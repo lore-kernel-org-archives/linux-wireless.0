@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30E65CDB47E
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Oct 2023 03:34:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E66FC001DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Oct 2023 03:34:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346935AbjJTDeU (ORCPT
+        id S1346942AbjJTDeX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Oct 2023 23:34:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39428 "EHLO
+        Thu, 19 Oct 2023 23:34:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346919AbjJTDeO (ORCPT
+        with ESMTP id S1346929AbjJTDeU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Oct 2023 23:34:14 -0400
+        Thu, 19 Oct 2023 23:34:20 -0400
 Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2085.outbound.protection.outlook.com [40.107.21.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2BB81A4;
-        Thu, 19 Oct 2023 20:34:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 165BBD7C;
+        Thu, 19 Oct 2023 20:34:15 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=F2jR9wO23IG4mopDB+XpfMV1dEqW1wb/X54SfGHmoQInQ+jMNP0Uw1EZqUa8UTjxUV1i62kZw7zzwoWFfJN/kklSN8M5LGpNLyQI7dBGW21ALkRO9wv9Yk+4Sjvz0dy6JArrPYom4AeawxAnfdT08qbyESOf4D1zOEJdIyCJ+OMZfVhSLtj/9gZZQdnxODXuiLoWKkAxJFQSsu/qsibQmo6sllCIbYGcSAF2gDuyPNSRnkt72wuJtuX4eP4yBYbfSVp+5mcf0+krBgXs5fgut/NIqmC6Xso4+xplcmEWXlK/5jP5WP5L0HUSv07qGAmtX9Jw5mOr5xRN2O/ahBjlNw==
+ b=BggqzKtX1Jlm/fJufr7QNaNrRgcogN1WzJ8O09mJ5bIUh54HkuTThupevACV1Ph3oBGkK9OwglXfmx7cEK1XZey3uB5kw0uGbcQ1Q/iq4p0XennHz1Es57f5ynm6lOkUlP++5sKNqkMLj4GJx2zUXtR+dUyygs2BH0ud22hr2gMD0Wmodkro1hspDWdqueO0kElLu9dq1ry4BgIPYcwnJ5fPRDyker4TR6HI2eKCA3Tenpbn8uSL65RZtekd+hQKEGvOpGz7gSDfehuU72yePmqgEUFT1Wpzv4ivuirMLNT7LbQyoRUsCKO0LwSigh3WhCZFnraxHS5d7GKqRJTkPQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XwbLXcBQEonmrJlLkdG9hTpdRahNTcCwK+hEC1Mumak=;
- b=P0xm+ZxISRdkwzjwvtgdxb7019PwwqR6muNOfbgjaqMUHzS/Sa+HAitFPXK0KhxiJ07XUJ1zlQEgnDZbsrnN+/LJOxh3ntRt0RINeScFIwSv/ApUG2tVFnjuil9N72beXkjI7EXEVNg2Ibsp6JEYorCnmg1C4wCmJ3feYV/EiYxdOu1OEv1TJm90fSnBpz7rea03P/MhfgMWbgV/+IFt0F2KGCHdneSPFPfYTO5LmHeQzBjb7Hnh+U+4wPwWkqrqGeYsK1gp2pEVgOT5itvwFAbOkiOvfC3FbysUSgg7NoY2oPrRuIXK9YTRTfGL8cSOdW1iDsW7mk2qF8EPuaKJmQ==
+ bh=U4SkeeAq/HkU/8HoKVchswjM51I1gqV16brMIKI5cU0=;
+ b=b8TnDLNc35mAQsDUAmc0AsPACN6HWr4c/Z6AfQuQVQPnxAJ9v//I/l/80HEBAwk/e6hbhEGotl3BNbiz4wdC9wu+aEBgOBv5CtWdZSFiSPGGde8WGABQFFuiCTqKA/EVJrIUa5YHYZDnLaO5HZJyNo/kBhgRKGZColFODQiQqh5argzdxt8j+tOG4Te9ccLgBcZJgvWhAgERqlJz49OGSGGfCChPTa6Nu5sR0JwCytoDbNsnm/HGyXPVkjNBS9vHnlPKY7VbUyaKhzCVIWpw2FxXB/r+pKXUjnX2BRIAP0Oynqyqa5akzuexpOtrAdWmz/BKnMpkxEGfoRA0DiAQrQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XwbLXcBQEonmrJlLkdG9hTpdRahNTcCwK+hEC1Mumak=;
- b=iF20LNkwR4fpxXa5k+gQG1vaIQhp4ZXlzK2WD8kWtRq91yR/VUr5/Drm3ZtyvzVLkU/1hn9lsPzs1QA8i5qsvwXqDteqVtnnXu+tklhX5fNdFJgkVlvdocYFrz0oUJWGJTC9M/FEkcva3hzoktENJ+OcUfCA3rohUNs5MWGmLG4=
+ bh=U4SkeeAq/HkU/8HoKVchswjM51I1gqV16brMIKI5cU0=;
+ b=RdLe+Rz+KqSJM6IwUNXdbzq+S5Vxc8SaW/NAYqKuQHnBbhLZPJ4LvCNMO4nvnJmqvFoVunRvhwN8EZsTqoz0xKlqDTBpCQWI+0gDvOo5qQfKlj5K9O9WNX9rjRPCi55s5oH4p8dRzTkDXxbjPb9u8SLaPckXUIxdfi5vKk0YN5s=
 Received: from PA4PR04MB9638.eurprd04.prod.outlook.com (2603:10a6:102:273::20)
  by DB9PR04MB8236.eurprd04.prod.outlook.com (2603:10a6:10:245::24) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6886.34; Fri, 20 Oct
- 2023 03:34:04 +0000
+ 2023 03:34:11 +0000
 Received: from PA4PR04MB9638.eurprd04.prod.outlook.com
  ([fe80::34dd:289e:9e8b:9c9b]) by PA4PR04MB9638.eurprd04.prod.outlook.com
  ([fe80::34dd:289e:9e8b:9c9b%7]) with mapi id 15.20.6933.011; Fri, 20 Oct 2023
- 03:34:04 +0000
+ 03:34:11 +0000
 Content-Type: multipart/mixed;
-        boundary="_000_PA4PR04MB96386AE515E67332D246CF22D1DBAPA4PR04MB9638eurp_"
+        boundary="_000_PA4PR04MB9638D34DE94CB6B24152E06DD1DBAPA4PR04MB9638eurp_"
 From:   David Lin <yu-hao.lin@nxp.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -50,1663 +50,524 @@ CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Sharvari Harisangam <sharvari.harisangam@nxp.com>,
         David Lin <yu-hao.lin@nxp.com>,
         Pete Hsieh <tsung-hsien.hsieh@nxp.com>
-Subject: [PATCH v5 1/6] wifi: mwifiex: added code to support host mlme.
-Thread-Topic: [PATCH v5 1/6] wifi: mwifiex: added code to support host mlme.
-Thread-Index: AdoDBkTYDiWyHExpTiquikNmJiJIbw==
-Date:   Fri, 20 Oct 2023 03:34:04 +0000
-Message-ID: <PA4PR04MB96386AE515E67332D246CF22D1DBA@PA4PR04MB9638.eurprd04.prod.outlook.com>
+Subject: [PATCH v5 3/6] wifi: mwifiex: fixed reassocation issue for WPA3.
+Thread-Topic: [PATCH v5 3/6] wifi: mwifiex: fixed reassocation issue for WPA3.
+Thread-Index: AdoDBklPP2ms8qKvSYKhwn8ugGVR0w==
+Date:   Fri, 20 Oct 2023 03:34:11 +0000
+Message-ID: <PA4PR04MB9638D34DE94CB6B24152E06DD1DBA@PA4PR04MB9638.eurprd04.prod.outlook.com>
 Accept-Language: zh-TW, en-US
 Content-Language: zh-TW
 X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: <PA4PR04MB96386AE515E67332D246CF22D1DBA@PA4PR04MB9638.eurprd04.prod.outlook.com>
+X-MS-TNEF-Correlator: <PA4PR04MB9638D34DE94CB6B24152E06DD1DBA@PA4PR04MB9638.eurprd04.prod.outlook.com>
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: PA4PR04MB9638:EE_|DB9PR04MB8236:EE_
-x-ms-office365-filtering-correlation-id: 4b1a6639-e87f-4b1b-1a8d-08dbd11d68ca
+x-ms-office365-filtering-correlation-id: 84d3de13-bbec-4b12-2a01-08dbd11d6ce3
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: vvN9oHPyKzp8GJi9yWq3DA0VqmQAJD4vG3tLsbRJyh8b+hjkKH9KaWo2w1ydq9cYgPzZPVFnyrNFHnaqrVgl3rwEATeTyNL2rp81jYZCqc+z1dY8cCw4RHeNrIA0FYd4LLd9puvs1B1NxhxeI1vm7E9oR/YzAK9KMltvFK7tP4wW2+3oehO/r16wsfEbAwIHWp4NlcvFDGcZWl70EYAJS3/qb9H2HOM+H705mQKCh9DVpKU5URp5CDDOkj/r+3lA+qJmrnty9ND0w3EoPRKM0/RaPYhpfXetfpDlOXcCbAKhi1FdHUDal7e2MnCh82EElvw3M2xYHbCe1++TLmYJTOeXAj+4ZM+CgLblHw9CxS72bJ5Uwx43ZO3dmiTx2fj6/XMGCr3tGh4nbgqCWVaADhQsaSsTxpMTq0ilBHn0ic3cmHLwi1g7oWMmHJc8TP5x60zWQvdL6hXnYJoIfksZ1Dw3Ll8j+uAOfAwefdsr7S93XDdNES5DJsMkMh0Fikc8zqqqPQuQtypY2RdpSE7LuBHxum+vHKBUwN+vBt7HBSdZNGZzTIosRcilOWroj7IizJMVvaJY7A/Z/36dqRqnqB/ylYWocGuaxX0qfuM63azSDqzQMYyZvws4PJKakbYZ
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9638.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(376002)(346002)(366004)(39860400002)(230922051799003)(451199024)(1800799009)(64100799003)(186009)(38070700009)(66446008)(38100700002)(66556008)(30864003)(33656002)(64756008)(478600001)(66476007)(54906003)(66946007)(6506007)(6916009)(76116006)(71200400001)(2906002)(8936002)(5660300002)(8676002)(52536014)(9686003)(41300700001)(4326008)(86362001)(316002)(7696005)(83380400001)(122000001)(26005)(66899024)(55016003)(559001)(579004);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: 897YWYWYWfmdXuSGPPFPrLlFg8OgSDhKRvvPzdHRklSzOPmbngJvYGI2B2dH9ESTh66WDaVbg7HSi4PTvMLPHP6r/AVHhUjJSlv+tPkM0WUobVDxUdExOhy3/TDj6yUG9Rg3g0BBC93GnQbIxzfsHo/3gUpt4kRKeOU4LCQYAL4gm/WS5NI1pbiPrawtawkXX4fgSZA15MRDIa+prkcQVW0cvEHhvtNLWP/t4KVuIAHWoXcH1JRxWAlJsIRBzdH9HWFXAD9xti6DgglaLmEV7vK7+oWGidmgbfvfegfBOXfp/nXRJJIac2Q6fvgVHoF3N3YTt6IuH/vsh0x3hvpomeWNj7SPVvAqGFta7wuXCeCfTITWjQUyqEb3RF3k4aZbjS3iY47XAcJBtCllPFeKg40PPL6IXrfCwSkF16ldCuaYRkY1ThVF9EQF6JJgY94yN4etVprYugE639mvi5Pi0PdbvkGt0sG21SlTr6dXGLK+SbXJv6557U92fbNig0TPJ0NWqo+FSuqfP6r6MHFPeRAFBOXv5nr7cEckkfLmKzL373Z84UIiNXZrxmLrZWQXbtVrS1XxJ36rOuACnaeTJhaZfTQQWIFUQTuef147xF1LQpWA4GlL5NWzqmRY7zQG
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9638.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(376002)(346002)(366004)(39860400002)(230922051799003)(451199024)(1800799009)(64100799003)(186009)(38070700009)(66446008)(38100700002)(66556008)(33656002)(64756008)(478600001)(66476007)(54906003)(66946007)(6506007)(6916009)(76116006)(71200400001)(2906002)(8936002)(5660300002)(8676002)(52536014)(9686003)(41300700001)(4326008)(86362001)(316002)(7696005)(83380400001)(122000001)(26005)(55016003);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?urwIein6pUIRDkZfKfJZtoDQ2O2zihpIhlmI68a0AoNP9cZZIi9S3WzAXhzC?=
- =?us-ascii?Q?2b+bUln/jSs/uaraqibjDMdKHcxrGgOADxjw+pO4nGGsFn+fdS+m+4m6kC/6?=
- =?us-ascii?Q?h7RL1CK6XYETUzMs7zTKBom3F9DKM1WdcT5OOmRv8IMPHh9vtRUrc2bqs4lF?=
- =?us-ascii?Q?4GAYIBR98ISmtiDApCdI2tpzDBkRwiq2U851C8oRyodIZEQabPKPecuqpX1k?=
- =?us-ascii?Q?iN/vA4r9p6cCE3revREdyHzqXtUX76/3qSkv6KTNmJX6QbV0XroGZlMjRvUo?=
- =?us-ascii?Q?malvbKfpJ8GD8QJyl8zGSW9V01Nhnw0NBa+mmkVeV8NFghybDUVOsBvFoMCz?=
- =?us-ascii?Q?iazpWmkFmgKVPXdqYkywX6qaZ13rvE/qwxNzdzK9MGl+AjkV7jeYN8Dkdf43?=
- =?us-ascii?Q?Hg2FIE3D3FkObnormYdQmE9eXaWFaxrTO3H11dy11F+/Sjv27lt9cb9HwVqg?=
- =?us-ascii?Q?Xz43Ap+B12n5WK3Kr1NaNHzUAV5oRzyyu1liXep5xEgtz5NawIZ61tRP7hfR?=
- =?us-ascii?Q?Y9dBgy7cp08gis+jdfcKlP++V2vnch4z02XMe5xaNizMXREK84PvI+uBOg4u?=
- =?us-ascii?Q?Tc31uAQEonS+IuDM6SRLOXNUP/L7cOPDgE3wtlmknvoG5o/u2fXXIKkdZzab?=
- =?us-ascii?Q?6/HlV48GnNPA4a2szVtzPTt4DUA7wBgJItO3CzWWrlEjtu5g3TBbrocNcMdR?=
- =?us-ascii?Q?ILZCuCtFz1tGV/EdkoM3CXgbawzZlVzoUV+Aw+LbT33VhUAjMpMXeVJIQawb?=
- =?us-ascii?Q?BsqUN0tpA/ZWXv7LVfIDy710wwhcqsMkfb4/LAVZBcDnmuXo1E6zk4XtVcpg?=
- =?us-ascii?Q?vOD/JcEwjqtFRtnwENqZIh+sVs2SaTOG6lAcF/eLHDALKhpmCa0CeUwvIklF?=
- =?us-ascii?Q?3R824fN2kdKewcdnJzWPYZvam10L43Y9JLHhS0plhz8SyOCO0VEtiI5+aKsB?=
- =?us-ascii?Q?M14fSEWepDg8D+7EBqQZILiVpyw7mz/CwYt5JKm1RICZdr+r+qFTIABm2eYe?=
- =?us-ascii?Q?kGj40mspDA+pTTWYXEAWAmBumz9UFyumeGY+FiMDjaWF5VYOvMdd01bzTqGj?=
- =?us-ascii?Q?CJWvHaNufmlDYfcJA1lbfBywD/Y80zWjBDeA11Yp7lnsk2VbXu3rAnk3bSuV?=
- =?us-ascii?Q?xkXIufC4vrcMEpfyhQlbVktG7Z3HPum1Lvy/Zc/0KCoC57QwIIS8X15MfXJt?=
- =?us-ascii?Q?xA4AgWH8s6tFUh/+LA6x7dUtxEbrXcdwYwuruB8P3PhCZp2zWZ88qtFhn3kT?=
- =?us-ascii?Q?kpOJ4rfnD/kqJo93y2K31e6omv1QDtg5KLNph2J3rOvbP+X1cyjKE3fQwrTz?=
- =?us-ascii?Q?plkU57XUFwaTcQdcah3AigFGtrTiqYSJHpnyR5rP5s2riQjZiPxtx5w5y/WR?=
- =?us-ascii?Q?KYxcp86nuMFfVAQq4GsK8o1/S7dHkoxDLYhlz7lTbmXjtMKVIHTgaSVi3bbz?=
- =?us-ascii?Q?+/OAPm+CTfAe+lU0K3lpU4FR0aJyTDPVe8OTmBn+uiI0f4aPqO4J6qZGv906?=
- =?us-ascii?Q?diK1WzV2xKaZ+wtyRU4qayJOkRT3UzKOhpIpR/tMUU/ELAt1uOLLg4h/beLQ?=
- =?us-ascii?Q?68V4lbrhVZIWh2rsmfYva+VyBmenNa6c6ogmQVlV?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?yQ4oaXk4FSwAwMxmU2fxK3aBDJ0xcLQrilFipKKjqzFnuJoeLDunsSgGD47p?=
+ =?us-ascii?Q?wPl2zz1VWwXXAxlyOPsMymoopZpVtMYrbt6clLwv60849sU0KWa/PRuXF5uV?=
+ =?us-ascii?Q?tUDIyzJzkgkImoYVJhP6DwbzXLgmgTWkwL6KNcWpSUwlEw9o5chplEU/PXnR?=
+ =?us-ascii?Q?YDwEQKyjqp0/vp94fOJjhOk0EbRRLxVe+wLQ3fj2Kb93dz3+m7h4V8NxZgTk?=
+ =?us-ascii?Q?Xjj7/GEklFypb+UEk//mfpbzUtRzESJk9I2hyMT75GgnFbloe0S7ydZ13tJC?=
+ =?us-ascii?Q?PnjiVHM+EWnKMjhbdsOZfSsQX9Rw2W2YIBbkFfMxuZXlU9ylJdYNhQ5GeOvP?=
+ =?us-ascii?Q?yUnT/ec/xtmgNXpWSIqigiKLIbu3CZFRaS9moVseIXEIeM9UcgtM2j1CmTws?=
+ =?us-ascii?Q?DU+4M5AJUh3pAvZMfM9HsGcT3wpaUeXlpdeepjmhb0ad23Sdt5ZfpI5uzS9s?=
+ =?us-ascii?Q?PsVadSr31QVZTav/JQm3a1Qp7lJf74wKvzO+pal7d03rQvDW0OdmxsEdJdDy?=
+ =?us-ascii?Q?UkKcanGDz+9pza7lKmbA4tBEr8hiv9bg2pUJZPi3sUkYheWtzxDllHcA51ry?=
+ =?us-ascii?Q?xdZUyPxn5oNVP6RzqHETp/V8kDLlod4yWZue6XJ4mjkg+2oQ99z1s1VsHSUW?=
+ =?us-ascii?Q?RWt6t5zq9y9CVoA5DqyC2YL6kBYaXIEqAW1rBaP9iGq75PW2RR7829KaziK9?=
+ =?us-ascii?Q?rFcYtCirXbJnhkJNIZjt1zO2jkrI+tfXgCfGCX0LKbshg0+V0zbVdhzzIqZS?=
+ =?us-ascii?Q?SWRAhedimjZW4ZO0PdK6N+Km3KYxms6Dqzy8PiJpanXzrpf6wl6+sHDfBDWR?=
+ =?us-ascii?Q?qUrcD1eRN5No1L1SXlJyEMmq9mpXKYC/9YkD7oYX3rLy1iUvzz0FhiDjWaxs?=
+ =?us-ascii?Q?wAWoPalKOGRZFoF4yt6Ew318H1pxpCYRfcifwMCfSKmJF/y9tLg2o4MBX84p?=
+ =?us-ascii?Q?0hIyss74aKzAvWVGCSw8YA5L2Z5/zvCYXAMfBf5HhHSe5ZFcO92H6RnVJOd6?=
+ =?us-ascii?Q?7DoJdHnDTFzzNfvFWMJkCY2wEB8+hsOkcexlZ6Bjwi4IBaUDouc52OmH4BtE?=
+ =?us-ascii?Q?jI2K+opg3NByW9yfIPN25EZvSpn/PPU3YYFS56fUYD/BbcfJKBFtK5pEFIIu?=
+ =?us-ascii?Q?UWe2smRbNrDQaVXa9BdpilCkK/6BN1eSiPOGtvlPcCkxZC+GEsYHM25Cb8AI?=
+ =?us-ascii?Q?si9WtUJXyiWB5aMQqmgvdVGshB+1CG5lhQLXQtmvqxK93mcz+rxu/Fz8inmM?=
+ =?us-ascii?Q?UJbXyrBXHraafLim9+g/2naC6Sd7TbLD0BQxLNy+EEo9QwTVPBEZOv4IOZq3?=
+ =?us-ascii?Q?w3+I9CFa7VRVKPF8f5qtcCOvQxTMVsDWgko2bEsb9JuWU7A+B8yIvrYQZVcY?=
+ =?us-ascii?Q?picpAFaKSAkg+e+HvUeDLrKIeCrJNKNG7GxkX1ZWaGcO99flIZv7/3hBLlKY?=
+ =?us-ascii?Q?1KALAD/BYtoO6iCEJU1yYrGTxMnkVan0crHtZwATT5KXowfCzrkci1IqF/tI?=
+ =?us-ascii?Q?VYztDAhknsq2g0CP3sw1yktC/l5You4g0CxKFfeXGP+XMiWjxvn8zjmeDjoF?=
+ =?us-ascii?Q?mAVAm27Uw9O/ArqCbRTC71jhFds7b6aXFRHsyTko?=
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9638.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b1a6639-e87f-4b1b-1a8d-08dbd11d68ca
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Oct 2023 03:34:04.4812
+X-MS-Exchange-CrossTenant-Network-Message-Id: 84d3de13-bbec-4b12-2a01-08dbd11d6ce3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Oct 2023 03:34:11.3639
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 61TVq+00KN7KLhJ6xQnRA6PkT63lrC1Fya+TyI7dhr13+/OqqnDxEjVr42ohB7slDpyeiW3GxIzuaSBZC2e8NQ==
+X-MS-Exchange-CrossTenant-userprincipalname: Nk9ParlmJ8D4ny0+O9C/o95ImvuYruCgBHuVwBVterkTTmaD4aF9qWkJAYZTA6H8J6UMtXnhZ+g1wSywl/Ginw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB8236
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
---_000_PA4PR04MB96386AE515E67332D246CF22D1DBAPA4PR04MB9638eurp_
+--_000_PA4PR04MB9638D34DE94CB6B24152E06DD1DBAPA4PR04MB9638eurp_
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-1. For station mode first.
-2. This feature is a must for WPA3.
-3. Firmware key api version 2 is needed for this feature.
-4. The code is only enabled and tested with IW416.
-5. This feature is disabled for other chips.
+This issue is related to resatart/reconfigure AP.
+
+When AP is restarted or reconfigured, wpa_supplilcant will use cached
+PMKSA to do association to AP.
+Because association failure does not report to cfg80211/wpa_supplicant,
+wpa_supplicant will always use cached PMKSA to do assocaiton.
+Connection can't be established under this way.
 
 Signed-off-by: David Lin <yu-hao.lin@nxp.com>
 ---
- .../net/wireless/marvell/mwifiex/cfg80211.c   | 327 ++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/cmdevt.c |  14 +-
- drivers/net/wireless/marvell/mwifiex/decl.h   |  12 +
- drivers/net/wireless/marvell/mwifiex/fw.h     |  15 +
- drivers/net/wireless/marvell/mwifiex/init.c   |   3 +
- drivers/net/wireless/marvell/mwifiex/join.c   |  64 +++-
- drivers/net/wireless/marvell/mwifiex/main.h   |  10 +
- drivers/net/wireless/marvell/mwifiex/scan.c   |   6 +
- drivers/net/wireless/marvell/mwifiex/sdio.c   |  13 +
- drivers/net/wireless/marvell/mwifiex/sdio.h   |   2 +
- .../net/wireless/marvell/mwifiex/sta_event.c  |  18 +-
- .../net/wireless/marvell/mwifiex/sta_ioctl.c  |   3 +-
- drivers/net/wireless/marvell/mwifiex/sta_tx.c |   9 +-
- .../net/wireless/marvell/mwifiex/uap_cmd.c    |  26 ++
- drivers/net/wireless/marvell/mwifiex/util.c   |  73 ++++
- 15 files changed, 582 insertions(+), 13 deletions(-)
+ .../net/wireless/marvell/mwifiex/cfg80211.c   | 25 ++++++++-----------
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 18 +++++++++++++
+ drivers/net/wireless/marvell/mwifiex/init.c   |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.c   |  6 +++++
+ drivers/net/wireless/marvell/mwifiex/main.h   |  3 +++
+ 5 files changed, 39 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/=
 wireless/marvell/mwifiex/cfg80211.c
-index 7a15ea8072e6..40c39e4765f7 100644
+index 3d59e6a441b9..a21310f3807c 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
 +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -57,6 +57,31 @@ ieee80211_iface_combination mwifiex_iface_comb_ap_sta_dr=
-cs =3D {
- 	.beacon_int_infra_match =3D true,
- };
+@@ -4395,9 +4395,6 @@ mwifiex_cfg80211_associate(struct wiphy *wiphy, struc=
+t net_device *dev,
+ 	int ret;
+ 	struct cfg80211_ssid req_ssid;
+ 	const u8 *ssid_ie;
+-	struct cfg80211_rx_assoc_resp assoc_resp =3D {
+-		.uapsd_queues =3D -1,
+-	};
 =20
-+struct mwifiex_ieee80211_mgmt {
-+	__le16 frame_control;
-+	__le16 duration;
-+	u8 da[ETH_ALEN];
-+	u8 sa[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
-+	__le16 seq_ctrl;
-+	u8 addr4[ETH_ALEN];
-+	union {
-+		struct {
-+			__le16 auth_alg;
-+			__le16 auth_transaction;
-+			__le16 status_code;
-+			/* possibly followed by Challenge text */
-+			u8 variable[];
-+		} __packed auth;
-+		struct {
-+			__le16 capab_info;
-+			__le16 listen_interval;
-+			/* followed by SSID and Supported rates */
-+			u8 variable[];
-+		} __packed assoc_req;
-+	} u;
-+} __pack;
+ 	if (GET_BSS_ROLE(priv) !=3D MWIFIEX_BSS_ROLE_STA) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -4433,13 +4430,13 @@ mwifiex_cfg80211_associate(struct wiphy *wiphy, str=
+uct net_device *dev,
+=20
+ 	req_ssid.ssid_len =3D ssid_ie[1];
+ 	if (req_ssid.ssid_len > IEEE80211_MAX_SSID_LEN) {
+-		mwifiex_dbg(priv->adapter, ERROR, "invalid SSID - aborting\n");
++		mwifiex_dbg(adapter, ERROR, "invalid SSID - aborting\n");
+ 		goto ssid_err;
+ 	}
+=20
+ 	memcpy(req_ssid.ssid, ssid_ie + 2, req_ssid.ssid_len);
+ 	if (!req_ssid.ssid_len || req_ssid.ssid[0] < 0x20) {
+-		mwifiex_dbg(priv->adapter, ERROR, "invalid SSID - aborting\n");
++		mwifiex_dbg(adapter, ERROR, "invalid SSID - aborting\n");
+ 		goto ssid_err;
+ 	}
+ 	rcu_read_unlock();
+@@ -4466,25 +4463,25 @@ mwifiex_cfg80211_associate(struct wiphy *wiphy, str=
+uct net_device *dev,
+=20
+ 	memcpy(priv->cfg_bssid, req->bss->bssid, ETH_ALEN);
+=20
+-	mwifiex_dbg(priv->adapter, MSG,
++	mwifiex_dbg(adapter, MSG,
+ 		    "assoc: send association to %pM\n", req->bss->bssid);
+=20
+-	cfg80211_ref_bss(priv->adapter->wiphy, req->bss);
++	cfg80211_ref_bss(adapter->wiphy, req->bss);
+=20
+ 	ret =3D mwifiex_bss_start(priv, req->bss, &req_ssid);
+=20
+-	if (!ret) {
+-		assoc_resp.links[0].bss =3D priv->attempted_bss_desc->bss;
+-		assoc_resp.buf =3D priv->assoc_rsp_buf;
+-		assoc_resp.len =3D priv->assoc_rsp_size;
+-		cfg80211_rx_assoc_resp(priv->netdev,
+-				       &assoc_resp);
+-	} else {
++	if (ret) {
+ 		priv->auth_flag =3D 0;
+ 		priv->auth_alg =3D 0xFFFF;
+ 		eth_zero_addr(priv->cfg_bssid);
+ 	}
+=20
++	if (priv->assoc_rsp_size) {
++		priv->req_bss =3D req->bss;
++		adapter->assoc_resp_received =3D true;
++		queue_work(adapter->workqueue, &adapter->main_work);
++	}
 +
- /*
-  * This function maps the nl802.11 channel type into driver channel type.
-  *
-@@ -268,6 +293,8 @@ mwifiex_cfg80211_update_mgmt_frame_registrations(struct=
- wiphy *wiphy,
+ 	cfg80211_put_bss(priv->adapter->wiphy, req->bss);
 =20
- 	if (mask !=3D priv->mgmt_frame_mask) {
- 		priv->mgmt_frame_mask =3D mask;
-+		if (priv->host_mlme_reg)
-+			priv->mgmt_frame_mask |=3D HOST_MLME_MGMT_MASK;
- 		mwifiex_send_cmd(priv, HostCmd_CMD_MGMT_FRAME_REG,
- 				 HostCmd_ACT_GEN_SET, 0,
- 				 &priv->mgmt_frame_mask, false);
-@@ -848,6 +875,7 @@ static int mwifiex_deinit_priv_params(struct mwifiex_pr=
-ivate *priv)
- 	struct mwifiex_adapter *adapter =3D priv->adapter;
- 	unsigned long flags;
-=20
-+	priv->host_mlme_reg =3D false;
- 	priv->mgmt_frame_mask =3D 0;
- 	if (mwifiex_send_cmd(priv, HostCmd_CMD_MGMT_FRAME_REG,
- 			     HostCmd_ACT_GEN_SET, 0,
-@@ -4202,6 +4230,292 @@ mwifiex_cfg80211_change_station(struct wiphy *wiphy=
-, struct net_device *dev,
+ 	return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wi=
+reless/marvell/mwifiex/cmdevt.c
+index 311af5f40c3e..16777af50097 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -924,6 +924,24 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *ad=
+apter)
  	return ret;
  }
 =20
-+static int
-+mwifiex_cfg80211_authenticate(struct wiphy *wiphy,
-+			      struct net_device *dev,
-+			      struct cfg80211_auth_request *req)
++void mwifiex_process_assoc_resp(struct mwifiex_adapter *adapter)
 +{
-+	struct mwifiex_private *priv =3D mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_adapter *adapter =3D priv->adapter;
-+	struct sk_buff *skb;
-+	u16 pkt_len, auth_alg;
-+	int ret;
-+	struct mwifiex_ieee80211_mgmt *mgmt;
-+	struct mwifiex_txinfo *tx_info;
-+	u32 tx_control =3D 0, pkt_type =3D PKT_TYPE_MGMT;
-+	u8 addr[ETH_ALEN] =3D {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-+	u8 trans =3D 1, status_code =3D 0;
-+	u8 *varptr;
-+
-+	if (GET_BSS_ROLE(priv) =3D=3D MWIFIEX_BSS_ROLE_UAP) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Interface role is AP\n");
-+		return -EFAULT;
-+	}
-+
-+	if (priv->wdev.iftype !=3D NL80211_IFTYPE_STATION) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "Interface type is not correct (type %d)\n",
-+			    priv->wdev.iftype);
-+		return -EINVAL;
-+	}
-+
-+	if (priv->auth_alg !=3D WLAN_AUTH_SAE &&
-+	    (priv->auth_flag & HOST_MLME_AUTH_PENDING)) {
-+		mwifiex_dbg(priv->adapter, ERROR, "Pending auth on going\n");
-+		return -EBUSY;
-+	}
-+
-+	if (!priv->host_mlme_reg) {
-+		priv->host_mlme_reg =3D true;
-+		priv->mgmt_frame_mask |=3D HOST_MLME_MGMT_MASK;
-+		mwifiex_send_cmd(priv, HostCmd_CMD_MGMT_FRAME_REG,
-+				 HostCmd_ACT_GEN_SET, 0,
-+				 &priv->mgmt_frame_mask, false);
-+	}
-+
-+	switch (req->auth_type) {
-+	case NL80211_AUTHTYPE_OPEN_SYSTEM:
-+		auth_alg =3D WLAN_AUTH_OPEN;
-+		break;
-+	case NL80211_AUTHTYPE_SHARED_KEY:
-+		auth_alg =3D WLAN_AUTH_SHARED_KEY;
-+		break;
-+	case NL80211_AUTHTYPE_FT:
-+		auth_alg =3D WLAN_AUTH_FT;
-+		break;
-+	case NL80211_AUTHTYPE_NETWORK_EAP:
-+		auth_alg =3D WLAN_AUTH_LEAP;
-+		break;
-+	case NL80211_AUTHTYPE_SAE:
-+		auth_alg =3D WLAN_AUTH_SAE;
-+		break;
-+	default:
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "unsupported auth type=3D%d\n", req->auth_type);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	if (!priv->auth_flag) {
-+		ret =3D mwifiex_remain_on_chan_cfg(priv, HostCmd_ACT_GEN_SET,
-+						 req->bss->channel,
-+						 AUTH_TX_DEFAULT_WAIT_TIME);
-+
-+		if (!ret) {
-+			priv->roc_cfg.cookie =3D get_random_u32() | 1;
-+			priv->roc_cfg.chan =3D *req->bss->channel;
-+		}
-+	}
-+
-+	priv->sec_info.authentication_mode =3D auth_alg;
-+
-+	mwifiex_cancel_scan(adapter);
-+
-+	pkt_len =3D (u16)req->ie_len + req->auth_data_len +
-+		     MWIFIEX_MGMT_HEADER_LEN + MWIFIEX_AUTH_BODY_LEN;
-+	if (req->auth_data_len >=3D 4)
-+		pkt_len -=3D 4;
-+
-+	skb =3D dev_alloc_skb(MWIFIEX_MIN_DATA_HEADER_LEN +
-+			    MWIFIEX_MGMT_FRAME_HEADER_SIZE +
-+			    pkt_len + sizeof(pkt_len));
-+	if (!skb) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "allocate skb failed for management frame\n");
-+		return -ENOMEM;
-+	}
-+
-+	tx_info =3D MWIFIEX_SKB_TXCB(skb);
-+	memset(tx_info, 0, sizeof(*tx_info));
-+	tx_info->bss_num =3D priv->bss_num;
-+	tx_info->bss_type =3D priv->bss_type;
-+	tx_info->pkt_len =3D pkt_len;
-+
-+	skb_reserve(skb, MWIFIEX_MIN_DATA_HEADER_LEN +
-+		    MWIFIEX_MGMT_FRAME_HEADER_SIZE + sizeof(pkt_len));
-+	memcpy(skb_push(skb, sizeof(pkt_len)), &pkt_len, sizeof(pkt_len));
-+	memcpy(skb_push(skb, sizeof(tx_control)),
-+	       &tx_control, sizeof(tx_control));
-+	memcpy(skb_push(skb, sizeof(pkt_type)), &pkt_type, sizeof(pkt_type));
-+
-+	mgmt =3D (struct mwifiex_ieee80211_mgmt *)skb_put(skb, pkt_len);
-+	memset(mgmt, 0, pkt_len);
-+	mgmt->frame_control =3D
-+		cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_AUTH);
-+	memcpy(mgmt->da, req->bss->bssid, ETH_ALEN);
-+	memcpy(mgmt->sa, priv->curr_addr, ETH_ALEN);
-+	memcpy(mgmt->bssid, req->bss->bssid, ETH_ALEN);
-+	memcpy(mgmt->addr4, addr, ETH_ALEN);
-+
-+	if (req->auth_data_len >=3D 4) {
-+		if (req->auth_type =3D=3D NL80211_AUTHTYPE_SAE) {
-+			__le16 *pos =3D (__le16 *)req->auth_data;
-+
-+			trans =3D le16_to_cpu(pos[0]);
-+			status_code =3D le16_to_cpu(pos[1]);
-+		}
-+		memcpy((u8 *)(&mgmt->u.auth.variable), req->auth_data + 4,
-+		       req->auth_data_len - 4);
-+		varptr =3D (u8 *)&mgmt->u.auth.variable +
-+			 (req->auth_data_len - 4);
-+	}
-+
-+	mgmt->u.auth.auth_alg =3D cpu_to_le16(auth_alg);
-+	mgmt->u.auth.auth_transaction =3D trans;
-+	mgmt->u.auth.status_code =3D status_code;
-+
-+	if (req->ie && req->ie_len) {
-+		if (!varptr)
-+			varptr =3D (u8 *)&mgmt->u.auth.variable;
-+		memcpy((u8 *)varptr, req->ie, req->ie_len);
-+	}
-+
-+	priv->auth_flag =3D HOST_MLME_AUTH_PENDING;
-+	priv->auth_alg =3D auth_alg;
-+
-+	skb->priority =3D WMM_HIGHEST_PRIORITY;
-+	__net_timestamp(skb);
-+
-+	mwifiex_dbg(priv->adapter, MSG,
-+		    "auth: send authentication to %pM\n", req->bss->bssid);
-+
-+	mwifiex_queue_tx_pkt(priv, skb);
-+
-+	return 0;
-+}
-+
-+static int
-+mwifiex_cfg80211_associate(struct wiphy *wiphy, struct net_device *dev,
-+			   struct cfg80211_assoc_request *req)
-+{
-+	struct mwifiex_private *priv =3D mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_adapter *adapter =3D priv->adapter;
-+	int ret;
-+	struct cfg80211_ssid req_ssid;
-+	const u8 *ssid_ie;
 +	struct cfg80211_rx_assoc_resp assoc_resp =3D {
 +		.uapsd_queues =3D -1,
 +	};
++	struct mwifiex_private *priv =3D
++		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
 +
-+	if (GET_BSS_ROLE(priv) !=3D MWIFIEX_BSS_ROLE_STA) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "%s: reject infra assoc request in non-STA role\n",
-+			    dev->name);
-+		return -EINVAL;
-+	}
-+
-+	if (test_bit(MWIFIEX_SURPRISE_REMOVED, &adapter->work_flags) ||
-+	    test_bit(MWIFIEX_IS_CMD_TIMEDOUT, &adapter->work_flags)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "%s: Ignore association.\t"
-+			    "Card removed or FW in bad state\n",
-+			    dev->name);
-+		return -EFAULT;
-+	}
-+
-+	if (priv->auth_alg =3D=3D WLAN_AUTH_SAE)
-+		priv->auth_flag =3D HOST_MLME_AUTH_DONE;
-+
-+	if (priv->auth_flag && !(priv->auth_flag & HOST_MLME_AUTH_DONE))
-+		return -EBUSY;
-+
-+	if (!mwifiex_stop_bg_scan(priv))
-+		cfg80211_sched_scan_stopped_locked(priv->wdev.wiphy, 0);
-+
-+	memset(&req_ssid, 0, sizeof(struct cfg80211_ssid));
-+	rcu_read_lock();
-+	ssid_ie =3D ieee80211_bss_get_ie(req->bss, WLAN_EID_SSID);
-+
-+	if (!ssid_ie)
-+		goto ssid_err;
-+
-+	req_ssid.ssid_len =3D ssid_ie[1];
-+	if (req_ssid.ssid_len > IEEE80211_MAX_SSID_LEN) {
-+		mwifiex_dbg(priv->adapter, ERROR, "invalid SSID - aborting\n");
-+		goto ssid_err;
-+	}
-+
-+	memcpy(req_ssid.ssid, ssid_ie + 2, req_ssid.ssid_len);
-+	if (!req_ssid.ssid_len || req_ssid.ssid[0] < 0x20) {
-+		mwifiex_dbg(priv->adapter, ERROR, "invalid SSID - aborting\n");
-+		goto ssid_err;
-+	}
-+	rcu_read_unlock();
-+
-+	/* As this is new association, clear locally stored
-+	 * keys and security related flags
-+	 */
-+	priv->sec_info.wpa_enabled =3D false;
-+	priv->sec_info.wpa2_enabled =3D false;
-+	priv->wep_key_curr_index =3D 0;
-+	priv->sec_info.encryption_mode =3D 0;
-+	priv->sec_info.is_authtype_auto =3D 0;
-+	ret =3D mwifiex_set_encode(priv, NULL, NULL, 0, 0, NULL, 1);
-+
-+	if (req->crypto.n_ciphers_pairwise)
-+		priv->sec_info.encryption_mode =3D
-+			req->crypto.ciphers_pairwise[0];
-+
-+	if (req->crypto.cipher_group)
-+		priv->sec_info.encryption_mode =3D req->crypto.cipher_group;
-+
-+	if (req->ie)
-+		ret =3D mwifiex_set_gen_ie(priv, req->ie, req->ie_len);
-+
-+	memcpy(priv->cfg_bssid, req->bss->bssid, ETH_ALEN);
-+
-+	mwifiex_dbg(priv->adapter, MSG,
-+		    "assoc: send association to %pM\n", req->bss->bssid);
-+
-+	cfg80211_ref_bss(priv->adapter->wiphy, req->bss);
-+
-+	ret =3D mwifiex_bss_start(priv, req->bss, &req_ssid);
-+
-+	if (!ret) {
-+		assoc_resp.links[0].bss =3D priv->attempted_bss_desc->bss;
++	if (priv->assoc_rsp_size) {
++		assoc_resp.links[0].bss =3D priv->req_bss;
 +		assoc_resp.buf =3D priv->assoc_rsp_buf;
 +		assoc_resp.len =3D priv->assoc_rsp_size;
 +		cfg80211_rx_assoc_resp(priv->netdev,
 +				       &assoc_resp);
-+	} else {
-+		priv->auth_flag =3D 0;
-+		priv->auth_alg =3D 0xFFFF;
-+		eth_zero_addr(priv->cfg_bssid);
-+	}
-+
-+	cfg80211_put_bss(priv->adapter->wiphy, req->bss);
-+
-+	return 0;
-+
-+ssid_err:
-+
-+	rcu_read_unlock();
-+	return -EFAULT;
-+}
-+
-+static int
-+mwifiex_cfg80211_deauthenticate(struct wiphy *wiphy,
-+				struct net_device *dev,
-+				struct cfg80211_deauth_request *req)
-+{
-+	return mwifiex_cfg80211_disconnect(wiphy, dev, req->reason_code);
-+}
-+
-+static int
-+mwifiex_cfg80211_disassociate(struct wiphy *wiphy,
-+			      struct net_device *dev,
-+			      struct cfg80211_disassoc_request *req)
-+{
-+	return mwifiex_cfg80211_disconnect(wiphy, dev, req->reason_code);
-+}
-+
-+static int
-+mwifiex_cfg80211_probe_client(struct wiphy *wiphy,
-+			      struct net_device *dev, const u8 *peer,
-+			      u64 *cookie)
-+{
-+	return -1;
-+}
-+
- /* station cfg80211 operations */
- static struct cfg80211_ops mwifiex_cfg80211_ops =3D {
- 	.add_virtual_intf =3D mwifiex_add_virtual_intf,
-@@ -4347,6 +4661,16 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter=
- *adapter)
- 			    "%s: creating new wiphy\n", __func__);
- 		return -ENOMEM;
- 	}
-+	if (adapter->host_mlme) {
-+		mwifiex_cfg80211_ops.auth =3D mwifiex_cfg80211_authenticate;
-+		mwifiex_cfg80211_ops.assoc =3D mwifiex_cfg80211_associate;
-+		mwifiex_cfg80211_ops.deauth =3D mwifiex_cfg80211_deauthenticate;
-+		mwifiex_cfg80211_ops.disassoc =3D mwifiex_cfg80211_disassociate;
-+		mwifiex_cfg80211_ops.disconnect =3D NULL;
-+		mwifiex_cfg80211_ops.connect =3D NULL;
-+		mwifiex_cfg80211_ops.probe_client =3D
-+			mwifiex_cfg80211_probe_client;
-+	}
- 	wiphy->max_scan_ssids =3D MWIFIEX_MAX_SSID_LIST_LENGTH;
- 	wiphy->max_scan_ie_len =3D MWIFIEX_MAX_VSIE_LEN;
- 	wiphy->mgmt_stypes =3D mwifiex_mgmt_stypes;
-@@ -4428,6 +4752,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter =
-*adapter)
- 			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			   NL80211_FEATURE_NEED_OBSS_SCAN;
-=20
-+	if (adapter->host_mlme)
-+		wiphy->features |=3D NL80211_FEATURE_SAE;
-+
- 	if (ISSUPP_ADHOC_ENABLED(adapter->fw_cap_info))
- 		wiphy->features |=3D NL80211_FEATURE_HT_IBSS;
-=20
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wi=
-reless/marvell/mwifiex/cmdevt.c
-index 3756aa247e77..311af5f40c3e 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -654,7 +654,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 =
-cmd_no,
- 	if (ret) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "PREP_CMD: cmd %#x preparation failed\n",
--			cmd_no);
-+			    cmd_no);
- 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
- 		return -1;
- 	}
-@@ -1477,6 +1477,17 @@ int mwifiex_cmd_get_hw_spec(struct mwifiex_private *=
-priv,
- 	return 0;
- }
-=20
-+static void mwifiex_check_key_api_ver(struct mwifiex_adapter *adapter)
-+{
-+	if (adapter->host_mlme) {
-+		if (adapter->key_api_major_ver !=3D KEY_API_VER_MAJOR_V2)
-+			adapter->host_mlme =3D false;
-+		mwifiex_dbg(adapter, MSG, "host_mlme: %s, key_api: %d\n",
-+			    adapter->host_mlme ? "enable" : "disable",
-+			    adapter->key_api_major_ver);
++		priv->assoc_rsp_size =3D 0;
 +	}
 +}
 +
  /*
-  * This function handles the command response of get hardware
-  * specifications.
-@@ -1586,6 +1597,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *p=
-riv,
- 						    "key_api v%d.%d\n",
- 						    adapter->key_api_major_ver,
- 						    adapter->key_api_minor_ver);
-+					mwifiex_check_key_api_ver(adapter);
- 					break;
- 				case FW_API_VER_ID:
- 					adapter->fw_api_ver =3D
-diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wire=
-less/marvell/mwifiex/decl.h
-index 326ffb05d791..f9b21b13d6c3 100644
---- a/drivers/net/wireless/marvell/mwifiex/decl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-@@ -24,6 +24,18 @@
- #define MWIFIEX_RX_HEADROOM	    64
- #define MAX_TXPD_SZ		    32
- #define INTF_HDR_ALIGN		     4
-+/* frmctl + durationid + addr1 + addr2 + addr3 + seqctl + addr4 */
-+#define MWIFIEX_MGMT_HEADER_LEN   (2 + 2 + 6 + 6 + 6 + 2 + 6)
-+/* 6   =3D auth_alg + auth_transaction + auth_status */
-+#define MWIFIEX_AUTH_BODY_LEN     6
-+
-+#define HOST_MLME_AUTH_PENDING    BIT(0)
-+#define HOST_MLME_AUTH_DONE       BIT(1)
-+
-+#define HOST_MLME_MGMT_MASK       (BIT(IEEE80211_STYPE_AUTH >> 4) | \
-+				   BIT(IEEE80211_STYPE_DEAUTH >> 4) | \
-+				   BIT(IEEE80211_STYPE_DISASSOC >> 4))
-+#define AUTH_TX_DEFAULT_WAIT_TIME 2400
-=20
- #define MWIFIEX_MIN_DATA_HEADER_LEN (MWIFIEX_DMA_ALIGN_SZ + INTF_HDR_ALIGN=
- + \
- 				     MAX_TXPD_SZ)
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wirele=
-ss/marvell/mwifiex/fw.h
-index 8e6db904e5b2..8b22cd993a79 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -209,6 +209,9 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_RANDOM_MAC         (PROPRIETARY_TLV_BASE_ID + 236)
- #define TLV_TYPE_CHAN_ATTR_CFG      (PROPRIETARY_TLV_BASE_ID + 237)
- #define TLV_TYPE_MAX_CONN           (PROPRIETARY_TLV_BASE_ID + 279)
-+#define TLV_TYPE_HOST_MLME          (PROPRIETARY_TLV_BASE_ID + 307)
-+#define TLV_TYPE_SAE_PWE_MODE       (PROPRIETARY_TLV_BASE_ID + 339)
-+
-=20
- #define MWIFIEX_TX_DATA_BUF_SIZE_2K        2048
-=20
-@@ -802,6 +805,11 @@ struct mwifiex_ie_types_ssid_param_set {
- 	u8 ssid[];
- } __packed;
-=20
-+struct mwifiex_ie_types_host_mlme {
-+	struct mwifiex_ie_types_header header;
-+	u8 host_mlme;
-+} __packed;
-+
- struct mwifiex_ie_types_num_probes {
- 	struct mwifiex_ie_types_header header;
- 	__le16 num_probes;
-@@ -905,6 +913,13 @@ struct mwifiex_ie_types_tdls_idle_timeout {
- 	__le16 value;
- } __packed;
-=20
-+#define MWIFIEX_AUTHTYPE_SAE 6
-+
-+struct mwifiex_ie_types_sae_pwe_mode {
-+	struct mwifiex_ie_types_header header;
-+	u8 pwe[];
-+} __packed;
-+
- struct mwifiex_ie_types_rsn_param_set {
- 	struct mwifiex_ie_types_header header;
- 	u8 rsn_ie[];
+  * This function handles the timeout of command sending.
+  *
 diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wire=
 less/marvell/mwifiex/init.c
-index c9c58419c37b..f86a527fd7ca 100644
+index f86a527fd7ca..4326e03a66d3 100644
 --- a/drivers/net/wireless/marvell/mwifiex/init.c
 +++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -81,6 +81,9 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->bcn_avg_factor =3D DEFAULT_BCN_AVG_FACTOR;
- 	priv->data_avg_factor =3D DEFAULT_DATA_AVG_FACTOR;
+@@ -223,6 +223,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter=
+ *adapter)
+ 	adapter->cmd_resp_received =3D false;
+ 	adapter->event_received =3D false;
+ 	adapter->data_received =3D false;
++	adapter->assoc_resp_received =3D false;
 =20
-+	priv->auth_flag =3D 0;
-+	priv->auth_alg =3D 0xFFFF;
-+
- 	priv->sec_info.wep_enabled =3D 0;
- 	priv->sec_info.authentication_mode =3D NL80211_AUTHTYPE_OPEN_SYSTEM;
- 	priv->sec_info.encryption_mode =3D 0;
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wire=
-less/marvell/mwifiex/join.c
-index a6e254a1185c..ef7cc40c3ba4 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -382,7 +382,9 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private=
- *priv,
- 	struct mwifiex_ie_types_ss_param_set *ss_tlv;
- 	struct mwifiex_ie_types_rates_param_set *rates_tlv;
- 	struct mwifiex_ie_types_auth_type *auth_tlv;
-+	struct mwifiex_ie_types_sae_pwe_mode *sae_pwe_tlv;
- 	struct mwifiex_ie_types_chan_list_param_set *chan_tlv;
-+	struct mwifiex_ie_types_host_mlme *host_mlme_tlv;
- 	u8 rates[MWIFIEX_SUPPORTED_RATES];
- 	u32 rates_size;
- 	u16 tmp_cap;
-@@ -448,7 +450,7 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private=
- *priv,
- 	mwifiex_dbg(priv->adapter, INFO, "info: ASSOC_CMD: rates size =3D %d\n",
- 		    rates_size);
+ 	clear_bit(MWIFIEX_SURPRISE_REMOVED, &adapter->work_flags);
 =20
--	/* Add the Authentication type to be used for Auth frames */
-+	/* Add the Authentication type */
- 	auth_tlv =3D (struct mwifiex_ie_types_auth_type *) pos;
- 	auth_tlv->header.type =3D cpu_to_le16(TLV_TYPE_AUTH_TYPE);
- 	auth_tlv->header.len =3D cpu_to_le16(sizeof(auth_tlv->auth_type));
-@@ -460,6 +462,24 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_privat=
-e *priv,
-=20
- 	pos +=3D sizeof(auth_tlv->header) + le16_to_cpu(auth_tlv->header.len);
-=20
-+	if (priv->sec_info.authentication_mode =3D=3D WLAN_AUTH_SAE) {
-+		auth_tlv->auth_type =3D cpu_to_le16(MWIFIEX_AUTHTYPE_SAE);
-+		if (bss_desc->bcn_rsnx_ie &&
-+		    bss_desc->bcn_rsnx_ie->ieee_hdr.len &&
-+		    (bss_desc->bcn_rsnx_ie->data[0] &
-+		    WLAN_RSNX_CAPA_SAE_H2E)) {
-+			sae_pwe_tlv =3D
-+				(struct mwifiex_ie_types_sae_pwe_mode *)pos;
-+			sae_pwe_tlv->header.type =3D
-+				cpu_to_le16(TLV_TYPE_SAE_PWE_MODE);
-+			sae_pwe_tlv->header.len =3D
-+				cpu_to_le16(sizeof(sae_pwe_tlv->pwe[0]));
-+			sae_pwe_tlv->pwe[0] =3D bss_desc->bcn_rsnx_ie->data[0];
-+			pos +=3D sizeof(sae_pwe_tlv->header) +
-+				sizeof(sae_pwe_tlv->pwe[0]);
-+		}
-+	}
-+
- 	if (IS_SUPPORT_MULTI_BANDS(priv->adapter) &&
- 	    !(ISSUPP_11NENABLED(priv->adapter->fw_cap_info) &&
- 	    (!bss_desc->disable_11n) &&
-@@ -491,6 +511,16 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_privat=
-e *priv,
- 			sizeof(struct mwifiex_chan_scan_param_set);
- 	}
-=20
-+	if (priv->adapter->host_mlme) {
-+		host_mlme_tlv =3D (struct mwifiex_ie_types_host_mlme *)pos;
-+		host_mlme_tlv->header.type =3D cpu_to_le16(TLV_TYPE_HOST_MLME);
-+		host_mlme_tlv->header.len =3D
-+			cpu_to_le16(sizeof(host_mlme_tlv->host_mlme));
-+		host_mlme_tlv->host_mlme =3D 1;
-+		pos +=3D sizeof(host_mlme_tlv->header) +
-+			sizeof(host_mlme_tlv->host_mlme);
-+	}
-+
- 	if (!priv->wps.session_enable) {
- 		if (priv->sec_info.wpa_enabled || priv->sec_info.wpa2_enabled)
- 			rsn_ie_len =3D mwifiex_append_rsn_ie_wpa_wpa2(priv, &pos);
-@@ -634,6 +664,7 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private=
- *priv,
- 	u16 cap_info, status_code, aid;
- 	const u8 *ie_ptr;
- 	struct ieee80211_ht_operation *assoc_resp_ht_oper;
-+	struct ieee80211_mgmt *hdr;
-=20
- 	if (!priv->attempted_bss_desc) {
- 		mwifiex_dbg(priv->adapter, ERROR,
-@@ -641,7 +672,19 @@ int mwifiex_ret_802_11_associate(struct mwifiex_privat=
-e *priv,
- 		goto done;
- 	}
-=20
--	assoc_rsp =3D (struct ieee_types_assoc_rsp *) &resp->params;
-+	if (adapter->host_mlme) {
-+		hdr =3D (struct ieee80211_mgmt *)&resp->params;
-+		if (!memcmp(hdr->bssid,
-+			    priv->attempted_bss_desc->mac_address,
-+			    ETH_ALEN))
-+			assoc_rsp =3D (struct ieee_types_assoc_rsp *)
-+				&hdr->u.assoc_resp;
-+		else
-+			assoc_rsp =3D
-+				(struct ieee_types_assoc_rsp *)&resp->params;
-+	} else {
-+		assoc_rsp =3D (struct ieee_types_assoc_rsp *)&resp->params;
-+	}
-=20
- 	cap_info =3D le16_to_cpu(assoc_rsp->cap_info_bitmap);
- 	status_code =3D le16_to_cpu(assoc_rsp->status_code);
-@@ -778,7 +821,8 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private=
- *priv,
-=20
- 	priv->adapter->dbg.num_cmd_assoc_success++;
-=20
--	mwifiex_dbg(priv->adapter, INFO, "info: ASSOC_RESP: associated\n");
-+	mwifiex_dbg(priv->adapter, MSG, "assoc: associated with %pM\n",
-+		    priv->attempted_bss_desc->mac_address);
-=20
- 	/* Add the ra_list here for infra mode as there will be only 1 ra
- 	   always */
-@@ -1491,6 +1535,20 @@ int mwifiex_deauthenticate(struct mwifiex_private *p=
-riv, u8 *mac)
- 	if (!priv->media_connected)
- 		return 0;
-=20
-+	if (priv->adapter->host_mlme) {
-+		priv->auth_flag =3D 0;
-+		priv->auth_alg =3D 0xFFFF;
-+		priv->host_mlme_reg =3D false;
-+		priv->mgmt_frame_mask =3D 0;
-+		if (mwifiex_send_cmd(priv, HostCmd_CMD_MGMT_FRAME_REG,
-+				     HostCmd_ACT_GEN_SET, 0,
-+				     &priv->mgmt_frame_mask, false)) {
-+			mwifiex_dbg(priv->adapter, ERROR,
-+				    "could not unregister mgmt frame rx\n");
-+			return -1;
-+		}
-+	}
-+
- 	switch (priv->bss_mode) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_P2P_CLIENT:
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wire=
-less/marvell/mwifiex/main.h
-index d263eae6078c..83449ad84d15 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -384,6 +384,7 @@ struct ieee_types_aid {
-=20
- struct mwifiex_bssdescriptor {
- 	u8 mac_address[ETH_ALEN];
-+	struct cfg80211_bss *bss;
- 	struct cfg80211_ssid ssid;
- 	u32 privacy;
- 	s32 rssi;
-@@ -426,6 +427,8 @@ struct mwifiex_bssdescriptor {
- 	u16 wpa_offset;
- 	struct ieee_types_generic *bcn_rsn_ie;
- 	u16 rsn_offset;
-+	struct ieee_types_generic *bcn_rsnx_ie;
-+	u16 rsnx_offset;
- 	struct ieee_types_generic *bcn_wapi_ie;
- 	u16 wapi_offset;
- 	u8 *beacon_buf;
-@@ -527,6 +530,8 @@ struct mwifiex_private {
- 	u8 bss_priority;
- 	u8 bss_num;
- 	u8 bss_started;
-+	u8 auth_flag;
-+	u16 auth_alg;
- 	u8 frame_type;
- 	u8 curr_addr[ETH_ALEN];
- 	u8 media_connected;
-@@ -649,6 +654,7 @@ struct mwifiex_private {
- 	u16 gen_idx;
- 	u8 ap_11n_enabled;
- 	u8 ap_11ac_enabled;
-+	bool host_mlme_reg;
- 	u32 mgmt_frame_mask;
- 	struct mwifiex_roc_cfg roc_cfg;
- 	bool scan_aborting;
-@@ -998,6 +1004,7 @@ struct mwifiex_adapter {
- 	bool is_up;
-=20
- 	bool ext_scan;
-+	bool host_mlme;
- 	u8 fw_api_ver;
- 	u8 key_api_major_ver, key_api_minor_ver;
- 	u8 max_p2p_conn, max_sta_conn;
-@@ -1063,6 +1070,9 @@ int mwifiex_recv_packet(struct mwifiex_private *priv,=
- struct sk_buff *skb);
- int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
- 			    struct sk_buff *skb);
-=20
-+void mwifiex_host_mlme_disconnect(struct mwifiex_private *priv,
-+				  u16 reason_code, u8 *sa);
-+
- int mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 				struct sk_buff *skb);
-=20
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wire=
-less/marvell/mwifiex/scan.c
-index 72904c275461..7ecff7ce06e4 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1383,6 +1383,12 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_a=
-dapter *adapter,
- 			bss_entry->rsn_offset =3D (u16) (current_ptr -
- 							bss_entry->beacon_buf);
- 			break;
-+		case WLAN_EID_RSNX:
-+			bss_entry->bcn_rsnx_ie =3D
-+				(struct ieee_types_generic *)current_ptr;
-+			bss_entry->rsnx_offset =3D
-+				(u16)(current_ptr - bss_entry->beacon_buf);
-+			break;
- 		case WLAN_EID_BSS_AC_ACCESS_DELAY:
- 			bss_entry->bcn_wapi_ie =3D
- 				(struct ieee_types_generic *) current_ptr;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wire=
-less/marvell/mwifiex/sdio.c
-index 6462a0ffe698..f5039d158f46 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -331,6 +331,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8786 =3D {
- 	.can_dump_fw =3D false,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D false,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 =3D {
-@@ -346,6 +347,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8787 =3D {
- 	.can_dump_fw =3D false,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 =3D {
-@@ -361,6 +363,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8797 =3D {
- 	.can_dump_fw =3D false,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 =3D {
-@@ -376,6 +379,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8897 =3D {
- 	.can_dump_fw =3D true,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8977 =3D {
-@@ -392,6 +396,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8977 =3D {
- 	.fw_dump_enh =3D true,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8978 =3D {
-@@ -408,6 +413,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8978 =3D {
- 	.fw_dump_enh =3D true,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D true,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8997 =3D {
-@@ -425,6 +431,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8997 =3D {
- 	.fw_dump_enh =3D true,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 =3D {
-@@ -440,6 +447,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8887 =3D {
- 	.can_dump_fw =3D false,
- 	.can_auto_tdls =3D true,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8987 =3D {
-@@ -456,6 +464,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8987 =3D {
- 	.fw_dump_enh =3D true,
- 	.can_auto_tdls =3D true,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 =3D {
-@@ -471,6 +480,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd=
-8801 =3D {
- 	.can_dump_fw =3D false,
- 	.can_auto_tdls =3D false,
- 	.can_ext_scan =3D true,
-+	.host_mlme =3D false,
- };
-=20
- static struct memory_type_mapping generic_mem_type_map[] =3D {
-@@ -563,6 +573,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct=
- sdio_device_id *id)
- 		card->fw_dump_enh =3D data->fw_dump_enh;
- 		card->can_auto_tdls =3D data->can_auto_tdls;
- 		card->can_ext_scan =3D data->can_ext_scan;
-+		card->host_mlme =3D data->host_mlme;
- 		INIT_WORK(&card->work, mwifiex_sdio_work);
- 	}
-=20
-@@ -2493,6 +2504,8 @@ static int mwifiex_register_dev(struct mwifiex_adapte=
-r *adapter)
- 		adapter->num_mem_types =3D ARRAY_SIZE(mem_type_mapping_tbl);
- 	}
-=20
-+	adapter->host_mlme =3D card->host_mlme;
-+
- 	return 0;
- }
-=20
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wire=
-less/marvell/mwifiex/sdio.h
-index b86a9263a6a8..4f253d8cae42 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -255,6 +255,7 @@ struct sdio_mmc_card {
- 	bool fw_dump_enh;
- 	bool can_auto_tdls;
- 	bool can_ext_scan;
-+	bool host_mlme;
-=20
- 	struct mwifiex_sdio_mpa_tx mpa_tx;
- 	struct mwifiex_sdio_mpa_rx mpa_rx;
-@@ -278,6 +279,7 @@ struct mwifiex_sdio_device {
- 	bool fw_dump_enh;
- 	bool can_auto_tdls;
- 	bool can_ext_scan;
-+	bool host_mlme;
- };
-=20
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net=
-/wireless/marvell/mwifiex/sta_event.c
-index df9cdd10a494..69426ddd9c3a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -135,6 +135,9 @@ void mwifiex_reset_connect_state(struct mwifiex_private=
- *priv, u16 reason_code,
-=20
- 	priv->media_connected =3D false;
-=20
-+	priv->auth_flag =3D 0;
-+	priv->auth_alg =3D 0xFFFF;
-+
- 	priv->scan_block =3D false;
- 	priv->port_open =3D false;
-=20
-@@ -999,10 +1002,17 @@ int mwifiex_process_sta_event(struct mwifiex_private=
- *priv)
- 	case EVENT_REMAIN_ON_CHAN_EXPIRED:
- 		mwifiex_dbg(adapter, EVENT,
- 			    "event: Remain on channel expired\n");
--		cfg80211_remain_on_channel_expired(&priv->wdev,
--						   priv->roc_cfg.cookie,
--						   &priv->roc_cfg.chan,
--						   GFP_ATOMIC);
-+
-+		if (adapter->host_mlme &&
-+		    (priv->auth_flag & HOST_MLME_AUTH_PENDING)) {
-+			priv->auth_flag =3D 0;
-+			priv->auth_alg =3D 0xFFFF;
-+		} else {
-+			cfg80211_remain_on_channel_expired(&priv->wdev,
-+							   priv->roc_cfg.cookie,
-+							   &priv->roc_cfg.chan,
-+							   GFP_ATOMIC);
-+		}
-=20
- 		memset(&priv->roc_cfg, 0x00, sizeof(struct mwifiex_roc_cfg));
-=20
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net=
-/wireless/marvell/mwifiex/sta_ioctl.c
-index a2ad2b53f016..046541713318 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -136,6 +136,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *p=
-riv,
- 	const struct cfg80211_bss_ies *ies;
-=20
- 	rcu_read_lock();
-+	bss_desc->bss =3D bss;
- 	ies =3D rcu_dereference(bss->ies);
- 	beacon_ie =3D kmemdup(ies->data, ies->len, GFP_ATOMIC);
- 	beacon_ie_len =3D ies->len;
-@@ -339,7 +340,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, str=
-uct cfg80211_bss *bss,
- 			ret =3D mwifiex_associate(priv, bss_desc);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wire=
+less/marvell/mwifiex/main.c
+index 3bebb6c37604..1dac77946813 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -365,6 +365,12 @@ int mwifiex_main_process(struct mwifiex_adapter *adapt=
+er)
+ 			}
  		}
 =20
--		if (bss)
-+		if (bss && !priv->adapter->host_mlme)
- 			cfg80211_put_bss(priv->adapter->wiphy, bss);
- 	} else {
- 		/* Adhoc mode */
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_tx.c b/drivers/net/wi=
-reless/marvell/mwifiex/sta_tx.c
-index 70c2790b8e35..9d0ef04ebe02 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_tx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_tx.c
-@@ -36,7 +36,7 @@ void mwifiex_process_sta_txpd(struct mwifiex_private *pri=
-v,
- 	struct txpd *local_tx_pd;
- 	struct mwifiex_txinfo *tx_info =3D MWIFIEX_SKB_TXCB(skb);
- 	unsigned int pad;
--	u16 pkt_type, pkt_offset;
-+	u16 pkt_type, pkt_length, pkt_offset;
- 	int hroom =3D adapter->intf_hdr_len;
-=20
- 	pkt_type =3D mwifiex_is_skb_mgmt_frame(skb) ? PKT_TYPE_MGMT : 0;
-@@ -49,9 +49,10 @@ void mwifiex_process_sta_txpd(struct mwifiex_private *pr=
-iv,
- 	memset(local_tx_pd, 0, sizeof(struct txpd));
- 	local_tx_pd->bss_num =3D priv->bss_num;
- 	local_tx_pd->bss_type =3D priv->bss_type;
--	local_tx_pd->tx_pkt_length =3D cpu_to_le16((u16)(skb->len -
--						       (sizeof(struct txpd) +
--							pad)));
-+	pkt_length =3D (u16)(skb->len - (sizeof(struct txpd) + pad));
-+	if (pkt_type =3D=3D PKT_TYPE_MGMT)
-+		pkt_length -=3D MWIFIEX_MGMT_FRAME_HEADER_SIZE;
-+	local_tx_pd->tx_pkt_length =3D cpu_to_le16(pkt_length);
-=20
- 	local_tx_pd->priority =3D (u8) skb->priority;
- 	local_tx_pd->pkt_delay_2ms =3D
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/w=
-ireless/marvell/mwifiex/uap_cmd.c
-index e78a201cd150..eb0b8016d43d 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -743,6 +743,29 @@ mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command =
-*cmd, u16 cmd_action,
- 	return 0;
- }
-=20
-+/* This function prepares AP start up command with or without host MLME
-+ */
-+static int mwifiex_cmd_uap_bss_start(struct mwifiex_private *priv,
-+				     struct host_cmd_ds_command *cmd)
-+{
-+	struct mwifiex_ie_types_host_mlme *tlv;
-+
-+	cmd->command =3D cpu_to_le16(HostCmd_CMD_UAP_BSS_START);
-+	cmd->size =3D S_DS_GEN;
-+
-+	if (priv->adapter->host_mlme) {
-+		tlv =3D (struct mwifiex_ie_types_host_mlme *)((u8 *)cmd + cmd->size);
-+		tlv->header.type =3D cpu_to_le16(TLV_TYPE_HOST_MLME);
-+		tlv->header.len =3D cpu_to_le16(sizeof(tlv->host_mlme));
-+		tlv->host_mlme =3D 1;
-+		cmd->size +=3D sizeof(struct mwifiex_ie_types_host_mlme);
-+	}
-+
-+	cmd->size =3D cpu_to_le16(cmd->size);
-+
-+	return 0;
-+}
-+
- /* This function prepares AP specific deauth command with mac supplied in
-  * function parameter.
-  */
-@@ -777,6 +800,9 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *pri=
-v, u16 cmd_no,
- 			return -1;
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
-+		if (mwifiex_cmd_uap_bss_start(priv, cmd))
-+			return -1;
-+		break;
- 	case HostCmd_CMD_UAP_BSS_STOP:
- 	case HOST_CMD_APCMD_SYS_RESET:
- 	case HOST_CMD_APCMD_STA_LIST:
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wire=
-less/marvell/mwifiex/util.c
-index 745b1d925b21..23675c1cecae 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -370,6 +370,46 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv=
-, u8 *payload, u16 len,
-=20
- 	return 0;
- }
-+
-+/* This function sends deauth packet to the kernel. */
-+void mwifiex_host_mlme_disconnect(struct mwifiex_private *priv,
-+				  u16 reason_code, u8 *sa)
-+{
-+	u8 broadcast_addr[ETH_ALEN] =3D {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+	u8 frame_buf[100];
-+	struct ieee80211_mgmt *mgmt =3D (struct ieee80211_mgmt *)frame_buf;
-+
-+	memset(frame_buf, 0, sizeof(frame_buf));
-+	mgmt->frame_control =3D (__force __le16)IEEE80211_STYPE_DEAUTH;
-+	mgmt->duration =3D 0;
-+	mgmt->seq_ctrl =3D 0;
-+	mgmt->u.deauth.reason_code =3D (__force __le16)reason_code;
-+
-+	if (GET_BSS_ROLE(priv) =3D=3D MWIFIEX_BSS_ROLE_STA) {
-+		memcpy(mgmt->da, broadcast_addr, ETH_ALEN);
-+		memcpy(mgmt->sa,
-+		       priv->curr_bss_params.bss_descriptor.mac_address,
-+		       ETH_ALEN);
-+		memcpy(mgmt->bssid, priv->cfg_bssid, ETH_ALEN);
-+		priv->auth_flag =3D 0;
-+		priv->auth_alg =3D 0xFFFF;
-+	} else {
-+		memcpy(mgmt->da, priv->curr_addr, ETH_ALEN);
-+		memcpy(mgmt->sa, sa, ETH_ALEN);
-+		memcpy(mgmt->bssid, priv->curr_addr, ETH_ALEN);
-+	}
-+
-+	if (GET_BSS_ROLE(priv) !=3D MWIFIEX_BSS_ROLE_UAP) {
-+		wiphy_lock(priv->wdev.wiphy);
-+		cfg80211_rx_mlme_mgmt(priv->netdev, frame_buf, 26);
-+		wiphy_unlock(priv->wdev.wiphy);
-+	} else {
-+		cfg80211_rx_mgmt(&priv->wdev,
-+				 priv->bss_chandef.chan->center_freq,
-+				 0, frame_buf, 26, 0);
-+	}
-+}
-+
- /*
-  * This function processes the received management packet and send it
-  * to the kernel.
-@@ -417,6 +457,39 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *pr=
-iv,
- 	pkt_len -=3D ETH_ALEN;
- 	rx_pd->rx_pkt_length =3D cpu_to_le16(pkt_len);
-=20
-+	if (priv->host_mlme_reg &&
-+	    (GET_BSS_ROLE(priv) !=3D MWIFIEX_BSS_ROLE_UAP) &&
-+	    (ieee80211_is_auth(ieee_hdr->frame_control) ||
-+	     ieee80211_is_deauth(ieee_hdr->frame_control) ||
-+	     ieee80211_is_disassoc(ieee_hdr->frame_control))) {
-+		if (ieee80211_is_auth(ieee_hdr->frame_control)) {
-+			if (priv->auth_flag & HOST_MLME_AUTH_PENDING) {
-+				if (priv->auth_alg !=3D WLAN_AUTH_SAE) {
-+					priv->auth_flag &=3D
-+						~HOST_MLME_AUTH_PENDING;
-+					priv->auth_flag |=3D
-+						HOST_MLME_AUTH_DONE;
-+				}
-+			} else {
-+				return 0;
-+			}
-+
-+			mwifiex_dbg(priv->adapter, MSG,
-+				    "auth: receive authentication from %pM\n",
-+				    ieee_hdr->addr3);
-+		} else {
-+			if (!priv->wdev.connected)
-+				return 0;
-+
-+			if (ieee80211_is_deauth(ieee_hdr->frame_control)) {
-+				priv->auth_flag =3D 0;
-+				priv->auth_alg =3D 0xFFFF;
-+			}
++		/* Chekc for Assoc Resp */
++		if (adapter->assoc_resp_received) {
++			adapter->assoc_resp_received =3D false;
++			mwifiex_process_assoc_resp(adapter);
 +		}
 +
-+		cfg80211_rx_mlme_mgmt(priv->netdev, skb->data, pkt_len);
-+	}
-+
- 	cfg80211_rx_mgmt(&priv->wdev, priv->roc_cfg.chan.center_freq,
- 			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
- 			 0);
+ 		/* Check if we need to confirm Sleep Request
+ 		   received previously */
+ 		if (adapter->ps_state =3D=3D PS_STATE_PRE_SLEEP)
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wire=
+less/marvell/mwifiex/main.h
+index 83449ad84d15..ae4b44ad6c50 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -615,6 +615,7 @@ struct mwifiex_private {
+ #define MWIFIEX_ASSOC_RSP_BUF_SIZE  500
+ 	u8 assoc_rsp_buf[MWIFIEX_ASSOC_RSP_BUF_SIZE];
+ 	u32 assoc_rsp_size;
++	struct cfg80211_bss *req_bss;
+=20
+ #define MWIFIEX_GENIE_BUF_SIZE      256
+ 	u8 gen_ie_buf[MWIFIEX_GENIE_BUF_SIZE];
+@@ -915,6 +916,7 @@ struct mwifiex_adapter {
+ 	u8 cmd_resp_received;
+ 	u8 event_received;
+ 	u8 data_received;
++	u8 assoc_resp_received;
+ 	u16 seq_num;
+ 	struct cmd_ctrl_node *cmd_pool;
+ 	struct cmd_ctrl_node *curr_cmd;
+@@ -1104,6 +1106,7 @@ void mwifiex_insert_cmd_to_pending_q(struct mwifiex_a=
+dapter *adapter,
+=20
+ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter);
+ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter);
++void mwifiex_process_assoc_resp(struct mwifiex_adapter *adapter);
+ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
+ 			     struct sk_buff *skb);
+ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
 --=20
 2.25.1
 
 
---_000_PA4PR04MB96386AE515E67332D246CF22D1DBAPA4PR04MB9638eurp_
+--_000_PA4PR04MB9638D34DE94CB6B24152E06DD1DBAPA4PR04MB9638eurp_
 Content-Disposition: attachment; filename="winmail.dat"
 Content-Transfer-Encoding: base64
 Content-Type: application/ms-tnef; name="winmail.dat"
 
-eJ8+IqcLAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAAEEyODE2OEFB
-Nzk0QTUwNDlBNzlFN0YxODI5N0Y1MkI2ACYHAQ2ABAACAAAAAgACAAEFgAMADgAAAOcHCgAUAAMA
-IgAEAAUAOgEBIIADAA4AAADnBwoAFAADACIABAAFADoBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
-YWlsLk5vdGUAMQgBBIABAD8AAABbUEFUQ0ggdjUgMS82XSB3aWZpOiBtd2lmaWV4OiBhZGRlZCBj
-b2RlIHRvIHN1cHBvcnQgaG9zdCBtbG1lLgDpFAELgAEAIQAAAEEyODE2OEFBNzk0QTUwNDlBNzlF
-N0YxODI5N0Y1MkI2ACYHAQOQBgDkZwAAWgAAAAIBfwABAAAAUQAAADxQQTRQUjA0TUI5NjM4NkFF
-NTE1RTY3MzMyRDI0NkNGMjJEMURCQUBQQTRQUjA0TUI5NjM4LmV1cnByZDA0LnByb2Qub3V0bG9v
-ay5jb20+AAAAAAsAHw4AAAAAAgEJEAEAAACLOQAAhzkAAFq1AABMWkZ1JHvfw2EACmZiaWQEAABj
-Y8BwZzEyNTIA/gND8HRleHQB9wKkA+MCAARjaArAc2V0MCDvB20CgwBQEU0yCoAGtAKAln0KgAjI
-OwliMTkOwL8JwxZyCjIWcQKAFWIqCbBzCfAEkGF0BbIOUANgc6JvAYAgRXgRwW4YMF0GUnYEkBe2
-AhByAMB0fQhQbhoxECAFwAWgG2RkmiADUiAQIheyXHYIkOR3awuAZDUdUwTwB0ANF3AwCnEX8mJr
-bWsGcwGQACAgQk1fQuBFR0lOfQr8AfEL8MAyIDEuIEYFsR9htHRpAiAgBGIccGkR8FB0LlxsC4Bl
-CoAy2SGwVGgEABxwZRiACHDrGeAkAWEigHUfYBxwBbHwV1BBMyM2JcAhwCLwjG13CsAZ4GtleSTQ
-+HBpIBoxAJAiYSGAJAFvGFAJgBxSBbF0I/kjNjS/I8IZ4AWgIrEkAQIgbCcw/wnwAaAecBxgAHAc
-YBAgH2AHHFED8CkQIElXNDHqNiM2NSPPIA3hK7QlUs5vKRAbsiPwcHMjNiNFSFNpZxhQZC0ZMGaA
-LWJ5OiBEYR1gBRxgTAuAIDx5dS0JEdBvLiNRQG54cNIuBaBtPiNFLTTAI0WUIC41cC8YUHQvA/A3
-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
-AGQAIABMAGkAbgAAAB8AHwwBAAAAJgAAAHkAdQAtAGgAYQBvAC4AbABpAG4AQABuAHgAcAAuAGMA
-bwBtAAAAAAAfAB4MAQAAAAoAAABTAE0AVABQAAAAAAACARkMAQAAAFwAAAAAAAAAgSsfpL6jEBmd
-bgDdAQ9UAgAAAIBEAGEAdgBpAGQAIABMAGkAbgAAAFMATQBUAFAAAAB5AHUALQBoAGEAbwAuAGwA
-aQBuAEAAbgB4AHAALgBjAG8AbQAAAB8AAV0BAAAAJgAAAHkAdQAtAGgAYQBvAC4AbABpAG4AQABu
-AHgAcAAuAGMAbwBtAAAAAAALAEA6AQAAAB8AGgABAAAAEgAAAEkAUABNAC4ATgBvAHQAZQAAAAAA
-AwDxPwQEAAALAEA6AQAAAAMA/T/kBAAAAgELMAEAAAAQAAAAooFoqnlKUEmnnn8YKX9StgMAFwAB
-AAAAQAA5AADeAEYGA9oBQAAIMDJySEYGA9oBCwApAAAAAAAfANk/AQAAAAACAAAxAC4AIABGAG8A
-cgAgAHMAdABhAHQAaQBvAG4AIABtAG8AZABlACAAZgBpAHIAcwB0AC4ADQAKADIALgAgAFQAaABp
-AHMAIABmAGUAYQB0AHUAcgBlACAAaQBzACAAYQAgAG0AdQBzAHQAIABmAG8AcgAgAFcAUABBADMA
-LgANAAoAMwAuACAARgBpAHIAbQB3AGEAcgBlACAAawBlAHkAIABhAHAAaQAgAHYAZQByAHMAaQBv
-AG4AIAAyACAAaQBzACAAbgBlAGUAZABlAGQAIABmAG8AcgAgAHQAaABpAHMAIABmAGUAYQB0AHUA
-cgBlAC4ADQAKADQALgAgAFQAaABlACAAYwBvAGQAZQAgAGkAcwAgAG8AbgBsAHkAIABlAG4AYQBi
-AGwAZQBkACAAYQBuAGQAIAB0AGUAcwB0AGUAZAAgAHcAaQB0AGgAIABJAFcANAAxADYALgANAAoA
-NQAuACAAVABoAGkAcwAgAGYAZQBhAHQAdQByAGUAIABpAHMAIABkAGkAcwBhAGIAbABlAGQAIABm
-AG8AcgAgAG8AdABoAGUAcgAgAGMAaABpAHAAcwAuAA0ACgANAAoAUwBpAGcAbgBlAGQALQBvAGYA
-ZgAtAGIAeQA6ACAARABhAHYAaQBkACAATABpAG4AIAA8AHkAdQAtAGgAYQAAAAsAAIAIIAYAAAAA
-AMAAAAAAAABGAAAAABSFAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAHgAAAGEAYwBjAGUA
-cAB0AGwAYQBuAGcAdQBhAGcAZQAAAAAAAQAAABoAAAB6AGgALQBUAFcALAAgAGUAbgAtAFUAUwAA
-AAAAAwAAgAggBgAAAAAAwAAAAAAAAEYBAAAAMgAAAEUAeABjAGgAYQBuAGcAZQBBAHAAcABsAGkA
-YwBhAHQAaQBvAG4ARgBsAGEAZwBzAAAAAAAgAAAASAAAgAggBgAAAAAAwAAAAAAAAEYBAAAAIgAA
-AE4AZQB0AHcAbwByAGsATQBlAHMAcwBhAGcAZQBJAGQAAAAAADlmGkt/6BtLGo0I29EdaMofAACA
-E4/yQfSDFEGlhO7bWmsL/wEAAAAWAAAAQwBsAGkAZQBuAHQASQBuAGYAbwAAAAAAAQAAACoAAABD
-AGwAaQBlAG4AdAA9AE0AUwBFAHgAYwBoAGEAbgBnAGUAUgBQAEMAAAAAAB8A+j8BAAAAFAAAAEQA
-YQB2AGkAZAAgAEwAaQBuAAAAHwA3AAEAAAB+AAAAWwBQAEEAVABDAEgAIAB2ADUAIAAxAC8ANgBd
-ACAAdwBpAGYAaQA6ACAAbQB3AGkAZgBpAGUAeAA6ACAAYQBkAGQAZQBkACAAYwBvAGQAZQAgAHQA
-bwAgAHMAdQBwAHAAbwByAHQAIABoAG8AcwB0ACAAbQBsAG0AZQAuAAAAAAAfAD0AAQAAAAIAAAAA
-AAAAAwA2AAAAAAACAXEAAQAAABYAAAAB2gMGRNgOJbIcTGlOKq6KQ2YmIkhvAAAfAHAAAQAAAH4A
-AABbAFAAQQBUAEMASAAgAHYANQAgADEALwA2AF0AIAB3AGkAZgBpADoAIABtAHcAaQBmAGkAZQB4
-ADoAIABhAGQAZABlAGQAIABjAG8AZABlACAAdABvACAAcwB1AHAAcABvAHIAdAAgAGgAbwBzAHQA
-IABtAGwAbQBlAC4AAAAAAB8ANRABAAAAogAAADwAUABBADQAUABSADAANABNAEIAOQA2ADMAOAA2
-AEEARQA1ADEANQBFADYANwAzADMAMgBEADIANAA2AEMARgAyADIARAAxAEQAQgBBAEAAUABBADQA
-UABSADAANABNAEIAOQA2ADMAOAAuAGUAdQByAHAAcgBkADAANAAuAHAAcgBvAGQALgBvAHUAdABs
-AG8AbwBrAC4AYwBvAG0APgAAAAAAAwDeP59OAAADABMSAAAAAAIBAIATj/JB9IMUQaWE7ttaawv/
-AQAAAC4AAABIAGUAYQBkAGUAcgBCAG8AZAB5AEYAcgBhAGcAbQBlAG4AdABMAGkAcwB0AAAAAAAB
-AAAAIgAAAAEACgAAAAQAAAAAAAAAFAAAAAAAAAAAAAAA/////wAAAAAAAAsAAIATj/JB9IMUQaWE
-7ttaawv/AQAAABwAAABIAGEAcwBRAHUAbwB0AGUAZABUAGUAeAB0AAAAAAAAAAsAAIATj/JB9IMU
-QaWE7ttaawv/AQAAACgAAABJAHMAUQB1AG8AdABlAGQAVABlAHgAdABDAGgAYQBuAGcAZQBkAAAA
-AAAAAEAABzBWYcRFBgPaAQIBCwABAAAAEAAAAKKBaKp5SlBJp55/GCl/UrYDACYAAAAAAAsABgwA
-AAAAAgEQMAEAAABGAAAAAAAAAMilJbGII5JKg6pkkAqkqyoHAE8+IND8Jt1ErmEHWjoK3ScAAAAA
-AQsAAE8+IND8Jt1ErmEHWjoK3ScAAiEalQsAAAAAAgETMAEAAAAQAAAADiWyHExpTiquikNmJiJI
-bwIBFDABAAAADAAAALoJAACS7U1FMQAAAAMAWzMBAAAAAwBaNgAAAAADAGg2DQAAAAsA+jYBAAAA
-HwD4PwEAAAAUAAAARABhAHYAaQBkACAATABpAG4AAAAfACJAAQAAAAYAAABFAFgAAAAAAB8AI0AB
-AAAA/AAAAC8ATwA9AEUAWABDAEgAQQBOAEcARQBMAEEAQgBTAC8ATwBVAD0ARQBYAEMASABBAE4A
-RwBFACAAQQBEAE0ASQBOAEkAUwBUAFIAQQBUAEkAVgBFACAARwBSAE8AVQBQACAAKABGAFkARABJ
-AEIATwBIAEYAMgAzAFMAUABEAEwAVAApAC8AQwBOAD0AUgBFAEMASQBQAEkARQBOAFQAUwAvAEMA
-TgA9AEMAQgAwADQARgA2ADUAOQAxAEEARAA2ADQANAA2AEIAOABBAEEAQgBDADkAQgA2ADUARABB
-AEUAOQAyADAANwAtAE4AWABGADUANwA2ADIANAAAAB8AJEABAAAABgAAAEUAWAAAAAAAHwAlQAEA
-AAD8AAAALwBPAD0ARQBYAEMASABBAE4ARwBFAEwAQQBCAFMALwBPAFUAPQBFAFgAQwBIAEEATgBH
-AEUAIABBAEQATQBJAE4ASQBTAFQAUgBBAFQASQBWAEUAIABHAFIATwBVAFAAIAAoAEYAWQBEAEkA
-QgBPAEgARgAyADMAUwBQAEQATABUACkALwBDAE4APQBSAEUAQwBJAFAASQBFAE4AVABTAC8AQwBO
-AD0AQwBCADAANABGADYANQA5ADEAQQBEADYANAA0ADYAQgA4AEEAQQBCAEMAOQBCADYANQBEAEEA
-RQA5ADIAMAA3AC0ATgBYAEYANQA3ADYAMgA0AAAAHwAwQAEAAAAUAAAARABhAHYAaQBkACAATABp
-AG4AAAAfADFAAQAAABQAAABEAGEAdgBpAGQAIABMAGkAbgAAAB8AOEABAAAAFAAAAEQAYQB2AGkA
-ZAAgAEwAaQBuAAAAHwA5QAEAAAAUAAAARABhAHYAaQBkACAATABpAG4AAAADAFlAAAAAAAMAWkAA
-AAAAAwA3UAEAAAADAAlZAQAAAB8ACl0BAAAAJgAAAHkAdQAtAGgAYQBvAC4AbABpAG4AQABuAHgA
-cAAuAGMAbwBtAAAAAAAfAAtdAQAAACYAAAB5AHUALQBoAGEAbwAuAGwAaQBuAEAAbgB4AHAALgBj
-AG8AbQAAAAAAAgEVXQEAAAASAAAAAtOhbmgrvG9MqSzZnFwwFjUBAAACARZdAQAAABIAAAAC06Fu
-aCu8b0ypLNmcXDAWNQEAAAMAAIBQ42MLzJzQEbzbAIBfzM4EAQAAACQAAABJAG4AZABlAHgAaQBu
-AGcARQByAHIAbwByAEMAbwBkAGUAAAAbAAAAHwAAgFDjYwvMnNARvNsAgF/MzgQBAAAAKgAAAEkA
-bgBkAGUAeABpAG4AZwBFAHIAcgBvAHIATQBlAHMAcwBhAGcAZQAAAAAAAQAAAHAAAABJAG4AZABl
-AHgAaQBuAGcAIABQAGUAbgBkAGkAbgBnACAAdwBoAGkAbABlACAAQgBpAGcARgB1AG4AbgBlAGwA
-UABPAEkASQBzAFUAcABUAG8ARABhAHQAZQAgAGkAcwAgAGYAYQBsAHMAZQAuAAAACwAAgFDjYwvM
-nNARvNsAgF/MzgQBAAAAJgAAAEkAcwBQAGUAcgBtAGEAbgBlAG4AdABGAGEAaQBsAHUAcgBlAAAA
-AAAAAAAAHwAAgB+k6zOoei5Cvnt54amOVLMBAAAAOAAAAEMAbwBuAHYAZQByAHMAYQB0AGkAbwBu
-AEkAbgBkAGUAeABUAHIAYQBjAGsAaQBuAGcARQB4AAAAAQAAAEQBAABJAEkAPQBbAEMASQBEAD0A
-MQBjAGIAMgAyADUAMABlAC0ANgA5ADQAYwAtADIAYQA0AGUALQBhAGUAOABhAC0ANAAzADYANgAy
-ADYAMgAyADQAOAA2AGYAOwBJAEQAWABIAEUAQQBEAD0ARABBADAAMwAwADYANAA0AEQAOAA7AEkA
-RABYAEMATwBVAE4AVAA9ADEAXQA7AFQARgBSAD0AVABoAHIAZQBhAGQARgBvAHIAawBpAG4AZwBJ
-AHMARABpAHMAYQBiAGwAZQBkADsAVgBlAHIAcwBpAG8AbgA9AFYAZQByAHMAaQBvAG4AIAAxADUA
-LgAyADAAIAAoAEIAdQBpAGwAZAAgADYAOQAzADMALgAwACkALAAgAFMAdABhAGcAZQA9AEgANAA7
-AFUAUAA9ADEAMAA7AEQAUAA9ADEAAABAAACACCAGAAAAAADAAAAAAAAARgAAAAC/hQAAwEnbRAYD
-2gELAACACCAGAAAAAADAAAAAAAAARgAAAACChQAAAAAAAAIBAIAIIAYAAAAAAMAAAAAAAABGAQAA
-ADYAAABJAG4AVAByAGEAbgBzAGkAdABNAGUAcwBzAGEAZwBlAEMAbwByAHIAZQBsAGEAdABvAHIA
-AAAAAAEAAAAQAAAAuLmepnutJ0mXQZWtCd4nggMADTT9PwAAHwAAgIYDAgAAAAAAwAAAAAAAAEYB
-AAAALgAAAGEAdQB0AGgAZQBuAHQAaQBjAGEAdABpAG8AbgAtAHIAZQBzAHUAbAB0AHMAAAAAAAEA
-AACyAAAAZABrAGkAbQA9AG4AbwBuAGUAIAAoAG0AZQBzAHMAYQBnAGUAIABuAG8AdAAgAHMAaQBn
-AG4AZQBkACkAIABoAGUAYQBkAGUAcgAuAGQAPQBuAG8AbgBlADsAZABtAGEAcgBjAD0AbgBvAG4A
-ZQAgAGEAYwB0AGkAbwBuAD0AbgBvAG4AZQAgAGgAZQBhAGQAZQByAC4AZgByAG8AbQA9AG4AeABw
-AC4AYwBvAG0AOwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAIAAAAHgALQBtAHMALQBoAGEA
-cwAtAGEAdAB0AGEAYwBoAAAAAQAAAAIAAAAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAALgAA
-AHgALQBtAHMALQBwAHUAYgBsAGkAYwB0AHIAYQBmAGYAaQBjAHQAeQBwAGUAAAAAAAEAAAAMAAAA
-RQBtAGEAaQBsAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAANgAAAHgALQBtAHMALQB0AHIAYQBm
-AGYAaQBjAHQAeQBwAGUAZABpAGEAZwBuAG8AcwB0AGkAYwAAAAAAAQAAAEgAAABQAEEANABQAFIA
-MAA0AE0AQgA5ADYAMwA4ADoARQBFAF8AfABEAEIAOQBQAFIAMAA0AE0AQgA4ADIAMwA2ADoARQBF
-AF8AAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAABQAAAAeAAtAG0AcwAtAG8AZgBmAGkAYwBlADMA
-NgA1AC0AZgBpAGwAdABlAHIAaQBuAGcALQBjAG8AcgByAGUAbABhAHQAaQBvAG4ALQBpAGQAAAAB
-AAAASgAAADQAYgAxAGEANgA2ADMAOQAtAGUAOAA3AGYALQA0AGIAMQBiAC0AMQBhADgAZAAtADAA
-OABkAGIAZAAxADEAZAA2ADgAYwBhAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAA4AAAAeAAt
-AG0AcwAtAGUAeABjAGgAYQBuAGcAZQAtAHMAZQBuAGQAZQByAGEAZABjAGgAZQBjAGsAAAABAAAA
-BAAAADEAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAA6AAAAeAAtAG0AcwAtAGUAeABjAGgAYQBu
-AGcAZQAtAGEAbgB0AGkAcwBwAGEAbQAtAHIAZQBsAGEAeQAAAAAAAQAAAAQAAAAwAAAAHwAAgIYD
-AgAAAAAAwAAAAAAAAEYBAAAAKgAAAHgALQBtAGkAYwByAG8AcwBvAGYAdAAtAGEAbgB0AGkAcwBw
-AGEAbQAAAAAAAQAAAA4AAABCAEMATAA6ADAAOwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAA
-RAAAAHgALQBtAGkAYwByAG8AcwBvAGYAdAAtAGEAbgB0AGkAcwBwAGEAbQAtAG0AZQBzAHMAYQBn
-AGUALQBpAG4AZgBvAAAAAQAAAAIFAAB2AHYATgA5AG8ASABQAHkASwB6AHAAOABHAEoAaQA5AHkA
-VwBxADMARABBADAAVgBxAG0AUQBBAEoARAA0AHYARwAzAHQATABzAGIAUgBKAHkAaAA4AGIAKwBo
-AGoAawBLAEgAOQBLAGEAVwBvADIAdwAxAHkAZABxADkAYwBZAGcAUAB6AFoAUABWAEYAbgB5AHIA
-TgBGAEgAbgBhAHEAcgBWAGcAbAAzAHIAdwBFAEEAVABlAFQAeQBOAEwAMgByAHAAOAAxAGoAWQBa
-AEMAcQBjACsAegAxAGQAWQA4AGMAQwB3ADQAUgBIAGUATgByAEkAQQAwAEYAWQBkADQATABMAGQA
-OQBwAHUAdgBzADEAQgAxAE4AeABoAHgAZQBJADEAdgBtADcARQA5AG8AUgAvAFkAegBBAEsAOQBL
-AE0AbAB0AHYARgBLADcAdABQADQAdwBXADIAKwAzAG8AZQBoAE8ALwByADEANgB3AHMAZgBFAGIA
-QQB3AEkASABXAHAANABOAGwAYwB2AEYARABHAGMAWgBXAGwANwAwAEUAWQBBAEoAUwAzAC8AcQBi
-ADkASAAyAEgATwBNACsASAA3ADAANQBtAFEASwBDAGgAOQBEAFYAcABLAFUANQBVAFIAcAA1AEMA
-RABEAE8AawBqAC8AcgArADMAbABBACsAcQBKAG0AcgBuAHQAeQA5AE4ARAAwAHcAMwBFAG8AUABS
-AEsATQAwAC8AUgBhAFAAWQBoAHAAZgBYAGUAdABmAHAARABsAE8AWABjAEMAYgBBAEsAaABpADEA
-RgBkAEgAVQBEAGEAbAA3AGUAMgBNAG4AQwBoADgAMgBFAEUAbAB2AHcAMwBNADIAeABZAEgAYgBD
-AGUAMQArACsAVABMAG0AWQBKAFQATwBlAFgAQQBqACsANABaAE0AKwBDAGcATABiAGwASAB3ADkA
-QwB4AFMANwAyAGIASgA1AFUAdwB4ADQAMwBaAE8AMwBkAG0AaQBUAHgAMgBmAGoANgAvAFgATQBH
-AEMAcgAzAHQARwBoADQAbgBiAGcAcQBDAFcAVgBhAEEARABoAFEAcwBhAFMAcwBUAHgAcABNAFQA
-cQAwAGkAbABCAEgAbgAwAGkAYwAzAGMAbQBIAEwAdwBpADEAZwA3AG8AVwBNAG0ASABKAGMAOABU
-AFAANQB4ADYAMAB6AFcAUQB2AGQATAA2AGgAWABuAFkASgBvAEkAZgBrAHMAWgAxAEQAdwAzAEwA
-bAA4AGoAKwB1AEEATwBmAEEAdwBlAGYAZABzAHIANwBTADkAMwBYAEQAZABOAEUAUwA1AEQASgBz
-AE0AawBNAGgAMABGAGkAawBjADgAegBxAHEAcQBQAFEAdQBRAHQAeQBwAFkAMgBSAGQAcABTAEUA
-NwBMAHUAQgBIAHgAdQBtACsAdgBIAEsAQgBVAHcATgArAHYAQgB0ADcASABCAFMAZABaAE4ARwBa
-AHoAVABJAG8AcwBSAGMAaQBsAE8AVwByAG8AagA3AEkAaQB6AEoATQBWAHYAYQBKAFkANwBBAC8A
-WgAvADMANgBkAHEAUgBxAG4AcQBCAC8AeQBsAFkAVwBvAGMARwB1AGEAeABYADAAcQBmAHUATQA2
-ADMAYQB6AFMARABxAHoAUQBNAFkAeQBaAHYAdwBzADQAUABKAEsAYQBrAGIAWQBaAAAAAAAfAACA
-hgMCAAAAAADAAAAAAAAARgEAAAA4AAAAeAAtAGYAbwByAGUAZgByAG8AbgB0AC0AYQBuAHQAaQBz
-AHAAYQBtAC0AcgBlAHAAbwByAHQAAAABAAAAqgQAAEMASQBQADoAMgA1ADUALgAyADUANQAuADIA
-NQA1AC4AMgA1ADUAOwBDAFQAUgBZADoAOwBMAEEATgBHADoAZQBuADsAUwBDAEwAOgAxADsAUwBS
-AFYAOgA7AEkAUABWADoATgBMAEkAOwBTAEYAVgA6AE4AUwBQAE0AOwBIADoAUABBADQAUABSADAA
-NABNAEIAOQA2ADMAOAAuAGUAdQByAHAAcgBkADAANAAuAHAAcgBvAGQALgBvAHUAdABsAG8AbwBr
-AC4AYwBvAG0AOwBQAFQAUgA6ADsAQwBBAFQAOgBOAE8ATgBFADsAUwBGAFMAOgAoADEAMwAyADMA
-MAAwADMAMQApACgAMQAzADYAMAAwADMAKQAoADMAOQA2ADAAMAAzACkAKAAzADcANgAwADAAMgAp
-ACgAMwA0ADYAMAAwADIAKQAoADMANgA2ADAAMAA0ACkAKAAzADkAOAA2ADAANAAwADAAMAAwADIA
-KQAoADIAMwAwADkAMgAyADAANQAxADcAOQA5ADAAMAAzACkAKAA0ADUAMQAxADkAOQAwADIANAAp
-ACgAMQA4ADAAMAA3ADkAOQAwADAAOQApACgANgA0ADEAMAAwADcAOQA5ADAAMAAzACkAKAAxADgA
-NgAwADAAOQApACgAMwA4ADAANwAwADcAMAAwADAAMAA5ACkAKAA2ADYANAA0ADYAMAAwADgAKQAo
-ADMAOAAxADAAMAA3ADAAMAAwADAAMgApACgANgA2ADUANQA2ADAAMAA4ACkAKAAzADAAOAA2ADQA
-MAAwADMAKQAoADMAMwA2ADUANgAwADAAMgApACgANgA0ADcANQA2ADAAMAA4ACkAKAA0ADcAOAA2
-ADAAMAAwADAAMQApACgANgA2ADQANwA2ADAAMAA3ACkAKAA1ADQAOQAwADYAMAAwADMAKQAoADYA
-NgA5ADQANgAwADAANwApACgANgA1ADAANgAwADAANwApACgANgA5ADEANgAwADAAOQApACgANwA2
-ADEAMQA2ADAAMAA2ACkAKAA3ADEAMgAwADAANAAwADAAMAAwADEAKQAoADIAOQAwADYAMAAwADIA
-KQAoADgAOQAzADYAMAAwADIAKQAoADUANgA2ADAAMwAwADAAMAAwADIAKQAoADgANgA3ADYAMAAw
-ADIAKQAoADUAMgA1ADMANgAwADEANAApACgAOQA2ADgANgAwADAAMwApACgANAAxADMAMAAwADcA
-MAAwADAAMAAxACkAKAA0ADMAMgA2ADAAMAA4ACkAKAA4ADYAMwA2ADIAMAAwADEAKQAoADMAMQA2
-ADAAMAAyACkAKAA3ADYAOQA2ADAAMAA1ACkAKAA4ADMAMwA4ADAANAAwADAAMAAwADEAKQAoADEA
-MgAyADAAMAAwADAAMAAxACkAKAAyADYAMAAwADUAKQAoADYANgA4ADkAOQAwADIANAApACgANQA1
-ADAAMQA2ADAAMAAzACkAKAA1ADUAOQAwADAAMQApACgANQA3ADkAMAAwADQAKQA7AEQASQBSADoA
-TwBVAFQAOwBTAEYAUAA6ADEAMQAwADEAOwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAXAAA
-AHgALQBtAHMALQBlAHgAYwBoAGEAbgBnAGUALQBhAG4AdABpAHMAcABhAG0ALQBtAGUAcwBzAGEA
-ZwBlAGQAYQB0AGEALQBjAGgAdQBuAGsAYwBvAHUAbgB0AAAAAQAAAAQAAAAxAAAAHwAAgIYDAgAA
-AAAAwAAAAAAAAEYBAAAASgAAAHgALQBtAHMALQBlAHgAYwBoAGEAbgBnAGUALQBhAG4AdABpAHMA
-cABhAG0ALQBtAGUAcwBzAGEAZwBlAGQAYQB0AGEALQAwAAAAAAABAAAAggwAAHUAcgB3AEkAZQBp
-AG4ANgBwAFUASQBSAEQAawBaAGYASwBmAEoAWgB0AG8ARABRADIATwAyAHoAaQBoAHAASQBoAGwA
-bQBJADYAOABhADAAQQBvAE4AUAA5AGMAWgBaAEkAaQA5AFMAMwBXAHoAQQBYAGgAegBDADIAYgAr
-AGIAVQBsAG4ALwBqAFMAcwAvAHUAYQByAGEAcQBpAGIAagBEAE0AZABLAEgAYwB4AHIARwBnAE8A
-QQBEAHgAagB3ACsAcABPADQAbgBHAEcAcwBGAG4AKwBmAGQAUwArAG0AKwA0AG0ANgBrAEMALwA2
-AGgANwBSAEwAMQBDAEsANgBYAFkARQBUAFUAegBNAHMANwB6AFQASwBCAG8AbQAzAEYAOQBEAEsA
-TQAxAFcAZABjAFQANQBPAE8AbQBSAHYAOABJAE0AUABIAGgAOQB2AHQAUgBVAHIAYwAyAGIAcQBz
-ADQAbABGADQARwBBAFkASQBCAFIAOQA4AEkAUwBtAHQAaQBEAEEAcABDAGQASQAyAHQAcAB6AEQA
-QgBrAFIAdwBpAHEAMgBVADgANQAxAEMAOABvAFIAeQBvAGQASQBaAEUAUQBhAGIAUABLAFAAZQBj
-AHUAcQBwAFgAMQBrAGkATgAvAHYAQQA0AHIAOQBwADYAYwBDAEUAMwByAGUAdgBSAEUAZAB5AEgA
-egBxAFgAdABVAFgANwA2AC8AMwBxAFMAawB2ADYASwBUAE4AbQBKAFgANgBRAGIAVgAwAFgAcgBv
-AEcAWgBsAE0AagBSAHYAVQBvAG0AYQBsAHYAYgBLAGYAcABKADgARwBEADgAUQBKAHkAbAA4AHoA
-RwBTAFcAOQBWADAAMQBOAGgAbgB3ADAATgBCAGEAKwBtAG0AawBWAGUAVgA4AE4ARgBnAGgAeQBi
-AEQAVQBWAE8AcwBCAHYARgBvAE0AQwB6AGkAYQB6AHAAVwBtAGsARgBtAGcASwBWAFAAWABkAHEA
-WQBrAHkAdwBYADYAcQBhAFoAMQAzAHIAdgBFAC8AcQB3AHgATgB6AGQAegBLADkATQBHAGwAKwBB
-AGoAawBWADcAagBlAFkATgA4AEQAawBkAGYANAAzAEgAZwAyAEYASQBFADMARAAzAEYAawBPAGIA
-bgBvAHIAbQBZAGQAUQBtAEUAOQBlAFgAYQBXAEYAYQB4AHIAVABPADMASAAxADEAZAB5ADEAMQBG
-ACsALwBTAGoAdgAyADcAbAB0ADkAYwBiADkASAB3AFYAcQBnAFgAegA0ADMAQQBwACsAQgAxADIA
-bgA1AFcASwAzAEsAcgAxAE4AYQBOAEgAegBVAEEAVgA1AG8AUgB6AHkAeQB1ADEAbABpAFgAZQBw
-ADUAeABFAGcAdAB6ADUATgBhAHcASQBaADYAMQB0AFIAUAA3AGgAZgBSAFkAOQBkAEIAZwB5ADcA
-YwBwADAAOABnAGkAcwArAGoAZABmAGMASwBsAFAAKwArAFYAMgB2AG4AYwBoADQAegAwADIAWABN
-AGUANQB4AGEATgBpAHoATQBYAFIARQBLADgANABQAHYASQArAHUAQgBPAGcANAB1AFQAYwAzADEA
-dQBBAFEARQBvAG4AUwArAEkAdQBEAE0ANgBTAFIATABPAFgATgBVAFAALwBMADcAYwBPAFAARABn
-AEUAMwB3AHQAbABtAGsAbgB2AG8ARwA1AG8ALwB1ADIAZgBYAFgASQBLAGsAZABaAHoAYQBiADYA
-LwBIAGwAVgA0ADgARwBuAE4AUABBADQAYQAyAHMAegBWAHQAegBQAFQAdAA0AEQAVQBBADcAdwBC
-AGcASgBJAHQATwAzAEMAegBXAFcAcgBsAEUAagB0AHUANQBnADMAVABCAGIAcgBvAGMATgBjAE0A
-ZABSAEkATABaAEMAdQBDAHQARgB6ADEAdABHAFYALwBFAGQAawBvAE0AMwBDAFgAZwBiAGEAdwB6
-AFoAbABWAHoAbwBVAFYAKwBBAHcAKwBMAGIAVAAzADMAVgBoAFUAQQBqAE0AcABNAFgAZQBWAEoA
-SQBRAGEAdwBiAEIAcwBxAFUATgAwAHQAcABBAC8AWgBXAFgAdgA3AEwAVgBmAEkARAB5ADcAMQAw
-AHcAdwBoAGMAcQBzAE0AawBmAGIANAAvAEwAQQBWAFoAQgBjAEQAbgBtAHUAWABvADEARQA2AHoA
-awA0AFgAdABWAGMAcABnAHYATwBEAC8ASgBjAEUAdwBqAHEAdABGAFIAdABuAHcARQBOAHEAWgBJ
-AGgAKwBzAFYAcwAyAFMAYQBUAE8ARwA2AGwAQQBjAEYALwBlAEwASABEAEEATABLAGgAcABtAEMA
-YQAwAEMAZQBVAHcAdgBJAGsAbABGADMAUgA4ADIANABmAE4AMgBrAGQASwBlAHcAYwBkAG4ASgB6
-AFcAUABZAFoAdgBhAG0AMQAwAEwANAAzAFkAOQBKAEwASABoAFMAMABwAGwAaAB6ADgAUwB5AE8A
-QwBPADAAVgBFAHQAaQBJADUAKwBhAEsAcwBCAE0AMQA0AGYAUwBFAFcAZQBwAEQAZwA4AEQAKwA3
-AEUAQgBxAFEAWgBJAEwAaQBWAHAAeQB3ADcAbQB6AC8AQwB3AFkAdAA1AEoASwBtADEAUgBJAEMA
-WgBkAHIAKwByACsAcQBGAFQASQBBAEIAbQAyAGUAWQBlAGsARwBqADQAMABtAHMAcABEAEEAKwBw
-AFQAVABXAFkAWABFAEEAVwBBAG0AQgB1AG0AegA5AFUARgB5AHUAbQBlAEcAWQArAEYAaQBNAEQA
-agBhAFcARgA1AFYAWQBPAHYATQBkAGQAMAAxAGIAegBUAHEARwBqAEMASgBXAHYASABhAE4AdQBm
-AG0AbABEAFkAZgBjAEoAQQAxAGwAYgBmAEIAeQB3AEQALwBZADgAMAB6AFcAagBCAEQAZQBBADEA
-MQBZAHAANwBsAG4AcwBrADIAVgBiAFgAdQAzAHIAQQBuAGsAMwBiAFMAdQBWAHgAawBYAEkAdQBm
-AEMANAB2AHIAYwBNAEUAcABmAHkAaABRAGwAYgBWAGsAdABHADcAWgAzAEgAUAB1AG0AMQBMAHYA
-eQAvAFoAYwAvADAASwBDAG8AQwA1ADcAUQB3AEkASQBTADgAWAAxADUATQBmAFgASgB0AHgAQQA0
-AEEAZwBXAEgAOABzADYAdABGAFUAaAAvACsATABBADYAeAA3AGQAVQB0AHgARQBiAHIAWABjAGQA
-dwBZAHcAdQByAHUAQgA4AFAAMwBQAGgAQwBaAHAAMgB6AFcAWgA4ADgAcQB0AEYAaABuADMAawBU
-AGsAcABPAEoANAByAGYAbgBEAC8AawBxAEoAbwA5ADMAeQAyAEsAMwAxAGUANgBvAG0AdgAxAFEA
-RAB0AGcANQBLAEwATgBwAGgAMgBKADMAcgBPAHYAYgBQACsAWAAxAGMAeQBqAEsARQAzAGYAUQB3
-AHIAVAB6AHAAbABrAFUANQA3AFgAVQBGAHcAYQBUAGMAUQBkAGMAYQBoADMAQQBpAGcARgBHAHQA
-cgBUAGkAcQBZAFMASgBIAHAAbgB5AFIANQByAFAANQBzADIAcgBpAFEAagBaAGkAUAB4AHQAeAA1
-AHcANQB5AC8AVwBSAEsAWQB4AGMAcAA4ADYAbgB1AE0ARgBmAFYAQQBRAHEANABHAHMASwA4AG8A
-MQAvAFMANwBkAEgAawBvAHgARABMAFkAaABsAHoANwBsAFQAYgBtAFgAagB0AE0ASwBWAEkASABU
-AGcAYQBTAFYAaQAzAGIAYgB6ACsALwBPAEEAUABtACsAQwBUAGYAQQBlACsAbABVADAASwAzAGwA
-cABVADQARgBSADAAYQBKAHkAVABEAFAAVgBlADgATwBUAG0AQgBuACsAdQBpAEkAMABmADQAYQBQ
-AHEATwA0AEoANgBxAFoARwB2ADkAMAA2AGQAaQBLADEAVwB6AFYAMgB4AEsAYQBaACsAdwB0AHkA
-UgBVADQAcQBhAHkASgBPAGsAUgBUADMAVQB6AEsATwBoAHAASQBwAFIALwB0AE0AVQBVAC8ARQBM
-AEEAdAAxAHUATwBMAEwAZwA0AGgALwBiAGUATABRADYAOABWADQAbABiAHIAaABWAFoASQBXAGgA
-MgByAHMAbQBmAFkAdgBhACsAVgB5AEIAbQBlAG4ATgBhADYAYwA2AG8AZwBtAFEAVgBsAFYAAAAA
-AJOJ
+eJ8+Iu1pAQaQCAAEAAAAAAABAAEAAQeQBgAIAAAA5AQAAAAAAADoAAEJgAEAIQAAADgwQjEwNUI3
+OTg1QkQ0NEE5NjFBNkU3QzA1NUNFQjgxADEHAQ2ABAACAAAAAgACAAEFgAMADgAAAOcHCgAUAAMA
+IgALAAUAQQEBIIADAA4AAADnBwoAFAADACIACwAFAEEBAQiABwAYAAAASVBNLk1pY3Jvc29mdCBN
+YWlsLk5vdGUAMQgBBIABAEEAAABbUEFUQ0ggdjUgMy82XSB3aWZpOiBtd2lmaWV4OiBmaXhlZCBy
+ZWFzc29jYXRpb24gaXNzdWUgZm9yIFdQQTMuAHsVAQuAAQAhAAAAODBCMTA1Qjc5ODVCRDQ0QTk2
+MUE2RTdDMDU1Q0VCODEAMQcBA5AGACQ5AABaAAAAAgF/AAEAAABRAAAAPFBBNFBSMDRNQjk2MzhE
+MzRERTk0Q0I2QjI0MTUyRTA2REQxREJBQFBBNFBSMDRNQjk2MzguZXVycHJkMDQucHJvZC5vdXRs
+b29rLmNvbT4AAAAACwAfDgAAAAACAQkQAQAAAAkLAAAFCwAAox8AAExaRnXxujRpYQAKZmJpZAQA
+AGNjwHBnMTI1MgD+A0PwdGV4dAH3AqQD4wIABGNoCsBzZXQwIO8HbQKDAFARTTIKgAa0AoCWfQqA
+CMg7CWIxOQ7AvwnDFnIKMhZxAoAVYioJsHMJ8ASQYXQFsg5QA2Bzom8BgCBFeBHBbhgwXQZSdgSQ
+F7YCEHIAwHR9CFBuGjEQIAXABaAbZGSaIANSIBAiF7JcdgiQ5HdrC4BkNR1TBPAHQA0XcDAKcRfy
+YmttawZzAZAAICBCTV9C4EVHSU59CvwB8Qvw6jISQGgEACAEAQpQIeG+IAlwC2AcQhiQInFzGICN
+H4EvCXAb4WZpZwhwQRngQVAuXGwLgGXzCoEkxFdoCfAkcSJEH2OHHFEFsSPJZCwgdwqw+l8iEHAL
+UAMQHlACMCfg+wMQAyB1EgAb0ADQJaALMEEkxFBNS1NBIvJkJSMQYQQQb2MHMHRp1wIgIvIkiEIF
+kGEpQisaPmYLcApAJFEq4AeRbm8bBUAJcHAJESLyY2ZnwDgwMjExLyf4KKIeLCS1MCwo5AdAd2F5
+uwQgKUggKl8LcBiQbiSmWxtBGFBjK4MooScFQGLfGeAmUgJgBAAzonUdwBuxbnQhsjLhJK1TJCAY
+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
+AG4AeABwAC4AYwBvAG0AAAAAAB8AHgwBAAAACgAAAFMATQBUAFAAAAAAAAIBGQwBAAAAXAAAAAAA
+AACBKx+kvqMQGZ1uAN0BD1QCAAAAgEQAYQB2AGkAZAAgAEwAaQBuAAAAUwBNAFQAUAAAAHkAdQAt
+AGgAYQBvAC4AbABpAG4AQABuAHgAcAAuAGMAbwBtAAAAHwABXQEAAAAmAAAAeQB1AC0AaABhAG8A
+LgBsAGkAbgBAAG4AeABwAC4AYwBvAG0AAAAAAAsAQDoBAAAAHwAaAAEAAAASAAAASQBQAE0ALgBO
+AG8AdABlAAAAAAADAPE/BAQAAAsAQDoBAAAAAwD9P+QEAAACAQswAQAAABAAAACAsQW3mFvUSpYa
+bnwFXOuBAwAXAAEAAABAADkAgPssSgYD2gFAAAgwlGlaSgYD2gELACkAAAAAAB8A2T8BAAAAAAIA
+AFQAaABpAHMAIABpAHMAcwB1AGUAIABpAHMAIAByAGUAbABhAHQAZQBkACAAdABvACAAcgBlAHMA
+YQB0AGEAcgB0AC8AcgBlAGMAbwBuAGYAaQBnAHUAcgBlACAAQQBQAC4ADQAKAA0ACgBXAGgAZQBu
+ACAAQQBQACAAaQBzACAAcgBlAHMAdABhAHIAdABlAGQAIABvAHIAIAByAGUAYwBvAG4AZgBpAGcA
+dQByAGUAZAAsACAAdwBwAGEAXwBzAHUAcABwAGwAaQBsAGMAYQBuAHQAIAB3AGkAbABsACAAdQBz
+AGUAIABjAGEAYwBoAGUAZAANAAoAUABNAEsAUwBBACAAdABvACAAZABvACAAYQBzAHMAbwBjAGkA
+YQB0AGkAbwBuACAAdABvACAAQQBQAC4ADQAKAEIAZQBjAGEAdQBzAGUAIABhAHMAcwBvAGMAaQBh
+AHQAaQBvAG4AIABmAGEAaQBsAHUAcgBlACAAZABvAGUAcwAgAG4AbwB0ACAAcgBlAHAAbwByAHQA
+IAB0AG8AIABjAGYAZwA4ADAAMgAxADEALwB3AHAAYQBfAHMAdQBwAHAAbABpAGMAYQBuAHQALAAN
+AAoAdwBwAGEAXwBzAHUAcABwAGwAaQBjAGEAbgB0ACAAdwBpAGwAbAAgAGEAbAB3AGEAeQBzAAAA
+CwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAFIUAAAAAAAAfAACAhgMCAAAAAADAAAAAAAAARgEAAAAe
+AAAAYQBjAGMAZQBwAHQAbABhAG4AZwB1AGEAZwBlAAAAAAABAAAAGgAAAHoAaAAtAFQAVwAsACAA
+ZQBuAC0AVQBTAAAAAAADAACACCAGAAAAAADAAAAAAAAARgEAAAAyAAAARQB4AGMAaABhAG4AZwBl
+AEEAcABwAGwAaQBjAGEAdABpAG8AbgBGAGwAYQBnAHMAAAAAACAAAABIAACACCAGAAAAAADAAAAA
+AAAARgEAAAAiAAAATgBlAHQAdwBvAHIAawBNAGUAcwBzAGEAZwBlAEkAZAAAAAAAE97ThOy7Eksq
+AQjb0R1s4x8AAIATj/JB9IMUQaWE7ttaawv/AQAAABYAAABDAGwAaQBlAG4AdABJAG4AZgBvAAAA
+AAABAAAAKgAAAEMAbABpAGUAbgB0AD0ATQBTAEUAeABjAGgAYQBuAGcAZQBSAFAAQwAAAAAAHwD6
+PwEAAAAUAAAARABhAHYAaQBkACAATABpAG4AAAAfADcAAQAAAIIAAABbAFAAQQBUAEMASAAgAHYA
+NQAgADMALwA2AF0AIAB3AGkAZgBpADoAIABtAHcAaQBmAGkAZQB4ADoAIABmAGkAeABlAGQAIABy
+AGUAYQBzAHMAbwBjAGEAdABpAG8AbgAgAGkAcwBzAHUAZQAgAGYAbwByACAAVwBQAEEAMwAuAAAA
+AAAfAD0AAQAAAAIAAAAAAAAAAwA2AAAAAAACAXEAAQAAABYAAAAB2gMGSU8/aazyoq9JgqHCfy6A
+ZVHTAAAfAHAAAQAAAIIAAABbAFAAQQBUAEMASAAgAHYANQAgADMALwA2AF0AIAB3AGkAZgBpADoA
+IABtAHcAaQBmAGkAZQB4ADoAIABmAGkAeABlAGQAIAByAGUAYQBzAHMAbwBjAGEAdABpAG8AbgAg
+AGkAcwBzAHUAZQAgAGYAbwByACAAVwBQAEEAMwAuAAAAAAAfADUQAQAAAKIAAAA8AFAAQQA0AFAA
+UgAwADQATQBCADkANgAzADgARAAzADQARABFADkANABDAEIANgBCADIANAAxADUAMgBFADAANgBE
+AEQAMQBEAEIAQQBAAFAAQQA0AFAAUgAwADQATQBCADkANgAzADgALgBlAHUAcgBwAHIAZAAwADQA
+LgBwAHIAbwBkAC4AbwB1AHQAbABvAG8AawAuAGMAbwBtAD4AAAAAAAMA3j+fTgAAAwATEgAAAAAC
+AQCAE4/yQfSDFEGlhO7bWmsL/wEAAAAuAAAASABlAGEAZABlAHIAQgBvAGQAeQBGAHIAYQBnAG0A
+ZQBuAHQATABpAHMAdAAAAAAAAQAAACIAAAABAAoAAAAEAAAAAAAAABQAAAAAAAAAAAAAAP////8A
+AAAAAAALAACAE4/yQfSDFEGlhO7bWmsL/wEAAAAcAAAASABhAHMAUQB1AG8AdABlAGQAVABlAHgA
+dAAAAAAAAAALAACAE4/yQfSDFEGlhO7bWmsL/wEAAAAoAAAASQBzAFEAdQBvAHQAZQBkAFQAZQB4
+AHQAQwBoAGEAbgBnAGUAZAAAAAAAAABAAAcweyMvSgYD2gECAQsAAQAAABAAAACAsQW3mFvUSpYa
+bnwFXOuBAwAmAAAAAAALAAYMAAAAAAIBEDABAAAARgAAAAAAAADIpSWxiCOSSoOqZJAKpKsqBwBP
+PiDQ/CbdRK5hB1o6Ct0nAAAAAAELAABPPiDQ/CbdRK5hB1o6Ct0nAAIhGpUNAAAAAAIBEzABAAAA
+EAAAAD9prPKir0mCocJ/LoBlUdMCARQwAQAAAAwAAACvAQAAFKN8TFQAAAADAFszAQAAAAMAWjYA
+AAAAAwBoNg0AAAALAPo2AQAAAB8A+D8BAAAAFAAAAEQAYQB2AGkAZAAgAEwAaQBuAAAAHwAiQAEA
+AAAGAAAARQBYAAAAAAAfACNAAQAAAPwAAAAvAE8APQBFAFgAQwBIAEEATgBHAEUATABBAEIAUwAv
+AE8AVQA9AEUAWABDAEgAQQBOAEcARQAgAEEARABNAEkATgBJAFMAVABSAEEAVABJAFYARQAgAEcA
+UgBPAFUAUAAgACgARgBZAEQASQBCAE8ASABGADIAMwBTAFAARABMAFQAKQAvAEMATgA9AFIARQBD
+AEkAUABJAEUATgBUAFMALwBDAE4APQBDAEIAMAA0AEYANgA1ADkAMQBBAEQANgA0ADQANgBCADgA
+QQBBAEIAQwA5AEIANgA1AEQAQQBFADkAMgAwADcALQBOAFgARgA1ADcANgAyADQAAAAfACRAAQAA
+AAYAAABFAFgAAAAAAB8AJUABAAAA/AAAAC8ATwA9AEUAWABDAEgAQQBOAEcARQBMAEEAQgBTAC8A
+TwBVAD0ARQBYAEMASABBAE4ARwBFACAAQQBEAE0ASQBOAEkAUwBUAFIAQQBUAEkAVgBFACAARwBS
+AE8AVQBQACAAKABGAFkARABJAEIATwBIAEYAMgAzAFMAUABEAEwAVAApAC8AQwBOAD0AUgBFAEMA
+SQBQAEkARQBOAFQAUwAvAEMATgA9AEMAQgAwADQARgA2ADUAOQAxAEEARAA2ADQANAA2AEIAOABB
+AEEAQgBDADkAQgA2ADUARABBAEUAOQAyADAANwAtAE4AWABGADUANwA2ADIANAAAAB8AMEABAAAA
+FAAAAEQAYQB2AGkAZAAgAEwAaQBuAAAAHwAxQAEAAAAUAAAARABhAHYAaQBkACAATABpAG4AAAAf
+ADhAAQAAABQAAABEAGEAdgBpAGQAIABMAGkAbgAAAB8AOUABAAAAFAAAAEQAYQB2AGkAZAAgAEwA
+aQBuAAAAAwBZQAAAAAADAFpAAAAAAAMAN1ABAAAAAwAJWQEAAAAfAApdAQAAACYAAAB5AHUALQBo
+AGEAbwAuAGwAaQBuAEAAbgB4AHAALgBjAG8AbQAAAAAAHwALXQEAAAAmAAAAeQB1AC0AaABhAG8A
+LgBsAGkAbgBAAG4AeABwAC4AYwBvAG0AAAAAAAIBFV0BAAAAEgAAAALToW5oK7xvTKks2ZxcMBY1
+AQAAAgEWXQEAAAASAAAAAtOhbmgrvG9MqSzZnFwwFjUBAAADAACAUONjC8yc0BG82wCAX8zOBAEA
+AAAkAAAASQBuAGQAZQB4AGkAbgBnAEUAcgByAG8AcgBDAG8AZABlAAAAGwAAAB8AAIBQ42MLzJzQ
+EbzbAIBfzM4EAQAAACoAAABJAG4AZABlAHgAaQBuAGcARQByAHIAbwByAE0AZQBzAHMAYQBnAGUA
+AAAAAAEAAABwAAAASQBuAGQAZQB4AGkAbgBnACAAUABlAG4AZABpAG4AZwAgAHcAaABpAGwAZQAg
+AEIAaQBnAEYAdQBuAG4AZQBsAFAATwBJAEkAcwBVAHAAVABvAEQAYQB0AGUAIABpAHMAIABmAGEA
+bABzAGUALgAAAAsAAIBQ42MLzJzQEbzbAIBfzM4EAQAAACYAAABJAHMAUABlAHIAbQBhAG4AZQBu
+AHQARgBhAGkAbAB1AHIAZQAAAAAAAAAAAB8AAIAfpOszqHouQr57eeGpjlSzAQAAADgAAABDAG8A
+bgB2AGUAcgBzAGEAdABpAG8AbgBJAG4AZABlAHgAVAByAGEAYwBrAGkAbgBnAEUAeAAAAAEAAABE
+AQAASQBJAD0AWwBDAEkARAA9AGYAMgBhAGMANgA5ADMAZgAtAGEAZgBhADIALQA4ADIANAA5AC0A
+YQAxAGMAMgAtADcAZgAyAGUAOAAwADYANQA1ADEAZAAzADsASQBEAFgASABFAEEARAA9AEQAQQAw
+ADMAMAA2ADQAOQA0AEYAOwBJAEQAWABDAE8AVQBOAFQAPQAxAF0AOwBUAEYAUgA9AFQAaAByAGUA
+YQBkAEYAbwByAGsAaQBuAGcASQBzAEQAaQBzAGEAYgBsAGUAZAA7AFYAZQByAHMAaQBvAG4APQBW
+AGUAcgBzAGkAbwBuACAAMQA1AC4AMgAwACAAKABCAHUAaQBsAGQAIAA2ADkAMwAzAC4AMAApACwA
+IABTAHQAYQBnAGUAPQBIADQAOwBVAFAAPQAxADAAOwBEAFAAPQAxAAAAQAAAgAggBgAAAAAAwAAA
+AAAAAEYAAAAAv4UAACDIUkkGA9oBCwAAgAggBgAAAAAAwAAAAAAAAEYAAAAAgoUAAAAAAAACAQCA
+CCAGAAAAAADAAAAAAAAARgEAAAA2AAAASQBuAFQAcgBhAG4AcwBpAHQATQBlAHMAcwBhAGcAZQBD
+AG8AcgByAGUAbABhAHQAbwByAAAAAAABAAAAEAAAAOGYjWKvDPFAm2eB+qApqjkDAA00/T8AAB8A
+AICGAwIAAAAAAMAAAAAAAABGAQAAAC4AAABhAHUAdABoAGUAbgB0AGkAYwBhAHQAaQBvAG4ALQBy
+AGUAcwB1AGwAdABzAAAAAAABAAAAsgAAAGQAawBpAG0APQBuAG8AbgBlACAAKABtAGUAcwBzAGEA
+ZwBlACAAbgBvAHQAIABzAGkAZwBuAGUAZAApACAAaABlAGEAZABlAHIALgBkAD0AbgBvAG4AZQA7
+AGQAbQBhAHIAYwA9AG4AbwBuAGUAIABhAGMAdABpAG8AbgA9AG4AbwBuAGUAIABoAGUAYQBkAGUA
+cgAuAGYAcgBvAG0APQBuAHgAcAAuAGMAbwBtADsAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+ACAAAAB4AC0AbQBzAC0AaABhAHMALQBhAHQAdABhAGMAaAAAAAEAAAACAAAAAAAAAB8AAICGAwIA
+AAAAAMAAAAAAAABGAQAAAC4AAAB4AC0AbQBzAC0AcAB1AGIAbABpAGMAdAByAGEAZgBmAGkAYwB0
+AHkAcABlAAAAAAABAAAADAAAAEUAbQBhAGkAbAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAADYA
+AAB4AC0AbQBzAC0AdAByAGEAZgBmAGkAYwB0AHkAcABlAGQAaQBhAGcAbgBvAHMAdABpAGMAAAAA
+AAEAAABIAAAAUABBADQAUABSADAANABNAEIAOQA2ADMAOAA6AEUARQBfAHwARABCADkAUABSADAA
+NABNAEIAOAAyADMANgA6AEUARQBfAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAUAAAAHgALQBt
+AHMALQBvAGYAZgBpAGMAZQAzADYANQAtAGYAaQBsAHQAZQByAGkAbgBnAC0AYwBvAHIAcgBlAGwA
+YQB0AGkAbwBuAC0AaQBkAAAAAQAAAEoAAAA4ADQAZAAzAGQAZQAxADMALQBiAGIAZQBjAC0ANABi
+ADEAMgAtADIAYQAwADEALQAwADgAZABiAGQAMQAxAGQANgBjAGUAMwAAAAAAHwAAgIYDAgAAAAAA
+wAAAAAAAAEYBAAAAOAAAAHgALQBtAHMALQBlAHgAYwBoAGEAbgBnAGUALQBzAGUAbgBkAGUAcgBh
+AGQAYwBoAGUAYwBrAAAAAQAAAAQAAAAxAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAOgAAAHgA
+LQBtAHMALQBlAHgAYwBoAGEAbgBnAGUALQBhAG4AdABpAHMAcABhAG0ALQByAGUAbABhAHkAAAAA
+AAEAAAAEAAAAMAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAAACoAAAB4AC0AbQBpAGMAcgBvAHMA
+bwBmAHQALQBhAG4AdABpAHMAcABhAG0AAAAAAAEAAAAOAAAAQgBDAEwAOgAwADsAAAAAAB8AAICG
+AwIAAAAAAMAAAAAAAABGAQAAAEQAAAB4AC0AbQBpAGMAcgBvAHMAbwBmAHQALQBhAG4AdABpAHMA
+cABhAG0ALQBtAGUAcwBzAGEAZwBlAC0AaQBuAGYAbwAAAAEAAAACBQAAOAA5ADcAWQBXAFkAVwBZ
+AFcAZgBtAGQAWAB1AFMARwBQAFAARgBQAHIATABsAEYAZwA4AE8AZwBTAEQAaABLAFIAdgB2AFAA
+egBkAEgAUgBrAGwAUwB6AE8AUABtAGIAbgBnAEoAdgBZAEcASQAyAEIAMgBkAEgAOQBFAFMAVABo
+ADYANgBXAEQAYQBWAGIAZwA3AEgAUwBpADQAUABUAHYATQBMAFAASABQADYAcgAvAEEAVgBIAGgA
+VQBqAEoAUwBsAHYAKwB0AFAAawBNADAAVwBVAG8AYgBWAEQAeABVAGQARQB4AE8AaAB5ADMALwBU
+AEQAagA2AHkAVQBHADkAUgBnADMAZwAwAEIAQgBDADkAMwBHAG4AUQBiAEkAeAB6AGYAcwBIAG8A
+LwAzAGcAVQBwAHQANABrAFIASwBlAE8AVQA0AEwAQwBRAFkAQQBMADQAZwBtAC8AVwBTADUATgBJ
+ADEAcABiAGkAUAByAGEAdwB0AGEAdwBrAFgAWAA0AGYAZwBTAFoAQQAxADUATQBSAEQASQBhACsA
+cAByAGsAYwBRAFYAVwAwAGMAdgBFAEgAaAB2AHQATgBMAFcAUAAvAHQANABLAFYAdQBJAEEASABX
+AG8AWABjAEgAMQBKAFIAeABXAEEAbABKAHMASQBSAEIAegBkAEgAOQBIAFcARgBYAEEARAA5AHgA
+dABpADYARABnAGcAbABhAEwAbQBFAFYANwB2AEsANwArAG8AVwBHAGkAZABtAGcAYgBmAHYAZgBl
+AGcAZgBCAE8AWABmAHAALwBuAFgAUgBKAEoASQBhAGMAMgBRADYAZgB2AGcAVgBIAG8ARgAzAE4A
+MwBZAFQAdAA2AEkAdQBIAC8AdgBzAGgAMAB4ADMAaAB2AHAAbwBtAGUAVwBOAGoANwBTAFAAVgB2
+AEEAcQBHAEYAdABhADcAdwB1AFgAQwBlAEMAZgBUAEkAVABXAGoAUQBVAHkAcQBFAGIAMwBSAEYA
+MwBrADQAYQBaAGIAagBTADMAaQBZADQANwBYAEEAYwBKAEIAdABDAGwAbABQAEYAZQBLAGcANAAw
+AFAAUABMADYASQBYAHIAZgBDAHcAUwBrAEYAMQA2AGwAZABDAHUAYQBZAFIAawBZADEAVABoAFYA
+RgA5AEUAUQBGADYASgBKAGcAWQA5ADQAeQBOADQAZQB0AFYAcAByAFkAdQBnAEUANgAzADkAbQB2
+AGkANQBQAGkAMABQAGQAYgB2AGsARwB0ADAAcwBHADIAMQBTAGwAVAByADYAZABYAEcATABLACsA
+UwBiAFgASgB2ADYANQA1ADcAVQA5ADIAZgBiAE4AaQBnADAAVABQAEoAMABOAFcAcQBvACsARgBT
+AHUAcQBmAFAANgByADYATQBIAEYAUABlAFIAQQBGAEIATwBYAHYANQBuAHIANwBjAEUAYwBrAGsA
+ZgBMAG0ASwB6AEwAMwA3ADMAWgA4ADQAVQBJAGkATgBYAFoAcgB4AG0ATAByAFoAVwBRAFgAYgB0
+AFYAcgBTADEAWAB4AEoAMwA2AHIATwB1AEEAQwBuAGEAZQBUAEoAaABhAFoAZgBUAFEAUQBXAEkA
+RgBVAFEAVAB1AGUAZgAxADQANwB4AEYAMQBMAFEAcABXAEEANABHAGwATAA1AE4AVwB6AHEAbQBS
+AFkANwB6AFEARwAAAAAAHwAAgIYDAgAAAAAAwAAAAAAAAEYBAAAAOAAAAHgALQBmAG8AcgBlAGYA
+cgBvAG4AdAAtAGEAbgB0AGkAcwBwAGEAbQAtAHIAZQBwAG8AcgB0AAAAAQAAAGIEAABDAEkAUAA6
+ADIANQA1AC4AMgA1ADUALgAyADUANQAuADIANQA1ADsAQwBUAFIAWQA6ADsATABBAE4ARwA6AGUA
+bgA7AFMAQwBMADoAMQA7AFMAUgBWADoAOwBJAFAAVgA6AE4ATABJADsAUwBGAFYAOgBOAFMAUABN
+ADsASAA6AFAAQQA0AFAAUgAwADQATQBCADkANgAzADgALgBlAHUAcgBwAHIAZAAwADQALgBwAHIA
+bwBkAC4AbwB1AHQAbABvAG8AawAuAGMAbwBtADsAUABUAFIAOgA7AEMAQQBUADoATgBPAE4ARQA7
+AFMARgBTADoAKAAxADMAMgAzADAAMAAzADEAKQAoADEAMwA2ADAAMAAzACkAKAAzADkANgAwADAA
+MwApACgAMwA3ADYAMAAwADIAKQAoADMANAA2ADAAMAAyACkAKAAzADYANgAwADAANAApACgAMwA5
+ADgANgAwADQAMAAwADAAMAAyACkAKAAyADMAMAA5ADIAMgAwADUAMQA3ADkAOQAwADAAMwApACgA
+NAA1ADEAMQA5ADkAMAAyADQAKQAoADEAOAAwADAANwA5ADkAMAAwADkAKQAoADYANAAxADAAMAA3
+ADkAOQAwADAAMwApACgAMQA4ADYAMAAwADkAKQAoADMAOAAwADcAMAA3ADAAMAAwADAAOQApACgA
+NgA2ADQANAA2ADAAMAA4ACkAKAAzADgAMQAwADAANwAwADAAMAAwADIAKQAoADYANgA1ADUANgAw
+ADAAOAApACgAMwAzADYANQA2ADAAMAAyACkAKAA2ADQANwA1ADYAMAAwADgAKQAoADQANwA4ADYA
+MAAwADAAMAAxACkAKAA2ADYANAA3ADYAMAAwADcAKQAoADUANAA5ADAANgAwADAAMwApACgANgA2
+ADkANAA2ADAAMAA3ACkAKAA2ADUAMAA2ADAAMAA3ACkAKAA2ADkAMQA2ADAAMAA5ACkAKAA3ADYA
+MQAxADYAMAAwADYAKQAoADcAMQAyADAAMAA0ADAAMAAwADAAMQApACgAMgA5ADAANgAwADAAMgAp
+ACgAOAA5ADMANgAwADAAMgApACgANQA2ADYAMAAzADAAMAAwADAAMgApACgAOAA2ADcANgAwADAA
+MgApACgANQAyADUAMwA2ADAAMQA0ACkAKAA5ADYAOAA2ADAAMAAzACkAKAA0ADEAMwAwADAANwAw
+ADAAMAAwADEAKQAoADQAMwAyADYAMAAwADgAKQAoADgANgAzADYAMgAwADAAMQApACgAMwAxADYA
+MAAwADIAKQAoADcANgA5ADYAMAAwADUAKQAoADgAMwAzADgAMAA0ADAAMAAwADAAMQApACgAMQAy
+ADIAMAAwADAAMAAwADEAKQAoADIANgAwADAANQApACgANQA1ADAAMQA2ADAAMAAzACkAOwBEAEkA
+UgA6AE8AVQBUADsAUwBGAFAAOgAxADEAMAAxADsAAAAAAB8AAICGAwIAAAAAAMAAAAAAAABGAQAA
+AFwAAAB4AC0AbQBzAC0AZQB4AGMAaABhAG4AZwBlAC0AYQBuAHQAaQBzAHAAYQBtAC0AbQBlAHMA
+cwBhAGcAZQBkAGEAdABhAC0AYwBoAHUAbgBrAGMAbwB1AG4AdAAAAAEAAAAEAAAAMQAAAB8AAICG
+AwIAAAAAAMAAAAAAAABGAQAAAEoAAAB4AC0AbQBzAC0AZQB4AGMAaABhAG4AZwBlAC0AYQBuAHQA
+aQBzAHAAYQBtAC0AbQBlAHMAcwBhAGcAZQBkAGEAdABhAC0AMAAAAAAAAQAAAIIMAAB5AFEANABv
+AGEAWABrADQARgBTAHcAQQB3AE0AeABtAFUAMgBmAHgASwAzAGEAQgBEAEoAMAB4AGMATABRAHIA
+aQBsAEYAaQBwAEsASwBqAHEAegBGAG4AdQBKAG8AZQBMAEQAdQBuAHMAUwBnAEcARAA0ADcAcAB3
+AFAAbAAyAHoAegAxAFYAVwB3AFgAWABBAHgAbAB5AE8AUABzAE0AeQBtAG8AbwBwAFoAcABWAHQA
+TQBZAHIAYgB0ADYAYwBsAEwAdwB2ADYAMAA4ADQAOQBzAFUAMABLAFcAYQAvAFAAUgB1AFgARgA1
+AHUAVgB0AFUARABJAHkAegBKAHoAawBnAGsASQBtAG8AWQBWAEoAaABQADYARAB3AGIAegBYAEwA
+ZwBtAGcAVABXAGsAdwBMADYASwBOAGMAVwBwAFMAVQB3AGwARQB3ADkAbwA1AGMAaABwAGwARQBV
+AC8AUABYAG4AUgBZAEQAdwBFAFEASwB5AGoAcQBwADAALwB2AHAAOQA0AGYATwBKAGoAaABPAGsA
+MABFAGIAUgBSAEwAeABWAGUAKwB3AEwAUQAzAGYAagAyAEsAYgA5ADMAZAB6ADMAKwBtADcAaAA0
+AFYAOABOAHgAWgBnAFQAawBYAGoAagA3AC8ARwBFAGsAbABGAHkAcABiACsAVQBFAGsALwAvAG0A
+ZgBwAGIAegBVAHQAUgB6AEUAUwBKAGsAOQBJADIAaAB5AE0AVAA3ADUARwBnAG4ARgBiAGwAbwBl
+ADAAUwA3AHkAZABaADEAMwB0AEoAQwBQAG4AagBpAFYASABNACsARQBXAG4ASwBNAGoAaABiAGQA
+cwBPAFoAZgBTAHMAUQBYADkAUgB3ADIAVwAyAFkASQBCAGIAawBGAGYATQB4AHUAWgBYAGwAVQA5
+AHkAbABKAGQAWQBOAGgAUQA1AEcAZQBPAHYAUAB5AFUAbgBUAC8AZQBjAC8AeAB0AG0AZwBOAFgA
+cABXAFMASQBxAGkAZwBpAEsATABJAGIAdQAzAEMAWgBGAFIAYQBTADkAbQBvAFYAcwBlAEkAWABF
+AEkAZQBNADkAVQBjAGcAdABNADIAagAxAEMAbQBUAHcAcwBEAFUAKwA0AE0ANQBBAEoAVQBoADMA
+cABBAHYAWgBNAGYATQA5AEgAcwBHAGMAVAAzAHcAcABhAFUAZQBYAGwAcABkAGUAZQBwAGoAbQBo
+AGIAMABhAGQAMgAzAFMAZAB0ADUAWgBmAHAASQA1AHUAegBTADkAcwBQAHMAVgBhAGQAUwByADMA
+MQBRAFYAWgBUAGEAdgAvAEoAUQBtADMAYQAxAFEAcAA3AGwASgBmADcANAB3AEsAdgB6AE8AKwBw
+AGEAbAA3AGQAMAAzAHIAUQB2AEQAVwAwAE8AZABtAHgAcwBFAGQASgBkAEQAeQBVAGsASwBjAGEA
+bgBHAEQAegArADkAcAB6AGEANwBsAEsAbQBiAEEANAB0AEIARQByADgAaABpAHYAOQBiAGcAMgBw
+AFUASgBaAFAAaQAzAHMAVQBrAFkAaABlAFcAdAB6AHgARABsAGwASABjAEEANQAxAHIAeQB4AGQA
+WgBVAHkAUAB4AG4ANQBvAE4AVgBQADYAUgB6AHEASABFAFQAcAAvAFYAOABrAEQATABsAG8AZAA0
+AHkAVwBaAHUAZQA2AFgASgA0AG0AagBrAGcAKwAyAG8AUQA5ADkAegAxAHMAMQBWAHMASABTAFUA
+VwBSAFcAdAA2AHQANQB6AHEAOQB5ADkAQwBWAG8AQQA1AEQAcQB5AEMAMgBZAEwANgBrAEIAWQBh
+AFgASQBFAHEAQQBXADEAcgBCAGEAUAA5AGkARwBxADcANQBQAFcAMgBSAFIANwA4ADIAOQBLAGEA
+egBpAEsAOQByAEYAYwBZAHQAQwBpAHIAWABiAEoAbgBoAGsASgBOAEkAWgBqAHQAMQB6AE8AMgBq
+AGsAcgBJACsAdABmAFgAZwBDAGYARwBDAFgAMABMAEsAYgBzAGgAZwAwACsAVgAwAHoAYgBWAGQA
+aAB6AHoASQBxAFoAUwBTAFcAUgBBAGgAZQBkAGkAbQBqAFoAVwA0AFoATwAwAFAAZABLADYATgAr
+AEsAbQAzAEsAWQB4AG0AcwA2AEQAcQB6AHkAOABQAGkASgBwAGEAbgBYAHoAcgBwAGYANgB3AGwA
+NgArAHMASABEAGYAQgBEAFcAUgBxAFUAcgBjAEQAMQBlAFIATgA1AE4AbwAxAEwAMQBTAFgAbABK
+AHkARQBNAG0AcQA5AG0AcABYAEsAWQBDAC8AOQBZAGsARAA3AG8AWQBYADMAcgBMAHkAMQBpAFUA
+dgB6AHoAMABGAGgAaQBEAGoAVwBhAHgAcwB3AEEAVwBvAFAAYQBsAEsATwBHAFIAWgBGAG8ARgA0
+AHkAdAA2AEUAdwAzADEAOABIADEAcAB4AHAAQwBZAFIAZgBjAGkAZgB3AE0AQwBmAFMASwBtAEoA
+RgAvAHkAOQB0AEwAZwAyAG8ANABNAEIAWAA4ADQAcAAwAGgASQB5AHMAcwA3ADQAYQBLAHoAQQB2
+AFcAVgBHAEMAUwB3ADgAWQBBADUATAAyAFoANQAvAHoAdgBDAFkAWABBAE0AZgBCAGYANQBIAGgA
+SABTAGUANQBaAEYAYwBPADkAMgBIADYAUgBuAFYASgBPAGQANgA3AEQAbwBKAGQASABuAEQAVABG
+AHoAegBOAGYAdgBGAFcATQBKAGsAQwBZADIAdwBFAEIAOAArAGgAcwBPAGsAYwBlAHgAbABaADYA
+QgBqAHcAaQA0AEkAQgBhAFUARABvAHUAYwA1ADIATwBtAEgANABCAHQARQBqAEkAMgBLACsAbwBw
+AGcAMwBOAEIAeQBXADkAeQBmAEkAUABOADIANQBFAFoAdgBTAHAAbgAvAFAAUABVADMAWQBZAEYA
+UwA1ADYAZgBVAFkARAAvAEIAYgBjAGYASgBLAEIARgB0AEsANQBwAEUARgBJAEkAdQBVAFcAZQAy
+AHMAbQBSAGIATgByAEQAUQBhAFYAWABhADkAQgBkAHAAaQBsAEMAawBLAC8ANgBCAE4AMQBlAFMA
+aQBQAE8ARwB0AHYAbABQAGMAQwBrAHgAWgBDACsARwBFAHMAWQBIAE0AMgA1AEMAYgA4AEEASQBz
+AGkAOQBXAHQAVQBKAFgAeQBpAFcAQgA1AGEATQBRAHEAbQBnAHYAZABWAEcAcwBoAEIAKwAxAEMA
+RwA1AGwAaABRAEwAWABRAHQAbQB2AHEAeABLADkAMwBtAGMAegArAHIAeAB1AC8ARgB6ADgAaQBu
+AG0ATQBVAEoAYgBYAHkAcgBCAFgASAByAGEAYQBmAEwAaQBtADkAKwBnAC8AMgBuAGEAQwA2AFMA
+ZAA3AFQAYgBMAEQAMABCAFEAeABMAE4AeQArAEUARQBvADkAUQB3AFQAVgBQAEIARQBaAE8AdgA0
+AEkATwBaAHEAMwB3ADMAKwBJADkAQwBGAGEANwBWAFIAVgBLAFAARgA4AGYANQBxAHQAYwBDAE8A
+dgBRAHgAVABNAFYAcwBEAFcAZwBrAG8AMgBiAEUAcwBiADkASgB1AFcAVQA3AEEAKwBCADgAeQBJ
+AHYAcgBZAFEAWgBWAGMAWQBwAGkAYwBwAEEARgBhAEsAUwBBAGsAZwArAGUAKwBIAHYAVQBlAEQA
+TAByAEsASQBlAEMAcgBKAE4ASwBOAEcANwBHAHgAawBYADEAWgBXAGEARwBjAE8AOQA5AGYAbABJ
+AFoAdgA3AC8AMwBoAEIATABsAEsAWQAxAEsAQQBMAEEARAAvAEIAWQB0AG8ATwA2AGkAQwBFAEoA
+VQAxAHkAWQByAEcAVAB4AE0AbgBrAFYAYQBuADAAYwByAEgAdABaAHcAQQBUAFQANQBLAFgAbwB3
+AGYAQwB6AHIAawBjAGkAMQBJAHEARgAvAHQASQBWAFkAegB0AEQAQQBoAGsAbgBzAHEAMgBnADAA
+QwBQADMAcwB3ADEAeQBrAHQAQwAvAGwANQBZAG8AdQA0AGcAMABDAHgASwBGAGYAZQBYAEcAUAAr
+AFgATQBpAFcAagB4AHYAbgA4AHoAagBtAGUARABqAG8ARgBtAEEAVgBBAG0AMgA3AFUAdwA5AE8A
+LwBBAHIAcQBDAGIAUgBUAEMANwAxAGoAaABGAGQAcwA3AGIANgBhAFgARgBSAEgAcwB5AFQAawBv
+AAAAAABG3w==
 
---_000_PA4PR04MB96386AE515E67332D246CF22D1DBAPA4PR04MB9638eurp_--
+--_000_PA4PR04MB9638D34DE94CB6B24152E06DD1DBAPA4PR04MB9638eurp_--
