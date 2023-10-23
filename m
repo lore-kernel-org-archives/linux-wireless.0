@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C52C5C001E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Oct 2023 13:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A57D3C001E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Oct 2023 13:22:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232836AbjJWNVd (ORCPT
+        id S231241AbjJWNWL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Oct 2023 09:21:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33828 "EHLO
+        Mon, 23 Oct 2023 09:22:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232798AbjJWNVG (ORCPT
+        with ESMTP id S233296AbjJWNVK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2023 09:21:06 -0400
+        Mon, 23 Oct 2023 09:21:10 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75DF710E2;
-        Mon, 23 Oct 2023 06:20:40 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92809C433CA;
-        Mon, 23 Oct 2023 13:20:35 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD2641984;
+        Mon, 23 Oct 2023 06:20:49 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE1A0C433C8;
+        Mon, 23 Oct 2023 13:20:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698067239;
-        bh=++bBb8IK3w/0hHMylV43PpVYsba57W8n3rqjGv7Qsmo=;
+        s=k20201202; t=1698067249;
+        bh=i39yxpLbZ11W5L47t7F8M74uve8mYfDcqtQ7ZjpGM4w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XgH4l+a5tCTcZFYv03qJmawOlnP3VZhGy6ADnXvjHgF0D+2COoe9PMadrxlurk5aC
-         /xmJQzJ+WV2aF+ArRSntvEGynwRocxFt1844GNYPwgw+QVivNXfpNl0r6//ieU8Uje
-         iLEvA6Q3WNicaTbsAWBjmCyGceX1redIAWOByTCKHLNWXr4kZedC1iGnqRxtgpypVw
-         PHtIyf9ShxuezVkNqt1BMiD+jJj4xA3ZWxgt8nH+oMk4ViIczgPQ2aEJaiaWZEie+0
-         SVBztTNos5qfwYiHmDLIsRcrATAEAhn5+cjNmt/xrn//3lyt77DjJzdPGPLwiS7o5R
-         Ovs22+s+uQXHA==
+        b=CAwE4vpjYswO/3LwJuPe1hFegSoDN693JyVrILxOrHXZztuL51s1JSqJ/Gh1965x6
+         w7jxZpmeUQjERId7w9TaJ1m/YfZ97W1ekUAS0Ox5IJgHwNvlJO2KJ52C8JG3tgl+Yp
+         dW7GMD8fHW4YlT79xauhLHo+daMTPf5QkjDyzQq6Vuep3KRR0hiStXfj2pWbIsoz0e
+         rt3sedCPUlD85tajz5symGivV7XJDLiN0xJufjOlv4PQZnEymymkb96IfRwcjw400T
+         Qmqdl1Lvgahg2ccZDZibf/VaetAqndvaZlAlnQGPw7SjS6nDn//He2f92wMe6Gln6I
+         w6eBQc0wbwiEA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     Kalle Valo <kvalo@kernel.org>
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -47,9 +47,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-staging@lists.linux.dev, linux-wireless@vger.kernel.org
-Subject: [PATCH 05/10] wifi: remove orphaned zd1201 driver
-Date:   Mon, 23 Oct 2023 15:19:47 +0200
-Message-Id: <20231023131953.2876682-6-arnd@kernel.org>
+Subject: [PATCH 07/10] wifi: remove orphaned ray_cs driver
+Date:   Mon, 23 Oct 2023 15:19:49 +0200
+Message-Id: <20231023131953.2876682-8-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231023131953.2876682-1-arnd@kernel.org>
 References: <20231023131953.2876682-1-arnd@kernel.org>
@@ -61,2144 +61,3913 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-This is a wireless extensions style driver for 802.11b USB dongles,
-with partial support for cfg80211 interfaces.
+Aviator/Raytheon is an early PCMCIA driver, apparently predating 802.11b
+and only supporting wireless extensions.
 
-As these are all external dongles, there are probably few users that
-have not yet replaced them with cheap 802.11n devices that work better.
+The driver has been orphaned since 2010 and only seen cosmetic updates
+long before than. Jean Tourrilhes pointed out in a 2005 changelog that
+he tested a change on actual hardware, which was apparently already
+noteworthy back then.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- MAINTAINERS                         |    6 -
- drivers/net/wireless/zydas/Kconfig  |   19 -
- drivers/net/wireless/zydas/Makefile |    2 -
- drivers/net/wireless/zydas/zd1201.c | 1909 ---------------------------
- drivers/net/wireless/zydas/zd1201.h |  144 --
- 5 files changed, 2080 deletions(-)
- delete mode 100644 drivers/net/wireless/zydas/zd1201.c
- delete mode 100644 drivers/net/wireless/zydas/zd1201.h
+ .../networking/device_drivers/wifi/index.rst  |    1 -
+ .../networking/device_drivers/wifi/ray_cs.rst |  165 -
+ MAINTAINERS                                   |    5 -
+ drivers/net/wireless/legacy/Kconfig           |   16 -
+ drivers/net/wireless/legacy/Makefile          |    1 -
+ drivers/net/wireless/legacy/ray_cs.c          | 2824 -----------------
+ drivers/net/wireless/legacy/ray_cs.h          |   74 -
+ drivers/net/wireless/legacy/rayctl.h          |  734 -----
+ 8 files changed, 3820 deletions(-)
+ delete mode 100644 Documentation/networking/device_drivers/wifi/ray_cs.rst
+ delete mode 100644 drivers/net/wireless/legacy/ray_cs.c
+ delete mode 100644 drivers/net/wireless/legacy/ray_cs.h
+ delete mode 100644 drivers/net/wireless/legacy/rayctl.h
 
+diff --git a/Documentation/networking/device_drivers/wifi/index.rst b/Documentation/networking/device_drivers/wifi/index.rst
+index bf91a87c7acff..fb394f5de4a94 100644
+--- a/Documentation/networking/device_drivers/wifi/index.rst
++++ b/Documentation/networking/device_drivers/wifi/index.rst
+@@ -10,7 +10,6 @@ Contents:
+ 
+    intel/ipw2100
+    intel/ipw2200
+-   ray_cs
+ 
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/networking/device_drivers/wifi/ray_cs.rst b/Documentation/networking/device_drivers/wifi/ray_cs.rst
+deleted file mode 100644
+index 9a46d1ae8f209..0000000000000
+--- a/Documentation/networking/device_drivers/wifi/ray_cs.rst
++++ /dev/null
+@@ -1,165 +0,0 @@
+-.. SPDX-License-Identifier: GPL-2.0
+-
+-.. include:: <isonum.txt>
+-
+-=========================
+-Raylink wireless LAN card
+-=========================
+-
+-September 21, 1999
+-
+-Copyright |copy| 1998  Corey Thomas (corey@world.std.com)
+-
+-This file is the documentation for the Raylink Wireless LAN card driver for
+-Linux.  The Raylink wireless LAN card is a PCMCIA card which provides IEEE
+-802.11 compatible wireless network connectivity at 1 and 2 megabits/second.
+-See http://www.raytheon.com/micro/raylink/ for more information on the Raylink
+-card.  This driver is in early development and does have bugs.  See the known
+-bugs and limitations at the end of this document for more information.
+-This driver also works with WebGear's Aviator 2.4 and Aviator Pro
+-wireless LAN cards.
+-
+-As of kernel 2.3.18, the ray_cs driver is part of the Linux kernel
+-source.  My web page for the development of ray_cs is at
+-http://web.ralinktech.com/ralink/Home/Support/Linux.html
+-and I can be emailed at corey@world.std.com
+-
+-The kernel driver is based on ray_cs-1.62.tgz
+-
+-The driver at my web page is intended to be used as an add on to
+-David Hinds pcmcia package.  All the command line parameters are
+-available when compiled as a module.  When built into the kernel, only
+-the essid= string parameter is available via the kernel command line.
+-This will change after the method of sorting out parameters for all
+-the PCMCIA drivers is agreed upon.  If you must have a built in driver
+-with nondefault parameters, they can be edited in
+-/usr/src/linux/drivers/net/pcmcia/ray_cs.c.  Searching for module_param
+-will find them all.
+-
+-Information on card services is available at:
+-
+-	http://pcmcia-cs.sourceforge.net/
+-
+-
+-Card services user programs are still required for PCMCIA devices.
+-pcmcia-cs-3.1.1 or greater is required for the kernel version of
+-the driver.
+-
+-Currently, ray_cs is not part of David Hinds card services package,
+-so the following magic is required.
+-
+-At the end of the /etc/pcmcia/config.opts file, add the line:
+-source ./ray_cs.opts
+-This will make card services read the ray_cs.opts file
+-when starting.  Create the file /etc/pcmcia/ray_cs.opts containing the
+-following::
+-
+-  #### start of /etc/pcmcia/ray_cs.opts ###################
+-  # Configuration options for Raylink Wireless LAN PCMCIA card
+-  device "ray_cs"
+-    class "network" module "misc/ray_cs"
+-
+-  card "RayLink PC Card WLAN Adapter"
+-    manfid 0x01a6, 0x0000
+-    bind "ray_cs"
+-
+-  module "misc/ray_cs" opts ""
+-  #### end of /etc/pcmcia/ray_cs.opts #####################
+-
+-
+-To join an existing network with
+-different parameters, contact the network administrator for the
+-configuration information, and edit /etc/pcmcia/ray_cs.opts.
+-Add the parameters below between the empty quotes.
+-
+-Parameters for ray_cs driver which may be specified in ray_cs.opts:
+-
+-=============== =============== =============================================
+-bc              integer         0 = normal mode (802.11 timing),
+-				1 = slow down inter frame timing to allow
+-				operation with older breezecom access
+-				points.
+-
+-beacon_period	integer         beacon period in Kilo-microseconds,
+-
+-				legal values = must be integer multiple
+-				of hop dwell
+-
+-				default = 256
+-
+-country         integer         1 = USA (default),
+-				2 = Europe,
+-				3 = Japan,
+-				4 = Korea,
+-				5 = Spain,
+-				6 = France,
+-				7 = Israel,
+-				8 = Australia
+-
+-essid		string		ESS ID - network name to join
+-
+-				string with maximum length of 32 chars
+-				default value = "ADHOC_ESSID"
+-
+-hop_dwell	integer         hop dwell time in Kilo-microseconds
+-
+-				legal values = 16,32,64,128(default),256
+-
+-irq_mask	integer         linux standard 16 bit value 1bit/IRQ
+-
+-				lsb is IRQ 0, bit 1 is IRQ 1 etc.
+-				Used to restrict choice of IRQ's to use.
+-				Recommended method for controlling
+-				interrupts is in /etc/pcmcia/config.opts
+-
+-net_type	integer		0 (default) = adhoc network,
+-				1 = infrastructure
+-
+-phy_addr	string          string containing new MAC address in
+-				hex, must start with x eg
+-				x00008f123456
+-
+-psm		integer         0 = continuously active,
+-				1 = power save mode (not useful yet)
+-
+-pc_debug	integer		(0-5) larger values for more verbose
+-				logging.  Replaces ray_debug.
+-
+-ray_debug	integer		Replaced with pc_debug
+-
+-ray_mem_speed   integer         defaults to 500
+-
+-sniffer         integer         0 = not sniffer (default),
+-				1 = sniffer which can be used to record all
+-				network traffic using tcpdump or similar,
+-				but no normal network use is allowed.
+-
+-translate	integer		0 = no translation (encapsulate frames),
+-				1 = translation    (RFC1042/802.1)
+-=============== =============== =============================================
+-
+-More on sniffer mode:
+-
+-tcpdump does not understand 802.11 headers, so it can't
+-interpret the contents, but it can record to a file.  This is only
+-useful for debugging 802.11 lowlevel protocols that are not visible to
+-linux.  If you want to watch ftp xfers, or do similar things, you
+-don't need to use sniffer mode.  Also, some packet types are never
+-sent up by the card, so you will never see them (ack, rts, cts, probe
+-etc.)  There is a simple program (showcap) included in the ray_cs
+-package which parses the 802.11 headers.
+-
+-Known Problems and missing features
+-
+-	Does not work with non x86
+-
+-	Does not work with SMP
+-
+-	Support for defragmenting frames is not yet debugged, and in
+-	fact is known to not work.  I have never encountered a net set
+-	up to fragment, but still, it should be fixed.
+-
+-	The ioctl support is incomplete.  The hardware address cannot be set
+-	using ifconfig yet.  If a different hardware address is needed, it may
+-	be set using the phy_addr parameter in ray_cs.opts.  This requires
+-	a card insertion to take effect.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 78fa9932ba28f..be59dc66c8133 100644
+index e5c669d9bca00..3123c955bb7f5 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -22426,12 +22426,6 @@ S:	Supported
- F:	drivers/usb/host/pci-quirks*
- F:	drivers/usb/host/xhci*
+@@ -17947,11 +17947,6 @@ F:	drivers/ras/
+ F:	include/linux/ras.h
+ F:	include/ras/ras_event.h
  
--USB ZD1201 DRIVER
+-RAYLINK/WEBGEAR 802.11 WIRELESS LAN DRIVER
 -L:	linux-wireless@vger.kernel.org
 -S:	Orphan
--W:	http://linux-lc100020.sourceforge.net
--F:	drivers/net/wireless/zydas/zd1201.*
+-F:	drivers/net/wireless/legacy/ray*
 -
- USER DATAGRAM PROTOCOL (UDP)
- M:	Willem de Bruijn <willemdebruijn.kernel@gmail.com>
- S:	Maintained
-diff --git a/drivers/net/wireless/zydas/Kconfig b/drivers/net/wireless/zydas/Kconfig
-index 08574433df66f..839e1217e855c 100644
---- a/drivers/net/wireless/zydas/Kconfig
-+++ b/drivers/net/wireless/zydas/Kconfig
-@@ -12,25 +12,6 @@ config WLAN_VENDOR_ZYDAS
- 
- if WLAN_VENDOR_ZYDAS
- 
--config USB_ZD1201
--	tristate "USB ZD1201 based Wireless device support"
--	depends on CFG80211 && USB
+ RC-CORE / LIRC FRAMEWORK
+ M:	Sean Young <sean@mess.org>
+ L:	linux-media@vger.kernel.org
+diff --git a/drivers/net/wireless/legacy/Kconfig b/drivers/net/wireless/legacy/Kconfig
+index 3a5275941212d..1d77d53d64409 100644
+--- a/drivers/net/wireless/legacy/Kconfig
++++ b/drivers/net/wireless/legacy/Kconfig
+@@ -1,19 +1,3 @@
+-config PCMCIA_RAYCS
+-	tristate "Aviator/Raytheon 2.4GHz wireless support"
+-	depends on PCMCIA
 -	select WIRELESS_EXT
+-	select WEXT_SPY
 -	select WEXT_PRIV
--	select FW_LOADER
 -	help
--	  Say Y if you want to use wireless LAN adapters based on the ZyDAS
--	  ZD1201 chip.
+-	  Say Y here if you intend to attach an Aviator/Raytheon PCMCIA
+-	  (PC-card) wireless Ethernet networking card to your computer.
+-	  Please read the file
+-	  <file:Documentation/networking/device_drivers/wifi/ray_cs.rst> for
+-	  details.
 -
--	  This driver makes the adapter appear as a normal Ethernet interface,
--	  typically on wlan0.
+-	  To compile this driver as a module, choose M here: the module will be
+-	  called ray_cs.  If unsure, say N.
 -
--	  The zd1201 device requires external firmware to be loaded.
--	  This can be found at http://linux-lc100020.sourceforge.net/
--
--	  To compile this driver as a module, choose M here: the
--	  module will be called zd1201.
--
- source "drivers/net/wireless/zydas/zd1211rw/Kconfig"
+ config PCMCIA_WL3501
+ 	tristate "Planet WL3501 PCMCIA cards"
+ 	depends on CFG80211 && PCMCIA
+diff --git a/drivers/net/wireless/legacy/Makefile b/drivers/net/wireless/legacy/Makefile
+index 36878f080bfc5..d8705ccc5cf5d 100644
+--- a/drivers/net/wireless/legacy/Makefile
++++ b/drivers/net/wireless/legacy/Makefile
+@@ -1,5 +1,4 @@
+ # 16-bit wireless PCMCIA client drivers
+-obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
+ obj-$(CONFIG_PCMCIA_WL3501)	+= wl3501_cs.o
  
- endif # WLAN_VENDOR_ZYDAS
-diff --git a/drivers/net/wireless/zydas/Makefile b/drivers/net/wireless/zydas/Makefile
-index c70003d30a8fb..3e0a51db98742 100644
---- a/drivers/net/wireless/zydas/Makefile
-+++ b/drivers/net/wireless/zydas/Makefile
-@@ -1,4 +1,2 @@
- # SPDX-License-Identifier: GPL-2.0-only
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
--
--obj-$(CONFIG_USB_ZD1201)	+= zd1201.o
-diff --git a/drivers/net/wireless/zydas/zd1201.c b/drivers/net/wireless/zydas/zd1201.c
+ obj-$(CONFIG_USB_NET_RNDIS_WLAN)	+= rndis_wlan.o
+diff --git a/drivers/net/wireless/legacy/ray_cs.c b/drivers/net/wireless/legacy/ray_cs.c
 deleted file mode 100644
-index 2814df1ecc78f..0000000000000
---- a/drivers/net/wireless/zydas/zd1201.c
+index 8ace797ce951c..0000000000000
+--- a/drivers/net/wireless/legacy/ray_cs.c
 +++ /dev/null
-@@ -1,1909 +0,0 @@
+@@ -1,2824 +0,0 @@
 -// SPDX-License-Identifier: GPL-2.0-only
--/*
-- *	Driver for ZyDAS zd1201 based USB wireless devices.
+-/*=============================================================================
 - *
-- *	Copyright (c) 2004, 2005 Jeroen Vreeken (pe1rxq@amsat.org)
+- * A  PCMCIA client driver for the Raylink wireless LAN card.
+- * The starting point for this module was the skeleton.c in the
+- * PCMCIA 2.9.12 package written by David Hinds, dahinds@users.sourceforge.net
 - *
-- *	Parts of this driver have been derived from a wlan-ng version
-- *	modified by ZyDAS. They also made documentation available, thanks!
-- *	Copyright (C) 1999 AbsoluteValue Systems, Inc.  All Rights Reserved.
-- */
+- * Copyright (c) 1998  Corey Thomas (corey@world.std.com)
+- *
+- * Changes:
+- * Arnaldo Carvalho de Melo <acme@conectiva.com.br> - 08/08/2000
+- * - reorganize kmallocs in ray_attach, checking all for failure
+- *   and releasing the previous allocations if one fails
+- *
+- * Daniele Bellucci <bellucda@tiscali.it> - 07/10/2003
+- * - Audit copy_to_user in ioctl(SIOCGIWESSID)
+- *
+-=============================================================================*/
 -
 -#include <linux/module.h>
--#include <linux/usb.h>
--#include <linux/slab.h>
+-#include <linux/kernel.h>
+-#include <linux/proc_fs.h>
+-#include <linux/ptrace.h>
+-#include <linux/seq_file.h>
+-#include <linux/string.h>
+-#include <linux/timer.h>
+-#include <linux/init.h>
 -#include <linux/netdevice.h>
 -#include <linux/etherdevice.h>
--#include <linux/wireless.h>
--#include <net/cfg80211.h>
--#include <net/iw_handler.h>
--#include <linux/string.h>
 -#include <linux/if_arp.h>
--#include <linux/firmware.h>
--#include "zd1201.h"
+-#include <linux/ioport.h>
+-#include <linux/skbuff.h>
+-#include <linux/ieee80211.h>
 -
--static const struct usb_device_id zd1201_table[] = {
--	{USB_DEVICE(0x0586, 0x3400)}, /* Peabird USB Wireless Adapter */
--	{USB_DEVICE(0x0ace, 0x1201)}, /* ZyDAS ZD1201 USB Wireless Adapter */
--	{USB_DEVICE(0x050d, 0x6051)}, /* Belkin F5D6051 usb  adapter */
--	{USB_DEVICE(0x0db0, 0x6823)}, /* MSI UB11B usb  adapter */
--	{USB_DEVICE(0x1044, 0x8004)}, /* Gigabyte GN-WLBZ101 */
--	{USB_DEVICE(0x1044, 0x8005)}, /* GIGABYTE GN-WLBZ201 usb adapter */
--	{}
--};
+-#include <pcmcia/cistpl.h>
+-#include <pcmcia/cisreg.h>
+-#include <pcmcia/ds.h>
 -
--static int ap;	/* Are we an AP or a normal station? */
+-#include <linux/wireless.h>
+-#include <net/iw_handler.h>
 -
--#define ZD1201_VERSION	"0.15"
+-#include <asm/io.h>
+-#include <asm/byteorder.h>
+-#include <linux/uaccess.h>
 -
--MODULE_AUTHOR("Jeroen Vreeken <pe1rxq@amsat.org>");
--MODULE_DESCRIPTION("Driver for ZyDAS ZD1201 based USB Wireless adapters");
--MODULE_VERSION(ZD1201_VERSION);
+-/* Warning : these stuff will slow down the driver... */
+-#define WIRELESS_SPY		/* Enable spying addresses */
+-/* Definitions we need for spy */
+-typedef struct iw_statistics iw_stats;
+-typedef u_char mac_addr[ETH_ALEN];	/* Hardware address */
+-
+-#include "rayctl.h"
+-#include "ray_cs.h"
+-
+-
+-/** Prototypes based on PCMCIA skeleton driver *******************************/
+-static int ray_config(struct pcmcia_device *link);
+-static void ray_release(struct pcmcia_device *link);
+-static void ray_detach(struct pcmcia_device *p_dev);
+-
+-/***** Prototypes indicated by device structure ******************************/
+-static int ray_dev_close(struct net_device *dev);
+-static int ray_dev_config(struct net_device *dev, struct ifmap *map);
+-static struct net_device_stats *ray_get_stats(struct net_device *dev);
+-static int ray_dev_init(struct net_device *dev);
+-
+-static int ray_open(struct net_device *dev);
+-static netdev_tx_t ray_dev_start_xmit(struct sk_buff *skb,
+-					    struct net_device *dev);
+-static void set_multicast_list(struct net_device *dev);
+-static void ray_update_multi_list(struct net_device *dev, int all);
+-static int translate_frame(ray_dev_t *local, struct tx_msg __iomem *ptx,
+-			   unsigned char *data, int len);
+-static void ray_build_header(ray_dev_t *local, struct tx_msg __iomem *ptx,
+-			     UCHAR msg_type, unsigned char *data);
+-static void untranslate(ray_dev_t *local, struct sk_buff *skb, int len);
+-static iw_stats *ray_get_wireless_stats(struct net_device *dev);
+-static const struct iw_handler_def ray_handler_def;
+-
+-/***** Prototypes for raylink functions **************************************/
+-static void authenticate(ray_dev_t *local);
+-static int build_auth_frame(ray_dev_t *local, UCHAR *dest, int auth_type);
+-static void authenticate_timeout(struct timer_list *t);
+-static int get_free_ccs(ray_dev_t *local);
+-static int get_free_tx_ccs(ray_dev_t *local);
+-static void init_startup_params(ray_dev_t *local);
+-static int parse_addr(char *in_str, UCHAR *out);
+-static int ray_hw_xmit(unsigned char *data, int len, struct net_device *dev, UCHAR type);
+-static int ray_init(struct net_device *dev);
+-static int interrupt_ecf(ray_dev_t *local, int ccs);
+-static void ray_reset(struct net_device *dev);
+-static void ray_update_parm(struct net_device *dev, UCHAR objid, UCHAR *value, int len);
+-static void verify_dl_startup(struct timer_list *t);
+-
+-/* Prototypes for interrpt time functions **********************************/
+-static irqreturn_t ray_interrupt(int reg, void *dev_id);
+-static void clear_interrupt(ray_dev_t *local);
+-static void rx_deauthenticate(ray_dev_t *local, struct rcs __iomem *prcs,
+-			      unsigned int pkt_addr, int rx_len);
+-static int copy_from_rx_buff(ray_dev_t *local, UCHAR *dest, int pkt_addr, int len);
+-static void ray_rx(struct net_device *dev, ray_dev_t *local, struct rcs __iomem *prcs);
+-static void release_frag_chain(ray_dev_t *local, struct rcs __iomem *prcs);
+-static void rx_authenticate(ray_dev_t *local, struct rcs __iomem *prcs,
+-			    unsigned int pkt_addr, int rx_len);
+-static void rx_data(struct net_device *dev, struct rcs __iomem *prcs,
+-		    unsigned int pkt_addr, int rx_len);
+-static void associate(ray_dev_t *local);
+-
+-/* Card command functions */
+-static int dl_startup_params(struct net_device *dev);
+-static void join_net(struct timer_list *t);
+-static void start_net(struct timer_list *t);
+-
+-/*===========================================================================*/
+-/* Parameters that can be set with 'insmod' */
+-
+-/* ADHOC=0, Infrastructure=1 */
+-static int net_type = ADHOC;
+-
+-/* Hop dwell time in Kus (1024 us units defined by 802.11) */
+-static int hop_dwell = 128;
+-
+-/* Beacon period in Kus */
+-static int beacon_period = 256;
+-
+-/* power save mode (0 = off, 1 = save power) */
+-static int psm;
+-
+-/* String for network's Extended Service Set ID. 32 Characters max */
+-static char *essid;
+-
+-/* Default to encapsulation unless translation requested */
+-static bool translate = true;
+-
+-static int country = USA;
+-
+-static int sniffer;
+-
+-static int bc;
+-
+-/* 48 bit physical card address if overriding card's real physical
+- * address is required.  Since IEEE 802.11 addresses are 48 bits
+- * like ethernet, an int can't be used, so a string is used. To
+- * allow use of addresses starting with a decimal digit, the first
+- * character must be a letter and will be ignored. This letter is
+- * followed by up to 12 hex digits which are the address.  If less
+- * than 12 digits are used, the address will be left filled with 0's.
+- * Note that bit 0 of the first byte is the broadcast bit, and evil
+- * things will happen if it is not 0 in a card address.
+- */
+-static char *phy_addr = NULL;
+-
+-static unsigned int ray_mem_speed = 500;
+-
+-/* WARNING: THIS DRIVER IS NOT CAPABLE OF HANDLING MULTIPLE DEVICES! */
+-static struct pcmcia_device *this_device = NULL;
+-
+-MODULE_AUTHOR("Corey Thomas <corey@world.std.com>");
+-MODULE_DESCRIPTION("Raylink/WebGear wireless LAN driver");
 -MODULE_LICENSE("GPL");
--module_param(ap, int, 0);
--MODULE_PARM_DESC(ap, "If non-zero Access Point firmware will be loaded");
--MODULE_DEVICE_TABLE(usb, zd1201_table);
 -
--
--static int zd1201_fw_upload(struct usb_device *dev, int apfw)
--{
--	const struct firmware *fw_entry;
--	const char *data;
--	unsigned long len;
--	int err;
--	unsigned char ret;
--	char *buf;
--	char *fwfile;
--
--	if (apfw)
--		fwfile = "zd1201-ap.fw";
--	else
--		fwfile = "zd1201.fw";
--
--	err = request_firmware(&fw_entry, fwfile, &dev->dev);
--	if (err) {
--		dev_err(&dev->dev, "Failed to load %s firmware file!\n", fwfile);
--		dev_err(&dev->dev, "Make sure the hotplug firmware loader is installed.\n");
--		dev_err(&dev->dev, "Goto http://linux-lc100020.sourceforge.net for more info.\n");
--		return err;
--	}
--
--	data = fw_entry->data;
--        len = fw_entry->size;
--
--	buf = kmalloc(1024, GFP_ATOMIC);
--	if (!buf) {
--		err = -ENOMEM;
--		goto exit;
--	}
--	
--	while (len > 0) {
--		int translen = (len > 1024) ? 1024 : len;
--		memcpy(buf, data, translen);
--
--		err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), 0,
--		    USB_DIR_OUT | 0x40, 0, 0, buf, translen,
--		    ZD1201_FW_TIMEOUT);
--		if (err < 0)
--			goto exit;
--
--		len -= translen;
--		data += translen;
--	}
--                                        
--	err = usb_control_msg(dev, usb_sndctrlpipe(dev, 0), 0x2,
--	    USB_DIR_OUT | 0x40, 0, 0, NULL, 0, ZD1201_FW_TIMEOUT);
--	if (err < 0)
--		goto exit;
--
--	err = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), 0x4,
--	    USB_DIR_IN | 0x40, 0, 0, buf, sizeof(ret), ZD1201_FW_TIMEOUT);
--	if (err < 0)
--		goto exit;
--
--	memcpy(&ret, buf, sizeof(ret));
--
--	if (ret & 0x80) {
--		err = -EIO;
--		goto exit;
--	}
--
--	err = 0;
--exit:
--	kfree(buf);
--	release_firmware(fw_entry);
--	return err;
--}
--
--MODULE_FIRMWARE("zd1201-ap.fw");
--MODULE_FIRMWARE("zd1201.fw");
--
--static void zd1201_usbfree(struct urb *urb)
--{
--	struct zd1201 *zd = urb->context;
--
--	switch(urb->status) {
--		case -EILSEQ:
--		case -ENODEV:
--		case -ETIME:
--		case -ENOENT:
--		case -EPIPE:
--		case -EOVERFLOW:
--		case -ESHUTDOWN:
--			dev_warn(&zd->usb->dev, "%s: urb failed: %d\n", 
--			    zd->dev->name, urb->status);
--	}
--
--	kfree(urb->transfer_buffer);
--	usb_free_urb(urb);
--}
--
--/* cmdreq message: 
--	u32 type
--	u16 cmd
--	u16 parm0
--	u16 parm1
--	u16 parm2
--	u8  pad[4]
--
--	total: 4 + 2 + 2 + 2 + 2 + 4 = 16
--*/
--static int zd1201_docmd(struct zd1201 *zd, int cmd, int parm0,
--			int parm1, int parm2)
--{
--	unsigned char *command;
--	int ret;
--	struct urb *urb;
--
--	command = kmalloc(16, GFP_ATOMIC);
--	if (!command)
--		return -ENOMEM;
--
--	*((__le32*)command) = cpu_to_le32(ZD1201_USB_CMDREQ);
--	*((__le16*)&command[4]) = cpu_to_le16(cmd);
--	*((__le16*)&command[6]) = cpu_to_le16(parm0);
--	*((__le16*)&command[8]) = cpu_to_le16(parm1);
--	*((__le16*)&command[10])= cpu_to_le16(parm2);
--
--	urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!urb) {
--		kfree(command);
--		return -ENOMEM;
--	}
--	usb_fill_bulk_urb(urb, zd->usb, usb_sndbulkpipe(zd->usb, zd->endp_out2),
--			  command, 16, zd1201_usbfree, zd);
--	ret = usb_submit_urb(urb, GFP_ATOMIC);
--	if (ret) {
--		kfree(command);
--		usb_free_urb(urb);
--	}
--
--	return ret;
--}
--
--/* Callback after sending out a packet */
--static void zd1201_usbtx(struct urb *urb)
--{
--	struct zd1201 *zd = urb->context;
--	netif_wake_queue(zd->dev);
--}
--
--/* Incoming data */
--static void zd1201_usbrx(struct urb *urb)
--{
--	struct zd1201 *zd = urb->context;
--	int free = 0;
--	unsigned char *data = urb->transfer_buffer;
--	struct sk_buff *skb;
--	unsigned char type;
--
--	if (!zd)
--		return;
--
--	switch(urb->status) {
--		case -EILSEQ:
--		case -ENODEV:
--		case -ETIME:
--		case -ENOENT:
--		case -EPIPE:
--		case -EOVERFLOW:
--		case -ESHUTDOWN:
--			dev_warn(&zd->usb->dev, "%s: rx urb failed: %d\n",
--			    zd->dev->name, urb->status);
--			free = 1;
--			goto exit;
--	}
--	
--	if (urb->status != 0 || urb->actual_length == 0)
--		goto resubmit;
--
--	type = data[0];
--	if (type == ZD1201_PACKET_EVENTSTAT || type == ZD1201_PACKET_RESOURCE) {
--		memcpy(zd->rxdata, data, urb->actual_length);
--		zd->rxlen = urb->actual_length;
--		zd->rxdatas = 1;
--		wake_up(&zd->rxdataq);
--	}
--	/* Info frame */
--	if (type == ZD1201_PACKET_INQUIRE) {
--		int i = 0;
--		unsigned short infotype, copylen;
--		infotype = le16_to_cpu(*(__le16*)&data[6]);
--
--		if (infotype == ZD1201_INF_LINKSTATUS) {
--			short linkstatus;
--
--			linkstatus = le16_to_cpu(*(__le16*)&data[8]);
--			switch(linkstatus) {
--				case 1:
--					netif_carrier_on(zd->dev);
--					break;
--				case 2:
--					netif_carrier_off(zd->dev);
--					break;
--				case 3:
--					netif_carrier_off(zd->dev);
--					break;
--				case 4:
--					netif_carrier_on(zd->dev);
--					break;
--				default:
--					netif_carrier_off(zd->dev);
--			}
--			goto resubmit;
--		}
--		if (infotype == ZD1201_INF_ASSOCSTATUS) {
--			short status = le16_to_cpu(*(__le16*)(data+8));
--			int event;
--			union iwreq_data wrqu;
--
--			switch (status) {
--				case ZD1201_ASSOCSTATUS_STAASSOC:
--				case ZD1201_ASSOCSTATUS_REASSOC:
--					event = IWEVREGISTERED;
--					break;
--				case ZD1201_ASSOCSTATUS_DISASSOC:
--				case ZD1201_ASSOCSTATUS_ASSOCFAIL:
--				case ZD1201_ASSOCSTATUS_AUTHFAIL:
--				default:
--					event = IWEVEXPIRED;
--			}
--			memcpy(wrqu.addr.sa_data, data+10, ETH_ALEN);
--			wrqu.addr.sa_family = ARPHRD_ETHER;
--
--			/* Send event to user space */
--			wireless_send_event(zd->dev, event, &wrqu, NULL);
--
--			goto resubmit;
--		}
--		if (infotype == ZD1201_INF_AUTHREQ) {
--			union iwreq_data wrqu;
--
--			memcpy(wrqu.addr.sa_data, data+8, ETH_ALEN);
--			wrqu.addr.sa_family = ARPHRD_ETHER;
--			/* There isn't a event that trully fits this request.
--			   We assume that userspace will be smart enough to
--			   see a new station being expired and sends back a
--			   authstation ioctl to authorize it. */
--			wireless_send_event(zd->dev, IWEVEXPIRED, &wrqu, NULL);
--			goto resubmit;
--		}
--		/* Other infotypes are handled outside this handler */
--		zd->rxlen = 0;
--		while (i < urb->actual_length) {
--			copylen = le16_to_cpu(*(__le16*)&data[i+2]);
--			/* Sanity check, sometimes we get junk */
--			if (copylen+zd->rxlen > sizeof(zd->rxdata))
--				break;
--			memcpy(zd->rxdata+zd->rxlen, data+i+4, copylen);
--			zd->rxlen += copylen;
--			i += 64;
--		}
--		if (i >= urb->actual_length) {
--			zd->rxdatas = 1;
--			wake_up(&zd->rxdataq);
--		}
--		goto  resubmit;
--	}
--	/* Actual data */
--	if (data[urb->actual_length-1] == ZD1201_PACKET_RXDATA) {
--		int datalen = urb->actual_length-1;
--		unsigned short len, fc, seq;
--
--		len = ntohs(*(__be16 *)&data[datalen-2]);
--		if (len>datalen)
--			len=datalen;
--		fc = le16_to_cpu(*(__le16 *)&data[datalen-16]);
--		seq = le16_to_cpu(*(__le16 *)&data[datalen-24]);
--
--		if (zd->monitor) {
--			if (datalen < 24)
--				goto resubmit;
--			if (!(skb = dev_alloc_skb(datalen+24)))
--				goto resubmit;
--			
--			skb_put_data(skb, &data[datalen - 16], 2);
--			skb_put_data(skb, &data[datalen - 2], 2);
--			skb_put_data(skb, &data[datalen - 14], 6);
--			skb_put_data(skb, &data[datalen - 22], 6);
--			skb_put_data(skb, &data[datalen - 8], 6);
--			skb_put_data(skb, &data[datalen - 24], 2);
--			skb_put_data(skb, data, len);
--			skb->protocol = eth_type_trans(skb, zd->dev);
--			zd->dev->stats.rx_packets++;
--			zd->dev->stats.rx_bytes += skb->len;
--			netif_rx(skb);
--			goto resubmit;
--		}
--			
--		if ((seq & IEEE80211_SCTL_FRAG) ||
--		    (fc & IEEE80211_FCTL_MOREFRAGS)) {
--			struct zd1201_frag *frag = NULL;
--			char *ptr;
--
--			if (datalen<14)
--				goto resubmit;
--			if ((seq & IEEE80211_SCTL_FRAG) == 0) {
--				frag = kmalloc(sizeof(*frag), GFP_ATOMIC);
--				if (!frag)
--					goto resubmit;
--				skb = dev_alloc_skb(IEEE80211_MAX_DATA_LEN +14+2);
--				if (!skb) {
--					kfree(frag);
--					goto resubmit;
--				}
--				frag->skb = skb;
--				frag->seq = seq & IEEE80211_SCTL_SEQ;
--				skb_reserve(skb, 2);
--				skb_put_data(skb, &data[datalen - 14], 12);
--				skb_put_data(skb, &data[6], 2);
--				skb_put_data(skb, data + 8, len);
--				hlist_add_head(&frag->fnode, &zd->fraglist);
--				goto resubmit;
--			}
--			hlist_for_each_entry(frag, &zd->fraglist, fnode)
--				if (frag->seq == (seq&IEEE80211_SCTL_SEQ))
--					break;
--			if (!frag)
--				goto resubmit;
--			skb = frag->skb;
--			ptr = skb_put(skb, len);
--			if (ptr)
--				memcpy(ptr, data+8, len);
--			if (fc & IEEE80211_FCTL_MOREFRAGS)
--				goto resubmit;
--			hlist_del_init(&frag->fnode);
--			kfree(frag);
--		} else {
--			if (datalen<14)
--				goto resubmit;
--			skb = dev_alloc_skb(len + 14 + 2);
--			if (!skb)
--				goto resubmit;
--			skb_reserve(skb, 2);
--			skb_put_data(skb, &data[datalen - 14], 12);
--			skb_put_data(skb, &data[6], 2);
--			skb_put_data(skb, data + 8, len);
--		}
--		skb->protocol = eth_type_trans(skb, zd->dev);
--		zd->dev->stats.rx_packets++;
--		zd->dev->stats.rx_bytes += skb->len;
--		netif_rx(skb);
--	}
--resubmit:
--	memset(data, 0, ZD1201_RXSIZE);
--
--	urb->status = 0;
--	urb->dev = zd->usb;
--	if(usb_submit_urb(urb, GFP_ATOMIC))
--		free = 1;
--
--exit:
--	if (free) {
--		zd->rxlen = 0;
--		zd->rxdatas = 1;
--		wake_up(&zd->rxdataq);
--		kfree(urb->transfer_buffer);
--	}
--}
--
--static int zd1201_getconfig(struct zd1201 *zd, int rid, void *riddata,
--	unsigned int riddatalen)
--{
--	int err;
--	int i = 0;
--	int code;
--	int rid_fid;
--	int length;
--	unsigned char *pdata;
--
--	zd->rxdatas = 0;
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_ACCESS, rid, 0, 0);
--	if (err)
--		return err;
--
--	wait_event_interruptible(zd->rxdataq, zd->rxdatas);
--	if (!zd->rxlen)
--		return -EIO;
--
--	code = le16_to_cpu(*(__le16*)(&zd->rxdata[4]));
--	rid_fid = le16_to_cpu(*(__le16*)(&zd->rxdata[6]));
--	length = le16_to_cpu(*(__le16*)(&zd->rxdata[8]));
--	if (length > zd->rxlen)
--		length = zd->rxlen-6;
--
--	/* If access bit is not on, then error */
--	if ((code & ZD1201_ACCESSBIT) != ZD1201_ACCESSBIT || rid_fid != rid )
--		return -EINVAL;
--
--	/* Not enough buffer for allocating data */
--	if (riddatalen != (length - 4)) {
--		dev_dbg(&zd->usb->dev, "riddatalen mismatches, expected=%u, (packet=%u) length=%u, rid=0x%04X, rid_fid=0x%04X\n",
--		    riddatalen, zd->rxlen, length, rid, rid_fid);
--		return -ENODATA;
--	}
--
--	zd->rxdatas = 0;
--	/* Issue SetRxRid commnd */			
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_SETRXRID, rid, 0, length);
--	if (err)
--		return err;
--
--	/* Receive RID record from resource packets */
--	wait_event_interruptible(zd->rxdataq, zd->rxdatas);
--	if (!zd->rxlen)
--		return -EIO;
--
--	if (zd->rxdata[zd->rxlen - 1] != ZD1201_PACKET_RESOURCE) {
--		dev_dbg(&zd->usb->dev, "Packet type mismatch: 0x%x not 0x3\n",
--		    zd->rxdata[zd->rxlen-1]);
--		return -EINVAL;
--	}
--
--	/* Set the data pointer and received data length */
--	pdata = zd->rxdata;
--	length = zd->rxlen;
--
--	do {
--		int actual_length;
--
--		actual_length = (length > 64) ? 64 : length;
--
--		if (pdata[0] != 0x3) {
--			dev_dbg(&zd->usb->dev, "Rx Resource packet type error: %02X\n",
--			    pdata[0]);
--			return -EINVAL;
--		}
--
--		if (actual_length != 64) {
--			/* Trim the last packet type byte */
--			actual_length--;
--		}
--
--		/* Skip the 4 bytes header (RID length and RID) */
--		if (i == 0) {
--			pdata += 8;
--			actual_length -= 8;
--		} else {
--			pdata += 4;
--			actual_length -= 4;
--		}
--		
--		memcpy(riddata, pdata, actual_length);
--		riddata += actual_length;
--		pdata += actual_length;
--		length -= 64;
--		i++;
--	} while (length > 0);
--
--	return 0;
--}
--
--/*
-- *	resreq:
-- *		byte	type
-- *		byte	sequence
-- *		u16	reserved
-- *		byte	data[12]
-- *	total: 16
-- */
--static int zd1201_setconfig(struct zd1201 *zd, int rid, const void *buf, int len, int wait)
--{
--	int err;
--	unsigned char *request;
--	int reqlen;
--	char seq=0;
--	struct urb *urb;
--	gfp_t gfp_mask = wait ? GFP_NOIO : GFP_ATOMIC;
--
--	len += 4;			/* first 4 are for header */
--
--	zd->rxdatas = 0;
--	zd->rxlen = 0;
--	for (seq=0; len > 0; seq++) {
--		request = kzalloc(16, gfp_mask);
--		if (!request)
--			return -ENOMEM;
--		urb = usb_alloc_urb(0, gfp_mask);
--		if (!urb) {
--			kfree(request);
--			return -ENOMEM;
--		}
--		reqlen = len>12 ? 12 : len;
--		request[0] = ZD1201_USB_RESREQ;
--		request[1] = seq;
--		request[2] = 0;
--		request[3] = 0;
--		if (request[1] == 0) {
--			/* add header */
--			*(__le16*)&request[4] = cpu_to_le16((len-2+1)/2);
--			*(__le16*)&request[6] = cpu_to_le16(rid);
--			memcpy(request+8, buf, reqlen-4);
--			buf += reqlen-4;
--		} else {
--			memcpy(request+4, buf, reqlen);
--			buf += reqlen;
--		}
--
--		len -= reqlen;
--
--		usb_fill_bulk_urb(urb, zd->usb, usb_sndbulkpipe(zd->usb,
--		    zd->endp_out2), request, 16, zd1201_usbfree, zd);
--		err = usb_submit_urb(urb, gfp_mask);
--		if (err)
--			goto err;
--	}
--
--	request = kmalloc(16, gfp_mask);
--	if (!request)
--		return -ENOMEM;
--	urb = usb_alloc_urb(0, gfp_mask);
--	if (!urb) {
--		kfree(request);
--		return -ENOMEM;
--	}
--	*((__le32*)request) = cpu_to_le32(ZD1201_USB_CMDREQ);
--	*((__le16*)&request[4]) = 
--	    cpu_to_le16(ZD1201_CMDCODE_ACCESS|ZD1201_ACCESSBIT);
--	*((__le16*)&request[6]) = cpu_to_le16(rid);
--	*((__le16*)&request[8]) = cpu_to_le16(0);
--	*((__le16*)&request[10]) = cpu_to_le16(0);
--	usb_fill_bulk_urb(urb, zd->usb, usb_sndbulkpipe(zd->usb, zd->endp_out2),
--	     request, 16, zd1201_usbfree, zd);
--	err = usb_submit_urb(urb, gfp_mask);
--	if (err)
--		goto err;
--	
--	if (wait) {
--		wait_event_interruptible(zd->rxdataq, zd->rxdatas);
--		if (!zd->rxlen || le16_to_cpu(*(__le16*)&zd->rxdata[6]) != rid) {
--			dev_dbg(&zd->usb->dev, "wrong or no RID received\n");
--		}
--	}
--
--	return 0;
--err:
--	kfree(request);
--	usb_free_urb(urb);
--	return err;
--}
--
--static inline int zd1201_getconfig16(struct zd1201 *zd, int rid, short *val)
--{
--	int err;
--	__le16 zdval;
--
--	err = zd1201_getconfig(zd, rid, &zdval, sizeof(__le16));
--	if (err)
--		return err;
--	*val = le16_to_cpu(zdval);
--	return 0;
--}
--
--static inline int zd1201_setconfig16(struct zd1201 *zd, int rid, short val)
--{
--	__le16 zdval = cpu_to_le16(val);
--	return (zd1201_setconfig(zd, rid, &zdval, sizeof(__le16), 1));
--}
--
--static int zd1201_drvr_start(struct zd1201 *zd)
--{
--	int err, i;
--	short max;
--	__le16 zdmax;
--	unsigned char *buffer;
--
--	buffer = kzalloc(ZD1201_RXSIZE, GFP_KERNEL);
--	if (!buffer)
--		return -ENOMEM;
--
--	usb_fill_bulk_urb(zd->rx_urb, zd->usb, 
--	    usb_rcvbulkpipe(zd->usb, zd->endp_in), buffer, ZD1201_RXSIZE,
--	    zd1201_usbrx, zd);
--
--	err = usb_submit_urb(zd->rx_urb, GFP_KERNEL);
--	if (err)
--		goto err_buffer;
--
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_INIT, 0, 0, 0);
--	if (err)
--		goto err_urb;
--
--	err = zd1201_getconfig(zd, ZD1201_RID_CNFMAXTXBUFFERNUMBER, &zdmax,
--	    sizeof(__le16));
--	if (err)
--		goto err_urb;
--
--	max = le16_to_cpu(zdmax);
--	for (i=0; i<max; i++) {
--		err = zd1201_docmd(zd, ZD1201_CMDCODE_ALLOC, 1514, 0, 0);
--		if (err)
--			goto err_urb;
--	}
--
--	return 0;
--
--err_urb:
--	usb_kill_urb(zd->rx_urb);
--	return err;
--err_buffer:
--	kfree(buffer);
--	return err;
--}
--
--/*	Magic alert: The firmware doesn't seem to like the MAC state being
-- *	toggled in promisc (aka monitor) mode.
-- *	(It works a number of times, but will halt eventually)
-- *	So we turn it of before disabling and on after enabling if needed.
-- */
--static int zd1201_enable(struct zd1201 *zd)
--{
--	int err;
--
--	if (zd->mac_enabled)
--		return 0;
--
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_ENABLE, 0, 0, 0);
--	if (!err)
--		zd->mac_enabled = 1;
--
--	if (zd->monitor)
--		err = zd1201_setconfig16(zd, ZD1201_RID_PROMISCUOUSMODE, 1);
--
--	return err;
--}
--
--static int zd1201_disable(struct zd1201 *zd)
--{
--	int err;
--
--	if (!zd->mac_enabled)
--		return 0;
--	if (zd->monitor) {
--		err = zd1201_setconfig16(zd, ZD1201_RID_PROMISCUOUSMODE, 0);
--		if (err)
--			return err;
--	}
--
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_DISABLE, 0, 0, 0);
--	if (!err)
--		zd->mac_enabled = 0;
--	return err;
--}
--
--static int zd1201_mac_reset(struct zd1201 *zd)
--{
--	if (!zd->mac_enabled)
--		return 0;
--	zd1201_disable(zd);
--	return zd1201_enable(zd);
--}
--
--static int zd1201_join(struct zd1201 *zd, char *essid, int essidlen)
--{
--	int err, val;
--	char buf[IW_ESSID_MAX_SIZE+2];
--
--	err = zd1201_disable(zd);
--	if (err)
--		return err;
--
--	val = ZD1201_CNFAUTHENTICATION_OPENSYSTEM;
--	val |= ZD1201_CNFAUTHENTICATION_SHAREDKEY;
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFAUTHENTICATION, val);
--	if (err)
--		return err;
--
--	*(__le16 *)buf = cpu_to_le16(essidlen);
--	memcpy(buf+2, essid, essidlen);
--	if (!zd->ap) {	/* Normal station */
--		err = zd1201_setconfig(zd, ZD1201_RID_CNFDESIREDSSID, buf,
--		    IW_ESSID_MAX_SIZE+2, 1);
--		if (err)
--			return err;
--	} else {	/* AP */
--		err = zd1201_setconfig(zd, ZD1201_RID_CNFOWNSSID, buf,
--		    IW_ESSID_MAX_SIZE+2, 1);
--		if (err)
--			return err;
--	}
--
--	err = zd1201_setconfig(zd, ZD1201_RID_CNFOWNMACADDR, 
--	    zd->dev->dev_addr, zd->dev->addr_len, 1);
--	if (err)
--		return err;
--
--	err = zd1201_enable(zd);
--	if (err)
--		return err;
--
--	msleep(100);
--	return 0;
--}
--
--static int zd1201_net_open(struct net_device *dev)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--
--	/* Start MAC with wildcard if no essid set */
--	if (!zd->mac_enabled)
--		zd1201_join(zd, zd->essid, zd->essidlen);
--	netif_start_queue(dev);
--
--	return 0;
--}
--
--static int zd1201_net_stop(struct net_device *dev)
--{
--	netif_stop_queue(dev);
--	return 0;
--}
--
--/*
--	RFC 1042 encapsulates Ethernet frames in 802.11 frames
--	by prefixing them with 0xaa, 0xaa, 0x03) followed by a SNAP OID of 0
--	(0x00, 0x00, 0x00). Zd requires an additional padding, copy
--	of ethernet addresses, length of the standard RFC 1042 packet
--	and a command byte (which is nul for tx).
--	
--	tx frame (from Wlan NG):
--	RFC 1042:
--		llc		0xAA 0xAA 0x03 (802.2 LLC)
--		snap		0x00 0x00 0x00 (Ethernet encapsulated)
--		type		2 bytes, Ethernet type field
--		payload		(minus eth header)
--	Zydas specific:
--		padding		1B if (skb->len+8+1)%64==0
--		Eth MAC addr	12 bytes, Ethernet MAC addresses
--		length		2 bytes, RFC 1042 packet length 
--				(llc+snap+type+payload)
--		zd		1 null byte, zd1201 packet type
-- */
--static netdev_tx_t zd1201_hard_start_xmit(struct sk_buff *skb,
--						struct net_device *dev)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--	unsigned char *txbuf = zd->txdata;
--	int txbuflen, pad = 0, err;
--	struct urb *urb = zd->tx_urb;
--
--	if (!zd->mac_enabled || zd->monitor) {
--		dev->stats.tx_dropped++;
--		kfree_skb(skb);
--		return NETDEV_TX_OK;
--	}
--	netif_stop_queue(dev);
--
--	txbuflen = skb->len + 8 + 1;
--	if (txbuflen%64 == 0) {
--		pad = 1;
--		txbuflen++;
--	}
--	txbuf[0] = 0xAA;
--	txbuf[1] = 0xAA;
--	txbuf[2] = 0x03;
--	txbuf[3] = 0x00;	/* rfc1042 */
--	txbuf[4] = 0x00;
--	txbuf[5] = 0x00;
--
--	skb_copy_from_linear_data_offset(skb, 12, txbuf + 6, skb->len - 12);
--	if (pad)
--		txbuf[skb->len-12+6]=0;
--	skb_copy_from_linear_data(skb, txbuf + skb->len - 12 + 6 + pad, 12);
--	*(__be16*)&txbuf[skb->len+6+pad] = htons(skb->len-12+6);
--	txbuf[txbuflen-1] = 0;
--
--	usb_fill_bulk_urb(urb, zd->usb, usb_sndbulkpipe(zd->usb, zd->endp_out),
--	    txbuf, txbuflen, zd1201_usbtx, zd);
--
--	err = usb_submit_urb(zd->tx_urb, GFP_ATOMIC);
--	if (err) {
--		dev->stats.tx_errors++;
--		netif_start_queue(dev);
--	} else {
--		dev->stats.tx_packets++;
--		dev->stats.tx_bytes += skb->len;
--	}
--	kfree_skb(skb);
--
--	return NETDEV_TX_OK;
--}
--
--static void zd1201_tx_timeout(struct net_device *dev, unsigned int txqueue)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--
--	if (!zd)
--		return;
--	dev_warn(&zd->usb->dev, "%s: TX timeout, shooting down urb\n",
--	    dev->name);
--	usb_unlink_urb(zd->tx_urb);
--	dev->stats.tx_errors++;
--	/* Restart the timeout to quiet the watchdog: */
--	netif_trans_update(dev); /* prevent tx timeout */
--}
--
--static int zd1201_set_mac_address(struct net_device *dev, void *p)
--{
--	struct sockaddr *addr = p;
--	struct zd1201 *zd = netdev_priv(dev);
--	int err;
--
--	if (!zd)
--		return -ENODEV;
--
--	err = zd1201_setconfig(zd, ZD1201_RID_CNFOWNMACADDR, 
--	    addr->sa_data, dev->addr_len, 1);
--	if (err)
--		return err;
--	eth_hw_addr_set(dev, addr->sa_data);
--
--	return zd1201_mac_reset(zd);
--}
--
--static struct iw_statistics *zd1201_get_wireless_stats(struct net_device *dev)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--
--	return &zd->iwstats;
--}
--
--static void zd1201_set_multicast(struct net_device *dev)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--	struct netdev_hw_addr *ha;
--	unsigned char reqbuf[ETH_ALEN*ZD1201_MAXMULTI];
--	int i;
--
--	if (netdev_mc_count(dev) > ZD1201_MAXMULTI)
--		return;
--
--	i = 0;
--	netdev_for_each_mc_addr(ha, dev)
--		memcpy(reqbuf + i++ * ETH_ALEN, ha->addr, ETH_ALEN);
--	zd1201_setconfig(zd, ZD1201_RID_CNFGROUPADDRESS, reqbuf,
--			 netdev_mc_count(dev) * ETH_ALEN, 0);
--}
--
--static int zd1201_config_commit(struct net_device *dev, 
--	struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
--{
--	struct zd1201 *zd = netdev_priv(dev);
--
--	return zd1201_mac_reset(zd);
--}
--
--static int zd1201_get_name(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	strcpy(wrqu->name, "IEEE 802.11b");
--	return 0;
--}
--
--static int zd1201_set_freq(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_freq *freq = &wrqu->freq;
--	struct zd1201 *zd = netdev_priv(dev);
--	short channel = 0;
--	int err;
--
--	if (freq->e == 0)
--		channel = freq->m;
--	else
--		channel = ieee80211_frequency_to_channel(freq->m);
--
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFOWNCHANNEL, channel);
--	if (err)
--		return err;
--
--	zd1201_mac_reset(zd);
--
--	return 0;
--}
--
--static int zd1201_get_freq(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_freq *freq = &wrqu->freq;
--	struct zd1201 *zd = netdev_priv(dev);
--	short channel;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFOWNCHANNEL, &channel);
--	if (err)
--		return err;
--	freq->e = 0;
--	freq->m = channel;
--
--	return 0;
--}
--
--static int zd1201_set_mode(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	__u32 *mode = &wrqu->mode;
--	struct zd1201 *zd = netdev_priv(dev);
--	short porttype, monitor = 0;
--	unsigned char buffer[IW_ESSID_MAX_SIZE+2];
--	int err;
--
--	if (zd->ap) {
--		if (*mode != IW_MODE_MASTER)
--			return -EINVAL;
--		return 0;
--	}
--
--	err = zd1201_setconfig16(zd, ZD1201_RID_PROMISCUOUSMODE, 0);
--	if (err)
--		return err;
--	zd->dev->type = ARPHRD_ETHER;
--	switch(*mode) {
--		case IW_MODE_MONITOR:
--			monitor = 1;
--			zd->dev->type = ARPHRD_IEEE80211;
--			/* Make sure we are no longer associated with by
--			   setting an 'impossible' essid.
--			   (otherwise we mess up firmware)
--			 */
--			zd1201_join(zd, "\0-*#\0", 5);
--			/* Put port in pIBSS */
--			fallthrough;
--		case 8: /* No pseudo-IBSS in wireless extensions (yet) */
--			porttype = ZD1201_PORTTYPE_PSEUDOIBSS;
--			break;
--		case IW_MODE_ADHOC:
--			porttype = ZD1201_PORTTYPE_IBSS;
--			break;
--		case IW_MODE_INFRA:
--			porttype = ZD1201_PORTTYPE_BSS;
--			break;
--		default:
--			return -EINVAL;
--	}
--
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFPORTTYPE, porttype);
--	if (err)
--		return err;
--	if (zd->monitor && !monitor) {
--			zd1201_disable(zd);
--			*(__le16 *)buffer = cpu_to_le16(zd->essidlen);
--			memcpy(buffer+2, zd->essid, zd->essidlen);
--			err = zd1201_setconfig(zd, ZD1201_RID_CNFDESIREDSSID,
--			    buffer, IW_ESSID_MAX_SIZE+2, 1);
--			if (err)
--				return err;
--	}
--	zd->monitor = monitor;
--	/* If monitor mode is set we don't actually turn it on here since it
--	 * is done during mac reset anyway (see zd1201_mac_enable).
--	 */
--	zd1201_mac_reset(zd);
--
--	return 0;
--}
--
--static int zd1201_get_mode(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	__u32 *mode = &wrqu->mode;
--	struct zd1201 *zd = netdev_priv(dev);
--	short porttype;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFPORTTYPE, &porttype);
--	if (err)
--		return err;
--	switch(porttype) {
--		case ZD1201_PORTTYPE_IBSS:
--			*mode = IW_MODE_ADHOC;
--			break;
--		case ZD1201_PORTTYPE_BSS:
--			*mode = IW_MODE_INFRA;
--			break;
--		case ZD1201_PORTTYPE_WDS:
--			*mode = IW_MODE_REPEAT;
--			break;
--		case ZD1201_PORTTYPE_PSEUDOIBSS:
--			*mode = 8;/* No Pseudo-IBSS... */
--			break;
--		case ZD1201_PORTTYPE_AP:
--			*mode = IW_MODE_MASTER;
--			break;
--		default:
--			dev_dbg(&zd->usb->dev, "Unknown porttype: %d\n",
--			    porttype);
--			*mode = IW_MODE_AUTO;
--	}
--	if (zd->monitor)
--		*mode = IW_MODE_MONITOR;
--
--	return 0;
--}
--
--static int zd1201_get_range(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_point *wrq = &wrqu->data;
--	struct iw_range *range = (struct iw_range *)extra;
--
--	wrq->length = sizeof(struct iw_range);
--	memset(range, 0, sizeof(struct iw_range));
--	range->we_version_compiled = WIRELESS_EXT;
--	range->we_version_source = WIRELESS_EXT;
--
--	range->max_qual.qual = 128;
--	range->max_qual.level = 128;
--	range->max_qual.noise = 128;
--	range->max_qual.updated = 7;
--
--	range->encoding_size[0] = 5;
--	range->encoding_size[1] = 13;
--	range->num_encoding_sizes = 2;
--	range->max_encoding_tokens = ZD1201_NUMKEYS;
--
--	range->num_bitrates = 4;
--	range->bitrate[0] = 1000000;
--	range->bitrate[1] = 2000000;
--	range->bitrate[2] = 5500000;
--	range->bitrate[3] = 11000000;
--
--	range->min_rts = 0;
--	range->min_frag = ZD1201_FRAGMIN;
--	range->max_rts = ZD1201_RTSMAX;
--	range->min_frag = ZD1201_FRAGMAX;
--
--	return 0;
--}
--
--/*	Little bit of magic here: we only get the quality if we poll
-- *	for it, and we never get an actual request to trigger such
-- *	a poll. Therefore we 'assume' that the user will soon ask for
-- *	the stats after asking the bssid.
-- */
--static int zd1201_get_wap(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct sockaddr *ap_addr = &wrqu->ap_addr;
--	struct zd1201 *zd = netdev_priv(dev);
--	unsigned char buffer[6];
--
--	if (!zd1201_getconfig(zd, ZD1201_RID_COMMSQUALITY, buffer, 6)) {
--		/* Unfortunately the quality and noise reported is useless.
--		   they seem to be accumulators that increase until you
--		   read them, unless we poll on a fixed interval we can't
--		   use them
--		 */
--		/*zd->iwstats.qual.qual = le16_to_cpu(((__le16 *)buffer)[0]);*/
--		zd->iwstats.qual.level = le16_to_cpu(((__le16 *)buffer)[1]);
--		/*zd->iwstats.qual.noise = le16_to_cpu(((__le16 *)buffer)[2]);*/
--		zd->iwstats.qual.updated = 2;
--	}
--
--	return zd1201_getconfig(zd, ZD1201_RID_CURRENTBSSID, ap_addr->sa_data, 6);
--}
--
--static int zd1201_set_scan(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	/* We do everything in get_scan */
--	return 0;
--}
--
--static int zd1201_get_scan(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_point *srq = &wrqu->data;
--	struct zd1201 *zd = netdev_priv(dev);
--	int err, i, j, enabled_save;
--	struct iw_event iwe;
--	char *cev = extra;
--	char *end_buf = extra + IW_SCAN_MAX_DATA;
--
--	/* No scanning in AP mode */
--	if (zd->ap)
--		return -EOPNOTSUPP;
--
--	/* Scan doesn't seem to work if disabled */
--	enabled_save = zd->mac_enabled;
--	zd1201_enable(zd);
--
--	zd->rxdatas = 0;
--	err = zd1201_docmd(zd, ZD1201_CMDCODE_INQUIRE, 
--	     ZD1201_INQ_SCANRESULTS, 0, 0);
--	if (err)
--		return err;
--
--	wait_event_interruptible(zd->rxdataq, zd->rxdatas);
--	if (!zd->rxlen)
--		return -EIO;
--
--	if (le16_to_cpu(*(__le16*)&zd->rxdata[2]) != ZD1201_INQ_SCANRESULTS)
--		return -EIO;
--
--	for(i=8; i<zd->rxlen; i+=62) {
--		iwe.cmd = SIOCGIWAP;
--		iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
--		memcpy(iwe.u.ap_addr.sa_data, zd->rxdata+i+6, 6);
--		cev = iwe_stream_add_event(info, cev, end_buf,
--					   &iwe, IW_EV_ADDR_LEN);
--
--		iwe.cmd = SIOCGIWESSID;
--		iwe.u.data.length = zd->rxdata[i+16];
--		iwe.u.data.flags = 1;
--		cev = iwe_stream_add_point(info, cev, end_buf,
--					   &iwe, zd->rxdata+i+18);
--
--		iwe.cmd = SIOCGIWMODE;
--		if (zd->rxdata[i+14]&0x01)
--			iwe.u.mode = IW_MODE_MASTER;
--		else
--			iwe.u.mode = IW_MODE_ADHOC;
--		cev = iwe_stream_add_event(info, cev, end_buf,
--					   &iwe, IW_EV_UINT_LEN);
--		
--		iwe.cmd = SIOCGIWFREQ;
--		iwe.u.freq.m = zd->rxdata[i+0];
--		iwe.u.freq.e = 0;
--		cev = iwe_stream_add_event(info, cev, end_buf,
--					   &iwe, IW_EV_FREQ_LEN);
--		
--		iwe.cmd = SIOCGIWRATE;
--		iwe.u.bitrate.fixed = 0;
--		iwe.u.bitrate.disabled = 0;
--		for (j=0; j<10; j++) if (zd->rxdata[i+50+j]) {
--			iwe.u.bitrate.value = (zd->rxdata[i+50+j]&0x7f)*500000;
--			cev = iwe_stream_add_event(info, cev, end_buf,
--						   &iwe, IW_EV_PARAM_LEN);
--		}
--		
--		iwe.cmd = SIOCGIWENCODE;
--		iwe.u.data.length = 0;
--		if (zd->rxdata[i+14]&0x10)
--			iwe.u.data.flags = IW_ENCODE_ENABLED;
--		else
--			iwe.u.data.flags = IW_ENCODE_DISABLED;
--		cev = iwe_stream_add_point(info, cev, end_buf, &iwe, NULL);
--		
--		iwe.cmd = IWEVQUAL;
--		iwe.u.qual.qual = zd->rxdata[i+4];
--		iwe.u.qual.noise= zd->rxdata[i+2]/10-100;
--		iwe.u.qual.level = (256+zd->rxdata[i+4]*100)/255-100;
--		iwe.u.qual.updated = 7;
--		cev = iwe_stream_add_event(info, cev, end_buf,
--					   &iwe, IW_EV_QUAL_LEN);
--	}
--
--	if (!enabled_save)
--		zd1201_disable(zd);
--
--	srq->length = cev - extra;
--	srq->flags = 0;
--
--	return 0;
--}
--
--static int zd1201_set_essid(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
--{
--	struct iw_point *data = &wrqu->data;
--	struct zd1201 *zd = netdev_priv(dev);
--
--	if (data->length > IW_ESSID_MAX_SIZE)
--		return -EINVAL;
--	if (data->length < 1)
--		data->length = 1;
--	zd->essidlen = data->length;
--	memset(zd->essid, 0, IW_ESSID_MAX_SIZE+1);
--	memcpy(zd->essid, essid, data->length);
--	return zd1201_join(zd, zd->essid, zd->essidlen);
--}
--
--static int zd1201_get_essid(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *essid)
--{
--	struct iw_point *data = &wrqu->data;
--	struct zd1201 *zd = netdev_priv(dev);
--
--	memcpy(essid, zd->essid, zd->essidlen);
--	data->flags = 1;
--	data->length = zd->essidlen;
--
--	return 0;
--}
--
--static int zd1201_get_nick(struct net_device *dev, struct iw_request_info *info,
--	union iwreq_data *wrqu, char *nick)
--{
--	struct iw_point *data = &wrqu->data;
--	strcpy(nick, "zd1201");
--	data->flags = 1;
--	data->length = strlen(nick);
--	return 0;
--}
--
--static int zd1201_set_rate(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->bitrate;
--	struct zd1201 *zd = netdev_priv(dev);
--	short rate;
--	int err;
--
--	switch (rrq->value) {
--		case 1000000:
--			rate = ZD1201_RATEB1;
--			break;
--		case 2000000:
--			rate = ZD1201_RATEB2;
--			break;
--		case 5500000:
--			rate = ZD1201_RATEB5;
--			break;
--		case 11000000:
--		default:
--			rate = ZD1201_RATEB11;
--			break;
--	}
--	if (!rrq->fixed) { /* Also enable all lower bitrates */
--		rate |= rate-1;
--	}
--
--	err = zd1201_setconfig16(zd, ZD1201_RID_TXRATECNTL, rate);
--	if (err)
--		return err;
--
--	return zd1201_mac_reset(zd);
--}
--
--static int zd1201_get_rate(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->bitrate;
--	struct zd1201 *zd = netdev_priv(dev);
--	short rate;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CURRENTTXRATE, &rate);
--	if (err)
--		return err;
--
--	switch(rate) {
--		case 1:
--			rrq->value = 1000000;
--			break;
--		case 2:
--			rrq->value = 2000000;
--			break;
--		case 5:
--			rrq->value = 5500000;
--			break;
--		case 11:
--			rrq->value = 11000000;
--			break;
--		default:
--			rrq->value = 0;
--	}
--	rrq->fixed = 0;
--	rrq->disabled = 0;
--
--	return 0;
--}
--
--static int zd1201_set_rts(struct net_device *dev, struct iw_request_info *info,
--	union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rts = &wrqu->rts;
--	struct zd1201 *zd = netdev_priv(dev);
--	int err;
--	short val = rts->value;
--
--	if (rts->disabled || !rts->fixed)
--		val = ZD1201_RTSMAX;
--	if (val > ZD1201_RTSMAX)
--		return -EINVAL;
--	if (val < 0)
--		return -EINVAL;
--
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFRTSTHRESHOLD, val);
--	if (err)
--		return err;
--	return zd1201_mac_reset(zd);
--}
--
--static int zd1201_get_rts(struct net_device *dev, struct iw_request_info *info,
--	union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rts = &wrqu->rts;
--	struct zd1201 *zd = netdev_priv(dev);
--	short rtst;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFRTSTHRESHOLD, &rtst);
--	if (err)
--		return err;
--	rts->value = rtst;
--	rts->disabled = (rts->value == ZD1201_RTSMAX);
--	rts->fixed = 1;
--
--	return 0;
--}
--
--static int zd1201_set_frag(struct net_device *dev, struct iw_request_info *info,
--	union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *frag = &wrqu->frag;
--	struct zd1201 *zd = netdev_priv(dev);
--	int err;
--	short val = frag->value;
--
--	if (frag->disabled || !frag->fixed)
--		val = ZD1201_FRAGMAX;
--	if (val > ZD1201_FRAGMAX)
--		return -EINVAL;
--	if (val < ZD1201_FRAGMIN)
--		return -EINVAL;
--	if (val & 1)
--		return -EINVAL;
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFFRAGTHRESHOLD, val);
--	if (err)
--		return err;
--	return zd1201_mac_reset(zd);
--}
--
--static int zd1201_get_frag(struct net_device *dev, struct iw_request_info *info,
--	union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *frag = &wrqu->frag;
--	struct zd1201 *zd = netdev_priv(dev);
--	short fragt;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFFRAGTHRESHOLD, &fragt);
--	if (err)
--		return err;
--	frag->value = fragt;
--	frag->disabled = (frag->value == ZD1201_FRAGMAX);
--	frag->fixed = 1;
--
--	return 0;
--}
--
--static int zd1201_set_retry(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	return 0;
--}
--
--static int zd1201_get_retry(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	return 0;
--}
--
--static int zd1201_set_encode(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *key)
--{
--	struct iw_point *erq = &wrqu->encoding;
--	struct zd1201 *zd = netdev_priv(dev);
--	short i;
--	int err, rid;
--
--	if (erq->length > ZD1201_MAXKEYLEN)
--		return -EINVAL;
--
--	i = (erq->flags & IW_ENCODE_INDEX)-1;
--	if (i == -1) {
--		err = zd1201_getconfig16(zd,ZD1201_RID_CNFDEFAULTKEYID,&i);
--		if (err)
--			return err;
--	} else {
--		err = zd1201_setconfig16(zd, ZD1201_RID_CNFDEFAULTKEYID, i);
--		if (err)
--			return err;
--	}
--
--	if (i < 0 || i >= ZD1201_NUMKEYS)
--		return -EINVAL;
--
--	rid = ZD1201_RID_CNFDEFAULTKEY0 + i;
--	err = zd1201_setconfig(zd, rid, key, erq->length, 1);
--	if (err)
--		return err;
--	zd->encode_keylen[i] = erq->length;
--	memcpy(zd->encode_keys[i], key, erq->length);
--
--	i=0;
--	if (!(erq->flags & IW_ENCODE_DISABLED & IW_ENCODE_MODE)) {
--		i |= 0x01;
--		zd->encode_enabled = 1;
--	} else
--		zd->encode_enabled = 0;
--	if (erq->flags & IW_ENCODE_RESTRICTED & IW_ENCODE_MODE) {
--		i |= 0x02;
--		zd->encode_restricted = 1;
--	} else
--		zd->encode_restricted = 0;
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFWEBFLAGS, i);
--	if (err)
--		return err;
--
--	if (zd->encode_enabled)
--		i = ZD1201_CNFAUTHENTICATION_SHAREDKEY;
--	else
--		i = ZD1201_CNFAUTHENTICATION_OPENSYSTEM;
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFAUTHENTICATION, i);
--	if (err)
--		return err;
--
--	return zd1201_mac_reset(zd);
--}
--
--static int zd1201_get_encode(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *key)
--{
--	struct iw_point *erq = &wrqu->encoding;
--	struct zd1201 *zd = netdev_priv(dev);
--	short i;
--	int err;
--
--	if (zd->encode_enabled)
--		erq->flags = IW_ENCODE_ENABLED;
--	else
--		erq->flags = IW_ENCODE_DISABLED;
--	if (zd->encode_restricted)
--		erq->flags |= IW_ENCODE_RESTRICTED;
--	else
--		erq->flags |= IW_ENCODE_OPEN;
--
--	i = (erq->flags & IW_ENCODE_INDEX) -1;
--	if (i == -1) {
--		err = zd1201_getconfig16(zd, ZD1201_RID_CNFDEFAULTKEYID, &i);
--		if (err)
--			return err;
--	}
--	if (i<0 || i>= ZD1201_NUMKEYS)
--		return -EINVAL;
--
--	erq->flags |= i+1;
--
--	erq->length = zd->encode_keylen[i];
--	memcpy(key, zd->encode_keys[i], erq->length);
--
--	return 0;
--}
--
--static int zd1201_set_power(struct net_device *dev, 
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *vwrq = &wrqu->power;
--	struct zd1201 *zd = netdev_priv(dev);
--	short enabled, duration, level;
--	int err;
--
--	enabled = vwrq->disabled ? 0 : 1;
--	if (enabled) {
--		if (vwrq->flags & IW_POWER_PERIOD) {
--			duration = vwrq->value;
--			err = zd1201_setconfig16(zd, 
--			    ZD1201_RID_CNFMAXSLEEPDURATION, duration);
--			if (err)
--				return err;
--			goto out;
--		}
--		if (vwrq->flags & IW_POWER_TIMEOUT) {
--			err = zd1201_getconfig16(zd, 
--			    ZD1201_RID_CNFMAXSLEEPDURATION, &duration);
--			if (err)
--				return err;
--			level = vwrq->value * 4 / duration;
--			if (level > 4)
--				level = 4;
--			if (level < 0)
--				level = 0;
--			err = zd1201_setconfig16(zd, ZD1201_RID_CNFPMEPS,
--			    level);
--			if (err)
--				return err;
--			goto out;
--		}
--		return -EINVAL;
--	}
--out:
--	return zd1201_setconfig16(zd, ZD1201_RID_CNFPMENABLED, enabled);
--}
--
--static int zd1201_get_power(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *vwrq = &wrqu->power;
--	struct zd1201 *zd = netdev_priv(dev);
--	short enabled, level, duration;
--	int err;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFPMENABLED, &enabled);
--	if (err)
--		return err;
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFPMEPS, &level);
--	if (err)
--		return err;
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFMAXSLEEPDURATION, &duration);
--	if (err)
--		return err;
--	vwrq->disabled = enabled ? 0 : 1;
--	if (vwrq->flags & IW_POWER_TYPE) {
--		if (vwrq->flags & IW_POWER_PERIOD) {
--			vwrq->value = duration;
--			vwrq->flags = IW_POWER_PERIOD;
--		} else {
--			vwrq->value = duration * level / 4;
--			vwrq->flags = IW_POWER_TIMEOUT;
--		}
--	}
--	if (vwrq->flags & IW_POWER_MODE) {
--		if (enabled && level)
--			vwrq->flags = IW_POWER_UNICAST_R;
--		else
--			vwrq->flags = IW_POWER_ALL_R;
--	}
--
--	return 0;
--}
--
--
--static const iw_handler zd1201_iw_handler[] =
--{
--	IW_HANDLER(SIOCSIWCOMMIT,	zd1201_config_commit),
--	IW_HANDLER(SIOCGIWNAME,		zd1201_get_name),
--	IW_HANDLER(SIOCSIWFREQ,		zd1201_set_freq),
--	IW_HANDLER(SIOCGIWFREQ,		zd1201_get_freq),
--	IW_HANDLER(SIOCSIWMODE,		zd1201_set_mode),
--	IW_HANDLER(SIOCGIWMODE,		zd1201_get_mode),
--	IW_HANDLER(SIOCGIWRANGE,	zd1201_get_range),
--	IW_HANDLER(SIOCGIWAP,		zd1201_get_wap),
--	IW_HANDLER(SIOCSIWSCAN,		zd1201_set_scan),
--	IW_HANDLER(SIOCGIWSCAN,		zd1201_get_scan),
--	IW_HANDLER(SIOCSIWESSID,	zd1201_set_essid),
--	IW_HANDLER(SIOCGIWESSID,	zd1201_get_essid),
--	IW_HANDLER(SIOCGIWNICKN,	zd1201_get_nick),
--	IW_HANDLER(SIOCSIWRATE,		zd1201_set_rate),
--	IW_HANDLER(SIOCGIWRATE,		zd1201_get_rate),
--	IW_HANDLER(SIOCSIWRTS,		zd1201_set_rts),
--	IW_HANDLER(SIOCGIWRTS,		zd1201_get_rts),
--	IW_HANDLER(SIOCSIWFRAG,		zd1201_set_frag),
--	IW_HANDLER(SIOCGIWFRAG,		zd1201_get_frag),
--	IW_HANDLER(SIOCSIWRETRY,	zd1201_set_retry),
--	IW_HANDLER(SIOCGIWRETRY,	zd1201_get_retry),
--	IW_HANDLER(SIOCSIWENCODE,	zd1201_set_encode),
--	IW_HANDLER(SIOCGIWENCODE,	zd1201_get_encode),
--	IW_HANDLER(SIOCSIWPOWER,	zd1201_set_power),
--	IW_HANDLER(SIOCGIWPOWER,	zd1201_get_power),
+-module_param(net_type, int, 0);
+-module_param(hop_dwell, int, 0);
+-module_param(beacon_period, int, 0);
+-module_param(psm, int, 0);
+-module_param(essid, charp, 0);
+-module_param(translate, bool, 0);
+-module_param(country, int, 0);
+-module_param(sniffer, int, 0);
+-module_param(bc, int, 0);
+-module_param(phy_addr, charp, 0);
+-module_param(ray_mem_speed, int, 0);
+-
+-static const UCHAR b5_default_startup_parms[] = {
+-	0, 0,			/* Adhoc station */
+-	'L', 'I', 'N', 'U', 'X', 0, 0, 0,	/* 32 char ESSID */
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	1, 0,			/* Active scan, CA Mode */
+-	0, 0, 0, 0, 0, 0,	/* No default MAC addr  */
+-	0x7f, 0xff,		/* Frag threshold */
+-	0x00, 0x80,		/* Hop time 128 Kus */
+-	0x01, 0x00,		/* Beacon period 256 Kus */
+-	0x01, 0x07, 0xa3,	/* DTIM, retries, ack timeout */
+-	0x1d, 0x82, 0x4e,	/* SIFS, DIFS, PIFS */
+-	0x7f, 0xff,		/* RTS threshold */
+-	0x04, 0xe2, 0x38, 0xA4,	/* scan_dwell, max_scan_dwell */
+-	0x05,			/* assoc resp timeout thresh */
+-	0x08, 0x02, 0x08,	/* adhoc, infra, super cycle max */
+-	0,			/* Promiscuous mode */
+-	0x0c, 0x0bd,		/* Unique word */
+-	0x32,			/* Slot time */
+-	0xff, 0xff,		/* roam-low snr, low snr count */
+-	0x05, 0xff,		/* Infra, adhoc missed bcn thresh */
+-	0x01, 0x0b, 0x4f,	/* USA, hop pattern, hop pat length */
+-/* b4 - b5 differences start here */
+-	0x00, 0x3f,		/* CW max */
+-	0x00, 0x0f,		/* CW min */
+-	0x04, 0x08,		/* Noise gain, limit offset */
+-	0x28, 0x28,		/* det rssi, med busy offsets */
+-	7,			/* det sync thresh */
+-	0, 2, 2,		/* test mode, min, max */
+-	0,			/* allow broadcast SSID probe resp */
+-	0, 0,			/* privacy must start, can join */
+-	2, 0, 0, 0, 0, 0, 0, 0	/* basic rate set */
 -};
 -
--static int zd1201_set_hostauth(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->param;
--	struct zd1201 *zd = netdev_priv(dev);
--
--	if (!zd->ap)
--		return -EOPNOTSUPP;
--
--	return zd1201_setconfig16(zd, ZD1201_RID_CNFHOSTAUTH, rrq->value);
--}
--
--static int zd1201_get_hostauth(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->param;
--	struct zd1201 *zd = netdev_priv(dev);
--	short hostauth;
--	int err;
--
--	if (!zd->ap)
--		return -EOPNOTSUPP;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFHOSTAUTH, &hostauth);
--	if (err)
--		return err;
--	rrq->value = hostauth;
--	rrq->fixed = 1;
--
--	return 0;
--}
--
--static int zd1201_auth_sta(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct sockaddr *sta = &wrqu->ap_addr;
--	struct zd1201 *zd = netdev_priv(dev);
--	unsigned char buffer[10];
--
--	if (!zd->ap)
--		return -EOPNOTSUPP;
--
--	memcpy(buffer, sta->sa_data, ETH_ALEN);
--	*(short*)(buffer+6) = 0;	/* 0==success, 1==failure */
--	*(short*)(buffer+8) = 0;
--
--	return zd1201_setconfig(zd, ZD1201_RID_AUTHENTICATESTA, buffer, 10, 1);
--}
--
--static int zd1201_set_maxassoc(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->param;
--	struct zd1201 *zd = netdev_priv(dev);
--
--	if (!zd->ap)
--		return -EOPNOTSUPP;
--
--	return zd1201_setconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, rrq->value);
--}
--
--static int zd1201_get_maxassoc(struct net_device *dev,
--	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
--{
--	struct iw_param *rrq = &wrqu->param;
--	struct zd1201 *zd = netdev_priv(dev);
--	short maxassoc;
--	int err;
--
--	if (!zd->ap)
--		return -EOPNOTSUPP;
--
--	err = zd1201_getconfig16(zd, ZD1201_RID_CNFMAXASSOCSTATIONS, &maxassoc);
--	if (err)
--		return err;
--	rrq->value = maxassoc;
--	rrq->fixed = 1;
--
--	return 0;
--}
--
--static const iw_handler zd1201_private_handler[] = {
--	zd1201_set_hostauth,	/* ZD1201SIWHOSTAUTH */
--	zd1201_get_hostauth,	/* ZD1201GIWHOSTAUTH */
--	zd1201_auth_sta,	/* ZD1201SIWAUTHSTA */
--	NULL,			/* nothing to get */
--	zd1201_set_maxassoc,	/* ZD1201SIMAXASSOC */
--	zd1201_get_maxassoc,	/* ZD1201GIMAXASSOC */
+-static const UCHAR b4_default_startup_parms[] = {
+-	0, 0,			/* Adhoc station */
+-	'L', 'I', 'N', 'U', 'X', 0, 0, 0,	/* 32 char ESSID */
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	0, 0, 0, 0, 0, 0, 0, 0,
+-	1, 0,			/* Active scan, CA Mode */
+-	0, 0, 0, 0, 0, 0,	/* No default MAC addr  */
+-	0x7f, 0xff,		/* Frag threshold */
+-	0x02, 0x00,		/* Hop time */
+-	0x00, 0x01,		/* Beacon period */
+-	0x01, 0x07, 0xa3,	/* DTIM, retries, ack timeout */
+-	0x1d, 0x82, 0xce,	/* SIFS, DIFS, PIFS */
+-	0x7f, 0xff,		/* RTS threshold */
+-	0xfb, 0x1e, 0xc7, 0x5c,	/* scan_dwell, max_scan_dwell */
+-	0x05,			/* assoc resp timeout thresh */
+-	0x04, 0x02, 0x4,	/* adhoc, infra, super cycle max */
+-	0,			/* Promiscuous mode */
+-	0x0c, 0x0bd,		/* Unique word */
+-	0x4e,			/* Slot time (TBD seems wrong) */
+-	0xff, 0xff,		/* roam-low snr, low snr count */
+-	0x05, 0xff,		/* Infra, adhoc missed bcn thresh */
+-	0x01, 0x0b, 0x4e,	/* USA, hop pattern, hop pat length */
+-/* b4 - b5 differences start here */
+-	0x3f, 0x0f,		/* CW max, min */
+-	0x04, 0x08,		/* Noise gain, limit offset */
+-	0x28, 0x28,		/* det rssi, med busy offsets */
+-	7,			/* det sync thresh */
+-	0, 2, 2,		/* test mode, min, max */
+-	0,			/* rx/tx delay */
+-	0, 0, 0, 0, 0, 0,	/* current BSS id */
+-	0			/* hop set */
 -};
 -
--static const struct iw_priv_args zd1201_private_args[] = {
--	{ ZD1201SIWHOSTAUTH, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	    IW_PRIV_TYPE_NONE, "sethostauth" },
--	{ ZD1201GIWHOSTAUTH, IW_PRIV_TYPE_NONE,
--	    IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, "gethostauth" },
--	{ ZD1201SIWAUTHSTA, IW_PRIV_TYPE_ADDR | IW_PRIV_SIZE_FIXED | 1,
--	    IW_PRIV_TYPE_NONE, "authstation" },
--	{ ZD1201SIWMAXASSOC, IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
--	    IW_PRIV_TYPE_NONE, "setmaxassoc" },
--	{ ZD1201GIWMAXASSOC, IW_PRIV_TYPE_NONE,
--	    IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1, "getmaxassoc" },
+-/*===========================================================================*/
+-static const u8 eth2_llc[] = { 0xaa, 0xaa, 3, 0, 0, 0 };
+-
+-static const char hop_pattern_length[] = { 1,
+-	USA_HOP_MOD, EUROPE_HOP_MOD,
+-	JAPAN_HOP_MOD, KOREA_HOP_MOD,
+-	SPAIN_HOP_MOD, FRANCE_HOP_MOD,
+-	ISRAEL_HOP_MOD, AUSTRALIA_HOP_MOD,
+-	JAPAN_TEST_HOP_MOD
 -};
 -
--static const struct iw_handler_def zd1201_iw_handlers = {
--	.num_standard 		= ARRAY_SIZE(zd1201_iw_handler),
--	.num_private 		= ARRAY_SIZE(zd1201_private_handler),
--	.num_private_args 	= ARRAY_SIZE(zd1201_private_args),
--	.standard		= zd1201_iw_handler,
--	.private		= zd1201_private_handler,
--	.private_args 		= (struct iw_priv_args *) zd1201_private_args,
--	.get_wireless_stats	= zd1201_get_wireless_stats,
--};
+-static const char rcsid[] =
+-    "Raylink/WebGear wireless LAN - Corey <Thomas corey@world.std.com>";
 -
--static const struct net_device_ops zd1201_netdev_ops = {
--	.ndo_open		= zd1201_net_open,
--	.ndo_stop		= zd1201_net_stop,
--	.ndo_start_xmit		= zd1201_hard_start_xmit,
--	.ndo_tx_timeout		= zd1201_tx_timeout,
--	.ndo_set_rx_mode	= zd1201_set_multicast,
--	.ndo_set_mac_address	= zd1201_set_mac_address,
+-static const struct net_device_ops ray_netdev_ops = {
+-	.ndo_init 		= ray_dev_init,
+-	.ndo_open 		= ray_open,
+-	.ndo_stop 		= ray_dev_close,
+-	.ndo_start_xmit		= ray_dev_start_xmit,
+-	.ndo_set_config		= ray_dev_config,
+-	.ndo_get_stats		= ray_get_stats,
+-	.ndo_set_rx_mode	= set_multicast_list,
+-	.ndo_set_mac_address 	= eth_mac_addr,
 -	.ndo_validate_addr	= eth_validate_addr,
 -};
 -
--static int zd1201_probe(struct usb_interface *interface,
--			const struct usb_device_id *id)
+-static int ray_probe(struct pcmcia_device *p_dev)
 -{
--	struct zd1201 *zd;
+-	ray_dev_t *local;
 -	struct net_device *dev;
--	struct usb_device *usb;
--	int err;
--	short porttype;
--	char buf[IW_ESSID_MAX_SIZE+2];
--	u8 addr[ETH_ALEN];
+-	int ret;
 -
--	usb = interface_to_usbdev(interface);
+-	dev_dbg(&p_dev->dev, "ray_attach()\n");
 -
--	dev = alloc_etherdev(sizeof(*zd));
+-	/* Allocate space for private device-specific data */
+-	dev = alloc_etherdev(sizeof(ray_dev_t));
 -	if (!dev)
 -		return -ENOMEM;
--	zd = netdev_priv(dev);
--	zd->dev = dev;
 -
--	zd->ap = ap;
--	zd->usb = usb;
--	zd->removed = 0;
--	init_waitqueue_head(&zd->rxdataq);
--	INIT_HLIST_HEAD(&zd->fraglist);
--	
--	err = zd1201_fw_upload(usb, zd->ap);
--	if (err) {
--		dev_err(&usb->dev, "zd1201 firmware upload failed: %d\n", err);
--		goto err_zd;
--	}
--	
--	zd->endp_in = 1;
--	zd->endp_out = 1;
--	zd->endp_out2 = 2;
--	zd->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
--	zd->tx_urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!zd->rx_urb || !zd->tx_urb) {
--		err = -ENOMEM;
--		goto err_zd;
--	}
+-	local = netdev_priv(dev);
+-	local->finder = p_dev;
 -
--	mdelay(100);
--	err = zd1201_drvr_start(zd);
--	if (err)
--		goto err_zd;
+-	/* The io structure describes IO port mapping. None used here */
+-	p_dev->resource[0]->end = 0;
+-	p_dev->resource[0]->flags |= IO_DATA_PATH_WIDTH_8;
 -
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFMAXDATALEN, 2312);
--	if (err)
--		goto err_start;
+-	/* General socket configuration */
+-	p_dev->config_flags |= CONF_ENABLE_IRQ;
+-	p_dev->config_index = 1;
 -
--	err = zd1201_setconfig16(zd, ZD1201_RID_TXRATECNTL,
--	    ZD1201_RATEB1 | ZD1201_RATEB2 | ZD1201_RATEB5 | ZD1201_RATEB11);
--	if (err)
--		goto err_start;
+-	p_dev->priv = dev;
 -
--	dev->netdev_ops = &zd1201_netdev_ops;
--	dev->wireless_handlers = &zd1201_iw_handlers;
--	dev->watchdog_timeo = ZD1201_TX_TIMEOUT;
--	strcpy(dev->name, "wlan%d");
+-	local->finder = p_dev;
+-	local->card_status = CARD_INSERTED;
+-	local->authentication_state = UNAUTHENTICATED;
+-	local->num_multi = 0;
+-	dev_dbg(&p_dev->dev, "ray_attach p_dev = %p,  dev = %p,  local = %p, intr = %p\n",
+-	      p_dev, dev, local, &ray_interrupt);
 -
--	err = zd1201_getconfig(zd, ZD1201_RID_CNFOWNMACADDR, addr, ETH_ALEN);
--	if (err)
--		goto err_start;
--	eth_hw_addr_set(dev, addr);
+-	/* Raylink entries in the device structure */
+-	dev->netdev_ops = &ray_netdev_ops;
+-	dev->wireless_handlers = &ray_handler_def;
+-#ifdef WIRELESS_SPY
+-	local->wireless_data.spy_data = &local->spy_data;
+-	dev->wireless_data = &local->wireless_data;
+-#endif /* WIRELESS_SPY */
 -
--	/* Set wildcard essid to match zd->essid */
--	*(__le16 *)buf = cpu_to_le16(0);
--	err = zd1201_setconfig(zd, ZD1201_RID_CNFDESIREDSSID, buf,
--	    IW_ESSID_MAX_SIZE+2, 1);
--	if (err)
--		goto err_start;
 -
--	if (zd->ap)
--		porttype = ZD1201_PORTTYPE_AP;
--	else
--		porttype = ZD1201_PORTTYPE_BSS;
--	err = zd1201_setconfig16(zd, ZD1201_RID_CNFPORTTYPE, porttype);
--	if (err)
--		goto err_start;
+-	dev_dbg(&p_dev->dev, "ray_cs ray_attach calling ether_setup.)\n");
+-	netif_stop_queue(dev);
 -
--	SET_NETDEV_DEV(dev, &usb->dev);
+-	timer_setup(&local->timer, NULL, 0);
 -
--	err = register_netdev(dev);
--	if (err)
--		goto err_start;
--	dev_info(&usb->dev, "%s: ZD1201 USB Wireless interface\n",
--	    dev->name);
+-	this_device = p_dev;
+-	ret = ray_config(p_dev);
+-	if (ret)
+-		goto err_free_dev;
 -
--	usb_set_intfdata(interface, zd);
--	zd1201_enable(zd);	/* zd1201 likes to startup enabled, */
--	zd1201_disable(zd);	/* interfering with all the wifis in range */
 -	return 0;
 -
--err_start:
--	/* Leave the device in reset state */
--	zd1201_docmd(zd, ZD1201_CMDCODE_INIT, 0, 0, 0);
--err_zd:
--	usb_free_urb(zd->tx_urb);
--	usb_free_urb(zd->rx_urb);
+-err_free_dev:
 -	free_netdev(dev);
+-	return ret;
+-}
+-
+-static void ray_detach(struct pcmcia_device *link)
+-{
+-	struct net_device *dev;
+-
+-	dev_dbg(&link->dev, "ray_detach\n");
+-
+-	this_device = NULL;
+-	dev = link->priv;
+-
+-	ray_release(link);
+-
+-	if (link->priv) {
+-		unregister_netdev(dev);
+-		free_netdev(dev);
+-	}
+-	dev_dbg(&link->dev, "ray_cs ray_detach ending\n");
+-} /* ray_detach */
+-
+-#define MAX_TUPLE_SIZE 128
+-static int ray_config(struct pcmcia_device *link)
+-{
+-	int ret = 0;
+-	int i;
+-	struct net_device *dev = (struct net_device *)link->priv;
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	dev_dbg(&link->dev, "ray_config\n");
+-
+-	/* Determine card type and firmware version */
+-	printk(KERN_INFO "ray_cs Detected: %s%s%s%s\n",
+-	       link->prod_id[0] ? link->prod_id[0] : " ",
+-	       link->prod_id[1] ? link->prod_id[1] : " ",
+-	       link->prod_id[2] ? link->prod_id[2] : " ",
+-	       link->prod_id[3] ? link->prod_id[3] : " ");
+-
+-	/* Now allocate an interrupt line.  Note that this does not
+-	   actually assign a handler to the interrupt.
+-	 */
+-	ret = pcmcia_request_irq(link, ray_interrupt);
+-	if (ret)
+-		goto failed;
+-	dev->irq = link->irq;
+-
+-	ret = pcmcia_enable_device(link);
+-	if (ret)
+-		goto failed;
+-
+-/*** Set up 32k window for shared memory (transmit and control) ************/
+-	link->resource[2]->flags |= WIN_DATA_WIDTH_8 | WIN_MEMORY_TYPE_CM | WIN_ENABLE | WIN_USE_WAIT;
+-	link->resource[2]->start = 0;
+-	link->resource[2]->end = 0x8000;
+-	ret = pcmcia_request_window(link, link->resource[2], ray_mem_speed);
+-	if (ret)
+-		goto failed;
+-	ret = pcmcia_map_mem_page(link, link->resource[2], 0);
+-	if (ret)
+-		goto failed;
+-	local->sram = ioremap(link->resource[2]->start,
+-			resource_size(link->resource[2]));
+-	if (!local->sram)
+-		goto failed;
+-
+-/*** Set up 16k window for shared memory (receive buffer) ***************/
+-	link->resource[3]->flags |=
+-	    WIN_DATA_WIDTH_8 | WIN_MEMORY_TYPE_CM | WIN_ENABLE | WIN_USE_WAIT;
+-	link->resource[3]->start = 0;
+-	link->resource[3]->end = 0x4000;
+-	ret = pcmcia_request_window(link, link->resource[3], ray_mem_speed);
+-	if (ret)
+-		goto failed;
+-	ret = pcmcia_map_mem_page(link, link->resource[3], 0x8000);
+-	if (ret)
+-		goto failed;
+-	local->rmem = ioremap(link->resource[3]->start,
+-			resource_size(link->resource[3]));
+-	if (!local->rmem)
+-		goto failed;
+-
+-/*** Set up window for attribute memory ***********************************/
+-	link->resource[4]->flags |=
+-	    WIN_DATA_WIDTH_8 | WIN_MEMORY_TYPE_AM | WIN_ENABLE | WIN_USE_WAIT;
+-	link->resource[4]->start = 0;
+-	link->resource[4]->end = 0x1000;
+-	ret = pcmcia_request_window(link, link->resource[4], ray_mem_speed);
+-	if (ret)
+-		goto failed;
+-	ret = pcmcia_map_mem_page(link, link->resource[4], 0);
+-	if (ret)
+-		goto failed;
+-	local->amem = ioremap(link->resource[4]->start,
+-			resource_size(link->resource[4]));
+-	if (!local->amem)
+-		goto failed;
+-
+-	dev_dbg(&link->dev, "ray_config sram=%p\n", local->sram);
+-	dev_dbg(&link->dev, "ray_config rmem=%p\n", local->rmem);
+-	dev_dbg(&link->dev, "ray_config amem=%p\n", local->amem);
+-	if (ray_init(dev) < 0) {
+-		ray_release(link);
+-		return -ENODEV;
+-	}
+-
+-	SET_NETDEV_DEV(dev, &link->dev);
+-	i = register_netdev(dev);
+-	if (i != 0) {
+-		printk("ray_config register_netdev() failed\n");
+-		ray_release(link);
+-		return i;
+-	}
+-
+-	printk(KERN_INFO "%s: RayLink, irq %d, hw_addr %pM\n",
+-	       dev->name, dev->irq, dev->dev_addr);
+-
+-	return 0;
+-
+-failed:
+-	ray_release(link);
+-	return -ENODEV;
+-} /* ray_config */
+-
+-static inline struct ccs __iomem *ccs_base(ray_dev_t *dev)
+-{
+-	return dev->sram + CCS_BASE;
+-}
+-
+-static inline struct rcs __iomem *rcs_base(ray_dev_t *dev)
+-{
+-	/*
+-	 * This looks nonsensical, since there is a separate
+-	 * RCS_BASE. But the difference between a "struct rcs"
+-	 * and a "struct ccs" ends up being in the _index_ off
+-	 * the base, so the base pointer is the same for both
+-	 * ccs/rcs.
+-	 */
+-	return dev->sram + CCS_BASE;
+-}
+-
+-/*===========================================================================*/
+-static int ray_init(struct net_device *dev)
+-{
+-	int i;
+-	struct ccs __iomem *pccs;
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	dev_dbg(&link->dev, "ray_init(0x%p)\n", dev);
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_init - device not present\n");
+-		return -1;
+-	}
+-
+-	local->net_type = net_type;
+-	local->sta_type = TYPE_STA;
+-
+-	/* Copy the startup results to local memory */
+-	memcpy_fromio(&local->startup_res, local->sram + ECF_TO_HOST_BASE,
+-		      sizeof(struct startup_res_6));
+-
+-	/* Check Power up test status and get mac address from card */
+-	if (local->startup_res.startup_word != 0x80) {
+-		printk(KERN_INFO "ray_init ERROR card status = %2x\n",
+-		       local->startup_res.startup_word);
+-		local->card_status = CARD_INIT_ERROR;
+-		return -1;
+-	}
+-
+-	local->fw_ver = local->startup_res.firmware_version[0];
+-	local->fw_bld = local->startup_res.firmware_version[1];
+-	local->fw_var = local->startup_res.firmware_version[2];
+-	dev_dbg(&link->dev, "ray_init firmware version %d.%d\n", local->fw_ver,
+-	      local->fw_bld);
+-
+-	local->tib_length = 0x20;
+-	if ((local->fw_ver == 5) && (local->fw_bld >= 30))
+-		local->tib_length = local->startup_res.tib_length;
+-	dev_dbg(&link->dev, "ray_init tib_length = 0x%02x\n", local->tib_length);
+-	/* Initialize CCS's to buffer free state */
+-	pccs = ccs_base(local);
+-	for (i = 0; i < NUMBER_OF_CCS; i++) {
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-	}
+-	init_startup_params(local);
+-
+-	/* copy mac address to startup parameters */
+-	if (!parse_addr(phy_addr, local->sparm.b4.a_mac_addr)) {
+-		memcpy(&local->sparm.b4.a_mac_addr,
+-		       &local->startup_res.station_addr, ADDRLEN);
+-	}
+-
+-	clear_interrupt(local);	/* Clear any interrupt from the card */
+-	local->card_status = CARD_AWAITING_PARAM;
+-	dev_dbg(&link->dev, "ray_init ending\n");
+-	return 0;
+-} /* ray_init */
+-
+-/*===========================================================================*/
+-/* Download startup parameters to the card and command it to read them       */
+-static int dl_startup_params(struct net_device *dev)
+-{
+-	int ccsindex;
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct ccs __iomem *pccs;
+-	struct pcmcia_device *link = local->finder;
+-
+-	dev_dbg(&link->dev, "dl_startup_params entered\n");
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs dl_startup_params - device not present\n");
+-		return -1;
+-	}
+-
+-	/* Copy parameters to host to ECF area */
+-	if (local->fw_ver == 0x55)
+-		memcpy_toio(local->sram + HOST_TO_ECF_BASE, &local->sparm.b4,
+-			    sizeof(struct b4_startup_params));
+-	else
+-		memcpy_toio(local->sram + HOST_TO_ECF_BASE, &local->sparm.b5,
+-			    sizeof(struct b5_startup_params));
+-
+-	/* Fill in the CCS fields for the ECF */
+-	if ((ccsindex = get_free_ccs(local)) < 0)
+-		return -1;
+-	local->dl_param_ccs = ccsindex;
+-	pccs = ccs_base(local) + ccsindex;
+-	writeb(CCS_DOWNLOAD_STARTUP_PARAMS, &pccs->cmd);
+-	dev_dbg(&link->dev, "dl_startup_params start ccsindex = %d\n",
+-	      local->dl_param_ccs);
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		printk(KERN_INFO "ray dl_startup_params failed - "
+-		       "ECF not ready for intr\n");
+-		local->card_status = CARD_DL_PARAM_ERROR;
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-		return -2;
+-	}
+-	local->card_status = CARD_DL_PARAM;
+-	/* Start kernel timer to wait for dl startup to complete. */
+-	local->timer.expires = jiffies + HZ / 2;
+-	local->timer.function = verify_dl_startup;
+-	add_timer(&local->timer);
+-	dev_dbg(&link->dev,
+-	      "ray_cs dl_startup_params started timer for verify_dl_startup\n");
+-	return 0;
+-} /* dl_startup_params */
+-
+-/*===========================================================================*/
+-static void init_startup_params(ray_dev_t *local)
+-{
+-	int i;
+-
+-	if (country > JAPAN_TEST)
+-		country = USA;
+-	else if (country < USA)
+-		country = USA;
+-	/* structure for hop time and beacon period is defined here using
+-	 * New 802.11D6.1 format.  Card firmware is still using old format
+-	 * until version 6.
+-	 *    Before                    After
+-	 *    a_hop_time ms byte        a_hop_time ms byte
+-	 *    a_hop_time 2s byte        a_hop_time ls byte
+-	 *    a_hop_time ls byte        a_beacon_period ms byte
+-	 *    a_beacon_period           a_beacon_period ls byte
+-	 *
+-	 *    a_hop_time = uS           a_hop_time = KuS
+-	 *    a_beacon_period = hops    a_beacon_period = KuS
+-	 *//* 64ms = 010000 */
+-	if (local->fw_ver == 0x55) {
+-		memcpy(&local->sparm.b4, b4_default_startup_parms,
+-		       sizeof(struct b4_startup_params));
+-		/* Translate sane kus input values to old build 4/5 format */
+-		/* i = hop time in uS truncated to 3 bytes */
+-		i = (hop_dwell * 1024) & 0xffffff;
+-		local->sparm.b4.a_hop_time[0] = (i >> 16) & 0xff;
+-		local->sparm.b4.a_hop_time[1] = (i >> 8) & 0xff;
+-		local->sparm.b4.a_beacon_period[0] = 0;
+-		local->sparm.b4.a_beacon_period[1] =
+-		    ((beacon_period / hop_dwell) - 1) & 0xff;
+-		local->sparm.b4.a_curr_country_code = country;
+-		local->sparm.b4.a_hop_pattern_length =
+-		    hop_pattern_length[(int)country] - 1;
+-		if (bc) {
+-			local->sparm.b4.a_ack_timeout = 0x50;
+-			local->sparm.b4.a_sifs = 0x3f;
+-		}
+-	} else { /* Version 5 uses real kus values */
+-		memcpy((UCHAR *) &local->sparm.b5, b5_default_startup_parms,
+-		       sizeof(struct b5_startup_params));
+-
+-		local->sparm.b5.a_hop_time[0] = (hop_dwell >> 8) & 0xff;
+-		local->sparm.b5.a_hop_time[1] = hop_dwell & 0xff;
+-		local->sparm.b5.a_beacon_period[0] =
+-		    (beacon_period >> 8) & 0xff;
+-		local->sparm.b5.a_beacon_period[1] = beacon_period & 0xff;
+-		if (psm)
+-			local->sparm.b5.a_power_mgt_state = 1;
+-		local->sparm.b5.a_curr_country_code = country;
+-		local->sparm.b5.a_hop_pattern_length =
+-		    hop_pattern_length[(int)country];
+-	}
+-
+-	local->sparm.b4.a_network_type = net_type & 0x01;
+-	local->sparm.b4.a_acting_as_ap_status = TYPE_STA;
+-
+-	if (essid != NULL)
+-		strscpy(local->sparm.b4.a_current_ess_id, essid, ESSID_SIZE);
+-} /* init_startup_params */
+-
+-/*===========================================================================*/
+-static void verify_dl_startup(struct timer_list *t)
+-{
+-	ray_dev_t *local = from_timer(local, t, timer);
+-	struct ccs __iomem *pccs = ccs_base(local) + local->dl_param_ccs;
+-	UCHAR status;
+-	struct pcmcia_device *link = local->finder;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs verify_dl_startup - device not present\n");
+-		return;
+-	}
+-#if 0
+-	{
+-		int i;
+-		printk(KERN_DEBUG
+-		       "verify_dl_startup parameters sent via ccs %d:\n",
+-		       local->dl_param_ccs);
+-		for (i = 0; i < sizeof(struct b5_startup_params); i++) {
+-			printk(" %2x",
+-			       (unsigned int)readb(local->sram +
+-						   HOST_TO_ECF_BASE + i));
+-		}
+-		printk("\n");
+-	}
+-#endif
+-
+-	status = readb(&pccs->buffer_status);
+-	if (status != CCS_BUFFER_FREE) {
+-		printk(KERN_INFO
+-		       "Download startup params failed.  Status = %d\n",
+-		       status);
+-		local->card_status = CARD_DL_PARAM_ERROR;
+-		return;
+-	}
+-	if (local->sparm.b4.a_network_type == ADHOC)
+-		start_net(&local->timer);
+-	else
+-		join_net(&local->timer);
+-} /* end verify_dl_startup */
+-
+-/*===========================================================================*/
+-/* Command card to start a network */
+-static void start_net(struct timer_list *t)
+-{
+-	ray_dev_t *local = from_timer(local, t, timer);
+-	struct ccs __iomem *pccs;
+-	int ccsindex;
+-	struct pcmcia_device *link = local->finder;
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs start_net - device not present\n");
+-		return;
+-	}
+-	/* Fill in the CCS fields for the ECF */
+-	if ((ccsindex = get_free_ccs(local)) < 0)
+-		return;
+-	pccs = ccs_base(local) + ccsindex;
+-	writeb(CCS_START_NETWORK, &pccs->cmd);
+-	writeb(0, &pccs->var.start_network.update_param);
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		dev_dbg(&link->dev, "ray start net failed - card not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-		return;
+-	}
+-	local->card_status = CARD_DOING_ACQ;
+-} /* end start_net */
+-
+-/*===========================================================================*/
+-/* Command card to join a network */
+-static void join_net(struct timer_list *t)
+-{
+-	ray_dev_t *local = from_timer(local, t, timer);
+-
+-	struct ccs __iomem *pccs;
+-	int ccsindex;
+-	struct pcmcia_device *link = local->finder;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs join_net - device not present\n");
+-		return;
+-	}
+-	/* Fill in the CCS fields for the ECF */
+-	if ((ccsindex = get_free_ccs(local)) < 0)
+-		return;
+-	pccs = ccs_base(local) + ccsindex;
+-	writeb(CCS_JOIN_NETWORK, &pccs->cmd);
+-	writeb(0, &pccs->var.join_network.update_param);
+-	writeb(0, &pccs->var.join_network.net_initiated);
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		dev_dbg(&link->dev, "ray join net failed - card not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-		return;
+-	}
+-	local->card_status = CARD_DOING_ACQ;
+-}
+-
+-
+-static void ray_release(struct pcmcia_device *link)
+-{
+-	struct net_device *dev = link->priv;
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	dev_dbg(&link->dev, "ray_release\n");
+-
+-	del_timer_sync(&local->timer);
+-
+-	if (local->sram)
+-		iounmap(local->sram);
+-	if (local->rmem)
+-		iounmap(local->rmem);
+-	if (local->amem)
+-		iounmap(local->amem);
+-	pcmcia_disable_device(link);
+-
+-	dev_dbg(&link->dev, "ray_release ending\n");
+-}
+-
+-static int ray_suspend(struct pcmcia_device *link)
+-{
+-	struct net_device *dev = link->priv;
+-
+-	if (link->open)
+-		netif_device_detach(dev);
+-
+-	return 0;
+-}
+-
+-static int ray_resume(struct pcmcia_device *link)
+-{
+-	struct net_device *dev = link->priv;
+-
+-	if (link->open) {
+-		ray_reset(dev);
+-		netif_device_attach(dev);
+-	}
+-
+-	return 0;
+-}
+-
+-/*===========================================================================*/
+-static int ray_dev_init(struct net_device *dev)
+-{
+-#ifdef RAY_IMMEDIATE_INIT
+-	int i;
+-#endif /* RAY_IMMEDIATE_INIT */
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-
+-	dev_dbg(&link->dev, "ray_dev_init(dev=%p)\n", dev);
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_dev_init - device not present\n");
+-		return -1;
+-	}
+-#ifdef RAY_IMMEDIATE_INIT
+-	/* Download startup parameters */
+-	if ((i = dl_startup_params(dev)) < 0) {
+-		printk(KERN_INFO "ray_dev_init dl_startup_params failed - "
+-		       "returns 0x%x\n", i);
+-		return -1;
+-	}
+-#else /* RAY_IMMEDIATE_INIT */
+-	/* Postpone the card init so that we can still configure the card,
+-	 * for example using the Wireless Extensions. The init will happen
+-	 * in ray_open() - Jean II */
+-	dev_dbg(&link->dev,
+-	      "ray_dev_init: postponing card init to ray_open() ; Status = %d\n",
+-	      local->card_status);
+-#endif /* RAY_IMMEDIATE_INIT */
+-
+-	/* copy mac and broadcast addresses to linux device */
+-	eth_hw_addr_set(dev, local->sparm.b4.a_mac_addr);
+-	eth_broadcast_addr(dev->broadcast);
+-
+-	dev_dbg(&link->dev, "ray_dev_init ending\n");
+-	return 0;
+-}
+-
+-/*===========================================================================*/
+-static int ray_dev_config(struct net_device *dev, struct ifmap *map)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	/* Dummy routine to satisfy device structure */
+-	dev_dbg(&link->dev, "ray_dev_config(dev=%p,ifmap=%p)\n", dev, map);
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_dev_config - device not present\n");
+-		return -1;
+-	}
+-
+-	return 0;
+-}
+-
+-/*===========================================================================*/
+-static netdev_tx_t ray_dev_start_xmit(struct sk_buff *skb,
+-					    struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	short length = skb->len;
+-
+-	if (!pcmcia_dev_present(link)) {
+-		dev_dbg(&link->dev, "ray_dev_start_xmit - device not present\n");
+-		dev_kfree_skb(skb);
+-		return NETDEV_TX_OK;
+-	}
+-
+-	dev_dbg(&link->dev, "ray_dev_start_xmit(skb=%p, dev=%p)\n", skb, dev);
+-	if (local->authentication_state == NEED_TO_AUTH) {
+-		dev_dbg(&link->dev, "ray_cs Sending authentication request.\n");
+-		if (!build_auth_frame(local, local->auth_id, OPEN_AUTH_REQUEST)) {
+-			local->authentication_state = AUTHENTICATED;
+-			netif_stop_queue(dev);
+-			return NETDEV_TX_BUSY;
+-		}
+-	}
+-
+-	if (length < ETH_ZLEN) {
+-		if (skb_padto(skb, ETH_ZLEN))
+-			return NETDEV_TX_OK;
+-		length = ETH_ZLEN;
+-	}
+-	switch (ray_hw_xmit(skb->data, length, dev, DATA_TYPE)) {
+-	case XMIT_NO_CCS:
+-	case XMIT_NEED_AUTH:
+-		netif_stop_queue(dev);
+-		return NETDEV_TX_BUSY;
+-	case XMIT_NO_INTR:
+-	case XMIT_MSG_BAD:
+-	case XMIT_OK:
+-	default:
+-		dev_kfree_skb(skb);
+-	}
+-
+-	return NETDEV_TX_OK;
+-} /* ray_dev_start_xmit */
+-
+-/*===========================================================================*/
+-static int ray_hw_xmit(unsigned char *data, int len, struct net_device *dev,
+-		       UCHAR msg_type)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct ccs __iomem *pccs;
+-	int ccsindex;
+-	int offset;
+-	struct tx_msg __iomem *ptx;	/* Address of xmit buffer in PC space */
+-	short int addr;		/* Address of xmit buffer in card space */
+-
+-	pr_debug("ray_hw_xmit(data=%p, len=%d, dev=%p)\n", data, len, dev);
+-	if (len + TX_HEADER_LENGTH > TX_BUF_SIZE) {
+-		printk(KERN_INFO "ray_hw_xmit packet too large: %d bytes\n",
+-		       len);
+-		return XMIT_MSG_BAD;
+-	}
+-	switch (ccsindex = get_free_tx_ccs(local)) {
+-	case ECCSBUSY:
+-		pr_debug("ray_hw_xmit tx_ccs table busy\n");
+-		fallthrough;
+-	case ECCSFULL:
+-		pr_debug("ray_hw_xmit No free tx ccs\n");
+-		fallthrough;
+-	case ECARDGONE:
+-		netif_stop_queue(dev);
+-		return XMIT_NO_CCS;
+-	default:
+-		break;
+-	}
+-	addr = TX_BUF_BASE + (ccsindex << 11);
+-
+-	if (msg_type == DATA_TYPE) {
+-		local->stats.tx_bytes += len;
+-		local->stats.tx_packets++;
+-	}
+-
+-	ptx = local->sram + addr;
+-
+-	ray_build_header(local, ptx, msg_type, data);
+-	if (translate) {
+-		offset = translate_frame(local, ptx, data, len);
+-	} else { /* Encapsulate frame */
+-		/* TBD TIB length will move address of ptx->var */
+-		memcpy_toio(&ptx->var, data, len);
+-		offset = 0;
+-	}
+-
+-	/* fill in the CCS */
+-	pccs = ccs_base(local) + ccsindex;
+-	len += TX_HEADER_LENGTH + offset;
+-	writeb(CCS_TX_REQUEST, &pccs->cmd);
+-	writeb(addr >> 8, &pccs->var.tx_request.tx_data_ptr[0]);
+-	writeb(local->tib_length, &pccs->var.tx_request.tx_data_ptr[1]);
+-	writeb(len >> 8, &pccs->var.tx_request.tx_data_length[0]);
+-	writeb(len & 0xff, &pccs->var.tx_request.tx_data_length[1]);
+-/* TBD still need psm_cam? */
+-	writeb(PSM_CAM, &pccs->var.tx_request.pow_sav_mode);
+-	writeb(local->net_default_tx_rate, &pccs->var.tx_request.tx_rate);
+-	writeb(0, &pccs->var.tx_request.antenna);
+-	pr_debug("ray_hw_xmit default_tx_rate = 0x%x\n",
+-	      local->net_default_tx_rate);
+-
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		pr_debug("ray_hw_xmit failed - ECF not ready for intr\n");
+-/* TBD very inefficient to copy packet to buffer, and then not
+-   send it, but the alternative is to queue the messages and that
+-   won't be done for a while.  Maybe set tbusy until a CCS is free?
+-*/
+-		writeb(CCS_BUFFER_FREE, &pccs->buffer_status);
+-		return XMIT_NO_INTR;
+-	}
+-	return XMIT_OK;
+-} /* end ray_hw_xmit */
+-
+-/*===========================================================================*/
+-static int translate_frame(ray_dev_t *local, struct tx_msg __iomem *ptx,
+-			   unsigned char *data, int len)
+-{
+-	__be16 proto = ((struct ethhdr *)data)->h_proto;
+-	if (ntohs(proto) >= ETH_P_802_3_MIN) { /* DIX II ethernet frame */
+-		pr_debug("ray_cs translate_frame DIX II\n");
+-		/* Copy LLC header to card buffer */
+-		memcpy_toio(&ptx->var, eth2_llc, sizeof(eth2_llc));
+-		memcpy_toio(((void __iomem *)&ptx->var) + sizeof(eth2_llc),
+-			    (UCHAR *) &proto, 2);
+-		if (proto == htons(ETH_P_AARP) || proto == htons(ETH_P_IPX)) {
+-			/* This is the selective translation table, only 2 entries */
+-			writeb(0xf8,
+-			       &((struct snaphdr_t __iomem *)ptx->var)->org[2]);
+-		}
+-		/* Copy body of ethernet packet without ethernet header */
+-		memcpy_toio((void __iomem *)&ptx->var +
+-			    sizeof(struct snaphdr_t), data + ETH_HLEN,
+-			    len - ETH_HLEN);
+-		return (int)sizeof(struct snaphdr_t) - ETH_HLEN;
+-	} else { /* already  802 type, and proto is length */
+-		pr_debug("ray_cs translate_frame 802\n");
+-		if (proto == htons(0xffff)) { /* evil netware IPX 802.3 without LLC */
+-			pr_debug("ray_cs translate_frame evil IPX\n");
+-			memcpy_toio(&ptx->var, data + ETH_HLEN, len - ETH_HLEN);
+-			return 0 - ETH_HLEN;
+-		}
+-		memcpy_toio(&ptx->var, data + ETH_HLEN, len - ETH_HLEN);
+-		return 0 - ETH_HLEN;
+-	}
+-	/* TBD do other frame types */
+-} /* end translate_frame */
+-
+-/*===========================================================================*/
+-static void ray_build_header(ray_dev_t *local, struct tx_msg __iomem *ptx,
+-			     UCHAR msg_type, unsigned char *data)
+-{
+-	writeb(PROTOCOL_VER | msg_type, &ptx->mac.frame_ctl_1);
+-/*** IEEE 802.11 Address field assignments *************
+-		TODS	FROMDS	addr_1		addr_2		addr_3	addr_4
+-Adhoc		0	0	dest		src (terminal)	BSSID	N/A
+-AP to Terminal	0	1	dest		AP(BSSID)	source	N/A
+-Terminal to AP	1	0	AP(BSSID)	src (terminal)	dest	N/A
+-AP to AP	1	1	dest AP		src AP		dest	source
+-*******************************************************/
+-	if (local->net_type == ADHOC) {
+-		writeb(0, &ptx->mac.frame_ctl_2);
+-		memcpy_toio(ptx->mac.addr_1, ((struct ethhdr *)data)->h_dest,
+-			    ADDRLEN);
+-		memcpy_toio(ptx->mac.addr_2, ((struct ethhdr *)data)->h_source,
+-			    ADDRLEN);
+-		memcpy_toio(ptx->mac.addr_3, local->bss_id, ADDRLEN);
+-	} else { /* infrastructure */
+-
+-		if (local->sparm.b4.a_acting_as_ap_status) {
+-			writeb(FC2_FROM_DS, &ptx->mac.frame_ctl_2);
+-			memcpy_toio(ptx->mac.addr_1,
+-				    ((struct ethhdr *)data)->h_dest, ADDRLEN);
+-			memcpy_toio(ptx->mac.addr_2, local->bss_id, 6);
+-			memcpy_toio(ptx->mac.addr_3,
+-				    ((struct ethhdr *)data)->h_source, ADDRLEN);
+-		} else { /* Terminal */
+-
+-			writeb(FC2_TO_DS, &ptx->mac.frame_ctl_2);
+-			memcpy_toio(ptx->mac.addr_1, local->bss_id, ADDRLEN);
+-			memcpy_toio(ptx->mac.addr_2,
+-				    ((struct ethhdr *)data)->h_source, ADDRLEN);
+-			memcpy_toio(ptx->mac.addr_3,
+-				    ((struct ethhdr *)data)->h_dest, ADDRLEN);
+-		}
+-	}
+-} /* end encapsulate_frame */
+-
+-/*====================================================================*/
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get protocol name
+- */
+-static int ray_get_name(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	strcpy(wrqu->name, "IEEE 802.11-FH");
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set frequency
+- */
+-static int ray_set_freq(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	int err = -EINPROGRESS;	/* Call commit handler */
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	/* Setting by channel number */
+-	if ((wrqu->freq.m > USA_HOP_MOD) || (wrqu->freq.e > 0))
+-		err = -EOPNOTSUPP;
+-	else
+-		local->sparm.b5.a_hop_pattern = wrqu->freq.m;
+-
 -	return err;
 -}
 -
--static void zd1201_disconnect(struct usb_interface *interface)
--{
--	struct zd1201 *zd = usb_get_intfdata(interface);
--	struct hlist_node *node2;
--	struct zd1201_frag *frag;
--
--	if (!zd)
--		return;
--	usb_set_intfdata(interface, NULL);
--
--	hlist_for_each_entry_safe(frag, node2, &zd->fraglist, fnode) {
--		hlist_del_init(&frag->fnode);
--		kfree_skb(frag->skb);
--		kfree(frag);
--	}
--
--	if (zd->tx_urb) {
--		usb_kill_urb(zd->tx_urb);
--		usb_free_urb(zd->tx_urb);
--	}
--	if (zd->rx_urb) {
--		usb_kill_urb(zd->rx_urb);
--		usb_free_urb(zd->rx_urb);
--	}
--
--	if (zd->dev) {
--		unregister_netdev(zd->dev);
--		free_netdev(zd->dev);
--	}
--}
--
--#ifdef CONFIG_PM
--
--static int zd1201_suspend(struct usb_interface *interface,
--			   pm_message_t message)
--{
--	struct zd1201 *zd = usb_get_intfdata(interface);
--
--	netif_device_detach(zd->dev);
--
--	zd->was_enabled = zd->mac_enabled;
--
--	if (zd->was_enabled)
--		return zd1201_disable(zd);
--	else
--		return 0;
--}
--
--static int zd1201_resume(struct usb_interface *interface)
--{
--	struct zd1201 *zd = usb_get_intfdata(interface);
--
--	if (!zd || !zd->dev)
--		return -ENODEV;
--
--	netif_device_attach(zd->dev);
--
--	if (zd->was_enabled)
--		return zd1201_enable(zd);
--	else
--		return 0;
--}
--
--#else
--
--#define zd1201_suspend NULL
--#define zd1201_resume  NULL
--
--#endif
--
--static struct usb_driver zd1201_usb = {
--	.name = "zd1201",
--	.probe = zd1201_probe,
--	.disconnect = zd1201_disconnect,
--	.id_table = zd1201_table,
--	.suspend = zd1201_suspend,
--	.resume = zd1201_resume,
--	.disable_hub_initiated_lpm = 1,
--};
--
--module_usb_driver(zd1201_usb);
-diff --git a/drivers/net/wireless/zydas/zd1201.h b/drivers/net/wireless/zydas/zd1201.h
-deleted file mode 100644
-index c46ac87550d1b..0000000000000
---- a/drivers/net/wireless/zydas/zd1201.h
-+++ /dev/null
-@@ -1,144 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0-only */
+-/*------------------------------------------------------------------*/
 -/*
-- *	Copyright (c) 2004, 2005 Jeroen Vreeken (pe1rxq@amsat.org)
-- *
-- *	Parts of this driver have been derived from a wlan-ng version
-- *	modified by ZyDAS.
-- *	Copyright (C) 1999 AbsoluteValue Systems, Inc.  All Rights Reserved.
+- * Wireless Handler : get frequency
+- */
+-static int ray_get_freq(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	wrqu->freq.m = local->sparm.b5.a_hop_pattern;
+-	wrqu->freq.e = 0;
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set ESSID
+- */
+-static int ray_set_essid(struct net_device *dev, struct iw_request_info *info,
+-			 union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	/* Check if we asked for `any' */
+-	if (wrqu->essid.flags == 0)
+-		/* Corey : can you do that ? */
+-		return -EOPNOTSUPP;
+-
+-	/* Check the size of the string */
+-	if (wrqu->essid.length > IW_ESSID_MAX_SIZE)
+-		return -E2BIG;
+-
+-	/* Set the ESSID in the card */
+-	memset(local->sparm.b5.a_current_ess_id, 0, IW_ESSID_MAX_SIZE);
+-	memcpy(local->sparm.b5.a_current_ess_id, extra, wrqu->essid.length);
+-
+-	return -EINPROGRESS;	/* Call commit handler */
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get ESSID
+- */
+-static int ray_get_essid(struct net_device *dev, struct iw_request_info *info,
+-			 union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	UCHAR tmp[IW_ESSID_MAX_SIZE + 1];
+-
+-	/* Get the essid that was set */
+-	memcpy(extra, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
+-	memcpy(tmp, local->sparm.b5.a_current_ess_id, IW_ESSID_MAX_SIZE);
+-	tmp[IW_ESSID_MAX_SIZE] = '\0';
+-
+-	/* Push it out ! */
+-	wrqu->essid.length = strlen(tmp);
+-	wrqu->essid.flags = 1;	/* active */
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get AP address
+- */
+-static int ray_get_wap(struct net_device *dev, struct iw_request_info *info,
+-		       union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	memcpy(wrqu->ap_addr.sa_data, local->bss_id, ETH_ALEN);
+-	wrqu->ap_addr.sa_family = ARPHRD_ETHER;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set Bit-Rate
+- */
+-static int ray_set_rate(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	/* Check if rate is in range */
+-	if ((wrqu->bitrate.value != 1000000) && (wrqu->bitrate.value != 2000000))
+-		return -EINVAL;
+-
+-	/* Hack for 1.5 Mb/s instead of 2 Mb/s */
+-	if ((local->fw_ver == 0x55) &&	/* Please check */
+-	    (wrqu->bitrate.value == 2000000))
+-		local->net_default_tx_rate = 3;
+-	else
+-		local->net_default_tx_rate = wrqu->bitrate.value / 500000;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get Bit-Rate
+- */
+-static int ray_get_rate(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	if (local->net_default_tx_rate == 3)
+-		wrqu->bitrate.value = 2000000;	/* Hum... */
+-	else
+-		wrqu->bitrate.value = local->net_default_tx_rate * 500000;
+-	wrqu->bitrate.fixed = 0;	/* We are in auto mode */
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set RTS threshold
+- */
+-static int ray_set_rts(struct net_device *dev, struct iw_request_info *info,
+-		       union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	int rthr = wrqu->rts.value;
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	/* if(wrq->u.rts.fixed == 0) we should complain */
+-	if (wrqu->rts.disabled)
+-		rthr = 32767;
+-	else {
+-		if ((rthr < 0) || (rthr > 2347))   /* What's the max packet size ??? */
+-			return -EINVAL;
+-	}
+-	local->sparm.b5.a_rts_threshold[0] = (rthr >> 8) & 0xFF;
+-	local->sparm.b5.a_rts_threshold[1] = rthr & 0xFF;
+-
+-	return -EINPROGRESS;	/* Call commit handler */
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get RTS threshold
+- */
+-static int ray_get_rts(struct net_device *dev, struct iw_request_info *info,
+-		       union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	wrqu->rts.value = (local->sparm.b5.a_rts_threshold[0] << 8)
+-	    + local->sparm.b5.a_rts_threshold[1];
+-	wrqu->rts.disabled = (wrqu->rts.value == 32767);
+-	wrqu->rts.fixed = 1;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set Fragmentation threshold
+- */
+-static int ray_set_frag(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	int fthr = wrqu->frag.value;
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	/* if(wrq->u.frag.fixed == 0) should complain */
+-	if (wrqu->frag.disabled)
+-		fthr = 32767;
+-	else {
+-		if ((fthr < 256) || (fthr > 2347))	/* To check out ! */
+-			return -EINVAL;
+-	}
+-	local->sparm.b5.a_frag_threshold[0] = (fthr >> 8) & 0xFF;
+-	local->sparm.b5.a_frag_threshold[1] = fthr & 0xFF;
+-
+-	return -EINPROGRESS;	/* Call commit handler */
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get Fragmentation threshold
+- */
+-static int ray_get_frag(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	wrqu->frag.value = (local->sparm.b5.a_frag_threshold[0] << 8)
+-	    + local->sparm.b5.a_frag_threshold[1];
+-	wrqu->frag.disabled = (wrqu->frag.value == 32767);
+-	wrqu->frag.fixed = 1;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : set Mode of Operation
+- */
+-static int ray_set_mode(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	int err = -EINPROGRESS;	/* Call commit handler */
+-	char card_mode = 1;
+-
+-	/* Reject if card is already initialised */
+-	if (local->card_status != CARD_AWAITING_PARAM)
+-		return -EBUSY;
+-
+-	switch (wrqu->mode) {
+-	case IW_MODE_ADHOC:
+-		card_mode = 0;
+-		fallthrough;
+-	case IW_MODE_INFRA:
+-		local->sparm.b5.a_network_type = card_mode;
+-		break;
+-	default:
+-		err = -EINVAL;
+-	}
+-
+-	return err;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get Mode of Operation
+- */
+-static int ray_get_mode(struct net_device *dev, struct iw_request_info *info,
+-			union iwreq_data *wrqu, char *extra)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-
+-	if (local->sparm.b5.a_network_type)
+-		wrqu->mode = IW_MODE_INFRA;
+-	else
+-		wrqu->mode = IW_MODE_ADHOC;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Handler : get range info
+- */
+-static int ray_get_range(struct net_device *dev, struct iw_request_info *info,
+-			 union iwreq_data *wrqu, char *extra)
+-{
+-	struct iw_range *range = (struct iw_range *)extra;
+-
+-	memset(range, 0, sizeof(struct iw_range));
+-
+-	/* Set the length (very important for backward compatibility) */
+-	wrqu->data.length = sizeof(struct iw_range);
+-
+-	/* Set the Wireless Extension versions */
+-	range->we_version_compiled = WIRELESS_EXT;
+-	range->we_version_source = 9;
+-
+-	/* Set information in the range struct */
+-	range->throughput = 1.1 * 1000 * 1000;	/* Put the right number here */
+-	range->num_channels = hop_pattern_length[(int)country];
+-	range->num_frequency = 0;
+-	range->max_qual.qual = 0;
+-	range->max_qual.level = 255;	/* What's the correct value ? */
+-	range->max_qual.noise = 255;	/* Idem */
+-	range->num_bitrates = 2;
+-	range->bitrate[0] = 1000000;	/* 1 Mb/s */
+-	range->bitrate[1] = 2000000;	/* 2 Mb/s */
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Private Handler : set framing mode
+- */
+-static int ray_set_framing(struct net_device *dev, struct iw_request_info *info,
+-			   union iwreq_data *wrqu, char *extra)
+-{
+-	translate = !!*(extra);	/* Set framing mode */
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Private Handler : get framing mode
+- */
+-static int ray_get_framing(struct net_device *dev, struct iw_request_info *info,
+-			   union iwreq_data *wrqu, char *extra)
+-{
+-	*(extra) = translate;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Wireless Private Handler : get country
+- */
+-static int ray_get_country(struct net_device *dev, struct iw_request_info *info,
+-			   union iwreq_data *wrqu, char *extra)
+-{
+-	*(extra) = country;
+-
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Commit handler : called after a bunch of SET operations
+- */
+-static int ray_commit(struct net_device *dev, struct iw_request_info *info,
+-		      union iwreq_data *wrqu, char *extra)
+-{
+-	return 0;
+-}
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Stats handler : return Wireless Stats
+- */
+-static iw_stats *ray_get_wireless_stats(struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	struct status __iomem *p = local->sram + STATUS_BASE;
+-
+-	local->wstats.status = local->card_status;
+-#ifdef WIRELESS_SPY
+-	if ((local->spy_data.spy_number > 0)
+-	    && (local->sparm.b5.a_network_type == 0)) {
+-		/* Get it from the first node in spy list */
+-		local->wstats.qual.qual = local->spy_data.spy_stat[0].qual;
+-		local->wstats.qual.level = local->spy_data.spy_stat[0].level;
+-		local->wstats.qual.noise = local->spy_data.spy_stat[0].noise;
+-		local->wstats.qual.updated =
+-		    local->spy_data.spy_stat[0].updated;
+-	}
+-#endif /* WIRELESS_SPY */
+-
+-	if (pcmcia_dev_present(link)) {
+-		local->wstats.qual.noise = readb(&p->rxnoise);
+-		local->wstats.qual.updated |= 4;
+-	}
+-
+-	return &local->wstats;
+-} /* end ray_get_wireless_stats */
+-
+-/*------------------------------------------------------------------*/
+-/*
+- * Structures to export the Wireless Handlers
 - */
 -
--#ifndef _INCLUDE_ZD1201_H_
--#define _INCLUDE_ZD1201_H_
--
--#define ZD1201_NUMKEYS		4
--#define ZD1201_MAXKEYLEN	13
--#define ZD1201_MAXMULTI		16
--#define ZD1201_FRAGMAX		2500
--#define ZD1201_FRAGMIN		256
--#define ZD1201_RTSMAX		2500
--
--#define ZD1201_RXSIZE		3000
--
--struct zd1201 {
--	struct usb_device	*usb;
--	int			removed;
--	struct net_device	*dev;
--	struct iw_statistics	iwstats;
--
--	int			endp_in;
--	int			endp_out;
--	int			endp_out2;
--	struct urb		*rx_urb;
--	struct urb		*tx_urb;
--
--	unsigned char 		rxdata[ZD1201_RXSIZE];
--	int			rxlen;
--	wait_queue_head_t	rxdataq;
--	int			rxdatas;
--	struct hlist_head	fraglist;
--	unsigned char		txdata[ZD1201_RXSIZE];
--
--	int			ap;
--	char			essid[IW_ESSID_MAX_SIZE+1];
--	int			essidlen;
--	int			mac_enabled;
--	int			was_enabled;
--	int			monitor;
--	int			encode_enabled;
--	int			encode_restricted;
--	unsigned char		encode_keys[ZD1201_NUMKEYS][ZD1201_MAXKEYLEN];
--	int			encode_keylen[ZD1201_NUMKEYS];
+-static const iw_handler ray_handler[] = {
+-	IW_HANDLER(SIOCSIWCOMMIT, ray_commit),
+-	IW_HANDLER(SIOCGIWNAME, ray_get_name),
+-	IW_HANDLER(SIOCSIWFREQ, ray_set_freq),
+-	IW_HANDLER(SIOCGIWFREQ, ray_get_freq),
+-	IW_HANDLER(SIOCSIWMODE, ray_set_mode),
+-	IW_HANDLER(SIOCGIWMODE, ray_get_mode),
+-	IW_HANDLER(SIOCGIWRANGE, ray_get_range),
+-#ifdef WIRELESS_SPY
+-	IW_HANDLER(SIOCSIWSPY, iw_handler_set_spy),
+-	IW_HANDLER(SIOCGIWSPY, iw_handler_get_spy),
+-	IW_HANDLER(SIOCSIWTHRSPY, iw_handler_set_thrspy),
+-	IW_HANDLER(SIOCGIWTHRSPY, iw_handler_get_thrspy),
+-#endif /* WIRELESS_SPY */
+-	IW_HANDLER(SIOCGIWAP, ray_get_wap),
+-	IW_HANDLER(SIOCSIWESSID, ray_set_essid),
+-	IW_HANDLER(SIOCGIWESSID, ray_get_essid),
+-	IW_HANDLER(SIOCSIWRATE, ray_set_rate),
+-	IW_HANDLER(SIOCGIWRATE, ray_get_rate),
+-	IW_HANDLER(SIOCSIWRTS, ray_set_rts),
+-	IW_HANDLER(SIOCGIWRTS, ray_get_rts),
+-	IW_HANDLER(SIOCSIWFRAG, ray_set_frag),
+-	IW_HANDLER(SIOCGIWFRAG, ray_get_frag),
 -};
 -
--struct zd1201_frag {
--	struct hlist_node	fnode;
--	int			seq;
--	struct sk_buff		*skb;
+-#define SIOCSIPFRAMING	SIOCIWFIRSTPRIV	/* Set framing mode */
+-#define SIOCGIPFRAMING	SIOCIWFIRSTPRIV + 1	/* Get framing mode */
+-#define SIOCGIPCOUNTRY	SIOCIWFIRSTPRIV + 3	/* Get country code */
+-
+-static const iw_handler ray_private_handler[] = {
+-	[0] = ray_set_framing,
+-	[1] = ray_get_framing,
+-	[3] = ray_get_country,
 -};
 -
--#define ZD1201SIWHOSTAUTH SIOCIWFIRSTPRIV
--#define ZD1201GIWHOSTAUTH ZD1201SIWHOSTAUTH+1
--#define ZD1201SIWAUTHSTA SIOCIWFIRSTPRIV+2
--#define ZD1201SIWMAXASSOC SIOCIWFIRSTPRIV+4
--#define ZD1201GIWMAXASSOC ZD1201SIWMAXASSOC+1
+-static const struct iw_priv_args ray_private_args[] = {
+-/* cmd,		set_args,	get_args,	name */
+-	{SIOCSIPFRAMING, IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1, 0,
+-	 "set_framing"},
+-	{SIOCGIPFRAMING, 0, IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1,
+-	 "get_framing"},
+-	{SIOCGIPCOUNTRY, 0, IW_PRIV_TYPE_BYTE | IW_PRIV_SIZE_FIXED | 1,
+-	 "get_country"},
+-};
 -
--#define ZD1201_FW_TIMEOUT	(1000)
+-static const struct iw_handler_def ray_handler_def = {
+-	.num_standard = ARRAY_SIZE(ray_handler),
+-	.num_private = ARRAY_SIZE(ray_private_handler),
+-	.num_private_args = ARRAY_SIZE(ray_private_args),
+-	.standard = ray_handler,
+-	.private = ray_private_handler,
+-	.private_args = ray_private_args,
+-	.get_wireless_stats = ray_get_wireless_stats,
+-};
 -
--#define ZD1201_TX_TIMEOUT	(2000)
+-/*===========================================================================*/
+-static int ray_open(struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link;
+-	link = local->finder;
 -
--#define ZD1201_USB_CMDREQ	0
--#define ZD1201_USB_RESREQ	1
+-	dev_dbg(&link->dev, "ray_open('%s')\n", dev->name);
 -
--#define	ZD1201_CMDCODE_INIT	0x00
--#define ZD1201_CMDCODE_ENABLE	0x01
--#define ZD1201_CMDCODE_DISABLE	0x02
--#define ZD1201_CMDCODE_ALLOC	0x0a
--#define ZD1201_CMDCODE_INQUIRE	0x11
--#define ZD1201_CMDCODE_SETRXRID	0x17
--#define ZD1201_CMDCODE_ACCESS	0x21
+-	if (link->open == 0)
+-		local->num_multi = 0;
+-	link->open++;
 -
--#define ZD1201_PACKET_EVENTSTAT	0x0
--#define ZD1201_PACKET_RXDATA	0x1
--#define ZD1201_PACKET_INQUIRE	0x2
--#define ZD1201_PACKET_RESOURCE	0x3
+-	/* If the card is not started, time to start it ! - Jean II */
+-	if (local->card_status == CARD_AWAITING_PARAM) {
+-		int i;
 -
--#define ZD1201_ACCESSBIT	0x0100
+-		dev_dbg(&link->dev, "ray_open: doing init now !\n");
 -
--#define ZD1201_RID_CNFPORTTYPE		0xfc00
--#define ZD1201_RID_CNFOWNMACADDR	0xfc01
--#define ZD1201_RID_CNFDESIREDSSID	0xfc02
--#define ZD1201_RID_CNFOWNCHANNEL	0xfc03
--#define ZD1201_RID_CNFOWNSSID		0xfc04
--#define ZD1201_RID_CNFMAXDATALEN	0xfc07
--#define ZD1201_RID_CNFPMENABLED		0xfc09
--#define ZD1201_RID_CNFPMEPS		0xfc0a
--#define ZD1201_RID_CNFMAXSLEEPDURATION	0xfc0c
--#define ZD1201_RID_CNFDEFAULTKEYID	0xfc23
--#define ZD1201_RID_CNFDEFAULTKEY0	0xfc24
--#define ZD1201_RID_CNFDEFAULTKEY1	0xfc25
--#define ZD1201_RID_CNFDEFAULTKEY2	0xfc26
--#define ZD1201_RID_CNFDEFAULTKEY3	0xfc27
--#define ZD1201_RID_CNFWEBFLAGS		0xfc28
--#define ZD1201_RID_CNFAUTHENTICATION	0xfc2a
--#define ZD1201_RID_CNFMAXASSOCSTATIONS	0xfc2b
--#define ZD1201_RID_CNFHOSTAUTH		0xfc2e
--#define ZD1201_RID_CNFGROUPADDRESS	0xfc80
--#define ZD1201_RID_CNFFRAGTHRESHOLD	0xfc82
--#define ZD1201_RID_CNFRTSTHRESHOLD	0xfc83
--#define ZD1201_RID_TXRATECNTL		0xfc84
--#define ZD1201_RID_PROMISCUOUSMODE	0xfc85
--#define ZD1201_RID_CNFBASICRATES	0xfcb3
--#define ZD1201_RID_AUTHENTICATESTA	0xfce3
--#define ZD1201_RID_CURRENTBSSID		0xfd42
--#define ZD1201_RID_COMMSQUALITY		0xfd43
--#define ZD1201_RID_CURRENTTXRATE	0xfd44
--#define ZD1201_RID_CNFMAXTXBUFFERNUMBER	0xfda0
--#define ZD1201_RID_CURRENTCHANNEL	0xfdc1
+-		/* Download startup parameters */
+-		if ((i = dl_startup_params(dev)) < 0) {
+-			printk(KERN_INFO
+-			       "ray_dev_init dl_startup_params failed - "
+-			       "returns 0x%x\n", i);
+-			return -1;
+-		}
+-	}
 -
--#define ZD1201_INQ_SCANRESULTS		0xf101
+-	if (sniffer)
+-		netif_stop_queue(dev);
+-	else
+-		netif_start_queue(dev);
 -
--#define ZD1201_INF_LINKSTATUS		0xf200
--#define ZD1201_INF_ASSOCSTATUS		0xf201
--#define ZD1201_INF_AUTHREQ		0xf202
+-	dev_dbg(&link->dev, "ray_open ending\n");
+-	return 0;
+-} /* end ray_open */
 -
--#define ZD1201_ASSOCSTATUS_STAASSOC	0x1
--#define ZD1201_ASSOCSTATUS_REASSOC	0x2
--#define ZD1201_ASSOCSTATUS_DISASSOC	0x3
--#define ZD1201_ASSOCSTATUS_ASSOCFAIL	0x4
--#define ZD1201_ASSOCSTATUS_AUTHFAIL	0x5
+-/*===========================================================================*/
+-static int ray_dev_close(struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link;
+-	link = local->finder;
 -
--#define ZD1201_PORTTYPE_IBSS		0
--#define ZD1201_PORTTYPE_BSS		1
--#define ZD1201_PORTTYPE_WDS		2
--#define ZD1201_PORTTYPE_PSEUDOIBSS	3
--#define ZD1201_PORTTYPE_AP		6
+-	dev_dbg(&link->dev, "ray_dev_close('%s')\n", dev->name);
 -
--#define ZD1201_RATEB1	1
--#define ZD1201_RATEB2	2
--#define ZD1201_RATEB5	4	/* 5.5 really, but 5 is shorter :) */
--#define ZD1201_RATEB11	8
+-	link->open--;
+-	netif_stop_queue(dev);
 -
--#define ZD1201_CNFAUTHENTICATION_OPENSYSTEM	0x0001
--#define ZD1201_CNFAUTHENTICATION_SHAREDKEY	0x0002
+-	/* In here, we should stop the hardware (stop card from beeing active)
+-	 * and set local->card_status to CARD_AWAITING_PARAM, so that while the
+-	 * card is closed we can chage its configuration.
+-	 * Probably also need a COR reset to get sane state - Jean II */
 -
--#endif /* _INCLUDE_ZD1201_H_ */
+-	return 0;
+-} /* end ray_dev_close */
+-
+-/*===========================================================================*/
+-static void ray_reset(struct net_device *dev)
+-{
+-	pr_debug("ray_reset entered\n");
+-}
+-
+-/*===========================================================================*/
+-/* Cause a firmware interrupt if it is ready for one                         */
+-/* Return nonzero if not ready                                               */
+-static int interrupt_ecf(ray_dev_t *local, int ccs)
+-{
+-	int i = 50;
+-	struct pcmcia_device *link = local->finder;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs interrupt_ecf - device not present\n");
+-		return -1;
+-	}
+-	dev_dbg(&link->dev, "interrupt_ecf(local=%p, ccs = 0x%x\n", local, ccs);
+-
+-	while (i &&
+-	       (readb(local->amem + CIS_OFFSET + ECF_INTR_OFFSET) &
+-		ECF_INTR_SET))
+-		i--;
+-	if (i == 0) {
+-		dev_dbg(&link->dev, "ray_cs interrupt_ecf card not ready for interrupt\n");
+-		return -1;
+-	}
+-	/* Fill the mailbox, then kick the card */
+-	writeb(ccs, local->sram + SCB_BASE);
+-	writeb(ECF_INTR_SET, local->amem + CIS_OFFSET + ECF_INTR_OFFSET);
+-	return 0;
+-} /* interrupt_ecf */
+-
+-/*===========================================================================*/
+-/* Get next free transmit CCS                                                */
+-/* Return - index of current tx ccs                                          */
+-static int get_free_tx_ccs(ray_dev_t *local)
+-{
+-	int i;
+-	struct ccs __iomem *pccs = ccs_base(local);
+-	struct pcmcia_device *link = local->finder;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs get_free_tx_ccs - device not present\n");
+-		return ECARDGONE;
+-	}
+-
+-	if (test_and_set_bit(0, &local->tx_ccs_lock)) {
+-		dev_dbg(&link->dev, "ray_cs tx_ccs_lock busy\n");
+-		return ECCSBUSY;
+-	}
+-
+-	for (i = 0; i < NUMBER_OF_TX_CCS; i++) {
+-		if (readb(&(pccs + i)->buffer_status) == CCS_BUFFER_FREE) {
+-			writeb(CCS_BUFFER_BUSY, &(pccs + i)->buffer_status);
+-			writeb(CCS_END_LIST, &(pccs + i)->link);
+-			local->tx_ccs_lock = 0;
+-			return i;
+-		}
+-	}
+-	local->tx_ccs_lock = 0;
+-	dev_dbg(&link->dev, "ray_cs ERROR no free tx CCS for raylink card\n");
+-	return ECCSFULL;
+-} /* get_free_tx_ccs */
+-
+-/*===========================================================================*/
+-/* Get next free CCS                                                         */
+-/* Return - index of current ccs                                             */
+-static int get_free_ccs(ray_dev_t *local)
+-{
+-	int i;
+-	struct ccs __iomem *pccs = ccs_base(local);
+-	struct pcmcia_device *link = local->finder;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs get_free_ccs - device not present\n");
+-		return ECARDGONE;
+-	}
+-	if (test_and_set_bit(0, &local->ccs_lock)) {
+-		dev_dbg(&link->dev, "ray_cs ccs_lock busy\n");
+-		return ECCSBUSY;
+-	}
+-
+-	for (i = NUMBER_OF_TX_CCS; i < NUMBER_OF_CCS; i++) {
+-		if (readb(&(pccs + i)->buffer_status) == CCS_BUFFER_FREE) {
+-			writeb(CCS_BUFFER_BUSY, &(pccs + i)->buffer_status);
+-			writeb(CCS_END_LIST, &(pccs + i)->link);
+-			local->ccs_lock = 0;
+-			return i;
+-		}
+-	}
+-	local->ccs_lock = 0;
+-	dev_dbg(&link->dev, "ray_cs ERROR no free CCS for raylink card\n");
+-	return ECCSFULL;
+-} /* get_free_ccs */
+-
+-/*===========================================================================*/
+-static void authenticate_timeout(struct timer_list *t)
+-{
+-	ray_dev_t *local = from_timer(local, t, timer);
+-	del_timer(&local->timer);
+-	printk(KERN_INFO "ray_cs Authentication with access point failed"
+-	       " - timeout\n");
+-	join_net(&local->timer);
+-}
+-
+-/*===========================================================================*/
+-static int parse_addr(char *in_str, UCHAR *out)
+-{
+-	int i, k;
+-	int len;
+-
+-	if (in_str == NULL)
+-		return 0;
+-	len = strnlen(in_str, ADDRLEN * 2 + 1) - 1;
+-	if (len < 1)
+-		return 0;
+-	memset(out, 0, ADDRLEN);
+-
+-	i = 5;
+-
+-	while (len > 0) {
+-		if ((k = hex_to_bin(in_str[len--])) != -1)
+-			out[i] = k;
+-		else
+-			return 0;
+-
+-		if (len == 0)
+-			break;
+-		if ((k = hex_to_bin(in_str[len--])) != -1)
+-			out[i] += k << 4;
+-		else
+-			return 0;
+-		if (!i--)
+-			break;
+-	}
+-	return 1;
+-}
+-
+-/*===========================================================================*/
+-static struct net_device_stats *ray_get_stats(struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	struct status __iomem *p = local->sram + STATUS_BASE;
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs net_device_stats - device not present\n");
+-		return &local->stats;
+-	}
+-	if (readb(&p->mrx_overflow_for_host)) {
+-		local->stats.rx_over_errors += swab16(readw(&p->mrx_overflow));
+-		writeb(0, &p->mrx_overflow);
+-		writeb(0, &p->mrx_overflow_for_host);
+-	}
+-	if (readb(&p->mrx_checksum_error_for_host)) {
+-		local->stats.rx_crc_errors +=
+-		    swab16(readw(&p->mrx_checksum_error));
+-		writeb(0, &p->mrx_checksum_error);
+-		writeb(0, &p->mrx_checksum_error_for_host);
+-	}
+-	if (readb(&p->rx_hec_error_for_host)) {
+-		local->stats.rx_frame_errors += swab16(readw(&p->rx_hec_error));
+-		writeb(0, &p->rx_hec_error);
+-		writeb(0, &p->rx_hec_error_for_host);
+-	}
+-	return &local->stats;
+-}
+-
+-/*===========================================================================*/
+-static void ray_update_parm(struct net_device *dev, UCHAR objid, UCHAR *value,
+-			    int len)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	int ccsindex;
+-	int i;
+-	struct ccs __iomem *pccs;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_update_parm - device not present\n");
+-		return;
+-	}
+-
+-	if ((ccsindex = get_free_ccs(local)) < 0) {
+-		dev_dbg(&link->dev, "ray_update_parm - No free ccs\n");
+-		return;
+-	}
+-	pccs = ccs_base(local) + ccsindex;
+-	writeb(CCS_UPDATE_PARAMS, &pccs->cmd);
+-	writeb(objid, &pccs->var.update_param.object_id);
+-	writeb(1, &pccs->var.update_param.number_objects);
+-	writeb(0, &pccs->var.update_param.failure_cause);
+-	for (i = 0; i < len; i++) {
+-		writeb(value[i], local->sram + HOST_TO_ECF_BASE);
+-	}
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		dev_dbg(&link->dev, "ray_cs associate failed - ECF not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-	}
+-}
+-
+-/*===========================================================================*/
+-static void ray_update_multi_list(struct net_device *dev, int all)
+-{
+-	int ccsindex;
+-	struct ccs __iomem *pccs;
+-	ray_dev_t *local = netdev_priv(dev);
+-	struct pcmcia_device *link = local->finder;
+-	void __iomem *p = local->sram + HOST_TO_ECF_BASE;
+-
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_update_multi_list - device not present\n");
+-		return;
+-	} else
+-		dev_dbg(&link->dev, "ray_update_multi_list(%p)\n", dev);
+-	if ((ccsindex = get_free_ccs(local)) < 0) {
+-		dev_dbg(&link->dev, "ray_update_multi - No free ccs\n");
+-		return;
+-	}
+-	pccs = ccs_base(local) + ccsindex;
+-	writeb(CCS_UPDATE_MULTICAST_LIST, &pccs->cmd);
+-
+-	if (all) {
+-		writeb(0xff, &pccs->var);
+-		local->num_multi = 0xff;
+-	} else {
+-		struct netdev_hw_addr *ha;
+-		int i = 0;
+-
+-		/* Copy the kernel's list of MC addresses to card */
+-		netdev_for_each_mc_addr(ha, dev) {
+-			memcpy_toio(p, ha->addr, ETH_ALEN);
+-			dev_dbg(&link->dev, "ray_update_multi add addr %pm\n",
+-				ha->addr);
+-			p += ETH_ALEN;
+-			i++;
+-		}
+-		if (i > 256 / ADDRLEN)
+-			i = 256 / ADDRLEN;
+-		writeb((UCHAR) i, &pccs->var);
+-		dev_dbg(&link->dev, "ray_cs update_multi %d addresses in list\n", i);
+-		/* Interrupt the firmware to process the command */
+-		local->num_multi = i;
+-	}
+-	if (interrupt_ecf(local, ccsindex)) {
+-		dev_dbg(&link->dev,
+-		      "ray_cs update_multi failed - ECF not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-	}
+-} /* end ray_update_multi_list */
+-
+-/*===========================================================================*/
+-static void set_multicast_list(struct net_device *dev)
+-{
+-	ray_dev_t *local = netdev_priv(dev);
+-	UCHAR promisc;
+-
+-	pr_debug("ray_cs set_multicast_list(%p)\n", dev);
+-
+-	if (dev->flags & IFF_PROMISC) {
+-		if (local->sparm.b5.a_promiscuous_mode == 0) {
+-			pr_debug("ray_cs set_multicast_list promisc on\n");
+-			local->sparm.b5.a_promiscuous_mode = 1;
+-			promisc = 1;
+-			ray_update_parm(dev, OBJID_promiscuous_mode,
+-					&promisc, sizeof(promisc));
+-		}
+-	} else {
+-		if (local->sparm.b5.a_promiscuous_mode == 1) {
+-			pr_debug("ray_cs set_multicast_list promisc off\n");
+-			local->sparm.b5.a_promiscuous_mode = 0;
+-			promisc = 0;
+-			ray_update_parm(dev, OBJID_promiscuous_mode,
+-					&promisc, sizeof(promisc));
+-		}
+-	}
+-
+-	if (dev->flags & IFF_ALLMULTI)
+-		ray_update_multi_list(dev, 1);
+-	else {
+-		if (local->num_multi != netdev_mc_count(dev))
+-			ray_update_multi_list(dev, 0);
+-	}
+-} /* end set_multicast_list */
+-
+-/*=============================================================================
+- * All routines below here are run at interrupt time.
+-=============================================================================*/
+-static irqreturn_t ray_interrupt(int irq, void *dev_id)
+-{
+-	struct net_device *dev = (struct net_device *)dev_id;
+-	struct pcmcia_device *link;
+-	ray_dev_t *local;
+-	struct ccs __iomem *pccs;
+-	struct rcs __iomem *prcs;
+-	UCHAR rcsindex;
+-	UCHAR tmp;
+-	UCHAR cmd;
+-	UCHAR status;
+-	UCHAR memtmp[ESSID_SIZE + 1];
+-
+-
+-	if (dev == NULL)	/* Note that we want interrupts with dev->start == 0 */
+-		return IRQ_NONE;
+-
+-	pr_debug("ray_cs: interrupt for *dev=%p\n", dev);
+-
+-	local = netdev_priv(dev);
+-	link = local->finder;
+-	if (!pcmcia_dev_present(link)) {
+-		pr_debug(
+-			"ray_cs interrupt from device not present or suspended.\n");
+-		return IRQ_NONE;
+-	}
+-	rcsindex = readb(&((struct scb __iomem *)(local->sram))->rcs_index);
+-
+-	if (rcsindex >= (NUMBER_OF_CCS + NUMBER_OF_RCS)) {
+-		dev_dbg(&link->dev, "ray_cs interrupt bad rcsindex = 0x%x\n", rcsindex);
+-		clear_interrupt(local);
+-		return IRQ_HANDLED;
+-	}
+-	if (rcsindex < NUMBER_OF_CCS) { /* If it's a returned CCS */
+-		pccs = ccs_base(local) + rcsindex;
+-		cmd = readb(&pccs->cmd);
+-		status = readb(&pccs->buffer_status);
+-		switch (cmd) {
+-		case CCS_DOWNLOAD_STARTUP_PARAMS:	/* Happens in firmware someday */
+-			del_timer(&local->timer);
+-			if (status == CCS_COMMAND_COMPLETE) {
+-				dev_dbg(&link->dev,
+-				      "ray_cs interrupt download_startup_parameters OK\n");
+-			} else {
+-				dev_dbg(&link->dev,
+-				      "ray_cs interrupt download_startup_parameters fail\n");
+-			}
+-			break;
+-		case CCS_UPDATE_PARAMS:
+-			dev_dbg(&link->dev, "ray_cs interrupt update params done\n");
+-			if (status != CCS_COMMAND_COMPLETE) {
+-				tmp =
+-				    readb(&pccs->var.update_param.
+-					  failure_cause);
+-				dev_dbg(&link->dev,
+-				      "ray_cs interrupt update params failed - reason %d\n",
+-				      tmp);
+-			}
+-			break;
+-		case CCS_REPORT_PARAMS:
+-			dev_dbg(&link->dev, "ray_cs interrupt report params done\n");
+-			break;
+-		case CCS_UPDATE_MULTICAST_LIST:	/* Note that this CCS isn't returned */
+-			dev_dbg(&link->dev,
+-			      "ray_cs interrupt CCS Update Multicast List done\n");
+-			break;
+-		case CCS_UPDATE_POWER_SAVINGS_MODE:
+-			dev_dbg(&link->dev,
+-			      "ray_cs interrupt update power save mode done\n");
+-			break;
+-		case CCS_START_NETWORK:
+-		case CCS_JOIN_NETWORK:
+-			memcpy(memtmp, local->sparm.b4.a_current_ess_id,
+-								ESSID_SIZE);
+-			memtmp[ESSID_SIZE] = '\0';
+-
+-			if (status == CCS_COMMAND_COMPLETE) {
+-				if (readb
+-				    (&pccs->var.start_network.net_initiated) ==
+-				    1) {
+-					dev_dbg(&link->dev,
+-					      "ray_cs interrupt network \"%s\" started\n",
+-					      memtmp);
+-				} else {
+-					dev_dbg(&link->dev,
+-					      "ray_cs interrupt network \"%s\" joined\n",
+-					      memtmp);
+-				}
+-				memcpy_fromio(&local->bss_id,
+-					      pccs->var.start_network.bssid,
+-					      ADDRLEN);
+-
+-				if (local->fw_ver == 0x55)
+-					local->net_default_tx_rate = 3;
+-				else
+-					local->net_default_tx_rate =
+-					    readb(&pccs->var.start_network.
+-						  net_default_tx_rate);
+-				local->encryption =
+-				    readb(&pccs->var.start_network.encryption);
+-				if (!sniffer && (local->net_type == INFRA)
+-				    && !(local->sparm.b4.a_acting_as_ap_status)) {
+-					authenticate(local);
+-				}
+-				local->card_status = CARD_ACQ_COMPLETE;
+-			} else {
+-				local->card_status = CARD_ACQ_FAILED;
+-
+-				del_timer(&local->timer);
+-				local->timer.expires = jiffies + HZ * 5;
+-				if (status == CCS_START_NETWORK) {
+-					dev_dbg(&link->dev,
+-					      "ray_cs interrupt network \"%s\" start failed\n",
+-					      memtmp);
+-					local->timer.function = start_net;
+-				} else {
+-					dev_dbg(&link->dev,
+-					      "ray_cs interrupt network \"%s\" join failed\n",
+-					      memtmp);
+-					local->timer.function = join_net;
+-				}
+-				add_timer(&local->timer);
+-			}
+-			break;
+-		case CCS_START_ASSOCIATION:
+-			if (status == CCS_COMMAND_COMPLETE) {
+-				local->card_status = CARD_ASSOC_COMPLETE;
+-				dev_dbg(&link->dev, "ray_cs association successful\n");
+-			} else {
+-				dev_dbg(&link->dev, "ray_cs association failed,\n");
+-				local->card_status = CARD_ASSOC_FAILED;
+-				join_net(&local->timer);
+-			}
+-			break;
+-		case CCS_TX_REQUEST:
+-			if (status == CCS_COMMAND_COMPLETE) {
+-				dev_dbg(&link->dev,
+-				      "ray_cs interrupt tx request complete\n");
+-			} else {
+-				dev_dbg(&link->dev,
+-				      "ray_cs interrupt tx request failed\n");
+-			}
+-			if (!sniffer)
+-				netif_start_queue(dev);
+-			netif_wake_queue(dev);
+-			break;
+-		case CCS_TEST_MEMORY:
+-			dev_dbg(&link->dev, "ray_cs interrupt mem test done\n");
+-			break;
+-		case CCS_SHUTDOWN:
+-			dev_dbg(&link->dev,
+-			      "ray_cs interrupt Unexpected CCS returned - Shutdown\n");
+-			break;
+-		case CCS_DUMP_MEMORY:
+-			dev_dbg(&link->dev, "ray_cs interrupt dump memory done\n");
+-			break;
+-		case CCS_START_TIMER:
+-			dev_dbg(&link->dev,
+-			      "ray_cs interrupt DING - raylink timer expired\n");
+-			break;
+-		default:
+-			dev_dbg(&link->dev,
+-			      "ray_cs interrupt Unexpected CCS 0x%x returned 0x%x\n",
+-			      rcsindex, cmd);
+-		}
+-		writeb(CCS_BUFFER_FREE, &pccs->buffer_status);
+-	} else { /* It's an RCS */
+-
+-		prcs = rcs_base(local) + rcsindex;
+-
+-		switch (readb(&prcs->interrupt_id)) {
+-		case PROCESS_RX_PACKET:
+-			ray_rx(dev, local, prcs);
+-			break;
+-		case REJOIN_NET_COMPLETE:
+-			dev_dbg(&link->dev, "ray_cs interrupt rejoin net complete\n");
+-			local->card_status = CARD_ACQ_COMPLETE;
+-			/* do we need to clear tx buffers CCS's? */
+-			if (local->sparm.b4.a_network_type == ADHOC) {
+-				if (!sniffer)
+-					netif_start_queue(dev);
+-			} else {
+-				memcpy_fromio(&local->bss_id,
+-					      prcs->var.rejoin_net_complete.
+-					      bssid, ADDRLEN);
+-				dev_dbg(&link->dev, "ray_cs new BSSID = %pm\n",
+-					local->bss_id);
+-				if (!sniffer)
+-					authenticate(local);
+-			}
+-			break;
+-		case ROAMING_INITIATED:
+-			dev_dbg(&link->dev, "ray_cs interrupt roaming initiated\n");
+-			netif_stop_queue(dev);
+-			local->card_status = CARD_DOING_ACQ;
+-			break;
+-		case JAPAN_CALL_SIGN_RXD:
+-			dev_dbg(&link->dev, "ray_cs interrupt japan call sign rx\n");
+-			break;
+-		default:
+-			dev_dbg(&link->dev,
+-			      "ray_cs Unexpected interrupt for RCS 0x%x cmd = 0x%x\n",
+-			      rcsindex,
+-			      (unsigned int)readb(&prcs->interrupt_id));
+-			break;
+-		}
+-		writeb(CCS_BUFFER_FREE, &prcs->buffer_status);
+-	}
+-	clear_interrupt(local);
+-	return IRQ_HANDLED;
+-} /* ray_interrupt */
+-
+-/*===========================================================================*/
+-static void ray_rx(struct net_device *dev, ray_dev_t *local,
+-		   struct rcs __iomem *prcs)
+-{
+-	int rx_len;
+-	unsigned int pkt_addr;
+-	void __iomem *pmsg;
+-	pr_debug("ray_rx process rx packet\n");
+-
+-	/* Calculate address of packet within Rx buffer */
+-	pkt_addr = ((readb(&prcs->var.rx_packet.rx_data_ptr[0]) << 8)
+-		    + readb(&prcs->var.rx_packet.rx_data_ptr[1])) & RX_BUFF_END;
+-	/* Length of first packet fragment */
+-	rx_len = (readb(&prcs->var.rx_packet.rx_data_length[0]) << 8)
+-	    + readb(&prcs->var.rx_packet.rx_data_length[1]);
+-
+-	local->last_rsl = readb(&prcs->var.rx_packet.rx_sig_lev);
+-	pmsg = local->rmem + pkt_addr;
+-	switch (readb(pmsg)) {
+-	case DATA_TYPE:
+-		pr_debug("ray_rx data type\n");
+-		rx_data(dev, prcs, pkt_addr, rx_len);
+-		break;
+-	case AUTHENTIC_TYPE:
+-		pr_debug("ray_rx authentic type\n");
+-		if (sniffer)
+-			rx_data(dev, prcs, pkt_addr, rx_len);
+-		else
+-			rx_authenticate(local, prcs, pkt_addr, rx_len);
+-		break;
+-	case DEAUTHENTIC_TYPE:
+-		pr_debug("ray_rx deauth type\n");
+-		if (sniffer)
+-			rx_data(dev, prcs, pkt_addr, rx_len);
+-		else
+-			rx_deauthenticate(local, prcs, pkt_addr, rx_len);
+-		break;
+-	case NULL_MSG_TYPE:
+-		pr_debug("ray_cs rx NULL msg\n");
+-		break;
+-	case BEACON_TYPE:
+-		pr_debug("ray_rx beacon type\n");
+-		if (sniffer)
+-			rx_data(dev, prcs, pkt_addr, rx_len);
+-
+-		copy_from_rx_buff(local, (UCHAR *) &local->last_bcn, pkt_addr,
+-				  rx_len < sizeof(struct beacon_rx) ?
+-				  rx_len : sizeof(struct beacon_rx));
+-
+-		local->beacon_rxed = 1;
+-		/* Get the statistics so the card counters never overflow */
+-		ray_get_stats(dev);
+-		break;
+-	default:
+-		pr_debug("ray_cs unknown pkt type %2x\n",
+-		      (unsigned int)readb(pmsg));
+-		break;
+-	}
+-
+-} /* end ray_rx */
+-
+-/*===========================================================================*/
+-static void rx_data(struct net_device *dev, struct rcs __iomem *prcs,
+-		    unsigned int pkt_addr, int rx_len)
+-{
+-	struct sk_buff *skb = NULL;
+-	struct rcs __iomem *prcslink = prcs;
+-	ray_dev_t *local = netdev_priv(dev);
+-	UCHAR *rx_ptr;
+-	int total_len;
+-	int tmp;
+-#ifdef WIRELESS_SPY
+-	int siglev = local->last_rsl;
+-	u_char linksrcaddr[ETH_ALEN];	/* Other end of the wireless link */
+-#endif
+-
+-	if (!sniffer) {
+-		if (translate) {
+-/* TBD length needs fixing for translated header */
+-			if (rx_len < (ETH_HLEN + RX_MAC_HEADER_LENGTH) ||
+-			    rx_len >
+-			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+-			     FCS_LEN)) {
+-				pr_debug(
+-				      "ray_cs invalid packet length %d received\n",
+-				      rx_len);
+-				return;
+-			}
+-		} else { /* encapsulated ethernet */
+-
+-			if (rx_len < (ETH_HLEN + RX_MAC_HEADER_LENGTH) ||
+-			    rx_len >
+-			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+-			     FCS_LEN)) {
+-				pr_debug(
+-				      "ray_cs invalid packet length %d received\n",
+-				      rx_len);
+-				return;
+-			}
+-		}
+-	}
+-	pr_debug("ray_cs rx_data packet\n");
+-	/* If fragmented packet, verify sizes of fragments add up */
+-	if (readb(&prcs->var.rx_packet.next_frag_rcs_index) != 0xFF) {
+-		pr_debug("ray_cs rx'ed fragment\n");
+-		tmp = (readb(&prcs->var.rx_packet.totalpacketlength[0]) << 8)
+-		    + readb(&prcs->var.rx_packet.totalpacketlength[1]);
+-		total_len = tmp;
+-		prcslink = prcs;
+-		do {
+-			tmp -=
+-			    (readb(&prcslink->var.rx_packet.rx_data_length[0])
+-			     << 8)
+-			    + readb(&prcslink->var.rx_packet.rx_data_length[1]);
+-			if (readb(&prcslink->var.rx_packet.next_frag_rcs_index)
+-			    == 0xFF || tmp < 0)
+-				break;
+-			prcslink = rcs_base(local)
+-			    + readb(&prcslink->link_field);
+-		} while (1);
+-
+-		if (tmp < 0) {
+-			pr_debug(
+-			      "ray_cs rx_data fragment lengths don't add up\n");
+-			local->stats.rx_dropped++;
+-			release_frag_chain(local, prcs);
+-			return;
+-		}
+-	} else { /* Single unfragmented packet */
+-		total_len = rx_len;
+-	}
+-
+-	skb = dev_alloc_skb(total_len + 5);
+-	if (skb == NULL) {
+-		pr_debug("ray_cs rx_data could not allocate skb\n");
+-		local->stats.rx_dropped++;
+-		if (readb(&prcs->var.rx_packet.next_frag_rcs_index) != 0xFF)
+-			release_frag_chain(local, prcs);
+-		return;
+-	}
+-	skb_reserve(skb, 2);	/* Align IP on 16 byte (TBD check this) */
+-
+-	pr_debug("ray_cs rx_data total_len = %x, rx_len = %x\n", total_len,
+-	      rx_len);
+-
+-/************************/
+-	/* Reserve enough room for the whole damn packet. */
+-	rx_ptr = skb_put(skb, total_len);
+-	/* Copy the whole packet to sk_buff */
+-	rx_ptr +=
+-	    copy_from_rx_buff(local, rx_ptr, pkt_addr & RX_BUFF_END, rx_len);
+-	/* Get source address */
+-#ifdef WIRELESS_SPY
+-	skb_copy_from_linear_data_offset(skb,
+-					 offsetof(struct mac_header, addr_2),
+-					 linksrcaddr, ETH_ALEN);
+-#endif
+-	/* Now, deal with encapsulation/translation/sniffer */
+-	if (!sniffer) {
+-		if (!translate) {
+-			/* Encapsulated ethernet, so just lop off 802.11 MAC header */
+-/* TBD reserve            skb_reserve( skb, RX_MAC_HEADER_LENGTH); */
+-			skb_pull(skb, RX_MAC_HEADER_LENGTH);
+-		} else {
+-			/* Do translation */
+-			untranslate(local, skb, total_len);
+-		}
+-	} else { /* sniffer mode, so just pass whole packet */
+-	}
+-
+-/************************/
+-	/* Now pick up the rest of the fragments if any */
+-	tmp = 17;
+-	if (readb(&prcs->var.rx_packet.next_frag_rcs_index) != 0xFF) {
+-		prcslink = prcs;
+-		pr_debug("ray_cs rx_data in fragment loop\n");
+-		do {
+-			prcslink = rcs_base(local)
+-			    +
+-			    readb(&prcslink->var.rx_packet.next_frag_rcs_index);
+-			rx_len =
+-			    ((readb(&prcslink->var.rx_packet.rx_data_length[0])
+-			      << 8)
+-			     +
+-			     readb(&prcslink->var.rx_packet.rx_data_length[1]))
+-			    & RX_BUFF_END;
+-			pkt_addr =
+-			    ((readb(&prcslink->var.rx_packet.rx_data_ptr[0]) <<
+-			      8)
+-			     + readb(&prcslink->var.rx_packet.rx_data_ptr[1]))
+-			    & RX_BUFF_END;
+-
+-			rx_ptr +=
+-			    copy_from_rx_buff(local, rx_ptr, pkt_addr, rx_len);
+-
+-		} while (tmp-- &&
+-			 readb(&prcslink->var.rx_packet.next_frag_rcs_index) !=
+-			 0xFF);
+-		release_frag_chain(local, prcs);
+-	}
+-
+-	skb->protocol = eth_type_trans(skb, dev);
+-	netif_rx(skb);
+-	local->stats.rx_packets++;
+-	local->stats.rx_bytes += total_len;
+-
+-	/* Gather signal strength per address */
+-#ifdef WIRELESS_SPY
+-	/* For the Access Point or the node having started the ad-hoc net
+-	 * note : ad-hoc work only in some specific configurations, but we
+-	 * kludge in ray_get_wireless_stats... */
+-	if (!memcmp(linksrcaddr, local->bss_id, ETH_ALEN)) {
+-		/* Update statistics */
+-		/*local->wstats.qual.qual = none ? */
+-		local->wstats.qual.level = siglev;
+-		/*local->wstats.qual.noise = none ? */
+-		local->wstats.qual.updated = 0x2;
+-	}
+-	/* Now, update the spy stuff */
+-	{
+-		struct iw_quality wstats;
+-		wstats.level = siglev;
+-		/* wstats.noise = none ? */
+-		/* wstats.qual = none ? */
+-		wstats.updated = 0x2;
+-		/* Update spy records */
+-		wireless_spy_update(dev, linksrcaddr, &wstats);
+-	}
+-#endif /* WIRELESS_SPY */
+-} /* end rx_data */
+-
+-/*===========================================================================*/
+-static void untranslate(ray_dev_t *local, struct sk_buff *skb, int len)
+-{
+-	snaphdr_t *psnap = (snaphdr_t *) (skb->data + RX_MAC_HEADER_LENGTH);
+-	struct ieee80211_hdr *pmac = (struct ieee80211_hdr *)skb->data;
+-	__be16 type = *(__be16 *) psnap->ethertype;
+-	int delta;
+-	struct ethhdr *peth;
+-	UCHAR srcaddr[ADDRLEN];
+-	UCHAR destaddr[ADDRLEN];
+-	static const UCHAR org_bridge[3] = { 0, 0, 0xf8 };
+-	static const UCHAR org_1042[3] = { 0, 0, 0 };
+-
+-	memcpy(destaddr, ieee80211_get_DA(pmac), ADDRLEN);
+-	memcpy(srcaddr, ieee80211_get_SA(pmac), ADDRLEN);
+-
+-#if 0
+-	if {
+-		print_hex_dump(KERN_DEBUG, "skb->data before untranslate: ",
+-			       DUMP_PREFIX_NONE, 16, 1,
+-			       skb->data, 64, true);
+-		printk(KERN_DEBUG
+-		       "type = %08x, xsap = %02x%02x%02x, org = %02x02x02x\n",
+-		       ntohs(type), psnap->dsap, psnap->ssap, psnap->ctrl,
+-		       psnap->org[0], psnap->org[1], psnap->org[2]);
+-		printk(KERN_DEBUG "untranslate skb->data = %p\n", skb->data);
+-	}
+-#endif
+-
+-	if (psnap->dsap != 0xaa || psnap->ssap != 0xaa || psnap->ctrl != 3) {
+-		/* not a snap type so leave it alone */
+-		pr_debug("ray_cs untranslate NOT SNAP %02x %02x %02x\n",
+-		      psnap->dsap, psnap->ssap, psnap->ctrl);
+-
+-		delta = RX_MAC_HEADER_LENGTH - ETH_HLEN;
+-		peth = (struct ethhdr *)(skb->data + delta);
+-		peth->h_proto = htons(len - RX_MAC_HEADER_LENGTH);
+-	} else { /* Its a SNAP */
+-		if (memcmp(psnap->org, org_bridge, 3) == 0) {
+-		/* EtherII and nuke the LLC */
+-			pr_debug("ray_cs untranslate Bridge encap\n");
+-			delta = RX_MAC_HEADER_LENGTH
+-			    + sizeof(struct snaphdr_t) - ETH_HLEN;
+-			peth = (struct ethhdr *)(skb->data + delta);
+-			peth->h_proto = type;
+-		} else if (memcmp(psnap->org, org_1042, 3) == 0) {
+-			switch (ntohs(type)) {
+-			case ETH_P_IPX:
+-			case ETH_P_AARP:
+-				pr_debug("ray_cs untranslate RFC IPX/AARP\n");
+-				delta = RX_MAC_HEADER_LENGTH - ETH_HLEN;
+-				peth = (struct ethhdr *)(skb->data + delta);
+-				peth->h_proto =
+-				    htons(len - RX_MAC_HEADER_LENGTH);
+-				break;
+-			default:
+-				pr_debug("ray_cs untranslate RFC default\n");
+-				delta = RX_MAC_HEADER_LENGTH +
+-				    sizeof(struct snaphdr_t) - ETH_HLEN;
+-				peth = (struct ethhdr *)(skb->data + delta);
+-				peth->h_proto = type;
+-				break;
+-			}
+-		} else {
+-			printk("ray_cs untranslate very confused by packet\n");
+-			delta = RX_MAC_HEADER_LENGTH - ETH_HLEN;
+-			peth = (struct ethhdr *)(skb->data + delta);
+-			peth->h_proto = type;
+-		}
+-	}
+-/* TBD reserve  skb_reserve(skb, delta); */
+-	skb_pull(skb, delta);
+-	pr_debug("untranslate after skb_pull(%d), skb->data = %p\n", delta,
+-	      skb->data);
+-	memcpy(peth->h_dest, destaddr, ADDRLEN);
+-	memcpy(peth->h_source, srcaddr, ADDRLEN);
+-#if 0
+-	{
+-		int i;
+-		printk(KERN_DEBUG "skb->data after untranslate:");
+-		for (i = 0; i < 64; i++)
+-			printk("%02x ", skb->data[i]);
+-		printk("\n");
+-	}
+-#endif
+-} /* end untranslate */
+-
+-/*===========================================================================*/
+-/* Copy data from circular receive buffer to PC memory.
+- * dest     = destination address in PC memory
+- * pkt_addr = source address in receive buffer
+- * len      = length of packet to copy
+- */
+-static int copy_from_rx_buff(ray_dev_t *local, UCHAR *dest, int pkt_addr,
+-			     int length)
+-{
+-	int wrap_bytes = (pkt_addr + length) - (RX_BUFF_END + 1);
+-	if (wrap_bytes <= 0) {
+-		memcpy_fromio(dest, local->rmem + pkt_addr, length);
+-	} else { /* Packet wrapped in circular buffer */
+-
+-		memcpy_fromio(dest, local->rmem + pkt_addr,
+-			      length - wrap_bytes);
+-		memcpy_fromio(dest + length - wrap_bytes, local->rmem,
+-			      wrap_bytes);
+-	}
+-	return length;
+-}
+-
+-/*===========================================================================*/
+-static void release_frag_chain(ray_dev_t *local, struct rcs __iomem *prcs)
+-{
+-	struct rcs __iomem *prcslink = prcs;
+-	int tmp = 17;
+-	unsigned rcsindex = readb(&prcs->var.rx_packet.next_frag_rcs_index);
+-
+-	while (tmp--) {
+-		writeb(CCS_BUFFER_FREE, &prcslink->buffer_status);
+-		if (rcsindex >= (NUMBER_OF_CCS + NUMBER_OF_RCS)) {
+-			pr_debug("ray_cs interrupt bad rcsindex = 0x%x\n",
+-			      rcsindex);
+-			break;
+-		}
+-		prcslink = rcs_base(local) + rcsindex;
+-		rcsindex = readb(&prcslink->var.rx_packet.next_frag_rcs_index);
+-	}
+-	writeb(CCS_BUFFER_FREE, &prcslink->buffer_status);
+-}
+-
+-/*===========================================================================*/
+-static void authenticate(ray_dev_t *local)
+-{
+-	struct pcmcia_device *link = local->finder;
+-	dev_dbg(&link->dev, "ray_cs Starting authentication.\n");
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs authenticate - device not present\n");
+-		return;
+-	}
+-
+-	del_timer(&local->timer);
+-	if (build_auth_frame(local, local->bss_id, OPEN_AUTH_REQUEST)) {
+-		local->timer.function = join_net;
+-	} else {
+-		local->timer.function = authenticate_timeout;
+-	}
+-	local->timer.expires = jiffies + HZ * 2;
+-	add_timer(&local->timer);
+-	local->authentication_state = AWAITING_RESPONSE;
+-} /* end authenticate */
+-
+-/*===========================================================================*/
+-static void rx_authenticate(ray_dev_t *local, struct rcs __iomem *prcs,
+-			    unsigned int pkt_addr, int rx_len)
+-{
+-	UCHAR buff[256];
+-	struct ray_rx_msg *msg = (struct ray_rx_msg *) buff;
+-
+-	del_timer(&local->timer);
+-
+-	copy_from_rx_buff(local, buff, pkt_addr, rx_len & 0xff);
+-	/* if we are trying to get authenticated */
+-	if (local->sparm.b4.a_network_type == ADHOC) {
+-		pr_debug("ray_cs rx_auth var= %6ph\n", msg->var);
+-		if (msg->var[2] == 1) {
+-			pr_debug("ray_cs Sending authentication response.\n");
+-			if (!build_auth_frame
+-			    (local, msg->mac.addr_2, OPEN_AUTH_RESPONSE)) {
+-				local->authentication_state = NEED_TO_AUTH;
+-				memcpy(local->auth_id, msg->mac.addr_2,
+-				       ADDRLEN);
+-			}
+-		}
+-	} else { /* Infrastructure network */
+-
+-		if (local->authentication_state == AWAITING_RESPONSE) {
+-			/* Verify authentication sequence #2 and success */
+-			if (msg->var[2] == 2) {
+-				if ((msg->var[3] | msg->var[4]) == 0) {
+-					pr_debug("Authentication successful\n");
+-					local->card_status = CARD_AUTH_COMPLETE;
+-					associate(local);
+-					local->authentication_state =
+-					    AUTHENTICATED;
+-				} else {
+-					pr_debug("Authentication refused\n");
+-					local->card_status = CARD_AUTH_REFUSED;
+-					join_net(&local->timer);
+-					local->authentication_state =
+-					    UNAUTHENTICATED;
+-				}
+-			}
+-		}
+-	}
+-
+-} /* end rx_authenticate */
+-
+-/*===========================================================================*/
+-static void associate(ray_dev_t *local)
+-{
+-	struct ccs __iomem *pccs;
+-	struct pcmcia_device *link = local->finder;
+-	struct net_device *dev = link->priv;
+-	int ccsindex;
+-	if (!(pcmcia_dev_present(link))) {
+-		dev_dbg(&link->dev, "ray_cs associate - device not present\n");
+-		return;
+-	}
+-	/* If no tx buffers available, return */
+-	if ((ccsindex = get_free_ccs(local)) < 0) {
+-/* TBD should never be here but... what if we are? */
+-		dev_dbg(&link->dev, "ray_cs associate - No free ccs\n");
+-		return;
+-	}
+-	dev_dbg(&link->dev, "ray_cs Starting association with access point\n");
+-	pccs = ccs_base(local) + ccsindex;
+-	/* fill in the CCS */
+-	writeb(CCS_START_ASSOCIATION, &pccs->cmd);
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		dev_dbg(&link->dev, "ray_cs associate failed - ECF not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-
+-		del_timer(&local->timer);
+-		local->timer.expires = jiffies + HZ * 2;
+-		local->timer.function = join_net;
+-		add_timer(&local->timer);
+-		local->card_status = CARD_ASSOC_FAILED;
+-		return;
+-	}
+-	if (!sniffer)
+-		netif_start_queue(dev);
+-
+-} /* end associate */
+-
+-/*===========================================================================*/
+-static void rx_deauthenticate(ray_dev_t *local, struct rcs __iomem *prcs,
+-			      unsigned int pkt_addr, int rx_len)
+-{
+-/*  UCHAR buff[256];
+-    struct ray_rx_msg *msg = (struct ray_rx_msg *) buff;
+-*/
+-	pr_debug("Deauthentication frame received\n");
+-	local->authentication_state = UNAUTHENTICATED;
+-	/* Need to reauthenticate or rejoin depending on reason code */
+-/*  copy_from_rx_buff(local, buff, pkt_addr, rx_len & 0xff);
+- */
+-}
+-
+-/*===========================================================================*/
+-static void clear_interrupt(ray_dev_t *local)
+-{
+-	writeb(0, local->amem + CIS_OFFSET + HCS_INTR_OFFSET);
+-}
+-
+-/*===========================================================================*/
+-#ifdef CONFIG_PROC_FS
+-#define MAXDATA (PAGE_SIZE - 80)
+-
+-static const char *card_status[] = {
+-	"Card inserted - uninitialized",	/* 0 */
+-	"Card not downloaded",			/* 1 */
+-	"Waiting for download parameters",	/* 2 */
+-	"Card doing acquisition",		/* 3 */
+-	"Acquisition complete",			/* 4 */
+-	"Authentication complete",		/* 5 */
+-	"Association complete",			/* 6 */
+-	"???", "???", "???", "???",		/* 7 8 9 10 undefined */
+-	"Card init error",			/* 11 */
+-	"Download parameters error",		/* 12 */
+-	"???",					/* 13 */
+-	"Acquisition failed",			/* 14 */
+-	"Authentication refused",		/* 15 */
+-	"Association failed"			/* 16 */
+-};
+-
+-static const char *nettype[] = { "Adhoc", "Infra " };
+-static const char *framing[] = { "Encapsulation", "Translation" }
+-
+-;
+-/*===========================================================================*/
+-static int ray_cs_proc_show(struct seq_file *m, void *v)
+-{
+-/* Print current values which are not available via other means
+- * eg ifconfig
+- */
+-	int i;
+-	struct pcmcia_device *link;
+-	struct net_device *dev;
+-	ray_dev_t *local;
+-	UCHAR *p;
+-	struct freq_hop_element *pfh;
+-	UCHAR c[33];
+-
+-	link = this_device;
+-	if (!link)
+-		return 0;
+-	dev = (struct net_device *)link->priv;
+-	if (!dev)
+-		return 0;
+-	local = netdev_priv(dev);
+-	if (!local)
+-		return 0;
+-
+-	seq_puts(m, "Raylink Wireless LAN driver status\n");
+-	seq_printf(m, "%s\n", rcsid);
+-	/* build 4 does not report version, and field is 0x55 after memtest */
+-	seq_puts(m, "Firmware version     = ");
+-	if (local->fw_ver == 0x55)
+-		seq_puts(m, "4 - Use dump_cis for more details\n");
+-	else
+-		seq_printf(m, "%2d.%02d.%02d\n",
+-			   local->fw_ver, local->fw_bld, local->fw_var);
+-
+-	for (i = 0; i < 32; i++)
+-		c[i] = local->sparm.b5.a_current_ess_id[i];
+-	c[32] = 0;
+-	seq_printf(m, "%s network ESSID = \"%s\"\n",
+-		   nettype[local->sparm.b5.a_network_type], c);
+-
+-	p = local->bss_id;
+-	seq_printf(m, "BSSID                = %pM\n", p);
+-
+-	seq_printf(m, "Country code         = %d\n",
+-		   local->sparm.b5.a_curr_country_code);
+-
+-	i = local->card_status;
+-	if (i < 0)
+-		i = 10;
+-	if (i > 16)
+-		i = 10;
+-	seq_printf(m, "Card status          = %s\n", card_status[i]);
+-
+-	seq_printf(m, "Framing mode         = %s\n", framing[translate]);
+-
+-	seq_printf(m, "Last pkt signal lvl  = %d\n", local->last_rsl);
+-
+-	if (local->beacon_rxed) {
+-		/* Pull some fields out of last beacon received */
+-		seq_printf(m, "Beacon Interval      = %d Kus\n",
+-			   local->last_bcn.beacon_intvl[0]
+-			   + 256 * local->last_bcn.beacon_intvl[1]);
+-
+-		p = local->last_bcn.elements;
+-		if (p[0] == C_ESSID_ELEMENT_ID)
+-			p += p[1] + 2;
+-		else {
+-			seq_printf(m,
+-				   "Parse beacon failed at essid element id = %d\n",
+-				   p[0]);
+-			return 0;
+-		}
+-
+-		if (p[0] == C_SUPPORTED_RATES_ELEMENT_ID) {
+-			seq_puts(m, "Supported rate codes = ");
+-			for (i = 2; i < p[1] + 2; i++)
+-				seq_printf(m, "0x%02x ", p[i]);
+-			seq_putc(m, '\n');
+-			p += p[1] + 2;
+-		} else {
+-			seq_puts(m, "Parse beacon failed at rates element\n");
+-			return 0;
+-		}
+-
+-		if (p[0] == C_FH_PARAM_SET_ELEMENT_ID) {
+-			pfh = (struct freq_hop_element *)p;
+-			seq_printf(m, "Hop dwell            = %d Kus\n",
+-				   pfh->dwell_time[0] +
+-				   256 * pfh->dwell_time[1]);
+-			seq_printf(m, "Hop set              = %d\n",
+-				   pfh->hop_set);
+-			seq_printf(m, "Hop pattern          = %d\n",
+-				   pfh->hop_pattern);
+-			seq_printf(m, "Hop index            = %d\n",
+-				   pfh->hop_index);
+-			p += p[1] + 2;
+-		} else {
+-			seq_puts(m,
+-				 "Parse beacon failed at FH param element\n");
+-			return 0;
+-		}
+-	} else {
+-		seq_puts(m, "No beacons received\n");
+-	}
+-	return 0;
+-}
+-#endif
+-/*===========================================================================*/
+-static int build_auth_frame(ray_dev_t *local, UCHAR *dest, int auth_type)
+-{
+-	int addr;
+-	struct ccs __iomem *pccs;
+-	struct tx_msg __iomem *ptx;
+-	int ccsindex;
+-
+-	/* If no tx buffers available, return */
+-	if ((ccsindex = get_free_tx_ccs(local)) < 0) {
+-		pr_debug("ray_cs send authenticate - No free tx ccs\n");
+-		return -1;
+-	}
+-
+-	pccs = ccs_base(local) + ccsindex;
+-
+-	/* Address in card space */
+-	addr = TX_BUF_BASE + (ccsindex << 11);
+-	/* fill in the CCS */
+-	writeb(CCS_TX_REQUEST, &pccs->cmd);
+-	writeb(addr >> 8, pccs->var.tx_request.tx_data_ptr);
+-	writeb(0x20, pccs->var.tx_request.tx_data_ptr + 1);
+-	writeb(TX_AUTHENTICATE_LENGTH_MSB, pccs->var.tx_request.tx_data_length);
+-	writeb(TX_AUTHENTICATE_LENGTH_LSB,
+-	       pccs->var.tx_request.tx_data_length + 1);
+-	writeb(0, &pccs->var.tx_request.pow_sav_mode);
+-
+-	ptx = local->sram + addr;
+-	/* fill in the mac header */
+-	writeb(PROTOCOL_VER | AUTHENTIC_TYPE, &ptx->mac.frame_ctl_1);
+-	writeb(0, &ptx->mac.frame_ctl_2);
+-
+-	memcpy_toio(ptx->mac.addr_1, dest, ADDRLEN);
+-	memcpy_toio(ptx->mac.addr_2, local->sparm.b4.a_mac_addr, ADDRLEN);
+-	memcpy_toio(ptx->mac.addr_3, local->bss_id, ADDRLEN);
+-
+-	/* Fill in msg body with protocol 00 00, sequence 01 00 ,status 00 00 */
+-	memset_io(ptx->var, 0, 6);
+-	writeb(auth_type & 0xff, ptx->var + 2);
+-
+-	/* Interrupt the firmware to process the command */
+-	if (interrupt_ecf(local, ccsindex)) {
+-		pr_debug(
+-		      "ray_cs send authentication request failed - ECF not ready for intr\n");
+-		writeb(CCS_BUFFER_FREE, &(pccs++)->buffer_status);
+-		return -1;
+-	}
+-	return 0;
+-} /* End build_auth_frame */
+-
+-/*===========================================================================*/
+-#ifdef CONFIG_PROC_FS
+-static ssize_t ray_cs_essid_proc_write(struct file *file,
+-		const char __user *buffer, size_t count, loff_t *pos)
+-{
+-	static char proc_essid[33];
+-	unsigned int len = count;
+-
+-	if (len > 32)
+-		len = 32;
+-	memset(proc_essid, 0, 33);
+-	if (copy_from_user(proc_essid, buffer, len))
+-		return -EFAULT;
+-	essid = proc_essid;
+-	return count;
+-}
+-
+-static const struct proc_ops ray_cs_essid_proc_ops = {
+-	.proc_write	= ray_cs_essid_proc_write,
+-	.proc_lseek	= noop_llseek,
+-};
+-
+-static ssize_t int_proc_write(struct file *file, const char __user *buffer,
+-			      size_t count, loff_t *pos)
+-{
+-	static char proc_number[10];
+-	char *p;
+-	int nr, len;
+-
+-	if (!count)
+-		return 0;
+-
+-	if (count > 9)
+-		return -EINVAL;
+-	if (copy_from_user(proc_number, buffer, count))
+-		return -EFAULT;
+-	p = proc_number;
+-	nr = 0;
+-	len = count;
+-	do {
+-		unsigned int c = *p - '0';
+-		if (c > 9)
+-			return -EINVAL;
+-		nr = nr * 10 + c;
+-		p++;
+-	} while (--len);
+-	*(int *)pde_data(file_inode(file)) = nr;
+-	return count;
+-}
+-
+-static const struct proc_ops int_proc_ops = {
+-	.proc_write	= int_proc_write,
+-	.proc_lseek	= noop_llseek,
+-};
+-#endif
+-
+-static const struct pcmcia_device_id ray_ids[] = {
+-	PCMCIA_DEVICE_MANF_CARD(0x01a6, 0x0000),
+-	PCMCIA_DEVICE_NULL,
+-};
+-
+-MODULE_DEVICE_TABLE(pcmcia, ray_ids);
+-
+-static struct pcmcia_driver ray_driver = {
+-	.owner = THIS_MODULE,
+-	.name = "ray_cs",
+-	.probe = ray_probe,
+-	.remove = ray_detach,
+-	.id_table = ray_ids,
+-	.suspend = ray_suspend,
+-	.resume = ray_resume,
+-};
+-
+-static int __init init_ray_cs(void)
+-{
+-	int rc;
+-
+-	pr_debug("%s\n", rcsid);
+-	rc = pcmcia_register_driver(&ray_driver);
+-	pr_debug("raylink init_module register_pcmcia_driver returns 0x%x\n",
+-	      rc);
+-	if (rc)
+-		return rc;
+-
+-#ifdef CONFIG_PROC_FS
+-	proc_mkdir("driver/ray_cs", NULL);
+-
+-	proc_create_single("driver/ray_cs/ray_cs", 0, NULL, ray_cs_proc_show);
+-	proc_create("driver/ray_cs/essid", 0200, NULL, &ray_cs_essid_proc_ops);
+-	proc_create_data("driver/ray_cs/net_type", 0200, NULL, &int_proc_ops,
+-			 &net_type);
+-	proc_create_data("driver/ray_cs/translate", 0200, NULL, &int_proc_ops,
+-			 &translate);
+-#endif
+-	translate = !!translate;
+-	return 0;
+-} /* init_ray_cs */
+-
+-/*===========================================================================*/
+-
+-static void __exit exit_ray_cs(void)
+-{
+-	pr_debug("ray_cs: cleanup_module\n");
+-
+-#ifdef CONFIG_PROC_FS
+-	remove_proc_subtree("driver/ray_cs", NULL);
+-#endif
+-
+-	pcmcia_unregister_driver(&ray_driver);
+-} /* exit_ray_cs */
+-
+-module_init(init_ray_cs);
+-module_exit(exit_ray_cs);
+-
+-/*===========================================================================*/
+diff --git a/drivers/net/wireless/legacy/ray_cs.h b/drivers/net/wireless/legacy/ray_cs.h
+deleted file mode 100644
+index 0609d86250192..0000000000000
+--- a/drivers/net/wireless/legacy/ray_cs.h
++++ /dev/null
+@@ -1,74 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/* Raytheon wireless LAN PCMCIA card driver for Linux 
+-   A  PCMCIA client driver for the Raylink wireless network card
+-   Written by Corey Thomas
+-*/
+-
+-#ifndef _RAY_CS_H_
+-#define _RAY_CS_H_
+-
+-struct beacon_rx {
+-    struct mac_header mac;
+-    UCHAR timestamp[8];
+-    UCHAR beacon_intvl[2];
+-    UCHAR capability[2];
+-    UCHAR elements[sizeof(struct essid_element) 
+-                  + sizeof(struct rates_element)
+-                  + sizeof(struct freq_hop_element) 
+-                  + sizeof(struct japan_call_sign_element)
+-                  + sizeof(struct tim_element)];
+-};
+-
+-/* Return values for get_free{,_tx}_ccs */
+-#define ECCSFULL  (-1)
+-#define ECCSBUSY  (-2)
+-#define ECARDGONE (-3)
+-
+-typedef struct ray_dev_t {
+-    int card_status;
+-    int authentication_state;
+-    void __iomem *sram;            /* pointer to beginning of shared RAM     */
+-    void __iomem *amem;            /* pointer to attribute mem window        */
+-    void __iomem *rmem;            /* pointer to receive buffer window       */
+-    struct pcmcia_device *finder;            /* pointer back to struct pcmcia_device for card    */
+-    struct timer_list timer;
+-    unsigned long tx_ccs_lock;
+-    unsigned long ccs_lock;
+-    int   dl_param_ccs;
+-    union {
+-        struct b4_startup_params b4;
+-        struct b5_startup_params b5;
+-    } sparm;
+-    int timeout_flag;
+-    UCHAR supported_rates[8];
+-    UCHAR japan_call_sign[12];
+-    struct startup_res_6 startup_res;
+-    int num_multi;
+-    /* Network parameters from start/join */
+-    UCHAR bss_id[6];
+-    UCHAR auth_id[6];
+-    UCHAR net_default_tx_rate;
+-    UCHAR encryption;
+-    struct net_device_stats stats;
+-
+-    UCHAR net_type;
+-    UCHAR sta_type;
+-    UCHAR fw_ver;
+-    UCHAR fw_bld;
+-    UCHAR fw_var;
+-    UCHAR ASIC_version;
+-    UCHAR assoc_id[2];
+-    UCHAR tib_length;
+-    UCHAR last_rsl;
+-    int beacon_rxed;
+-    struct beacon_rx last_bcn;
+-    iw_stats	wstats;		/* Wireless specific stats */
+-#ifdef WIRELESS_SPY
+-    struct iw_spy_data		spy_data;
+-    struct iw_public_data	wireless_data;
+-#endif	/* WIRELESS_SPY */
+-
+-} ray_dev_t;
+-/*****************************************************************************/
+-
+-#endif /* _RAY_CS_H_ */
+diff --git a/drivers/net/wireless/legacy/rayctl.h b/drivers/net/wireless/legacy/rayctl.h
+deleted file mode 100644
+index 1f3bde8ac73d4..0000000000000
+--- a/drivers/net/wireless/legacy/rayctl.h
++++ /dev/null
+@@ -1,734 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-#ifndef _RAYCTL_H_
+-#define _RAYCTL_H_
+-
+-typedef unsigned char UCHAR;
+-
+-/****** IEEE 802.11 constants ************************************************/
+-#define ADDRLEN           6
+-/* Frame control 1 bit fields */
+-#define PROTOCOL_VER      0x00
+-#define DATA_TYPE         0x08
+-#define ASSOC_REQ_TYPE    0x00
+-#define ASSOC_RESP_TYPE   0x10
+-#define REASSOC_REQ_TYPE  0x20
+-#define REASSOC_RESP_TYPE 0x30
+-#define NULL_MSG_TYPE     0x48
+-#define BEACON_TYPE       0x80
+-#define DISASSOC_TYPE     0xA0
+-#define PSPOLL_TYPE       0xA4
+-#define AUTHENTIC_TYPE    0xB0
+-#define DEAUTHENTIC_TYPE  0xC0
+-/* Frame control 2 bit fields */
+-#define FC2_TO_DS         0x01
+-#define FC2_FROM_DS       0x02
+-#define FC2_MORE_FRAG     0x04
+-#define FC2_RETRY         0x08
+-#define FC2_PSM           0x10
+-#define FC2_MORE_DATA     0x20
+-#define FC2_WEP           0x40
+-#define FC2_ORDER         0x80
+-/*****************************************************************************/
+-/* 802.11 element ID's and lengths */
+-#define C_BP_CAPABILITY_ESS             0x01
+-#define C_BP_CAPABILITY_IBSS            0x02
+-#define C_BP_CAPABILITY_CF_POLLABLE     0x04
+-#define C_BP_CAPABILITY_CF_POLL_REQUEST 0x08
+-#define C_BP_CAPABILITY_PRIVACY         0x10
+-
+-#define C_ESSID_ELEMENT_ID               0
+-#define C_ESSID_ELEMENT_MAX_LENGTH       32
+-
+-#define C_SUPPORTED_RATES_ELEMENT_ID     1
+-#define C_SUPPORTED_RATES_ELEMENT_LENGTH 2
+-
+-#define C_FH_PARAM_SET_ELEMENT_ID        2
+-#define C_FH_PARAM_SET_ELEMENT_LNGTH     5
+-
+-#define C_CF_PARAM_SET_ELEMENT_ID        4
+-#define C_CF_PARAM_SET_ELEMENT_LNGTH     6
+-
+-#define C_TIM_ELEMENT_ID                 5
+-#define C_TIM_BITMAP_LENGTH            251
+-#define C_TIM_BMCAST_BIT              0x01
+-
+-#define C_IBSS_ELEMENT_ID                6
+-#define C_IBSS_ELEMENT_LENGTH            2
+-
+-#define C_JAPAN_CALL_SIGN_ELEMENT_ID    51
+-#define C_JAPAN_CALL_SIGN_ELEMENT_LNGTH 12
+-
+-#define C_DISASSOC_REASON_CODE_LEN       2
+-#define C_DISASSOC_REASON_CODE_DEFAULT   8
+-
+-#define C_CRC_LEN                        4
+-#define C_NUM_SUPPORTED_RATES            8 
+-/****** IEEE 802.11 mac header for type data packets *************************/
+-struct mac_header {
+-  UCHAR frame_ctl_1;                          
+-  UCHAR frame_ctl_2;
+-  UCHAR duration_lsb;
+-  UCHAR duration_msb;
+-  UCHAR addr_1[ADDRLEN];
+-  UCHAR addr_2[ADDRLEN];
+-  UCHAR addr_3[ADDRLEN];
+-  UCHAR seq_frag_num[2];
+-/*  UCHAR addr_4[ADDRLEN]; *//* only present for AP to AP (TO DS and FROM DS */
+-};
+-/****** IEEE 802.11 frame element structures *********************************/
+-struct essid_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR text[C_ESSID_ELEMENT_MAX_LENGTH];
+-};
+-struct rates_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR value[8];
+-};
+-struct freq_hop_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR dwell_time[2];
+-  UCHAR hop_set;
+-  UCHAR hop_pattern;
+-  UCHAR hop_index;
+-};
+-struct tim_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR dtim_count;
+-  UCHAR dtim_period;    
+-  UCHAR bitmap_control;
+-  UCHAR tim[C_TIM_BITMAP_LENGTH];
+-};
+-struct ibss_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR atim_window[2];
+-};
+-struct japan_call_sign_element
+-{
+-  UCHAR id;
+-  UCHAR length;
+-  UCHAR call_sign[12];
+-};
+-/****** Beacon message structures ********************************************/
+-/* .elements is a large lump of max size because elements are variable size  */
+-struct infra_beacon
+-{
+-    UCHAR timestamp[8];
+-    UCHAR beacon_intvl[2];
+-    UCHAR capability[2];
+-    UCHAR elements[sizeof(struct essid_element) 
+-                  + sizeof(struct rates_element)
+-                  + sizeof(struct freq_hop_element) 
+-                  + sizeof(struct japan_call_sign_element)
+-                  + sizeof(struct tim_element)];
+-};
+-struct adhoc_beacon
+-{
+-    UCHAR timestamp[8];
+-    UCHAR beacon_intvl[2];
+-    UCHAR capability[2];
+-    UCHAR elements[sizeof(struct essid_element) 
+-                  + sizeof(struct rates_element)
+-                  + sizeof(struct freq_hop_element) 
+-                  + sizeof(struct japan_call_sign_element)
+-                  + sizeof(struct ibss_element)];
+-};
+-/*****************************************************************************/
+-/*****************************************************************************/
+-/* #define C_MAC_HDR_2_WEP 0x40 */
+-/* TX/RX CCS constants */
+-#define TX_HEADER_LENGTH 0x1C
+-#define RX_MAC_HEADER_LENGTH 0x18
+-#define TX_AUTHENTICATE_LENGTH (TX_HEADER_LENGTH + 6)
+-#define TX_AUTHENTICATE_LENGTH_MSB (TX_AUTHENTICATE_LENGTH >> 8)
+-#define TX_AUTHENTICATE_LENGTH_LSB (TX_AUTHENTICATE_LENGTH & 0xff)
+-#define TX_DEAUTHENTICATE_LENGTH (TX_HEADER_LENGTH + 2)
+-#define TX_DEAUTHENTICATE_LENGTH_MSB (TX_AUTHENTICATE_LENGTH >> 8)
+-#define TX_DEAUTHENTICATE_LENGTH_LSB (TX_AUTHENTICATE_LENGTH & 0xff)
+-#define FCS_LEN           4
+-
+-#define ADHOC                 0
+-#define INFRA                 1
+-
+-#define TYPE_STA              0
+-#define TYPE_AP               1
+-
+-#define PASSIVE_SCAN          1
+-#define ACTIVE_SCAN           1
+-
+-#define PSM_CAM               0
+-
+-/* Country codes */
+-#define USA                   1
+-#define EUROPE                2
+-#define JAPAN                 3
+-#define KOREA                 4
+-#define SPAIN                 5
+-#define FRANCE                6
+-#define ISRAEL                7
+-#define AUSTRALIA             8
+-#define JAPAN_TEST            9
+-
+-/* Hop pattern lengths */
+-#define USA_HOP_MOD          79 
+-#define EUROPE_HOP_MOD       79 
+-#define JAPAN_HOP_MOD        23
+-#define KOREA_HOP_MOD        23
+-#define SPAIN_HOP_MOD        27
+-#define FRANCE_HOP_MOD       35
+-#define ISRAEL_HOP_MOD       35
+-#define AUSTRALIA_HOP_MOD    47
+-#define JAPAN_TEST_HOP_MOD   23
+-
+-#define ESSID_SIZE           32
+-/**********************************************************************/
+-/* CIS Register Constants */
+-#define CIS_OFFSET             0x0f00
+-/* Configuration Option Register (0x0F00) */
+-#define COR_OFFSET             0x00
+-#define COR_SOFT_RESET         0x80
+-#define COR_LEVEL_IRQ          0x40
+-#define COR_CONFIG_NUM         0x01
+-#define COR_DEFAULT            (COR_LEVEL_IRQ | COR_CONFIG_NUM)
+-
+-/* Card Configuration and Status Register (0x0F01) */
+-#define CCSR_OFFSET            0x01
+-#define CCSR_HOST_INTR_PENDING 0x01
+-#define CCSR_POWER_DOWN        0x04
+-
+-/* HCS Interrupt Register (0x0F05) */
+-#define HCS_INTR_OFFSET        0x05
+-/* #define HCS_INTR_OFFSET        0x0A */
+-#define HCS_INTR_CLEAR         0x00
+-
+-/* ECF Interrupt Register (0x0F06) */
+-#define ECF_INTR_OFFSET        0x06
+-/* #define ECF_INTR_OFFSET        0x0C */
+-#define ECF_INTR_SET           0x01
+-
+-/* Authorization Register 0 (0x0F08) */
+-#define AUTH_0_ON              0x57
+-
+-/* Authorization Register 1 (0x0F09) */
+-#define AUTH_1_ON              0x82
+-
+-/* Program Mode Register (0x0F0A) */
+-#define PC2PM                  0x02
+-#define PC2CAL                 0x10
+-#define PC2MLSE                0x20
+-
+-/* PC Test Mode Register (0x0F0B) */
+-#define PC_TEST_MODE           0x08
+-
+-/* Frequency Control Word (0x0F10) */
+-/* Range 0x02 - 0xA6 */
+-
+-/* Test Mode Control 1-4 (0x0F14 - 0x0F17) */
+-
+-/**********************************************************************/
+-
+-/* Shared RAM Area */
+-#define SCB_BASE               0x0000
+-#define STATUS_BASE            0x0100
+-#define HOST_TO_ECF_BASE       0x0200
+-#define ECF_TO_HOST_BASE       0x0300
+-#define CCS_BASE               0x0400
+-#define RCS_BASE               0x0800
+-#define INFRA_TIM_BASE         0x0C00
+-#define SSID_LIST_BASE         0x0D00
+-#define TX_BUF_BASE            0x1000
+-#define RX_BUF_BASE            0x8000
+-
+-#define NUMBER_OF_CCS    64
+-#define NUMBER_OF_RCS    64
+-/*#define NUMBER_OF_TX_CCS 14 */
+-#define NUMBER_OF_TX_CCS 14
+-
+-#define TX_BUF_SIZE      (2048 - sizeof(struct tx_msg))
+-#define RX_BUFF_END      0x3FFF
+-/* Values for buffer_status */
+-#define CCS_BUFFER_FREE       0
+-#define CCS_BUFFER_BUSY       1
+-#define CCS_COMMAND_COMPLETE  2
+-#define CCS_COMMAND_FAILED    3
+-
+-/* Values for cmd */
+-#define CCS_DOWNLOAD_STARTUP_PARAMS    1
+-#define CCS_UPDATE_PARAMS              2
+-#define CCS_REPORT_PARAMS              3
+-#define CCS_UPDATE_MULTICAST_LIST      4
+-#define CCS_UPDATE_POWER_SAVINGS_MODE  5
+-#define CCS_START_NETWORK              6
+-#define CCS_JOIN_NETWORK               7
+-#define CCS_START_ASSOCIATION          8
+-#define CCS_TX_REQUEST                 9
+-#define CCS_TEST_MEMORY              0xa
+-#define CCS_SHUTDOWN                 0xb
+-#define CCS_DUMP_MEMORY              0xc
+-#define CCS_START_TIMER              0xe
+-#define CCS_LAST_CMD                 CCS_START_TIMER
+-
+-/* Values for link field */
+-#define CCS_END_LIST                 0xff
+-
+-/* values for buffer_status field */
+-#define RCS_BUFFER_FREE       0
+-#define RCS_BUFFER_BUSY       1
+-#define RCS_COMPLETE          2
+-#define RCS_FAILED            3
+-#define RCS_BUFFER_RELEASE    0xFF
+-
+-/* values for interrupt_id field */
+-#define PROCESS_RX_PACKET           0x80 /* */
+-#define REJOIN_NET_COMPLETE         0x81 /* RCS ID: Rejoin Net Complete */
+-#define ROAMING_INITIATED           0x82 /* RCS ID: Roaming Initiated   */
+-#define JAPAN_CALL_SIGN_RXD         0x83 /* RCS ID: New Japan Call Sign */
+-
+-/*****************************************************************************/
+-/* Memory types for dump memory command */
+-#define C_MEM_PROG  0
+-#define C_MEM_XDATA 1
+-#define C_MEM_SFR   2
+-#define C_MEM_IDATA 3
+-
+-/*** Return values for hw_xmit **********/
+-#define XMIT_OK        (0)
+-#define XMIT_MSG_BAD   (-1)
+-#define XMIT_NO_CCS    (-2)
+-#define XMIT_NO_INTR   (-3)
+-#define XMIT_NEED_AUTH (-4)
+-
+-/*** Values for card status */
+-#define CARD_INSERTED       (0)
+-
+-#define CARD_AWAITING_PARAM (1)
+-#define CARD_INIT_ERROR     (11)
+-
+-#define CARD_DL_PARAM       (2)
+-#define CARD_DL_PARAM_ERROR (12)
+-
+-#define CARD_DOING_ACQ      (3)
+-
+-#define CARD_ACQ_COMPLETE   (4)
+-#define CARD_ACQ_FAILED     (14)
+-
+-#define CARD_AUTH_COMPLETE  (5)
+-#define CARD_AUTH_REFUSED   (15)
+-
+-#define CARD_ASSOC_COMPLETE (6)
+-#define CARD_ASSOC_FAILED   (16)
+-
+-/*** Values for authentication_state ***********************************/
+-#define UNAUTHENTICATED     (0)
+-#define AWAITING_RESPONSE   (1)
+-#define AUTHENTICATED       (2)
+-#define NEED_TO_AUTH        (3)
+-
+-/*** Values for authentication type ************************************/
+-#define OPEN_AUTH_REQUEST   (1)
+-#define OPEN_AUTH_RESPONSE  (2)
+-#define BROADCAST_DEAUTH    (0xc0)
+-/*** Values for timer functions ****************************************/
+-#define TODO_NOTHING              (0)
+-#define TODO_VERIFY_DL_START      (-1)
+-#define TODO_START_NET            (-2)
+-#define TODO_JOIN_NET             (-3)
+-#define TODO_AUTHENTICATE_TIMEOUT (-4)
+-#define TODO_SEND_CCS             (-5)
+-/***********************************************************************/
+-/* Parameter passing structure for update/report parameter CCS's */
+-struct object_id {
+-    void          *object_addr;
+-    unsigned char object_length;
+-};
+-
+-#define OBJID_network_type            0
+-#define OBJID_acting_as_ap_status     1
+-#define OBJID_current_ess_id          2
+-#define OBJID_scanning_mode           3
+-#define OBJID_power_mgt_state         4
+-#define OBJID_mac_address             5
+-#define OBJID_frag_threshold          6
+-#define OBJID_hop_time                7
+-#define OBJID_beacon_period           8
+-#define OBJID_dtim_period             9
+-#define OBJID_retry_max              10
+-#define OBJID_ack_timeout            11
+-#define OBJID_sifs                   12
+-#define OBJID_difs                   13
+-#define OBJID_pifs                   14
+-#define OBJID_rts_threshold          15
+-#define OBJID_scan_dwell_time        16
+-#define OBJID_max_scan_dwell_time    17
+-#define OBJID_assoc_resp_timeout     18
+-#define OBJID_adhoc_scan_cycle_max   19
+-#define OBJID_infra_scan_cycle_max   20
+-#define OBJID_infra_super_cycle_max  21
+-#define OBJID_promiscuous_mode       22
+-#define OBJID_unique_word            23
+-#define OBJID_slot_time              24
+-#define OBJID_roaming_low_snr        25
+-#define OBJID_low_snr_count_thresh   26
+-#define OBJID_infra_missed_bcn       27
+-#define OBJID_adhoc_missed_bcn       28
+-#define OBJID_curr_country_code      29
+-#define OBJID_hop_pattern            30
+-#define OBJID_reserved               31
+-#define OBJID_cw_max_msb             32
+-#define OBJID_cw_min_msb             33
+-#define OBJID_noise_filter_gain      34
+-#define OBJID_noise_limit_offset     35
+-#define OBJID_det_rssi_thresh_offset 36
+-#define OBJID_med_busy_thresh_offset 37
+-#define OBJID_det_sync_thresh        38
+-#define OBJID_test_mode              39
+-#define OBJID_test_min_chan_num      40
+-#define OBJID_test_max_chan_num      41
+-#define OBJID_allow_bcast_ID_prbrsp  42
+-#define OBJID_privacy_must_start     43
+-#define OBJID_privacy_can_join       44
+-#define OBJID_basic_rate_set         45
+-
+-/**** Configuration/Status/Control Area ***************************/
+-/*    System Control Block (SCB) Area
+- *    Located at Shared RAM offset 0
+- */
+-struct scb {
+-    UCHAR ccs_index;
+-    UCHAR rcs_index;
+-};
+-
+-/****** Status area at Shared RAM offset 0x0100 ******************************/
+-struct status {
+-    UCHAR mrx_overflow_for_host;         /* 0=ECF may write, 1=host may write*/
+-    UCHAR mrx_checksum_error_for_host;   /* 0=ECF may write, 1=host may write*/
+-    UCHAR rx_hec_error_for_host;         /* 0=ECF may write, 1=host may write*/
+-    UCHAR reserved1;
+-    short mrx_overflow;                  /* ECF increments on rx overflow    */
+-    short mrx_checksum_error;            /* ECF increments on rx CRC error   */
+-    short rx_hec_error;                  /* ECF incs on mac header CRC error */
+-    UCHAR rxnoise;                       /* Average RSL measurement          */
+-};
+-
+-/****** Host-to-ECF Data Area at Shared RAM offset 0x200 *********************/
+-struct host_to_ecf_area {
+-    
+-};
+-
+-/****** ECF-to-Host Data Area at Shared RAM offset 0x0300 ********************/
+-struct startup_res_518 {
+-    UCHAR startup_word;
+-    UCHAR station_addr[ADDRLEN];
+-    UCHAR calc_prog_chksum;
+-    UCHAR calc_cis_chksum;
+-    UCHAR ecf_spare[7];
+-    UCHAR japan_call_sign[12];
+-};
+-
+-struct startup_res_6 {
+-    UCHAR startup_word;
+-    UCHAR station_addr[ADDRLEN];
+-    UCHAR reserved;
+-    UCHAR supp_rates[8];
+-    UCHAR japan_call_sign[12];
+-    UCHAR calc_prog_chksum;
+-    UCHAR calc_cis_chksum;
+-    UCHAR firmware_version[3];
+-    UCHAR asic_version;
+-    UCHAR tib_length;
+-};
+-
+-struct start_join_net_params {
+-    UCHAR net_type;
+-    UCHAR ssid[ESSID_SIZE];
+-    UCHAR reserved;
+-    UCHAR privacy_can_join;
+-};
+-
+-/****** Command Control Structure area at Shared ram offset 0x0400 ***********/
+-/* Structures for command specific parameters (ccs.var) */
+-struct update_param_cmd {
+-    UCHAR object_id;
+-    UCHAR number_objects;
+-    UCHAR failure_cause;
+-};
+-struct report_param_cmd {
+-    UCHAR object_id;
+-    UCHAR number_objects;
+-    UCHAR failure_cause;
+-    UCHAR length;
+-};
+-struct start_network_cmd {
+-    UCHAR update_param;
+-    UCHAR bssid[ADDRLEN];
+-    UCHAR net_initiated;
+-    UCHAR net_default_tx_rate;
+-    UCHAR encryption;
+-};
+-struct join_network_cmd {
+-    UCHAR update_param;
+-    UCHAR bssid[ADDRLEN];
+-    UCHAR net_initiated;
+-    UCHAR net_default_tx_rate;
+-    UCHAR encryption;
+-};
+-struct tx_requested_cmd {
+- 
+-    UCHAR tx_data_ptr[2];
+-    UCHAR tx_data_length[2];
+-    UCHAR host_reserved[2];
+-    UCHAR reserved[3];
+-    UCHAR tx_rate;
+-    UCHAR pow_sav_mode;
+-    UCHAR retries;
+-    UCHAR antenna;
+-};
+-struct tx_requested_cmd_4 {
+- 
+-    UCHAR tx_data_ptr[2];
+-    UCHAR tx_data_length[2];
+-    UCHAR dest_addr[ADDRLEN];
+-    UCHAR pow_sav_mode;
+-    UCHAR retries;
+-    UCHAR station_id;
+-};
+-struct memory_dump_cmd {
+-    UCHAR memory_type;
+-    UCHAR memory_ptr[2];
+-    UCHAR length;
+-};
+-struct update_association_cmd {
+-    UCHAR status;
+-    UCHAR aid[2];
+-};
+-struct start_timer_cmd {
+-    UCHAR duration[2];
+-};
+-
+-struct ccs {
+-    UCHAR buffer_status;                 /* 0 = buffer free, 1 = buffer busy */
+-                                         /* 2 = command complete, 3 = failed */
+-    UCHAR cmd;                           /* command to ECF                   */
+-    UCHAR link;                          /* link to next CCS, FF=end of list */
+-    /* command specific parameters      */
+-    union {
+-        char reserved[13];
+-        struct update_param_cmd update_param;
+-        struct report_param_cmd report_param;
+-        UCHAR nummulticast;
+-        UCHAR mode;
+-        struct start_network_cmd start_network;
+-        struct join_network_cmd join_network;
+-        struct tx_requested_cmd tx_request;
+-        struct memory_dump_cmd memory_dump;
+-        struct update_association_cmd update_assoc;
+-        struct start_timer_cmd start_timer;
+-    } var;
+-};
+-
+-/*****************************************************************************/
+-/* Transmit buffer structures */
+-struct tib_structure {
+-    UCHAR ccs_index;
+-    UCHAR psm;
+-    UCHAR pass_fail;
+-    UCHAR retry_count;
+-    UCHAR max_retries;
+-    UCHAR frags_remaining;
+-    UCHAR no_rb;
+-    UCHAR rts_reqd;
+-    UCHAR csma_tx_cntrl_2;
+-    UCHAR sifs_tx_cntrl_2;
+-    UCHAR tx_dma_addr_1[2];
+-    UCHAR tx_dma_addr_2[2];
+-    UCHAR var_dur_2mhz[2];
+-    UCHAR var_dur_1mhz[2];
+-    UCHAR max_dur_2mhz[2];
+-    UCHAR max_dur_1mhz[2];
+-    UCHAR hdr_len;
+-    UCHAR max_frag_len[2];
+-    UCHAR var_len[2];
+-    UCHAR phy_hdr_4;
+-    UCHAR mac_hdr_1;
+-    UCHAR mac_hdr_2;
+-    UCHAR sid[2];
+-};
+-
+-struct phy_header {
+-    UCHAR sfd[2];
+-    UCHAR hdr_3;
+-    UCHAR hdr_4;
+-};
+-struct ray_rx_msg {
+-    struct mac_header mac;
+-	UCHAR	var[];
+-};
+-
+-struct tx_msg {
+-    struct tib_structure tib;
+-    struct phy_header phy;
+-    struct mac_header mac;
+-    UCHAR  var[];
+-};
+-
+-/****** ECF Receive Control Structure (RCS) Area at Shared RAM offset 0x0800  */
+-/* Structures for command specific parameters (rcs.var) */
+-struct rx_packet_cmd {
+-    UCHAR rx_data_ptr[2];
+-    UCHAR rx_data_length[2];
+-    UCHAR rx_sig_lev;
+-    UCHAR next_frag_rcs_index;
+-    UCHAR totalpacketlength[2];
+-};
+-struct rejoin_net_cmplt_cmd {
+-    UCHAR reserved;
+-    UCHAR bssid[ADDRLEN];
+-};
+-struct japan_call_sign_rxd {
+-    UCHAR rxd_call_sign[8];
+-    UCHAR reserved[5];
+-};
+-
+-struct rcs {
+-    UCHAR buffer_status;
+-    UCHAR interrupt_id;
+-    UCHAR link_field;
+-    /* command specific parameters      */
+-    union {
+-        UCHAR reserved[13]; 
+-        struct rx_packet_cmd rx_packet;
+-        struct rejoin_net_cmplt_cmd rejoin_net_complete;
+-        struct japan_call_sign_rxd japan_call_sign;
+-    } var;
+-};
+-
+-/****** Startup parameter structures for both versions of firmware ***********/
+-struct b4_startup_params {
+-    UCHAR a_network_type;                /* C_ADHOC, C_INFRA                 */
+-    UCHAR a_acting_as_ap_status;         /* C_TYPE_STA, C_TYPE_AP            */
+-    UCHAR a_current_ess_id[ESSID_SIZE];  /* Null terminated unless 32 long   */
+-    UCHAR a_scanning_mode;               /* passive 0, active 1              */
+-    UCHAR a_power_mgt_state;             /* CAM 0,                           */
+-    UCHAR a_mac_addr[ADDRLEN];           /*                                  */
+-    UCHAR a_frag_threshold[2];           /* 512                              */
+-    UCHAR a_hop_time[2];                 /* 16k * 2**n, n=0-4 in Kus         */
+-    UCHAR a_beacon_period[2];            /* n * a_hop_time  in Kus           */
+-    UCHAR a_dtim_period;                 /* in beacons                       */
+-    UCHAR a_retry_max;                   /*                                  */
+-    UCHAR a_ack_timeout;                 /*                                  */
+-    UCHAR a_sifs;                        /*                                  */
+-    UCHAR a_difs;                        /*                                  */
+-    UCHAR a_pifs;                        /*                                  */
+-    UCHAR a_rts_threshold[2];            /*                                  */
+-    UCHAR a_scan_dwell_time[2];          /*                                  */
+-    UCHAR a_max_scan_dwell_time[2];      /*                                  */
+-    UCHAR a_assoc_resp_timeout_thresh;   /*                                  */
+-    UCHAR a_adhoc_scan_cycle_max;        /*                                  */
+-    UCHAR a_infra_scan_cycle_max;        /*                                  */
+-    UCHAR a_infra_super_scan_cycle_max;  /*                                  */
+-    UCHAR a_promiscuous_mode;            /*                                  */
+-    UCHAR a_unique_word[2];              /*                                  */
+-    UCHAR a_slot_time;                   /*                                  */
+-    UCHAR a_roaming_low_snr_thresh;      /*                                  */
+-    UCHAR a_low_snr_count_thresh;        /*                                  */
+-    UCHAR a_infra_missed_bcn_thresh;     /*                                  */
+-    UCHAR a_adhoc_missed_bcn_thresh;     /*                                  */
+-    UCHAR a_curr_country_code;           /* C_USA                            */
+-    UCHAR a_hop_pattern;                 /*                                  */
+-    UCHAR a_hop_pattern_length;          /*                                  */
+-/* b4 - b5 differences start here */
+-    UCHAR a_cw_max;                      /*                                  */
+-    UCHAR a_cw_min;                      /*                                  */
+-    UCHAR a_noise_filter_gain;           /*                                  */
+-    UCHAR a_noise_limit_offset;          /*                                  */
+-    UCHAR a_det_rssi_thresh_offset;      /*                                  */
+-    UCHAR a_med_busy_thresh_offset;      /*                                  */
+-    UCHAR a_det_sync_thresh;             /*                                  */
+-    UCHAR a_test_mode;                   /*                                  */
+-    UCHAR a_test_min_chan_num;           /*                                  */
+-    UCHAR a_test_max_chan_num;           /*                                  */
+-    UCHAR a_rx_tx_delay;                 /*                                  */
+-    UCHAR a_current_bss_id[ADDRLEN];     /*                                  */
+-    UCHAR a_hop_set;                     /*                                  */
+-};
+-struct b5_startup_params {
+-    UCHAR a_network_type;                /* C_ADHOC, C_INFRA                 */
+-    UCHAR a_acting_as_ap_status;         /* C_TYPE_STA, C_TYPE_AP            */
+-    UCHAR a_current_ess_id[ESSID_SIZE];  /* Null terminated unless 32 long   */
+-    UCHAR a_scanning_mode;               /* passive 0, active 1              */
+-    UCHAR a_power_mgt_state;             /* CAM 0,                           */
+-    UCHAR a_mac_addr[ADDRLEN];           /*                                  */
+-    UCHAR a_frag_threshold[2];           /* 512                              */
+-    UCHAR a_hop_time[2];                 /* 16k * 2**n, n=0-4 in Kus         */
+-    UCHAR a_beacon_period[2];            /* n * a_hop_time  in Kus           */
+-    UCHAR a_dtim_period;                 /* in beacons                       */
+-    UCHAR a_retry_max;                   /* 4                                */
+-    UCHAR a_ack_timeout;                 /*                                  */
+-    UCHAR a_sifs;                        /*                                  */
+-    UCHAR a_difs;                        /*                                  */
+-    UCHAR a_pifs;                        /*                                  */
+-    UCHAR a_rts_threshold[2];            /*                                  */
+-    UCHAR a_scan_dwell_time[2];          /*                                  */
+-    UCHAR a_max_scan_dwell_time[2];      /*                                  */
+-    UCHAR a_assoc_resp_timeout_thresh;   /*                                  */
+-    UCHAR a_adhoc_scan_cycle_max;        /*                                  */
+-    UCHAR a_infra_scan_cycle_max;        /*                                  */
+-    UCHAR a_infra_super_scan_cycle_max;  /*                                  */
+-    UCHAR a_promiscuous_mode;            /*                                  */
+-    UCHAR a_unique_word[2];              /*                                  */
+-    UCHAR a_slot_time;                   /*                                  */
+-    UCHAR a_roaming_low_snr_thresh;      /*                                  */
+-    UCHAR a_low_snr_count_thresh;        /*                                  */
+-    UCHAR a_infra_missed_bcn_thresh;     /*                                  */
+-    UCHAR a_adhoc_missed_bcn_thresh;     /*                                  */
+-    UCHAR a_curr_country_code;           /* C_USA                            */
+-    UCHAR a_hop_pattern;                 /*                                  */
+-    UCHAR a_hop_pattern_length;          /*                                  */
+-/* b4 - b5 differences start here */
+-    UCHAR a_cw_max[2];                   /*                                  */
+-    UCHAR a_cw_min[2];                   /*                                  */
+-    UCHAR a_noise_filter_gain;           /*                                  */
+-    UCHAR a_noise_limit_offset;          /*                                  */
+-    UCHAR a_det_rssi_thresh_offset;      /*                                  */
+-    UCHAR a_med_busy_thresh_offset;      /*                                  */
+-    UCHAR a_det_sync_thresh;             /*                                  */
+-    UCHAR a_test_mode;                   /*                                  */
+-    UCHAR a_test_min_chan_num;           /*                                  */
+-    UCHAR a_test_max_chan_num;           /*                                  */
+-    UCHAR a_allow_bcast_SSID_probe_rsp;
+-    UCHAR a_privacy_must_start;
+-    UCHAR a_privacy_can_join;
+-    UCHAR a_basic_rate_set[8];
+-};
+-
+-/*****************************************************************************/
+-#define RAY_IOCG_PARMS (SIOCDEVPRIVATE)
+-#define RAY_IOCS_PARMS (SIOCDEVPRIVATE + 1)
+-#define RAY_DO_CMD     (SIOCDEVPRIVATE + 2)
+-
+-/****** ethernet <-> 802.11 translation **************************************/
+-typedef struct snaphdr_t
+-{
+-  UCHAR   dsap;
+-  UCHAR   ssap;
+-  UCHAR   ctrl;
+-  UCHAR   org[3];
+-  UCHAR   ethertype[2];
+-} snaphdr_t;
+-
+-#define BRIDGE_ENCAP  0xf80000
+-#define RFC1042_ENCAP 0
+-#define SNAP_ID       0x0003aaaa
+-#define RAY_IPX_TYPE  0x8137
+-#define APPLEARP_TYPE 0x80f3
+-/*****************************************************************************/
+-#endif /* _RAYCTL_H_ */
 -- 
 2.39.2
 
