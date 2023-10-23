@@ -2,125 +2,84 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC21C001E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Oct 2023 14:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9001CC001E0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Oct 2023 14:36:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbjJWOUy (ORCPT
+        id S233459AbjJWOgL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Oct 2023 10:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59468 "EHLO
+        Mon, 23 Oct 2023 10:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230255AbjJWOUx (ORCPT
+        with ESMTP id S230356AbjJWOgJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Oct 2023 10:20:53 -0400
-X-Greylist: delayed 611 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Oct 2023 07:20:51 PDT
-Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F96110B;
-        Mon, 23 Oct 2023 07:20:51 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 63CC4581579;
-        Mon, 23 Oct 2023 10:10:39 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Mon, 23 Oct 2023 10:10:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm2; t=1698070239; x=1698077439; bh=Cd
-        D00F6lo71GUCVAQ5trDcf1jHXe2aUX3dC/0CHjbQ4=; b=qXXUQDlq0gAM5PfthE
-        tj0+25tcD8B0dHKH53Y8/RBXX924Jv6+TCHgZ2DmBOPjpvDgoA6vfpQG4R5hBMmt
-        yHtfzcx94RUzYA4BDrAoin2MGZ9kXM/rf7x82Q//kq1W0KkIWXdbljW91rPjUY10
-        iRUXdIVSZOXRcMy+b0MSGV4mTsBo28657zFxjy3PRri+A74kVikmvO6Xd/Sb8C1A
-        oMniFTNPeg0h1+dV/VIixGCsQ9XQZL88wvFFNQCjTxIPUd7T5AlibIF/mb+73/mn
-        rD6df1qJCAMghE6/MeI4S6hQKhruJM8DpbU8wOeo3F8pqdD07HqekPFue6fcWKC2
-        Nfyw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1698070239; x=1698077439; bh=CdD00F6lo71GU
-        CVAQ5trDcf1jHXe2aUX3dC/0CHjbQ4=; b=hwUXLudllnoVroI4li0WSBuEKuS0m
-        x5JRGf4/rrt20gTiLKboQBd6YiuI3HjGNfNnZ9Qt/2j90IzlMAv0YnNIbqMbmY55
-        jVswrzfOKf8HCvbXFn/kXKL9/sGSehUbUCFycV0fu7SSdmzd2sLmz31QFbgIxbd0
-        EhrKOBsPWx2hBCzFogyLfVylT3+4xDBLCoPQKZtY7fPCOnYGrDFcS9nep+3kBW4I
-        jQet8pbe+BVl0IMhMejxkIqBU0Qd47FVWAuQTSGij7McKriKYUY8QW6/R4Fbk+2C
-        Z6myKGW5RtMaGCBgn86OL+EXsFoa64U8ph445g0QiK8ba1orns8o2vIHg==
-X-ME-Sender: <xms:3X42ZQ_ItFV-GbRI3mbqY1F_ZfsutV9aIgWdaivjEnFtaDWXrbZDOg>
-    <xme:3X42ZYvEgKFXGNttA0kthbKP0HLq0YI2X_Hj9IO3rnRWR05AcK2f_hmbe7Xk4pECK
-    UIWY5T0CA5vr3FM3nw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrkeeigdejudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefofgggkfgjfhffhffvvefutgesthdtredtreertdenucfhrhhomhepfdetrhhn
-    ugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtth
-    gvrhhnpeffheeugeetiefhgeethfejgfdtuefggeejleehjeeutefhfeeggefhkedtkeet
-    ffenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrh
-    hnugesrghrnhgusgdruggv
-X-ME-Proxy: <xmx:3X42ZWDp7CUTlUyBhid-28tQffehzvNNNvbBz8kQ2uCuoFOyovsmgw>
-    <xmx:3X42ZQcK76hDhVVMBr3tH9vKd0PzjWN6deGqeG4iQ0StSHA-h6qjSA>
-    <xmx:3X42ZVNTgT22xJcQiBBH_8M8IxNt2AOYjo-XZR2bJW2uGJGy0lLQtQ>
-    <xmx:3342ZQGdEQ1YnY6VFN2tafTbr289GUD9MriSoShSnfxIvV8srUdX-g>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 1EB20B60089; Mon, 23 Oct 2023 10:10:37 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-1048-g9229b632c5-fm-20231019.001-g9229b632
-MIME-Version: 1.0
-Message-Id: <50eafe40-9c50-48e2-8d48-6a113c8fd87d@app.fastmail.com>
-In-Reply-To: <87v8axzc46.fsf@kernel.org>
-References: <20231023131953.2876682-1-arnd@kernel.org>
- <87v8axzc46.fsf@kernel.org>
-Date:   Mon, 23 Oct 2023 16:10:16 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Kalle Valo" <kvalo@kernel.org>, "Arnd Bergmann" <arnd@kernel.org>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        "Alexandre Belloni" <alexandre.belloni@bootlin.com>,
-        "Claudiu Beznea" <claudiu.beznea@tuxon.dev>,
-        "Geert Uytterhoeven" <geert@linux-m68k.org>,
-        "Geoff Levand" <geoff@infradead.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        "Jakub Kicinski" <kuba@kernel.org>,
-        "Jeff Johnson" <quic_jjohnson@quicinc.com>,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        "Larry Finger" <Larry.Finger@lwfinger.net>,
-        "Nicolas Ferre" <nicolas.ferre@microchip.com>,
-        "Pavel Machek" <pavel@ucw.cz>, "Stanislaw Gruszka" <stf_xl@wp.pl>,
-        "Gregory Greenman" <gregory.greenman@intel.com>,
+        Mon, 23 Oct 2023 10:36:09 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B52C1DD;
+        Mon, 23 Oct 2023 07:36:07 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 256C7C433C7;
+        Mon, 23 Oct 2023 14:36:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698071767;
+        bh=PgA9yYa6/1qxru0Rwr8SOL4n9Sf+KY4AdlDhFZNeRMo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=qQjhSgSZxVDSNrUricToBpOO3r3/9HPO9ePt28aLe38EMuSbiPvh0DhTtdiZt8DKb
+         zccwbQRXYv7h1SjVPXd+UphUB4VILi6IE0ef/Jkpf14TinQSLXWHSeg1KNGKZlGKdO
+         qUPTnR5EwpEQOYod9oelcttVvxy2u8hinktsyJNfh6eVdJ8aPD5hfQisqosvKojUQG
+         s89phH1sbMPTAH5f61vmorwhTOeop64y9KNMHJEaAYKBLRVJ2+mAsiMTUv4cjo5tZH
+         MD1WPybZUAYpoiJZgnv8d32NDcnx73frJGkJDJswEYZjFVVWqdMGI8b1ndc4MtJw14
+         Op5z3rREu0YVA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     Arnd Bergmann <arnd@kernel.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        "David S . Miller" <davem@davemloft.net>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Geoff Levand <geoff@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Nicolas Ferre <nicolas.ferre@microchip.com>,
+        Pavel Machek <pavel@ucw.cz>, Stanislaw Gruszka <stf_xl@wp.pl>,
+        Gregory Greenman <gregory.greenman@intel.com>,
         linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-staging@lists.linux.dev, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/10] Remove obsolete and orphaned wifi drivers
+Subject: Re: [PATCH 04/10] wifi: remove obsolete hostap driver
+References: <20231023131953.2876682-1-arnd@kernel.org>
+        <20231023131953.2876682-5-arnd@kernel.org>
+Date:   Mon, 23 Oct 2023 17:36:00 +0300
+In-Reply-To: <20231023131953.2876682-5-arnd@kernel.org> (Arnd Bergmann's
+        message of "Mon, 23 Oct 2023 15:19:46 +0200")
+Message-ID: <87msw9z9rj.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 23, 2023, at 15:45, Kalle Valo wrote:
-> Arnd Bergmann <arnd@kernel.org> writes:
+Arnd Bergmann <arnd@kernel.org> writes:
+
+> From: Arnd Bergmann <arnd@arndb.de>
 >
->> From: Arnd Bergmann <arnd@arndb.de>
->>
->> As discussed previously, a lot of the older wifi drivers are likely
->> entirely unused, Though we can't know for sure.
->>
->> As suggested by both Greg and Jakub, let's remove the ones that look
->> are most likely to have no users left and also get in the way of the
->> wext cleanup. If anyone is still using any of these, we can revert the
->> driver removal individually.
->>
->> I would suggest merging these for net-next after 6.7-rc1 is out
+> HostAP is an ISA/PCMCIA style 802.11b driver supporting only
+> wireless extensions, and some custom ioctls (already removed).
+> Some devices include a legacy PCI bridge but no DMA.
 >
-> Why net-next? I want to take these to wireless-next to avoid any
-> conflicts with other wireless patches.
+> The driver was marked obsolete in 2016 and is highly unlikely
+> to still have any users.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-My mistake, I actually rebased them on top of wireless-next before
-sending out the patches, I just forgot update the text I had
-already written a week earlier.
+This patch didn't make it to the list, I guess it was too big. But it's
+available from the pending branch:
 
-> We could take these to wireless-next after we submit the last new
-> features (-next) pull request to v6.7, so most likely already next week.
-> So if anyone has any problems with these speak up now.
+https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git/commit/?h=pending&id=39ed2ce3bdc43bc9dbed65608d98828f21b9f33d
 
-Sounds good to me, thanks!
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-    Arnd
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
