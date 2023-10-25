@@ -2,72 +2,67 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72DE6C25B47
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Oct 2023 10:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 522AFC25B47
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Oct 2023 10:39:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343784AbjJYKfq (ORCPT
+        id S234654AbjJYKj0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Oct 2023 06:35:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51628 "EHLO
+        Wed, 25 Oct 2023 06:39:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343703AbjJYKfN (ORCPT
+        with ESMTP id S235134AbjJYKjP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2023 06:35:13 -0400
+        Wed, 25 Oct 2023 06:39:15 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEF1B10C6;
-        Wed, 25 Oct 2023 03:35:02 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44581C433C8;
-        Wed, 25 Oct 2023 10:35:01 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7304330C6
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2023 03:36:57 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB672C433C9;
+        Wed, 25 Oct 2023 10:36:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698230102;
-        bh=58+Mou08nY22qSI2kcR2X7ao1pMoXvcAK23BpqCVe88=;
+        s=k20201202; t=1698230216;
+        bh=7Rl8C1Uk+dHF25r0wiSnC9dy7aLIzE0A9eteM9RTuhE=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=I/jJU600/ucSi3pl2JckyZP+QNnU8dUO4msq+9w2vatOjNPDIsEJWD933yb9yGyYj
-         IPdm5HNN5cL6GTuN+1KRN24kah4UKuWRcK+IRbWJZJw10o7kHIAsco6nNiscrO0VVY
-         /yNTFNH5Vd82k+klWbVmoOvXXHfgsik7SEOv6dj80tlFITQc+5leWRdK/mqrGlFo6p
-         clKq2eMG+YzKsz6+ZnsewS8LtRT0Eg1QMIgRr7aAJxVJD1UYDK17NtsVWkhYNB9onP
-         oUoSTeAtrw5ZpzuqZCuUWUkjwGcFMoXWEcfG4UYJRq67OA9yWk+m8BJxE5Mhuk+Ei6
-         faVRMQwnyx2wQ==
+        b=t/LRDwuWt0ezmpb2wvHnc5DDZMgIQnEDcDTVNVdrkiy6kOp7SuZEjOP57Qkl6rv6E
+         TjqijEbsR1lNpoyT+puU7pPXDFON4zEa/Myq3E8L0CCKxV7v13syy6lZqdk6wUy4iv
+         0RH0chClhab/vd4KPTnXDE3mi1v482d4duuaeGrrOSnoeC5ndSqLF//dhvu1kUX+I+
+         iT/hM/f2Amg4ARaEF7fHQ81MUkMae+I2EHRsQGz9iQjgAMogdS25gW9cq76xx/k94e
+         Jt1f5Vg1NL89WTtutCU5hLSCfnunomCnNLrgJxxFQQbvYBotjYTdAHwsXkLXhawS+2
+         j+EPTbHrt7WBg==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath12k: Introduce and use ath12k_sta_to_arsta()
+Subject: Re: [PATCH] Revert "wifi: ath11k: call ath11k_mac_fils_discovery()
+ without condition"
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20231019-upstream-ath12k_sta_to_arsta-v1-1-06f06f693338@quicinc.com>
-References: <20231019-upstream-ath12k_sta_to_arsta-v1-1-06f06f693338@quicinc.com>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20231023164120.651151-1-kvalo@kernel.org>
+References: <20231023164120.651151-1-kvalo@kernel.org>
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <169823009956.891844.2307289880340272431.kvalo@kernel.org>
-Date:   Wed, 25 Oct 2023 10:35:01 +0000 (UTC)
+Message-ID: <169823021370.891844.8029663919365856343.kvalo@kernel.org>
+Date:   Wed, 25 Oct 2023 10:36:55 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
+Kalle Valo <kvalo@kernel.org> wrote:
 
-> Currently, the logic to return an ath12k_sta pointer, given a
-> ieee80211_sta pointer, uses typecasting throughout the driver. In
-> general, conversion functions are preferable to typecasting since
-> using a conversion function allows the compiler to validate the types
-> of both the input and output parameters.
+> This reverts commit e149353e6562f3e3246f75dfc4cca6a0cc5b4efc. The commit caused
+> QCA6390 hw2.0 firmware WLAN.HST.1.0.1-05266-QCAHSTSWPLZ_V2_TO_X86-1 to crash
+> during disconnect:
 > 
-> ath12k already defines a conversion function ath12k_vif_to_arvif() for
-> a similar conversion. So introduce ath12k_sta_to_arsta() for this use
-> case, and convert all of the existing typecasting to use this
-> function.
+> [71990.787525] ath11k_pci 0000:72:00.0: firmware crashed: MHI_CB_EE_RDDM
 > 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> Closes: https://lore.kernel.org/all/87edhu3550.fsf@kernel.org/
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> Reviewed-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-9ef118152ee0 wifi: ath12k: Introduce and use ath12k_sta_to_arsta()
+f59065401602 Revert "wifi: ath11k: call ath11k_mac_fils_discovery() without condition"
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20231019-upstream-ath12k_sta_to_arsta-v1-1-06f06f693338@quicinc.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20231023164120.651151-1-kvalo@kernel.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
