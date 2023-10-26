@@ -2,346 +2,199 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF638C0032E
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Oct 2023 23:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE4FC25B47
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Oct 2023 01:35:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229664AbjJYXej (ORCPT
+        id S229954AbjJZBff (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Oct 2023 19:34:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45658 "EHLO
+        Wed, 25 Oct 2023 21:35:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229632AbjJYXeh (ORCPT
+        with ESMTP id S229596AbjJZBfe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Oct 2023 19:34:37 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A83313A
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2023 16:34:31 -0700 (PDT)
-X-UUID: 07fe3c52738f11ee8051498923ad61e6-20231026
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=BO8xex5TrqKc5bh/hA+OWln73QdvPyAo1WOD+A9cnLY=;
-        b=cakzDXp9PjZWLEHBOvwe85foTmN85PQRz5ImF0GO87lsBtT5/gPkchBq6q2k8gTdxbHLf8n712o8M0qSTI3IWu1wKIFv/9l+N3tLFhjn1lJdtd9UenxWlZr6DMVr5AFAAsk3h2HXTQWFUPGcf1vt6jH18+eyoplm9s9xuqHAv8o=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.32,REQID:a92f932b-2313-4d2e-9309-a91c8ddb0529,IP:0,U
-        RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-        N:release,TS:-25
-X-CID-META: VersionHash:5f78ec9,CLOUDID:2377c6fb-4a48-46e2-b946-12f04f20af8c,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
-        NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 07fe3c52738f11ee8051498923ad61e6-20231026
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 457424361; Thu, 26 Oct 2023 07:34:24 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 26 Oct 2023 07:34:22 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 26 Oct 2023 07:34:22 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>, <linux-wireless@vger.kernel.org>
-CC:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        <linux-mediatek@lists.infradead.org>,
-        Peter Chiu <chui-hao.chiu@mediatek.com>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] wifi: mt76: mt7915: enable mt7986 and mt7916 pre-calibration support
-Date:   Thu, 26 Oct 2023 07:34:20 +0800
-Message-ID: <f21b261373fc221b8370264c44ee751fa85cf41c.1698274193.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Wed, 25 Oct 2023 21:35:34 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D952A3
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2023 18:35:31 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-6be1bc5aa1cso342326b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Oct 2023 18:35:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698284131; x=1698888931; darn=vger.kernel.org;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=CtxBFwLBF7za+nT95yQRjeeCz5xZOSDivFlhlka7bx8=;
+        b=VG1JwZ5k/gm5gOnNTo5x+ol9XF01oLfoLIjY2BoXsEGB4js9VC9eKCKTK80exLb2Av
+         mhgkHRQiYmwksUt97aeTfekl8ua6J3l8hi0yJ5/orGXmzASUuwuLwvxVkP+BY+fFiYsM
+         L3bCmBHb1RcuTM0eiiLrwV2uriEAv0bGJ4vADkA1Aametjt4r8WZrT2aO0/YpKLi7wJ3
+         4xGXs6LelDXBY1nEiAnQ60CmaLHGZSzDcUcNC4+fqL0a7udjPi30LR+agebWFJp5E4gB
+         DP0iVrwfdhwxO8b4EjISjYHE8Cl4QgRomFrpjydFJWLfi+LCP0FqzK+n5GW6T3qmvuxJ
+         KLVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698284131; x=1698888931;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=CtxBFwLBF7za+nT95yQRjeeCz5xZOSDivFlhlka7bx8=;
+        b=CvQhUt4QcKVXB0Mg+gJ1GFwXGpkF0R/u2vqJP5HPGDI3JGXZc0GYfl73z79JuxkPQy
+         aIOTfbbA2BNcx12abPvsSS0gGC+P6VBAX2vuQYUNvX8ddarilUeygXiMaQA3URATIM6u
+         c34PDaBaAbgMU5UM+GAwcP+Py4hPeYZreobdVXm6NYOm4CJeMDocIXqLMRWExHJaAGlc
+         ULyizh9wtQFVG7ya9goZoZmMZYeLcjoVL/wWAS+2AQiCs+WQChMO81jSiKhIeCN36Fyy
+         ZqGn105T4+l3xsZsIIq1h1GfMcS/DLTnDNekwetzdj1m8P9lNwswTyWieasTJ1gQtc7E
+         vRsQ==
+X-Gm-Message-State: AOJu0YzvhXl5FT9QHLHUsqHLbK0L1eJ5ZWvFweD3pkYjsQGQaBx8Cou7
+        fvzCPrZ7egOrtyMTsVz3h9U=
+X-Google-Smtp-Source: AGHT+IGvV0CAMC3/cWVT0zwZOt/u7Y3aTd6YcOCTEWmr6oA3CrjRzu+y6GnNVzKRbXk2yZ4XvSUM0g==
+X-Received: by 2002:a05:6a21:6d94:b0:157:1b5:61ce with SMTP id wl20-20020a056a216d9400b0015701b561cemr8310369pzb.4.1698284131011;
+        Wed, 25 Oct 2023 18:35:31 -0700 (PDT)
+Received: from localhost ([103.40.76.4])
+        by smtp.gmail.com with ESMTPSA id a13-20020a63e40d000000b0059d219cb359sm9483565pgi.9.2023.10.25.18.35.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 25 Oct 2023 18:35:30 -0700 (PDT)
+Date:   Thu, 26 Oct 2023 09:35:28 +0800
+From:   Jiazi Li <jqqlijiazi@gmail.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Jiazi Li <jiazi.li@transsion.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wifi: cfg80211: fix bss rbn double erase issue
+Message-ID: <20231026013528.GA24122@Jiazi.Li>
+References: <20231025103304.22082-1-jiazi.li@transsion.com>
+ <b1358d256500d5bb6b3bbc312673c24b54b3674e.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--10.657900-8.000000
-X-TMASE-MatchedRID: fnR2S3QqRUoVAKRaMHqjDlz+axQLnAVBI5K4Cd+0ao/N1rLqpIKz42mt
-        ukJWdiprNJnt9TW/xwZX/sAhRmSCr+n7m7FfgPpPS3OTftLNfg05QyrxWymujdq1QfwtMOlPpQm
-        bCq8RaKGyNEPkdHcNkr/yMxJu7qUwlwt7DABrvp+O0rt0LpQGeWf6wD367Vgt82HMiBe0UlUYEU
-        tWQA3BEMSUQ1jnXMOcMdLQNZUMEkTx3YzTiJbL8h3EEAbn+GRbU+A7YkpDJ1i+FARAmHPCpuJz0
-        /I2b9TR4vM1YF6AJbbCCfuIMF6xLcK21zBg2KlfGM6W3U+LnndyhLF+UJD6ydHOvrNLoDEnJMLo
-        W9dlXdp7a5Ka2JuTgg==
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--10.657900-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 3B8F6AA5FE336E0DBE28363D30D2A0D7C440CBEBAC3059ADF149881E885CD6BC2000:8
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b1358d256500d5bb6b3bbc312673c24b54b3674e.camel@sipsolutions.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
-
-Add pre-calibration for mt7986 and mt7916. Their group cal size are
-54k and 94k for 2G + 5G and 2G + 6G, respectively. DPD size is 300k.
-
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../wireless/mediatek/mt76/mt7915/eeprom.c    |  11 +-
- .../wireless/mediatek/mt76/mt7915/eeprom.h    |  34 +++++-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 100 ++++++++++++++----
- 3 files changed, 114 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-index 76be7308460b..45b216ca7c3c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
-@@ -9,16 +9,15 @@ static int mt7915_eeprom_load_precal(struct mt7915_dev *dev)
- {
- 	struct mt76_dev *mdev = &dev->mt76;
- 	u8 *eeprom = mdev->eeprom.data;
--	u32 val = eeprom[MT_EE_DO_PRE_CAL];
--	u32 offs;
-+	u32 offs = is_mt7915(&dev->mt76) ? MT_EE_DO_PRE_CAL : MT_EE_DO_PRE_CAL_V2;
-+	u32 val;
- 
--	if (!dev->flash_mode)
-+	if (!dev->flash_mode || !eeprom[offs])
- 		return 0;
- 
--	if (val != (MT_EE_WIFI_CAL_DPD | MT_EE_WIFI_CAL_GROUP))
--		return 0;
-+	val = mt7915_get_cal_group_size(dev) +
-+	      (is_mt7915(&dev->mt76) ? MT_EE_CAL_DPD_SIZE : MT_EE_CAL_DPD_SIZE_V2);
- 
--	val = MT_EE_CAL_GROUP_SIZE + MT_EE_CAL_DPD_SIZE;
- 	dev->cal = devm_kzalloc(mdev->dev, val, GFP_KERNEL);
- 	if (!dev->cal)
- 		return -ENOMEM;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
-index f3e56817d36e..84c1903b2a6c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.h
-@@ -19,6 +19,7 @@ enum mt7915_eeprom_field {
- 	MT_EE_DDIE_FT_VERSION =	0x050,
- 	MT_EE_DO_PRE_CAL =	0x062,
- 	MT_EE_WIFI_CONF =	0x190,
-+	MT_EE_DO_PRE_CAL_V2 =	0x19a,
- 	MT_EE_RATE_DELTA_2G =	0x252,
- 	MT_EE_RATE_DELTA_5G =	0x29d,
- 	MT_EE_TX0_POWER_2G =	0x2fc,
-@@ -39,10 +40,18 @@ enum mt7915_eeprom_field {
- };
- 
- #define MT_EE_WIFI_CAL_GROUP			BIT(0)
--#define MT_EE_WIFI_CAL_DPD			GENMASK(2, 1)
-+#define MT_EE_WIFI_CAL_DPD_5G			BIT(1)
-+#define MT_EE_WIFI_CAL_DPD_2G			BIT(2)
-+#define MT_EE_WIFI_CAL_DPD_6G			BIT(3)
-+#define MT_EE_WIFI_CAL_DPD			GENMASK(3, 1)
- #define MT_EE_CAL_UNIT				1024
--#define MT_EE_CAL_GROUP_SIZE			(49 * MT_EE_CAL_UNIT + 16)
-+#define MT_EE_CAL_GROUP_SIZE_7915		(49 * MT_EE_CAL_UNIT + 16)
-+#define MT_EE_CAL_GROUP_SIZE_7916		(54 * MT_EE_CAL_UNIT + 16)
-+#define MT_EE_CAL_GROUP_SIZE_7975		(54 * MT_EE_CAL_UNIT + 16)
-+#define MT_EE_CAL_GROUP_SIZE_7976		(94 * MT_EE_CAL_UNIT + 16)
-+#define MT_EE_CAL_GROUP_SIZE_7916_6G		(94 * MT_EE_CAL_UNIT + 16)
- #define MT_EE_CAL_DPD_SIZE			(54 * MT_EE_CAL_UNIT)
-+#define MT_EE_CAL_DPD_SIZE_V2			(300 * MT_EE_CAL_UNIT)
- 
- #define MT_EE_WIFI_CONF0_TX_PATH		GENMASK(2, 0)
- #define MT_EE_WIFI_CONF0_BAND_SEL		GENMASK(7, 6)
-@@ -155,6 +164,27 @@ mt7915_tssi_enabled(struct mt7915_dev *dev, enum nl80211_band band)
- 		return val & MT_EE_WIFI_CONF7_TSSI0_5G;
- }
- 
-+static inline u32
-+mt7915_get_cal_group_size(struct mt7915_dev *dev)
-+{
-+	if (is_mt7915(&dev->mt76)) {
-+		return MT_EE_CAL_GROUP_SIZE_7915;
-+	} else if (is_mt7916(&dev->mt76)) {
-+		u8 *eep = dev->mt76.eeprom.data;
-+		u32 val = eep[MT_EE_WIFI_CONF + 1];
-+
-+		val = FIELD_GET(MT_EE_WIFI_CONF0_BAND_SEL, val);
-+
-+		return (val == MT_EE_V2_BAND_SEL_6GHZ) ?
-+			MT_EE_CAL_GROUP_SIZE_7916_6G :
-+			MT_EE_CAL_GROUP_SIZE_7916;
-+	} else if (mt7915_check_adie(dev, false)) {
-+		return MT_EE_CAL_GROUP_SIZE_7976;
-+	} else {
-+		return MT_EE_CAL_GROUP_SIZE_7975;
-+	}
-+}
-+
- extern const u8 mt7915_sku_group_len[MAX_SKU_RATE_GROUP_NUM];
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index b22f06d4411a..da3ee9f91704 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2904,9 +2904,10 @@ static int mt7915_mcu_set_pre_cal(struct mt7915_dev *dev, u8 idx,
- int mt7915_mcu_apply_group_cal(struct mt7915_dev *dev)
- {
- 	u8 idx = 0, *cal = dev->cal, *eep = dev->mt76.eeprom.data;
--	u32 total = MT_EE_CAL_GROUP_SIZE;
-+	u32 total = mt7915_get_cal_group_size(dev);
-+	u32 offs = is_mt7915(&dev->mt76) ? MT_EE_DO_PRE_CAL : MT_EE_DO_PRE_CAL_V2;
- 
--	if (!(eep[MT_EE_DO_PRE_CAL] & MT_EE_WIFI_CAL_GROUP))
-+	if (!(eep[offs] & MT_EE_WIFI_CAL_GROUP))
- 		return 0;
- 
- 	/*
-@@ -2942,9 +2943,9 @@ static int mt7915_find_freq_idx(const u16 *freqs, int n_freqs, u16 cur)
- 	return -1;
- }
- 
--static int mt7915_dpd_freq_idx(u16 freq, u8 bw)
-+static int mt7915_dpd_freq_idx(struct mt7915_dev *dev, u16 freq, u8 bw)
- {
--	static const u16 freq_list[] = {
-+	const u16 freq_list_v1[] = {
- 		5180, 5200, 5220, 5240,
- 		5260, 5280, 5300, 5320,
- 		5500, 5520, 5540, 5560,
-@@ -2952,65 +2953,118 @@ static int mt7915_dpd_freq_idx(u16 freq, u8 bw)
- 		5660, 5680, 5700, 5745,
- 		5765, 5785, 5805, 5825
- 	};
--	int offset_2g = ARRAY_SIZE(freq_list);
--	int idx;
-+	const u16 freq_list_v2[] = {
-+		/* 6G BW20 */
-+		5955, 5975, 5995, 6015,
-+		6035, 6055, 6075, 6095,
-+		6115, 6135, 6155, 6175,
-+		6195, 6215, 6235, 6255,
-+		6275, 6295, 6315, 6335,
-+		6355, 6375, 6395, 6415,
-+		6435, 6455, 6475, 6495,
-+		6515, 6535, 6555, 6575,
-+		6595, 6615, 6635, 6655,
-+		6675, 6695, 6715, 6735,
-+		6755, 6775, 6795, 6815,
-+		6835, 6855, 6875, 6895,
-+		6915, 6935, 6955, 6975,
-+		6995, 7015, 7035, 7055,
-+		7075, 7095, 7115,
-+		/* 6G BW160 */
-+		6025, 6185, 6345, 6505,
-+		6665, 6825, 6985,
-+		/* 5G BW20 */
-+		5180, 5200, 5220, 5240,
-+		5260, 5280, 5300, 5320,
-+		5500, 5520, 5540, 5560,
-+		5580, 5600, 5620, 5640,
-+		5660, 5680, 5700, 5720,
-+		5745, 5765, 5785, 5805,
-+		5825, 5845, 5865, 5885,
-+		/* 5G BW160 */
-+		5250, 5570, 5815
-+	};
-+	const u16 *freq_list;
-+	int n_freqs, idx;
-+
-+	if (is_mt7915(&dev->mt76)) {
-+		freq_list = freq_list_v1;
-+		n_freqs = ARRAY_SIZE(freq_list_v1);
-+	} else {
-+		freq_list = freq_list_v2;
-+		n_freqs = ARRAY_SIZE(freq_list_v2);
-+	}
- 
- 	if (freq < 4000) {
- 		if (freq < 2432)
--			return offset_2g;
-+			return n_freqs;
- 		if (freq < 2457)
--			return offset_2g + 1;
-+			return n_freqs + 1;
- 
--		return offset_2g + 2;
-+		return n_freqs + 2;
- 	}
- 
--	if (bw == NL80211_CHAN_WIDTH_80P80 || bw == NL80211_CHAN_WIDTH_160)
-+	if (bw == NL80211_CHAN_WIDTH_80P80)
- 		return -1;
- 
- 	if (bw != NL80211_CHAN_WIDTH_20) {
--		idx = mt7915_find_freq_idx(freq_list, ARRAY_SIZE(freq_list),
--					   freq + 10);
-+		idx = mt7915_find_freq_idx(freq_list, n_freqs, freq + 10);
- 		if (idx >= 0)
- 			return idx;
- 
--		idx = mt7915_find_freq_idx(freq_list, ARRAY_SIZE(freq_list),
--					   freq - 10);
-+		idx = mt7915_find_freq_idx(freq_list, n_freqs, freq - 10);
- 		if (idx >= 0)
- 			return idx;
- 	}
- 
--	return mt7915_find_freq_idx(freq_list, ARRAY_SIZE(freq_list), freq);
-+	return mt7915_find_freq_idx(freq_list, n_freqs, freq);
- }
- 
- int mt7915_mcu_apply_tx_dpd(struct mt7915_phy *phy)
- {
- 	struct mt7915_dev *dev = phy->dev;
- 	struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
--	u16 total = 2, center_freq = chandef->center_freq1;
--	u8 *cal = dev->cal, *eep = dev->mt76.eeprom.data;
-+	u32 offs = is_mt7915(&dev->mt76) ? MT_EE_DO_PRE_CAL : MT_EE_DO_PRE_CAL_V2;
-+	u8 mask, num, *cal = dev->cal, *eep = dev->mt76.eeprom.data;
- 	int idx;
- 
--	if (!(eep[MT_EE_DO_PRE_CAL] & MT_EE_WIFI_CAL_DPD))
-+	switch (chandef->chan->band) {
-+	case NL80211_BAND_2GHZ:
-+		mask = MT_EE_WIFI_CAL_DPD_2G;
-+		break;
-+	case NL80211_BAND_5GHZ:
-+		mask = MT_EE_WIFI_CAL_DPD_5G;
-+		break;
-+	case NL80211_BAND_6GHZ:
-+		mask = MT_EE_WIFI_CAL_DPD_6G;
-+		break;
-+	default:
-+		mask = 0;
-+		break;
-+	}
-+
-+	if (!(eep[offs] & mask))
- 		return 0;
- 
--	idx = mt7915_dpd_freq_idx(center_freq, chandef->width);
-+	idx = mt7915_dpd_freq_idx(dev, chandef->center_freq1, chandef->width);
- 	if (idx < 0)
- 		return -EINVAL;
- 
- 	/* Items: Tx DPD, Tx Flatness */
--	idx = idx * 2;
--	cal += MT_EE_CAL_GROUP_SIZE;
-+	num = is_mt7915(&dev->mt76) ? 2 : 3;
-+	idx *= num;
-+	cal += mt7915_get_cal_group_size(dev) + (idx * MT_EE_CAL_UNIT);
- 
--	while (total--) {
-+	while (num--) {
- 		int ret;
- 
--		cal += (idx * MT_EE_CAL_UNIT);
- 		ret = mt7915_mcu_set_pre_cal(dev, idx, cal, MT_EE_CAL_UNIT,
- 					     MCU_EXT_CMD(DPD_PRE_CAL_INFO));
- 		if (ret)
- 			return ret;
- 
- 		idx++;
-+		cal += MT_EE_CAL_UNIT;
- 	}
- 
- 	return 0;
--- 
-2.39.0
-
+On Wed, Oct 25, 2023 at 12:36:24PM +0200, Johannes Berg wrote:
+> Huh.
+> 
+> On Wed, 2023-10-25 at 18:33 +0800, Jiazi Li wrote:
+> > If cfg80211_update_assoc_bss_entry call rb_insert_bss re-insert bss
+> > failed because cmp_bss return 0,
+> > 
+> 
+> Ok that's bad - so you hit the WARN_ON there? How that? We should fix
+> that too?
+> 
+Yes, hit this WARN_ON in the test of direct connection between mobile
+phones and PC. Here is the log:
+[ 2741.982362] -----------[ cut here ]-----------
+[ 2741.982446] WARNING: CPU: 6 PID: 2175 at net/wireless/scan.c:1496 cfg80211_update_assoc_bss_entry+0x350/0x378 [cfg80211]
+[ 2741.983274] Call trace:
+[ 2741.983343] cfg80211_update_assoc_bss_entry+0x350/0x378 [cfg80211]
+[ 2741.983413] cfg80211_ch_switch_notify+0x7c/0x1b4 [cfg80211]
+[ 2741.983487] kalP2pIndicateChnlSwitch+0x520/0xa34 [wlan_drv_gen4m_6895]
+[ 2741.983558] p2pRoleFsmRunEventChnlGrant+0x358/0x5c0 [wlan_drv_gen4m_6895]
+[ 2741.983629] p2pFsmRunEventChGrant+0x12c/0x16c [wlan_drv_gen4m_6895]
+[ 2741.983699] mboxRcvAllMsg+0x198/0x23c [wlan_drv_gen4m_6895]
+[ 2741.983770] kalProcessTxReq+0x50/0x340 [wlan_drv_gen4m_6895]
+[ 2741.983840] main_thread+0x410/0x1730 [wlan_drv_gen4m_6895]
+[ 2741.983846] kthread+0x150/0x200
+[ 2741.983849] ret_from_fork+0x10/0x30
+I don't know why this is happening yet.
+> > this bss->rbn will continue to hold
+> > expired data, such as __rd_parent_color.
+> 
+> Does that matter in any way?
+> 
+It caused a null pointer issue in rb_erase:
+[ 2781.560091][T502248] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+[ 2781.560115][T502248] Mem abort info:
+[ 2781.560128][T502248]   ESR = 0x96000005
+[ 2781.560143][T502248]   EC = 0x25: DABT (current EL), IL = 32 bits
+[ 2781.560156][T502248]   SET = 0, FnV = 0
+[ 2781.560168][T502248]   EA = 0, S1PTW = 0
+[ 2781.560178][T502248] Data abort info:
+[ 2781.560187][T502248]   ISV = 0, ISS = 0x00000005
+[ 2781.560196][T502248]   CM = 0, WnR = 0
+[ 2781.560207][T502248] user pgtable: 4k pages, 39-bit VAs, pgdp=00000001cb653000
+[ 2781.560216][T502248] [0000000000000000] pgd=0000000000000000
+[ 2781.560222][T502248] , p4d=0000000000000000
+[ 2781.560230][T502248] , pud=0000000000000000
+[ 2781.560238][T502248]
+[ 2781.560254][T502248] Internal error: Oops: 96000005 [#1] PREEMPT SMP
+[ 2781.568590][ T2176] [wlan][2176]halSetFWOwn:(INIT INFO) FW OWN:1, IntSta:0x08000000
+[ 2781.591991][T502248] Kernel Offset: 0x22e2600000 from 0xffffffc008000000
+[ 2781.591998][T502248] PHYS_OFFSET: 0x40000000
+[ 2781.592002][T502248] pstate: 60400005 (nZCv daif +PAN -UAO)
+[ 2781.592010][T502248] pc : [0xffffffe2eb0698e4] rb_erase+0x1c8/0x354
+[ 2781.592123][T502248] lr : [0xffffffe2edef93b4] __cfg80211_unlink_bss+0xac/0x1a0 [cfg80211]
+[ 2781.592127][T502248] sp : ffffffc02ce43720
+[ 2781.592130][T502248] x29: ffffffc02ce43720 x28: 0000000000000014
+[ 2781.592133][T502248] x27: ffffff812e343e00 x26: 0000000000000000
+[ 2781.592135][T502248] x25: ffffff81cb89c100 x24: fffffffefff6a5f0
+[ 2781.592138][T502248] x23: ffffff80f58b0000 x22: 0000000000000001
+[ 2781.592140][T502248] x21: ffffff809fbe8da0 x20: ffffff80f58b0000
+[ 2781.592143][T502248] x19: ffffff809fbe8d00 x18: ffffffc02c4a7080
+[ 2781.592146][T502248] x17: 000000000000012b x16: 0000000000000000
+[ 2781.592148][T502248] x15: 000000000000001f x14: ffffff81b372c628
+[ 2781.592151][T502248] x13: ffffff80c3298b28 x12: 0000000000000000
+[ 2781.592154][T502248] x11: 0000000000000000 x10: ffffff80c3298b20
+[ 2781.592156][T502248] x9 : 0000000000000000 x8 : ffffff80c3298b20
+[ 2781.592159][T502248] x7 : 000000000000012a x6 : ffffff818755a000
+[ 2781.592161][T502248] x5 : 000000008020001c x4 : ffffffff02541020
+[ 2781.592164][T502248] x3 : 000000008020001c x2 : ffffff809fbe8da0
+[ 2781.592166][T502248] x1 : ffffff80f58b00e8 x0 : ffffff809fbe8d20
+[ 2781.592649][T502248] CPU: 5 PID: 2248 Comm: wpa_supplicant Tainted: P        W  O      5.10.177-android12-9-00002-g593c61caffd9-ab10731447 #1
+[ 2781.592652][T502248] Hardware name: MT6896 (DT)
+[ 2781.592656][T502248] Call trace:
+[ 2781.592665][T502248]  dump_backtrace.cfi_jt+0x0/0x8
+[ 2781.592669][T502248]  dump_stack_lvl+0xdc/0x138
+[ 2781.592672][T502248]  dump_stack+0x1c/0x2c
+[ 2781.592698][T502248]  mrdump_common_die+0x3a8/0x544 [mrdump]
+[ 2781.592710][T502248]  ipanic_die+0x24/0x38 [mrdump]
+[ 2781.592717][T502248]  die+0x358/0x680
+[ 2781.592723][T502248]  die_kernel_fault+0x84/0x94
+[ 2781.592726][T502248]  __do_kernel_fault+0x240/0x28c
+[ 2781.592735][T502248]  do_page_fault+0xb4/0x770
+[ 2781.592738][T502248]  do_translation_fault+0x48/0x64
+[ 2781.592741][T502248]  do_mem_abort+0x6c/0x164
+[ 2781.592745][T502248]  el1_abort+0x44/0x68
+[ 2781.592748][T502248]  el1_sync_handler+0x58/0x88
+[ 2781.592751][T502248]  el1_sync+0x8c/0x140
+[ 2781.592754][T502248]  rb_erase+0x1c8/0x354
+[ 2781.592838][T502248]  nl80211_dump_scan+0x564/0x634 [cfg80211]
+[ 2781.592845][T502248]  netlink_dump+0x1b0/0x414
+[ 2781.592848][T502248]  __netlink_dump_start+0x224/0x478
+[ 2781.592852][T502248]  genl_rcv_msg+0x434/0x5c0
+[ 2781.592855][T502248]  netlink_rcv_skb+0xf0/0x170
+[ 2781.592858][T502248]  genl_rcv+0x3c/0x58
+[ 2781.592861][T502248]  netlink_unicast_kernel+0xb8/0x248
+[ 2781.592864][T502248]  netlink_unicast+0x18c/0x2fc
+[ 2781.592867][T502248]  netlink_sendmsg+0x4c8/0x6f8
+[ 2781.592873][T502248]  ____sys_sendmsg+0x240/0x3cc
+[ 2781.592876][T502248]  __sys_sendmsg+0x21c/0x320
+[ 2781.592880][T502248]  __arm64_sys_sendmsg+0x28/0x38
+[ 2781.592886][T502248]  el0_svc_common+0xd4/0x270
+[ 2781.592890][T502248]  el0_svc+0x28/0x98
+[ 2781.592893][T502248]  el0_sync_handler+0x8c/0xf0
+[ 2781.592896][T502248]  el0_sync+0x1b4/0x1c0
+The one currently eraseing is the bss re-insert failed earlier.
+The status of this bss is as follows after re-insert fail:
+1. color is black
+2. no child
+After 40s, nl80211_dump_scan want to erase this bss, because it's
+color is black, need rebalance, but it's parent(from expired
+__rb_parent_color) now doesn't have any children, so we encountered a
+null pointer issue in ____rb_erase_color.
+> > And this bss still in rdev->bss_list, maybe double erase in
+> > __cfg80211_bss_expire later.
+> > Double erase a rbtree node(with expired parent and color data) maybe
+> > corrupt rbtree, so add a in_rbtree flag to fix this issue.
+> 
+> This seems overly complex - couldn't we just remove it from the list too
+> or something? It's already a case that "should never happen" so ... not
+> sure we need to do something "good"?
+> 
+Will remove it from list when re-insert fail cause confusion in it's
+refcount? Which could lead to leakage or use-after-free?
+> johannes
+> 
