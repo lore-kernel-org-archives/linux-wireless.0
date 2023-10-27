@@ -2,44 +2,41 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43315C25B6E
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 08:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E51C25B47
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 08:29:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235017AbjJ0IZf (ORCPT
+        id S1345493AbjJ0I3E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Oct 2023 04:25:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44872 "EHLO
+        Fri, 27 Oct 2023 04:29:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235073AbjJ0IZe (ORCPT
+        with ESMTP id S1345562AbjJ0I2x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2023 04:25:34 -0400
+        Fri, 27 Oct 2023 04:28:53 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B57511B1;
-        Fri, 27 Oct 2023 01:25:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C3D5C433C7;
-        Fri, 27 Oct 2023 08:25:30 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91BFED42
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2023 01:22:56 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D6B4C433C8;
+        Fri, 27 Oct 2023 08:22:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698395132;
-        bh=QfeOWdwE/IqoYB+mqr3chG0yS+T71+Nm/ssIY25qlkk=;
+        s=k20201202; t=1698394975;
+        bh=Nt7iWTc2zlF5adOjywSKI6AgxjT55FIpazXgJLLWuSY=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=iHzGHUBYp8J5jK0eJJXhQwe2tROaFdXhyaE9WXpL2QJaeNYhqGWrVX/Wuov+RF7Yz
-         jtasbTiM94yhN0ZwLm9vSB0XMYB01AiFWbi77ecTU98zIsIPsH3tuw1XQCczwHec74
-         VLg8Hq/oow8+z7plFR88BHej0Btb9VGwUaS4FxaVzKvSkWtluXiAql/7sjQzlzLhTD
-         EkMgPWxkjqPLWlipA+KLtEUxV/m2D+NlZ0bBCOvLG14G0z0tCxkbFKFxMNLRuHIndZ
-         30tlzT8KETaxluOYytLD0Xe9gn0y/7f/cmyOumwVOLNX4UDKJgp+jPZYiH/7EK42Ec
-         E/ovnyIHnxUdw==
+        b=RbBNacKVnk01cggLRGk6iVxpvrTpY3LGYVf1kZRGZQq8cZ/XYEOU7qVfQNRWPCwTY
+         pbT+XeUeV4fCNi7HhIMpOPVqw4LvZ0VvdYj3OJ9nbC93mmos4qc22YW9+7C9/PBdPY
+         qac08mOV+MHV1RAbcxkv7Y238h+mG4lqyy+zZBOp5rzeBOWNui/kXGS322NOZjrlGm
+         7H9CK7hRHgDBHUN69mAhFlJU00OCadbZO3PYMhfBZpcqy4x/Zd8rOH9OcA+F/1gKrO
+         25Y2PVhALfuINhdlsRUp05prz0P5q0MmZ5KbCsTgGiP+ZJkdkBP3BRWPg3+p4T32w6
+         r7iEOfkG044tw==
 From:   Kalle Valo <kvalo@kernel.org>
-To:     Luca Weiss <luca.weiss@fairphone.com>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath11k: Defer on rproc_get failure
-References: <20231027-ath11k-rproc-defer-v1-1-f6b6a812cd18@fairphone.com>
-Date:   Fri, 27 Oct 2023 11:25:28 +0300
-In-Reply-To: <20231027-ath11k-rproc-defer-v1-1-f6b6a812cd18@fairphone.com>
-        (Luca Weiss's message of "Fri, 27 Oct 2023 08:57:18 +0200")
-Message-ID: <87lebowjyf.fsf@kernel.org>
+To:     Dmitry Antipov <dmantipov@yandex.ru>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wifi: rtlwifi: fix USB device initialization sequence
+References: <20231027075920.116006-1-dmantipov@yandex.ru>
+Date:   Fri, 27 Oct 2023 11:22:52 +0300
+In-Reply-To: <20231027075920.116006-1-dmantipov@yandex.ru> (Dmitry Antipov's
+        message of "Fri, 27 Oct 2023 10:59:17 +0300")
+Message-ID: <87pm10wk2r.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -47,35 +44,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Weiss <luca.weiss@fairphone.com> writes:
+Dmitry Antipov <dmantipov@yandex.ru> writes:
 
-> If we already have gotten the rproc_handle (meaning the "qcom,rproc"
-> property is defined in the devicetree), it's a valid state that the
-> remoteproc module hasn't probed yet so we should defer probing instead
-> of just failing to probe.
+> Do not ignore possible errors in '_rtl_usb_init()' and tweak error
+> handling in 'rtl_usb_probe()' to ensure that 'rtl_usb_cleanup()' is
+> called when needed. Minor style adjustments, compile tested only.
 >
-> This resolves a race condition when the ath11k driver probes and fails
-> before the wpss remoteproc driver has probed, like the following:
->
->   [    6.232360] ath11k 17a10040.wifi: failed to get rproc
->   [    6.232366] ath11k 17a10040.wifi: failed to get rproc: -22
->   [    6.232478] ath11k: probe of 17a10040.wifi failed with error -22
->        ...
->   [    6.252415] remoteproc remoteproc2: 8a00000.remoteproc is available
->   [    6.252776] remoteproc remoteproc2: powering up 8a00000.remoteproc
->   [    6.252781] remoteproc remoteproc2: Booting fw image qcom/qcm6490/fairphone5/wpss.mdt, size 7188
->
-> So, defer the probe if we hit that so we can retry later once the wpss
-> remoteproc is available.
->
-> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 
-Did you test this on a real device? If yes, what ath11k hardware and firmware
-did you use? We use Tested-on tag to document that:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath11k/submittingpatches#tested-on_tag
-
-I can add that in the pending branch if you provide the info.
+Patches like this should be tested on a real device, compile testing is
+not enough. We don't know if there are hidden errors which this patch
+then exposes.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
