@@ -2,61 +2,57 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73E51C25B47
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 08:29:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23D84C25B47
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 09:08:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345493AbjJ0I3E (ORCPT
+        id S231233AbjJ0JIR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Oct 2023 04:29:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50242 "EHLO
+        Fri, 27 Oct 2023 05:08:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345562AbjJ0I2x (ORCPT
+        with ESMTP id S230101AbjJ0JIQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Oct 2023 04:28:53 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91BFED42
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2023 01:22:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D6B4C433C8;
-        Fri, 27 Oct 2023 08:22:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698394975;
-        bh=Nt7iWTc2zlF5adOjywSKI6AgxjT55FIpazXgJLLWuSY=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=RbBNacKVnk01cggLRGk6iVxpvrTpY3LGYVf1kZRGZQq8cZ/XYEOU7qVfQNRWPCwTY
-         pbT+XeUeV4fCNi7HhIMpOPVqw4LvZ0VvdYj3OJ9nbC93mmos4qc22YW9+7C9/PBdPY
-         qac08mOV+MHV1RAbcxkv7Y238h+mG4lqyy+zZBOp5rzeBOWNui/kXGS322NOZjrlGm
-         7H9CK7hRHgDBHUN69mAhFlJU00OCadbZO3PYMhfBZpcqy4x/Zd8rOH9OcA+F/1gKrO
-         25Y2PVhALfuINhdlsRUp05prz0P5q0MmZ5KbCsTgGiP+ZJkdkBP3BRWPg3+p4T32w6
-         r7iEOfkG044tw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wifi: rtlwifi: fix USB device initialization sequence
-References: <20231027075920.116006-1-dmantipov@yandex.ru>
-Date:   Fri, 27 Oct 2023 11:22:52 +0300
-In-Reply-To: <20231027075920.116006-1-dmantipov@yandex.ru> (Dmitry Antipov's
-        message of "Fri, 27 Oct 2023 10:59:17 +0300")
-Message-ID: <87pm10wk2r.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        Fri, 27 Oct 2023 05:08:16 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C97E493
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Oct 2023 02:08:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=5Z5Wi+b9/KqswyyexFwwBfjoKXdVSYrsaCKW/5XNS4w=;
+        t=1698397693; x=1699607293; b=WjUW331NMsxS7Hc8ztUlkGNzTmMlcOun0pZYLbb/9ewOXVs
+        HPon6DGX1+89BuKq1mVQSIXR86rp1JlP8VrYxNXWHC3yT6+vgSGcRBjt5yeq5N46F/cVjNKtxZcfJ
+        6l9n0fXBzlQ/m+ETblULbyt+F1xJg8ogH1pnFutbUIFuStQ8FOgaooOGh3t+ibc4kX6KTDyyAxll5
+        qqj/F0toakKplLaGoo1xhKogre9ss4u1EQF2XsTbiTvQXTLIYrr5A0wXyfLZTzooOa06E46Ew7tUl
+        ZEWXaiDdVP2ZWZT8W584Plljp9KnCULZDSNreidk/N6aJsZLpWleN1MZvZvC1XeA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97-RC1)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1qwIp4-00000004fD2-3NTA;
+        Fri, 27 Oct 2023 11:08:07 +0200
+Message-ID: <f26cee40e10be4fa91862d85a1c3054e1da909ce.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: ath10k: prefer stack-allocated __le32 variables
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Dmitry Antipov <dmantipov@yandex.ru>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Date:   Fri, 27 Oct 2023 11:08:05 +0200
+In-Reply-To: <20231027082325.126606-1-dmantipov@yandex.ru>
+References: <20231027082325.126606-1-dmantipov@yandex.ru>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dmitry Antipov <dmantipov@yandex.ru> writes:
+On Fri, 2023-10-27 at 11:23 +0300, Dmitry Antipov wrote:
+> There isn't too much sense to 'kzalloc()' buffer
 
-> Do not ignore possible errors in '_rtl_usb_init()' and tweak error
-> handling in 'rtl_usb_probe()' to ensure that 'rtl_usb_cleanup()' is
-> called when needed. Minor style adjustments, compile tested only.
->
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Actually, there is. Consider what's done with it.
 
-Patches like this should be tested on a real device, compile testing is
-not enough. We don't know if there are hidden errors which this patch
-then exposes.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
