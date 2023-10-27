@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED734C25B6B
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 01:45:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7559FC25B48
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 01:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345097AbjJ0Bp5 (ORCPT
+        id S229633AbjJ0Bze (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Oct 2023 21:45:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53652 "EHLO
+        Thu, 26 Oct 2023 21:55:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345082AbjJ0Bp5 (ORCPT
+        with ESMTP id S229437AbjJ0Bzc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2023 21:45:57 -0400
+        Thu, 26 Oct 2023 21:55:32 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4CA4111
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Oct 2023 18:45:54 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39R1jmKV33456432, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.93/5.92) with ESMTPS id 39R1jmKV33456432
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51080AB
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Oct 2023 18:55:29 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39R1tLEF13465344, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+        by rtits2.realtek.com.tw (8.15.2/2.93/5.92) with ESMTPS id 39R1tLEF13465344
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Oct 2023 09:45:48 +0800
+        Fri, 27 Oct 2023 09:55:21 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 27 Oct 2023 09:45:44 +0800
+ 15.1.2375.32; Fri, 27 Oct 2023 09:52:36 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 27 Oct
- 2023 09:45:41 +0800
+ 2023 09:51:36 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] wifi: rtw89: extend PHY status parser to support WiFi 7 chips
-Date:   Fri, 27 Oct 2023 09:45:06 +0800
-Message-ID: <20231027014506.9570-1-pkshih@realtek.com>
+Subject: [PATCH v2 1/4] wifi: rtw89: set entry size of address CAM to H2C field by chip
+Date:   Fri, 27 Oct 2023 09:50:56 +0800
+Message-ID: <20231027015059.10032-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231027014402.9448-1-pkshih@realtek.com>
-References: <20231027014402.9448-1-pkshih@realtek.com>
+In-Reply-To: <20231027015059.10032-1-pkshih@realtek.com>
+References: <20231027015059.10032-1-pkshih@realtek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -48,63 +48,69 @@ X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
+X-KSE-AntiSpam-Interceptor-Info: fallback
+X-KSE-Antivirus-Interceptor-Info: fallback
+X-KSE-AntiSpam-Interceptor-Info: fallback
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PHY status IEs is used to have more information about received packets,
-such as RSSI and EVM. For each PHY IE type, it has different predefined
-PHY IE length, and the length are changed, so add them for WiFi 7 chips
-accordingly.
+The new chips change hardware design to shrink entry size of address
+CAM from 0x40 to 0x20, so make this change accordingly.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/cam.c | 16 +++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/mac.h |  1 +
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index ac99434c0e66..554191086336 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1513,14 +1513,24 @@ static void rtw89_core_rx_process_phy_ppdu_iter(void *data,
- static u16 rtw89_core_get_phy_status_ie_len(struct rtw89_dev *rtwdev,
- 					    const struct rtw89_phy_sts_iehdr *iehdr)
- {
--	static const u8 physts_ie_len_tab[32] = {
--		16, 32, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
--		VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
--		VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
-+	static const u8 physts_ie_len_tabs[RTW89_CHIP_GEN_NUM][32] = {
-+		[RTW89_CHIP_AX] = {
-+			16, 32, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
-+			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
-+			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
-+		},
-+		[RTW89_CHIP_BE] = {
-+			32, 40, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
-+			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
-+			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
-+		},
- 	};
-+	const u8 *physts_ie_len_tab;
- 	u16 ie_len;
- 	u8 ie;
+diff --git a/drivers/net/wireless/realtek/rtw89/cam.c b/drivers/net/wireless/realtek/rtw89/cam.c
+index f5301c2bbf13..914c94988b2f 100644
+--- a/drivers/net/wireless/realtek/rtw89/cam.c
++++ b/drivers/net/wireless/realtek/rtw89/cam.c
+@@ -488,6 +488,20 @@ static int rtw89_cam_get_avail_addr_cam(struct rtw89_dev *rtwdev,
+ 	return 0;
+ }
  
-+	physts_ie_len_tab = physts_ie_len_tabs[rtwdev->chip->chip_gen];
++static u8 rtw89_get_addr_cam_entry_size(struct rtw89_dev *rtwdev)
++{
++	const struct rtw89_chip_info *chip = rtwdev->chip;
 +
- 	ie = le32_get_bits(iehdr->w0, RTW89_PHY_STS_IEHDR_TYPE);
- 	if (physts_ie_len_tab[ie] != VAR_LEN)
- 		ie_len = physts_ie_len_tab[ie];
-@@ -1607,6 +1617,9 @@ static int rtw89_core_rx_process_phy_ppdu(struct rtw89_dev *rtwdev,
- 
- 	len_from_header = le32_get_bits(hdr->w0, RTW89_PHY_STS_HDR_W0_LEN) << 3;
- 
-+	if (rtwdev->chip->chip_gen == RTW89_CHIP_BE)
-+		len_from_header += PHY_STS_HDR_LEN;
++	switch (chip->chip_id) {
++	case RTL8852A:
++	case RTL8852B:
++	case RTL8851B:
++		return ADDR_CAM_ENT_SIZE;
++	default:
++		return ADDR_CAM_ENT_SHORT_SIZE;
++	}
++}
 +
- 	if (len_from_header != phy_ppdu->len) {
- 		rtw89_debug(rtwdev, RTW89_DBG_UNEXP, "phy ppdu len mismatch\n");
- 		return -EINVAL;
+ int rtw89_cam_init_addr_cam(struct rtw89_dev *rtwdev,
+ 			    struct rtw89_addr_cam_entry *addr_cam,
+ 			    const struct rtw89_bssid_cam_entry *bssid_cam)
+@@ -509,7 +523,7 @@ int rtw89_cam_init_addr_cam(struct rtw89_dev *rtwdev,
+ 	}
+ 
+ 	addr_cam->addr_cam_idx = addr_cam_idx;
+-	addr_cam->len = ADDR_CAM_ENT_SIZE;
++	addr_cam->len = rtw89_get_addr_cam_entry_size(rtwdev);
+ 	addr_cam->offset = 0;
+ 	addr_cam->valid = true;
+ 	addr_cam->addr_mask = 0;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
+index c11c904f87fe..cd2e9b850c72 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.h
++++ b/drivers/net/wireless/realtek/rtw89/mac.h
+@@ -10,6 +10,7 @@
+ 
+ #define MAC_MEM_DUMP_PAGE_SIZE 0x40000
+ #define ADDR_CAM_ENT_SIZE  0x40
++#define ADDR_CAM_ENT_SHORT_SIZE 0x20
+ #define BSSID_CAM_ENT_SIZE 0x08
+ #define HFC_PAGE_UNIT 64
+ #define RPWM_TRY_CNT 3
 -- 
 2.25.1
 
