@@ -2,39 +2,39 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A15AFC25B48
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 01:56:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E62E9C25B48
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Oct 2023 01:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345123AbjJ0B4s (ORCPT
+        id S1345136AbjJ0B4w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Oct 2023 21:56:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47502 "EHLO
+        Thu, 26 Oct 2023 21:56:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345109AbjJ0B4r (ORCPT
+        with ESMTP id S1345120AbjJ0B4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Oct 2023 21:56:47 -0400
+        Thu, 26 Oct 2023 21:56:51 -0400
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D632AB
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Oct 2023 18:56:44 -0700 (PDT)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39R1ubl173466053, This message is accepted by code: ctloc85258
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1905AB
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Oct 2023 18:56:48 -0700 (PDT)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 39R1ufl173466053, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.93/5.92) with ESMTPS id 39R1ubl173466053
+        by rtits2.realtek.com.tw (8.15.2/2.93/5.92) with ESMTPS id 39R1ufl173466053
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Oct 2023 09:56:37 +0800
+        Fri, 27 Oct 2023 09:56:41 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 27 Oct 2023 09:55:13 +0800
+ 15.1.2507.17; Fri, 27 Oct 2023 09:55:14 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 27 Oct
- 2023 09:51:37 +0800
+ 2023 09:51:41 +0800
 From:   Ping-Ke Shih <pkshih@realtek.com>
 To:     <kvalo@kernel.org>
 CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/4] wifi: rtw89: configure PPDU max user by chip
-Date:   Fri, 27 Oct 2023 09:50:57 +0800
-Message-ID: <20231027015059.10032-3-pkshih@realtek.com>
+Subject: [PATCH v2 4/4] wifi: rtw89: extend PHY status parser to support WiFi 7 chips
+Date:   Fri, 27 Oct 2023 09:50:59 +0800
+Message-ID: <20231027015059.10032-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231027015059.10032-1-pkshih@realtek.com>
 References: <20231027015059.10032-1-pkshih@realtek.com>
@@ -52,114 +52,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+PHY status IEs is used to have more information about received packets,
+such as RSSI and EVM. For each PHY IE type, it has different predefined
+PHY IE length, and the length are changed, so add them for WiFi 7 chips
+accordingly.
 
-Different chip can support different max user in one PPDU report.
-So, we now configure it in chip info.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     | 6 ++++--
- drivers/net/wireless/realtek/rtw89/core.h     | 2 +-
- drivers/net/wireless/realtek/rtw89/rtw8851b.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c | 1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c | 1 +
- 6 files changed, 9 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 4bfb4188de72..6a70c035b22e 100644
+index ac99434c0e66..554191086336 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1407,6 +1407,7 @@ static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
- 					  struct sk_buff *skb,
- 					  struct rtw89_rx_phy_ppdu *phy_ppdu)
+@@ -1513,14 +1513,24 @@ static void rtw89_core_rx_process_phy_ppdu_iter(void *data,
+ static u16 rtw89_core_get_phy_status_ie_len(struct rtw89_dev *rtwdev,
+ 					    const struct rtw89_phy_sts_iehdr *iehdr)
  {
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
- 	const struct rtw89_rxinfo *rxinfo = (const struct rtw89_rxinfo *)skb->data;
- 	bool rx_cnt_valid = false;
- 	u8 plcp_size = 0;
-@@ -1416,8 +1417,9 @@ static int rtw89_core_rx_process_mac_ppdu(struct rtw89_dev *rtwdev,
- 	rx_cnt_valid = le32_get_bits(rxinfo->w0, RTW89_RXINFO_W0_RX_CNT_VLD);
- 	plcp_size = le32_get_bits(rxinfo->w1, RTW89_RXINFO_W1_PLCP_LEN) << 3;
- 	usr_num = le32_get_bits(rxinfo->w0, RTW89_RXINFO_W0_USR_NUM);
--	if (usr_num > RTW89_PPDU_MAX_USR) {
--		rtw89_warn(rtwdev, "Invalid user number in mac info\n");
-+	if (usr_num > chip->ppdu_max_usr) {
-+		rtw89_warn(rtwdev, "Invalid user number (%d) in mac info\n",
-+			   usr_num);
+-	static const u8 physts_ie_len_tab[32] = {
+-		16, 32, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
+-		VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
+-		VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
++	static const u8 physts_ie_len_tabs[RTW89_CHIP_GEN_NUM][32] = {
++		[RTW89_CHIP_AX] = {
++			16, 32, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
++			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
++			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
++		},
++		[RTW89_CHIP_BE] = {
++			32, 40, 24, 24, 8, 8, 8, 8, VAR_LEN, 8, VAR_LEN, 176, VAR_LEN,
++			VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, VAR_LEN, 16, 24, VAR_LEN,
++			VAR_LEN, VAR_LEN, 0, 24, 24, 24, 24, 32, 32, 32, 32
++		},
+ 	};
++	const u8 *physts_ie_len_tab;
+ 	u16 ie_len;
+ 	u8 ie;
+ 
++	physts_ie_len_tab = physts_ie_len_tabs[rtwdev->chip->chip_gen];
++
+ 	ie = le32_get_bits(iehdr->w0, RTW89_PHY_STS_IEHDR_TYPE);
+ 	if (physts_ie_len_tab[ie] != VAR_LEN)
+ 		ie_len = physts_ie_len_tab[ie];
+@@ -1607,6 +1617,9 @@ static int rtw89_core_rx_process_phy_ppdu(struct rtw89_dev *rtwdev,
+ 
+ 	len_from_header = le32_get_bits(hdr->w0, RTW89_PHY_STS_HDR_W0_LEN) << 3;
+ 
++	if (rtwdev->chip->chip_gen == RTW89_CHIP_BE)
++		len_from_header += PHY_STS_HDR_LEN;
++
+ 	if (len_from_header != phy_ppdu->len) {
+ 		rtw89_debug(rtwdev, RTW89_DBG_UNEXP, "phy ppdu len mismatch\n");
  		return -EINVAL;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 91e4d4e79eea..2eb29ea9ff7b 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -2815,7 +2815,6 @@ struct rtw89_ra_info {
- 	u8 csi_bw:3;
- };
- 
--#define RTW89_PPDU_MAX_USR 4
- #define RTW89_PPDU_MAC_INFO_USR_SIZE 4
- #define RTW89_PPDU_MAC_INFO_SIZE 8
- #define RTW89_PPDU_MAC_RX_CNT_SIZE 96
-@@ -3644,6 +3643,7 @@ struct rtw89_chip_info {
- 	u8 bacam_num;
- 	u8 bacam_dynamic_num;
- 	enum rtw89_bacam_ver bacam_ver;
-+	u8 ppdu_max_usr;
- 
- 	u8 sec_ctrl_efuse_size;
- 	u32 physical_efuse_size;
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b.c b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-index 50522ff85003..ffc464b2ac10 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8851b.c
-@@ -2393,6 +2393,7 @@ const struct rtw89_chip_info rtw8851b_chip_info = {
- 	.bacam_num		= 2,
- 	.bacam_dynamic_num	= 4,
- 	.bacam_ver		= RTW89_BACAM_V0,
-+	.ppdu_max_usr		= 4,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 2048,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852a.c b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-index 0c36e6180e25..0d6f87b900d5 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852a.c
-@@ -2129,6 +2129,7 @@ const struct rtw89_chip_info rtw8852a_chip_info = {
- 	.bacam_num		= 2,
- 	.bacam_dynamic_num	= 4,
- 	.bacam_ver		= RTW89_BACAM_V0,
-+	.ppdu_max_usr		= 4,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 1536,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b.c b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-index 9d4e6f08218d..62c2feab569c 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852b.c
-@@ -2563,6 +2563,7 @@ const struct rtw89_chip_info rtw8852b_chip_info = {
- 	.bacam_num		= 2,
- 	.bacam_dynamic_num	= 4,
- 	.bacam_ver		= RTW89_BACAM_V0,
-+	.ppdu_max_usr		= 4,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 2048,
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852c.c b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-index 3b7d8ab39bab..7bb5d359a06a 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852c.c
-@@ -2877,6 +2877,7 @@ const struct rtw89_chip_info rtw8852c_chip_info = {
- 	.bacam_num		= 8,
- 	.bacam_dynamic_num	= 8,
- 	.bacam_ver		= RTW89_BACAM_V0_EXT,
-+	.ppdu_max_usr		= 8,
- 	.sec_ctrl_efuse_size	= 4,
- 	.physical_efuse_size	= 1216,
- 	.logical_efuse_size	= 2048,
 -- 
 2.25.1
 
