@@ -2,132 +2,159 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 123F3C4332F
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Oct 2023 00:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FE2C4332F
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Oct 2023 11:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229794AbjJ2AyX (ORCPT
+        id S230124AbjJ2L0t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 28 Oct 2023 20:54:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39378 "EHLO
+        Sun, 29 Oct 2023 07:26:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjJ2AyW (ORCPT
+        with ESMTP id S230113AbjJ2L0s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Oct 2023 20:54:22 -0400
-Received: from JPN01-TYC-obe.outbound.protection.outlook.com (mail-tycjpn01olkn2066.outbound.protection.outlook.com [40.92.99.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF8239E
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Oct 2023 17:54:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ehY2kXN31Y7f6NDTabtPdvUa+9aUkq7kvqjk/d9VwUlOrTXm42zVJ0zYOB4BDZp4oato4HqVkxowi+zeGSgcpcj0a2c8nb0erh06bzQXEj65kIcbLATnN0hnA/kCpFmvd1QGKHnzCH1LWKkKH0pAL0ZW2MHSGbWLPKUjFBFyPHwTTvYdkhP/RqT0+RNkeubFuqwbYwEaWJiObF6b7/W/7UhOZCykLsWi/DJ2rlC4OWuQoVf4jDNJjQ1yLJpTMC1FXaO3vk2f/fsHjqEm837benKyaf8SnkrbWxxLaFXGSgSs5AdpjNd36Ba7vanz05QzHUHLJFFBMcGJqrbSviRWbQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dbWn+lPDJPma78prKLFlZY60TAwLHBNaDrFl4DVM1Sg=;
- b=CvRid59VvRjDoQJIaEgfizh8XYlaMGFfhR+OImAwuG/BB85LT2K4fj+Aq/xhziiKnvK92Xf5uI7VJL7g5wdcn45JiVVrci7T/1Zscz1qzVaWEpd2iYMh0VBAun8sUpa/lQLCu4sbAURwzpFF+dkkVEeORxpUA9s5MvFyqsGyxEaThpH9dHZ6aGxalAmO8k3fsGX37bWLwZEAa7LS1FHilCaOIEg9d1EOjVa83D1/rl3uiyoa2R78qdr3Dq6RF24fm3SEICRRZQLNapLsyPJ/uoRWhyqQNQolpOSeGUgk/r2sD5+uwMY0tFbPAulL4s3j3tZz+H49e6lYx7e1tmzOTg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dbWn+lPDJPma78prKLFlZY60TAwLHBNaDrFl4DVM1Sg=;
- b=vO2FKteAJpicDyX577KzSCnEBko/zBdwsbz2y7dE2nrlvJ/nlQJnF78SzLQbeo2arPD0tcXurhmau7znINcWj1GKZ1XBLgA7CBHYbseA5ccly4SKw3AH1CFNh4NNN7FQGHz5o0ca098FAAIVHCGLkIe0a1hbBgFMcF4PLKULacL+8SnrhlknAJ8ZKob/mrxLzCz9BeVm5wNnx/OMfxNRMtLYwtLoRyTxRU1YChLZ6fiYT/sN6tp10YY4+lSJ90bDmDsh5lmqsmxbirqgQMcNlQRX82YblhlH38krVEJc0UymwqdHfMjPxFAdGQJys4oQl5EuCgCsgbJm7PG6+797sw==
-Received: from TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM (2603:1096:404:8041::8)
- by TYCP286MB2258.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:153::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.26; Sun, 29 Oct
- 2023 00:54:16 +0000
-Received: from TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- ([fe80::465a:2534:4d99:a25b]) by TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- ([fe80::465a:2534:4d99:a25b%6]) with mapi id 15.20.6933.019; Sun, 29 Oct 2023
- 00:54:16 +0000
-From:   Shiji Yang <yangshiji66@outlook.com>
-To:     kvalo@kernel.org
-Cc:     linux-wireless@vger.kernel.org, stf_xl@wp.pl
-Subject: Re: [PATCH 2/3] wifi: rt2x00: disable RTS threshold for rt2800 by default
-Date:   Sun, 29 Oct 2023 08:54:02 +0800
-Message-ID: <TYAP286MB03156AAFCED8CD8D91392FC5BCA2A@TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <87y1fmbxwc.fsf@kernel.org>
-References: <87y1fmbxwc.fsf@kernel.org>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-TMN:  [CODVy8XVF+HDrCLHxGz2NpUhWVHjMB6lVIFIFis2wPs=]
-X-ClientProxiedBy: SG2PR04CA0183.apcprd04.prod.outlook.com
- (2603:1096:4:14::21) To TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:404:8041::8)
-X-Microsoft-Original-Message-ID: <20231029005402.6834-1-yangshiji66@outlook.com>
+        Sun, 29 Oct 2023 07:26:48 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F610C5
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Oct 2023 04:26:43 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id 2adb3069b0e04-5079f9ec8d9so3954087e87.0
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Oct 2023 04:26:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1698578802; x=1699183602; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=oiJ98AzIdDvp4H2ObVcO2pM8eJBa6hKhd5j05v0RH0w=;
+        b=uLi6D6rPMX7vsQ0EmgjNNq+ZyKOyQQiS9LHJMOSAtFxBQ4S7y+MkJqw6vqGNgl7K+z
+         n8TLocWyaFHZaNNl8aRCjL70LHbZ8Jzc1fAVq5VA8OfX4v2ByoefwdWkEeUyIAKWtheS
+         ojjYof/jpmRMMsukjHpFzXhxw9w65uvCfAdu9r4VBd282N/75uvkWlFyV2Gl6jaRIPeo
+         QYjnpIQxFqHnqiIb5kymevMY7gl/tCNfyXc7sVX5UCLkOBnqgnPAQZP5nrnFwlkNdS3g
+         +61MHF2ruSYLhKCoR76UPkw7IQIG+iWonMuth+jNGxZz2ffRd27OiUvDaCNNgjeoTLmt
+         D0vA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698578802; x=1699183602;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oiJ98AzIdDvp4H2ObVcO2pM8eJBa6hKhd5j05v0RH0w=;
+        b=nTCOxI5IYin4b0YJCYJB0pbA1qZgT0pZnafhfGqB69eCUHkXvPxLMwafS6c5US8mAM
+         8ctIVrUqndIHUAd+iQ+azSZMB60D/IT5b1clLaSPjlYpFkrW6CTXksXbuKsAFWq3BsK4
+         600hNlt7x6+uGkQjnzO2TkfsRGR6umLfRECuidCbBiS7nz07EOgC1ZcjRQO06s3PQEwm
+         o3uOTxAMC7Z58Wk14Z5gxXwt1qBmEc780Rr5QA6sFjFOCKDG3Bhz8S6xy3tP6OkbYmA7
+         tan+5DNQ2RvvBPfl+k2AKRBqNg2uJzlYI6hD4MAZY4Iel54Kzb+pqxJl+HidbA+2VWEV
+         kJyQ==
+X-Gm-Message-State: AOJu0YxYosUqj0V2DG4YRuEctbTuPt7LORQ5onoWV7bEoTilVJYJPCzr
+        iBVk+AOlF3npRtdoao95I571Eg==
+X-Google-Smtp-Source: AGHT+IF3ww+xNZIcGhsqitXJi46WtGMXlhoovfyHbmi3gpzQ9+l3xdAt6vARv3IK3FgMe6Vb5wtNDw==
+X-Received: by 2002:a05:6512:aca:b0:4fd:c8fb:eb71 with SMTP id n10-20020a0565120aca00b004fdc8fbeb71mr3163336lfu.11.1698578801768;
+        Sun, 29 Oct 2023 04:26:41 -0700 (PDT)
+Received: from [192.168.0.22] ([78.10.206.168])
+        by smtp.gmail.com with ESMTPSA id h2-20020a0565123c8200b005030b642ec8sm1000453lfv.157.2023.10.29.04.26.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 29 Oct 2023 04:26:41 -0700 (PDT)
+Message-ID: <dd28569f-b59e-4c07-8b1d-076646396954@linaro.org>
+Date:   Sun, 29 Oct 2023 12:26:40 +0100
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYAP286MB0315:EE_|TYCP286MB2258:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3feb9bd7-35f6-408b-38ba-08dbd819928e
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: cDiIPYwdO6+sYufrWWgAXvJ6aQfch14Yiv7lMZvYYqrZiiPZ7Plx37SmnOFoUEJeDeda2je1e12vQ+8zYxj+4/jP0LaYjmNLe3zk94o9hQj3rdmlxHs7vfEjYqIcnNEToh3kpf7gS21bdmMVRvfHZmCQ6/IaRyl3MuZmowjlUyj6JnQ4dGu39bOO1GkTVBi8YcCwm9rjfbSUUHhq67pRpKW6QFqXM55U70rZ31vsIfUe0YcZCmUQFHEMFYona0kGQwCXpHuKEgj2lHX6JeqwVPFipWBxAhGbzrPDYUgbGM93FwNEhTYr4fN4VqjNaGC3jsNtmEOv6NpUZ2AHg6YKRsu6Jnxj8Da8GlNwrVZWu6T7sdo6fK7NaSJY8kAQDrB1J0xMWZs+Tmsgb3gAt+BVIoNXa9ZAUm/o/KdljJlk5VU7fppbQJGEjMhSQlUnn6fZVidneoMy5p+D4cepkLBQycuS0BjvUss2vHd1eGmx0gATu9Qc3PvR11u2fdilzL0bFyfO6qIxPoOYtKvs/LmS1AYzOwoa/1c+UD8az3F0ojBRCbMH1c8BjlAQK8ixAXyv
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?9MX/lsqg0XR3i+HOyvySLs9+BUc03mw7dwobQQyVFuWXy7az7KCNCn0oOG4d?=
- =?us-ascii?Q?7nvsm9p6WFmpJEpTPhmQTG0s6EjIKouD4+tF4n+OE/O7bjTmX8klO7um2Cww?=
- =?us-ascii?Q?jbeJ3RGAirQUAX/Z99wLjYJFO4oqpjyhRiugdQlbMBpZ+vpyCSnANl8ohDsH?=
- =?us-ascii?Q?BI3daChk1J6FZBqlFAdo64beU8I0kWdMgLV2ORgofrbGvmdbn/4JA8/WudRv?=
- =?us-ascii?Q?uk4oUaWRQxYkiN06pNZc9r1xNZ1uipWz0LDOc+thSXEaWAFdcZoZG2otrTo0?=
- =?us-ascii?Q?eZcZNUT7uR9ZZwSCuthv/bBePfogkz79AxSwo4lhkpwR4Ro4TC4M2q/LFIXL?=
- =?us-ascii?Q?8vaf3WrBYm6214i2wL4/o1vnvVZfO8rGlLztTkbP2AlM8S+3sQlkf/f8Mtwt?=
- =?us-ascii?Q?iTGpCkuSIn0VcTsaTvltpW0xp70KyNLKSt57371NryRggzrBl9W0ULqJMvW+?=
- =?us-ascii?Q?4arGdGV90rU25WNEzvXTMtoFKCFhXDLZ2/DxqKYWXTYCTnMbIknd1Jln9ioA?=
- =?us-ascii?Q?Ka1dOxYYdpmxiLqyI/IfhmYy8QIfGwlVBiU3R1cQjAFdwL18mKAaFhdZO5eF?=
- =?us-ascii?Q?sPinxIR8roDJ3T6Jpa/kQkZof/skdgT2q0qfvA6DAjiiUC+dreJTMeUkXaK7?=
- =?us-ascii?Q?U1mkg3iQTUl486iiWUEBG4KcOdBgjNllOEju7+S63XGPiVC8Gt6VL3UdsVvX?=
- =?us-ascii?Q?x3kVuVgZ2nL4F6yQyc+CNX9RM5k9FBaLqDQGX1KKJcjbcoc+03cRRNNSu4yw?=
- =?us-ascii?Q?yvrohW3dD/hu+tvD8oJsU4T65a5wm5M/IhGYSGm6Ne+iSZNamtRhslK2zqqo?=
- =?us-ascii?Q?60Q435ePuQf6N0WUE/CwZ/TXXJ+ECx8Ijku1zxlIqi0zjo81SANjHIoEvhEe?=
- =?us-ascii?Q?Zg4W96wEKB7pc5ndn1UE213K7M98M6RFRm1dbdKNJx2o6d/Se8002a7PE6lx?=
- =?us-ascii?Q?6u7nxMFNpHxQXJJ1LW8Dp8QdAMtGiWZ6YHn/Gx+udAtxpe6lejPcI+wH4y4j?=
- =?us-ascii?Q?+XhNDLgBdUsXd367vJiaJc4P+efu+iF/vb9fWD77erQh0gkJ6AkE6s5NeJpf?=
- =?us-ascii?Q?8pMh+j8rNrCHys/08FkzJMonmI5YxxAZL3bBt/IXaaMbvHV6BqbEpR7drwSy?=
- =?us-ascii?Q?78oTJjHkkXTWPZBmsLyzNneMFtIrwP+cf+OrTNv22SZKMxp6Jmp/SLZkLpgU?=
- =?us-ascii?Q?q5pGF1XyTLfoEk9YfDdz0Hdt+sR3Ypv5fvG0o/H9n1l62BqjVNUckCPmo5I?=
- =?us-ascii?Q?=3D?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3feb9bd7-35f6-408b-38ba-08dbd819928e
-X-MS-Exchange-CrossTenant-AuthSource: TYAP286MB0315.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Oct 2023 00:54:15.9321
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB2258
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] dt-bindings: mwifiex: document use with the SD8777
+ chipset
+Content-Language: en-US
+To:     Karel Balej <balejk@matfyz.cz>, Kalle Valo <kvalo@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mmc@vger.kernel.org
+Cc:     =?UTF-8?Q?Duje_Mihanovi=C4=87?= <duje.mihanovic@skole.hr>,
+        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org
+References: <20231029111807.19261-1-balejk@matfyz.cz>
+ <20231029111807.19261-2-balejk@matfyz.cz>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <20231029111807.19261-2-balejk@matfyz.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 28 Oct 2023 17:54:27 +0300, Kalle Valo wrote:
+On 29/10/2023 12:08, Karel Balej wrote:
+> Document the corresponding compatible string for the use of this driver
+> with the Marvell SD8777 wireless chipset.
+> 
+> Signed-off-by: Karel Balej <balejk@matfyz.cz>
+> ---
 
->Shiji Yang <yangshiji66@outlook.com> writes:
->
->> Disable the RTS threshold for OFDM and CCK rates by default as the
->> initial RTS threshold is 'IEEE80211_MAX_RTS_THRESHOLD'. And RTS
->> thresholds for all other rates have already been disabled when init.
->>
->> Signed-off-by: Shiji Yang <yangshiji66@outlook.com>
->
->The commit log should always answer to the question "Why?". What problem
->does this patch fix?
 
-Hi! Thanks for your review.
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-rt2800 has a lot of registers to control the RTS enable/disable
-status for different rates. And the driver control them via
-rt2800_set_rts_threshold(). I found that when RTS was disabled
-in user interface, this function won't be called at all. This
-means that the RTS is still 'on' for CCK and OFDM rates. So we'd
-better to disable them by default in case they did some bad
-things. The RTS for HT20 and HT40 is already default off so we
-don't need to touch them. If we toggle the RTS status, these
-register bits will be enabled/disabled again by
-rt2800_set_rts_threshold().
 
-If this patch is acceptable, I will add more explanations in the
-v2 patch. Anyway, I don't know if it really solves some existing
-problems, but I think it should be like this.
+---
 
-Regards,
-Shiji Yang
+This is an automated instruction, just in case, because many review tags
+are being ignored. If you know the process, you can skip it (please do
+not feel offended by me posting it here - no bad intentions intended).
+If you do not know the process, here is a short explanation:
+
+Please add Acked-by/Reviewed-by/Tested-by tags when posting new
+versions, under or above your Signed-off-by tag. Tag is "received", when
+provided in a message replied to you on the mailing list. Tools like b4
+can help here. However, there's no need to repost patches *only* to add
+the tags. The upstream maintainer will do that for tags received on the
+version they apply.
+
+https://elixir.bootlin.com/linux/v6.5-rc3/source/Documentation/process/submitting-patches.rst#L577
+
+
+Best regards,
+Krzysztof
+
