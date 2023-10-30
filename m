@@ -2,45 +2,45 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F0D8C4167D
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 07:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66758C4167D
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 07:21:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232055AbjJ3HVI (ORCPT
+        id S232110AbjJ3HVt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Oct 2023 03:21:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41158 "EHLO
+        Mon, 30 Oct 2023 03:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232106AbjJ3HUe (ORCPT
+        with ESMTP id S231931AbjJ3HU7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2023 03:20:34 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2079.outbound.protection.outlook.com [40.107.237.79])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ADB41B5;
-        Mon, 30 Oct 2023 00:20:18 -0700 (PDT)
+        Mon, 30 Oct 2023 03:20:59 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1B961B3;
+        Mon, 30 Oct 2023 00:20:51 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CB1uyYnqPX8CqBplQLukywwQqhf1GhurG1Rdcy2XFByp0sIPjoWYjtew1L2joXZRkVt72oznNvczSvDyj1opzCsw8iNbeKn7u9W85P7SEVAUV++hoJGt1VpSOWr5cCdh9fe/Jz323kKZaZQSLGow/PJr7SYUC8lABmO9JuYr3Y74PcmkMDd0AoEkppVdvL9EJ9nKCaRBg3vS7el1ColjogQSe4GCylPFusKdJY6DzxI+42T7p6REcNU7OrHDcp3NJruso+S4L4N0wCCjf55O5l+uxZ1kEGdWxjiaqmoGheFo273AkaHg2uBV1iU4u3riDzNtOUUNIqcWKmNXsczS/Q==
+ b=GL0NhqPVCzjSRPxWHZ7HvXa5gAG0ZT5+h3Kp6EB1AwEw1uZsudFx2MoVylDQimnZCXOjNRmtnp8iCnpdhY+rvXkUhDbBSRdJpplhz6fiJMFrsLyYGVeuyJfgzE5hOxVB5N9oBi8I4caWGNWzy6mHnyhbRpcH8c/fBEE9qRbEdR/9G+Jti38efmPLTedUO1FFq1nJudvQHefjNOQQ3jEs4D4ZM3nVPAJSIv1IuRRflgf5EA/7cujGnTDRGCr6AlYesq7h0qrLIGAb5FJm2JhKwtZDtjUEVGef5qkvluLgEbDvMPbKOeppB5s3lw1f1SaTNW9hOOysXJLoWACBtbQkjg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=hVfFf0p+8wgOM9uC4lch3z24GlPHt/hE37lsHB8eMOU=;
- b=mTpSoxOqctG6k0IbBEDbsDRGj47P9XvkTjPXKIW9S8t0KGl1VGGQuXUjbyDKd8SoOXgrWlOOav2HYxJKos4IBF42bbe6VW3HjmMdFIPV+et5e2mXHmip9rxcQQ4KRs2HTc5KuIg+CyZHcfOkhoObxWGGjKrbIIT/iKlqhejThf4RB4ndAw1Vw5ctBy+hJfSz8P96/QZAxPX9cOq/1qeV+pchD0cbe0/kyTH+kXyL6DGNIK8fONt2e3t+BxGqKFRRTHWDO0kSMMP/VCToOjsuwN6dxdU6RbVtCNmGiTIIIE2kR+p1RG8zk5FzPPGPRoOFT7CiXl6daGBKUDsYP3PhlQ==
+ bh=vP1wCT9rAxWtNY+/Zm6kmN9ULRiGso0luVIOZ4aFcfo=;
+ b=FerVBxRYw0Rlx83211VMzI42GXQm3rnAsbSAZ5wl1mAKoPcI8HnH/FdTrhsCUEMTu3qqioHWLwkiuHTRFaA3CyoDYoOVGMA/gT4AtvL/0gak1sFzPQgFWsocaxYP+XRsa2yQJ5948b+DxMp/HgdG64vuWeqNmvo8Pa26KaeuMhued0q8LWNz0TA/48M4GbCUVqAPpyj7LEC04jfaehDb367DhhnI8K2tNJBYz+5oMkPXK3GrZVGHz1aetPLHAYZYAUSMGJQDXkL9TaowDfGy0goY8K/mu3xJSCS5erfSa6FBzuGcA99i//YbWs8Zs55sYpLw1ql6v5P7JoIxvSHhow==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=lists.freedesktop.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hVfFf0p+8wgOM9uC4lch3z24GlPHt/hE37lsHB8eMOU=;
- b=oB3N5h3bZj9hzxC0npsyttx3/VaH9E0Uy6JoEeDQ4P6DJhmraPzPwewP/Z+cyq9zUCSMfo5KsRrDKWBGb9g0MuMMD3FLsJE00gd9Wqu35fi5w9opppsedSdQdBCW8oXNv7mWdhRo7MgDF+/B+/FqD56Sgrta2ScfauGN6YRwNYk=
-Received: from CY5PR15CA0190.namprd15.prod.outlook.com (2603:10b6:930:82::8)
- by SA3PR12MB7781.namprd12.prod.outlook.com (2603:10b6:806:31a::13) with
+ bh=vP1wCT9rAxWtNY+/Zm6kmN9ULRiGso0luVIOZ4aFcfo=;
+ b=pvXBG2VdpyFGle/E2C2O1ep3+caWlvKBbvoU978WSVxaZFVd9Cg+gH8q1zJHRD1ljUjBsMX59dtWlHM6kiUuR42O7AUWrfKYBEn/D1F4BTfKzBpiH7endYEPFtn4+tkbj4W8SMNXF3I4g/FsHQDzSy5T0AKW2scv7bwsNo/YvuY=
+Received: from CY5PR04CA0029.namprd04.prod.outlook.com (2603:10b6:930:1e::20)
+ by MW4PR12MB8609.namprd12.prod.outlook.com (2603:10b6:303:1e2::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.26; Mon, 30 Oct
- 2023 07:20:15 +0000
-Received: from CY4PEPF0000E9DB.namprd05.prod.outlook.com
- (2603:10b6:930:82:cafe::57) by CY5PR15CA0190.outlook.office365.com
- (2603:10b6:930:82::8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.28 via Frontend
- Transport; Mon, 30 Oct 2023 07:20:14 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.27; Mon, 30 Oct
+ 2023 07:20:48 +0000
+Received: from CY4PEPF0000E9D7.namprd05.prod.outlook.com
+ (2603:10b6:930:1e:cafe::58) by CY5PR04CA0029.outlook.office365.com
+ (2603:10b6:930:1e::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.27 via Frontend
+ Transport; Mon, 30 Oct 2023 07:20:48 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,13 +48,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000E9DB.mail.protection.outlook.com (10.167.241.81) with Microsoft
+ CY4PEPF0000E9D7.mail.protection.outlook.com (10.167.241.78) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6933.15 via Frontend Transport; Mon, 30 Oct 2023 07:20:14 +0000
+ 15.20.6933.15 via Frontend Transport; Mon, 30 Oct 2023 07:20:48 +0000
 Received: from compile-server.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Mon, 30 Oct
- 2023 02:20:09 -0500
+ 2023 02:20:18 -0500
 From:   Ma Jun <Jun.Ma2@amd.com>
 To:     <amd-gfx@lists.freedesktop.org>, <lenb@kernel.org>,
         <johannes@sipsolutions.net>, <davem@davemloft.net>,
@@ -65,9 +65,9 @@ To:     <amd-gfx@lists.freedesktop.org>, <lenb@kernel.org>,
         <linux-doc@vger.kernel.org>, <platform-driver-x86@vger.kernel.org>
 CC:     <majun@amd.com>, Evan Quan <quanliangl@hotmail.com>,
         Ma Jun <Jun.Ma2@amd.com>
-Subject: [Patch v13 7/9] drm/amd/pm: add flood detection for wbrf events
-Date:   Mon, 30 Oct 2023 15:18:30 +0800
-Message-ID: <20231030071832.2217118-8-Jun.Ma2@amd.com>
+Subject: [Patch v13 9/9] drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.7
+Date:   Mon, 30 Oct 2023 15:18:32 +0800
+Message-ID: <20231030071832.2217118-10-Jun.Ma2@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231030071832.2217118-1-Jun.Ma2@amd.com>
 References: <20231030071832.2217118-1-Jun.Ma2@amd.com>
@@ -79,138 +79,96 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9DB:EE_|SA3PR12MB7781:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1fc9f035-230c-41f5-2561-08dbd918a92a
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9D7:EE_|MW4PR12MB8609:EE_
+X-MS-Office365-Filtering-Correlation-Id: d1594655-bfbf-41dd-0411-08dbd918bdba
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GltRWmZoOIuD6HxuakJSZMPj4YvSl2TEVqQW8qIwjQSHVpxPgHryD6E54lJVczvHLadHDQDujlW//kK9/IceYstVVBlo9uoY/v/EIEOE20nUfbt9WtSVjTRivHw3+RzYUSRBFSe6pkJdwxUzX3nFqY54SPZPzKcnGY/Ma1M6D82X87m2AjhcVO0MUmeMN1yHRDznXbYeydbw7YSDWL00oUzMaYsCKcg7pi6C+bsv0sLjBQkBsCmIOEC44PTgMyF0iTCpqA5ClupA/QUKn/SK65QNV2GwTCbcO0Y11Dem8OCaAjDiFTXkDh207PN9JrYfFcdJwQ5ecH8Jl9zMxgv/E2/UYMF5sZWf1+d4o7ExNLIVg3FmQVKzdcCAp2ABVr/0zsY30vETJvntQuqvq0QFsxHYIO7zk2e4S7NKX62TkamSW6gDKTmlQS7HlnZbxlTckj+wPjgYxpkktsoVmfHSi5fEUYqtJkc8FIiZ3PkEw8MTf0gCV6ro62vAaGT1x33zPD3EJ7E4f3zPbfTYQ/RnwppeTy5z812fL6RH4RLfe9joR5OW1fp60kwYQCEoU/xw3eBHd5+nEYiXRIDMk/MUQbeEBj/rWk8afqG/Uktyzr5djo8U+SR+CCEc5XRjimYbQuI7LMqVTTqnd4UfCcN627rl4Jfiw6UDpsIci7V2FeDhy+UqHqraD87kOS7s2xAyL4EqKp6JFEvgbymr3OjJW5h2B9MZXT3zr7DPnW64Swxs2aiSV34tpe0qdAPiVF/rEu5jRB814EAxHXXUFojkuQS/vsQz3v1YPZJzaJqkUnw=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(39860400002)(346002)(376002)(136003)(230922051799003)(186009)(451199024)(64100799003)(1800799009)(82310400011)(40470700004)(36840700001)(40480700001)(40460700003)(1076003)(83380400001)(336012)(26005)(16526019)(426003)(32650700002)(356005)(82740400003)(36860700001)(81166007)(70206006)(2616005)(70586007)(316002)(110136005)(5660300002)(7416002)(54906003)(4326008)(8676002)(8936002)(6666004)(7696005)(41300700001)(2906002)(478600001)(45080400002)(921008)(36756003)(86362001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: f8oe0FE4JukUW7NrkweqT26aUuySbTkrW5cs5FR7y33SczOd6slSv28z0mfZ1Czmz4PYIfSx5hF7xa1USLZVSd172FyFXShmEQ9bxqmyPrmLLad03oCiToB2akTbVDN0ZwjKx6HoOzUKXBOCXFWygKctgUExA2/WNKyWFMx/8KjPkp2IlcZ7FeHnW8BsP2/MGBRFEPDa/QVdY50lSlePNBuRCyDIDYtSBirlKOu4mU8XqXDAWdQuIN76fWex8D0PzlM8oR+C/rs5Gpjx05eZ0PQmm3XDN/nkkU0MilDcE/VY0dJUbJLSoBeLeulQFhXX7Q94hwG3DnyGrf+EcNeFHjMTthhA7GdXg6VTzgLeqSdBUQkHgI12R5q8NrlL4wh4lebiwXcTYJz1/uGUEBL1hghpnW1zfAQ1dJD9b6PbRDG2uxiW2ijvVaN73afTof6qMcOBh4ruRsOvjP3FuTJQWv/lPtfndZ4SQKIyllE28FFJYrMB1AKPSaxtoo0KLeuG7su3cK3ZSMO8g97MsNGrqmL3Rs0elW3rtYyCjiAZ+qbJukfN7pK+NoPxEflhzaMH1SuLiHYzXjmEDVtWBWZ02F7owJV+zztfbSgRDt0Z5tItPq1gCgAjLyL+iIQctScczqUbNIQ2C/+cee+uSvHALiSQ9aa88s+lBXjkX9FtuIMp1JibQjNnJwwX4Uz+bZ4dJTS30DHIG5BB/CNlp7icf+xCYQM+VD5Z/PR+kyEtmm2DAbmsb/6Xz6HvODsRvRUPlOqwE1ZN12Jxe0quoQVEGGQ2yZddyZ6H3q7wy90NoWQHsY4KcvtGCWCUY5AylrgMUZ/UT/WET885mYPlhB1+Nw==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(376002)(346002)(136003)(39860400002)(230273577357003)(230173577357003)(230922051799003)(82310400011)(64100799003)(1800799009)(186009)(451199024)(36840700001)(40470700004)(83380400001)(16526019)(110136005)(41300700001)(2906002)(7416002)(5660300002)(2616005)(86362001)(36756003)(40480700001)(1076003)(426003)(336012)(26005)(40460700003)(32650700002)(81166007)(36860700001)(7696005)(478600001)(54906003)(70586007)(70206006)(4326008)(8936002)(8676002)(316002)(45080400002)(921008)(82740400003)(356005)(6666004)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2023 07:20:14.2517
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2023 07:20:48.7490
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1fc9f035-230c-41f5-2561-08dbd918a92a
+X-MS-Exchange-CrossTenant-Network-Message-Id: d1594655-bfbf-41dd-0411-08dbd918bdba
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9DB.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9D7.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB7781
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB8609
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Evan Quan <quanliangl@hotmail.com>
 
-To protect PMFW from being overloaded.
+Fulfill the SMU13.0.7 support for Wifi RFI mitigation feature.
 
 Signed-off-by: Evan Quan <quanliangl@hotmail.com>
 Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
 Signed-off-by: Ma Jun <Jun.Ma2@amd.com>
+--
+v10->v11:
+  - downgrade the prompt level on message failure(Lijo)
+v13:
+ - Fix the format issue (IIpo Jarvinen)
+ - Remove duplicate code (IIpo Jarvinen)
 ---
- drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 29 +++++++++++++++----
- drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  7 +++++
- 2 files changed, 30 insertions(+), 6 deletions(-)
+ .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c    | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-index 1553e175019c..2dbfcd7d0ef5 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c
-@@ -1316,7 +1316,8 @@ static int smu_wbrf_event_handler(struct notifier_block *nb,
- 
- 	switch (action) {
- 	case WBRF_CHANGED:
--		smu_wbrf_handle_exclusion_ranges(smu);
-+		schedule_delayed_work(&smu->wbrf_delayed_work,
-+				      msecs_to_jiffies(SMU_WBRF_EVENT_HANDLING_PACE));
- 		break;
- 	default:
- 		return NOTIFY_DONE;
-@@ -1325,6 +1326,20 @@ static int smu_wbrf_event_handler(struct notifier_block *nb,
- 	return NOTIFY_OK;
- }
- 
-+/**
-+ * smu_wbrf_delayed_work_handler - callback on delayed work timer expired
-+ *
-+ * @work: struct work_struct pointer
-+ *
-+ * Flood is over and driver will consume the latest exclusion ranges.
-+ */
-+static void smu_wbrf_delayed_work_handler(struct work_struct *work)
-+{
-+	struct smu_context *smu = container_of(work, struct smu_context, wbrf_delayed_work.work);
-+
-+	smu_wbrf_handle_exclusion_ranges(smu);
-+}
-+
- /**
-  * smu_wbrf_support_check - check wbrf support
-  *
-@@ -1354,12 +1369,13 @@ static void smu_wbrf_support_check(struct smu_context *smu)
-  */
- static int smu_wbrf_init(struct smu_context *smu)
- {
--	struct amdgpu_device *adev = smu->adev;
- 	int ret;
- 
- 	if (!smu->wbrf_supported)
- 		return 0;
- 
-+	INIT_DELAYED_WORK(&smu->wbrf_delayed_work, smu_wbrf_delayed_work_handler);
-+
- 	smu->wbrf_notifier.notifier_call = smu_wbrf_event_handler;
- 	ret = amd_wbrf_register_notifier(&smu->wbrf_notifier);
- 	if (ret)
-@@ -1370,11 +1386,10 @@ static int smu_wbrf_init(struct smu_context *smu)
- 	 * before our driver loaded. To make sure our driver
- 	 * is awared of those exclusion ranges.
- 	 */
--	ret = smu_wbrf_handle_exclusion_ranges(smu);
--	if (ret)
--		dev_err(adev->dev, "Failed to handle wbrf exclusion ranges\n");
-+	schedule_delayed_work(&smu->wbrf_delayed_work,
-+			      msecs_to_jiffies(SMU_WBRF_EVENT_HANDLING_PACE));
- 
--	return ret;
-+	return 0;
- }
- 
- /**
-@@ -1390,6 +1405,8 @@ static void smu_wbrf_fini(struct smu_context *smu)
- 		return;
- 
- 	amd_wbrf_unregister_notifier(&smu->wbrf_notifier);
-+
-+	cancel_delayed_work_sync(&smu->wbrf_delayed_work);
- }
- 
- static int smu_smc_hw_setup(struct smu_context *smu)
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-index 3a183e73e9de..5e62b7474c20 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-+++ b/drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h
-@@ -469,6 +469,12 @@ struct stb_context {
- 
- #define WORKLOAD_POLICY_MAX 7
- 
-+/*
-+ * Configure wbrf event handling pace as there can be only one
-+ * event processed every SMU_WBRF_EVENT_HANDLING_PACE ms.
-+ */
-+#define SMU_WBRF_EVENT_HANDLING_PACE	10
-+
- struct smu_context {
- 	struct amdgpu_device            *adev;
- 	struct amdgpu_irq_src		irq_source;
-@@ -569,6 +575,7 @@ struct smu_context {
- 	/* data structures for wbrf feature support */
- 	bool				wbrf_supported;
- 	struct notifier_block		wbrf_notifier;
-+	struct delayed_work		wbrf_delayed_work;
+diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
+index 94ef5b4d116d..b230d13fc5b0 100644
+--- a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
++++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
+@@ -134,6 +134,7 @@ static struct cmn2asic_msg_mapping smu_v13_0_7_message_map[SMU_MSG_MAX_COUNT] =
+ 	MSG_MAP(AllowGpo,			PPSMC_MSG_SetGpoAllow,           0),
+ 	MSG_MAP(GetPptLimit,			PPSMC_MSG_GetPptLimit,                 0),
+ 	MSG_MAP(NotifyPowerSource,		PPSMC_MSG_NotifyPowerSource,           0),
++	MSG_MAP(EnableUCLKShadow,		PPSMC_MSG_EnableUCLKShadow,            0),
  };
  
- struct i2c_adapter;
+ static struct cmn2asic_mapping smu_v13_0_7_clk_map[SMU_CLK_COUNT] = {
+@@ -215,6 +216,7 @@ static struct cmn2asic_mapping smu_v13_0_7_table_map[SMU_TABLE_COUNT] = {
+ 	TAB_MAP(ACTIVITY_MONITOR_COEFF),
+ 	[SMU_TABLE_COMBO_PPTABLE] = {1, TABLE_COMBO_PPTABLE},
+ 	TAB_MAP(OVERDRIVE),
++	TAB_MAP(WIFIBAND),
+ };
+ 
+ static struct cmn2asic_mapping smu_v13_0_7_pwr_src_map[SMU_POWER_SOURCE_COUNT] = {
+@@ -510,6 +512,9 @@ static int smu_v13_0_7_tables_init(struct smu_context *smu)
+ 		       AMDGPU_GEM_DOMAIN_VRAM);
+ 	SMU_TABLE_INIT(tables, SMU_TABLE_COMBO_PPTABLE, MP0_MP1_DATA_REGION_SIZE_COMBOPPTABLE,
+ 			PAGE_SIZE, AMDGPU_GEM_DOMAIN_VRAM);
++	SMU_TABLE_INIT(tables, SMU_TABLE_WIFIBAND,
++		       sizeof(WifiBandEntryTable_t), PAGE_SIZE,
++		       AMDGPU_GEM_DOMAIN_VRAM);
+ 
+ 	smu_table->metrics_table = kzalloc(sizeof(SmuMetricsExternal_t), GFP_KERNEL);
+ 	if (!smu_table->metrics_table)
+@@ -2178,6 +2183,11 @@ static int smu_v13_0_7_set_df_cstate(struct smu_context *smu,
+ 					       NULL);
+ }
+ 
++static bool smu_v13_0_7_wbrf_support_check(struct smu_context *smu)
++{
++	return smu->smc_fw_version > 0x00524600;
++}
++
+ static const struct pptable_funcs smu_v13_0_7_ppt_funcs = {
+ 	.get_allowed_feature_mask = smu_v13_0_7_get_allowed_feature_mask,
+ 	.set_default_dpm_table = smu_v13_0_7_set_default_dpm_table,
+@@ -2246,6 +2256,9 @@ static const struct pptable_funcs smu_v13_0_7_ppt_funcs = {
+ 	.set_mp1_state = smu_v13_0_7_set_mp1_state,
+ 	.set_df_cstate = smu_v13_0_7_set_df_cstate,
+ 	.gpo_control = smu_v13_0_gpo_control,
++	.is_asic_wbrf_supported = smu_v13_0_7_wbrf_support_check,
++	.enable_uclk_shadow = smu_v13_0_enable_uclk_shadow,
++	.set_wbrf_exclusion_ranges = smu_v13_0_set_wbrf_exclusion_ranges,
+ };
+ 
+ void smu_v13_0_7_set_ppt_funcs(struct smu_context *smu)
 -- 
 2.34.1
 
