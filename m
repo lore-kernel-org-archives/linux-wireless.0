@@ -2,173 +2,109 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66758C4167D
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 07:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A4EC41535
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 08:28:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232110AbjJ3HVt (ORCPT
+        id S231467AbjJ3I2T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Oct 2023 03:21:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52838 "EHLO
+        Mon, 30 Oct 2023 04:28:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231931AbjJ3HU7 (ORCPT
+        with ESMTP id S229517AbjJ3I2R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2023 03:20:59 -0400
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1B961B3;
-        Mon, 30 Oct 2023 00:20:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GL0NhqPVCzjSRPxWHZ7HvXa5gAG0ZT5+h3Kp6EB1AwEw1uZsudFx2MoVylDQimnZCXOjNRmtnp8iCnpdhY+rvXkUhDbBSRdJpplhz6fiJMFrsLyYGVeuyJfgzE5hOxVB5N9oBi8I4caWGNWzy6mHnyhbRpcH8c/fBEE9qRbEdR/9G+Jti38efmPLTedUO1FFq1nJudvQHefjNOQQ3jEs4D4ZM3nVPAJSIv1IuRRflgf5EA/7cujGnTDRGCr6AlYesq7h0qrLIGAb5FJm2JhKwtZDtjUEVGef5qkvluLgEbDvMPbKOeppB5s3lw1f1SaTNW9hOOysXJLoWACBtbQkjg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vP1wCT9rAxWtNY+/Zm6kmN9ULRiGso0luVIOZ4aFcfo=;
- b=FerVBxRYw0Rlx83211VMzI42GXQm3rnAsbSAZ5wl1mAKoPcI8HnH/FdTrhsCUEMTu3qqioHWLwkiuHTRFaA3CyoDYoOVGMA/gT4AtvL/0gak1sFzPQgFWsocaxYP+XRsa2yQJ5948b+DxMp/HgdG64vuWeqNmvo8Pa26KaeuMhued0q8LWNz0TA/48M4GbCUVqAPpyj7LEC04jfaehDb367DhhnI8K2tNJBYz+5oMkPXK3GrZVGHz1aetPLHAYZYAUSMGJQDXkL9TaowDfGy0goY8K/mu3xJSCS5erfSa6FBzuGcA99i//YbWs8Zs55sYpLw1ql6v5P7JoIxvSHhow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=lists.freedesktop.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vP1wCT9rAxWtNY+/Zm6kmN9ULRiGso0luVIOZ4aFcfo=;
- b=pvXBG2VdpyFGle/E2C2O1ep3+caWlvKBbvoU978WSVxaZFVd9Cg+gH8q1zJHRD1ljUjBsMX59dtWlHM6kiUuR42O7AUWrfKYBEn/D1F4BTfKzBpiH7endYEPFtn4+tkbj4W8SMNXF3I4g/FsHQDzSy5T0AKW2scv7bwsNo/YvuY=
-Received: from CY5PR04CA0029.namprd04.prod.outlook.com (2603:10b6:930:1e::20)
- by MW4PR12MB8609.namprd12.prod.outlook.com (2603:10b6:303:1e2::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.27; Mon, 30 Oct
- 2023 07:20:48 +0000
-Received: from CY4PEPF0000E9D7.namprd05.prod.outlook.com
- (2603:10b6:930:1e:cafe::58) by CY5PR04CA0029.outlook.office365.com
- (2603:10b6:930:1e::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6933.27 via Frontend
- Transport; Mon, 30 Oct 2023 07:20:48 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000E9D7.mail.protection.outlook.com (10.167.241.78) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6933.15 via Frontend Transport; Mon, 30 Oct 2023 07:20:48 +0000
-Received: from compile-server.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Mon, 30 Oct
- 2023 02:20:18 -0500
-From:   Ma Jun <Jun.Ma2@amd.com>
-To:     <amd-gfx@lists.freedesktop.org>, <lenb@kernel.org>,
-        <johannes@sipsolutions.net>, <davem@davemloft.net>,
-        <edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
-        <alexander.deucher@amd.com>, <Lijo.Lazar@amd.com>,
-        <mario.limonciello@amd.com>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>, <platform-driver-x86@vger.kernel.org>
-CC:     <majun@amd.com>, Evan Quan <quanliangl@hotmail.com>,
-        Ma Jun <Jun.Ma2@amd.com>
-Subject: [Patch v13 9/9] drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.7
-Date:   Mon, 30 Oct 2023 15:18:32 +0800
-Message-ID: <20231030071832.2217118-10-Jun.Ma2@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231030071832.2217118-1-Jun.Ma2@amd.com>
-References: <20231030071832.2217118-1-Jun.Ma2@amd.com>
+        Mon, 30 Oct 2023 04:28:17 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68A6A7
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2023 01:28:14 -0700 (PDT)
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39U5qRvl018071;
+        Mon, 30 Oct 2023 08:28:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=1224riGAY2pl3uI1iYhXwTc6iUN5iq+Jta9Y0ikdI3g=;
+ b=fQXLQ2OMAaNTORJi0wEe2vtJJatneCoM0qwsjC86PBatpzJOf8aHYHjzwrJUyQkEHxRk
+ zWrdeZvJMhflf88U7/32D91aYo+JenIZA6N0ca0aBr1U3O78G9OWXoMc/6TJiR1MOYHd
+ Lf9C0UwILjOxUj5ftOyUGDfiiPIrx3ER98s0auzqnME+sByMNeQc1VSq/rn6ZoD1Cs43
+ cwgYfs/GKFOrt0nOav4CjmG0tJq0EvSVkfu/CzvCZbZ5Ay3NrPMVUPcmY1pJckrkTK26
+ i6RBh0mHFomrmSP3Q2pXy7UwEyXK2O08Q33evU7u81Ie0Wb+k1ku5wGYHRc7tsFb3bXF Yg== 
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u0qnuuhya-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Oct 2023 08:28:10 +0000
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+        by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39U8SA1S010966
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Oct 2023 08:28:10 GMT
+Received: from aarasahu-linux.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.39; Mon, 30 Oct 2023 01:28:07 -0700
+From:   Aaradhana Sahu <quic_aarasahu@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Aaradhana Sahu <quic_aarasahu@quicinc.com>
+Subject: [PATCH 0/4] ath12k: Factory test mode support
+Date:   Mon, 30 Oct 2023 13:57:45 +0530
+Message-ID: <20231030082749.17855-1-quic_aarasahu@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9D7:EE_|MW4PR12MB8609:EE_
-X-MS-Office365-Filtering-Correlation-Id: d1594655-bfbf-41dd-0411-08dbd918bdba
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: f8oe0FE4JukUW7NrkweqT26aUuySbTkrW5cs5FR7y33SczOd6slSv28z0mfZ1Czmz4PYIfSx5hF7xa1USLZVSd172FyFXShmEQ9bxqmyPrmLLad03oCiToB2akTbVDN0ZwjKx6HoOzUKXBOCXFWygKctgUExA2/WNKyWFMx/8KjPkp2IlcZ7FeHnW8BsP2/MGBRFEPDa/QVdY50lSlePNBuRCyDIDYtSBirlKOu4mU8XqXDAWdQuIN76fWex8D0PzlM8oR+C/rs5Gpjx05eZ0PQmm3XDN/nkkU0MilDcE/VY0dJUbJLSoBeLeulQFhXX7Q94hwG3DnyGrf+EcNeFHjMTthhA7GdXg6VTzgLeqSdBUQkHgI12R5q8NrlL4wh4lebiwXcTYJz1/uGUEBL1hghpnW1zfAQ1dJD9b6PbRDG2uxiW2ijvVaN73afTof6qMcOBh4ruRsOvjP3FuTJQWv/lPtfndZ4SQKIyllE28FFJYrMB1AKPSaxtoo0KLeuG7su3cK3ZSMO8g97MsNGrqmL3Rs0elW3rtYyCjiAZ+qbJukfN7pK+NoPxEflhzaMH1SuLiHYzXjmEDVtWBWZ02F7owJV+zztfbSgRDt0Z5tItPq1gCgAjLyL+iIQctScczqUbNIQ2C/+cee+uSvHALiSQ9aa88s+lBXjkX9FtuIMp1JibQjNnJwwX4Uz+bZ4dJTS30DHIG5BB/CNlp7icf+xCYQM+VD5Z/PR+kyEtmm2DAbmsb/6Xz6HvODsRvRUPlOqwE1ZN12Jxe0quoQVEGGQ2yZddyZ6H3q7wy90NoWQHsY4KcvtGCWCUY5AylrgMUZ/UT/WET885mYPlhB1+Nw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(376002)(346002)(136003)(39860400002)(230273577357003)(230173577357003)(230922051799003)(82310400011)(64100799003)(1800799009)(186009)(451199024)(36840700001)(40470700004)(83380400001)(16526019)(110136005)(41300700001)(2906002)(7416002)(5660300002)(2616005)(86362001)(36756003)(40480700001)(1076003)(426003)(336012)(26005)(40460700003)(32650700002)(81166007)(36860700001)(7696005)(478600001)(54906003)(70586007)(70206006)(4326008)(8936002)(8676002)(316002)(45080400002)(921008)(82740400003)(356005)(6666004)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2023 07:20:48.7490
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: d1594655-bfbf-41dd-0411-08dbd918bdba
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9D7.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB8609
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 9DWX8vR6rA1GXU7cdGXWPH-a5tkfL5vK
+X-Proofpoint-GUID: 9DWX8vR6rA1GXU7cdGXWPH-a5tkfL5vK
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-30_06,2023-10-27_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 impostorscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 suspectscore=0 phishscore=0
+ lowpriorityscore=0 mlxlogscore=944 adultscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2310240000 definitions=main-2310300063
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Evan Quan <quanliangl@hotmail.com>
+Device is booted in factory test mode for calibration.
+The commands are sent from userspace application, which
+is sent to firmware using wmi commands. Firmware sends
+the response to driver as wmi events and driver sends
+these events to the application via netlink message.
 
-Fulfill the SMU13.0.7 support for Wifi RFI mitigation feature.
+Also added changes related to correct pdev id access for
+fw test cmd.
 
-Signed-off-by: Evan Quan <quanliangl@hotmail.com>
-Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
-Signed-off-by: Ma Jun <Jun.Ma2@amd.com>
---
-v10->v11:
-  - downgrade the prompt level on message failure(Lijo)
-v13:
- - Fix the format issue (IIpo Jarvinen)
- - Remove duplicate code (IIpo Jarvinen)
----
- .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c    | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Aaradhana Sahu (3):
+  wifi: ath: create common testmode_i.h file for ath drivers
+  wifi: ath12k: export ath12k_wmi_tlv_hdr for testmode
+  wifi: ath12k: add factory test mode support
 
-diff --git a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
-index 94ef5b4d116d..b230d13fc5b0 100644
---- a/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
-+++ b/drivers/gpu/drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c
-@@ -134,6 +134,7 @@ static struct cmn2asic_msg_mapping smu_v13_0_7_message_map[SMU_MSG_MAX_COUNT] =
- 	MSG_MAP(AllowGpo,			PPSMC_MSG_SetGpoAllow,           0),
- 	MSG_MAP(GetPptLimit,			PPSMC_MSG_GetPptLimit,                 0),
- 	MSG_MAP(NotifyPowerSource,		PPSMC_MSG_NotifyPowerSource,           0),
-+	MSG_MAP(EnableUCLKShadow,		PPSMC_MSG_EnableUCLKShadow,            0),
- };
- 
- static struct cmn2asic_mapping smu_v13_0_7_clk_map[SMU_CLK_COUNT] = {
-@@ -215,6 +216,7 @@ static struct cmn2asic_mapping smu_v13_0_7_table_map[SMU_TABLE_COUNT] = {
- 	TAB_MAP(ACTIVITY_MONITOR_COEFF),
- 	[SMU_TABLE_COMBO_PPTABLE] = {1, TABLE_COMBO_PPTABLE},
- 	TAB_MAP(OVERDRIVE),
-+	TAB_MAP(WIFIBAND),
- };
- 
- static struct cmn2asic_mapping smu_v13_0_7_pwr_src_map[SMU_POWER_SOURCE_COUNT] = {
-@@ -510,6 +512,9 @@ static int smu_v13_0_7_tables_init(struct smu_context *smu)
- 		       AMDGPU_GEM_DOMAIN_VRAM);
- 	SMU_TABLE_INIT(tables, SMU_TABLE_COMBO_PPTABLE, MP0_MP1_DATA_REGION_SIZE_COMBOPPTABLE,
- 			PAGE_SIZE, AMDGPU_GEM_DOMAIN_VRAM);
-+	SMU_TABLE_INIT(tables, SMU_TABLE_WIFIBAND,
-+		       sizeof(WifiBandEntryTable_t), PAGE_SIZE,
-+		       AMDGPU_GEM_DOMAIN_VRAM);
- 
- 	smu_table->metrics_table = kzalloc(sizeof(SmuMetricsExternal_t), GFP_KERNEL);
- 	if (!smu_table->metrics_table)
-@@ -2178,6 +2183,11 @@ static int smu_v13_0_7_set_df_cstate(struct smu_context *smu,
- 					       NULL);
- }
- 
-+static bool smu_v13_0_7_wbrf_support_check(struct smu_context *smu)
-+{
-+	return smu->smc_fw_version > 0x00524600;
-+}
-+
- static const struct pptable_funcs smu_v13_0_7_ppt_funcs = {
- 	.get_allowed_feature_mask = smu_v13_0_7_get_allowed_feature_mask,
- 	.set_default_dpm_table = smu_v13_0_7_set_default_dpm_table,
-@@ -2246,6 +2256,9 @@ static const struct pptable_funcs smu_v13_0_7_ppt_funcs = {
- 	.set_mp1_state = smu_v13_0_7_set_mp1_state,
- 	.set_df_cstate = smu_v13_0_7_set_df_cstate,
- 	.gpo_control = smu_v13_0_gpo_control,
-+	.is_asic_wbrf_supported = smu_v13_0_7_wbrf_support_check,
-+	.enable_uclk_shadow = smu_v13_0_enable_uclk_shadow,
-+	.set_wbrf_exclusion_ranges = smu_v13_0_set_wbrf_exclusion_ranges,
- };
- 
- void smu_v13_0_7_set_ppt_funcs(struct smu_context *smu)
+Rajat Soni (1):
+  wifi: ath12k: Fill pdev id for fw test cmd
+
+ drivers/net/wireless/ath/ath11k/testmode.c    |  78 ++--
+ drivers/net/wireless/ath/ath12k/Makefile      |   1 +
+ drivers/net/wireless/ath/ath12k/core.c        |  19 +-
+ drivers/net/wireless/ath/ath12k/core.h        |  13 +
+ drivers/net/wireless/ath/ath12k/debug.h       |   1 +
+ drivers/net/wireless/ath/ath12k/dp.c          |   3 +
+ drivers/net/wireless/ath/ath12k/mac.c         |  13 +-
+ drivers/net/wireless/ath/ath12k/pci.c         |   1 +
+ drivers/net/wireless/ath/ath12k/testmode.c    | 413 ++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/testmode.h    |  42 ++
+ drivers/net/wireless/ath/ath12k/wmi.c         |  38 +-
+ drivers/net/wireless/ath/ath12k/wmi.h         |  22 +-
+ .../wireless/ath/{ath11k => }/testmode_i.h    |  52 +--
+ 13 files changed, 624 insertions(+), 72 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath12k/testmode.c
+ create mode 100644 drivers/net/wireless/ath/ath12k/testmode.h
+ rename drivers/net/wireless/ath/{ath11k => }/testmode_i.h (53%)
+
+
+base-commit: 0263687f4441d5a5eab8074d56b4693c8f0acf85
 -- 
-2.34.1
+2.17.1
 
