@@ -2,74 +2,105 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76702C4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 20:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E1AC4167D
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Oct 2023 22:27:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229886AbjJ3UjL (ORCPT
+        id S231995AbjJ3W1q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Oct 2023 16:39:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38380 "EHLO
+        Mon, 30 Oct 2023 18:27:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229873AbjJ3UjK (ORCPT
+        with ESMTP id S229672AbjJ3W1p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Oct 2023 16:39:10 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EC1EAB
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2023 13:39:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEE1EC433C7;
-        Mon, 30 Oct 2023 20:39:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698698348;
-        bh=3P2qlkX+DrVyadaT90jeCX8ol+J/3yj2L/wdhbe9yzU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Lmgo8NhNPupJ0NhOoB4yZewAcFFr6Aji12DHSPpOsGQsHpeObSWOSpLm4jfsbFhBB
-         5ZoI4gFSUd/F0/AqaDXqEAzn/Abno6fD2nZi0ycY1l1+Y4Xfz/LpxdHuvMxbMAuu16
-         ZQ7YMEH06xRjdig2grPmPPn9SOZVcVGvOUGBFQInZrCGfYnGBrigyTjuGYKY/R8hpN
-         gyuaGCIlyjLVAKD5DurRLo7ypcRkgls15PHIPNXO4v3myJoRxT/w2c5WTpXQj99eKW
-         ZjOGQLxxM/ZCXxcAqPHj9rbChH5lV13DdLhF5msft7KKLecLMfmWKV+TWdqTv0bn04
-         1IPtrWxOTxnRA==
-Date:   Mon, 30 Oct 2023 15:39:06 -0500
-From:   Seth Forshee <sforshee@kernel.org>
-To:     Chen-Yu Tsai <wens@kernel.org>
-Cc:     wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [wireless-regdb] [ANN] wireless-regdb: master-2023-09-01
-Message-ID: <ZUAUahZakEvOXpip@do-x1extreme>
-References: <ZPJF1/2YA4dP+ggY@ubuntu-x1>
- <CAGb2v657baNMPKU3QADijx7hZa=GUcSv2LEDdn6N=QQaFX8r-g@mail.gmail.com>
+        Mon, 30 Oct 2023 18:27:45 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DD2FE8
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Oct 2023 15:27:39 -0700 (PDT)
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39ULqTE3027293;
+        Mon, 30 Oct 2023 22:27:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=jXzHCSyj9C0E6i8loryrBAmW6y6X02LfmsWBoLfcjRQ=;
+ b=Uv80+PfIfUv8cs+iET9chBHoRWovIqozXJGT3gAeWcxhvMbN50+0pjQW2Eb06jUCZC0h
+ c2BTxPkNqlLTbtqUUUU4FIJAM1FdZqZqeFpaICrkwL+lCrZwk401n5cI5ZU79W7rc7J+
+ fgvjhKEoYREA3aP4RcKt2WG0/lQbj0IV+ffCnw58zvouBYle5a7hyAQMCg1aSNsvbVOx
+ azeJwqVEYJjunfIk1u8OMBNaAqogFnZsJ4xJKgFd/ObbW4cm9CShBOsbx3q6FKmwkRIK
+ x1CNAdUKZ+OlhHKqPI2juOe+iPrgcSxZCY9FV1NTm3fcgBib5D1/KlsuOBTjdJFIsgbQ WQ== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u2dey175h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Oct 2023 22:27:36 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 39UMRZbJ021330
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 30 Oct 2023 22:27:35 GMT
+Received: from rajkbhag-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.39; Mon, 30 Oct 2023 15:27:33 -0700
+From:   Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Rajat Soni <quic_rajson@quicinc.com>,
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Subject: [PATCH 01/13] wifi: ath12k: Update enum wmi_direct_buffer_module
+Date:   Tue, 31 Oct 2023 03:56:48 +0530
+Message-ID: <20231030222700.18914-2-quic_rajkbhag@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231030222700.18914-1-quic_rajkbhag@quicinc.com>
+References: <20231030222700.18914-1-quic_rajkbhag@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGb2v657baNMPKU3QADijx7hZa=GUcSv2LEDdn6N=QQaFX8r-g@mail.gmail.com>
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: IwjlGxMzqnrxfOW8SL4HgLWxMRGJrpbG
+X-Proofpoint-GUID: IwjlGxMzqnrxfOW8SL4HgLWxMRGJrpbG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-30_13,2023-10-27_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 suspectscore=0 spamscore=0 bulkscore=0 mlxscore=0
+ phishscore=0 priorityscore=1501 impostorscore=0 mlxlogscore=940
+ adultscore=0 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2310240000 definitions=main-2310300176
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 24, 2023 at 02:23:26PM +0800, Chen-Yu Tsai wrote:
-> I'd like to take up maintainership.
+From: Rajat Soni <quic_rajson@quicinc.com>
 
-Thanks for volunteering! Sorry I didn't get respond sooner, this thread
-was buried kinda deep in my inbox so I didn't notice your message right
-away.
+Currently firmware is sending module id as 2 that is not supported.
+This causes functional failure in driver.
+Firmware added support for WMI_CONFIG_MODULE_CV_UPLOAD.
+Add enum WMI_CONFIG_MODULE_CV_UPLOAD in wmi_direct_buffer_module to
+resolve this issue.
 
-> As far as I know, I would need to:
-> 
-> 1. Make a clone of the repository on git.kernel.org under my own namespace.
-> 2. Generate a key pair and certificate
-> 3. Put the certificate into the kernel tree
-> 4. Update the docs to point to the new repository and certificate
-> 5. Review incoming patches and apply them
-> 6. Tag releases timely
-> 
-> I'm not sure if I missed anything.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00188-QCAHKSWPL_SILICONZ-1
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-That's the bulk of it. Most of the time is spend validating proposed
-changes against the government documents. There's also maintaining the
-tools to build the database and moderating the mailing list, but neither
-of those are much effort.
+Signed-off-by: Rajat Soni <quic_rajson@quicinc.com>
+Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/wmi.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Johannes will be the one who needs to accept your key into the kernel,
-so we should wait for a +1 from him at least before we really get the
-ball rolling.
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 629373d67..8e1eda7aa 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -2230,6 +2230,7 @@ enum wmi_beacon_gen_mode {
+ enum wmi_direct_buffer_module {
+ 	WMI_DIRECT_BUF_SPECTRAL = 0,
+ 	WMI_DIRECT_BUF_CFR = 1,
++	WMI_DIRECT_BUF_CV_UPLOAD = 2,
+ 
+ 	/* keep it last */
+ 	WMI_DIRECT_BUF_MAX
+-- 
+2.17.1
 
-Thanks,
-Seth
