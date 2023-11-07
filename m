@@ -2,92 +2,104 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37079C4708E
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD5CC0032E
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234760AbjKGMaI (ORCPT
+        id S234738AbjKGMaL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:30:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36338 "EHLO
+        Tue, 7 Nov 2023 07:30:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234392AbjKGM3q (ORCPT
+        with ESMTP id S234161AbjKGM3t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2023 07:29:46 -0500
+        Tue, 7 Nov 2023 07:29:49 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 870531FC4;
-        Tue,  7 Nov 2023 04:10:30 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2979C433C9;
-        Tue,  7 Nov 2023 12:10:28 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 847B65252;
+        Tue,  7 Nov 2023 04:13:22 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60A4CC433C7;
+        Tue,  7 Nov 2023 12:13:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359029;
-        bh=rjyDa/JzWevqiRTvkRQBMVxrkWCq/sYG2ae5ELikHhw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M4cZUewBoAKO5Sw4jxy8jYpPrn+VKH7zoiMlhKMSp+E6yzSGR9UszTheUg/Co2aMY
-         JqhCbMRCWsXV9nVM2JRdaqIoNr8nGIdS5YIhb5J2KHtOA1zNV39JbaRLT9SDIgmB71
-         5JkXOCV3sS6gqq+rADq9pPlBVwzIMG0njZaQPwmGR3gy8OJAB0h1okjVAS1KeVX+Sd
-         Fhz3TbN7waWKry28Kw6ANzYPXf+m+JUVLgdqOsIrZ+tHE4QuLnMWXf5Qko8qKLhuSV
-         XFqfnayLYp6dTGDKZ6niVJUd3cIBPYqM2rTcrq9akQ7XBR82gEKlA0wSzdyRvWT4vj
-         c1+xdF+f0KSZg==
+        s=k20201202; t=1699359201;
+        bh=l2ci43Lk6jRZ84U5FKyB6zVZOnbwQgMj4pjul8H6M1M=;
+        h=From:To:Cc:Subject:Date:From;
+        b=nSXbo2F9MPIgCv+poCCjHzjI434GeS8lPTA93v7UsZO8g+I7VGRTQxPQI/pBrd2V0
+         YpzlY0BAiNUErEuwhC7f77zr46AH6jjqOEHhiQE1ImI5KhZJswF02sN0rGw436hNaw
+         IgCS7ndqwCa2Owro4UiWUwSAmKWJ2a7MosWtK4tH4oqQSIFjdac1gpBV9PzH0yrzZp
+         O+5FiwmT2vBkPRZLhlFAQK4dEy0gE9WNUEKeBMMzNs6L3tE+JRxadFnrkjlsqMFVwe
+         7+a2EefdRWrNBZ/DD0t/HMjKe5Gtome00pIOR/xGw2bX3k48Aj/FHQcglEdN6EQqZF
+         UkI1rtco7Edqw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Gregory Greenman <gregory.greenman@intel.com>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Zong-Zhe Yang <kevin_yang@realtek.com>,
         Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        miriam.rachel.korenblit@intel.com, emmanuel.grumbach@intel.com,
-        ilan.peer@intel.com, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 22/30] wifi: iwlwifi: mvm: fix size check for fw_link_id
-Date:   Tue,  7 Nov 2023 07:08:37 -0500
-Message-ID: <20231107120922.3757126-22-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 1/7] wifi: mac80211: don't return unset power in ieee80211_get_tx_power()
+Date:   Tue,  7 Nov 2023 07:13:09 -0500
+Message-ID: <20231107121318.3759058-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107120922.3757126-1-sashal@kernel.org>
-References: <20231107120922.3757126-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.5.10
+X-stable-base: Linux 4.19.297
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit e25bd1853cc8308158d97e5b3696ea3689fa0840 ]
+[ Upstream commit e160ab85166e77347d0cbe5149045cb25e83937f ]
 
-Check that fw_link_id does not exceed the size of link_id_to_link_conf
-array. There's no any codepath that can cause that, but it's still
-safer to verify in case fw_link_id gets corrupted.
+We can get a UBSAN warning if ieee80211_get_tx_power() returns the
+INT_MIN value mac80211 internally uses for "unset power level".
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Link: https://lore.kernel.org/r/20231017115047.3385bd11f423.I2d30fdb464f951c648217553c47901857a0046c7@changeid
+ UBSAN: signed-integer-overflow in net/wireless/nl80211.c:3816:5
+ -2147483648 * 100 cannot be represented in type 'int'
+ CPU: 0 PID: 20433 Comm: insmod Tainted: G        WC OE
+ Call Trace:
+  dump_stack+0x74/0x92
+  ubsan_epilogue+0x9/0x50
+  handle_overflow+0x8d/0xd0
+  __ubsan_handle_mul_overflow+0xe/0x10
+  nl80211_send_iface+0x688/0x6b0 [cfg80211]
+  [...]
+  cfg80211_register_wdev+0x78/0xb0 [cfg80211]
+  cfg80211_netdev_notifier_call+0x200/0x620 [cfg80211]
+  [...]
+  ieee80211_if_add+0x60e/0x8f0 [mac80211]
+  ieee80211_register_hw+0xda5/0x1170 [mac80211]
+
+In this case, simply return an error instead, to indicate
+that no data is available.
+
+Cc: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://lore.kernel.org/r/20230203023636.4418-1-pkshih@realtek.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/link.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-index ace82e2c5bd91..a15e2c6caa242 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
-@@ -61,7 +61,7 @@ int iwl_mvm_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID) {
- 		link_info->fw_link_id = iwl_mvm_get_free_fw_link_id(mvm,
- 								    mvmvif);
--		if (link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID)
-+		if (link_info->fw_link_id >= ARRAY_SIZE(mvm->link_id_to_link_conf))
- 			return -EINVAL;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5659af1bec179..77d8ed184c1c4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2452,6 +2452,10 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
+ 	else
+ 		*dbm = sdata->vif.bss_conf.txpower;
  
- 		rcu_assign_pointer(mvm->link_id_to_link_conf[link_info->fw_link_id],
-@@ -245,7 +245,7 @@ int iwl_mvm_remove_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	int ret;
++	/* INT_MIN indicates no power level was set yet */
++	if (*dbm == INT_MIN)
++		return -EINVAL;
++
+ 	return 0;
+ }
  
- 	if (WARN_ON(!link_info ||
--		    link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID))
-+		    link_info->fw_link_id >= ARRAY_SIZE(mvm->link_id_to_link_conf)))
- 		return -EINVAL;
- 
- 	RCU_INIT_POINTER(mvm->link_id_to_link_conf[link_info->fw_link_id],
 -- 
 2.42.0
 
