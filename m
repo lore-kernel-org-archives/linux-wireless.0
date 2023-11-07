@@ -2,168 +2,116 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F88C4167B
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F44C4167D
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:27:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234537AbjKGMZk (ORCPT
+        id S234405AbjKGM1G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:25:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36406 "EHLO
+        Tue, 7 Nov 2023 07:27:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234532AbjKGMZ2 (ORCPT
+        with ESMTP id S234221AbjKGM0w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2023 07:25:28 -0500
+        Tue, 7 Nov 2023 07:26:52 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3574130F1;
-        Tue,  7 Nov 2023 04:12:47 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D12DC433CD;
-        Tue,  7 Nov 2023 12:12:45 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E14C1BE2;
+        Tue,  7 Nov 2023 04:10:08 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF04AC433C9;
+        Tue,  7 Nov 2023 12:10:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359167;
-        bh=AlXlsp9NHDktXqL7L/Pfoni0pjv5b60f6e/5CJpJnEQ=;
+        s=k20201202; t=1699359007;
+        bh=+mxGaSSeTSwa0Gg5Ml4n2KMjwdczO05A6HdzKAdtoYw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gx4uti5WghDtLW/PddCymFlOLrAiy1wA7/xkoZg1gB1gWSI5PyStKL1aRuD0bxnNE
-         qU76eStN1cFSGXZpsIS7RAoCse5EpTe/FvSqlVsoWmCzNPC6S4oDKWG03QeRa2m0lm
-         ThYd+M1bWmrtQ/qisGgM8Cj48Aa4TelGf52UmGoOjihqytDMCKXpaSDZ56xHTcPhn6
-         57vl/tZHqpeI6WUqF+5i4l5UpodCwt9pu2PdPDiVzy+JY3r5o1d1ySjSxMOxeeqz96
-         UGzLEBmfw2nWnUjnUqLjKaN4nlUelGLjj0hWnUwkhsg3zhv072MtZfGfVw3p5I9ZZu
-         g9fmovoIW/MCQ==
+        b=XPpEluHFYNImOi+E2iZgUdA2RPMA/XHQCS/0LzZ1uB/vviaECMa2mNPeOAkZFIDn9
+         SF6j40kh20LLj7NC3LevgBX6wIfCITEhwTE3rjHWCv5s9gC2aHqx4vl0ulkQnN/IQ8
+         uVlM7yQ+21gTdZeAjFIRCGSRFEs0e6xqEFNWj2wfmQow7E8pyPK6VwYvfg9oH4/rNz
+         8YDxDP/XiDfEtQotuei7RFDqxYgAOLA6HIrJy4JBKHeBwv8NGqJN2Fb1tCiCLs4Mj/
+         m8q7mcJbhNzpDNtecww4TSzg1eWN5QcN8h/25dmvoWyqia1n6SPEuBx7B84O5bBH59
+         NHQGrc6YY2sIQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Douglas Anderson <dianders@chromium.org>,
-        Kalle Valo <quic_kvalo@quicinc.com>,
-        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
-        quic_jjohnson@quicinc.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 08/11] wifi: ath10k: Don't touch the CE interrupt registers after power up
-Date:   Tue,  7 Nov 2023 07:12:23 -0500
-Message-ID: <20231107121230.3758617-8-sashal@kernel.org>
+Cc:     StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        lorenzo@kernel.org, ryder.lee@mediatek.com, kvalo@kernel.org,
+        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+        chui-hao.chiu@mediatek.com, Bo.Jiao@mediatek.com,
+        howard-yh.hsu@mediatek.com, meichia.chiu@mediatek.com,
+        linux-wireless@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.5 14/30] wifi: mt76: get rid of false alamrs of tx emission issues
+Date:   Tue,  7 Nov 2023 07:08:29 -0500
+Message-ID: <20231107120922.3757126-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107121230.3758617-1-sashal@kernel.org>
-References: <20231107121230.3758617-1-sashal@kernel.org>
+In-Reply-To: <20231107120922.3757126-1-sashal@kernel.org>
+References: <20231107120922.3757126-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.199
+X-stable-base: Linux 6.5.10
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Douglas Anderson <dianders@chromium.org>
+From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 
-[ Upstream commit 170c75d43a77dc937c58f07ecf847ba1b42ab74e ]
+[ Upstream commit 413f05d68d11981f5984b49214d3a5a0d88079b1 ]
 
-As talked about in commit d66d24ac300c ("ath10k: Keep track of which
-interrupts fired, don't poll them"), if we access the copy engine
-register at a bad time then ath10k can go boom. However, it's not
-necessarily easy to know when it's safe to access them.
+When the set_chan_info command is set with CH_SWITCH_NORMAL reason,
+even if the action is UNI_CHANNEL_RX_PATH, it'll still generate some
+unexpected tones, which might confuse DFS CAC tests that there are some
+tone leakages. To get rid of these kinds of false alarms, always bypass
+DPD calibration when IEEE80211_CONF_IDLE is set.
 
-The ChromeOS test labs saw a crash that looked like this at
-shutdown/reboot time (on a chromeos-5.15 kernel, but likely the
-problem could also reproduce upstream):
-
-Internal error: synchronous external abort: 96000010 [#1] PREEMPT SMP
-...
-CPU: 4 PID: 6168 Comm: reboot Not tainted 5.15.111-lockdep-19350-g1d624fe6758f #1 010b9b233ab055c27c6dc88efb0be2f4e9e86f51
-Hardware name: Google Kingoftown (DT)
-...
-pc : ath10k_snoc_read32+0x50/0x74 [ath10k_snoc]
-lr : ath10k_snoc_read32+0x24/0x74 [ath10k_snoc]
-...
-Call trace:
-ath10k_snoc_read32+0x50/0x74 [ath10k_snoc ...]
-ath10k_ce_disable_interrupt+0x190/0x65c [ath10k_core ...]
-ath10k_ce_disable_interrupts+0x8c/0x120 [ath10k_core ...]
-ath10k_snoc_hif_stop+0x78/0x660 [ath10k_snoc ...]
-ath10k_core_stop+0x13c/0x1ec [ath10k_core ...]
-ath10k_halt+0x398/0x5b0 [ath10k_core ...]
-ath10k_stop+0xfc/0x1a8 [ath10k_core ...]
-drv_stop+0x148/0x6b4 [mac80211 ...]
-ieee80211_stop_device+0x70/0x80 [mac80211 ...]
-ieee80211_do_stop+0x10d8/0x15b0 [mac80211 ...]
-ieee80211_stop+0x144/0x1a0 [mac80211 ...]
-__dev_close_many+0x1e8/0x2c0
-dev_close_many+0x198/0x33c
-dev_close+0x140/0x210
-cfg80211_shutdown_all_interfaces+0xc8/0x1e0 [cfg80211 ...]
-ieee80211_remove_interfaces+0x118/0x5c4 [mac80211 ...]
-ieee80211_unregister_hw+0x64/0x1f4 [mac80211 ...]
-ath10k_mac_unregister+0x4c/0xf0 [ath10k_core ...]
-ath10k_core_unregister+0x80/0xb0 [ath10k_core ...]
-ath10k_snoc_free_resources+0xb8/0x1ec [ath10k_snoc ...]
-ath10k_snoc_shutdown+0x98/0xd0 [ath10k_snoc ...]
-platform_shutdown+0x7c/0xa0
-device_shutdown+0x3e0/0x58c
-kernel_restart_prepare+0x68/0xa0
-kernel_restart+0x28/0x7c
-
-Though there's no known way to reproduce the problem, it makes sense
-that it would be the same issue where we're trying to access copy
-engine registers when it's not allowed.
-
-Let's fix this by changing how we "disable" the interrupts. Instead of
-tweaking the copy engine registers we'll just use disable_irq() and
-enable_irq(). Then we'll configure the interrupts once at power up
-time.
-
-Tested-on: WCN3990 hw1.0 SNOC WLAN.HL.3.2.2.c10-00754-QCAHLSWMTPL-1
-
-Signed-off-by: Douglas Anderson <dianders@chromium.org>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
-Link: https://lore.kernel.org/r/20230630151842.1.If764ede23c4e09a43a842771c2ddf99608f25f8e@changeid
+Reviewed-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
+Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/snoc.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 4870a3dab0ded..f7ee1032b1729 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -827,12 +827,20 @@ static void ath10k_snoc_hif_get_default_pipe(struct ath10k *ar,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 1a8611c6b684d..d46db4b04b78b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2687,10 +2687,10 @@ int mt7915_mcu_set_chan_info(struct mt7915_phy *phy, int cmd)
+ 	if (mt76_connac_spe_idx(phy->mt76->antenna_mask))
+ 		req.tx_path_num = fls(phy->mt76->antenna_mask);
  
- static inline void ath10k_snoc_irq_disable(struct ath10k *ar)
- {
--	ath10k_ce_disable_interrupts(ar);
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	int id;
-+
-+	for (id = 0; id < CE_COUNT_MAX; id++)
-+		disable_irq(ar_snoc->ce_irqs[id].irq_line);
- }
+-	if (cmd == MCU_EXT_CMD(SET_RX_PATH) ||
+-	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
++	if (dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
+ 		req.switch_reason = CH_SWITCH_NORMAL;
+-	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
++	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL ||
++		 phy->mt76->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
+ 	else if (!cfg80211_reg_can_beacon(phy->mt76->hw->wiphy, chandef,
+ 					  NL80211_IFTYPE_AP))
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 62a02b03d83ba..c22a7ec285cd4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -2861,10 +2861,10 @@ int mt7996_mcu_set_chan_info(struct mt7996_phy *phy, u16 tag)
+ 		.channel_band = ch_band[chandef->chan->band],
+ 	};
  
- static inline void ath10k_snoc_irq_enable(struct ath10k *ar)
- {
--	ath10k_ce_enable_interrupts(ar);
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
-+	int id;
-+
-+	for (id = 0; id < CE_COUNT_MAX; id++)
-+		enable_irq(ar_snoc->ce_irqs[id].irq_line);
- }
- 
- static void ath10k_snoc_rx_pipe_cleanup(struct ath10k_snoc_pipe *snoc_pipe)
-@@ -1048,6 +1056,8 @@ static int ath10k_snoc_hif_power_up(struct ath10k *ar,
- 		goto err_free_rri;
- 	}
- 
-+	ath10k_ce_enable_interrupts(ar);
-+
- 	return 0;
- 
- err_free_rri:
-@@ -1209,8 +1219,8 @@ static int ath10k_snoc_request_irq(struct ath10k *ar)
- 
- 	for (id = 0; id < CE_COUNT_MAX; id++) {
- 		ret = request_irq(ar_snoc->ce_irqs[id].irq_line,
--				  ath10k_snoc_per_engine_handler, 0,
--				  ce_name[id], ar);
-+				  ath10k_snoc_per_engine_handler,
-+				  IRQF_NO_AUTOEN, ce_name[id], ar);
- 		if (ret) {
- 			ath10k_err(ar,
- 				   "failed to register IRQ handler for CE %d: %d\n",
+-	if (tag == UNI_CHANNEL_RX_PATH ||
+-	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
++	if (dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
+ 		req.switch_reason = CH_SWITCH_NORMAL;
+-	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
++	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL ||
++		 phy->mt76->hw->conf.flags & IEEE80211_CONF_IDLE)
+ 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
+ 	else if (!cfg80211_reg_can_beacon(phy->mt76->hw->wiphy, chandef,
+ 					  NL80211_IFTYPE_AP))
 -- 
 2.42.0
 
