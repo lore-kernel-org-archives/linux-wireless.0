@@ -2,48 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F44C4167D
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37079C4708E
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:30:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234405AbjKGM1G (ORCPT
+        id S234760AbjKGMaI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:27:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52612 "EHLO
+        Tue, 7 Nov 2023 07:30:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234221AbjKGM0w (ORCPT
+        with ESMTP id S234392AbjKGM3q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2023 07:26:52 -0500
+        Tue, 7 Nov 2023 07:29:46 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E14C1BE2;
-        Tue,  7 Nov 2023 04:10:08 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF04AC433C9;
-        Tue,  7 Nov 2023 12:10:05 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 870531FC4;
+        Tue,  7 Nov 2023 04:10:30 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2979C433C9;
+        Tue,  7 Nov 2023 12:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359007;
-        bh=+mxGaSSeTSwa0Gg5Ml4n2KMjwdczO05A6HdzKAdtoYw=;
+        s=k20201202; t=1699359029;
+        bh=rjyDa/JzWevqiRTvkRQBMVxrkWCq/sYG2ae5ELikHhw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XPpEluHFYNImOi+E2iZgUdA2RPMA/XHQCS/0LzZ1uB/vviaECMa2mNPeOAkZFIDn9
-         SF6j40kh20LLj7NC3LevgBX6wIfCITEhwTE3rjHWCv5s9gC2aHqx4vl0ulkQnN/IQ8
-         uVlM7yQ+21gTdZeAjFIRCGSRFEs0e6xqEFNWj2wfmQow7E8pyPK6VwYvfg9oH4/rNz
-         8YDxDP/XiDfEtQotuei7RFDqxYgAOLA6HIrJy4JBKHeBwv8NGqJN2Fb1tCiCLs4Mj/
-         m8q7mcJbhNzpDNtecww4TSzg1eWN5QcN8h/25dmvoWyqia1n6SPEuBx7B84O5bBH59
-         NHQGrc6YY2sIQ==
+        b=M4cZUewBoAKO5Sw4jxy8jYpPrn+VKH7zoiMlhKMSp+E6yzSGR9UszTheUg/Co2aMY
+         JqhCbMRCWsXV9nVM2JRdaqIoNr8nGIdS5YIhb5J2KHtOA1zNV39JbaRLT9SDIgmB71
+         5JkXOCV3sS6gqq+rADq9pPlBVwzIMG0njZaQPwmGR3gy8OJAB0h1okjVAS1KeVX+Sd
+         Fhz3TbN7waWKry28Kw6ANzYPXf+m+JUVLgdqOsIrZ+tHE4QuLnMWXf5Qko8qKLhuSV
+         XFqfnayLYp6dTGDKZ6niVJUd3cIBPYqM2rTcrq9akQ7XBR82gEKlA0wSzdyRvWT4vj
+         c1+xdF+f0KSZg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        lorenzo@kernel.org, ryder.lee@mediatek.com, kvalo@kernel.org,
-        matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-        chui-hao.chiu@mediatek.com, Bo.Jiao@mediatek.com,
-        howard-yh.hsu@mediatek.com, meichia.chiu@mediatek.com,
-        linux-wireless@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.5 14/30] wifi: mt76: get rid of false alamrs of tx emission issues
-Date:   Tue,  7 Nov 2023 07:08:29 -0500
-Message-ID: <20231107120922.3757126-14-sashal@kernel.org>
+Cc:     Gregory Greenman <gregory.greenman@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        miriam.rachel.korenblit@intel.com, emmanuel.grumbach@intel.com,
+        ilan.peer@intel.com, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 22/30] wifi: iwlwifi: mvm: fix size check for fw_link_id
+Date:   Tue,  7 Nov 2023 07:08:37 -0500
+Message-ID: <20231107120922.3757126-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107120922.3757126-1-sashal@kernel.org>
 References: <20231107120922.3757126-1-sashal@kernel.org>
@@ -56,62 +50,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-[ Upstream commit 413f05d68d11981f5984b49214d3a5a0d88079b1 ]
+[ Upstream commit e25bd1853cc8308158d97e5b3696ea3689fa0840 ]
 
-When the set_chan_info command is set with CH_SWITCH_NORMAL reason,
-even if the action is UNI_CHANNEL_RX_PATH, it'll still generate some
-unexpected tones, which might confuse DFS CAC tests that there are some
-tone leakages. To get rid of these kinds of false alarms, always bypass
-DPD calibration when IEEE80211_CONF_IDLE is set.
+Check that fw_link_id does not exceed the size of link_id_to_link_conf
+array. There's no any codepath that can cause that, but it's still
+safer to verify in case fw_link_id gets corrupted.
 
-Reviewed-by: Evelyn Tsai <evelyn.tsai@mediatek.com>
-Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Link: https://lore.kernel.org/r/20231017115047.3385bd11f423.I2d30fdb464f951c648217553c47901857a0046c7@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 6 +++---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/link.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 1a8611c6b684d..d46db4b04b78b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -2687,10 +2687,10 @@ int mt7915_mcu_set_chan_info(struct mt7915_phy *phy, int cmd)
- 	if (mt76_connac_spe_idx(phy->mt76->antenna_mask))
- 		req.tx_path_num = fls(phy->mt76->antenna_mask);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+index ace82e2c5bd91..a15e2c6caa242 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/link.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+@@ -61,7 +61,7 @@ int iwl_mvm_add_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID) {
+ 		link_info->fw_link_id = iwl_mvm_get_free_fw_link_id(mvm,
+ 								    mvmvif);
+-		if (link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID)
++		if (link_info->fw_link_id >= ARRAY_SIZE(mvm->link_id_to_link_conf))
+ 			return -EINVAL;
  
--	if (cmd == MCU_EXT_CMD(SET_RX_PATH) ||
--	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
-+	if (dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
- 		req.switch_reason = CH_SWITCH_NORMAL;
--	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
-+	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL ||
-+		 phy->mt76->hw->conf.flags & IEEE80211_CONF_IDLE)
- 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
- 	else if (!cfg80211_reg_can_beacon(phy->mt76->hw->wiphy, chandef,
- 					  NL80211_IFTYPE_AP))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 62a02b03d83ba..c22a7ec285cd4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -2861,10 +2861,10 @@ int mt7996_mcu_set_chan_info(struct mt7996_phy *phy, u16 tag)
- 		.channel_band = ch_band[chandef->chan->band],
- 	};
+ 		rcu_assign_pointer(mvm->link_id_to_link_conf[link_info->fw_link_id],
+@@ -245,7 +245,7 @@ int iwl_mvm_remove_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	int ret;
  
--	if (tag == UNI_CHANNEL_RX_PATH ||
--	    dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
-+	if (dev->mt76.hw->conf.flags & IEEE80211_CONF_MONITOR)
- 		req.switch_reason = CH_SWITCH_NORMAL;
--	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
-+	else if (phy->mt76->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL ||
-+		 phy->mt76->hw->conf.flags & IEEE80211_CONF_IDLE)
- 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
- 	else if (!cfg80211_reg_can_beacon(phy->mt76->hw->wiphy, chandef,
- 					  NL80211_IFTYPE_AP))
+ 	if (WARN_ON(!link_info ||
+-		    link_info->fw_link_id == IWL_MVM_FW_LINK_ID_INVALID))
++		    link_info->fw_link_id >= ARRAY_SIZE(mvm->link_id_to_link_conf)))
+ 		return -EINVAL;
+ 
+ 	RCU_INIT_POINTER(mvm->link_id_to_link_conf[link_info->fw_link_id],
 -- 
 2.42.0
 
