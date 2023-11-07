@@ -2,32 +2,32 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02DBC4167B
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:34:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED699C0018C
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:39:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234929AbjKGMeb (ORCPT
+        id S234466AbjKGMju (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:34:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53060 "EHLO
+        Tue, 7 Nov 2023 07:39:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343566AbjKGMeN (ORCPT
+        with ESMTP id S1343885AbjKGMjY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2023 07:34:13 -0500
+        Tue, 7 Nov 2023 07:39:24 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0D7B5258;
-        Tue,  7 Nov 2023 04:13:24 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54EFCC433CB;
-        Tue,  7 Nov 2023 12:13:22 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 707554C29;
+        Tue,  7 Nov 2023 04:13:03 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 713B9C433C8;
+        Tue,  7 Nov 2023 12:13:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359203;
-        bh=q5xEAjcaG5TO08PsnRP5mH0OMVS1kzr5nXD9L79tdtk=;
+        s=k20201202; t=1699359182;
+        bh=pTtMVMf5yz+QF+lficp01mw9DSUcGqK1R83bMxhYSUY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZxCXRXYVhfhRhTuhs/0ZYHFxvH/k0ktyko365x6TOKopw7V+GLhPeHZYFUTqSC/Qu
-         3qHhKwHxawH0L39zUQvD7uM5LB8Js4Hbd0PQUZYq9NaVEymCGQMW9WdNtPnvqSsCGz
-         bcnuiEzfyPD/Z9wskh4y+qy8z50F7XrU1+DZ6j5G9uRauRmB/PJ7fzO3S/oQdjedb3
-         mdx4pYzHcxTZBgRzuop1AZQQEMJAC3E8qMFqNGDNGnXZjg2EaxgVb9Ue8hHt2ik+oM
-         En9ddr9CkucwsDbMzZqpZc6ipI8aWJBZ/08m5mjGg940HyIk1HI8ls/yR7HPrw0qmk
-         TQV7R6qFjZAdw==
+        b=Q/I3TzB/WRQKSriyZYbu49XocwZybHWLNij7N13mlgPwW7rh1hr093G94LdVJv9/2
+         vc2Nlbb+mJt1+D+9CDBK6YEhsYB4zSJoMXM/ea81uz++zqZy+eKN6O9F12RUEfzApM
+         FVHwrSnm/nUfmFj8IkOWCG+G/RtJLjWs1YIkXrzaihGsHv5RYa6y6BSySuH7HK4fr5
+         rlhAJqGRHMcukxlr86DKSJeySWj9g8S/wo2Upn5higcnNJuCk3EClKD51I7IOeF2e5
+         BY9agHarKqGo3X6Cxl0dciqtR9vnujfllCDoC5Aj12ILL5gzbseKbUvdDlKypRkSe3
+         HIUn5WMzxlHFQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
@@ -36,17 +36,17 @@ Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
         Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
         nathan@kernel.org, ndesaulniers@google.com,
         linux-wireless@vger.kernel.org, llvm@lists.linux.dev
-Subject: [PATCH AUTOSEL 4.19 2/7] wifi: ath9k: fix clang-specific fortify warnings
-Date:   Tue,  7 Nov 2023 07:13:10 -0500
-Message-ID: <20231107121318.3759058-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 3/9] wifi: ath9k: fix clang-specific fortify warnings
+Date:   Tue,  7 Nov 2023 07:12:46 -0500
+Message-ID: <20231107121256.3758858-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107121318.3759058-1-sashal@kernel.org>
-References: <20231107121318.3759058-1-sashal@kernel.org>
+In-Reply-To: <20231107121256.3758858-1-sashal@kernel.org>
+References: <20231107121256.3758858-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.297
+X-stable-base: Linux 5.4.259
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -118,10 +118,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 84fe686709496..e0a4e3fa87305 100644
+index 859a865c59950..8d98347e0ddff 100644
 --- a/drivers/net/wireless/ath/ath9k/debug.c
 +++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1297,7 +1297,7 @@ void ath9k_get_et_strings(struct ieee80211_hw *hw,
+@@ -1284,7 +1284,7 @@ void ath9k_get_et_strings(struct ieee80211_hw *hw,
  			  u32 sset, u8 *data)
  {
  	if (sset == ETH_SS_STATS)
