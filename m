@@ -2,44 +2,44 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61370C4332F
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D52DCC41535
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Nov 2023 12:18:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234495AbjKGMSZ (ORCPT
+        id S234137AbjKGMS1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Nov 2023 07:18:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51560 "EHLO
+        Tue, 7 Nov 2023 07:18:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234633AbjKGMRm (ORCPT
+        with ESMTP id S234295AbjKGMRs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Nov 2023 07:17:42 -0500
+        Tue, 7 Nov 2023 07:17:48 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E11AB26A9;
-        Tue,  7 Nov 2023 04:12:35 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DFE4C43395;
-        Tue,  7 Nov 2023 12:12:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B195B49E5;
+        Tue,  7 Nov 2023 04:12:40 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D61CC4339A;
+        Tue,  7 Nov 2023 12:12:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699359155;
-        bh=cYmZsL8f0x/yljOBP/ipObqQSXEDxf1vk1TY8G4z8PU=;
+        s=k20201202; t=1699359160;
+        bh=jLypUU/0noopu0alttsui9gNIEEEjhC17JOSvYszyPs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KZ9ET1w1FG3szWTOS6kkvkAMYVguI5GW50SsNyZN4msWZxsLmUeiC+V1++kZwBDwC
-         S2Kzm22pLOrU2oee80jUzeMpGMMoN40rIjH5fck/XTSH75y1GDActSSxKUFQIRwPxa
-         bIeNW9gye96ZDoJ3zO6nP+7a1ZOd5g2M8b4igqBiUUnc/O2xvyEbEBNuXCp+CMuXrA
-         Ych/nA5LK8pkRaj0zkeyKzhIip7PSD9ZuPCVmbJW3D8K9mfqPSYxaDLH3e2I3taxpc
-         Z4+uG0A+/b/ZDCn8p1myVh93CIS5Fu5pL8CY2BAk7OEaos9l8zA1Z47RHVu2IeCcK/
-         dnV9IgXiUaZxA==
+        b=gdzb2n0Y8H1THe8WP4+igpxpIJQRwGVJ9YT0/+dR26Eh1nkWxLVMXr+CuWSxWv7wD
+         O/zlDRIulxJqgg0yB2IVSVfnrbf9JyF/h99NQ0h7vSXrq+mlbJ9Uo8/K8HQdUoyjWF
+         rbkoVS2gVf+2qpWyA7WqaK+8wlOR53CuoQfKq8br/R84xxU4XbrLg4vi62kOitfU04
+         4evZrZ9dlujYPDwYtrPjyt+7rE6eXo5D473YceB4QYugGXbrhC8xs4QfHk+WGHD0W7
+         4oGO4YV8ohZq0vO1dpJ0qC6BTEtwSnBV82X+Tnyo2P/dotr2uySA9LbjtI+9s21Qbg
+         FwM2e1xt1JiJw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Zong-Zhe Yang <kevin_yang@realtek.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, johannes@sipsolutions.net,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 02/11] wifi: mac80211: don't return unset power in ieee80211_get_tx_power()
-Date:   Tue,  7 Nov 2023 07:12:17 -0500
-Message-ID: <20231107121230.3758617-2-sashal@kernel.org>
+Cc:     Dmitry Antipov <dmantipov@yandex.ru>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        Kalle Valo <quic_kvalo@quicinc.com>,
+        Sasha Levin <sashal@kernel.org>, kvalo@kernel.org,
+        nathan@kernel.org, ndesaulniers@google.com,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        llvm@lists.linux.dev
+Subject: [PATCH AUTOSEL 5.10 05/11] wifi: ath10k: fix clang-specific fortify warning
+Date:   Tue,  7 Nov 2023 07:12:20 -0500
+Message-ID: <20231107121230.3758617-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107121230.3758617-1-sashal@kernel.org>
 References: <20231107121230.3758617-1-sashal@kernel.org>
@@ -52,54 +52,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Dmitry Antipov <dmantipov@yandex.ru>
 
-[ Upstream commit e160ab85166e77347d0cbe5149045cb25e83937f ]
+[ Upstream commit cb4c132ebfeac5962f7258ffc831caa0c4dada1a ]
 
-We can get a UBSAN warning if ieee80211_get_tx_power() returns the
-INT_MIN value mac80211 internally uses for "unset power level".
+When compiling with clang 16.0.6 and CONFIG_FORTIFY_SOURCE=y, I've
+noticed the following (somewhat confusing due to absence of an actual
+source code location):
 
- UBSAN: signed-integer-overflow in net/wireless/nl80211.c:3816:5
- -2147483648 * 100 cannot be represented in type 'int'
- CPU: 0 PID: 20433 Comm: insmod Tainted: G        WC OE
- Call Trace:
-  dump_stack+0x74/0x92
-  ubsan_epilogue+0x9/0x50
-  handle_overflow+0x8d/0xd0
-  __ubsan_handle_mul_overflow+0xe/0x10
-  nl80211_send_iface+0x688/0x6b0 [cfg80211]
-  [...]
-  cfg80211_register_wdev+0x78/0xb0 [cfg80211]
-  cfg80211_netdev_notifier_call+0x200/0x620 [cfg80211]
-  [...]
-  ieee80211_if_add+0x60e/0x8f0 [mac80211]
-  ieee80211_register_hw+0xda5/0x1170 [mac80211]
+In file included from drivers/net/wireless/ath/ath10k/debug.c:8:
+In file included from ./include/linux/module.h:13:
+In file included from ./include/linux/stat.h:19:
+In file included from ./include/linux/time.h:60:
+In file included from ./include/linux/time32.h:13:
+In file included from ./include/linux/timex.h:67:
+In file included from ./arch/x86/include/asm/timex.h:5:
+In file included from ./arch/x86/include/asm/processor.h:23:
+In file included from ./arch/x86/include/asm/msr.h:11:
+In file included from ./arch/x86/include/asm/cpumask.h:5:
+In file included from ./include/linux/cpumask.h:12:
+In file included from ./include/linux/bitmap.h:11:
+In file included from ./include/linux/string.h:254:
+./include/linux/fortify-string.h:592:4: warning: call to '__read_overflow2_field'
+declared with 'warning' attribute: detected read beyond size of field (2nd
+parameter); maybe use struct_group()? [-Wattribute-warning]
+                        __read_overflow2_field(q_size_field, size);
 
-In this case, simply return an error instead, to indicate
-that no data is available.
+The compiler actually complains on 'ath10k_debug_get_et_strings()' where
+fortification logic inteprets call to 'memcpy()' as an attempt to copy
+the whole 'ath10k_gstrings_stats' array from it's first member and so
+issues an overread warning. This warning may be silenced by passing
+an address of the whole array and not the first member to 'memcpy()'.
 
-Cc: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://lore.kernel.org/r/20230203023636.4418-1-pkshih@realtek.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://lore.kernel.org/r/20230829093652.234537-1-dmantipov@yandex.ru
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/cfg.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath10k/debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c6a7f1c99abc5..45bb6f2755987 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2726,6 +2726,10 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
- 	else
- 		*dbm = sdata->vif.bss_conf.txpower;
- 
-+	/* INT_MIN indicates no power level was set yet */
-+	if (*dbm == INT_MIN)
-+		return -EINVAL;
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e8250a6654338..ab737177a86bf 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1139,7 +1139,7 @@ void ath10k_debug_get_et_strings(struct ieee80211_hw *hw,
+ 				 u32 sset, u8 *data)
+ {
+ 	if (sset == ETH_SS_STATS)
+-		memcpy(data, *ath10k_gstrings_stats,
++		memcpy(data, ath10k_gstrings_stats,
+ 		       sizeof(ath10k_gstrings_stats));
  }
  
 -- 
