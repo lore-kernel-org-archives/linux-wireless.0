@@ -2,65 +2,79 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 309B2C4332F
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Nov 2023 21:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D72C4167B
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Nov 2023 23:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbjKHVhQ (ORCPT
+        id S231259AbjKHXax (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Nov 2023 16:37:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40602 "EHLO
+        Wed, 8 Nov 2023 18:30:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjKHVhP (ORCPT
+        with ESMTP id S230393AbjKHXaw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Nov 2023 16:37:15 -0500
-Received: from mxb-1-3d1.seznam.cz (mxb-1-3d1.seznam.cz [IPv6:2a02:598:128:8a00::1000:3d1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8859B2127
-        for <linux-wireless@vger.kernel.org>; Wed,  8 Nov 2023 13:37:12 -0800 (PST)
-Received: from email.seznam.cz
-        by smtpc-mxb-59df7f4d65-k4z9p
-        (smtpc-mxb-59df7f4d65-k4z9p [2a02:598:128:8a00::1000:3d1])
-        id 4e1f14c5afa909a3484c48cf;
-        Wed, 08 Nov 2023 22:37:00 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=emailprofi.seznam.cz; s=szn20221014; t=1699479420;
-        bh=4Y1BbhTSY/9Ja6explMEjDxVisga0RVjsF8xRyapfoI=;
-        h=Received:From:To:Subject:Date:Message-Id:Mime-Version:X-Mailer:
-         Content-Type:Content-Transfer-Encoding;
-        b=a6QZH7yRtjlVu6W4eJDDlXB/lQi3hfsA9uSJONMmeY6d8Z9aUnXl70B42+HjVjS/y
-         vQxIoxe+gBOEDxLFNTgalnDsA2BDi9zInuMwiU2s9vGgmmJrbUxVQeCkEYAi5Bxl5/
-         l9MhzpE1Wvpd2XEsTXBw/Laqzr5h7TkHLi2cqbaPN5V9QjtP95ei6qQcbK7ioDzdHU
-         s7sy7KluXkfyxQIpgQfJhSCVTQ5UjoKu+iIj886GZL0mciR5je9x5DSGS/0KRRGyMD
-         7GBNHl3lqZbvvQ2jlhwUT3a7UeWzkmdrt2ECZUCIXh4C6xHjdrOUTxu2OuqZeIIjoq
-         l0TBsCsWG5I6w==
-Received: from kaj-0955.koleje.cuni.cz
-        (kaj-0955.koleje.cuni.cz [78.128.163.196])
-        by email.seznam.cz (szn-UNKNOWN-unknown) with HTTP;
-        Wed, 08 Nov 2023 22:36:58 +0100 (CET)
-From:   =?utf-8?q?Patrik_V=C3=A1cal?= <patrik@vacal.dev>
-To:     <linux-wireless@vger.kernel.org>
-Subject: ipw2x00 driver user here
-Date:   Wed, 08 Nov 2023 22:36:57 +0100 (CET)
-Message-Id: <8fc.6Krdh.6K7Yey8hySX.1bI}zv@seznam.cz>
-Mime-Version: 1.0 (szn-mime-2.1.33)
-X-Mailer: szn-UNKNOWN-unknown
-Content-Type: text/plain;
-        charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+        Wed, 8 Nov 2023 18:30:52 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6BEE259F
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Nov 2023 15:30:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=ULjNDhRCHzCMzyECCH/VPkyLwedLWPjPhvYK4wx2F28=;
+        t=1699486249; x=1700695849; b=yGiABc9rBn7DgFAoFISmshBb8RZYUtcpHShkyQZs68/birS
+        2l0NiSPp25YRtWIFUqAwvNXlgTx3ILhB2HvOpJG5/SS6hA8RJBKw/EbD/sQNdh4M/n6EBqPLuvLc7
+        kG6nMPSvC4NuV3zGpec5qqK+1Yxonx+mPRn2a9U0pRIsAXE0GSY4Mn3X97eeejz7oy7yP0MWJCSMl
+        A4QUOMVT9mptz46kuU7cwKPOg0wdK5aCj/58OMMjCUsCnZVobVnnkFhsYkwvks1cMpIPTZcrBFP2h
+        O32dw9gx2HhLqAnAyrOrmzqKurGaQwDBYOdVRvQ9oQbypEhXA82/K3rQym3ALVag==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1r0s0U-00000000r6s-0ssk;
+        Thu, 09 Nov 2023 00:30:46 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC PATCH 2/2] wifi: mac80211: chan: chandef is non-NULL for reserved
+Date:   Thu,  9 Nov 2023 00:30:42 +0100
+Message-ID: <20231109003040.a490f0117800.I12287452f42c54baf75821e75491cf6d021af20a@changeid>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231109003040.4b25d42b8b14.I60d093b2fc81ca1853925a4d0ac3a2337d5baa5b@changeid>
+References: <20231109003040.4b25d42b8b14.I60d093b2fc81ca1853925a4d0ac3a2337d5baa5b@changeid>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've just read about removing old wireless drivers in new kernel versions.=
+The last caller of this with a NULL argument was related to
+the non-chanctx code, so we can now remove this odd logic.
 
-There was also discussion about the ipw2x00 drivers.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/chan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Just wanna let you know that I still use my ThinkPad x41 with ipw2200. Ple=
-ase don't remove the drivers from the kernel.
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 0a08dc7b7976..085ea7ce5750 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -90,11 +90,11 @@ ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
++	if (WARN_ON(!compat))
++		return NULL;
++
+ 	list_for_each_entry(link, &ctx->reserved_links,
+ 			    reserved_chanctx_list) {
+-		if (!compat)
+-			compat = &link->reserved_chandef;
+-
+ 		compat = cfg80211_chandef_compatible(&link->reserved_chandef,
+ 						     compat);
+ 		if (!compat)
+-- 
+2.41.0
 
-Also in case you need to test if the drivers are working on this machine, =
-I can test it out.
-
-Have a great day,
-Patrik.
