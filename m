@@ -2,75 +2,225 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE811C4167B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:27:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31969C04A95
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:27:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344246AbjKJS1H (ORCPT
+        id S1345083AbjKJS1J (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:27:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39672 "EHLO
+        Fri, 10 Nov 2023 13:27:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235755AbjKJSZ2 (ORCPT
+        with ESMTP id S1345952AbjKJSZx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:25:28 -0500
-Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF49F8694;
-        Thu,  9 Nov 2023 23:36:20 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R191e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0Vw3kmLf_1699601764;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0Vw3kmLf_1699601764)
-          by smtp.aliyun-inc.com;
-          Fri, 10 Nov 2023 15:36:16 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     stf_xl@wp.pl
-Cc:     kvalo@kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] iwlegacy: Remove the unused variable len
-Date:   Fri, 10 Nov 2023 15:36:02 +0800
-Message-Id: <20231110073602.16846-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        Fri, 10 Nov 2023 13:25:53 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7FA528132
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:22:06 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6454C433C8;
+        Fri, 10 Nov 2023 10:22:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699611726;
+        bh=4R+48ZsZ6g6W/iclu+AoYZ4jUcByaUxPgac3A4UoqZw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=I1b4xoASLNZkFLnpBRCNyVvsw5GtJYDvTd+94wQ6wapIFnNbGlrgfGK2jjRZNMDpu
+         U+SksjmptPpASrcgwX9qsvuxVGT4HEl5VSeYoyPWipoMC8cobwLLd4rdTimPy84Kdq
+         TFkUZpe25gGt9FFnl0dZ+jJDH9bQj7tphgiNiaTo3vyGn5YF4PQ2P099jrrAOZNZxb
+         Zk6lstxtwf6RMoRwQICt2ZJsn7laCiBdnoAY7xCLJexHvkDKdFBEsqIylwKN2rBp+s
+         6hUxGjiTDztIC1HAZ/eKfXyFeYmgD39nKwWS7QVoJxN2WqLJbIzoQUgIw9s7lGkOO1
+         Vf+GDjXsapZDg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     mhi@lists.linux.dev
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 1/8] bus: mhi: host: add mhi_power_down_no_destroy()
+Date:   Fri, 10 Nov 2023 12:21:55 +0200
+Message-Id: <20231110102202.3168243-2-kvalo@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231110102202.3168243-1-kvalo@kernel.org>
+References: <20231110102202.3168243-1-kvalo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Variable len is not effectively used, so delete it.
+From: Baochen Qiang <quic_bqiang@quicinc.com>
 
-drivers/net/wireless/intel/iwlegacy/4965-mac.c:4234:7: warning: variable 'len' set but not used.
+If ath11k tries to call mhi_power_up() during resume it fails:
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=7223
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+ath11k_pci 0000:06:00.0: timeout while waiting for restart complete
+
+This happens because when calling mhi_power_up() the MHI subsystem eventually
+calls device_add() from mhi_create_devices() but the device creation is
+deferred:
+
+mhi mhi0_IPCR: Driver qcom_mhi_qrtr force probe deferral
+
+The reason for deferring device creation is explained in dpm_prepare():
+
+	/*
+	 * It is unsafe if probing of devices will happen during suspend or
+	 * hibernation and system behavior will be unpredictable in this case.
+	 * So, let's prohibit device's probing here and defer their probes
+	 * instead. The normal behavior will be restored in dpm_complete().
+	 */
+
+Because the device probe is deferred, the qcom_mhi_qrtr_probe() is not called and
+qcom_mhi_qrtr_dl_callback() fails silently as qdev is zero:
+
+static void qcom_mhi_qrtr_dl_callback(struct mhi_device *mhi_dev,
+				      struct mhi_result *mhi_res)
+{
+	struct qrtr_mhi_dev *qdev = dev_get_drvdata(&mhi_dev->dev);
+	int rc;
+
+	if (!qdev || mhi_res->transaction_status)
+		return;
+
+So what this means that QRTR is not delivering messages and the QMI connection
+is not working between ath11k and the firmware, resulting a failure in firmware
+initialisation.
+
+To fix this add new function mhi_power_down_no_destroy() which does not destroy
+the devices during power down. This way mhi_power_up() can be called during
+resume and we can get ath11k hibernation working with the following patches.
+
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
+
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/bus/mhi/host/internal.h |  1 +
+ drivers/bus/mhi/host/pm.c       | 26 +++++++++++++++++++-------
+ include/linux/mhi.h             | 29 +++++++++++++++++++++++++++--
+ 3 files changed, 47 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 69276266ce6f..70e420df1643 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4231,8 +4231,6 @@ il4965_rx_handle(struct il_priv *il)
- 		fill_rx = 1;
+diff --git a/drivers/bus/mhi/host/internal.h b/drivers/bus/mhi/host/internal.h
+index 2e139e76de4c..d1033af285e2 100644
+--- a/drivers/bus/mhi/host/internal.h
++++ b/drivers/bus/mhi/host/internal.h
+@@ -69,6 +69,7 @@ enum dev_st_transition {
+ 	DEV_ST_TRANSITION_FP,
+ 	DEV_ST_TRANSITION_SYS_ERR,
+ 	DEV_ST_TRANSITION_DISABLE,
++	DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE,
+ 	DEV_ST_TRANSITION_MAX,
+ };
  
- 	while (i != r) {
--		int len;
--
- 		rxb = rxq->queue[i];
+diff --git a/drivers/bus/mhi/host/pm.c b/drivers/bus/mhi/host/pm.c
+index 8a4362d75fc4..e0e429adbda6 100644
+--- a/drivers/bus/mhi/host/pm.c
++++ b/drivers/bus/mhi/host/pm.c
+@@ -453,7 +453,8 @@ static int mhi_pm_mission_mode_transition(struct mhi_controller *mhi_cntrl)
+ }
  
- 		/* If an RXB doesn't have a Rx queue slot associated with it,
-@@ -4246,10 +4244,6 @@ il4965_rx_handle(struct il_priv *il)
- 			       PAGE_SIZE << il->hw_params.rx_page_order,
- 			       DMA_FROM_DEVICE);
- 		pkt = rxb_addr(rxb);
--
--		len = le32_to_cpu(pkt->len_n_flags) & IL_RX_FRAME_SIZE_MSK;
--		len += sizeof(u32);	/* account for status word */
--
- 		reclaim = il_need_reclaim(il, pkt);
+ /* Handle shutdown transitions */
+-static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl)
++static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl,
++				      bool destroy_device)
+ {
+ 	enum mhi_pm_state cur_state;
+ 	struct mhi_event *mhi_event;
+@@ -515,8 +516,10 @@ static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl)
+ 	dev_dbg(dev, "Waiting for all pending threads to complete\n");
+ 	wake_up_all(&mhi_cntrl->state_event);
  
- 		/* Based on type of command response or notification,
+-	dev_dbg(dev, "Reset all active channels and remove MHI devices\n");
+-	device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_destroy_device);
++	if (destroy_device) {
++		dev_dbg(dev, "Reset all active channels and remove MHI devices\n");
++		device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_destroy_device);
++	}
+ 
+ 	mutex_lock(&mhi_cntrl->pm_mutex);
+ 
+@@ -801,7 +804,10 @@ void mhi_pm_st_worker(struct work_struct *work)
+ 			mhi_pm_sys_error_transition(mhi_cntrl);
+ 			break;
+ 		case DEV_ST_TRANSITION_DISABLE:
+-			mhi_pm_disable_transition(mhi_cntrl);
++			mhi_pm_disable_transition(mhi_cntrl, false);
++			break;
++		case DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE:
++			mhi_pm_disable_transition(mhi_cntrl, true);
+ 			break;
+ 		default:
+ 			break;
+@@ -1154,7 +1160,8 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
+ }
+ EXPORT_SYMBOL_GPL(mhi_async_power_up);
+ 
+-void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
++void __mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful,
++		      bool destroy_device)
+ {
+ 	enum mhi_pm_state cur_state, transition_state;
+ 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+@@ -1190,14 +1197,19 @@ void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
+ 	write_unlock_irq(&mhi_cntrl->pm_lock);
+ 	mutex_unlock(&mhi_cntrl->pm_mutex);
+ 
+-	mhi_queue_state_transition(mhi_cntrl, DEV_ST_TRANSITION_DISABLE);
++	if (destroy_device)
++		mhi_queue_state_transition(mhi_cntrl,
++					   DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE);
++	else
++		mhi_queue_state_transition(mhi_cntrl,
++					   DEV_ST_TRANSITION_DISABLE);
+ 
+ 	/* Wait for shutdown to complete */
+ 	flush_work(&mhi_cntrl->st_worker);
+ 
+ 	disable_irq(mhi_cntrl->irq[0]);
+ }
+-EXPORT_SYMBOL_GPL(mhi_power_down);
++EXPORT_SYMBOL_GPL(__mhi_power_down);
+ 
+ int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
+ {
+diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+index 039943ec4d4e..85edc9c5df88 100644
+--- a/include/linux/mhi.h
++++ b/include/linux/mhi.h
+@@ -644,12 +644,37 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl);
+  */
+ int mhi_sync_power_up(struct mhi_controller *mhi_cntrl);
+ 
++void __mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful,
++		    bool destroy_device);
++
+ /**
+- * mhi_power_down - Start MHI power down sequence
++ * mhi_power_down - Start MHI power down sequence. See also
++ * mhi_power_down_no_destroy() which is a variant of this for suspend.
++ *
+  * @mhi_cntrl: MHI controller
+  * @graceful: Link is still accessible, so do a graceful shutdown process
+  */
+-void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful);
++static inline void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
++{
++	__mhi_power_down(mhi_cntrl, graceful, true);
++}
++
++/**
++ * mhi_power_down_no_destroy - Start MHI power down sequence but don't
++ * destroy struct devices. This is a variant for mhi_power_down() and is a
++ * workaround to make it possible to use mhi_power_up() in a resume
++ * handler. When using this variant the caller must also call
++ * mhi_prepare_all_for_transfer_autoqueue() and
++ * mhi_unprepare_all_from_transfer().
++ *
++ * @mhi_cntrl: MHI controller
++ * @graceful: Link is still accessible, so do a graceful shutdown process
++ */
++static inline void mhi_power_down_no_destroy(struct mhi_controller *mhi_cntrl,
++					     bool graceful)
++{
++	__mhi_power_down(mhi_cntrl, graceful, false);
++}
+ 
+ /**
+  * mhi_unprepare_after_power_down - Free any allocated memory after power down
 -- 
-2.20.1.7.g153144c
+2.39.2
 
