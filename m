@@ -2,90 +2,108 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20454C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 20:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2305C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 21:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235887AbjKJUgv (ORCPT
+        id S229569AbjKJVkC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 15:36:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46512 "EHLO
+        Fri, 10 Nov 2023 16:40:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235739AbjKJUgi (ORCPT
+        with ESMTP id S229471AbjKJVkB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 15:36:38 -0500
-Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82C889EE8;
-        Fri, 10 Nov 2023 00:33:39 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0Vw3yTAp_1699605209;
-Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0Vw3yTAp_1699605209)
-          by smtp.aliyun-inc.com;
-          Fri, 10 Nov 2023 16:33:35 +0800
-From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-To:     briannorris@chromium.org
+        Fri, 10 Nov 2023 16:40:01 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75F5BA9;
+        Fri, 10 Nov 2023 13:39:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=zv4p0IORXbUduRi4hB1ViF0SxIffSRz9cFMe9JTmeIQ=;
+        t=1699652398; x=1700861998; b=S4RLP2TGncVD+SsWLHv6/8l3YTBVtDi0qZK8MKnEE6dG45g
+        5GP0lEuMgoTgKz/mgEH/o41FCZ+DWSzu+NKXD3XrKsoOwX65zY8UEe9n8AIOsacpBn7MPR7I3P2/n
+        90dYK+MbxGlJdocf+QSv0Gd5eDhkWSL89j0Dvwh/V/uvvcqLDoG0a6iZky/Jx4kIwM2ul6QlMEWHu
+        oNnqZx3b+N4W4F2khVYrTVEV3G0s/WV52DQ/2umYPQ+V6+OSr2wVJ+RAJxYjdx6VgS8W5U/UAdFuT
+        KO14sf/uwdxdw72CeZQnGy2ukNmd/wDVjxyQKFXcO8fzLEeDF4Gr5EIeVMoxMPlA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1r1ZEJ-00000003DcW-2daU;
+        Fri, 10 Nov 2023 22:39:55 +0100
+Message-ID: <c4c14b15d5e0c2e4650b50ef7ae9d8755f83900e.camel@sipsolutions.net>
+Subject: Re: [PATCH] mwifiex: clean up some inconsistent indenting
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        briannorris@chromium.org
 Cc:     kvalo@kernel.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        Abaci Robot <abaci@linux.alibaba.com>
-Subject: [PATCH] mwifiex: clean up some inconsistent indenting
-Date:   Fri, 10 Nov 2023 16:33:27 +0800
-Message-Id: <20231110083327.7022-1-jiapeng.chong@linux.alibaba.com>
-X-Mailer: git-send-email 2.20.1.7.g153144c
+        linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
+Date:   Fri, 10 Nov 2023 22:39:54 +0100
+In-Reply-To: <20231110083327.7022-1-jiapeng.chong@linux.alibaba.com>
+References: <20231110083327.7022-1-jiapeng.chong@linux.alibaba.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-No functional modification involved.
+On Fri, 2023-11-10 at 16:33 +0800, Jiapeng Chong wrote:
+> No functional modification involved.
+>=20
+> drivers/net/wireless/marvell/mwifiex/sta_event.c:789 mwifiex_process_sta_=
+event() warn: inconsistent indenting.
 
-drivers/net/wireless/marvell/mwifiex/sta_event.c:789 mwifiex_process_sta_event() warn: inconsistent indenting.
+OK, sure ...
 
-Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=7226
-Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
----
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+> +++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+> @@ -762,7 +762,7 @@ int mwifiex_process_sta_event(struct mwifiex_private =
+*priv)
+>  		mwifiex_dbg(adapter, EVENT, "info: EVENT: AWAKE\n");
+>  		if (!adapter->pps_uapsd_mode &&
+>  		    (priv->port_open ||
+> -		     (priv->bss_mode =3D=3D NL80211_IFTYPE_ADHOC)) &&
+> +		    (priv->bss_mode =3D=3D NL80211_IFTYPE_ADHOC)) &&
+>  		    priv->media_connected && adapter->sleep_period.period) {
+>  			adapter->pps_uapsd_mode =3D true;
+>  			mwifiex_dbg(adapter, EVENT,
+> @@ -773,7 +773,7 @@ int mwifiex_process_sta_event(struct mwifiex_private =
+*priv)
+>  			if (mwifiex_check_last_packet_indication(priv)) {
+>  				if (adapter->data_sent ||
+>  				    (adapter->if_ops.is_port_ready &&
+> -				     !adapter->if_ops.is_port_ready(priv))) {
+> +				    !adapter->if_ops.is_port_ready(priv))) {
+>  					adapter->ps_state =3D PS_STATE_AWAKE;
+>  					adapter->pm_wakeup_card_req =3D false;
+>  					adapter->pm_wakeup_fw_try =3D false;
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index df9cdd10a494..9dd3b6d71026 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -762,7 +762,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		mwifiex_dbg(adapter, EVENT, "info: EVENT: AWAKE\n");
- 		if (!adapter->pps_uapsd_mode &&
- 		    (priv->port_open ||
--		     (priv->bss_mode == NL80211_IFTYPE_ADHOC)) &&
-+		    (priv->bss_mode == NL80211_IFTYPE_ADHOC)) &&
- 		    priv->media_connected && adapter->sleep_period.period) {
- 			adapter->pps_uapsd_mode = true;
- 			mwifiex_dbg(adapter, EVENT,
-@@ -773,7 +773,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 			if (mwifiex_check_last_packet_indication(priv)) {
- 				if (adapter->data_sent ||
- 				    (adapter->if_ops.is_port_ready &&
--				     !adapter->if_ops.is_port_ready(priv))) {
-+				    !adapter->if_ops.is_port_ready(priv))) {
- 					adapter->ps_state = PS_STATE_AWAKE;
- 					adapter->pm_wakeup_card_req = false;
- 					adapter->pm_wakeup_fw_try = false;
-@@ -781,12 +781,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					break;
- 				}
- 				if (!mwifiex_send_null_packet
--					(priv,
--					 MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
--					 MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
--						adapter->ps_state =
--							PS_STATE_SLEEP;
--					return 0;
-+				    (priv, MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
-+				     MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
-+					adapter->ps_state = PS_STATE_SLEEP;
-+				return 0;
- 			}
- 		}
- 		adapter->ps_state = PS_STATE_AWAKE;
--- 
-2.20.1.7.g153144c
 
+Seems fine.
+
+> @@ -781,12 +781,10 @@ int mwifiex_process_sta_event(struct mwifiex_privat=
+e *priv)
+>  					break;
+>  				}
+>  				if (!mwifiex_send_null_packet
+> -					(priv,
+> -					 MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
+> -					 MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
+> -						adapter->ps_state =3D
+> -							PS_STATE_SLEEP;
+> -					return 0;
+> +				    (priv, MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
+> +				     MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
+> +					adapter->ps_state =3D PS_STATE_SLEEP;
+> +				return 0;
+>=20
+
+=F0=9F=A4=B7=E2=80=8D=E2=99=80=EF=B8=8F=EF=B8=8F
+That's not really an improvement is it? You've just indented the
+function arguments as if they were part another part of the condition? I
+mean, sure, it was awful - but ... maybe better break the 80 cols rule
+(which isn't one any more anyway)?
+
+johannes
