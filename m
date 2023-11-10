@@ -2,91 +2,123 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C08FC4167B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C466C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229687AbjKJSHL (ORCPT
+        id S1344613AbjKJSLo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:07:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55496 "EHLO
+        Fri, 10 Nov 2023 13:11:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345734AbjKJSGu (ORCPT
+        with ESMTP id S1345589AbjKJSLO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:06:50 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C1BE9000
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 00:13:37 -0800 (PST)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7gTKE011102;
-        Fri, 10 Nov 2023 08:13:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=txZZy8CL21otkiewHkKdEAcF3VMcwzBDxAnpSqKwR+c=;
- b=MVmGjSkGLWT1NRpSCsajc4xqKxBlO/a+dI2vWzv8bR4TlPBsU6FdlZbE3yTQWcx5E0fw
- y5/ezEXZTP/EofEX/Yzkh5YB0MgaXdkjXS7t643+7mLlZ9vUy0x3NJW60ecUAeawZSqG
- f2CDNJisRwxxqXIbkHVJrymmBr9juKVVjxEzGDFvMJVRrj+opbe/Uhy/jRKeJmxc7bTx
- /+FGHfsCztLfWpoI21M1/VRDortL2f/BtL9MIJlK+xsuY3xMIjLUgDy7zRD7W7rEtI/B
- GQ0y71AxU5OS0lhtdCY1vveMl7G/W2ZJNaHFLY8pUU3RrHBMgxynl53iZ8A+McWrMROC 8g== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93qy9jv1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 08:13:34 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA8DXZB022106
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 08:13:33 GMT
-Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.39; Fri, 10 Nov 2023 00:13:32 -0800
-From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-To:     <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Subject: [PATCH 0/4] ath12k: Refactor Rxdma replenish arguments
-Date:   Fri, 10 Nov 2023 13:43:13 +0530
-Message-ID: <20231110081317.19608-1-quic_periyasa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 10 Nov 2023 13:11:14 -0500
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DF1529514
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:33:42 -0800 (PST)
+Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-2802d218242so1739244a91.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:33:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessos.org; s=google; t=1699612422; x=1700217222; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=P8nODykpdMd/QuQkSZ1t9BSG46K5XmlrvFgBiwL5jzw=;
+        b=BfY54kMWKZiNpxgDwPTosomEnEgsKfjIYzSAPtRvKLZSmNQ9ewIT+Mh8vLAKoykbGb
+         KDOy2O46yc9Mjz5mc7Owjk1YCqkmfYorpgOO9FCddogShAYDstKFaQzad4K8ivulDcH4
+         5iCjIpw5cjdtkBi9S35Zh+DX4OFnEGd3H7NPLVP94fYFgAVFbR9rElUl6bPVVEG8gQCr
+         uebMNwAT6awoXQ2KkMkDSkJkHzI8PYIsYJMZi6qEzI1e3orgKphgbYgAequ6/QUjTH2f
+         9FDmSdiMSl37H7niunnVPnlIn1UTvRevC83/tG76Vij7Nhi2Pint+UzvEdfMz8wjXv6n
+         xCEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699612422; x=1700217222;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=P8nODykpdMd/QuQkSZ1t9BSG46K5XmlrvFgBiwL5jzw=;
+        b=jzM1v3xL0Pv7mPVK4dHC0hFfUSS3OYiIX/02f4/UpK5dIoAp6Icvpww3g/qyXKX3Nq
+         /DoKifWjZT0bh8tIlLh7BcehsCdQIGsswG7xd4q0fU/XuOOwDJgVrEqC4EH2sFJVBcym
+         9L/fuUJgJkkg6hzUHsA+l9RyPHzZ3Xig/kFc0MtuHWSMIfBYsCYmzR3Ix7j3Rtacsh/w
+         j4zqmIxob8p1AxV9fE1tbtUt/8Pgyk7zMEnVdDp14dNlXEEjedt79Z2Xx4pgs9HVe/QM
+         b4zhpGI8AU1/3Yw0HnGKDQLlnLSKvrZO1s24/+qddyCtgKf6I21VnmZdbiBMHheXbCdw
+         Y8mw==
+X-Gm-Message-State: AOJu0Yywyr4124EyvjEqI3KRF0+sgPl7MvDmTKnCGZvh5umYfHGdp0Qg
+        ujr2x+jk+icQjRyTEZ+D+7OYnlvO+b81CecNc69a9g==
+X-Google-Smtp-Source: AGHT+IHjFC6nDf4W0MIiTHQ5Vsil8/hQIjbCss9sx8CmgDHYcwV6iMqCPxN37OS6HIohKShUayaC9Q==
+X-Received: by 2002:a17:90b:3805:b0:27d:5562:7e0b with SMTP id mq5-20020a17090b380500b0027d55627e0bmr4235389pjb.7.1699612421849;
+        Fri, 10 Nov 2023 02:33:41 -0800 (PST)
+Received: from localhost.localdomain ([123.51.167.56])
+        by smtp.googlemail.com with ESMTPSA id oa3-20020a17090b1bc300b0027cfd582b51sm1319374pjb.3.2023.11.10.02.33.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Nov 2023 02:33:41 -0800 (PST)
+From:   Jian-Hong Pan <jhp@endlessos.org>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux@endlessos.org,
+        Jian-Hong Pan <jhp@endlessos.org>
+Subject: [PATCH] rtlwifi: rtl8723be: Disable ASPM if RTL8723BE connects to some Intel PCI bridge
+Date:   Fri, 10 Nov 2023 18:32:28 +0800
+Message-ID: <20231110103227.58008-2-jhp@endlessos.org>
+X-Mailer: git-send-email 2.42.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: eI5UD6H4nch1rSWIDeQvRcKWk7VXFJhN
-X-Proofpoint-GUID: eI5UD6H4nch1rSWIDeQvRcKWk7VXFJhN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-10_04,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=1 phishscore=0 bulkscore=0
- spamscore=1 clxscore=1015 malwarescore=0 priorityscore=1501 suspectscore=0
- mlxscore=1 lowpriorityscore=0 mlxlogscore=190 impostorscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
- definitions=main-2311100068
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Avoid the explicit arguments of Rxdma replenish to optimize the per packet
-rx data path CPU cycles. Also refactor the Rxdma ring structure.
+Disable rtl8723be's ASPM if the Realtek RTL8723BE PCIe Wireless adapter
+connects to some Intel PCI bridges, such as Skylake and Kabylake.
+Otherwise, the PCI AER flood hangs system:
 
-Karthikeyan Periyasamy (4):
-  wifi: ath12k: avoid explicit mac id argument in Rxdma replenish
-  wifi: ath12k: avoid explicit RBM id argument in Rxdma replenish
-  wifi: ath12k: avoid explicit HW conversion argument in Rxdma replenish
-  wifi: ath12k: refactor DP Rxdma ring structure
+pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected, type=Physical Layer, (Receiver ID)
+pcieport 0000:00:1c.5:   device [8086:9d15] error status/mask=00000001/00002000
+pcieport 0000:00:1c.5:    [ 0] RxErr                  (First)
+pcieport 0000:00:1c.5: AER: Corrected error received: 0000:00:1c.5
+pcieport 0000:00:1c.5: AER: can't find device of ID00e5
+pcieport 0000:00:1c.5: AER: Corrected error received: 0000:00:1c.5
+pcieport 0000:00:1c.5: AER: can't find device of ID00e5
+pcieport 0000:00:1c.5: AER: Multiple Corrected error received: 0000:00:1c.5
+pcieport 0000:00:1c.5: AER: can't find device of ID00e5
 
- drivers/net/wireless/ath/ath12k/dp.c     |   4 +-
- drivers/net/wireless/ath/ath12k/dp.h     |  11 +-
- drivers/net/wireless/ath/ath12k/dp_mon.c |  10 +-
- drivers/net/wireless/ath/ath12k/dp_mon.h |   2 +-
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 143 ++++++++++-------------
- drivers/net/wireless/ath/ath12k/dp_rx.h  |   6 +-
- 6 files changed, 76 insertions(+), 100 deletions(-)
+Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=218127
+Signed-off-by: Jian-Hong Pan <jhp@endlessos.org>
+---
+ .../wireless/realtek/rtlwifi/rtl8723be/sw.c   | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-
-base-commit: 553d0057523dc1d6935160613f1fbf9bb8db88f6
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 43b611d5288d..720c79e0781a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -25,10 +25,29 @@ static void rtl8723be_init_aspm_vars(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	struct pci_dev *bridge_pdev;
+ 
+ 	/*close ASPM for AMD defaultly */
+ 	rtlpci->const_amdpci_aspm = 0;
+ 
++	/* Disable ASPM if RTL8723BE connects to some Intel PCI bridges, such as
++	 * Skylake and Kabylake. Otherwise, the PCI AER flood hangs system.
++	 */
++	bridge_pdev = rtlpci->pdev->bus->self;
++	if (bridge_pdev->vendor == PCI_VENDOR_ID_INTEL) {
++		switch(bridge_pdev->device) {
++		case 0x9d15:
++		/* PCI bridges on Skylake */
++		case 0xa110 ... 0xa11f:
++		case 0xa167 ... 0xa16a:
++		/* PCI bridges on Kabylake */
++		case 0xa290 ... 0xa29f:
++		case 0xa2e7 ... 0xa2ee:
++			rtlpriv->cfg->mod_params->aspm_support = 0;
++			break;
++		}
++	}
++
+ 	/* ASPM PS mode.
+ 	 * 0 - Disable ASPM,
+ 	 * 1 - Enable ASPM without Clock Req,
 -- 
-2.17.1
+2.42.1
 
