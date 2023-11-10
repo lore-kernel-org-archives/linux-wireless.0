@@ -2,368 +2,307 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B3A6C41535
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 01:24:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8FFC4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 17:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234849AbjKJBY2 (ORCPT
+        id S235217AbjKJRoG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Nov 2023 20:24:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52026 "EHLO
+        Fri, 10 Nov 2023 12:44:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345535AbjKJBY0 (ORCPT
+        with ESMTP id S1345541AbjKJRnh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Nov 2023 20:24:26 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51E5544A4
-        for <linux-wireless@vger.kernel.org>; Thu,  9 Nov 2023 17:24:24 -0800 (PST)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3AA1OFSp81890534, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3AA1OFSp81890534
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Nov 2023 09:24:15 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Fri, 10 Nov 2023 09:24:16 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Fri, 10 Nov
- 2023 09:24:16 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] wifi: rtw89: 8922ae: add v2 interrupt handlers for 8922AE
-Date:   Fri, 10 Nov 2023 09:23:17 +0800
-Message-ID: <20231110012319.12727-6-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231110012319.12727-1-pkshih@realtek.com>
-References: <20231110012319.12727-1-pkshih@realtek.com>
+        Fri, 10 Nov 2023 12:43:37 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00EFB9032
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 00:14:18 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7fv1M010164;
+        Fri, 10 Nov 2023 08:14:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=+hqU5tkNI2B1H0/whYLHX2tnk8i5R1+HkG3shxBzx5A=;
+ b=JMy/cEApSfi4o2UcBX6RrMLSrvucxATjiyxHJMXVMRlMO6YoMIyrrAZ2yUb5ZBMz2yd8
+ BnxgKMMbzGGTxy+0nioQ8iPiv8kScWCQsjxkr5cQOxFHDJOu3gixZWXDD3Y+1aTogYCf
+ 4Rq9X7ow+Fv449R9RcvZusmIei7mVsPrPzI9X7c8qei1qwJEz4uZCOAYr4Lnl0CCibB5
+ JYX6Rf5fO7FlwmegsarIhgui0Kr8ImwPGrZ1R7B9Hn7xTdZ1LYwy2YG6F38O0ymKxch3
+ yFREeuEsFnlrjFmCugPA/z318XYSXJ/rG56UhrK3Nl8KJUbB1eG7C/8lxJohGkGS7hx7 /g== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93qy9jva-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:14:16 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA8Dgmu022176
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:13:42 GMT
+Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.39; Fri, 10 Nov 2023 00:13:40 -0800
+From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH 4/4] wifi: ath12k: refactor DP Rxdma ring structure
+Date:   Fri, 10 Nov 2023 13:43:17 +0530
+Message-ID: <20231110081317.19608-5-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231110081317.19608-1-quic_periyasa@quicinc.com>
+References: <20231110081317.19608-1-quic_periyasa@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.94]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: LmD3EAtDkN7iTreqs1_i7qWA7nh7jGG2
+X-Proofpoint-GUID: LmD3EAtDkN7iTreqs1_i7qWA7nh7jGG2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-10_04,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ spamscore=0 clxscore=1015 malwarescore=0 priorityscore=1501 suspectscore=0
+ mlxscore=0 lowpriorityscore=0 mlxlogscore=701 impostorscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311100069
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The handlers include three parts -- 1) configure interrupt mask;
-2) enable/disable interrupt; 3) recognize (read) interrupt status.
+Currently data path Rxdma ring structure store the IDR buffer and lock.
+These IDR handling is needed only for SW cookie conversion and not
+needed for HW cookie conversion. REO Rxdma ring use the HW cookie
+conversion and monitor Rxdma ring use the SW cookie conversion.
+Since idr not needed for REO Rxdma ring, remove the IDR data entity
+from the data path Rxdma ring structure. Introduce the new data path ring
+structure for monitor rxmda rings since it need IDR data entity.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00125-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci.c      |  86 +++++++++++++++
- drivers/net/wireless/realtek/rtw89/pci.h      | 102 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/reg.h      |  27 +++++
- .../net/wireless/realtek/rtw89/rtw8922ae.c    |   4 +
- 4 files changed, 219 insertions(+)
+ drivers/net/wireless/ath/ath12k/dp.h     | 11 +++--
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 10 ++---
+ drivers/net/wireless/ath/ath12k/dp_mon.h |  2 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c  | 56 ++++++++++++------------
+ 4 files changed, 43 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 71c73adfcf59..9c6d55af8c8e 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -696,6 +696,27 @@ void rtw89_pci_recognize_intrs_v1(struct rtw89_dev *rtwdev,
- }
- EXPORT_SYMBOL(rtw89_pci_recognize_intrs_v1);
- 
-+void rtw89_pci_recognize_intrs_v2(struct rtw89_dev *rtwdev,
-+				  struct rtw89_pci *rtwpci,
-+				  struct rtw89_pci_isrs *isrs)
-+{
-+	isrs->ind_isrs = rtw89_read32(rtwdev, R_BE_PCIE_HISR) & rtwpci->ind_intrs;
-+	isrs->halt_c2h_isrs = isrs->ind_isrs & B_BE_HS0ISR_IND_INT ?
-+			      rtw89_read32(rtwdev, R_BE_HISR0) & rtwpci->halt_c2h_intrs : 0;
-+	isrs->isrs[0] = isrs->ind_isrs & B_BE_HCI_AXIDMA_INT ?
-+			rtw89_read32(rtwdev, R_BE_HAXI_HISR00) & rtwpci->intrs[0] : 0;
-+	isrs->isrs[1] = rtw89_read32(rtwdev, R_BE_PCIE_DMA_ISR);
-+
-+	if (isrs->halt_c2h_isrs)
-+		rtw89_write32(rtwdev, R_BE_HISR0, isrs->halt_c2h_isrs);
-+	if (isrs->isrs[0])
-+		rtw89_write32(rtwdev, R_BE_HAXI_HISR00, isrs->isrs[0]);
-+	if (isrs->isrs[1])
-+		rtw89_write32(rtwdev, R_BE_PCIE_DMA_ISR, isrs->isrs[1]);
-+	rtw89_write32(rtwdev, R_BE_PCIE_HISR, isrs->ind_isrs);
-+}
-+EXPORT_SYMBOL(rtw89_pci_recognize_intrs_v2);
-+
- void rtw89_pci_enable_intr(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci)
- {
- 	rtw89_write32(rtwdev, R_AX_HIMR0, rtwpci->halt_c2h_intrs);
-@@ -727,6 +748,22 @@ void rtw89_pci_disable_intr_v1(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpc
- }
- EXPORT_SYMBOL(rtw89_pci_disable_intr_v1);
- 
-+void rtw89_pci_enable_intr_v2(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci)
-+{
-+	rtw89_write32(rtwdev, R_BE_HIMR0, rtwpci->halt_c2h_intrs);
-+	rtw89_write32(rtwdev, R_BE_HAXI_HIMR00, rtwpci->intrs[0]);
-+	rtw89_write32(rtwdev, R_BE_PCIE_DMA_IMR_0_V1, rtwpci->intrs[1]);
-+	rtw89_write32(rtwdev, R_BE_PCIE_HIMR0, rtwpci->ind_intrs);
-+}
-+EXPORT_SYMBOL(rtw89_pci_enable_intr_v2);
-+
-+void rtw89_pci_disable_intr_v2(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci)
-+{
-+	rtw89_write32(rtwdev, R_BE_PCIE_HIMR0, 0);
-+	rtw89_write32(rtwdev, R_BE_PCIE_DMA_IMR_0_V1, 0);
-+}
-+EXPORT_SYMBOL(rtw89_pci_disable_intr_v2);
-+
- static void rtw89_pci_ops_recovery_start(struct rtw89_dev *rtwdev)
- {
- 	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-@@ -3343,6 +3380,55 @@ void rtw89_pci_config_intr_mask_v1(struct rtw89_dev *rtwdev)
- }
- EXPORT_SYMBOL(rtw89_pci_config_intr_mask_v1);
- 
-+static void rtw89_pci_recovery_intr_mask_v2(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-+
-+	rtwpci->ind_intrs = B_BE_HS0_IND_INT_EN0;
-+	rtwpci->halt_c2h_intrs = B_BE_HALT_C2H_INT_EN | B_BE_WDT_TIMEOUT_INT_EN;
-+	rtwpci->intrs[0] = 0;
-+	rtwpci->intrs[1] = B_BE_PCIE_RX_RX0P2_IMR0_V1 |
-+			   B_BE_PCIE_RX_RPQ0_IMR0_V1;
-+}
-+
-+static void rtw89_pci_default_intr_mask_v2(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-+
-+	rtwpci->ind_intrs = B_BE_HCI_AXIDMA_INT_EN0 |
-+			    B_BE_HS0_IND_INT_EN0;
-+	rtwpci->halt_c2h_intrs = B_BE_HALT_C2H_INT_EN | B_BE_WDT_TIMEOUT_INT_EN;
-+	rtwpci->intrs[0] = B_BE_RDU_CH1_INT_IMR_V1 |
-+			   B_BE_RDU_CH0_INT_IMR_V1;
-+	rtwpci->intrs[1] = B_BE_PCIE_RX_RX0P2_IMR0_V1 |
-+			   B_BE_PCIE_RX_RPQ0_IMR0_V1;
-+}
-+
-+static void rtw89_pci_low_power_intr_mask_v2(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-+
-+	rtwpci->ind_intrs = B_BE_HS0_IND_INT_EN0 |
-+			    B_BE_HS1_IND_INT_EN0;
-+	rtwpci->halt_c2h_intrs = B_BE_HALT_C2H_INT_EN | B_BE_WDT_TIMEOUT_INT_EN;
-+	rtwpci->intrs[0] = 0;
-+	rtwpci->intrs[1] = B_BE_PCIE_RX_RX0P2_IMR0_V1 |
-+			   B_BE_PCIE_RX_RPQ0_IMR0_V1;
-+}
-+
-+void rtw89_pci_config_intr_mask_v2(struct rtw89_dev *rtwdev)
-+{
-+	struct rtw89_pci *rtwpci = (struct rtw89_pci *)rtwdev->priv;
-+
-+	if (rtwpci->under_recovery)
-+		rtw89_pci_recovery_intr_mask_v2(rtwdev);
-+	else if (rtwpci->low_power)
-+		rtw89_pci_low_power_intr_mask_v2(rtwdev);
-+	else
-+		rtw89_pci_default_intr_mask_v2(rtwdev);
-+}
-+EXPORT_SYMBOL(rtw89_pci_config_intr_mask_v2);
-+
- static int rtw89_pci_request_irq(struct rtw89_dev *rtwdev,
- 				 struct pci_dev *pdev)
- {
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
-index cb95ad653419..d2a0a9aa4da3 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.h
-+++ b/drivers/net/wireless/realtek/rtw89/pci.h
-@@ -290,6 +290,69 @@
- #define B_BE_RTK_LDO_BIAS_LATENCY_MASK GENMASK(9, 8)
- #define B_BE_CLK_REQ_LAT_MASK GENMASK(7, 4)
- 
-+#define R_BE_PCIE_HIMR0 0x30B0
-+#define B_BE_PCIE_HB1_IND_INTA_IMR BIT(31)
-+#define B_BE_PCIE_HB0_IND_INTA_IMR BIT(30)
-+#define B_BE_HCI_AXIDMA_INTA_IMR BIT(29)
-+#define B_BE_HC0_IND_INTA_IMR BIT(28)
-+#define B_BE_HD1_IND_INTA_IMR BIT(27)
-+#define B_BE_HD0_IND_INTA_IMR BIT(26)
-+#define B_BE_HS1_IND_INTA_IMR BIT(25)
-+#define B_BE_HS0_IND_INTA_IMR BIT(24)
-+#define B_BE_PCIE_HOTRST_INT_EN BIT(16)
-+#define B_BE_PCIE_FLR_INT_EN BIT(15)
-+#define B_BE_PCIE_PERST_INT_EN BIT(14)
-+#define B_BE_PCIE_DBG_STE_INT_EN BIT(13)
-+#define B_BE_HB1_IND_INT_EN0 BIT(9)
-+#define B_BE_HB0_IND_INT_EN0 BIT(8)
-+#define B_BE_HC1_IND_INT_EN0 BIT(7)
-+#define B_BE_HCI_AXIDMA_INT_EN0 BIT(5)
-+#define B_BE_HC0_IND_INT_EN0 BIT(4)
-+#define B_BE_HD1_IND_INT_EN0 BIT(3)
-+#define B_BE_HD0_IND_INT_EN0 BIT(2)
-+#define B_BE_HS1_IND_INT_EN0 BIT(1)
-+#define B_BE_HS0_IND_INT_EN0 BIT(0)
-+
-+#define R_BE_PCIE_HISR 0x30B4
-+#define B_BE_PCIE_HOTRST_INT BIT(16)
-+#define B_BE_PCIE_FLR_INT BIT(15)
-+#define B_BE_PCIE_PERST_INT BIT(14)
-+#define B_BE_PCIE_DBG_STE_INT BIT(13)
-+#define B_BE_HB1IMR_IND BIT(9)
-+#define B_BE_HB0IMR_IND BIT(8)
-+#define B_BE_HC1ISR_IND_INT BIT(7)
-+#define B_BE_HCI_AXIDMA_INT BIT(5)
-+#define B_BE_HC0ISR_IND_INT BIT(4)
-+#define B_BE_HD1ISR_IND_INT BIT(3)
-+#define B_BE_HD0ISR_IND_INT BIT(2)
-+#define B_BE_HS1ISR_IND_INT BIT(1)
-+#define B_BE_HS0ISR_IND_INT BIT(0)
-+
-+#define R_BE_PCIE_DMA_IMR_0_V1 0x30B8
-+#define B_BE_PCIE_RX_RX1P1_IMR0_V1 BIT(23)
-+#define B_BE_PCIE_RX_RX0P1_IMR0_V1 BIT(22)
-+#define B_BE_PCIE_RX_ROQ1_IMR0_V1 BIT(21)
-+#define B_BE_PCIE_RX_RPQ1_IMR0_V1 BIT(20)
-+#define B_BE_PCIE_RX_RX1P2_IMR0_V1 BIT(19)
-+#define B_BE_PCIE_RX_ROQ0_IMR0_V1 BIT(18)
-+#define B_BE_PCIE_RX_RPQ0_IMR0_V1 BIT(17)
-+#define B_BE_PCIE_RX_RX0P2_IMR0_V1 BIT(16)
-+#define B_BE_PCIE_TX_CH14_IMR0 BIT(14)
-+#define B_BE_PCIE_TX_CH13_IMR0 BIT(13)
-+#define B_BE_PCIE_TX_CH12_IMR0 BIT(12)
-+#define B_BE_PCIE_TX_CH11_IMR0 BIT(11)
-+#define B_BE_PCIE_TX_CH10_IMR0 BIT(10)
-+#define B_BE_PCIE_TX_CH9_IMR0 BIT(9)
-+#define B_BE_PCIE_TX_CH8_IMR0 BIT(8)
-+#define B_BE_PCIE_TX_CH7_IMR0 BIT(7)
-+#define B_BE_PCIE_TX_CH6_IMR0 BIT(6)
-+#define B_BE_PCIE_TX_CH5_IMR0 BIT(5)
-+#define B_BE_PCIE_TX_CH4_IMR0 BIT(4)
-+#define B_BE_PCIE_TX_CH3_IMR0 BIT(3)
-+#define B_BE_PCIE_TX_CH2_IMR0 BIT(2)
-+#define B_BE_PCIE_TX_CH1_IMR0 BIT(1)
-+#define B_BE_PCIE_TX_CH0_IMR0 BIT(0)
-+
- #define R_BE_PCIE_DMA_ISR 0x30BC
- #define B_BE_PCIE_RX_RX1P1_ISR_V1 BIT(23)
- #define B_BE_PCIE_RX_RX0P1_ISR_V1 BIT(22)
-@@ -315,6 +378,39 @@
- #define B_BE_PCIE_TX_CH1_ISR BIT(1)
- #define B_BE_PCIE_TX_CH0_ISR BIT(0)
- 
-+#define R_BE_HAXI_HIMR00 0xB0B0
-+#define B_BE_RDU_CH5_INT_IMR_V1 BIT(30)
-+#define B_BE_RDU_CH4_INT_IMR_V1 BIT(29)
-+#define B_BE_RDU_CH3_INT_IMR_V1 BIT(28)
-+#define B_BE_RDU_CH2_INT_IMR_V1 BIT(27)
-+#define B_BE_RDU_CH1_INT_IMR_V1 BIT(26)
-+#define B_BE_RDU_CH0_INT_IMR_V1 BIT(25)
-+#define B_BE_RXDMA_STUCK_INT_EN_V1 BIT(24)
-+#define B_BE_TXDMA_STUCK_INT_EN_V1 BIT(23)
-+#define B_BE_TXDMA_CH14_INT_EN_V1 BIT(22)
-+#define B_BE_TXDMA_CH13_INT_EN_V1 BIT(21)
-+#define B_BE_TXDMA_CH12_INT_EN_V1 BIT(20)
-+#define B_BE_TXDMA_CH11_INT_EN_V1 BIT(19)
-+#define B_BE_TXDMA_CH10_INT_EN_V1 BIT(18)
-+#define B_BE_TXDMA_CH9_INT_EN_V1 BIT(17)
-+#define B_BE_TXDMA_CH8_INT_EN_V1 BIT(16)
-+#define B_BE_TXDMA_CH7_INT_EN_V1 BIT(15)
-+#define B_BE_TXDMA_CH6_INT_EN_V1 BIT(14)
-+#define B_BE_TXDMA_CH5_INT_EN_V1 BIT(13)
-+#define B_BE_TXDMA_CH4_INT_EN_V1 BIT(12)
-+#define B_BE_TXDMA_CH3_INT_EN_V1 BIT(11)
-+#define B_BE_TXDMA_CH2_INT_EN_V1 BIT(10)
-+#define B_BE_TXDMA_CH1_INT_EN_V1 BIT(9)
-+#define B_BE_TXDMA_CH0_INT_EN_V1 BIT(8)
-+#define B_BE_RX1P1DMA_INT_EN_V1 BIT(7)
-+#define B_BE_RX0P1DMA_INT_EN_V1 BIT(6)
-+#define B_BE_RO1DMA_INT_EN BIT(5)
-+#define B_BE_RP1DMA_INT_EN BIT(4)
-+#define B_BE_RX1DMA_INT_EN BIT(3)
-+#define B_BE_RO0DMA_INT_EN BIT(2)
-+#define B_BE_RP0DMA_INT_EN BIT(1)
-+#define B_BE_RX0DMA_INT_EN BIT(0)
-+
- #define R_BE_HAXI_HISR00 0xB0B4
- #define B_BE_RDU_CH6_INT BIT(28)
- #define B_BE_RDU_CH5_INT BIT(27)
-@@ -1438,16 +1534,22 @@ u32 rtw89_pci_fill_txaddr_info_v1(struct rtw89_dev *rtwdev,
- void rtw89_pci_ctrl_dma_all(struct rtw89_dev *rtwdev, bool enable);
- void rtw89_pci_config_intr_mask(struct rtw89_dev *rtwdev);
- void rtw89_pci_config_intr_mask_v1(struct rtw89_dev *rtwdev);
-+void rtw89_pci_config_intr_mask_v2(struct rtw89_dev *rtwdev);
- void rtw89_pci_enable_intr(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
- void rtw89_pci_disable_intr(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
- void rtw89_pci_enable_intr_v1(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
- void rtw89_pci_disable_intr_v1(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
-+void rtw89_pci_enable_intr_v2(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
-+void rtw89_pci_disable_intr_v2(struct rtw89_dev *rtwdev, struct rtw89_pci *rtwpci);
- void rtw89_pci_recognize_intrs(struct rtw89_dev *rtwdev,
- 			       struct rtw89_pci *rtwpci,
- 			       struct rtw89_pci_isrs *isrs);
- void rtw89_pci_recognize_intrs_v1(struct rtw89_dev *rtwdev,
- 				  struct rtw89_pci *rtwpci,
- 				  struct rtw89_pci_isrs *isrs);
-+void rtw89_pci_recognize_intrs_v2(struct rtw89_dev *rtwdev,
-+				  struct rtw89_pci *rtwpci,
-+				  struct rtw89_pci_isrs *isrs);
- 
- static inline
- u32 rtw89_chip_fill_txaddr_info(struct rtw89_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index 51a0394eee3c..080db70b87d2 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -3826,6 +3826,33 @@
- #define B_BE_FS_GPIO17_INT_EN BIT(1)
- #define B_BE_FS_GPIO16_INT_EN BIT(0)
- 
-+#define R_BE_HIMR0 0x01A0
-+#define B_BE_WDT_DATACPU_TIMEOUT_INT_EN BIT(25)
-+#define B_BE_HALT_D2H_INT_EN BIT(24)
-+#define B_BE_WDT_TIMEOUT_INT_EN BIT(22)
-+#define B_BE_HALT_C2H_INT_EN BIT(21)
-+#define B_BE_RON_INT_EN BIT(20)
-+#define B_BE_PDNINT_EN BIT(19)
-+#define B_BE_SPSANA_OCP_INT_EN BIT(18)
-+#define B_BE_SPS_OCP_INT_EN BIT(17)
-+#define B_BE_BTON_STS_UPDATE_INT_EN BIT(16)
-+#define B_BE_GPIOF_INT_EN BIT(15)
-+#define B_BE_GPIOE_INT_EN BIT(14)
-+#define B_BE_GPIOD_INT_EN BIT(13)
-+#define B_BE_GPIOC_INT_EN BIT(12)
-+#define B_BE_GPIOB_INT_EN BIT(11)
-+#define B_BE_GPIOA_INT_EN BIT(10)
-+#define B_BE_GPIO9_INT_EN BIT(9)
-+#define B_BE_GPIO8_INT_EN BIT(8)
-+#define B_BE_GPIO7_INT_EN BIT(7)
-+#define B_BE_GPIO6_INT_EN BIT(6)
-+#define B_BE_GPIO5_INT_EN BIT(5)
-+#define B_BE_GPIO4_INT_EN BIT(4)
-+#define B_BE_GPIO3_INT_EN BIT(3)
-+#define B_BE_GPIO2_INT_EN BIT(2)
-+#define B_BE_GPIO1_INT_EN BIT(1)
-+#define B_BE_GPIO0_INT_EN BIT(0)
-+
- #define R_BE_HISR0 0x01A4
- #define B_BE_WDT_DATACPU_TIMEOUT_INT BIT(25)
- #define B_BE_HALT_D2H_INT BIT(24)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-index 944337c60191..2a9ad5a254d8 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-@@ -50,6 +50,10 @@ static const struct rtw89_pci_info rtw8922a_pci_info = {
- 
- 	.ltr_set		= rtw89_pci_ltr_set_v2,
- 	.fill_txaddr_info	= rtw89_pci_fill_txaddr_info_v1,
-+	.config_intr_mask	= rtw89_pci_config_intr_mask_v2,
-+	.enable_intr		= rtw89_pci_enable_intr_v2,
-+	.disable_intr		= rtw89_pci_disable_intr_v2,
-+	.recognize_intrs	= rtw89_pci_recognize_intrs_v2,
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index 61f765432516..7586eb92a910 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -31,7 +31,7 @@ struct dp_srng {
+ 	u32 ring_id;
  };
  
- static const struct rtw89_driver_info rtw89_8922ae_info = {
+-struct dp_rxdma_ring {
++struct dp_rxdma_mon_ring {
+ 	struct dp_srng refill_buf_ring;
+ 	struct idr bufs_idr;
+ 	/* Protects bufs_idr */
+@@ -39,6 +39,11 @@ struct dp_rxdma_ring {
+ 	int bufs_max;
+ };
+ 
++struct dp_rxdma_ring {
++	struct dp_srng refill_buf_ring;
++	int bufs_max;
++};
++
+ #define ATH12K_TX_COMPL_NEXT(x)	(((x) + 1) % DP_TX_COMP_RING_SIZE)
+ 
+ struct dp_tx_ring {
+@@ -353,8 +358,8 @@ struct ath12k_dp {
+ 	struct dp_rxdma_ring rx_refill_buf_ring;
+ 	struct dp_srng rx_mac_buf_ring[MAX_RXDMA_PER_PDEV];
+ 	struct dp_srng rxdma_err_dst_ring[MAX_RXDMA_PER_PDEV];
+-	struct dp_rxdma_ring rxdma_mon_buf_ring;
+-	struct dp_rxdma_ring tx_mon_buf_ring;
++	struct dp_rxdma_mon_ring rxdma_mon_buf_ring;
++	struct dp_rxdma_mon_ring tx_mon_buf_ring;
+ 	struct ath12k_reo_q_addr_lut reoq_lut;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+index f44bc5494ce7..1319c1938772 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+@@ -797,7 +797,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
+ 		/* TODO: add msdu start parsing logic */
+ 		break;
+ 	case HAL_MON_BUF_ADDR: {
+-		struct dp_rxdma_ring *buf_ring = &ab->dp.rxdma_mon_buf_ring;
++		struct dp_rxdma_mon_ring *buf_ring = &ab->dp.rxdma_mon_buf_ring;
+ 		struct dp_mon_packet_info *packet_info =
+ 			(struct dp_mon_packet_info *)tlv_data;
+ 		int buf_id = u32_get_bits(packet_info->cookie,
+@@ -1259,7 +1259,7 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
+ }
+ 
+ int ath12k_dp_mon_buf_replenish(struct ath12k_base *ab,
+-				struct dp_rxdma_ring *buf_ring,
++				struct dp_rxdma_mon_ring *buf_ring,
+ 				int req_entries)
+ {
+ 	struct hal_mon_buf_ring *mon_buf;
+@@ -1902,7 +1902,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
+ 	}
+ 
+ 	case HAL_MON_BUF_ADDR: {
+-		struct dp_rxdma_ring *buf_ring = &ab->dp.tx_mon_buf_ring;
++		struct dp_rxdma_mon_ring *buf_ring = &ab->dp.tx_mon_buf_ring;
+ 		struct dp_mon_packet_info *packet_info =
+ 			(struct dp_mon_packet_info *)tlv_data;
+ 		int buf_id = u32_get_bits(packet_info->cookie,
+@@ -2067,7 +2067,7 @@ int ath12k_dp_mon_srng_process(struct ath12k *ar, int mac_id, int *budget,
+ 	struct ath12k_skb_rxcb *rxcb;
+ 	struct dp_srng *mon_dst_ring;
+ 	struct hal_srng *srng;
+-	struct dp_rxdma_ring *buf_ring;
++	struct dp_rxdma_mon_ring *buf_ring;
+ 	u64 cookie;
+ 	u32 ppdu_id;
+ 	int num_buffs_reaped = 0, srng_id, buf_id;
+@@ -2480,7 +2480,7 @@ int ath12k_dp_mon_rx_process_stats(struct ath12k *ar, int mac_id,
+ 	struct ath12k_skb_rxcb *rxcb;
+ 	struct dp_srng *mon_dst_ring;
+ 	struct hal_srng *srng;
+-	struct dp_rxdma_ring *buf_ring;
++	struct dp_rxdma_mon_ring *buf_ring;
+ 	struct ath12k_sta *arsta = NULL;
+ 	struct ath12k_peer *peer;
+ 	u64 cookie;
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.h b/drivers/net/wireless/ath/ath12k/dp_mon.h
+index c18c385798a1..c3e66d31b597 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.h
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.h
+@@ -80,7 +80,7 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
+ 				  int mac_id, struct sk_buff *skb,
+ 				  struct napi_struct *napi);
+ int ath12k_dp_mon_buf_replenish(struct ath12k_base *ab,
+-				struct dp_rxdma_ring *buf_ring,
++				struct dp_rxdma_mon_ring *buf_ring,
+ 				int req_entries);
+ int ath12k_dp_mon_srng_process(struct ath12k *ar, int mac_id,
+ 			       int *budget, enum dp_monitor_mode monitor_mode,
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+index 0c47a242cdd8..8b6458d84a47 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+@@ -364,8 +364,8 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab,
+ 	return req_entries - num_remain;
+ }
+ 
+-static int ath12k_dp_rxdma_buf_ring_free(struct ath12k_base *ab,
+-					 struct dp_rxdma_ring *rx_ring)
++static int ath12k_dp_rxdma_mon_buf_ring_free(struct ath12k_base *ab,
++					     struct dp_rxdma_mon_ring *rx_ring)
+ {
+ 	struct sk_buff *skb;
+ 	int buf_id;
+@@ -390,44 +390,49 @@ static int ath12k_dp_rxdma_buf_ring_free(struct ath12k_base *ab,
+ static int ath12k_dp_rxdma_buf_free(struct ath12k_base *ab)
+ {
+ 	struct ath12k_dp *dp = &ab->dp;
+-	struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
+ 
+-	ath12k_dp_rxdma_buf_ring_free(ab, rx_ring);
++	ath12k_dp_rxdma_mon_buf_ring_free(ab, &dp->rxdma_mon_buf_ring);
++
++	ath12k_dp_rxdma_mon_buf_ring_free(ab, &dp->tx_mon_buf_ring);
++
++	return 0;
++}
++
++static int ath12k_dp_rxdma_mon_ring_buf_setup(struct ath12k_base *ab,
++					      struct dp_rxdma_mon_ring *rx_ring,
++					      u32 ringtype)
++{
++	int num_entries;
+ 
+-	rx_ring = &dp->rxdma_mon_buf_ring;
+-	ath12k_dp_rxdma_buf_ring_free(ab, rx_ring);
++	num_entries = rx_ring->refill_buf_ring.size /
++		ath12k_hal_srng_get_entrysize(ab, ringtype);
+ 
+-	rx_ring = &dp->tx_mon_buf_ring;
+-	ath12k_dp_rxdma_buf_ring_free(ab, rx_ring);
++	rx_ring->bufs_max = num_entries;
++	ath12k_dp_mon_buf_replenish(ab, rx_ring, num_entries);
+ 
+ 	return 0;
+ }
+ 
+ static int ath12k_dp_rxdma_ring_buf_setup(struct ath12k_base *ab,
+-					  struct dp_rxdma_ring *rx_ring,
+-					  u32 ringtype)
++					  struct dp_rxdma_ring *rx_ring)
+ {
+ 	int num_entries;
+ 
+ 	num_entries = rx_ring->refill_buf_ring.size /
+-		ath12k_hal_srng_get_entrysize(ab, ringtype);
++		ath12k_hal_srng_get_entrysize(ab, HAL_RXDMA_BUF);
+ 
+ 	rx_ring->bufs_max = num_entries;
+-	if ((ringtype == HAL_RXDMA_MONITOR_BUF) || (ringtype == HAL_TX_MONITOR_BUF))
+-		ath12k_dp_mon_buf_replenish(ab, rx_ring, num_entries);
+-	else
+-		ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_entries);
++	ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_entries);
++
+ 	return 0;
+ }
+ 
+ static int ath12k_dp_rxdma_buf_setup(struct ath12k_base *ab)
+ {
+ 	struct ath12k_dp *dp = &ab->dp;
+-	struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
+ 	int ret;
+ 
+-	ret = ath12k_dp_rxdma_ring_buf_setup(ab, rx_ring,
+-					     HAL_RXDMA_BUF);
++	ret = ath12k_dp_rxdma_ring_buf_setup(ab, &dp->rx_refill_buf_ring);
+ 	if (ret) {
+ 		ath12k_warn(ab,
+ 			    "failed to setup HAL_RXDMA_BUF\n");
+@@ -435,18 +440,18 @@ static int ath12k_dp_rxdma_buf_setup(struct ath12k_base *ab)
+ 	}
+ 
+ 	if (ab->hw_params->rxdma1_enable) {
+-		rx_ring = &dp->rxdma_mon_buf_ring;
+-		ret = ath12k_dp_rxdma_ring_buf_setup(ab, rx_ring,
+-						     HAL_RXDMA_MONITOR_BUF);
++		ret = ath12k_dp_rxdma_mon_ring_buf_setup(ab,
++							 &dp->rxdma_mon_buf_ring,
++							 HAL_RXDMA_MONITOR_BUF);
+ 		if (ret) {
+ 			ath12k_warn(ab,
+ 				    "failed to setup HAL_RXDMA_MONITOR_BUF\n");
+ 			return ret;
+ 		}
+ 
+-		rx_ring = &dp->tx_mon_buf_ring;
+-		ret = ath12k_dp_rxdma_ring_buf_setup(ab, rx_ring,
+-						     HAL_TX_MONITOR_BUF);
++		ret = ath12k_dp_rxdma_mon_ring_buf_setup(ab,
++							 &dp->tx_mon_buf_ring,
++							 HAL_TX_MONITOR_BUF);
+ 		if (ret) {
+ 			ath12k_warn(ab,
+ 				    "failed to setup HAL_TX_MONITOR_BUF\n");
+@@ -4060,9 +4065,6 @@ int ath12k_dp_rx_alloc(struct ath12k_base *ab)
+ 	struct ath12k_dp *dp = &ab->dp;
+ 	int i, ret;
+ 
+-	idr_init(&dp->rx_refill_buf_ring.bufs_idr);
+-	spin_lock_init(&dp->rx_refill_buf_ring.idr_lock);
+-
+ 	idr_init(&dp->rxdma_mon_buf_ring.bufs_idr);
+ 	spin_lock_init(&dp->rxdma_mon_buf_ring.idr_lock);
+ 
 -- 
-2.25.1
+2.17.1
 
