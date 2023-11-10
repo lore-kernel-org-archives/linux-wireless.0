@@ -2,190 +2,259 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3CAC4167D
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66485C4332F
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346209AbjKJS3R (ORCPT
+        id S1344930AbjKJSfh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:29:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39912 "EHLO
+        Fri, 10 Nov 2023 13:35:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345663AbjKJS1O (ORCPT
+        with ESMTP id S1345518AbjKJSfC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:27:14 -0500
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2059.outbound.protection.outlook.com [40.107.92.59])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7626595;
-        Thu,  9 Nov 2023 22:20:04 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oYdRE+TvYp9sS/jmG8WyPrt7nnwPKV0NLPZ/bIwVcCzHO7/dx3HlQX6m0jYUGB3c0r5S7u8mXJ9sSc2Wlw6fwDfOYgrZAtCzD7NmJZtBlj6ZY5UAFo5H5IfF9t5xUGGxTaKd9I5FjTgusJcOxZV+XPKYCQMIBsl/f/5a8ap7xxsf5nNn9+v7JrvGVCs+YDqGegsVGwMPsDmSNTQPoOmMxdxEYBvdAWwxyMqpNzWg2+55K5w4EVcSezXKaP9JX9d36zNGEqItC3l4bdkN3vpr8FptqPW9RVz7wf1XNzcUxMC8qTo1Jb6GN+ugMb286p/a6xqB5S6igaa0+yjGeNxJkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=W2IjFB2Py0Qm69uOKPb9IPDrnGI6L9Ns2AaebZ3f+NM=;
- b=dEtik4TqvHLT5w+cfxt6WDG2tmzs0Gmf3O1SHx7s3W8hNog+K8n6XAGBSFCyvytteOywzSwVoSoqiHPWdkvMdU9FAa+LWcy8Kom2a66AwU4yBjF2rBirDn6BDsIbTvUYvjtkbnAtgrX/unlRSJnLVDgcTh34vaasScj7ANxrq+ds/RyzvhG8l0Fy6wwu0dOvbqgVTFr5G2rLjlUGKlOKEs7Ay9SgZwTeICfbYF0n0uzhv6xlQHRiodC7cJC+Bl46P11Kch1MJF7trXvLegX4eBCiHWijLxyXPRkLNYC+LiNr8YzICKJcypeOlCG1JSbnH968VKyOj4PBVahMgb7/6w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=W2IjFB2Py0Qm69uOKPb9IPDrnGI6L9Ns2AaebZ3f+NM=;
- b=fxmA4oPMx5TU6y0ZPxYmPqRYm5Ik5KSygCpz8SBWEb4vc7fwdO/VO/lULbz5JSDKExUG2jO9I3K45QY9iQMnEr3A4eu9DIcuS0vtum4QUW41kXL8S/nOqXcgu3Rr07VtRLd4j4oERm6EUDuxs+PgxUXbWbk0n5/hSCCg3v+Ixu0=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from DM4PR12MB6351.namprd12.prod.outlook.com (2603:10b6:8:a2::6) by
- MW3PR12MB4363.namprd12.prod.outlook.com (2603:10b6:303:56::14) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6977.19; Fri, 10 Nov 2023 05:31:23 +0000
-Received: from DM4PR12MB6351.namprd12.prod.outlook.com
- ([fe80::5287:5f3:34f:4402]) by DM4PR12MB6351.namprd12.prod.outlook.com
- ([fe80::5287:5f3:34f:4402%7]) with mapi id 15.20.6954.028; Fri, 10 Nov 2023
- 05:31:23 +0000
-Message-ID: <665cb7da-3d7e-4323-9a07-d4f59102c5f1@amd.com>
-Date:   Fri, 10 Nov 2023 13:31:09 +0800
-User-Agent: Mozilla Thunderbird
-Cc:     majun@amd.com
-Subject: Re: [Patch v13 0/9] Enable Wifi RFI interference mitigation feature
- support
-Content-Language: en-US
-To:     Ma Jun <Jun.Ma2@amd.com>, amd-gfx@lists.freedesktop.org,
-        lenb@kernel.org, johannes@sipsolutions.net, davem@davemloft.net,
-        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
-        alexander.deucher@amd.com, Lijo.Lazar@amd.com,
-        mario.limonciello@amd.com, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, platform-driver-x86@vger.kernel.org
-References: <20231030071832.2217118-1-Jun.Ma2@amd.com>
-From:   "Ma, Jun" <majun@amd.com>
-In-Reply-To: <20231030071832.2217118-1-Jun.Ma2@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SG3P274CA0005.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::17)
- To DM4PR12MB6351.namprd12.prod.outlook.com (2603:10b6:8:a2::6)
+        Fri, 10 Nov 2023 13:35:02 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F08469005
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 00:13:42 -0800 (PST)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7iJxD016329;
+        Fri, 10 Nov 2023 08:13:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=6SwtnFo/CZ8Zi8axnPpg6znmsZnRXrE3zcZOY3F4IFM=;
+ b=hu98IKQUdZw7aA5lY+p9nVUNw2aIbE56aQc0mZP7gqWS1MAq9SkJ58Lpq1EUt/U71JUP
+ geWA6FtxpL1Mr7Pefz3a4g5XYbh55hHPfoaJQRiV1akfwYboVpeHHPMGLXlNSZC/N2S8
+ wUNUJKS/1TmzzdIeCAioppW3gqfOJ4sO3VohaKG10/DEaCwWq0ABDJ/SJ5Q5XfINa3bF
+ HOmMUeQ8FJll2fl5m/IdFkJfi73ZUL/U293Cz8DSzEhG84pCyQPdPgxfPsmKrRpA4/R5
+ QdjpaAheTzPXyUTucdAzuLCUf5WF0vD34vyZtas5TOssT22GHu/GsYH0jDDBYTUtOxPC /w== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93tq9kr0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:13:40 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA8DeGF021942
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:13:40 GMT
+Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.39; Fri, 10 Nov 2023 00:13:38 -0800
+From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH 3/4] wifi: ath12k: avoid explicit HW conversion argument in Rxdma replenish
+Date:   Fri, 10 Nov 2023 13:43:16 +0530
+Message-ID: <20231110081317.19608-4-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231110081317.19608-1-quic_periyasa@quicinc.com>
+References: <20231110081317.19608-1-quic_periyasa@quicinc.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM4PR12MB6351:EE_|MW3PR12MB4363:EE_
-X-MS-Office365-Filtering-Correlation-Id: b655a1cd-bf58-4fc3-f6fb-08dbe1ae4678
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: OVXqpOTGUjkR0w63DG9B+sgISTHyrwfsPwFqMlPP99QhJvP51w2oXXuox5QJSJAnANz8oxzglkpV3Iy4Fyv44hATu8J0+5n5IkjpdtQV2j8AiH6nmA8zHQLiphCSnTnZbLyB1S6UHFTyhzE4L8eiOOvccHQJ6gfr+9MhByf/bCmzO4Nz2boce7au4TTz2AKZqznZbx81ZyCoOgZ1orUI0PRzDYxn24kTTShsGf10e+AERtMgk1zPEQS3RTYzGQsDF13ga9si9NmNst8GUrJ+Z3ugu1Ri8y0xi3JUG3iu3JNh/17deXrkxkXzff48SPVrRinBad75qKhj+uQb1R3eSWq3o9RM3h5KPUpVXEBT+juU2LW+lidcirrGf+MCvonOCX0+sjjN9fECuwGZkyGa0WPeLfqFaE6Ojie0BLdXLiaLn0FkhbVbI2gLdLv5m3tsav58TzMDZWFOeuGPWSUZZxGeT4/bNwF8D/1OxjfqBgwDauFscQm/TwVyuLAJKalH+kiuewu5ssk0ZfhO1ELGP/fzNQr3GIhRQyf6/8EpLT3N2KOHhoVlIONXlDh1DqYUNEjOKWQeOoZ643x2dSvLUbcOW9eY98DpraBLnXf99V9JZ99FJLyEAd4UU/0MuYR/SVfMk95vJre87u99wcht0RYbeaC8n1sSbFK7A4TTAhk=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB6351.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(346002)(366004)(376002)(39860400002)(230922051799003)(64100799003)(1800799009)(451199024)(186009)(26005)(2616005)(6512007)(83380400001)(31686004)(6666004)(36756003)(53546011)(478600001)(6506007)(6486002)(316002)(2906002)(66946007)(66556008)(66476007)(41300700001)(5660300002)(31696002)(7416002)(38100700002)(4326008)(8676002)(8936002)(921008)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dUhzMFlGOXkrSGhsZlJJUk4ybVB2NDNkemdQR29HT2NGVFI2U2k2Y2J3N25R?=
- =?utf-8?B?ZFgwTE5RRnYzdjNBbXZNeWh3TVFtRDhvRFkzYmc3N241d0U5S250TU1jUFNj?=
- =?utf-8?B?bDRlNUIzcUZtcHFndWNXQVFUd2l4Nkk4cFdNS1BiUWNkRngxakZZZGVDQjd2?=
- =?utf-8?B?cnJSVnpwV2swZkRYeXV1L21lZEptZWF3dWVvcldQNjVXNHFmeTRoMXJGQ0o5?=
- =?utf-8?B?ZU8xSXcrK1dXRXZZU3c3UkpjaEFPbEFZTkVJYzlmNTlRMlliSFFHUHA5TzZq?=
- =?utf-8?B?Sm1PeCtiNWtVWWZqWHJ2MDhWUEgxK2htMm50WG9ieFdnZGNBMzZLVXhYc3dk?=
- =?utf-8?B?ZzBJd25nZjMwenhLaGJycUI3SWxjM2VUcHBNVkhMc1BrWFJtam42QUNvdnNv?=
- =?utf-8?B?Y0dScDl1N21Bb2N6MFc3aTZFZVJZbkN6Y0o1WjhwaWhnVVZtU28veVdrdlFo?=
- =?utf-8?B?RE1sTENYL2drcElQZ0dMUUpRVUNtMGR4bFlXdzRDbzBTR2IzbW9LVitMV1dF?=
- =?utf-8?B?ZkhkeHIvNndUTEhINkhqSXYzUzdCTzFnZWRHcVkxdFVndVdTKzk3SjVlaldT?=
- =?utf-8?B?VUFjQ2kxTENuWTkxOGt0bXNYaXArbTlJSUY0bHc2dDc2Uk9BM1UxWjBKSVA0?=
- =?utf-8?B?NDVuU0wxMFRpbjBTWElVbWlrejQ1OFJOU1VuZ0p4eFVIY2J4Ny96SCtUQSt6?=
- =?utf-8?B?dDlia1ROUVhtMnpvNmJpSHphRnRZejV4OVJpazdxKzlvekkwcjFmY01waGNI?=
- =?utf-8?B?ZStKTENOZVMyZ1BIcXprbk40czk4NWFSeUxvSHlkMmRjZWVQUXZ2VUl1aDFQ?=
- =?utf-8?B?aGtmUnJKRWM4Ly9aUWNSUlVFMjN2RzJvSTdIcEhsR3ZqWGE1a0JQVWhTL01U?=
- =?utf-8?B?VkRSTkhHcnNPbzZoT2MyK1VLTEtqYVQ5Uy9PQzJvMXFuSmlkZUVES3JGYjZB?=
- =?utf-8?B?dmsxME5iRytDUWhGU3gvVFkwUENXUkFUdXJRQURLb1ZhZEVOd3k0eG9HUGQx?=
- =?utf-8?B?MFI4ek13OGVLZlFMbEpUbjJzMGRuQzFiR1lub0ttNE1rc3RsRmFucXZLNjZn?=
- =?utf-8?B?VUdaZVNENU9vbklQMDlFTDZDUUtJdVczZ2xoVkJvYkp0RmUrUWJVRHI1ZURC?=
- =?utf-8?B?UzcxNU9jeDFRakp2WTNlUVVlMXRkbFo0NUw0bTU4V0N5cnJML0s0OXI3bTZk?=
- =?utf-8?B?Q2xMZzNncjFHK05iQVNzaXEvYXN6VFllcndad3I2OWVVZ2szbm1BbEpvMzdz?=
- =?utf-8?B?V25yOE51OU9ZVXBCMlM5S2xQb1BGeVRYcGRqUGdHcE5iZk5YL293eVJ3N0xm?=
- =?utf-8?B?Qlh4TnBYSTJUSDd2ZWt6cjZVeHY0bE1qVVpXME5sY05oV2krKzFuQlV0b2Ft?=
- =?utf-8?B?TFV3MTlDWUN6WmNtTEpqWTVUNlV1SFJVQ2hjbm9IYVY5WHBkSFZzcjZpYlc0?=
- =?utf-8?B?V3lkQmF2ZExUUlJaQUFYb3NJMFNraHhlRDgxcnZTd3lnOFczTk5hdjVibU9o?=
- =?utf-8?B?Q0pqU3pGZTVVVXZHOFcxTXowc0EreWhXaFNLTHNPazc5VHJNdlRHaVdIWUVE?=
- =?utf-8?B?dlFNYWZTSEFxcU9jcjlBb2N0ay9SSzRUdC9NNmNNY0k5NUFXZnlJbDVZc1lv?=
- =?utf-8?B?dHJmOUZaZEYzZGVVcHdWL1RqK2k4Nis3N2IyQUxKMUVNVUo5NExRSEs5ZkZ3?=
- =?utf-8?B?MHhUeVZMYjl5YkhpZzJDZGxETHEzTDZhOExTWlFrcFZ2WEIxOFFtaGJJUlFF?=
- =?utf-8?B?bGxuU2dNcHVxeDlGU0xSTk1VWEg3TVJoWTVtN2R6dEs4VEtFMWs4TkQ5QVVF?=
- =?utf-8?B?VGlONFM0MEUzU0FCNlpxOUJ0Nm5rSEUrdWlmUUVGZzJLNUVud3lZUnJaeVFy?=
- =?utf-8?B?aVRLSUxvMGVabm83Y29TTFJyZkpVY2tmcDZqU09TMUpBdWR2eFdCb01iL00r?=
- =?utf-8?B?bWd5WlErYVJ0cWF1dXdxT2hSK2lVOWlYa1EwL3RQUVVUVVJoYnJNTGFORlo0?=
- =?utf-8?B?YkpnMStrcEM1VHc4cHpJek1wMEoyT0FrbkpCeW5GdXJ0SjZOUFFIMnBHM0hC?=
- =?utf-8?B?V0xlN25FSUZ5L2E4WUN3bUI2VlM0eXk0OHNsR3B3d2xXeklNMjIxYTNqWmNq?=
- =?utf-8?Q?IOgPjCa6jnEBgKgT7JHoJgihd?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b655a1cd-bf58-4fc3-f6fb-08dbe1ae4678
-X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB6351.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 05:31:22.8323
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: veYcbKh+rMsqz6ff5c7FGE6YSKLmyhVKxCOQxpY5xFAuK8khJtkhSt3vL2k58pgv
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4363
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: IYtxxfztZTZuPnzvypb1SongWzCg-45d
+X-Proofpoint-ORIG-GUID: IYtxxfztZTZuPnzvypb1SongWzCg-45d
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-10_04,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_spam policy=outbound score=58 lowpriorityscore=0 mlxscore=58
+ suspectscore=0 clxscore=1015 priorityscore=1501 mlxlogscore=-13
+ spamscore=58 phishscore=0 impostorscore=0 bulkscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311100068
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-ping...
-Any other comments?
+Currently Rxdma replenish require HW conversion argument which is
+unnecessary argument since ath12k driver configures the Rxdma only
+in HW conversion. To optimize the rx data path per packet, avoid
+the explicit unnecessary argument and condition check in the rx
+replenish.
 
-Regards,
-Ma Jun
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00125-QCAHKSWPL_SILICONZ-1
 
-On 10/30/2023 3:18 PM, Ma Jun wrote:
-> Due to electrical and mechanical constraints in certain platform designs there
-> may be likely interference of relatively high-powered harmonics of the (G-)DDR
-> memory clocks with local radio module frequency bands used by Wifi 6/6e/7. To
-> mitigate possible RFI interference we introuduced WBRF(Wifi Band RFI mitigation Feature).
-> Producers can advertise the frequencies in use and consumers can use this information
-> to avoid using these frequencies for sensitive features.
-> 
-> The whole patch set is based on Linux 6.6.0-rc6. With some brief introductions
-> as below:
-> Patch1:      Document about WBRF
-> Patch2:      Core functionality setup for WBRF feature support
-> Patch3 - 4:  Bring WBRF support to wifi subsystem.
-> Patch5 - 9:  Bring WBRF support to AMD graphics driver.
-> 
-> Evan Quan (6):
->   cfg80211: expose nl80211_chan_width_to_mhz for wide sharing
->   wifi: mac80211: Add support for WBRF features
->   drm/amd/pm: update driver_if and ppsmc headers for coming wbrf feature
->   drm/amd/pm: setup the framework to support Wifi RFI mitigation feature
->   drm/amd/pm: add flood detection for wbrf events
->   drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.7
-> 
-> Ma Jun (3):
->   Documentation/driver-api: Add document about WBRF mechanism
->   platform/x86/amd: Add support for AMD ACPI based Wifi band RFI
->     mitigation feature
->   drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.0
-> 
->  Documentation/driver-api/wbrf.rst             |  76 ++++
->  drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   2 +
->  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |  17 +
->  drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 208 +++++++++
->  drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  42 ++
->  .../inc/pmfw_if/smu13_driver_if_v13_0_0.h     |   3 +-
->  .../inc/pmfw_if/smu13_driver_if_v13_0_7.h     |   3 +-
->  .../pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h  |   5 +-
->  .../pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h  |   3 +-
->  drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h  |   3 +-
->  drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h  |   4 +
->  .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c    |  48 ++
->  .../drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c  |  22 +
->  .../drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c  |  13 +
->  drivers/gpu/drm/amd/pm/swsmu/smu_internal.h   |   3 +
->  drivers/platform/x86/amd/Kconfig              |  15 +
->  drivers/platform/x86/amd/Makefile             |   1 +
->  drivers/platform/x86/amd/wbrf.c               | 413 ++++++++++++++++++
->  include/linux/acpi_amd_wbrf.h                 |  94 ++++
->  include/net/cfg80211.h                        |   9 +
->  net/mac80211/Makefile                         |   2 +
->  net/mac80211/chan.c                           |   9 +
->  net/mac80211/ieee80211_i.h                    |   7 +
->  net/mac80211/main.c                           |   2 +
->  net/mac80211/wbrf.c                           |  95 ++++
->  net/wireless/chan.c                           |   3 +-
->  26 files changed, 1094 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/driver-api/wbrf.rst
->  create mode 100644 drivers/platform/x86/amd/wbrf.c
->  create mode 100644 include/linux/acpi_amd_wbrf.h
->  create mode 100644 net/mac80211/wbrf.c
-> 
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/dp.c    |  3 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c | 78 +++++++++----------------
+ drivers/net/wireless/ath/ath12k/dp_rx.h |  3 +-
+ 3 files changed, 31 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
+index f3c48aa9f62d..26be6818f4ed 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.c
++++ b/drivers/net/wireless/ath/ath12k/dp.c
+@@ -961,8 +961,7 @@ int ath12k_dp_service_srng(struct ath12k_base *ab,
+ 		struct ath12k_dp *dp = &ab->dp;
+ 		struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
+ 
+-		ath12k_dp_rx_bufs_replenish(ab, rx_ring, 0,
+-					    true);
++		ath12k_dp_rx_bufs_replenish(ab, rx_ring, 0);
+ 	}
+ 
+ 	/* TODO: Implement handler for other interrupts */
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+index 46fa8ee14b45..0c47a242cdd8 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+@@ -258,15 +258,13 @@ static int ath12k_dp_purge_mon_ring(struct ath12k_base *ab)
+ /* Returns number of Rx buffers replenished */
+ int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab,
+ 				struct dp_rxdma_ring *rx_ring,
+-				int req_entries,
+-				bool hw_cc)
++				int req_entries)
+ {
+ 	struct ath12k_buffer_addr *desc;
+ 	struct hal_srng *srng;
+ 	struct sk_buff *skb;
+ 	int num_free;
+ 	int num_remain;
+-	int buf_id;
+ 	u32 cookie;
+ 	dma_addr_t paddr;
+ 	struct ath12k_dp *dp = &ab->dp;
+@@ -307,40 +305,29 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab,
+ 		if (dma_mapping_error(ab->dev, paddr))
+ 			goto fail_free_skb;
+ 
+-		if (hw_cc) {
+-			spin_lock_bh(&dp->rx_desc_lock);
+-
+-			/* Get desc from free list and store in used list
+-			 * for cleanup purposes
+-			 *
+-			 * TODO: pass the removed descs rather than
+-			 * add/read to optimize
+-			 */
+-			rx_desc = list_first_entry_or_null(&dp->rx_desc_free_list,
+-							   struct ath12k_rx_desc_info,
+-							   list);
+-			if (!rx_desc) {
+-				spin_unlock_bh(&dp->rx_desc_lock);
+-				goto fail_dma_unmap;
+-			}
+-
+-			rx_desc->skb = skb;
+-			cookie = rx_desc->cookie;
+-			list_del(&rx_desc->list);
+-			list_add_tail(&rx_desc->list, &dp->rx_desc_used_list);
++		spin_lock_bh(&dp->rx_desc_lock);
+ 
++		/* Get desc from free list and store in used list
++		 * for cleanup purposes
++		 *
++		 * TODO: pass the removed descs rather than
++		 * add/read to optimize
++		 */
++		rx_desc = list_first_entry_or_null(&dp->rx_desc_free_list,
++						   struct ath12k_rx_desc_info,
++						   list);
++		if (!rx_desc) {
+ 			spin_unlock_bh(&dp->rx_desc_lock);
+-		} else {
+-			spin_lock_bh(&rx_ring->idr_lock);
+-			buf_id = idr_alloc(&rx_ring->bufs_idr, skb, 0,
+-					   rx_ring->bufs_max * 3, GFP_ATOMIC);
+-			spin_unlock_bh(&rx_ring->idr_lock);
+-			if (buf_id < 0)
+-				goto fail_dma_unmap;
+-			cookie = u32_encode_bits(buf_id,
+-						 DP_RXDMA_BUF_COOKIE_BUF_ID);
++			goto fail_dma_unmap;
+ 		}
+ 
++		rx_desc->skb = skb;
++		cookie = rx_desc->cookie;
++		list_del(&rx_desc->list);
++		list_add_tail(&rx_desc->list, &dp->rx_desc_used_list);
++
++		spin_unlock_bh(&dp->rx_desc_lock);
++
+ 		desc = ath12k_hal_srng_src_get_next_entry(ab, srng);
+ 		if (!desc)
+ 			goto fail_buf_unassign;
+@@ -359,17 +346,11 @@ int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab,
+ 	return req_entries - num_remain;
+ 
+ fail_buf_unassign:
+-	if (hw_cc) {
+-		spin_lock_bh(&dp->rx_desc_lock);
+-		list_del(&rx_desc->list);
+-		list_add_tail(&rx_desc->list, &dp->rx_desc_free_list);
+-		rx_desc->skb = NULL;
+-		spin_unlock_bh(&dp->rx_desc_lock);
+-	} else {
+-		spin_lock_bh(&rx_ring->idr_lock);
+-		idr_remove(&rx_ring->bufs_idr, buf_id);
+-		spin_unlock_bh(&rx_ring->idr_lock);
+-	}
++	spin_lock_bh(&dp->rx_desc_lock);
++	list_del(&rx_desc->list);
++	list_add_tail(&rx_desc->list, &dp->rx_desc_free_list);
++	rx_desc->skb = NULL;
++	spin_unlock_bh(&dp->rx_desc_lock);
+ fail_dma_unmap:
+ 	dma_unmap_single(ab->dev, paddr, skb->len + skb_tailroom(skb),
+ 			 DMA_FROM_DEVICE);
+@@ -435,8 +416,7 @@ static int ath12k_dp_rxdma_ring_buf_setup(struct ath12k_base *ab,
+ 	if ((ringtype == HAL_RXDMA_MONITOR_BUF) || (ringtype == HAL_TX_MONITOR_BUF))
+ 		ath12k_dp_mon_buf_replenish(ab, rx_ring, num_entries);
+ 	else
+-		ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_entries,
+-					    ringtype == HAL_RXDMA_BUF);
++		ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_entries);
+ 	return 0;
+ }
+ 
+@@ -2708,7 +2688,7 @@ int ath12k_dp_rx_process(struct ath12k_base *ab, int ring_id,
+ 	if (!total_msdu_reaped)
+ 		goto exit;
+ 
+-	ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_buffs_reaped, true);
++	ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_buffs_reaped);
+ 
+ 	ath12k_dp_rx_process_received_packets(ab, napi, &msdu_list,
+ 					      ring_id);
+@@ -3486,7 +3466,7 @@ int ath12k_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *napi,
+ 
+ 	rx_ring = &dp->rx_refill_buf_ring;
+ 
+-	ath12k_dp_rx_bufs_replenish(ab, rx_ring, tot_n_bufs_reaped, true);
++	ath12k_dp_rx_bufs_replenish(ab, rx_ring, tot_n_bufs_reaped);
+ 
+ 	return tot_n_bufs_reaped;
+ }
+@@ -3799,7 +3779,7 @@ int ath12k_dp_rx_process_wbm_err(struct ath12k_base *ab,
+ 	if (!num_buffs_reaped)
+ 		goto done;
+ 
+-	ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_buffs_reaped, true);
++	ath12k_dp_rx_bufs_replenish(ab, rx_ring, num_buffs_reaped);
+ 
+ 	rcu_read_lock();
+ 	for (i = 0; i <  ab->num_radios; i++) {
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
+index 14f20977c9de..b0c5352ac6e6 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.h
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
+@@ -118,8 +118,7 @@ int ath12k_dp_rx_process(struct ath12k_base *ab, int mac_id,
+ 			 int budget);
+ int ath12k_dp_rx_bufs_replenish(struct ath12k_base *ab,
+ 				struct dp_rxdma_ring *rx_ring,
+-				int req_entries,
+-				bool hw_cc);
++				int req_entries);
+ int ath12k_dp_rx_pdev_mon_attach(struct ath12k *ar);
+ int ath12k_dp_rx_peer_frag_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_id);
+ 
+-- 
+2.17.1
+
