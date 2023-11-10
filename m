@@ -2,108 +2,102 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFE7C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 19:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EC70C4167D
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 19:24:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346118AbjKJTUn (ORCPT
+        id S235946AbjKJTYv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 14:20:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36316 "EHLO
+        Fri, 10 Nov 2023 14:24:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235949AbjKJTUX (ORCPT
+        with ESMTP id S235330AbjKJTYR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 14:20:23 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 500088687
-        for <linux-wireless@vger.kernel.org>; Thu,  9 Nov 2023 23:28:22 -0800 (PST)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA4xZwT002493;
-        Fri, 10 Nov 2023 07:28:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=F29z0DH6ltzPxFbZVijda5qq2mYS1r+J36j+smma3a0=;
- b=AubLtytXvuHfQQs+HMhOdUMHBO1XM51d6GWgyUYjvg8kbwKBCEuta+uVz0M/EjZG0E1v
- ikrrhB4njNSqYs/221ublfHiL/w6K3JsyyyvjZWsRwBUD2IFLBOs9HRxLipxN66HqksY
- sX9z3XjXciPhqUDPGL7l5+1KGGYueIK1BxSxOH7M1kWcvLn4Fk4vPvUxT4/wFCObNqBu
- C3b96sMZzaVfSPfSbGpDEieW/ciuwqoyEBJ0MqRFuA5+wtFh+2UAnY2lfQXrxHmoTipK
- U7MpzBQBvIuRjYVCLL6k2vdh1LGFvm/+7Q+bZmsG5BSSKeejjdzgr1EHKXePY2iTR/Li FA== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93tq9g5a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 07:28:17 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA7SHR7018044
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 07:28:17 GMT
-Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.39; Thu, 9 Nov 2023 23:28:15 -0800
-From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-To:     <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Subject: [PATCH] wifi: ath12k: fix the error handler of rfkill config
-Date:   Fri, 10 Nov 2023 12:58:02 +0530
-Message-ID: <20231110072802.25290-1-quic_periyasa@quicinc.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 10 Nov 2023 14:24:17 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A3D338EB4;
+        Fri, 10 Nov 2023 06:29:56 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AA8BC433C7;
+        Fri, 10 Nov 2023 14:29:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699626596;
+        bh=nLlP5zYhWe9W91LWYdUOANl7JYKJxORxVdmkjcwH0Fs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=qxa3WiwlZU/JYQmPYD4XnuPogZqrblGFEefjgDc/LBLt0n3SAtxDGBwMrw5zi5QeQ
+         /ze1SQmOpav4e+VBgWN97fcnudCWzsL6zaqzYT+SWuUF3Q0ba7KXIhANddvQkKm2VA
+         lj9rGCIVCEGuIej00dRE1LiXkyc4f5OsOeCVM44z1tUXAIVM7laGJOOrDdsnUj8iFD
+         NvjlJt1XfuXm52Zu8yUdBbTZdg8xObKvFgVqPUdLyqZhv3GCTmZxIwQPRp4nXi8rfJ
+         e3KAEvn6G3hX06UVnBv1maxNmFjqvVRrDhSuCPB0jNeNSdMzsDBkm8luHnTiyqWtOj
+         ZK8D1eHHtqdLA==
+From:   Arnd Bergmann <arnd@kernel.org>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>,
+        Yi-Chia Hsieh <yi-chia.hsieh@mediatek.com>,
+        Peter Chiu <chui-hao.chiu@mediatek.com>,
+        Money Wang <Money.Wang@mediatek.com>,
+        Evelyn Tsai <evelyn.tsai@mediatek.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Bo Jiao <bo.jiao@mediatek.com>,
+        MeiChia Chiu <meichia.chiu@mediatek.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: mt7996: fix mt7996_mcu_all_sta_info_event struct packing
+Date:   Fri, 10 Nov 2023 15:29:30 +0100
+Message-Id: <20231110142948.3841137-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: GgDle1GoykzNTQP0El6k9JvG-UpzS6dv
-X-Proofpoint-ORIG-GUID: GgDle1GoykzNTQP0El6k9JvG-UpzS6dv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-10_03,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
- suspectscore=0 clxscore=1011 priorityscore=1501 mlxlogscore=688
- spamscore=0 phishscore=0 impostorscore=0 bulkscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311100061
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When the core rfkill config throws error, it should free the
-allocated resources. Currently it is not freeing the core pdev
-create resources. Avoid this issue by calling the core pdev
-destroy in the error handler of core rfkill config.
+From: Arnd Bergmann <arnd@arndb.de>
 
-Found this issue in the code review and it is compile tested only.
+The internal struct and union inside mt7996_mcu_all_sta_info_event is
+marked as being aligned, which conflicts with it being unaligned
+within that structure:
 
-Fixes: 004ccbc0dd49 ("wifi: ath12k: add support for hardware rfkill for WCN7850")
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+drivers/net/wireless/mediatek/mt76/mt7996/mcu.h:165:2: error: field  within 'struct mt7996_mcu_all_sta_info_event' is less aligned than 'union mt7996_mcu_all_sta_info_event::(anonymous at ../drivers/net/wireless/mediatek/mt76/mt7996/mcu.h:165:2)' and is usually due to 'struct mt7996_mcu_all_sta_info_event' being packed, which can lead to unaligned accesses [-Werror,-Wunaligned-access]
+
+Mark all three as being packed as well to ensure byte packing for
+the entire thing.
+
+Fixes: adde3eed4a75 ("wifi: mt76: mt7996: Add mcu commands for getting sta tx statistic")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath12k/core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index b936760b5140..5ba680379f7e 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -698,13 +698,15 @@ int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
- 	ret = ath12k_core_rfkill_config(ab);
- 	if (ret && ret != -EOPNOTSUPP) {
- 		ath12k_err(ab, "failed to config rfkill: %d\n", ret);
--		goto err_core_stop;
-+		goto err_core_pdev_destroy;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+index a88f6af323da..e20c38f17827 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+@@ -168,15 +168,15 @@ struct mt7996_mcu_all_sta_info_event {
+ 			u8 rsv[2];
+ 			__le32 tx_bytes[IEEE80211_NUM_ACS];
+ 			__le32 rx_bytes[IEEE80211_NUM_ACS];
+-		} adm_stat[0];
++		} adm_stat[0] __packed;
  
- 	mutex_unlock(&ab->core_lock);
+ 		struct {
+ 			__le16 wlan_idx;
+ 			u8 rsv[2];
+ 			__le32 tx_msdu_cnt;
+ 			__le32 rx_msdu_cnt;
+-		} msdu_cnt[0];
+-	};
++		} msdu_cnt[0] __packed;
++	} __packed;
+ } __packed;
  
- 	return 0;
- 
-+err_core_pdev_destroy:
-+	ath12k_core_pdev_destroy(ab);
- err_core_stop:
- 	ath12k_core_stop(ab);
- 	ath12k_mac_destroy(ab);
-
-base-commit: 553d0057523dc1d6935160613f1fbf9bb8db88f6
+ enum mt7996_chan_mib_offs {
 -- 
-2.17.1
+2.39.2
 
