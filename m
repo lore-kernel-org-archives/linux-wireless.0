@@ -2,225 +2,190 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31969C04A95
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3CAC4167D
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:29:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345083AbjKJS1J (ORCPT
+        id S1346209AbjKJS3R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:27:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49530 "EHLO
+        Fri, 10 Nov 2023 13:29:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345952AbjKJSZx (ORCPT
+        with ESMTP id S1345663AbjKJS1O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:25:53 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7FA528132
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:22:06 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6454C433C8;
-        Fri, 10 Nov 2023 10:22:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699611726;
-        bh=4R+48ZsZ6g6W/iclu+AoYZ4jUcByaUxPgac3A4UoqZw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I1b4xoASLNZkFLnpBRCNyVvsw5GtJYDvTd+94wQ6wapIFnNbGlrgfGK2jjRZNMDpu
-         U+SksjmptPpASrcgwX9qsvuxVGT4HEl5VSeYoyPWipoMC8cobwLLd4rdTimPy84Kdq
-         TFkUZpe25gGt9FFnl0dZ+jJDH9bQj7tphgiNiaTo3vyGn5YF4PQ2P099jrrAOZNZxb
-         Zk6lstxtwf6RMoRwQICt2ZJsn7laCiBdnoAY7xCLJexHvkDKdFBEsqIylwKN2rBp+s
-         6hUxGjiTDztIC1HAZ/eKfXyFeYmgD39nKwWS7QVoJxN2WqLJbIzoQUgIw9s7lGkOO1
-         Vf+GDjXsapZDg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     mhi@lists.linux.dev
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 1/8] bus: mhi: host: add mhi_power_down_no_destroy()
-Date:   Fri, 10 Nov 2023 12:21:55 +0200
-Message-Id: <20231110102202.3168243-2-kvalo@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231110102202.3168243-1-kvalo@kernel.org>
-References: <20231110102202.3168243-1-kvalo@kernel.org>
+        Fri, 10 Nov 2023 13:27:14 -0500
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2059.outbound.protection.outlook.com [40.107.92.59])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7626595;
+        Thu,  9 Nov 2023 22:20:04 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=oYdRE+TvYp9sS/jmG8WyPrt7nnwPKV0NLPZ/bIwVcCzHO7/dx3HlQX6m0jYUGB3c0r5S7u8mXJ9sSc2Wlw6fwDfOYgrZAtCzD7NmJZtBlj6ZY5UAFo5H5IfF9t5xUGGxTaKd9I5FjTgusJcOxZV+XPKYCQMIBsl/f/5a8ap7xxsf5nNn9+v7JrvGVCs+YDqGegsVGwMPsDmSNTQPoOmMxdxEYBvdAWwxyMqpNzWg2+55K5w4EVcSezXKaP9JX9d36zNGEqItC3l4bdkN3vpr8FptqPW9RVz7wf1XNzcUxMC8qTo1Jb6GN+ugMb286p/a6xqB5S6igaa0+yjGeNxJkg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=W2IjFB2Py0Qm69uOKPb9IPDrnGI6L9Ns2AaebZ3f+NM=;
+ b=dEtik4TqvHLT5w+cfxt6WDG2tmzs0Gmf3O1SHx7s3W8hNog+K8n6XAGBSFCyvytteOywzSwVoSoqiHPWdkvMdU9FAa+LWcy8Kom2a66AwU4yBjF2rBirDn6BDsIbTvUYvjtkbnAtgrX/unlRSJnLVDgcTh34vaasScj7ANxrq+ds/RyzvhG8l0Fy6wwu0dOvbqgVTFr5G2rLjlUGKlOKEs7Ay9SgZwTeICfbYF0n0uzhv6xlQHRiodC7cJC+Bl46P11Kch1MJF7trXvLegX4eBCiHWijLxyXPRkLNYC+LiNr8YzICKJcypeOlCG1JSbnH968VKyOj4PBVahMgb7/6w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=W2IjFB2Py0Qm69uOKPb9IPDrnGI6L9Ns2AaebZ3f+NM=;
+ b=fxmA4oPMx5TU6y0ZPxYmPqRYm5Ik5KSygCpz8SBWEb4vc7fwdO/VO/lULbz5JSDKExUG2jO9I3K45QY9iQMnEr3A4eu9DIcuS0vtum4QUW41kXL8S/nOqXcgu3Rr07VtRLd4j4oERm6EUDuxs+PgxUXbWbk0n5/hSCCg3v+Ixu0=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from DM4PR12MB6351.namprd12.prod.outlook.com (2603:10b6:8:a2::6) by
+ MW3PR12MB4363.namprd12.prod.outlook.com (2603:10b6:303:56::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6977.19; Fri, 10 Nov 2023 05:31:23 +0000
+Received: from DM4PR12MB6351.namprd12.prod.outlook.com
+ ([fe80::5287:5f3:34f:4402]) by DM4PR12MB6351.namprd12.prod.outlook.com
+ ([fe80::5287:5f3:34f:4402%7]) with mapi id 15.20.6954.028; Fri, 10 Nov 2023
+ 05:31:23 +0000
+Message-ID: <665cb7da-3d7e-4323-9a07-d4f59102c5f1@amd.com>
+Date:   Fri, 10 Nov 2023 13:31:09 +0800
+User-Agent: Mozilla Thunderbird
+Cc:     majun@amd.com
+Subject: Re: [Patch v13 0/9] Enable Wifi RFI interference mitigation feature
+ support
+Content-Language: en-US
+To:     Ma Jun <Jun.Ma2@amd.com>, amd-gfx@lists.freedesktop.org,
+        lenb@kernel.org, johannes@sipsolutions.net, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        alexander.deucher@amd.com, Lijo.Lazar@amd.com,
+        mario.limonciello@amd.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, platform-driver-x86@vger.kernel.org
+References: <20231030071832.2217118-1-Jun.Ma2@amd.com>
+From:   "Ma, Jun" <majun@amd.com>
+In-Reply-To: <20231030071832.2217118-1-Jun.Ma2@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SG3P274CA0005.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::17)
+ To DM4PR12MB6351.namprd12.prod.outlook.com (2603:10b6:8:a2::6)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM4PR12MB6351:EE_|MW3PR12MB4363:EE_
+X-MS-Office365-Filtering-Correlation-Id: b655a1cd-bf58-4fc3-f6fb-08dbe1ae4678
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: OVXqpOTGUjkR0w63DG9B+sgISTHyrwfsPwFqMlPP99QhJvP51w2oXXuox5QJSJAnANz8oxzglkpV3Iy4Fyv44hATu8J0+5n5IkjpdtQV2j8AiH6nmA8zHQLiphCSnTnZbLyB1S6UHFTyhzE4L8eiOOvccHQJ6gfr+9MhByf/bCmzO4Nz2boce7au4TTz2AKZqznZbx81ZyCoOgZ1orUI0PRzDYxn24kTTShsGf10e+AERtMgk1zPEQS3RTYzGQsDF13ga9si9NmNst8GUrJ+Z3ugu1Ri8y0xi3JUG3iu3JNh/17deXrkxkXzff48SPVrRinBad75qKhj+uQb1R3eSWq3o9RM3h5KPUpVXEBT+juU2LW+lidcirrGf+MCvonOCX0+sjjN9fECuwGZkyGa0WPeLfqFaE6Ojie0BLdXLiaLn0FkhbVbI2gLdLv5m3tsav58TzMDZWFOeuGPWSUZZxGeT4/bNwF8D/1OxjfqBgwDauFscQm/TwVyuLAJKalH+kiuewu5ssk0ZfhO1ELGP/fzNQr3GIhRQyf6/8EpLT3N2KOHhoVlIONXlDh1DqYUNEjOKWQeOoZ643x2dSvLUbcOW9eY98DpraBLnXf99V9JZ99FJLyEAd4UU/0MuYR/SVfMk95vJre87u99wcht0RYbeaC8n1sSbFK7A4TTAhk=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM4PR12MB6351.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(346002)(366004)(376002)(39860400002)(230922051799003)(64100799003)(1800799009)(451199024)(186009)(26005)(2616005)(6512007)(83380400001)(31686004)(6666004)(36756003)(53546011)(478600001)(6506007)(6486002)(316002)(2906002)(66946007)(66556008)(66476007)(41300700001)(5660300002)(31696002)(7416002)(38100700002)(4326008)(8676002)(8936002)(921008)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?dUhzMFlGOXkrSGhsZlJJUk4ybVB2NDNkemdQR29HT2NGVFI2U2k2Y2J3N25R?=
+ =?utf-8?B?ZFgwTE5RRnYzdjNBbXZNeWh3TVFtRDhvRFkzYmc3N241d0U5S250TU1jUFNj?=
+ =?utf-8?B?bDRlNUIzcUZtcHFndWNXQVFUd2l4Nkk4cFdNS1BiUWNkRngxakZZZGVDQjd2?=
+ =?utf-8?B?cnJSVnpwV2swZkRYeXV1L21lZEptZWF3dWVvcldQNjVXNHFmeTRoMXJGQ0o5?=
+ =?utf-8?B?ZU8xSXcrK1dXRXZZU3c3UkpjaEFPbEFZTkVJYzlmNTlRMlliSFFHUHA5TzZq?=
+ =?utf-8?B?Sm1PeCtiNWtVWWZqWHJ2MDhWUEgxK2htMm50WG9ieFdnZGNBMzZLVXhYc3dk?=
+ =?utf-8?B?ZzBJd25nZjMwenhLaGJycUI3SWxjM2VUcHBNVkhMc1BrWFJtam42QUNvdnNv?=
+ =?utf-8?B?Y0dScDl1N21Bb2N6MFc3aTZFZVJZbkN6Y0o1WjhwaWhnVVZtU28veVdrdlFo?=
+ =?utf-8?B?RE1sTENYL2drcElQZ0dMUUpRVUNtMGR4bFlXdzRDbzBTR2IzbW9LVitMV1dF?=
+ =?utf-8?B?ZkhkeHIvNndUTEhINkhqSXYzUzdCTzFnZWRHcVkxdFVndVdTKzk3SjVlaldT?=
+ =?utf-8?B?VUFjQ2kxTENuWTkxOGt0bXNYaXArbTlJSUY0bHc2dDc2Uk9BM1UxWjBKSVA0?=
+ =?utf-8?B?NDVuU0wxMFRpbjBTWElVbWlrejQ1OFJOU1VuZ0p4eFVIY2J4Ny96SCtUQSt6?=
+ =?utf-8?B?dDlia1ROUVhtMnpvNmJpSHphRnRZejV4OVJpazdxKzlvekkwcjFmY01waGNI?=
+ =?utf-8?B?ZStKTENOZVMyZ1BIcXprbk40czk4NWFSeUxvSHlkMmRjZWVQUXZ2VUl1aDFQ?=
+ =?utf-8?B?aGtmUnJKRWM4Ly9aUWNSUlVFMjN2RzJvSTdIcEhsR3ZqWGE1a0JQVWhTL01U?=
+ =?utf-8?B?VkRSTkhHcnNPbzZoT2MyK1VLTEtqYVQ5Uy9PQzJvMXFuSmlkZUVES3JGYjZB?=
+ =?utf-8?B?dmsxME5iRytDUWhGU3gvVFkwUENXUkFUdXJRQURLb1ZhZEVOd3k0eG9HUGQx?=
+ =?utf-8?B?MFI4ek13OGVLZlFMbEpUbjJzMGRuQzFiR1lub0ttNE1rc3RsRmFucXZLNjZn?=
+ =?utf-8?B?VUdaZVNENU9vbklQMDlFTDZDUUtJdVczZ2xoVkJvYkp0RmUrUWJVRHI1ZURC?=
+ =?utf-8?B?UzcxNU9jeDFRakp2WTNlUVVlMXRkbFo0NUw0bTU4V0N5cnJML0s0OXI3bTZk?=
+ =?utf-8?B?Q2xMZzNncjFHK05iQVNzaXEvYXN6VFllcndad3I2OWVVZ2szbm1BbEpvMzdz?=
+ =?utf-8?B?V25yOE51OU9ZVXBCMlM5S2xQb1BGeVRYcGRqUGdHcE5iZk5YL293eVJ3N0xm?=
+ =?utf-8?B?Qlh4TnBYSTJUSDd2ZWt6cjZVeHY0bE1qVVpXME5sY05oV2krKzFuQlV0b2Ft?=
+ =?utf-8?B?TFV3MTlDWUN6WmNtTEpqWTVUNlV1SFJVQ2hjbm9IYVY5WHBkSFZzcjZpYlc0?=
+ =?utf-8?B?V3lkQmF2ZExUUlJaQUFYb3NJMFNraHhlRDgxcnZTd3lnOFczTk5hdjVibU9o?=
+ =?utf-8?B?Q0pqU3pGZTVVVXZHOFcxTXowc0EreWhXaFNLTHNPazc5VHJNdlRHaVdIWUVE?=
+ =?utf-8?B?dlFNYWZTSEFxcU9jcjlBb2N0ay9SSzRUdC9NNmNNY0k5NUFXZnlJbDVZc1lv?=
+ =?utf-8?B?dHJmOUZaZEYzZGVVcHdWL1RqK2k4Nis3N2IyQUxKMUVNVUo5NExRSEs5ZkZ3?=
+ =?utf-8?B?MHhUeVZMYjl5YkhpZzJDZGxETHEzTDZhOExTWlFrcFZ2WEIxOFFtaGJJUlFF?=
+ =?utf-8?B?bGxuU2dNcHVxeDlGU0xSTk1VWEg3TVJoWTVtN2R6dEs4VEtFMWs4TkQ5QVVF?=
+ =?utf-8?B?VGlONFM0MEUzU0FCNlpxOUJ0Nm5rSEUrdWlmUUVGZzJLNUVud3lZUnJaeVFy?=
+ =?utf-8?B?aVRLSUxvMGVabm83Y29TTFJyZkpVY2tmcDZqU09TMUpBdWR2eFdCb01iL00r?=
+ =?utf-8?B?bWd5WlErYVJ0cWF1dXdxT2hSK2lVOWlYa1EwL3RQUVVUVVJoYnJNTGFORlo0?=
+ =?utf-8?B?YkpnMStrcEM1VHc4cHpJek1wMEoyT0FrbkpCeW5GdXJ0SjZOUFFIMnBHM0hC?=
+ =?utf-8?B?V0xlN25FSUZ5L2E4WUN3bUI2VlM0eXk0OHNsR3B3d2xXeklNMjIxYTNqWmNq?=
+ =?utf-8?Q?IOgPjCa6jnEBgKgT7JHoJgihd?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: b655a1cd-bf58-4fc3-f6fb-08dbe1ae4678
+X-MS-Exchange-CrossTenant-AuthSource: DM4PR12MB6351.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 05:31:22.8323
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: veYcbKh+rMsqz6ff5c7FGE6YSKLmyhVKxCOQxpY5xFAuK8khJtkhSt3vL2k58pgv
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4363
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Baochen Qiang <quic_bqiang@quicinc.com>
+ping...
+Any other comments?
 
-If ath11k tries to call mhi_power_up() during resume it fails:
+Regards,
+Ma Jun
 
-ath11k_pci 0000:06:00.0: timeout while waiting for restart complete
-
-This happens because when calling mhi_power_up() the MHI subsystem eventually
-calls device_add() from mhi_create_devices() but the device creation is
-deferred:
-
-mhi mhi0_IPCR: Driver qcom_mhi_qrtr force probe deferral
-
-The reason for deferring device creation is explained in dpm_prepare():
-
-	/*
-	 * It is unsafe if probing of devices will happen during suspend or
-	 * hibernation and system behavior will be unpredictable in this case.
-	 * So, let's prohibit device's probing here and defer their probes
-	 * instead. The normal behavior will be restored in dpm_complete().
-	 */
-
-Because the device probe is deferred, the qcom_mhi_qrtr_probe() is not called and
-qcom_mhi_qrtr_dl_callback() fails silently as qdev is zero:
-
-static void qcom_mhi_qrtr_dl_callback(struct mhi_device *mhi_dev,
-				      struct mhi_result *mhi_res)
-{
-	struct qrtr_mhi_dev *qdev = dev_get_drvdata(&mhi_dev->dev);
-	int rc;
-
-	if (!qdev || mhi_res->transaction_status)
-		return;
-
-So what this means that QRTR is not delivering messages and the QMI connection
-is not working between ath11k and the firmware, resulting a failure in firmware
-initialisation.
-
-To fix this add new function mhi_power_down_no_destroy() which does not destroy
-the devices during power down. This way mhi_power_up() can be called during
-resume and we can get ath11k hibernation working with the following patches.
-
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
-
-Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
----
- drivers/bus/mhi/host/internal.h |  1 +
- drivers/bus/mhi/host/pm.c       | 26 +++++++++++++++++++-------
- include/linux/mhi.h             | 29 +++++++++++++++++++++++++++--
- 3 files changed, 47 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/bus/mhi/host/internal.h b/drivers/bus/mhi/host/internal.h
-index 2e139e76de4c..d1033af285e2 100644
---- a/drivers/bus/mhi/host/internal.h
-+++ b/drivers/bus/mhi/host/internal.h
-@@ -69,6 +69,7 @@ enum dev_st_transition {
- 	DEV_ST_TRANSITION_FP,
- 	DEV_ST_TRANSITION_SYS_ERR,
- 	DEV_ST_TRANSITION_DISABLE,
-+	DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE,
- 	DEV_ST_TRANSITION_MAX,
- };
- 
-diff --git a/drivers/bus/mhi/host/pm.c b/drivers/bus/mhi/host/pm.c
-index 8a4362d75fc4..e0e429adbda6 100644
---- a/drivers/bus/mhi/host/pm.c
-+++ b/drivers/bus/mhi/host/pm.c
-@@ -453,7 +453,8 @@ static int mhi_pm_mission_mode_transition(struct mhi_controller *mhi_cntrl)
- }
- 
- /* Handle shutdown transitions */
--static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl)
-+static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl,
-+				      bool destroy_device)
- {
- 	enum mhi_pm_state cur_state;
- 	struct mhi_event *mhi_event;
-@@ -515,8 +516,10 @@ static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl)
- 	dev_dbg(dev, "Waiting for all pending threads to complete\n");
- 	wake_up_all(&mhi_cntrl->state_event);
- 
--	dev_dbg(dev, "Reset all active channels and remove MHI devices\n");
--	device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_destroy_device);
-+	if (destroy_device) {
-+		dev_dbg(dev, "Reset all active channels and remove MHI devices\n");
-+		device_for_each_child(&mhi_cntrl->mhi_dev->dev, NULL, mhi_destroy_device);
-+	}
- 
- 	mutex_lock(&mhi_cntrl->pm_mutex);
- 
-@@ -801,7 +804,10 @@ void mhi_pm_st_worker(struct work_struct *work)
- 			mhi_pm_sys_error_transition(mhi_cntrl);
- 			break;
- 		case DEV_ST_TRANSITION_DISABLE:
--			mhi_pm_disable_transition(mhi_cntrl);
-+			mhi_pm_disable_transition(mhi_cntrl, false);
-+			break;
-+		case DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE:
-+			mhi_pm_disable_transition(mhi_cntrl, true);
- 			break;
- 		default:
- 			break;
-@@ -1154,7 +1160,8 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl)
- }
- EXPORT_SYMBOL_GPL(mhi_async_power_up);
- 
--void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
-+void __mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful,
-+		      bool destroy_device)
- {
- 	enum mhi_pm_state cur_state, transition_state;
- 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
-@@ -1190,14 +1197,19 @@ void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
- 	write_unlock_irq(&mhi_cntrl->pm_lock);
- 	mutex_unlock(&mhi_cntrl->pm_mutex);
- 
--	mhi_queue_state_transition(mhi_cntrl, DEV_ST_TRANSITION_DISABLE);
-+	if (destroy_device)
-+		mhi_queue_state_transition(mhi_cntrl,
-+					   DEV_ST_TRANSITION_DISABLE_DESTROY_DEVICE);
-+	else
-+		mhi_queue_state_transition(mhi_cntrl,
-+					   DEV_ST_TRANSITION_DISABLE);
- 
- 	/* Wait for shutdown to complete */
- 	flush_work(&mhi_cntrl->st_worker);
- 
- 	disable_irq(mhi_cntrl->irq[0]);
- }
--EXPORT_SYMBOL_GPL(mhi_power_down);
-+EXPORT_SYMBOL_GPL(__mhi_power_down);
- 
- int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
- {
-diff --git a/include/linux/mhi.h b/include/linux/mhi.h
-index 039943ec4d4e..85edc9c5df88 100644
---- a/include/linux/mhi.h
-+++ b/include/linux/mhi.h
-@@ -644,12 +644,37 @@ int mhi_async_power_up(struct mhi_controller *mhi_cntrl);
-  */
- int mhi_sync_power_up(struct mhi_controller *mhi_cntrl);
- 
-+void __mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful,
-+		    bool destroy_device);
-+
- /**
-- * mhi_power_down - Start MHI power down sequence
-+ * mhi_power_down - Start MHI power down sequence. See also
-+ * mhi_power_down_no_destroy() which is a variant of this for suspend.
-+ *
-  * @mhi_cntrl: MHI controller
-  * @graceful: Link is still accessible, so do a graceful shutdown process
-  */
--void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful);
-+static inline void mhi_power_down(struct mhi_controller *mhi_cntrl, bool graceful)
-+{
-+	__mhi_power_down(mhi_cntrl, graceful, true);
-+}
-+
-+/**
-+ * mhi_power_down_no_destroy - Start MHI power down sequence but don't
-+ * destroy struct devices. This is a variant for mhi_power_down() and is a
-+ * workaround to make it possible to use mhi_power_up() in a resume
-+ * handler. When using this variant the caller must also call
-+ * mhi_prepare_all_for_transfer_autoqueue() and
-+ * mhi_unprepare_all_from_transfer().
-+ *
-+ * @mhi_cntrl: MHI controller
-+ * @graceful: Link is still accessible, so do a graceful shutdown process
-+ */
-+static inline void mhi_power_down_no_destroy(struct mhi_controller *mhi_cntrl,
-+					     bool graceful)
-+{
-+	__mhi_power_down(mhi_cntrl, graceful, false);
-+}
- 
- /**
-  * mhi_unprepare_after_power_down - Free any allocated memory after power down
--- 
-2.39.2
-
+On 10/30/2023 3:18 PM, Ma Jun wrote:
+> Due to electrical and mechanical constraints in certain platform designs there
+> may be likely interference of relatively high-powered harmonics of the (G-)DDR
+> memory clocks with local radio module frequency bands used by Wifi 6/6e/7. To
+> mitigate possible RFI interference we introuduced WBRF(Wifi Band RFI mitigation Feature).
+> Producers can advertise the frequencies in use and consumers can use this information
+> to avoid using these frequencies for sensitive features.
+> 
+> The whole patch set is based on Linux 6.6.0-rc6. With some brief introductions
+> as below:
+> Patch1:      Document about WBRF
+> Patch2:      Core functionality setup for WBRF feature support
+> Patch3 - 4:  Bring WBRF support to wifi subsystem.
+> Patch5 - 9:  Bring WBRF support to AMD graphics driver.
+> 
+> Evan Quan (6):
+>   cfg80211: expose nl80211_chan_width_to_mhz for wide sharing
+>   wifi: mac80211: Add support for WBRF features
+>   drm/amd/pm: update driver_if and ppsmc headers for coming wbrf feature
+>   drm/amd/pm: setup the framework to support Wifi RFI mitigation feature
+>   drm/amd/pm: add flood detection for wbrf events
+>   drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.7
+> 
+> Ma Jun (3):
+>   Documentation/driver-api: Add document about WBRF mechanism
+>   platform/x86/amd: Add support for AMD ACPI based Wifi band RFI
+>     mitigation feature
+>   drm/amd/pm: enable Wifi RFI mitigation feature support for SMU13.0.0
+> 
+>  Documentation/driver-api/wbrf.rst             |  76 ++++
+>  drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   2 +
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c       |  17 +
+>  drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     | 208 +++++++++
+>  drivers/gpu/drm/amd/pm/swsmu/inc/amdgpu_smu.h |  42 ++
+>  .../inc/pmfw_if/smu13_driver_if_v13_0_0.h     |   3 +-
+>  .../inc/pmfw_if/smu13_driver_if_v13_0_7.h     |   3 +-
+>  .../pm/swsmu/inc/pmfw_if/smu_v13_0_0_ppsmc.h  |   5 +-
+>  .../pm/swsmu/inc/pmfw_if/smu_v13_0_7_ppsmc.h  |   3 +-
+>  drivers/gpu/drm/amd/pm/swsmu/inc/smu_types.h  |   3 +-
+>  drivers/gpu/drm/amd/pm/swsmu/inc/smu_v13_0.h  |   4 +
+>  .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c    |  48 ++
+>  .../drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c  |  22 +
+>  .../drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c  |  13 +
+>  drivers/gpu/drm/amd/pm/swsmu/smu_internal.h   |   3 +
+>  drivers/platform/x86/amd/Kconfig              |  15 +
+>  drivers/platform/x86/amd/Makefile             |   1 +
+>  drivers/platform/x86/amd/wbrf.c               | 413 ++++++++++++++++++
+>  include/linux/acpi_amd_wbrf.h                 |  94 ++++
+>  include/net/cfg80211.h                        |   9 +
+>  net/mac80211/Makefile                         |   2 +
+>  net/mac80211/chan.c                           |   9 +
+>  net/mac80211/ieee80211_i.h                    |   7 +
+>  net/mac80211/main.c                           |   2 +
+>  net/mac80211/wbrf.c                           |  95 ++++
+>  net/wireless/chan.c                           |   3 +-
+>  26 files changed, 1094 insertions(+), 8 deletions(-)
+>  create mode 100644 Documentation/driver-api/wbrf.rst
+>  create mode 100644 drivers/platform/x86/amd/wbrf.c
+>  create mode 100644 include/linux/acpi_amd_wbrf.h
+>  create mode 100644 net/mac80211/wbrf.c
+> 
