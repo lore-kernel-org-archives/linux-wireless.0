@@ -2,89 +2,102 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C87DBC4167B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFDAC05022
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344763AbjKJSRV (ORCPT
+        id S1345107AbjKJSRY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:17:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39426 "EHLO
+        Fri, 10 Nov 2023 13:17:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346082AbjKJSQf (ORCPT
+        with ESMTP id S1346113AbjKJSQj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:16:35 -0500
-X-Greylist: delayed 581 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 10 Nov 2023 03:38:21 PST
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DA492FEFF
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 03:38:21 -0800 (PST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-        t=1699615717; bh=+IwBurxvPqAe6pW4WbGM/ZfHCCn6WQeRnVpjBLvJH7Q=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=urBLSHQ+1KNH/wBWu7BJeThXdvQ+StQA1jEPW0LmHcBOvyPqATbFt8Yb9rdI44mMR
-         fLoGckXnY3DogLTtQgVDKaV1R/wW+mBmu+DJrFsHiUwIferNQMygYoiKMyTYi9dUOG
-         Swj2c8xYaJ/IAomEzVINMfqmv7u6zl0fKyEbECDS4GE4wUUx4NvMQsugqKxOFwynpP
-         Ibx1K9HwQEGj8XlI5pnIX5hvUE2EMFgri/OraPaWsCEUZ5NJo5fdr/oZFP5MyhlFtp
-         aBMQkMwwewkd7ZMa7KyIKWF1iippXe+37a/R9Ne9qPeyXV0roiryCaXMDoAuykYs+1
-         vGz2BCyyDLPDw==
-To:     Minsuk Kang <linuxlovemin@yonsei.ac.kr>,
-        linux-wireless@vger.kernel.org
-Cc:     kvalo@kernel.org, dokyungs@yonsei.ac.kr, jisoo.jang@yonsei.ac.kr,
-        Minsuk Kang <linuxlovemin@yonsei.ac.kr>
-Subject: Re: [PATCH] wifi: ath9k: Fix potential array-index-out-of-bounds
- read in ath9k_htc_txstatus()
-In-Reply-To: <20231110064143.1356077-1-linuxlovemin@yonsei.ac.kr>
-References: <20231110064143.1356077-1-linuxlovemin@yonsei.ac.kr>
-Date:   Fri, 10 Nov 2023 12:28:36 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87cywhvod7.fsf@toke.dk>
+        Fri, 10 Nov 2023 13:16:39 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A8C28135
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:22:10 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A57C433C8;
+        Fri, 10 Nov 2023 10:22:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699611730;
+        bh=hptKbYz04+x5Rr0maSkv69QvScaY06HUThEK/G5dIhM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BkMo7EG6iUws0M/o6eo67UcGSSC6caRinXQ6YCAQIeTAjUdzj/soIs7A00vEsswei
+         Uz/eA64OKT6OWdFUiYd7UnU211hCMV65JQ7yG/A3Oze90Fxlfau00+KR1j7ZVgW9I2
+         cutec7332I9fLZAvWwAXxK81C3Tq7rGL5yIIw/13E0quEN6Wq0OCiYWWWUKUwLXDJt
+         qFG4eaApzDzE0dpRhvw3DMdyOICKrbvEiYmrQ5JJPeuJ0sBWQtgIbV/aLFkNVPhFZK
+         Aj+E0Ts36sj/gKYP57gKjgM7aNhK78Pk8RwoD1DBDk/68H7Sf8jYpI5kS8ttPPjsgc
+         rHN3ObEhPfFDA==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     mhi@lists.linux.dev
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 4/8] wifi: ath11k: remove MHI LOOPBACK channels
+Date:   Fri, 10 Nov 2023 12:21:58 +0200
+Message-Id: <20231110102202.3168243-5-kvalo@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231110102202.3168243-1-kvalo@kernel.org>
+References: <20231110102202.3168243-1-kvalo@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Minsuk Kang <linuxlovemin@yonsei.ac.kr> writes:
+From: Baochen Qiang <quic_bqiang@quicinc.com>
 
-> Fix an array-index-out-of-bounds read in ath9k_htc_txstatus(). The bug
-> occurs when txs->cnt, data from a URB provided by a USB device, is
-> bigger than the size of the array txs->txstatus, which is
-> HTC_MAX_TX_STATUS. WARN_ON() already checks it, but there is no bug
-> handling code after the check. Make the function return if that is the
-> case.
->
-> Found by a modified version of syzkaller.
->
-> UBSAN: array-index-out-of-bounds in htc_drv_txrx.c
-> index 13 is out of range for type '__wmi_event_txstatus [12]'
-> Call Trace:
->  ath9k_htc_txstatus
->  ath9k_wmi_event_tasklet
->  tasklet_action_common
->  __do_softirq
->  irq_exit_rxu
->  sysvec_apic_timer_interrupt
->
-> Signed-off-by: Minsuk Kang <linuxlovemin@yonsei.ac.kr>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> index 800177021baf..c628332f2562 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> @@ -652,9 +652,10 @@ void ath9k_htc_txstatus(struct ath9k_htc_priv *priv, void *wmi_event)
->  	struct ath9k_htc_tx_event *tx_pend;
->  	int i;
->  
-> -	for (i = 0; i < txs->cnt; i++) {
-> -		WARN_ON(txs->cnt > HTC_MAX_TX_STATUS);
-> +	if (WARN_ON(txs->cnt > HTC_MAX_TX_STATUS))
-> +		return;
+There is no driver to match these two channels, so
+remove them. This fixes warnings from MHI subsystem during suspend:
 
-Since this is something that can be triggered by a device sending bad
-data, this shouldn't be an unbounded WARN_ON(). We could turn it into a
-WARN_ON_ONCE(), or just get rid of it entirely...
+mhi mhi0_LOOPBACK: 1: Failed to reset channel, still resetting
+mhi mhi0_LOOPBACK: 0: Failed to reset channel, still resetting
 
--Toke
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
+
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/mhi.c | 28 ---------------------------
+ 1 file changed, 28 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+index afeabd6ecc67..d4fe1d1c86e4 100644
+--- a/drivers/net/wireless/ath/ath11k/mhi.c
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -21,34 +21,6 @@
+ #define RDDM_DUMP_SIZE	0x420000
+ 
+ static struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
+-	{
+-		.num = 0,
+-		.name = "LOOPBACK",
+-		.num_elements = 32,
+-		.event_ring = 0,
+-		.dir = DMA_TO_DEVICE,
+-		.ee_mask = 0x4,
+-		.pollcfg = 0,
+-		.doorbell = MHI_DB_BRST_DISABLE,
+-		.lpm_notify = false,
+-		.offload_channel = false,
+-		.doorbell_mode_switch = false,
+-		.auto_queue = false,
+-	},
+-	{
+-		.num = 1,
+-		.name = "LOOPBACK",
+-		.num_elements = 32,
+-		.event_ring = 0,
+-		.dir = DMA_FROM_DEVICE,
+-		.ee_mask = 0x4,
+-		.pollcfg = 0,
+-		.doorbell = MHI_DB_BRST_DISABLE,
+-		.lpm_notify = false,
+-		.offload_channel = false,
+-		.doorbell_mode_switch = false,
+-		.auto_queue = false,
+-	},
+ 	{
+ 		.num = 20,
+ 		.name = "IPCR",
+-- 
+2.39.2
+
