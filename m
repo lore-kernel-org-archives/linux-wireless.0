@@ -2,80 +2,91 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AEB4C4332F
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:07:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C08FC4167B
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Nov 2023 18:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229795AbjKJSHJ (ORCPT
+        id S229687AbjKJSHL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:07:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40492 "EHLO
+        Fri, 10 Nov 2023 13:07:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230003AbjKJSFE (ORCPT
+        with ESMTP id S1345734AbjKJSGu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Nov 2023 13:05:04 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58DF12813A
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 02:22:14 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340EAC433C7;
-        Fri, 10 Nov 2023 10:22:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699611734;
-        bh=s8f7ejt6/6A/AIKa6sJs8NlXnpAnYLCNcVR7yofQBJk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kWxDiZoqvEUMJIGCjpia9hNLEYYeM7aF+jdw4GLLMl+osG9gI4Q3jz2oHIOJmS/XF
-         Xp7enBMvYSeCIHF+uy2nU4QLzycIpA34EJbHV/uPiortko0WsVU64uIza624ZIa7En
-         hbcFcvtUbZW17dpg8CAbMytZXk4u/df7Kfr1iyFwSwCtWNSIvOEfp3DzK5EMdyLSvc
-         lgz1dSxLCKVDx5NzZ9xIgpG4ExjmdZgY7SYyNo7wSNij3/TK9pYpYONp0iDxZMrlvV
-         9bVbceVp6N6ok+5Rj6jv0/6sIi29ZYZxGY1/G7k5s+48qILF9sLa4YiesA3VvIJ3Yd
-         Xp5eRN7uKQheg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     mhi@lists.linux.dev
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 7/8] wifi: ath11k: thermal: don't try to register multiple times
-Date:   Fri, 10 Nov 2023 12:22:01 +0200
-Message-Id: <20231110102202.3168243-8-kvalo@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231110102202.3168243-1-kvalo@kernel.org>
-References: <20231110102202.3168243-1-kvalo@kernel.org>
+        Fri, 10 Nov 2023 13:06:50 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C1BE9000
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Nov 2023 00:13:37 -0800 (PST)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA7gTKE011102;
+        Fri, 10 Nov 2023 08:13:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=txZZy8CL21otkiewHkKdEAcF3VMcwzBDxAnpSqKwR+c=;
+ b=MVmGjSkGLWT1NRpSCsajc4xqKxBlO/a+dI2vWzv8bR4TlPBsU6FdlZbE3yTQWcx5E0fw
+ y5/ezEXZTP/EofEX/Yzkh5YB0MgaXdkjXS7t643+7mLlZ9vUy0x3NJW60ecUAeawZSqG
+ f2CDNJisRwxxqXIbkHVJrymmBr9juKVVjxEzGDFvMJVRrj+opbe/Uhy/jRKeJmxc7bTx
+ /+FGHfsCztLfWpoI21M1/VRDortL2f/BtL9MIJlK+xsuY3xMIjLUgDy7zRD7W7rEtI/B
+ GQ0y71AxU5OS0lhtdCY1vveMl7G/W2ZJNaHFLY8pUU3RrHBMgxynl53iZ8A+McWrMROC 8g== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u93qy9jv1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:13:34 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AA8DXZB022106
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 10 Nov 2023 08:13:33 GMT
+Received: from periyasa-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.39; Fri, 10 Nov 2023 00:13:32 -0800
+From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH 0/4] ath12k: Refactor Rxdma replenish arguments
+Date:   Fri, 10 Nov 2023 13:43:13 +0530
+Message-ID: <20231110081317.19608-1-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: eI5UD6H4nch1rSWIDeQvRcKWk7VXFJhN
+X-Proofpoint-GUID: eI5UD6H4nch1rSWIDeQvRcKWk7VXFJhN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-10_04,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=1 phishscore=0 bulkscore=0
+ spamscore=1 clxscore=1015 malwarescore=0 priorityscore=1501 suspectscore=0
+ mlxscore=1 lowpriorityscore=0 mlxlogscore=190 impostorscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
+ definitions=main-2311100068
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <quic_kvalo@quicinc.com>
+Avoid the explicit arguments of Rxdma replenish to optimize the per packet
+rx data path CPU cycles. Also refactor the Rxdma ring structure.
 
-Every time the firmware boots we call ath11k_core_qmi_firmware_ready() which
-ends up calling ath11k_thermal_register(). So we try to register thermal
-devices multiple times. And when we power off the firmware during
-suspend/hibernation (implemented in the next patch) we get a warning in resume:
+Karthikeyan Periyasamy (4):
+  wifi: ath12k: avoid explicit mac id argument in Rxdma replenish
+  wifi: ath12k: avoid explicit RBM id argument in Rxdma replenish
+  wifi: ath12k: avoid explicit HW conversion argument in Rxdma replenish
+  wifi: ath12k: refactor DP Rxdma ring structure
 
-hwmon hwmon4: PM: parent phy0 should not be sleeping
+ drivers/net/wireless/ath/ath12k/dp.c     |   4 +-
+ drivers/net/wireless/ath/ath12k/dp.h     |  11 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.c |  10 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.h |   2 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c  | 143 ++++++++++-------------
+ drivers/net/wireless/ath/ath12k/dp_rx.h  |   6 +-
+ 6 files changed, 76 insertions(+), 100 deletions(-)
 
-Workaround this similarly like ath11k_mac_register() does by testing
-ATH11K_FLAG_REGISTERED.
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
-
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/thermal.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/thermal.c b/drivers/net/wireless/ath/ath11k/thermal.c
-index c9b012f97ba5..80abf472fb87 100644
---- a/drivers/net/wireless/ath/ath11k/thermal.c
-+++ b/drivers/net/wireless/ath/ath11k/thermal.c
-@@ -162,6 +162,9 @@ int ath11k_thermal_register(struct ath11k_base *ab)
- 	struct ath11k_pdev *pdev;
- 	int i, ret;
- 
-+	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
-+		return 0;
-+
- 	for (i = 0; i < ab->num_radios; i++) {
- 		pdev = &ab->pdevs[i];
- 		ar = pdev->ar;
+base-commit: 553d0057523dc1d6935160613f1fbf9bb8db88f6
 -- 
-2.39.2
+2.17.1
 
