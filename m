@@ -2,124 +2,94 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B52EC4332F
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Nov 2023 14:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44814C4332F
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Nov 2023 14:48:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229706AbjKMO1E (ORCPT
+        id S230056AbjKMOsw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Nov 2023 09:27:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50442 "EHLO
+        Mon, 13 Nov 2023 09:48:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbjKMO1D (ORCPT
+        with ESMTP id S229626AbjKMOsv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Nov 2023 09:27:03 -0500
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7ED4D5E
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2023 06:27:00 -0800 (PST)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3ADEQOn5013712;
-        Mon, 13 Nov 2023 14:26:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=Kxa0v6rsK62hSA77IhoXhkBpBXYgkTMF3T7bmHgOOj8=;
- b=ck+zig0GwQDBuUY+qJZgPX+Hn8lXyVK262lAcPJzJ98Q7Gv6SkJKYehR11k7jHQ5Uqq4
- enPqLy9nBIVze8UUzKAMs4jAjKVWizl88O3EwIIRZXFhezC3FFYLasALnYHYTp9KEVZf
- YBYlBXQfONeY+QiQTgDQd+kEBNvWbISz8K0lYGS36JgFzemGXmjyBAY7Cq/sLOLqpKsW
- 9xjCUBTyOz5hnM3sXYXGQplQH++dOgMdWEwXEnAosoZTJfOaBlSiM4tyoScVjJ1dpvQ9
- Huwf3UUTQ0aWDRYGk+0fAWfyEvWBR1JaTwtIDHc2V6Ei39VWPThYSnA+kq8zCqhXPsfD zQ== 
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ua2wfksj3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 13 Nov 2023 14:26:48 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3ADEQl5m000586
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 13 Nov 2023 14:26:47 GMT
-Received: from [10.226.59.182] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.39; Mon, 13 Nov
- 2023 06:26:47 -0800
-Message-ID: <fb3709a6-95d2-711f-3ca1-0107fa159c62@quicinc.com>
-Date:   Mon, 13 Nov 2023 07:26:46 -0700
+        Mon, 13 Nov 2023 09:48:51 -0500
+Received: from forward100c.mail.yandex.net (forward100c.mail.yandex.net [178.154.239.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D2A71A5
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Nov 2023 06:48:44 -0800 (PST)
+Received: from mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net [IPv6:2a02:6b8:c00:2f9f:0:640:dfdd:0])
+        by forward100c.mail.yandex.net (Yandex) with ESMTP id 6A5886090D;
+        Mon, 13 Nov 2023 17:48:12 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id Amj84jlUtuQ0-NiaHArxL;
+        Mon, 13 Nov 2023 17:48:12 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+        t=1699886892; bh=LTQa9sc17ntD9uNZCs1vpw8MhnFcVfJo2L9K62kMj0Y=;
+        h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=m3vdNVViCbOa0q5me1hZmKRbg7iDu/ANCess5OXbzhh8iFUi0ixhQjNjzu4WFNqTC
+         dXI/xBhfbQ+UJToNkhyGHW9HlWW6lLAnOrfZLP0k4ecypYZ/X6NsAIS52210DY6887
+         ZloyEqt/nPbBcBVQiMWCKLnJ/+jx7lvYBiLkfTOg=
+Authentication-Results: mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From:   Dmitry Antipov <dmantipov@yandex.ru>
+To:     Ping-Ke Shih <pkshih@realtek.com>
+Cc:     Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org, Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 2/2] wifi: rtlwifi: simplify rtl_action_proc() and rtl_tx_agg_start()
+Date:   Mon, 13 Nov 2023 17:47:30 +0300
+Message-ID: <20231113144734.197359-2-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231113144734.197359-1-dmantipov@yandex.ru>
+References: <20231113144734.197359-1-dmantipov@yandex.ru>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH RFC 4/8] wifi: ath11k: remove MHI LOOPBACK channels
-Content-Language: en-US
-To:     Kalle Valo <kvalo@kernel.org>
-CC:     Baochen Qiang <quic_bqiang@quicinc.com>, <mhi@lists.linux.dev>,
-        <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-References: <20231110102202.3168243-1-kvalo@kernel.org>
- <20231110102202.3168243-5-kvalo@kernel.org>
- <f56bce13-bba8-40d2-1dfc-210478ff63d6@quicinc.com>
- <e2ad1380-d55f-42bd-9f40-ef8aa6e0f105@quicinc.com>
- <818fddb9-b59e-7a6f-6605-2ba016d0db60@quicinc.com>
- <87msvhu4d5.fsf@kernel.org>
-From:   Jeffrey Hugo <quic_jhugo@quicinc.com>
-In-Reply-To: <87msvhu4d5.fsf@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: N_oti0dSwLYzqAaf4SYfVnX_0rcXhlbF
-X-Proofpoint-ORIG-GUID: N_oti0dSwLYzqAaf4SYfVnX_0rcXhlbF
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-13_04,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
- phishscore=0 clxscore=1015 mlxscore=0 impostorscore=0 malwarescore=0
- bulkscore=0 priorityscore=1501 adultscore=0 mlxlogscore=903
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311130117
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/13/2023 7:15 AM, Kalle Valo wrote:
-> Jeffrey Hugo <quic_jhugo@quicinc.com> writes:
-> 
->> On 11/11/2023 9:24 PM, Baochen Qiang wrote:
->>
->>> On 11/11/2023 12:54 AM, Jeffrey Hugo wrote:
->>>> On 11/10/2023 3:21 AM, Kalle Valo wrote:
->>>>> From: Baochen Qiang <quic_bqiang@quicinc.com>
->>>>>
->>>>> There is no driver to match these two channels, so
->>>>> remove them. This fixes warnings from MHI subsystem during suspend:
->>>>>
->>>>> mhi mhi0_LOOPBACK: 1: Failed to reset channel, still resetting
->>>>> mhi mhi0_LOOPBACK: 0: Failed to reset channel, still resetting
->>>>
->>>> This feels like just masking a real issue.
->>>>
->>>> If LOOPBACK is not being consumed, then the channel should never go
->>>> into the start state.  Why would we be trying to transition to the
->>>> reset state then?
->>>>
->>>> -Jeff
->>> That is because, with patch 'bus: mhi: host: add new interfaces to
->>> handle MHI channels directly' in this patch set, ath11k is able to
->>> call mhi_unprepare_all_from_transfer(), which will reset all
->>> channels.
->>
->> that implementation is flawed if it is causing this.  Looks like you
->> never check to see if the channel was prepared in the first place.
->>
->> If you go fix that, then it looks like this change is not needed.
-> 
-> BTW what do these loopback channels do? I didn't notice any difference
-> in the functionality so I'm wondering the reason for these.
-> 
+Since 'drv_priv' is an in-place member allocated at the end of
+'struct ieee80211_sta', it can't be NULL and so relevant checks
+in 'rtl_action_proc()' and 'rtl_tx_agg_start()' may be dropped.
+Compile tested only.
 
-The loopback channel is defined as a service where any data the host 
-sends to the device is immediately sent back to the host, unmodified. 
-The typical usecase is smoke test and performance profiling.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-I do not object to the removal of the channel from the atheros devices, 
-assuming suitable justification.  Not having a use for the channel seems 
-like good justification.  Working around a bug seem more like a hack 
-than proper justification.
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ drivers/net/wireless/realtek/rtlwifi/base.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index 7ce37fb4fdbf..1a8d715b7c07 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1402,10 +1402,6 @@ bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
+ 
+ 				sta_entry =
+ 					(struct rtl_sta_info *)sta->drv_priv;
+-				if (!sta_entry) {
+-					rcu_read_unlock();
+-					return true;
+-				}
+ 				capab =
+ 				  le16_to_cpu(mgmt->u.action.u.addba_req.capab);
+ 				tid = (capab &
+@@ -1760,8 +1756,6 @@ int rtl_tx_agg_start(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		return -EINVAL;
+ 
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+-	if (!sta_entry)
+-		return -ENXIO;
+ 	tid_data = &sta_entry->tids[tid];
+ 
+ 	rtl_dbg(rtlpriv, COMP_SEND, DBG_DMESG,
+@@ -1818,8 +1812,6 @@ int rtl_rx_agg_start(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+-	if (!sta_entry)
+-		return -ENXIO;
+ 	tid_data = &sta_entry->tids[tid];
+ 
+ 	rtl_dbg(rtlpriv, COMP_RECV, DBG_DMESG,
+-- 
+2.41.0
+
