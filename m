@@ -2,51 +2,86 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C9C5C07548
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Nov 2023 08:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 796CEC47072
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Nov 2023 08:57:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234679AbjKOIgq (ORCPT
+        id S234678AbjKOI5b (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Nov 2023 03:36:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35754 "EHLO
+        Wed, 15 Nov 2023 03:57:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234675AbjKOIgp (ORCPT
+        with ESMTP id S234651AbjKOI5a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Nov 2023 03:36:45 -0500
-Received: from mail.tradestry.pl (mail.tradestry.pl [141.94.250.68])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E687810E
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2023 00:36:42 -0800 (PST)
-Received: by mail.tradestry.pl (Postfix, from userid 1002)
-        id BB518A4B81; Wed, 15 Nov 2023 08:36:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tradestry.pl; s=mail;
-        t=1700037401; bh=Y0HnXqH+26AP5Uq6M8BQXaj1HIAPQY/WndV9tkpAHHU=;
-        h=Date:From:To:Subject:From;
-        b=KrUWxqnTEFqPf54L0wk/PyjP1gp3SBaFddbsd9MaOnHQO8JyHET966ceLpDH+S6f/
-         SXwtUoonVNgAa3VZBMbh+jLq/k5Z8iRIgDqDza1v7zv5U/VLyasGDJzKd1KTeobJ3r
-         0UhQt4SLGvr7Pzjzcif0Axcju6b4FrRVeoYE1Sn05v4NAoCgXl0WxX+vA6bBUivJoq
-         yLGtrEbxd+QDfGKIOymLtY9zo2XlJQ7V8Pt2Zim2t+yDI35rd5HPMUV1pOzW3IkGFM
-         y5rJySI36J7sw6zG/ZSjkPLvFQ2PdJr/bd72UoZNwVGJZ9+N83O5Ylc5NiErXQsPOV
-         v3LOA+Kr7hKqA==
-Received: by mail.tradestry.pl for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2023 08:36:04 GMT
-Message-ID: <20231115074501-0.1.dp.1kdzd.0.jj5c5nlt2d@tradestry.pl>
-Date:   Wed, 15 Nov 2023 08:36:04 GMT
-From:   "Damian Cichocki" <damian.cichocki@tradestry.pl>
-To:     <linux-wireless@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.tradestry.pl
-MIME-Version: 1.0
+        Wed, 15 Nov 2023 03:57:30 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B69F7114
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Nov 2023 00:57:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+        Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=HCupE9/tnBdses71DbNxEh3wT5H5TcT70vzQqZr30Es=;
+        t=1700038646; x=1701248246; b=Vpvd2DTB1M6Dk64TxldCDJDOO+bqavz1BliuDaKFHO8Tuup
+        U1gAqpWs/CLvwG0WRXBFtRN2hVykWP07yyz3M8U04t7Cswaqkx+PkQlq5mbFUjXdd3yRYtOleD0VW
+        PbK+UtF/gZudWY1lcL/AGcCt6B2gdC1Fv+KvFnnkCVNPIeCe/8WDDX2fmOVITwgCecw74pbNm3ZlN
+        WfbNKf32ZHYAEPHP3sGPOftcdYmXQUbzgR0vmi3koDtP46SzFiIsQEX5QKRBZEammoVSq4Eb+bzGu
+        HE3oSGonipSKBgQQGJ+I1wQeEvaSgLOisq5+eJf+wbqZobUOSUWrNMP5dZOw16KQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1r3Bi8-000000093pV-0nQP;
+        Wed, 15 Nov 2023 09:57:24 +0100
+Message-ID: <9574407e2be4c97b1ef2d9f73b5eecb08791ff56.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: iwlwifi:  Add debugging around scan failure
+ warning.
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date:   Wed, 15 Nov 2023 09:57:23 +0100
+In-Reply-To: <20231114212309.2180281-1-greearb@candelatech.com>
+References: <20231114212309.2180281-1-greearb@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Tue, 2023-11-14 at 13:23 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>=20
+> Provide additional information that may help debugging why
+> the WARN_ON is seen.
+>=20
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/=
+wireless/intel/iwlwifi/mvm/scan.c
+> index 75c5c58e14a5..ec24ece7c877 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+> @@ -2356,7 +2356,10 @@ iwl_mvm_scan_umac_fill_general_p_v12(struct iwl_mv=
+m *mvm,
+>  			link_id =3D ffs(vif->active_links) - 1;
+> =20
+>  		link_info =3D scan_vif->link[link_id];
+> -		if (!WARN_ON(!link_info))
+> +		if (WARN_ON(!link_info))
+> +			IWL_ERR(mvm, "scan failure: Cannot find link info for link-id: %d act=
+ive-links: 0x%x\n",
+> +				link_id, vif->active_links);
+>=20
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+It would make sense to put the data *into* the warning, rather than
+separately? Though I'm not sure I see so much value in the long string
+(vs. just the data).
 
+But honestly I'm not sure this really even is a problem at all? Some
+confusion can happen during firmware restart here, and not sure we can
+really fix that. Though maybe with the new locking we can.
 
-Pozdrawiam,
-Damian Cichocki
+johannes
