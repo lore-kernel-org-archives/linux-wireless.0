@@ -2,44 +2,43 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 731AAC072A2
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Nov 2023 09:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57DD4C072A2
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Nov 2023 09:58:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345782AbjKQJ54 (ORCPT
+        id S1345887AbjKQJ6K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Nov 2023 04:57:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54698 "EHLO
+        Fri, 17 Nov 2023 04:58:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235810AbjKQJ5o (ORCPT
+        with ESMTP id S235762AbjKQJ5w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Nov 2023 04:57:44 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E0621994;
-        Fri, 17 Nov 2023 01:46:18 -0800 (PST)
+        Fri, 17 Nov 2023 04:57:52 -0500
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56881732;
+        Fri, 17 Nov 2023 01:45:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700214378; x=1731750378;
+  t=1700214357; x=1731750357;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=cnRhqRHN/FCSPFyKVdYVH7cYpVC1KUyHAWcRs58SbBg=;
-  b=c1pKTN1O9RInsY149OLutR+iFZvJBfaFSkgI7cxEDUIAcWYfxgkMVisc
-   lo1MI8VTFwoOuiNj6SwfaJ/3UCqdmQiakX7eLqMY+SB+BzIksewu0JtTK
-   M7P7dZ6Q4o0R7bu115TOk/BDZCKesnBdIazcW2kx4X3vrzCU8Wo5RsaoT
-   7LweLk2bJQunvp1jNcU3daqH6iF9hGQlSxU9Ll8mvsojvGCGT3DAjYhW/
-   vg8wxZOYvUWMkhTzoDGmbNR/2pF6KLDTHgyV4o5NennzmkxuSrIMaAaFS
-   LUzwXvS9bn91PkH2CfuZStzTcyy009JvXvFTWY1GXB7MzkvxiwIeodM8D
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10896"; a="457767226"
+  bh=IOd4p7E6WZRecHlZmv4wDM9ERugu04lZ89KnrsRyhwI=;
+  b=PoPUMEGUxs90j1tRw1IVD76dteAx2YEmU8sMKYaHDqg+j3lYqdIBIFmE
+   QTiwsHxJAjQ0pIhn6xk9nxPMXkFyx6Xl5dHKgES38X3N+k9wB6IgBtxTe
+   CsiYgMETrr0Rj0H0taE0Pz/HJ3GgOz7w0tZe+F+NcvSsI4kVWliV0DJmb
+   +FFzaxlbsDGxy8A6LI3VIIOopo5BP9vqI1CxU1Szvx3suj+iauepuJ6Wf
+   jMgdVx9WwwxQ1badhAxHG8LwSd9hQOr1CMkQcNXf7C+ikHrkF318HX6oB
+   6kUuTFrMefW5ugbpVJQzMHz7KCAtehsVUDIa68aXrp0tbzILgIzsOzOAz
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10896"; a="390123944"
 X-IronPort-AV: E=Sophos;i="6.04,206,1695711600"; 
-   d="scan'208";a="457767226"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 01:46:17 -0800
+   d="scan'208";a="390123944"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 01:45:57 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10896"; a="742048037"
 X-IronPort-AV: E=Sophos;i="6.04,206,1695711600"; 
-   d="scan'208";a="742048037"
+   d="scan'208";a="6972546"
 Received: from rvadera-mobl.ger.corp.intel.com (HELO localhost) ([10.251.219.158])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 01:46:14 -0800
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Nov 2023 01:45:54 -0800
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     "John W. Linville" <linville@tuxdriver.com>,
         Kalle Valo <kvalo@kernel.org>,
@@ -48,9 +47,9 @@ To:     "John W. Linville" <linville@tuxdriver.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org
 Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 7/7] rtlwifi: rtl8821ae: Access full PMCS reg and use pci_regs.h
-Date:   Fri, 17 Nov 2023 11:44:25 +0200
-Message-Id: <20231117094425.80477-8-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 5/7] rtlwifi: rtl8821ae: Use pci_find_capability()
+Date:   Fri, 17 Nov 2023 11:44:23 +0200
+Message-Id: <20231117094425.80477-6-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20231117094425.80477-1-ilpo.jarvinen@linux.intel.com>
 References: <20231117094425.80477-1-ilpo.jarvinen@linux.intel.com>
@@ -61,60 +60,92 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-_rtl8821ae_clear_pci_pme_status() accesses the upper byte of the Power
-Management Control/Status register (PMCS) with literal 5 offset.
+Instead of open coding the capability structure search, find the PM
+Capability using pci_find_capability().
 
-Access the entire PMCS register using defines from pci_regs.h to
-improve code readability.
-
-While at it, remove the obvious comment and tweak debug prints
-slightly to not sound misleading.
+While at it, rename the generic 'cap_pointer' to 'pm_cap' which makes
+the intent of the code more obvious.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 21 +++++++------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 49 +++----------------
+ 1 file changed, 8 insertions(+), 41 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 7cc648d49f2d..f4b232f038a9 100644
+index 53cfeed0b030..7877509c34c7 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -2271,7 +2271,7 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
+@@ -2270,42 +2270,11 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
+ {
  	struct rtl_priv *rtlpriv = rtl_priv(hw);
  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct pci_dev *pdev = rtlpci->pdev;
--	u8 pmcs_reg;
-+	u16 pmcs_reg;
- 	u8 pm_cap;
+-	u16 cap_hdr;
+-	u8 cap_pointer;
+-	u8 cap_id = 0xff;
+ 	u8 pmcs_reg;
+-	u8 cnt = 0;
++	u8 pm_cap;
  
- 	pm_cap = pci_find_capability(pdev, PCI_CAP_ID_PM);
-@@ -2281,23 +2281,16 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
--	/* Get the PM CSR (Control/Status Register),
--	 * The PME_Status is located at PM Capatibility offset 5, bit 7
--	 */
--	pci_read_config_byte(pdev, pm_cap + 5, &pmcs_reg);
+-	/* Get the Capability pointer first,
+-	 * the Capability Pointer is located at
+-	 * offset 0x34 from the Function Header */
 -
--	if (pmcs_reg & BIT(7)) {
-+	pci_read_config_word(pdev, pm_cap + PCI_PM_CTRL, &pmcs_reg);
-+	if (pmcs_reg & PCI_PM_CTRL_PME_STATUS) {
+-	pci_read_config_byte(rtlpci->pdev, 0x34, &cap_pointer);
+-	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
+-		"PCI configuration 0x34 = 0x%2x\n", cap_pointer);
+-
+-	do {
+-		pci_read_config_word(rtlpci->pdev, cap_pointer, &cap_hdr);
+-		cap_id = cap_hdr & 0xFF;
+-
+-		rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
+-			"in pci configuration, cap_pointer%x = %x\n",
+-			cap_pointer, cap_id);
+-
+-		if (cap_id == 0x01) {
+-			break;
+-		} else {
+-			/* point to next Capability */
+-			cap_pointer = (cap_hdr >> 8) & 0xFF;
+-			/* 0: end of pci capability, 0xff: invalid value */
+-			if (cap_pointer == 0x00 || cap_pointer == 0xff) {
+-				cap_id = 0xff;
+-				break;
+-			}
+-		}
+-	} while (cnt++ < 200);
+-
+-	if (cap_id != 0x01) {
++	pm_cap = pci_find_capability(rtlpci->pdev, PCI_CAP_ID_PM);
++	if (!pm_cap) {
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING,
+ 			"Cannot find PME Capability\n");
+ 		return;
+@@ -2314,22 +2283,20 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
+ 	/* Get the PM CSR (Control/Status Register),
+ 	 * The PME_Status is located at PM Capatibility offset 5, bit 7
+ 	 */
+-	pci_read_config_byte(rtlpci->pdev, cap_pointer + 5, &pmcs_reg);
++	pci_read_config_byte(rtlpci->pdev, pm_cap + 5, &pmcs_reg);
+ 
+ 	if (pmcs_reg & BIT(7)) {
  		/* Clear PME_Status with write */
--		pci_write_config_byte(pdev, pm_cap + 5, pmcs_reg);
--		/* Read it back to check */
--		pci_read_config_byte(pdev, pm_cap + 5, &pmcs_reg);
-+		pci_write_config_word(pdev, pm_cap + PCI_PM_CTRL, pmcs_reg);
-+		pci_read_config_word(pdev, pm_cap + PCI_PM_CTRL, &pmcs_reg);
+-		pci_write_config_byte(rtlpci->pdev, cap_pointer + 5,
+-				      pmcs_reg);
++		pci_write_config_byte(rtlpci->pdev, pm_cap + 5, pmcs_reg);
+ 		/* Read it back to check */
+-		pci_read_config_byte(rtlpci->pdev, cap_pointer + 5,
+-				     &pmcs_reg);
++		pci_read_config_byte(rtlpci->pdev, pm_cap + 5, &pmcs_reg);
  		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
--			"Clear PME status 0x%2x to 0x%2x\n",
--			pm_cap + 5, pmcs_reg);
-+			"Cleared PME status, PMCS reg = 0x%4x\n", pmcs_reg);
+ 			"Clear PME status 0x%2x to 0x%2x\n",
+-			cap_pointer + 5, pmcs_reg);
++			pm_cap + 5, pmcs_reg);
  	} else {
  		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
--			"PME status(0x%2x) = 0x%2x\n",
--			pm_cap + 5, pmcs_reg);
-+			"PMCS reg = 0x%4x\n", pmcs_reg);
+ 			"PME status(0x%2x) = 0x%2x\n",
+-			cap_pointer + 5, pmcs_reg);
++			pm_cap + 5, pmcs_reg);
  	}
  }
  
