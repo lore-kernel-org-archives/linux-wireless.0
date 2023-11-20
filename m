@@ -2,267 +2,192 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0516CC54E76
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8BCC197A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:35:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233042AbjKTKQY (ORCPT
+        id S233076AbjKTKfS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 05:16:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47474 "EHLO
+        Mon, 20 Nov 2023 05:35:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233074AbjKTKQV (ORCPT
+        with ESMTP id S232849AbjKTKfP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 05:16:21 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4264DD2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 02:16:17 -0800 (PST)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AK8qNPF008174;
-        Mon, 20 Nov 2023 10:16:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=24HKzInYJko9UhmnoYizm+FRjJugTmJLTmD9ciQQlM8=;
- b=hBitDSb+FlNZdxJ/juP09PyQq3O9fMnGTBSXuZ/43QDSKjkfKa7ZRLu5u7Ot0/DG9rTr
- SWXHW9o5mQxU2yv3mcb5OTjzZNqRxEL1DetFJVbY8EtsLDyYfh6lmQuIa3hZCO3PhU1j
- F7tTl2lSJ+0SDGmtX2BrD0QLMf7usQrPYKC9Oy/ge42rooVfBTUrolz74iGe3d6dHcFL
- w81bSSzggi50pF07Mf+weI7lfNlNA26L/g9opjss217kYbRQmDPLW0FrFZn54KLEAeI5
- gz0g++szRdM12Wo/+HUvpleMen4bsuY6RrbSaperuHyQL+WnutxW1MUbJQ9fKKJ36nvl Yw== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ug26trh4q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Nov 2023 10:16:06 +0000
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AKAG55o031944
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 20 Nov 2023 10:16:05 GMT
-Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 20 Nov 2023 02:16:03 -0800
-From:   Kang Yang <quic_kangyang@quicinc.com>
-To:     <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
-Subject: [PATCH 5/7] wifi: ath12k: add support one MSI vector
-Date:   Mon, 20 Nov 2023 18:15:41 +0800
-Message-ID: <20231120101543.4369-6-quic_kangyang@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231120101543.4369-1-quic_kangyang@quicinc.com>
-References: <20231120101543.4369-1-quic_kangyang@quicinc.com>
+        Mon, 20 Nov 2023 05:35:15 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46C85F2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 02:35:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1700476511;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WDa5Zifa699JA7DgA6NqBUl602nqWvF/0Qs0z1ItO6s=;
+        b=XSX1aJAVxBnOE2QsM2OlWcbguDnWIqcnzEwk4C6NS2+mS729v+8oKcOCLdy1Juu1GZQQNc
+        KxatyVcpqvAGDK8EfbhR7yZp8tCmMBkZKQDVyK/DFpwo/E7DQEzxvxFO1Mt65zQxxSaZGZ
+        E5holZuu05dxMyNK0CdKu6eLLPrL+vc=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-340-hJpcSBxlObWHzmTANMAyeQ-1; Mon, 20 Nov 2023 05:35:09 -0500
+X-MC-Unique: hJpcSBxlObWHzmTANMAyeQ-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-9d30a6a67abso304559266b.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 02:35:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700476508; x=1701081308;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=WDa5Zifa699JA7DgA6NqBUl602nqWvF/0Qs0z1ItO6s=;
+        b=NVPAocpX8JovBNYBlEJO5rzm+00TKfQBaPj2bV0OfxLOiLRWMjVpMi4sT+tb4LzbSE
+         rznB7dSpiv10AHyMYFf4eIAHTW068TzJaCAdjaj2/HrhvB/dR6qokeWQwVXmh57djlTt
+         n66dSuK+z4dbR4RUf0toIr4HDMZ2UgHhhQh5zTsd3mAOMSsGeqCifuBKZPyrUl7TBmpN
+         lCS8A2Nw1TbMcm3E4Z1DG+XQQk+FfQv/e/OrkJkBMWcz9dIBXm63/ohaMbMlj9cXe7gX
+         v70E7FLtSEqu2hL4digbK9hg8fPlnOAqaBB6/jr0yp2pFTKWYrOiWgVXNiOX+ZGlBsCx
+         NoYA==
+X-Gm-Message-State: AOJu0YwnjBQLokSFOQ3NEH+MchMQudiKLgKwFID+cJv7UU9JJSsIDcVw
+        IDeplarI0RpjxsRiVjS97z82pVNfkcfjyDpIv6CnCOZuH1T2knjZUOwCEDLvoC+eUsSY3bJh6uB
+        L4A2QXHGB97jzfOrnyNjv3WadRmo=
+X-Received: by 2002:a17:907:c24b:b0:9ae:6ad0:f6db with SMTP id tj11-20020a170907c24b00b009ae6ad0f6dbmr6930268ejc.71.1700476508608;
+        Mon, 20 Nov 2023 02:35:08 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFtYB3LpQ2jUhXembvmGnwIAULaeNK5MwYtq0w1lhRVzSiXtm7qVIWAoEoosVuqDagxql3aow==
+X-Received: by 2002:a17:907:c24b:b0:9ae:6ad0:f6db with SMTP id tj11-20020a170907c24b00b009ae6ad0f6dbmr6930238ejc.71.1700476507968;
+        Mon, 20 Nov 2023 02:35:07 -0800 (PST)
+Received: from ?IPV6:2001:1c00:c32:7800:5bfa:a036:83f0:f9ec? (2001-1c00-0c32-7800-5bfa-a036-83f0-f9ec.cable.dynamic.v6.ziggo.nl. [2001:1c00:c32:7800:5bfa:a036:83f0:f9ec])
+        by smtp.gmail.com with ESMTPSA id p27-20020a1709060ddb00b009fc50ebb062sm1745968eji.4.2023.11.20.02.35.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Nov 2023 02:35:07 -0800 (PST)
+Message-ID: <db2051d0-c847-4d3b-98da-4f4f68a5b30b@redhat.com>
+Date:   Mon, 20 Nov 2023 11:35:06 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: N8zIpk2WDImfpRRit1T__yQe8NAr9SlR
-X-Proofpoint-GUID: N8zIpk2WDImfpRRit1T__yQe8NAr9SlR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-20_07,2023-11-17_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- malwarescore=0 mlxlogscore=867 priorityscore=1501 impostorscore=0
- suspectscore=0 clxscore=1015 bulkscore=0 spamscore=0 phishscore=0
- adultscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311200068
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 1/9] Documentation/driver-api: Add document about WBRF
+ mechanism
+Content-Language: en-US, nl
+To:     Ma Jun <Jun.Ma2@amd.com>, amd-gfx@lists.freedesktop.org,
+        lenb@kernel.org, johannes@sipsolutions.net, davem@davemloft.net,
+        edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+        alexander.deucher@amd.com, Lijo.Lazar@amd.com,
+        mario.limonciello@amd.com
+Cc:     majun@amd.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-doc@vger.kernel.org, platform-driver-x86@vger.kernel.org
+References: <20231017025358.1773598-1-Jun.Ma2@amd.com>
+ <20231017025358.1773598-2-Jun.Ma2@amd.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <20231017025358.1773598-2-Jun.Ma2@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On some platforms it's not possible to allocate 32 MSI vectors for
-various reasons, maybe kernel configuration, VT-d disabled, buggy BIOS
-etc. So ath12k was not able to use WCN7850 PCI devices on those
-platforms. Add support for one MSI vector to solve that.
+Hi,
 
-In case of one MSI vector, interrupt migration needs to be disabled.
-This is because when interrupt migration happens, the msi_data may
-change. However, msi_data is already programmed to rings during initial
-phase and ath12k has no way to know that msi_data is changed during run
-time and reprogram again.
+On 10/17/23 04:53, Ma Jun wrote:
+> Add documentation about AMD's Wifi band RFI mitigation (WBRF) mechanism
+> explaining the theory and how it is used.
+> 
+> Signed-off-by: Ma Jun <Jun.Ma2@amd.com>
+> ---
+>  Documentation/driver-api/wbrf.rst | 73 +++++++++++++++++++++++++++++++
+>  1 file changed, 73 insertions(+)
+>  create mode 100644 Documentation/driver-api/wbrf.rst
+> 
+> diff --git a/Documentation/driver-api/wbrf.rst b/Documentation/driver-api/wbrf.rst
+> new file mode 100644
+> index 000000000000..8561840263b3
+> --- /dev/null
+> +++ b/Documentation/driver-api/wbrf.rst
+> @@ -0,0 +1,73 @@
+> +.. SPDX-License-Identifier: GPL-2.0-or-later
+> +
+> +=================================
+> +WBRF - Wifi Band RFI Mitigations
+> +=================================
+> +Due to electrical and mechanical constraints in certain platform designs
+> +there may be likely interference of relatively high-powered harmonics of
+> +the GPU memory clocks with local radio module frequency bands used by
+> +certain Wifi bands.
+> +
+> +To mitigate possible RFI interference producers can advertise the
+> +frequencies in use and consumers can use this information to avoid using
+> +these frequencies for sensitive features.
+> +
+> +When a platform is known to have this issue with any contained devices,
+> +the platform designer will advertise the availability of this feature via
+> +ACPI devices with a device specific method (_DSM).
+> +* Producers with this _DSM will be able to advertise the frequencies in use.
+> +* Consumers with this _DSM will be able to register for notifications of
+> +frequencies in use.
+> +
+> +Some general terms
+> +==================
+> +Producer: such component who can produce high-powered radio frequency
+> +Consumer: such component who can adjust its in-use frequency in
+> +           response to the radio frequencies of other components to
+> +           mitigate the possible RFI.
+> +
+> +To make the mechanism function, those producers should notify active use
+> +of their particular frequencies so that other consumers can make relative
+> +internal adjustments as necessary to avoid this resonance.
+> +
+> +ACPI interface
+> +==============
+> +Although initially used by for wifi + dGPU use cases, the ACPI interface
+> +can be scaled to any type of device that a platform designer discovers
+> +can cause interference.
+> +
+> +The GUID used for the _DSM is 7B7656CF-DC3D-4C1C-83E9-66E721DE3070.
+> +
+> +3 functions are available in this _DSM:
+> +
+> +* 0: discover # of functions available
+> +* 1: record RF bands in use
+> +* 2: retrieve RF bands in use
+> +
+> +Driver programming interface
+> +============================
+> +.. kernel-doc:: drivers/platform/x86/amd/wbrf.c
+> +
+> +Sample Usage
+> +=============
+> +The expected flow for the producers:
+> +1) During probe, call `acpi_amd_wbrf_supported_producer` to check if WBRF
+> +can be enabled for the device.
+> +2) On using some frequency band, call `acpi_amd_wbrf_add_remove` with 'add'
+> +param to get other consumers properly notified.
+> +3) Or on stopping using some frequency band, call
+> +`acpi_amd_wbrf_add_remove` with 'remove' param to get other consumers notified.
+> +
+> +The expected flow for the consumers:
+> +1) During probe, call `acpi_amd_wbrf_supported_consumer` to check if WBRF
+> +can be enabled for the device.
+> +2) Call `amd_wbrf_register_notifier` to register for notification
+> +of frequency band change(add or remove) from other producers.
 
-In case of one MSI vector, MHI subsystem should not use IRQF_NO_SUSPEND
-as WCN7850 doesn't set this flag too. Ath12k doesn't need to leave IRQ
-enabled in suspend state.
+> +3) Call the `amd_wbrf_retrieve_freq_band` intentionally to retrieve
+> +current active frequency bands considering some producers may broadcast
+> +such information before the consumer is up.
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+"intentionally" in this sentence should be "initially" (I presume).
 
-Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/mhi.c | 16 +++++++--
- drivers/net/wireless/ath/ath12k/pci.c | 51 ++++++++++++++++++++-------
- 2 files changed, 52 insertions(+), 15 deletions(-)
+With that fixed and Ilpo's review comments addressed you may add my:
 
-diff --git a/drivers/net/wireless/ath/ath12k/mhi.c b/drivers/net/wireless/ath/ath12k/mhi.c
-index 39e640293cdc..638b124eb895 100644
---- a/drivers/net/wireless/ath/ath12k/mhi.c
-+++ b/drivers/net/wireless/ath/ath12k/mhi.c
-@@ -251,6 +251,7 @@ static int ath12k_mhi_get_msi(struct ath12k_pci *ab_pci)
- 	u32 user_base_data, base_vector;
- 	int ret, num_vectors, i;
- 	int *irq;
-+	unsigned int msi_data;
- 
- 	ret = ath12k_pci_get_user_msi_assignment(ab,
- 						 "MHI", &num_vectors,
-@@ -265,9 +266,15 @@ static int ath12k_mhi_get_msi(struct ath12k_pci *ab_pci)
- 	if (!irq)
- 		return -ENOMEM;
- 
--	for (i = 0; i < num_vectors; i++)
--		irq[i] = ath12k_pci_get_msi_irq(ab->dev,
--						base_vector + i);
-+	msi_data = base_vector;
-+	for (i = 0; i < num_vectors; i++) {
-+		if (test_bit(ATH12K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags))
-+			irq[i] = ath12k_pci_get_msi_irq(ab->dev,
-+							msi_data++);
-+		else
-+			irq[i] = ath12k_pci_get_msi_irq(ab->dev,
-+							msi_data);
-+	}
- 
- 	ab_pci->mhi_ctrl->irq = irq;
- 	ab_pci->mhi_ctrl->nr_irqs = num_vectors;
-@@ -374,6 +381,9 @@ int ath12k_mhi_register(struct ath12k_pci *ab_pci)
- 		goto free_controller;
- 	}
- 
-+	if (!test_bit(ATH12K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags))
-+		mhi_ctrl->irq_flags = IRQF_SHARED | IRQF_NOBALANCING;
-+
- 	mhi_ctrl->iova_start = 0;
- 	mhi_ctrl->iova_stop = 0xffffffff;
- 	mhi_ctrl->sbl_size = SZ_512K;
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 3bb2d622dc52..4484bac18f4e 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -61,6 +61,17 @@ static const struct ath12k_msi_config ath12k_msi_config[] = {
- 	},
- };
- 
-+static const struct ath12k_msi_config msi_config_one_msi = {
-+	.total_vectors = 1,
-+	.total_users = 4,
-+	.users = (struct ath12k_msi_user[]) {
-+		{ .name = "MHI", .num_vectors = 3, .base_vector = 0 },
-+		{ .name = "CE", .num_vectors = 1, .base_vector = 0 },
-+		{ .name = "WAKE", .num_vectors = 1, .base_vector = 0 },
-+		{ .name = "DP", .num_vectors = 1, .base_vector = 0 },
-+	},
-+};
-+
- static const char *irq_name[ATH12K_IRQ_NUM_MAX] = {
- 	"bhi",
- 	"mhi-er0",
-@@ -414,16 +425,18 @@ static void ath12k_pci_sync_ce_irqs(struct ath12k_base *ab)
- static void ath12k_pci_ce_tasklet(struct tasklet_struct *t)
- {
- 	struct ath12k_ce_pipe *ce_pipe = from_tasklet(ce_pipe, t, intr_tq);
-+	int irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + ce_pipe->pipe_num;
- 
- 	ath12k_ce_per_engine_service(ce_pipe->ab, ce_pipe->pipe_num);
- 
--	ath12k_pci_ce_irq_enable(ce_pipe->ab, ce_pipe->pipe_num);
-+	enable_irq(ce_pipe->ab->irq_num[irq_idx]);
- }
- 
- static irqreturn_t ath12k_pci_ce_interrupt_handler(int irq, void *arg)
- {
- 	struct ath12k_ce_pipe *ce_pipe = arg;
- 	struct ath12k_base *ab = ce_pipe->ab;
-+	int irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + ce_pipe->pipe_num;
- 
- 	if (!test_bit(ATH12K_FLAG_CE_IRQ_ENABLED, &ab->dev_flags))
- 		return IRQ_HANDLED;
-@@ -431,7 +444,8 @@ static irqreturn_t ath12k_pci_ce_interrupt_handler(int irq, void *arg)
- 	/* last interrupt received for this CE */
- 	ce_pipe->timestamp = jiffies;
- 
--	ath12k_pci_ce_irq_disable(ce_pipe->ab, ce_pipe->pipe_num);
-+	disable_irq_nosync(ab->irq_num[irq_idx]);
-+
- 	tasklet_schedule(&ce_pipe->intr_tq);
- 
- 	return IRQ_HANDLED;
-@@ -504,11 +518,13 @@ static int ath12k_pci_ext_grp_napi_poll(struct napi_struct *napi, int budget)
- 						napi);
- 	struct ath12k_base *ab = irq_grp->ab;
- 	int work_done;
-+	int i;
- 
- 	work_done = ath12k_dp_service_srng(ab, irq_grp, budget);
- 	if (work_done < budget) {
- 		napi_complete_done(napi, work_done);
--		ath12k_pci_ext_grp_enable(irq_grp);
-+		for (i = 0; i < irq_grp->num_irq; i++)
-+			enable_irq(irq_grp->ab->irq_num[irq_grp->irqs[i]]);
- 	}
- 
- 	if (work_done > budget)
-@@ -521,6 +537,7 @@ static irqreturn_t ath12k_pci_ext_interrupt_handler(int irq, void *arg)
- {
- 	struct ath12k_ext_irq_grp *irq_grp = arg;
- 	struct ath12k_base *ab = irq_grp->ab;
-+	int i;
- 
- 	if (!test_bit(ATH12K_FLAG_EXT_IRQ_ENABLED, &ab->dev_flags))
- 		return IRQ_HANDLED;
-@@ -530,7 +547,8 @@ static irqreturn_t ath12k_pci_ext_interrupt_handler(int irq, void *arg)
- 	/* last interrupt received for this group */
- 	irq_grp->timestamp = jiffies;
- 
--	ath12k_pci_ext_grp_disable(irq_grp);
-+	for (i = 0; i < irq_grp->num_irq; i++)
-+		disable_irq_nosync(irq_grp->ab->irq_num[irq_grp->irqs[i]]);
- 
- 	napi_schedule(&irq_grp->napi);
- 
-@@ -713,18 +731,26 @@ static int ath12k_pci_msi_alloc(struct ath12k_pci *ab_pci)
- 					    msi_config->total_vectors,
- 					    msi_config->total_vectors,
- 					    PCI_IRQ_MSI);
--	if (num_vectors != msi_config->total_vectors) {
--		ath12k_err(ab, "failed to get %d MSI vectors, only %d available",
--			   msi_config->total_vectors, num_vectors);
- 
--		if (num_vectors >= 0)
--			return -EINVAL;
--		else
--			return num_vectors;
--	} else {
-+	if (num_vectors == msi_config->total_vectors) {
- 		set_bit(ATH12K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags);
- 		ab_pci->irq_flags = IRQF_SHARED;
-+	} else {
-+		num_vectors = pci_alloc_irq_vectors(ab_pci->pdev,
-+						    1,
-+						    1,
-+						    PCI_IRQ_MSI);
-+		if (num_vectors < 0) {
-+			ret = -EINVAL;
-+			goto reset_msi_config;
-+		}
-+		clear_bit(ATH12K_PCI_FLAG_MULTI_MSI_VECTORS, &ab_pci->flags);
-+		ab_pci->msi_config = &msi_config_one_msi;
-+		ab_pci->irq_flags = IRQF_SHARED | IRQF_NOBALANCING;
-+		ath12k_dbg(ab, ATH12K_DBG_PCI, "request MSI one vector\n");
-+
- 	}
-+	ath12k_info(ab, "MSI vectors: %d\n", num_vectors);
- 
- 	ath12k_pci_msi_disable(ab_pci);
- 
-@@ -746,6 +772,7 @@ static int ath12k_pci_msi_alloc(struct ath12k_pci *ab_pci)
- free_msi_vector:
- 	pci_free_irq_vectors(ab_pci->pdev);
- 
-+reset_msi_config:
- 	return ret;
- }
- 
--- 
-2.34.1
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+to this patch.
+
+Regards,
+
+Hans
+
+
+
+
+> +4) On receiving a notification for frequency band change, run
+> +`amd_wbrf_retrieve_freq_band` again to retrieve the latest
+> +active frequency bands.
+> +5) During driver cleanup, call `amd_wbrf_unregister_notifier` to
+> +unregister the notifier.
 
