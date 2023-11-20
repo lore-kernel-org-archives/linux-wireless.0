@@ -2,145 +2,160 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4FB7C197A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 12:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6FEC54E76
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 12:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232738AbjKTMbU (ORCPT
+        id S233549AbjKTMkB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 07:31:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39612 "EHLO
+        Mon, 20 Nov 2023 07:40:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232135AbjKTMbT (ORCPT
+        with ESMTP id S232135AbjKTMkB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 07:31:19 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3550100
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 04:31:15 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id 5b1f17b1804b1-4079ed65582so13927125e9.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 04:31:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1700483474; x=1701088274; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=U+ygfjyW2dtt7SNYdGG+a1RKbTlkp8CN0gh3juIVK50=;
-        b=gpu1ivGulkhKvdk5so7NtuqUMLlTWTuX2mLaMv/JBLnR0LBsI2dEjcgi7Qp7MSKHn2
-         FygvSfqECuoRMQCyIuRPi9ZOLY9a5PMZppkIIzTLBbYmgvtY8jF2jBTmhqSVXhsZS+yS
-         csbso2McCRZwKQgOsE69KSLlhM2kpAm++D1lLEoCWTdEz23Pnov9FSY60q90uSx+L6u9
-         oA8nK54+DUqOlEBcLBGLwtqoORc8Q1uVQj7lX4ET3zsOODF86cTNubXKLLPmtv0ciQyz
-         0JmQBuNQxfgrF6DXu5vx0NrivkQ9ed6rxwGA4DSVX4qZUD0GMneKiXEmSYnw4AFoVgHJ
-         WHlA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700483474; x=1701088274;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=U+ygfjyW2dtt7SNYdGG+a1RKbTlkp8CN0gh3juIVK50=;
-        b=BoFL6r+uYxNP/W3XGoMWrz5K7bmOxCcffQjEIoY0Hw6nwQk1jYLSMYcHLnAwxhDQVW
-         bkmOnsHfTZCQuHnNzEzE6CYvUkirUBGba/xLF1sJxlAAUPDim5ffNyJIcQDNPkT7Kgi+
-         /qxfYfrIOZxEPc1oPFMSj9fZvXDaAkPRIdhSi6fZPpGgxEvwdu2NOoGxnF4mF608gpSn
-         CiD2WavPDN5oEGQ7PcDElDrgxZfjNTdGlw31prjmHjN++GxgVYbSj3zziQTCG2OtswAp
-         YVlznKDnu6aeUuP5rae+vjwpXLIvQCQzvmJrnricY/0ogLhTxnPcG2UAEGmRCyFEwnES
-         jVCQ==
-X-Gm-Message-State: AOJu0YyhSeBeE+ht2z7eofu8y5GezBgN7AegoVeJ/pHCn09CFFzUQq0d
-        FCYvLjUvdkMzSoIW3P6HsEIPVg==
-X-Google-Smtp-Source: AGHT+IFH5ZY2W8nrgFtr/VHzEM4XPB2oiuC34QYENqeI3k2VGALPT0oPN0iCaxJHt7hbpyaLHA4VRA==
-X-Received: by 2002:a5d:4382:0:b0:32d:a7b0:62b with SMTP id i2-20020a5d4382000000b0032da7b0062bmr3677437wrq.26.1700483474267;
-        Mon, 20 Nov 2023 04:31:14 -0800 (PST)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id d4-20020a5d4f84000000b0032d96dd703bsm11077492wru.70.2023.11.20.04.31.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Nov 2023 04:31:13 -0800 (PST)
-Date:   Mon, 20 Nov 2023 07:31:10 -0500
-From:   Dan Carpenter <dan.carpenter@linaro.org>
-To:     Ping-Ke Shih <pkshih@realtek.com>
-Cc:     Su Hui <suhui@nfschina.com>,
-        "Jes.Sorensen@gmail.com" <Jes.Sorensen@gmail.com>,
-        "kvalo@kernel.org" <kvalo@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: Re: [PATCH] wifi: rtl8xxxu: correct the error value of 'timeout'
-Message-ID: <456145f7-9c6e-4231-aec4-9c02511b6550@suswa.mountain>
-References: <20231113054917.96894-1-suhui@nfschina.com>
- <e8b847437ab242d18108d9364360bb8a@realtek.com>
+        Mon, 20 Nov 2023 07:40:01 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E7A0113
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 04:39:53 -0800 (PST)
+X-UUID: e41ac3ec87a111eea33bb35ae8d461a2-20231120
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=OV8s5wCvnPXepXNDZfhDStlrcZJfc8V8KOxPfWMOlBQ=;
+        b=KLLW2sPWQeM7LfJZIVDVn85gyD6tEgj9VOLy4xiEbY4agLhx5kpT0c/Io/dDdlPLMFTStPz6UvQiE+2DDRIozSZDsSvqOU3tjLJYGnn5ayCFOcUHu9Fqf0tY05p5+RGCEuU2YupTSIBM5QKkJ2hicrgGW2AnBwuprkHO8oEAwwg=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.33,REQID:5822e2be-e793-45ca-af9a-5b268a86944b,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+        release,TS:0
+X-CID-META: VersionHash:364b77b,CLOUDID:3c8a4460-c89d-4129-91cb-8ebfae4653fc,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
+        DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: e41ac3ec87a111eea33bb35ae8d461a2-20231120
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+        (envelope-from <mingyen.hsieh@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 781947254; Mon, 20 Nov 2023 20:39:48 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Mon, 20 Nov 2023 20:39:47 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Mon, 20 Nov 2023 20:39:46 +0800
+From:   Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo@kernel.org>
+CC:     <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
+        <Soul.Huang@mediatek.com>, <Leon.Yen@mediatek.com>,
+        <Eric-SY.Chang@mediatek.com>, <km.lin@mediatek.com>,
+        <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
+        <posh.sun@mediatek.com>, <Quan.Zhou@mediatek.com>,
+        <Ryder.Lee@mediatek.com>, <Shayne.Chen@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Subject: [PATCH v3 3/3] wifi: mt76: mt7921: fix wrong 6Ghz power type
+Date:   Mon, 20 Nov 2023 20:39:40 +0800
+Message-ID: <20231120123940.5788-4-mingyen.hsieh@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20231120123940.5788-1-mingyen.hsieh@mediatek.com>
+References: <20231120123940.5788-1-mingyen.hsieh@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e8b847437ab242d18108d9364360bb8a@realtek.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Nov 14, 2023 at 06:42:50AM +0000, Ping-Ke Shih wrote:
-> > diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > index 43ee7592bc6e..9cab8b1dc486 100644
-> > --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > @@ -4757,6 +4757,12 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
-> >          *   RxAggPageTimeout = 4 or 6 (absolute time 34ms/(2^6))
-> >          */
-> > 
-> > +       /* REG_RXDMA_AGG_PG_TH + 1 seems to be the timeout register on
-> > +        * gen2 chips and rtl8188eu. The rtl8723au seems unhappy if we
-> > +        * don't set it, so better set both.
-> > +        */
-> > +       timeout = 4;
-> > +
-> >         page_thresh = (priv->fops->rx_agg_buf_size / 512);
-> >         if (rtl8xxxu_dma_agg_pages >= 0) {
-> >                 if (rtl8xxxu_dma_agg_pages <= page_thresh)
-> 
-> The logic here is:
-> 
-> 	page_thresh = (priv->fops->rx_agg_buf_size / 512);
-> 	if (rtl8xxxu_dma_agg_pages >= 0) {
-> 		if (rtl8xxxu_dma_agg_pages <= page_thresh)
-> 			timeout = page_thresh;
-> 
-> Do you know why 'timeout = page_thresh;'? Intuitively, units of 'timeout' and
-> 'thresh' are different. Maybe, we should correct here instead?
-> 
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Yeah.  That's strange.  I'm not convinced this fix is correct.  I'm
-hesitant to suggest this but maybe the following is the correct fix?
-It just silences the warning but doesn't change runtime.
+To avoid using incorrect 6g power settings after disconnection,
+it should to update back to the default state when disconnected.
 
-I don't know.  *shrug*.  One thing that we could do is just leave the
-warning as-is until someone who knows better than we do can take a look
-at it.
+Fixes: 51ba0e3a15eb ("wifi: mt76: mt7921: add 6GHz power type support for clc")
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 38 +++++++++++++++++--
+ 1 file changed, 35 insertions(+), 3 deletions(-)
 
-regards,
-dan carpenter
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 43ee7592bc6e..68d9b4a0ee63 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4759,16 +4759,16 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 510a575a973b..0645417e0582 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -683,17 +683,45 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
+ }
  
- 	page_thresh = (priv->fops->rx_agg_buf_size / 512);
- 	if (rtl8xxxu_dma_agg_pages >= 0) {
--		if (rtl8xxxu_dma_agg_pages <= page_thresh)
--			timeout = page_thresh;
--		else if (rtl8xxxu_dma_agg_pages <= 6)
--			dev_err(&priv->udev->dev,
--				"%s: dma_agg_pages=%i too small, minimum is 6\n",
--				__func__, rtl8xxxu_dma_agg_pages);
--		else
--			dev_err(&priv->udev->dev,
--				"%s: dma_agg_pages=%i larger than limit %i\n",
--				__func__, rtl8xxxu_dma_agg_pages, page_thresh);
-+		if (rtl8xxxu_dma_agg_pages > page_thresh) {
-+			if (rtl8xxxu_dma_agg_pages <= 6)
-+				dev_err(&priv->udev->dev,
-+					"%s: dma_agg_pages=%i too small, minimum is 6\n",
-+					__func__, rtl8xxxu_dma_agg_pages);
-+			else
-+				dev_err(&priv->udev->dev,
-+					"%s: dma_agg_pages=%i larger than limit %i\n",
-+					__func__, rtl8xxxu_dma_agg_pages, page_thresh);
-+		}
+ static void
+-mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif)
++mt7921_calc_vif_num(void *priv, u8 *mac, struct ieee80211_vif *vif)
++{
++	u32 *num = priv;
++
++	if (!priv)
++		return;
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		*num += 1;
++		break;
++	default:
++		break;
++	}
++}
++
++static void
++mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif, bool is_add)
+ {
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+ 	struct mt792x_phy *phy = mvif->phy;
+ 	struct mt792x_dev *dev = phy->dev;
++	u32 valid_vif_num = 0;
++
++	ieee80211_iterate_active_interfaces(mt76_hw(dev),
++					    IEEE80211_IFACE_ITER_RESUME_ALL,
++					    mt7921_calc_vif_num, &valid_vif_num);
+ 
+-	if (hweight64(dev->mt76.vif_mask) > 1) {
++	if (valid_vif_num > 1) {
+ 		phy->power_type = MT_AP_DEFAULT;
+ 		goto out;
  	}
- 	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH, page_thresh);
- 	/*
+ 
++	if (!is_add)
++		vif->bss_conf.power_type = IEEE80211_REG_UNSET_AP;
++
+ 	switch (vif->bss_conf.power_type) {
+ 	case IEEE80211_REG_SP_AP:
+ 		phy->power_type = MT_AP_SP;
+@@ -705,6 +733,8 @@ mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif)
+ 		phy->power_type = MT_AP_LPI;
+ 		break;
+ 	case IEEE80211_REG_UNSET_AP:
++		phy->power_type = MT_AP_UNSET;
++		break;
+ 	default:
+ 		phy->power_type = MT_AP_DEFAULT;
+ 		break;
+@@ -749,7 +779,7 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
+-	mt7921_regd_set_6ghz_power_type(vif);
++	mt7921_regd_set_6ghz_power_type(vif, true);
+ 
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ 
+@@ -811,6 +841,8 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 		list_del_init(&msta->wcid.poll_list);
+ 	spin_unlock_bh(&dev->mt76.sta_poll_lock);
+ 
++	mt7921_regd_set_6ghz_power_type(vif, false);
++
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ }
+ EXPORT_SYMBOL_GPL(mt7921_mac_sta_remove);
+-- 
+2.18.0
+
