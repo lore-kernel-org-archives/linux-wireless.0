@@ -2,174 +2,292 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A5CC072A2
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 03:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B290C2BB3F
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 06:23:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231755AbjKTD2x (ORCPT
+        id S230033AbjKTGXW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 19 Nov 2023 22:28:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51312 "EHLO
+        Mon, 20 Nov 2023 01:23:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231775AbjKTD2t (ORCPT
+        with ESMTP id S229483AbjKTGXV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 19 Nov 2023 22:28:49 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB2C192
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Nov 2023 19:28:38 -0800 (PST)
-X-UUID: dfdaab8c875411ee8051498923ad61e6-20231120
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=WHKjHgXikLGJDyv8AI/jp6CimfDylOTQp4C8AvVDv5Y=;
-        b=o2uFmaFCJqx2Pfk3TTHuDe8cqPSZ357fL+je259U8ISI3KqBNYJeHyCZeMC2nlVdIBTlbC3KQl7xNpz6w3FLxWL5wPU6QREDDOXMXq0K7h7DeWBXyGWhfVMwnryzZR1gWWWTzgvduMewgG5c1Mf7yUwaXIS35VogOs0+hr4SC38=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.33,REQID:0333d20f-8ed2-4ba5-af97-cb81939143ac,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:364b77b,CLOUDID:2a0d9495-10ce-4e4b-85c2-c9b5229ff92b,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
-        DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: dfdaab8c875411ee8051498923ad61e6-20231120
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
-        (envelope-from <mingyen.hsieh@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 604342940; Mon, 20 Nov 2023 11:28:29 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+        Mon, 20 Nov 2023 01:23:21 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C45BDB
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Nov 2023 22:23:17 -0800 (PST)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AK52cGQ018983;
+        Mon, 20 Nov 2023 06:23:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=qcppdkim1;
+ bh=ZZmDfo2cixmlw30akZ0EuRNmmu3NoDZLVRi03HacEK8=;
+ b=h19D4HarwtQegS6U6uZo7jP/QbhCe1dhSUBO+omupjW54vqunp+9S+Y47UX+JcO2XSDV
+ Ur+0YREgC75iFTaV7E5Hcvt3n0t3DYj6ZMtD7FV9W54R2CykQOiESTmIInEvKrEO6HmW
+ cW3fIQSVXhNq/zaHo0XMTzws5eY/4UnntSE7ek4JvhwoExux+u99jrTK04si9TC5Rgeq
+ RZSvTFgzqZ1WESzNIa4WVOQU6PvXeWVVuFaaCuRBVfpZ3oT3g3CUMt6OGcnKqb9uzaCi
+ Bge5CxZ2ABMzr92K0/7U4+wGzj/SmvDQxcX6bdbvcIEmKmxv+3Yhs3ic8bsldu3WcxDG qA== 
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uepjhk1d9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 06:23:13 +0000
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+        by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AK6NCaQ006186
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 06:23:12 GMT
+Received: from hu-akhera-blr.qualcomm.com (10.80.80.8) by
+ nasanex01b.na.qualcomm.com (10.46.141.250) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 20 Nov 2023 11:28:28 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 20 Nov 2023 11:28:27 +0800
-From:   Mingyen Hsieh <mingyen.hsieh@mediatek.com>
-To:     <nbd@nbd.name>, <lorenzo@kernel.org>
-CC:     <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
-        <Soul.Huang@mediatek.com>, <Leon.Yen@mediatek.com>,
-        <Eric-SY.Chang@mediatek.com>, <km.lin@mediatek.com>,
-        <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
-        <posh.sun@mediatek.com>, <Quan.Zhou@mediatek.com>,
-        <Ryder.Lee@mediatek.com>, <Shayne.Chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Subject: [PATCH 2/3] wifi: mt76: mt7921: fix CLC command timeout when suspend/resume
-Date:   Mon, 20 Nov 2023 11:27:49 +0800
-Message-ID: <20231120032750.19747-3-mingyen.hsieh@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20231120032750.19747-1-mingyen.hsieh@mediatek.com>
-References: <20231120032750.19747-1-mingyen.hsieh@mediatek.com>
+ 15.2.1118.40; Sun, 19 Nov 2023 22:23:10 -0800
+From:   Anuj Khera <quic_akhera@quicinc.com>
+To:     <johannes@sipsolutions.net>
+CC:     <linux-wireless@vger.kernel.org>, <quic_akhera@quicinc.com>
+Subject: [PATCH] wifi: cfg80211: Rename bssid to peer_addr in cfg80211_pmksa
+Date:   Mon, 20 Nov 2023 11:52:52 +0530
+Message-ID: <20231120062252.7818-1-quic_akhera@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--6.681300-8.000000
-X-TMASE-MatchedRID: 53RBOU84eqnwa4iJAsefGEKcYi5Qw/RVG/VQKT/ZNQR+YFLISofIH2Xg
-        eMJEe5Cm21PqNqqsX9ngfoEaEmt6A3wcnCGmNiJCG5mg0pzqmX6gD0t7xcmluqiDWKm0QmVU26Z
-        8tetBUMDXmdTK29etzH51/Ce39OcTzrfv4DmGmcXJ5W6OZe5hherRJDUyDHkIxKLCLOyCW5D7UH
-        KxrU+2pNivMxyivZ7HYMnhLsDOSO6Rs/CdRi4O05YsKSXWWrsHMZm0+sEE9mt+YesuCgkiXFmhl
-        TC2eRES4vM1YF6AJbbCCfuIMF6xLcK21zBg2KlfGM6W3U+Lnne4SmePTZNPfdAWDkv38FJgJo1f
-        EQQk/kYuMoaPF4sJVQ==
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--6.681300-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: DCF3AA004D444796D5CE39C212160FEB7489C5ED63A765BD73D1D29C4DEB94FD2000:8
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: H9E-RVyBQY3kRsWTMCQKUCw4_KVPuGVD
+X-Proofpoint-GUID: H9E-RVyBQY3kRsWTMCQKUCw4_KVPuGVD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-20_03,2023-11-17_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 mlxlogscore=999 clxscore=1015 suspectscore=0 impostorscore=0
+ adultscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311200039
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+The cfg80211_pmksa structure uses bssid member to store
+the PMKSA for a BSS in Station mode. Change the name of
+structure member bssid to peer_addr so that same member
+can be used to store the PMKSA for a station in AP mode
+using station MAC address.
 
-When enter suspend/resume while in a connected state, the upper layer
-will trigger disconnection before entering suspend, and at the same time,
-it will trigger regd_notifier() and update CLC, causing the CLC event to
-not be received due to suspend, resulting in a command timeout.
-
-Therefore, the update of CLC is postponed until resume, to ensure data
-consistency and avoid the occurrence of command timeout.
-
-Fixes: 4fc8df50fd41 ("wifi: mt76: mt7921: get regulatory information from the clc event")
-Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Signed-off-by: Anuj Khera <quic_akhera@quicinc.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/init.c  | 23 +++++++++++++++----
- .../wireless/mediatek/mt76/mt7921/mt7921.h    |  1 +
- .../net/wireless/mediatek/mt76/mt7921/pci.c   |  3 +++
- 3 files changed, 22 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c           |  8 ++++----
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 12 ++++++------
+ drivers/net/wireless/microchip/wilc1000/cfg80211.c   | 10 +++++-----
+ drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c    |  8 ++++----
+ include/net/cfg80211.h                               |  2 +-
+ net/wireless/nl80211.c                               |  2 +-
+ net/wireless/trace.h                                 |  2 +-
+ net/wireless/wext-compat.c                           |  2 +-
+ 8 files changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-index 7d6a9d746011..48433c6d5e7d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
-@@ -110,24 +110,37 @@ mt7921_regd_channel_update(struct wiphy *wiphy, struct mt792x_dev *dev)
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index e37db4af33de..853f0e55e828 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1877,8 +1877,8 @@ static int ath6kl_set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 	struct ath6kl *ar = ath6kl_priv(netdev);
+ 	struct ath6kl_vif *vif = netdev_priv(netdev);
+ 
+-	return ath6kl_wmi_setpmkid_cmd(ar->wmi, vif->fw_vif_idx, pmksa->bssid,
+-				       pmksa->pmkid, true);
++	return ath6kl_wmi_setpmkid_cmd(ar->wmi, vif->fw_vif_idx,
++				       pmksa->peer_addr, pmksa->pmkid, true);
+ }
+ 
+ static int ath6kl_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+@@ -1887,8 +1887,8 @@ static int ath6kl_del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 	struct ath6kl *ar = ath6kl_priv(netdev);
+ 	struct ath6kl_vif *vif = netdev_priv(netdev);
+ 
+-	return ath6kl_wmi_setpmkid_cmd(ar->wmi, vif->fw_vif_idx, pmksa->bssid,
+-				       pmksa->pmkid, false);
++	return ath6kl_wmi_setpmkid_cmd(ar->wmi, vif->fw_vif_idx,
++				       pmksa->peer_addr, pmksa->pmkid, false);
+ }
+ 
+ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 133c5ea6429c..e00a2b858945 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4329,7 +4329,7 @@ brcmf_pmksa_v3_op(struct brcmf_if *ifp, struct cfg80211_pmksa *pmksa,
+ 		/* Single PMK operation */
+ 		pmk_op->count = cpu_to_le16(1);
+ 		length += sizeof(struct brcmf_pmksa_v3);
+-		memcpy(pmk_op->pmk[0].bssid, pmksa->bssid, ETH_ALEN);
++		memcpy(pmk_op->pmk[0].bssid, pmksa->peer_addr, ETH_ALEN);
+ 		memcpy(pmk_op->pmk[0].pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
+ 		pmk_op->pmk[0].pmkid_len = WLAN_PMKID_LEN;
+ 		pmk_op->pmk[0].time_left = cpu_to_le32(alive ? BRCMF_PMKSA_NO_EXPIRY : 0);
+@@ -4375,7 +4375,7 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	brcmf_dbg(CONN, "set_pmksa - PMK bssid: %pM =\n", pmksa->bssid);
++	brcmf_dbg(CONN, "set_pmksa - PMK bssid: %pM =\n", pmksa->peer_addr);
+ 	brcmf_dbg(CONN, "%*ph\n", WLAN_PMKID_LEN, pmksa->pmkid);
+ 
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V3))
+@@ -4385,10 +4385,10 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+ 	for (i = 0; i < npmk; i++)
+-		if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
++		if (!memcmp(pmksa->peer_addr, pmk[i].bssid, ETH_ALEN))
+ 			break;
+ 	if (i < BRCMF_MAXPMKID) {
+-		memcpy(pmk[i].bssid, pmksa->bssid, ETH_ALEN);
++		memcpy(pmk[i].bssid, pmksa->peer_addr, ETH_ALEN);
+ 		memcpy(pmk[i].pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
+ 		if (i == npmk) {
+ 			npmk++;
+@@ -4420,7 +4420,7 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+-	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
++	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->peer_addr);
+ 
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V3))
+ 		return brcmf_pmksa_v3_op(ifp, pmksa, false);
+@@ -4429,7 +4429,7 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+ 	for (i = 0; i < npmk; i++)
+-		if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
++		if (!memcmp(pmksa->peer_addr, pmk[i].bssid, ETH_ALEN))
+ 			break;
+ 
+ 	if ((npmk > 0) && (i < npmk)) {
+diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+index ad2509d8c99a..a2630506a619 100644
+--- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
++++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
+@@ -877,14 +877,14 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 	u8 flag = 0;
+ 
+ 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+-		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
+-			    ETH_ALEN)) {
++		if (!memcmp(pmksa->peer_addr,
++			    priv->pmkid_list.pmkidlist[i].bssid, ETH_ALEN)) {
+ 			flag = PMKID_FOUND;
+ 			break;
+ 		}
  	}
- }
+ 	if (i < WILC_MAX_NUM_PMKIDS) {
+-		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->bssid,
++		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->peer_addr,
+ 		       ETH_ALEN);
+ 		memcpy(priv->pmkid_list.pmkidlist[i].pmkid, pmksa->pmkid,
+ 		       WLAN_PMKID_LEN);
+@@ -909,8 +909,8 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 	struct wilc_priv *priv = &vif->priv;
  
-+void mt7921_regd_update(struct mt792x_dev *dev)
-+{
-+	struct mt76_dev *mdev = &dev->mt76;
-+	struct ieee80211_hw *hw = mdev->hw;
-+	struct wiphy *wiphy = hw->wiphy;
-+
-+	mt7921_mcu_set_clc(dev, mdev->alpha2, dev->country_ie_env);
-+	mt7921_regd_channel_update(wiphy, dev);
-+	mt76_connac_mcu_set_channel_domain(hw->priv);
-+	mt7921_set_tx_sar_pwr(hw, NULL);
-+}
-+EXPORT_SYMBOL_GPL(mt7921_regd_update);
-+
- static void
- mt7921_regd_notifier(struct wiphy *wiphy,
- 		     struct regulatory_request *request)
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-+	struct mt76_connac_pm *pm = &dev->pm;
+ 	for (i = 0; i < priv->pmkid_list.numpmkid; i++)	{
+-		if (!memcmp(pmksa->bssid, priv->pmkid_list.pmkidlist[i].bssid,
+-			    ETH_ALEN)) {
++		if (!memcmp(pmksa->peer_addr,
++			    priv->pmkid_list.pmkidlist[i].bssid, ETH_ALEN)) {
+ 			memset(&priv->pmkid_list.pmkidlist[i], 0,
+ 			       sizeof(struct wilc_pmkid));
+ 			break;
+diff --git a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+index 1ff763c10064..4dd78dd05955 100644
+--- a/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
++++ b/drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c
+@@ -1851,14 +1851,14 @@ static int cfg80211_rtw_set_pmksa(struct wiphy *wiphy,
+ 	struct adapter *padapter = rtw_netdev_priv(ndev);
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
  
- 	memcpy(dev->mt76.alpha2, request->alpha2, sizeof(dev->mt76.alpha2));
- 	dev->mt76.region = request->dfs_region;
- 	dev->country_ie_env = request->country_ie_env;
+-	if (is_zero_ether_addr((u8 *)pmksa->bssid))
++	if (is_zero_ether_addr((u8 *)pmksa->peer_addr))
+ 		return -EINVAL;
  
-+	if (pm->suspended)
-+		return;
-+
- 	mt792x_mutex_acquire(dev);
--	mt7921_mcu_set_clc(dev, request->alpha2, request->country_ie_env);
--	mt76_connac_mcu_set_channel_domain(hw->priv);
--	mt7921_set_tx_sar_pwr(hw, NULL);
-+	mt7921_regd_update(dev);
- 	mt792x_mutex_release(dev);
--
--	mt7921_regd_channel_update(wiphy, dev);
- }
+ 	blInserted = false;
  
- int mt7921_mac_init(struct mt792x_dev *dev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-index f28621121927..5c4cc370e6ce 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
-@@ -233,6 +233,7 @@ mt7921_l1_rmw(struct mt792x_dev *dev, u32 addr, u32 mask, u32 val)
- #define mt7921_l1_set(dev, addr, val)	mt7921_l1_rmw(dev, addr, 0, val)
- #define mt7921_l1_clear(dev, addr, val)	mt7921_l1_rmw(dev, addr, val, 0)
+ 	/* overwrite PMKID */
+ 	for (index = 0 ; index < NUM_PMKID_CACHE; index++) {
+-		if (!memcmp(psecuritypriv->PMKIDList[index].Bssid, (u8 *)pmksa->bssid, ETH_ALEN)) {
++		if (!memcmp(psecuritypriv->PMKIDList[index].Bssid, (u8 *)pmksa->peer_addr, ETH_ALEN)) {
+ 			memcpy(psecuritypriv->PMKIDList[index].PMKID, (u8 *)pmksa->pmkid, WLAN_PMKID_LEN);
+ 			psecuritypriv->PMKIDList[index].bUsed = true;
+ 			psecuritypriv->PMKIDIndex = index + 1;
+@@ -1868,7 +1868,7 @@ static int cfg80211_rtw_set_pmksa(struct wiphy *wiphy,
+ 	}
  
-+void mt7921_regd_update(struct mt792x_dev *dev);
- int mt7921_mac_init(struct mt792x_dev *dev);
- bool mt7921_mac_wtbl_update(struct mt792x_dev *dev, int idx, u32 mask);
- int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index f04e7095e181..42fd456eb6fa 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -507,6 +507,9 @@ static int mt7921_pci_resume(struct device *device)
- 		mt76_connac_mcu_set_deep_sleep(&dev->mt76, false);
+ 	if (!blInserted) {
+-		memcpy(psecuritypriv->PMKIDList[psecuritypriv->PMKIDIndex].Bssid, (u8 *)pmksa->bssid, ETH_ALEN);
++		memcpy(psecuritypriv->PMKIDList[psecuritypriv->PMKIDIndex].Bssid, (u8 *)pmksa->peer_addr, ETH_ALEN);
+ 		memcpy(psecuritypriv->PMKIDList[psecuritypriv->PMKIDIndex].PMKID, (u8 *)pmksa->pmkid, WLAN_PMKID_LEN);
  
- 	err = mt76_connac_mcu_set_hif_suspend(mdev, false);
-+
-+	mt7921_regd_update(dev);
-+
- failed:
- 	pm->suspended = false;
+ 		psecuritypriv->PMKIDList[psecuritypriv->PMKIDIndex].bUsed = true;
+@@ -1889,7 +1889,7 @@ static int cfg80211_rtw_del_pmksa(struct wiphy *wiphy,
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
  
+ 	for (index = 0 ; index < NUM_PMKID_CACHE; index++) {
+-		if (!memcmp(psecuritypriv->PMKIDList[index].Bssid, (u8 *)pmksa->bssid, ETH_ALEN)) {
++		if (!memcmp(psecuritypriv->PMKIDList[index].Bssid, (u8 *)pmksa->peer_addr, ETH_ALEN)) {
+ 			/*
+ 			 * BSSID is matched, the same AP => Remove this PMKID information
+ 			 * and reset it.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b137a33a1b68..0bacd705c030 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3370,7 +3370,7 @@ enum wiphy_params_flags {
+  *	threshold to generate a new PMK before the current one expires.
+  */
+ struct cfg80211_pmksa {
+-	const u8 *bssid;
++	const u8 *peer_addr;
+ 	const u8 *pmkid;
+ 	const u8 *pmk;
+ 	size_t pmk_len;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 569234bc2be6..e4659c204102 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12189,7 +12189,7 @@ static int nl80211_setdel_pmksa(struct sk_buff *skb, struct genl_info *info)
+ 	pmksa.pmkid = nla_data(info->attrs[NL80211_ATTR_PMKID]);
+ 
+ 	if (info->attrs[NL80211_ATTR_MAC]) {
+-		pmksa.bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
++		pmksa.peer_addr = nla_data(info->attrs[NL80211_ATTR_MAC]);
+ 	} else if (info->attrs[NL80211_ATTR_SSID] &&
+ 		   info->attrs[NL80211_ATTR_FILS_CACHE_ID] &&
+ 		   (info->genlhdr->cmd == NL80211_CMD_DEL_PMKSA ||
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 30cd1bd58aac..8bc6e7dc70e7 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1925,7 +1925,7 @@ DECLARE_EVENT_CLASS(rdev_pmksa,
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+ 		NETDEV_ASSIGN;
+-		MAC_ASSIGN(bssid, pmksa->bssid);
++		MAC_ASSIGN(bssid, pmksa->peer_addr);
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", bssid: %pM",
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, __entry->bssid)
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 2371069f3c43..ee7d9066485f 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1544,7 +1544,7 @@ static int cfg80211_wext_siwpmksa(struct net_device *dev,
+ 	if (wdev->iftype != NL80211_IFTYPE_STATION)
+ 		return -EINVAL;
+ 
+-	cfg_pmksa.bssid = pmksa->bssid.sa_data;
++	cfg_pmksa.peer_addr = pmksa->bssid.sa_data;
+ 	cfg_pmksa.pmkid = pmksa->pmkid;
+ 
+ 	wiphy_lock(&rdev->wiphy);
 -- 
-2.18.0
+2.17.1
 
