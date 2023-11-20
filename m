@@ -2,137 +2,103 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9558C197A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF92BC54FB9
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232791AbjKTKEU (ORCPT
+        id S232954AbjKTKHp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 05:04:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54964 "EHLO
+        Mon, 20 Nov 2023 05:07:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232176AbjKTKEQ (ORCPT
+        with ESMTP id S233011AbjKTKHf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 05:04:16 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B591B95;
-        Mon, 20 Nov 2023 02:04:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700474652; x=1732010652;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=Q5vDujUu2jQVmhCwOqd7SDr4yeZ+2NBNFFCi8xPFKlY=;
-  b=bV3q0rqqbbrJyWKTKCN4gB1BcaBkK4a7w895lz4PvF8dalrT0iTcIzJw
-   qPcEhISWJNjScj30pEoyrtyyoMF0vEhS7JEywIMZHsN0gNcDUsY5EJzCg
-   XcI1JYiXCx1ZboofA/L6FnQ2QCBzbXZPk5ouFZspumVcL9Rfelh7RHM8u
-   D8yG2Bb39psp8leC0dlpemtIC9jYfLfBKFn7p0ZC6DaN6hhbeC0CPcqq7
-   WC0AhF27fbkqyOhF53tlu4l41hkJZ/geUrJXhBxXKCpe/54I2SZcVfY5a
-   0ioJTIvC0Vp6Rg0+CL8TKYICPgn/DCc07Muq7P9HsIy5ATXdZgT7AyCcP
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10899"; a="455914983"
-X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
-   d="scan'208";a="455914983"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 01:59:09 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10899"; a="889872771"
-X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
-   d="scan'208";a="889872771"
-Received: from akeren-mobl.ger.corp.intel.com ([10.252.40.26])
-  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 01:59:06 -0800
-Date:   Mon, 20 Nov 2023 11:59:04 +0200 (EET)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-cc:     "John W. Linville" <linville@tuxdriver.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/7] rtlwifi: rtl8821ae: Reverse PM capability exists
- check
-In-Reply-To: <20231117224407.GA95935@bhelgaas>
-Message-ID: <34385eee-b08c-8ff9-db47-75c3d2be681@linux.intel.com>
-References: <20231117224407.GA95935@bhelgaas>
+        Mon, 20 Nov 2023 05:07:35 -0500
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C8EEF2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 02:07:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=ACBikKPIRqzr9payxhpI5XM4jMhbiP2iolHg18i3IrE=;
+        t=1700474851; x=1701684451; b=IuS+7nmA+l2gANpc9/2dO9gdATaCsGryH/0IWSJviJcFh9t
+        hCbx1fr5JHjcZu1teORbuDsa/RZkdZ625bblBHyzwnE/UXq14sIWztCXzOc6peeBISE8bfx2K9rG3
+        vY5/Hss/BKoBy4hlZfvaqU9u2AJNwzefymUWlsd8Q1NrWJ8E5O95s6Gkqwt0fjff90eRFGWhvkdlH
+        GfP1nayk4Z1Kk6wMcrZtpHs+1juGqzx14L+K3U3Is7X6rHoZpgXCAQgDaa2h1B0it5NHEfDujQZ+T
+        A1a7bgn6NtKGYbGrJT1B0IJ0rSMcH+aONQD7a3NJtBPgOhUSG2NI0Mi2mZ3YjiNg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.97)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1r51Be-0000000F5C6-06Ta;
+        Mon, 20 Nov 2023 11:07:26 +0100
+Message-ID: <f246e61a32590b8b543f02fa810da32f2d1c9a81.camel@sipsolutions.net>
+Subject: Re: [PATCH v2,2/2] wifi: mac80211: Refactor STA CSA parsing flow
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Michael-cy Lee =?UTF-8?Q?=28=E6=9D=8E=E5=B3=BB=E5=AE=87=29?= 
+        <Michael-cy.Lee@mediatek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     "linux-mediatek@lists.infradead.org" 
+        <linux-mediatek@lists.infradead.org>,
+        "nbd@nbd.name" <nbd@nbd.name>,
+        Evelyn Tsai =?UTF-8?Q?=28=E8=94=A1=E7=8F=8A=E9=88=BA=29?= 
+        <Evelyn.Tsai@mediatek.com>,
+        "lorenzo@kernel.org" <lorenzo@kernel.org>,
+        Money Wang =?UTF-8?Q?=28=E7=8E=8B=E4=BF=A1=E5=AE=89=29?= 
+        <Money.Wang@mediatek.com>
+Date:   Mon, 20 Nov 2023 11:07:25 +0100
+In-Reply-To: <e56d4b60d6b0e7305cc9db4f4b1e33fc44317ce5.camel@mediatek.com>
+References: <20231113021107.13110-1-michael-cy.lee@mediatek.com>
+         <20231113021107.13110-2-michael-cy.lee@mediatek.com>
+         <2eaa04080702230b8dbe3b3541d6d831484c4f1f.camel@sipsolutions.net>
+         <e56d4b60d6b0e7305cc9db4f4b1e33fc44317ce5.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-1927733487-1700473754=:2032"
-Content-ID: <2366eb98-2abd-5792-be3d-ea2e2c2d16fb@linux.intel.com>
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Hi Michael,
 
---8323329-1927733487-1700473754=:2032
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
-Content-ID: <9fa8dab0-fcc-f0b0-f269-af6933aa9b6@linux.intel.com>
+> I will fix the typos and change all the =E2=80=9CIE =E2=80=9D to =E2=80=
+=9CElement=E2=80=9D. The TODO
+> for 320 MHz bandwidth is used for internal tests, I=E2=80=99ll remove it,=
+ too.
 
-On Fri, 17 Nov 2023, Bjorn Helgaas wrote:
+Sounds good.
 
-> On Fri, Nov 17, 2023 at 11:44:22AM +0200, Ilpo Järvinen wrote:
-> > Check if PM capability does not exists and return early which follows
-> > the usual error handling pattern.
-> > 
-> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-> > ---
-> >  .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 45 ++++++++++---------
-> >  1 file changed, 23 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> > index 6ae37d61a2a2..53cfeed0b030 100644
-> > --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> > +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-> > @@ -2305,30 +2305,31 @@ static void _rtl8821ae_clear_pci_pme_status(struct ieee80211_hw *hw)
-> >  		}
-> >  	} while (cnt++ < 200);
-> >  
-> > -	if (cap_id == 0x01) {
-> > -		/* Get the PM CSR (Control/Status Register),
-> > -		 * The PME_Status is located at PM Capatibility offset 5, bit 7
-> > -		 */
-> > -		pci_read_config_byte(rtlpci->pdev, cap_pointer + 5, &pmcs_reg);
-> > -
-> > -		if (pmcs_reg & BIT(7)) {
-> > -			/* Clear PME_Status with write */
-> > -			pci_write_config_byte(rtlpci->pdev, cap_pointer + 5,
-> > -					      pmcs_reg);
-> > -			/* Read it back to check */
-> > -			pci_read_config_byte(rtlpci->pdev, cap_pointer + 5,
-> > -					     &pmcs_reg);
-> > -			rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-> > -				"Clear PME status 0x%2x to 0x%2x\n",
-> > -				cap_pointer + 5, pmcs_reg);
-> > -		} else {
-> > -			rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
-> > -				"PME status(0x%2x) = 0x%2x\n",
-> > -				cap_pointer + 5, pmcs_reg);
-> > -		}
-> > -	} else {
-> > +	if (cap_id != 0x01) {
-> >  		rtl_dbg(rtlpriv, COMP_INIT, DBG_WARNING,
-> >  			"Cannot find PME Capability\n");
-> > +		return;
-> > +	}
-> > +
-> > +	/* Get the PM CSR (Control/Status Register),
-> > +	 * The PME_Status is located at PM Capatibility offset 5, bit 7
+> We had checked the D4.1, and unfortunately, the additional description
+> for WBCS Element in D3.2 9.4.2.159 is removed. In other words, D4.1
+> does not change the definitions of WBCS Element and WBCS Element should
+> be parsed as VHT operating information regardless of the BSS being VHT,
+> HE, or EHT.
 
-> But this is PCI_PM_CTRL and PCI_PM_CTRL_PME_STATUS (with a word read),
-> right?  No need for a comment then.
-> 
-> I don't know why the driver needs to do this, but I'm skeptical.  The
-> only other drivers that look at PCI_PM_CTRL_PME_STATUS themselves are
-> bnx2x and ksz884xp (ksz884x.c), so this is highly suspicious.
+Right, I thought there were going to be some changes here.
 
-I hope you are not asking from me because I'm just the poor guy who tries 
-to cleanup this mess. ;-) ...So all I can do is shrug and say, I 
-unfortunately don't know the answer.
+> After parsing the WBCS Element, the STA needs to check whether the new
+> channel fits its capabilities according to the operating mode
+> (VHT/HE/EHT).
+> However, the existing flow only checks the VHT capability after the
+> WBCS Element parsing, which is incorrect when the BSS is HE/EHT or the
+> band is 6 GHz.
+> =20
+> In summary, I will refactor the WBCS Element parsing part of this
+> patch, along with other fixes.
 
-Hopefully somebody more familiar with the devices could chime in.
+Sounds good.
 
+We'll have to figure this out separately, but I'm also working on
+something else that will certainly affect this code. I noticed very
+recently that the whole STA_DISABLE_* flags are very messy, and am
+working on some improvements along these lines. The current version
+looks like this, but it doesn't even compile yet:
 
--- 
- i.
---8323329-1927733487-1700473754=:2032--
+https://p.sipsolutions.net/ccb552810b020745.txt
+
+No idea if this would help/hinder you in any way, but I figured since it
+has some overlap I'd let you know. I don't think you need to worry about
+it for now, it'll take me some more time to work on it.
+
+johannes
