@@ -2,81 +2,209 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD5FC54E76
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 09:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B025EC54E76
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 09:25:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232456AbjKTJOS (ORCPT
+        id S232571AbjKTJZN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 04:14:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37004 "EHLO
+        Mon, 20 Nov 2023 04:25:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232413AbjKTJOR (ORCPT
+        with ESMTP id S231997AbjKTJZM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 04:14:17 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F35A4B8
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 01:14:13 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D86D0C433C9;
-        Mon, 20 Nov 2023 09:14:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700471653;
-        bh=vgJvmpCV9HLNfOdNG/HfmOWosDAeSYMlsE665fuAPjw=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=G+zTVl9KMKNRRENidWysHsqWhr/l2KuAmwmb+ySNZIefm4bR7G68rVRed50vJgU1C
-         /homhVoWTYpHveinKRoJTaIpaB9/poh7EqgBP3R8du/EA4OJRIBe2LGzflgv9/2kjh
-         qyoFYAsH4eXep0cPQ3iLSwYz8yqmXBieyqjld7PU82nSaCVQwyat+m+75VfC18h20K
-         EX9xn7U/pQPBJ6Qy/SdUIuZsEZ2+V6NMQwhNBJMELaUbMH3bI/EO4UpyeA9pxpWQoD
-         mKoMJr7K46ZRUrme5ZPYs91lSzrcwfGRFGCvjf9u6iGdK/mjqm8bDFjxMTQImqohCD
-         l2NoTrPe6R1nQ==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc:     James Prestwood <prestwoj@gmail.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] wifi: ath11k: use select for CRYPTO_MICHAEL_MIC
-References: <20231113153544.282461-1-prestwoj@gmail.com>
-        <343af05d-eab9-4411-a016-8d7d96f78379@quicinc.com>
-Date:   Mon, 20 Nov 2023 11:14:10 +0200
-In-Reply-To: <343af05d-eab9-4411-a016-8d7d96f78379@quicinc.com> (Jeff
-        Johnson's message of "Thu, 16 Nov 2023 11:24:56 -0800")
-Message-ID: <87pm04947x.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        Mon, 20 Nov 2023 04:25:12 -0500
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5F4DCD;
+        Mon, 20 Nov 2023 01:25:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1700472308; x=1732008308;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=BVUYYQ1JYAQmJwUnfzncwjq61tORuEuESunZjowyk9o=;
+  b=RoO18/ZUgKH+IGafBqYuRiwNfDVEkPmNmRc0YsFPvqJ6ALrkh2I5Fpbk
+   U5/Krds5dG7rsKf+vImHCYkUWVgf2YfSOpgNXqfmlFb5woNZM45fgzbHo
+   lw5FjVIfVQs2+geGQMsfVliUtNhsvlECTydNvTPSFd2infdrl0/fl38uB
+   XOsuajJQy10sBu8T5QVq1nVyFNOckUzrjvnFyTHi3yZeBo8pWQC+PmjXJ
+   QWP1iCkr6x3u5bc1VV8kPsd8CNq7I2HuXT4LfaFweWwgOfHcZps+FpiYS
+   w4Bzfg2dwGd1XPtB9VB/zeTZoe1pysD5Q3Y/Y9DZh3G/m/otpwzmSkRhJ
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10899"; a="4765284"
+X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
+   d="scan'208";a="4765284"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 01:25:08 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10899"; a="795418486"
+X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
+   d="scan'208";a="795418486"
+Received: from akeren-mobl.ger.corp.intel.com ([10.252.40.26])
+  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 01:25:05 -0800
+Date:   Mon, 20 Nov 2023 11:25:03 +0200 (EET)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     "John W. Linville" <linville@tuxdriver.com>,
+        Kalle Valo <kvalo@kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/7] wifi: rtlwifi: Convert LNKCTL change to PCIe cap
+ RMW accessors
+In-Reply-To: <20231117222416.GA94936@bhelgaas>
+Message-ID: <bcb6c224-c279-bfa3-5bf0-d1e7512f44cb@linux.intel.com>
+References: <20231117222416.GA94936@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed; BOUNDARY="8323329-1911404933-1700466388=:2032"
+Content-ID: <118f9d3-aec8-f64a-2857-2dfad61f381c@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jeff Johnson <quic_jjohnson@quicinc.com> writes:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On 11/13/2023 7:35 AM, James Prestwood wrote:
->> Let ath11k select this option automatically which makes building
->> more intuitive if the user enables this driver (rather than the
->> driver not building unless CRYPTO_MICAEL_MIC is explicitly enabled)
->
-> s/MICAEL/MICHAEL/
->
-> add hard stop
->
-> Also suggest you include (or summarize) the information that Kalle
-> shared that ath is the outlier here:
->
-> Further investigation shows that ath11k and ath12k are the only who use
-> 'depends on' with CRYPTO_MICHAEL_MIC:
->
-> ./drivers/net/wireless/intel/ipw2x00/Kconfig:	select CRYPTO_MICHAEL_MIC
-> ./drivers/net/wireless/intersil/hostap/Kconfig:	select CRYPTO_MICHAEL_MIC
-> ./drivers/net/wireless/intersil/orinoco/Kconfig:	select CRYPTO_MICHAEL_MIC
-> ./drivers/net/wireless/ath/ath11k/Kconfig:	depends on CRYPTO_MICHAEL_MIC
-> ./drivers/net/wireless/ath/ath12k/Kconfig:	depends on CRYPTO_MICHAEL_MIC
-> ./drivers/staging/rtl8192e/Kconfig:	select CRYPTO_MICHAEL_MIC
-> ./drivers/staging/ks7010/Kconfig:	select CRYPTO_MICHAEL_MIC
->
-> consider these comments apply to ath12k change as well :)
+--8323329-1911404933-1700466388=:2032
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
+Content-ID: <79bf996f-ae7-d121-1633-98d3cdbca3de@linux.intel.com>
 
-BTW I can add these changes in the pending branch, no need to resend
-because of this.
+On Fri, 17 Nov 2023, Bjorn Helgaas wrote:
+
+> On Fri, Nov 17, 2023 at 11:44:19AM +0200, Ilpo Järvinen wrote:
+> > The rtlwifi driver comes with custom code to write into PCIe Link
+> > Control register. RMW access for the Link Control register requires
+> > locking that is already provided by the standard PCIe capability
+> > accessors.
+> > 
+> > Convert the custom RMW code writing into LNKCTL register to standard
+> > RMW capability accessors. The accesses are changed to cover the full
+> > LNKCTL register instead of touching just a single byte of the register.
+> > 
+> > After custom LNKCTL access code is removed, .num4bytes in the struct
+> > mp_adapter is no longer needed.
+> 
+> Looks like some nice fixes here.  I confess they're not all obvious to
+> me.
+
+It took a while to figure out what it is doing, yes... and while figuring
+it out, I found more and more to cleanup... And seems you also found some
+more... ;-) lol.
+
+When going all the way with cleanups, I tend run this kind of things that 
+are not all that obvious but those are usually the most valuable cleanups 
+(and normally cannot be automated either so we'll have a lot less people 
+looking at them).
+
+> > @@ -164,21 +164,27 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
+> >  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> >  	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> >  
+> > +	value &= PCI_EXP_LNKCTL_ASPMC;
+> > +
+> >  	if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE)
+> >  		value |= 0x40;
+> 
+> I guess this 0x40 is PCI_EXP_LNKCTL_CCC?
+
+Good point, I forgot to change that in 2/7 and it belongs logically into 
+this patch anyway so I'll add it to this patch.
+
+> > -	pci_write_config_byte(rtlpci->pdev, 0x80, value);
+> > +	pcie_capability_clear_and_set_word(rtlpci->pdev, PCI_EXP_LNKCTL,
+> 
+> PCI_EXP_LNKCTL is 0x10, so I guess we know somehow that the PCIe
+> Capability is at 0x70?
+
+It's what I inferred based on the offsets of LNKCTL & DEVCTL2. And if 
+that assumption does not hold with all these devices, the writes would 
+just wreck some random havoc. :-/
+
+> > +					   PCI_EXP_LNKCTL_ASPMC | value,
+> > +					   value);
+> >  
+> >  	return false;
+> >  }
+> >  
+> >  /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
+> > -static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
+> > +static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u16 value)
+> >  {
+> >  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> >  	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> >  
+> > -	pci_write_config_byte(rtlpci->pdev, 0x81, value);
+> > +	pcie_capability_clear_and_set_word(rtlpci->pdev, PCI_EXP_LNKCTL,
+> > +					   PCI_EXP_LNKCTL_CLKREQ_EN,
+> 
+> Depends on the fact that the caller only passes 0 or 1.  Ugly, but
+> looks true, and I see you clean this up a little more later.  I like
+> how you made it explicit in _rtl_pci_platform_switch_device_pci_aspm()
+> above by masking the value to set.
+
+I thought of adding the masking here too but since it wasn't strictly 
+necessary, I didn't. But I can add that now and I'll also update the 
+comment to match the code :-).
+
+These code fragments hopefully die anyway once I get the ASPM from 
+drivers to core series done.
+
+> > @@ -268,13 +267,14 @@ static void rtl_pci_enable_aspm(struct ieee80211_hw *hw)
+> >  	if (pcibridge_vendor == PCI_BRIDGE_VENDOR_INTEL)
+> >  		u_pcibridge_aspmsetting &= ~BIT(0);
+> >  
+> > -	pci_write_config_byte(rtlpci->pdev, (num4bytes << 2),
+> > -			      u_pcibridge_aspmsetting);
+> > +	pcie_capability_clear_and_set_word(rtlpci->pdev, PCI_EXP_LNKCTL,
+> > +					   PCI_EXP_LNKCTL_ASPMC,
+> > +					   u_pcibridge_aspmsetting &
+> > +					   PCI_EXP_LNKCTL_ASPMC);
+> >  
+> >  	rtl_dbg(rtlpriv, COMP_INIT, DBG_LOUD,
+> > -		"PlatformEnableASPM(): Write reg[%x] = %x\n",
+> > -		(pcipriv->ndis_adapter.pcibridge_pciehdr_offset + 0x10),
+> > -		u_pcibridge_aspmsetting);
+> > +		"PlatformEnableASPM(): Write ASPM = %x\n",
+> > +		u_pcibridge_aspmsetting & PCI_EXP_LNKCTL_ASPMC);
+> >  
+> >  	udelay(50);
+
+> > @@ -2030,8 +2031,6 @@ static bool _rtl_pci_find_adapter(struct pci_dev *pdev,
+> >  		    PCI_FUNC(bridge_pdev->devfn);
+> >  		pcipriv->ndis_adapter.pcibridge_pciehdr_offset =
+> >  		    pci_pcie_cap(bridge_pdev);
+> > -		pcipriv->ndis_adapter.num4bytes =
+> > -		    (pcipriv->ndis_adapter.pcibridge_pciehdr_offset + 0x10) / 4;
+> 
+> I don't understand what's going on here.  Are we caching the PCIe
+> Capability offset of the *upstream bridge* here?  And then computing
+> the dword offset of the *bridge's* LNKCTL? And then writing a byte to
+> the rtlwifi device (not the bridge) at the dword offset << 2, i.e., the
+> byte offset?  I must be out to lunch, because how could that ever
+> work?
+>
+> If we were using the bridge capability location to write to the
+> rtlwifi device, that would clearly be a bug fix that would merit its
+> own patch.
+
+Oh no, I entirely missed it because of those nice comments which tell it's 
+trying to update bridge's ASPM so I didn't pay attention to which device 
+it passes for real...
+
+Now I'm left to wonder what would be the best course of action here...
+Since it has never really written to bridge's ASPM at all, perhaps that's 
+not needed and those writes could just be dropped rather than point them 
+to the correct device.
+
+> Maybe this num4bytes thing could be its own patch, too.  Seems so
+> cumbersome that it makes me wonder if the device has issues with
+> larger accesses.
+
+I thought of that but since it was just 2 extra context blocks which are 
+clearly disjoint from the rest, I didn't separate the removal of the 
+member variable to its own patch.
+
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+ i.
+--8323329-1911404933-1700466388=:2032--
