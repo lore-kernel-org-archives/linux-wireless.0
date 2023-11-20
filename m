@@ -2,144 +2,182 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA094C2BB3F
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 19:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A79FDC197A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 23:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbjKTT4O (ORCPT
+        id S229592AbjKTX6q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 14:56:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45062 "EHLO
+        Mon, 20 Nov 2023 18:58:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229937AbjKTT4E (ORCPT
+        with ESMTP id S229492AbjKTX6p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 14:56:04 -0500
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E91C391
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 11:56:00 -0800 (PST)
-Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-a00c200782dso79192166b.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 11:56:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20230601; t=1700510159; x=1701114959; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yYgI9NHxU2UdmbEZcwd7bhTYCKdrR+WItSKkzQt3ufY=;
-        b=NNw99bzZkNgG1n8fhKw+HTPJiT3seKenPnFvF3CGz9jLJLQpUUkrwbhSGt1VCRXACQ
-         MhRV/3teB804mAthBBn7G9J91L7Zqhvw/UmZdF7q++JfQQLaVPCsZUjAWKiHITPdInI1
-         i/MyB5gOg//5KvY0x1PG7XnHOvtjCblJ1xXqSE6F1nCIsHCkZYPjkmlDc9fwpBfq42wd
-         8Sr8+Vja6TF2v6IEsRYYk8DnCwTiTDFFOkrWzVSzAcKTahHlDm3i1Ke6UZLgKfcu2FVa
-         hXBpdBUPieaUsDjvbIkUAdlq0tDeIMivoLGQt/VHcgLBZtB5/SGkLvG8nxGsHMI8t1/A
-         Q72A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700510159; x=1701114959;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yYgI9NHxU2UdmbEZcwd7bhTYCKdrR+WItSKkzQt3ufY=;
-        b=WadW87rFyzYUUrrYmOqZo3JsIaU1hlLZ2qisbTiim9xDRQoif/YydmkymNHQIdaxYK
-         AsOI64wnI8R/LLJafnkT9/HmDrfNkG5GjHNQXd3A4HjGUD07FEP6pr1Toa3dkDItjF8p
-         SboZ190H854wsLxbXXfXGAvStwtjuOVr8jxe66PUGI2xddQQDYiFsdCJTUb0X+FJzWzS
-         tJjWEbEPi8qcGMW696Vrv7uqWLA+UV8GXbMApjT4ExAg5MXJ1M2kCMQRaYGSmKq8xwCJ
-         V1pvsm+Hu8ckrDvRnNdbwR3/c9V0beIS/VcmWGTKfhtSFSF6PU+dg4eL+LtRwZ41/eHZ
-         irKg==
-X-Gm-Message-State: AOJu0YyaXpdG9ALI3ZEzPEfPrJ4/vODCrFhlvr3NOCSfZx4K3n/ZlMbn
-        SW0sop8q0VZUYvsVAfqnuycOOsDZQ5RcUgJZabqmJLIJL/U=
-X-Google-Smtp-Source: AGHT+IEsh5Tv9SjhFHl5iz7cqct4FFX0r8V0bnkaECzOhiwg0c4n8ejAyAAl9le7j/SORtZoJgTbftJ1dDlPUB8N57M=
-X-Received: by 2002:a17:906:2b10:b0:9bd:e017:370e with SMTP id
- a16-20020a1709062b1000b009bde017370emr4812309ejg.54.1700510159090; Mon, 20
- Nov 2023 11:55:59 -0800 (PST)
+        Mon, 20 Nov 2023 18:58:45 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36EBBAC
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 15:58:42 -0800 (PST)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AKNiOIt008012;
+        Mon, 20 Nov 2023 23:58:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=iIOsr+Oc6RR7yThdcqDp7tmyW3n4O2KqOa9s+XtgHTk=;
+ b=X+NtZRuF8/hwufxGtJ1GG/ZvhZH3GQlFHHPSOpaMH5B2AEmQ+wc8DRv7SUb3vsPJc3R2
+ yBHWiZXkTpUWB5eRYJxArU5RZzGGuIxqOXQDCsx95m9dB7OG3uYTnwRmIIDlH9SItp97
+ LloN5t7uYOfuXYHaSHvHO1JwJy99HFZnipcUqSwdZuT6L+1Sj3gSV3Q+1tnUfRnAhHFr
+ fGnStqMLrdtoT2Pxy/7vkqr8KchwV6qZE0v6MIzswmalTAfqq9e3pWJzkwD+1G9rlm16
+ iVS4IIyezJx5SRn+mx2WODcdCDMY2RKIkP3K/8zkaF2MvSYAySHumWxDthVZOYGvVlxo 0w== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ug26ttb00-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 23:58:31 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AKNwUTe032543
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 23:58:30 GMT
+Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 20 Nov 2023 15:58:28 -0800
+From:   Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Subject: [PATCH 1/2] wifi: ath12k: Optimize the mac80211 hw data access
+Date:   Tue, 21 Nov 2023 05:28:11 +0530
+Message-ID: <20231120235812.2602198-2-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231120235812.2602198-1-quic_periyasa@quicinc.com>
+References: <20231120235812.2602198-1-quic_periyasa@quicinc.com>
 MIME-Version: 1.0
-References: <f3505110-b76b-4152-8375-37fa3184d3c1@lwfinger.net> <748b045e7aaa43eb9a7fb83ad924614f@realtek.com>
-In-Reply-To: <748b045e7aaa43eb9a7fb83ad924614f@realtek.com>
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Mon, 20 Nov 2023 20:55:48 +0100
-Message-ID: <CAFBinCD=iLbyfWWTqQjLQ5CiqOn08r4UaVqyKHve8AoW_xeFEw@mail.gmail.com>
-Subject: Re: EFUSE in RTW8723DS
-To:     Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <larry.finger@lwfinger.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: -4uWAg06eyF_ZHYfbgM1hd3HJazWwAxX
+X-Proofpoint-GUID: -4uWAg06eyF_ZHYfbgM1hd3HJazWwAxX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-20_22,2023-11-20_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ malwarescore=0 mlxlogscore=999 priorityscore=1501 impostorscore=0
+ suspectscore=0 clxscore=1015 bulkscore=0 spamscore=0 phishscore=0
+ adultscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311200176
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Larry and Ping-Ke,
+Currently mac80211 hw data is accessed by convert the hw to radio (ar)
+structure and then radio to hw structure which is not necessary in some
+places where mac80211 hw data is already present. So in that kind of
+places avoid the conversion and directly access the mac80211 hw data.
 
-On Tue, Nov 14, 2023 at 1:52=E2=80=AFAM Ping-Ke Shih <pkshih@realtek.com> w=
-rote:
->
->
->
-> > -----Original Message-----
-> > From: Larry Finger <larry.finger@gmail.com> On Behalf Of Larry Finger
-> > Sent: Saturday, November 11, 2023 4:26 AM
-> > To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> > Cc: linux-wireless <linux-wireless@vger.kernel.org>
-> > Subject: EFUSE in RTW8723DS
-> >
-> > Martin,
-> >
-> > The commit 9be20a822327 ("wifi: rtw88: rtw8723d: Implement RTL8723DS (S=
-DIO)
-> > efuse parsing") indicates that no additional information is extracted f=
-rom the
-> > EFUSE? Is that true, or did I misread the code?
->
-> I think the commit is only to read MAC address that is programmed in diff=
-erent
-> location from PCI interface, and no more information.
-Ping-Ke is right: the eFuse is split into two sections:
-1. common (RF calibration, EEPROM version, antenna information,
-country code, ...) which is independent of the HCI (host controller
-interface)
-2. HCI specific bits (PCI vendor/device IDs, USB vendor/device IDs,
-SDIO specifics)
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-#1 has already existed for a long time and I didn't have to touch it
-since it's the same for the PCIe, USB and SDIO variant of a wireless
-chip.
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 14 +++++++-------
+ drivers/net/wireless/ath/ath12k/reg.c |  6 +++---
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-For #2 there are no (known to me) SDIO specific bits other than the
-MAC address. That's why I only added the MAC address for SDIO. If
-there's more it can still be added.
-Note that the MAC address has different offsets depending on whether
-the HCI is PCIe, USB or SDIO.
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index fc0d14ea328e..a85862ba134e 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -4987,7 +4987,7 @@ static void ath12k_mac_op_tx(struct ieee80211_hw *hw,
+ 		if (ret) {
+ 			ath12k_warn(ar->ab, "failed to queue management frame %d\n",
+ 				    ret);
+-			ieee80211_free_txskb(ar->hw, skb);
++			ieee80211_free_txskb(hw, skb);
+ 		}
+ 		return;
+ 	}
+@@ -4995,7 +4995,7 @@ static void ath12k_mac_op_tx(struct ieee80211_hw *hw,
+ 	ret = ath12k_dp_tx(ar, arvif, skb);
+ 	if (ret) {
+ 		ath12k_warn(ar->ab, "failed to transmit frame %d\n", ret);
+-		ieee80211_free_txskb(ar->hw, skb);
++		ieee80211_free_txskb(hw, skb);
+ 	}
+ }
+ 
+@@ -5596,7 +5596,7 @@ static int ath12k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 		goto err_peer_del;
+ 
+ 	param_id = WMI_VDEV_PARAM_RTS_THRESHOLD;
+-	param_value = ar->hw->wiphy->rts_threshold;
++	param_value = hw->wiphy->rts_threshold;
+ 	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+ 					    param_id, param_value);
+ 	if (ret) {
+@@ -6836,7 +6836,7 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 				    arvif->vdev_id, ret);
+ 			return ret;
+ 		}
+-		ieee80211_iterate_stations_atomic(ar->hw,
++		ieee80211_iterate_stations_atomic(hw,
+ 						  ath12k_mac_disable_peer_fixed_rate,
+ 						  arvif);
+ 	} else if (ath12k_mac_bitrate_mask_get_single_nss(ar, band, mask,
+@@ -6882,14 +6882,14 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 			return -EINVAL;
+ 		}
+ 
+-		ieee80211_iterate_stations_atomic(ar->hw,
++		ieee80211_iterate_stations_atomic(hw,
+ 						  ath12k_mac_disable_peer_fixed_rate,
+ 						  arvif);
+ 
+ 		mutex_lock(&ar->conf_mutex);
+ 
+ 		arvif->bitrate_mask = *mask;
+-		ieee80211_iterate_stations_atomic(ar->hw,
++		ieee80211_iterate_stations_atomic(hw,
+ 						  ath12k_mac_set_bitrate_mask_iter,
+ 						  arvif);
+ 
+@@ -6927,7 +6927,7 @@ ath12k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
+ 		ath12k_warn(ar->ab, "pdev %d successfully recovered\n",
+ 			    ar->pdev->pdev_id);
+ 		ar->state = ATH12K_STATE_ON;
+-		ieee80211_wake_queues(ar->hw);
++		ieee80211_wake_queues(hw);
+ 
+ 		if (ab->is_reset) {
+ 			recovery_count = atomic_inc_return(&ab->recovery_count);
+diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wireless/ath/ath12k/reg.c
+index 5c006256c82a..b7fe4a6e7873 100644
+--- a/drivers/net/wireless/ath/ath12k/reg.c
++++ b/drivers/net/wireless/ath/ath12k/reg.c
+@@ -28,11 +28,11 @@ static const struct ieee80211_regdomain ath12k_world_regd = {
+ 	}
+ };
+ 
+-static bool ath12k_regdom_changes(struct ath12k *ar, char *alpha2)
++static bool ath12k_regdom_changes(struct ieee80211_hw *hw, char *alpha2)
+ {
+ 	const struct ieee80211_regdomain *regd;
+ 
+-	regd = rcu_dereference_rtnl(ar->hw->wiphy->regd);
++	regd = rcu_dereference_rtnl(hw->wiphy->regd);
+ 	/* This can happen during wiphy registration where the previous
+ 	 * user request is received before we update the regd received
+ 	 * from firmware.
+@@ -71,7 +71,7 @@ ath12k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 		return;
+ 	}
+ 
+-	if (!ath12k_regdom_changes(ar, request->alpha2)) {
++	if (!ath12k_regdom_changes(hw, request->alpha2)) {
+ 		ath12k_dbg(ar->ab, ATH12K_DBG_REG, "Country is already set\n");
+ 		return;
+ 	}
+-- 
+2.34.1
 
-> >
-> > One problem we are having is that some devices come with zero programmi=
-ng in the
-> > EFUSE, and even with supplying a valid MAC address, the performance is =
-poor.
->
-> One or two years ago, people reported efuse of RTL8192DE (IIRC) isn't pro=
-grammed
-> in OpenWRT platform originally. That kind of product, calibration values =
-are stored
-> in external files instead, and chip is soldered on main board instead of =
-a
-> separated hardware module such M.2.
-I have worked on this (also as part of getting devices supported in
-OpenWrt :-)) for the ath9k driver.
-Things have evolved (for the better) over time and now ath9k has
-nvmem-cell support, see
-Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml
-We can implement something similar for rtw88 if we have a board that
-requires it and with someone who can help test things on the rtw88
-side (don't forget: there will also be board specific .dts bits where
-I could help, but someone has to be willing to do some work on this
-end on their own).
-
-> Maybe, we can read calibration values programmed in efuse as _default_ va=
-lues
-> from another module. This can't yield the best performance, but at least =
-better
-> than nothing.
-I'm not an expert in this field but I *thought* that from a legal
-standpoint it's mandatory to have the RF calibration data (to ensure
-that the device is running within the country's regulatory rules and
-never exceeds them).
-
-
-Best regards,
-Martin
