@@ -2,94 +2,92 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69348C54E76
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A306C5AE5C
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Nov 2023 10:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233089AbjKTKIE (ORCPT
+        id S232951AbjKTKQP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 05:08:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40798 "EHLO
+        Mon, 20 Nov 2023 05:16:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232565AbjKTKHw (ORCPT
+        with ESMTP id S232881AbjKTKQO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 05:07:52 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B9AB10E;
-        Mon, 20 Nov 2023 02:07:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700474868; x=1732010868;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=xR0+UQoJfM6pZ/tg70OOBb2loJbFmI+VNTmfYo2c9eU=;
-  b=Yw0pCCNQGCl11r68DBlu13se7+NPskXNO9ClNsUKWXM8TXQ9P11i/8WR
-   DBG41m/Ctn34SK1Thz/wMhMjS14X32+V6Z1W0wc1k424qThEO+Rhp+wKe
-   XtdosEi0v8kFAYlHKzm9jSoKLRL2lQeEHGAMugdP68an0DU1VzXv89dxQ
-   ncnKVwPNN5JYqqb9UckHKy/oXhKM9LwiiM80iISAlMxv5uJwyW6ei7Vfv
-   TyANepkn7exfbV5R+MN0u0VGZrizhNSmrFXeAM68vRwowm4WJAlqPZHt/
-   e2wy8dXmqRIWCjDYHLhmB9BQyGcEIxHf7s12k5TATGh7VqndKOpMWGCSJ
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10899"; a="477800373"
-X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
-   d="scan'208";a="477800373"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 02:06:22 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.04,213,1695711600"; 
-   d="scan'208";a="14548591"
-Received: from akeren-mobl.ger.corp.intel.com ([10.252.40.26])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Nov 2023 02:06:19 -0800
-Date:   Mon, 20 Nov 2023 12:06:17 +0200 (EET)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-cc:     "John W. Linville" <linville@tuxdriver.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 7/7] rtlwifi: rtl8821ae: Access full PMCS reg and use
- pci_regs.h
-In-Reply-To: <20231117224842.GA96270@bhelgaas>
-Message-ID: <553cda39-ffe7-e9b3-a38b-d1f3381b485@linux.intel.com>
-References: <20231117224842.GA96270@bhelgaas>
+        Mon, 20 Nov 2023 05:16:14 -0500
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98CD8F0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 02:16:10 -0800 (PST)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AK7igFm030716;
+        Mon, 20 Nov 2023 10:15:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=uj7mYuruhzmFSeRMTe7qL0xzEeLtaoTcbb2EDHnDZg0=;
+ b=mHUUNesxm4pusAWvGtqkwjNSDdnj65hVn3GgPar/kJvMxKwy+qhVA1JvXowwI6Wz4VUY
+ QvFnpQV5u9zlmN96XQguPAENIiii5SKHx/nW2Puc5O46heX/LqBjFiUixZwNg0xYBBBU
+ mAGEa8UNEt05+ag9cj6fWUYc1rjQN6OngvKiriUYXHaYZGLLoTWxbhl4nxt2RmRpnSM3
+ A1lL3x7no4LDlt+5wVTlxHsToXu19XciF03YQ6vd84To9I0HfclSqG7V3jZm3+OENjWg
+ IuYrBn4AsqkOcwKOJnJzoM6BFuwyz66Q/HcnhsXmXvsdFXtf31tbptBnma9+Dl6M9VHX wA== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uem80kqrg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 10:15:59 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AKAFwb0018285
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Nov 2023 10:15:58 GMT
+Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 20 Nov 2023 02:15:57 -0800
+From:   Kang Yang <quic_kangyang@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
+Subject: [PATCH 0/7] wifi: ath12k: support one MSI
+Date:   Mon, 20 Nov 2023 18:15:36 +0800
+Message-ID: <20231120101543.4369-1-quic_kangyang@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-1384141213-1700474781=:2032"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: C9v3Z_f2GTP8dPLEif9SdSPb2Q3T_KzE
+X-Proofpoint-ORIG-GUID: C9v3Z_f2GTP8dPLEif9SdSPb2Q3T_KzE
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-20_07,2023-11-17_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=394
+ adultscore=0 priorityscore=1501 phishscore=0 malwarescore=0
+ impostorscore=0 lowpriorityscore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311200069
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This patch set is to support one MSI vector for WCN7850.
 
---8323329-1384141213-1700474781=:2032
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Kang Yang (7):
+  wifi: ath12k: get msi_data again after request_irq is called
+  wifi: ath12k: add CE and ext IRQ flag to indicate irq_handler
+  wifi: ath12k: use ATH12K_PCI_IRQ_DP_OFFSET for DP IRQ
+  wifi: ath12k: refactor multiple MSI vector implementation
+  wifi: ath12k: add support one MSI vector
+  wifi: ath12k: do not restore ASPM in case of single MSI vector
+  wifi: ath12k: set IRQ affinity to CPU0 in case of one MSI vector
 
-On Fri, 17 Nov 2023, Bjorn Helgaas wrote:
+ drivers/net/wireless/ath/ath12k/core.h |   2 +
+ drivers/net/wireless/ath/ath12k/mhi.c  |  16 ++-
+ drivers/net/wireless/ath/ath12k/pci.c  | 180 +++++++++++++++++++++----
+ drivers/net/wireless/ath/ath12k/pci.h  |   2 +
+ 4 files changed, 172 insertions(+), 28 deletions(-)
 
-> On Fri, Nov 17, 2023 at 11:44:25AM +0200, Ilpo Järvinen wrote:
-> > _rtl8821ae_clear_pci_pme_status() accesses the upper byte of the Power
-> > Management Control/Status register (PMCS) with literal 5 offset.
-> > 
-> > Access the entire PMCS register using defines from pci_regs.h to
-> > improve code readability.
-> > 
-> > While at it, remove the obvious comment and tweak debug prints
-> > slightly to not sound misleading.
-> 
-> OK, ignore my previous comments ;)  I should read all the way through
-> before responding.
 
-Please don't do that because then you'll just end up forgetting useful 
-comments. :-)
-
-I had this all in one patch initially but thought it's better to split it 
-a bit.
-
-Thanks a lot for reviewing.
-
+base-commit: 9a36440d929d134c56030a8492405708a143f580
 -- 
- i.
+2.34.1
 
---8323329-1384141213-1700474781=:2032--
