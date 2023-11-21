@@ -2,85 +2,150 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158D8C61D88
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Nov 2023 00:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15CC8C5AD4C
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Nov 2023 02:13:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbjKUAni (ORCPT
+        id S230098AbjKUCNn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 19:43:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57134 "EHLO
+        Mon, 20 Nov 2023 21:13:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229496AbjKUAnh (ORCPT
+        with ESMTP id S229679AbjKUCNm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 19:43:37 -0500
+        Mon, 20 Nov 2023 21:13:42 -0500
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABC3491
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 16:43:34 -0800 (PST)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AL0FqWt024759;
-        Tue, 21 Nov 2023 00:43:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=yAOBm449Tl1kAubAwTsoXCsiWK1Ge7McedU2Qp8DQc4=;
- b=RlACDlzp22A0xYGEuNoXBUBZntDqo5oqZN5VAK1iM5ILT4WkLUgP7tIJspow7y21S50D
- 3vg8eZVbcrycdsq3F7kbznly5m32atDcyDXtfEtbijIF/QLvtd53CziiQYvpIBPL8cC7
- MBNrzIy1xx71MGf42N/o8QrUpw8JWw/BAo7DzGK+9ohlBzf+I5QqiXc6pBVo/xXvWdHW
- xCvOhpegqEtYVX2MvBbZKECYFo78rMZ6sWXZwfXPr56A68b747wyFHYcDtj9GxepbBcn
- fq5tqPh5h+CB86tOlMw8wM3ihtLf8YKVtvlsoUTuzwltXfvQeKN0+XSJFmpeAG7t3tQ3 vw== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ug30mj6h7-1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 415D5CC
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 18:13:39 -0800 (PST)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AL1kUfg016808;
+        Tue, 21 Nov 2023 02:13:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=RVswQanSlZDwRvjP+z0pW7HS5L7S568d6bpUCj3FAMQ=;
+ b=DoDN+3WaVetpJSGoVdrOZdXgXr8JO5s0Bjw9vYsAkNrmdUeRrbhMBufYCPhm6HOV4BAh
+ lDyQeldo5tOZqbXXEh6ikxnHfSYlTmfLU5xysX4lIY2cZ5UdlYlOQafi0ws+2WO+wVa/
+ 1KoqU6aYQLypHixMuWrCcilGWR4jZPCxzTpgYXpWlmR2PS/PAbR+6EmbsWFh+1+dt7YY
+ SDuol6ClP2SlhwuXxGU5EuUD44Y65p+bdSUJUBKVwjYpddQpiYl/uKrHm+oxHnyHNtno
+ IxwijV1EwGEatRNDitJQDe9NeB1neMop7OjS6mwx19/c0K6lwh9G0Gv4vIyAb2yNOuTC qg== 
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ugcqs0taq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Nov 2023 00:43:30 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AL0hUuA030361
+        Tue, 21 Nov 2023 02:13:34 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AL2DYWw011808
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Nov 2023 00:43:30 GMT
-Received: from [10.110.116.223] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 20 Nov
- 2023 16:43:29 -0800
-Message-ID: <0ef439a7-dda3-43cd-9f5c-22be430bfe80@quicinc.com>
-Date:   Mon, 20 Nov 2023 16:43:29 -0800
+        Tue, 21 Nov 2023 02:13:34 GMT
+Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 20 Nov 2023 18:13:32 -0800
+From:   Kang Yang <quic_kangyang@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
+Subject: [PATCH v2 1/7] wifi: ath12k: get msi_data again after request_irq is called
+Date:   Tue, 21 Nov 2023 10:12:57 +0800
+Message-ID: <20231121021304.12966-2-quic_kangyang@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231121021304.12966-1-quic_kangyang@quicinc.com>
+References: <20231121021304.12966-1-quic_kangyang@quicinc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] wifi: ath12k: avoid repeated hw access from ar
-Content-Language: en-US
-To:     Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC:     <linux-wireless@vger.kernel.org>
-References: <20231120235812.2602198-1-quic_periyasa@quicinc.com>
- <20231120235812.2602198-3-quic_periyasa@quicinc.com>
-From:   Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20231120235812.2602198-3-quic_periyasa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: jIBO5DQbMEi8y7JWgGdgfv1qc5RzwPax
-X-Proofpoint-ORIG-GUID: jIBO5DQbMEi8y7JWgGdgfv1qc5RzwPax
+X-Proofpoint-ORIG-GUID: nSXVxXXLAlXOKzv39A-KZEgEYT0Y2XUf
+X-Proofpoint-GUID: nSXVxXXLAlXOKzv39A-KZEgEYT0Y2XUf
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-20_22,2023-11-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- clxscore=1015 mlxlogscore=522 priorityscore=1501 lowpriorityscore=0
- spamscore=0 phishscore=0 adultscore=0 bulkscore=0 suspectscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311210001
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ priorityscore=1501 phishscore=0 bulkscore=0 clxscore=1015 mlxlogscore=938
+ mlxscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311210013
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/20/2023 3:58 PM, Karthikeyan Periyasamy wrote:
-> Currently, the helper functions are accessing mac80211 hw data from the
-> radio (ar) structure repeatedly. So optimize these helper functions by
-> storing mac80211 hw data locally and accessing it directly.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+The reservation mode of interrupts in kernel assigns a dummy vector
+when the interrupt is allocated and assigns a real vector when the
+request_irq is called. The reservation mode helps to ease vector
+pressure when devices with a large amount of queues/interrupts are
+initialized, but only a minimal subset of those queues/interrupts
+is actually used.
+
+So on reservation mode, the msi_data may change after request_irq is
+called, then it will lead to spurious interrupt. But when VT-d in
+BIOS is enabled and ath12k can get 32 MSI vectors, ath12k always get
+the same msi_data before and after request_irq.
+
+So in case of one MSI vector, ath12k need read msi_data again after
+request_irq is called, and then the correct msi_data is programmed
+into WCN7850 hardware components.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+
+Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
+---
+
+v2: No change from v1.
+
+---
+ drivers/net/wireless/ath/ath12k/pci.c | 30 +++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 3006cd3fbe11..c5bc9afaa9fc 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -708,6 +708,25 @@ static void ath12k_pci_msi_free(struct ath12k_pci *ab_pci)
+ 	pci_free_irq_vectors(ab_pci->pdev);
+ }
+ 
++static int ath12k_pci_config_msi_data(struct ath12k_pci *ab_pci)
++{
++	struct msi_desc *msi_desc;
++
++	msi_desc = irq_get_msi_desc(ab_pci->pdev->irq);
++	if (!msi_desc) {
++		ath12k_err(ab_pci->ab, "msi_desc is NULL!\n");
++		pci_free_irq_vectors(ab_pci->pdev);
++		return -EINVAL;
++	}
++
++	ab_pci->msi_ep_base_data = msi_desc->msg.data;
++
++	ath12k_dbg(ab_pci->ab, ATH12K_DBG_PCI, "pci after request_irq msi_ep_base_data %d\n",
++		   ab_pci->msi_ep_base_data);
++
++	return 0;
++}
++
+ static int ath12k_pci_claim(struct ath12k_pci *ab_pci, struct pci_dev *pdev)
+ {
+ 	struct ath12k_base *ab = ab_pci->ab;
+@@ -1286,6 +1305,17 @@ static int ath12k_pci_probe(struct pci_dev *pdev,
+ 		goto err_ce_free;
+ 	}
+ 
++	/* kernel may allocate a dummy vector before request_irq and
++	 * then allocate a real vector when request_irq is called.
++	 * So get msi_data here again to avoid spurious interrupt
++	 * as msi_data will configured to srngs.
++	 */
++	ret = ath12k_pci_config_msi_data(ab_pci);
++	if (ret) {
++		ath12k_err(ab, "failed to config msi_data: %d\n", ret);
++		goto err_free_irq;
++	}
++
+ 	ret = ath12k_core_init(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to init core: %d\n", ret);
+-- 
+2.34.1
 
