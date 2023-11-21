@@ -2,53 +2,51 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5155C61D88
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Nov 2023 02:13:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35773C5AD4C
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Nov 2023 02:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233167AbjKUCNx (ORCPT
+        id S229608AbjKUCZ0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Nov 2023 21:13:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53620 "EHLO
+        Mon, 20 Nov 2023 21:25:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233141AbjKUCNv (ORCPT
+        with ESMTP id S229522AbjKUCZZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Nov 2023 21:13:51 -0500
+        Mon, 20 Nov 2023 21:25:25 -0500
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAA93D8
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 18:13:47 -0800 (PST)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AL0ocqv010832;
-        Tue, 21 Nov 2023 02:13:38 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D079C8
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Nov 2023 18:25:22 -0800 (PST)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AL0ciZU022562;
+        Tue, 21 Nov 2023 02:25:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=qcppdkim1;
- bh=3T3tsbrW2QCOzTzf5sP4r+PMl/ssqlywb08dph4B51U=;
- b=P2uILgCcLSuh6b60s8QrtUkNE9PJ1Wxqr5ydsjFEbsMga69TLZegFlwJxQQxHS/y7qic
- ww6macmGyeNh3a66P+FmwIet4tsruL+eLFSEPfxMMwzH9IEULxqURbX9/COPaOmLxG8N
- dPExMR/s6BzjpgrjYnt9RqSrPaDbIydiCDoRpoXnVB1J+r3DV4c2aHVyWIguOrXwnEfp
- 8f7ijBKoP0M5y4cdTG6V+p9YZCuoWrhnC8L3GmYzgn85H5Ahki9z4QZtwRz5m1+49lV9
- 2Yi28/edCCa+rux+zTaWYTVi6qYViPX47yNTS6dmHp86FMA7vWJsBrdmZ7HKBWtpGFB/ sQ== 
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ugdxmgm2d-1
+ subject : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=qcppdkim1;
+ bh=0REo6nX+5s0gJx4U7jtL994EgSVQBUDxH5778eo5r/M=;
+ b=IFTQSSep664wLCyzNsWBMHJ/ge7mN1CfrlawDww1CghqLpUJGRwgjIzfZ3W6Lgz2fZ58
+ 4P/jCZpOSUDYxJZUJOosgrz8Xsm7sBnRRNZdnK837hShbzbGAWsy6P9xf3UpIrRIbjrN
+ pQ/J1gM4soop//jc9PYKPpPUV3zXAb89FTsQvs4Ia80P4KcuKjKf7bP7lVm5TBl1WZE2
+ MtDZpOA7XdgTXQFrNNgLeL4x9/Xr5t9FQNAvxuH7EflHxlJNGN0uKnsVASXdqpnZHiTI
+ ZR6jUOQsSX1Cgwi4MR6oB27KARjJAHZ+PbL9cL2zD07jKkGqC/DRKaIdMORCQ2HIA2SO ww== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ug53722db-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Nov 2023 02:13:37 +0000
+        Tue, 21 Nov 2023 02:25:18 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AL2Dbt0031537
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AL2PHA6007995
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 21 Nov 2023 02:13:37 GMT
+        Tue, 21 Nov 2023 02:25:17 GMT
 Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 20 Nov 2023 18:13:36 -0800
+ 15.2.1118.40; Mon, 20 Nov 2023 18:25:16 -0800
 From:   Kang Yang <quic_kangyang@quicinc.com>
 To:     <ath12k@lists.infradead.org>
 CC:     <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
-Subject: [PATCH v2 3/7] wifi: ath12k: use ATH12K_PCI_IRQ_DP_OFFSET for DP IRQ
-Date:   Tue, 21 Nov 2023 10:12:59 +0800
-Message-ID: <20231121021304.12966-4-quic_kangyang@quicinc.com>
+Subject: [PATCH v2] wifi: ath12k: fix and enable AP mode for WCN7850
+Date:   Tue, 21 Nov 2023 10:24:59 +0800
+Message-ID: <20231121022459.17209-1-quic_kangyang@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231121021304.12966-1-quic_kangyang@quicinc.com>
-References: <20231121021304.12966-1-quic_kangyang@quicinc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -57,68 +55,83 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: av0r_GpyUKHOJpfaVQS4LXVKn5yRNyyN
-X-Proofpoint-ORIG-GUID: av0r_GpyUKHOJpfaVQS4LXVKn5yRNyyN
+X-Proofpoint-ORIG-GUID: o0XCQPTAJkQoukuzLAlgOThBp2gEYInH
+X-Proofpoint-GUID: o0XCQPTAJkQoukuzLAlgOThBp2gEYInH
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-20_22,2023-11-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
- phishscore=0 clxscore=1015 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 spamscore=0 adultscore=0 impostorscore=0
- mlxlogscore=610 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311060000 definitions=main-2311210013
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ priorityscore=1501 bulkscore=0 phishscore=0 suspectscore=0 adultscore=0
+ mlxlogscore=942 spamscore=0 malwarescore=0 mlxscore=0 clxscore=1015
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311210015
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Like ATH12K_PCI_IRQ_CE0_OFFSET, define ATH12K_PCI_IRQ_DP_OFFSET for
-DP to save the IRQ instead of base_vector from MSI config.
+For AP mode, the peer is created earlier in ath12k_mac_op_add_interface().
+But ath12k_mac_op_assign_vif_chanctx() will try to create peer again.
+Then an error will return which make startup of AP mode fail.
+
+Kernel log:
+[ 5017.665006] ath12k_pci 0000:04:00.0: failed to create peer after vdev start delay: -22
+
+wpa_supplicant log:
+Failed to set beacon parameters
+Interface initialization failed
+wls1: interface state UNINITIALIZED->DISABLED
+wls1: AP-DISABLED
+wls1: Unable to setup interface.
+Failed to initialize AP interface
+wls1: interface state DISABLED->DISABLED
+wls1: AP-DISABLED
+
+So change this check and enable AP mode for WCN7850, then soft AP can
+work normally.
 
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
 
 Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
 ---
 
-v2: No change from v1.
+v2: fix Subject content.
 
----
- drivers/net/wireless/ath/ath12k/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+--
+ drivers/net/wireless/ath/ath12k/hw.c  | 3 ++-
+ drivers/net/wireless/ath/ath12k/mac.c | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 7f984a80fb27..4b872eff087c 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -17,7 +17,8 @@
- #define ATH12K_PCI_BAR_NUM		0
- #define ATH12K_PCI_DMA_MASK		32
+diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
+index 2245fb510ba2..b55cf33e37bd 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.c
++++ b/drivers/net/wireless/ath/ath12k/hw.c
+@@ -949,7 +949,8 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
+ 		.rx_mac_buf_ring = true,
+ 		.vdev_start_delay = true,
  
--#define ATH12K_PCI_IRQ_CE0_OFFSET		3
-+#define ATH12K_PCI_IRQ_CE0_OFFSET	3
-+#define ATH12K_PCI_IRQ_DP_OFFSET	14
+-		.interface_modes = BIT(NL80211_IFTYPE_STATION),
++		.interface_modes = BIT(NL80211_IFTYPE_STATION) |
++				   BIT(NL80211_IFTYPE_AP),
+ 		.supports_monitor = false,
  
- #define WINDOW_ENABLE_BIT		0x40000000
- #define WINDOW_REG_ADDRESS		0x310c
-@@ -511,9 +512,8 @@ static irqreturn_t ath12k_pci_ext_interrupt_handler(int irq, void *arg)
- static int ath12k_pci_ext_irq_config(struct ath12k_base *ab)
- {
- 	int i, j, ret, num_vectors = 0;
--	u32 user_base_data = 0, base_vector = 0, base_idx;
-+	u32 user_base_data = 0, base_vector = 0;
+ 		.idle_ps = true,
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index fc0d14ea328e..b698e55a5b7b 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -6380,8 +6380,8 @@ ath12k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
+ 	}
  
--	base_idx = ATH12K_PCI_IRQ_CE0_OFFSET + CE_COUNT_MAX;
- 	ret = ath12k_pci_get_user_msi_assignment(ab, "DP",
- 						 &num_vectors,
- 						 &user_base_data,
-@@ -542,7 +542,7 @@ static int ath12k_pci_ext_irq_config(struct ath12k_base *ab)
- 		}
- 
- 		irq_grp->num_irq = num_irq;
--		irq_grp->irqs[0] = base_idx + i;
-+		irq_grp->irqs[0] = ATH12K_PCI_IRQ_DP_OFFSET + i;
- 
- 		for (j = 0; j < irq_grp->num_irq; j++) {
- 			int irq_idx = irq_grp->irqs[j];
+ 	if (ab->hw_params->vdev_start_delay &&
+-	    (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
+-	    arvif->vdev_type == WMI_VDEV_TYPE_MONITOR)) {
++	    arvif->vdev_type != WMI_VDEV_TYPE_AP &&
++	    arvif->vdev_type != WMI_VDEV_TYPE_MONITOR) {
+ 		param.vdev_id = arvif->vdev_id;
+ 		param.peer_type = WMI_PEER_TYPE_DEFAULT;
+ 		param.peer_addr = ar->mac_addr;
+
+base-commit: 9a36440d929d134c56030a8492405708a143f580
 -- 
 2.34.1
 
