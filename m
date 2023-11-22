@@ -2,66 +2,66 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5C3C61D97
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 18:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3B9C61D9B
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 18:23:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235134AbjKVSW6 (ORCPT
+        id S1344079AbjKVSXY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Nov 2023 13:22:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44496 "EHLO
+        Wed, 22 Nov 2023 13:23:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231478AbjKVSW4 (ORCPT
+        with ESMTP id S231478AbjKVSXX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Nov 2023 13:22:56 -0500
+        Wed, 22 Nov 2023 13:23:23 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1C2D101
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Nov 2023 10:22:53 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17796C433C8;
-        Wed, 22 Nov 2023 18:22:51 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D387B2;
+        Wed, 22 Nov 2023 10:23:20 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C4AAC433C7;
+        Wed, 22 Nov 2023 18:23:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700677373;
-        bh=BN7rd/tFqCbZXrOesCyWAkSFr6Mf/2JkzS1pjZzr/EI=;
+        s=k20201202; t=1700677400;
+        bh=rsm/2nRii3HbKt0aA439i27NiMC571tbBfMbl0xkr98=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=CQgVo1J1VdjQa0NfgheujtzrBa00ttQsAMm8T2MeXE74ANXCBsS9vAJbdwSsbiFYq
-         ZHXjBlZlaIQkyum9GA6jtkC0R8Q0eSSX/DwGFQyPlO6oJZgPriMcCNJiBS4yG6Geze
-         uF7Vng7pn+bDHMLBsZNPWAHhO8fHwOtOGDyrE84D5/4ES2AcpvduuIECgmMz6buc+g
-         bor25aDTNti3diNxO+qzyrQteX4mvYuXlVyTDOyzd4t5Ratwg1yQFl+gj86QXzjI9L
-         3U15gQt1tx8v/VID+ERyMRyVW7ioUf3U+Rhq5OrbRVkyT/48uFVq7c72m5nUVTmnKD
-         mZ2X0aXq9TFUg==
+        b=ZqALDBOpZeAJOS33W+umAg2VxzMDVHcq4ryuaSj4ZcBAK4k5LAZqDxMxR9+G4rsW5
+         CjS6qmm9zenFVCSMdL9AlFb3wK64w2uuSvxsWE6Zgiswk4l6ElH1lz4nAZq81ZW9vz
+         bDBTZFbNBbgWVbuF08HCYP5IjR9/diucGmoHjjC0F0zwT3FYUFtrNbNE9ubnCPTfrT
+         HjdM144cfV4CXQsCpmXCzc76LJy0MRxuRxLNJ0gZsDYNgsCR06AATLNbYOu6YxWjJ9
+         FRTt+F8xpuIXH6X3lCbTiTm4wJ9f4FDyDRedvDxHHTk1jY+8IWrT4TwW8Mf3DPYe3t
+         /XrFyoyIjq1fw==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wifi: ath10k: simplify __ath10k_htt_tx_txq_recalc()
+Subject: Re: [PATCH] wifi: ath10k: Remove unused struct ath10k_htc_frame
 From:   Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20231102115459.69791-1-dmantipov@yandex.ru>
-References: <20231102115459.69791-1-dmantipov@yandex.ru>
-To:     Dmitry Antipov <dmantipov@yandex.ru>
-Cc:     Jeff Johnson <quic_jjohnson@quicinc.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Dmitry Antipov <dmantipov@yandex.ru>
+In-Reply-To: <20231103-ath10k_htc_frame-v1-1-ff00b38a9630@quicinc.com>
+References: <20231103-ath10k_htc_frame-v1-1-ff00b38a9630@quicinc.com>
+To:     Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc:     <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <170067737021.158537.658295083023097640.kvalo@kernel.org>
-Date:   Wed, 22 Nov 2023 18:22:51 +0000 (UTC)
+Message-ID: <170067739699.158537.769046394140345550.kvalo@kernel.org>
+Date:   Wed, 22 Nov 2023 18:23:18 +0000 (UTC)
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dmitry Antipov <dmantipov@yandex.ru> wrote:
+Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
 
-> Since 'ieee80211_txq_get_depth()' allows NULL for 2nd and
-> 3rd arguments, simplify '__ath10k_htt_tx_txq_recalc()' by
-> dropping unused 'frame_cnt'. Compile tested only.
+> struct ath10k_htc_frame is unused, and since it illogically contains
+> two consecutive flexible arrays, it could never be used, so remove it.
 > 
-> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
-> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> No functional changes, compile tested only.
+> 
+> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-08500f6eaa91 wifi: ath10k: simplify __ath10k_htt_tx_txq_recalc()
+2bc76fef1a9a wifi: ath10k: Remove unused struct ath10k_htc_frame
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20231102115459.69791-1-dmantipov@yandex.ru/
+https://patchwork.kernel.org/project/linux-wireless/patch/20231103-ath10k_htc_frame-v1-1-ff00b38a9630@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
