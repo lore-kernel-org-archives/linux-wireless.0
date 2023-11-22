@@ -2,102 +2,103 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A20C61D92
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 06:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84CE6C072A2
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 06:40:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229631AbjKVGPf (ORCPT
+        id S234797AbjKVGkF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Nov 2023 01:15:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42676 "EHLO
+        Wed, 22 Nov 2023 01:40:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbjKVGPe (ORCPT
+        with ESMTP id S229561AbjKVGkE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Nov 2023 01:15:34 -0500
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F851A4
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2023 22:15:28 -0800 (PST)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3AM6FK9k82081039, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-        by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3AM6FK9k82081039
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 22 Nov 2023 14:15:20 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 22 Nov 2023 14:15:20 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 22 Nov
- 2023 14:15:20 +0800
-From:   Ping-Ke Shih <pkshih@realtek.com>
-To:     <kvalo@kernel.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wifi: rtw88: debug: remove wrapper of rtw_dbg()
-Date:   Wed, 22 Nov 2023 14:14:29 +0800
-Message-ID: <20231122061429.34487-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+        Wed, 22 Nov 2023 01:40:04 -0500
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EF7E19D
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2023 22:40:00 -0800 (PST)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AM4x9Ut021696;
+        Wed, 22 Nov 2023 06:39:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=05Ai4kFhbQgeobP1c/yOIK/orqSWfTvtFADCmroXUrY=;
+ b=QL1anAsRkLeKY9P6EQD77dWKK9D1iblOsZzNJ2iqorOb9NKraSn+uQH7DdU6uo2pNop4
+ AVlpAaSnaszlzgGOnIhr1DhBU/TMZu5gsj/zXLR/qIoJQBKS3G1XbUpn9iPtR0VxpSrJ
+ bpY2jy2G2pixFQwirW8Ns8hA2QDobuoBxHQV9E/HcoyJfb2aQYpmEfUJkqRW0QNtMmjb
+ KeJ9V82SbfmDvdkIxrMHvJT4YvZzFKFZXdhEWY/lP2bzyb3oBgFw5OG3D/HJZP+aFEpX
+ r0G7DpoFIpVJ20mdcOU6p5dOTdeAtDhHSpcAhth7mFi/HO8wBbtf+6+4wGTSuIYW0wbp AA== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ugu54atdw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 22 Nov 2023 06:39:55 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3AM6dsho030401
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 22 Nov 2023 06:39:54 GMT
+Received: from tamizhr-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Tue, 21 Nov 2023 22:39:52 -0800
+From:   Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+To:     <ath12k@lists.infradead.org>
+CC:     <linux-wireless@vger.kernel.org>,
+        Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Subject: [PATCH 1/3] wifi: ath12k: fix calling correct function for rx monitor mode
+Date:   Wed, 22 Nov 2023 12:09:30 +0530
+Message-ID: <20231122063932.10321-2-quic_tamizhr@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231122063932.10321-1-quic_tamizhr@quicinc.com>
+References: <20231122063932.10321-1-quic_tamizhr@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [172.21.69.94]
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: njW0vcUl3vg1XE1se5DJREvFwUW4aaYY
+X-Proofpoint-ORIG-GUID: njW0vcUl3vg1XE1se5DJREvFwUW4aaYY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-22_04,2023-11-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ bulkscore=0 phishscore=0 impostorscore=0 priorityscore=1501 spamscore=0
+ lowpriorityscore=0 mlxlogscore=928 adultscore=0 suspectscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311220046
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove unnecessary wrapper of rtw_dbg(), and just call it directly.
+Currently in ath12k_dp_tx_htt_monitor_mode_ring_config()
+ath12k_dp_tx_htt_tx_monitor_mode_ring_config() function wrongly called
+twice. Fix that by calling ath12k_dp_tx_htt_rx_monitor_mode_ring_config().
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Currently monitor mode is disabled in driver so the change is compile
+tested and boot sequence verified.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 6 +++---
- drivers/net/wireless/realtek/rtw88/debug.h | 6 ++----
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp_tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 35bc37a3c469..1b2ad81838be 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -1314,8 +1314,8 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
+index 492ca6ce6714..8b5ca90d4f17 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
+@@ -1030,7 +1030,7 @@ int ath12k_dp_tx_htt_monitor_mode_ring_config(struct ath12k *ar, bool reset)
+ 		return ret;
+ 	}
  
- #ifdef CONFIG_RTW88_DEBUG
- 
--void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
--	       const char *fmt, ...)
-+void rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
-+	     const char *fmt, ...)
- {
- 	struct va_format vaf = {
- 		.fmt = fmt,
-@@ -1330,6 +1330,6 @@ void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
- 
- 	va_end(args);
- }
--EXPORT_SYMBOL(__rtw_dbg);
-+EXPORT_SYMBOL(rtw_dbg);
- 
- #endif /* CONFIG_RTW88_DEBUG */
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
-index a03ced11bbe0..f20c0471c82a 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.h
-+++ b/drivers/net/wireless/realtek/rtw88/debug.h
-@@ -43,10 +43,8 @@ static inline void rtw_debugfs_init(struct rtw_dev *rtwdev) {}
- #ifdef CONFIG_RTW88_DEBUG
- 
- __printf(3, 4)
--void __rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
--	       const char *fmt, ...);
--
--#define rtw_dbg(rtwdev, a...) __rtw_dbg(rtwdev, ##a)
-+void rtw_dbg(struct rtw_dev *rtwdev, enum rtw_debug_mask mask,
-+	     const char *fmt, ...);
- 
- static inline bool rtw_dbg_is_enabled(struct rtw_dev *rtwdev,
- 				      enum rtw_debug_mask mask)
+-	ret = ath12k_dp_tx_htt_tx_monitor_mode_ring_config(ar, reset);
++	ret = ath12k_dp_tx_htt_rx_monitor_mode_ring_config(ar, reset);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to setup rx monitor filter %d\n", ret);
+ 		return ret;
 -- 
-2.25.1
+2.17.1
 
