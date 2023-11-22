@@ -2,42 +2,42 @@ Return-Path: <linux-wireless-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2076C61D97
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 03:07:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8108FC61D92
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Nov 2023 03:07:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343566AbjKVDHW (ORCPT
+        id S235068AbjKVDHY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Nov 2023 22:07:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        Tue, 21 Nov 2023 22:07:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235054AbjKVDHT (ORCPT
+        with ESMTP id S235078AbjKVDHT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 21 Nov 2023 22:07:19 -0500
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AE271720
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2023 19:07:01 -0800 (PST)
-X-UUID: 3133ca3288e411eea33bb35ae8d461a2-20231122
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E29E710DE
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Nov 2023 19:07:02 -0800 (PST)
+X-UUID: 316d078e88e411eea33bb35ae8d461a2-20231122
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=jSFFjTdw0ItTbmm8+XW8dK5TPxES/Z2vXBWRweW0Bno=;
-        b=QG+4fdkcBIIn0wMgvmpuwB1QlnOBCqEjclsJnExgtzD5sF2XJp5z/2Vrb+eZyRE/iqEgSNuAgEZYBeM511uM4I0wOI7gItTT8KFTTfA5mnBlBgjEB1zvyYsxUsoNeqbvLTK8ZXgw0DUGNpa1msHQbr6L8poNz/JJubEvpilQ1rk=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=OV8s5wCvnPXepXNDZfhDStlrcZJfc8V8KOxPfWMOlBQ=;
+        b=CwXgr1+8BItr4Wluzrkb/pdQh+oGIsk4sJA0pXlJcGOIx44lebPcgEiiFWWGIhJH0gzpyvpTE6bGgQnjYZ0DA5PW6sK7l2DYDLN0kyGucmMwwYYCcqBNMdaixA4jtZBGrZB4bzTIJKGIznSIBvyqjDJqfSP05sBslwaxtmpHuME=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.33,REQID:80f020a1-9c63-4183-a9e5-ac4f7033f7f6,IP:0,U
+X-CID-O-INFO: VERSION:1.1.33,REQID:a95eac47-00c1-40a3-84c7-583680909165,IP:0,U
         RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
         release,TS:0
-X-CID-META: VersionHash:364b77b,CLOUDID:692aed72-1bd3-4f48-b671-ada88705968c,B
+X-CID-META: VersionHash:364b77b,CLOUDID:53ad5560-c89d-4129-91cb-8ebfae4653fc,B
         ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
         RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
         DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0,NGT
 X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 3133ca3288e411eea33bb35ae8d461a2-20231122
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+X-UUID: 316d078e88e411eea33bb35ae8d461a2-20231122
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
         (envelope-from <mingyen.hsieh@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1565193917; Wed, 22 Nov 2023 11:06:55 +0800
+        with ESMTP id 1714578632; Wed, 22 Nov 2023 11:06:55 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.26; Wed, 22 Nov 2023 11:06:54 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -54,9 +54,9 @@ CC:     <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
         <linux-wireless@vger.kernel.org>,
         <linux-mediatek@lists.infradead.org>,
         Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Subject: [PATCH v4 1/3] wifi: mt76: mt7921: fix country count limitation for CLC
-Date:   Wed, 22 Nov 2023 11:06:44 +0800
-Message-ID: <20231122030646.31784-2-mingyen.hsieh@mediatek.com>
+Subject: [PATCH v4 3/3] wifi: mt76: mt7921: fix wrong 6Ghz power type
+Date:   Wed, 22 Nov 2023 11:06:46 +0800
+Message-ID: <20231122030646.31784-4-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20231122030646.31784-1-mingyen.hsieh@mediatek.com>
 References: <20231122030646.31784-1-mingyen.hsieh@mediatek.com>
@@ -68,62 +68,94 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Due to the increase in the number of power tables for 6Ghz on CLC,
-the variable nr_country is no longer sufficient to represent the
-total quantity. Therefore, we have switched to calculating the
-length of clc buf to obtain the correct power table. Additionally,
-the version number has been incremented to 1.
+To avoid using incorrect 6g power settings after disconnection,
+it should to update back to the default state when disconnected.
 
-Fixes: 23bdc5d8cadf ("wifi: mt76: mt7921: introduce Country Location Control support")
+Fixes: 51ba0e3a15eb ("wifi: mt76: mt7921: add 6GHz power type support for clc")
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-
 ---
-v2:
-  - Convert type of buf_len from "__le16" to "u16".
----
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7921/main.c  | 38 +++++++++++++++++--
+ 1 file changed, 35 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index 753a4fc45c70..36ac004e1ec9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -1264,6 +1264,7 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
- 		u8 mtcl_conf;
- 		u8 rsvd[62];
- 	} __packed req = {
-+		.ver = 1,
- 		.idx = idx,
- 		.env = env_cap,
- 		.env_6g = dev->phy.power_type,
-@@ -1271,7 +1272,8 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
- 		.mtcl_conf = mt792x_acpi_get_mtcl_conf(&dev->phy, alpha2),
- 	};
- 	int ret, valid_cnt = 0;
--	u8 i, *pos;
-+	u16 buf_len = 0;
-+	u8 *pos;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 510a575a973b..0645417e0582 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -683,17 +683,45 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
+ }
  
- 	if (!clc)
- 		return 0;
-@@ -1281,12 +1283,15 @@ int __mt7921_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
- 	if (mt76_find_power_limits_node(&dev->mt76))
- 		req.cap |= CLC_CAP_DTS_EN;
+ static void
+-mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif)
++mt7921_calc_vif_num(void *priv, u8 *mac, struct ieee80211_vif *vif)
++{
++	u32 *num = priv;
++
++	if (!priv)
++		return;
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		*num += 1;
++		break;
++	default:
++		break;
++	}
++}
++
++static void
++mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif, bool is_add)
+ {
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+ 	struct mt792x_phy *phy = mvif->phy;
+ 	struct mt792x_dev *dev = phy->dev;
++	u32 valid_vif_num = 0;
++
++	ieee80211_iterate_active_interfaces(mt76_hw(dev),
++					    IEEE80211_IFACE_ITER_RESUME_ALL,
++					    mt7921_calc_vif_num, &valid_vif_num);
  
-+	buf_len = le16_to_cpu(clc->len) - sizeof(*clc);
- 	pos = clc->data;
--	for (i = 0; i < clc->nr_country; i++) {
-+	while (buf_len > 16) {
- 		struct mt7921_clc_rule *rule = (struct mt7921_clc_rule *)pos;
- 		u16 len = le16_to_cpu(rule->len);
-+		u16 offset = len + sizeof(*rule);
+-	if (hweight64(dev->mt76.vif_mask) > 1) {
++	if (valid_vif_num > 1) {
+ 		phy->power_type = MT_AP_DEFAULT;
+ 		goto out;
+ 	}
  
--		pos += len + sizeof(*rule);
-+		pos += offset;
-+		buf_len -= offset;
- 		if (rule->alpha2[0] != alpha2[0] ||
- 		    rule->alpha2[1] != alpha2[1])
- 			continue;
++	if (!is_add)
++		vif->bss_conf.power_type = IEEE80211_REG_UNSET_AP;
++
+ 	switch (vif->bss_conf.power_type) {
+ 	case IEEE80211_REG_SP_AP:
+ 		phy->power_type = MT_AP_SP;
+@@ -705,6 +733,8 @@ mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif)
+ 		phy->power_type = MT_AP_LPI;
+ 		break;
+ 	case IEEE80211_REG_UNSET_AP:
++		phy->power_type = MT_AP_UNSET;
++		break;
+ 	default:
+ 		phy->power_type = MT_AP_DEFAULT;
+ 		break;
+@@ -749,7 +779,7 @@ int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
+-	mt7921_regd_set_6ghz_power_type(vif);
++	mt7921_regd_set_6ghz_power_type(vif, true);
+ 
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ 
+@@ -811,6 +841,8 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 		list_del_init(&msta->wcid.poll_list);
+ 	spin_unlock_bh(&dev->mt76.sta_poll_lock);
+ 
++	mt7921_regd_set_6ghz_power_type(vif, false);
++
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ }
+ EXPORT_SYMBOL_GPL(mt7921_mac_sta_remove);
 -- 
 2.18.0
 
