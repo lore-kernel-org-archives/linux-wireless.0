@@ -1,29 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="aajMN46c"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fCJPldP3"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 789CFD54
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:59 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1B68D67
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:28:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=tM/1/OsfFc09xKH60EPDi8LDQODPMlUF4rRrAn1WasU=;
-	t=1700778479; x=1701988079; b=aajMN46cDVeXf/ZI/179mL+YdZ5nsOl8x9vVo2dJfpSxI6X
-	ca5k+5dSU51x/NuJ9utNnwZcHxneiVWV4LGmrtXy6vfN2zsYQmNQu6wEDkdY95ji1ZxUsSkFbrYXv
-	Twfn+Y2JuoX6cwDa5ndSdtUh4ecv0hZXbw64HFDFeibqC4nFLbSejpln5ToLDSUkJ1XrFWBxS0yA7
-	0ckzk65WBXl3udpeY32LFWXokBU/UJvFe36PaMlHlKvkYAQBwEVtHevSVo3ZMPvWVEJk4AgJWI9QB
-	Xx2GQjAW0Y4FHs6U58maIRLBST6ac1p19pq43JlDuoi+gVUrcSms6bDlobyARNEA==;
+	Resent-Cc:Resent-Message-ID; bh=Q2KCkqGxx8qJdzfHAlSCBvED4kseHGHCcqLQHBjP2Wk=;
+	t=1700778481; x=1701988081; b=fCJPldP3No5fdHaKXkCC6WulvTQ/mSYChMOGLy02eRywAKy
+	ZHeSyQPvwbeGJqCzZiMIXFEid1L/+3+M8lkycQwcIt/E67KaQILJ4oHFz6QJlG8jn2zCRENCOMDjh
+	G4d4e5Z0ZyLkj2hELabNUu8X6tCEEAL+tglw1LZb0wRoSC0SzA/JpnnkQWPlNO/AF9dJwobfP7Or0
+	Pz1a5Zk03jJGzkqNv9DKfsmXp5DgSk5n1jJDkx1CnKZYfa39qpzxkhjVIJXcuMmEN/rq2YpdhwUwx
+	pz5PYDNeoCfhuqa6tL0keo5GRik5VagWaszvGmBhRSJn8hursX0+a4vfc/cXPezw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IAu-00000001Y53-1EsP;
-	Thu, 23 Nov 2023 23:27:56 +0100
+	id 1r6IAx-00000001Y53-2YCs;
+	Thu, 23 Nov 2023 23:27:59 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 06/13] wifi: mac80211: disallow drivers with HT wider than HE
-Date: Thu, 23 Nov 2023 23:14:43 +0100
-Message-ID: <20231123231436.1617dc22842f.I4df51ad2f4c844615c168bf9bdb498925b3c77d4@changeid>
+Subject: [RFC PATCH v2 10/13] wifi: mac80211: chan: chandef is non-NULL for reserved
+Date: Thu, 23 Nov 2023 23:14:47 +0100
+Message-ID: <20231123231436.1ffba9763c23.I12287452f42c54baf75821e75491cf6d021af20a@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231123221436.143254-14-johannes@sipsolutions.net>
 References: <20231123221436.143254-14-johannes@sipsolutions.net>
@@ -37,46 +37,33 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-To simplify the code in the next patch, disallow drivers
-supporting 40 MHz in HT but not HE, since we'd otherwise
-have to track local maximum bandwidth per mode there.
+The last caller of this with a NULL argument was related to
+the non-chanctx code, so we can now remove this odd logic.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/main.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ net/mac80211/chan.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 033a5261ac3a..48e012ee1ae4 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1115,8 +1115,26 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		supp_vht = supp_vht || sband->vht_cap.vht_supported;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 2974fe9ddb74..fdcc3d777190 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -90,11 +90,11 @@ ieee80211_chanctx_reserved_chandef(struct ieee80211_local *local,
  
- 		for_each_sband_iftype_data(sband, i, iftd) {
-+			u8 he_40_mhz_cap;
-+
- 			supp_he = supp_he || iftd->he_cap.has_he;
- 			supp_eht = supp_eht || iftd->eht_cap.has_eht;
-+
-+			if (sband->band == NL80211_BAND_2GHZ)
-+				he_40_mhz_cap =
-+					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
-+			else
-+				he_40_mhz_cap =
-+					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G;
-+
-+			/* currently no support for HE client where HT has 40 MHz but not HT */
-+			if (iftd->he_cap.has_he &&
-+			    iftd->types_mask & (BIT(NL80211_IFTYPE_STATION) |
-+						BIT(NL80211_IFTYPE_P2P_CLIENT)) &&
-+			    sband->ht_cap.ht_supported &&
-+			    sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
-+			    !(iftd->he_cap.he_cap_elem.phy_cap_info[0] & he_40_mhz_cap))
-+				return -EINVAL;
- 		}
+ 	lockdep_assert_wiphy(local->hw.wiphy);
  
- 		/* HT, VHT, HE require QoS, thus >= 4 queues */
++	if (WARN_ON(!compat))
++		return NULL;
++
+ 	list_for_each_entry(link, &ctx->reserved_links,
+ 			    reserved_chanctx_list) {
+-		if (!compat)
+-			compat = &link->reserved_chandef;
+-
+ 		compat = cfg80211_chandef_compatible(&link->reserved_chandef,
+ 						     compat);
+ 		if (!compat)
 -- 
 2.42.0
 
