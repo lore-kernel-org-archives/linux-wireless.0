@@ -1,29 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="SAhTNLHJ"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="aajMN46c"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DEB1D64
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:28:00 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 789CFD54
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=ITJCzxR8J+1dD23bAsKOSvc66aUksZiFuwJM352tX+E=;
-	t=1700778480; x=1701988080; b=SAhTNLHJ1oFdreRDZFL/VXJg/54YiArD1zFKJdCf1xrlEFM
-	pmXp4kC6ZolR8/gLFc5eI9XAWeCsS9azfzM862D6SdVNIagZno4jN0PpeKjMJvj4wNs/U1ugDag7L
-	c8jzbuRbMm0h7bWga3TbI8nVFVwm2hwUjqWyAQ9fK3kmJ3JU2oK57z3tVCdjoLlouHYPWSbtDOWtl
-	hjpciaFAPxQE7y/e0CZuMhkgjn2dnHFl62PffHP7saDfHi21Eekeu3AcObdJuv2VJJHueVJswofh4
-	sM5gmYEnh8onEBs/DKlQSuK+FCHdJsqvgjxmNl5hBpjUFfzgqBiNgEZiv+0toYqQ==;
+	Resent-Cc:Resent-Message-ID; bh=tM/1/OsfFc09xKH60EPDi8LDQODPMlUF4rRrAn1WasU=;
+	t=1700778479; x=1701988079; b=aajMN46cDVeXf/ZI/179mL+YdZ5nsOl8x9vVo2dJfpSxI6X
+	ca5k+5dSU51x/NuJ9utNnwZcHxneiVWV4LGmrtXy6vfN2zsYQmNQu6wEDkdY95ji1ZxUsSkFbrYXv
+	Twfn+Y2JuoX6cwDa5ndSdtUh4ecv0hZXbw64HFDFeibqC4nFLbSejpln5ToLDSUkJ1XrFWBxS0yA7
+	0ckzk65WBXl3udpeY32LFWXokBU/UJvFe36PaMlHlKvkYAQBwEVtHevSVo3ZMPvWVEJk4AgJWI9QB
+	Xx2GQjAW0Y4FHs6U58maIRLBST6ac1p19pq43JlDuoi+gVUrcSms6bDlobyARNEA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IAv-00000001Y53-48mx;
-	Thu, 23 Nov 2023 23:27:58 +0100
+	id 1r6IAu-00000001Y53-1EsP;
+	Thu, 23 Nov 2023 23:27:56 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 08/13] wifi: mac80211: workaround for tests that drop capabilities during CSA
-Date: Thu, 23 Nov 2023 23:14:45 +0100
-Message-ID: <20231123231436.af4c46e01358.I4d433a27e206996acd79b59e4d3e0c84d33ad9cb@changeid>
+Subject: [RFC PATCH v2 06/13] wifi: mac80211: disallow drivers with HT wider than HE
+Date: Thu, 23 Nov 2023 23:14:43 +0100
+Message-ID: <20231123231436.1617dc22842f.I4df51ad2f4c844615c168bf9bdb498925b3c77d4@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231123221436.143254-14-johannes@sipsolutions.net>
 References: <20231123221436.143254-14-johannes@sipsolutions.net>
@@ -37,55 +37,46 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There are some tests that for some reason drop HT (and higher)
-capability/operation elements during CSA, which leads to the
-code now disconnecting. The affected tests are:
- - ap_csa_1_switch
- - ap_csa_2_switches
- - ap_csa_ecsa_only
- - ap_vht80_csa
- - ap_vht_csa_vht40_disable
- - he80_csa
- - ocv_sa_query_csa
- - ocv_sa_query_csa_no_resp
-
-Work around such APs, but I actually don't think we really
-should be doing that.
+To simplify the code in the next patch, disallow drivers
+supporting 40 MHz in HT but not HE, since we'd otherwise
+have to track local maximum bandwidth per mode there.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ net/mac80211/main.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fdcdba2b2c9e..aa1b07c0548a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -919,9 +919,10 @@ static int ieee80211_config_bw(struct ieee80211_link_data *link,
- 					      elems, true, &link->u.mgd.conn,
- 					      &ap_chandef);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 033a5261ac3a..48e012ee1ae4 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1115,8 +1115,26 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		supp_vht = supp_vht || sband->vht_cap.vht_supported;
  
--	if (ap_mode != link->u.mgd.conn.mode) {
-+	/* W/A for some tests, make that == again? */
-+	if (ap_mode > link->u.mgd.conn.mode) {
- 		link_info(link,
--			  "AP appears to change mode (expected %s, found %s), disconnect\n",
-+			  "AP appears to change mode (expected at most %s, got %s), disconnect\n",
- 			  ieee80211_conn_mode_str(link->u.mgd.conn.mode),
- 			  ieee80211_conn_mode_str(ap_mode));
- 		return -EINVAL;
-@@ -953,6 +954,11 @@ static int ieee80211_config_bw(struct ieee80211_link_data *link,
- 	if (cfg80211_chandef_identical(&ap_chandef, &link->conf->chandef))
- 		return 0;
- 
-+	/* W/A for some tests - remove it again? */
-+	if (ap_chandef.width == NL80211_CHAN_WIDTH_20_NOHT &&
-+	    link->u.mgd.conn.mode > IEEE80211_CONN_MODE_LEGACY)
-+		ap_chandef.width = NL80211_CHAN_WIDTH_20;
+ 		for_each_sband_iftype_data(sband, i, iftd) {
++			u8 he_40_mhz_cap;
 +
- 	link_info(link,
- 		  "AP %pM changed bandwidth, new config is %d.%03d MHz, width %d (%d.%03d/%d MHz)\n",
- 		  link->u.mgd.bssid, ap_chandef.chan->center_freq,
+ 			supp_he = supp_he || iftd->he_cap.has_he;
+ 			supp_eht = supp_eht || iftd->eht_cap.has_eht;
++
++			if (sband->band == NL80211_BAND_2GHZ)
++				he_40_mhz_cap =
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
++			else
++				he_40_mhz_cap =
++					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G;
++
++			/* currently no support for HE client where HT has 40 MHz but not HT */
++			if (iftd->he_cap.has_he &&
++			    iftd->types_mask & (BIT(NL80211_IFTYPE_STATION) |
++						BIT(NL80211_IFTYPE_P2P_CLIENT)) &&
++			    sband->ht_cap.ht_supported &&
++			    sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
++			    !(iftd->he_cap.he_cap_elem.phy_cap_info[0] & he_40_mhz_cap))
++				return -EINVAL;
+ 		}
+ 
+ 		/* HT, VHT, HE require QoS, thus >= 4 queues */
 -- 
 2.42.0
 
