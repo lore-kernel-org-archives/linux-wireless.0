@@ -1,31 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="uyEeSJYE"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rHax5LHP"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE026D54
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:54 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 704D9D64
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=mP8Wq6CXAMqmmi4Cc2dRJlLYRuw/4wvj4uk52hARVCc=; t=1700778474; x=1701988074; 
-	b=uyEeSJYERZBZrETKMLCry62pGLFDJepvpMMDtQN/4TFRa/uQBYCXkKWL4M5pjF92XvGya89aSBe
-	djt5MMHDmUHNOetRw+TcUBCc6P5+0WaNSVGib4zgrlaW7TT4zRM2I+cca/2neATpfwYQ1K0jA+m2t
-	W8koakGICDtFpTul0GlIxitHgpb7qbSBmaxevymW9Xs4VV4oub6HKJm2lFAhG3+hZ1+Of1VckxqE6
-	s7uY74ePbtHlWIGDAua59LwUpE6newR2wZf1KYAVj0/0/wDdUarIEVYhfAYMJ5lEf/s2drWtyqZ3R
-	PKC5lpP5MMdvWafA0grhWiVZZbwoodzUfO7w==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=TKYfuNSNeNnvEUmjh4pr20odwS4M+QXd1x4w8HGydEo=;
+	t=1700778476; x=1701988076; b=rHax5LHP7d/G8cuvAEErQeGrxEphbMd5baKhQqv+nuZIofU
+	rHev2Rc9rDghPLfFZ9K1UvQ+8xtDQDJuryjAKt6rH9ve5pfUvm/790jhmZBsi+XdCL+pvJeqvtm05
+	sg0pdCNCTNyiGnn3PiyTQwO3+uF6qxxRxoroniK24b69DnLnxhDBbc/W4uBj86rx5ZeDncseI+fZk
+	5LW+llOLr+s1hLzAT5PYuKw7yu4u40VS8QQKwzzX6VeiJJPXU2GDNu9oVXti5xMmfeGyuKCNTBzyn
+	E6ASxIfPWgw92IoU/UYXUj3+wMLoUHptzVwJokpzTJ1ABGRR/QWGcVQPVXc35H4w==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IAq-00000001Y53-1UQi
-	for linux-wireless@vger.kernel.org;
-	Thu, 23 Nov 2023 23:27:52 +0100
+	id 1r6IAr-00000001Y53-2Ru6;
+	Thu, 23 Nov 2023 23:27:53 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH v2 00/13] refactor and wider-BW OFDMA support
-Date: Thu, 23 Nov 2023 23:14:37 +0100
-Message-ID: <20231123221436.143254-14-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC PATCH v2 02/13] wifi: mac80211: take EML capa/delay from assoc response
+Date: Thu, 23 Nov 2023 23:14:39 +0100
+Message-ID: <20231123231436.5bd5d9a20c39.I545e955675e2269a52496a22ae7822d95b40235e@changeid>
 X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231123221436.143254-14-johannes@sipsolutions.net>
+References: <20231123221436.143254-14-johannes@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -34,59 +35,64 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Continuing the work I already began in [1] (but hadn't so far posted
-a v2 of), this shows what really was the purpose of me looking at it,
-which I had alluded to earlier: supporting wider-bandwidth OFDMA in
-mac80211.
+The association response is more likely to be correct
+than a random scan result, which really also should be
+correct, but we generally prefer to take data from the
+association response, so do that here as well.
 
-While starting to work on it more after the channel request, I saw
-that the code that determines the channels etc. in the MLME is not
-really very amenable to the kinds of things I needed to have here,
-so I've done some major refactoring of that code, that's in patch 7.
+Also reset the data so it doesn't hang around from an
+old connection to a non-MLO connection, drivers would
+hopefully not look at it, but less surprise this way.
 
-Note that patch 5 breaks two hwsim tests, but the reason is that the
-code in wpa_supplicant doesn't take the HE/EHT operation into account
-when calculating the expected throughput, only the capabilities, so I
-believe that's just a bug there.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-Note also that I think that patch 8 shouldn't be there, an AP that
-drops any of HT/VHT/HE/EHT operation while doing a channel switch
-doesn't really seem quite reasonable to me. As noted there, that's
-affecting 8 more tests, and I've split out the workaround into this
-patch to show more obviously what's going on.
-
-Also, the refactor patch (patch 7) introduces a FIXME for puncturing,
-as it doesn't configure it properly from the start, but will then
-only reconfigure it when the first beacon is parsed. There were some
-additional patches about puncturing [2], and I need to take a look
-at those. I believe patch 3 there is already covered by what I've
-done in my patch 7 (partially it's the same), but I probably still
-need patch 1/2 in some way, and of course the driver patch isn't
-related at all.
-However, the right fix for the puncturing is to put it into the
-chandef as Aloka had originally suggested, but I questioned and
-somehow managed to convince her that it shouldn't be - I was quite
-clearly wrong about that. I already said I'd need to move it into
-the chandef, and at that point the FIXME in this code basically is
-addressed automatically. I didn't want to introduce any workarounds
-to this code instead.
-
-So ... yes I realize that these are some big changes, but I tend to
-think that they make the code better to understand/maintain, in
-particular the 'connection mode' struct that's easier to track.
-
-The hwsim tests seem to run cleanly apart from what I mentioned
-above, although I have 9 tests that always fail for me, and for
-some reason I cannot run the wmediumd tests right now.
-
-johannes
-
-[1] https://lore.kernel.org/r/20231109003040.4b25d42b8b14.I60d093b2fc81ca1853925a4d0ac3a2337d5baa5b@changeid
-[2] https://lore.kernel.org/linux-wireless/20230928055022.9670-1-quic_kangyang@quicinc.com/
-[3] https://lore.kernel.org/linux-wireless/20230928055022.9670-4-quic_kangyang@quicinc.com/
-
-
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 778eef2f06f1..2cdafabe46e0 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3068,6 +3068,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	memset(sdata->vif.bss_conf.tx_pwr_env, 0,
+ 	       sizeof(sdata->vif.bss_conf.tx_pwr_env));
+ 
++	sdata->vif.cfg.eml_cap = 0;
++	sdata->vif.cfg.eml_med_sync_delay = 0;
++
+ 	memset(&sdata->u.mgd.ttlm_info, 0,
+ 	       sizeof(sdata->u.mgd.ttlm_info));
+ 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy, &ifmgd->ttlm_work);
+@@ -4961,14 +4964,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		    eht_ml_elem &&
+ 		    ieee80211_mle_type_ok(eht_ml_elem->data + 1,
+ 					  IEEE80211_ML_CONTROL_TYPE_BASIC,
+-					  eht_ml_elem->datalen - 1)) {
++					  eht_ml_elem->datalen - 1))
+ 			supports_mlo = true;
+-
+-			sdata->vif.cfg.eml_cap =
+-				ieee80211_mle_get_eml_cap(eht_ml_elem->data + 1);
+-			sdata->vif.cfg.eml_med_sync_delay =
+-				ieee80211_mle_get_eml_med_sync_delay(eht_ml_elem->data + 1);
+-		}
+ 	}
+ 
+ 	/* Allow VHT if at least one channel on the sband supports 80 MHz */
+@@ -5416,6 +5413,11 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
+ 					goto abandon_assoc;
+ 				}
+ 			}
++
++			sdata->vif.cfg.eml_cap =
++				ieee80211_mle_get_eml_cap((const void *)elems->ml_basic);
++			sdata->vif.cfg.eml_med_sync_delay =
++				ieee80211_mle_get_eml_med_sync_delay((const void *)elems->ml_basic);
+ 		}
+ 
+ 		sdata->vif.cfg.aid = aid;
+-- 
+2.42.0
 
