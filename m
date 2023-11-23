@@ -1,29 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="c8Wu3P6n"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="SAhTNLHJ"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4310BD60
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:56 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DEB1D64
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:28:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=otmmcFLnOKUc8cSls2Dv7CYsJv5mMEEslURXO+VqiEU=;
-	t=1700778476; x=1701988076; b=c8Wu3P6nAt6dU8X14DteKH2ZhSx0KJFwGJmiPgR3ht5hRiN
-	EWgzmj0Q0oJVBGh1xWzYiF8oodEJUQFNBSXbL6l4H/vJHwAI1F6bjWJ1C7ZfFMMYaLm8uaNoBiLlN
-	ijdLPGZd0jp5uxpgNSSxCmFkuA1FIMZKPQUUbg9cmuRRVq6AK6kyvaZPFd2FM+4W3fR0jcr5bvbVY
-	jaanFmg3ueU+A5UObIZ49eL1OJ/hqpyOiN4772dfayGhN5tq5RAI4O78k5kMrkbiXSvzcBgRNBsm/
-	psXWehxI21EEiVYRB1lVL+o0svIvWag2MrblIpkvSV7ZLxBHGjY65GOM5qi0jA/Q==;
+	Resent-Cc:Resent-Message-ID; bh=ITJCzxR8J+1dD23bAsKOSvc66aUksZiFuwJM352tX+E=;
+	t=1700778480; x=1701988080; b=SAhTNLHJ1oFdreRDZFL/VXJg/54YiArD1zFKJdCf1xrlEFM
+	pmXp4kC6ZolR8/gLFc5eI9XAWeCsS9azfzM862D6SdVNIagZno4jN0PpeKjMJvj4wNs/U1ugDag7L
+	c8jzbuRbMm0h7bWga3TbI8nVFVwm2hwUjqWyAQ9fK3kmJ3JU2oK57z3tVCdjoLlouHYPWSbtDOWtl
+	hjpciaFAPxQE7y/e0CZuMhkgjn2dnHFl62PffHP7saDfHi21Eekeu3AcObdJuv2VJJHueVJswofh4
+	sM5gmYEnh8onEBs/DKlQSuK+FCHdJsqvgjxmNl5hBpjUFfzgqBiNgEZiv+0toYqQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IAq-00000001Y53-44vE;
-	Thu, 23 Nov 2023 23:27:53 +0100
+	id 1r6IAv-00000001Y53-48mx;
+	Thu, 23 Nov 2023 23:27:58 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 01/13] wifi: mac80211: simplify ieee80211_config_bw() prototype
-Date: Thu, 23 Nov 2023 23:14:38 +0100
-Message-ID: <20231123231436.d16617c03e0f.I8bd5ee848074029a9f0495c95e4339546ad8fe15@changeid>
+Subject: [RFC PATCH v2 08/13] wifi: mac80211: workaround for tests that drop capabilities during CSA
+Date: Thu, 23 Nov 2023 23:14:45 +0100
+Message-ID: <20231123231436.af4c46e01358.I4d433a27e206996acd79b59e4d3e0c84d33ad9cb@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231123221436.143254-14-johannes@sipsolutions.net>
 References: <20231123221436.143254-14-johannes@sipsolutions.net>
@@ -37,56 +37,55 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The only user of this function passes a lot of pointers
-directly from the parsed elements, so it's simpler to
-just pass the entire elements parsing struct. This also
-shows that the ht_cap is actually unused.
+There are some tests that for some reason drop HT (and higher)
+capability/operation elements during CSA, which leads to the
+code now disconnecting. The affected tests are:
+ - ap_csa_1_switch
+ - ap_csa_2_switches
+ - ap_csa_ecsa_only
+ - ap_vht80_csa
+ - ap_vht_csa_vht40_disable
+ - he80_csa
+ - ocv_sa_query_csa
+ - ocv_sa_query_csa_no_resp
+
+Work around such APs, but I actually don't think we really
+should be doing that.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ net/mac80211/mlme.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 887b496f2b81..778eef2f06f1 100644
+index fdcdba2b2c9e..aa1b07c0548a 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -481,15 +481,15 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- }
+@@ -919,9 +919,10 @@ static int ieee80211_config_bw(struct ieee80211_link_data *link,
+ 					      elems, true, &link->u.mgd.conn,
+ 					      &ap_chandef);
  
- static int ieee80211_config_bw(struct ieee80211_link_data *link,
--			       const struct ieee80211_ht_cap *ht_cap,
--			       const struct ieee80211_vht_cap *vht_cap,
--			       const struct ieee80211_ht_operation *ht_oper,
--			       const struct ieee80211_vht_operation *vht_oper,
--			       const struct ieee80211_he_operation *he_oper,
--			       const struct ieee80211_eht_operation *eht_oper,
--			       const struct ieee80211_s1g_oper_ie *s1g_oper,
-+			       struct ieee802_11_elems *elems,
- 			       const u8 *bssid, u64 *changed)
- {
-+	const struct ieee80211_vht_cap *vht_cap = elems->vht_cap_elem;
-+	const struct ieee80211_ht_operation *ht_oper = elems->ht_operation;
-+	const struct ieee80211_vht_operation *vht_oper = elems->vht_operation;
-+	const struct ieee80211_he_operation *he_oper = elems->he_operation;
-+	const struct ieee80211_eht_operation *eht_oper = elems->eht_operation;
-+	const struct ieee80211_s1g_oper_ie *s1g_oper = elems->s1g_oper;
- 	struct ieee80211_sub_if_data *sdata = link->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -6340,11 +6340,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+-	if (ap_mode != link->u.mgd.conn.mode) {
++	/* W/A for some tests, make that == again? */
++	if (ap_mode > link->u.mgd.conn.mode) {
+ 		link_info(link,
+-			  "AP appears to change mode (expected %s, found %s), disconnect\n",
++			  "AP appears to change mode (expected at most %s, got %s), disconnect\n",
+ 			  ieee80211_conn_mode_str(link->u.mgd.conn.mode),
+ 			  ieee80211_conn_mode_str(ap_mode));
+ 		return -EINVAL;
+@@ -953,6 +954,11 @@ static int ieee80211_config_bw(struct ieee80211_link_data *link,
+ 	if (cfg80211_chandef_identical(&ap_chandef, &link->conf->chandef))
+ 		return 0;
  
- 	changed |= ieee80211_recalc_twt_req(sdata, sband, link, link_sta, elems);
- 
--	if (ieee80211_config_bw(link, elems->ht_cap_elem,
--				elems->vht_cap_elem, elems->ht_operation,
--				elems->vht_operation, elems->he_operation,
--				elems->eht_operation,
--				elems->s1g_oper, bssid, &changed)) {
-+	if (ieee80211_config_bw(link, elems, bssid, &changed)) {
- 		sdata_info(sdata,
- 			   "failed to follow AP %pM bandwidth change, disconnect\n",
- 			   bssid);
++	/* W/A for some tests - remove it again? */
++	if (ap_chandef.width == NL80211_CHAN_WIDTH_20_NOHT &&
++	    link->u.mgd.conn.mode > IEEE80211_CONN_MODE_LEGACY)
++		ap_chandef.width = NL80211_CHAN_WIDTH_20;
++
+ 	link_info(link,
+ 		  "AP %pM changed bandwidth, new config is %d.%03d MHz, width %d (%d.%03d/%d MHz)\n",
+ 		  link->u.mgd.bssid, ap_chandef.chan->center_freq,
 -- 
 2.42.0
 
