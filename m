@@ -1,29 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="WvlOZtZM"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="c8Wu3P6n"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 473D1D69
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:58 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4310BD60
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:27:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=j8YqGfwVDHBkZbNh9kwvwhuVLvovZTwX+d5lnt5oR6U=;
-	t=1700778478; x=1701988078; b=WvlOZtZMcfWt9cPv4BhIDfj+12UY6tJ8EzxHyLwYIz3QX1N
-	wEmsUCNgVT/Mruk7fIyWiOHwnIZz8qx0OGt0KQ149ABRnhVG7dEwGwSBwAAnQ9GTatx1C9mhaN7iQ
-	5zR+vAQQ8HbGcrwM9P3dKbBpItF2QmKEJUafoQomzKrKDyDRh0wVjl3O2rN5fK1lVj8Y57jGJVAxz
-	tUjkqYyomalwO+Qni0UKtbIO6PnyUdbNbKojb6P+mizMdMWAk7Oo9fYXcWNsU0Z1GwXhRxm21iIX4
-	sGSjBVcKY7PwNEGryX+s8wjXblnYWaA5JSjXrTfXF3vRrGQDFLgZLw19TQGkqKNA==;
+	Resent-Cc:Resent-Message-ID; bh=otmmcFLnOKUc8cSls2Dv7CYsJv5mMEEslURXO+VqiEU=;
+	t=1700778476; x=1701988076; b=c8Wu3P6nAt6dU8X14DteKH2ZhSx0KJFwGJmiPgR3ht5hRiN
+	EWgzmj0Q0oJVBGh1xWzYiF8oodEJUQFNBSXbL6l4H/vJHwAI1F6bjWJ1C7ZfFMMYaLm8uaNoBiLlN
+	ijdLPGZd0jp5uxpgNSSxCmFkuA1FIMZKPQUUbg9cmuRRVq6AK6kyvaZPFd2FM+4W3fR0jcr5bvbVY
+	jaanFmg3ueU+A5UObIZ49eL1OJ/hqpyOiN4772dfayGhN5tq5RAI4O78k5kMrkbiXSvzcBgRNBsm/
+	psXWehxI21EEiVYRB1lVL+o0svIvWag2MrblIpkvSV7ZLxBHGjY65GOM5qi0jA/Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IAt-00000001Y53-2ibI;
-	Thu, 23 Nov 2023 23:27:55 +0100
+	id 1r6IAq-00000001Y53-44vE;
+	Thu, 23 Nov 2023 23:27:53 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH v2 05/13] wifi: mac80211_hwsim: support HE 40 MHz
-Date: Thu, 23 Nov 2023 23:14:42 +0100
-Message-ID: <20231123231436.02fd03dadd5b.I196ad0d80bbe37cf2574458418a9dcb2661a8ee6@changeid>
+Subject: [RFC PATCH v2 01/13] wifi: mac80211: simplify ieee80211_config_bw() prototype
+Date: Thu, 23 Nov 2023 23:14:38 +0100
+Message-ID: <20231123231436.d16617c03e0f.I8bd5ee848074029a9f0495c95e4339546ad8fe15@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231123221436.143254-14-johannes@sipsolutions.net>
 References: <20231123221436.143254-14-johannes@sipsolutions.net>
@@ -37,51 +37,56 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add support for 40 MHz in HE to hwsim, it has support
-for it in HT and appears to be the only driver that
-has lower bandwidth in HE than HT.
+The only user of this function passes a lot of pointers
+directly from the parsed elements, so it's simpler to
+just pass the entire elements parsing struct. This also
+shows that the ht_cap is actually unused.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Note: this breaks two hwsim tests in hostap, but that's
-due to the wpa_supplicant code to estimate throughput
-being broken in HE/EHT cases by not taking into account
-the operating bandwidth, only the capabilities.
----
- drivers/net/wireless/virtual/mac80211_hwsim.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ net/mac80211/mlme.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index c7b4414cc6c3..84f417b0d8c6 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -4029,6 +4029,8 @@ static const struct ieee80211_sband_iftype_data sband_capa_2ghz[] = {
- 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
- 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
- 				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
-+				.phy_cap_info[0] =
-+					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G,
- 				.phy_cap_info[1] =
- 					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
- 					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
-@@ -4134,6 +4136,8 @@ static const struct ieee80211_sband_iftype_data sband_capa_2ghz[] = {
- 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
- 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
- 				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
-+				.phy_cap_info[0] =
-+					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G,
- 				.phy_cap_info[1] =
- 					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
- 					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
-@@ -4237,6 +4241,8 @@ static const struct ieee80211_sband_iftype_data sband_capa_2ghz[] = {
- 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
- 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_EXT_3,
- 				.mac_cap_info[4] = IEEE80211_HE_MAC_CAP4_AMSDU_IN_AMPDU,
-+				.phy_cap_info[0] =
-+					IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G,
- 				.phy_cap_info[1] =
- 					IEEE80211_HE_PHY_CAP1_PREAMBLE_PUNC_RX_MASK |
- 					IEEE80211_HE_PHY_CAP1_DEVICE_CLASS_A |
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 887b496f2b81..778eef2f06f1 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -481,15 +481,15 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static int ieee80211_config_bw(struct ieee80211_link_data *link,
+-			       const struct ieee80211_ht_cap *ht_cap,
+-			       const struct ieee80211_vht_cap *vht_cap,
+-			       const struct ieee80211_ht_operation *ht_oper,
+-			       const struct ieee80211_vht_operation *vht_oper,
+-			       const struct ieee80211_he_operation *he_oper,
+-			       const struct ieee80211_eht_operation *eht_oper,
+-			       const struct ieee80211_s1g_oper_ie *s1g_oper,
++			       struct ieee802_11_elems *elems,
+ 			       const u8 *bssid, u64 *changed)
+ {
++	const struct ieee80211_vht_cap *vht_cap = elems->vht_cap_elem;
++	const struct ieee80211_ht_operation *ht_oper = elems->ht_operation;
++	const struct ieee80211_vht_operation *vht_oper = elems->vht_operation;
++	const struct ieee80211_he_operation *he_oper = elems->he_operation;
++	const struct ieee80211_eht_operation *eht_oper = elems->eht_operation;
++	const struct ieee80211_s1g_oper_ie *s1g_oper = elems->s1g_oper;
+ 	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -6340,11 +6340,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 
+ 	changed |= ieee80211_recalc_twt_req(sdata, sband, link, link_sta, elems);
+ 
+-	if (ieee80211_config_bw(link, elems->ht_cap_elem,
+-				elems->vht_cap_elem, elems->ht_operation,
+-				elems->vht_operation, elems->he_operation,
+-				elems->eht_operation,
+-				elems->s1g_oper, bssid, &changed)) {
++	if (ieee80211_config_bw(link, elems, bssid, &changed)) {
+ 		sdata_info(sdata,
+ 			   "failed to follow AP %pM bandwidth change, disconnect\n",
+ 			   bssid);
 -- 
 2.42.0
 
