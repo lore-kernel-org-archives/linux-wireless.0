@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="eplHiX6Z"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="O0k0ulbt"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEB3D19A6;
-	Fri, 24 Nov 2023 08:35:18 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9043019A4;
+	Fri, 24 Nov 2023 08:35:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=eUQSivaM/C3sgIYV/55zPnV1kMbFsOGZiai+sGa+jDY=;
-	t=1700843718; x=1702053318; b=eplHiX6ZMYIt11LKuIlWEPvXql5NNzBtK2Qbe3nAL30vIGt
-	FwyzxUPM43QQVDRpK5rOtubghhSH5orccxvy4bO30sNFYVr3FRo6gEh+RLgXqF+JmygXOabWp9aji
-	GtNi+yykJNzgnhM3ysbd7YOcVdz1ANXHQNTPxQ91C5s934QrL7SKN6ezcaq+T/73gIJIiFx8dVrZQ
-	ylpxnbTXDUpkSTYbqrkecDjd/p5AHJmS2flrv6a69kcyLKkvahc1e0p4m3l4XkNrqr/YroUpi2nil
-	D/+u1vUE0e2O0twKy7C3KVmyXzAx3/kLvucZN02tB1jDypmrLFajK/96of2N1YZA==;
+	Resent-Cc:Resent-Message-ID; bh=liAhozg7Mw19h9BQg+C0TH1QJAs+IpxQtgvDIZ45qPY=;
+	t=1700843720; x=1702053320; b=O0k0ulbtJS8ygJhQrmxW7+kEchrVYQ6Xcz+cBuYRS+Vs+WT
+	u++r4apCdiNEOI81+ivYE7/LWUU3XEanONBCiZRlwywwejyAetFPbXutAqeNIz4FbAh6RiY/2cIKM
+	nKWa05FpEsAA5LDEQB698L+RDRLqJHP+RUvt5OGIbyZuMnlcYKxuZ44m3FP2QRGCKIkrD6/Mmpqih
+	copzgWuvDTpVJ6336UNvyDTo8dO/PJzA+jHlgyWbRXMWJJpFQ1t44qp8PKeoSxMKJi5LynxscLKEm
+	Lwsc/WopaEtOOr3IQvehOm3rsOmzRBsMlU/lzWcfLrCWS5oU9EMAKFEOtKHtJdFQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6Z9A-00000002fA8-0Xch;
-	Fri, 24 Nov 2023 17:35:16 +0100
+	id 1r6Z9B-00000002fA8-2i2H;
+	Fri, 24 Nov 2023 17:35:18 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/6] debugfs: annotate debugfs handlers vs. removal with lockdep
-Date: Fri, 24 Nov 2023 17:25:25 +0100
-Message-ID: <20231124172522.0442774abc66.Ia70a49792c448867fd61b0234e1da507b0f75086@changeid>
+Subject: [PATCH v2 4/6] wifi: cfg80211: add locked debugfs wrappers
+Date: Fri, 24 Nov 2023 17:25:27 +0100
+Message-ID: <20231124172522.e79351e3900f.I52daf6c4d8f70b5c5c2de7f0918c6748f11f1e8b@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231124162522.16344-7-johannes@sipsolutions.net>
 References: <20231124162522.16344-7-johannes@sipsolutions.net>
@@ -40,110 +40,252 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When you take a lock in a debugfs handler but also try
-to remove the debugfs file under that lock, things can
-deadlock since the removal has to wait for all users
-to finish.
+Add wrappers for debugfs files that should be called with
+the wiphy mutex held, while the file is also to be removed
+under the wiphy mutex. This could otherwise deadlock when
+a file is trying to acquire the wiphy mutex while the code
+removing it holds the mutex but waits for the removal.
 
-Add lockdep annotations in debugfs_file_get()/_put()
-to catch such issues.
+This actually works by pushing the execution of the read
+or write handler to a wiphy work that can be cancelled
+using the debugfs cancellation API.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- fs/debugfs/file.c     | 10 ++++++++++
- fs/debugfs/inode.c    | 12 ++++++++++++
- fs/debugfs/internal.h |  6 ++++++
- 3 files changed, 28 insertions(+)
+ include/net/cfg80211.h |  46 ++++++++++++
+ net/wireless/debugfs.c | 160 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 206 insertions(+)
 
-diff --git a/fs/debugfs/file.c b/fs/debugfs/file.c
-index e00189aebbf4..3eff92450fd5 100644
---- a/fs/debugfs/file.c
-+++ b/fs/debugfs/file.c
-@@ -108,6 +108,12 @@ int debugfs_file_get(struct dentry *dentry)
- 			kfree(fsd);
- 			fsd = READ_ONCE(dentry->d_fsdata);
- 		}
-+#ifdef CONFIG_LOCKDEP
-+		fsd->lock_name = kasprintf(GFP_KERNEL, "debugfs:%pd", dentry);
-+		lockdep_register_key(&fsd->key);
-+		lockdep_init_map(&fsd->lockdep_map, fsd->lock_name ?: "debugfs",
-+				 &fsd->key, 0);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b137a33a1b68..4ecfb06c413d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -9299,4 +9299,50 @@ bool cfg80211_valid_disable_subchannel_bitmap(u16 *bitmap,
+  */
+ void cfg80211_links_removed(struct net_device *dev, u16 link_mask);
+ 
++#ifdef CONFIG_CFG80211_DEBUGFS
++/**
++ * wiphy_locked_debugfs_read - do a locked read in debugfs
++ * @wiphy: the wiphy to use
++ * @file: the file being read
++ * @buf: the buffer to fill and then read from
++ * @bufsize: size of the buffer
++ * @userbuf: the user buffer to copy to
++ * @count: read count
++ * @ppos: read position
++ * @handler: the read handler to call (under wiphy lock)
++ * @data: additional data to pass to the read handler
++ */
++ssize_t wiphy_locked_debugfs_read(struct wiphy *wiphy, struct file *file,
++				  char *buf, size_t bufsize,
++				  char __user *userbuf, size_t count,
++				  loff_t *ppos,
++				  ssize_t (*handler)(struct wiphy *wiphy,
++						     struct file *file,
++						     char *buf,
++						     size_t bufsize,
++						     void *data),
++				  void *data);
++
++/**
++ * wiphy_locked_debugfs_write - do a locked write in debugfs
++ * @wiphy: the wiphy to use
++ * @file: the file being written to
++ * @buf: the buffer to copy the user data to
++ * @bufsize: size of the buffer
++ * @userbuf: the user buffer to copy from
++ * @count: read count
++ * @handler: the write handler to call (under wiphy lock)
++ * @data: additional data to pass to the write handler
++ */
++ssize_t wiphy_locked_debugfs_write(struct wiphy *wiphy, struct file *file,
++				   char *buf, size_t bufsize,
++				   const char __user *userbuf, size_t count,
++				   ssize_t (*handler)(struct wiphy *wiphy,
++						      struct file *file,
++						      char *buf,
++						      size_t count,
++						      void *data),
++				   void *data);
 +#endif
- 	}
- 
- 	/*
-@@ -124,6 +130,8 @@ int debugfs_file_get(struct dentry *dentry)
- 	if (!refcount_inc_not_zero(&fsd->active_users))
- 		return -EIO;
- 
-+	lock_map_acquire_read(&fsd->lockdep_map);
 +
- 	return 0;
+ #endif /* __NET_CFG80211_H */
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 0878b162890a..40e49074e2ee 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -4,6 +4,7 @@
+  *
+  * Copyright 2009	Luis R. Rodriguez <lrodriguez@atheros.com>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
++ * Copyright (C) 2023 Intel Corporation
+  */
+ 
+ #include <linux/slab.h>
+@@ -109,3 +110,162 @@ void cfg80211_debugfs_rdev_add(struct cfg80211_registered_device *rdev)
+ 	DEBUGFS_ADD(long_retry_limit);
+ 	DEBUGFS_ADD(ht40allow_map);
  }
- EXPORT_SYMBOL_GPL(debugfs_file_get);
-@@ -141,6 +149,8 @@ void debugfs_file_put(struct dentry *dentry)
- {
- 	struct debugfs_fsdata *fsd = READ_ONCE(dentry->d_fsdata);
- 
-+	lock_map_release(&fsd->lockdep_map);
 +
- 	if (refcount_dec_and_test(&fsd->active_users))
- 		complete(&fsd->active_users_drained);
- }
-diff --git a/fs/debugfs/inode.c b/fs/debugfs/inode.c
-index dcde4199a625..80f4f000dcc1 100644
---- a/fs/debugfs/inode.c
-+++ b/fs/debugfs/inode.c
-@@ -241,6 +241,14 @@ static void debugfs_release_dentry(struct dentry *dentry)
- 	if ((unsigned long)fsd & DEBUGFS_FSDATA_IS_REAL_FOPS_BIT)
- 		return;
- 
-+	/* check it wasn't a dir (no fsdata) or automount (no real_fops) */
-+	if (fsd && fsd->real_fops) {
-+#ifdef CONFIG_LOCKDEP
-+		lockdep_unregister_key(&fsd->key);
-+		kfree(fsd->lock_name);
-+#endif
-+	}
++struct debugfs_read_work {
++	struct wiphy_work work;
++	ssize_t (*handler)(struct wiphy *wiphy,
++			   struct file *file,
++			   char *buf,
++			   size_t count,
++			   void *data);
++	struct wiphy *wiphy;
++	struct file *file;
++	char *buf;
++	size_t bufsize;
++	void *data;
++	ssize_t ret;
++	struct completion completion;
++};
 +
- 	kfree(fsd);
- }
- 
-@@ -744,6 +752,10 @@ static void __debugfs_file_removed(struct dentry *dentry)
- 	fsd = READ_ONCE(dentry->d_fsdata);
- 	if ((unsigned long)fsd & DEBUGFS_FSDATA_IS_REAL_FOPS_BIT)
- 		return;
++static void wiphy_locked_debugfs_read_work(struct wiphy *wiphy,
++					   struct wiphy_work *work)
++{
++	struct debugfs_read_work *w = container_of(work, typeof(*w), work);
 +
-+	lock_map_acquire(&fsd->lockdep_map);
-+	lock_map_release(&fsd->lockdep_map);
++	w->ret = w->handler(w->wiphy, w->file, w->buf, w->bufsize, w->data);
++	complete(&w->completion);
++}
 +
- 	if (!refcount_dec_and_test(&fsd->active_users))
- 		wait_for_completion(&fsd->active_users_drained);
- }
-diff --git a/fs/debugfs/internal.h b/fs/debugfs/internal.h
-index f7c489b5a368..c7d61cfc97d2 100644
---- a/fs/debugfs/internal.h
-+++ b/fs/debugfs/internal.h
-@@ -7,6 +7,7 @@
- 
- #ifndef _DEBUGFS_INTERNAL_H_
- #define _DEBUGFS_INTERNAL_H_
-+#include <linux/lockdep.h>
- 
- struct file_operations;
- 
-@@ -23,6 +24,11 @@ struct debugfs_fsdata {
- 		struct {
- 			refcount_t active_users;
- 			struct completion active_users_drained;
-+#ifdef CONFIG_LOCKDEP
-+			struct lockdep_map lockdep_map;
-+			struct lock_class_key key;
-+			char *lock_name;
-+#endif
- 		};
- 	};
- };
++static void wiphy_locked_debugfs_read_cancel(struct dentry *dentry,
++					     void *data)
++{
++	struct debugfs_read_work *w = data;
++
++	wiphy_work_cancel(w->wiphy, &w->work);
++	complete(&w->completion);
++}
++
++ssize_t wiphy_locked_debugfs_read(struct wiphy *wiphy, struct file *file,
++				  char *buf, size_t bufsize,
++				  char __user *userbuf, size_t count,
++				  loff_t *ppos,
++				  ssize_t (*handler)(struct wiphy *wiphy,
++						     struct file *file,
++						     char *buf,
++						     size_t bufsize,
++						     void *data),
++				  void *data)
++{
++	struct debugfs_read_work work = {
++		.handler = handler,
++		.wiphy = wiphy,
++		.file = file,
++		.buf = buf,
++		.bufsize = bufsize,
++		.data = data,
++		.ret = -ENODEV,
++		.completion = COMPLETION_INITIALIZER_ONSTACK(work.completion),
++	};
++	struct debugfs_cancellation cancellation = {
++		.cancel = wiphy_locked_debugfs_read_cancel,
++		.cancel_data = &work,
++	};
++
++	/* don't leak stack data or whatever */
++	memset(buf, 0, bufsize);
++
++	wiphy_work_init(&work.work, wiphy_locked_debugfs_read_work);
++	wiphy_work_queue(wiphy, &work.work);
++
++	debugfs_enter_cancellation(file, &cancellation);
++	wait_for_completion(&work.completion);
++	debugfs_leave_cancellation(file, &cancellation);
++
++	if (work.ret < 0)
++		return work.ret;
++
++	if (WARN_ON(work.ret > bufsize))
++		return -EINVAL;
++
++	return simple_read_from_buffer(userbuf, count, ppos, buf, work.ret);
++}
++EXPORT_SYMBOL_GPL(wiphy_locked_debugfs_read);
++
++struct debugfs_write_work {
++	struct wiphy_work work;
++	ssize_t (*handler)(struct wiphy *wiphy,
++			   struct file *file,
++			   char *buf,
++			   size_t count,
++			   void *data);
++	struct wiphy *wiphy;
++	struct file *file;
++	char *buf;
++	size_t count;
++	void *data;
++	ssize_t ret;
++	struct completion completion;
++};
++
++static void wiphy_locked_debugfs_write_work(struct wiphy *wiphy,
++					    struct wiphy_work *work)
++{
++	struct debugfs_write_work *w = container_of(work, typeof(*w), work);
++
++	w->ret = w->handler(w->wiphy, w->file, w->buf, w->count, w->data);
++	complete(&w->completion);
++}
++
++static void wiphy_locked_debugfs_write_cancel(struct dentry *dentry,
++					      void *data)
++{
++	struct debugfs_write_work *w = data;
++
++	wiphy_work_cancel(w->wiphy, &w->work);
++	complete(&w->completion);
++}
++
++ssize_t wiphy_locked_debugfs_write(struct wiphy *wiphy,
++				   struct file *file, char *buf, size_t bufsize,
++				   const char __user *userbuf, size_t count,
++				   ssize_t (*handler)(struct wiphy *wiphy,
++						      struct file *file,
++						      char *buf,
++						      size_t count,
++						      void *data),
++				   void *data)
++{
++	struct debugfs_write_work work = {
++		.handler = handler,
++		.wiphy = wiphy,
++		.file = file,
++		.buf = buf,
++		.count = count,
++		.data = data,
++		.ret = -ENODEV,
++		.completion = COMPLETION_INITIALIZER_ONSTACK(work.completion),
++	};
++	struct debugfs_cancellation cancellation = {
++		.cancel = wiphy_locked_debugfs_write_cancel,
++		.cancel_data = &work,
++	};
++
++	/* mostly used for strings so enforce NUL-termination for safety */
++	if (count >= bufsize)
++		return -EINVAL;
++
++	memset(buf, 0, bufsize);
++
++	if (copy_from_user(buf, userbuf, count))
++		return -EFAULT;
++
++	wiphy_work_init(&work.work, wiphy_locked_debugfs_write_work);
++	wiphy_work_queue(wiphy, &work.work);
++
++	debugfs_enter_cancellation(file, &cancellation);
++	wait_for_completion(&work.completion);
++	debugfs_leave_cancellation(file, &cancellation);
++
++	return work.ret;
++}
++EXPORT_SYMBOL_GPL(wiphy_locked_debugfs_write);
 -- 
 2.42.0
 
