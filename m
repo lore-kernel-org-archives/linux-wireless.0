@@ -1,32 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Hui6ohvg"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="wa+2OV/o"
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64CB719AA;
-	Fri, 24 Nov 2023 08:35:21 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E579710CF;
+	Fri, 24 Nov 2023 08:35:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=/IUf3uo2oD/a+xS0yZzjtqpayIwTZ7+Ecxpk1N2XlRA=;
-	t=1700843721; x=1702053321; b=Hui6ohvg9kGiiEXql0YQ1U+qOGmEdE5cVpHBLFOapXGTRZ5
-	NX5qnKNgs/mo9r5DRavTUsNoOiN+xk3JsFN559kos522SgWpZmdQNxMT7jyl/A1CeZ83P/YU4aBAy
-	1NTVJBKIK3GTdF+cWbxeWQKD4ShD9mmB09vp2JuoHxafiIYNrVE840gTDMMwZBZbCLvl1Yp7yRBNI
-	AJX6BI5zPsEK/+OYEkCWTfLz7XdTmv0dudXEuNeO7XRWKBjzacLiDeXn/AZSLAKJcekA8Ta6IPGKn
-	jh18REJafmqu+Fo4NkLrzHNWrtE3vfsGHUzGzDDOYu5Vl2UheNjeWJiW4UMDUpxw==;
+	Resent-Cc:Resent-Message-ID; bh=lRmcKq7AIxSR6usOW5TWHREpkqLey1xNLAHUQ3oiplc=;
+	t=1700843720; x=1702053320; b=wa+2OV/olec2UJOI4JBr78xUtZA+Ok2eKCz+qntJmqFVVx1
+	VkhlSBJMOwZOCHWZMjE2Ra0szNu7DWV1jr7v9HSEVevn83Kze8Q2wa7DFGaW9xkyNg3iTriUF6h2g
+	6QRQKXR6msqO3OvcEjVzoD4DD1XAf+OR19UGO1e6rwnLmSd/Bdnor2PTS0IdlnA8bhTl8NF4pzN1w
+	n/xXm1wW6o1lrGe7JfxJRQ0EHsCxo3zgoFKjg7SD0otQJku34r1aHIk9jOMqeAo9sy5YPg5cog+Hb
+	P2NuN5JYKZJDZ//7Ka+YfkT+9HAGXHf3c9+6DuLUOkemC6062/iHQG4jPoTc2bIA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6Z9C-00000002fA8-32NO;
-	Fri, 24 Nov 2023 17:35:18 +0100
+	id 1r6Z9A-00000002fA8-3co7;
+	Fri, 24 Nov 2023 17:35:17 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 5/6] wifi: mac80211: use wiphy locked debugfs helpers for agg_status
-Date: Fri, 24 Nov 2023 17:25:28 +0100
-Message-ID: <20231124172522.a5e8901f9976.Id4251db174cdd42519a5ef19cbb08d7ed8f65397@changeid>
+Subject: [PATCH v2 3/6] debugfs: add API to allow debugfs operations cancellation
+Date: Fri, 24 Nov 2023 17:25:26 +0100
+Message-ID: <20231124172522.8c5d739c69e7.If54cd017d5734024e7bee5e4a237e17244050480@changeid>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231124162522.16344-7-johannes@sipsolutions.net>
 References: <20231124162522.16344-7-johannes@sipsolutions.net>
@@ -40,165 +40,231 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The read is currently with RCU and the write can deadlock,
-convert both for the sake of illustration.
+In some cases there might be longer-running hardware accesses
+in debugfs files, or attempts to acquire locks, and we want
+to still be able to quickly remove the files.
 
-Make mac80211 depend on cfg80211 debugfs to get the helpers,
-but mac80211 debugfs without it does nothing anyway.
+Introduce a cancellations API to use inside the debugfs handler
+functions to be able to cancel such operations on a per-file
+basis.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
 v2:
- - make mac80211 debugfs depend on cfg80211 debugfs, it's
-   anyway useless without it
+ - use mutex to protect the cancellations and hold it around
+   calling the cancel function so that cannot race with the
+   handler finishing and leaving the cancellation.
 ---
- net/mac80211/Kconfig       |  2 +-
- net/mac80211/debugfs_sta.c | 74 +++++++++++++++++++++-----------------
- 2 files changed, 43 insertions(+), 33 deletions(-)
+ fs/debugfs/file.c       | 82 +++++++++++++++++++++++++++++++++++++++++
+ fs/debugfs/inode.c      | 32 +++++++++++++++-
+ fs/debugfs/internal.h   |  5 +++
+ include/linux/debugfs.h | 19 ++++++++++
+ 4 files changed, 137 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 037ab74f5ade..cb0291decf2e 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -88,7 +88,7 @@ config MAC80211_LEDS
- 
- config MAC80211_DEBUGFS
- 	bool "Export mac80211 internals in DebugFS"
--	depends on MAC80211 && DEBUG_FS
-+	depends on MAC80211 && CFG80211_DEBUGFS
- 	help
- 	  Select this to see extensive information about
- 	  the internal state of mac80211 in debugfs.
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 06e3613bf46b..5bf507ebb096 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -312,23 +312,14 @@ static ssize_t sta_aql_write(struct file *file, const char __user *userbuf,
- STA_OPS_RW(aql);
- 
- 
--static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
--					size_t count, loff_t *ppos)
-+static ssize_t sta_agg_status_do_read(struct wiphy *wiphy, struct file *file,
-+				      char *buf, size_t bufsz, void *data)
- {
--	char *buf, *p;
--	ssize_t bufsz = 71 + IEEE80211_NUM_TIDS * 40;
-+	struct sta_info *sta = data;
-+	char *p = buf;
- 	int i;
--	struct sta_info *sta = file->private_data;
- 	struct tid_ampdu_rx *tid_rx;
- 	struct tid_ampdu_tx *tid_tx;
--	ssize_t ret;
--
--	buf = kzalloc(bufsz, GFP_KERNEL);
--	if (!buf)
--		return -ENOMEM;
--	p = buf;
--
--	rcu_read_lock();
- 
- 	p += scnprintf(p, bufsz + buf - p, "next dialog_token: %#02x\n",
- 			sta->ampdu_mlme.dialog_token_allocator + 1);
-@@ -338,8 +329,8 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
- 		bool tid_rx_valid;
- 
--		tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[i]);
--		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[i]);
-+		tid_rx = wiphy_dereference(wiphy, sta->ampdu_mlme.tid_rx[i]);
-+		tid_tx = wiphy_dereference(wiphy, sta->ampdu_mlme.tid_tx[i]);
- 		tid_rx_valid = test_bit(i, sta->ampdu_mlme.agg_session_valid);
- 
- 		p += scnprintf(p, bufsz + buf - p, "%02d", i);
-@@ -358,31 +349,39 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
- 				tid_tx ? skb_queue_len(&tid_tx->pending) : 0);
- 		p += scnprintf(p, bufsz + buf - p, "\n");
+diff --git a/fs/debugfs/file.c b/fs/debugfs/file.c
+index 3eff92450fd5..5568cdea3490 100644
+--- a/fs/debugfs/file.c
++++ b/fs/debugfs/file.c
+@@ -114,6 +114,8 @@ int debugfs_file_get(struct dentry *dentry)
+ 		lockdep_init_map(&fsd->lockdep_map, fsd->lock_name ?: "debugfs",
+ 				 &fsd->key, 0);
+ #endif
++		INIT_LIST_HEAD(&fsd->cancellations);
++		mutex_init(&fsd->cancellations_mtx);
  	}
--	rcu_read_unlock();
  
--	ret = simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
-+	return p - buf;
-+}
-+
-+static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
-+				   size_t count, loff_t *ppos)
+ 	/*
+@@ -156,6 +158,86 @@ void debugfs_file_put(struct dentry *dentry)
+ }
+ EXPORT_SYMBOL_GPL(debugfs_file_put);
+ 
++/**
++ * debugfs_enter_cancellation - enter a debugfs cancellation
++ * @file: the file being accessed
++ * @cancellation: the cancellation object, the cancel callback
++ *	inside of it must be initialized
++ *
++ * When a debugfs file is removed it needs to wait for all active
++ * operations to complete. However, the operation itself may need
++ * to wait for hardware or completion of some asynchronous process
++ * or similar. As such, it may need to be cancelled to avoid long
++ * waits or even deadlocks.
++ *
++ * This function can be used inside a debugfs handler that may
++ * need to be cancelled. As soon as this function is called, the
++ * cancellation's 'cancel' callback may be called, at which point
++ * the caller should proceed to call debugfs_leave_cancellation()
++ * and leave the debugfs handler function as soon as possible.
++ * Note that the 'cancel' callback is only ever called in the
++ * context of some kind of debugfs_remove().
++ *
++ * This function must be paired with debugfs_leave_cancellation().
++ */
++void debugfs_enter_cancellation(struct file *file,
++				struct debugfs_cancellation *cancellation)
 +{
-+	struct sta_info *sta = file->private_data;
-+	struct wiphy *wiphy = sta->local->hw.wiphy;
-+	size_t bufsz = 71 + IEEE80211_NUM_TIDS * 40;
-+	char *buf = kmalloc(bufsz, GFP_KERNEL);
-+	ssize_t ret;
++	struct debugfs_fsdata *fsd;
++	struct dentry *dentry = F_DENTRY(file);
 +
-+	if (!buf)
-+		return -ENOMEM;
++	INIT_LIST_HEAD(&cancellation->list);
 +
-+	ret = wiphy_locked_debugfs_read(wiphy, file, buf, bufsz,
-+					userbuf, count, ppos,
-+					sta_agg_status_do_read, sta);
- 	kfree(buf);
++	if (WARN_ON(!d_is_reg(dentry)))
++		return;
 +
- 	return ret;
++	if (WARN_ON(!cancellation->cancel))
++		return;
++
++	fsd = READ_ONCE(dentry->d_fsdata);
++	if (WARN_ON(!fsd ||
++		    ((unsigned long)fsd & DEBUGFS_FSDATA_IS_REAL_FOPS_BIT)))
++		return;
++
++	mutex_lock(&fsd->cancellations_mtx);
++	list_add(&cancellation->list, &fsd->cancellations);
++	mutex_unlock(&fsd->cancellations_mtx);
++
++	/* if we're already removing wake it up to cancel */
++	if (d_unlinked(dentry))
++		complete(&fsd->active_users_drained);
++}
++EXPORT_SYMBOL_GPL(debugfs_enter_cancellation);
++
++/**
++ * debugfs_leave_cancellation - leave cancellation section
++ * @file: the file being accessed
++ * @cancellation: the cancellation previously registered with
++ *	debugfs_enter_cancellation()
++ *
++ * See the documentation of debugfs_enter_cancellation().
++ */
++void debugfs_leave_cancellation(struct file *file,
++				struct debugfs_cancellation *cancellation)
++{
++	struct debugfs_fsdata *fsd;
++	struct dentry *dentry = F_DENTRY(file);
++
++	if (WARN_ON(!d_is_reg(dentry)))
++		return;
++
++	fsd = READ_ONCE(dentry->d_fsdata);
++	if (WARN_ON(!fsd ||
++		    ((unsigned long)fsd & DEBUGFS_FSDATA_IS_REAL_FOPS_BIT)))
++		return;
++
++	mutex_lock(&fsd->cancellations_mtx);
++	if (!list_empty(&cancellation->list))
++		list_del(&cancellation->list);
++	mutex_unlock(&fsd->cancellations_mtx);
++}
++EXPORT_SYMBOL_GPL(debugfs_leave_cancellation);
++
+ /*
+  * Only permit access to world-readable files when the kernel is locked down.
+  * We also need to exclude any file that has ways to write or alter it as root
+diff --git a/fs/debugfs/inode.c b/fs/debugfs/inode.c
+index 80f4f000dcc1..d53c2860b03c 100644
+--- a/fs/debugfs/inode.c
++++ b/fs/debugfs/inode.c
+@@ -247,6 +247,8 @@ static void debugfs_release_dentry(struct dentry *dentry)
+ 		lockdep_unregister_key(&fsd->key);
+ 		kfree(fsd->lock_name);
+ #endif
++		WARN_ON(!list_empty(&fsd->cancellations));
++		mutex_destroy(&fsd->cancellations_mtx);
+ 	}
+ 
+ 	kfree(fsd);
+@@ -756,8 +758,36 @@ static void __debugfs_file_removed(struct dentry *dentry)
+ 	lock_map_acquire(&fsd->lockdep_map);
+ 	lock_map_release(&fsd->lockdep_map);
+ 
+-	if (!refcount_dec_and_test(&fsd->active_users))
++	/* if we hit zero, just wait for all to finish */
++	if (!refcount_dec_and_test(&fsd->active_users)) {
+ 		wait_for_completion(&fsd->active_users_drained);
++		return;
++	}
++
++	/* if we didn't hit zero, try to cancel any we can */
++	while (refcount_read(&fsd->active_users)) {
++		struct debugfs_cancellation *c;
++
++		/*
++		 * Lock the cancellations. Note that the cancellations
++		 * structs are meant to be on the stack, so we need to
++		 * ensure we either use them here or don't touch them,
++		 * and debugfs_leave_cancellation() will wait for this
++		 * to be finished processing before exiting one. It may
++		 * of course win and remove the cancellation, but then
++		 * chances are we never even got into this bit, we only
++		 * do if the refcount isn't zero already.
++		 */
++		mutex_lock(&fsd->cancellations_mtx);
++		while ((c = list_first_entry_or_null(&fsd->cancellations,
++						     typeof(*c), list))) {
++			list_del_init(&c->list);
++			c->cancel(dentry, c->cancel_data);
++		}
++		mutex_unlock(&fsd->cancellations_mtx);
++
++		wait_for_completion(&fsd->active_users_drained);
++	}
  }
  
--static ssize_t sta_agg_status_write(struct file *file, const char __user *userbuf,
--				    size_t count, loff_t *ppos)
-+static ssize_t sta_agg_status_do_write(struct wiphy *wiphy, struct file *file,
-+				       char *buf, size_t count, void *data)
- {
--	char _buf[25] = {}, *buf = _buf;
--	struct sta_info *sta = file->private_data;
-+	struct sta_info *sta = data;
- 	bool start, tx;
- 	unsigned long tid;
--	char *pos;
-+	char *pos = buf;
- 	int ret, timeout = 5000;
+ static void remove_one(struct dentry *victim)
+diff --git a/fs/debugfs/internal.h b/fs/debugfs/internal.h
+index c7d61cfc97d2..0c4c68cf161f 100644
+--- a/fs/debugfs/internal.h
++++ b/fs/debugfs/internal.h
+@@ -8,6 +8,7 @@
+ #ifndef _DEBUGFS_INTERNAL_H_
+ #define _DEBUGFS_INTERNAL_H_
+ #include <linux/lockdep.h>
++#include <linux/list.h>
  
--	if (count > sizeof(_buf))
--		return -EINVAL;
--
--	if (copy_from_user(buf, userbuf, count))
--		return -EFAULT;
--
--	buf[sizeof(_buf) - 1] = '\0';
--	pos = buf;
- 	buf = strsep(&pos, " ");
- 	if (!buf)
- 		return -EINVAL;
-@@ -420,7 +419,6 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
- 	if (ret || tid >= IEEE80211_NUM_TIDS)
- 		return -EINVAL;
+ struct file_operations;
  
--	wiphy_lock(sta->local->hw.wiphy);
- 	if (tx) {
- 		if (start)
- 			ret = ieee80211_start_tx_ba_session(&sta->sta, tid,
-@@ -432,10 +430,22 @@ static ssize_t sta_agg_status_write(struct file *file, const char __user *userbu
- 					       3, true);
- 		ret = 0;
- 	}
--	wiphy_unlock(sta->local->hw.wiphy);
- 
- 	return ret ?: count;
- }
+@@ -29,6 +30,10 @@ struct debugfs_fsdata {
+ 			struct lock_class_key key;
+ 			char *lock_name;
+ #endif
 +
-+static ssize_t sta_agg_status_write(struct file *file,
-+				    const char __user *userbuf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct wiphy *wiphy = sta->local->hw.wiphy;
-+	char _buf[26];
-+
-+	return wiphy_locked_debugfs_write(wiphy, file, _buf, sizeof(_buf),
-+					  userbuf, count,
-+					  sta_agg_status_do_write, sta);
-+}
- STA_OPS_RW(agg_status);
++			/* protect cancellations */
++			struct mutex cancellations_mtx;
++			struct list_head cancellations;
+ 		};
+ 	};
+ };
+diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
+index ea2d919fd9c7..c9c65b132c0f 100644
+--- a/include/linux/debugfs.h
++++ b/include/linux/debugfs.h
+@@ -171,6 +171,25 @@ ssize_t debugfs_write_file_bool(struct file *file, const char __user *user_buf,
+ ssize_t debugfs_read_file_str(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos);
  
- /* link sta attributes */
++/**
++ * struct debugfs_cancellation - cancellation data
++ * @list: internal, for keeping track
++ * @cancel: callback to call
++ * @cancel_data: extra data for the callback to call
++ */
++struct debugfs_cancellation {
++	struct list_head list;
++	void (*cancel)(struct dentry *, void *);
++	void *cancel_data;
++};
++
++void __acquires(cancellation)
++debugfs_enter_cancellation(struct file *file,
++			   struct debugfs_cancellation *cancellation);
++void __releases(cancellation)
++debugfs_leave_cancellation(struct file *file,
++			   struct debugfs_cancellation *cancellation);
++
+ #else
+ 
+ #include <linux/err.h>
 -- 
 2.42.0
 
