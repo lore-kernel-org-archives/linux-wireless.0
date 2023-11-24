@@ -1,52 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="cM06JoaT"
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D97421B2
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Nov 2023 14:38:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=95guUuv+ogl9ajTD16KV9pDS1vta6fm4xGG9ISOeqts=;
-	t=1700779092; x=1701988692; b=cM06JoaTFKp7y8ZKxSVlt03nckXP8/0UdVYWJe+iE85VgWQ
-	mYCG2uNMYXO8mKKFW94WHV4iqw0dwSbk+3oEjF+T5970Kzsh9xOoR58km5Cbzky5pbUJUydlM1mo0
-	dDiKH7MbdyElfMEDvkHe+o8gMhZZviDCN6ganXZNke7Qi+CD6c02kdNou0noH3/L+VlT0osXUpGKj
-	O3PLOBZRgYlmE0oKEMbQ/GW7i42wCMX53EDMyME55psSDvI6VbTwGJ7h398lKbSSPymgE09+O8HtS
-	0nA0iOE/S512leWlgdtucUKRsk4BSAaG4eTpHs2ohWNHdnJd3o9D5FkvWFw+DlHQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1r6IKo-00000001YYJ-3OKG
-	for linux-wireless@vger.kernel.org;
-	Thu, 23 Nov 2023 23:38:11 +0100
-Message-ID: <8353fe1ae02b4cb3ff0f9e663f620416c475ae8c.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH v2 13/13] wifi: mac80211: support wider bandwidth
- OFDMA config
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 23 Nov 2023 23:38:09 +0100
-In-Reply-To: <20231123231437.e13d689aff72.I939d04674f4ff06f39934b1591c8d36a30ce74c2@changeid>
-References: <20231123221436.143254-14-johannes@sipsolutions.net>
-	 <20231123231437.e13d689aff72.I939d04674f4ff06f39934b1591c8d36a30ce74c2@changeid>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail.nfschina.com (unknown [42.101.60.195])
+	by lindbergh.monkeyblade.net (Postfix) with SMTP id 94DEFD71;
+	Thu, 23 Nov 2023 18:04:32 -0800 (PST)
+Received: from localhost.localdomain (unknown [180.167.10.98])
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 3DD40602608EB;
+	Fri, 24 Nov 2023 10:04:19 +0800 (CST)
+X-MD-Sfrom: suhui@nfschina.com
+X-MD-SrcIP: 180.167.10.98
+From: Su Hui <suhui@nfschina.com>
+To: pkshih@realtek.com,
+	kvalo@kernel.org,
+	nathan@kernel.org,
+	ndesaulniers@google.com,
+	trix@redhat.com
+Cc: Su Hui <suhui@nfschina.com>,
+	lizetao1@huawei.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	llvm@lists.linux.dev,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH v2 1/2] wifi: rtlwifi: rtl8821ae: phy: remove some useless code
+Date: Fri, 24 Nov 2023 10:03:52 +0800
+Message-Id: <20231124020352.1660621-1-suhui@nfschina.com>
+X-Mailer: git-send-email 2.30.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Thu, 2023-11-23 at 23:14 +0100, Johannes Berg wrote:
->=20
-> + * @IEEE80211_VIF_IGNORE_OFDMA_WIDER_BW: Ignore wider bandwidth OFDMA
-> + *	operation on this interface and request a channel context without
-> + *	the AP definition. Use this e.g. because the device is able to
-> + *	handle OFDMA (downlink and trigger for uplink) on a per-AP basis.
->=20
+Clang static checker warning:
+Value stored to 'v1' is never read [deadcode.DeadStores]
+Value stored to 'channel' is never read [deadcode.DeadStores]
 
-Err. I forgot to ever check that flag.
+Remove them to save some place.
 
-johannes
+Signed-off-by: Su Hui <suhui@nfschina.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2:
+ - fix the subject prefix problem
+
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 5323ead30db0..6df270e29e66 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -2038,15 +2038,9 @@ static bool _rtl8821ae_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
+ 			 /*don't need the hw_body*/
+ 			if (!_rtl8821ae_check_condition(hw, v1)) {
+ 				i += 2; /* skip the pair of expression*/
+-				v1 = array[i];
+ 				v2 = array[i+1];
+-				v3 = array[i+2];
+-				while (v2 != 0xDEAD) {
++				while (v2 != 0xDEAD)
+ 					i += 3;
+-					v1 = array[i];
+-					v2 = array[i+1];
+-					v3 = array[i+2];
+-				}
+ 			}
+ 		}
+ 	}
+@@ -3543,7 +3537,6 @@ u8 rtl8821ae_phy_sw_chnl(struct ieee80211_hw *hw)
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	u32 timeout = 1000, timecount = 0;
+-	u8 channel = rtlphy->current_channel;
+ 
+ 	if (rtlphy->sw_chnl_inprogress)
+ 		return 0;
+@@ -3566,8 +3559,6 @@ u8 rtl8821ae_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		rtl8821ae_phy_switch_wirelessband(hw, BAND_ON_2_4G);
+ 
+ 	rtlphy->sw_chnl_inprogress = true;
+-	if (channel == 0)
+-		channel = 1;
+ 
+ 	rtl_dbg(rtlpriv, COMP_SCAN, DBG_TRACE,
+ 		"switch to channel%d, band type is %d\n",
+-- 
+2.30.2
+
