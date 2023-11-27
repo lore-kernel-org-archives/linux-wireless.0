@@ -1,61 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C11CC12E58
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Nov 2023 22:26:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UFVwuBD+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB3C8C433C8;
-	Sun, 26 Nov 2023 22:26:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701037596;
-	bh=WYWHeUOvyvzljTzqy0dHZNjOtP4h9rbjEwP36PpU3qI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=UFVwuBD+/k7MMP+f0hM6mEmyn9+uXqakr0oLim/czrNpsPLNUal1bRwVX2Mn/KB/L
-	 S/5DhaEjz3X7iZQ7T6AUaFFbjjkDQbHHnpqPp+bx7td/3ZiKhDxiMxJtvh1z7mG5FW
-	 q9SnfiTB0L5mk1pZDvufkehsnuQdmGsO2KpaQKJRCCPj4tVOP4WYxrEpMFeTTOCSJ5
-	 FtIQ1dwZHh/0uKJASBMEPW0GHK1whKjiHYSz3pt6GX11CUpD2I6xPECpu/p2Jr9bOJ
-	 +vv9oIZYguLSUQvBQ9sj1ylaQvC1mDNk/CtbXxXH3xek7ZhiWlT72I/fmPxiL7nMsm
-	 dastMCp0EamLQ==
-Date: Sun, 26 Nov 2023 14:26:34 -0800
-From: Jakub Kicinski <kuba@kernel.org>
-To: cristian_ci <cristian_ci@protonmail.com>
-Cc: "kvalo@kernel.org" <kvalo@kernel.org>, "matthias.bgg@gmail.com"
- <matthias.bgg@gmail.com>, "angelogioacchino.delregno@collabora.com"
- <angelogioacchino.delregno@collabora.com>, "linux-wireless@vger.kernel.org"
- <linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [BUG] wireless: mt7601u: probe failed with error -110
-Message-ID: <20231126142634.3a100e2c@kernel.org>
-In-Reply-To: <Bnwq2et4CBU1_MS8X3rFeejMDmKf2dr_BNq60IzBcGKbjTxHG1CjJ0zB_wZjn8_iLJsi7fCx6_Eh01ozYBqPA-cEZXMZE_X98E0b7yotXCg=@protonmail.com>
-References: <Bnwq2et4CBU1_MS8X3rFeejMDmKf2dr_BNq60IzBcGKbjTxHG1CjJ0zB_wZjn8_iLJsi7fCx6_Eh01ozYBqPA-cEZXMZE_X98E0b7yotXCg=@protonmail.com>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from mail.nfschina.com (unknown [42.101.60.195])
+	by lindbergh.monkeyblade.net (Postfix) with SMTP id CCC2710F;
+	Sun, 26 Nov 2023 17:14:27 -0800 (PST)
+Received: from [172.30.11.106] (unknown [180.167.10.98])
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 8DFB16018B8D8;
+	Mon, 27 Nov 2023 09:13:41 +0800 (CST)
+Message-ID: <1bec6c93-aac4-eb95-f4f6-7b8fac65d967@nfschina.com>
+Date: Mon, 27 Nov 2023 09:13:09 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.0
+Subject: Re: [PATCH v2 2/2] wifi: rtlwifi: rtl8821ae: phy: fix an undefined
+ bitwise shift behavior
+Content-Language: en-US
+To: Ping-Ke Shih <pkshih@realtek.com>, "kvalo@kernel.org" <kvalo@kernel.org>,
+ "nathan@kernel.org" <nathan@kernel.org>,
+ "ndesaulniers@google.com" <ndesaulniers@google.com>,
+ "dan.carpenter@linaro.org" <dan.carpenter@linaro.org>,
+ "trix@redhat.com" <trix@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+ "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+ "llvm@lists.linux.dev" <llvm@lists.linux.dev>,
+ "linville@tuxdriver.com" <linville@tuxdriver.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "lizetao1@huawei.com" <lizetao1@huawei.com>
+X-MD-Sfrom: suhui@nfschina.com
+X-MD-SrcIP: 180.167.10.98
+From: Su Hui <suhui@nfschina.com>
+In-Reply-To: <02f0a505b3a02a3c5e29ac1e327acd1fc946188c.camel@realtek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Sat, 25 Nov 2023 13:03:45 +0000 cristian_ci wrote:
-> I'm not the only one to have experienced this bug. I've been
-> suggested to report that to kernel mailing list by linux support
-> channels.
-> 
-> I've tested this bug against upstream 6.6.2 kernel tarball from the
-> latest stable branch [1].
-> 
-> To solve this issue. I've also tried to patch mt7601u driver
-> disabling mcu calibration. Which doesn't seem a wise idea because
-> apparently it fixes probing but also hangs completely the machine
-> after some seconds (so, it needs a hard/forced shutdown).
+On 2023/11/24 19:19, Ping-Ke Shih wrote:
+> On Fri, 2023-11-24 at 18:06 +0800, Su Hui wrote:
+>> On 2023/11/24 16:51, Ping-Ke Shih wrote:
+>>> Subject: [PATCH v2 2/2] wifi: rtlwifi: rtl8821ae: phy: fix an undefined bitwise shift behavior
+>>>
+>>> [...]
+>>>> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+>>>> b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+>>>> index 6df270e29e66..52ab1b0761c0 100644
+>>>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+>>>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+>>>> @@ -31,7 +31,12 @@ static u32 _rtl8821ae_phy_calculate_bit_shift(u32 bitmask)
+>>>>    {
+>>>>           u32 i = ffs(bitmask);
+>>>>
+>>>> -       return i ? i - 1 : 32;
+>>>> +       if (!i) {
+>>>> +               WARN_ON_ONCE(1);
+>>>> +               return 0;
+>>>> +       }
+>>>> +
+>>>> +       return i - 1;
+>>>>    }
+>>> Personally, I prefer to use __ffs(), because in normal case no need additional '-1',
+>>> and abnormal cases should not happen.
+>> Hi,  Ping-Ke
+>>
+>> Replace _rtl8821ae_phy_calculate_bit_shift() by __ffs(bitmask) is better,
+>> but I'm not sure what callers should do when callers check bitmask is 0 before calling.
+>> Maybe this check is useless?
+>>
+>> I can send a v3 patch if using  __ffs(bitmask) and no check for bitmask is fine.
+>> Or could you send this patch if you have a better idea?
+>> Thanks for your suggestion!
+>>
+> Can this work to you?
+Looks good to me, briefer and better!
+I will send v3 soon.
+> static u32 _rtl8821ae_phy_calculate_bit_shift(u32 bitmask)
+> {
+> 	if (WARN_ON_ONCE(!bitmask))
+> 		return 0;
+>
+> 	return __ffs(bitmask);
+> }
 
-Does it work with the vendor driver? The upstream driver is just 
-a rewrite of the vendor driver, I don't know much about the device
-internals.
-
-Maybe Lorenzo or Felix have some ideas.
