@@ -1,33 +1,33 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Dq8fdjEH"
-Received: from EUR01-VE1-obe.outbound.protection.outlook.com (mail-ve1eur01on2054.outbound.protection.outlook.com [40.107.14.54])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0295391;
-	Tue, 28 Nov 2023 00:26:50 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="dk36nVVv"
+Received: from EUR02-VI1-obe.outbound.protection.outlook.com (mail-vi1eur02on2084.outbound.protection.outlook.com [40.107.241.84])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E0B610A;
+	Tue, 28 Nov 2023 00:31:46 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Bu4EAMEuhQ38wqWNZ/WJyCEBFqM0CVnmlVzdwKAkNKwje5mkCEfp8Uo2J1ZMKxhYlTsSW1lWUym2B18Pqgd+kLkDOTHE63133byWIu9hPQHGcsjLVWTlBb148rNpu5G/Fol4cJLXzL4rrwvjZ3x8q7/uMKisp+B9pdgJB5/A3qavZPvSCcZukycOEWJzkapgExIhXNVpW9SztWf0lcDZWV2M/G4/iwOBBcgJ3zEY8hELakPniW0nNX/3xfJ0NKPnDFVAZjMXLLkUkWtq1XC57jgzH1iMeUAKvvtXR8oMe6cHp8DymHZFJ2YBgNbasOeuDFzP0N3+f/fWI1LrJxnt5Q==
+ b=equ9d4BNCfQSockbNRwyYWFAu1oigbAz0xquQxyFEWMk22GZHboTa0FG3gyUGhyOGH/r0f7CqK6NE6evZk6ghwkbjb94HDA3GceSLnQetcO1Arzdibcl57LOI6yP/Db+DFaRUmgm5NhZaCWDzUQihyYjjI5RBKwAHgzYGYtmSA3+vbOnIXcguz4jO7CleXavdPwFSO6X8WUJDFuB/paaM0VMvXMpXj0TQ9f1AMtXsrBWsl/0Zac9wlZ4w0pRSp+vvoFNdAIaJ6wdOt+PZxlUsVJbC0ii1I5L8XKMQAGs5y4Nq9mIh/g6BD7pfuty3EFVRjRzTOiVd+4pisnwkPqVUA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JTJlh2esIs0J3zdwZT62A3siivnz7gZnEojPswGLlvk=;
- b=LeWTHjlpLgLJcAQBhd6W0n2xxAvEqP3yE1aP8N4ok7FCcXBxcSw/B+Z4MTIf/PgCeMkP8sDNkYOaNFowSHzgLXHoW1+WSiZ3wmPuJwr8nWVRQCVR055nNWbv+S1WI5+npS4OmUtsi2aOsJQ1h6B1s/CYVrG+B3ibm9o6vFAYNnlkudWOrceQUsFOxbx5J8hAy9hQu2bffWUJGUrp3WQxR1pofl/OGJqKLcqH+CROcqDm7WRyH3HJ4pKXptaCrj7gxZ0JhPru+nsag0U4T6bjmDMBGTESbIP6DEM148i8qOFKRnQPMjgUQd4YXpv8cJmgdhjDXzx6+gCgwOfkyl7TEA==
+ bh=tbIJ9yUDbBehYS94wXgA88Qam2O8rt9xNUsNEp1N5bk=;
+ b=G/3fVlKkgXtVVH0ocAL6oxn7D+sR8mbUoPoWWjDM/3iNQi99tsiMATEJuwttqiPE7zqYEqFyT0/SVpBhlTdhATCK4NIaducYG0Llk7Ue70R7Pk8nNEgCgWEj5T6zCH7vjeK5qkwIdg36La4jDJ7aSWRmWVkEOGNHeSo7Jc4CFv83xDkyQ+x3axJi8nFSZuTbLuhkZd5IfGeQ5BO/MzP6J51QhxImrA2ZRXet5FZosIlPp4ConTQBtiCxW4MOl65sPhk6xiixA4uXSRZ5jso3JpMWvLHzdjxiT66FTeCrQm4RKI6TSH5Fs8OvrR8bl5Y8+m6xa7pqNHb5E+cgKLE+kQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JTJlh2esIs0J3zdwZT62A3siivnz7gZnEojPswGLlvk=;
- b=Dq8fdjEHrpN8TaVkPEPt8pkzhAZB24pKOQ4KBT6prMmwL7Svj92nvGjciAsullkSNn/snqYd1A1XxnmA4xEQDFzUk2inG2cq10Q0h4q/kRwaWodaK/wgyKO1OVIE7uqE7Pm873Z9NxwhFTx1oCbT+PZyfeTEhxkelOQFwul5lNg=
+ bh=tbIJ9yUDbBehYS94wXgA88Qam2O8rt9xNUsNEp1N5bk=;
+ b=dk36nVVvD08Lcijp44YB8RuaZcCzFagSo7hCZFBgDYO58gclHaIvU4W/IeiKmK5aa9kX7DlmYb4InbzTaTUaLvTgTiKtCdtjMlNoJtQtkwZT6fNlWqnovJr8nqx+nY+7fZuR3sXKVfJ63Oy+KaUwh/rLC/oNdrg+DVlVM7LGhJE=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PA4PR04MB9638.eurprd04.prod.outlook.com (2603:10a6:102:273::20)
- by PAXPR04MB8653.eurprd04.prod.outlook.com (2603:10a6:102:21c::24) with
+ by AS5PR04MB10043.eurprd04.prod.outlook.com (2603:10a6:20b:67f::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7046.22; Tue, 28 Nov
- 2023 08:26:47 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7046.18; Tue, 28 Nov
+ 2023 08:31:43 +0000
 Received: from PA4PR04MB9638.eurprd04.prod.outlook.com
  ([fe80::34dd:289e:9e8b:9c9b]) by PA4PR04MB9638.eurprd04.prod.outlook.com
  ([fe80::34dd:289e:9e8b:9c9b%7]) with mapi id 15.20.7046.015; Tue, 28 Nov 2023
- 08:26:47 +0000
+ 08:31:43 +0000
 From: David Lin <yu-hao.lin@nxp.com>
 To: linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -36,14 +36,14 @@ Cc: linux-kernel@vger.kernel.org,
 	francesco@dolcini.it,
 	tsung-hsien.hsieh@nxp.com,
 	David Lin <yu-hao.lin@nxp.com>
-Subject: [PATCH] wifi: mwifiex: added extra delay for firmware ready.
-Date: Tue, 28 Nov 2023 16:25:44 +0800
-Message-Id: <20231128082544.613179-1-yu-hao.lin@nxp.com>
+Subject: [PATCH v7 00/12] wifi: mwifiex: added code to support host mlme.
+Date: Tue, 28 Nov 2023 16:31:03 +0800
+Message-Id: <20231128083115.613235-1-yu-hao.lin@nxp.com>
 X-Mailer: git-send-email 2.25.1
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYAPR03CA0004.apcprd03.prod.outlook.com
- (2603:1096:404:14::16) To PA4PR04MB9638.eurprd04.prod.outlook.com
+X-ClientProxiedBy: TYCP286CA0019.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:263::13) To PA4PR04MB9638.eurprd04.prod.outlook.com
  (2603:10a6:102:273::20)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -52,81 +52,141 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9638:EE_|PAXPR04MB8653:EE_
-X-MS-Office365-Filtering-Correlation-Id: e43a317b-4b2c-4654-659a-08dbefebc2da
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9638:EE_|AS5PR04MB10043:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5e6a48c5-d639-4b31-580e-08dbefec7386
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
 X-Microsoft-Antispam-Message-Info:
-	Y3yFcHA2xnIi/ZVI65ZBi9Dp8tE5Y/4OJckVvpfoR9VqwP9Jw+r6peizFz9VOCJIr8HgIUQ+pp3ro1DPdKwwlTTUzc54HDxiSwW40CkkPUvCI33AXB3p+cOBZOkQcrbPfN0LNAjuBQOZrCZH+zFt7KIyhPWAi6hLxRPDSCn2r5nsik7p8rgc1UmyfX0GMxsTlHRUpsqf7OAcdnz8xUd6SVytNXe4LHrRcGdC3IcX9M+cjf9HIxxci7drnTxXMPZNqnXsCol0oJET/tCm2jP2mkzOmO6U69BXBkWXc56mnU7KBhDtGw9+hBHYtPXsFOkj6A6xMRwN4Ju6+6M5uppT/1RHzdGJoe+4028bHivFoxX7fo0sxAmpZGrZUtQOiHEIn5yBZWodoXhYcF9jxLnSarBRrdqOSD886GOvfA/+3lMYzW5B7YtWIqwR5Y1p3li7UQi05zOlAV7Q/+YPhD8PXj/rKIp/Rr9eMdc69ki2FIA7r1Rw3Zrc2I4Nd1wVN391PMEijXCSqK7Fw1j0gzIy8Hp07Vp0J+sIiPdve4IzpuEloy2dOpdTFuygWEKqIxij
+	MYG70GLHIuzOcTZtg4Zf9CE73eqWa1y9GWJgd0i/wFUYEewrXGR1nIaRjGUxWeZUgdWk7AUhr/GOxlh/LwS6RNWy6cInsJrfg3Fr9rfb0BPfD3XfyOzfsIBHqwXux4ijQunhvKj1aYFiLQUqkYgAVATn0AeCg+aXVUqrVBlO4CgPDZfZFKCzh1kXfF8krr3z1FEkw/LvBEVWwP/p21CF0CmavNSuftOT2B70eiVnZP5JKmsLj6KzHaM9QwhctzyzjTL8pkauHved4wW9CiTvF5YU7foOIZPgOupHwn5mnroK9qgunbRX3mk8wbqSTk6fqqfFwx54ycfLJImP0XXoJVUPDtn+YSkOb06jyNC/F1qH81KWOngxRMKHDKNPHhjlmWws/NXiggNXdJFbg6QJcI2jTq/h/zbNYgk40CuEttMXPS+MdDJv0q1iK0dDAVEKkH1GNO4wI01zOA0CPo298VemJ3PGoKTnBTLnorNf7ZPbgStt8KH9OtLMYv8lItbiqO4UIXNKCEvbNwxae2ptNT8uOOuCkDB7dppmi9IKuFEHuxXQuUI1XJtx6Ju8l6N+
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9638.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(366004)(39860400002)(136003)(396003)(346002)(230922051799003)(64100799003)(451199024)(186009)(1800799012)(5660300002)(38100700002)(4744005)(2906002)(36756003)(41300700001)(86362001)(316002)(6916009)(66476007)(6666004)(66556008)(66946007)(52116002)(6486002)(6512007)(478600001)(1076003)(2616005)(6506007)(8936002)(8676002)(4326008);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9638.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(346002)(376002)(396003)(136003)(39860400002)(230922051799003)(1800799012)(186009)(64100799003)(451199024)(86362001)(2906002)(5660300002)(6506007)(83380400001)(6512007)(52116002)(41300700001)(38100700002)(36756003)(6666004)(1076003)(2616005)(478600001)(66556008)(66946007)(6486002)(8936002)(6916009)(8676002)(316002)(4326008)(66476007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?pfpJbVgXLHM7YejGv+l969IZAhnFy/dqlfc6p0+IqPAYr+nXEsPqT3yFXye1?=
- =?us-ascii?Q?Oh/vqgeK4IcoVD6VNHZl4leBdHHZfwRud5yvuisYZWarPhAQpG/yY9ALKxUC?=
- =?us-ascii?Q?R5/XMYPD0+t9MV9YEbGLwepS1jinUoWCdiaRMcV2Q7DxWrwh1gKmTPyiplyo?=
- =?us-ascii?Q?hcIeDYZZLzVaasb87fn0yS1Sx/iARBAHRwxkCMgz6KR57eEvCjWWc+cUfZLb?=
- =?us-ascii?Q?DNe4TKUGqCu/iEQGZ5Q4t/5KkN37sFUVgvIytm+8kElcOQvK88a7MyxYRJSw?=
- =?us-ascii?Q?A8ulZH9a+joHgdV7apOOM0sNiCt7gh0nziCsNJoTv14ZjF9mOk/MyqVAf9a2?=
- =?us-ascii?Q?d7tpGboOpBQSCHdK0m8SQhe4M4sVK0yaIxYwzt3hjNxvp4yyxhY95Yi0hzeY?=
- =?us-ascii?Q?wmz8vh89P4hj7S4BXztGxiDtdwWlwWfhiAI68pvi4aWwagGZ/d0kphLQ2kfj?=
- =?us-ascii?Q?KKLVOpcmhagHFqMzIoBhxQIj3XX3UXk8rwCOcRwTGMcpWwV8ywvPdc6ZCyhb?=
- =?us-ascii?Q?yg6762DUxJV2K6eDG2ROl0pbQ146lvzoDZ/G1GLxUa+uoLnfK198QUdYcoIw?=
- =?us-ascii?Q?8qsVTDDYA4p6G3mw6FF5AttMusqM0JiRXGCfhVM9+41YeejgdrUCOxROrGlh?=
- =?us-ascii?Q?m3A+7rmMoLJfnH8H+oEu5LWzQ3KA/PTqeDO5EmoQktmPbatUqCvaqZ+7hDn6?=
- =?us-ascii?Q?hm+u4vb1XkYm5evWhYkG5QMW5Hyuf/pN/yXF47Ji1El0voTqGsrXA67tP76G?=
- =?us-ascii?Q?iVQKwP3uawOzBwRwSNxk1W9j6TUJFFRDZrWe7RC8H2VfOPsAQU1wHauOTlWd?=
- =?us-ascii?Q?0+Ao5i3YDaTBuDi+KaXDoA007izha6eUwg9HQu21T2sYh+k1q5Ys2IrSXeLr?=
- =?us-ascii?Q?ghQtBWSf2TwmAttvKur8Rsk0KlSyq7xYW1utawIWijlw2SrAnRuTprUuv5Nh?=
- =?us-ascii?Q?IYoAhEfRcHduVGuL3AsqF2U3anZmXQnWLZRFJnHLjEBJt3mumjLGMncuxpEC?=
- =?us-ascii?Q?feGWZS1JTAuz4ZldpoMiU7uBksh0iuLD62fr2qvZv7hMc8PGU7++xNaZ5yjS?=
- =?us-ascii?Q?5fqz7OOlxuapSoAig9Z9ae7VZQiAkENgYFGY8BxtiQoOjbmJfWb2PQi311ot?=
- =?us-ascii?Q?/XXxnWlnKqumPLyPxvGTVRrxnyv8GgbBfedo5PCCV53f3dT8AnL5rsHv5z2n?=
- =?us-ascii?Q?1WEOYGwWkulYpRt2kYUzVOMtRk7vF/MLjQ1FGc1FFQmC3wNnSpqG0OXNJCqS?=
- =?us-ascii?Q?Cam/6EWheeQGuDH9k5iLruBN6pzhF3NUWsM/guiugmvG/6oSzv/8FMZD1//h?=
- =?us-ascii?Q?tC+UInmZXmeaWG2bnMWcQuo3niWcUuekp7BXbEa8qyvr2L4Vujs5L/4rMbyN?=
- =?us-ascii?Q?laWUjxHba37UutVTmtyJYmk6E9ICnn19thj06x7YEpHGzzXGcpKXkdblxA94?=
- =?us-ascii?Q?9+fgBmwfN0y8iTTVfWxijpKIdVvcFHfPWtmHTUKtmT6StdPVx6cyIETwCq6I?=
- =?us-ascii?Q?jDNswN7LCoAY5b1A1OUB48t4mUfMrXk+fXeiG2fsgazrHu8vYCS+HevmW8pF?=
- =?us-ascii?Q?OGcZrZEBoS3tYIYi3A+YqqzBcsLx4RfUQDR4x/IWk7I8BI81+atfvgixk8+f?=
- =?us-ascii?Q?temCMrCU8A1uOawStcT+UO2uM+bsBhLaj6qdELhMKY9g?=
+	=?us-ascii?Q?hG1Unkeb/FJrZblMeoAsL/e4lsrPrOzAeeNqxcCAmblb5QtnU6QZGJux4MVx?=
+ =?us-ascii?Q?muawnZfPvpdb3gXSB88C4WxMfL9WfBXMUIPLp+LCAT16vF2Cb3GUkeEOhGWk?=
+ =?us-ascii?Q?wCjmh4lHKyXBkYmTomZJ+yyV+UVRnfB6Qq+mBshVvHyJMBqY75LJQrzB2yzx?=
+ =?us-ascii?Q?UFTx7BWdu101vSahqfGk74Zy/UCMgzd4uPIVsB3ONVUDxh9t9Vlh1Fbz8zj1?=
+ =?us-ascii?Q?obGIoFGppIK2Iwq1CPImuX7y4YxN9qKsk+pxxkjA1YEAfi585PMnoxBfUjY+?=
+ =?us-ascii?Q?2OaxhF8SburT9FS73gjGy9v2r4tlK+VY3VIx4PZ+Rc901CT5tpsGv6NlaJMs?=
+ =?us-ascii?Q?atIQi2ee84S7Z8k9S6jGghvNFY8nIkYo7AO7bJ1qPZBJqMF9bkMG9fObTe9c?=
+ =?us-ascii?Q?A802qYoNGtpdN6KykyHChmsvUYjqhgPySRaPkkxSLusSw6hb4E0ZpxDkc9XG?=
+ =?us-ascii?Q?0jvMRHD/J8mqee3ql6Q+YTnf5T+UGjJqJYCdjGRyvoFyIYx+3HkqpD+VoRfa?=
+ =?us-ascii?Q?ps81SSvgtkzFQUF9YyVEk7pL2V7Ir74hwacyjQ8NU7+gXCzg5tgmiYI6IPnO?=
+ =?us-ascii?Q?LVSZJ7jELGeRO0VgdDM9qGy0y53lS3MnJYqaEIpvM/fx22cNHGEvezDvjP3x?=
+ =?us-ascii?Q?KJORVQBzZwCx7AwTNbzCHwHvKcksMsSDoW9VRtHTebCrav5ifSDyc9VXGTjU?=
+ =?us-ascii?Q?WT25q1INly+Rmk+0iXWeroLJUKO+fH3emeQ+gtEOVo2dRlKOKnDWMcdnQuhU?=
+ =?us-ascii?Q?mkdmlle3bQtnku9JkXcCrx8WhKk9+L4Ze+Jr/wTnv99LSxKATg2n6oZK6G0t?=
+ =?us-ascii?Q?fu9EF7sclp7gM+KmlXkorWrfZUantloBk568Ju6uJIktVaGPSzyEKyHZ/4oV?=
+ =?us-ascii?Q?cRfpNafbhfKaJSB85pZ+m0YVABsnzVrrwRLWnI0ODdgXQhVHmtf1VppPPEQj?=
+ =?us-ascii?Q?ylThSVPzpfzocCRBN0Yt/7QXLTJRycT89sdLuybLyaM2yAuRdCcQkFKNwMvZ?=
+ =?us-ascii?Q?Bdq7/ujsdXejBzmu1H+LCkkODxkhXjaLl3G3pMr4BFvSgc0dtFmw+W5rD6xf?=
+ =?us-ascii?Q?vv7WySRR3PRe5aDpZbrGPLDg7bpRv7Zq/TEAK6z5pvXqu8mWzooW8n5WiEY9?=
+ =?us-ascii?Q?CAhqv1hIPlSGx0OtcOz0OT1pwT0SF6Y3rn6D0k1GrnLkQh0C3bom24NKcnUc?=
+ =?us-ascii?Q?iIvxl2dROJTtjZRP+TQhRdthJg349eHAVXuoVwbs9nguvDJUghIGf/LAp3KQ?=
+ =?us-ascii?Q?+tlWLMJ7UlVGMxtKZ/Bi0zmQ2CvVKBhfjvWutvo5l9ZCFpru/Vundkg7eAPL?=
+ =?us-ascii?Q?mzRjEBjKYPEm4xVwgYuUo+5rEHRdDH3ehfMU1me4ChVYGLik8z6cg0xvsnit?=
+ =?us-ascii?Q?+B51Km5no/kJ8Yxg2/0ObdW2cwyA/LEa8YZHne6sHbSgGE+QmGkXUkouLLkx?=
+ =?us-ascii?Q?OCRm4hU1D0nleYJXfc7O5q9mxC9vVoISFVqnmGyFO8dJdTQ4lGfoUpbFaoby?=
+ =?us-ascii?Q?amHsq1ilI//SAnhB/REFs86Y4xafTx97exZ3t23zxFFMszLxqzkPAeR6cnkN?=
+ =?us-ascii?Q?Mq2xibOo1H92Z8i7jObmZxlZDsDuMcNhbxSQEorOWV501aI9EsOcWVo/QwuI?=
+ =?us-ascii?Q?SmSLxBhgv8q2e2qjlPhiH663aQ+h1Lp7QHH+1uNKc3KH?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e43a317b-4b2c-4654-659a-08dbefebc2da
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5e6a48c5-d639-4b31-580e-08dbefec7386
 X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9638.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Nov 2023 08:26:47.1790
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Nov 2023 08:31:43.4091
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3+Rz+52l2mqxYo8thzIBWuo3O4Q7y2Vql2JJ203ZzGKilqcJH1QPoou2HQcptPl0cuzQSG2HGIIuJxZtgysz4A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8653
+X-MS-Exchange-CrossTenant-UserPrincipalName: NpGlmObXmf1tbhFcAQjxcvUoazxf1Ur8sCIcXDn1siT+upiizNBdGK1GRjBpb2o3Tp4la9Zczldkyxtxmi55Kg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS5PR04MB10043
 
-For SDIO IW416, in a corner case FW may return ready before complete full
-initialization.
-Command timeout may occur at driver load after reboot.
-Workaround by adding 100ms delay at checking FW status.
+Patch v7:
 
-Signed-off-by: David Lin <yu-hao.lin@nxp.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +++
- 1 file changed, 3 insertions(+)
+Changelogs since Patch v6:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 6462a0ffe698..744e9403430a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -783,6 +783,9 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
- 		ret = -1;
- 	}
- 
-+	if (!ret)
-+		msleep(100);
-+
- 	return ret;
- }
- 
+1. Fix regression: Downlink throughput degraded by 70% in AP mode. 
+2. Fix issue: On STAUT, kernel Oops occurs when there is no association
+   response from AP. 
+3. Fix issue: On STAUT, if AP leaves abruptly and deauth is missing,
+   STA can't connect to AP anymore.
+4. Fix regression: STA can't connect to AP when host_mlme is disabled
+   (impact all chips). 
+5. Address reviewer comments.
+
+Patch v6:
+
+Correct mailing sequence.
+
+Patch v5:
+
+1. Add host base MLME support to enable WPA3 functionalities for both STA
+   and AP mode. 
+2. This feature (WPA3) required a firmware with corresponding Key API V2
+   support. 
+3. QA validation and regression have been covered for IW416.
+4. This feature (WPA3) is currently enabled and verified only for IW416.
+5. Changelogs since patch V4:
+	a. Add WPA3 support for AP mode.
+	b. Bug fix: In WPA3 STA mode, deice gets disconnected from AP
+           when group rekey occurs. 
+	c. Bug fix: STAUT doesn't send WMM IE in association request when
+           associate to a WMM-AP.
+
+
+Patch v4:
+
+1. Refine code segment per review comment. 
+2. Add API to check firmware encryption key command version when host_mlme
+   is enabled. 
+
+Patch v3:
+
+Cleanup commit message.
+
+Patch v2:
+
+1. Fix checkpatch error (pwe[1] -> pwe[0]).
+2. Move module parameter 'host_mlme' to mwifiex_sdio_device structure.
+   Default only enable for IW416.
+3. Disable advertising NL80211_FEATURE_SAE if host_mlme is not enabled.
+
+David Lin (12):
+  wifi: mwifiex: added code to support host mlme.
+  wifi: mwifiex: fixed group rekey issue for WPA3.
+  wifi: mwifiex: fixed reassocation issue for WPA3.
+  wifi: mwifiex: fixed missing WMM IE for assoc req.
+  wifi: mwifiex: supported host mlme for AP mode.
+  wifi: mwifiex: added mac address for AP config.
+  wifi: mwifiex: fixed TLV error for station add cmd.
+  wifi: mwifiex: fixed the way to handle assoc timeout.
+  wifi: mwifiex: fixed the way to handle link lost.
+  wifi: mwifiex: fixed AP issue without host mlme.
+  wifi: mwifiex: misc modifications for review comments.
+  wifi: mwifiex: fixed compile and coding errors.
+
+ .../net/wireless/marvell/mwifiex/cfg80211.c   | 397 +++++++++++++++++-
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c |  35 +-
+ drivers/net/wireless/marvell/mwifiex/decl.h   |  25 +-
+ drivers/net/wireless/marvell/mwifiex/fw.h     |  61 +++
+ drivers/net/wireless/marvell/mwifiex/init.c   |   6 +
+ drivers/net/wireless/marvell/mwifiex/ioctl.h  |   6 +
+ drivers/net/wireless/marvell/mwifiex/join.c   |  67 ++-
+ drivers/net/wireless/marvell/mwifiex/main.c   |  54 +++
+ drivers/net/wireless/marvell/mwifiex/main.h   |  17 +
+ drivers/net/wireless/marvell/mwifiex/scan.c   |   6 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c   |  13 +
+ drivers/net/wireless/marvell/mwifiex/sdio.h   |   2 +
+ .../wireless/marvell/mwifiex/sta_cmdresp.c    |   2 +
+ .../net/wireless/marvell/mwifiex/sta_event.c  |  36 +-
+ .../net/wireless/marvell/mwifiex/sta_ioctl.c  |   3 +-
+ drivers/net/wireless/marvell/mwifiex/sta_tx.c |   9 +-
+ .../net/wireless/marvell/mwifiex/uap_cmd.c    | 180 ++++++++
+ drivers/net/wireless/marvell/mwifiex/util.c   | 104 +++++
+ 18 files changed, 1003 insertions(+), 20 deletions(-)
+
 
 base-commit: 783004b6dbda2cfe9a552a4cc9c1d168a2068f6c
 -- 
