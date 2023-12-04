@@ -1,70 +1,129 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B7A9101;
-	Mon,  4 Dec 2023 00:12:48 -0800 (PST)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1rA44G-0007MD-Am; Mon, 04 Dec 2023 09:12:40 +0100
-Message-ID: <b5063044-e82d-4f73-a1fa-db6eeacd0498@leemhuis.info>
-Date: Mon, 4 Dec 2023 09:12:39 +0100
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Kfujqjzl"
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20070BB
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Dec 2023 00:13:45 -0800 (PST)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B45MGi6016439;
+	Mon, 4 Dec 2023 08:13:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=FcqFJo9TPMzxG/MHT15UDlu2X2WeYmoOM6aLSIt9Yts=;
+ b=KfujqjzlqasQCbgw3Trol20Mld2PchygUPMuJN4e2iSqmRAwIcmE/UxD6lzTm+gK3qnL
+ UDfSGj/vv2xwi4UjBtHDmraqo8yaZvxgcR6uNhcwBYff7K8xhxlLEGqkNm9UhgaM8BM9
+ RkVISp4G/88/8r1bbsO9pHTfOOymNby89X5rnAWqSp6bFKvOzYEgVAgWjiXtQ9K0egp/
+ THsHp4dx5N7un0x2dMqX9ZX7pJFwJLna7WMPxqP/JTVcFOggd19CZDCFK5ZQUdt7sd9+
+ RzvLNnIhwOAY4Skjz91wZrzgkeoaIC7f6z/aSYcjSn17w6aVgVP+WICb30gjkm8/x9+Q IA== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uqvyeuawe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 04 Dec 2023 08:13:41 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B48DefI002133
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 4 Dec 2023 08:13:40 GMT
+Received: from bqiang-Celadon-RN.qca.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 4 Dec 2023 00:13:38 -0800
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+To: <ath11k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v8 03/12] wifi: ath11k: fix a possible dead lock caused by ab->base_lock
+Date: Mon, 4 Dec 2023 16:13:14 +0800
+Message-ID: <20231204081323.5582-4-quic_bqiang@quicinc.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20231204081323.5582-1-quic_bqiang@quicinc.com>
+References: <20231204081323.5582-1-quic_bqiang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: iwlwifi: rfkill locking up kernel 6.5.12, 6.6.2
-Content-Language: en-US, de-DE
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>, "John W. Linville"
- <linville@tuxdriver.com>, Gregory Greenman <gregory.greenman@intel.com>,
- Linus Lotz <register+kernelbugzilla@lotz.li>,
- Darrell Enns <darrell@darrellenns.com>, Bagas Sanjaya
- <bagasdotme@gmail.com>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linux Regressions <regressions@lists.linux.dev>,
- Linux Wireless <linux-wireless@vger.kernel.org>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-References: <5ef14fe7-84a5-407f-b514-1527f7279ecd@gmail.com>
- <af62295b-b757-49ec-83ce-9d3ef93e24af@leemhuis.info>
-In-Reply-To: <af62295b-b757-49ec-83ce-9d3ef93e24af@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1701677568;02a0687e;
-X-HE-SMSGID: 1rA44G-0007MD-Am
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: RKb6FjYdnrRn7DmVKEKNBRWYNj_uN3cQ
+X-Proofpoint-GUID: RKb6FjYdnrRn7DmVKEKNBRWYNj_uN3cQ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-04_06,2023-11-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
+ mlxlogscore=966 bulkscore=0 suspectscore=0 clxscore=1015 spamscore=0
+ mlxscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2312040061
 
-On 02.12.23 07:07, Linux regression tracking (Thorsten Leemhuis) wrote:
-> On 30.11.23 09:23, Bagas Sanjaya wrote:
->>
->> I notice a regression report on Bugzilla [1]. Quoting from it:
->>
->>> Rfkilling the iwlwifi can lock up my machine, rfkill will not
->>> respond and other networking related things (e.g. ip a or ip r) I
->>> see this on 6.5.12 and 6.6.2 (fedora kernel). On 6.5.11 it does not
->>> lockup AFAICT, but also shows kernel oops. WiFi Hardware: AC 8265
->>
->> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=218206
-> 
-> TWIMC: More people that seem to be affected by the same problem joined
-> the report. And one user performed a bisection on 6.6.y. According to
-> that the problem is caused by a 6.6.y-backport of 37fb29bd1f90f1 ("wifi:
-> iwlwifi: pcie: synchronize IRQs before NAPI") [v6.7-rc1] from Johannes.
-> 
-> Another reported user also stated that the same problem happens on
-> 6.7-rc3 as well. No confirmation yet that 37fb29bd1f90f1 causes it
-> there, but it seems likely.
+spin_lock/spin_unlock are used in ath11k_reg_chan_list_event to
+acquire/release ab->base_lock. For now this is safe because that
+function is only called in soft IRQ context.
 
-TWIMC, it was now confirmed that reverting 37fb29bd1f90f1 in 6.7-rc
-fixes the problem.
+But ath11k_reg_chan_list_event() will be called from process
+context in an upcoming patch, and this can result in a deadlock if
+ab->base_lock is acquired in process context and then soft IRQ occurs
+on the same CPU and tries to acquire that lock.
 
-The bugzilla ticket has the details; it's sadly all a bit mess (it was
-afaics actually a gentoo user that confirmed the above in a downstream
-bug tracker [https://bugs.gentoo.org/918128#c21] and a gentoo kernel dev
-forwarded the result to our bugzilla...).
+Fix it by using spin_lock_bh and spin_unlock_bh instead.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+
+Fixes: 69a0fcf8a9f2 ("ath11k: Avoid reg rules update during firmware recovery")
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+v8:
+ no change.
+v7:
+ no change.
+
+ drivers/net/wireless/ath/ath11k/wmi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 4d484d29826e..6f0a35fcc9c1 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -7139,13 +7139,13 @@ int ath11k_reg_handle_chan_list(struct ath11k_base *ab,
+ 	/* Avoid default reg rule updates sent during FW recovery if
+ 	 * it is already available
+ 	 */
+-	spin_lock(&ab->base_lock);
++	spin_lock_bh(&ab->base_lock);
+ 	if (test_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags) &&
+ 	    ab->default_regd[pdev_idx]) {
+-		spin_unlock(&ab->base_lock);
++		spin_unlock_bh(&ab->base_lock);
+ 		goto retfail;
+ 	}
+-	spin_unlock(&ab->base_lock);
++	spin_unlock_bh(&ab->base_lock);
+ 
+ 	if (pdev_idx >= ab->num_radios) {
+ 		/* Process the event for phy0 only if single_pdev_only
+@@ -7198,7 +7198,7 @@ int ath11k_reg_handle_chan_list(struct ath11k_base *ab,
+ 		ab->reg_info_store[pdev_idx] = *reg_info;
+ 	}
+ 
+-	spin_lock(&ab->base_lock);
++	spin_lock_bh(&ab->base_lock);
+ 	if (ab->default_regd[pdev_idx]) {
+ 		/* The initial rules from FW after WMI Init is to build
+ 		 * the default regd. From then on, any rules updated for
+@@ -7218,7 +7218,7 @@ int ath11k_reg_handle_chan_list(struct ath11k_base *ab,
+ 		ab->default_regd[pdev_idx] = regd;
+ 	}
+ 	ab->dfs_region = reg_info->dfs_region;
+-	spin_unlock(&ab->base_lock);
++	spin_unlock_bh(&ab->base_lock);
+ 
+ 	return 0;
+ 
+-- 
+2.25.1
+
