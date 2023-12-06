@@ -1,25 +1,25 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 216F41BD
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Dec 2023 04:46:17 -0800 (PST)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3B6Ck5xoD3602903, This message is accepted by code: ctloc85258
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38071D4E
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Dec 2023 04:46:15 -0800 (PST)
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3B6Ck2s753602891, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3B6Ck5xoD3602903
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3B6Ck2s753602891
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 6 Dec 2023 20:46:05 +0800
+	Wed, 6 Dec 2023 20:46:02 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 6 Dec 2023 20:46:06 +0800
+ 15.1.2507.17; Wed, 6 Dec 2023 20:46:02 +0800
 Received: from [127.0.1.1] (172.16.20.124) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 6 Dec 2023
- 20:46:05 +0800
+ 20:46:01 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <kvalo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/6] wifi: rtw89: load RFK log format string from firmware file
-Date: Wed, 6 Dec 2023 20:44:45 +0800
-Message-ID: <20231206124448.10537-4-pkshih@realtek.com>
+Subject: [PATCH 1/6] wifi: rtw89: fw: load TX power track tables from fw_element
+Date: Wed, 6 Dec 2023 20:44:43 +0800
+Message-ID: <20231206124448.10537-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231206124448.10537-1-pkshih@realtek.com>
 References: <20231206124448.10537-1-pkshih@realtek.com>
@@ -38,172 +38,249 @@ X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
-To debug RFK (RF calibration) in firmware, it sends log via firmware C2H
-events to driver with string format ID and four arguments. Load formatted
-string from firmware file, and the string ID can get back its string. Then,
-use regular print format to show the message.
-
-This firmware element layout looks like
-
-    +============================================+
-    |  elm ID  | elm size | version  |           |
-    +----------+----------+----------+-----------+
-    |                     | nr |rsvd |rfk_id|rsvd|
-    +--------------------------------------------+
-    | offset[] (__le16 * nr)                     |
-    | ...                                        |
-    +--------------------------------------------+
-    | formatted string with null termintor (*nr) |
-    | ...                                        |
-    +============================================+
-
- * a firmware file can contains more than one elements with this element ID
-   named RTW89_FW_ELEMENT_ID_RFKLOG_FMT (19), because many RFK needs its
-   own formatted strings, so add 'rfk_id' to know it belongs to which RFK.
- * the 'formatted string' just follow 'offset[]' without padding to align
-   32bits.
+The TX power track tables are used to define compensation power reflected
+to thermal value. Currently, we have 16 (2 * 4 * 2) tables made by
+combinations of
+  {negative/positive thermal value, 2GHz/2GHz-CCK/5GHz/6GHz, path A/B}
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  2 ++
- drivers/net/wireless/realtek/rtw89/fw.c   | 29 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.h   |  8 +++++++
- drivers/net/wireless/realtek/rtw89/phy.h  | 15 ++++++++++++
- 4 files changed, 54 insertions(+)
+ drivers/net/wireless/realtek/rtw89/core.h |  4 ++
+ drivers/net/wireless/realtek/rtw89/fw.c   | 71 +++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/fw.h   | 60 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.h  |  2 -
+ 4 files changed, 135 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 396e6dd08b04..3080a3515aed 100644
+index c315ef96e91e..396e6dd08b04 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -18,6 +18,7 @@ struct rtw89_mac_gen_def;
+@@ -17,6 +17,7 @@ struct rtw89_pci_info;
+ struct rtw89_mac_gen_def;
  struct rtw89_phy_gen_def;
  struct rtw89_efuse_block_cfg;
- struct rtw89_fw_txpwr_track_cfg;
-+struct rtw89_phy_rfk_log_fmt;
++struct rtw89_fw_txpwr_track_cfg;
  
  extern const struct ieee80211_ops rtw89_ops;
  
-@@ -3939,6 +3940,7 @@ struct rtw89_fw_elm_info {
+@@ -38,6 +39,8 @@ extern const struct ieee80211_ops rtw89_ops;
+ #define RSSI_FACTOR 1
+ #define RTW89_RSSI_RAW_TO_DBM(rssi) ((s8)((rssi) >> RSSI_FACTOR) - MAX_RSSI)
+ #define RTW89_TX_DIV_RSSI_RAW_TH (2 << RSSI_FACTOR)
++#define DELTA_SWINGIDX_SIZE 30
++
+ #define RTW89_RADIOTAP_ROOM_HE sizeof(struct ieee80211_radiotap_he)
+ #define RTW89_RADIOTAP_ROOM_EHT \
+ 	(sizeof(struct ieee80211_radiotap_tlv) + \
+@@ -3935,6 +3938,7 @@ struct rtw89_fw_elm_info {
+ 	struct rtw89_phy_table *bb_gain;
  	struct rtw89_phy_table *rf_radio[RF_PATH_MAX];
  	struct rtw89_phy_table *rf_nctl;
- 	struct rtw89_fw_txpwr_track_cfg *txpwr_trk;
-+	struct rtw89_phy_rfk_log_fmt *rfk_log_fmt;
++	struct rtw89_fw_txpwr_track_cfg *txpwr_trk;
  };
  
  struct rtw89_fw_info {
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 546569a8fd5b..497c6dd5edf0 100644
+index b11ed35e265d..8c8ae13751b3 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.c
 +++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -728,6 +728,31 @@ int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
- 	return -EFAULT;
+@@ -658,6 +658,72 @@ int rtw89_fw_recognize_txpwr_from_elm(struct rtw89_dev *rtwdev,
+ 	return 0;
  }
  
 +static
-+int rtw89_build_rfk_log_fmt_from_elm(struct rtw89_dev *rtwdev,
-+				     const struct rtw89_fw_element_hdr *elm,
-+				     const union rtw89_fw_element_arg arg)
++int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
++				       const struct rtw89_fw_element_hdr *elm,
++				       const union rtw89_fw_element_arg arg)
 +{
 +	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
-+	u8 rfk_id;
++	const struct rtw89_chip_info *chip = rtwdev->chip;
++	u32 needed_bitmap = 0;
++	u32 offset = 0;
++	int subband;
++	u32 bitmap;
++	int type;
 +
-+	if (elm_info->rfk_log_fmt)
-+		goto allocated;
++	if (chip->support_bands & BIT(NL80211_BAND_6GHZ))
++		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_6GHZ;
++	if (chip->support_bands & BIT(NL80211_BAND_5GHZ))
++		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_5GHZ;
++	if (chip->support_bands & BIT(NL80211_BAND_2GHZ))
++		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_2GHZ;
 +
-+	elm_info->rfk_log_fmt = kzalloc(sizeof(*elm_info->rfk_log_fmt), GFP_KERNEL);
-+	if (!elm_info->rfk_log_fmt)
-+		return 1; /* this is an optional element, so just ignore this */
++	bitmap = le32_to_cpu(elm->u.txpwr_trk.bitmap);
 +
-+allocated:
-+	rfk_id = elm->u.rfk_log_fmt.rfk_id;
-+	if (rfk_id >= RTW89_PHY_C2H_RFK_LOG_FUNC_NUM)
-+		return 1;
++	if ((bitmap & needed_bitmap) != needed_bitmap) {
++		rtw89_warn(rtwdev, "needed txpwr trk bitmap %08x but %0x8x\n",
++			   needed_bitmap, bitmap);
++		return -ENOENT;
++	}
 +
-+	elm_info->rfk_log_fmt->elm[rfk_id] = elm;
++	elm_info->txpwr_trk = kzalloc(sizeof(*elm_info->txpwr_trk), GFP_KERNEL);
++	if (!elm_info->txpwr_trk)
++		return -ENOMEM;
++
++	for (type = 0; bitmap; type++, bitmap >>= 1) {
++		if (!(bitmap & BIT(0)))
++			continue;
++
++		if (type >= __RTW89_FW_TXPWR_TRK_TYPE_6GHZ_START &&
++		    type <= __RTW89_FW_TXPWR_TRK_TYPE_6GHZ_MAX)
++			subband = 4;
++		else if (type >= __RTW89_FW_TXPWR_TRK_TYPE_5GHZ_START &&
++			 type <= __RTW89_FW_TXPWR_TRK_TYPE_5GHZ_MAX)
++			subband = 3;
++		else if (type >= __RTW89_FW_TXPWR_TRK_TYPE_2GHZ_START &&
++			 type <= __RTW89_FW_TXPWR_TRK_TYPE_2GHZ_MAX)
++			subband = 1;
++		else
++			break;
++
++		elm_info->txpwr_trk->delta[type] = &elm->u.txpwr_trk.contents[offset];
++
++		offset += subband;
++		if (offset * DELTA_SWINGIDX_SIZE > le32_to_cpu(elm->size))
++			goto err;
++	}
 +
 +	return 0;
++
++err:
++	rtw89_warn(rtwdev, "unexpected txpwr trk offset %d over size %d\n",
++		   offset, le32_to_cpu(elm->size));
++	kfree(elm_info->txpwr_trk);
++	elm_info->txpwr_trk = NULL;
++
++	return -EFAULT;
 +}
 +
  static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
  	[RTW89_FW_ELEMENT_ID_BBMCU0] = {__rtw89_fw_recognize_from_elm,
  					{ .fw_type = RTW89_FW_BBMCU0 }, NULL},
-@@ -783,6 +808,9 @@ static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
- 	[RTW89_FW_ELEMENT_ID_TXPWR_TRK] = {
- 		rtw89_build_txpwr_trk_tbl_from_elm, {}, "PWR_TRK",
+@@ -710,6 +776,9 @@ static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
+ 		rtw89_fw_recognize_txpwr_from_elm,
+ 		{ .offset = offsetof(struct rtw89_rfe_data, tx_shape_lmt_ru.conf) }, NULL,
  	},
-+	[RTW89_FW_ELEMENT_ID_RFKLOG_FMT] = {
-+		rtw89_build_rfk_log_fmt_from_elm, {}, NULL,
++	[RTW89_FW_ELEMENT_ID_TXPWR_TRK] = {
++		rtw89_build_txpwr_trk_tbl_from_elm, {}, "PWR_TRK",
 +	},
  };
  
  int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
-@@ -1212,6 +1240,7 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
+@@ -1135,6 +1204,8 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
+ 	for (i = 0; i < ARRAY_SIZE(elm_info->rf_radio); i++)
+ 		rtw89_free_phy_tbl_from_elm(elm_info->rf_radio[i]);
  	rtw89_free_phy_tbl_from_elm(elm_info->rf_nctl);
- 
- 	kfree(elm_info->txpwr_trk);
-+	kfree(elm_info->rfk_log_fmt);
++
++	kfree(elm_info->txpwr_trk);
  }
  
  void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 6abe4f4e3489..1d909d684ed9 100644
+index d4db9ab0b5e8..99fb8471a223 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.h
 +++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -3427,6 +3427,7 @@ enum rtw89_fw_element_id {
+@@ -3426,6 +3426,7 @@ enum rtw89_fw_element_id {
+ 	RTW89_FW_ELEMENT_ID_TXPWR_LMT_RU_6GHZ = 15,
  	RTW89_FW_ELEMENT_ID_TX_SHAPE_LMT = 16,
  	RTW89_FW_ELEMENT_ID_TX_SHAPE_LMT_RU = 17,
- 	RTW89_FW_ELEMENT_ID_TXPWR_TRK = 18,
-+	RTW89_FW_ELEMENT_ID_RFKLOG_FMT = 19,
++	RTW89_FW_ELEMENT_ID_TXPWR_TRK = 18,
  
  	RTW89_FW_ELEMENT_ID_NUM,
  };
-@@ -3542,6 +3543,13 @@ struct rtw89_fw_element_hdr {
- 			__le32 rsvd;
- 			s8 contents[][DELTA_SWINGIDX_SIZE];
- 		} __packed txpwr_trk;
+@@ -3446,6 +3447,7 @@ enum rtw89_fw_element_id {
+ 					     BIT(RTW89_FW_ELEMENT_ID_RADIO_A) | \
+ 					     BIT(RTW89_FW_ELEMENT_ID_RADIO_B) | \
+ 					     BIT(RTW89_FW_ELEMENT_ID_RF_NCTL) | \
++					     BIT(RTW89_FW_ELEMENT_ID_TXPWR_TRK) | \
+ 					     BITS_OF_RTW89_TXPWR_FW_ELEMENTS)
+ 
+ struct __rtw89_fw_txpwr_element {
+@@ -3457,6 +3459,59 @@ struct __rtw89_fw_txpwr_element {
+ 	u8 content[];
+ } __packed;
+ 
++enum rtw89_fw_txpwr_trk_type {
++	__RTW89_FW_TXPWR_TRK_TYPE_6GHZ_START = 0,
++	RTW89_FW_TXPWR_TRK_TYPE_6GB_N = 0,
++	RTW89_FW_TXPWR_TRK_TYPE_6GB_P = 1,
++	RTW89_FW_TXPWR_TRK_TYPE_6GA_N = 2,
++	RTW89_FW_TXPWR_TRK_TYPE_6GA_P = 3,
++	__RTW89_FW_TXPWR_TRK_TYPE_6GHZ_MAX = 3,
++
++	__RTW89_FW_TXPWR_TRK_TYPE_5GHZ_START = 4,
++	RTW89_FW_TXPWR_TRK_TYPE_5GB_N = 4,
++	RTW89_FW_TXPWR_TRK_TYPE_5GB_P = 5,
++	RTW89_FW_TXPWR_TRK_TYPE_5GA_N = 6,
++	RTW89_FW_TXPWR_TRK_TYPE_5GA_P = 7,
++	__RTW89_FW_TXPWR_TRK_TYPE_5GHZ_MAX = 7,
++
++	__RTW89_FW_TXPWR_TRK_TYPE_2GHZ_START = 8,
++	RTW89_FW_TXPWR_TRK_TYPE_2GB_N = 8,
++	RTW89_FW_TXPWR_TRK_TYPE_2GB_P = 9,
++	RTW89_FW_TXPWR_TRK_TYPE_2GA_N = 10,
++	RTW89_FW_TXPWR_TRK_TYPE_2GA_P = 11,
++	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_N = 12,
++	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_P = 13,
++	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_N = 14,
++	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_P = 15,
++	__RTW89_FW_TXPWR_TRK_TYPE_2GHZ_MAX = 15,
++
++	RTW89_FW_TXPWR_TRK_TYPE_NR,
++};
++
++struct rtw89_fw_txpwr_track_cfg {
++	const s8 (*delta[RTW89_FW_TXPWR_TRK_TYPE_NR])[DELTA_SWINGIDX_SIZE];
++};
++
++#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_6GHZ \
++	(BIT(RTW89_FW_TXPWR_TRK_TYPE_6GB_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GB_P) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GA_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GA_P))
++#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_5GHZ \
++	(BIT(RTW89_FW_TXPWR_TRK_TYPE_5GB_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GB_P) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GA_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GA_P))
++#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_2GHZ \
++	(BIT(RTW89_FW_TXPWR_TRK_TYPE_2GB_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GB_P) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GA_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GA_P) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_P) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_N) | \
++	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_P))
++
+ struct rtw89_fw_element_hdr {
+ 	__le32 id; /* enum rtw89_fw_element_id */
+ 	__le32 size; /* exclude header size */
+@@ -3477,6 +3532,11 @@ struct rtw89_fw_element_hdr {
+ 				__le32 data;
+ 			} __packed regs[];
+ 		} __packed reg2;
 +		struct {
-+			u8 nr;
-+			u8 rsvd[3];
-+			u8 rfk_id; /* enum rtw89_phy_c2h_rfk_log_func */
-+			u8 rsvd1[3];
-+			__le16 offset[];
-+		} __packed rfk_log_fmt;
++			__le32 bitmap; /* bitmap of enum rtw89_fw_txpwr_trk_type */
++			__le32 rsvd;
++			s8 contents[][DELTA_SWINGIDX_SIZE];
++		} __packed txpwr_trk;
  		struct __rtw89_fw_txpwr_element txpwr;
  	} __packed u;
  } __packed;
 diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index 6792b73e9ca3..b60bc563d86f 100644
+index d6363defcde6..6792b73e9ca3 100644
 --- a/drivers/net/wireless/realtek/rtw89/phy.h
 +++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -136,6 +136,17 @@ enum rtw89_phy_c2h_ra_func {
- 	RTW89_PHY_C2H_FUNC_RA_MAX,
+@@ -291,8 +291,6 @@ struct rtw89_txpwr_byrate_cfg {
+ 	u32 data;
  };
  
-+enum rtw89_phy_c2h_rfk_log_func {
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_IQK = 0,
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_DPK = 1,
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_DACK = 2,
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_RXDCK = 3,
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_TSSI = 4,
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_TXGAPK = 5,
-+
-+	RTW89_PHY_C2H_RFK_LOG_FUNC_NUM,
-+};
-+
- enum rtw89_phy_c2h_dm_func {
- 	RTW89_PHY_C2H_DM_FUNC_FW_TEST,
- 	RTW89_PHY_C2H_DM_FUNC_FW_TRIG_TX_RPT,
-@@ -483,6 +494,10 @@ struct rtw89_txpwr_limit_ru_be {
- 	s8 ru106_26[RTW89_RU_SEC_NUM_BE];
- };
- 
-+struct rtw89_phy_rfk_log_fmt {
-+	const struct rtw89_fw_element_hdr *elm[RTW89_PHY_C2H_RFK_LOG_FUNC_NUM];
-+};
-+
- struct rtw89_phy_gen_def {
- 	u32 cr_base;
- 	const struct rtw89_ccx_regs *ccx;
+-#define DELTA_SWINGIDX_SIZE 30
+-
+ struct rtw89_txpwr_track_cfg {
+ 	const s8 (*delta_swingidx_6gb_n)[DELTA_SWINGIDX_SIZE];
+ 	const s8 (*delta_swingidx_6gb_p)[DELTA_SWINGIDX_SIZE];
 -- 
 2.25.1
 
