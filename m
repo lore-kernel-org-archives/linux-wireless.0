@@ -1,28 +1,38 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38071D4E
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Dec 2023 04:46:15 -0800 (PST)
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3B6Ck2s753602891, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3B6Ck2s753602891
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 6 Dec 2023 20:46:02 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.17; Wed, 6 Dec 2023 20:46:02 +0800
-Received: from [127.0.1.1] (172.16.20.124) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Wed, 6 Dec 2023
- 20:46:01 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <kvalo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/6] wifi: rtw89: fw: load TX power track tables from fw_element
-Date: Wed, 6 Dec 2023 20:44:43 +0800
-Message-ID: <20231206124448.10537-2-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231206124448.10537-1-pkshih@realtek.com>
-References: <20231206124448.10537-1-pkshih@realtek.com>
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1FDBAC
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Dec 2023 05:13:46 -0800 (PST)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <rcz@pengutronix.de>)
+	id 1rArii-0001DV-2f; Wed, 06 Dec 2023 14:13:44 +0100
+Received: from [2a0a:edc0:0:1101:1d::54] (helo=dude05.red.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <rcz@pengutronix.de>)
+	id 1rArig-00DyO1-MO; Wed, 06 Dec 2023 14:13:42 +0100
+Received: from rcz by dude05.red.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <rcz@pengutronix.de>)
+	id 1rArig-00D0Qc-20;
+	Wed, 06 Dec 2023 14:13:42 +0100
+From: Rouven Czerwinski <r.czerwinski@pengutronix.de>
+To: Josua Mayer <josua@solid-run.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: kernel@pengutronix.de,
+	Rouven Czerwinski <r.czerwinski@pengutronix.de>,
+	stable@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>
+Subject: [PATCH] net: rfkill: gpio: set GPIO direction
+Date: Wed,  6 Dec 2023 14:13:35 +0100
+Message-Id: <20231206131336.3099727-1-r.czerwinski@pengutronix.de>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -30,257 +40,50 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: rcz@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-The TX power track tables are used to define compensation power reflected
-to thermal value. Currently, we have 16 (2 * 4 * 2) tables made by
-combinations of
-  {negative/positive thermal value, 2GHz/2GHz-CCK/5GHz/6GHz, path A/B}
+Fix the undefined usage of the GPIO consumer API after retrieving the
+GPIO description with GPIO_ASIS. The API documentation mentions that
+GPIO_ASIS won't set a GPIO direction and requires the user to set a
+direction before using the GPIO.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+This can be confirmed on i.MX6 hardware, where rfkill-gpio is no longer
+able to enabled/disable a device, presumably because the GPIO controller
+was never configured for the output direction.
+
+Fixes: b2f750c3a80b ("net: rfkill: gpio: prevent value glitch during probe")
+Cc: stable@vger.kernel.org
+Signed-off-by: Rouven Czerwinski <r.czerwinski@pengutronix.de>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  4 ++
- drivers/net/wireless/realtek/rtw89/fw.c   | 71 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/fw.h   | 60 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/phy.h  |  2 -
- 4 files changed, 135 insertions(+), 2 deletions(-)
+ net/rfkill/rfkill-gpio.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index c315ef96e91e..396e6dd08b04 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -17,6 +17,7 @@ struct rtw89_pci_info;
- struct rtw89_mac_gen_def;
- struct rtw89_phy_gen_def;
- struct rtw89_efuse_block_cfg;
-+struct rtw89_fw_txpwr_track_cfg;
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 5a81505fba9ac..3d9ae696397cf 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -126,6 +126,16 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
  
- extern const struct ieee80211_ops rtw89_ops;
- 
-@@ -38,6 +39,8 @@ extern const struct ieee80211_ops rtw89_ops;
- #define RSSI_FACTOR 1
- #define RTW89_RSSI_RAW_TO_DBM(rssi) ((s8)((rssi) >> RSSI_FACTOR) - MAX_RSSI)
- #define RTW89_TX_DIV_RSSI_RAW_TH (2 << RSSI_FACTOR)
-+#define DELTA_SWINGIDX_SIZE 30
++	if (rfkill->reset_gpio)
++		ret = gpiod_direction_output(rfkill->reset_gpio, true);
++	if (ret)
++		return ret;
 +
- #define RTW89_RADIOTAP_ROOM_HE sizeof(struct ieee80211_radiotap_he)
- #define RTW89_RADIOTAP_ROOM_EHT \
- 	(sizeof(struct ieee80211_radiotap_tlv) + \
-@@ -3935,6 +3938,7 @@ struct rtw89_fw_elm_info {
- 	struct rtw89_phy_table *bb_gain;
- 	struct rtw89_phy_table *rf_radio[RF_PATH_MAX];
- 	struct rtw89_phy_table *rf_nctl;
-+	struct rtw89_fw_txpwr_track_cfg *txpwr_trk;
- };
- 
- struct rtw89_fw_info {
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index b11ed35e265d..8c8ae13751b3 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -658,6 +658,72 @@ int rtw89_fw_recognize_txpwr_from_elm(struct rtw89_dev *rtwdev,
- 	return 0;
- }
- 
-+static
-+int rtw89_build_txpwr_trk_tbl_from_elm(struct rtw89_dev *rtwdev,
-+				       const struct rtw89_fw_element_hdr *elm,
-+				       const union rtw89_fw_element_arg arg)
-+{
-+	struct rtw89_fw_elm_info *elm_info = &rtwdev->fw.elm_info;
-+	const struct rtw89_chip_info *chip = rtwdev->chip;
-+	u32 needed_bitmap = 0;
-+	u32 offset = 0;
-+	int subband;
-+	u32 bitmap;
-+	int type;
++	if (rfkill->shutdown_gpio)
++		ret = gpiod_direction_output(rfkill->shutdown_gpio, true);
++	if (ret)
++		return ret;
 +
-+	if (chip->support_bands & BIT(NL80211_BAND_6GHZ))
-+		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_6GHZ;
-+	if (chip->support_bands & BIT(NL80211_BAND_5GHZ))
-+		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_5GHZ;
-+	if (chip->support_bands & BIT(NL80211_BAND_2GHZ))
-+		needed_bitmap |= RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_2GHZ;
-+
-+	bitmap = le32_to_cpu(elm->u.txpwr_trk.bitmap);
-+
-+	if ((bitmap & needed_bitmap) != needed_bitmap) {
-+		rtw89_warn(rtwdev, "needed txpwr trk bitmap %08x but %0x8x\n",
-+			   needed_bitmap, bitmap);
-+		return -ENOENT;
-+	}
-+
-+	elm_info->txpwr_trk = kzalloc(sizeof(*elm_info->txpwr_trk), GFP_KERNEL);
-+	if (!elm_info->txpwr_trk)
-+		return -ENOMEM;
-+
-+	for (type = 0; bitmap; type++, bitmap >>= 1) {
-+		if (!(bitmap & BIT(0)))
-+			continue;
-+
-+		if (type >= __RTW89_FW_TXPWR_TRK_TYPE_6GHZ_START &&
-+		    type <= __RTW89_FW_TXPWR_TRK_TYPE_6GHZ_MAX)
-+			subband = 4;
-+		else if (type >= __RTW89_FW_TXPWR_TRK_TYPE_5GHZ_START &&
-+			 type <= __RTW89_FW_TXPWR_TRK_TYPE_5GHZ_MAX)
-+			subband = 3;
-+		else if (type >= __RTW89_FW_TXPWR_TRK_TYPE_2GHZ_START &&
-+			 type <= __RTW89_FW_TXPWR_TRK_TYPE_2GHZ_MAX)
-+			subband = 1;
-+		else
-+			break;
-+
-+		elm_info->txpwr_trk->delta[type] = &elm->u.txpwr_trk.contents[offset];
-+
-+		offset += subband;
-+		if (offset * DELTA_SWINGIDX_SIZE > le32_to_cpu(elm->size))
-+			goto err;
-+	}
-+
-+	return 0;
-+
-+err:
-+	rtw89_warn(rtwdev, "unexpected txpwr trk offset %d over size %d\n",
-+		   offset, le32_to_cpu(elm->size));
-+	kfree(elm_info->txpwr_trk);
-+	elm_info->txpwr_trk = NULL;
-+
-+	return -EFAULT;
-+}
-+
- static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
- 	[RTW89_FW_ELEMENT_ID_BBMCU0] = {__rtw89_fw_recognize_from_elm,
- 					{ .fw_type = RTW89_FW_BBMCU0 }, NULL},
-@@ -710,6 +776,9 @@ static const struct rtw89_fw_element_handler __fw_element_handlers[] = {
- 		rtw89_fw_recognize_txpwr_from_elm,
- 		{ .offset = offsetof(struct rtw89_rfe_data, tx_shape_lmt_ru.conf) }, NULL,
- 	},
-+	[RTW89_FW_ELEMENT_ID_TXPWR_TRK] = {
-+		rtw89_build_txpwr_trk_tbl_from_elm, {}, "PWR_TRK",
-+	},
- };
- 
- int rtw89_fw_recognize_elements(struct rtw89_dev *rtwdev)
-@@ -1135,6 +1204,8 @@ static void rtw89_unload_firmware_elements(struct rtw89_dev *rtwdev)
- 	for (i = 0; i < ARRAY_SIZE(elm_info->rf_radio); i++)
- 		rtw89_free_phy_tbl_from_elm(elm_info->rf_radio[i]);
- 	rtw89_free_phy_tbl_from_elm(elm_info->rf_nctl);
-+
-+	kfree(elm_info->txpwr_trk);
- }
- 
- void rtw89_unload_firmware(struct rtw89_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index d4db9ab0b5e8..99fb8471a223 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -3426,6 +3426,7 @@ enum rtw89_fw_element_id {
- 	RTW89_FW_ELEMENT_ID_TXPWR_LMT_RU_6GHZ = 15,
- 	RTW89_FW_ELEMENT_ID_TX_SHAPE_LMT = 16,
- 	RTW89_FW_ELEMENT_ID_TX_SHAPE_LMT_RU = 17,
-+	RTW89_FW_ELEMENT_ID_TXPWR_TRK = 18,
- 
- 	RTW89_FW_ELEMENT_ID_NUM,
- };
-@@ -3446,6 +3447,7 @@ enum rtw89_fw_element_id {
- 					     BIT(RTW89_FW_ELEMENT_ID_RADIO_A) | \
- 					     BIT(RTW89_FW_ELEMENT_ID_RADIO_B) | \
- 					     BIT(RTW89_FW_ELEMENT_ID_RF_NCTL) | \
-+					     BIT(RTW89_FW_ELEMENT_ID_TXPWR_TRK) | \
- 					     BITS_OF_RTW89_TXPWR_FW_ELEMENTS)
- 
- struct __rtw89_fw_txpwr_element {
-@@ -3457,6 +3459,59 @@ struct __rtw89_fw_txpwr_element {
- 	u8 content[];
- } __packed;
- 
-+enum rtw89_fw_txpwr_trk_type {
-+	__RTW89_FW_TXPWR_TRK_TYPE_6GHZ_START = 0,
-+	RTW89_FW_TXPWR_TRK_TYPE_6GB_N = 0,
-+	RTW89_FW_TXPWR_TRK_TYPE_6GB_P = 1,
-+	RTW89_FW_TXPWR_TRK_TYPE_6GA_N = 2,
-+	RTW89_FW_TXPWR_TRK_TYPE_6GA_P = 3,
-+	__RTW89_FW_TXPWR_TRK_TYPE_6GHZ_MAX = 3,
-+
-+	__RTW89_FW_TXPWR_TRK_TYPE_5GHZ_START = 4,
-+	RTW89_FW_TXPWR_TRK_TYPE_5GB_N = 4,
-+	RTW89_FW_TXPWR_TRK_TYPE_5GB_P = 5,
-+	RTW89_FW_TXPWR_TRK_TYPE_5GA_N = 6,
-+	RTW89_FW_TXPWR_TRK_TYPE_5GA_P = 7,
-+	__RTW89_FW_TXPWR_TRK_TYPE_5GHZ_MAX = 7,
-+
-+	__RTW89_FW_TXPWR_TRK_TYPE_2GHZ_START = 8,
-+	RTW89_FW_TXPWR_TRK_TYPE_2GB_N = 8,
-+	RTW89_FW_TXPWR_TRK_TYPE_2GB_P = 9,
-+	RTW89_FW_TXPWR_TRK_TYPE_2GA_N = 10,
-+	RTW89_FW_TXPWR_TRK_TYPE_2GA_P = 11,
-+	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_N = 12,
-+	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_P = 13,
-+	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_N = 14,
-+	RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_P = 15,
-+	__RTW89_FW_TXPWR_TRK_TYPE_2GHZ_MAX = 15,
-+
-+	RTW89_FW_TXPWR_TRK_TYPE_NR,
-+};
-+
-+struct rtw89_fw_txpwr_track_cfg {
-+	const s8 (*delta[RTW89_FW_TXPWR_TRK_TYPE_NR])[DELTA_SWINGIDX_SIZE];
-+};
-+
-+#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_6GHZ \
-+	(BIT(RTW89_FW_TXPWR_TRK_TYPE_6GB_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GB_P) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GA_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_6GA_P))
-+#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_5GHZ \
-+	(BIT(RTW89_FW_TXPWR_TRK_TYPE_5GB_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GB_P) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GA_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_5GA_P))
-+#define RTW89_DEFAULT_NEEDED_FW_TXPWR_TRK_2GHZ \
-+	(BIT(RTW89_FW_TXPWR_TRK_TYPE_2GB_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GB_P) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GA_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2GA_P) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_B_P) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_N) | \
-+	 BIT(RTW89_FW_TXPWR_TRK_TYPE_2G_CCK_A_P))
-+
- struct rtw89_fw_element_hdr {
- 	__le32 id; /* enum rtw89_fw_element_id */
- 	__le32 size; /* exclude header size */
-@@ -3477,6 +3532,11 @@ struct rtw89_fw_element_hdr {
- 				__le32 data;
- 			} __packed regs[];
- 		} __packed reg2;
-+		struct {
-+			__le32 bitmap; /* bitmap of enum rtw89_fw_txpwr_trk_type */
-+			__le32 rsvd;
-+			s8 contents[][DELTA_SWINGIDX_SIZE];
-+		} __packed txpwr_trk;
- 		struct __rtw89_fw_txpwr_element txpwr;
- 	} __packed u;
- } __packed;
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index d6363defcde6..6792b73e9ca3 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -291,8 +291,6 @@ struct rtw89_txpwr_byrate_cfg {
- 	u32 data;
- };
- 
--#define DELTA_SWINGIDX_SIZE 30
--
- struct rtw89_txpwr_track_cfg {
- 	const s8 (*delta_swingidx_6gb_n)[DELTA_SWINGIDX_SIZE];
- 	const s8 (*delta_swingidx_6gb_p)[DELTA_SWINGIDX_SIZE];
+ 	rfkill->rfkill_dev = rfkill_alloc(rfkill->name, &pdev->dev,
+ 					  rfkill->type, &rfkill_gpio_ops,
+ 					  rfkill);
+
+base-commit: 994d5c58e50e91bb02c7be4a91d5186292a895c8
 -- 
-2.25.1
+2.39.2
 
