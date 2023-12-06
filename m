@@ -1,105 +1,109 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="hXGY7TC+"
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFBDF1A5
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Dec 2023 18:49:45 -0800 (PST)
-X-UUID: 198ba52293e211ee8051498923ad61e6-20231206
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=LoDR6yW5PhaOI9nXfn4sNBMu5ukjVwmKI+VJR2t82HE=;
-	b=hXGY7TC+sxlmrtHGpr5yMl4ASXuMFXHMLrgQe8fK3E8Bn41W9p5ZRa2U3KmNl9s+I7oONg2xzYx7irNl6hgXzBfH1NbVCIEWZxaDuQ8pdKDAjHoXauvNHaJZJ4BqZekNl9u04sjxtR4X06+zKWj/tfQhouZ1+nj9qF7KYf+/TSQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.34,REQID:828c328a-49b5-48ad-82ef-bb2c909b3cd8,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:abefa75,CLOUDID:fc9755fd-4a48-46e2-b946-12f04f20af8c,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
-	NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 198ba52293e211ee8051498923ad61e6-20231206
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-	(envelope-from <allen.ye@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1106730928; Wed, 06 Dec 2023 10:49:39 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="f9IiPKSj"
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B9F51B9
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Dec 2023 19:49:47 -0800 (PST)
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3B61gIrr009539;
+	Wed, 6 Dec 2023 03:49:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding : content-type; s=qcppdkim1;
+ bh=tOb0i94BXrphYlWkVqGJbav+T8VJNdzoLbiXPs7lrwA=;
+ b=f9IiPKSjeoqu24P07MJqXJuVfQX5poj7ahZqtpioPEkXO6e40oSN+NhklQYp0aq8aeaT
+ YvNN5plsQOglIH9h1HP4t1D/uiiPo6+P1lGHOj3TWoYzzbkdmO+nRazpaZFoVpuxaZK4
+ AO5mqrzmH9M9iIDcsmBKV/KtuHWyNXky4P62eul+jY9j2OJXTY4kj3fRxgjPl6YsJysT
+ cY3g/sV7GEkYaIafpfm5ZPehKvfik8JCU4WEgFo4ApIcl79ei/kYoEF0k1XU/8opR/jF
+ MAw6fXerwccNdCOBaBFxmexFKdeuWsYESj8lQH6vPh2KWr099kbxwaT9hJhxLakuYeRw oQ== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3utddjrehf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 06 Dec 2023 03:49:43 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3B63ngnj000822
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 6 Dec 2023 03:49:42 GMT
+Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 6 Dec 2023 10:49:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 6 Dec 2023 10:49:38 +0800
-From: Allen Ye <allen.ye@mediatek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes.berg@intel.com>, Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, Evelyn Tsai
-	<evelyn.tsai@mediatek.com>, "Money . Wang" <money.wang@mediatek.com>,
-	<linux-mediatek@lists.infradead.org>, Allen.Ye <allen.ye@mediatek.com>
-Subject: [PATCH] wifi: mac80211: Update bssid indicator with real BSS numbers
-Date: Wed, 6 Dec 2023 10:49:11 +0800
-Message-ID: <20231206024911.7668-1-allen.ye@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+ 15.2.1118.40; Tue, 5 Dec 2023 19:49:41 -0800
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Karthikeyan Periyasamy
+	<quic_periyasa@quicinc.com>
+Subject: [PATCH 1/4] wifi: ath12k: Refactor the DP pdev pre alloc call sequence
+Date: Wed, 6 Dec 2023 09:19:17 +0530
+Message-ID: <20231206034920.1037449-2-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231206034920.1037449-1-quic_periyasa@quicinc.com>
+References: <20231206034920.1037449-1-quic_periyasa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--8.102400-8.000000
-X-TMASE-MatchedRID: kgKXJcFYqZi2jsN8aguKvC97pb4g5HCtvtVce6w5+K9bLUcJ8BGOxWD/
-	jkY+Hb4O08QE6X8k+fyUTQ2JYQzY2yE6c9JYhNJ6k3ewifG2MNPm1SQ5tAvJo9qtffjsN+cnq3c
-	ttlDobAypYSDa5JlKKGijwWv+7EDclwV2iaAfSWcURSScn+QSXt0H8LFZNFG73Yq8RVaZivWmra
-	jv7qH7k7zHx35ro84oE/svZgTKKT+OAG8otMPC8qehxTSuqyLn
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--8.102400-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP:
-	F1F1717A581B2F9DE085D79198B1B8E48C4B0560DDCDE47B740B2AA210E968702000:8
-X-MTK: N
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: q35iMVU68DYXvXc_fPljYu4NWKTCY5c5
+X-Proofpoint-GUID: q35iMVU68DYXvXc_fPljYu4NWKTCY5c5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-06_01,2023-12-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 clxscore=1011 priorityscore=1501 mlxscore=0 impostorscore=0
+ malwarescore=0 adultscore=0 mlxlogscore=789 phishscore=0 suspectscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312060031
 
-From: "Allen.Ye" <allen.ye@mediatek.com>
+Currently, the data path pdev pre alloc and mac allocate are called
+separately from the core start procedure. The data path pdev pre alloc
+can be called from the mac allocate procedure itself since initialization
+related to pdev happens in the mac allocate procedure. So move the caller
+of DP pdev pre alloc from the core start procedure to the mac allocate
+procedure. This change helps in the future to easily decouple the mac
+allocate procedure from core start handling in order to support MLO in
+multi chip.
 
-The cnt member in mbssid is the count of total number of MBSSID elements
-instead of BSSID. Therefore, we fix this by reading the MaxBSSID Indicator
-field directly.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Signed-off-by: Evelyn.Tsai <evelyn.tsai@mediatek.com>
-Signed-off-by: Money.Wang <money.wang@mediatek.com>
-Signed-off-by: Allen.Ye <allen.ye@mediatek.com>
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- net/mac80211/cfg.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath12k/core.c | 2 --
+ drivers/net/wireless/ath/ath12k/mac.c  | 2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 606b1b2e4123..f90bcd59f85a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1164,9 +1164,11 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 	/* copy in optional mbssid_ies */
- 	if (mbssid) {
- 		u8 *pos = new->tail + new->tail_len;
-+		const struct element *mbssid_elem;
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 6c01b282fcd3..6f634b57dde8 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -592,8 +592,6 @@ static int ath12k_core_start(struct ath12k_base *ab,
  
- 		new->mbssid_ies = (void *)pos;
- 		pos += struct_size(new->mbssid_ies, elem, mbssid->cnt);
-+		mbssid_elem = (const struct element *)pos;
- 		pos += ieee80211_copy_mbssid_beacon(pos, new->mbssid_ies,
- 						    mbssid);
- 		if (rnr) {
-@@ -1175,8 +1177,7 @@ ieee80211_assign_beacon(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_copy_rnr_beacon(pos, new->rnr_ies, rnr);
- 		}
- 		/* update bssid_indicator */
--		link_conf->bssid_indicator =
--			ilog2(__roundup_pow_of_two(mbssid->cnt + 1));
-+		link_conf->bssid_indicator = mbssid_elem->data[0];
+ 	ath12k_dp_cc_config(ab);
+ 
+-	ath12k_dp_pdev_pre_alloc(ab);
+-
+ 	ret = ath12k_dp_rx_pdev_reo_setup(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to initialize reo destination rings: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 88cec54c6c2e..49d56f5d8896 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -7667,6 +7667,8 @@ int ath12k_mac_allocate(struct ath12k_base *ab)
+ 		clear_bit(ATH12K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
  	}
  
- 	if (csa) {
++	ath12k_dp_pdev_pre_alloc(ab);
++
+ 	return 0;
+ 
+ err_free_mac:
 -- 
-2.18.0
+2.34.1
 
