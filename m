@@ -1,107 +1,92 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="YdsnpsvZ"
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 063FB1715
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Dec 2023 13:01:33 -0800 (PST)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 95FB118005D;
-	Thu,  7 Dec 2023 21:01:30 +0000 (UTC)
-Received: from [192.168.100.159] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id 7760A13C2B0;
-	Thu,  7 Dec 2023 13:01:29 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7760A13C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1701982889;
-	bh=u6waVsnKLrpkLbU4WWVvRu6hgYQIyJF8c8oD5cWGx+w=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YdsnpsvZBSw16q2zOp34pgYg/thcdtZmjZ8sPK5i3te2yZM8+rcw/SdLl4EYR5Ppt
-	 Fdh2l6nkyCPkm08u6wOb00rRKAla88a/fABx1+VgekzTJnsUHV8QT9mW1GX3GxfC5+
-	 o0mwb0xQpYDOd2/JMfsfj1IqYmnx+XKWeS+BTsKk=
-Message-ID: <487ef0bb-5930-e998-7daa-6f57d09d682c@candelatech.com>
-Date: Thu, 7 Dec 2023 13:01:29 -0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E/Wgz/m3"
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C76A4
+	for <linux-wireless@vger.kernel.org>; Thu,  7 Dec 2023 14:31:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701988275; x=1733524275;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9c4OqDL9uM1O4qAKCxZ63Qu3L+Sv5X7NG+CW5iiGSqA=;
+  b=E/Wgz/m31bjKNmAk9kxgXgmm54rSXc1+vWfmhHLOxqm19zcjlq9tzMue
+   +cYMZANqkWF5C2E//NbdZGfiL6UlyPPt78emdXSpcQUlpq2EnLwpu1JCJ
+   nMN01sIzlfF6F812s0VGvZ9kUyjxrpzve64NahRYqfW4cKHcul+gWYdRH
+   9rUZ5u8pxZ+g5qrqvkqJR2psbeFlqZVFnhgcGpvziV8jJyhz5gPAeQLO5
+   /GcRNnyVUZiVT9/PYWEw2vR/qZFSHZg+o/At952RUV4161hFc/GaaAOz9
+   dvpqIZ/Se7rp3pbwkmHWNt8MFLQ20dqRpo7D2V8FfskvmsGWDnd0IdNBo
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10917"; a="1396132"
+X-IronPort-AV: E=Sophos;i="6.04,258,1695711600"; 
+   d="scan'208";a="1396132"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2023 14:31:15 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10917"; a="721636313"
+X-IronPort-AV: E=Sophos;i="6.04,258,1695711600"; 
+   d="scan'208";a="721636313"
+Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Dec 2023 14:31:13 -0800
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 13/13 v2] wifi: iwlwifi: pcie: add another missing bh-disable for rxq->lock
+Date: Fri,  8 Dec 2023 18:32:02 +0200
+Message-Id: <20231208183100.e79ad3dae649.I8f19713c4383707f8be7fc20ff5cc1ecf12429bb@changeid>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH 2/8] wifi: mt76: mt7996: add txpower setting support
-Content-Language: en-US
-To: shayne.chen@mediatek.com, "nbd@nbd.name" <nbd@nbd.name>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- =?UTF-8?B?QWxsZW4gWWUgKOiRieiKt+WLsyk=?= <Allen.Ye@mediatek.com>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- =?UTF-8?B?RXZlbHluIFRzYWkgKOiUoeePiumIuik=?= <Evelyn.Tsai@mediatek.com>,
- "lorenzo@kernel.org" <lorenzo@kernel.org>, Ryder Lee
- <Ryder.Lee@mediatek.com>, =?UTF-8?B?U3RhbmxleVlQIFdhbmcgKOeOi+S+kemCpik=?=
- <StanleyYP.Wang@mediatek.com>
-References: <20231102100302.22160-1-shayne.chen@mediatek.com>
- <20231102100302.22160-2-shayne.chen@mediatek.com>
- <bbf8fe7e-1098-5b33-8ed6-dee38329edf6@candelatech.com>
- <8c5fbe88bcc5b55e6d80247144e4f890fd68ef27.camel@mediatek.com>
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <8c5fbe88bcc5b55e6d80247144e4f890fd68ef27.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1701982892-SRca-0hEqb86
-X-MDID-O:
- us5;at1;1701982892;SRca-0hEqb86;<greearb@candelatech.com>;0a87ce8853dfc5be48bfe846d29ed5d9
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: ***
 
-On 12/7/23 09:15, shayne.chen@mediatek.com wrote:
-> On Fri, 2023-12-01 at 15:40 -0800, Ben Greear wrote:
->>   	
->> External email : Please do not click links or open attachments until
->> you have verified the sender or the content.
->>   On 11/2/23 03:02, Shayne Chen wrote:
->>> Add support for setting txpower from upper layer and configuring
->> per-rate
->>> txpower limit table.
->>
->> Hello Shayne,
-> 
-> Hi Ben,
->>
->>   From what I can tell, this patch causes STA vdevs to no longer send
->> probe
->> requests when trying to associate.  I bisected to this in Felix's
->> tree that holds
->> this patch.
->>
->> Tested on x86-64, mtk7996 radio.  Specifically
->> debugged on 2.4Ghz radio, but I think it affects 5Ghz too.
->>
-> I have done some tests but didn't face this issue. Could you also use
-> the newer firmware to test if it still happens?
+From: Johannes Berg <johannes.berg@intel.com>
 
-The problem remains with this firmware:
-
-[root@ct523c-a0af ~]# ethtool -i wlan2
-driver: mt7996e
-version: 6.7.0-rc3+
-firmware-version: ____000000-20231012001354
-expansion-rom-version:
-bus-info: 0000:0d:00.0
-supports-statistics: yes
-supports-test: no
-supports-eeprom-access: no
-supports-register-dump: no
-supports-priv-flags: no
-
-Do you have a kernel tree that you are using successfully (not an owrt feed of patches)
-that you can share?
+Hi,
+I Added the 'wifi' prefix
 
 Thanks,
-Ben
+Miri
 
+Evidently I had only looked at all the ones in rx.c, and missed this.
+Add bh-disable to this use of the rxq->lock as well.
 
+Fixes: 25edc8f259c7 ("iwlwifi: pcie: properly implement NAPI")
+Reported-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f39c436f0b6d..fc64e1e7f5ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3092,7 +3092,7 @@ static u32 iwl_trans_pcie_dump_rbs(struct iwl_trans *trans,
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq[0];
+ 	u32 i, r, j, rb_len = 0;
+ 
+-	spin_lock(&rxq->lock);
++	spin_lock_bh(&rxq->lock);
+ 
+ 	r = iwl_get_closed_rb_stts(trans, rxq);
+ 
+@@ -3116,7 +3116,7 @@ static u32 iwl_trans_pcie_dump_rbs(struct iwl_trans *trans,
+ 		*data = iwl_fw_error_next_data(*data);
+ 	}
+ 
+-	spin_unlock(&rxq->lock);
++	spin_unlock_bh(&rxq->lock);
+ 
+ 	return rb_len;
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+2.34.1
 
