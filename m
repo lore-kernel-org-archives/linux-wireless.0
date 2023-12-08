@@ -1,88 +1,104 @@
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7744A19A2;
-	Fri,  8 Dec 2023 08:27:31 -0800 (PST)
-Received: by mail-ot1-f54.google.com with SMTP id 46e09a7af769-6d9f514f796so256476a34.3;
-        Fri, 08 Dec 2023 08:27:31 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702052850; x=1702657650;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o9ER5qIprpwLYgCbIQAvqPacoHFK4xi4mCA2pH+f0WM=;
-        b=YiAYbI9hGXLuDpo/mBPT432mwQk6/f35zQvDWfP2+WCI6dSV9KQXIrkvjFwrtsFjxn
-         qExgaTU409RicCepC5szRM+PXdq53Ef1ICHtwciTVZjHJANFlLQWNaurqwMB5qBnIqrt
-         eK6tFcPuYbGxOh6HizRQgXjsJdf5Vh7ELv6VXumVR3mUyEBaHnPhfu8cAlSdE3OFeXl2
-         dcYf4u9dfQ3Mc2efiii/+3tmwEZ5Rz8UCmB4c/srKCxigh/mWKrjKARi5HR2++udB56J
-         L1PbTY+Ndd+njcjGl3FujNpG76jXaB/gBaYJ9WfBTAcNRe7iStSB16YxRw+WGAPoK4Yf
-         ac3A==
-X-Gm-Message-State: AOJu0YxRbAnFfpzOZiAyvtstH+U5Fd5CRxqGAJISrm8pd8NiV6pgTabG
-	0zzczR0B3rJehnHc9ExLNrLtz/0GMA==
-X-Google-Smtp-Source: AGHT+IGoCBIdUoYHkFT9QQgUxa2omYYXOQwXX4AzFygvyqUJIp41c4SIZsAORINlyDflchYMlvWtxg==
-X-Received: by 2002:a9d:7758:0:b0:6d9:dd14:3a75 with SMTP id t24-20020a9d7758000000b006d9dd143a75mr304450otl.70.1702052850656;
-        Fri, 08 Dec 2023 08:27:30 -0800 (PST)
-Received: from herring.priv (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id e7-20020a0568301e4700b006d87df1c53dsm339278otj.65.2023.12.08.08.27.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Dec 2023 08:27:30 -0800 (PST)
-Received: (nullmailer pid 1634379 invoked by uid 1000);
-	Fri, 08 Dec 2023 16:27:29 -0000
-Date: Fri, 8 Dec 2023 10:27:29 -0600
-From: Rob Herring <robh@kernel.org>
-To: Peter Chiu <chui-hao.chiu@mediatek.com>
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, Ryder Lee <ryder.Lee@mediatek.com>, Evelyn Tsai <evelyn.tsai@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sam Shih <sam.shih@mediatek.com>, linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2] dt-bindings: net: wireless: mt76: add interrupts
- description for MT7986
-Message-ID: <20231208162729.GA1575094-robh@kernel.org>
-References: <20231204091156.6535-1-chui-hao.chiu@mediatek.com>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZAxn9AuF"
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3833910F1
+	for <linux-wireless@vger.kernel.org>; Fri,  8 Dec 2023 09:00:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702054811; x=1733590811;
+  h=date:from:to:cc:subject:message-id;
+  bh=xSQD3kjEJcy9nbYKMktsJ7hzXqshhJGBVjG+ZX7dX98=;
+  b=ZAxn9AuFCHX1QMAzrF0c6itrlGqTKHUFqagzh9HunxYfGbfs85dDXX/e
+   arL/CINfBmfjWslt7YyN2HxWZNp1Zwi7RMMnKkAzLRibQkZf5ZxrtaEAO
+   qck4Phiq9bJeM0rNa1OMLHsHvFD5whL73DDavSXunFbli+/VE8T0kaiaG
+   5Yg1qEQihSM2XiY9IYEf8qKYpUnkSad1tK7/ejX4vD0TsgvgV7EhuiyOQ
+   yjAriWVhJq1Eu7Hd6NsJPJpDP1cmR4ZFWSGputUNsmbn5+dCdX/C0g1vu
+   KxrbPrAkCgjJT7DY3Xs7hWSBVXboxur6wGBb3S61c57demzOAITGfYihD
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10918"; a="397226129"
+X-IronPort-AV: E=Sophos;i="6.04,261,1695711600"; 
+   d="scan'208";a="397226129"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Dec 2023 09:00:10 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10918"; a="721916065"
+X-IronPort-AV: E=Sophos;i="6.04,261,1695711600"; 
+   d="scan'208";a="721916065"
+Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
+  by orsmga003.jf.intel.com with ESMTP; 08 Dec 2023 09:00:09 -0800
+Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rBeCt-000E2W-1L;
+	Fri, 08 Dec 2023 17:00:07 +0000
+Date: Sat, 09 Dec 2023 00:59:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+ linux-wireless@vger.kernel.org
+Subject: [wireless-next:main] BUILD REGRESSION
+ db7fac15eaf0f09d675730d7002edabe27fe9e1d
+Message-ID: <202312090036.jwmcWv2Y-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231204091156.6535-1-chui-hao.chiu@mediatek.com>
 
-On Mon, Dec 04, 2023 at 05:11:56PM +0800, Peter Chiu wrote:
-> The mt7986 can support four interrupts to distribute the interrupts
-> to different CPUs.
-> 
-> Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
-> ---
-> v2: Change to use description instead of using items.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+branch HEAD: db7fac15eaf0f09d675730d7002edabe27fe9e1d  wifi: rtw89: mac: refine SER setting during WiFi CPU power on
 
-Not what I said to do...
+Error/Warning ids grouped by kconfigs:
 
-Let me spell it out:
+gcc_recent_errors
+`-- mips-allyesconfig
+    |-- (.ref.text):relocation-truncated-to-fit:R_MIPS_26-against-start_secondary
+    |-- (.text):relocation-truncated-to-fit:R_MIPS_26-against-kernel_entry
+    |-- main.c:(.init.text):relocation-truncated-to-fit:R_MIPS_26-against-__sanitizer_cov_trace_pc
+    `-- main.c:(.init.text):relocation-truncated-to-fit:R_MIPS_26-against-_mcount
 
-  interrupts:
-    minItems: 1
-      items:
-        - description: major interrupt for rings
-        - description: addditional interrupt for ring 19
-        - description: addditional interrupt for ring 4
-        - description: addditional interrupt for ring 5
+elapsed time: 1467m
 
-if:
-  properties:
-    compatible:
-      contains:
-        enum:
-          - mediatek,mt7986-wmac
-then:
-  properties:
-    interrupts:
-      minItems: 4
-else:
-  properties:
-    interrupts:
-      maxItems: 1
+configs tested: 35
+configs skipped: 0
 
+tested configs:
+i386                             allmodconfig   clang
+i386                              allnoconfig   clang
+i386                             allyesconfig   clang
+i386         buildonly-randconfig-001-20231208   clang
+i386         buildonly-randconfig-002-20231208   clang
+i386         buildonly-randconfig-003-20231208   clang
+i386         buildonly-randconfig-004-20231208   clang
+i386         buildonly-randconfig-005-20231208   clang
+i386         buildonly-randconfig-006-20231208   clang
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231208   clang
+i386                  randconfig-002-20231208   clang
+i386                  randconfig-003-20231208   clang
+i386                  randconfig-004-20231208   clang
+i386                  randconfig-005-20231208   clang
+i386                  randconfig-006-20231208   clang
+i386                  randconfig-011-20231208   gcc  
+i386                  randconfig-012-20231208   gcc  
+i386                  randconfig-013-20231208   gcc  
+i386                  randconfig-014-20231208   gcc  
+i386                  randconfig-015-20231208   gcc  
+i386                  randconfig-016-20231208   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+sh                               allmodconfig   gcc  
+sh                               allyesconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+um                               allmodconfig   clang
+um                               allyesconfig   clang
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
+x86_64                              defconfig   gcc  
+x86_64                          rhel-8.3-rust   clang
 
-If there are 4 interrupts then you should always have all 4. It's not 
-some OS config. However, as an ABI, you might want to allow 1. If so, 
-then the if/then should just have the 'maxItems: 1' restriction for the 
-compatibles which only have 1 interrupt in the h/w.
-
-Rob
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
