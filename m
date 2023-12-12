@@ -1,257 +1,138 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tl3oyNlR"
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 033D4DB
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2023 10:35:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1702406149; x=1733942149;
-  h=date:from:to:cc:subject:message-id;
-  bh=0OY2EA1uQwr7f4HBkNVBcTEG2Cz4L8IbctPmsir9FW0=;
-  b=Tl3oyNlROqI7BVML7FqRCEc8O9XWPXvAih63rH5ApwH5PbHzUzuUHoMv
-   mp4eSSV56AehCe7MotFJSbqQk7n6pBGX30919ucGVxDbI8NSmssShKKFe
-   OhY+6QLQ7NKX7ydtj7e2zwObalKkBTzAufh98kRWqYg3kyEUEhHOQugaF
-   cLXGE1YFQmCqP4u25nvUAbUTVlrOvfdrrTl3i5EI7rFZd+qlLzBSbD8OP
-   gfvxft5HMi1x7qoejFQ4bSn0+lBuNbDeqUzAuGndLM6RFv0/5iFucm8LC
-   abadndSF7kXZ/cPKPBzBue1GaP4CVL3+5/LG6poTjUBL1IvVR2uJ3Zo6n
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10922"; a="459169619"
-X-IronPort-AV: E=Sophos;i="6.04,271,1695711600"; 
-   d="scan'208";a="459169619"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2023 10:35:48 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10922"; a="844005373"
-X-IronPort-AV: E=Sophos;i="6.04,271,1695711600"; 
-   d="scan'208";a="844005373"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga004.fm.intel.com with ESMTP; 12 Dec 2023 10:35:46 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rD7bc-000JYn-2M;
-	Tue, 12 Dec 2023 18:35:44 +0000
-Date: Wed, 13 Dec 2023 02:34:53 +0800
-From: kernel test robot <lkp@intel.com>
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org
-Subject: [wireless-next:pending] BUILD SUCCESS
- 197e1b5a15b1a5544d063155d7fea2fe847ed56d
-Message-ID: <202312130250.asQdExs1-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="ku5sD/dE"
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2080.outbound.protection.outlook.com [40.107.220.80])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98674EA;
+	Tue, 12 Dec 2023 11:12:52 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=R5tkyxAxGoOgOiJzf4OBARrzLDA5uPbf/MizYiccePYUIkO6fRJahFt/+f6AquzT/txTl3/i6PdrrhMhOTK39R49T8UfSsdBsSEqK98r89C0Yj2KRR6wZQLWGbQIyAR4W6Snk65HiKI1u851aBWH0R5ZkJu7fmExFAONhmOUxN76NogX49vb+fFNr+48cCXWkBmzgUC+w5qNuUqhq0Qto4k2AmzHlyhN9vPT2sheqWo1gB28XYLuBb+qyu3wmpY6vjUAMxHHiz+KKfF+PJKe2asCehBfNuPEWznxPJXOnhWpRkqsym74T9VaadUVAjS6bemHB89qoqRYlDSmvOBu6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bQZEUEcsAihho8q2jE6fb9Zp2WDLdvI1gr2KcTRApts=;
+ b=LSPUah3rJc2ggNK9iyerR2DAHPpY9SYxMSjJLD4YC4jvNm/MUCIErZfZktpKf6pAJPX/cuSbwtWi0VeLIT3Purqwh66ZY2B2oLbBOd2qnVayr+i6djb9PdFh0caHmTA8b7/axlg3NU4mq4v3N3otQBF70fk1ObXlf/h0nBl8t9fGEZdUXpnUHDw8E7mtWUvGyIkz/IqGXmOVWpPi2anhyo/tL26D4fhVpBPlm4qcvm5CdYmqgDvsrYxLBwJuFKE+7gTijLdnAPIi4pjS8kFZOatjX9UdCoaEB6E2U2UFnNh8CZBCiWeBCbqByESEKuc92RguXTFfwi8H+rvUl3b3tg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nbd.name smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bQZEUEcsAihho8q2jE6fb9Zp2WDLdvI1gr2KcTRApts=;
+ b=ku5sD/dErdPUYmwIoCuemes+8DVM4g7wUPSOcgsJN/NXirDpgukuV+6Ycx2jvAInAJGqrrf3uJQHVqi43dAhQc4Vas4lfkhtpG8JtjSiFS9pwySWzuw6UvazJF4kQpZBkBaaGmnD5dPMKzx2jyKPPvUt7xAmUtsGHfcS8UkZg90=
+Received: from DM6PR10CA0036.namprd10.prod.outlook.com (2603:10b6:5:60::49) by
+ DM6PR12MB4957.namprd12.prod.outlook.com (2603:10b6:5:20d::14) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.7091.26; Tue, 12 Dec 2023 19:12:50 +0000
+Received: from CY4PEPF0000FCBF.namprd03.prod.outlook.com
+ (2603:10b6:5:60:cafe::fe) by DM6PR10CA0036.outlook.office365.com
+ (2603:10b6:5:60::49) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.32 via Frontend
+ Transport; Tue, 12 Dec 2023 19:12:49 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CY4PEPF0000FCBF.mail.protection.outlook.com (10.167.242.101) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.7091.26 via Frontend Transport; Tue, 12 Dec 2023 19:12:49 +0000
+Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.34; Tue, 12 Dec
+ 2023 13:12:42 -0600
+From: Mario Limonciello <mario.limonciello@amd.com>
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+	"Ryder Lee" <ryder.lee@mediatek.com>
+CC: Shayne Chen <shayne.chen@mediatek.com>, Sean Wang
+	<sean.wang@mediatek.com>, Kalle Valo <kvalo@kernel.org>, Matthias Brugger
+	<matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, Deren Wu <deren.wu@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>, Ben Greear
+	<greearb@candelatech.com>, "open list:MEDIATEK MT76 WIRELESS LAN DRIVER"
+	<linux-wireless@vger.kernel.org>, "open list:ARM/Mediatek SoC support"
+	<linux-kernel@vger.kernel.org>, "moderated list:ARM/Mediatek SoC support"
+	<linux-mediatek@lists.infradead.org>, Mario Limonciello
+	<mario.limonciello@amd.com>
+Subject: [PATCH 2/2] wifi: mt76: mt7925: Disable powersaving by default
+Date: Tue, 12 Dec 2023 03:08:52 -0600
+Message-ID: <20231212090852.162787-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231212090852.162787-1-mario.limonciello@amd.com>
+References: <20231212090852.162787-1-mario.limonciello@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000FCBF:EE_|DM6PR12MB4957:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2d878ad2-65bb-4afe-550e-08dbfb4654ca
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	egKSY5nqVqEqmDjkJeJ14v9dhsO15aPR0Xacp1xgb3/PWk2wHUuikcCAFwbLLBRcJQ/MRcbL9RhUu+N3dWYsebZaAp5ikVd5UeNRi88VhCjcHXYTWS2WdoMzBc0Rt489BWWh7DsD/gcc1HWndEzvNqkELt7/ojNWjJdui3zhbTDNuWKRVJRWFnGe94EsFFrA37ZeimXpo9atxS6urw8hwDT+gcXIpgCaU3cezZxNMHP6W2Bdjj6qMnpiH+8tMqRRp6N1xEaH6OnJxlFGU88b1kZZXcfJz600ixEDdg2M7D7jRQpG1o4Pl2NhjnqviuhvKoFNn5+4nPreqofOPrDMpJKU0/1CRgyYUDdj+1MH81ZawUPNzO37/pb9YaCZAAJ/hKegXPRllW69R1Zt2e/POnV83A8ltqV6KgPfQlYUTcxVZlXl4zcafnvrJHRbFBHTMCabqHsx3FxI4f2/+y45G8iiGVE77z77w8B6cxwaNJkzvImjSJkS4LVTo0h5pYw8RJ2dqdMXCBcX5nr+H59yYxb1/apFn4z6PTmPJbPHnmu1COaxeZBFsim5cXHb+QHeTyoVAWgmuJRLr/NpSsYtnSkQTrYFZ/jUP9sI+deLkyhd/NyY/pkqXdxfigP/YuUIkawyxUdQy/t6cO1Cb6kRkD4cIqrTM2BKYrflgbxZLsaEQTgiFY6KBkD+YuY5n4hX7llN3Ep5EqtuOGQ3lrvuamBsb1n8tER1krmVxuAzVPlYiwczuhD9ZFzJlUcgljDeSroxMtliTO5lkWioXC4PQQ==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(376002)(136003)(39860400002)(396003)(230922051799003)(451199024)(1800799012)(82310400011)(64100799003)(186009)(46966006)(36840700001)(40470700004)(40460700003)(26005)(110136005)(426003)(336012)(16526019)(83380400001)(7696005)(2616005)(1076003)(47076005)(36860700001)(44832011)(5660300002)(4326008)(8936002)(8676002)(7416002)(41300700001)(2906002)(316002)(6666004)(478600001)(54906003)(70206006)(70586007)(36756003)(86362001)(82740400003)(356005)(81166007)(40480700001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Dec 2023 19:12:49.0792
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2d878ad2-65bb-4afe-550e-08dbfb4654ca
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CY4PEPF0000FCBF.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4957
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git pending
-branch HEAD: 197e1b5a15b1a5544d063155d7fea2fe847ed56d  Merge tag 'mt76-for-kvalo-2023-12-06' of https://github.com/nbd168/wireless into pending
+Introduce a module parameter that would control the power saving
+behavior.  Set it to default as disabled. This mirrors what some other
+WLAN drivers like iwlwifi do.
 
-elapsed time: 1473m
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7925/init.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-configs tested: 194
-configs skipped: 2
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     haps_hs_smp_defconfig   gcc  
-arc                        nsimosci_defconfig   gcc  
-arc                   randconfig-001-20231212   gcc  
-arc                   randconfig-002-20231212   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                         orion5x_defconfig   clang
-arm                   randconfig-001-20231212   gcc  
-arm                   randconfig-002-20231212   gcc  
-arm                   randconfig-003-20231212   gcc  
-arm                   randconfig-004-20231212   gcc  
-arm                        realview_defconfig   gcc  
-arm                           sama7_defconfig   clang
-arm                           u8500_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20231212   gcc  
-arm64                 randconfig-002-20231212   gcc  
-arm64                 randconfig-003-20231212   gcc  
-arm64                 randconfig-004-20231212   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20231212   gcc  
-csky                  randconfig-002-20231212   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20231212   clang
-hexagon               randconfig-002-20231212   clang
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386         buildonly-randconfig-001-20231212   gcc  
-i386         buildonly-randconfig-002-20231212   gcc  
-i386         buildonly-randconfig-003-20231212   gcc  
-i386         buildonly-randconfig-004-20231212   gcc  
-i386         buildonly-randconfig-005-20231212   gcc  
-i386         buildonly-randconfig-006-20231212   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20231212   gcc  
-i386                  randconfig-002-20231212   gcc  
-i386                  randconfig-003-20231212   gcc  
-i386                  randconfig-004-20231212   gcc  
-i386                  randconfig-005-20231212   gcc  
-i386                  randconfig-006-20231212   gcc  
-i386                  randconfig-011-20231212   clang
-i386                  randconfig-012-20231212   clang
-i386                  randconfig-013-20231212   clang
-i386                  randconfig-014-20231212   clang
-i386                  randconfig-015-20231212   clang
-i386                  randconfig-016-20231212   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20231212   gcc  
-loongarch             randconfig-002-20231212   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5407c3_defconfig   gcc  
-m68k                          sun3x_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   clang
-mips                             allyesconfig   gcc  
-mips                         db1xxx_defconfig   gcc  
-mips                     decstation_defconfig   gcc  
-mips                           ip32_defconfig   gcc  
-mips                           jazz_defconfig   gcc  
-mips                     loongson2k_defconfig   gcc  
-mips                         rt305x_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20231212   gcc  
-nios2                 randconfig-002-20231212   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20231212   gcc  
-parisc                randconfig-002-20231212   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   clang
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                    gamecube_defconfig   clang
-powerpc                 linkstation_defconfig   gcc  
-powerpc                 mpc832x_rdb_defconfig   clang
-powerpc                    mvme5100_defconfig   clang
-powerpc                         ps3_defconfig   gcc  
-powerpc               randconfig-001-20231212   gcc  
-powerpc               randconfig-002-20231212   gcc  
-powerpc               randconfig-003-20231212   gcc  
-powerpc64             randconfig-001-20231212   gcc  
-powerpc64             randconfig-002-20231212   gcc  
-powerpc64             randconfig-003-20231212   gcc  
-riscv                            alldefconfig   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   clang
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20231212   gcc  
-riscv                 randconfig-002-20231212   gcc  
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20231212   clang
-s390                  randconfig-002-20231212   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                 kfr2r09-romimage_defconfig   gcc  
-sh                    randconfig-001-20231212   gcc  
-sh                    randconfig-002-20231212   gcc  
-sh                          rsk7269_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20231212   gcc  
-sparc64               randconfig-002-20231212   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20231212   gcc  
-um                    randconfig-002-20231212   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20231212   gcc  
-x86_64       buildonly-randconfig-002-20231212   gcc  
-x86_64       buildonly-randconfig-003-20231212   gcc  
-x86_64       buildonly-randconfig-004-20231212   gcc  
-x86_64       buildonly-randconfig-005-20231212   gcc  
-x86_64       buildonly-randconfig-006-20231212   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                randconfig-001-20231212   clang
-x86_64                randconfig-002-20231212   clang
-x86_64                randconfig-003-20231212   clang
-x86_64                randconfig-004-20231212   clang
-x86_64                randconfig-005-20231212   clang
-x86_64                randconfig-006-20231212   clang
-x86_64                randconfig-011-20231212   gcc  
-x86_64                randconfig-012-20231212   gcc  
-x86_64                randconfig-013-20231212   gcc  
-x86_64                randconfig-014-20231212   gcc  
-x86_64                randconfig-015-20231212   gcc  
-x86_64                randconfig-016-20231212   gcc  
-x86_64                randconfig-071-20231212   gcc  
-x86_64                randconfig-072-20231212   gcc  
-x86_64                randconfig-073-20231212   gcc  
-x86_64                randconfig-074-20231212   gcc  
-x86_64                randconfig-075-20231212   gcc  
-x86_64                randconfig-076-20231212   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                  cadence_csp_defconfig   gcc  
-xtensa                          iss_defconfig   gcc  
-xtensa                  nommu_kc705_defconfig   gcc  
-xtensa                randconfig-001-20231212   gcc  
-xtensa                randconfig-002-20231212   gcc  
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/init.c b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
+index 8f9b7a2f376c..370fe26d592b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
+@@ -7,6 +7,11 @@
+ #include "mac.h"
+ #include "mcu.h"
+ 
++static bool mt7925_powersave;
++module_param_named(power_save, mt7925_powersave, bool, 0444);
++MODULE_PARM_DESC(power_save,
++		 "enable WiFi power management (default: disable)");
++
+ static void
+ mt7925_regd_notifier(struct wiphy *wiphy,
+ 		     struct regulatory_request *req)
+@@ -184,11 +189,13 @@ int mt7925_register_device(struct mt792x_dev *dev)
+ 	dev->pm.idle_timeout = MT792x_PM_TIMEOUT;
+ 	dev->pm.stats.last_wake_event = jiffies;
+ 	dev->pm.stats.last_doze_event = jiffies;
+-	if (!mt76_is_usb(&dev->mt76)) {
++	if (mt7925_powersave && !mt76_is_usb(&dev->mt76)) {
+ 		dev->pm.enable_user = true;
+ 		dev->pm.enable = true;
+ 		dev->pm.ds_enable_user = true;
+ 		dev->pm.ds_enable = true;
++	} else {
++		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 	}
+ 
+ 	if (!mt76_is_mmio(&dev->mt76))
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
