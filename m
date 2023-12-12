@@ -1,55 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A1118B19
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2023 08:05:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFCE15811B
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2023 09:15:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nMUszGCH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABF2CC433C8;
-	Tue, 12 Dec 2023 08:05:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NTzWB8E3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CEE2C433C7;
+	Tue, 12 Dec 2023 09:15:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702368342;
-	bh=gpNj8I/75OB5szd1g/dOW3OTP6BzEjuRG5ADKuihkok=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=nMUszGCH9FX8/9eCqx9A1bdo4CS3slOBK6DdDZykUgYpjfoZ2REWvRyC6nlTKEOb/
-	 fJDYezW6gy/v7bgrLUkKBIiufO4Lug8v62hEzREmON33GkXmd/ZJ7V3PBUjJtPAq2F
-	 GIAuKFRpx1UarXZIo70yY0xhjPnmCiUMzggVUrsUK2zlrg9x8iKqKZLL+sqrpfjH3p
-	 hYwt2DvCqLjqWd4zePq4nqJHCVCUGfviuQwFGuuYqxFPiLZZ+9xiZnOCSx/D+OPkqj
-	 2JtDP/o1UFJAF8Uc96bXP19O5WCU0auyccrc/g689Mei1iCnQmPWre5pfgkre9EIAN
-	 hwZbwMbKYKYrQ==
-From: Kalle Valo <kvalo@kernel.org>
-To: shitao <shitao@kylinos.cn>
-Cc: gregory.greenman@intel.com,  linux-wireless@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  k2ci <kernel-bot@kylinos.cn>
-Subject: Re: [PATCH] net: Fix spelling typo in comment
-References: <20231212071935.3098275-1-shitao@kylinos.cn>
-Date: Tue, 12 Dec 2023 10:05:39 +0200
-In-Reply-To: <20231212071935.3098275-1-shitao@kylinos.cn> (shitao@kylinos.cn's
-	message of "Tue, 12 Dec 2023 15:19:35 +0800")
-Message-ID: <87wmtjonfw.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	s=k20201202; t=1702372527;
+	bh=FR6eSFR1DdCBefwAt+83BDLOHz5IyrhGNmJV1nYYKmw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=NTzWB8E310b4xVRFr26JzLuPUehbe2Hi0iQ0WxAO7iQcr5mmefg7AGQ24lCCqDQmL
+	 XvLV88D9UBwOCMxTGpG/M8Yh83OMlCK9Ts4ZSkdGt4aefsUwCClKD/8ms8fVuNJ4Kp
+	 nMl4LrzxWZMrle94r0KxpBnZF3LTBGCfloRxYYfWliMXUuZ6r/bzmwHFnXoIpEoXJ1
+	 6XB8GRqB1dXZzy10zUlXGWDvZihDTgX+VuXvetcIHT1BZNwV7zlSmkylLrvqjxShm5
+	 sTr7OUPxNATsSQn9gOKdy3WE1jyJFwdpl3X/XSksFaNE5hCAJPE3Z9KA3cXBid0dr6
+	 T/F2Cq6O7wrLQ==
+From: Lorenzo Bianconi <lorenzo@kernel.org>
+To: nbd@nbd.name
+Cc: lorenzo.bianconi@redhat.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wifi: mt76: set page_pool napi pointer for mmio devices
+Date: Tue, 12 Dec 2023 10:15:19 +0100
+Message-ID: <fd60f357f603d2ac4a41e8820b9b4c01e156a3c7.1702372069.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-shitao <shitao@kylinos.cn> writes:
+In order to recycle skbs in the page_pool "hot" cache in
+napi_pp_put_page routine, set napi pointer for MMIO devices in
+mt76_create_page_pool().
 
-> Fix spelling typo in iwl-context-info.h comment.
->
-> Reported-by: k2ci <kernel-bot@kylinos.cn>
-> Signed-off-by: shitao <shitao@kylinos.cn>
-> ---
->  drivers/net/wireless/intel/iwlwifi/iwl-context-info.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+Changes since v1:
+- do not allocate page_pools for tx queues
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 10 +++++++++-
+ drivers/net/wireless/mediatek/mt76/mt76.h     | 12 ++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-The title should start with "wifi: iwlwifi:". Please read our wiki, link
-below.
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 5cc608d20619..516980cf4caf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -579,13 +579,18 @@ EXPORT_SYMBOL_GPL(mt76_unregister_phy);
+ 
+ int mt76_create_page_pool(struct mt76_dev *dev, struct mt76_queue *q)
+ {
++	bool is_qrx = mt76_queue_is_rx(dev, q);
+ 	struct page_pool_params pp_params = {
+ 		.order = 0,
+ 		.flags = 0,
+ 		.nid = NUMA_NO_NODE,
+ 		.dev = dev->dma_dev,
+ 	};
+-	int idx = q - dev->q_rx;
++	int idx = is_qrx ? q - dev->q_rx : -1;
++
++	/* Allocate page_pools just for rx/wed_tx_free queues */
++	if (!is_qrx && !mt76_queue_is_wed_tx_free(q))
++		return 0;
+ 
+ 	switch (idx) {
+ 	case MT_RXQ_MAIN:
+@@ -604,6 +609,9 @@ int mt76_create_page_pool(struct mt76_dev *dev, struct mt76_queue *q)
+ 		pp_params.dma_dir = DMA_FROM_DEVICE;
+ 		pp_params.max_len = PAGE_SIZE;
+ 		pp_params.offset = 0;
++		/* NAPI is available just for rx queues */
++		if (idx >= 0 && idx < ARRAY_SIZE(dev->napi))
++			pp_params.napi = &dev->napi[idx];
+ 	}
+ 
+ 	q->page_pool = page_pool_create(&pp_params);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index c7286dbeeaae..0da88f153427 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1613,6 +1613,18 @@ s8 mt76_get_rate_power_limits(struct mt76_phy *phy,
+ 			      struct mt76_power_limits *dest,
+ 			      s8 target_power);
+ 
++static inline bool mt76_queue_is_rx(struct mt76_dev *dev, struct mt76_queue *q)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(dev->q_rx); i++) {
++		if (q == &dev->q_rx[i])
++			return true;
++	}
++
++	return false;
++}
++
+ static inline bool mt76_queue_is_wed_tx_free(struct mt76_queue *q)
+ {
+ 	return (q->flags & MT_QFLAG_WED) &&
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.43.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
