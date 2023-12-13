@@ -1,90 +1,93 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447FF59B59
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Dec 2023 18:18:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="U2BFaeSV"
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBE54D0;
-	Wed, 13 Dec 2023 09:07:26 -0800 (PST)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BDGd2JP030010;
-	Wed, 13 Dec 2023 17:06:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:subject:date:message-id:mime-version:content-type
-	:content-transfer-encoding:to:cc; s=qcppdkim1; bh=kN410wwRUNkyfP
-	B7ahiFKEuZhRz6mV89Ym+9lK+dfNQ=; b=U2BFaeSVEh4jQX0pbjz/c1bRKiSRNR
-	cKg83IDMph3fuNpeMFtBzfsFkTiyymvHnb2icXcM3NRTWpzlvzFQwC7sgSgu1Ly+
-	IlXwOkYcbt9z5mxAHUwdnQSNr6lVPOblEUEyv49zq+J7mg77O1q7k0W3oocGmr7F
-	U/e9S+7cE0J8bRv/7fFho/CyVzWJZ2yDH2/BZ9nVNx5me2WGwBv6M0Wy5Jjp2Z7E
-	sKK5RKfJOx8hAWspFtP/q/lVYYi1613ArYmwlwagycg9GKIO7z47ezRKDzDGEPcr
-	u4GCmcHhuskGb0kF0JHpUsGJjCAVixXLSHHA87qQp+ShVUwoA09ca65g==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3uy5tvhpv3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Dec 2023 17:06:41 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BDH6eVM031494
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Dec 2023 17:06:40 GMT
-Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 13 Dec
- 2023 09:06:40 -0800
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-Subject: [PATCH 0/6] wifi: ath10k: use flexible arrays
-Date: Wed, 13 Dec 2023 09:06:38 -0800
-Message-ID: <20231213-wmi_host_mem_chunks_flexarray-v1-0-92922d92fa2c@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PC5RWoWM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA7DBC433C8;
+	Wed, 13 Dec 2023 18:18:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702491534;
+	bh=PjfwdZOSR2dwBs3EAJKkgyjx0b0MU1xrVZTWAWbnAYg=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=PC5RWoWME/Cb01hoJ4tntBmUrXtAKuXoxFLNoat77qpUCkpi6EHqrE/iIP2i9e9eP
+	 oXMkSt/45erQi7CTpnE9V/5F8/bz91tZHHLkEayh1Gxeam5OUf5uPEulZnRCBflOnD
+	 ulDOExq2qlbPkWGzDJ//bBMkrqUKzApzlhW6S3bSaoj6lCiC83x37rXKHjPSFGNbly
+	 abUHlvrBUFnWh4vNcuunwFVNdZp7LcEgxOaVUHtSMwVEDupR7gXNSOm47xS+A9pBjE
+	 IgMYMA6dnziiUQVe36g3uBnISWV4iSORhMxnEaYUDDG97RJY8W9QjRD+77ZZj3u3CC
+	 agrZuxgTksK3w==
+From: Kalle Valo <kvalo@kernel.org>
+To: rwahler@gmx.net
+Cc: linux-kernel@vger.kernel.org,  Sultan Alsawaf <sultan@kerneltoast.com>,
+    linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wifi: mt76: mt7921: Disable powersaving by default
+References: <874jgmnud8.fsf@kernel.org>
+	<20231213172757.46199-1-rwahler@gmx.net>
+Date: Wed, 13 Dec 2023 20:18:51 +0200
+In-Reply-To: <20231213172757.46199-1-rwahler@gmx.net> (rwahler@gmx.net's
+	message of "Wed, 13 Dec 2023 18:27:57 +0100")
+Message-ID: <87sf46m0dw.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAJ/keWUC/5XNyw6CMBCF4VchXVvjDDd15XsYQ2qZ2okC2kKFE
- N5dYOdOl/9ZfGcUnhyTF8doFI4Ce27qOWATCW1VfSPJ5dwCdxgDAsp3xYVtfFtUVBXadvXdF+Z
- BvXJODTLfY5YQJFkeg5iNpyPD/eqfL3Nb9m3jhvUuwLL+KgeQIFON6aFUKWUGTq+ONdd6q5tKL
- HbAvzyUO2nwmua6NACgvr1pmj4ibXffHAEAAA==
-To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
-CC: Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva"
-	<gustavo@embeddedor.com>,
-        <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-X-Mailer: b4 0.12.3
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: lRec6QprZZ2S4zgOuvxWwXKHU4hYWDQ3
-X-Proofpoint-GUID: lRec6QprZZ2S4zgOuvxWwXKHU4hYWDQ3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- priorityscore=1501 impostorscore=0 mlxscore=0 clxscore=1015
- mlxlogscore=600 bulkscore=0 spamscore=0 adultscore=0 lowpriorityscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2311290000 definitions=main-2312130122
+Content-Type: text/plain
 
-Clean up the last remaining zero-length and one-element arrays in
-ath10k to comply with:
-https://docs.kernel.org/process/deprecated.html#zero-length-and-one-element-arrays
+(adding back linux-wireless, please don't drop lists and people from Cc)
 
-With these cleanups done the ath10k-check script no longer reports any
-issues.
+rwahler@gmx.net writes:
 
----
-Jeff Johnson (6):
-      wifi: ath10k: use flexible array in struct wmi_host_mem_chunks
-      wifi: ath10k: use flexible arrays for WMI start scan TLVs
-      wifi: ath10k: remove struct wmi_pdev_chanlist_update_event
-      wifi: ath10k: remove unused template structs
-      wifi: ath10k: use flexible array in struct wmi_tdls_peer_capabilities
-      wifi: ath10k: remove duplicate memset() in 10.4 TDLS peer update
+> From: Sultan Alsawaf <sultan@kerneltoast.com>
+>
+> Sultan Alsawaf <sultan@kerneltoast.com> writes:
+>
+>> 3. For insignificant/low-bandwidth traffic like ICMP to the AP, high latency is
+>>    expected since the amount of traffic doesn't warrant kicking the chipset out
+>>    of powersave. So although it's not pretty to look at, bad ping times to the
+>>    AP aren't representative of the full user experience.
+>
+> Without the proposed patch ping times are often > 3000ms with a packet
+> loss of ~20%. And it's not only ICMP packets because i.e. ssh to the
+> laptop is also not working. It is unusable slow and very often the
+> connection breaks completely.
 
- drivers/net/wireless/ath/ath10k/wmi.c | 10 +++----
- drivers/net/wireless/ath/ath10k/wmi.h | 55 +++++++++--------------------------
- 2 files changed, 17 insertions(+), 48 deletions(-)
----
-base-commit: 7133b072dfbfac8763ffb017642c9c894894c50d
-change-id: 20231212-wmi_host_mem_chunks_flexarray-78264e146731
+To which direction? When reporting power save issues it's a good idea to
+be specific as possible, we don't have crystal balls.
 
+> Kalle Valo <kvalo@kernel.org> writes:
+>
+>> Mario Limonciello <mario.limonciello@amd.com> writes:
+>>
+>> > Several users have reported awful latency when powersaving is enabled
+>> > with certain access point combinations.
+>>
+>> What APs are these exactly? In the past 802.11 Power Save Mode was
+>> challenging due to badly behaving APs. But nowadays with so many mobile
+>> devices in the market I would assume that APs work a lot better. It
+>> would be best to investigate the issues in detail and try to fix them in
+>> mt76, assuming the bugs are in mt76 driver or firmware.
+>
+> I'm using a FritzBox 6591 Cable Router with latest Firmware for Wlan
+> and use a Framework13 Laptop with built in MT7921 module. I can
+> reliably reproduce the problem with high round trip times and packet
+> loss for inbound connections.
+
+Have you tried other clients with that AP? Especially mobile devices
+like phones is good to test, they usually have pretty aggressive power
+savings. Also testing with other APs is good.
+
+> If i can help with some tests to find the problem i'm happy to support you.
+
+I don't know about mt76 driver internals but hopefully others can help.
+But what I recommend is to provide comprehensive and detailed bug
+reports, even better if you can include a 802.11 frame capture from a
+sniffer. Just saying "it doesn't work" doesn't get very far.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
