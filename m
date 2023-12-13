@@ -1,85 +1,88 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="L3pbz1Z4"
-Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [178.154.239.83])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AF67B7
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2023 09:35:37 -0800 (PST)
-Received: from mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:1e96:0:640:734b:0])
-	by forward100a.mail.yandex.net (Yandex) with ESMTP id 2E3274230E;
-	Tue, 12 Dec 2023 20:35:35 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id YZm9jT2OlGk0-W1Ypg9aR;
-	Tue, 12 Dec 2023 20:35:34 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1702402534; bh=HnPj+3UUwtYbAybm62XaSvEnjwzf1mi3XwkCwZ9ZoME=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=L3pbz1Z4fjtxqjmlWQ4ywg7RkAnoGrs4HccJBw93UWmXUjXCuHjpXtqMYXrzG9bRE
-	 cdUKYrADnwoZwn+Z4Xiw/nrtNZ8uUJKtNvJRKDBV9PdrmaV3iaZlCwQNqVZCaxlzGW
-	 6JnO/REuYyAxEQ6YUZ7nTjeL+vHX62NOXHe8IfrI=
-Authentication-Results: mail-nwsmtp-smtp-production-main-85.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	lvc-project@linuxtesting.org,
-	linux-wireless@vger.kernel.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] wifi: rt2x00: remove useless code in rt2x00queue_create_tx_descriptor()
-Date: Tue, 12 Dec 2023 20:34:18 +0300
-Message-ID: <20231212173421.119136-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XgPJgtRC"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82DE6CE
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Dec 2023 09:45:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702403121; x=1733939121;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=gQqpnCLTfhm+oRnG7qRwdE8IIR5WlktBCZV51moCWug=;
+  b=XgPJgtRC5bnrz6ZBf40uzd3VWmH6kgmZH5yfSp+OyS1k9ZXcNX8EmC3q
+   JSkKBnFWvHbzw5TrnWqCoCIlXSLF9tOQh08ymQIbARxNq0/EZYsfYQT3J
+   DSxYpywfOLvoyDOuj4KlxFWr30qBsMp8IVq+0F9N21D9/nG/HVKmz0t8J
+   MDLu3YcIuIzPeBGGPXfA04TBqWD8coc8rXAJYwvsd4V7+d0ALrg9UXrqJ
+   LIw+13KFwd5N2YWCe7V8z8X/NTWJK3pxnwOHSeSnpr98je9g7IMPYgXCh
+   UKly2ZLldyhyoRirVdF/kmHSQ2rC5nHqfuFU5zl7LsaGYiRH/8ZwCbDFU
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10922"; a="16395967"
+X-IronPort-AV: E=Sophos;i="6.04,270,1695711600"; 
+   d="scan'208";a="16395967"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2023 09:45:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10922"; a="749796943"
+X-IronPort-AV: E=Sophos;i="6.04,270,1695711600"; 
+   d="scan'208";a="749796943"
+Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Dec 2023 09:45:13 -0800
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 13/13 v2] wifi: iwlwifi: pcie: add another missing bh-disable for rxq->lock
+Date: Wed, 13 Dec 2023 13:46:03 +0200
+Message-Id: <20231213134350.5929ce913431.I8f19713c4383707f8be7fc20ff5cc1ecf12429bb@changeid>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
+X-Spam-Level: ***
 
-In 'rt2x00queue_create_tx_descriptor()', there is no need to call
-'ieee80211_get_rts_cts_rate()' while checking for RTS/CTS frame
-since this function returns NULL or pointer to internal bitrate
-table entry, and the return value is not actually used. This way,
-'rate' becomes block-scoped later when determining the modulation.
-Compile tested only.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+Evidently I had only looked at all the ones in rx.c, and missed this.
+Add bh-disable to this use of the rxq->lock as well.
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+Fixes: 25edc8f259c7 ("iwlwifi: pcie: properly implement NAPI")
+Reported-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+v2: add 'wifi' prefix
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-index 98df0aef8168..7f9955deb204 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
-@@ -389,7 +389,6 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
--	struct ieee80211_rate *rate;
- 	const struct rt2x00_rate *hwrate = NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f39c436f0b6d..fc64e1e7f5ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3092,7 +3092,7 @@ static u32 iwl_trans_pcie_dump_rbs(struct iwl_trans *trans,
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq[0];
+ 	u32 i, r, j, rb_len = 0;
  
- 	memset(txdesc, 0, sizeof(*txdesc));
-@@ -416,9 +415,6 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
- 			__set_bit(ENTRY_TXD_RTS_FRAME, &txdesc->flags);
- 		else
- 			__set_bit(ENTRY_TXD_CTS_FRAME, &txdesc->flags);
--		if (tx_info->control.rts_cts_rate_idx >= 0)
--			rate =
--			    ieee80211_get_rts_cts_rate(rt2x00dev->hw, tx_info);
+-	spin_lock(&rxq->lock);
++	spin_lock_bh(&rxq->lock);
+ 
+ 	r = iwl_get_closed_rb_stts(trans, rxq);
+ 
+@@ -3116,7 +3116,7 @@ static u32 iwl_trans_pcie_dump_rbs(struct iwl_trans *trans,
+ 		*data = iwl_fw_error_next_data(*data);
  	}
  
- 	/*
-@@ -463,7 +459,8 @@ static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
- 	else if (txrate->flags & IEEE80211_TX_RC_MCS)
- 		txdesc->rate_mode = RATE_MODE_HT_MIX;
- 	else {
--		rate = ieee80211_get_tx_rate(rt2x00dev->hw, tx_info);
-+		struct ieee80211_rate *rate =
-+			ieee80211_get_tx_rate(rt2x00dev->hw, tx_info);
- 		hwrate = rt2x00_get_rate(rate->hw_value);
- 		if (hwrate->flags & DEV_RATE_OFDM)
- 			txdesc->rate_mode = RATE_MODE_OFDM;
+-	spin_unlock(&rxq->lock);
++	spin_unlock_bh(&rxq->lock);
+ 
+ 	return rb_len;
+ }
 -- 
-2.43.0
+2.34.1
 
