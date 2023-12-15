@@ -1,58 +1,124 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+Received: from forward202b.mail.yandex.net (forward202b.mail.yandex.net [178.154.239.155])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E212510D
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2023 11:30:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8384B134BF
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2023 12:50:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="Fk5V3eB4"
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-	t=1702639447; bh=f+bNiLJMwMo6AviIXbDSyDjyccy0dWXy8LsYbdkBFZs=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=Fk5V3eB4fgGAtjLetxFHIMhAtl/sWtRbw39UH0+Nn9YvO+wcilQSx/WHMkS9zLrIE
-	 dqKUDfbxlNgB0zQL2MSOFvcjduRLcLSgKfUIk/NTOjvgU0WGKtPO8nKsigN+B9x/Vk
-	 W5YtmU80hUxSF6bZsG44w7I6/BRPaoSaCRo/IdtjQIdPIu+wKRlpT2ASKnnYChv7CO
-	 xoZODNAJ/gVMtNUAADAgITRUEHeHk6B3I9x/7H7V2Wx1BpE5RipapZrDycsIvQrQay
-	 yxXqzjknafqzDRbBVPGwu+LQEjQJmD5d8JjkFRBWAw6fu51RtyGaVRE9NHLjtntMdi
-	 4tT1klOGZ8GDw==
-To: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- Kalle Valo
- <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org, kernel@pengutronix.de
-Subject: Re: [PATCH wifi-next 3/6] wifi: ath9k: Convert to platform remove
- callback returning void
-In-Reply-To: <20231117093056.873834-11-u.kleine-koenig@pengutronix.de>
-References: <20231117093056.873834-8-u.kleine-koenig@pengutronix.de>
- <20231117093056.873834-11-u.kleine-koenig@pengutronix.de>
-Date: Fri, 15 Dec 2023 12:24:07 +0100
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87cyv7zp2g.fsf@toke.dk>
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="lsmAvTrq"
+Received: from forward101b.mail.yandex.net (forward101b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d101])
+	by forward202b.mail.yandex.net (Yandex) with ESMTP id 86B4764A97
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Dec 2023 15:43:50 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:47a7:0:640:b27a:0])
+	by forward101b.mail.yandex.net (Yandex) with ESMTP id BB76E60906;
+	Fri, 15 Dec 2023 15:43:42 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id ehk5Ww9j9W20-0t0XZDJE;
+	Fri, 15 Dec 2023 15:43:42 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1702644222; bh=TegX+b1MeIhyCw21tTI1d6dy0UZhkzNSn15M6//DtzM=;
+	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=lsmAvTrqW4tHU36aHXsxgR6yjzx/WKgSUAHTdXkRZR0aN0JYN9s2RdYPm9tsHZmFj
+	 F99v2q4ktkeACNfK4R5AdnzGHLDwEG2N4zfH2S8GPpBFJnoYugYXUv9Yo1HTle8C9t
+	 jNuGI+kAiBtKNC9184CrEE6pyXkwINuj0I4fIeeg=
+Authentication-Results: mail-nwsmtp-smtp-production-main-91.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 2/3] wifi: mwifiex: use cfg80211_ssid_eq() instead of mwifiex_ssid_cmp()
+Date: Fri, 15 Dec 2023 15:38:52 +0300
+Message-ID: <20231215123859.196350-2-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20231215123859.196350-1-dmantipov@yandex.ru>
+References: <20231215123859.196350-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de> writes:
+Prefer generic 'cfg80211_ssid_eq()' over dropped 'mwifiex_ssid_cmp()'.
+Compile tested only.
 
-> The .remove() callback for a platform driver returns an int which makes
-> many driver authors wrongly assume it's possible to do error handling by
-> returning an error code. However the value returned is ignored (apart
-> from emitting a warning) and this typically results in resource leaks.
->
-> To improve here there is a quest to make the remove callback return
-> void. In the first step of this quest all drivers are converted to
-> .remove_new(), which already returns void. Eventually after all drivers
-> are converted, .remove_new() will be renamed to .remove().
->
-> Trivially convert this driver from always returning zero in the remove
-> callback to the void returning variant.
->
-> Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ drivers/net/wireless/marvell/mwifiex/join.c      |  4 ++--
+ drivers/net/wireless/marvell/mwifiex/main.h      |  1 -
+ drivers/net/wireless/marvell/mwifiex/scan.c      | 11 -----------
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c |  4 ++--
+ 4 files changed, 4 insertions(+), 16 deletions(-)
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
+index a6e254a1185c..9d98a1908dd6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/join.c
++++ b/drivers/net/wireless/marvell/mwifiex/join.c
+@@ -1427,8 +1427,8 @@ int mwifiex_adhoc_join(struct mwifiex_private *priv,
+ 
+ 	/* Check if the requested SSID is already joined */
+ 	if (priv->curr_bss_params.bss_descriptor.ssid.ssid_len &&
+-	    !mwifiex_ssid_cmp(&bss_desc->ssid,
+-			      &priv->curr_bss_params.bss_descriptor.ssid) &&
++	    cfg80211_ssid_eq(&bss_desc->ssid,
++			     &priv->curr_bss_params.bss_descriptor.ssid) &&
+ 	    (priv->curr_bss_params.bss_descriptor.bss_mode ==
+ 							NL80211_IFTYPE_ADHOC)) {
+ 		mwifiex_dbg(priv->adapter, INFO,
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index d263eae6078c..318b42b1896f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1152,7 +1152,6 @@ void mwifiex_queue_scan_cmd(struct mwifiex_private *priv,
+ 			    struct cmd_ctrl_node *cmd_node);
+ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 			    struct host_cmd_ds_command *resp);
+-s32 mwifiex_ssid_cmp(struct cfg80211_ssid *ssid1, struct cfg80211_ssid *ssid2);
+ int mwifiex_associate(struct mwifiex_private *priv,
+ 		      struct mwifiex_bssdescriptor *bss_desc);
+ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 72904c275461..a2ddac363b10 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -179,17 +179,6 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	return ret;
+ }
+ 
+-/*
+- * This function compares two SSIDs and checks if they match.
+- */
+-s32
+-mwifiex_ssid_cmp(struct cfg80211_ssid *ssid1, struct cfg80211_ssid *ssid2)
+-{
+-	if (!ssid1 || !ssid2 || (ssid1->ssid_len != ssid2->ssid_len))
+-		return -1;
+-	return memcmp(ssid1->ssid, ssid2->ssid, ssid1->ssid_len);
+-}
+-
+ /*
+  * This function checks if wapi is enabled in driver and scanned network is
+  * compatible with it.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index a2ad2b53f016..32a27fad7b79 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -345,8 +345,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 		/* Adhoc mode */
+ 		/* If the requested SSID matches current SSID, return */
+ 		if (bss_desc && bss_desc->ssid.ssid_len &&
+-		    (!mwifiex_ssid_cmp(&priv->curr_bss_params.bss_descriptor.
+-				       ssid, &bss_desc->ssid))) {
++		    cfg80211_ssid_eq(&priv->curr_bss_params.bss_descriptor.ssid,
++				     &bss_desc->ssid)) {
+ 			ret = 0;
+ 			goto done;
+ 		}
+-- 
+2.43.0
+
