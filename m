@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCD03786B
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 14:37:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D964B3A1C4
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 14:37:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="3BuJlAqC";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="umPYKHnq"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="34E0YzjJ";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="LlnxWC3j"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1702910227;
+	s=2020; t=1702910228;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=mi4ELzo3FZhzcl+T/tLoCV1R4ur75BKpb4KlDpGL0C8=;
-	b=3BuJlAqCPWbDWOBt/QriNe32VHuu7wLM0qexdFgKIm4b/a8oBYPq4Qg8+U42T76E1N35fo
-	A90qzE3ZRzmDNb4fQdPLTxehbVZcBTWdOm/vmrmpgWrBaOC1T5QTEYAZrWKUsYyXuN+9WC
-	DO0t8Ql+9WBvFmVq1w4UTBshlLdEjhkVt9xvSCOnYmkwVF1QzFZunz7GHU/WdtjI9yCT91
-	jXkZBBYMNHKOZJZpiirobc6APHuo98qQuXFqxl8w2dKKo3iM6kW7Iux/08i2w31C+1LAdM
-	GfTCbe1U2IOJF5iG20FhDtmc1nt+rvTJtu546HBHc5PYp9qbf2GUSUD7Ip+zUg==
+	bh=TKI2/zxYrERJWs2DGqRViwQjgKsJSEC50UVPlwqFoM8=;
+	b=34E0YzjJ9ybA1FmnrEmQxi3GK/O252mPjCCPh5Tj3ct4zn6QBzmlahH7afLHnnQRQ0zuD+
+	R2NJ8qWlKiql8HjEW9NYz9MENN2v+lADSczlTM1uBHQ8TDeSr39VtxaBdMvoXCdRjstdiw
+	EVjKKW+7eB2OqX4CTXqj6GAQ6IggXhZkkRbtA0gl3yV7RwFVGnmoBBrXXIGctRHRK60iW/
+	+PKazyu21do2YSx6KOJvYnvBvVASMWbPjKFqODFxr2B9QCcM/5ZrUyxiVGP/S680DYuNsk
+	mr3G/4sS27XGDrCgio+SirIwoC//HOMLW9KF7SEIi5Q+8aWWuuKtj3Wj868HdQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1702910227;
+	s=2020e; t=1702910228;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=mi4ELzo3FZhzcl+T/tLoCV1R4ur75BKpb4KlDpGL0C8=;
-	b=umPYKHnq2m/oV6XobESfFSBEGLND2wqTWAjkeAd9LmExlCFj2GRsj/+Nw+ZeqNXcwWl76I
-	loICFmKs9lrDq4AQ==
+	bh=TKI2/zxYrERJWs2DGqRViwQjgKsJSEC50UVPlwqFoM8=;
+	b=LlnxWC3j+V3mKwND0X95jgCPJTeIDMSbDFZpvGjdnjFMHQlFZ5aOFfNPxRpysy++XmDcJ9
+	O9Px8cwCVj4YpUAw==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 03/20] wifi: rtl8xxxu: support setting linktype for both interfaces
-Date: Mon, 18 Dec 2023 15:36:28 +0100
-Message-Id: <20231218143645.433356-4-martin.kaistra@linutronix.de>
+Subject: [PATCH 06/20] wifi: rtl8xxxu: extend wifi connected check to both interfaces
+Date: Mon, 18 Dec 2023 15:36:31 +0100
+Message-Id: <20231218143645.433356-7-martin.kaistra@linutronix.de>
 In-Reply-To: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 References: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,100 +49,73 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To prepare for concurrent mode, enhance the set_linktype function to be
-able to set the linktype in the MSR register for both hardware ports.
+There are multiple places in the code where the current connection
+status of wifi is checked. The driver will support two interfaces soon
+and either one of them (or both) could be connected.
 
-Until the users of set_linktype can handle multiple interfaces, use
-port_num = 0.
+Convert all uses of (vif && vif->cfg.assoc) to a new helper
+function rtl8xxxu_is_assoc() which checks both interfaces.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 37 +++++++++++--------
- 1 file changed, 22 insertions(+), 15 deletions(-)
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 20 +++++++++----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 5b7c20970a973..305d6dd585dfa 100644
+index c2ea8e92cd637..fd6b6e2eba038 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -1633,33 +1633,41 @@ rtl8xxxu_gen1_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+@@ -6043,18 +6043,20 @@ void rtl8723bu_update_bt_link_info(struct rtl8xxxu_priv *priv, u8 bt_info)
+ 		btcoex->bt_busy = false;
  }
  
- static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
--				  enum nl80211_iftype linktype)
-+				  enum nl80211_iftype linktype, int port_num)
- {
--	u8 val8;
--
--	val8 = rtl8xxxu_read8(priv, REG_MSR);
--	val8 &= ~MSR_LINKTYPE_MASK;
-+	u8 val8, type;
- 
- 	switch (linktype) {
- 	case NL80211_IFTYPE_UNSPECIFIED:
--		val8 |= MSR_LINKTYPE_NONE;
-+		type = MSR_LINKTYPE_NONE;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		val8 |= MSR_LINKTYPE_ADHOC;
-+		type = MSR_LINKTYPE_ADHOC;
- 		break;
- 	case NL80211_IFTYPE_STATION:
--		val8 |= MSR_LINKTYPE_STATION;
-+		type = MSR_LINKTYPE_STATION;
- 		break;
- 	case NL80211_IFTYPE_AP:
--		val8 |= MSR_LINKTYPE_AP;
-+		type = MSR_LINKTYPE_AP;
- 		break;
- 	default:
--		goto out;
-+		return;
-+	}
++static inline bool rtl8xxxu_is_assoc(struct rtl8xxxu_priv *priv)
++{
++	return (priv->vifs[0] && priv->vifs[0]->cfg.assoc) ||
++	       (priv->vifs[1] && priv->vifs[1]->cfg.assoc);
++}
 +
-+	switch (port_num) {
-+	case 0:
-+		val8 = rtl8xxxu_read8(priv, REG_MSR) & 0x0c;
-+		val8 |= type;
-+		break;
-+	case 1:
-+		val8 = rtl8xxxu_read8(priv, REG_MSR) & 0x03;
-+		val8 |= type << 2;
-+		break;
-+	default:
-+		return;
- 	}
+ static
+ void rtl8723bu_handle_bt_inquiry(struct rtl8xxxu_priv *priv)
+ {
+-	struct ieee80211_vif *vif;
+ 	struct rtl8xxxu_btcoex *btcoex;
+-	bool wifi_connected;
  
- 	rtl8xxxu_write8(priv, REG_MSR, val8);
--out:
--	return;
- }
+-	vif = priv->vif;
+ 	btcoex = &priv->bt_coex;
+-	wifi_connected = (vif && vif->cfg.assoc);
  
- static void
-@@ -4236,7 +4244,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	}
+-	if (!wifi_connected) {
++	if (!rtl8xxxu_is_assoc(priv)) {
+ 		rtl8723bu_set_ps_tdma(priv, 0x8, 0x0, 0x0, 0x0, 0x0);
+ 		rtl8723bu_set_coex_with_type(priv, 0);
+ 	} else if (btcoex->has_sco || btcoex->has_hid || btcoex->has_a2dp) {
+@@ -6072,15 +6074,11 @@ void rtl8723bu_handle_bt_inquiry(struct rtl8xxxu_priv *priv)
+ static
+ void rtl8723bu_handle_bt_info(struct rtl8xxxu_priv *priv)
+ {
+-	struct ieee80211_vif *vif;
+ 	struct rtl8xxxu_btcoex *btcoex;
+-	bool wifi_connected;
  
- 	rtl8xxxu_set_mac(priv);
--	rtl8xxxu_set_linktype(priv, NL80211_IFTYPE_STATION);
+-	vif = priv->vif;
+ 	btcoex = &priv->bt_coex;
+-	wifi_connected = (vif && vif->cfg.assoc);
  
- 	/*
- 	 * Configure initial WMAC settings
-@@ -4964,7 +4971,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		dev_dbg(dev, "Changed ASSOC: %i!\n", vif->cfg.assoc);
+-	if (wifi_connected) {
++	if (rtl8xxxu_is_assoc(priv)) {
+ 		u32 val32 = 0;
+ 		u32 high_prio_tx = 0, high_prio_rx = 0;
  
--		rtl8xxxu_set_linktype(priv, vif->type);
-+		rtl8xxxu_set_linktype(priv, vif->type, 0);
+@@ -7103,7 +7101,7 @@ static void rtl8xxxu_track_cfo(struct rtl8xxxu_priv *priv)
+ 	int cfo_khz_a, cfo_khz_b, cfo_average;
+ 	int crystal_cap;
  
- 		if (vif->cfg.assoc) {
- 			u32 ramask;
-@@ -6610,7 +6617,7 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 		ret = -EOPNOTSUPP;
- 	}
- 
--	rtl8xxxu_set_linktype(priv, vif->type);
-+	rtl8xxxu_set_linktype(priv, vif->type, 0);
- 	ether_addr_copy(priv->mac_addr, vif->addr);
- 	rtl8xxxu_set_mac(priv);
+-	if (!priv->vif || !priv->vif->cfg.assoc) {
++	if (!rtl8xxxu_is_assoc(priv)) {
+ 		/* Reset */
+ 		cfo->adjust = true;
  
 -- 
 2.39.2
