@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FEBC3A1C8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6094B101DB
 	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 14:37:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="qORbmYsV";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ItlK5PDY"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vaRcre4I";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="d4qMrxg0"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1702910228;
+	s=2020; t=1702910229;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gD6FlXg8fJCspALTklpM7SCQ1whYQouNEOtnvE39Xhk=;
-	b=qORbmYsVRSnTwHw1gM1+FP0nEeInpMfBSEdXNKEc66dsmyWPHwd1gFk9V3TBIhs0TjQksS
-	m81Dl/R1tFC8cTuAbhK8FP9KxeDpe8fT5pVNvP1xVJMYIyfRmC4Q8RjrC1eGLxzeNhO7e5
-	qGWx7GwijE28f2+67z6ovLX4/T+vWR+5aYnLMVS7CEyghvk/HgZqpTOoh1mdrhuxq/ntWF
-	jLayXkOYfZgePbtiIeiPnyID4CBj0l7fx1YksG1kgp7ugjYIlvPWUFVBlpg7fU88liDaQA
-	3q6cXuQ0bQHlMyhB+vnyLHxieJSxRhCJhWfLas0DSAfZRfbha7RrXj4W6tVc2Q==
+	bh=ILeYXLyZzn3UARL0UAlnYpv8NwrUpQyxGl9/DdeQ9yY=;
+	b=vaRcre4ICpupNl+2bsG7WABrbNLzfqZGr7hZLEIDJyLVXSwBVPMMPBwp4RbjpyILCT3zX3
+	9gKA8WPeSXpDuUSKb8pLFRmItffP7cp51kU3DSw26JNbmnHiZLdoWlmhAU2PDNIzU4aIvl
+	rb+B2dEJLwGIU1V3bnXC5ITUSP8dKJAh9a+FXnFF7Xhd0Ts6GrqJxjZrtU2P8i2oQKOB51
+	5rTAkVoWV1p6/X4WZekWmfT9JrBblkVVM/sZWINeyejGcBbixbcPFBaK9/0m8VoEOIoz+p
+	PTQcuBbP20DZFxpqqgbONd4x32nrDWYg/V005QA1Y0urkw+Kra+a5NErJamBGA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1702910228;
+	s=2020e; t=1702910229;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gD6FlXg8fJCspALTklpM7SCQ1whYQouNEOtnvE39Xhk=;
-	b=ItlK5PDYP3qqhdEyQfwmUeUZZ+vHTohDwqMjN7keJoRpQjPVvVcs9K+YWj8qmUcmcSyT6p
-	MHDQKlbPz/IR1dBQ==
+	bh=ILeYXLyZzn3UARL0UAlnYpv8NwrUpQyxGl9/DdeQ9yY=;
+	b=d4qMrxg0+onBi3d6SpscDSHYpttsNNnFNRbevKfpqLsgRo6fzZtwaaJFvUuNv319EexFjW
+	3YaY+WCBGnZXXTBg==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 09/20] wifi: rtl8xxxu: support multiple interfaces in set_aifs()
-Date: Mon, 18 Dec 2023 15:36:34 +0100
-Message-Id: <20231218143645.433356-10-martin.kaistra@linutronix.de>
+Subject: [PATCH 11/20] wifi: rtl8xxxu: support multiple interfaces in configure_filter()
+Date: Mon, 18 Dec 2023 15:36:36 +0100
+Message-Id: <20231218143645.433356-12-martin.kaistra@linutronix.de>
 In-Reply-To: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 References: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,46 +49,32 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In concurrent mode supported by this driver, both interfaces will use
-the same channel and same wireless mode.
-It is therefore possible to get the wireless mode by checking the first
-connected interface.
+As we only want to support AP mode/sending beacons on port 0, change
+from priv->vif to priv->vifs[0] in the check for AP mode.
+Additionally, if we are in AP mode, don't filter RX beacon and probe
+response frames to still allow working STATION mode on the other
+interface.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 2b546bce01237..827e715f0e585 100644
+index 6683ff0f4d8c7..f54d7b1647792 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4913,14 +4913,18 @@ static void rtl8xxxu_set_aifs(struct rtl8xxxu_priv *priv, u8 slot_time)
- 	u8 aifs, aifsn, sifs;
- 	int i;
+@@ -6782,8 +6782,8 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
+ 	else
+ 		rcr |= RCR_CHECK_BSSID_BEACON | RCR_CHECK_BSSID_MATCH;
  
--	if (priv->vif) {
--		struct ieee80211_sta *sta;
-+	for (i = 0; i < ARRAY_SIZE(priv->vifs); i++) {
-+		if (priv->vifs[i]) {
-+			struct ieee80211_sta *sta;
+-	if (priv->vif && priv->vif->type == NL80211_IFTYPE_AP)
+-		rcr &= ~RCR_CHECK_BSSID_MATCH;
++	if (priv->vifs[0] && priv->vifs[0]->type == NL80211_IFTYPE_AP)
++		rcr &= ~(RCR_CHECK_BSSID_MATCH | RCR_CHECK_BSSID_BEACON);
  
--		rcu_read_lock();
--		sta = ieee80211_find_sta(priv->vif, priv->vif->bss_conf.bssid);
--		if (sta)
--			wireless_mode = rtl8xxxu_wireless_mode(priv->hw, sta);
--		rcu_read_unlock();
-+			rcu_read_lock();
-+			sta = ieee80211_find_sta(priv->vifs[i], priv->vifs[i]->bss_conf.bssid);
-+			if (sta)
-+				wireless_mode = rtl8xxxu_wireless_mode(priv->hw, sta);
-+			rcu_read_unlock();
-+		}
-+		if (wireless_mode)
-+			break;
- 	}
- 
- 	if (priv->hw->conf.chandef.chan->band == NL80211_BAND_5GHZ ||
+ 	if (*total_flags & FIF_CONTROL)
+ 		rcr |= RCR_ACCEPT_CTRL_FRAME;
 -- 
 2.39.2
 
