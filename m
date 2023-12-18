@@ -1,72 +1,89 @@
-Received: from forward103b.mail.yandex.net (forward103b.mail.yandex.net [178.154.239.150])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 825603D540
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 15:05:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51A2815485;
+	Mon, 18 Dec 2023 15:17:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="NWj70zYm"
-Received: from mail-nwsmtp-smtp-production-main-84.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-84.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:30a4:0:640:6426:0])
-	by forward103b.mail.yandex.net (Yandex) with ESMTP id E2A9A60A95;
-	Mon, 18 Dec 2023 18:04:55 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-84.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id s4q4qX8PfuQ0-A9zrS1Bi;
-	Mon, 18 Dec 2023 18:04:55 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1702911895; bh=9APtOO4AkWSIUPxuEeY1iDf0BKjrWx98wgRgAmiaKUg=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=NWj70zYmefUfhIsm1YuRqKhMPAnLfPl0eZp3rAAIWTXToqNfeSoBr+S8M347uASmM
-	 wKWDWVtGog9g4OO+kGYE06bcBCpaBqgI+P/PmYx6iVKSRVcagXZBILgi6vDi1UWrg5
-	 cZ1Q9Elz5ENnqbC6IxyLD8j7+sThyhxJ8xDIsRaY=
-Authentication-Results: mail-nwsmtp-smtp-production-main-84.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] wifi: iwlwifi: dvm: do not set priv_sta of rs_get_rate()
-Date: Mon, 18 Dec 2023 18:02:34 +0300
-Message-ID: <20231218150245.343691-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qsGzLhld"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE153C433C8;
+	Mon, 18 Dec 2023 15:17:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702912673;
+	bh=gdw2rG1kHMxFAFPOz78qJY9ASvmd2ILrgUQz0xLeORE=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=qsGzLhldjXDOoUeKXNf619KvH5SkEYA4I+fGoUcCNWOxv3vJIetK15Ui3BnVr9wMZ
+	 qk3TzhQEXcftcZv4sXkPWxKO0PAqCo0srqyRoZ3iXVY56jfeL+Eo80+m6SXtQ+jBK5
+	 Fy8IJ66lZwBfnXeoaNJ+14DUjs5uI5K1ZNGfuCao1I9tN6kH+08lZfSZy8aVQnTsiS
+	 XoL5mfU/MpW+kFx+Becsv72a06N92eq/iESC8IA6nsVq9Axk62nC4QgTKxzj9CqNes
+	 N3uq+ZVW8cEXxp1D3KBVHT9oNNfzYyp0bYQFMYU5EmZhNEjzGPsCbkMJonYgSDOnip
+	 5ljboZDb0DhNw==
+From: Kalle Valo <kvalo@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,  "David S . Miller"
+ <davem@davemloft.net>,  Eric Dumazet <edumazet@google.com>,  Jakub
+ Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>,  "open
+ list:MAC80211" <linux-wireless@vger.kernel.org>,  "open list:NETWORKING
+ [GENERAL]" <netdev@vger.kernel.org>,  open list
+ <linux-kernel@vger.kernel.org>,  Jun Ma <Jun.ma2@amd.com>
+Subject: Re: [PATCH] wifi: mac80211: Use subsystem appropriate debug call
+References: <20231215145439.57286-1-mario.limonciello@amd.com>
+Date: Mon, 18 Dec 2023 17:17:49 +0200
+In-Reply-To: <20231215145439.57286-1-mario.limonciello@amd.com> (Mario
+	Limonciello's message of "Fri, 15 Dec 2023 08:54:39 -0600")
+Message-ID: <87frzzsfoi.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Since commit 1e87fec9fa52 ("mac80211: call rate_control_send_low()
-internally") removes an explicit call to 'rate_control_send_low()'
-from 'rs_get_rate()' and 'priv_sta' is no longer used till the end
-of the function, there is no need to reset it to NULL. Compile
-tested only.
+Mario Limonciello <mario.limonciello@amd.com> writes:
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> mac80211 doesn't use dev_dbg() but instead various macros from
+> net/mac80211/debug.h. Adjust wbrf code to use wiphy_dbg() instead.
+>
+> Cc: Jun Ma <Jun.ma2@amd.com>
+> Reported-by: kvalo@kernel.org
+> Closes:
+> https://lore.kernel.org/amd-gfx/8bd60010-7534-4c22-9337-c4219946d8d6@amd.com/T/#mfe2f29372c45130d27745912faf33d9f7ce50118
+> Fixes: d34be4310cbe ("wifi: mac80211: Add support for WBRF features")
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+> ---
+>  net/mac80211/wbrf.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/wbrf.c b/net/mac80211/wbrf.c
+> index a05c5b971789..12c23e14f884 100644
+> --- a/net/mac80211/wbrf.c
+> +++ b/net/mac80211/wbrf.c
+> @@ -23,8 +23,8 @@ void ieee80211_check_wbrf_support(struct ieee80211_local *local)
+>  		return;
+>  
+>  	local->wbrf_supported = acpi_amd_wbrf_supported_producer(dev);
+> -	dev_dbg(dev, "WBRF is %s supported\n",
+> -		local->wbrf_supported ? "" : "not");
+> +	wiphy_dbg(wiphy, "WBRF is %s supported\n",
+> +		  local->wbrf_supported ? "" : "not");
+>  }
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+This won't work, I still see the debug message:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-index f4a6f76cf193..ab237cb1d91d 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-@@ -2684,10 +2684,8 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
- 	}
- 
- 	/* Treat uninitialized rate scaling data same as non-existing. */
--	if (lq_sta && !lq_sta->drv) {
-+	if (lq_sta && !lq_sta->drv)
- 		IWL_DEBUG_RATE(priv, "Rate scaling not initialized yet.\n");
--		priv_sta = NULL;
--	}
- 
- 	rate_idx  = lq_sta->last_txrate_idx;
- 
+[  333.765867] ieee80211 phy0: WBRF is not supported
+
+The issue seems to be that mac80211 defines DEBUG in
+net/mac80211/Makefile:
+
+ccflags-y += -DDEBUG
+
+That -DDEBUG should be cleaned up, but I think separately. It's just
+that I cannot come up with any good proposal, all the macros in
+net/mac80211/debug.h require sdata and we don't have that in this stage.
+Any ideas?
+
 -- 
-2.43.0
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
