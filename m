@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556EC37881
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87C442368
 	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 14:37:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="BU841PcR";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DGZZft/c"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="KeRB5YF6";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="cxh5cbeY"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1702910229;
+	s=2020; t=1702910230;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ekGZde80ryPvRrygxKOP62jjy+O59aTejVkHWJWxnAE=;
-	b=BU841PcRXAkmbQhZTYvR3Hd3lsPsvZnfUH8YVDBP8yjWHSGtff6XcRT2jdS/UqTDxnq4Iu
-	VMqNoXpVMhorZh9c6dE1I2230NixFfWf6yAGz37DPvlFXh7IWRixuuD6ZfHqxA2AA5VtyQ
-	QchXSibZyHVXI4tCjWnVz1BjCpbSn2Nrk67W4GNchMU/UKfv/T/LVqVhih4k6VHzTjZuq8
-	/sUK7ZzAsiOApnVr7D+EaFuqgUtomZk+ytiydAcJXyjVoPAhWOIY9eA0hddRrrk7hGjgox
-	cSheDKtfaWRAhZg2kQGuJk/UzQS10fWqI9677CUx9324thcGbyX1Iq6KSnhLbg==
+	bh=Ptqs0ZJ3rYpPy4Q6TEj8asN+2XXFzbqaYPKnRdE81BI=;
+	b=KeRB5YF6zaCgRCWVwZk9a7jCKJQ3/ebFSbevvX0iBu+wxYVA5S8qFDHqXBv8lnJT9psuqI
+	1K6b4MsIZVmMSwuUmG13uG/7qBDI5RxLPO3ZGP+p7BPQC6kBzi34IvxnkwWhoepNDM2vqf
+	p8VGk11MhRm2OJz7W+CA+WNGMrLCYtFioDbPy43xfIKhHtnov9J9zO1BHbqedH7FiKt2yx
+	aBffbXMrYVveL5eZSOhFmSWRC7jhidoWxM4zfzKmGyZDDQvGAcYfZVys8KNk6LaAcQUKzy
+	tPZuLa6/x0SCf+HFzXHNIe1YNaSgFyso3fMhWzfWI0VO0DymYM9X3r2gGkY12A==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1702910229;
+	s=2020e; t=1702910230;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ekGZde80ryPvRrygxKOP62jjy+O59aTejVkHWJWxnAE=;
-	b=DGZZft/cZWjDI287XyJlefC57LmIXF66UhqbW3MCQI3En4SOxd/LXPdTZoP/t/c+Azo4Jd
-	bXsWMrl5LsBBc3BQ==
+	bh=Ptqs0ZJ3rYpPy4Q6TEj8asN+2XXFzbqaYPKnRdE81BI=;
+	b=cxh5cbeY1IUmpdz0+B7r6/o2TeugC/Ja+Rcna6yGL/6bwMTZeQZRbc1aGbG7S6A0+jsMa3
+	3S1QhnDlasNGp2DA==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 15/20] wifi: rtl8xxxu: support multiple interface in start_ap()
-Date: Mon, 18 Dec 2023 15:36:40 +0100
-Message-Id: <20231218143645.433356-16-martin.kaistra@linutronix.de>
+Subject: [PATCH 17/20] wifi: rtl8xxxu: remove obsolete priv->vif
+Date: Mon, 18 Dec 2023 15:36:42 +0100
+Message-Id: <20231218143645.433356-18-martin.kaistra@linutronix.de>
 In-Reply-To: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 References: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,30 +49,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Call set_bssid() with the correct port_num now.
+Now that all uses of priv->vif have been converted to priv->vifs[]
+remove the old attribute.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 5 -----
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 --
+ 2 files changed, 7 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 9d272da373a3c..889ef7217f142 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1892,11 +1892,6 @@ struct rtl8xxxu_priv {
+ 	u8 rssi_level;
+ 	DECLARE_BITMAP(tx_aggr_started, IEEE80211_NUM_TIDS);
+ 	DECLARE_BITMAP(tid_tx_operational, IEEE80211_NUM_TIDS);
+-	/*
+-	 * Only one virtual interface permitted because only STA mode
+-	 * is supported and no iface_combinations are provided.
+-	 */
+-	struct ieee80211_vif *vif;
+ 
+ 	struct ieee80211_vif *vifs[2];
+ 	struct delayed_work ra_watchdog;
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index f929b01615d00..3851fc90339e0 100644
+index ad76cddef81b2..c2a577ebd061e 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5111,11 +5111,12 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			     struct ieee80211_bss_conf *link_conf)
- {
-+	struct rtl8xxxu_vif *rtlvif = (struct rtl8xxxu_vif *)vif->drv_priv;
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct device *dev = &priv->udev->dev;
+@@ -6655,7 +6655,6 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
+ 	}
  
- 	dev_dbg(dev, "Start AP mode\n");
--	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid, 0);
-+	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid, rtlvif->port_num);
- 	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
- 	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, 0, true);
+ 	priv->vifs[port_num] = vif;
+-	priv->vif = vif;
+ 	rtlvif->port_num = port_num;
+ 
+ 	rtl8xxxu_set_linktype(priv, vif->type, port_num);
+@@ -6673,7 +6672,6 @@ static void rtl8xxxu_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	dev_dbg(&priv->udev->dev, "%s\n", __func__);
+ 
+-	priv->vif = NULL;
+ 	priv->vifs[rtlvif->port_num] = NULL;
+ }
  
 -- 
 2.39.2
