@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815823786E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC983786A
 	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 14:37:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="b+3Tnurs";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zkuVj1Qp"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="R5KDsR1t";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="INtMqkuv"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1702910227;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=vzsqM0SUc/jjw0gmWP1m/hJ9HqquK8z8C1PFOnd93Ng=;
-	b=b+3TnursnHhGpupeFQ1iYliO0l65IYK4vEqnmNPS7PQbwHLiltlsmRK0qGKrh9YyI7DvaS
-	Qe8Z0QkbCRHVUxXlBowToPrrjcMlIikXbKbglO1oFga3mdiCyt4vyQNxg51P7Jrzm0Q3da
-	MLCFh39Yg4+Puhuu6qlAObSDJ291d/ZKi+VqR4UzzI6f0zr3JWPI907HKZsiT1TVAVgtOP
-	1VS5g4TVYlmf3IYbFlj9I8wPekji7t/RWg7CY73Zbjq4BCv0dTVwUKNr3Pq5mYEQjpITWH
-	ZfWxh/MYJFSkeW/IrsMfHlpNfFzGL6MCNHOWpN0cpKtNfJEYlCbxft/goKcSUA==
+	bh=+/9bjab4Pb/DvS+T4bTTKjNF+6+c/Gp5dxRtBRfAUz8=;
+	b=R5KDsR1tA2uz3WNkTLgftZGrCKdlwUX70/XwMCFcxa2kPlMLFIZcvhrBRG1gtOM4VMuABa
+	aahg4utE+4MOHsgMd2n3LIMD1PUArEEOkMU8c7O1hw8W6pr4y/yfoTuD6dVl5MMpmXrLHV
+	juE2/faTeuLBKIduUD5zVRIgzxT6erC2wfMpzS8gLHbamYDr0jucXsBourMoSPUgAtvza1
+	k7qkF5p2PKHVIKEIMTkJP+jEIuRgD1hc8z7XVi/j9k7RD7NConkoNOEyfHilrYqvLbiPDs
+	KDEtFaYCog50wOOq529BztXEULqKXEeFXw2Pgw/44ervpG3TD0BoEoyYgigRGw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1702910227;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=vzsqM0SUc/jjw0gmWP1m/hJ9HqquK8z8C1PFOnd93Ng=;
-	b=zkuVj1QpInfPj8UXMf7ZUE0FO9b/qQjOzdrdDvBzMxJJD+GvmE7S2dElrDtcrqTuyDAv/o
-	u/ZkYSeiuqFFjsAQ==
+	bh=+/9bjab4Pb/DvS+T4bTTKjNF+6+c/Gp5dxRtBRfAUz8=;
+	b=INtMqkuvE/aOnzLfhw8IHPceq3+dnnZDNdYSRRzjFJ5sC0LX2EnNIl5voXGFH4iSjz7Wqn
+	8Q1t8t13ZFG3NBDw==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 04/20] wifi: rtl8xxxu: 8188e: convert usage of priv->vif to priv->vifs[0]
-Date: Mon, 18 Dec 2023 15:36:29 +0100
-Message-Id: <20231218143645.433356-5-martin.kaistra@linutronix.de>
+Subject: [PATCH 02/20] wifi: rtl8xxxu: prepare supporting two virtual interfaces
+Date: Mon, 18 Dec 2023 15:36:27 +0100
+Message-Id: <20231218143645.433356-3-martin.kaistra@linutronix.de>
 In-Reply-To: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 References: <20231218143645.433356-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,27 +49,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The driver currently does not support AP or concurrent mode for 8188e,
-so just use priv->vifs[0] instead of priv->vif for now.
+To prepare for concurrent mode, add an array ("vifs") to rtl8xxxu_priv
+to keep track of both interfaces.
+
+Keep the old priv->vif as long there are still users of it and let
+priv->vifs[0] point to the same location.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  2 ++
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++++---
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
-index 6d0f975f891b7..cbeac9386ae51 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188e.c
-@@ -1699,7 +1699,7 @@ void rtl8188e_handle_ra_tx_report2(struct rtl8xxxu_priv *priv, struct sk_buff *s
- 	/* We only use macid 0, so only the first item is relevant.
- 	 * AP mode will use more of them if it's ever implemented.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 4695fb4e2d2db..b63fe084de92b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1897,6 +1897,8 @@ struct rtl8xxxu_priv {
+ 	 * is supported and no iface_combinations are provided.
  	 */
--	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_STATION)
-+	if (!priv->vifs[0] || priv->vifs[0]->type == NL80211_IFTYPE_STATION)
- 		items = 1;
+ 	struct ieee80211_vif *vif;
++
++	struct ieee80211_vif *vifs[2];
+ 	struct delayed_work ra_watchdog;
+ 	struct work_struct c2hcmd_work;
+ 	struct sk_buff_head c2hcmd_queue;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 2dbed43ef22a5..5b7c20970a973 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6569,10 +6569,12 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
+ 	int ret;
+ 	u8 val8;
  
- 	for (macid = 0; macid < items; macid++) {
+-	if (!priv->vif)
++	if (!priv->vif) {
+ 		priv->vif = vif;
+-	else
++		priv->vifs[0] = vif;
++	} else {
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -6622,8 +6624,10 @@ static void rtl8xxxu_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	dev_dbg(&priv->udev->dev, "%s\n", __func__);
+ 
+-	if (priv->vif)
++	if (priv->vif) {
+ 		priv->vif = NULL;
++		priv->vifs[0] = NULL;
++	}
+ }
+ 
+ static int rtl8xxxu_config(struct ieee80211_hw *hw, u32 changed)
 -- 
 2.39.2
 
