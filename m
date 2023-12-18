@@ -1,32 +1,46 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F1BDF4B
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 06:15:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 3BI6FJB203224896, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 3BI6FJB203224896
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 18 Dec 2023 14:15:19 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.32; Mon, 18 Dec 2023 14:15:19 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.7; Mon, 18 Dec
- 2023 14:15:18 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <kvalo@kernel.org>
-CC: <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/11] wifi: rtw89: coex: To improve Wi-Fi performance while BT is idle
-Date: Mon, 18 Dec 2023 14:13:41 +0800
-Message-ID: <20231218061341.51255-12-pkshih@realtek.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41C0710971
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Dec 2023 08:59:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="NzYQY0Zk"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BI8oPKZ032499;
+	Mon, 18 Dec 2023 08:58:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=DKGzKwneF7KlICaNNz5yVaRItgqQUsmR/AIeqB4B2RY=; b=Nz
+	YQY0ZkOYyJ5VnieAq02BD/zOGd4SJQRsE8A99R8W8/FZyY+bp9jZwB42sUTXKqRP
+	7ccNJgi+nF3jM6d2W61Z5P78qCbx2gY41ExZQ69TcOvt5L+BmXNQfYLHkVg02/lT
+	AXhuVIz1b2OIjgC6ErpNYN0G97mhMsKzRFIYZVQDSk9lFjbyxl6dXtMsjjq0kxQG
+	5RRbog045CO+ULHK2umH2W+JwWxUuyBa879RzZtClObxIbSc/KPDpAShAFqxiMkq
+	JMssu+BsZJui72aFwxL7f/+rCO323wk30KmGZIAfJSCbXd3c865bwGdfT9ubmAvA
+	JEQvpR5otp8iRsM/zuGQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3v2jx0g0hg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Dec 2023 08:58:58 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BI8wvcM011358
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 Dec 2023 08:58:57 GMT
+Received: from bqiang-Celadon-RN.qca.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 18 Dec 2023 00:58:56 -0800
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+To: <ath11k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v10 01/12] wifi: ath11k: add support to select 6 GHz regulatory type
+Date: Mon, 18 Dec 2023 16:58:33 +0800
+Message-ID: <20231218085844.2658-2-quic_bqiang@quicinc.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231218061341.51255-1-pkshih@realtek.com>
-References: <20231218061341.51255-1-pkshih@realtek.com>
+In-Reply-To: <20231218085844.2658-1-quic_bqiang@quicinc.com>
+References: <20231218085844.2658-1-quic_bqiang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,161 +49,175 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXMBS04.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: NqaGVv4Ph0TqAEDypy7Ea0LAzcSVCluM
+X-Proofpoint-GUID: NqaGVv4Ph0TqAEDypy7Ea0LAzcSVCluM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
+ phishscore=0 priorityscore=1501 suspectscore=0 impostorscore=0
+ lowpriorityscore=0 adultscore=0 mlxscore=0 malwarescore=0 spamscore=0
+ mlxlogscore=942 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2312180064
 
-From: Ching-Te Ku <ku920601@realtek.com>
+From: Wen Gong <quic_wgong@quicinc.com>
 
-Because some platform Bluetooth will have many background scan when idle.
-And the frequently Bluetooth scan will break Wi-Fi traffic many times at
-a short duration, it will make Wi-Fi throughput become lower. This patch
-will shorter Bluetooth slot and adjust priority settings, make Wi-Fi can
-have a more completed duration to do traffic.
+There are 3 types of regulatory rules for AP mode and 6 type for
+station mode. Add wmi_vdev_type and ieee80211_ap_reg_power to
+select the exact reg rules.
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+
+Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 63 +++++++++++++----------
- 1 file changed, 37 insertions(+), 26 deletions(-)
+v10:
+ no change.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 0b430eace1aa..f37afb4cbb63 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -123,7 +123,8 @@ static const u32 cxtbl[] = {
- 	0xea55556a, /* 21 */
- 	0xaafafafa, /* 22 */
- 	0xfafaaafa, /* 23 */
--	0xfafffaff  /* 24 */
-+	0xfafffaff, /* 24 */
-+	0xea6a5a5a, /* 25 */
- };
+v9:
+ no change.
+
+v8:
+ add s-o-b tag.
+
+v7:
+ no change.
+
+ drivers/net/wireless/ath/ath11k/reg.c | 66 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath11k/reg.h |  6 ++-
+ drivers/net/wireless/ath/ath11k/wmi.c |  3 +-
+ 3 files changed, 58 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/reg.c b/drivers/net/wireless/ath/ath11k/reg.c
+index b4fd4d2107c7..8a6fe9b495bf 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.c
++++ b/drivers/net/wireless/ath/ath11k/reg.c
+@@ -618,25 +618,64 @@ ath11k_reg_update_weather_radar_band(struct ath11k_base *ab,
+ 	*rule_idx = i;
+ }
  
- static const struct rtw89_btc_ver rtw89_btc_ver_defs[] = {
-@@ -413,11 +414,14 @@ enum btc_cx_poicy_type {
- 	/* TDMA Fix slot-8: W1:B1 = user-define */
- 	BTC_CXP_FIX_TDW1B1 = (BTC_CXP_FIX << 8) | 8,
- 
--	/* TDMA Fix slot-9: W1:B1 = 40:20 */
--	BTC_CXP_FIX_TD4020 = (BTC_CXP_FIX << 8) | 9,
--
- 	/* TDMA Fix slot-9: W1:B1 = 40:10 */
--	BTC_CXP_FIX_TD4010ISO = (BTC_CXP_FIX << 8) | 10,
-+	BTC_CXP_FIX_TD4010ISO = (BTC_CXP_FIX << 8) | 9,
++enum wmi_reg_6ghz_ap_type
++ath11k_reg_ap_pwr_convert(enum ieee80211_ap_reg_power power_type)
++{
++	switch (power_type) {
++	case IEEE80211_REG_LPI_AP:
++		return WMI_REG_INDOOR_AP;
++	case IEEE80211_REG_SP_AP:
++		return WMI_REG_STANDARD_POWER_AP;
++	case IEEE80211_REG_VLP_AP:
++		return WMI_REG_VERY_LOW_POWER_AP;
++	default:
++		return WMI_REG_MAX_AP_TYPE;
++	}
++}
 +
-+	/* TDMA Fix slot-10: W1:B1 = 40:10 */
-+	BTC_CXP_FIX_TD4010ISO_DL = (BTC_CXP_FIX << 8) | 10,
-+
-+	/* TDMA Fix slot-11: W1:B1 = 40:10 */
-+	BTC_CXP_FIX_TD4010ISO_UL = (BTC_CXP_FIX << 8) | 11,
- 
- 	/* PS-TDMA Fix slot-0: W1:B1 = 30:30 */
- 	BTC_CXP_PFIX_TD3030 = (BTC_CXP_PFIX << 8) | 0,
-@@ -2815,9 +2819,17 @@ void rtw89_btc_set_policy(struct rtw89_dev *rtwdev, u16 policy_type)
- 			_slot_set(btc, CXST_W1, 40, tbl_w1, SLOT_ISO);
- 			_slot_set(btc, CXST_B1, 10, tbl_b1, SLOT_MIX);
- 			break;
--		case BTC_CXP_FIX_TD4020:
--			_slot_set(btc, CXST_W1, 40, cxtbl[1], SLOT_MIX);
--			_slot_set(btc, CXST_B1, 20, tbl_b1, SLOT_MIX);
-+		case BTC_CXP_FIX_TD4010ISO:
-+			_slot_set(btc, CXST_W1, 40, cxtbl[1], SLOT_ISO);
-+			_slot_set(btc, CXST_B1, 10, tbl_b1, SLOT_MIX);
-+			break;
-+		case BTC_CXP_FIX_TD4010ISO_DL:
-+			_slot_set(btc, CXST_W1, 40, cxtbl[25], SLOT_ISO);
-+			_slot_set(btc, CXST_B1, 10, cxtbl[25], SLOT_ISO);
-+			break;
-+		case BTC_CXP_FIX_TD4010ISO_UL:
-+			_slot_set(btc, CXST_W1, 40, cxtbl[20], SLOT_ISO);
-+			_slot_set(btc, CXST_B1, 10, cxtbl[25], SLOT_MIX);
- 			break;
- 		case BTC_CXP_FIX_TD7010:
- 			_slot_set(btc, CXST_W1, 70, tbl_w1, SLOT_ISO);
-@@ -3156,9 +3168,13 @@ void rtw89_btc_set_policy_v1(struct rtw89_dev *rtwdev, u16 policy_type)
- 			_slot_set(btc, CXST_W1, 40, cxtbl[1], SLOT_ISO);
- 			_slot_set(btc, CXST_B1, 10, tbl_b1, SLOT_MIX);
- 			break;
--		case BTC_CXP_FIX_TD4020:
--			_slot_set(btc, CXST_W1, 40, cxtbl[1], SLOT_MIX);
--			_slot_set(btc, CXST_B1, 20, tbl_b1, SLOT_MIX);
-+		case BTC_CXP_FIX_TD4010ISO_DL:
-+			_slot_set(btc, CXST_W1, 40, cxtbl[25], SLOT_ISO);
-+			_slot_set(btc, CXST_B1, 10, cxtbl[25], SLOT_ISO);
-+			break;
-+		case BTC_CXP_FIX_TD4010ISO_UL:
-+			_slot_set(btc, CXST_W1, 40, cxtbl[20], SLOT_ISO);
-+			_slot_set(btc, CXST_B1, 10, cxtbl[25], SLOT_MIX);
- 			break;
- 		case BTC_CXP_FIX_TD7010:
- 			_slot_set(btc, CXST_W1, 70, tbl_w1, SLOT_ISO);
-@@ -3595,31 +3611,25 @@ static void _action_bt_idle(struct rtw89_dev *rtwdev)
+ struct ieee80211_regdomain *
+ ath11k_reg_build_regd(struct ath11k_base *ab,
+-		      struct cur_regulatory_info *reg_info, bool intersect)
++		      struct cur_regulatory_info *reg_info, bool intersect,
++		      enum wmi_vdev_type vdev_type,
++		      enum ieee80211_ap_reg_power power_type)
  {
- 	struct rtw89_btc *btc = &rtwdev->btc;
- 	struct rtw89_btc_bt_link_info *b = &btc->cx.bt.link_info;
-+	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct ieee80211_regdomain *tmp_regd, *default_regd, *new_regd = NULL;
+-	struct cur_reg_rule *reg_rule;
++	struct cur_reg_rule *reg_rule, *reg_rule_6ghz;
+ 	u8 i = 0, j = 0, k = 0;
+ 	u8 num_rules;
+ 	u16 max_bw;
+-	u32 flags;
++	u32 flags, reg_6ghz_number, max_bw_6ghz;
+ 	char alpha2[3];
  
- 	_set_ant(rtwdev, NM_EXEC, BTC_PHY_ALL, BTC_ANT_W2G);
+ 	num_rules = reg_info->num_5ghz_reg_rules + reg_info->num_2ghz_reg_rules;
  
- 	if (btc->mdinfo.ant.type == BTC_ANT_SHARED) { /* shared-antenna */
- 		switch (btc->cx.state_map) {
- 		case BTC_WBUSY_BNOSCAN: /*wl-busy + bt idle*/
--			if (b->profile_cnt.now > 0)
--				_set_policy(rtwdev, BTC_CXP_FIX_TD4010,
--					    BTC_ACT_BT_IDLE);
-+		case BTC_WSCAN_BNOSCAN: /* wl-scan + bt-idle */
-+			if (b->status.map.connect)
-+				_set_policy(rtwdev, BTC_CXP_FIX_TD4010, BTC_ACT_BT_IDLE);
-+			else if (wl->status.map.traffic_dir & BIT(RTW89_TFC_DL))
-+				_set_policy(rtwdev, BTC_CXP_FIX_TD4010ISO_DL, BTC_ACT_BT_IDLE);
- 			else
--				_set_policy(rtwdev, BTC_CXP_FIX_TD4020,
--					    BTC_ACT_BT_IDLE);
-+				_set_policy(rtwdev, BTC_CXP_FIX_TD4010ISO_UL, BTC_ACT_BT_IDLE);
+-	/* FIXME: Currently taking reg rules for 6 GHz only from Indoor AP mode list.
+-	 * This can be updated after complete 6 GHz regulatory support is added.
+-	 */
+-	if (reg_info->is_ext_reg_event)
+-		num_rules += reg_info->num_6ghz_rules_ap[WMI_REG_INDOOR_AP];
++	if (reg_info->is_ext_reg_event) {
++		if (vdev_type == WMI_VDEV_TYPE_STA) {
++			enum wmi_reg_6ghz_ap_type ap_type;
++
++			ap_type = ath11k_reg_ap_pwr_convert(power_type);
++
++			if (ap_type == WMI_REG_MAX_AP_TYPE)
++				ap_type = WMI_REG_INDOOR_AP;
++			reg_6ghz_number = reg_info->num_6ghz_rules_client
++					[ap_type][WMI_REG_DEFAULT_CLIENT];
++			if (reg_6ghz_number == 0) {
++				ap_type = WMI_REG_INDOOR_AP;
++				reg_6ghz_number = reg_info->num_6ghz_rules_client
++						[ap_type][WMI_REG_DEFAULT_CLIENT];
++			}
++			reg_rule_6ghz = reg_info->reg_rules_6ghz_client_ptr
++					[ap_type][WMI_REG_DEFAULT_CLIENT];
++			max_bw_6ghz = reg_info->max_bw_6ghz_client
++					[ap_type][WMI_REG_DEFAULT_CLIENT];
++		} else {
++			reg_6ghz_number = reg_info->num_6ghz_rules_ap[WMI_REG_INDOOR_AP];
++			reg_rule_6ghz =
++				reg_info->reg_rules_6ghz_ap_ptr[WMI_REG_INDOOR_AP];
++			max_bw_6ghz = reg_info->max_bw_6ghz_ap[WMI_REG_INDOOR_AP];
++		}
++		num_rules += reg_6ghz_number;
++	}
+ 
+ 	if (!num_rules)
+ 		goto ret;
+@@ -683,13 +722,10 @@ ath11k_reg_build_regd(struct ath11k_base *ab,
+ 			 * per other BW rule flags we pass from here
+ 			 */
+ 			flags = NL80211_RRF_AUTO_BW;
+-		} else if (reg_info->is_ext_reg_event &&
+-			   reg_info->num_6ghz_rules_ap[WMI_REG_INDOOR_AP] &&
+-			   (k < reg_info->num_6ghz_rules_ap[WMI_REG_INDOOR_AP])) {
+-			reg_rule = reg_info->reg_rules_6ghz_ap_ptr[WMI_REG_INDOOR_AP] +
+-				   k++;
+-			max_bw = min_t(u16, reg_rule->max_bw,
+-				       reg_info->max_bw_6ghz_ap[WMI_REG_INDOOR_AP]);
++		} else if (reg_info->is_ext_reg_event && reg_6ghz_number &&
++			   (k < reg_6ghz_number)) {
++			reg_rule = reg_rule_6ghz + k++;
++			max_bw = min_t(u16, reg_rule->max_bw, max_bw_6ghz);
+ 			flags = NL80211_RRF_AUTO_BW;
+ 		} else {
  			break;
- 		case BTC_WBUSY_BSCAN: /*wl-busy + bt-inq */
- 			_set_policy(rtwdev, BTC_CXP_PFIX_TD5050,
- 				    BTC_ACT_BT_IDLE);
- 			break;
--		case BTC_WSCAN_BNOSCAN: /* wl-scan + bt-idle */
--			if (b->profile_cnt.now > 0)
--				_set_policy(rtwdev, BTC_CXP_FIX_TD4010,
--					    BTC_ACT_BT_IDLE);
--			else
--				_set_policy(rtwdev, BTC_CXP_FIX_TD4020,
--					    BTC_ACT_BT_IDLE);
--			break;
- 		case BTC_WSCAN_BSCAN: /* wl-scan + bt-inq */
- 			_set_policy(rtwdev, BTC_CXP_FIX_TD5050,
- 				    BTC_ACT_BT_IDLE);
-@@ -3786,7 +3796,7 @@ static void _action_bt_pan(struct rtw89_dev *rtwdev)
- 		_set_policy(rtwdev, BTC_CXP_FIX_TD3060, BTC_ACT_BT_PAN);
- 		break;
- 	case BTC_WLINKING: /* wl-connecting + bt-PAN */
--		_set_policy(rtwdev, BTC_CXP_FIX_TD4020, BTC_ACT_BT_PAN);
-+		_set_policy(rtwdev, BTC_CXP_FIX_TD4010ISO, BTC_ACT_BT_PAN);
- 		break;
- 	case BTC_WIDLE: /* wl-idle + bt-pan */
- 		_set_policy(rtwdev, BTC_CXP_PFIX_TD2080, BTC_ACT_BT_PAN);
-@@ -6945,8 +6955,9 @@ static const char *steps_to_str(u16 step)
- 	CASE_BTC_POLICY_STR(FIX_TD3060);
- 	CASE_BTC_POLICY_STR(FIX_TD2080);
- 	CASE_BTC_POLICY_STR(FIX_TDW1B1);
--	CASE_BTC_POLICY_STR(FIX_TD4020);
- 	CASE_BTC_POLICY_STR(FIX_TD4010ISO);
-+	CASE_BTC_POLICY_STR(FIX_TD4010ISO_DL);
-+	CASE_BTC_POLICY_STR(FIX_TD4010ISO_UL);
- 	CASE_BTC_POLICY_STR(PFIX_TD3030);
- 	CASE_BTC_POLICY_STR(PFIX_TD5050);
- 	CASE_BTC_POLICY_STR(PFIX_TD2030);
+diff --git a/drivers/net/wireless/ath/ath11k/reg.h b/drivers/net/wireless/ath/ath11k/reg.h
+index f28902f85e41..989b27b16bea 100644
+--- a/drivers/net/wireless/ath/ath11k/reg.h
++++ b/drivers/net/wireless/ath/ath11k/reg.h
+@@ -34,7 +34,11 @@ void ath11k_reg_free(struct ath11k_base *ab);
+ void ath11k_regd_update_work(struct work_struct *work);
+ struct ieee80211_regdomain *
+ ath11k_reg_build_regd(struct ath11k_base *ab,
+-		      struct cur_regulatory_info *reg_info, bool intersect);
++		      struct cur_regulatory_info *reg_info, bool intersect,
++		      enum wmi_vdev_type vdev_type,
++		      enum ieee80211_ap_reg_power power_type);
+ int ath11k_regd_update(struct ath11k *ar);
+ int ath11k_reg_update_chan_list(struct ath11k *ar, bool wait);
++enum wmi_reg_6ghz_ap_type
++ath11k_reg_ap_pwr_convert(enum ieee80211_ap_reg_power power_type);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 8a65fa04b48d..75c79c99faa9 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -7151,7 +7151,8 @@ static int ath11k_reg_chan_list_event(struct ath11k_base *ab,
+ 	    !ath11k_reg_is_world_alpha((char *)reg_info->alpha2))
+ 		intersect = true;
+ 
+-	regd = ath11k_reg_build_regd(ab, reg_info, intersect);
++	regd = ath11k_reg_build_regd(ab, reg_info, intersect,
++				     WMI_VDEV_TYPE_AP, IEEE80211_REG_LPI_AP);
+ 	if (!regd) {
+ 		ath11k_warn(ab, "failed to build regd from reg_info\n");
+ 		goto fallback;
 -- 
 2.25.1
 
