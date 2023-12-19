@@ -1,23 +1,25 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 6F9CB107B7;
-	Tue, 19 Dec 2023 06:58:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 78DD311702;
+	Tue, 19 Dec 2023 06:58:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 1BDF360F259C0;
-	Tue, 19 Dec 2023 14:57:56 +0800 (CST)
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id EED0A60F259C3;
+	Tue, 19 Dec 2023 14:58:00 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
 To: pkshih@realtek.com,
 	kvalo@kernel.org
 Cc: Su Hui <suhui@nfschina.com>,
+	Larry.Finger@lwfinger.net,
+	linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless-next 02/11] wifi: rtlwifi: rtl8821ae: phy: using calculate_bit_shift()
-Date: Tue, 19 Dec 2023 14:57:30 +0800
-Message-Id: <20231219065739.1895666-3-suhui@nfschina.com>
+Subject: [PATCH wireless-next 06/11] wifi: rtlwifi: rtl8192ce: using calculate_bit_shift()
+Date: Tue, 19 Dec 2023 14:57:34 +0800
+Message-Id: <20231219065739.1895666-7-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20231219065739.1895666-1-suhui@nfschina.com>
 Precedence: bulk
@@ -28,68 +30,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-using calculate_bit_shift() to replace
-_rtl8821ae_phy_calculate_bit_shift().
+Using calculate_bit_shift() to replace _rtl92c_phy_calculate_bit_shift().
+And fix the undefined bitwise shift behavior problem.
 
+Fixes: 0c8173385e54 ("rtl8192ce: Add new driver")
 Signed-off-by: Su Hui <suhui@nfschina.com>
 ---
- .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c  | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c | 6 +++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h | 1 -
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index 68c3fb0395ce..1be51ea3f3c8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -27,13 +27,6 @@ static u32 _rtl8821ae_phy_rf_serial_read(struct ieee80211_hw *hw,
- static void _rtl8821ae_phy_rf_serial_write(struct ieee80211_hw *hw,
- 					   enum radio_path rfpath, u32 offset,
- 					   u32 data);
--static u32 _rtl8821ae_phy_calculate_bit_shift(u32 bitmask)
--{
--	if (WARN_ON_ONCE(!bitmask))
--		return 0;
--
--	return __ffs(bitmask);
--}
- static bool _rtl8821ae_phy_bb8821a_config_parafile(struct ieee80211_hw *hw);
- /*static bool _rtl8812ae_phy_config_mac_with_headerfile(struct ieee80211_hw *hw);*/
- static bool _rtl8821ae_phy_config_mac_with_headerfile(struct ieee80211_hw *hw);
-@@ -106,7 +99,7 @@ u32 rtl8821ae_phy_query_bb_reg(struct ieee80211_hw *hw, u32 regaddr,
- 		"regaddr(%#x), bitmask(%#x)\n",
- 		regaddr, bitmask);
- 	originalvalue = rtl_read_dword(rtlpriv, regaddr);
--	bitshift = _rtl8821ae_phy_calculate_bit_shift(bitmask);
-+	bitshift = calculate_bit_shift(bitmask);
- 	returnvalue = (originalvalue & bitmask) >> bitshift;
- 
- 	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
-@@ -127,7 +120,7 @@ void rtl8821ae_phy_set_bb_reg(struct ieee80211_hw *hw,
- 
- 	if (bitmask != MASKDWORD) {
- 		originalvalue = rtl_read_dword(rtlpriv, regaddr);
--		bitshift = _rtl8821ae_phy_calculate_bit_shift(bitmask);
-+		bitshift = calculate_bit_shift(bitmask);
- 		data = ((originalvalue & (~bitmask)) |
- 			((data << bitshift) & bitmask));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
+index da54e51badd3..fa70a7d5539f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
+@@ -39,7 +39,7 @@ u32 rtl92c_phy_query_rf_reg(struct ieee80211_hw *hw,
+ 							       rfpath, regaddr);
  	}
-@@ -153,7 +146,7 @@ u32 rtl8821ae_phy_query_rf_reg(struct ieee80211_hw *hw,
- 	spin_lock(&rtlpriv->locks.rf_lock);
  
- 	original_value = _rtl8821ae_phy_rf_serial_read(hw, rfpath, regaddr);
--	bitshift = _rtl8821ae_phy_calculate_bit_shift(bitmask);
+-	bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
 +	bitshift = calculate_bit_shift(bitmask);
  	readback_value = (original_value & bitmask) >> bitshift;
  
  	spin_unlock(&rtlpriv->locks.rf_lock);
-@@ -181,7 +174,7 @@ void rtl8821ae_phy_set_rf_reg(struct ieee80211_hw *hw,
- 	if (bitmask != RFREG_OFFSET_MASK) {
- 		original_value =
- 		   _rtl8821ae_phy_rf_serial_read(hw, rfpath, regaddr);
--		bitshift = _rtl8821ae_phy_calculate_bit_shift(bitmask);
-+		bitshift = calculate_bit_shift(bitmask);
- 		data = ((original_value & (~bitmask)) | (data << bitshift));
- 	}
- 
+@@ -110,7 +110,7 @@ void rtl92ce_phy_set_rf_reg(struct ieee80211_hw *hw,
+ 			original_value = _rtl92c_phy_rf_serial_read(hw,
+ 								    rfpath,
+ 								    regaddr);
+-			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
++			bitshift = calculate_bit_shift(bitmask);
+ 			data =
+ 			    ((original_value & (~bitmask)) |
+ 			     (data << bitshift));
+@@ -122,7 +122,7 @@ void rtl92ce_phy_set_rf_reg(struct ieee80211_hw *hw,
+ 			original_value = _rtl92c_phy_fw_rf_serial_read(hw,
+ 								       rfpath,
+ 								       regaddr);
+-			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
++			bitshift = calculate_bit_shift(bitmask);
+ 			data =
+ 			    ((original_value & (~bitmask)) |
+ 			     (data << bitshift));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
+index 7582a162bd11..c7a0d4c776f0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
+@@ -94,7 +94,6 @@ u32 _rtl92c_phy_rf_serial_read(struct ieee80211_hw *hw, enum radio_path rfpath,
+ 			       u32 offset);
+ u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
+ 				  enum radio_path rfpath, u32 offset);
+-u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask);
+ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 				 enum radio_path rfpath, u32 offset, u32 data);
+ void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
 -- 
 2.30.2
 
