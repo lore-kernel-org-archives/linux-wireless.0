@@ -1,23 +1,26 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 78E0011709;
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 8FA8E11729;
 	Tue, 19 Dec 2023 06:58:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id B484B60F259C1;
-	Tue, 19 Dec 2023 14:57:54 +0800 (CST)
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id C621060F259C4;
+	Tue, 19 Dec 2023 14:57:59 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
 To: pkshih@realtek.com,
 	kvalo@kernel.org
 Cc: Su Hui <suhui@nfschina.com>,
+	Larry.Finger@lwfinger.net,
+	george0505@realtek.com,
+	linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless-next 01/11] wifi: rtlwifi: add calculate_bit_shift()
-Date: Tue, 19 Dec 2023 14:57:29 +0800
-Message-Id: <20231219065739.1895666-2-suhui@nfschina.com>
+Subject: [PATCH wireless-next 05/11] wifi: rtlwifi: rtl8192cu: using calculate_bit_shift()
+Date: Tue, 19 Dec 2023 14:57:33 +0800
+Message-Id: <20231219065739.1895666-6-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20231219065739.1895666-1-suhui@nfschina.com>
 Precedence: bulk
@@ -28,32 +31,46 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are many same functions like _rtl88e_phy_calculate_bit_shift(),
-_rtl92c_phy_calculate_bit_shift() and so on. And these functions can
-cause undefined bitwise shift behavior. Add calculate_bit_shift() to
-replace them and fix undefined behavior in subsequent patches.
+Using calculate_bit_shift() to replace _rtl92c_phy_calculate_bit_shift().
+And fix an undefined bitwise shift behavior problem.
 
+Fixes: f0a39ae738d6 ("rtlwifi: rtl8192cu: Add routine phy")
 Signed-off-by: Su Hui <suhui@nfschina.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 31a481f43a07..5d842cc394aa 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -3069,4 +3069,11 @@ static inline struct ieee80211_sta *rtl_find_sta(struct ieee80211_hw *hw,
- 	return ieee80211_find_sta(mac->vif, mac_addr);
- }
- 
-+static inline u32 calculate_bit_shift(u32 bitmask)
-+{
-+	if (WARN_ON_ONCE(!bitmask))
-+		return 0;
-+
-+	return __ffs(bitmask);
-+}
- #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
+index a8d9fe269f31..0b8cb7e61fd8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
+@@ -32,7 +32,7 @@ u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
+ 		original_value = _rtl92c_phy_fw_rf_serial_read(hw,
+ 							       rfpath, regaddr);
+ 	}
+-	bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
++	bitshift = calculate_bit_shift(bitmask);
+ 	readback_value = (original_value & bitmask) >> bitshift;
+ 	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
+ 		"regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
+@@ -56,7 +56,7 @@ void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
+ 			original_value = _rtl92c_phy_rf_serial_read(hw,
+ 								    rfpath,
+ 								    regaddr);
+-			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
++			bitshift = calculate_bit_shift(bitmask);
+ 			data =
+ 			    ((original_value & (~bitmask)) |
+ 			     (data << bitshift));
+@@ -67,7 +67,7 @@ void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
+ 			original_value = _rtl92c_phy_fw_rf_serial_read(hw,
+ 								       rfpath,
+ 								       regaddr);
+-			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
++			bitshift = calculate_bit_shift(bitmask);
+ 			data =
+ 			    ((original_value & (~bitmask)) |
+ 			     (data << bitshift));
 -- 
 2.30.2
 
