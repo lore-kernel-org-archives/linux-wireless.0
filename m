@@ -1,11 +1,11 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 8FA8E11729;
-	Tue, 19 Dec 2023 06:58:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 6463812B80;
+	Tue, 19 Dec 2023 06:58:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id C621060F259C4;
-	Tue, 19 Dec 2023 14:57:59 +0800 (CST)
+	by mail.nfschina.com (Maildata Gateway V2.8.8) with ESMTPSA id 3FA5260F0D2BB;
+	Tue, 19 Dec 2023 14:57:51 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
@@ -13,16 +13,16 @@ To: pkshih@realtek.com,
 	kvalo@kernel.org
 Cc: Su Hui <suhui@nfschina.com>,
 	Larry.Finger@lwfinger.net,
-	george0505@realtek.com,
 	linville@tuxdriver.com,
+	george0505@realtek.com,
+	chaoming_li@realsil.com.cn,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless-next 05/11] wifi: rtlwifi: rtl8192cu: using calculate_bit_shift()
-Date: Tue, 19 Dec 2023 14:57:33 +0800
-Message-Id: <20231219065739.1895666-6-suhui@nfschina.com>
+Subject: [PATCH wireless-next 00/11] using calculate_bit_shift() to fix undefined bitwise shift behavior.
+Date: Tue, 19 Dec 2023 14:57:28 +0800
+Message-Id: <20231219065739.1895666-1-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20231219065739.1895666-1-suhui@nfschina.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -31,46 +31,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Using calculate_bit_shift() to replace _rtl92c_phy_calculate_bit_shift().
-And fix an undefined bitwise shift behavior problem.
+There is an undefined bitwise shift behavior, when the right operand is
+greater than or equal to then width of the  promoted left operand.
+(eg: (u32)data << 32). Commit bc8263083af6("fix an undefined bitwise shift
+behavior") only fixed one problem, there are many similar problems in 
+drivers/net/wireless/realtek/. 
 
-Fixes: f0a39ae738d6 ("rtlwifi: rtl8192cu: Add routine phy")
-Signed-off-by: Su Hui <suhui@nfschina.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This patchset adds a new function calculate_bit_shift() to fix the
+remaining undefined bitwise shift behavior problems.(Compile tested only)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-index a8d9fe269f31..0b8cb7e61fd8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-@@ -32,7 +32,7 @@ u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
- 		original_value = _rtl92c_phy_fw_rf_serial_read(hw,
- 							       rfpath, regaddr);
- 	}
--	bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
-+	bitshift = calculate_bit_shift(bitmask);
- 	readback_value = (original_value & bitmask) >> bitshift;
- 	rtl_dbg(rtlpriv, COMP_RF, DBG_TRACE,
- 		"regaddr(%#x), rfpath(%#x), bitmask(%#x), original_value(%#x)\n",
-@@ -56,7 +56,7 @@ void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
- 			original_value = _rtl92c_phy_rf_serial_read(hw,
- 								    rfpath,
- 								    regaddr);
--			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
-+			bitshift = calculate_bit_shift(bitmask);
- 			data =
- 			    ((original_value & (~bitmask)) |
- 			     (data << bitshift));
-@@ -67,7 +67,7 @@ void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
- 			original_value = _rtl92c_phy_fw_rf_serial_read(hw,
- 								       rfpath,
- 								       regaddr);
--			bitshift = _rtl92c_phy_calculate_bit_shift(bitmask);
-+			bitshift = calculate_bit_shift(bitmask);
- 			data =
- 			    ((original_value & (~bitmask)) |
- 			     (data << bitshift));
+Su Hui (11):
+  wifi: rtlwifi: add calculate_bit_shift()
+  wifi: rtlwifi: rtl8821ae: phy: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8188ee: phy: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192c: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192cu: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192ce: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192de: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192ee: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8192se: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8723_common: using calculate_bit_shift()
+  wifi: rtlwifi: rtl8723{be,ae}: using calculate_bit_shift()
+
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 14 ++++----------
+ .../realtek/rtlwifi/rtl8192c/phy_common.c        | 12 ++----------
+ .../realtek/rtlwifi/rtl8192c/phy_common.h        |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.c |  6 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.h |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/phy.c |  6 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 15 ++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 16 ++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c | 15 ++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/phy.c |  6 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c |  4 ++--
+ .../realtek/rtlwifi/rtl8723com/phy_common.c      | 12 ++----------
+ .../realtek/rtlwifi/rtl8723com/phy_common.h      |  1 -
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 15 ++++-----------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h      |  7 +++++++
+ 15 files changed, 42 insertions(+), 89 deletions(-)
+
 -- 
 2.30.2
 
