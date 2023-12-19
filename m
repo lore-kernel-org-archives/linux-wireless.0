@@ -1,181 +1,327 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward202c.mail.yandex.net (forward202c.mail.yandex.net [178.154.239.219])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C74ED12B6F
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 09:01:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1657D13FFB
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 09:19:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Iragtcib"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6d39132d6baso1533035b3a.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 01:01:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1702976518; x=1703581318; darn=vger.kernel.org;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4ojE9SfoRxB/NhEUjnvZ49SuQsjpDnxSuI9bPqXhnz4=;
-        b=Iragtcib2db2bPx/Z64jaOmd/EEcFwhL6CJh2EyOC+QM/Og88evWZNJEsO5EUIEhRE
-         iuoKA9GFsHOzyJ/viBzcaeEkWpYsKodD0m0F8kaUPqyO8cadllkmAq/NeMv+Jb7/D/8c
-         qqTEDoIQBKheBMVQ90s75uR93780PM506Bv4M=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702976518; x=1703581318;
-        h=mime-version:subject:user-agent:references:in-reply-to:message-id
-         :date:cc:to:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4ojE9SfoRxB/NhEUjnvZ49SuQsjpDnxSuI9bPqXhnz4=;
-        b=F/Pr3yKAQ08KS0zQyYh2OHlR53kwOcqbAQC+T4USn4m0ycdgj7qvOmCkaWd3aTIT1n
-         mP8reCXLJnwA7KpWqxevA7A0OBUV/rbyerBkhfgqQxQXPE8nZNgAuoV4uV2116z6XWLS
-         TkcRdfn2oj77PYW+uYEQA13IRGML3TCiFodobYJxVtrQKYO1x6VSFFlTpbx0bbw3gJ2J
-         mSo+TNb2Btu8QeQjGJtP+UdK+pGeOny8sFx3Cf2zmgR7XgZjeIO2mxBEPbQ9doI8t+Mt
-         8coW2TANj1mo8HzOZb2cCBOM0FI2kPGJpfKCQQy9dCwIxjhxXf9gPPP2jYuPbA1sSNdL
-         xUbA==
-X-Gm-Message-State: AOJu0YxtPNrNE5iXWUdF4GBeS012L9T061xQgkv1qVguZ6qrzFPyAlA3
-	Eh8HTDWrEClyuTpA+WUqaEv8fQ==
-X-Google-Smtp-Source: AGHT+IEeX46HPldTf62RcNMdmmDHDQlNnj9aDS5hPL0VVv1fkr8gB7pp4OdlIZL7ePqzCB93t46OZA==
-X-Received: by 2002:a05:6a21:999c:b0:18f:97c:5b99 with SMTP id ve28-20020a056a21999c00b0018f097c5b99mr8761086pzb.103.1702976517978;
-        Tue, 19 Dec 2023 01:01:57 -0800 (PST)
-Received: from [192.168.178.38] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id du16-20020a056a002b5000b006d93cc20792sm162316pfb.90.2023.12.19.01.01.53
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 19 Dec 2023 01:01:57 -0800 (PST)
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@kernel.org>, Lukas Bulwahn <lukas.bulwahn@gmail.com>
-CC: Arend van Spriel <aspriel@gmail.com>, Franky Lin <franky.lin@broadcom.com>, Hante Meuleman <hante.meuleman@broadcom.com>, <linux-wireless@vger.kernel.org>, <brcm80211-dev-list.pdl@broadcom.com>, <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Date: Tue, 19 Dec 2023 10:01:46 +0100
-Message-ID: <18c814f4890.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <170295913267.640718.8284035097366475252.kvalo@kernel.org>
-References: <20231218121105.23882-1-lukas.bulwahn@gmail.com>
- <170295913267.640718.8284035097366475252.kvalo@kernel.org>
-User-Agent: AquaMail/1.49.0 (build: 104900403)
-Subject: Re: MAINTAINERS: wifi: brcm80211: remove non-existing SHA-cyfmac-dev-list@infineon.com
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="vU+Bac7k"
+Received: from forward102c.mail.yandex.net (forward102c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d102])
+	by forward202c.mail.yandex.net (Yandex) with ESMTP id 4FCEA654E1
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 12:12:41 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net [IPv6:2a02:6b8:c00:2fa5:0:640:c484:0])
+	by forward102c.mail.yandex.net (Yandex) with ESMTP id 3F5C560918;
+	Tue, 19 Dec 2023 12:12:33 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id WCImvU1oJa60-s8Vryqm7;
+	Tue, 19 Dec 2023 12:12:32 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1702977152; bh=QN6sKgMhWcxss0dyYsHwHQY4QwUxCoexe3ak4SQ70mQ=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=vU+Bac7kUCIZ+A6tVDEvXO1VgeKHXpgSi3VtxFzDN51iASqlKoNYXkSgl/HkV7Boe
+	 F/V6PajxXqaliDvHL5kYetuxjgwJBF0Fji3Q9ZUowGPKR1D7vF+XP8ZvS2T4Sc/a48
+	 BLr6qvffsZpUzknhZJ3z6T67SZJ810X/NqgXadno=
+Authentication-Results: mail-nwsmtp-smtp-production-main-45.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc: Kalle Valo <kvalo@kernel.org>,
+	ath12k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] wifi: ath12k: refactor ath12k_wmi_tlv_parse_alloc()
+Date: Tue, 19 Dec 2023 12:10:18 +0300
+Message-ID: <20231219091022.70861-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000070cef8060cd91e40"
-
---00000000000070cef8060cd91e40
-Content-Type: text/plain; format=flowed; charset="us-ascii"
 Content-Transfer-Encoding: 8bit
 
-On December 19, 2023 5:12:19 AM Kalle Valo <kvalo@kernel.org> wrote:
+Since 'ath12k_wmi_tlv_parse_alloc()' always operates on 'skb->data,
+skb->len' tuple, it may be simplified to pass the only 'skb' argument
+instead (which implies refactoring of 'ath12k_pull_bcn_tx_status_ev()',
+'ath12k_pull_chan_info_ev()' and 'ath12k_pull_pdev_temp_ev()' in the
+same way). This is an ath12k counterpart of the recently submitted
+ath11k patch and compile tested only as well.
 
-> Lukas Bulwahn <lukas.bulwahn@gmail.com> wrote:
->
->> When sending an email to SHA-cyfmac-dev-list@infineon.com, the server
->> responds '550 #5.1.0 Address rejected.'
->>
->> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
->
-> Patch applied to wireless.git, thanks.
->
-> 044879ce5406 MAINTAINERS: wifi: brcm80211: remove non-existing 
-> SHA-cyfmac-dev-list@infineon.com
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ drivers/net/wireless/ath/ath12k/wmi.c | 69 +++++++++++++--------------
+ 1 file changed, 34 insertions(+), 35 deletions(-)
 
-Is the claim here true? In another thread I replied all including this list 
-and I am not getting a bounce message.
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 11cc3005c0f9..553d2566b3f7 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -359,8 +359,8 @@ static int ath12k_wmi_tlv_parse(struct ath12k_base *ar, const void **tb,
+ }
+ 
+ static const void **
+-ath12k_wmi_tlv_parse_alloc(struct ath12k_base *ab, const void *ptr,
+-			   size_t len, gfp_t gfp)
++ath12k_wmi_tlv_parse_alloc(struct ath12k_base *ab,
++			   struct sk_buff *skb, gfp_t gfp)
+ {
+ 	const void **tb;
+ 	int ret;
+@@ -369,7 +369,7 @@ ath12k_wmi_tlv_parse_alloc(struct ath12k_base *ab, const void *ptr,
+ 	if (!tb)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	ret = ath12k_wmi_tlv_parse(ab, tb, ptr, len);
++	ret = ath12k_wmi_tlv_parse(ab, tb, skb->data, skb->len);
+ 	if (ret) {
+ 		kfree(tb);
+ 		return ERR_PTR(ret);
+@@ -4374,7 +4374,7 @@ static int ath12k_pull_vdev_start_resp_tlv(struct ath12k_base *ab, struct sk_buf
+ 	const struct wmi_vdev_start_resp_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4452,7 +4452,7 @@ static int ath12k_pull_reg_chan_list_ext_update_ev(struct ath12k_base *ab,
+ 
+ 	ath12k_dbg(ab, ATH12K_DBG_WMI, "processing regulatory ext channel list\n");
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4738,7 +4738,7 @@ static int ath12k_pull_peer_del_resp_ev(struct ath12k_base *ab, struct sk_buff *
+ 	const struct wmi_peer_delete_resp_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4770,7 +4770,7 @@ static int ath12k_pull_vdev_del_resp_ev(struct ath12k_base *ab,
+ 	const struct wmi_vdev_delete_resp_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4790,15 +4790,15 @@ static int ath12k_pull_vdev_del_resp_ev(struct ath12k_base *ab,
+ 	return 0;
+ }
+ 
+-static int ath12k_pull_bcn_tx_status_ev(struct ath12k_base *ab, void *evt_buf,
+-					u32 len, u32 *vdev_id,
+-					u32 *tx_status)
++static int ath12k_pull_bcn_tx_status_ev(struct ath12k_base *ab,
++					struct sk_buff *skb,
++					u32 *vdev_id, u32 *tx_status)
+ {
+ 	const void **tb;
+ 	const struct wmi_bcn_tx_status_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, evt_buf, len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4826,7 +4826,7 @@ static int ath12k_pull_vdev_stopped_param_tlv(struct ath12k_base *ab, struct sk_
+ 	const struct wmi_vdev_stopped_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -4970,7 +4970,7 @@ static int ath12k_pull_mgmt_tx_compl_param_tlv(struct ath12k_base *ab,
+ 	const struct wmi_mgmt_tx_compl_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5141,7 +5141,7 @@ static int ath12k_pull_scan_ev(struct ath12k_base *ab, struct sk_buff *skb,
+ 	const struct wmi_scan_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5174,7 +5174,7 @@ static int ath12k_pull_peer_sta_kickout_ev(struct ath12k_base *ab, struct sk_buf
+ 	const struct wmi_peer_sta_kickout_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5201,7 +5201,7 @@ static int ath12k_pull_roam_ev(struct ath12k_base *ab, struct sk_buff *skb,
+ 	const struct wmi_roam_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5245,14 +5245,14 @@ static int freq_to_idx(struct ath12k *ar, int freq)
+ 	return idx;
+ }
+ 
+-static int ath12k_pull_chan_info_ev(struct ath12k_base *ab, u8 *evt_buf,
+-				    u32 len, struct wmi_chan_info_event *ch_info_ev)
++static int ath12k_pull_chan_info_ev(struct ath12k_base *ab, struct sk_buff *skb,
++				    struct wmi_chan_info_event *ch_info_ev)
+ {
+ 	const void **tb;
+ 	const struct wmi_chan_info_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, evt_buf, len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5291,7 +5291,7 @@ ath12k_pull_pdev_bss_chan_info_ev(struct ath12k_base *ab, struct sk_buff *skb,
+ 	const struct wmi_pdev_bss_chan_info_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5331,7 +5331,7 @@ ath12k_pull_vdev_install_key_compl_ev(struct ath12k_base *ab, struct sk_buff *sk
+ 	const struct wmi_vdev_install_key_compl_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5362,7 +5362,7 @@ static int ath12k_pull_peer_assoc_conf_ev(struct ath12k_base *ab, struct sk_buff
+ 	const struct wmi_peer_assoc_conf_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5384,13 +5384,13 @@ static int ath12k_pull_peer_assoc_conf_ev(struct ath12k_base *ab, struct sk_buff
+ }
+ 
+ static int
+-ath12k_pull_pdev_temp_ev(struct ath12k_base *ab, u8 *evt_buf,
+-			 u32 len, const struct wmi_pdev_temperature_event *ev)
++ath12k_pull_pdev_temp_ev(struct ath12k_base *ab, struct sk_buff *skb,
++			 const struct wmi_pdev_temperature_event *ev)
+ {
+ 	const void **tb;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, evt_buf, len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -5725,8 +5725,7 @@ static void ath12k_bcn_tx_status_event(struct ath12k_base *ab, struct sk_buff *s
+ {
+ 	u32 vdev_id, tx_status;
+ 
+-	if (ath12k_pull_bcn_tx_status_ev(ab, skb->data, skb->len,
+-					 &vdev_id, &tx_status) != 0) {
++	if (ath12k_pull_bcn_tx_status_ev(ab, skb, &vdev_id, &tx_status) != 0) {
+ 		ath12k_warn(ab, "failed to extract bcn tx status");
+ 		return;
+ 	}
+@@ -6110,7 +6109,7 @@ static void ath12k_chan_info_event(struct ath12k_base *ab, struct sk_buff *skb)
+ 	/* HW channel counters frequency value in hertz */
+ 	u32 cc_freq_hz = ab->cc_freq_hz;
+ 
+-	if (ath12k_pull_chan_info_ev(ab, skb->data, skb->len, &ch_info_ev) != 0) {
++	if (ath12k_pull_chan_info_ev(ab, skb, &ch_info_ev) != 0) {
+ 		ath12k_warn(ab, "failed to extract chan info event");
+ 		return;
+ 	}
+@@ -6395,7 +6394,7 @@ static void ath12k_pdev_ctl_failsafe_check_event(struct ath12k_base *ab,
+ 	const struct wmi_pdev_ctl_failsafe_chk_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -6460,7 +6459,7 @@ ath12k_wmi_pdev_csa_switch_count_status_event(struct ath12k_base *ab,
+ 	const u32 *vdev_ids;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -6494,7 +6493,7 @@ ath12k_wmi_pdev_dfs_radar_detected_event(struct ath12k_base *ab, struct sk_buff
+ 	struct ath12k *ar;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+@@ -6546,7 +6545,7 @@ ath12k_wmi_pdev_temperature_event(struct ath12k_base *ab,
+ 	struct ath12k *ar;
+ 	struct wmi_pdev_temperature_event ev = {0};
+ 
+-	if (ath12k_pull_pdev_temp_ev(ab, skb->data, skb->len, &ev) != 0) {
++	if (ath12k_pull_pdev_temp_ev(ab, skb, &ev) != 0) {
+ 		ath12k_warn(ab, "failed to extract pdev temperature event");
+ 		return;
+ 	}
+@@ -6573,7 +6572,7 @@ static void ath12k_fils_discovery_event(struct ath12k_base *ab,
+ 	const struct wmi_fils_discovery_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab,
+@@ -6603,7 +6602,7 @@ static void ath12k_probe_resp_tx_status_event(struct ath12k_base *ab,
+ 	const struct wmi_probe_resp_tx_status_event *ev;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab,
+@@ -6635,7 +6634,7 @@ static void ath12k_rfkill_state_change_event(struct ath12k_base *ab,
+ 	const void **tb;
+ 	int ret;
+ 
+-	tb = ath12k_wmi_tlv_parse_alloc(ab, skb->data, skb->len, GFP_ATOMIC);
++	tb = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+ 	if (IS_ERR(tb)) {
+ 		ret = PTR_ERR(tb);
+ 		ath12k_warn(ab, "failed to parse tlv: %d\n", ret);
+-- 
+2.43.0
 
-Googling error code 550 seems to indicate a sender issue:
-
-""""
-This means the recipient's server doesn't trust the domain name you are 
-using. If this happens, then your email IP is blacklisted, and your 
-messages will bounce.
-"""
-
-Regards,
-Arend
-
-> --
-> https://patchwork.kernel.org/project/linux-wireless/patch/20231218121105.23882-1-lukas.bulwahn@gmail.com/
->
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
-
-
-
---00000000000070cef8060cd91e40
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
-Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
-HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
-Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
-KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
-Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
-dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
-OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
-MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
-BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
-ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
-zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
-sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
-BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
-N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
-p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
-YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
-bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCCLbMeM4ucMjh0u24BR
-DH+g0zBFFfuLTOz2C1dEq+3dKDAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
-BTEPFw0yMzEyMTkwOTAxNThaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
-AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
-BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAZ30g+RjmwtZHwR6H5oof3T0HKy8Bv+1M6toJ
-MfLMmuLNqUA/JLX4byrDbUVUt3XKEG+Gonvs6l5li0iMEiKjFrTkyJFTG/Y+e6B1sEdY4Pb9gTfo
-XKGLV3UDdUDAj6MLZjsNr2Gg33Y5axr8+SsyNgWRYUFMNiCUMCtNNRLfI8fbV/BqzHNgAwNC1Y9S
-uwMt38jm/391Wxat5HEBAP6oojWivkAytAJFOl+pu0zvVivpCwFTZwxHaQyyvbUsou7613NH6Dt4
-efPtX8gDF3JfQXbQytCNyRmf6pv1d+xbLFYthpZ6Drs3bTw1jStCK9QF7k5fzxynXbbsf5LF++99
-4w==
---00000000000070cef8060cd91e40--
