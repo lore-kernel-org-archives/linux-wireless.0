@@ -1,58 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 922A537D2F
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 18:24:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02CA938F8B
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Dec 2023 19:23:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jHAmqfcs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46964C433C8;
-	Tue, 19 Dec 2023 18:24:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703010268;
-	bh=jRAZdnaaVTi2KgSnKBcf8uT0X3s4ufbNWJviPiLm2Mk=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=jHAmqfcsGm8ICBikWzyPbOY/YwSf1XEni0rNq9zjkvjN2cwVoLgOyr68ReLYHrcg1
-	 blI51LGsqjY3DhE16X2QAUOFDwz83ckn/gG/jec58M+w+//7bd5LysOb0Y9vSQ9pSd
-	 7bwHbItmkZ2T+Zz/hD4WcIX5pDQA51LvBOjjoYCssIlGG3j0gyJ83Z/AOy7Rzk+hz0
-	 XDJ7QZtA/vcZY6Be5zxiFl/YayBbpihgNyM1eJmrQstwJFU3iZMgtp18iuSAGq9YEi
-	 pMvs+X1EyT27MSXRyuakJvDownClPjM1KCH0D2tP86CmlhXeswGqFqJjqeBnLL/nKc
-	 yBbEKDHUNqaZw==
-From: Kalle Valo <kvalo@kernel.org>
-To: James Prestwood <prestwoj@gmail.com>
-Cc: "open list:MEDIATEK MT76 WIRELESS LAN DRIVER"
- <linux-wireless@vger.kernel.org>,  ath11k@lists.infradead.org
-Subject: Re: Ath11k warnings, and eventual phy going away requiring reboot
-References: <ab00ff77-23de-43a1-9eb9-6ac036ab80e3@gmail.com>
-Date: Tue, 19 Dec 2023 20:24:25 +0200
-In-Reply-To: <ab00ff77-23de-43a1-9eb9-6ac036ab80e3@gmail.com> (James
-	Prestwood's message of "Tue, 19 Dec 2023 05:51:24 -0800")
-Message-ID: <87edfiqcdi.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GZA0OmXs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1703013826; x=1734549826;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=0j1PsHHG9EWpgj+lOXdnlSzbv8CzTz08jIIF+jcNzlk=;
+  b=GZA0OmXspG9Ly+LqtQQKsjgcbBvgG5nbeWQkgiEY9kYi0z6S67pXqQC0
+   gKb+hQtL0XnBdpwSIkwQrLvJQOGqQBH4198UPjtTXtAZK9kdaeTOykyEr
+   aKF772IAzw5abbqSNeIh9fJYRNB+s2lyim93q6NSd66VEM2I4smv4c0bO
+   FGacpn4slQVjVHstu1/+xM6xZVo0j75r5kjku6IrWHS2UtfgWOtepG3fh
+   x6IfyL/bFir3cfUs500V5nplZy17yWBwY28CCPrenoJ/v+SigZeI8BFCF
+   nlLd6vwrvt4HYPGDmbze65gWn4LX85I/TF2Nf4UXYTAG9C8tV5I4SqOPZ
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="481900240"
+X-IronPort-AV: E=Sophos;i="6.04,289,1695711600"; 
+   d="scan'208";a="481900240"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 11:23:45 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="779582585"
+X-IronPort-AV: E=Sophos;i="6.04,289,1695711600"; 
+   d="scan'208";a="779582585"
+Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 11:23:43 -0800
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/14] wifi: iwlwifi: updates - 2023-12-19
+Date: Wed, 20 Dec 2023 15:24:30 +0200
+Message-Id: <20231220132444.3310698-1-miriam.rachel.korenblit@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-James Prestwood <prestwoj@gmail.com> writes:
+Hi,
 
-> I noticed this after one of our devices dropped offline. The device
-> had roamed 7 minutes prior so I doubt that had anything to do with it.
-> But then we get this, and then tons of warnings. I'm happy to provide
-> full stack traces but its quite a few, not sure which ones are
-> relevant or not. After all the warnings IWD got an RTNL del link event
-> and was unable to recover from that. It seems after that ath11k tried
-> to power back on but failed.
->
-> This is a stock 6.2 ubuntu kernel, WCN6855:
+This patch set includes iwlwifi patches intended for v6.8
+It contains a few features, bugfixes and cleanups.
 
-BTW I don't know how it's nowadays, but back in the day Ubuntu heavily
-modified ath11k. And we can't support distro kernels anyway as we don't
-know what they have changed in the kernel.
+Thanks,
+Miri
+
+Andrei Otcheretianski (3):
+  wifi: iwlwifi: mvm: Allow DFS concurrent operation
+  wifi: iwlwifi: Don't mark DFS channels as NO-IR
+  wifi: iwlwifi: replace ENOTSUPP with EOPNOTSUPP
+
+Anjaneyulu (1):
+  wifi: iwlwifi: fix out of bound copy_from_user
+
+Emmanuel Grumbach (1):
+  wifi: iwlwifi: mvm: use the new command to clear the internal buffer
+
+Ilan Peer (1):
+  wifi: iwlwifi: mvm: Do not warn if valid link pair was not found
+
+Johannes Berg (5):
+  iwlwifi: mvm: set siso/mimo chains to 1 in FW SMPS request
+  wifi: iwlwifi: mvm: send TX path flush in rfkill
+  wifi: iwlwifi: mvm: d3: avoid intermediate/early mutex unlock
+  wifi: iwlwifi: mvm: add US/Canada MCC to API
+  wifi: iwlwifi: mvm: disallow puncturing in US/Canada
+
+Miri Korenblit (2):
+  wifi: iwlwifi: assign phy_ctxt before eSR activation
+  wifi: iwlwifi: cleanup BT Shared Single Antenna code
+
+Mukesh Sisodiya (1):
+  wifi: iwlwifi: Add rf_mapping of new wifi7 devices
+
+ .../net/wireless/intel/iwlwifi/fw/api/debug.h |  6 +++++
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   |  3 +++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  9 ++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  4 ++++
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  2 ++
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 15 +++++++++----
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  8 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 22 ++++---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 17 ++------------
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  4 ++--
+ .../intel/iwlwifi/mvm/ftm-responder.c         |  8 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  7 ++----
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 16 +++++++++++++-
+ .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  8 +++----
+ .../net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 11 ----------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |  2 +-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 10 +++++++++
+ 19 files changed, 85 insertions(+), 72 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
