@@ -1,38 +1,37 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2BE240BE4;
-	Wed, 20 Dec 2023 15:20:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CD5440BE3;
+	Wed, 20 Dec 2023 15:20:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="eMMefgr3"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tuDHrFQY"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=3dQ/koIlD9pX3qWk/1PizLnWMFvyP4MgGx4SMHiaVsI=;
-	t=1703085602; x=1704295202; b=eMMefgr38W7BSQPl4Tc+BIicEzIQZtG6kvjV9rEnUcnGMRG
-	KPn9UcC+2SDomdWiPUfDuUXdZwGOSiOnzfuakgzsWe/zL7zS0U5tm7oUHrWLmh9feH4+4G2usEkFi
-	FuClcClKaC+TmG0Q81sw60yZ70CqepPY5w1UaqtkLTmEO/dxt47uSO0ke4V4E3y8KJpDgAI7Kgw/Z
-	v25x8lEP34lJGyd9FPrz0/XXwumCOr6/Ej5ORQzJ7ROdo16o1qj4iqyRKGcQ3Ydl0LMJUE8rpb4rm
-	8FwghZQPKUTceh9cFNGKsRLG+KYauUe6whyMRSgMzYqUdlOVJOLHPNpQZ5zHNQOw==;
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=+TT0x2mfXYsJfJLBBaBRybFsPHGeBn/YbhuKpVUSDZs=; t=1703085601; x=1704295201; 
+	b=tuDHrFQYj/y2SLsaPGiIg5fZFOKbyTKEVtDr78dzCDLIvtq1cqPipO8qEFT4CdKryn9zbT7CujJ
+	yXo7WoT9OBarb+R8vEe8RWi6ID86moP0wZGFnH7MEc0OFDpJrFHa2Zme2LgB1R6BBLkJxKcrPjHuW
+	HLWyy3b4UbEwXly5NRVWM509Lz9bSOsQduMHPVIVr8ufL2mrfH2SLsoT1qKQ0I3AWg8ATAXl61CG5
+	F2jjRF9XA+/f2RL+gFWzJgzh9Xn3yxDtiS2G45Uq2wm0apFhKTgZPrZSht3kXAi+kB5lpmf5l3bBN
+	6967XIROnVpx/vuxDyGcw3w3srlSuCFZODrA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1rFyMZ-00000001WFz-0VCN;
-	Wed, 20 Dec 2023 16:19:59 +0100
+	id 1rFyMX-00000001WFz-1eNn;
+	Wed, 20 Dec 2023 16:19:57 +0100
 From: benjamin@sipsolutions.net
 To: linux-wireless@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	kunit-dev@googlegroups.com
 Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH 2/6] kunit: add a convenience allocation wrapper for SKBs
-Date: Wed, 20 Dec 2023 16:19:48 +0100
-Message-ID: <20231220151952.415232-3-benjamin@sipsolutions.net>
+Subject: [PATCH 0/6] Add some more cfg80211 and mac80211 kunit tests
+Date: Wed, 20 Dec 2023 16:19:46 +0100
+Message-ID: <20231220151952.415232-1-benjamin@sipsolutions.net>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20231220151952.415232-1-benjamin@sipsolutions.net>
-References: <20231220151952.415232-1-benjamin@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -43,80 +42,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-Add a simple convenience helper to allocate and zero fill an SKB for the
-use by a kunit test. Also provide a way to free it again in case that
-may be desirable.
+This patchset adds a couple of helpers for kunit as well as tests for
+cfg80211 and mac80211 that use them.
 
-This simply mirrors the kunit_kmalloc API.
+Benjamin Berg (3):
+  kunit: add parameter generation macro using description from array
+  kunit: add a convenience allocation wrapper for SKBs
+  wifi: cfg80211: tests: add some scanning related tests
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
----
- include/kunit/skbuff.h | 56 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+Johannes Berg (3):
+  wifi: mac80211: add kunit tests for public action handling
+  wifi: mac80211: kunit: generalize public action test
+  wifi: mac80211: kunit: extend MFP tests
+
+ Documentation/dev-tools/kunit/usage.rst |  12 +-
+ include/kunit/skbuff.h                  |  56 +++
+ include/kunit/test.h                    |  19 +
+ net/mac80211/ieee80211_i.h              |  10 +
+ net/mac80211/rx.c                       |   4 +-
+ net/mac80211/tests/Makefile             |   2 +-
+ net/mac80211/tests/mfp.c                | 286 +++++++++++
+ net/wireless/core.h                     |  13 +-
+ net/wireless/scan.c                     |   9 +-
+ net/wireless/tests/Makefile             |   2 +-
+ net/wireless/tests/scan.c               | 625 ++++++++++++++++++++++++
+ net/wireless/tests/util.c               |  56 +++
+ net/wireless/tests/util.h               |  66 +++
+ 13 files changed, 1145 insertions(+), 15 deletions(-)
  create mode 100644 include/kunit/skbuff.h
+ create mode 100644 net/mac80211/tests/mfp.c
+ create mode 100644 net/wireless/tests/scan.c
+ create mode 100644 net/wireless/tests/util.c
+ create mode 100644 net/wireless/tests/util.h
 
-diff --git a/include/kunit/skbuff.h b/include/kunit/skbuff.h
-new file mode 100644
-index 000000000000..2144d01e556f
---- /dev/null
-+++ b/include/kunit/skbuff.h
-@@ -0,0 +1,56 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Base unit test (KUnit) API.
-+ *
-+ * Copyright (C) 2023 Intel Corporation
-+ */
-+
-+#ifndef _KUNIT_SKBUFF_H
-+#define _KUNIT_SKBUFF_H
-+
-+#include <kunit/resource.h>
-+#include <linux/skbuff.h>
-+
-+static void kunit_action_kfree_skb(void *p)
-+{
-+	kfree_skb((struct sk_buff *)p);
-+}
-+
-+/**
-+ * kunit_zalloc_skb() - Allocate and initialize a resource managed skb.
-+ * @test: The test case to which the skb belongs
-+ * @len: size to allocate
-+ *
-+ * Allocate a new struct sk_buff with GFP_KERNEL, zero fill the give length
-+ * and add it as a resource to the kunit test for automatic cleanup.
-+ *
-+ * Returns: newly allocated SKB, or %NULL on error
-+ */
-+static inline struct sk_buff *kunit_zalloc_skb(struct kunit *test, int len,
-+					       gfp_t gfp)
-+{
-+	struct sk_buff *res = alloc_skb(len, GFP_KERNEL);
-+
-+	if (!res || skb_pad(res, len))
-+		return NULL;
-+
-+	if (kunit_add_action_or_reset(test, kunit_action_kfree_skb, res))
-+		return NULL;
-+
-+	return res;
-+}
-+
-+/**
-+ * kunit_kfree_skb() - Like kfree_skb except for allocations managed by KUnit.
-+ * @test: The test case to which the resource belongs.
-+ * @skb: The SKB to free.
-+ */
-+static inline void kunit_kfree_skb(struct kunit *test, struct sk_buff *skb)
-+{
-+	if (!skb)
-+		return;
-+
-+	kunit_release_action(test, kunit_action_kfree_skb, (void *)skb);
-+}
-+
-+#endif /* _KUNIT_SKBUFF_H */
 -- 
 2.43.0
 
