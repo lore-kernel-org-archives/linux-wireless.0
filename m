@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCCFC55E73
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A2C7627FB
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="GBQkv/u5";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="+2kNyYHN"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lFPs1k4E";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="a3Yka52/"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1703177044;
+	s=2020; t=1703177045;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YYFdViIjlESDzhteIs2oPwA/vKJ2vfKkn8h4MvsolD4=;
-	b=GBQkv/u5Fn7wo7K49zrWlYeqMTwbju4qSr+Pezfb/Rig+DgJN4u4EQx++vlmZ7//W2NejX
-	Rg8ZCj3/StfDZ4CeacER01B2xqap9Zpa4ysZ1fVmRlWsU1SLND5T18LHrIIEd5uN53M+CX
-	1Pb1FDr9FbFEqtWrymDp7aKMW9nvC8ugJe439+iL5IcuklzeP7xGKpjwD55hEP00L+Jvo6
-	4PqhF4PaH1cxBzUAovA8S63NHDXJIPiNZG6Cfg6SoJH/r7FHh7bjpv0lo5c/owEC5PGs32
-	dyFQO4wHcc511J34zd40kjzSwlZVab6ODHCWQAWdlMzduyKUTr+NPfNZwQKp9w==
+	bh=zRk4m+3M6izeZ0mA7nRGeJ3BoZePGHkX8ECIhqsMmgo=;
+	b=lFPs1k4E96J3MiSWo9gyHk7fk3u8Mt6fJpZ99FIhEfFjy4SW5TtaJwK2hmig31LU1iyYcE
+	rDvaBHdVzf3I/6jcybnq7Z8cOrCvREE4LhfQ+X9ndODfhv2CK7Bkr/tsDjjkA9oX3T/TDY
+	/rkjHkq58e1Jyv9Iad4DEzyuet05oAFbDLMtWwZLwj/6+M4CcGonBwjNdOINDLbZJe1W9y
+	kU9kQbdMH5XD9JhybMBRwbx+6Zva+NDvgltwdyCkpXrYJ4XGvertcbRzkv0vhsTEzJynQA
+	ketswRdOBLwtKmRIougDLCe/eB8ouTj8d/hvfLHLzh6WK0Xc47n5z2EgMOxWWg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1703177044;
+	s=2020e; t=1703177045;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YYFdViIjlESDzhteIs2oPwA/vKJ2vfKkn8h4MvsolD4=;
-	b=+2kNyYHNEd74iWBlT/dJcYyiSbOJtXAhTQuCa416R3zqBw54P6Vbjf6u02xXcEhXn9Pgzi
-	naVZX/GpZVnkDaAg==
+	bh=zRk4m+3M6izeZ0mA7nRGeJ3BoZePGHkX8ECIhqsMmgo=;
+	b=a3Yka52/RESgpdPQ/a+dew5NTUCxfInLo6UcqTifML4cdtfKSuFw9AkD3DIHEEsp8waMsW
+	j78HX68hwLleKjAQ==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 11/21] wifi: rtl8xxxu: support multiple interfaces in update_beacon_work_callback()
-Date: Thu, 21 Dec 2023 17:43:43 +0100
-Message-Id: <20231221164353.603258-12-martin.kaistra@linutronix.de>
+Subject: [PATCH v2 16/21] wifi: rtl8xxxu: support multiple interface in start_ap()
+Date: Thu, 21 Dec 2023 17:43:48 +0100
+Message-Id: <20231221164353.603258-17-martin.kaistra@linutronix.de>
 In-Reply-To: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 References: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,28 +49,32 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-As we only want to support AP mode/sending beacons on port 0, it is
-enough to replace priv->vif with priv->vifs[0].
+Call set_bssid() with the correct port_num now.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 99fe567e0f75b..680dffb9657e1 100644
+index aa88e66c64d67..5e4e6c006cc1f 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5712,7 +5712,7 @@ static void rtl8xxxu_update_beacon_work_callback(struct work_struct *work)
- 	struct rtl8xxxu_priv *priv =
- 		container_of(work, struct rtl8xxxu_priv, update_beacon_work);
- 	struct ieee80211_hw *hw = priv->hw;
--	struct ieee80211_vif *vif = priv->vif;
-+	struct ieee80211_vif *vif = priv->vifs[0];
+@@ -5111,11 +5111,12 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			     struct ieee80211_bss_conf *link_conf)
+ {
++	struct rtl8xxxu_vif *rtlvif = (struct rtl8xxxu_vif *)vif->drv_priv;
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct device *dev = &priv->udev->dev;
  
- 	if (!vif) {
- 		WARN_ONCE(true, "no vif to update beacon\n");
+ 	dev_dbg(dev, "Start AP mode\n");
+-	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid, 0);
++	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid, rtlvif->port_num);
+ 	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
+ 	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, 0, true);
+ 
 -- 
 2.39.2
 
