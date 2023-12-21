@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C035823A
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD3B55E77
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vQKmLL5h";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Xk55P+e7"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="OYwblMev";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Y3mPF7xD"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1703177043;
+	s=2020; t=1703177044;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NtxhvT5EXVJY6bH7E7j4niDLoEOAgIXN8np9XwZ7Rvw=;
-	b=vQKmLL5hdj1w4LzEMlcv/vjtOicgWj7cj9OeMF/UBtOXZ1/ovV/YPt2p+LsR+pkmKZ99/N
-	TCx7P5vbCswxmoaiP2HeiIchLvjTtCOVh2dmXSRW2g3AHbAyMIOpXfkMvyNUmD8ZXyNR1/
-	y6ABfy/0sSzl6G5aF1azfpvjgSP1TEdDQb1/baJu2m/PzvctRV2/AR1VMl+F+Qh+XM742S
-	8QIXz075zeoo5T01UITUZ7HPWkfxGR6LH4I9UJGwCw1DTA3VzdJuyv7wvDZqIfLIvJk8f7
-	Pwhvy6ZTwhjuOQShZiFCsUAICsJ7SbjJpxSoDZaS+hYIoISK6mt5Tfkec3i7Gg==
+	bh=j6s7kkvQAOBUfRax1TIdYRfxEwtEdowAwFlbuI48dos=;
+	b=OYwblMevBJEW8WoG/04VuZlgdUj6/eaphEU03z9Rg19FahZAyxIBsBjVHSmBV1uD0UeQCk
+	BgT8QMqIjxhZJiSDHXVBF4Br+/tnLNTYcnLJj2ckx8UHek0jQIvYpUk+jGoGgkJ7C6eMfe
+	4ThPbZNMPl0C4c8w4oy7EYc5k9rA/W8uMRM7eZAIOStIcNBSmF6synLoqdI9ST5te3IGNl
+	nGIl7BoIZrEZV/KYHilMCzfOYWPO0dm6NL8x93jDOC4RXiaYJfspTt82OxI16rz2Ohhnln
+	up96lEzbspf9YWwVpgD+Xx9eIFiq/cpQ8FEeBmFm81d6P23T0Jy+GryhrVUPPw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1703177043;
+	s=2020e; t=1703177044;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NtxhvT5EXVJY6bH7E7j4niDLoEOAgIXN8np9XwZ7Rvw=;
-	b=Xk55P+e7wa1LVSDVOSzlUR+U6HK/kFt5za2PACtbEa9fSUUBR6O3ykK8kmRsJIE+le6gKw
-	PH25eqMRxHy/LHDA==
+	bh=j6s7kkvQAOBUfRax1TIdYRfxEwtEdowAwFlbuI48dos=;
+	b=Y3mPF7xD+Gsn1dKKakAkjnRbAcxsi3d906J12HmDrBozaRe3TJG6Vif1g49XUvMnbvquw1
+	CkRV+UrDLnXKdzCA==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 05/21] wifi: rtl8xxxu: support setting mac address register for both interfaces
-Date: Thu, 21 Dec 2023 17:43:37 +0100
-Message-Id: <20231221164353.603258-6-martin.kaistra@linutronix.de>
+Subject: [PATCH v2 12/21] wifi: rtl8xxxu: support multiple interfaces in configure_filter()
+Date: Thu, 21 Dec 2023 17:43:44 +0100
+Message-Id: <20231221164353.603258-13-martin.kaistra@linutronix.de>
 In-Reply-To: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 References: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,72 +49,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To prepare for concurrent mode, enhance rtl8xxxu_set_mac() to write the
-mac address of the respective interface to REG_MACID or REG_MACID1.
-
-Remove the call to rtl8xxxu_set_mac() from the init function as we set
-it in rtl8xxxu_add_interface() later anyway.
-
-Until rtl8xxxu_add_interface() can handle both interfaces, call
-rtl8xxxu_set_mac() with port_num = 0.
+As we only want to support AP mode/sending beacons on port 0, change
+from priv->vif to priv->vifs[0] in the check for AP mode.
+Additionally, if we are in AP mode, don't filter RX beacon and probe
+response frames to still allow working STATION mode on the other
+interface.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 20 +++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 305d6dd585dfa..c2ea8e92cd637 100644
+index 680dffb9657e1..c5b71892369c9 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3580,15 +3580,25 @@ void rtl8723a_phy_lc_calibrate(struct rtl8xxxu_priv *priv)
- 		rtl8xxxu_write8(priv, REG_TXPAUSE, 0x00);
- }
+@@ -6794,8 +6794,8 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
+ 	else
+ 		rcr |= RCR_CHECK_BSSID_BEACON | RCR_CHECK_BSSID_MATCH;
  
--static int rtl8xxxu_set_mac(struct rtl8xxxu_priv *priv)
-+static int rtl8xxxu_set_mac(struct rtl8xxxu_priv *priv, int port_num)
- {
- 	int i;
- 	u16 reg;
+-	if (priv->vif && priv->vif->type == NL80211_IFTYPE_AP)
+-		rcr &= ~RCR_CHECK_BSSID_MATCH;
++	if (priv->vifs[0] && priv->vifs[0]->type == NL80211_IFTYPE_AP)
++		rcr &= ~(RCR_CHECK_BSSID_MATCH | RCR_CHECK_BSSID_BEACON);
  
--	reg = REG_MACID;
-+	switch (port_num) {
-+	case 0:
-+		reg = REG_MACID;
-+		break;
-+	case 1:
-+		reg = REG_MACID1;
-+		break;
-+	default:
-+		WARN_ONCE("%s: invalid port_num\n", __func__);
-+		return -EINVAL;
-+	}
- 
- 	for (i = 0; i < ETH_ALEN; i++)
--		rtl8xxxu_write8(priv, reg + i, priv->mac_addr[i]);
-+		rtl8xxxu_write8(priv, reg + i, priv->vifs[port_num]->addr[i]);
- 
- 	return 0;
- }
-@@ -4243,8 +4253,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		rtl8xxxu_write32(priv, REG_HIMR, 0xffffffff);
- 	}
- 
--	rtl8xxxu_set_mac(priv);
--
- 	/*
- 	 * Configure initial WMAC settings
- 	 */
-@@ -6619,7 +6627,7 @@ static int rtl8xxxu_add_interface(struct ieee80211_hw *hw,
- 
- 	rtl8xxxu_set_linktype(priv, vif->type, 0);
- 	ether_addr_copy(priv->mac_addr, vif->addr);
--	rtl8xxxu_set_mac(priv);
-+	rtl8xxxu_set_mac(priv, 0);
- 
- 	return ret;
- }
+ 	if (*total_flags & FIF_CONTROL)
+ 		rcr |= RCR_ACCEPT_CTRL_FRAME;
 -- 
 2.39.2
 
