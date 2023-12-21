@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B996280B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6EDD62815
 	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="GPm08bxy";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="E5waxjo/"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="x6+yi+iI";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="i7LFpfmf"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1703177045;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=r0yo6wUPMjlWISpPYo4osApNu94NIJzCy0g+vJ50WnU=;
-	b=GPm08bxyWhQI9QLBkcKCI6F0IU6FZMjgptBBF/UxOk5VieLzQ1CldHt0jdBLw6rWz+gRJt
-	QpX2HNszgVJ2Mc+oWA/pWmEzsKjg1QDV93TykC8fsDd/0It830VnuuNGipXHfXQme+XdCu
-	cV1LNfm+IMYgAfAK8gZbBXw+EDvukDj/iRZRchoac0cL2Ea4cV+RoT8g5HcZ1G8IwDeiZ6
-	vl/t5aLMTb8FlRC+LF4oW9yEHKzBG+IN00+G7uSqe9owSElKBUFv0tkc6zC46DKTpQ72x6
-	ELKYrxw0VaCUxZL1IEal7oSa3u3qBdD0TF2FCvQ/kEJ7HLAuuJD4FK/ANdgg2Q==
+	bh=jbPBCL8asc0tD7whYSrHIT9BZnwfAuyYIxS588VM4fE=;
+	b=x6+yi+iIRRq4KOr4/nhWqVi+rCTU/HH7obCDWxKvpEALZIrbS66WLXqV0sfe+TsluU0jq6
+	IjNsENBh6fqWGNY/eFlGnywKfSDoC22sjSB5atUdJ4KbGla1nl5pSj1CeUNjElUHYIoeBC
+	b05+/mnZz1Ne7IJ+rR3VO2SVcAy/xMtRtl82MUvc3/wlYYJTTY52/OweTMy66DfgRYZfLB
+	IlzMPIYNRJ4oJVOcqvTr/MMZyWqzNPDYmYFYKbzU2Ob0gGAfQvbA+cu8et+PQRfH/vURGu
+	mtHbcedXoHRMbbxrAp7onJygPGmmtPm3kjxuwnnbTu+zR5D0rjoLY03etpAHrg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1703177045;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=r0yo6wUPMjlWISpPYo4osApNu94NIJzCy0g+vJ50WnU=;
-	b=E5waxjo/wuwgI6W4shjcjC9+VYzH9W0U635pgdVN3wEGezDf0V/XzBZxP8NnkrXpLENKzC
-	DZnzNhwd8MMOY4DQ==
+	bh=jbPBCL8asc0tD7whYSrHIT9BZnwfAuyYIxS588VM4fE=;
+	b=i7LFpfmfxIu5ckT0XldwLGrZcPYJamiwlK3rf2r54vnfASg4WMwd7esvaGWNYnTC/mbdbP
+	gilRSIyPqtkrQUBA==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 15/21] wifi: rtl8xxxu: support multiple interfaces in bss_info_changed()
-Date: Thu, 21 Dec 2023 17:43:47 +0100
-Message-Id: <20231221164353.603258-16-martin.kaistra@linutronix.de>
+Subject: [PATCH v2 17/21] wifi: rtl8xxxu: add macids for STA mode
+Date: Thu, 21 Dec 2023 17:43:49 +0100
+Message-Id: <20231221164353.603258-18-martin.kaistra@linutronix.de>
 In-Reply-To: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 References: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,56 +49,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Call set_linktype and set_bssid now with correct port_num. Call
-stop_tx_beacon only for port 0, as we don't support beacons on port 1.
-Explicit changes to BEACON will only happen for AP type interfaces, so
-we don't need an additional check there.
+Until now, the driver only assigned a dedicated macid for connections
+made in AP mode, in STA mode the return value of rtl8xxxu_get_macid()
+was simply 0.
+To differentiate between port 0 and 1, when both are in STA mode,
+allocate a second macid (with value 1) and set sta_info->macid according
+to the used port_num in rtl8xxxu_sta_add().
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  1 +
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 18 +++++++++++++++++-
+ 2 files changed, 18 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 9d272da373a3c..6a58897446f4c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1774,6 +1774,7 @@ struct rtl8xxxu_cfo_tracking {
+ #define RTL8XXXU_HW_LED_CONTROL	2
+ #define RTL8XXXU_MAX_MAC_ID_NUM	128
+ #define RTL8XXXU_BC_MC_MACID	0
++#define RTL8XXXU_BC_MC_MACID1	1
+ 
+ struct rtl8xxxu_priv {
+ 	struct ieee80211_hw *hw;
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 4090db8abba7b..aa88e66c64d67 100644
+index 5e4e6c006cc1f..0b6eac14f60e5 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4983,6 +4983,7 @@ static void
- rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			  struct ieee80211_bss_conf *bss_conf, u64 changed)
+@@ -4053,10 +4053,13 @@ static inline u8 rtl8xxxu_get_macid(struct rtl8xxxu_priv *priv,
  {
+ 	struct rtl8xxxu_sta_info *sta_info;
+ 
+-	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_STATION || !sta)
++	if (!sta)
+ 		return 0;
+ 
+ 	sta_info = (struct rtl8xxxu_sta_info *)sta->drv_priv;
++	if (!sta_info)
++		return 0;
++
+ 	return sta_info->macid;
+ }
+ 
+@@ -4536,6 +4539,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 		rtl8188e_ra_info_init_all(&priv->ra_info);
+ 
+ 	set_bit(RTL8XXXU_BC_MC_MACID, priv->mac_id_map);
++	set_bit(RTL8XXXU_BC_MC_MACID1, priv->mac_id_map);
+ 
+ exit:
+ 	return ret;
+@@ -7375,6 +7379,7 @@ static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
+ 			    struct ieee80211_sta *sta)
+ {
+ 	struct rtl8xxxu_sta_info *sta_info = (struct rtl8xxxu_sta_info *)sta->drv_priv;
 +	struct rtl8xxxu_vif *rtlvif = (struct rtl8xxxu_vif *)vif->drv_priv;
  	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct device *dev = &priv->udev->dev;
- 	struct ieee80211_sta *sta;
-@@ -4995,7 +4996,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		dev_dbg(dev, "Changed ASSOC: %i!\n", vif->cfg.assoc);
  
--		rtl8xxxu_set_linktype(priv, vif->type, 0);
-+		rtl8xxxu_set_linktype(priv, vif->type, rtlvif->port_num);
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+@@ -7384,6 +7389,17 @@ static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
  
- 		if (vif->cfg.assoc) {
- 			u32 ramask;
-@@ -5042,7 +5043,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
- 
--			rtl8xxxu_stop_tx_beacon(priv);
-+			if (rtlvif->port_num == 0)
-+				rtl8xxxu_stop_tx_beacon(priv);
- 
- 			/* joinbss sequence */
- 			rtl8xxxu_write16(priv, REG_BCN_PSR_RPT,
-@@ -5084,7 +5086,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	if (changed & BSS_CHANGED_BSSID) {
- 		dev_dbg(dev, "Changed BSSID!\n");
--		rtl8xxxu_set_bssid(priv, bss_conf->bssid, 0);
-+		rtl8xxxu_set_bssid(priv, bss_conf->bssid, rtlvif->port_num);
+ 		rtl8xxxu_refresh_rate_mask(priv, 0, sta, true);
+ 		priv->fops->report_connect(priv, sta_info->macid, H2C_MACID_ROLE_STA, true);
++	} else {
++		switch (rtlvif->port_num) {
++		case 0:
++			sta_info->macid = RTL8XXXU_BC_MC_MACID;
++			break;
++		case 1:
++			sta_info->macid = RTL8XXXU_BC_MC_MACID1;
++			break;
++		default:
++			break;
++		}
  	}
  
- 	if (changed & BSS_CHANGED_BASIC_RATES) {
+ 	return 0;
 -- 
 2.39.2
 
