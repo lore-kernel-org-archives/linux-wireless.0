@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BD258207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55C95990A
 	for <linux-wireless@vger.kernel.org>; Thu, 21 Dec 2023 16:44:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="OMSJh7ei";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="0kO597al"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="SL22u6FE";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="jq6GzpWk"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1703177043;
+	s=2020; t=1703177044;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YJF8OMXv6zsmzzE/WAkfo8NUsf2ylyf77tp+jhQnMpQ=;
-	b=OMSJh7ei6dgx5uN40Dahi7Wp8ygkvzEef1cxp1rWc+GSrc5kMWpO/T4He4jfZEqB78jAm9
-	DG/zXp9IXDF4zKN4+wspYWB35UzQU8sLnSd0O28V95AADcVfStMi0cqeJkKF7lzEGfmfSc
-	phC0Thpzm7RbCy/lbP+yM62J2L5euLB87YhyIyRHDhpveWxkYSqkEpybb65d+RkpxmUmiO
-	uWgWfqQu1j/wjqTxZGwZEZHfzPNNW6s4V3qMI4P/7UHTK5h1uJVGsiKTwoH7lJhJ3OBG4+
-	T6gc1HEsemotwWH/x+0q74NnhFYafEMOnTyY3mkAIG5jqPo/Bi0L9mjKIqPLBg==
+	bh=iNyg5aqBG5urJxpU+rxykaqCxQCO72gRqKK8Ye1CjKI=;
+	b=SL22u6FEwH27XAt3XUHG+ae6BabruNOzJ4leqbV+zMnughsIU8qBTtjiGsThYAvBJsJOWq
+	22o++n2GGzIvuvKxV6JoEy2CHY2ntAPiOQeePNQIx/0RL/aath/96QzS2NvM5RSo1RCxiz
+	xa79WZQIZMuVHBsjQA+QXyhBjTM2t6cWXbRi64R0GoQbJ/b6MlNb/EM3A/KSiB3HxdBpq3
+	M4botKmsKvbVT/o+RGxR3kRoO+Qt6BQDmBIMJERP8G88+zmsRak1yvW6dFilBkFi6vxgv1
+	/bAOsAL83f7QOFyxh5z/+W5ax/J9ai7n2DukRpr2nfrkHhVetY9bSxdMTrpYtw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1703177043;
+	s=2020e; t=1703177044;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YJF8OMXv6zsmzzE/WAkfo8NUsf2ylyf77tp+jhQnMpQ=;
-	b=0kO597al0KUdFXzcjR1UPd6pB0UpK0PUZbG+MVecIQyPDA2Mmlp48q7xgJ4WlTDEi462R4
-	QX7KjBR6jncJ8ADQ==
+	bh=iNyg5aqBG5urJxpU+rxykaqCxQCO72gRqKK8Ye1CjKI=;
+	b=jq6GzpWk5vwQ1kM/IXeyPJtEsxyYY3CElP1yVWYjgQTCZFGmjMKpvshJZaAP0rmd1cWAF+
+	xau8PI64hjwP6BAw==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v2 06/21] wifi: rtl8xxxu: extend wifi connected check to both interfaces
-Date: Thu, 21 Dec 2023 17:43:38 +0100
-Message-Id: <20231221164353.603258-7-martin.kaistra@linutronix.de>
+Subject: [PATCH v2 10/21] wifi: rtl8xxxu: support multiple interfaces in set_aifs()
+Date: Thu, 21 Dec 2023 17:43:42 +0100
+Message-Id: <20231221164353.603258-11-martin.kaistra@linutronix.de>
 In-Reply-To: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 References: <20231221164353.603258-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,75 +49,43 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are multiple places in the code where the current connection
-status of wifi is checked. The driver will support two interfaces soon
-and either one of them (or both) could be connected.
-
-Convert all uses of (vif && vif->cfg.assoc) to a new helper
-function rtl8xxxu_is_assoc() which checks both interfaces.
+In concurrent mode supported by this driver, both interfaces will use
+the same channel and same wireless mode.
+It is therefore possible to get the wireless mode by checking the first
+connected interface.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 20 +++++++++----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index c2ea8e92cd637..fd6b6e2eba038 100644
+index 490f35d0d6199..99fe567e0f75b 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6043,18 +6043,20 @@ void rtl8723bu_update_bt_link_info(struct rtl8xxxu_priv *priv, u8 bt_info)
- 		btcoex->bt_busy = false;
- }
+@@ -4913,14 +4913,20 @@ static void rtl8xxxu_set_aifs(struct rtl8xxxu_priv *priv, u8 slot_time)
+ 	u8 aifs, aifsn, sifs;
+ 	int i;
  
-+static inline bool rtl8xxxu_is_assoc(struct rtl8xxxu_priv *priv)
-+{
-+	return (priv->vifs[0] && priv->vifs[0]->cfg.assoc) ||
-+	       (priv->vifs[1] && priv->vifs[1]->cfg.assoc);
-+}
+-	if (priv->vif) {
++	for (i = 0; i < ARRAY_SIZE(priv->vifs); i++) {
++		if (!priv->vifs[i])
++			continue;
 +
- static
- void rtl8723bu_handle_bt_inquiry(struct rtl8xxxu_priv *priv)
- {
--	struct ieee80211_vif *vif;
- 	struct rtl8xxxu_btcoex *btcoex;
--	bool wifi_connected;
+ 		struct ieee80211_sta *sta;
  
--	vif = priv->vif;
- 	btcoex = &priv->bt_coex;
--	wifi_connected = (vif && vif->cfg.assoc);
+ 		rcu_read_lock();
+-		sta = ieee80211_find_sta(priv->vif, priv->vif->bss_conf.bssid);
++		sta = ieee80211_find_sta(priv->vifs[i], priv->vifs[i]->bss_conf.bssid);
+ 		if (sta)
+ 			wireless_mode = rtl8xxxu_wireless_mode(priv->hw, sta);
+ 		rcu_read_unlock();
++
++		if (wireless_mode)
++			break;
+ 	}
  
--	if (!wifi_connected) {
-+	if (!rtl8xxxu_is_assoc(priv)) {
- 		rtl8723bu_set_ps_tdma(priv, 0x8, 0x0, 0x0, 0x0, 0x0);
- 		rtl8723bu_set_coex_with_type(priv, 0);
- 	} else if (btcoex->has_sco || btcoex->has_hid || btcoex->has_a2dp) {
-@@ -6072,15 +6074,11 @@ void rtl8723bu_handle_bt_inquiry(struct rtl8xxxu_priv *priv)
- static
- void rtl8723bu_handle_bt_info(struct rtl8xxxu_priv *priv)
- {
--	struct ieee80211_vif *vif;
- 	struct rtl8xxxu_btcoex *btcoex;
--	bool wifi_connected;
- 
--	vif = priv->vif;
- 	btcoex = &priv->bt_coex;
--	wifi_connected = (vif && vif->cfg.assoc);
- 
--	if (wifi_connected) {
-+	if (rtl8xxxu_is_assoc(priv)) {
- 		u32 val32 = 0;
- 		u32 high_prio_tx = 0, high_prio_rx = 0;
- 
-@@ -7103,7 +7101,7 @@ static void rtl8xxxu_track_cfo(struct rtl8xxxu_priv *priv)
- 	int cfo_khz_a, cfo_khz_b, cfo_average;
- 	int crystal_cap;
- 
--	if (!priv->vif || !priv->vif->cfg.assoc) {
-+	if (!rtl8xxxu_is_assoc(priv)) {
- 		/* Reset */
- 		cfo->adjust = true;
- 
+ 	if (priv->hw->conf.chandef.chan->band == NL80211_BAND_5GHZ ||
 -- 
 2.39.2
 
