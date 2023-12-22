@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E79B168DC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E1E171A3
 	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 10:14:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hYOd7gO/";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="IS1l+F5K"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="KVq+UF+w";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lnOwaRmr"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1703240088;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=8t0lIqToI+GCrOO3Dy/d7o1P1Q/lQmkoeEK94dOQEx4=;
-	b=hYOd7gO/zIZTJxFBGO9uw4XCWLA4KVwTh2ynegCbPatlkQzHyEkIKbarCqW9qaoyMkA2Wn
-	TapGiRTmWiSkMKayLjTw53El3jDswOr4v0+dfqi8NyIRZ368WDfOLpdktdXoJfnii8rugt
-	Gux0egAe05xTKJRhGBHrUxoLWICEPA68dKSK5qSWrff9gZcsJY5DVOa6dpKoU4ku2ufQXF
-	mrE0o3dFQDwOqAyCHp2Vl9rcyIfFyVIsu3i3heYdUga0sFmkbE4FyJjvzsDaag0vl0TFWU
-	OUJPg7X2b6ZH+GDfFaFcqG+R9PZ8nTEdPMV6AwWkrXtjccQjx9/zX9lPqq4tiw==
+	bh=43NbwlNaFzVIc5XSe7laQbDtYbGsuzb24fzj9Y2JK7c=;
+	b=KVq+UF+wlOcMtkm/bPN2YrtvPZl5y0yno3QRyoS9kbsueGCE0EwuTMR2ckVz5leGuv1fab
+	OG86ZJznHJ+CjMbbHsrUmpemSf6YDQwDRVrUDOLE++y2xSqThp3NkpWmKcFHGqzrke8OFO
+	8yRQNCq4ZUrTULj3VOnTvxRUiTbceKCLkjB3TTm/T417ksu052Ni8UC6fFvihEYIwvYdDl
+	660oPX/m8QnaLVvNVm9wJ/63i0t3UdxWPde6x8sWHWKhPBQ5IxiKIwR5OewAV2zldycYpS
+	mxUQ8lkmw710wTGN/rTX2COF6m8XjCcLhQE3mageILscQIhcbGWQUkQSqcL7Pw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1703240088;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=8t0lIqToI+GCrOO3Dy/d7o1P1Q/lQmkoeEK94dOQEx4=;
-	b=IS1l+F5KBjG4/D/VKrkT3x0W8SPWhqVDEamP8W2s8YLEgvx23HgW2VGNiWmgMK0phMOiNW
-	7QA5I2wPwXD0lrAA==
+	bh=43NbwlNaFzVIc5XSe7laQbDtYbGsuzb24fzj9Y2JK7c=;
+	b=lnOwaRmrpKqoqmECG6Dkj3EwtCrCdRQl0MKwgJV/fa8EKVxR/QbSuqqLeSitqxc11/R0bh
+	kGSKZbCE1FzL78BQ==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 07/21] wifi: rtl8xxxu: extend check for matching bssid to both interfaces
-Date: Fri, 22 Dec 2023 11:14:28 +0100
-Message-Id: <20231222101442.626837-8-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 09/21] wifi: rtl8xxxu: support setting bssid register for multiple interfaces
+Date: Fri, 22 Dec 2023 11:14:30 +0100
+Message-Id: <20231222101442.626837-10-martin.kaistra@linutronix.de>
 In-Reply-To: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 References: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,69 +49,66 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The driver will support two interfaces soon, which both can be in
-station mode, so extend the check, whether cfo information should be
-parsed, to cover both interfaces.
+To prepare for concurrent mode, enhance rtl8xxxu_set_bssid() to write the
+BSSID of the respective interface to REG_BSSID or REG_BSSID1.
 
-For better code readability put the lines with priv->vifs[port_num] in a
-separate function.
+Like done with rtl8xxxu_set_mac(), call rtl8xxxu_set_bssid() with
+port_num = 0, until the callers also support multiple interfaces.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 22 ++++++++++++-------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index fd6b6e2eba038..ca0d885eabb71 100644
+index 6fff982f65253..490f35d0d6199 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5706,6 +5706,16 @@ static void rtl8xxxu_update_beacon_work_callback(struct work_struct *work)
- 	rtl8xxxu_send_beacon_frame(hw, vif);
+@@ -3603,14 +3603,24 @@ static int rtl8xxxu_set_mac(struct rtl8xxxu_priv *priv, int port_num)
+ 	return 0;
  }
  
-+static inline bool rtl8xxxu_is_packet_match_bssid(struct rtl8xxxu_priv *priv,
-+						  struct ieee80211_hdr *hdr,
-+						  int port_num)
-+{
-+	return priv->vifs[port_num] &&
-+	       priv->vifs[port_num]->type == NL80211_IFTYPE_STATION &&
-+	       priv->vifs[port_num]->cfg.assoc &&
-+	       ether_addr_equal(priv->vifs[port_num]->bss_conf.bssid, hdr->addr2);
-+}
-+
- void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
- 				 struct ieee80211_rx_status *rx_status,
- 				 struct rtl8723au_phy_stats *phy_stats,
-@@ -5722,12 +5732,10 @@ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
- 		rx_status->signal = priv->fops->cck_rssi(priv, phy_stats);
- 	} else {
- 		bool parse_cfo = priv->fops->set_crystal_cap &&
--				 priv->vif &&
--				 priv->vif->type == NL80211_IFTYPE_STATION &&
--				 priv->vif->cfg.assoc &&
- 				 !crc_icv_err &&
- 				 !ieee80211_is_ctl(hdr->frame_control) &&
--				 ether_addr_equal(priv->vif->bss_conf.bssid, hdr->addr2);
-+				 (rtl8xxxu_is_packet_match_bssid(priv, hdr, 0) ||
-+				  rtl8xxxu_is_packet_match_bssid(priv, hdr, 1));
- 
- 		if (parse_cfo) {
- 			priv->cfo_tracking.cfo_tail[0] = phy_stats->path_cfotail[0];
-@@ -5762,12 +5770,10 @@ static void jaguar2_rx_parse_phystats_type1(struct rtl8xxxu_priv *priv,
- 					    bool crc_icv_err)
+-static int rtl8xxxu_set_bssid(struct rtl8xxxu_priv *priv, const u8 *bssid)
++static int rtl8xxxu_set_bssid(struct rtl8xxxu_priv *priv, const u8 *bssid, int port_num)
  {
- 	bool parse_cfo = priv->fops->set_crystal_cap &&
--			 priv->vif &&
--			 priv->vif->type == NL80211_IFTYPE_STATION &&
--			 priv->vif->cfg.assoc &&
- 			 !crc_icv_err &&
- 			 !ieee80211_is_ctl(hdr->frame_control) &&
--			 ether_addr_equal(priv->vif->bss_conf.bssid, hdr->addr2);
-+			 (rtl8xxxu_is_packet_match_bssid(priv, hdr, 0) ||
-+			  rtl8xxxu_is_packet_match_bssid(priv, hdr, 1));
- 	u8 pwdb_max = 0;
- 	int rx_path;
+ 	int i;
+ 	u16 reg;
+ 
+ 	dev_dbg(&priv->udev->dev, "%s: (%pM)\n", __func__, bssid);
+ 
+-	reg = REG_BSSID;
++	switch (port_num) {
++	case 0:
++		reg = REG_BSSID;
++		break;
++	case 1:
++		reg = REG_BSSID1;
++		break;
++	default:
++		WARN_ONCE("%s: invalid port_num\n", __func__);
++		return -EINVAL;
++	}
+ 
+ 	for (i = 0; i < ETH_ALEN; i++)
+ 		rtl8xxxu_write8(priv, reg + i, bssid[i]);
+@@ -5068,7 +5078,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		dev_dbg(dev, "Changed BSSID!\n");
+-		rtl8xxxu_set_bssid(priv, bss_conf->bssid);
++		rtl8xxxu_set_bssid(priv, bss_conf->bssid, 0);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BASIC_RATES) {
+@@ -5097,7 +5107,7 @@ static int rtl8xxxu_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct device *dev = &priv->udev->dev;
+ 
+ 	dev_dbg(dev, "Start AP mode\n");
+-	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid);
++	rtl8xxxu_set_bssid(priv, vif->bss_conf.bssid, 0);
+ 	rtl8xxxu_write16(priv, REG_BCN_INTERVAL, vif->bss_conf.beacon_int);
+ 	priv->fops->report_connect(priv, RTL8XXXU_BC_MC_MACID, 0, true);
  
 -- 
 2.39.2
