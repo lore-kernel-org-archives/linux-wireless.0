@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7105018AE4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4A518C20
 	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 10:14:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="EoUizU3z";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="y1VEtt9Q"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="K/p6UU3f";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="6cAnJdXD"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1703240090;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jFviRyNSEaCCig/K0agE7VjOEKBHNbMhi6bLLQTlXkA=;
-	b=EoUizU3zB/EliBNNUOE9qr15HQmh0qhNZ8ogtU4Twe4NVLEMQydYUuGXu9mEmegpEqvjMl
-	s1pgVvrVYMwxuaNZJoFjPcf04IvuBEPgsnvPclOPRt4Ps2b80n6uHArTa3zoIyFiZXcIfi
-	vNXtgWXklVRcpQPLHruL5DGyYDeQdyH/D02s33rvzpDKrywbAZDJNBHJRKpW+7hBdoq3ar
-	QMREhLDp1hj+4d+ke7/Ceyb3l8vyIK3WrA/Z4uAFbhm70D6kKVBIpU/x6mcB2UNZg5p5XI
-	LnPNoRfX4EY5MxTQb1h0n+2lLlvGX8xcvh8WML6VewJbZ6ygFX/FjRHs6h31cA==
+	bh=Vm1o2HILfB97WRmJbwt9PEqUOiIwfdeFIsy8DmCIJpI=;
+	b=K/p6UU3fvfUsEJNWk4IfUmmXswb3YdJQzn9BAv3HNUiJO4tI6pUEHafLTY7grSVdNFr87S
+	HG86QYJMGb5/nwmNBjB3sUMnUSJ+MbIhiDXKmkLnx+uxiX/D1aW16NbznBss7ME81Bz45D
+	0BF8RXB+C7fV458T8J27yyJYXDK+p5jyZp0stbP5Abi3MJSCZ1hkueC7YpBJjqzVWBX2t8
+	zLtKZUhQ+QVGQG/wDP7tb/OaJVzUnWdzXDdCHcvXm8Ty2/NzkBDBDAHmehq38k7+T1aDJ6
+	MMucE76a8hrE/iXupjcYRGLImotyUvbCTTJpL6XqWmnI9j6YDx/H9AAHDVNlOA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1703240090;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jFviRyNSEaCCig/K0agE7VjOEKBHNbMhi6bLLQTlXkA=;
-	b=y1VEtt9QcJ3hRAbuWeiorQrKa24vPVIfAAOzCrze2/UfzvFVsdIWTYqfNJiJpUxHxW+FyD
-	I7sFvg8GJYjo3eBg==
+	bh=Vm1o2HILfB97WRmJbwt9PEqUOiIwfdeFIsy8DmCIJpI=;
+	b=6cAnJdXDDKTIZJzP7n1/cj41X7KGoO/4i8V8Zn2ROzPTm98/1QeZqkKODyvKYIeTCDEZzf
+	CZj7wh/2hAElsfBg==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 17/21] wifi: rtl8xxxu: add macids for STA mode
-Date: Fri, 22 Dec 2023 11:14:38 +0100
-Message-Id: <20231222101442.626837-18-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 21/21] wifi: rtl8xxxu: declare concurrent mode support for 8188f
+Date: Fri, 22 Dec 2023 11:14:42 +0100
+Message-Id: <20231222101442.626837-22-martin.kaistra@linutronix.de>
 In-Reply-To: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 References: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,85 +49,80 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Until now, the driver only assigned a dedicated macid for connections
-made in AP mode, in STA mode the return value of rtl8xxxu_get_macid()
-was simply 0.
-To differentiate between port 0 and 1, when both are in STA mode,
-allocate a second macid (with value 1) and set sta_info->macid according
-to the used port_num in rtl8xxxu_sta_add().
+Everything is in place now for concurrent mode, we can tell the system
+that we support it.
+We will allow a maximum of 2 virtual interfaces, one of them can be in
+AP mode.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  1 +
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 18 +++++++++++++++++-
- 2 files changed, 18 insertions(+), 1 deletion(-)
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu.h  |  1 +
+ .../realtek/rtl8xxxu/rtl8xxxu_8188f.c         |  1 +
+ .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 19 +++++++++++++++++++
+ 3 files changed, 21 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 9d272da373a3c..6a58897446f4c 100644
+index 62e6318bc0924..803c76b3209c4 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1774,6 +1774,7 @@ struct rtl8xxxu_cfo_tracking {
- #define RTL8XXXU_HW_LED_CONTROL	2
- #define RTL8XXXU_MAX_MAC_ID_NUM	128
- #define RTL8XXXU_BC_MC_MACID	0
-+#define RTL8XXXU_BC_MC_MACID1	1
- 
- struct rtl8xxxu_priv {
- 	struct ieee80211_hw *hw;
+@@ -1992,6 +1992,7 @@ struct rtl8xxxu_fileops {
+ 	u8 init_reg_rxfltmap:1;
+ 	u8 init_reg_pkt_life_time:1;
+ 	u8 init_reg_hmtfr:1;
++	u8 supports_concurrent:1;
+ 	u8 ampdu_max_time;
+ 	u8 ustime_tsf_edca;
+ 	u16 max_aggr_num;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
+index 574a5fe951543..464216d007ce8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8188f.c
+@@ -1752,6 +1752,7 @@ struct rtl8xxxu_fileops rtl8188fu_fops = {
+ 	.supports_ap = 1,
+ 	.max_macid_num = 16,
+ 	.max_sec_cam_num = 16,
++	.supports_concurrent = 1,
+ 	.adda_1t_init = 0x03c00014,
+ 	.adda_1t_path_on = 0x03c00014,
+ 	.trxff_boundary = 0x3f7f,
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 5e4e6c006cc1f..0b6eac14f60e5 100644
+index 0178b441dce53..5fddbd6594a24 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4053,10 +4053,13 @@ static inline u8 rtl8xxxu_get_macid(struct rtl8xxxu_priv *priv,
- {
- 	struct rtl8xxxu_sta_info *sta_info;
- 
--	if (!priv->vif || priv->vif->type == NL80211_IFTYPE_STATION || !sta)
-+	if (!sta)
- 		return 0;
- 
- 	sta_info = (struct rtl8xxxu_sta_info *)sta->drv_priv;
-+	if (!sta_info)
-+		return 0;
-+
- 	return sta_info->macid;
+@@ -7665,6 +7665,20 @@ static void rtl8xxxu_deinit_led(struct rtl8xxxu_priv *priv)
+ 	led_classdev_unregister(led);
  }
  
-@@ -4536,6 +4539,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		rtl8188e_ra_info_init_all(&priv->ra_info);
- 
- 	set_bit(RTL8XXXU_BC_MC_MACID, priv->mac_id_map);
-+	set_bit(RTL8XXXU_BC_MC_MACID1, priv->mac_id_map);
- 
- exit:
- 	return ret;
-@@ -7375,6 +7379,7 @@ static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
- 			    struct ieee80211_sta *sta)
++struct ieee80211_iface_limit rtl8xxxu_limits[] = {
++	{ .max = 2, .types = BIT(NL80211_IFTYPE_STATION), },
++	{ .max = 1, .types = BIT(NL80211_IFTYPE_AP), },
++};
++
++struct ieee80211_iface_combination rtl8xxxu_combinations[] = {
++	{
++		.limits = rtl8xxxu_limits,
++		.n_limits = ARRAY_SIZE(rtl8xxxu_limits),
++		.max_interfaces = 2,
++		.num_different_channels = 1,
++	},
++};
++
+ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 			  const struct usb_device_id *id)
  {
- 	struct rtl8xxxu_sta_info *sta_info = (struct rtl8xxxu_sta_info *)sta->drv_priv;
-+	struct rtl8xxxu_vif *rtlvif = (struct rtl8xxxu_vif *)vif->drv_priv;
- 	struct rtl8xxxu_priv *priv = hw->priv;
+@@ -7811,6 +7825,11 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP);
+ 	hw->queues = 4;
  
- 	if (vif->type == NL80211_IFTYPE_AP) {
-@@ -7384,6 +7389,17 @@ static int rtl8xxxu_sta_add(struct ieee80211_hw *hw,
- 
- 		rtl8xxxu_refresh_rate_mask(priv, 0, sta, true);
- 		priv->fops->report_connect(priv, sta_info->macid, H2C_MACID_ROLE_STA, true);
-+	} else {
-+		switch (rtlvif->port_num) {
-+		case 0:
-+			sta_info->macid = RTL8XXXU_BC_MC_MACID;
-+			break;
-+		case 1:
-+			sta_info->macid = RTL8XXXU_BC_MC_MACID1;
-+			break;
-+		default:
-+			break;
-+		}
- 	}
- 
- 	return 0;
++	if (priv->fops->supports_concurrent) {
++		hw->wiphy->iface_combinations = rtl8xxxu_combinations;
++		hw->wiphy->n_iface_combinations = ARRAY_SIZE(rtl8xxxu_combinations);
++	}
++
+ 	sband = &rtl8xxxu_supported_band;
+ 	sband->ht_cap.ht_supported = true;
+ 	sband->ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
 -- 
 2.39.2
 
