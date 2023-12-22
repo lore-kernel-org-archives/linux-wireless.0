@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05F1171C5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8FB171B6
 	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 10:14:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="FxJ803ht";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="kiuhp64O"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tb+qk1Va";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ABtZKuZ9"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1703240088;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hasIo9oLKqyDGDcV1syjvPr5KcH/7zYo5xQ76onoqKU=;
-	b=FxJ803htdPoLdADLhaC/y0NwGXLK/8jaO806PN7TU7pAfkNezn8zoRuVipYxDqwBLQJDbE
-	g234A2E0r+pwZs5ocMnWY8rtTZZIFL2jPIB0TcwpAmTJpWarwDI9YBPsxJ06tqYbLDg23J
-	330lIIgSZy1Cv9OXy+QqbY4e4M/ZdfQylpRyibmL73ZJ/n9eNE6hE8GkCfVy/Ks751068+
-	zkS9CFk9K6Os96riXVvYHJatrMPY4LusPfXHCZpKdAl5XE8/xiLCavCEIFSzNK0RxdBzTw
-	U9LercWBAxne6oQDUWd5j2qriqFQLo4yUwy/o+4eu4OtwCo18Fh/p1kObs9qrg==
+	bh=CPW8iKPYFAwZwMyiYi0S8we3AtROWwXa6uqLOJUILIM=;
+	b=tb+qk1VaM/kJMttjl0hgVZm/bl7S4oFQYsCOys/saaGl2jusXfwXESEybf4E9AZhegUJOV
+	qPedzLzZW1botyXzGJ+uBjd8/jCyxC9KDFWFwvFK6AL1B5rvFgjQbxUm0RN3nCYK6ymS/K
+	nNKDL3ck+LYau3UpiKH/ZzDRTTL2w1bP+gEDZqfz3C77wmlHwrZuYpBtLFftX9iYrk7XCM
+	40+Cs1XLlX77LCof4BfERTtIPtxQiKyhh504jz9ueSo+oEmYpG/sQQaKOHiZTgeX+j7EXN
+	xdg3Epbg6/R1mOIUQkcxiCtdR6BlIPQ2kCVbkH5cIT/tmGujQg1fzfyFX855aQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1703240088;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hasIo9oLKqyDGDcV1syjvPr5KcH/7zYo5xQ76onoqKU=;
-	b=kiuhp64ON5XCAirWDQlvpFB8Xh+OCR+fJjsZn1sa+dpbO8/MUUu9ZbjXNWReODWbkfu+DD
-	cNfnvrt7ohnAycCA==
+	bh=CPW8iKPYFAwZwMyiYi0S8we3AtROWwXa6uqLOJUILIM=;
+	b=ABtZKuZ9kgzJjBFKg7FFSMxWPiHQrZ/APGL6szjx0LBVwoyg2MiPDgTPRbTOF1Saa/qVe8
+	QDrPARa2UMFkkSCQ==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 10/21] wifi: rtl8xxxu: support multiple interfaces in set_aifs()
-Date: Fri, 22 Dec 2023 11:14:31 +0100
-Message-Id: <20231222101442.626837-11-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 08/21] wifi: rtl8xxxu: don't parse CFO, if both interfaces are connected in STA mode
+Date: Fri, 22 Dec 2023 11:14:29 +0100
+Message-Id: <20231222101442.626837-9-martin.kaistra@linutronix.de>
 In-Reply-To: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 References: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,44 +49,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In concurrent mode supported by this driver, both interfaces will use
-the same channel and same wireless mode.
-It is therefore possible to get the wireless mode by checking the first
-connected interface.
+If both interfaces are in STATION mode and both are connected to an AP,
+there might be conflicting CFO values for the two connections. Ignore
+the CFO information in this case.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 490f35d0d6199..99fe567e0f75b 100644
+index ca0d885eabb71..6fff982f65253 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4913,14 +4913,20 @@ static void rtl8xxxu_set_aifs(struct rtl8xxxu_priv *priv, u8 slot_time)
- 	u8 aifs, aifsn, sifs;
- 	int i;
+@@ -5716,6 +5716,14 @@ static inline bool rtl8xxxu_is_packet_match_bssid(struct rtl8xxxu_priv *priv,
+ 	       ether_addr_equal(priv->vifs[port_num]->bss_conf.bssid, hdr->addr2);
+ }
  
--	if (priv->vif) {
-+	for (i = 0; i < ARRAY_SIZE(priv->vifs); i++) {
-+		if (!priv->vifs[i])
-+			continue;
++static inline bool rtl8xxxu_is_sta_sta(struct rtl8xxxu_priv *priv)
++{
++	return (priv->vifs[0] && priv->vifs[0]->cfg.assoc &&
++		priv->vifs[0]->type == NL80211_IFTYPE_STATION) &&
++	       (priv->vifs[1] && priv->vifs[1]->cfg.assoc &&
++		priv->vifs[1]->type == NL80211_IFTYPE_STATION);
++}
 +
- 		struct ieee80211_sta *sta;
+ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
+ 				 struct ieee80211_rx_status *rx_status,
+ 				 struct rtl8723au_phy_stats *phy_stats,
+@@ -5734,6 +5742,7 @@ void rtl8723au_rx_parse_phystats(struct rtl8xxxu_priv *priv,
+ 		bool parse_cfo = priv->fops->set_crystal_cap &&
+ 				 !crc_icv_err &&
+ 				 !ieee80211_is_ctl(hdr->frame_control) &&
++				 !rtl8xxxu_is_sta_sta(priv) &&
+ 				 (rtl8xxxu_is_packet_match_bssid(priv, hdr, 0) ||
+ 				  rtl8xxxu_is_packet_match_bssid(priv, hdr, 1));
  
- 		rcu_read_lock();
--		sta = ieee80211_find_sta(priv->vif, priv->vif->bss_conf.bssid);
-+		sta = ieee80211_find_sta(priv->vifs[i], priv->vifs[i]->bss_conf.bssid);
- 		if (sta)
- 			wireless_mode = rtl8xxxu_wireless_mode(priv->hw, sta);
- 		rcu_read_unlock();
-+
-+		if (wireless_mode)
-+			break;
- 	}
- 
- 	if (priv->hw->conf.chandef.chan->band == NL80211_BAND_5GHZ ||
+@@ -5772,6 +5781,7 @@ static void jaguar2_rx_parse_phystats_type1(struct rtl8xxxu_priv *priv,
+ 	bool parse_cfo = priv->fops->set_crystal_cap &&
+ 			 !crc_icv_err &&
+ 			 !ieee80211_is_ctl(hdr->frame_control) &&
++			 !rtl8xxxu_is_sta_sta(priv) &&
+ 			 (rtl8xxxu_is_packet_match_bssid(priv, hdr, 0) ||
+ 			  rtl8xxxu_is_packet_match_bssid(priv, hdr, 1));
+ 	u8 pwdb_max = 0;
 -- 
 2.39.2
 
