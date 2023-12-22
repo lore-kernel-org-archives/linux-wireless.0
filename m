@@ -1,34 +1,34 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD883F9C8
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 08:53:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFC46F9EA
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 08:53:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="clNf69Y/"
-X-UUID: 9e6d8bc6a0a711eeba30773df0976c77-20231222
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DUs5d+un"
+X-UUID: 9ee6236aa0a711eeba30773df0976c77-20231222
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=PW7QxyXWVo8geaEzsvLAPz194kUbtcGEUcUhyQ+mZrM=;
-	b=clNf69Y/w+TC+hyHZwj5kSDfWQzcW2nFqdWVkUpKw3Ty81lv0YmMvq+PHDg3Nf6AtbiEMq5EnrycsQtfnEIJyZqumQ1yrklBZuFLc1dv5m25uU1EysLgDcgFQ/JHDk7Uv/OAsA2o+SmKyXTaGcLXO+kyCnZdRWRxfqPbM4O0MeA=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=G903a+rUPsDraNi3izuk1MYUFsGK+bZ2eCu8WQaAmhc=;
+	b=DUs5d+unO7N9INw9ANe+qVV2oiBRqI60eN4BEA3KqrdQfnmOFXMLvVW9o8PqcqsoUg5rJTHjzxTWow6gv+ahJBZCWQuiN9Da2ZEFDMLfejONmOaDXQBlYSJ+yZLaVe/IX4iaTu60rgYTbnvvs5tuviQwZMoV8qeP1rXLxJP40h0=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:f3e7930d-dad6-48e4-9924-d82ccc4e3ea4,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:5d391d7,CLOUDID:266d0f82-8d4f-477b-89d2-1e3bdbef96d1,B
+X-CID-O-INFO: VERSION:1.1.35,REQID:2a08bd80-f7b9-4993-831b-31864669d1a2,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:5d391d7,CLOUDID:49b7602e-1ab8-4133-9780-81938111c800,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
 	DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 9e6d8bc6a0a711eeba30773df0976c77-20231222
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+X-UUID: 9ee6236aa0a711eeba30773df0976c77-20231222
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 235859967; Fri, 22 Dec 2023 16:53:47 +0800
+	with ESMTP id 1073065947; Fri, 22 Dec 2023 16:53:48 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.26; Fri, 22 Dec 2023 16:53:46 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -43,11 +43,13 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
 	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
-	<MingYen.Hsieh@mediatek.com>
-Subject: [PATCH v1 0/4] wifi: mt76: mt7921: fix potential issues for mt7921
-Date: Fri, 22 Dec 2023 16:53:34 +0800
-Message-ID: <20231222085338.4530-1-mingyen.hsieh@mediatek.com>
+	<mingyen.hsieh@mediatek.com>, Leon Yen <leon.yen@mediatek.com>
+Subject: [PATCH v1 4/4] wifi: mt76: mt7921: fix the unfinished command of regd_notifier before suspend
+Date: Fri, 22 Dec 2023 16:53:38 +0800
+Message-ID: <20231222085338.4530-5-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20231222085338.4530-1-mingyen.hsieh@mediatek.com>
+References: <20231222085338.4530-1-mingyen.hsieh@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,32 +58,74 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-From: Ming Yen Hsieh <MingYen.Hsieh@mediatek.com>
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Hi,
+Before entering suspend, we need to ensure that all MCU command are completed.
+In some cases, such as with regd_notifier, there is a chance that CLC commands,
+will be executed before suspend.
 
-This patchset includes some bugfixes for CLC (Country Location Control),
-suspend/resume and ACPI SAR.
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Signed-off-by: Leon Yen <leon.yen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/init.c | 6 ++++++
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c  | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt792x.h      | 2 ++
+ 3 files changed, 11 insertions(+)
 
-v1:
-    remove patch, "mt7921: fix potential command timeout issues when suspend",
-    and add patch, "mt7921: fix the unfinished command of regd_notifier before suspend"
-
-Ming Yen Hsieh (4):
-  wifi: mt76: mt7921: fix incorrect type conversion for CLC command
-  wifi: mt76: mt792x: fix a potential loading failure of the 6Ghz
-    channel config from ACPI
-  wifi: mt76: mt792x: update the country list of EU for ACPI SAR
-  wifi: mt76: mt7921: fix the unfinished command of regd_notifier before
-    suspend
-
- .../net/wireless/mediatek/mt76/mt7921/init.c  |  6 ++++
- .../net/wireless/mediatek/mt76/mt7921/mcu.c   |  4 +--
- .../net/wireless/mediatek/mt76/mt7921/pci.c   |  3 ++
- drivers/net/wireless/mediatek/mt76/mt792x.h   |  2 ++
- .../wireless/mediatek/mt76/mt792x_acpi_sar.c  | 28 ++++++++++---------
- 5 files changed, 28 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/init.c b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+index 48433c6d5e7d..bb2abf341c68 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/init.c
+@@ -138,9 +138,14 @@ mt7921_regd_notifier(struct wiphy *wiphy,
+ 	if (pm->suspended)
+ 		return;
+ 
++	dev->regd_in_progress = true;
++
+ 	mt792x_mutex_acquire(dev);
+ 	mt7921_regd_update(dev);
+ 	mt792x_mutex_release(dev);
++
++	dev->regd_in_progress = true;
++	wake_up(&dev->wait);
+ }
+ 
+ int mt7921_mac_init(struct mt792x_dev *dev)
+@@ -261,6 +266,7 @@ int mt7921_register_device(struct mt792x_dev *dev)
+ 	spin_lock_init(&dev->pm.wake.lock);
+ 	mutex_init(&dev->pm.mutex);
+ 	init_waitqueue_head(&dev->pm.wait);
++	init_waitqueue_head(&dev->wait);
+ 	if (mt76_is_sdio(&dev->mt76))
+ 		init_waitqueue_head(&dev->mt76.sdio.wait);
+ 	spin_lock_init(&dev->pm.txq_lock);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 57903c6e4f11..8b226b731ec9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -409,6 +409,9 @@ static int mt7921_pci_suspend(struct device *device)
+ 	if (err < 0)
+ 		goto restore_suspend;
+ 
++	wait_event_timeout(dev->wait,
++			   !dev->regd_in_progress, 5 * HZ);
++
+ 	err = mt76_connac_mcu_set_hif_suspend(mdev, true);
+ 	if (err)
+ 		goto restore_suspend;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index 3c897b34aaa7..a8556de3d480 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -186,6 +186,8 @@ struct mt792x_dev {
+ 	bool hw_init_done:1;
+ 	bool fw_assert:1;
+ 	bool has_eht:1;
++	bool regd_in_progress:1;
++	wait_queue_head_t wait;
+ 
+ 	struct work_struct init_work;
+ 
 -- 
 2.18.0
 
