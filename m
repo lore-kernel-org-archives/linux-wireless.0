@@ -1,13 +1,13 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F1A17730
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 10:14:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42122182DB
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Dec 2023 10:14:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lDvcIQYz";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="uawn56sd"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="GgnjMwUF";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="5TVQXdkX"
 From: Martin Kaistra <martin.kaistra@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020; t=1703240089;
@@ -15,30 +15,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eryH5zA3yic32Y48S4s6Nib6FNvxlkIlksAClAdIqQM=;
-	b=lDvcIQYzyzNBEoHb+6ntjMgHlZ3oDWvSkdf4ZmMrrk5SI4Zcl+vnNqkErTnod62KjShonS
-	XRafU6mnuT4RQrssgWOyGNPcsd+bTIOw+gUmAQMEi9HE2D++ZgsU8fyJ4thYRGIwpLTG+v
-	NVdKwE3ySCsZBzd7dQ/5XuBEYJ1LM6gdTFyi9vXAM1cGX2/N9v10pe7kdk0bpErgSalIPr
-	zIDMrw0N7J7sTG/gqHXGvsRZRAtWNMO4WKGyTGmOVVkWtHrNZvkNTKNSoEXlUDo6zgmLDn
-	I+ed5ZoRrpyiDwPmbvddtxUCkaVhIg8g4yCjsC68bK1T7jwGHWjdZBJrN6fR3w==
+	bh=QLl28lcvQRbeGozcuyY+yj4QH7BjrvxnEnm1615dXDI=;
+	b=GgnjMwUFtVSyJxIt0vnq1PPWjhCNWmF4wZ/892fm7V9o34CkcO478NZ/I2h5IcUty01LuF
+	ygaTedQfPIBF8rGQC/0xxzkKlW49EMate2pTnO8VyAkIJiDjiPPNPuziUK61aaehlMHERv
+	kCIx9uwdRh9xnJ/hvRqsu75lMIgq8pQVkaFxcjrSHNukfU/74QOYGe/+rLcFNaCvpePzIy
+	wmly5mf9MnoiXeGlYFClwWWSTJWxLfKWci3cCtWUs4u05pc6+1jfS5h2dYhAKCVAWUG7ZD
+	Zv7aXYSyJlZCwApvYGLO5Hiu+cyrf811VCIVk7al7QAWy9Vd+x9Ea57TESo49w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
 	s=2020e; t=1703240089;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eryH5zA3yic32Y48S4s6Nib6FNvxlkIlksAClAdIqQM=;
-	b=uawn56sd7Fw0mZkcWC7ld1ZJqjX7XQ5UIBMrS7UPFnhm8AdsUlKO6Pqvy4JETMeBiQOTQB
-	T1/QKy3hA4JOGoAg==
+	bh=QLl28lcvQRbeGozcuyY+yj4QH7BjrvxnEnm1615dXDI=;
+	b=5TVQXdkXbtgOBGh+p7LykMdLtWtmI0ArzwceEjiyhb1wqPRbganCckql7TMt5dB9j0olm0
+	BVGy/yEquxJAtSDQ==
 To: linux-wireless@vger.kernel.org
 Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
 	Kalle Valo <kvalo@kernel.org>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v3 13/21] wifi: rtl8xxxu: support multiple interfaces in watchdog_callback()
-Date: Fri, 22 Dec 2023 11:14:34 +0100
-Message-Id: <20231222101442.626837-14-martin.kaistra@linutronix.de>
+Subject: [PATCH v3 15/21] wifi: rtl8xxxu: support multiple interfaces in bss_info_changed()
+Date: Fri, 22 Dec 2023 11:14:36 +0100
+Message-Id: <20231222101442.626837-16-martin.kaistra@linutronix.de>
 In-Reply-To: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 References: <20231222101442.626837-1-martin.kaistra@linutronix.de>
 Precedence: bulk
@@ -49,65 +49,57 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Check first whether priv->vifs[0] exists and is of type STATION, then go
-to priv->vifs[1]. Make sure to call refresh_rate_mask for both
-interfaces.
+Call set_linktype and set_bssid now with correct port_num. Call
+stop_tx_beacon only for port 0, as we don't support beacons on port 1.
+Explicit changes to BEACON will only happen for AP type interfaces, so
+we don't need an additional check there.
 
 Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index c5b71892369c9..fd0108668bcda 100644
+index 4090db8abba7b..aa88e66c64d67 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -7200,11 +7200,15 @@ static void rtl8xxxu_watchdog_callback(struct work_struct *work)
+@@ -4983,6 +4983,7 @@ static void
+ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			  struct ieee80211_bss_conf *bss_conf, u64 changed)
  {
- 	struct ieee80211_vif *vif;
- 	struct rtl8xxxu_priv *priv;
-+	int i;
++	struct rtl8xxxu_vif *rtlvif = (struct rtl8xxxu_vif *)vif->drv_priv;
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct device *dev = &priv->udev->dev;
+ 	struct ieee80211_sta *sta;
+@@ -4995,7 +4996,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		dev_dbg(dev, "Changed ASSOC: %i!\n", vif->cfg.assoc);
  
- 	priv = container_of(work, struct rtl8xxxu_priv, ra_watchdog.work);
--	vif = priv->vif;
-+	for (i = 0; i < ARRAY_SIZE(priv->vifs); i++) {
-+		vif = priv->vifs[i];
-+
-+		if (!vif || vif->type != NL80211_IFTYPE_STATION)
-+			continue;
+-		rtl8xxxu_set_linktype(priv, vif->type, 0);
++		rtl8xxxu_set_linktype(priv, vif->type, rtlvif->port_num);
  
--	if (vif && vif->type == NL80211_IFTYPE_STATION) {
- 		int signal;
- 		struct ieee80211_sta *sta;
+ 		if (vif->cfg.assoc) {
+ 			u32 ramask;
+@@ -5042,7 +5043,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  
-@@ -7215,22 +7219,21 @@ static void rtl8xxxu_watchdog_callback(struct work_struct *work)
+ 			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
  
- 			dev_dbg(dev, "%s: no sta found\n", __func__);
- 			rcu_read_unlock();
--			goto out;
-+			continue;
- 		}
- 		rcu_read_unlock();
+-			rtl8xxxu_stop_tx_beacon(priv);
++			if (rtlvif->port_num == 0)
++				rtl8xxxu_stop_tx_beacon(priv);
  
- 		signal = ieee80211_ave_rssi(vif);
+ 			/* joinbss sequence */
+ 			rtl8xxxu_write16(priv, REG_BCN_PSR_RPT,
+@@ -5084,7 +5086,7 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  
--		priv->fops->report_rssi(priv, 0,
-+		priv->fops->report_rssi(priv, rtl8xxxu_get_macid(priv, sta),
- 					rtl8xxxu_signal_to_snr(signal));
- 
--		if (priv->fops->set_crystal_cap)
--			rtl8xxxu_track_cfo(priv);
--
- 		rtl8xxxu_refresh_rate_mask(priv, signal, sta, false);
+ 	if (changed & BSS_CHANGED_BSSID) {
+ 		dev_dbg(dev, "Changed BSSID!\n");
+-		rtl8xxxu_set_bssid(priv, bss_conf->bssid, 0);
++		rtl8xxxu_set_bssid(priv, bss_conf->bssid, rtlvif->port_num);
  	}
  
--out:
-+	if (priv->fops->set_crystal_cap)
-+		rtl8xxxu_track_cfo(priv);
-+
- 	schedule_delayed_work(&priv->ra_watchdog, 2 * HZ);
- }
- 
+ 	if (changed & BSS_CHANGED_BASIC_RATES) {
 -- 
 2.39.2
 
