@@ -1,39 +1,39 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 571966FA3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610C26FA1
 	for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2023 09:08:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bq8Q/9A0"
-X-UUID: 94bb8930a56011ee9e680517dc993faa-20231228
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="cmb3T38z"
+X-UUID: 94b885faa56011ee9e680517dc993faa-20231228
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=/vDByupUfyISXXTWuopoR7VUqbCKko4NXwHDyQ6l7KU=;
-	b=bq8Q/9A0ihGhgNMnH5jmXdk0fGBVNO0enInG6ciMa72aoNDFf7PJzr4fLzLuRFHDpBCOmYwZqLbKBQ+/CCzh10jydLYFNRvsH6EHqPDotMyps5jZJb+raeGqYrERqcP9fcjbW8Y/bV6YMGDBB3jpyeIuP3qLaPZdMKyfOMKDYT8=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=KWpiIQtLjDPLAdoQ8qHMuR2ReGdC3GYqShwY/8A+DLQ=;
+	b=cmb3T38zLllzGQ6WpN/uUcYG6W9za4gLprSeBuqfDywo7LsGZ7Vg+8f5Zz5n7/DPWRVcehgS7j9+TZ2clvWbRh9QuMrUk8Ea7EAETut6NxNxGhAsgdzU7H7d2to32BK2xPMB8DF2qXQ51TtzaKuYSgfImUoouq7QgHELV4EFKO0=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:6aac890a-5051-4e60-86b6-47e94203a1db,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:5d391d7,CLOUDID:b07ca98d-e2c0-40b0-a8fe-7c7e47299109,B
+X-CID-O-INFO: VERSION:1.1.35,REQID:7c206727-9b94-4728-bd1c-d71c123b80cf,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:5d391d7,CLOUDID:20954282-8d4f-477b-89d2-1e3bdbef96d1,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
 	DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 94bb8930a56011ee9e680517dc993faa-20231228
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+X-UUID: 94b885faa56011ee9e680517dc993faa-20231228
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 924546400; Thu, 28 Dec 2023 17:07:52 +0800
+	with ESMTP id 353804192; Thu, 28 Dec 2023 17:07:52 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 28 Dec 2023 17:07:52 +0800
+ 15.2.1118.26; Thu, 28 Dec 2023 17:07:51 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 28 Dec 2023 17:07:52 +0800
+ 15.2.1118.26 via Frontend Transport; Thu, 28 Dec 2023 17:07:51 +0800
 From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
@@ -44,9 +44,9 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
 	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
 	<mingyen.hsieh@mediatek.com>
-Subject: [PATCH 07/10] wifi: mt76: mt7925: fix the wrong header translation config
-Date: Thu, 28 Dec 2023 17:07:46 +0800
-Message-ID: <20231228090749.15191-8-mingyen.hsieh@mediatek.com>
+Subject: [PATCH 04/10] wifi: mt76: mt7925: fix wmm queue mapping
+Date: Thu, 28 Dec 2023 17:07:43 +0800
+Message-ID: <20231228090749.15191-5-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20231228090749.15191-1-mingyen.hsieh@mediatek.com>
 References: <20231228090749.15191-1-mingyen.hsieh@mediatek.com>
@@ -57,101 +57,71 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--1.733100-8.000000
-X-TMASE-MatchedRID: QMK8gM4dfEMUhfC/ipzRk2k5BPvE0+6WK70vctTSAAccwojTLz1sEtAY
-	WUo4HSIkc46ToSz0LLxr4juqG1HKuzEV1fJb8/5dbc297PAGtWZMkOX0UoduuQCGaccd4ae9Q09
-	1A4TyNpoR4d+Uvhl0qjVKsMbHn8GJvycUQR1kwKaeAiCmPx4NwBnUJ0Ek6yhjxEHRux+uk8jfhP
-	1xgyx3DCGV0CE3FLpC1980gzEE6UbPR3p2NEv4v1WMtCORztjQRNSZlxZuNFzP3raw2QuvZl5Y/
-	Jlwxz0+G/GKqjU34EkWUQpFBvThUo6H7DI0GsVcMmI24qiENwrMpIbcl3IoA+q1XYAYw09qIdY9
-	jOi4lTI=
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--1.733100-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP:
-	8DC4502D9B22A98703EE3C7E6AD2104ABBC70AE491ACBE0DF9A9DE8FBBC5D6902000:8
 
 From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-The header translation config should set to broadcast and unicast
-cases correctly, not only unicast case. And also remove the cmds
-of wtbl (wlan table) series, because these MCU commands have
-already been replaced by other commands in mt7925.
+Firmware uses access class index (ACI) for wmm parameters update,
+so convert mac80211 queue to ACI in mt7925_conf_tx().
 
 Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 32 +++++--------------
- 1 file changed, 8 insertions(+), 24 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 21 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  2 +-
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index a080df58120f..b832dd8adee5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -1273,6 +1273,25 @@ mt7925_channel_switch_beacon(struct ieee80211_hw *hw,
+ 	mt792x_mutex_release(dev);
+ }
+ 
++static int
++mt7925_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++	       unsigned int link_id, u16 queue,
++	       const struct ieee80211_tx_queue_params *params)
++{
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++	const u8 mq_to_aci[] = {
++		    [IEEE80211_AC_VO] = 3,
++		    [IEEE80211_AC_VI] = 2,
++		    [IEEE80211_AC_BE] = 0,
++		    [IEEE80211_AC_BK] = 1,
++	};
++
++	/* firmware uses access class index */
++	mvif->queue_params[mq_to_aci[queue]] = *params;
++
++	return 0;
++}
++
+ static int
+ mt7925_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		struct ieee80211_bss_conf *link_conf)
+@@ -1396,7 +1415,7 @@ const struct ieee80211_ops mt7925_ops = {
+ 	.add_interface = mt7925_add_interface,
+ 	.remove_interface = mt792x_remove_interface,
+ 	.config = mt7925_config,
+-	.conf_tx = mt792x_conf_tx,
++	.conf_tx = mt7925_conf_tx,
+ 	.configure_filter = mt7925_configure_filter,
+ 	.bss_info_changed = mt7925_bss_info_changed,
+ 	.start_ap = mt7925_start_ap,
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 8c3233182083..932ecf38672c 100644
+index 4811fccbe30e..0299045b4b83 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -814,6 +814,7 @@ mt7925_mcu_sta_hdr_trans_tlv(struct sk_buff *skb,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta)
- {
-+	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
- 	struct sta_rec_hdr_trans *hdr_trans;
- 	struct mt76_wcid *wcid;
- 	struct tlv *tlv;
-@@ -827,7 +828,11 @@ mt7925_mcu_sta_hdr_trans_tlv(struct sk_buff *skb,
- 	else
- 		hdr_trans->from_ds = true;
+@@ -895,7 +895,7 @@ int mt7925_mcu_set_tx(struct mt792x_dev *dev, struct ieee80211_vif *vif)
  
--	wcid = (struct mt76_wcid *)sta->drv_priv;
-+	if (sta)
-+		wcid = (struct mt76_wcid *)sta->drv_priv;
-+	else
-+		wcid = &mvif->sta.wcid;
-+
- 	if (!wcid)
- 		return;
+ 		e = (struct edca *)tlv;
+ 		e->set = WMM_PARAM_SET;
+-		e->queue = ac + mvif->mt76.wmm_idx * MT76_CONNAC_MAX_WMM_SETS;
++		e->queue = ac;
+ 		e->aifs = q->aifs;
+ 		e->txop = cpu_to_le16(q->txop);
  
-@@ -1577,8 +1582,6 @@ mt7925_mcu_sta_cmd(struct mt76_phy *phy,
- {
- 	struct mt76_vif *mvif = (struct mt76_vif *)info->vif->drv_priv;
- 	struct mt76_dev *dev = phy->dev;
--	struct wtbl_req_hdr *wtbl_hdr;
--	struct tlv *sta_wtbl;
- 	struct sk_buff *skb;
- 
- 	skb = __mt76_connac_mcu_alloc_sta_req(dev, mvif, info->wcid,
-@@ -1602,30 +1605,11 @@ mt7925_mcu_sta_cmd(struct mt76_phy *phy,
- 		mt7925_mcu_sta_state_v2_tlv(phy, skb, info->sta,
- 					    info->vif, info->rcpi,
- 					    info->state);
--		mt7925_mcu_sta_hdr_trans_tlv(skb, info->vif, info->sta);
- 		mt7925_mcu_sta_mld_tlv(skb, info->vif, info->sta);
- 	}
- 
--	sta_wtbl = mt76_connac_mcu_add_tlv(skb, STA_REC_WTBL,
--					   sizeof(struct tlv));
--
--	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(dev, info->wcid,
--						  WTBL_RESET_AND_SET,
--						  sta_wtbl, &skb);
--	if (IS_ERR(wtbl_hdr))
--		return PTR_ERR(wtbl_hdr);
--
--	if (info->enable) {
--		mt76_connac_mcu_wtbl_generic_tlv(dev, skb, info->vif,
--						 info->sta, sta_wtbl,
--						 wtbl_hdr);
--		mt76_connac_mcu_wtbl_hdr_trans_tlv(skb, info->vif, info->wcid,
--						   sta_wtbl, wtbl_hdr);
--		if (info->sta)
--			mt76_connac_mcu_wtbl_ht_tlv(dev, skb, info->sta,
--						    sta_wtbl, wtbl_hdr,
--						    true, true);
--	}
-+	if (info->enable)
-+		mt7925_mcu_sta_hdr_trans_tlv(skb, info->vif, info->sta);
- 
- 	return mt76_mcu_skb_send_msg(dev, skb, info->cmd, true);
- }
 -- 
 2.18.0
 
