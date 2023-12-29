@@ -1,39 +1,39 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AB8820FC
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A640023DD
 	for <linux-wireless@vger.kernel.org>; Fri, 29 Dec 2023 02:00:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="f8ABNOOo"
-X-UUID: 034192c2a5ee11eea2298b7352fd921d-20231229
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="B+uJC9BA"
+X-UUID: 03ade422a5ee11ee9e680517dc993faa-20231229
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=kcXnCe2GxhdKsTo3t99vWikpDZzl4UTFFwX5mWnPJyI=;
-	b=f8ABNOOoLHWXII1bIex1nJM22nqI64WLsCw8bw1954prdDo0QH9gbiEpTKt/HoC/9U5i8HYbs1gt4FCTHW990lHXEZluFLYEYyreKK+rN/OoC88d6U6NkQZzF99ExqZvA4v7qulPEYO8FlVfE23aXaiYfhhnTwEs58vx8sxcBHs=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ixki3DqzAq4cmzEmI1gi4aPq+TJbnvD0XOxbDCZxy9M=;
+	b=B+uJC9BA++WsC7uUVw10EhPymb2YWMtjWUexzJY7VrAEL0hj5jHLcuUWczYjYVfpjP602SyQs11mfrXYTAOBIbNOSEomVZDlpXAbaO+fxL5i6CkhHzEdVHmZFZ6I/kYTm/Ao61Dm4MaTJaCmBzxCBXW/Xaf1oWGE7lM23oH0NhQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:8b7eedb4-a6ed-4edb-a0d5-cbeeabb81a9d,IP:0,U
+X-CID-O-INFO: VERSION:1.1.35,REQID:9bd0cb64-cfb3-43f5-be3b-85816de6b38e,IP:0,U
 	RL:-32768,TC:0,Content:-32768,EDM:-32768,RT:0,SF:-32768,FILE:0,BULK:-32768
 	,RULE:Release_Ham,ACTION:release,TS:0
-X-CID-META: VersionHash:5d391d7,CLOUDID:a18a992e-1ab8-4133-9780-81938111c800,B
+X-CID-META: VersionHash:5d391d7,CLOUDID:8936c87e-4f93-4875-95e7-8c66ea833d57,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:nil,TC:nil,Content:nil,EDM:nil,IP:ni
 	l,URL:nil,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SP
 	R:NO,DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 034192c2a5ee11eea2298b7352fd921d-20231229
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
+X-UUID: 03ade422a5ee11ee9e680517dc993faa-20231229
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 724773277; Fri, 29 Dec 2023 10:00:17 +0800
+	with ESMTP id 1409818827; Fri, 29 Dec 2023 10:00:17 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 29 Dec 2023 10:00:15 +0800
+ 15.2.1118.26; Fri, 29 Dec 2023 10:00:16 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 29 Dec 2023 10:00:15 +0800
+ 15.2.1118.26 via Frontend Transport; Fri, 29 Dec 2023 10:00:16 +0800
 From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
@@ -42,11 +42,11 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
 	<Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, rong.yan <rong.yan@mediatek.com>, "Ming
- Yen Hsieh" <mingyen.hsieh@mediatek.com>
-Subject: [PATCH v1 02/10] wifi: mt76: mt7925: fix SAP no beacon issue in 5Ghz and 6Ghz band
-Date: Fri, 29 Dec 2023 10:00:01 +0800
-Message-ID: <20231229020009.12385-3-mingyen.hsieh@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
+	<mingyen.hsieh@mediatek.com>
+Subject: [PATCH v1 10/10] wifi: mt76: mt7925: update PCIe DMA settings
+Date: Fri, 29 Dec 2023 10:00:09 +0800
+Message-ID: <20231229020009.12385-11-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20231229020009.12385-1-mingyen.hsieh@mediatek.com>
 References: <20231229020009.12385-1-mingyen.hsieh@mediatek.com>
@@ -57,99 +57,87 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--7.252400-8.000000
-X-TMASE-MatchedRID: 4YoTATPIqSyz4qmxBSXJhZyBsp6+TmyGWjWsWQUWzVoFi3R9x/2qQgvQ
-	UzpmNOPwN+23Pcx1Dm5+dfwnt/TnE8637+A5hpnFkDpLRKO9xhRYN1akkye0qLVhTD1Udgq8PJI
-	EzMAuYxaTZwIgzmiejcpjK4dbPxs8HxPMjOKY7A8LbigRnpKlKTpcQTtiHDgW1vTNtV9+GseF5j
-	MPxiSy3NxfLX5S1toTfCeU+nlQdBWbZtrN0+RWmQ==
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--7.252400-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: E4466A94A49F72C884332A8263B6B8D3C9D209761BAB7382CC6573A54E6011552000:8
 
-From: "rong.yan" <rong.yan@mediatek.com>
+From: Deren Wu <deren.wu@mediatek.com>
 
-Driver should configure basic rate and phy mode for SAP mode.
+Fix the wrong WFDMA settings to improve TX performance.
 
 Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Signed-off-by: rong.yan <rong.yan@mediatek.com>
+Signed-off-by: Deren Wu <deren.wu@mediatek.com>
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt76_connac_mcu.h    |  3 +++
- drivers/net/wireless/mediatek/mt76/mt7925/mcu.c     | 13 ++++++++++---
- drivers/net/wireless/mediatek/mt76/mt7925/mcu.h     |  3 ++-
- 3 files changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt792x_dma.c  | 13 ++++++++++---
+ drivers/net/wireless/mediatek/mt76/mt792x_regs.h |  5 +++++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index ae6d0179727d..db96ddbeb9e7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -935,6 +935,9 @@ enum {
- 	PHY_TYPE_INDEX_NUM
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
+index 488326ce5ed4..8fa36b59e738 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
+@@ -123,14 +123,13 @@ static void mt792x_dma_prefetch(struct mt792x_dev *dev)
  
-+#define HR_DSSS_ERP_BASIC_RATE			GENMASK(3, 0)
-+#define OFDM_BASIC_RATE				(BIT(6) | BIT(8) | BIT(10))
-+
- #define PHY_TYPE_BIT_HR_DSSS			BIT(PHY_TYPE_HR_DSSS_INDEX)
- #define PHY_TYPE_BIT_ERP			BIT(PHY_TYPE_ERP_INDEX)
- #define PHY_TYPE_BIT_OFDM			BIT(PHY_TYPE_OFDM_INDEX)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 1fc9ecb96bc4..9a8db9b1a4f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -2047,9 +2047,9 @@ mt7925_mcu_bss_basic_tlv(struct sk_buff *skb,
- 	struct cfg80211_chan_def *chandef = ctx ? &ctx->def : &phy->chandef;
- 	enum nl80211_band band = chandef->chan->band;
- 	struct mt76_connac_bss_basic_tlv *basic_req;
--	u8 idx, basic_phy;
- 	struct tlv *tlv;
- 	int conn_type;
-+	u8 idx;
+ int mt792x_dma_enable(struct mt792x_dev *dev)
+ {
+-	if (is_mt7925(&dev->mt76))
+-		mt76_rmw(dev, MT_UWFDMA0_GLO_CFG_EXT1, BIT(28), BIT(28));
+-
+ 	/* configure perfetch settings */
+ 	mt792x_dma_prefetch(dev);
  
- 	tlv = mt76_connac_mcu_add_tlv(skb, UNI_BSS_INFO_BASIC, sizeof(*basic_req));
- 	basic_req = (struct mt76_connac_bss_basic_tlv *)tlv;
-@@ -2060,8 +2060,10 @@ mt7925_mcu_bss_basic_tlv(struct sk_buff *skb,
+ 	/* reset dma idx */
+ 	mt76_wr(dev, MT_WFDMA0_RST_DTX_PTR, ~0);
++	if (is_mt7925(&dev->mt76))
++		mt76_wr(dev, MT_WFDMA0_RST_DRX_PTR, ~0);
  
- 	basic_req->phymode_ext = mt7925_get_phy_mode_ext(phy, vif, band, sta);
+ 	/* configure delay interrupt */
+ 	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0, 0);
+@@ -140,12 +139,20 @@ int mt792x_dma_enable(struct mt792x_dev *dev)
+ 		 MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN |
+ 		 MT_WFDMA0_GLO_CFG_CLK_GAT_DIS |
+ 		 MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
++		 FIELD_PREP(MT_WFDMA0_GLO_CFG_DMA_SIZE, 3) |
++		 MT_WFDMA0_GLO_CFG_FIFO_DIS_CHECK |
++		 MT_WFDMA0_GLO_CFG_RX_WB_DDONE |
+ 		 MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN |
+ 		 MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
  
--	basic_phy = mt76_connac_get_phy_mode_v2(phy, vif, band, sta);
--	basic_req->nonht_basic_phy = cpu_to_le16(basic_phy);
-+	if (band == NL80211_BAND_2GHZ)
-+		basic_req->nonht_basic_phy = cpu_to_le16(PHY_TYPE_ERP_INDEX);
-+	else
-+		basic_req->nonht_basic_phy = cpu_to_le16(PHY_TYPE_OFDM_INDEX);
+ 	mt76_set(dev, MT_WFDMA0_GLO_CFG,
+ 		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
  
- 	memcpy(basic_req->bssid, vif->bss_conf.bssid, ETH_ALEN);
- 	basic_req->phymode = mt76_connac_get_phy_mode(phy, vif, band, sta);
-@@ -2165,6 +2167,11 @@ mt7925_mcu_bss_bmc_tlv(struct sk_buff *skb, struct mt792x_phy *phy,
++	if (is_mt7925(&dev->mt76)) {
++		mt76_rmw(dev, MT_UWFDMA0_GLO_CFG_EXT1, BIT(28), BIT(28));
++		mt76_set(dev, MT_WFDMA0_INT_RX_PRI, 0x0F00);
++		mt76_set(dev, MT_WFDMA0_INT_TX_PRI, 0x7F00);
++	}
+ 	mt76_set(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
  
- 	bmc = (struct bss_rate_tlv *)tlv;
+ 	/* enable interrupts for TX/RX rings */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
+index d7f9b24cd665..458cfd0260b1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
+@@ -292,9 +292,12 @@
+ #define MT_WFDMA0_GLO_CFG_TX_DMA_BUSY	BIT(1)
+ #define MT_WFDMA0_GLO_CFG_RX_DMA_EN	BIT(2)
+ #define MT_WFDMA0_GLO_CFG_RX_DMA_BUSY	BIT(3)
++#define MT_WFDMA0_GLO_CFG_DMA_SIZE	GENMASK(5, 4)
+ #define MT_WFDMA0_GLO_CFG_TX_WB_DDONE	BIT(6)
+ #define MT_WFDMA0_GLO_CFG_FW_DWLD_BYPASS_DMASHDL BIT(9)
++#define MT_WFDMA0_GLO_CFG_FIFO_DIS_CHECK	BIT(11)
+ #define MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN	BIT(12)
++#define MT_WFDMA0_GLO_CFG_RX_WB_DDONE	BIT(13)
+ #define MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN BIT(15)
+ #define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2	BIT(21)
+ #define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO	BIT(27)
+@@ -322,6 +325,8 @@
  
-+	if (band == NL80211_BAND_2GHZ)
-+		bmc->basic_rate = cpu_to_le16(HR_DSSS_ERP_BASIC_RATE);
-+	else
-+		bmc->basic_rate = cpu_to_le16(OFDM_BASIC_RATE);
-+
- 	bmc->short_preamble = (band == NL80211_BAND_2GHZ);
- 	bmc->bc_fixed_rate = idx;
- 	bmc->mc_fixed_rate = idx;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-index 3c41e21303b1..0218fd2a0eb0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-@@ -334,7 +334,8 @@ struct bss_req_hdr {
- struct bss_rate_tlv {
- 	__le16 tag;
- 	__le16 len;
--	u8 __rsv1[4];
-+	u8 __rsv1[2];
-+	__le16 basic_rate;
- 	__le16 bc_trans;
- 	__le16 mc_trans;
- 	u8 short_preamble;
+ #define MT_WFDMA0_RST_DTX_PTR		MT_WFDMA0(0x20c)
+ #define MT_WFDMA0_RST_DRX_PTR		MT_WFDMA0(0x280)
++#define MT_WFDMA0_INT_RX_PRI		MT_WFDMA0(0x298)
++#define MT_WFDMA0_INT_TX_PRI		MT_WFDMA0(0x29c)
+ #define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
+ #define MT_WFDMA0_CSR_TX_DMASHDL_ENABLE	BIT(6)
+ #define MT_WFDMA0_PRI_DLY_INT_CFG0	MT_WFDMA0(0x2f0)
 -- 
 2.18.0
 
