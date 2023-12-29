@@ -1,100 +1,130 @@
-Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A85FA10960
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2023 22:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=networkplumber.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=networkplumber.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85861382
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Dec 2023 02:00:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=networkplumber-org.20230601.gappssmtp.com header.i=@networkplumber-org.20230601.gappssmtp.com header.b="rHPA/BbR"
-Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-203fe0e3fefso3388458fac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Dec 2023 14:20:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=networkplumber-org.20230601.gappssmtp.com; s=20230601; t=1703802011; x=1704406811; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:subject:cc:to
-         :from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fFugFLuJ8vMteV8DFgbuwMKXul3+UHBzBJUgvyDGXaI=;
-        b=rHPA/BbRjf3adNEv/jkZy3NkQWeQTeSJs/JNobis/N2/sAiT66mnSRKIKJE0vY01jQ
-         79B9mqAZK+SNQMhPMJN1x1a1oICFZikUwLGkn7QsHVMKdFxgxzpK2RZ/CHsga7iAt47N
-         BitEk++pR2AHIByRcwHEfeIKGkBh0tuiwTRVkas6b+crwaV3UJnsjaP5TkcesVoEHH5u
-         jhkeiuO6+i5R0m4pzVBi2VlqTDNidRQscanlMFz85LyfT8g/Sv9vk4d60J+E0kRJQQ4o
-         4upWhaLRtaA9csgd95ZJVVAi13ktjCxLYQ8IYAQsaMTjkLO9B+yuK2kIQHEHTPmERh7k
-         9mRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703802011; x=1704406811;
-        h=content-transfer-encoding:mime-version:message-id:subject:cc:to
-         :from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fFugFLuJ8vMteV8DFgbuwMKXul3+UHBzBJUgvyDGXaI=;
-        b=Mb5NnqBxOxR/vyf+3mca1wVSFg8ySa5cAg12zeNUUoZnfgVmP3ERmOEA3suFJH060p
-         QtfHKe0HhZYTqPAr9QT2fUYebGRYofk2BWnX53y+//zqJImhN7A979LL2JA1zRCq6+mv
-         1fcBtrP+uXFS5tri5t1HBpihhXuvSAuVqvRoDKBFlOvMgvOzySxrglxVrkCm84l9N/xV
-         sr72H8dRH8njR7udzSG72F8WWU4LODsrNtHwMsB1zTKwVcxezGORnC9oI13LX1rFejGn
-         qGYTQwEJL0Qzz8StcBls/GWQOkkbVF/T3DO+fyR9CWi7pcBQrkSgNOqwA3tCOhpRLovv
-         G1qA==
-X-Gm-Message-State: AOJu0YwRIY8UwTy2uTGSPQvp6Q0ymWqHi1zSfRbcvks5euGiw35bt6tT
-	40oAG5y7OvIun1zLoGbGvOC0MJqJKNEpGQ==
-X-Google-Smtp-Source: AGHT+IG4/u9bmxoWCQgWEb+IxIitQY+Jqk27uGUvwtrEDLlmMJ5zol/qywAJYHJRxS1K7m+SYsgO9g==
-X-Received: by 2002:a05:6870:b48b:b0:204:2ea8:3f41 with SMTP id y11-20020a056870b48b00b002042ea83f41mr9561336oap.52.1703802011559;
-        Thu, 28 Dec 2023 14:20:11 -0800 (PST)
-Received: from hermes.local (204-195-123-141.wavecable.com. [204.195.123.141])
-        by smtp.gmail.com with ESMTPSA id j26-20020a62b61a000000b006d3b7f40292sm8644148pff.19.2023.12.28.14.20.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Dec 2023 14:20:11 -0800 (PST)
-Date: Thu, 28 Dec 2023 14:20:09 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Gregory Greenman <gregory.greenman@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Fw: [Bug 218330] New: wifi bug
-Message-ID: <20231228142009.0883d2a9@hermes.local>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="eK5C1iqC"
+X-UUID: 0311fc38a5ee11ee9e680517dc993faa-20231229
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=5ko/LEAOlYQbdOl4c1numicj2ObmbnGDmmOJTS+nGKQ=;
+	b=eK5C1iqC4hUZ60qdy3hS7bq0JBbfI7rfZb0QpaVO8ez+nKMPSfg0orRfKVx6AKnhYJQ96CNzVV9DfFeZJXt62trhc+4pb+yJB+ztnEGDDK2W9Bz1wNd91zUliojkMDWF1tqxPc0jjJJAIygk8eN4K1uadvt8mWVQsuvs2VgwfXo=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.35,REQID:7c1df33d-04ab-4322-b1af-2479ca3c717d,IP:0,U
+	RL:-32768,TC:0,Content:-32768,EDM:-32768,RT:0,SF:-32768,FILE:0,BULK:-32768
+	,RULE:Release_Ham,ACTION:release,TS:0
+X-CID-META: VersionHash:5d391d7,CLOUDID:d11eaf8d-e2c0-40b0-a8fe-7c7e47299109,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:nil,TC:nil,Content:nil,EDM:nil,IP:ni
+	l,URL:nil,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SP
+	R:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 0311fc38a5ee11ee9e680517dc993faa-20231229
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+	(envelope-from <mingyen.hsieh@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 851878821; Fri, 29 Dec 2023 10:00:16 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 29 Dec 2023 10:00:15 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 29 Dec 2023 10:00:15 +0800
+From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
+	<Soul.Huang@mediatek.com>, <Leon.Yen@mediatek.com>,
+	<Eric-SY.Chang@mediatek.com>, <km.lin@mediatek.com>,
+	<robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
+	<Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
+	<mingyen.hsieh@mediatek.com>
+Subject: [PATCH v1 04/10] wifi: mt76: mt7925: fix wmm queue mapping
+Date: Fri, 29 Dec 2023 10:00:03 +0800
+Message-ID: <20231229020009.12385-5-mingyen.hsieh@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20231229020009.12385-1-mingyen.hsieh@mediatek.com>
+References: <20231229020009.12385-1-mingyen.hsieh@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
+Firmware uses access class index (ACI) for wmm parameters update,
+so convert mac80211 queue to ACI in mt7925_conf_tx().
 
-Begin forwarded message:
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+---
+v1:
+ change mq_to_aci[] definition from "static" to "static const".
 
-Date: Thu, 28 Dec 2023 21:54:40 +0000
-From: bugzilla-daemon@kernel.org
-To: stephen@networkplumber.org
-Subject: [Bug 218330] New: wifi bug
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 21 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  2 +-
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
-
-https://bugzilla.kernel.org/show_bug.cgi?id=218330
-
-            Bug ID: 218330
-           Summary: wifi bug
-           Product: Networking
-           Version: 2.5
-          Hardware: Intel
-                OS: Linux
-            Status: NEW
-          Severity: normal
-          Priority: P3
-         Component: IPV4
-          Assignee: stephen@networkplumber.org
-          Reporter: 1bdou.charik@gmail.com
-        Regression: No
-
-Created attachment 305670
-  --> https://bugzilla.kernel.org/attachment.cgi?id=305670&action=edit  
-wifi bug
-
-https://pastebin.com/QKgPALG8 , hey there there is output after i click the
-wifi icon to turn it off on fedora . my  device is : 02:00.0 Network
-controller: Intel Corporation Wireless 8265 / 8275 (rev 78) and 
-
-
-uname -r : 6.6.8-200.fc39.x86_64
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index a080df58120f..813136223b57 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -1273,6 +1273,25 @@ mt7925_channel_switch_beacon(struct ieee80211_hw *hw,
+ 	mt792x_mutex_release(dev);
+ }
+ 
++static int
++mt7925_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++	       unsigned int link_id, u16 queue,
++	       const struct ieee80211_tx_queue_params *params)
++{
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++	static const u8 mq_to_aci[] = {
++		    [IEEE80211_AC_VO] = 3,
++		    [IEEE80211_AC_VI] = 2,
++		    [IEEE80211_AC_BE] = 0,
++		    [IEEE80211_AC_BK] = 1,
++	};
++
++	/* firmware uses access class index */
++	mvif->queue_params[mq_to_aci[queue]] = *params;
++
++	return 0;
++}
++
+ static int
+ mt7925_start_ap(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		struct ieee80211_bss_conf *link_conf)
+@@ -1396,7 +1415,7 @@ const struct ieee80211_ops mt7925_ops = {
+ 	.add_interface = mt7925_add_interface,
+ 	.remove_interface = mt792x_remove_interface,
+ 	.config = mt7925_config,
+-	.conf_tx = mt792x_conf_tx,
++	.conf_tx = mt7925_conf_tx,
+ 	.configure_filter = mt7925_configure_filter,
+ 	.bss_info_changed = mt7925_bss_info_changed,
+ 	.start_ap = mt7925_start_ap,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index 4811fccbe30e..0299045b4b83 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -895,7 +895,7 @@ int mt7925_mcu_set_tx(struct mt792x_dev *dev, struct ieee80211_vif *vif)
+ 
+ 		e = (struct edca *)tlv;
+ 		e->set = WMM_PARAM_SET;
+-		e->queue = ac + mvif->mt76.wmm_idx * MT76_CONNAC_MAX_WMM_SETS;
++		e->queue = ac;
+ 		e->aifs = q->aifs;
+ 		e->txop = cpu_to_le16(q->txop);
+ 
 -- 
-You may reply to this email to add a comment.
+2.18.0
 
-You are receiving this mail because:
-You are the assignee for the bug.
