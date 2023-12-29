@@ -1,39 +1,39 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299FA20FE
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Dec 2023 03:09:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA8E23A4
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Dec 2023 03:09:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="jRTz9ohR"
-X-UUID: b6327834a5f711eea2298b7352fd921d-20231229
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MSvi+dR2"
+X-UUID: b68a050ea5f711ee9e680517dc993faa-20231229
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ixki3DqzAq4cmzEmI1gi4aPq+TJbnvD0XOxbDCZxy9M=;
-	b=jRTz9ohR1ZnbE+HHl+yo/K0M1ZOT6Sd0Iv8B+xsvYv83ADkytXqvj83MLAQlTOgaKstWorWO5BW/RbzdB4IkF9CNYj1zDaOstn1JpQRFJlt1F2M5S6M+iv31CqVzMFbM1aai8W0RBdIRRG/yuFvM56oMjP2OQfg2dJcKHd/NU8M=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=IGGC5pOBDPEDthaV7kHlRmsE6IFZQlw9U1xCEMj9Inw=;
+	b=MSvi+dR2to0AQAn5sE7F9oTJiX+BrJ3fuST2Z0g1sFYwFAOuZNx14FcmNdd4G+mptq7T1rMfK6D/RXD15EjWuWokFYU03FDRD/VygFIWeTwcYwIzOG5VPbviKuK9nhOqq9m1D6rgozi7pJK3/RX0KWAApauuZQJi2/vRGPpnuRc=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:8fab7469-23f7-4bd8-95b5-a7bf6e3b6ea3,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:5d391d7,CLOUDID:4503c97e-4f93-4875-95e7-8c66ea833d57,B
+X-CID-O-INFO: VERSION:1.1.35,REQID:1597f9c3-9705-4e2b-b12c-a164eb6aa6ae,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:5d391d7,CLOUDID:4aebaf8d-e2c0-40b0-a8fe-7c7e47299109,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,
 	DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: b6327834a5f711eea2298b7352fd921d-20231229
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+X-UUID: b68a050ea5f711ee9e680517dc993faa-20231229
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1275623443; Fri, 29 Dec 2023 11:09:42 +0800
+	with ESMTP id 1684375940; Fri, 29 Dec 2023 11:09:43 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 29 Dec 2023 11:09:42 +0800
+ 15.2.1118.26; Fri, 29 Dec 2023 11:09:41 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 29 Dec 2023 11:09:42 +0800
+ 15.2.1118.26 via Frontend Transport; Fri, 29 Dec 2023 11:09:41 +0800
 From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
@@ -42,11 +42,11 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>, <posh.sun@mediatek.com>,
 	<Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
-	<mingyen.hsieh@mediatek.com>
-Subject: [PATCH v2 10/10] wifi: mt76: mt7925: update PCIe DMA settings
-Date: Fri, 29 Dec 2023 11:09:37 +0800
-Message-ID: <20231229030937.22605-11-mingyen.hsieh@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Quan Zhou <quan.zhou@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Subject: [PATCH v2 08/10] wifi: mt76: mt7925: add flow to avoid chip bt function fail
+Date: Fri, 29 Dec 2023 11:09:35 +0800
+Message-ID: <20231229030937.22605-9-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20231229030937.22605-1-mingyen.hsieh@mediatek.com>
 References: <20231229030937.22605-1-mingyen.hsieh@mediatek.com>
@@ -58,98 +58,61 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--2.080700-8.000000
-X-TMASE-MatchedRID: bY/LIBxtflpgVrply6HujfmF8IFnUmgvMZm0+sEE9mup+RClYacCxp4z
-	JaCWrNnn09NQNrxIpFYBtjkcfRMmqe3NIrNSYNRXTd1FGyH+HrJo3Yq5PCwLAhL6MU7t349bO0J
-	rNwAu2rtSl318SPsuorlxRECWghM+HxPMjOKY7A+07DQ3hChjAMRB0bsfrpPI34T9cYMsdwy4G1
-	DN3eUcHySp1XaWzf0kQH34UkJc067Ydld2tww3hmM3p5JrrEi9lV6kZVjftUftGGYhhXXcvPErT
-	6xnvR2iCMnAB9ZGc6+Oh+wyNBrFXDJiNuKohDcKzKSG3JdyKAPqtV2AGMNPaiHWPYzouJUy
+X-TM-AS-Result: No-10--2.224500-8.000000
+X-TMASE-MatchedRID: uyqRcNBN+ubpRzKqh62z7I4V8tCoXo/SjzwigoyOACRTCQL4BWtbpGDb
+	UAcMOUZ0MbcpjNXxwebhihMBM8ipLFilxHYfa34UH5YQyOg71ZZMkOX0UoduuQqiCYa6w8tvIub
+	j9bOa7Mt5lXU337u2SOWYSIzA/m69DPIzF4wRfrAURSScn+QSXt0H8LFZNFG7doMssNsUwYVpHR
+	SnbupUBB1x/By+gvnhaTKhO+lvTeQvZkbHd6W91e0kc/JNjS08EgywJelLOq9HqzOtgqvuRwy2w
+	bvlZJdK7IZlhIDgeCWAhOcaQrQ0U1GyRcoeF18qmKP0zzpTAeGwod8xOMKmvA1Aka/KIp/p
 X-TM-AS-User-Approved-Sender: No
 X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--2.080700-8.000000
+X-TMASE-Result: 10--2.224500-8.000000
 X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 4670C1B0DEDE0D5906D5FD260E72E25937052ADFD63CDC0DCF71383E3E55984C2000:8
+X-TM-SNTS-SMTP:
+	3BC64EDDF9AEFF503E50CBCCAFCD4DA3910AC5A0458AE190E40EA9D6CC0AFD272000:8
 
-From: Deren Wu <deren.wu@mediatek.com>
+From: Quan Zhou <quan.zhou@mediatek.com>
 
-Fix the wrong WFDMA settings to improve TX performance.
+A sub-process of Wifi L0.5 reset will make chip common partition
+enter low power, and have chance lead to Bluetooth host-to-chip
+command timeout, modify the software flow according to the chip's
+design to solve the problem.
 
 Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Signed-off-by: Deren Wu <deren.wu@mediatek.com>
+Signed-off-by: Quan Zhou <quan.zhou@mediatek.com>
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt792x_dma.c  | 13 ++++++++++---
- drivers/net/wireless/mediatek/mt76/mt792x_regs.h |  5 +++++
- 2 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/pci.c  | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt792x_regs.h | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-index 488326ce5ed4..8fa36b59e738 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-@@ -123,14 +123,13 @@ static void mt792x_dma_prefetch(struct mt792x_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index 734f31ee40d3..7661098a02b8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -386,6 +386,8 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
  
- int mt792x_dma_enable(struct mt792x_dev *dev)
- {
--	if (is_mt7925(&dev->mt76))
--		mt76_rmw(dev, MT_UWFDMA0_GLO_CFG_EXT1, BIT(28), BIT(28));
--
- 	/* configure perfetch settings */
- 	mt792x_dma_prefetch(dev);
+ 	dev_info(mdev->dev, "ASIC revision: %04x\n", mdev->rev);
  
- 	/* reset dma idx */
- 	mt76_wr(dev, MT_WFDMA0_RST_DTX_PTR, ~0);
-+	if (is_mt7925(&dev->mt76))
-+		mt76_wr(dev, MT_WFDMA0_RST_DRX_PTR, ~0);
- 
- 	/* configure delay interrupt */
- 	mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0, 0);
-@@ -140,12 +139,20 @@ int mt792x_dma_enable(struct mt792x_dev *dev)
- 		 MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN |
- 		 MT_WFDMA0_GLO_CFG_CLK_GAT_DIS |
- 		 MT_WFDMA0_GLO_CFG_OMIT_TX_INFO |
-+		 FIELD_PREP(MT_WFDMA0_GLO_CFG_DMA_SIZE, 3) |
-+		 MT_WFDMA0_GLO_CFG_FIFO_DIS_CHECK |
-+		 MT_WFDMA0_GLO_CFG_RX_WB_DDONE |
- 		 MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN |
- 		 MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2);
- 
- 	mt76_set(dev, MT_WFDMA0_GLO_CFG,
- 		 MT_WFDMA0_GLO_CFG_TX_DMA_EN | MT_WFDMA0_GLO_CFG_RX_DMA_EN);
- 
-+	if (is_mt7925(&dev->mt76)) {
-+		mt76_rmw(dev, MT_UWFDMA0_GLO_CFG_EXT1, BIT(28), BIT(28));
-+		mt76_set(dev, MT_WFDMA0_INT_RX_PRI, 0x0F00);
-+		mt76_set(dev, MT_WFDMA0_INT_TX_PRI, 0x7F00);
-+	}
- 	mt76_set(dev, MT_WFDMA_DUMMY_CR, MT_WFDMA_NEED_REINIT);
- 
- 	/* enable interrupts for TX/RX rings */
++	mt76_rmw_field(dev, MT_HW_EMI_CTL, MT_HW_EMI_CTL_SLPPROT_EN, 1);
++
+ 	ret = mt792x_wfsys_reset(dev);
+ 	if (ret)
+ 		goto err_free_dev;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-index d7f9b24cd665..458cfd0260b1 100644
+index a99af23e4b56..d7f9b24cd665 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-@@ -292,9 +292,12 @@
- #define MT_WFDMA0_GLO_CFG_TX_DMA_BUSY	BIT(1)
- #define MT_WFDMA0_GLO_CFG_RX_DMA_EN	BIT(2)
- #define MT_WFDMA0_GLO_CFG_RX_DMA_BUSY	BIT(3)
-+#define MT_WFDMA0_GLO_CFG_DMA_SIZE	GENMASK(5, 4)
- #define MT_WFDMA0_GLO_CFG_TX_WB_DDONE	BIT(6)
- #define MT_WFDMA0_GLO_CFG_FW_DWLD_BYPASS_DMASHDL BIT(9)
-+#define MT_WFDMA0_GLO_CFG_FIFO_DIS_CHECK	BIT(11)
- #define MT_WFDMA0_GLO_CFG_FIFO_LITTLE_ENDIAN	BIT(12)
-+#define MT_WFDMA0_GLO_CFG_RX_WB_DDONE	BIT(13)
- #define MT_WFDMA0_GLO_CFG_CSR_DISP_BASE_PTR_CHAIN_EN BIT(15)
- #define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO_PFET2	BIT(21)
- #define MT_WFDMA0_GLO_CFG_OMIT_RX_INFO	BIT(27)
-@@ -322,6 +325,8 @@
+@@ -389,6 +389,9 @@
+ #define MT_HW_CHIPID			0x70010200
+ #define MT_HW_REV			0x70010204
  
- #define MT_WFDMA0_RST_DTX_PTR		MT_WFDMA0(0x20c)
- #define MT_WFDMA0_RST_DRX_PTR		MT_WFDMA0(0x280)
-+#define MT_WFDMA0_INT_RX_PRI		MT_WFDMA0(0x298)
-+#define MT_WFDMA0_INT_TX_PRI		MT_WFDMA0(0x29c)
- #define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
- #define MT_WFDMA0_CSR_TX_DMASHDL_ENABLE	BIT(6)
- #define MT_WFDMA0_PRI_DLY_INT_CFG0	MT_WFDMA0(0x2f0)
++#define MT_HW_EMI_CTL			0x18011100
++#define MT_HW_EMI_CTL_SLPPROT_EN	BIT(1)
++
+ #define MT_PCIE_MAC_BASE		0x10000
+ #define MT_PCIE_MAC(ofs)		(MT_PCIE_MAC_BASE + (ofs))
+ #define MT_PCIE_MAC_INT_ENABLE		MT_PCIE_MAC(0x188)
 -- 
 2.18.0
 
