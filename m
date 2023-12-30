@@ -1,95 +1,87 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bues.ch (bues.ch [80.190.117.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EDE08BE3
-	for <linux-wireless@vger.kernel.org>; Sat, 30 Dec 2023 13:12:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Vzi1Lu77"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3367a304091so7264445f8f.3
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Dec 2023 05:12:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703941943; x=1704546743; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gkZG2PFmUVhAXh/L5KxYka8HsNQpzi7jnZ2EAhsXux0=;
-        b=Vzi1Lu77RFj4AvxnYQP0xOZ71vkUBzRQgEIa4P8aFvwta8tpnh7YATIpsfm/Hpmo3n
-         fWzFG/B+yvNmyNYml3MLIqY/oNXmmror49iJ93aPr0Jad76IIxUkIzF5fBd1MnVJ+SC/
-         tyyOneAY6QNTRJg3hskAVhwYxlJw/XJ10PlvkxtjTXBmideoGmOai7qwxYSmIIuKS+2c
-         IGfgnj2xMiKAFSNVZmQJhxwfTZNFUXDuvUwOCFA6dAFJvF6AyGRSyRuanEMWVDMWp8ml
-         +Gs6BpasvDEJ0DJmb3QKs8xhKguiP/VvO5s5/umBuXUpQvCmasfDUFjRqCac1XIqXK7z
-         qrhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703941943; x=1704546743;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gkZG2PFmUVhAXh/L5KxYka8HsNQpzi7jnZ2EAhsXux0=;
-        b=SxmimCjKmIiSc1AiY97x9fwyY22BiCkur3f8g0YAiyBNec/5xNOYWIn5LAkkASWFR6
-         flV0UrVnZ4EwQP8TjuwnrMRfOI1hxzMrTgHdaosZXnPvcHH00aA/9ROmg8zaP2MnJxz7
-         SfJx6R7DHYg0NFUUWoyALhLuUsboXZuOBUXFtC3ZU3UAO9foXb2C6sDCEKQBQrjw5vMT
-         nIILiWy3wESUuA7KuWI0hS6C1ZidEC2n7CxNowoYnwAPRRUabmIZt1zgqRzSUD6tSObD
-         y0eccEl0Rx2PSYYw9XkVFJpc2p5i8Pm5hftiNbRE/fb5bb6NU3WvZQ0X3LP070TsJd9E
-         pEgA==
-X-Gm-Message-State: AOJu0YxsWj/UN4VBcnhed44PzrJAmKpYxkZEOcKJ9l6F6Nmtax0GO8Ro
-	4wz8unVHwfdmgt3tEk/zNeOMi6Mm1UA=
-X-Google-Smtp-Source: AGHT+IHsIJueYbOwQKXs2M4lW+tYXh1DkAZZsW+kSew5HwAEvRgpNWsILmtVXgNitq9OjGXwg0kVRg==
-X-Received: by 2002:a5d:60cd:0:b0:332:e68b:416c with SMTP id x13-20020a5d60cd000000b00332e68b416cmr4961824wrt.26.1703941942603;
-        Sat, 30 Dec 2023 05:12:22 -0800 (PST)
-Received: from [192.168.1.50] ([81.196.40.51])
-        by smtp.gmail.com with ESMTPSA id t12-20020adfe10c000000b00336f43fa654sm8534385wrz.22.2023.12.30.05.12.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 30 Dec 2023 05:12:22 -0800 (PST)
-Message-ID: <1408a85d-48c4-4427-a5e0-a81c3cf10385@gmail.com>
-Date: Sat, 30 Dec 2023 15:12:20 +0200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E68DC8BED;
+	Sat, 30 Dec 2023 13:41:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
+Received: by bues.ch with esmtpsa (Exim 4.96)
+	(envelope-from <m@bues.ch>)
+	id 1rJZaI-000BEm-05;
+	Sat, 30 Dec 2023 14:41:01 +0100
+Date: Sat, 30 Dec 2023 14:40:36 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Rahul Rameshbabu <sergeantsagara@protonmail.com>, Kalle Valo
+ <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+ b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH wireless 2/5] wifi: b43: Stop/wake correct queue in DMA
+ Tx path when QoS is disabled
+Message-ID: <20231230144036.7f48b739@barney>
+In-Reply-To: <CAGRGNgWYLTmRfvw94Ok_FfcEVGPa0tRg-ELxkD8K6nxTTNZ9jg@mail.gmail.com>
+References: <20231230045105.91351-1-sergeantsagara@protonmail.com>
+	<20231230045105.91351-3-sergeantsagara@protonmail.com>
+	<CAGRGNgWYLTmRfvw94Ok_FfcEVGPa0tRg-ELxkD8K6nxTTNZ9jg@mail.gmail.com>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.39; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: rtlwifi: rtl_usb: Use sync register writes
-To: Larry Finger <Larry.Finger@lwfinger.net>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-References: <f806007e-8fba-4f29-8a38-f81d04bd4fb8@gmail.com>
- <ddaf8f07-5a7b-49a4-8ec1-2a28eee2279e@lwfinger.net>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <ddaf8f07-5a7b-49a4-8ec1-2a28eee2279e@lwfinger.net>
+Content-Type: multipart/signed; boundary="Sig_/TCfuXrtMG=ku6EJFF1A=u3k";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
+
+--Sig_/TCfuXrtMG=ku6EJFF1A=u3k
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 29/12/2023 23:36, Larry Finger wrote:
-> On 12/29/23 14:51, Bitterblue Smith wrote:
->> Currently rtl_usb performs register writes using the async
->> usb_submit_urb() function. This appears to work fine for the RTL8192CU,
->> but the RTL8192DU (soon to be supported by rtlwifi) has a problem:
->> it transmits everything at the 1M rate in the 2.4 GHz band. (The 5 GHZ
->> band is still untested.)
->>
->> With this patch, rtl_usb performs the register writes using the
->> synchronous usb_control_msg() function, and the RTL8192DU works
->> normally. The RTL8192CU still works.
->>
->> The vendor drivers use the async writes in only one function,
->> rtl8192du_trigger_gpio_0 / rtl8192cu_trigger_gpio_0, which probably
->> doesn't even run in real life. They use sync writes everywhere else.
->>
->> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
->> ---
->>
->> Larry, do you remember why, back in 2011, you chose to implement the
->> async writes?
-> 
-> Bitterblue,
-> 
-> That was code provided by Realtek from their USB group. I think they were in China, not Taiwan. At least the PCI and USB groups were in different countries. They provided the code, and I just cleaned it up. tested it, and submitted it. If the sync function works for the cu and du chips, go for it.
-> 
-> Larry
-> 
+On Sat, 30 Dec 2023 18:48:45 +1100
+Julian Calaby <julian.calaby@gmail.com> wrote:
+> > --- a/drivers/net/wireless/broadcom/b43/dma.c
+> > +++ b/drivers/net/wireless/broadcom/b43/dma.c
+> > @@ -1399,7 +1399,10 @@ int b43_dma_tx(struct b43_wldev *dev, struct sk_=
+buff *skb)
+> >             should_inject_overflow(ring)) {
+> >                 /* This TX ring is full. */
+> >                 unsigned int skb_mapping =3D skb_get_queue_mapping(skb);
+> > -               ieee80211_stop_queue(dev->wl->hw, skb_mapping);
+> > +               if (dev->qos_enabled)
+> > +                       ieee80211_stop_queue(dev->wl->hw, skb_mapping);
+> > +               else
+> > +                       ieee80211_stop_queue(dev->wl->hw, 0); =20
+>=20
+> Would this be a little cleaner if we only look up the queue mapping if
+> QOS is enabled? I.e.
 
-Ahh, okay. I guess we'll never know why they did that.
+No. It would break the other uses of skb_mapping.
+
+But I am wondering why skb_mapping is non-zero in the first place.
+I think the actual bug might be somewhere else.
+
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
+
+--Sig_/TCfuXrtMG=ku6EJFF1A=u3k
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmWQHdQACgkQ9TK+HZCN
+iw4Dgw//UdhkJsEMI+LxdCItWs0laiTytoyk135y6K81oXnImGPWuN51vh99z/Fd
+s5cjPp0e8IJ27FzDxzyM+0mo0+uqUPqPE1nO6VM4vgt0wgVl+iA6ulkbk3Xr0LkI
+4CoIk0GZZkFsuubT6yF71gSImSvSoIFP/GJMOlWrjecGAOtRbvpi1o6rIcRYQTLn
+MQ6kHNASJbhbbNJd5/XCOro27YdO2OkKRq3xs4YOfd6bV567j71SPEQN8f5I6/UZ
+uiAd6MhP6noVsXepzz/QA4exUAW9RhPHwVmh6QHnbEoXfHWM+lSrvlv/fcmtbh7o
+Pfxg9df9lftT+2WMSfcpr3rks7d/idx9XqPA1T5ndDB7vdP4qLofzzgXG3Ig0KUH
+tu0SomIfu4xOemEfPTIFIL1EGPOdsNYWcL4yX2GMZuti9dtfw0jf6d31qa08IfoC
+OEqIx2+WbluTwFaeGwPw2/xmtA7q8wK2dgeN0feNDSZHPN1/PrYyL9tvjuZCkIR/
+LCs9HFMwVb5HwNvIvCY1sAFIzIsup7XhZVfPRi0d/qYA66mlXG4mWFpQMC1ko/Ze
+43oahhSLaShjrmYPJ0ZN/fAmyJo94mMshrqtbtFGqsR17ue7zsfbLpjT4IVmsCv0
+ShKV2hWciHCKo5xxoe6GD9PfRhC3bnnIb81aY5ks2tPx8+RvPHo=
+=5i0z
+-----END PGP SIGNATURE-----
+
+--Sig_/TCfuXrtMG=ku6EJFF1A=u3k--
