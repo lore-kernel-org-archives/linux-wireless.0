@@ -1,25 +1,25 @@
 Received: from bues.ch (bues.ch [80.190.117.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE772B642;
-	Sat, 30 Dec 2023 13:45:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF3508BED;
+	Sat, 30 Dec 2023 14:10:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
 Received: by bues.ch with esmtpsa (Exim 4.96)
 	(envelope-from <m@bues.ch>)
-	id 1rJZf2-000BJJ-0F;
-	Sat, 30 Dec 2023 14:45:55 +0100
-Date: Sat, 30 Dec 2023 14:45:23 +0100
+	id 1rJZVD-000B92-1i;
+	Sat, 30 Dec 2023 14:35:46 +0100
+Date: Sat, 30 Dec 2023 14:34:55 +0100
 From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
 To: Rahul Rameshbabu <sergeantsagara@protonmail.com>
 Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
  b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless 5/5] wifi: b43: Support advertising lack of QoS
- capability
-Message-ID: <20231230144523.7df01ff5@barney>
-In-Reply-To: <20231230045105.91351-6-sergeantsagara@protonmail.com>
+Subject: Re: [PATCH wireless 1/5] wifi: b43: Correct OpenFW QoS capability
+ warning conditional
+Message-ID: <20231230143455.4d64ffc7@barney>
+In-Reply-To: <20231230045105.91351-2-sergeantsagara@protonmail.com>
 References: <20231230045105.91351-1-sergeantsagara@protonmail.com>
-	<20231230045105.91351-6-sergeantsagara@protonmail.com>
+	<20231230045105.91351-2-sergeantsagara@protonmail.com>
 X-Mailer: Claws Mail 4.2.0 (GTK 3.24.39; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -27,86 +27,61 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/T.bvxtOYGsFs/DdDLs.JbJn";
+Content-Type: multipart/signed; boundary="Sig_/DPVM1GyukumrzwBTrXX/GYf";
  protocol="application/pgp-signature"; micalg=pgp-sha512
 
---Sig_/T.bvxtOYGsFs/DdDLs.JbJn
+--Sig_/DPVM1GyukumrzwBTrXX/GYf
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 30 Dec 2023 04:51:51 +0000
+On Sat, 30 Dec 2023 04:51:29 +0000
 Rahul Rameshbabu <sergeantsagara@protonmail.com> wrote:
 
-> bcm4331 appears to lack QoS support.
+> Trigger the warning message should be when the OpenFW capability for QoS
+> does not advertise QoS support. Previously, the warning would be
+> incorrectly triggered when OpenFW reported QoS capability is present.
 
-I think that's rather unlikely.
-The firmware probably is just too old for this device.
+> --- a/drivers/net/wireless/broadcom/b43/main.c
+> +++ b/drivers/net/wireless/broadcom/b43/main.c
+> @@ -2713,7 +2713,7 @@ static int b43_upload_microcode(struct b43_wldev *d=
+ev)
+>  			dev->hwcrypto_enabled =3D false;
+>  		}
+>  		/* adding QoS support should use an offline discovery mechanism */
+> -		WARN(fwcapa & B43_FWCAPA_QOS, "QoS in OpenFW not supported\n");
+> +		WARN(!(fwcapa & B43_FWCAPA_QOS), "QoS in OpenFW not supported\n");
+>  	} else {
+>  		b43info(dev->wl, "Loading firmware version %u.%u "
+>  			"(20%.2i-%.2i-%.2i %.2i:%.2i:%.2i)\n",
 
-> +static const u16 b43_no_qos_chip_ids[] =3D {
-> +	BCMA_CHIP_ID_BCM4331,
-> +	0,
-> +};
-> +
-> +static bool b43_qos_not_supported(struct b43_wldev *dev)
-> +{
-> +	int idx;
-> +
-> +	for (idx =3D 0; b43_no_qos_chip_ids[idx]; idx++)
-> +		if (dev->dev->chip_id =3D=3D b43_no_qos_chip_ids[idx])
-> +			return true;
-> +
-> +	return false;
-> +}
-> +
->  static void b43_wireless_core_exit(struct b43_wldev *dev);
->  static int b43_wireless_core_init(struct b43_wldev *dev);
->  static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
-> @@ -2587,7 +2603,7 @@ static void b43_request_firmware(struct work_struct=
- *work)
-> =20
->  start_ieee80211:
->  	wl->hw->queues =3D B43_QOS_QUEUE_NUM;
-> -	if (!modparam_qos || dev->fw.opensource)
-> +	if (!modparam_qos || dev->fw.opensource || b43_qos_not_supported(wl->cu=
-rrent_dev))
-
-This looks a bit over-engineered to me.
-Can we just instead do it like this, please?
-
-	if (!modparam_qos || dev->fw.opensource || dev->dev->chip_id =3D=3D BCMA_C=
-HIP_ID_BCM4331)
-
->  		wl->hw->queues =3D 1;
-> =20
->  	err =3D ieee80211_register_hw(wl->hw);
-
-
-
+I don't think this patch is correct.
+It should warn, if the firmware advertises QoS, because that is not
+supported by b43 in case of OpenFW.
 
 
 --=20
 Michael B=C3=BCsch
 https://bues.ch/
 
---Sig_/T.bvxtOYGsFs/DdDLs.JbJn
+--Sig_/DPVM1GyukumrzwBTrXX/GYf
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmWQHvMACgkQ9TK+HZCN
-iw7KyA//RGQAAGvzcl7lHIw3Q1W8KypUU6+E78hwrtWSmRIje8kjNCUAcdrnNCti
-otWZV6CJrCEL0iay0cFAoym7vfaca3qFTqUtZ47OqvnhuIk2KuW93/LBNC2i04tY
-Duo5FXAGkiZob7ARyDX77QQmfWxWFwZXF3L/tgovhVyzT8PQFAPfqCAUuCT4C/8Q
-7pQ+/nInlvvCCE8qyAecBZKUoRCZUrgr+sP54zqAwsIiWsbCCIgxrL28YiaLMhei
-1+W0LdyZFvPMr+wIHkD5ZdF5SKGuUq9vBQiMNbtXcF3zQcKOpVm/xBRXxuFLHnwV
-xB01PO2CNf4sTy6pA5yIMaKpeOk05WokKkj2vCQWFT8XzS4YkQJD350zEVOIkWa0
-vYNaxilDzTb3yaSZPk28klMRvL1mKlBlktaANVEReV+jCKd9gg1xQda2B5IDBKby
-rI9YAURrwcc7awcoFC7Gy0+8SYmhXuWiiLn+rocGz3fEaUzjtA1Lihk4yo/RtS3z
-3k5wAaBmsj8/arV2NnVxbL/Sh7Wd9Gxmt0ofaDvIzv62LOymPJJC0fjIgP+ANX5i
-nfsiPA2LrzzkT7R4+KK9Hb7xq1Wn5gACvngPc27M92LkbhiJxmJR7m5OdBWG2suY
-f9JyXTTDZhooqhTirb78Ctf7vR0OLt5xcethqpATESD6qQwOmbY=
-=cBPA
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmWQHH8ACgkQ9TK+HZCN
+iw76ZxAAurASq9nsjCyeOlHYgd0pN/3LqmEX3OSxwMsOry8MP3yjmQk5xRT/mfSL
+SeU4V6KqkvH3tBpHRkHhua8X3TkDRqKv2e0YvjOOAUpPm5U0qlWzdZhHQNyypum4
+uAYLTUHL325m5k91mlnmC70wRrKn/GLrCewOCTdJa1g5+TUIq6Xx1J266GK2nmRl
+1DTIsBoz8R9wLE5vk3UiIS3WFudddofd2A+Fwpqe601sX5CNKBlL2Leis0oZcLBR
+xZ+H1f07AslPR9BR47wyohMdPXOGpyo1HloG6IeCgqp1l149mQVLlvNuw20uRGjN
+JGe37rp22nc8n8qudMIobZT8+IeW2/8JRYBSeQ3eft+43c5pySkQcMEOPRhb4mLH
+1CC3BYeeGoe40eCiJOVrdf1jGLtRsv8wCYUCsZ/T8jAHziKZ1dObyxTG/10JBtDi
+2JuiWSHxsEFaKkbjbq5B0nsorb29YpuEQya7IYyHy7dixtP3mMdB3F4g//qHZb1S
+i9YgtI0mcUaSE/0ahR4pRnbScyJV54uJfa+L9xHRTEpbp3y8toeVWcRncAOoPTQ+
+x7pcqkOVQESjYfqmUfmab1zo/roXw9yN226THi5aQEv3S+uU7OpZffLOI5YkDV/a
+TyOZKf75WIzDkUydwVPEqf+3J54T8tdYMZKaan4mMeF0VlA/bro=
+=mRQS
 -----END PGP SIGNATURE-----
 
---Sig_/T.bvxtOYGsFs/DdDLs.JbJn--
+--Sig_/DPVM1GyukumrzwBTrXX/GYf--
