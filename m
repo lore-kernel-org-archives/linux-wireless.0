@@ -1,30 +1,30 @@
 Received: from mail-4322.protonmail.ch (mail-4322.protonmail.ch [185.70.43.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC792187E;
-	Sat, 30 Dec 2023 04:51:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E23392589
+	for <linux-wireless@vger.kernel.org>; Sat, 30 Dec 2023 04:52:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="njDNIiTL"
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="SBjnCyE9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1703911916; x=1704171116;
-	bh=caRSz9JKsn3mBdUsKSY4AOfcZFf54zv3YQQgaKNP9h8=;
+	s=protonmail3; t=1703911925; x=1704171125;
+	bh=mpfS2FF753ZSOUmOzhDiJSInHt5JGm319qqgU/Wo+a4=;
 	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
 	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
 	 Message-ID:BIMI-Selector;
-	b=njDNIiTL3IF6x3x/pXq0Ry8quqaGuG+CzH54ahHsfyz+W9qccrydDwGbmqrzrCiXb
-	 sqqjDsPkSodTUlwTgtcdPPGNbJrE9btj76ixqdc1ueE8oAiKqZmfCDvpsApMDQ8SIr
-	 qY3kJpQ1H3auM0Q4I11P/ro6ivWXDDREHKOjhfLNxCCyfiLBxt4zs9M7TW1sK+hA9+
-	 nbNckCWKvkDxJtTd61NfF16H77lrJRY9s4D3nv83TCFJ9Qv+jomqj5cxVQICc/3O2w
-	 sCVU66WXaT+qO4m+PXOrw9D8sUWiWn5fRgY9rDhBQkVmMXDVBJCimasNFRzENUls95
-	 mIhtexoqM3YLQ==
-Date: Sat, 30 Dec 2023 04:51:40 +0000
+	b=SBjnCyE94BXerPC1PUjPsFByxySTEa5qI51gVNbc9JHxX6ZCqpN3B0AaJWl4I3O7z
+	 MtmOrOlga0M7rzSpR0Y04YAxCn2TfxGim7xrzU7qGRdkgxZyFTFpD2qqTIoDhP61l2
+	 3jfL7oIQZBfbi5vF6lnmyVx64Bq333HGGfV5htqFulmf5QeJOBotW1P8ReTCkNZy0k
+	 M9DcZnEv7kIYcQ2xqiXw6dvVTVP9Z/ktLDG12+wZMRJMPZzUphcc9AEET99Rz8sGCJ
+	 IGy+4CKqOC+ReLeDj92E4XPYPSKcQFt508g5N+qaY5BvVlBJzeBN06FDH8l1PFjM18
+	 Kt4u8oLfT2pXg==
+Date: Sat, 30 Dec 2023 04:51:51 +0000
 To: Kalle Valo <kvalo@kernel.org>
 From: Rahul Rameshbabu <sergeantsagara@protonmail.com>
 Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org, Rahul Rameshbabu <sergeantsagara@protonmail.com>
-Subject: [PATCH wireless 3/5] wifi: b43: Stop/wake correct queue in PIO Tx path when QoS is disabled
-Message-ID: <20231230045105.91351-4-sergeantsagara@protonmail.com>
+Subject: [PATCH wireless 5/5] wifi: b43: Support advertising lack of QoS capability
+Message-ID: <20231230045105.91351-6-sergeantsagara@protonmail.com>
 In-Reply-To: <20231230045105.91351-1-sergeantsagara@protonmail.com>
 References: <20231230045105.91351-1-sergeantsagara@protonmail.com>
 Feedback-ID: 26003777:user:proton
@@ -37,62 +37,94 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-When QoS is disabled, the queue priority value will not map to the correct
-ieee80211 queue since there is only one queue. Stop/wake queue 0 when QoS
-is disabled to prevent trying to stop/wake a non-existent queue and failing
-to stop/wake the actual queue instantiated.
+Add b43_qos_not_supported functionality for disabling QoS. Currently, the
+function checks an array to see if the chip id matches a value in the
+array. If so, disable QoS.
 
-Fixes: 5100d5ac81b9 ("b43: Add PIO support for PCMCIA devices")
+bcm4331 appears to lack QoS support. When queues that are not of the
+default "best effort" priority are selected, traffic appears to not
+transmit out of the hardware while no errors are returned. This behavior is
+present among all the other priority queues: video, voice, and background.
+While this can be worked around by setting a kernel parameter, the default
+behavior is problematic for most users and may be difficult to debug. This
+patch offers a working out-of-box experience for bcm4331 users.
+
+Log of the issue (using ssh low-priority traffic as an example):
+    ssh -T -vvvv git@github.com
+    OpenSSH_9.6p1, OpenSSL 3.0.12 24 Oct 2023
+    debug1: Reading configuration data /etc/ssh/ssh_config
+    debug2: checking match for 'host * exec "/nix/store/q1c2flcykgr4wwg5a6h=
+450hxbk4ch589-bash-5.2-p15/bin/bash -c '/nix/store/c015armnkhr6v18za0rypm7s=
+h1i8js8w-gnupg-2.4.1/bin/gpg-connect-agent --quiet updatestartuptty /bye >/=
+dev/null 2>&1'"' host github.com originally github.com
+    debug3: /etc/ssh/ssh_config line 5: matched 'host "github.com"'
+    debug1: Executing command: '/nix/store/q1c2flcykgr4wwg5a6h450hxbk4ch589=
+-bash-5.2-p15/bin/bash -c '/nix/store/c015armnkhr6v18za0rypm7sh1i8js8w-gnup=
+g-2.4.1/bin/gpg-connect-agent --quiet updatestartuptty /bye >/dev/null 2>&1=
+''
+    debug3: command returned status 0
+    debug3: /etc/ssh/ssh_config line 5: matched 'exec "/nix/store/q1c2flcyk=
+gr4wwg5a6h450hxbk4ch589-bash-5.2-p15/bin/bash -c '/nix/store/c015armnkhr6v1=
+8za0r"'
+    debug2: match found
+    debug1: /etc/ssh/ssh_config line 9: Applying options for *
+    debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts' -> '/home/bina=
+ry-eater/.ssh/known_hosts'
+    debug3: expanded UserKnownHostsFile '~/.ssh/known_hosts2' -> '/home/bin=
+ary-eater/.ssh/known_hosts2'
+    debug2: resolving "github.com" port 22
+    debug3: resolve_host: lookup github.com:22
+    debug3: channel_clear_timeouts: clearing
+    debug3: ssh_connect_direct: entering
+    debug1: Connecting to github.com [192.30.255.113] port 22.
+    debug3: set_sock_tos: set socket 3 IP_TOS 0x48
+
+Fixes: e6f5b934fba8 ("b43: Add QOS support")
 Signed-off-by: Rahul Rameshbabu <sergeantsagara@protonmail.com>
 ---
- drivers/net/wireless/broadcom/b43/pio.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/broadcom/b43/main.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/pio.c b/drivers/net/wireless=
-/broadcom/b43/pio.c
-index 0cf70fdb60a6..7168fe50af5b 100644
---- a/drivers/net/wireless/broadcom/b43/pio.c
-+++ b/drivers/net/wireless/broadcom/b43/pio.c
-@@ -525,7 +525,11 @@ int b43_pio_tx(struct b43_wldev *dev, struct sk_buff *=
-skb)
- =09if (total_len > (q->buffer_size - q->buffer_used)) {
- =09=09/* Not enough memory on the queue. */
- =09=09err =3D -EBUSY;
--=09=09ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
-+=09=09if (dev->qos_enabled)
-+=09=09=09ieee80211_stop_queue(dev->wl->hw,
-+=09=09=09=09=09     skb_get_queue_mapping(skb));
-+=09=09else
-+=09=09=09ieee80211_stop_queue(dev->wl->hw, 0);
- =09=09q->stopped =3D true;
- =09=09goto out;
- =09}
-@@ -552,7 +556,11 @@ int b43_pio_tx(struct b43_wldev *dev, struct sk_buff *=
-skb)
- =09if (((q->buffer_size - q->buffer_used) < roundup(2 + 2 + 6, 4)) ||
- =09    (q->free_packet_slots =3D=3D 0)) {
- =09=09/* The queue is full. */
--=09=09ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
-+=09=09if (dev->qos_enabled)
-+=09=09=09ieee80211_stop_queue(dev->wl->hw,
-+=09=09=09=09=09     skb_get_queue_mapping(skb));
-+=09=09else
-+=09=09=09ieee80211_stop_queue(dev->wl->hw, 0);
- =09=09q->stopped =3D true;
- =09}
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireles=
+s/broadcom/b43/main.c
+index b6ac1526c0e8..39906bebef7b 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -359,6 +359,22 @@ static struct ieee80211_supported_band b43_band_2ghz_l=
+imited =3D {
+ =09.n_bitrates=09=3D b43_g_ratetable_size,
+ };
 =20
-@@ -587,7 +595,10 @@ void b43_pio_handle_txstatus(struct b43_wldev *dev,
- =09list_add(&pack->list, &q->packets_list);
++static const u16 b43_no_qos_chip_ids[] =3D {
++=09BCMA_CHIP_ID_BCM4331,
++=090,
++};
++
++static bool b43_qos_not_supported(struct b43_wldev *dev)
++{
++=09int idx;
++
++=09for (idx =3D 0; b43_no_qos_chip_ids[idx]; idx++)
++=09=09if (dev->dev->chip_id =3D=3D b43_no_qos_chip_ids[idx])
++=09=09=09return true;
++
++=09return false;
++}
++
+ static void b43_wireless_core_exit(struct b43_wldev *dev);
+ static int b43_wireless_core_init(struct b43_wldev *dev);
+ static struct b43_wldev * b43_wireless_core_stop(struct b43_wldev *dev);
+@@ -2587,7 +2603,7 @@ static void b43_request_firmware(struct work_struct *=
+work)
 =20
- =09if (q->stopped) {
--=09=09ieee80211_wake_queue(dev->wl->hw, q->queue_prio);
-+=09=09if (dev->qos_enabled)
-+=09=09=09ieee80211_wake_queue(dev->wl->hw, q->queue_prio);
-+=09=09else
-+=09=09=09ieee80211_wake_queue(dev->wl->hw, 0);
- =09=09q->stopped =3D false;
- =09}
- }
+ start_ieee80211:
+ =09wl->hw->queues =3D B43_QOS_QUEUE_NUM;
+-=09if (!modparam_qos || dev->fw.opensource)
++=09if (!modparam_qos || dev->fw.opensource || b43_qos_not_supported(wl->cu=
+rrent_dev))
+ =09=09wl->hw->queues =3D 1;
+=20
+ =09err =3D ieee80211_register_hw(wl->hw);
 --=20
 2.42.0
 
