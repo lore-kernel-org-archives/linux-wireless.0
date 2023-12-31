@@ -1,29 +1,32 @@
 Received: from mail-4316.protonmail.ch (mail-4316.protonmail.ch [185.70.43.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB336138A
-	for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2023 05:03:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34EA92573
+	for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2023 05:03:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="yMOHqcuL"
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="jr2j+Kfc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1703999023; x=1704258223;
-	bh=QrNUfX8Rb1OX00fG4mbQo/eO3Y707VvS2aAOdZZ/lzQ=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=yMOHqcuLGdg9TI29jGJ3y5pPcVC0kbKrn6FmEnZBmpzCoRVtwNbxkRP0iVn/U/l+U
-	 tyIVwr8r+yW1Csy2VOEfQktIfwNFDRs9rHxFCjpS37wEPSMiP6QJk/szkRPAvhCoUf
-	 Mv8D1LNUgVnrSZqO36lRNQgGcuY7kVPOggl5SIuBrYivULR7aa1MunmfWueJq/3jBe
-	 EVZ+sGA76TxJS24XjFOh7RgUbdm03OypkalkxGDqNWW5YCkBJuR36qX69dnhlDHh/9
-	 l2vlxIKTyO45Ku+5lY9HfxT1dMTyu6u3eU7PGBKsrDs2+LltlIBk00RSHC5fc7gDcG
-	 pPZ5snfCb6jRQ==
-Date: Sun, 31 Dec 2023 05:03:27 +0000
+	s=protonmail3; t=1703999034; x=1704258234;
+	bh=nMmY4lgSrVOhiGZvska8zO0P9lepPYf3Fiw+Sy4tIfM=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=jr2j+Kfc4KlGvnS8FgkLquzWm38h6gO/Dm8FrvOU5KyM+gSPjvfkFr8EZeaFjVD7A
+	 6DewXceSr5rOj+JqkZVDf+yg14Ni5d0eYG/fKz1k/v1q7lMtOohYm8qdT+QQZrj3yw
+	 /jdIYshMvSabOI9FoE4/OjKXnfkpfLijeXzfCTcjjDIcuIn2fR0opr1WIgp0yO48BQ
+	 gDY2ccGLeCOwtReCvzlF2e663WorzVNdWrA+/sGbm9xQlIbcnRldTxZNvAMnGYj/g2
+	 sI4vLxBF/E1b2YaCxb2gyImD6HGSrXltHyUCTa8JJAqGowJbg1zY01+wJBtJGsio7q
+	 QEPjXlt3CPUoA==
+Date: Sun, 31 Dec 2023 05:03:45 +0000
 To: Kalle Valo <kvalo@kernel.org>, Larry Finger <Larry.Finger@lwfinger.net>, =?utf-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>, Julian Calaby <julian.calaby@gmail.com>
 From: Rahul Rameshbabu <sergeantsagara@protonmail.com>
 Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org, Rahul Rameshbabu <sergeantsagara@protonmail.com>
-Subject: [PATCH wireless v2 0/4] wifi: b43: Various QoS-related fixes
-Message-ID: <20231231050300.122806-1-sergeantsagara@protonmail.com>
+Subject: [PATCH wireless v2 2/4] wifi: b43: Stop/wake correct queue in PIO Tx path when QoS is disabled
+Message-ID: <20231231050300.122806-3-sergeantsagara@protonmail.com>
+In-Reply-To: <20231231050300.122806-1-sergeantsagara@protonmail.com>
+References: <20231231050300.122806-1-sergeantsagara@protonmail.com>
 Feedback-ID: 26003777:user:proton
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -34,56 +37,80 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Recently acquired a MacBookPro8,3 (early 2011), which has a bcm4331 card.
-Noticed some issues with the wireless driver, specifically related to QoS, =
-when
-using this device.
+When QoS is disabled, the queue priority value will not map to the correct
+ieee80211 queue since there is only one queue. Stop/wake queue 0 when QoS
+is disabled to prevent trying to stop/wake a non-existent queue and failing
+to stop/wake the actual queue instantiated.
 
-Out of the box, applications like ssh appear to not work with the device wh=
-en
-QoS is enabled. This series attempts to improve the out-of-box experience w=
-hile
-cleaning up some fundamental issues in the driver when QoS is disabled, eit=
-her
-by the related kernel parameter or the newly introduced QoS disablement
-function.
+Fixes: 5100d5ac81b9 ("b43: Add PIO support for PCMCIA devices")
+Signed-off-by: Rahul Rameshbabu <sergeantsagara@protonmail.com>
+---
 
-Running FW 784.2 during testing.
+Notes:
+    Changes:
+   =20
+        v1->v2:
+            - Refactored logic with helpers (suggested by Larry Finger
+              <Larry.Finger@lwfinger.net>)
+   =20
+    Issue Details:
+   =20
+        When PIO support was first introduced to the b43 driver in commit
+        5100d5ac81b9 ("b43: Add PIO support for PCMCIA devices"), four queu=
+es
+        were allocated for different QoS priorities for video, voice, best
+        effort, and background. This was modelled after commit
+        e6f5b934fba8 ("b43: Add QOS support"), which has the following issu=
+e.
+        The core networking stack maps these priorities in the skb, and the=
+se
+        mappings are noted in the ring's queue_prio member. When disabling =
+QoS
+        in the driver, the skb will still contain the mapping for the core
+        stack while only one queue is actually considered active (the best
+        effort queue). In the situation that QoS is disabled, b43 needs to =
+pass
+        0 to ieee80211 queue functions since the number of queues is set to=
+ 1
+        in the struct ieee80211_hw queues member.
 
-Log:
-    [   11.661972] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
-35:19)
-    [   11.919942] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
-35:19)
-    [   13.717460] [drm] amdgpu kernel modesetting enabled.
-    [   13.717705] amdgpu: Virtual CRAT table created for CPU
-    [   13.717719] amdgpu: Topology: Add CPU node
-    [   13.776896] NET: Registered PF_PACKET protocol family
-    [   15.234058] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
-35:19)
-    [   15.319388] wlp3s0b1: authenticate with 1c:87:2c:6f:f4:e0
-    [   15.333239] wlp3s0b1: send auth to 1c:87:2c:6f:f4:e0 (try 1/3)
-    [   15.341672] wlp3s0b1: authenticated
-    [   15.341921] wlp3s0b1: associate with 1c:87:2c:6f:f4:e0 (try 1/3)
-    [   15.346912] wlp3s0b1: RX AssocResp from 1c:87:2c:6f:f4:e0 (capab=3D0=
-x411 status=3D0 aid=3D3)
-    [   15.347255] wlp3s0b1: associated
+ drivers/net/wireless/broadcom/b43/pio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Link: https://lore.kernel.org/linux-wireless/20231230045105.91351-1-sergean=
-tsagara@protonmail.com/
-
-Rahul Rameshbabu (4):
-  wifi: b43: Stop/wake correct queue in DMA Tx path when QoS is disabled
-  wifi: b43: Stop/wake correct queue in PIO Tx path when QoS is disabled
-  wifi: b43: Stop correct queue in DMA worker when QoS is disabled
-  wifi: b43: Disable QoS for bcm4331
-
- drivers/net/wireless/broadcom/b43/b43.h  | 16 ++++++++++++++++
- drivers/net/wireless/broadcom/b43/dma.c  |  4 ++--
- drivers/net/wireless/broadcom/b43/main.c | 16 +++++++++-------
- drivers/net/wireless/broadcom/b43/pio.c  |  6 +++---
- 4 files changed, 30 insertions(+), 12 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/b43/pio.c b/drivers/net/wireless=
+/broadcom/b43/pio.c
+index 0cf70fdb60a6..e41f2f5b4c26 100644
+--- a/drivers/net/wireless/broadcom/b43/pio.c
++++ b/drivers/net/wireless/broadcom/b43/pio.c
+@@ -525,7 +525,7 @@ int b43_pio_tx(struct b43_wldev *dev, struct sk_buff *s=
+kb)
+ =09if (total_len > (q->buffer_size - q->buffer_used)) {
+ =09=09/* Not enough memory on the queue. */
+ =09=09err =3D -EBUSY;
+-=09=09ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
++=09=09b43_stop_queue(dev, skb_get_queue_mapping(skb));
+ =09=09q->stopped =3D true;
+ =09=09goto out;
+ =09}
+@@ -552,7 +552,7 @@ int b43_pio_tx(struct b43_wldev *dev, struct sk_buff *s=
+kb)
+ =09if (((q->buffer_size - q->buffer_used) < roundup(2 + 2 + 6, 4)) ||
+ =09    (q->free_packet_slots =3D=3D 0)) {
+ =09=09/* The queue is full. */
+-=09=09ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
++=09=09b43_stop_queue(dev, skb_get_queue_mapping(skb));
+ =09=09q->stopped =3D true;
+ =09}
+=20
+@@ -587,7 +587,7 @@ void b43_pio_handle_txstatus(struct b43_wldev *dev,
+ =09list_add(&pack->list, &q->packets_list);
+=20
+ =09if (q->stopped) {
+-=09=09ieee80211_wake_queue(dev->wl->hw, q->queue_prio);
++=09=09b43_wake_queue(dev, q->queue_prio);
+ =09=09q->stopped =3D false;
+ =09}
+ }
 --=20
 2.42.0
 
