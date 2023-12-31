@@ -1,32 +1,29 @@
-Received: from mail-40133.protonmail.ch (mail-40133.protonmail.ch [185.70.40.133])
+Received: from mail-4316.protonmail.ch (mail-4316.protonmail.ch [185.70.43.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4AEE546;
-	Sun, 31 Dec 2023 00:02:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB336138A
+	for <linux-wireless@vger.kernel.org>; Sun, 31 Dec 2023 05:03:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="PIa1/Fwt"
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="yMOHqcuL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1703980964; x=1704240164;
-	bh=NzTBAR3J7TqlmV8UyI1UxV71fO1hFB/qVw412kUFJcE=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=PIa1/FwtZTQ2ITyhtpzTfs/gpygu8d9/KHHnrAJtDv1Xd5EDlYHD6Y2lK2fBQ9hJ5
-	 bYvAyydeznYtidorMjMsDKqDvUJLEsQG7YU3mpBKcgZ856InCtlZbQ46szMFVXkqZ+
-	 YkPVnwZuRTRWAWiqUFJIUPbCza8ekXKxENakMYQvAhFXrywiO0+CAOiXYp86Z9pH/t
-	 GcDY0PgdweMxYRN8J6TTRSBj9QtmAKvtlSs/0lGoZmawwaLBcA+65b652hn5S/TqeI
-	 TH24Ow2ChDV66qWMggBShd0qnJR7A7cUas/eb3bRRWZH433l+cabad9veH4cu75skM
-	 DvIjG2PA9s4/Q==
-Date: Sun, 31 Dec 2023 00:02:32 +0000
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	s=protonmail3; t=1703999023; x=1704258223;
+	bh=QrNUfX8Rb1OX00fG4mbQo/eO3Y707VvS2aAOdZZ/lzQ=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=yMOHqcuLGdg9TI29jGJ3y5pPcVC0kbKrn6FmEnZBmpzCoRVtwNbxkRP0iVn/U/l+U
+	 tyIVwr8r+yW1Csy2VOEfQktIfwNFDRs9rHxFCjpS37wEPSMiP6QJk/szkRPAvhCoUf
+	 Mv8D1LNUgVnrSZqO36lRNQgGcuY7kVPOggl5SIuBrYivULR7aa1MunmfWueJq/3jBe
+	 EVZ+sGA76TxJS24XjFOh7RgUbdm03OypkalkxGDqNWW5YCkBJuR36qX69dnhlDHh/9
+	 l2vlxIKTyO45Ku+5lY9HfxT1dMTyu6u3eU7PGBKsrDs2+LltlIBk00RSHC5fc7gDcG
+	 pPZ5snfCb6jRQ==
+Date: Sun, 31 Dec 2023 05:03:27 +0000
+To: Kalle Valo <kvalo@kernel.org>, Larry Finger <Larry.Finger@lwfinger.net>, =?utf-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>, Julian Calaby <julian.calaby@gmail.com>
 From: Rahul Rameshbabu <sergeantsagara@protonmail.com>
-Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless 3/5] wifi: b43: Stop/wake correct queue in PIO Tx path when QoS is disabled
-Message-ID: <874jfzutm5.fsf@protonmail.com>
-In-Reply-To: <ca357d13-7da9-490f-9e69-4674c6ede057@lwfinger.net>
-References: <20231230045105.91351-1-sergeantsagara@protonmail.com> <20231230045105.91351-4-sergeantsagara@protonmail.com> <cb9dcb49-ad94-40df-9f01-a28df3daf6c3@lwfinger.net> <877ckvwk5v.fsf@protonmail.com> <ca357d13-7da9-490f-9e69-4674c6ede057@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, linux-kernel@vger.kernel.org, Rahul Rameshbabu <sergeantsagara@protonmail.com>
+Subject: [PATCH wireless v2 0/4] wifi: b43: Various QoS-related fixes
+Message-ID: <20231231050300.122806-1-sergeantsagara@protonmail.com>
 Feedback-ID: 26003777:user:proton
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -37,39 +34,57 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, 30 Dec, 2023 16:23:58 -0600 "Larry Finger" <Larry.Finger@lwfinger.n=
-et> wrote:
-> On 12/30/23 13:43, Rahul Rameshbabu wrote:
->> Unfortunately, new firmware would not prevent the need to fix up the
->> code with regards to QoS being disabled via the kernel parameter or
->> using OpenFW. That said, new firmware could help us drop the fifth patch
->> in this series. I am thinking about using b43-fwcutter to extract
->> proprietary fw from a newer release of broadcom-wl to see if that makes
->> a difference. That said, I am a bit puzzled since the device I am
->> testing on released in early 2011, and I used firmware released in late
->> 2012.
->
-> Unfortunately, it is very difficult to get the parameters for fwcutter fr=
-om an
-> x86 binary. Some of the other architectures are easier.
+Recently acquired a MacBookPro8,3 (early 2011), which has a bcm4331 card.
+Noticed some issues with the wireless driver, specifically related to QoS, =
+when
+using this device.
 
-Just tried this with the x86 binary just because and ran into extraction
-issues as expected. I could not find other architecture options from
-Broadcom's download page, but I may not have been looking well enough...
+Out of the box, applications like ssh appear to not work with the device wh=
+en
+QoS is enabled. This series attempts to improve the out-of-box experience w=
+hile
+cleaning up some fundamental issues in the driver when QoS is disabled, eit=
+her
+by the related kernel parameter or the newly introduced QoS disablement
+function.
 
-  =E2=9D=AF b43-fwcutter ./wlc_hybrid.o_shipped
-  Sorry, the input file is either wrong or not supported by b43-fwcutter.
-  This file has an unknown MD5sum 6889dbd24abf8006de5cc6eddd138518.
+Running FW 784.2 during testing.
 
-  https://www.broadcom.com/support/download-search?pg=3DWireless+Embedded+S=
-olutions+and+RF+Components&pf=3DLegacy+Wireless&pn=3D&pa=3DDriver&po=3D&dk=
-=3DBCM4331&pl=3D&l=3Dtrue
+Log:
+    [   11.661972] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
+35:19)
+    [   11.919942] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
+35:19)
+    [   13.717460] [drm] amdgpu kernel modesetting enabled.
+    [   13.717705] amdgpu: Virtual CRAT table created for CPU
+    [   13.717719] amdgpu: Topology: Add CPU node
+    [   13.776896] NET: Registered PF_PACKET protocol family
+    [   15.234058] b43-phy0: Loading firmware version 784.2 (2012-08-15 21:=
+35:19)
+    [   15.319388] wlp3s0b1: authenticate with 1c:87:2c:6f:f4:e0
+    [   15.333239] wlp3s0b1: send auth to 1c:87:2c:6f:f4:e0 (try 1/3)
+    [   15.341672] wlp3s0b1: authenticated
+    [   15.341921] wlp3s0b1: associate with 1c:87:2c:6f:f4:e0 (try 1/3)
+    [   15.346912] wlp3s0b1: RX AssocResp from 1c:87:2c:6f:f4:e0 (capab=3D0=
+x411 status=3D0 aid=3D3)
+    [   15.347255] wlp3s0b1: associated
 
-I guess, for now, we can keep the exception for bcm4331 and see if
-future firmware extractions help.
+Link: https://lore.kernel.org/linux-wireless/20231230045105.91351-1-sergean=
+tsagara@protonmail.com/
 
---
-Thanks,
+Rahul Rameshbabu (4):
+  wifi: b43: Stop/wake correct queue in DMA Tx path when QoS is disabled
+  wifi: b43: Stop/wake correct queue in PIO Tx path when QoS is disabled
+  wifi: b43: Stop correct queue in DMA worker when QoS is disabled
+  wifi: b43: Disable QoS for bcm4331
 
-Rahul Rameshbabu
+ drivers/net/wireless/broadcom/b43/b43.h  | 16 ++++++++++++++++
+ drivers/net/wireless/broadcom/b43/dma.c  |  4 ++--
+ drivers/net/wireless/broadcom/b43/main.c | 16 +++++++++-------
+ drivers/net/wireless/broadcom/b43/pio.c  |  6 +++---
+ 4 files changed, 30 insertions(+), 12 deletions(-)
+
+--=20
+2.42.0
+
 
