@@ -1,127 +1,77 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8568D2033C
-	for <linux-wireless@vger.kernel.org>; Thu,  4 Jan 2024 09:08:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5960120312
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Jan 2024 09:12:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XsaPiFhM"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-33723ad790cso223052f8f.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Jan 2024 01:08:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bsvSHTRu"
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-5f0462ee645so769867b3.0
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Jan 2024 01:12:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1704359284; x=1704964084; darn=vger.kernel.org;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Vu69+F4VLRlaBCdU/TQtcQNi2BkTn42ySbPdCve9vZE=;
-        b=XsaPiFhM34qdKAqUZqPvyFrZUAjCPklhN9CqZ9sRhDLIN/UXoLL32+cPqpdz5X26aw
-         /ZoysWRypTdVSxhNrtO+5NnwlmU2HM+usuZ1fdJZJUc+jUHc704gjitbRpwG+6zZ5vp7
-         8o5FvH5r+ZLZ83vXNYugZ1hdEWntrfm3isFOYExmLwhkBEmcWbsHbTMnzzOntaWwE0Mi
-         8jzT+R3uIL284h+TTJWP8GYxbRdDQyiwh4KAUd32UfEQ7v+OiQwljb9fc8YvcIwXVdf0
-         kYTpXC9i1vFsJN0bSV+l9ITaoQNRnH3SWpjAlH6PYq36X4oaZQn6pbvnB0zNJ0K9p6LC
-         iF6Q==
+        d=gmail.com; s=20230601; t=1704359569; x=1704964369; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=q6zy9fgKcFtlSto6sNYmWO9c6tE+E4PhEvJJmzXqdus=;
+        b=bsvSHTRuDlEYnnX6mHMEFtex5gJrG76+cYFjPHE83T7aDwq8LzZXUP1b4MFPbeXBFd
+         yZnFvsJl/NGKWdLqs5Y/p/nXjQ7mcWSkgHx/X9MJn5KPXTUiSkT8fg45LVVHyzOHmNVk
+         Nt0nAomPyWyWLs3609uM5l/o7QMvvc2lLNPQ2TN35s6cyikHpuUI0DbreNBRX8APuj4m
+         8Ra7cYW9U0yFU0nuF9CRBrT0bjP+g8mHx/dMGWotxjqR0WnUyXeNp0AMABp3IliQfVUf
+         erXiYmczu+yCFM3WhHlQIrGVcX1WJnR9Yo6cRCEi5z7YSxMM6DPCRq2IYdLWzU1WT9/P
+         L3Bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704359284; x=1704964084;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Vu69+F4VLRlaBCdU/TQtcQNi2BkTn42ySbPdCve9vZE=;
-        b=AjVzsTMSVNkuS0b3qmYHka+FOiCQzmAltgiOyAQ3EX/WCGr2QQE8usWZnBw/VNkN8/
-         329chLvtuJAjH+rDTWQDCgS9YqnxV3c4kw2cwjMHpSpA1zEy3pJG/KqDCQQ1vtuoVt4q
-         OmNV+fcRscq9VY8aZeyGCyacXFyd4marFksWTkYbrdWVR7wwptCzjFOdYEAMUqcpqSFQ
-         mN3j2X7Rh3I1B3KGq0dNgrjm9g4sqyUHhjxfe3jkZ5EVZ/u+Y1SPE4U2gwBIX8yvtUks
-         qKqx9TJAFKW3U2tw/C6pwZ5UIMsWLWV2N0BL0Mp+ci1g3wJI00XW6MxMDY/ht3Xd8IU+
-         3L/g==
-X-Gm-Message-State: AOJu0YwG8T1bJJF4HU3ghANgV/xcxzT6XkfoMXoxnNo7nVz4BV3SryDx
-	/sGs+yt9JnXhuGikL5GYcrDZPuoWj1I5W8RCLQ0=
-X-Google-Smtp-Source: AGHT+IFnLkTxcruD7Hp1LV4wDr6+30vNm48XHdgQUg4VzXCoYkEGYb5bRjLqoDMIRwbBgeRfzf13lL8tY47F3kq0esI=
-X-Received: by 2002:adf:e601:0:b0:336:4308:28df with SMTP id
- p1-20020adfe601000000b00336430828dfmr120570wrm.204.1704359283391; Thu, 04 Jan
- 2024 01:08:03 -0800 (PST)
+        d=1e100.net; s=20230601; t=1704359569; x=1704964369;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=q6zy9fgKcFtlSto6sNYmWO9c6tE+E4PhEvJJmzXqdus=;
+        b=gpl0Ia//NIimoHDm4NmNMMQioaA7Ri3iGWj7EVmhVsnRpJCzhi8lbpCpf7UG32usF0
+         Z4/ir084Z02Q5ly5eLu8ooq/KJBkszG/NEH7Phnow9nmadIO4PzhE1HxILUm6VKaQKaG
+         0dYJk3tnP6P4+39reswCxGoibRUZyTEvu56ghavOZifroyRDWa+UdKPXGs0sN/t8UplQ
+         GuE05nAOby+WFNC2CaQehodQLidE79QvRtmnOuM5vY6DKJJfYAY3o2sv/3A7MQwtHTsd
+         0rne6Ks9+J82Ynhxyh9VlUeBVreHCi3BiBwSWx5cRBme6Lgx7zSFQC29qruEgWZp3vkq
+         6XIg==
+X-Gm-Message-State: AOJu0Yz6I1xVmihkCnXIwsixtp0ADWI93Jg6GdGZF54p5hI5zGi8qSJY
+	wcuO96Ga9Tt4WyYMxIl6V5P6CUVqZvFQcpAwBxQ4LOivYdM=
+X-Google-Smtp-Source: AGHT+IHu3z9GImaZuA/4OBj8tIDrNXXvaIavnGB4r1v5t8qSupFQ1yOB9vXzhVMVv2DeMqUdrhqGgqHFxfeQUT/aJoQ=
+X-Received: by 2002:a25:d656:0:b0:dbd:5ad0:8a34 with SMTP id
+ n83-20020a25d656000000b00dbd5ad08a34mr328185ybg.5.1704359569418; Thu, 04 Jan
+ 2024 01:12:49 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAPVz0n2Ky350xhOv6WvE0YhFJ9QBe59LnWvKiafs2tjFnptP+g@mail.gmail.com>
- <22115037-3a81-4a52-8e64-bc85c2be4212@broadcom.com> <CAPVz0n2Dah1b45c0yUjMZNph5AVJjneLsc2LOQ-dkXNRTv6y+Q@mail.gmail.com>
- <18cce9a7818.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <18ccea1d6d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <BFE6B9E5-CAF5-4E30-A4A2-A2489423C961@gmail.com> <18cd08e83d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <18cd08e83d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-From: Svyatoslav Ryhel <clamor95@gmail.com>
-Date: Thu, 4 Jan 2024 11:07:52 +0200
-Message-ID: <CAPVz0n347PVv28H2wswmO3N63dpfPZ0d3VrdxmQHXMoo9LS69g@mail.gmail.com>
-Subject: Re: License of old broadcom BT firmwares and WiFi calibration files
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>, linux-wireless@vger.kernel.org, 
-	linux-firmware@kernel.org
+From: Nicola Mingotti <nico020978@gmail.com>
+Date: Thu, 4 Jan 2024 10:12:38 +0100
+Message-ID: <CAL7TOjnP72fV4en6i3hsd3qgsjas+a9O2rgp2CuCdKMLOh+VEg@mail.gmail.com>
+Subject: RTL8822bu as AP rejects Tapo devices
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-=D1=81=D1=80, 3 =D1=81=D1=96=D1=87. 2024=E2=80=AF=D1=80. =D0=BE 20:20 Arend=
- Van Spriel <arend.vanspriel@broadcom.com> =D0=BF=D0=B8=D1=88=D0=B5:
->
-> On January 3, 2024 6:28:33 PM Svyatoslav Ryhel <clamor95@gmail.com> wrote=
-:
->
-> > 3 =D1=81=D1=96=D1=87=D0=BD=D1=8F 2024 =D1=80. 11:22:42 GMT+02:00, Arend=
- Van Spriel
-> > <arend.vanspriel@broadcom.com> =D0=BD=D0=B0=D0=BF=D0=B8=D1=81=D0=B0=D0=
-=B2(-=D0=BB=D0=B0):
-> >> On January 3, 2024 10:14:42 AM Arend Van Spriel
-> >> <arend.vanspriel@broadcom.com> wrote:
-> >>
-> >>> + linux-wireless
-> >>> + Hans de Goede
-> >>>
-> >>>
-> >>> On December 16, 2023 9:14:48 PM Svyatoslav Ryhel <clamor95@gmail.com>=
- wrote:
-> >>>
-> >>>> =D1=81=D0=B1, 16 =D0=B3=D1=80=D1=83=D0=B4. 2023=E2=80=AF=D1=80. =D0=
-=BE 21:57 Arend van Spriel
-> >>>> <arend.vanspriel@broadcom.com> =D0=BF=D0=B8=D1=88=D0=B5:
-> >>>>>
-> >>>>> On 12/16/2023 6:45 PM, Svyatoslav Ryhel wrote:
-> >>>>>> Greetings!
-> >>>>>>
-> >>>>>> I am trying to submit bluetooth firmwares (BCM4329B1.*,*.hcd and
-> >>>>>> BCM4330B1.*,*.hcd) and wifi calibration files
-> >>>>>> (brcmfmac4329-sdio.*,*.txt and brcmfmac4329-sdio.*,*.txt) from a f=
-ew
-> >>>>>> Tegra 2 and Tegra 3 based devices into linux-fimware.
-> >>>>>>
-> >>>>>> I have faced ambiguous license issue since those files were part o=
-f
-> >>>>>> Android Images of different vendors. Those vendors did not provide=
- a
-> >>>>>> license nor for android images, not for these files.
-> >>
-> >> Does this mean you extracted them from the android image? That probabl=
-y
-> >> never get accepted without any license information.
-> >
-> > Can Broadcom re-grant license to these files?
-> >
-> > This license is for bcm4329 in crespo
-> > <https://android.googlesource.com/device/samsung/crespo/+/refs/heads/ma=
-in/self-extractors/broadcom/LICENSE>
->
-> Actually checked this link:
->
-> https://android.googlesource.com/device/samsung/crespo/+/refs/heads/main/=
-proprietary-blobs.txt
->
-> It lists the bcm4329.hcd file as falling under Apache-2.0 license. Same f=
-or
-> asus/grouper.
->
-> Regards,
-> Arend
+Hi, i wish to signal what seems to me a bug.
 
-So this actually resolves ambiguity. Thanks
+I set up a few Linux boxes as AP in our office using Brostrend AC1200
+dongles (chipset RTL8822BU).
 
-Best regards,
-Svyatoslav R.
+Using the external module RTL882xbu suggested by Brostrend it all
+works but there is one issue, i can't put more than one dongle for
+each Linux box. I contacted Brostrend and I was told to wait for the
+driver to be in the Linux kernel.
+
+I saw that now RTL8822bu is in the kernel 6.5.0-5 which for me is
+accessible without risk of wasting the AP configuration upgrading the
+OS from Debian Stable to Debian Testing. I upgraded.
+
+In the AP which runs now Debian Testing it is true i can plug in two
+Brostrend dongles. It works as AP 2.4Ghz, in the sense that i can
+connect to it with my Samsung phone. BUT, here comes the problem, NO
+ONE of the >10 Tapo devices (2 cameras C225 and several plugs P110)
+want to connects to the AP with the driver provided by the kernel.
+
+I installed the RTL882xbu module in the same Debian Testing AP and now
+all the Tapo devices do connect.
+
+bye
+n.m.
