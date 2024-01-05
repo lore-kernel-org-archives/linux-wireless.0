@@ -1,49 +1,46 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC66236087
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Jan 2024 19:57:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4401836082
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Jan 2024 19:57:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="FLilW/VE"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="k0yw+mwp"
 Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 405JdVlU009486;
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 405FRNNg019371;
 	Fri, 5 Jan 2024 19:57:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=pphqLFZ3nbkit+9az2nx8KAHhjg7wW7ZnAMxFl/CcXM=; b=FL
-	ilW/VEIHNYVRVKd+2vD793VdbHFtH228FBZDh39SWhLASQIkDzzW63QZ24luST0r
-	W4+LQ9oT2gV5uE5nx/dTn1eY4j7iNdygRqmoN1YugiiyH6Gu95jm4rJFgdGtHIzE
-	pqWi/WYr5rTOT8wQFLzFXGYZQmxgtb7A5WNMw5WO5IQnIYbCk1Wp13oJs/PBPZke
-	b1aW81WnSE3M5CGKPEFEXkauYMQq692pBxIUD6fBng5ohItYnglWEAjVjlu+WCyC
-	igNCMGWVeUclHfWiFqc1PxzeB0Rj2a0DblcLihRjcKPgbCDdJEiClobSYr8FZdMR
-	UX7r6YW7beJ0wyQAg4Rw==
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding:content-type; s=qcppdkim1; bh=qk88lsg
+	GU+VdIkidCS8MgwDxZmq2Ur3sWpm/pws8VH4=; b=k0yw+mwpDg43nHKWN1Jh1Gt
+	yMt3ekJU17OUVUsZtwGaxRGHbqgaZCXD7x3IsBSy4E0a8OCON5AYodkTZb949GhR
+	TYxvC1bV3vBZ9MgudspfF/6cdvU3FBwqAUr9HM0DXdQ7DO4Xq9Vuz3J/6+vuul41
+	jzJl7qAquHcnm62HwpN702xcuoWdnTyQ43kvCFjGoXCLs2xy5Lcpp553Bi3OTHjK
+	e6tjz4tnoW6UGAHEbUfCzif4jPWvMplGkI9w7ADzU6BOkRncoLRc7OUk+DqU9SBL
+	MmTM0mc64Kt4BQe1vBJ2CL7aru5TJ/e5zubuWfRLpqd79M9zlpXHsgS9U0zJ0Fg=
+	=
 Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vemdt8sf2-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vemdt8sew-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 05 Jan 2024 19:57:12 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 405Jv27S032211
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 405Juwpu032149
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 5 Jan 2024 19:57:02 GMT
+	Fri, 5 Jan 2024 19:56:58 GMT
 Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Fri, 5 Jan 2024 11:57:00 -0800
+ 15.2.1118.40; Fri, 5 Jan 2024 11:56:56 -0800
 From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-        Sowmiya Sree Elavalagan
-	<quic_ssreeela@quicinc.com>,
-        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
-Subject: [PATCH v2 02/12] wifi: ath12k: fetch correct pdev id from WMI_SERVICE_READY_EXT_EVENTID
-Date: Sat, 6 Jan 2024 01:26:29 +0530
-Message-ID: <20240105195639.3217739-3-quic_rajkbhag@quicinc.com>
+        Raj Kumar Bhagat
+	<quic_rajkbhag@quicinc.com>
+Subject: [PATCH v2 00/12] wifi: ath12k: QCN9274 dualmac bring up
+Date: Sat, 6 Jan 2024 01:26:27 +0530
+Message-ID: <20240105195639.3217739-1-quic_rajkbhag@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240105195639.3217739-1-quic_rajkbhag@quicinc.com>
-References: <20240105195639.3217739-1-quic_rajkbhag@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,146 +53,86 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: wZyzxP6dYqh1v-plIbqsg4mrNfyNwq7z
-X-Proofpoint-ORIG-GUID: wZyzxP6dYqh1v-plIbqsg4mrNfyNwq7z
+X-Proofpoint-GUID: 7gjCcW1wm9WWPhxyswNE-G_HLtsgXpg9
+X-Proofpoint-ORIG-GUID: 7gjCcW1wm9WWPhxyswNE-G_HLtsgXpg9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 impostorscore=0
- malwarescore=0 mlxlogscore=901 lowpriorityscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=326 lowpriorityscore=0 phishscore=0
  suspectscore=0 clxscore=1015 adultscore=0 priorityscore=1501 bulkscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2311290000 definitions=main-2401050161
 
-From: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
+QCN9274 Ath12k chipset can support single-mac or dualmac architecture.
+Currently, Ath12k driver supports only the single-mac QCN9274
+architecture.
 
-Currently while fetching for pdev id from WMI_SERVICE_READY_EXT_EVENTID
-we consider 32 bit pdev_id in ath12k_wmi_caps_ext_params structure. But
-Firmware sends lower 16 bit for pdev id along with higher 16 bit for
-hw_link_id. Due to this wrong pdev id is fetched. This wrong pdev id
-when used for WMI commands leads to Firmware crash.
+Hence, add support for dualmac QCN9274 chipset.
 
-Hence fetch the correct pdev id considering only the lower 16 bits.
+Depends-On: wifi: ath12k: add firmware-2.bin support
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00188-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Aaradhana Sahu (1):
+  wifi: ath12k: fix firmware assert during insmod in memory segment mode
 
-Signed-off-by: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-Co-developed-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
-Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Ganesh Babu Jothiram (1):
+  wifi: ath12k: Read board id to support split-PHY QCN9274
+
+Harshitha Prem (1):
+  wifi: ath12k: add support for peer meta data version
+
+Karthikeyan Kathirvel (1):
+  wifi: ath12k: subscribe required word mask from rx tlv
+
+Karthikeyan Periyasamy (1):
+  wifi: ath12k: add MAC id support in WBM error path
+
+P Praneesh (2):
+  wifi: ath12k: Add logic to write QRTR node id to scratch
+  wifi: ath12k: fix PCI read and write
+
+Raj Kumar Bhagat (3):
+  wifi: ath12k: fix fetching MCBC flag for QCN9274
+  wifi: ath12k: split hal_ops to support RX TLVs word mask compaction
+  wifi: ath12k: remove hal_desc_sz from hw params
+
+Sowmiya Sree Elavalagan (1):
+  wifi: ath12k: fetch correct pdev id from WMI_SERVICE_READY_EXT_EVENTID
+
+Sriram R (1):
+  wifi: ath12k: indicate NON MBSSID vdev by default during vdev start
+
 ---
- drivers/net/wireless/ath/ath12k/wmi.c |  9 +++---
- drivers/net/wireless/ath/ath12k/wmi.h | 44 ++++++++++++++++++++++-----
- 2 files changed, 41 insertions(+), 12 deletions(-)
+v2:
+- dropped patch [1/13] - wifi: ath12k: Update enum wmi_direct_buffer_module
+  not required with FW version being used.
+- defined enum wmi_vdev_mbssid_flags at proper place.
+- implemented hal_ops to retrieve the corresponding compact ops.
+---
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index fd5b0a7b00e8..011ba3d459a0 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -493,13 +493,13 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 
- 	mac_caps = wmi_mac_phy_caps + phy_idx;
- 
--	pdev->pdev_id = le32_to_cpu(mac_caps->pdev_id);
-+	pdev->pdev_id = ath12k_wmi_mac_phy_get_pdev_id(mac_caps);
- 	pdev_cap->supported_bands |= le32_to_cpu(mac_caps->supported_bands);
- 	pdev_cap->ampdu_density = le32_to_cpu(mac_caps->ampdu_density);
- 
- 	fw_pdev = &ab->fw_pdev[ab->fw_pdev_count];
- 	fw_pdev->supported_bands = le32_to_cpu(mac_caps->supported_bands);
--	fw_pdev->pdev_id = le32_to_cpu(mac_caps->pdev_id);
-+	fw_pdev->pdev_id = ath12k_wmi_mac_phy_get_pdev_id(mac_caps);
- 	fw_pdev->phy_id = le32_to_cpu(mac_caps->phy_id);
- 	ab->fw_pdev_count++;
- 
-@@ -4215,7 +4215,7 @@ ath12k_wmi_tlv_mac_phy_caps_ext_parse(struct ath12k_base *ab,
- 		for (i = 0; i < ab->fw_pdev_count; i++) {
- 			struct ath12k_fw_pdev *fw_pdev = &ab->fw_pdev[i];
- 
--			if (fw_pdev->pdev_id == le32_to_cpu(caps->pdev_id) &&
-+			if (fw_pdev->pdev_id == ath12k_wmi_caps_ext_get_pdev_id(caps) &&
- 			    fw_pdev->phy_id == le32_to_cpu(caps->phy_id)) {
- 				bands = fw_pdev->supported_bands;
- 				break;
-@@ -4272,7 +4272,8 @@ static int ath12k_wmi_tlv_mac_phy_caps_ext(struct ath12k_base *ab, u16 tag,
- 			return 0;
- 	} else {
- 		for (i = 0; i < ab->num_radios; i++) {
--			if (ab->pdevs[i].pdev_id == le32_to_cpu(caps->pdev_id))
-+			if (ab->pdevs[i].pdev_id ==
-+			    ath12k_wmi_caps_ext_get_pdev_id(caps))
- 				break;
- 		}
- 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index d8481c710021..06b931222321 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -2542,9 +2542,17 @@ struct ath12k_wmi_hw_mode_cap_params {
- 
- #define WMI_MAX_HECAP_PHY_SIZE                 (3)
- 
-+/* pdev_id is present in lower 16 bits of pdev_and_hw_link_ids in
-+ * ath12k_wmi_mac_phy_caps_params & ath12k_wmi_caps_ext_params.
-+ *
-+ * hw_link_id is present in higher 16 bits of pdev_and_hw_link_ids.
-+ */
-+#define WMI_CAPS_PARAMS_PDEV_ID		GENMASK(15, 0)
-+#define WMI_CAPS_PARAMS_HW_LINK_ID	GENMASK(31, 16)
-+
- struct ath12k_wmi_mac_phy_caps_params {
- 	__le32 hw_mode_id;
--	__le32 pdev_id;
-+	__le32 pdev_and_hw_link_ids;
- 	__le32 phy_id;
- 	__le32 supported_flags;
- 	__le32 supported_bands;
-@@ -2636,13 +2644,7 @@ struct wmi_service_ready_ext2_event {
- 
- struct ath12k_wmi_caps_ext_params {
- 	__le32 hw_mode_id;
--	union {
--		struct {
--			__le16 pdev_id;
--			__le16 hw_link_id;
--		} __packed ath12k_wmi_pdev_to_link_map;
--		__le32 pdev_id;
--	};
-+	__le32 pdev_and_hw_link_ids;
- 	__le32 phy_id;
- 	__le32 wireless_modes_ext;
- 	__le32 eht_cap_mac_info_2ghz[WMI_MAX_EHTCAP_MAC_SIZE];
-@@ -4921,4 +4923,30 @@ int ath12k_wmi_probe_resp_tmpl(struct ath12k *ar, u32 vdev_id,
- int ath12k_wmi_set_hw_mode(struct ath12k_base *ab,
- 			   enum wmi_host_hw_mode_config_type mode);
- 
-+static inline u32
-+ath12k_wmi_caps_ext_get_pdev_id(const struct ath12k_wmi_caps_ext_params *param)
-+{
-+	return le32_get_bits(param->pdev_and_hw_link_ids, WMI_CAPS_PARAMS_PDEV_ID);
-+}
-+
-+static inline u32
-+ath12k_wmi_caps_ext_get_hw_link_id(const struct ath12k_wmi_caps_ext_params *param)
-+{
-+	return le32_get_bits(param->pdev_and_hw_link_ids, WMI_CAPS_PARAMS_HW_LINK_ID);
-+}
-+
-+static inline u32
-+ath12k_wmi_mac_phy_get_pdev_id(const struct ath12k_wmi_mac_phy_caps_params *param)
-+{
-+	return le32_get_bits(param->pdev_and_hw_link_ids,
-+			     WMI_CAPS_PARAMS_PDEV_ID);
-+}
-+
-+static inline u32
-+ath12k_wmi_mac_phy_get_hw_link_id(const struct ath12k_wmi_mac_phy_caps_params *param)
-+{
-+	return le32_get_bits(param->pdev_and_hw_link_ids,
-+			     WMI_CAPS_PARAMS_HW_LINK_ID);
-+}
-+
- #endif
+ drivers/net/wireless/ath/ath12k/core.c    |  29 ++
+ drivers/net/wireless/ath/ath12k/core.h    |   7 +
+ drivers/net/wireless/ath/ath12k/dp.c      |  25 +-
+ drivers/net/wireless/ath/ath12k/dp.h      |  17 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.c  |   7 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c   | 161 +++++----
+ drivers/net/wireless/ath/ath12k/dp_tx.c   |  22 +-
+ drivers/net/wireless/ath/ath12k/fw.c      |   7 +
+ drivers/net/wireless/ath/ath12k/fw.h      |   6 +
+ drivers/net/wireless/ath/ath12k/hal.c     | 415 +++++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/hal.h     |  20 +-
+ drivers/net/wireless/ath/ath12k/hw.c      |  10 +-
+ drivers/net/wireless/ath/ath12k/hw.h      |  30 +-
+ drivers/net/wireless/ath/ath12k/mac.c     |  14 +-
+ drivers/net/wireless/ath/ath12k/mhi.c     |  49 ++-
+ drivers/net/wireless/ath/ath12k/pci.c     |  84 +++--
+ drivers/net/wireless/ath/ath12k/pci.h     |   6 +-
+ drivers/net/wireless/ath/ath12k/qmi.h     |   3 +-
+ drivers/net/wireless/ath/ath12k/rx_desc.h | 116 +++++-
+ drivers/net/wireless/ath/ath12k/wmi.c     |  33 +-
+ drivers/net/wireless/ath/ath12k/wmi.h     |  58 ++-
+ 21 files changed, 943 insertions(+), 176 deletions(-)
+
 -- 
 2.34.1
 
