@@ -1,160 +1,103 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770643BB33;
-	Tue,  9 Jan 2024 17:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1CB6440C
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Jan 2024 00:43:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ANGw3fPw"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 409FwJm5001291;
-	Tue, 9 Jan 2024 17:51:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:date:subject:mime-version:content-type
-	:content-transfer-encoding:message-id:references:in-reply-to:to
-	:cc; s=qcppdkim1; bh=x8mI8xVxho6usfeyYDPHPyWvfEXa6ZMB/rRz6yGDxGo
-	=; b=ANGw3fPwyVpXG/i6Q8p0HDgX3a6gLfLI2wqJsYaBlrdfJNSIZlQWQOI89rn
-	oi1dn4BDCCzNid9VfkrNF9rKSl15YqAls28i05si/WLEASzqHblyiOJ9Q5CAf35P
-	n4K/OSQ5+6TsYbuXBeKRsL97k+YwOUqCGLvTfuCniD4YPaJ0QxcXUoKYNGL2mzmv
-	T+4ccjVr++1pb1RLGB/OFBROW9PL/ZsO24UhA9JNU6Nqthe4KiLanAvowT3YLUAD
-	nRNaJ4w8ZCR1Hn+35boY3kA3GWYlCsoP3toW7VJWS09SnEtnqtKqDoQF9lDgQJUQ
-	oA7t9dwrITAiqNa3Kw85eFGvgfg==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vh98m89j7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 09 Jan 2024 17:51:08 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 409Hp70N032037
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 9 Jan 2024 17:51:07 GMT
-Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 9 Jan
- 2024 09:51:06 -0800
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-Date: Tue, 9 Jan 2024 09:51:03 -0800
-Subject: [PATCH 1/3] wifi: ath12k: Remove unnecessary struct qmi_txn
- initializers
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hEzKFRWK"
+Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2cce6c719caso40086261fa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jan 2024 16:43:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1704847382; x=1705452182; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=kM8heQLb1WxBeDONq1X7q8jQ8JXiO0fRAK69Y+bY9XY=;
+        b=hEzKFRWKexc/Gtvkxpqfbz7ytB4ctmpzLKGVMpA2tllRHIO5NigQTDTc0CRFvZQQm+
+         vCOuGBp5WXHx3Zlx7LHh94I4oGDYfg++L+vC9+T8X/+YtXybR1KY0iodFDc/rB9Mij1l
+         5Y+qcxGYMhuSUfTsoW6rxriIYFS1FZ33jpLGvPt7cbfC6ZAdBf5P+9TAq22+GGBUxGFB
+         AhGHBOkJq9nx8tGnOTkT6dyv21tdVe766s9A52NlqlS+IBCYELEIUXNxIS0OmiYhosZ+
+         3oIEynlQPLQ/E6t64pvzNw9RFzAyLTciBMKL1c8NFF81TvZirjK3N4039fQMkYGgYC6b
+         oUYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704847382; x=1705452182;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=kM8heQLb1WxBeDONq1X7q8jQ8JXiO0fRAK69Y+bY9XY=;
+        b=qdkf0KvA3i7e2kE5r4pksYf8b6ZRXbsI5WA7gtlFy6vJwiNNJ+8puWv5dSKxo3rMq5
+         8AEzjDkTbO/X2N7UGpGdepxxyJUQkG8ZN5Zxj2CCCurusv0qhGzW7yuYMRlJ/3BJE8KS
+         XijW5YtwoLIA8D63sTREYvricP/Wnqv8Ebzluk5e51QnTdfWE6W4lt43Vhaswf57rDqv
+         sF/pCoX91Z0xSrXTmYWmka7X/ajDwk2f6NaxDNes/OsYMY3iNSBvzGHWqrIBWPFU08Ry
+         TZBcuLzoyNJZJoW0PdVn+1CoiqXQfU+jXWimfueyok/4DncCK3+Yru5n5KUET6ecP9Nb
+         I3Lg==
+X-Gm-Message-State: AOJu0Yy0bO+5xfLglHBDCBVLM58VSYUpu/VfMH+Jws65HQeeoeXs+wbe
+	KTCurK4+A8H/0nZdaYyOfJvh8hwtrZeHvot85/yhMI+AHsQ=
+X-Google-Smtp-Source: AGHT+IGp7Svf1+qtr+oIJ3lI1JMomxiI1ELL3hpayjh1w0As/k9QdU0Q4TgGJGkw6bBmNF8huV0bjq91MJiwdckEomk=
+X-Received: by 2002:a05:651c:1315:b0:2cc:e919:eb8f with SMTP id
+ u21-20020a05651c131500b002cce919eb8fmr75322lja.101.1704847381655; Tue, 09 Jan
+ 2024 16:43:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20240109-qmi-cleanup-v1-1-607b10858566@quicinc.com>
-References: <20240109-qmi-cleanup-v1-0-607b10858566@quicinc.com>
-In-Reply-To: <20240109-qmi-cleanup-v1-0-607b10858566@quicinc.com>
-To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
-CC: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-X-Mailer: b4 0.12.3
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: N2K5Q2q1DNfj2AmCnmjbHxgDb0IIDgL1
-X-Proofpoint-GUID: N2K5Q2q1DNfj2AmCnmjbHxgDb0IIDgL1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- impostorscore=0 spamscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- malwarescore=0 mlxlogscore=999 suspectscore=0 clxscore=1015 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2311290000 definitions=main-2401090144
+References: <20231212031914.47339-1-imguzh@gmail.com> <8734v6ecp1.fsf@kernel.org>
+In-Reply-To: <8734v6ecp1.fsf@kernel.org>
+From: Zhenghao Gu <imguzh@gmail.com>
+Date: Tue, 9 Jan 2024 18:42:50 -0600
+Message-ID: <CAMuEUs+ZOwgOmNXSc42H5yFiNWQQiKJL7Q1isBUCBO1AaVsN1g@mail.gmail.com>
+Subject: Re: [PATCH v2] wifi: ath11k: fix IOMMU errors on buffer rings
+To: Kalle Valo <kvalo@kernel.org>
+Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Currently most of the ath12k QMI messaging functions define their
-struct qmi_txn variables with a {} initializer. However, all of these
-functions subsequently call qmi_txn_init(), and the very first thing
-that function does is zero the struct. Hence, the initializers are
-unnecessary. Since these consume code space and cpu cycles, remove
-them.
+On Tue, Jan 9, 2024 at 9:41=E2=80=AFAM Kalle Valo <kvalo@kernel.org> wrote:
+>
+> Zhenghao Gu <imguzh@gmail.com> writes:
+>
+> > virt_to_phys doesn't work on systems with IOMMU enabled,
+> > which have non-identity physical-to-IOVA mappings.
+>
+> Can you give an example of such system? Just curious where you are
+> seeing this.
 
-No functional changes, compile tested only.
----
- drivers/net/wireless/ath/ath12k/qmi.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+I'm testing on an AMD system with IOMMU enabled in the BIOS and "iommu=3Dno=
+pt"
+in the kernel command line. I also noticed
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217056
+which may be the same issue.
 
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index 536856234f3b..180e86c2a10c 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: BSD-3-Clause-Clear
- /*
-  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #include <linux/elf.h>
-@@ -1921,7 +1921,7 @@ static int ath12k_qmi_host_cap_send(struct ath12k_base *ab)
- {
- 	struct qmi_wlanfw_host_cap_req_msg_v01 req;
- 	struct qmi_wlanfw_host_cap_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	int ret = 0;
- 
- 	memset(&req, 0, sizeof(req));
-@@ -2069,7 +2069,7 @@ static int ath12k_qmi_respond_fw_mem_request(struct ath12k_base *ab)
- {
- 	struct qmi_wlanfw_respond_mem_req_msg_v01 *req;
- 	struct qmi_wlanfw_respond_mem_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	int ret = 0, i;
- 	bool delayed;
- 
-@@ -2210,7 +2210,7 @@ static int ath12k_qmi_request_target_cap(struct ath12k_base *ab)
- {
- 	struct qmi_wlanfw_cap_req_msg_v01 req;
- 	struct qmi_wlanfw_cap_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	unsigned int board_id = ATH12K_BOARD_ID_DEFAULT;
- 	int ret = 0;
- 	int r;
-@@ -2311,7 +2311,7 @@ static int ath12k_qmi_load_file_target_mem(struct ath12k_base *ab,
- {
- 	struct qmi_wlanfw_bdf_download_req_msg_v01 *req;
- 	struct qmi_wlanfw_bdf_download_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	const u8 *temp = data;
- 	int ret;
- 	u32 remaining = len;
-@@ -2547,7 +2547,7 @@ static int ath12k_qmi_wlanfw_m3_info_send(struct ath12k_base *ab)
- 	struct m3_mem_region *m3_mem = &ab->qmi.m3_mem;
- 	struct qmi_wlanfw_m3_info_req_msg_v01 req;
- 	struct qmi_wlanfw_m3_info_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	int ret = 0;
- 
- 	memset(&req, 0, sizeof(req));
-@@ -2598,7 +2598,7 @@ static int ath12k_qmi_wlanfw_mode_send(struct ath12k_base *ab,
- {
- 	struct qmi_wlanfw_wlan_mode_req_msg_v01 req;
- 	struct qmi_wlanfw_wlan_mode_resp_msg_v01 resp;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	int ret = 0;
- 
- 	memset(&req, 0, sizeof(req));
-@@ -2651,7 +2651,7 @@ static int ath12k_qmi_wlanfw_wlan_cfg_send(struct ath12k_base *ab)
- 	struct qmi_wlanfw_wlan_cfg_resp_msg_v01 resp;
- 	struct ce_pipe_config *ce_cfg;
- 	struct service_to_pipe *svc_cfg;
--	struct qmi_txn txn = {};
-+	struct qmi_txn txn;
- 	int ret = 0, pipe_num;
- 
- 	ce_cfg	= (struct ce_pipe_config *)ab->qmi.ce_cfg.tgt_ce;
+>
+> > It leads to IO_PAGE_FAULTs like this:
+> > [IO_PAGE_FAULT domain=3D0x0023 address=3D0x1cce00000 flags=3D0x0020]
+> > and no link can be established.
+>
+> What do you mean with link in this context? Are you talking about 802.11
+> association?
 
--- 
-2.42.0
+Yes.
 
+>
+> > This patch changes that to dma_map_single(), which works correctly.
+>
+> Good catch. And virt_to_phys() documentation even says this:
+>
+>  *      This function does not give bus mappings for DMA transfers. In
+>  *      almost all conceivable cases a device driver should not be using
+>  *      this function
+>
+> > Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+> > Signed-off-by: Zhenghao Gu <imguzh@gmail.com>
+>
+> Jeff, are you ok with this?
+>
+> I did some cosmetics changes in the pending branch (removed unnecessary
+> parenthesis, reverse xmas tree etc), please check:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=
+=3Dpending&id=3Dfefa43d63e1928fce6e8c2bb626900e9ce98ca69
