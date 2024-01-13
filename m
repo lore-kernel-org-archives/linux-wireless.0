@@ -1,82 +1,100 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from h5.fbrelay.privateemail.com (h5.fbrelay.privateemail.com [162.0.218.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D2919454
-	for <linux-wireless@vger.kernel.org>; Sat, 13 Jan 2024 01:17:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98D41134C2;
+	Sat, 13 Jan 2024 01:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pappasbrent.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pappasbrent.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XgqdVEcO"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40D0slke000488;
-	Sat, 13 Jan 2024 01:17:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:cc:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=l9NoyDG5umoNuRDwQ09u0T+oDSR0HJd9jbast/IM0Mw=; b=Xg
-	qdVEcOJMUrwSta4vXQApbnC0nxm6zWQHSGtAOjyB6D/RjYYDB1KNsyJ0PLyjcHKx
-	/yzASiBjx93FNW/ZBmQEQzRI9loZMD6NFO3ZYGBefr24+gdmEQ/PXdzDjVWCO/4B
-	smX2xjQ+1xJXQhdQ51zPTh8PA8bAIE37z1FMCL8pTCM1zTuE3zdBE6kcxARyttTD
-	ZR2VNxtGqm/sbutCfAnHxeBc0ewXkde7IyF4e0nILLzfqqaJZKxkYCf2Ksi+B5r5
-	3zKGwEjxkAjce7mDbTE44DUc/Q9Rn57QO4ZPeTOT5aGFc9oNaR9bE269XvN2dpxp
-	W7D/D5vdpxivzoOmo5JA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vjyk8ajuu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 13 Jan 2024 01:17:29 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40D1GrKT028416
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 13 Jan 2024 01:16:53 GMT
-Received: from [10.110.118.97] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 12 Jan
- 2024 17:16:52 -0800
-Message-ID: <83e67ed1-9cac-4206-8e67-ac18f7effee9@quicinc.com>
-Date: Fri, 12 Jan 2024 17:16:52 -0800
+	dkim=pass (2048-bit key) header.d=pappasbrent.com header.i=@pappasbrent.com header.b="QcbN3/tm"
+Received: from MTA-10-4.privateemail.com (mta-10.privateemail.com [198.54.118.218])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(No client certificate requested)
+	by h5.fbrelay.privateemail.com (Postfix) with ESMTPSA id B138B60562;
+	Sat, 13 Jan 2024 01:14:49 +0000 (UTC)
+Received: from mta-10.privateemail.com (localhost [127.0.0.1])
+	by mta-10.privateemail.com (Postfix) with ESMTP id E443E180020E;
+	Fri, 12 Jan 2024 20:14:40 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=pappasbrent.com;
+	s=default; t=1705108481;
+	bh=5tLeUjD4Wuj2pnMpbrqMQhIri6Cryus27QrLloXWnoE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=QcbN3/tm2Mzp1wE86PFCzJsLp8ocsCOFrvclQrhYXpGSYMFuMcvh5Hcl7VqAZ7Cc+
+	 aAel++fm523ubqNQ3B13GH33fzD4tydNS3woLkLuvXHjYQZOMyzdhxXuIUKUPncqhV
+	 jEz4pHOSNjWR5LYlJOIXMmDTz6bCNOkDdmNXm6L6UoD41wC0BB7xbs4KHFgJDtUXBX
+	 BrizwHfnjtfM3m7rD3k+WrsSWsf7q4R62lOGrWaKZfCt/FLidHWkdme37WDtGhhQea
+	 QtH7sXMOlNVFfbOCFD/KmB/t9CPXKKF5HkVv3RBlafVAfH9/2Ev3m+LGItkigT2Rv6
+	 tSCasZnAe62EQ==
+Received: from bpappas-XPS-13-9310.cfl.rr.com (050-088-208-203.res.spectrum.com [50.88.208.203])
+	by mta-10.privateemail.com (Postfix) with ESMTPA;
+	Fri, 12 Jan 2024 20:14:30 -0500 (EST)
+From: Brent Pappas <bpappas@pappasbrent.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>
+Cc: Brent Pappas <bpappas@pappasbrent.com>,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: tx: Add __must_hold() annotation
+Date: Fri, 12 Jan 2024 20:11:45 -0500
+Message-ID: <20240113011145.10888-2-bpappas@pappasbrent.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 02/10] wifi: ath12k: add P2P IE in beacon template
-Content-Language: en-US
-To: Kang Yang <quic_kangyang@quicinc.com>, <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-References: <20240112092824.7664-1-quic_kangyang@quicinc.com>
- <20240112092824.7664-3-quic_kangyang@quicinc.com>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20240112092824.7664-3-quic_kangyang@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: HYzGE2R2tgg4aIyPW-ZN5RkuNRw82xWS
-X-Proofpoint-GUID: HYzGE2R2tgg4aIyPW-ZN5RkuNRw82xWS
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 spamscore=0
- mlxlogscore=837 impostorscore=0 phishscore=0 suspectscore=0
- priorityscore=1501 malwarescore=0 adultscore=0 bulkscore=0
- lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2311290000 definitions=main-2401130008
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: ClamAV using ClamSMTP
 
-On 1/12/2024 1:28 AM, Kang Yang wrote:
-> P2P Element is a necessary component of P2P protocol communication.
-> It contains the Vendor Specific Information Element which includes
-> the WFA OUI and an OUI Type indicating P2P.
-> 
-> Add P2P IE in beacon template, and implement WMI interface for it.
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Annotates ieee80211_set_beacon_cntdwn() with a __must_hold() annotation to
+make it clear that ieee80211_set_beacon_cntdwn() is only intended to be
+called when the caller has a lock on the argument "link."
 
+Signed-off-by: Brent Pappas <bpappas@pappasbrent.com>
+---
+
+Currently, ieee80211_set_beacon_cntdwn() calls rcu_dereference(), but
+without calling rcu_read_lock() beforehand and rcu_read_unlock()
+afterward.  At first I thought this was a bug, since (if I understand the
+RCU API correctly) rcu_dereference() should only be called in RCU
+read-side critical sections. However, upon closer inspection of the code,
+I realized that ieee80211_set_beacon_cntdwn() is only ever called inside
+critical sections. Therefore it seems appropriate to me to annotate
+ieee80211_set_beacon_cntdwn() with a __must_hold() annotation to make this
+apparent precondition explicit.
+
+This is my first time submitting an RCU-related patch so please tell me if
+I am misunderstanding the RCU API.
+
+ net/mac80211/tx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 314998fdb1a5..7245f2e641ba 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -10,6 +10,7 @@
+  * Transmit and frame generation functions.
+  */
+ 
++#include "linux/compiler_types.h"
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+@@ -4974,6 +4975,7 @@ static int ieee80211_beacon_add_tim(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
+ 					struct beacon_data *beacon,
+ 					struct ieee80211_link_data *link)
++	__must_hold(link)
+ {
+ 	u8 *beacon_data, count, max_count = 1;
+ 	struct probe_resp *resp;
+-- 
+2.43.0
 
