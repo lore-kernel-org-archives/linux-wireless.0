@@ -1,102 +1,76 @@
-Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7626018629;
-	Mon, 15 Jan 2024 15:06:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6C417981
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2024 15:27:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="eQp3fu30"
-Received: from relay9-d.mail.gandi.net (unknown [217.70.183.199])
-	by mslow1.mail.gandi.net (Postfix) with ESMTP id 95A43C6473;
-	Mon, 15 Jan 2024 14:59:22 +0000 (UTC)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 954FAFF812;
-	Mon, 15 Jan 2024 14:59:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705330755;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KljMchxpu6sUXwdpmR1vxK0+FWcbaI+DBRqAnIQUPW8=;
-	b=eQp3fu301Pdbrj+5NEEwhB3xtfqdd9CrRZuNr4j+TnGsXarH/kVpLtdeYvHaixB6ExxMTG
-	mN5jxpP6VHWMrGHwGj7dWEo8XkBAL36stLNgR+OTGWliEQh5zWQCnAUwF7ocfgo9DmCO+Y
-	FVlIeszJvowU32RiBfsGCs+7M/eZvHgg+ZyyG9NxLS+iK76xCrhsaga0CSWs4g6FO5MEn0
-	cTtk9zBZkHmZFpLXEX+BI60Z8jUzQe+5DdIKsHkjXBqpoPjPDDE/1P6liFl1dU1ogyfolq
-	wlBhNylR8C6qQrHEh1Es/3qrMzz73MpaZaQAW5moO2Knxum4b7Gv0yG/f5G04Q==
-From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Date: Mon, 15 Jan 2024 15:56:34 +0100
-Subject: [PATCH 5/5] wifi: wilc1000: fix multi-vif management when deleting
- a vif
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnjFJtSU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D9D5C433C7;
+	Mon, 15 Jan 2024 15:27:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705332478;
+	bh=83Kwxp4mOs4b7IHvqtRZuMJdTUukpnkqxu557swleIs=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=TnjFJtSUyGh2PJLnoF+yvF/yRixUtkfXtalmww1XZOrq24RFQ0TKmrFVFtf+QmqKe
+	 AcMj1lm5+MYLEy79m60g0+0tMtYtYKR2d0wwapRR6Sqpsk1r3axcq1rC6b33/7OSzV
+	 uX9j5Q/7zghzDcG5Z4aH9qe5HGKnvB3FrnkpDO0HJckByTngm9mFXaPgPg71CfqDG8
+	 Up/Y+zERPYlPOPUv1AJaJ0uWB25Sr6JS+L8Bt8sCnSEOqUwgGzCdyITXgSVRH7h1Ec
+	 CiwKoSI3i76TvX0qWl8sDNXQst+zEhwX69gRZL12/mLTatIAPeulImvYlxJXA1+Moh
+	 YLFPIaFUbrqEA==
+From: Kalle Valo <kvalo@kernel.org>
+To: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/4] wifi: ath12k: Refactor MAC un/register helper function
+References: <20231206034920.1037449-1-quic_periyasa@quicinc.com>
+	<20231206034920.1037449-5-quic_periyasa@quicinc.com>
+	<87bk9uej0b.fsf@kernel.org>
+	<269ea05b-d665-eceb-d7a1-d0ac20d341a7@quicinc.com>
+Date: Mon, 15 Jan 2024 17:27:55 +0200
+In-Reply-To: <269ea05b-d665-eceb-d7a1-d0ac20d341a7@quicinc.com> (Karthikeyan
+	Periyasamy's message of "Tue, 9 Jan 2024 19:11:38 +0530")
+Message-ID: <87v87u7h1g.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20240115-wilc_1000_fixes-v1-5-54d29463a738@bootlin.com>
-References: <20240115-wilc_1000_fixes-v1-0-54d29463a738@bootlin.com>
-In-Reply-To: <20240115-wilc_1000_fixes-v1-0-54d29463a738@bootlin.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>, 
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>, 
- David Mosberger-Tang <davidm@egauge.net>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-kernel@vger.kernel.org, 
- =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-X-Mailer: b4 0.12.4
-X-GND-Sasl: alexis.lothore@bootlin.com
+Content-Type: text/plain
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+Karthikeyan Periyasamy <quic_periyasa@quicinc.com> writes:
 
-Adding then removing a second vif currently makes the first vif not working
-anymore. This is visible for example when we have a first interface
-connected to some access point:
-- create a wpa_supplicant.conf with some AP credentials
-- wpa_supplicant -Dnl80211 -c /etc/wpa_supplicant.conf -i wlan0
-- dhclient wlan0
-- iw phy phy0 interface add wlan1 type managed
-- iw dev wlan1 del
-wlan0 does not manage properly traffic anymore (eg: ping not working)
+>> Is there a reason why you moved these two functions from mac.c to
+>> core.c? This is mac level code anyway, right?
+>
+> This is not fully mac level code, some parts of SoC/chip level code
+> bindup in the mac level. So i segregated the SoC level code like ab
+> related param initialization handling from the mac level procedure.
+>
+> Now, mac/radio should take care only radio level handling procedure.
+>
+> In future for MLO, SoC level can be extend easily.
 
-This is due to vif mode being incorrectly reconfigured with some default
-values in del_virtual_intf, affecting by default first vif.
+But is there a concrete reason to have the functions in core.c? In your
+following patches I couldn't see why to move these functions to core.c,
+everything seems to be suitable for mac.c.
 
-Prevent first vif from being affected on second vif removal by removing vif
-mode change command in del_virtual_intf
+I experimented this in the pending branch and moved the functions to
+mac.c (tag ath-pending-202401151424):
 
-Fixes: 9bc061e88054 ("staging: wilc1000: added support to dynamically add/remove interfaces")
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Co-developed-by: Alexis Lothoré <alexis.lothore@bootlin.com>
-Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
----
-This patch has been initiated by Ajay, and I reworked it a bit/split it.
-I could have just fixed the parameters passed to wilc_set_operation_mode,
-but I observed that even calling wilc_set_operation_mode seems faulty in
-del_virtual_intf: for example the thread in charge of sending commands to
-the chip is possibly not running (because interface is not up). Also, the
-vif mode is only configured in change_virtual_intf and not in
-add_virtual_intf, which tends to validate the removal from
-del_virtual_intf.
----
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=bee89ac2b5755754849deaf7054828e982cc6658
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index 2d0474e6404e..f03fd15c0c97 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -1609,7 +1609,6 @@ static int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	cfg80211_unregister_netdevice(vif->ndev);
- 	vif->monitor_flag = 0;
- 
--	wilc_set_operation_mode(vif, 0, 0, 0);
- 	mutex_lock(&wl->vif_mutex);
- 	list_del_rcu(&vif->list);
- 	wl->vif_num--;
+I also fixed your other patchsets to match that and to me it makes more
+sense to have everything in mac.c. I prefer to make core.c as simple as possible.
+
+As you can see I also made changes to the patch titles to make them more
+understandable:
+
+wifi: ath12k: refactor ath12k_mac_register() and ath12k_mac_unregister()
+
+Thoughts?
 
 -- 
-2.42.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
