@@ -1,77 +1,81 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459F918E20;
-	Mon, 15 Jan 2024 20:00:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NlnYItp0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=CRFKM3mqGAyECZMl3VOp9tD4rz9UsD6jBBbM8HZGeCo=;
-	t=1705348834; x=1706558434; b=NlnYItp0QYFifMRCAJqA0hl3YFYH/i4FY3fiQDEnE2iNmGA
-	XSz5NXcH6rr93u0sBKmMlysLo8bsi343qvg2hD+BpvkCx7g9sNZh6FIyzduG9ja9nwefCuFjOUdle
-	hkFJP2RB0om1eHFTPbNztjTDxDw5rFREBE6cfvB0/iEAPsM595Ha5mjizhyFpKOelJCXR5dyDhRfD
-	2QeIDGdoOcDMW15tlTru3XqHLIFFe16hHIiMmq9Vsz3OHMm8P1+6zcaYFsAZPYcPJ74dF5j3/omSV
-	bjueHTaEyKw5ICOQL3gEBu0GB0HFYoG5j4RCREJQrYh363F1c4EnRnowamxaLnFg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1rPT8I-00000003kqH-2U5O;
-	Mon, 15 Jan 2024 21:00:30 +0100
-Message-ID: <dae4bb032ad8b0c9fa6547de5e869e51f9f6e766.camel@sipsolutions.net>
-Subject: Re: [REGRESSION] 6.7 broke wifi "AP is in CSA process, reject auth"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: coldolt <andypalmadi@gmail.com>, ayala.beker@intel.com, 
-	linux-wireless@vger.kernel.org, regressions@lists.linux.dev
-Date: Mon, 15 Jan 2024 21:00:29 +0100
-In-Reply-To: <CAJvGw+DQhBk_mHXeu6RTOds5iramMW2FbMB01VbKRA4YbHHDTA@mail.gmail.com>
-References: 
-	<CAJvGw+DQhBk_mHXeu6RTOds5iramMW2FbMB01VbKRA4YbHHDTA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 (3.50.3-1.fc39) 
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0651A19BDE
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Jan 2024 20:21:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rPTSJ-00050q-KB; Mon, 15 Jan 2024 21:21:11 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rPTSJ-0005hp-3A; Mon, 15 Jan 2024 21:21:11 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rPTSJ-000N99-02;
+	Mon, 15 Jan 2024 21:21:11 +0100
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To: Mark Brown <broonie@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: linux-spi@vger.kernel.org,
+	kernel@pengutronix.de,
+	Kalle Valo <kvalo@kernel.org>,
+	Dmitry Antipov <dmantipov@yandex.ru>,
+	Michal Simek <michal.simek@amd.com>,
+	Amit Kumar Mahapatra <amit.kumar-mahapatra@amd.com>,
+	libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 30/33] wifi: libertas: Follow renaming of SPI "master" to "controller"
+Date: Mon, 15 Jan 2024 21:13:16 +0100
+Message-ID:  <ff935c49902f3961b602ae3b47bfe6dd2ceb8405.1705348270.git.u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1705348269.git.u.kleine-koenig@pengutronix.de>
+References: <cover.1705348269.git.u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1120; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=CilgUXn9sYnDzeXUBV/K3zS5xmEAYPQmSA4m63seKdk=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlpZHi9oLLoowITBN5S7io8wKs2b+sTo+Tnck0X PYYVS9ioBuJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZaWR4gAKCRCPgPtYfRL+ Tuc6B/99UXFdbq9RRhmAcP+eXGKu3vvNAzW2hyj2PgdWq/5WkM97mQOeIMcksFoAnxE0HJNPI1u oCt3Zwlk0B8V56WfGHK/rcCsw6CDsu1zy/gZ8HzbQSoJbJZC7oSZeQKJOD/TAJ8SCjRv23xwpU+ scwrox96U29cCMeKG7r/nW+bQ+p1YGCM8ydB/M8e0/3MC14osg+wSUWK4UYmOEU6vnoQnsTxJHR xy1mPr+4Hx3iF0Y1200bnv3f2wfUcw+G68btaKOEF4nOmBGcFXK5YFmsX/ynn31/zJG3hO1eToX w6NNhTx64W8yRc+n/rD/nqCm1vRrRT5tBU0jWJN7kOsg7cBH
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On Mon, 2024-01-15 at 16:39 +0200, coldolt wrote:
-> I'm on Arch linux, updated the kernel from 6.6.10 -> 6.7.
->=20
-> Now it doesn't connect to my 5GHz wifi, to 2.4GHz it still connects.
-> Also the earlier kernel version still works. Output from "sudo dmesg |
-> grep -i wlp2s0":
->=20
-> > [    6.049600] iwlwifi 0000:02:00.0 wlp2s0: renamed from wlan0
-> > [  131.095861] wlp2s0: AP is in CSA process, reject auth
-> > [  132.143170] wlp2s0: AP is in CSA process, reject auth
-> > [  133.599906] wlp2s0: AP is in CSA process, reject auth
-> > [  135.549325] wlp2s0: AP is in CSA process, reject auth
-> > [  145.510438] wlp2s0: AP is in CSA process, reject auth
->=20
-> I notice that the commit c09c4f31998bac, which was added to kernel
-> 6.7, introduced rejecting a connection with that error message "AP is
-> in CSA process, reject auth".
->=20
-> My guess is that commit is the cause of the regression.
+In commit 8caab75fd2c2 ("spi: Generalize SPI "master" to "controller"")
+some functions and struct members were renamed. To not break all drivers
+compatibility macros were provided.
 
-I guess? But that was quite intentional - we don't handle connecting
-well while the AP is switching channels.
+To be able to remove these compatibility macros push the renaming into
+this driver.
 
-This really shouldn't persist for longer than a few seconds though, even
-the 15 seconds sounds pretty excessive.
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/net/wireless/marvell/libertas/if_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Could you show the output of
+diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
+index 8690b0114e23..b722a6587fd3 100644
+--- a/drivers/net/wireless/marvell/libertas/if_spi.c
++++ b/drivers/net/wireless/marvell/libertas/if_spi.c
+@@ -1052,7 +1052,7 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 				"attached to SPI bus_num %d, chip_select %d. "
+ 				"spi->max_speed_hz=%d\n",
+ 				card->card_id, card->card_rev,
+-				card->spi->master->bus_num,
++				card->spi->controller->bus_num,
+ 				spi_get_chipselect(card->spi, 0),
+ 				card->spi->max_speed_hz);
+ 		err = if_spi_prog_helper_firmware(card, helper);
+-- 
+2.43.0
 
-$ sudo iw wlp2s0 scan -u
-
-for this AP?
-
-johannes
