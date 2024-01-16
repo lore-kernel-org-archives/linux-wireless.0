@@ -1,99 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD7131690B7;
-	Tue, 16 Jan 2024 20:04:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9612867069
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2024 20:04:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435456; cv=none; b=DTZ7sBAwg0XspmIhjjZ7EjvBPG3iPyJPe3mWWZSN8svdaxRbPUBwU06aSOIrcIHJONvzmEj1OVguh3q2p/panLgPGAA1wvKDtsYYSuk5768yhmxdyKsXOq4xjCiFLhES4/PhCfM9VMpbBaTAyyfuiebiF7iF5dmvFXPT2i5d+Zo=
+	t=1705435476; cv=none; b=LXtbJQ6q95XEbYZ5Oz861PQm7rSoGTLCh62tpy3cIYswK3IkH5YIOGW5raTKfL65rSpVZlYBflp7JABsOxC4AX9feMnPXY4MFaXI+PPSkTq5Fl+ULmDd/LE+Z+8WQc3tzjjs//KKssTqmSbz7Ptu9SsQIYKHeUOuGjXnCOgupFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435456; c=relaxed/simple;
-	bh=ZacWzLCDX992GlzXe6YpXKHBw5JHUXKwxy/FO9FQ0JQ=;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=Hzs716nCqdKHECrcvuR1B2UgtoFM03EUR+8MU+5lHTDPPKjEeQLXGfAVx7lGluCJhCCUV0wbr5+v1sJLkmBAsZ2Kn2BKeROhIVHSiR2WBP6YjnW/LdGeqCNZRiPZnP814OOjRwmzdnxJXdlJTeTl1vuSfDr6atJ0lca3biI6ASE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=co+SQyGC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705435476; c=relaxed/simple;
+	bh=wa1V2GkipVVfoEPy+xFf0pJB1DcmBtp3oAjLnuUjxCc=;
+	h=Received:DKIM-Signature:Received:Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:Content-Language:To:CC:
+	 References:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Originating-IP:X-ClientProxiedBy:X-QCInternal:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details; b=ZZ5BA2qNi66OWEKsljv891ID3J8GRJwfZ1t7bcUGr0L2vlcw1XKiconE7A8res3WDZuaXan4sRQri9LElqy90yJVl5gy1NubDXGaHh62F9lyqNIi2FqgKqvnCHYIsWitfuJpqCuWKHWkeTe85h/ximRccJGK2QKIBq+ehZUqmzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ZyiXSeBd; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="co+SQyGC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69582C433F1;
-	Tue, 16 Jan 2024 20:04:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435455;
-	bh=ZacWzLCDX992GlzXe6YpXKHBw5JHUXKwxy/FO9FQ0JQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=co+SQyGC0Sq9vYIaE+6VKYvmUNjW+REajGpbD/co2qCg1dTJXD8DeYC8ZP62Y8ZVc
-	 c6A2LhkhjmXfT4zOnK2BZp/C58nw7CoYX7dry/DbXNfngR3MByVGyjMb0fHCEmx0Eq
-	 5tvNRi+bcv9KNIPN/sftKLIoVk0xMAA91aXKG2k78I9Xk80KBk2gAPp4fLVviuvOSX
-	 rf5lBPFmWpQQ607wYZ3s7Olvk6eo9C58Zndr2UACOa/4UW0g6KzITjb7owFl/j+doC
-	 t3jqW+v3OyR3okfx0FsV42q9W3wtIH3BmxqmQZYgLKVfY/R+RUQK9XIZq5zxPx6poR
-	 vMderklFrZ3+w==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 31/31] wifi: cfg80211: free beacon_ies when overridden from hidden BSS
-Date: Tue, 16 Jan 2024 15:02:40 -0500
-Message-ID: <20240116200310.259340-31-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240116200310.259340-1-sashal@kernel.org>
-References: <20240116200310.259340-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ZyiXSeBd"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40GHtivH015885;
+	Tue, 16 Jan 2024 20:04:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=4ReoGPfYklfwCZlaqdmEKibjC0wze4T4BY193JwG4r4=; b=Zy
+	iXSeBdoYAUyYrJozQwtyUk5UeoifmWtPOncDOrOZH+No+yjQMUb4DYWjtPYOtZnx
+	gRCJvw22AwvZE+v/bqW0xuRq+KUtDZViIHt3R7QRWWrYfGwpxVxTGmseyu26MpDy
+	9M6bzQ++9T5+AlanbY1KrwxwJLP5Q94sjmduhIbqxzPDw2WH1InOMHqMkQof5JFo
+	sw/vbOqF+XUuNVBdhEFm1dx5oqk9Id3SKqMT5LsxyvIsHf3ZpsHbGPegnWXvTngw
+	q+b1eQVX/3hfegirQ7RaZCrg15DtfnjE0MCbw0fQgMvT4zNehnBU0tRWYwvDjbQ8
+	zyMZ/ZuZ3KMkVo1JN/cg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vnq4t1kev-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jan 2024 20:04:25 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40GK4Ouj020803
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 16 Jan 2024 20:04:24 GMT
+Received: from [10.227.110.203] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 16 Jan
+ 2024 12:04:24 -0800
+Message-ID: <f3822735-8366-47b6-be78-af09aee0307c@quicinc.com>
+Date: Tue, 16 Jan 2024 12:04:23 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.267
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath11k: do not process consecutive RDDM event
+Content-Language: en-US
+To: Baochen Qiang <quic_bqiang@quicinc.com>, <ath11k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+References: <20240111071406.14053-1-quic_bqiang@quicinc.com>
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20240111071406.14053-1-quic_bqiang@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Q6hEjz6xJjNdNu5AOsG4nepxsXNe5Z2x
+X-Proofpoint-ORIG-GUID: Q6hEjz6xJjNdNu5AOsG4nepxsXNe5Z2x
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ clxscore=1015 malwarescore=0 suspectscore=0 spamscore=0 lowpriorityscore=0
+ bulkscore=0 mlxlogscore=655 priorityscore=1501 phishscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2401160158
 
-From: Benjamin Berg <benjamin.berg@intel.com>
-
-[ Upstream commit 32af9a9e1069e55bc02741fb00ac9d0ca1a2eaef ]
-
-This is a more of a cosmetic fix. The branch will only be taken if
-proberesp_ies is set, which implies that beacon_ies is not set unless we
-are connected to an AP that just did a channel switch. And, in that case
-we should have found the BSS in the internal storage to begin with.
-
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://msgid.link/20231220133549.b898e22dadff.Id8c4c10aedd176ef2e18a4cad747b299f150f9df@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/wireless/scan.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index e35c54ba2fd5..f3a957f2bc49 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1294,8 +1294,12 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 				list_add(&new->hidden_list,
- 					 &hidden->hidden_list);
- 				hidden->refcount++;
-+
-+				ies = (void *)rcu_dereference(new->pub.beacon_ies);
- 				rcu_assign_pointer(new->pub.beacon_ies,
- 						   hidden->pub.beacon_ies);
-+				if (ies)
-+					kfree_rcu(ies, rcu_head);
- 			}
- 		} else {
- 			/*
--- 
-2.43.0
+On 1/10/2024 11:14 PM, Baochen Qiang wrote:
+> Currently we do reset for each RDDM event from MHI, however there are
+> cases, see below log, that we get two or more consecutive events, and
+> it is pointless to do reset for the subsequent ones. What's more, it
+> makes reset process more likely to fail.
+> 
+> [ 1502.115876] ath11k_pci 0000:04:00.0: boot notify status reason MHI_CB_EE_RDDM
+> [ 1502.115884] ath11k_pci 0000:04:00.0: firmware crashed: MHI_CB_EE_RDDM
+> [ 1502.224041] ath11k_pci 0000:04:00.0: boot notify status reason MHI_CB_EE_RDDM
+> [ 1502.224050] ath11k_pci 0000:04:00.0: firmware crashed: MHI_CB_EE_RDDM
+> 
+> Add a check to avoid reset again and again. This is done by tracking previous
+> MHI status: if we receive a new RDDM event while the previous one is
+> also the same, we treat it as duplicate and ignore it, because normally
+> we should receive a MHI_CB_EE_MISSION_MODE event between them.
+> 
+> Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.23
+> 
+> Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 
