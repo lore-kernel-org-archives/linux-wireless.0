@@ -1,71 +1,117 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C96D711C84
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Jan 2024 08:10:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AE551171E;
+	Tue, 16 Jan 2024 08:19:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 40G8A7Fa8147637, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 40G8J4KJ0154508, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 40G8A7Fa8147637
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 40G8J4KJ0154508
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Jan 2024 16:10:07 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+	Tue, 16 Jan 2024 16:19:04 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.32; Tue, 16 Jan 2024 16:10:07 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Tue, 16 Jan
- 2024 16:10:06 +0800
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.32; Tue, 16 Jan 2024 16:19:04 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.7; Tue, 16 Jan 2024 16:19:03 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e4c4:c4f:4e4c:d23c]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e4c4:c4f:4e4c:d23c%5]) with mapi id
+ 15.01.2507.035; Tue, 16 Jan 2024 16:19:03 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: <Jes.Sorensen@gmail.com>, <kvalo@kernel.org>
-CC: <martin.kaistra@linutronix.de>, <lkp@intel.com>,
-        <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] wifi: rtl8xxxu: convert EN_DESC_ID of TX descriptor to le32 type
-Date: Tue, 16 Jan 2024 16:09:44 +0800
-Message-ID: <20240116080945.20172-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+To: Kalle Valo <kvalo@kernel.org>, kernel test robot <lkp@intel.com>
+CC: Martin Kaistra <martin.kaistra@linutronix.de>,
+        "oe-kbuild-all@lists.linux.dev" <oe-kbuild-all@lists.linux.dev>,
+        "Johannes
+ Berg" <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+Subject: RE: [wireless-next:main 32/56] drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5623:40: sparse: sparse: invalid assignment: |=
+Thread-Topic: [wireless-next:main 32/56]
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5623:40: sparse:
+ sparse: invalid assignment: |=
+Thread-Index: AQHaSD+It1T//jaidk6ElNqnaDHlRrDb+H+JgAAfIPA=
+Date: Tue, 16 Jan 2024 08:19:03 +0000
+Message-ID: <0337a8c9c9224ec8852e8ec03bf21560@realtek.com>
+References: <202401161318.YtXoCkjU-lkp@intel.com> <877ck9hk4z.fsf@kernel.org>
+In-Reply-To: <877ck9hk4z.fsf@kernel.org>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+x-kse-serverinfo: RTEXDAG01.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
 X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
-Fields of TX descriptor are little-endian order, so correct EN_DESC_ID
-field to le32 type.
 
-Fixes: b837f78fbffa ("wifi: rtl8xxxu: add hw crypto support for AP mode")
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202401161318.YtXoCkjU-lkp@intel.com/
-Cc: Martin Kaistra <martin.kaistra@linutronix.de>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 521faa48803c..98700f3ad6f9 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5619,7 +5619,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 			break;
- 		}
- 		if (bmc && rtlvif->hw_key_idx != 0xff) {
--			tx_desc->txdw1 |= TXDESC_EN_DESC_ID;
-+			tx_desc->txdw1 |= cpu_to_le32(TXDESC_EN_DESC_ID);
- 			macid = rtlvif->hw_key_idx;
- 		}
- 	}
--- 
-2.25.1
+> -----Original Message-----
+> From: Kalle Valo <kvalo@kernel.org>
+> Sent: Tuesday, January 16, 2024 2:23 PM
+> To: kernel test robot <lkp@intel.com>
+> Cc: Martin Kaistra <martin.kaistra@linutronix.de>; oe-kbuild-all@lists.li=
+nux.dev; Johannes Berg
+> <johannes@sipsolutions.net>; linux-wireless@vger.kernel.org; Ping-Ke Shih=
+ <pkshih@realtek.com>
+> Subject: Re: [wireless-next:main 32/56] drivers/net/wireless/realtek/rtl8=
+xxxu/rtl8xxxu_core.c:5623:40:
+> sparse: sparse: invalid assignment: |=3D
+>=20
+> kernel test robot <lkp@intel.com> writes:
+>=20
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wirele=
+ss-next.git main
+> > head:   ece90a8622320bf5a24d3326da1f8e109891573c
+> > commit: b837f78fbffa5f8e7e7c59879db54793abf161ec [32/56] wifi: rtl8xxxu=
+: add hw crypto support for AP
+> mode
+> > config: riscv-randconfig-r132-20240116
+> (https://download.01.org/0day-ci/archive/20240116/202401161318.YtXoCkjU-l=
+kp@intel.com/config)
+> > compiler: riscv64-linux-gcc (GCC) 13.2.0
+> > reproduce:
+> (https://download.01.org/0day-ci/archive/20240116/202401161318.YtXoCkjU-l=
+kp@intel.com/reproduce)
+> >
+> > If you fix the issue in a separate patch/commit (i.e. not just a new ve=
+rsion of
+> > the same patch/commit), kindly add following tags
+> > | Reported-by: kernel test robot <lkp@intel.com>
+> > | Closes: https://lore.kernel.org/oe-kbuild-all/202401161318.YtXoCkjU-l=
+kp@intel.com/
+> >
+> > sparse warnings: (new ones prefixed by >>)
+> >>> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5623:40: sparse=
+: sparse: invalid assignment: |=3D
+> >    drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5623:40: spars=
+e:    left side has type
+> restricted __le32
+> >    drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5623:40: spars=
+e:    right side has type
+> unsigned long
+>=20
+> Martin, could you send a fix for this ASAP?
+>=20
+
+I help to prepare a patch [1]. Because sparse reports two warnings, I fix
+them by two patches in the same patchset. =20
+
+[1] https://lore.kernel.org/linux-wireless/20240116080945.20172-1-pkshih@re=
+altek.com/T/#t
+
+Ping-Ke=20
 
