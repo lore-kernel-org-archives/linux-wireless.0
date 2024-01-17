@@ -1,57 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7A41DFDE
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Jan 2024 13:43:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89AFF200A4
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jan 2024 13:45:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705498992; cv=none; b=JSuUMtDgChjxJTFC7mjpHDJhOGhahEepN4hsVnGZQ4J4pX1SAHPbcNDki4TBr5+dpyKLHTYsZVC3+gRTin7UQ/IZsoDv0ENoKx7Mx+r1DqzS3V7Z/bEgzq62aDShEq6z+Fk6HSpsDgsXfZN3pUVDGJ0YZqgAtV75xKrq1FOneWI=
+	t=1705499146; cv=none; b=b5DLGA4Wddr6J0kt7r8qYaMgsoH0+O2oB2FHZFcaqR7fE+gL8rSlFnKwFfbG3ELhE3hjdRdaYzdmMpuaDWtAtqk98rPiJvq+pLcGNQiEFashDvPWY18lWY5kjr4QfKEXhLmNW3JAqrJHDcOcZ1PL0GO55ZplFXJxtnBy/EAh3Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705498992; c=relaxed/simple;
-	bh=rNryY6hYZlO1btpN6zBV4mq9B44lFRLTK0qMjrq9rBg=;
+	s=arc-20240116; t=1705499146; c=relaxed/simple;
+	bh=Wea10r8QPdbUDSZNfU+aEEm35fedoPB+u5pgJIvgJFo=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:References:Date:
-	 In-Reply-To:Message-ID:User-Agent:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding; b=SgYGoxrijB4332HsdjISyUGs64sMa1oFAfWNFzdH51MMhoixAd6m4Z7/0IgwEmD5ITgbJ7q4yk5756uNB2wf/uhIYciE29ALW0nV0DeGo+Fygu3fUgVZLhNipkhvq7UnW3sClR0SjSbffCPa68y7CkebZB7ggigTVMBW2uJVYJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PVDFa0qV; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Message-ID:User-Agent:MIME-Version:Content-Type; b=jTupZCsuW70XvHXxCZiIR+ddf6XRS/5NP/WX2psHKY5e72Lk1GiiT4eP/zTdi1rIAYLZ66wUxcDF9Ls09tctX236TwPM0tFdo3oTDbsojWpdTzfPJMxpRDT+KrevFmqtFzbz7Zz0MQmptHeF7j4DfQSNQaoWjyGVIQLbMFy2j+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XRM0Mq1z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PVDFa0qV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 107C3C433F1;
-	Wed, 17 Jan 2024 13:43:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XRM0Mq1z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5109BC433C7;
+	Wed, 17 Jan 2024 13:45:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705498991;
-	bh=rNryY6hYZlO1btpN6zBV4mq9B44lFRLTK0qMjrq9rBg=;
+	s=k20201202; t=1705499146;
+	bh=Wea10r8QPdbUDSZNfU+aEEm35fedoPB+u5pgJIvgJFo=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=PVDFa0qVeQgfcmtTLvCT/aURzwV29B744wxAwuaQ73mWhuWPqchRniFVuU5H5Hl+D
-	 wvaaY+VBJHOffrmv/+3ae0fqYxsk1hjP+jAcoWZh5+f7Djg8ZFWQw6Wus7P6wHfAmR
-	 gZLPkTtEMSRsWZp5XbLgDJyzbAn0VgO+15CCtdY9wr/QO6/o36gNoeckVCGNl5RYL8
-	 0njz6HRmRyNVe+OYUDuq/RyHTfhQTqWrSfCrsjNXWtgzSvXEKccH7BaMuAV+vTdrZg
-	 F4sRRbPDC5l4cAZN/jX4LN+hDJ7IfB2gB1hdtrhi55QHCCRfAxtKBNNrmlLglnHue5
-	 HdAzIj0EiSXTw==
+	b=XRM0Mq1zS2Z3HvmPAFJ2mi986a0gw5m1AcdSZ0bovGwc5LCR6d+EP5rTkAmu+HXcF
+	 IbRmbF+relAX6NYNdh+SAelDfgDxQ+2RDnMFyCB83Z9+lrsnmxGommliuVpUn+zz9g
+	 w7dZzf17AqjAx/G4Db4kKpw6E1pSI5qUE3QUQ+8ANoQhVRpVdJmbo7Fj/C18o6LHu6
+	 AsvnC6vpsh35bQcRm0mo9mEU4m73dQKuEGlDc0p/sfJOv86M44wr5kwaHY6zooxA1f
+	 tTqvkKnsXq3yuQO+ZALIiJzGOUwjIU/topOJzPAUMuWXXE6EVcrBkzBywVpttp6i/z
+	 qBhI8BILGe/UQ==
 From: Kalle Valo <kvalo@kernel.org>
-To: James Prestwood <prestwoj@gmail.com>
-Cc: Baochen Qiang <quic_bqiang@quicinc.com>,
-  linux-wireless@vger.kernel.org,  ath11k@lists.infradead.org
-Subject: Re: ath11k and vfio-pci support
-References: <adcb785e-4dc7-4c4a-b341-d53b72e13467@gmail.com>
-	<8734v5zhol.fsf@kernel.org>
-	<87fa5220-6fd9-433d-879b-c55ac67a0748@gmail.com>
-	<87r0ipcn7j.fsf@kernel.org>
-	<356e0b05-f396-4ad7-9b29-c492b54af834@gmail.com>
-	<26119c3f-9012-47bb-948e-7e976d4773a7@quicinc.com>
-	<87mstccmk6.fsf@kernel.org>
-	<df9fd970-5af3-468c-b1f1-18f91215cf44@gmail.com>
-	<8734v4auc4.fsf@kernel.org>
-	<e8878979-1f3f-4635-a716-9ac381c617d9@gmail.com>
-	<285b84d0-229c-4c83-a7d6-4c3c23139597@quicinc.com>
-	<4607fb37-8227-49a3-9e8c-10c9b117ec7b@gmail.com>
-	<3d22a730-aee5-4f2a-9ddc-b4b5bd4d62fe@quicinc.com>
-	<ee0280fd-032c-4f45-a3f9-50d96d8bed6d@gmail.com>
-	<16cfd010-b62d-4385-92d1-002820a8db38@quicinc.com>
-	<cdec259a-b779-4856-8585-f285179e3671@gmail.com>
-Date: Wed, 17 Jan 2024 15:43:08 +0200
-In-Reply-To: <cdec259a-b779-4856-8585-f285179e3671@gmail.com> (James
-	Prestwood's message of "Wed, 17 Jan 2024 05:20:24 -0800")
-Message-ID: <87cyu05b4j.fsf@kernel.org>
+To: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/3] wifi: ath12k: Remove unsupported and unused ring
+ configurations
+References: <20231122063932.10321-1-quic_tamizhr@quicinc.com>
+Date: Wed, 17 Jan 2024 15:45:43 +0200
+In-Reply-To: <20231122063932.10321-1-quic_tamizhr@quicinc.com> (Tamizh Chelvam
+	Raja's message of "Wed, 22 Nov 2023 12:09:29 +0530")
+Message-ID: <878r4o5b08.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -59,37 +43,30 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 
-James Prestwood <prestwoj@gmail.com> writes:
+Tamizh Chelvam Raja <quic_tamizhr@quicinc.com> writes:
 
->>> I don't see anything in the dmesg logs, or in lspci etc.
->>>
->> fee00578 is the physical MSI vector so I got it using lspci in host, see
->> ...
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Capabilities: [50] MSI: Enabl=
-e+ Count=3D1/32 Maskable+ 64bit-
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 Address: fee00578=C2=A0 Data: 0000
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 Masking: fffffffe=C2=A0 Pending: 00000000
->> ...
+> Currently in driver doing memory allocation for tx_monitor, tcl_cmd_ring
+> and tcl_status ring. Here driver support for tx_monitor mode is not
+> there and memory for tcl_cmd and tcl_status rings are allocated by
+> firmware and it uses that memory instead of host allocated. So avoid
+> these unused ring setup configuration.
 >
-> Mine looks like this:
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 >
-> ...
->
-> =C2=A0=C2=A0=C2=A0 Capabilities: [50] MSI: Enable- Count=3D1/32 Maskable+=
- 64bit-
-> =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0 Address: 00000000=C2=A0 Data: 0000
-> =C2=A0=C2=A0 =C2=A0=C2=A0=C2=A0=C2=A0 Masking: 00000000=C2=A0 Pending: 00=
-000000
+> Tamizh Chelvam Raja (3):
+>   wifi: ath12k: fix calling correct function for rx monitor mode
+>   wifi: ath12k: Remove unsupported tx monitor handling
+>   wifi: ath12k: Remove unused tcl_*_ring configuration
 
-And that lspci output is from the host (not the guest)?
+I had several conflict, please double check:
 
---=20
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=cfb7ae2dc5d32206d6978625bac055e1f431f450
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=d9e193e606e87fc4da445c1aed12113d2ae72151
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=23c88b95ce6a67eb422ab858e22c90312028b69d
+
+-- 
 https://patchwork.kernel.org/project/linux-wireless/list/
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
