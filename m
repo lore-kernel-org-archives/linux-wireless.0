@@ -1,127 +1,168 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E8622E82F
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2024 20:19:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F44C1B96A
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2024 20:24:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705609192; cv=none; b=QSweB9tA1R5g2kSTgLfNH+Qi+58qgun7rxxet8r+clUztLsF6ErzJquv8JZY6g3CeqaoFUJb34qP1GGg/xErAid3WFyWyZklAUdh5DzWigwABrT7zcnHLE6h66IeRhrIVK1JQjZNGb5F0UXnBd0yF2MUQlE786KdBGdmUPycDRA=
+	t=1705609466; cv=none; b=i5w1lc6oaakAZyXjJ/kn1WHnc1QDfCdhh7PqJ3JFkSrvICrXIMXhwMaJmr4tnpctjMfceHqYV+vGv0YdJw6rvSAUSfwXMwuWX/5ipoTxuZ6u7LQMGNl+tT/i+sPDNOk8U6mjs7h765Bs+Yw2jqGUBXYyOFGOED4vdiSTp0Oa0d8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705609192; c=relaxed/simple;
-	bh=j9PldOicSCiR56xGx4w5DlqynjyiqkkllVc8RQEib1c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lfwVZVPwh35/uIjQamJWPrsSZdFau24hFwSEgJyPnPRttsHe1yk5Fco5K65sf9ApNkn/5PHkXHPiYoNL6Dm+NZoydjPP7igpyh+nyrLvxIVlUVBtuGWYCHf8KQLrFrt/zH6mB6I4MSQCvMCz4rmbAokW+1Ev+FMcKQ9UU7Bqq6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=avv2qAf4; arc=none smtp.client-ip=209.85.215.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1705609466; c=relaxed/simple;
+	bh=gdx9D6e9HCsQk6lirjvtmenTzWkKtii8/V5ifZHXOK0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dk8B9WMN7fHEhxqN5gBJ9I/kUd8KgBpDg40pMReLIElUVlNFpPHNdjhWSS9aFMzuapEIqNsf1fv5NsPshBbAne0xZEZ1GfjSbJyyjedyj21wa8KhlmvI2gldeFLwuzq5EG6TWx6+OusqoDKKs0dkTOYoZyHnPQf9uPGnb3cPUWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=PcmQj4Jr; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="avv2qAf4"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-5cde7afa1d7so40239a12.1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2024 12:19:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1705609191; x=1706213991; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/WcFOrXzi1etprpTMrc6iHqPcX21W26WmkZmedeBfBQ=;
-        b=avv2qAf4u7zBd00cqH3rkrR5fCKK09j8sPYmBm2bKx9MjBrrHY5+gJPXMqyX2sUwcQ
-         Xzi+Jq63GdANlZxY7SoUVi2TINvfE/Mr8O8F7lWXFs8vYpYjpAdPtqBszV5EhYJWJOPB
-         qGEwnBllHt6MO145vbaVXHBfLuBmwf9W7hbTs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705609191; x=1706213991;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/WcFOrXzi1etprpTMrc6iHqPcX21W26WmkZmedeBfBQ=;
-        b=T0eE1y+TXxH2qhG/9h4PyXuoKs+m4U6sYpeKufatPJsm9Rh0pgmGgGWatwq6MMkM6M
-         vDOqDQpKNJGA1ns1+SRJZl/j8O/oYdnj1VVQ3cvrX2jSV7VP/Pu8V66gUrFcGDevVbyT
-         sWfLitiYzAMmFIGDUtNemY9XnseTaDhbi2DySJ+c7i5IG0gx8Apv+QLnYxli+DG1FMcf
-         oL9zz4NjNRTFWDYPxPSYNHB6j8ykML2CWASKLzW6XWfFdTL03pM0swxOSd0oMKDjH/ri
-         /HUn1VotDl8DgYWHfFvo619rvLYge6PQ6P6dFehNa0Vo1qlBapaJkjIxEJ5j81sKJg26
-         7caw==
-X-Gm-Message-State: AOJu0Yweg1qdEaIUUWmMYTRgMU/TGm+8yjqwWV90YFh2MC8p+c31h3Mu
-	QpCvGBwd+Ktk1Ia04lR6sdeXzTYUzeLoRQpC4Y9zf4iCAJsXxgp9eLFXjU+EEg==
-X-Google-Smtp-Source: AGHT+IF4nnlVdgtVrwLuTAYy39B/0R16JlUrk6mFm918Pc2TjDWO4jFBSBuNgu+yKV55b4U9s0AePA==
-X-Received: by 2002:a05:6a20:1604:b0:199:701a:4452 with SMTP id l4-20020a056a20160400b00199701a4452mr1373703pzj.9.1705609190749;
-        Thu, 18 Jan 2024 12:19:50 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id fa18-20020a056a002d1200b006d996ce80a6sm3670498pfb.0.2024.01.18.12.19.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jan 2024 12:19:50 -0800 (PST)
-Date: Thu, 18 Jan 2024 12:19:49 -0800
-From: Kees Cook <keescook@chromium.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Atul Raut <rauji.raut@gmail.com>, aspriel@gmail.com,
-	franky.lin@broadcom.com, kvalo@kernel.org,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel-mentees@lists.linuxfoundation.org
-Subject: Re: [PATCH v2] brcmfmac: replace one-element array with
- flexible-array member
-Message-ID: <202401181217.1D75C32E@keescook>
-References: <20230803052238.12147-1-rauji.raut@gmail.com>
- <20230803052238.12147-2-rauji.raut@gmail.com>
- <f739cc15-dade-4f69-a17a-30242026c099@broadcom.com>
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="PcmQj4Jr"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=2zaiAQegrb7sxTbZzD9E1p1jA7PFDM4qXDv9SwRT+rU=; b=PcmQj4JrCYpk9mFLJB74h7KS8X
+	VHvIpPKTAP1eaOAXxzh7ERfD5Y59P5pLwemO6/oScC3XP57zed1Px8Cd42CxlC1Nqvj/ftq6LWSDN
+	FhzA0U2NVWSL0jfmqakGnB/s7xhjGLg5SYIH6HNOZ3svuqQdxbOVBMFVvwLT01OgByDM=;
+Received: from p200300daa7090900680536e7cb8d8cd3.dip0.t-ipconnect.de ([2003:da:a709:900:6805:36e7:cb8d:8cd3] helo=Maecks.lan)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.94.2)
+	(envelope-from <nbd@nbd.name>)
+	id 1rQYQz-0054tJ-7H; Thu, 18 Jan 2024 20:52:17 +0100
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 4/5] wifi: mt76: mt7915: add locking for accessing mapped registers
+Date: Thu, 18 Jan 2024 20:52:15 +0100
+Message-ID: <20240118195216.80974-4-nbd@nbd.name>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240118195216.80974-1-nbd@nbd.name>
+References: <20240118195216.80974-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f739cc15-dade-4f69-a17a-30242026c099@broadcom.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jan 18, 2024 at 02:53:28PM +0100, Arend van Spriel wrote:
-> + Kees
-> 
-> On 8/3/2023 7:22 AM, Atul Raut wrote:
-> > One-element arrays are obsolete, and flexible
-> > array members have taken their place. So, in
-> > struct cca_stats_n_flags, replace the one-element
-> > array with a flexible-array member.
-> > 
-> > This fixes warnings such as:
-> > ./drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:119:6-9: WARNING use flexible-array member instead (https://www.kernel.org/doc/html/latest/process/deprecated.html#zero-length-and-one-element-arrays)
-> 
-> I think this correct, but maybe Kees can give definitive answer here.
-> 
-> > Signed-off-by: Atul Raut <rauji.raut@gmail.com>
-> > ---
-> >   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> > index de8a2e27f49c..fff32e54833d 100644
-> > --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> > +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> > @@ -116,7 +116,7 @@ struct brcmf_dump_survey {
-> >   struct cca_stats_n_flags {
-> >   	u32 msrmnt_time; /* Time for Measurement (msec) */
-> >   	u32 msrmnt_done; /* flag set when measurement complete */
-> > -	char buf[1];
-> > +	char buf[];
-> >   };
-> >   struct cca_msrmnt_query {
+From: Shayne Chen <shayne.chen@mediatek.com>
 
-Normally a [1] -> [] conversion needs some details in the commit log
-about why this is safe (since it runs the risk of changing sizeof(struct
-cca_stats_n_flags). In this case, there's only a single user of the
-struct, and nothing about its use depends on its size:
+Sicne the mapping is global, mapped register access needs to be protected
+against concurrent access, otherwise a race condition might cause the reads
+or writes to go towards the wrong register
 
-#define BRCMF_DCMD_MEDLEN       1536
-...
-        struct cca_stats_n_flags *results;
-        char *buf;
-	...
-        buf = kzalloc(sizeof(char) * BRCMF_DCMD_MEDLEN, GFP_KERNEL);
-	...
-        results = (struct cca_stats_n_flags *)(buf);
-	...
-                brcmf_parse_dump_obss(results->buf, survey);
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../net/wireless/mediatek/mt76/mt7915/mmio.c  | 45 ++++++++++++++++---
+ .../wireless/mediatek/mt76/mt7915/mt7915.h    |  1 +
+ 2 files changed, 41 insertions(+), 5 deletions(-)
 
-So, the allocation size is big enough for the struct, and nothing
-depends on the struct size.
-
-Reviewed-by: Kees Cook <keescook@chromium.org>
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+index aff4f21e843d..cea2a31ae138 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
+@@ -490,6 +490,11 @@ static u32 __mt7915_reg_addr(struct mt7915_dev *dev, u32 addr)
+ 		return dev->reg.map[i].maps + ofs;
+ 	}
+ 
++	return 0;
++}
++
++static u32 __mt7915_reg_remap_addr(struct mt7915_dev *dev, u32 addr)
++{
+ 	if ((addr >= MT_INFRA_BASE && addr < MT_WFSYS0_PHY_START) ||
+ 	    (addr >= MT_WFSYS0_PHY_START && addr < MT_WFSYS1_PHY_START) ||
+ 	    (addr >= MT_WFSYS1_PHY_START && addr <= MT_WFSYS1_PHY_END))
+@@ -514,15 +519,30 @@ void mt7915_memcpy_fromio(struct mt7915_dev *dev, void *buf, u32 offset,
+ {
+ 	u32 addr = __mt7915_reg_addr(dev, offset);
+ 
+-	memcpy_fromio(buf, dev->mt76.mmio.regs + addr, len);
++	if (addr) {
++		memcpy_fromio(buf, dev->mt76.mmio.regs + addr, len);
++		return;
++	}
++
++	spin_lock_bh(&dev->reg_lock);
++	memcpy_fromio(buf, dev->mt76.mmio.regs +
++			   __mt7915_reg_remap_addr(dev, offset), len);
++	spin_unlock_bh(&dev->reg_lock);
+ }
+ 
+ static u32 mt7915_rr(struct mt76_dev *mdev, u32 offset)
+ {
+ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
+-	u32 addr = __mt7915_reg_addr(dev, offset);
++	u32 addr = __mt7915_reg_addr(dev, offset), val;
+ 
+-	return dev->bus_ops->rr(mdev, addr);
++	if (addr)
++		return dev->bus_ops->rr(mdev, addr);
++
++	spin_lock_bh(&dev->reg_lock);
++	val = dev->bus_ops->rr(mdev, __mt7915_reg_remap_addr(dev, offset));
++	spin_unlock_bh(&dev->reg_lock);
++
++	return val;
+ }
+ 
+ static void mt7915_wr(struct mt76_dev *mdev, u32 offset, u32 val)
+@@ -530,7 +550,14 @@ static void mt7915_wr(struct mt76_dev *mdev, u32 offset, u32 val)
+ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
+ 	u32 addr = __mt7915_reg_addr(dev, offset);
+ 
+-	dev->bus_ops->wr(mdev, addr, val);
++	if (addr) {
++		dev->bus_ops->wr(mdev, addr, val);
++		return;
++	}
++
++	spin_lock_bh(&dev->reg_lock);
++	dev->bus_ops->wr(mdev, __mt7915_reg_remap_addr(dev, offset), val);
++	spin_unlock_bh(&dev->reg_lock);
+ }
+ 
+ static u32 mt7915_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
+@@ -538,7 +565,14 @@ static u32 mt7915_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
+ 	struct mt7915_dev *dev = container_of(mdev, struct mt7915_dev, mt76);
+ 	u32 addr = __mt7915_reg_addr(dev, offset);
+ 
+-	return dev->bus_ops->rmw(mdev, addr, mask, val);
++	if (addr)
++		return dev->bus_ops->rmw(mdev, addr, mask, val);
++
++	spin_lock_bh(&dev->reg_lock);
++	val = dev->bus_ops->rmw(mdev, __mt7915_reg_remap_addr(dev, offset), mask, val);
++	spin_unlock_bh(&dev->reg_lock);
++
++	return val;
+ }
+ 
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+@@ -707,6 +741,7 @@ static int mt7915_mmio_init(struct mt76_dev *mdev,
+ 
+ 	dev = container_of(mdev, struct mt7915_dev, mt76);
+ 	mt76_mmio_init(&dev->mt76, mem_base);
++	spin_lock_init(&dev->reg_lock);
+ 
+ 	switch (device_id) {
+ 	case 0x7915:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+index 4727d9c7b11d..6e79bc65f5a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h
+@@ -287,6 +287,7 @@ struct mt7915_dev {
+ 
+ 	struct list_head sta_rc_list;
+ 	struct list_head twt_list;
++	spinlock_t reg_lock;
+ 
+ 	u32 hw_pattern;
+ 
 -- 
-Kees Cook
+2.43.0
+
