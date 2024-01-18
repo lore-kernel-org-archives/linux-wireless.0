@@ -1,53 +1,53 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66FAC29429;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE9362C197;
 	Thu, 18 Jan 2024 16:13:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705594382; cv=none; b=LtDIgnRKyCHhdoNJOsvHbR4vcE70fiibb8xOWi5spcWi5mqVXr1co/c7Yak8oqdlXSt8VYkJOlTsehH6gpaXM6jj5P7B5kuVTDrzDYDevhU/SkcIzLPzZXQ2igqB1roKjyVMkYEiv5CnCD73nX3/YO9jCcfUAS1SX5HUWffmYGc=
+	t=1705594383; cv=none; b=iJvGXFv03xVxJv3GGTX8o51eRVIB+xOqjRKSaZap6cI0/8p+VZWaD0d1UU6799voUUknalqsw+Tc+9gRgezDzI9bQ0JXNIzdOJBl3nongOz6rGO03OhSH4HUhCnZecu/MxUfnpKa4kW4N95DsqZH//1GKbUXam59w4ftL59K8o0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705594382; c=relaxed/simple;
-	bh=HIsuhJz2xjOzaNn4dAfL5qjx0UdbR6tCoP9H0Jum8ZU=;
+	s=arc-20240116; t=1705594383; c=relaxed/simple;
+	bh=cVq8KIc6KbMwS94GCq0XE4YIyPj2j38EsV1T7oPH1cI=;
 	h=Received:DKIM-Signature:Received:Received:Received:From:Date:
 	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 Message-ID:References:In-Reply-To:To:CC:X-Mailer:X-Originating-IP:
 	 X-ClientProxiedBy:X-QCInternal:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=KcN1EIi+9LDEspLz3eWYBoIWsvj/jv7DYFyb6RdJjgjDDSerLLS+MX7+6wk3/8QAXOW8Av/9Uad6CUlO3JadsqcMq+ctArZ5SM1IE2jp7AkmMadOQO9iBROyrcgeHI1EtEAcBMsGZt4b4ezErG3eYhmUDPcocQAt916VYjATQq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=aqbaR28G; arc=none smtp.client-ip=205.220.168.131
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=svBWjGbYZ+un6keSML62rsJ3oWPfz5vw8zUDVqhOJaZgPK+J2/mRzFZ/U4paJpPyKK1xAx6eRwDEAbm+JEFCGS2GvTjFCWp6W8y4Mkvu0y0kXgyWg1e3niluw6c9sDTb4fJUXUNEr5e+R+cDpw4uHe0Uybbvs6sdXRmiKRaF8RY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=E7t0IQ4K; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="aqbaR28G"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40IET6px016240;
-	Thu, 18 Jan 2024 16:12:56 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="E7t0IQ4K"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40IFtoLh003667;
+	Thu, 18 Jan 2024 16:12:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:date:subject:mime-version:content-type
 	:content-transfer-encoding:message-id:references:in-reply-to:to
-	:cc; s=qcppdkim1; bh=gBb3H3vMQRpyKqlY5i8ArYeJx6IwM8jcS43UCmibO1c
-	=; b=aqbaR28Gq4WV3D/zxTdSUoX15fis5yV5IWvxNtcHg1rhYKUPzZ/3hhfdPsx
-	2Vel1SCcJbfc5CnzKWq4y3QGXFD/O/oyOyKYa0UHUIthX4BNVc+COkacu8/ebLMG
-	c6ox0ePFEyenwZbJrFhxogbnftbcOOLwPsbodkLJglFt1iKRSRQanEYK43zNp1Q3
-	EFRFqZYfw4fn9LiqCKckImZ9DaTzngLMC4S7xtslvHRRVaVpmiHn1zSTEmkkUm7n
-	O31BK9sOtFbQqPwBgR98Z/SYIyU7kDqQiit9h9wpwrcZWwInde4p3CPw3jdDMWI7
-	OBNw+VmC7Oz5s3ZzvTz1doErp2g==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vpx8shg6k-1
+	:cc; s=qcppdkim1; bh=xu6LTZd46of4ubV1T8bkdLfUORCXmE/Vrh+3G16Hzgg
+	=; b=E7t0IQ4KKRqP66W1QzCTrCfwySqO2uRoRHfyYx1R7c10FkgKCA/6RcBaYWg
+	7dNocXha1JYlhxg8kUWUC0DbZ/c3d1DgdOuXQndh9PwbrSoMHx6QZQ35qwvKxSlj
+	0KOj330oiLtGbkT4RlGjlE6QXTDk6HdQ3801Y/HbcZPlXB6FOpbuNzOtljcDspSB
+	Ir+NJG1dmtP15mkeILniSpbZKnWL+UWD/ZObXM9MnruNmuazQdFw/ZkSVRW4LzuX
+	KJI+FXqvQpYigq/taxLSqIuFbIdOWrfCf3WW17LmnpxczaezSHQxj2hjswvRC4ji
+	F2YXsGrjs6tfMcV8FFj13SP/8xw==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vq00116p9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 16:12:56 +0000 (GMT)
+	Thu, 18 Jan 2024 16:12:57 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40IGCtC3025424
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40IGCuR1007130
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 16:12:55 GMT
+	Thu, 18 Jan 2024 16:12:56 GMT
 Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Thu, 18 Jan
- 2024 08:12:55 -0800
+ 2024 08:12:56 -0800
 From: Jeff Johnson <quic_jjohnson@quicinc.com>
-Date: Thu, 18 Jan 2024 08:12:55 -0800
-Subject: [PATCH 3/5] wifi: ath10k: fix htt_q_state_conf & htt_q_state
+Date: Thu, 18 Jan 2024 08:12:57 -0800
+Subject: [PATCH 5/5] wifi: ath10k: Fix enum ath10k_fw_crash_dump_type
  kernel-doc
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -57,7 +57,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20240118-ath10k-kerneldoc-v1-3-99c7e8d95aad@quicinc.com>
+Message-ID: <20240118-ath10k-kerneldoc-v1-5-99c7e8d95aad@quicinc.com>
 References: <20240118-ath10k-kerneldoc-v1-0-99c7e8d95aad@quicinc.com>
 In-Reply-To: <20240118-ath10k-kerneldoc-v1-0-99c7e8d95aad@quicinc.com>
 To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>
@@ -68,73 +68,59 @@ X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 25DU34vyzjr2CZfbOjgPkHjPEQdnnPFR
-X-Proofpoint-GUID: 25DU34vyzjr2CZfbOjgPkHjPEQdnnPFR
+X-Proofpoint-GUID: jYp6qPk_ZYAK8Non6zY-kJVaTpyo4p0X
+X-Proofpoint-ORIG-GUID: jYp6qPk_ZYAK8Non6zY-kJVaTpyo4p0X
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-18_08,2024-01-17_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 spamscore=0
- phishscore=0 priorityscore=1501 mlxlogscore=999 impostorscore=0 mlxscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ mlxscore=0 clxscore=1015 spamscore=0 malwarescore=0 priorityscore=1501
+ lowpriorityscore=0 phishscore=0 bulkscore=0 mlxlogscore=894 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2311290000
  definitions=main-2401180118
 
-Currently kernel-doc reports:
-drivers/net/wireless/ath/ath10k/htt.h:1488: warning: cannot understand function prototype: 'struct htt_q_state_conf '
-drivers/net/wireless/ath/ath10k/htt.h:1542: warning: cannot understand function prototype: 'struct htt_q_state '
+The kernel-doc script currently reports:
+drivers/net/wireless/ath/ath10k/coredump.h:27: warning: Enum value 'ATH10K_FW_CRASH_DUMP_REGISTERS' not described in enum 'ath10k_fw_crash_dump_type'
+drivers/net/wireless/ath/ath10k/coredump.h:27: warning: Enum value 'ATH10K_FW_CRASH_DUMP_CE_DATA' not described in enum 'ath10k_fw_crash_dump_type'
+drivers/net/wireless/ath/ath10k/coredump.h:27: warning: Enum value 'ATH10K_FW_CRASH_DUMP_RAM_DATA' not described in enum 'ath10k_fw_crash_dump_type'
+drivers/net/wireless/ath/ath10k/coredump.h:27: warning: Enum value 'ATH10K_FW_CRASH_DUMP_MAX' not described in enum 'ath10k_fw_crash_dump_type'
+drivers/net/wireless/ath/ath10k/coredump.h:27: warning: Excess enum value 'ATH10K_FW_CRASH_DUMP_REGDUMP' description in 'ath10k_fw_crash_dump_type'
 
-Update the kernel-doc for these two structs to resolve the warnings.
+Fix these issues with the enum ath10k_fw_crash_dump_type kernel-doc.
 
 No functional changes, compile tested only.
 
 Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/coredump.h | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 4a9270e2a4c8..eb0ce2f49315 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -3,7 +3,7 @@
-  * Copyright (c) 2005-2011 Atheros Communications Inc.
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.h b/drivers/net/wireless/ath/ath10k/coredump.h
+index e5ef0352e319..8d274e0f374b 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.h
++++ b/drivers/net/wireless/ath/ath10k/coredump.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: ISC */
+ /*
   * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
-  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021, 2023 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021, 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
   */
  
- #ifndef _HTT_H_
-@@ -1474,15 +1474,19 @@ enum htt_q_depth_type {
- #define HTT_TX_Q_STATE_ENTRY_MULTIPLIER		0
+ #ifndef _COREDUMP_H_
+@@ -13,7 +13,11 @@
  
  /**
-- * htt_q_state_conf - part of htt_frag_desc_bank_cfg for host q state config
-+ * struct htt_q_state_conf - part of htt_frag_desc_bank_cfg for host q state config
-  *
-  * Defines host q state format and behavior. See htt_q_state.
-  *
-+ * @paddr: Queue physical address
-+ * @num_peers: Number of supported peers
-+ * @num_tids: Number of supported TIDs
-  * @record_size: Defines the size of each host q entry in bytes. In practice
-  *	however firmware (at least 10.4.3-00191) ignores this host
-  *	configuration value and uses hardcoded value of 1.
-  * @record_multiplier: This is valid only when q depth type is MSDUs. It
-  *	defines the exponent for the power of 2 multiplication.
-+ * @pad: struct padding for 32-bit alignment
+  * enum ath10k_fw_crash_dump_type - types of data in the dump file
+- * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
++ * @ATH10K_FW_CRASH_DUMP_REGISTERS: Register crash dump in binary format
++ * @ATH10K_FW_CRASH_DUMP_CE_DATA: Copy Engine crash dump data
++ * @ATH10K_FW_CRASH_DUMP_RAM_DATA: RAM crash dump data, contains multiple
++ *				   struct ath10k_dump_ram_data_hdr
++ * @ATH10K_FW_CRASH_DUMP_MAX: Maximum enumeration
   */
- struct htt_q_state_conf {
- 	__le32 paddr;
-@@ -1518,7 +1522,7 @@ struct htt_frag_desc_bank_cfg64 {
- #define HTT_TX_Q_STATE_ENTRY_EXP_LSB		6
- 
- /**
-- * htt_q_state - shared between host and firmware via DMA
-+ * struct htt_q_state - shared between host and firmware via DMA
-  *
-  * This structure is used for the host to expose it's software queue state to
-  * firmware so that its rate control can schedule fetch requests for optimized
+ enum ath10k_fw_crash_dump_type {
+ 	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
 
 -- 
 2.42.0
