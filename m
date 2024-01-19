@@ -1,43 +1,42 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FFEE208CB
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2024 08:57:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFE981E89B
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2024 08:57:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705654666; cv=none; b=IGnfCXTgI/xNpBe6GAlilfExyoUUcVLFrPvW+QxyA5mHafgicOLzNe+JUjt33wBBSkG0aqTGGnfDl9k0Z5lUOtqUrZpR7sNgIsA4xL2xOyusMnLeFQsq/HDloPAqxwFQAfweA7iGBlJ0uTFGu1NBKUewXZJMqLoLacl8Qj8qTrE=
+	t=1705654667; cv=none; b=AAMhcrE6qZ0bIfqEDAJ7C0RabqKTRSmNZRzkNL/cY2zxd9Y/bZlmDGKpZ8kB8nFgJDFzfWuB/ALkBoZTP76nrmN500PudDIs9P3EpPes5P5NEkOlL4iJ0RB6i5eqRthsA9t6SBMbIafwB7zChEx5QyRHsuZDyPkMKZ6wqaGSaa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705654666; c=relaxed/simple;
-	bh=S1E86e9R/FG8ivTm60MAPno1ouTEm7Qe1nU0O2dRoSs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V927pDc/wAKJkJMKZhfDKUoFjcNcmVk9wJuBUOfC3Cr4ns8GY0Nyji1QgmwCofVQi8RPd3Q4P4AH7mm2tYzuArGZq+LUTVtIK7PptXlF8P7605NbflvpLPUPqQ9RP24zFVU9MKqAOjPn7vQqSfOQZtftm6hVo3D6hzCifFr5gnE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=XXTsTOKT; arc=none smtp.client-ip=210.61.82.184
+	s=arc-20240116; t=1705654667; c=relaxed/simple;
+	bh=zWlc/S6DZ/fUTn9LwVH+0v5+9nwdAYr32erZ91OEyXM=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=YBHShV7UC8kZfCM9/BeUDZ6lvXCISouO6cj/1fmLDKDesfcpATMnBKD/osWQYh2FAnQbzeGJIQC1Sy1bAAHJoyeOzs54uQHVDFe7eTMNyS8DFxAxjjxtRkfdakJ2fcd4h1Lvzfj2IIl2CJ0pLvQCoZG/VpVAFOHiu5TZnO9QJHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=N3f9ml0/; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="XXTsTOKT"
-X-UUID: cb576d5cb6a811eea2298b7352fd921d-20240119
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="N3f9ml0/"
+X-UUID: caad9390b6a811ee9e680517dc993faa-20240119
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=epN7KJjCMnYrcOaasseqP03+HRXsNVjKd4ndmSsQ1BM=;
-	b=XXTsTOKT5vW8XZE26oU9qKwA6L126NHPCHmzSSIcutBG6HfDQWT0vabmMGGSONSBJZ/kqn52aF7YkSXftbN7eqSSFOyq1dkBL74Crl7ysI2t9/twmfl3n9Y8MICJu34dAvuFQ7puxySpxq1f5i1U6Hh+cbjO6ZydPRqhqQ9MDOo=;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=QfBJh/G27e2/TM1jxbBhY/qC7WJr1g5LZzWtbcjgAfw=;
+	b=N3f9ml0/WZu7P1F6eqpfQXvavxnkJRceCQjkFmvBuNshR7mwCS0mqxUDi1ynU+7+Qfi06PnHTyKDxH96qc4hxdVgOAKAbYygrMB+ntRrxt1b0471B9ypitDL/8eOP1oKYAD+u1HVRG4z4hYCOxgjfdvOHb1qYULDi4z94wp6caI=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.36,REQID:838a4037-aa55-4982-bba7-2da512cb866b,IP:0,U
+X-CID-O-INFO: VERSION:1.1.36,REQID:64c8cb4d-e5a6-4d8d-bad3-caad842d10de,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:6e16cf4,CLOUDID:506b0783-8d4f-477b-89d2-1e3bdbef96d1,B
+X-CID-META: VersionHash:6e16cf4,CLOUDID:396b0783-8d4f-477b-89d2-1e3bdbef96d1,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
-	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: cb576d5cb6a811eea2298b7352fd921d-20240119
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: caad9390b6a811ee9e680517dc993faa-20240119
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1531838297; Fri, 19 Jan 2024 16:57:37 +0800
+	with ESMTP id 1344398572; Fri, 19 Jan 2024 16:57:36 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.26; Fri, 19 Jan 2024 16:57:35 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -48,14 +47,12 @@ To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, Bo Jiao <Bo.Jiao@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Benjamin Lin
-	<benjamin-jw.lin@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 04/12] wifi: mt76: mt7996: fix incorrect interpretation of EHT MCS caps
-Date: Fri, 19 Jan 2024 16:57:00 +0800
-Message-ID: <20240119085708.23592-4-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Peter Chiu
+	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 01/12] wifi: mt76: mt7996: check txs format before getting skb by pid
+Date: Fri, 19 Jan 2024 16:56:57 +0800
+Message-ID: <20240119085708.23592-1-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20240119085708.23592-1-shayne.chen@mediatek.com>
-References: <20240119085708.23592-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -63,70 +60,64 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10-1.739900-8.000000
-X-TMASE-MatchedRID: /RWZlr+4p74zTh1BHqxnVY3NgkEqAN0Rsf4f4CxxueRz/u+TcH1U7P9T
-	oIqmlx19ThbvLLI8RvOWLz7gHk2taUHQ/pYAwhs6R/j040fRFpJ9LQinZ4QefPcjNeVeWlqY+gt
-	Hj7OwNO0A7WI2V4bLAuuk854hvA8+V+SwhFPhEoCx9buuJcLWGIg2O6s7GegS+cdfgsVbKhBSNA
-	OKzF0tk5keeltQbbqsVMMzQNLWGsoHo6Gh2L5tQUma3zYT97IFAYfQIAUhBayZvmCbKVb49sZL6
-	x5U/HriIk9sIzm5o6zAvpLE+mvX8g==
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10-1.739900-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP:
-	A8EE4D743659859585BCB5302B51DA086E7514AD8E9A87E29D00C6623711E8842000:8
 X-MTK: N
 
-From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-The EHT MCS map subfield of 20 MHz-Only is not present in the EHT
-capability of AP, so STA does not need to parse the subfield.
-Moreover, AP should parse the subfield only if STA is 20 MHz-Only, which
-can be confirmed by checking supported channel width in HE capability.
+The PPDU TXS does not include the error bit so it cannot use to report
+status to mac80211. This patch fixes issue that STA wrongly detects if AP
+is still alive.
 
-Fixes: 92aa2da9fa49 ("wifi: mt76: mt7996: enable EHT support in firmware")
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
+Fixes: 2569ea5326e2 ("wifi: mt76: mt7996: enable PPDU-TxS to host")
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 23 +++++++++++--------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 3c729b563edc..02d858fdc9fe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -1240,6 +1240,9 @@ mt7996_mcu_sta_he_6g_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- static void
- mt7996_mcu_sta_eht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- {
-+	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
-+	struct ieee80211_vif *vif = container_of((void *)msta->vif,
-+						 struct ieee80211_vif, drv_priv);
- 	struct ieee80211_eht_mcs_nss_supp *mcs_map;
- 	struct ieee80211_eht_cap_elem_fixed *elem;
- 	struct sta_rec_eht *eht;
-@@ -1259,8 +1262,17 @@ mt7996_mcu_sta_eht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- 	eht->phy_cap = cpu_to_le64(*(u64 *)elem->phy_cap_info);
- 	eht->phy_cap_ext = cpu_to_le64(elem->phy_cap_info[8]);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index 53258488d49f..a8414fbb07c8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -1188,25 +1188,28 @@ mt7996_mac_add_txs_skb(struct mt7996_dev *dev, struct mt76_wcid *wcid,
+ 	struct ieee80211_tx_info *info;
+ 	struct sk_buff_head list;
+ 	struct rate_info rate = {};
+-	struct sk_buff *skb;
++	struct sk_buff *skb = NULL;
+ 	bool cck = false;
+ 	u32 txrate, txs, mode, stbc;
  
--	if (sta->deflink.bandwidth == IEEE80211_STA_RX_BW_20)
--		memcpy(eht->mcs_map_bw20, &mcs_map->only_20mhz, sizeof(eht->mcs_map_bw20));
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    (sta->deflink.he_cap.he_cap_elem.phy_cap_info[0] &
-+	     (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)) == 0) {
-+		memcpy(eht->mcs_map_bw20, &mcs_map->only_20mhz,
-+		       sizeof(eht->mcs_map_bw20));
-+		return;
-+	}
-+
- 	memcpy(eht->mcs_map_bw80, &mcs_map->bw._80, sizeof(eht->mcs_map_bw80));
- 	memcpy(eht->mcs_map_bw160, &mcs_map->bw._160, sizeof(eht->mcs_map_bw160));
- 	memcpy(eht->mcs_map_bw320, &mcs_map->bw._320, sizeof(eht->mcs_map_bw320));
+ 	txs = le32_to_cpu(txs_data[0]);
+ 
+ 	mt76_tx_status_lock(mdev, &list);
+-	skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
+ 
+-	if (skb) {
+-		info = IEEE80211_SKB_CB(skb);
+-		if (!(txs & MT_TXS0_ACK_ERROR_MASK))
+-			info->flags |= IEEE80211_TX_STAT_ACK;
++	/* only report MPDU TXS */
++	if (le32_get_bits(txs_data[0], MT_TXS0_TXS_FORMAT) == 0) {
++		skb = mt76_tx_status_skb_get(mdev, wcid, pid, &list);
++		if (skb) {
++			info = IEEE80211_SKB_CB(skb);
++			if (!(txs & MT_TXS0_ACK_ERROR_MASK))
++				info->flags |= IEEE80211_TX_STAT_ACK;
+ 
+-		info->status.ampdu_len = 1;
+-		info->status.ampdu_ack_len =
+-			!!(info->flags & IEEE80211_TX_STAT_ACK);
++			info->status.ampdu_len = 1;
++			info->status.ampdu_ack_len =
++				!!(info->flags & IEEE80211_TX_STAT_ACK);
+ 
+-		info->status.rates[0].idx = -1;
++			info->status.rates[0].idx = -1;
++		}
+ 	}
+ 
+ 	if (mtk_wed_device_active(&dev->mt76.mmio.wed) && wcid->sta) {
 -- 
 2.39.2
 
