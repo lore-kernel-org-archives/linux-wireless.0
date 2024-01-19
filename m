@@ -1,58 +1,58 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C946B23776
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2024 08:57:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD1424B41
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2024 08:57:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705654667; cv=none; b=i3e9JbytiaDn3s80xq29qNRxYfZjIluKIOr99DQ1688MXt4w1QlDNWnwod1XaT6Sxc7Q9sh7qtPo6VphOUqiiyidi2g/OyG9QvHINWAZmu31wYXasCTSs+JZa6uydAMenGFaz9AqDG/Zw9925Hyg2SpRLtFw5jjaF1gZ0CEiI+0=
+	t=1705654667; cv=none; b=fkzaGaq+r1MX5qaZ+Ur7jQj4NnSCdkeE+wYk/T/4qvtj64Wz9ybaAqlDy9WTt26/hNwFYthZ6UiGtqELPSJI09zvIHEEYzVyCW6sb5Y5bLrBrPWhkQVS4RRy06Vn9LqgA8BDm4FTTN4ET96lelhVA2BVl8Abbj2WY9s5rVClku0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1705654667; c=relaxed/simple;
-	bh=6138irgpa4o4kmzoz9y2IFLVRkBSqve99R2TqzlX/fE=;
+	bh=AN93mku1aufsQfIJLhRqaON5/0zVS3Pf5FIZ8N+JJbA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qLKcOG4KIdkRwFAL6k/CdetwDUvvG5W9uxfYjIgFJokQgul/9iFQP9DzaNNw28e4ckwcUrsMMjIRy1bugbmL/w87NfmOb/O+PXFToU+kxAfQeKw0g/sxAqtDBGLE/xCLMuI9E9EGKd+U1Yi/ak+0+jR+xGspHIv/VQJo2M2fBkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Uut1uEWH; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=RfeLyi4eIYE4u8hWZu7v0+1tIj7HHpJhlszJ0UW8dr5divW5imKP5ZV/M+6L7qX+/K5d/O5Egj0Aq7ZXrEQFjqIBJshrexKlmT39KC9SGk/tUELlruRfdX+PiHljZBwsvLfv9BhSvPAyAC4nsKiqD64Y6qOX5xvG20MtCahgQ/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=iBB6wVLU; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Uut1uEWH"
-X-UUID: cacb57a4b6a811eea2298b7352fd921d-20240119
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="iBB6wVLU"
+X-UUID: cae5064ab6a811eea2298b7352fd921d-20240119
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=TvxIW4C14aJXWPt/ZgsY7E7tG7QflT4efJyySE1EjY0=;
-	b=Uut1uEWH/T7I5LYe4lqM0g4ug1ttTcInejz42fqqZZJeZYiuLv6nq9e0utAgvCejLXKob39gkqdaEwj+HghqfgsUFhGmEeT/ok3QaU7cm/xOyKzOCOgL4+mtAG/fLNbjWcOSRx7cOFMiZJLh67oqPU8QjI/v8ht6gNtWEBAC6d8=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=EEku9dH/c4UtKmMn5ZT6SVK916xuuKS3jPzR8xW3rN4=;
+	b=iBB6wVLUKhF0zFcmuqwH6zn/4MhVeD5KiQKjmAHtXJEl7ovBpwaWo4KC3fsQ372O5piZssHLRSAUrM0JlxLFmXMC3cpX4EFcLCspqR19fVsWhIcot4PGGVNzzo95Jdbc4tFaeNctuSPI46c3TvPmI+E6mWgDAbAQetMiMSvOrlI=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.36,REQID:a33f8920-1b80-4635-84a1-21e8880e9b00,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6e16cf4,CLOUDID:49bd582f-1ab8-4133-9780-81938111c800,B
+X-CID-O-INFO: VERSION:1.1.36,REQID:be29e46a-ae2c-4016-8663-72d02400f3ed,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6e16cf4,CLOUDID:4e6b0783-8d4f-477b-89d2-1e3bdbef96d1,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
 	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: cacb57a4b6a811eea2298b7352fd921d-20240119
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+X-UUID: cae5064ab6a811eea2298b7352fd921d-20240119
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 154672047; Fri, 19 Jan 2024 16:57:36 +0800
+	with ESMTP id 1019726904; Fri, 19 Jan 2024 16:57:36 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 19 Jan 2024 16:57:35 +0800
+ 15.2.1118.26; Fri, 19 Jan 2024 16:57:36 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 19 Jan 2024 16:57:35 +0800
+ 15.2.1118.26 via Frontend Transport; Fri, 19 Jan 2024 16:57:36 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, Bo Jiao <Bo.Jiao@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Peter Chiu
-	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 02/12] wifi: mt76: mt7996: fix TWT issues
-Date: Fri, 19 Jan 2024 16:56:58 +0800
-Message-ID: <20240119085708.23592-2-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Michael-CY Lee
+	<michael-cy.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 07/12] wifi: mt76: mt7996: mark GCMP IGTK unsupported
+Date: Fri, 19 Jan 2024 16:57:03 +0800
+Message-ID: <20240119085708.23592-7-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20240119085708.23592-1-shayne.chen@mediatek.com>
 References: <20240119085708.23592-1-shayne.chen@mediatek.com>
@@ -65,131 +65,35 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-MTK: N
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+From: Michael-CY Lee <michael-cy.lee@mediatek.com>
 
-This patch fixes the following TWT issues:
-- Change table_mask to u16 to support up to 16 TWT stations
-- Reject TWT flows for duplicated establishment
-- Fix possible unaligned pointer
-- Remove unsupported TWT_CONTROL_WAKE_DUR_UNIT flag
-- The minimum TWT duration supported by mt7996 chipsets is 64. Reply
-  with TWT_SETUP_CMD_DICTATE if the min_twt_dur is smaller than 64
+Since the FW does not support to handle the integrity and validation of
+IGTK in GCMP mode, return -EOPNOTSUPP to let it be handled by upper layer.
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/mac.c   | 53 ++++++++++++++++---
- .../wireless/mediatek/mt76/mt7996/mt7996.h    |  3 +-
- 2 files changed, 47 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index a8414fbb07c8..63d34844c122 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -2530,6 +2530,34 @@ static int mt7996_mac_check_twt_req(struct ieee80211_twt_setup *twt)
- 	return 0;
- }
- 
-+static bool
-+mt7996_mac_twt_param_equal(struct mt7996_sta *msta,
-+			   struct ieee80211_twt_params *twt_agrt)
-+{
-+	u16 type = le16_to_cpu(twt_agrt->req_type);
-+	u8 exp;
-+	int i;
-+
-+	exp = FIELD_GET(IEEE80211_TWT_REQTYPE_WAKE_INT_EXP, type);
-+	for (i = 0; i < MT7996_MAX_STA_TWT_AGRT; i++) {
-+		struct mt7996_twt_flow *f;
-+
-+		if (!(msta->twt.flowid_mask & BIT(i)))
-+			continue;
-+
-+		f = &msta->twt.flow[i];
-+		if (f->duration == twt_agrt->min_twt_dur &&
-+		    f->mantissa == twt_agrt->mantissa &&
-+		    f->exp == exp &&
-+		    f->protection == !!(type & IEEE80211_TWT_REQTYPE_PROTECTION) &&
-+		    f->flowtype == !!(type & IEEE80211_TWT_REQTYPE_FLOWTYPE) &&
-+		    f->trigger == !!(type & IEEE80211_TWT_REQTYPE_TRIGGER))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta,
- 			      struct ieee80211_twt_setup *twt)
-@@ -2541,8 +2569,7 @@ void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
- 	enum ieee80211_twt_setup_cmd sta_setup_cmd;
- 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
- 	struct mt7996_twt_flow *flow;
--	int flowid, table_id;
--	u8 exp;
-+	u8 flowid, table_id, exp;
- 
- 	if (mt7996_mac_check_twt_req(twt))
- 		goto out;
-@@ -2555,9 +2582,19 @@ void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
- 	if (hweight8(msta->twt.flowid_mask) == ARRAY_SIZE(msta->twt.flow))
- 		goto unlock;
- 
-+	if (twt_agrt->min_twt_dur < MT7996_MIN_TWT_DUR) {
-+		setup_cmd = TWT_SETUP_CMD_DICTATE;
-+		twt_agrt->min_twt_dur = MT7996_MIN_TWT_DUR;
-+		goto unlock;
-+	}
-+
-+	if (mt7996_mac_twt_param_equal(msta, twt_agrt))
-+		goto unlock;
-+
- 	flowid = ffs(~msta->twt.flowid_mask) - 1;
--	le16p_replace_bits(&twt_agrt->req_type, flowid,
--			   IEEE80211_TWT_REQTYPE_FLOWID);
-+	twt_agrt->req_type &= ~cpu_to_le16(IEEE80211_TWT_REQTYPE_FLOWID);
-+	twt_agrt->req_type |= le16_encode_bits(flowid,
-+					       IEEE80211_TWT_REQTYPE_FLOWID);
- 
- 	table_id = ffs(~dev->twt.table_mask) - 1;
- 	exp = FIELD_GET(IEEE80211_TWT_REQTYPE_WAKE_INT_EXP, req_type);
-@@ -2604,10 +2641,10 @@ void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
- unlock:
- 	mutex_unlock(&dev->mt76.mutex);
- out:
--	le16p_replace_bits(&twt_agrt->req_type, setup_cmd,
--			   IEEE80211_TWT_REQTYPE_SETUP_CMD);
--	twt->control = (twt->control & IEEE80211_TWT_CONTROL_WAKE_DUR_UNIT) |
--		       (twt->control & IEEE80211_TWT_CONTROL_RX_DISABLED);
-+	twt_agrt->req_type &= ~cpu_to_le16(IEEE80211_TWT_REQTYPE_SETUP_CMD);
-+	twt_agrt->req_type |=
-+		le16_encode_bits(setup_cmd, IEEE80211_TWT_REQTYPE_SETUP_CMD);
-+	twt->control = twt->control & IEEE80211_TWT_CONTROL_RX_DISABLED;
- }
- 
- void mt7996_mac_twt_teardown_flow(struct mt7996_dev *dev,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index bc73bcb47bf0..8154ad37827f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -53,6 +53,7 @@
- 
- #define MT7996_MAX_TWT_AGRT		16
- #define MT7996_MAX_STA_TWT_AGRT		8
-+#define MT7996_MIN_TWT_DUR		64
- #define MT7996_MAX_QUEUE		(__MT_RXQ_MAX +	__MT_MCUQ_MAX + 3)
- 
- /* NOTE: used to map mt76_rates. idx may change if firmware expands table */
-@@ -320,7 +321,7 @@ struct mt7996_dev {
- 	struct rchan *relay_fwlog;
- 
- 	struct {
--		u8 table_mask;
-+		u16 table_mask;
- 		u8 n_agrt;
- 	} twt;
- 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 51deea84b642..339753c25709 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -350,9 +350,12 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_GCMP:
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+ 	case WLAN_CIPHER_SUITE_SMS4:
++		break;
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
+-		break;
++		if (key->keyidx == 6 || key->keyidx == 7)
++			break;
++		fallthrough;
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 	default:
 -- 
 2.39.2
 
