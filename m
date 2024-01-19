@@ -1,83 +1,86 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD9672E638
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Jan 2024 20:24:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8FB383
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Jan 2024 00:23:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705609481; cv=none; b=IQxI23RLC+K6oUqsPv2eMTZwXoj8HZ6ys2dejbCWlMDOqvYTepPFGFARuSnAkEc7VLvD8WErLT9liSFypQq9VUb0l68Wt0WL1hyklrmgPhoNjagjOi/6bdyDY4shzdNJgu3m6TdZ1WMPESuOZfk3rVLCm7pveBCAFycNdVn//sA=
+	t=1705623811; cv=none; b=VDpB0qclcAaRWxsfP3PIamzpGHtDllMUSU7Lfd8bXNpXNhEZjA/BnrIpvQB/YS9l6Ap9pKSbbipvAOR5fK7RgHiHZDrniPz2mntk2TwoMg+Qc9NO3hePmctIUnCChsiprG0a0IWUDS6mi1WciTNpcUHaSu3pWopDgyeiAWWF5Yc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705609481; c=relaxed/simple;
-	bh=RI1aKO6DhMyb5MqETo1O88T+LB4RYxLVROc+0gI05zo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r1wAOA5ZIpBfGXltMNTO3eVNJc8ENZiwd48IPPauI++IykMLd7TjPUUSM7ncSN3CGR8/tgzWdyVdHhRO7Rppzpp8r+Op6TisDYsicFcTYDl2hwyGoNxC77MJ10RINa+A4bsUuhLjY4fo7bYW6dScpy2lmquaS77W6qyq54f3BJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=CJ4b1r0x; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CJ4b1r0x"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=6tkEcJFhqIhXum4DqljO2a94J18fHHSMslWTe3EccPw=; b=CJ4b1r0xPn1GWWa9R+46crsZ0K
-	H4vZGf9TrHVvHHjkYJltbAxPNIT0BcNT74nTK1enu4GYYp4W4L7/KZtefikqIUjkbOs1+fTfOwp/W
-	8unoU3C/OWxDmk9LVGOMM7uHutf2HJn+dW5Kod5JN2Z4aua2QeQPE/Jvyg0Ve2ylY378=;
-Received: from p200300daa7090900680536e7cb8d8cd3.dip0.t-ipconnect.de ([2003:da:a709:900:6805:36e7:cb8d:8cd3] helo=Maecks.lan)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.94.2)
-	(envelope-from <nbd@nbd.name>)
-	id 1rQYQy-0054tJ-LJ; Thu, 18 Jan 2024 20:52:16 +0100
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: Peter Chiu <chui-hao.chiu@mediatek.com>
-Subject: [PATCH 1/5] wifi: mt76: disable HW AMSDU when using fixed rate
-Date: Thu, 18 Jan 2024 20:52:12 +0100
-Message-ID: <20240118195216.80974-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1705623811; c=relaxed/simple;
+	bh=/No3arMse3wpnRSirRDEw6OYQskvcnagaiJHfi8yyGI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Ya/vnSiaqBw7XYLhsFq2bqQI41m8aC8YhzJeRSGTzMc6G57pIV/RCqZQxVtFWjcf5VGAo/GTOXSdStsmtvoyOyqM4dnY9P9xVGOkA34g03Vbgp24tMRwTYkNfZVTKZb0y3dTKtFTKLUgcZPoZca9HfuYCs4Nrv8e8SYKrX8NeKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 40J0NDpvC1960110, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 40J0NDpvC1960110
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 19 Jan 2024 08:23:13 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.17; Fri, 19 Jan 2024 08:23:13 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Fri, 19 Jan 2024 08:23:13 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::e4c4:c4f:4e4c:d23c]) by
+ RTEXMBS04.realtek.com.tw ([fe80::e4c4:c4f:4e4c:d23c%5]) with mapi id
+ 15.01.2507.035; Fri, 19 Jan 2024 08:23:13 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: RE: [PATCH v2] wifi: rtlwifi: Speed up firmware loading for USB
+Thread-Topic: [PATCH v2] wifi: rtlwifi: Speed up firmware loading for USB
+Thread-Index: AQHaSYFrQa8WDirFr0+YumezfZVwHrDeuEZAgAB8YoCAARLVAA==
+Date: Fri, 19 Jan 2024 00:23:13 +0000
+Message-ID: <531c906cc1d949ab959f28225605b6e7@realtek.com>
+References: <d9bd4949-6e92-4f35-8b60-3b45f9ad74ab@gmail.com>
+ <69d5e71d354b48ef839fb3d3c47f09c7@realtek.com>
+ <1314347a-a7a7-4021-bcd5-58ff7cfa0fba@gmail.com>
+In-Reply-To: <1314347a-a7a7-4021-bcd5-58ff7cfa0fba@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
-
-When using fixed rate, HW uses txd DW9 to store tx arrivial time if VTA
-is set. It would overwrite the msdu_id in txd and lead to token pending
-if amsdu is enable.
-
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index c7914643e9c0..630c6402ec25 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -544,7 +544,7 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 	val = FIELD_PREP(MT_TXD5_PID, pid);
- 	if (pid >= MT_PACKET_ID_FIRST) {
- 		val |= MT_TXD5_TX_STATUS_HOST;
--		amsdu_en = amsdu_en && !is_mt7921(dev);
-+		amsdu_en = 0;
- 	}
- 
- 	txwi[5] = cpu_to_le32(val);
-@@ -579,6 +579,8 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 				spe_idx = 24 + phy_idx;
- 			txwi[7] |= cpu_to_le32(FIELD_PREP(MT_TXD7_SPE_IDX, spe_idx));
- 		}
-+
-+		txwi[7] &= ~cpu_to_le32(MT_TXD7_HW_AMSDU);
- 	}
- }
- EXPORT_SYMBOL_GPL(mt76_connac2_mac_write_txwi);
--- 
-2.43.0
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQml0dGVyYmx1ZSBTbWl0
+aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+DQo+IFNlbnQ6IFRodXJzZGF5LCBKYW51YXJ5IDE4
+LCAyMDI0IDExOjU2IFBNDQo+IFRvOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT47
+IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBDYzogTGFycnkgRmluZ2VyIDxMYXJy
+eS5GaW5nZXJAbHdmaW5nZXIubmV0Pg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSB3aWZpOiBy
+dGx3aWZpOiBTcGVlZCB1cCBmaXJtd2FyZSBsb2FkaW5nIGZvciBVU0INCj4gDQo+IA0KPiBPbiAx
+OC8wMS8yMDI0IDAyOjM3LCBQaW5nLUtlIFNoaWggd3JvdGU6DQo+ID4NCj4gPg0KPiA+PiAtLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBCaXR0ZXJibHVlIFNtaXRoIDxydGw4
+ODIxY2VyZmUyQGdtYWlsLmNvbT4NCj4gPj4gU2VudDogVGh1cnNkYXksIEphbnVhcnkgMTgsIDIw
+MjQgNDoxMiBBTQ0KPiA+PiBUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+ID4+
+IENjOiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT47IExhcnJ5IEZpbmdlciA8TGFy
+cnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4NCj4gPj4gU3ViamVjdDogW1BBVENIIHYyXSB3aWZpOiBy
+dGx3aWZpOiBTcGVlZCB1cCBmaXJtd2FyZSBsb2FkaW5nIGZvciBVU0INCj4gPj4NCj4gPj4gK3N0
+YXRpYyB2b2lkIF91c2Jfd3JpdGVfY2h1bmtfc3luYyhzdHJ1Y3QgcnRsX3ByaXYgKnJ0bHByaXYs
+IHUzMiBhZGRyLA0KPiA+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTMyIGxl
+bmd0aCwgdTggKmRhdGEpDQo+ID4+ICt7DQo+ID4+ICsgICAgICAgc3RydWN0IHVzYl9kZXZpY2Ug
+KnVkZXYgPSB0b191c2JfZGV2aWNlKHJ0bHByaXYtPmlvLmRldik7DQo+ID4+ICsNCj4gPj4gKyAg
+ICAgICBfdXNiY3RybF92ZW5kb3JyZXFfc3luYyh1ZGV2LCBSRUFMVEVLX1VTQl9WRU5RVF9XUklU
+RSwgYWRkciwgZGF0YSwgbGVuZ3RoKTsNCj4gPg0KPiA+IEp1c3QgY3VyaW91cy4gT3JpZ2luYWxs
+eSwgaXQgdXNlcyAxLzIvNCBhcyBsZW5ndGggZm9yIHdyaXRlOC8xNi8zMiwgYW5kIHRoaXMNCj4g
+PiBwYXRjaCBhZGRpdGlvbmFsbHkgdXNlcyA4LzY0IGFzIGxlbmd0aC4gQW55IGxpbWl0YXRpb24g
+b2YgYXJndW1lbnQgJ2xlbmd0aCcgb2YNCj4gPiB0aGlzIGZ1bmN0aW9uPyBJcyBhcmJpdHJhcnkg
+bnVtYmVyIGRpc2FsbG93ZWQ/DQo+ID4NCj4gDQo+IEkgZGlkbid0IGZpbmQgYW55dGhpbmcgaW4g
+dGhlIHVzYl9jb250cm9sX21zZygpIGRvY3VtZW50YXRpb24uDQo+IEkgb25seSBmb3VuZCB0aGlz
+IGlzc3VlLCB3aGVyZSBzb21lIHBlb3BsZSBzYXkgMHhmZmZmIGlzIGZpbmUsDQo+IGJ1dCBvbGRl
+ciBoYXJkd2FyZSBtYXkgaGF2ZSBhIGxpbWl0IG9mIDQwOTY6DQo+IGh0dHBzOi8vZ2l0aHViLmNv
+bS9saWJ1c2IvbGlidXNiL2lzc3Vlcy8xMjUNCj4gDQo+IHJ0bDh4eHh1IHVzZXMgbGVuZ3RocyBv
+ZiAzMiwgOTQsIDEyNCwgMTI2LCAxMjgsIDE1NiwgMjU0IGJ5dGVzLg0KPiBTb21lIG90aGVyIFJl
+YWx0ZWsgd2lmaSBkcml2ZXJzIHVzZSAxOTYgYnl0ZXMuDQoNCkdvdCBpdC4gVGhhbmtzIGZvciB0
+aGUgaW5mb3JtYXRpb24uIA0KDQo=
