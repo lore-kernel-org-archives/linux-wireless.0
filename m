@@ -1,38 +1,38 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3018236136
-	for <linux-wireless@vger.kernel.org>; Sun, 21 Jan 2024 07:19:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A378364BA
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Jan 2024 07:19:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705821549; cv=none; b=iVtiiiQ57oMCC9Xjl5x34nY3aOlyasGNn6l3RCivLsGpPZIUXEoKTScxOKKeQzyCrNQWd04dH5bw5tfXiqm1h+WAqmH3PUDWsdjvu4LGJd7m53YEqiZArTGEIzfBZtcqdFnIakJ/2TXf+Z3UiIPnGOuk2TOdpGKiiQqTdKu674g=
+	t=1705821551; cv=none; b=Erd948Iu4N2m5deTqsvtDa6XdzXtgK+1SDN/4OYy1hisJmigPSFW5Uv46Ln3DTASPZ25d5kjsXvV/MhZq5+kkLiKnBNKMZg34PFxDHIGa1ipnZ/YIidWrXVmnb2eKlWzlQOVYNIbUv+ixVjrSRAi2WaIRHg7n5NpYgl9ZRR5MF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705821549; c=relaxed/simple;
-	bh=DUhCKy54Szw4KS/OtETrlpxzBKoG31ljAoZiCMwWtOE=;
+	s=arc-20240116; t=1705821551; c=relaxed/simple;
+	bh=x4OnkdtyBsN2/JNYoDT1OfXKmaBQwCQlSd8a2osGG3A=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lsLbAtgd3m8yyy+7eWfRsT15EILlLKp+GMdxkBpB3/9MY9IdyvXalX5t8kagigJXp9IMNlvj8urNtkv406EzkbWFm8L5Jg8kU1s9s3+xXJpCNmBCgMKZY+0/djJEAtu2IfthB3J3zyMVHYenlR9jGgrk2eoHaxz06ICu6QumGR4=
+	 MIME-Version:Content-Type; b=lArGi8nQMEuOSt8DciufQCKfbJ+0vm53YbD8QBqSzCIM6gLZWJenvWmTkSSaKC21o4KP7vxMZWnrlYHhccU1KvSnzF051llmujqy+k4ID6TEVSqtcaKdCuCHZ6oLzG2z7wjIEaWRS219jVJsdlWA/SCC4kSk5e1dlfNXxTJ5g0I=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 40L7IsfZ63102115, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 40L7J3A803102121, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 40L7IsfZ63102115
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 40L7J3A803102121
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 21 Jan 2024 15:18:54 +0800
+	Sun, 21 Jan 2024 15:19:03 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2375.32; Sun, 21 Jan 2024 15:18:54 +0800
+ 15.1.2375.32; Sun, 21 Jan 2024 15:19:03 +0800
 Received: from [127.0.1.1] (172.16.17.107) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Sun, 21 Jan
- 2024 15:18:53 +0800
+ 2024 15:19:02 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <kvalo@kernel.org>
 CC: <kevin_yang@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] wifi: rtw89: pci: update SER timer unit and timeout time
-Date: Sun, 21 Jan 2024 15:18:23 +0800
-Message-ID: <20240121071826.10159-2-pkshih@realtek.com>
+Subject: [PATCH 3/4] wifi: rtw89: pci: validate RX tag for RXQ and RPQ
+Date: Sun, 21 Jan 2024 15:18:25 +0800
+Message-ID: <20240121071826.10159-4-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240121071826.10159-1-pkshih@realtek.com>
 References: <20240121071826.10159-1-pkshih@realtek.com>
@@ -51,52 +51,232 @@ X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
-Be higher resolution of SER timer unit from 32ms to 16ms to detect
-abnormal situation more accurately, and set hardware watchdog timer to 4ms.
+PCI RX ring is a kind of read/write index ring, and DMA and ring index are
+asynchronous, so suddenly driver gets newer index ahead before DMA. To
+resolve this rare situation, we use a RX tag as helpers to make sure DMA
+is done.
+
+The RX tag is a 13-bit value, and range is from 1 ~ 0x1FFF, but 0 isn't
+used so should be skipped.
+
+Only enable this validation to coming WiFi 7 chips, because existing
+chips use different design and don't really meet this situation.
+
+Add missed rx_ring_eq_is_full for 8851BE by the way.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/pci_be.c | 5 +++++
- drivers/net/wireless/realtek/rtw89/reg.h    | 3 +++
- 2 files changed, 8 insertions(+)
+ drivers/net/wireless/realtek/rtw89/pci.c      | 60 +++++++++++++++++--
+ drivers/net/wireless/realtek/rtw89/pci.h      |  4 +-
+ .../net/wireless/realtek/rtw89/rtw8851be.c    |  2 +
+ .../net/wireless/realtek/rtw89/rtw8852ae.c    |  1 +
+ .../net/wireless/realtek/rtw89/rtw8852be.c    |  1 +
+ .../net/wireless/realtek/rtw89/rtw8852ce.c    |  1 +
+ .../net/wireless/realtek/rtw89/rtw8922ae.c    |  1 +
+ 7 files changed, 63 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci_be.c b/drivers/net/wireless/realtek/rtw89/pci_be.c
-index 629ffa4bee91..5c9e39357773 100644
---- a/drivers/net/wireless/realtek/rtw89/pci_be.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci_be.c
-@@ -105,6 +105,10 @@ static void rtw89_pci_ctrl_trxdma_pcie_be(struct rtw89_dev *rtwdev,
- 		val |= B_BE_STOP_AXI_MST;
- 
- 	rtw89_write32(rtwdev, R_BE_HAXI_INIT_CFG1, val);
-+
-+	if (io_en == MAC_AX_PCIE_ENABLE)
-+		rtw89_write32_mask(rtwdev, R_BE_HAXI_MST_WDT_TIMEOUT_SEL_V1,
-+				   B_BE_HAXI_MST_WDT_TIMEOUT_SEL_MASK, 4);
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 8227dc55e818..b51ec3cbc715 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -155,8 +155,8 @@ static void rtw89_pci_sync_skb_for_device(struct rtw89_dev *rtwdev,
+ 				   DMA_FROM_DEVICE);
  }
  
- static void rtw89_pci_clr_idx_all_be(struct rtw89_dev *rtwdev)
-@@ -257,6 +261,7 @@ static void rtw89_pci_ser_setting_be(struct rtw89_dev *rtwdev)
- 	rtw89_write32(rtwdev, R_BE_PL1_DBG_INFO, 0x0);
- 	rtw89_write32_set(rtwdev, R_BE_FWS1IMR, B_BE_PCIE_SER_TIMEOUT_INDIC_EN);
- 	rtw89_write32_set(rtwdev, R_BE_SER_PL1_CTRL, B_BE_PL1_SER_PL1_EN);
-+	rtw89_write32_mask(rtwdev, R_BE_SER_PL1_CTRL, B_BE_PL1_TIMER_UNIT_MASK, 1);
- 
- 	val32 = rtw89_read32(rtwdev, R_BE_REG_PL1_MASK);
- 	val32 |= B_BE_SER_PMU_IMR | B_BE_SER_L1SUB_IMR | B_BE_SER_PM_MASTER_IMR |
-diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
-index b411bf726849..e1802fe04576 100644
---- a/drivers/net/wireless/realtek/rtw89/reg.h
-+++ b/drivers/net/wireless/realtek/rtw89/reg.h
-@@ -5727,6 +5727,9 @@
- #define B_BE_STOP_CH1 BIT(1)
- #define B_BE_STOP_CH0 BIT(0)
- 
-+#define R_BE_HAXI_MST_WDT_TIMEOUT_SEL_V1 0xB02C
-+#define B_BE_HAXI_MST_WDT_TIMEOUT_SEL_MASK GENMASK(4, 0)
+-static int rtw89_pci_rxbd_info_update(struct rtw89_dev *rtwdev,
+-				      struct sk_buff *skb)
++static void rtw89_pci_rxbd_info_update(struct rtw89_dev *rtwdev,
++				       struct sk_buff *skb)
+ {
+ 	struct rtw89_pci_rxbd_info *rxbd_info;
+ 	struct rtw89_pci_rx_info *rx_info = RTW89_PCI_RX_SKB_CB(skb);
+@@ -166,10 +166,58 @@ static int rtw89_pci_rxbd_info_update(struct rtw89_dev *rtwdev,
+ 	rx_info->ls = le32_get_bits(rxbd_info->dword, RTW89_PCI_RXBD_LS);
+ 	rx_info->len = le32_get_bits(rxbd_info->dword, RTW89_PCI_RXBD_WRITE_SIZE);
+ 	rx_info->tag = le32_get_bits(rxbd_info->dword, RTW89_PCI_RXBD_TAG);
++}
 +
- #define R_BE_HAXI_IDCT_MSK 0xB0B8
- #define B_BE_HAXI_RRESP_ERR_IDCT_MSK BIT(7)
- #define B_BE_HAXI_BRESP_ERR_IDCT_MSK BIT(6)
++static int rtw89_pci_validate_rx_tag(struct rtw89_dev *rtwdev,
++				     struct rtw89_pci_rx_ring *rx_ring,
++				     struct sk_buff *skb)
++{
++	struct rtw89_pci_rx_info *rx_info = RTW89_PCI_RX_SKB_CB(skb);
++	const struct rtw89_pci_info *info = rtwdev->pci_info;
++	u32 target_rx_tag;
++
++	if (!info->check_rx_tag)
++		return 0;
++
++	/* valid range is 1 ~ 0x1FFF */
++	if (rx_ring->target_rx_tag == 0)
++		target_rx_tag = 1;
++	else
++		target_rx_tag = rx_ring->target_rx_tag;
++
++	if (rx_info->tag != target_rx_tag) {
++		rtw89_debug(rtwdev, RTW89_DBG_UNEXP, "mismatch RX tag 0x%x 0x%x\n",
++			    rx_info->tag, target_rx_tag);
++		return -EAGAIN;
++	}
+ 
+ 	return 0;
+ }
+ 
++static
++int rtw89_pci_sync_skb_for_device_and_validate_rx_info(struct rtw89_dev *rtwdev,
++						       struct rtw89_pci_rx_ring *rx_ring,
++						       struct sk_buff *skb)
++{
++	struct rtw89_pci_rx_info *rx_info = RTW89_PCI_RX_SKB_CB(skb);
++	int rx_tag_retry = 100;
++	int ret;
++
++	do {
++		rtw89_pci_sync_skb_for_cpu(rtwdev, skb);
++		rtw89_pci_rxbd_info_update(rtwdev, skb);
++
++		ret = rtw89_pci_validate_rx_tag(rtwdev, rx_ring, skb);
++		if (ret != -EAGAIN)
++			break;
++	} while (rx_tag_retry--);
++
++	/* update target rx_tag for next RX */
++	rx_ring->target_rx_tag = rx_info->tag + 1;
++
++	return ret;
++}
++
+ static void rtw89_pci_ctrl_txdma_ch_pcie(struct rtw89_dev *rtwdev, bool enable)
+ {
+ 	const struct rtw89_pci_info *info = rtwdev->pci_info;
+@@ -259,9 +307,8 @@ static u32 rtw89_pci_rxbd_deliver_skbs(struct rtw89_dev *rtwdev,
+ 
+ 	skb_idx = rtw89_pci_get_rx_skb_idx(rtwdev, bd_ring);
+ 	skb = rx_ring->buf[skb_idx];
+-	rtw89_pci_sync_skb_for_cpu(rtwdev, skb);
+ 
+-	ret = rtw89_pci_rxbd_info_update(rtwdev, skb);
++	ret = rtw89_pci_sync_skb_for_device_and_validate_rx_info(rtwdev, rx_ring, skb);
+ 	if (ret) {
+ 		rtw89_err(rtwdev, "failed to update %d RXBD info: %d\n",
+ 			  bd_ring->wp, ret);
+@@ -549,9 +596,8 @@ static u32 rtw89_pci_release_tx_skbs(struct rtw89_dev *rtwdev,
+ 
+ 	skb_idx = rtw89_pci_get_rx_skb_idx(rtwdev, bd_ring);
+ 	skb = rx_ring->buf[skb_idx];
+-	rtw89_pci_sync_skb_for_cpu(rtwdev, skb);
+ 
+-	ret = rtw89_pci_rxbd_info_update(rtwdev, skb);
++	ret = rtw89_pci_sync_skb_for_device_and_validate_rx_info(rtwdev, rx_ring, skb);
+ 	if (ret) {
+ 		rtw89_err(rtwdev, "failed to update %d RXBD info: %d\n",
+ 			  bd_ring->wp, ret);
+@@ -1550,6 +1596,7 @@ static void rtw89_pci_reset_trx_rings(struct rtw89_dev *rtwdev)
+ 		bd_ring->rp = 0;
+ 		rx_ring->diliver_skb = NULL;
+ 		rx_ring->diliver_desc.ready = false;
++		rx_ring->target_rx_tag = 0;
+ 
+ 		rtw89_write16(rtwdev, addr_num, bd_ring->len);
+ 		rtw89_write32(rtwdev, addr_desa_l, bd_ring->dma);
+@@ -3213,6 +3260,7 @@ static int rtw89_pci_alloc_rx_ring(struct rtw89_dev *rtwdev,
+ 	rx_ring->buf_sz = buf_sz;
+ 	rx_ring->diliver_skb = NULL;
+ 	rx_ring->diliver_desc.ready = false;
++	rx_ring->target_rx_tag = 0;
+ 
+ 	for (i = 0; i < len; i++) {
+ 		skb = dev_alloc_skb(buf_sz);
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
+index 1fb7c209fa0d..0543221b4c58 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.h
++++ b/drivers/net/wireless/realtek/rtw89/pci.h
+@@ -1235,6 +1235,7 @@ struct rtw89_pci_info {
+ 	enum mac_ax_pcie_func_ctrl io_rcy_en;
+ 	enum mac_ax_io_rcy_tmr io_rcy_tmr;
+ 	bool rx_ring_eq_is_full;
++	bool check_rx_tag;
+ 
+ 	u32 init_cfg_reg;
+ 	u32 txhci_en_bit;
+@@ -1277,7 +1278,7 @@ struct rtw89_pci_tx_data {
+ 
+ struct rtw89_pci_rx_info {
+ 	dma_addr_t dma;
+-	u32 fs:1, ls:1, tag:11, len:14;
++	u32 fs:1, ls:1, tag:13, len:14;
+ };
+ 
+ #define RTW89_PCI_TXBD_OPTION_LS	BIT(14)
+@@ -1406,6 +1407,7 @@ struct rtw89_pci_rx_ring {
+ 	u32 buf_sz;
+ 	struct sk_buff *diliver_skb;
+ 	struct rtw89_rx_desc_info diliver_desc;
++	u32 target_rx_tag:13;
+ };
+ 
+ struct rtw89_pci_isrs {
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851be.c b/drivers/net/wireless/realtek/rtw89/rtw8851be.c
+index ade69bd30fc8..ca1374a71727 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851be.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851be.c
+@@ -25,6 +25,8 @@ static const struct rtw89_pci_info rtw8851b_pci_info = {
+ 	.autok_en		= MAC_AX_PCIE_DISABLE,
+ 	.io_rcy_en		= MAC_AX_PCIE_DISABLE,
+ 	.io_rcy_tmr		= MAC_AX_IO_RCY_ANA_TMR_6MS,
++	.rx_ring_eq_is_full	= false,
++	.check_rx_tag		= false,
+ 
+ 	.init_cfg_reg		= R_AX_PCIE_INIT_CFG1,
+ 	.txhci_en_bit		= B_AX_TXHCI_EN,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+index f1e890bde049..7c6ffedb77e2 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
+@@ -26,6 +26,7 @@ static const struct rtw89_pci_info rtw8852a_pci_info = {
+ 	.io_rcy_en		= MAC_AX_PCIE_DISABLE,
+ 	.io_rcy_tmr		= MAC_AX_IO_RCY_ANA_TMR_6MS,
+ 	.rx_ring_eq_is_full	= false,
++	.check_rx_tag		= false,
+ 
+ 	.init_cfg_reg		= R_AX_PCIE_INIT_CFG1,
+ 	.txhci_en_bit		= B_AX_TXHCI_EN,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852be.c b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+index 920b20bbcfb7..ed71364e6437 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
+@@ -26,6 +26,7 @@ static const struct rtw89_pci_info rtw8852b_pci_info = {
+ 	.io_rcy_en		= MAC_AX_PCIE_DISABLE,
+ 	.io_rcy_tmr		= MAC_AX_IO_RCY_ANA_TMR_6MS,
+ 	.rx_ring_eq_is_full	= false,
++	.check_rx_tag		= false,
+ 
+ 	.init_cfg_reg		= R_AX_PCIE_INIT_CFG1,
+ 	.txhci_en_bit		= B_AX_TXHCI_EN,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+index 4592de3dbd94..583ea673a4f5 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
+@@ -35,6 +35,7 @@ static const struct rtw89_pci_info rtw8852c_pci_info = {
+ 	.io_rcy_en		= MAC_AX_PCIE_ENABLE,
+ 	.io_rcy_tmr		= MAC_AX_IO_RCY_ANA_TMR_6MS,
+ 	.rx_ring_eq_is_full	= false,
++	.check_rx_tag		= false,
+ 
+ 	.init_cfg_reg		= R_AX_HAXI_INIT_CFG1,
+ 	.txhci_en_bit		= B_AX_TXHCI_EN_V1,
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
+index 7b3d98d2c402..9f46fb166105 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
+@@ -26,6 +26,7 @@ static const struct rtw89_pci_info rtw8922a_pci_info = {
+ 	.io_rcy_en		= MAC_AX_PCIE_ENABLE,
+ 	.io_rcy_tmr		= MAC_AX_IO_RCY_ANA_TMR_DEF,
+ 	.rx_ring_eq_is_full	= true,
++	.check_rx_tag		= true,
+ 
+ 	.init_cfg_reg		= R_BE_HAXI_INIT_CFG1,
+ 	.txhci_en_bit		= B_BE_TXDMA_EN,
 -- 
 2.25.1
 
