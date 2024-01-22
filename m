@@ -1,90 +1,90 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDCE63EA69
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2024 17:48:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66EF556478
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jan 2024 18:08:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705945706; cv=none; b=QEvOfZJ/3e0ZYHgO5Nu+cOFsWq1YSDvCtV4s3/rHn7g7omSZgxg1ybJoHDYD5MZQjbnREefw2I/V+0/4NIKS0R+eSfAi0banO5mNB0VOYcu0Kog189PR4HCa217I+b8McSYD2M0z2Y3OL8YR3CvE03Bv34XapyOj6dIdrmqToPM=
+	t=1705946914; cv=none; b=Yay7bLL6PLvp0jQwW8iUWGNghJ3w4ub/vd5G64WlAFiOzF9V0E6OLI8Ewxjel9sa2gYRXYbJ7nY35WtAnu6vFO8uHbYCG3cAQy9lTVIiyljUXADkilJYdGnBsyIkZWBQnp3TonXD8SUPnqH9OvbTCjv09Ozz3oLSIq1DhNZBoho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705945706; c=relaxed/simple;
-	bh=YBeB6YSEa4WZsVF6NoHNYckEPVqWxf2qJxDTBqt1DYA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=WMEQtZx01OTLLzr+Z4hj9nnd7y7iknsonXTc4cNsNPXPG3Ryoifm78JRLvFQ6bSI7UjcDWcVUJVRJsi0yIZPdRmsDWcd8bYkQYsj7MdTevJVe2RXhsBiUw1R+7yxxCrL4AIQABPLpadNkbTIk6tjfzCQl+Nv6MELr8i9XkZL8eQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BWlPRqfM; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BWlPRqfM"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40MEvNTh014268;
-	Mon, 22 Jan 2024 17:48:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:cc:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=skADsusE5cYMrUI6vixhB2mBE0F8QCvNnRSX6mz4n2I=; b=BW
-	lPRqfMxVKzllUJ16yxV7s9piBJaYC0OUPG3W+b0ZpmabMtHaMD3qYBrch1yL12LP
-	9MRm3Mb9HW1DRYyov8+Ly9aHA0NW0HMazbaE4zLZe5SIQOu0Gs2nF1FGOQ0wQiLk
-	524lJX8wf5mwTGP8FHUKhelNIk7H+wWcm8L5yhA1Hg30LlEAYA1IgMb299RYAplN
-	SagyPTQXcnQQR4MkA14otzSJxobjAaEabK+qgAtopErY9mrv63cXhkTicURY6fvC
-	VdRWr3o6EgSNmiDABSwhd06EZDbmyASeUdALSFwC3xX0hUynAVeDuuOCe8U2cHgj
-	HoIb5CfOl+RDLVc1JoWQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vssw9gg8w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Jan 2024 17:48:20 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40MHmKSV022172
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Jan 2024 17:48:20 GMT
-Received: from [10.110.26.199] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 22 Jan
- 2024 09:48:19 -0800
-Message-ID: <f410e661-e46c-4ec3-8775-fe80f26418fc@quicinc.com>
-Date: Mon, 22 Jan 2024 09:48:19 -0800
+	s=arc-20240116; t=1705946914; c=relaxed/simple;
+	bh=XKtQhRqSb5nNqOnG6IfCydGW2PBCJJiRQ5sD9D7wQtw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=l96wsnZ8eAlSk6y882yFmDCiRCOst+1zNdIvutR7vP4N5EHpSMKUB+s3SPXW6HJjwoAqXdBHh5Yl5lVecF8y2JLZJFDliHEaAhj9RiEH2JwQS69wVlfH8RDs21EOFR3Ukvmp96OCZPVCXG5ByglWWKgYHU9s+ou5lNoMgGwwOHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rRyiZ-00027k-L7; Mon, 22 Jan 2024 19:08:19 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rRyiY-001eR6-S1; Mon, 22 Jan 2024 19:08:18 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rRyiY-005Zyp-2X;
+	Mon, 22 Jan 2024 19:08:18 +0100
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To: Mark Brown <broonie@kernel.org>
+Cc: kernel@pengutronix.de,
+	Kalle Valo <kvalo@kernel.org>,
+	Dmitry Antipov <dmantipov@yandex.ru>,
+	Amit Kumar Mahapatra <amit.kumar-mahapatra@amd.com>,
+	libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-spi@vger.kernel.org
+Subject: [PATCH v2 30/33] wifi: libertas: Follow renaming of SPI "master" to "controller"
+Date: Mon, 22 Jan 2024 19:07:25 +0100
+Message-ID:  <bc73a4e33fe347298a0a338dd7b720509a6b0081.1705944943.git.u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1705944943.git.u.kleine-koenig@pengutronix.de>
+References: <cover.1705944943.git.u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] wifi: ath12k: add processing for TWT disable event
-Content-Language: en-US
-To: Lingbo Kong <quic_lingbok@quicinc.com>, <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-References: <20240122085336.3985-1-quic_lingbok@quicinc.com>
- <20240122085336.3985-3-quic_lingbok@quicinc.com>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20240122085336.3985-3-quic_lingbok@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 7yOyQSXJQ4Qso2Fa-BAvnHlhiQ2cCzvL
-X-Proofpoint-ORIG-GUID: 7yOyQSXJQ4Qso2Fa-BAvnHlhiQ2cCzvL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-22_07,2024-01-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
- phishscore=0 lowpriorityscore=0 bulkscore=0 adultscore=0 spamscore=0
- malwarescore=0 clxscore=1015 impostorscore=0 suspectscore=0
- mlxlogscore=646 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2311290000 definitions=main-2401220124
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1161; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=XKtQhRqSb5nNqOnG6IfCydGW2PBCJJiRQ5sD9D7wQtw=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlrq7mROqMmksVXtZKlK5ePULByhi3a7e8uai26 yJC0UxzavSJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZa6u5gAKCRCPgPtYfRL+ TsZpCACIuvX+HHZCs05CT9E3DYKuX7QOYeKsJmVpLGYd1eJU5u9AahYwFkMRkOo8iNokGhL3Eto Mwfjrnk4qbG2gurEV5Yva9HGfCAkewtRlLUmS7rJqasWw5wCBELkyx1C8j3F70j73oi6ALONobR ngQrCZgs7PkA0gb4RFyZF8sXYxI9pWEB+NjljAIVmil8K2mpH1P7MTSzDHbSYXzbrYhXEkmrMAI pz235ikKBD5fn6LWYq3ODbMZRt5WlN7eodgmp0eCNDMrR0Zb/eI1OTbCdnns7IKmeH7oN1Pz4ro CDfjOo0XVPJFZRd1rV4h+EKtA9EqqBMjnXpgetO8PPkpgUk6
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On 1/22/2024 12:53 AM, Lingbo Kong wrote:
-> When ath12k send TWT disable command to firmware, firmware will return a
-> TWT disable event to ath12k. Through the analysis of TWT disable event
-> status, we can easily obtain the status of TWT disable command. It can be
-> more convenient to debug TWT.
-> 
-> This patch works with WCN7850 and QCN9274.
-> 
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
-> 
-> Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+In commit 8caab75fd2c2 ("spi: Generalize SPI "master" to "controller"")
+some functions and struct members were renamed. To not break all drivers
+compatibility macros were provided.
+
+To be able to remove these compatibility macros push the renaming into
+this driver.
+
+Acked-by: Kalle Valo <kvalo@kernel.org>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/net/wireless/marvell/libertas/if_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
+index 8690b0114e23..b722a6587fd3 100644
+--- a/drivers/net/wireless/marvell/libertas/if_spi.c
++++ b/drivers/net/wireless/marvell/libertas/if_spi.c
+@@ -1052,7 +1052,7 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 				"attached to SPI bus_num %d, chip_select %d. "
+ 				"spi->max_speed_hz=%d\n",
+ 				card->card_id, card->card_rev,
+-				card->spi->master->bus_num,
++				card->spi->controller->bus_num,
+ 				spi_get_chipselect(card->spi, 0),
+ 				card->spi->max_speed_hz);
+ 		err = if_spi_prog_helper_firmware(card, helper);
+-- 
+2.43.0
 
