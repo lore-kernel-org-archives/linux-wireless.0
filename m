@@ -1,54 +1,54 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6CEE4EB24
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2024 12:59:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68914F88E
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jan 2024 12:59:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706187567; cv=none; b=Dee3I40oeUZUwQ+rs7KGvstQSwrst19c9TQ71yHw3eIXKtDMZZCJaeVaC0DdBvU+oFitv6mWmZj6EeN8Lue/VU5uqLVdsGUUHbYNprmylD2SJyNvRbLnuQ9G3TzTDH+sBpXhp9uAdXjJCUcjseJRk0NbhAh6TpLDCaP6A4l9W2g=
+	t=1706187569; cv=none; b=THCfic7q5Np5okvXuLbD/T/ZmydrIAQS8O36N1gTy53Ie9fHyezQdd4A1c9K0DF9Jqk80fM3AHxIODkwVKLWT3OWr4MOMDQNtOfR+rp0jbrA0e1KYvdA4wfe0WnWL3Cnw+wGLwnZFQqRcBUWd8ND9pQ/CR9qMc9QfPJQD9SIS7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706187567; c=relaxed/simple;
-	bh=xg2DUYuZTOjoHGVl7aUrFKcfsdKHg5/NBf4yajGuGjQ=;
+	s=arc-20240116; t=1706187569; c=relaxed/simple;
+	bh=fveO+5H+lk3A8NyX42BprP3X6Ea6DGTHOvOCQQlrhu0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d1k4DMna6WaDsYuapqlYsrtqkVDXMERVT1jiUqVpTwqfm1RHqm/UuixjsS7S9T1SpzqOxwdmEghUJkQBCmp15K1YT21O3nZlorGTX6OgvkixwE5QtqR4/S+c5E6gyKVSDmLfP3E+aLf6YtS6N409hBH8Sa0I/e70pUU58DBI7Ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PvZR118r; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=NERaS/pM2j9PdHIE/ep44uZbp0BZnut3E8SEELhWh8cvgalKml79Fd6f0pkMJX320L5Wbryf9UqgWv1jlfbnBKzwl7R4Hk6k7FH05lMz4DK5CnylmzQJSDAhDAhy6lF9hJ6rnudmVd213qfqT+tUdqhTHVt+RQEaZ5qxG0dipzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=naZp3i8E; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PvZR118r"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40PBu7cC028048;
-	Thu, 25 Jan 2024 12:59:21 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="naZp3i8E"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40P9dtPo031568;
+	Thu, 25 Jan 2024 12:59:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=7QUoY9xhpgIrwvQuU/IEDAk9OYK2v7qDauAg/zyDrZA=; b=Pv
-	ZR118rfymK8plhZA52SJaqygOqVWahVX0rqGOmbJl7leVQfZ1LGqCAokmJkDeaub
-	xz7Yz33J872o9Hhe/HTowk2N+BAjgn0bDUP983l1oVMNTKoP5hh4IM4u3UgeJYXV
-	CV/14xzVMZYLZ2xUhsbgj26U5Zjxo7bhVks+1Dm25jakNo8VqFrGGNolQmvcBE6u
-	U9JAcf/ruyul/KUqC8ptxtyJp+xAXdDqj8wT61BYYOESE7flSwdcaiNfkndwuNqF
-	HWFOanf6sezPvp8GXTiX0O5PSxIS69MONHBpjxX9wV2P9T9F8Qs2EX9ha5/RQaQr
-	dptQwzGhWaU6fIVvZsoA==
+	qcppdkim1; bh=zDRhT/J+FtOUydChngJeg+g/jsUa70xFEFEH5O2dOfs=; b=na
+	Zp3i8ESilCi8E+LMwL+hLktR2dVVVMgJ64DNRdaG6tTiCnlOm4yNwE1DC8lPokPZ
+	eZVPtTVKYMCa7JpQk5JDlVoWJjjfWYOD/086Ls3vgypjOeW0IrCEVPu7wqdCjWUp
+	0uDruUASef4NMu+df++vd5qRWXTSXJlYzztmxugJI/zTbVhXowCww55cwAhR2FFw
+	3p0wHXwibzeWNxNwrVlzniuieRg+fBIOHIftiNyarNFwIiIQvgurTMSo23rBiLFd
+	PTKi6LjRO4M6kQhfA4FTfLmYRzj5XUbRJeHS0yF7VX1w6Ux8LtZP8sRT03TI3mLx
+	x7eA9qBzdRVlROzwiOtQ==
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vumyngm77-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vun6w0ma2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 25 Jan 2024 12:59:21 +0000 (GMT)
+	Thu, 25 Jan 2024 12:59:18 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40PCxL8E009131
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40PCxHXc009104
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 25 Jan 2024 12:59:21 GMT
+	Thu, 25 Jan 2024 12:59:17 GMT
 Received: from cdcwlex322514-lin.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Thu, 25 Jan 2024 04:59:19 -0800
+ 15.2.1118.40; Thu, 25 Jan 2024 04:59:15 -0800
 From: Aditya Kumar Singh <quic_adisi@quicinc.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
         Aditya Kumar Singh
 	<quic_adisi@quicinc.com>
-Subject: [PATCH v5 1/3] wifi: cfg80211: send link id in channel_switch ops
-Date: Thu, 25 Jan 2024 18:28:53 +0530
-Message-ID: <20240125125855.827619-6-quic_adisi@quicinc.com>
+Subject: [PATCH 3/3] wifi: mac80211: remove only own link stations during stop_ap
+Date: Thu, 25 Jan 2024 18:28:51 +0530
+Message-ID: <20240125125855.827619-4-quic_adisi@quicinc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240125125855.827619-1-quic_adisi@quicinc.com>
 References: <20240125125855.827619-1-quic_adisi@quicinc.com>
@@ -64,92 +64,49 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ooBVRjOwzRsz7CllKthW39bvVKeO1ybj
-X-Proofpoint-ORIG-GUID: ooBVRjOwzRsz7CllKthW39bvVKeO1ybj
+X-Proofpoint-GUID: 9rnTnLTvEzNHeqmgRdRaUXS-SKaT9uFt
+X-Proofpoint-ORIG-GUID: 9rnTnLTvEzNHeqmgRdRaUXS-SKaT9uFt
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-25_08,2024-01-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=885 adultscore=0 spamscore=0 lowpriorityscore=0 clxscore=1015
- impostorscore=0 priorityscore=1501 suspectscore=0 bulkscore=0 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2401190000 definitions=main-2401250090
+ definitions=2024-01-25_07,2024-01-25_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=856
+ lowpriorityscore=0 adultscore=0 spamscore=0 priorityscore=1501 mlxscore=0
+ bulkscore=0 phishscore=0 impostorscore=0 malwarescore=0 suspectscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2401190000 definitions=main-2401250089
 
-Currently, during channel switch, no link id information is passed
-due to which channel switch is carried on deflink always. In order
-to support channel switch during Multi Link Operation, it is
-required to pass link id as well.
+Currently, whenever AP link is brought down via ieee80211_stop_ap()
+function, all stations connected to the sdata are flushed. However, in case
+of MLO there is a requirement to flush only stations connected to that link
+and not all.
 
-Add changes to pass link id in the channel_switch cfg80211_ops.
+For instance - Consider 2 GHz and 5 GHz are AP MLD. Now due to some reason
+5 GHz link of this AP is going down (link removal or any other case). All
+stations connected, even legacy stations connected to 2 GHz link AP would
+also be flushed. Flushing of other link stations is wrong.
+
+Fix this issue by passing self link ID to sta_flush() function. This would
+then only remove the stations which are still using the passed link
+ID as their link sta. Other stations will not be affected.
 
 Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 ---
- include/net/cfg80211.h | 3 +++
- net/wireless/nl80211.c | 1 +
- net/wireless/trace.h   | 7 +++++--
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index cf79656ce09c..098a4f10fdfd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1531,6 +1531,8 @@ struct cfg80211_ap_update {
-  * @punct_bitmap: Preamble puncturing bitmap. Each bit represents
-  *	a 20 MHz channel, lowest bit corresponding to the lowest channel.
-  *	Bit set to 1 indicates that the channel is punctured.
-+ * @link_id: defines the link on which channel switch is expected during
-+ *	     MLO. 0 is case of non-MLO.
-  */
- struct cfg80211_csa_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -1544,6 +1546,7 @@ struct cfg80211_csa_settings {
- 	bool block_tx;
- 	u8 count;
- 	u16 punct_bitmap;
-+	u8 link_id;
- };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 26a8ea553401..968ceadd88a7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1618,7 +1618,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	link_conf->ema_ap = false;
+ 	link_conf->bssid_indicator = 0;
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 60877b532993..7022e34d0a93 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10277,6 +10277,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
- 			goto free;
- 	}
+-	__sta_info_flush(sdata, true, -1);
++	__sta_info_flush(sdata, true, link_id);
+ 	ieee80211_free_keys(sdata, true);
  
-+	params.link_id = link_id;
- 	err = rdev_channel_switch(rdev, dev, &params);
- 
- free:
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 1f374c8a17a5..2af58f5fbf51 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2324,6 +2324,7 @@ TRACE_EVENT(rdev_channel_switch,
- 		__field(u8, count)
- 		__dynamic_array(u16, bcn_ofs, params->n_counter_offsets_beacon)
- 		__dynamic_array(u16, pres_ofs, params->n_counter_offsets_presp)
-+		__field(u8, link_id)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-@@ -2341,11 +2342,13 @@ TRACE_EVENT(rdev_channel_switch,
- 			memcpy(__get_dynamic_array(pres_ofs),
- 			       params->counter_offsets_presp,
- 			       params->n_counter_offsets_presp * sizeof(u16));
-+		__entry->link_id = params->link_id;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT
--		  ", block_tx: %d, count: %u, radar_required: %d",
-+		  ", block_tx: %d, count: %u, radar_required: %d link_id: %d",
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG,
--		  __entry->block_tx, __entry->count, __entry->radar_required)
-+		  __entry->block_tx, __entry->count, __entry->radar_required,
-+		  __entry->link_id)
- );
- 
- TRACE_EVENT(rdev_set_qos_map,
+ 	link_conf->enable_beacon = false;
 -- 
 2.25.1
 
