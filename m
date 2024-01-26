@@ -1,43 +1,43 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED19C633FD
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 09:10:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 793BC6341C
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 09:10:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706260208; cv=none; b=l1A4AGz4vmPbZD6psJ/bkiBVZDzf4REtU+4Znwg0NHueWP8mnvieBWAoTX0D98E2jXaK2HQF4E14IapsCEMpTfLHLLB3E7ZJ+l8mhL8fWFaR/3PW7pRUemrZDP9ACvMW3iAFKHcIAnXgrGce+K5coyrCvY90CHe2hhM76fgBHJw=
+	t=1706260209; cv=none; b=lCQyrm0jvLGGBqHVCS7tGcACmXLX6bqzXnP/Bbb4iPqCMy4ZCwhv7g+OgmnScCYVJCL6WWVfiHLOuZmyPtAoFZHIx1ZIHq0HBb1Zcx4DA6HbmWkBzc4uuyZzSccEVLuM/AxXkqiJ7Hc+fEki0UxFI6Fw92I7z4+weIwGP+FhZIU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706260208; c=relaxed/simple;
-	bh=S1E86e9R/FG8ivTm60MAPno1ouTEm7Qe1nU0O2dRoSs=;
+	s=arc-20240116; t=1706260209; c=relaxed/simple;
+	bh=iQ50UnkfJ9pI/F2P/t14Iwlu+lRPaxoMbDXYBIB9DmA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q/G58Ua92xQokLBr2kprh6JkRjmCY+2NtgIvXmUrYIu4Fm0FJT+EcZW/TT4ERsABbEC+gsPYHlQCou6gHuuzm8e1TDqfa6yXQ0HRrfWHEgJc20hGtxU0jPACxg7q96ZYUHohpAy8CSgdoMfZYvTbed8y8owniIBZve6UQkPB7Pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Gqkz10s+; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=rptO/VckHh32JKZsvgVkyjePHqo46xjYx11Mt5NZLLAyayiC+qVHxFQtF6mMy3KKl6dxXb+7oRErAhNnJSZehS3r71wLg95fDuAF3TGSF0QvaRPDqj2D/ezd2DW1V/ajZbMwSGRPcLRnkAQk2cfmNvoS8JRup4Rl8VHTP67+rrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=h6e8eUkk; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Gqkz10s+"
-X-UUID: a9931d74bc2a11eea2298b7352fd921d-20240126
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="h6e8eUkk"
+X-UUID: a91409c6bc2a11eea2298b7352fd921d-20240126
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=epN7KJjCMnYrcOaasseqP03+HRXsNVjKd4ndmSsQ1BM=;
-	b=Gqkz10s+Uv38jJy+FfDMuwqmfb5gYYDUnmpgUIihIYFCYKdgXYmXtMAoQL1w6a1JEklv34m3ZlJe5sl9iWYwsi+HniAu00KOqeH4kwcAZOO/vdIzHiBJAYbqHwAEo2HQoIIMitvKt99eqTkm/Y2c3alnsmtBTOHaFuD22eZroGk=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Sda5kZdyKKIJK2I43a9AKWlXy5NJNzHmEBQEBx80YOQ=;
+	b=h6e8eUkkA0/+5HRFUVYRBrlQlycG6+aL1sWNgUwxA3kLWVDOO6C8mGF8cqOB7N0X4IEIChvWzp4gkT0wYCCoQghDRtIHaEDa9zn4AExDzzfmXOeDilsmziQ9qqCa0lQloBKovcoJGnKU8KvAK1dupDIjOPA7Vz7lkk4oPiWQUYw=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.36,REQID:68f75bf8-d61a-460f-b080-aa15ee712380,IP:0,U
+X-CID-O-INFO: VERSION:1.1.36,REQID:ea83c1f0-465e-4022-9b6d-294f6f63ec51,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:6e16cf4,CLOUDID:1b414983-8d4f-477b-89d2-1e3bdbef96d1,B
+X-CID-META: VersionHash:6e16cf4,CLOUDID:f76e2efe-c16b-4159-a099-3b9d0558e447,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
 	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: a9931d74bc2a11eea2298b7352fd921d-20240126
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+X-UUID: a91409c6bc2a11eea2298b7352fd921d-20240126
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 395730437; Fri, 26 Jan 2024 17:09:51 +0800
+	with ESMTP id 193711143; Fri, 26 Jan 2024 17:09:50 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1118.26; Fri, 26 Jan 2024 17:09:49 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
@@ -48,11 +48,11 @@ To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, Bo Jiao <Bo.Jiao@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Benjamin Lin
-	<benjamin-jw.lin@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH v2 04/12] wifi: mt76: mt7996: fix incorrect interpretation of EHT MCS caps
-Date: Fri, 26 Jan 2024 17:09:15 +0800
-Message-ID: <20240126090923.6357-4-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Howard Hsu
+	<howard-yh.hsu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH v2 06/12] wifi: mt76: mt7996: fix HE beamformer phy cap for station vif
+Date: Fri, 26 Jan 2024 17:09:17 +0800
+Message-ID: <20240126090923.6357-6-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20240126090923.6357-1-shayne.chen@mediatek.com>
 References: <20240126090923.6357-1-shayne.chen@mediatek.com>
@@ -63,69 +63,39 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10-1.739900-8.000000
-X-TMASE-MatchedRID: nZiOSCXx2v0zTh1BHqxnVY3NgkEqAN0Rsf4f4CxxueRz/u+TcH1U7P9T
-	oIqmlx19ThbvLLI8RvOWLz7gHk2taUHQ/pYAwhs6R/j040fRFpJ9LQinZ4QefPcjNeVeWlqY+gt
-	Hj7OwNO3Y+r35MKhZcLtq+wOZHYbSBzOYxaP1nyFhNr/gqmm8vOLUFJq/ej6iXI/zOPA1FeTMdT
-	ys6h3FMES8yNWlgnTLN7lgFJuCeT3roWeZQy0/P3ZrUbEZipAEiWT09mQz7szw9kH8zAy44SIdu
-	k5Jkjd37ndUHUMmXu5+3BndfXUhXQ==
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10-1.739900-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 593BC6402B06AF40E581A4655D040D11F37BC173E5CFCB661EFFDC2E9FAD6D562000:8
 X-MTK: N
 
-From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
+From: Howard Hsu <howard-yh.hsu@mediatek.com>
 
-The EHT MCS map subfield of 20 MHz-Only is not present in the EHT
-capability of AP, so STA does not need to parse the subfield.
-Moreover, AP should parse the subfield only if STA is 20 MHz-Only, which
-can be confirmed by checking supported channel width in HE capability.
+Set correct beamformer capabilities for station vif in HE PHY
+capability IE.
 
-Fixes: 92aa2da9fa49 ("wifi: mt76: mt7996: enable EHT support in firmware")
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 3c729b563edc..02d858fdc9fe 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -1240,6 +1240,9 @@ mt7996_mcu_sta_he_6g_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- static void
- mt7996_mcu_sta_eht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- {
-+	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
-+	struct ieee80211_vif *vif = container_of((void *)msta->vif,
-+						 struct ieee80211_vif, drv_priv);
- 	struct ieee80211_eht_mcs_nss_supp *mcs_map;
- 	struct ieee80211_eht_cap_elem_fixed *elem;
- 	struct sta_rec_eht *eht;
-@@ -1259,8 +1262,17 @@ mt7996_mcu_sta_eht_tlv(struct sk_buff *skb, struct ieee80211_sta *sta)
- 	eht->phy_cap = cpu_to_le64(*(u64 *)elem->phy_cap_info);
- 	eht->phy_cap_ext = cpu_to_le64(elem->phy_cap_info[8]);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index 0cf0d1fe420a..1a1a60744272 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -1012,11 +1012,12 @@ mt7996_set_stream_he_txbf_caps(struct mt7996_phy *phy,
+ 	/* the maximum cap is 4 x 3, (Nr, Nc) = (3, 2) */
+ 	elem->phy_cap_info[7] |= min_t(int, sts - 1, 2) << 3;
  
--	if (sta->deflink.bandwidth == IEEE80211_STA_RX_BW_20)
--		memcpy(eht->mcs_map_bw20, &mcs_map->only_20mhz, sizeof(eht->mcs_map_bw20));
-+	if (vif->type != NL80211_IFTYPE_STATION &&
-+	    (sta->deflink.he_cap.he_cap_elem.phy_cap_info[0] &
-+	     (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
-+	      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)) == 0) {
-+		memcpy(eht->mcs_map_bw20, &mcs_map->only_20mhz,
-+		       sizeof(eht->mcs_map_bw20));
-+		return;
-+	}
-+
- 	memcpy(eht->mcs_map_bw80, &mcs_map->bw._80, sizeof(eht->mcs_map_bw80));
- 	memcpy(eht->mcs_map_bw160, &mcs_map->bw._160, sizeof(eht->mcs_map_bw160));
- 	memcpy(eht->mcs_map_bw320, &mcs_map->bw._320, sizeof(eht->mcs_map_bw320));
+-	if (vif != NL80211_IFTYPE_AP)
++	if (!(vif == NL80211_IFTYPE_AP || vif == NL80211_IFTYPE_STATION))
+ 		return;
+ 
+ 	elem->phy_cap_info[3] |= IEEE80211_HE_PHY_CAP3_SU_BEAMFORMER;
+-	elem->phy_cap_info[4] |= IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER;
++	if (vif == NL80211_IFTYPE_AP)
++		elem->phy_cap_info[4] |= IEEE80211_HE_PHY_CAP4_MU_BEAMFORMER;
+ 
+ 	c = FIELD_PREP(IEEE80211_HE_PHY_CAP5_BEAMFORMEE_NUM_SND_DIM_UNDER_80MHZ_MASK,
+ 		       sts - 1) |
 -- 
 2.39.2
 
