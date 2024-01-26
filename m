@@ -1,92 +1,281 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA07212E72;
-	Fri, 26 Jan 2024 12:31:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7CACBA39
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 12:36:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706272305; cv=none; b=KbYZNYG3xr3fSzhyelDpRqJogxjsjLVTp/U4sfg2oGH5BXlieRvNAwNj/gfWQWaZhT+N7EefdF9FkHm3+CpvGzDu7wgX7jbhD7RzqMyR3E/KZ1GhWKMSDD6Xp79Iuy9PkS9fniGkQ7MpatLHowaU2BcCLv1wG1LnnKsyNavDiZA=
+	t=1706272603; cv=none; b=kk/tJvl5T5mPGNPNs7uhRQPGv0NA6cBPKs1Me+PXhZ4E81L32z9W3CAjFo5A10JH49cW0SkFAnlQJNzcNKFOfue98cJJro0Mz1PHaE+AhBv5JxnHPGwf4NTDcndnJOOh1zPeRPbL0ngVfTsVtXKyxUotDxsxdOpNI8KDwmCa2RU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706272305; c=relaxed/simple;
-	bh=ipCUSjnM/+mHuCmrIoG3yByfeAdeaGi0eaCJY0n0870=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=rWKfPlVn2KHcAo/1vIRDjdUwbqJOfP3Ears574HVfT1ul3T1dWMDfKSc6eramB9aCCvn/eWzUsXxWpxpaGCQdJNTcGMpwoUSh/bEozWn309RziOSRkcTTkTMV5GxbDAtmHhWjfpVS6j58hLX8WtZeowp9x+EXIOObrnco7BP4Pw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s1SrQnER; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706272603; c=relaxed/simple;
+	bh=MW6etxyQRB30dowAieGWhaOuXv6Zyu1oPZJ9C4CR9zI=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EcTsTcCJcHtb6D85UdPxaymMIn9epNtXLCjsFHm9qvMlhJ5NWVvTT3X5GG3nphL3aTZfv9ylit6X69BBKRV5yw36cT7OM+ZezUqhbrZnhOGfL5LPAnq6LWAIo6rGskkp/QFIfEhkeXfReQS8F0kxWDHSKUWIjkhLmqoKsshj6II=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PWq2elz5; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s1SrQnER"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79932C433C7;
-	Fri, 26 Jan 2024 12:31:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706272304;
-	bh=ipCUSjnM/+mHuCmrIoG3yByfeAdeaGi0eaCJY0n0870=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=s1SrQnERVeIjv7orjXvCqdSU+t8tO4oWl68uokNWhWLpXR6qbtmqKWGLu9PXEabOs
-	 RRLfO3BzY8c5fTeSwu8A0NriuDTFLSCg7ea5cTLquqlHRvKHcCmSqOADWTFbPBueiP
-	 wZBDuBmrxXqMG/DUR3Znu09RJjrEqyd9q1BsYpVpQzPC1I9K+B0N987ulKpQO0QLz+
-	 u9HHxiTLYCBflSNNyu/nJSNk6MvLmK9R77Dt+vSkZL17xv57ElW5BqMmT6NiTqKixh
-	 jozUZSTzx23BfuX36XN8fLNovAOEQnHtyNDjqI8gCJ2JBKZaAQ8LOLiacUfQREuIyt
-	 eQO+KlNqJM9zg==
-From: Kalle Valo <kvalo@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,  brcm80211@lists.linux.dev
-Subject: Re: [PATCH v3] wifi: cleanup brcm80211 drivers maintainer entry
-References: <20240126105724.384063-1-arend.vanspriel@broadcom.com>
-Date: Fri, 26 Jan 2024 14:31:41 +0200
-In-Reply-To: <20240126105724.384063-1-arend.vanspriel@broadcom.com> (Arend van
-	Spriel's message of "Fri, 26 Jan 2024 11:57:24 +0100")
-Message-ID: <8734ukz36a.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PWq2elz5"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40QBcuHS011287;
+	Fri, 26 Jan 2024 11:52:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=J4JDdcP9SXcFzsAMGP4w8w1Dvwru6fB7HNDDojrBjEM=; b=PW
+	q2elz5hYls6yPC+dtmiBjCdDNkRLQ7yiuQTE00s+eQecfrJufOTHwP3POmBrl/44
+	9Xwib/5YRV72zspXvnciM6b0WGYuxNZO346DtClg1YgBqjn93UygYddXWYykf/Wc
+	Ag25F5sq+bfaWrV+OtTcKSQLwNvBDL4sXeEc/HWNGFmHx9NJg/AbD78jYIEue4gk
+	QGrYfcdzQdNAdZ12Yk6Mp6WtnxqRDKqqf+LxtBg5XV0u1xNtVKDITXziy3HX5HHz
+	HWQEU7H0IBI2Ne1w6Uc09ID6KVr390RYMKfIRDFJHc42C3Rzgh7xjZYuf6vqpuYy
+	kW6Amd/hG46QAChN9kYw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vv1019cwf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 26 Jan 2024 11:52:56 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40QBqtJI005533
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 26 Jan 2024 11:52:55 GMT
+Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Fri, 26 Jan 2024 03:52:54 -0800
+From: Kang Yang <quic_kangyang@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
+Subject: [PATCH v4 04/11] wifi: ath12k: implement remain on channel for P2P mode
+Date: Fri, 26 Jan 2024 19:52:24 +0800
+Message-ID: <20240126115231.356658-5-quic_kangyang@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240126115231.356658-1-quic_kangyang@quicinc.com>
+References: <20240126115231.356658-1-quic_kangyang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: TzzYpTe9lajACxCQoLmzoxcbZglg8VI_
+X-Proofpoint-GUID: TzzYpTe9lajACxCQoLmzoxcbZglg8VI_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-25_14,2024-01-25_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
+ mlxlogscore=999 adultscore=0 spamscore=0 clxscore=1015 phishscore=0
+ malwarescore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2401190000 definitions=main-2401260087
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+Implement remain on channel for p2p mode in ath12k_ops:
+        ath12k_mac_op_remain_on_channel
+        ath12k_mac_op_cancel_remain_on_channel
 
-> There has been some discussion about what is expected from
-> a maintainer and so a cleanup seems to be in order. A dedicated
-> mailing list has been created to discuss brcm80211 specific
-> development issues. Keeping the status as Supported although
-> help in maintaining this driver is welcomed.
->
-> Cc: brcm80211@lists.linux.dev
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
-> changelog:
->   V2: let's not orphan the drivers for now
->   V3: switch to my Broadcom email
->
-> The discussion around the SAE password patch [1] was a lively one
-> and at some point I wanted to drop the ball and be done with it.
-> However, when the emotions subsided and people offered to help out
-> with maintaining the brcm80211 drivers I decided to stay on for the
-> job. The discussion had some valid points specifically on my actual
-> involvement. Hopefully I can improve in that aspect. I sharpened my
-> email filters to keep better eye on brcm80211 related queryies,
-> patches and what not.
->
-> Another step taken is the creation of a specific mailing list for
-> brcm80211 development topics:
->
-> <brcm80211@lists.linux.dev>
+P2P device can trigger ROC scan. Then keep listening or sending management
+frames on particular channels.
 
-Arend, thanks for creating the list. Apparently to subscribe to the list
-send email to:
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-brcm80211+subscribe@lists.linux.dev
+Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
+---
 
-Though I didn't get any reply yet, hopefully it's just slow.
+v4: no change.
+v3: use ath12k_ah_to_ar() to get ar.
+v2:
+    1. add Tested-on tag of QCN9274.
+    2. update copyright.
 
-> This patch was based on the wireless tree, but it probably applies
-> to wireless-next as well. I am fine either way.
+---
+ drivers/net/wireless/ath/ath12k/core.c |   1 +
+ drivers/net/wireless/ath/ath12k/mac.c  | 119 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath12k/wmi.c  |   4 +
+ 3 files changed, 124 insertions(+)
 
-We usually take patches to MAINTAINERS file to wireless, less conflicts
-that way. So I'll queue this to wireless.
-
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 1baad3302157..ffe4fd6e36f5 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -950,6 +950,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
+ 		ath12k_mac_drain_tx(ar);
+ 		complete(&ar->scan.started);
+ 		complete(&ar->scan.completed);
++		complete(&ar->scan.on_channel);
+ 		complete(&ar->peer_assoc_done);
+ 		complete(&ar->peer_delete_done);
+ 		complete(&ar->install_key_done);
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 0b8eab9656ed..366bb5e5934b 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -7391,6 +7391,122 @@ static void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
+ }
+ 
++static int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
++						  struct ieee80211_vif *vif)
++{
++	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
++	struct ath12k *ar;
++
++	ar = ath12k_ah_to_ar(ah);
++
++	mutex_lock(&ar->conf_mutex);
++
++	spin_lock_bh(&ar->data_lock);
++	ar->scan.roc_notify = false;
++	spin_unlock_bh(&ar->data_lock);
++
++	ath12k_scan_abort(ar);
++
++	mutex_unlock(&ar->conf_mutex);
++
++	cancel_delayed_work_sync(&ar->scan.timeout);
++
++	return 0;
++}
++
++static int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
++					   struct ieee80211_vif *vif,
++					   struct ieee80211_channel *chan,
++					   int duration,
++					   enum ieee80211_roc_type type)
++{
++	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
++	struct ath12k *ar;
++	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
++	struct ath12k_wmi_scan_req_arg arg;
++	int ret;
++	u32 scan_time_msec;
++
++	ar = ath12k_ah_to_ar(ah);
++
++	mutex_lock(&ar->conf_mutex);
++	spin_lock_bh(&ar->data_lock);
++	switch (ar->scan.state) {
++	case ATH12K_SCAN_IDLE:
++		reinit_completion(&ar->scan.started);
++		reinit_completion(&ar->scan.completed);
++		reinit_completion(&ar->scan.on_channel);
++		ar->scan.state = ATH12K_SCAN_STARTING;
++		ar->scan.is_roc = true;
++		ar->scan.vdev_id = arvif->vdev_id;
++		ar->scan.roc_freq = chan->center_freq;
++		ar->scan.roc_notify = true;
++		ret = 0;
++		break;
++	case ATH12K_SCAN_STARTING:
++	case ATH12K_SCAN_RUNNING:
++	case ATH12K_SCAN_ABORTING:
++		ret = -EBUSY;
++		break;
++	}
++	spin_unlock_bh(&ar->data_lock);
++
++	if (ret)
++		goto exit;
++
++	scan_time_msec = hw->wiphy->max_remain_on_channel_duration * 2;
++
++	memset(&arg, 0, sizeof(arg));
++	ath12k_wmi_start_scan_init(ar, &arg);
++	arg.num_chan = 1;
++	arg.chan_list = kcalloc(arg.num_chan, sizeof(*arg.chan_list),
++				GFP_KERNEL);
++	if (!arg.chan_list) {
++		ret = -ENOMEM;
++		goto exit;
++	}
++
++	arg.vdev_id = arvif->vdev_id;
++	arg.scan_id = ATH12K_SCAN_ID;
++	arg.chan_list[0] = chan->center_freq;
++	arg.dwell_time_active = scan_time_msec;
++	arg.dwell_time_passive = scan_time_msec;
++	arg.max_scan_time = scan_time_msec;
++	arg.scan_flags |= WMI_SCAN_FLAG_PASSIVE;
++	arg.burst_duration = duration;
++
++	ret = ath12k_start_scan(ar, &arg);
++	if (ret) {
++		ath12k_warn(ar->ab, "failed to start roc scan: %d\n", ret);
++
++		spin_lock_bh(&ar->data_lock);
++		ar->scan.state = ATH12K_SCAN_IDLE;
++		spin_unlock_bh(&ar->data_lock);
++		goto free_chan_list;
++	}
++
++	ret = wait_for_completion_timeout(&ar->scan.on_channel, 3 * HZ);
++	if (ret == 0) {
++		ath12k_warn(ar->ab, "failed to switch to channel for roc scan\n");
++		ret = ath12k_scan_stop(ar);
++		if (ret)
++			ath12k_warn(ar->ab, "failed to stop scan: %d\n", ret);
++		ret = -ETIMEDOUT;
++		goto free_chan_list;
++	}
++
++	ieee80211_queue_delayed_work(hw, &ar->scan.timeout,
++				     msecs_to_jiffies(duration));
++
++	ret = 0;
++
++free_chan_list:
++	kfree(arg.chan_list);
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
+ static const struct ieee80211_ops ath12k_ops = {
+ 	.tx				= ath12k_mac_op_tx,
+ 	.wake_tx_queue			= ieee80211_handle_wake_tx_queue,
+@@ -7425,6 +7541,8 @@ static const struct ieee80211_ops ath12k_ops = {
+ 	.get_survey			= ath12k_mac_op_get_survey,
+ 	.flush				= ath12k_mac_op_flush,
+ 	.sta_statistics			= ath12k_mac_op_sta_statistics,
++	.remain_on_channel              = ath12k_mac_op_remain_on_channel,
++	.cancel_remain_on_channel       = ath12k_mac_op_cancel_remain_on_channel,
+ };
+ 
+ static void ath12k_mac_update_ch_list(struct ath12k *ar,
+@@ -7952,6 +8070,7 @@ static void ath12k_mac_setup(struct ath12k *ar)
+ 	init_completion(&ar->bss_survey_done);
+ 	init_completion(&ar->scan.started);
+ 	init_completion(&ar->scan.completed);
++	init_completion(&ar->scan.on_channel);
+ 
+ 	INIT_DELAYED_WORK(&ar->scan.timeout, ath12k_scan_timeout_work);
+ 	INIT_WORK(&ar->regd_update_work, ath12k_regd_update_work);
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 7b48f8a2e397..c7e732c6c145 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -5050,6 +5050,8 @@ static void ath12k_wmi_event_scan_started(struct ath12k *ar)
+ 		break;
+ 	case ATH12K_SCAN_STARTING:
+ 		ar->scan.state = ATH12K_SCAN_RUNNING;
++		if (ar->scan.is_roc)
++			ieee80211_ready_on_channel(ath12k_ar_to_hw(ar));
+ 		complete(&ar->scan.started);
+ 		break;
+ 	}
+@@ -5134,6 +5136,8 @@ static void ath12k_wmi_event_scan_foreign_chan(struct ath12k *ar, u32 freq)
+ 	case ATH12K_SCAN_RUNNING:
+ 	case ATH12K_SCAN_ABORTING:
+ 		ar->scan_channel = ieee80211_get_channel(hw->wiphy, freq);
++		if (ar->scan.is_roc && ar->scan.roc_freq == freq)
++			complete(&ar->scan.on_channel);
+ 		break;
+ 	}
+ }
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
