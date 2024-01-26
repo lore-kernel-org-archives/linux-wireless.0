@@ -1,151 +1,222 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90FA12B6F
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 10:46:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB61513FED
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 10:51:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706265997; cv=none; b=hHnQl8xy/pRbD0vByFEoW8e+zq1XTWwtNIiXhDRKY0BoNR/p33kEutdl8/WiOJcykYs/lZUBKfAq8sRPseEc3HbQHEb6yRhhHDvRblTjSSvTeM453C2w3s3BFYCLsLOSn8Qzpmma1nYPvGMRfcrxIgWFwvcGwIZOBa+nF16uI1Y=
+	t=1706266300; cv=none; b=VySpp7Jmw3J1OG0YQTMXhMjp5gINDlAT7Cdo8YXgEvhUBv+ps+e1XC0/0SgHGqLug1cFgjhgm7jjOFE+DdvEJs0GS7eRBt4NsRtK0pAFeuWvXoLoUyVOKyaEDwBfQ8VT7h+bvkw7raV9Ixx/sKqbtHPPICSvnawfawD9dIjnrwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706265997; c=relaxed/simple;
-	bh=lv7lTnch23M14rjMsV/eshYaQgNIUJk4h2Njl3Rn63M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=j9M5pW8Sur01iryGFo7XeFzRcMTmT0Cg4+q60B0vCnAdi8PLaslOlliPX30xx3fcCQCY4WeuMlfE1Z15ErYxb95Zh6nblrvQUhno2qj+1G4+n+LXSGGDzNvACzE/X68GDIIys8fwo6KCpP22yKQxGmKrSK61pQFRlWqwWpcKPQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Sa8uny3r; arc=none smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1706266300; c=relaxed/simple;
+	bh=giLNOMelqbjGWZASeCevOD9gkB+FSvceqCoPaopv/wk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=fDYpgaob1nZjv7YecmsBVrfCWxNnqP5YB8jMwxvjOv9Li9dYF9EjWWC73P54D3BRxU2WjN2jWIK2XDJnkyhcVDnNwMEEC2356AWa0+D3bNW2l4jnzYb5UOwRlLdbqQ0YIyv8Vffqx3xLFUOegarM9StttjGOdhtAdokfQzsy490=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=akEEO9+F; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sa8uny3r"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-6818f3cf00aso3001236d6.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 02:46:35 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="akEEO9+F"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-40ee705e9bfso948385e9.0
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jan 2024 02:51:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706265994; x=1706870794; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=krVn4OeUL/ZtKJj1q/PKY6xPFZUbhi/ZPPKjnOMh/OU=;
-        b=Sa8uny3rhBmvR6hNMkWPkVNd5JXuWfvng5ugRldp9vkAIKF7V7XQ/iwIPKiDyWhlOp
-         zuQk0mkUKEa38O0e60pS0VCk+nev7Ci+nXX58kRCJHVJz1DGvGpzE7adpvGIvoc1XRer
-         KulaWV9a+35WEJEC2D+tqjsoPouxOulXhFqQwzikxwm7yxowdYrCyaCtjZe73TU+1IMS
-         NaA+8kAFzk9nDRKk9RH7rz8a+6en3FKpJBBQaczaG7KsQxAQeA+1L209N6kglscdRt+Z
-         2ou4ISKQ44JsYkwdvMD5G358NUnjz29uzgUB09zfJwWw3Qsna3SwgaWgeqT/ipQgZLX3
-         bRWA==
+        d=broadcom.com; s=google; t=1706266297; x=1706871097; darn=vger.kernel.org;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=SyjADxZOmHU31kDQ9ast1jpWp7L95UIDq2fQvwzGCK0=;
+        b=akEEO9+FuG32SREopf9fme6wyp6gxjeHBKJh/6naBtSyNqTKSbmUvQGZRvo+lBhGfY
+         B6hidfnHOkqSec4YqofBFfu/DjOo5VtnlVOThTYEw14s/HL2FTytNRAqAvpe3a2G5g5t
+         Ul273F6FWjcjl5x/vDC4dGOAoBIAufg/H9Xbc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706265994; x=1706870794;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=krVn4OeUL/ZtKJj1q/PKY6xPFZUbhi/ZPPKjnOMh/OU=;
-        b=C1fyNM58IkOhi/gaNiuSqzBpn92I5K8nvmIkHCoQT2nL0qrFbGbjQ09fUwyVI309zC
-         4T0AJfgjP0gEOJdhGW+m/3OmGcRB8GOxk/ZCAUsaLDg6CKyFUOP2tKzX0yyfd0RdhlvD
-         oml7MKPRnaQJlYpdGs6lXmmx/SfKws+bX8WwCfSlOAgb640Ulc/BThjAaX6CfYW2X4g6
-         JaNEzPr73n1+L/Kgn3bl8JhQSUyHnWSBRZ7w6a5aYXtQn8cv/Xx6NYEuEREarGn+aO/B
-         8XaRJTsKyRC//vfSn7Z99UVt4WjPW/WsPOaoXojOUO7CbeqvE68AsldonAkBCv9FOAsP
-         8Bbw==
-X-Gm-Message-State: AOJu0Yzte/050DflAM+CFR7Wauw+Db/G3l7X7TvCqxNhIZOw29CiJn6y
-	FHM+iHQmTkB+Vmu/ty9DchLRhNX4y4xe2zSQ3Y4kBaCEuoAyfjS2O/5bFYDMM0q1CxAMhWQ52Ce
-	0mkSRPydp9FKgfovZgksFU734q2fwE+PRElc=
-X-Google-Smtp-Source: AGHT+IG4KEy17knQeCJ7D0bBdlM0MgTqZGNJPR4DCzhUZ8j0NKQ177ro1LkU5tHWow08DHmc0sdOCfKP8jddXUu01go=
-X-Received: by 2002:a05:6214:2249:b0:686:ab0f:9ad0 with SMTP id
- c9-20020a056214224900b00686ab0f9ad0mr1211997qvc.124.1706265994387; Fri, 26
- Jan 2024 02:46:34 -0800 (PST)
+        d=1e100.net; s=20230601; t=1706266297; x=1706871097;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=SyjADxZOmHU31kDQ9ast1jpWp7L95UIDq2fQvwzGCK0=;
+        b=twPU5wRZNMuuYKLxLWofs8RMzMvv/aK4U8Fwzuj7mL8KoolJhALW0FgGyy+NOG4AqM
+         xOJpJRja1fEsDYznjFXPA+slgPS/+rYQ5LhEsplctrNQRIaa8vkcDTx+bYMUfJbs+o3f
+         HNaM9WYvOMgz+NI3tcb0kco9i3MgmPjERYns4+UW3L7ps3h0SAOyJvQn1+U2riafB8s1
+         3kTic+R6H5ATyOb7hkWdRPxUJRsSGGoVqnCKjotIOkbfafY3ouYKnU/+enoSYOGzePkv
+         nN0OuSOd/Bxv/M6UaqqULCuZVMXzjgR4yIjIHqrIjF2aawNH7Uk1rOLR0N5pygFmbE/6
+         8xLA==
+X-Gm-Message-State: AOJu0Yy7JLj2xojTpEyi4CSlBGzYU0DNP6zMigVxqlrgwge0QR6YAPSn
+	2ECu/ZbEiQ8Ol8Xf2tX3lY2ZwcUVQyD0RN1Q4hRonJIVmYJt1AboSGMvZjK7Qw==
+X-Google-Smtp-Source: AGHT+IG5DbHG7Cqr7zT9+KLQahI5PMRTgW0Jutnxk8CsTqPccR9d8cq9/Em4jnzDLNjb47wTPcHtIQ==
+X-Received: by 2002:a05:600c:4e0a:b0:40e:e73b:e285 with SMTP id b10-20020a05600c4e0a00b0040ee73be285mr47037wmq.137.1706266296888;
+        Fri, 26 Jan 2024 02:51:36 -0800 (PST)
+Received: from bld-bun-02.bun.broadcom.net ([192.19.148.250])
+        by smtp.gmail.com with ESMTPSA id b19-20020a05600c4e1300b0040d8d11bf63sm1481084wmq.41.2024.01.26.02.51.35
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 26 Jan 2024 02:51:35 -0800 (PST)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	brcm80211@lists.linux.dev
+Subject: [PATCH v2] wifi: cleanup brcm80211 drivers maintainer entry
+Date: Fri, 26 Jan 2024 11:51:32 +0100
+Message-Id: <20240126105132.382785-1-arend.vanspriel@broadcom.com>
+X-Mailer: git-send-email 2.32.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGb2v66xVLqr+tUSD_6uzguGXtj04WfbpT0z9M28r8z-g62Z=A@mail.gmail.com>
- <CAPuHQ=GSuKW5=T0GXXCq7Pf9jw=zcEnms-fEJey68QUWH1ishQ@mail.gmail.com>
- <a5123274d5a8d80d554ffb786e25bef72d45f69b.camel@sipsolutions.net> <CAPuHQ=HSJNXx_ukS4G=+AsM=qp2yMA4mKD=NHDpq+BoMMLSv+Q@mail.gmail.com>
-In-Reply-To: <CAPuHQ=HSJNXx_ukS4G=+AsM=qp2yMA4mKD=NHDpq+BoMMLSv+Q@mail.gmail.com>
-From: Petko Bordjukov <bordjukov@gmail.com>
-Date: Fri, 26 Jan 2024 12:46:23 +0200
-Message-ID: <CAAgmp6vdK-bMJCnXUqhPPADRcd3sJXeFvuSOt5_7HCSV2dVKEQ@mail.gmail.com>
-Subject: Re: WiF Transmit Power Control (TPC) Regulatory Requirements?
-To: b.K.il.h.u+tigbuh@gmail.com
-Cc: wireless-regdb <wireless-regdb@lists.infradead.org>, 
-	linux-wireless <linux-wireless@vger.kernel.org>, thomas.huehn@hs-nordhausen.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000008a26cc060fd71459"
 
-Hi,
+--0000000000008a26cc060fd71459
+Content-Transfer-Encoding: 8bit
 
-The only project I've heard of that implements such functionality is
-https://github.com/thuehn/Minstrel-Blues.
+There has been some discussion about what is expected from
+a maintainer and so a cleanup seems to be in order. A dedicated
+mailing list has been created to discuss brcm80211 specific
+development issues. Keeping the status as Supported although
+help in maintaining this driver is welcomed.
 
-On Thu, Jan 4, 2024 at 12:02=E2=80=AFPM <b.K.il.h.u+tigbuh@gmail.com> wrote=
-:
->
-> Ideally, TPC should be a fully automatic mechanism that reduces
-> transmit power between the two points to as low of a level as possible
-> while delivering the same quality of service. The purpose is to reduce
-> the excess headroom in each link. I.e., if you could still link with
-> 65Mb/s towards a given direction using 14dBmW, you should not transmit
-> with 20dBmW.
->
-> Some only set the AP TX power globally (i.e., same towards all of its
-> connected clients at the moment) to tackle the hidden/exposed node
-> problem, but again must do this adaptively and change this constantly
-> without human intervention. There exist multiple advanced algorithms
-> for this, some proprietary tuned for corporate deployment.
->
-> Actually, if we accepted automatically retuning tx power with iw based
-> on actual link stats of momentarily connected clients every 60s with
-> cron, this could be added to OpenWrt pretty easily.
->
-> > Class A devices control their transmit power within =C2=B13 dB and clas=
-s B devices control their power within =C2=B19 dB.
->
-> - https://www.litepoint.com/blog/wi-fi-6-ofdma/
-> - https://www.cisco.com/c/en/us/td/docs/wireless/controller/technotes/8-3=
-/b_RRM_White_Paper/tpc.html
->
-> On Thu, Jan 4, 2024 at 10:42=E2=80=AFAM Johannes Berg <johannes@sipsoluti=
-ons.net> wrote:
-> >
-> > On Thu, 2024-01-04 at 10:07 +0100, b.K.il.h.u+tigbuh@gmail.com wrote:
-> > > You can find a wording in most such regulations that if TPC is not
-> > > supported, the maximal TX power must be reduced by 3 dBmW. Hence in
-> > > all such cases, the entries in db.txt contain 3 less than the maximum=
-.
-> > >
-> > > If, on the other hand, you know of a country that specifies that
-> > > devices lacking TPC may not use the band at all, all such band entrie=
-s
-> > > must be omitted (commented out along with a URL).
-> >
-> > Yeah, that's how we (currently) handle things.
-> >
-> > I'm not even sure what the requirements would be for "TPC" to be
-> > implemented, tbh.
-> >
-> > > > As far as I know the kernel doesn't have facilities to support TPC =
-or
-> > > > transmit power control,
-> >
-> > Right. I have, however, heard the interpretation that the fact that we
-> > have - even if nobody uses it - the "iw set txpower" command means that
-> > we *do* have TPC ... Not really sure what to make of that though.
-> >
-> > > > nor does the wireless-regdb database.
-> >
-> > Correct. With the new regdb format we could add something that would
-> > enable these ranges in the kernel only with some additional
-> > requirements, but
-> >   (a) we don't implement that now, and
-> >   (b) I don't know what the requirements would actually be, e.g. would
-> >       it be enough that the driver promises it implements "TPC" in some
-> >       way? Or even the manual setting?
-> >
-> > > > And so
-> > > > in the database we would either omit rules that require TPC, or inc=
-lude
-> > > > alternative rules (as specified by local regulations) not requiring=
- TPC.
-> > > > Am I right?
-> >
-> > Right.
-> >
-> > johannes
->
+Cc: brcm80211@lists.linux.dev
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+changelog:
+  V2: let's not orphan the drivers for now
+
+The discussion around the SAE password patch [1] was a lively one
+and at some point I wanted to drop the ball and be done with it.
+However, when the emotions subsided and people offered to help out
+with maintaining the brcm80211 drivers I decided to stay on for the
+job. The discussion had some valid points specifically on my actual
+involvement. Hopefully I can improve in that aspect. I sharpened my
+email filters to keep better eye on brcm80211 related queryies,
+patches and what not.
+
+Another step taken is the creation of a specific mailing list for
+brcm80211 development topics:
+
+<brcm80211@lists.linux.dev>
+
+The driver wireless wiki can also use a cleanup. Probably will add
+a list of people who volunteer to perform regression testing with
+the chipsets they have available.
+
+Hope we can move on in a relatively fresh new year and leave the
+frustration behind us.
+
+This patch was based on the wireless tree, but it probably applies
+to wireless-next as well. I am fine either way.
+
+Regards,
+Arend
+
+[1] https://lore.kernel.org/linux-wireless/20231107-brcmfmac-wpa3-v1-1-4c7db8636680@marcan.st/
+---
+ MAINTAINERS | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d8ca0e10c8d1..79a95a5156df 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4169,14 +4169,14 @@ F:	drivers/firmware/broadcom/tee_bnxt_fw.c
+ F:	drivers/net/ethernet/broadcom/bnxt/
+ F:	include/linux/firmware/broadcom/tee_bnxt_fw.h
+ 
+-BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
++BROADCOM BRCM80211 IEEE802.11 WIRELESS DRIVERS
+ M:	Arend van Spriel <aspriel@gmail.com>
+-M:	Franky Lin <franky.lin@broadcom.com>
+-M:	Hante Meuleman <hante.meuleman@broadcom.com>
+ L:	linux-wireless@vger.kernel.org
++L:	brcm80211@lists.linux.dev
+ L:	brcm80211-dev-list.pdl@broadcom.com
+ S:	Supported
+ F:	drivers/net/wireless/broadcom/brcm80211/
++F:	include/linux/platform_data/brcmfmac.h
+ 
+ BROADCOM BRCMSTB GPIO DRIVER
+ M:	Doug Berger <opendmb@gmail.com>
+
+base-commit: 1b023d475ae928f3036cefee9ea0a499af1d8900
+-- 
+2.32.0
+
+
+--0000000000008a26cc060fd71459
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+2Gzj3QNJRLsZu1TLyOyBBIr/BE7UiY3RabgRzknBGAPmzhS+fmyM8OtM5BYBsFBrSUFtZZO2p/tf
+Nbc24J2zf2peoZ8MK+7WQqummYlOnz+FyDkA9EybeNMcS5C+xi/PAgMBAAGjggHdMIIB2TAOBgNV
+HQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRwOi8vc2VjdXJl
+Lmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcnQwQQYI
+KwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24y
+Y2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3
+dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRCMEAwPqA8oDqG
+OGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3Js
+MCcGA1UdEQQgMB6BHGFyZW5kLnZhbnNwcmllbEBicm9hZGNvbS5jb20wEwYDVR0lBAwwCgYIKwYB
+BQUHAwQwHwYDVR0jBBgwFoAUljPR5lgXWzR1ioFWZNW+SN6hj88wHQYDVR0OBBYEFIikAXd8CEtv
+ZbDflDRnf3tuStPuMA0GCSqGSIb3DQEBCwUAA4IBAQCdS5XCYx6k2GGZui9DlFsFm75khkqAU7rT
+zBX04sJU1+B1wtgmWTVIzW7ugdtDZ4gzaV0S9xRhpDErjJaltxPbCylb1DEsLj+AIvBR34caW6ZG
+sQk444t0HPb29HnWYj+OllIGMbdJWr0/P95ZrKk2bP24ub3ZP/8SyzrohfIba9WZKMq6g2nTLZE3
+BtkeSGJx/8dy0h8YmRn+adOrxKXHxhSL8BNn8wsmIZyYWe6fRcBtO3Ks2DOLyHCdkoFlN8x9VUQF
+N2ulEgqCbRKkx+qNirW86eF138lr1gRxzclu/38ko//MmkAYR/+hP3WnBll7zbpIt0jc9wyFkSqH
+p8a1MYICbTCCAmkCAQEwazBbMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1z
+YTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMgUGVyc29uYWxTaWduIDIgQ0EgMjAyMAIMTv1t
+bpIzNUky46LXMA0GCWCGSAFlAwQCAQUAoIHUMC8GCSqGSIb3DQEJBDEiBCDD1svWA9xl3fJS7laK
+j3vK6lwNw2ocCFhP98QR0RPYYzAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqGSIb3DQEJ
+BTEPFw0yNDAxMjYxMDUxMzdaMGkGCSqGSIb3DQEJDzFcMFowCwYJYIZIAWUDBAEqMAsGCWCGSAFl
+AwQBFjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcwCwYJKoZIhvcNAQEKMAsGCSqGSIb3DQEBBzAL
+BglghkgBZQMEAgEwDQYJKoZIhvcNAQEBBQAEggEAh3WMHYv2i0hCe6HWGEQDsI8l6+kxzub+eDGI
+6XDsDjN6iuETI8W97LhKmuBmmm3cUDaxSxnbLTH/8osf5d81iIhVGRE7cMNoJxHPROncMqHNPlK6
+FjCh8I2MN6HiV0h5mewFMiyP8EQOdRIQ0BGcg+TzIGQOqMjKeqRvyVrShYgU92PAJiU4Q9ywKDAX
+9Bj7EenoqlzkfQ8t4QUyzm4T5FFXAYCLXtPHC2HYT2nXlrYEqcv9mmtd28rYrIYn7HaKC0Mz+9Kd
+VXSnT7ar0LyDsMv5TlsmbYdfi/F3s9HFjiegc5fNry6Xn2U+j+j0leR4cQqF/YDnzT3qNw+Cfeav
+qQ==
+--0000000000008a26cc060fd71459--
