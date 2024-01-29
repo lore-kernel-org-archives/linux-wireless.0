@@ -1,45 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D99014290
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2024 19:05:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFE5D179AB
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Jan 2024 19:07:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706555103; cv=none; b=T1E5r5Pp63XMcplTLaqmHCJb/zmcwHT1S+oc1J8tR5HIgbKIIVDLdGELdZKtXL1kjvhtmEOLLv4SFKJPhJZFXk4FvGuKMDopFuNUcsEH/7EqcBhRXIdklwAnlQKtPO/Gz5YCZNlDXAgjj2902wOZ6HYt1vvvHLHaJe9syu4SVco=
+	t=1706555223; cv=none; b=OfII/FhLn44Sz0BwS0K+vPE4D9Vc1qLzIbfjqKFIU2+LavsjAjAPXe19dzqekWKTP2f8UCKe1rc+tj+mDLg9a0wa+mk4m6OoP2Vd3NB41IW23rOUxrmbr40HcsFmxoTLKI+f+sqt21hVK8TYNeyYRHMnSQ78kG1+dX0vRfQF2bM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706555103; c=relaxed/simple;
-	bh=aUJw8lHt9wBagvcqvxcAGHAMJIw1Gqkck/Y1F7xckTI=;
+	s=arc-20240116; t=1706555223; c=relaxed/simple;
+	bh=uO0bYzXbD2aa4/QC2zjDM0j2kn2skueJHj3MYOGtwdQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Auqrs7R/dCAizyyEPNgJRh1nUY+E4YUdvj8r5pQOf03xsQoPEwHHoXdK64Q4QAqc2/JvNm0ByQRJRRjsJUFLuZFZaCfhrbqEFgAWQaRuuBjJbb0hZX37qDOKx12rwXVOoUH/Q6Qz05K1nRS2yjp9HjKHa8tWhTQIL7skul5nRGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=e3F/sQZL; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=N73+7y0f803arBaJ/kyNO8bdb/jbbOwO+eVqjPbnwg1pw2h0wgu9nA9UROfYKTfcKTNBCJPQGwej9xc4qRGaLthRDm1lSmWSiWHDy2Ln6fUnloaFixBfCcQ+yQ4/4hkFk8uEcTSRGHQDBdYwwY/wkETxhGDgRdhA1hVC7Zxz80M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=elBEVD1P; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="e3F/sQZL"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="elBEVD1P"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SpyDBUKuC20VCKu+8OT+E+sPIsgGAsqVi4QD8tGGaoM=;
-	t=1706555102; x=1707764702; b=e3F/sQZLSBtqL64imgJJZ9FpinCBNkpuac++UPzo7N+PcWW
-	RDpNJfepxeuoQOksXJP0t2n1RVy/C7JTUssnDxY/NExDfG/wc2bM55wXkT0KueLy/zIOue3Kn0gfB
-	Xbr9RKfJuY1BJlymlep9jrSZnAB41+efiLOFv4s+8+bN0TluNeXzh7wGt8/Q1qUFgs0NkBO+sS8L2
-	RrX66a6OgAcwD2qqxlLo+Yciy76RPh9rms+IbHguvivafbkpUCuVYu5/dZHRaGWNXc8SnC3G6sFSw
-	rDi227elvyokeWhlSicLjI0LgRnH9Oxm/tMOaEvVaBBWpKI3roxY0QsTGKz27sFw==;
+	Resent-Cc:Resent-Message-ID; bh=eduVrWKSGC3XcNydEmnEOl9Hjdyy0Cr/IM5nZpN62e0=;
+	t=1706555222; x=1707764822; b=elBEVD1P7EsNm0VcH6ykxhuSKzTlF6UkwLo74875k2FigRZ
+	MywoR6rgX0LfZdSwpF6hAPioTf0rf3LJcHtToLPsesslDZDHoy/iNg8HUjar+2NShrtqsDY407n5O
+	WfCJ2spRe53eLapMVqIkH4CoH2jJ8nEPikpSQmzP6OZ/Ou/yqJpIdXzkNwtJnaZogl72zL+c1UEsC
+	6NUGlJ4FTKhegVPtNcGbJuYX4IEola8gZgi3NCawZFNxVh7LyfFDSWX6B1SKcXsUqCU+MyuylXH0o
+	drwk9nWGRu4JexFMneM+eHxF09VjeqWsZhDxWsbONVt82vm0ks8KX3QG5YIBXABQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1rUWwF-0000000506V-2c7G;
-	Mon, 29 Jan 2024 20:04:59 +0100
+	id 1rUWyA-000000050B1-3KUl;
+	Mon, 29 Jan 2024 20:06:59 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] wifi: mac80211: implement MLO multicast deduplication
-Date: Mon, 29 Jan 2024 20:04:57 +0100
-Message-ID: <20240129200456.693b77d14b44.I491846f2bea0058c14eab6422962c10bfae9b675@changeid>
+Subject: [PATCH 2/2] wifi: mac80211: disallow basic multi-link element in per-STA profile
+Date: Mon, 29 Jan 2024 20:06:54 +0100
+Message-ID: <20240129200652.23f1e3b337f1.Idd2e43cdbfe3ba15b3e9b8aeb54c8115587177a0@changeid>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240129200456.f0ff49c80006.I850d2785ab1640e56e262d3ad7343b87f6962552@changeid>
-References: <20240129200456.f0ff49c80006.I850d2785ab1640e56e262d3ad7343b87f6962552@changeid>
+In-Reply-To: <20240129200652.1a69f2a31ec7.I55b86561d64e7ef1504c73f6f2813c33030c8136@changeid>
+References: <20240129200652.1a69f2a31ec7.I55b86561d64e7ef1504c73f6f2813c33030c8136@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,115 +50,60 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If the vif is an MLD then it may receive multicast from
-different links, and should drop those frames according
-to the SN. Implement that.
+There really shouldn't be a basic multi-link element in any
+per-STA profile in an association response, it's not clear
+what that would really mean. Refuse connecting in this case
+since the AP isn't following the spec.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h  |  5 +++++
- net/mac80211/ieee80211_i.h |  4 +++-
- net/mac80211/mlme.c        |  3 +++
- net/mac80211/rx.c          | 22 ++++++++++++++++++++--
- 4 files changed, 31 insertions(+), 3 deletions(-)
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/mlme.c        | 3 ++-
+ net/mac80211/util.c        | 5 +++++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b9367d5f04c4..e9078143b822 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -191,6 +191,11 @@ static inline bool ieee80211_sn_less(u16 sn1, u16 sn2)
- 	return ((sn1 - sn2) & IEEE80211_SN_MASK) > (IEEE80211_SN_MODULO >> 1);
- }
- 
-+static inline bool ieee80211_sn_less_eq(u16 sn1, u16 sn2)
-+{
-+	return ((sn2 - sn1) & IEEE80211_SN_MASK) <= (IEEE80211_SN_MODULO >> 1);
-+}
-+
- static inline u16 ieee80211_sn_add(u16 sn1, u16 sn2)
- {
- 	return (sn1 + sn2) & IEEE80211_SN_MASK;
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 534cac3fc8df..46b517cf47ea 100644
+index f5fe659a1efd..e11297b4dc63 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -5,7 +5,7 @@
-  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-- * Copyright (C) 2018-2022 Intel Corporation
-+ * Copyright (C) 2018-2024 Intel Corporation
-  */
+@@ -1671,6 +1671,7 @@ enum ieee80211_elems_parse_error {
+ 	IEEE80211_PARSE_ERR_DUP_ELEM		= BIT(1),
+ 	IEEE80211_PARSE_ERR_BAD_ELEM_SIZE	= BIT(2),
+ 	IEEE80211_PARSE_ERR_UNEXPECTED_ELEM	= BIT(3),
++	IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC	= BIT(4),
+ };
  
- #ifndef IEEE80211_I_H
-@@ -523,6 +523,8 @@ struct ieee80211_if_managed {
- 
- 	unsigned int flags;
- 
-+	u16 mcast_seq_last;
-+
- 	bool status_acked;
- 	bool status_received;
- 	__le16 status_fc;
+ /* Parsed Information Elements */
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 64367cb141ca..d5293e715558 100644
+index d5293e715558..f110566a496b 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -3350,6 +3350,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
- 				  &ifmgd->neg_ttlm_timeout_work);
- 	ieee80211_vif_set_links(sdata, 0, 0);
-+
-+	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
- }
- 
- static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
-@@ -7514,6 +7516,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 	spin_lock_init(&ifmgd->teardown_lock);
- 	ifmgd->teardown_skb = NULL;
- 	ifmgd->orig_teardown_skb = NULL;
-+	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
- }
- 
- static void ieee80211_recalc_smps_work(struct wiphy *wiphy,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 16d8783a469d..1ee00547c0a4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1434,13 +1434,31 @@ ieee80211_rx_h_check_dup(struct ieee80211_rx_data *rx)
- 		return RX_CONTINUE;
- 
- 	if (ieee80211_is_ctl(hdr->frame_control) ||
--	    ieee80211_is_any_nullfunc(hdr->frame_control) ||
--	    is_multicast_ether_addr(hdr->addr1))
-+	    ieee80211_is_any_nullfunc(hdr->frame_control))
- 		return RX_CONTINUE;
- 
- 	if (!rx->sta)
- 		return RX_CONTINUE;
- 
-+	if (unlikely(is_multicast_ether_addr(hdr->addr1))) {
-+		struct ieee80211_sub_if_data *sdata = rx->sdata;
-+		u16 sn = ieee80211_get_sn(hdr);
-+
-+		if (!ieee80211_is_data_present(hdr->frame_control))
-+			return RX_CONTINUE;
-+
-+		if (!ieee80211_vif_is_mld(&sdata->vif) ||
-+		    sdata->vif.type != NL80211_IFTYPE_STATION)
-+			return RX_CONTINUE;
-+
-+		if (sdata->u.mgd.mcast_seq_last != IEEE80211_SN_MODULO &&
-+		    ieee80211_sn_less_eq(sn, sdata->u.mgd.mcast_seq_last))
-+			return RX_DROP_U_DUP;
-+
-+		sdata->u.mgd.mcast_seq_last = sn;
-+		return RX_CONTINUE;
-+	}
-+
- 	if (unlikely(ieee80211_has_retry(hdr->frame_control) &&
- 		     rx->sta->last_seq_ctrl[rx->seqno_idx] == hdr->seq_ctrl)) {
- 		I802_DEBUG_INC(rx->local->dot11FrameDuplicateCount);
+@@ -4303,7 +4303,8 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
+ 			link->u.mgd.bss_param_ch_cnt =
+ 				ieee80211_mle_get_bss_param_ch_cnt(elems->ml_basic);
+ 		}
+-	} else if (!elems->prof ||
++	} else if (elems->parse_error & IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC ||
++		   !elems->prof ||
+ 		   !(elems->prof->control & prof_bss_param_ch_present)) {
+ 		ret = false;
+ 		goto out;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index c1fa762f0cba..d85a9c5cde26 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1012,6 +1012,11 @@ ieee80211_parse_extension_element(u32 *crc,
+ 			switch (le16_get_bits(mle->control,
+ 					      IEEE80211_ML_CONTROL_TYPE)) {
+ 			case IEEE80211_ML_CONTROL_TYPE_BASIC:
++				if (elems->ml_basic) {
++					elems->parse_error |=
++						IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC;
++					break;
++				}
+ 				elems->ml_basic_elem = (void *)elem;
+ 				elems->ml_basic = data;
+ 				elems->ml_basic_len = len;
 -- 
 2.43.0
 
