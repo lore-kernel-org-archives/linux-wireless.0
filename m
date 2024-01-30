@@ -1,52 +1,55 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB037374F8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CC1D376F7
 	for <linux-wireless@vger.kernel.org>; Tue, 30 Jan 2024 04:03:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706587414; cv=none; b=PNULOOhbO0JWBcXNZ6QzHuvgK5fUvFb7/fv+oZHUILCOa9JHgVN9yx/wA4x+i2P8n+2lrRAT1Fq7bBENTRfSmBsfsKgiL+3fGaemgvDHD9hJ9rcXbObP60sg+ZUV2Zwt8+/lfHmgMOWEUGVSJRpgQlXr3KQk4IkempRicRYNWHY=
+	t=1706587415; cv=none; b=m6gJNGM1jaKbuZh+hpKvCBQbxnGozofuplkrexTQfdpWXIdd9uBU+BR52uj0HGQ5AnONZ20pxEWP4xQzXjbMYtObEIqP1kVtRBm+77wnIQgoHGLq19cablGRgW8nzo3tbRYpuZkHJR9P4aMAhHU5Sw6ln9KKjcoQr+nfo8G1wUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706587414; c=relaxed/simple;
-	bh=860igtthFIN345/GKB0lWMr+nY73TPAcRNCiWTD63SI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ptM9wgfe3j5Es/b9l0vq7B8pAkJQoHmUk264+kMIkOmfD+G6rr60EBD3fgs8EKcOYxiCpmdufovQFxRyFZNFJWnI/B6iRSGoz+CIq8aMvWq6CuBk1X7G1BpXAi8ypJy3rmy7fFWN+SJv/0eZr26XH8yK+7g1KRhjtur+D9gUX8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mpmhk3fV; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1706587415; c=relaxed/simple;
+	bh=WrkOuX0rCjkaYIFvjRWTMgAtX6Wb52wBMvKPEyIL59I=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N2VZcinFZcgPLPoTZc3wApF+2cgErUGSxCviERGHJqp8ICzxlIacVXM7ZgB/VuB+r5crjCJSpnYVVC+efLT6QedbIYFBfNRaFGta/Sk5+UVu0z1dvZd8erFhpISh71zQwC4i+ZUx599yHhyCKoTJeR5H6oap4jG0Z6kZaOrOqTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SZtiwORP; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mpmhk3fV"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40TNt2Bc029321;
-	Tue, 30 Jan 2024 04:03:27 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SZtiwORP"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40U3Fiqr006379;
+	Tue, 30 Jan 2024 04:03:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=AxEbFMO
-	FeW0GnYcW8HYKRmgzB0sqrscRRRUvW7sQ0Ms=; b=mpmhk3fVJmFzGEZURg3n1vk
-	1doAAlEnwHsDzhdeveWsa5ECWnt3b5utBTN0kaNaPN0XBdtIItK0vt5v+ZKUE58z
-	/m1LfI2jwwP7WHrFsiz2mnkWiPoEorclnYtcUOGSrl6c9NGNhYf5pR9ul8Ue4ca0
-	F/8XyeJPLjqBztV/0OFtXawDUJEZdPAokj1PhEAaLP8nvF5xENCWOoG7/hPHRq3h
-	hL3WaPsFWgASoNaolm+ANqBW+mleAjlE1xLqMLQQv+LdfCLedXJ6cauMXoCzxbx1
-	yOAyBXDT8zMp/Df6x728MriGU/3SIAaYl5fNnn8HgW4ha699ZJs6yk72TQ2ijZQ=
-	=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=mXahEYF6LWZRIvmoGt5ZgUHokkGBgoI68HUqngEQgtc=; b=SZ
+	tiwORPr1j5V6jmQQmZaR2mRo+nAFI5HxGZ6sQxk5TUOWmsrciLECW/57WE07jqiB
+	cYPx2/Kznd3oSMziAX3llE3vzm5MuSx6WfT38kzYU7SwfRevgLEDJcEKgoAKNJG3
+	tz/6BHnlZKSNaVGLX+N2SlmeVs3iRnGJ5yBMfRMCN7QIx4WAI34TNggZBuTJzyqW
+	Gsdx9KxaTGTh0fDuGE93On34vMFc7xuuvbmMTaL32gDi90KE9URKbtQD7aPahOXZ
+	etcshKwyEBo1gU+SvtBap+ryK8A+x7nV5pkLI2m1VnL375dBANs7wyEVUDA2NHQ9
+	P+Lm2ryHWTJXCoiOFLaQ==
 Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vx86htkd1-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vx9ya2cak-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jan 2024 04:03:26 +0000 (GMT)
+	Tue, 30 Jan 2024 04:03:29 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40U43P4N026770
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40U43TwV026864
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jan 2024 04:03:25 GMT
+	Tue, 30 Jan 2024 04:03:29 GMT
 Received: from yk-E5440.qca.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 29 Jan 2024 20:03:24 -0800
+ 15.2.1118.40; Mon, 29 Jan 2024 20:03:27 -0800
 From: Kang Yang <quic_kangyang@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
-Subject: [PATCH v6 00/11] wifi: ath12k: P2P support for WCN7850
-Date: Tue, 30 Jan 2024 12:02:52 +0800
-Message-ID: <20240130040303.370590-1-quic_kangyang@quicinc.com>
+Subject: [PATCH v6 02/11] wifi: ath12k: fix incorrect logic of calculating vdev_stats_id
+Date: Tue, 30 Jan 2024 12:02:54 +0800
+Message-ID: <20240130040303.370590-3-quic_kangyang@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240130040303.370590-1-quic_kangyang@quicinc.com>
+References: <20240130040303.370590-1-quic_kangyang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,57 +62,60 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RgLLsdWEkc9jnhi8he3k6qArfvKPpbn4
-X-Proofpoint-GUID: RgLLsdWEkc9jnhi8he3k6qArfvKPpbn4
+X-Proofpoint-GUID: 91J7QY-qfgjys1vR_xD2ZPAdbkuqZhAX
+X-Proofpoint-ORIG-GUID: 91J7QY-qfgjys1vR_xD2ZPAdbkuqZhAX
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-29_15,2024-01-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- mlxscore=0 bulkscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0
- impostorscore=0 adultscore=0 clxscore=1015 mlxlogscore=999
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2401190000 definitions=main-2401300026
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
+ adultscore=0 mlxscore=0 mlxlogscore=904 lowpriorityscore=0 suspectscore=0
+ clxscore=1015 spamscore=0 impostorscore=0 priorityscore=1501 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2401190000
+ definitions=main-2401300026
 
-Add P2P support for WCN7850.
+During calculate vdev_stats_id, will compare vdev_stats_id with
+ATH12K_INVAL_VDEV_STATS_ID by '<='. If vdev_stats_id is relatively
+small, then assign ATH12K_INVAL_VDEV_STATS_ID to vdev_stats_id.
 
-Kang Yang (11):
-  wifi: ath12k: fix broken structure wmi_vdev_create_cmd
-  wifi: ath12k: fix incorrect logic of calculating vdev_stats_id
-  wifi: ath12k: change interface combination for P2P mode
-  wifi: ath12k: add P2P IE in beacon template
-  wifi: ath12k: implement handling of P2P NoA event
-  wifi: ath12k: implement remain on channel for P2P mode
-  wifi: ath12k: change WLAN_SCAN_PARAMS_MAX_IE_LEN from 256 to 512
-  wifi: ath12k: allow specific mgmt frame tx while vdev is not up
-  wifi: ath12k: move peer delete after vdev stop of station for WCN7850
-  wifi: ath12k: designating channel frequency for ROC scan
-  wifi: ath12k: advertise P2P dev support for WCN7850
+This logic is incorrect. Firstly, should use '>=' instead of '<=' to
+check if this u8 variable exceeds the max valid range.
 
-v6: move patch #7, #8 to patch #1, #2(Jeff).
-v5:
-    1. move patch #10 to patch #8.
-    2. change commit log for patch #6 and patch #8.
-    3. simplify assignment logic for patch #7(Jeff).
-v4: add a new patch #10 to fix warning(Kalle).
-v3: rebase on new ath-tag, use ath12k_ah_to_ar() get ar(Karthikeyan).
+Secondly, should use the maximum value as comparison value.
+
+Correct comparison symbols and use the maximum value
+ATH12K_MAX_VDEV_STATS_ID for comparison.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+
+Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
+---
+
+v6: position adjustment.
+v5: no change.
+v4: no change.
+v3: no change.
 v2:
     1. add Tested-on tag of QCN9274.
-    2. update copyright in patch #1, #2, #4 and #10(Jeff).
+    2. update copyright.
 
- drivers/net/wireless/ath/ath12k/Makefile |   3 +-
- drivers/net/wireless/ath/ath12k/core.c   |   1 +
- drivers/net/wireless/ath/ath12k/hw.c     |   7 +-
- drivers/net/wireless/ath/ath12k/mac.c    | 368 +++++++++++++++++++----
- drivers/net/wireless/ath/ath12k/p2p.c    | 142 +++++++++
- drivers/net/wireless/ath/ath12k/p2p.h    |  23 ++
- drivers/net/wireless/ath/ath12k/wmi.c    | 114 ++++++-
- drivers/net/wireless/ath/ath12k/wmi.h    |  50 ++-
- 8 files changed, 642 insertions(+), 66 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath12k/p2p.c
- create mode 100644 drivers/net/wireless/ath/ath12k/p2p.h
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-base-commit: 17f4b952f067b1f87d14e6df4c8c216fe7a245d1
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index a27480a69b27..6d9660f68074 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -5366,7 +5366,7 @@ ath12k_mac_get_vdev_stats_id(struct ath12k_vif *arvif)
+ 	do {
+ 		if (ab->free_vdev_stats_id_map & (1LL << vdev_stats_id)) {
+ 			vdev_stats_id++;
+-			if (vdev_stats_id <= ATH12K_INVAL_VDEV_STATS_ID) {
++			if (vdev_stats_id >= ATH12K_MAX_VDEV_STATS_ID) {
+ 				vdev_stats_id = ATH12K_INVAL_VDEV_STATS_ID;
+ 				break;
+ 			}
 -- 
 2.34.1
 
