@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C21C74F5EC;
-	Mon,  5 Feb 2024 19:02:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6E0E5A7BB;
+	Mon,  5 Feb 2024 19:03:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707159774; cv=none; b=Bmo4FdBqRb3SjjKH+D0Dq4f7iutPa5N7Be+DTPWHEcf+AKJYX8yjelBsrlCN+ppEU85LxJwUdsN13KX26lq9zLybP1dQD71TvZiRPHdsJJ4NPr92HLXZxfBFL94mAsmJcWUcPntHLmpJ2EscPfWO2bdjANRBZ106tuBSAeuRO4Y=
+	t=1707159787; cv=none; b=l9ly9x0jvDaEkdwDVfN33N77cUriLxsI+499uuoxxRnHMTzmDQWgNszzAv9qS07vJqVWoFhQOcaykJA2YZVlRaV8gHOhW3V8WWy6c3cBcdFCbXMujGoiI4xz8+eOnqJgLTiolw5nAAE9bvazaA67VHA2Y2OlogAwgdt5GPqakSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707159774; c=relaxed/simple;
-	bh=ahF3cXBPBvE5YZU15bdesla+Jh6D/oIfrgvYM6Qeb0M=;
+	s=arc-20240116; t=1707159787; c=relaxed/simple;
+	bh=y7rclFvbLz49u6nM+LwwvLo07quZDiET4J+mtxUDuyM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=isD/rcrYaZ4GROUnDvlU//2hzuBvI1pampqCJAdxFadLZ9P9iaEjLkiU5GVG0QDJDZWanoSNLFO+Ae+L/wCLQBASw7f8SxjpFOttBZULeZ3OS+kkCmUaymxtnaGPE6bJtZFRrZcT8W8gvRnkMDsZ5Lh0B/Xwa1k8ZDpxgVi7e38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=ZrZtegeB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=fXONUSzpe7igQyMV6sakgB0Hq5Pf953GL7ye1cgd+8CjGWxiRs2TNTJrHIXRAUfmkYZtMvvniffClPt/OshCTUDMcKCN9wpvT/+bzaFSjadhh44mtd5z0k5FhGfJUTam4IAAq3epIW/FijIUX8NTmhzacuVMUGQBMlVUmKPLobk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=l6Slrggr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="ZrZtegeB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7C3AC43390;
-	Mon,  5 Feb 2024 19:02:53 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="l6Slrggr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEB30C43394;
+	Mon,  5 Feb 2024 19:03:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1707159774;
-	bh=ahF3cXBPBvE5YZU15bdesla+Jh6D/oIfrgvYM6Qeb0M=;
+	s=korg; t=1707159787;
+	bh=y7rclFvbLz49u6nM+LwwvLo07quZDiET4J+mtxUDuyM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZrZtegeBayuKkF0bB0DxpdnHBuUK5zGgzGoIb6Mt3pBKch+121QLo9D7o4H5CPP/W
-	 VhAhLuX5WWtR5WOQ5kk2dJ2MgpY3oecsqYCNFeGOskL5kNO9U4F93yQ4gpZmSwYfn/
-	 dZj/3y0WcAmjMWGfDgCXwHGiPOQRCoi0BfcH5NaY=
-Date: Mon, 5 Feb 2024 04:45:59 -0800
+	b=l6Slrggr7PSxn55Jtzac3Ggl68HEyUAlgX9S+Isrzs3to/q2uqyKYV7B/qiMzM4Mw
+	 F/jqV6z+sm0OM3QdZ50NgXqxd4KudI3HsL/vfQ+pQP4pt1CC0ab9/nyIkuPEYCrb2o
+	 OouBUzS00q7j3DLezv4d/phvcCilABcKI4+112wE=
+Date: Mon, 5 Feb 2024 04:46:46 -0800
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: "Ricardo B. Marliere" <ricardo@marliere.net>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] bcma: make bcma_bus_type const
-Message-ID: <2024020554-caption-elite-ba36@gregkh>
-References: <20240204-bus_cleanup-bcma-v1-1-0d881c793190@marliere.net>
+Cc: Michael Buesch <m@bues.ch>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ssb: make ssb_bustype const
+Message-ID: <2024020543-footsie-unreeling-1cd2@gregkh>
+References: <20240204-bus_cleanup-ssb-v1-1-511026cd5f3c@marliere.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,11 +39,11 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240204-bus_cleanup-bcma-v1-1-0d881c793190@marliere.net>
+In-Reply-To: <20240204-bus_cleanup-ssb-v1-1-511026cd5f3c@marliere.net>
 
-On Sun, Feb 04, 2024 at 05:57:23PM -0300, Ricardo B. Marliere wrote:
+On Sun, Feb 04, 2024 at 05:44:21PM -0300, Ricardo B. Marliere wrote:
 > Now that the driver core can properly handle constant struct bus_type,
-> move the bcma_bus_type variable to be a constant structure as well,
+> move the ssb_bustype variable to be a constant structure as well,
 > placing it into read-only memory which can not be modified at runtime.
 > 
 > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
