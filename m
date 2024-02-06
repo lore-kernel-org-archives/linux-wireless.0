@@ -1,53 +1,53 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22E6812D142
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Feb 2024 09:21:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16BB12CDA2
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Feb 2024 09:22:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707211321; cv=none; b=SIg4goYccLnK3Feu7v4KGAQGEBfpOK1iDoftfEVHPbw5S/HAXyZYHfgSs+T43VVDPtPtLcsVhQap6Ln9yoC3kOh8b/rXs1S4bW+HNM1hoObt0NIteZNnP2XsACbEwkqOoMu+FW5g6BZ+JNurTAI8idyhlJzm9vSrPGKXahS9KmU=
+	t=1707211325; cv=none; b=dJimwGCbG8/jvo7RziAwQG7QDRqvyQm9qYFWJ70zVuRB0XChaTBVu5XVd45XZRUrbT8Q6mV711PctJdIQjQU1G4mh9GkO+lvSbgdXwWP4maOvqJ37Vk/WvJRwCYIytNMgiuCQh6R4ntxRrNBCqU65ZlDcKjouuUydtE0vhWzxy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707211321; c=relaxed/simple;
-	bh=AXhOwg6esfWlwknCnpB7OoSbnpPDfLBzC/nAtYiKQpI=;
+	s=arc-20240116; t=1707211325; c=relaxed/simple;
+	bh=W8T7WR8Y5m2V5w6tPKlT99nLKYCWkraIbvA0apBU8Mc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Hz6ru8H/ZtIAKdaIGmP7BtBcnPcVdSn+5/BVFHKBm1iArMoCI0YN9BvGCdjL645Ulahu/0YkEcEHoszq4saprbegV6Y0fIsVlJ7mO2WSc1wTu8TDQieTE5hFEBRwgYsd2sfKpdR46e/hDpavzN6p7k3qbeBHNszkhe3gRNugveQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H8J8UiNq; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=EYbpNaoLh4PzKFxa40b1Jzo+ONsBaMcSaRztePwrS5ncG9rc7YekuyppEEopg/YBgUFvfhrYw1eCnwxVxOH96Y9nHEE5+CNgXNrhT4+yPyoFm1kyvYXkXPLjto/vBuWk9F0xcZvpm0TW6kKSoWwCD5Sq3tExcbosbo4XZvw5BFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=VHRzC2pJ; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H8J8UiNq"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4169L9pb023425;
-	Tue, 6 Feb 2024 09:21:53 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="VHRzC2pJ"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4166xQRE014451;
+	Tue, 6 Feb 2024 09:21:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=tHkWseutCdgNyUruY5Alxo1qwcln4362ES9gewgFg8A=; b=H8
-	J8UiNqqegISvlT0abIDjzJbNfgF49akGG2zZUqJYe7cDambUAT1Ij5sOYdH7fSUl
-	+wy6P3/XhiEdN2eeBdCQlb/P2f1G8G5EDeiGU1GgKtv/Pa5X6KICY0klMY9L963z
-	vIsSvzXzKGwWHyZtjzdPvX90VRRwyrU8EWGdfDmihiO+1z5dw9ia4ncp1Uh8dnWL
-	gDEgeuUXI2R2zcR8PWm8xkqCznziCgLdpaI2+sJbGCy1T82sCRMkDKhyKkk+Ftwn
-	n/w1oadYWn67PXy22JHic3q7ECAMoYeVMB50oPWwA4RuVvmZCW/0jZu6CCWoOOZU
-	fGQslqNidpsAOdREh9dA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3w3apjgut9-1
+	qcppdkim1; bh=y9x/L9zBRAyTkONnTlLEDtK2szL6cwTn1TVFewVFbA8=; b=VH
+	RzC2pJ9zDmojfTndwt1pGvVBBn2fxsTQ5az+hsp3xOeOwah7vJP9Ap0tU8hzARB2
+	+O+BA/jHBWx4OjnKnmy0cF0DXjKTZBVuzT9e75fFB3theGQ+rX8ceVFwpHj9GURk
+	L4aJ59AIpLfhi8pZVzvueU80eQ8tZwpR0STI2q7y48FyPVKoKSgJ19HZR27icavZ
+	d5kPY0ky0hTkJGorJEvTqHFhW7rQsecbvTPiMoIwJsnViEDH0NpnZTeQ5wSQ4ioj
+	6+90aGUg+9SjjtXGAjYqwtIny5v3uZZc550mE2qknW25JUBsIgcGkM0+w0z0cPLr
+	4Zq8SttR0byZp/foXezA==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3w3e7g0ggx-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 06 Feb 2024 09:21:53 +0000 (GMT)
+	Tue, 06 Feb 2024 09:21:57 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4169Lq1v006845
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4169LvIN021340
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 6 Feb 2024 09:21:52 GMT
+	Tue, 6 Feb 2024 09:21:57 GMT
 Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Tue, 6 Feb 2024 01:21:50 -0800
+ 15.2.1118.40; Tue, 6 Feb 2024 01:21:55 -0800
 From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, Sriram R <quic_srirrama@quicinc.com>,
         Rameshkumar Sundaram <quic_ramess@quicinc.com>
-Subject: [PATCH v2 08/12] wifi: ath12k: Add additional checks for vif and sta iterators
-Date: Tue, 6 Feb 2024 14:49:50 +0530
-Message-ID: <20240206091954.4144454-9-quic_ramess@quicinc.com>
+Subject: [PATCH v2 10/12] wifi: ath12k: Modify set and get antenna mac ops for single wiphy
+Date: Tue, 6 Feb 2024 14:49:52 +0530
+Message-ID: <20240206091954.4144454-11-quic_ramess@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240206091954.4144454-1-quic_ramess@quicinc.com>
 References: <20240206091954.4144454-1-quic_ramess@quicinc.com>
@@ -63,24 +63,30 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 81ASiM8WVZw6MQV1WS2o86JjgmQ3CCPn
-X-Proofpoint-GUID: 81ASiM8WVZw6MQV1WS2o86JjgmQ3CCPn
+X-Proofpoint-GUID: u6ghTtS7jtMuDVEAtYnTINYiHk9OGl6b
+X-Proofpoint-ORIG-GUID: u6ghTtS7jtMuDVEAtYnTINYiHk9OGl6b
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-02-06_02,2024-01-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=654 mlxscore=0
- phishscore=0 priorityscore=1501 bulkscore=0 suspectscore=0 adultscore=0
- clxscore=1015 lowpriorityscore=0 spamscore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ suspectscore=0 adultscore=0 mlxscore=0 mlxlogscore=999 lowpriorityscore=0
+ bulkscore=0 spamscore=0 clxscore=1015 priorityscore=1501 phishscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2401310000 definitions=main-2402060064
+ engine=8.19.0-2401310000 definitions=main-2402060065
 
 From: Sriram R <quic_srirrama@quicinc.com>
 
-Since vif and sta objects of different radios are added to same
-local hw list in mac80211, additional checks need to be done
-in driver to ensure we are processing the intended vif
-and sta corresponding to the radio when the vif and sta mac80211
-iterator utils are used from driver.
+As multiple radios are combined into a single wiphy, and
+the current infrastructure supports only set/get antenna
+for the wiphy, the max Tx/Rx antenna capability is advertised
+during wiphy register.
+Hence, When antenna set/get is received we adjust the set/get
+based on max radio capability and set/get antenna accordingly.
+
+Multi radio capability needs to introduced with interface
+combination changes to support single wiphy model in cfg80211
+which would help extend the wiphy specific get/set configs similar
+to this to per hw level.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -88,112 +94,79 @@ Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ
 Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
 Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  1 +
- drivers/net/wireless/ath/ath12k/mac.c  | 22 ++++++++++++++++++++--
- 2 files changed, 21 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 37 ++++++++++++++++++++-------
+ 1 file changed, 28 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 009d7b50b5a0..d41f8e5915f6 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -290,6 +290,7 @@ struct ath12k_vif {
- 
- struct ath12k_vif_iter {
- 	u32 vdev_id;
-+	struct ath12k *ar;
- 	struct ath12k_vif *arvif;
- };
- 
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 618c75d50547..631b24c6e435 100644
+index 617dd55e7d4e..a85468cc63da 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -533,7 +533,8 @@ static void ath12k_get_arvif_iter(void *data, u8 *mac,
- 	struct ath12k_vif_iter *arvif_iter = data;
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
+@@ -5010,6 +5010,13 @@ static int __ath12k_set_antenna(struct ath12k *ar, u32 tx_ant, u32 rx_ant)
+ 	if (ath12k_check_chain_mask(ar, rx_ant, false))
+ 		return -EINVAL;
  
--	if (arvif->vdev_id == arvif_iter->vdev_id)
-+	if (arvif->vdev_id == arvif_iter->vdev_id &&
-+	    arvif->ar == arvif_iter->ar)
- 		arvif_iter->arvif = arvif;
++	/* Since we advertised the max cap of all radios combined during wiphy
++	 * registration, ensure we don't set the antenna config higher than the
++	 * limits
++	 */
++	tx_ant = min_t(u32, tx_ant, ar->pdev->cap.tx_chain_mask);
++	rx_ant = min_t(u32, rx_ant, ar->pdev->cap.rx_chain_mask);
++
+ 	ar->cfg_tx_chainmask = tx_ant;
+ 	ar->cfg_rx_chainmask = rx_ant;
+ 
+@@ -6309,16 +6316,22 @@ static void ath12k_mac_op_configure_filter(struct ieee80211_hw *hw,
+ static int ath12k_mac_op_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ {
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
++	int antennas_rx = 0, antennas_tx = 0;
+ 	struct ath12k *ar;
++	int i;
+ 
+ 	ar = ath12k_ah_to_ar(ah, 0);
+ 
+-	mutex_lock(&ar->conf_mutex);
+-
+-	*tx_ant = ar->cfg_tx_chainmask;
+-	*rx_ant = ar->cfg_rx_chainmask;
++	for (i = 0; i < ah->num_radio; i++) {
++		mutex_lock(&ar->conf_mutex);
++		antennas_rx = max_t(u32, antennas_rx, ar->cfg_rx_chainmask);
++		antennas_tx = max_t(u32, antennas_tx, ar->cfg_tx_chainmask);
++		mutex_unlock(&ar->conf_mutex);
++		ar++;
++	}
+ 
+-	mutex_unlock(&ar->conf_mutex);
++	*tx_ant = antennas_tx;
++	*rx_ant = antennas_rx;
+ 
+ 	return 0;
  }
- 
-@@ -543,6 +544,7 @@ struct ath12k_vif *ath12k_mac_get_arvif(struct ath12k *ar, u32 vdev_id)
- 	u32 flags;
- 
- 	arvif_iter.vdev_id = vdev_id;
-+	arvif_iter.ar = ar;
- 
- 	flags = IEEE80211_IFACE_ITER_RESUME_ALL;
- 	ieee80211_iterate_active_interfaces_atomic(ath12k_ar_to_hw(ar),
-@@ -6678,14 +6680,19 @@ struct ath12k_mac_change_chanctx_arg {
- 	struct ieee80211_vif_chanctx_switch *vifs;
- 	int n_vifs;
- 	int next_vif;
-+	struct ath12k *ar;
- };
- 
- static void
- ath12k_mac_change_chanctx_cnt_iter(void *data, u8 *mac,
- 				   struct ieee80211_vif *vif)
+@@ -6327,13 +6340,19 @@ static int ath12k_mac_op_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx
  {
-+	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	struct ath12k_mac_change_chanctx_arg *arg = data;
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+-	int ret;
++	int ret = 0;
++	int i;
  
-+	if (arvif->ar != arg->ar)
-+		return;
-+
- 	if (rcu_access_pointer(vif->bss_conf.chanctx_conf) != arg->ctx)
- 		return;
+ 	ar = ath12k_ah_to_ar(ah, 0);
  
-@@ -6696,9 +6703,13 @@ static void
- ath12k_mac_change_chanctx_fill_iter(void *data, u8 *mac,
- 				    struct ieee80211_vif *vif)
- {
-+	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	struct ath12k_mac_change_chanctx_arg *arg = data;
- 	struct ieee80211_chanctx_conf *ctx;
+-	mutex_lock(&ar->conf_mutex);
+-	ret = __ath12k_set_antenna(ar, tx_ant, rx_ant);
+-	mutex_unlock(&ar->conf_mutex);
++	for (i = 0; i < ah->num_radio; i++) {
++		mutex_lock(&ar->conf_mutex);
++		ret = __ath12k_set_antenna(ar, tx_ant, rx_ant);
++		mutex_unlock(&ar->conf_mutex);
++		if (ret)
++			break;
++		ar++;
++	}
  
-+	if (arvif->ar != arg->ar)
-+		return;
-+
- 	ctx = rcu_access_pointer(vif->bss_conf.chanctx_conf);
- 	if (ctx != arg->ctx)
- 		return;
-@@ -6815,7 +6826,7 @@ static void
- ath12k_mac_update_active_vif_chan(struct ath12k *ar,
- 				  struct ieee80211_chanctx_conf *ctx)
- {
--	struct ath12k_mac_change_chanctx_arg arg = { .ctx = ctx };
-+	struct ath12k_mac_change_chanctx_arg arg = { .ctx = ctx, .ar = ar };
- 	struct ieee80211_hw *hw = ath12k_ar_to_hw(ar);
- 
- 	lockdep_assert_held(&ar->conf_mutex);
-@@ -7391,6 +7402,9 @@ static void ath12k_mac_set_bitrate_mask_iter(void *data,
- 	struct ath12k_sta *arsta = ath12k_sta_to_arsta(sta);
- 	struct ath12k *ar = arvif->ar;
- 
-+	if (arsta->arvif != arvif)
-+		return;
-+
- 	spin_lock_bh(&ar->data_lock);
- 	arsta->changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
- 	spin_unlock_bh(&ar->data_lock);
-@@ -7401,10 +7415,14 @@ static void ath12k_mac_set_bitrate_mask_iter(void *data,
- static void ath12k_mac_disable_peer_fixed_rate(void *data,
- 					       struct ieee80211_sta *sta)
- {
-+	struct ath12k_sta *arsta = ath12k_sta_to_arsta(sta);
- 	struct ath12k_vif *arvif = data;
- 	struct ath12k *ar = arvif->ar;
- 	int ret;
- 
-+	if (arsta->arvif != arvif)
-+		return;
-+
- 	ret = ath12k_wmi_set_peer_param(ar, sta->addr,
- 					arvif->vdev_id,
- 					WMI_PEER_PARAM_FIXED_RATE,
+ 	return ret;
+ }
 -- 
 2.25.1
 
