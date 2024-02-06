@@ -1,98 +1,101 @@
-Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D831EA80
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Feb 2024 13:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B3EB133420
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Feb 2024 14:54:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707224940; cv=none; b=QLl5/5SHHN0VEs5Yv6cJ6IxFq0Al1ImxF8XkjboGtN5lgUu2C/6ZguJxXBV71LNAxJ4QM0af1+Os+vshY338wkpqyJeWNOBnfcVcoCEOyPl8Ww4S0ask16l/vRgYFd+3t54UdxPcu6Im4OPk0TO5yWUlFmxF7Tuqxld8CT/p38E=
+	t=1707231266; cv=none; b=d/vLz7GeCMNRDQWMTU/u9QMeFOi1pZn8y64ov+Lq2R7yz69DFxa1aQX4WBq9WImBk4ZCcEtaNPWmw+exv3hQFYHgem/9a8ziW4eqquXnVaUBVnsP1/A8Qo7sGibXnHNH5HukFZW2axcDRRr9dz8eFif3rH5RMgQHTXK13poESbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707224940; c=relaxed/simple;
-	bh=LMvw7ZapEqNLS9EY1kyMAKXzGH0Bt6b0N6T6aTC0hjY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=UAlxMj8buplWUbCtAGJS83ZiDHNKAZG3ixnKttlb4PyH8GH9AsDtTanRbcp8IP8XOIOg2+vUZH2i9pjubLk4Lt/kzlR2bBoSnC4Yjinqil1fQ0p72tbptSZcwp9qH5yz/EocIUgsd6gNs+UPuHBfV5WFMjbOqNXmf+Hv/tHdD7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GqOVmpyS; arc=none smtp.client-ip=209.85.167.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1707231266; c=relaxed/simple;
+	bh=6BrtTIYLDqoYtvrEKhlZ/7B82WT3RiJLX0W7lhqR14A=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=L0iWerc5+2EiAJpKghTmo5s8LoF6ENp3a8etSPh1u/pAGuRm0mcflST7RFyCuxcA+YNNI9EceM1z3NKePJ+qD9wkdY629vjOSEKjMP0rjugTQ2/cCSDKOB+q0o/KNfuHu/SdYW6mMKxkDnue4rgPLeyilDqdpntJLGA8YBc0fJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Gap/Ia+g; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GqOVmpyS"
-Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-511490772f6so3077975e87.2
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Feb 2024 05:08:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1707224936; x=1707829736; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qpw7KIB9SDLyg6r6DS+MT6bxeqqIfgw6wlcljwHw/7Y=;
-        b=GqOVmpySBNx2/SauyhOoO08nVrWpOuaQM17SYefrxN+TBOgSI1EtW+5sSLqOlV3KdA
-         RCqAZbFFFWRamj8MFp42E3GGtQ59wLmLLPgsyaHnagOEEZnBH9UFuzFR33LiwEuaEu+s
-         f7jNBdK2VGMa+lefDAKMbN4uEurRF6K9Y4sVaRzO30t3nHBA0clTTjnl/EqSNF0MyT5m
-         ga23vBX3hlnQKJS7b/zQpoi+vIBl16CkmjTGgxCA7iEBZx7bBDXmN8gLab4/HHTGAFSu
-         SF+0bNVHdBYg3S+I946if7xAOtM9EOhZfUrAON+N2jk+HCyJIF2TzZQ64RSWqmIIoeAR
-         /TMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707224936; x=1707829736;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=qpw7KIB9SDLyg6r6DS+MT6bxeqqIfgw6wlcljwHw/7Y=;
-        b=lHdDlJU3qOBZI94f5o9a7QYFIcY6X2zjY7rhUrSETRfCZ6Y39ebHuopqpgv2+t+WoO
-         OSlsSpB7P3+WxWrV8tGIzOasP4GEY+Y5QqQZhswp3O/5jQiBJYZL0+zW4GD54Jpt1qra
-         xAQrUj7LQZjsmt9QfUSkfE9RjmR3WgrgHnErkDzWE3vIOW3hjT6LlASXcxUwQaAtzQTB
-         DSLPzGtWHzTgWbzd7VqkfxH1GUT60G47nkuzIX6Wixs3rcnpqxedVJxNcFv2mATzm8Oh
-         JKPvpgdrtGkVLxf1iyxkRHXLvDcPg8zQB1N2b7KRl/6Yyu/kFBCDz6WF6pq0Zwyf8ZUX
-         Ny6Q==
-X-Gm-Message-State: AOJu0YyIgXlLoCc/ZYU/pSvHBAjsCgetc/IcrH31m12rfX5KOJPfUUG+
-	pQvqOLcZ7LSfPqMVaAXBaVag0uQnAdzfAKVXQnE/DejxPJQsL+lyfIKVyWqUZY8=
-X-Google-Smtp-Source: AGHT+IHz+S0/hLkcdwKUkrMXvDZrGQi09oEgaIQ9CQreZOYPgmTZ+FJGvUC2VV65gSeMtESWDNTYlQ==
-X-Received: by 2002:a05:6512:49d:b0:511:5411:1144 with SMTP id v29-20020a056512049d00b0051154111144mr1522178lfq.14.1707224936479;
-        Tue, 06 Feb 2024 05:08:56 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCV1kdRpRxa7551jyeZut7+dRRqYEjtBtwSA2JsotGvkOvTm6mCBlGpnHpehfGak1mZE8mcq6/UMldKAZztANJBjUemhrvgacLFFxwSfYqBx6Y/KMPmETVR1yalhuTtKnaSVgZ/7i5M1rgVtbTCpB0B+hirV0Rqfdrgp1Qsgbkn2Q4mBtnYJYlSF//crcBlkW7qxDpLtAs4fJ28x+UclDVIsblNMk3jaPBZpgQuBvBm9IvjCxvi/ScA/YWUSQXMEMbS+SA4vqHgPFSdSvgAdD3LdffSCSma53K2/PyLdtnF7paoT4ndU387TkTqCnZ5N8+qlR4ZQxt90RL4I7ngPqTv6oeYDY3dY+Bv0uZpQGQY=
-Received: from localhost ([102.222.70.76])
-        by smtp.gmail.com with ESMTPSA id cu16-20020a170906ba9000b00a2a61b9c166sm1135601ejd.33.2024.02.06.05.08.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Feb 2024 05:08:56 -0800 (PST)
-Date: Tue, 6 Feb 2024 16:08:52 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: Kalle Valo <kvalo@kernel.org>, Johannes Berg <johannes.berg@intel.com>,
-	Gregory Greenman <gregory.greenman@intel.com>,
-	Alon Giladi <alon.giladi@intel.com>,
-	Mukesh Sisodiya <mukesh.sisodiya@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] wifi: iwlwifi: return negative -EINVAL instead of positive
- EINVAL
-Message-ID: <f0391316-ab30-4664-96ac-03445ab2aeba@moroto.mountain>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Gap/Ia+g"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707231264; x=1738767264;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=6BrtTIYLDqoYtvrEKhlZ/7B82WT3RiJLX0W7lhqR14A=;
+  b=Gap/Ia+gqKA6UmXzy2Yg0RiOh9ZxjDc1auPKzhj9ZhUqKvIEMRtf2JXA
+   XE6bx2FpXK1IcooaSwcBoYkaC8qmYDbHGIJvEFg70zbWH31mX/Raa25sH
+   RKFR5NrAz1NKOpXwu/jEwvkHrf1IbpAVc2syWcRBHKQl/xq1H2QDrgrkt
+   tJDehU31bD6fXsxl2chadSKGj4dH4UfqCpevj1nkcovijk2TNFZWo/G1H
+   g6QkCf3OzQ8WGLVzW8ua2cLVgKxxSMVEyEBME5SrPJoiuNOWqnmoUbSSY
+   /d6sJH44kcY7S+4Gm+dBHuTfEJHHwvQ8fl4nl6X5ppHeJH869VS6Li6pj
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="917775"
+X-IronPort-AV: E=Sophos;i="6.05,247,1701158400"; 
+   d="scan'208";a="917775"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2024 06:54:23 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="824197882"
+X-IronPort-AV: E=Sophos;i="6.05,247,1701158400"; 
+   d="scan'208";a="824197882"
+Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2024 06:54:20 -0800
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/8] cfg80211/mac80211 patches from our internal tree 2024-02-06
+Date: Tue,  6 Feb 2024 16:54:03 +0200
+Message-Id: <20240206145411.3217588-1-miriam.rachel.korenblit@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-The '-' character is missing in -EINVAL.
+Hi,
 
-Fixes: fc7214c3c986 ("wifi: iwlwifi: read DSM functions from UEFI")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+A bunch of patches from our internal tree with mac80211 and
+cfg80211 changes. It's the usual developement, adding a few small
+features.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index fe6d0141cd5b..3c4c99eed110 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -679,7 +679,7 @@ int iwl_uefi_get_dsm(struct iwl_fw_runtime *fwrt, enum iwl_dsm_funcs func,
- 		     u32 *value)
- {
- 	struct uefi_cnv_var_general_cfg *data;
--	int ret = EINVAL;
-+	int ret = -EINVAL;
- 
- 	/* Not supported function index */
- 	if (func >= DSM_FUNC_NUM_FUNCS || func == 5)
+Thanks,
+Miri
+
+Andrei Otcheretianski (1):
+  wifi: mac80211_hwsim: Add 160MHz bw range to regdom_custom_04
+
+Daniel Amosi (1):
+  wifi: mac80211: remove unnecessary chanreq compat check
+
+Johannes Berg (3):
+  wifi: cfg80211: rename UHB to 6 GHz
+  wifi: cfg80211: optionally support monitor on disabled channels
+  wifi: mac80211: drop injection on disabled-chan monitor
+
+Miri Korenblit (1):
+  wifi: mac80211:  make associated BSS pointer visible to the driver
+
+Shaul Triebitz (2):
+  wifi: nl80211: add WOWLAN_TRIG_UNPROTECTED_DEAUTH_DISASSOC
+  wifi: cfg80211: report unprotected deauth/disassoc in wowlan
+
+ drivers/net/wireless/virtual/mac80211_hwsim.c |  6 ++-
+ include/net/cfg80211.h                        | 19 ++++++---
+ include/net/mac80211.h                        |  3 ++
+ include/uapi/linux/nl80211.h                  | 38 +++++++++++++-----
+ net/mac80211/chan.c                           |  3 --
+ net/mac80211/mlme.c                           | 18 ++++-----
+ net/mac80211/tx.c                             | 10 ++++-
+ net/wireless/chan.c                           | 26 ++++++++----
+ net/wireless/core.h                           |  5 ++-
+ net/wireless/nl80211.c                        | 40 +++++++++++++------
+ net/wireless/reg.c                            | 10 ++---
+ net/wireless/scan.c                           |  8 ++--
+ 12 files changed, 124 insertions(+), 62 deletions(-)
+
 -- 
-2.43.0
+2.34.1
 
