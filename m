@@ -1,28 +1,27 @@
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69C4823B9;
-	Wed,  7 Feb 2024 19:12:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D9185954;
+	Wed,  7 Feb 2024 19:12:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707333180; cv=none; b=tjZ+vMJq9yDxHBH6G5lolc5qLQwNIwi+RV1E7dsj1Sg8N71JbTnte9DAEwnhZQ+chm5wszjxn0Oyk8KBu2AiSTDoYgQfn+sS3gssEXOHWBd/f4tvGIsqRUGrwPovJZCVRg6KWTZuRtMR+qDBmKinkCn2101YNgfVXRhq2pu6LQY=
+	t=1707333182; cv=none; b=mXZaUPWeqoyVRPYy7RRGKDA3aVqAGHB6xcsGjgcvk13edL3mfUZdcrO7Y+vWWgqQJulqO8PzDFZDjfUHqFsJiKmuK+RqgXjtgWavAhS7Micfsn2d/mDUk68NWr9q6R8IjbcyQ3DoM7enQsKug9S2j39VLlH/tHE3A5qYHB33PRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707333180; c=relaxed/simple;
-	bh=AB6u5fg2dweFTMD5jMbAqYepGoUI5YM7pGFRXWYMAfY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N15Hskrnu/aKA+cnsIj0avxPbECiXRzCYLjx7uXysOJ276Kuwy85OyM7MQ0rov/mjPK5UprsDMUrjTD3uB83dgJTOsfxwH8riwT/+o7bNX+aznL7D/vMyqGKkh7aXOCNu4PIxic/mI5mvgU6SDmDo7A6P3SDlZv3RKnm4C01hRM=
+	s=arc-20240116; t=1707333182; c=relaxed/simple;
+	bh=mrBbjhTnXeyV6fjV83s22Ro95nfA5WuWbc6HKUQTVrM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j++aIRA9daJ1bsDfPA68OYEC1bLsCPPx+5gy0yQkToypzbl3iJN+mQ7dT2b8WTHwPX0NAgJ/E954uU4gprpuSjQeiSvyPIRQC5E5AaUTo5p+ZY8HF2TgyutT6uAv4+9e6PZpUcOvxJSsWIvhzHbXPm5f048tC3qXbS/9BDR4XgM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; arc=none smtp.client-ip=79.96.170.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.4.0)
- id cc3e3f799ac74844; Wed, 7 Feb 2024 20:12:48 +0100
+ id f148895491a4f1fa; Wed, 7 Feb 2024 20:12:51 +0100
 Received: from kreacher.localnet (unknown [195.136.19.94])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 261B2669B2E;
-	Wed,  7 Feb 2024 20:12:48 +0100 (CET)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id B4C9D669B2E;
+	Wed,  7 Feb 2024 20:12:50 +0100 (CET)
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To: Linux PM <linux-pm@vger.kernel.org>
 Cc: Gregory Greenman <gregory.greenman@intel.com>,
@@ -31,13 +30,9 @@ Cc: Gregory Greenman <gregory.greenman@intel.com>,
  linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
  Daniel Lezcano <daniel.lezcano@linaro.org>,
  Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
-Subject:
- [PATCH v1 3/3] iwlwifi: mvm: Use for_each_thermal_trip() for walking trip
- points
-Date: Wed, 07 Feb 2024 20:12:38 +0100
-Message-ID: <2270733.iZASKD2KPV@kreacher>
-In-Reply-To: <1892445.tdWV9SEqCh@kreacher>
-References: <1892445.tdWV9SEqCh@kreacher>
+Subject: [PATCH v1 0/3] iwlwifi: mvm: Thermal management fixes
+Date: Wed, 07 Feb 2024 20:08:18 +0100
+Message-ID: <1892445.tdWV9SEqCh@kreacher>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,97 +44,35 @@ Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 195.136.19.94
 X-CLIENT-HOSTNAME: 195.136.19.94
 X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrtddvgdduudekucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepvdffueeitdfgvddtudegueejtdffteetgeefkeffvdeftddttdeuhfegfedvjefhnecukfhppeduleehrddufeeirdduledrleegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepudelhedrudefiedrudelrdelgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepledprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehgrhgvghhorhihrdhgrhgvvghnmhgrnhesihhnthgvlhdrtghomhdprhgtphhtthhopehmihhrihgrmhdrrhgrtghhvghlrdhkohhrvghnsghlihhtsehinhhtvghlrdgtohhmpdhrtghpthhtohepkhhvrghloheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepjhhohhgrnhhnvghsrdgsvghrghesihhnthgvlhdrtghomhdprhgtphhtthhopehlihhnuhigqdifihhrvghlvghsshesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrtddvgdduudelucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkfgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepgeffhfdujeelhfdtgeffkeetudfhtefhhfeiteethfekvefgvdfgfeeikeeigfehnecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepudelhedrudefiedrudelrdelgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduleehrddufeeirdduledrleegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeelpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepghhrvghgohhrhidrghhrvggvnhhmrghnsehinhhtvghlrdgtohhmpdhrtghpthhtohepmhhirhhirghmrdhrrggthhgvlhdrkhhorhgvnhgslhhithesihhnthgvlhdrtghomhdprhgtphhtthhopehkvhgrlhhosehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjohhhrghnnhgvshdrsggvrhhgsehinhhtvghlrdgtohhmpdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
 X-DCC--Metrics: v370.home.net.pl 1024; Body=9 Fuz1=9 Fuz2=9
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Everyone,
 
-The code walking trip points in iwl_mvm_send_temp_report_ths_cmd()
-reads the trip table passed to thermal_zone_device_register_with_trips()
-in order to get the current trip temperatures, but this is not
-guaranteed to work in the future, because the thermal zone will store
-trip points information internally.
+There are a few thermal management shortcomings in the iwlwifi driver that are
+addressed by this series.
 
-For this reason, make iwl_mvm_send_temp_report_ths_cmd() use
-for_each_thermal_trip() as appropriate for walking trip points in a
-given thermal zone.
+First off, the fw_trips_index[] array field in struct iwl_mvm_thermal_device
+is only populated and never read, and the code populating it has problems,
+so patch [1/3] removes it.
 
-No intentional functional impact, but it is requisite for future thermal
-core improvements.
+Second, iwl_mvm_thermal_zone_register() populates the trip table after passing
+it to thermal_zone_device_register_with_trips() which is too late, because it
+can get used before it is populated.  It also may as well use THERMAL_TEMP_INVALID
+as the "invalid temperature" value.  Both these issues are addressed by patch [2/3].
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c |   40 +++++++++++++++++-----------
- 1 file changed, 25 insertions(+), 15 deletions(-)
+Finally, iwl_mvm_send_temp_report_ths_cmd() accesses the trip tables used during
+thermal zone registration directly in order to obtain the current trip point
+temperature values, which is not guaranteed to work in the future, because the
+core will store the trips information in its own copy of the trip table - see
+this patch series:
 
-Index: linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-===================================================================
---- linux-pm.orig/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -555,6 +555,22 @@ static int compare_temps(const void *a,
- 	return ((s16)le16_to_cpu(*(__le16 *)a) -
- 		(s16)le16_to_cpu(*(__le16 *)b));
- }
-+
-+struct iwl_trip_walk_data {
-+	__le16 *thresholds;
-+	int count;
-+};
-+
-+static int iwl_trip_temp_cb(struct thermal_trip *trip, void *arg)
-+{
-+	struct iwl_trip_walk_data *twd = arg;
-+
-+	if (trip->temperature == THERMAL_TEMP_INVALID)
-+		return 0;
-+
-+	twd->thresholds[twd->count++] = cpu_to_le16((s16)(trip->temperature / 1000));
-+	return 0;
-+}
- #endif
- 
- int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm)
-@@ -562,31 +578,25 @@ int iwl_mvm_send_temp_report_ths_cmd(str
- 	struct temp_report_ths_cmd cmd = {0};
- 	int ret;
- #ifdef CONFIG_THERMAL
--	int i, idx = 0;
-+	struct iwl_trip_walk_data twd = { .thresholds = cmd.thresholds, .count = 0 };
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	if (!mvm->tz_device.tzone)
- 		goto send;
- 
--	/* The driver holds array of temperature trips that are unsorted
--	 * and uncompressed, the FW should get it compressed and sorted
-+	/*
-+	 * The thermal core holds an array of temperature trips that are
-+	 * unsorted and uncompressed, the FW should get it compressed and
-+	 * sorted.
- 	 */
- 
- 	/* compress trips to cmd array, remove uninitialized values*/
--	for (i = 0; i < IWL_MAX_DTS_TRIPS; i++) {
--		if (mvm->tz_device.trips[i].temperature != THERMAL_TEMP_INVALID) {
--			cmd.thresholds[idx++] =
--				cpu_to_le16((s16)(mvm->tz_device.trips[i].temperature / 1000));
--		}
--	}
--	cmd.num_temps = cpu_to_le32(idx);
--
--	if (!idx)
--		goto send;
-+	for_each_thermal_trip(mvm->tz_device.tzone, iwl_trip_temp_cb, &twd);
- 
--	/*sort cmd array*/
--	sort(cmd.thresholds, idx, sizeof(s16), compare_temps, NULL);
-+	cmd.num_temps = cpu_to_le32(twd.count);
-+	if (twd.count)
-+		sort(cmd.thresholds, twd.count, sizeof(s16), compare_temps, NULL);
- 
- send:
- #endif
+https://lore.kernel.org/linux-pm/2728491.mvXUDI8C0e@kreacher/
+
+If possible, I'd like to route the $subject series through the thermal tree,
+it is requisite for the above one.
+
+Thanks!
 
 
 
