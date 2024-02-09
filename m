@@ -1,89 +1,154 @@
-Received: from w1.tutanota.de (w1.tutanota.de [81.3.6.162])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C076F73161
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Feb 2024 16:16:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.3.6.162
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9457AE50;
+	Fri,  9 Feb 2024 16:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707495411; cv=none; b=kadLsx4Y8Qpsu8hTrBuc9j1GBKu6KfrnypphmrdPkmpb/iiSWxvFCIUsXDrLurc13pZS/ihkc/Eg7BWer9avK29S7KbvsMVUpfgBTxgHNYLTm2muL9EPZDAvFApTpc1SA0CQLytwYXCDZQQwPBRlqpYD2OxDdXIXFfchEBy6UWE=
+	t=1707496067; cv=none; b=ibUazD6fmwwuW8DSnzL5GUM3ncA/0r380aom4JCkH+XiM6ouejsoz7cF98FDJGegGs5oVKbHDDrdsnA3RDB/fSEfyu5hdyZBP8MfYOmzwrzr/+1+wuCuTKO9up/kzD6CVrjgrSSO+kkhFLA+p8OOaYDhqVIfjX2SHyLWNglxUKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707495411; c=relaxed/simple;
-	bh=EpOO3GMFvb0k3nDos5VeUna1s5ystjnSdwdvSk24bHs=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=fdT59H72+ZK/px8Xfp2Y53UohkrcdBEA/glFG+g0hBYLTfur8AgkC72MTSJNwbY95prQqLqOdC4B/ud9QE/blDh5Z5jCpwZijscPNnzd667d1LbEx1Aep66LbSSgvtp/n0PGG4Uiw3zq9j/bLc/5+C8pZoCbsBL95KTAuRCK6K0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuta.io; spf=pass smtp.mailfrom=tuta.io; dkim=pass (2048-bit key) header.d=tuta.io header.i=@tuta.io header.b=dyLONyD5; arc=none smtp.client-ip=81.3.6.162
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuta.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuta.io
+	s=arc-20240116; t=1707496067; c=relaxed/simple;
+	bh=4DH6uSiz75VZ5wu8uWaWlKg6/VzeFejpqv+LEayXYbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NQtTQBUFD+o2lIScuwEdoE6z37YuHtrIEiUshFpJeaMPsFmh8sz4k9X+Qy4ctvgbp+hBo+8oNXIzoDWIc3CYCGe+YgEGQ7zMA8L/peaZuDK2gvFr+VOyk/uV2MBWPRowDEtY74fBfK2r67Wne1JKJbXi7b8i2EzE7bGyAsr7MEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OgLiL6t/; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuta.io header.i=@tuta.io header.b="dyLONyD5"
-Received: from tutadb.w10.tutanota.de (unknown [192.168.1.10])
-	by w1.tutanota.de (Postfix) with ESMTP id B824AFBFC30;
-	Fri,  9 Feb 2024 16:07:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1707494832;
-	s=s1; d=tuta.io;
-	h=From:From:To:To:Subject:Subject:Content-Description:Content-ID:Content-Type:Content-Type:Content-Transfer-Encoding:Content-Transfer-Encoding:Cc:Cc:Date:Date:In-Reply-To:In-Reply-To:MIME-Version:MIME-Version:Message-ID:Message-ID:Reply-To:References:References:Sender;
-	bh=Q9X+dskE7PENUs7yc3UZWejOGmchbflexQvZpdQlIb4=;
-	b=dyLONyD5wYyjAKDQTa1bFvCqVmLS1rQ/35K5YIJlbCmDXesOzHLk70oNWu/wkdzv
-	QDnnZR1qNgP7+nVDi0zwFOa3jL9rw5Kgikqkgu/p4X3znmkpnaU7sqdgFo5TqHbGwXI
-	Xv4MAxGhIvxRpO0dB/qVWcHDM6LqsLpIf6mc1i+sgBcezyL28+m5hR13ksrAjq6UoZc
-	ha24eNaLquRkOh6oX1+5N5uMH/Id/wXMXiPvHUyzzWAqMy9Q2dGVBasTsh4SrDCIjkO
-	ANKQ/rjjF1lF6FatPeBuMlGootaff373haJY6580LeGzBvOu/Rhx1WOLdGm5DeXx/MA
-	OaOKPc07rw==
-Date: Fri, 9 Feb 2024 17:07:12 +0100 (CET)
-From: marco.rodolfi@tuta.io
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Jay Sweat <jjsweat@outlook.com>
-Message-ID: <NqDbrXQ--3-9@tuta.io>
-In-Reply-To: <161bc4c6ffe14a36ad76f214fe533eef@realtek.com>
-References: <NlE3B0K--3-9@tuta.io> <60d366ff-8145-4f9d-a9f3-e27b82da31c2@lwfinger.net> <NlEvkht--3-9@tuta.io> <161bc4c6ffe14a36ad76f214fe533eef@realtek.com>
-Subject: RE: Wireless P2P support for rtw88 families cards
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OgLiL6t/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707496065; x=1739032065;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=4DH6uSiz75VZ5wu8uWaWlKg6/VzeFejpqv+LEayXYbQ=;
+  b=OgLiL6t/H2gFoHq3PfA4AWaOs2CfJdNFCl+eChhIv6H27ZynJgATZorL
+   Xa8WLR1QoAwkiTyX4SsS7A94ftRPhM6sWJx9ppRNSfB4rfSFX4aGWghHw
+   UqulWKCEuNgset/FrXIQwXErSYIWvO81ub5DtM1qehUXWVQ1GqUYFP+lD
+   HQQ4am44KGQsTenY0eZCzDXipWkPXit/go7XgSUiTzC5KJqxE0WGONTUg
+   7SrGz3XipsQFQdq0fu3ZukTyjJBHXPF6Sb0hwmxiT4FW0l5mYgfk8V9nR
+   O1l1/8OPOelg8XXQ+I5FvLItImRM+LWRiDGfCnFKVSEZbWTZvbmObj9Ub
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="1355034"
+X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
+   d="scan'208";a="1355034"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 08:27:44 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="825178698"
+X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
+   d="scan'208";a="825178698"
+Received: from sgruszka-mobl.ger.corp.intel.com (HELO localhost) ([10.252.43.96])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 08:27:40 -0800
+Date: Fri, 9 Feb 2024 17:27:37 +0100
+From: Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Zhang Rui <rui.zhang@intel.com>, netdev@vger.kernel.org,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	linux-wireless@vger.kernel.org, Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
+Subject: Re: [PATCH v1 6/9] iwlwifi: mvm: Set THERMAL_TRIP_WRITABLE_TEMP
+ directly
+Message-ID: <ZcZSeVjuYuL4mGCT@linux.intel.com>
+References: <3232442.5fSG56mABF@kreacher>
+ <3757041.MHq7AAxBmi@kreacher>
+ <ZcY7jyyFJq1yfOCj@linux.intel.com>
+ <CAJZ5v0gZ1tpNmdkvRLA6-ydnhKPKgsM_FCwrW+q1=5ZiD=vbWA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJZ5v0gZ1tpNmdkvRLA6-ydnhKPKgsM_FCwrW+q1=5ZiD=vbWA@mail.gmail.com>
 
-Just recently managed to run a couple of tests on lwfinger fork of the driver, which still required a small modification to expose P2P to the host like:
-diff --git a/main.c b/main.cindex f589029..e8d7079 100644--- a/main.c+++ b/main.c@@ -110,7 +110,9 @@ static const struct ieee80211_iface_limit rtw_iface_limits[] = { 	}, 	{ 		.max = 1,-		.types = BIT(NL80211_IFTYPE_AP),+		.types = BIT(NL80211_IFTYPE_AP) |+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |+				 BIT(NL80211_IFTYPE_P2P_GO), 	} }; @@ -2366,6 +2368,9 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw) 	if (rtwdev->chip->id == RTW_CHIP_TYPE_8822C) { 		hw->wiphy->iface_combinations = rtw_iface_combs; 		hw->wiphy->n_iface_combinations = ARRAY_SIZE(rtw_iface_combs);+		hw->wiphy->interface_modes = hw->wiphy->interface_modes |+				BIT(NL80211_IFTYPE_P2P_CLIENT) |+				BIT(NL80211_IFTYPE_P2P_GO); 	}  	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
-I've limited this only on my specific chipset instead of all the supported chips, since just below there was a filter on the 8822c chip.
+On Fri, Feb 09, 2024 at 05:15:41PM +0100, Rafael J. Wysocki wrote:
+> On Fri, Feb 9, 2024 at 3:50 PM Stanislaw Gruszka
+> <stanislaw.gruszka@linux.intel.com> wrote:
+> >
+> > On Fri, Feb 09, 2024 at 03:10:24PM +0100, Rafael J. Wysocki wrote:
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >
+> > > It is now possible to flag trip points with THERMAL_TRIP_WRITABLE_TEMP
+> > > to allow their temperature to be set from user space via sysfs instead
+> > > of using a nonzero writable trips mask during thermal zone registration,
+> > > so make the iwlwifi code do that.
+> > >
+> > > No intentional functional impact.
+> > >
+> > > Note that this change is requisite for dropping the mask argument from
+> > > thermal_zone_device_register_with_trips() going forward.
+> > >
+> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >
+> > > This patch obviously depends on
+> > >
+> > > https://patchwork.kernel.org/project/linux-pm/patch/8346768.T7Z3S40VBb@kreacher/
+> > >
+> > > which has been queued up for 6.9 already.
+> > >
+> > > ---
+> > >  drivers/net/wireless/intel/iwlwifi/mvm/tt.c |    6 ++----
+> > >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > >
+> > > Index: linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> > > +++ linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> > > @@ -667,9 +667,6 @@ static  struct thermal_zone_device_ops t
+> > >       .set_trip_temp = iwl_mvm_tzone_set_trip_temp,
+> > >  };
+> > >
+> > > -/* make all trips writable */
+> > > -#define IWL_WRITABLE_TRIPS_MSK (BIT(IWL_MAX_DTS_TRIPS) - 1)
+> > > -
+> > >  static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+> > >  {
+> > >       int i, ret;
+> > > @@ -692,11 +689,12 @@ static void iwl_mvm_thermal_zone_registe
+> > >       for (i = 0 ; i < IWL_MAX_DTS_TRIPS; i++) {
+> > >               mvm->tz_device.trips[i].temperature = THERMAL_TEMP_INVALID;
+> > >               mvm->tz_device.trips[i].type = THERMAL_TRIP_PASSIVE;
+> > > +             mvm->tz_device.trips[i].type = THERMAL_TRIP_WRITABLE_TEMP;
+> >
+> >                 mvm->tz_device.trips[i].flags = THERMAL_TRIP_WRITABLE_TEMP;
+> >
+> > Consider using diffrent prefix for constants to diffrenciate flags and types.
+> 
+> Well, I can use THERMAL_TRIP_FLAG_RW_TEMP or similar, but is it really
+> so confusing?
 
-Initial tests seems good to me, P2P is exposed to userspace and a short test using wpa_supplicant show activity + my android phone seems to see the wireless direct network just fine and the connect prompts come in the wpa_supplicant logs, but pairing seems to always failing even inserting the code shown in the console. Not sure if I have to whitelist stuff from wpa_cli, can't really find much as user guide on the web regarding Wireless Direct.
+It's not, it was just suggestion, if you don't want to, don't do it.
 
-I've tried mirrorcast as another usecase, but I can't seem to get it working correctly, the wpa_supplicant logs just claim that it can't be enabled on a non active interface during initialization (might just be an issue with mirrorcast itself rather than anything else tho).
+Regards
+Stanislaw
 
-I've posted this to a Deck user forums where other people had expressed their desire to test this, so I might get additional feedback to say if this is all that's needed to the driver or if it requires other stuff to be added.
-
-No dmesg errors are printed anywhere, so this looks already quite good to me for now.
-
-I'll probably follow this up soon as more data comes in,
-
-Marco.
-
-
-Dec 11, 2023, 02:30 by pkshih@realtek.com:
-
->
->
->> -----Original Message-----
->> From: marco.rodolfi@tuta.io <marco.rodolfi@tuta.io>
->> Sent: Sunday, December 10, 2023 2:55 AM
->> To: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Linux Wireless <linux-wireless@vger.kernel.org>; Ping-Ke Shih <pkshih@realtek.com>
->> Subject: Re: Wireless P2P support for rtw88 families cards
->>
->> Oh, so there is already a test in. It's not in the main driver since it's missing testing or it's not that
->> much stable?
->>
->
-> I don't have time to develop and test P2P on rtw88 that contains many chips.
->
-> As thread [1], I did suggest some test cases, and I think Jay is testing.
->
-> [1] https://lore.kernel.org/linux-wireless/1f6b255e8c8a4d9c9d2af80c93b7acf0@realtek.com/
->
-
+> I'm wondering what others think.
+> 
+> > >       }
+> > >       mvm->tz_device.tzone = thermal_zone_device_register_with_trips(name,
+> > >                                                       mvm->tz_device.trips,
+> > >                                                       IWL_MAX_DTS_TRIPS,
+> > > -                                                     IWL_WRITABLE_TRIPS_MSK,
+> > > +                                                     0,
+> > >                                                       mvm, &tzone_ops,
+> > >                                                       NULL, 0, 0);
+> > >       if (IS_ERR(mvm->tz_device.tzone)) {
+> > >
+> > >
+> > >
+> >
+> 
