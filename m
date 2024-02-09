@@ -1,263 +1,408 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF9B3C099
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Feb 2024 13:45:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4E2A69971;
+	Fri,  9 Feb 2024 14:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707486325; cv=none; b=aAWgY6Edql6ZUz7NKjPlxOhD0vR9W4EqlfGPSir2GlwEVnkfsNWsrusMWnCAt6nsbf+gh+HS3a+jC54cZbfbMkhpGdZK4MezrUkWf4CzZhf7RiZdsDktTr8Aa3xkv1joZYcNZ5KsuuGSjiXGCk8O5MBZKD5rgfzuxsnhoNnsTdw=
+	t=1707488086; cv=none; b=u19bxAJaKJzlurQOvErGju53dAd8DdgC0biYH83s6f+dCtxbd2kn7DF6/+ybXlE8x4BnY51SBqREvETvhCLNjSZOh51ZjlgGCk+4Aqag5dk97bFDniIwauIC/KPnuCyG36Tc/m/ZwErOxb/MHHfrlfbrHHF/ICWQ1jwmn8XRtNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707486325; c=relaxed/simple;
-	bh=O7ExEhOfreOhKikgsOgxHOgUH/7a0r/6CmnFs2T6wEo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=SkcYQdDpa7WgZq4ef8dL3DGiXhfZcp47TPuoHBmoUJALyxSz2mJnTVon6LdYTywlSCIJha7rnpjeV1Gh45CfQ1Hm2osHjWU5s9zxTNirIwzLpThVfyJmTA7tskL5qYM6nhn7nCy2q3EJhwuN14oA1QaYcfkih5JOhoLM+1CnfTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=TdU+ZSys; arc=none smtp.client-ip=209.85.222.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="TdU+ZSys"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-783f3d27bfbso41218085a.2
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Feb 2024 05:45:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1707486323; x=1708091123; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=wjGCK4lgpy/0QQ/lFE2vHUo6oRVe9mteXFl8otNH7i8=;
-        b=TdU+ZSyspbfNMV75//vQfrKgyoNhqBxPOuyk/a18ZBEdobclHLXfD9x3JOVBacKS1x
-         QmH7TOVciqgEXKSYSHEM7pHrkxRcy0YdO77q+AUOgWeuUplqRz4mqc1Op+tc9skb9I2J
-         LFjgTIL8owXca4x4AbmbMv58I1m7sqHhHUlIQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707486323; x=1708091123;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wjGCK4lgpy/0QQ/lFE2vHUo6oRVe9mteXFl8otNH7i8=;
-        b=EY2R428bmnbV5UeFMY4sgo69BPSMuUN+UTKB0amOQ4QLqu0gQSBQ3uete+rK8/nJpF
-         jDSb2qH9Pw6R9IIaP4lUHdLBV+w/54DR2YFDuHFnrpcHjlmZTODvovIF12v6bKARTsIJ
-         q9AYjjsdqHSJuBz8l9mkPkonik0+nXcHyGGnIqgxUWk/lEZYWVLfjsPuNgH7g7Yen9Ac
-         /8cCm+S9Hnoa33WmW1xg+G6TqQYZx74heVx4WmuuTVb2WYTXJYjxZkFaDsFqYWSf36cv
-         haUjbKLm6phtt9f+9JTHxy2AnOzE+WF5XojFaDTHzKkB8nxvWOB7u5cbMZ0heC1wONVH
-         /UEw==
-X-Gm-Message-State: AOJu0YylK69jtuAnWYFIDmxPbuaQCv0WrVlPQTIs+0mLIMbD0HMtO972
-	4D8XAGHaGen6gUJB/SPI3tloyZcaNCgNY3N2BeHcgviOr0W3ddczy2CjJK9D0w==
-X-Google-Smtp-Source: AGHT+IHvMs+FHIzq2AZspOOV3PVKPJ09r60srJMtnF2wYlmsJpEfxYPTLj5XGIjAkxyV18cHQjkGvA==
-X-Received: by 2002:a05:620a:2287:b0:785:74f5:62c6 with SMTP id o7-20020a05620a228700b0078574f562c6mr1436159qkh.75.1707486322816;
-        Fri, 09 Feb 2024 05:45:22 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVLWn7VXT2a4ntW4EW8XSZSiPaqHQBujPWVhlnU9JAS9wVDtazwNZgBADEwrKcPEoqlNunhhwO/SGGRg99IeskmjpzSgHng9ct7wEjEN1kcmNTMf4E5o39ODY/nFZkJiOMP4zVJhpQ=
-Received: from hnd.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id bq42-20020a05620a46aa00b00783fed2e88fsm730598qkb.20.2024.02.09.05.45.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Feb 2024 05:45:22 -0800 (PST)
-From: Vinayak Yadawad <vinayak.yadawad@broadcom.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	jithu.jance@broadcom.com,
-	Vinayak Yadawad <vinayak.yadawad@broadcom.com>
-Subject: [PATCH 1/1] wifi: nl80211: Add support for plumbing SAE groups to driver
-Date: Fri,  9 Feb 2024 19:20:43 +0530
-Message-Id: <309965e8ef4d220053ca7e6bd34393f892ea1bb8.1707486287.git.vinayak.yadawad@broadcom.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1707488086; c=relaxed/simple;
+	bh=JCRIRi/ahdTVjHOVuAFtDP5BXnRzKIpZ4pHG+X6RGvQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lmA9FIhb8h+vzsBl2Sl1mH2rWLrjHz1SbHcWVRpuu5SFxScag2MrXcq0HySlc9fpOiIHV5FECxbKT6kynD542tAo0xWP7rqiPorOR4VFkT13g7hqtDpc5ZzZQkTI3DwxjH2KmTszSSR814aGlUGu/gM0ibnjMCeRz6M18Q/zDvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; arc=none smtp.client-ip=79.96.170.134
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.4.0)
+ id e8469aef8d66b243; Fri, 9 Feb 2024 15:14:40 +0100
+Received: from kreacher.localnet (unknown [195.136.19.94])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 930B8669C52;
+	Fri,  9 Feb 2024 15:14:39 +0100 (CET)
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Lukasz Luba <lukasz.luba@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ Daniel Lezcano <daniel.lezcano@linaro.org>,
+ Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>,
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+ Zhang Rui <rui.zhang@intel.com>, netdev@vger.kernel.org,
+ Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+ linux-wireless@vger.kernel.org, Shawn Guo <shawnguo@kernel.org>,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>,
+ Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
+Subject: [PATCH v1 9/9] thermal: core: Eliminate writable trip points masks
+Date: Fri, 09 Feb 2024 15:14:10 +0100
+Message-ID: <2475159.jE0xQCEvom@kreacher>
+In-Reply-To: <3232442.5fSG56mABF@kreacher>
+References: <3232442.5fSG56mABF@kreacher>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000c0b6b80610f323d5"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 195.136.19.94
+X-CLIENT-HOSTNAME: 195.136.19.94
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrtdeigdeitdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvffeuiedtgfdvtddugeeujedtffetteegfeekffdvfedttddtuefhgeefvdejhfenucfkphepudelhedrudefiedrudelrdelgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduleehrddufeeirdduledrleegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeduiedprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehluhhkrghsiidrlhhusggrsegrrhhmrdgtohhmpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrnhhivghlrdhlvgiitggrnhhosehlihhnrghrohdrohhrghdprhgtphhtthhopehsthgrnhhishhlrgifrdhgrhhushiikhgrsehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepshhrihhnihhvrghsrdhprghnughruhhvrggurgeslhhinhhugidrihhnthgvlhdrtghomh
+X-DCC--Metrics: v370.home.net.pl 1024; Body=16 Fuz1=16 Fuz2=16
 
---000000000000c0b6b80610f323d5
-Content-Transfer-Encoding: 8bit
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-In case of SAE authentication offload, the driver would need
-the info of SAE DH groups for both STA connection and soft AP.
-In the current change we update the SAE DH group support info
-to driver in the order/priority as provided by the supplicant/
-upper layer.
+All of the thermal_zone_device_register_with_trips() callers pass zero
+writable trip points masks to it, so drop the mask argument from that
+function and update all of its callers accordingly.
 
-Signed-off-by: Vinayak Yadawad <vinayak.yadawad@broadcom.com>
+This also removes the artificial trip points per zone limit of 32,
+related to using writable trip points masks.
+
+No intentional functional impact.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- include/net/cfg80211.h       |  6 ++++++
- include/uapi/linux/nl80211.h |  7 +++++++
- net/wireless/nl80211.c       | 22 ++++++++++++++++++++++
- 3 files changed, 35 insertions(+)
+ drivers/acpi/thermal.c                                               |    2 
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.c                   |    2 
+ drivers/net/ethernet/mellanox/mlxsw/core_thermal.c                   |    3 -
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c                          |    1 
+ drivers/platform/x86/acerhdf.c                                       |    2 
+ drivers/thermal/da9062-thermal.c                                     |    2 
+ drivers/thermal/imx_thermal.c                                        |    2 
+ drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c         |    2 
+ drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c |    2 
+ drivers/thermal/intel/intel_pch_thermal.c                            |    2 
+ drivers/thermal/intel/intel_quark_dts_thermal.c                      |    2 
+ drivers/thermal/intel/intel_soc_dts_iosf.c                           |    2 
+ drivers/thermal/intel/x86_pkg_temp_thermal.c                         |    2 
+ drivers/thermal/rcar_thermal.c                                       |    2 
+ drivers/thermal/st/st_thermal.c                                      |    2 
+ drivers/thermal/thermal_core.c                                       |   30 +---------
+ drivers/thermal/thermal_of.c                                         |    2 
+ include/linux/thermal.h                                              |    6 --
+ 18 files changed, 19 insertions(+), 49 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5b42bfc..0b2db0d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1194,6 +1194,7 @@ struct survey_info {
- };
- 
- #define CFG80211_MAX_NUM_AKM_SUITES	10
-+#define CFG80211_MAX_NUM_SAE_DH_GROUPS 10
- 
- /**
-  * struct cfg80211_crypto_settings - Crypto settings
-@@ -1235,6 +1236,9 @@ struct survey_info {
-  *
-  *	NL80211_SAE_PWE_BOTH
-  *	  Allow either hunting-and-pecking loop or hash-to-element
-+ *
-+ * @sae_dh_groups: SAE DH groups in preference order.
-+ * @n_sae_dhd_groups: No of SAE DH groups assigned.
+Index: linux-pm/include/linux/thermal.h
+===================================================================
+--- linux-pm.orig/include/linux/thermal.h
++++ linux-pm/include/linux/thermal.h
+@@ -322,8 +322,7 @@ int thermal_zone_get_crit_temp(struct th
+ struct thermal_zone_device *thermal_zone_device_register_with_trips(
+ 					const char *type,
+ 					struct thermal_trip *trips,
+-					int num_trips, int mask,
+-					void *devdata,
++					int num_trips, void *devdata,
+ 					struct thermal_zone_device_ops *ops,
+ 					const struct thermal_zone_params *tzp,
+ 					int passive_delay, int polling_delay);
+@@ -382,8 +381,7 @@ void thermal_zone_device_critical(struct
+ static inline struct thermal_zone_device *thermal_zone_device_register_with_trips(
+ 					const char *type,
+ 					struct thermal_trip *trips,
+-					int num_trips, int mask,
+-					void *devdata,
++					int num_trips, void *devdata,
+ 					struct thermal_zone_device_ops *ops,
+ 					const struct thermal_zone_params *tzp,
+ 					int passive_delay, int polling_delay)
+Index: linux-pm/drivers/thermal/thermal_core.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/thermal_core.c
++++ linux-pm/drivers/thermal/thermal_core.c
+@@ -1251,7 +1251,6 @@ EXPORT_SYMBOL_GPL(thermal_zone_get_crit_
+  * @type:	the thermal zone device type
+  * @trips:	a pointer to an array of thermal trips
+  * @num_trips:	the number of trip points the thermal zone support
+- * @mask:	a bit string indicating the writeablility of trip points
+  * @devdata:	private device data
+  * @ops:	standard thermal zone device callbacks
+  * @tzp:	thermal zone platform parameters
+@@ -1272,7 +1271,7 @@ EXPORT_SYMBOL_GPL(thermal_zone_get_crit_
+  * IS_ERR*() helpers.
   */
- struct cfg80211_crypto_settings {
- 	u32 wpa_versions;
-@@ -1252,6 +1256,8 @@ struct cfg80211_crypto_settings {
- 	const u8 *sae_pwd;
- 	u8 sae_pwd_len;
- 	enum nl80211_sae_pwe_mechanism sae_pwe;
-+	u32 sae_dh_groups[CFG80211_MAX_NUM_SAE_DH_GROUPS];
-+	u8 n_sae_dh_groups;
- };
+ struct thermal_zone_device *
+-thermal_zone_device_register_with_trips(const char *type, struct thermal_trip *trips, int num_trips, int mask,
++thermal_zone_device_register_with_trips(const char *type, struct thermal_trip *trips, int num_trips,
+ 					void *devdata, struct thermal_zone_device_ops *ops,
+ 					const struct thermal_zone_params *tzp, int passive_delay,
+ 					int polling_delay)
+@@ -1293,20 +1292,7 @@ thermal_zone_device_register_with_trips(
+ 		return ERR_PTR(-EINVAL);
+ 	}
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 853ac53..7c1a7b4 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2855,6 +2855,11 @@ enum nl80211_commands {
-  *	%NL80211_CMD_ASSOCIATE indicating the SPP A-MSDUs
-  *	are used on this connection
-  *
-+ * @NL80211_ATTR_SAE_DH_GROUPS: Attribute to indicate the supported SAE DH
-+ *	groups to driver. For STA role, the dh groups should be tried in the
-+ *	indicated order. For AP role, the order does not have any specific
-+ *	significance.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3400,6 +3405,8 @@ enum nl80211_attrs {
+-	/*
+-	 * Max trip count can't exceed 31 as the "mask >> num_trips" condition.
+-	 * For example, shifting by 32 will result in compiler warning:
+-	 * warning: right shift count >= width of type [-Wshift-count- overflow]
+-	 *
+-	 * Also "mask >> num_trips" will always be true with 32 bit shift.
+-	 * E.g. mask = 0x80000000 for trip id 31 to be RW. Then
+-	 * mask >> 32 = 0x80000000
+-	 * This will result in failure for the below condition.
+-	 *
+-	 * Check will be true when the bit 31 of the mask is set.
+-	 * 32 bit shift will cause overflow of 4 byte integer.
+-	 */
+-	if (num_trips > (BITS_PER_TYPE(int) - 1) || num_trips < 0 || mask >> num_trips) {
++	if (num_trips < 0) {
+ 		pr_err("Incorrect number of thermal trips\n");
+ 		return ERR_PTR(-EINVAL);
+ 	}
+@@ -1356,16 +1342,6 @@ thermal_zone_device_register_with_trips(
+ 	tz->devdata = devdata;
+ 	tz->trips = trips;
+ 	tz->num_trips = num_trips;
+-	if (num_trips > 0) {
+-		struct thermal_trip *trip;
+-
+-		for_each_trip(tz, trip) {
+-			if (mask & 1)
+-				trip->flags |= THERMAL_TRIP_WRITABLE_TEMP;
+-
+-			mask >>= 1;
+-		}
+-	}
  
- 	NL80211_ATTR_ASSOC_SPP_AMSDU,
- 
-+	NL80211_ATTR_SAE_DH_GROUPS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 68c2040..555eb0f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -826,6 +826,7 @@ static int validate_he_capa(const struct nlattr *attr,
- 	[NL80211_ATTR_MLO_TTLM_DLINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
- 	[NL80211_ATTR_MLO_TTLM_ULINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
- 	[NL80211_ATTR_ASSOC_SPP_AMSDU] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_SAE_DH_GROUPS] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -10883,6 +10884,27 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 	else
- 		settings->sae_pwe = NL80211_SAE_PWE_UNSPECIFIED;
- 
-+	if (info->attrs[NL80211_ATTR_SAE_DH_GROUPS]) {
-+		struct nlattr *dh_group;
-+		int tmp, i = 0;
-+
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_SAE_OFFLOAD) &&
-+		    !wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_SAE_OFFLOAD_AP))
-+			return -EINVAL;
-+
-+		nla_for_each_nested(dh_group, info->attrs[NL80211_ATTR_SAE_DH_GROUPS],
-+		    tmp) {
-+			settings->sae_dh_groups[i] = nla_get_u32(dh_group);
-+			i++;
-+
-+			if (i == CFG80211_MAX_NUM_SAE_DH_GROUPS)
-+				break;
-+		}
-+		settings->n_sae_dh_groups = i;
-+	}
-+
- 	return 0;
+ 	thermal_set_delay_jiffies(&tz->passive_delay_jiffies, passive_delay);
+ 	thermal_set_delay_jiffies(&tz->polling_delay_jiffies, polling_delay);
+@@ -1450,7 +1426,7 @@ struct thermal_zone_device *thermal_trip
+ 					struct thermal_zone_device_ops *ops,
+ 					const struct thermal_zone_params *tzp)
+ {
+-	return thermal_zone_device_register_with_trips(type, NULL, 0, 0, devdata,
++	return thermal_zone_device_register_with_trips(type, NULL, 0, devdata,
+ 						       ops, tzp, 0, 0);
  }
+ EXPORT_SYMBOL_GPL(thermal_tripless_zone_device_register);
+Index: linux-pm/drivers/acpi/thermal.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/thermal.c
++++ linux-pm/drivers/acpi/thermal.c
+@@ -670,7 +670,7 @@ static int acpi_thermal_register_thermal
+ 	tz->thermal_zone = thermal_zone_device_register_with_trips("acpitz",
+ 								   tz->trip_table,
+ 								   trip_count,
+-								   0, tz,
++								   tz,
+ 								   &acpi_thermal_zone_ops,
+ 								   NULL,
+ 								   passive_delay,
+Index: linux-pm/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
++++ linux-pm/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
+@@ -184,7 +184,7 @@ struct int34x_thermal_zone *int340x_ther
+ 	int34x_zone->zone = thermal_zone_device_register_with_trips(
+ 							acpi_device_bid(adev),
+ 							zone_trips, trip_cnt,
+-							0, int34x_zone,
++							int34x_zone,
+ 							int34x_zone->ops,
+ 							&int340x_thermal_params,
+ 							0, 0);
+Index: linux-pm/drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c
++++ linux-pm/drivers/thermal/intel/int340x_thermal/processor_thermal_device_pci.c
+@@ -291,7 +291,7 @@ static int proc_thermal_pci_probe(struct
+ 	psv_trip.temperature = get_trip_temp(pci_info);
  
--- 
-1.8.3.1
+ 	pci_info->tzone = thermal_zone_device_register_with_trips("TCPU_PCI", &psv_trip,
+-							1, 0, pci_info,
++							1, pci_info,
+ 							&tzone_ops,
+ 							&tzone_params, 0, 0);
+ 	if (IS_ERR(pci_info->tzone)) {
+Index: linux-pm/drivers/thermal/intel/intel_pch_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/intel_pch_thermal.c
++++ linux-pm/drivers/thermal/intel/intel_pch_thermal.c
+@@ -235,7 +235,7 @@ read_trips:
+ 
+ 	ptd->tzd = thermal_zone_device_register_with_trips(board_names[board_id],
+ 							   ptd->trips, nr_trips,
+-							   0, ptd, &tzd_ops,
++							   ptd, &tzd_ops,
+ 							   NULL, 0, 0);
+ 	if (IS_ERR(ptd->tzd)) {
+ 		dev_err(&pdev->dev, "Failed to register thermal zone %s\n",
+Index: linux-pm/drivers/thermal/intel/intel_quark_dts_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/intel_quark_dts_thermal.c
++++ linux-pm/drivers/thermal/intel/intel_quark_dts_thermal.c
+@@ -363,7 +363,7 @@ static struct soc_sensor_entry *alloc_so
+ 	aux_entry->tzone = thermal_zone_device_register_with_trips("quark_dts",
+ 								   aux_entry->trips,
+ 								   QRK_MAX_DTS_TRIPS,
+-								   0, aux_entry,
++								   aux_entry,
+ 								   &tzone_ops,
+ 								   NULL, 0, polling_delay);
+ 	if (IS_ERR(aux_entry->tzone)) {
+Index: linux-pm/drivers/thermal/intel/intel_soc_dts_iosf.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/intel_soc_dts_iosf.c
++++ linux-pm/drivers/thermal/intel/intel_soc_dts_iosf.c
+@@ -229,7 +229,7 @@ static int add_dts_thermal_zone(int id,
+ 	snprintf(name, sizeof(name), "soc_dts%d", id);
+ 	dts->tzone = thermal_zone_device_register_with_trips(name, dts->trips,
+ 							     SOC_MAX_DTS_TRIPS,
+-							     0, dts, &tzone_ops,
++							     dts, &tzone_ops,
+ 							     NULL, 0, 0);
+ 	if (IS_ERR(dts->tzone)) {
+ 		ret = PTR_ERR(dts->tzone);
+Index: linux-pm/drivers/thermal/intel/x86_pkg_temp_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/x86_pkg_temp_thermal.c
++++ linux-pm/drivers/thermal/intel/x86_pkg_temp_thermal.c
+@@ -346,7 +346,7 @@ static int pkg_temp_thermal_device_add(u
+ 	INIT_DELAYED_WORK(&zonedev->work, pkg_temp_thermal_threshold_work_fn);
+ 	zonedev->cpu = cpu;
+ 	zonedev->tzone = thermal_zone_device_register_with_trips("x86_pkg_temp",
+-			zonedev->trips, thres_count, 0,
++			zonedev->trips, thres_count,
+ 			zonedev, &tzone_ops, &pkg_temp_tz_params, 0, 0);
+ 	if (IS_ERR(zonedev->tzone)) {
+ 		err = PTR_ERR(zonedev->tzone);
+Index: linux-pm/drivers/thermal/thermal_of.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/thermal_of.c
++++ linux-pm/drivers/thermal/thermal_of.c
+@@ -518,7 +518,7 @@ static struct thermal_zone_device *therm
+ 			of_ops->critical = thermal_zone_device_critical_reboot;
+ 
+ 	tz = thermal_zone_device_register_with_trips(np->name, trips, ntrips,
+-						     0, data, of_ops, &tzp,
++						     data, of_ops, &tzp,
+ 						     pdelay, delay);
+ 	if (IS_ERR(tz)) {
+ 		ret = PTR_ERR(tz);
+Index: linux-pm/drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.c
++++ linux-pm/drivers/net/ethernet/chelsio/cxgb4/cxgb4_thermal.c
+@@ -60,7 +60,7 @@ int cxgb4_thermal_init(struct adapter *a
+ 
+ 	snprintf(ch_tz_name, sizeof(ch_tz_name), "cxgb4_%s", adap->name);
+ 	ch_thermal->tzdev = thermal_zone_device_register_with_trips(ch_tz_name, &trip, num_trip,
+-								    0, adap,
++								    adap,
+ 								    &cxgb4_thermal_ops,
+ 								    NULL, 0, 0);
+ 	if (IS_ERR(ch_thermal->tzdev)) {
+Index: linux-pm/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
++++ linux-pm/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
+@@ -423,7 +423,6 @@ mlxsw_thermal_module_tz_init(struct mlxs
+ 	module_tz->tzdev = thermal_zone_device_register_with_trips(tz_name,
+ 							module_tz->trips,
+ 							MLXSW_THERMAL_NUM_TRIPS,
+-							0,
+ 							module_tz,
+ 							&mlxsw_thermal_module_ops,
+ 							&mlxsw_thermal_params,
+@@ -551,7 +550,6 @@ mlxsw_thermal_gearbox_tz_init(struct mlx
+ 	gearbox_tz->tzdev = thermal_zone_device_register_with_trips(tz_name,
+ 						gearbox_tz->trips,
+ 						MLXSW_THERMAL_NUM_TRIPS,
+-						0,
+ 						gearbox_tz,
+ 						&mlxsw_thermal_gearbox_ops,
+ 						&mlxsw_thermal_params, 0,
+@@ -776,7 +774,6 @@ int mlxsw_thermal_init(struct mlxsw_core
+ 	thermal->tzdev = thermal_zone_device_register_with_trips("mlxsw",
+ 						      thermal->trips,
+ 						      MLXSW_THERMAL_NUM_TRIPS,
+-						      0,
+ 						      thermal,
+ 						      &mlxsw_thermal_ops,
+ 						      &mlxsw_thermal_params, 0,
+Index: linux-pm/drivers/platform/x86/acerhdf.c
+===================================================================
+--- linux-pm.orig/drivers/platform/x86/acerhdf.c
++++ linux-pm/drivers/platform/x86/acerhdf.c
+@@ -678,7 +678,7 @@ static int __init acerhdf_register_therm
+ 		return -EINVAL;
+ 
+ 	thz_dev = thermal_zone_device_register_with_trips("acerhdf", trips, ARRAY_SIZE(trips),
+-							  0, NULL, &acerhdf_dev_ops,
++							  NULL, &acerhdf_dev_ops,
+ 							  &acerhdf_zone_params, 0,
+ 							  (kernelmode) ? interval*1000 : 0);
+ 	if (IS_ERR(thz_dev))
+Index: linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+===================================================================
+--- linux-pm.orig/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -694,7 +694,6 @@ static void iwl_mvm_thermal_zone_registe
+ 	mvm->tz_device.tzone = thermal_zone_device_register_with_trips(name,
+ 							mvm->tz_device.trips,
+ 							IWL_MAX_DTS_TRIPS,
+-							0,
+ 							mvm, &tzone_ops,
+ 							NULL, 0, 0);
+ 	if (IS_ERR(mvm->tz_device.tzone)) {
+Index: linux-pm/drivers/thermal/da9062-thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/da9062-thermal.c
++++ linux-pm/drivers/thermal/da9062-thermal.c
+@@ -197,7 +197,7 @@ static int da9062_thermal_probe(struct p
+ 	mutex_init(&thermal->lock);
+ 
+ 	thermal->zone = thermal_zone_device_register_with_trips(thermal->config->name,
+-								trips, ARRAY_SIZE(trips), 0, thermal,
++								trips, ARRAY_SIZE(trips), thermal,
+ 								&da9062_thermal_ops, NULL, pp_tmp,
+ 								0);
+ 	if (IS_ERR(thermal->zone)) {
+Index: linux-pm/drivers/thermal/imx_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/imx_thermal.c
++++ linux-pm/drivers/thermal/imx_thermal.c
+@@ -700,7 +700,7 @@ static int imx_thermal_probe(struct plat
+ 	data->tz = thermal_zone_device_register_with_trips("imx_thermal_zone",
+ 							   trips,
+ 							   ARRAY_SIZE(trips),
+-							   0, data,
++							   data,
+ 							   &imx_tz_ops, NULL,
+ 							   IMX_PASSIVE_DELAY,
+ 							   IMX_POLLING_DELAY);
+Index: linux-pm/drivers/thermal/rcar_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/rcar_thermal.c
++++ linux-pm/drivers/thermal/rcar_thermal.c
+@@ -489,7 +489,7 @@ static int rcar_thermal_probe(struct pla
+ 						&rcar_thermal_zone_ops);
+ 		} else {
+ 			priv->zone = thermal_zone_device_register_with_trips(
+-				"rcar_thermal", trips, ARRAY_SIZE(trips), 0, priv,
++				"rcar_thermal", trips, ARRAY_SIZE(trips), priv,
+ 						&rcar_thermal_zone_ops, NULL, 0,
+ 						idle);
+ 
+Index: linux-pm/drivers/thermal/st/st_thermal.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/st/st_thermal.c
++++ linux-pm/drivers/thermal/st/st_thermal.c
+@@ -203,7 +203,7 @@ int st_thermal_register(struct platform_
+ 	trip.type = THERMAL_TRIP_CRITICAL;
+ 
+ 	sensor->thermal_dev =
+-		thermal_zone_device_register_with_trips(dev_name(dev), &trip, 1, 0, sensor,
++		thermal_zone_device_register_with_trips(dev_name(dev), &trip, 1, sensor,
+ 							&st_tz_ops, NULL, 0, polling_delay);
+ 	if (IS_ERR(sensor->thermal_dev)) {
+ 		dev_err(dev, "failed to register thermal zone device\n");
 
 
---000000000000c0b6b80610f323d5
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
 
-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
-RY30ttFfLGgUxOvRzd7UPGXmjiRyV20Vv+kGag5aTueKGHUv49TWypHgJc4PX8L9y3VouEhbWmGb
-bwuQjKELfovabHM5PWUVRda3t72kGFVMkIZ65u6DCdyjPFCUGnMCAwEAAaOCAd0wggHZMA4GA1Ud
-DwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUu
-Z2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggr
-BgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3
-Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4
-aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmww
-JwYDVR0RBCAwHoEcdmluYXlhay55YWRhd2FkQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEF
-BQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUS9fHYxc9qAJz
-gfBKun+P2LFASWAwDQYJKoZIhvcNAQELBQADggEBABiMQNJRdQCxXwqwqb49w0ZXCxsSrs3gS4NA
-G3H9oJuvzJ8ml5Z9l9p9PGPHcrmc/BdFjIIu/wQftGETAf1+W6AvxXqYmA2flaogebRueqCMQJiy
-xbJlOSry64AGOzHYULvI70tt9woEYgSx3I703b7c8o7eWCiU267y/WNzH+MpZ12h9q0Jwhw8uH9S
-BTl38q8FNdCLAiM1OD+blhu7LqMLVaAEEeoUGhRxdNkvMGss1Z7/ZefenAfm9IpiaGR0PQhBwI7c
-spqD/wIJUULcXiaj0eatDUjsrx3QN9OZOh3iubCt0uBoxCQUGuvxqd3Qz4FVKMSzEIzs8v/hwR+T
-nTkxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
-MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxIxd7r
-XtHLz48aMtQwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDG0CtGs1L85bA4vBKHo
-HYBJEXKRSR48I8OOCDb9A38AMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTI0MDIwOTEzNDUyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
-BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCpNbSadD5tAoWw4CQjWDGi++KfoVsV7/e0e6mF
-1ugzv+Lt8OhOkoLVrcwq8FbA3YgrRrQeJJgaeJvYaIST9dh/BIXxHhX/kzGZlIBzHrTXqcRtnp12
-S2xAp6AW0AmNenoaMrYorUwXUw3wGf78Q2QqTmDFRekDl2AyS2aoX+MStRpVTaCZLDnOi/kL4jZL
-GFHOpyz8DPL8dOvT5m60wI9zldFrPbMWU3t8CQmMkVuRbgcGxLIKX5WqdlNipJqjbAVL+8+Grj3G
-aqWYv5Hc4MlA4C12JKmIFEgLyceS2QDO/ycjGZYSWIYE2aCJJ5aqaFgcCfJYSAc1h9KZSt5xx8A9
---000000000000c0b6b80610f323d5--
