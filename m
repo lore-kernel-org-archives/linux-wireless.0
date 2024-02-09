@@ -1,115 +1,137 @@
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E6967AE4A;
-	Fri,  9 Feb 2024 14:14:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F1037145;
+	Fri,  9 Feb 2024 14:50:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707488094; cv=none; b=LgHLn2rTK/gkS/22ClL3IsXyKR4ekiDKK2nVjlRL9bSkseBFpPcxAag/wEonezkuVL+AA4+jsRHcYVOV+51euABvvrUhF2UWS4R4wwegfoU5AET1P8THerocx/P9zy1J5e/SorbYlHKZzBsPY7LaeL4wVDschJEXpQitH4Xzq8Q=
+	t=1707490202; cv=none; b=LHnWLG0r7aciOsNDoNY2M7GP07jyAomzz7VPke2WRAKSerE9Fi11RJ3HHcZdtMSFpE+y/ImwdGquFXIk3s84/fZs5fqZPfDugYvj2n2PeVpRFKJM0ZeVMvlDI6PTGwepj5FwmgjQEY4uTRbMetl0lnOBc1xGlvzF9hl34Yme4JA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707488094; c=relaxed/simple;
-	bh=Fdyr0vbCOxxml792JxhFekjDRwIaFLknFjO9gt91Sd0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hAYGNcokSn3KVqZR4vovQg9xynfSn2/zVBBN+xunvX8vENhtyciQpyJG34OVcev5bHGNCDzAnD6gMm720RI3mf4I8AJ2EXXgRsryKQj7xRp3nZ9jKOkM/39RDLbmLI1VlsbsbKo1//wn0wEbY5xJbvvO/2qDBHBk+4hYSFYgeVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; arc=none smtp.client-ip=79.96.170.134
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.4.0)
- id c430e78c73a3d589; Fri, 9 Feb 2024 15:14:49 +0100
-Received: from kreacher.localnet (unknown [195.136.19.94])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 04D75669C4D;
-	Fri,  9 Feb 2024 15:14:49 +0100 (CET)
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Lukasz Luba <lukasz.luba@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- Daniel Lezcano <daniel.lezcano@linaro.org>,
- Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>,
- Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
- Zhang Rui <rui.zhang@intel.com>, netdev@vger.kernel.org,
- Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
- Miri Korenblit <miriam.rachel.korenblit@intel.com>,
- linux-wireless@vger.kernel.org, Shawn Guo <shawnguo@kernel.org>,
- Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
-Subject: [PATCH v1 0/9] thermal: Writable trip points handling rework
-Date: Fri, 09 Feb 2024 15:02:23 +0100
-Message-ID: <3232442.5fSG56mABF@kreacher>
+	s=arc-20240116; t=1707490202; c=relaxed/simple;
+	bh=BKZ2mtO8cS0Ik5dmaQV6ifo7dNShLGEHdT1wapWSz8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YlGOSgQt5h56j4DoVSPScfLQw7vplYpkaF8NLVi5tIyeuk3HZ7FBY3Q1/DOIII7kGgD9dVyUnbvvTJ3Pl/KFi40732xANnUFmJhElQfVp6Zpxu6zIxTCGQWJjSYJpzhJsYNXZRkly5y0Ncahtj2xImjfzNrAI6EZXNvqpVpAnQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xba1DbnX; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xba1DbnX"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1707490201; x=1739026201;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=BKZ2mtO8cS0Ik5dmaQV6ifo7dNShLGEHdT1wapWSz8M=;
+  b=Xba1DbnXMnOwY7vxa+JxDvLFth77t3bFqcpyZcXR9znBRGEKkx9OTjrV
+   3Ubof3meJc3b37drBKBT0MMVuiPK5v5Q+WaVK1PS5gDGJNeU+PqGkC2mT
+   3sebE3uHJsSh7cIQbhSgb7+90/XAlPcOyfhQxEEDRkKmADRulK9pdp30i
+   9StDVcXuZOw/TIuLS8I85qS2dJlOnq/n5imAcMWI7fdbEDb/5qCxVjyUy
+   4pt7UM1ni2xiL/OlHOHpsF8Jxa6SaF9i0vHSipVb09hgK9Ze7OLXyE6L+
+   4mZfo4Vs7+bi8N4rhPLDRcJuGKw0p8OvbO0oLUWuh3ERt/XKHkVGMe9cB
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="12810651"
+X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
+   d="scan'208";a="12810651"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 06:50:00 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="825157463"
+X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
+   d="scan'208";a="825157463"
+Received: from sgruszka-mobl.ger.corp.intel.com (HELO localhost) ([10.252.43.96])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 06:49:53 -0800
+Date: Fri, 9 Feb 2024 15:49:51 +0100
+From: Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Zhang Rui <rui.zhang@intel.com>, netdev@vger.kernel.org,
+	Ido Schimmel <idosch@nvidia.com>, Petr Machata <petrm@nvidia.com>,
+	linux-wireless@vger.kernel.org, Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
+Subject: Re: [PATCH v1 6/9] iwlwifi: mvm: Set THERMAL_TRIP_WRITABLE_TEMP
+ directly
+Message-ID: <ZcY7jyyFJq1yfOCj@linux.intel.com>
+References: <3232442.5fSG56mABF@kreacher>
+ <3757041.MHq7AAxBmi@kreacher>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 195.136.19.94
-X-CLIENT-HOSTNAME: 195.136.19.94
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrtdeigdeitdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpeegfffhudejlefhtdegffekteduhfethffhieettefhkeevgfdvgfefieekiefgheenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeduleehrddufeeirdduledrleegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepudelhedrudefiedrudelrdelgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepudeipdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhukhgrshiirdhluhgsrgesrghrmhdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghnihgvlhdrlhgviigtrghnoheslhhinhgrrhhordhorhhgpdhrtghpthhtohepshhtrghnihhslhgrfidrghhruhhsiihkrgeslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopehsrhhinhhivhgrshdrphgrnhgurhhuvhgruggrsehlihhnuhigrdhinhhtvghlrdgtohhm
-X-DCC--Metrics: v370.home.net.pl 1024; Body=16 Fuz1=16 Fuz2=16
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3757041.MHq7AAxBmi@kreacher>
 
-Hi Everyone,
+On Fri, Feb 09, 2024 at 03:10:24PM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> It is now possible to flag trip points with THERMAL_TRIP_WRITABLE_TEMP
+> to allow their temperature to be set from user space via sysfs instead
+> of using a nonzero writable trips mask during thermal zone registration,
+> so make the iwlwifi code do that.
+> 
+> No intentional functional impact.
+> 
+> Note that this change is requisite for dropping the mask argument from
+> thermal_zone_device_register_with_trips() going forward.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> This patch obviously depends on
+> 
+> https://patchwork.kernel.org/project/linux-pm/patch/8346768.T7Z3S40VBb@kreacher/
+> 
+> which has been queued up for 6.9 already.
+> 
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/tt.c |    6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> Index: linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> ===================================================================
+> --- linux-pm.orig/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> +++ linux-pm/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> @@ -667,9 +667,6 @@ static  struct thermal_zone_device_ops t
+>  	.set_trip_temp = iwl_mvm_tzone_set_trip_temp,
+>  };
+>  
+> -/* make all trips writable */
+> -#define IWL_WRITABLE_TRIPS_MSK (BIT(IWL_MAX_DTS_TRIPS) - 1)
+> -
+>  static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+>  {
+>  	int i, ret;
+> @@ -692,11 +689,12 @@ static void iwl_mvm_thermal_zone_registe
+>  	for (i = 0 ; i < IWL_MAX_DTS_TRIPS; i++) {
+>  		mvm->tz_device.trips[i].temperature = THERMAL_TEMP_INVALID;
+>  		mvm->tz_device.trips[i].type = THERMAL_TRIP_PASSIVE;
+> +		mvm->tz_device.trips[i].type = THERMAL_TRIP_WRITABLE_TEMP;
 
-The purpose of this patch series is to allow thermal zone creators
-to specify which properties (temperature or hysteresis) of which
-trip points can be set from user space via sysfs on a per-trip basis
-instead of passing writable trips masks to the thermal zone registration
-function which is both cumbersome and error prone and it doesn't even
-allow to request different treatment of different trip properties.
+		mvm->tz_device.trips[i].flags = THERMAL_TRIP_WRITABLE_TEMP;
 
-The writable trip masks used today only affect trip temperatures (that is, if
-a trip point is in a writable trips mask, its temperature can be set via
-sysfs) and they only take effect if the CONFIG_THERMAL_WRITABLE_TRIPS kernel
-configuration option is set, which appears to be assumed by at least some
-of the drivers using writable trips masks.  Some other drivers using them
-simply select CONFIG_THERMAL_WRITABLE_TRIPS which pretty much defeats its
-purpose (and imx even sets this option in its defconfig).
+Consider using diffrent prefix for constants to diffrenciate flags and types.
 
-For this reasons, patch [1/9] removes CONFIG_THERMAL_WRITABLE_TRIPS and makes
-the writable trips masks always work.
+Regards
+Stanislaw
 
-Moreover, trip hysteresis, which is not affected either by the writable trips
-masks or by CONFIG_THERMAL_WRITABLE_TRIPS, can only be set via sysfs if the
-.set_trip_hyst() operation is provided by the given thermal zone, but currently
-this thermal zone operation is used by no one, so effectively trip hysteresis
-cannot be set via sysfs at all.  This is not a problem for the majority of
-drivers that want trip temperatures to be set via sysfs, because they also
-don't want trip hysteresis to be changed for any trips (at least as far as I
-can say), but there are use cases in which it is desirable to be able to
-update trip hysteresis as well as trip temperature (for example see
-https://lore.kernel.org/linux-pm/20240106191502.29126-1-quic_manafm@quicinc.com/).
-Those use cases are not addressed here directly, but after this series
-addressing them should be relatively straightforward.
-
-Namely, patch [2/9] adds flags to struct thermal_trip and defines two of them
-to indicate whether or not setting the temperature or hysteresis of the given
-trip via sysfs is allowed.  If a writable trips mask is passed to
-thermal_zone_device_register_with_trips(), is it is used to set the
-"writable temperature" flag for the trips covered by it and that flag is
-then consulted by the thermal sysfs code.  The "writable hysteresis" trip
-flag is also taken into account by the thermal sysfs code, but it is not set
-automatically in any case.
-
-Patch [3/9] is based on the observation that the .set_trip_hyst() thermal zone
-operation is never used - it simply drops that callback from struct
-thermal_zone_device_ops and adjusts the code checking its presence.
-
-Patches [4-8/9] update drivers using writable trips masks to set the new
-"writable temperature" flag directly instead and some of them are simplified
-a bit as a result.  After these patches, all of the callers of
-thermal_zone_device_register_with_trips() pass a zero writable trips mask
-to it, so patch [9/9] drops that mask from the functions argument list and
-adjusts all of its callers accordingly.
-
-After all of the changes in this series, allowing the hysteresis value to be
-set via sysfs for a given trip is a matter of setting its "writable
-hysteresis" flag (and analogously for trip temperature).
-
-Thanks!
-
-
-
+>  	}
+>  	mvm->tz_device.tzone = thermal_zone_device_register_with_trips(name,
+>  							mvm->tz_device.trips,
+>  							IWL_MAX_DTS_TRIPS,
+> -							IWL_WRITABLE_TRIPS_MSK,
+> +							0,
+>  							mvm, &tzone_ops,
+>  							NULL, 0, 0);
+>  	if (IS_ERR(mvm->tz_device.tzone)) {
+> 
+> 
+> 
