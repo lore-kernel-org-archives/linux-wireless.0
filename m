@@ -1,28 +1,28 @@
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8804240BEE;
-	Mon, 12 Feb 2024 18:42:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0661F46B80;
+	Mon, 12 Feb 2024 18:42:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707763356; cv=none; b=OwOGur65AS2LCue2FUemDaxLwkegZaSVg5XgCBTItDKPuNV6Kj6gh48h+nkck6w/o6sA/WG9ZlyDBfqjQr1Km47sSszaBCMN3rYWM53zctxFxlD4TZ6P0Qd8VgpgW7czm5rWYs0pi4jzopm9iG2uzXpvapD1gn4AYeQVQ9JDLIU=
+	t=1707763357; cv=none; b=mrHi8YdNn89XSnWRyblASvs42OdU7tFVxE3fOw+tdxCrkruveO4r96KtKk6Ig0m1WQlrkdxSLLmBxOkuXTCOwLzfIzAlIhPbfDAitsq8e8fs4zFwNksTYMuDKzeGOmdAHESYUlV8cBDs7lLruliBP0lWUaS3pCzGGk5mKY+nBxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707763356; c=relaxed/simple;
-	bh=hOAifuosbac6a+ahRRhg5YVd6cXd/8T1Y8QRCjzuvWQ=;
+	s=arc-20240116; t=1707763357; c=relaxed/simple;
+	bh=wj2ycacNWn0hCZghvwjFNw/BDfk05TWUJ/+mzHxUew0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PF3P50Q5DEBljR1yTgvA7KFkIBEIY7kEhRTdp+30/V/rGRecaRmr3BrDoSNO97an7dZAQCVkIVJB0o1cHULmCt3eA2yjOu5tzMRHNwirlw5rb0zgq4Ch8s0jQELRDCDyXESXEZ+AqXPJIRpN0OWo8T6/CcNaSSbo0Ie1+eInPEY=
+	 MIME-Version:Content-Type; b=SMYutbaljkvUsnMYxH9wuOrVPihTOIAyNKJ5X3OFLhrQ0L1qtTCaV55lXIsyyClDnM9MCmeIBqgTSQXzplcxPK2tRCk5oZXiubK/lGpCehF0QJ8PbDHb4rpT3tfpkvwRqPZjnU9+9LJUkKRZmJSh2plcICZhUNYsohUhdhvyguM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; arc=none smtp.client-ip=79.96.170.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.4.0)
- id e215d587004f3844; Mon, 12 Feb 2024 19:42:31 +0100
+ id 2db039505757ed15; Mon, 12 Feb 2024 19:42:33 +0100
 Received: from kreacher.localnet (unknown [195.136.19.94])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id DB91E669CF2;
-	Mon, 12 Feb 2024 19:42:30 +0100 (CET)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 6B485669CF2;
+	Mon, 12 Feb 2024 19:42:32 +0100 (CET)
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To: Linux PM <linux-pm@vger.kernel.org>
 Cc: Lukasz Luba <lukasz.luba@arm.com>, LKML <linux-kernel@vger.kernel.org>,
@@ -36,10 +36,9 @@ Cc: Lukasz Luba <lukasz.luba@arm.com>, LKML <linux-kernel@vger.kernel.org>,
  Sascha Hauer <s.hauer@pengutronix.de>,
  Pengutronix Kernel Team <kernel@pengutronix.de>,
  Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
-Subject:
- [PATCH v2 5/9] mlxsw: core_thermal: Set THERMAL_TRIP_FLAG_RW_TEMP directly
-Date: Mon, 12 Feb 2024 19:35:56 +0100
-Message-ID: <10417137.nUPlyArG6x@kreacher>
+Subject: [PATCH v2 2/9] thermal: core: Add flags to struct thermal_trip
+Date: Mon, 12 Feb 2024 19:31:28 +0100
+Message-ID: <2173914.irdbgypaU6@kreacher>
 In-Reply-To: <6017196.lOV4Wx5bFT@kreacher>
 References: <6017196.lOV4Wx5bFT@kreacher>
 Precedence: bulk
@@ -53,114 +52,208 @@ Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 195.136.19.94
 X-CLIENT-HOSTNAME: 195.136.19.94
 X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrudefgdduudegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepvdffueeitdfgvddtudegueejtdffteetgeefkeffvdeftddttdeuhfegfedvjefhnecukfhppeduleehrddufeeirdduledrleegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepudelhedrudefiedrudelrdelgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepudeipdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhukhgrshiirdhluhgsrgesrghrmhdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghnihgvlhdrlhgviigtrghnoheslhhinhgrrhhordhorhhgpdhrtghpthhtohepshhtrghnihhslhgrfidrghhruhhsiihkrgeslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopehsrhhinhhivhgrshdrphgrnhgurhhuvhgruggrsehlihhnuhigrdhinhhtvghlrdgtohhm
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrudefgdduudegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkfgjfhgggfgtsehtufertddttdejnecuhfhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqnecuggftrfgrthhtvghrnhepvdffueeitdfgvddtudegueejtdffteetgeefkeffvdeftddttdeuhfegfedvjefhnecukfhppeduleehrddufeeirdduledrleegnecuvehluhhsthgvrhfuihiivgepvdenucfrrghrrghmpehinhgvthepudelhedrudefiedrudelrdelgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepudeipdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhukhgrshiirdhluhgsrgesrghrmhdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghnihgvlhdrlhgviigtrghnoheslhhinhgrrhhordhorhhgpdhrtghpthhtohepshhtrghnihhslhgrfidrghhruhhsiihkrgeslhhinhhugidrihhnthgvlhdrtghomhdprhgtphhtthhopehsrhhinhhivhgrshdrphgrnhgurhhuvhgruggrsehlihhnuhigrdhinhhtvghlrdgtohhm
 X-DCC--Metrics: v370.home.net.pl 1024; Body=16 Fuz1=16 Fuz2=16
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-It is now possible to flag trip points with THERMAL_TRIP_FLAG_RW_TEMP
-to allow their temperature to be set from user space via sysfs instead
-of using a nonzero writable trips mask during thermal zone registration,
-so make the mlxsw code do that.
+In order to allow thermal zone creators to specify the writability of
+trip point temperature and hysteresis on a per-trip basis, add a flags
+field to struct thermal_trip and define flags to represent the desired
+trip properties.
+
+Also make thermal_zone_device_register_with_trips() set the
+THERMAL_TRIP_FLAG_RW_TEMP flag for all trips covered by the writable
+trips mask passed to it and modify the thermal sysfs code to look at
+the trip flags instead of using the writable trips mask directly or
+checking the presence of the .set_trip_hyst() zone callback.
+
+Additionally, make trip_point_temp_store() and trip_point_hyst_store()
+fail with an error code if the trip passed to one of them has
+THERMAL_TRIP_FLAG_RW_TEMP or THERMAL_TRIP_FLAG_RW_HYST,
+respectively, clear in its flags.
 
 No intentional functional impact.
 
-Note that this change is requisite for dropping the mask argument from
-thermal_zone_device_register_with_trips() going forward.
-
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Ido Schimmel <idosch@nvidia.com>
 ---
 
 v1 -> v2:
-   * Rename trip flag (Stanislaw).
-   * Add R-by from Ido.
+   * Rename trip flags (Stanislaw).
 
 ---
- drivers/net/ethernet/mellanox/mlxsw/core_thermal.c |   15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+ drivers/thermal/thermal_core.c  |   12 +++++++++++-
+ drivers/thermal/thermal_core.h  |    2 +-
+ drivers/thermal/thermal_sysfs.c |   28 +++++++++++++++++++---------
+ include/linux/thermal.h         |    7 +++++++
+ 4 files changed, 38 insertions(+), 11 deletions(-)
 
-Index: linux-pm/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
+Index: linux-pm/include/linux/thermal.h
 ===================================================================
---- linux-pm.orig/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
-+++ linux-pm/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
-@@ -44,16 +44,19 @@ static const struct thermal_trip default
- 		.type		= THERMAL_TRIP_ACTIVE,
- 		.temperature	= MLXSW_THERMAL_ASIC_TEMP_NORM,
- 		.hysteresis	= MLXSW_THERMAL_HYSTERESIS_TEMP,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
- 	{
- 		/* In range - 40-100% PWM */
- 		.type		= THERMAL_TRIP_ACTIVE,
- 		.temperature	= MLXSW_THERMAL_ASIC_TEMP_HIGH,
- 		.hysteresis	= MLXSW_THERMAL_HYSTERESIS_TEMP,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
- 	{	/* Warning */
- 		.type		= THERMAL_TRIP_HOT,
- 		.temperature	= MLXSW_THERMAL_ASIC_TEMP_HOT,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
+--- linux-pm.orig/include/linux/thermal.h
++++ linux-pm/include/linux/thermal.h
+@@ -64,15 +64,23 @@ enum thermal_notify_event {
+  * @threshold: trip crossing notification threshold miliCelsius
+  * @type: trip point type
+  * @priv: pointer to driver data associated with this trip
++ * @flags: flags representing binary properties of the trip
+  */
+ struct thermal_trip {
+ 	int temperature;
+ 	int hysteresis;
+ 	int threshold;
+ 	enum thermal_trip_type type;
++	u8 flags;
+ 	void *priv;
  };
  
-@@ -62,16 +65,19 @@ static const struct thermal_trip default
- 		.type		= THERMAL_TRIP_ACTIVE,
- 		.temperature	= MLXSW_THERMAL_MODULE_TEMP_NORM,
- 		.hysteresis	= MLXSW_THERMAL_HYSTERESIS_TEMP,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
- 	{
- 		/* In range - 40-100% PWM */
- 		.type		= THERMAL_TRIP_ACTIVE,
- 		.temperature	= MLXSW_THERMAL_MODULE_TEMP_HIGH,
- 		.hysteresis	= MLXSW_THERMAL_HYSTERESIS_TEMP,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
- 	{	/* Warning */
- 		.type		= THERMAL_TRIP_HOT,
- 		.temperature	= MLXSW_THERMAL_MODULE_TEMP_HOT,
-+		.flags		= THERMAL_TRIP_FLAG_RW_TEMP,
- 	},
- };
++#define THERMAL_TRIP_FLAG_RW_TEMP	BIT(0)
++#define THERMAL_TRIP_FLAG_RW_HYST	BIT(1)
++
++#define THERMAL_TRIP_FLAG_MASK_RW	(THERMAL_TRIP_FLAG_RW_TEMP | \
++					 THERMAL_TRIP_FLAG_RW_HYST)
++
+ struct thermal_zone_device_ops {
+ 	int (*bind) (struct thermal_zone_device *,
+ 		     struct thermal_cooling_device *);
+Index: linux-pm/drivers/thermal/thermal_core.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/thermal_core.c
++++ linux-pm/drivers/thermal/thermal_core.c
+@@ -1356,13 +1356,23 @@ thermal_zone_device_register_with_trips(
+ 	tz->devdata = devdata;
+ 	tz->trips = trips;
+ 	tz->num_trips = num_trips;
++	if (num_trips > 0) {
++		struct thermal_trip *trip;
++
++		for_each_trip(tz, trip) {
++			if (mask & 1)
++				trip->flags |= THERMAL_TRIP_FLAG_RW_TEMP;
++
++			mask >>= 1;
++		}
++	}
  
-@@ -92,9 +98,6 @@ static const struct mlxsw_cooling_states
+ 	thermal_set_delay_jiffies(&tz->passive_delay_jiffies, passive_delay);
+ 	thermal_set_delay_jiffies(&tz->polling_delay_jiffies, polling_delay);
  
- #define MLXSW_THERMAL_NUM_TRIPS	ARRAY_SIZE(default_thermal_trips)
+ 	/* sys I/F */
+ 	/* Add nodes that are always present via .groups */
+-	result = thermal_zone_create_device_groups(tz, mask);
++	result = thermal_zone_create_device_groups(tz);
+ 	if (result)
+ 		goto remove_id;
  
--/* Make sure all trips are writable */
--#define MLXSW_THERMAL_TRIP_MASK	(BIT(MLXSW_THERMAL_NUM_TRIPS) - 1)
--
- struct mlxsw_thermal;
+Index: linux-pm/drivers/thermal/thermal_core.h
+===================================================================
+--- linux-pm.orig/drivers/thermal/thermal_core.h
++++ linux-pm/drivers/thermal/thermal_core.h
+@@ -131,7 +131,7 @@ void thermal_zone_trip_updated(struct th
+ int __thermal_zone_get_temp(struct thermal_zone_device *tz, int *temp);
  
- struct mlxsw_thermal_module {
-@@ -420,7 +423,7 @@ mlxsw_thermal_module_tz_init(struct mlxs
- 	module_tz->tzdev = thermal_zone_device_register_with_trips(tz_name,
- 							module_tz->trips,
- 							MLXSW_THERMAL_NUM_TRIPS,
--							MLXSW_THERMAL_TRIP_MASK,
-+							0,
- 							module_tz,
- 							&mlxsw_thermal_module_ops,
- 							&mlxsw_thermal_params,
-@@ -548,7 +551,7 @@ mlxsw_thermal_gearbox_tz_init(struct mlx
- 	gearbox_tz->tzdev = thermal_zone_device_register_with_trips(tz_name,
- 						gearbox_tz->trips,
- 						MLXSW_THERMAL_NUM_TRIPS,
--						MLXSW_THERMAL_TRIP_MASK,
-+						0,
- 						gearbox_tz,
- 						&mlxsw_thermal_gearbox_ops,
- 						&mlxsw_thermal_params, 0,
-@@ -773,7 +776,7 @@ int mlxsw_thermal_init(struct mlxsw_core
- 	thermal->tzdev = thermal_zone_device_register_with_trips("mlxsw",
- 						      thermal->trips,
- 						      MLXSW_THERMAL_NUM_TRIPS,
--						      MLXSW_THERMAL_TRIP_MASK,
-+						      0,
- 						      thermal,
- 						      &mlxsw_thermal_ops,
- 						      &mlxsw_thermal_params, 0,
+ /* sysfs I/F */
+-int thermal_zone_create_device_groups(struct thermal_zone_device *, int);
++int thermal_zone_create_device_groups(struct thermal_zone_device *tz);
+ void thermal_zone_destroy_device_groups(struct thermal_zone_device *);
+ void thermal_cooling_device_setup_sysfs(struct thermal_cooling_device *);
+ void thermal_cooling_device_destroy_sysfs(struct thermal_cooling_device *cdev);
+Index: linux-pm/drivers/thermal/thermal_sysfs.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/thermal_sysfs.c
++++ linux-pm/drivers/thermal/thermal_sysfs.c
+@@ -122,6 +122,11 @@ trip_point_temp_store(struct device *dev
+ 
+ 	trip = &tz->trips[trip_id];
+ 
++	if (!(trip->flags & THERMAL_TRIP_FLAG_RW_TEMP)) {
++		ret = -EPERM;
++		goto unlock;
++	}
++
+ 	if (temp != trip->temperature) {
+ 		if (tz->ops->set_trip_temp) {
+ 			ret = tz->ops->set_trip_temp(tz, trip_id, temp);
+@@ -173,6 +178,11 @@ trip_point_hyst_store(struct device *dev
+ 
+ 	trip = &tz->trips[trip_id];
+ 
++	if (!(trip->flags & THERMAL_TRIP_FLAG_RW_HYST)) {
++		ret = -EPERM;
++		goto unlock;
++	}
++
+ 	if (hyst != trip->hysteresis) {
+ 		if (tz->ops->set_trip_hyst) {
+ 			ret = tz->ops->set_trip_hyst(tz, trip_id, hyst);
+@@ -392,17 +402,16 @@ static const struct attribute_group *the
+ /**
+  * create_trip_attrs() - create attributes for trip points
+  * @tz:		the thermal zone device
+- * @mask:	Writeable trip point bitmap.
+  *
+  * helper function to instantiate sysfs entries for every trip
+  * point and its properties of a struct thermal_zone_device.
+  *
+  * Return: 0 on success, the proper error value otherwise.
+  */
+-static int create_trip_attrs(struct thermal_zone_device *tz, int mask)
++static int create_trip_attrs(struct thermal_zone_device *tz)
+ {
++	const struct thermal_trip *trip;
+ 	struct attribute **attrs;
+-	int indx;
+ 
+ 	/* This function works only for zones with at least one trip */
+ 	if (tz->num_trips <= 0)
+@@ -437,7 +446,9 @@ static int create_trip_attrs(struct ther
+ 		return -ENOMEM;
+ 	}
+ 
+-	for (indx = 0; indx < tz->num_trips; indx++) {
++	for_each_trip(tz, trip) {
++		int indx = thermal_zone_trip_id(tz, trip);
++
+ 		/* create trip type attribute */
+ 		snprintf(tz->trip_type_attrs[indx].name, THERMAL_NAME_LENGTH,
+ 			 "trip_point_%d_type", indx);
+@@ -458,7 +469,7 @@ static int create_trip_attrs(struct ther
+ 						tz->trip_temp_attrs[indx].name;
+ 		tz->trip_temp_attrs[indx].attr.attr.mode = S_IRUGO;
+ 		tz->trip_temp_attrs[indx].attr.show = trip_point_temp_show;
+-		if (mask & (1 << indx)) {
++		if (trip->flags & THERMAL_TRIP_FLAG_RW_TEMP) {
+ 			tz->trip_temp_attrs[indx].attr.attr.mode |= S_IWUSR;
+ 			tz->trip_temp_attrs[indx].attr.store =
+ 							trip_point_temp_store;
+@@ -473,7 +484,7 @@ static int create_trip_attrs(struct ther
+ 					tz->trip_hyst_attrs[indx].name;
+ 		tz->trip_hyst_attrs[indx].attr.attr.mode = S_IRUGO;
+ 		tz->trip_hyst_attrs[indx].attr.show = trip_point_hyst_show;
+-		if (tz->ops->set_trip_hyst) {
++		if (trip->flags & THERMAL_TRIP_FLAG_RW_HYST) {
+ 			tz->trip_hyst_attrs[indx].attr.attr.mode |= S_IWUSR;
+ 			tz->trip_hyst_attrs[indx].attr.store =
+ 					trip_point_hyst_store;
+@@ -505,8 +516,7 @@ static void destroy_trip_attrs(struct th
+ 	kfree(tz->trips_attribute_group.attrs);
+ }
+ 
+-int thermal_zone_create_device_groups(struct thermal_zone_device *tz,
+-				      int mask)
++int thermal_zone_create_device_groups(struct thermal_zone_device *tz)
+ {
+ 	const struct attribute_group **groups;
+ 	int i, size, result;
+@@ -522,7 +532,7 @@ int thermal_zone_create_device_groups(st
+ 		groups[i] = thermal_zone_attribute_groups[i];
+ 
+ 	if (tz->num_trips) {
+-		result = create_trip_attrs(tz, mask);
++		result = create_trip_attrs(tz);
+ 		if (result) {
+ 			kfree(groups);
+ 
 
 
 
