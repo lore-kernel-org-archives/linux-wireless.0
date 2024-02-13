@@ -1,125 +1,100 @@
-Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [217.70.183.200])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B25045D902;
-	Tue, 13 Feb 2024 15:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2282D5EE62;
+	Tue, 13 Feb 2024 15:27:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707837888; cv=none; b=f4TYqgQfFRuHcwvoFnEssnJ6jzpOmCQBj9M5qGovxCowOdgI3i8I5HlNlaF0BrddMd5bFzXySqFJRnR7os8Ox9WuDE53DTU8+FH6TYNG2bHyTYYEs5OH6ulrR3CVc2Z1zK6qGIYTV3/e2ouANOW8kLW+2r5FKc4s66egxPuQSA4=
+	t=1707838043; cv=none; b=MwGC3WNgpvq/lvMMhU3PdZtwlJLWTsb43deX/CDX4DGCGU2oYyArTowAE50k3JJO7SzW6aOVDQWq7lwcseYKKiqeMkPRaS6FdvyqJ7vWyfTybZI02TE05erughUuVsGaNz8RnAyXQgkLZeP8v5JFxDJPc/EZsIoLFmOE+60jx0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707837888; c=relaxed/simple;
-	bh=ZRse6JczO8c8briiSuR06UnfYpScvqAmNKuKcNSxv4E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=s+huxKBTuACenrk7I5H9LRQkclTGti4Kn72BePFoJ9jX92c4IINTp1hOO0S4RADMbnh72S7UaRidWAcqQkOU2mQH8bIq32ThdIGe5KwrZYWK3/pMm9WGJtqidqs83jF0di/rKtnpHg6VufadyI9+2aI6kP4y7nLy7qZJsJT7jxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=kfaq/68N; arc=none smtp.client-ip=217.70.183.200
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1707838043; c=relaxed/simple;
+	bh=JVjbwYoXdew3kvQWCrF/DJvgpzuG4RWJZp9j/k373W4=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=uRxuuKpcz5zf4ejRQFO9gdCp3c3Tqe3VOmYGtZQJej0KwW+qR5f2V4rQyUKUzqaTwL0odHUNurzM2BRPIabWm4hHZOU2tBTax5jbO4JCEZYMFCUQAwFsvGj3cP1nTlfKbkGJZ9NgV96QdgHNFJh3lHfVPfoAUdMGwUE3BUaQpeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YXaXDpWF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="kfaq/68N"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id C49012000B;
-	Tue, 13 Feb 2024 15:24:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1707837877;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=52cY2LUgFu15OCe72LM2FQu+S39du9WmCDQ8io2kZ8M=;
-	b=kfaq/68NzMwiXUkSTseCvfYIiL4b4bIu5M5IexBkVGXzeSEmz1ghDU6VPuKXiseIpxTfgm
-	OX6X86yQEKg3JgHyYBq5oDJ4OzDJM21V6yGD4BUOdbgbqSUHilpQAr/kgPe/uQzcXkmfMW
-	TWllHo+DBBJjAIskfwiu6GvrKkigwvYgeiBvPIsEijh2zu9NsyvORI/AAzZT/XG/iA6PVE
-	vXmzpmaPhgYjsUm7g7bqNz2syNx0S9Go4hlOJP6I+qL+iRR8NzQiNF1+grwWirAvm0+rxj
-	L/4iU5xiIcVO73t9ELMpD6XOGyZTzaH9pRnWZyUrGIkckJNM5+Bva5gD/vqg7g==
-From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Date: Tue, 13 Feb 2024 16:22:44 +0100
-Subject: [PATCH RFC] wifi: wilc1000: fix reset line assert/deassert
- polarity
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YXaXDpWF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94979C433F1;
+	Tue, 13 Feb 2024 15:27:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707838042;
+	bh=JVjbwYoXdew3kvQWCrF/DJvgpzuG4RWJZp9j/k373W4=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=YXaXDpWFRSuYK80xF7yQekFu6YFQwC+rlIV1Fpa57QEgd7f2IhSIWkVK1D1yqtgsF
+	 oxmL5WnczQ/imvN0nu1PI3CGYyfAnMVIYbJZxGJDoSEbihdY1TnmoUtYbP1Ex/E8wp
+	 rs8dl+K8qmb+NBmxxnT0lxv6ty7bNaWFpZJSPmNXFV0EIRygCrPbxBKXY4xIwOxNNP
+	 OYQscyZ/9E/EG2m7XHqJAZYOTh9ADJidvN+pXSZ7RH8HlXKQ00StJGzkZRKlMbxI7w
+	 G0vRm0cHbdJeiFHZAD8Pa3FeJpdsrnLEnLXHQMQ3ifOOmPLBh2FWJOgwFiI49Vztxz
+	 GtZsQizV9AOWQ==
+From: Kalle Valo <kvalo@kernel.org>
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+  <netdev@vger.kernel.org>,  <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: wireless-next-2024-01-25
+References: <20240125104030.B6CA6C433C7@smtp.kernel.org>
+	<20240125165128.7e43a1f3@kernel.org> <87r0i4zl92.fsf@kernel.org>
+	<18d447cc0b8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+	<877cjwz9ya.fsf@kernel.org> <20240126105255.5476cf85@kernel.org>
+	<87mssrxf44.fsf@kernel.org> <20240129115505.76d35e31@kernel.org>
+Date: Tue, 13 Feb 2024 17:27:19 +0200
+In-Reply-To: <20240129115505.76d35e31@kernel.org> (Jakub Kicinski's message of
+	"Mon, 29 Jan 2024 11:55:05 -0800")
+Message-ID: <87zfw4o04o.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20240213-wilc_1000_reset_line-v1-1-e01da2b23fed@bootlin.com>
-X-B4-Tracking: v=1; b=H4sIAEOJy2UC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIxMDQ0NL3fLMnOR4QwMDg/ii1OLUkviczLxUXWNLYyNzg7RkE3OTVCWg1oK
- i1LTMCrCx0UpBbs5KsbW1AK54SQtrAAAA
-To: linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>, 
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>, 
- David Mosberger-Tang <davidm@egauge.net>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-kernel@vger.kernel.org, 
- =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-X-Mailer: b4 0.12.4
-X-GND-Sasl: alexis.lothore@bootlin.com
+Content-Type: text/plain
 
-When using a wilc1000 chip over a spi bus, users can optionally define a
-reset gpio and a chip enable gpio. The reset line of wilc1000 is active
-low, so to hold the chip in reset, a low (physical) value must be applied.
+Jakub Kicinski <kuba@kernel.org> writes:
 
-The corresponding device tree binding documentation was introduced by
-commit f31ee3c0a555 ("wilc1000: Document enable-gpios and reset-gpios
-properties") and correctly indicates that the reset line is an active-low
-signal. However, the corresponding driver part, brought by commit
-ec031ac4792c ("wilc1000: Add reset/enable GPIO support to SPI driver"), is
-misusing the gpiod APIs and apply an inverted logic when powering up/down
-the chip (for example, setting the reset line to a logic "1" during power
-up, which in fact asserts the reset line when device tree describes the
-reset line as GPIO_ACTIVE_LOW). As a consequence, any platform currently
-using the driver in SPI mode must use a faulty reset line description in
-device tree, or else chip will be maintained in reset and will not even
-allow to bring up the chip.
+> On Sat, 27 Jan 2024 12:08:59 +0200 Kalle Valo wrote:
+>> Jakub Kicinski <kuba@kernel.org> writes:
+>> >> I don't run checkpatch except for ath10k/ath11k/ath12k, too much noise.
+>> >> I ended up adding this to my script:  
+>> >
+>> > We run build with sparse and W=1 and then diff the number of warnings 
+>> > to weed out the pre-existing ones, FWIW.   
+>> 
+>> So for wireless and wireless-next I now check W=1 warnings every time I
+>> push. We are mostly warning free now but I'm not checking the linker
+>> warnings, for example the current MODULE_DESCRIPTION() warnings.
+>> 
+>> It's really annoying, and extra work, that people enable new W=1
+>> warnings before fixing them. Could we somehow push back on those and
+>> require that warnings are fixed before enabling with W=1 level?
+>
+> My quite possibly incorrect understanding is that "giving people time
+> to fix" is the main point of W=1 :( W=2 is for stuff which may false
+> positive, W=1 is for stuff which does not false positive but we can't
+> enable it in formal builds because the tree is full of it.
 
-Fix reset line usage by inverting back the gpiod APIs usage, setting the
-reset line to the logic value "0" when powering the chip, and the logic
-value "1" when powering off the chip.
+Ok, so keeping the code clean from W=1 warnings will be hard :/
 
-Fixes: ec031ac4792c ("wilc1000: Add reset/enable GPIO support to SPI driver")
-Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
----
-This issue was detected because I struggled a bit to setup a WILC-over-SPI
-setup, and eventually realized that it was due to chip being hold in reset.
+>> In wireless there is a significant number of sparse warnings. I have
+>> tried the cleanup people to fix them but it seems there's no interest,
+>> instead we get to receive pointless cleanups wasting our time. <loud sigh>
+>
+> Tell me about it.. :)
+>
+>> BTW the 'no new line at end of file' warning is indeed from sparse, like
+>> Arend suspected:
+>> 
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.c:432:49:
+>> warning: no newline at end of file
+>
+> BTW I'd happy to help you set up an instance of our build testing bot,
+> if you have a VM that can be used. It does take a bit of care and
+> feeding, but seeing the build failures in patchwork pays the time back.
 
-This patch, if accepted, will force any WILC-over-SPI user to update its
-device tree description: any platform currently working correctly in this
-setup likely have a wrong GPIO_ACTIVE_HIGH used on the reset line device
-tree description, contrary to what the documentation says. I am not sure
-whether this is tolerable ? If not, what would be the proper way to fix
-this ? Make the driver manually parse this flag and somehow make it able
-to deal with both versions (so basically: ignoring the setting) ? Just live
-with it, and possibly document the issue somewhere ?
----
- drivers/net/wireless/microchip/wilc1000/spi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+We have talked about setting up your build bot for linux-wireless
+patchwork project but never found the time to do anything. Also we don't
+have a VM for it right now.
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wireless/microchip/wilc1000/spi.c
-index c92ee4b73a74..30eed2ea523d 100644
---- a/drivers/net/wireless/microchip/wilc1000/spi.c
-+++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -192,11 +192,11 @@ static void wilc_wlan_power(struct wilc *wilc, bool on)
- 		/* assert ENABLE: */
- 		gpiod_set_value(gpios->enable, 1);
- 		mdelay(5);
--		/* assert RESET: */
--		gpiod_set_value(gpios->reset, 1);
--	} else {
- 		/* deassert RESET: */
- 		gpiod_set_value(gpios->reset, 0);
-+	} else {
-+		/* assert RESET: */
-+		gpiod_set_value(gpios->reset, 1);
- 		/* deassert ENABLE: */
- 		gpiod_set_value(gpios->enable, 0);
- 	}
-
----
-base-commit: 246a8c611ace197f43ecc6ea4936c6ca363b8aaa
-change-id: 20240119-wilc_1000_reset_line-393270fc474e
-
-Best regards,
 -- 
-Alexis Lothoré, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
