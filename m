@@ -1,138 +1,133 @@
-Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F3F133432;
-	Thu, 15 Feb 2024 15:36:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.178.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4563F12C548;
+	Thu, 15 Feb 2024 15:41:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708011409; cv=none; b=JWYzKZNhntrfo7OMFp1gmmvsqZ5oxj3dtWO4iZB/4yuqkckN0eB9qar1+ms2ePRO3+MP6WBt/MOgFpjZoGbrG0dPsAM0ueMYTZXIrUu60RO7qwNrANBKpOIa1TaBifcN5iU6+Az4CjoIZIv/d9rMOLp7uspp65vNaULvHl0Wfko=
+	t=1708011705; cv=none; b=S9Gxr1tQ3kSdtx88js+7zcHdu73Eu2GDu9tNxJzJysqtdV6iBdXxkRV+ZRs2lJ5FhupHygZIW/B5xusTmDdSMLhEKk7xpb7rMt/9Oj8u2wzOfrfQuPxnb5GxH3a2HNegRs4a+sG/qG7wzey2QJ7DDAmLiymAjTQrouGD2y4g+NE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708011409; c=relaxed/simple;
-	bh=FjdprrnC/XsA9GWxGqo/QmO/W07N1XedtxUX8gEVkh8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AR/QDfnFBCWP2lSh4W9fpftZLL/jqsi2d4SqnE1a01EcoGDggQ4JBTuPaUQKTRTLgonkGpzwLpNIjeQbkI5XzPkzBeYCiBrm+BlHLRjW7UZVftJB7CDdgfwHNENIPVWw3D/+uVvUtJTjjKbFIEWxDgQwvgnc3Cosa8dZIHDaig0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=RQdOi/+x; arc=none smtp.client-ip=217.70.178.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1708011705; c=relaxed/simple;
+	bh=Pgd5J6Uby1Zyd/C1wyBnm9ePGiFzIsnkC58Bl/jyjRE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q0Fg4Ww3BqvVSzCocNrvI6N8/iuCS0qDDFMxayNoSBw4M1OP6FXlAvti09RMbiO5aO4EDp1oCJM32uMewsw4maeKidYTRCD2Dmr+V+tCygZyuSImO1YYrlYK3ZcZr/iSOQLTKoGU2lMr9+5L3f4I/20oC7D4lTETCDCqTcNEhk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VtlnUwjB; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="RQdOi/+x"
-Received: from relay9-d.mail.gandi.net (unknown [IPv6:2001:4b98:dc4:8::229])
-	by mslow1.mail.gandi.net (Postfix) with ESMTP id B757FC876C;
-	Thu, 15 Feb 2024 15:36:39 +0000 (UTC)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id B78B4FF807;
-	Thu, 15 Feb 2024 15:36:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1708011392;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZVIMZPbdYf3ZH4bucFJyX+oUYzajS9yHWDPkyGO2CoA=;
-	b=RQdOi/+xBIS2kluyOnNaH9ORWUF5pi0TEliRBZFwz7PAVW7PSOlvE/kYx3RaC6N9rOIMX+
-	0oit69wYMUXzjmfjvETTh+iadx6jC0tfiJgVW7WoIzzLz+YjyECs6/sWqMDERhuF4mkFsa
-	9Pu/ZASDXLgAI94bnHzeFtmXcm/1S6KMguQNkjdeF/ixSjR1uvUASU41olKyDVuECPDOhz
-	Fo3mzAlxxushnul31gJEKdW1ZdnxOuXnQw641Np/zGjXV6BNv8o8JEL5JCi8e0tVCUKCpL
-	xxsYIZGWEtbzLGHYt1D+e8D+UhSIZHGcjrVVlgczoIZ2asqkazmQnR2a2lyIxw==
-From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Date: Thu, 15 Feb 2024 16:36:20 +0100
-Subject: [PATCH 3/4] wifi: wilc1000: fix declarations ordering
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VtlnUwjB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1708011703; x=1739547703;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Pgd5J6Uby1Zyd/C1wyBnm9ePGiFzIsnkC58Bl/jyjRE=;
+  b=VtlnUwjB9oH4wtbAK9eJ9lbg3AmBfsaYryM5f8oAsH8z6R4NtEW91Ssp
+   1cinY5rg96Km0fe17mqRO6mh5pkQd9rX+dZs1T3miXlNSTuVnGESqPoBe
+   riOXqhWDmbrfHkzGBaiuYgbp8muTtM1G6edSDGL0KMDomhxURAVnuLXKy
+   X0l8CWv5gLMQeyKvUMUwahZD5LvewgHDT5h+vqvMG55O1kN8fz6HZ4bWT
+   1LWqalsvQviAtPlqrcujah3tfNfqthsDc1GSrPtJlu39mIxSxeqIXjeSz
+   WoGGs51XPhU4EZj8uUtm7QnDLpHBXlfakemCQJgw0SSFbJyiC+Pk4V2dn
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10984"; a="5888083"
+X-IronPort-AV: E=Sophos;i="6.06,162,1705392000"; 
+   d="scan'208";a="5888083"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 07:41:42 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10984"; a="935682308"
+X-IronPort-AV: E=Sophos;i="6.06,162,1705392000"; 
+   d="scan'208";a="935682308"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 15 Feb 2024 07:41:39 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+	id B54E2204; Thu, 15 Feb 2024 17:41:38 +0200 (EET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>
+Subject: [PATCH net-next v1 1/1] wireless: Add KHZ_PER_GHZ to units.h and reuse
+Date: Thu, 15 Feb 2024 17:41:36 +0200
+Message-ID: <20240215154136.630029-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.43.0.rc1.1.gbec44491f096
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20240215-wilc_fix_rcu_usage-v1-3-f610e46c6f82@bootlin.com>
-References: <20240215-wilc_fix_rcu_usage-v1-0-f610e46c6f82@bootlin.com>
-In-Reply-To: <20240215-wilc_fix_rcu_usage-v1-0-f610e46c6f82@bootlin.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>, 
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-kernel@vger.kernel.org, 
- =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-X-Mailer: b4 0.12.4
-X-GND-Sasl: alexis.lothore@bootlin.com
 
-Fix reverse-christmas tree order in some functions before adding more
-variables
+The KHZ_PER_GHZ might be used by others (with the name aligned
+with similar constants). Define it in units.h and convert
+wireless to use it.
 
-Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/wireless/microchip/wilc1000/hif.c    | 16 ++++++++--------
- drivers/net/wireless/microchip/wilc1000/netdev.c |  6 +++---
- 2 files changed, 11 insertions(+), 11 deletions(-)
+ include/linux/units.h | 5 ++++-
+ net/wireless/reg.c    | 7 +++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/hif.c b/drivers/net/wireless/microchip/wilc1000/hif.c
-index f3800aa9e9f8..c42859a727c3 100644
---- a/drivers/net/wireless/microchip/wilc1000/hif.c
-+++ b/drivers/net/wireless/microchip/wilc1000/hif.c
-@@ -1567,11 +1567,11 @@ int wilc_deinit(struct wilc_vif *vif)
+diff --git a/include/linux/units.h b/include/linux/units.h
+index 45110daaf8d3..00e15de33eca 100644
+--- a/include/linux/units.h
++++ b/include/linux/units.h
+@@ -24,10 +24,13 @@
+ #define NANOHZ_PER_HZ		1000000000UL
+ #define MICROHZ_PER_HZ		1000000UL
+ #define MILLIHZ_PER_HZ		1000UL
++
+ #define HZ_PER_KHZ		1000UL
+-#define KHZ_PER_MHZ		1000UL
+ #define HZ_PER_MHZ		1000000UL
  
- void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
++#define KHZ_PER_MHZ		1000UL
++#define KHZ_PER_GHZ		1000000UL
++
+ #define MILLIWATT_PER_WATT	1000UL
+ #define MICROWATT_PER_MILLIWATT	1000UL
+ #define MICROWATT_PER_WATT	1000000UL
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 50cadbad485f..753f8e9aa4b1 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -57,6 +57,8 @@
+ #include <linux/verification.h>
+ #include <linux/moduleparam.h>
+ #include <linux/firmware.h>
++#include <linux/units.h>
++
+ #include <net/cfg80211.h>
+ #include "core.h"
+ #include "reg.h"
+@@ -1289,20 +1291,17 @@ static bool is_valid_rd(const struct ieee80211_regdomain *rd)
+ static bool freq_in_rule_band(const struct ieee80211_freq_range *freq_range,
+ 			      u32 freq_khz)
  {
--	int result;
--	struct host_if_msg *msg;
--	int id;
- 	struct host_if_drv *hif_drv;
-+	struct host_if_msg *msg;
- 	struct wilc_vif *vif;
-+	int result;
-+	int id;
+-#define ONE_GHZ_IN_KHZ	1000000
+ 	/*
+ 	 * From 802.11ad: directional multi-gigabit (DMG):
+ 	 * Pertaining to operation in a frequency band containing a channel
+ 	 * with the Channel starting frequency above 45 GHz.
+ 	 */
+-	u32 limit = freq_khz > 45 * ONE_GHZ_IN_KHZ ?
+-			20 * ONE_GHZ_IN_KHZ : 2 * ONE_GHZ_IN_KHZ;
++	u32 limit = freq_khz > 45 * KHZ_PER_GHZ ? 20 * KHZ_PER_GHZ : 2 * KHZ_PER_GHZ;
+ 	if (abs(freq_khz - freq_range->start_freq_khz) <= limit)
+ 		return true;
+ 	if (abs(freq_khz - freq_range->end_freq_khz) <= limit)
+ 		return true;
+ 	return false;
+-#undef ONE_GHZ_IN_KHZ
+ }
  
- 	id = get_unaligned_le32(&buffer[length - 4]);
- 	vif = wilc_get_vif_from_idx(wilc, id);
-@@ -1608,11 +1608,11 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 
- void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- {
--	int result;
--	struct host_if_msg *msg;
--	int id;
- 	struct host_if_drv *hif_drv;
-+	struct host_if_msg *msg;
- 	struct wilc_vif *vif;
-+	int result;
-+	int id;
- 
- 	mutex_lock(&wilc->deinit_lock);
- 
-@@ -1654,10 +1654,10 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *buffer, u32 length)
- 
- void wilc_scan_complete_received(struct wilc *wilc, u8 *buffer, u32 length)
- {
--	int result;
--	int id;
- 	struct host_if_drv *hif_drv;
- 	struct wilc_vif *vif;
-+	int result;
-+	int id;
- 
- 	id = get_unaligned_le32(&buffer[length - 4]);
- 	vif = wilc_get_vif_from_idx(wilc, id);
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index 96f239adc078..092801d33915 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -814,12 +814,12 @@ static int wilc_mac_close(struct net_device *ndev)
- void wilc_frmw_to_host(struct wilc *wilc, u8 *buff, u32 size,
- 		       u32 pkt_offset)
- {
--	unsigned int frame_len = 0;
--	int stats;
- 	unsigned char *buff_to_send = NULL;
--	struct sk_buff *skb;
- 	struct net_device *wilc_netdev;
-+	unsigned int frame_len = 0;
- 	struct wilc_vif *vif;
-+	struct sk_buff *skb;
-+	int stats;
- 
- 	if (!wilc)
- 		return;
-
+ /*
 -- 
-2.43.0
+2.43.0.rc1.1.gbec44491f096
 
