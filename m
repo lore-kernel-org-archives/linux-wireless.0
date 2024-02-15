@@ -1,39 +1,42 @@
-Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
+Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79FD5131727;
-	Thu, 15 Feb 2024 14:14:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F01133413;
+	Thu, 15 Feb 2024 15:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.178.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708006466; cv=none; b=CyFwVPfufOSf8jWNc4uUaG/fsNQQZEMUiTTLSaMy4r4yfmZDvLNCOICsJKx6a6fhFDqezT91+JBAli7yyIlZGyYUaZZP6jOZ5WizTcueVVliWjOz5QLiB4XZ++BtJmQEzk98HWrihkqag0IHUxytH/JZV7Q0IHCjzmi3oZQWe00=
+	t=1708011408; cv=none; b=Tgmo59HoFSX85eqaDajWjBNaABrB+NuZO+iw3NEfkWrSQvcRuESCAf8zzT2vzHUnZHOSZFRoN/zlsfbUK+21vfGsxBpZ+l15l1C4/64GbVtRxlKb831MESCc4ZuwojWleBX/7YgMUI5olSR0YRLSwyewV8JMMLcXIzAOW6tF1mQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708006466; c=relaxed/simple;
-	bh=t3Zyfq1flidLj2HJeYGumwpQFqjehsUbkuEswwX6ibc=;
+	s=arc-20240116; t=1708011408; c=relaxed/simple;
+	bh=8WF6UR9eF6nZvmRireCrz2oeCtLoHCVzVebIRGr2RAo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=aT4g+IILHZAWWq5Z5msF3dQcPEm1juVYzVwNZ9MuDu41nu3nhpcat0Gd6h+MXMMVX5ijw0nnyWd/7bsKtxmWCDa5DXmBYHhffDEwmgSiDjLSMXL2YdFSot9KaH/ikL+JHMRdFZZAaQZ/HFY+e0zXtN3QucQwDT8bBWXUE1OTsZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=cqwUUNub; arc=none smtp.client-ip=217.70.183.195
+	 In-Reply-To:To:Cc; b=YOdY2rjouqBXcUQm9q23JgWBTsYvY0XXUHgFfJbh6zPmVody05P5VE+K2fHYLlYGhcqQJ8Zls1FZre2/CXJ5Oa+fKKY0y3zTmn1M1oEs23vwcQIzPf7o4imJ4Y2VI4Qp9QkvCA4eoq5UXWiWxGKdJSgm2nK44xz3iFO1yvFlcY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=CRUEGZFA; arc=none smtp.client-ip=217.70.178.240
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="cqwUUNub"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 321DA60008;
-	Thu, 15 Feb 2024 14:14:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="CRUEGZFA"
+Received: from relay9-d.mail.gandi.net (unknown [IPv6:2001:4b98:dc4:8::229])
+	by mslow1.mail.gandi.net (Postfix) with ESMTP id 28449C8768;
+	Thu, 15 Feb 2024 15:36:39 +0000 (UTC)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id F2AD1FF809;
+	Thu, 15 Feb 2024 15:36:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1708006462;
+	t=1708011391;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NRqWFUm6aNd2iZs3bNrOnrrE0X4fa/zKmGGOIOEUt48=;
-	b=cqwUUNub4BGRoLFqoqtgc+yWruEgnDpy9FAO7POq7+WalF28f1RZ5um9ioRiKR2EeBmFAY
-	4AE2By7uWnsmGNb2n0V6xVVF/VQ648hC4tRjJZqwBuywwu2oMKIQDzM4uNA43zbzXjHZC8
-	Dk3gcIW5XsZIB2w89xDBNVayArH6U3lnCw/noJBy43YWlm89Z0vh5Wk3I+qZWPxVvN4Ha2
-	fjdsOUlTgb8goH0nlP4PBFzc1fhHxPxaihvQO40Tmv/ug4Xmx1cjP1y60uQI2taRUGlanN
-	yPDD0OOtB2Kw+mOyvJE1c5czw7TOBHa/qKYNyrAEOwsDOgAbUIXfyoaAq35FXQ==
+	bh=+VdOMGdhUfnRqC84Ds5qac0THeFNjbkMbQFO9qc5HW0=;
+	b=CRUEGZFAXDgeTHu5kecJXNIKhz+bUdJmbxnNGF5IbvVOjnsmfTe46lk6qelri2fgmCdKq+
+	2Jh6vqUVAIrheNpl12a3Dj7k+iabPy6JR1FZJG8FhvJ83X3CPI+UjhYbx/nbWIxdcpDbOO
+	aL2znWcb6ADFHg82PPNcN3cplGUcwcfFjli+xinRpHFGoADaoDSOxAXhqyoCvy9aODs6o1
+	0u9ltZK/fg0pzqJL39yt7+dFVzMkx6SwlJZgKgK8AikZIRIb2KZ7Z4k7Wh8UzptJjcB3SJ
+	3/p4WQP2ABd7a2rUQUDGRfJCkchtZSeL+gcSPb/ImFH8j1aMuNqmbeivhCUPfw==
 From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Date: Thu, 15 Feb 2024 15:13:53 +0100
-Subject: [PATCH 2/2] wifi: wilc1000: remove AKM suite be32 conversion for
- external auth request
+Date: Thu, 15 Feb 2024 16:36:18 +0100
+Subject: [PATCH 1/4] wifi: wilc1000: split deeply nested RCU list traversal
+ in dedicated helper
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -42,60 +45,69 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20240215-nl80211_fix_akm_suites_endianness-v1-2-57e902632f9d@bootlin.com>
-References: <20240215-nl80211_fix_akm_suites_endianness-v1-0-57e902632f9d@bootlin.com>
-In-Reply-To: <20240215-nl80211_fix_akm_suites_endianness-v1-0-57e902632f9d@bootlin.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ajay Singh <ajay.kathat@microchip.com>, Kalle Valo <kvalo@kernel.org>, 
+Message-Id: <20240215-wilc_fix_rcu_usage-v1-1-f610e46c6f82@bootlin.com>
+References: <20240215-wilc_fix_rcu_usage-v1-0-f610e46c6f82@bootlin.com>
+In-Reply-To: <20240215-wilc_fix_rcu_usage-v1-0-f610e46c6f82@bootlin.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ajay Singh <ajay.kathat@microchip.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>, 
  Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Igor Mitsyanko <imitsyanko@quantenna.com>, 
- Sergey Matyukevich <geomatsi@gmail.com>, 
- =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>, 
- kernel test robot <lkp@intel.com>
+ linux-kernel@vger.kernel.org, 
+ =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
 X-Mailer: b4 0.12.4
 X-GND-Sasl: alexis.lothore@bootlin.com
 
-The driver currently raises the following sparse warning:
-[...] cfg80211.c:360:42: warning: incorrect type in assignment (different
-base types)
-[...] cfg80211.c:360:42:    expected unsigned int key_mgmt_suite
-[...] cfg80211.c:360:42:    got restricted __be32 [usertype]
-  CHECK   drivers/net/wireless/microchip/wilc1000/netdev.c
+Move netif_wake_queue and its surrounding RCU operations in a dedicated
+function to clarify wilc_txq_task and ease refactoring
 
-This conversion was needed because historically the external supplicant
-(observed with wpa_supplicant) expects AKM suite as big endian in
-NL80211_CMD_EXTERNAL_AUTH message when the AKM suite is WLAN_AKM_SUITE_SAE.
-This is not needed anymore:
-- new (to be released) versions of wpa_supplicant now reads it in host
-  endian _while_ keeping compatibility for older drivers
-- for new drivers used with current/old wpa_supplicant, this conversion has
-  been added to nl80211 to force big endian when the AKM suite is
-  WLAN_AKM_SUITE_SAE
-
-Remove this not-needed-anymore conversion to fix the sparse warning.
-
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202308290615.lUTIgqUl-lkp@intel.com/
-Tested-on: WILC1000 hwB SPI WILC_WIFI_FW_REL_16_1-13452
 Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
 ---
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/microchip/wilc1000/netdev.c | 25 +++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index f03fd15c0c97..cb564e2bad29 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -356,7 +356,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			memcpy(vif->auth.ssid.ssid, sme->ssid, sme->ssid_len);
- 			vif->auth.ssid.ssid_len = sme->ssid_len;
- 		}
--		vif->auth.key_mgmt_suite = cpu_to_be32(sme->crypto.akm_suites[0]);
-+		vif->auth.key_mgmt_suite = sme->crypto.akm_suites[0];
- 		ether_addr_copy(vif->auth.bssid, sme->bssid);
- 		break;
+diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
+index 22f461f477f1..62414ab8846e 100644
+--- a/drivers/net/wireless/microchip/wilc1000/netdev.c
++++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
+@@ -140,6 +140,19 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+ 	return ret_val;
+ }
  
++static void wilc_wake_tx_queues(struct wilc *wl)
++{
++	int srcu_idx;
++	struct wilc_vif *ifc;
++
++	srcu_idx = srcu_read_lock(&wl->srcu);
++	list_for_each_entry_rcu(ifc, &wl->vif_list, list) {
++		if (ifc->mac_opened && netif_queue_stopped(ifc->ndev))
++			netif_wake_queue(ifc->ndev);
++	}
++	srcu_read_unlock(&wl->srcu, srcu_idx);
++}
++
+ static int wilc_txq_task(void *vp)
+ {
+ 	int ret;
+@@ -160,17 +173,7 @@ static int wilc_txq_task(void *vp)
+ 		do {
+ 			ret = wilc_wlan_handle_txq(wl, &txq_count);
+ 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD) {
+-				int srcu_idx;
+-				struct wilc_vif *ifc;
+-
+-				srcu_idx = srcu_read_lock(&wl->srcu);
+-				list_for_each_entry_rcu(ifc, &wl->vif_list,
+-							list) {
+-					if (ifc->mac_opened &&
+-					    netif_queue_stopped(ifc->ndev))
+-						netif_wake_queue(ifc->ndev);
+-				}
+-				srcu_read_unlock(&wl->srcu, srcu_idx);
++				wilc_wake_tx_queues(wl);
+ 			}
+ 			if (ret != WILC_VMM_ENTRY_FULL_RETRY)
+ 				break;
 
 -- 
 2.43.0
