@@ -1,57 +1,57 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7052115351B
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2024 20:33:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE465154BEA
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2024 20:33:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708115618; cv=none; b=Ks0cEmYxk+d1PF1QFo5HR8cFnwrNqQO1tlQwBvrTFcQnBQ8+cjHI0poxbmQxUfup1mxXAoqnCprDsBtD00Rw2+17uX32/xfNBRco5XZAW/P7hGY0+hQ8gc2pWLz8c+B84wL0meVxnXzaQRdcGSrqtw7cEyrtmufV3xZZxgA9Ki8=
+	t=1708115623; cv=none; b=Lk4X0eLiYVtmmKtXNmXaTKA2rKEI+YZzOqrDkulQNDH9SXvalXFbIL2KaPJbGApke7HcXmAiVm1ZtEvXvSoi7Fe35zyZw1coHAvmVOrMqIMmOkigtY6h3oecOTl68H3+SiIqb2yPUYmvQQl4n575USWxcDHf1wYunlEC07KNssY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708115618; c=relaxed/simple;
-	bh=yx9oNf9d3eA1FlLSpotJY/uy8bPphhk+h+RPxHa1al0=;
+	s=arc-20240116; t=1708115623; c=relaxed/simple;
+	bh=uxQvnPI8/bGrVMuVI5gjeJIZtyIinJjoJ9no/gq7xoY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AkgnZcUqjInTyNjvz5Ih21hUpv8Dsq2S0MyQdJuLodmLifd7CgIjZJKwhvzUDEd5qnW32EjN6Wi4uol5RRvMON9RNjB1TrZXT71//DH8L9ddnow/tfoHxh22eddYFjjpdpoqxdOR8osyuAFjrrDKcwnMm24ALbasxdHxIFw1SjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=Pb6XyWpV; arc=none smtp.client-ip=209.85.208.170
+	 MIME-Version; b=U8OaD0tfjEfrz8NbgGKGV9fiU6SncUiooBlvEEVc2pShZ/eMEdzam2O2izjMFi2xhyoVwFqSRf8qtoLGhFYxBoNrPeM+iyDYY1xrF0mZzuJT8R+U56rnIwd/CiBsJcDlC5gYb4+28Q6iGAU9Q8M33MLk+YhjdoqwCDm1AFvUXk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=ima8Razl; arc=none smtp.client-ip=209.85.221.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="Pb6XyWpV"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2d0e520362cso25705891fa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2024 12:33:35 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="ima8Razl"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-3394b892691so1621246f8f.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Feb 2024 12:33:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1708115613; x=1708720413; darn=vger.kernel.org;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1708115617; x=1708720417; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iiAgZXD5R5oyKE5kvpTu1Xl8SVVb50mDoXKZHDVMF3g=;
-        b=Pb6XyWpVwDbIYabChrT2njYtuWzXrM7tQ4+lP6XtchjVJY/hIvgDhIk5waBW9aypVb
-         4av6eZQpVGzknbr4L71sVR9W7g17bX1uZLAL4bjR5uogLyd46dbiO2TsbmiCvAeXVWy1
-         o+yBvWgtxLnAjrk68YnBWTESHcXDCPi0d5b93xlU7H/l6KyQex5bHHbuXali1zfukm1l
-         Dvg3PTpRg8UZh9OF4YoMqnadhLpzX2PRTi+kDmQyW5x/gQxny2Q3tGkQ2gjrufrtSMl8
-         E6K11IpDvKhsqKLcdJGwN3Yb+xqen7TWGIdj0LU5vkmwVAeSS3r+O4UJ7xWzWt8CR6ZD
-         DY7Q==
+        bh=EQHWuFoizOSDk7qTx/YRGg03f0p2QHBA18E+Wk2phRk=;
+        b=ima8RazlHxQgrhYUtLazcByVb/KfgI7dsyQqZ0aIfBHwMqW4I47iJlZk4IGfnGQJIA
+         ehB9c1mG0+kpBC3Gx7/qr2Ne9bqIYra099A7WMajVzhs/X1HXDh9B0NYLV+wLDEynaAa
+         bPagwOVue6iYIKRXn5Ev8bxDzBB8nLvEboYDbA5H7Z3o3H2rrCGICZohoSNXyTjUIp5u
+         sYMq2ozIzJhwNF5yQdcZiAdekbVfJ58LS8RhLe2jcjjFfcREpZcWtZ8lkttQFror3h/X
+         sphpIQ4AUHc1FmNebvywyEuZGp5qC9kRg8/N/VrtY5Zobvcc7ENnnhSkF0v2i+j7vXrp
+         qCZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708115613; x=1708720413;
+        d=1e100.net; s=20230601; t=1708115617; x=1708720417;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=iiAgZXD5R5oyKE5kvpTu1Xl8SVVb50mDoXKZHDVMF3g=;
-        b=jrCQxTjNU+TjyxIt/bzUzGCBaTmDgCVGVRSF3d0H54QXXDpsaJ1/OVppIF220WBirE
-         DeUzyA/DYi4Y/khzfqLzCvapV35orLKn0nn6fjATYHuml0GfEFb9OATHno4VixxootR9
-         dw12zRIGB5yBIKEf37O1W/W1BfqXoeEjdc81Pb56XSlh6m1ibTSS0UVPPpSXZiYLVFvU
-         /pADl2v4UDfKObsuiRi/6g5j7FPkqjS1xJEUdNU5qZylCvM20WW1Mvn7D08iqUMh2uRG
-         SFCodQ2y3r9c9EM+eEaJFn1ENNJ1YIUdy9U0uW8iSTCXD9JQ9/eU/ngUWoXykomFWE59
-         Jzmw==
-X-Forwarded-Encrypted: i=1; AJvYcCU+1TS0hqpm+GP37e1ed99YxHL+BAwoA4KlhS4RDE6gBuQzgtFn9MKSbIDl8bMtFu6RjuzcGx7JX/Vuvb2gO9x3GzoNT+FsWn8EbnA1/WA=
-X-Gm-Message-State: AOJu0YzvEAWYJhYGhGa2YtxzaXvTN7EB/jYNC0zJsUR28YAIGtvGpDuU
-	ehGIhVBUAtZ9x8eclEqiDCgFK+rXcqk5XhGq6fDyHR77Kgm2ddLTGfYEi3t3WrU=
-X-Google-Smtp-Source: AGHT+IEuflH9wQzsx8TrMcwmwhz38pYeg7QRtUYyjKydmIUvwvFOOto2iAhoyBREDsH8Oy9snBTz1A==
-X-Received: by 2002:a2e:b8c6:0:b0:2d1:1dae:c562 with SMTP id s6-20020a2eb8c6000000b002d11daec562mr4928843ljp.6.1708115613459;
-        Fri, 16 Feb 2024 12:33:33 -0800 (PST)
+        bh=EQHWuFoizOSDk7qTx/YRGg03f0p2QHBA18E+Wk2phRk=;
+        b=I2wk9JeAoIq6vhuZh9ku2W/eLwI5rOC6UdWX7XuD7/r2HioLihiNhFu04SzovcyyHf
+         M2RceLySpzhfw4NiXBeG5i2rMwUHVxgdauf9b0T83DmCvZadfsjJ8OSxu4NKsdtVy1Bp
+         vG2wh6YCUV3bIMOwgC6tzHShpCLnfzXOP5xhb21doyoIRlc5ZL+BfsLZ5oo5ARgjucG7
+         4pD0itub+11WdcgBPSRpTfr86j9FdWAZna6bJEuQWlZ3MS4oehLWLsJcNm5WhgtW+Fsx
+         g8CAUBpCwRZ/Uut0GlzmSZa9vLc/kpqD0rOO6Noyak87R5hyF+pTa/UC8N799DtfmLTJ
+         Ng0A==
+X-Forwarded-Encrypted: i=1; AJvYcCVAULfG1CjGDMuEdAv1/ZHkhGY3AO2LII05EmXL/A/JJG1WwxBsa9vWKKNMj8dMFz2JhGKk7dGl0xJ6FYzw3yJOqz1wBTw2sLH0eFDhv0c=
+X-Gm-Message-State: AOJu0Yw8BSz6JgREEVrPxvQt1K4pFV9fIe94yqDhHhkK8xnB10orCGKH
+	fRghayKRw2ISfEnazSVct0XjyYXivj6gKp8eAm+m0JHTrEGg78BDVCBeyF7LT+c=
+X-Google-Smtp-Source: AGHT+IGinJo+FpgyRjl2kJ/ySAi2AYljBCrn99NoRGeBpUSzr8brtEvQeJbO+Rn9M6cn5QFIJHX91A==
+X-Received: by 2002:adf:fd0b:0:b0:33d:119e:2ca1 with SMTP id e11-20020adffd0b000000b0033d119e2ca1mr3839965wrr.5.1708115616769;
+        Fri, 16 Feb 2024 12:33:36 -0800 (PST)
 Received: from brgl-uxlite.home ([2a01:cb1d:334:ac00:7758:12d:16:5f19])
-        by smtp.gmail.com with ESMTPSA id m5-20020a05600c4f4500b0041253d0acd6sm1420528wmq.47.2024.02.16.12.33.32
+        by smtp.gmail.com with ESMTPSA id m5-20020a05600c4f4500b0041253d0acd6sm1420528wmq.47.2024.02.16.12.33.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Feb 2024 12:33:33 -0800 (PST)
+        Fri, 16 Feb 2024 12:33:36 -0800 (PST)
 From: Bartosz Golaszewski <brgl@bgdev.pl>
 To: Marcel Holtmann <marcel@holtmann.org>,
 	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
@@ -93,9 +93,9 @@ Cc: linux-bluetooth@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-pm@vger.kernel.org,
 	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: [PATCH v5 14/18] PCI/pwrctl: add a power control driver for WCN7850
-Date: Fri, 16 Feb 2024 21:32:11 +0100
-Message-Id: <20240216203215.40870-15-brgl@bgdev.pl>
+Subject: [PATCH v5 16/18] power: pwrseq: add a driver for the QCA6390 PMU module
+Date: Fri, 16 Feb 2024 21:32:13 +0100
+Message-Id: <20240216203215.40870-17-brgl@bgdev.pl>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20240216203215.40870-1-brgl@bgdev.pl>
 References: <20240216203215.40870-1-brgl@bgdev.pl>
@@ -109,251 +109,410 @@ Content-Transfer-Encoding: 8bit
 
 From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
-Add a PCI power control driver that's capable of correctly powering up
-the ath12k module on WCN7850 using the PCI pwrctl functionality.
+This adds the power sequencing driver for the QCA6390's PMU module. It
+uses the pwrseq subsystem and knows how to match the sequencer to the
+consumer device by verifying the relevant properties and DT layout.
 
 Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 ---
- drivers/pci/pwrctl/Kconfig              |   8 +
- drivers/pci/pwrctl/Makefile             |   2 +
- drivers/pci/pwrctl/pci-pwrctl-wcn7850.c | 202 ++++++++++++++++++++++++
- 3 files changed, 212 insertions(+)
- create mode 100644 drivers/pci/pwrctl/pci-pwrctl-wcn7850.c
+ drivers/power/sequencing/Kconfig          |  16 +
+ drivers/power/sequencing/Makefile         |   2 +
+ drivers/power/sequencing/pwrseq-qca6390.c | 353 ++++++++++++++++++++++
+ 3 files changed, 371 insertions(+)
+ create mode 100644 drivers/power/sequencing/pwrseq-qca6390.c
 
-diff --git a/drivers/pci/pwrctl/Kconfig b/drivers/pci/pwrctl/Kconfig
-index 96195395af69..b91170ebfb49 100644
---- a/drivers/pci/pwrctl/Kconfig
-+++ b/drivers/pci/pwrctl/Kconfig
-@@ -5,4 +5,12 @@ menu "PCI Power control drivers"
- config PCI_PWRCTL
- 	tristate
+diff --git a/drivers/power/sequencing/Kconfig b/drivers/power/sequencing/Kconfig
+index ba5732b1dbf8..84ddf3b4ae56 100644
+--- a/drivers/power/sequencing/Kconfig
++++ b/drivers/power/sequencing/Kconfig
+@@ -10,3 +10,19 @@ menuconfig POWER_SEQUENCING
+ 	  during power-up.
  
-+config PCI_PWRCTL_WCN7850
-+	tristate "PCI Power Control driver for WCN7850"
-+	select PCI_PWRCTL
-+	default m if (ATH12K && ARCH_QCOM)
-+	help
-+	  Enable support for the PCI power control driver for the ath12k
-+	  module of the WCN7850 WLAN/BT chip.
+ 	  If unsure, say no.
 +
- endmenu
-diff --git a/drivers/pci/pwrctl/Makefile b/drivers/pci/pwrctl/Makefile
-index 52ae0640ef7b..de20c3af1b78 100644
---- a/drivers/pci/pwrctl/Makefile
-+++ b/drivers/pci/pwrctl/Makefile
++if POWER_SEQUENCING
++
++config POWER_SEQUENCING_QCA6390
++	tristate "QCA6390 PMU driver"
++	default m if ARCH_QCOM
++	help
++	  Say U here to enable the power sequencing driver for Qualcomm
++	  QCA6390.
++
++	  The QCA6390 package contains the BT and WLAN modules whose power
++	  is controlled by the PMU module. As the former two share the power-up
++	  sequence which is executed by the PMU, this driver is needed for
++	  correct power control.
++
++endif
+diff --git a/drivers/power/sequencing/Makefile b/drivers/power/sequencing/Makefile
+index dcdf8c0c159e..628345c4e7ae 100644
+--- a/drivers/power/sequencing/Makefile
++++ b/drivers/power/sequencing/Makefile
 @@ -2,3 +2,5 @@
  
- obj-$(CONFIG_PCI_PWRCTL)		+= pci-pwrctl-core.o
- pci-pwrctl-core-y			:= core.o
+ obj-$(CONFIG_POWER_SEQUENCING)		+= pwrseq-core.o
+ pwrseq-core-y				:= core.o
 +
-+obj-$(CONFIG_PCI_PWRCTL_WCN7850)	+= pci-pwrctl-wcn7850.o
-diff --git a/drivers/pci/pwrctl/pci-pwrctl-wcn7850.c b/drivers/pci/pwrctl/pci-pwrctl-wcn7850.c
++obj-$(CONFIG_POWER_SEQUENCING_QCA6390)	+= pwrseq-qca6390.o
+diff --git a/drivers/power/sequencing/pwrseq-qca6390.c b/drivers/power/sequencing/pwrseq-qca6390.c
 new file mode 100644
-index 000000000000..e2b2c53bff29
+index 000000000000..5f254f9c71d7
 --- /dev/null
-+++ b/drivers/pci/pwrctl/pci-pwrctl-wcn7850.c
-@@ -0,0 +1,202 @@
++++ b/drivers/power/sequencing/pwrseq-qca6390.c
+@@ -0,0 +1,353 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2024 Linaro Ltd.
 + */
 +
-+#include <linux/clk.h>
 +#include <linux/delay.h>
 +#include <linux/device.h>
 +#include <linux/gpio/consumer.h>
++#include <linux/jiffies.h>
 +#include <linux/mod_devicetable.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
-+#include <linux/pci-pwrctl.h>
 +#include <linux/platform_device.h>
 +#include <linux/regulator/consumer.h>
-+#include <linux/slab.h>
++#include <linux/pwrseq/provider.h>
++#include <linux/string.h>
 +#include <linux/types.h>
 +
-+struct pci_pwrctl_wcn7850_vreg {
++struct pwrseq_qca6390_vreg {
 +	const char *name;
 +	unsigned int load_uA;
 +};
 +
-+struct pci_pwrctl_wcn7850_pdata {
-+	struct pci_pwrctl_wcn7850_vreg *vregs;
-+	size_t num_vregs;
-+	unsigned int delay_msec;
++struct pwrseq_qca6390_pdata {
++	const struct pwrseq_qca6390_vreg *vregs_common;
++	size_t num_vregs_common;
++	const struct pwrseq_qca6390_vreg *vregs_wlan;
++	size_t num_vregs_wlan;
++	unsigned int pwup_delay_msec;
 +};
 +
-+struct pci_pwrctl_wcn7850_ctx {
-+	struct pci_pwrctl pwrctl;
-+	const struct pci_pwrctl_wcn7850_pdata *pdata;
-+	struct regulator_bulk_data *regs;
-+	struct gpio_desc *en_gpio;
-+	struct clk *clk;
++struct pwrseq_qca6390_ctx {
++	struct pwrseq_device *pwrseq;
++	struct device_node *of_node;
++	const struct pwrseq_qca6390_pdata *pdata;
++	struct regulator_bulk_data *regs_common;
++	struct regulator_bulk_data *regs_wlan;
++	struct gpio_desc *bt_gpio;
++	struct gpio_desc *wlan_gpio;
++	unsigned long last_gpio_enable;
 +};
 +
-+static struct pci_pwrctl_wcn7850_vreg pci_pwrctl_wcn7850_vregs[] = {
-+	{
-+		.name = "vdd",
-+		.load_uA = 16000,
-+	},
++static const struct pwrseq_qca6390_vreg pwrseq_qca6390_vregs_common[] = {
 +	{
 +		.name = "vddio",
-+		.load_uA = 5000,
-+	},
-+	{
-+		.name = "vddio1p2",
-+		.load_uA = 16000,
++		.load_uA = 20000,
 +	},
 +	{
 +		.name = "vddaon",
-+		.load_uA = 26000,
++		.load_uA = 100000,
 +	},
 +	{
-+		.name = "vdddig",
-+		.load_uA = 126000,
++		.name = "vddpmu",
++		.load_uA = 1250000,
 +	},
 +	{
-+		.name = "vddrfa1p2",
-+		.load_uA = 257000,
++		.name = "vddrfa0p95",
++		.load_uA = 200000,
 +	},
 +	{
-+		.name = "vddrfa1p8",
-+		.load_uA = 302000,
++		.name = "vddrfa1p3",
++		.load_uA = 400000,
++	},
++	{
++		.name = "vddrfa1p9",
++		.load_uA = 400000,
 +	},
 +};
 +
-+static struct pci_pwrctl_wcn7850_pdata pci_pwrctl_wcn7850_of_data = {
-+	.vregs = pci_pwrctl_wcn7850_vregs,
-+	.num_vregs = ARRAY_SIZE(pci_pwrctl_wcn7850_vregs),
-+	.delay_msec = 50,
++static const struct pwrseq_qca6390_vreg pwrseq_qca6390_vregs_wlan[] = {
++	{
++		.name = "vddpcie1p3",
++		.load_uA = 35000,
++	},
++	{
++		.name = "vddpcie1p9",
++		.load_uA = 15000,
++	},
 +};
 +
-+static int pci_pwrctl_wcn7850_power_on(struct pci_pwrctl_wcn7850_ctx *ctx)
++static void pwrseq_qca6390_ensure_gpio_delay(struct pwrseq_qca6390_ctx *ctx)
 +{
-+	int ret;
++	unsigned long diff_jiffies = jiffies - ctx->last_gpio_enable;
++	unsigned int diff_msecs = jiffies_to_msecs(diff_jiffies);
 +
-+	ret = regulator_bulk_enable(ctx->pdata->num_vregs, ctx->regs);
-+	if (ret)
-+		return ret;
++	if (diff_msecs < 100)
++		msleep(100 - diff_msecs);
++}
 +
-+	ret = clk_prepare_enable(ctx->clk);
-+	if (ret)
-+		return ret;
++static const struct pwrseq_qca6390_pdata pwrseq_qca6390_of_data = {
++	.vregs_common = pwrseq_qca6390_vregs_common,
++	.num_vregs_common = ARRAY_SIZE(pwrseq_qca6390_vregs_common),
++	.vregs_wlan = pwrseq_qca6390_vregs_wlan,
++	.num_vregs_wlan = ARRAY_SIZE(pwrseq_qca6390_vregs_wlan),
++	.pwup_delay_msec = 16,
++};
 +
-+	gpiod_set_value_cansleep(ctx->en_gpio, 1);
++static int pwrseq_qca6390_vregs_enable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
 +
-+	if (ctx->pdata->delay_msec)
-+		msleep(ctx->pdata->delay_msec);
++	return regulator_bulk_enable(ctx->pdata->num_vregs_common,
++				     ctx->regs_common);
++}
++
++static int pwrseq_qca6390_vregs_disable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	return regulator_bulk_disable(ctx->pdata->num_vregs_common,
++				      ctx->regs_common);
++}
++
++static const struct pwrseq_unit_data pwrseq_qca6390_vregs_unit_data = {
++	.name = "regulators-enable",
++	.enable = pwrseq_qca6390_vregs_enable,
++	.disable = pwrseq_qca6390_vregs_disable,
++};
++
++static const struct pwrseq_unit_data *pwrseq_qca6390_unit_deps[] = {
++	&pwrseq_qca6390_vregs_unit_data,
++	NULL
++};
++
++static int pwrseq_qca6390_bt_enable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	pwrseq_qca6390_ensure_gpio_delay(ctx);
++	gpiod_set_value_cansleep(ctx->bt_gpio, 1);
++	ctx->last_gpio_enable = jiffies;
 +
 +	return 0;
 +}
 +
-+static int pci_pwrctl_wcn7850_power_off(struct pci_pwrctl_wcn7850_ctx *ctx)
++static int pwrseq_qca6390_bt_disable(struct pwrseq_device *pwrseq)
 +{
-+	gpiod_set_value_cansleep(ctx->en_gpio, 0);
-+	clk_disable_unprepare(ctx->clk);
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
 +
-+	return regulator_bulk_disable(ctx->pdata->num_vregs, ctx->regs);
++	gpiod_set_value_cansleep(ctx->bt_gpio, 0);
++
++	return 0;
 +}
 +
-+static void devm_pci_pwrctl_wcn7850_power_off(void *data)
-+{
-+	struct pci_pwrctl_wcn7850_ctx *ctx = data;
++static const struct pwrseq_unit_data pwrseq_qca6390_bt_unit_data = {
++	.name = "bluetooth-enable",
++	.deps = pwrseq_qca6390_unit_deps,
++	.enable = pwrseq_qca6390_bt_enable,
++	.disable = pwrseq_qca6390_bt_disable,
++};
 +
-+	pci_pwrctl_wcn7850_power_off(ctx);
++static int pwrseq_qca6390_wlan_enable(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++	int ret;
++
++	ret = regulator_bulk_enable(ctx->pdata->num_vregs_wlan, ctx->regs_wlan);
++	if (ret)
++		return ret;
++
++	pwrseq_qca6390_ensure_gpio_delay(ctx);
++	gpiod_set_value_cansleep(ctx->wlan_gpio, 1);
++	ctx->last_gpio_enable = jiffies;
++
++	return 0;
 +}
 +
-+static int pci_pwrctl_wcn7850_probe(struct platform_device *pdev)
++static int pwrseq_qca6390_wlan_disable(struct pwrseq_device *pwrseq)
 +{
-+	struct pci_pwrctl_wcn7850_ctx *ctx;
-+	struct device *dev = &pdev->dev;
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	gpiod_set_value_cansleep(ctx->wlan_gpio, 0);
++
++	return regulator_bulk_disable(ctx->pdata->num_vregs_wlan,
++				      ctx->regs_wlan);
++}
++
++static const struct pwrseq_unit_data pwrseq_qca6390_wlan_unit_data = {
++	.name = "wlan-enable",
++	.deps = pwrseq_qca6390_unit_deps,
++	.enable = pwrseq_qca6390_wlan_enable,
++	.disable = pwrseq_qca6390_wlan_disable,
++};
++
++static int pwrseq_qca6390_pwup_delay(struct pwrseq_device *pwrseq)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++
++	if (ctx->pdata->pwup_delay_msec)
++		msleep(ctx->pdata->pwup_delay_msec);
++
++	return 0;
++}
++
++static const struct pwrseq_target_data pwrseq_qca6390_bt_target_data = {
++	.name = "bluetooth",
++	.unit = &pwrseq_qca6390_bt_unit_data,
++	.post_enable = pwrseq_qca6390_pwup_delay,
++};
++
++static const struct pwrseq_target_data pwrseq_qca6390_wlan_target_data = {
++	.name = "wlan",
++	.unit = &pwrseq_qca6390_wlan_unit_data,
++	.post_enable = pwrseq_qca6390_pwup_delay,
++};
++
++static const struct pwrseq_target_data *pwrseq_qca6390_targets[] = {
++	&pwrseq_qca6390_bt_target_data,
++	&pwrseq_qca6390_wlan_target_data,
++	NULL
++};
++
++static int pwrseq_qca6390_match(struct pwrseq_device *pwrseq,
++				struct device *dev)
++{
++	struct pwrseq_qca6390_ctx *ctx = pwrseq_device_get_drvdata(pwrseq);
++	struct device_node *dev_node = dev->of_node;
++
++	/*
++	 * The PMU supplies power to the Bluetooth and WLAN modules. both
++	 * consume the PMU AON output so check the presence of the
++	 * 'vddaon-supply' property and whether it leads us to the right
++	 * device.
++	 */
++	if (!of_property_present(dev_node, "vddaon-supply"))
++		return 0;
++
++	struct device_node *reg_node __free(device_node) =
++			of_parse_phandle(dev_node, "vddaon-supply", 0);
++	if (!reg_node)
++		return 0;
++
++	/*
++	 * `reg_node` is the PMU AON regulator, its parent is the `regulators`
++	 * node and finally its grandparent is the PMU device node that we're
++	 * looking for.
++	 */
++	if (!reg_node->parent || !reg_node->parent->parent ||
++	    reg_node->parent->parent != ctx->of_node)
++		return 0;
++
++	return 1;
++}
++
++static struct regulator_bulk_data *
++pwrseq_qca6390_get_regs(struct device *dev, size_t num_regs,
++			const struct pwrseq_qca6390_vreg *pdata)
++{
++	struct regulator_bulk_data *regs;
 +	int ret, i;
++
++	regs = devm_kcalloc(dev, num_regs, sizeof(*regs), GFP_KERNEL);
++	if (!regs)
++		return ERR_PTR(-ENOMEM);
++
++	for (i = 0; i < num_regs; i++)
++		regs[i].supply = pdata[i].name;
++
++	ret = devm_regulator_bulk_get(dev, num_regs, regs);
++	if (ret < 0)
++		return ERR_PTR(ret);
++
++	for (i = 0; i < num_regs; i++) {
++		if (!pdata[i].load_uA)
++			continue;
++
++		ret = regulator_set_load(regs[i].consumer, pdata[i].load_uA);
++		if (ret)
++			return ERR_PTR(ret);
++	}
++
++	return regs;
++}
++
++static int pwrseq_qca6390_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct pwrseq_qca6390_ctx *ctx;
++	struct pwrseq_config config;
 +
 +	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
 +	if (!ctx)
 +		return -ENOMEM;
++
++	ctx->of_node = dev->of_node;
 +
 +	ctx->pdata = of_device_get_match_data(dev);
 +	if (!ctx->pdata)
 +		return dev_err_probe(dev, -ENODEV,
 +				     "Failed to obtain platform data\n");
 +
-+	if (ctx->pdata->vregs) {
-+		ctx->regs = devm_kcalloc(dev, ctx->pdata->num_vregs,
-+					 sizeof(*ctx->regs), GFP_KERNEL);
-+		if (!ctx->regs)
-+			return -ENOMEM;
++	ctx->regs_common = pwrseq_qca6390_get_regs(dev,
++						   ctx->pdata->num_vregs_common,
++						   ctx->pdata->vregs_common);
++	if (IS_ERR(ctx->regs_common))
++		return dev_err_probe(dev, PTR_ERR(ctx->regs_common),
++				     "Failed to get all regulators\n");
 +
-+		for (i = 0; i < ctx->pdata->num_vregs; i++)
-+			ctx->regs[i].supply = ctx->pdata->vregs[i].name;
++	ctx->regs_wlan = pwrseq_qca6390_get_regs(dev,
++						 ctx->pdata->num_vregs_wlan,
++						 ctx->pdata->vregs_wlan);
++	if (IS_ERR(ctx->regs_wlan))
++		return dev_err_probe(dev, PTR_ERR(ctx->regs_wlan),
++				     "Failed to get all regulators\n");
 +
-+		ret = devm_regulator_bulk_get(dev, ctx->pdata->num_vregs,
-+					      ctx->regs);
-+		if (ret < 0)
-+			return dev_err_probe(dev, ret,
-+					     "Failed to get all regulators\n");
++	ctx->bt_gpio = devm_gpiod_get_optional(dev, "bt-enable", GPIOD_OUT_LOW);
++	if (IS_ERR(ctx->bt_gpio))
++		return dev_err_probe(dev, PTR_ERR(ctx->bt_gpio),
++				     "Failed to get the Bluetooth enable GPIO\n");
 +
-+		for (i = 0; i < ctx->pdata->num_vregs; i++) {
-+			if (!ctx->pdata->vregs[1].load_uA)
-+				continue;
++	ctx->wlan_gpio = devm_gpiod_get_optional(dev, "wlan-enable",
++						 GPIOD_OUT_LOW);
++	if (IS_ERR(ctx->wlan_gpio))
++		return dev_err_probe(dev, PTR_ERR(ctx->wlan_gpio),
++				     "Failed to get the WLAN enable GPIO\n");
 +
-+			ret = regulator_set_load(ctx->regs[i].consumer,
-+						 ctx->pdata->vregs[i].load_uA);
-+			if (ret)
-+				return dev_err_probe(dev, ret,
-+						     "Failed to set vreg load\n");
-+		}
-+	}
++	memset(&config, 0, sizeof(config));
 +
-+	ctx->clk = devm_clk_get_optional(dev, NULL);
-+	if (IS_ERR(ctx->clk))
-+		return dev_err_probe(dev, PTR_ERR(ctx->clk),
-+				     "Failed to get clock\n");
++	config.parent = dev;
++	config.owner = THIS_MODULE;
++	config.drvdata = ctx;
++	config.match = pwrseq_qca6390_match;
++	config.targets = pwrseq_qca6390_targets;
 +
-+	ctx->en_gpio = devm_gpiod_get_optional(dev, "enable", GPIOD_OUT_LOW);
-+	if (IS_ERR(ctx->en_gpio))
-+		return dev_err_probe(dev, PTR_ERR(ctx->en_gpio),
-+				     "Failed to get enable the GPIO\n");
-+
-+	ret = pci_pwrctl_wcn7850_power_on(ctx);
-+	if (ret)
-+		return dev_err_probe(dev, ret,
-+				     "Failed to power on the device\n");
-+
-+	ret = devm_add_action_or_reset(dev, devm_pci_pwrctl_wcn7850_power_off,
-+				       ctx);
-+	if (ret)
-+		return ret;
-+
-+	ctx->pwrctl.dev = dev;
-+
-+	ret = devm_pci_pwrctl_device_set_ready(dev, &ctx->pwrctl);
-+	if (ret)
-+		return dev_err_probe(dev, ret,
-+				     "Failed to register the pwrctl wrapper\n");
++	ctx->pwrseq = devm_pwrseq_device_register(dev, &config);
++	if (IS_ERR(ctx->pwrseq))
++		return dev_err_probe(dev, PTR_ERR(ctx->pwrseq),
++				     "Failed to register the power sequencer\n");
 +
 +	return 0;
 +}
 +
-+static const struct of_device_id pci_pwrctl_wcn7850_of_match[] = {
++static const struct of_device_id pwrseq_qca6390_of_match[] = {
 +	{
-+		.compatible = "pci17cb,1107",
-+		.data = &pci_pwrctl_wcn7850_of_data,
++		.compatible = "qcom,qca6390-pmu",
++		.data = &pwrseq_qca6390_of_data,
 +	},
 +	{ }
 +};
-+MODULE_DEVICE_TABLE(of, pci_pwrctl_wcn7850_of_match);
++MODULE_DEVICE_TABLE(of, pwrseq_qca6390_of_match);
 +
-+static struct platform_driver pci_pwrctl_wcn7850_driver = {
++static struct platform_driver pwrseq_qca6390_driver = {
 +	.driver = {
-+		.name = "pci-pwrctl-wcn7850",
-+		.of_match_table = pci_pwrctl_wcn7850_of_match,
++		.name = "pwrseq-qca6390",
++		.of_match_table = pwrseq_qca6390_of_match,
 +	},
-+	.probe = pci_pwrctl_wcn7850_probe,
++	.probe = pwrseq_qca6390_probe,
 +};
-+module_platform_driver(pci_pwrctl_wcn7850_driver);
++module_platform_driver(pwrseq_qca6390_driver);
 +
 +MODULE_AUTHOR("Bartosz Golaszewski <bartosz.golaszewski@linaro.org>");
-+MODULE_DESCRIPTION("PCI Power Sequencing module for WCN7850");
++MODULE_DESCRIPTION("QCA6390 PMU power sequencing driver");
 +MODULE_LICENSE("GPL");
 -- 
 2.40.1
