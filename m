@@ -1,51 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B57086F073
-	for <linux-wireless@vger.kernel.org>; Sun, 18 Feb 2024 17:52:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5A36F07F
+	for <linux-wireless@vger.kernel.org>; Sun, 18 Feb 2024 17:52:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708278751; cv=none; b=fTy+mL8w27Xa0CpHbYkZyRjnV3O4O8GWNgrhx5tDl2Tzi28jcuJzguzgdnsSjjZzlqJzOLEzX9yCVejg0o9MTbRrkLq4Fdz+NFsRrOLK11xNJUCNN8F7HM7AFSZloGbXvqW2EhTXBFEWcqczGq+K7idEBwg/qx+7CdS5lnvTJzg=
+	t=1708278760; cv=none; b=tsj5DbVP7HeTreSSat2qO7zNvESqfYIrL3wXtgAw99icF6e5x7awTFwEgMMIf3LXH9V5OjcjM14U5uDayQNlm98UFT/g63SDGBzsG2jWNe9S/9oaaNlDms7nxVobaf9Vl+LoURAzYjp/Qt7tteVMJYUSxTsYsNKph+t3yh8i4KU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708278751; c=relaxed/simple;
-	bh=G+YodfR4e2XXImQfdYALBKenslG2kJSn0i17Xvfpm5o=;
+	s=arc-20240116; t=1708278760; c=relaxed/simple;
+	bh=WZLy47OalfPpmhmdoWBPLEZ6ydjRfJfM93jaNaHm7D8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZVLWssCqtTjgkmcn0iuT50BJ7x0DRlWoeJOdqziUmbcsgfntFRC9OKLSPlWKnGGsq+9aAu4JDBmxdcaGVkLgcSGYq4Nh1pP/h4k8nuiiHd0n7orr+tB81q/2r74GBLwPJVGFlC8cbKOD2qI7BPeD2H7vI9Oo1jOvbiffYcSlLO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fu+McmBb; arc=none smtp.client-ip=198.175.65.18
+	 MIME-Version; b=PrpTF2+3qPMwdATPsqGP2RVTo03jlsMqmG03HV+RyDo5P2OJfVoK/3/66uvPLtRNVcNB/yM34gKPgeU6/PutTQvMzF/1rQSV9FppGNHa+eQP48N+gQmRXkLgPd12lH89SM0V1S/WCHtCoeo+Wn+9gyNKyiKEdPZOeuPIB6YQsOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CnlpmXEs; arc=none smtp.client-ip=198.175.65.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fu+McmBb"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CnlpmXEs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708278741; x=1739814741;
+  t=1708278749; x=1739814749;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=G+YodfR4e2XXImQfdYALBKenslG2kJSn0i17Xvfpm5o=;
-  b=fu+McmBbBNjNeH6LalQWxtJbxRPi65W3MsL8Q0OAFZ8vWYb/ZzizmA2/
-   MEc9F54w5J3wmpwxwgjmNFDyLqcmTITxvzbENV2Efrpps5rQJrPp6mVJS
-   A443nIo44h4bDemPSc6rX59m7JKht+iOdxAcJLGhT82efWnjBmI3RtIx3
-   snYhLvce+lsC4wR8Rw5vlokIEMn275TKoeJiXoKveC5reVGMdgkFx8EGu
-   4+kHiMd2LmHUfm7xZs8cjCN7QIObWQS81jvYTktDa8ijrWHTuyLEIu67v
-   BLgwJMkDj/xzjtPlreWYzdtlNL/K2dTppnnZXHMxQEFl+fYd19+0UZ8Ll
+  bh=WZLy47OalfPpmhmdoWBPLEZ6ydjRfJfM93jaNaHm7D8=;
+  b=CnlpmXEsPTlSE9+gR2crklrEm2HRxFuMzuwAcWFlC93wWyjybEqlN/gt
+   LKk6WaNdoaoFHmhVCyEF15AYx8yyAxAr4kk6TokDB1I8p7nsPVXEQ93I7
+   SAmyp6nPEOsDJKVjeWxQcgvw49RTahyQMkbzUvh6SgvAeYsCx4F3xnDt7
+   J4DJwXxU38zBXAu9wGOqz3KBwSmUFlTXTvvaAvQfHlagd7Pj6nxg9uDt7
+   dmMgcCzjqtbDAUYU89DDmeeJBBxLeuUwvSDqzg4rSs4//xMhddDg9c7ZI
+   MiI0dzV4WZ9pgKJ4V7TRTlaiFDyxGE/YW+d7blKToGqt3hbEtMJoOZwoo
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10988"; a="2464985"
+X-IronPort-AV: E=McAfee;i="6600,9927,10988"; a="2464992"
 X-IronPort-AV: E=Sophos;i="6.06,169,1705392000"; 
-   d="scan'208";a="2464985"
+   d="scan'208";a="2464992"
 Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2024 09:52:21 -0800
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2024 09:52:25 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.06,169,1705392000"; 
-   d="scan'208";a="27459449"
+   d="scan'208";a="27459456"
 Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2024 09:52:19 -0800
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2024 09:52:24 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/11] wifi: iwlwifi: iwl-fh.h: fix kernel-doc issues
-Date: Sun, 18 Feb 2024 19:51:49 +0200
-Message-Id: <20240218194912.4a342ac06f0b.I604ea964a094b43df0ab29b06231c2f42d6bd79b@changeid>
+Subject: [PATCH 10/11] wifi: iwlwifi: handle per-phy statistics from fw
+Date: Sun, 18 Feb 2024 19:51:51 +0200
+Message-Id: <20240218194912.e84f975b69ee.Ibbc7817135827e45adaaa47b796be165f9f1ca48@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240218175152.3133364-1-miriam.rachel.korenblit@intel.com>
 References: <20240218175152.3133364-1-miriam.rachel.korenblit@intel.com>
@@ -58,105 +58,81 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+In the operational statistics notifications (both old and new
+API) the driver receives the statistics per phy.
+currently this statistics wasn't handled because they wasn't needed.
 
-Clean up kernel-doc in iwl-fh.h. In one case, rename the
-(otherwise unused) struct member to have the correct name.
+Now the channel_load_by_us parameter in these statistics will be used
+for the link grading calculation (implemented in another patch),
+so store its value in phy_ctxt.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h | 36 ++++++++++++---------
- 1 file changed, 20 insertions(+), 16 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c  | 17 ++++++++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index e0400ba2ab74..6ba374efaacb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 8a45d69d0f81..13b803101d4b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -106,6 +106,7 @@ struct iwl_mvm_phy_ctxt {
+ 	/* track for RLC config command */
+ 	u32 center_freq1;
+ 	bool rlc_disabled;
++	u32 channel_load_by_us;
+ };
+ 
+ struct iwl_mvm_time_event_data {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 72df41996464..b1add7942c5b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
 @@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-- * Copyright (C) 2005-2014, 2018-2021, 2023 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2021, 2023-2024 Intel Corporation
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2012-2014, 2018-2023 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2024 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
   */
- #ifndef __iwl_fh_h__
-@@ -570,18 +570,19 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
- /**
-  * struct iwl_rb_status - reserve buffer status
-  * 	host memory mapped FH registers
-- * @closed_rb_num [0:11] - Indicates the index of the RB which was closed
-- * @closed_fr_num [0:11] - Indicates the index of the RX Frame which was closed
-- * @finished_rb_num [0:11] - Indicates the index of the current RB
-+ * @closed_rb_num: [0:11] Indicates the index of the RB which was closed
-+ * @closed_fr_num: [0:11] Indicates the index of the RX Frame which was closed
-+ * @finished_rb_num: [0:11] Indicates the index of the current RB
-  * 	in which the last frame was written to
-- * @finished_fr_num [0:11] - Indicates the index of the RX Frame
-+ * @finished_fr_num: [0:11] Indicates the index of the RX Frame
-  * 	which was transferred
-+ * @__spare: reserved
-  */
- struct iwl_rb_status {
- 	__le16 closed_rb_num;
- 	__le16 closed_fr_num;
- 	__le16 finished_rb_num;
--	__le16 finished_fr_nam;
-+	__le16 finished_fr_num;
- 	__le32 __spare;
- } __packed;
+@@ -752,6 +752,19 @@ iwl_mvm_update_tcm_from_stats(struct iwl_mvm *mvm, __le32 *air_time_le,
+ 	spin_unlock(&mvm->tcm.lock);
+ }
  
-@@ -651,15 +652,15 @@ struct iwl_tfd_tb {
-  *
-  * This structure contains dma address and length of transmission address
-  *
-- * @tb_len length of the tx buffer
-- * @addr 64 bits dma address
-+ * @tb_len: length of the tx buffer
-+ * @addr: 64 bits dma address
-  */
- struct iwl_tfh_tb {
- 	__le16 tb_len;
- 	__le64 addr;
- } __packed;
++static void iwl_mvm_handle_per_phy_stats(struct iwl_mvm *mvm,
++					 struct iwl_stats_ntfy_per_phy *per_phy)
++{
++	int i;
++
++	for (i = 0; i < NUM_PHY_CTX; i++) {
++		if (!mvm->phy_ctxts[i].ref)
++			continue;
++		mvm->phy_ctxts[i].channel_load_by_us =
++			le32_to_cpu(per_phy[i].channel_load_by_us);
++	}
++}
++
+ static void
+ iwl_mvm_stats_ver_15(struct iwl_mvm *mvm,
+ 		     struct iwl_statistics_operational_ntfy *stats)
+@@ -766,6 +779,7 @@ iwl_mvm_stats_ver_15(struct iwl_mvm *mvm,
+ 					    IEEE80211_IFACE_ITER_NORMAL,
+ 					    iwl_mvm_stat_iterator_all_macs,
+ 					    &data);
++	iwl_mvm_handle_per_phy_stats(mvm, stats->per_phy);
+ }
  
--/**
-+/*
-  * Each Tx queue uses a circular buffer of 256 TFDs stored in host DRAM.
-  * Both driver and device share these circular buffers, each of which must be
-  * contiguous 256 TFDs.
-@@ -698,10 +699,11 @@ struct iwl_tfd {
+ static void
+@@ -942,6 +956,7 @@ void iwl_mvm_handle_rx_system_oper_stats(struct iwl_mvm *mvm,
  
- /**
-  * struct iwl_tfh_tfd - Transmit Frame Descriptor (TFD)
-- * @ num_tbs 0-4 number of active tbs
-- *	     5 -15   reserved
-- * @ tbs[25]	transmit frame buffer descriptors
-- * @ __pad	padding
-+ * @num_tbs:
-+ *	0-4 number of active tbs
-+ *	5-15   reserved
-+ * @tbs:	transmit frame buffer descriptors
-+ * @__pad:	padding
-  */
- struct iwl_tfh_tfd {
- 	__le16 num_tbs;
-@@ -718,10 +720,12 @@ struct iwl_tfh_tfd {
-  * struct iwlagn_schedq_bc_tbl scheduler byte count table
-  *	base physical address provided by SCD_DRAM_BASE_ADDR
-  * For devices up to 22000:
-- * @tfd_offset  0-12 - tx command byte count
-+ * @tfd_offset:
-+ *	For devices up to 22000:
-+ *		 0-12 - tx command byte count
-  *		12-16 - station index
-- * For 22000:
-- * @tfd_offset  0-12 - tx command byte count
-+ *	For 22000:
-+ *		 0-12 - tx command byte count
-  *		12-13 - number of 64 byte chunks
-  *		14-16 - reserved
-  */
+ 	ieee80211_iterate_stations_atomic(mvm->hw, iwl_mvm_stats_energy_iter,
+ 					  average_energy);
++	iwl_mvm_handle_per_phy_stats(mvm, stats->per_phy);
+ }
+ 
+ void iwl_mvm_handle_rx_system_oper_part1_stats(struct iwl_mvm *mvm,
 -- 
 2.34.1
 
