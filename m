@@ -1,100 +1,96 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [20.231.56.155])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3675313F01E;
-	Tue, 27 Feb 2024 13:51:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=20.231.56.155
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F8313F01E;
+	Tue, 27 Feb 2024 13:57:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709041889; cv=none; b=RTiR3QrJqHTqUFo6G0wiRlGrO2VE7DCNZP8siXdkaBk0x8x8B14GqfcZEbpVuH0CQrDK4hSU4/9NX6m13I/zEFu8FZn43JruAE/Jv3hnGOrLkfRjKu4H/f2IrIZLOJvArfTF+ZTeBBRukd3KScB83rzoggYJS7KvZeibpQicnbA=
+	t=1709042272; cv=none; b=DkyyM5ixahm+ZeQvu1NRlKGd5B7Tdm7OyKhfHlbp7gPZ5nyJe1sG/7afEJhdiKu62jI7ypqzbEjd/RqzoZlwLOE5Oyd9vYyzDnNs6oAyUE7lE2suxbjo11EPWPdcEd3i90ws0PmjJbcy8EXcYF76d5giC1yFLpQ9DpnHw5EA75g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709041889; c=relaxed/simple;
-	bh=25KIikUSQM4AHnPVJzVUXiR8trFSdiqq3nXlzQll/2U=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=cZwkL6WCkcNrbMjwl5TbOkdUoCCk/gBU/iqhuvDA14iQcWlMJexUUB58b5k+msQXLmb/1/VXLMxaHbA5SaI8DWVMPX0cEhbw5L1NTQwa4c8VMgSMncuhPNoP4k8SIe7Ub8CPa3iq3rXztRrbntWQUi6OSVYjn/uy2F9znUg/PHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=20.231.56.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from duoming$zju.edu.cn ( [124.236.128.238] ) by
- ajax-webmail-mail-app3 (Coremail) ; Tue, 27 Feb 2024 21:44:43 +0800
- (GMT+08:00)
-Date: Tue, 27 Feb 2024 21:44:43 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: duoming@zju.edu.cn
-To: "Joe Perches" <joe@perches.com>
-Cc: "Arend van Spriel" <arend.vanspriel@broadcom.com>,
-	linux-kernel@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-	brcm80211@lists.linux.dev, linux-wireless@vger.kernel.org,
-	justinstitt@google.com, john@keeping.me.uk, quic_alokad@quicinc.com,
-	marcan@marcan.st, johannes.berg@intel.com, linus.walleij@linaro.org,
-	kvalo@kernel.org
-Subject: Re: [PATCH] wifi: brcm80211: handle pmk_op allocation failure
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2023.4-cmXT5 build
- 20231205(37e20f0e) Copyright (c) 2002-2024 www.mailtech.cn
- mispb-4df6dc2c-e274-4d1c-b502-72c5c3dfa9ce-zj.edu.cn
-In-Reply-To: <b0a352781f58a829deadffbe2ef2085c97c6ab32.camel@perches.com>
-References: <20240227080613.34001-1-duoming@zju.edu.cn>
- <87166784-79ab-4eb4-ad1e-af4bc31757b7@broadcom.com>
- <b0a352781f58a829deadffbe2ef2085c97c6ab32.camel@perches.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1709042272; c=relaxed/simple;
+	bh=biCbZLCy7NySqqV+H6vAkrnFQ5KUncRsBTr63Ei8uJ8=;
+	h=Content-Type:MIME-Version:From:Subject:To:Cc:Message-Id:Date; b=kUM+X+MFLKOPrkvSLeeVY1ls9gsd9/i3n6NR0TWRgElfggLAZzyYi+8DIKKcFw+6OA21FEsgsTb3EPGp9zlIr+cxy+Ii8Y23hrk/tU/rpEJGaDQPuv7LKAIcQeMS00sTIDpXMoWacp106Ux+6NMQnnTkY5N26F+JOWFi/H/o5vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDX8TSI2; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDX8TSI2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5EC6C43390;
+	Tue, 27 Feb 2024 13:57:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1709042272;
+	bh=biCbZLCy7NySqqV+H6vAkrnFQ5KUncRsBTr63Ei8uJ8=;
+	h=From:Subject:To:Cc:Date:From;
+	b=UDX8TSI2NC8W4w3xmtJqv6+o40jLQv32R91o38ku4NH3POsVajzYJz1YndQco8h9v
+	 jvDozxc0Ye+UGJPgFdoumAanvfbSdC63RVIGrsZk1MoDEUWge9wcBISnJ8g4fy7DOu
+	 zAefJWUMcpRHQzEp0yLhxkAQhkD5pPd+NcE418zxIPXh34spdp2SbtYF1uZ4LoBKEG
+	 8pQgnLo20uplFRapVUG4vx9iMAeaaUEJNTvwqAU7DQ/GbdaLwHVGC4WRTTXdMuzJtS
+	 3sEhztcpzAALp6CyWajYvpnB8MpIgOT4CzUKsS/C0Eo+FYhEzTiA9B4dECum57fwF1
+	 MJ+dLfExl0utw==
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <62bf57d8.2291.18deacf80c6.Coremail.duoming@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:cC_KCgBHvTdM591lQACiAQ--.38834W
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwQEAWXc3dIZAwAAsu
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Transfer-Encoding: 7bit
+From: Kalle Valo <kvalo@kernel.org>
+Subject: pull-request: wireless-2024-02-27
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20240227135751.C5EC6C43390@smtp.kernel.org>
+Date: Tue, 27 Feb 2024 13:57:51 +0000 (UTC)
 
-T24gVHVlLCAyNyBGZWIgMjAyNCAwMzo0MjoxMyAtMDgwMCBKb2UgUGVyY2hlcyB3cm90ZToKPiA+
-ID4gVGhlIGt6YWxsb2MoKSBpbiBicmNtZl9wbWtzYV92M19vcCgpIHdpbGwgcmV0dXJuIG51bGwg
-aWYgdGhlCj4gPiA+IHBoeXNpY2FsIG1lbW9yeSBoYXMgcnVuIG91dC4gQXMgYSByZXN1bHQsIGlm
-IHdlIGRlcmVmZXJlbmNlCj4gPiA+IHRoZSBudWxsIHZhbHVlLCB0aGUgbnVsbCBwb2ludGVyIGRl
-cmVmZXJlbmNlIGJ1ZyB3aWxsIGhhcHBlbi4KPiA+ID4gCj4gPiA+IFJldHVybiAtRU5PTUVNIGZy
-b20gYnJjbWZfcG1rc2FfdjNfb3AoKSBpZiBremFsbG9jKCkgZmFpbHMKPiA+ID4gZm9yIHBta19v
-cC4KPiA+IAo+ID4gTkFLIChzZWUgYmVsb3cpCj4gPiAKPiA+IEFsc28gdGhpcyBpc3N1ZSB3YXMg
-cmVwb3J0ZWQgZWFybGllciBieSBKb2UgUGVyY2hlcy4gTm90IHN1cmUgaWYgaGUgCj4gPiB3YW50
-cyB0byBiZSBtZW50aW9uZWQgYXMgc3VjaC4KPiAKPiBJIHRoaW5rIGl0J3MgdW5pbXBvcnRhbnQg
-dG8gYmUgbWVudGlvbmVkLgo+IAo+IEkgdGhpbmsgaXQncyBtb3JlIGltcG9ydGFudCB0aGF0IHRo
-ZSBjb2RlIGJlIHJlc2VhcmNoZWQKPiB0aGF0IHRoZSBzaW1wbGUgcmV0dXJuIG9mIC1FTk9NRU0g
-dGhlIGFwcHJvcHJpYXRlIGZpeAo+IGFuZCBpcyBoYW5kbGVkIGJ5IGFsbCBwb3NzaWJsZSBjYWxs
-ZXJzIG9mIHRoZSBmdW5jdGlvbi4KClRoZXJlIGFyZSB0aHJlZSBmdW5jdGlvbnMgdGhhdCBjYWxs
-IHRoZSBicmNtZl9wbWtzYV92M19vcCgpLAppbmNsdWRpbmcgYnJjbWZfY2ZnODAyMTFfc2V0X3Bt
-a3NhKCksIGJyY21mX2NmZzgwMjExX2RlbF9wbWtzYSgpCmFuZCBicmNtZl9jZmc4MDIxMV9mbHVz
-aF9wbWtzYSgpLiBUaGUgcmV0dXJuIHR5cGUgb2YgdGhlIGFib3ZlCnRocmVlIGZ1bmN0aW9ucyBp
-cyBzMzIuIElmIGJyY21mX3Bta3NhX3YzX29wKCkgcmV0dXJucyAtRU5PTUVNLAp0aGUgYWJvdmUg
-dGhyZWUgZnVuY3Rpb25zIHdpbGwgYWxzbyByZXR1cm4gLUVOT01FTS4gSXQgY291bGQgYmUKaGFu
-ZGxlZCBhcHByb3ByaWF0ZWx5IGJ5IHRoZSBjYWxsZXJzIG9mIHRoZSBmdW5jdGlvbi4gU28gSSB0
-aGluawp0aGUgc2ltcGxlIHJldHVybiBvZiAtRU5PTUVNIGlzIGFwcHJvcHJpYXRlLgoKPiA+ID4g
-Rml4ZXM6IGE5NjIwMmFjYWVhNCAoIndpZmk6IGJyY21mbWFjOiBjZmc4MDIxMTogQWRkIHN1cHBv
-cnQgZm9yIFBNS0lEX1YzIG9wZXJhdGlvbnMiKQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBEdW9taW5n
-IFpob3UgPGR1b21pbmdAemp1LmVkdS5jbj4KPiA+ID4gLS0tCj4gPiA+ICAgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMgfCA1ICsrKysr
-Cj4gPiA+ICAgMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKQo+ID4gPiAKPiA+ID4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1h
-Yy9jZmc4MDIxMS5jcSBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9i
-cmNtZm1hYy9jZmc4MDIxMS5jCj4gPiA+IGluZGV4IDI4ZDZhMzBjYzAxLi4zYjQyMGIzMzE4OCAx
-MDA2NDQKPiA+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjEx
-L2JyY21mbWFjL2NmZzgwMjExLmMKPiA+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJv
-YWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMKPiA+ID4gQEAgLTQzMjIsNiArNDMy
-MiwxMCBAQCBicmNtZl9wbWtzYV92M19vcChzdHJ1Y3QgYnJjbWZfaWYgKmlmcCwgc3RydWN0IGNm
-ZzgwMjExX3Bta3NhICpwbWtzYSwKPiA+ID4gICAJaW50IHJldDsKPiA+ID4gICAKPiA+ID4gICAJ
-cG1rX29wID0ga3phbGxvYyhzaXplb2YoKnBta19vcCksIEdGUF9LRVJORUwpOwo+ID4gPiArCWlm
-ICghcG1rX29wKSB7Cj4gPiA+ICsJCXJldCA9IC1FTk9NRU07Cj4gPiA+ICsJCWdvdG8gb3V0Owo+
-ID4gPiArCX0KPiA+IAo+ID4gVGhlcmUgaXMgcmVhbGx5IG5vIG5lZWQgdG8gaW50cm9kdWNlIGEg
-bmV3IGxhYmVsIGZvciB0aGlzLiBBbHRob3VnaCB5b3UgCj4gPiBjYW4ga2ZyZWUoKSBhIE5VTEwg
-cG9pbnRlciB0aGVyZSBpcyBubyBuZWVkIHRvIGRvIHNvIHdoZW4geW91IGtub3cgCj4gPiBhbHJl
-YWR5IGl0IGlzIE5VTEwuIEp1c3QgcmV0dXJuIC1FTk9NRU0gYW5kIGJlIGRvbmUgd2l0aCBpdC4K
-PiA+IAo+ID4gUmVnYXJkcywKPiA+IEFyZW5kCj4gPiAKPiA+ID4gICAJcG1rX29wLT52ZXJzaW9u
-ID0gY3B1X3RvX2xlMTYoQlJDTUZfUE1LU0FfVkVSXzMpOwo+ID4gPiAgIAo+ID4gPiAgIAlpZiAo
-IXBta3NhKSB7Cj4gPiA+IEBAIC00MzQwLDYgKzQzNDQsNyBAQCBicmNtZl9wbWtzYV92M19vcChz
-dHJ1Y3QgYnJjbWZfaWYgKmlmcCwgc3RydWN0IGNmZzgwMjExX3Bta3NhICpwbWtzYSwKPiA+ID4g
-ICAJcG1rX29wLT5sZW5ndGggPSBjcHVfdG9fbGUxNihsZW5ndGgpOwo+ID4gPiAgIAo+ID4gPiAg
-IAlyZXQgPSBicmNtZl9maWxfaW92YXJfZGF0YV9zZXQoaWZwLCAicG1raWRfaW5mbyIsIHBta19v
-cCwgc2l6ZW9mKCpwbWtfb3ApKTsKPiA+ID4gK291dDoKPiA+ID4gICAJa2ZyZWUocG1rX29wKTsK
-PiA+ID4gICAJcmV0dXJuIHJldDsKPiA+ID4gICB9CgpCZXN0IHJlZ2FyZHMsCkR1b21pbmcgWmhv
-dQo=
+Hi,
+
+here's a pull request to net tree, more info below. Please let me know if there
+are any problems.
+
+Kalle
+
+The following changes since commit b7198383ef2debe748118996f627452281cf27d7:
+
+  wifi: iwlwifi: mvm: fix a crash when we run out of stations (2024-02-08 14:55:39 +0100)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2024-02-27
+
+for you to fetch changes up to 413dafc8170fcb925fb17af8842f06af305f8e0b:
+
+  wifi: mac80211: only call drv_sta_rc_update for uploaded stations (2024-02-23 09:22:52 +0100)
+
+----------------------------------------------------------------
+wireless fixes for v6.8-rc7
+
+Few remaining fixes, hopefully the last wireless pull request to v6.8. Two
+fixes to the stack and two to iwlwifi but no high priority fixes this
+time.
+
+----------------------------------------------------------------
+Benjamin Berg (1):
+      wifi: iwlwifi: mvm: ensure offloading TID queue exists
+
+Emmanuel Grumbach (1):
+      wifi: iwlwifi: mvm: fix the TXF mapping for BZ devices
+
+Felix Fietkau (1):
+      wifi: mac80211: only call drv_sta_rc_update for uploaded stations
+
+Jeff Johnson (2):
+      MAINTAINERS: wifi: update Jeff Johnson e-mail address
+      MAINTAINERS: wifi: Add N: ath1*k entries to match .yaml files
+
+Johannes Berg (1):
+      wifi: nl80211: reject iftype change with mesh ID change
+
+ MAINTAINERS                                       | 11 +++++----
+ drivers/net/wireless/intel/iwlwifi/fw/api/txq.h   | 12 +++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       |  9 +++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 11 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  8 +++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 28 +++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h      |  3 ++-
+ net/mac80211/rate.c                               |  3 ++-
+ net/wireless/nl80211.c                            |  2 ++
+ 9 files changed, 76 insertions(+), 11 deletions(-)
+
