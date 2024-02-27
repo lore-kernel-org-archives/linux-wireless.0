@@ -1,91 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA46E13A87C
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2024 13:23:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FD9D13F006
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Feb 2024 13:48:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709040184; cv=none; b=lGCd0jzvSmTCt/vvomZN1P37qZx5wvGB4Q6Fk9SoUYSD4Y4YsrwNX6NNbFeiX1jGC/PxEozvOMSA+WzEm5U+s6e4NGVghPLagmI+CGA6oqLVXB/9XMN013DE4f693/9n7vTA/v/8W2ob4wAFi7+uoFah4x//PMVAkEOM+k0A1+g=
+	t=1709041686; cv=none; b=MkZlpfQZcQZ/91aFL14fa4CHI4AR04lgPYPEvxsl0mzi1NAH7gL5hAI6KpXzdYjpXsKxrjw7l0uuxpKI3A9kWz6Csyt2biLd4pZPgPJL0uRsi5lfjV/yvIPV2Qn6YYwMHydeEKkmJE5G5Kbusv/yuMq3QYnacRPCNCqokquxhCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709040184; c=relaxed/simple;
-	bh=TUkZkkUGbM11amjg6L2bFOhq4Ad1EaBH2oZivW9MLj8=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=V72qD9rCI9NE28JpVDuRqG0NVyHk8hrnNW9GpzHWGyxP+cdK5SQV04ZNDiC+COJYVPwJgszn4YNePZDGpwLey9HDyg6/lHTjaQ+a/UeBMhiveVmjRexkpw7drp3HVGgWXx3HRM3MyA+vD5v6MLnffmIc8qKYppMu70UURftQBtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qnjpRWG1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709041686; c=relaxed/simple;
+	bh=Fz00mnO8wt75jhaPVRAdWIaW5p/1QdSAgiEzjtfNvdc=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=MPMSvbYtnL5aXHnPWjN9gRY1EjPr13QGFGWv050ecokq0g0Q0KMytSOqiHoxz6Eq0fRq2W9LfgleCq28d655jkWWq7HFRyr0H4wrh4hY0OlVVAAWP10cQktfuDfUdNROByqCncmKqae54FnGH0D0DbbhPVLe92rDVjiz7m4mibk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PEt9duzJ; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qnjpRWG1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A887AC433C7;
-	Tue, 27 Feb 2024 13:23:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709040184;
-	bh=TUkZkkUGbM11amjg6L2bFOhq4Ad1EaBH2oZivW9MLj8=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=qnjpRWG10Z1GRIM7uPI78mrinLBuTcKaqqj4xGZY0OLDrQKXbSZy8od7d2L2LEfqX
-	 K3n2hFb7Sl59E4Yb3v6D906va6CnV//7I1EE1PT1EbqKLQWSNk6PNOsbqUtgqKcWIr
-	 OwwRQbcWNaaSf228gp3jggrQg3Q1uN/56W72Wc2FpzGtft68Yegp3MBFOql2hB/Ix3
-	 5ipAMT0XpA3WXTpEI4JF3IHhQoKrimhQHod6me4IlIP+24fHbvT4UZXcqF/oubB8T1
-	 LVP0CyhQDcjQDvLWp6l4+wfNR+bNZRqRvZD47Li33tcsIGhHERlbLoQtZH3PnS92a2
-	 JAlHMO8sv/ukA==
-From: Kalle Valo <kvalo@kernel.org>
-To: Lingbo Kong <quic_lingbok@quicinc.com>
-Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4] wifi: ath12k: report tx bitrate for iw dev xxx
- station dump
-References: <20240219095802.1147-1-quic_lingbok@quicinc.com>
-	<87y1b7jkxu.fsf@kernel.org>
-	<6f39eb1c-97f7-4029-a5f2-5ab36ff0f0a6@quicinc.com>
-Date: Tue, 27 Feb 2024 15:23:01 +0200
-In-Reply-To: <6f39eb1c-97f7-4029-a5f2-5ab36ff0f0a6@quicinc.com> (Lingbo Kong's
-	message of "Tue, 27 Feb 2024 21:07:36 +0800")
-Message-ID: <877ciq9h3e.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PEt9duzJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=aQCQEJyDlL03QbDHCFktm6JFzoi5Nc2x2S7OyRZuXAA=;
+	t=1709041684; x=1710251284; b=PEt9duzJEhHjbj04q2ZvG871+dyJB80293HstHVrOSITOOm
+	YJ4qLgLhQhT5OqiGHAA8ijlV7Im9iPzeD1Yo8NQBxmfO6Yb8R05qp2cUSndBAXJlPW5OAHhmr1eAW
+	fqYbhgOKGy0NElAQTcaQ+SHdgaPAgkzEA2FvFtrJIjZjgwVsUx6pLIpkbUN4w1biJfbLNJRqVw3Na
+	BATzhWoQ+/uC8hENBcXNKbDzRPGRgsRIEcpBbj/mVGzbI9OGvi1ODk3CRvSO+FRhjz0fwFxl088yl
+	cQP1a4oE92QJAXpmSqOLXW9BT0cKJYum1hF40K49U7Yt5A59iG5Pqt/abkldb9vQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1rexoM-0000000AhbM-1seK;
+	Tue, 27 Feb 2024 14:47:58 +0100
+Message-ID: <0f8a0451e547f318febcbe36823e1f9914cc684b.camel@sipsolutions.net>
+Subject: Re: Kernel deadlock in 6.7.5 + hacks, maybe debugfs related.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>, linux-wireless
+	 <linux-wireless@vger.kernel.org>
+Date: Tue, 27 Feb 2024 14:47:57 +0100
+In-Reply-To: <95d56b9a-4b91-476f-bab3-7af0f28ff469@candelatech.com>
+References: <1c9fa9e5-09f1-0522-fdbc-dbcef4d255ca@candelatech.com>
+	 <bdc7c51e3b6afaa7ac79efa15c6d1d41e9e918b5.camel@sipsolutions.net>
+	 <95d56b9a-4b91-476f-bab3-7af0f28ff469@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.4 (3.50.4-1.fc39) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-malware-bazaar: not-scanned
 
-Lingbo Kong <quic_lingbok@quicinc.com> writes:
 
-> On 2024/2/26 23:37, Kalle Valo wrote:
->> Lingbo Kong <quic_lingbok@quicinc.com> writes:
->> 
->>> The tx bitrate of "iw dev xxx station dump" always show an invalid value
->>> "tx bitrate: 6.0MBit/s".
->>>
->>> To address this issue, parse the tx complete report from firmware and
->>> indicate the tx rate to mac80211.
->>>
->>> After that, "iw dev xxx station dump" show the correct tx bitrate such as:
->>> tx bitrate: 104.0 MBit/s MCS 13
->>> tx bitrate: 144.4 MBit/s MCS 15 short GI
->>> tx bitrate: 626.9 MBit/s 80MHz HE-MCS 6 HE-NSS 2 HE-GI 0 HE-DCM 0
->>> tx bitrate: 1921.5 MBit/s 160MHz HE-MCS 9 HE-NSS 2 HE-GI 0 HE-DCM 0
->>>
->>> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
->>> Tested-on: QCN9274 hw2.0 PCI QCN9274 hw2.0 PCI
->>> WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
->>>
->>> Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
->> Please use full englist words like transmit instead of tx. Also the
->> title could be simplified to:
->> wifi: ath12k: report station mode transmit rate to user space
->> Here I assumed this only works in station mode. Or does this also
->> support AP and P2P mode? The commit message should explain that.
->> 
->
-> Ok, i will apply it in next version. Thanks for pointing out.
+> Feb 26 06:01:45 ct523c-0b0b kernel: task:ip              state:D stack:0 =
+    pid:28125 tgid:28125 ppid:3604   flags:0x00004002
+> Feb 26 06:01:45 ct523c-0b0b kernel: Call Trace:
+> Feb 26 06:01:45 ct523c-0b0b kernel:  <TASK>
+> Feb 26 06:01:45 ct523c-0b0b kernel:  __schedule+0x42c/0xde0
+> Feb 26 06:01:45 ct523c-0b0b kernel:  schedule+0x3c/0x120
+> Feb 26 06:01:45 ct523c-0b0b kernel:  schedule_timeout+0x19c/0x1b0
+> Feb 26 06:01:45 ct523c-0b0b kernel:  ? mark_held_locks+0x49/0x70
+> Feb 26 06:01:45 ct523c-0b0b kernel:  __wait_for_common+0xba/0x1d0
+> Feb 26 06:01:45 ct523c-0b0b kernel:  ? usleep_range_state+0xb0/0xb0
+> Feb 26 06:01:45 ct523c-0b0b kernel:  remove_one+0x6b/0x100
 
-After rereading my comments maybe keep the title simple like:
+Can you say where this remove_one+0x6b is?
 
-  wifi: ath12k: report station mode transmit rate
+I feel it's probably this:
 
-But it would be good to clarify in the commit message what modes this is
-supported. And what hardware families support this.
+       if (!refcount_dec_and_test(&fsd->active_users)) {
+               wait_for_completion(&fsd->active_users_drained);
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+which ... looking at it, seems wrong?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+_Completely_ untested:
+
+diff --git a/fs/debugfs/inode.c b/fs/debugfs/inode.c
+index 034a617cb1a5..fb636478c54d 100644
+--- a/fs/debugfs/inode.c
++++ b/fs/debugfs/inode.c
+@@ -751,13 +751,19 @@ static void __debugfs_file_removed(struct dentry *den=
+try)
+ 	if ((unsigned long)fsd & DEBUGFS_FSDATA_IS_REAL_FOPS_BIT)
+ 		return;
+=20
+-	/* if we hit zero, just wait for all to finish */
+-	if (!refcount_dec_and_test(&fsd->active_users)) {
+-		wait_for_completion(&fsd->active_users_drained);
+-		return;
+-	}
++	/*
++	 * Now that debugfs_file_get() no longer sees a valid entry,
++	 * decrement the refcount to remove the initial reference.
++	 */
++	refcount_dec(&fsd->active_users);
+=20
+-	/* if we didn't hit zero, try to cancel any we can */
++	/*
++	 * As long as it's not zero, try to cancel any cancellations,
++	 * new incoming ones will wake up the completion as we might
++	 * have raced: debugfs_file_get() had already been done, but
++	 * debugfs_enter_cancellation() hadn't, by the time we got
++	 * to this point here.
++	 */
+ 	while (refcount_read(&fsd->active_users)) {
+ 		struct debugfs_cancellation *c;
+=20
+
+
+
+johannes
