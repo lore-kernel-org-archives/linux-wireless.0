@@ -1,43 +1,44 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9DF2D05C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:57:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B28136103
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:57:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709110649; cv=none; b=SN8qrHsygc1MfT40s8QXUFzHz/DIooosSnrkDnIoPr6jlNgMx/J+SF6R97+rBfaFbciXKCG3FfjIN9E1AJt+CFJmmCV30MoBEXKuDDGHRscnv8yma8v7pJSsXRp/8Z4t8NO2rdkQ/80CvsEL31sd5gQaDGdArYw99FxELKsZZuA=
+	t=1709110650; cv=none; b=RzGvLfmpx4ZjwR9PvF4o0aXUikWGE4yVqSh4h+TgsMHkrQ0CC+6xlSxAc1ij94vYJPvgj93fI9OCezwxp+md1DZ/E5vBMtUtnS5sg4Z1+UZvHa9qbezORmar+NRadeXZxIM2vQDIb8wInmTuYgMpE6OrQk2v9+yG9GyeQajhHIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709110649; c=relaxed/simple;
-	bh=8RHkckFWdGbhyBvfkts8ED9rWyIzWT1Ig+VRNx+6wGU=;
+	s=arc-20240116; t=1709110650; c=relaxed/simple;
+	bh=r7UGfWCcvYvR6Cjokm5UalBHfJnWo+6rlLLoR2GqsPc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cY5UsEa/kGX7HH0rbCEUikK8dZr09rAPyLozfLtbhXsidlKOh5UITYQZCoUxrBCQp21klhZ1b+Cw1OUbDp+/ueM1hXa/ydLRgIHLfOyMucH3F4T99m9F81Nb1qmOFH2fWtJRrnsg/QAhCoqmP+q0iZeAanF2Yp6aYHrsE5Chxvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=aRbJdXhY; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=TPcwvFEgqml+5OG27JQbLClqZ6sg2sPr9QziqqvirNrB+wbLaqFfET/gcISQDRcqSE8+vX8WxQM3/vWBnHYgGIgb8bEPaW8J5uMSymZmkCl0ChZU9Z7Yu330Tv/ZUUbB4OKRX7gr5CpQMf0isPitKCvG/XCktYkuZGB8Nbd36vc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=CC3iAzJu; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="aRbJdXhY"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="CC3iAzJu"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=kQJYXoTBlV6CzEBIc1Psrki3Ou/72l6qW2/BPqtWqqI=;
-	t=1709110647; x=1710320247; b=aRbJdXhYm87HLwTHeBCjBQWFrOuaxjZnXy87i/QIRQp9NGr
-	oN3wRvsHFLtKj/ujM1iKhlkVuYETka4hR4yxaXa0yoK65tL1svzptW/L3MnIq1aVXerMdYAxOe3I/
-	3yTaopC5tXcnLzELN78VVPl9xkkeSDfZe72u8FZAgcNSFMQ7yv/NQLPIZk6C6Vd6+gXynMRMUiJWS
-	kG/oRxfhwzN6p5n0dPUxFrBGyad7PYkSNgYFUq8OAU1oCrDNk61g/BZlcVHgsdHzajibal4XuulqV
-	dS9FO5byQrXraJ0g9iM8ikx7NfGZVsGpMQW6Ry+4C+qV/xR0hvguz26qmSgtko6Q==;
+	Resent-Cc:Resent-Message-ID; bh=SJwlyrqBNk2cmNjjnNKUT3Ao3z2tiQ2mPcJUTde19fk=;
+	t=1709110649; x=1710320249; b=CC3iAzJuY1zoAOzy+2lSrfucysk7PyFzwVEfKIOTC/Ghi6n
+	KAhGLsFRtsCO8KAPvY6rCTg0QnPJ8bFEEajMSd2OSo5u+R9hmb67Typ064U6UNvrzuGW1W77SvC6M
+	4xtiBpSHOZGLw6mnkevIVbGABt3lNE5TTX6G0205x0fSusoy3iUBT4ohdLi//ZFm/rvChvsOrbKVr
+	OR3mmP02Ui7zpnOaW7swft3nEbrS5wQbJBe+kM3nMNDdH7lMQUEeH2gdCWkiWYfs5NE0jq+1FgJqo
+	QyWkOdcKMWU131lOPscsnQHrxIGBm87y8l6Q8wvD3uduZF3yloaxjap0sV2mp88A==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1rfFkj-0000000C0hJ-0iwh;
-	Wed, 28 Feb 2024 09:57:25 +0100
+	id 1rfFkk-0000000C0hJ-2XWu;
+	Wed, 28 Feb 2024 09:57:26 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 6/8] wifi: mac80211: mlme: unify CSA handling
-Date: Wed, 28 Feb 2024 09:55:46 +0100
-Message-ID: <20240228095719.e269c0e02905.I9dc68ff1e84d51349822bc7d3b33b578fcf8e360@changeid>
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 8/8] wifi: mac80211: remove TDLS peers on link deactivation
+Date: Wed, 28 Feb 2024 09:55:48 +0100
+Message-ID: <20240228095719.a7dd812c37bf.I3474dbde79e9e7a539d47f6f81f32e6c3e459080@changeid>
 X-Mailer: git-send-email 2.43.2
 In-Reply-To: <20240228085718.21171-10-johannes@sipsolutions.net>
 References: <20240228085718.21171-10-johannes@sipsolutions.net>
@@ -51,87 +52,30 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Unify all the CSA handling, including handling of a beacon
-after the CSA, into ieee80211_sta_process_chanswitch().
-
-The CRC of the beacon will change due to changes in the
-CSA/ECSA elements, so there's really no need to have the
-'beacon after CSA' handling before the CRC processing or
-to change the beacon_crc_valid value here.
+If a link is deactivated, we really cannot sustain any
+TDLS connections on that link any more. With the API
+now changed, fix this issue and remove TDLS connections.
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 38 ++++++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 16 deletions(-)
+ net/mac80211/link.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ce61e84d8130..563b001496ce 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1934,11 +1934,6 @@ static void ieee80211_chswitch_post_beacon(struct ieee80211_link_data *link)
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index 87a413374ece..685ec66b4264 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -356,7 +356,7 @@ static int _ieee80211_set_active_links(struct ieee80211_sub_if_data *sdata,
  
- 	link->conf->csa_active = false;
- 	link->u.mgd.csa_waiting_bcn = false;
--	/*
--	 * If the CSA IE is still present on the beacon after the switch,
--	 * we need to consider it as a new CSA (possibly to self).
--	 */
--	link->u.mgd.beacon_crc_valid = false;
+ 		link = sdata_dereference(sdata->link[link_id], sdata);
  
- 	ret = drv_post_channel_switch(link);
- 	if (ret) {
-@@ -2053,18 +2048,32 @@ ieee80211_sta_process_chanswitch(struct ieee80211_link_data *link,
- 	if (res < 0)
- 		goto drop_connection;
+-		/* FIXME: kill TDLS connections on the link */
++		ieee80211_teardown_tdls_peers(link);
  
--	if (beacon && link->conf->csa_active &&
--	    !link->u.mgd.csa_waiting_bcn) {
--		if (res)
-+	if (link->conf->csa_active) {
-+		/* already processing - disregard action frames */
-+		if (!beacon)
-+			return;
-+
-+		if (link->u.mgd.csa_waiting_bcn) {
-+			ieee80211_chswitch_post_beacon(link);
-+			/*
-+			 * If the CSA IE is still present in the beacon after
-+			 * the switch, we need to consider it as a new CSA
-+			 * (possibly to self) - this happens by not returning
-+			 * here so we'll get to the check below.
-+			 */
-+		} else if (res) {
- 			ieee80211_sta_abort_chanswitch(link);
--		else
-+			return;
-+		} else {
- 			drv_channel_switch_rx_beacon(sdata, &ch_switch);
--		return;
--	} else if (link->conf->csa_active || res) {
--		/* disregard subsequent announcements if already processing */
--		return;
-+			return;
-+		}
+ 		ieee80211_link_release_channel(link);
  	}
- 
-+	/* nothing to do at all - no active CSA nor a new one */
-+	if (res)
-+		return;
-+
- 	if (link->conf->chanreq.oper.chan->band !=
- 	    csa_ie.chanreq.oper.chan->band) {
- 		sdata_info(sdata,
-@@ -6293,9 +6302,6 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 		}
- 	}
- 
--	if (link->u.mgd.csa_waiting_bcn)
--		ieee80211_chswitch_post_beacon(link);
--
- 	/*
- 	 * Update beacon timing and dtim count on every beacon appearance. This
- 	 * will allow the driver to use the most updated values. Do it before
 -- 
 2.43.2
 
