@@ -1,45 +1,44 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1C72D60C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:49:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBBEF2E852
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:49:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709110153; cv=none; b=a2Gxxhm0A+IcbKWAEcrh+Wj93bY81V1PDScqLc1vpyuUb/N9kIYbIQUMR8Hoyqr3xQnBFjqlit3Ilhw6BjCiVy3Z24nWC03LFw6+WQW6N/hR1DtJ1wvjGJGdDfEHxxgJ+kCni8cKROUtT9JYQntb66asprhPerDqkFFGxhiv6oI=
+	t=1709110154; cv=none; b=VAlcbuVnwOJ8/9C9lHjMflCYuwSnuAHisMbrdNJeG3alVL/rbFI0CNdvXb8GULA9sUyK2O48Ll8EtqkhCgLeGAs5dqTR8DRTLhUtx/sEj6UoSGOjOgKn+4k1GBu2iVFuLilEnjeR65Ibm8rWXkE0FIPNT2UZb1yocOtFh5X/ZVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709110153; c=relaxed/simple;
-	bh=GH234ThYK/CbslSPidh7qj8r735EKZZt1K4fDgj9EC8=;
+	s=arc-20240116; t=1709110154; c=relaxed/simple;
+	bh=6qsFQwGKR7PDtIFw/0jhbaNki1V6r/CkU0vKb0uBeBo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=p3otugpKkmGPR+efmPFnWJdaa0GoCDea9RA5awp9hzuHor82VARXauJZKdv3XZdyo8ZFuSgSVlej1GJ1Ff1QNS1SSgkqqX1r+5E0AR17Zm3dvUOsaD6zqVgwD3GyL1BRCsHLgcoHF/IRhgKhXKt9f7zCT2Fbg241tkinVp6Lt24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=tDIrKspl; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=AMqYBMFguUzVCh8YgnC3+DIIg7c3BPrG30fVjOm2c4yFzZfORcVAn2aZBDnYCnR9rCx6uOZEccatjMIaHS5FuFVkFnM4I6WZInClRQmUT8CUAPIZaFzZE25+/pi/XV5uiikqMScoAu2XsW/MyPqo/pobAiFsDAolOZzW17evhqw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=C9MSgolM; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tDIrKspl"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="C9MSgolM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=nV1zAS4CHCd9wjj2/NVlwm3qWhQlkoLk80Lq09ojcrw=;
-	t=1709110150; x=1710319750; b=tDIrKsplyfYiRDBI/LYWdG/RsF7TkHCaoXUOw+MEmliNykk
-	/7/kDAYRs578lEMTQAWyF1BN/uwlTnB485UfXBqqfxeXsqMChOfAPKqa/0yTypjbE2ddsl+Dz9Y5w
-	ySY32jumjepZAEvnkudZyC0YQABFn95Xti2gH2auq6gKXcmmxALyI8urkX1AcNgLk59cHPk3yCxjJ
-	h7L0ry0gE0MeuIXbFP0bbhwyhd8/DapAgq+wqroFo9gjHGVmxRa5ooJPAGdhe+jtaKVmpYzYVGRw7
-	rj3RtCHmq6VegrghPsHWTNGh+FabF5C4mrTWCPGOmjoqFtf4a7x/CNxOIwwHdCPw==;
+	Resent-Cc:Resent-Message-ID; bh=L/QMi87Nm5EYaVKhY/t/4j9baOhGOCRe35/W+r2riLU=;
+	t=1709110152; x=1710319752; b=C9MSgolMsS/pFtgFyvgKzyGX6jhQo83taJbOkOuCDt/MdH7
+	dJeNVjzmIVDa8wJwQTYXo3lODtW/w4huISLHtAqe/KSM27exjAzGZe0KiUrDE2aY1UZu8sDj27fWF
+	xznoqn04wpQdGOblNw3yzrUYnR3daj9Nor/A41pIFJBDvg9MGY7ExijJuI6niyx1kJ8g6BraMZdQu
+	ZwnKhelc0LRluUsto+9+r9Y3D+N3lwrovVLwIFtZMbmLh727OYmSZB+sY/OX0Gel2IPWPKKhy/xyo
+	oDx8if5I2OKyp/geXlal7MRHITLmFtQkLcNT6xQViP/pwTCUjC6y3FWOJkLiCyHQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1rfFcg-0000000C0BC-2qTz;
-	Wed, 28 Feb 2024 09:49:06 +0100
+	id 1rfFcj-0000000C0BC-2jEm;
+	Wed, 28 Feb 2024 09:49:09 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 3/8] wifi: mac80211: add ieee80211_vif_link_active() helper
-Date: Wed, 28 Feb 2024 09:48:11 +0100
-Message-ID: <20240228094901.688760aff5f7.I06892a503f5ecb9563fbd678d35d08daf7a044b0@changeid>
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 7/8] wifi: mac80211: remove unneeded scratch_len subtraction
+Date: Wed, 28 Feb 2024 09:48:15 +0100
+Message-ID: <20240228094902.44e07cfa9e63.I7a9758fb9bc6b726aac49804f2f05cd521bc4128@changeid>
 X-Mailer: git-send-email 2.43.2
 In-Reply-To: <20240228084901.18661-10-johannes@sipsolutions.net>
 References: <20240228084901.18661-10-johannes@sipsolutions.net>
@@ -53,145 +52,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We sometimes need to check if a link is active, and this
-is complicated by the fact that active_links has no bits
-set when the vif isn't (acting as) an MLD. Add a small
-new helper ieee80211_vif_link_active() to make that a bit
-easier, and use it in a few places.
+We're always using "scratch + len - pos", so we don't need
+to subtract here to calculate the remaining length. Remove
+the unnecessary subtraction.
 
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h    | 15 +++++++++++++++
- net/mac80211/cfg.c        |  3 +--
- net/mac80211/chan.c       |  3 +--
- net/mac80211/driver-ops.c | 14 +++++---------
- net/mac80211/util.c       |  3 +--
- 5 files changed, 23 insertions(+), 15 deletions(-)
+ net/mac80211/parse.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 34d66d0a24b1..6c6d8210d637 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2011,6 +2011,21 @@ static inline bool ieee80211_vif_is_mld(const struct ieee80211_vif *vif)
- 	return vif->valid_links != 0;
- }
- 
-+/**
-+ * ieee80211_vif_link_active - check if a given link is active
-+ * @vif: the vif
-+ * @link_id: the link ID to check
-+ * Return: %true if the vif is an MLD and the link is active, or if
-+ *	the vif is not an MLD and the link ID is 0; %false otherwise.
-+ */
-+static inline bool ieee80211_vif_link_active(const struct ieee80211_vif *vif,
-+					     unsigned int link_id)
-+{
-+	if (!ieee80211_vif_is_mld(vif))
-+		return link_id == 0;
-+	return vif->active_links & BIT(link_id);
-+}
-+
- #define for_each_vif_active_link(vif, link, link_id)				\
- 	for (link_id = 0; link_id < ARRAY_SIZE((vif)->link_conf); link_id++)	\
- 		if ((!(vif)->active_links ||					\
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e57ba4f7a589..821a83e487df 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3155,8 +3155,7 @@ int __ieee80211_request_smps_mgd(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION))
- 		return -EINVAL;
- 
--	if (ieee80211_vif_is_mld(&sdata->vif) &&
--	    !(sdata->vif.active_links & BIT(link->link_id)))
-+	if (!ieee80211_vif_link_active(&sdata->vif, link->link_id))
- 		return 0;
- 
- 	old_req = link->u.mgd.req_smps;
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 38acdc458c7c..80e4b9784131 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1701,8 +1701,7 @@ int ieee80211_link_use_channel(struct ieee80211_link_data *link,
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	if (sdata->vif.active_links &&
--	    !(sdata->vif.active_links & BIT(link->link_id))) {
-+	if (!ieee80211_vif_link_active(&sdata->vif, link->link_id)) {
- 		ieee80211_link_update_chanreq(link, chanreq);
- 		return 0;
- 	}
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index 3b7f70073fc3..dce37ba8ebe3 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /*
-  * Copyright 2015 Intel Deutschland GmbH
-- * Copyright (C) 2022-2023 Intel Corporation
-+ * Copyright (C) 2022-2024 Intel Corporation
-  */
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
-@@ -214,8 +214,7 @@ int drv_conf_tx(struct ieee80211_local *local,
- 	if (!check_sdata_in_driver(sdata))
- 		return -EIO;
- 
--	if (sdata->vif.active_links &&
--	    !(sdata->vif.active_links & BIT(link->link_id)))
-+	if (!ieee80211_vif_link_active(&sdata->vif, link->link_id))
- 		return 0;
- 
- 	if (params->cw_min == 0 || params->cw_min > params->cw_max) {
-@@ -315,8 +314,7 @@ int drv_assign_vif_chanctx(struct ieee80211_local *local,
- 	if (!check_sdata_in_driver(sdata))
- 		return -EIO;
- 
--	if (sdata->vif.active_links &&
--	    !(sdata->vif.active_links & BIT(link_conf->link_id)))
-+	if (!ieee80211_vif_link_active(&sdata->vif, link_conf->link_id))
- 		return 0;
- 
- 	trace_drv_assign_vif_chanctx(local, sdata, link_conf, ctx);
-@@ -343,8 +341,7 @@ void drv_unassign_vif_chanctx(struct ieee80211_local *local,
- 	if (!check_sdata_in_driver(sdata))
- 		return;
- 
--	if (sdata->vif.active_links &&
--	    !(sdata->vif.active_links & BIT(link_conf->link_id)))
-+	if (!ieee80211_vif_link_active(&sdata->vif, link_conf->link_id))
- 		return;
- 
- 	trace_drv_unassign_vif_chanctx(local, sdata, link_conf, ctx);
-@@ -461,8 +458,7 @@ void drv_link_info_changed(struct ieee80211_local *local,
- 	if (!check_sdata_in_driver(sdata))
- 		return;
- 
--	if (sdata->vif.active_links &&
--	    !(sdata->vif.active_links & BIT(link_id)))
-+	if (!ieee80211_vif_link_active(&sdata->vif, link_id))
- 		return;
- 
- 	trace_drv_link_info_changed(local, sdata, info, changed);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 627bd5a8bda5..d7c4d162321f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1935,8 +1935,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		for (link_id = 0;
- 		     link_id < ARRAY_SIZE(sdata->vif.link_conf);
- 		     link_id++) {
--			if (ieee80211_vif_is_mld(&sdata->vif) &&
--			    !(sdata->vif.active_links & BIT(link_id)))
-+			if (!ieee80211_vif_link_active(&sdata->vif, link_id))
- 				continue;
- 
- 			link = sdata_dereference(sdata->link[link_id], sdata);
+diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
+index 804323858977..73e52504ed97 100644
+--- a/net/mac80211/parse.c
++++ b/net/mac80211/parse.c
+@@ -862,7 +862,6 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
+ 					      elems, params->bss,
+ 					      nontransmitted_profile);
+ 	elems->scratch_pos += nontransmitted_profile_len;
+-	elems->scratch_len -= nontransmitted_profile_len;
+ 	non_inherit = cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
+ 					     nontransmitted_profile,
+ 					     nontransmitted_profile_len);
 -- 
 2.43.2
 
