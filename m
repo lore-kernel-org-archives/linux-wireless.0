@@ -1,44 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5662D05C
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:49:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173B32D61A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Feb 2024 08:49:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709110150; cv=none; b=Xbw98WM/3fbf8KpqgYG4Afj6U0/Enlb/dD1CJFrsLXLwQ0lsL9+ThewRJKxu9464qLv7XiYT5qjLyAJroYhAtD7v+0QzabPChj0IPw5ByxZFffdsvyfEgtKXbTq/WREL92Ekr8CxvgKGFZDQ1RdjkrM28W0BrB76qn+jxuzl5Ww=
+	t=1709110151; cv=none; b=Z+mF8V9QnVVqpodnYvxZuNaAuA5vBdvgnAeuUrzTzHMb+bJ04Lc24MS5IkYoGEYoWl4RbAaj3EcLgRJTdGlCtHNKx6FWB9m1GA8eT5EBbtmlmfYpmX78ZboYOZYoZXhFC0Rz1+ER3FfCthEZS6yWUugfrkx1NlPayoIOVUi92So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709110150; c=relaxed/simple;
-	bh=Xsnnez6zvL++vwTf44cbUFTOtmrSWuGSTWfS/o7S7tg=;
+	s=arc-20240116; t=1709110151; c=relaxed/simple;
+	bh=hOinKWtUg5W4CrkwaEyr458E8imU8uIRCSZhyha97rM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NHbSoRhSJUWj8bzJjx3IQaGZeEj7U7f6dPV6/nk5JPf1Hon5tL/TdopiRQTVnpI5clJ6MFlwP2H/yt+/4nbJhp8/dMmaCkqIAWrtr18+AUJl7wMCo+o+VHuqMVW/E4yHvHjy3eHrucdR9jBGpEp8x+y/XVeTf/rwx2yObhNGtU0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HWvUwiAe; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=izPkyz8bpCr5zJQL6TUak25rd84TBfoYJqi1U1Fpq7RmgDUCoOOZ+QSTDqaNL7kATGMeqtt6PlKd6uoeNYjfKEyjRmCB54hXLi8+3d0eSPCibh6UX5Eq4g9qeTWittkhEA//98MQvzPm/eietCnNwTDI+Mp6dGZdk7G6lVAF8hY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=h7wdCHUj; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HWvUwiAe"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="h7wdCHUj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=fn/+YyW+0dDZ2Tyij3BZ+Ds0KcAJWYAvLwT1/MyHQP0=;
-	t=1709110148; x=1710319748; b=HWvUwiAeLAK/i6bBA6vKuuoTfPZhm6MhN5yleGw7hi1rYsr
-	iM19BbORwW6uy0IhAc4T1POHO0D/jDfd4bVlHDESC/y+4Rc96uukRfcG6aooUCeP4skN5l4FCr5Wo
-	hO5qm6Y11GPIxFzPqsjlU2R996ij+3NfmlY5uBFz599yWYidagUoFsjEFScP2/8dLbNPqmApPVtt2
-	SlQtLkDw0MOP55XAhBHNbkXs0g3c90+9cyz25LUfeDD8Jo6uZ7RhvpdxhgMIpDQrIagq2RwO8lkbh
-	ipaNX0HEgUCWzEN4abE5vEXXbsEDTW/ZoJbDHq3T8xW0Sb/1v8VpyW/ph+ajn+xw==;
+	Resent-Cc:Resent-Message-ID; bh=j5oxcJP2A8Odjp+ntNsOu7pyOW3a2wG4g7laIEkEmao=;
+	t=1709110150; x=1710319750; b=h7wdCHUjj4Otbd6jlKOGe9yhZCOA77ZPFlTd8yxJ5clNKOl
+	olX6CwSB8dl5oTv6qrhjY0JUKS0+QmpDVihWesl/xdqCKxq9xSdWynbXkfAM6duACLzoH9rEE4Lb9
+	rP9ZBfcENw0D2aM3uyMPF0BnZugoUjgecvoL8aaV8xMs9QcBd0dehJ32pM6vzeIsW52dEgIvKGUuE
+	YgsuD4l3b6iDcI5grbdzAMoyGxshAexqWs6NNs2V7/8qAF9tVLGW4EREVALz/IOsHH7QjVpdTYghU
+	yosOVk0ZcOIaUPyi5ju2IT+h6h594p/T35du51GSOgieH/aEjv13vBWzr3+BriwA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1rfFcf-0000000C0BC-3sMy;
-	Wed, 28 Feb 2024 09:49:06 +0100
+	id 1rfFch-0000000C0BC-1RZf;
+	Wed, 28 Feb 2024 09:49:07 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 2/8] wifi: mac80211: remove unnecessary ML element type check
-Date: Wed, 28 Feb 2024 09:48:10 +0100
-Message-ID: <20240228094901.ad1d4a09a6eb.Ib96fa75b1a6db21dd4182dcfa11fe9aff78fa3ed@changeid>
+Subject: [PATCH 4/8] wifi: mac80211: remove unnecessary ML element checks
+Date: Wed, 28 Feb 2024 09:48:12 +0100
+Message-ID: <20240228094901.9e32c4b63875.Ia2ee0aafdc8a48bd21b485cc36a9866f950d781b@changeid>
 X-Mailer: git-send-email 2.43.2
 In-Reply-To: <20240228084901.18661-10-johannes@sipsolutions.net>
 References: <20240228084901.18661-10-johannes@sipsolutions.net>
@@ -52,27 +51,25 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-At this point, since it's taken from elems->ml_basic which
-is stored only if it's of type basic, we don't really need
-to check again if it's basic.
+Given the prior changes to ieee80211_mle_size_ok(), we
+can now pass NULL to for_each_mle_subelement(), so no
+longer need to check for that here explicitly.
 
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/parse.c | 4 ----
- 1 file changed, 4 deletions(-)
+ net/mac80211/parse.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
 diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
-index 233c761823d3..ae0f14bd952a 100644
+index ae0f14bd952a..d231aaecc219 100644
 --- a/net/mac80211/parse.c
 +++ b/net/mac80211/parse.c
-@@ -723,10 +723,6 @@ static void ieee80211_mle_get_sta_prof(struct ieee802_11_elems *elems,
- 	if (!ml || !ml_len)
- 		return;
+@@ -720,9 +720,6 @@ static void ieee80211_mle_get_sta_prof(struct ieee802_11_elems *elems,
+ 	ssize_t ml_len = elems->ml_basic_len;
+ 	const struct element *sub;
  
--	if (le16_get_bits(ml->control, IEEE80211_ML_CONTROL_TYPE) !=
--	    IEEE80211_ML_CONTROL_TYPE_BASIC)
+-	if (!ml || !ml_len)
 -		return;
 -
  	for_each_mle_subelement(sub, (u8 *)ml, ml_len) {
