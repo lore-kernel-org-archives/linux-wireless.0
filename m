@@ -1,130 +1,239 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11327171D1
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Mar 2024 03:47:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B7D0179B5
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Mar 2024 04:44:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709696848; cv=none; b=AY4D+sR1ssBqiuKJqBJKwh8bxiDEvTHfE+bKsZBObTvMZ1vWcSUHXzdYn4u+o3ec6UyFxkLtvDaSt24YcLG7dbrzP14u5lUzhO/NPfTJcKKKUXd+NS8bf7i/JTzm19I5+W/3N5YKZzGS0FWX0G6fuFyA7HYWxsf+GubL4WhHpXg=
+	t=1709700284; cv=none; b=IO3v2KXBHxdAJ7FDnmBbNivig0vGQfzQHC6omnNj01Fte1cbeq5C8ul60Sm9MNKJQf6apTK1Uhy52IQcD1NtUfd8eUnQoC+MwtUdThx3QwwpwosB/RnGywgP86ykU3sOzQk0lOwjr1CUDh9cMJRqzlFq9L90KcEVGxZ7loeizQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709696848; c=relaxed/simple;
-	bh=+nJZV6zHOpPX4a+ZBt83FDtYPe4mDT0yXOXV4M2w9rs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IlQ9PdGTO2virp5EjeDILEoSPUDg5JH9EFZKNmb7Hfcda7H7o1FRmFAyauUdeBZivc/7liTBFfiad9XUGHRLVhdnmmBjfTPbcZfHkbdn/oJyVzgPVfGHIqZAsR0pAnrXq3l0FtiQQ2GQ+/JJJmgvkAOORzLchtTGMcZM45ygeL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4263lL7y9482476, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4263lL7y9482476
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 6 Mar 2024 11:47:21 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Wed, 6 Mar 2024 11:47:22 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 6 Mar
- 2024 11:47:21 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <kvalo@kernel.org>
-CC: <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 6/6] wifi: rtw89: 8922a: add 8922ae to Makefile and Kconfig
-Date: Wed, 6 Mar 2024 11:45:58 +0800
-Message-ID: <20240306034558.19648-7-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240306034558.19648-1-pkshih@realtek.com>
-References: <20240306034558.19648-1-pkshih@realtek.com>
+	s=arc-20240116; t=1709700284; c=relaxed/simple;
+	bh=HgOrVK3draNDYq63qFD3REzO8c1p+cxbycwBXCYlU0E=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+	 In-Reply-To:Content-Type; b=NdyRalx+cZwHKSLnSlDl3RiyZCGuRtzEJGVfEXyg0oqan3lmz+TGBMRwQ1w0E6AsuUdUnXUUCv+CQRTVJR2T2d0uHbu0bVZT4+w37hrZaYXOLrE8qSQeLUIpAvF7Cn/6qfHa/NGDWxajzn5BP1sDDnXh8mXtpKsD5MndxRBT9wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=QljbtKB+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="QljbtKB+"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4260g51q014707;
+	Wed, 6 Mar 2024 04:44:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:from:to:cc:references
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=2qH83HxliV1uVpQGC6xK96ulfWTpQIzrVHaZ2J7NW+k=; b=Ql
+	jbtKB+3AttpWtH6S2P9UsKnXEMT+sIdowqq7s5OU2u3K1RtCmVYyz+uilSrCWl3q
+	vnhaUyfqAXMdt1Mj9MAduVMIB61pmK9o4dR+zzXgfcNoAeO7H+Hh+eeRAfETyQEy
+	PIqcQmCuPKUMC4apR7avCI2wNwJk628/b39bsOu0/jCCfbMFAfvJ1nNdZR8hJsam
+	hqSJjmnMWhioVLG8989E7PLxRrwD69kPL9UEB/wbl2CAafCkCIfYUjGxXtGFr8Cn
+	yXf5Q0iuzXyuFxAT99RnsG4+QJcxI2ijmdwSvJmm5Ste0VN4NBEWbzezmuReKjQk
+	FJlX+oTWokbAoWmGuYNA==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wp028adfm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 06 Mar 2024 04:44:33 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4264iWDO028802
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 6 Mar 2024 04:44:32 GMT
+Received: from [10.253.9.240] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 5 Mar
+ 2024 20:44:31 -0800
+Message-ID: <c9af14d1-2202-493c-9dae-7e3924e4e149@quicinc.com>
+Date: Wed, 6 Mar 2024 12:44:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/4] wifi: mac80211: mlme: fix verification of puncturing
+ bitmap obtained from AP
+Content-Language: en-US
+From: Kang Yang <quic_kangyang@quicinc.com>
+To: Johannes Berg <johannes@sipsolutions.net>, <ath12k@lists.infradead.org>,
+        Kalle Valo <kvalo@kernel.org>, Kalle Valo <quic_kvalo@quicinc.com>
+CC: <linux-wireless@vger.kernel.org>
+References: <20230928055022.9670-1-quic_kangyang@quicinc.com>
+ <20230928055022.9670-2-quic_kangyang@quicinc.com>
+ <08ff36664eb34bce8e7beb425233b1e8d4a4971c.camel@sipsolutions.net>
+ <d85bd8f7-a6aa-6ff7-09a8-57005e4d0779@quicinc.com>
+In-Reply-To: <d85bd8f7-a6aa-6ff7-09a8-57005e4d0779@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: MlkG6IrN481YpYMktXDB74gg_Hwrnhya
+X-Proofpoint-ORIG-GUID: MlkG6IrN481YpYMktXDB74gg_Hwrnhya
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-06_01,2024-03-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=999 suspectscore=0 phishscore=0 spamscore=0
+ malwarescore=0 mlxscore=0 clxscore=1011 bulkscore=0 impostorscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2402120000 definitions=main-2403060035
 
-Add 8922AE to Makefile and Kconfig. Currently, it can support STA, AP and
-monitor modes with good performance. Implemented initial BT-coexistence
-function only, and will to fine tune this component.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/Kconfig  | 15 +++++++++++++++
- drivers/net/wireless/realtek/rtw89/Makefile | 12 +++++++++++-
- 2 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/Kconfig b/drivers/net/wireless/realtek/rtw89/Kconfig
-index 90ffbab7cc4c..eaea4eaeb361 100644
---- a/drivers/net/wireless/realtek/rtw89/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw89/Kconfig
-@@ -28,6 +28,9 @@ config RTW89_8852B
- config RTW89_8852C
- 	tristate
- 
-+config RTW89_8922A
-+	tristate
-+
- config RTW89_8851BE
- 	tristate "Realtek 8851BE PCI wireless network (Wi-Fi 6) adapter"
- 	depends on PCI
-@@ -72,6 +75,18 @@ config RTW89_8852CE
- 
- 	  802.11ax PCIe wireless network (Wi-Fi 6E) adapter
- 
-+config RTW89_8922AE
-+	tristate "Realtek 8922AE PCI wireless network (Wi-Fi 7) adapter"
-+	depends on PCI
-+	select RTW89_CORE
-+	select RTW89_PCI
-+	select RTW89_8922A
-+	help
-+	  Select this option will enable support for 8922AE chipset
-+
-+	  802.11be PCIe wireless network (Wi-Fi 7) adapter
-+	  supporting 2x2 2GHz/5GHz/6GHz 4096-QAM 160MHz channels.
-+
- config RTW89_DEBUG
- 	bool
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/Makefile b/drivers/net/wireless/realtek/rtw89/Makefile
-index 41940099af1b..86a553fb0136 100644
---- a/drivers/net/wireless/realtek/rtw89/Makefile
-+++ b/drivers/net/wireless/realtek/rtw89/Makefile
-@@ -4,10 +4,13 @@ obj-$(CONFIG_RTW89_CORE) += rtw89_core.o
- rtw89_core-y += core.o \
- 		mac80211.o \
- 		mac.o \
-+		mac_be.o \
- 		phy.o \
-+		phy_be.o \
- 		fw.o \
- 		cam.o \
- 		efuse.o \
-+		efuse_be.o \
- 		regd.o \
- 		sar.o \
- 		coex.o \
-@@ -54,8 +57,15 @@ rtw89_8852c-objs := rtw8852c.o \
- obj-$(CONFIG_RTW89_8852CE) += rtw89_8852ce.o
- rtw89_8852ce-objs := rtw8852ce.o
- 
-+obj-$(CONFIG_RTW89_8922A) += rtw89_8922a.o
-+rtw89_8922a-objs := rtw8922a.o \
-+		    rtw8922a_rfk.o
-+
-+obj-$(CONFIG_RTW89_8922AE) += rtw89_8922ae.o
-+rtw89_8922ae-objs := rtw8922ae.o
-+
- rtw89_core-$(CONFIG_RTW89_DEBUG) += debug.o
- 
- obj-$(CONFIG_RTW89_PCI) += rtw89_pci.o
--rtw89_pci-y := pci.o
-+rtw89_pci-y := pci.o pci_be.o
- 
--- 
-2.25.1
+Due to Johannes's refactor of Puncturing bitmap, this patchset can be 
+abandoned now.
 
+
+Will prepare a new patch about puncturing bitmap for ath12k.
+
+
+On 10/19/2023 11:25 AM, Kang Yang wrote:
+> 
+> 
+> On 10/18/2023 7:39 PM, Johannes Berg wrote:
+>>>   static bool ieee80211_config_puncturing(struct ieee80211_link_data 
+>>> *link,
+>>>                       const struct ieee80211_eht_operation *eht_oper,
+>>>                       u64 *changed)
+>>>   {
+>>> +    struct cfg80211_chan_def rx_chandef = link->conf->chandef;
+>>>       u16 bitmap = 0, extracted;
+>>> +    u8 bw = 0;
+>>>       if ((eht_oper->params & IEEE80211_EHT_OPER_INFO_PRESENT) &&
+>>>           (eht_oper->params &
+>>> @@ -5684,6 +5706,28 @@ static bool ieee80211_config_puncturing(struct 
+>>> ieee80211_link_data *link,
+>>>           const u8 *disable_subchannel_bitmap = info->optional;
+>>>           bitmap = get_unaligned_le16(disable_subchannel_bitmap);
+>>> +        bw = u8_get_bits(info->control, IEEE80211_EHT_OPER_CHAN_WIDTH);
+>>> +        rx_chandef.width = ieee80211_rx_bw_to_nlwidth(bw);
+>>
+>> But looking here, it clearly _doesn't_ make sense. IEEE80211_STA_RX_BW_*
+>> is a purely internal API, has nothing to do with the spec.
+>>
+>> All this might even be "accidentally correct", but it really isn't right
+>> at all - the values in IEEE80211_EHT_OPER_CHAN_WIDTH are
+>> IEEE80211_EHT_OPER_CHAN_WIDTH_*, not IEEE80211_STA_RX_BW_*.
+>>
+> 
+> 
+> 
+> Oh, sorry that i didn't notice IEEE80211_EHT_OPER_CHAN_WIDTH_*, will 
+> replace them.
+> 
+> 
+>>
+>>
+>> More generally though, I don't even understand the change.
+> 
+> 
+> During assoc, downgrade may happen in func ieee80211_config_bw(). In 
+> this situation, the bandwidth in beacon and the bandwidth after 
+> downgrade(chandef->width, maybe i should call it local bandwidth during 
+> below context, will use this name in next version) during assoc will be 
+> different.
+> 
+> The change is based on this point.
+> 
+> 
+>>
+>>> +        if (rx_chandef.width == NL80211_CHAN_WIDTH_80)
+>>> +            rx_chandef.center_freq1 =
+>>> +                ieee80211_channel_to_frequency(info->ccfs0,
+>>> +                                   rx_chandef.chan->band);
+>>> +        else if (rx_chandef.width == NL80211_CHAN_WIDTH_160 ||
+>>> +             rx_chandef.width == NL80211_CHAN_WIDTH_320)
+>>> +            rx_chandef.center_freq1 =
+>>> +                ieee80211_channel_to_frequency(info->ccfs1,
+>>> +                                   rx_chandef.chan->band);
+>>> +    }
+>>> +
+>>> +    if (!cfg80211_valid_disable_subchannel_bitmap(&bitmap,
+>>> +                              &rx_chandef)) {
+> 
+> 
+> Here i change you code 
+> cfg80211_valid_disable_subchannel_bitmap(&bitmap,&link->conf->chandef) to
+> cfg80211_valid_disable_subchannel_bitmap(&bitmap,&rx_chandef)
+> 
+> As described above, downgrade may happen before enter 
+> ieee80211_config_puncturing(), so the bandwidth in link->conf->chandef 
+> may be different with bandwidth in beacon.
+> 
+> Here, the bitmap you used is from eht_oper in beacon, but the bandwidth 
+> you used is local bandwidth. They are not match. This is the first issue.
+> 
+> 
+>>> +        link_info(link,
+>>> +              "Got an invalid disable subchannel bitmap from AP %pM: 
+>>> bitmap = 0x%x, bw = 0x%x. disconnect\n",
+>>> +              link->u.mgd.bssid,
+>>> +              bitmap,
+>>> +              rx_chandef.width);
+>>> +        return false;
+>>>       }
+>>>       extracted = ieee80211_extract_dis_subch_bmap(eht_oper,
+>> // I've filled in the context here in the patch
+> 
+> 
+> Here is move the cfg80211_valid_disable_subchannel_bitmap() before the 
+> ieee80211_extract_dis_subch_bmap(), cause i think check should done 
+> before extract.
+> 
+> This is the second issue i said(perhaps not a issue).
+> 
+> 
+> 
+>>>                                                       
+>>> &link->conf->chandef,
+>>>                                                       bitmap);
+>>>
+>>>          /* accept if there are no changes */
+>>>          if (!(*changed & BSS_CHANGED_BANDWIDTH) &&
+>>>              extracted == link->conf->eht_puncturing)
+>>>                  return true;
+>>
+>> but ... ieee80211_extract_dis_subch_bmap actually already takes the
+>> bandwidth from eht_oper into account!
+> 
+> Yes, the ieee80211_extract_dis_subch_bmap realy takes the bandwidth from 
+> eht_oper into account, and the local_bw in this func is the local 
+> bandwidth i discuss.
+> 
+> You already notice the difference between bandwidth from eht_oper and 
+> local bandwidth in ieee80211_extract_dis_subch_bmap(). I think you 
+> should also take it into account when you use 
+> cfg80211_valid_disable_subchannel_bitmap(), right?
+> 
+> BTW, do you want to verify the bitmap from eht_oper, or the extracted 
+> bitmap?
+> 
+> Anyway, whether you want to verify the bitmap from eht_oper or extracted 
+> bitmap in cfg80211_valid_disable_subchannel_bitmap(), the bitmap and 
+> bandwidth must correspond.
+> 
+> 
+> 
+>>> -    if (!cfg80211_valid_disable_subchannel_bitmap(&bitmap,
+>>> -                              &link->conf->chandef)) {
+>>
+>> So are you saying that the real bug is that we're missing to update the
+>> link->conf->chandef with the EHT operation from the assoc response?
+>>
+>> But you didn't fix that issue ... so not sure?
+> 
+> 
+> I have described my patch with the comments above, maybe i should make 
+> my commit log more coherent.
+> 
+> 
+> Besides, this is you first version, i made some comments on Nov. 21, 
+> 2022, 7:29 a.m. Maybe you already forget them.
+> https://patchwork.kernel.org/project/linux-wireless/patch/20220325140859.e48bf244f157.I3547481d49f958389f59dfeba3fcc75e72b0aa6e@changeid/
+> 
+> 
+>>
+>> johannes
+>>
+> 
