@@ -1,38 +1,41 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90F3E542
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Mar 2024 03:47:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F24114F68
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Mar 2024 03:47:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709696833; cv=none; b=OFgKFRBf3x5dDZ4DgI7s1GTd2IOX3gvSpW3nFgS6hqjc2HTHbE0gjK30MsRHIRrAN2B7sBei3qiCApvQwp3Jo+JKOq+TgD1WF0YSjkqbaCMm4TUlS3+aY915aqZ0mpGtWkmi/yibfYhZaWie7F56rI9owLqHpQ+cNS/jhDeVXAw=
+	t=1709696836; cv=none; b=tu5HxyY3OqqaaUcz7T4/NINpY78v0D8hhuRpY9ZhfMgjaD5Q/QDSg9Ld23xPzsrfsVYqQXLkMNfAnGDGvovBT8wOIg0XxXvzzv2Rntdv0TBo8UP7ZWK+lHGQOOkPzV4mFyCPdkh+8TXdeaP7QBD4l+LmOfeSKYQkD957k8TT9p0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709696833; c=relaxed/simple;
-	bh=fVcs8464nzUib9oKvD/4P4Jz0BJVXkG5v7VRldCLcTE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hAXY6oGJkodirZC1unfDlvsAX4env3K8pqFXci8h+I68rns/GYpRQjkOooL6PsqYLQF+MAwy657nMZAeG6DtVxx5B/6ORuu8BPD7kKuDRGyoYs7hnAM98wg8j0pjBhHvrha7QkPerwEEY5IgbCI/d8KeYiQmUKWRE6Lj9mxg/nY=
+	s=arc-20240116; t=1709696836; c=relaxed/simple;
+	bh=n+vg7lGjQtQM64Pkv7mY4CkQURNLuNT09O9Hge1Q2Lw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=h7o8xh8Rx1BgjxLs27czWqDE3t8M247gJo9pJo3YwhoZgSyMjijG4REo56u+kx+ODtnytsXjNEX6g2GKZQ7ienArqyTug80HnE6ia2M9OItg40WByr+Pz+/w8HqxUpU+yY9/SeDRaqr8ZnJ8GrGJBwS4k9xI5Yl3fVH6y0OWRdc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4263kvShB482434, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4263l61P1482446, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4263kvShB482434
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4263l61P1482446
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 6 Mar 2024 11:46:57 +0800
+	Wed, 6 Mar 2024 11:47:06 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Wed, 6 Mar 2024 11:46:58 +0800
+ 15.1.2507.35; Wed, 6 Mar 2024 11:47:07 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 6 Mar
- 2024 11:46:57 +0800
+ 2024 11:47:06 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <kvalo@kernel.org>
 CC: <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/6] wifi: rtw89: add BT-coexistence materials for 8922A and enable 8922AE
-Date: Wed, 6 Mar 2024 11:45:52 +0800
-Message-ID: <20240306034558.19648-1-pkshih@realtek.com>
+Subject: [PATCH 2/6] wifi: rtw89: coex: Add antenna setting function for RTL8922A
+Date: Wed, 6 Mar 2024 11:45:54 +0800
+Message-ID: <20240306034558.19648-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240306034558.19648-1-pkshih@realtek.com>
+References: <20240306034558.19648-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,33 +47,279 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-The more BT-coexistence materials are added by this patchset to have
-initial basic functions, and WiFi features of STA, AP and monitor modes
-are also ready now, so we can enable 8922AE.
+From: Ching-Te Ku <ku920601@realtek.com>
 
-Since new files are added to Kconfig/Makefile, apply checkers of sparse
-and smatch to this patchset, and no any error/warning is reported.
+Because there is new hardware structure and Wi-Fi 7 protocol,
+the antenna settings need to concern more complex for Wi-Fi 7
+using. The antenna setting included grant control signal, they
+decide which MAC/Port or Bluetooth can do traffic.
 
-Ching-Te Ku (5):
-  wifi: rtw89: coex: Add WiFi role info format version 8
-  wifi: rtw89: coex: Add antenna setting function for RTL8922A
-  wifi: rtw89: coex: Add TDMA version 7
-  wifi: rtw89: coex: Add TDMA slot parameter setting version 7
-  wifi: rtw89: 8922a: update chip parameter for coex
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/coex.c | 193 +++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/coex.h |   5 +
+ drivers/net/wireless/realtek/rtw89/core.h |   1 +
+ 3 files changed, 197 insertions(+), 2 deletions(-)
 
-Ping-Ke Shih (1):
-  wifi: rtw89: 8922a: add 8922ae to Makefile and Kconfig
-
- drivers/net/wireless/realtek/rtw89/Kconfig    |  15 +
- drivers/net/wireless/realtek/rtw89/Makefile   |  12 +-
- drivers/net/wireless/realtek/rtw89/coex.c     | 962 ++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/coex.h     |  72 ++
- drivers/net/wireless/realtek/rtw89/core.h     | 108 +-
- drivers/net/wireless/realtek/rtw89/fw.c       |  42 +
- drivers/net/wireless/realtek/rtw89/fw.h       |  27 +
- drivers/net/wireless/realtek/rtw89/rtw8922a.c | 156 ++-
- 8 files changed, 1283 insertions(+), 111 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index 836d958c4f6f..f13295fe849a 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -311,6 +311,7 @@ enum btc_ant_phase {
+ 	BTC_ANT_W25G,
+ 	BTC_ANT_FREERUN,
+ 	BTC_ANT_WRFK,
++	BTC_ANT_WRFK2,
+ 	BTC_ANT_BRFK,
+ 	BTC_ANT_MAX
+ };
+@@ -615,6 +616,13 @@ enum btc_ctr_path {
+ 	BTC_CTRL_BY_WL
+ };
+ 
++enum btc_wlact_state {
++	BTC_WLACT_HW = 0,
++	BTC_WLACT_SW_LO,
++	BTC_WLACT_SW_HI,
++	BTC_WLACT_MAX,
++};
++
+ enum btc_wl_max_tx_time {
+ 	BTC_MAX_TX_TIME_L1 = 500,
+ 	BTC_MAX_TX_TIME_L2 = 1000,
+@@ -2247,6 +2255,76 @@ static void _set_gnt(struct rtw89_dev *rtwdev, u8 phy_map, u8 wl_state, u8 bt_st
+ 	rtw89_chip_mac_cfg_gnt(rtwdev, &dm->gnt);
+ }
+ 
++static void _set_gnt_v1(struct rtw89_dev *rtwdev, u8 phy_map,
++			u8 wl_state, u8 bt_state, u8 wlact_state)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_dm *dm = &btc->dm;
++	struct rtw89_mac_ax_gnt *g = dm->gnt.band;
++	u8 i, bt_idx = dm->bt_select + 1;
++
++	if (phy_map > BTC_PHY_ALL)
++		return;
++
++	for (i = 0; i < RTW89_PHY_MAX; i++) {
++		if (!(phy_map & BIT(i)))
++			continue;
++
++		switch (wl_state) {
++		case BTC_GNT_HW:
++			g[i].gnt_wl_sw_en = 0;
++			g[i].gnt_wl = 0;
++			break;
++		case BTC_GNT_SW_LO:
++			g[i].gnt_wl_sw_en = 1;
++			g[i].gnt_wl = 0;
++			break;
++		case BTC_GNT_SW_HI:
++			g[i].gnt_wl_sw_en = 1;
++			g[i].gnt_wl = 1;
++			break;
++		}
++
++		switch (bt_state) {
++		case BTC_GNT_HW:
++			g[i].gnt_bt_sw_en = 0;
++			g[i].gnt_bt = 0;
++			break;
++		case BTC_GNT_SW_LO:
++			g[i].gnt_bt_sw_en = 1;
++			g[i].gnt_bt = 0;
++			break;
++		case BTC_GNT_SW_HI:
++			g[i].gnt_bt_sw_en = 1;
++			g[i].gnt_bt = 1;
++			break;
++		}
++	}
++
++	if (rtwdev->chip->para_ver & BTC_FEAT_WLAN_ACT_MUX) {
++		for (i = 0; i < 2; i++) {
++			if (!(bt_idx & BIT(i)))
++				continue;
++
++			switch (wlact_state) {
++			case BTC_WLACT_HW:
++				dm->gnt.bt[i].wlan_act_en = 0;
++				dm->gnt.bt[i].wlan_act = 0;
++				break;
++			case BTC_WLACT_SW_LO:
++				dm->gnt.bt[i].wlan_act_en = 1;
++				dm->gnt.bt[i].wlan_act = 0;
++				break;
++			case BTC_WLACT_SW_HI:
++				dm->gnt.bt[i].wlan_act_en = 1;
++				dm->gnt.bt[i].wlan_act = 1;
++				break;
++			}
++		}
++	}
++	rtw89_mac_cfg_gnt_v2(rtwdev, &dm->gnt);
++}
++
+ #define BTC_TDMA_WLROLE_MAX 2
+ 
+ static void _set_bt_ignore_wlan_act(struct rtw89_dev *rtwdev, u8 enable)
+@@ -3512,8 +3590,8 @@ static void _set_bt_plut(struct rtw89_dev *rtwdev, u8 phy_map,
+ 		rtw89_mac_cfg_plt(rtwdev, &plt);
+ }
+ 
+-static void _set_ant(struct rtw89_dev *rtwdev, bool force_exec,
+-		     u8 phy_map, u8 type)
++static void _set_ant_v0(struct rtw89_dev *rtwdev, bool force_exec,
++			u8 phy_map, u8 type)
+ {
+ 	struct rtw89_btc *btc = &rtwdev->btc;
+ 	struct rtw89_btc_dm *dm = &btc->dm;
+@@ -3639,6 +3717,117 @@ static void _set_ant(struct rtw89_dev *rtwdev, bool force_exec,
+ 	}
+ }
+ 
++static void _set_ant_v1(struct rtw89_dev *rtwdev, bool force_exec,
++			u8 phy_map, u8 type)
++{
++	struct rtw89_btc *btc = &rtwdev->btc;
++	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
++	struct rtw89_btc_bt_info *bt = &btc->cx.bt;
++	struct rtw89_btc_wl_role_info_v8 *wl_rinfo = &wl->role_info_v8;
++	u32 ant_path_type = rtw89_get_antpath_type(phy_map, type);
++	struct rtw89_btc_wl_dbcc_info *wl_dinfo = &wl->dbcc_info;
++	struct rtw89_btc_dm *dm = &btc->dm;
++	u8 gwl = BTC_GNT_HW;
++
++	if (btc->dm.run_reason == BTC_RSN_NTFY_POWEROFF ||
++	    btc->dm.run_reason == BTC_RSN_NTFY_RADIO_STATE ||
++	    btc->dm.run_reason == BTC_RSN_CMD_SET_COEX || wl_rinfo->dbcc_chg)
++		force_exec = FC_EXEC;
++
++	if (wl_rinfo->link_mode != BTC_WLINK_25G_MCC &&
++	    btc->dm.wl_btg_rx == 2)
++		force_exec = FC_EXEC;
++
++	if (!force_exec && ant_path_type == dm->set_ant_path) {
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "[BTC], %s(): return by no change!!\n",
++			     __func__);
++		return;
++	} else if (bt->rfk_info.map.run) {
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "[BTC], %s(): return by bt rfk!!\n", __func__);
++		return;
++	} else if (btc->dm.run_reason != BTC_RSN_NTFY_WL_RFK &&
++		   wl->rfk_info.state != BTC_WRFK_STOP) {
++		rtw89_debug(rtwdev, RTW89_DBG_BTC,
++			    "[BTC], %s(): return by wl rfk!!\n", __func__);
++		return;
++	}
++
++	dm->set_ant_path = ant_path_type;
++
++	rtw89_debug(rtwdev, RTW89_DBG_BTC,
++		    "[BTC], %s(): path=0x%x, set_type=0x%x\n",
++		    __func__, phy_map, dm->set_ant_path & 0xff);
++
++	switch (type) {
++	case BTC_ANT_WINIT:
++		/* To avoid BT MP driver case (bt_enable but no mailbox) */
++		if (bt->enable.now && bt->run_patch_code)
++			_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_LO, BTC_GNT_SW_HI,
++				    BTC_WLACT_SW_LO);
++		else
++			_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_SW_LO,
++				    BTC_WLACT_SW_HI);
++		break;
++	case BTC_ANT_WONLY:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_SW_LO,
++			    BTC_WLACT_SW_HI);
++		break;
++	case BTC_ANT_WOFF:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_LO, BTC_GNT_SW_HI,
++			    BTC_WLACT_SW_LO);
++		break;
++	case BTC_ANT_W2G:
++	case BTC_ANT_W25G:
++		if (wl_rinfo->dbcc_en) {
++			if (wl_dinfo->real_band[RTW89_PHY_0] == RTW89_BAND_2G)
++				gwl = BTC_GNT_HW;
++			else
++				gwl = BTC_GNT_SW_HI;
++			_set_gnt_v1(rtwdev, BTC_PHY_0, gwl, BTC_GNT_HW, BTC_WLACT_HW);
++
++			if (wl_dinfo->real_band[RTW89_PHY_1] == RTW89_BAND_2G)
++				gwl = BTC_GNT_HW;
++			else
++				gwl = BTC_GNT_SW_HI;
++			_set_gnt_v1(rtwdev, BTC_PHY_1, gwl, BTC_GNT_HW, BTC_WLACT_HW);
++		} else {
++			gwl = BTC_GNT_HW;
++			_set_gnt_v1(rtwdev, phy_map, gwl, BTC_GNT_HW, BTC_WLACT_HW);
++		}
++		break;
++	case BTC_ANT_W5G:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_HW, BTC_WLACT_HW);
++		break;
++	case BTC_ANT_FREERUN:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_SW_HI,
++			    BTC_WLACT_SW_LO);
++		break;
++	case BTC_ANT_WRFK:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_SW_LO,
++			    BTC_WLACT_HW);
++		break;
++	case BTC_ANT_WRFK2:
++		_set_gnt_v1(rtwdev, phy_map, BTC_GNT_SW_HI, BTC_GNT_SW_LO,
++			    BTC_WLACT_SW_HI); /* no BT-Tx */
++		break;
++	default:
++		return;
++	}
++
++	_set_bt_plut(rtwdev, phy_map, BTC_PLT_GNT_WL, BTC_PLT_GNT_WL);
++}
++
++static void _set_ant(struct rtw89_dev *rtwdev, bool force_exec,
++		     u8 phy_map, u8 type)
++{
++	if (rtwdev->chip->chip_id == RTL8922A)
++		_set_ant_v1(rtwdev, force_exec, phy_map, type);
++	else
++		_set_ant_v0(rtwdev, force_exec, phy_map, type);
++}
++
+ static void _action_wl_only(struct rtw89_dev *rtwdev)
+ {
+ 	_set_ant(rtwdev, FC_EXEC, BTC_PHY_ALL, BTC_ANT_WONLY);
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.h b/drivers/net/wireless/realtek/rtw89/coex.h
+index 32c95022d6ee..671f52fe8931 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.h
++++ b/drivers/net/wireless/realtek/rtw89/coex.h
+@@ -280,4 +280,9 @@ static inline u16 rtw89_coex_query_bt_req_len(struct rtw89_dev *rtwdev,
+ 	return btc->bt_req_len;
+ }
+ 
++static inline u32 rtw89_get_antpath_type(u8 phy_map, u8 type)
++{
++	return ((phy_map << 8) + type);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 8617c65ff60e..bc10ebb785a2 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -2658,6 +2658,7 @@ struct rtw89_btc_dm {
+ 	u8 wl_pre_agc: 2;
+ 	u8 wl_lna2: 1;
+ 	u8 wl_pre_agc_rb: 2;
++	u8 bt_select: 2; /* 0:s0, 1:s1, 2:s0 & s1, refer to enum btc_bt_index */
+ };
+ 
+ struct rtw89_btc_ctrl {
 -- 
 2.25.1
 
