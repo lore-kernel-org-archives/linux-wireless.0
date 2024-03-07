@@ -1,132 +1,201 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921531369A5
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Mar 2024 19:30:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5463C51C45;
+	Thu,  7 Mar 2024 20:51:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709839809; cv=none; b=sgfxBLTQ86BhN9RDCBLWQd5aCnVKtQi3sCRV72M7bYLL/GNIXYr/pegXNZqyYBtA8yPZmABgyvwpvDJKmpBcEHQfndl5thR6qxXnJa+ek9vP41Xw63zVUHMkq+UojgrPip917sWsWlpjKNGkgufOeodK+jrDnRkVuKskyAViwZs=
+	t=1709844710; cv=none; b=NCE1MwR87GuhYvXbQ0Uiq5ugWMUd+n59IKprzV6gyXr3BMzJnCqsbjA5TJUB9WxwId2Opu0IpylLLWUxT7IDs87vPX5SxXVerUEHU03RdqJ0HetsDA6tk6rkoOAGdsEG9TdsMrb2QLupppC8Jt7MKcRQyG9O2r+kRIrEbLDQ6OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709839809; c=relaxed/simple;
-	bh=rz0UWo4M0Y/5XqRmFHUvTF57ACW4KzUMAQaLJ/wXVi4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Tdbnd+EqzqCDpEOphzXaJU3H5tim8NHeuMvDQFnQLIY+UHaD8QbtmT7jcDM1D9B58hQjtsBHCicg0oNgWkjtzTuG0f6tbb1Jk5YtGnXdgC1ieqKW0V9wVJApNuaIHgh6O88BdGEsFe0843DeVjTax6Zkvrfa+qTE+7sDN42Wqx8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=Lch9Qr2v; arc=none smtp.client-ip=67.231.154.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1709844710; c=relaxed/simple;
+	bh=M9VgY37R5X5dK1MqkH7r/9BxhdJVg5x9aVOFx5ViFV0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PAfUtr+SZ9PWZBGrXIg8Vx5m6IXuHt6Oiqy5ssCWd0qX6+NHZ5RVmVpk0DpMD+NhsuRXXVJrjXoRiuT6h4aFnpe2h6GZAaG72eaJJK6rtpOWLpfFBd4debv3HEdhn2U0jWjVmWd01LluivICnyZgRCZTYMRjxwbqh4P4vNPrluw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bbdzF0h9; arc=none smtp.client-ip=209.85.219.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Lch9Qr2v"
-Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
-	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id B63CF503545
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Mar 2024 19:30:06 +0000 (UTC)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 67E318C006C
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Mar 2024 19:29:59 +0000 (UTC)
-Received: from ben-dt5.candelatech.com (unknown [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id EEA5913C2B4;
-	Thu,  7 Mar 2024 11:29:58 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com EEA5913C2B4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1709839799;
-	bh=rz0UWo4M0Y/5XqRmFHUvTF57ACW4KzUMAQaLJ/wXVi4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Lch9Qr2vb0iXdHMdiJJHcBup2rVm7Y9yAK36RGCUcDnovjp0J8DiRUS9Gy+QWMLsY
-	 4jpEoKMZJSmtUPGfMT2Z9VVDohWwoWGYTVS7fQzfnlm/bPdbkGzlqLNNd/AV5BpHrM
-	 1uBq+64mdBKAoXRrcjbiHulvQeQ9St6BZYFsUNLU=
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/6] wifi: mt76: mt7915: Mitigate mcu communication loss.
-Date: Thu,  7 Mar 2024 11:29:49 -0800
-Message-ID: <20240307192951.3271156-4-greearb@candelatech.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240307192951.3271156-1-greearb@candelatech.com>
-References: <20240307192951.3271156-1-greearb@candelatech.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bbdzF0h9"
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-dc753905f1eso399812276.1;
+        Thu, 07 Mar 2024 12:51:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709844707; x=1710449507; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wzd9qyAHSj1dh2JiXc4kanSf03p7bVYoiTZbxFh6R+k=;
+        b=bbdzF0h96cw147+tlyGO6BwS9cK2U7/tFZTqTLRqZUkLjwgxH1wJao+7+Ko1CyhKfT
+         u8f65qcyqVyPKpHV2UHwF5AQ10S8Xgmjix7XIHagQX9SI6MP96CQOzdNSaTcJtTSWWux
+         EqBnNFpydFyi9AqdIkp4FzwWuBDKl8qaHYhlYIqOP0/x8B7VOUp88AXcobQsZAEwPsEN
+         Ee5yYmBOaJgWkikprZLHppdCkXOBSC1kVy915sc/GeUjQf4UhNmQNFDiM1dKq2pJN5H9
+         Vbd13rg+ajBRgObbhabpGt7e1Vg0zKQ5B6E5FJGhfWZPKJ+IpGRK/+DjiRMq+1VTTyEK
+         BwUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709844707; x=1710449507;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wzd9qyAHSj1dh2JiXc4kanSf03p7bVYoiTZbxFh6R+k=;
+        b=oYUSSBSEkhjL8mUpMK+/yCbu/NgOJks2gt7IKYkMcPh19LnBrBco7LLsmPw4DfXwSa
+         +DeKwNzxvb7Is/MBAY6xOIgR780xFDxS79HOhJMeBElnBkTSm1cE5tAZ2yPn6hzAnfJ+
+         RmX/pteGKkw+s2lAqeme6TaKArXQzOAIBlHjz32Y25YYEblJhZTAMMMZrpFqzL+c9ido
+         FhUUwbxPV+Rz3RGchDufKYGacd7EVfIv2ST6iQANHR4qMPDZuM2jjTvij0DCphTXHy5w
+         D38nknWvI+T3uwIsIJukvGctFQb7EcyT53azvAqg19oLAhV2OQzku8J/QAPRvVn2d6aF
+         UK6Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXYR1Vz8m7QyQt/qx8/fggWvEwjHKb/yRcoF6Uzurf8uMXsyMxWcfNumIlqk+BxjTzHzs20n2wgXA16+pOOiC9IPjLXXlLMeQAycTXE
+X-Gm-Message-State: AOJu0YzbCQBoyk0dHWxvP9kxsMNr/+r7gFcP2WdoT7TGu/wKx8Q8q2+H
+	izWDACa12FNiOSzomvYtQ4/FbJ1qJ1Y3tW63j/14T4AuiE19rAz3C3ypiTHFuCRUQOJ9jYKeEiq
+	4QcyVdximTSKA1D7RpIV2YpktCspltfjSvchkVR3/
+X-Google-Smtp-Source: AGHT+IFQ/YtkiCwFFFKPgR0SxuV0RELJaW0Q3Z/hLhITD3GTL5BXBsJE489DJS+jZyulDyy9FzgKdJH0evMjVHXP7bM=
+X-Received: by 2002:a05:6902:240f:b0:dcf:4c79:5f32 with SMTP id
+ dr15-20020a056902240f00b00dcf4c795f32mr2762568ybb.4.1709844707091; Thu, 07
+ Mar 2024 12:51:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-MDID: 1709839800-eh3T4hxW4-xa
-X-MDID-O:
- us5;at1;1709839800;eh3T4hxW4-xa;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+References: <CABXGCsOdvVwdLmSsC8TZ1jF0UOg_F_W3wqLECWX620PUkvNk=A@mail.gmail.com>
+ <efcb591e162ff0b04a9878f7250ab6ee6907f4a4.camel@mediatek.com>
+ <CABXGCsPF6MbSOpfUBbT77Hnfc450kutsc8Fzr1O_O9bgtQ5PAw@mail.gmail.com> <CABXGCsPfOd_pqHpOXsZZwmqLY+DBg+EiDfKb_Wf-UrXvyuZkOw@mail.gmail.com>
+In-Reply-To: <CABXGCsPfOd_pqHpOXsZZwmqLY+DBg+EiDfKb_Wf-UrXvyuZkOw@mail.gmail.com>
+From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+Date: Fri, 8 Mar 2024 01:51:34 +0500
+Message-ID: <CABXGCsO8CjBRmgK_+wLOkSrzACYf4JPHW6rjZa7=GrkfwvDBMA@mail.gmail.com>
+Subject: Re: [BUG] Unloading mt7921e module cause use-after-free
+To: =?UTF-8?B?RGVyZW4gV3UgKOatpuW+t+S7gSk=?= <Deren.Wu@mediatek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "nbd@nbd.name" <nbd@nbd.name>, 
+	"angelogioacchino.delregno@collabora.com" <angelogioacchino.delregno@collabora.com>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, Jan 12, 2024 at 1:06=E2=80=AFPM Mikhail Gavrilov
+<mikhail.v.gavrilov@gmail.com> wrote:
+>
+> On Fri, Jan 12, 2024 at 12:31=E2=80=AFPM Mikhail Gavrilov
+> <mikhail.v.gavrilov@gmail.com> wrote:
+> >
+> > Thanks, this patch looks good to me.
+> > Demonstration: https://youtu.be/nKnA2ftVoXw
+> >
+> > Tested-by: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+> >
+>
+> I noticed DMA-API notice:
+> ------------[ cut here ]------------
+> DMA-API: pci 0000:0f:00.0: device driver has pending DMA allocations
+> while released from device [count=3D21]
+> One of leaked entries details: [device address=3D0x00000000ffbda000]
+> [size=3D4096 bytes] [mapped with DMA_FROM_DEVICE] [mapped as single]
+> WARNING: CPU: 13 PID: 11252 at kernel/dma/debug.c:863
+> dma_debug_device_change+0x276/0x3d0
+> Modules linked in: mt7921e(-) uinput rfcomm snd_seq_dummy snd_hrtimer
+> nf_conntrack_netbios_ns nf_conntrack_broadcast nft_fib_inet
+> nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4
+> nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6
+> nf_defrag_ipv4 ip_set nf_tables qrtr bnep sunrpc binfmt_misc
+> intel_rapl_msr intel_rapl_common mt7921_common mt792x_lib
+> snd_hda_codec_hdmi mt76 edac_mce_amd snd_hda_intel snd_intel_dspcfg
+> snd_intel_sdw_acpi mac80211 snd_usb_audio kvm_amd snd_hda_codec
+> snd_usbmidi_lib btusb snd_hda_core uvcvideo snd_ump btrtl kvm ntel
+> snd_hwdep btbcm uvc snd_seq vfat btmtk videobuf2_vmalloc
+> videobuf2_memops libarc4 fat snd_seq_device videobuf2_v4l2 bluetooth
+> snd_pcm irqbypass videobuf2_common snd_timer cfg80211 rapl of snd
+> joydev pcspkr mc k10temp i2c_piix4 soundcore rfkill gpio_amdpt
+> gpio_generic loop nfnetlink zram amdgpu amdxcp i2c_algo_bit
+> drm_ttm_helper ttm drm_exec crct10dif_pclmul gpu_sched
+>  crc32_pclmul crc32c_intel drm_suballoc_helper polyval_clmulni
+> drm_buddy polyval_generic drm_display_helper ghash_clmulni_intel nvme
+> sha512_ssse3 sha256_ssse3 ccp nvme_core sha1_ssse3 sp5100_tco ek
+> nvme_auth video wmi ip6_tables ip_tables fuse [last unloaded: mt7921e]
+> CPU: 13 PID: 11252 Comm: rmmod Tainted: G        W    L     6.7.0-check-f=
+ix+ #70
+> Hardware name: Micro-Star International Co., Ltd. MS-7D73/MPG B650I
+> EDGE WIFI (MS-7D73), BIOS 1.81 01/05/2024
+> RIP: 0010:dma_debug_device_change+0x276/0x3d0
+> Code: 54 24 08 e8 5c d7 c8 01 48 8b 54 24 08 48 89 c6 ff 34 24 49 89
+> e9 49 89 d8 44 89 e1 41 56 48 c7 c7 40 46 52 b3 e8 1a c9 d6 ff <0f> 0b
+> 5a 59 4d 85 ed 74 49 48 c7 c7 80 47 52 b3 e8 15 04 f5 ff
+> RSP: 0018:ffffc90009c77bf0 EFLAGS: 00010286
+> RAX: 0000000000000000 RBX: 00000000ffbda000 RCX: 0000000000000000
+> RDX: 0000000000000002 RSI: 0000000000000004 RDI: 0000000000000001
+> RBP: 0000000000001000 R08: 0000000000000001 R09: ffffed11f587fff9
+> R10: ffff888fac3fffcb R11: 0000000000000000 R12: 0000000000000015
+> R13: ffff888109b02180 R14: ffffffffb35265e0 R15: ffff88811418e0c0
+> FS:  00007f5a1e4177c0(0000) GS:ffff888fac200000(0000) knlGS:0000000000000=
+000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007f8b1d394054 CR3: 0000000134cb8000 CR4: 0000000000f50ef0
+> PKRU: 55555554
+> Call Trace:
+>  <TASK>
+>  ? __warn+0xcd/0x2b0
+>  ? __pfx_vprintk_emit+0x10/0x10
+>  ? dma_debug_device_change+0x276/0x3d0
+>  ? report_bug+0x2ea/0x390
+>  ? handle_bug+0x79/0xa0
+>  ? exc_invalid_op+0x17/0x40
+>  ? asm_exc_invalid_op+0x1a/0x20
+>  ? dma_debug_device_change+0x276/0x3d0
+>  notifier_call_chain+0xa0/0x2a0
+>  blocking_notifier_call_chain+0x64/0x90
+>  bus_notify+0x51/0x70
+>  device_release_driver_internal+0x42d/0x540
+>  driver_detach+0xc5/0x180
+>  bus_remove_driver+0x11e/0x2a0
+>  ? __check_object_size+0x5b/0x680
+>  pci_unregister_driver+0x2a/0x250
+>  __do_sys_delete_module+0x350/0x580
+>  ? __pfx___do_sys_delete_module+0x10/0x10
+>  ? syscall_exit_to_user_mode+0xce/0x2b0
+>  ? do_syscall_64+0xab/0x190
+>  ? rcu_is_watching+0x15/0xb0
+>  ? syscall_exit_to_user_mode+0xb6/0x2b0
+>  ? trace_hardirqs_on_prepare+0xe3/0x100
+>  ? do_syscall_64+0x58/0x190
+>  do_syscall_64+0x9b/0x190
+>  ? trace_hardirqs_on_prepare+0xe3/0x100
+>  entry_SYSCALL_64_after_hwframe+0x6e/0x76
+> RIP: 0033:0x7f5a1dd2d05b
+> Code: 73 01 c3 48 8b 0d bd 8d 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66
+> 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa b8 b0 00 00 00 0f 05 <48> 3d
+> 01 f0 ff ff 73 01 c3 48 8b 0d 8d 8d 0c 00 f7 d8 64 89 01
+> RSP: 002b:00007ffc5ae71b68 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+> RAX: ffffffffffffffda RBX: 000055e490fee760 RCX: 00007f5a1dd2d05b
+> RDX: 0000000000000000 RSI: 0000000000000800 RDI: 000055e490fee7c8
+> RBP: 00007ffc5ae71b90 R08: 1999999999999999 R09: 0000000000000000
+> R10: 00007f5a1dda5ac0 R11: 0000000000000206 R12: 0000000000000000
+> R13: 00007ffc5ae71df0 R14: 000055e490fee760 R15: 0000000000000000
+>  </TASK>
+> irq event stamp: 0
+> hardirqs last  enabled at (0): [<0000000000000000>] 0x0
+> hardirqs last disabled at (0): [<ffffffffb023b291>] copy_process+0x2111/0=
+x88e0
+> softirqs last  enabled at (0): [<ffffffffb023b2f3>] copy_process+0x2173/0=
+x88e0
+> softirqs last disabled at (0): [<0000000000000000>] 0x0
+> ---[ end trace 0000000000000000 ]---
+> DMA-API: Mapped at:
+>  debug_dma_map_page+0x60/0x3c0
+>  dma_map_page_attrs+0x2fc/0xba0
+>  page_pool_dma_map+0xaf/0x2d0
+>  __page_pool_alloc_pages_slow+0x36f/0xab0
+>  page_pool_alloc_frag+0x4fa/0x9c0
+>
+> It happens when I unload driver mt7921e and in the background some
+> applications (in my case it is speedtest) have heavy network activity.
+>
+> Demonstration: https://youtu.be/XYO4ueVlh90
+>
+> But I am not sure what it is related to the mt7921e driver.
+>
 
-Many calls that end up sending mcu messages to the firmware hold
-RTNL or other important locks.  So when radio stops answering,
-the entire system becomes very sluggish.
+Deren, excuse me.
+Do you plan to send this patch to the stable branch?
+Or will you find another approach?
 
-Add timeout counter, and if radio times out 3 times in a row,
-consider it dead and no longer attempt to talk to it.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mediatek/mt76/dma.c        | 14 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h       |  3 +++
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c |  2 ++
- 3 files changed, 19 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 00230f106294..4d1426093e1e 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -510,6 +510,20 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, struct mt76_queue *q,
- 	if (test_bit(MT76_MCU_RESET, &dev->phy.state))
- 		goto error;
- 
-+	/* Check for non responsive radios.  Better to just stop sending it messages
-+	 * than continuously block the OS (since rtnl and similar are often held while
-+	 * the timeout is happening).
-+	 */
-+	if (dev->mcu_timeouts > MAX_MCU_TIMEOUTS) {
-+		static unsigned long last_log;
-+
-+		if (time_after(jiffies, last_log + 5 * HZ)) {
-+			last_log = jiffies;
-+			mtk_dbg(dev, WRN, "mt76-dma-tx-queue-skb-raw, too many timeouts, msg is dropped.\n");
-+		}
-+		goto error;
-+	}
-+
- 	if (q->queued + 1 >= q->ndesc - 1)
- 		goto error;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index dd8a24cda48a..b052a9c24c73 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -832,6 +832,9 @@ struct mt76_dev {
- 	struct mt76_mcu mcu;
- 	u32 first_failed_mcu_cmd; /* for debugging */
- 	u32 last_successful_mcu_cmd; /* for debugging */
-+	u32 mcu_timeouts; /* sequential timeout counter */
-+	#define MAX_MCU_TIMEOUTS 3
-+
- 
- 	struct net_device napi_dev;
- 	struct net_device tx_napi_dev;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index c67c4f6ca2aa..f3e60fba48b2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -161,11 +161,13 @@ mt7915_mcu_parse_response(struct mt76_dev *mdev, int cmd,
- 	int ret = 0;
- 
- 	if (!skb) {
-+		mdev->mcu_timeouts++;
- 		dev_err(mdev->dev, "Message %08x (seq %d) timeout\n",
- 			cmd, seq);
- 		return -ETIMEDOUT;
- 	}
- 
-+	mdev->mcu_timeouts = 0;
- 	rxd = (struct mt76_connac2_mcu_rxd *)skb->data;
- 	if (seq != rxd->seq &&
- 	    !(rxd->eid == MCU_CMD_EXT_CID &&
--- 
-2.42.0
-
+--=20
+Best Regards,
+Mike Gavrilov.
