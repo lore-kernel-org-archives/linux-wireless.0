@@ -1,102 +1,77 @@
-Received: from bues.ch (bues.ch [80.190.117.144])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE562130ADF;
-	Thu,  7 Mar 2024 18:24:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.190.117.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B74E13473E
+	for <linux-wireless@vger.kernel.org>; Thu,  7 Mar 2024 19:30:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709835884; cv=none; b=LqyBvsGm9fwvVDOk5EF39eRCNsBei5r8n/l6uQct+hyJjhyTJACVnC8WJuC9xkSPsXZIlRJnJc3NOC6dZbIF8AKbW+oZ0kAWu1tHM1Jumgl5qwN/cRrZdEAIFFcsqBGQdYxhZ9F9DkusGhJt7TEcjDYBLRta8TDiLE2l3UD0CDg=
+	t=1709839803; cv=none; b=WDkB59vQgkZVqDEEfyRJ570TDsurMjNwf4zUgh/oPgAwOy95F9ysQbhKhTgKIMff3VynnNRKMUslMla2CASz3Q/yV85fww9YcOn9A3wAxLTgjfFPuLIh1yj/UROGYk0JZL2Pxm3KP/GS52nHBY7kuuMM+0DhSx/3Z0OUJH05mKI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709835884; c=relaxed/simple;
-	bh=bmMfawzjcrQ9urG/fPu4rua8NJxWPKOC1ywnVzCVBZo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PYmsDdbxE8XEJxuuqXTRk3oKxHyl60KPkxPaCC2oYO6/C4jAlcqpNG8Tl11zxeaz7XH8+bbPz3x5ITUXc3Iel+WIjUaECJz8++foXGlB3R0EpdT6givIdbi5T93zL4QKqahNIbaIGmLqailncdmN1VXo49SXzrdaAwTNR53bUYA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; arc=none smtp.client-ip=80.190.117.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
-Received: by bues.ch with esmtpsa (Exim 4.96)
-	(envelope-from <m@bues.ch>)
-	id 1riIPl-000qCZ-2r;
-	Thu, 07 Mar 2024 19:24:20 +0100
-Date: Thu, 7 Mar 2024 19:24:05 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Rand Deeb <rand.sec96@gmail.com>
-Cc: jonas.gorski@gmail.com, deeb.rand@confident.ru, khoroshilov@ispras.ru,
- kvalo@kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org,
- voskresenski.stanislav@confident.ru
-Subject: Re: [PATCH v3] ssb: Fix potential NULL pointer dereference in
- ssb_device_uevent
-Message-ID: <20240307192405.34aa9841@barney>
-In-Reply-To: <20240307134142.169523-1-rand.sec96@gmail.com>
-References: <CAOiHx==HHd3Nu=p5192=tOP-kAzJZUg2iRO2j8UCtcpfGT13nw@mail.gmail.com>
- <20240307134142.169523-1-rand.sec96@gmail.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1709839803; c=relaxed/simple;
+	bh=licXwMZE9nQRR1VJBrVvcUMfdfPScXi/Vz1g26dmJEU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=noFZaoOEQ4nbmsWIVmk5RcHTcfv4lelBc1zM+xOmFHvpSrCO16nI92kAcNm2Ev1J8oMSG8/wc60YKdBVDkrZ91SQOYpscgMDMf1x4wSRSY4+thP4BD1fdlITYwnBS25hO/62PgPlZUQzsig0PdVOlIyBqYcjg+F19Ega4EwsmfQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=Tqc3RJMJ; arc=none smtp.client-ip=67.231.154.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Tqc3RJMJ"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 5D2C82C006E
+	for <linux-wireless@vger.kernel.org>; Thu,  7 Mar 2024 19:29:59 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (unknown [50.251.239.81])
+	by mail3.candelatech.com (Postfix) with ESMTP id BFD5D13C2B3;
+	Thu,  7 Mar 2024 11:29:58 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com BFD5D13C2B3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1709839798;
+	bh=licXwMZE9nQRR1VJBrVvcUMfdfPScXi/Vz1g26dmJEU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Tqc3RJMJtNGcThi9Zm0mRh5vbLJU/MCXx5jgEMKn+VMYnE2iY7DHOcOBYi8EnIywU
+	 V3z0oQC4MeebkHbHj7OGltJC2ynJQFCIoXRvu3mLD9SbjNfRItsR3xUSyaRog8nwow
+	 vGC4PI+zaTXJ5CpIXz8v50EYvZ/mFyDBVi2fYpJM=
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/6] wifi: mt76: mt7996: Enable spectrum management hw flag.
+Date: Thu,  7 Mar 2024 11:29:48 -0800
+Message-ID: <20240307192951.3271156-3-greearb@candelatech.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20240307192951.3271156-1-greearb@candelatech.com>
+References: <20240307192951.3271156-1-greearb@candelatech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/EICs9rZNMSRHQGfY17PNDw/";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Transfer-Encoding: 8bit
+X-MDID: 1709839800-mwwquWsOLHsO
+X-MDID-O:
+ us5;at1;1709839800;mwwquWsOLHsO;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 
---Sig_/EICs9rZNMSRHQGfY17PNDw/
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Ben Greear <greearb@candelatech.com>
 
-On Thu,  7 Mar 2024 16:41:42 +0300
-Rand Deeb <rand.sec96@gmail.com> wrote:
+This hardware does appear to support changing txpower dynamically.
 
-> Given that null is improbable in this context due to the calls being made=
-=20
-> through uevent, we should eliminate the redundant condition. In light of=
-=20
-> this, would you recommend sending a new version (v4)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-No.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index d3b72fb73c30..494679a412cf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -402,6 +402,7 @@ mt7996_init_wiphy(struct ieee80211_hw *hw, struct mtk_wed_device *wed)
+ 	ieee80211_hw_set(hw, SUPPORTS_RX_DECAP_OFFLOAD);
+ 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
+ 	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
++	ieee80211_hw_set(hw, SPECTRUM_MGMT);
+ 
+ 	hw->max_tx_fragments = 4;
+ 
+-- 
+2.42.0
 
-We should _not_ eliminate NULL checks in this code.
-Ever.
-There is only one reason to eliminate NULL checks:
-In extremely performance critical code, if it improves performance
-significantly and it is clearly documented that the pointer can never be NU=
-LL.
-
-This is not that case here. This is not critical code.
-
-Having NULL checks is defensive programming.
-Removing NULL checks is a hazard.
-Not having these checks is a big part of why security sucks in today's soft=
-ware.
-
-V3 shall be applied, because it fixes a clear bug. Whether this bug can act=
-ually
-be triggered or not in today's kernel doesn't matter.
-
---=20
-Michael B=C3=BCsch
-https://bues.ch/
-
---Sig_/EICs9rZNMSRHQGfY17PNDw/
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmXqBkUACgkQ9TK+HZCN
-iw7FrQ/+LHJe8g6BkVKrdLKc/L7rLp0XojDoW643xNMWUXyFLCQ8WnsmkFrr2Co0
-re2MKcdhCNfJPxj4A2ZMEr9ASFjll6jvqHGotdgsUHFQ0YPa+4ZLXdKNKaPgDlYp
-CoBs5sMNRGPtMFlh1g1U4R92cAMoSEvuj+nXEx8j+MA3dHT3fy6aPXAofVwOlwOr
-t9iqAeNMsR+kSf4LLKNnv3r5WmXbuWC3bMe72ESpCtExuvUkQ0RXuBBdInPXPSYC
-+yu5uITrNjxMzyydYo6Kkr0pksO8yrNjLQaCbIhl1xKz/KO92ye7QivRxlGqyOQZ
-mRE/RVthmZR1/l2HpVFgkvAlFYIEiWfLU2MJhgPaAWfPNP5gAaxrw3At0nkhx3Tf
-8C8asZeKWds4eMu901VOzEO2jqDiAtjSMEhr+i4fP912DhP03HdXXYhI1Stl4wOu
-yx7dwOkuR19IwlGVSQ1cqKkI0a85i2oY5R7Jtub1Tujm1w23KCde/GlPIB41sepe
-2N/7xOaNrJZGuKnuUgeazcdLhOhenO6SUwnC1BZYkTEtxekEGxDMby6GBqnWdwdN
-H2RNnbwq5BfP3V4N6+gVSOk6Td1hFMubD6rUozgvEz/xaMYMo6GF/T/WxhTpjMQ/
-/uuwUDh9HHe/pgcnbyeUYllyKDaW6xAE8CwVpq8WGQurQ3I9+I8=
-=ZdG7
------END PGP SIGNATURE-----
-
---Sig_/EICs9rZNMSRHQGfY17PNDw/--
