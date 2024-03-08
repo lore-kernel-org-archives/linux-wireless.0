@@ -1,87 +1,105 @@
-Received: from bues.ch (bues.ch [80.190.117.144])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988132EAE6;
-	Fri,  8 Mar 2024 05:11:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.190.117.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 787DB208AD
+	for <linux-wireless@vger.kernel.org>; Fri,  8 Mar 2024 08:51:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709874663; cv=none; b=evROyZ3HZgQPdl9lugrXom+sW90guUV7hDEA4szbOgv5kbC/T72dU2v5PoulsQ97t7nbuf9O8rVlGwcA6erszOGbEo2vTBocLFMd5qn+5jETTT+P8PXCSuLck08pUEYE5GyQpd1hC8kVu8emv1S4XGFhofIwXMC9UqLzuCPOjSo=
+	t=1709887904; cv=none; b=pWlki/EhUEwNyz5ReOk6gth6liGpwCrF5UwTvqsPxm7IiitDCM5Ut3Gn3pwrz9fSowQuqe7eD1Kxd2KDLenIosZTFW0Efzdc3qkRoZpDQk2ofBBufesgXnab4tqKPH6ZVkqHc1RdzgZKVeLtEjznwF/KtMDyFFYAUoS8wDnYVtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709874663; c=relaxed/simple;
-	bh=7c7DCl5tHRd02QLwo//WwbvkDNPX9svF1WEwOb1bLwo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WHl1vgEzXWq6Yh4UR0RB8o1XtlkNPqSPwsTnAvzTDekzgeLuY1qF9nrhntajlLtS9xj7OdzF1lKZ0ofoAx72CJdEHQNjFtAbPfmNRCvqZNY3Wh/w2K2QVRa84ZjvhwHrlQ/KrbAXmLdeetCYzy3pjJ9R8iOa/5IDD1dcRo0Lho0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; arc=none smtp.client-ip=80.190.117.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bues.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
-Received: by bues.ch with esmtpsa (Exim 4.96)
-	(envelope-from <m@bues.ch>)
-	id 1riSVT-0006Q4-1x;
-	Fri, 08 Mar 2024 06:10:54 +0100
-Date: Fri, 8 Mar 2024 05:50:49 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: James Dutton <james.dutton@gmail.com>
-Cc: Rand Deeb <rand.sec96@gmail.com>, deeb.rand@confident.ru,
- jonas.gorski@gmail.com, khoroshilov@ispras.ru, kvalo@kernel.org,
- linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
- lvc-project@linuxtesting.org, voskresenski.stanislav@confident.ru
-Subject: Re: [PATCH v3] ssb: Fix potential NULL pointer dereference in
- ssb_device_uevent
-Message-ID: <20240308055049.50a830fc@barney>
-In-Reply-To: <CAAMvbhGmu5VtkA=KnxoHr=Fg_4=1yHFP_SERwKD_rxH=jpM1BA@mail.gmail.com>
-References: <20240307192405.34aa9841@barney>
-	<20240307211928.170877-1-rand.sec96@gmail.com>
-	<20240307223849.13d5b58b@barney>
-	<CAAMvbhGmu5VtkA=KnxoHr=Fg_4=1yHFP_SERwKD_rxH=jpM1BA@mail.gmail.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
+	s=arc-20240116; t=1709887904; c=relaxed/simple;
+	bh=c0Cnl8ikeMfmNdB41RuxboV0cAOLKezFofDlHFzQqFA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jHSRHvvkcuWALZW/ol7KK5cZsObMgCVOa+kdk88VlcqAK24XcWC5osCrsWwkjkzw7TU9ri/jb1s5MePiQxpW8lfIbQvFHxy19xHrLJVLCkmbZgJhISLKcKXfzpqyt9d78VPGwZsJe/CcdqfLe7Tydw9rmwv3U5ySV8Hks8aK/PA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1riVx4-0006lO-LE; Fri, 08 Mar 2024 09:51:38 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1riVx4-0056Mt-8t; Fri, 08 Mar 2024 09:51:38 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1riVx4-00244b-0c;
+	Fri, 08 Mar 2024 09:51:38 +0100
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	kernel@pengutronix.de
+Subject: [PATCH] bcma: convert to platform remove callback returning void
+Date: Fri,  8 Mar 2024 09:51:03 +0100
+Message-ID:  <a92e4b2f7aace64a1e3a91af7974a6982700a18f.1709886922.git.u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/Rhyzgt75tD3LaJRP/HlHUF7";
- protocol="application/pgp-signature"; micalg=pgp-sha512
-
---Sig_/Rhyzgt75tD3LaJRP/HlHUF7
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1843; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=c0Cnl8ikeMfmNdB41RuxboV0cAOLKezFofDlHFzQqFA=; b=owGbwMvMwMXY3/A7olbonx/jabUkhtRXFysepzxjsHPYJ6u+SUmjYeEGJrl9nTn8jWtmrblaO 3UFn/HeTkZjFgZGLgZZMUUW+8Y1mVZVcpGda/9dhhnEygQyhYGLUwAmkqLGwTDjnWy4XiJL7Z+2 2gAdK4lLnA1LPb8F1N4ujjQ5a3Ri4hLFGZwr3zSvCZA8MLX+dkvfC2OfojdZBgd7NaYfP/zRgm9 T6GdhyRebWqp2XThW65vgbJTk87jAmZEr8nPN3pgJrDsr5ffpu/FGK5nYBjA5fHNUkfZUWDN3j/ TKmUbXI+W7fKczLBDhErrElqmR+eLK4crb/Hd4lhQ43m+LmPv7ltFNLt6bti1G8rpT13ilTQ8u0 zlkPPUH1/4Hdxot2lJO8ZSqXtyfwzC5N+npN+5pNYFz7cv7Eo/mqmqHmekKMZ2Vm3Z694G53z3E HsiWXFl84Y7tkTezfhSUmG3pW7LMUMH2TPVnXp83jLs1AQ==
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On Thu, 7 Mar 2024 22:02:29 +0000
-James Dutton <james.dutton@gmail.com> wrote:
+The .remove() callback for a platform driver returns an int which makes
+many driver authors wrongly assume it's possible to do error handling by
+returning an error code. However the value returned is ignored (apart
+from emitting a warning) and this typically results in resource leaks.
 
-> If one does a NULL check after it has been previously dereferenced,
-> the compiler will totally remove the NULL check anyway,
+To improve here there is a quest to make the remove callback return
+void. In the first step of this quest all drivers are converted to
+.remove_new(), which already returns void. Eventually after all drivers
+are converted, .remove_new() will be renamed to .remove().
 
-I think the kernel uses -fno-delete-null-pointer-checks.
+Trivially convert this driver from always returning zero in the remove
+callback to the void returning variant.
 
-But anyway, this doesn't invalidate the point of having a NULL check.
-The intent of the code was very clear.
-So don't remove it.
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/bcma/host_soc.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 90d5bdc12e03..8ae0b918e740 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -240,15 +240,13 @@ static int bcma_host_soc_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
+-static int bcma_host_soc_remove(struct platform_device *pdev)
++static void bcma_host_soc_remove(struct platform_device *pdev)
+ {
+ 	struct bcma_bus *bus = platform_get_drvdata(pdev);
+ 
+ 	bcma_bus_unregister(bus);
+ 	iounmap(bus->mmio);
+ 	platform_set_drvdata(pdev, NULL);
+-
+-	return 0;
+ }
+ 
+ static const struct of_device_id bcma_host_soc_of_match[] = {
+@@ -263,7 +261,7 @@ static struct platform_driver bcma_host_soc_driver = {
+ 		.of_match_table = bcma_host_soc_of_match,
+ 	},
+ 	.probe		= bcma_host_soc_probe,
+-	.remove		= bcma_host_soc_remove,
++	.remove_new	= bcma_host_soc_remove,
+ };
+ 
+ int __init bcma_host_soc_register_driver(void)
 
---Sig_/Rhyzgt75tD3LaJRP/HlHUF7
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+base-commit: 8ffc8b1bbd505e27e2c8439d326b6059c906c9dd
+-- 
+2.43.0
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmXqmSkACgkQ9TK+HZCN
-iw5FQw//bOaVLWgfyhfI4G/Yl8Syd1+U+W3zc5f7fIpIbNGqn7UnWyWhgb196In1
-knUBwNb5lyCmjtSBnMxl3xrm8LatJgwFnFk8sVjbljGrEpdL5pVTrABdYQA5d6br
-xZOWm7vFQWTGLTNdvjmLP6CqF96yVCiFMyCtQ8xnOw0zplPFnG/kO3yz5t/hFxER
-2JHGwdJMatyBXVyPjFqkKOdU0+i9heOUvvwTfcQby5kbaP8r2iPy4JEewnCQLQEV
-DCvUyOE6Gv8PNDngX9EcMyxoBe7teYDxX6wWlVx9eldRVlATl0g2Qgl52PPh8hAE
-dr8UetddVgX7yA2VwZT4IYfL1tu4GAd+8DjPh98r79V28DrmRcnxE+eGM0mCfTaJ
-TwLDSd9UGPTe1EDBqMkNG5JtpzNHKaFAz84HOUS8bf/QlQtOBnZUo9c4IPWtWdNv
-mbqAd5FgVEfjRpCSyJ8A5ty8lplQH80ORx/z8ty7Rpp2JqYq6yyrGhQkU42IEH8D
-WJvwoWEh7yyluL1o1J8p0xwMI+OxTB36uCb1EkuV2jEjfBjOWhYXr7BEQtQBRBs3
-6GH2UKmL5h0nVhGsKXgo0vUIPFeG+jpG1wGaSPtyUBn/xo+JU7APxpNOCob12DhH
-1umDjHtUlf1K0FZ6sfDAa5FMIvCwsaKRyrxbfiqTY2+gi5Z1wAA=
-=3Ich
------END PGP SIGNATURE-----
-
---Sig_/Rhyzgt75tD3LaJRP/HlHUF7--
