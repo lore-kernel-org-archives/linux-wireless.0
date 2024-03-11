@@ -1,36 +1,36 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E42137152;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 397F1199AD;
 	Mon, 11 Mar 2024 10:38:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.15
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710153504; cv=none; b=ez/oxeBy7onYX8RkWLjysPsFt/KnmJGFo2demTnaUzxf1N68HdL5/MxbHghRPrMI4I3mrdE/hv+fu60bZsZtbet72fYXhR7q8cQ+JlCPYJZS0Er+5KTLS90gtMLDYmrK/ZlsHqVRj4zDIp4/BY10n/lJZNqnyC0GO5UUJHbK23Y=
+	t=1710153505; cv=none; b=HimBHoVOlDGNdHtvjDUSsyKcwTpGGq0gJUZVVdEbQ551pAIHJsTK0UT3GAzddoJ7nZwNWHpDuDBtNcxEhpHZLLcphsm/TCXwbp8dMW608dAMwz3ULpSKU4HZ00JjCZcI3TmbubwENoeW8Iw2AzTkOgiD+CGfW86jYcZkcp/SBDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710153504; c=relaxed/simple;
-	bh=crlhiY6qgkK15nd+3o63nXhD6gdOLtEZFlTS+eK41+A=;
+	s=arc-20240116; t=1710153505; c=relaxed/simple;
+	bh=KwZr///IvqX1ALEKr4OOy/LNKMTrPfYHY9pB5hMd8FY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PmJJba4YArQeAcc94BXNQYg6dB99y6MiE1oip+TPjZnKzpMy6/kJKVHu35pZEoUvP90li8ciLxqPuU8xmr6JM1y52AE8g5JYDA3pB8HiyqrO9z7Qb218pg5ASsMC8sJyKPXuQUlAyN1eFf+hQrCuX+m+jXL18LexZWzfYOoPPKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b=ohivN9wC; arc=none smtp.client-ip=212.227.15.15
+	 MIME-Version; b=IDS9M0EcjPtJPTBYQMOVmFghl750RbANhv8eFSfYcM23UX0CZDj2yvf4FSwn9R+4ABOiIJimpPSxiYV/F0dI5Q29j8MWHcHk/7ttqyU5cquwoPpRwWkegMUmembBLlLWCzv+wmxnD0IH0pxMFT5kTAKUVWvBjvfroH/PPk2uhhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b=eW4vJVXe; arc=none smtp.client-ip=212.227.15.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b="ohivN9wC"
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b="eW4vJVXe"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
-	t=1710153491; x=1710758291; i=fiona.klute@gmx.de;
-	bh=crlhiY6qgkK15nd+3o63nXhD6gdOLtEZFlTS+eK41+A=;
+	t=1710153492; x=1710758292; i=fiona.klute@gmx.de;
+	bh=KwZr///IvqX1ALEKr4OOy/LNKMTrPfYHY9pB5hMd8FY=;
 	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:
 	 References;
-	b=ohivN9wCGlaAkSWkzvOtgT/0uf0IDWto9ums9UDqKGF5eGB7pjKtjWgKnROAnhIZ
-	 aKgULrUaRJvl9t1NVVdKxmB6RzV/s8EyC7PrUxaIWZlveJqfvdYsZOJm7U50qPWt1
-	 oQ40JB7BIchoK+8aeQh7gunPRinueFejzLHTYYdWfKpKZZRGnmcJLbOQlhMPoUHHC
-	 WfzrrOHCi0MnKcVQCeNmXhZ2t1HJeILm+TlzdbDbZKmzUhxAtS+u0hB6eeq0En/O8
-	 Mg05/oz1XUOHnUuvldLTrZ54vNjsgoNjR0LsIR/EcqXr4qXQd3GEysgjO4fGR7qm+
-	 E6Lt02iOFbqF7wBVSg==
+	b=eW4vJVXemCOazOu5REIMDGKv0aLiVtywTT5KOmvIvfHA80j0Q+/8dekyQmu+JXjc
+	 YrAXseCqvidlHqw2oizSkPVTE8sNpaqQ71q2pzdBFKAef+qGNcyHB7/c7ctMI+lT7
+	 GOwnDSUdhz3fQXyZo8DGYY46vFXQ1zXSOIFo3iVWB7q1vzRdGQDtLKwm+qvfljZM+
+	 Or+YiNqFVf/X887hhEkqYoJ5fxD1NP5eORQU310/eA/gSBcmCstrvYHS/hDKcMyUx
+	 nsSnxS0S4bX4OkIIJn2a9WUH8qDdiB8Vt3whLWFMz2hLOJH7pU7UYc5Mvj2TwYy+k
+	 XDqEhMa+YNhkr8VLWg==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
 Received: from haruka.lan ([85.22.108.92]) by mail.gmx.net (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MBUqL-1rXGzE0tLz-00D0TP; Mon, 11
- Mar 2024 11:38:11 +0100
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MNbp3-1rTrDD1fFT-00P5IR; Mon, 11
+ Mar 2024 11:38:12 +0100
 From: Fiona Klute <fiona.klute@gmx.de>
 To: linux-wireless@vger.kernel.org,
 	Ping-Ke Shih <pkshih@realtek.com>
@@ -40,9 +40,9 @@ Cc: Fiona Klute <fiona.klute@gmx.de>,
 	linux-mmc@vger.kernel.org,
 	Pavel Machek <pavel@ucw.cz>,
 	=?UTF-8?q?Ond=C5=99ej=20Jirman?= <megi@xff.cz>
-Subject: [PATCH v4 6/9] wifi: rtw88: Add rtw8703b_tables.h
-Date: Mon, 11 Mar 2024 11:37:10 +0100
-Message-ID: <20240311103735.615541-7-fiona.klute@gmx.de>
+Subject: [PATCH v4 8/9] wifi: rtw88: Reset 8703b firmware before download
+Date: Mon, 11 Mar 2024 11:37:12 +0100
+Message-ID: <20240311103735.615541-9-fiona.klute@gmx.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240311103735.615541-1-fiona.klute@gmx.de>
 References: <20240311103735.615541-1-fiona.klute@gmx.de>
@@ -53,56 +53,56 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:ft4wmVJJYk5xr7YIdEH6pNkDxSyG6HMuFUAKZGN1pzy5OPHRgcf
- yBJK6gcSU/pebtBCl3jMeZerr+cFWzMzfWCVILYUEmYPzN+J54rb9RyJxM2H4JV+kd2636X
- /BsNeFqe3qk90fQUqs1M10mV6gHM9411371OSBCSQxPZhdDQ+Vo+qohuVXSD5kHxNkbawUB
- wWY8LlbdDOJwDlX2GGEPg==
+X-Provags-ID: V03:K1:KPPVdPov5etYgRS1RYBEzsxh7yn1n6tR6gJEeydUszsy17LrJLg
+ EaaHcbhTPuJxiJtPybWOPw6ujuGcnNVrilrR29vekEdVErL+HBaPRAOeHqj8cM08Qgwir6+
+ 0LGtuLCX7VPjIRGdbberd7HwnuqCT69qDEPcNIrlmopDKMyMC+r3BHk81gOTFrBF/B8a25Y
+ j7S2wSPjrIiNuBIf8/czw==
 X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:yXFtqoJC25Y=;5DB0T6+ZcC2quOlc3RX1pNv2V8a
- mrkS6VkA0Bw3UyusYp6DzOh+EiO1qeBCOJ9605QeUUGznE+ats3z+CfhhU0APRh24atMrDU6T
- j0oO/JEkPKZ8f0RKZeh9M2j2eLWEcQvjZTg60+KfGijsyHDNBJgqAaYtT4++IB7jXF4Y3Wtcu
- F/nSTPvjE0hen2iNbS8AVb9NPVq4BoHdv5WNllk88g4lBMlMgWM18fyUcFYcTimXIUFWBgmmv
- PnKyPCVJvYbJ0lbI8V3k6dbyXF3owjIZzFKh9ZWqzjm8mckNm/64J9wrT9PTSMlFrLUGsUeyn
- 5n5aGlaBxFdzo+JEjF00kFnAp365u3tEztLFrxUwXD8HroxZMg0XsbSXx0/tY2+TzVN0wqAfM
- cHU0P7O21PZCrQzToXvwXMKU9QsQA9wzs3yZw2Q9+2tzigAXQ0zhGFbACeMJqHSaymhExIqR7
- rS9uvh9/24mB82PCkp8s1QGz42WBLwOesmuL+23BUR5o7XQDYVMkU9dbevBgnXAxv9pF/QyPI
- 2Vw1Z1sFXgRN6+7h92t4RF+XZVpzYYs5Cs874hhgZ7a2ZX/uA2csuzMsvjfa3a6ec3eQfOBRs
- U+E95bpgngtoytmvID3UqC1O8S8/dVrB7roPivqN49JZkpHflL3nbgoddo15dZ50QtEnPXx3C
- JMc4Btn+TWNVhwK+bU1yUO0BHRrU5PmACasxZrILduxWaY6+OeP4ryTlWxUjr4uCW260ULhjt
- t5f3CMUaEl6NsjA/8rZffx2zho+JLg/Aggdt8mtbTEk+v5tKVa5sSY6V6rifFFqZlBAeF4WRV
- HUncrcvdja9QqyGa8NovQK92/EKODTxslbBnytRbjGQ90=
+UI-OutboundReport: notjunk:1;M01:P0:+TILPNUhTsw=;q8nMNFkib4Pvwo9jtvDhgU4jfYG
+ hBV433wa0i72JDAKxic79rao6mXgHLwbkxNj77yfps3PCVWBEm7TZOXcQp1wPpeBhzTZz/MeO
+ GG5JDjrxdxxztWUCYYwlc+CyruVFPQx2wkW3fWbu68aQjTYkUHED5Q7Ue3P0FVZF2YmKvSucG
+ 5V4gDEYN/bn1r1LG6nQp57STy6W70Co+rR/XvnX97JyoQf3zlKp9ChTvfno9hGMzXGdrqDg6O
+ KvU+gI/Ir9AzTJ8ZeZa89fr9lW+tKOiXGarg/XQwnS5D4/fPqBA7ALsJrbHpIBj6w+JrCgDPc
+ AwPmZ5rqUDYAtzoFcyYBZwwXvIlj2eSSNu+xWXuBo2p2pPlFeiYiTsgN79bdEqHRCGwEf5fvZ
+ uogX6fm1/cJIfyYaFUbNU6WVHas/dtrkVKBWyYyyj6cI2OvQyZlryYPaV7WZLvVQdDu7fCOSr
+ eej7rTfovTkgR31ZwTtZ29P29KhWraDnqgI9Uk9Phkzxi/IR4Y2cgb81v9q2Mzrdaf45bkUzx
+ IImM3bqA4sT7rssLu2lW0nLkjV8hFrT1aNXnzhaEs867dXf4rbGYNUJLv2Wh2IcQ+SUidVlCM
+ WSN48VBntkIJxYRTcN295hCm/vmMmRsz25h+Rm3aGq8v1O4Wc4WALjs8hO6ORTfpn9rCrsbmf
+ 3ycbtY5Rcg6fP8rsl8CpKT6icd550Lzz3VSwT7czYyjZ7K7RLgH69Uu2P5yriF3pK52Sa4DPz
+ V0yJ0Iq3qcaJhtpQXZKw8VyMcXYXbxFLWV8dTX3ElPbfRWDPGhvJo1FC25oYmCrg35uaLhd+U
+ ewLLDv0K9XUXA0JcItcyBHnaTf+ybvJ/jLu7GlSQnGJ1Q=
 
-Initialization table definitions for rtw8703b.
+Sometimes 8703b firmware is still active from previous use when the
+driver needs to download the firmware during MAC activation. Reset it
+in that case.
 
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Tested-by: Pavel Machek <pavel@ucw.cz>
 Signed-off-by: Fiona Klute <fiona.klute@gmx.de>
 =2D--
- .../net/wireless/realtek/rtw88/rtw8703b_tables.h   | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8703b_tables.h
+ drivers/net/wireless/realtek/rtw88/mac.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8703b_tables.h b/driver=
-s/net/wireless/realtek/rtw88/rtw8703b_tables.h
-new file mode 100644
-index 00000000000..98bd399bddb
-=2D-- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8703b_tables.h
-@@ -0,0 +1,14 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-+/* Copyright Fiona Klute <fiona.klute@gmx.de> */
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wirele=
+ss/realtek/rtw88/mac.c
+index 298663b0358..5fa38b1068e 100644
+=2D-- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -936,6 +936,12 @@ static int __rtw_download_firmware_legacy(struct rtw_=
+dev *rtwdev,
+ {
+ 	int ret =3D 0;
+
++	/* reset firmware if still present */
++	if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8703B &&
++	    rtw_read8_mask(rtwdev, REG_MCUFW_CTRL, BIT_RAM_DL_SEL)) {
++		rtw_write8(rtwdev, REG_MCUFW_CTRL, 0x00);
++	}
 +
-+#ifndef __RTW8703B_TABLES_H__
-+#define __RTW8703B_TABLES_H__
-+
-+extern const struct rtw_table rtw8703b_bb_pg_tbl;
-+extern const struct rtw_table rtw8703b_txpwr_lmt_tbl;
-+extern const struct rtw_table rtw8703b_mac_tbl;
-+extern const struct rtw_table rtw8703b_agc_tbl;
-+extern const struct rtw_table rtw8703b_bb_tbl;
-+extern const struct rtw_table rtw8703b_rf_a_tbl;
-+
-+#endif
+ 	en_download_firmware_legacy(rtwdev, true);
+ 	ret =3D download_firmware_legacy(rtwdev, fw->firmware->data, fw->firmwar=
+e->size);
+ 	en_download_firmware_legacy(rtwdev, false);
 =2D-
 2.43.0
 
