@@ -1,34 +1,36 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.19])
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C620E22081;
-	Mon, 11 Mar 2024 10:38:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51D8111AA;
+	Mon, 11 Mar 2024 10:38:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710153497; cv=none; b=rm9dpn7OfCQq/6t344a9Y8kQI7ehMdRr8DkJyg7aw3hIU9lErSGTvMLUWTotHoowqbIcqVDF6UET2PjNgQi6FIpWvMw+WdR0tgPNgxOT2R3+9l1nuqFNL9fss+djG12N7Z7ikwexOSXKdKbnD20L/cBy6kzlmxvy0gbO/34sWc0=
+	t=1710153503; cv=none; b=PCHK81oIXBfhJONT6kR+/fw0Mh73ulCwiIihZTcmUqEH5zJUYfqe7k/8Xt85hf9EqCpqU4Bx0gyQo5vR+Ambxh+EjdHaAxXcDPYiC5rXoCIT8UIBvtaqA1D5laPkgdnYrrmZ0gPN2dAI7mpbwJn+xIhDLBK1CYrIPwbubcb8ibA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710153497; c=relaxed/simple;
-	bh=VKI4C53tqjvymCOND4W5+jLuXV5U8d5fu41/iuhYVuA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GHq9REaZi1cgD5FNJlTO1spZKtdYSLCYiRnGDf3Do85traEV1+Dla9FvKEGbL+utl4CS6/w9bNXTy/SQcn/JGBqO146x9g1y5zcf1p0sitWVaDWwj3BmjmY4z5SBjw7Nj2n3Jcas4awo0zexD6+W2ni9yNPIa+PhEGtUqSNJLsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b=d63pQtU5; arc=none smtp.client-ip=212.227.15.19
+	s=arc-20240116; t=1710153503; c=relaxed/simple;
+	bh=PxoFEcu7unejY1iHkcJHEaUePuL2NaKdYsqWsj2Q984=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=d1Q1wWc8KNpuHJP2CzAyiVFdflYj1P9/d0AVSCBLsDT25s4f/PLWDT+DIXr1dbO/cDeRq8T8D4QqQOGraC8IYY5ECRrPVef2yUV0BVdQsscCC8Mbp/DMjEDnXrcj6WzUT2RaNF980e73AWjgwWXAxjAdG+4XCDOkhnt3kmKcjd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b=bbFryVTk; arc=none smtp.client-ip=212.227.15.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b="d63pQtU5"
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=fiona.klute@gmx.de header.b="bbFryVTk"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de; s=s31663417;
-	t=1710153479; x=1710758279; i=fiona.klute@gmx.de;
-	bh=VKI4C53tqjvymCOND4W5+jLuXV5U8d5fu41/iuhYVuA=;
-	h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-	b=d63pQtU5m3V8tBnN4qIhNzGxYLk7huTbbyBOt2bRfuGaOMZIqVhCdTSxN/1rQFJU
-	 /kRf3P0RWUkIEu5tqhpNeUmiHcz3vHEcSy4F3OhtYD+g+Caphs/7d9mZt3HW0KPsY
-	 nASAVt1AUWBXp/eqZPfa6bPHjgNc/ySCNiMwiL0crZ5MeD7nJvionwuxBg94zHZOy
-	 DVsE4cyKcs5e2vaHf0xD269YAN5Dc199otNN21+mm6M8NX24qdVJQt8RGx/19Ox7z
-	 FVgMzgG0SbTFJ9dsxT8vS3TEj/EWbfhZEY671kKHphuWuruEHiw8GlFM04rvvwI/y
-	 k8Nxv1I5JjiVjRg/0Q==
+	t=1710153489; x=1710758289; i=fiona.klute@gmx.de;
+	bh=PxoFEcu7unejY1iHkcJHEaUePuL2NaKdYsqWsj2Q984=;
+	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:
+	 References;
+	b=bbFryVTkWPY5iJUAejqsisRQsgxJGI2o35nygRbIo7lKvMZ4YOTFQ69VzH+VYP9K
+	 inEvv8eCEu8STaisQXXofICwjQDW8Ja1UzjFfUGO4qFX3D1HIIeRjbXmxXk472MFS
+	 D4cE85LncoGQ+o87/8o9kM7a/m3/VMjJTARY9LPUMZfvdWFO2j0qhBZJ0cjwbGwoc
+	 LmZjc6uMp4AgHEA6QGf4hrKQhvqMiVqJBbwaBkHRv60KmmuxVc2sq8+MQYyNmrCRi
+	 QTB/3joeYsG1sdq8kdim5lUwgFlYetgkjLm6AHCTL9S3t6xgncFc2XsTYTAS+kkaJ
+	 ssPSCvBNxhahSOceyQ==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
 Received: from haruka.lan ([85.22.108.92]) by mail.gmx.net (mrgmx004
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MSt8W-1rFKcj2GLe-00UGF4; Mon, 11
- Mar 2024 11:37:59 +0100
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1N2DxE-1qfzsV1nXq-013aze; Mon, 11
+ Mar 2024 11:38:09 +0100
 From: Fiona Klute <fiona.klute@gmx.de>
 To: linux-wireless@vger.kernel.org,
 	Ping-Ke Shih <pkshih@realtek.com>
@@ -38,116 +40,157 @@ Cc: Fiona Klute <fiona.klute@gmx.de>,
 	linux-mmc@vger.kernel.org,
 	Pavel Machek <pavel@ucw.cz>,
 	=?UTF-8?q?Ond=C5=99ej=20Jirman?= <megi@xff.cz>
-Subject: [PATCH v4 0/9] rtw88: Add support for RTL8723CS/RTL8703B
-Date: Mon, 11 Mar 2024 11:37:04 +0100
-Message-ID: <20240311103735.615541-1-fiona.klute@gmx.de>
+Subject: [PATCH v4 4/9] wifi: rtw88: Add rtw8703b.h
+Date: Mon, 11 Mar 2024 11:37:08 +0100
+Message-ID: <20240311103735.615541-5-fiona.klute@gmx.de>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240311103735.615541-1-fiona.klute@gmx.de>
+References: <20240311103735.615541-1-fiona.klute@gmx.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:HxM8l8pT6+Cfy4PtmyaRT8pSi5B9zmKU6J9IHd3KOiRQ+2VQY84
- WfZbtrVSrhAvtgmpCQzhJXgUDvw++s9xzYOst15UfQ1qY4pPSdhmi/5JN7WayP0lmA7PHTJ
- iItvvQXwDeOjFS7qMBmMlWP4gBIG+lrIxMTjt+YiRhN3lE0npeUamw/HTLs/2at4ydRLjgy
- 1YN12+ASgIWOyDdkwxOOQ==
+X-Provags-ID: V03:K1:AW4H/PKDgcvAmmAxtrLglm4U1cZKQKUG0W4QQravxulJCQIEA76
+ OTQh7M+ylsFxzJjwcwEdCTLiJ9c3qe2mdgn7V/JWDfBkXdpcyjOR8vdXh4DF6bXW1mKsCYK
+ A3/7q8NtYAofQbemDREaw5LIQ3YQswLKjQYBzf3/fHPxAP1nU6uO+yLufj80eI9YQlucz94
+ RU/qmOf/rZEtu4Sp5f26Q==
 X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:JHaKhnCMtGM=;WVqbLKtoBQcd54jUWWWEnTV6zBp
- 7E9vZ4IfnW7lu6oIWFucbDFd2Vhy++L0yW+pSnWghOuEfxgkhTjVsOQmOEfYuv0XjAKbarEBb
- XOCugRqqYcuvpJGzdY8aTQCJnA8GD/sibq9H7aiDhJ4jGHdfiNlzya7DpCcqrLBDiBuN/OKqx
- vC8ituHo9PHxPjzuQ1VSxn5cBdwTS93zFSLgaFAJup0ZYET+HhpVm0rr7sjjWj6Gv2In+/67w
- +4qrUuGUHNEey+VAs+LEOEsyau7EGbUDrtqhBKnFjxLOUpt4Y+SgwMwtC/cqkPERGJjA7Ukgs
- w7FlxfF77UE3ggOALSsGK/OlWlNMElH4w6Q8JSXEsi/XutokG93da5ffdY6TAakyEODHnahU4
- Wk2R8iSNRItkREzKaeGXdhOym1v/P3LxejVYgqn8z9yaK8DmB/sfer0SV1BnZyUNy6+7gPDi5
- 30I7Sui62I10Wbe+G9fmbLQzYiwGJbK7On79AohhjPvAUHPONPF481vvrhuC0MN9yIltlZA1K
- pcGyqU8Cb95ZpkrrSLcBe9jpUi7YY7PXRVAoneEmIPhZ2aCEJpUIaPMNPSPc5sSAauVjjPL0P
- CBJ6PeshyWOyUL0s+v/1+EXIG8jUyuANtR04SQuS/a0Db0pJEZn/Y+IV0gUf1x2LoNUS1w1R0
- JNOl1ojiPE5gpRUzxrqXQTttXrjbEfzNidDA1PPVw9MfGS5yOt+K3Gvdgo16UXIh0+ql/GMLn
- 1yRKU09sycOEH0f9dNVBG8/mA+6/28F1EJ611h0DFdkNeFck6CR7Tr5r+c10c6Cu2SXcoemVc
- AiY+NrxaKmYDyyo0Uz254BaidIpuruZpiJ0IRf7CAN+VA=
+UI-OutboundReport: notjunk:1;M01:P0:b9ffb4t4L5w=;B85z3OMW2qjO5QwKOLVi5OzZ203
+ euF7OCcmDoS2OPbQyjXwKjR2/lcWnb6T3hSVQajuTqjE6ebBJPsH4sqZTxywmN3/y3WsbUwlJ
+ b5VKjzSlMww2FmJQ+oCgex7RJaObjHZJfM5N//pPDmsYDDP0hQ39Rafjq9Kxfmle4JbaNzZiQ
+ Oxh815FpQbqobLDNnbrNX9wS36IU9AwqVDMKugXwdcKYiWKkjW+1eHSdYP43qhNOXumPG6gTT
+ oFn7m1DsSgaoCo0ZE4poxLZ+Q00FZNIroh+EmKKhn6Wpuvpt9S5C8diDQWS3fK+aNTN85lg47
+ aS3+z0fhxxoa/tsUQSte8eewKBn33j7bdvfFvQBgkWyUZhqAlqoH7LgQimidyWUORybqkr8rx
+ ZBdctgwmzScTTfnUOXdNZPh4++436iKxo1RBW9ibB8cLB9SutT+lcptoP0j+ToE5vaaP8Nhnd
+ XF+QOq6/hgQ76Q6p/wSvzyBJTnNmIngVoZOR1D+nzgcVVkf9ODVN75oRkfyMrglSLwFkPpijA
+ TbFzi6NjHaIS4cIEp9kxNpiwYqhN8waBg4yV5xI8yg98TYgckUiTKNASJmSdyEqH7D3D9NQpK
+ CbHYQisMZsnzja8UPRPBd0fuJ4vC3jUw6fgADIEGt17iDEBqU+yiECwPTR0VWJ441Ce2hOHys
+ aY5hezq9KLMRBJEtKeLS/pFd+wz1bU8mUGgHpFHR9CzcdBtuW8jUjmjYMtHW1CuZl2IYZOSrq
+ j/8hjW3ckBFIwt+5FK2fbozUpSwhT8N2e2WuqhBAxdUjtFV8M24W2HFCo7sUdBMWSt9D80kY8
+ pz2J2x5VR7Zm9QW2LSn7Av4x1EY05AhjCJQ9sI+iLavBA=
 
-This patch set adds a driver for RTL8723CS, which is used in the
-Pinephone and a few other devices. It is a combined wifi/bluetooth
-device, the wifi part is called RTL8703B. There is already a mainline
-driver for the bluetooth part. RTL8703B is similar to the RTL8723D
-chip already supported by rtw88. I've been using the out-of-tree
-rtl8723cs driver as reference.
+This is the main header for the new rtw88_8703b chip driver.
 
-Station and monitor mode work well enough for daily use on my
-Pinephone, I have not tested other modes yet. WOW firmware is
-declared, but WOW isn't implemented yet. RX rates stay fairly low
-still.
-
-Ping-Ke Shih kindly offered to add the required s-o-b for the firmware
-and help get it into linux-firmware when it's time, for testing now
-please see the code I used to extract firmware from the out-of-tree
-driver [1].
-
-Thanks to Ping-Ke Shih for advice, and Ond=C5=99ej Jirman for debug logs!
-
-[1] https://github.com/airtower-luna/rtw8703b-fw-extractor
-
-v2:
-  * Parse PHY status using struct instead of macros
-  * Prefer MAC from EFUSE if available, move retrieving MAC from DT to
-    a separate function
-  * Tidy up wait for IQK to be done, replace mdelay loop with
-    read_poll_timeout
-  * Set dual author for rtw88_8723x
-  * Add missing "static" to rtw8723x function declarations, fixes
-    build failure when not built as a module
-  * Various style fixes
-
-v3 has only minor changes requested in review, so I hope it's good to
-merge now:
-  * rtw8703b.h: #include rtw8723x.h instead of linux/types.h and
-    linux/compiler_attributes.h
-  * rtw8703b_tables.c: #include rtw8703b_tables.h
-  * rtw8703b.c: define TRANS_SEQ_END without braces (checkpatch.pl
-    doesn't like this, but I assume maintainer request overrides it)
-
-v4:
-  * Move definition of GET_RX_DESC_BW from rtw8703b.c to rx.h (now in
-    patch 3/9 "wifi: rtw88: Add definitions for 8703b chip")
-
-Fiona Klute (9):
-  wifi: rtw88: Shared module for rtw8723x devices
-  wifi: rtw88: Debug output for rtw8723x EFUSE
-  wifi: rtw88: Add definitions for 8703b chip
-  wifi: rtw88: Add rtw8703b.h
-  wifi: rtw88: Add rtw8703b.c
-  wifi: rtw88: Add rtw8703b_tables.h
-  wifi: rtw88: Add rtw8703b_tables.c
-  wifi: rtw88: Reset 8703b firmware before download
-  wifi: rtw88: SDIO device driver for RTL8723CS
-
- drivers/net/wireless/realtek/rtw88/Kconfig    |   22 +
- drivers/net/wireless/realtek/rtw88/Makefile   |    9 +
- drivers/net/wireless/realtek/rtw88/mac.c      |    6 +
- drivers/net/wireless/realtek/rtw88/main.h     |    3 +
- drivers/net/wireless/realtek/rtw88/rtw8703b.c | 2109 +++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8703b.h |  102 +
- .../wireless/realtek/rtw88/rtw8703b_tables.c  |  902 +++++++
- .../wireless/realtek/rtw88/rtw8703b_tables.h  |   14 +
- .../net/wireless/realtek/rtw88/rtw8723cs.c    |   34 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  673 +-----
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  269 +--
- drivers/net/wireless/realtek/rtw88/rtw8723x.c |  721 ++++++
- drivers/net/wireless/realtek/rtw88/rtw8723x.h |  518 ++++
- drivers/net/wireless/realtek/rtw88/rx.h       |    2 +
- include/linux/mmc/sdio_ids.h                  |    1 +
- 15 files changed, 4485 insertions(+), 900 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8703b.c
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Tested-by: Pavel Machek <pavel@ucw.cz>
+Signed-off-by: Fiona Klute <fiona.klute@gmx.de>
+=2D--
+ drivers/net/wireless/realtek/rtw88/rtw8703b.h | 102 ++++++++++++++++++
+ 1 file changed, 102 insertions(+)
  create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8703b.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8703b_tables.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8703b_tables.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723cs.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723x.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723x.h
 
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8703b.h b/drivers/net/w=
+ireless/realtek/rtw88/rtw8703b.h
+new file mode 100644
+index 00000000000..3e2da2e6739
+=2D-- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8703b.h
+@@ -0,0 +1,102 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright Fiona Klute <fiona.klute@gmx.de> */
++
++#ifndef __RTW8703B_H__
++#define __RTW8703B_H__
++
++#include "rtw8723x.h"
++
++extern const struct rtw_chip_info rtw8703b_hw_spec;
++
++/* phy status parsing */
++#define VGA_BITS GENMASK(4, 0)
++#define LNA_L_BITS GENMASK(7, 5)
++#define LNA_H_BIT BIT(7)
++/* masks for assembling LNA index from high and low bits */
++#define BIT_LNA_H_MASK BIT(3)
++#define BIT_LNA_L_MASK GENMASK(2, 0)
++
++struct phy_rx_agc_info {
++#ifdef __LITTLE_ENDIAN
++	u8 gain: 7;
++	u8 trsw: 1;
++#else
++	u8 trsw: 1;
++	u8 gain: 7;
++#endif
++} __packed;
++
++/* This struct is called phy_status_rpt_8192cd in the vendor driver,
++ * there might be potential to share it with drivers for other chips
++ * of the same generation.
++ */
++struct phy_status_8703b {
++	struct phy_rx_agc_info path_agc[2];
++	u8 ch_corr[2];
++	u8 cck_sig_qual_ofdm_pwdb_all;
++	/* for CCK: bits 0:4: VGA index, bits 5:7: LNA index (low) */
++	u8 cck_agc_rpt_ofdm_cfosho_a;
++	/* for CCK: bit 7 is high bit of LNA index if long report type */
++	u8 cck_rpt_b_ofdm_cfosho_b;
++	u8 reserved_1;
++	u8 noise_power_db_msb;
++	s8 path_cfotail[2];
++	u8 pcts_mask[2];
++	s8 stream_rxevm[2];
++	u8 path_rxsnr[2];
++	u8 noise_power_db_lsb;
++	u8 reserved_2[3];
++	u8 stream_csi[2];
++	u8 stream_target_csi[2];
++	s8 sig_evm;
++	u8 reserved_3;
++
++#ifdef __LITTLE_ENDIAN
++	u8 antsel_rx_keep_2: 1;
++	u8 sgi_en: 1;
++	u8 rxsc: 2;
++	u8 idle_long: 1;
++	u8 r_ant_train_en: 1;
++	u8 ant_sel_b: 1;
++	u8 ant_sel: 1;
++#else /* __BIG_ENDIAN */
++	u8 ant_sel: 1;
++	u8 ant_sel_b: 1;
++	u8 r_ant_train_en: 1;
++	u8 idle_long: 1;
++	u8 rxsc: 2;
++	u8 sgi_en: 1;
++	u8 antsel_rx_keep_2: 1;
++#endif
++} __packed;
++
++/* Baseband registers */
++#define REG_BB_PWR_SAV5_11N 0x0818
++/* BIT(11) should be 1 for 8703B *and* 8723D, which means LNA uses 4
++ * bit for CCK rates in report, not 3. Vendor driver logs a warning if
++ * it's 0, but handles the case.
++ *
++ * Purpose of other parts of this register is unknown, 8723cs driver
++ * code indicates some other chips use certain bits for antenna
++ * diversity.
++ */
++#define REG_BB_AMP 0x0950
++#define BIT_MASK_RX_LNA (BIT(11))
++
++/* 0xaXX: 40MHz channel settings */
++#define REG_CCK_TXSF2 0x0a24  /* CCK TX filter 2 */
++#define REG_CCK_DBG 0x0a28  /* debug port */
++#define REG_OFDM0_A_TX_AFE 0x0c84
++#define REG_TXIQK_MATRIXB_LSB2_11N 0x0c9c
++#define REG_OFDM0_TX_PSD_NOISE 0x0ce4  /* TX pseudo noise weighting */
++#define REG_IQK_RDY 0x0e90  /* is !=3D 0 when IQK is done */
++
++/* RF registers */
++#define RF_RCK1 0x1E
++
++#define AGG_BURST_NUM 3
++#define AGG_BURST_SIZE 0 /* 1K */
++#define BIT_MASK_AGG_BURST_NUM (GENMASK(3, 2))
++#define BIT_MASK_AGG_BURST_SIZE (GENMASK(5, 4))
++
++#endif /* __RTW8703B_H__ */
 =2D-
 2.43.0
 
