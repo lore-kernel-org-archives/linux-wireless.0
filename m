@@ -1,53 +1,53 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D7B17866E
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2024 09:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB2EE77F22
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Mar 2024 09:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710234283; cv=none; b=Y3XstcWzQHEjaaJt6t13qSsUduoG+a/Y2stSD4H3CI/z3C4E8qKG1CyKFkLE7sKah/P+357OgrVvJ2qyU5yhJs5mOJL+H15bSgDIFN+pTBxwnk+1/qznGqClW1JllL9sgRTkvYZE12uxjSiuGv6FeUqnknL4WAW19BuBq9sUI84=
+	t=1710234287; cv=none; b=ZXeS7U0OiaGBS2rxDTU1lh7oiO99fcKcsCnaVKPFRRteNhI8T46nePkh8l9HexicqNXrUcqROMm0KmyugIQeZ/tu1gfZzPZdyTaa973LBLnpllWNceDT5WZCu3PwTiIAjFqlaYZdeON9cliAOv27hyL9Gex7ERjjIJRls2e5Cvw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710234283; c=relaxed/simple;
-	bh=e6Bi/XW5F309zRA8KfpZIzbioFgW+1TYUUWMwONdKoY=;
+	s=arc-20240116; t=1710234287; c=relaxed/simple;
+	bh=iexHK45mipTfM8EeaOzrgUJWRqTfOJq5MJs99Bh0LN0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BIkTiuYCwRnMLrDUQhQxzzMF/PlYuc+gLKUSjJvaRZWq6DN1vY4LKb0XYu5R55fqwUMlcrhICAZjgiqgFNGQIaDwmZ86smEMoX/3ZL1cEo4Nk+Xe0XPtKcf2JPwiP0BDmjVtbwnC7AU7ugwQfAml2Z8tqYzZJjHYwPaq+Zigl60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=psWKIhDs; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=T96rU4f956+5veOQQIe7pYtW0YFaDSWsshBb4Hf1iXNkG5PVpV5njMkD/Ixwesd1EdGHgb2E2vaGJe9YZK/YaXU+pw9vS3/hGzbMejwNgi8HumQsaDwvbbI4bTD3hOE1nLD69Ux9v/5G1ukUV1OTUbYZ6WhqvKfhIi6+qOpmsTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Hi655STS; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="psWKIhDs"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42C6MQF4019737;
-	Tue, 12 Mar 2024 09:04:36 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Hi655STS"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42C5o3oR016031;
+	Tue, 12 Mar 2024 09:04:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=UEEWyQPfS/z2ZZ2PTbBEE5MObLNZHiNkQZkre89czW4=; b=ps
-	WKIhDsUMOyuTLgELFq6WpGeIMuLWvmS+s9FY/RRzmImUy9TTVjiY1oPXrBkdoptF
-	2caM+3LCv+vJwbv8XkbeDLRDuXOwcMLCyE+ZQp9osB7Ql+0P3wbH4gPuMLFfJoke
-	34EU1b1iqHl3VgN6Ig2LAaqH5QauJ8dS6hfsHAX4lXNn+x4FqLr38JJyGLDurBQd
-	Eo5STQ7dP0aD3IiIYP9dSo92VYLzwihtC4tM7MVQUVjJ+KRodoaMQOl1hbQ5WnxL
-	9NhjSycZah9M3fcoRHDSxsyfHIEl2H7QF6fxxd1giBwLlXys0C7ggsqp9vA0F212
-	N+4m2grs2sugciJL1F7w==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wthqfr9e3-1
+	qcppdkim1; bh=iZJ4VRgr4LISkh8MwG1GKEXxFUCVqzmdo1GFxR1yobc=; b=Hi
+	655STShu1Azld6+j1OI++4zaoz98aFMKBQ8isxHfJoOFkXNCpa63E+GqJ+eyW8JW
+	5VpR+1vEpU7cLm3Cym6Z0CQceUSYQJvjPqEGzm61xviEZ0ckZcEiXrammFo63bYu
+	8HjoaezLTUl/u3Lp/mz9uH8+gQIl4I9vt4OHMZjmVTNER/0q9oySgDF/aLVYuvDt
+	JTLxx99J3GODV0LvrPphkth8DUSp+0bSl8pqpsiUTpQOoO6PBJK+tSW6KyOQ44Si
+	/MNO0IXYulGPkAX9rjsX+tqg9/MHPLKldnzB68y0/rC888ZXK4I1MunzaqwgX4OD
+	OiOKlUOFiLSdFqxftfXQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wth7rrbh9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Mar 2024 09:04:35 +0000 (GMT)
+	Tue, 12 Mar 2024 09:04:40 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42C94OWQ005651
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42C94dCK011198
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Mar 2024 09:04:24 GMT
+	Tue, 12 Mar 2024 09:04:39 GMT
 Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Tue, 12 Mar 2024 02:04:22 -0700
+ 15.2.1118.40; Tue, 12 Mar 2024 02:04:37 -0700
 From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, Sriram R <quic_srirrama@quicinc.com>,
         Rameshkumar Sundaram <quic_ramess@quicinc.com>
-Subject: [PATCH v3 02/12] wifi: ath12k: Modify add and remove chanctx ops for single wiphy support
-Date: Tue, 12 Mar 2024 14:33:41 +0530
-Message-ID: <20240312090351.1620218-3-quic_ramess@quicinc.com>
+Subject: [PATCH v3 10/12] wifi: ath12k: Modify set and get antenna mac ops for single wiphy
+Date: Tue, 12 Mar 2024 14:33:49 +0530
+Message-ID: <20240312090351.1620218-11-quic_ramess@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240312090351.1620218-1-quic_ramess@quicinc.com>
 References: <20240312090351.1620218-1-quic_ramess@quicinc.com>
@@ -63,25 +63,30 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: fFM-0kFaIpgflsmvgDYJ9n8MgN2aTaT5
-X-Proofpoint-ORIG-GUID: fFM-0kFaIpgflsmvgDYJ9n8MgN2aTaT5
+X-Proofpoint-GUID: WMyRqi_L58058kzdV4_H49EbgXz_Tt1p
+X-Proofpoint-ORIG-GUID: WMyRqi_L58058kzdV4_H49EbgXz_Tt1p
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-12_08,2024-03-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- bulkscore=0 impostorscore=0 mlxlogscore=788 spamscore=0 lowpriorityscore=0
- suspectscore=0 clxscore=1015 adultscore=0 mlxscore=0 malwarescore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2402120000 definitions=main-2403120070
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ priorityscore=1501 phishscore=0 spamscore=0 impostorscore=0 mlxscore=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 adultscore=0 clxscore=1015
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2402120000 definitions=main-2403120069
 
 From: Sriram R <quic_srirrama@quicinc.com>
 
-Modify add and remove chanctx mac80211 ops to fetch the correct
-radio(ar) based on channel context.
+As multiple radios are combined into a single wiphy, and
+the current infrastructure supports only set/get antenna
+for the wiphy, the max Tx/Rx antenna capability is advertised
+during wiphy register.
+Hence, When antenna set/get is received we adjust the set/get
+based on max radio capability and set/get antenna accordingly.
 
-This change also introduces new helper function to fetch the
-radio/ar based on channel context and ieee80211_chan which internally
-uses the radio's low/high freq range.
+Multi radio capability needs to introduced with interface
+combination changes to support single wiphy model in cfg80211
+which would help extend the wiphy specific get/set configs similar
+to this to per hw level.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -89,122 +94,77 @@ Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ
 Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
 Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  3 ++
- drivers/net/wireless/ath/ath12k/mac.c  | 50 ++++++++++++++++++++++----
- 2 files changed, 47 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 39 ++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index ff831faa4945..53bcf9416efd 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -598,6 +598,9 @@ struct ath12k {
- 	bool monitor_vdev_created;
- 	bool monitor_started;
- 	int monitor_vdev_id;
-+
-+	u32 freq_low;
-+	u32 freq_high;
- };
- 
- struct ath12k_hw {
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index ba69fdfa9133..0f33f5615170 100644
+index 29c68aa2d30a..0934abc7995f 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -613,6 +613,35 @@ struct ath12k *ath12k_mac_get_ar_by_pdev_id(struct ath12k_base *ab, u32 pdev_id)
- 	return NULL;
- }
+@@ -5183,6 +5183,13 @@ static int __ath12k_set_antenna(struct ath12k *ar, u32 tx_ant, u32 rx_ant)
+ 	if (ath12k_check_chain_mask(ar, rx_ant, false))
+ 		return -EINVAL;
  
-+static struct ath12k *ath12k_mac_get_ar_by_chan(struct ieee80211_hw *hw,
-+						struct ieee80211_channel *channel)
-+{
-+	struct ath12k_hw *ah = hw->priv;
-+	struct ath12k *ar;
++	/* Since we advertised the max cap of all radios combined during wiphy
++	 * registration, ensure we don't set the antenna config higher than the
++	 * limits
++	 */
++	tx_ant = min_t(u32, tx_ant, ar->pdev->cap.tx_chain_mask);
++	rx_ant = min_t(u32, rx_ant, ar->pdev->cap.rx_chain_mask);
++
+ 	ar->cfg_tx_chainmask = tx_ant;
+ 	ar->cfg_rx_chainmask = rx_ant;
+ 
+@@ -6489,16 +6496,19 @@ static void ath12k_mac_op_configure_filter(struct ieee80211_hw *hw,
+ static int ath12k_mac_op_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ {
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
++	int antennas_rx = 0, antennas_tx = 0;
+ 	struct ath12k *ar;
 +	int i;
-+
-+	ar = ah->radio;
-+
-+	if (ah->num_radio == 1)
-+		return ar;
-+
+ 
+-	ar = ath12k_ah_to_ar(ah, 0);
+-
+-	mutex_lock(&ar->conf_mutex);
+-
+-	*tx_ant = ar->cfg_tx_chainmask;
+-	*rx_ant = ar->cfg_rx_chainmask;
 +	for_each_ar(i, ah, ar) {
-+		if (channel->center_freq >= ar->freq_low &&
-+		    channel->center_freq <= ar->freq_high)
-+			return ar;
++		mutex_lock(&ar->conf_mutex);
++		antennas_rx = max_t(u32, antennas_rx, ar->cfg_rx_chainmask);
++		antennas_tx = max_t(u32, antennas_tx, ar->cfg_tx_chainmask);
++		mutex_unlock(&ar->conf_mutex);
 +	}
-+	return NULL;
-+}
-+
-+static struct ath12k *ath12k_get_ar_by_ctx(struct ieee80211_hw *hw,
-+					   struct ieee80211_chanctx_conf *ctx)
-+{
-+	if (!ctx)
-+		return NULL;
-+
-+	return ath12k_mac_get_ar_by_chan(hw, ctx->def.chan);
-+}
-+
- static void ath12k_pdev_caps_update(struct ath12k *ar)
- {
- 	struct ath12k_base *ab = ar->ab;
-@@ -6229,11 +6258,13 @@ static int ath12k_mac_op_ampdu_action(struct ieee80211_hw *hw,
- static int ath12k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- 				     struct ieee80211_chanctx_conf *ctx)
- {
--	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
  
--	ar = ath12k_ah_to_ar(ah, 0);
-+	ar = ath12k_get_ar_by_ctx(hw, ctx);
-+	if (!ar)
-+		return -EINVAL;
-+
- 	ab = ar->ab;
+-	mutex_unlock(&ar->conf_mutex);
++	*tx_ant = antennas_tx;
++	*rx_ant = antennas_rx;
  
- 	ath12k_dbg(ab, ATH12K_DBG_MAC,
-@@ -6257,11 +6288,13 @@ static int ath12k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- static void ath12k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
- 					 struct ieee80211_chanctx_conf *ctx)
- {
--	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
- 
--	ar = ath12k_ah_to_ar(ah, 0);
-+	ar = ath12k_get_ar_by_ctx(hw, ctx);
-+	if (!ar)
-+		return;
-+
- 	ab = ar->ab;
- 
- 	ath12k_dbg(ab, ATH12K_DBG_MAC,
-@@ -6637,11 +6670,13 @@ static void ath12k_mac_op_change_chanctx(struct ieee80211_hw *hw,
- 					 struct ieee80211_chanctx_conf *ctx,
- 					 u32 changed)
- {
--	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
- 
--	ar = ath12k_ah_to_ar(ah, 0);
-+	ar = ath12k_get_ar_by_ctx(hw, ctx);
-+	if (!ar)
-+		return;
-+
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -7643,6 +7678,9 @@ static void ath12k_mac_update_ch_list(struct ath12k *ar,
- 		    band->channels[i].center_freq > freq_high)
- 			band->channels[i].flags |= IEEE80211_CHAN_DISABLED;
- 	}
-+
-+	ar->freq_low = freq_low;
-+	ar->freq_high = freq_high;
+ 	return 0;
  }
+@@ -6507,13 +6517,16 @@ static int ath12k_mac_op_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx
+ {
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+-	int ret;
+-
+-	ar = ath12k_ah_to_ar(ah, 0);
++	int ret = 0;
++	int i;
  
- static u32 ath12k_get_phy_id(struct ath12k *ar, u32 band)
+-	mutex_lock(&ar->conf_mutex);
+-	ret = __ath12k_set_antenna(ar, tx_ant, rx_ant);
+-	mutex_unlock(&ar->conf_mutex);
++	for_each_ar(i, ah, ar) {
++		mutex_lock(&ar->conf_mutex);
++		ret = __ath12k_set_antenna(ar, tx_ant, rx_ant);
++		mutex_unlock(&ar->conf_mutex);
++		if (ret)
++			break;
++	}
+ 
+ 	return ret;
+ }
 -- 
 2.25.1
 
