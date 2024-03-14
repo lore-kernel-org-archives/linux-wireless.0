@@ -1,62 +1,47 @@
-Received: from esa12.hc1455-7.c3s2.iphmx.com (esa12.hc1455-7.c3s2.iphmx.com [139.138.37.100])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC34C6CDDF;
-	Thu, 14 Mar 2024 09:48:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.37.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E996D1C8;
+	Thu, 14 Mar 2024 10:10:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710409723; cv=none; b=cn9BYad/ihGqtbOodWVcK9+z45M4AJoFKVSavG4qMkS9tusLHbB3ZhsUF/vl8e2+UKFVZ/yVEJ5pYiIT5KLeBnO1qpiqxlrhJMd6soxKPLvY5boFb2c6pACuw6BRR8MbZcUklPAfPKL7Noswqo7iuygwNWhlrvCopKzv7ZO7+cQ=
+	t=1710411008; cv=none; b=d1I03EufI5FaHyqcEiRAcVrFRT45EFbIPP4TLtNp7DMByAMdkR+5LPvprPpjq/t26uI7KOAb+O6NWs3BbLamQMoupUvQws4P3x89cXXE/+ZHOZy+A6uOlcyuIfx/0aTmaDQ/GiYdszyr7OEGS7l12pxWlQhwbTKTJwuAGMHSu+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710409723; c=relaxed/simple;
-	bh=tXWoDv0MCVcjPegxH+LsuRrAuyb6Of1Y0FhIRJQ/Wsw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IgiS+xD3oiQ1uzVmWpQzmwHavjH9xZYVhYqkd+HeNinGKsmEQVvzIqlfuVeIjue+zpGeiO6HXgqyb2abEHbtd3bwaKNi9iJIvod/QHZZQ3Ee9AmTrEim+u0YlzBpnnNwOUBpj/+Ok1aPpOZOyRt4WOfAiFub+Sz/H1NLQ9imUp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=YI1oeMRO; arc=none smtp.client-ip=139.138.37.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
+	s=arc-20240116; t=1710411008; c=relaxed/simple;
+	bh=ySDz11gRP28auks7fj5AC4J0V+PhZ+YcgZc3uVR/92U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sZQypKCw//myJ+RD6qm1L87xFFOzwtFdxlSEYPcrj74UEcYN39xizdFYPlxa53oTgbO27FHS6La69jCucQHCajPRHC+ErPS7W/aXP1b4WD7IpErTxR9/zQ9+Wqf97A7o6GrLGfJggG3y1SSc2PKHfTaIJmCIwB6ANO3DbM11jlA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=VoCCJJpR; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="YI1oeMRO"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1710409719; x=1741945719;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=tXWoDv0MCVcjPegxH+LsuRrAuyb6Of1Y0FhIRJQ/Wsw=;
-  b=YI1oeMRO7bg02fVIy+YWaheiQ1MxCvINdAvuGMmscYsuOh4uwvb8OL5P
-   dXgzJxia4FuTh8mE9PUOg5J17zyRvHFKiNFBY0Y7uZPJ0S5yNHCVyIdoO
-   cu7Pci6zSH3e5mW5p+BASbpYMoNTENWlzZba3tm9u+TP885pC5zjYwJGk
-   4IRj1pf9QjczwIAfrOMXW04hbZo8OkL31wFyOBN1T39orzIGSbH+nP7ul
-   CKC9QsUlFpxg5XPDpt/hpIe1ufvJ8/kS1g0rPR4o9A5V+qWJNEGSCEMnL
-   Edb4xyxG1y/5g+zJVV8POaEhArjIL5QNhW8ZpJEo1EhKyOClzeGNYmNe6
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11012"; a="131570232"
-X-IronPort-AV: E=Sophos;i="6.07,125,1708354800"; 
-   d="scan'208";a="131570232"
-Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
-  by esa12.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2024 18:48:36 +0900
-Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
-	by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id F10D99D107;
-	Thu, 14 Mar 2024 18:48:33 +0900 (JST)
-Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-	by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id 3A27DE6268;
-	Thu, 14 Mar 2024 18:48:33 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id C1E5A6B4D4;
-	Thu, 14 Mar 2024 18:48:32 +0900 (JST)
-Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 1D2AE1A006B;
-	Thu, 14 Mar 2024 17:48:32 +0800 (CST)
-From: Li Zhijian <lizhijian@fujitsu.com>
-To: linux-kernel@vger.kernel.org
-Cc: Li Zhijian <lizhijian@fujitsu.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath10k@lists.infradead.org
-Subject: [PATCH 1/3] net: ath: Convert sprintf/snprintf to sysfs_emit
-Date: Thu, 14 Mar 2024 17:48:21 +0800
-Message-Id: <20240314094823.1324898-1-lizhijian@fujitsu.com>
-X-Mailer: git-send-email 2.31.1
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="VoCCJJpR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=R+dG/F9SAS74F0UmnSYaQKCAoX4nYEm4hmGAbe+Pwg0=;
+	t=1710411006; x=1711620606; b=VoCCJJpRmuJA1fRgHS+9tf1x7iZmJSO3jLux2mosn73AxRm
+	ZZYSqbz1YjyOL93esFJYM5J81CltpaG6uHJcKe/ghoGsWJsgBOePADl5xBp/IJOy8nq+pSNXxng6y
+	K/AJrcAQGmwKikGaSppXYIXp22kWRaV8O+aoj2N3Kfhtw7C4upoJrsz7dk8T0gO9EQWgjqctvqenp
+	jE7QZXXfLuTe8w2x7jJQ4vaof7L5I9Yzfsk4jtzfhuMTOd9OJ1bf9g7O81iTJH4xU2auYKAezAXFj
+	oLQW6vj4x82/mVRgsMkmMDDiBAOxQg6ZqdfS61/AX5RuGOMHeUM/FjAFHHB2i4bA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1rki2A-0000000GUPO-1oHk;
+	Thu, 14 Mar 2024 11:09:58 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	stable@vger.kernel.org,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH 2/2] wifi: iwlwifi: mvm: disable MLO for the time being
+Date: Thu, 14 Mar 2024 11:09:52 +0100
+Message-ID: <20240314110951.d6ad146df98d.I47127e4fdbdef89e4ccf7483641570ee7871d4e6@changeid>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240314110951.b50f1dc4ec21.I656ddd8178eedb49dc5c6c0e70f8ce5807afb54f@changeid>
+References: <20240314110951.b50f1dc4ec21.I656ddd8178eedb49dc5c6c0e70f8ce5807afb54f@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,74 +49,35 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28250.006
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28250.006
-X-TMASE-Result: 10--3.130400-10.000000
-X-TMASE-MatchedRID: ebEStOsB1eE4ibokZ3+Q0CoiRKlBVkYIBXngI6jFvpfDqO6/8R69QE8U
-	roFNOGp7a6aAZTOwtJmRloiW1Kgftd2ZdKe8BPbSrMZ+BqQt2Nps/NNpVQ666iXOD7ucKRbIQiM
-	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/wmWvXEqQTm5wLkNMQzGl5B+Kr
-	WCPbERPznpYPqS6jzxEi2pD9yuITrh15/JKUJo/p4CIKY/Hg3AGdQnQSTrKGPEQdG7H66TyHEqm
-	8QYBtMO3LlEZYYZnW9rIyN56uP6NRM6ylMvEXGk1oRQBQClV4HA/0Gjnf5bBp2jOiFp3dpx6YyQ
-	KoFjU2kssxlojaTXaZ9+GrWpP0BdW4wbpXTb5DJKKve1kh3RY37qSWrndbmQn0bOriG5BVc=
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
-Per filesystems/sysfs.rst, show() should only use sysfs_emit()
-or sysfs_emit_at() when formatting the value to be returned to user space.
+From: Johannes Berg <johannes.berg@intel.com>
 
-coccinelle complains that there are still a couple of functions that use
-snprintf(). Convert them to sysfs_emit().
+MLO ended up not really fully stable yet, we want to make
+sure it works well with the ecosystem before enabling it.
+Thus, remove the flag, but set WIPHY_FLAG_DISABLE_WEXT so
+we don't get wireless extensions back until we enable MLO
+for this hardware.
 
-sprintf() will be converted as weel if they have.
-
-Generally, this patch is generated by
-make coccicheck M=<path/to/file> MODE=patch \
-COCCI=scripts/coccinelle/api/device_attr_show.cocci
-
-No functional change intended
-
-CC: Kalle Valo <kvalo@kernel.org>
-CC: Jeff Johnson <jjohnson@kernel.org>
-CC: linux-wireless@vger.kernel.org
-CC: ath11k@lists.infradead.org
-CC: ath10k@lists.infradead.org
-Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
+Cc: stable@vger.kernel.org
+Reviewed-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-This is a part of the work "Fix coccicheck device_attr_show warnings"[1]
-Split them per subsystem so that the maintainer can review it easily
-[1] https://lore.kernel.org/lkml/20240116041129.3937800-1-lizhijian@fujitsu.com/
----
- drivers/net/wireless/ath/ath10k/thermal.c | 2 +-
- drivers/net/wireless/ath/ath11k/thermal.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 31c8d7fbb095..8b15ec07b107 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -100,7 +100,7 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
- 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 1935630d3def..69227954e281 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -360,7 +360,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (mvm->mld_api_is_used && mvm->nvm_data->sku_cap_11be_enable &&
+ 	    !iwlwifi_mod_params.disable_11ax &&
+ 	    !iwlwifi_mod_params.disable_11be)
+-		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_MLO;
++		hw->wiphy->flags |= WIPHY_FLAG_DISABLE_WEXT;
  
- 	/* display in millidegree celsius */
--	ret = snprintf(buf, PAGE_SIZE, "%d\n", temperature * 1000);
-+	ret = sysfs_emit(buf, "%d\n", temperature * 1000);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath11k/thermal.c b/drivers/net/wireless/ath/ath11k/thermal.c
-index 41e7499f075f..18d6eab5cce3 100644
---- a/drivers/net/wireless/ath/ath11k/thermal.c
-+++ b/drivers/net/wireless/ath/ath11k/thermal.c
-@@ -101,7 +101,7 @@ static ssize_t ath11k_thermal_show_temp(struct device *dev,
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	/* display in millidegree Celsius */
--	ret = snprintf(buf, PAGE_SIZE, "%d\n", temperature * 1000);
-+	ret = sysfs_emit(buf, "%d\n", temperature * 1000);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
+ 	/* With MLD FW API, it tracks timing by itself,
+ 	 * no need for any timing from the host
 -- 
-2.29.2
+2.44.0
 
