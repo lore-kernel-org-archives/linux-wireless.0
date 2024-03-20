@@ -1,51 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE71485C65
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 21:27:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9869C85C6A
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 21:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710970036; cv=none; b=D5IiqkRAROjpwXruQb28JZb3hOaZ+AjSm1NBEXMtnW/RlbnL0OtrhxwtT7jv1sMNZuCsZBKBf0i/9whWLjDlGi8FkFBmpoPioWVqQXnL/YpRvoZcrHwcYn9XmyKWbItrmOaWaBWwrHRdgok26GbHXWX8BGEULzLUCXqsP2RNdek=
+	t=1710970041; cv=none; b=G9Fbj8qlLySLQaYuH7RZ037cGNQcMLiMMvmfXvyuQYK7RgiApxx4odsW/q/EZ10hpqCGJTELzgEBOMaP4dQg+sKXet/PvVqXgNCAM9HIPq+QYnAVb2qVHeJjoZh+R12+zpsUCDqH9Tzpx94INmDx+4zFZxYnbVrTbKjz/YP4VwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710970036; c=relaxed/simple;
-	bh=YSBUIhPrA7wrXcRXy005UgiygbYmj01MsO26cVHOwMg=;
+	s=arc-20240116; t=1710970041; c=relaxed/simple;
+	bh=jMmq3FBBSZV1RcYJ0p91pG+T8fW8kNGy/1K+l9C1iH4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=f5GXQVv6SKRPvJmeTAYoMNct/rD72UOxu1BsnUENXq7VXS8Hn5i5ewVWWDeuOTqslk/iqo52jR9YTOUAl9updZ4Aa/R+xY1yVXqxtL8gIhjJhBKc4+oL9c1IMKW9it88i+M+0Rq3VtcX1crqlS8PSsdercpsJ3zkGZD7lid7LQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mHs9Xk5G; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=NGawKe2gnlFaT9iwhYu1VU61hW2av5z4Sw9zuiItGzgUPcsZ20JphWumruAeaVz967AJbWU+S8O1WJX95hi7iiZIuoVdbWEgpwlenWS+Rtros9cQLY9sohzBF8Pyv5u+kPZfQitb2T45A0tP/m5W3fjMSXK042/CRsO/GNnB08g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mpg7dDvT; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mHs9Xk5G"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mpg7dDvT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710970034; x=1742506034;
+  t=1710970039; x=1742506039;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YSBUIhPrA7wrXcRXy005UgiygbYmj01MsO26cVHOwMg=;
-  b=mHs9Xk5GfHtn5EyqFZtxst89vk0qsybFA/1iQ2dyNTo57RL86BOUEeJk
-   d7eYLmRwDBIK8RtruaS6vt91FehvRjd2V6NJtgIHnv4ZO90UtW2LVx4fJ
-   p8iFxfyuGsrPgQuzYjaDBejExswcAwlzHPhyx1wSFljXTiqRIgLw75ckj
-   VaNg6ZJC9j6+8AJhv2rGAk5Uz+TnaC13CTnFHFlnfHFaO3frw2JBWrx+S
-   x0aXRyAkAowyZpuk7kYko9o5zi9QNEQ4D5hJzL5kmLbeYdVLvUDOmtgYj
-   GHwS6s1dX8L+hv6D648YwPAzV8+lJrlStFFs5TTaldxMSM5Xw2pyPCDQ3
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11019"; a="9698118"
+  bh=jMmq3FBBSZV1RcYJ0p91pG+T8fW8kNGy/1K+l9C1iH4=;
+  b=mpg7dDvTHs3tALDKs4VsKUX5SE0Z6TO3A/FCkpzAT2Dp7F3pxYo4yWhT
+   akMgZqJ08e+yrFVeWtLmkhflH+AVnL6CK4jQIEA4n/K8TApuI9Jrs4XLL
+   +HkuUFG8FIcR0ujK2w+fKAnkaH7dG1gFlyMcjmFQLifjGk7tmtCgjup5K
+   KKmJQtiyW9QonGoO97CWu97UuCWeAaLoNDJl69tR9gAOy1qJLh5KxqkM9
+   aijZ1HGuazS9+D2gprTutbzIRnihrfCXfp51JCDdDOQojZjS5BeGPc6x9
+   s8R6A8UD1pk/mzR90Wx63/65bD0DR5oVKKEXsVlLo3GqjLqqTs/bGZRKx
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11019"; a="9698140"
 X-IronPort-AV: E=Sophos;i="6.07,141,1708416000"; 
-   d="scan'208";a="9698118"
+   d="scan'208";a="9698140"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:14 -0700
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:19 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,141,1708416000"; 
-   d="scan'208";a="14184184"
+   d="scan'208";a="14184198"
 Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:13 -0700
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:18 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 12/17] wifi: iwlwifi: mvm: Declare HE/EHT capabilities support for P2P interfaces
-Date: Wed, 20 Mar 2024 23:26:33 +0200
-Message-Id: <20240320232419.37fdea8e55a3.If074bdc6c6cd55b76c3421417a987d21ab6bb041@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 14/17] wifi: iwlwifi: mvm: set wider BW OFDMA ignore correctly
+Date: Wed, 20 Mar 2024 23:26:35 +0200
+Message-Id: <20240320232419.0d5fb0e971e4.I3b67c5e0ddcbe6e58143ec0bc4e40dd6dba4f863@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240320212638.1446082-1-miriam.rachel.korenblit@intel.com>
 References: <20240320212638.1446082-1-miriam.rachel.korenblit@intel.com>
@@ -58,51 +58,48 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Declare HE/EHT capabilities support also for P2P client and P2P GO
-interface types.
+Clearly, I put this flag into the wrong place: devices using the
+code in mac80211.c only do not support EHT, so this isn't even
+relevant. Fix this by moving the code to the right function.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Fixes: 32a5690e9acb ("wifi: iwlwifi: mvm: support wider-bandwidth OFDMA")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 3 +++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 03ff6ee546ce..149903f52567 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -599,7 +599,8 @@ static const u8 iwl_vendor_caps[] = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 448b43d73625..40e70ffecd14 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1698,9 +1698,6 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
+ 				     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+ 	}
  
- static const struct ieee80211_sband_iftype_data iwl_he_eht_capa[] = {
- 	{
--		.types_mask = BIT(NL80211_IFTYPE_STATION),
-+		.types_mask = BIT(NL80211_IFTYPE_STATION) |
-+			      BIT(NL80211_IFTYPE_P2P_CLIENT),
- 		.he_cap = {
- 			.has_he = true,
- 			.he_cap_elem = {
-@@ -755,7 +756,8 @@ static const struct ieee80211_sband_iftype_data iwl_he_eht_capa[] = {
- 		},
- 	},
- 	{
--		.types_mask = BIT(NL80211_IFTYPE_AP),
-+		.types_mask = BIT(NL80211_IFTYPE_AP) |
-+			      BIT(NL80211_IFTYPE_P2P_GO),
- 		.he_cap = {
- 			.has_he = true,
- 			.he_cap_elem = {
-@@ -908,7 +910,8 @@ iwl_nvm_fixup_sband_iftd(struct iwl_trans *trans,
- 			 u8 tx_chains, u8 rx_chains,
- 			 const struct iwl_fw *fw)
- {
--	bool is_ap = iftype_data->types_mask & BIT(NL80211_IFTYPE_AP);
-+	bool is_ap = iftype_data->types_mask & (BIT(NL80211_IFTYPE_AP) |
-+						BIT(NL80211_IFTYPE_P2P_GO));
- 	bool no_320;
+-	if (vif->p2p || iwl_fw_lookup_cmd_ver(mvm->fw, PHY_CONTEXT_CMD, 1) < 5)
+-		vif->driver_flags |= IEEE80211_VIF_IGNORE_OFDMA_WIDER_BW;
+-
+ 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
+ 		mvm->p2p_device_vif = vif;
  
- 	no_320 = (!trans->trans_cfg->integrated &&
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index d18304ac126c..5a4973431c8b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -92,6 +92,9 @@ static int iwl_mvm_mld_mac_add_interface(struct ieee80211_hw *hw,
+ 		mvm->csme_vif = vif;
+ 	}
+ 
++	if (vif->p2p || iwl_fw_lookup_cmd_ver(mvm->fw, PHY_CONTEXT_CMD, 1) < 5)
++		vif->driver_flags |= IEEE80211_VIF_IGNORE_OFDMA_WIDER_BW;
++
+ 	goto out_unlock;
+ 
+  out_free_bf:
 -- 
 2.34.1
 
