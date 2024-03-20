@@ -1,60 +1,64 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42BE69DE8
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 17:13:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD51469DE8
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 17:13:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710954805; cv=none; b=Z6AyhSrR1S3pQgX0EdFAV2YueUSpLydlmo2dEBF/m1+b/q3kr8397PXgSUPA7djUzib+sH8sAEIM/ZCdWLjsV7epPfd3CqP+Ly6lB9mlr+LE8Ias7bA5nwaJpd6cioFqOGLk3dZTVgzTk7oSP/cRCO9vK0pv4DneEUpi5caqwVs=
+	t=1710954809; cv=none; b=JaCFhnzIhE+vH3AebHGHvzNt6phCqu8C61p7k4ig/AYV/nBVrWt/HAprcNYUjoIbcf8H+cE/iN7WyaKTrCXWQIlY1xczsJQGYhCk94g0BpoDelQKm/y4/Ki22xiGaKxyoWcvuEm/KTawX2yz+mx4P7Sy7Ib3/t/BA6cH6YQqskg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710954805; c=relaxed/simple;
-	bh=z3IeR0iaei7ZJ4wKNv1yiEGHGPByBpmFJR4ZaJtEkgA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TTXZrFFVbxuDEEm1dLhk7fGrUTXse2+yoPj97BQnh0lqwAlVoDRm2voBM+SokmPlAUTURBLcEubkAUYIF5PTUn5Saz3jYEWb7disYeyMnHlEPHPjX4kqUYOWenxlm7XMIc7HMSA05y15idMcIWFSU8PQGv8kco/eWdRodpjpYVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SOzVXRsX; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1710954809; c=relaxed/simple;
+	bh=toEHmX7Y1iYYggglyJ97/XD1NW2HUScLEX17BAhQRMk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=XfgGZL4vCZw8vkUGdwY9nGOsETVOEoxHDlO3UfDYZkUPwRM+aRndcmPSw3a2or29SKcKH1jr0UqRtwMgFG+qERkE5j8AZVq2KEb3g3mOpYakQECUhqOB9oJ9I93i0jhkjkChokmOVZW139y9a8TVddr8CuntWDSYu+Qc9k+Qxm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pnjKGp8h; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SOzVXRsX"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42KEjcfX004878;
-	Wed, 20 Mar 2024 17:13:19 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pnjKGp8h"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42KEllxN026329;
+	Wed, 20 Mar 2024 17:13:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=qcppdkim1; bh=K7kXL+a40eAx0IhBFrh2
-	WRCAOiRuFpj3lSiUYKEdKz8=; b=SOzVXRsXQUVzu+9K+ILKFIZQSJqYk3W4VM0I
-	kHXtdurNgbM0DKY9ywVNSe7GhgV1ukVqBDg6cy0hCRw6KpROM69GXTOeyWtcoGYZ
-	HyDrZfkgWbCxRCn6LbaVW8ss8vPNcQj4hpkHLwX1zbg535GePEA7bzLxz1lCn9bY
-	sPm5qwPzg0h2n8eHR2wyAfDUG39K5S+M2cmGqq4mzoaDpEE9ALUDjP/8PPq5eBgk
-	VTYeBtZY3nU64XYrS+VktYOtpDnBkd4+Gg0WCmGSgwfvhQ6cZX20KAv0t3TxCzo0
-	lLxhJom5R9EMvLx92zEZuBo7fLUIcT7sqlG2u8AI5EusPZ8Cew==
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding; s=qcppdkim1; bh=CTXBCtf
+	XCxYc611xL35TE8CazjY9B/HsC2l12V8lW5Y=; b=pnjKGp8h47f0UDYa8RyM+Z0
+	knB+qzTSYB/IIrD1NOemqUp3HuLVK2TDL0Rtw57usbq0PTswMf83/4G2Gqo9YZ90
+	wtd1UAZY751QeYiJmqsF4PcmVDNDAbdTzJLn5ow8w0297A8+E0r98E/V6DGK82QP
+	wvJzuPJXG8/wuGErnMCbawSv31/dpM5fHp7W2+6gLqf7ZWNJSM9EzNBhz1Xv95T1
+	OLJ5b5CSnoM1O7z3kQI1TxL9HAZkfUTy5SjXDkZBvLrru+ybWvKvac2hhbOze0Zl
+	IHOQp2nxNHSpQpxET+VmPQHQC/FHN0rzGHvXKTEfiZ2R4VyrEr/expUqmK0Eo5Q=
+	=
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wypxq1u1j-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wyy76gsv4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 Mar 2024 17:13:18 +0000 (GMT)
+	Wed, 20 Mar 2024 17:13:23 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 42KHDFB2028158;
-	Wed, 20 Mar 2024 17:13:16 GMT
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 42KHDLNs028208;
+	Wed, 20 Mar 2024 17:13:21 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3ww4gm7nu7-1
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3ww4gm7num-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 Mar 2024 17:13:15 +0000
+	Wed, 20 Mar 2024 17:13:21 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42KHDFjQ028152;
-	Wed, 20 Mar 2024 17:13:15 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42KHDKfj028195;
+	Wed, 20 Mar 2024 17:13:20 GMT
 Received: from hu-devc-blr-u22-a.qualcomm.com (hu-rgnanase-blr.qualcomm.com [10.190.106.79])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 42KHDFGB028151
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 42KHDKJ0028193
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 Mar 2024 17:13:15 +0000
+	Wed, 20 Mar 2024 17:13:20 +0000
 Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 2378837)
-	id A3E2341111; Wed, 20 Mar 2024 22:43:14 +0530 (+0530)
+	id 12ACF41138; Wed, 20 Mar 2024 22:43:20 +0530 (+0530)
 From: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
 To: ath12k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
         Ramya Gnanasekar <quic_rgnanase@quicinc.com>
-Subject: [PATCH 0/2] wifi: ath12k: Add initial debugfs support in ath12k
-Date: Wed, 20 Mar 2024 22:43:03 +0530
-Message-Id: <20240320171305.655288-1-quic_rgnanase@quicinc.com>
+Subject: [PATCH 2/2] wifi: ath12k: Add radar simulation debugfs support
+Date: Wed, 20 Mar 2024 22:43:05 +0530
+Message-Id: <20240320171305.655288-3-quic_rgnanase@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240320171305.655288-1-quic_rgnanase@quicinc.com>
+References: <20240320171305.655288-1-quic_rgnanase@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -66,43 +70,76 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: hY1ttI-sIiqqKk71V8lfj57DYvcLQ9ET
-X-Proofpoint-GUID: hY1ttI-sIiqqKk71V8lfj57DYvcLQ9ET
+X-Proofpoint-GUID: Ge9-l4I6LyKxUxwtrhjn0g1Vs7f6n81I
+X-Proofpoint-ORIG-GUID: Ge9-l4I6LyKxUxwtrhjn0g1Vs7f6n81I
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-20_10,2024-03-18_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- lowpriorityscore=0 phishscore=0 clxscore=1011 malwarescore=0
- priorityscore=1501 mlxlogscore=793 adultscore=0 suspectscore=0 mlxscore=0
- bulkscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2403140001 definitions=main-2403200138
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ suspectscore=0 malwarescore=0 bulkscore=0 spamscore=0 mlxscore=0
+ priorityscore=1501 adultscore=0 clxscore=1015 mlxlogscore=999 phishscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403140001 definitions=main-2403200138
 
-The initial debugfs infra support in ath12k driver and create the
-ath12k debugfs and soc-specific directories in /sys/kernel/debug/
+Create dfs_simulate_radar debugfs in ath12k debugfs directory.
 
-Add support to simulate RADAR interference through debugfs 
+Usage:
+echo 1 > /sys/kernel/debug/ath12k/pci-0000:06:00.0/mac0/dfs_simulate_radar
 
-ath12k
-`-- pci-0000:06:00.0
-    |-- mac0
-        `-- dfs_simulate_radar
+This debugfs helps user to simulate RADAR interference in run time.
 
-Ramasamy Kaliappan (1):
-  wifi: ath12k: Add initial debugfs support in ath12k
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Ramya Gnanasekar (1):
-  wifi: ath12k: Add radar simulation debugfs support
+Signed-off-by: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/debugfs.c | 29 +++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
- drivers/net/wireless/ath/ath12k/Kconfig   |  9 +++
- drivers/net/wireless/ath/ath12k/Makefile  |  1 +
- drivers/net/wireless/ath/ath12k/core.c    |  5 ++
- drivers/net/wireless/ath/ath12k/core.h    | 10 +++
- drivers/net/wireless/ath/ath12k/debugfs.c | 89 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/debugfs.h | 30 ++++++++
- drivers/net/wireless/ath/ath12k/mac.c     |  3 +
- 7 files changed, 147 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath12k/debugfs.c
- create mode 100644 drivers/net/wireless/ath/ath12k/debugfs.h
-
+diff --git a/drivers/net/wireless/ath/ath12k/debugfs.c b/drivers/net/wireless/ath/ath12k/debugfs.c
+index 65f3c8bf3f10..8d8ba951093b 100644
+--- a/drivers/net/wireless/ath/ath12k/debugfs.c
++++ b/drivers/net/wireless/ath/ath12k/debugfs.c
+@@ -7,6 +7,29 @@
+ #include "core.h"
+ #include "debugfs.h"
+ 
++static ssize_t ath12k_write_simulate_radar(struct file *file,
++					   const char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath12k *ar = file->private_data;
++	int ret;
++
++	mutex_lock(&ar->conf_mutex);
++	ret = ath12k_wmi_simulate_radar(ar);
++	if (ret)
++		goto exit;
++
++	ret = count;
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_simulate_radar = {
++	.write = ath12k_write_simulate_radar,
++	.open = simple_open
++};
++
+ void ath12k_debugfs_soc_create(struct ath12k_base *ab)
+ {
+ 	bool dput_needed;
+@@ -58,4 +81,10 @@ void ath12k_debugfs_register(struct ath12k *ar)
+ 	/* Create a symlink under ieee80211/phy* */
+ 	scnprintf(buf, sizeof(buf), "../../ath12k/%pd2", ar->debug.debugfs_pdev);
+ 	debugfs_create_symlink("ath12k", hw->wiphy->debugfsdir, buf);
++
++	if (ar->mac.sbands[NL80211_BAND_5GHZ].channels) {
++		debugfs_create_file("dfs_simulate_radar", 0200,
++				    ar->debug.debugfs_pdev, ar,
++				    &fops_simulate_radar);
++	}
+ }
 -- 
-2.17.1
+2.34.1
+
