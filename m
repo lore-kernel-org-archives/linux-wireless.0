@@ -1,52 +1,51 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6CB885C65
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 21:27:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D230986260
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 21:27:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710970041; cv=none; b=bNRXSX/Zo96t7yx79AczhufK+VFx2I/aBkIHw0dHfkHcm6LGe/RuFDqgEftuyMI52z+pQq52Q9Rkuw+s5Mw/42ZLcTcFdnzGffdru+hiXRDAg/gst9Cp7MUv6rz9v6V2dsGslUHQ9lK3mt4aLn7b8Ffim10gQVRylfNBtZ/HOME=
+	t=1710970043; cv=none; b=gNGIjYcI0uPc8AdHZAzODFIXiCfB2YCbHUoDpqgCamexZQWLSRfTWpkynzoH5L5JBuK4O0CDE0HPdVXpS7LTOje+EqkopeEqdlLt0re6AMMFgw7Cf8cYEOPB1CWJZWYzx96CrTBAkevSJMLU5QY0R6bwkWHOe1MbazMi15M0ZEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710970041; c=relaxed/simple;
-	bh=kF8RqkWGKpsSZiC5vI1jIDNMrjiBNxUyTQ/OG7YIuYo=;
+	s=arc-20240116; t=1710970043; c=relaxed/simple;
+	bh=K0T0YiaEnqSJxu7Su0549h0R7JIe5tnCkwaJAHPRjy4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cX3VLkiakC2tU13GBGmFmnp4S4NIFNxShGTsJzXurP2OsgnRGz5tdlFxTjyfPtBEFQfBL0nz1rIzWSoUEhUxXmFI/COkRmY1rhh/fy0k9Sc5N9Bfs4Xphu5SjXPv5Bm9MY6oFgRgI28ZeXkkoSNZxlb8MFMgZWzYc/gjy0KfIvc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ood4kt6B; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=epswI4vaEOwf+wCIw1ykIKtejENTygTIq3hnE+gGe9lkq5CXDkjiWFpdp0eiRMSbrpqmFbkH+UJOGzZo3xYIijDYd7p4n1rLOf42uuDD0/ZHskq7P47DaiUwJabmXs8US0Z1hg122qFP+elqBqslNdZoOGX37QKhkXwuDjOTTcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QeyAgeBR; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ood4kt6B"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QeyAgeBR"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710970038; x=1742506038;
+  t=1710970042; x=1742506042;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kF8RqkWGKpsSZiC5vI1jIDNMrjiBNxUyTQ/OG7YIuYo=;
-  b=Ood4kt6BsZ1v0JX96dPdQ6ZuP2dA67aYrQk6jchPdw8KF6ADhWIxOn1T
-   2wbTVzefnRWIFY1Y/gIjUQoPapfkHKLdSzFtfPIS7x9cFxP67kZdLqvf4
-   k3rrKRRP+0E3kDi3aOhQOnTRNua9q9hKo+uxIbHQtsnmnKIEgaEUbEbJ5
-   W4a3lnsxF5nUrDMbxSSLuLkpeRFKBkPnG1sea+dpBiqrmXvW0gAM1besE
-   XR7tb+Y/1tumAz/5jIC1f6cIKx4mDiz29paMaHFaJ3BWclFu2sIJKupOy
-   58ciVI0PeTb5TfJxU2FpMFZn6VdbUpAjSig61YipYQwUtP+CJk5elIg8N
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11019"; a="9698127"
+  bh=K0T0YiaEnqSJxu7Su0549h0R7JIe5tnCkwaJAHPRjy4=;
+  b=QeyAgeBRLElg5jjzFBXSGPjmj4EN2lPgYZNPwJTYQescX9xEwxB8PPro
+   m7d7bl0WZGw/mx9bCGjUZ5bJrhFE5H7aNyhfbYVX+GIr0957+jg9M5f8b
+   YQhpf36nZ61jM1E6dNCp3KnE59WluXefqWtAlf241eSXjZlJqpnjqD75f
+   5N1+eupSQC7lQ32JMLPL0rA0utpYqtu0gbSI5/NsmPRAanLufdquSBG79
+   Yfrx/UN4nARVMEyPcCJiZ+vcvrbC25CGzEexVwESAA5bSeoSS9cvSiY1g
+   mJrFgD65PvBqRJ2fpPC+UCcE/Tpi+HKAbnE60c/2Ir8v6f/FfmmWgidry
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11019"; a="9698146"
 X-IronPort-AV: E=Sophos;i="6.07,141,1708416000"; 
-   d="scan'208";a="9698127"
+   d="scan'208";a="9698146"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:17 -0700
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:21 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,141,1708416000"; 
-   d="scan'208";a="14184191"
+   d="scan'208";a="14184204"
 Received: from unknown (HELO WEIS0040.iil.intel.com) ([10.12.217.108])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:15 -0700
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2024 14:27:20 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
-	Mukesh Sisodiya <mukesh.sisodiya@intel.com>
-Subject: [PATCH 13/17] wifi: iwlwifi: Add support for LARI_CONFIG_CHANGE_CMD cmd v9
-Date: Wed, 20 Mar 2024 23:26:34 +0200
-Message-Id: <20240320232419.5c31ccd73119.I0363992efc3607368648d34a7918b2534150a3ca@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 15/17] wifi: iwlwifi: mvm: select STA mask only for active links
+Date: Wed, 20 Mar 2024 23:26:36 +0200
+Message-Id: <20240320232419.c6818d1c6033.I6357f05c55ef111002ddc169287eb356ca0c1b21@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240320212638.1446082-1-miriam.rachel.korenblit@intel.com>
 References: <20240320212638.1446082-1-miriam.rachel.korenblit@intel.com>
@@ -59,116 +58,65 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-There is a requirement from OEMs to support new bits in DSM function 7,
-which will indicate enablement of 5.9 GHz in Canada.
-Add support for this by reading those bits from BIOS and sending it to the
-FW. mask unii4 allow bitmap based on LARI_CONFIG_CHANGE_CMD version
+During reconfig, we might send keys, but those should be only
+sent to already active link stations. Iterate only active ones
+to fix that issue.
 
-Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Reviewed-by: Mukesh Sisodiya <mukesh.sisodiya@intel.com>
+Fixes: aea99650f731 ("wifi: iwlwifi: mvm: set STA mask for keys in MLO")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   |  5 ++++-
- .../wireless/intel/iwlwifi/fw/regulatory.h    | 19 ++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  9 ++++++++-
- 3 files changed, 30 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-index 58034dfa7e70..988b5421a629 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-@@ -609,7 +609,7 @@ struct iwl_lari_config_change_cmd_v6 {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+index 902c64f210aa..5785b70a4aff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+@@ -9,7 +9,9 @@
+ u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			   int filter_link_id)
+ {
++	struct ieee80211_link_sta *link_sta;
+ 	struct iwl_mvm_sta *mvmsta;
++	struct ieee80211_vif *vif;
+ 	unsigned int link_id;
+ 	u32 result = 0;
  
- /**
-  * struct iwl_lari_config_change_cmd_v7 - change LARI configuration
-- * This structure is used also for lari cmd version 8.
-+ * This structure is used also for lari cmd version 8 and 9.
-  * @config_bitmap: Bitmap of the config commands. Each bit will trigger a
-  *     different predefined FW config operation.
-  * @oem_uhb_allow_bitmap: Bitmap of UHB enabled MCC sets.
-@@ -619,6 +619,8 @@ struct iwl_lari_config_change_cmd_v6 {
-  * @oem_unii4_allow_bitmap: Bitmap of unii4 allowed MCCs.There are two bits
-  *     per country, one to indicate whether to override and the other to
-  *     indicate allow/disallow unii4 channels.
-+ *     For LARI cmd version 4 to 8 - bits 0:3 are supported.
-+ *     For LARI cmd version 9 - bits 0:5 are supported.
-  * @chan_state_active_bitmap: Bitmap to enable different bands per country
-  *     or region.
-  *     Each bit represents a country or region, and a band to activate
-@@ -642,6 +644,7 @@ struct iwl_lari_config_change_cmd_v7 {
- } __packed;
- /* LARI_CHANGE_CONF_CMD_S_VER_7 */
- /* LARI_CHANGE_CONF_CMD_S_VER_8 */
-+/* LARI_CHANGE_CONF_CMD_S_VER_9 */
+@@ -17,26 +19,27 @@ u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		return 0;
  
- /* Activate UNII-1 (5.2GHz) for World Wide */
- #define ACTIVATE_5G2_IN_WW_MASK	BIT(4)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-index 28e774766847..a0cb8881e629 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2023 Intel Corporation
-+ * Copyright (C) 2023-2024 Intel Corporation
-  */
+ 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	vif = mvmsta->vif;
  
- #ifndef __fw_regulatory_h__
-@@ -132,6 +132,23 @@ enum iwl_dsm_values_indonesia {
- 	DSM_VALUE_INDONESIA_MAX
- };
+ 	/* it's easy when the STA is not an MLD */
+ 	if (!sta->valid_links)
+ 		return BIT(mvmsta->deflink.sta_id);
  
-+enum iwl_dsm_unii4_bitmap {
-+	DSM_VALUE_UNII4_US_OVERRIDE_MSK		= BIT(0),
-+	DSM_VALUE_UNII4_US_EN_MSK		= BIT(1),
-+	DSM_VALUE_UNII4_ETSI_OVERRIDE_MSK	= BIT(2),
-+	DSM_VALUE_UNII4_ETSI_EN_MSK		= BIT(3),
-+	DSM_VALUE_UNII4_CANADA_OVERRIDE_MSK	= BIT(4),
-+	DSM_VALUE_UNII4_CANADA_EN_MSK		= BIT(5),
-+};
-+
-+#define DSM_UNII4_ALLOW_BITMAP_CMD_V8 (DSM_VALUE_UNII4_US_OVERRIDE_MSK | \
-+				       DSM_VALUE_UNII4_US_EN_MSK | \
-+				       DSM_VALUE_UNII4_ETSI_OVERRIDE_MSK | \
-+				       DSM_VALUE_UNII4_ETSI_EN_MSK)
-+#define DSM_UNII4_ALLOW_BITMAP (DSM_UNII4_ALLOW_BITMAP_CMD_V8 | \
-+				DSM_VALUE_UNII4_CANADA_OVERRIDE_MSK | \
-+				DSM_VALUE_UNII4_CANADA_EN_MSK)
-+
- enum iwl_dsm_values_rfi {
- 	DSM_VALUE_RFI_DLVR_DISABLE	= BIT(0),
- 	DSM_VALUE_RFI_DDR_DISABLE	= BIT(1),
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index df3b29b998cf..1f8d4723512f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1239,8 +1239,14 @@ static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
- 		cmd.oem_11ax_allow_bitmap = cpu_to_le32(value);
+ 	/* but if it is an MLD, get the mask of all the FW STAs it has ... */
+-	for (link_id = 0; link_id < ARRAY_SIZE(mvmsta->link); link_id++) {
+-		struct iwl_mvm_link_sta *link_sta;
++	for_each_sta_active_link(vif, sta, link_sta, link_id) {
++		struct iwl_mvm_link_sta *mvm_link_sta;
  
- 	ret = iwl_bios_get_dsm(&mvm->fwrt, DSM_FUNC_ENABLE_UNII4_CHAN, &value);
--	if (!ret)
-+	if (!ret) {
-+		if (cmd_ver < 9)
-+			value &= DSM_UNII4_ALLOW_BITMAP_CMD_V8;
-+		else
-+			value &= DSM_UNII4_ALLOW_BITMAP;
-+
- 		cmd.oem_unii4_allow_bitmap = cpu_to_le32(value);
-+	}
+ 		/* unless we have a specific link in mind */
+ 		if (filter_link_id >= 0 && link_id != filter_link_id)
+ 			continue;
  
- 	ret = iwl_bios_get_dsm(&mvm->fwrt, DSM_FUNC_ACTIVATE_CHANNEL, &value);
- 	if (!ret) {
-@@ -1273,6 +1279,7 @@ static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
- 		size_t cmd_size;
+-		link_sta =
++		mvm_link_sta =
+ 			rcu_dereference_check(mvmsta->link[link_id],
+ 					      lockdep_is_held(&mvm->mutex));
+ 		if (!link_sta)
+ 			continue;
  
- 		switch (cmd_ver) {
-+		case 9:
- 		case 8:
- 		case 7:
- 			cmd_size = sizeof(struct iwl_lari_config_change_cmd_v7);
+-		result |= BIT(link_sta->sta_id);
++		result |= BIT(mvm_link_sta->sta_id);
+ 	}
+ 
+ 	return result;
 -- 
 2.34.1
 
