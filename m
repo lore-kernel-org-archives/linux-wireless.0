@@ -1,38 +1,49 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward201b.mail.yandex.net (forward201b.mail.yandex.net [178.154.239.156])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C2E923770
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 07:52:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA0D3FB2C
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 08:49:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.156
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710921129; cv=none; b=Glc2f8Mgreoa57JRUTO089/cPk7B37RbcpPJLRbke0d/yGaw+mzKOn4Q5eyTfcZd+yqs3vxJXBTpiCajxrqCVmWI3KvS7ZS5k1Vr6o4Mbch64DPXFF8Cq0EaNLEzA3QLZlpDStEFG5xixoQRP8V7SQKrUUHge033WuQH2pLo6Vs=
+	t=1710924545; cv=none; b=M8LuZc5M+X9m1o+MRq4DPKp7sdW5YkCsojO1fHolfsutvABP59WULHI+OxxRRo4My2M4DBUN7ZJ5R0/At0rdU27GKuDxFXjXPAvDyvuXUa5Fnwqj6FksSbWOKSYWjjEk9au4xjEo0i7JGDSPf2kuLFr8pBrSCNI1lRdeNvzB0zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710921129; c=relaxed/simple;
-	bh=sBBSqb2PjgpeGizeasqOVHTAH58NbR6m5Dm5UWkN5GY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kGMe/PkJhQLA7PZ2IhYhJNde60AUVZASuSG/E683muCjiJtr1FoJi2WoOBOYjrKGUZVi0MM+3OJGq9oaQHBUKAjx/QS2NLZf3j+fxD30AyXYUfvQ7vfqZPDtXXcqv5QE653Z6xWYpMo6LNHO9dKBj697RTxHXwqaKmAOjEHAvNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 42K7pqCV3340019, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 42K7pqCV3340019
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 20 Mar 2024 15:51:52 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Wed, 20 Mar 2024 15:51:53 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 20 Mar
- 2024 15:51:52 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <kvalo@kernel.org>
-CC: <ku920601@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wifi: rtw88: coex: Prevent doing I/O during Wi-Fi power saving
-Date: Wed, 20 Mar 2024 15:50:47 +0800
-Message-ID: <20240320075047.31810-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1710924545; c=relaxed/simple;
+	bh=Qlioykv5hApah2n20hboUTEU7sRCpV3NlM03TtGRKSU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MoDM7LhvfO8stvTFBnGRniCiaBGUm3VlOBhZTgW2GhC3PZyvTB1LDu+5K9jLYeu6P8P5O+U0ATcisCQLQL5otlpw0fA50L/+tZXx2VNVOYUeLKJrgb2f8JK03VtlBA+1fLxcRKOsFK3lewIkwAsvvkVn6+y+P5gcAvcK2OKh/fI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=Bc3L/JlT; arc=none smtp.client-ip=178.154.239.156
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="Bc3L/JlT"
+Received: from forward103c.mail.yandex.net (forward103c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d103])
+	by forward201b.mail.yandex.net (Yandex) with ESMTPS id B06586736B
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Mar 2024 11:43:35 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net [IPv6:2a02:6b8:c12:1791:0:640:98f4:0])
+	by forward103c.mail.yandex.net (Yandex) with ESMTPS id DCFF160B58;
+	Wed, 20 Mar 2024 11:43:27 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id PhAfFV1OduQ0-fJC1zOpZ;
+	Wed, 20 Mar 2024 11:43:27 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1710924207; bh=isYLfReRHHxvrQUz/5fzhXAtiXm5WmMKSF2U7YoDwjE=;
+	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=Bc3L/JlT9BW9WnzJwzG3HYJMJ+mctMldAnkT2b7D4ZYrvcVTDwQ4mjtb/TEJgGUyj
+	 uWsWCgaa4wqw+IQw26aUEX99DOWSGo8Tr5JF8xkhxYCfNZKZqnqolOilxxTN/dhIaM
+	 g3GzYH7wbcR2B0j7Qejet5GFvgJBiKPRezGLk2U8=
+Authentication-Results: mail-nwsmtp-smtp-production-main-91.myt.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 2/2] wifi: rtlwifi: always assume QoS mode in rtl8192cu
+Date: Wed, 20 Mar 2024 11:43:24 +0300
+Message-ID: <20240320084324.109506-2-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240320084324.109506-1-dmantipov@yandex.ru>
+References: <20240320084324.109506-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,63 +51,70 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-From: Ching-Te Ku <ku920601@realtek.com>
+In 'rtl92cu_set_hw_reg()', always assume that QoS mode is enabled
+as it was hardcoded since an initial commit. Compile tested only.
 
-Fix Wi-Fi 2.4Ghz throughput drop over than 40% when Bluetooh is idle.
-The code flow will read registers during Wi-Fi power saving, and be
-returned, which results in incorrect counters to do mechanism judgment.
-Adjust the code flow. Will leave Wi-Fi power save mode first then update
-counters.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 4 +++-
- drivers/net/wireless/realtek/rtw88/main.c | 5 ++---
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 30 +++----------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 86467d2f8888..de3332eb7a22 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -3937,7 +3937,9 @@ void rtw_coex_display_coex_info(struct rtw_dev *rtwdev, struct seq_file *m)
- 	lte_coex = rtw_coex_read_indirect_reg(rtwdev, 0x38);
- 	bt_coex = rtw_coex_read_indirect_reg(rtwdev, 0x54);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 76bedfec55a3..0195c9a3e9e8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1484,7 +1484,6 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	enum wireless_mode wirelessmode = mac->mode;
+ 	u8 idx = 0;
  
--	if (!coex_stat->bt_disabled && !coex_stat->bt_mailbox_reply) {
-+	if (!coex_stat->wl_under_ips &&
-+	    (!coex_stat->wl_under_lps || coex_stat->wl_force_lps_ctrl) &&
-+	    !coex_stat->bt_disabled && !coex_stat->bt_mailbox_reply) {
- 		rtw_coex_get_bt_supported_version(rtwdev,
- 				&coex_stat->bt_supported_version);
- 		rtw_coex_get_bt_patch_version(rtwdev, &coex_stat->patch_ver);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index ffba6b88f392..81ef4717dbf4 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -227,9 +227,6 @@ static void rtw_watch_dog_work(struct work_struct *work)
- 	else
- 		clear_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags);
+ 	switch (variable) {
+@@ -1536,36 +1535,15 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 		}
+ 	case HW_VAR_SLOT_TIME:{
+ 			u8 e_aci;
+-			u8 QOS_MODE = 1;
  
--	rtw_coex_wl_status_check(rtwdev);
--	rtw_coex_query_bt_hid_list(rtwdev);
--
- 	if (busy_traffic != test_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags))
- 		rtw_coex_wl_status_change_notify(rtwdev, 0);
+ 			rtl_write_byte(rtlpriv, REG_SLOT, val[0]);
+ 			rtl_dbg(rtlpriv, COMP_MLME, DBG_LOUD,
+ 				"HW_VAR_SLOT_TIME %x\n", val[0]);
+-			if (QOS_MODE) {
+-				for (e_aci = 0; e_aci < AC_MAX; e_aci++)
+-					rtlpriv->cfg->ops->set_hw_reg(hw,
+-								HW_VAR_AC_PARAM,
+-								&e_aci);
+-			} else {
+-				u8 sifstime = 0;
+-				u8	u1baifs;
  
-@@ -257,6 +254,8 @@ static void rtw_watch_dog_work(struct work_struct *work)
- 
- 	/* make sure BB/RF is working for dynamic mech */
- 	rtw_leave_lps(rtwdev);
-+	rtw_coex_wl_status_check(rtwdev);
-+	rtw_coex_query_bt_hid_list(rtwdev);
- 
- 	rtw_phy_dynamic_mechanism(rtwdev);
- 
+-				if (IS_WIRELESS_MODE_A(wirelessmode) ||
+-				    IS_WIRELESS_MODE_N_24G(wirelessmode) ||
+-				    IS_WIRELESS_MODE_N_5G(wirelessmode))
+-					sifstime = 16;
+-				else
+-					sifstime = 10;
+-				u1baifs = sifstime + (2 *  val[0]);
+-				rtl_write_byte(rtlpriv, REG_EDCA_VO_PARAM,
+-					       u1baifs);
+-				rtl_write_byte(rtlpriv, REG_EDCA_VI_PARAM,
+-					       u1baifs);
+-				rtl_write_byte(rtlpriv, REG_EDCA_BE_PARAM,
+-					       u1baifs);
+-				rtl_write_byte(rtlpriv, REG_EDCA_BK_PARAM,
+-					       u1baifs);
+-			}
++			for (e_aci = 0; e_aci < AC_MAX; e_aci++)
++				rtlpriv->cfg->ops->set_hw_reg(hw,
++							      HW_VAR_AC_PARAM,
++							      &e_aci);
+ 			break;
+ 		}
+ 	case HW_VAR_ACK_PREAMBLE:{
 -- 
-2.25.1
+2.44.0
 
