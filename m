@@ -1,67 +1,62 @@
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DF5728E7;
-	Thu, 21 Mar 2024 17:36:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B20F12BE80
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Mar 2024 18:37:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711042617; cv=none; b=Q3VKFI0eZIw+6eXg5xe+Fm2cl52B+1xBSBXuNlif4OCo13G884Am2ZaLE5xLmo4URmIQMbSdMJqde+n9sfMiASujmekCrP+OENwUx4l9m2QrjCs4WUYhIpdD6K3Et2c7yNKhU9QW5IXJ449+XOtxUOtCnMXF1n57L2Fkh+ZOtYc=
+	t=1711046274; cv=none; b=G/n5K1d6M3CZ166hRdi43yrN10elNsZsfEtTER8vF4+bpBHp+XEarFrnqoIh5pumxjYY3VzJ99XZrhk+GPhiYfXK6u3B4z6PvjXsvGj/LxneMp18it+itdyhBkLNOAtpse6C2AN4vzkO8ERO6BiK+eb9f5OuCXQ1lyNM19Gsp3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711042617; c=relaxed/simple;
-	bh=h1oQKriSLCqDjSLy+aBuDnCDSSYx3kAjFzFetPDxwKg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QBe20RufeZQ0W83Kjx28xeA9XJmUAcw57/2fmetD+sb3ZdI4cC70wmvlAobC/XDGVwNSQohFncSm2yS4N5fVvEva/MMMYf9kdRjV7/G4f++7aJgmiWFlN6oNP81mZzja2vLuAkEkCf4n/GXe65hgLWVvwTaf20g2UHwmAQcvV8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=dlNzP8Iq; arc=none smtp.client-ip=217.194.8.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+	s=arc-20240116; t=1711046274; c=relaxed/simple;
+	bh=ojZIPiV7g6bmfC8b774a9YG4ZE9m7SBQNwmkKyNWp5c=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=fVAvRpgM9bam2jzxOdr4WCXP5UfqavU4w8fAv1W5YjhKnmfUrqY1q0IUYhpvAtvX0Ar9i22HaS8U+PfRD8tDR3ydSa8ol1Rb50lNdNIyfmmMDjXR0UhNHYgxSvC8DZgwrpRrQIR+ivISdgx2FRCc6S9nvRjQu5mINX3o154SiPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b=OYPtsuVM; arc=none smtp.client-ip=45.145.95.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="dlNzP8Iq"
-Received: from francesco-nb (31-10-206-125.static.upc.ch [31.10.206.125])
-	by mail11.truemail.it (Postfix) with ESMTPA id 320AF1F925;
-	Thu, 21 Mar 2024 18:36:52 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1711042612;
-	bh=xGnEOdC2UWMFq3f2HadSnkInpwhH3sbmjhpwAdVYI/k=; h=From:To:Subject;
-	b=dlNzP8Iqq3GcSF9XGMn/wXAGhf/SE62lCy/yTfpr1QImMvXTsM324PLeD9hVT6Si2
-	 JMxYDtBA+oYshXwH8PvSc5KL+LNs/oKym0C9t/GCHplnZShbMItbmNTUvYK51MIfV/
-	 WavsNJ0h9LcmXkQJAZqVTOHrCulTIddPnCRgJPpHLufiM9TRUerVr+06AwVGCry1Z/
-	 9UvxrXO+Fyb9fYEqt/4lwdhJAULvr3UANxxVHJRT1pjydm6C04lQkjd/B1kqIhmsIc
-	 yhLLtxkxDGpUBkCeEN+SXHOYOi1yCxFlC81JjmIICaahZDPR5zjyPBMapS2yZGeTkf
-	 AIRV2F+zsYRjA==
-Date: Thu, 21 Mar 2024 18:36:48 +0100
-From: Francesco Dolcini <francesco@dolcini.it>
+	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="OYPtsuVM"
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
+	t=1711046268; bh=ojZIPiV7g6bmfC8b774a9YG4ZE9m7SBQNwmkKyNWp5c=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=OYPtsuVMKn6Lbx/liWSSa0JPXAb8JZd0YPXq4iCulvV/ea6l1cIFHk4Hy3JxLT4Y+
+	 8l3SKnFkllM/7Ad4n1v7bj1TrYN7Pva4eOSU+lZdIy/JNMF49wkHhqDiIVg6XNyqP1
+	 gSeNC0sHMhifpvRkq7Go0twxhQW/iQf2m011q1rmG7CPgu2BZiS52yy+nhi/WmGvKd
+	 zXJsmlIW+IoyJsSaYvl7KDUInt38ZURyAf2Ma6SE7OHkF4X4OWLWgfEC4gXK6eMWwF
+	 Eok+eTwRbG6+KHGf7EsACd6cLXOrZOr9Jpljmk1neddnhgLtkeTzoDgZ8Mh6ElBZj+
+	 Hatvx07K8SkuQ==
 To: Kalle Valo <kvalo@kernel.org>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Brian Norris <briannorris@chromium.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: add myself as mwifiex driver reviewer
-Message-ID: <20240321173648.GA12994@francesco-nb>
-References: <20240321163420.11158-1-francesco@dolcini.it>
- <87y1ab8r13.fsf@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] wifi: ath9k: fix ath9k_use_msi declaration
+In-Reply-To: <20240320170656.3534265-3-kvalo@kernel.org>
+References: <20240320170656.3534265-1-kvalo@kernel.org>
+ <20240320170656.3534265-3-kvalo@kernel.org>
+Date: Thu, 21 Mar 2024 19:37:48 +0100
+X-Clacks-Overhead: GNU Terry Pratchett
+Message-ID: <8734sjh1mr.fsf@toke.dk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87y1ab8r13.fsf@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hello Kalle,
+Kalle Valo <kvalo@kernel.org> writes:
 
-On Thu, Mar 21, 2024 at 06:54:00PM +0200, Kalle Valo wrote:
-> Francesco Dolcini <francesco@dolcini.it> writes:
-> 
-> > As discussed on the mailing list [1], add myself as mwifiex driver reviewer.
-> >
-> > [1] https://lore.kernel.org/all/20240318112830.GA9565@francesco-nb/
-> 
-> I'm nitpicking but the preferred way is to use the Link tag. I can fix
-> that.
+> From: Kalle Valo <quic_kvalo@quicinc.com>
+>
+> Sparse warns:
+>
+> drivers/net/wireless/ath/ath9k/init.c:79:5: warning: symbol 'ath9k_use_ms=
+i' was not declared. Should it be static?
+>
+> Move the extern to ath9k.h so that it's visible in init.c.
+>
+> Compile tested only.
+>
+> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
-I can also send a new version with that fixed, whatever is the best for you
-works for me.
-
-Francesco
-
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
