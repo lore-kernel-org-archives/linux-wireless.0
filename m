@@ -1,628 +1,114 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ECDEBA27
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2024 05:43:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04B6CDDB6
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Mar 2024 05:48:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711086182; cv=none; b=G5ZYXpbJlF8Ack0H2/hQjJKh4rCgs0Z4Fh3or/gL2N3oyfWdLKwljZzC4cJT4RQXAViTgK7rVoPXbD4A/5FQmISiZ17xufCiTecem1QIKEBiQFkeTVsPAuWN6dp0vliQIk8TuvE8oNiKlx4nS8vOGJnp2z0i3kKhitJICcBeIs4=
+	t=1711086529; cv=none; b=RMhAJp9ewG7UnUKfxtO9VKJgSMHu2DIDO8i0zJJKqiAvL24gWZdOzNmenRo+LIyoVq2/I2UQy7ydPLO5lymb0uB1Xrb8h2tW1rE3CsJBMAVrFa6Nc+vPO/M3XqA5y/MT0SETnT4TrlQZgE44KQD+u4/Xda6LQV4Oe5cGHk16xcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711086182; c=relaxed/simple;
-	bh=HYWxIYFFLyqtXiPKlgzOgf5+4QIbsbkHM7JPjqe5kKU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=H1tCSZrtDTN+3q3DPvhlP3BAPDTTZWZU1LNKLh07G3FaDtz2oGEtKDc93oY51jST16VfEYbOlquKBxFz8HO3zGPRXsm797amCpq2SgKf47LOxXpPtCu2HcwaeKyS3xRyQpAIfrKiNpuI7cwTsKIiaqIXnL/LzzkqCsLZDfKHOgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DPj07hTl; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DPj07hTl"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42M3DhfW000526;
-	Fri, 22 Mar 2024 05:42:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=V4Rh52A
-	ff6paIDc8eLPSoaA/qICEJpm3yrfW8T9vQl0=; b=DPj07hTleZg4YaPEdg1nyRz
-	QM5k+MphcQMUu+MBW5F+Z2T8aa2ubVUCVR9dOjgIEGPKpwIfaCwA59+hjwcqIO0t
-	oSciLT0ddXzd5bV9ptB05aX6z9VglOsKFiip6Ofgbjyp1kYfKnDpQyqfQkYVc2Xh
-	LPHtyUwRurZkAEL8oh+H0KZR8ZGH7xjZG3gpai9sdKbhMRyzCslxnt5gE9zTYOi1
-	0g5ZLx65KYEMzOmpOdqCV9auN9ZJwTRcPI4ulNNsZc3lPlno2lzRV1C1vqwhh76Y
-	8d3NoupXMq0T41fzUo4XVsPxaedaUK9OAbmemH53OnS0jShYMqD2CBH8Ybn3RgQ=
-	=
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x0wy8ruac-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 Mar 2024 05:42:52 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42M5gq5B014780
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 Mar 2024 05:42:52 GMT
-Received: from hu-ssreeela-blr.qualcomm.com (10.80.80.8) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+	s=arc-20240116; t=1711086529; c=relaxed/simple;
+	bh=26+kUbtsM7i2H8bL3+SRN2e2Weysu4AuZifis2f5qeI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=DCjyXWeLa2eTl7B35EN1X9XoVXYI4VvMCCuo6VU+7nct2GL/4G2RKNEqxjzt/3cLKHOxhEq176vav8JaTXtrWCPQD7C27GaCLi+LaY1Q9kdCjWk00K1IYfsTuLSRSd7Lr1ob1R6E/T16YPrHImYu7Rs8CntJ7tfsT6ZPmiKpGRQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 42M5mJnhD1492328, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 42M5mJnhD1492328
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 22 Mar 2024 13:48:19 +0800
+Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Thu, 21 Mar 2024 22:42:50 -0700
-From: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Sowmiya Sree Elavalagan
-	<quic_ssreeela@quicinc.com>
-Subject: [PATCH v2]wifi: ath12k: Add firmware coredump collection support
-Date: Fri, 22 Mar 2024 11:12:31 +0530
-Message-ID: <20240322054231.467152-1-quic_ssreeela@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+ 15.1.2507.35; Fri, 22 Mar 2024 13:48:02 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Fri, 22 Mar 2024 13:48:02 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::4c42:f80:bcc2:d00f]) by
+ RTEXMBS04.realtek.com.tw ([fe80::4c42:f80:bcc2:d00f%5]) with mapi id
+ 15.01.2507.035; Fri, 22 Mar 2024 13:48:02 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>
+CC: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "s.l-h@gmx.de"
+	<s.l-h@gmx.de>,
+        "chewitt@libreelec.tv" <chewitt@libreelec.tv>
+Subject: Re: [PATCH v3 10/12] wifi: rtlwifi: Add rtl8192du/dm.{c,h}
+Thread-Topic: [PATCH v3 10/12] wifi: rtlwifi: Add rtl8192du/dm.{c,h}
+Thread-Index: AQHaev6+1Jzyq6jgyUijc1zK39prWrFCvJsA
+Date: Fri, 22 Mar 2024 05:48:02 +0000
+Message-ID: <2d553b73952db4fd00bc4f190f5773f5454daa7a.camel@realtek.com>
+References: <7f4b3309-1580-48f3-9426-29f1eb4052fd@gmail.com>
+	 <5af3c18f-b96a-4599-b3a4-328c8f402693@gmail.com>
+In-Reply-To: <5af3c18f-b96a-4599-b3a4-328c8f402693@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+user-agent: Evolution 3.36.1-2 
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <9EF46270A613FB4585FAE9F42982C105@realtek.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: H2YaIqUugMAJfcOSKCJ9dtxq-yEZ5_9p
-X-Proofpoint-GUID: H2YaIqUugMAJfcOSKCJ9dtxq-yEZ5_9p
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-22_01,2024-03-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 phishscore=0 mlxlogscore=999 adultscore=0
- priorityscore=1501 mlxscore=0 spamscore=0 bulkscore=0 suspectscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2403210001 definitions=main-2403220038
 
-In case of firmware assert snapshot of firmware memory is essential for
-debugging. Add firmware coredump collection support for PCI bus.
-Collect RDDM and firmware paging dumps from MHI and pack them in TLV
-format and also pack various memory shared during QMI phase in separate
-TLVs.  Add necessary header and share the dumps to user space using dev
-coredump framework. Coredump collection is disabled by default and can
-be enabled using menuconfig. Dump collected for a radio is 55 MB
-approximately.
-
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.2.1-00201-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
----
-v2:
-  - Fixed errors shown by ath12k-check
----
- drivers/net/wireless/ath/ath12k/Kconfig    |  10 ++
- drivers/net/wireless/ath/ath12k/Makefile   |   1 +
- drivers/net/wireless/ath/ath12k/core.c     |   2 +
- drivers/net/wireless/ath/ath12k/core.h     |   5 +
- drivers/net/wireless/ath/ath12k/coredump.c |  51 ++++++
- drivers/net/wireless/ath/ath12k/coredump.h |  80 +++++++++
- drivers/net/wireless/ath/ath12k/hif.h      |   9 +-
- drivers/net/wireless/ath/ath12k/hw.c       |   4 +-
- drivers/net/wireless/ath/ath12k/mhi.c      |   5 +
- drivers/net/wireless/ath/ath12k/mhi.h      |   4 +-
- drivers/net/wireless/ath/ath12k/pci.c      | 185 +++++++++++++++++++++
- 11 files changed, 351 insertions(+), 5 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath12k/coredump.c
- create mode 100644 drivers/net/wireless/ath/ath12k/coredump.h
-
-diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
-index e135d2b1b61d..87874240b39f 100644
---- a/drivers/net/wireless/ath/ath12k/Kconfig
-+++ b/drivers/net/wireless/ath/ath12k/Kconfig
-@@ -32,3 +32,13 @@ config ATH12K_TRACING
- 
- 	  If unsure, say Y to make it easier to debug problems. But if
- 	  you want optimal performance choose N.
-+
-+config ATH12K_COREDUMP
-+	bool "ath12k coredump"
-+	depends on ATH12K
-+	select WANT_DEV_COREDUMP
-+	help
-+	  Enable ath12k coredump collection
-+
-+	  If unsure, say Y to make it easier to debug problems. But if
-+	  you want optimal performance choose N.
-diff --git a/drivers/net/wireless/ath/ath12k/Makefile b/drivers/net/wireless/ath/ath12k/Makefile
-index 71669f94ff75..41c584acc582 100644
---- a/drivers/net/wireless/ath/ath12k/Makefile
-+++ b/drivers/net/wireless/ath/ath12k/Makefile
-@@ -24,6 +24,7 @@ ath12k-y += core.o \
- 	    p2p.o
- 
- ath12k-$(CONFIG_ATH12K_TRACING) += trace.o
-+ath12k-$(CONFIG_ATH12K_COREDUMP) += coredump.o
- 
- # for tracing framework to find trace.h
- CFLAGS_trace.o := -I$(src)
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index 391b6fb2bd42..f0cc4959faf5 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1121,6 +1121,7 @@ static void ath12k_core_reset(struct work_struct *work)
- 	reinit_completion(&ab->recovery_start);
- 	atomic_set(&ab->recovery_count, 0);
- 
-+	ath12k_coredump_collect(ab);
- 	ath12k_core_pre_reconfigure_recovery(ab);
- 
- 	reinit_completion(&ab->reconfigure_complete);
-@@ -1220,6 +1221,7 @@ struct ath12k_base *ath12k_core_alloc(struct device *dev, size_t priv_size,
- 	INIT_WORK(&ab->restart_work, ath12k_core_restart);
- 	INIT_WORK(&ab->reset_work, ath12k_core_reset);
- 	INIT_WORK(&ab->rfkill_work, ath12k_rfkill_work);
-+	INIT_WORK(&ab->dump_work, ath12k_coredump_upload);
- 
- 	timer_setup(&ab->rx_replenish_retry, ath12k_ce_rx_replenish_retry, 0);
- 	init_completion(&ab->htc_suspend);
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 97e5a0ccd233..736958989794 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -26,6 +26,7 @@
- #include "reg.h"
- #include "dbring.h"
- #include "fw.h"
-+#include "coredump.h"
- 
- #define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
- 
-@@ -700,6 +701,10 @@ struct ath12k_base {
- 	/* HW channel counters frequency value in hertz common to all MACs */
- 	u32 cc_freq_hz;
- 
-+	struct ath12k_dump_file_data *dump_data;
-+	size_t ath12k_coredump_len;
-+	struct work_struct dump_work;
-+
- 	struct ath12k_htc htc;
- 
- 	struct ath12k_dp dp;
-diff --git a/drivers/net/wireless/ath/ath12k/coredump.c b/drivers/net/wireless/ath/ath12k/coredump.c
-new file mode 100644
-index 000000000000..8a3eaa2f51aa
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/coredump.c
-@@ -0,0 +1,51 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
-+/*
-+ * Copyright (c) 2020 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
-+ */
-+#include <linux/devcoredump.h>
-+#include "hif.h"
-+#include "coredump.h"
-+#include "debug.h"
-+
-+enum
-+ath12k_fw_crash_dump_type ath12k_coredump_get_dump_type(enum ath12k_qmi_target_mem type)
-+{
-+	enum ath12k_fw_crash_dump_type dump_type;
-+
-+	switch (type) {
-+	case HOST_DDR_REGION_TYPE:
-+		dump_type = FW_CRASH_DUMP_REMOTE_MEM_DATA;
-+		break;
-+	case M3_DUMP_REGION_TYPE:
-+		dump_type = FW_CRASH_DUMP_M3_DUMP;
-+		break;
-+	case PAGEABLE_MEM_REGION_TYPE:
-+		dump_type = FW_CRASH_DUMP_PAGEABLE_DATA;
-+		break;
-+	case BDF_MEM_REGION_TYPE:
-+	case CALDB_MEM_REGION_TYPE:
-+		dump_type = FW_CRASH_DUMP_NONE;
-+		break;
-+	default:
-+		dump_type = FW_CRASH_DUMP_TYPE_MAX;
-+		break;
-+	}
-+
-+	return dump_type;
-+}
-+
-+void ath12k_coredump_upload(struct work_struct *work)
-+{
-+	struct ath12k_base *ab = container_of(work, struct ath12k_base, dump_work);
-+
-+	ath12k_info(ab, "Uploading coredump\n");
-+	/* dev_coredumpv() takes ownership of the buffer */
-+	dev_coredumpv(ab->dev, ab->dump_data, ab->ath12k_coredump_len, GFP_KERNEL);
-+	ab->dump_data = NULL;
-+}
-+
-+void ath12k_coredump_collect(struct ath12k_base *ab)
-+{
-+	ath12k_hif_coredump_download(ab);
-+}
-diff --git a/drivers/net/wireless/ath/ath12k/coredump.h b/drivers/net/wireless/ath/ath12k/coredump.h
-new file mode 100644
-index 000000000000..5d6003b1c12d
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/coredump.h
-@@ -0,0 +1,80 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
-+/*
-+ * Copyright (c) 2020 The Linux Foundation. All rights reserved.
-+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
-+ */
-+#ifndef _ATH12K_COREDUMP_H_
-+#define _ATH12K_COREDUMP_H_
-+
-+#define ATH12K_FW_CRASH_DUMP_V2      2
-+
-+enum ath12k_fw_crash_dump_type {
-+	FW_CRASH_DUMP_PAGING_DATA,
-+	FW_CRASH_DUMP_RDDM_DATA,
-+	FW_CRASH_DUMP_REMOTE_MEM_DATA,
-+	FW_CRASH_DUMP_PAGEABLE_DATA,
-+	FW_CRASH_DUMP_M3_DUMP,
-+	FW_CRASH_DUMP_NONE,
-+
-+	/* keep last */
-+	FW_CRASH_DUMP_TYPE_MAX,
-+};
-+
-+#define COREDUMP_TLV_HDR_SIZE 8
-+
-+struct ath12k_tlv_dump_data {
-+	/* see ath11k_fw_crash_dump_type above */
-+	__le32 type;
-+
-+	/* in bytes */
-+	__le32 tlv_len;
-+
-+	/* pad to 32-bit boundaries as needed */
-+	u8 tlv_data[];
-+} __packed;
-+
-+struct ath12k_dump_file_data {
-+	/* "ATH12K-FW-DUMP" */
-+	char df_magic[16];
-+	/* total dump len in bytes */
-+	__le32 len;
-+	/* file dump version */
-+	__le32 version;
-+	/* pci device id */
-+	__le32 chip_id;
-+	/* qrtr instance id */
-+	__le32 qrtr_id;
-+	/* pci domain id */
-+	__le32 bus_id;
-+	guid_t guid;
-+	/* time-of-day stamp */
-+	__le64 tv_sec;
-+	/* time-of-day stamp, nano-seconds */
-+	__le64 tv_nsec;
-+	/* room for growth w/out changing binary format */
-+	u8 unused[128];
-+	u8 data[];
-+} __packed;
-+
-+#ifdef CONFIG_ATH12K_COREDUMP
-+enum ath12k_fw_crash_dump_type ath12k_coredump_get_dump_type
-+						(enum ath12k_qmi_target_mem type);
-+void ath12k_coredump_upload(struct work_struct *work);
-+void ath12k_coredump_collect(struct ath12k_base *ab);
-+#else
-+static inline enum ath12k_fw_crash_dump_type ath12k_coredump_get_dump_type
-+							(enum ath12k_qmi_target_mem type)
-+{
-+	return FW_CRASH_DUMP_TYPE_MAX;
-+}
-+
-+static inline void ath12k_coredump_upload(struct work_struct *work)
-+{
-+}
-+
-+static inline void ath12k_coredump_collect(struct ath12k_base *ab)
-+{
-+}
-+#endif
-+
-+#endif
-diff --git a/drivers/net/wireless/ath/ath12k/hif.h b/drivers/net/wireless/ath/ath12k/hif.h
-index c653ca1f59b2..94fb8a9dbdf3 100644
---- a/drivers/net/wireless/ath/ath12k/hif.h
-+++ b/drivers/net/wireless/ath/ath12k/hif.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: BSD-3-Clause-Clear */
- /*
-  * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #ifndef ATH12K_HIF_H
-@@ -30,6 +30,7 @@ struct ath12k_hif_ops {
- 	void (*ce_irq_enable)(struct ath12k_base *ab);
- 	void (*ce_irq_disable)(struct ath12k_base *ab);
- 	void (*get_ce_msi_idx)(struct ath12k_base *ab, u32 ce_id, u32 *msi_idx);
-+	void (*coredump_download)(struct ath12k_base *ab);
- };
- 
- static inline int ath12k_hif_map_service_to_pipe(struct ath12k_base *ab, u16 service_id,
-@@ -141,4 +142,10 @@ static inline void ath12k_hif_power_down(struct ath12k_base *ab)
- 	ab->hif.ops->power_down(ab);
- }
- 
-+static inline void ath12k_hif_coredump_download(struct ath12k_base *ab)
-+{
-+	if (ab->hif.ops->coredump_download)
-+		ab->hif.ops->coredump_download(ab);
-+}
-+
- #endif /* ATH12K_HIF_H */
-diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
-index 0b17dfd47856..6be5ce39ff8f 100644
---- a/drivers/net/wireless/ath/ath12k/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/hw.c
-@@ -912,7 +912,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.rfkill_cfg = 0,
- 		.rfkill_on_level = 0,
- 
--		.rddm_size = 0,
-+		.rddm_size = 0x600000,
- 
- 		.def_num_link = 0,
- 		.max_mlo_peer = 256,
-@@ -1053,7 +1053,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.rfkill_cfg = 0,
- 		.rfkill_on_level = 0,
- 
--		.rddm_size = 0,
-+		.rddm_size = 0x600000,
- 
- 		.def_num_link = 0,
- 		.max_mlo_peer = 256,
-diff --git a/drivers/net/wireless/ath/ath12k/mhi.c b/drivers/net/wireless/ath/ath12k/mhi.c
-index adb8c3ec1950..2642eae40cf2 100644
---- a/drivers/net/wireless/ath/ath12k/mhi.c
-+++ b/drivers/net/wireless/ath/ath12k/mhi.c
-@@ -668,3 +668,8 @@ void ath12k_mhi_resume(struct ath12k_pci *ab_pci)
- {
- 	ath12k_mhi_set_state(ab_pci, ATH12K_MHI_RESUME);
- }
-+
-+void ath12k_mhi_coredump(struct mhi_controller *mhi_ctrl, bool in_panic)
-+{
-+	mhi_download_rddm_image(mhi_ctrl, in_panic);
-+}
-diff --git a/drivers/net/wireless/ath/ath12k/mhi.h b/drivers/net/wireless/ath/ath12k/mhi.h
-index ebc23640ce7a..3c9268824ca5 100644
---- a/drivers/net/wireless/ath/ath12k/mhi.h
-+++ b/drivers/net/wireless/ath/ath12k/mhi.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: BSD-3-Clause-Clear */
- /*
-  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021-2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- #ifndef _ATH12K_MHI_H
- #define _ATH12K_MHI_H
-@@ -42,5 +42,5 @@ void ath12k_mhi_clear_vector(struct ath12k_base *ab);
- 
- void ath12k_mhi_suspend(struct ath12k_pci *ar_pci);
- void ath12k_mhi_resume(struct ath12k_pci *ar_pci);
--
-+void ath12k_mhi_coredump(struct mhi_controller *mhi_ctrl, bool in_panic);
- #endif
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 14954bc05144..5f45c77fda38 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -7,6 +7,7 @@
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-+#include <linux/time.h>
- 
- #include "pci.h"
- #include "core.h"
-@@ -1240,6 +1241,186 @@ void ath12k_pci_write32(struct ath12k_base *ab, u32 offset, u32 value)
- 		ab_pci->pci_ops->release(ab);
- }
- 
-+#ifdef CONFIG_ATH12K_COREDUMP
-+static int ath12k_pci_coredump_calculate_size(struct ath12k_base *ab, u32 *dump_seg_sz)
-+{
-+	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
-+	struct mhi_controller *mhi_ctrl = ab_pci->mhi_ctrl;
-+	struct image_info *rddm_img, *fw_img;
-+	struct ath12k_tlv_dump_data *dump_tlv;
-+	enum ath12k_fw_crash_dump_type mem_type;
-+	u32 len = 0, rddm_tlv_sz = 0, paging_tlv_sz = 0;
-+	struct ath12k_dump_file_data *file_data;
-+	int i;
-+
-+	rddm_img = mhi_ctrl->rddm_image;
-+	if (!rddm_img) {
-+		ath12k_err(ab, "No RDDM dump found\n");
-+		return 0;
-+	}
-+
-+	fw_img = mhi_ctrl->fbc_image;
-+
-+	for (i = 0; i < fw_img->entries ; i++) {
-+		if (!fw_img->mhi_buf[i].buf)
-+			continue;
-+
-+		paging_tlv_sz += fw_img->mhi_buf[i].len;
-+	}
-+	dump_seg_sz[FW_CRASH_DUMP_PAGING_DATA] = paging_tlv_sz;
-+
-+	for (i = 0; i < rddm_img->entries; i++) {
-+		if (!rddm_img->mhi_buf[i].buf)
-+			continue;
-+
-+		rddm_tlv_sz += rddm_img->mhi_buf[i].len;
-+	}
-+	dump_seg_sz[FW_CRASH_DUMP_RDDM_DATA] = rddm_tlv_sz;
-+
-+	for (i = 0; i < ab->qmi.mem_seg_count; i++) {
-+		mem_type = ath12k_coredump_get_dump_type(ab->qmi.target_mem[i].type);
-+
-+		if (mem_type == FW_CRASH_DUMP_NONE)
-+			continue;
-+
-+		if (mem_type == FW_CRASH_DUMP_TYPE_MAX) {
-+			ath12k_dbg(ab, ATH12K_DBG_PCI,
-+				   "target mem region type %d not supported",
-+				   ab->qmi.target_mem[i].type);
-+			continue;
-+		}
-+
-+		if (!ab->qmi.target_mem[i].paddr)
-+			continue;
-+
-+		dump_seg_sz[mem_type] += ab->qmi.target_mem[i].size;
-+	}
-+
-+	for (i = 0; i < FW_CRASH_DUMP_TYPE_MAX; i++) {
-+		if (!dump_seg_sz[i])
-+			continue;
-+
-+		len += sizeof(*dump_tlv) + dump_seg_sz[i];
-+	}
-+
-+	if (len)
-+		len += sizeof(*file_data);
-+
-+	return len;
-+}
-+
-+static void ath12k_pci_coredump_download(struct ath12k_base *ab)
-+{
-+	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
-+	struct mhi_controller *mhi_ctrl = ab_pci->mhi_ctrl;
-+	struct image_info *rddm_img, *fw_img;
-+	struct timespec64 timestamp;
-+	int i, len, mem_idx;
-+	enum ath12k_fw_crash_dump_type mem_type;
-+	struct ath12k_dump_file_data *file_data;
-+	struct ath12k_tlv_dump_data *dump_tlv;
-+	size_t hdr_len = sizeof(*file_data);
-+	void *buf;
-+	u32 dump_seg_sz[FW_CRASH_DUMP_TYPE_MAX] = { 0 };
-+
-+	ath12k_mhi_coredump(mhi_ctrl, false);
-+
-+	len = ath12k_pci_coredump_calculate_size(ab, dump_seg_sz);
-+	if (!len) {
-+		ath12k_warn(ab, "No crash dump data found for devcoredump");
-+		return;
-+	}
-+
-+	rddm_img = mhi_ctrl->rddm_image;
-+	fw_img = mhi_ctrl->fbc_image;
-+
-+	/* dev_coredumpv() requires vmalloc data */
-+	buf = vzalloc(len);
-+	if (!buf)
-+		return;
-+
-+	ab->dump_data = buf;
-+	ab->ath12k_coredump_len = len;
-+	file_data = ab->dump_data;
-+	strscpy(file_data->df_magic, "ATH12K-FW-DUMP", sizeof(file_data->df_magic));
-+	file_data->len = cpu_to_le32(len);
-+	file_data->version = cpu_to_le32(ATH12K_FW_CRASH_DUMP_V2);
-+	file_data->chip_id = cpu_to_le32(ab_pci->dev_id);
-+	file_data->qrtr_id = cpu_to_le32(ab_pci->ab->qmi.service_ins_id);
-+	file_data->bus_id = cpu_to_le32(pci_domain_nr(ab_pci->pdev->bus));
-+	guid_gen(&file_data->guid);
-+	ktime_get_real_ts64(&timestamp);
-+	file_data->tv_sec = cpu_to_le64(timestamp.tv_sec);
-+	file_data->tv_nsec = cpu_to_le64(timestamp.tv_nsec);
-+	buf += hdr_len;
-+	dump_tlv = buf;
-+	dump_tlv->type = cpu_to_le32(FW_CRASH_DUMP_PAGING_DATA);
-+	dump_tlv->tlv_len = cpu_to_le32(dump_seg_sz[FW_CRASH_DUMP_PAGING_DATA]);
-+	buf += COREDUMP_TLV_HDR_SIZE;
-+
-+	/* append all segments together as they are all part of a single contiguous
-+	 * block of memory
-+	 */
-+	for (i = 0; i < fw_img->entries ; i++) {
-+		if (!fw_img->mhi_buf[i].buf)
-+			continue;
-+
-+		memcpy_fromio(buf, (void const __iomem *)fw_img->mhi_buf[i].buf,
-+			      fw_img->mhi_buf[i].len);
-+		buf += fw_img->mhi_buf[i].len;
-+	}
-+
-+	dump_tlv = buf;
-+	dump_tlv->type = cpu_to_le32(FW_CRASH_DUMP_RDDM_DATA);
-+	dump_tlv->tlv_len = cpu_to_le32(dump_seg_sz[FW_CRASH_DUMP_RDDM_DATA]);
-+	buf += COREDUMP_TLV_HDR_SIZE;
-+
-+	/* append all segments together as they are all part of a single contiguous
-+	 * block of memory
-+	 */
-+	for (i = 0; i < rddm_img->entries; i++) {
-+		if (!rddm_img->mhi_buf[i].buf)
-+			continue;
-+
-+		memcpy_fromio(buf, (void const __iomem *)rddm_img->mhi_buf[i].buf,
-+			      rddm_img->mhi_buf[i].len);
-+		buf += rddm_img->mhi_buf[i].len;
-+	}
-+
-+	mem_idx = FW_CRASH_DUMP_REMOTE_MEM_DATA;
-+	for (; mem_idx < FW_CRASH_DUMP_TYPE_MAX; mem_idx++) {
-+		if (mem_idx == FW_CRASH_DUMP_NONE)
-+			continue;
-+
-+		dump_tlv = buf;
-+		dump_tlv->type = cpu_to_le32(mem_idx);
-+		dump_tlv->tlv_len = cpu_to_le32(dump_seg_sz[mem_idx]);
-+		buf += COREDUMP_TLV_HDR_SIZE;
-+
-+		for (i = 0; i < ab->qmi.mem_seg_count; i++) {
-+			mem_type = ath12k_coredump_get_dump_type
-+							(ab->qmi.target_mem[i].type);
-+
-+			if (mem_type != mem_idx)
-+				continue;
-+
-+			if (!ab->qmi.target_mem[i].paddr) {
-+				ath12k_dbg(ab, ATH12K_DBG_PCI,
-+					   "Skipping mem region type %d",
-+					   ab->qmi.target_mem[i].type);
-+				continue;
-+			}
-+
-+			memcpy_fromio(buf, ab->qmi.target_mem[i].v.ioaddr,
-+				      ab->qmi.target_mem[i].size);
-+			buf += ab->qmi.target_mem[i].size;
-+		}
-+	}
-+
-+	queue_work(ab->workqueue, &ab->dump_work);
-+}
-+#endif
-+
- int ath12k_pci_power_up(struct ath12k_base *ab)
- {
- 	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
-@@ -1302,6 +1483,9 @@ static const struct ath12k_hif_ops ath12k_pci_hif_ops = {
- 	.ce_irq_enable = ath12k_pci_hif_ce_irq_enable,
- 	.ce_irq_disable = ath12k_pci_hif_ce_irq_disable,
- 	.get_ce_msi_idx = ath12k_pci_get_ce_msi_idx,
-+#ifdef CONFIG_ATH12K_COREDUMP
-+	.coredump_download = ath12k_pci_coredump_download,
-+#endif
- };
- 
- static
-@@ -1511,6 +1695,7 @@ static void ath12k_pci_remove(struct pci_dev *pdev)
- 	set_bit(ATH12K_FLAG_UNREGISTERING, &ab->dev_flags);
- 
- 	cancel_work_sync(&ab->reset_work);
-+	cancel_work_sync(&ab->dump_work);
- 	ath12k_core_deinit(ab);
- 
- qmi_fail:
--- 
-2.34.1
-
+T24gV2VkLCAyMDI0LTAzLTIwIGF0IDIxOjQyICswMjAwLCBCaXR0ZXJibHVlIFNtaXRoIHdyb3Rl
+Og0KPiANCj4gVGhlc2UgY29udGFpbiBmdW5jdGlvbnMgcmVsYXRlZCB0byB0aGUgZHluYW1pYyBt
+ZWNoYW5pc20sIHdoaWNoIHJ1bnMNCj4gZXZlcnkgdHdvIHNlY29uZHMgdG8gYWRqdXN0IHRvIGNo
+YW5nZXMgaW4gdGhlIGVudmlyb25tZW50Lg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQml0dGVyYmx1
+ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+DQo+IC0tLQ0KPiB2MzoNCj4gIC0gTm8g
+Y2hhbmdlLg0KPiANCj4gdjI6DQo+ICAtIFBhdGNoIGlzIG5ldyBpbiB2Miwgc3BsaXQgZnJvbSBw
+YXRjaCAzLzMgaW4gdjEuDQo+IC0tLQ0KPiAgLi4uL3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9y
+dGw4MTkyZHUvZG0uYyAgIHwgMTI1ICsrKysrKysrKysrKysrKysrKw0KPiAgLi4uL3dpcmVsZXNz
+L3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTkyZHUvZG0uaCAgIHwgIDEwICsrDQo+ICAyIGZpbGVzIGNo
+YW5nZWQsIDEzNSBpbnNlcnRpb25zKCspDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJkdS9kbS5jDQo+ICBjcmVhdGUgbW9k
+ZSAxMDA2NDQgZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJkdS9k
+bS5oDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3
+aWZpL3J0bDgxOTJkdS9kbS5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3
+aWZpL3J0bDgxOTJkdS9kbS5jDQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+IGluZGV4IDAwMDAw
+MDAwMDAwMC4uYWE3MDMyZTBmNzFhDQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJkdS9kbS5jDQo+IEBAIC0wLDAgKzEs
+MTI1IEBADQo+ICsvLyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogR1BMLTIuMA0KPiArLyogQ29w
+eXJpZ2h0KGMpIDIwMDktMjAxMiAgUmVhbHRlayBDb3Jwb3JhdGlvbi4qLw0KPiArDQo+ICsjaW5j
+bHVkZSAiLi4vd2lmaS5oIg0KPiArI2luY2x1ZGUgIi4uL2Jhc2UuaCINCj4gKyNpbmNsdWRlICIu
+Li9jb3JlLmgiDQo+ICsjaW5jbHVkZSAiLi4vcnRsODE5MmQvcmVnLmgiDQo+ICsjaW5jbHVkZSAi
+Li4vcnRsODE5MmQvZGVmLmgiDQo+ICsjaW5jbHVkZSAiLi4vcnRsODE5MmQvZG1fY29tbW9uLmgi
+DQo+ICsjaW5jbHVkZSAiLi4vcnRsODE5MmQvZndfY29tbW9uLmgiDQo+ICsjaW5jbHVkZSAiLi4v
+cnRsODE5MmQvcGh5X2NvbW1vbi5oIg0KPiArI2luY2x1ZGUgInBoeS5oIg0KPiArI2luY2x1ZGUg
+ImRtLmgiDQo+ICsjaW5jbHVkZSAiZncuaCINCj4gKw0KPiArI2RlZmluZSBVTkRFQ19TTV9QV0RC
+ICBlbnRyeV9taW5fdW5kZWNfc21fcHdkYg0KDQpOb3QgdXNlLiBQbGVhc2UgcmVtb3ZlIGl0LiAN
+Cg0KSSBkaWQgZ3JlcCwgYW5kIGZvdW5kIHRoZXNlIGFyZSB1bm5lY2Vzc2FyeS4gSSBkb24ndCBr
+bm93IHdoeSBwZW9wbGUgdXNlZA0KaXQgdG8gdHlwZSBzaG9ydGVyIG5hbWUuIFdoeSBub3QganVz
+dCBtYWtlIGVudHJ5X21pbl91bmRlY19zbV9wd2RiIHNob3J0ZXI/DQoNCmRyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JlYWx0ZWsvcnRsd2lmaSQgZ2l0IGdyZXAgVU5ERUNfU01fUFdEQg0KcnRsODE5MmQv
+ZG1fY29tbW9uLmM6I2RlZmluZSBVTkRFQ19TTV9QV0RCICAgICAgZW50cnlfbWluX3VuZGVjX3Nt
+X3B3ZGINCnJ0bDgxOTJkL2RtX2NvbW1vbi5jOiAgICAgICBydGxwcml2LT5kbS5VTkRFQ19TTV9Q
+V0RCID09IDApIHsNCnJ0bDgxOTJkL2RtX2NvbW1vbi5jOiAgICAgICAgICAgICAgICAgICAgICAg
+cnRscHJpdi0+ZG0uVU5ERUNfU01fUFdEQjsNCnJ0bDgxOTJkL2RtX2NvbW1vbi5jOiAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBydGxwcml2LT5kbS5VTkRFQ19TTV9QV0RCKTsNCnJ0bDgxOTJk
+L2RtX2NvbW1vbi5jOiAgICAgICAgICAgZGVfZGlndGFibGUtPm1pbl91bmRlY19wd2RiX2Zvcl9k
+bSA9IHJ0bHByaXYtPmRtLlVOREVDX1NNX1BXREI7DQpydGw4MTkyZGUvZG0uYzojZGVmaW5lIFVO
+REVDX1NNX1BXREIgICAgZW50cnlfbWluX3VuZGVjX3NtX3B3ZGINCnJ0bDgxOTJkZS9kbS5jOiAg
+ICAgKHJ0bHByaXYtPmRtLlVOREVDX1NNX1BXREIgPT0gMCkpIHsNCnJ0bDgxOTJkZS9kbS5jOiAg
+ICAgICAgICAgICAgICAgICAgIHJ0bHByaXYtPmRtLlVOREVDX1NNX1BXREI7DQpydGw4MTkyZGUv
+ZG0uYzogICAgICAgICAgICAgcnRscHJpdi0+ZG0uVU5ERUNfU01fUFdEQjsNCnJ0bDgxOTJkdS9k
+bS5jOiNkZWZpbmUgVU5ERUNfU01fUFdEQiAgICBlbnRyeV9taW5fdW5kZWNfc21fcHdkYg0KDQpb
+Li4uXQ0KDQoNCg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9y
+dGx3aWZpL3J0bDgxOTJkdS9kbS5oDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9y
+dGx3aWZpL3J0bDgxOTJkdS9kbS5oDQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+IGluZGV4IDAw
+MDAwMDAwMDAwMC4uZDAzNmNmNzIyMzg0DQo+IC0tLSAvZGV2L251bGwNCj4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGx3aWZpL3J0bDgxOTJkdS9kbS5oDQo+IEBAIC0wLDAg
+KzEsMTAgQEANCj4gKy8qIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwtMi4wICovDQo+ICsv
+KiBDb3B5cmlnaHQoYykgMjAwOS0yMDEyICBSZWFsdGVrIENvcnBvcmF0aW9uLiovDQo+ICsNCj4g
+KyNpZm5kZWYgICAgICAgIF9fUlRMOTJDX0RNX0hfXw0KDQpVc2Ugc3BhY2UgaW5zdGVhZCBvZiB0
+YWIuIA0KDQo+ICsjZGVmaW5lIF9fUlRMOTJDX0RNX0hfXw0KDQpQbGVhc2UgY29ycmVjdCBpdHMg
+bmFtZS4NCg0KPiArDQo+ICt2b2lkIHJ0bDkyZHVfZG1faW5pdChzdHJ1Y3QgaWVlZTgwMjExX2h3
+ICpodyk7DQo+ICt2b2lkIHJ0bDkyZHVfZG1fd2F0Y2hkb2coc3RydWN0IGllZWU4MDIxMV9odyAq
+aHcpOw0KPiArDQo+ICsjZW5kaWYNCj4gLS0NCj4gMi40My4yDQo=
