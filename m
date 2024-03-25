@@ -1,86 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87E73DABE4;
-	Mon, 25 Mar 2024 15:55:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5831A482F4
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2024 15:58:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711382123; cv=none; b=XB67EDXV4eAw5akSW/H6R8bekB3crwTr6O81r7SV0Qo3iI/ujR6SLZgwX4YMXALNhmh3ftiJd2ykt31ji+OHMPIwVOaVI+6sym+7MV7bJydbmlBcIvQig7rJ8pEh1nPN7yuLnORLh+rDelQmVdGnxifC3XrVioXuWay9TMb0IEg=
+	t=1711382321; cv=none; b=GyqPGEzUtEo2CVlVTWJb2nJD5tFGNuMLpYU40pBOxzfpOneRyZ+Tn6N4n4wqjkyznFwVtaqzHI+biaiT04Sdtfnjc/v3H7XW/APTASobqaj7vgQ79sG2nFZ7u/LURnaaOQrtljRhgPZF+XZHD/qlJ/fe8+XyPKHmBUGMiMHP6s0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711382123; c=relaxed/simple;
-	bh=KCKMR+ILD4PVJLMsuipVfj8QVOZrAGWjhVprqfmw3eM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KT6baVoFVlASoKVe0Y2e9qxFAFH81X/ffUor1uESQlJRvL5q3y0/ZUge/fPsiPFnN16X83u+srz4LEKamgPkqDFjg6xmPYGtgm6Geq+eDK4uBeHCcgG0uHIQ2Pa4Hl4nvYkXmyJPnkffgcLxpDV81B64Qb5lDuq++QsoiIWPai0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SeyOuI7h; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711382321; c=relaxed/simple;
+	bh=oReHDUpC6TA5VUbgzAw3E1izvq773nmHZTtGXvqXmKI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EuxlK6bmTK2ghGfnNCTC5SqsOK2I2GAXizGPFEOdo8tfyqSTDJtOgm42E6USoKO+KLiE/l3G7viqn9ZgQmatddH51l0hFDUKMfqnNLyMpWWaf8MiqcWpGEOkKXdUTKqndQosasbM8sulfFSW+/kqAoNFbfqb4HVtrPWRoNYVy8M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KmVX4qMD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SeyOuI7h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09906C433C7;
-	Mon, 25 Mar 2024 15:55:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KmVX4qMD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29174C43390;
+	Mon, 25 Mar 2024 15:58:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711382123;
-	bh=KCKMR+ILD4PVJLMsuipVfj8QVOZrAGWjhVprqfmw3eM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SeyOuI7hEeFDNtNHmTwXhfq1ktE+wDYayMxGK2ZLVMYuwp0kbnwLz5e7Jmt/ns1ym
-	 u2ofHLYbYwBOXyGplLOOVb+6dnJwPk6Q5ZFQze/PLrViEtIOruOSEr3wVUt0GpZRlq
-	 VlJEg31GSfcodBpziQTUS+4hVlu0/79hyrA3Qxa1H942H8Bto1U4Ekx1mLU46+2DMX
-	 9SUM9LAyWtepGWr5XWprmlsLhkKBUbI6s2EY/pxoV6lFEQUMruzqQQQw3dHVLystmT
-	 DEk6ONnMoC6dWei9FCiwuNihKscwW/Z2kirMneP00lkvqgGqhDAfXQotktbf6LDRCf
-	 wHsaoesDL0BkQ==
-Date: Mon, 25 Mar 2024 15:55:18 +0000
-From: Mark Brown <broonie@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Brendan Higgins <brendanhiggins@google.com>,
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
-	netdev@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	kunit-dev@googlegroups.com, x86@kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: kunit alltests runs broken in mainline
-Message-ID: <c01d6e1c-1dad-4012-b8b0-dccf19b2e3f2@sirena.org.uk>
-Mail-Followup-To: Johannes Berg <johannes@sipsolutions.net>,
-	Brendan Higgins <brendanhiggins@google.com>,
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
-	netdev@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	kunit-dev@googlegroups.com, x86@kernel.org,
-	linux-wireless@vger.kernel.org
-References: <b743a5ec-3d07-4747-85e0-2fb2ef69db7c@sirena.org.uk>
- <9c9e1297e2548b363fc93e774c8546e6ebf4efd6.camel@sipsolutions.net>
+	s=k20201202; t=1711382320;
+	bh=oReHDUpC6TA5VUbgzAw3E1izvq773nmHZTtGXvqXmKI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=KmVX4qMDnHBYxgBmeIO5xIic9jQ0NdGwVOuypfeUDy11xrfFlicxZR9ys/pxIqSh+
+	 tioPOGrxAQjRS88Oy6yedDbknxUINo5+kQvem02VwmzqwRKuB4VWNBDopydwy+BYzw
+	 2/sfVTwSbtf5Cp1CKxW7ZBNHNQqjdyPbsEN+AGSSIFWLgl0cu7X03XXeIbb+HuA2ms
+	 zPnfbOa3/6+m7dGQRAQlSDkaFNtWVMo5d+T3tNECSgy6Ufq8wm1wkMMwHXxb1/fjGe
+	 myLg+S0ChIEBN3mzF81nfV+pCZtT11WhlkLpkz7VeM37f2dyJuuwKya197nOWEeBQB
+	 DFuPlYzjXfDTg==
+From: Kalle Valo <kvalo@kernel.org>
+To: nbd@nbd.name,
+	lorenzo.bianconi@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wifi: mt76: mt7915: workaround dubious x | !y warning
+Date: Mon, 25 Mar 2024 17:58:38 +0200
+Message-Id: <20240325155838.1558680-1-kvalo@kernel.org>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="4jvBTpuTtm1bPuXu"
-Content-Disposition: inline
-In-Reply-To: <9c9e1297e2548b363fc93e774c8546e6ebf4efd6.camel@sipsolutions.net>
-X-Cookie: Evil isn't all bad.
+Content-Transfer-Encoding: 8bit
 
+Sparse warns:
 
---4jvBTpuTtm1bPuXu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c:526:9: warning: dubious: x | !y
 
-On Mon, Mar 25, 2024 at 04:29:53PM +0100, Johannes Berg wrote:
+Workaround it by using the '?' operator. Compile tested only.
 
-> But I'm not sure why ARCH=um is different?
+Signed-off-by: Kalle Valo <kvalo@kernel.org>
+---
+v2:
 
-It's probably something to do with it lacking a bunch of features of
-normal architectures, especially around hardware support.
+* use parenthesis
 
---4jvBTpuTtm1bPuXu
-Content-Type: application/pgp-signature; name="signature.asc"
+ drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
------BEGIN PGP SIGNATURE-----
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index 450f4d221184..578013884e43 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -523,7 +523,8 @@ mt7915_fw_debug_wm_set(void *data, u64 val)
+ 
+ 	/* WM CPU info record control */
+ 	mt76_clear(dev, MT_CPU_UTIL_CTRL, BIT(0));
+-	mt76_wr(dev, MT_DIC_CMD_REG_CMD, BIT(2) | BIT(13) | !dev->fw.debug_wm);
++	mt76_wr(dev, MT_DIC_CMD_REG_CMD, BIT(2) | BIT(13) |
++		(dev->fw.debug_wm ? 0 : BIT(0)));
+ 	mt76_wr(dev, MT_MCU_WM_CIRQ_IRQ_MASK_CLR_ADDR, BIT(5));
+ 	mt76_wr(dev, MT_MCU_WM_CIRQ_IRQ_SOFT_ADDR, BIT(5));
+ 
+-- 
+2.39.2
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmYBnmUACgkQJNaLcl1U
-h9ALDgf/XYMGzxDASg1Yc8Xy1aYc9Vb0lyDqOp0iIGFDCn4UraS7RU63hYEfJ9R8
-DV/58lF9zliBinTQ4thT4fesKQsvQF51UJNH/WGUxyRg1McSxUtXkSK1DzRJmMKG
-JdFBftK8O4DlXrV96jszwXw9TZZNCaaRY8adwLVSZ1Y6FWlTTsz4miog5lZlIyWB
-N79/pkCbXjFD2MTtCiqNop+TXS1c24fLKH3G146bU4voKKd3Kx7Uo1uiiZQ2ebco
-Ofa+UNn14ETNn0YKsM5vngb5MaD+/EMFpxOPKEtX4fu0BPt+0akIr8UcnM5K6BTi
-z+U6vwsi/C1NgLQQLkS5Kpi0evb0vQ==
-=Pr7g
------END PGP SIGNATURE-----
-
---4jvBTpuTtm1bPuXu--
