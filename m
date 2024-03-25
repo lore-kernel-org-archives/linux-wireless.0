@@ -1,93 +1,108 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E7B55C33
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2024 20:15:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555396CDDB
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Mar 2024 21:23:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711397738; cv=none; b=XEg1EChDvoDfyrAxiBuuBck8Ac8dIHOZzM9jBb53s3fU7n+sDP/qq9rVqbZoE6HruDkxwbVgWDRpBAbX9qVhd4wVSW724jah2jS+yX7gEwcu56vMVqCdBdFCEZpKni7aG+LyEieQflOZL4D7h1xhkfYr9DdUbZ+mIcKI6bVGUxg=
+	t=1711401804; cv=none; b=ZAOmnz+l2i8vtFyNwN1C5YmzEmOZ65PmTvbqcZ3EVzGskEEnbw50zeX4QyqfsTTUQU8y8k81ykvPzCtKQJyGibdQMUCyy9p4acG8KBTECAyNd+ph3IHn4eNrw2tT+tYB8OkeJgC04O9S412qb1cHqGcIvmqMhrPmjV8xkVm/jDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711397738; c=relaxed/simple;
-	bh=WvYQ7tS48NKU46IjZBI+ciCPqzCBUhz05OM2yEl6/WU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=fMzFLY5OITorkBLfGMTI4dQ3GzbptDYZR1deJsvYdxafMjl8BBLije00lMhpOFhgFMQwggeK2qdPSj4tpffcFZZU+OcNnawTAO09NvJxz8sPRG2g898SPRkLdN4BGn3mpi594bdEUIc6j7WYqC0bmd+vvmHE0wR+UlbBFty3/3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mLzvcfxw; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1711401804; c=relaxed/simple;
+	bh=Xbmy+gkyYYWc252UGDV3wa5+w2+SyE8W7XLa4ytQ0LA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kW1B78hAGcxQvs7uXExa8ZBUunE7tjC6ykEJAlF+/dP0pZopIMFnBA6LPp0WCqMEUPAGlm4rYf8/MHLbJKCnc3MnXM1hr0MGm9QSRxl+BU4kvzKTbrpKk5hGG3mnbnX07JTL1NejZnqbPVFaHaJsm8cwoEWy5a6A3i3NCSODHD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H0MESbn2; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mLzvcfxw"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42PJWrB6024198;
-	Mon, 25 Mar 2024 20:15:31 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H0MESbn2"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42PLNJVi024920;
+	Mon, 25 Mar 2024 21:23:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:cc:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=VgxrJr7RxCBZbVsl1HuThf/tnvSo8NafdzAd0VT/Vdc=; b=mL
-	zvcfxw++rG8vdYyWwKKygkocE6rHlrLoR2m1zAB8qQBQezzL2shXK1jwlQ+M/HGG
-	JHy3SKjScJgu3yStI0SLJyO0Rma4dXn7em1As6OYsTqMOIfnF1JOXvmUvR9SO4kK
-	RmmrnhEac3/fDSJBko3kWZnUKeka1J7TlQR/WvGpPcf3BVsVtFPyEBvRTnXQ85Il
-	0iuDnqNtyNr6fvNyaq/XZuVNhRZpbukUHySnkNClskvRT6ivltPsOoV7UtYEsh6Z
-	yei3TLlopMFSECODciVNBtF1XQ6shS/OmJ77eIC0Im3ULJO3Z7HIraFIWXdg33Ov
-	yHABE2pw+XHC7V8wDCDw==
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type; s=qcppdkim1; bh=6vu5LSNElxlwZObCgswq
+	7FQDRY7WTqZ5f0rO/+SUyhQ=; b=H0MESbn2LB2MjAHk1xjFUpPut71Xel7XZ/OT
+	Xkh6VbxnsVGNdLmbkEl4r2o/LS70VrssBCDMfDPjdTW25b34R/GXkeB+ljtgi5cS
+	gZShMBnB2jph4zG7atKbvQBVSs90vXF48dfXDQBsArgEyzRhxpo8j+NXW7yCCUbS
+	+vCh8N1sXya3Tl60plCrlg6VLT3p3n1FHuzEQiy5Hu18weux7jOf/p8yFJNSDh1e
+	84+kuPvtVyg+4Ul03QNdP8VUzogtOPprSm+KoigRmgk3I4K2B/4r46bcFhyqUYXs
+	me2B7g0/VD1+xcxWdsLCru4I9kldBXo3pakcDk/BM7AqwbF/SA==
 Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x3626hjqt-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x31wst6wc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 25 Mar 2024 20:15:31 +0000 (GMT)
+	Mon, 25 Mar 2024 21:23:18 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42PKFUSH006736
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42PLNIpg023122
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 25 Mar 2024 20:15:30 GMT
-Received: from [10.227.110.203] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 25 Mar
- 2024 13:15:29 -0700
-Message-ID: <42eda95a-34a7-4e0a-a57d-6f7c57b8f53a@quicinc.com>
-Date: Mon, 25 Mar 2024 13:15:29 -0700
+	Mon, 25 Mar 2024 21:23:18 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Mon, 25 Mar 2024 14:23:17 -0700
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>
+Subject: [PATCH 3/6] wifi: ath12k: fix survey dump collection in 6 GHz
+Date: Mon, 25 Mar 2024 14:23:01 -0700
+Message-ID: <20240325212304.28241-4-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240325212304.28241-1-quic_pradeepc@quicinc.com>
+References: <20240325212304.28241-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3]wifi: ath12k: Add firmware coredump collection support
-Content-Language: en-US
-To: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-References: <20240325183414.4016663-1-quic_ssreeela@quicinc.com>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20240325183414.4016663-1-quic_ssreeela@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Ddah0_Vwja2chAd1N6k_CRBqGAxbGPJc
-X-Proofpoint-GUID: Ddah0_Vwja2chAd1N6k_CRBqGAxbGPJc
+X-Proofpoint-GUID: brVnu-dqIWNi2RMsEz8WWsneCWNrSeX7
+X-Proofpoint-ORIG-GUID: brVnu-dqIWNi2RMsEz8WWsneCWNrSeX7
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-25_19,2024-03-21_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
- mlxlogscore=691 mlxscore=0 priorityscore=1501 phishscore=0 adultscore=0
- clxscore=1015 malwarescore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2403210001 definitions=main-2403250123
+ definitions=2024-03-25_21,2024-03-21_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ clxscore=1015 malwarescore=0 priorityscore=1501 phishscore=0 bulkscore=0
+ adultscore=0 spamscore=0 mlxscore=0 mlxlogscore=810 impostorscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2403250132
 
-On 3/25/2024 11:34 AM, Sowmiya Sree Elavalagan wrote:
-> In case of firmware assert snapshot of firmware memory is essential for
-> debugging. Add firmware coredump collection support for PCI bus.
-> Collect RDDM and firmware paging dumps from MHI and pack them in TLV
-> format and also pack various memory shared during QMI phase in separate
-> TLVs.  Add necessary header and share the dumps to user space using dev
-> coredump framework. Coredump collection is disabled by default and can
-> be enabled using menuconfig. Dump collected for a radio is 55 MB
-> approximately.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.2.1-00201-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
+When ath12k receives survey request, choose the 6 GHz band
+when enabled. Without this, survey requests do not include
+any 6 GHz band results, leading to failures in auto channel
+selection.
 
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index b91d34b602dd..6d7df18ec424 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -7419,7 +7419,13 @@ static int ath12k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 
+ 	if (!sband)
+ 		sband = hw->wiphy->bands[NL80211_BAND_5GHZ];
++	if (sband && idx >= sband->n_channels) {
++		idx -= sband->n_channels;
++		sband = NULL;
++	}
+ 
++	if (!sband)
++		sband = hw->wiphy->bands[NL80211_BAND_6GHZ];
+ 	if (!sband || idx >= sband->n_channels) {
+ 		ret = -ENOENT;
+ 		goto exit;
+-- 
+2.17.1
 
