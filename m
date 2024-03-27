@@ -1,160 +1,92 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460F6148308
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2024 12:42:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD11F13248B
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2024 12:43:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711543376; cv=none; b=BpjbDhEb0cv/Wz3o02bnWJmjpfaLnprj4fIWpxFbJJLtCz1+WkNVlhu+HlYibGapRyoZyzVpN8USasWbtb9yVxLKcFl0cnZQH2WJF6Fk4bDLllw/GORrv0v5pQLXW6lwMgxMJfRTyVy7y6cb3jcd/HG+gRsThqDaEh2hn3MZRdQ=
+	t=1711543399; cv=none; b=gFs/YG2jgsvXyh6HiLRHvpL8wuGbU5XYcTJquahUy+WOf0NEwv0ih+APEMG7+14d3+tcv7WRXXecqnGjybiy5EFjTzNa+O7IrdeBKjHzWpAUrthGCNK4q/D4ZuxjgXUyuilR7Bp7W8PxNIGmxR1hWtBhSlcN7t/yCJ0Yh3prRBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711543376; c=relaxed/simple;
-	bh=RVE008LGGmmk5WXgZGxtm6p/ays+12n/AyoNVnX9umo=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=r12+FCod5LnEl+TBJGKsAVpKp+MCJGoo16Em2HD7/UxHvRJALW1iI+49ET6ZFA78l0lKGdsl4jBvD1EgWfMqsxSyNJVUrzpYuJSpVs0KYwFzzxIlxP15MNgsemm1sNmjZpwhnqqcGSngLEchLKglknaOMlH0cn2lnVJvCmuM3dE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nBeOP6YQ; arc=none smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nBeOP6YQ"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a46d0a8399aso142111466b.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2024 05:42:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1711543371; x=1712148171; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/vBka3ABZcniwH/u8QWX2xHT7esEXtapMcD7AcTvpic=;
-        b=nBeOP6YQwW711m5i5jDQY0Hd3rG0tK7i7IpNf/zCNRa7dmLz1sVHpCTTzOcmLaWZaR
-         fv7WFaUXVxb+E9GYEjNzNthLgqFJkLL54ZTi2/++avtlP5wq0ugb/JINai447NPiJYfw
-         JR6TDwwsPXJ49P3uX+ryFkaTJb96KGrFD+lfJuF2/HhSM7XnY/EicWxVpk/mcYpuhW4b
-         fpNl5RU6lEgTiWU7nUEPt4GbRXLnGygkmeKelOuW4zRJqdHsJAec6qkpLwmYzWRAjrYT
-         gS0U/Y0+0Zq4GbYDVIiOsgUCTAvTquTPdHpXTP/Ma5LWv3FJwMr79AL1rKObI4l5jMN+
-         g6qA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711543371; x=1712148171;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/vBka3ABZcniwH/u8QWX2xHT7esEXtapMcD7AcTvpic=;
-        b=TKbVoLfZ38F4c9GT0xobLSRusvhoIFCVWSimnU3EjJc0kF63nmFKdzQX/hgMfFVKOS
-         n7LVjXEikCAnNg1BFKmnbixJ/Hhal9grjUyxk0OKiRZNsQBfJSjWaw/ru17r7Nb07Bd8
-         lOWTQna6sBL/X+gfPws7fOyL/jOiOxHo9jnlTEYmtei13+sDZ5HSDdz2dC6CDcmyvIzq
-         9lfcWZxlaPTAYkgYrxu17YxzUb5rKAkmOcea9glz/cCcDOU7G5pM1vpnv6351MK1DTpx
-         nmHOWrc3ftre/fI9ivAIeevH8iaEfUjJO8E5pB7TOfyhqp77MuYFvZXYoDqBGVsumaHA
-         OWfQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW4QkzUyaP9Q4XustiGeiRK8YImhI1QmuUWbCdPAQ0e9DDr9zdBaZLkBHT+xq6H2kCVP1h9r+vXT7HflAvrUNfMtpWa/XunCAdlP+8YEtA=
-X-Gm-Message-State: AOJu0Yybec6yrZ0ZspvwGiydulu0lztBFiNeYRn5KuB+BfFeDzvCOnhD
-	nL27LC6Q0f7JwYBaw0dNy9NpKYynS9NKk/Uue6zbY/PCRAsLH5WKezFwbd7lP64=
-X-Google-Smtp-Source: AGHT+IG5vuCEMnJybNEU3pw6Dfhrha9UVjffnJEN9pSayVDfDg6+G0gg3OeqyhGazXN+XfbDGEL4yA==
-X-Received: by 2002:a17:906:5645:b0:a47:34b5:fa6e with SMTP id v5-20020a170906564500b00a4734b5fa6emr3936509ejr.2.1711543370618;
-        Wed, 27 Mar 2024 05:42:50 -0700 (PDT)
-Received: from [127.0.1.1] ([178.197.206.205])
-        by smtp.gmail.com with ESMTPSA id gx16-20020a170906f1d000b00a4707ec7c34sm5379175ejb.166.2024.03.27.05.42.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Mar 2024 05:42:50 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Date: Wed, 27 Mar 2024 13:40:57 +0100
-Subject: [PATCH 04/22] bluetooth: virtio: drop owner assignment
+	s=arc-20240116; t=1711543399; c=relaxed/simple;
+	bh=DL0wIRWQ92PZfn+D5B0g7hwpTzHw4wTxTgsuASsspog=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=EhKaSIgJWEzo49KvA9JDq2fVtR7U/ZzajfvOTr9Rx8RP3XQfk+DAdSsuZOFufibGJmjrZbpCmFW8tD++U4mVtz/skISBTpYVptC4EoCzKMmWKCyUdMufMNu2eEmgwH4ezdlfCNAvPVQgNn38YMWrzhkA55Suqu2dbnOxmIeZzkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 42RCgfQX3929049, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 42RCgfQX3929049
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 27 Mar 2024 20:42:41 +0800
+Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Wed, 27 Mar 2024 20:42:42 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Wed, 27 Mar 2024 20:42:41 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::4c42:f80:bcc2:d00f]) by
+ RTEXMBS04.realtek.com.tw ([fe80::4c42:f80:bcc2:d00f%5]) with mapi id
+ 15.01.2507.035; Wed, 27 Mar 2024 20:42:41 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "kvalo@kernel.org" <kvalo@kernel.org>,
+        "rtl8821cerfe2@gmail.com"
+	<rtl8821cerfe2@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "s.l-h@gmx.de"
+	<s.l-h@gmx.de>,
+        "chewitt@libreelec.tv" <chewitt@libreelec.tv>
+Subject: Re: [PATCH v3 04/12] wifi: rtlwifi: Add rtl8192du/table.{c,h}
+Thread-Topic: [PATCH v3 04/12] wifi: rtlwifi: Add rtl8192du/table.{c,h}
+Thread-Index: AQHaev3qY3Nayk5vYE26xHTZIDMXTLFCmpOAgAcv14CAAY8s8v//fNcAgAA0JwCAAAGFAA==
+Date: Wed, 27 Mar 2024 12:42:41 +0000
+Message-ID: <cb5505ae874312b6027b8a6e60eae1cd538c12cb.camel@realtek.com>
+References: <7f4b3309-1580-48f3-9426-29f1eb4052fd@gmail.com>
+	 <ed50254c-889e-4dcd-93db-f63b776e3503@gmail.com>
+	 <5170c29a7b565fdec2e004f9391d325328ef5a72.camel@realtek.com>
+	 <8a90f3cb-7218-4f23-8aa7-fcc68e2f4a93@gmail.com>
+	 <87y1a4yqvh.fsf@kernel.org>
+	 <5d117cf09134b034e704b8a1b5167235963a9c88.camel@realtek.com>
+	 <de1af6c3-25e2-4480-9da3-f3e5de1d6d5f@gmail.com>
+In-Reply-To: <de1af6c3-25e2-4480-9da3-f3e5de1d6d5f@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+user-agent: Evolution 3.36.1-2 
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <E4D345F65FDE774D867E1190B0DDACBC@realtek.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240327-module-owner-virtio-v1-4-0feffab77d99@linaro.org>
-References: <20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org>
-In-Reply-To: <20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Richard Weinberger <richard@nod.at>, 
- Anton Ivanov <anton.ivanov@cambridgegreys.com>, 
- Johannes Berg <johannes@sipsolutions.net>, 
- Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
- Jens Axboe <axboe@kernel.dk>, Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Olivia Mackall <olivia@selenic.com>, 
- Herbert Xu <herbert@gondor.apana.org.au>, Amit Shah <amit@kernel.org>, 
- Arnd Bergmann <arnd@arndb.de>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Gonglei <arei.gonglei@huawei.com>, "David S. Miller" <davem@davemloft.net>, 
- Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, 
- Bartosz Golaszewski <brgl@bgdev.pl>, David Airlie <airlied@redhat.com>, 
- Gerd Hoffmann <kraxel@redhat.com>, 
- Gurchetan Singh <gurchetansingh@chromium.org>, 
- Chia-I Wu <olvaffe@gmail.com>, 
- Jean-Philippe Brucker <jean-philippe@linaro.org>, 
- Joerg Roedel <joro@8bytes.org>, Alexander Graf <graf@amazon.com>, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>, Eric Van Hensbergen <ericvh@kernel.org>, 
- Latchesar Ionkov <lucho@ionkov.net>, 
- Dominique Martinet <asmadeus@codewreck.org>, 
- Christian Schoenebeck <linux_oss@crudebyte.com>, 
- Stefano Garzarella <sgarzare@redhat.com>, Kalle Valo <kvalo@kernel.org>, 
- Dan Williams <dan.j.williams@intel.com>, 
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
- Ira Weiny <ira.weiny@intel.com>, 
- Pankaj Gupta <pankaj.gupta.linux@gmail.com>, 
- Bjorn Andersson <andersson@kernel.org>, 
- Mathieu Poirier <mathieu.poirier@linaro.org>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, 
- Anton Yakovlev <anton.yakovlev@opensynergy.com>, 
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>
-Cc: virtualization@lists.linux.dev, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-um@lists.infradead.org, 
- linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
- linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev, 
- kvm@vger.kernel.org, linux-wireless@vger.kernel.org, nvdimm@lists.linux.dev, 
- linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, alsa-devel@alsa-project.org, 
- linux-sound@vger.kernel.org, 
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=797;
- i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
- bh=RVE008LGGmmk5WXgZGxtm6p/ays+12n/AyoNVnX9umo=;
- b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBmBBPdBdOoV7iseHu8Ha4ifJV+o69aPjmkC0Glb
- hZvw0OYKhSJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCZgQT3QAKCRDBN2bmhouD
- 1wI+D/9dbQLSRFm34TU4Qv7YYw/ixrbQYbzdht3LbG49prmr+l9PRN+lDKM5C7rVEcSei80vRnM
- TiW6KxYh0V1FcMmWftM5R3iPFwUdsjSJJ8STF9/qxCFrtRu4JF2jLy20hTeoVbp18elVq5cPQX7
- x0ZT+2U/6ejc+Tj67MUtextCGgzfAnxyzk869i8eMn5+xHxfOheEJYs56sRxZveNqcH02H3SJzS
- lVHZpxQrf3FRGgcwHAPt3T3Xdw8Z16tpAtE2x8gC688DaS1Xf+F0yjXhNYUD3TZ2Nf2LOIirHft
- RqrMloYSPBljyoR9aLzb+/TS3YpVgQlAvKN5d6tmlJ0nE9har9+fKbx2BcRrLp/6GDENjqsOo/l
- 8CB/SP4BTOX5vsL5yzZ+pY00Qmxt0ejqUXPkWtmcx1XbG9w2k8k24TXnlZCPdLXrLhnZ2jI9LT+
- zBfzzDbBRNwOCPfTHDN6HNuuxYCdwPAnpCXF+I0jmGk74U4igIav9OArAmrq3hKZBqbWqOZI0BN
- vbbrFOmyQQ3Nr/FfhrtNyG373ZzkyCTApUHwmnIEwpxTiKH0m+OVNyP38BY9vsn1/ZkBfOPZZyU
- LMQHmHackK+l1II6lBOJVnPTDqc4EvqiFx/LJsVwQvunku2hC9omSwT9D4Wuv363XinjYsbSqRE
- G6BGGHfVkJ9lWYw==
-X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
- fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
 
-virtio core already sets the .owner, so driver does not need to.
-
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
----
-
-Depends on the first patch.
----
- drivers/bluetooth/virtio_bt.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/bluetooth/virtio_bt.c b/drivers/bluetooth/virtio_bt.c
-index 2ac70b560c46..463b49ca2492 100644
---- a/drivers/bluetooth/virtio_bt.c
-+++ b/drivers/bluetooth/virtio_bt.c
-@@ -417,7 +417,6 @@ static const unsigned int virtbt_features[] = {
- 
- static struct virtio_driver virtbt_driver = {
- 	.driver.name         = KBUILD_MODNAME,
--	.driver.owner        = THIS_MODULE,
- 	.feature_table       = virtbt_features,
- 	.feature_table_size  = ARRAY_SIZE(virtbt_features),
- 	.id_table            = virtbt_table,
-
--- 
-2.34.1
-
+T24gV2VkLCAyMDI0LTAzLTI3IGF0IDE0OjM2ICswMjAwLCBCaXR0ZXJibHVlIFNtaXRoIHdyb3Rl
+Og0KPiANCj4gT24gMjcvMDMvMjAyNCAxMTozMCwgUGluZy1LZSBTaGloIHdyb3RlOg0KPiA+IE9u
+IFdlZCwgMjAyNC0wMy0yNyBhdCAxMToxOCArMDIwMCwgS2FsbGUgVmFsbyB3cm90ZToNCj4gPiA+
+IEJpdHRlcmJsdWUgU21pdGggPHJ0bDg4MjFjZXJmZTJAZ21haWwuY29tPiB3cml0ZXM6DQo+ID4g
+PiANCj4gPiA+ID4gPiA+IC0tLSAvZGV2L251bGwNCj4gPiA+ID4gPiA+ICsrKyBiL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTkyZHUvdGFibGUuYw0KPiA+ID4gPiA+
+ID4gQEAgLTAsMCArMSwxNjc1IEBADQo+ID4gPiA+ID4gPiArLy8gU1BEWC1MaWNlbnNlLUlkZW50
+aWZpZXI6IEdQTC0yLjANCj4gPiA+ID4gPiA+ICsvKiBDb3B5cmlnaHQoYykgMjAwOS0yMDEyICBS
+ZWFsdGVrIENvcnBvcmF0aW9uLiovDQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArI2luY2x1
+ZGUgPGxpbnV4L3R5cGVzLmg+DQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArI2luY2x1ZGUg
+InRhYmxlLmgiDQo+ID4gPiA+ID4gPiArDQo+ID4gPiA+ID4gPiArdTMyIHJ0bDgxOTJkdV9waHlf
+cmVnXzJ0YXJyYXlbUEhZX1JFR18yVF9BUlJBWUxFTkdUSF0gPSB7DQo+ID4gPiA+ID4gDQo+ID4g
+PiA+ID4gc3RhdGljIGNvbnN0ID8NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiA+ICsNCj4gPiA+ID4g
+PiA+ICt1MzIgcnRsODE5MmR1X3BoeV9yZWdfYXJyYXlfcGdbUEhZX1JFR19BUlJBWV9QR19MRU5H
+VEhdID0gew0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IHN0YXRpYyBjb25zdCA/DQo+ID4gPiA+ID4g
+DQo+ID4gPiA+IA0KPiA+ID4gPiBJIGNhbiBtYWtlIHRoZW0gc3RhdGljIGlmIEkgbW92ZSB0aGVt
+IHRvIHRhYmxlLmguIE9ubHkgcGh5LmMNCj4gPiA+ID4gaW5jbHVkZXMgdGhpcyBoZWFkZXIsIHNv
+IHRoYXQgc2hvdWxkIGJlIGZpbmUuDQo+ID4gPiANCj4gPiA+IERvIG5vdGUgdGhhdCAuaCBmaWxl
+cyBjYW4ndCBjb250YWluIHN0YXRpYyB2YXJpYWJsZXMsIG90aGVyd2lzZSB0aGVyZQ0KPiA+ID4g
+d2lsbCBiZSBkdXBsaWNhdGUgZGF0YS4NCj4gPiA+IA0KPiA+IA0KPiA+IEluZGVlZCwgc28gdGhl
+c2UgY2FzZXMgc2hvdWxkIGJlICdjb25zdCB1MzInLCBubyBuZWVkICdzdGF0aWMnLg0KPiA+IA0K
+PiA+IA0KPiANCj4gU28gSSBzaG91bGQgbGVhdmUgdGhlbSBpbiB0YWJsZS5jPyBPbmx5IHBoeS5j
+IGluY2x1ZGVzIHRhYmxlLmgsDQo+IHNvIG5vdGhpbmcgd291bGQgYmUgZHVwbGljYXRlZC4NCg0K
+SSB0aGluayBzby4gV2hhdCB5b3UgbmVlZCB0byBkbyBpcyB0byBhZGQgJ2NvbnN0JyB0byBlYWNo
+IG9mIHRoZW0uIA0KDQoNCg==
