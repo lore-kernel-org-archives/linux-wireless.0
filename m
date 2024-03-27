@@ -1,131 +1,127 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F92212F583
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2024 16:49:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8051D14D2A2
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Mar 2024 17:09:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711558146; cv=none; b=Ckfc91V9cmjNiea7FhXfCnixZEKfQbdcPHUoBQ+OSgBpYD6cu1TjcwSVlw/kAnWKZ+6IuaHopgwHuYdi+noqf6ZUOBIQS45fihxtQeH62PEU7Av40gc+kAVOjpQ1DkIo/HhjQckygS+lHSM1BoQzvGqGT3AjGALcir4ygKK+mpY=
+	t=1711559369; cv=none; b=UZQjKbKLlYXXPGXTQCSmuD06JuQP760zFkgxcKe9ZmGn6V4+jYoFWP1He0YXMf4Pptejcas6PeiB4Qjb4Q3iYrSkehqkjGspDa1GqbAJBUfwY/x2lUMz9mYUQ6b2Kl4Zfm9Cdbx2XtXSiKlPFs0jZX6q7kRXzuMcNb83fmyrPYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711558146; c=relaxed/simple;
-	bh=tbp6KZ04r4B1c4Q0pk1lD2JPlBlcT8pOim03CLlTlzQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jlAmA/YTiNT+Aam7hrIfaGEyAF6vPHNqjeihiqJ5Pg4MywAX6zAk2naxDV9NXaGqSuNpZKx7k5/rI0O4/dvpNZYd8xG16zXo2hjguuEwR11DdEd8CtlPlu/bnez5s3B61yK6BPAgd5adFUpuMb3w7lgT5eaaBTj0uYuJiPzpelQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=nOgGCeYW; arc=none smtp.client-ip=148.163.129.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1711559369; c=relaxed/simple;
+	bh=RSHHCmTyp1zvb5wAQIl1HTvgeq9+h8BcyBoyTen2W80=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ypn39WZpxLRT27TPQzLpwZhlUC+P8djleNBoVKy7GKmKGUc9Bt2BqcgFxUb78AocaDi2yoMKbCtgXByP3UlMnZNSxvmqIn0BZO8L4BHW3yc2HJN7eR0ebnoi1OUKTzS0Zi3Legj6/KY4ngC/GG7FtykX7u+Uf8Fc7Nukr3vdlnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=I/1Qmoga; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="nOgGCeYW"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail2.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 4373710006B;
-	Wed, 27 Mar 2024 16:49:03 +0000 (UTC)
-Received: from [192.168.100.159] (unknown [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id E485113C2B0;
-	Wed, 27 Mar 2024 09:49:01 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E485113C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1711558142;
-	bh=tbp6KZ04r4B1c4Q0pk1lD2JPlBlcT8pOim03CLlTlzQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nOgGCeYWkHCdJmloX9UY/SFiccBZzLG0Agj7Z4941EkMnUYEMa0fkkLzAXOpeW/0K
-	 mCUJf0BokAD4gzMWEg9byoNrhPpeigj84b0QT97YaM7ZgAquZIlabOckIb3IS5KCWH
-	 Lae4QJDMY534EdffuSQohcla8Z8JfBq/+2YMJjyk=
-Message-ID: <2dda8ef8-b004-2afc-c398-5a3c92aa7267@candelatech.com>
-Date: Wed, 27 Mar 2024 09:49:01 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="I/1Qmoga"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42RARFME012423;
+	Wed, 27 Mar 2024 17:09:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type; s=qcppdkim1; bh=Lwlet65No16meZmBBzMx
+	ZZgYWWPZ3pChqCYjUW0zKo8=; b=I/1QmogadbajZbMbR0h3rLfmys/N1aebQcbY
+	hyGlnGSucJRYpUbjQB9rS+pFP6mGWJ4psxCk8UMMU4WhD/epWFDurBJK5MgUNYa3
+	L7O8XuDX3VeLan54JpSybELiA53xcaHyUq7577Al/86jHk0GsZ9k5PL5Paq9dpVQ
+	oNeeJsDvu+vxzNRq4kkQhhb0+eBu6Totsw9X0BSaVrIE6cShgoLTrrXVcYOnMkaf
+	NjdiYXNyI0hLqLyLgrpHb0T+5x78SQMNQ66kNCRlVcsy+VwgRs4ipmXr49v5UwRP
+	Ye4pTeF0NTo1tbNgy+SwY+xMiGXnabM8t6PmZ7bXk4iy7tZhWQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x47832fe5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Mar 2024 17:09:21 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42RH9KXj030147
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Mar 2024 17:09:20 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Wed, 27 Mar 2024 10:09:20 -0700
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>
+Subject: [PATCH v2 01/10] wifi: mac80211: Add EHT UL MU-MIMO flag in ieee80211_bss_conf
+Date: Wed, 27 Mar 2024 10:09:01 -0700
+Message-ID: <20240327170910.23975-2-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240327170910.23975-1-quic_pradeepc@quicinc.com>
+References: <20240327170910.23975-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH] wifi: mt76: mt7925: Fix invalid chandef access.
-Content-Language: en-US
-To: Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: linux-wireless@vger.kernel.org
-References: <20240320192723.3440938-1-greearb@candelatech.com>
- <ZftrMyXvN7JcWhHH@lore-desk>
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <ZftrMyXvN7JcWhHH@lore-desk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1711558143-YeMDW48QTesw
-X-MDID-O:
- us5;ut7;1711558143;YeMDW48QTesw;<greearb@candelatech.com>;0161bc757c83381a5b931166ef547186
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: mhT8Evfo5OLXqQkJ076lcwNYRjsipNbc
+X-Proofpoint-ORIG-GUID: mhT8Evfo5OLXqQkJ076lcwNYRjsipNbc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-27_13,2024-03-27_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
+ bulkscore=0 lowpriorityscore=0 mlxscore=0 priorityscore=1501
+ mlxlogscore=999 spamscore=0 phishscore=0 adultscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2403270119
 
-On 3/20/24 16:03, Lorenzo Bianconi wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> mt76.ctx can be null, and that causes chandef to be null.
->> Use logic found in similar code paths to use chandef
->> from the phy object in case ctx is NULL.
->>
->> With this, my system no longer crashes, but STA will still not
->> associate.
-> 
-> Hi Ben,
-> 
-> can you please add 'Fixes' tag to help people backporting the fix?
-> I think it is:
-> Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Add flag for Full Bandwidth UL MU-MIMO for EHT. This is utilized
+to pass EHT MU-MIMO configurations from user space to driver.
 
-I'm not able to reproduce the crash on upstream drivers, the crash only happened when
-I had a local patch that caused it to not associate.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-I still think the patch should go upstream as there may be other paths to hit the bug,
-but maybe it doesn't need to be backported?
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+---
+ include/net/mac80211.h | 4 ++++
+ net/mac80211/cfg.c     | 5 +++++
+ 2 files changed, 9 insertions(+)
 
-Let me know if you still want me to do the Fixes thing.
-
-Thanks,
-Ben
-
-> 
-> Regards,
-> Lorenzo
-> 
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 6 ++++--
->>   1 file changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
->> index bd37cb8d734b..feb818411a25 100644
->> --- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
->> +++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
->> @@ -1502,7 +1502,8 @@ mt7925_mcu_sta_phy_tlv(struct sk_buff *skb,
->>   		       struct ieee80211_vif *vif, struct ieee80211_sta *sta)
->>   {
->>   	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
->> -	struct cfg80211_chan_def *chandef = &mvif->mt76.ctx->def;
->> +	struct mt76_phy *mphy = mvif->phy->mt76;
->> +	struct cfg80211_chan_def *chandef = mvif->mt76.ctx ? &mvif->mt76.ctx->def : &mphy->chandef;
->>   	struct sta_rec_phy *phy;
->>   	struct tlv *tlv;
->>   	u8 af = 0, mm = 0;
->> @@ -1569,7 +1570,8 @@ mt7925_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb,
->>   			     struct ieee80211_vif *vif, struct ieee80211_sta *sta)
->>   {
->>   	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
->> -	struct cfg80211_chan_def *chandef = &mvif->mt76.ctx->def;
->> +	struct mt76_phy *mphy = mvif->phy->mt76;
->> +	struct cfg80211_chan_def *chandef = mvif->mt76.ctx ? &mvif->mt76.ctx->def : &mphy->chandef;
->>   	enum nl80211_band band = chandef->chan->band;
->>   	struct sta_rec_ra_info *ra_info;
->>   	struct tlv *tlv;
->> -- 
->> 2.42.0
->>
->>
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 353488ab94a2..54bd2a988d91 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -701,6 +701,9 @@ struct ieee80211_fils_discovery {
+  *	beamformee
+  * @eht_mu_beamformer: in AP-mode, does this BSS enable operation as an EHT MU
+  *	beamformer
++ * @eht_80mhz_full_bw_ul_mumimo: does this BSS support the reception (AP) or transmission
++ *	(non-AP STA) of an EHT TB PPDU on an RU that spans the entire PPDU
++ *	bandwidth
+  */
+ struct ieee80211_bss_conf {
+ 	struct ieee80211_vif *vif;
+@@ -793,6 +796,7 @@ struct ieee80211_bss_conf {
+ 	bool eht_su_beamformer;
+ 	bool eht_su_beamformee;
+ 	bool eht_mu_beamformer;
++	bool eht_80mhz_full_bw_ul_mumimo;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f03452dc716d..894c7b6ddb0a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1379,6 +1379,11 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 				(IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_80MHZ |
+ 				 IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_160MHZ |
+ 				 IEEE80211_EHT_PHY_CAP7_MU_BEAMFORMER_320MHZ);
++		link_conf->eht_80mhz_full_bw_ul_mumimo =
++			params->eht_cap->fixed.phy_cap_info[7] &
++				(IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_80MHZ |
++				 IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_160MHZ |
++				 IEEE80211_EHT_PHY_CAP7_NON_OFDMA_UL_MU_MIMO_320MHZ);
+ 	} else {
+ 		link_conf->eht_su_beamformer = false;
+ 		link_conf->eht_su_beamformee = false;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+2.17.1
 
