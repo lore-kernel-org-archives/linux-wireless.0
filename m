@@ -1,56 +1,54 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 468FF2561F
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2024 07:30:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79EAC537F5
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2024 07:30:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711611019; cv=none; b=LyQSHpMn5PBvgMMB3OS+9SErDa1+iagE2nYIHR2LPlCftaLqP3lfwH9GJ6dY2kLeDU7Sfpxk0ywwLMXrFRsplCyH9UtBvr1WGRIIOcwi0OoConmIUfyul20CQ/hTxByyhJxH13va4mAwgiKCQktW2M4A5gLU8GIcg5hNT5Ac9UU=
+	t=1711611020; cv=none; b=N11mvlpS47KTmafqo9XoMZScJ+ONEMp/9i1u8BwOkxv4pgyE+gFiTrjW+pMEhdcpaa6/Y7gpS8CHd/bCE2G9yQIZ0InT/pedsvlXjP/0fG4jwa7IhFhiiV2mcBAM+jfwwsh77fhiLTtTrCc/usrY+nfbz//EzgJSa+ULCaH6BWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711611019; c=relaxed/simple;
-	bh=f6MNTOWwzwf6ydIW6HtiwQ76qAdLfrunihPWPOaZACo=;
+	s=arc-20240116; t=1711611020; c=relaxed/simple;
+	bh=qgtUJ9Qb0c1d4ANEhpl0hr1bMgVvNbPcH7OGu6E6700=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qgOkcawmooGQexyu2/RDwr+pIXtIWCecVabMOWOZ0IJZyP7t4IpCcHdLJwRFoc5F8QSbsgl3oOQ6RzEbJKI7HYxPp4ljQGtGfLnIzM16bHvx577K0V525jUC8GaV5gA/yrBiYNsWB7mrBUQDxjOM5hlA0yRxFlVyiHmdzhQ2mRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ek0iPnvm; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=M9nrzUKS/R3bQnjTGmCfujfM+lPaclFJmsYVef3jluekjcOvm3T1FX27ijKulz3REhKqk0LLrCDkeJAFm7XpFVjZSNESZkFHbaWjRhcMYFuOCY/m4NYWNymdptT6DTf6p87gXsUAqUh77bOX9nncKsKEhB5n4/prsAUpAfuv5y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=hYwhuoWB; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ek0iPnvm"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42S5S5OV016571;
-	Thu, 28 Mar 2024 07:30:11 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hYwhuoWB"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42S3ns57031494;
+	Thu, 28 Mar 2024 07:30:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=7xp+XbKb73LQNxCMLPSORGHvndiMuoHtAUrCCwDw+eU=; b=ek
-	0iPnvm8spNXXxE6Dfu5ymEiwHdNw8wmSDxOrCF/z96nBKX4OHkkJplkiJYuSc+/t
-	6d3/NjagXEmLNi36e674LL9Ifo6gF65psqNV8wsBHdrKCMseKH6UyUgFsYkdV+Kt
-	H0LvQWA0orkKvvErS3HBo0JYSJ1br2Rb44dioyLQNNAZFQgw37vxYzrJGxPkBEHU
-	ykzvPRBxqAkTKK98PjL5DHVooB6jLw3QoJaCCs1URgSoWzqdi4OUjtPjdW6stPPE
-	Z7wtGvQDoA1s8VYu/CpF+65yJMEsNrLezvJLmP8InoPuJkIee6pvN1FTFJz555IQ
-	w0Crvj3UBNQ0ziDynK8A==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x4u1wtbn4-1
+	qcppdkim1; bh=BVEFDZ2WTP4C+ARaLT2dCt71jFI5J76TrRdBOehoe4E=; b=hY
+	whuoWBRmec3k2s1yqvZ48r9rhbXCTDCSPZ+uu0ZDNkqd/zV3MBTWasCbOsU3RJhk
+	pIl1BCwzvV00oORyEDp+XDTXhhtk3fFxo+8lFnmOgMt+zVL1PDRUguu7+i7Mv1oQ
+	IPupEuj/iFXElRD585u1Ly+rXqWRGaP46lbEiZLqUnspf6B408MEvNENzPF+d8pQ
+	jDFVUkxSNLD+jz7e5RtwMkHKUZpb1f9xKd5zlRAmFU4QSiCDUQ3P+hkAYDmpoy79
+	b8QR9d+6M45E2T1jQ88uXypSFG4cqx1XksHatURrEm2kkJH8zOyI2v3NbAMoYgKk
+	+ZNEvPcAb7N6ZHM69s8g==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x4u20acu0-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Mar 2024 07:30:11 +0000 (GMT)
+	Thu, 28 Mar 2024 07:30:12 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42S7U75r000502
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42S7UBMr013403
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Mar 2024 07:30:07 GMT
+	Thu, 28 Mar 2024 07:30:11 GMT
 Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Thu, 28 Mar 2024 00:30:05 -0700
+ 15.2.1118.40; Thu, 28 Mar 2024 00:30:09 -0700
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>, <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan
-	<quic_vthiagar@quicinc.com>,
         Karthikeyan Periyasamy
 	<quic_periyasa@quicinc.com>
-Subject: [PATCH 10/13] wifi: mac80211: expose channel context helper function
-Date: Thu, 28 Mar 2024 12:59:13 +0530
-Message-ID: <20240328072916.1164195-11-quic_periyasa@quicinc.com>
+Subject: [PATCH 12/13] wifi: ath12k: Introduce iface combination cleanup helper
+Date: Thu, 28 Mar 2024 12:59:15 +0530
+Message-ID: <20240328072916.1164195-13-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240328072916.1164195-1-quic_periyasa@quicinc.com>
 References: <20240328072916.1164195-1-quic_periyasa@quicinc.com>
@@ -66,59 +64,87 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: xMKdNmPFr_uNVzBGA_dI9aiknVAtmJmp
-X-Proofpoint-ORIG-GUID: xMKdNmPFr_uNVzBGA_dI9aiknVAtmJmp
+X-Proofpoint-ORIG-GUID: X6mhx8re7R4-DFU8pAIHiuENpe-xYaZ5
+X-Proofpoint-GUID: X6mhx8re7R4-DFU8pAIHiuENpe-xYaZ5
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-28_06,2024-03-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=994
- priorityscore=1501 lowpriorityscore=0 adultscore=0 malwarescore=0
- mlxscore=0 spamscore=0 bulkscore=0 impostorscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2403210001 definitions=main-2403280048
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ malwarescore=0 suspectscore=0 mlxlogscore=961 spamscore=0
+ priorityscore=1501 phishscore=0 adultscore=0 lowpriorityscore=0
+ clxscore=1015 mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2403210001 definitions=main-2403280048
 
-From: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
-
-Currently, link specific channel context helper function scope is static.
-For multi hardware iface combination support, mac80211 need this helper
-function, so expose it internally.
+Introduce a cleanup helper function to avoid redundant code for iface
+combination cleanup. Remove the cleanup code from
+ath12k_mac_hw_unregister() and ath12k_mac_hw_register() and replace it
+with new cleanup helper function.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00188-QCAHKSWPL_SILICONZ-1
 
-Signed-off-by: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
-Co-developed-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- net/mac80211/chan.c        | 2 +-
- net/mac80211/ieee80211_i.h | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 5a7fb0e4f89d..08a362892d9a 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -67,7 +67,7 @@ static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
- 	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 52a5fb8b03e9..44c8bf6eb6ae 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -7781,6 +7781,14 @@ static bool ath12k_mac_is_iface_mode_enable(struct ath12k_hw *ah,
+ 	return is_enable;
  }
  
--static struct ieee80211_chanctx *
-+struct ieee80211_chanctx *
- ieee80211_link_get_chanctx(struct ieee80211_link_data *link)
++static void ath12k_mac_cleanup_iface_combinations(struct ath12k_hw *ah)
++{
++	struct wiphy *wiphy = ah->hw->wiphy;
++
++	kfree(wiphy->iface_combinations[0].limits);
++	kfree(wiphy->iface_combinations);
++}
++
+ static int ath12k_mac_setup_iface_combinations(struct ath12k_hw *ah)
  {
- 	struct ieee80211_local *local __maybe_unused = link->sdata->local;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index def611e4e55f..202bbffec746 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2577,6 +2577,8 @@ void ieee80211_link_copy_chanctx_to_vlans(struct ieee80211_link_data *link,
- 					  bool clear);
- int ieee80211_chanctx_refcount(struct ieee80211_local *local,
- 			       struct ieee80211_chanctx *ctx);
-+struct ieee80211_chanctx *
-+ieee80211_link_get_chanctx(struct ieee80211_link_data *link);
+ 	struct wiphy *wiphy = ah->hw->wiphy;
+@@ -7905,7 +7913,6 @@ static void ath12k_mac_cleanup_unregister(struct ath12k *ar)
+ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
+ {
+ 	struct ieee80211_hw *hw = ah->hw;
+-	struct wiphy *wiphy = hw->wiphy;
+ 	struct ath12k *ar = ath12k_ah_to_ar(ah);
  
- void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				   struct ieee80211_chanctx *chanctx);
+ 	cancel_work_sync(&ar->regd_update_work);
+@@ -7914,8 +7921,7 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
+ 
+ 	ath12k_mac_cleanup_unregister(ar);
+ 
+-	kfree(wiphy->iface_combinations[0].limits);
+-	kfree(wiphy->iface_combinations);
++	ath12k_mac_cleanup_iface_combinations(ah);
+ 
+ 	SET_IEEE80211_DEV(hw, NULL);
+ }
+@@ -8087,7 +8093,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 	ret = ieee80211_register_hw(hw);
+ 	if (ret) {
+ 		ath12k_err(ab, "ieee80211 registration failed: %d\n", ret);
+-		goto err_free_if_combs;
++		goto err_cleanup_if_combs;
+ 	}
+ 
+ 	if (!ab->hw_params->supports_monitor)
+@@ -8110,9 +8116,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ err_unregister_hw:
+ 	ieee80211_unregister_hw(hw);
+ 
+-err_free_if_combs:
+-	kfree(wiphy->iface_combinations[0].limits);
+-	kfree(wiphy->iface_combinations);
++err_cleanup_if_combs:
++	ath12k_mac_cleanup_iface_combinations(ah);
+ 
+ err_cleanup_unregister:
+ 	ath12k_mac_cleanup_unregister(ar);
 -- 
 2.34.1
 
