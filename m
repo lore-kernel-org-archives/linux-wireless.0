@@ -1,46 +1,46 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E4452F96
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2024 07:30:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50BE653E17
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Mar 2024 07:30:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711611021; cv=none; b=ePBKAnKIpZeqsSSEVrfZ1YSmK+tckQSgPO5f6x65coVXg45lousY4/fh75pXe+oaSxCxStp5sRqHD/BTyo5OkVtkiJy6Xlht4KxhmAlo33kEC9pB6nqzMgfBZl3a78Rd1V9pt8Ezy4jUIjtGIMOLfBRs9UOCpWuukDLmGzNRrIY=
+	t=1711611023; cv=none; b=g7J3lqAFgv97Vi2bJSuU4fiGAu/2OWiR0PfCLl75tuK/ZCOpjtUT/9bUJPqxiWgFuBG9rmPc+rdLktOE50wNiWuegOUllNrjZYFE15ayR27RxFG+SQmbuOb1M0jt1BCoDUubhGlehc4LJ+ORvSX+4NEb7q5t+Y8UHv62o5EyRT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711611021; c=relaxed/simple;
-	bh=qdM8CKRYFSCyshP+cMf59eT93klHlq7hXGwWaAUtRoE=;
+	s=arc-20240116; t=1711611023; c=relaxed/simple;
+	bh=JJp+Vyh1lNEfhffR8l0pgkCmcaq7Be+70PvUeYzEPks=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MaUQ3jWYjysLsLZfQ+RIqNV6pHfqFituZ9VlPtgcvoza7OzO0JDd3nrixxvZYlcbjHLY6qfSK19QhJxyn72iXwzHJzWeI5QazMBD5zpGdowkFgVA+9Ed6ANrxp92FwTyRZbeFA1mfk54iZ6nP/49DnE4NaQCSwiaJhqGlxzJ32A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=lDJoto8E; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=Fm3QFpVUXGYye4dMEXqdPYv1h9u6qfBoqTqYVLEjnZUUXNpOIW5rtCLihOX7G/+ttJLsN2J80cJK5xUKIpghDgF1KG9jy1TQKIUMu7RkwsduEGsn9zw8a8RuLjBAVujx6Y8p7KnNG+uLVL3BNljmX8sEZ2pUBVKGJbqJP0ZkeUo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=FoGOd3G/; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="lDJoto8E"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42S4fvOO028796;
-	Thu, 28 Mar 2024 07:30:08 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="FoGOd3G/"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42S4u682015094;
+	Thu, 28 Mar 2024 07:30:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=mY1WVvWUa3DboJH7ADBJXhfPU1+y1DUVM8FJmgvcp5c=; b=lD
-	Joto8EKp/iWLahwxY9QwfJo8AM0RDDdnABZm59tpMh2wQ88Vjjuj48iGyxvMcmwL
-	P0Ps0QpbKcrZ8RIP8i7E+eOwNokDZtzOuOnZpFqYvbJg9RINAizRk2CVqOHPlUcu
-	LvahHjGN/yuoano/iFitIhWhwQjCpidRyPq1AffOsS6stjRcyhIbBjk9wleAR/ON
-	NR2YogFt/oM7wjBztupakgz3Y2OAOrvTgdhmTbrioM63qtYFtmAQlUvlHyqCw3Wl
-	t0njH5hobSUQTKR9zwIt4lXnd/SYJo8RLzdDEhtBVRwpiaMzs2t0kzOBZt2AbF2I
-	T4sbqbfZUurgkAjHFhTQ==
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=rSxKIjo/maAlGl1SnvISTzkFB8wGULpB3LJphUKy/YM=; b=Fo
+	GOd3G/GiepGDt4jClVKOGHxoYnX81O42Y9L4bqRZXY27j8XU/fWC1BwJK4amp4G2
+	0Wi9cw0h9KJobyAPFx5c2skLxTJSb75dmtRjqxq5aLJeY5xOjYcc2UWgXt1RpWmO
+	ktmsCFNBpehTcGawEEKtUvr/H9fQOURtgt0cbvcSom3oHDU13DnPu1mgAWcWktG4
+	79CdDyyuJ73w4Kt5ahs3iP+jYmdooWUtz/wKgkooUWrNvcKIo+1hlSFNOXv5SfPe
+	dbQ1IgTYEz50N2i2KqLE5OfWxuoe3xh4UGpm6qQe11oNCOou2BnhYuF1H+B+c+ks
+	3CPC95yxYoSbt9+9noPA==
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x4u1wjb37-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x4u1yjaut-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Mar 2024 07:30:08 +0000 (GMT)
+	Thu, 28 Mar 2024 07:30:10 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42S7Tq5C003687
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42S7U9FV004892
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Mar 2024 07:29:52 GMT
+	Thu, 28 Mar 2024 07:30:09 GMT
 Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Thu, 28 Mar 2024 00:29:50 -0700
+ 15.2.1118.40; Thu, 28 Mar 2024 00:30:07 -0700
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>, <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
@@ -48,9 +48,9 @@ CC: <linux-wireless@vger.kernel.org>,
 	<quic_vthiagar@quicinc.com>,
         Karthikeyan Periyasamy
 	<quic_periyasa@quicinc.com>
-Subject: [PATCH 04/13] wifi: cfg80211/mac80211: extend iface comb advertisement for multi-hardware dev
-Date: Thu, 28 Mar 2024 12:59:07 +0530
-Message-ID: <20240328072916.1164195-5-quic_periyasa@quicinc.com>
+Subject: [PATCH 11/13] wifi: mac80211: Add multi-hardware support in the iface comb helper
+Date: Thu, 28 Mar 2024 12:59:14 +0530
+Message-ID: <20240328072916.1164195-12-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240328072916.1164195-1-quic_periyasa@quicinc.com>
 References: <20240328072916.1164195-1-quic_periyasa@quicinc.com>
@@ -60,93 +60,29 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 0fbya7M05UqIpQYjoHfhDZLh47dPUnuS
-X-Proofpoint-ORIG-GUID: 0fbya7M05UqIpQYjoHfhDZLh47dPUnuS
+X-Proofpoint-GUID: Fjr9dXMqvujiTldB_0ADICPRt4y1rkEX
+X-Proofpoint-ORIG-GUID: Fjr9dXMqvujiTldB_0ADICPRt4y1rkEX
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-28_06,2024-03-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- adultscore=0 lowpriorityscore=0 bulkscore=0 phishscore=0 impostorscore=0
- mlxlogscore=999 mlxscore=0 spamscore=0 suspectscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2403210001
- definitions=main-2403280048
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 suspectscore=0
+ mlxscore=0 clxscore=1015 mlxlogscore=999 malwarescore=0 priorityscore=1501
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2403280048
 
 From: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
 
-As originally discussed in the RFC [1], when a driver combines multiple
-discrete hardware under one wiphy, it is required for the driver to be
-able to advertise iface combination capabilities per underlying physical
-hardware. Each underlying hardware's iface combination is described with
-an identifier, which corresponds to the same index used in
-wiphy->hw_chans[] to learn the channel capabilities of the respective
-hardware. It’s important to note that supporting drivers also signal the
-iface combination capabilities that are common for all the hardware
-through the existing interface, maintaining backward compatibility with
-user space. This commit implements provisions to advertise per-physical
-hardware specific iface combination capabilities and includes sanity
-checks on the advertised capabilities. The sanity check includes channel
-validation against the entire range of DFS frequencies, irrespective of
-regulatory configurations.
-
-Example:
-
-Say driver abstracts two discrete hardware under one wiphy,
-wiphy->hw_chans[0] supporting 2 GHz and wiphy->hw_chans[1] supporting
-5 GHz. Each hardware can operate on only one channel at any given time
-but under the wiphy there can be concurrent interfaces on both the radios.
-2 GHz hardware supports #STA <= 1, #AP <= 3 total 4 and 5 GHz hardware
-supports #STA <= 1, #AP <= 4 total 5
-
-struct ieee80211_iface_limit limits_common[] = {
-	{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-	{ .max = 3, .types = BIT(NL80211_IFTYPE_AP), },
-};
-
-limits_common[] defines the minimum (common) capability out of all the
-underlying hardware specific capabilities. This is reported in the existing
-advertisement mechanism. Common max_interfaces across 2 GHz and 5 GHz is 4,
-common num_different_channels is 1.
-
-struct ieee80211_iface_limit limits_2ghz[] = {
-	{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-	{ .max = 3, .types = BIT(NL80211_IFTYPE_AP), },
-};
-
-struct ieee80211_iface_limit limits_5ghz[] = {
-	{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-	{ .max = 4, .types = BIT(NL80211_IFTYPE_AP), },
-};
-
-struct ieee80211_iface_combination combination = {
-	.limits = limits_common,
-	.max_interfaces = 4,
-	.num_different_channels = 1,
-	...
-	.freq_range = {
-			{
-				.hw_chan_idx = 0,
-				.limits = limits_2ghz,
-				.max_interfaces = 4,
-				.num_different_channels = 1,
-				.n_limits = ARRAY_SIZE(limits_2ghz),
-			},
-			{
-				.hw_chan_idx = 1,
-				.limits = limits_5ghz,
-				.max_interfaces = 5,
-				.num_different_channels = 1,
-				.n_limits = ARRAY_SIZE(limits_5ghz),
-			},
-		      },
-};
-
-[1]: https://lore.kernel.org/linux-wireless/20220920100518.19705-4-quic_vthiagar@quicinc.com/
+Currently, iface combination param supports single physical hardware.
+To support multi physical hardware, add hardware specific checks on the
+channel context creation and populate hardware specific parameters from
+the channel definition for which the interface combination need to check.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00188-QCAHKSWPL_SILICONZ-1
 
@@ -154,313 +90,361 @@ Signed-off-by: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
 Co-developed-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- include/net/cfg80211.h | 96 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/main.c    | 46 ++++++++++++++++++++
- net/wireless/core.c    | 92 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 234 insertions(+)
+ net/mac80211/chan.c        |  33 +++++--
+ net/mac80211/ieee80211_i.h |   3 +-
+ net/mac80211/util.c        | 194 ++++++++++++++++++++++++++++++++++---
+ 3 files changed, 207 insertions(+), 23 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index dde129e61b60..491d074fe430 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5030,6 +5030,32 @@ struct ieee80211_iface_limit {
- 	u16 types;
- };
- 
-+/**
-+ * struct ieee80211_iface_per_hw - hardware specific interface combination
-+ *
-+ * Drivers registering multiple radios under a single wiphy can advertise
-+ * radio specific interface combinations through this structure. Please note
-+ * that to maintain the compatibility with the user space which is not aware
-+ * of this extension of per-hardware interface combination signaling,
-+ * the driver should still advertise it's interface combination (mostly
-+ * common minimum capability) using the existing interface combination signaling
-+ * method.
-+ *
-+ * @limits: limits for the given interface type
-+ * @num_different_channels: number of different channels which can be active
-+ *	concurrently in this hardware
-+ * @max_interfaces: maximum number of total interfaces allowed in this group
-+ * @n_limits: number of limitations
-+ * @hw_chans_idx: index of hardware specific channel list as per wiphy @hw_chans
-+ */
-+struct ieee80211_iface_per_hw {
-+	const struct ieee80211_iface_limit *limits;
-+	u32 num_different_channels;
-+	u16 max_interfaces;
-+	u8 n_limits;
-+	u8 hw_chans_idx;
-+};
-+
- /**
-  * struct ieee80211_iface_combination - possible interface combination
-  *
-@@ -5088,6 +5114,62 @@ struct ieee80211_iface_limit {
-  *		.num_different_channels = 2,
-  *	};
-  *
-+ *
-+ * 4. Hardware specific interface combination with driver supporting two
-+ *    physical HW, first underlying HW supporting 2 GHz band and the other
-+ *    supporting 5 GHz band.
-+ *
-+ *    Allow #STA <= 1, #AP <= 1, channels = 1, total 2 in 2 GHz radio and
-+ *
-+ *    Allow #STA <= 1, #AP <= 2, channels = 1, total 3 in 5 GHz radio
-+ *
-+ *    Drivers advertising per-hardware interface combination should also
-+ *    advertise a sub-set of capabilities using existing interface mainly for
-+ *    maintaining compatibility with the user space which is not aware of the
-+ *    new per-hardware advertisement.
-+ *
-+ *    Sub-set interface combination advertised in the existing infrastructure:
-+ *    Allow #STA <= 1, #AP <= 1, channels = 1, total 2
-+ *
-+ *    .. code-block:: c
-+ *
-+ *	struct ieee80211_iface_limit limits_overall[] = {
-+ *		{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-+ *		{ .max = 1, .types = BIT(NL80211_IFTYPE_AP), },
-+ *	};
-+ *	struct ieee80211_iface_limit limits_2ghz[] = {
-+ *		{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-+ *		{ .max = 1, .types = BIT(NL80211_IFTYPE_AP), },
-+ *	};
-+ *	struct ieee80211_iface_limit limits_5ghz[] = {
-+ *		{ .max = 1, .types = BIT(NL80211_IFTYPE_STATION), },
-+ *		{ .max = 2, .types = BIT(NL80211_IFTYPE_AP), },
-+ *	};
-+ *	struct ieee80211_iface_per_hw hw_combinations[] = {
-+ *		{
-+ *			.hw_chans_idx = 0,
-+ *			.limits = limits_2ghz,
-+ *			.num_different_channels = 1,
-+ *			.max_interfaces = 2,
-+ *			.n_limits = ARRAY_SIZE(limits_2ghz),
-+ *		 },
-+ *		{
-+ *			.hw_chans_idx = 1,
-+ *			.limits = limits_5ghz,
-+ *			.num_different_channels = 1,
-+ *			.max_interfaces = 3,
-+ *			.n_limits = ARRAY_SIZE(limits_5ghz),
-+ *		 },
-+ *	};
-+ *	struct ieee80211_iface_combination combination4 = {
-+ *		.limits = limits_overall,
-+ *		.n_limits = ARRAY_SIZE(limits_overall),
-+ *		.max_interfaces = 2,
-+ *		.num_different_channels = 1,
-+ *		.iface_hw_list = hw_combinations,
-+ *		.n_hw_list = ARRAY_SIZE(hw_combinations),
-+ *	};
-+ *
-  */
- struct ieee80211_iface_combination {
- 	/**
-@@ -5145,6 +5227,20 @@ struct ieee80211_iface_combination {
- 	 *   combination must be greater or equal to this value.
- 	 */
- 	u32 beacon_int_min_gcd;
-+
-+	/**
-+	 * @iface_hw_list:
-+	 * This wiphy has multiple underlying radios, describe interface
-+	 * combination for each of them, valid only when the driver advertises
-+	 * multi-radio presence in wiphy @hw_chans.
-+	 */
-+	const struct ieee80211_iface_per_hw *iface_hw_list;
-+
-+	/**
-+	 * @n_hw_list:
-+	 * number of hardware in @iface_hw_List
-+	 */
-+	u32 n_hw_list;
- };
- 
- struct ieee80211_txrx_stypes {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4eaea0a9975b..24765ab5121b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1083,6 +1083,46 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- 	return 0;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 08a362892d9a..0558eafa45aa 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -47,24 +47,43 @@ int ieee80211_chanctx_refcount(struct ieee80211_local *local,
+ 	       ieee80211_chanctx_num_reserved(local, ctx);
  }
  
-+static int
-+ieee80211_check_per_hw_iface_comb(struct ieee80211_local *local,
-+				  const struct ieee80211_iface_combination *c)
-+{
-+	int hw_idx, lmt_idx;
-+	u32 hw_idx_bm = 0;
-+
-+	if (!local->hw.wiphy->num_hw)
-+		return -EINVAL;
-+
-+	if (local->emulate_chanctx)
-+		return -EINVAL;
-+
-+	for (hw_idx = 0; hw_idx < c->n_hw_list; hw_idx++) {
-+		const struct ieee80211_iface_per_hw *hl;
-+
-+		hl = &c->iface_hw_list[hw_idx];
-+
-+		if (hl->hw_chans_idx >= local->hw.wiphy->num_hw)
-+			return -EINVAL;
-+
-+		/* mac80211 doesn't support more than one IBSS interface right now */
-+		for (lmt_idx = 0; lmt_idx < hl->n_limits; lmt_idx++) {
-+			const struct ieee80211_iface_limit *limits;
-+
-+			limits = &hl->limits[lmt_idx];
-+			if ((limits->types & BIT(NL80211_IFTYPE_ADHOC)) &&
-+			    limits->max > 1)
-+				return -EINVAL;
-+		}
-+
-+		if (hw_idx_bm & BIT(hw_idx))
-+			return -EINVAL;
-+
-+		hw_idx_bm |= BIT(hw_idx);
-+	}
-+
-+	return 0;
-+}
-+
- int ieee80211_register_hw(struct ieee80211_hw *hw)
+-static int ieee80211_num_chanctx(struct ieee80211_local *local)
++static int ieee80211_num_chanctx(struct ieee80211_local *local,
++				 const struct cfg80211_chan_def *chandef)
  {
- 	struct ieee80211_local *local = hw_to_local(hw);
-@@ -1323,6 +1363,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 			if ((c->limits[j].types & BIT(NL80211_IFTYPE_ADHOC)) &&
- 			    c->limits[j].max > 1)
- 				return -EINVAL;
+ 	struct ieee80211_chanctx *ctx;
+-	int num = 0;
++	int num = 0, hw_idx = -1, ctx_idx;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	list_for_each_entry(ctx, &local->chanctx_list, list)
+-		num++;
++	if (chandef && cfg80211_chandef_valid(chandef))
++		hw_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++						     chandef->chan);
 +
-+		if (!c->n_hw_list)
++	if (hw_idx < 0) {
++		list_for_each_entry(ctx, &local->chanctx_list, list)
++			num++;
++	} else {
++		list_for_each_entry(ctx, &local->chanctx_list, list) {
++			ctx_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++							      ctx->conf.def.chan);
++			if (ctx_idx != hw_idx)
++				continue;
++
++			num++;
++		}
++	}
+ 
+ 	return num;
+ }
+ 
+-static bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local)
++static
++bool ieee80211_can_create_new_chanctx(struct ieee80211_local *local,
++				      const struct cfg80211_chan_def *chandef)
+ {
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	return ieee80211_num_chanctx(local) < ieee80211_max_num_channels(local);
++	return ieee80211_num_chanctx(local, chandef) <
++	       ieee80211_max_num_channels(local, chandef);
+ }
+ 
+ struct ieee80211_chanctx *
+@@ -1029,7 +1048,7 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+-		if (ieee80211_can_create_new_chanctx(local)) {
++		if (ieee80211_can_create_new_chanctx(local, &chanreq->oper)) {
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode);
+ 			if (IS_ERR(new_ctx))
+ 				return PTR_ERR(new_ctx);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 202bbffec746..42f4211c622b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2600,7 +2600,8 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+ 				 u8 radar_detect);
+-int ieee80211_max_num_channels(struct ieee80211_local *local);
++int ieee80211_max_num_channels(struct ieee80211_local *local,
++			       const struct cfg80211_chan_def *chandef);
+ void ieee80211_recalc_chanctx_chantype(struct ieee80211_local *local,
+ 				       struct ieee80211_chanctx *ctx);
+ 
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b1f3b1eb053d..f8ffc8ad0cd8 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3926,6 +3926,44 @@ static u8 ieee80211_chanctx_radar_detect(struct ieee80211_local *local,
+ 	return radar_detect;
+ }
+ 
++static void
++ieee80211_get_per_hw_sdata_active_iface(struct ieee80211_sub_if_data *sdata,
++					struct iface_comb_per_hw_params *per_hw,
++					int iftype_num[NUM_NL80211_IFTYPES],
++					int *total)
++{
++	struct ieee80211_local *local = sdata->local;
++	unsigned int link_id;
++	int hw_idx;
++
++	for (link_id = 0; link_id < ARRAY_SIZE(sdata->link); link_id++) {
++		struct ieee80211_link_data *link;
++		struct ieee80211_chanctx *ctx;
++
++		link = sdata_dereference(sdata->link[link_id], sdata);
++		if (!link)
 +			continue;
 +
-+		if (ieee80211_check_per_hw_iface_comb(local, c))
-+			return -EINVAL;
++		ctx = ieee80211_link_get_chanctx(link);
++		if (ctx &&
++		    ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
++			ctx = ctx->replace_ctx;
++
++		hw_idx = -1;
++		if (ctx && cfg80211_chandef_valid(&ctx->conf.def))
++			hw_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++							     ctx->conf.def.chan);
++
++		if (hw_idx >= 0)
++			per_hw[hw_idx].iftype_num[sdata->wdev.iftype]++;
++		else
++			iftype_num[sdata->wdev.iftype]++;
++
++		if (total)
++			(*total)++;
++	}
++}
++
+ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 				 const struct cfg80211_chan_def *chandef,
+ 				 enum ieee80211_chanctx_mode chanmode,
+@@ -3936,9 +3974,12 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_iftype iftype = sdata->wdev.iftype;
+ 	struct ieee80211_chanctx *ctx;
+ 	int total = 1;
++	struct iface_comb_per_hw_params *per_hw __free(kfree) = NULL;
+ 	struct iface_combination_params params = {
+ 		.radar_detect = radar_detect,
+ 	};
++	bool is_per_hw;
++	int hchan_idx = -1;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -3969,26 +4010,68 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 		return 0;
  	}
  
- 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2b810855a805..88de2839ed6b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -600,6 +600,34 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- }
- EXPORT_SYMBOL(wiphy_new_nm);
- 
-+/**
-+ * cfg80211_hw_chans_includes_dfs - check if per-hardware channel includes DFS
-+ * @chans: hardware channel list
-+ *
-+ * Check if the given per-hardware list include channels in DFS range.
-+ * Please note the channel is checked against the entire range of DFS
-+ * freq in 5 GHz irrespective of regulatory configurations.
-+ *
-+ * This helper helps for the sanity checks on the channel advertisement from
-+ * driver during the hw registration.
-+ */
-+static bool
-+cfg80211_hw_chans_includes_dfs(const struct ieee80211_chans_per_hw *chans)
-+{
-+	int i;
+-	if (chandef)
+-		params.num_different_channels = 1;
++	is_per_hw = cfg80211_per_hw_iface_comb_advertised(local->hw.wiphy);
++	if (is_per_hw) {
++		per_hw = kcalloc(local->hw.wiphy->num_hw, sizeof(*per_hw),
++				 GFP_KERNEL);
++		if (!per_hw)
++			return -ENOMEM;
 +
-+	for (i = 0; i < chans->n_chans; i++) {
-+		if (chans->chans[i].band == NL80211_BAND_5GHZ &&
-+		    ((chans->chans[i].center_freq >= 5250 &&
-+		     chans->chans[i].center_freq <= 5340) ||
-+		    (chans->chans[i].center_freq >= 5480 &&
-+		     chans->chans[i].center_freq <= 5720)))
-+			return true;
++		if (chandef && cfg80211_chandef_valid(chandef)) {
++			hchan_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++								chandef->chan);
++			if (hchan_idx < 0)
++				goto skip;
+ 
+-	if (iftype != NL80211_IFTYPE_UNSPECIFIED)
+-		params.iftype_num[iftype] = 1;
++			per_hw[hchan_idx].num_different_channels = 1;
+ 
++			if (iftype != NL80211_IFTYPE_UNSPECIFIED)
++				per_hw[hchan_idx].iftype_num[iftype] = 1;
++		}
++	} else {
++		if (chandef)
++			params.num_different_channels = 1;
++
++		if (iftype != NL80211_IFTYPE_UNSPECIFIED)
++			params.iftype_num[iftype] = 1;
 +	}
 +
-+	return false;
-+}
++skip:
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
+ 			continue;
 +
- static int
- wiphy_verify_comb_limit(struct wiphy *wiphy,
- 			const struct ieee80211_iface_limit *limits,
-@@ -659,6 +687,63 @@ wiphy_verify_comb_limit(struct wiphy *wiphy,
- 	return 0;
- }
++		if (is_per_hw) {
++			if (WARN_ON(!cfg80211_chandef_valid(&ctx->conf.def)))
++				continue;
++
++			hchan_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++								ctx->conf.def.chan);
++			if (WARN_ON(hchan_idx < 0))
++				continue;
++		}
++
+ 		params.radar_detect |=
+ 			ieee80211_chanctx_radar_detect(local, ctx);
++
+ 		if (ctx->mode == IEEE80211_CHANCTX_EXCLUSIVE) {
+-			params.num_different_channels++;
++			if (is_per_hw)
++				per_hw[hchan_idx].num_different_channels++;
++			else
++				params.num_different_channels++;
++
+ 			continue;
+ 		}
++
+ 		if (chandef && chanmode == IEEE80211_CHANCTX_SHARED &&
+ 		    cfg80211_chandef_compatible(chandef,
+ 						&ctx->conf.def))
+ 			continue;
+-		params.num_different_channels++;
++
++		if (is_per_hw)
++			per_hw[hchan_idx].num_different_channels++;
++		else
++			params.num_different_channels++;
+ 	}
  
-+static int
-+wiphy_verify_comb_per_hw(struct wiphy *wiphy,
-+			 const struct ieee80211_iface_combination *comb)
-+{
-+	int i;
-+	u32 hw_idx_bitmap = 0;
-+	int ret;
-+
-+	for (i = 0; i < comb->n_hw_list; i++) {
-+		const struct ieee80211_iface_per_hw *hl;
-+		const struct ieee80211_chans_per_hw *chans;
-+		u32 iface_cnt = 0;
-+		u16 all_iftypes = 0;
-+
-+		hl = &comb->iface_hw_list[i];
-+
-+		if (hl->hw_chans_idx >= wiphy->num_hw)
-+			return -EINVAL;
-+
-+		if (hw_idx_bitmap & BIT(hl->hw_chans_idx))
-+			return -EINVAL;
-+
-+		hw_idx_bitmap |= BIT(hl->hw_chans_idx);
-+		chans = wiphy->hw_chans[hl->hw_chans_idx];
-+
-+		if (WARN_ON(hl->max_interfaces < 2 &&
-+			    (!comb->radar_detect_widths ||
-+			     !(cfg80211_hw_chans_includes_dfs(chans)))))
-+			return -EINVAL;
-+
-+		if (WARN_ON(!hl->num_different_channels))
-+			return -EINVAL;
-+
-+		if (WARN_ON(comb->radar_detect_widths &&
-+			    cfg80211_hw_chans_includes_dfs(chans) &&
-+			    hl->num_different_channels > 1))
-+			return -EINVAL;
-+
-+		if (WARN_ON(!hl->n_limits))
-+			return -EINVAL;
-+
-+		ret = wiphy_verify_comb_limit(wiphy, hl->limits, hl->n_limits,
-+					      comb->beacon_int_min_gcd,
-+					      &iface_cnt, &all_iftypes);
-+		if (ret)
-+			return ret;
-+
-+		if (WARN_ON(all_iftypes & BIT(NL80211_IFTYPE_WDS)))
-+			return -EINVAL;
-+
-+		if (WARN_ON(iface_cnt < comb->max_interfaces))
-+			return -EINVAL;
+ 	list_for_each_entry_rcu(sdata_iter, &local->interfaces, list) {
+@@ -4002,13 +4085,25 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 					    wdev_iter->iftype, 0, 1))
+ 			continue;
+ 
+-		params.iftype_num[wdev_iter->iftype]++;
+-		total++;
++		if (is_per_hw) {
++			ieee80211_get_per_hw_sdata_active_iface(sdata_iter,
++								per_hw,
++								params.iftype_num,
++								&total);
++		} else {
++			params.iftype_num[wdev_iter->iftype]++;
++			total++;
++		}
+ 	}
+ 
+ 	if (total == 1 && !params.radar_detect)
+ 		return 0;
+ 
++	if (is_per_hw) {
++		params.n_per_hw = local->hw.wiphy->num_hw;
++		params.per_hw = per_hw;
 +	}
 +
-+	return 0;
+ 	return cfg80211_check_combinations(local->hw.wiphy, &params);
+ }
+ 
+@@ -4022,31 +4117,100 @@ ieee80211_iter_max_chans(const struct ieee80211_iface_combination *c,
+ 					  c->num_different_channels);
+ }
+ 
+-int ieee80211_max_num_channels(struct ieee80211_local *local)
++static void
++ieee80211_iter_per_hw_max_chans(const struct ieee80211_iface_combination *c,
++				int hw_chan_idx, void *data)
++{
++	u32 *max_num_diff_chans = data;
++	u32 max_supp_diff_chans = 0;
++	int i;
++
++	for (i = 0; i < c->n_hw_list; i++) {
++		const struct ieee80211_iface_per_hw *h;
++
++		h = &c->iface_hw_list[i];
++		if (hw_chan_idx != -1) {
++			if (h->hw_chans_idx == hw_chan_idx) {
++				max_supp_diff_chans = h->num_different_channels;
++				break;
++			}
++			continue;
++		}
++		max_supp_diff_chans += h->num_different_channels;
++	}
++
++	*max_num_diff_chans = max(*max_num_diff_chans, max_supp_diff_chans);
 +}
 +
- static int wiphy_verify_combinations(struct wiphy *wiphy)
++int ieee80211_max_num_channels(struct ieee80211_local *local,
++			       const struct cfg80211_chan_def *chandef)
  {
- 	const struct ieee80211_iface_combination *c;
-@@ -701,6 +786,13 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 		/* You can't even choose that many! */
- 		if (WARN_ON(cnt < c->max_interfaces))
- 			return -EINVAL;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_chanctx *ctx;
++	struct iface_comb_per_hw_params *per_hw __free(kfree) = NULL;
++	struct iface_combination_params params = {0};
++	void (*iter)(const struct ieee80211_iface_combination *c,
++		     int hw_chan_idx, void *data) = ieee80211_iter_max_chans;
+ 	u32 max_num_different_channels = 1;
++	bool is_per_hw;
+ 	int err;
+-	struct iface_combination_params params = {0};
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
++	is_per_hw = cfg80211_per_hw_iface_comb_advertised(local->hw.wiphy);
++	if (is_per_hw) {
++		per_hw = kcalloc(local->hw.wiphy->num_hw,
++				 sizeof(*params.per_hw),
++				 GFP_KERNEL);
++		if (!per_hw)
++			return -ENOMEM;
 +
-+		/* Do similar validations on the freq range specific interface
-+		 * combinations when advertised.
-+		 */
-+		if (WARN_ON(c->n_hw_list &&
-+			    wiphy_verify_comb_per_hw(wiphy, c)))
-+			return -EINVAL;
++		params.chandef = chandef;
++		iter = ieee80211_iter_per_hw_max_chans;
++	}
++
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+-		if (ctx->replace_state == IEEE80211_CHANCTX_WILL_BE_REPLACED)
++		if (ctx->replace_state ==
++		    IEEE80211_CHANCTX_WILL_BE_REPLACED)
+ 			continue;
+ 
+-		params.num_different_channels++;
++		if (is_per_hw) {
++			int hw_idx;
++
++			if (WARN_ON(!cfg80211_chandef_valid(&ctx->conf.def)))
++				continue;
++
++			hw_idx = cfg80211_get_hw_idx_by_chan(local->hw.wiphy,
++							     ctx->conf.def.chan);
++			if (WARN_ON(hw_idx < 0))
++				continue;
++
++			per_hw[hw_idx].num_different_channels++;
++		} else {
++			params.num_different_channels++;
++		}
+ 
+ 		params.radar_detect |=
+ 			ieee80211_chanctx_radar_detect(local, ctx);
  	}
  
- 	return 0;
+-	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-		params.iftype_num[sdata->wdev.iftype]++;
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (is_per_hw && ieee80211_sdata_running(sdata))
++			ieee80211_get_per_hw_sdata_active_iface(sdata,
++								per_hw,
++								params.iftype_num,
++								NULL);
++		else
++			params.iftype_num[sdata->wdev.iftype]++;
++	}
++
++	if (is_per_hw) {
++		params.n_per_hw = local->hw.wiphy->num_hw;
++		params.per_hw = per_hw;
++	}
+ 
+ 	err = cfg80211_iter_combinations(local->hw.wiphy, &params,
+-					 ieee80211_iter_max_chans,
++					 iter,
+ 					 &max_num_different_channels);
+ 	if (err < 0)
+ 		return err;
 -- 
 2.34.1
 
