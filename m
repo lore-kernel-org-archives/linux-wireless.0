@@ -1,109 +1,122 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1C750A72
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2024 18:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1212C1DFD1;
+	Fri, 29 Mar 2024 20:27:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711737571; cv=none; b=I0khEeUu4VtyAbqhMc7IkBvSWJux3CFHDlLpw/7T/dx5IcNBhxDWU3jdtcYX0KK8JVWyvbGreduSdtKwaYYSI85Khft9ND3zcVhQR0/BHS6pPwqgGeOOFLk6kSDuOMzmuNoBavQI4hAO5jkk+P6575Ry2eoLNK57H4A218hie74=
+	t=1711744054; cv=none; b=qpWUhTghtpxAkXbbsMYRpxBq/yFfZys+67c8HI2Hb7K9VWCuTtnEA5gsW+TP2qycXEPW42vwi3Q22OQlgnWt8tI2bxdhT1zcVFCurtZoQo1Dekfz+m2NlpP67Onkr2Y6HdgpQKjI18wD9nNkImPTZw02wUq34lmAxbb9/At2bME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711737571; c=relaxed/simple;
-	bh=icpSpN9xUOxcE2hIzIkbhqs3wHIlgjmgedlUzOxhs0g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:CC:
-	 In-Reply-To:Content-Type; b=OlHnagE6wsw83Iewi7Tvi9mOrOYzNjWtMT07ePHXFQvoGKQMdiR6xvetS9AGcnevz75m+leHPRAVzihhRclUbtoxoZOpfGR6gs+buLUn8KUsWWuXarnrK1NMNmiy70//XTrFxfYrxumNuvlY0Sp012r3gUwP4yTXrpTaeKo6LVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Zb+QDcVO; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1711744054; c=relaxed/simple;
+	bh=gbGnL0gewmXLZlGj5Y4rOs83fi3Ir5o3AQbVnBS4Upo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=pr1PZydC+d9O8PbnD2rgRIeG6nAuZFpfnzbuu+BS+g8Znu+fC+phB6s0omClBmL3ixUlrqkZLLVx0HqIlITXP9PivKtsHf6VJk0VWyG37pCickh0OBDFW7z3AbNSt+Znp+ggr0yr9OGHNmtNH5ub8yiy0OnZyMwZN/DFdSNXWOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SQcC6e1U; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Zb+QDcVO"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42THegmB022199;
-	Fri, 29 Mar 2024 18:39:25 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SQcC6e1U"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42THerM2001554;
+	Fri, 29 Mar 2024 20:27:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:references:from:cc
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=Em1lJd6M7y/VRuMxpKSji7OJmdzscgdXtJix3bTMdMs=; b=Zb
-	+QDcVOOLUsrfm4vrAgRhWLKMrwwqyaFwrqzqrv8pNu+WffYipdKhB6Ev8Y4CTTae
-	Lqkiq2zknY+aR9tVdB5Xo9eJ6S+z1J1eeo969hU6bt83d6BuP4X85XtooxWil/pi
-	dW/agT/Sg8AMxVoE9m7u690ygp8E+BxfSQSEpCgNK58C0A2h6hXZFIGZQIRn9QGF
-	7qRR+LzaDGPL/dP9pgI5ju7gBGvtiYrKtXQtVUcYzgvzkHcRSkEtR6Dfqo5Fh+lD
-	B+BIh8ew02h7er9e4BqSkwfCL/zv+K+X4uVzj9lnsxG/bmWDwr0asAUE3wrgN59m
-	cn4nnJnH48LGBZl7Tnww==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x5vkcrxv1-1
+	from:date:subject:mime-version:content-type
+	:content-transfer-encoding:message-id:references:in-reply-to:to
+	:cc; s=qcppdkim1; bh=c1TSAXudN1gCLr4FCS1phZaaFIRMRxVAsvGPnn14IrA
+	=; b=SQcC6e1UAWC7yj89VEyEUiVcKXt6/dbMvyFDW9q8hN7lEJtLhpnMI8xpbBM
+	LFRSW364+bvcuWU0ee+RPA9rZQM3yMQfvzeN1CNnrmL5rb2UtMPcmaF6YDFhN5nD
+	zJaTn4guqrGAXqwAFitMKWzF2SlX/BJMzC2eD8nJKeoaACAjm2a/ovy90NQsm/JM
+	b9eYAt4HId7meSF4eguzzB0BinIaaFR4rvkD9xppyaNNyQ/lJ2SsONj7dngep8pY
+	PkTyMBKVJ7hawJuXMzQ/DY5c9E+C/OKWlSbJyLx5EA43UEm1JemxQtXxEeBMvXoW
+	N70Pka2klGMVEem4I+uRm+gqV0w==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x5u89heht-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 29 Mar 2024 18:39:24 +0000 (GMT)
+	Fri, 29 Mar 2024 20:27:19 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42TIdOxZ004871
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42TKRJpW027230
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 29 Mar 2024 18:39:24 GMT
-Received: from [10.110.124.221] (10.80.80.8) by nalasex01a.na.qualcomm.com
+	Fri, 29 Mar 2024 20:27:19 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 29 Mar
- 2024 11:39:23 -0700
-Message-ID: <216b223b-e871-42d4-8e53-59dd64efe4b9@quicinc.com>
-Date: Fri, 29 Mar 2024 11:39:21 -0700
+ 2024 13:27:18 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Fri, 29 Mar 2024 13:27:17 -0700
+Subject: [PATCH 1/2] wifi: mac80211: remove ieee80211_set_hw_80211_encap()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: ath11k failed to enqueue rx buf: -28
-Content-Language: en-US
-To: James Prestwood <prestwoj@gmail.com>,
-        "open list:MEDIATEK MT76 WIRELESS
- LAN DRIVER" <linux-wireless@vger.kernel.org>
-References: <5c63a3a2-29fe-444c-96f1-f87c89d7af39@gmail.com>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-CC: "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-In-Reply-To: <5c63a3a2-29fe-444c-96f1-f87c89d7af39@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240329-mac80211-kdoc-retval-v1-1-5e4d1ad6c250@quicinc.com>
+References: <20240329-mac80211-kdoc-retval-v1-0-5e4d1ad6c250@quicinc.com>
+In-Reply-To: <20240329-mac80211-kdoc-retval-v1-0-5e4d1ad6c250@quicinc.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller"
+	<davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski
+	<kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Randy Dunlap
+	<rdunlap@infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.13.0
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 1l8wSCrPiMHI9K15n_bBHbZyFVXTspJr
-X-Proofpoint-GUID: 1l8wSCrPiMHI9K15n_bBHbZyFVXTspJr
+X-Proofpoint-GUID: eC6dER2XUg40RjrSEUxFhyIgOuY9FXDX
+X-Proofpoint-ORIG-GUID: eC6dER2XUg40RjrSEUxFhyIgOuY9FXDX
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-29_13,2024-03-28_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- mlxlogscore=792 bulkscore=0 impostorscore=0 suspectscore=0 phishscore=0
- adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0 clxscore=1015
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2403210001 definitions=main-2403290165
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ mlxlogscore=653 bulkscore=0 malwarescore=0 priorityscore=1501
+ lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=0
+ impostorscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2403210001 definitions=main-2403290183
 
-On 3/27/2024 9:25 AM, James Prestwood wrote:
-> Hi,
-> 
-> This error was brought to my attention in the kernel logs and I'm 
-> wondering if it is of any concern:
-> 
-> kernel: ath11k_pci 0000:03:00.0: failed to enqueue rx buf: -28
-> 
-> It seems to happen every few minutes or so. I don't notice any bad 
-> behavior associated with it per-se, but maybe its an issue of some 
-> buffer needing to be increased in size? Does this mean a frame is being 
-> dropped due to no room to receive it?
-> 
-> Hardware we are running is:
-> 
-> [    4.610399] ath11k_pci 0000:03:00.0: wcn6855 hw2.1
-> [    5.777030] ath11k_pci 0000:03:00.0: chip_id 0x12 chip_family 0xb 
-> board_id 0xff soc_id 0x400c1211
-> [    5.777039] ath11k_pci 0000:03:00.0: fw_version 0x1109996e 
-> fw_build_timestamp 2023-12-19 11:11 fw_build_id 
-> WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.36
-> 
-> Thanks,
-> 
-> James
-> 
-> 
+While fixing kernel-doc issues it was discovered that the
+ieee80211_set_hw_80211_encap() prototype doesn't actually have an
+implementation, so remove it.
 
-+ ath11k list to get more specific eyes on this issue
-+ bcc to internal list as well
+Note the implementation was rmeoved in patch 6aea26ce5a4c ("mac80211:
+rework tx encapsulation offload API").
+
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ include/net/mac80211.h | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 353488ab94a2..e6a11a982ca8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -7478,18 +7478,6 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
+ 			      struct ieee80211_tx_info *info,
+ 			      int len);
+-/**
+- * ieee80211_set_hw_80211_encap - enable hardware encapsulation offloading.
+- *
+- * This function is used to notify mac80211 that a vif can be passed raw 802.3
+- * frames. The driver needs to then handle the 802.11 encapsulation inside the
+- * hardware or firmware.
+- *
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- * @enable: indicate if the feature should be turned on or off
+- */
+-bool ieee80211_set_hw_80211_encap(struct ieee80211_vif *vif, bool enable);
+-
+ /**
+  * ieee80211_get_fils_discovery_tmpl - Get FILS discovery template.
+  * @hw: pointer obtained from ieee80211_alloc_hw().
+
+-- 
+2.42.0
 
