@@ -1,130 +1,214 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B6F13BC10
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2024 17:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76ACE1327FE
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2024 17:39:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711733103; cv=none; b=kmimqW1fhmbJgOVyby+MM83iFC6pEuOjD889iizq8KHF6mvpgB85O/2iITsEIHj8BnkrEcgA+eDKZSBy2Y+UsC1RwU5fTnWko/kEbJPMLntqQFnwfoWqrUyZIAwLc4B3zmSIgmp4mrNspsFnYtbLAejCYAJEsoed6M3FCITsLxo=
+	t=1711733987; cv=none; b=CZSQ+ftA4tKZchPXZItEIWzXgQ4pS5lw3kSrBQUcEXa06OHqAKKToyGRcuvUeLhJVm6DSqwwDKYt43B0F8M8lqWPtpNov8quUWSsfPdWmIjFaUlzaT25c7pxBWp8ZjdOLIUMOoqtHtFli5Wzj2prL2JQHiS1qd59BLyDN2WEFCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711733103; c=relaxed/simple;
-	bh=dy5/P4BbGd7xVHeclyb88G2cDXZH9d/+8cFl6+jA+cY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RYhb4Z6V78329C3k+WKvi+Nco1n4XqDA67o7lVAfyB1ApqLsZ16F9WRv8sVH4/m7kLPEkDUaRru+6UWVCKsc2289MNVnGKknm2+LqsTX5qDg4OEH2uPtj6OFzbcqT4Rnqq/up57W4fVpunZo/XddGF924rsx2V98SjcA2ZgB7IM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=uHzQAnVB; arc=none smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1711733987; c=relaxed/simple;
+	bh=uYaRkCjvP4yOIJkSUwEr8DJkyIyykKa/15Tc6HNqPa0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=rYPbixr7g/pM0WoyxEGeUp7W/h1qDkR9SxOwwUNGU757xpxIzyxX3ddVqQT/b2cvxKzsVb2tIEkiZPykh0f1kZxUloSH2J06dKQK+ODasDK7N6LwtVQFOLFkDP5JibXPEsxhnsNkvNbk9LERjdf0P6N07IWJdK3mWk/xYXogfT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mFL3VBHd; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uHzQAnVB"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2d6ff0422a2so31302351fa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Mar 2024 10:25:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1711733100; x=1712337900; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KcD8HRHcrp/DV6/mbC4noaoosmpuTxjJzgOpstPofQw=;
-        b=uHzQAnVBz2D91jS9kmxkJKFO+WhpsJbYe+7KdINzZJbNUr9H8uHlwmZrddkC8rGVqs
-         iz6BwGOl+qgzYOSs3jhH27uqZ4qMgu1rRxheiAVPy5mwCoHQdpkuIBNYyGzhaJVICT7H
-         5IBEBSSJVfJYWI5rfkfHC5x6d+zc4rronihRvBUpZ135y4S8i6GyF6G29Q1fH3wJXBSy
-         QCHeJkGHu2Ufr9L8GS9w5f5R7T62+8qIJ4d3oz3DfJHPMbfM1uiYfMV9/55uFGwcSH8S
-         DRw8py8yXCBahd+vQeZoahqLYmKIeVx2y8HS+5NeAQ6z1ZYDjwBAHJdn/BfHJsKdMV1O
-         x9ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711733100; x=1712337900;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KcD8HRHcrp/DV6/mbC4noaoosmpuTxjJzgOpstPofQw=;
-        b=oL3IbMWZmmEUJEAmMA9uLme6cM2tGJkEF1QZ+LBVZpVmpwA146bZhaeNfjyhFpbImP
-         Q8RnQPwaGflEmu0T0IOI6EvjfYsVroq4e0udpMIG1ldGnPr4tJxXTVtbjaChBmgijhFF
-         0OtTe0d51az5QAnfYBgjbGGagznfG4TnOlWh0g1fX+vNqVdaucCgpfs6Jk1F4XGmQxa7
-         J5JdrnStDHBBU0NDrkJTi9Ulhm3WqhpzOCz3lVj86Kv22Rbmti8xDLqu2dG4rBd/qrMu
-         W2vcyWMo0cG9H1AMMizJ9bS0htXDp49TUPrtg9le/rdQ0PmBHVDk5gYq4oaOMv9bBUdN
-         gs+w==
-X-Forwarded-Encrypted: i=1; AJvYcCWZxfDI0SzXr9tA0Tz78gjGNoxryFQ2oZaJjdDgFyo4daP5zOdvSG5V8/gQO9oYTbuEiwcLB4KsbmYkk1c3MZl8BPDTHsu6RvEtXBzPz6Q=
-X-Gm-Message-State: AOJu0YwD14EDMj8dAQERwkzZTWXloAvaxPGPJ8MMhTOggAwYJ6k4IMpa
-	oIc91ihvg21Rg9iXMok5HvEOCvIJqWOnFNHIn0HO0oEV96o3smVBc/7VAuX8nnQ=
-X-Google-Smtp-Source: AGHT+IFyjNez3sE4PWODMtgmz7C3Sd3IPme3UL4MYB3hYvUDweMQ3FjLWXzSNso3+baxRqVn9yAqyA==
-X-Received: by 2002:a2e:a40e:0:b0:2d4:ad34:85a7 with SMTP id p14-20020a2ea40e000000b002d4ad3485a7mr1899831ljn.29.1711733099818;
-        Fri, 29 Mar 2024 10:24:59 -0700 (PDT)
-Received: from [127.0.1.1] ([178.197.223.16])
-        by smtp.gmail.com with ESMTPSA id v8-20020a05600c470800b004149543c82fsm8491069wmo.39.2024.03.29.10.24.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Mar 2024 10:24:59 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Date: Fri, 29 Mar 2024 18:24:37 +0100
-Subject: [PATCH 7/7] wifi: silabs: wfx: drop driver owner initialization
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mFL3VBHd"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42TGnusL024839;
+	Fri, 29 Mar 2024 17:39:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type; s=qcppdkim1; bh=BrUU9BCiNa7NM7K22CRy
+	Mozni1xVGLJA1h8jFoSXQDc=; b=mFL3VBHdBVdrleSq9QUfMQDtJ1TVLGEmaVJw
+	mky1JJZ2mcI4jH6eAqD5/xPpzQ6YBOXisB/EltdwvTECkIbfW7f8GLKpLb4S/f0M
+	z0NI15PcfMOlyx8oSvLE0ODvgJSKKiUdZStmLnGFvFwqtE+cW9wqwjZBnO8Aw9Tb
+	QQYzdcTFcCO1LKFHQiMhhyuZiiVrTLEfO/mg3tVTnaj4IsT2IiCxLG991anbxfhW
+	hKtEAgV+xfbohCh5psI24PUeuWbMkTo1lO7raJVZatVG68KKeinM+2ZgAT5++6Iz
+	z9QzBws5NNss13foJF/Je/YPJoJmC72A/JqLAXYZbxVkDL5UAw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x5sm6hdpe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 29 Mar 2024 17:39:40 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42THddZc028224
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 29 Mar 2024 17:39:39 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Fri, 29 Mar 2024 10:39:39 -0700
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>
+Subject: [PATCH v2 6/6] wifi: ath12k: support SMPS configuration for 6 GHz
+Date: Fri, 29 Mar 2024 10:39:26 -0700
+Message-ID: <20240329173926.17741-7-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240329173926.17741-1-quic_pradeepc@quicinc.com>
+References: <20240329173926.17741-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240329-module-owner-sdio-v1-7-e4010b11ccaa@linaro.org>
-References: <20240329-module-owner-sdio-v1-0-e4010b11ccaa@linaro.org>
-In-Reply-To: <20240329-module-owner-sdio-v1-0-e4010b11ccaa@linaro.org>
-To: Ulf Hansson <ulf.hansson@linaro.org>, 
- Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
- Arend van Spriel <arend.vanspriel@broadcom.com>, 
- Brian Norris <briannorris@chromium.org>, 
- =?utf-8?q?J=C3=A9r=C3=B4me_Pouiller?= <jerome.pouiller@silabs.com>
-Cc: linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-bluetooth@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org, 
- ath10k@lists.infradead.org, brcm80211@lists.linux.dev, 
- brcm80211-dev-list.pdl@broadcom.com, 
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=750;
- i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
- bh=dy5/P4BbGd7xVHeclyb88G2cDXZH9d/+8cFl6+jA+cY=;
- b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBmBvlcZ0oBCo8Oq6N8hTvt2aQpgKAKxHIpjqSlr
- SahyH8uLI6JAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCZgb5XAAKCRDBN2bmhouD
- 1/gPD/92fMg4HeDOH6UvazVFxNBFDiNGJ0FuWFqOWnbcog8PrO2WrRE1CwCalUVCWLtRzP/1FSC
- wPYAKDHxoCbDCUBmACS1AywZqPGdRT/aw3iVNVrBDP8MD36K+MzLgAysUxL+5DCQsNF+L+hi7JW
- 3gtzJRKDlGqFn/qAnv+C9FI/Ds01g5GuA0re2O1B1Pjl/6AuKk9hLXXOaWOsgDdjhU+z8KaW2Tf
- xhU15j9lvurPC3StuJfkS3YV/4SoVpPzvO8YB54LV6wyx6RHDxi7UItPbp1KbECx/NE2oGo/EQq
- 5NRKXKzKAUd+Ldk9rKoRG0Qns2jZdUZd/9UIbgZIBcVTCd6XbVolP0fzkibJ878LM9hxbq8ZX4l
- qILgzeZ0//xpzDjVLIraNWKk7sZ5rHsOUI2TFzneTIuVzfDM9vc9ArlWOPoe1zJSWathXf8DG+O
- WatvfNlBC2gQ9NTQGlOgJQDC7sjHIeIheQAGBrvbfhhCMooPM9G8Ca8p+ivZvs+WRI1mn253DY1
- +qus3gE+ShRmFXkyRfALGgV5dwLm6Me6e2CoBys14WXjhMe9d3hog/3RNZtVjIeAdG5J+Vw5PgT
- StMgaYVmpBBm4LkTKTBuvaFhH89MiGxa7ChhElyueeFEP7QVpO+cVfVEASSGeAOL1vSNOX0M7cE
- osfdo2scTUV3CIg==
-X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
- fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: mKRqJP80vjABezQ0DuO9qt3Ljbak-d8m
+X-Proofpoint-GUID: mKRqJP80vjABezQ0DuO9qt3Ljbak-d8m
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-29_13,2024-03-28_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 mlxlogscore=999 suspectscore=0
+ impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0 clxscore=1015
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2403290157
 
-Core in sdio_register_driver() already sets the .owner, so driver does
-not need to.
+Parse SMPS configuration from IEs and configure. Without this,
+SMPS is not enabled for 6 GHz band. This is disabled for
+WCN7850 as hardware does not support it.
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 ---
+ drivers/net/wireless/ath/ath12k/hw.c  |  3 +++
+ drivers/net/wireless/ath/ath12k/hw.h  |  1 +
+ drivers/net/wireless/ath/ath12k/mac.c | 26 ++++++++++++++++++--------
+ 3 files changed, 22 insertions(+), 8 deletions(-)
 
-Depends on the first patch.
----
- drivers/net/wireless/silabs/wfx/bus_sdio.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/silabs/wfx/bus_sdio.c b/drivers/net/wireless/silabs/wfx/bus_sdio.c
-index 909d5f346a01..f290eecde773 100644
---- a/drivers/net/wireless/silabs/wfx/bus_sdio.c
-+++ b/drivers/net/wireless/silabs/wfx/bus_sdio.c
-@@ -267,7 +267,6 @@ struct sdio_driver wfx_sdio_driver = {
- 	.probe = wfx_sdio_probe,
- 	.remove = wfx_sdio_remove,
- 	.drv = {
--		.owner = THIS_MODULE,
- 		.of_match_table = wfx_sdio_of_match,
- 	}
+diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
+index 0b17dfd47856..3321d78575eb 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.c
++++ b/drivers/net/wireless/ath/ath12k/hw.c
+@@ -920,6 +920,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
+ 		.otp_board_id_register = QCN9274_QFPROM_RAW_RFA_PDET_ROW13_LSB,
+ 
+ 		.supports_sta_ps = false,
++		.supports_dynamic_smps_6ghz = true,
+ 	},
+ 	{
+ 		.name = "wcn7850 hw2.0",
+@@ -993,6 +994,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
+ 		.otp_board_id_register = 0,
+ 
+ 		.supports_sta_ps = true,
++		.supports_dynamic_smps_6ghz = false,
+ 	},
+ 	{
+ 		.name = "qcn9274 hw2.0",
+@@ -1061,6 +1063,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
+ 		.otp_board_id_register = QCN9274_QFPROM_RAW_RFA_PDET_ROW13_LSB,
+ 
+ 		.supports_sta_ps = false,
++		.supports_dynamic_smps_6ghz = true,
+ 	},
  };
-
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
+index 87965980b938..263efa077611 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.h
++++ b/drivers/net/wireless/ath/ath12k/hw.h
+@@ -211,6 +211,7 @@ struct ath12k_hw_params {
+ 	u32 otp_board_id_register;
+ 
+ 	bool supports_sta_ps;
++	bool supports_dynamic_smps_6ghz;
+ };
+ 
+ struct ath12k_hw_ops {
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index b4114dd22bf0..2f1e5e249ef3 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1964,12 +1964,17 @@ static void ath12k_peer_assoc_h_he_6ghz(struct ath12k *ar,
+ }
+ 
+ static inline int ath12k_get_smps_from_capa(const struct ieee80211_sta_ht_cap *ht_cap,
++					    const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
+ 					    int *smps)
+ {
+-	if (!ht_cap->ht_supported)
++	if (!ht_cap->ht_supported && !he_6ghz_capa->capa)
+ 		return -EOPNOTSUPP;
+ 
+-	*smps = u16_get_bits(ht_cap->cap, IEEE80211_HT_CAP_SM_PS);
++	if (ht_cap->ht_supported)
++		*smps = u16_get_bits(ht_cap->cap, IEEE80211_HT_CAP_SM_PS);
++	else
++		*smps = le16_get_bits(he_6ghz_capa->capa,
++				      IEEE80211_HE_6GHZ_CAP_SM_PS);
+ 
+ 	if (*smps >= ARRAY_SIZE(ath12k_smps_map))
+ 		return -EINVAL;
+@@ -1980,10 +1985,11 @@ static inline int ath12k_get_smps_from_capa(const struct ieee80211_sta_ht_cap *h
+ static void ath12k_peer_assoc_h_smps(struct ieee80211_sta *sta,
+ 				     struct ath12k_wmi_peer_assoc_arg *arg)
+ {
++	const struct ieee80211_he_6ghz_capa *he_6ghz_capa = &sta->deflink.he_6ghz_capa;
+ 	const struct ieee80211_sta_ht_cap *ht_cap = &sta->deflink.ht_cap;
+ 	int smps;
+ 
+-	if (ath12k_get_smps_from_capa(ht_cap, &smps))
++	if (ath12k_get_smps_from_capa(ht_cap, he_6ghz_capa, &smps))
+ 		return;
+ 
+ 	switch (smps) {
+@@ -2457,11 +2463,12 @@ static void ath12k_peer_assoc_prepare(struct ath12k *ar,
+ 
+ static int ath12k_setup_peer_smps(struct ath12k *ar, struct ath12k_vif *arvif,
+ 				  const u8 *addr,
+-				  const struct ieee80211_sta_ht_cap *ht_cap)
++				  const struct ieee80211_sta_ht_cap *ht_cap,
++				  const struct ieee80211_he_6ghz_capa *he_6ghz_capa)
+ {
+ 	int smps, ret = 0;
+ 
+-	ret = ath12k_get_smps_from_capa(ht_cap, &smps);
++	ret = ath12k_get_smps_from_capa(ht_cap, he_6ghz_capa, &smps);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -2514,7 +2521,8 @@ static void ath12k_bss_assoc(struct ath12k *ar,
+ 	}
+ 
+ 	ret = ath12k_setup_peer_smps(ar, arvif, bss_conf->bssid,
+-				     &ap_sta->deflink.ht_cap);
++				     &ap_sta->deflink.ht_cap,
++				     &ap_sta->deflink.he_6ghz_capa);
+ 	if (ret) {
+ 		ath12k_warn(ar->ab, "failed to setup peer SMPS for vdev %d: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -3677,7 +3685,8 @@ static int ath12k_station_assoc(struct ath12k *ar,
+ 		return 0;
+ 
+ 	ret = ath12k_setup_peer_smps(ar, arvif, sta->addr,
+-				     &sta->deflink.ht_cap);
++				     &sta->deflink.ht_cap,
++				     &sta->deflink.he_6ghz_capa);
+ 	if (ret) {
+ 		ath12k_warn(ar->ab, "failed to setup peer SMPS for vdev %d: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -8104,7 +8113,8 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 	 * for each band for a dual band capable radio. It will be tricky to
+ 	 * handle it when the ht capability different for each band.
+ 	 */
+-	if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS)
++	if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS ||
++	    (ar->supports_6ghz && ab->hw_params->supports_dynamic_smps_6ghz))
+ 		wiphy->features |= NL80211_FEATURE_DYNAMIC_SMPS;
+ 
+ 	wiphy->max_scan_ssids = WLAN_SCAN_PARAMS_MAX_SSID;
 -- 
-2.34.1
+2.17.1
 
