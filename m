@@ -1,130 +1,117 @@
-Received: from mx2.freebsd.org (mx2.freebsd.org [96.47.72.81])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59D524688
-	for <linux-wireless@vger.kernel.org>; Sun, 31 Mar 2024 18:07:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=96.47.72.81
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711908470; cv=pass; b=WTfXKAw0bo4DWz2kx5Mf2eIxzo3CJANvjaagts19no9lcclkd11GS6D7KQFfO5U9y0kRS90rvPqP7qXYDafbdRcLm679MWzyGqDnwVIJZzTh3HjEwuOwzbo/1Mmnm6WsQYEqA+2oKqOVQGRxpFOnpdGNirtKat40fq//XbGAaEc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711908470; c=relaxed/simple;
-	bh=O+v7TLaSMAEieSBS053ThteSgklJUCsx7AE3sZPx1CU=;
-	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=IFLemo4iwnSsY8/lGE9x8WWMd2PZOundfLzWhw6jyyYrzWzucnE6H7zhyowTdXSacQhhIW7lJLQQFjILYekHK9i0Tiparw5FQ18ocJT2zAhLbLlEgf49DvLr2NUHn2JrotbJ5qEQ//b2ptqIBfeHylicCmmR4ksVfc6+/BjrMNc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=FreeBSD.org; spf=pass smtp.mailfrom=FreeBSD.org; dkim=pass (2048-bit key) header.d=freebsd.org header.i=@freebsd.org header.b=ENfHKHCF; arc=pass smtp.client-ip=96.47.72.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=FreeBSD.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=FreeBSD.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23D162AE69
+	for <linux-wireless@vger.kernel.org>; Sun, 31 Mar 2024 18:32:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1711909979; cv=none; b=dQXr72Got/mq0FOyZDSFLXfED0P04HYEhvjXdQv73QXZn0cySXAnFkRmUkR74GXMNxQDTgAj/eZ6I5fkqoTNBclH50r0FB0GsEKg02LC+XrIFmuEiGiTumLvOdPkbMYW/PpCn1PjINA1Z6u2oDDQ1bMHKb93B6ICcZ3C2wjH2SY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1711909979; c=relaxed/simple;
+	bh=DYnp5d/UrENxwU6r1SwoyP4ZmGYJhhn32kI198DD8SU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jIHznVj2oh/sC1hGw7lZ2ACB0OP36nT+ANEEOc5cpzX4kSccDoPzP3ILnxFLqxKGl1xvv1fiJ2wthb0HBogVrIyTu2iBrVnaqd1XO4pegkIukJystyyZhOAOmHJXmckgagyE9d+r7cficd6EZviOzXc/teTIAD6Yn/S4dl2+Fxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=oz9RfGWc; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=freebsd.org header.i=@freebsd.org header.b="ENfHKHCF"
-Received: from mx1.freebsd.org (mx1.freebsd.org [96.47.72.80])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits)
-	 client-signature RSA-PSS (4096 bits))
-	(Client CN "mx1.freebsd.org", Issuer "R3" (verified OK))
-	by mx2.freebsd.org (Postfix) with ESMTPS id 4V72DY5tlwz4Rrq;
-	Sun, 31 Mar 2024 18:07:41 +0000 (UTC)
-	(envelope-from bz@FreeBSD.org)
-Received: from smtp.freebsd.org (smtp.freebsd.org [IPv6:2610:1c1:1:606c::24b:4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "smtp.freebsd.org", Issuer "R3" (verified OK))
-	by mx1.freebsd.org (Postfix) with ESMTPS id 4V72DY4v3Gz42ws;
-	Sun, 31 Mar 2024 18:07:41 +0000 (UTC)
-	(envelope-from bz@FreeBSD.org)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=freebsd.org; s=dkim;
-	t=1711908461;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=QWFsyRgnApHufeu19p+rnrR5Cazct16bfM2s39Ru9Nw=;
-	b=ENfHKHCFQIMkCg2fOhdiCYeMEyROJGuYlbCIfjqPxejExWneARnObla0Q2xiqQN+BQ8Y7E
-	B8Rbs1UwXA2GQBEOSZ7Rp03lTtdTxnu5Smx6aT3uP4X2JWLy0qKVnTFYfwmBddkrFdSmL2
-	91SEOHBru5PoQavmFQ1DtcMLAugAVTdIc1W2MyKv4XGFhF+JoXULlkU8sgyXz/BD67rR1o
-	BBP80kb/SxPevxxv3802IAdfTcV2kfTlHgfVGZBbyL/HtiPEW2Y7IzkfK8FdYHEXW4BJzC
-	nodyt8GQGokedrh6r5HgiPzOR4pn/axV5D1OIN49WNc+mSwISe/ZMWMtODcdzw==
-ARC-Seal: i=1; s=dkim; d=freebsd.org; t=1711908461; a=rsa-sha256; cv=none;
-	b=XPX7TxHJyk0Yug6Qm4j1Y2GtvI1tHLsBLHe/doAUVMk8ztcUls2BwELu9kS4FxtjI1vl2q
-	Glib3q2phmFyfFh6a8sjAn06us0Rbmk+8fyxYOgMflolaxRNQwk+4Ovt39dKZpZMK6Jls7
-	Did8lmqJedBjyp0QUW9zBpQc/5z/E8ejHwPrqUwo0F0qMTJVJuEGb2+EDMqsSS848BOgc/
-	HztMDOmtW71sMUtU1KDBJ1dUEuCH2mU5JBssPZ75NlsNZYZNhx/Zp6DwW/1D/lD4pkZc45
-	gXmwUC9uhqAvA3NmINaNSZeQDD2beMy8SQeW9YapXxubPDQzd+STEM7VVdVnZA==
-ARC-Authentication-Results: i=1;
-	mx1.freebsd.org;
-	none
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=freebsd.org;
-	s=dkim; t=1711908461;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=QWFsyRgnApHufeu19p+rnrR5Cazct16bfM2s39Ru9Nw=;
-	b=C8+8Cx6QH/VWHb1TX/OqAYL65QhmUYVe5x5eruYSNjMKXSpmvTnHKGiry59IcWuy7PEh5b
-	xKokZEi47qD6XCJZU9pWinwDOswq7K9iQnMyXHWez6+mYYt+VxWBejhtfEE/Wuo5ycp/sK
-	Ii1f/MgyMw3kMlllXbqrSuRXlJaq/hIjCRrJbrUHB6zvFHQSpjMX+QmYhA+mvGkIaI6SMF
-	1i2b8gXe9BFRFo88jYP+GhmVovB0Ep37PzDNdAaXae6/ZsVJO/b1U41+ebAaqYpeyaWAPw
-	h8AP0dPO1balDYudDy47rkOCjj8NQ1zID/zchuaJb6eig6sclbidFrAeL3Rp+A==
-Received: from mx1.sbone.de (mx1.sbone.de [IPv6:2a01:4f8:13b:39f::9f:25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "mx1.sbone.de", Issuer "SBone.DE Root Certificate Authority" (not verified))
-	(Authenticated sender: bz/mail)
-	by smtp.freebsd.org (Postfix) with ESMTPSA id 4V72DY3lV2zVsm;
-	Sun, 31 Mar 2024 18:07:41 +0000 (UTC)
-	(envelope-from bz@FreeBSD.org)
-Received: from mail.sbone.de (mail.sbone.de [IPv6:fde9:577b:c1a9:4902:0:7404:2:1025])
-	(using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by mx1.sbone.de (Postfix) with ESMTPS id 66F088D4A241;
-	Sun, 31 Mar 2024 18:07:40 +0000 (UTC)
-Received: from content-filter.t4-02.sbone.de (content-filter.t4-02.sbone.de [IPv6:fde9:577b:c1a9:4902:0:7404:2:2742])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.sbone.de (Postfix) with ESMTPS id E1E052D029D9;
-	Sun, 31 Mar 2024 18:07:39 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at sbone.de
-Received: from mail.sbone.de ([IPv6:fde9:577b:c1a9:4902:0:7404:2:1025])
-	by content-filter.t4-02.sbone.de (content-filter.t4-02.sbone.de [IPv6:fde9:577b:c1a9:4902:0:7404:2:2742]) (amavisd-new, port 10024)
-	with ESMTP id r6GsfbF0UnPH; Sun, 31 Mar 2024 18:07:39 +0000 (UTC)
-Received: from strong-iwl0.sbone.de (strong-iwl0.sbone.de [IPv6:fde9:577b:c1a9:4902:b66b:fcff:fef3:e3d2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.sbone.de (Postfix) with ESMTPSA id A397D2D029D2;
-	Sun, 31 Mar 2024 18:07:38 +0000 (UTC)
-Date: Sun, 31 Mar 2024 18:07:38 +0000 (UTC)
-From: "Bjoern A. Zeeb" <bz@FreeBSD.org>
-To: linux-wireless@vger.kernel.org
-cc: miriam.rachel.korenblit@intel.com
-Subject: [PATCH] wifi: iwlwifi: mvm: fix iwl_ssid_exist() duplicate check
-Message-ID: <04759p9q-p8r3-p811-s0n4-q23r6n3s74s2@SerrOFQ.bet>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="oz9RfGWc"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42VIWsmT004760;
+	Sun, 31 Mar 2024 18:32:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=q93c9sBFJCr+/QZpXrD44ARUzrI3QNyDoaClgJ2Gp30=; b=oz
+	9RfGWcAEPC/jHYX5d9lUB8QUubds3+ushwZg9Tfx/Aim854FyJJIaN9wDsPZ0F4D
+	LSd7zEPP9PXcizcGmU9/QfCeVSSgBCnqGrsO80WOCuFg+SIFW4flLWUlNrEQDsM3
+	xtb9/VZlE2THWg1WkdYFyhEqQq3vSjdlqK96Bxe7eC7IpQBfhVe7FrxjBtPBZ2PV
+	J5Z5mzl6vD4W1boJRcqzjm1Bnfnf76nJu5ZpLa/+2yYP4fCbtmK3YWsupW/Rzrgk
+	Lj/7a0zxYPqm99x3T8QxP+9QjTmzHc001DUwLbm+GkTgUCiQWtez6LQnpgIs/wBG
+	kwmSTrnlTNzMn1TKFjeg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x6aybadhc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 31 Mar 2024 18:32:54 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 42VIWrrN022089
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 31 Mar 2024 18:32:53 GMT
+Received: from hu-kathirve-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Sun, 31 Mar 2024 11:32:51 -0700
+From: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, P Praneesh <quic_ppranees@quicinc.com>,
+        Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+Subject: [PATCH 2/2] wifi: ath12k: match WMI BSS chan info structure with firmware definition
+Date: Mon, 1 Apr 2024 00:02:32 +0530
+Message-ID: <20240331183232.2158756-3-quic_kathirve@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240331183232.2158756-1-quic_kathirve@quicinc.com>
+References: <20240331183232.2158756-1-quic_kathirve@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: vMg0IO-ZptBn5EVv2M52T1SsOWB7lGtF
+X-Proofpoint-GUID: vMg0IO-ZptBn5EVv2M52T1SsOWB7lGtF
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-31_13,2024-03-28_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 clxscore=1015
+ priorityscore=1501 suspectscore=0 impostorscore=0 mlxscore=0
+ malwarescore=0 phishscore=0 mlxlogscore=999 spamscore=0 lowpriorityscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2403310142
 
-iwl_ssid_exist() seems to check if a given ssid/ssid_len already
-exists in a given array ssid_list.
-Correctly compare the ssid to the SSID of each array element
-(with a matching SSID length) to better remove duplicates.
+From: P Praneesh <quic_ppranees@quicinc.com>
 
-Signed-off-by:	Bjoern A. Zeeb <bz@FreeBSD.org>
-Sponsored by:	The FreeBSD Foundation
+struct wmi_pdev_bss_chan_info_event is not similar to the firmware
+struct definition, this will cause some random failures.
+
+Fix by matching the struct wmi_pdev_bss_chan_info_event with the
+firmware structure definition.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+
+Fixes: d889913205 ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
 ---
-  drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
-  1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/wmi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git drivers/net/wireless/intel/iwlwifi/mvm/scan.c drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 7b6f1cdca067..343e70e58da5 100644
---- drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -454,7 +454,7 @@ static int iwl_ssid_exist(u8 *ssid, u8 ssid_len, struct iwl_ssid_ie *ssid_list)
-  		if (!ssid_list[i].len)
-  			break;
-  		if (ssid_list[i].len == ssid_len &&
--		    !memcmp(ssid_list->ssid, ssid, ssid_len))
-+		    !memcmp(ssid_list[i]->ssid, ssid, ssid_len))
-  			return i;
-  	}
-  	return -1;
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index f67e355ee202..96e8fb164bd4 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -4021,7 +4021,6 @@ struct wmi_vdev_stopped_event {
+ } __packed;
+ 
+ struct wmi_pdev_bss_chan_info_event {
+-	__le32 pdev_id;
+ 	__le32 freq;	/* Units in MHz */
+ 	__le32 noise_floor;	/* units are dBm */
+ 	/* rx clear - how often the channel was unused */
+@@ -4039,6 +4038,7 @@ struct wmi_pdev_bss_chan_info_event {
+ 	/*rx_cycle cnt for my bss in 64bits format */
+ 	__le32 rx_bss_cycle_count_low;
+ 	__le32 rx_bss_cycle_count_high;
++	__le32 pdev_id;
+ } __packed;
+ 
+ #define WMI_VDEV_INSTALL_KEY_COMPL_STATUS_SUCCESS 0
 -- 
-2.40.0
+2.34.1
+
