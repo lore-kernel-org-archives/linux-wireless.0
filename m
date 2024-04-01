@@ -1,58 +1,55 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA4B481D1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 141EC5024E
 	for <linux-wireless@vger.kernel.org>; Mon,  1 Apr 2024 19:05:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711998318; cv=none; b=nuoNvMUr9K/sVeWyvGEdZZQMYTEXsFBv8ydYg9k2QXIcvGQul1p1nsZHlIcM/gsybs7xgkcD/hojuygP8lPzDkjjaClWa2+vhnYTu1Gdd4FrmilWPwu/EWxUC9gOfqqPghBKuyn4Icf/XInVmRvLrn4ZPMEMESN8FUfEKwQVnhY=
+	t=1711998318; cv=none; b=tuiGi52t0NfU3bHYdzoi/HUsam4eLcoT5OcDUccWq/UJVr4uE2jQh7xvp5xpmnQ9noZHtuBfvBGD31ot47/h40gIwBDtm+4TAIhM6zYMX1emipEmFiFx/fbIDHkUn5bNPRzYaCS2QybmqToSI8OCsy6pnyw2ScwlDOqNqAW6po4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1711998318; c=relaxed/simple;
-	bh=O/rYf+RhthNi1hpDugipnHY6le8JE/hytnWG1hqFAwg=;
+	bh=TvK8Bfg8mmXsizvacRSd/Pn7e/UbefnVgOqwToAJX6E=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gGxkVbRpCTdPKqQmPXH5A1ZSE2dNbyTO6kPGMp/46YwRnUmnlwhg/X/HPgkXw1fc7u4xwC7/HyXKolWFMC40oJC1QqYblId+66weIQGP0/YKt3cSgxuh5jjAXYUXRQqcRcIktAMqyZ6gV1Wb+Y/0oqtWq4EPqgv4z/DxxNWD8l8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=itUy3+pt; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=SzF5PndHbyRFpBAT42E1YiOuFXC0sxRcbrFnmnMSKv2AL9nVzWaOebNcIY8t7DMW4DQvjzl7cHic7fLvdUhFjWYRKwnq7gdqnMI8fZ9s4ui+rkdSpGMJih2sptjU7aiu3nXDxWFDeBeUU6MilVMWIERxT12HXyd4x0nZi8q304w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PZ5KXmZp; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="itUy3+pt"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PZ5KXmZp"
 Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 431IMc3a003783;
-	Mon, 1 Apr 2024 19:05:05 GMT
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 431J2F23020675;
+	Mon, 1 Apr 2024 19:05:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=y/UdIJuLlRLQy/cTDsFzLeVaiY4ctBS21Dwog9v457I=; b=it
-	Uy3+ptG3aZhGOvDdA7JIiLd7nX2+pz8AO5oUfqrli1Z5f+GABTAyOlIbZD0FaxOl
-	A9qqrG0O/ST1aKsX5Q38/9Zu7Quc6r6tV5JdVrhjDwTn5dG+stNP6m4PbviVPinn
-	W6NosXxShwNsWreB1BhAOCkG9TaT5sdMyf3woAGoR9Od1GgUnMJ54VKTQRpjbyZY
-	OOOGLBf47ZKqpW2BShX5zdCK28jW07hWYfe7uJEfmj/N46hR/1vCNhpipXmamD3i
-	1AfuSiVdfk8qGgglsLsFUhAuTXaip0wHDou5QR1b/wnLfYEDDVZweok3TCN7zfSh
-	L9BFxNXTE7sbVaSHlkXw==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x7qgw9ks7-1
+	qcppdkim1; bh=YOvFbvbunUHIkvG45kRH7qRYCL2dxL/HNgVqr2lJcjA=; b=PZ
+	5KXmZpjkaIER62SKe9dAwReljkCPModhodPfXdcqnoCu9Hb8it5U9pQwMbwljYax
+	Zc72q1O6+HWkGiLd2kivph5aDbGCGVoFqLLa/MB3U2VdW0dyB5JD29sRq9H4kXfQ
+	r6kPGKH163+zxfR3ETkIWlFKwzRrm5p2aeYuokbZcj3gdh8x1OFvYQuEebQPjo9u
+	n2bKDF+4e2N4AtqITFNVdMSD1tfAN4Lr1chGrMkH7qvue22qmS+FeoncdXYhqUwv
+	CI++sFL+Hq6yvdZT96E/lQB0WLYnwwiqh8Hr4fHIY/qyZr3dksjAIIhxWe+eeqoz
+	2uF7ugJb/jI/3otDmNkg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x7qgw9ks9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Mon, 01 Apr 2024 19:05:05 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 431J54HE004683
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 431J55jt006845
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 1 Apr 2024 19:05:04 GMT
+	Mon, 1 Apr 2024 19:05:05 GMT
 Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 1 Apr 2024 12:04:58 -0700
+ 15.2.1118.40; Mon, 1 Apr 2024 12:05:02 -0700
 From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy
-	<quic_periyasa@quicinc.com>,
-        Sriram R <quic_srirrama@quicinc.com>,
+CC: <linux-wireless@vger.kernel.org>, Sriram R <quic_srirrama@quicinc.com>,
         Rameshkumar Sundaram <quic_ramess@quicinc.com>,
         Jeff Johnson
 	<quic_jjohnson@quicinc.com>
-Subject: [PATCH v6 01/12] wifi: ath12k: add multiple radio support in a single MAC HW un/register
-Date: Tue, 2 Apr 2024 00:33:58 +0530
-Message-ID: <20240401190409.2461819-2-quic_ramess@quicinc.com>
+Subject: [PATCH v6 03/12] wifi: ath12k: modify ath12k mac start/stop ops for single wiphy
+Date: Tue, 2 Apr 2024 00:34:00 +0530
+Message-ID: <20240401190409.2461819-4-quic_ramess@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240401190409.2461819-1-quic_ramess@quicinc.com>
 References: <20240401190409.2461819-1-quic_ramess@quicinc.com>
@@ -68,612 +65,110 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: HVnZrKIrcbE3SQrTzep8WaVyvbX0pBJC
-X-Proofpoint-GUID: HVnZrKIrcbE3SQrTzep8WaVyvbX0pBJC
+X-Proofpoint-ORIG-GUID: taVrTq5G1okxStmq455EHOQaxgxH0z0-
+X-Proofpoint-GUID: taVrTq5G1okxStmq455EHOQaxgxH0z0-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-01_13,2024-04-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=830 clxscore=1015
  priorityscore=1501 bulkscore=0 adultscore=0 suspectscore=0 impostorscore=0
  spamscore=0 lowpriorityscore=0 malwarescore=0 mlxscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2403210001
  definitions=main-2404010134
 
-From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+From: Sriram R <quic_srirrama@quicinc.com>
 
-Currently MAC HW un/register helper function support the single radio.
-To enable single/multi link operation in the future, the following helper
-functions need to be refactored to accommodate multiple radios under a
-single MAC HW un/register:
-
-	* ath12k_ah_to_ar()
-	* ath12k_mac_hw_allocate()
-	* ath12k_mac_hw_register()
-	* ath12k_mac_hw_unregister()
-
-This refactoring will make it easier to scale these functionalities and
-support Multi link operation.
-
-                         Current Multi wiphy Model
-
- +---------------+          +---------------+            +---------------+
- |  Mac80211 hw  |          | Mac80211 hw   |            | Mac80211 hw   |
- |  private data |          | private data  |            | private data  |
- |               |          |               |            |               |
- |ath12k_hw (ah) |          |ath12k_hw (ah) |            |ath12k_hw (ah) |
- |               |          |               |            |               |
- | +-----------+ |          | +-----------+ |            | +-----------+ |
- | | ar (2GHz) | |          | | ar (5GHz) | |            | | ar (6GHz) | |
- | +-----------+ |          | +-----------+ |            | +-----------+ |
- |               |          |               |            |               |
- +---------------+          +---------------+            +---------------+
-
-                           Single wiphy Model
-
-                            +--------------+
-                            | Mac80211 hw  |
-                            | private data |
-                            |              |
-                            |ath12k hw (ah)|
-                            | +----------+ |
-                            | |ar (2GHz) | |
-                            | +----------+ |
-                            | |ar (5GHz) | |
-                            | +----------+ |
-                            | |ar (6GHz) | |
-                            | +----------+ |
-                            +--------------+
+When mac80211 does drv start/stop, apply the state change
+for all the radios within the wiphy in ath12k.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
 Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  12 +-
- drivers/net/wireless/ath/ath12k/mac.c  | 184 ++++++++++++++++---------
- drivers/net/wireless/ath/ath12k/reg.c  |   2 +-
- 3 files changed, 127 insertions(+), 71 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 43 +++++++++++++++++++--------
+ 1 file changed, 31 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 97e5a0ccd233..f16bb7621a74 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -951,13 +951,21 @@ static inline struct ath12k_hw *ath12k_hw_to_ah(struct ieee80211_hw  *hw)
- 	return hw->priv;
- }
- 
--static inline struct ath12k *ath12k_ah_to_ar(struct ath12k_hw *ah)
-+static inline struct ath12k *ath12k_ah_to_ar(struct ath12k_hw *ah, u8 hw_link_id)
- {
--	return ah->radio;
-+	if (WARN(hw_link_id >= ah->num_radio,
-+		 "bad hw link id %d, so switch to default link\n", hw_link_id))
-+		hw_link_id = 0;
-+
-+	return &ah->radio[hw_link_id];
- }
- 
- static inline struct ieee80211_hw *ath12k_ar_to_hw(struct ath12k *ar)
- {
- 	return ar->ah->hw;
- }
-+
-+#define for_each_ar(ah, ar, index) \
-+	for ((index) = 0; ((index) < (ah)->num_radio && \
-+	     ((ar) = &(ah)->radio[(index)])); (index)++)
- #endif /* _CORE_H_ */
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 52a5fb8b03e9..94ab2e705f61 100644
+index 0fce3e7e06a4..cbe83578b81d 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -1169,7 +1169,7 @@ static int ath12k_mac_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct ath12k *ar;
- 	int ret;
+@@ -243,6 +243,7 @@ static const u32 ath12k_smps_map[] = {
  
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
+ static int ath12k_start_vdev_delay(struct ath12k *ar,
+ 				   struct ath12k_vif *arvif);
++static void ath12k_mac_stop(struct ath12k *ar);
  
- 	ret = ath12k_mac_config(ar, changed);
- 	if (ret)
-@@ -2970,7 +2970,7 @@ static void ath12k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
- 	struct ath12k *ar;
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
+ static const char *ath12k_mac_phymode_str(enum wmi_phy_mode mode)
+ {
+@@ -5472,23 +5473,39 @@ static int ath12k_mac_start(struct ath12k *ar)
+ 	return ret;
+ }
  
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -3155,7 +3155,7 @@ static int ath12k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 	int ret;
- 	int i;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -3245,7 +3245,7 @@ static void ath12k_mac_op_cancel_hw_scan(struct ieee80211_hw *hw,
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ath12k_scan_abort(ar);
-@@ -3390,7 +3390,7 @@ static int ath12k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
- 		return 1;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	if (test_bit(ATH12K_FLAG_HW_CRYPTO_DISABLED, &ar->ab->dev_flags))
-@@ -3980,7 +3980,7 @@ static int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
- 	     new_state == IEEE80211_STA_NOTEXIST))
- 		cancel_work_sync(&arsta->update_wk);
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -4109,7 +4109,7 @@ static int ath12k_mac_op_sta_set_txpwr(struct ieee80211_hw *hw,
- 	if (txpwr > ATH12K_TX_POWER_MAX_VAL || txpwr < ATH12K_TX_POWER_MIN_VAL)
- 		return -EINVAL;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -4138,7 +4138,7 @@ static void ath12k_mac_op_sta_rc_update(struct ieee80211_hw *hw,
- 	struct ath12k_peer *peer;
- 	u32 bw, smps;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	spin_lock_bh(&ar->ab->base_lock);
- 
-@@ -4319,7 +4319,7 @@ static int ath12k_mac_op_conf_tx(struct ieee80211_hw *hw,
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	int ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ret = ath12k_mac_conf_tx(arvif, link_id, ac, params);
-@@ -5446,7 +5446,7 @@ static int ath12k_mac_start(struct ath12k *ar)
++static void ath12k_drain_tx(struct ath12k_hw *ah)
++{
++	struct ath12k *ar;
++	int i;
++
++	for_each_ar(ah, ar, i)
++		ath12k_mac_drain_tx(ar);
++}
++
  static int ath12k_mac_op_start(struct ieee80211_hw *hw)
  {
  	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 	struct ath12k_base *ab = ar->ab;
- 	int ret;
- 
-@@ -5555,7 +5555,7 @@ static void ath12k_mac_stop(struct ath12k *ar)
- static void ath12k_mac_op_stop(struct ieee80211_hw *hw)
- {
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 
- 	ath12k_mac_drain_tx(ar);
- 
-@@ -5749,7 +5749,7 @@ static int ath12k_mac_op_add_interface(struct ieee80211_hw *hw,
- 
- 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6017,7 +6017,7 @@ static void ath12k_mac_op_remove_interface(struct ieee80211_hw *hw,
- 	unsigned long time_left;
- 	int ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6132,7 +6132,7 @@ static void ath12k_mac_op_configure_filter(struct ieee80211_hw *hw,
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -6147,7 +6147,7 @@ static int ath12k_mac_op_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -6165,7 +6165,7 @@ static int ath12k_mac_op_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx
- 	struct ath12k *ar;
- 	int ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ret = __ath12k_set_antenna(ar, tx_ant, rx_ant);
-@@ -6213,7 +6213,7 @@ static int ath12k_mac_op_ampdu_action(struct ieee80211_hw *hw,
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	int ret = -EINVAL;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 	ret = ath12k_mac_ampdu_action(arvif, params);
-@@ -6233,7 +6233,7 @@ static int ath12k_mac_op_add_chanctx(struct ieee80211_hw *hw,
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	ath12k_dbg(ab, ATH12K_DBG_MAC,
-@@ -6261,7 +6261,7 @@ static void ath12k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	ath12k_dbg(ab, ATH12K_DBG_MAC,
-@@ -6641,7 +6641,7 @@ static void ath12k_mac_op_change_chanctx(struct ieee80211_hw *hw,
- 	struct ath12k *ar;
- 	struct ath12k_base *ab;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6712,7 +6712,7 @@ ath12k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
- 	int ret;
- 	struct ath12k_wmi_peer_create_arg param;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6794,7 +6794,7 @@ ath12k_mac_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	int ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -6849,7 +6849,7 @@ ath12k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -6895,7 +6895,7 @@ static int ath12k_mac_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- 	struct ath12k *ar;
- 	int param_id = WMI_VDEV_PARAM_RTS_THRESHOLD, ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	ret = ath12k_set_vdev_param_to_all_vifs(ar, param_id, value);
- 
-@@ -6939,7 +6939,7 @@ static void ath12k_mac_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *v
- 				u32 queues, bool drop)
- {
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 
- 	if (drop)
- 		return;
-@@ -7306,7 +7306,7 @@ ath12k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
- 	if (reconfig_type != IEEE80211_RECONFIG_TYPE_RESTART)
- 		return;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 	ab = ar->ab;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -7401,7 +7401,7 @@ static int ath12k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	if (idx >= ATH12K_NUM_CHANS)
- 		return -ENOENT;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	ar_survey = &ar->survey[idx];
- 
-@@ -7478,7 +7478,7 @@ static int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -7508,7 +7508,7 @@ static int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
- 	u32 scan_time_msec;
- 	int ret;
- 
--	ar = ath12k_ah_to_ar(ah);
-+	ar = ath12k_ah_to_ar(ah, 0);
- 
- 	mutex_lock(&ar->conf_mutex);
- 	spin_lock_bh(&ar->data_lock);
-@@ -7757,10 +7757,12 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 
- static u16 ath12k_mac_get_ifmodes(struct ath12k_hw *ah)
- {
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar;
-+	int i;
- 	u16 interface_modes = U16_MAX;
- 
--	interface_modes &= ar->ab->hw_params->interface_modes;
-+	for_each_ar(ah, ar, i)
-+		interface_modes &= ar->ab->hw_params->interface_modes;
- 
- 	return interface_modes == U16_MAX ? 0 : interface_modes;
- }
-@@ -7768,15 +7770,19 @@ static u16 ath12k_mac_get_ifmodes(struct ath12k_hw *ah)
- static bool ath12k_mac_is_iface_mode_enable(struct ath12k_hw *ah,
- 					    enum nl80211_iftype type)
- {
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar;
-+	int i;
- 	u16 interface_modes, mode;
- 	bool is_enable = true;
- 
- 	mode = BIT(type);
--
--	interface_modes = ar->ab->hw_params->interface_modes;
--	if (!(interface_modes & mode))
--		is_enable = false;
-+	for_each_ar(ah, ar, i) {
-+		interface_modes = ar->ab->hw_params->interface_modes;
-+		if (!(interface_modes & mode)) {
-+			is_enable = false;
-+			break;
-+		}
-+	}
- 
- 	return is_enable;
- }
-@@ -7906,13 +7912,16 @@ static void ath12k_mac_hw_unregister(struct ath12k_hw *ah)
- {
- 	struct ieee80211_hw *hw = ah->hw;
- 	struct wiphy *wiphy = hw->wiphy;
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar;
-+	int i;
- 
--	cancel_work_sync(&ar->regd_update_work);
-+	for_each_ar(ah, ar, i)
-+		cancel_work_sync(&ar->regd_update_work);
- 
- 	ieee80211_unregister_hw(hw);
- 
--	ath12k_mac_cleanup_unregister(ar);
-+	for_each_ar(ah, ar, i)
-+		ath12k_mac_cleanup_unregister(ar);
- 
- 	kfree(wiphy->iface_combinations[0].limits);
- 	kfree(wiphy->iface_combinations);
-@@ -7952,7 +7961,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- {
- 	struct ieee80211_hw *hw = ah->hw;
- 	struct wiphy *wiphy = hw->wiphy;
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 	struct ath12k_base *ab = ar->ab;
- 	struct ath12k_pdev *pdev;
- 	struct ath12k_pdev_cap *cap;
-@@ -7967,39 +7976,71 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		WLAN_CIPHER_SUITE_GCMP_256,
- 		WLAN_CIPHER_SUITE_CCMP_256,
- 	};
+-	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
+-	struct ath12k_base *ab = ar->ab;
 -	int ret;
--	u32 ht_cap = 0;
-+	int ret, i, j;
-+	u32 ht_cap = U32_MAX, antennas_rx = 0, antennas_tx = 0;
-+	bool is_6ghz = false, is_raw_mode = false, is_monitor_disable = false;
-+	u8 *mac_addr = NULL;
++	struct ath12k *ar;
++	int ret, i;
  
--	pdev = ar->pdev;
-+	wiphy->max_ap_assoc_sta = 0;
+-	ath12k_mac_drain_tx(ar);
++	ath12k_drain_tx(ah);
  
--	if (ab->pdevs_macaddr_valid)
--		ether_addr_copy(ar->mac_addr, pdev->mac_addr);
--	else
--		ether_addr_copy(ar->mac_addr, ab->mac_addr);
-+	for_each_ar(ah, ar, i) {
-+		u32 ht_cap_info = 0;
- 
--	ret = ath12k_mac_setup_register(ar, &ht_cap, hw->wiphy->bands);
--	if (ret)
--		goto out;
-+		pdev = ar->pdev;
-+		if (ar->ab->pdevs_macaddr_valid) {
-+			ether_addr_copy(ar->mac_addr, pdev->mac_addr);
-+		} else {
-+			ether_addr_copy(ar->mac_addr, ar->ab->mac_addr);
-+			ar->mac_addr[4] += ar->pdev_idx;
-+		}
-+
-+		ret = ath12k_mac_setup_register(ar, &ht_cap_info, hw->wiphy->bands);
-+		if (ret)
-+			goto err_cleanup_unregister;
- 
--	wiphy->max_ap_assoc_sta = ar->max_num_stations;
-+		ht_cap &= ht_cap_info;
-+		wiphy->max_ap_assoc_sta += ar->max_num_stations;
-+
-+		/* Advertise the max antenna support of all radios, driver can handle
-+		 * per pdev specific antenna setting based on pdev cap when antenna
-+		 * changes are made
-+		 */
-+		cap = &pdev->cap;
- 
--	cap = &pdev->cap;
-+		antennas_rx = max_t(u32, antennas_rx, cap->rx_chain_mask);
-+		antennas_tx = max_t(u32, antennas_tx, cap->tx_chain_mask);
- 
--	wiphy->available_antennas_rx = cap->rx_chain_mask;
--	wiphy->available_antennas_tx = cap->tx_chain_mask;
-+		if (ar->supports_6ghz)
-+			is_6ghz = true;
- 
--	SET_IEEE80211_PERM_ADDR(hw, ar->mac_addr);
-+		if (test_bit(ATH12K_FLAG_RAW_MODE, &ar->ab->dev_flags))
-+			is_raw_mode = true;
-+
-+		if (!ar->ab->hw_params->supports_monitor)
-+			is_monitor_disable = true;
-+
-+		if (i == 0)
-+			mac_addr = ar->mac_addr;
-+		else
-+			mac_addr = ab->mac_addr;
-+	}
-+
-+	wiphy->available_antennas_rx = antennas_rx;
-+	wiphy->available_antennas_tx = antennas_tx;
-+
-+	SET_IEEE80211_PERM_ADDR(hw, mac_addr);
- 	SET_IEEE80211_DEV(hw, ab->dev);
- 
- 	ret = ath12k_mac_setup_iface_combinations(ah);
- 	if (ret) {
- 		ath12k_err(ab, "failed to setup interface combinations: %d\n", ret);
--		goto err_cleanup_unregister;
-+		goto err_complete_cleanup_unregister;
- 	}
- 
- 	wiphy->interface_modes = ath12k_mac_get_ifmodes(ah);
- 
--	if (wiphy->bands[NL80211_BAND_2GHZ] &&
-+	if (ah->num_radio == 1 &&
-+	    wiphy->bands[NL80211_BAND_2GHZ] &&
- 	    wiphy->bands[NL80211_BAND_5GHZ] &&
- 	    wiphy->bands[NL80211_BAND_6GHZ])
- 		ieee80211_hw_set(hw, SINGLE_SCAN_ON_ALL_BANDS);
-@@ -8067,7 +8108,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	wiphy->iftype_ext_capab = ath12k_iftypes_ext_capa;
- 	wiphy->num_iftype_ext_capab = ARRAY_SIZE(ath12k_iftypes_ext_capa);
- 
--	if (ar->supports_6ghz) {
-+	if (is_6ghz) {
- 		wiphy_ext_feature_set(wiphy,
- 				      NL80211_EXT_FEATURE_FILS_DISCOVERY);
- 		wiphy_ext_feature_set(wiphy,
-@@ -8078,7 +8119,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 
- 	ath12k_reg_init(hw);
- 
--	if (!test_bit(ATH12K_FLAG_RAW_MODE, &ab->dev_flags)) {
-+	if (!is_raw_mode) {
- 		hw->netdev_features = NETIF_F_HW_CSUM;
- 		ieee80211_hw_set(hw, SW_CRYPTO_CONTROL);
- 		ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
-@@ -8090,7 +8131,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		goto err_free_if_combs;
- 	}
- 
--	if (!ab->hw_params->supports_monitor)
-+	if (is_monitor_disable)
- 		/* There's a race between calling ieee80211_register_hw()
- 		 * and here where the monitor mode is enabled for a little
- 		 * while. But that time is so short and in practise it make
-@@ -8098,11 +8139,13 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 		 */
- 		wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MONITOR);
- 
--	/* Apply the regd received during initialization */
--	ret = ath12k_regd_update(ar, true);
+-	ret = ath12k_mac_start(ar);
 -	if (ret) {
--		ath12k_err(ar->ab, "ath12k regd update failed: %d\n", ret);
--		goto err_unregister_hw;
+-		ath12k_err(ab, "fail to start mac operations in pdev idx %d ret %d\n",
+-			   ar->pdev_idx, ret);
+-		return ret;
 +	for_each_ar(ah, ar, i) {
-+		/* Apply the regd received during initialization */
-+		ret = ath12k_regd_update(ar, true);
++		ret = ath12k_mac_start(ar);
 +		if (ret) {
-+			ath12k_err(ar->ab, "ath12k regd update failed: %d\n", ret);
-+			goto err_unregister_hw;
++			ath12k_err(ar->ab, "fail to start mac operations in pdev idx %d ret %d\n",
++				   ar->pdev_idx, ret);
++			goto fail_start;
 +		}
  	}
  
  	return 0;
-@@ -8114,10 +8157,15 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	kfree(wiphy->iface_combinations[0].limits);
- 	kfree(wiphy->iface_combinations);
- 
-+err_complete_cleanup_unregister:
-+	i = ah->num_radio;
-+
- err_cleanup_unregister:
--	ath12k_mac_cleanup_unregister(ar);
-+	for (j = 0; j < i; j++) {
-+		ar = ath12k_ah_to_ar(ah, j);
-+		ath12k_mac_cleanup_unregister(ar);
++fail_start:
++	for (; i > 0; i--) {
++		ar = ath12k_ah_to_ar(ah, i - 1);
++		ath12k_mac_stop(ar);
 +	}
++	return ret;
+ }
  
--out:
- 	SET_IEEE80211_DEV(hw, NULL);
- 
- 	return ret;
-@@ -8243,7 +8291,7 @@ static struct ath12k_hw *ath12k_mac_hw_allocate(struct ath12k_base *ab,
- 		pdev_idx = pdev_map[i].pdev_idx;
- 		pdev = &ab->pdevs[pdev_idx];
- 
--		ar = ath12k_ah_to_ar(ah);
-+		ar = ath12k_ah_to_ar(ah, i);
- 		ar->ah = ah;
- 		ar->ab = ab;
- 		ar->hw_link_id = i;
-diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wireless/ath/ath12k/reg.c
-index f308e9a6ed55..e73b716a2d80 100644
---- a/drivers/net/wireless/ath/ath12k/reg.c
-+++ b/drivers/net/wireless/ath/ath12k/reg.c
-@@ -49,7 +49,7 @@ ath12k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct ath12k_wmi_init_country_arg arg;
+ int ath12k_mac_rfkill_config(struct ath12k *ar)
+@@ -5584,11 +5601,13 @@ static void ath12k_mac_stop(struct ath12k *ar)
+ static void ath12k_mac_op_stop(struct ieee80211_hw *hw)
+ {
  	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
--	struct ath12k *ar = ath12k_ah_to_ar(ah);
-+	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 	int ret;
+-	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
++	struct ath12k *ar;
++	int i;
  
- 	ath12k_dbg(ar->ab, ATH12K_DBG_REG,
+-	ath12k_mac_drain_tx(ar);
++	ath12k_drain_tx(ah);
+ 
+-	ath12k_mac_stop(ar);
++	for_each_ar(ah, ar, i)
++		ath12k_mac_stop(ar);
+ }
+ 
+ static u8
 -- 
 2.25.1
 
