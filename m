@@ -1,55 +1,55 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB9A453E01
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E281B53E07
 	for <linux-wireless@vger.kernel.org>; Mon,  1 Apr 2024 19:05:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711998322; cv=none; b=Y1MWUfiYWQ34sqm8SM4Ctr9+shvmSCk3do/eFr2ZgxmJkpBxjbwOxA/P8Fa6lIh/Rws2pRhCBdEq3/CxKVmEUT5xQIELqCf69VTc09fE7mxOgWeYWul6oEGlF6CJoEGiqG+mVC8W0ywnza1Gy27iiqG2kwcvvJOF7raZdz/iu4c=
+	t=1711998322; cv=none; b=M0HYbzxu3EzEfPBH7MAvFjAWA4XHfHlF2Vn/dzpSmMZvqHixsfVgZX6zpcaVvVEAAVi1/Pc9/QIwidLGHLjiOe3nvUhDO6LqpBao0L8vnkNyCKYHjD0rJN6iQHzs/XyJ1ZWD5/jyzg7wvanhyy0dP9zZ3jfv6bEC3OIHrWJy2Fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1711998322; c=relaxed/simple;
-	bh=NJ8CrdjDqk+fkwmPDNeQ7wUjva8KmoAspB3xXZyiKZU=;
+	bh=P3G6sLa8z8Ew8D6lkcogPJ7qZjjLfXMzG8qqo95gAP0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HUOkrqOI1SzHzS5dY4x8jL8XNTtEHFVaBw53PJ4EjrGwwDluz4YITkedF9sG2d3UZ6rnud9NOd/wVDfMEQ5DqqQ8Hd6pStKWwPyfYbNze8mi4IhfTTvH6z5rvGM11l5jEdBkt+YIXW8ZgE12kPuRuYxOo5SjLdG2qpAb5joNPJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XYPWoWqm; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=HLwmjUDPvOryXCMk5cv0LQXwkWwa3pTYiDyZvaozHhnqLAJEXcOWlfLDYsfqfcn7Wvh5NTBo4kzRNkgMLPUKzzXeJdnJQhXmCuU+dDEfEpdAkRIKciXSVOy5s/AqC/JC7pQyWoKkHH0MyM6eDm4kQCj6W3suVIY88AoMCpAt1Ow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OFuL+lsP; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XYPWoWqm"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 431Gwu5x001427;
-	Mon, 1 Apr 2024 19:05:16 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OFuL+lsP"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 431DuOf4000324;
+	Mon, 1 Apr 2024 19:05:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=vVwvcKa92aaQ0Cc5SrkZw9UYZdbbGrZU2Ma6xGEiKzs=; b=XY
-	PWoWqm2i4PBAJvOXsN7YN5DtVujnQhIHGWh0akGAHVa6uSmXV6LkNKXHzqWFm1fJ
-	cfyo9hMMRukvauQZF5t9nR+n5jNhi7HOfdZEwiwWqINtgmZPtw27zP4f4VSRYVO+
-	lS2DnElFbRmkI2GKYRiz4501e+9j5OwW9/wuVMQbNwIeY8sGuycVgpFGCUzI3OGR
-	xWW4mvE6X65W+/zdLY3RyIM43f1AabTWLF8kvGYnMUFT5GypS4DWzfngBcq8bGwU
-	D/xoGSZwZn9lFmQS8W/GOkO4FaGpJyxXGrTDfCdIWC8m5SG288jJJrDL6z3oILYi
-	GVK5ZZvtvteWk5Ec/ETQ==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x80w5gb2g-1
+	qcppdkim1; bh=jwygHPwgGoT95uLvxAvUjs5JWhQDjWwcbExKoDFjxOQ=; b=OF
+	uL+lsPAopx0U59qsssYB7fVIYNQuCsV1178xaSIHTBXkqlOtNdcuCAXOAMx3PCqA
+	ivwCG2SVQo0nAIzuDAZx0MBpru9wL8deFPLTLqCIZPxGgDgbA+YgRl++Yq1O0ULM
+	j4jgID8p6Ao2V6yTsxpit7iYcefmi+HLl6XBQCVn5iuUNBykplo3epuFY9VqVz3p
+	6n2JFy+5L66nnfHVKhGrhPuh1PFO9jlGB41dOSlxIivE5e1qiaTIJFwF7qSF/G9Y
+	8TWx8fyomdDe7mqX8PI2Q5EYhCgmba8/k8zlAjH/A/1PSyG2kwtxaIy7Tpvg1qeH
+	5f5xu3Pr/OoYiq71lVOQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x7qgw9ksj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Apr 2024 19:05:16 +0000 (GMT)
+	Mon, 01 Apr 2024 19:05:12 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 431J5FWb000659
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 431J5Bbn018272
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 1 Apr 2024 19:05:15 GMT
+	Mon, 1 Apr 2024 19:05:11 GMT
 Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 1 Apr 2024 12:05:13 -0700
+ 15.2.1118.40; Mon, 1 Apr 2024 12:05:09 -0700
 From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, Sriram R <quic_srirrama@quicinc.com>,
         Rameshkumar Sundaram <quic_ramess@quicinc.com>,
         Jeff Johnson
 	<quic_jjohnson@quicinc.com>
-Subject: [PATCH v6 08/12] wifi: ath12k: Add additional checks for vif and sta iterators
-Date: Tue, 2 Apr 2024 00:34:05 +0530
-Message-ID: <20240401190409.2461819-9-quic_ramess@quicinc.com>
+Subject: [PATCH v6 06/12] wifi: ath12k: fetch correct radio based on vdev status
+Date: Tue, 2 Apr 2024 00:34:03 +0530
+Message-ID: <20240401190409.2461819-7-quic_ramess@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240401190409.2461819-1-quic_ramess@quicinc.com>
 References: <20240401190409.2461819-1-quic_ramess@quicinc.com>
@@ -65,24 +65,25 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 7Um1bb3CMNTRMlikThj5lumYvZlcWrA0
-X-Proofpoint-ORIG-GUID: 7Um1bb3CMNTRMlikThj5lumYvZlcWrA0
+X-Proofpoint-ORIG-GUID: WFZVaiWTAxp35xc4mfID2N7NtPLA-Ux0
+X-Proofpoint-GUID: WFZVaiWTAxp35xc4mfID2N7NtPLA-Ux0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-01_13,2024-04-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=850
- lowpriorityscore=0 phishscore=0 bulkscore=0 clxscore=1015 suspectscore=0
- priorityscore=1501 adultscore=0 impostorscore=0 mlxscore=0 malwarescore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2403210001 definitions=main-2404010134
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1015
+ priorityscore=1501 bulkscore=0 adultscore=0 suspectscore=0 impostorscore=0
+ spamscore=0 lowpriorityscore=0 malwarescore=0 mlxscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2403210001
+ definitions=main-2404010134
 
 From: Sriram R <quic_srirrama@quicinc.com>
 
-Since vif and sta objects of different radios are added to same
-local hw list in mac80211, additional checks need to be done
-in driver to ensure we are processing the intended vif
-and sta corresponding to the radio when the vif and sta mac80211
-iterator utils are used from driver.
+For ops which passes the vif info, fetch the radio(ar)
+to be used for corresponding functions based on the
+the vdev creation status. If the vdev is not created yet,
+which could happen when the ops are called before channel
+is assigned for the vif, the data needs to be cached and this
+is done in followup changes.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -91,146 +92,174 @@ Signed-off-by: Sriram R <quic_srirrama@quicinc.com>
 Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
 Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  1 +
- drivers/net/wireless/ath/ath12k/mac.c  | 22 ++++++++++++++++++++--
- drivers/net/wireless/ath/ath12k/p2p.c  |  3 ++-
- drivers/net/wireless/ath/ath12k/p2p.h  |  1 +
- 4 files changed, 24 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 75 +++++++++++++++++++++++----
+ 1 file changed, 64 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index dd6c474bd507..4d71267bbb60 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -291,6 +291,7 @@ struct ath12k_vif {
- 
- struct ath12k_vif_iter {
- 	u32 vdev_id;
-+	struct ath12k *ar;
- 	struct ath12k_vif *arvif;
- };
- 
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 3f2d1b00ae24..ec592504f926 100644
+index 1120c362c4c5..60095d876a43 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -533,7 +533,8 @@ static void ath12k_get_arvif_iter(void *data, u8 *mac,
- 	struct ath12k_vif_iter *arvif_iter = data;
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 
--	if (arvif->vdev_id == arvif_iter->vdev_id)
-+	if (arvif->vdev_id == arvif_iter->vdev_id &&
-+	    arvif->ar == arvif_iter->ar)
- 		arvif_iter->arvif = arvif;
+@@ -645,6 +645,24 @@ static struct ath12k *ath12k_get_ar_by_ctx(struct ieee80211_hw *hw,
+ 	return ath12k_mac_get_ar_by_chan(hw, ctx->def.chan);
  }
  
-@@ -543,6 +544,7 @@ struct ath12k_vif *ath12k_mac_get_arvif(struct ath12k *ar, u32 vdev_id)
- 	u32 flags;
- 
- 	arvif_iter.vdev_id = vdev_id;
-+	arvif_iter.ar = ar;
- 
- 	flags = IEEE80211_IFACE_ITER_RESUME_ALL;
- 	ieee80211_iterate_active_interfaces_atomic(ath12k_ar_to_hw(ar),
-@@ -6845,14 +6847,19 @@ struct ath12k_mac_change_chanctx_arg {
- 	struct ieee80211_vif_chanctx_switch *vifs;
- 	int n_vifs;
- 	int next_vif;
-+	struct ath12k *ar;
- };
- 
- static void
- ath12k_mac_change_chanctx_cnt_iter(void *data, u8 *mac,
- 				   struct ieee80211_vif *vif)
- {
++static struct ath12k *ath12k_get_ar_by_vif(struct ieee80211_hw *hw,
++					   struct ieee80211_vif *vif)
++{
 +	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	struct ath12k_mac_change_chanctx_arg *arg = data;
- 
-+	if (arvif->ar != arg->ar)
-+		return;
++	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
 +
- 	if (rcu_access_pointer(vif->bss_conf.chanctx_conf) != arg->ctx)
- 		return;
- 
-@@ -6863,9 +6870,13 @@ static void
- ath12k_mac_change_chanctx_fill_iter(void *data, u8 *mac,
- 				    struct ieee80211_vif *vif)
- {
-+	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	struct ath12k_mac_change_chanctx_arg *arg = data;
- 	struct ieee80211_chanctx_conf *ctx;
- 
-+	if (arvif->ar != arg->ar)
-+		return;
++	/* If there is one pdev within ah, then we return
++	 * ar directly.
++	 */
++	if (ah->num_radio == 1)
++		return ah->radio;
 +
- 	ctx = rcu_access_pointer(vif->bss_conf.chanctx_conf);
- 	if (ctx != arg->ctx)
- 		return;
-@@ -6984,7 +6995,7 @@ static void
- ath12k_mac_update_active_vif_chan(struct ath12k *ar,
- 				  struct ieee80211_chanctx_conf *ctx)
++	if (arvif->is_created)
++		return arvif->ar;
++
++	return NULL;
++}
++
+ static void ath12k_pdev_caps_update(struct ath12k *ar)
  {
--	struct ath12k_mac_change_chanctx_arg arg = { .ctx = ctx };
-+	struct ath12k_mac_change_chanctx_arg arg = { .ctx = ctx, .ar = ar };
- 	struct ieee80211_hw *hw = ath12k_ar_to_hw(ar);
+ 	struct ath12k_base *ab = ar->ab;
+@@ -2998,11 +3016,17 @@ static void ath12k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 					   struct ieee80211_bss_conf *info,
+ 					   u64 changed)
+ {
+-	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
  
- 	lockdep_assert_held(&ar->conf_mutex);
-@@ -7560,6 +7571,9 @@ static void ath12k_mac_set_bitrate_mask_iter(void *data,
+-	ar = ath12k_ah_to_ar(ah, 0);
++	ar = ath12k_get_ar_by_vif(hw, vif);
++
++	/* TODO if the vdev is not created on a certain radio,
++	 * cache the info to be updated later on vdev creation
++	 */
++
++	if (!ar)
++		return;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -3497,7 +3521,6 @@ static int ath12k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 				 struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+ 				 struct ieee80211_key_conf *key)
+ {
+-	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+ 	struct ath12k_base *ab;
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
+@@ -3514,7 +3537,11 @@ static int ath12k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
+ 		return 1;
+ 
+-	ar = ath12k_ah_to_ar(ah, 0);
++	ar = ath12k_get_ar_by_vif(hw, vif);
++	if (!ar) {
++		WARN_ON_ONCE(1);
++		return -EINVAL;
++	}
+ 	ab = ar->ab;
+ 
+ 	if (test_bit(ATH12K_FLAG_HW_CRYPTO_DISABLED, &ar->ab->dev_flags))
+@@ -4092,7 +4119,6 @@ static int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 				   enum ieee80211_sta_state old_state,
+ 				   enum ieee80211_sta_state new_state)
+ {
+-	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
  	struct ath12k_sta *arsta = ath12k_sta_to_arsta(sta);
- 	struct ath12k *ar = arvif->ar;
+@@ -4104,7 +4130,11 @@ static int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
+ 	     new_state == IEEE80211_STA_NOTEXIST))
+ 		cancel_work_sync(&arsta->update_wk);
  
-+	if (arsta->arvif != arvif)
-+		return;
-+
- 	spin_lock_bh(&ar->data_lock);
- 	arsta->changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
- 	spin_unlock_bh(&ar->data_lock);
-@@ -7570,10 +7584,14 @@ static void ath12k_mac_set_bitrate_mask_iter(void *data,
- static void ath12k_mac_disable_peer_fixed_rate(void *data,
- 					       struct ieee80211_sta *sta)
+-	ar = ath12k_ah_to_ar(ah, 0);
++	ar = ath12k_get_ar_by_vif(hw, vif);
++	if (!ar) {
++		WARN_ON_ONCE(1);
++		return -EINVAL;
++	}
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -4255,14 +4285,17 @@ static void ath12k_mac_op_sta_rc_update(struct ieee80211_hw *hw,
+ 					struct ieee80211_sta *sta,
+ 					u32 changed)
  {
-+	struct ath12k_sta *arsta = ath12k_sta_to_arsta(sta);
- 	struct ath12k_vif *arvif = data;
- 	struct ath12k *ar = arvif->ar;
+-	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+ 	struct ath12k_sta *arsta = ath12k_sta_to_arsta(sta);
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
+ 	struct ath12k_peer *peer;
+ 	u32 bw, smps;
+ 
+-	ar = ath12k_ah_to_ar(ah, 0);
++	ar = ath12k_get_ar_by_vif(hw, vif);
++	if (!ar) {
++		WARN_ON_ONCE(1);
++		return;
++	}
+ 
+ 	spin_lock_bh(&ar->ab->base_lock);
+ 
+@@ -4438,12 +4471,15 @@ static int ath12k_mac_op_conf_tx(struct ieee80211_hw *hw,
+ 				 unsigned int link_id, u16 ac,
+ 				 const struct ieee80211_tx_queue_params *params)
+ {
+-	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+ 	struct ath12k *ar;
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
  	int ret;
  
-+	if (arsta->arvif != arvif)
-+		return;
-+
- 	ret = ath12k_wmi_set_peer_param(ar, sta->addr,
- 					arvif->vdev_id,
- 					WMI_PEER_PARAM_FIXED_RATE,
-diff --git a/drivers/net/wireless/ath/ath12k/p2p.c b/drivers/net/wireless/ath/ath12k/p2p.c
-index d334df720032..3a851ee15b2f 100644
---- a/drivers/net/wireless/ath/ath12k/p2p.c
-+++ b/drivers/net/wireless/ath/ath12k/p2p.c
-@@ -121,7 +121,7 @@ static void ath12k_p2p_noa_update_vdev_iter(void *data, u8 *mac,
- 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
- 	struct ath12k_p2p_noa_arg *arg = data;
+-	ar = ath12k_ah_to_ar(ah, 0);
++	ar = ath12k_get_ar_by_vif(hw, vif);
++	if (!ar) {
++		/* TODO cache the info and apply after vdev is created */
++		return -EINVAL;
++	}
  
--	if (arvif->vdev_id != arg->vdev_id)
-+	if (arvif->ar != arg->ar || arvif->vdev_id != arg->vdev_id)
+ 	mutex_lock(&ar->conf_mutex);
+ 	ret = ath12k_mac_conf_tx(arvif, link_id, ac, params);
+@@ -6454,6 +6490,10 @@ static int ath12k_mac_op_ampdu_action(struct ieee80211_hw *hw,
+ 	struct ath12k_vif *arvif = ath12k_vif_to_arvif(vif);
+ 	int ret = -EINVAL;
+ 
++	ar = ath12k_get_ar_by_vif(hw, vif);
++	if (!ar)
++		return -EINVAL;
++
+ 	ar = ath12k_ah_to_ar(ah, 0);
+ 
+ 	mutex_lock(&ar->conf_mutex);
+@@ -7209,11 +7249,24 @@ static void ath12k_mac_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *v
+ 				u32 queues, bool drop)
+ {
+ 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
+-	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
++	struct ath12k *ar;
++	int i;
+ 
+ 	if (drop)
  		return;
  
- 	ath12k_p2p_noa_update(arvif, arg->noa);
-@@ -132,6 +132,7 @@ void ath12k_p2p_noa_update_by_vdev_id(struct ath12k *ar, u32 vdev_id,
- {
- 	struct ath12k_p2p_noa_arg arg = {
- 		.vdev_id = vdev_id,
-+		.ar = ar,
- 		.noa = noa,
- 	};
- 
-diff --git a/drivers/net/wireless/ath/ath12k/p2p.h b/drivers/net/wireless/ath/ath12k/p2p.h
-index 5768139a7844..b2eec51a9900 100644
---- a/drivers/net/wireless/ath/ath12k/p2p.h
-+++ b/drivers/net/wireless/ath/ath12k/p2p.h
-@@ -12,6 +12,7 @@ struct ath12k_wmi_p2p_noa_info;
- 
- struct ath12k_p2p_noa_arg {
- 	u32 vdev_id;
-+	struct ath12k *ar;
- 	const struct ath12k_wmi_p2p_noa_info *noa;
- };
++	/* vif can be NULL when flush() is considered for hw */
++	if (!vif) {
++		for_each_ar(ah, ar, i)
++			ath12k_mac_flush(ar);
++		return;
++	}
++
++	ar = ath12k_get_ar_by_vif(hw, vif);
++
++	if (!ar)
++		return;
++
+ 	ath12k_mac_flush(ar);
+ }
  
 -- 
 2.25.1
