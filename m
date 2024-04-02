@@ -1,52 +1,55 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5059815E200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8A0312DDBE
 	for <linux-wireless@vger.kernel.org>; Tue,  2 Apr 2024 21:05:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712091956; cv=none; b=X+doRdCscc0xcJHcLa34p6H+3nFDkAM4zP9qHfRRthoO6+hY+ss6xrTgJENUNNOvm9qXQsdWXQ2KnVBnUrDw6Z7o74jmv+AOAU9PYWwfypHRbHPJkIEZ8JcPwQS6FXFSeNOv1wV/PLJFr3mjTmmFRtPqzHTDlS4Tne5NfECysPg=
+	t=1712091956; cv=none; b=Spuiiff+iNn9yESoyK/BkkkCpy27Ot5QXlV/SZdWeOetw8dnf8mL3N49ilobtr3LFYN/9rzfWa8a1R6ilYolrChjvADLxRX3fv1wJMoqy9CKt3wjiCJvI5dER4blOJrENMMR086lmV3/RegonKbOu4hHEa8ReJGTkJTyqBejf1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712091956; c=relaxed/simple;
-	bh=vuJ4Bijtahk+1dkUYyfw9B3QI1rx9OcihkPlCxlpPMQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KO9xDHO7OMqGgRddSFUYHsqNaTlAF35/rA73hQXVd0PgWVA8vYdwX6ZauwckeaNQMPmTceqAQGu0EhGybw6uNj00KsYzI0YHs0IQq4sEEUeltEpaqetyLjjA5EHrelhfLfmzNPSfGEB/xd0wiCDWd8PGhWWgnTslqATqZBow704=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ynw2I/0l; arc=none smtp.client-ip=205.220.168.131
+	bh=QGFSju/xtJlSmAOEoaQV4VAfRWIXKtYoaqEGccEqyKw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jadjJf+QKSEyb3m7wuSx7W8J80VV2jh5YyARP/JiJ7jTm1tTy143GIzMsowv28geBCHKQsfQkyY+L2FetsB8WStKXeYfdeNDos5tLU7HIu7S64qpNuntKHXI7Ji3xTn3oVp8c5Jo74gOeW0tp/1bw3UbJRDvosunjPuyqHAOF0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jbvmWhZ9; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ynw2I/0l"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 432L5Nbs021037;
-	Tue, 2 Apr 2024 21:05:49 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jbvmWhZ9"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 432HDuSg018895;
+	Tue, 2 Apr 2024 21:05:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=Eja0qQ4
-	bFpG/cnGcLoou9CJZ8WjMSBNFw5DfrEJWOBE=; b=Ynw2I/0lOWYoqr9Tz262XQt
-	roEn/gzgotDMszSJZgnwvQkptr+OwhdRJ6tmvLtINWupalNZQ7SfIsVGX+rIvwFm
-	9r3jzvBUgrIvIUSCuMoT+vqNoi7Y+4EKvFDAqbN3pf1/Aa/xYPSKE7gZD2nH2GmS
-	qDPbpVrWBAiCZcH3CRxh/Jx03ciJVX0Bgsv3iBx/ClFyeGCPAUYO/N2W/tskClyB
-	XkSdFPNgVeSc6lpzwZtSFELFZ63rAgqvfSu/tNQmfndh4r/r8tB3Z1SA6JqhA2Vg
-	nsT6IEWr8MDPXEKcopZmjIBnbBgMe1xaiziSPOYKOjhEV0Tg4ftgIuJINpK05Ig=
-	=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=iuHKgaN0UdFzti4ivh25s5UvnrZVlq0j6E+8ytyec6A=; b=jb
+	vmWhZ9zZYHmkKBdT2nALKkAQgU4qUbDlQwfke5n+Cr9rp9mRaCscqdkg7AsBaey9
+	1vAqCjV5UFFOPKOHrCQleXdn7wWOahBlX7msYsVpdD7Z0mGWPW+QW5OLQvkPWP0E
+	VEzIq8e3UAIYD0YhRcQMReEjQD6fFiUdzGY/JPR+xJa9ppU2NR3UB22ACGO7gpKx
+	rdLIKA57tGpqLCbjI/bSgBAGI2ldEnba/oDAvr6sbXUHaM5BkRKijjNd6ggEOAeF
+	6sAm1dz83KeFlGGMbHW9gCgpwKX4fT+Zh9KnIMu4XtMiTKI0ZUuErPfHQeRNsWc1
+	lxIcDnQn5mCmQoGDQ5ig==
 Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x8eymhw0q-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x8ha3hfd3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 02 Apr 2024 21:05:49 +0000 (GMT)
+	Tue, 02 Apr 2024 21:05:51 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 432L5m2J031796
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 432L5o0U031821
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 2 Apr 2024 21:05:48 GMT
+	Tue, 2 Apr 2024 21:05:50 GMT
 Received: from alokad-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Tue, 2 Apr 2024 14:05:48 -0700
+ 15.2.1544.4; Tue, 2 Apr 2024 14:05:50 -0700
 From: Aloka Dixit <quic_alokad@quicinc.com>
 To: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
 CC: Aloka Dixit <quic_alokad@quicinc.com>
-Subject: [PATCH 0/9] wifi: ath12k: MBSSID and EMA AP support 
-Date: Tue, 2 Apr 2024 14:05:29 -0700
-Message-ID: <20240402210538.7308-1-quic_alokad@quicinc.com>
+Subject: [PATCH 6/9] wifi: ath12k: refactor arvif security parameter configuration
+Date: Tue, 2 Apr 2024 14:05:35 -0700
+Message-ID: <20240402210538.7308-7-quic_alokad@quicinc.com>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20240402210538.7308-1-quic_alokad@quicinc.com>
+References: <20240402210538.7308-1-quic_alokad@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,60 +62,85 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: EOM-q9X879RN9p88-Q6IeFF7EHk1dXke
-X-Proofpoint-ORIG-GUID: EOM-q9X879RN9p88-Q6IeFF7EHk1dXke
+X-Proofpoint-ORIG-GUID: UpNw-9e0Uxfb4GYsR9_q2pjvUnNSixK1
+X-Proofpoint-GUID: UpNw-9e0Uxfb4GYsR9_q2pjvUnNSixK1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-02_14,2024-04-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
- priorityscore=1501 impostorscore=0 suspectscore=0 bulkscore=0
- mlxlogscore=999 lowpriorityscore=0 mlxscore=0 clxscore=1011 phishscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 impostorscore=0
+ priorityscore=1501 mlxlogscore=999 spamscore=0 lowpriorityscore=0
+ clxscore=1015 adultscore=0 bulkscore=0 suspectscore=0 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2403210001 definitions=main-2404020157
 
-Add support for multiple BSSID (MBSSID) and enhanced multi-BSSID
-advertisements (EMA) features in AP mode. Set extended capabilities,
-WMI resource configurations to advertise the driver support to
-userspace and to firmware. Configure each MBSSID profile by sending
-BSSID index, total BSS count to firmware. Retrieve and propagate
-MBSSID/EMA beacon templates to firmware. Set the arvif security
-parameters for non-transmitting profiles.
+Configure security parameters in a separate function to make it
+easier to support setting the same for nontransmitted profiles.
 
-This series has been tested on QCN9274 for AP mode but not on
-WCN7850 as STA support is not part of this version.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-One issue unrelated to these driver changes but seen with these:
-cfg80211_mlme_mgmt_tx() fails when hostapd tries to send a Probe
-Response for a directed probe request for a nontransmitted interface.
-Failure happens because both cfg80211_allowed_address() and
-cfg80211_allowed_random_address() return false when SA is that of the
-transmitted interface but wdev points to the nontransmitted interface.
-Association is successful and pings work. Issue is not seen with
-hostapd version up to commit ID 3cd377eb54e7 ("MLD: Ignore failed links
-from association attempt") so will debug commit ID 82453a3482c4
-("AP: Split Probe Response frame IE generation into a separate
-function") and commit ID 6b5e00a80e5f ("AP: Use a struct for Probe
-Response generation in/out params").
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 33 +++++++++++++++++----------
+ 1 file changed, 21 insertions(+), 12 deletions(-)
 
-Aloka Dixit (9):
-  wifi: ath12k: advertise driver capabilities for MBSSID and EMA
-  wifi: ath12k: configure MBSSID params in vdev create/start
-  wifi: ath12k: rename MBSSID fields in wmi_vdev_up_cmd
-  wifi: ath12k: create a structure for WMI vdev up parameters
-  wifi: ath12k: configure MBSSID parameters in AP mode
-  wifi: ath12k: refactor arvif security parameter configuration
-  wifi: ath12k: add MBSSID beacon support
-  wifi: ath12k: add EMA beacon support
-  wifi: ath12k: skip sending vdev down for channel switch
-
- drivers/net/wireless/ath/ath12k/hw.h  |   1 +
- drivers/net/wireless/ath/ath12k/mac.c | 324 +++++++++++++++++++++-----
- drivers/net/wireless/ath/ath12k/wmi.c |  40 +++-
- drivers/net/wireless/ath/ath12k/wmi.h |  46 +++-
- 4 files changed, 345 insertions(+), 66 deletions(-)
-
-
-base-commit: fe7e1b830cf3c0272aa4eaf367c4c7b29c169c3d
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 01422fcfa760..996ce2c4698a 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1242,6 +1242,26 @@ static int ath12k_mac_remove_vendor_ie(struct sk_buff *skb, unsigned int oui,
+ 	return 0;
+ }
+ 
++static void ath12k_mac_set_arvif_ies(struct ath12k_vif *arvif, struct sk_buff *bcn)
++{
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)bcn->data;
++	const u8 *start, *tail;
++	u16 rem_len;
++
++	start = bcn->data + ieee80211_get_hdrlen_from_skb(bcn) + sizeof(mgmt->u.beacon);
++	tail = skb_tail_pointer(bcn);
++	rem_len = tail - start;
++
++	arvif->rsnie_present = false;
++	arvif->wpaie_present = false;
++
++	if (cfg80211_find_ie(WLAN_EID_RSN, start, rem_len))
++		arvif->rsnie_present = true;
++	if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT, WLAN_OUI_TYPE_MICROSOFT_WPA,
++				    start, rem_len))
++		arvif->wpaie_present = true;
++}
++
+ static int ath12k_mac_setup_bcn_tmpl(struct ath12k_vif *arvif)
+ {
+ 	struct ath12k *ar = arvif->ar;
+@@ -1250,8 +1270,6 @@ static int ath12k_mac_setup_bcn_tmpl(struct ath12k_vif *arvif)
+ 	struct ieee80211_vif *vif = arvif->vif;
+ 	struct ieee80211_mutable_offsets offs = {};
+ 	struct sk_buff *bcn;
+-	struct ieee80211_mgmt *mgmt;
+-	u8 *ies;
+ 	int ret;
+ 
+ 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+@@ -1263,16 +1281,7 @@ static int ath12k_mac_setup_bcn_tmpl(struct ath12k_vif *arvif)
+ 		return -EPERM;
+ 	}
+ 
+-	ies = bcn->data + ieee80211_get_hdrlen_from_skb(bcn);
+-	ies += sizeof(mgmt->u.beacon);
+-
+-	if (cfg80211_find_ie(WLAN_EID_RSN, ies, (skb_tail_pointer(bcn) - ies)))
+-		arvif->rsnie_present = true;
+-
+-	if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+-				    WLAN_OUI_TYPE_MICROSOFT_WPA,
+-				    ies, (skb_tail_pointer(bcn) - ies)))
+-		arvif->wpaie_present = true;
++	ath12k_mac_set_arvif_ies(arvif, bcn);
+ 
+ 	if (arvif->vif->type == NL80211_IFTYPE_AP && arvif->vif->p2p) {
+ 		ret = ath12k_mac_setup_bcn_p2p_ie(arvif, bcn);
 -- 
 2.39.0
 
