@@ -1,159 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C47C215E1FF
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Apr 2024 20:34:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DF5179DD4
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Apr 2024 21:05:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712090086; cv=none; b=qJF/yQqXcG2wRmHJQAm4XAO9fGUo98XrwveyEb/pSp9bQ4qgQfj4sO2H0KP8jxIF/G7zO9rCHgr61DfZyNW4UABWMomhsN6HT/UK4zMwMyl+he4Q5XFjz8bZau2OCOSb1ir8QNCi3vvHsS5IDZoSs171MUkrAa/CgWWc0ltiY+Y=
+	t=1712091955; cv=none; b=RjhFvOyD676Cr/39xYW5lIr1pDRpTKAy+AXIwNhy+srfug4dnsrcYSyiBJuaN68Iz3gpoYlP/v1HcnbqA5VXBX5E6YC/TevZdJI2LDyaxNNRNvUdEm53jL5jBan+cFnvzwfQOGPlkF8fn9Xhmf1fAaQbSxv4TOZNGKaGZEx0YV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712090086; c=relaxed/simple;
-	bh=PbCYgrPVbVOdhV1jC/4KII4virJ8WGK/ifPusT5Ym9k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=f3Y8WXW/VT+TXf76n/y5SA01VVDi1vyHCqIet0gCTiwWT0p/eq/xDblvKQRUHMImBZBJcAtYg+89XJXdNMYu/iof5UdxJ3FMtvZUVTZTOpnpXhy6aufu2Vk88Ocgjzwl9Bcsa1GcC5vb+CWISIpLUxC35TbaAy7+uvPAJx7phAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=f6U0DyP5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712091955; c=relaxed/simple;
+	bh=tb5h11j5mBpiyRyGBkjSsF/1Oyq80nLKNE2QA7KPOOA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=p8X7Wgukgmf1/hUDKftuZOqE+rbhVjUXfyvT7PP9B5IP6JIailTm1R0qAP7tEyw6aAe3Qg0pIUsnEx+iD8CFuIEFnWB9ycFVo9bwpqJF4YpSRUi05ngnfK+qbbMrytsTtCFh7oHNMTLnD90xk/PyeKHCGCuZROb9bmPeuKASQEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dwJp+tCW; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="f6U0DyP5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712090084;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OmliKS7IXk0y+y9ssPc7arVQxLqF15p8TNQCcmbmlpA=;
-	b=f6U0DyP5RTDuDa4zavUrwkOVaS3it37P0oHjHsWeG1Ly6Lg0TSGAlC1XgialT9oJ1I0FwU
-	UlaoJD/wMnY2JW+k4Lj4MMY/LgttSBQxtUE7XhRN7Bfk6XJ9qH8xnbkA6zHjFhUMGNrPjz
-	XepIrotzXv36o1KlWTgPU9830qQy3o4=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-665-0Tm61sA2Nw-68qBkgUVZgw-1; Tue, 02 Apr 2024 16:34:40 -0400
-X-MC-Unique: 0Tm61sA2Nw-68qBkgUVZgw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id BF21F101A520;
-	Tue,  2 Apr 2024 20:34:38 +0000 (UTC)
-Received: from localhost (unknown [10.39.193.21])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 6A6D640C6DAE;
-	Tue,  2 Apr 2024 20:34:37 +0000 (UTC)
-Date: Tue, 2 Apr 2024 16:34:18 -0400
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	David Hildenbrand <david@redhat.com>,
-	Gerd Hoffmann <kraxel@redhat.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Paolo Bonzini <pbonzini@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Olivia Mackall <olivia@selenic.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gonglei <arei.gonglei@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Sudeep Holla <sudeep.holla@arm.com>,
-	Cristian Marussi <cristian.marussi@arm.com>,
-	Viresh Kumar <vireshk@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	David Airlie <airlied@redhat.com>,
-	Gurchetan Singh <gurchetansingh@chromium.org>,
-	Chia-I Wu <olvaffe@gmail.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Jean-Philippe Brucker <jean-philippe@linaro.org>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Alexander Graf <graf@amazon.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Stefano Garzarella <sgarzare@redhat.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>,
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>,
-	Anton Yakovlev <anton.yakovlev@opensynergy.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	virtualization@lists.linux.dev, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev,
-	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
-Subject: Re: [PATCH v2 24/25] fuse: virtio: drop owner assignment
-Message-ID: <20240402203418.GG2507314@fedora>
-References: <20240331-module-owner-virtio-v2-0-98f04bfaf46a@linaro.org>
- <20240331-module-owner-virtio-v2-24-98f04bfaf46a@linaro.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dwJp+tCW"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 432KYYBO012476;
+	Tue, 2 Apr 2024 21:05:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=QM3TW/fjiuQ1ShVfHv4u63kETVk73i4HMowuZTZofK0=; b=dw
+	Jp+tCWPzmlvgdGkMrrTLIovxtofGyMNNMLql10r3GFMe4pq5YZMgIIjsD3xtCLuS
+	Z6yQ/9OR17aclX1UJFR6Akahe/AGl/TqHpCf0SVWz004WWwvu2uX+9ELljbXf9CB
+	OLK0aug5ghmIqCjy6xVawUd/5Be0J+dja2S+EelRrv8MCbu5LACltw3K2zt0gjtb
+	HgTs0Xj0qGIFeQbvX3We211azAJvGAYxD2FKa6dOUitxUwJOZcMsolcNSlU8ji5l
+	StAlzOxvrLRa1weZGm3A3wxQgCdylUsrEo2D81FulKsVUYvGxuwA7XAZw6vu5Vp7
+	ej/8XU+gNXJ3BBFnyOow==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3x8huwhbtc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Apr 2024 21:05:50 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 432L5nZG000711
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 2 Apr 2024 21:05:49 GMT
+Received: from alokad-linux.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.4; Tue, 2 Apr 2024 14:05:49 -0700
+From: Aloka Dixit <quic_alokad@quicinc.com>
+To: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: Aloka Dixit <quic_alokad@quicinc.com>
+Subject: [PATCH 3/9] wifi: ath12k: rename MBSSID fields in wmi_vdev_up_cmd
+Date: Tue, 2 Apr 2024 14:05:32 -0700
+Message-ID: <20240402210538.7308-4-quic_alokad@quicinc.com>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20240402210538.7308-1-quic_alokad@quicinc.com>
+References: <20240402210538.7308-1-quic_alokad@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="y2TTKZujScqhsi/4"
-Content-Disposition: inline
-In-Reply-To: <20240331-module-owner-virtio-v2-24-98f04bfaf46a@linaro.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: JfAaVkXg3RED-PeyifHj-5UT5WsDPWYc
+X-Proofpoint-ORIG-GUID: JfAaVkXg3RED-PeyifHj-5UT5WsDPWYc
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-02_14,2024-04-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 malwarescore=0
+ impostorscore=0 adultscore=0 mlxscore=0 priorityscore=1501 bulkscore=0
+ suspectscore=0 mlxlogscore=792 spamscore=0 clxscore=1015
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2403210001 definitions=main-2404020157
 
+Rename trans_bssid to tx_vdev_bssid to make it similar to vdev_bssid.
 
---y2TTKZujScqhsi/4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Rename profile_num to nontx_profile_cnt, and profile_idx to
+nontx_profile_idx which make it clear that these configurations
+correspond to nontransmitted MBSSID profiles.
 
-On Sun, Mar 31, 2024 at 10:44:11AM +0200, Krzysztof Kozlowski wrote:
-> virtio core already sets the .owner, so driver does not need to.
->=20
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
->=20
-> ---
->=20
-> Depends on the first patch.
-> ---
->  fs/fuse/virtio_fs.c | 1 -
->  1 file changed, 1 deletion(-)
+These members are currently unused in the driver.
 
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
---y2TTKZujScqhsi/4
-Content-Type: application/pgp-signature; name="signature.asc"
+Signed-off-by: Aloka Dixit <quic_alokad@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/wmi.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmYMa8oACgkQnKSrs4Gr
-c8hVnAf/cA3xbyK70jAgkZV9EtimcENA8Vicjc5wwuE2Vt1WSOZUWtD+a8KtqIDS
-ICvCIk7XlMHoB7BYaP8qlXQ0kjkARmT7hwEQyqEDL/MzEgyKhChus/pV8g6Cvywl
-OdPkT57aujxEBU5+l5t8TnP2I8CziPoDf0uizIpf5r2pZstP0q/mRVNFevjTDeSu
-L+LjxHElpmAVApGciiGOH+cpPYuKAejObzy5z92m7jZgh/LfHtcK29bhoWwNTL1l
-e6ryz/B2YrpyrVdDjqUD1iJ2WR2qxEUAI3moU5ySGqG/w5Lg0+ji+9TlCE46xoQ/
-U1ALdKDyNFUB1iRXdA00oKhEe6MUOw==
-=AQF3
------END PGP SIGNATURE-----
-
---y2TTKZujScqhsi/4--
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 29e4aa2710c1..adc72c0f2862 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -2745,9 +2745,9 @@ struct wmi_vdev_up_cmd {
+ 	__le32 vdev_id;
+ 	__le32 vdev_assoc_id;
+ 	struct ath12k_wmi_mac_addr_params vdev_bssid;
+-	struct ath12k_wmi_mac_addr_params trans_bssid;
+-	__le32 profile_idx;
+-	__le32 profile_num;
++	struct ath12k_wmi_mac_addr_params tx_vdev_bssid;
++	__le32 nontx_profile_idx;
++	__le32 nontx_profile_cnt;
+ } __packed;
+ 
+ struct wmi_vdev_stop_cmd {
+-- 
+2.39.0
 
