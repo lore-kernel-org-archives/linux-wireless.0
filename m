@@ -1,41 +1,41 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CE0B136989
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:52:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7780136989
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:52:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712141578; cv=none; b=BWhLD6j9QlfKMr8hlqo08iiKNrYT9ddNDB5/3rm8CWUZzoON9faoCpvVRjLnd/FmXGYrtyQcPKSPEdjnQRY8pY+9LSW2M71c/eX8w+I3rHcr4n9sJxVkCivu9SXvyHtULjfKs8x0U2vTcZE4rWKRuv3zBtIWw25Yq15HQjlJ4/g=
+	t=1712141581; cv=none; b=uWLs1dh30NfCkgL05prruMaWSZrp8lM+ZhNgtdl2QS6SF0ohn9hbelY+OEM9OcyvrpMMzMiU0Hflq3JvQVMvjA+bmXWYsw/v/l9Ulflm3V2ROlGQfOn3s2Z9gDz6KVhZioGi48Mb2L8MTKfexdeiGgPkw1wi7J4e47ApLc9K1AY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712141578; c=relaxed/simple;
-	bh=NmZfMWWiAiW7lkg0ljsyNcUyTJWYaciOvsYO0qRt6j4=;
+	s=arc-20240116; t=1712141581; c=relaxed/simple;
+	bh=YDKRSRISc0kpls4zpkAzwhxh20G3/n0mq3GMx7wO59c=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fz4e1CWNffcWFBFBrfU+LFcGX10JAVD57oa3jLlzvBfhWZA4PFJuoqci1zeXnISHaPzY/KyJv2yCNVn5kR9JXobH+4Fzgv1dLqIClOPLrUjdwjA2wAWS817I3Yea9gLzn8fCs6JZPJ5P6jNqzLcEAt1sSVIJOUNpBJkz3I2udsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=QTUdVgdm; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=aXQZzOafrjV5LscKS7B384Etmfjc0+m/XKJpvk7p3Ay+tktvqVtGWXYJWMJ0zo6SDGKcqRuZevwtwrFvMNhnHu22vLPm2kXku0+ndX39XR2R3BvLJDlWRGt3mff38k49tNcEMP8knN+/o9TKY143LjA9ffQZB6B6eXqFm8WudT0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Wr5Wh651; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="QTUdVgdm"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Wr5Wh651"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=aGJ0TLncanEet7ffoqEAYZmRD569y9Qq5VdyPo9myiY=; b=QTUdVgdmoGjrupBttTqEN0Dnvi
-	TfktjktilgGkE4QVb6cN+lJPf+Ou+8rxXnhdgOGqVuTnGVuVskHJbaiRzF+EdFnjP0hBgVvZg6oRH
-	Kp5v9c9d5utn+dlyVNVye3xnF1mlOhRGv0JE3TX6pnPGIXBOo1F2buzCGsVBUpRxq7po=;
+	bh=avYmju3+CMFfshpROmOz5IWxIKBPVzthBow2+avgqb0=; b=Wr5Wh65152r7T8ky9+MNoA1Cwb
+	aYEHLstfG1t7dMdApR6e5N/bxfV/J2/MQFafjhLhZqleuaiyBiqxW+M9PR0m3T47J8KUNKrO5/GL0
+	3N73h4SR/1migmPT8B4I0PGwScJx1xFOkdbJ03V1ChXtC1vD2IwwHaYUZkg/cegD+ZXQ=;
 Received: from p54ae9c93.dip0.t-ipconnect.de ([84.174.156.147] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.94.2)
 	(envelope-from <nbd@nbd.name>)
-	id 1rrxt3-00CgfA-At
+	id 1rrxt3-00CgfA-0W
 	for linux-wireless@vger.kernel.org; Wed, 03 Apr 2024 12:30:33 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/13] wifi: mt76: mt7915: fix mcu command format for mt7915 tx stats
-Date: Wed,  3 Apr 2024 12:30:23 +0200
-Message-ID: <20240403103032.54823-4-nbd@nbd.name>
+Subject: [PATCH 02/13] wifi: mt76: replace skb_put with skb_put_zero
+Date: Wed,  3 Apr 2024 12:30:21 +0200
+Message-ID: <20240403103032.54823-2-nbd@nbd.name>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240403103032.54823-1-nbd@nbd.name>
 References: <20240403103032.54823-1-nbd@nbd.name>
@@ -47,84 +47,76 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+Avoid potentially reusing uninitialized data
 
-The mcu command format are different for mt7915 and mt7986.
-Fix the mt7915_mcu_wed_wa_tx_stats to support mt7915 and mt7986.
-
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 36 ++++++++++++-------
- 1 file changed, 24 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c | 10 +++++-----
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c      |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index af0c2b2aacb0..b8927714d7e0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -257,7 +257,7 @@ mt76_connac_mcu_add_nested_tlv(struct sk_buff *skb, int tag, int len,
+ 	};
+ 	u16 ntlv;
+ 
+-	ptlv = skb_put(skb, len);
++	ptlv = skb_put_zero(skb, len);
+ 	memcpy(ptlv, &tlv, sizeof(tlv));
+ 
+ 	ntlv = le16_to_cpu(ntlv_hdr->tlv_num);
+@@ -1670,7 +1670,7 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 	set_bit(MT76_HW_SCANNING, &phy->state);
+ 	mvif->scan_seq_num = (mvif->scan_seq_num + 1) & 0x7f;
+ 
+-	req = (struct mt76_connac_hw_scan_req *)skb_put(skb, sizeof(*req));
++	req = (struct mt76_connac_hw_scan_req *)skb_put_zero(skb, sizeof(*req));
+ 
+ 	req->seq_num = mvif->scan_seq_num | mvif->band_idx << 7;
+ 	req->bss_idx = mvif->idx;
+@@ -1798,7 +1798,7 @@ int mt76_connac_mcu_sched_scan_req(struct mt76_phy *phy,
+ 
+ 	mvif->scan_seq_num = (mvif->scan_seq_num + 1) & 0x7f;
+ 
+-	req = (struct mt76_connac_sched_scan_req *)skb_put(skb, sizeof(*req));
++	req = (struct mt76_connac_sched_scan_req *)skb_put_zero(skb, sizeof(*req));
+ 	req->version = 1;
+ 	req->seq_num = mvif->scan_seq_num | mvif->band_idx << 7;
+ 
+@@ -2321,7 +2321,7 @@ int mt76_connac_mcu_update_gtk_rekey(struct ieee80211_hw *hw,
+ 		return -ENOMEM;
+ 
+ 	skb_put_data(skb, &hdr, sizeof(hdr));
+-	gtk_tlv = (struct mt76_connac_gtk_rekey_tlv *)skb_put(skb,
++	gtk_tlv = (struct mt76_connac_gtk_rekey_tlv *)skb_put_zero(skb,
+ 							 sizeof(*gtk_tlv));
+ 	gtk_tlv->tag = cpu_to_le16(UNI_OFFLOAD_OFFLOAD_GTK_REKEY);
+ 	gtk_tlv->len = cpu_to_le16(sizeof(*gtk_tlv));
+@@ -2446,7 +2446,7 @@ mt76_connac_mcu_set_wow_pattern(struct mt76_dev *dev,
+ 		return -ENOMEM;
+ 
+ 	skb_put_data(skb, &hdr, sizeof(hdr));
+-	ptlv = (struct mt76_connac_wow_pattern_tlv *)skb_put(skb, sizeof(*ptlv));
++	ptlv = (struct mt76_connac_wow_pattern_tlv *)skb_put_zero(skb, sizeof(*ptlv));
+ 	ptlv->tag = cpu_to_le16(UNI_SUSPEND_WOW_PATTERN);
+ 	ptlv->len = cpu_to_le16(sizeof(*ptlv));
+ 	ptlv->data_len = pattern->pattern_len;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index b7157bdb3103..11f81b233d46 100644
+index d90f98c50039..b7157bdb3103 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -3801,30 +3801,38 @@ int mt7915_mcu_wed_wa_tx_stats(struct mt7915_dev *dev, u16 wlan_idx)
- {
- 	struct {
- 		__le32 cmd;
--		__le32 num;
--		__le32 __rsv;
--		__le16 wlan_idx;
--	} req = {
-+		__le32 arg0;
-+		__le32 arg1;
-+		__le16 arg2;
-+	} __packed req = {
- 		.cmd = cpu_to_le32(0x15),
--		.num = cpu_to_le32(1),
--		.wlan_idx = cpu_to_le16(wlan_idx),
+@@ -424,7 +424,7 @@ mt7915_mcu_add_nested_subtlv(struct sk_buff *skb, int sub_tag, int sub_len,
+ 		.len = cpu_to_le16(sub_len),
  	};
- 	struct mt7915_mcu_wa_tx_stat {
--		__le16 wlan_idx;
--		u8 __rsv[2];
-+		__le16 wcid;
-+		u8 __rsv2[2];
  
- 		/* tx_bytes is deprecated since WA byte counter uses u32,
- 		 * which easily leads to overflow.
- 		 */
- 		__le32 tx_bytes;
- 		__le32 tx_packets;
--	} *res;
-+	} __packed *res;
- 	struct mt76_wcid *wcid;
- 	struct sk_buff *skb;
--	int ret;
-+	int ret, len;
-+	u16 ret_wcid;
-+
-+	if (is_mt7915(&dev->mt76)) {
-+		req.arg0 = cpu_to_le32(wlan_idx);
-+		len = sizeof(req) - sizeof(req.arg2);
-+	} else {
-+		req.arg0 = cpu_to_le32(1);
-+		req.arg2 = cpu_to_le16(wlan_idx);
-+		len = sizeof(req);
-+	}
+-	ptlv = skb_put(skb, sub_len);
++	ptlv = skb_put_zero(skb, sub_len);
+ 	memcpy(ptlv, &tlv, sizeof(tlv));
  
- 	ret = mt76_mcu_send_and_get_msg(&dev->mt76, MCU_WA_PARAM_CMD(QUERY),
--					&req, sizeof(req), true, &skb);
-+					&req, len, true, &skb);
- 	if (ret)
- 		return ret;
- 
-@@ -3833,7 +3841,11 @@ int mt7915_mcu_wed_wa_tx_stats(struct mt7915_dev *dev, u16 wlan_idx)
- 
- 	res = (struct mt7915_mcu_wa_tx_stat *)skb->data;
- 
--	if (le16_to_cpu(res->wlan_idx) != wlan_idx) {
-+	ret_wcid = le16_to_cpu(res->wcid);
-+	if (is_mt7915(&dev->mt76))
-+		ret_wcid &= 0xff;
-+
-+	if (ret_wcid != wlan_idx) {
- 		ret = -EINVAL;
- 		goto out;
- 	}
+ 	le16_add_cpu(sub_ntlv, 1);
 -- 
 2.43.0
 
