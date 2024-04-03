@@ -1,71 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF30219E0
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:38:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD61F1411D6
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712140695; cv=none; b=XF6aRWnq/uOepp8rP9LzSBj+dFTVvaKwryKw1/6XKs27rdSI8mxaWILvZwYBbMm1l3r7T84FqrHLAzAVrYB3ycaGeViykdENBlZATJVWBHKV3zxjpyoZmfl59kkyYaq2WNbu+ip4+I/GX6ATE9AoXL+zkHYyCmx/4KAz0QTekro=
+	t=1712141569; cv=none; b=Pp2b93nMJVUChiSvUqP2SWb62sdnSUwhLsRRgijnQ/QoBLxUnwmgP26FoR71AUS6NICUkqVenNJSiadxorLt1y11xhXDLqKH9bHHSZ8Y0j21AoPJADm0vxWtkj56Fq9zMGyOitQ8uG4m0jZ2dfVcI5gbaOZvPGqdBMvo7Q6z63Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712140695; c=relaxed/simple;
-	bh=nRxqRG35XPkOm9ujEDT+vmy7suP6a7xyli/k/7DN3Tg=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=neXxUz+GzqzDYxYNw4Sty0sX5TVdWh1S4w9iU4gB1NY08gg+ojsyZirK/z9ZH2JQUoeO0Y0svXDsJwEvSrCPiikR2dmwxorNOvB+4uz+z3fKa2u1gjmTzWYSth4MnN5UYe1AJs94mdlnXIHtzgyukoJynRI+TcXDZYaUe3Y7KyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qwfh1pkA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712141569; c=relaxed/simple;
+	bh=+0hKOhgqBsmGI7VoeFqWOQwM0SZXh84wljtnBWsmjjo=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=e4SQjg3E3s+VuxYcjg3O9MDSFh9NoKpwyEvv9Fu5PSCXndvKAcj60dfLY82OizCZL7IsCsczdyZvHlbyBg1BK/kxXWOa3D3WmcmZNjAEHl0ds1evdrRgq26NUuuCmdGAFOiIbkSVQoo7jwzsUz0oCo1wXOSkansWp6N8SjgeKS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Bz5uJPRW; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qwfh1pkA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F172C43394;
-	Wed,  3 Apr 2024 10:38:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712140695;
-	bh=nRxqRG35XPkOm9ujEDT+vmy7suP6a7xyli/k/7DN3Tg=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=Qwfh1pkAa435kxRTaAYYZfQo1Y4XsW+MhwGNUOyYrbY//z8IzN9yzrGX+EYeqpp2S
-	 bHvPem3HjxCDF3LZ5ygn1ITjbOFPNU/E1lwi/VdnCnzAAvcnGz/0HQXZ89PaY7U6bQ
-	 WqTDnz27ohJnWRbq6rdLVAs+x0/fw+JIdI7clhIpFD8bjZsi4ICjhjJ6qHmDJpoW0Z
-	 Wgb2cDhmc+2axcmdtsg0SMJfKLp6IAO/YcGGGnPoC7MmJOyPOKsvTzZFTqvS/Yl/SY
-	 4zbHLCy/x4lowgelWGiFdsp9A1F22CB9vKxvU7Num8nWI/XAdzlGhwVRr3DoCXelyS
-	 N/B53805Q77BA==
-From: Kalle Valo <kvalo@kernel.org>
-To: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/2] [RESEND] wifi: ath12k: refactor the link capable
- flag
-References: <20240403042056.1504209-1-quic_periyasa@quicinc.com>
-Date: Wed, 03 Apr 2024 13:38:12 +0300
-In-Reply-To: <20240403042056.1504209-1-quic_periyasa@quicinc.com> (Karthikeyan
-	Periyasamy's message of "Wed, 3 Apr 2024 09:50:54 +0530")
-Message-ID: <87o7aq68a3.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Bz5uJPRW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Bi8CmWyYC3S1OMhHBGv7//trnZFH8HiYjc/gqU4+eZo=; b=Bz5uJPRWqBMRaLiO9bu5bzX6Ug
+	Zux7MwEMiFN6QfRaclhKNcLQcCrQEQotHYHWpbKmaSuJVuVrZZc7eRjF4o75Q08y8feoslj68uF2K
+	tW7zhi8Y22hsjfQno5pdVH1tGcBaVZ6ot5Q3OoznekA4d4aiYgrybPsXIwv4MayBM5nQ=;
+Received: from p54ae9c93.dip0.t-ipconnect.de ([84.174.156.147] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.94.2)
+	(envelope-from <nbd@nbd.name>)
+	id 1rrxt2-00CgfA-Rj
+	for linux-wireless@vger.kernel.org; Wed, 03 Apr 2024 12:30:32 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/13] wifi: mt76: mt7915: initialize rssi on adding stations
+Date: Wed,  3 Apr 2024 12:30:20 +0200
+Message-ID: <20240403103032.54823-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Karthikeyan Periyasamy <quic_periyasa@quicinc.com> writes:
+Improves initial rate selection after connecting
 
-> extend the link capable flag to accommodate inter-device capability.
->
-> v2:
->  - Rename the terminology from chip to device
->
-> Karthikeyan Periyasamy (2):
->   wifi: ath12k: extend the link capable flag
->   wifi: ath12k: fix link capable flags
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Why the resend? I'm not really a fan of these "RESEND" versions. If you
-need to resend something simply just increase the version number (in
-this case to v3) and explain in the change log why you sent v3. That's a
-lot more clear for everyone than having "v2", "v2 RESEND", "v2 RESEND
-RESEND" and what not. It's not like we are running out of version
-numbers ;)
-
-But no need to resend because of this :)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 3709d18da0e6..49d5b459fb44 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -744,6 +744,7 @@ int mt7915_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
+ 	bool ext_phy = mvif->phy != &dev->phy;
+ 	int ret, idx;
++	u32 addr;
+ 
+ 	idx = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7915_WTBL_STA);
+ 	if (idx < 0)
+@@ -767,6 +768,9 @@ int mt7915_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
++	addr = mt7915_mac_wtbl_lmac_addr(dev, msta->wcid.idx, 30);
++	mt76_rmw_field(dev, addr, GENMASK(7, 0), 0xa0);
++
+ 	return mt7915_mcu_add_rate_ctrl(dev, vif, sta, false);
+ }
+ 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.43.0
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
