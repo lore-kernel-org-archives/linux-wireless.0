@@ -1,41 +1,41 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187401411F0
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:55:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF42B1411FC
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:55:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712141729; cv=none; b=eVhmz+ETWYciY+diEckwlUZSafndvZoJsUviy0jHYJZnJRocPwBD6CcGkCFl9ETp1J/Q23vMDa4pn/jfa/Su4afmLH1maWj2OCfvBycDcQYyL7ZVs5xaP3CChbaN7IgUapBNlCD+LAkm+AHUpIb9QFHnokGYvKfTL2ZPCmDB3FQ=
+	t=1712141733; cv=none; b=dd0ZtjhPy9Q3wPLrAYg4rjG5zPsIVAcY5myJUBnA/8KVs35pDrkYSNsXJy5tfSIHtxVIcKlcGPFgT88HWZ1oHYVO6Q2dTWj3vY1BYC27ZJfEr5A8WmjgQZ+vJNwjB3TuPrqCQSb+P2b2Qj2o4CvVxDb2OBSX+D0SS74KKkvuFyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712141729; c=relaxed/simple;
-	bh=bJ4AFAATadQ6GPqVXMJVqNGm5tyyDwnYZuC1O08rHVQ=;
+	s=arc-20240116; t=1712141733; c=relaxed/simple;
+	bh=OXnLBvhO+pTjhmhUpWBHMfulniUgx1opC9NtdV5oSH8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=q53DOUHljykboRKEgKkeJr1GNsvd7KLcZYGswgaoMxoYB93DBrBCNFzaGi2gEFEJNxcqVYJRTkBQ/ykmSTO7G7+TYXGziksRkgjzUmDSyV9nG3ySYot3gOfZyhbtz6kPf82mBi8BvewBr3E2mNAvh4PEMr01dKMUVQvncOBfDYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=HLEam39u; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=J5U7bmvlK//q8rMHw9CATH4nsjVnNVxxAPdjhLvr2wiZfm+lBpf46V4kS5Dj0hKWtbeIxtYFsGHJkHK9CBISzPF4PImMtix6VQe9FACEzCjGKMoxuyiMtFFI83JJ8cu4p8uDsmBQSJjiZ/Mh30koQEe38ADhJl/CpHq3+fOsK4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ekZsdoym; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HLEam39u"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ekZsdoym"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=vfYWTNhZuEn17qWNLJuZdsMFkM+isrKnXo5fuGfQGx0=; b=HLEam39u27K3okwqeh5v7h7sbK
-	bn0DuBuXLaybpdTD9p3jXUHuDCogPhDFCkWAQ9jeFU7wkYutqzkI/w15UW0TEfy4spn6qQOa0WmF+
-	v3blSPLQu+pLzXbAlwbWZh783w37te/+rPyNWDoFY+Z+VxdIlVXUD0M3gXShhfLO+Hiw=;
+	bh=5lP0IBnIIK8zvGHDHh/xa0kI4gpiW5jjRsW8EHqgMBA=; b=ekZsdoymf2hKAHUVHFQvMB/Whs
+	NQicgMeeAzebLENpcMMa1oRjbS+t+cmSrVqq1Zx2kldjXYEuvytHIpe7yo8leWTLwuPikMa38DW0e
+	sO5GpJuY+s5hdN1LO0Zri1aMy8XrPmtXYBSQAMjAi1fRBRtbVWMlRC//f3C1r/VIQQsc=;
 Received: from p54ae9c93.dip0.t-ipconnect.de ([84.174.156.147] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.94.2)
 	(envelope-from <nbd@nbd.name>)
-	id 1rrxt4-00CgfA-59
+	id 1rrxt4-00CgfA-NH
 	for linux-wireless@vger.kernel.org; Wed, 03 Apr 2024 12:30:34 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/13] wifi: mt76: mt7915: add support for disabling in-band discovery
-Date: Wed,  3 Apr 2024 12:30:28 +0200
-Message-ID: <20240403103032.54823-9-nbd@nbd.name>
+Subject: [PATCH 12/13] wifi: mt76: mt7603: fix tx queue of loopback packets
+Date: Wed,  3 Apr 2024 12:30:31 +0200
+Message-ID: <20240403103032.54823-12-nbd@nbd.name>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240403103032.54823-1-nbd@nbd.name>
 References: <20240403103032.54823-1-nbd@nbd.name>
@@ -47,38 +47,101 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: MeiChia Chiu <meichia.chiu@mediatek.com>
+Use the correct WMM AC queue instead of the MGMT one to fix potential issues
+with aggregation sequence number tracking. Drop non-bufferable packets.
 
-Send an update to the MCU whenever the settings change
-
-Signed-off-by: MeiChia Chiu <MeiChia.Chiu@mediatek.com>
+Fixes: fca9615f1a43 ("mt76: mt7603: fix up hardware queue index for PS filtered packets")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   | 46 +++++++++++++------
+ 1 file changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 11f81b233d46..398afab447c7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -1919,8 +1919,7 @@ mt7915_mcu_add_inband_discov(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	bcn = (struct bss_info_bcn *)tlv;
- 	bcn->enable = true;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+index 7a2f5d38562b..14304b063715 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -4,6 +4,13 @@
+ #include "mac.h"
+ #include "../dma.h"
  
--	if (changed & BSS_CHANGED_FILS_DISCOVERY &&
--	    vif->bss_conf.fils_discovery.max_interval) {
-+	if (changed & BSS_CHANGED_FILS_DISCOVERY) {
- 		interval = vif->bss_conf.fils_discovery.max_interval;
- 		skb = ieee80211_get_fils_discovery_tmpl(hw, vif);
- 	} else if (changed & BSS_CHANGED_UNSOL_BCAST_PROBE_RESP &&
-@@ -1957,7 +1956,7 @@ mt7915_mcu_add_inband_discov(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	discov->tx_type = !!(changed & BSS_CHANGED_FILS_DISCOVERY);
- 	discov->tx_interval = interval;
- 	discov->prob_rsp_len = cpu_to_le16(MT_TXD_SIZE + skb->len);
--	discov->enable = true;
-+	discov->enable = !!interval;
++static const u8 wmm_queue_map[] = {
++	[IEEE80211_AC_BK] = 0,
++	[IEEE80211_AC_BE] = 1,
++	[IEEE80211_AC_VI] = 2,
++	[IEEE80211_AC_VO] = 3,
++};
++
+ static void
+ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ {
+@@ -22,10 +29,10 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	struct ieee80211_sta *sta;
+ 	struct mt7603_sta *msta;
+ 	struct mt76_wcid *wcid;
++	u8 tid = 0, hwq = 0;
+ 	void *priv;
+ 	int idx;
+ 	u32 val;
+-	u8 tid = 0;
  
- 	buf = (u8 *)sub_tlv + sizeof(*discov);
+ 	if (skb->len < MT_TXD_SIZE + sizeof(struct ieee80211_hdr))
+ 		goto free;
+@@ -42,19 +49,36 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 		goto free;
+ 
+ 	priv = msta = container_of(wcid, struct mt7603_sta, wcid);
+-	val = le32_to_cpu(txd[0]);
+-	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
+-	val |= FIELD_PREP(MT_TXD0_Q_IDX, MT_TX_HW_QUEUE_MGMT);
+-	txd[0] = cpu_to_le32(val);
+ 
+ 	sta = container_of(priv, struct ieee80211_sta, drv_priv);
+ 	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
+-	if (ieee80211_is_data_qos(hdr->frame_control))
++
++	hwq = wmm_queue_map[IEEE80211_AC_BE];
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		tid = *ieee80211_get_qos_ctl(hdr) &
+-		      IEEE80211_QOS_CTL_TAG1D_MASK;
+-	skb_set_queue_mapping(skb, tid_to_ac[tid]);
++			 IEEE80211_QOS_CTL_TAG1D_MASK;
++		u8 qid = tid_to_ac[tid];
++		hwq = wmm_queue_map[qid];
++		skb_set_queue_mapping(skb, qid);
++	} else if (ieee80211_is_data(hdr->frame_control)) {
++		skb_set_queue_mapping(skb, IEEE80211_AC_BE);
++		hwq = wmm_queue_map[IEEE80211_AC_BE];
++	} else {
++		skb_pull(skb, MT_TXD_SIZE);
++		if (!ieee80211_is_bufferable_mmpdu(skb))
++			goto free;
++		skb_push(skb, MT_TXD_SIZE);
++		skb_set_queue_mapping(skb, MT_TXQ_PSD);
++		hwq = MT_TX_HW_QUEUE_MGMT;
++	}
++
+ 	ieee80211_sta_set_buffered(sta, tid, true);
+ 
++	val = le32_to_cpu(txd[0]);
++	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
++	val |= FIELD_PREP(MT_TXD0_Q_IDX, hwq);
++	txd[0] = cpu_to_le32(val);
++
+ 	spin_lock_bh(&dev->ps_lock);
+ 	__skb_queue_tail(&msta->psq, skb);
+ 	if (skb_queue_len(&msta->psq) >= 64) {
+@@ -151,12 +175,6 @@ static int mt7603_poll_tx(struct napi_struct *napi, int budget)
+ 
+ int mt7603_dma_init(struct mt7603_dev *dev)
+ {
+-	static const u8 wmm_queue_map[] = {
+-		[IEEE80211_AC_BK] = 0,
+-		[IEEE80211_AC_BE] = 1,
+-		[IEEE80211_AC_VI] = 2,
+-		[IEEE80211_AC_VO] = 3,
+-	};
+ 	int ret;
+ 	int i;
  
 -- 
 2.43.0
