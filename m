@@ -1,37 +1,37 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14BB4136989
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:56:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68EE81353E2
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Apr 2024 10:57:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712141773; cv=none; b=BzuCnvqI49wtNlmqtYBFTANU/BzpHB0i10J9WZYGAjTR9HmWdz5dRUaNNUpskGPXX/3vdBTzeS0o9w5Bu3Sz4KwOCErrCS2QSJxNkHMXq9qUaRR9ieNAziMUMoRQhZub+rUgBQZc/S8IWeIYNOv2pKp1SAuIZomxLR8pjRt30II=
+	t=1712141841; cv=none; b=JkKNWeuhvfuBjKNogDNmwn0O4UKoEfcfm/ViqMF2nMqEsZ4s5x+q3zzgzQ9hWMr51xAjSj3FMefoM/j3hKyFB+74BflMDgieIsqFrWsqpB39fH2VgvYCx4DEXQFOQCZ6Ve9hST/gOK8TK7cCJQq0wWGw99V+UYP/ELtqn364wtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712141773; c=relaxed/simple;
-	bh=Vojos7bBxegOeHnGrc2X27ECUOk5DuwcDgpY2noBjhg=;
+	s=arc-20240116; t=1712141841; c=relaxed/simple;
+	bh=fi7cOj43Zr5QeOscWvQGsjRkY9QsQwAscxWYSCpgl1o=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cqgFw973mb3X/B/kutKoxoXIeDBsEx+1f8S28qj+qxCE75HjcUJu5SuNle0v/e36V1o8y5gdFWcfNmA4pI+iwurLMgxQO02n6+Y4fKpHdZ0QWCLb7L1EzU5dMi86WiiKLQ9znBDK93VP+MZDKsCOw3xMTKm1lIypd71fHGsQ7/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=DIsV3Peg; arc=none smtp.client-ip=46.4.11.11
+	 In-Reply-To:Content-Type; b=robaEUi+qZwy5P+gGRS89um/VcL734/gLVOIe3eRWDSM0OC5p5LOyyuVOHfaLTkqj8U2A4yQ07oiWzSZF9ZlkzUvju125ndo8VUc0VO1z7bRZGdWgB1ZW+O57CpFA00H9AZFM1ckVAhUdJAO/1cMmg3jz5wDNiEICp1vJ+F7qWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=bTDXjEyo; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="DIsV3Peg"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="bTDXjEyo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
 	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
 	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
 	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
 	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=DG8RRYGurHH7eJqvVVi62aX25pa8rpEUy+z3d66HOPc=; b=DIsV3PegxvRrMFBV4MQWfctgr1
-	hGROqOBEVGurOe08vyHQXQSZHe9jF0J3ZA5K5nHnU4VZDP/6xwjsyzkKFCUpapqV+3Sq+oBJYilhm
-	dL5x6+6bRKs74rANpFUQZw4ckzAiUVXZSNbKa6h1QKBniUiTfjDJ4grt/c39idV4TO0c=;
+	bh=BQXR41AesZLRM9jJK9HfvouXViEHlO7QApiKUi7YnH8=; b=bTDXjEyoY+y8PaUrVRaxFAYlQr
+	8Oq+GBbd+HL/pv9JzCteYfuBqahIsiGs8uGqUyapTqKliHWpf2eT75ABfy0GAdQrTfBk+RzruqpHc
+	re4PKlLkQcwtN+rcCRgu3NczJMRE9QTjnHY4EswJGonROkX1I7yVyuYIfaQz0Mjwi1nA=;
 Received: from p54ae9c93.dip0.t-ipconnect.de ([84.174.156.147] helo=nf.local)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.94.2)
 	(envelope-from <nbd@nbd.name>)
-	id 1rryHp-00ChNS-C4; Wed, 03 Apr 2024 12:56:09 +0200
-Message-ID: <c3758211-1849-454b-88cc-bb91e040c486@nbd.name>
-Date: Wed, 3 Apr 2024 12:56:08 +0200
+	id 1rryIt-00ChQx-Ja; Wed, 03 Apr 2024 12:57:15 +0200
+Message-ID: <8fe81cdf-5807-4d6b-9bad-7a45208cd15a@nbd.name>
+Date: Wed, 3 Apr 2024 12:57:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,18 +39,18 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/10] wifi: mt76: mt7996: let upper layer handle MGMT
- frame protection
+Subject: Re: [PATCH 10/10] wifi: mt76: mt7996: add sanity check for NAPI
+ schedule
 To: Shayne Chen <shayne.chen@mediatek.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
  Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
  Evelyn Tsai <evelyn.tsai@mediatek.com>, Bo Jiao <Bo.Jiao@mediatek.com>,
  linux-mediatek <linux-mediatek@lists.infradead.org>,
- Michael-CY Lee <michael-cy.lee@mediatek.com>
+ Henry Yen <henry.yen@mediatek.com>
 References: <20240320110918.3488-1-shayne.chen@mediatek.com>
- <20240320110918.3488-9-shayne.chen@mediatek.com>
-From: Felix Fietkau <nbd@nbd.name>
+ <20240320110918.3488-10-shayne.chen@mediatek.com>
 Content-Language: en-US
+From: Felix Fietkau <nbd@nbd.name>
 Autocrypt: addr=nbd@nbd.name; keydata=
  xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
  ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
@@ -74,39 +74,22 @@ Autocrypt: addr=nbd@nbd.name; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
  cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20240320110918.3488-9-shayne.chen@mediatek.com>
+In-Reply-To: <20240320110918.3488-10-shayne.chen@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 20.03.24 12:09, Shayne Chen wrote:
-> From: Michael-CY Lee <michael-cy.lee@mediatek.com>
+> From: Henry Yen <henry.yen@mediatek.com>
 > 
-> The firmware support for management frame protection has limitations:
-> - do not support cipher BIP-GMAC-128 and BIP-GMAC-256
-> - support cipher BIP-CMAC-128 and BIP-CMAC-256, except action frame with
->    action type 'not robust'.
+> It's observed that host driver might occasionally receive
+> interrupts from unexpected Rx ring, whose Rx NAPI hasn't been
+> prepared yet. Under such situation, __napi_poll crash issue
+> would occur, so we add a sanity check to prevent it.
 > 
-> Therefore, to simplify the logic, do not set the IGTK to firmware and
-> let the encryption of management frames be handled by upper layer.
-> 
-> Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
-> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-> ---
->   drivers/net/wireless/mediatek/mt76/mt7996/main.c | 8 ++++----
->   1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-> index 338ff10b121d..4ab4d2bcbedc 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-> @@ -352,10 +352,6 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->   
->   	/* fall back to sw encryption for unsupported ciphers */
->   	switch (key->cipher) {
-> -	case WLAN_CIPHER_SUITE_AES_CMAC:
-> -		wcid_keyidx = &wcid->hw_key_idx2;
+> Without this patch, we might encounter kernel crash issue
+> especially in WED-on & RRO-on software path.
 
-Did you intend to drop the wcid_keyidx line? If so, I don't see anything 
-related to that in the patch description.
+Does this issue occur even with Lorenzo's fix "wifi: mt76: mt7996: fix 
+uninitialized variable in mt7996_irq_tasklet()"?
 
 - Felix
