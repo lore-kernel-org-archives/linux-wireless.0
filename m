@@ -1,218 +1,126 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from exchange.fintech.ru (exchange.fintech.ru [195.54.195.159])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA2C1DFCB
-	for <linux-wireless@vger.kernel.org>; Sun,  7 Apr 2024 12:03:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E00E3FB16;
+	Sun,  7 Apr 2024 13:11:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.54.195.159
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712491422; cv=none; b=uuYa0TQUHYeVEd4miLb113gcYhKvYOSWLrlSiPbodd3k1GtJmTDqpZcWhxmGQFf2iXZPFFe+pGUKYaPChjD7a1PN8zQw32DkJ2FNaExcsT7raaYodTpSmJqo/8XWaotQ2GcfzENrLBoW+nwU4LpfR1fAX6Er2KKARpxpZRgC7IU=
+	t=1712495480; cv=none; b=UVQSnaSwVLG1mdHRSS9hWiYoCOe30uJlOq75MgMPAvWA9V20qn541DjnXboWkG8W1DOypYsKt9Si+X0m2rc+wV2oS8aWQel2FIEPguUupLJi00CE3/x9vEUYlgiSA/nEWFV0CI5ON/JPbBiOC7Y0BK21JWpNLU/HN0K1CPhoZNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712491422; c=relaxed/simple;
-	bh=Dvyt/DFUm/Ne+iRbKcDV99BJH8TIeZc3P225zGWCGaY=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=p4cR1RYzzZ3XF9l45SDfL1p2tNltw4/VrsHHMESDBNKylnyiTSW1R5XOq53xRMxAD3JevIk9+QOs+4q5cFJRFibLtkL6MZ4pDeNppSM5SijftySP2BK2A22UkMYhthaPQtOcOr0gcL4QtJrebjLdlTO7g0yHi9I3lmvcVeFeibQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OB9j5KEg; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OB9j5KEg"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4162b5ba2bbso23278935e9.1
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Apr 2024 05:03:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1712491419; x=1713096219; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0IB3UxPs50urWwM/qqU0ESX/IZ0GLc9HfubxnJYvCIY=;
-        b=OB9j5KEgRv4nKugfdCpuSaRrmrZLCzwJbW8CkFU/g2PH1PyPDVv2mX4+Lwe0de4xmz
-         AxO4DdPKgwzEKqcFep7NdMFSkfDSl1mVjKVe9Gj2Mp8esarg9z2IZhTTwyw0s/M0YaeA
-         8VelhZCHgiD9bP4inv09egB1n3nmyeL/DWsGQmXmWaTEGZz8YKZ1m4vRtq3BDpdA5Mg2
-         1BLudDd5lz5svSlVzbxJF7ec3+BYBxYfjHJlANSHoR0AWQM07la4XY80XH3+wRWupiCE
-         xC58qJ2yPiIGXgcnHDdK/J0L1qzibMgwoHFKZxfuikSP46ViNuDL+etTtbN3lQdp46Jr
-         G/Pw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712491419; x=1713096219;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0IB3UxPs50urWwM/qqU0ESX/IZ0GLc9HfubxnJYvCIY=;
-        b=VPSOCrykkwEgy2iUIGXf1tcEIAsQ/qKiTJqz4JzaQMZB2aN9geQgue/NiI461DDskO
-         CKxfyKAsa2bjCZn7tBFK75l/GNwk6T2aEyvcOEIEA6f8xGrsmmCkek2tN9WA3VmNla/l
-         fJiskRE4MltbBEq9prqqmoQ3E5jtp7WCCP6IQAfRJtljW99tmCI4BAA2kfn/PchpgA8a
-         qlf+EmGQnwDVH4yRUTBLm5KJBxLjIQxb/YggVltOVRgHIem8JZhyiU/zMniwCfhrw5YK
-         hRafWBIKo2YcG/G7Unx7yABhheSSrbtHZwP2Z/2ALqDWdV+YPJoZ2/PXmfpgW3ZFsGHy
-         PL0g==
-X-Gm-Message-State: AOJu0YwaLfqAXS8XEWgu+CgYPeVP0Wv6pg4grJTH25PireWCLBs7n5B/
-	RletMUziDRW3xrU2gEIGrJ6HpEpr/Ylzvin4hxq9L4T8kqPyysQI
-X-Google-Smtp-Source: AGHT+IGO7Qbf+rpFrU/c/B02EzbzzYzcbETLxcmSejpwaPocO/GCVlB7oiPwROSIfi9WE9HSgfiplQ==
-X-Received: by 2002:a05:600c:1c8b:b0:416:6a8c:b7cd with SMTP id k11-20020a05600c1c8b00b004166a8cb7cdmr280505wms.6.1712491419260;
-        Sun, 07 Apr 2024 05:03:39 -0700 (PDT)
-Received: from [192.168.1.50] ([81.196.40.5])
-        by smtp.gmail.com with ESMTPSA id u12-20020a05600c19cc00b0041469869d11sm13170796wmq.47.2024.04.07.05.03.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 07 Apr 2024 05:03:38 -0700 (PDT)
-Message-ID: <321c6855-2e58-48ae-b131-a3f6d7041713@gmail.com>
-Date: Sun, 7 Apr 2024 15:03:37 +0300
+	s=arc-20240116; t=1712495480; c=relaxed/simple;
+	bh=tOK8citKj5coWWGdrUGQDHZ0rmgq5F1rm/dGHe8XHdE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GAEiu0dofjln8s6oh1SwnMIyjT0mNE5sv7Pj0FoGK8rAxZnXAJWzqQD5adR2ZVwWmONDK3p13Z2z/tf7w28xshDP2B+3RsSqmMK9Vxvo5XL0NF+zgFzh6rFG1AqAe/Ytl8DbRhD96hcd6Ts5QViRXFOANCa4RH0kwHdnVfG6AbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fintech.ru; spf=pass smtp.mailfrom=fintech.ru; arc=none smtp.client-ip=195.54.195.159
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fintech.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fintech.ru
+Received: from Ex16-01.fintech.ru (10.0.10.18) by exchange.fintech.ru
+ (195.54.195.159) with Microsoft SMTP Server (TLS) id 14.3.498.0; Sun, 7 Apr
+ 2024 16:11:15 +0300
+Received: from localhost (10.0.253.138) by Ex16-01.fintech.ru (10.0.10.18)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2242.4; Sun, 7 Apr 2024
+ 16:11:15 +0300
+From: Nikita Zhandarovich <n.zhandarovich@fintech.ru>
+To: Christian Lamparter <chunkeey@googlemail.com>, Kalle Valo
+	<kvalo@kernel.org>
+CC: Nikita Zhandarovich <n.zhandarovich@fintech.ru>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<syzkaller-bugs@googlegroups.com>, <lvc-project@linuxtesting.org>,
+	<syzbot+0ae4804973be759fa420@syzkaller.appspotmail.com>
+Subject: [PATCH] wifi: carl9170: add a proper sanity check for endpoints
+Date: Sun, 7 Apr 2024 06:11:09 -0700
+Message-ID: <20240407131109.26212-1-n.zhandarovich@fintech.ru>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH v3 11/12] wifi: rtlwifi: Add rtl8192du/sw.{c,h}
-To: Ping-Ke Shih <pkshih@realtek.com>, "kvalo@kernel.org" <kvalo@kernel.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
- "s.l-h@gmx.de" <s.l-h@gmx.de>, "chewitt@libreelec.tv" <chewitt@libreelec.tv>
-References: <7f4b3309-1580-48f3-9426-29f1eb4052fd@gmail.com>
- <2eb79c8c-cf2c-4696-b958-e8d961628e17@gmail.com>
- <f86a40493745a53ff73083f87b3e8fae215eac77.camel@realtek.com>
- <66565618-3638-47e5-afe5-3530214da0c9@gmail.com> <87ttkrzf1m.fsf@kernel.org>
- <5696990a-4450-4d92-bbda-1d9ca3a9a619@gmail.com>
- <4672072ef782ae1200886a190c740e0f3ccec2c8.camel@realtek.com>
- <7873dee1-46a8-48a7-9059-bc300ac98c23@gmail.com>
- <1f8ebed6a04a4fbebf33b0a3edc2f50b@realtek.com>
- <ff3b97d0-118c-42b3-be0b-47cfcf06ab74@gmail.com>
- <7741a59a6ebf4e0f8c55b0f5c3f55a41@realtek.com>
-Content-Language: en-US
-In-Reply-To: <7741a59a6ebf4e0f8c55b0f5c3f55a41@realtek.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: Ex16-02.fintech.ru (10.0.10.19) To Ex16-01.fintech.ru
+ (10.0.10.18)
 
-On 01/04/2024 04:21, Ping-Ke Shih wrote:
->>
->> I asked linux-usb and they said the two interfaces are probed
->> and disconnected one at a time, so it should be fine without
->> another mutex:
->>
->> https://lore.kernel.org/linux-usb/2024032907-smokeless-imperial-f3f9@gregkh/
-> 
-> Thanks for the clarification. Then, will you dynamically allocate mutex
-> by first interface with ref_cnt=1, and second interface obtains mutex from
-> first interface and increases ref_cnt=2?
-> 
-> When USB disconnection, decrease ref_cnt and if ref_cnt==0 free the mutex 
-> no matter which one disconnect first. 
-> 
-> My thinking above is the same as yours?
-> 
+Syzkaller reports [1] hitting a warning which is caused by presence
+of a wrong endpoint type at the URB sumbitting stage. While there
+was a check for a specific 4th endpoint, since it can switch types
+between bulk and interrupt, other endpoints are trusted implicitly.
+Similar warning is triggered in a couple of other syzbot issues [2].
 
-I did not consider using a ref_cnt variable. I made the first
-probe allocate the things and the first disconnect frees them:
+Fix the issue by doing a comprehensive check of all endpoints
+taking into account difference between high- and full-speed
+configuration.
 
+This patch has not been tested on real hardware.
 
-static struct usb_interface *rtl92du_get_other_intf(struct ieee80211_hw *hw)
-{
-	struct usb_interface *intf;
-	struct usb_device *udev;
-	u8 other_interfaceindex;
+[1] Syzkaller report:
+...
+WARNING: CPU: 0 PID: 4721 at drivers/usb/core/urb.c:504 usb_submit_urb+0xed6/0x1880 drivers/usb/core/urb.c:504
+...
+Call Trace:
+ <TASK>
+ carl9170_usb_send_rx_irq_urb+0x273/0x340 drivers/net/wireless/ath/carl9170/usb.c:504
+ carl9170_usb_init_device drivers/net/wireless/ath/carl9170/usb.c:939 [inline]
+ carl9170_usb_firmware_finish drivers/net/wireless/ath/carl9170/usb.c:999 [inline]
+ carl9170_usb_firmware_step2+0x175/0x240 drivers/net/wireless/ath/carl9170/usb.c:1028
+ request_firmware_work_func+0x130/0x240 drivers/base/firmware_loader/main.c:1107
+ process_one_work+0x9bf/0x1710 kernel/workqueue.c:2289
+ worker_thread+0x669/0x1090 kernel/workqueue.c:2436
+ kthread+0x2e8/0x3a0 kernel/kthread.c:376
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
 
-	/* See SET_IEEE80211_DEV(hw, &intf->dev); in usb.c */
-	intf = container_of_const(wiphy_dev(hw->wiphy), struct usb_interface, dev);
+[2] Related syzkaller crashes:
+Link: https://syzkaller.appspot.com/bug?extid=e394db78ae0b0032cb4d
+Link: https://syzkaller.appspot.com/bug?extid=9468df99cb63a4a4c4e1
 
-	other_interfaceindex = 1 - intf->altsetting[0].desc.bInterfaceNumber;
+Reported-and-tested-by: syzbot+0ae4804973be759fa420@syzkaller.appspotmail.com
+Fixes: a84fab3cbfdc ("carl9170: 802.11 rx/tx processing and usb backend")
+Signed-off-by: Nikita Zhandarovich <n.zhandarovich@fintech.ru>
+---
+P.S. as AR9170_USB_EP_CMD endpoint can switch between bulk and int,
+I failed to find a prettier solution to this problem. Will be glad
+to hear if there is a better option...
 
-	udev = interface_to_usbdev(intf);
+ drivers/net/wireless/ath/carl9170/usb.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-	return usb_ifnum_to_if(udev, other_interfaceindex);
-}
-
-static int rtl92du_init_shared_data(struct ieee80211_hw *hw)
-{
-	struct usb_interface *other_intf = rtl92du_get_other_intf(hw);
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	struct rtl_priv *other_rtlpriv = NULL;
-	struct ieee80211_hw *other_hw = NULL;
-
-	if (other_intf)
-		other_hw = usb_get_intfdata(other_intf);
-
-	if (other_hw) {
-		/* The other interface was already probed. */
-		other_rtlpriv = rtl_priv(other_hw);
-		rtlpriv->curveindex_2g = other_rtlpriv->curveindex_2g;
-		rtlpriv->curveindex_5g = other_rtlpriv->curveindex_5g;
-		rtlpriv->mutex_for_power_on_off = other_rtlpriv->mutex_for_power_on_off;
-		rtlpriv->mutex_for_hw_init = other_rtlpriv->mutex_for_hw_init;
-
-		if (!rtlpriv->curveindex_2g || !rtlpriv->curveindex_5g ||
-		    !rtlpriv->mutex_for_power_on_off || !rtlpriv->mutex_for_hw_init)
-			return 1;
-
-		return 0;
-	}
-
-	/* The other interface doesn't exist or was not probed yet. */
-	rtlpriv->curveindex_2g =
-		kzalloc(TARGET_CHNL_NUM_2G * sizeof(*rtlpriv->curveindex_2g),
-			GFP_KERNEL);
-	rtlpriv->curveindex_5g =
-		kzalloc(TARGET_CHNL_NUM_5G * sizeof(*rtlpriv->curveindex_5g),
-			GFP_KERNEL);
-	rtlpriv->mutex_for_power_on_off =
-		kzalloc(sizeof(*rtlpriv->mutex_for_power_on_off), GFP_KERNEL);
-	rtlpriv->mutex_for_hw_init =
-		kzalloc(sizeof(*rtlpriv->mutex_for_hw_init), GFP_KERNEL);
-
-	if (!rtlpriv->curveindex_2g || !rtlpriv->curveindex_5g ||
-	    !rtlpriv->mutex_for_power_on_off || !rtlpriv->mutex_for_hw_init) {
-		kfree(rtlpriv->curveindex_2g);
-		kfree(rtlpriv->curveindex_5g);
-		kfree(rtlpriv->mutex_for_power_on_off);
-		kfree(rtlpriv->mutex_for_hw_init);
-		rtlpriv->curveindex_2g = NULL;
-		rtlpriv->curveindex_5g = NULL;
-		rtlpriv->mutex_for_power_on_off = NULL;
-		rtlpriv->mutex_for_hw_init = NULL;
-		return 1;
-	}
-
-	mutex_init(rtlpriv->mutex_for_power_on_off);
-	mutex_init(rtlpriv->mutex_for_hw_init);
-
-	return 0;
-}
-
-static void rtl92du_deinit_shared_data(struct ieee80211_hw *hw)
-{
-	struct usb_interface *other_intf = rtl92du_get_other_intf(hw);
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-
-	if (!other_intf || usb_get_intfdata(other_intf)) {
-		/* The other interface doesn't exist or was not disconnected yet. */
-		kfree(rtlpriv->curveindex_2g);
-		kfree(rtlpriv->curveindex_5g);
-		if (rtlpriv->mutex_for_power_on_off)
-			mutex_destroy(rtlpriv->mutex_for_power_on_off);
-		if (rtlpriv->mutex_for_hw_init)
-			mutex_destroy(rtlpriv->mutex_for_hw_init);
-		kfree(rtlpriv->mutex_for_power_on_off);
-		kfree(rtlpriv->mutex_for_hw_init);
-	}
-}
-
-static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
-{
-	const char *fw_name = "rtlwifi/rtl8192dufw.bin";
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-	int err;
-
-	if (rtl92du_init_shared_data(hw))
-		return 1;
-
-	[...]
-
-	return 0;
-}
-
-static void rtl92du_deinit_sw_vars(struct ieee80211_hw *hw)
-{
-	struct rtl_priv *rtlpriv = rtl_priv(hw);
-
-	kfree(rtlpriv->rtlhal.pfirmware);
-	rtlpriv->rtlhal.pfirmware = NULL;
-
-	rtl92du_deinit_shared_data(hw);
-}
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index c4edf8355941..66d2ad561fd3 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -1069,6 +1069,33 @@ static int carl9170_usb_probe(struct usb_interface *intf,
+ 			ar->usb_ep_cmd_is_bulk = true;
+ 	}
+ 
++	/* Verify that all expected endpoints are present */
++	if (ar->usb_ep_cmd_is_bulk) {
++		u8 bulk_ep_addr[] = {
++			AR9170_USB_EP_RX | USB_DIR_IN,
++			AR9170_USB_EP_TX | USB_DIR_OUT,
++			AR9170_USB_EP_CMD | USB_DIR_OUT,
++			0};
++		u8 int_ep_addr[] = {
++			AR9170_USB_EP_IRQ | USB_DIR_IN,
++			0};
++		if (!usb_check_bulk_endpoints(intf, bulk_ep_addr) ||
++		    !usb_check_int_endpoints(intf, int_ep_addr))
++			return -ENODEV;
++	} else {
++		u8 bulk_ep_addr[] = {
++			AR9170_USB_EP_RX | USB_DIR_IN,
++			AR9170_USB_EP_TX | USB_DIR_OUT,
++			0};
++		u8 int_ep_addr[] = {
++			AR9170_USB_EP_IRQ | USB_DIR_IN,
++			AR9170_USB_EP_CMD | USB_DIR_OUT,
++			0};
++		if (!usb_check_bulk_endpoints(intf, bulk_ep_addr) ||
++		    !usb_check_int_endpoints(intf, int_ep_addr))
++			return -ENODEV;
++	}
++
+ 	usb_set_intfdata(intf, ar);
+ 	SET_IEEE80211_DEV(ar->hw, &intf->dev);
+ 
