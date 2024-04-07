@@ -1,51 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA3C05FB88;
-	Sun,  7 Apr 2024 13:11:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E4F3C466;
+	Sun,  7 Apr 2024 13:12:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712495514; cv=none; b=YnJo621egqsfaynVjpT50V9hqdZfoUfCZr/JlnCYQVnsxWgrebYMwJimrN85fNuCQvQtQZnguFJcsBuNGIyszWf1bjyUU7xHO+wexzjMSPIYPLEaR/Vg1e63rMxBRsNrzCIM46wbg9cFCYtRAFv4L6fN55ff0WjKqS53IJnnpBA=
+	t=1712495565; cv=none; b=kk6zC1YTzYuPEE01npkztHndw11t7uzJ1jxPshx+T5Jw4DlMLf8XxiZMURJuXLAU7DlbhYrIoRRngHO1yQXEFoIIgM7O0Wxw8cElMTwqfD4lL1KdfM84BzEAhcAPr+GYb2hnxVHIZI8Szef+tZ1n9wro6Pa3MEb8qMwCvHFtlbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712495514; c=relaxed/simple;
-	bh=nVUQwkAaY67Iy5mNEiV6os3iDa67GOZDRUbfrDXOo/0=;
+	s=arc-20240116; t=1712495565; c=relaxed/simple;
+	bh=MC0tgLt0jrr0NSy2yRRQrTbju6Z/nby9f3YMGcj9yOo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=atuDvhJI2x9tH/UjKttRrv1ngSrlrDjZwD3LJg5DIuVRd9mNbdhmpY5HrHWO2GaQqV+4aWVHgUFm/QIJqRzxzD3/jnU1xp+ybOD7goPKlTX2mb6urbYx+PkK5aBEYTr35q1c4FpyCsf/CtKJMwdqF+wvHD6YJuZydnYCnF+jywM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mU87h09y; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=l/peDNQEXsZpiNd4oYIbi2B8sy8wRKWWympN0nRBKU2cm/eSxVgZJnoWM4T5thM8hfzufNiiWE6nUpzIk1M+8jN9I5DriLGQOrOuHvwj1eh55WxjTiKR3XYU5s4z5cH284uzIeMbxmlFy8GVo45NP3PGadrcDSSLncPC3pQzlro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CCPcAzpy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mU87h09y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 640AAC433C7;
-	Sun,  7 Apr 2024 13:11:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CCPcAzpy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A79C1C43390;
+	Sun,  7 Apr 2024 13:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712495513;
-	bh=nVUQwkAaY67Iy5mNEiV6os3iDa67GOZDRUbfrDXOo/0=;
+	s=k20201202; t=1712495565;
+	bh=MC0tgLt0jrr0NSy2yRRQrTbju6Z/nby9f3YMGcj9yOo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=mU87h09ygRxaZRb88cEAQ0O3C2yi4co2DOki0GveWsAgF8tHQpeLF5LETV0RmHLRl
-	 Tm863E1W/huZUOJt5g25QEmFOvb33bGD3ZEkpKJHNLU+SENZlSIt8GJQdo3aDtC40f
-	 DbQpPQuQc7Ishf6mZ4YSnIGemy4j3k8GIF1xrKhcN/iW1knTRwi9S07+AtGhoeNmdu
-	 N3h2vyG7oZoXhj0Ysk7l4SuEkTcGIfNw3iu5Ar7dWcwZHrrqw3zx+w6alsetbfO8kH
-	 xvnLmOe1epX0jmC/mNrx4wlwMiaZ81wXhgOq1tuNnf94XQkMKG8OnrlVC72TrS784k
-	 VZjuHI9sI1n/Q==
+	b=CCPcAzpyMahWnUXCWiSj6h9TQwQnG8O1SMFB4HApf3WX1XRZ+mLqvS4+19Axi4Q+o
+	 JyIbIx0LMYSmSsCHPZj6L7il/slt+bsoxbLX8sOtQmYucXyLkwygr4QowqERQqD0OS
+	 lQ4u9USEKsWhBVahaxuZDyeBNS46ddnTGw44eWxuGw9YAG0n4OhDXF65CHHbySsmc8
+	 jKPpqtjgazR+mllmG224+DmWlA9cDwgKwE2CSLLEYYYVITeCUux9TcfSbDsFxqE4yP
+	 IcswVc4FooEb5wUU7uS+ksdB6sS6H1AVJ/IYMO2jVsmiUuCfjeWC9RRi1A7ER1lVO4
+	 75rhfrpYvsYtg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Jeff Johnson <quic_jjohnson@quicinc.com>,
+	Simon Horman <horms@kernel.org>,
 	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	kvalo@kernel.org,
-	gregory.greenman@intel.com,
-	emmanuel.grumbach@intel.com,
-	dan.carpenter@linaro.org,
-	mukesh.sisodiya@intel.com,
-	avraham.stern@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.8 14/25] wifi: iwlwifi: mvm: guard against invalid STA ID on removal
-Date: Sun,  7 Apr 2024 09:11:02 -0400
-Message-ID: <20240407131130.1050321-14-sashal@kernel.org>
+	johannes@sipsolutions.net,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.6 09/22] wifi: mac80211: fix ieee80211_bss_*_flags kernel-doc
+Date: Sun,  7 Apr 2024 09:12:08 -0400
+Message-ID: <20240407131231.1051652-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240407131130.1050321-1-sashal@kernel.org>
-References: <20240407131130.1050321-1-sashal@kernel.org>
+In-Reply-To: <20240407131231.1051652-1-sashal@kernel.org>
+References: <20240407131231.1051652-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -54,47 +54,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.8.4
+X-stable-base: Linux 6.6.25
 Content-Transfer-Encoding: 8bit
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
 
-[ Upstream commit 17f64517bf5c26af56b6c3566273aad6646c3c4f ]
+[ Upstream commit 774f8841f55d7ac4044c79812691649da203584a ]
 
-Guard against invalid station IDs in iwl_mvm_mld_rm_sta_id as that would
-result in out-of-bounds array accesses. This prevents issues should the
-driver get into a bad state during error handling.
+Running kernel-doc on ieee80211_i.h flagged the following:
+net/mac80211/ieee80211_i.h:145: warning: expecting prototype for enum ieee80211_corrupt_data_flags. Prototype was for enum ieee80211_bss_corrupt_data_flags instead
+net/mac80211/ieee80211_i.h:162: warning: expecting prototype for enum ieee80211_valid_data_flags. Prototype was for enum ieee80211_bss_valid_data_flags instead
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://msgid.link/20240320232419.d523167bda9c.I1cffd86363805bf86a95d8bdfd4b438bb54baddc@changeid
+Fix these warnings.
+
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Link: https://msgid.link/20240314-kdoc-ieee80211_i-v1-1-72b91b55b257@quicinc.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index 1628bf55458fc..23e64a757cfe8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -855,10 +855,15 @@ int iwl_mvm_mld_rm_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 07beb72ddd25a..fefaa9e902a2f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -122,7 +122,7 @@ struct ieee80211_bss {
+ };
  
- int iwl_mvm_mld_rm_sta_id(struct iwl_mvm *mvm, u8 sta_id)
- {
--	int ret = iwl_mvm_mld_rm_sta_from_fw(mvm, sta_id);
-+	int ret;
+ /**
+- * enum ieee80211_corrupt_data_flags - BSS data corruption flags
++ * enum ieee80211_bss_corrupt_data_flags - BSS data corruption flags
+  * @IEEE80211_BSS_CORRUPT_BEACON: last beacon frame received was corrupted
+  * @IEEE80211_BSS_CORRUPT_PROBE_RESP: last probe response received was corrupted
+  *
+@@ -135,7 +135,7 @@ enum ieee80211_bss_corrupt_data_flags {
+ };
  
- 	lockdep_assert_held(&mvm->mutex);
- 
-+	if (WARN_ON(sta_id == IWL_MVM_INVALID_STA))
-+		return 0;
-+
-+	ret = iwl_mvm_mld_rm_sta_from_fw(mvm, sta_id);
-+
- 	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[sta_id], NULL);
- 	RCU_INIT_POINTER(mvm->fw_id_to_link_sta[sta_id], NULL);
- 	return ret;
+ /**
+- * enum ieee80211_valid_data_flags - BSS valid data flags
++ * enum ieee80211_bss_valid_data_flags - BSS valid data flags
+  * @IEEE80211_BSS_VALID_WMM: WMM/UAPSD data was gathered from non-corrupt IE
+  * @IEEE80211_BSS_VALID_RATES: Supported rates were gathered from non-corrupt IE
+  * @IEEE80211_BSS_VALID_ERP: ERP flag was gathered from non-corrupt IE
 -- 
 2.43.0
 
