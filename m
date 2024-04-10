@@ -1,121 +1,120 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34DD713C901;
-	Wed, 10 Apr 2024 07:59:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66AF113DB88;
+	Wed, 10 Apr 2024 08:02:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712735949; cv=none; b=QSnl9UBKyqmZZesLgO3QWUzoeT+03FCOuYbeMQUYgtNlpcrm+XBHNhq7Hqh+N3gT71WVBS2O5fXUub9uqFko8VOtLaj+NVKFBu6u7pcJg0HNUXL6SGQrf23vXnzVgKDWBlyovVxgKyd+KlAIH7UHTxfvUnsItRRGnVLbcD5fswg=
+	t=1712736158; cv=none; b=VzLqshVh6+i8H2/hwBk2/4pynxVXyOsNXdsWNr545zSFnv0RBPI+XGNsxEQh0c0QGeXCDeew7Z4geDFl0awWkTZtZYVdMiz7tjfhRIkXzbzyjzF/iFGScCJKEpyIuuqrs4vGT87tbtJHhLH3FFmF2rllVobhjZZINfkmxiG3m1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712735949; c=relaxed/simple;
-	bh=AqHcHzCtayvBZM24ONCW4wGNrQrcIpD/e+IDvuE88IU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aCAzE15nwOOcRNkn/IUaowxktHyDxx8rJ8pWLc5JtptP4hqK6vyxGLU4TDy3eyzPGxcvzfyBZ5fLyJAAJjw3Jy1tD0qEDPn0CS+lkQdH2Bzrr5XpDzGI4Tnk2LC/8H5xNPcaMWUXAvTmyK8CUwhOAbICzzo0o8JV3Uf8ckw35gM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Oc9E48YY; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Oc9E48YY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=8yJzNJsbUcZyMZ+JVyPnDvNkzO3Jhk9AuCTJ1rgbO+o=;
-	t=1712735947; x=1713945547; b=Oc9E48YYT/XL6SyREC+jjB8NpUwrljBx1DO2JxiU0Cl8Oze
-	BHBdsADSjhPy2aDixnLqNW86PAQgfw686M4tF3JjSiKx0M6+Kyu1/ckuRjKOlWLxl9G/TbaV+c0QU
-	ExVsZJJKw6cQCmdT6nvE8DIqeTRceXHQFn6nMpp4tMQyGywloCvLF3TrDmMAmmNMCBbs5HGaDpqI6
-	cyDNE8lQDaJBAAJdowtCda0/bnB9+CZzyzVCl1cAf85R4cfWJbh83YVt5DymayST8o2XbA3KlhkBQ
-	uxWX1u0vfO9dpMVi5dLn5UPFvum/kjovRzcfyl3mtKYzNM14PjkWjVSLTHLBnsOQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1ruSrH-00000001EoS-3zUt;
-	Wed, 10 Apr 2024 09:59:04 +0200
-Message-ID: <902dd36fa5ab0503377e558b92505fe499f666fa.camel@sipsolutions.net>
-Subject: Re: [PATCH 02/13] wifi: nl80211: send underlying multi-hardware
- channel capabilities to user space
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>, Karthikeyan
-	Periyasamy <quic_periyasa@quicinc.com>, ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Jakub Kicinski
-	 <kuba@kernel.org>
-Date: Wed, 10 Apr 2024 09:59:02 +0200
-In-Reply-To: <b455f267-9552-be3b-95b0-a036bfa8e14a@quicinc.com>
-References: <20240328072916.1164195-1-quic_periyasa@quicinc.com>
-	 <20240328072916.1164195-3-quic_periyasa@quicinc.com>
-	 <6d92d0ba4a8764cd91cc20c4bd35613bcc41dfcd.camel@sipsolutions.net>
-	 <9d5c2f9f-19b5-af4d-8018-1eb97fac10d6@quicinc.com>
-	 <9d0f309da45ae657cd2ce0bc11a93d66e856ef64.camel@sipsolutions.net>
-	 <b455f267-9552-be3b-95b0-a036bfa8e14a@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.4 (3.50.4-1.fc39) 
+	s=arc-20240116; t=1712736158; c=relaxed/simple;
+	bh=KElYbch9PwjyMMyu6DqQ19Q1q06S1GdiKB4kYIvJsOA=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=CU2uvUcuRRxzKzHhb2m122yvYwZBKteQeqxjKdf1daPChN3DafuqJ9KAxjpbzYtBTA5hlGJIqDCdABWYN0Tr+jwJFsVOAUu5MT3rPRNKKBLcNlN8MFMyZLfzZclgr5iSL5z87e2iZbFaHApzydDGNzctGZ/oLSbc8mY9hXaiNvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16B5EC43141;
+	Wed, 10 Apr 2024 08:02:38 +0000 (UTC)
+Received: by mercury (Postfix, from userid 1000)
+	id 324081063262; Wed, 10 Apr 2024 10:02:32 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Michael Ellerman <mpe@ellerman.id.au>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Damien Le Moal <dlemoal@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Corey Minyard <minyard@acm.org>, Peter Huewe <peterhuewe@gmx.de>, 
+ Jarkko Sakkinen <jarkko@kernel.org>, Tero Kristo <kristo@kernel.org>, 
+ Stephen Boyd <sboyd@kernel.org>, Ian Abbott <abbotti@mev.co.uk>, 
+ H Hartley Sweeten <hsweeten@visionengravers.com>, 
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, 
+ Len Brown <lenb@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ John Allen <john.allen@amd.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+ Vinod Koul <vkoul@kernel.org>, Ard Biesheuvel <ardb@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, Moritz Fischer <mdf@kernel.org>, 
+ Liviu Dudau <liviu.dudau@arm.com>, 
+ Benjamin Tissoires <benjamin.tissoires@redhat.com>, 
+ Andi Shyti <andi.shyti@kernel.org>, 
+ Michael Hennerich <michael.hennerich@analog.com>, 
+ Peter Rosin <peda@axentia.se>, Lars-Peter Clausen <lars@metafoo.de>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Markuss Broks <markuss.broks@gmail.com>, 
+ Alexandre Torgue <alexandre.torgue@foss.st.com>, Lee Jones <lee@kernel.org>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, 
+ Iyappan Subramanian <iyappan@os.amperecomputing.com>, 
+ Yisen Zhuang <yisen.zhuang@huawei.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
+ Kalle Valo <kvalo@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
+ Tony Lindgren <tony@atomide.com>, Mark Brown <broonie@kernel.org>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Xiang Chen <chenxiang66@hisilicon.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, 
+ Heiko Stuebner <heiko@sntech.de>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, 
+ Vaibhav Hiremath <hvaibhav.linux@gmail.com>, Alex Elder <elder@kernel.org>, 
+ Jiri Slaby <jirislaby@kernel.org>, Jacky Huang <ychuang3@nuvoton.com>, 
+ Helge Deller <deller@gmx.de>, Christoph Hellwig <hch@lst.de>, 
+ Robin Murphy <robin.murphy@arm.com>, Steven Rostedt <rostedt@goodmis.org>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Kees Cook <keescook@chromium.org>, 
+ Trond Myklebust <trond.myklebust@hammerspace.com>, 
+ Anna Schumaker <anna@kernel.org>, Masahiro Yamada <masahiroy@kernel.org>, 
+ Nathan Chancellor <nathan@kernel.org>, Takashi Iwai <tiwai@suse.com>, 
+ linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, 
+ openipmi-developer@lists.sourceforge.net, linux-integrity@vger.kernel.org, 
+ linux-omap@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-pm@vger.kernel.org, linux-crypto@vger.kernel.org, 
+ dmaengine@vger.kernel.org, linux-efi@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, linux-fpga@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, 
+ linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org, 
+ linux-stm32@st-md-mailman.stormreply.com, 
+ linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, 
+ linux-leds@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-spi@vger.kernel.org, linux-amlogic@lists.infradead.org, 
+ linux-rockchip@lists.infradead.org, linux-samsung-soc@vger.kernel.org, 
+ greybus-dev@lists.linaro.org, linux-staging@lists.linux.dev, 
+ linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-fbdev@vger.kernel.org, iommu@lists.linux.dev, 
+ linux-trace-kernel@vger.kernel.org, kasan-dev@googlegroups.com, 
+ linux-hardening@vger.kernel.org, linux-nfs@vger.kernel.org, 
+ linux-kbuild@vger.kernel.org, alsa-devel@alsa-project.org, 
+ linux-sound@vger.kernel.org
+In-Reply-To: <20240403080702.3509288-1-arnd@kernel.org>
+References: <20240403080702.3509288-1-arnd@kernel.org>
+Subject: Re: (subset) [PATCH 00/34] address all -Wunused-const warnings
+Message-Id: <171273615213.1094883.18382201508159771859.b4-ty@collabora.com>
+Date: Wed, 10 Apr 2024 10:02:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13.0
 
-On Fri, 2024-03-29 at 19:51 +0530, Vasanthakumar Thiagarajan wrote:
->=20
-> On 3/28/2024 5:31 PM, Johannes Berg wrote:
-> > On Thu, 2024-03-28 at 15:48 +0530, Karthikeyan Periyasamy wrote:
-> > > On 3/28/2024 1:19 PM, Johannes Berg wrote:
-> > > > On Thu, 2024-03-28 at 12:59 +0530, Karthikeyan Periyasamy wrote:
-> > > > > +/**
-> > > > > + * nl80211_multi_hw_attrs - multi-hw attributes
-> > > > > + *
-> > > > > + * @NL80211_MULTI_HW_ATTR_INVALID: invalid
-> > > > > + * @NL80211_MULTI_HW_ATTR_IDX: (u8) multi-HW index to refer the =
-underlying HW
-> > > > > + *	for which the supported channel list is advertised. Internall=
-y refer
-> > > > > + *	the index of the wiphy's @hw_chans array.
-> > > > Is there a good reason to expose this? Seems pretty internal to me,=
- and
-> > > > not sure what userspace would do with it?
-> > >=20
-> > > Hostapd use this hw index for the channel switch cmd.
-> >=20
-> > What, where? I don't see that in this patchset? And why??
-> >=20
-> > In any case, unless I just missed it and you're going to tell me to loo=
-k
-> > at patch N, we don't need it here, and then I'd prefer to keep it an
-> > internal detail until it's needed.
-> >=20
-> > > The hw index used as a sanity check to identify whether the user
-> > > requested channel fall under the different hw or not.
-> >=20
-> > You mean within hostapd itself? That doesn't make sense, it can derive
-> > that information differently.
-> >=20
-> > > In split-phy hardware, 5GHz band supported by two physical hardware's=
-.
-> > > First supports 5GHz Low band and second supports 5GHz High band.
-> >=20
-> > In your hardware design anyway, but yeah, I get it.
-> >=20
-> > > In this case, user space cannot use band vise check here to identify
-> > > given channel or freq supported in the given hardware.
-> >=20
-> > No, but it also doesn't need an index assigned by the kernel for that.
-> >=20
->=20
-> The only purpose of hw index is to link hw_chans to per-hardware=20
-> interface combination capability so that each hardware can be
-> identified during interface combination checks capability vs
-> current state. Thinking if we can embed the channel list also
-> into per-hardware interface combination signaling by giving the
-> pointer?
 
-Maybe? It might mean more allocations where the use is concerned since
-it can't be "static const" that way.
+On Wed, 03 Apr 2024 10:06:18 +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> Compilers traditionally warn for unused 'static' variables, but not
+> if they are constant. The reason here is a custom for C++ programmers
+> to define named constants as 'static const' variables in header files
+> instead of using macros or enums.
+> 
+> [...]
 
-I found the code that needs it later, just that Karthikeyan was using
-the wrong explanation for it ... I'd hoped he'd understand your own code
-better ;-)
+Applied, thanks!
 
-johannes
+[09/34] power: rt9455: hide unused rt9455_boost_voltage_values
+        commit: 452d8950db3e839aba1bb13bc5378f4bac11fa04
+
+Best regards,
+-- 
+Sebastian Reichel <sebastian.reichel@collabora.com>
+
