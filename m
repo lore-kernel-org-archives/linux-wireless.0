@@ -1,170 +1,138 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8345D13DBBE
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2024 08:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E86B13C9C2
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2024 08:50:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712736170; cv=none; b=Xrif7Si/p/nhHjtHagsmTSJpSCfzwl5pEDOXEn89Mi2ALzT9WHsFcGuOz/SteR0Z4nnePaV0//PAAZFFB6CTLtnPLbCp6Zy7R+gvgvamG6c3agwyEe996J8TnvRwZ69kqgL/qUl9/+Q2gZKV2hnbZSma8miVPtx8O6VqnEhF5ig=
+	t=1712739020; cv=none; b=E4KxkGbZLp9LS4umREPO7CdIhNjeku0cZ/sBykiOun7noaLbm7NE09mmVNugDW3WOJzP9mZnDfwmGD9s8b1flAgb1QCOSsoNlu5uLaEFtVhhHoIcMSbOts8iczxidPk6+VvjSO8L/AA0fofyiKlyL5eZ4OdOZ+yzWctginnjKLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712736170; c=relaxed/simple;
-	bh=d1PN1Hm45NhCEHeS1enwZRk3BBE6Kbx5SrWseLrZK54=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sZ0Kv+uNIAiHcZEfr8PHSTg96mPJJ2gh7fA+SgkMW9WCB3YHYab0iPNT0JuGmYkZeNZT9DWbqK+G7mAU8z2Z8REs96cZrDcatmioPHVbCE1aiA0kod3RPMO0r24BXyM/PHa5hwjDp8/0VIATZQ7m6bhAlluPTfBM1qez7/vdY3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=c6q9rj0H; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712739020; c=relaxed/simple;
+	bh=V38oHlK3cwnDqxKFQEfCF54MJqkAlwdwZfWPODui/5M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=S6kIa1wmfwu1/Qf+NNDD1CUOLDxfDkBV7rcL7wQ8uXDjlyqDRabizm3RYk6DdXPIVQcI0BjU9g3Hto9QbQhoGfk/Mt+J0D+PztUHCTdAwUOAc8QlrQBazX1wA7XpWsYvrUu+2Dz5rVpw8XDwshy/WT1whorNdVUBvNrPGL7uC1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nVVtTss+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c6q9rj0H"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712736167;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DXu5GyWFLRYVVgKT/xx47xxPPvyqqTS3jJA/xlCkkm0=;
-	b=c6q9rj0HKs32UHjI03kJEg7cZ+PdS6o3PrRGuQSys+uhbPFQdSBE0Bo7bsztY3elub4Pww
-	rz7piC/Y96ysdqT6ZshWI+3Ph0Lod8dtdxT7huXsvoP24ViezBW96iZDP9qau+Qr1szgGe
-	+vs2i5Ji2nkJeaVg0/CfwlYgU7jC/pA=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-601-BCIVXJ5zP7-TyVgqiyUNxA-1; Wed, 10 Apr 2024 04:02:41 -0400
-X-MC-Unique: BCIVXJ5zP7-TyVgqiyUNxA-1
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4155db7b58cso33153195e9.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Apr 2024 01:02:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712736160; x=1713340960;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DXu5GyWFLRYVVgKT/xx47xxPPvyqqTS3jJA/xlCkkm0=;
-        b=f6kkQSBERaiUJR+KaJDbwD8dA3knkBV7y6cD7InKofs+YOXRJqzHMNv7Sv2pX2bO3Z
-         gYYV4ptGHlHM31mV9ImVXXYJBU7Rr2Ywp2o3inUXVJ4PxsTH3AF3tVF1h9UE/o4jtKNH
-         rkKKUtBqh9ey34kbWtnG7v++0oT5JzAxhXi/E9juCKPG83YdjOaJCRRxzOgq71N0CY+e
-         hYzLp8yg/lpRNXTkZvmcZKz2HIH1bqDY+UoWvtaD3D+T+hgT1zdwlusVBnMWgBME/Buq
-         byAlNdJODGm5vOE5L4hT3l9EqaLTpoD7xIXESNeieczhgtDT2QEci6i5qXapfQFmTaSj
-         AiqQ==
-X-Forwarded-Encrypted: i=1; AJvYcCV6k05ery4dsVUo+ZZm8w2+0CSB34guvbR0B2ks3gVQ8z8hhaIQoy/1EJmtggZtjlAkHMZizgJrMhPwzcPiiSYywxjMKL8gP55NWTbe0rM=
-X-Gm-Message-State: AOJu0YxwSExTkVcg9YY60o+WkNWkiq5rGlDDEdg/EkKiri0zyoeI1n+X
-	AlLg1jkLr/iCEjRNEEJXj1Npgq25bbn6g4KPjy9n+E5KnF5saBdc6C2EoFPtQoIesbhrseNB/s/
-	q7IaKLuJI4eFhMAzTf/pY7kyuDuLgiEhA1mu0ZvyZtL31YqAIxdRvVxNxS3lPIqZJ
-X-Received: by 2002:a05:600c:1e05:b0:416:6eaa:6179 with SMTP id ay5-20020a05600c1e0500b004166eaa6179mr1616322wmb.6.1712736160207;
-        Wed, 10 Apr 2024 01:02:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFmI+bK+Bmn5+2XukodBdn2GXQ92haKG6VohgZt2mHVdjYtyJPyqjLehKUQ4vb5gN6ueySe/w==
-X-Received: by 2002:a05:600c:1e05:b0:416:6eaa:6179 with SMTP id ay5-20020a05600c1e0500b004166eaa6179mr1616221wmb.6.1712736159530;
-        Wed, 10 Apr 2024 01:02:39 -0700 (PDT)
-Received: from redhat.com ([2a02:14f:179:8bde:8cd:63ff:6fae:3872])
-        by smtp.gmail.com with ESMTPSA id t7-20020a05600c198700b00416c160ff88sm1491111wmq.1.2024.04.10.01.02.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Apr 2024 01:02:38 -0700 (PDT)
-Date: Wed, 10 Apr 2024 04:02:23 -0400
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	David Hildenbrand <david@redhat.com>,
-	Gerd Hoffmann <kraxel@redhat.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Stefan Hajnoczi <stefanha@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Olivia Mackall <olivia@selenic.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Gonglei <arei.gonglei@huawei.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Sudeep Holla <sudeep.holla@arm.com>,
-	Cristian Marussi <cristian.marussi@arm.com>,
-	Viresh Kumar <vireshk@kernel.org>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	David Airlie <airlied@redhat.com>,
-	Gurchetan Singh <gurchetansingh@chromium.org>,
-	Chia-I Wu <olvaffe@gmail.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Jean-Philippe Brucker <jean-philippe@linaro.org>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Alexander Graf <graf@amazon.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Eric Van Hensbergen <ericvh@kernel.org>,
-	Latchesar Ionkov <lucho@ionkov.net>,
-	Dominique Martinet <asmadeus@codewreck.org>,
-	Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Stefano Garzarella <sgarzare@redhat.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>,
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>,
-	Anton Yakovlev <anton.yakovlev@opensynergy.com>,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	virtualization@lists.linux.dev, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev,
-	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
-	nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	alsa-devel@alsa-project.org, linux-sound@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH v2 00/25] virtio: store owner from modules with
- register_virtio_driver()
-Message-ID: <20240410040140-mutt-send-email-mst@kernel.org>
-References: <20240331-module-owner-virtio-v2-0-98f04bfaf46a@linaro.org>
- <285be63c-8939-495c-8411-ce2a68e25b2b@linaro.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nVVtTss+"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43A4fSWT002543;
+	Wed, 10 Apr 2024 08:50:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=PGV7WjLYhT2xFvjYvosxufQsQ61p1QLmZahYYx6DGDA=; b=nV
+	VtTss+ECw1q1d47ZYMbhQPpk59lo2BMLOhAgngBL3pJMUXnD36YWmMEcxxnVtnIx
+	lXBg2gfNU5PnCiLxpFuwzQI5JnM4RvDfUJgvgA9z1xLL7Qi9hX37PQO5rHRA40B+
+	yIU9ul6Q0AidpG3Wcejx5Q3t3ayAIJoaOsDEXUIDIz9Ff7V0hwzEdoCfDEWgImGW
+	uJ7lnvxTsh833uUPgE3uagTIx8IfVQxFazSYsFx7kMtPobEQrxoBKAKRXO+W9P6Q
+	zQVIwRetrKJVqXE8n1dmJmEntEf+Hlzv3b0s+MMNFGXSH5H+vCEARwi/nKuyoAzA
+	cqWCtysms5DrabbJLwJg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xdh6xaea9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Apr 2024 08:50:12 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43A8oBB7018852
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Apr 2024 08:50:11 GMT
+Received: from [10.50.38.146] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Wed, 10 Apr
+ 2024 01:50:09 -0700
+Message-ID: <c47aa30f-cebb-4460-a78c-9a8df4f9e85e@quicinc.com>
+Date: Wed, 10 Apr 2024 14:20:05 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <285be63c-8939-495c-8411-ce2a68e25b2b@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath12k: enable service flag for survey dump stats
+To: Jeff Johnson <quic_jjohnson@quicinc.com>, <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Thiraviyam Mariyappan
+	<quic_tmariyap@quicinc.com>
+References: <20240409175604.3299752-1-quic_kathirve@quicinc.com>
+ <1e515bbc-0119-4114-b44e-d7a449b031f7@quicinc.com>
+Content-Language: en-US
+From: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+In-Reply-To: <1e515bbc-0119-4114-b44e-d7a449b031f7@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: KUQCmLgg8CvLKkl3WoEYBFZkG1mYm9hy
+X-Proofpoint-ORIG-GUID: KUQCmLgg8CvLKkl3WoEYBFZkG1mYm9hy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-10_03,2024-04-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
+ lowpriorityscore=0 malwarescore=0 priorityscore=1501 adultscore=0
+ phishscore=0 impostorscore=0 bulkscore=0 suspectscore=0 clxscore=1015
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2404010003 definitions=main-2404100063
 
-On Wed, Apr 10, 2024 at 09:41:57AM +0200, Krzysztof Kozlowski wrote:
-> On 31/03/2024 10:43, Krzysztof Kozlowski wrote:
-> > Changes in v2:
-> > - Three new patches: virtio mem+input+balloon
-> > - Minor commit msg adjustments
-> > - Add tags
-> > - Link to v1: https://lore.kernel.org/r/20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org
-> > 
-> > Merging
-> > =======
-> > All further patches depend on the first virtio patch, therefore please ack
-> > and this should go via one tree: maybe virtio?
+
+
+On 4/10/2024 5:37 AM, Jeff Johnson wrote:
+> On 4/9/2024 10:56 AM, Karthikeyan Kathirvel wrote:
+>> From: Thiraviyam Mariyappan <quic_tmariyap@quicinc.com>
+>>
+>> The survey dump statistics does not display channel RX and TX time
+>> properly because the survey flag is not enabled in the firmware service
+>> flag.
+>>
+>> If firmware supports enable the service flag "bss_chan_info" in
+>> wmi_resource_config to fetch and print the stats for specific pdev.
+>>
+>> Enabling WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64 does not have any impact
+>> on WCN7850 since this bit is not utilized by the WCN7850 firmware.
+>>
+>> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+>>
+>> Signed-off-by: Thiraviyam Mariyappan <quic_tmariyap@quicinc.com>
+>> Signed-off-by: Karthikeyan Kathirvel <quic_kathirve@quicinc.com>
+>> ---
+>>   drivers/net/wireless/ath/ath12k/wmi.c | 3 ++-
+>>   drivers/net/wireless/ath/ath12k/wmi.h | 1 +
+>>   2 files changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+>> index a5575ce9eed4..16504786735a 100644
+>> --- a/drivers/net/wireless/ath/ath12k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath12k/wmi.c
+>> @@ -3324,7 +3324,8 @@ ath12k_wmi_copy_resource_config(struct ath12k_wmi_resource_config_params *wmi_cf
+>>   	wmi_cfg->bpf_instruction_size = cpu_to_le32(tg_cfg->bpf_instruction_size);
+>>   	wmi_cfg->max_bssid_rx_filters = cpu_to_le32(tg_cfg->max_bssid_rx_filters);
+>>   	wmi_cfg->use_pdev_id = cpu_to_le32(tg_cfg->use_pdev_id);
+>> -	wmi_cfg->flag1 = cpu_to_le32(tg_cfg->atf_config);
+>> +	wmi_cfg->flag1 = cpu_to_le32(tg_cfg->atf_config) |
+>> +				     WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64;
 > 
-> Michael, Jason, Xuan,
+> shouldn't that | operation be inside the ) ?
+Yes, will address in next version, thanks for the review Jeff
+
 > 
-> Will you be able to take the entire patchset through virtio?
+>>   	wmi_cfg->peer_map_unmap_version = cpu_to_le32(tg_cfg->peer_map_unmap_version);
+>>   	wmi_cfg->sched_params = cpu_to_le32(tg_cfg->sched_params);
+>>   	wmi_cfg->twt_ap_pdev_count = cpu_to_le32(tg_cfg->twt_ap_pdev_count);
+>> diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+>> index 78afc94a815d..1283d25b5cc4 100644
+>> --- a/drivers/net/wireless/ath/ath12k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath12k/wmi.h
+>> @@ -2400,6 +2400,7 @@ struct wmi_init_cmd {
+>>   
+>>   #define WMI_RSRC_CFG_HOST_SVC_FLAG_REG_CC_EXT_SUPPORT_BIT 4
+>>   #define WMI_RSRC_CFG_FLAGS2_RX_PEER_METADATA_VERSION		GENMASK(5, 4)
+>> +#define WMI_RSRC_CFG_FLAG1_BSS_CHANNEL_INFO_64	BIT(5)
+>>   
+>>   struct ath12k_wmi_resource_config_params {
+>>   	__le32 tlv_header;
+>>
+>> base-commit: b36766befd306a606f287b0c0f0e53d994516acb
 > 
-> Best regards,
-> Krzysztof
-
-
-Hello!
-Yes I intend to take it for the next merge window.
-I am also merging the 1st patch for this release (it's a bugfix).
-
--- 
-MST
-
