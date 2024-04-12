@@ -1,38 +1,38 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AAB56443
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2024 11:59:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4711B55792
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2024 11:59:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712923161; cv=none; b=oudmtMJK9WwJJkP3fN5EibCKtEWvwGIi2TtBA9tuIWxy+VUEk3ISG5p2Oy+mDrEQwCK8rrQFn681+MpILQ9OaEp8TXu3brfh8M9kl0zmWHWdHPSQNptmVT3QFYmyXR+yOYsrUOk68ULF7wrfydz/eDxMZYT/+F+WXSYryTJxN1c=
+	t=1712923178; cv=none; b=guVznPmfyq/JeFfERItE5JdSVMELxQsz9jf7m/eem9lZ2pBZFRq8xVCPeWrsnSSfYLuFEkF+sQkJDxTOLtIMjQ1iwn/3sKZKoiaRHVIjg8vjms20/NrbFwZuBjbeVv2tszNFEgRdi989Yi0b9JmcfvLVdAcTYQAHnKSx4qrCGqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712923161; c=relaxed/simple;
-	bh=IhGLo7jupCS3fnEyeeNifOj2LWvdRlhjw4RgDhV86UE=;
+	s=arc-20240116; t=1712923178; c=relaxed/simple;
+	bh=qlajmsfa/oYqUJr45ILRjLYpxKoI0zmRB529GzeS7tk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ljPC0qXjlOR6z38tWgDGZiJCkQeFnwFeH7g6lfRYDSB5NQuuGIu7+zJfD/VG9PsEJbd/oC+T63GmZDZLCdk2j4fPGKz9pgZLr8BYlDzxP9P9q+IEzzw45Y6/jgUcx8xBNRr/KrA5efurIQBRetmG+jiX4erxfyiD97U70ILZlO0=
+	 MIME-Version:Content-Type; b=c3Xnm0Lau736ptrGvMNAuRVuIZHwkNj/1TLfkOlQGqrfNgzMiz//SFqcC6bT9kyz2xJSCmcgu2hJOO1Y0RVu2ufvyEQhcaACydVEbdfl6qkBCXB2iNPjcxqhuWdM2jHcRH+nmeSnoSVgMIQDakepghbmLrMbENv9ao93yBfObJM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 43CBxFCw92093242, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 43CBxFCw92093242
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 43CBxYlrD2094295, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 43CBxYlrD2094295
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2024 19:59:15 +0800
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Apr 2024 19:59:34 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 12 Apr 2024 19:59:16 +0800
+ 15.1.2507.35; Fri, 12 Apr 2024 19:59:34 +0800
 Received: from [127.0.1.1] (172.16.17.25) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 12 Apr
- 2024 19:59:15 +0800
+ 2024 19:59:33 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <kevin_yang@realtek.com>
-Subject: [PATCH 2/8] wifi: rtw89: fw: scan offload prohibit all 6 GHz channel if no 6 GHz sband
-Date: Fri, 12 Apr 2024 19:57:23 +0800
-Message-ID: <20240412115729.8316-3-pkshih@realtek.com>
+Subject: [PATCH 5/8] wifi: rtw89: regd: block 6 GHz by policy if not specific country
+Date: Fri, 12 Apr 2024 19:57:26 +0800
+Message-ID: <20240412115729.8316-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240412115729.8316-1-pkshih@realtek.com>
 References: <20240412115729.8316-1-pkshih@realtek.com>
@@ -46,38 +46,38 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-We have some policy via BIOS to block uses of 6 GHz. In this case, 6 GHz
-sband will be NULL even if it is WiFi 7 chip. So, add NULL handling here
-to avoid crash.
+We allow 6 GHz on target regd if and only if
+  1. it is a specific country, i.e. not any world-wide cases
+  2. its 6 GHz is not blocked
+
+So, for world-wide cases, their 6 GHz will be blocked now.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/realtek/rtw89/regd.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 74d0d515ada0..d9ab781fa0e6 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -4689,6 +4689,10 @@ static void rtw89_scan_get_6g_disabled_chan(struct rtw89_dev *rtwdev,
- 	u8 i, idx;
+diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
+index d0857ef60ea6..85a7f902ccf9 100644
+--- a/drivers/net/wireless/realtek/rtw89/regd.c
++++ b/drivers/net/wireless/realtek/rtw89/regd.c
+@@ -572,10 +572,8 @@ static void rtw89_regd_apply_policy_6ghz(struct rtw89_dev *rtwdev,
+ 	int i;
  
- 	sband = rtwdev->hw->wiphy->bands[NL80211_BAND_6GHZ];
-+	if (!sband) {
-+		option->prohib_chan = U64_MAX;
-+		return;
-+	}
+ 	index = rtw89_regd_get_index(regd);
+-	if (index == RTW89_REGD_MAX_COUNTRY_NUM)
+-		return;
+-
+-	if (!test_bit(index, regulatory->block_6ghz))
++	if (index != RTW89_REGD_MAX_COUNTRY_NUM &&
++	    !test_bit(index, regulatory->block_6ghz))
+ 		return;
  
- 	for (i = 0; i < sband->n_channels; i++) {
- 		chan = &sband->channels[i];
+ 	rtw89_debug(rtwdev, RTW89_DBG_REGD, "%c%c 6 GHz is blocked by policy\n",
 -- 
 2.25.1
 
