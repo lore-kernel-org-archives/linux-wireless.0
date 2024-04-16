@@ -1,54 +1,54 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39515381C4
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2024 05:00:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48A3A39ADB
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Apr 2024 05:00:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713243619; cv=none; b=BbPBV8g0dzuX/FHnaOddwh0Q3rv+oIC5gcOInDKH6DQ+5I3I4rR+PxoegmCF2knqybP8s9kpwQqcUZkyL3Q9e1l1fPwVFkvKD4YpCqiWGgkdvEAuOUU1kFz5HEUEHEVEabChPt6L4IOLvYwAtCwmdNylUYbk5LMU6WbatSklYes=
+	t=1713243622; cv=none; b=d024AgrIM78iBDCDu8gcaVetFWIjEno0u7veDqAIjvy/To1d46S8FttO3Ey+FZF+n+QdkZD2JBtVTnlJDBuZHHGfiXp9fnulEuxtPo3dEOdbPREYQcEfFYDZ20XfwCh+SYlvdEQqYRqxat+R5D7jFKlPXGypVbwF9XAH7ZOvWH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713243619; c=relaxed/simple;
-	bh=rTZcYv4qs+rIYMCy26E79qFvv7coOO4lv/ldOKvKvjk=;
+	s=arc-20240116; t=1713243622; c=relaxed/simple;
+	bh=uaQ3c8m+/A946TpD0YK6/MczE7fphtvTQIhyYcJg+KE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bqOcQkrrUE/idXwRIqIQwa4+uouioFfqPEOs+cgKuOIeCM1b7i+Y5kp/38uz2fU+Zm9gcQ+ZsOH1iiQr8FEm4mPidYf4VPymQWeGd+UbMcIsZJJQ5lcfUizeScUjQulKiQTO9hoZtB99ftN+RjQCEE3uapQoIacEaCR/vQPe968=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=g5olfTvD; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=qRN+uWjQedI5FpFWOzGYse5HJJQiAr3c0rVuz2VD8rOeoubWiMhMMuhrB7Hpw5Ppfrg2Mjno41WJexT0xhNNr3whELRVTZVQfHVm6DQ+lCa4dDQ+9uW1zr64coBs1V43PA168kfSWw4bwux+iL5dqJhVfkG/IsLvwBApyGlFVFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=GIS0eXG2; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="g5olfTvD"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43G0SpuM027426;
-	Tue, 16 Apr 2024 05:00:04 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="GIS0eXG2"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43G01Nsw004728;
+	Tue, 16 Apr 2024 05:00:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=Eggx1Omwg5XkPBCknvyvg9fDz91sqH79N/bczjdg8Ag=; b=g5
-	olfTvDTizfeKw3s/aEA6wgKVG+nNVwmXeqwipgAzYjlWJostI8qFK2B6azVcn2bN
-	Miu+APQiOzNXF/GOPf2yaAa0UPt138mVshx8CBuAb4xUYXpL+q+LfLn7AtGlbbam
-	rNVw6AeVNiWW5NCeibnae0pfxVOBkTf0Od/xNiUXoVpUpcYw9mQrUqQ0ACk2MbAc
-	ZibJSyy+K4GkGiATVbc3PmE2Y0dBDM6/7yXgbHex3W6TlOxPIWDFGVVFTq+68HrQ
-	mda5Dg1w+pr3NNNyqafTL22OrgER29TqjqeJOq3SiB8oLOHZpLnQTw5aJk5sVb2y
-	pzKU1/7/X1LGnL32jEEQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xh5jx9q5s-1
+	qcppdkim1; bh=jT3Xv5Vc7uQ7izAgX+FvIryOPSI/RZA5PZRWEzBBOXI=; b=GI
+	S0eXG2yMy4SEAovvnfkZII2rMcM1obzm4ByTVOTjZorE327chwyoItyeEeEv+TeQ
+	0WP47jNDK5XvzdS7jS3ojOh4LviHlvr9YeA7bNKv0Z2Bnl5qzTwuEk6l3hQ80Em2
+	t4TjjkjYofuctQckZVRHtdWlnZbNuykHp3REd9PkCht16FexhGNUuRCxK7Xo4wI4
+	XPUTp69qo6ImqZ2tDVLCOjOCKAMa+WrAujwhBjRwnsCD2P/zIXWLHVaThbzWZi0E
+	t3aFWuWXiRakYld3kNnD19z5/+QsGJm3P2k0amgYie7EuMkTFYoEJnq3IjzSos2P
+	WIMWr9QXXoj2GhUI+NRg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xhbburtn3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Apr 2024 05:00:04 +0000 (GMT)
+	Tue, 16 Apr 2024 05:00:07 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43G5037H021687
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43G5075l025571
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Apr 2024 05:00:03 GMT
+	Tue, 16 Apr 2024 05:00:07 GMT
 Received: from hu-adisi-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 15 Apr 2024 22:00:01 -0700
+ 15.2.1544.9; Mon, 15 Apr 2024 22:00:05 -0700
 From: Aditya Kumar Singh <quic_adisi@quicinc.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
         Aditya Kumar Singh
 	<quic_adisi@quicinc.com>
-Subject: [PATCH 1/7] wifi: cfg80211: send link id in color_change ops
-Date: Tue, 16 Apr 2024 10:29:37 +0530
-Message-ID: <20240416045943.576656-2-quic_adisi@quicinc.com>
+Subject: [PATCH 3/7] wifi: mac80211: handle set color_change/after_color_change beacon on per link basis
+Date: Tue, 16 Apr 2024 10:29:39 +0530
+Message-ID: <20240416045943.576656-4-quic_adisi@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240416045943.576656-1-quic_adisi@quicinc.com>
 References: <20240416045943.576656-1-quic_adisi@quicinc.com>
@@ -64,100 +64,119 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: TYEB3njHuLiIIeMVhklAAYI4WBkmVzrs
-X-Proofpoint-ORIG-GUID: TYEB3njHuLiIIeMVhklAAYI4WBkmVzrs
+X-Proofpoint-ORIG-GUID: qOPNt8TwBiug3pr7yCgIz4HTNVJbIjnr
+X-Proofpoint-GUID: qOPNt8TwBiug3pr7yCgIz4HTNVJbIjnr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-16_02,2024-04-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
- suspectscore=0 adultscore=0 impostorscore=0 bulkscore=0 lowpriorityscore=0
- mlxlogscore=999 spamscore=0 mlxscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
- definitions=main-2404160028
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 impostorscore=0 mlxscore=0 adultscore=0 spamscore=0
+ phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2404010003 definitions=main-2404160028
 
-Currently, during color change, no link id information is passed down.
-In order to support color change during Multi Link Operation, it is
-required to pass link id as well.
+In order to support color change with MLO, there is a need to handle the
+functions ieee80211_set_color_change_beacon() and
+ieee80211_set_after_color_change_beacon() on a per link basis.
 
-Add changes to pass link id in the color_change cfg80211_ops.
+Implement this by making the function argument accept the link data
+instead of the sdata.
+
+Currently, deflink would only be passed. Proper link data will be passed in
+a subsequent change.
 
 Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 ---
- include/net/cfg80211.h | 3 +++
- net/wireless/nl80211.c | 4 +++-
- net/wireless/trace.h   | 6 ++++--
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ net/mac80211/cfg.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1e09329acc42..0e2b3e0c8541 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1575,6 +1575,8 @@ struct cfg80211_csa_settings {
-  * @beacon_next: beacon data to be used after the color change
-  * @count: number of beacons until the color change
-  * @color: the color used after the change
-+ * @link_id: defines the link on which color change is expected during MLO.
-+ *	0 in case of non-MLO.
-  */
- struct cfg80211_color_change_settings {
- 	struct cfg80211_beacon_data beacon_color_change;
-@@ -1583,6 +1585,7 @@ struct cfg80211_color_change_settings {
- 	struct cfg80211_beacon_data beacon_next;
- 	u8 count;
- 	u8 color;
-+	u8 link_id;
- };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f9374ce04c93..6e64c0740c81 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4662,20 +4662,22 @@ static int ieee80211_set_sar_specs(struct wiphy *wiphy,
+ }
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b4edba6b0b7b..a9d01cd16196 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16029,6 +16029,7 @@ static int nl80211_color_change(struct sk_buff *skb, struct genl_info *info)
- 		params.counter_offset_presp = offset;
+ static int
+-ieee80211_set_after_color_change_beacon(struct ieee80211_sub_if_data *sdata,
++ieee80211_set_after_color_change_beacon(struct ieee80211_link_data *link,
+ 					u64 *changed)
+ {
++	struct ieee80211_sub_if_data *sdata = link->sdata;
++
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP: {
+ 		int ret;
+ 
+-		if (!sdata->deflink.u.ap.next_beacon)
++		if (!link->u.ap.next_beacon)
+ 			return -EINVAL;
+ 
+-		ret = ieee80211_assign_beacon(sdata, &sdata->deflink,
+-					      sdata->deflink.u.ap.next_beacon,
++		ret = ieee80211_assign_beacon(sdata, link,
++					      link->u.ap.next_beacon,
+ 					      NULL, NULL, changed);
+-		ieee80211_free_next_beacon(&sdata->deflink);
++		ieee80211_free_next_beacon(link);
+ 
+ 		if (ret < 0)
+ 			return ret;
+@@ -4691,18 +4693,19 @@ ieee80211_set_after_color_change_beacon(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static int
+-ieee80211_set_color_change_beacon(struct ieee80211_sub_if_data *sdata,
++ieee80211_set_color_change_beacon(struct ieee80211_link_data *link,
+ 				  struct cfg80211_color_change_settings *params,
+ 				  u64 *changed)
+ {
++	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_color_change_settings color_change = {};
+ 	int err;
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+-		sdata->deflink.u.ap.next_beacon =
++		link->u.ap.next_beacon =
+ 			cfg80211_beacon_dup(&params->beacon_next);
+-		if (!sdata->deflink.u.ap.next_beacon)
++		if (!link->u.ap.next_beacon)
+ 			return -ENOMEM;
+ 
+ 		if (params->count <= 1)
+@@ -4714,11 +4717,11 @@ ieee80211_set_color_change_beacon(struct ieee80211_sub_if_data *sdata,
+ 			params->counter_offset_presp;
+ 		color_change.count = params->count;
+ 
+-		err = ieee80211_assign_beacon(sdata, &sdata->deflink,
++		err = ieee80211_assign_beacon(sdata, link,
+ 					      &params->beacon_color_change,
+ 					      NULL, &color_change, changed);
+ 		if (err < 0) {
+-			ieee80211_free_next_beacon(&sdata->deflink);
++			ieee80211_free_next_beacon(link);
+ 			return err;
+ 		}
+ 		break;
+@@ -4766,7 +4769,7 @@ static int ieee80211_color_change_finalize(struct ieee80211_sub_if_data *sdata)
+ 
+ 	sdata->vif.bss_conf.color_change_active = false;
+ 
+-	err = ieee80211_set_after_color_change_beacon(sdata, &changed);
++	err = ieee80211_set_after_color_change_beacon(&sdata->deflink, &changed);
+ 	if (err) {
+ 		cfg80211_color_change_aborted_notify(sdata->dev, 0);
+ 		return err;
+@@ -4866,7 +4869,7 @@ ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
+ 		goto out;
  	}
  
-+	params.link_id = nl80211_link_id(info->attrs);
- 	err = rdev_color_change(rdev, dev, &params);
+-	err = ieee80211_set_color_change_beacon(sdata, params, &changed);
++	err = ieee80211_set_color_change_beacon(&sdata->deflink, params, &changed);
+ 	if (err)
+ 		goto out;
  
- out:
-@@ -17431,7 +17432,8 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
- 		.doit = nl80211_color_change,
- 		.flags = GENL_UNS_ADMIN_PERM,
--		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP |
-+					 NL80211_FLAG_MLO_VALID_LINK_ID),
- 	},
- 	{
- 		.cmd = NL80211_CMD_SET_FILS_AAD,
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index cbbf347c6b2e..db4d9f567ad0 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2842,6 +2842,7 @@ TRACE_EVENT(rdev_color_change,
- 		__field(u8, count)
- 		__field(u16, bcn_ofs)
- 		__field(u16, pres_ofs)
-+		__field(u8, link_id)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-@@ -2849,11 +2850,12 @@ TRACE_EVENT(rdev_color_change,
- 		__entry->count = params->count;
- 		__entry->bcn_ofs = params->counter_offset_beacon;
- 		__entry->pres_ofs = params->counter_offset_presp;
-+		__entry->link_id = params->link_id;
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT
--		  ", count: %u",
-+		  ", count: %u, link_id: %d",
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG,
--		  __entry->count)
-+		  __entry->count, __entry->link_id)
- );
- 
- TRACE_EVENT(rdev_set_radar_background,
 -- 
 2.25.1
 
