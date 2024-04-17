@@ -1,38 +1,54 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D3D46E613
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2024 09:01:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBAC512F375
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2024 09:34:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713344471; cv=none; b=THCM56a52jN+Z44mQ/xmi+gScf6tEV8HIBH6Kb03aNQa4gxwH4u9sARovIL78dHrIRJTxc0VvVUEbhtTJ8ErWGSuHiMBsGGHFt6+/ijtd7hNd9JTwc3/3zmazmauKl1sZOkO2X2VQ6ag2RgjuFXreNioJVO7IHm5kAy2GsrPEJo=
+	t=1713346449; cv=none; b=rLscsOaT9DHsVukVp0kCwtdW8n7xEZkDzH8tX/L8T2AOVMqZet4329w/HGuawQmiKmvTuAdpbrtNe5C21pgtUR1cN2jn8R+PieXLtyrfL1EPij7jJ5d7CsWDELAZzxzliflWco4TEsNafIp3oe9Vh2peDP7+bjZL1yntIAE0Rgc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713344471; c=relaxed/simple;
-	bh=e9SSBma6jlKqvwC3OvKN5raP3ZdwsZuZ59ls0XCOua0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GB9nkyeGckyQJ4G5gYjs8AyhqOA7PbSJu/hHPhJK/F1b62Lrj5SMWKZdnA0CuR2X1GFyNoscHuhzrNriFoQ9UpENV+Y9GZEXxOPKXQRaVEktn+2WaG3/PTINFiA2/kTeZqj9Ff+3VMe3boqMbp3EeJqqs4kO+/ORjmnKHBjMJ48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 43H913EE03193486, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 43H913EE03193486
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Apr 2024 17:01:03 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Wed, 17 Apr 2024 17:01:04 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 17 Apr
- 2024 17:01:03 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kevin_yang@realtek.com>
-Subject: [PATCH 2/2] wifi: rtw89: 8922a: fix argument to hal_reset in bb_cfg_txrx_path
-Date: Wed, 17 Apr 2024 17:00:58 +0800
-Message-ID: <20240417090058.42663-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1713346449; c=relaxed/simple;
+	bh=Cg1iTi2FUXqVVHzGMD1K2e1YDIXHsJDkNuJnwdsixCM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=FJDZgTUzq+WeuluwDv6PqQJXWXXVGIPRKlK0D4v2fPGOglNtCcPY/5Mgb79qwzHs++UlIWYD9dmy58hJwdO+od/TlUZunDgEgaRpS03ePJjyrCZKlqhJc76sZtGOhyh+45S9W8taeTrQGN40X1i+XsA13CVazJ4Wy5Li77dcjkI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=GPpItFcX; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=AiUq6DJn; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="GPpItFcX";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="AiUq6DJn"
+From: Martin Kaistra <martin.kaistra@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1713346446;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O6VB8MvZp7y+//9ulInPdAxj0qajVjR9ewdbxzm77yY=;
+	b=GPpItFcXXEp3//xiL3BX5yY59SZSa4nLDXS/4qLsqW0s6kSjQbJ0rrNe+R/cEuqD9ko/EK
+	j5rweu4Y5xfeBPswefWlAnk72RU96QwbWTez7lGxOfo6VDyAdGlnByM5pdCh+hVKD/Bbki
+	6k0A8l85U+arDgAue6ml6sI+zfc2bI7V8q5rXHkhsOpD4VTrzrg324xn+jq7BNoUAt/XOg
+	mV9thZU4HHL88ZXRrpr0+nngSl2XGpvtFL+5Cq7GEvpz5ZFfilD7FyQM266CtO/dH1SWfE
+	ECpOauIttiHx5Vq+pCqxUjK42+X86+iu6bFKdZKkn0Yko1v9Bii033Ext538Sw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1713346446;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O6VB8MvZp7y+//9ulInPdAxj0qajVjR9ewdbxzm77yY=;
+	b=AiUq6DJnN9XUjay3nMiJG5BohPrI2752RWE/kZ90TSGwmqMaithbCgAQAiTij9RUGS3gH2
+	2cscfq+e4ZbtgKAg==
+To: linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 1/2] Revert "wifi: rtl8xxxu: enable MFP support"
+Date: Wed, 17 Apr 2024 11:33:51 +0200
+Message-Id: <20240417093352.1840632-2-martin.kaistra@linutronix.de>
+In-Reply-To: <20240417093352.1840632-1-martin.kaistra@linutronix.de>
+References: <20240417093352.1840632-1-martin.kaistra@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,33 +56,54 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+This reverts commit 77f5924fc41c243e907c80ce2576902d3a9cb336.
 
-When hal_reset on MAC_1/PHY_1, we should pass tx_en1 instead of tx_en0.
+There is a more elegant solution to check for not decrypted frames,
+which is to check the security flag in the RX descriptor.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Revert commit 77f5924fc41c ("wifi: rtl8xxxu: enable MFP support") in
+favor of this to be able to send it to stable.
+
+Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
 ---
- drivers/net/wireless/realtek/rtw89/rtw8922a.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922a.c b/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-index 1d0b6de0eeab..3b3ea3a7c19a 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922a.c
-@@ -2126,7 +2126,7 @@ static void rtw8922a_bb_cfg_txrx_path(struct rtw89_dev *rtwdev)
- 	rtw8922a_hal_reset(rtwdev, RTW89_PHY_0, RTW89_MAC_0, band, &tx_en0, false);
- 	if (rtwdev->dbcc_en)
- 		rtw8922a_hal_reset(rtwdev, RTW89_PHY_1, RTW89_MAC_1, band,
--				   &tx_en0, false);
-+				   &tx_en1, false);
- }
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 870bd952f5902..4a49f8f9d80f2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6473,9 +6473,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 			rx_status->mactime = rx_desc->tsfl;
+ 			rx_status->flag |= RX_FLAG_MACTIME_START;
  
- static u8 rtw8922a_get_thermal(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path)
+-			if (!rx_desc->swdec &&
+-			    !(_ieee80211_is_robust_mgmt_frame(hdr) &&
+-			      ieee80211_has_protected(hdr->frame_control)))
++			if (!rx_desc->swdec)
+ 				rx_status->flag |= RX_FLAG_DECRYPTED;
+ 			if (rx_desc->crc32)
+ 				rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+@@ -6580,9 +6578,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 			rx_status->mactime = rx_desc->tsfl;
+ 			rx_status->flag |= RX_FLAG_MACTIME_START;
+ 
+-			if (!rx_desc->swdec &&
+-			    !(_ieee80211_is_robust_mgmt_frame(hdr) &&
+-			      ieee80211_has_protected(hdr->frame_control)))
++			if (!rx_desc->swdec)
+ 				rx_status->flag |= RX_FLAG_DECRYPTED;
+ 			if (rx_desc->crc32)
+ 				rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+@@ -8002,7 +7998,6 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+-	ieee80211_hw_set(hw, MFP_CAPABLE);
+ 
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 
 -- 
-2.25.1
+2.39.2
 
