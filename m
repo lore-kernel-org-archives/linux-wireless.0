@@ -1,99 +1,82 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7055715AAC9;
-	Thu, 18 Apr 2024 08:48:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF47F15AAAD
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2024 08:52:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713430133; cv=none; b=hESICLKiG3sOwBJVrgfLEsLLMhKnC5++Jpj+gfcKDHLGDHJdTSDv5HMWTSEc4zpyrjgNFbGgnNyzAa39BZgMlCJZi0JZaDbujYNbVWyFug7b94WG2poRZIhirBPbubotSJd3GQLAZqNLYrBQywy2xl2dZ2uu0XRDs6C5jski6AY=
+	t=1713430355; cv=none; b=F7EWmH04fvsXnCEWvn243+wiHFEbHYwWtPB7OThEMLUMBgMXQDKH9Ft+3kDITqAZJGiIRy5Wf+hpvcM/M4r/Cd3mZvp2n/e8XGUtSxx8js6St6a3fgraHVZlpMnP00Bt78e5iXdBVzrLx2gZBbgXXVWLwbgvfMeo/ECK/WgiyCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713430133; c=relaxed/simple;
-	bh=cCZcSL0YIDAF5qz+4wzip6oQvBGsMJ9ti10QUAp/PH4=;
-	h=Message-ID:Date:MIME-Version:From:To:Cc:Subject:Content-Type; b=lxTPN1I34wHUwfhlxvUd6ai6Hf6B9ohVm+e8iQU/+4k1lQW1VxT349mAxRxNoNTrp3St5OKYxaeSxL0/33FO/7GtIlHFmEYaMM8FsGSuVTM+DSM8+4yDz5nXAEhJxAM9OTFn2IUDi1DwYFZLzd1MedYfG9crslaPqH8a0rUWl3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=LIimsa/f; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1713430355; c=relaxed/simple;
+	bh=9hoUm5POCuTxc3+9KwPVjrX1Tb9aEkNsvVgbiRa9z70=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pmZdm9ppC0DX8+89cSevZgi2JLXxC3vtGQIgKq7JgfG1PtVALue0u85xFyBmsoRI6VoA7wUHSy+fPqT4ROgKUI4WiIIhBmU5UBnrjjhDUGDZEOKydYvQTl5LM7GYKhDXvEcllXqcDHn9FzDv4xfnlDXqZvn6w0sChwwnJznHfK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=a4z3vcv4; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="LIimsa/f"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="a4z3vcv4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
-	Reply-To:Subject:Cc:To:From:MIME-Version:Date:Message-ID:From:Sender:Reply-To
-	:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To:
-	References; bh=ceJILIOVA2WDBG4d054KS51MjWUMSrgtQobFchiud7w=; t=1713430131;
-	x=1713862131; b=LIimsa/fAMNjDmSmZRH9wMKuyxY3DkeZSljscBj73THRs7plnK0OGTVxDGE0q
-	JT7B9WYprfRkMq0eQoxxTT+A2+eM23K2I0kcAKY6jC4f090lXVweIl3ScSTR7fg+3yZCGrt/WafEi
-	OfXlcoXU/+A3hXEZUF/9eeEcUMeM+dW+Aw8k0ZKn9OaRQJ/LhuoeaZBFHavy+Pgv2F7/2cBp4KCdY
-	reSWHyg8ABuy2COuAlZAv31NJXWE0Je6sOdqMLoSl/brOylI2uFKJ6TxRT2CYLrH2UQHVJXPdzN7I
-	3CW5KQ4ZiOOFvGanEzLJ9eWJpobnIDTvmeHmCR7SP3/SLqqaQA==;
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1rxNRi-0004qb-BO; Thu, 18 Apr 2024 10:48:42 +0200
-Message-ID: <e17e5bf2-657a-4a22-a925-94db95fe8ca1@leemhuis.info>
-Date: Thu, 18 Apr 2024 10:48:41 +0200
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=ay+c9wu6kl7oYkHo5zpr+zpGhSopkkHHh+yc2Ug6Jbw=;
+	t=1713430353; x=1714639953; b=a4z3vcv4CiRksvFRha518lBeACIbZevAkr0zf2BTTKj47pw
+	frFD4U301sgFSAG/kklOQM5T/6dZog4qOoy0srZqUz7gZ1s+ShcQJetkQuQLdBDzIEbPmnzOzsj2S
+	s2cveVMTf/JOlwTxSFTaPzTW1nJrhVei+pwlHgKqp5RExowYVzS4D68u4GA8YX5VFdLpuRwf6NWyn
+	VQOQyLT14PfPKdx+u9S+HB6aV/cb6rSbkZMG6KuAG4rqAa+WfI6Dpb+v0Jqcj2ieVnxjA4tdlAJDs
+	xXSTBfPRDeYkmdxSP157P3TGC0W4ZFC3YiT8o3mGV/IBQR6taYKQFU8iFxCm6C+Q==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1rxNVJ-0000000CIvO-2Ve4;
+	Thu, 18 Apr 2024 10:52:25 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH wireless 3/8] wifi: mac80211: mlme: fix memory leak
+Date: Thu, 18 Apr 2024 10:52:21 +0200
+Message-ID: <20240418105220.458421e3bbff.Icb5b84cba3ea420794cf009cf18ec3d76e434736@changeid>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240418105220.90df97557702.I05d2228ce85c203b9f2d6da8538cc16dce46752a@changeid>
+References: <20240418105220.90df97557702.I05d2228ce85c203b9f2d6da8538cc16dce46752a@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Content-Language: en-US, de-DE
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>
-Cc: Kalle Valo <kvalo@kernel.org>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- LKML <linux-kernel@vger.kernel.org>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- Linux kernel regressions list <regressions@lists.linux.dev>
-Subject: [regression] Tri-band AMD RZ608 (MediaTek MT7921K) has 6GHz band
- disabled in kernel 6.8 despite working in <=6.6
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1713430131;169e7109;
-X-HE-SMSGID: 1rxNRi-0004qb-BO
+Content-Transfer-Encoding: 8bit
 
-Hi, Thorsten here, the Linux kernel's regression tracker.
+From: Johannes Berg <johannes.berg@intel.com>
 
-mt7921 maintainers, I noticed a report about a regression in
-bugzilla.kernel.org related to your driver. As many (most?) kernel
-developers don't keep an eye on bugzilla, I decided to write this mail.
-To quote from https://bugzilla.kernel.org/show_bug.cgi?id=218731 :
+When re-parsing the elements here (with changed mode), free
+the original ones first to avoid leaking memory.
 
-> On kernel 6.6.27-1-lts, running `iw list` shows that 6GHz channels are supported:>
-> [...]
-> Similarly, discovering and connecting to 6GHz APs works fine.
-> 
-> However, in recent kernel 6.8.5, running `iw list` shows that 6GHz channels are disabled:
->
-> [...]
->
-> And scanning or connecting to 6GHz APs does not work. 
-> 
-> There's nothing in `dmesg` that differs between boots of the two kernels. On 6.8.5, 6GHz band doesn't work like it did on previous kernels. 
-> 
-> I can provide more logs or help debug the issue if needed.
+Fixes: 310c8387c638 ("wifi: mac80211: clean up connection process")
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-See the ticket for more details. Note, you have to use bugzilla to reach
-the reporter, as I sadly[1] can not CCed them in mails like this.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 98cb475a14c8..6fa3752b740e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -753,8 +753,10 @@ ieee80211_determine_chan_mode(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	/* the mode can only decrease, so this must terminate */
+-	if (ap_mode != conn->mode)
++	if (ap_mode != conn->mode) {
++		kfree(elems);
+ 		goto again;
++	}
+ 
+ 	mlme_link_id_dbg(sdata, link_id,
+ 			 "connecting with %s mode, max bandwidth %d MHz\n",
+-- 
+2.44.0
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
-
-[1] because bugzilla.kernel.org tells users upon registration their
-"email address will never be displayed to logged out users"
-
-P.S.: let me use this mail to also add the report to the list of tracked
-regressions to ensure it's doesn't fall through the cracks:
-
-#regzbot introduced: v6.6..v6.8.5
-#regzbot title: wifi drivers: mt7921: 6GHz band stopped working
-#regzbot from: AlexDeLorenzo.dev
-#regzbot duplicate: https://bugzilla.kernel.org/show_bug.cgi?id=218731
-#regzbot ignore-activity
