@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF47F15AAAD
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF4D115AAB2
 	for <linux-wireless@vger.kernel.org>; Thu, 18 Apr 2024 08:52:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713430355; cv=none; b=F7EWmH04fvsXnCEWvn243+wiHFEbHYwWtPB7OThEMLUMBgMXQDKH9Ft+3kDITqAZJGiIRy5Wf+hpvcM/M4r/Cd3mZvp2n/e8XGUtSxx8js6St6a3fgraHVZlpMnP00Bt78e5iXdBVzrLx2gZBbgXXVWLwbgvfMeo/ECK/WgiyCg=
+	t=1713430356; cv=none; b=sEnZzm9cB6cfuFBZzhvkqPlbY+EmQhmg7LWeufPCqP6rELdlu5Ocle1aPXu/+bGq0dCTu7ZooKNKmg+mN1kxymVIIjQm5iSw40q3KC7rWypXhVjpILbZXn1WkTd0xOhMwu2XjLwzbc5sxwybFqMGc6ARFv5BIk/K3lG1lOsFNj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713430355; c=relaxed/simple;
-	bh=9hoUm5POCuTxc3+9KwPVjrX1Tb9aEkNsvVgbiRa9z70=;
+	s=arc-20240116; t=1713430356; c=relaxed/simple;
+	bh=FZWjRDeZ7I3Jm48qImbEx1ZJtfTBKfdaZZR1Si5EMds=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pmZdm9ppC0DX8+89cSevZgi2JLXxC3vtGQIgKq7JgfG1PtVALue0u85xFyBmsoRI6VoA7wUHSy+fPqT4ROgKUI4WiIIhBmU5UBnrjjhDUGDZEOKydYvQTl5LM7GYKhDXvEcllXqcDHn9FzDv4xfnlDXqZvn6w0sChwwnJznHfK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=a4z3vcv4; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=G7pi5YrCusOybkC5qaB+Jit/DHHWbx08GTSFdf679bqM8tgMY4X5SVGs+DpQZJ7++3FzzSZc1zp0v5WOjUt1vdZTW7OOtLhgu8dOK9WPW4vfxN6sWLeJ7pwWf/Kyh7ZvdZvJio2LebTQAZu57QjvvGhS3c5mW9OUQFM4X9GpN1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LIGL2uMz; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="a4z3vcv4"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LIGL2uMz"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=ay+c9wu6kl7oYkHo5zpr+zpGhSopkkHHh+yc2Ug6Jbw=;
-	t=1713430353; x=1714639953; b=a4z3vcv4CiRksvFRha518lBeACIbZevAkr0zf2BTTKj47pw
-	frFD4U301sgFSAG/kklOQM5T/6dZog4qOoy0srZqUz7gZ1s+ShcQJetkQuQLdBDzIEbPmnzOzsj2S
-	s2cveVMTf/JOlwTxSFTaPzTW1nJrhVei+pwlHgKqp5RExowYVzS4D68u4GA8YX5VFdLpuRwf6NWyn
-	VQOQyLT14PfPKdx+u9S+HB6aV/cb6rSbkZMG6KuAG4rqAa+WfI6Dpb+v0Jqcj2ieVnxjA4tdlAJDs
-	xXSTBfPRDeYkmdxSP157P3TGC0W4ZFC3YiT8o3mGV/IBQR6taYKQFU8iFxCm6C+Q==;
+	Resent-Cc:Resent-Message-ID; bh=QU2gUPFup3r6nTJn+Hbmd95Utnrgxk9QPq90kMGKeSk=;
+	t=1713430353; x=1714639953; b=LIGL2uMzPmI7FafcJ3o0eDl4Kyq/gYZzcX4QPH1poQetZ/k
+	d0Rbnv+UkLRa1NejMT1+crJm8ZkDN9WbPSSJppZCpEzfaadZbTUirpebVz3TqAee2pG5mObH0LANE
+	+iDhEC/7q52vp7kXM/u5sGHt6F2hleF6ww2X8i9fD034uHi7mjVBNhu2wrWw6KUdMxgcDBWphGwa6
+	9TzEywqSUtdjpcbc+oPy9Sa9tAdH+pimzyCexDv7MQvlsXO0buORbm58W/GlhySQ2NebNeuZcHoML
+	YeGf+DMCQ4AnEBRDRiEhTgwO/qB6d1WVFGsdh0OzNPn1vFn0bHHsdY4UUTiVvn/Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1rxNVJ-0000000CIvO-2Ve4;
+	id 1rxNVI-0000000CIvO-3vD7;
 	Thu, 18 Apr 2024 10:52:25 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless 3/8] wifi: mac80211: mlme: fix memory leak
-Date: Thu, 18 Apr 2024 10:52:21 +0200
-Message-ID: <20240418105220.458421e3bbff.Icb5b84cba3ea420794cf009cf18ec3d76e434736@changeid>
+Subject: [PATCH wireless 2/8] wifi: mac80211: mlme: re-parse with correct mode
+Date: Thu, 18 Apr 2024 10:52:20 +0200
+Message-ID: <20240418105220.5e0d1fcb5622.Ib0673e0bc90033fd6d387b6a5f107c040eb907cf@changeid>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240418105220.90df97557702.I05d2228ce85c203b9f2d6da8538cc16dce46752a@changeid>
 References: <20240418105220.90df97557702.I05d2228ce85c203b9f2d6da8538cc16dce46752a@changeid>
@@ -51,32 +51,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When re-parsing the elements here (with changed mode), free
-the original ones first to avoid leaking memory.
+When doing re-parsing in ieee80211_determine_chan_mode(),
+the conn->mode is changed, and the whole point of doing
+the parsing again was to parse as the downgraded mode.
+However, that didn't actually work, because the setting
+was copied before and never changed again. Fix that.
 
 Fixes: 310c8387c638 ("wifi: mac80211: clean up connection process")
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 98cb475a14c8..6fa3752b740e 100644
+index db7128f6c901..98cb475a14c8 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -753,8 +753,10 @@ ieee80211_determine_chan_mode(struct ieee80211_sub_if_data *sdata,
- 	}
+@@ -616,7 +616,6 @@ ieee80211_determine_chan_mode(struct ieee80211_sub_if_data *sdata,
+ 		.from_ap = true,
+ 		.start = ies->data,
+ 		.len = ies->len,
+-		.mode = conn->mode,
+ 	};
+ 	struct ieee802_11_elems *elems;
+ 	struct ieee80211_supported_band *sband;
+@@ -625,6 +624,7 @@ ieee80211_determine_chan_mode(struct ieee80211_sub_if_data *sdata,
+ 	int ret;
  
- 	/* the mode can only decrease, so this must terminate */
--	if (ap_mode != conn->mode)
-+	if (ap_mode != conn->mode) {
-+		kfree(elems);
- 		goto again;
-+	}
- 
- 	mlme_link_id_dbg(sdata, link_id,
- 			 "connecting with %s mode, max bandwidth %d MHz\n",
+ again:
++	parse_params.mode = conn->mode;
+ 	elems = ieee802_11_parse_elems_full(&parse_params);
+ 	if (!elems)
+ 		return ERR_PTR(-ENOMEM);
 -- 
 2.44.0
 
