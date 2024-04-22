@@ -1,54 +1,57 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC38E13FF6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFBDF18AED
 	for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2024 05:34:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713764088; cv=none; b=RGJBZJgfwot0mYRbzvd57+t2LlMWkXX5ToK38FXTWd7NJSHNGBgXoU4L1QuMt9PAVqvO1VdqJthNM5Np+Ri+AMCvDMrWvBvUis8Jte0x2MUYPHyhOn19uEJ1/JcCBlaNUlKBIrM3tSSOq1xjfOccFCCoRN22DVYChXPkQebhL+A=
+	t=1713764088; cv=none; b=jjYl7d79pAv3VqmTfTHDDIVYXDFxQcJfYA1vzYKR3K/V/9FKnO1+F+O1k0q/QmyZQgABy2lfMfMBKIf970ZvtGX93K4E5puLdzBVF1zM90P68I44cGfzH4eRLBxD+AsmvB34JlVDIOAtybKXDj7QfFoIoDEIDZRviRwpVou2a7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713764088; c=relaxed/simple;
-	bh=Ef3Z/C4qnuYPIZmr+PzI54GhLPTLuQbx51Kj2h+uraw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CZi9Zicl5f+aqv8hzPnpsbKwEl4BX1JzzSik29tW+74WsqfhGO9egF+ivWBXhYYIF+i9N7X85r2eYk2zkgWeq1OoE6/toMCsIkvVUL94PZrOZMCzaS4Zj2bhX1JZLPUMBRAPnwOgu/vjM9xmwK/CiMf9yL+B35IIviPKRg8IRUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pl0/tu3V; arc=none smtp.client-ip=205.220.168.131
+	bh=lFl9k+5aUsAVbKFNnEW5+HEPvjHbW551OLeR2904Ja4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AsjqF0mVXV9A/GtsQNvUPOonpAYMgMPox0pIQbdecdP1PTcY07ZGlKW/qFa988R6DYLjA+yUjDakFRMbP4QLaAhcaFU7XcTaeg239NidUtUam65tE4NJjL0W3QWiulsiOticCxAs7fPdsDqo9TbrO4KCZgDU31aM2TMTjvTfW9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=klQ7ElEF; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pl0/tu3V"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="klQ7ElEF"
 Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43M3TiC7010535;
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43M4quxi024387;
 	Mon, 22 Apr 2024 05:34:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=0vLUa0d
-	DYwcfoKBRm6JzcsMYrXtMRNeKoP5k3UP9aOU=; b=pl0/tu3VJ4/SbrOdKLw8k6S
-	DsYbyruCWtci/4BMCNIUpsGNPNCNZgoTi6Y9uNqDbssGeCSpnpCZ+AKEHRnKo5Y1
-	Mqt3hueMUmlctgbptojEztR18rhxqrIaQy9f61pAyn9zOQ1hwzFmH1ghLDRE3uWY
-	HHKr9b7G2KBAff1Z2acOMi6PqQdT0USqW8h5s6Qq5ftfT9ncMx9c+B9vRF6RIY2e
-	qulT7XV0U8xXTU0txUptpU9tENjdFiXyO7Uer4vYXqNpT7Q20S32rrGF6Ufc7B4I
-	XPOZezheVivF0iT+e1Nsn8/pKFNVDFI+WxBa+9Fgazfwk0tyPi9w31OLTzH35sA=
-	=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=jFCcSOQcwxDBXHLAYbZNnCLmLWWilFDa7gVoMb44tck=; b=kl
+	Q7ElEF1diahdnStY9FwpBWI6gD+DU5hqhA4gCsndJ7N900IARa3IuHZal8sbcF49
+	BnLBbeAK5lNyqYa9tDdOJ6mqagp8rl3En0UF+AcvKIV9qVSEOy4Z2FnVKK29x5dV
+	dcTpwRdPeCaPBHHvL5RrvIJ1JtrVu+3avFVI08haeBeK3ah74HFcvBvbjKuCQAhh
+	47Tis1x4eeq/D8FxQh14Yht73oWlR2sj3odTc2S+BiPQOKVCk8Rz3jEHmiYrkbQa
+	mXSqA1Vzn27XSUImg2D3vkN+C2KzTMYTDxRPuRvY8SVphLt4Fs6u1pgHvlw4cimz
+	vO+zJ+nnaPnhq4BjlWzQ==
 Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xned0gbgj-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xned0gbgu-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Mon, 22 Apr 2024 05:34:42 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43M5YVhL006164
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43M5YdjL006268
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Apr 2024 05:34:31 GMT
+	Mon, 22 Apr 2024 05:34:39 GMT
 Received: from hu-adisi-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 21 Apr 2024 22:34:30 -0700
+ 15.2.1544.9; Sun, 21 Apr 2024 22:34:37 -0700
 From: Aditya Kumar Singh <quic_adisi@quicinc.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
         Aditya Kumar Singh
 	<quic_adisi@quicinc.com>
-Subject: [PATCH v2 0/7] wifi: cfg80211/mac80211: add support for HE BSS color handling with Multi-Link Operation
-Date: Mon, 22 Apr 2024 11:04:05 +0530
-Message-ID: <20240422053412.2024075-1-quic_adisi@quicinc.com>
+Subject: [PATCH v2 4/7] wifi: mac80211: handle color_change_abort and bss_config_notify on per link
+Date: Mon, 22 Apr 2024 11:04:09 +0530
+Message-ID: <20240422053412.2024075-5-quic_adisi@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240422053412.2024075-1-quic_adisi@quicinc.com>
+References: <20240422053412.2024075-1-quic_adisi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,60 +64,101 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: RWtjiNfo0u6AOd47AIL-lEdQLhXtB4zY
-X-Proofpoint-GUID: RWtjiNfo0u6AOd47AIL-lEdQLhXtB4zY
+X-Proofpoint-ORIG-GUID: rVz9hdRrQ4WejhFAHQnfiJZeaubp7Tfg
+X-Proofpoint-GUID: rVz9hdRrQ4WejhFAHQnfiJZeaubp7Tfg
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-22_02,2024-04-19_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
- mlxlogscore=905 mlxscore=0 suspectscore=0 adultscore=0 lowpriorityscore=0
+ mlxlogscore=999 mlxscore=0 suspectscore=0 adultscore=0 lowpriorityscore=0
  malwarescore=0 impostorscore=0 spamscore=0 bulkscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
  definitions=main-2404220025
 
-Currently, deflink (or link_id 0) is always considered while handling HE
-BSS color. However, with Multi-Link Operation (MLO), there is a need to
-handle link specific data structures based on the actual operational
-link_id.
+With MLO, there is a requirement to handle functions
+ieee80211_color_change_abort() and
+ieee80211_color_change_bss_config_notify() on a per link basis.
 
-Hence, add support for the same. Non-MLO based operations will continue to
-use link_id as 0 or deflink member as applicable.
+Currently, deflink would only be passed. Proper link data will be passed in
+a subsequent change.
 
-At the same time, add support for BSS color by mac80211_hwsim.
-
-Aditya Kumar Singh (7):
-  wifi: cfg80211: send link id in color_change ops
-  wifi: cfg80211: notify link ID in bss_color_notify
-  wifi: mac80211: handle set color_change/after_color_change beacon on
-    per link basis
-  wifi: mac80211: handle color_change_abort and bss_config_notify on per
-    link
-  wifi: mac80211: start and finalize color change on link basis
-  wifi: mac80211: add support to call color_change and OBSS collision on
-    a link
-  wifi: mac80211_hwsim: add support for BSS color
+Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 ---
-v2: * Rebased on ToT
-    * Fix sparse warning -
-      warning: context imbalance in 'ieee80211_obss_color_collision_notify'
-               - different lock contexts for basic block
+ net/mac80211/cfg.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
----
- drivers/net/wireless/ath/ath11k/mac.c         |   2 +-
- drivers/net/wireless/ath/ath11k/wmi.c         |   3 +-
- .../net/wireless/mediatek/mt76/mt7915/mcu.c   |   2 +-
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   |   2 +-
- drivers/net/wireless/virtual/mac80211_hwsim.c |   6 +
- include/net/cfg80211.h                        |  29 ++--
- include/net/mac80211.h                        |   6 +-
- net/mac80211/cfg.c                            | 144 ++++++++++++------
- net/mac80211/rx.c                             |   7 +-
- net/wireless/nl80211.c                        |  10 +-
- net/wireless/trace.h                          |   6 +-
- 11 files changed, 149 insertions(+), 68 deletions(-)
-
-
-base-commit: b0d2d8f996c1ce3d4c8a1c8cb7d634536e7c2118
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3ae7c409ac77..5339a8e884ac 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3918,13 +3918,13 @@ static int ieee80211_set_csa_beacon(struct ieee80211_link_data *link_data,
+ 	return 0;
+ }
+ 
+-static void ieee80211_color_change_abort(struct ieee80211_sub_if_data  *sdata)
++static void ieee80211_color_change_abort(struct ieee80211_link_data *link)
+ {
+-	sdata->vif.bss_conf.color_change_active = false;
++	link->conf->color_change_active = false;
+ 
+-	ieee80211_free_next_beacon(&sdata->deflink);
++	ieee80211_free_next_beacon(link);
+ 
+-	cfg80211_color_change_aborted_notify(sdata->dev, 0);
++	cfg80211_color_change_aborted_notify(link->sdata->dev, link->link_id);
+ }
+ 
+ static int
+@@ -4008,7 +4008,7 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	/* if there is a color change in progress, abort it */
+ 	if (link_conf->color_change_active)
+-		ieee80211_color_change_abort(sdata);
++		ieee80211_color_change_abort(link_data);
+ 
+ 	err = ieee80211_set_csa_beacon(link_data, params, &changed);
+ 	if (err) {
+@@ -4737,16 +4737,18 @@ ieee80211_set_color_change_beacon(struct ieee80211_link_data *link,
+ }
+ 
+ static void
+-ieee80211_color_change_bss_config_notify(struct ieee80211_sub_if_data *sdata,
++ieee80211_color_change_bss_config_notify(struct ieee80211_link_data *link,
+ 					 u8 color, int enable, u64 changed)
+ {
++	struct ieee80211_sub_if_data *sdata = link->sdata;
++
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+ 
+-	sdata->vif.bss_conf.he_bss_color.color = color;
+-	sdata->vif.bss_conf.he_bss_color.enabled = enable;
++	link->conf->he_bss_color.color = color;
++	link->conf->he_bss_color.enabled = enable;
+ 	changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 
+-	ieee80211_link_info_change_notify(sdata, &sdata->deflink, changed);
++	ieee80211_link_info_change_notify(sdata, link, changed);
+ 
+ 	if (!sdata->vif.bss_conf.nontransmitted && sdata->vif.mbssid_tx_vif) {
+ 		struct ieee80211_sub_if_data *child;
+@@ -4779,7 +4781,7 @@ static int ieee80211_color_change_finalize(struct ieee80211_sub_if_data *sdata)
+ 		return err;
+ 	}
+ 
+-	ieee80211_color_change_bss_config_notify(sdata,
++	ieee80211_color_change_bss_config_notify(&sdata->deflink,
+ 						 sdata->vif.bss_conf.color_change_color,
+ 						 1, changed);
+ 	cfg80211_color_change_notify(sdata->dev, 0);
+@@ -4883,7 +4885,7 @@ ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
+ 	cfg80211_color_change_started_notify(sdata->dev, params->count, 0);
+ 
+ 	if (changed)
+-		ieee80211_color_change_bss_config_notify(sdata, 0, 0, changed);
++		ieee80211_color_change_bss_config_notify(&sdata->deflink, 0, 0, changed);
+ 	else
+ 		/* if the beacon didn't change, we can finalize immediately */
+ 		ieee80211_color_change_finalize(sdata);
 -- 
 2.34.1
 
