@@ -1,57 +1,40 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B74011804E
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Apr 2024 05:34:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD4F918059;
+	Mon, 22 Apr 2024 05:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713764101; cv=none; b=ZzQ3wKvyLrmaQMWRoMI1Syd4raTzNpVNH1OBjRkXv4NZusWT0f6EBSGkPrZos8IKfuFTPhjExe6iQ6xe3NQXEabvYNlgtsDLOvlyZBtaoUf0RKlqSgJDHxnNu+5VmUejcnxnFcESA/ozes/GsJYgXZekxKidFZPoAu4sr4LxEx0=
+	t=1713765037; cv=none; b=ZLLt4SDs7XoxniJaLNXiXx5MdyvXbl/FW7CTRp+ymde8Uz1taSu2vzbebl9BGwGYXRbsGDU3t0SThocGZoWCtNYbIo64R/ImIuf5brk3zoV4KU93l4HxC4HM38LTh22LsC9wd84TrQ+RWn8RWwettMBWKPr0N4xIoWf1MH3sd8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713764101; c=relaxed/simple;
-	bh=8rgn+PbELrgQMzxKrspsvEjUOB0L7PYZPDspRX1GGQs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CbvqfH8ag6Zrq58icMa1v30iHQvfgBcJqpVJNZKmQZU4mMhPOsTK+0W215uHDZqxTFlMaNOmvO6l7mvyRswYs9KezFYBGQe3gEVEaWC0/8RbexPV7EAdYRfDUGpx2wIPjFhLRWDQIm3yeFyrUANpvAWMMHB0TWwb0w9BXoCkT2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dJNl6q5+; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1713765037; c=relaxed/simple;
+	bh=wGfpoWSm6fFunl81xx0OAs77f3/yN+iTSevM4zdbNxk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RX/H3fJzcFRal7v8vLKTfYVxqEbtHJn8d1qSMJuTO13PiMz9sfqrJs+xpOPUUyllrqLWPxZoeLl0B0kS9h6+aoXwGhyIajUOyQ1lUc8neulsScY/I2Qn/SydHX6tjI4/Vq4IBb+wFfKX168Y3Z85WN7DXDSNFVYZqf0PDm+D+Go=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=QNrB/lfm; arc=none smtp.client-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dJNl6q5+"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43M33SZb006809;
-	Mon, 22 Apr 2024 05:34:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=TJ6oG8DGD57x79+PDqCjO0OoTZOKjfsNvv9/yOd3TeM=; b=dJ
-	Nl6q5+rYf0JMRNI+P9jAgKjVF+9tQSfd6rP5366Hy9WIXhSAuWa7HWBo1E+WiYIF
-	tzxhyUMtb2iAU36+06CfINEkW5ZhUBH9YkCExffCSZONbtO4PLiooDj3UcEu+MUD
-	arzf5EHmR19uhbwN/zskzvpg6bA2rhFxwN2cS2LKu14EPUe4XY6hyacSHVaBPCwl
-	zGGUgUdeuyANbvGEAYjVk7vjRFOQVLtElv0667yz3NRZULGu8kBuX8DtOTX1mw9N
-	p2b43MkyQhJ7a+E8ErU7L1KONKI8QQyF66emjLpksbPHXLSDh5wodVqpTGUf7Kqj
-	3dSsDWBPb5aGlBWfSS1A==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xm6vrb5bc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Apr 2024 05:34:54 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43M5YfM4016017
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 22 Apr 2024 05:34:41 GMT
-Received: from hu-adisi-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 21 Apr 2024 22:34:39 -0700
-From: Aditya Kumar Singh <quic_adisi@quicinc.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Aditya Kumar Singh
-	<quic_adisi@quicinc.com>
-Subject: [PATCH v2 5/7] wifi: mac80211: start and finalize color change on link basis
-Date: Mon, 22 Apr 2024 11:04:10 +0530
-Message-ID: <20240422053412.2024075-6-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240422053412.2024075-1-quic_adisi@quicinc.com>
-References: <20240422053412.2024075-1-quic_adisi@quicinc.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="QNrB/lfm"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1713765032; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=gbEIARgYdC2FJkyc7mZ73e93KYSKUIL9lR89ZCA2+nU=;
+	b=QNrB/lfm7BzuZAW4tQDbHeX45/ilsBv0hNuk9rVjncZaBHFyND/0ZL4Iwvoh3+70WrMmXT5arD740jcdZAQZf6JqwWP45PEGLrPj/SJXsv8PHcYrpFY0tGJcmU2+BEwAoblAaRWa0B6xHy/Reutfr567QS+IkRNQjVla9w3NKFQ=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R241e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=6;SR=0;TI=SMTPD_---0W4z0UcW_1713765023;
+Received: from localhost(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0W4z0UcW_1713765023)
+          by smtp.aliyun-inc.com;
+          Mon, 22 Apr 2024 13:50:31 +0800
+From: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To: pkshih@realtek.com
+Cc: kvalo@kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+	Abaci Robot <abaci@linux.alibaba.com>
+Subject: [PATCH] wifi: rtw89: Remove useless else
+Date: Mon, 22 Apr 2024 13:50:22 +0800
+Message-Id: <20240422055022.33388-1-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 2.20.1.7.g153144c
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,155 +42,35 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: awx-r_p8FSEHQJZ1knwu3jgc4fk9i7FB
-X-Proofpoint-ORIG-GUID: awx-r_p8FSEHQJZ1knwu3jgc4fk9i7FB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-22_02,2024-04-19_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
- malwarescore=0 lowpriorityscore=0 priorityscore=1501 suspectscore=0
- mlxlogscore=999 impostorscore=0 phishscore=0 clxscore=1015 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2404010003 definitions=main-2404220025
 
-Add changes to start a color change as well as finalize it on link basis
-in order to support switching color with MLO as well.
+The assignment of the else and if branches is the same, so the else
+here is redundant, so we remove it.
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+./drivers/net/wireless/realtek/rtw89/phy.c:6406:2-4: WARNING: possible condition with no effect (if == else).
+
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=8812
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 ---
- net/mac80211/cfg.c | 55 +++++++++++++++++++++++++++++-----------------
- 1 file changed, 35 insertions(+), 20 deletions(-)
+ drivers/net/wireless/realtek/rtw89/phy.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5339a8e884ac..b30d842e5068 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4765,26 +4765,27 @@ ieee80211_color_change_bss_config_notify(struct ieee80211_link_data *link,
- 	}
- }
- 
--static int ieee80211_color_change_finalize(struct ieee80211_sub_if_data *sdata)
-+static int ieee80211_color_change_finalize(struct ieee80211_link_data *link)
- {
-+	struct ieee80211_sub_if_data *sdata = link->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	u64 changed = 0;
- 	int err;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	sdata->vif.bss_conf.color_change_active = false;
-+	link->conf->color_change_active = false;
- 
--	err = ieee80211_set_after_color_change_beacon(&sdata->deflink, &changed);
-+	err = ieee80211_set_after_color_change_beacon(link, &changed);
- 	if (err) {
--		cfg80211_color_change_aborted_notify(sdata->dev, 0);
-+		cfg80211_color_change_aborted_notify(sdata->dev, link->link_id);
- 		return err;
- 	}
- 
--	ieee80211_color_change_bss_config_notify(&sdata->deflink,
--						 sdata->vif.bss_conf.color_change_color,
-+	ieee80211_color_change_bss_config_notify(link,
-+						 link->conf->color_change_color,
- 						 1, changed);
--	cfg80211_color_change_notify(sdata->dev, 0);
-+	cfg80211_color_change_notify(sdata->dev, link->link_id);
- 
- 	return 0;
- }
-@@ -4792,21 +4793,23 @@ static int ieee80211_color_change_finalize(struct ieee80211_sub_if_data *sdata)
- void ieee80211_color_change_finalize_work(struct wiphy *wiphy,
- 					  struct wiphy_work *work)
- {
--	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data,
--			     deflink.color_change_finalize_work);
-+	struct ieee80211_link_data *link =
-+		container_of(work, struct ieee80211_link_data,
-+			     color_change_finalize_work);
-+	struct ieee80211_sub_if_data *sdata = link->sdata;
-+	struct ieee80211_bss_conf *link_conf = link->conf;
- 	struct ieee80211_local *local = sdata->local;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	/* AP might have been stopped while waiting for the lock. */
--	if (!sdata->vif.bss_conf.color_change_active)
-+	if (!link_conf->color_change_active)
- 		return;
- 
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
- 
--	ieee80211_color_change_finalize(sdata);
-+	ieee80211_color_change_finalize(link);
- }
- 
- void ieee80211_color_collision_detection_work(struct work_struct *work)
-@@ -4859,36 +4862,48 @@ ieee80211_color_change(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_bss_conf *link_conf;
-+	struct ieee80211_link_data *link;
-+	u8 link_id = params->link_id;
- 	u64 changed = 0;
- 	int err;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	if (sdata->vif.bss_conf.nontransmitted)
-+	if (WARN_ON(link_id >= IEEE80211_MLD_MAX_NUM_LINKS))
-+		return -EINVAL;
-+
-+	link = wiphy_dereference(wiphy, sdata->link[link_id]);
-+	if (!link)
-+		return -ENOLINK;
-+
-+	link_conf = link->conf;
-+
-+	if (link_conf->nontransmitted)
- 		return -EINVAL;
- 
- 	/* don't allow another color change if one is already active or if csa
- 	 * is active
- 	 */
--	if (sdata->vif.bss_conf.color_change_active || sdata->vif.bss_conf.csa_active) {
-+	if (link_conf->color_change_active || link_conf->csa_active) {
- 		err = -EBUSY;
- 		goto out;
- 	}
- 
--	err = ieee80211_set_color_change_beacon(&sdata->deflink, params, &changed);
-+	err = ieee80211_set_color_change_beacon(link, params, &changed);
- 	if (err)
- 		goto out;
- 
--	sdata->vif.bss_conf.color_change_active = true;
--	sdata->vif.bss_conf.color_change_color = params->color;
-+	link_conf->color_change_active = true;
-+	link_conf->color_change_color = params->color;
- 
--	cfg80211_color_change_started_notify(sdata->dev, params->count, 0);
-+	cfg80211_color_change_started_notify(sdata->dev, params->count, link_id);
- 
- 	if (changed)
--		ieee80211_color_change_bss_config_notify(&sdata->deflink, 0, 0, changed);
-+		ieee80211_color_change_bss_config_notify(link, 0, 0, changed);
- 	else
- 		/* if the beacon didn't change, we can finalize immediately */
--		ieee80211_color_change_finalize(sdata);
-+		ieee80211_color_change_finalize(link);
- 
- out:
- 
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index eaa18140d1a8..ca5a098c30a4 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -6403,10 +6403,7 @@ enum rtw89_rf_path_bit rtw89_phy_get_kpath(struct rtw89_dev *rtwdev,
+ 			return RF_D;
+ 	case MLO_0_PLUS_2_1RF:
+ 	case MLO_2_PLUS_0_1RF:
+-		if (phy_idx == RTW89_PHY_0)
+-			return RF_AB;
+-		else
+-			return RF_AB;
++		return RF_AB;
+ 	case MLO_0_PLUS_2_2RF:
+ 	case MLO_2_PLUS_0_2RF:
+ 	case MLO_2_PLUS_2_2RF:
 -- 
-2.34.1
+2.20.1.7.g153144c
 
