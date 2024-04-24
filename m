@@ -1,149 +1,118 @@
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F9A316EBFF;
-	Wed, 24 Apr 2024 18:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61067FF
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Apr 2024 19:11:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713983046; cv=none; b=iuRnU3cdtdYbs/aBkFjxWKPOp8waOVenAU6Za3hypb9+zqGCYESQD+gfawb41cXpOf4g27mi9C0OTqQ/Imt8CSLhvqTEzwm7fySfpNgUGOBcV1BHljffDofSyZp2SuwYTqjTAxUVQWdz3fFNsbFseAdjEzCDqPix7IGJUPMHVsA=
+	t=1713985920; cv=none; b=gC6peZEsB+tOKL6EEmpCV/3y3x5oqBINxJDh8CSuc6OBaj8AEvqBPDIERUpJWmKVp6L9WLvT1ZkijDyz2L+pU6lddfCqBhoyd95qRSsI5FFH6kvL9RtVhAhZwOidWfI23a2LiJ0jyQnfGRpC6iaDXfNjSoDk8PN4sGQCt48eoxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713983046; c=relaxed/simple;
-	bh=Nq2r/xSMTKTi9jtSRejmw3Y+UjmxAmLt/U8EyeA1a8w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SrAOMoYaMl80KQadMSGNGJk9y1P2WdDMqSFL4ZqVdexjUl0NyKJI/b2FCcwxlNxvZ2Kd5DyqGjvrhVpObzMqrrCUqDk37PQ7jp06pS/Q4j4WQZuqBkIRKuXHpO7wU+KSVR0uzwMTN9+LMNcUwHNlR2/Y7utP84/MMTcKpAJevns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2dd6c14d000so1437201fa.0;
-        Wed, 24 Apr 2024 11:24:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713983043; x=1714587843;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NBHxa/dhAV/9oWKxfTbAVhvzTVzXkONqk+9xtsxO6s4=;
-        b=ZPcDRn50bw8dQWu765xFNTvI0+ICCIUUBp5ItlHsV1DmT43tZ/pQnhXhpDEHQU46Zo
-         WptDjmoE3fKq0LLLCBEGcJJFHa/ZljVknmK4swJ6lTJSGHYtUxzLkwydBayT6PqQfxs/
-         mC6hS6+yEQNT707NUsyTF2FEo9qGc2gWvpKlEhxx0QKNbt9VMTyE2jvVQPXBGz0cAR0w
-         aMTiPs1JSDQBcgaKAUnTo6TLT8Qqqkjzr8B+fNmIbRRlHE5lR1jEEUxRAsm1zEReZFjh
-         77xnOpUQm2/8G0H3nKMRReYE7f5NdNb89RVZ50qlx+SjB92esVmKyPRrDL0AgpS0b7wh
-         hJTA==
-X-Forwarded-Encrypted: i=1; AJvYcCUlnUwlbcgjSsjzti+eBgzZK+dluthwDgSRBO+XiX2j2fj/cIl6locBQ5dky+awUTVgGX1q+fN7FygIuP42EUbmYQ0ZYSS1n5BGYrdAkdiN7uhY3zDPDsss5PCcuM3fL4rqiHhw5s1En1Op1iY=
-X-Gm-Message-State: AOJu0YyTDYJYyjt18EBrECornjGD7z5TuDqZsfTlMiWu4v1dnPK9ngSP
-	hfTd0d890C25mxFsdXH+3qpQAjDritGdZpsvH8H3ICarO09dO05hSGvdpQ==
-X-Google-Smtp-Source: AGHT+IFDIB5hiF3emblc38AiRWGTrPAmQvq/oxLDBOAerlKusVDaocqu4PyucwRkOdRO0cu3Z4IeBQ==
-X-Received: by 2002:a2e:838b:0:b0:2de:809c:c670 with SMTP id x11-20020a2e838b000000b002de809cc670mr1567225ljg.49.1713983042412;
-        Wed, 24 Apr 2024 11:24:02 -0700 (PDT)
-Received: from localhost (fwdproxy-lla-001.fbsv.net. [2a03:2880:30ff:1::face:b00c])
-        by smtp.gmail.com with ESMTPSA id g22-20020a056402091600b005721f9fbb60sm2259610edz.63.2024.04.24.11.24.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Apr 2024 11:24:02 -0700 (PDT)
-From: Breno Leitao <leitao@debian.org>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>
-Cc: leit@meta.com,
-	linux-wireless@vger.kernel.org (open list:REALTEK WIRELESS DRIVER (rtw89)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH wireless] wifi: rtw89: Un-embed dummy device
-Date: Wed, 24 Apr 2024 11:23:49 -0700
-Message-ID: <20240424182351.3936556-1-leitao@debian.org>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1713985920; c=relaxed/simple;
+	bh=rvwhxdv04ii1EvtwqFIQMh38FRkUCvG17AxaQSSSPjo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ofd0nlZyD5JFUgAF+KJi/khR/uqJuA5Rvcasti7R1HgzdxKZlq5mDVWtJ9Zs2UGvGMg6yWWKxPItNAS/4kc1PwCsJXG85Cu27KqdpTc9a/vgX1LroMFV1kGC1DPDAMLi4u6t/DNFWAWQA4jLPzz76jewaoJSamw43WJliykYVAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=c8nCZU0w; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="c8nCZU0w"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43OIo4eX014656;
+	Wed, 24 Apr 2024 19:11:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type; s=qcppdkim1; bh=DenjpMhHLKQrtXVeGUyx
+	Fi/JMRbsRtCYVIBp04lFejY=; b=c8nCZU0wbf9z3PeIktGOBqwp5xJEYKQGEFjX
+	tXqCFmZ93QGD5vcIT4kvbeEjWTs6V71R3gUwnTAqOEP3fQ2+Bu5iaKOpZXb0VTdq
+	ElW/hNfSsT5D9gn/TpCrBMna1PrqnPVhwm0HgizGfpcuQzqVTIsmN2yh3w1AkP4i
+	EKhrrcnPBFqIk14GtG4bU3swHUGQhlZ+MgOzbsbZ0A1QW6wBGwG0VVeQ1Y2f4gsV
+	DollvJafj4ykbb/Ie3sOgaCcDq6IdxTD0p7jWctqRJ6YgmS0taxDsbdgM1FDfBmB
+	f7YcBm6pq3h2ieaZx0qfZmB4gN6aA2ENbt0M4QzWpqtuVk5iGg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xpv9e1ytb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 24 Apr 2024 19:11:52 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43OJBqHI015974
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 24 Apr 2024 19:11:52 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 24 Apr 2024 12:11:51 -0700
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>
+Subject: [PATCH V3 1/6] wifi: ath12k: add channel 2 into 6 GHz channel list
+Date: Wed, 24 Apr 2024 12:11:36 -0700
+Message-ID: <20240424191141.32549-2-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240424191141.32549-1-quic_pradeepc@quicinc.com>
+References: <20240424191141.32549-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: KBPIOmdhQKDZqv6Jw6XIhOU3tbi7uI6B
+X-Proofpoint-ORIG-GUID: KBPIOmdhQKDZqv6Jw6XIhOU3tbi7uI6B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-24_16,2024-04-24_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 malwarescore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ clxscore=1015 spamscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2404240091
 
-Embedding net_device into structures prohibits the usage of flexible
-arrays in the net_device structure. For more details, see the discussion
-at [1].
+Add support for the 6 GHz channel 2 with center frequency
+5935 MHz and operating class 136 per IEEE Std 802.11ax-2021,
+Table E-4.
 
-Un-embed the net_device from the private struct by converting it
-into a pointer. Then use the leverage the new alloc_netdev_dummy()
-helper to allocate and initialize dummy devices.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-[1] https://lore.kernel.org/all/20240229225910.79e224cf@kernel.org/
-
-Signed-off-by: Breno Leitao <leitao@debian.org>
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 11 ++++++++---
- drivers/net/wireless/realtek/rtw89/core.h |  4 ++--
- drivers/net/wireless/realtek/rtw89/pci.c  |  6 +++++-
- 3 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath12k/core.h | 2 +-
+ drivers/net/wireless/ath/ath12k/mac.c  | 4 ++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-PS: This is compile-tested only due to lack of hardware.
-
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index d474b8d5df3d..ade3e2a953a1 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -2485,11 +2485,15 @@ void rtw89_core_napi_stop(struct rtw89_dev *rtwdev)
- }
- EXPORT_SYMBOL(rtw89_core_napi_stop);
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 47dde4401210..5113b630ffee 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -454,7 +454,7 @@ struct ath12k_sta {
+ #define ATH12K_MIN_5G_FREQ 4150
+ #define ATH12K_MIN_6G_FREQ 5925
+ #define ATH12K_MAX_6G_FREQ 7115
+-#define ATH12K_NUM_CHANS 100
++#define ATH12K_NUM_CHANS 101
+ #define ATH12K_MAX_5G_CHAN 173
  
--void rtw89_core_napi_init(struct rtw89_dev *rtwdev)
-+int rtw89_core_napi_init(struct rtw89_dev *rtwdev)
- {
--	init_dummy_netdev(&rtwdev->netdev);
--	netif_napi_add(&rtwdev->netdev, &rtwdev->napi,
-+	rtwdev->netdev = alloc_netdev_dummy(0);
-+	if (!rtwdev->netdev)
-+		return -ENOMEM;
+ enum ath12k_state {
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 56b1f8b6844e..b471b27d6594 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -91,6 +91,10 @@ static const struct ieee80211_channel ath12k_5ghz_channels[] = {
+ };
+ 
+ static const struct ieee80211_channel ath12k_6ghz_channels[] = {
++	/* Operating Class 136 */
++	CHAN6G(2, 5935, 0),
 +
-+	netif_napi_add(rtwdev->netdev, &rtwdev->napi,
- 		       rtwdev->hci.ops->napi_poll);
-+	return 0;
- }
- EXPORT_SYMBOL(rtw89_core_napi_init);
- 
-@@ -2497,6 +2501,7 @@ void rtw89_core_napi_deinit(struct rtw89_dev *rtwdev)
- {
- 	rtw89_core_napi_stop(rtwdev);
- 	netif_napi_del(&rtwdev->napi);
-+	free_netdev(rtwdev->netdev);
- }
- EXPORT_SYMBOL(rtw89_core_napi_deinit);
- 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index fc1ed8612cf1..e206a2186747 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5239,7 +5239,7 @@ struct rtw89_dev {
- 	struct rtw89_wow_param wow;
- 
- 	/* napi structure */
--	struct net_device netdev;
-+	struct net_device *netdev;
- 	struct napi_struct napi;
- 	int napi_budget_countdown;
- 
-@@ -6211,7 +6211,7 @@ void rtw89_core_query_rxdesc_v2(struct rtw89_dev *rtwdev,
- 				u8 *data, u32 data_offset);
- void rtw89_core_napi_start(struct rtw89_dev *rtwdev);
- void rtw89_core_napi_stop(struct rtw89_dev *rtwdev);
--void rtw89_core_napi_init(struct rtw89_dev *rtwdev);
-+int rtw89_core_napi_init(struct rtw89_dev *rtwdev);
- void rtw89_core_napi_deinit(struct rtw89_dev *rtwdev);
- int rtw89_core_sta_add(struct rtw89_dev *rtwdev,
- 		       struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 19001130ad94..ef41c3a83b4a 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -4201,7 +4201,11 @@ int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	rtw89_pci_link_cfg(rtwdev);
- 	rtw89_pci_l1ss_cfg(rtwdev);
- 
--	rtw89_core_napi_init(rtwdev);
-+	ret = rtw89_core_napi_init(rtwdev);
-+	if (ret) {
-+		rtw89_err(rtwdev, "failed to init napi\n");
-+		goto err_clear_resource;
-+	}
- 
- 	ret = rtw89_pci_request_irq(rtwdev, pdev);
- 	if (ret) {
++	/* Operating Classes 131-135 */
+ 	CHAN6G(1, 5955, 0),
+ 	CHAN6G(5, 5975, 0),
+ 	CHAN6G(9, 5995, 0),
 -- 
-2.43.0
+2.17.1
 
