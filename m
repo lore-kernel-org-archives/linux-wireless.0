@@ -1,45 +1,60 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80A881494BF;
-	Thu, 25 Apr 2024 16:03:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3457614C5BD;
+	Thu, 25 Apr 2024 16:40:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714060990; cv=none; b=R2/FG6xEhD1nSZ8xidYK4HdbV/q5XkVGOvKm1A3AOm+HT6672SF/VYu9n3M/y7bSLVnUQvdsmbueACJb18z8+sq9ZntcQfk0IDeIVQPEqkUXdpeHU5B9dhlauRNm5AcJOP5aIIR01DgoEiDCcZm9a3GbjpdGjq4tfknBWJezRfw=
+	t=1714063204; cv=none; b=e4Wnc9E3m4Al/9Mdx3Qdd8JnBEihjkwbsPDPX9PGAphjgHZrn438Y9zlykmaL5kOw5ljErLBBH6gy66uilH5ez5Do5zjS87t0V2TM0jT9D7Yy6aoZnrZBrSgld7M0E7IkFe7jOLpnUeRrLpP27oYrPo4Hf48yQZTmQN5pN0NauM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714060990; c=relaxed/simple;
-	bh=3hP3govGe0OHHTR4xCJ9CZzV7UIniHmuOXenpQjPGHM=;
+	s=arc-20240116; t=1714063204; c=relaxed/simple;
+	bh=LbSqadMzoFjsuXSnWvEu/tPbSTkv0wSi5qeCjW/x/YA=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=jpayrqBEwoLX2VKWaHLXNEYGswEFqxEmckzBDEXWbhluJWVWhsdoeInocvAl6APkvZ9bwbwMUHeYh3l17uD6FFqqKF9g/NTYlqn5Y7PO+Tw0QFKkilr4xooBJUaJpSMhir4VvJ389bypBvmVsJndFtIhQDpyoVAzqwp2hnNUCM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pWS/aITh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VeeOicCbLAAJnbbNXKmZRI5riOdl2+y904docYXmg2XLA6KR+IbMsGmZtNCtMkeyIPrxvslHOZfnZ3iM/J3uhcHsuDhTKQi3VB+b7YO8Hr7XqmKmaugYqaDEzGGgfo1q5PiZAn3xHWbEUvylstOe0imVKEIShr32zSV35qT7vAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kpCGPsNP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pWS/aITh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACBA9C113CE;
-	Thu, 25 Apr 2024 16:03:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kpCGPsNP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AFEEC113CE;
+	Thu, 25 Apr 2024 16:39:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714060990;
-	bh=3hP3govGe0OHHTR4xCJ9CZzV7UIniHmuOXenpQjPGHM=;
+	s=k20201202; t=1714063204;
+	bh=LbSqadMzoFjsuXSnWvEu/tPbSTkv0wSi5qeCjW/x/YA=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=pWS/aIThsXtBIX+S9GHI0HOm1qEbdbgE3Mv/ZcTnQ9kLV0W7SOP1KgU+O79ook+wV
-	 24PedWk/FlcF36EhhcLbn88aAkgn/rLgqrG/ErHpOsUURYJO0zippRVB8jhvCHBcE5
-	 9E1pYkNz3+5vAppMZ4SrfUlEQzjSPAy4ZFtQBpZKFiPQy8IehsCSCvr45hRe4ZNjBY
-	 fxJoOw4DMGvU5ZavFFlKFYoByumDNYBUwTLbeG3P7C1NlJo++2iG25jSXjwD4px6eE
-	 ZQQllJgrFU7HnhlQbp17Lu56AFaxVqYCLuUoGgnz1WyuoBNt9+G1lSnWLkPTUpJBT9
-	 2D2ZPlFbqjH1Q==
+	b=kpCGPsNPtizwkRXzbbBOisqIxYXAYDvBURByNuPNU7j+hAZaM3rY4zD9QvWJosW68
+	 iC0L8DM0TP4KnXEx4C3MICMMVEH9a6cqbEgZ7ANWMYOYB6nyRMCg2jexrQAtQQNaO4
+	 sS+tAVTrBYCPA95XjLgyBzehFuUM7HqoFrvJ4I1FAjXyN03+BjI2hp4QK/8bHTh7sz
+	 CA0JgVVrA7XGz3fZ5GjYINhkpDAI3n3XxKqZtHGVMLXXrpq0YuSbeaa7K2SaZn/zPI
+	 ed2bP4EbknrklmiDXJLJCsNer2VxtXL2JV3xQkOXT7D3dMuzr4kwowbBdy2W06/FNN
+	 Re8OsFDjeHi7w==
 From: Kalle Valo <kvalo@kernel.org>
-To: Nikita Zhandarovich <n.zhandarovich@fintech.ru>
-Cc: Wu Yunchuan <yunchuan@nfschina.com>,  Johannes Berg
- <johannes.berg@intel.com>,  "Breno Leitao" <leitao@debian.org>,
-  <linux-wireless@vger.kernel.org>,  <linux-kernel@vger.kernel.org>,
-  <lvc-project@linuxtesting.org>,
-  <syzbot+1bc2c2afd44f820a669f@syzkaller.appspotmail.com>
-Subject: Re: [PATCH v2] wifi: ar5523: enable proper endpoint verification
-References: <20240408121425.29392-1-n.zhandarovich@fintech.ru>
-	<171406032921.2967849.6111681305541795423.kvalo@kernel.org>
-Date: Thu, 25 Apr 2024 18:58:19 +0300
-In-Reply-To: <171406032921.2967849.6111681305541795423.kvalo@kernel.org>
-	(Kalle Valo's message of "Thu, 25 Apr 2024 15:52:23 +0000 (UTC)")
-Message-ID: <87a5lhh1t0.fsf@kernel.org>
+To: Conor Dooley <conor@kernel.org>
+Cc: Marc Gonzalez <mgonzalez@freebox.fr>,  Dmitry Baryshkov
+ <dmitry.baryshkov@linaro.org>,  Konrad Dybcio <konrad.dybcio@linaro.org>,
+  Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,  Jeff Johnson
+ <quic_jjohnson@quicinc.com>,  ath10k <ath10k@lists.infradead.org>,
+  wireless <linux-wireless@vger.kernel.org>,  DT
+ <devicetree@vger.kernel.org>,  MSM <linux-arm-msm@vger.kernel.org>,  Rob
+ Herring <robh+dt@kernel.org>,  Conor Dooley <conor+dt@kernel.org>,
+  Pierre-Hugues Husson <phhusson@freebox.fr>,  Arnaud Vrac
+ <avrac@freebox.fr>,  Bjorn Andersson <andersson@kernel.org>,  Jami
+ Kettunen <jamipkettunen@gmail.com>,  Marijn Suijten
+ <marijn.suijten@somainline.org>,  Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+Subject: Re: [PATCH v2 3/3] arm64: dts: qcom: msm8998: set
+ qcom,no-msa-ready-indicator for wifi
+References: <502322f1-4f66-4922-bc4e-46bacac23410@linaro.org>
+	<0ca1221b-b707-450f-877d-ca07a601624d@freebox.fr>
+	<CAA8EJppeREj-0g9oGCzzKx5ywhg1mgmJR1q8yvXKN7N45do1Xg@mail.gmail.com>
+	<87ttkh49xi.fsf@kernel.org>
+	<e804b257-4dc0-45f1-a5c5-66bda51cf296@freebox.fr>
+	<87h6gh406w.fsf@kernel.org>
+	<ad5e178b-cd64-4a87-8994-f917993f3bbb@freebox.fr>
+	<871q6tu6bn.fsf@kernel.org>
+	<de65290c-0f67-4499-ba28-a460e6d6e419@freebox.fr>
+	<87msphsb3b.fsf@kernel.org> <20240425-monopoly-barn-45608dae0996@spud>
+Date: Thu, 25 Apr 2024 19:39:34 +0300
+In-Reply-To: <20240425-monopoly-barn-45608dae0996@spud> (Conor Dooley's
+	message of "Thu, 25 Apr 2024 17:02:56 +0100")
+Message-ID: <87il05s8ft.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -49,73 +64,46 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Kalle Valo <kvalo@kernel.org> writes:
+Conor Dooley <conor@kernel.org> writes:
 
-> Nikita Zhandarovich <n.zhandarovich@fintech.ru> wrote:
+> On Thu, Apr 25, 2024 at 06:42:16PM +0300, Kalle Valo wrote:
 >
->> Syzkaller reports [1] hitting a warning about an endpoint in use
->> not having an expected type to it.
+>> Marc Gonzalez <mgonzalez@freebox.fr> writes:
 >> 
->> Fix the issue by checking for the existence of all proper
->> endpoints with their according types intact.
+>> > On 25/04/2024 11:42, Kalle Valo wrote:
+>> >
+>> >> Marc Gonzalez wrote:
+>> >> 
+>> >>> Do you prefer:
+>> >>>
+>> >>> Option A = never waiting for the MSA_READY indicator for ANYONE
+>> >>> Option B = not waiting for the MSA_READY indicator when
+>> >>> qcom,no-msa-ready-indicator is defined
+>> >>> Option C = not waiting for the MSA_READY indicator for certain
+>> >>> platforms (based on root compatible)
+>> >>> Option D = some other solution not yet discussed
+>> >> 
+>> >> After firmware-N.bin solution didn't work (sorry about that!) my
+>> >> preference is option B.
+>> >
+>> > Actually, Option B is this patch series.
+>> > Could you formally review it?
 >> 
->> Sadly, this patch has not been tested on real hardware.
->> 
->> [1] Syzkaller report:
->> ------------[ cut here ]------------
->> usb 1-1: BOGUS urb xfer, pipe 3 != type 1
->> WARNING: CPU: 0 PID: 3643 at drivers/usb/core/urb.c:504
->> usb_submit_urb+0xed6/0x1880 drivers/usb/core/urb.c:504
->> ...
->> Call Trace:
->>  <TASK>
->>  ar5523_cmd+0x41b/0x780 drivers/net/wireless/ath/ar5523/ar5523.c:275
->>  ar5523_cmd_read drivers/net/wireless/ath/ar5523/ar5523.c:302 [inline]
->>  ar5523_host_available drivers/net/wireless/ath/ar5523/ar5523.c:1376 [inline]
->>  ar5523_probe+0x14b0/0x1d10 drivers/net/wireless/ath/ar5523/ar5523.c:1655
->>  usb_probe_interface+0x30f/0x7f0 drivers/usb/core/driver.c:396
->>  call_driver_probe drivers/base/dd.c:560 [inline]
->>  really_probe+0x249/0xb90 drivers/base/dd.c:639
->>  __driver_probe_device+0x1df/0x4d0 drivers/base/dd.c:778
->>  driver_probe_device+0x4c/0x1a0 drivers/base/dd.c:808
->>  __device_attach_driver+0x1d4/0x2e0 drivers/base/dd.c:936
->>  bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:427
->>  __device_attach+0x1e4/0x530 drivers/base/dd.c:1008
->>  bus_probe_device+0x1e8/0x2a0 drivers/base/bus.c:487
->>  device_add+0xbd9/0x1e90 drivers/base/core.c:3517
->>  usb_set_configuration+0x101d/0x1900 drivers/usb/core/message.c:2170
->>  usb_generic_driver_probe+0xbe/0x100 drivers/usb/core/generic.c:238
->>  usb_probe_device+0xd8/0x2c0 drivers/usb/core/driver.c:293
->>  call_driver_probe drivers/base/dd.c:560 [inline]
->>  really_probe+0x249/0xb90 drivers/base/dd.c:639
->>  __driver_probe_device+0x1df/0x4d0 drivers/base/dd.c:778
->>  driver_probe_device+0x4c/0x1a0 drivers/base/dd.c:808
->>  __device_attach_driver+0x1d4/0x2e0 drivers/base/dd.c:936
->>  bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:427
->>  __device_attach+0x1e4/0x530 drivers/base/dd.c:1008
->>  bus_probe_device+0x1e8/0x2a0 drivers/base/bus.c:487
->>  device_add+0xbd9/0x1e90 drivers/base/core.c:3517
->>  usb_new_device.cold+0x685/0x10ad drivers/usb/core/hub.c:2573
->>  hub_port_connect drivers/usb/core/hub.c:5353 [inline]
->>  hub_port_connect_change drivers/usb/core/hub.c:5497 [inline]
->>  port_event drivers/usb/core/hub.c:5653 [inline]
->>  hub_event+0x26cb/0x45d0 drivers/usb/core/hub.c:5735
->>  process_one_work+0x9bf/0x1710 kernel/workqueue.c:2289
->>  worker_thread+0x669/0x1090 kernel/workqueue.c:2436
->>  kthread+0x2e8/0x3a0 kernel/kthread.c:376
->>  ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:306
->>  </TASK>
->> 
->> Reported-and-tested-by: syzbot+1bc2c2afd44f820a669f@syzkaller.appspotmail.com
->> Fixes: b7d572e1871d ("ar5523: Add new driver")
->> Signed-off-by: Nikita Zhandarovich <n.zhandarovich@fintech.ru>
+>> I'm happy with this series and would take it to ath.git, just need an
+>> ack from DT maintainers:
 >
-> Does anyone have a real device to test this? I have had so much problems with
-> syzbot fixes in the past that I'm hesitant to take such patches without
-> testing.
+> As far as I can tell, Krzysztof wanted a commit message update for
+> 1/3.
 
-Actually should we just remove ar5523 driver? Has anyone heard anyone
-using this driver still?
+That's my understanding as well, I assume Marc will submit v3. I marked
+this patchset as 'Changes Requested' in patchwork.
+
+> Usually this dts patch would go via the qcom dts tree, so presumably
+> there's a need for an Ack from Bjorn or Konrad?
+
+Thanks pointing this out. What I meant to say earlier that I'm happy to
+take patches 1-2 to ath.git but I prefer that patch 3 goes via qcom dts
+tree.
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
