@@ -1,54 +1,54 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAB801CF90
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABA11D554
 	for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2024 16:27:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714235233; cv=none; b=BFSH4jU7wmausPcDcwr/XalGGdGUsgWRye7V5wwaXlKA7oxHr3UYhJhLCDAA7roPsSehp9vr+QCQdyaxoQWcJbPl5GJm0E8Yyb7FvRFPsf/JN3ijL0eEK4BNN0n61PVxY8qdJ5YTHw8VFH/JKPcsnCSQDYCgduHivBwCEG6ujP4=
+	t=1714235234; cv=none; b=Yew56Y0P4pIOIook5PG3xZ7AcOW5WU4oDPguIB1ANoCErxwx+nzvQ/YltNKM2C4uGxBRv3yeR1LyUXM0MsQFQJW3H8JSWF57o+p2h15ACXlCN1MK+pvDnl+4ea9zaSv2YVDhSBLhSrfbvX5QchONRjwhpAT9TjvVwUUow5w/YqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714235233; c=relaxed/simple;
-	bh=IDCOydwSgl8zMjc73CbR0ttgW5FlolRf6mqqD+YH54M=;
+	s=arc-20240116; t=1714235234; c=relaxed/simple;
+	bh=T8YIVeYYJhZlE8zlXEKAzcyDwG7It05YF7jlYEpiLmQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KrxUpu3K15ukLv51W8yN5EErssudqQCG8k20I3BNe3ULOw9laVILLVhRFEv7iSbUSjLgs4pD2VTjQPJmjQmHAXzrD9qm+KJ5kRUrQdXwkJCBEAmmjxDJAV6hlVvWsxIoQLMOeKoUImO6YyB9t3EBBFr6oDnhhooA4br8WxExCAY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BxwTvZs9; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=iG8PPk7YyEZEM9W+xGIS5ldkdGDZ9fybveAUON+NUKv+XtkvHwPQXb98fq1fh7KLJiwMVhqrBnnUY2KuBZC4wia7pUZYAqoPDMZG09rPn7bd1Abj1p2855liZfzGmDIH67c+huAP+Zpi+uxCaWycmJ5LXYukPRMaL2LlltMPrtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Hq9t4njy; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BxwTvZs9"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43RG85tE005221;
-	Sat, 27 Apr 2024 16:27:05 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Hq9t4njy"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43RGLtae010745;
+	Sat, 27 Apr 2024 16:27:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=nFd6ENsGO/cclvnJCgMh9yw2JMm3BjWGly3AxMK9K2w=; b=Bx
-	wTvZs99GNcuKHs1QabkL2Y+eg94aYNR+uu6zmV8AgGgek3Z00GVTjwKOEe3aRfUp
-	CfTlFZ11uPNm+5JwrcMieM1fmjuZ8TEy7jtQNYlxe0rvvbFafuVFdJO+Y6e+irCf
-	/biQEOrVG9I/V7ZmlfsA7MJxQIWr6Tso9yDMWf+17/c1RZwANOZDzZYHUNb0cbRt
-	6MKEwqV8+mGljyac5xAkpW5cg3Ui0LO4iXKSyrZl4THzFJstZFnVPmhQhAWRjiJl
-	KFtS3hrtvXifyGOM/7Hun60RjNVHK1+mdrBB3v5gFw43JKKTxg1FT7dx8FoLt+ZD
-	t5R4gUE5siQvlZcT5BIQ==
+	qcppdkim1; bh=xoG6O88QwWOX2mC7RY8Vl2PhxJ61CVCdrGl5iBudFXE=; b=Hq
+	9t4njyDenJL16ZMpzu7GlGlqlwcT2WRqwfQ5T7ZDihIoZJdE+JNVdEtok89VncT7
+	X+lC8BQSpOQJ2nkfOLyr87XD+a0zFcxWgHV0odrlhIQ4mQsEQWMFXjhuZ0m9UmAl
+	jOMg+wU14tbVh0nsBUbGD4zID4JtdIUDMS+BWpXiJg9hqRKSgoIiONXFYyPwQYbj
+	5VWoa1M6YpEv9tcvbwiWxeF6cApbhXqMzwCmOko4dhN7lRGHbMrXffmpNkPB10TP
+	mid1sUSLor7l08g2+Ul+kdB/oi1IzE6zXUJat4r8rSLfbkbmwLSR7O9HxtNehueS
+	Y3OE6q8a7x1iCJG1iWpg==
 Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xrq2k0ufn-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xrsk78p1b-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Apr 2024 16:27:05 +0000 (GMT)
+	Sat, 27 Apr 2024 16:27:08 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43RGR3F6026137
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43RGR7mL026514
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Apr 2024 16:27:03 GMT
+	Sat, 27 Apr 2024 16:27:07 GMT
 Received: from hu-tamizhr-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sat, 27 Apr 2024 09:27:01 -0700
+ 15.2.1544.9; Sat, 27 Apr 2024 09:27:05 -0700
 From: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Tamizh Chelvam Raja
 	<quic_tamizhr@quicinc.com>
-Subject: [PATCHv2 1/3] wifi: ath12k: fix calling correct function for rx monitor mode
-Date: Sat, 27 Apr 2024 21:56:42 +0530
-Message-ID: <20240427162644.2470886-2-quic_tamizhr@quicinc.com>
+Subject: [PATCHv2 3/3] wifi: ath12k: Remove unused tcl_*_ring configuration
+Date: Sat, 27 Apr 2024 21:56:44 +0530
+Message-ID: <20240427162644.2470886-4-quic_tamizhr@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240427162644.2470886-1-quic_tamizhr@quicinc.com>
 References: <20240427162644.2470886-1-quic_tamizhr@quicinc.com>
@@ -64,44 +64,79 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: hmnSK9l7zw4XK6P1RNFc5HIi18bt6lXb
-X-Proofpoint-GUID: hmnSK9l7zw4XK6P1RNFc5HIi18bt6lXb
+X-Proofpoint-GUID: pMV8mSHn4oskGbxse93igWKk-3Y-oJh-
+X-Proofpoint-ORIG-GUID: pMV8mSHn4oskGbxse93igWKk-3Y-oJh-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
  definitions=2024-04-27_14,2024-04-26_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=999
- impostorscore=0 adultscore=0 malwarescore=0 mlxscore=0 priorityscore=1501
- suspectscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ suspectscore=0 priorityscore=1501 mlxlogscore=954 bulkscore=0 phishscore=0
+ spamscore=0 lowpriorityscore=0 adultscore=1 malwarescore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
  definitions=main-2404270120
 
-Currently in ath12k_dp_tx_htt_monitor_mode_ring_config()
-ath12k_dp_tx_htt_tx_monitor_mode_ring_config() function wrongly called twice.
-Fix that by calling ath12k_dp_tx_htt_rx_monitor_mode_ring_config().
-
-Currently monitor mode is disabled in driver so the change is compile
-tested and boot sequence verified.
+Currently memory allocation for multiple hardware rings done
+in host as these memory will be used by firmware/hardware.
+But in case of tcl_cmd_ring and tcl_status_ring neither firmware
+nor hardware uses host allocated memory and it uses memory
+allocated by firmware itself. So avoid tcl_cmd_ring and
+tcl_status_ring setup in host.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/dp.c | 16 ----------------
+ drivers/net/wireless/ath/ath12k/dp.h |  2 --
+ 2 files changed, 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
-index 9b6d7d72f57c..2fb9fc42db11 100644
---- a/drivers/net/wireless/ath/ath12k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
-@@ -1044,7 +1044,7 @@ int ath12k_dp_tx_htt_monitor_mode_ring_config(struct ath12k *ar, bool reset)
- 	struct ath12k_base *ab = ar->ab;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
+index 963b9ad4dc82..d91d5c308210 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.c
++++ b/drivers/net/wireless/ath/ath12k/dp.c
+@@ -457,8 +457,6 @@ static void ath12k_dp_srng_common_cleanup(struct ath12k_base *ab)
+ 		ath12k_dp_srng_cleanup(ab, &dp->tx_ring[i].tcl_comp_ring);
+ 		ath12k_dp_srng_cleanup(ab, &dp->tx_ring[i].tcl_data_ring);
+ 	}
+-	ath12k_dp_srng_cleanup(ab, &dp->tcl_status_ring);
+-	ath12k_dp_srng_cleanup(ab, &dp->tcl_cmd_ring);
+ 	ath12k_dp_srng_cleanup(ab, &dp->wbm_desc_rel_ring);
+ }
  
--	ret = ath12k_dp_tx_htt_tx_monitor_mode_ring_config(ar, reset);
-+	ret = ath12k_dp_tx_htt_rx_monitor_mode_ring_config(ar, reset);
- 	if (ret) {
- 		ath12k_err(ab, "failed to setup tx monitor filter %d\n", ret);
- 		return ret;
+@@ -479,20 +477,6 @@ static int ath12k_dp_srng_common_setup(struct ath12k_base *ab)
+ 		goto err;
+ 	}
+ 
+-	ret = ath12k_dp_srng_setup(ab, &dp->tcl_cmd_ring, HAL_TCL_CMD, 0, 0,
+-				   DP_TCL_CMD_RING_SIZE);
+-	if (ret) {
+-		ath12k_warn(ab, "failed to set up tcl_cmd ring :%d\n", ret);
+-		goto err;
+-	}
+-
+-	ret = ath12k_dp_srng_setup(ab, &dp->tcl_status_ring, HAL_TCL_STATUS,
+-				   0, 0, DP_TCL_STATUS_RING_SIZE);
+-	if (ret) {
+-		ath12k_warn(ab, "failed to set up tcl_status ring :%d\n", ret);
+-		goto err;
+-	}
+-
+ 	for (i = 0; i < ab->hw_params->max_tx_ring; i++) {
+ 		map = ab->hw_params->hal_ops->tcl_to_wbm_rbm_map;
+ 		tx_comp_ring_num = map[i].wbm_ring_num;
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index 5cf0d21ef184..21afdb51b6e6 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -327,8 +327,6 @@ struct ath12k_dp {
+ 	struct dp_link_desc_bank link_desc_banks[DP_LINK_DESC_BANKS_MAX];
+ 	struct dp_srng wbm_idle_ring;
+ 	struct dp_srng wbm_desc_rel_ring;
+-	struct dp_srng tcl_cmd_ring;
+-	struct dp_srng tcl_status_ring;
+ 	struct dp_srng reo_reinject_ring;
+ 	struct dp_srng rx_rel_ring;
+ 	struct dp_srng reo_except_ring;
 -- 
 2.34.1
 
