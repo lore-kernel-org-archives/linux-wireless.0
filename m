@@ -1,349 +1,133 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C7B61E521
-	for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2024 16:27:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC61E54D
+	for <linux-wireless@vger.kernel.org>; Sat, 27 Apr 2024 22:46:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714235235; cv=none; b=Uom5BLJtfp346V1i46PiwyLd7GqrS8pEtmQpA4RwULVb2lY8MS8Zw+KVLEO/i4gG3O7m+7RAS11N/xjJ3lCpY3YoHQNDNyMOmSzIkpU8aKNUDsY0wKcVuK/DFCGs/G5R+Awqxb8NHjf0or8nWNC0R+e5YZmyOauySYvgciUq4uw=
+	t=1714257978; cv=none; b=Kz54NEykbiZjaQoa5PR8x6J8rRsmB3FRKEOyvc6Y+rv6+mNI1TiaQfNDgoTG055JPj9BhKHutju0IOfmrSEn6o5uQynm6hSfrpbPvUbf/M/Hx1wxiFddwVA0RL7bOnPH5dqIYm3/O4+L/h/t8dhXnIKF6lp5Li6ZYACK55I72+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714235235; c=relaxed/simple;
-	bh=+rcsPMOFnXMh8zTI8UVjS0IHriISX1ADKisFdmalMtw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H6rOIIHDuFPFhirwNvzanH4Yn0dhJO6YLLDtKNJt1gF/9J09pZRXB082GO4cHCAZrPh4hdTFbMzkYopHfK0FNOPJbf+4YRseg6Df0I5jcqAuybvhFb4DVGidk3Y9rQnPgAI5bP622w1+M99x1ZfKIOzSfOuaKRfvLeHkxBjFgL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UhuIdZ9+; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1714257978; c=relaxed/simple;
+	bh=yxsRpPQi1f0WbPAt34qqYC3tr3Jql0RoGwu/g7uJ3iE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=h7RaAe3hzEwJA+Jf5LUxfKyfddyr/yH15whxnXQGvSREBB3TyUMqEPdFiHIhqosz12r2cZwLFi94ZdcwixOkZL5s84w5ndifzean95RTB+6qRisRp2gXWBCdyXQAAFxqmjJLnvutOsax1l29GH6i4p6v6xwk1wcMz50Aef+sZ4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=VohSSa96; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UhuIdZ9+"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43RGR6jG027565;
-	Sat, 27 Apr 2024 16:27:06 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="VohSSa96"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43RMk3dl012914;
+	Sat, 27 Apr 2024 22:46:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=cAEv4E5uWobac9rUW6g3pE131QXvissN59LGzUwtkZU=; b=Uh
-	uIdZ9+RWWM65Dnl5UVc6E5urrswLpZ8FY6GHKkTTlpiFsCyVagKk5LMkd3M0A06D
-	EaOJNHaX9HHEbrE/DBoE1AYqjq0mhSWtI0CmDHArQRkPoHpCcxCzfRG10IHvy7Q6
-	z2XZDdO1ITCp08o5OPQr8BKH6MC3BtHXvf78K5WFxodwaZscs53EBPcm/SSS2BY2
-	Sw9DrSWg3DTsL/t1HZwybASPRtB1RG6p1vRk+jQklzi/24VJAybEkz7kRLGQpKMi
-	e2NNJT8edIhxkRYrHgC9nWc0NtoSt/EODT4x+du7nSQNSJN6GY4Uv/L6UgMYT4d8
-	zhZXvtFBEC7keMTjyjlg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xrtht8ksc-1
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=44xxfJtOsHmK/8rspywyrfc8Y5MiR+Ebqvd5b3xlx/Y=; b=Vo
+	hSSa965Z5daqZpCmzJHOrqInl1PO0fORhLltx6AHqEHfzbOh7REAfuHsIadIPp+Y
+	M8hU+zFcdYq8qqpEdCcgQ5L9q9yRwQ6jiTh09drfs7fYCxTEVkfigI2oWmQoOFay
+	WNQHjVhLF8iIalKYQz+tpk7CaKqDwpMjOgtaof1tPy/uTMeqT9/gWausT6SrSfq1
+	M5MykftuFP1ACyHdjbwim0pPF77eLJEX+YGNuFVZhSgpmHfpr+X8oxhWzj07ziZr
+	d+y3rVYaQbLyrIHxvcMJZ7O/eBL2iXKfYtbwa30TpuII2wl2Q2lE8/avJ4zF66ZZ
+	Pl+gAUx1PFvKSZgo3BeQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xrpqrs6b8-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Apr 2024 16:27:06 +0000 (GMT)
+	Sat, 27 Apr 2024 22:46:03 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43RGR5Oh016987
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43RMk1Ve032294
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Apr 2024 16:27:05 GMT
-Received: from hu-tamizhr-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sat, 27 Apr 2024 09:27:03 -0700
-From: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Tamizh Chelvam Raja
-	<quic_tamizhr@quicinc.com>
-Subject: [PATCHv2 2/3] wifi: ath12k: Remove unsupported tx monitor handling
-Date: Sat, 27 Apr 2024 21:56:43 +0530
-Message-ID: <20240427162644.2470886-3-quic_tamizhr@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240427162644.2470886-1-quic_tamizhr@quicinc.com>
-References: <20240427162644.2470886-1-quic_tamizhr@quicinc.com>
+	Sat, 27 Apr 2024 22:46:01 GMT
+Received: from [10.110.48.199] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sat, 27 Apr
+ 2024 15:46:01 -0700
+Message-ID: <c8812227-ae90-4bbe-9fd3-425b61e36838@quicinc.com>
+Date: Sat, 27 Apr 2024 15:46:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv3] wifi: ath11k: skip status ring entry processing
+Content-Language: en-US
+To: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
+        <ath11k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Venkateswara Naralasetty
+	<quic_vnaralas@quicinc.com>,
+        kernel test robot <lkp@intel.com>
+References: <20240427091248.2013946-1-quic_tamizhr@quicinc.com>
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <20240427091248.2013946-1-quic_tamizhr@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2HUTMirwy9H1WAQdvWWm_LNLhTOOlhal
-X-Proofpoint-GUID: 2HUTMirwy9H1WAQdvWWm_LNLhTOOlhal
+X-Proofpoint-GUID: WQ3E0SGEn0RO1c_nW-U1XYCxuJzdiWEw
+X-Proofpoint-ORIG-GUID: WQ3E0SGEn0RO1c_nW-U1XYCxuJzdiWEw
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-27_14,2024-04-26_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
- mlxscore=0 adultscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0
- priorityscore=1501 bulkscore=0 phishscore=0 mlxlogscore=999 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
- definitions=main-2404270120
+ definitions=2024-04-27_22,2024-04-26_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ priorityscore=1501 impostorscore=0 suspectscore=0 clxscore=1015
+ mlxlogscore=626 malwarescore=0 bulkscore=0 mlxscore=0 adultscore=0
+ lowpriorityscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2404010003 definitions=main-2404270170
 
-Currently tx monitor is not supported in driver.So remove
-the tx monitor ring configuration, allocation and handling.
+On 4/27/2024 2:12 AM, Tamizh Chelvam Raja wrote:
+> From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+> 
+> If STATUS_BUFFER_DONE is not set for a monitor status ring entry,
+> we don't process the status ring until STATUS_BUFFER_DONE set
+> for that status ring entry.
+> 
+> During LMAC reset it may happen that hardware will not write
+> STATUS_BUFFER_DONE tlv in status buffer, in that case we end up
+> waiting for STATUS_BUFFER_DONE leading to backpressure on monitor
+> status ring.
+> 
+> To fix the issue, when HP(Head Pointer) + 1 entry is peeked and if DMA
+> is not done and if HP + 2 entry's DMA done is set,
+> replenish HP + 1 entry and start processing in next interrupt.
+> If HP + 2 entry's DMA done is not set, poll onto HP + 1 entry DMA
+> done to be set.
+> 
+> Also, during monitor attach HP points to the end of the ring and
+> TP(Tail Pointer) points to the start of the ring.
+> Using ath11k_hal_srng_src_peek() may result in processing invalid buffer
+> for the very first interrupt. Since, HW starts writing buffer from TP.
+> 
+> To avoid this issue call ath11k_hal_srng_src_next_peek() instead of
+> calling ath11k_hal_srng_src_peek().
+> 
+> Tested-on: IPQ5018 hw1.0 AHB WLAN.HK.2.6.0.1-00861-QCAHKSWPL_SILICONZ-1
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202303281719.CvnPkOiK-lkp@intel.com/
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+I believe these are misleading. LKP didn't find the problem you are fixing, it
+found a problem in the implementation of the patch.
+So I would move these below the "---" so the LKP knows the issue it found is
+fixed, but the git history isn't itself isn't misleading
 
-Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/dp_mon.c | 40 +----------------
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 56 ------------------------
- drivers/net/wireless/ath/ath12k/dp_tx.c  | 42 ------------------
- drivers/net/wireless/ath/ath12k/dp_tx.h  |  1 -
- 4 files changed, 1 insertion(+), 138 deletions(-)
+> Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+> Co-developed-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+> Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+> ---
+> v3:
+>   * Rebased on top of ToT
+> v2:
+>   * Fixed compilation warning Reported-by: kernel test robot <lkp@intel.com>
+> 
+>  drivers/net/wireless/ath/ath11k/dp_rx.c | 88 ++++++++++++++++++++++---
+>  drivers/net/wireless/ath/ath11k/hal.c   | 14 ++++
+>  drivers/net/wireless/ath/ath11k/hal.h   |  2 +
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
-index 6b0b72477540..5c6749bc4039 100644
---- a/drivers/net/wireless/ath/ath12k/dp_mon.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
-@@ -1903,43 +1903,6 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 
--	case HAL_MON_BUF_ADDR: {
--		struct dp_rxdma_mon_ring *buf_ring = &ab->dp.tx_mon_buf_ring;
--		struct dp_mon_packet_info *packet_info =
--			(struct dp_mon_packet_info *)tlv_data;
--		int buf_id = u32_get_bits(packet_info->cookie,
--					  DP_RXDMA_BUF_COOKIE_BUF_ID);
--		struct sk_buff *msdu;
--		struct dp_mon_mpdu *mon_mpdu = tx_ppdu_info->tx_mon_mpdu;
--		struct ath12k_skb_rxcb *rxcb;
--
--		spin_lock_bh(&buf_ring->idr_lock);
--		msdu = idr_remove(&buf_ring->bufs_idr, buf_id);
--		spin_unlock_bh(&buf_ring->idr_lock);
--
--		if (unlikely(!msdu)) {
--			ath12k_warn(ab, "monitor destination with invalid buf_id %d\n",
--				    buf_id);
--			return DP_MON_TX_STATUS_PPDU_NOT_DONE;
--		}
--
--		rxcb = ATH12K_SKB_RXCB(msdu);
--		dma_unmap_single(ab->dev, rxcb->paddr,
--				 msdu->len + skb_tailroom(msdu),
--				 DMA_FROM_DEVICE);
--
--		if (!mon_mpdu->head)
--			mon_mpdu->head = msdu;
--		else if (mon_mpdu->tail)
--			mon_mpdu->tail->next = msdu;
--
--		mon_mpdu->tail = msdu;
--
--		ath12k_dp_mon_buf_replenish(ab, buf_ring, 1);
--		status = DP_MON_TX_BUFFER_ADDR;
--		break;
--	}
--
- 	case HAL_TX_MPDU_END:
- 		list_add_tail(&tx_ppdu_info->tx_mon_mpdu->list,
- 			      &tx_ppdu_info->dp_tx_mon_mpdu_list);
-@@ -2088,8 +2051,7 @@ int ath12k_dp_mon_srng_process(struct ath12k *ar, int mac_id, int *budget,
- 		mon_dst_ring = &pdev_dp->rxdma_mon_dst_ring[srng_id];
- 		buf_ring = &dp->rxdma_mon_buf_ring;
- 	} else {
--		mon_dst_ring = &pdev_dp->tx_mon_dst_ring[srng_id];
--		buf_ring = &dp->tx_mon_buf_ring;
-+		return 0;
- 	}
- 
- 	srng = &ab->hal.srng_list[mon_dst_ring->ring_id];
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index 75df622f25d8..ada7bc8719b7 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -422,8 +422,6 @@ static int ath12k_dp_rxdma_buf_free(struct ath12k_base *ab)
- 
- 	ath12k_dp_rxdma_mon_buf_ring_free(ab, &dp->rxdma_mon_buf_ring);
- 
--	ath12k_dp_rxdma_mon_buf_ring_free(ab, &dp->tx_mon_buf_ring);
--
- 	return 0;
- }
- 
-@@ -476,15 +474,6 @@ static int ath12k_dp_rxdma_buf_setup(struct ath12k_base *ab)
- 				    "failed to setup HAL_RXDMA_MONITOR_BUF\n");
- 			return ret;
- 		}
--
--		ret = ath12k_dp_rxdma_mon_ring_buf_setup(ab,
--							 &dp->tx_mon_buf_ring,
--							 HAL_TX_MONITOR_BUF);
--		if (ret) {
--			ath12k_warn(ab,
--				    "failed to setup HAL_TX_MONITOR_BUF\n");
--			return ret;
--		}
- 	}
- 
- 	return 0;
-@@ -498,7 +487,6 @@ static void ath12k_dp_rx_pdev_srng_free(struct ath12k *ar)
- 
- 	for (i = 0; i < ab->hw_params->num_rxmda_per_pdev; i++) {
- 		ath12k_dp_srng_cleanup(ab, &dp->rxdma_mon_dst_ring[i]);
--		ath12k_dp_srng_cleanup(ab, &dp->tx_mon_dst_ring[i]);
- 	}
- }
- 
-@@ -554,17 +542,6 @@ static int ath12k_dp_rx_pdev_srng_alloc(struct ath12k *ar)
- 				    "failed to setup HAL_RXDMA_MONITOR_DST\n");
- 			return ret;
- 		}
--
--		ret = ath12k_dp_srng_setup(ar->ab,
--					   &dp->tx_mon_dst_ring[i],
--					   HAL_TX_MONITOR_DST,
--					   0, mac_id + i,
--					   DP_TX_MONITOR_DEST_RING_SIZE);
--		if (ret) {
--			ath12k_warn(ar->ab,
--				    "failed to setup HAL_TX_MONITOR_DST\n");
--			return ret;
--		}
- 	}
- 
- 	return 0;
-@@ -3970,7 +3947,6 @@ void ath12k_dp_rx_free(struct ath12k_base *ab)
- 		ath12k_dp_srng_cleanup(ab, &dp->rxdma_err_dst_ring[i]);
- 
- 	ath12k_dp_srng_cleanup(ab, &dp->rxdma_mon_buf_ring.refill_buf_ring);
--	ath12k_dp_srng_cleanup(ab, &dp->tx_mon_buf_ring.refill_buf_ring);
- 
- 	ath12k_dp_rxdma_buf_free(ab);
- }
-@@ -4113,15 +4089,6 @@ int ath12k_dp_rx_htt_setup(struct ath12k_base *ab)
- 				    ret);
- 			return ret;
- 		}
--
--		ring_id = dp->tx_mon_buf_ring.refill_buf_ring.ring_id;
--		ret = ath12k_dp_tx_htt_srng_setup(ab, ring_id,
--						  0, HAL_TX_MONITOR_BUF);
--		if (ret) {
--			ath12k_warn(ab, "failed to configure rxdma_mon_buf_ring %d\n",
--				    ret);
--			return ret;
--		}
- 	}
- 
- 	ret = ab->hw_params->hw_ops->rxdma_ring_sel_config(ab);
-@@ -4141,9 +4108,6 @@ int ath12k_dp_rx_alloc(struct ath12k_base *ab)
- 	idr_init(&dp->rxdma_mon_buf_ring.bufs_idr);
- 	spin_lock_init(&dp->rxdma_mon_buf_ring.idr_lock);
- 
--	idr_init(&dp->tx_mon_buf_ring.bufs_idr);
--	spin_lock_init(&dp->tx_mon_buf_ring.idr_lock);
--
- 	ret = ath12k_dp_srng_setup(ab,
- 				   &dp->rx_refill_buf_ring.refill_buf_ring,
- 				   HAL_RXDMA_BUF, 0, 0,
-@@ -4186,15 +4150,6 @@ int ath12k_dp_rx_alloc(struct ath12k_base *ab)
- 			ath12k_warn(ab, "failed to setup HAL_RXDMA_MONITOR_BUF\n");
- 			return ret;
- 		}
--
--		ret = ath12k_dp_srng_setup(ab,
--					   &dp->tx_mon_buf_ring.refill_buf_ring,
--					   HAL_TX_MONITOR_BUF, 0, 0,
--					   DP_TX_MONITOR_BUF_RING_SIZE);
--		if (ret) {
--			ath12k_warn(ab, "failed to setup DP_TX_MONITOR_BUF_RING_SIZE\n");
--			return ret;
--		}
- 	}
- 
- 	ret = ath12k_dp_rxdma_buf_setup(ab);
-@@ -4234,17 +4189,6 @@ int ath12k_dp_rx_pdev_alloc(struct ath12k_base *ab, int mac_id)
- 				    i, ret);
- 			return ret;
- 		}
--
--		ring_id = dp->tx_mon_dst_ring[i].ring_id;
--		ret = ath12k_dp_tx_htt_srng_setup(ab, ring_id,
--						  mac_id + i,
--						  HAL_TX_MONITOR_DST);
--		if (ret) {
--			ath12k_warn(ab,
--				    "failed to configure tx_mon_dst_ring %d %d\n",
--				    i, ret);
--			return ret;
--		}
- 	}
- out:
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
-index 2fb9fc42db11..a9534d31a8b4 100644
---- a/drivers/net/wireless/ath/ath12k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
-@@ -669,14 +669,6 @@ ath12k_dp_tx_get_ring_id_type(struct ath12k_base *ab,
- 		*htt_ring_id = HTT_RXDMA_MONITOR_DESC_RING;
- 		*htt_ring_type = HTT_SW_TO_HW_RING;
- 		break;
--	case HAL_TX_MONITOR_BUF:
--		*htt_ring_id = HTT_TX_MON_HOST2MON_BUF_RING;
--		*htt_ring_type = HTT_SW_TO_HW_RING;
--		break;
--	case HAL_TX_MONITOR_DST:
--		*htt_ring_id = HTT_TX_MON_MON2HOST_DEST_RING;
--		*htt_ring_type = HTT_HW_TO_SW_RING;
--		break;
- 	default:
- 		ath12k_warn(ab, "Unsupported ring type in DP :%d\n", ring_type);
- 		ret = -EINVAL;
-@@ -1050,12 +1042,6 @@ int ath12k_dp_tx_htt_monitor_mode_ring_config(struct ath12k *ar, bool reset)
- 		return ret;
- 	}
- 
--	ret = ath12k_dp_tx_htt_tx_monitor_mode_ring_config(ar, reset);
--	if (ret) {
--		ath12k_err(ab, "failed to setup rx monitor filter %d\n", ret);
--		return ret;
--	}
--
- 	return 0;
- }
- 
-@@ -1209,31 +1195,3 @@ int ath12k_dp_tx_htt_tx_filter_setup(struct ath12k_base *ab, u32 ring_id,
- 	dev_kfree_skb_any(skb);
- 	return ret;
- }
--
--int ath12k_dp_tx_htt_tx_monitor_mode_ring_config(struct ath12k *ar, bool reset)
--{
--	struct ath12k_base *ab = ar->ab;
--	struct ath12k_dp *dp = &ab->dp;
--	struct htt_tx_ring_tlv_filter tlv_filter = {0};
--	int ret, ring_id;
--
--	ring_id = dp->tx_mon_buf_ring.refill_buf_ring.ring_id;
--
--	/* TODO: Need to set upstream/downstream tlv filters
--	 * here
--	 */
--
--	if (ab->hw_params->rxdma1_enable) {
--		ret = ath12k_dp_tx_htt_tx_filter_setup(ar->ab, ring_id, 0,
--						       HAL_TX_MONITOR_BUF,
--						       DP_RXDMA_REFILL_RING_SIZE,
--						       &tlv_filter);
--		if (ret) {
--			ath12k_err(ab,
--				   "failed to setup filter for monitor buf %d\n", ret);
--			return ret;
--		}
--	}
--
--	return 0;
--}
-diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.h b/drivers/net/wireless/ath/ath12k/dp_tx.h
-index 436d77e5e9ee..5f2fa3b69577 100644
---- a/drivers/net/wireless/ath/ath12k/dp_tx.h
-+++ b/drivers/net/wireless/ath/ath12k/dp_tx.h
-@@ -36,6 +36,5 @@ int ath12k_dp_tx_htt_tx_filter_setup(struct ath12k_base *ab, u32 ring_id,
- 				     int mac_id, enum hal_ring_type ring_type,
- 				     int tx_buf_size,
- 				     struct htt_tx_ring_tlv_filter *htt_tlv_filter);
--int ath12k_dp_tx_htt_tx_monitor_mode_ring_config(struct ath12k *ar, bool reset);
- int ath12k_dp_tx_htt_monitor_mode_ring_config(struct ath12k *ar, bool reset);
- #endif
--- 
-2.34.1
+My Qualcomm Innovation Center copyright checker reports:
+drivers/net/wireless/ath/ath11k/dp_rx.c copyright missing 2024
+drivers/net/wireless/ath/ath11k/hal.c copyright missing 2024
 
