@@ -1,57 +1,58 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED6AF10971
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 14:08:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 649407BAF9
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 14:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714399704; cv=none; b=XKcn2jF67SK01AYvxv8egy7+8nhF/jSTNublPleZZqKxDh2bXqE7EY8VX+UDHNufuBG2Ny5rpVekX1RixSrOhMXsp7pRgttTvB/jmGDdjVN6ybXcjjIpXdJKVdys7jFWdMmj4f6bd8D46W08jhhDKNx4x/0hgptErPWhfZXrLHg=
+	t=1714399706; cv=none; b=OGROmUnk0LQP9MtPTIpTwSEI3QUGs5TS62vhd7BbOuTtCJhql+nx8Yn9ZhHiFkvlZDbsMvtXgwiMsOxGnMSkLeCa2qeUuy6/rBnp6GBfxrenXw4IzBfStl6KMyzWy2hYYUWxsQoW1huIYrD0GHk1RWWU1I5SFl7dJ6EvhyNA+tU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714399704; c=relaxed/simple;
-	bh=UMmU4EaPtt4Sc7gHKo5oC4Xvqd8k19rulgB4e7VGPFs=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=AiNrBIrH6ScDRKIGKrGXQNGz4L/L8kRIH/rqUA6Dm1SIFvbx//2QK5uES1+ZC4dePnN8CnYOG3aDhRDQxu72CtixqTiA1lRRtQwgoi83Z9kMyJ6zXp1/GE/Oz0pfv0DnwOs7HKcdOpp+Oy1a3tFGGurutTnJ/P/UT7xeYJes0eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=Nhw9HWjJ; arc=none smtp.client-ip=209.85.221.52
+	s=arc-20240116; t=1714399706; c=relaxed/simple;
+	bh=WrCjqqS4I8VzWNdnSjP2v41ZlCPdZRUDzsyBoXAuSUg=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=D4rfPXkj8Qo/6BGEXz1cDZiju6N2MR+KBPIG055td/jfjqvoGTiZ9O+E6z0H6fxaVXF98ebuIIHdppG3PumTq2dUv/YLRzaQpIsJXjCUZzoytra1rFpRRc9bIqMV8Rke0UcVyRjXzjEqcmQ54R7t3+qOGVWXS+B90oEwN4tfGSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=LD+oAJp1; arc=none smtp.client-ip=209.85.221.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=freebox.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="Nhw9HWjJ"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-34d13789e2fso746861f8f.3
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 07:08:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="LD+oAJp1"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-3499f1bed15so3219628f8f.1
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 07:08:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1714399700; x=1715004500; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-language:cc:to:subject:from
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZgN/Q2xaGtKT6vvkSTDEzO9awo6/5voQRCCnxevwdKQ=;
-        b=Nhw9HWjJqIH35rtbuCYJNilli0R5uvlS94U5G5XGnJk/WZXA33owxAekzK4+z6KRYc
-         JDvlARjEujZwlWDdxxoggVYaSHJZ+m2xDVx9adEwkQz1TMtlNIJQmJISHaQTmnoKOftO
-         cVdQa7gbiIHXebQv42VOUf2BFzAR1zIi3iKHTs3KvXAsY6I/NbHisNdpMEDUcHKGD1Pa
-         pPLhA7Vj6c8nvgOWUxLQaCf/lWoe4CXcAEBxkQItuc5snD0pfj3IbEUk7ll4gOujBi6e
-         YWqhCGIOviSdGk7F+bFaOoEbNIuKlyhIPRL8AjBRh832KEp4nxRESkiy2NZK4IwpATFA
-         ctDQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714399700; x=1715004500;
-        h=content-transfer-encoding:content-language:cc:to:subject:from
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1714399703; x=1715004503; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=ZgN/Q2xaGtKT6vvkSTDEzO9awo6/5voQRCCnxevwdKQ=;
-        b=oxlNRns540drMT4Szwhu/tggc1DhXg0Hzbzb6VidODX6CgenHlnk2A/m6m6qKE+cg1
-         oDGABePPfS64HxJv6tal8oQu1mpfH9Mn0CT/++ex/1zBQ3l62vfVzlsj8xNlloiHuteZ
-         5lQ/qA/Jk16DP2ZwcLYvLTwhKMz03f15Uv0+avNHpUnrYN7JP7l+44aO1OuTG060/ao2
-         1lSOYa9V4d4we9Z9iXF1Gpg3x9S5MRsKqZNgK4tevtSYxB9RxgFD4LTsI6xYv6dPzrCm
-         uv91PYVWiAGqQCl91Zpv1APvaOC2sZ1V3MZo7VGmUWLXQa/h8dIFqTtg2K1+h0KNCAiZ
-         OS+Q==
-X-Gm-Message-State: AOJu0Yxhwf0vI9NJtdIa7Cy/WJRTB4K39yv960J7+dKEcZoQXJXC0VWw
-	VyDslq3fcOncDrBJSZSgPLXiC/Rsrg1NQGVTCOd2t0VI+9YqMsmOgksKWkeloXc=
-X-Google-Smtp-Source: AGHT+IEYOKVhPKai+Fa1uXLnecUJvyvuyl4SsHgSfkU/MZ0kr1joJET/wbdjmxnDeMCyPvAKUbffYw==
-X-Received: by 2002:a5d:6306:0:b0:343:efb7:8748 with SMTP id i6-20020a5d6306000000b00343efb78748mr6534087wru.66.1714399700400;
-        Mon, 29 Apr 2024 07:08:20 -0700 (PDT)
+        bh=rGP2iA16V5Nst5OwKNnVBbqTeg1qcPV1rwQPISYCkp0=;
+        b=LD+oAJp1ytflpXrnrbzP4asQgsLC/HTvdpRdEuh3ls/E8OP0pTerDOaB52bS8X5YtV
+         QlAtriUgAKOxzNFmt3yTml8dR9UjECCkBlFEokalCSATLBjvH1zV5/+5FC+9DwH0B25V
+         aBGd72T5NoeTN1dnlN+XbK8/3nwOnFLw9STVgFSb89uy42TFEx2bqGh18KBImBhSjfdA
+         UCCRZo2CTBNBA+LdF3C49ydS5Nlrs8gSO0s+LrRKsRju/kkZFFmpkQ+MxGrlOWIobS4G
+         /Sz1lVesym28O66XfvgQWNC0jrvLeENjXxmqHovbuaTaMJ5DC7Ldr4cePiiT78F68+ce
+         VmDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714399703; x=1715004503;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rGP2iA16V5Nst5OwKNnVBbqTeg1qcPV1rwQPISYCkp0=;
+        b=ACQRdnedpa7pMI7frJKYv9rxAXuqzt6XKovof4N0nIJ2U9JA8ndv2ZO0x+rmeR5vlj
+         yxsBDGxVhTfhtL/zEOzrCvPWkvwIczvG8fpwzKIhUTF/n2j3MpqECflNmfbojbvxc67a
+         UKWZb39HnZiF6QTOxlOjaAK01+Np9lwLjwB4oq87xLwthTNKBtL/2O5bn8vPm5JuIHra
+         wRhRkuNOpVh0ZfH1SU8/QpzY6tcWhAsgYcKE0UwlIIjKifjQ94g4nw6sS+yG2wD8NS2Y
+         B5sZYxzd0sPzyedue9EJTpkgyjSzJYQUrgSUDkD0oYOZfMAO0QylH6XEpCw3y6XF55nN
+         hBmg==
+X-Gm-Message-State: AOJu0YxWYjoS7Xr5ZihzlSCA5H8N4uKZ658O9pUGmg8Dl2wQ62TxZR8e
+	HSEQIpxBuMY0nJhMjr2j+DiLIAFxPxBLBA5AAmLWCQK7BSUbQik7R+dmhpWaBTA=
+X-Google-Smtp-Source: AGHT+IGZQ41fU/EkV4HmK7QBpPzyho5VaflH4h8vksb+XnkyV8QbMyfG8zg8SLKLUmGItkgqlupe+A==
+X-Received: by 2002:adf:f3c1:0:b0:343:8bd6:97cf with SMTP id g1-20020adff3c1000000b003438bd697cfmr5372945wrp.35.1714399702664;
+        Mon, 29 Apr 2024 07:08:22 -0700 (PDT)
 Received: from [192.168.108.81] (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id h1-20020a5d6881000000b0034615862c64sm29585477wru.110.2024.04.29.07.08.19
+        by smtp.gmail.com with ESMTPSA id h1-20020a5d6881000000b0034615862c64sm29585477wru.110.2024.04.29.07.08.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Apr 2024 07:08:20 -0700 (PDT)
-Message-ID: <ebbda69c-63c1-4003-bf97-c3adf3ccb9e3@freebox.fr>
-Date: Mon, 29 Apr 2024 16:01:41 +0200
+        Mon, 29 Apr 2024 07:08:22 -0700 (PDT)
+Message-ID: <0914f96e-fcfd-4088-924a-fc1991bce75f@freebox.fr>
+Date: Mon, 29 Apr 2024 16:07:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,9 +60,9 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+Subject: [PATCH v3 3/3] arm64: dts: qcom: msm8998: set
+ qcom,no-msa-ready-indicator for wifi
 From: Marc Gonzalez <mgonzalez@freebox.fr>
-Subject: [PATCH v3 0/3] Work around missing MSA_READY indicator for msm8998
- devices
 To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>,
  ath10k <ath10k@lists.infradead.org>
 Cc: wireless <linux-wireless@vger.kernel.org>, DT
@@ -76,29 +77,51 @@ Cc: wireless <linux-wireless@vger.kernel.org>, DT
  Jeffrey Hugo <quic_jhugo@quicinc.com>,
  Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
  Alexey Minnekhanov <alexeymin@postmarketos.org>
+References: <ebbda69c-63c1-4003-bf97-c3adf3ccb9e3@freebox.fr>
 Content-Language: en-US
+In-Reply-To: <ebbda69c-63c1-4003-bf97-c3adf3ccb9e3@freebox.fr>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-Work around missing MSA_READY indicator in ath10k driver
-(apply work-around for all msm8998 devices)
+The ath10k driver waits for an "MSA_READY" indicator
+to complete initialization. If the indicator is not
+received, then the device remains unusable.
 
-CHANGELOG v3
-- Add a paragraph in binding commit to explain why we use
-  a DT property instead of a firmware feature bit.
-- Warn if the "no_msa_ready_indicator" property is true,
-  but we actually receive the indicator.
+cf. ath10k_qmi_driver_event_work()
 
-Marc Gonzalez (3):
-  dt-bindings: net: wireless: ath10k: add qcom,no-msa-ready-indicator prop
-  wifi: ath10k: do not always wait for MSA_READY indicator
-  arm64: dts: qcom: msm8998: set qcom,no-msa-ready-indicator for wifi
+Several msm8998-based devices are affected by this issue.
+Oddly, it seems safe to NOT wait for the indicator, and
+proceed immediately when QMI_EVENT_SERVER_ARRIVE.
 
- Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml |  5 +++++
- arch/arm64/boot/dts/qcom/msm8998.dtsi                           |  1 +
- drivers/net/wireless/ath/ath10k/qmi.c                           | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/qmi.h                           |  1 +
- 4 files changed, 18 insertions(+)
+Jeff Johnson wrote:
 
+  The feedback I received was "it might be ok to change all ath10k qmi
+  to skip waiting for msa_ready", and it was pointed out that ath11k
+  (and ath12k) do not wait for it.
+
+  However with so many deployed devices, "might be ok" isn't a strong
+  argument for changing the default behavior.
+
+cf. also
+https://wiki.postmarketos.org/wiki/Qualcomm_Snapdragon_835_(MSM8998)#WLAN
+
+Signed-off-by: Marc Gonzalez <mgonzalez@freebox.fr>
+---
+ arch/arm64/boot/dts/qcom/msm8998.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+index 67b8374ddf02f..4e6245095adfc 100644
+--- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
++++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+@@ -3234,6 +3234,7 @@ wifi: wifi@18800000 {
+ 			iommus = <&anoc2_smmu 0x1900>,
+ 				 <&anoc2_smmu 0x1901>;
+ 			qcom,snoc-host-cap-8bit-quirk;
++			qcom,no-msa-ready-indicator;
+ 		};
+ 	};
+ };
 -- 
 2.34.1
+
