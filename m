@@ -1,75 +1,133 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80A83548E8
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 12:23:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC08768EA
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 14:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714393387; cv=none; b=jlyPUcECP66GjYIataT6GoswNRQpHrQmiPhod61Sr+uoJFe/2FM2bpiL7zdkLIVyTbwwT38r7w2/US83UZvK3Zui3L7AJgpwWXzFJF7pfNG2p9iDvAr+H5cG+mTFtg5Z2Xu6R3m/TEYzivOD7jjHyWSGagDtR3+K6crieW58bp8=
+	t=1714399704; cv=none; b=EGbgRIBz3QkD56ZCp2uMhKveQK+ziT0x0yV1ZMyo7t9w+Xs8MdyWKtzgQHf+Vaya4+MxzwKoj4QbPYCVmT/uZqpTmPZChzGBRcDrprwvepc6IMlmhdXnoXB194jOEdKHmXyL6ZMoP6SchXr0JBPe8n8bYYnpMR5xDn3lhDnF1EI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714393387; c=relaxed/simple;
-	bh=NRWzX2QjlWDINijdQ9t0S3/I1bRQCVhBqIirrOAWS0U=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=mhspPZ/7KFFbFdtg8m1aMvbWWX2oilLw2CiiZ6/IJ9pJl/4zzABEcZVJx2r5FvBcbF7n9+a3cI4dRM2LzwbAxhhKpKJ+k7t4vfZ5qeP4G3QPoySDE5y4h3KHmpdwHYY/p2s/VWstZItiYfxQ8LRvpRPnewx5VG6FcryOxBWLrtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pfWBlDWb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714399704; c=relaxed/simple;
+	bh=U0UEVvgtP+Df0Luov+wIMPnlM4UAENUSvdQsvkRwh3U=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=TMkxcuZs0qoPHiAcCyE49ALdRRdc1nkJn/dKNAiMjspfndvL3xPnlxYK7zytnsSHLtTITaI1oGTaocFHWWWc3x4JP5MST7q17tj3bXtZYl0OtaSSYTN8XO9pyVVEtVUxqqG0rLX1OJ3H4op4sbgV1odN+7F49pOjs5oTYujXbik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=XnZoY7Ur; arc=none smtp.client-ip=209.85.208.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=freebox.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pfWBlDWb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62339C4AF17;
-	Mon, 29 Apr 2024 12:23:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714393387;
-	bh=NRWzX2QjlWDINijdQ9t0S3/I1bRQCVhBqIirrOAWS0U=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=pfWBlDWbMHf80p6/sEXUcqVLLaZAQMV48lgFzcsnIxLktKPJFLZQ2LBZzH55DKDoa
-	 kVPNL/R6maUo457E71W/4eyxfG2aJi+O1Lt9CLxSSjSUasyNzCbLlhyYVt3oHFLWxQ
-	 xIqCSDXznYhJ+ZBvup4+h/wO9ltJUgm2nVHY3gokxNTjryBJTpk95dK5Ns7SibalxX
-	 +jXuB9PZ8De+v7toNxDzhT1G/o7PpFqMED+JReaY+wEH7Lx0/UCMjq2FN4zzEGzx/V
-	 cKALQ7/CxV+IZseqmjYAM71Si49SFN8xzFPqInsGYTQkRVYyBNNbOZe1GfME81j5Su
-	 DTCthHyIvxyFA==
-From: Kalle Valo <kvalo@kernel.org>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] wifi: rtl8xxxu: remove some unused includes
-References: <20240426141939.3881678-1-kvalo@kernel.org>
-	<2a9fdafb5b5843c58cb080f8933b1e0a@realtek.com>
-Date: Mon, 29 Apr 2024 15:23:04 +0300
-In-Reply-To: <2a9fdafb5b5843c58cb080f8933b1e0a@realtek.com> (Ping-Ke Shih's
-	message of "Mon, 29 Apr 2024 02:54:55 +0000")
-Message-ID: <87frv4fjdj.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="XnZoY7Ur"
+Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2dd7e56009cso58925551fa.3
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Apr 2024 07:08:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1714399701; x=1715004501; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=oBy2kmpzdw0iu+shQSoNx7bJmznd+L61sp+luHwDb1k=;
+        b=XnZoY7UrfY7IKb6dUZV1MTTYhYs6cAmzgnK3BP6aZ728GejOm392qZcXamjVbp4bND
+         u1Au1ap9//OWnKQljLwOTwBXfmzbfkiUPxjzuCSG4eqSgdrXtM8GxmyLLczb0x/6doop
+         rHG4CLLGNUVIzPyLyD9AlBTckuGeKPt87FTIPVm7bJ5q0sBQ9+wTaiIfk2Y4Dx3UflMB
+         Z9wt4jSKq8IXnB9iTsabSHVLPYERdXpb8GNYKJDe7iieQQPfHKNo3JJ8kxoZY8f+aQYf
+         SYJsMYVL7gStU4yfM4oNobQ4JEewkVJ5yXCi6CkumSm5pdUsKVUhYZp4lbikzliIqP37
+         9egw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714399701; x=1715004501;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oBy2kmpzdw0iu+shQSoNx7bJmznd+L61sp+luHwDb1k=;
+        b=UbZlX/JfZuKMToAzwEaM4DUgs6OUc1X7anhNF0ZuOxNua4oZFPOfshYWXbuOdH/j+E
+         y1IZdorciHndDMzIwK3D1dZlYge+2ibUXrNdUSxl+OpA3dXvxG1uztFs6+X//Vhz9mbU
+         9eTLUFE7+T3KDnx+CuIvnGNkdQENk6C7VuxMl2TMDV9oPS0wNP7q7aJncXu+QkCzc7kU
+         hYaPkoPBvd33ks2YRFuT+CT1NKuDqiNCu1q4kvbgsyOQA+L5yujY82es3hAoe3juCM8f
+         ccWbgcvO7BEc0MP4ask7LBEjeiRi5X/laUZ1VxwKD1uCcj4KGfVeo8GSiGB3Gg/xMJ3q
+         1jpQ==
+X-Gm-Message-State: AOJu0Yycbp9oB2RjXp+PMDTyoagZGII0QNWxFV7YdtYwcvMl2hr+bW/V
+	olXrp1o9f4DcRhUzC28k3R+/3TTwT2KjRaSFe3Tw/W++eM+yJF9iJfztuERATqU=
+X-Google-Smtp-Source: AGHT+IGx5tX+xy8iJXA69SZQR1U/gQ2YxMQre7YD8YVUOem41NsX4VFYFSkbO1iHvPCmEz4H+9316w==
+X-Received: by 2002:a2e:9b41:0:b0:2dc:bf5c:9648 with SMTP id o1-20020a2e9b41000000b002dcbf5c9648mr7245557ljj.19.1714399701145;
+        Mon, 29 Apr 2024 07:08:21 -0700 (PDT)
+Received: from [192.168.108.81] (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id h1-20020a5d6881000000b0034615862c64sm29585477wru.110.2024.04.29.07.08.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Apr 2024 07:08:20 -0700 (PDT)
+Message-ID: <54ac2295-36b4-49fc-9583-a10db8d9d5d6@freebox.fr>
+Date: Mon, 29 Apr 2024 16:04:51 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH v3 1/3] dt-bindings: net: wireless: ath10k: add
+ qcom,no-msa-ready-indicator prop
+From: Marc Gonzalez <mgonzalez@freebox.fr>
+To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <quic_jjohnson@quicinc.com>,
+ ath10k <ath10k@lists.infradead.org>
+Cc: wireless <linux-wireless@vger.kernel.org>, DT
+ <devicetree@vger.kernel.org>, MSM <linux-arm-msm@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Pierre-Hugues Husson <phhusson@freebox.fr>, Arnaud Vrac <avrac@freebox.fr>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Jami Kettunen <jamipkettunen@gmail.com>,
+ Jeffrey Hugo <quic_jhugo@quicinc.com>,
+ Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+ Alexey Minnekhanov <alexeymin@postmarketos.org>
+References: <ebbda69c-63c1-4003-bf97-c3adf3ccb9e3@freebox.fr>
+Content-Language: en-US
+In-Reply-To: <ebbda69c-63c1-4003-bf97-c3adf3ccb9e3@freebox.fr>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Ping-Ke Shih <pkshih@realtek.com> writes:
+The ath10k driver waits for an "MSA_READY" indicator
+to complete initialization. If the indicator is not
+received, then the device remains unusable.
 
-> Ping-Ke Shih wrote:
->> Kalle Valo <kvalo@kernel.org> wrote:
->> > I noticed by random that rtl8xxxu includes linux/wireless.h even though it
->> > doesn't need it. While investigating a bit more I found even more unused
->> > include files:
->> >
->> > #include <linux/init.h>
->> > #include <linux/sched.h>
->> > #include <linux/ethtool.h>
->> >
->> > It looks like that the includes are just copied to every file without checking
->> > if the file really needs the include. So more includes could be removed but
->> > that would need more careful analysis per each file.
->> 
->> I can do that. My ways will be to create an empty (new) C file to examine
->> every driver's header file can be included individually, and then try-and-error
->> to remove includes from existing C files.
->
-> I made a patch [1] followed above ways based on these two patches.
+cf. ath10k_qmi_driver_event_work()
 
-Excellent, thanks Ping.
+Several msm8998-based devices are affected by this issue.
+Oddly, it seems safe to NOT wait for the indicator, and
+proceed immediately when QMI_EVENT_SERVER_ARRIVE.
 
+Jeff Johnson wrote:
+
+  The feedback I received was "it might be ok to change all ath10k qmi
+  to skip waiting for msa_ready", and it was pointed out that ath11k
+  (and ath12k) do not wait for it.
+
+  However with so many deployed devices, "might be ok" isn't a strong
+  argument for changing the default behavior.
+
+Kalle Valo first suggested setting a bit in firmware-5.bin to trigger
+work-around in the driver. However, firmware-5.bin is parsed too late.
+So we are stuck with a DT property.
+
+Signed-off-by: Pierre-Hugues Husson <phhusson@freebox.fr>
+Signed-off-by: Marc Gonzalez <mgonzalez@freebox.fr>
+---
+ Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+index 9b3ef4bc37325..9070a41f7fc07 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+@@ -122,6 +122,11 @@ properties:
+       Whether to skip executing an SCM call that reassigns the memory
+       region ownership.
+ 
++  qcom,no-msa-ready-indicator:
++    type: boolean
++    description:
++      Don't wait for MSA_READY indicator to complete init.
++
+   qcom,smem-states:
+     $ref: /schemas/types.yaml#/definitions/phandle-array
+     description: State bits used by the AP to signal the WLAN Q6.
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
