@@ -1,54 +1,57 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E5E1758C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2338175A7
 	for <linux-wireless@vger.kernel.org>; Tue, 30 Apr 2024 05:48:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714456107; cv=none; b=umGOEF0ccKS99pcRyRwpjguK+S1ofWOCJ5XzhzfLB+0JqYVOZ+Uar2gtRWLZG459LZfjUPu7HNrq/0IT5H0H9YgeDBWWoZLOzezRTRZN/EFIeQTjO/LJpgRFVCo96+SgUSAPtWfYjAu73sGaW6BEI0X0zKnN4OgGC6pFs8P3JrE=
+	t=1714456107; cv=none; b=TQMgAGYEZt8pWJZttY6FO0H75mM904KPX2tI7ZaOspT9RYtuKsRPo5q0xUhLUgduTPud9wyuz/aRcL6dsn67hTvrrKsFX6wImBoULMb61FRTGPJ6Zx6kRP51PeZ0KnL+ScGRCFNmdFT58Yy4jUVcf/EUhglL0I9u/MNTqUe7UT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1714456107; c=relaxed/simple;
-	bh=qVcgBWjJKrFcdCJFY6Oy3NmAWbgCxSp1CUOagyxrpn0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ndBBMVWrhUmnFNTu1lEgHV7u6m9Kd9uFbsbu51rWjmChorJwbGJ0I3/KY1MPryQNt/zPWopQxK+534/AAj4aabIpnnaT8TyE9xQzd+zhYzVvCPAXPZ5DgCEG6iHZUyc4sn5XhE1wOtVtEIN6Lak25IUuhe0kbefKmDCes4lxXs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mVklaYbl; arc=none smtp.client-ip=205.220.168.131
+	bh=tj8ZHXdmVjjkmzfTTEgXjndv6kXaRku5inSgU4XQAUc=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uPNeXyGln43oW+aec8OcZ1eiezlY1y+ckpwUtlluogUpB6Pdr4KfZXB8kWO9iZRJeaU0mtzeOSlUjJlyCgHK5DtcK0JvTJPdxfivJDUpa9Z0/ayObDQYN/VkahCSIXt8NCHGIhVrZz5Lcf1xawQcOa+SECl01w1YqIz52doFWdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=TFHvqNzE; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mVklaYbl"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43U49lIm022193;
-	Tue, 30 Apr 2024 05:48:15 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="TFHvqNzE"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43U4T7tu032242;
+	Tue, 30 Apr 2024 05:48:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=13j3o0w
-	pKKEex9/Mpqwhfgs3weNPfKWZt/RNfDqxUCE=; b=mVklaYblJI47dtHgWdrtbsn
-	x1SbMNc3DWoTZn8t28+DT9isZaWNf4BW4ax7rw9DqVuHLGE+38Iaip0QJ3kqaq/w
-	dUnEH/9hSZ2Samt9B/u7aFa6DdUWodR3Ri38QYFc5wxvDIIkjKSuZUjZ4JDvJgf7
-	Qo581nO/CO8vEW1+vyd2CdrOnCvCb+s3HHL7WIZNa/U3Db05+gYyZfHUly9HHwVt
-	CqJaWZ0Q0rnUFJY4+pNNoNSL2qu8v3YpokEbUqIz9sS96/ZLjvnCtmMaDBT+JeHc
-	DubiQvg6jCEhVH6lzvDX84RN16cgr5N3T6SaMMmlpI4afimHDoIRtdJjQZh9mZw=
-	=
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xtrep0cdr-1
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=2/3ZE7OKDAMMRzmdSaJRPraIPqXd9bNiUxmfhwEheS8=; b=TF
+	HvqNzEyODf7/nOrLBNL7gSu9hss/dXx7ncV2WfskDZllbQCyPB+KCUQJgJPNc2jr
+	A+f4myrBJ724W/Tmq7o9DpzBomiiLWr5uLiGd79F+44AI/HcyyWSte7mPvD02M+7
+	iI11o5LyAMAgOtMJ6vvzURotnG4CLZmAU/bYqLSvC7tQVn0/YaydJ9OQfm38r3VO
+	vcjQJugwWYrONYgXEAMilsScqzJ8FQt0jbIhnl8T6j1T5RmXqeTPxi2L0Z0rAbJs
+	e/+Vslcj/H0lCy6qRSUO0e5GcMzsADs6uyXXhB40Sf77ifkEwbEMS1yBGMNlKNv8
+	XypvHBZmpeLvCzwB1RNQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xtsnm86qy-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Apr 2024 05:48:15 +0000 (GMT)
+	Tue, 30 Apr 2024 05:48:23 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43U5mFJ4020623
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43U5mM1d013474
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Apr 2024 05:48:15 GMT
+	Tue, 30 Apr 2024 05:48:22 GMT
 Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 29 Apr 2024 22:48:13 -0700
+ 15.2.1544.9; Mon, 29 Apr 2024 22:48:20 -0700
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Karthikeyan Periyasamy
 	<quic_periyasa@quicinc.com>
-Subject: [PATCH 0/4] wifi: ath12k: Add multi device support for WBM idle ring buffer setup
-Date: Tue, 30 Apr 2024 11:17:55 +0530
-Message-ID: <20240430054759.722620-1-quic_periyasa@quicinc.com>
+Subject: [PATCH 4/4] wifi: ath12k: add multi device support for WBM idle ring buffer setup
+Date: Tue, 30 Apr 2024 11:17:59 +0530
+Message-ID: <20240430054759.722620-5-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240430054759.722620-1-quic_periyasa@quicinc.com>
+References: <20240430054759.722620-1-quic_periyasa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,53 +64,71 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ezlRTT8Qp8Hd37SBzJY81z88ixpO8_Fs
-X-Proofpoint-ORIG-GUID: ezlRTT8Qp8Hd37SBzJY81z88ixpO8_Fs
+X-Proofpoint-GUID: 18cwh1pTeIiJbfYCi865oOBF-b8xMb6K
+X-Proofpoint-ORIG-GUID: 18cwh1pTeIiJbfYCi865oOBF-b8xMb6K
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
  definitions=2024-04-30_02,2024-04-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- spamscore=0 suspectscore=0 mlxlogscore=674 mlxscore=0 phishscore=0
- clxscore=1015 malwarescore=0 bulkscore=0 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ suspectscore=0 malwarescore=0 spamscore=0 lowpriorityscore=0
+ impostorscore=0 adultscore=0 mlxlogscore=869 phishscore=0 bulkscore=0
  priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2404010003 definitions=main-2404300040
 
-Refactor the WBM idle ring buffer setup to scalable for inter device
-multi-link operation.
+Currently, inter device MLO is not supported. Therefore, the WBM idle ring
+buffers choose the implicit return buffer manager (DEV0_IDLE_DESC_LIST).
+However, this implicit return buffer manager design not meeting the
+requirements to support inter device MLO. In inter device MLO, multiple
+devices participate. The device specific WBM idle ring buffers transmit
+to multiple device REO rings. To distinguish between device specific WBM
+idle buffers, the setup configuration need to choose a different return
+buffer manager based on the unique identifier (device index).
 
-Note: This patchset rebased on top of below patch series
- [PATCH v2 0/8] wifi: ath12k: Introduce device group abstraction
- Link: https://lore.kernel.org/all/20240425055759.1181165-1-quic_hprem@quicinc.com/
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Karthikeyan Periyasamy (4):
-  wifi: ath12k: Replace "chip" with "device" in hal Rx return buffer
-    manager
-  wifi: ath12k: Refactor idle ring descriptor setup
-  wifi: ath12k: use device index to advertise MLO parameter
-  wifi: ath12k: add multi device support for WBM idle ring buffer setup
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/dp.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath12k/core.c  | 10 +++++++++
- drivers/net/wireless/ath/ath12k/dp.c    | 27 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath12k/dp.h    |  1 +
- drivers/net/wireless/ath/ath12k/dp_rx.c |  5 +++--
- drivers/net/wireless/ath/ath12k/hal.c   |  5 +++--
- drivers/net/wireless/ath/ath12k/hal.h   | 21 ++++++++++---------
- drivers/net/wireless/ath/ath12k/qmi.c   |  4 ++--
- 7 files changed, 54 insertions(+), 19 deletions(-)
-
-
-base-commit: 861928281f22a08e3d258ebcfe7159d729ec07d4
-prerequisite-patch-id: 4bc84a4f5b10ebc28db60c5167abdaf343a1619d
-prerequisite-patch-id: ea87d2f46dbd5e7c82d5df02934906e219aa8388
-prerequisite-patch-id: e08d8632dcde9e891d37b538832b4ecfed140d9e
-prerequisite-patch-id: bc2c9455c9175c27b8b68f6f41d468b258007478
-prerequisite-patch-id: 00966c65589af8a50078fea94630cbe355f0dacf
-prerequisite-patch-id: 4bd8ce903cd89ae536109922f65f128ed1d4307c
-prerequisite-patch-id: 54fe8eb540a77804c8befeb695b61756c133b56f
-prerequisite-patch-id: 06244ca08d9bed3834dc5315470a19d096d749ee
-prerequisite-patch-id: 8e7575808b1c498d81b606777153e0e2d4ee99bd
-prerequisite-patch-id: 1baa4ce64b2054e82e117cfbe29f85870def37c7
-prerequisite-patch-id: 733cb4a1e0d02079820d8306a3da88fe2d35b06c
+diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
+index 9b9e86cdb380..5812df436d53 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.c
++++ b/drivers/net/wireless/ath/ath12k/dp.c
+@@ -1582,6 +1582,24 @@ static int ath12k_dp_reoq_lut_setup(struct ath12k_base *ab)
+ 	return 0;
+ }
+ 
++static enum hal_rx_buf_return_buf_manager
++ath12k_dp_get_idle_link_rbm(struct ath12k_base *ab)
++{
++	switch (ab->device_id) {
++	case 0:
++		return HAL_RX_BUF_RBM_WBM_DEV0_IDLE_DESC_LIST;
++	case 1:
++		return HAL_RX_BUF_RBM_WBM_DEV1_IDLE_DESC_LIST;
++	case 2:
++		return HAL_RX_BUF_RBM_WBM_DEV2_IDLE_DESC_LIST;
++	default:
++		ath12k_warn(ab, "invalid %d device id, so choose default rbm\n",
++			    ab->device_id);
++		WARN_ON(1);
++		return HAL_RX_BUF_RBM_WBM_DEV0_IDLE_DESC_LIST;
++	}
++}
++
+ int ath12k_dp_alloc(struct ath12k_base *ab)
+ {
+ 	struct ath12k_dp *dp = &ab->dp;
+@@ -1598,7 +1616,7 @@ int ath12k_dp_alloc(struct ath12k_base *ab)
+ 	spin_lock_init(&dp->reo_cmd_lock);
+ 
+ 	dp->reo_cmd_cache_flush_count = 0;
+-	dp->idle_link_rbm = HAL_RX_BUF_RBM_WBM_DEV0_IDLE_DESC_LIST;
++	dp->idle_link_rbm = ath12k_dp_get_idle_link_rbm(ab);
+ 
+ 	ret = ath12k_wbm_idle_ring_setup(ab, &n_link_desc);
+ 	if (ret) {
 -- 
 2.34.1
 
