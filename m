@@ -1,151 +1,171 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0285813D633
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Apr 2024 12:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B40171E74;
+	Tue, 30 Apr 2024 13:30:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714479274; cv=none; b=Fqk3ArFUzgq/dwfg7HYMtkwV2d2TuihzMHOUGlxbDXPpTWt7FNVQZx52RWjM+r0ObUlJmvN2eCl8cJphA9W/6GQE92LloAoikCOmZip2RPH977ZIiN8+wbxqF/z0XAVUYNr+PpzF/wYjFo6yXOdC6ctuR7f+iIvtB5ThScFZFxo=
+	t=1714483842; cv=none; b=TwCepnXg6MMEmRe720y4VYVywEcXidD0PHfH9+5YI15U4bbPHhsQGJr8rAUnlxENc3R+EPhOnON58HdP6rvPYfjqWALazkLfnUB00wyHFD/ckTGGIoniNdeb53N7ZnRrVXo4QqaW5z+qQ038q6UjxiCBAyIvQEoOvekmJk6vLgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714479274; c=relaxed/simple;
-	bh=GYfQMSoiTaIElWv7VL8BMLdrosaTV8Yt0f5EDDn7pnI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tZHoVBKM2d+Q79XV7SR03CRY1CaNIVNIPxAoikFSLoWW4ej8OgF4LxTbyQ+g0OtvqDlPqH+SV2z83hIftdv4nHg0Fb2iPuKV5VdStItO1wA86RT6HFfGAtcGzGnXKEPmByl5EMMPYKCRpQckZGvLG9Ewn6M81mQ7R0OdTMWl8B8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hVqC0uCn; arc=none smtp.client-ip=209.85.221.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1714483842; c=relaxed/simple;
+	bh=hnUteZUlIfzfOm6FLXQVLAeHoh++k/AfwiOugSEGcms=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=FFen6H6EYDD/cj97jSkv1IZ6ckC1tMSR1ahsdrAgEUENkvNy+iPMDYGCWbYDKO4ktWlSZ36IJVEK+0ADJ8NFyXXucwXjXICcFHDs+6xImxEN2p77suyyN1eiSySI8L2CpV2Pho/82fj0sfFQRU6FelT+No1f7gCctkzrvv7BCnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=I8Bm+oH5; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVqC0uCn"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-34da84cb755so131611f8f.2
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Apr 2024 05:14:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714479270; x=1715084070; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=AhevxVct59ABKL34JMLXHoNxGSUEnsHrKrEgMFZg7c4=;
-        b=hVqC0uCnDShRGo9r/cFtZcno5Vk021BPsJdPcaGhDZ4nIMeEtD/ziUewX1VcJcAcO1
-         Ak3Ja0UThXVaXduqOLRF/f+FZ+n6x0D/4xypTngyJBUsPZYdZa4Prz+nxuDjOHFyCQ2s
-         on5UYiQmckhf/79vT6rE7xeA4/yOEdjncCxln7xv9N2lhwojtykzHf5R6vZO1VVMV8S2
-         eGZI236gnY8pD1QoMsjDrNxI0C9RRWBWqwd/GRTfiyJWFNOc+gJeFV3pyYQxbp2nXnie
-         HZ952RXbSgO4ojk4M08un5aKnpxJJHjVq5LnxUQ+5louelFd/FrdkQvehkQujZOMCBu0
-         AZfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714479270; x=1715084070;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=AhevxVct59ABKL34JMLXHoNxGSUEnsHrKrEgMFZg7c4=;
-        b=A3mRoCDwso3xoohMEGoZP+g3GSY1QHF9hAO1GqkS5AjdHqVWGUsxGSV6wWlyxOolZP
-         lwzanoZYbyRdNyipdT3zsHvsTJ4gAigAjNJxn6hWWu7fHihdjJvgxAcJpROIxSnqBIJ0
-         Z0FCAMIdR7Riqqg1gxD9oHxhWjwtV/R7vSV+NnASHnfhBgzsCfGgq119C5UJ2KfwElCz
-         3mTWa/lP2MA9w8/ZjXpI86+OG8nY36+BwjRhToVqloBSOh4PzMDOVKyUNsYEVgk0AbLs
-         dz2sDUyqgxeLrtcxkuqdf+ahIpCTa11aQNPPoSiGQCo5HQBvgd3jxO4AA+KyCc7zDALW
-         ZNHA==
-X-Forwarded-Encrypted: i=1; AJvYcCXg9FQDkAQzUTuwfg3cs9Yympl5UF1CXa0q0I58IWX/mgb775bObg3uuwKSGZDHuImbx5DYt5/b2DtYYJ2H50I5R6IZqoxJ8aCcil/CM7E=
-X-Gm-Message-State: AOJu0YxO4ZW0ackBNM3Tk9H4dPqC36lpuLxSvsBxoeGqRmz0kGW34238
-	ax79jOcTz8sOEDQfEL6sYthFIjw/ivQZdsjWK1gbgNnIjxnhFYBvny1CIsMF
-X-Google-Smtp-Source: AGHT+IGEC2SKxIXy1Y82Vgw6FYryhQr8dRMzmWsx28Vqy4L6Unay/htzl1uVoVEin72DpcFUoEVNhA==
-X-Received: by 2002:a5d:5284:0:b0:34d:8e21:556b with SMTP id c4-20020a5d5284000000b0034d8e21556bmr964679wrv.46.1714479269934;
-        Tue, 30 Apr 2024 05:14:29 -0700 (PDT)
-Received: from [192.168.1.50] ([79.113.154.240])
-        by smtp.gmail.com with ESMTPSA id c11-20020adffb0b000000b0034b1a91be72sm20021522wrr.14.2024.04.30.05.14.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 30 Apr 2024 05:14:29 -0700 (PDT)
-Message-ID: <cae2d330-a4fb-4570-9dde-09684af23ffd@gmail.com>
-Date: Tue, 30 Apr 2024 15:14:28 +0300
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="I8Bm+oH5"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43UD8u6K013161;
+	Tue, 30 Apr 2024 13:30:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:date:subject:mime-version:content-type
+	:content-transfer-encoding:message-id:references:in-reply-to:to
+	:cc; s=qcppdkim1; bh=/N+KEWOlYNdnDE15usheC2AQQq2OILk3vqXwsDWUnv4
+	=; b=I8Bm+oH5dtp1koo6b2FXCmIbB5qcidZZK5YxfJKzFaaPhgphQvIJyZbpLjY
+	VG3ygfy/F/8hPI6ztrDs7PWpvDRESJeH0Hh0gDbyHGeNJlZWurJdJjGY/xdzQrMD
+	YZIVVdQpWSU6C4kvh27eOMU2I36zMMagrN5bYeNddQCOpoU3eOQp2Pf2kCK1hQjH
+	g3qr4Hkq+0vLPYinOJ1FV7hV0EhLOfHbDZ+4ejlbPk80uD4Vp9wxUyvs4CVkw0OG
+	puCRk3djQnliGliYY3Hu6FwPOKFQLJSfQtjaopURNiyrn6vPCHkQw1oatPt3KFbX
+	feYDJW78Livd+MXEdA/riOazclg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xu199018v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 30 Apr 2024 13:30:28 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43UDURXY021835
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 30 Apr 2024 13:30:27 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 30 Apr
+ 2024 06:30:27 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Tue, 30 Apr 2024 06:30:20 -0700
+Subject: [PATCH 1/2] wifi: ath11k: refactor CE remap & unmap
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: rtw88: usb: Fix disconnection after beacon loss
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Sascha Hauer <sha@pengutronix.de>,
- Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-References: <ecbf0601-810d-4609-b8fc-8b0e38d2948d@gmail.com>
- <5b2e95cdac3d400eb2c9ef2eb20dc221@realtek.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <5b2e95cdac3d400eb2c9ef2eb20dc221@realtek.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-ID: <20240430-ce-unmap-v1-1-e468328f95d9@quicinc.com>
+References: <20240430-ce-unmap-v1-0-e468328f95d9@quicinc.com>
+In-Reply-To: <20240430-ce-unmap-v1-0-e468328f95d9@quicinc.com>
+To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath11k@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.13.0
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ZUXB3rjOkBNFDaSdMamiSZyKj7rHutcr
+X-Proofpoint-GUID: ZUXB3rjOkBNFDaSdMamiSZyKj7rHutcr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-30_07,2024-04-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxlogscore=999
+ lowpriorityscore=0 mlxscore=0 adultscore=0 bulkscore=0 phishscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 impostorscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2404010003 definitions=main-2404300095
 
-On 30/04/2024 03:50, Ping-Ke Shih wrote:
-> +Cc: Martin for rtw88 SDIO that seems have the same problem 
-> 
-> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
->> When there is beacon loss, for example due to unrelated Bluetooth
->> devices transmitting music nearby, the wifi connection dies soon
->> after the first beacon loss message:
->>
->> Apr 28 20:47:14 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-BEACON-LOSS
->> Apr 28 20:47:15 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-DISCONNECTED bssid=... reason=4 locally_generated=1
->>
->> Apr 28 20:47:24 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-BEACON-LOSS
->> Apr 28 20:47:25 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-DISCONNECTED bssid=... reason=4 locally_generated=1
->>
->> Apr 28 20:47:34 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-BEACON-LOSS
->> Apr 28 20:47:35 ideapad2 wpa_supplicant[1161]: wlp3s0f3u4:
->>  CTRL-EVENT-DISCONNECTED bssid=... reason=4 locally_generated=1
->>
->> When the beacon loss happens, mac80211 makes rtw88 transmit a QOS
->> NULL frame and asks to confirm the ACK status. Even though rtw88
->> confirms to mac80211 that the QOS NULL was transmitted successfully,
->> the connection still dies. This is because rtw88 is handing the QOS
->> NULL back to mac80211 with skb->data pointing to the headroom (the
->> TX descriptor) instead of ieee80211_hdr.
->>
->> Fix the disconnection by moving skb->data to the correct position
->> before ieee80211_tx_status_irqsafe().
->>
->> The problem was observed with RTL8811AU (TP-Link Archer T2U Nano)
->> and the potential future rtw88_8821au driver. Also tested with
->> RTL8811CU (Tenda U9).
->>
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
->> ---
->>  drivers/net/wireless/realtek/rtw88/usb.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
->> index 3ba7b81c6080..1dfe7c6ae4ba 100644
->> --- a/drivers/net/wireless/realtek/rtw88/usb.c
->> +++ b/drivers/net/wireless/realtek/rtw88/usb.c
->> @@ -278,6 +278,8 @@ static void rtw_usb_write_port_tx_complete(struct urb *urb)
->>                 info = IEEE80211_SKB_CB(skb);
->>                 tx_data = rtw_usb_get_tx_data(skb);
->>
->> +               skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
->> +
-> 
-> There are two cases of arguments of skb_push() for USB: 
-> 1. skb_push(skb, chip->tx_pkt_desc_sz);
-> 2. skb_push(skb, headsize);
->    headsize = pkt_info->offset ? pkt_info->offset : desclen;
->       pkt_info->offset = chip->tx_pkt_desc_sz;
->       desclen = chip->tx_pkt_desc_sz;
-> 
-> Eventually all are chip->tx_pkt_desc_sz, but spend a little time to ensure this.
-> Could you test and have another patch to change above case (2) to (1)?
-> 
+Currently the logic that handles hw_params->ce_remap is inline code,
+both for doing the remap and the unmap. An upcoming change needs to do
+the unmap in a second place, so refactor the unmap logic into a
+separate function. And although it is only called from one place,
+refactor the remap logic as well to have functional symmetry.
 
-I see what you mean. I will make it another patch, because
-the skb from case 2 is not sent to mac80211.
+No functional changes, compile tested only.
 
->>                 /* enqueue to wait for tx report */
->>                 if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
->>                         rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
->> --
->> 2.44.0
-> 
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/ahb.c | 52 +++++++++++++++++++++++------------
+ 1 file changed, 34 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 60b4c2800a33..aa62ed710090 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -949,6 +949,36 @@ static int ath11k_ahb_setup_msa_resources(struct ath11k_base *ab)
+ 	return 0;
+ }
+ 
++static int ath11k_ahb_ce_remap(struct ath11k_base *ab)
++{
++	const struct ce_remap *ce_remap = ab->hw_params.ce_remap;
++	struct platform_device *pdev = ab->pdev;
++
++	if (!ce_remap) {
++		/* no separate CE register space */
++		ab->mem_ce = ab->mem;
++		return 0;
++	}
++
++	/* ce register space is moved out of wcss unlike ipq8074 or ipq6018
++	 * and the space is not contiguous, hence remapping the CE registers
++	 * to a new space for accessing them.
++	 */
++	ab->mem_ce = ioremap(ce_remap->base, ce_remap->size);
++	if (!ab->mem_ce) {
++		dev_err(&pdev->dev, "ce ioremap error\n");
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static void ath11k_ahb_ce_unmap(struct ath11k_base *ab)
++{
++	if (ab->hw_params.ce_remap)
++		iounmap(ab->mem_ce);
++}
++
+ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
+ {
+ 	struct ath11k_ahb *ab_ahb = ath11k_ahb_priv(ab);
+@@ -1141,21 +1171,9 @@ static int ath11k_ahb_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto err_core_free;
+ 
+-	ab->mem_ce = ab->mem;
+-
+-	if (ab->hw_params.ce_remap) {
+-		const struct ce_remap *ce_remap = ab->hw_params.ce_remap;
+-		/* ce register space is moved out of wcss unlike ipq8074 or ipq6018
+-		 * and the space is not contiguous, hence remapping the CE registers
+-		 * to a new space for accessing them.
+-		 */
+-		ab->mem_ce = ioremap(ce_remap->base, ce_remap->size);
+-		if (!ab->mem_ce) {
+-			dev_err(&pdev->dev, "ce ioremap error\n");
+-			ret = -ENOMEM;
+-			goto err_core_free;
+-		}
+-	}
++	ret = ath11k_ahb_ce_remap(ab);
++	if (ret)
++		goto err_core_free;
+ 
+ 	ret = ath11k_ahb_fw_resources_init(ab);
+ 	if (ret)
+@@ -1243,9 +1261,7 @@ static void ath11k_ahb_free_resources(struct ath11k_base *ab)
+ 	ath11k_ahb_release_smp2p_handle(ab);
+ 	ath11k_ahb_fw_resource_deinit(ab);
+ 	ath11k_ce_free_pipes(ab);
+-
+-	if (ab->hw_params.ce_remap)
+-		iounmap(ab->mem_ce);
++	ath11k_ahb_ce_unmap(ab);
+ 
+ 	ath11k_core_free(ab);
+ 	platform_set_drvdata(pdev, NULL);
+
+-- 
+2.42.0
 
