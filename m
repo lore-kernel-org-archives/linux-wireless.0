@@ -1,137 +1,94 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FD28182A0
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Apr 2024 05:48:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25D5A19477;
+	Tue, 30 Apr 2024 06:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714456111; cv=none; b=rluIDrng7N3W2iZh7qHeSNEfxxVp9VOoPVMOhBGfrgB6l5U41FhSmqOdXdvy/zL0rpvhq/mwIr/EkRq1IULQchBL9cnOJ+L/rsHmD0YrjrEFMf+lc8TCTlHw20PRwW3DnakvnI2Lpwx1NqXYEfAjShfrkm6rKZypC1LDDT2TfjQ=
+	t=1714459174; cv=none; b=aFBZJp4RLHZYW55VOfiK96UbIuHnDg7GACcMWK+3xdiUB+ul+XzlTrsqH+4PY6xNdEGMxxBEctoZDlVRj8s2pnScInms2PNGQk9Krv5rTnS1SYO5ydovzLDdC2lVzEybVWMlj1cCmIRiGVZ6D1erYJ/qevK00TMZZlJfjxVelAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714456111; c=relaxed/simple;
-	bh=0NJet9EJ2l4msDWVbK1+Rz0Oha8tfn1LpcHfAP6/29E=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qVyuS2Bn50v42ex+3p2keIBSDY/qprXvIH+lGWzlJR1fRV/cPMaeBKdSHgm5mXtSDdq73OhzIFPhq+QimNYuu5u/B0kOLjbgA7w/cJ7gjH+bpblzV1C3dgU3KSEJ+0akDbGc+qxI1CeBgzBlf7tTof8vkAXzo8ZKuSj1bxcPcLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=iU07EfEX; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1714459174; c=relaxed/simple;
+	bh=oqnLXrIFCIxkLdU3yGt5+mmee31pq5ZWUdGnKAC//2Y=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=ED0fxCMvgafT+GbchuNZBTTzYsSzRMGoLTUabKYSKmEdDgAU5sbq3KhuAIG76HVQFEUB3C3NFbgIva5eOJ+p83UjiEEjuGfrZsGJDOa+Y/lWUfPuLH3fduVB4El4otmZce4PZqxNncWsxZSazlssZzWvuBHLy9CTvDHpYJVWM3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d9i1p07A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iU07EfEX"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43U50tTF019456;
-	Tue, 30 Apr 2024 05:48:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=gRx07PeP42Xu6oKZNz8pFA5EA7fQkStcMuP0sznf570=; b=iU
-	07EfEXIB3MfWHFSN3U2mvawOi72ms+qW5ul5jUxRVF0qW5QCZ5KaQdLGZyRvrwWr
-	yv8FED5ehNGgGne2odI7tSZEFKa7Mi5rZLV0ktyqzYNupMSoKOwZ1AjIfW++fizo
-	ciVt8QSvfD4jnZEJJexEALd1Pof7nU1JOVQvvqlWm8xdSdWdOJ3UJ8HDGBPamu7Z
-	jRbHRBiT/RH6FEH8ZOaqTy7tLVYv3Rk5u5kFl+dKRW2RK2NocnR6dN1v+W7Xgk7X
-	2FG0X4huAgu4jFvYcj59EvqyIunXzJ+bbza5dOjiTRKnQY+QMWnLcDbV8e37TPBZ
-	978X/K3LgcbOrmxjKZqA==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xtaf2mngb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Apr 2024 05:48:21 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43U5mKp8015407
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Apr 2024 05:48:20 GMT
-Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 29 Apr 2024 22:48:18 -0700
-From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy
-	<quic_periyasa@quicinc.com>
-Subject: [PATCH 3/4] wifi: ath12k: use device index to advertise MLO parameter
-Date: Tue, 30 Apr 2024 11:17:58 +0530
-Message-ID: <20240430054759.722620-4-quic_periyasa@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240430054759.722620-1-quic_periyasa@quicinc.com>
-References: <20240430054759.722620-1-quic_periyasa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d9i1p07A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51FDAC2BBFC;
+	Tue, 30 Apr 2024 06:39:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714459173;
+	bh=oqnLXrIFCIxkLdU3yGt5+mmee31pq5ZWUdGnKAC//2Y=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=d9i1p07Aca+YWhFilcHBrCXtPHtGcJx8kthc0StbqTMZrqBtVGMJqiTBqBdbGQvRP
+	 hpl6YozRPgM604gTXkL2bWDOHwRQThwiGuQAQ+TD1HftHWCePUbzRXtD/kkAw9hl/1
+	 w6Qhlva/Rqny8+ncRVfMZ+5nlmlEobcWMNi9Dml15E+q8XUr0DMl6TcbSEFd7SHRkO
+	 9tdopBqtqwaCgjYEILSLLC/YnAeGDZKSApiRkNzxvxSABGn5UPACL3WQZTbgPk0osf
+	 zDrqMQaBKB+MDLl4qf8qOhDwo3/8ktquodGSmDosA6q4dwzKa0t8/7atnx/5nTO3rl
+	 l0F1JX1iFEpvA==
+From: Kalle Valo <kvalo@kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,  Jeff Johnson
+ <quic_jjohnson@quicinc.com>,  linux-wireless@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v2][next] wifi: wil6210: wmi: Use __counted_by() in
+ struct wmi_set_link_monitor_cmd and avoid -Wfamnae warning
+References: <ZgSTCmdP+omePvWg@neat>
+	<171222554691.1806092.8730005090791383928.kvalo@kernel.org>
+	<202404291008.51DB333F@keescook> <877cggqdwb.fsf@kernel.org>
+	<202404291109.331E1704@keescook> <87bk5sf003.fsf@kernel.org>
+	<202404291251.9CBC42E481@keescook>
+Date: Tue, 30 Apr 2024 09:39:30 +0300
+In-Reply-To: <202404291251.9CBC42E481@keescook> (Kees Cook's message of "Mon,
+	29 Apr 2024 12:52:49 -0700")
+Message-ID: <87y18vpd5p.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: XqsYjIRN6b1env4eTNqavI2e0RSVC0JG
-X-Proofpoint-GUID: XqsYjIRN6b1env4eTNqavI2e0RSVC0JG
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-30_02,2024-04-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- phishscore=0 spamscore=0 malwarescore=0 suspectscore=0 mlxscore=0
- clxscore=1015 adultscore=0 impostorscore=0 bulkscore=0 priorityscore=1501
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2404010003 definitions=main-2404300040
 
-Device index parameter is used as unique identifier for devices involved
-in Inter-device MLO. It is also used to configure the MLO parameter within
-the QMI host capability send request. While currently set to zero, future
-logic will be added for inter device support to populate this parameter
-with non-zero values.
+Kees Cook <keescook@chromium.org> writes:
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+>> >> > I was just walking through our patch tracker and noticed that I don't
+>> >> > see this patch include in -next yet (as of next-20240429). Is there a
+>> >> > flush of the ath-next queue planned soon? Or did I miss some change?
+>> >> 
+>> >> Yeah, wireless-next was pulled last week so most likely we will create
+>> >> ath-next pull request this week.
+>> >> 
+>> >> BTW we are planning to move ath.git to a new location, rename branches
+>> >> etc. I think we'll see if we can also setup it so that it can be pulled
+>> >> to linux-next, so that you don't need to ask this every time ;)
+>> >> 
+>> >> (Just joking of course, there a lot of benefits from having the tree in
+>> >> linux-next)
+>> >
+>> > Ah-ha! Thanks. Yeah, sorry if I keep asking about that. It's different
+>> > from other trees, so it doesn't stick in my head. :) I should keep
+>> > better notes!
+>> 
+>> BTW I think all vendor specific wireless driver trees are not pulled to
+>> linux-next: iwlwifi, mt76, rtw (Realtek) and ath. So with all of these it will
+>> take a while before the commit is in linux-next.
+>
+> How long is "a while"?
 
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/core.c | 10 ++++++++++
- drivers/net/wireless/ath/ath12k/qmi.c  |  4 ++--
- 2 files changed, 12 insertions(+), 2 deletions(-)
+The cadence can be anything from 1-4 times per release (~8 weeks).
+Depends on the maintainer, how busy we are etc.
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index b304895ee295..e82442540697 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1562,6 +1562,16 @@ struct ath12k_base *ath12k_core_alloc(struct device *dev, size_t priv_size,
- 	ab->qmi.num_radios = U8_MAX;
- 	ab->mlo_capable_flags = ATH12K_INTRA_DEVICE_MLO_SUPPORT;
- 
-+	/* Device index used to identify the devices in a group.
-+	 *
-+	 * In Intra-device MLO, only one device present in a group,
-+	 * so it is always zero.
-+	 *
-+	 * In Inter-device MLO, Multiple device present in a group,
-+	 * expect non-zero value.
-+	 */
-+	ab->device_id = 0;
-+
- 	return ab;
- 
- err_free_wq:
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index b37ab6244931..a9946f0f6bd8 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -2041,7 +2041,7 @@ static void ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
- 	req->mlo_capable_valid = 1;
- 	req->mlo_capable = 1;
- 	req->mlo_chip_id_valid = 1;
--	req->mlo_chip_id = 0;
-+	req->mlo_chip_id = ab->device_id;
- 	req->mlo_group_id_valid = 1;
- 	req->mlo_group_id = 0;
- 	req->max_mlo_peer_valid = 1;
-@@ -2053,7 +2053,7 @@ static void ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
- 	req->mlo_num_chips = 1;
- 
- 	info = &req->mlo_chip_info[0];
--	info->chip_id = 0;
-+	info->chip_id = ab->device_id;
- 	info->num_local_links = ab->qmi.num_radios;
- 
- 	for (i = 0; i < info->num_local_links; i++) {
+> And if the latency can be reduced for these, it'd be nice since it
+> would allow for longer bake-time in -next.
+
+Sure but our time is limited, as always :) There's extra overhead with
+linux-next, like the rule that no updates during the merge window, so I
+can understand why some maintainers have not included their tree to
+linux-next builds.
+
 -- 
-2.34.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
