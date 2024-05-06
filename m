@@ -1,46 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5F72158DD7
-	for <linux-wireless@vger.kernel.org>; Mon,  6 May 2024 19:10:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EAC615572C
+	for <linux-wireless@vger.kernel.org>; Mon,  6 May 2024 19:10:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715022643; cv=none; b=YZfbIuDWSB12g0wuBio+S6r6Jv+M/yLwB3zvCcnhVhmhpvWOZ2n9kjv//VuLTswHyV/OrTlXeLUMImgMLmZtj21sVNSrK/lC+kELNhRZOEW+pP6rn6P1fXuwg+KaP+5F5EM0u1YwIT5U8Yd3syONKA/y6bE5OPVz1fzhd068MBc=
+	t=1715022643; cv=none; b=bMxe92m10E3fq5U5+vBbAJGnNhQdjA9Lv3m0A3BRgqB2e3cL9SUYr1+5Au8tuiMS6iVdB3B1mr0AwP16EjPpnqZKicIr4tokVW42Kk/iFfRtS+5/FHwEvlIVQouEYnTFD3Do+zmw56s9D/7PWg0NpulD4XKU/H7X6up0TeSmwYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715022643; c=relaxed/simple;
-	bh=b+Dj2cqUDvPB/fZ/kV2hEOcl4chUDeaAhAvguYwWH5E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=D6UuxQ9fHHr04i1U/1WHlETKQiHGlU4/YFD9i5SJPmChWuvu85N3kEKnzcbbFs2t22Bt4gAe9G3mPlPdERbWRfd9HxdH9gzYoDUqWQCQz6E6XZ/TqoO5hq9+pzmrI+zmabEXxBLlilOnMIH3Akpee/r/6n6uW53BOOY3QFD1DyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qp7iOicP; arc=none smtp.client-ip=168.119.38.16
+	bh=gGXhPP90yeHFvktdUR2v5tNk1s/+rUuhxsStnwLtvhc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MrJSds7UhpuLMkcT8iXIJGpBg4HVUKxnUquXTS/xdp1rKSdMwxKCBWZ4v2I1VL5mnMZXdhPR49lYGuuEAyAg/gFzQh88xFekTwRjTegHRa1FhaPWoi5n+BTkh7LNaZImICPS+pzUqPTTSuT1SL1oYOlxffq6s3zuLZOwO1lA/5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=G+6bbI85; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qp7iOicP"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="G+6bbI85"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=h6QVOh7HAtToWoQFnR5alrlPTrq9JbbxnxZ6/Y0lQgU=;
-	t=1715022641; x=1716232241; b=qp7iOicPN/+1S6/SON08Wph0UD2o4TxCleQ4SYZ4MJmZHbo
-	g0nP6PqIO9b7YSk46hIx3XC0aU2AFso8A/Vdx3Zmb34mRPBAj4e7W4CN1YAips0+uLFSuLTNEKEhT
-	0v4xiHtiK5ACvcb/Elwplvd04Y/FltXFu5e1tu3PzRW4H0tiYikRmdsYKmzvrK9jIYe1kg3pw0dYA
-	xbiHTTi/Xeazpq5ElRR9zYcoSLhDKG4u0ojECNiF0S+uMOy83a/Vd5WcttGK2uR/lSyqxwiTKbhwt
-	oVun6boxVT3Ix1rOx5fLBy53jfR7sr0kL0a/HTtjJoOGgpnYijwFT2bhJrrvLv/A==;
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=zUkCLm9OfxbR+Ki1x7eaABorT4P2VsGMjl6gM2Zxuf8=; t=1715022640; x=1716232240; 
+	b=G+6bbI856TaCwoe0d9ADe6MB0uo8Wl2/Or4Y2gmYjzLLdyk4PhHmXqSkFSviWZp9osu3biUT1TY
+	HdolYpVT7ICT//Q4EQKC7WQqYet5QAu52SM+5bAHTkYuJ//XcITdCIF9933rNpnB+BiHIR0k/HOQ0
+	AcyGEpguq71WgQLpTDY+2fPJcA3tf1ypUULJERDW0xR7A0gmsQf9z7u9apPKMZon7tarGtVK8VUXj
+	y+HqNA8QtbSymUKc3dSxG3lOQ43dZYg+V4TsCSzilCgHOs8HwG+ZjLh3sjkvwbRnwX1XjaqUJhKzd
+	V2k6Mdj+i9OxpDA5engLLh9fSk+fdf35z6Aw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1s43jS-000000089kh-2j6t;
-	Mon, 06 May 2024 21:10:38 +0200
+	id 1s43jQ-000000089kh-3voZ;
+	Mon, 06 May 2024 21:10:37 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 3/3] wifi: mac80211: don't stop TTLM works again
-Date: Mon,  6 May 2024 21:10:35 +0200
-Message-ID: <20240506211034.f8434be19f56.I021afadc538508da3bc8f95c89f424ca62b94bef@changeid>
+Subject: [PATCH 1/3] wifi: mac80211: cancel multi-link reconf work on disconnect
+Date: Mon,  6 May 2024 21:10:33 +0200
+Message-ID: <20240506211034.ac754794279f.Ib9fbb1dab50c6b67f6de9be09a6c452ce89bbd50@changeid>
 X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240506211034.ac754794279f.Ib9fbb1dab50c6b67f6de9be09a6c452ce89bbd50@changeid>
-References: <20240506211034.ac754794279f.Ib9fbb1dab50c6b67f6de9be09a6c452ce89bbd50@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,29 +50,42 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's no need to stop works that have already been
-stopped during disconnect, so don't.
+This work shouldn't run after we're disconnecting. Cancel it earlier
+(and then don't cancel it in stop later.)
 
+Fixes: 8eb8dd2ffbbb ("wifi: mac80211: Support link removal using Reconfiguration ML element")
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/mlme.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9b0598b42d48..a481728d78c7 100644
+index a5f2d3cfe60d..49bcd800bdca 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -8714,9 +8714,6 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- 			  &ifmgd->csa_connection_drop_work);
+@@ -3289,6 +3289,11 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
+ 				  &ifmgd->neg_ttlm_timeout_work);
++
++	sdata->u.mgd.removed_links = 0;
++	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
++				  &sdata->u.mgd.ml_reconf_work);
++
+ 	ieee80211_vif_set_links(sdata, 0, 0);
+ 
+ 	ifmgd->mcast_seq_last = IEEE80211_SN_MODULO;
+@@ -8708,8 +8713,6 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 			  &ifmgd->teardown_ttlm_work);
  	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
  				  &ifmgd->tdls_peer_del_work);
--	wiphy_delayed_work_cancel(sdata->local->hw.wiphy, &ifmgd->ttlm_work);
 -	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
--				  &ifmgd->neg_ttlm_timeout_work);
- 
- 	if (ifmgd->assoc_data)
- 		ieee80211_destroy_assoc_data(sdata, ASSOC_TIMEOUT);
+-				  &ifmgd->ml_reconf_work);
+ 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy, &ifmgd->ttlm_work);
+ 	wiphy_delayed_work_cancel(sdata->local->hw.wiphy,
+ 				  &ifmgd->neg_ttlm_timeout_work);
 -- 
 2.44.0
 
