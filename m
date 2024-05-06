@@ -1,59 +1,65 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7AE2157461
-	for <linux-wireless@vger.kernel.org>; Mon,  6 May 2024 17:39:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2281E157499
+	for <linux-wireless@vger.kernel.org>; Mon,  6 May 2024 17:39:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715017199; cv=none; b=UQ0qw8mX7LKPVNmoMANCFcaSK2zM+OrBexwugyWfDu5DWCj07uBcapo2Bnlo4bebrQAVqM0wJ9fkJRPlTm5IVsn0or6TzCN1t6LET2MisOEEkBeB2O6NPU3bY+ppNS591sl5IbqTkQwyrQHy3qa7ghdoTjGE0m7Q5M2lqXfpDbQ=
+	t=1715017199; cv=none; b=n4luoSSNKssGf3sE6HNC09urTl9yIlXEV4lt3NzEY8vbE0eLDXGMKHJMT85Z2KO3SZLfeRQk4vgiiMoA/Mc1aW4abT/8FnUuqDbMRUtuVfO3F+FQX15IChhlT5i2XbUSsrop8EOUwd0UAU9mwbljcGhx22Sl5Nzw6QgUfWH6sGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715017199; c=relaxed/simple;
-	bh=LBh3ETFUJzmGWEDz468gzJuAPnKf2x9oHPXyTqeqodc=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b2Q8Zt1BbBzjbMFVXVPnmgXOIva1RTqAyGQUgDqOt553JDfyHepUbfKVXYqOO0ut4CW+BcTh8saP4Y9yAFkHmoQp0vrgv7CltEVEVdeP40CvH+IdacsAJFjdGSMyB3Hfis6b/YVavCHssgq2A/yFl8ixiiGibTsYDuVQ8DvVit4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=NrtdTcsM; arc=none smtp.client-ip=205.220.168.131
+	bh=CDu6+qHa5CFOZbCVU1px35L8FPvNvKR8rW9VI1y+cMY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=NU4lGdq4JprVjHGW3hoo8GLQMb5FPMVHGa/6SPd30pVR0Iw0QX6UQT+80gQ2jADKy7VKxlyMuOUDVT0L0FSbD921xwir2ztfaA87rDGbtpVJBHlIi8UGvmaX4hmZQQteDpGGgBr5sMYFmikwgaNcprUriZrUCnNlvs2RHmegS+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=P2B9uNak; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="NrtdTcsM"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 446DTWdP028201;
-	Mon, 6 May 2024 17:39:53 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="P2B9uNak"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 446FkRhW031567;
+	Mon, 6 May 2024 17:39:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=qcppdkim1; bh=8CMMM3Q3bnHM99F+R/CB
-	fZNdms2W8A1FK7FOk9RBH1c=; b=NrtdTcsMyo50Ek0yP81nUBoKg4mHSq3snFTM
-	ec9blhD4Q8LvAUIb0LDL+CNwZ7jmfTKmLdfdCHZ9LYO8gHRWD5iF5GbuKPfQU+IR
-	FJi1Rj5wmQIiVx43LBH8CbZrMq5U3RbQ4VO/bwtM3vPUX9+M0Wr8cWUpdp6F7uEh
-	HwVWKTo1taIE5jouXmKpqqeP9TaPKZjXoU7/4uHYn36NV0B6GT0DXaTzj2nArpQz
-	2o26QPX2zEDnuY6OjDw4SBlEK7fljvGjNXV/rya23nzrfedJWp4M6+kMmU4nQy+s
-	BuI8FLUXotYStV7CBHrTf1IiZJAq4gpv79VyaEjETmvzeSbS5A==
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding; s=qcppdkim1; bh=KGqyLJV
+	Rs+k0t+QFxgCMqQGSimOvNzV+z3kV3M+YKcc=; b=P2B9uNakblHOwmcOPiq0VWj
+	IxZP67OZuIak2t/nloMWCjJABkFwCI+XQGOQ1DiBnBhRViMJdsEiTkHzDZjapn2r
+	XOcggwWzrQEUOY6a+O0ZhLJC8FXBRJsdbip2ER5fhIcX+dlG2gjiGF0oFF69J7sA
+	OqHVNeMqk112iBtqW+psNkAyE226RLxv9pTL+s6LhGwfhUE1FD2ztZAvAGJrJmyi
+	TbbXZXD/VXYLHNrYe4msDn3BLtoEjmapsKJUDYcw/NrEEVJvFO1OsaTDwB2EFynC
+	TcoVYmY4iHivkpYFy6rozirXVyxTxMVYknPBhwL2xtWWIkmMlTtWzP0D4P96OnA=
+	=
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xxw9a8y4h-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xxw38s02n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 May 2024 17:39:53 +0000 (GMT)
+	Mon, 06 May 2024 17:39:55 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 446HdmWo009724;
-	Mon, 6 May 2024 17:39:48 GMT
+	by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 446HdnnX009741;
+	Mon, 6 May 2024 17:39:52 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3xwe3k9tvm-1
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3xwe3k9twe-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 May 2024 17:39:48 +0000
+	Mon, 06 May 2024 17:39:52 +0000
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 446HdmbE009719;
-	Mon, 6 May 2024 17:39:48 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 446HdqUU009773;
+	Mon, 6 May 2024 17:39:52 GMT
 Received: from hu-devc-blr-u22-a.qualcomm.com (hu-hprem-blr.qualcomm.com [10.190.108.75])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 446HdmgD009718
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 446HdqtB009771
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 06 May 2024 17:39:48 +0000
+	Mon, 06 May 2024 17:39:52 +0000
 Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 4146166)
-	id 87D1A4114D; Mon,  6 May 2024 23:09:47 +0530 (+0530)
+	id 002ED41501; Mon,  6 May 2024 23:09:50 +0530 (+0530)
 From: Harshitha Prem <quic_hprem@quicinc.com>
 To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Harshitha Prem <hprem@qti.qualcomm.com>
-Subject: [PATCH v3 0/8] wifi: ath12k: Introduce device group abstraction
-Date: Mon,  6 May 2024 23:09:35 +0530
-Message-Id: <20240506173943.1747037-1-quic_hprem@quicinc.com>
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+        Harshitha Prem <quic_hprem@quicinc.com>
+Subject: [PATCH v3 4/8] wifi: ath12k: Introduce QMI firmware ready flag
+Date: Mon,  6 May 2024 23:09:39 +0530
+Message-Id: <20240506173943.1747037-5-quic_hprem@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240506173943.1747037-1-quic_hprem@quicinc.com>
+References: <20240506173943.1747037-1-quic_hprem@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -65,111 +71,88 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: MEjtt7VICiLJj4pflqpQ5yTzfpCAWcSk
-X-Proofpoint-ORIG-GUID: MEjtt7VICiLJj4pflqpQ5yTzfpCAWcSk
+X-Proofpoint-GUID: 59QWVy-39fyNC2y9vvplObd30victgCr
+X-Proofpoint-ORIG-GUID: 59QWVy-39fyNC2y9vvplObd30victgCr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
  definitions=2024-05-06_12,2024-05-06_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- lowpriorityscore=0 phishscore=0 mlxscore=0 suspectscore=0 impostorscore=0
- priorityscore=1501 bulkscore=0 mlxlogscore=714 spamscore=0 adultscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2404010003 definitions=main-2405060126
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ impostorscore=0 spamscore=0 phishscore=0 bulkscore=0 clxscore=1015
+ mlxlogscore=817 priorityscore=1501 lowpriorityscore=0 mlxscore=0
+ malwarescore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2404010003 definitions=main-2405060126
 
-From: Harshitha Prem <hprem@qti.qualcomm.com>
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 
-To support multi-link operation, multiple devices with different bands say
-2 GHz or 5 GHz or 6 GHz can be combined together as a group and provide
-an abstraction to mac80211.
+When hardware device group abstraction is introduced, QMI firmware
+ready event of different devices in a group can be received simultaneously.
 
-Device group abstraction - when there are multiple devices that are
-connected by any means of communication interface between them, then these
-devices can be combined together as a single group using a group id to form
-a group abstraction. In ath12k driver, this abstraction would be named as
-ath12k_hw_group (ag).
+To indicate firmware ready event is completed for a particular device in a
+group set a flag (ATH12K_FLAG_QMI_FW_READY_COMPLETE). This would be
+helpful when hardware recovery is introduced for hardware device group
+abstraction.
 
-Please find below illustration of device group abstraction with two
-devices.
+Add changes to set/unset ATH12K_FLAG_QMI_FW_READY_COMPLETE flag for a
+device.
 
-                 Grouping of multiple devices (in future)
-+------------------------------------------------------------------------+
-|  +-------------------------------------+       +-------------------+   |
-|  |   +-----------+ | | +-----------+   |       |   +-----------+   |   |
-|  |   | ar (2GHz) | | | | ar (5GHz) |   |       |   | ar (6GHz) |   |   |
-|  |   +-----------+ | | +-----------+   |       |   +-----------+   |   |
-|  |          ath12k_base (ab)           |       | ath12k_base (ab)  |   |
-|  |         (Dual band device)          |       |                   |   |
-|  +-------------------------------------+       +-------------------+   |
-|                 ath12k_hw_group (ag) based on group id                 |
-+------------------------------------------------------------------------+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Say for example, device 1 has two radios (2 GHz and 5 GHz band) and
-device 2 has one radio (6 GHz).
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/core.h |  1 +
+ drivers/net/wireless/ath/ath12k/qmi.c  | 12 +++++++++---
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-In existing code -
-        device 1 will have two hardware abstractions hw1 (2 GHz) and hw2
-        (5 GHz) will be registered separately to mac80211 as phy0 and phy1
-        respectively. Similarly, device 2 will register its hw (6GHz) as
-        phy2 to mac80211.
-
-In future, with multi-link abstraction
-
-        combination 1 - Different group id for device1 and device 2
-                Device 1 will create a single hardware abstraction hw1
-                (2 GHz and  5 GHz) and will be registered to mac80211 as
-                phy0. similarly, device 2 will register its hardware
-                (6 GHz) to mac80211 as phy1.
-
-        combination 2 - Same group id for device1 and device 2
-                Both device details are combined together as a group, say
-                group1, with single hardware abstraction of radios 2 GHz,
-                5 GHz and 6 GHz band details and will be registered to
-                mac80211 as phy0.
-
-Add base infrastructure changes to add device grouping abstraction with
-a single device.
-
-This patch series brings the base code changes with following order:
-        1. Refactor existing code which would facilitate in introducing
-           device group abstraction.
-        2. Create a device group abstraction during device probe.
-        3. Start the device group only after QMI firmware ready event is
-           received for all the devices that are combined in the group.
-        4. Move the hardware abstractions (ath12k_hw - ah) from device
-           (ath12k_base - ab) to device group abstraction (ag) as it would
-           ease in having different combinations of group abstraction that
-           can be registered to mac80211.
-
-
-v3: 
-  - Removed depends-on tag of "wifi: ath12k: Refactor the hardware recovery
-    procedures" as it is merged to ToT
-  - Addressed the deadlock warning seen during rmmod.
-
-v2:
- - Rebased to ToT
-
-
-Karthikeyan Periyasamy (8):
-  wifi: ath12k: Refactor core start api
-  wifi: ath12k: Add helpers to get or set ath12k_hw
-  wifi: ath12k: Add ath12k_get_num_hw api
-  wifi: ath12k: Introduce QMI firmware ready flag
-  wifi: ath12k: move ATH12K_FLAG_REGISTERED flag set to mac_register api
-  wifi: ath12k: Introduce device group abstraction
-  wifi: ath12k: refactor core start based on hardware group
-  wifi: ath12k: move ath12k_hw from per soc to group
-
- drivers/net/wireless/ath/ath12k/core.c | 433 +++++++++++++++++++++----
- drivers/net/wireless/ath/ath12k/core.h |  87 ++++-
- drivers/net/wireless/ath/ath12k/mac.c  | 108 ++++--
- drivers/net/wireless/ath/ath12k/mac.h  |   9 +-
- drivers/net/wireless/ath/ath12k/pci.c  |   2 +
- drivers/net/wireless/ath/ath12k/qmi.c  |  10 +-
- 6 files changed, 534 insertions(+), 115 deletions(-)
-
-
-base-commit: 2c4d8e19cf060744a9db466ffbaea13ab37f25ca
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 49ff408d6db1..4736d1afa0c7 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -210,6 +210,7 @@ enum ath12k_dev_flags {
+ 	ATH12K_FLAG_HTC_SUSPEND_COMPLETE,
+ 	ATH12K_FLAG_CE_IRQ_ENABLED,
+ 	ATH12K_FLAG_EXT_IRQ_ENABLED,
++	ATH12K_FLAG_QMI_FW_READY_COMPLETE,
+ };
+ 
+ enum ath12k_monitor_flags {
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index 3bb730326a02..19a03cf8c391 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -3023,6 +3023,8 @@ void ath12k_qmi_firmware_stop(struct ath12k_base *ab)
+ {
+ 	int ret;
+ 
++	clear_bit(ATH12K_FLAG_QMI_FW_READY_COMPLETE, &ab->dev_flags);
++
+ 	ret = ath12k_qmi_wlanfw_mode_send(ab, ATH12K_FIRMWARE_MODE_OFF);
+ 	if (ret < 0) {
+ 		ath12k_warn(ab, "qmi failed to send wlan mode off\n");
+@@ -3320,7 +3322,7 @@ static void ath12k_qmi_driver_event_work(struct work_struct *work)
+ 			break;
+ 		case ATH12K_QMI_EVENT_FW_READY:
+ 			clear_bit(ATH12K_FLAG_QMI_FAIL, &ab->dev_flags);
+-			if (test_bit(ATH12K_FLAG_REGISTERED, &ab->dev_flags)) {
++			if (test_bit(ATH12K_FLAG_QMI_FW_READY_COMPLETE, &ab->dev_flags)) {
+ 				if (ab->is_reset)
+ 					ath12k_hal_dump_srng_stats(ab);
+ 				queue_work(ab->workqueue, &ab->restart_work);
+@@ -3330,8 +3332,12 @@ static void ath12k_qmi_driver_event_work(struct work_struct *work)
+ 			clear_bit(ATH12K_FLAG_CRASH_FLUSH,
+ 				  &ab->dev_flags);
+ 			clear_bit(ATH12K_FLAG_RECOVERY, &ab->dev_flags);
+-			ath12k_core_qmi_firmware_ready(ab);
+-			set_bit(ATH12K_FLAG_REGISTERED, &ab->dev_flags);
++			ret = ath12k_core_qmi_firmware_ready(ab);
++			if (!ret) {
++				set_bit(ATH12K_FLAG_QMI_FW_READY_COMPLETE,
++					&ab->dev_flags);
++				set_bit(ATH12K_FLAG_REGISTERED, &ab->dev_flags);
++			}
+ 
+ 			break;
+ 		default:
 -- 
 2.17.1
 
