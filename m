@@ -1,79 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66DB47EF0C;
-	Tue,  7 May 2024 23:50:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01AA43D9E
+	for <linux-wireless@vger.kernel.org>; Wed,  8 May 2024 00:21:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715125831; cv=none; b=gBA8ifRfXyOMvnL5unzoVpZrcPf2cpaPeKAi+zOuuKULcJ2rh5qjz0AFarh9NQEmE4PpoTnhEyMWMSZh8vb4acmb6X1R+PPgyJuRj4KOiu1lJu+1ZsxEVj5KJ+vqDm7YknSumiisE3l3v0ckKheAwYG7YgLAWmv6xKGkl3ZdDbc=
+	t=1715127672; cv=none; b=VidpxKiRXIiqU+R60T/3L/LwdzNjcr648Ao6BT/ZBDd648ol4c7GOgis+Yg0c8SDjB2KcMjpzcWlMeYFhVjlhJy14I7F+zC+zlYJGsd5ToucWKm/2f85lq1LHY1WjuAwJMN3VyK0pOe+eRo5v2TATHKbXyIIN66lUlc4scaxJc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715125831; c=relaxed/simple;
-	bh=AuNMNu8cR7OOK42j3E5iQrR8P6Yee/2/ItRdzr5XcYc=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=OR1p4/isMOJqclxwPNtf8xU8ZJvZ/jjTBjhZKwU+7h/mARAsoWG1be4mb9dXTcMDqWzJ28mW/GEA3Qi817EqssIB+uY5NSK3C2YnpsJ7Aw6jtlSWh4ftUaRzxQ/8sNNQ8Gzy1tkvbQ0mRognUpCbB7V71/KHUJAh/Pi6i/RnRRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W/iZRA1d; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1715127672; c=relaxed/simple;
+	bh=+egyaEC0O1oSiW6ZuDmjv0GeKjZaGmnpD850PuScPNM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WoSVDLzWfJfYKroqiyZ5PRNqSLdcWRp97n31Ky0h2EnpAVTih2R3hDuwBUX8qBPae6IZJBZ3B3bi2WngRn2yef5kw41XSCTfqB+/2fDopXauecSbQS47ohMEuBQ5G0ZSWXxRY08nmwNxbI6Ta8BklEorVJHuQDqbsF+DpaJfzmc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ToR3mgS0; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W/iZRA1d"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8A340C3277B;
-	Tue,  7 May 2024 23:50:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715125830;
-	bh=AuNMNu8cR7OOK42j3E5iQrR8P6Yee/2/ItRdzr5XcYc=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=W/iZRA1dENP1WHj6QOzzQEnw7Yh7qMhAfrEzD9WvMeVYx2DfhlmdPNXGlzpz8i0pz
-	 4I1aBqn1phD+71TPf3ca1gNn+fylZi7m+G2XKLa4+EWPrkZ5pQNyTl9gYjBlyok1xU
-	 yJoqCm86EXkOQnYJbim/Jg9QRKKoOc49OWlBxPr2pQ4cATObwgxAytdvyDUpYdG6di
-	 ug8KbtAizq1shZM+TllEO+YJq7Mk52W6M769gIREvJxNUWBX70eUGHOnavY4gni4Ky
-	 BsqsXedP/7drNDDhRCu7DZJAORyZdE3zoGNODNK80aeR5Nf69QJEhXPWc3OEXDJO7Z
-	 JTaAsCOZNFRSQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 78662C43617;
-	Tue,  7 May 2024 23:50:30 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ToR3mgS0"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 447NUclq014251;
+	Wed, 8 May 2024 00:21:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type; s=qcppdkim1; bh=wh0y/FJJ4aZ/ETBd07+M
+	d2EicPjVyvquEG3Q/h2Tbkc=; b=ToR3mgS0v8xnTamZQSXqdNgjDcerS+Ft2ECR
+	i8qmVjfd70SEaohVldS5xLcMfVcj0LRhWWGNVDgZkzPs4wCr+fQBFZdw0fQOZ9px
+	VyFwG5Py7Vmb+dVY0GelFbSBTvA1FHXHgW9+l8SpN+AOdlRiy075b7X5FNo0ouM/
+	1+jqRxJE58JhNe0aBkwitnJoKyxsvCXk93G6kre4RLbRUMR+cKs8kYmRuxvY4W4L
+	9K0SGxHtdueLMbaCLTgBiwxIPqqr+9AktBxTEKR15DxHtghpVs/JUP2w1nekL6Oc
+	75w+QhCOR4HgYfFddnZic55pM4cOunPguTBXiuBC/RUFUbHXMQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xysg40kut-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 08 May 2024 00:21:08 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4480L70E032577
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 8 May 2024 00:21:07 GMT
+Received: from pradeepc2-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 7 May 2024 17:21:07 -0700
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>
+Subject: [PATCH V4 06/10] wifi: ath12k: fix TX and RX MCS rate configurations in HE mode
+Date: Tue, 7 May 2024 17:20:51 -0700
+Message-ID: <20240508002055.17705-7-quic_pradeepc@quicinc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240508002055.17705-1-quic_pradeepc@quicinc.com>
+References: <20240508002055.17705-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] nfc: nci: Fix kcov check in nci_rx_work()
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <171512583048.28510.14119936834012020359.git-patchwork-notify@kernel.org>
-Date: Tue, 07 May 2024 23:50:30 +0000
-References: <6d10f829-5a0c-405a-b39a-d7266f3a1a0b@I-love.SAKURA.ne.jp>
-In-Reply-To: <6d10f829-5a0c-405a-b39a-d7266f3a1a0b@I-love.SAKURA.ne.jp>
-To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Cc: ryasuoka@redhat.com, jeremy@jcline.org, krzysztof.kozlowski@linaro.org,
- davem@davemloft.net, syzbot+0438378d6f157baae1a2@syzkaller.appspotmail.com,
- edumazet@google.com, kuba@kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org, pabeni@redhat.com,
- syzkaller-bugs@googlegroups.com, nogikh@google.com, andreyknvl@gmail.com,
- johannes@sipsolutions.net, dvyukov@google.com
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: P2MH6sPQcl6nJG_OVOSjlwsir0lsrVAp
+X-Proofpoint-ORIG-GUID: P2MH6sPQcl6nJG_OVOSjlwsir0lsrVAp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-05-07_16,2024-05-06_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
+ spamscore=0 mlxlogscore=999 impostorscore=0 mlxscore=0 lowpriorityscore=0
+ clxscore=1015 malwarescore=0 priorityscore=1501 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405010000
+ definitions=main-2405080001
 
-Hello:
+Currently, the TX and RX MCS rate configurations per peer are
+reversed when sent to the firmware. As a result, RX MCS rates
+are configured for TX, and vice versa. This commit rectifies
+the configuration to match what the firmware expects.
 
-This patch was applied to netdev/net.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-On Sun, 5 May 2024 19:36:49 +0900 you wrote:
-> Commit 7e8cdc97148c ("nfc: Add KCOV annotations") added
-> kcov_remote_start_common()/kcov_remote_stop() pair into nci_rx_work(),
-> with an assumption that kcov_remote_stop() is called upon continue of
-> the for loop. But commit d24b03535e5e ("nfc: nci: Fix uninit-value in
-> nci_dev_up and nci_ntf_packet") forgot to call kcov_remote_stop() before
-> break of the for loop.
-> 
-> [...]
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/wmi.c | 4 ++--
+ drivers/net/wireless/ath/ath12k/wmi.h | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Here is the summary with links:
-  - nfc: nci: Fix kcov check in nci_rx_work()
-    https://git.kernel.org/netdev/net/c/19e35f24750d
-
-You are awesome, thank you!
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 7a52d2082b79..376d81c7550d 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -2112,8 +2112,8 @@ int ath12k_wmi_send_peer_assoc_cmd(struct ath12k *ar,
+ 		he_mcs->tlv_header = ath12k_wmi_tlv_cmd_hdr(WMI_TAG_HE_RATE_SET,
+ 							    sizeof(*he_mcs));
+ 
+-		he_mcs->rx_mcs_set = cpu_to_le32(arg->peer_he_rx_mcs_set[i]);
+-		he_mcs->tx_mcs_set = cpu_to_le32(arg->peer_he_tx_mcs_set[i]);
++		he_mcs->rx_mcs_set = cpu_to_le32(arg->peer_he_tx_mcs_set[i]);
++		he_mcs->tx_mcs_set = cpu_to_le32(arg->peer_he_rx_mcs_set[i]);
+ 		ptr += sizeof(*he_mcs);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 161e0ab5efe8..97500195ca85 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -3886,7 +3886,9 @@ struct ath12k_wmi_vht_rate_set_params {
+ 
+ struct ath12k_wmi_he_rate_set_params {
+ 	__le32 tlv_header;
++	/* MCS at which the peer can receive */
+ 	__le32 rx_mcs_set;
++	/* MCS at which the peer can transmit */
+ 	__le32 tx_mcs_set;
+ } __packed;
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.17.1
 
