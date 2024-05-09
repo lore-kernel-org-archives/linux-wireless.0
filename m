@@ -1,122 +1,83 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 961B11A2C37;
-	Thu,  9 May 2024 07:59:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED0DA14A0BE
+	for <linux-wireless@vger.kernel.org>; Thu,  9 May 2024 09:07:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715241567; cv=none; b=hq1A+yMUGq4iuAS1yshQeG7ovE1XJeFtXqsV3x0hUAhpnyS1aljgUS8HIwnzPAOlJAwwjHBcF5AZoDgh4lMTrBnoCQNGWfYn/Ta9lo9092Hh0FUJf2nZAdLA78lZj3dwqG9jT7oFNQat0Ywf7TxsInVNsBIv7aUclm9LyWp87eU=
+	t=1715245632; cv=none; b=lZvjMvF8PzxXBbNpcuLhRMQ3I3gIqizKmm/N+nfqX+WoZp1V3D4D6cGRX7q5J+c+a0rKSnjI15SUGkWQ+It+nzfpjvZFJkA/VBlZvuF0rushGTIWG1wqCCIaveh7g8fliy8j7Vjfmey9aUCBWaDGkpBB4nZo5MnJEBJP1cBuulU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715241567; c=relaxed/simple;
-	bh=j1fYyZ9BekfWCAvIhL5f+MAVLok5fQykKrvz7StbT4Y=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=pqzjrIpdw01iie//yW/HVj7KDeV3YMkNHNB5Ki0jcLXXaCW5zTHLi++r2VwKaDi4YtCxmlB1io2y6/HYZH8T4aJt63MxLReRsOgt7qriIV7NFRgdN4FJ4P3q4Z9JuLVw597IODqVG69KW7NeqLe78mO/TYSn/Uw/Uz5f+3tiItk=
+	s=arc-20240116; t=1715245632; c=relaxed/simple;
+	bh=Q41lfe0obyzX/FTezyS3IXQURC/xFvpvzfJ+W4UIwJ8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=q5CignNi2zZp6N7vhUWHp1pgRQ/JZ4xyABRIs9uQ5y0hEZiFDc/HMA8W2GnbHosMl+iKB4nUM9WI/ANUZ71xx+89DHn3D0/AKPDjUWWXunjAKHDoXFfyXS4WVdgn3qEWjJAyC17/sxLVs9U6Zz3Cl94tHD2vPL+wnyOf6Cz2E/A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4497x2Ax91364205, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4497x2Ax91364205
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 9 May 2024 15:59:02 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 9 May 2024 15:59:02 +0800
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4499773b81425565, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4499773b81425565
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Thu, 9 May 2024 17:07:07 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 9 May 2024 15:59:02 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::1a1:9ae3:e313:52e7]) by
- RTEXMBS04.realtek.com.tw ([fe80::1a1:9ae3:e313:52e7%5]) with mapi id
- 15.01.2507.035; Thu, 9 May 2024 15:59:02 +0800
+ 15.1.2507.35; Thu, 9 May 2024 17:07:08 +0800
+Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Thu, 9 May
+ 2024 17:07:07 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Breno Leitao <leitao@debian.org>
-CC: Kalle Valo <kvalo@kernel.org>, "leit@meta.com" <leit@meta.com>,
-        "open
- list:REALTEK WIRELESS DRIVER (rtw89)" <linux-wireless@vger.kernel.org>,
-        "open
- list" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH wireless] wifi: rtw89: Un-embed dummy device
-Thread-Topic: [PATCH wireless] wifi: rtw89: Un-embed dummy device
-Thread-Index: AQHalnSYD4Tb/iMnEk2tnRSMUSm6/rF4e3YAgAACc82AAAD0RYAAAhhAgBWWcwCAAIefEA==
-Date: Thu, 9 May 2024 07:59:01 +0000
-Message-ID: <acf2f82e7f424776835ffbc1f52ba996@realtek.com>
-References: <20240424182351.3936556-1-leitao@debian.org>
- <f46ae94488d1468e9a9a669320e4cfb9@realtek.com> <87ttjqgf2r.fsf@kernel.org>
- <87mspigex0.fsf@kernel.org> <acda4194c8d44690b05b83adccb3aa22@realtek.com>
- <Zjx/sKB++v8FJMXx@gmail.com>
-In-Reply-To: <Zjx/sKB++v8FJMXx@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To: <linux-wireless@vger.kernel.org>
+CC: <kevin_yang@realtek.com>
+Subject: [PATCH 0/4] wifi: rtw89: adjust security CAM, mac80211_ops and mac_id for coming MLO
+Date: Thu, 9 May 2024 17:06:42 +0800
+Message-ID: <20240509090646.35304-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-KSE-ServerInfo: RTEXH36505.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-Breno Leitao <leitao@debian.org> wrote:
->=20
-> On Thu, Apr 25, 2024 at 06:15:21AM +0000, Ping-Ke Shih wrote:
-> > Kalle Valo <kvalo@kernel.org> wrote:
-> > > Kalle Valo <kvalo@kernel.org> writes:
-> > >
-> > > > Ping-Ke Shih <pkshih@realtek.com> writes:
-> > > >
-> > > >> Breno Leitao <leitao@debian.org> wrote:
-> > > >>> Embedding net_device into structures prohibits the usage of flexi=
-ble
-> > > >>> arrays in the net_device structure. For more details, see the dis=
-cussion
-> > > >>> at [1].
-> > > >>>
-> > > >>> Un-embed the net_device from the private struct by converting it
-> > > >>> into a pointer. Then use the leverage the new alloc_netdev_dummy(=
-)
-> > > >>> helper to allocate and initialize dummy devices.
-> > > >>>
-> > > >>> [1] https://lore.kernel.org/all/20240229225910.79e224cf@kernel.or=
-g/
-> > > >>>
-> > > >>> Signed-off-by: Breno Leitao <leitao@debian.org>
-> > > >>
-> > > >> I think this patch should go via net-next tree, because wireless-n=
-ext tree
-> > > >> doesn't have patch of dummy devices yet.
-> > > >>
-> > > >> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-> > > >
-> > > > FWIW I sent the wireless-next pull request yesterday and once it pu=
-lled
-> > > > we will fast forward wireless-next to latest net-next.
-> > >
-> > > Oh, I just realised that this is not CCed to netdev so their patchwor=
-k
-> > > won't even see the patch. Ping, I recommend that you wait for the
-> > > dependency commits to trickle down to your tree and then apply the
-> > > patch. That's the simplest approach and no need to resend anything.
-> >
-> > Okay. If we don't hurry to get this patch merged, I will apply this pat=
-ch
-> > to my tree.
->=20
-> There is no hurry to get this patch merged.
+Originally rtw89 design is to WiFi 6 chips, and things are limit to single
+link (i.e. deflink). The security CAM is used to install keys, which one
+CAM entry can share to multiple links (the same MLD), so we adjust to
+maintain the CAM as a common pool, instead of binding to address CAM that
+belongs to single link.
 
-I merged this patch today.=20
+Also adjust use of bss_info_changed to vif_cfg_changed/link_info_changed,
+which are still compatible to existing ones.
 
->=20
-> Out of curiosity, why don't you rebase your tree to net-next/linux-next
-> frequently?
+MAC_ID is to represent an instance ID of a link, so more than one MAC_ID
+are used by a MLD. However, assignment of MAC_ID for links of a MLD should
+follow rules of hardware design (MAC_ID of 2nd link = MAC_ID of 1st link
++ 16). Prepare supported number of MAC_ID in chip_info.
 
-My tree goes to wireless-next, so I think it should be always based on
-wireless-next. Once wirelss-next rebase (ff-merge) net-next, my tree will
-have them also.=20
+Zong-Zhe Yang (4):
+  wifi: rtw89: ser: avoid multiple deinit on same CAM
+  wifi: rtw89: cam: tweak relation between sec CAM and addr CAM
+  wifi: rtw89: switch to register vif_cfg_changed and link_info_changed
+  wifi: rtw89: support mac_id number according to chip
 
+ drivers/net/wireless/realtek/rtw89/cam.c      | 79 ++++++++++++-------
+ drivers/net/wireless/realtek/rtw89/core.c     | 48 ++++++-----
+ drivers/net/wireless/realtek/rtw89/core.h     |  5 +-
+ drivers/net/wireless/realtek/rtw89/debug.c    | 16 ++--
+ drivers/net/wireless/realtek/rtw89/mac.c      |  7 +-
+ drivers/net/wireless/realtek/rtw89/mac80211.c | 42 ++++++----
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |  1 +
+ drivers/net/wireless/realtek/rtw89/rtw8922a.c |  1 +
+ drivers/net/wireless/realtek/rtw89/ser.c      |  8 +-
+ 12 files changed, 134 insertions(+), 76 deletions(-)
+
+-- 
+2.25.1
 
