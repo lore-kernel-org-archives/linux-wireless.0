@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5DB4381AD
-	for <linux-wireless@vger.kernel.org>; Sun, 12 May 2024 12:25:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF12240BF5
+	for <linux-wireless@vger.kernel.org>; Sun, 12 May 2024 12:25:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715516730; cv=none; b=prAlSSDkWpRrtaGUxFIimf2EcM5aEZlRGQLw4FUjt01zz4C/fED+a5bKsfvnh5IGJH7eempveq5lz4wK9kk1szhELTC53/pQzimB3cveN7+fRgHx5m6TZe17qxXBc/vx2zIYjE+MNixG9h+7aQR9etkvSDvI3MJ2L5aj2En+guk=
+	t=1715516733; cv=none; b=RDS9VWXuIJd0uPWqK1FpNHgWAJ/SxiO6enZSazNLYdHIDRXGOFsbAsywGO7UgZNPdp51+1lCeLG5rrfk3Ba2vxKXxJbJnqMahZ/HS29YbeYlmYjthwQlwMbLo1sS/QBMW6dXVOxuduHvUhjdYi89Z6TH4J/IN+mF6D2T/RligNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715516730; c=relaxed/simple;
-	bh=VS4KftS/w5xGxn/PIPGafOo8FOkHdaNZ2ljk72Xxyw8=;
+	s=arc-20240116; t=1715516733; c=relaxed/simple;
+	bh=Y3KhncoxmJfTmEP4bSlXsTRuAqNsseaI1cwMpqga0to=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=u79JkqCD3ZLJ9+CIc6ARGQw882voLtMGcBEO5wKzLbWYhFJ72nutGbc+4OP8PH9kPv/NBrZV2ucZIbUmvhBO5VNU2nnpyf1RZu9MWPHef2DN4AQgAXRMEVanqkUoJwEGOODimQr8Fpg1NUehIu/ba7ZGDGO2YgHLe/0uEefjdsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HDnTdBT6; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=g1E4VboHF3E9Uybu1CQ19cD9xo1MOTTUSQG7RLnCDir2WgwnE+WFiGghi2zxjNYlRBhNf+Zn6hS4L6+1BqAG0ekC9YjB6mNbW0Nz/cM4T101YjS1Pt8Lv68yZ/4ziVH8mhWnvRdht/fC1zPVW1ozBJMTppiWUYjO64omOTvbRdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Tf+spuVb; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HDnTdBT6"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tf+spuVb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715516729; x=1747052729;
+  t=1715516731; x=1747052731;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=VS4KftS/w5xGxn/PIPGafOo8FOkHdaNZ2ljk72Xxyw8=;
-  b=HDnTdBT63CGkFiT0wzr/QQr4seRltyDzx8jfdv7HIqnqum8Le7eh7OMF
-   ghobFM2n34H9H7wU1GEAUkYpkOoQMyUfEJeuxbMTyieLhwbw6Y0w3N+pA
-   oTcnxlQOydRUMPwvWdOQtw7oCSQWXbIHflp7Lef48CgGiEDbQngdxV9AJ
-   KHYq4YafSOM+27pAzjTfhNF/CKymg6bUj8vMe4wjGFpvGNq2FIP8G5tXV
-   r8Tjwed6CRO/TanY7cJHq9QX1rWmeQoEXyNq/Nh7wjt89QLDEAcjCcj6J
-   /jR3lslTNVXKvVb9+/DNN4ls7B13I3o5CxW/clRmeQHg9JECyy1YP0rQE
-   Q==;
-X-CSE-ConnectionGUID: jqLt4oHNTPu/Yl4uy7bZ6g==
-X-CSE-MsgGUID: bJLnoxpySsOvIvFlGvc5pA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11071"; a="11397210"
+  bh=Y3KhncoxmJfTmEP4bSlXsTRuAqNsseaI1cwMpqga0to=;
+  b=Tf+spuVb80IIS5KL3NsTzdAw88FBznXqmzTsl170IXXtO+DjdbCKyGkp
+   XfbvkR6WBvBHCIXgXi7a4kMdvjJ5s/dPgnzkF7RTPC4vAsXewaS6p0w3X
+   FO7PN+GEpxMAygqJJc+OIe4FyKGwfLbimGDpeb3TvHAxeEdQqo8Vqj0Gx
+   X1BRGnWfooVFupo+/eFSoR0Q+T2nuGnDpTCsuUHKOQ5RYRAlCxbIM6fCO
+   kKfQxsYuuV5vFPuxXg2PB3+Ytl8PJjF/2WfTnkXqVHeUWC2+rgOcaCYx5
+   hlTX6G8aX/e0KYKyfdRHYI5Vbs34h78gOAABbpOJOwwsBB0dJ2MtC1rv5
+   w==;
+X-CSE-ConnectionGUID: ZL3AFpnTTGWN/Evei4dkbQ==
+X-CSE-MsgGUID: VhEpo7tuQOiEp+iZ2t6SGg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11071"; a="11397216"
 X-IronPort-AV: E=Sophos;i="6.08,155,1712646000"; 
-   d="scan'208";a="11397210"
+   d="scan'208";a="11397216"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2024 05:25:28 -0700
-X-CSE-ConnectionGUID: wBTIQFBPRqa/MR8H5wISYA==
-X-CSE-MsgGUID: 2+tFrilmTCGTYPtMwSZsdw==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2024 05:25:31 -0700
+X-CSE-ConnectionGUID: 9CpQygJNQNyOL8MXAz2imQ==
+X-CSE-MsgGUID: DXL8S4D5SeGr/D8YWQE2Ig==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.08,155,1712646000"; 
-   d="scan'208";a="34761333"
+   d="scan'208";a="34761340"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2024 05:25:28 -0700
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2024 05:25:31 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/14] wifi: iwlwifi: kill iwl-eeprom-read
-Date: Sun, 12 May 2024 15:25:02 +0300
-Message-Id: <20240512152312.72f4bf256c8d.I7433bda9b0fc9eece5210db2cb90c2f03973f5ec@changeid>
+	Shaul Triebitz <shaul.triebitz@intel.com>
+Subject: [PATCH 11/14] wifi: iwlwifi: mvm: always set the TWT IE offset
+Date: Sun, 12 May 2024 15:25:04 +0300
+Message-Id: <20240512152312.eb27175c345a.If30ef24aba10fe47fd42a7a9703eb8903035e294@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240512122507.3812527-1-miriam.rachel.korenblit@intel.com>
 References: <20240512122507.3812527-1-miriam.rachel.korenblit@intel.com>
@@ -62,163 +62,67 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-This is used by dvm only, move to dvm.
+In beacon template version 14, make sure to always set
+the TWT IE offset before sending the beacon template command,
+also in the debugfs inject_beacon_ie path.
+If the TWT IE does not exist, the offset will be set to zero.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: bf0212fd8faa ("wifi: iwlwifi: mvm: add beacon template version 14")
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/Makefile          |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/Makefile      |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/agn.h         |  4 +++-
- .../iwlwifi/{iwl-eeprom-read.c => dvm/eeprom.c}      |  5 ++---
- drivers/net/wireless/intel/iwlwifi/dvm/main.c        |  4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h | 12 ------------
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c         |  3 +--
- 7 files changed, 10 insertions(+), 22 deletions(-)
- rename drivers/net/wireless/intel/iwlwifi/{iwl-eeprom-read.c => dvm/eeprom.c} (98%)
- delete mode 100644 drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 1 +
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
-index 8bb94a4c12cd..2c2c18cef9ff 100644
---- a/drivers/net/wireless/intel/iwlwifi/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/Makefile
-@@ -4,7 +4,7 @@ obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
- iwlwifi-objs		+= iwl-io.o
- iwlwifi-objs		+= iwl-drv.o
- iwlwifi-objs		+= iwl-debug.o
--iwlwifi-objs		+= iwl-eeprom-read.o iwl-eeprom-parse.o
-+iwlwifi-objs		+= iwl-eeprom-parse.o
- iwlwifi-objs		+= iwl-phy-db.o iwl-nvm-parse.o
- iwlwifi-objs		+= pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
- iwlwifi-objs		+= pcie/ctxt-info.o pcie/ctxt-info-gen3.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/Makefile b/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
-index 0486b17d7c41..2d0b6d287af4 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
-@@ -2,7 +2,7 @@
- # DVM
- obj-$(CONFIG_IWLDVM)	+= iwldvm.o
- iwldvm-objs		+= main.o rs.o mac80211.o ucode.o tx.o
--iwldvm-objs		+= lib.o calib.o tt.o sta.o rx.o
-+iwldvm-objs		+= lib.o calib.o tt.o sta.o rx.o eeprom.o
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 96c9382b98fb..7e7153220fd7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1619,6 +1619,15 @@ static int _iwl_dbgfs_inject_beacon_ie(struct iwl_mvm *mvm, char *bin, int len)
+ 					 &beacon_cmd.tim_size,
+ 					 beacon->data, beacon->len);
  
- iwldvm-objs		+= power.o
- iwldvm-objs		+= scan.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/agn.h b/drivers/net/wireless/intel/iwlwifi/dvm/agn.h
-index fefaa414272b..47d21413ba59 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/agn.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/agn.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2021 Intel Corporation
-+ * Copyright (C) 2005-2014, 2021, 2024 Intel Corporation
-  */
- #ifndef __iwl_agn_h__
- #define __iwl_agn_h__
-@@ -385,6 +385,8 @@ static inline void iwl_dvm_set_pmi(struct iwl_priv *priv, bool state)
- 	iwl_trans_set_pmi(priv->trans, state);
- }
- 
-+int iwl_read_eeprom(struct iwl_trans *trans, u8 **eeprom, size_t *eeprom_size);
++		if (iwl_fw_lookup_cmd_ver(mvm->fw,
++					  BEACON_TEMPLATE_CMD, 0) >= 14) {
++			u32 offset = iwl_mvm_find_ie_offset(beacon->data,
++							    WLAN_EID_S1G_TWT,
++							    beacon->len);
 +
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- void iwl_dbgfs_register(struct iwl_priv *priv, struct dentry *dbgfs_dir);
- #else
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c b/drivers/net/wireless/intel/iwlwifi/dvm/eeprom.c
-similarity index 98%
-rename from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-rename to drivers/net/wireless/intel/iwlwifi/dvm/eeprom.c
-index 5f386bb1a353..3972775fc133 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/eeprom.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2005-2014, 2018-2019, 2021 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2019, 2021, 2024 Intel Corporation
-  */
- #include <linux/types.h>
- #include <linux/slab.h>
-@@ -8,10 +8,10 @@
- 
- #include "iwl-drv.h"
- #include "iwl-debug.h"
--#include "iwl-eeprom-read.h"
- #include "iwl-io.h"
- #include "iwl-prph.h"
- #include "iwl-csr.h"
-+#include "agn.h"
- 
- /*
-  * EEPROM access time values:
-@@ -391,4 +391,3 @@ int iwl_read_eeprom(struct iwl_trans *trans, u8 **eeprom, size_t *eeprom_size)
- 
- 	return ret;
++			beacon_cmd.btwt_offset = cpu_to_le32(offset);
++		}
++
+ 		iwl_mvm_mac_ctxt_send_beacon_cmd(mvm, beacon, &beacon_cmd,
+ 						 sizeof(beacon_cmd));
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index f6baf7135efd..ef7ffeaf6ff2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -873,7 +873,7 @@ void iwl_mvm_mac_ctxt_set_tim(struct iwl_mvm *mvm,
+ 	}
  }
--IWL_EXPORT_SYMBOL(iwl_read_eeprom);
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index 8774dd7b921e..7bb3011e12e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1,7 +1,8 @@
- // SPDX-License-Identifier: GPL-2.0-only
- /******************************************************************************
-  *
-- * Copyright(c) 2003 - 2014, 2018 - 2022  Intel Corporation. All rights reserved.
-+ * Copyright(c) 2003 - 2014, 2018 - 2022 Intel Corporation. All rights reserved.
-+ * Copyright(c) 2024 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Deutschland GmbH
-  *
-  * Portions of this file are derived from the ipw3945 project, as well
-@@ -25,7 +26,6 @@
  
- #include <asm/div64.h>
+-static u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
++u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
+ {
+ 	struct ieee80211_mgmt *mgmt = (void *)beacon;
+ 	const u8 *ie;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 770a7098b0f9..9e967b9cb015 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1763,6 +1763,7 @@ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx);
+ void iwl_mvm_get_sync_time(struct iwl_mvm *mvm, int clock_type, u32 *gp2,
+ 			   u64 *boottime, ktime_t *realtime);
+ u32 iwl_mvm_get_systime(struct iwl_mvm *mvm);
++u32 iwl_mvm_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size);
  
--#include "iwl-eeprom-read.h"
- #include "iwl-eeprom-parse.h"
- #include "iwl-io.h"
- #include "iwl-trans.h"
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
-deleted file mode 100644
-index 63b8e6c6659b..000000000000
---- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h
-+++ /dev/null
-@@ -1,12 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
--/*
-- * Copyright (C) 2005-2014 Intel Corporation
-- */
--#ifndef __iwl_eeprom_h__
--#define __iwl_eeprom_h__
--
--#include "iwl-trans.h"
--
--int iwl_read_eeprom(struct iwl_trans *trans, u8 **eeprom, size_t *eeprom_size);
--
--#endif  /* __iwl_eeprom_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index ae8177222881..1e949b48188e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2019, 2021-2023 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2019, 2021-2024 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -10,7 +10,6 @@
- #include "iwl-csr.h"
- #include "mvm.h"
- #include "iwl-eeprom-parse.h"
--#include "iwl-eeprom-read.h"
- #include "iwl-nvm-parse.h"
- #include "iwl-prph.h"
- #include "fw/acpi.h"
+ /* Tx / Host Commands */
+ int __must_check iwl_mvm_send_cmd(struct iwl_mvm *mvm,
 -- 
 2.34.1
 
