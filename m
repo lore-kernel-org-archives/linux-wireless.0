@@ -1,54 +1,54 @@
-Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7851E5381B
-	for <linux-wireless@vger.kernel.org>; Sun, 12 May 2024 18:33:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8411F54BF4
+	for <linux-wireless@vger.kernel.org>; Sun, 12 May 2024 18:33:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715538836; cv=none; b=ceNt0E6hVouTDkfPqyOCZ8USV1uFrJ11Q8Rl2YVFLOgaGJ653F+1sf0qL30GWtyydxkWAdIraQJ33DJ05H1dq0aSmrn29mjimMIsX6+pcZNif8jn+ECCY/9+yybcaYWL5IPn3JXJKMkNs2jHYwkWKr/+LmgMJ/06nHE208+Cq1c=
+	t=1715538841; cv=none; b=BlpCTrYHT1f9OGEPjW40ZW7LlvMgTgIeZNmgfDmrO6wDzsFa+tWBTRjbqpSwOv7AwyI0dB6iuIrdqQwWd8cE6Gt2TTmBOdZYBfP+eTqcyAW7ajFm9tE5XHdMEgFz2OFePrrKDOpDBckBrJkwpwOH1BAt1Lq/PxPp86AwHOb4GTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715538836; c=relaxed/simple;
-	bh=MVESeKf3MJ+nQjkP4gqzUDpT32wTctzL+sYs7lFbLVA=;
+	s=arc-20240116; t=1715538841; c=relaxed/simple;
+	bh=ylaNEk531dAyUVCHKFQORYHipFciRfW+YC7usSyyeNw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HcL+L1NA4wEWBv4w0sOp3WKdluwEV98ZOqgxgR7wDj6MgIGD3PO1EEatqDOktz2wmR8DS4G7BdgYtiORzRKrUUia556QI0UyvTGtYYr+SPieoXq+/B0lN8ifgmF1/VFol6aSDjpbfUGLNOf8VliNXB7/8W26MjRuEAVvKQv8yqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=fldRdjLO; arc=none smtp.client-ip=198.47.19.141
+	 MIME-Version:Content-Type; b=X8eUdcxNoBophGv34SkIwe9Q1Sk9E2VllhtKAu8HLYP+xd1rPLl+GOnZlo7Ev4uTEiTr8oi/ffM5wmOVkGsH/c5/fSswginJ63imEH+aLWIJ/b3BVemcJAk+r1BCNLcrPz8BkbDtoRB/8Y+4gXEV9I4BlnVxDfS61uSP04T8Nc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=JfQmRd98; arc=none smtp.client-ip=198.47.23.248
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="fldRdjLO"
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 44CIXl92001246;
-	Sun, 12 May 2024 13:33:47 -0500
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="JfQmRd98"
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+	by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 44CIXu8V006175;
+	Sun, 12 May 2024 13:33:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1715538827;
-	bh=YFd+vIivleNG6raAa2uT/yXapJLnb8OgVcltuLUGG6w=;
+	s=ti-com-17Q1; t=1715538836;
+	bh=Hyjs0M18n/jpGUGawrzIyPk8VTLjxHGp8wb9dXrUUQM=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=fldRdjLO7Kt1segoEfdmpAwMKeTC0l1klvxpA1XrBP4yVz8bbDpe7ctXBmpjGwLrU
-	 7eFJBR+E7DpYBg65azJ7k9bySTYEhxE2/110BZDxspS5oCodIF4ivUIhs9BzGAzCry
-	 vO3fIBrEskbs5otfOmaeiXO2TLdsO5CSYSBe/y5o=
-Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
-	by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 44CIXlpW116530
+	b=JfQmRd98O7WKWe151Go199Z6bJdVv6qgk06BfT2lPE288RS4+96uiBCVQJRoXuiKV
+	 L9jP8D1zPMPZfd8/5G56GnolFDGFIFZ3+pAU6UDw5Vu46ZTocqCqoc5s7MVQNPfeuC
+	 VK+tpePr6EqN9Wr+7ZWaQO0w/Cb9LUKo7KAVA9RA=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 44CIXuRr029173
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 12 May 2024 13:33:47 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+	Sun, 12 May 2024 13:33:56 -0500
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Sun, 12
- May 2024 13:33:47 -0500
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
+ May 2024 13:33:55 -0500
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Sun, 12 May 2024 13:33:47 -0500
+ Frontend Transport; Sun, 12 May 2024 13:33:55 -0500
 Received: from localhost (uda0389739.dhcp.ti.com [137.167.1.114])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 44CIXkxP047290;
-	Sun, 12 May 2024 13:33:46 -0500
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 44CIXsbh074885;
+	Sun, 12 May 2024 13:33:55 -0500
 From: <michael.nemanov@ti.com>
 To: <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>
 CC: <sabeeh-khan@ti.com>, Michael Nemanov <Michael.Nemanov@ti.com>,
         Michael
  Nemanov <michael.nemanov@ti.com>
-Subject: [RFC PATCH 09/17] Add rx.c, rx.h
-Date: Sun, 12 May 2024 21:32:39 +0300
-Message-ID: <20240512183247.2190242-10-michael.nemanov@ti.com>
+Subject: [RFC PATCH 15/17] Add ps.c, ps.h
+Date: Sun, 12 May 2024 21:32:45 +0300
+Message-ID: <20240512183247.2190242-16-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240512183247.2190242-1-michael.nemanov@ti.com>
 References: <20240512183247.2190242-1-michael.nemanov@ti.com>
@@ -64,513 +64,160 @@ X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
 From: Michael Nemanov <Michael.Nemanov@ti.com>
 
-Code that handles parsing raw Rx data buffer from HW and, splitting
-it in to SKBs and handing them to MAC80211.
-
-Rx handling starts at cc33xx_rx. Full SKBs are stored at
-cc->deferred_rx_queue from where they are handed to MAC80211 by calling
-cc->netstack_work (cc33xx_netstack_work @ main.c). This allows
-calling ieee80211_rx_ni while new data is being read from HW.
+80211 power-save modes are handled automictically by HW but
+can be overridden here.
 
 Signed-off-by: Michael Nemanov <michael.nemanov@ti.com>
 ---
- drivers/net/wireless/ti/cc33xx/rx.c | 394 ++++++++++++++++++++++++++++
- drivers/net/wireless/ti/cc33xx/rx.h |  85 ++++++
- 2 files changed, 479 insertions(+)
- create mode 100644 drivers/net/wireless/ti/cc33xx/rx.c
- create mode 100644 drivers/net/wireless/ti/cc33xx/rx.h
+ drivers/net/wireless/ti/cc33xx/ps.c | 116 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/ps.h |  15 ++++
+ 2 files changed, 131 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.h
 
-diff --git a/drivers/net/wireless/ti/cc33xx/rx.c b/drivers/net/wireless/ti/cc33xx/rx.c
+diff --git a/drivers/net/wireless/ti/cc33xx/ps.c b/drivers/net/wireless/ti/cc33xx/ps.c
 new file mode 100644
-index 000000000000..086b3e2b6d1c
+index 000000000000..7f3d70577606
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/rx.c
-@@ -0,0 +1,394 @@
++++ b/drivers/net/wireless/ti/cc33xx/ps.c
+@@ -0,0 +1,116 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +
 +/* Copyright (C) 2022-2024 Texas Instruments Inc.*/
 +
-+#include "acx.h"
-+#include "rx.h"
++#include "ps.h"
 +#include "tx.h"
-+#include "io.h"
++#include "debug.h"
 +
-+#define RSSI_LEVEL_BITMASK	0x7F
-+#define ANT_DIVERSITY_BITMASK	BIT(7)
-+#define ANT_DIVERSITY_SHIFT		7
-+
-+/* Construct the rx status structure for upper layers */
-+static void cc33xx_rx_status(struct cc33xx *cc,
-+			     struct cc33xx_rx_descriptor *desc,
-+			     struct ieee80211_rx_status *status,
-+			     u8 beacon, u8 probe_rsp)
-+{
-+	memset(status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	if ((desc->flags & CC33XX_RX_DESC_BAND_MASK) == CC33XX_RX_DESC_BAND_BG)
-+		status->band = NL80211_BAND_2GHZ;
-+	else if ((desc->flags & CC33XX_RX_DESC_BAND_MASK) == CC33XX_RX_DESC_BAND_J)
-+		status->band = NL80211_BAND_2GHZ;
-+	else if ((desc->flags & CC33XX_RX_DESC_BAND_MASK) == CC33XX_RX_DESC_BAND_A)
-+		status->band = NL80211_BAND_5GHZ;
-+	else
-+		status->band = NL80211_BAND_5GHZ; /* todo -Should be 6GHZ when added */
-+
-+	status->rate_idx = cc33xx_rate_to_idx(cc, desc->rate, status->band);
-+
-+	if (desc->frame_format == CC33xx_VHT)
-+		status->encoding = RX_ENC_VHT;
-+	else if ((desc->frame_format == CC33xx_HT_MF) ||
-+		 (desc->frame_format == CC33xx_HT_GF))
-+		status->encoding = RX_ENC_HT;
-+	else if ((desc->frame_format == CC33xx_B_SHORT) ||
-+		 (desc->frame_format == CC33xx_B_LONG) ||
-+		(desc->frame_format == CC33xx_LEGACY_OFDM))
-+		status->encoding = RX_ENC_LEGACY;
-+	else
-+		status->encoding = RX_ENC_HE;
-+
-+	/* Read the signal level and antenna diversity indication.
-+	 * The msb in the signal level is always set as it is a
-+	 * negative number.
-+	 * The antenna indication is the msb of the rssi.
-+	 */
-+	status->signal = ((desc->rssi & RSSI_LEVEL_BITMASK) | BIT(7));
-+	status->antenna = ((desc->rssi & ANT_DIVERSITY_BITMASK) >> ANT_DIVERSITY_SHIFT);
-+	status->freq = ieee80211_channel_to_frequency(desc->channel,
-+						      status->band);
-+
-+	if (desc->flags & CC33XX_RX_DESC_ENCRYPT_MASK) {
-+		u8 desc_err_code = desc->status & CC33XX_RX_DESC_STATUS_MASK;
-+
-+		/* Frame is sent to driver with the IV (for PN replay check)
-+		 * but without the MIC
-+		 */
-+		status->flag |=  RX_FLAG_MMIC_STRIPPED |
-+				 RX_FLAG_DECRYPTED | RX_FLAG_MIC_STRIPPED;
-+
-+		if (unlikely(desc_err_code & CC33XX_RX_DESC_MIC_FAIL)) {
-+			status->flag |= RX_FLAG_MMIC_ERROR;
-+			cc33xx_warning("Michael MIC error. Desc: 0x%x",
-+				       desc_err_code);
-+		}
-+	}
-+
-+	if (beacon || probe_rsp)
-+		status->boottime_ns = ktime_get_boottime_ns();
-+
-+	if (beacon)
-+		cc33xx_set_pending_regdomain_ch(cc, (u16)desc->channel,
-+						status->band);
-+	status->nss = 1;
-+}
-+
-+/* Copy part\ all of the descriptor. Allocate skb, or drop corrupted packet
-+ */
-+static int cc33xx_rx_get_packet_descriptor(struct cc33xx *cc, u8 *raw_buffer_ptr,
-+					   u16 *raw_buffer_len)
-+{
-+	u16 missing_desc_bytes;
-+	u16 available_desc_bytes;
-+	u16 pkt_data_len;
-+	struct sk_buff *skb;
-+	u16 prev_buffer_len = *raw_buffer_len;
-+
-+	missing_desc_bytes = sizeof(struct cc33xx_rx_descriptor);
-+	missing_desc_bytes -= cc->partial_rx.handled_bytes;
-+	available_desc_bytes = min(*raw_buffer_len, missing_desc_bytes);
-+	memcpy(((u8 *)(&cc->partial_rx.desc)) + cc->partial_rx.handled_bytes,
-+	       raw_buffer_ptr, available_desc_bytes);
-+
-+	/* If descriptor was not completed */
-+	if (available_desc_bytes != missing_desc_bytes) {
-+		cc->partial_rx.handled_bytes += *raw_buffer_len;
-+		cc->partial_rx.status = CURR_RX_DESC;
-+		*raw_buffer_len = 0;
-+		goto out;
-+	} else {
-+		cc->partial_rx.handled_bytes += available_desc_bytes;
-+		*raw_buffer_len -= available_desc_bytes;
-+	}
-+
-+	/* Descriptor was fully copied */
-+	pkt_data_len = cc->partial_rx.original_bytes;
-+	pkt_data_len -=	sizeof(struct cc33xx_rx_descriptor);
-+
-+	if (unlikely(cc->partial_rx.desc.status & CC33XX_RX_DESC_DECRYPT_FAIL)) {
-+		cc33xx_warning("corrupted packet in RX: status: 0x%x len: %d",
-+			       cc->partial_rx.desc.status & CC33XX_RX_DESC_STATUS_MASK,
-+			pkt_data_len);
-+
-+		/* If frame can be fully dropped */
-+		if (pkt_data_len <= *raw_buffer_len) {
-+			*raw_buffer_len -=  pkt_data_len;
-+			cc->partial_rx.status = CURR_RX_START;
-+		} else {
-+			cc->partial_rx.handled_bytes += *raw_buffer_len;
-+			cc->partial_rx.status = CURR_RX_DROP;
-+			*raw_buffer_len = 0;
-+		}
-+		goto out;
-+	}
-+
-+	skb = __dev_alloc_skb(pkt_data_len, GFP_KERNEL);
-+	if (!skb) {
-+		cc33xx_error("Couldn't allocate RX frame");
-+		/* If frame can be fully dropped */
-+		if (pkt_data_len <= *raw_buffer_len) {
-+			*raw_buffer_len -=  pkt_data_len;
-+			cc->partial_rx.status = CURR_RX_START;
-+		} else {
-+		/* Dropped partial frame */
-+			cc->partial_rx.handled_bytes += *raw_buffer_len;
-+			cc->partial_rx.status = CURR_RX_DROP;
-+			*raw_buffer_len = 0;
-+		}
-+		goto out;
-+	}
-+
-+	cc->partial_rx.skb = skb;
-+	cc->partial_rx.status = CURR_RX_DATA;
-+
-+out:
-+	/* Function return the amount of consumed bytes */
-+	return (prev_buffer_len - *raw_buffer_len);
-+}
-+
-+/* Copy part or all of the packet's data. push skb to queue if possible */
-+static int cc33xx_rx_get_packet_data(struct cc33xx *cc, u8 *raw_buffer_ptr,
-+				     u16 *raw_buffer_len)
-+{
-+	u16 missing_data_bytes;
-+	u16 available_data_bytes;
-+	u32 defer_count;
-+	enum cc33xx_rx_buf_align rx_align;
-+	u16 extra_bytes;
-+	struct ieee80211_hdr *hdr;
-+	u8 beacon = 0;
-+	u8 is_probe_resp = 0;
-+	u8 is_data = 0;
-+	u16 seq_num;
-+	u16 prev_buffer_len = *raw_buffer_len;
-+
-+	cc33xx_debug(DEBUG_RX, "current rx data: original bytes: %d, handled bytes %d, desc pad len %d, missing_data_bytes %d",
-+		     cc->partial_rx.original_bytes,
-+		     cc->partial_rx.handled_bytes,
-+		     cc->partial_rx.desc.pad_len, missing_data_bytes);
-+
-+	missing_data_bytes = cc->partial_rx.original_bytes;
-+	missing_data_bytes -= cc->partial_rx.handled_bytes;
-+	available_data_bytes = min(missing_data_bytes, *raw_buffer_len);
-+
-+	skb_put_data(cc->partial_rx.skb, raw_buffer_ptr, available_data_bytes);
-+
-+	/* Check if we didn't manage to copy the entire packet - got out,
-+	 * continue next time
-+	 */
-+	if (available_data_bytes != missing_data_bytes) {
-+		cc->partial_rx.handled_bytes += *raw_buffer_len;
-+		cc->partial_rx.status = CURR_RX_DATA;
-+		*raw_buffer_len = 0;
-+		goto out;
-+	} else {
-+		*raw_buffer_len -=  available_data_bytes;
-+	}
-+
-+	/* Data fully copied */
-+
-+	rx_align = cc->partial_rx.desc.header_alignment;
-+	if (rx_align == CC33XX_RX_BUF_PADDED)
-+		skb_pull(cc->partial_rx.skb, RX_BUF_ALIGN);
-+
-+	extra_bytes = cc->partial_rx.desc.pad_len;
-+	if (extra_bytes != 0)
-+		skb_trim(cc->partial_rx.skb,
-+			 cc->partial_rx.skb->len - extra_bytes);
-+
-+	hdr = (struct ieee80211_hdr *)cc->partial_rx.skb->data;
-+
-+	if (ieee80211_is_beacon(hdr->frame_control))
-+		beacon = 1;
-+	if (ieee80211_is_data_present(hdr->frame_control))
-+		is_data = 1;
-+	if (ieee80211_is_probe_resp(hdr->frame_control))
-+		is_probe_resp = 1;
-+
-+	cc33xx_rx_status(cc, &cc->partial_rx.desc,
-+			 IEEE80211_SKB_RXCB(cc->partial_rx.skb),
-+			 beacon, is_probe_resp);
-+
-+	seq_num = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
-+	cc33xx_debug(DEBUG_RX, "rx skb 0x%p: %d B %s seq %d link id %d",
-+		     cc->partial_rx.skb,
-+		     cc->partial_rx.skb->len - cc->partial_rx.desc.pad_len,
-+		     beacon ? "beacon" : "", seq_num, cc->partial_rx.desc.hlid);
-+
-+	cc33xx_debug(DEBUG_RX, "rx frame. frame type 0x%x, frame length 0x%x, frame address 0x%lx",
-+		     hdr->frame_control, cc->partial_rx.skb->len,
-+		     (unsigned long)cc->partial_rx.skb->data);
-+
-+	/* Adding frame to queue */
-+	skb_queue_tail(&cc->deferred_rx_queue, cc->partial_rx.skb);
-+	cc->rx_counter++;
-+	cc->partial_rx.status = CURR_RX_START;
-+
-+	/* Make sure the deferred queues don't get too long */
-+	defer_count = skb_queue_len(&cc->deferred_tx_queue);
-+	defer_count += skb_queue_len(&cc->deferred_rx_queue);
-+	if (defer_count >= CC33XX_RX_QUEUE_MAX_LEN)
-+		cc33xx_flush_deferred_work(cc);
-+	else
-+		queue_work(cc->freezable_netstack_wq, &cc->netstack_work);
-+
-+out:
-+	return (prev_buffer_len - *raw_buffer_len);
-+}
-+
-+static int cc33xx_rx_drop_packet_data(struct cc33xx *cc, u8 *raw_buffer_ptr,
-+				      u16 *raw_buffer_len)
-+{
-+	u16 prev_buffer_len = *raw_buffer_len;
-+
-+	/* Can we drop the entire frame ? */
-+	if (*raw_buffer_len >=
-+		(cc->partial_rx.original_bytes - cc->partial_rx.handled_bytes)) {
-+		*raw_buffer_len -= cc->partial_rx.original_bytes -
-+				cc->partial_rx.handled_bytes;
-+		cc->partial_rx.handled_bytes = 0;
-+		cc->partial_rx.status = CURR_RX_START;
-+	} else {
-+		cc->partial_rx.handled_bytes += *raw_buffer_len;
-+		*raw_buffer_len = 0;
-+	}
-+
-+	return (prev_buffer_len - *raw_buffer_len);
-+}
-+
-+/* Handle single packet from the RX buffer. We don't have to be aligned to
-+ * packet boundary (buffer may start \ end in the middle of packet)
-+ */
-+static void cc33xx_rx_handle_packet(struct cc33xx *cc, u8 *raw_buffer_ptr,
-+				    u16 *raw_buffer_len)
-+{
-+	struct cc33xx_rx_descriptor *desc;
-+	u16 consumed_bytes;
-+
-+	if (cc->partial_rx.status == CURR_RX_START) {
-+		WARN_ON(*raw_buffer_len < 2);
-+		desc = (struct cc33xx_rx_descriptor *)raw_buffer_ptr;
-+		cc->partial_rx.original_bytes = le16_to_cpu(desc->length);
-+		cc->partial_rx.handled_bytes = 0;
-+		cc->partial_rx.status = CURR_RX_DESC;
-+
-+		cc33xx_debug(DEBUG_RX, "rx frame. desc length 0x%x, alignment 0x%x, padding 0x%x",
-+			     desc->length, desc->header_alignment, desc->pad_len);
-+	}
-+
-+	/* start \ continue copy descriptor */
-+	if (cc->partial_rx.status == CURR_RX_DESC) {
-+		consumed_bytes = cc33xx_rx_get_packet_descriptor(cc,
-+								 raw_buffer_ptr,
-+								 raw_buffer_len);
-+		raw_buffer_ptr += consumed_bytes;
-+	}
-+
-+	/* Check if we are in the middle of dropped packet */
-+	if (unlikely(cc->partial_rx.status == CURR_RX_DROP)) {
-+		consumed_bytes = cc33xx_rx_drop_packet_data(cc, raw_buffer_ptr,
-+							    raw_buffer_len);
-+		raw_buffer_ptr += consumed_bytes;
-+	}
-+
-+	/* start \ continue copy descriptor */
-+	if (cc->partial_rx.status == CURR_RX_DATA) {
-+		consumed_bytes = cc33xx_rx_get_packet_data(cc, raw_buffer_ptr,
-+							   raw_buffer_len);
-+		raw_buffer_ptr += consumed_bytes;
-+	}
-+}
-+
-+/* It is assumed that SDIO buffer was read prior to this function (data buffer
-+ * is read along with the status). The RX function gets pointer to the RX data
-+ * and its length. This buffer may contain unknown number of packets, separated
-+ * by hif descriptor and 0-3 bytes padding if required.
-+ * The last packet may be truncated in the middle, and should be saved for next
-+ * iteration.
-+ */
-+int cc33xx_rx(struct cc33xx *cc, u8 *rx_buf_ptr, u16 rx_buf_len)
-+{
-+	u16 local_rx_buffer_len = rx_buf_len;
-+	u16 pkt_offset = 0;
-+	u16 consumed_bytes;
-+	u16 prev_rx_buf_len;
-+
-+	/* Split data into separate packets */
-+	while (local_rx_buffer_len > 0) {
-+		cc33xx_debug(DEBUG_RX, "start loop. buffer length %d",
-+			     local_rx_buffer_len);
-+
-+		/* the handle data call can only fail in memory-outage
-+		 * conditions, in that case the received frame will just
-+		 * be dropped.
-+		 */
-+		prev_rx_buf_len = local_rx_buffer_len;
-+		cc33xx_rx_handle_packet(cc, rx_buf_ptr + pkt_offset,
-+					&local_rx_buffer_len);
-+		consumed_bytes = prev_rx_buf_len - local_rx_buffer_len;
-+
-+		pkt_offset +=  consumed_bytes;
-+
-+		cc33xx_debug(DEBUG_RX, "end rx loop. buffer length %d, packet counter %d, current packet status %d",
-+			     local_rx_buffer_len, cc->rx_counter,
-+			     cc->partial_rx.status);
-+	}
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_PM
-+int cc33xx_rx_filter_enable(struct cc33xx *cc, int index, bool enable,
-+			    struct cc33xx_rx_filter *filter)
++int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++		       enum cc33xx_cmd_ps_mode_e mode)
 +{
 +	int ret;
++	u16 timeout = cc->conf.host_conf.conn.dynamic_ps_timeout;
 +
-+	if (!!test_bit(index, cc->rx_filter_enabled) == enable) {
-+		cc33xx_warning("Request to enable an already enabled rx filter %d",
-+			       index);
-+		return 0;
++	switch (mode) {
++	case STATION_AUTO_PS_MODE:
++	case STATION_POWER_SAVE_MODE:
++		cc33xx_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
++			     mode, timeout);
++
++		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, timeout);
++		if (ret < 0)
++			return ret;
++
++		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
++		break;
++
++	case STATION_ACTIVE_MODE:
++		cc33xx_debug(DEBUG_PSM, "leaving psm");
++
++		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, 0);
++		if (ret < 0)
++			return ret;
++
++		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
++		break;
++
++	default:
++		cc33xx_warning("trying to set ps to unsupported mode %d", mode);
++		ret = -EINVAL;
 +	}
 +
-+	ret = cc33xx_acx_set_rx_filter(cc, index, enable, filter);
-+
-+	if (ret) {
-+		cc33xx_error("Failed to %s rx data filter %d (err=%d)",
-+			     enable ? "enable" : "disable", index, ret);
-+		return ret;
-+	}
-+
-+	if (enable)
-+		__set_bit(index, cc->rx_filter_enabled);
-+	else
-+		__clear_bit(index, cc->rx_filter_enabled);
-+
-+	return 0;
-+}
-+
-+int cc33xx_rx_filter_clear_all(struct cc33xx *cc)
-+{
-+	int i, ret = 0;
-+
-+	for (i = 0; i < CC33XX_MAX_RX_FILTERS; i++) {
-+		if (!test_bit(i, cc->rx_filter_enabled))
-+			continue;
-+		ret = cc33xx_rx_filter_enable(cc, i, 0, NULL);
-+		if (ret)
-+			goto out;
-+	}
-+
-+out:
 +	return ret;
 +}
-+#else
-+int cc33xx_rx_filter_enable(struct cc33xx *cc, int index, bool enable,
-+			    struct cc33xx_rx_filter *filter)
++
++static void cc33xx_ps_filter_frames(struct cc33xx *cc, u8 hlid)
 +{
++	int i;
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *info;
++	unsigned long flags;
++	int filtered[NUM_TX_QUEUES];
++	struct cc33xx_link *lnk = &cc->links[hlid];
++
++	/* filter all frames currently in the low level queues for this hlid */
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		filtered[i] = 0;
++		while ((skb = skb_dequeue(&lnk->tx_queue[i]))) {
++			filtered[i]++;
++
++			if (WARN_ON(cc33xx_is_dummy_packet(cc, skb)))
++				continue;
++
++			info = IEEE80211_SKB_CB(skb);
++			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++			info->status.rates[0].idx = -1;
++			ieee80211_tx_status_ni(cc->hw, skb);
++		}
++	}
++
++	spin_lock_irqsave(&cc->cc_lock, flags);
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		cc->tx_queue_count[i] -= filtered[i];
++		if (lnk->wlvif)
++			lnk->wlvif->tx_queue_count[i] -= filtered[i];
++	}
++
++	spin_unlock_irqrestore(&cc->cc_lock, flags);
++	cc33xx_handle_tx_low_watermark(cc);
 +}
 +
-+int cc33xx_rx_filter_clear_all(struct cc33xx *cc) {}
-+#endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/ti/cc33xx/rx.h b/drivers/net/wireless/ti/cc33xx/rx.h
++void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			  u8 hlid, bool clean_queues)
++{
++	struct ieee80211_sta *sta;
++	struct ieee80211_vif *vif = cc33xx_wlvif_to_vif(wlvif);
++
++	if (WARN_ON_ONCE(wlvif->bss_type != BSS_TYPE_AP_BSS))
++		return;
++
++	if (!test_bit(hlid, wlvif->ap.sta_hlid_map) ||
++	    test_bit(hlid, &cc->ap_ps_map))
++		return;
++
++	cc33xx_debug(DEBUG_PSM,
++		     "start mac80211 PSM on hlid %d pkts %d clean_queues %d",
++		     hlid, cc->links[hlid].allocated_pkts, clean_queues);
++
++	rcu_read_lock();
++	sta = ieee80211_find_sta(vif, cc->links[hlid].addr);
++	if (!sta) {
++		cc33xx_error("could not find sta %pM for starting ps",
++			     cc->links[hlid].addr);
++		rcu_read_unlock();
++		return;
++	}
++
++	ieee80211_sta_ps_transition_ni(sta, true);
++	rcu_read_unlock();
++
++	/* do we want to filter all frames from this link's queues? */
++	if (clean_queues)
++		cc33xx_ps_filter_frames(cc, hlid);
++
++	__set_bit(hlid, &cc->ap_ps_map);
++}
+diff --git a/drivers/net/wireless/ti/cc33xx/ps.h b/drivers/net/wireless/ti/cc33xx/ps.h
 new file mode 100644
-index 000000000000..d3f99fa0020b
+index 000000000000..d20160ef4f34
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/rx.h
-@@ -0,0 +1,85 @@
++++ b/drivers/net/wireless/ti/cc33xx/ps.h
+@@ -0,0 +1,15 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +
 +/* Copyright (C) 2022-2024 Texas Instruments Inc.*/
 +
-+#ifndef __RX_H__
-+#define __RX_H__
++#ifndef __PS_H__
++#define __PS_H__
 +
-+/* RX Descriptor flags:
-+ *
-+ * Bits 0-1 - band
-+ * Bit  2   - STBC
-+ * Bit  3   - A-MPDU
-+ * Bit  4   - HT
-+ * Bits 5-7 - encryption
-+ */
-+#define CC33XX_RX_DESC_BAND_MASK    0x03
-+#define CC33XX_RX_DESC_ENCRYPT_MASK 0xE0
++#include "acx.h"
 +
-+#define CC33XX_RX_DESC_BAND_BG      0x00
-+#define CC33XX_RX_DESC_BAND_J       0x01
-+#define CC33XX_RX_DESC_BAND_A       0x02
++int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++		       enum cc33xx_cmd_ps_mode_e mode);
++void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			  u8 hlid, bool clean_queues);
 +
-+/* RX Descriptor status
-+ *
-+ * Bits 0-2 - error code
-+ * Bits 3-5 - process_id tag (AP mode FW)
-+ * Bits 6-7 - reserved
-+ */
-+enum {
-+	CC33XX_RX_DESC_SUCCESS		= 0x00,
-+	CC33XX_RX_DESC_DECRYPT_FAIL	= 0x01,
-+	CC33XX_RX_DESC_MIC_FAIL		= 0x02,
-+	CC33XX_RX_DESC_STATUS_MASK	= 0x07
-+};
-+
-+/* Account for the padding inserted by the FW in case of RX_ALIGNMENT
-+ * or for fixing alignment in case the packet wasn't aligned.
-+ */
-+#define RX_BUF_ALIGN                 2
-+
-+/* Describes the alignment state of a Rx buffer */
-+enum cc33xx_rx_buf_align {
-+	CC33XX_RX_BUF_ALIGNED,
-+	CC33XX_RX_BUF_UNALIGNED,
-+	CC33XX_RX_BUF_PADDED,
-+};
-+
-+enum cc33xx_rx_curr_status {
-+	CURR_RX_START,
-+	CURR_RX_DROP,
-+	CURR_RX_DESC,
-+	CURR_RX_DATA
-+};
-+
-+struct cc33xx_rx_descriptor {
-+	__le16 length;
-+	u8  header_alignment;
-+	u8  status;
-+	__le32 timestamp;
-+
-+	u8  flags;
-+	u8  rate;
-+	u8  channel;
-+	s8  rssi;
-+	u8  snr;
-+
-+	u8  hlid;
-+	u8  pad_len;
-+	u8  frame_format;
-+} __packed;
-+
-+struct partial_rx_frame {
-+	struct sk_buff *skb;
-+	struct cc33xx_rx_descriptor desc;
-+	u16 handled_bytes;
-+	u16 original_bytes; /* including descriptor */
-+	enum cc33xx_rx_curr_status status;
-+};
-+
-+int cc33xx_rx(struct cc33xx *cc, u8 *rx_buf_ptr, u16 rx_buf_len);
-+int cc33xx_rx_filter_enable(struct cc33xx *cc, int index, bool enable,
-+			    struct cc33xx_rx_filter *filter);
-+int cc33xx_rx_filter_clear_all(struct cc33xx *cc);
-+
-+#endif /* __RX_H__ */
++#endif /* __PS_H__ */
 -- 
 2.25.1
 
