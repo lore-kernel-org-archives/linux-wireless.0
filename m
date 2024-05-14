@@ -1,129 +1,124 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2D2158213;
-	Tue, 14 May 2024 14:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED3517EB87;
+	Tue, 14 May 2024 15:51:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715697817; cv=none; b=ayAf2V6Ih7wk42e/gwH8uPBuwmZ8N3fIlYA7fZFGGs3et2GySm5siHLRANR12T4TLZ8N/YXIpi52czui7NBj5OIzkbuLlPTewjRk6UTMEg8l4jq1gHFKJGMxW8er5Hh8ozhr/yW9cpS3aNqApOMMaktgHXd/qP1M4Px3NIQiLcI=
+	t=1715701891; cv=none; b=TSZf5eJ0XhR7EAerVQPrADoDBuY7RyLggn5oUWBkQ1OWl9lDeJmwf8l5/QSl/otDvvh1a0ZKZKpTCghhCiUpmbnf/W+7PAbCOHcoSpMuiyl3yNiI8lQPlzp2J3CI7SKjHsZLDSpbCVI6NEKhi+aJV8stYevnnxCMxU+st9QkHOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715697817; c=relaxed/simple;
-	bh=yjz8BI8fWaQQVWoDkSf+/J9WJUV/N1nI3QgP6yJ6s4g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Z0/QTc+F8yX9HZiK3M3JhGvsjdOLsIU/Y0vmGAm4i6McUu7IIqqbjRtwRrmmOhCCkTMGmMDdjbFN2sMA8QTP8sIkwiICSqylnACzEGp+QRj4LxnLgcppe2N1CCH1nBN3TxEXRc/1fMWTwpfBDbkCzmCBhw7WIAbAVwtaZSwGmXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Cqv5U9MX; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1715701891; c=relaxed/simple;
+	bh=0/ADeysUK6zcQEDcTdDJA5QqOa1mNX4iXTZev0jcyPI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=R/XjVn3n5XneGp/n3+pisVoCePYE0bF/yuuSCXnBpndAmnI6VJefstxd/+WGFmpSrgzy6JqGIBWWY2mCMW8JnzF7YZBnapV+sNK+LgU8SvskP0l3HH92LBlcObWAkQlMeIr/nWrT2UPPuYwR/HfzPowuOySzqwoSK9x6g6xPgK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=U/rj+yU8; arc=none smtp.client-ip=217.70.183.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Cqv5U9MX"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44EA3WtS004117;
-	Tue, 14 May 2024 14:43:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:cc:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=aAjjICOleHXNnITLx80ygde13/wbWjLWPL4FqboldaM=; b=Cq
-	v5U9MXDpZxIXRfktQIkC5+6NX5gBJZEWYaN5HlzMFm8Go3vSkUpQiI8IAkJ1xJ0o
-	RJtXDawnU03/u3fu8NbndpnELudbmBcbiezI09M4Bt23J4aWjFzHwnxgg2lE2kBc
-	dhuClwcWbi9iy1lvM7lSmMtxfxZzA+s8a5l3Mu1f8hEyZTl5ZzVE8RiPHZjnMijk
-	70/51pM6Mug9mPSHMDpfFLcHXj/J8BVAi1Fqt6h7/ZF8alRZhY541G5P7qOmLvpZ
-	qTfsKp9WXfko6YvfFs9Kxmt+jifhFeAivhxYr2Unbl1orl8Y4vSDEaVp3wXzgvAV
-	mJhWSTgs0E4zWHMtqpFw==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y45vb8n82-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 May 2024 14:43:28 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44EEhRtK019301
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 14 May 2024 14:43:27 GMT
-Received: from [10.110.0.4] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 14 May
- 2024 07:43:26 -0700
-Message-ID: <12a208d7-f36b-4953-abff-323a15452b3c@quicinc.com>
-Date: Tue, 14 May 2024 07:43:25 -0700
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="U/rj+yU8"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id B1E911C000C;
+	Tue, 14 May 2024 15:51:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1715701887;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UL/FZYt1ZDeYd7vr1TRXKJow8zuiDeZ1OlrlaoQyJrs=;
+	b=U/rj+yU8YuImxDaISYiRJTPiohBEl3aXeSkyBRFP6cjbnxNTcp95/QomWIl79B1fbLLCDG
+	sf6aWaEk0Mz+eU/5Fo263dbSAkFpcEZuzMuC73MVsHNFPWTqF9tGM/Bjc4WScsqJp+d25Z
+	xeVofldBbcX86hmFSYCg5Eugy2T8RvmL9IzLHMQelJ0fwOU56Ca8lwRkzyl1qW83KX540Z
+	yen7dDRXZ7UMgE4JULJG8Fm5nGhHmKydica1rjDGkwkmE5/AeSIC8Fn+gMzngXks/7Ynhu
+	zsRxp3JWLY44Mlxv7gzWzJpXN+gw+M7R9KmCNKd7cGQKIW0+coLconwECxDIEQ==
+From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Date: Tue, 14 May 2024 17:51:19 +0200
+Subject: [PATCH v2 1/6] wifi: wilc1000: set net device registration as last
+ step during interface creation
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: ath10k: fix QCOM_RPROC_COMMON dependency
-Content-Language: en-US
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Kalle Valo
-	<kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
-        Stephen Boyd
-	<swboyd@chromium.org>,
-        Rakesh Pillai <quic_pillair@quicinc.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>,
-        <linux-kbuild@vger.kernel.org>
-References: <20240511-ath10k-snoc-dep-v1-1-9666e3af5c27@linaro.org>
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20240511-ath10k-snoc-dep-v1-1-9666e3af5c27@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 4OmYH8MLtWgkn02V-bn8b6U1_Y2cZtnJ
-X-Proofpoint-ORIG-GUID: 4OmYH8MLtWgkn02V-bn8b6U1_Y2cZtnJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-05-14_08,2024-05-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- clxscore=1011 mlxscore=0 suspectscore=0 spamscore=0 malwarescore=0
- adultscore=0 mlxlogscore=911 phishscore=0 priorityscore=1501 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405010000 definitions=main-2405140104
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240514-mac_addr_at_probe-v2-1-afef09f1cd10@bootlin.com>
+References: <20240514-mac_addr_at_probe-v2-0-afef09f1cd10@bootlin.com>
+In-Reply-To: <20240514-mac_addr_at_probe-v2-0-afef09f1cd10@bootlin.com>
+To: Ajay Singh <ajay.kathat@microchip.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Heiko Thiery <Heiko.Thiery@kontron.com>, 
+ =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+X-Mailer: b4 0.13.0
+X-GND-Sasl: alexis.lothore@bootlin.com
 
-On 5/11/2024 3:49 AM, Dmitry Baryshkov wrote:
-> If ath10k_snoc is built-in, while Qualcomm remoteprocs are built as
-> modules, compilation fails with:
-> 
-> /usr/bin/aarch64-linux-gnu-ld: drivers/net/wireless/ath/ath10k/snoc.o: in function `ath10k_modem_init':
-> drivers/net/wireless/ath/ath10k/snoc.c:1534: undefined reference to `qcom_register_ssr_notifier'
-> /usr/bin/aarch64-linux-gnu-ld: drivers/net/wireless/ath/ath10k/snoc.o: in function `ath10k_modem_deinit':
-> drivers/net/wireless/ath/ath10k/snoc.c:1551: undefined reference to `qcom_unregister_ssr_notifier'
-> 
-> Add corresponding dependency to ATH10K_SNOC Kconfig entry so that it's
-> built as module if QCOM_RPROC_COMMON is built as module too.
-> 
-> Fixes: 747ff7d3d742 ("ath10k: Don't always treat modem stop events as crashes")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> ---
->  drivers/net/wireless/ath/ath10k/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
-> index e6ea884cafc1..4f385f4a8cef 100644
-> --- a/drivers/net/wireless/ath/ath10k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath10k/Kconfig
-> @@ -45,6 +45,7 @@ config ATH10K_SNOC
->  	depends on ATH10K
->  	depends on ARCH_QCOM || COMPILE_TEST
->  	depends on QCOM_SMEM
-> +	depends on QCOM_RPROC_COMMON || QCOM_RPROC_COMMON=n
->  	select QCOM_SCM
->  	select QCOM_QMI_HELPERS
->  	help
-> 
-> ---
-> base-commit: 75fa778d74b786a1608d55d655d42b480a6fa8bd
-> change-id: 20240511-ath10k-snoc-dep-862a9da2e6bb
+net device registration is currently done in wilc_netdev_ifc_init but
+other initialization operations are still done after this registration.
+Since net device is assumed to be usable right after registration, it
+should be the very last step of initialization.
 
-I see how this fixes the problem, but this doesn't seem like an ideal
-solution. The fact that the *_ssr_notifier() functions are correctly protected
-by conditional compilation ideally should mean that clients don't need to call
-call out this as a dependency. Otherwise, it would mean we'd need to do this
-for all feature flags.
+Move netdev registration at the very end of wilc_netdev_ifc_init to let
+this function completely initialize netdevice before registering it.
 
-+linux-kbuild just to make sure there isn't a better approach.
+Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
+---
+ drivers/net/wireless/microchip/wilc1000/netdev.c | 31 ++++++++++++------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-/jeff
+diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
+index 73f56f7b002b..acc9b9a64552 100644
+--- a/drivers/net/wireless/microchip/wilc1000/netdev.c
++++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
+@@ -965,16 +965,6 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
+ 	vif->priv.wdev.iftype = type;
+ 	vif->priv.dev = ndev;
+ 
+-	if (rtnl_locked)
+-		ret = cfg80211_register_netdevice(ndev);
+-	else
+-		ret = register_netdev(ndev);
+-
+-	if (ret) {
+-		ret = -EFAULT;
+-		goto error;
+-	}
+-
+ 	ndev->needs_free_netdev = true;
+ 	vif->iftype = vif_type;
+ 	vif->idx = wilc_get_available_idx(wl);
+@@ -985,13 +975,24 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
+ 	mutex_unlock(&wl->vif_mutex);
+ 	synchronize_rcu();
+ 
+-	return vif;
+-
+-error:
+ 	if (rtnl_locked)
+-		cfg80211_unregister_netdevice(ndev);
++		ret = cfg80211_register_netdevice(ndev);
+ 	else
+-		unregister_netdev(ndev);
++		ret = register_netdev(ndev);
++
++	if (ret) {
++		ret = -EFAULT;
++		goto error_remove_vif;
++	}
++
++	return vif;
++
++error_remove_vif:
++	mutex_lock(&wl->vif_mutex);
++	list_del_rcu(&vif->list);
++	wl->vif_num -= 1;
++	mutex_unlock(&wl->vif_mutex);
++	synchronize_rcu();
+ 	free_netdev(ndev);
+ 	return ERR_PTR(ret);
+ }
+
+-- 
+2.44.0
 
