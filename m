@@ -1,54 +1,54 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F885158DD9
-	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2024 18:13:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280F5158DCF
+	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2024 18:13:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715796834; cv=none; b=GDys9phZ+zIztenQZpI6CEljxRJUkNKh6u2/sdeUo5IEBO9uqeHnMHMFdmfdL5xL+7ZnRimPA+kumgVyKrQcM1fEG3VOIzaHjKhx7Q/ntkjCsaU4rsmpjj1biGYNizpaeacssXRhELNK8mcxpPnnSVnS8qhhszIyCcrk9WT7Au0=
+	t=1715796834; cv=none; b=CiLuGG9AnWAY64ESq/W8ZTBhrY+pmq8UqzYqfGdhD3cAcvJ+Rr7LpMWWScmdW7tFZKluSnskO89bV37CSvXpEhbpfED+YJWAW6txXnATiHQlwuP28KXqEtAbnlkB0pvvBoQM9oh9nLAw3RQQaAuzXlr3v2dwY6Czg1GHQzsKlDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715796834; c=relaxed/simple;
-	bh=HMgeoZuy2eKBa5AGWEEw/EcbFYByBYn9GvpTnPZ78uE=;
+	bh=KdVXdAtgiwe+0h+44dwEs4WR46ToyZ38tuX1S+Cw0VM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=q8lyCNNmT2OKOnKk3ScDFSdxcLTQ5oiXOowXYX4GW9MUihUC5QsNOvIZaCj0dLjYrIT9rwiFJB6S26UxzrFI7YmR/JBCNwI0b4sFYNfhmzSvWk2yXyXwGQrTBET7h5zdfYr3OrJhAxfbefcNoIVRA+10qEx/NOeGJ5xFEfA0RGc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Nx8vnGcf; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=kJSyUdQWzqtZ82b9+gNfFKgG6cOK6gSHvymqquU74xFddMH3zAeN98Bvu4sL/dE+4KdyUHMYFKgNJSQkxIbAZOBv3e8ydiRzzOfBu78tNsc52UGQeEoRsrGykRshf3arFZiYl2mz/quHFXeV5+x1707HKEvgr4MLxCUrEde5J2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=gfFIVlx+; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Nx8vnGcf"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44F90aEU024803;
-	Wed, 15 May 2024 18:13:40 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="gfFIVlx+"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44F90Zqt029033;
+	Wed, 15 May 2024 18:13:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type; s=qcppdkim1; bh=XmCydjMmsAv68yoorcfi
-	yfAZw3LbdbQgz1JNaVnKL78=; b=Nx8vnGcf/LWp/xN4SzybB1TE6BGswtnEZ8OM
-	s+OWcWp4vB+NZURrp0UYg5cEasx7qrYTtx/RThZbL2jx1E422MYuU0CbDEy8HGsX
-	0u6ECXDLOW9A3tUuowPiBeRXtbzOVHzMkSBA5GE4XGl3vlu4mt77GudIdjDRv1tZ
-	ESe48v2djM9Bx4MwQ6XyycoC7GO9TRne6jVHWRHpyJxCfW9M2D8ISf6oIy5ReDHF
-	+8NgDYzo0/Jk76CDYN44l7IsZKXvQTI0XmeB92orGUYAZ/VQ+OMqjypEjiMH1CIx
-	O7eygTewOcdaGJULpOVuGLR2jHnGiMhyb9KB8/uYBBGOuFmmvA==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y49gdu92k-1
+	:mime-version:content-type; s=qcppdkim1; bh=YUKlc92v6DiLZkNvehTe
+	7k/CrG6VPxjodwh5XPekLc0=; b=gfFIVlx+7cWz1kpd7RP/FG0BnO97GadODDYy
+	lGhChBZ10QFDfPtX2/098PSxdD1BeIAn3rqLqYv+69ecrGrWyi0k8/oxtPjbmTFs
+	JgNv/ssNccZzMluL3PgfKRyOPdB4jPmOzwQkZ4i8RycgaNwcvWjiImUW9Sx63MS3
+	/ReNIVwp/IMcSsYnsjr9ctGu0m6l+JB4Gr8ZeGa+ekffXeK9YqUK/F03W1jyGQuh
+	GI4R7gdovZx5Hzhh6+ZmJNu8n7TyGiuPJEL51puW17/wgMQ/DCQboFD5Kv67cbIU
+	SUds7a0RMnDMXEmJzZd9nHxfQf3re9uWY6vdVzoD49KAKFF9pQ==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y21edhmk3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 15 May 2024 18:13:40 +0000 (GMT)
+	Wed, 15 May 2024 18:13:41 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44FIDde2017551
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44FIDfXP005121
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 15 May 2024 18:13:39 GMT
+	Wed, 15 May 2024 18:13:41 GMT
 Received: from pradeepc-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 15 May 2024 11:13:38 -0700
+ 15.2.1544.9; Wed, 15 May 2024 11:13:41 -0700
 From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Pradeep Kumar Chitrapu
 	<quic_pradeepc@quicinc.com>,
-        Muna Sinada <quic_msinada@quicinc.com>
-Subject: [PATCH V6 03/10] wifi: ath12k: push EHT MU-MIMO params to hardware
-Date: Wed, 15 May 2024 11:13:20 -0700
-Message-ID: <20240515181327.12855-4-quic_pradeepc@quicinc.com>
+        P Praneesh <quic_ppranees@quicinc.com>
+Subject: [PATCH V6 09/10] wifi: ath12k: add support for 160 MHz bandwidth
+Date: Wed, 15 May 2024 11:13:26 -0700
+Message-ID: <20240515181327.12855-10-quic_pradeepc@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20240515181327.12855-1-quic_pradeepc@quicinc.com>
 References: <20240515181327.12855-1-quic_pradeepc@quicinc.com>
@@ -63,141 +63,323 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ovNTnDq_g8FkaDjcgDIAr6LANn4zHVdN
-X-Proofpoint-ORIG-GUID: ovNTnDq_g8FkaDjcgDIAr6LANn4zHVdN
+X-Proofpoint-GUID: 6mktYZn6NKF_FYnDufq9qEHrPou9p79s
+X-Proofpoint-ORIG-GUID: 6mktYZn6NKF_FYnDufq9qEHrPou9p79s
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
  definitions=2024-05-15_11,2024-05-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- impostorscore=0 clxscore=1015 priorityscore=1501 phishscore=0 spamscore=0
- mlxscore=0 lowpriorityscore=0 suspectscore=0 bulkscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 adultscore=0
+ priorityscore=1501 bulkscore=0 spamscore=0 mlxscore=0 malwarescore=0
+ suspectscore=0 impostorscore=0 clxscore=1015 lowpriorityscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2405010000 definitions=main-2405150129
 
-Currently, only the EHT IE in management frames is updated with
-respect to MU-MIMO configurations, but this change is not
-reflected in the hardware. Add support to propagate MU-MIMO
-configurations to the hardware as well for AP mode. Similar
-support for STA mode will be added in future.
+Add support to configure maximum NSS in 160 MHz bandwidth.
+Firmware advertises support for handling NSS ratio information
+as a part of service ready ext event using nss_ratio_enabled
+flag. Save this information in ath12k_pdev_cap to calculate
+NSS ratio.
+
+Additionally, reorder the code by moving
+ath12k_peer_assoc_h_phymode() before ath12k_peer_assoc_h_vht()
+to ensure that arg->peer_phymode correctly reflects the bandwidth
+in the max NSS calculation.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Co-developed-by: Muna Sinada <quic_msinada@quicinc.com>
-Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
 Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/mac.c | 50 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wmi.h | 21 +++++++++++
- 2 files changed, 71 insertions(+)
+ drivers/net/wireless/ath/ath12k/core.h |  2 +
+ drivers/net/wireless/ath/ath12k/mac.c  | 85 ++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath12k/mac.h  |  2 +
+ drivers/net/wireless/ath/ath12k/wmi.c  | 19 +++++-
+ drivers/net/wireless/ath/ath12k/wmi.h  | 28 +++++++++
+ 5 files changed, 124 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 5e3b7894d4f4..f58558a52eef 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -2630,6 +2630,50 @@ static int ath12k_mac_vif_recalc_sta_he_txbf(struct ath12k *ar,
- 	return 0;
- }
- 
-+static int ath12k_mac_set_eht_txbf_conf(struct ath12k_vif *arvif)
-+{
-+	u32 param = WMI_VDEV_PARAM_SET_EHT_MU_MODE;
-+	struct ath12k *ar = arvif->ar;
-+	u32 value = 0;
-+	int ret;
-+
-+	if (!arvif->vif->bss_conf.eht_support)
-+		return 0;
-+
-+	if (arvif->vif->bss_conf.eht_su_beamformer) {
-+		value |= u32_encode_bits(EHT_SU_BFER_ENABLE, EHT_MODE_SU_TX_BFER);
-+		if (arvif->vif->bss_conf.eht_mu_beamformer &&
-+		    arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+			value |= u32_encode_bits(EHT_MU_BFER_ENABLE,
-+						 EHT_MODE_MU_TX_BFER) |
-+				 u32_encode_bits(EHT_DL_MUOFDMA_ENABLE,
-+						 EHT_MODE_DL_OFDMA_MUMIMO) |
-+				 u32_encode_bits(EHT_UL_MUOFDMA_ENABLE,
-+						 EHT_MODE_UL_OFDMA_MUMIMO);
-+	}
-+
-+	if (arvif->vif->type != NL80211_IFTYPE_MESH_POINT) {
-+		value |= u32_encode_bits(EHT_DL_MUOFDMA_ENABLE, EHT_MODE_DL_OFDMA) |
-+			 u32_encode_bits(EHT_UL_MUOFDMA_ENABLE, EHT_MODE_UL_OFDMA);
-+
-+		if (arvif->vif->bss_conf.eht_80mhz_full_bw_ul_mumimo)
-+			value |= u32_encode_bits(EHT_UL_MUMIMO_ENABLE, EHT_MODE_MUMIMO);
-+
-+		if (arvif->vif->bss_conf.eht_su_beamformee)
-+			value |= u32_encode_bits(EHT_SU_BFEE_ENABLE,
-+						 EHT_MODE_SU_TX_BFEE);
-+	}
-+
-+	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, param, value);
-+	if (ret) {
-+		ath12k_warn(ar->ab, "failed to set vdev %d EHT MU mode: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static void ath12k_bss_assoc(struct ath12k *ar,
- 			     struct ath12k_vif *arvif,
- 			     struct ieee80211_bss_conf *bss_conf)
-@@ -3015,6 +3059,12 @@ static void ath12k_mac_bss_info_changed(struct ath12k *ar,
- 				ath12k_warn(ar->ab,
- 					    "failed to set HE TXBF config for vdev: %d\n",
- 					    arvif->vdev_id);
-+
-+			ret = ath12k_mac_set_eht_txbf_conf(arvif);
-+			if (ret)
-+				ath12k_warn(ar->ab,
-+					    "failed to set EHT TXBF config for vdev: %d\n",
-+					    arvif->vdev_id);
- 		}
- 		ath12k_control_beaconing(arvif, info);
- 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index 03aab0531aa4..161e0ab5efe8 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -1138,6 +1138,7 @@ enum wmi_tlv_vdev_param {
- 	WMI_VDEV_PARAM_BSS_COLOR,
- 	WMI_VDEV_PARAM_SET_HEMU_MODE,
- 	WMI_VDEV_PARAM_HEOPS_0_31 = 0x8003,
-+	WMI_VDEV_PARAM_SET_EHT_MU_MODE = 0x8005,
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index c6b7524ce3a0..298940940f51 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -675,6 +675,8 @@ struct ath12k_pdev_cap {
+ 	u32 tx_chain_mask_shift;
+ 	u32 rx_chain_mask_shift;
+ 	struct ath12k_band_cap band[NUM_NL80211_BANDS];
++	bool nss_ratio_enabled;
++	u8 nss_ratio_info;
  };
  
- enum wmi_tlv_peer_flags {
-@@ -2985,6 +2986,26 @@ struct ath12k_wmi_rx_reorder_queue_remove_arg {
- #define HE_MU_BFER_ENABLE	1
- #define HE_SU_BFER_ENABLE	1
+ struct mlo_timestamp {
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 25a03f4946b5..eb04c1c3bab7 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1799,6 +1799,34 @@ ath12k_peer_assoc_h_vht_limit(u16 tx_mcs_set,
+ 	return tx_mcs_set;
+ }
  
-+#define EHT_MODE_SU_TX_BFEE		BIT(0)
-+#define EHT_MODE_SU_TX_BFER		BIT(1)
-+#define EHT_MODE_MU_TX_BFEE		BIT(2)
-+#define EHT_MODE_MU_TX_BFER		BIT(3)
-+#define EHT_MODE_DL_OFDMA		BIT(4)
-+#define EHT_MODE_UL_OFDMA		BIT(5)
-+#define EHT_MODE_MUMIMO			BIT(6)
-+#define EHT_MODE_DL_OFDMA_TXBF		BIT(7)
-+#define EHT_MODE_DL_OFDMA_MUMIMO	BIT(8)
-+#define EHT_MODE_UL_OFDMA_MUMIMO	BIT(9)
++static u8 ath12k_get_nss_160mhz(struct ath12k *ar,
++				u8 max_nss)
++{
++	u8 nss_ratio_info = ar->pdev->cap.nss_ratio_info;
++	u8 max_sup_nss = 0;
 +
-+#define EHT_DL_MUOFDMA_ENABLE    1
-+#define EHT_UL_MUOFDMA_ENABLE    1
-+#define EHT_DL_MUMIMO_ENABLE     1
-+#define EHT_UL_MUMIMO_ENABLE     1
-+#define EHT_MU_BFEE_ENABLE       1
-+#define EHT_SU_BFEE_ENABLE       1
-+#define EHT_MU_BFER_ENABLE       1
-+#define EHT_SU_BFER_ENABLE       1
++	switch (nss_ratio_info) {
++	case WMI_NSS_RATIO_1BY2_NSS:
++		max_sup_nss = max_nss >> 1;
++		break;
++	case WMI_NSS_RATIO_3BY4_NSS:
++		ath12k_warn(ar->ab, "WMI_NSS_RATIO_3BY4_NSS not supported\n");
++		break;
++	case WMI_NSS_RATIO_1_NSS:
++		max_sup_nss = max_nss;
++		break;
++	case WMI_NSS_RATIO_2_NSS:
++		ath12k_warn(ar->ab, "WMI_NSS_RATIO_2_NSS not supported\n");
++		break;
++	default:
++		ath12k_warn(ar->ab, "invalid nss ratio received from fw: %d\n",
++			    nss_ratio_info);
++		break;
++	}
 +
- #define HE_VHT_SOUNDING_MODE_ENABLE		1
- #define HE_SU_MU_SOUNDING_MODE_ENABLE		1
- #define HE_TRIG_NONTRIG_SOUNDING_MODE_ENABLE	1
++	return max_sup_nss;
++}
++
+ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 				    struct ieee80211_vif *vif,
+ 				    struct ieee80211_sta *sta,
+@@ -1814,6 +1842,7 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 	u8 max_nss, vht_mcs;
+ 	int i, vht_nss, nss_idx;
+ 	bool user_rate_valid = true;
++	u32 rx_nss, tx_nss, nss_160;
+ 
+ 	if (WARN_ON(ath12k_mac_vif_chan(vif, &def)))
+ 		return;
+@@ -1908,10 +1937,24 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 	/* TODO:  Check */
+ 	arg->tx_max_mcs_nss = 0xFF;
+ 
+-	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
+-		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
++	if (arg->peer_phymode == MODE_11AC_VHT160) {
++		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
++		rx_nss = min(arg->peer_nss, tx_nss);
++		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
+ 
+-	/* TODO: rxnss_override */
++		if (!rx_nss) {
++			ath12k_warn(ar->ab, "invalid max_nss\n");
++			return;
++		}
++
++		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
++		arg->peer_bw_rxnss_override |= nss_160;
++	}
++
++	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++		   "mac vht peer %pM max_mpdu %d flags 0x%x nss_override 0x%x\n",
++		   sta->addr, arg->peer_max_mpdu, arg->peer_flags,
++		   arg->peer_bw_rxnss_override);
+ }
+ 
+ static int ath12k_mac_get_max_he_mcs_map(u16 mcs_map, int nss)
+@@ -1998,6 +2041,7 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 	u16 he_tx_mcs = 0, v = 0;
+ 	int he_nss, nss_idx;
+ 	bool user_rate_valid = true;
++	u32 rx_nss, tx_nss, nss_160;
+ 
+ 	if (WARN_ON(ath12k_mac_vif_chan(vif, &def)))
+ 		return;
+@@ -2177,11 +2221,28 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 		    he_mcs_mask[i])
+ 			max_nss = i + 1;
+ 	}
++	max_nss = min(max_nss, ar->num_tx_chains);
+ 	arg->peer_nss = min(sta->deflink.rx_nss, max_nss);
+ 
++	if (arg->peer_phymode == MODE_11AX_HE160) {
++		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
++		rx_nss = min(arg->peer_nss, tx_nss);
++		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
++
++		if (!rx_nss) {
++			ath12k_warn(ar->ab, "invalid max_nss\n");
++			return;
++		}
++
++		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
++		arg->peer_bw_rxnss_override |= nss_160;
++	}
++
+ 	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
+-		   "mac he peer %pM nss %d mcs cnt %d\n",
+-		   sta->deflink.addr, arg->peer_nss, arg->peer_he_mcs_count);
++		   "mac he peer %pM nss %d mcs cnt %d nss_override 0x%x\n",
++		   sta->deflink.addr, arg->peer_nss,
++		   arg->peer_he_mcs_count,
++		   arg->peer_bw_rxnss_override);
+ }
+ 
+ static void ath12k_peer_assoc_h_smps(struct ieee80211_sta *sta,
+@@ -2642,12 +2703,12 @@ static void ath12k_peer_assoc_prepare(struct ath12k *ar,
+ 	ath12k_peer_assoc_h_basic(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_crypto(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_rates(ar, vif, sta, arg);
++	ath12k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_ht(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_vht(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_he(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_eht(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_qos(ar, vif, sta, arg);
+-	ath12k_peer_assoc_h_phymode(ar, vif, sta, arg);
+ 	ath12k_peer_assoc_h_smps(sta, arg);
+ 
+ 	/* TODO: amsdu_disable req? */
+@@ -5193,10 +5254,8 @@ ath12k_create_vht_cap(struct ath12k *ar, u32 rate_cap_tx_chainmask,
+ 
+ 	ath12k_set_vht_txbf_cap(ar, &vht_cap.cap);
+ 
+-	/* TODO: Enable back VHT160 mode once association issues are fixed */
+-	/* Disabling VHT160 and VHT80+80 modes */
+-	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
+-	vht_cap.cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
++	/* 80P80 is not supported */
++	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
+ 
+ 	rxmcs_map = 0;
+ 	txmcs_map = 0;
+@@ -9093,7 +9152,8 @@ static int ath12k_mac_setup_iface_combinations(struct ath12k_hw *ah)
+ 	combinations[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+ 						BIT(NL80211_CHAN_WIDTH_20) |
+ 						BIT(NL80211_CHAN_WIDTH_40) |
+-						BIT(NL80211_CHAN_WIDTH_80);
++						BIT(NL80211_CHAN_WIDTH_80) |
++						BIT(NL80211_CHAN_WIDTH_160);
+ 
+ 	wiphy->iface_combinations = combinations;
+ 	wiphy->n_iface_combinations = 1;
+@@ -9300,6 +9360,9 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
+ 	ieee80211_hw_set(hw, REPORTS_LOW_ACK);
+ 
++	if (cap->nss_ratio_enabled)
++		ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
++
+ 	if (ht_cap & WMI_HT_CAP_ENABLED) {
+ 		ieee80211_hw_set(hw, AMPDU_AGGREGATION);
+ 		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
+diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
+index e5193a44f344..ced73bb99169 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.h
++++ b/drivers/net/wireless/ath/ath12k/mac.h
+@@ -36,6 +36,8 @@ struct ath12k_generic_iter {
+ #define IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11	BIT(24)
+ 
+ #define ATH12K_CHAN_WIDTH_NUM			14
++#define ATH12K_BW_NSS_MAP_ENABLE		BIT(31)
++#define ATH12K_PEER_RX_NSS_160MHZ		GENMASK(2, 0)
+ 
+ #define ATH12K_TX_POWER_MAX_VAL	70
+ #define ATH12K_TX_POWER_MIN_VAL	0
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 7c958de83d03..e3b291fadcf5 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -519,6 +519,10 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
+ 		pdev_cap->he_mcs = le32_to_cpu(mac_caps->he_supp_mcs_5g);
+ 		pdev_cap->tx_chain_mask = le32_to_cpu(mac_caps->tx_chain_mask_5g);
+ 		pdev_cap->rx_chain_mask = le32_to_cpu(mac_caps->rx_chain_mask_5g);
++		pdev_cap->nss_ratio_enabled =
++			WMI_NSS_RATIO_EN_DIS_GET(mac_caps->nss_ratio);
++		pdev_cap->nss_ratio_info =
++			WMI_NSS_RATIO_INFO_GET(mac_caps->nss_ratio);
+ 	} else {
+ 		return -EINVAL;
+ 	}
+@@ -974,11 +978,24 @@ int ath12k_wmi_vdev_down(struct ath12k *ar, u8 vdev_id)
+ static void ath12k_wmi_put_wmi_channel(struct ath12k_wmi_channel_params *chan,
+ 				       struct wmi_vdev_start_req_arg *arg)
+ {
++	u32 center_freq1 = arg->band_center_freq1;
++
+ 	memset(chan, 0, sizeof(*chan));
+ 
+ 	chan->mhz = cpu_to_le32(arg->freq);
+ 	chan->band_center_freq1 = cpu_to_le32(arg->band_center_freq1);
+-	chan->band_center_freq2 = 0;
++	if (arg->mode == MODE_11AX_HE160) {
++		if (arg->freq > center_freq1)
++			chan->band_center_freq1 =
++					cpu_to_le32(center_freq1 + 40);
++		else
++			chan->band_center_freq1 =
++					cpu_to_le32(center_freq1 - 40);
++
++		chan->band_center_freq2 = cpu_to_le32(arg->band_center_freq1);
++	} else {
++		chan->band_center_freq2 = 0;
++	}
+ 
+ 	chan->info |= le32_encode_bits(arg->mode, WMI_CHAN_INFO_MODE);
+ 	if (arg->passive)
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index 49f485477d41..d5eb5982af47 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -2262,6 +2262,21 @@ enum wmi_direct_buffer_module {
+ 	WMI_DIRECT_BUF_MAX
+ };
+ 
++/**
++ * enum wmi_nss_ratio - NSS ratio received from FW during service ready ext event
++ * @WMI_NSS_RATIO_1BY2_NSS: Max nss of 160MHz is equals to half of the max nss of 80MHz
++ * @WMI_NSS_RATIO_3BY4_NSS: Max nss of 160MHz is equals to 3/4 of the max nss of 80MHz
++ * @WMI_NSS_RATIO_1_NSS: Max nss of 160MHz is equals to the max nss of 80MHz
++ * @WMI_NSS_RATIO_2_NSS: Max nss of 160MHz is equals to two times the max nss of 80MHz
++ */
++
++enum wmi_nss_ratio {
++	WMI_NSS_RATIO_1BY2_NSS,
++	WMI_NSS_RATIO_3BY4_NSS,
++	WMI_NSS_RATIO_1_NSS,
++	WMI_NSS_RATIO_2_NSS
++};
++
+ struct ath12k_wmi_pdev_band_arg {
+ 	u32 pdev_id;
+ 	u32 start_freq;
+@@ -2568,6 +2583,12 @@ struct ath12k_wmi_hw_mode_cap_params {
+ } __packed;
+ 
+ #define WMI_MAX_HECAP_PHY_SIZE                 (3)
++#define WMI_NSS_RATIO_EN_DIS_BITPOS    BIT(0)
++#define WMI_NSS_RATIO_EN_DIS_GET(_val) \
++	le32_get_bits(_val, WMI_NSS_RATIO_EN_DIS_BITPOS)
++#define WMI_NSS_RATIO_INFO_BITPOS              GENMASK(4, 1)
++#define WMI_NSS_RATIO_INFO_GET(_val) \
++	le32_get_bits(_val, WMI_NSS_RATIO_INFO_BITPOS)
+ 
+ /* pdev_id is present in lower 16 bits of pdev_and_hw_link_ids in
+  * ath12k_wmi_mac_phy_caps_params & ath12k_wmi_caps_ext_params.
+@@ -2609,6 +2630,13 @@ struct ath12k_wmi_mac_phy_caps_params {
+ 	__le32 he_cap_info_2g_ext;
+ 	__le32 he_cap_info_5g_ext;
+ 	__le32 he_cap_info_internal;
++	__le32 wireless_modes;
++	__le32 low_2ghz_chan_freq;
++	__le32 high_2ghz_chan_freq;
++	__le32 low_5ghz_chan_freq;
++	__le32 high_5ghz_chan_freq;
++	__le32 nss_ratio;
++
+ } __packed;
+ 
+ struct ath12k_wmi_hal_reg_caps_ext_params {
 -- 
 2.17.1
 
