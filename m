@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F86847F78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE26C47F6B
 	for <linux-wireless@vger.kernel.org>; Wed, 15 May 2024 07:39:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715758749; cv=none; b=bM32BUJZ4JNbqJNWdPwBP9iQ3ex7x9xgUnZADHsEneSfHrwyb1UmS8cqMD1p9Ewk2SES4ovvIkaOhGULIJPxnsQEppUEIlPtJ0EzhiM0z+uC25zFknHIBtM/JLm22o/1/6LJkcEwplqsg0Onl2kTiYiWliIIZmBLgEkzQLYKESw=
+	t=1715758750; cv=none; b=aJ+0/PYjGx01aZvLkZt4EFn0SqcKNm8fmHq2zzAcTRH9wWJoNQRIEZr7HQq8f6WxbCpy6ASn/I57jsGzwqukhO1aJq8Xn0UA4pgoXQz1jSm5XD4jG/VzC3v+TtZvrSPjyHwIQG5FZmTMwfpiep6P0cSDuFhdI3NQfOm8H8ffJCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715758749; c=relaxed/simple;
-	bh=yq1Mq2gs0gC0KAxEjFCmGz91agtgyakecfU/RP5JT70=;
+	s=arc-20240116; t=1715758750; c=relaxed/simple;
+	bh=/vYzJ8uW0U8WGjO8T6DSaItwayf/3m+8W5gVtxez3Ts=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oOdlHfEugOT0P6EUk3SiZWKJQoARF/V0NwkS7rewkPY6j0LdHucN7abQZMxXvqQ1qV9SKkgaPKIcAOlWM0x5lKljuWqVV1fSuO9MwiAWFdl9Yd2dB1nhgzBqzf/A4zdfRf8eEAYU5sl7icRw7cts/5MQabPH2r8nWtol1cbofCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Pnpvm8oJ; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=ibEWnebpCXyt1LYkf7xRuAHwXN6S8lfcWAVVRS+CGzP9F37BzMOJ+35DaFvaTpTRuQUsa3eFEBO+TSqY87JgojDVNoC7H+MIPDhh9cH+5/9fOz9Gmjt5KPUJ7vhfLJdnOxhB+NP80+L/xMxtp40xE3mLiWjN60a2rKlUZ0WgEm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qqF5BFkr; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Pnpvm8oJ"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qqF5BFkr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=X9WTqttk+8SrOJn82P1W7v6AhIuayiPTDGMBySZ37ac=;
-	t=1715758748; x=1716968348; b=Pnpvm8oJPVuTzWrF2byYP/PRZpZLrxqdj+Ic/tpJqBSOfpj
-	iqB9tt+lcXA5LvfIVMOnAOqhSpQR83nfWi+4ffLKbkT/jaR9+MTuL2SPVWDrY4zFmGLYwfVuQqB6V
-	Ier9VsGZQB4fP/v9KZA04CzghCoJQpBAGcHIj8sLHnggdGImbHghmfJVHrJxzS9VhOfnyqdSjQiS3
-	0t5WXlbZfUAt+TyMlYBkmLqTsEpEVEfrFd9dmAGd7WwZN/FszYVp9QB1mcKdqbimq+QsdRkqeUG10
-	D940f6W1bkEkAQripoPiT5/UhHg4GtcUdkfPXB48iv6gqLvZ/LtBfUlCAg/lHNNg==;
+	Resent-Cc:Resent-Message-ID; bh=d2nDvE9Q1rLmr+4YaSee4dJNpj6KauiaAeURSi6HZjs=;
+	t=1715758747; x=1716968347; b=qqF5BFkr+abvQizBBHj61cf7bNxWFmuWOVOEuMUt3feCpUO
+	Sf/VS+H1XG1+zU+WYR5fKumK3Uc3qA2EN7fDO0f6obkz6FgfJooK17yov4IIMS5hU7Unzms3yO+qN
+	0Q+FaNPiIzUtzD81m2Gw1gwAmpT7Jw/DC62hXolCVXG53iWQMTAYdMkmitTer9UFekmLCebqoPVg+
+	K1WbI9/Xm2j2jtJWyZHWlRY50tstAehnmV5xEmM2Qzbe6AujkqwkgfjhWiqYSe4coEukZpbUzDOQl
+	gyx+JA5GEUQauo2o0DehY/TQj7aIKgme4sRl98lRdQR3HHnqSwz70TwfvFzVY4aQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1s79E9-000000063rL-36X3;
-	Wed, 15 May 2024 09:39:05 +0200
+	id 1s79E8-000000063rL-1yf4;
+	Wed, 15 May 2024 09:39:04 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/6] wifi: ieee80211: remove ieee80211_next_tbtt_present()
-Date: Wed, 15 May 2024 09:38:38 +0200
-Message-ID: <20240515093852.774ced74dea8.I152525b4cff6e6a25be6c48fe6a4b89f17bab8a9@changeid>
+Subject: [PATCH 2/6] wifi: ieee80211: add missing doc short descriptions
+Date: Wed, 15 May 2024 09:38:36 +0200
+Message-ID: <20240515093852.16f4355e918e.I940276a4fb006ada68ab1a3e6077e3229fff0f14@changeid>
 X-Mailer: git-send-email 2.45.0
 In-Reply-To: <20240515073852.11273-8-johannes@sipsolutions.net>
 References: <20240515073852.11273-8-johannes@sipsolutions.net>
@@ -50,51 +50,55 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This is actually completely equivalent to the other function
-ieee80211_is_s1g_short_beacon(), but open-codes the logic.
-Implement the necessary logic in ieee80211_is_s1g_short_beacon()
-and remove ieee80211_next_tbtt_present().
+Some structures erroneously don't have a short description,
+add the missing descriptions.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+ include/linux/ieee80211.h | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 713266ce48a7..72b351abb4f6 100644
+index de2dce743ee2..713266ce48a7 100644
 --- a/include/linux/ieee80211.h
 +++ b/include/linux/ieee80211.h
-@@ -604,25 +604,15 @@ static inline bool ieee80211_is_s1g_beacon(__le16 fc)
- }
+@@ -1101,7 +1101,7 @@ enum ieee80211_vht_opmode_bits {
+ };
  
  /**
-- * ieee80211_next_tbtt_present - check if IEEE80211_FTYPE_EXT &&
-- * IEEE80211_STYPE_S1G_BEACON && IEEE80211_S1G_BCN_NEXT_TBTT
-- * @fc: frame control bytes in little-endian byteorder
-- */
--static inline bool ieee80211_next_tbtt_present(__le16 fc)
--{
--	return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
--	       cpu_to_le16(IEEE80211_FTYPE_EXT | IEEE80211_STYPE_S1G_BEACON) &&
--	       fc & cpu_to_le16(IEEE80211_S1G_BCN_NEXT_TBTT);
--}
--
--/**
-- * ieee80211_is_s1g_short_beacon - check if next tbtt present bit is set. Only
-- * true for S1G beacons when they're short.
-+ * ieee80211_is_s1g_short_beacon - check if frame is an S1G short beacon
-  * @fc: frame control bytes in little-endian byteorder
-+ * Return: whether or not the frame is an S1G short beacon,
-+ *	i.e. it is an S1G beacon with 'next TBTT' flag set
-  */
- static inline bool ieee80211_is_s1g_short_beacon(__le16 fc)
- {
--	return ieee80211_is_s1g_beacon(fc) && ieee80211_next_tbtt_present(fc);
-+	return ieee80211_is_s1g_beacon(fc) &&
-+		(fc & cpu_to_le16(IEEE80211_S1G_BCN_NEXT_TBTT));
- }
+- * enum ieee80211_s1g_chanwidth
++ * enum ieee80211_s1g_chanwidth - S1G channel widths
+  * These are defined in IEEE802.11-2016ah Table 10-20
+  * as BSS Channel Width
+  *
+@@ -4145,7 +4145,7 @@ enum ieee80211_idle_options {
+ };
  
  /**
+- * struct ieee80211_bss_max_idle_period_ie
++ * struct ieee80211_bss_max_idle_period_ie - BSS max idle period element struct
+  *
+  * This structure refers to "BSS Max idle period element"
+  *
+@@ -4180,7 +4180,7 @@ enum ieee80211_sa_query_action {
+ };
+ 
+ /**
+- * struct ieee80211_bssid_index
++ * struct ieee80211_bssid_index - multiple BSSID index element structure
+  *
+  * This structure refers to "Multiple BSSID-index element"
+  *
+@@ -4195,7 +4195,8 @@ struct ieee80211_bssid_index {
+ };
+ 
+ /**
+- * struct ieee80211_multiple_bssid_configuration
++ * struct ieee80211_multiple_bssid_configuration - multiple BSSID configuration
++ *	element structure
+  *
+  * This structure refers to "Multiple BSSID Configuration element"
+  *
 -- 
 2.45.0
 
