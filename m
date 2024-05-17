@@ -1,105 +1,128 @@
-Received: from forward201c.mail.yandex.net (forward201c.mail.yandex.net [178.154.239.220])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536E912F398;
-	Fri, 17 May 2024 15:41:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0225D3D9E;
+	Fri, 17 May 2024 16:23:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715960466; cv=none; b=DjPYO4oiT4ePQKmF/O3byrZ9lFi4ycCEL7Vhb9SjtQ3T2861H5QNavXh1FPrwe208mWAQk4KZLrblcAsNtgptXdSQA4CwTxxG2L7PuAOXCh/iHxMW++W4ZbKV8L9EmNcqBvvilZA70Zgm7buZLz7IUCOY3omlDJz6m5d3+wPywE=
+	t=1715962994; cv=none; b=JbzhVl9QqOrGn5aI3Lp2QNl3nFNFVGz2U9XaYDDV5FovgM5gKKZAXRXy1/SmO9pdi7wgxYf4Ybf2RQI7LH29HkUaLiMIMdWi2pliMj4nIRJ4+c9q0QjMzoq0sWfXOJpcHg7fErYP1NBGlj//ZNX4xSSk6r7glY0UKNAc0GOIo/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715960466; c=relaxed/simple;
-	bh=0u2MHk2i9OZen3eMY5VE2Cb74f2yioPtycCuCasj6J8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h6UCTJE9oMxe4lKkn7TWE4bWgfhfxy9jGrM5g8XHp/upSM+iwN59QrmBS9Y/RsHrTy3oNQx2LbibmXGGq8Td4QQL2CAy+6jI9NC8ZqwETy1HCGLikQFw1r3oFhPfqw3lHuPFTqF1+UnvZT7gK8IHV5qaCN+yGtZcSFh4PjnNlF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=dKW9lrvO; arc=none smtp.client-ip=178.154.239.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1715962994; c=relaxed/simple;
+	bh=uNwlZVn0k6bBYrUn2NOTbtyZjAe9hAwPUWGNLiaSzKs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MlIAnJvXoclx91HzV3KHgMAmzFsWWX7APIuqQKg6D8rdDfiO2lBWN8hNUnta8MkPvLMjbRrCzno9d+ey7uKWaxOu5yWMAIKuIS4yXd50yO6+ba4Jn3R+4XC21rSS0pTUnL9jV4xzW+y5gexohMQGsr+7nf1x4bn2gL2/M+fleQw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8J6rGhR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="dKW9lrvO"
-Received: from forward101b.mail.yandex.net (forward101b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d101])
-	by forward201c.mail.yandex.net (Yandex) with ESMTPS id 3F2B763FC0;
-	Fri, 17 May 2024 18:33:46 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-31.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-31.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:de2c:0:640:e39b:0])
-	by forward101b.mail.yandex.net (Yandex) with ESMTPS id E3D65608DE;
-	Fri, 17 May 2024 18:33:37 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-31.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id aXHWQ33Zu8c0-K37bRVuG;
-	Fri, 17 May 2024 18:33:37 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1715960017; bh=JzV/mk6KMC1LwaV1EcKob7gOE3lv1oBnCWZ0hjperVQ=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=dKW9lrvOtG0OM5bXZhLrxQYLKDmB5VKtw/mmIY85H9iZSNUKrg/wNcUmXVmRRSdjv
-	 KfsIWvfv0VBzgQJxMhWXRo/ZvA0itHohehslvNCvgtXA2cQ0LPz46N1A7K2CjmWpWF
-	 7jWDHpTKeQDe1ddFRfxB8kij+knT8YAkkuI+2aiA=
-Authentication-Results: mail-nwsmtp-smtp-production-main-31.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Kees Cook <keescook@chromium.org>,
-	linux-wireless@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Cc: Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH 1/2] wifi: cfg80211: use __counted_by where appropriate
-Date: Fri, 17 May 2024 18:33:31 +0300
-Message-ID: <20240517153332.18271-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.45.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8J6rGhR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70342C2BD10;
+	Fri, 17 May 2024 16:23:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715962993;
+	bh=uNwlZVn0k6bBYrUn2NOTbtyZjAe9hAwPUWGNLiaSzKs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F8J6rGhR6abMw+H3e0sNsBE3c0HR9drUMq7zelYKMTQHa0vv/MIG2W8+/hD/7XTI+
+	 9VkRoCKMyZzVY3LjQAv7zTKPKrfWjp+PaYpWL+HZIXKwJ9PpfHkWCOm8/AnprKJTiS
+	 x71fH3FEiRuBcJ7Snaffb4mCRWAYWAV32gCoEeO44TUBKDap7ZLHPJJXjD0QMTmCNO
+	 ZUj+MK/eDva4zMj4VegTwZ0y/H/lyuO2Nk/KqN8YnLbubwD8YFqugReL9OgeiAJUxc
+	 u0pTJlCPPo4/7T1+KTMYWfO14b9TwwHb+K7KeD4YmO6RNA3DpP+PsNxwbeXmOHuVhd
+	 +qE7xoo2PLRTA==
+Date: Fri, 17 May 2024 09:23:12 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Linux trace kernel <linux-trace-kernel@vger.kernel.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-cxl@vger.kernel.org,
+	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	amd-gfx@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+	freedreno@lists.freedesktop.org, virtualization@lists.linux.dev,
+	linux-rdma@vger.kernel.org, linux-pm@vger.kernel.org,
+	iommu@lists.linux.dev, linux-tegra@vger.kernel.org,
+	netdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+	linux-usb@vger.kernel.org, linux-bcachefs@vger.kernel.org,
+	linux-nfs@vger.kernel.org, ocfs2-devel@lists.linux.dev,
+	linux-cifs@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-edac@vger.kernel.org, selinux@vger.kernel.org,
+	linux-btrfs@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-hwmon@vger.kernel.org,
+	io-uring@vger.kernel.org, linux-sound@vger.kernel.org,
+	bpf@vger.kernel.org, linux-wpan@vger.kernel.org,
+	dev@openvswitch.org, linux-s390@vger.kernel.org,
+	tipc-discussion@lists.sourceforge.net,
+	Julia Lawall <Julia.Lawall@inria.fr>
+Subject: Re: [PATCH] tracing/treewide: Remove second parameter of
+ __assign_str()
+Message-ID: <20240517162312.GZ360919@frogsfrogsfrogs>
+References: <20240516133454.681ba6a0@rorschach.local.home>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240516133454.681ba6a0@rorschach.local.home>
 
-Annotate 'sub_specs' of 'struct cfg80211_sar_specs', 'channels'
-of 'struct cfg80211_sched_scan_request', 'channels' of 'struct
-cfg80211_wowlan_nd_match', and 'matches' of 'struct
-cfg80211_wowlan_nd_info' with '__counted_by' attribute. Briefly
-tested with clang 18.1.1 and CONFIG_UBSAN_BOUNDS running iwlwifi.
+On Thu, May 16, 2024 at 01:34:54PM -0400, Steven Rostedt wrote:
+> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+> 
+> [
+>    This is a treewide change. I will likely re-create this patch again in
+>    the second week of the merge window of v6.10 and submit it then. Hoping
+>    to keep the conflicts that it will cause to a minimum.
+> ]
+> 
+> With the rework of how the __string() handles dynamic strings where it
+> saves off the source string in field in the helper structure[1], the
+> assignment of that value to the trace event field is stored in the helper
+> value and does not need to be passed in again.
+> 
+> This means that with:
+> 
+>   __string(field, mystring)
+> 
+> Which use to be assigned with __assign_str(field, mystring), no longer
+> needs the second parameter and it is unused. With this, __assign_str()
+> will now only get a single parameter.
+> 
+> There's over 700 users of __assign_str() and because coccinelle does not
+> handle the TRACE_EVENT() macro I ended up using the following sed script:
+> 
+>   git grep -l __assign_str | while read a ; do
+>       sed -e 's/\(__assign_str([^,]*[^ ,]\) *,[^;]*/\1)/' $a > /tmp/test-file;
+>       mv /tmp/test-file $a;
+>   done
+> 
+> I then searched for __assign_str() that did not end with ';' as those
+> were multi line assignments that the sed script above would fail to catch.
+> 
+> Note, the same updates will need to be done for:
+> 
+>   __assign_str_len()
+>   __assign_rel_str()
+>   __assign_rel_str_len()
+> 
+> I tested this with both an allmodconfig and an allyesconfig (build only for both).
+> 
+> [1] https://lore.kernel.org/linux-trace-kernel/20240222211442.634192653@goodmis.org/
+> 
+> Cc: Masami Hiramatsu <mhiramat@kernel.org>
+> Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Cc: Julia Lawall <Julia.Lawall@inria.fr>
+> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- include/net/cfg80211.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+/me finds this pretty magical, but such is the way of macros.
+Thanks for being much smarter about them than me. :)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index cbf1664dc569..d79180bec7a1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2200,7 +2200,7 @@ struct cfg80211_sar_sub_specs {
- struct cfg80211_sar_specs {
- 	enum nl80211_sar_type type;
- 	u32 num_sub_specs;
--	struct cfg80211_sar_sub_specs sub_specs[];
-+	struct cfg80211_sar_sub_specs sub_specs[] __counted_by(num_sub_specs);
- };
- 
- 
-@@ -2838,7 +2838,7 @@ struct cfg80211_sched_scan_request {
- 	struct list_head list;
- 
- 	/* keep last */
--	struct ieee80211_channel *channels[];
-+	struct ieee80211_channel *channels[] __counted_by(n_channels);
- };
- 
- /**
-@@ -3582,7 +3582,7 @@ struct cfg80211_coalesce {
- struct cfg80211_wowlan_nd_match {
- 	struct cfg80211_ssid ssid;
- 	int n_channels;
--	u32 channels[];
-+	u32 channels[] __counted_by(n_channels);
- };
- 
- /**
-@@ -3596,7 +3596,7 @@ struct cfg80211_wowlan_nd_match {
-  */
- struct cfg80211_wowlan_nd_info {
- 	int n_matches;
--	struct cfg80211_wowlan_nd_match *matches[];
-+	struct cfg80211_wowlan_nd_match *matches[] __counted_by(n_matches);
- };
- 
- /**
--- 
-2.45.1
+Acked-by: Darrick J. Wong <djwong@kernel.org>	# xfs
 
+--D
