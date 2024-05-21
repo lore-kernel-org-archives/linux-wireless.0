@@ -1,46 +1,45 @@
-Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B245E148317;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0BE414830D;
 	Tue, 21 May 2024 17:19:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.249
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716311968; cv=none; b=XafI0pL3DAqjB03U7UREUq5QXXTit1bHd+f/8SnDGznaDVkovoGKKtiNOMUCztK//ZfTL+7YxSADjXchqHqNRkivWBqB5d4ZqDU2B1BaDx4Or8cNvSMZeR6bXEvEMARQH9qs7lraFEJ6qmuQCkGcxULTQR+msv7E9AFyAjHgQto=
+	t=1716311968; cv=none; b=Xl5txngSSntSMID0bazohi8b2IeV+7uw7Dl3oyQIM1DcNWC7ps8UXAhxJKTGO7gAHZ5sZbZ8nWhwTHt9/t5fLLlFoSNr3dSqkTKMd2V7BJDRr6T0x842ONCDS5jUqiTCm9NBCWyZ2h1BzT0hDss+3OoiRxIwbY1gHYdMHDPc8nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1716311968; c=relaxed/simple;
-	bh=jjo57Gr0OzRovClfoZv+9dQtVGRTeWuKYkbcPaEz7rk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=an522sY8muNEk0Hyg9KGJ/C7UXmjAgilZ6fd+O4Gew7NTlfNmVP3QEYl4v2lFrqRaqCl+HMvkW492TDATnH9h4KEN0kMNQdQlk3kKJbBD4b28vVH3Y+6k5t5linphwiiUymRA9rJKq5Li001pUxX6YkODoksjcKHi2KidX+1XPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=aMTc0jRi; arc=none smtp.client-ip=198.47.23.249
+	bh=VLzvIPj/S3ngnfBotvC7rncAzchdWyg+j6grIYSDDXg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ekLSb5OLGmYVCxYAkCr9pH/YbvzBpv33vp9VoEh7yTd8bTXhoGYtWQ0TenJosdraJOM58vC7zXd48UdETIg4FRDx1ZCzSFbIv7pQ3R4+v8HCvuGNSyHUVFNuhVBhRV1SH1TM0Fsj6fpMJDiynJsO3YviMzNCJ+N2yuTMe5qSubo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=HAaIc4Kn; arc=none smtp.client-ip=198.47.23.248
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="aMTc0jRi"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="HAaIc4Kn"
 Received: from lelv0265.itg.ti.com ([10.180.67.224])
-	by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 44LHIxpN071193;
-	Tue, 21 May 2024 12:18:59 -0500
+	by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 44LHIu1K096831;
+	Tue, 21 May 2024 12:18:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1716311939;
-	bh=iEvzsW5L2NUBj7nr0zp2xH89vF2/tMJAzLRRwGJqbvs=;
-	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=aMTc0jRiFnJxi63YykwXAof39CDKieRfJEPzkSXovJCukVfB7Cy20KAY/BaHkT6sZ
-	 UYyXfk/FP+xc/VanN8zM94AHk9CFElhk7d0FKSLkOxUxUxFXWLBad22TF/DcDBl8LH
-	 OEbXCINNOKLXWnSrV7yMv5wbPCVCq1hA+hZHu4DI=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 44LHIwRY032405
+	s=ti-com-17Q1; t=1716311936;
+	bh=S2YXdbcyJVlmzclCVxZ5TAlqXZgP4oQF7n9qzGat2gQ=;
+	h=From:To:CC:Subject:Date;
+	b=HAaIc4KnUsVrRr5ZP99E6/kQET71XPw0G3FkcoYcv8lmAnleY0OPDJePGahzk+0AL
+	 u0qiZSBZ4nnQp59FfRbCsY1we+qyYw1aw2C8y8L7Xyv46HX5C66paamSiyPh4a2rdT
+	 ysYajYhTynP73pOeKPLRVcLrSzBcQTu7cs1kHEls=
+Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
+	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 44LHIuvo032387
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 21 May 2024 12:18:58 -0500
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+	Tue, 21 May 2024 12:18:56 -0500
+Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Tue, 21
- May 2024 12:18:58 -0500
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ May 2024 12:18:55 -0500
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Tue, 21 May 2024 12:18:58 -0500
+ Frontend Transport; Tue, 21 May 2024 12:18:55 -0500
 Received: from localhost (uda0389739.dhcp.ti.com [137.167.1.114])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 44LHIvW7023002;
-	Tue, 21 May 2024 12:18:58 -0500
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 44LHIts5013885;
+	Tue, 21 May 2024 12:18:55 -0500
 From: <michael.nemanov@ti.com>
 To: Kalle Valo <kvalo@kernel.org>, Johannes Berg <johannes.berg@intel.com>,
         Breno Leitao <leitao@debian.org>,
@@ -48,16 +47,11 @@ To: Kalle Valo <kvalo@kernel.org>, Johannes Berg <johannes.berg@intel.com>,
         Kees
  Cook <keescook@chromium.org>, <linux-wireless@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-CC: Sabeeh Khan <sabeeh-khan@ti.com>,
-        Michael Nemanov
-	<Michael.Nemanov@ti.com>,
-        Michael Nemanov <michael.nemanov@ti.com>
-Subject: [PATCH 02/17] Add debug.h
-Date: Tue, 21 May 2024 20:18:26 +0300
-Message-ID: <20240521171841.884576-3-michael.nemanov@ti.com>
+CC: Sabeeh Khan <sabeeh-khan@ti.com>, Michael Nemanov <michael.nemanov@ti.com>
+Subject: [PATCH 00/17] wifi: cc33xx: Add driver for new TI CC33xx wireless device family
+Date: Tue, 21 May 2024 20:18:24 +0300
+Message-ID: <20240521171841.884576-1-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240521171841.884576-1-michael.nemanov@ti.com>
-References: <20240521171841.884576-1-michael.nemanov@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,114 +62,132 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
-From: Michael Nemanov <Michael.Nemanov@ti.com>
+From: Michael Nemanov <michael.nemanov@ti.com>
 
-These are trace macros used throughout the driver.
+Hello everyone,
 
-Signed-off-by: Michael Nemanov <michael.nemanov@ti.com>
----
- drivers/net/wireless/ti/cc33xx/debug.h | 92 ++++++++++++++++++++++++++
- 1 file changed, 92 insertions(+)
+This series adds support for CC33xx which is a new family of WLAN IEEE802.11 a/b/g/n/ax
+and BLE 5.4 transceivers by Texas Instruments. These devices are 20MHz single spatial stream
+enabling STA (IEEE802.11ax) and AP (IEEE802.11n only) roles as well as both roles simultaneously.
+Communication to the CC33xx is done via 4-bit SDIO with two extra GPIOs: Enable and Interrupt.
+
+Data sheet: https://www.ti.com/lit/gpn/cc3301
+
+This driver's architecture is a soft-MAC and derivative of existing wl18xx + wlcore code [1].
+It has been tested with the AM335x, AM625x, and i.MX8-MP evaluation kits.
+
+All code passes sparse and checkpatch with very few pragmatic exceptions.
+
+Known gaps to be addressed in following patches:
+1. BLE support
+
+Test log:
+https://0x0.st/XPUd.log
+
+Change log:
+v1:
+* Added dt-bindings
+* Removed debugfs to ease review
+* Fix build issue with CONFIG_CFG80211_CERTIFICATION_ONUS
+* Fix multiple build warnings found with Clang 18 and W=12
+
+RFC: https://lore.kernel.org/linux-wireless/20240512183247.2190242-1-michael.nemanov@ti.com/
+
+
+[1] It was considered implementing CC33xx as another user of wlcore but The
+differences in HW, host interface, IRQ functionality, Rx/Tx behavior and supported features
+were too significant so this was abandoned.
+
+Michael Nemanov
+Texas Instruments
+
+Michael Nemanov (17):
+  Add cc33xx.h, cc33xx_i.h
+  Add debug.h
+  Add sdio.c, io.c, io.h
+  Add cmd.c, cmd.h
+  Add acx.c, acx.h
+  Add event.c, event.h
+  Add boot.c, boot.h
+  Add main.c
+  Add rx.c, rx.h
+  Add tx.c, tx.h
+  Add init.c, init.h
+  Add scan.c, scan.h
+  Add conf.h
+  Add ps.c, ps.h
+  Add testmode.c, testmode.h
+  Add Kconfig, Makefile and integrate into wireless/ti folder
+  Add ti,cc33xx.yaml
+
+ .../bindings/net/wireless/ti,cc33xx.yaml      |   60 +
+ drivers/net/wireless/ti/Kconfig               |    1 +
+ drivers/net/wireless/ti/Makefile              |    1 +
+ drivers/net/wireless/ti/cc33xx/Kconfig        |   24 +
+ drivers/net/wireless/ti/cc33xx/Makefile       |   10 +
+ drivers/net/wireless/ti/cc33xx/acx.c          | 1009 +++
+ drivers/net/wireless/ti/cc33xx/acx.h          |  835 +++
+ drivers/net/wireless/ti/cc33xx/boot.c         |  363 +
+ drivers/net/wireless/ti/cc33xx/boot.h         |   24 +
+ drivers/net/wireless/ti/cc33xx/cc33xx.h       |  481 ++
+ drivers/net/wireless/ti/cc33xx/cc33xx_i.h     |  459 ++
+ drivers/net/wireless/ti/cc33xx/cmd.c          | 2033 ++++++
+ drivers/net/wireless/ti/cc33xx/cmd.h          |  700 ++
+ drivers/net/wireless/ti/cc33xx/conf.h         | 1246 ++++
+ drivers/net/wireless/ti/cc33xx/debug.h        |   92 +
+ drivers/net/wireless/ti/cc33xx/event.c        |  389 ++
+ drivers/net/wireless/ti/cc33xx/event.h        |   71 +
+ drivers/net/wireless/ti/cc33xx/init.c         |  236 +
+ drivers/net/wireless/ti/cc33xx/init.h         |   15 +
+ drivers/net/wireless/ti/cc33xx/io.c           |  131 +
+ drivers/net/wireless/ti/cc33xx/io.h           |   26 +
+ drivers/net/wireless/ti/cc33xx/main.c         | 5949 +++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/ps.c           |  117 +
+ drivers/net/wireless/ti/cc33xx/ps.h           |   16 +
+ drivers/net/wireless/ti/cc33xx/rx.c           |  393 ++
+ drivers/net/wireless/ti/cc33xx/rx.h           |   86 +
+ drivers/net/wireless/ti/cc33xx/scan.c         |  756 +++
+ drivers/net/wireless/ti/cc33xx/scan.h         |  364 +
+ drivers/net/wireless/ti/cc33xx/sdio.c         |  581 ++
+ drivers/net/wireless/ti/cc33xx/testmode.c     |  357 +
+ drivers/net/wireless/ti/cc33xx/testmode.h     |   12 +
+ drivers/net/wireless/ti/cc33xx/tx.c           | 1416 ++++
+ drivers/net/wireless/ti/cc33xx/tx.h           |  160 +
+ 33 files changed, 18413 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,cc33xx.yaml
+ create mode 100644 drivers/net/wireless/ti/cc33xx/Kconfig
+ create mode 100644 drivers/net/wireless/ti/cc33xx/Makefile
+ create mode 100644 drivers/net/wireless/ti/cc33xx/acx.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/acx.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/boot.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/boot.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/cc33xx.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/cc33xx_i.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/cmd.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/cmd.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/conf.h
  create mode 100644 drivers/net/wireless/ti/cc33xx/debug.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/event.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/event.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/init.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/init.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/io.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/io.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/main.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/rx.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/rx.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/scan.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/scan.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/sdio.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/testmode.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/testmode.h
+ create mode 100644 drivers/net/wireless/ti/cc33xx/tx.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/tx.h
 
-diff --git a/drivers/net/wireless/ti/cc33xx/debug.h b/drivers/net/wireless/ti/cc33xx/debug.h
-new file mode 100644
-index 000000000000..2cf20e387c1d
---- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/debug.h
-@@ -0,0 +1,92 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
-+ */
-+
-+#ifndef __DEBUG_H__
-+#define __DEBUG_H__
-+
-+#define DRIVER_NAME "cc33xx"
-+#define DRIVER_PREFIX DRIVER_NAME ": "
-+
-+enum {
-+	DEBUG_NONE		= 0,
-+	DEBUG_IRQ		= BIT(0),
-+	DEBUG_SPI		= BIT(1),
-+	DEBUG_BOOT		= BIT(2),
-+	DEBUG_CORE_STATUS	= BIT(3),
-+	DEBUG_TESTMODE		= BIT(4),
-+	DEBUG_EVENT		= BIT(5),
-+	DEBUG_TX		= BIT(6),
-+	DEBUG_RX		= BIT(7),
-+	DEBUG_SCAN		= BIT(8),
-+	DEBUG_CRYPT		= BIT(9),
-+	DEBUG_PSM		= BIT(10),
-+	DEBUG_MAC80211		= BIT(11),
-+	DEBUG_CMD		= BIT(12),
-+	DEBUG_ACX		= BIT(13),
-+	DEBUG_SDIO		= BIT(14),
-+	DEBUG_FILTERS		= BIT(15),
-+	DEBUG_ADHOC		= BIT(16),
-+	DEBUG_AP		= BIT(17),
-+	DEBUG_PROBE		= BIT(18),
-+	DEBUG_IO		= BIT(19),
-+	DEBUG_MASTER		= (DEBUG_ADHOC | DEBUG_AP),
-+	DEBUG_CC33xx		= BIT(20),
-+	DEBUG_ALL		= ~0,
-+	DEBUG_NO_DATAPATH = (DEBUG_ALL & ~DEBUG_IRQ & ~DEBUG_TX & ~DEBUG_RX & ~DEBUG_CORE_STATUS),
-+};
-+
-+extern u32 cc33xx_debug_level;
-+
-+#define DEBUG_DUMP_LIMIT 1024
-+
-+#define cc33xx_error(fmt, arg...) \
-+	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
-+
-+#define cc33xx_warning(fmt, arg...) \
-+	pr_warn(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
-+
-+#define cc33xx_notice(fmt, arg...) \
-+	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
-+
-+#define cc33xx_info(fmt, arg...) \
-+	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
-+
-+/* define the debug macro differently if dynamic debug is supported */
-+#if defined(CONFIG_DYNAMIC_DEBUG)
-+#define cc33xx_debug(level, fmt, arg...) \
-+	do { \
-+		if (unlikely((level) & cc33xx_debug_level)) \
-+			dynamic_pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
-+	} while (0)
-+#else
-+#define cc33xx_debug(level, fmt, arg...) \
-+	do { \
-+		if (unlikely((level) & cc33xx_debug_level)) \
-+			pr_debug(pr_fmt(DRIVER_PREFIX fmt "\n"), \
-+			       ##arg); \
-+	} while (0)
-+#endif /* CONFIG_DYNAMIC_DEBUG */
-+
-+#define cc33xx_dump(level, prefix, buf, len)					\
-+	do {									\
-+		if ((level) & cc33xx_debug_level)				\
-+			print_hex_dump_debug(DRIVER_PREFIX prefix,		\
-+					DUMP_PREFIX_OFFSET, 16, 1,		\
-+					buf,					\
-+					min_t(size_t, len, DEBUG_DUMP_LIMIT),	\
-+					0);					\
-+	} while (0)
-+
-+#define cc33xx_dump_ascii(level, prefix, buf, len)				\
-+	do {									\
-+		if ((level) & cc33xx_debug_level)				\
-+			print_hex_dump_debug(DRIVER_PREFIX prefix,		\
-+					DUMP_PREFIX_OFFSET, 16, 1,		\
-+					buf,					\
-+					min_t(size_t, len, DEBUG_DUMP_LIMIT),	\
-+					true);					\
-+	} while (0)
-+
-+#endif /* __DEBUG_H__ */
+
+base-commit: 2785ea9673a7305abeea87111849a4e04b0f4626
 -- 
 2.25.1
 
