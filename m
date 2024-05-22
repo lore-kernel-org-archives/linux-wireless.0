@@ -1,38 +1,41 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC76B33C9
-	for <linux-wireless@vger.kernel.org>; Wed, 22 May 2024 02:45:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB78375802
+	for <linux-wireless@vger.kernel.org>; Wed, 22 May 2024 06:31:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716345956; cv=none; b=YwU+dLA11zV6tL8xuUejo0mALL+Lkbj1wO+8znITUjyRkPP1CI536iQ8+rRwv/10hVbBRVk7ZUYhKIHS7J9kp6+N4b8zwJJYOlMH0jOFXJLq9GAyiSow7I7JVxgCxgZMiFDp/nguHH3wdpwYok8vrkmsMB3hSz4kJhVcof29lqk=
+	t=1716359521; cv=none; b=o+r5cS7esMOhwrN2i72bR2IabJOSnogz3rOA3BxqREa4PqlSDyp5A/+Hul8Ex9lQaCVBif1yrLlxqzNIPgI4WZ1CdvGuJea82lvAEGh3m99Ls4T3wYW7nYVJqSB48R/VzsxOKruskprN50kCOHuIr0bX4U2fHFOJShN6UOtMQj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716345956; c=relaxed/simple;
-	bh=WWMoPUR2n6MxARQArGDNNKqYaQAkQGg4TMpkFw6BdmA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=G9MIDv2DFbSri6+y6ueoVWMGmHHPNkpVe3bD49s+Ke7SiIuR6vequ1j0nx8hfEDYdGFTUxD0hz/ifFgMVmX9wGM0tYtg+bX5k5NRvnrNhxPoHAOyq5zeHFl2O6eFd66OqNvkFxjbKmUDlC5GbiX57IsOUOKtiLG926Dxvg6h1Cc=
+	s=arc-20240116; t=1716359521; c=relaxed/simple;
+	bh=UjTIMUnFfJwFmNlEo3c45NJW5zhIc4qLC8VlX1Z8FmY=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=VweSYAbWFmJLS5Op4boivg09pqZ5BhRmA/WFFtlYVDgesBBGpp3UHAH4P0387K2ao38vyxMWE2mQYfgU0mH3fMxW6WcIyvAWTPcZVE56lG5eeKaazqaEeHF356r8FjKWbXzMgbufDPQqVEbaeCgX9mlPWWMeFgW9dkdUV2p9HrI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 44M2jpe173364134, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 44M2jpe173364134
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Wed, 22 May 2024 10:45:51 +0800
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 44M6TECU03582022, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 44M6TECU03582022
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 22 May 2024 14:29:14 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Wed, 22 May 2024 10:45:51 +0800
+ 15.1.2507.39; Wed, 22 May 2024 14:29:15 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 22 May
- 2024 10:45:51 +0800
+ 2024 14:29:14 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <phhuang@realtek.com>
-Subject: [PATCH] wifi: rtw89: Fix P2P behavior for WiFi 7 chips
-Date: Wed, 22 May 2024 10:45:31 +0800
-Message-ID: <20240522024531.11401-1-pkshih@realtek.com>
+To: <wens@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
+Subject: [PATCH 3/4] wireless-regdb: Update regulatory rules for South Africa (ZA) on 6GHz
+Date: Wed, 22 May 2024 14:28:34 +0800
+Message-ID: <20240522062835.69628-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240522062835.69628-1-pkshih@realtek.com>
+References: <20240522062835.69628-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,68 +47,36 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-From: Po-Hao Huang <phhuang@realtek.com>
+Independent communications authority of South Africa released NOTICE 1822
+OF 2023, which defined 5925-6425 MHz for application of Wireless Access
+System/Radio Local Area Network, TX power is 14 dBm e.i.r.p. for
+Very Low Power (VLP), Indoor/Outdoor.
 
-Previously we used CCK rate when scanning for P2P on WiFi 7 chips.
-Fix this by explicitly setting the rate to OFDM 6Mbps.
+[1] https://www.gov.za/sites/default/files/gcis_document/202305/48643gon1822.pdf
 
-Signed-off-by: Po-Hao Huang <phhuang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 10 ++++++++++
- drivers/net/wireless/realtek/rtw89/fw.h |  4 ++++
- 2 files changed, 14 insertions(+)
+ db.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 044a5b90c7f4..ec559191db1f 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -4850,6 +4850,7 @@ int rtw89_fw_h2c_scan_offload_be(struct rtw89_dev *rtwdev,
- {
- 	struct rtw89_hw_scan_info *scan_info = &rtwdev->scan_info;
- 	struct rtw89_wait_info *wait = &rtwdev->mac.fw_ofld_wait;
-+	struct cfg80211_scan_request *req = rtwvif->scan_req;
- 	struct rtw89_h2c_scanofld_be_macc_role *macc_role;
- 	struct rtw89_chan *op = &scan_info->op_chan;
- 	struct rtw89_h2c_scanofld_be_opch *opch;
-@@ -4923,6 +4924,15 @@ int rtw89_fw_h2c_scan_offload_be(struct rtw89_dev *rtwdev,
- 				   RTW89_H2C_SCANOFLD_BE_W6_CHAN_PROHIB_LOW);
- 	h2c->w7 = le32_encode_bits(option->prohib_chan >> 32,
- 				   RTW89_H2C_SCANOFLD_BE_W7_CHAN_PROHIB_HIGH);
-+	if (req->no_cck) {
-+		h2c->w0 |= le32_encode_bits(true, RTW89_H2C_SCANOFLD_BE_W0_PROBE_WITH_RATE);
-+		h2c->w8 = le32_encode_bits(RTW89_HW_RATE_OFDM6,
-+					   RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_2GHZ) |
-+			  le32_encode_bits(RTW89_HW_RATE_OFDM6,
-+					   RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_5GHZ) |
-+			  le32_encode_bits(RTW89_HW_RATE_OFDM6,
-+					   RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_6GHZ);
-+	}
- 	ptr += sizeof(*h2c);
+diff --git a/db.txt b/db.txt
+index 4f3128556f89..022ecb3719b6 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1892,11 +1892,13 @@ country YT: DFS-ETSI
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW, wmmrule=ETSI
+ 	(5490 - 5710 @ 160), (27), DFS, wmmrule=ETSI
  
- 	for (i = 0; i < option->num_macc_role; i++) {
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 4151c9d566bd..01fea0b004d3 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -2722,6 +2722,7 @@ struct rtw89_h2c_scanofld_be {
- #define RTW89_H2C_SCANOFLD_BE_W0_MACID GENMASK(23, 8)
- #define RTW89_H2C_SCANOFLD_BE_W0_PORT GENMASK(26, 24)
- #define RTW89_H2C_SCANOFLD_BE_W0_BAND GENMASK(28, 27)
-+#define RTW89_H2C_SCANOFLD_BE_W0_PROBE_WITH_RATE BIT(29)
- #define RTW89_H2C_SCANOFLD_BE_W1_NUM_MACC_ROLE GENMASK(7, 0)
- #define RTW89_H2C_SCANOFLD_BE_W1_NUM_OP GENMASK(15, 8)
- #define RTW89_H2C_SCANOFLD_BE_W1_NORM_PD GENMASK(31, 16)
-@@ -2738,6 +2739,9 @@ struct rtw89_h2c_scanofld_be {
- #define RTW89_H2C_SCANOFLD_BE_W5_MLO_MODE GENMASK(31, 0)
- #define RTW89_H2C_SCANOFLD_BE_W6_CHAN_PROHIB_LOW GENMASK(31, 0)
- #define RTW89_H2C_SCANOFLD_BE_W7_CHAN_PROHIB_HIGH GENMASK(31, 0)
-+#define RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_2GHZ GENMASK(7, 0)
-+#define RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_5GHZ GENMASK(15, 8)
-+#define RTW89_H2C_SCANOFLD_BE_W8_PROBE_RATE_6GHZ GENMASK(23, 16)
++# Source: https://www.gov.za/sites/default/files/gcis_document/202305/48643gon1822.pdf
+ country ZA: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (30)
++	(5925 - 6425 @ 320), (14)
  
- static inline void RTW89_SET_FWCMD_P2P_MACID(void *cmd, u32 val)
- {
+ country ZW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
 2.25.1
 
