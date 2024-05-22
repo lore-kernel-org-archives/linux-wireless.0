@@ -1,38 +1,41 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D0E033080
-	for <linux-wireless@vger.kernel.org>; Wed, 22 May 2024 06:31:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F95B79952
+	for <linux-wireless@vger.kernel.org>; Wed, 22 May 2024 06:32:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716359522; cv=none; b=ctFSc8aMzq2KbwUh/YYTgXnZyaV8io84VwPzBj3L72bAEvr6gIk6quS8U+JWBl5v06eIIn2QscBA/jCSpt46fFCq7nLiHu3miRJRNsscVJ4iWQ7f9uIpX8B8eQQmyvNrwVlSmONEKQ3VCROlsVBOxdWLiYR9cJUxTOhkOO6O8lQ=
+	t=1716359524; cv=none; b=dNV84GHmXdupypjCkIGs9UEA+a+9OA0YyxlEh6+DIZQloEokwA16cNrlY2VHK5lRIK8ipxZE+f7jta2LI97j0yWFOleBhcNbpg0AJp/SjYjIXk5gJGzEgpZKGPFVcDxOJAB0dxshB9hs3iQ4mHbMITQVRVYhnNp9FUlZC6yrhxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716359522; c=relaxed/simple;
-	bh=WUK/mpB8BoXspY+yG8dUXrTPOo2roQcpQ8kjfRH43pE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=N3nJd02j+8j5m/5hwsTcGgxH4Yd9/MOU7bKA3N3IUTRBa5WcbSw+Bhg3sCbVzdYkV2VK61FemOG5PrxC9NV46Ky7AggArwKJuFWPGaZcc57fQsTamQF+tdpEeltpsIAnLBFf4WZX77LEapGD6kN/rOefnPEu6WKBe5CaUngq2nY=
+	s=arc-20240116; t=1716359524; c=relaxed/simple;
+	bh=/l9Szdj1wqsc8ihpU7jYa0KD1IqfHEUplLazHLFp0F0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hPTWI1nxJ2swY3pgrNntqYFkEG/O4zUjxT/M5uDuMG0ftZOwGB7DYrgQ1Kwv4/vinjNdxrJp9HbvYtiertVjFr17pxH6xsA9xBipmZsteELH/p4MnWQWJ99iTttb4CGtMMuZV+zrkCfyTLMCAI1r/4iW85xtw3gLsPuNU+gWay4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 44M6T6lrC3582003, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 44M6UBAZ03582126, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 44M6T6lrC3582003
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 44M6UBAZ03582126
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 22 May 2024 14:29:06 +0800
+	Wed, 22 May 2024 14:30:11 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Wed, 22 May 2024 14:29:07 +0800
+ 15.1.2507.39; Wed, 22 May 2024 14:30:11 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 22 May
- 2024 14:29:06 +0800
+ 2024 14:30:11 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <wens@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
-Subject: [PATCH 1/4] wireless-regdb: Update regulatory rules for Mongolia (MN) on 6GHz
-Date: Wed, 22 May 2024 14:28:32 +0800
-Message-ID: <20240522062835.69628-1-pkshih@realtek.com>
+Subject: [PATCH 4/4] wireless-regdb: Update regulatory info for Thailand (TH) on 6GHz
+Date: Wed, 22 May 2024 14:29:46 +0800
+Message-ID: <20240522062946.69832-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240522062835.69628-1-pkshih@realtek.com>
+References: <20240522062835.69628-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,39 +47,44 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-Communications Regulatory Commission- CRC released Amendment to Resolution
-No. 37 of 2020 [1] on 2022.01.31, which supports freqency range
-5925-6425 MHz, output power limitation is 100mW, Indoor and and outdoor
-will be used.
+The Broadcasting Commission Television business and the National
+Telecommunications Commission announced Technical standards for
+telecommunications equipment and equipment for radiocommunication equipment
+that uses the frequency 5.925 - 6.425 GHz [2], which section 2.1 describes
+e.i.r.p. (Equivalent Isotropically Radiated Power) is 250mW and 25mW for
+indoor and indoor/outdoor respectively.
 
-[1] Amendment to Resolution No. 37 of 2020
-    https://www.crc.gov.mn/storage/PDF/2022/2022-togtool1.pdf
+[1] https://ratchakitcha.soc.go.th/documents/140D100S0000000004000.pdf
+[2] https://ratchakitcha.soc.go.th/documents/140D100S0000000004200.pdf
+[3] https://ratchakitcha.soc.go.th/documents/140D100S0000000004300.pdf
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- db.txt | 3 +++
- 1 file changed, 3 insertions(+)
+ db.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/db.txt b/db.txt
-index 45ec3f3ff3ee..6182e194b7ea 100644
+index 022ecb3719b6..c7008e23b7ca 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -1209,12 +1209,15 @@ country MK: DFS-ETSI
- 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
- 	(57000 - 66000 @ 2160), (40)
+@@ -1702,12 +1702,17 @@ country TG: DFS-ETSI
+ 	(5250 - 5330 @ 40), (20), DFS
+ 	(5490 - 5710 @ 40), (27), DFS
  
-+# Communications Regulatory Commission- CRC released Amendment to Resolution No. 37 of 2020
-+# https://www.crc.gov.mn/storage/PDF/2022/2022-togtool1.pdf
- country MN: DFS-FCC
++# Source:
++# https://ratchakitcha.soc.go.th/documents/140D100S0000000004000.pdf
++# https://ratchakitcha.soc.go.th/documents/140D100S0000000004200.pdf
++# https://ratchakitcha.soc.go.th/documents/140D100S0000000004300.pdf
+ country TH: DFS-FCC
  	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
+ 	(5170 - 5250 @ 80), (17), AUTO-BW
  	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
  	(5490 - 5730 @ 160), (24), DFS
  	(5735 - 5835 @ 80), (30)
-+	(5925 - 6425 @ 320), (100mW)
++	(5925 - 6425 @ 320), (25 mW)
  
- country MO: DFS-FCC
- 	(2402 - 2482 @ 40), (23)
+ country TN: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
 -- 
 2.25.1
 
