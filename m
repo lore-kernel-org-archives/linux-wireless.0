@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DE3210195;
-	Mon, 27 May 2024 14:18:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EB601667D0;
+	Mon, 27 May 2024 14:19:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716819508; cv=none; b=qbKdIzaJHegUUDE9LIfGsheq8niqrTZFWNFS21cwkn9ozlKRb+sQqmQihh3lpsbt+66kDSVMrmARsHCHe7qBBgZqF0LGB4O2ElAT1VV5a3D+dpcrsWiq56Mai0TbaPr8I/308Vblj+bNXELRtabHzw8f/A3/7PjSSs5RO3mX7Ko=
+	t=1716819562; cv=none; b=DaeOn7+MkS4QudQLW53OEXB/gsusPm8rlPqDGcBqsOMI+RZpBlY5dPFeeBDP1DJosfofgMzZs7A5DiJf9KcmF0fvIyI3KfDnIs7B8pPySRTF7OW66hk25cii4kS/TjQqY0nAeRO7fdkEEj3aVUKtz68bJhc/rXxsZquShrbAdoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716819508; c=relaxed/simple;
-	bh=Nc1h0iROXLAYstYCLiGlzYQ1+t0FEGMu+q++HSBtj4U=;
+	s=arc-20240116; t=1716819562; c=relaxed/simple;
+	bh=bQw1hBLFgwb02QhDgR5Zh1puQadb/ncCstE5RNT3KVg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TrEUa7m74tUTTIVz0IcAXwNsUDeyDcEWdjltY09GuyD3xaCtYJP6rusKZH1nmHLHU1YDRQHC+MBFGUHb4Y1gvz9JwK6EK3urBVtT15NgnDrdeVdRSiVuxw2rg1JJBmRdKeCfcljpoM/OCa88C3aHMcpdZFhSdyYdGi4j4KB3Gnc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aFb2ODGM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=UcIXA4DkpZcC6qPn8PVt6Z/ohQZQjAfzE5STMHVwUEmIjA5AtEORbu75jbLaoplYrIf4EzbjAbHEYgEhhNsctwMppMITNQDN93sWPpBKBhQTpa5awKgKdLzcsLpBQVKpAalOCfZ3BKOAHNUZ8xBJph8nVTXPTr5WoIbtKgfBB+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jb7LkGmu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aFb2ODGM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 589B3C32781;
-	Mon, 27 May 2024 14:18:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jb7LkGmu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BD42C32781;
+	Mon, 27 May 2024 14:19:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716819508;
-	bh=Nc1h0iROXLAYstYCLiGlzYQ1+t0FEGMu+q++HSBtj4U=;
+	s=k20201202; t=1716819562;
+	bh=bQw1hBLFgwb02QhDgR5Zh1puQadb/ncCstE5RNT3KVg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aFb2ODGM49gX2HJPbGP3c33scw/2N6AL7SRwc/HkIZl0cQ3gdDkROLmz75GIUjtGR
-	 N7ATa5uM4k1r27EtdyQMoFlmMb+4ghLAOS7Aiqsr1jipCMTn5wLphwm6YacRrNKsu7
-	 qVEjm4P6mJiYLedCo9eb6zDqv3ykgwytnW/keRUVBn4YAQTgylTsbXG15QiEP3rxuM
-	 daiUKHLQZMTyXPYtytOaI7DB74t1Pi6DK4JEfttUqEL1/BZlSaM9UUzxkZVnUJK+SQ
-	 cngekjLrlGiIdKIxeGVv2Xj7RpzrJta9JCPj7cOQKaXCyGX54sm2q5k8cz9kns83gr
-	 3pVhQi+ohjlgw==
+	b=Jb7LkGmuwWa7jGVEUrDmFWnoardbbpxxKwcIrk8GXLWQSKxT0P8xDl2l9/Z4heglL
+	 IaeKj4fYiZ40gDonxp+YLgpR4aRO2lcsMFoRtsvasZ1Ur5YeBKY+k4xJH8UOcuzGhU
+	 LQcF44twVIBDJPR/IC5O5gZQI+9i3Mlb2fhCUzuG6vCwghLjO3SoiQLE87xqtpX+oA
+	 cy4703oZb94nsl4rXuRAQoHMi/QL+FUb9A7ZE8NXviE4Cp6NZObSTZDDhT4Uo18mQ2
+	 BQxvo7syy/yxSPAJH02E2Y0BnCgcHphvfaXuPmW18c/Ozh8afcrkBogWaQpT2+xgKq
+	 zXKOGtopNjHEw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -36,12 +36,12 @@ Cc: Arnd Bergmann <arnd@arndb.de>,
 	Sasha Levin <sashal@kernel.org>,
 	kvalo@kernel.org,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 04/13] wifi: ath9k: work around memset overflow warning
-Date: Mon, 27 May 2024 10:17:58 -0400
-Message-ID: <20240527141819.3854376-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 04/13] wifi: ath9k: work around memset overflow warning
+Date: Mon, 27 May 2024 10:18:41 -0400
+Message-ID: <20240527141901.3854691-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240527141819.3854376-1-sashal@kernel.org>
-References: <20240527141819.3854376-1-sashal@kernel.org>
+In-Reply-To: <20240527141901.3854691-1-sashal@kernel.org>
+References: <20240527141901.3854691-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,7 +51,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.160
+X-stable-base: Linux 5.10.218
 Content-Transfer-Encoding: 8bit
 
 From: Arnd Bergmann <arnd@arndb.de>
@@ -102,7 +102,7 @@ index f02a308a9ffc5..34654f710d8a1 100644
  	struct ath_regulatory regulatory;
  	struct ath_regulatory reg_world_copy;
 diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9e6d088bd2818..1b71fb1d04719 100644
+index b2cfc483515c0..c5904d81d0006 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
 @@ -135,8 +135,7 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
