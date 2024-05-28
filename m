@@ -1,43 +1,39 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02DE6A8A3
-	for <linux-wireless@vger.kernel.org>; Tue, 28 May 2024 14:17:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A452017106D;
+	Tue, 28 May 2024 14:20:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716905870; cv=none; b=WuA6GQFKiZpqOekpMUSM2ixbR10LZNtybJnag+EADEyswMq3JhczmZv9KWRaymvVBOd12vDQtec+l3FHlfN3JQPhN3TI6nBjphmxkrEg4OkELw01/K2SjVOIeQYXMOsLFxrD7vWaDOYu6u1xlbZG39WTD83Dq3vX67jADV+XF8E=
+	t=1716906049; cv=none; b=pb2ClmZiDQ1qYnJkVknStVHoRtRhqAkjpyF4O3++Dm7dYLH20TOEwN7dEJ/YdTfmIoAS0QENJcACQ++F634mzzdIHU2wPw9PT4+7F7uDBI6LVGyLbNjmPgqvC9nf1lkhM0IkxWuYapwqEuFy0HvjLykbPMffyZoRuGTotg+F65w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716905870; c=relaxed/simple;
-	bh=qiGTasfTtQoFyYOa6BZUrQ9nsnyUCXKNBvTcXCaF7zU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=P7HL+IghB7hTDkxtEyiU7KBppzWUJbOjydq34BCWHvvAWZUfXwVQ0KsAMP7mD3PDTQG1mocU2x3R2hgEJslBt+ZBLdidhsiLUJqjrMBmxIxD5yTbhn9NR3TTXzU3zOEFS2/+iAOK27lBTPmETkn5iSvn8+qXFueEo21CYIwtYIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SgHF2I4z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716906049; c=relaxed/simple;
+	bh=9LBFDaFfhOfUAOUwwN7VN1Kk9xj/7iR191B7RgVX7U0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=d1NXydEwbb+LqWAciYqJW2D7+/IdNGs1rfNfd+NnEwQrWIuxnSf1vmDNbUDqpyUfVCvN9HLjzcyDjRXDIY9bPuwLpzwDboCwmcJeuQ38Tts2JNnu8VmmWBAdO+MGT9P6RcX7oRcYiDCxQWO2jhhjE3c+hVux8LKZ7HRG98YxmWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=fbxRnf79; arc=none smtp.client-ip=217.70.183.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SgHF2I4z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 503A9C3277B;
-	Tue, 28 May 2024 14:17:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716905870;
-	bh=qiGTasfTtQoFyYOa6BZUrQ9nsnyUCXKNBvTcXCaF7zU=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=SgHF2I4zAgLB9pePA/MsdGdjtA7A1NPCbZx6lfFShHrwRUuxRGiq0fA9T97NGAiFz
-	 5h2UXKLM9XxvET7908LVgke5j52UkdTCkoYF5upNWmVaVSFWCgQbOHk7d+5+432Mh9
-	 m6ekssAP98dXWQy+zuDHRoDvosVqULV5r3LajedSh38hkL4YH+oUXSgenLsM4r8iA8
-	 B5LXkqPaMWbJBWjEPXIb2tTFVL47H+UUVDo+c7sAgGtM1R18uf3VajL9RWNOQvUJx3
-	 lgMgNJbYt7wSRqrGAJqhrJJVaVaJ6hw4ezD7S6Jkhw47AEJ12/X2TbkELNmc14NFqL
-	 8yeC7l/xGDOkQ==
-Received: from wens.tw (localhost [127.0.0.1])
-	by wens.tw (Postfix) with ESMTP id A93855FA42;
-	Tue, 28 May 2024 22:17:47 +0800 (CST)
-From: Chen-Yu Tsai <wens@kernel.org>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-In-Reply-To: <20240522062835.69628-1-pkshih@realtek.com>
-References: <20240522062835.69628-1-pkshih@realtek.com>
-Subject: Re: (subset) [PATCH 1/4] wireless-regdb: Update regulatory rules
- for Mongolia (MN) on 6GHz
-Message-Id: <171690586767.641246.5269610632344527661.b4-ty@kernel.org>
-Date: Tue, 28 May 2024 22:17:47 +0800
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="fbxRnf79"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 8F840240009;
+	Tue, 28 May 2024 14:20:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1716906045;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=CJi7Zl6vfBFp7vosq6ncw5ahjATKPSYSi4OHvyyAQs4=;
+	b=fbxRnf79QpMKw6SvU4q6fL33PZoOJp03DCfFeeQsyhiqnPyua23CMUPTmj4jMDKIe+Fvrm
+	Tju2BVObRrKy7RfMG4zFskMoRB9JgRDDZYfMctgkKzJzuypV8ttzlyJrJBTUVUUaJWkdBo
+	ROUmj2HoOAWPoZ2NpC2viegQi57PAtzr4D+P11cFdSfGt16fc5p2BV0qsrr7JB32+DZJzH
+	C8yuVzY8IZ2RikT3y6gSe42jlbeXYG/EDCz8BfutZ72A9fP1mUF4PtSm8eGVGy97sAUgGD
+	kcbAkjlg+3CKHj0Qk+2otGMeCkkNRgep0BUFjef98Gs58fhmPYZCNNkLox7Ysg==
+From: =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Date: Tue, 28 May 2024 16:20:29 +0200
+Subject: [PATCH wireless 2/3] Revert "wifi: wilc1000: set atomic flag on
+ kmemdup in srcu critical section"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -45,30 +41,46 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240528-wilc_revert_srcu_to_rcu-v1-2-bce096e0798c@bootlin.com>
+References: <20240528-wilc_revert_srcu_to_rcu-v1-0-bce096e0798c@bootlin.com>
+In-Reply-To: <20240528-wilc_revert_srcu_to_rcu-v1-0-bce096e0798c@bootlin.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ajay Singh <ajay.kathat@microchip.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>, 
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ Dan Carpenter <dan.carpenter@linaro.org>, linux-kernel@vger.kernel.org, 
+ =?utf-8?q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
 X-Mailer: b4 0.13.0
+X-GND-Sasl: alexis.lothore@bootlin.com
 
-On Wed, 22 May 2024 14:28:32 +0800, Ping-Ke Shih wrote:
-> Communications Regulatory Commission- CRC released Amendment to Resolution
-> No. 37 of 2020 [1] on 2022.01.31, which supports freqency range
-> 5925-6425 MHz, output power limitation is 100mW, Indoor and and outdoor
-> will be used.
-> 
-> [1] Amendment to Resolution No. 37 of 2020
->     https://www.crc.gov.mn/storage/PDF/2022/2022-togtool1.pdf
-> 
-> [...]
+This reverts commit 35aee01ff43d7eb6c2caa0b94e7cc6c45baeeab7
 
-Applied to master in wens/wireless-regdb.git, thanks!
+Commit 35aee01ff43d ("wifi: wilc1000: set atomic flag on kmemdup in srcu
+critical section") was preparatory to the SRCU to RCU conversion done by
+commit f236464f1db7 ("wifi: wilc1000: convert list management to RCU").
+This conversion brought issues and so has been reverted, so the atomic flag
+is not needed anymore.
 
-[1/4] wireless-regdb: Update regulatory rules for Mongolia (MN) on 6GHz
-      https://git.kernel.org/wens/wireless-regdb/c/2a768c42cebf
-[2/4] wireless-regdb: Update regulatory rules for Saudi Arabia (SA) on 6GHz
-      https://git.kernel.org/wens/wireless-regdb/c/04875d9b62c3
-[3/4] wireless-regdb: Update regulatory rules for South Africa (ZA) on 6GHz
-      https://git.kernel.org/wens/wireless-regdb/c/b7bced837f6a
+Signed-off-by: Alexis Lothoré <alexis.lothore@bootlin.com>
+---
+ drivers/net/wireless/microchip/wilc1000/hif.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Best regards,
+diff --git a/drivers/net/wireless/microchip/wilc1000/hif.c b/drivers/net/wireless/microchip/wilc1000/hif.c
+index 3925ca653e80..f1085ccb7eed 100644
+--- a/drivers/net/wireless/microchip/wilc1000/hif.c
++++ b/drivers/net/wireless/microchip/wilc1000/hif.c
+@@ -1594,7 +1594,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *buffer, u32 length)
+ 	msg->body.net_info.rssi = buffer[8];
+ 	msg->body.net_info.mgmt = kmemdup(&buffer[9],
+ 					  msg->body.net_info.frame_len,
+-					  GFP_ATOMIC);
++					  GFP_KERNEL);
+ 	if (!msg->body.net_info.mgmt) {
+ 		kfree(msg);
+ 		goto out;
+
 -- 
-Chen-Yu Tsai <wens@kernel.org>
+2.45.1
 
