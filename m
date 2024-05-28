@@ -1,165 +1,240 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E34994AEDF;
-	Tue, 28 May 2024 05:22:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8E543AA0
+	for <linux-wireless@vger.kernel.org>; Tue, 28 May 2024 06:36:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716873757; cv=none; b=JndqCVbtOW2nv+8cZZCCxCqjiS9GFLSPV6szJUgIxZ5zVLsqt0RGbZpEIxy1IN3W+DNffaWKErkgxqqonFriAgBOP0MulVMeDo4bPDiXL30PX/+8EXn7Ugp65RDFj11FAZe01cOdw0GeJdW9/RN2jJOa8Au2Ay/t/Q9MD7nTePc=
+	t=1716878173; cv=none; b=e7VgJmbtgjMJ9PzlnenUtUD1PDuNC/+7V415sBw5w/ocnjQ9wN9U5TwlaKxpH0vw53lDj6x7LgfJiez8wwZ75Q16AyooY69nre/C75IUvN33hMn+zXCHtZg8nlLkWg1g3oZLtHVYALIvOLTcptedz9VoxNnBizxr5HkqJj6Z2jY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716873757; c=relaxed/simple;
-	bh=7ERKas/OkCdasWCLOQ9A0s9OZOng3YFWI1DUXAB5Hwc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=l8BIXB76jLN+YonrhqWRVDXEKcargclZb5RWYOBMIGqFeV60rIaX3DVc3fZj3KdUC610c2qxYgDC8OypNGfNJ4ZUy1UlaXyz78+Gzep1fuBBhmsWN7xvzi5T9pSUs3vQV/db+qy+xV2Y1zg8XWw62oAY7uwCzAj2Bo3alakhjm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=II3O24pd; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1716878173; c=relaxed/simple;
+	bh=RASh+UJvq6ygxh2XYu62ZlDC7e4F0InRdmIeEDYJOpk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JdNfLVjO3y/ZZ9ezBE9cxGFyx8aKPZ9iiwsT8xpIR6dvOwYmYz8gtn+qk4RUBUiYwHvpZIPryqLefC3yyITPiErWacGdwv+9/2Su4riqPuv2C1jGpDVSzxBtDjHNHLScYUW+i9bwZ5sfta/NBpbYRWz47WZJoL3YvgRVbJAE+Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=HXQRA3U6; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="II3O24pd"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:
-	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
-	In-Reply-To:References; bh=h2WKMvgwAaogvoHjA4LWCMWXhYlg8Zv23ou9ksyPtbo=;
-	t=1716873755; x=1717305755; b=II3O24pdoi42K512Ax6StNNB6pZGKvZIbv7GmjYvOljd2RZ
-	xbW6KqFv9nnVQDauERtJei5qNpX+X5fw1PncMtmu0vfmdoLbmIg0AgjEYyx8cvxNmjTtiAnAs89dk
-	O6P5vApgA21pcmLyTmi0IJPJE7pCp82Bi5PxI5xjXrWcxOHcrgf2moKKf9L3O7iWWUnVqnRQuQPaw
-	TwVakVnmKmuLHEh9T6wpkT/mSKcFJkkiQe+Deo/RjAivjGeQj8Y3s8lfDzGGOqDwu2nI+xARF9gjj
-	5+h7PqwDLnOHPWD7E9/XGtO6JVzr3qIZjIBBVCdDWWSkXiHqfpWNB8FOxjP56fZQ==;
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1sBpI7-00087e-MZ; Tue, 28 May 2024 07:22:31 +0200
-Message-ID: <b3d8a378-346d-4dd8-9af8-1529a4484184@leemhuis.info>
-Date: Tue, 28 May 2024 07:22:31 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HXQRA3U6"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44RNoxhV008223;
+	Tue, 28 May 2024 06:36:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=Ei03v/CYUBC
+	QYP94hlE/M/Cli/p1dOmmt2/VlXFAs+k=; b=HXQRA3U6jzVyppTbo4Xrb0/lRN1
+	6DyWRG01igjAft3qv/4Uhu/D3lOLkXiR+0MWk99nm3C3/AI2JVVfDAn/VD5Zko+o
+	VDa4Mr2XakmMm8UmkfU5UkPckFZj8jN/JtPSGkRLKq3O6gs+nG4ieRW18jntTXe+
+	/u7MKuWEVcBvAuHX/fxAW415fTGzybesPlY4RathbcBAGIvQDPXvAuY2Xuj4Gc9g
+	ilLvc+FCnCEiulx1/BBSkGMauyvw/NVwN73n8uaiP5LqXsG8Qnwp/N0v1zqzu/Kz
+	NR+5DblaNBIEeytAAZZ9+DYKrFsD7E0LbZih44mdBw5wXsqcDz6lq3nJCsw==
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yba0g5cg6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 May 2024 06:36:06 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 44S6a3TF012750;
+	Tue, 28 May 2024 06:36:03 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3yb92kd5xc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 May 2024 06:36:03 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44S6a2fZ012737;
+	Tue, 28 May 2024 06:36:02 GMT
+Received: from hu-devc-blr-u22-a.qualcomm.com (hu-hprem-blr.qualcomm.com [10.190.108.75])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 44S6a2rc012736
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 28 May 2024 06:36:02 +0000
+Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 4146166)
+	id AC7D34114D; Tue, 28 May 2024 12:06:01 +0530 (+0530)
+From: Harshitha Prem <quic_hprem@quicinc.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+        Harshitha Prem <quic_hprem@quicinc.com>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+Subject: [PATCH v7 2/8] wifi: ath12k: Add helpers to get or set ath12k_hw
+Date: Tue, 28 May 2024 12:05:41 +0530
+Message-Id: <20240528063547.1400700-3-quic_hprem@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240528063547.1400700-1-quic_hprem@quicinc.com>
+References: <20240528063547.1400700-1-quic_hprem@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION][BISECTED] wifi: RTL8821CE does not work in monitor
- mode
-To: Christian Heusel <christian@heusel.eu>,
- Johannes Berg <johannes.berg@intel.com>, regressions@lists.linux.dev
-Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
- Savyasaachi Vanga <savyasaachiv@gmail.com>
-References: <chwoymvpzwtbmzryrlitpwmta5j6mtndocxsyqvdyikqu63lon@gfds653hkknl>
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Content-Language: en-US, de-DE
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-In-Reply-To: <chwoymvpzwtbmzryrlitpwmta5j6mtndocxsyqvdyikqu63lon@gfds653hkknl>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1716873755;2b659210;
-X-HE-SMSGID: 1sBpI7-00087e-MZ
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: I5Zt266T4OgGme5q-aLOwe4ayb0YjyE5
+X-Proofpoint-ORIG-GUID: I5Zt266T4OgGme5q-aLOwe4ayb0YjyE5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
+ definitions=2024-05-28_03,2024-05-27_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
+ mlxlogscore=742 malwarescore=0 lowpriorityscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2405280047
 
-On 28.05.24 00:01, Christian Heusel wrote:
-> 
-> Savyasaachi reports that scanning for other stations in monitor mode
-> does not work anymore with his RTL8821CE wireless network card for linux
-> kernels after 6.8.9.
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 
-Thx for the report. A few remarks:
+Currently, one or more ath12k_hw is part of a device (ath12k_base) but
+in future, it would be part of device group abstraction (ath12k_hw_group),
+i.e., when multiple radios (ar) across different devices can be combined
+together in a device group (ath12k_hw_group).
 
-Please be more specific in cases like this, as "kernels after 6.8.9" can
-mean "6.8.10+", "6.10-rc", or "6.9.y" (apparently it is the latter).
-Yes, this is nitpicking, which is why I normally would not have said
-anything -- but because you frequently report bugs it's likely in
-everybody's interest to bring this up.
+In order to facilitate the above transition, introduce helpers such as
+ath12k_ab_to_ah() and ath12k_ab_set_ah() to get and set values of ath12k_hw
+respectively.
 
-In a case like this it would also be good if the reporter could give
-latest mainline a try, as (1) a fix might already be in there and (2)
-some developers do not care at all about bugs in stable kernels (and
-they are free to do so!). See
-https://linux-regtracking.leemhuis.info/post/frequent-reasons-why-linux-kernel-bug-reports-are-ignored/
-for details.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-And sorry, there is something else: from the dmesg it looks a lot like
-this report is from a patched vendor kernel that among others seems to
-enable features like "forced interrupt request threading"
-(https://github.com/zen-kernel/zen-kernel/wiki/Detailed-Feature-List ).
-Such changes even if small and done carefully can lead to bugs like this
-(yes, that particular feature I mentioned can be enabled through a
-kernel parameter as well, but some developers would consider this to be
-an unsupported configuration). The absolut minimum you should have done
-is to mention that; but normally you never want to use such kernels for
-reporting bugs upstream, as the problem might not be present in the
-upstream code.
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/core.c |  6 +++---
+ drivers/net/wireless/ath/ath12k/core.h | 11 +++++++++++
+ drivers/net/wireless/ath/ath12k/mac.c  | 23 +++++++++++++----------
+ 3 files changed, 27 insertions(+), 13 deletions(-)
 
-Ciao, Thorsten
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 342d0ab12105..3925bb70d479 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -947,7 +947,7 @@ static void ath12k_rfkill_work(struct work_struct *work)
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+ 	for (i = 0; i < ab->num_hw; i++) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+ 
+@@ -999,7 +999,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
+ 		set_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags);
+ 
+ 	for (i = 0; i < ab->num_hw; i++) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah || ah->state == ATH12K_HW_STATE_OFF)
+ 			continue;
+ 
+@@ -1038,7 +1038,7 @@ static void ath12k_core_post_reconfigure_recovery(struct ath12k_base *ab)
+ 	int i, j;
+ 
+ 	for (i = 0; i < ab->num_hw; i++) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah || ah->state == ATH12K_HW_STATE_OFF)
+ 			continue;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 7d20b09c52e6..3f5c9fa9d04c 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -1051,4 +1051,15 @@ static inline struct ieee80211_hw *ath12k_ar_to_hw(struct ath12k *ar)
+ #define for_each_ar(ah, ar, index) \
+ 	for ((index) = 0; ((index) < (ah)->num_radio && \
+ 	     ((ar) = &(ah)->radio[(index)])); (index)++)
++
++static inline struct ath12k_hw *ath12k_ab_to_ah(struct ath12k_base *ab, int idx)
++{
++	return ab->ah[idx];
++}
++
++static inline void ath12k_ab_set_ah(struct ath12k_base *ab, int idx,
++				    struct ath12k_hw *ah)
++{
++	ab->ah[idx] = ah;
++}
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 784964ae03ec..f8e8320b8598 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -9158,7 +9158,7 @@ int ath12k_mac_register(struct ath12k_base *ab)
+ 	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS)) - 1;
+ 
+ 	for (i = 0; i < ab->num_hw; i++) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 
+ 		ret = ath12k_mac_hw_register(ah);
+ 		if (ret)
+@@ -9169,7 +9169,7 @@ int ath12k_mac_register(struct ath12k_base *ab)
+ 
+ err:
+ 	for (i = i - 1; i >= 0; i--) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+ 
+@@ -9185,7 +9185,7 @@ void ath12k_mac_unregister(struct ath12k_base *ab)
+ 	int i;
+ 
+ 	for (i = ab->num_hw - 1; i >= 0; i--) {
+-		ah = ab->ah[i];
++		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+ 
+@@ -9243,6 +9243,7 @@ static struct ath12k_hw *ath12k_mac_hw_allocate(struct ath12k_base *ab,
+ void ath12k_mac_destroy(struct ath12k_base *ab)
+ {
+ 	struct ath12k_pdev *pdev;
++	struct ath12k_hw *ah;
+ 	int i;
+ 
+ 	for (i = 0; i < ab->num_radios; i++) {
+@@ -9254,11 +9255,12 @@ void ath12k_mac_destroy(struct ath12k_base *ab)
+ 	}
+ 
+ 	for (i = 0; i < ab->num_hw; i++) {
+-		if (!ab->ah[i])
++		ah = ath12k_ab_to_ah(ab, i);
++		if (!ah)
+ 			continue;
+ 
+-		ath12k_mac_hw_destroy(ab->ah[i]);
+-		ab->ah[i] = NULL;
++		ath12k_mac_hw_destroy(ah);
++		ath12k_ab_set_ah(ab, i, NULL);
+ 	}
+ }
+ 
+@@ -9289,7 +9291,7 @@ int ath12k_mac_allocate(struct ath12k_base *ab)
+ 			goto err;
+ 		}
+ 
+-		ab->ah[i] = ah;
++		ath12k_ab_set_ah(ab, i, ah);
+ 	}
+ 
+ 	ath12k_dp_pdev_pre_alloc(ab);
+@@ -9298,11 +9300,12 @@ int ath12k_mac_allocate(struct ath12k_base *ab)
+ 
+ err:
+ 	for (i = i - 1; i >= 0; i--) {
+-		if (!ab->ah[i])
++		ah = ath12k_ab_to_ah(ab, i);
++		if (!ah)
+ 			continue;
+ 
+-		ath12k_mac_hw_destroy(ab->ah[i]);
+-		ab->ah[i] = NULL;
++		ath12k_mac_hw_destroy(ah);
++		ath12k_ab_set_ah(ab, i, NULL);
+ 	}
+ 
+ 	return ret;
+-- 
+2.34.1
 
-> His workflow was putting the adapter in monitor mode by running
-> "airmon-ng start wlan0" and then capture the surrounding stations with
-> "airodump-ng wlan0".
-> 
-> We have bisected the issue together in the issue in the Arch Linux
-> bugtracker[0] down to the following commit:
-> 
->     0a44dfc070749 ("wifi: mac80211: simplify non-chanctx drivers")
-> 
-> Savyasaachi (in CC) offered to be available for questions and further
-> debugging in this thread and some general debugging outputs are
-> attached/below.
-> 
-> Reported-by: Savyasaachi Vanga <savyasaachiv@gmail.com>
-> Bisected-by: Christian Heusel <christian@heusel.eu>
-> 
-> Cheers,
-> Chris
-> 
-> [0]: https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/issues/54
-> 
-> ---
-> 
-> #regzbot link: https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/issues/54
-> #regzbot introduced: 0a44dfc070749
-> #regzbot title: wifi: RTL8821CE does not work in monitor mode
-> 
-> ---
-> 
-> lsusb:
-> 
-> Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-> Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 003 Device 002: ID 0bda:c829 Realtek Semiconductor Corp. Bluetooth Radio
-> Bus 003 Device 003: ID 0c45:6739 Microdia Integrated_Webcam_FHD
-> Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-> 
-> lspci:
-> 
-> 00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne Root Complex
-> 00:00.2 IOMMU: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne IOMMU
-> 00:01.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Renoir PCIe Dummy Host Bridge
-> 00:01.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne PCIe GPP Bridge
-> 00:01.3 PCI bridge: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne PCIe GPP Bridge
-> 00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Renoir PCIe Dummy Host Bridge
-> 00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne PCIe GPP Bridge
-> 00:08.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Renoir PCIe Dummy Host Bridge
-> 00:08.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Renoir Internal PCIe GPP Bridge to Bus
-> 00:08.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Renoir Internal PCIe GPP Bridge to Bus
-> 00:14.0 SMBus: Advanced Micro Devices, Inc. [AMD] FCH SMBus Controller (rev 51)
-> 00:14.3 ISA bridge: Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge (rev 51)
-> 00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 0
-> 00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 1
-> 00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 2
-> 00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 3
-> 00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 4
-> 00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 5
-> 00:18.6 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 6
-> 00:18.7 Host bridge: Advanced Micro Devices, Inc. [AMD] Cezanne Data Fabric; Function 7
-> 01:00.0 Non-Volatile memory controller: Micron Technology Inc 2210 NVMe SSD [Cobain] (rev 03)
-> 02:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller (rev 15)
-> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8821CE 802.11ac PCIe Wireless Network Adapter
-> 04:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Barcelo (rev c2)
-> 04:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Renoir Radeon High Definition Audio Controller
-> 04:00.2 Encryption controller: Advanced Micro Devices, Inc. [AMD] Family 17h (Models 10h-1fh) Platform Security Processor
-> 04:00.3 USB controller: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne USB 3.1
-> 04:00.4 USB controller: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne USB 3.1
-> 04:00.5 Multimedia controller: Advanced Micro Devices, Inc. [AMD] ACP/ACP3X/ACP6x Audio Coprocessor (rev 01)
-> 04:00.6 Audio device: Advanced Micro Devices, Inc. [AMD] Family 17h/19h HD Audio Controller
-> 05:00.0 SATA controller: Advanced Micro Devices, Inc. [AMD] FCH SATA Controller [AHCI mode] (rev 81)
-> 05:00.1 SATA controller: Advanced Micro Devices, Inc. [AMD] FCH SATA Controller [AHCI mode] (rev 81)
