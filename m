@@ -1,140 +1,194 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2C0208B0
-	for <linux-wireless@vger.kernel.org>; Fri, 31 May 2024 18:00:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0547711B
+	for <linux-wireless@vger.kernel.org>; Fri, 31 May 2024 18:04:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717178426; cv=none; b=mBX3EcJYsViP7AUqsbn5Ezh1OJNacKzqS4+1HwhAu2XZ5oQdjZRObLPMkanCDe9PLkbJrGtdFumGiNtpklLyAxSPG8U9tAlNszZn+4nkz1KluWFVWlIXqmSpdwTD7cQBqMO5K2OxhRpudNxKbf65RiWxyhvF5+rO3Wif/zLyopE=
+	t=1717178671; cv=none; b=ONILWpGF3AbByYHwhWx1DP4vRnAO8CyY6OLaHpbU11zicPm/rLwEH+r+tLRMFwuB0A19QHcE4rL5cm6Pa1kFqx1yXbxFQD9DIwzWFApcIOTGh5LDKWtMQcmwA60UkwlmlzVwL3V/Qz2yTep30kN6e4LOs34Zfx5mpQNylZ2JHdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717178426; c=relaxed/simple;
-	bh=qlU+WYP7/d64bQDIKAIfVrPzMMEKKHCH53akTxStboM=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=S7ok63vCpyowAcvwKfBe2qIC7SpYYTCnUhsW5kQAmduIXUWx/6jeG+aOr9GXdfkPgBz8BXNYAGjz9gGLbVk06QDFN77RWOMD0wbhSOSomu4FCqNfWjOVr7VTL+v4+ZyeJk9ULc7mqRw9D/km72i7rQ5MRl/+cF6aySTJuyXhD2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lNKTL/jN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717178671; c=relaxed/simple;
+	bh=hEUZUNvfog/L5XqwmaI3S0w3b7ld5b/Ssk9RrZgZAQE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WDD+K8XHEee3c96Zth/zpGm9Vl4Ktx0R4WuHwjsMcNS3GE0WgNB0Zwq6KVbKhkvcJ4XGUD+MGGCvHJ6LefNxBlpuWSawa14pc3qbfVManjNMlQke5OZZIxbMN4Oini5YhmLZDbPuqvN96tJYk2JpN7OszDhcdUeRiO6p+v7yAdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=a+yepiUr; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lNKTL/jN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3199C116B1;
-	Fri, 31 May 2024 18:00:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717178425;
-	bh=qlU+WYP7/d64bQDIKAIfVrPzMMEKKHCH53akTxStboM=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=lNKTL/jNEiGb4YbmYyYpb0yznZrbnZAH76r+euDZAWw2ddMSrKIJwz0cLi2L8E/+h
-	 49D9KYx5JtN3IE7zKkCr87TfwH39P8a0FGrlVeqtv8y2wAf0R5S+O+8KKUZ0l5lzCH
-	 uAEx1ypz4TB9UC7cTF3Lup3klluADc0iWBXijEFJl0E++QZID907DWBo/ymRI9+3TU
-	 lX0MzI7JRqqt1/P8bEkG52O0fb+XfnNXQAISI2riELgMd20vB/OmDIJtkKjYd8ZXVw
-	 t2BDTSWVLXzpGqsLTOz4uCXRjoOQ5ptpsaxp3491zUvsraY0gK44RjK/nw6zxVwf68
-	 QVBAlP1tQgNMA==
-From: Kalle Valo <kvalo@kernel.org>
-To: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
-Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 5/5] wifi: ath12k: Dump additional Tx PDEV HTT stats
-References: <20240510050806.514126-1-quic_rgnanase@quicinc.com>
-	<20240510050806.514126-6-quic_rgnanase@quicinc.com>
-	<87le43d26u.fsf@kernel.org>
-	<024e2594-309a-4549-9c69-d527717c5dd4@quicinc.com>
-	<87r0dm6vrn.fsf@kernel.org>
-	<1be3531d-b550-4b19-93bb-d41e93362e19@quicinc.com>
-Date: Fri, 31 May 2024 21:00:22 +0300
-In-Reply-To: <1be3531d-b550-4b19-93bb-d41e93362e19@quicinc.com> (Ramya
-	Gnanasekar's message of "Tue, 28 May 2024 22:18:18 +0530")
-Message-ID: <87plt1vp3d.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="a+yepiUr"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44VHH0DG012837;
+	Fri, 31 May 2024 18:04:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=PsWkVlbWOWC
+	AFADPZTEIXLFgeVn8IL2OgXC2nvopReA=; b=a+yepiUrjRd5tBAz07S9LHaHxMu
+	BHPd04ihx7i68F1t/D6D5DbnWzBBtNTHavaPkR3wc3n8jqVKYR0jQgtBrQlszWlk
+	GHqxoHJM9NZ94fzaP6kOoQN/FpVWKtmDGbleSAX0r4P+g0bKMAzio6hh6kQuxJ8Q
+	h1qKq/8bsbUx9SLKlEo6eu2QW12cmDz1wroJlOZ98Uj0UAAN+zTV2Xp0nPNNieoW
+	SAXBYYExpHQFzCv8rSP0IBKbwoxwdhagjn1NHAPVPmgK/Xprgi+18PD6VcQ7Mm0J
+	bmSd5W2iKDMMGCFedhm06WN/whSmXq1Z1pf74Aku97fdp/XK/zBr5rdsgMA==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yba0qqvhp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 31 May 2024 18:04:19 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 44VI4FgU012029;
+	Fri, 31 May 2024 18:04:16 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3yf34nn90c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 31 May 2024 18:04:16 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44VI0slV009515;
+	Fri, 31 May 2024 18:04:16 GMT
+Received: from hu-devc-blr-u22-a.qualcomm.com (hu-hprem-blr.qualcomm.com [10.190.108.75])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 44VI4G87012054
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 31 May 2024 18:04:16 +0000
+Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 4146166)
+	id E1AC841174; Fri, 31 May 2024 23:34:15 +0530 (+0530)
+From: Harshitha Prem <quic_hprem@quicinc.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+        Harshitha Prem <quic_hprem@quicinc.com>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+Subject: [PATCH v8 3/8] wifi: ath12k: Add ath12k_get_num_hw api
+Date: Fri, 31 May 2024 23:34:06 +0530
+Message-Id: <20240531180411.1149605-4-quic_hprem@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240531180411.1149605-1-quic_hprem@quicinc.com>
+References: <20240531180411.1149605-1-quic_hprem@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: J6t_9Q8kYE9ON4Uw5AYJAVZ_UUmCbczh
+X-Proofpoint-ORIG-GUID: J6t_9Q8kYE9ON4Uw5AYJAVZ_UUmCbczh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
+ definitions=2024-05-31_12,2024-05-30_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 lowpriorityscore=0 impostorscore=0 clxscore=1015 mlxscore=0
+ mlxlogscore=853 malwarescore=0 spamscore=0 adultscore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2405310137
 
-Ramya Gnanasekar <quic_rgnanase@quicinc.com> writes:
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 
-> On 5/28/2024 4:36 PM, Kalle Valo wrote:
->> Ramya Gnanasekar <quic_rgnanase@quicinc.com> writes:
->> 
->>>>> +static inline void
->>>>> +ath12k_htt_print_tx_pdev_mu_ppdu_dist_stats_tlv(const void *tag_buf,
->>>>> +						struct debug_htt_stats_req *stats_req)
->>>>> +{
->>>>> + const struct ath12k_htt_tx_pdev_mu_ppdu_dist_stats_tlv
->>>>> *htt_stats_buf = tag_buf;
->>>>> +	char *mode;
->>>>> +	u8 j, hw_mode, i, str_buf_len;
->>>>> +	u8 *buf = stats_req->buf;
->>>>> +	u32 len = stats_req->buf_len;
->>>>> +	u32 buf_len = ATH12K_HTT_STATS_BUF_SIZE;
->>>>> +	u32 stats_value;
->>>>> +	u8 max_ppdu = ATH12K_HTT_STATS_MAX_NUM_MU_PPDU_PER_BURST;
->>>>> +	u8 max_sched = ATH12K_HTT_STATS_MAX_NUM_SCHED_STATUS;
->>>>> +	char str_buf[ATH12K_HTT_MAX_STRING_LEN];
->>>>> +
->>>>> +	hw_mode = le32_to_cpu(htt_stats_buf->hw_mode);
->>>>> +
->>>>> +	switch (hw_mode) {
->>>>> +	case ATH12K_HTT_STATS_HWMODE_AC:
->>>>> +		len += scnprintf(buf + len, buf_len - len,
->>>>> +				 "HTT_TX_PDEV_MU_PPDU_DISTRIBUTION_STATS:\n");
->>>>> +		mode = "ac";
->>>>> +		break;
->>>>> +	case ATH12K_HTT_STATS_HWMODE_AX:
->>>>> +		mode = "ax";
->>>>> +		break;
->>>>> +	case ATH12K_HTT_STATS_HWMODE_BE:
->>>>> +		mode = "be";
->>>>> +		break;
->>>>> +	default:
->>>>> +		return;
->>>>> +	}
->>>>
->>>> Why are we not adding "HTT_TX_PDEV_MU_PPDU_DISTRIBUTION_STATS:\n" with
->>>> ax and be modes?
->>>>
->>> Sorry for the delayed response. I was on OoO for a week.
->> 
->> No worries.
->> 
->>> We will receive this TLV for each hw modes. Since
->>> "HTT_TX_PDEV_MU_PPDU_DISTRIBUTION_STATS:\n" is header and it would be
->>> suffice to print it once, hence added it inside hw mode ac which will be
->>> the first hw mode integrated inside the TLV.
->> 
->> I would have expected that we print that outside of
->> ath12k_htt_print_tx_pdev_mu_ppdu_dist_stats_tlv(), before the function
->> is called at all.
->> 
->
-> Function itself will be called more than once.
+Currently, one or more ath12k_hw is part of device (ath12k_base) but
+in future, ath12k_hw would be part of device group (ath12k_hw_group).
+Hence, num_hw under device would be moved to device group.
 
-Sure, I got that. But I still think it is not really good design to
-print it like that.
+To facilitate above transition, add helper ath12k_get_num_hw() api to
+get the number of radios per device. In future, this helper would be
+able to get the number of radios in a device group.
 
-Maybe the output could be something like below? Or print the mode
-separate in the first line?
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
 
-HTT_TX_PDEV_MU_PPDU_DISTRIBUTION_STATS:
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/core.c | 6 +++---
+ drivers/net/wireless/ath/ath12k/core.h | 5 +++++
+ drivers/net/wireless/ath/ath12k/mac.c  | 8 ++++----
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-ac_mu_mimo_num_seq_posted_nr4 = 0
-ac_mu_mimo_num_ppdu_posted_per_burst_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ac_mu_mimo_num_ppdu_completed_per_burst_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ac_mu_mimo_num_seq_term_status_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0,
-
-....
-
-HTT_TX_PDEV_MU_PPDU_DISTRIBUTION_STATS:
-
-ax_mu_mimo_num_seq_posted_nr4 = 0
-ax_mu_mimo_num_ppdu_posted_per_burst_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ax_mu_mimo_num_ppdu_completed_per_burst_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ax_mu_mimo_num_seq_term_status_nr4 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0,
-
-ax_mu_mimo_num_seq_posted_nr8 = 0
-ax_mu_mimo_num_ppdu_posted_per_burst_nr8 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ax_mu_mimo_num_ppdu_completed_per_burst_nr8 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0,
-ax_mu_mimo_num_seq_term_status_nr8 =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0,
-
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 3925bb70d479..7ad65ace7123 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -946,7 +946,7 @@ static void ath12k_rfkill_work(struct work_struct *work)
+ 	rfkill_radio_on = ab->rfkill_radio_on;
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+@@ -998,7 +998,7 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
+ 	if (ab->is_reset)
+ 		set_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags);
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah || ah->state == ATH12K_HW_STATE_OFF)
+ 			continue;
+@@ -1037,7 +1037,7 @@ static void ath12k_core_post_reconfigure_recovery(struct ath12k_base *ab)
+ 	struct ath12k *ar;
+ 	int i, j;
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah || ah->state == ATH12K_HW_STATE_OFF)
+ 			continue;
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 3f5c9fa9d04c..a22f3561deb0 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -1062,4 +1062,9 @@ static inline void ath12k_ab_set_ah(struct ath12k_base *ab, int idx,
+ {
+ 	ab->ah[idx] = ah;
+ }
++
++static inline int ath12k_get_num_hw(struct ath12k_base *ab)
++{
++	return ab->num_hw;
++}
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index f8e8320b8598..66587c5ea8fd 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -9157,7 +9157,7 @@ int ath12k_mac_register(struct ath12k_base *ab)
+ 	ab->cc_freq_hz = 320000;
+ 	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS)) - 1;
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 
+ 		ret = ath12k_mac_hw_register(ah);
+@@ -9184,7 +9184,7 @@ void ath12k_mac_unregister(struct ath12k_base *ab)
+ 	struct ath12k_hw *ah;
+ 	int i;
+ 
+-	for (i = ab->num_hw - 1; i >= 0; i--) {
++	for (i = ath12k_get_num_hw(ab) - 1; i >= 0; i--) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+@@ -9254,7 +9254,7 @@ void ath12k_mac_destroy(struct ath12k_base *ab)
+ 		pdev->ar = NULL;
+ 	}
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		ah = ath12k_ab_to_ah(ab, i);
+ 		if (!ah)
+ 			continue;
+@@ -9277,7 +9277,7 @@ int ath12k_mac_allocate(struct ath12k_base *ab)
+ 	ab->num_hw = ab->num_radios;
+ 	radio_per_hw = 1;
+ 
+-	for (i = 0; i < ab->num_hw; i++) {
++	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
+ 		for (j = 0; j < radio_per_hw; j++) {
+ 			pdev_map[j].ab = ab;
+ 			pdev_map[j].pdev_idx = (i * radio_per_hw) + j;
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
