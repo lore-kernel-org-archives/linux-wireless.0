@@ -1,64 +1,59 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC16158D9C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E227D17C7D4
 	for <linux-wireless@vger.kernel.org>; Fri, 31 May 2024 18:04:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717178673; cv=none; b=Qd8iYTbsj7NEHd22EKCGjJBut53XVUW0jNhhr6DMbxmYthUAYS0ki9kZHBV1dhyZn8KdgTvRYGs3jBbWKCoSyM4gm9SLTdS0+hCQI/KdpNFZFsaUcerOnuznItTg1JGhqDUHyuYyPPUIyH9Bgr28zZRZPelkiPobHeL/Mki6edc=
+	t=1717178673; cv=none; b=FwbILl9Mxf1FhFUtO16LKuOsSBj/qVn6UzRdSIOvuXGjaNKGY43OZuZTZmtzz+EI0a8X/ud/UHvhnDAINoinbh33EaKHEPVEEsrHFFOxBPfekrOGQPstqynOw5kcKIVAFzDbaZ7iW/ETfOMponAMzpbrAdG3lNtK7rLLwWiY1dI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1717178673; c=relaxed/simple;
-	bh=3L4cIQUDBJLMgZESr4VRZncaE7r8n9V5HXGKuI6QDr8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=M3RKP6ERLVVVlXnotqGbbzPBEtHkzjHbz7Rjy5HccdyrKuaCosR0ARU4xpG2LglrTpqrIZDhX89iUy3Q433wCkaDdRb0mIa5yKxpm0yKEet1EUazTsHGO11IwRkUqOeFt7PWmGujCwaAVCFT2HvPeol9Wv8hIFpAWgVQLhipicI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=GnhRSiFL; arc=none smtp.client-ip=205.220.180.131
+	bh=62BZpPOZUE6MmZMpHqzKt4b/Hnf8KucCeYkMBIDB6Nc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XD46akWNZD5gryWa+26pBxDSAejmKpFAcRwEDkVcuV4uH1Iwxu5uPbSNAlwmiH3w5FNjrAAmVmh902ZJQnS4dDQWj0p1jHs6YBKE2vsm4S8B5pFYThMlIiuqxqxY2x/gzsBqAvv/WfkVWds8eFAka/BRflsEDDXGQLk1ssoWu5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fCDMdV4N; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="GnhRSiFL"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44VHAr0x019559;
-	Fri, 31 May 2024 18:04:23 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fCDMdV4N"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44VH1H7R019268;
+	Fri, 31 May 2024 18:04:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=CL+gGgDzeqN
-	4J04uMz7LUHJBpDdT+0KgfstkX2K1w8A=; b=GnhRSiFLUU4uxJf05HkZvshffhF
-	VXdBbq/8KIdrBBRJKqphznW5XS/MrQA5YK4NxkfcANxacww1Q2zMYyV/v9VSR3nf
-	L7pgjd1s/xhBdWhc9r/bThmAy2lyK0epp17HUs3olz5R8fv2YX2XxWQUpLjni8tK
-	EaTS2inrJ+G/kV1YOhRTChgncQvE0PNrxYGzFsopNHbaqPwcC8ue4uqluvjyDvDZ
-	2scGzFeo/nPIoltjb/o59LdUXms+ZgcSaIaUuxTETHSaLLlhHlHiDrzplK/C10cy
-	jDjN3qf0kmLSgJsMyCYgSN/YzqM1v+q/1wwt82Wd7IDUqpf6eh8ot4FWbVg==
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=F28IE+dGQvErarU4FqvR/zA+vYGbM7+FTA1
+	kZySAZuA=; b=fCDMdV4NkypSjaH293BlMR4NBnQWBE4dDOOwr6wdHlew200zV8Y
+	tLmZ0YZbIdQHr6/VuDPA9nS1K8O9VHEIZFSlMnIgpZzTrvT/J5ZzOdcYREDkeTKm
+	NGI8MgJrVUpMQVKsOi9jnv6ecDQKbnbimkHOhOKfMMB9o4FUy4EY2yn7P8nekGtG
+	sSnysUyiQH/MKGUq1MRiZRKCC1rxbGkTc1QwwGBAzbtksGafkPpKS8nSAn74YJLQ
+	eAJA9sRE+no6mUwEQly1A+E9ZAJ4bEHltHoRB00biydNGqeF4XyiPle9NeygR480
+	NTEazSoOikT1okxZc3woFi5XEC4rIk9ukzA==
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yba2n7ur0-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yba0gg307-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 31 May 2024 18:04:22 +0000 (GMT)
+	Fri, 31 May 2024 18:04:19 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 44VI4JrB012298;
-	Fri, 31 May 2024 18:04:19 GMT
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 44VI4EDd012013;
+	Fri, 31 May 2024 18:04:14 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3yf34nn90v-1
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3yf34nn8yr-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 31 May 2024 18:04:19 +0000
+	Fri, 31 May 2024 18:04:14 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44VI4Ju5012195;
-	Fri, 31 May 2024 18:04:19 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44VI4EeS012008;
+	Fri, 31 May 2024 18:04:14 GMT
 Received: from hu-devc-blr-u22-a.qualcomm.com (hu-hprem-blr.qualcomm.com [10.190.108.75])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 44VI4JQn012122
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 44VI4Es8012007
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 31 May 2024 18:04:19 +0000
+	Fri, 31 May 2024 18:04:14 +0000
 Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 4146166)
-	id 4277441174; Fri, 31 May 2024 23:34:18 +0530 (+0530)
+	id 871D641137; Fri, 31 May 2024 23:34:13 +0530 (+0530)
 From: Harshitha Prem <quic_hprem@quicinc.com>
 To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
-        Harshitha Prem <quic_hprem@quicinc.com>
-Subject: [PATCH v8 7/8] wifi: ath12k: refactor core start based on hardware group
-Date: Fri, 31 May 2024 23:34:10 +0530
-Message-Id: <20240531180411.1149605-8-quic_hprem@quicinc.com>
+Cc: linux-wireless@vger.kernel.org, Harshitha Prem <quic_hprem@quicinc.com>
+Subject: [PATCH v8 0/8] wifi: ath12k: Introduce device group abstraction
+Date: Fri, 31 May 2024 23:34:03 +0530
+Message-Id: <20240531180411.1149605-1-quic_hprem@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240531180411.1149605-1-quic_hprem@quicinc.com>
-References: <20240531180411.1149605-1-quic_hprem@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -70,431 +65,130 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: DPKaVkR-A_H692XURLD03YosQiLuSOG_
-X-Proofpoint-ORIG-GUID: DPKaVkR-A_H692XURLD03YosQiLuSOG_
+X-Proofpoint-GUID: CelirjJ3p5HH47UzNyjLz_cgMhQJkrwB
+X-Proofpoint-ORIG-GUID: CelirjJ3p5HH47UzNyjLz_cgMhQJkrwB
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
  definitions=2024-05-31_12,2024-05-30_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 adultscore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0
- malwarescore=0 spamscore=0 bulkscore=0 mlxlogscore=921 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405170001 definitions=main-2405310136
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
+ mlxlogscore=651 malwarescore=0 lowpriorityscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2405310137
 
-From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To support multi-link operation, multiple devices with different bands say
+2 GHz or 5 GHz or 6 GHz can be combined together as a group and provide
+an abstraction to mac80211.
 
-Currently, mac allocate/register and core_pdev_create are initiated
-immediately when QMI firmware ready event is received for a particular
-device.
+Device group abstraction - when there are multiple devices that are
+connected by any means of communication interface between them, then these
+devices can be combined together as a single group using a group id to form
+a group abstraction. In ath12k driver, this abstraction would be named as
+ath12k_hw_group (ag).
 
-With hardware device group abstraction, QMI firmware ready event can be
-received simultaneously for different devices in the group and so, it
-should not be registered immediately rather it has to be deferred until
-all devices in the group has received QMI firmware ready.
+Please find below illustration of device group abstraction with two
+devices.
 
-To handle this, refactor the code of core start to move the following
-apis inside a wrapper ath12k_core_hw_group_start()
-        * ath12k_mac_allocate()
-        * ath12k_core_pdev_create()
-        * ath12k_core_rfkill_config()
-        * ath12k_mac_register()
-        * ath12k_hif_irq_enable()
+                 Grouping of multiple devices (in future)
++------------------------------------------------------------------------+
+|  +-------------------------------------+       +-------------------+   |
+|  |   +-----------+ | | +-----------+   |       |   +-----------+   |   |
+|  |   | ar (2GHz) | | | | ar (5GHz) |   |       |   | ar (6GHz) |   |   |
+|  |   +-----------+ | | +-----------+   |       |   +-----------+   |   |
+|  |          ath12k_base (ab)           |       | ath12k_base (ab)  |   |
+|  |         (Dual band device)          |       |                   |   |
+|  +-------------------------------------+       +-------------------+   |
+|                 ath12k_hw_group (ag) based on group id                 |
++------------------------------------------------------------------------+
 
-similarly, move the corresponding destroy/unregister/disable apis
-inside wrapper ath12k_core_hw_group_stop()
+Say for example, device 1 has two radios (2 GHz and 5 GHz band) and
+device 2 has one radio (6 GHz).
 
-Add the device flags to indicate pdev created and IRQ enabled which would
-be helpful for device clean up during failure cases.
+In existing code -
+        device 1 will have two hardware abstractions hw1 (2 GHz) and hw2
+        (5 GHz) will be registered separately to mac80211 as phy0 and phy1
+        respectively. Similarly, device 2 will register its hw (6GHz) as
+        phy2 to mac80211.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
+In future, with multi-link abstraction
 
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Co-developed-by: Harshitha Prem <quic_hprem@quicinc.com>
-Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/core.c | 210 +++++++++++++++++++------
- drivers/net/wireless/ath/ath12k/core.h |  32 ++++
- 2 files changed, 191 insertions(+), 51 deletions(-)
+        combination 1 - Different group id for device1 and device 2
+                Device 1 will create a single hardware abstraction hw1
+                (2 GHz and  5 GHz) and will be registered to mac80211 as
+                phy0. similarly, device 2 will register its hardware
+                (6 GHz) to mac80211 as phy1.
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index ebe31cbb6435..90c70dbfc50a 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -563,6 +563,9 @@ u32 ath12k_core_get_max_num_tids(struct ath12k_base *ab)
- 
- static void ath12k_core_stop(struct ath12k_base *ab)
- {
-+	clear_bit(ATH12K_FLAG_CORE_STARTED, &ab->dev_flags);
-+	ath12k_dec_num_core_started(ab);
-+
- 	if (!test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags))
- 		ath12k_qmi_firmware_stop(ab);
- 
-@@ -689,11 +692,15 @@ static int ath12k_core_pdev_create(struct ath12k_base *ab)
- 		return ret;
- 	}
- 
-+	set_bit(ATH12K_FLAG_PDEV_CREATED, &ab->dev_flags);
-+
- 	return 0;
- }
- 
- static void ath12k_core_pdev_destroy(struct ath12k_base *ab)
- {
-+	clear_bit(ATH12K_FLAG_PDEV_CREATED, &ab->dev_flags);
-+
- 	ath12k_dp_pdev_free(ab);
- }
- 
-@@ -702,6 +709,8 @@ static int ath12k_core_start(struct ath12k_base *ab,
- {
- 	int ret;
- 
-+	lockdep_assert_held(&ab->core_lock);
-+
- 	ret = ath12k_wmi_attach(ab);
- 	if (ret) {
- 		ath12k_err(ab, "failed to attach wmi: %d\n", ret);
-@@ -795,6 +804,12 @@ static int ath12k_core_start(struct ath12k_base *ab,
- 		/* ACPI is optional so continue in case of an error */
- 		ath12k_dbg(ab, ATH12K_DBG_BOOT, "acpi failed: %d\n", ret);
- 
-+	if (!test_bit(ATH12K_FLAG_CORE_STARTED, &ab->dev_flags)) {
-+		/* Indicate the core start in the appropriate group */
-+		ath12k_inc_num_core_started(ab);
-+		set_bit(ATH12K_FLAG_CORE_STARTED, &ab->dev_flags);
-+	}
-+
- 	return 0;
- 
- err_reo_cleanup:
-@@ -806,6 +821,108 @@ static int ath12k_core_start(struct ath12k_base *ab,
- 	return ret;
- }
- 
-+static void ath12k_core_device_cleanup(struct ath12k_base *ab)
-+{
-+	mutex_lock(&ab->core_lock);
-+
-+	if (test_and_clear_bit(ATH12K_FLAG_CORE_HIF_IRQ_ENABLED, &ab->dev_flags))
-+		ath12k_hif_irq_disable(ab);
-+
-+	if (test_bit(ATH12K_FLAG_PDEV_CREATED, &ab->dev_flags))
-+		ath12k_core_pdev_destroy(ab);
-+
-+	if (test_bit(ATH12K_FLAG_REGISTERED, &ab->dev_flags)) {
-+		ath12k_mac_unregister(ab);
-+		ath12k_mac_destroy(ab);
-+	}
-+
-+	mutex_unlock(&ab->core_lock);
-+}
-+
-+static void ath12k_core_hw_group_stop(struct ath12k_hw_group *ag)
-+{
-+	struct ath12k_base *ab;
-+	int i;
-+
-+	lockdep_assert_held(&ag->mutex_lock);
-+
-+	for (i = ag->num_devices - 1; i >= 0; i--) {
-+		ab = ag->ab[i];
-+		if (!ab)
-+			continue;
-+		ath12k_core_device_cleanup(ab);
-+	}
-+}
-+
-+static int ath12k_core_hw_group_start(struct ath12k_hw_group *ag)
-+{
-+	struct ath12k_base *ab;
-+	int ret, i;
-+	bool is_registered;
-+
-+	lockdep_assert_held(&ag->mutex_lock);
-+
-+	for (i = 0; i < ag->num_devices; i++) {
-+		ab = ag->ab[i];
-+		if (!ab)
-+			continue;
-+
-+		mutex_lock(&ab->core_lock);
-+
-+		/* Check if already registered or not, since same flow
-+		 * execute for HW restart case.
-+		 */
-+		is_registered = test_bit(ATH12K_FLAG_REGISTERED, &ab->dev_flags);
-+
-+		if (is_registered)
-+			goto core_pdev_create;
-+
-+		ret = ath12k_mac_allocate(ab);
-+		if (ret) {
-+			ath12k_err(ab, "failed to create new hw device with mac80211 :%d\n",
-+				   ret);
-+			mutex_unlock(&ab->core_lock);
-+			return ret;
-+		}
-+
-+		ret = ath12k_mac_register(ab);
-+		if (ret) {
-+			ath12k_err(ab, "failed to register radio with mac80211: %d\n",
-+				   ret);
-+			mutex_unlock(&ab->core_lock);
-+			goto err;
-+		}
-+
-+core_pdev_create:
-+		ret = ath12k_core_pdev_create(ab);
-+		if (ret) {
-+			ath12k_err(ab, "failed to create pdev core %d\n", ret);
-+			mutex_unlock(&ab->core_lock);
-+			goto err;
-+		}
-+
-+		ath12k_hif_irq_enable(ab);
-+		set_bit(ATH12K_FLAG_CORE_HIF_IRQ_ENABLED, &ab->dev_flags);
-+
-+		ret = ath12k_core_rfkill_config(ab);
-+		if (ret && ret != -EOPNOTSUPP) {
-+			mutex_unlock(&ab->core_lock);
-+			goto err;
-+		}
-+
-+		mutex_unlock(&ab->core_lock);
-+	}
-+
-+	set_bit(ATH12K_GROUP_FLAG_REGISTERED, &ag->flags);
-+
-+	return 0;
-+
-+err:
-+	ath12k_core_hw_group_stop(ag);
-+
-+	return ret;
-+}
-+
- static int ath12k_core_start_firmware(struct ath12k_base *ab,
- 				      enum ath12k_firmware_mode mode)
- {
-@@ -823,9 +940,18 @@ static int ath12k_core_start_firmware(struct ath12k_base *ab,
- 	return ret;
- }
- 
-+static inline
-+bool ath12k_core_hw_group_start_ready(struct ath12k_hw_group *ag)
-+{
-+	lockdep_assert_held(&ag->mutex_lock);
-+
-+	return (ag->num_started == ag->num_devices);
-+}
-+
- int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
- {
--	int ret;
-+	struct ath12k_hw_group *ag = ath12k_ab_to_ag(ab);
-+	int ret, i;
- 
- 	ret = ath12k_core_start_firmware(ab, ATH12K_FIRMWARE_MODE_NORMAL);
- 	if (ret) {
-@@ -845,59 +971,48 @@ int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
- 		goto err_firmware_stop;
- 	}
- 
-+	mutex_lock(&ag->mutex_lock);
- 	mutex_lock(&ab->core_lock);
- 	ret = ath12k_core_start(ab, ATH12K_FIRMWARE_MODE_NORMAL);
- 	if (ret) {
- 		ath12k_err(ab, "failed to start core: %d\n", ret);
- 		goto err_dp_free;
- 	}
-+	mutex_unlock(&ab->core_lock);
- 
--	ret = ath12k_mac_allocate(ab);
--	if (ret) {
--		ath12k_err(ab, "failed to create new hw device with mac80211 :%d\n",
--			   ret);
--		goto err_core_stop;
--	}
--
--	ret = ath12k_mac_register(ab);
--	if (ret) {
--		ath12k_err(ab, "failed register the radio with mac80211: %d\n", ret);
--		goto err_mac_destroy;
-+	if (ath12k_core_hw_group_start_ready(ag)) {
-+		ret = ath12k_core_hw_group_start(ag);
-+		if (ret) {
-+			ath12k_warn(ab, "unable to start hw group\n");
-+			goto err_core_stop;
-+		}
-+		ath12k_dbg(ab, ATH12K_DBG_BOOT, "group %d started\n", ag->id);
- 	}
-+	mutex_unlock(&ag->mutex_lock);
- 
--	ret = ath12k_core_pdev_create(ab);
--	if (ret) {
--		ath12k_err(ab, "failed to create pdev core: %d\n", ret);
--		goto err_mac_unregister;
--	}
-+	return 0;
- 
--	ath12k_hif_irq_enable(ab);
-+err_core_stop:
-+	for (i = ag->num_devices - 1; i >= 0; i--) {
-+		ab = ag->ab[i];
-+		if (!ab)
-+			continue;
- 
--	ret = ath12k_core_rfkill_config(ab);
--	if (ret && ret != -EOPNOTSUPP) {
--		ath12k_err(ab, "failed to config rfkill: %d\n", ret);
--		goto err_core_pdev_destroy;
-+		mutex_lock(&ab->core_lock);
-+		if (test_bit(ATH12K_FLAG_CORE_STARTED, &ab->dev_flags))
-+			ath12k_core_stop(ab);
-+		mutex_unlock(&ab->core_lock);
- 	}
-+	goto exit;
- 
--	mutex_unlock(&ab->core_lock);
--
--	return 0;
--
--err_core_pdev_destroy:
--	ath12k_hif_irq_disable(ab);
--	ath12k_core_pdev_destroy(ab);
--err_mac_unregister:
--	ath12k_mac_unregister(ab);
--err_mac_destroy:
--	ath12k_mac_destroy(ab);
--err_core_stop:
--	ath12k_core_stop(ab);
- err_dp_free:
- 	ath12k_dp_free(ab);
- 	mutex_unlock(&ab->core_lock);
- err_firmware_stop:
- 	ath12k_qmi_firmware_stop(ab);
- 
-+exit:
-+	mutex_unlock(&ag->mutex_lock);
- 	return ret;
- }
- 
-@@ -1258,7 +1373,7 @@ static struct ath12k_hw_group *ath12k_core_assign_hw_group(struct ath12k_base *a
- 
- void ath12k_core_unassign_hw_group(struct ath12k_base *ab)
- {
--	struct ath12k_hw_group *ag = ab->ag;
-+	struct ath12k_hw_group *ag = ath12k_ab_to_ag(ab);
- 	u8 device_id = ab->device_id;
- 	int num_probed;
- 
-@@ -1292,19 +1407,6 @@ void ath12k_core_unassign_hw_group(struct ath12k_base *ab)
- 		ath12k_core_hw_group_free(ag);
- }
- 
--static void ath12k_core_device_cleanup(struct ath12k_base *ab)
--{
--	mutex_lock(&ab->core_lock);
--
--	ath12k_hif_irq_disable(ab);
--	ath12k_core_pdev_destroy(ab);
--	ath12k_mac_unregister(ab);
--	ath12k_mac_destroy(ab);
--	ath12k_core_stop(ab);
--
--	mutex_unlock(&ab->core_lock);
--}
--
- static void ath12k_core_hw_group_destroy(struct ath12k_hw_group *ag)
- {
- 	struct ath12k_base *ab;
-@@ -1332,14 +1434,20 @@ static void ath12k_core_hw_group_cleanup(struct ath12k_hw_group *ag)
- 		return;
- 
- 	mutex_lock(&ag->mutex_lock);
-+	if (test_and_clear_bit(ATH12K_GROUP_FLAG_REGISTERED, &ag->flags))
-+		ath12k_core_hw_group_stop(ag);
-+
- 	for (i = 0; i < ag->num_devices; i++) {
- 		ab = ag->ab[i];
- 		if (!ab)
- 			continue;
- 
--		if (test_bit(ATH12K_FLAG_QMI_FW_READY_COMPLETE, &ab->dev_flags))
--			ath12k_core_device_cleanup(ab);
-+		mutex_lock(&ab->core_lock);
-+		if (test_bit(ATH12K_FLAG_CORE_STARTED, &ab->dev_flags))
-+			ath12k_core_stop(ab);
-+		mutex_unlock(&ab->core_lock);
- 	}
-+
- 	mutex_unlock(&ag->mutex_lock);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index a6b8c100ebc8..d955deb08fd4 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -200,6 +200,10 @@ enum ath12k_scan_state {
- 	ATH12K_SCAN_ABORTING,
- };
- 
-+enum ath12k_hw_group_flags {
-+	ATH12K_GROUP_FLAG_REGISTERED,
-+};
-+
- enum ath12k_dev_flags {
- 	ATH12K_CAC_RUNNING,
- 	ATH12K_FLAG_CRASH_FLUSH,
-@@ -214,6 +218,9 @@ enum ath12k_dev_flags {
- 	ATH12K_FLAG_EXT_IRQ_ENABLED,
- 	ATH12K_FLAG_QMI_FW_READY_COMPLETE,
- 	ATH12K_FLAG_HW_GROUP_ATTACHED,
-+	ATH12K_FLAG_PDEV_CREATED,
-+	ATH12K_FLAG_CORE_STARTED,
-+	ATH12K_FLAG_CORE_HIF_IRQ_ENABLED,
- };
- 
- struct ath12k_tx_conf {
-@@ -736,6 +743,8 @@ struct ath12k_hw_group {
- 	u8 id;
- 	u8 num_devices;
- 	u8 num_probed;
-+	u8 num_started;
-+	unsigned long flags;
- 	struct ath12k_base *ab[ATH12K_MAX_SOCS];
- 	/* To synchronize group create, assign, start, stop */
- 	struct mutex mutex_lock;
-@@ -1087,4 +1096,27 @@ static inline int ath12k_get_num_hw(struct ath12k_base *ab)
- {
- 	return ab->num_hw;
- }
-+
-+static inline
-+struct ath12k_hw_group *ath12k_ab_to_ag(struct ath12k_base *ab)
-+{
-+	return ab->ag;
-+}
-+
-+static inline
-+void ath12k_inc_num_core_started(struct ath12k_base *ab)
-+{
-+	lockdep_assert_held(&ab->ag->mutex_lock);
-+
-+	ab->ag->num_started++;
-+}
-+
-+static inline
-+void ath12k_dec_num_core_started(struct ath12k_base *ab)
-+{
-+	lockdep_assert_held(&ab->ag->mutex_lock);
-+
-+	ab->ag->num_started--;
-+}
-+
- #endif /* _CORE_H_ */
+        combination 2 - Same group id for device1 and device 2
+                Both device details are combined together as a group, say
+                group1, with single hardware abstraction of radios 2 GHz,
+                5 GHz and 6 GHz band details and will be registered to
+                mac80211 as phy0.
+
+Add base infrastructure changes to add device grouping abstraction with
+a single device.
+
+This patch series brings the base code changes with following order:
+        1. Refactor existing code which would facilitate in introducing
+           device group abstraction.
+        2. Create a device group abstraction during device probe.
+        3. Start the device group only after QMI firmware ready event is
+           received for all the devices that are combined in the group.
+        4. Move the hardware abstractions (ath12k_hw - ah) from device
+           (ath12k_base - ab) to device group abstraction (ag) as it would
+           ease in having different combinations of group abstraction that
+           can be registered to mac80211.
+
+v8:
+  - Addressed firmware assert issue seen during hibernation scenario in
+    "[PATCH v7 7/8] wifi: ath12k: refactor core start based on hardware group"
+
+v7:
+   - Added linux-wireless mailer to cc.
+   - Removed Acked-by tag from "[PATCH v6 8/8]" as it has minor change.
+
+v6:
+  - Addressed smatch error seen on "[PATCH v5 8/8] wifi: ath12k: move
+    ath12k_hw from per soc to group"
+  - Rebased to ToT
+v5:
+  - on "[PATCH 8/8] wifi: ath12k: move ath12k_hw from per soc to
+    group", refactor the ath12k_mac_hw_allocate() api based on ag rather
+    than ab and update hardware abstraction array size in ath12k_hw_group
+    as ATH12K_GROUP_MAX_RADIO.
+  - Rebased to ToT
+v4:
+  - Modified the cover letter
+v3:
+  - Removed depends-on tag of "wifi: ath12k: Refactor the hardware recovery
+    procedures" as it is merged to ToT
+  - Addressed the deadlock warning seen during rmmod.
+
+v2:
+ - Rebased to ToT
+
+
+Karthikeyan Periyasamy (8):
+  wifi: ath12k: Refactor core start api
+  wifi: ath12k: Add helpers to get or set ath12k_hw
+  wifi: ath12k: Add ath12k_get_num_hw api
+  wifi: ath12k: Introduce QMI firmware ready flag
+  wifi: ath12k: move ATH12K_FLAG_REGISTERED flag set to mac_register api
+  wifi: ath12k: Introduce device group abstraction
+  wifi: ath12k: refactor core start based on hardware group
+  wifi: ath12k: move ath12k_hw from per device to group
+
+ drivers/net/wireless/ath/ath12k/core.c | 427 +++++++++++++++++++++----
+ drivers/net/wireless/ath/ath12k/core.h |  87 ++++-
+ drivers/net/wireless/ath/ath12k/dp.c   |  19 +-
+ drivers/net/wireless/ath/ath12k/dp.h   |   2 +-
+ drivers/net/wireless/ath/ath12k/mac.c  | 117 ++++---
+ drivers/net/wireless/ath/ath12k/mac.h  |   9 +-
+ drivers/net/wireless/ath/ath12k/pci.c  |   2 +
+ drivers/net/wireless/ath/ath12k/qmi.c  |  10 +-
+ 8 files changed, 540 insertions(+), 133 deletions(-)
+
+
+base-commit: 6e7a5c6d5e38b93f9cc3289d66a597b9a4ca0403
 -- 
 2.34.1
 
