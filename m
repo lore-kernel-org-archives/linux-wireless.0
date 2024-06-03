@@ -1,293 +1,148 @@
-Received: from mail33c25.carrierzone.com (mail33c25.carrierzone.com [64.29.147.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1192E57C9A
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Jun 2024 14:32:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.29.147.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE1C12F5A5
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Jun 2024 14:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717425137; cv=none; b=NziX7yOJCqhmTOgpwBcNo35zS+PwAdhmCET79IIaH3fQs1foJSGtBH0/9Hk9A3Cye9hlnorISrGQOckSVJs10rGGxcgei+jf6rhIRSlbJHc9+bXVG8dgft+jkHaw+e0nv/8ss4eSoNBBb78llvSTynov2p8kggnsqsrpUh+Xs8w=
+	t=1717426367; cv=none; b=ssL0dtLcBhP9ivLQ9AEBdky+OTwjrPKIFQNB5cv2YdGb1PxiTzlVPO90ibAFrDtrftDLUXCuS2Yd+zK8s44BG+8CIRMB//JjAPlJMUp4hfCupWXYmy5Jk1OySpXjzA0sJTlAqR40WJDYwATRrkdNb9kXdl5Tc/usUsnrrolpF34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717425137; c=relaxed/simple;
-	bh=MX7bhPDpyoRoQtgN30Y8zQVJv0ZI59dtVj8MaYOZzjY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XPcSQ72VaC85lG7H03CCdO/uEhYki+GWxZkrnBGHpPcEb1zCi0HifIhrf9wEhZQO64pPRH5P6dXjMUKcawpuDa3w4y++0HOBBCKnG8MXTapcXcLImVq9ia4js75qvWqZd4JRnKcbEQzICwWkCdcrrEZgp+QoBl4XGFzT54HWRm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hindutool.com; spf=none smtp.mailfrom=hindutool.com; dkim=pass (1024-bit key) header.d=carrierzone.com header.i=@carrierzone.com header.b=qvfoUrf8; arc=none smtp.client-ip=64.29.147.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hindutool.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=hindutool.com
+	s=arc-20240116; t=1717426367; c=relaxed/simple;
+	bh=L50mzYHAl+broDDdUVPJTzCnMe6cWLR2pEk07R4/mA4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tj+Z5rFt/hVpq4rkSFdrywFWHzGUD3pxMiM2FO6BcVvdFPtLWt5u23MWENuemf8dYZuaj7kGbKsFCiF591bfq8uBU+27FDNSpelEqAD+abRT+miJTGM0eAh5G0W2+RO4gDdbZOjtIxC9xRmEbsjSQmKrc17bbPAtZ5hL1T+lI6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EjJZr+Vj; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=carrierzone.com header.i=@carrierzone.com header.b="qvfoUrf8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=carrierzone.com;
-	s=mailmia; t=1717423966;
-	bh=MX7bhPDpyoRoQtgN30Y8zQVJv0ZI59dtVj8MaYOZzjY=;
-	h=From:To:CC:Subject:Date:In-Reply-To:References:Reply-to:From;
-	b=qvfoUrf8TdIjutwNlHndklo7yuXdHGfrFTGp9up3buPXorMSW07tLZD5HIejufeyr
-	 pOR3EG1HJWvkHQZ/2cMe+bluuLm0JaYKMcH5pgzfS4ahCWZ1mpO9bvVlXy8g9mkOTa
-	 KP8hEs9I2xhk4KFX5ldUrp1Plf9uPfjv+SFHqEfs=
-Feedback-ID:pgupta@hindutoo
-Received: from mail33c25.carrierzone.com (localhost [127.0.0.1])
-	by mail33c25.carrierzone.com (8.14.9/8.13.1) with ESMTP id 453ECfms013809
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Mon, 3 Jun 2024 14:12:41 +0000
-Received: (from webmail@localhost)
-	by mail33c25.carrierzone.com (8.14.9/8.12.2/Submit) id 453ECf3Y013729;
-	Mon, 3 Jun 2024 10:12:41 -0400
-From: "pgupta@hindutool.com" <pgupta@hindutool.com>
-To: quic_vthiagar@quicinc.com, quic_hprem@quicinc.com,
-        quic_jjohnson@quicinc.com, quic_bqiang@quicinc.com,
-        ath12k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 0/8] wifi: ath12k: Introduce device group abstraction
-Date: Mon, 03 Jun 2024 10:12:41 -0400
-Message-ID: <1717423961.zxh2nipscocc4sk0@mailapp03.register.com>
-In-Reply-To: <3453b0f2-6cf8-8377-127e-77f955593d3b@quicinc.com>
-References: <20240528063547.1400700-1-quic_hprem@quicinc.com>
- <396d645d-6f3b-4c1b-9d4b-d056fad36192@quicinc.com>
- <7b92a6cd-187d-4b6d-8cfb-af54365751fc@quicinc.com>
- <d7898dd9-b3d2-45a1-8581-41d16b900a27@quicinc.com>
- <cc0fdf88-7046-eb93-265b-35a2d7299952@quicinc.com>
- <1717161560.nw3mokq68g8og484@mailapp03.register.com>
- <3453b0f2-6cf8-8377-127e-77f955593d3b@quicinc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EjJZr+Vj"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-70109d34a16so4037711b3a.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Jun 2024 07:52:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1717426366; x=1718031166; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L50mzYHAl+broDDdUVPJTzCnMe6cWLR2pEk07R4/mA4=;
+        b=EjJZr+Vj9yUTaoeNSqElsB0yCfdohdsa1zmnMmBJ41DcD3abzhS71iLpMeDB4Gk9WO
+         2otcqFkUZAR6VbcI3qbb177bH+a3xkqNfi0naHVcmyjWhDkToEGaXe78c+rpKzOYRP7q
+         V4Yw8yKmTn8MnYF9XOBuV7t+NiuGdju+3+xGef/214JyGsig+teqCcUL+P0L683nlEeY
+         VDxl7e5BdBvUkwwnWwcQxC4rfh5EMNwQBXEbHmXz4KxrZRexHF0YIDE47FvsxkXZ1tgf
+         Masryez8UA6NbvNtUTs0tU2LrY8kRjoBTgAh7WXXPv3oFDJC27tmAZq4rMgmg+/b3fig
+         42RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717426366; x=1718031166;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=L50mzYHAl+broDDdUVPJTzCnMe6cWLR2pEk07R4/mA4=;
+        b=iZpC8HDUwku2j6oVS/FGYsm1mArMsTmSbd0kRf9xPfjIMyyqJHB2uMLHski5vrRLRl
+         4lhyQvaDJYQ3a3FvYHzBrWOH4EGwaZeTkD2VsuSRVpLXB8CJ3eiAlZcuMJXO6TG3gfeZ
+         Oiv1Jle5gqyWuFAQ7FZqe+qv+m12hc5KQ1jYduo5I10X3C9p1SL/FEGMlXGTkwAENuNW
+         F/PaFvgUSJKbzs5F2i1Iz9POac+MLQK6lZs1JQnLJWDM84KSGzDSMr/3+Jo+Zu2kahqm
+         5iG+aNhyUV4YrvyrfxGHk/IqSyDJOX/XgK2B2TWo5KLA7YZokYa0ABRvEUZdmtzfszwq
+         wBew==
+X-Gm-Message-State: AOJu0Yxoq08XDUdYe7VwjUhL1gX+TEM1EOGLsraO16z4ZTBDQbOW0bvl
+	FhvAVnxrRmpQPOTvTshj4txmD6CvWWLugX/jTyJOhkScwNNFX/qU7lpELh9jbwxd1hHLzgYzxPJ
+	IMqiO9xbKDZtO6pPkJgYZrDlxoRk=
+X-Google-Smtp-Source: AGHT+IFqorXq+HifS811xR7ulyfgQe91irwhg+z8+RdxovU5PSbjVha+xTZGRBPCHUc2cfU0h9wjptvNix0CC+1FVls=
+X-Received: by 2002:aa7:8890:0:b0:702:2d79:f4e5 with SMTP id
+ d2e1a72fcca58-702477be3bbmr11434555b3a.5.1717426365554; Mon, 03 Jun 2024
+ 07:52:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+References: <20240527173454.459264-1-marcin.slusarz@gmail.com>
+ <9bfc8f01e99b43e485b2afc6ae4fd661@realtek.com> <CA+GA0_sQ_Bnp8CUq1Pmxf7zut1Kocaxbw4iXT4hYC5_ceXb7WQ@mail.gmail.com>
+ <3cc9cc75468d487c988dbacd8dfc5f57@realtek.com> <CA+GA0_tUy0EuXm0CGYa8SsS78oRNHUanBNwRf_BLXERa1=MYdg@mail.gmail.com>
+ <b9c85972ab634364bf8a705a4f4513fd@realtek.com>
+In-Reply-To: <b9c85972ab634364bf8a705a4f4513fd@realtek.com>
+From: =?UTF-8?Q?Marcin_=C5=9Alusarz?= <marcin.slusarz@gmail.com>
+Date: Mon, 3 Jun 2024 16:52:39 +0200
+Message-ID: <CA+GA0_v1rpoFrRVxpKpYqOrjdxEecn_m3+RKwxYc9H761dpMvw@mail.gmail.com>
+Subject: Re: wifi: rtw88: 8821CU hangs after some number of power-off/on cycles
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, =?UTF-8?Q?Marcin_=C5=9Alusarz?= <mslusarz@renau.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Image-Url: https://mailapp03.register.com/api/storage/pgupta@hindutool.com/profile/picture
-Reply-to: pgupta@hindutool.com
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMSCORE: 40
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrvdelvddgjeefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffquffvqffrkfetpdfqfgfvpdfgpfggqdevvdehnecuuegrihhlohhuthemuceftddunecuogfuohhrthgvugftvggtihhpvdculdegtddmnecujfgurhephffvvefufffkjghfgggtgfhrsehtqhertddttdejnecuhfhrohhmpedfphhguhhpthgrsehhihhnughuthhoohhlrdgtohhmfdcuoehpghhuphhtrgeshhhinhguuhhtohholhdrtghomheqnecuggftrfgrthhtvghrnheptedtvdeiteekgeduheeitefhueekheetffethfdvjeffieejvdevvedvtedvgeehnecukfhppeduvdejrddtrddtrddunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepuddvjedrtddrtddruddphhgvlhhopehmrghilheffegtvdehrdgtrghrrhhivghriihonhgvrdgtohhmpdhmrghilhhfrhhomhepphhguhhpthgrsehhihhnughuthhoohhlrdgtohhmpdhnsggprhgtphhtthhopeeipdhrtghpthhtoheplhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheprghthhduvdhksehlihhsthhsrdhinhhfrhgruggvrggurdhorhhgpdhrtghpthhtohepqhhuihgtpggsqhhirghnghesqhhuihgtihhntgdrtghomhdprhgtphhtthhopehquhhitggpjhhjohhhnhhsohhnsehquhhitghinhgtrdgtohhmpdhrtgh!
- pthhtohepqhhuihgtpghhphhrvghmsehquhhitghinhgtrdgtohhmpdhrtghpthhtohepqhhuihgtpghvthhhihgrghgrrhesqhhuihgtihhntgdrtghomh
-X-Rspamd-Result: default: False [0.90 / 6.00];
-	FROM_DN_EQ_ADDR(1.00)[];
-	MIME_GOOD(-0.10)[text/plain];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_COUNT_ONE(0.00)[1];
-	MIME_TRACE(0.00)[0:+];
-	FROM_EQ_ENVFROM(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	HAS_REPLYTO(0.00)[pgupta@hindutool.com];
-	TO_DN_NONE(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6]
-X-Rspamd-Status: No, score=0.90
-X-Origin-Country: Unknown
 
-Thank you for your reply. I have passed this information along to my board =
-manufacturer (Compex) and we are currently working on a solution for the at=
-h12k failing to recognize my module in the board-2.bin
+czw., 30 maj 2024 o 05:13 Ping-Ke Shih <pkshih@realtek.com> napisa=C5=82(a)=
+:
+>
+> Marcin =C5=9Alusarz <marcin.slusarz@gmail.com> wrote:
+> > =C5=9Br., 29 maj 2024 o 03:52 Ping-Ke Shih <pkshih@realtek.com> napisa=
+=C5=82(a):
+> > >
+> > > Marcin =C5=9Alusarz <marcin.slusarz@gmail.com> wrote:
+> > > > wt., 28 maj 2024 o 05:52 Ping-Ke Shih <pkshih@realtek.com> napisa=
+=C5=82(a):
+> > > > >
+> > > > > Marcin =C5=9Alusarz <marcin.slusarz@gmail.com> wrote:
+> > > > > >
+> > > > > > I found out that the reason for those hangs is a power-off+on s=
+equence that's
+> > > > > > triggered by the above steps.
+> > > > >
+> > > > > To avoid power-off/on sequence once device becomes idle, I would =
+like to add
+> > > > > a ips_disabled helper. Please revert your changes and apply my at=
+tached patch.
+> > > >
+> > > > My first attempt was very similar, and it fixed some cases but not =
+all of them.
+> > > >
+> > > > This is due to the existence of a second source of power-offs - rtw=
+_ops_stop,
+> > > > which is called, e.g., on downing the interface (ifconfig wlan0 dow=
+n).
+> > >
+> > > Please try attached v2 patch. I would like to have an explicit helper
+> > > (i.e. always_power_on in v2) to have this fix, so days later people c=
+an be easy
+> > > to understand how it works. Not prefer adjusting existing flags to im=
+plicitly
+> > > have behavior you want.
+> >
+> > So, do you think this is a chip issue, not just some driver misconfigur=
+ation?
+>
+> I asked internal USB WiFi people who say vendor drivers of USB/SDIO can't
+> power-on/-off frequently but not very sure if hardware issue or driver is=
+sue.
+>
+> >
+> > I'm asking because if we are going in this direction, there's something
+> > more to fix... With your v2, very frequently, I hit WARN_ON(!local->sta=
+rted) in
+> > ieee80211_rx_napi (in wireless-next, the code was moved to ieee80211_rx=
+_list).
+> >
+> > With my patch, I checked and hit that WARN_ON, too, but very occasional=
+ly.
+> >
+> > I think the difference is in what happens in rtw_ips_enter - I disabled=
+ only
+> > the power_off, but you also disabled everything else, including the can=
+celation
+> > of work_structs.
+> >
+> > The warning itself sounds harmless, but I think users should never see =
+such
+> > warnings, so this needs to be fixed somehow. Probably some additional
+> > work_struct(s) need to be canceled?
+> >
+>
+> I forgot to say my patch is compiled test only, and I didn't consider flo=
+w
+> too much, just to close the behavior of your patches. You can improve my =
+patch
+> to be more reliable to avoid WARN_ON().
 
-
-Prashant
-
-On Mon, 3 Jun 2024 10:33:09 +0530, Vasanthakumar Thiagarajan <quic_vthiagar=
-@quicinc.com> wrote:
-
->> On 5/31/2024 6:49 PM, pgupta@hindutool.com wrote:
->> > Is there a limit to the number of hardware abstraction layers?
->>
->> Please note that grouping multiple hardware under one wiphy is still not=
- supported in
->> ath12k. This patch series is a strep towards such architecture. When the=
- full hardware
->> grouping support is added, there will not be any restrictions in the num=
-ber of hardware
->> which can be be grouped under only wiphy.
->>
->> My current platform has 3 physical WiFi 7 modules in one machine - one f=
-or each
->> frequency 2.4 GHz, 5 GHz, and 6GHz. Is this currently not supported?
->>
->> This should work with ath12k as all three will be registered as three di=
-fferent wiphys.
->>
->> > What if I want to connect more than 3 modules including identical modu=
-les of the same frequency? My setup will not be utilizing combined frequenc=
-y modules.
->>
->> Grouping hardware having same frequency capability will make things very=
- complex, I dont
->> think it is worthy of the effort especially there is no obvious real use=
- case to combine
->> such radios under one wiphy.
->>
->> > FYI, in my platform, each module is connected to its own PCIe slot, an=
-d has its own antennas so I assume it would be recognized as its own wirele=
-ss device by the OS (i.e wlan0, wlan1, wlan2, etc.).
->> >
->>
->> Yes, each hardware will be registered as separate phy and wlan
->> interfaces with respective capability can be created on top of
->> them.
->>
->> Vasanth
->>
->>
->> >
->> > On Fri, 31 May 2024 15:35:24 +0530, Harshitha Prem wrote:
->> >
->> >>> On 5/30/2024 3:58 AM, Jeff Johnson wrote:
->> >>>> On 5/28/2024 8:13 PM, Baochen Qiang wrote:
->> >>>>>
->> >>>>>
->> >>>>> On 5/29/2024 6:04 AM, Jeff Johnson wrote:
->> >>>>>> On 5/27/2024 11:35 PM, Harshitha Prem wrote:
->> >>>>>>> To support multi-link operation, multiple devices with different=
- bands say
->> >>>>>>> 2 GHz or 5 GHz or 6 GHz can be combined together as a group and =
-provide
->> >>>>>>> an abstraction to mac80211.
->> >>>>>>>
->> >>>>>>> Device group abstraction - when there are multiple devices that =
-are
->> >>>>>>> connected by any means of communication interface between them, =
-then these
->> >>>>>>> devices can be combined together as a single group using a group=
- id to form
->> >>>>>>> a group abstraction. In ath12k driver, this abstraction would be=
- named as
->> >>>>>>> ath12k_hw_group (ag).
->> >>>>>>>
->> >>>>>>> Please find below illustration of device group abstraction with =
-two
->> >>>>>>> devices.
->> >>>>>>>
->> >>>>>>> Grouping of multiple devices (in future)
->> >>>>>>> +---------------------------------------------------------------=
----------+
->> >>>>>>> | +-------------------------------------+ +-------------------+ =
-|
->> >>>>>>> | | +-----------+ | | +-----------+ | | +-----------+ | |
->> >>>>>>> | | | ar (2GHz) | | | | ar (5GHz) | | | | ar (6GHz) | | |
->> >>>>>>> | | +-----------+ | | +-----------+ | | +-----------+ | |
->> >>>>>>> | | ath12k_base (ab) | | ath12k_base (ab) | |
->> >>>>>>> | | (Dual band device) | | | |
->> >>>>>>> | +-------------------------------------+ +-------------------+ =
-|
->> >>>>>>> | ath12k_hw_group (ag) based on group id |
->> >>>>>>> +---------------------------------------------------------------=
----------+
->> >>>>>>>
->> >>>>>>> Say for example, device 1 has two radios (2 GHz and 5 GHz band) =
-and
->> >>>>>>> device 2 has one radio (6 GHz).
->> >>>>>>>
->> >>>>>>> In existing code -
->> >>>>>>> device 1 will have two hardware abstractions hw1 (2 GHz) and hw2
->> >>>>>>> (5 GHz) will be registered separately to mac80211 as phy0 and ph=
-y1
->> >>>>>>> respectively. Similarly, device 2 will register its hw (6GHz) as
->> >>>>>>> phy2 to mac80211.
->> >>>>>>>
->> >>>>>>> In future, with multi-link abstraction
->> >>>>>>>
->> >>>>>>> combination 1 - Different group id for device1 and device 2
->> >>>>>>> Device 1 will create a single hardware abstraction hw1
->> >>>>>>> (2 GHz and 5 GHz) and will be registered to mac80211 as
->> >>>>>>> phy0. similarly, device 2 will register its hardware
->> >>>>>>> (6 GHz) to mac80211 as phy1.
->> >>>>>>>
->> >>>>>>> combination 2 - Same group id for device1 and device 2
->> >>>>>>> Both device details are combined together as a group, say
->> >>>>>>> group1, with single hardware abstraction of radios 2 GHz,
->> >>>>>>> 5 GHz and 6 GHz band details and will be registered to
->> >>>>>>> mac80211 as phy0.
->> >>>>>>>
->> >>>>>>> Add base infrastructure changes to add device grouping abstracti=
-on with
->> >>>>>>> a single device.
->> >>>>>>>
->> >>>>>>> This patch series brings the base code changes with following or=
-der:
->> >>>>>>> 1. Refactor existing code which would facilitate in introducing
->> >>>>>>> device group abstraction.
->> >>>>>>> 2. Create a device group abstraction during device probe.
->> >>>>>>> 3. Start the device group only after QMI firmware ready event is
->> >>>>>>> received for all the devices that are combined in the group.
->> >>>>>>> 4. Move the hardware abstractions (ath12k_hw - ah) from device
->> >>>>>>> (ath12k_base - ab) to device group abstraction (ag) as it would
->> >>>>>>> ease in having different combinations of group abstraction that
->> >>>>>>> can be registered to mac80211.
->> >>>>>>>
->> >>>>>>> v7:
->> >>>>>>> - Added linux-wireless mailer to cc.
->> >>>>>>> - Removed Acked-by tag from "[PATCH v6 8/8]" as it has minor cha=
-nge.
->> >>>>>>>
->> >>>>>>> v6:
->> >>>>>>> - Addressed smatch error seen on "[PATCH v5 8/8] wifi: ath12k: m=
-ove
->> >>>>>>> ath12k_hw from per soc to group"
->> >>>>>>> - Rebased to ToT
->> >>>>>>> v5:
->> >>>>>>> - on "[PATCH 8/8] wifi: ath12k: move ath12k_hw from per soc to
->> >>>>>>> group", refactor the ath12k_mac_hw_allocate() api based on ag ra=
-ther
->> >>>>>>> than ab and update hardware abstraction array size in ath12k_hw_=
-group
->> >>>>>>> as ATH12K_GROUP_MAX_RADIO.
->> >>>>>>> - Rebased to ToT
->> >>>>>>> v4:
->> >>>>>>> - Modified the cover letter
->> >>>>>>> v3:
->> >>>>>>> - Removed depends-on tag of "wifi: ath12k: Refactor the hardware=
- recovery
->> >>>>>>> procedures" as it is merged to ToT
->> >>>>>>> - Addressed the deadlock warning seen during rmmod.
->> >>>>>>>
->> >>>>>>> v2:
->> >>>>>>> - Rebased to ToT
->> >>>>>>>
->> >>>>>>> Karthikeyan Periyasamy (8):
->> >>>>>>> wifi: ath12k: Refactor core start api
->> >>>>>>> wifi: ath12k: Add helpers to get or set ath12k_hw
->> >>>>>>> wifi: ath12k: Add ath12k_get_num_hw api
->> >>>>>>> wifi: ath12k: Introduce QMI firmware ready flag
->> >>>>>>> wifi: ath12k: move ATH12K_FLAG_REGISTERED flag set to mac_regist=
-er api
->> >>>>>>> wifi: ath12k: Introduce device group abstraction
->> >>>>>>> wifi: ath12k: refactor core start based on hardware group
->> >>>>>>> wifi: ath12k: move ath12k_hw from per device to group
->> >>>>>>>
->> >>>>>>> drivers/net/wireless/ath/ath12k/core.c | 431 +++++++++++++++++++=
-++----
->> >>>>>>> drivers/net/wireless/ath/ath12k/core.h | 87 ++++-
->> >>>>>>> drivers/net/wireless/ath/ath12k/dp.c | 19 +-
->> >>>>>>> drivers/net/wireless/ath/ath12k/dp.h | 2 +-
->> >>>>>>> drivers/net/wireless/ath/ath12k/mac.c | 117 ++++---
->> >>>>>>> drivers/net/wireless/ath/ath12k/mac.h | 9 +-
->> >>>>>>> drivers/net/wireless/ath/ath12k/pci.c | 2 +
->> >>>>>>> drivers/net/wireless/ath/ath12k/qmi.c | 10 +-
->> >>>>>>> 8 files changed, 544 insertions(+), 133 deletions(-)
->> >>>>>>>
->> >>>>>>>
->> >>>>>>> base-commit: f8320064a28242448eeb9fece08abd865ea8a226
->> >>>>>>
->> >>>>>> With this series I'm seeing a firmware crash upon resume from hib=
-ernation, but
->> >>>>>> I'm not sure if it is the same intermittent crash I reported in a=
-nother thread
->> >>>>>> where firmware is not correctly handling a low physical memory ad=
-dress.
->> >>>>>>
->> >>>>>> Baochen & Kalle, since this issue may be specific to my laptop, c=
-an you
->> >>>>>> validate hibernation on your setups?
->> >>>>> I can also see a firmware crash upon resume. I am using ath-202405=
-281746 as code base.
->> >>>>
->> >>>> I bisected to:
->> >>>> [PATCH v7 7/8] wifi: ath12k: refactor core start based on hardware =
-group
->> >>>>
->> >>>>
->> >>> Thank you so much, Jeff. Identified the possible reason that is caus=
-ing
->> >>> the firmware assert with hibernation scenario and will address it in
->> >>> next version.
->> >
+Two variants of the patch that fix this issue will follow. They are
+built on top of yours
+v2 and my "wifi: rtw88: schedule rx work after everything is set up"
+from the other thread.
+Please choose the one you like more :).
