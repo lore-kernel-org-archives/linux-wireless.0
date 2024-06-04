@@ -1,128 +1,98 @@
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B55A14A4EB
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Jun 2024 18:27:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 956944A11;
+	Tue,  4 Jun 2024 18:54:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.211.166.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717525681; cv=none; b=qB4SI8r6YI6+DkPHZB8Oe5dw+VIMb8Tu85MGbnwgWLDDItZ48PrgooPahxA16Ogr5jOzIqRUyXv3PBjaPx+JhbXQlsKquY8RTLJoRpdYxy0GvgjNzHZ++XZvNM0JNIdxY/MbC4/YxYiRxeIYiVUT1yutxcbAz31BixTM5c8tOk0=
+	t=1717527245; cv=none; b=PI1LDy52VkCJWy/T/4IYvtulbj9cXR05wY3uFIs8bE9XTzCYS4wMM/AsBhOGSV5xYv/Oki7oz9RzJMzD+GaYQw6X+JcXdJfiUMzYNS4ZmygMnCzf9PhQzPR3/V6HvDwYsxjBWmbN9t8aXYj6YEbnN/WZHmtU4dxU6xt5eMbW3N0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717525681; c=relaxed/simple;
-	bh=tgO7W51+bHcDvjyP/YA64C67mrFqdBGIc+5LxIoRFGo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=meqAbzTTjOQSThVQYx1ehkL4iyXNedhFHnCXZLsW4Q63Ra0jx4f7MVtFm2dGVkFQsLJbRlNbExQCMqN+OZ4AzaatKHmRF/XAJNmIrp6r9pJptIinPb+i0fZiKTsCP9v/ElQ4m8RS8tXpKEVFKE/DuQ/dx0rfkh7yGQTMLA+2fIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=UfKRuEKu; arc=none smtp.client-ip=209.85.167.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="UfKRuEKu"
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-52b962c4bb6so4427311e87.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2024 11:27:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1717525678; x=1718130478; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KtWwyHQ/s1Mo+jSgQ3jPju5LLIQLxY5LIc0kGaj+Rp0=;
-        b=UfKRuEKulQPRJ1eQ1jv5CPwj5N48I2Hd/0RecNZvR1umL2CaLMmHTBGRewMLx8xPVy
-         G8ohgactJFSAKbfIQPzAjtKfd0Sxw9ZtghZ+gPnY03Zy3F/AuVdbxqpIYaBWAInoXrKp
-         gIaaWDULocIxS0mx9djiuvA+RM3Ihq3jAZBVqt9hPjKydR8f38k2Ee3Uek4sOlzndqk/
-         dD4Azb1LLUXGqSiMu5p5k1byuGyaulNDQJDToit2cIh1xnjFr2Vmb2+SP6i40KeANUvt
-         HughqwuP0jI2ouIrSLA5Pi2guWDS3j1FF1vd4CKJq38kHz60Q3jIWz1rgtycCn6OtAv+
-         yGQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717525678; x=1718130478;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KtWwyHQ/s1Mo+jSgQ3jPju5LLIQLxY5LIc0kGaj+Rp0=;
-        b=RpXctc6uuBzWsvdPcaqknDVS3/3e+lovUvFEhZ0opyFsV/8g4AxZ/ax4yes5kR+L0Z
-         tfaCX24eRK54AgSLuHqIFGn1A/8HrWVhB/j0ejtC6dfqC/CSvYDzfO2MapfUIJn61QTY
-         oeqceAbZqTRA8yS5KFxdJ0OEzDPoWGZ64n6aSKWdYS4VQp25WOgI9pnPw6GBlTd49/Wu
-         pgOx/VNI2ladpqIJ2DtezqHPkg3gLCNfIrAwpc5mAGaxkVtH67a7qbiHa+rTc1BqFKXd
-         ESFVEAg+gQZDjKuYMZAV7PVkIqvGmxmjLRcmvW4DOxHGNIi3WucHxUrRXt2JnYwmqh9j
-         etiw==
-X-Forwarded-Encrypted: i=1; AJvYcCXvNNSJ5YYZDB+3zoxLD0AKZtnbCkY/y1OXtUTZLnx/0tKXp+BQiKsVTC+/D80ZMMWVeyn+tOgnD0uOiXrniSaCjbWhVf6xSjpoNliw3kw=
-X-Gm-Message-State: AOJu0YwZ9tUAg8VHXMM5mD5U23TPiurXvNY4+1fy8J11b8zRbFdID6Wh
-	nBr8XYITexPbU5Jkyfl8SrWGFE2Zh55NJL1ZPhpiZvj9Owh8Va6+/7OPUKSgL2sCQEHntNVLhHy
-	wABqVmsqAhWHgvRduszR4MxdDstzhf/hXKByLSA==
-X-Google-Smtp-Source: AGHT+IEIBmN6Pbw21C48aFo92GeQIhF5kiBTsuKNdmIGqw2sOD28tsikvtBG3m69ha2Gd5/MsgbO+7NQyJOTbJOSXRc=
-X-Received: by 2002:a05:6512:2253:b0:523:9515:4b74 with SMTP id
- 2adb3069b0e04-52bab4ca5e9mr311493e87.14.1717525678190; Tue, 04 Jun 2024
- 11:27:58 -0700 (PDT)
+	s=arc-20240116; t=1717527245; c=relaxed/simple;
+	bh=ilQQc4mZ1DUA8/7nK9hi/MsoR1Q7Eqgf7H5UYNlCkFY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UwHMyljYm7f2NlTclDqjpES2tSA4wxh0mDUF7jihvE+PPD7aI6IL8xmaGZRQfujiSYDs4nou4J7xUlcKUe6ZMkTvU221xoUHZkKk6XKU1RTr6JVPMWjqJoyT0+ZR4igajig546mPZjdV4j80UZYPSOSPMiUxUyB6QyFoeWytCck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org; spf=pass smtp.mailfrom=gentoo.org; arc=none smtp.client-ip=140.211.166.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
+Date: Tue, 4 Jun 2024 14:53:58 -0400
+From: Kenton Groombridge <concord@gentoo.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: davem@davemloft.net, edumazet@google.com, kuba@kernel.org, 
+	pabeni@redhat.com, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org, 
+	Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2] wifi: mac80211: Avoid address calculations via out of
+ bounds array indexing
+Message-ID: <cx2oet5b5lavjywcbf7u4c32krtoglvt3xbe2sxac55e36iibw@lrd5iuhtxz2g>
+Mail-Followup-To: Johannes Berg <johannes@sipsolutions.net>, 
+	davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
+References: <20240517145420.8891-1-concord@gentoo.org>
+ <d1fea590e53cb1b00dc64f4f8a4c8aec84610401.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240528-pwrseq-v8-10-d354d52b763c@linaro.org> <20240604174326.GA733165@bhelgaas>
-In-Reply-To: <20240604174326.GA733165@bhelgaas>
-From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Tue, 4 Jun 2024 20:27:47 +0200
-Message-ID: <CAMRc=Mf_n9xcFHofq5Q_X3xs=2jDeor1zfFAd=bM0FywyhFUJA@mail.gmail.com>
-Subject: Re: [PATCH v8 10/17] power: sequencing: implement the pwrseq core
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
-	Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konrad.dybcio@linaro.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Srini Kandagatla <srinivas.kandagatla@linaro.org>, 
-	Elliot Berman <quic_eberman@quicinc.com>, Caleb Connolly <caleb.connolly@linaro.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, 
-	Alex Elder <elder@kernel.org>, linux-arm-msm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	Jeff Johnson <quic_jjohnson@quicinc.com>, ath12k@lists.infradead.org, 
-	linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, kernel@quicinc.com, 
-	Amit Pundir <amit.pundir@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="u4dunbaywfh6hyso"
+Content-Disposition: inline
+In-Reply-To: <d1fea590e53cb1b00dc64f4f8a4c8aec84610401.camel@sipsolutions.net>
+
+
+--u4dunbaywfh6hyso
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 4, 2024 at 7:43=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> w=
-rote:
->
-> On Tue, May 28, 2024 at 09:03:18PM +0200, Bartosz Golaszewski wrote:
-> > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> >
-> > Implement the power sequencing subsystem allowing devices to share
-> > complex powering-up and down procedures. It's split into the consumer
-> > and provider parts but does not implement any new DT bindings so that
-> > the actual power sequencing is never revealed in the DT representation.
->
-> > +++ b/drivers/power/sequencing/core.c
->
-> > + * Unit - a unit is a discreet chunk of a power sequence. For instance=
- one unit
->
-> s/discreet/discrete/
->
-> > +static struct pwrseq_unit *pwrseq_unit_incref(struct pwrseq_unit *unit=
-)
-> > +{
-> > +     kref_get(&unit->ref);
-> > +
-> > +     return unit;
-> > +}
-> > +
-> > +static void pwrseq_unit_release(struct kref *ref);
-> > +
-> > +static void pwrseq_unit_decref(struct pwrseq_unit *unit)
-> > +{
-> > +     kref_put(&unit->ref, pwrseq_unit_release);
-> > +}
->
-> No existing callers of kref_get() and kref_put() use names that
-> include "incref" or "decref".  Many include "get" and "put", so maybe
-> there would be some value in using that pattern?
+On 24/05/29 04:54PM, Johannes Berg wrote:
+> On Fri, 2024-05-17 at 10:54 -0400, Kenton Groombridge wrote:
+> > req->n_channels must be set before req->channels[] can be used.
+> >=20
+>=20
+> I don't know why, but this patch breaks a number of hwsim test cases.
+>=20
+> https://w1.fi/cgit/hostap/tree/tests/hwsim/
+>=20
+> johannes
 
-These symbols are not exported and I personally dislike the get/put
-pattern. Best I can do is _ref/_unref like what kref does.
+Pardon my absence.
 
-Bart
+I'm also not sure why these tests are failing. Unless I'm missing
+something, the runtime behavior of these code paths shouldn't have
+changed significantly.
+
+FWIW, I have been running this patch on real hardware and connecting to
+Wi-Fi networks with it for the past couple weeks without problems.
+Though, I see that these tests are probably testing Wi-Fi modes that I
+am not using.
+
+--=20
+Kenton Groombridge
+Gentoo Linux Developer, SELinux Project
+
+--u4dunbaywfh6hyso
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQKTBAABCgB9FiEEP+u3AkfbrORB/inCFt7v5V9Ft54FAmZfYsNfFIAAAAAALgAo
+aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDNG
+RUJCNzAyNDdEQkFDRTQ0MUZFMjlDMjE2REVFRkU1NUY0NUI3OUUACgkQFt7v5V9F
+t54qNw//YhiRFppe9p3LZ2rWSH2ANit9/KoWnRDidGoCAiVwfzWshSxXBhSt51pg
+HFF6TbdPnpbRE80APNY/PHmbDm0U+kRq8+6B/OCHcop2Yl3DktBc3Yn4uhUCosl7
+r9lwUAOtUB4npMM1r+FeXkHxWgW8cZRn8T50DlpVeQN+23f0g5uzIbrZqYKCFucb
+mmxVXrSpkB4qgSGOUiMpsGBk73yyrsGSujH1df5eaclp4uvebGys7lhApdRmJg0u
+A0T42vwe7Uf+snt35W6BdAD+jiY/2WnEUCPnesPbde3maYYnCPZyzPUtPshScHk0
+WJA2LtDk9bSAE/OTwV2GfHdvensMp+ck7CEac1Ub1/INtZU+DJTv4Pa8wFGyUOvt
+edcXsvu4IOYx6ZtGc26z+IqnbLH2XNwNN3LvsabV3fUOtKLfQ7P47cg0C12AcEMZ
+MX8Qdy0yhZnYfdlaSNDUlKgiy7V0v0j8xc0lqXrlmy1b3R2Nor72SolyKUSmd8+a
++BC3FvzE5H6U7alhW5QpbdZvBaPUThwxDa/8IaIMNjHrh+BWaTEJ9dv7VAerGB6H
+OONq7eX4lsut95clnch6wf3CSYAgkDZFqKh0oLKv+vh+GxkgPNMp9Rt6UOUkcR7T
+9DIDzMVcV/ZNopIHznAP8rLKNf9DEOZ7mdJiW8n0anc7leMoTBo=
+=Do6D
+-----END PGP SIGNATURE-----
+
+--u4dunbaywfh6hyso--
