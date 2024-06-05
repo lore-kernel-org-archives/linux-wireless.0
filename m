@@ -1,38 +1,38 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9340F18C33A
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 07:42:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2137018C357
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 07:42:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717573373; cv=none; b=STRcMatbJ6gvWCkFZH+euqVfjRUk9utDspLBgtYuaCr/rIyHUis2doP4b4QsJRMbT5B1Ojf3vHVXF2eGBAqzkTzzy2wuf6xUY2FEMbx1Ba2sKUbmuCUcLRWwLHZYODtvYn8Liz9tI4NXxtAghGn3cPhaK9NXr7Q9+0GQGKMOV4k=
+	t=1717573375; cv=none; b=SJRLovPq03QZVhWmF68ILS/JtBAj2fHa9A2N+NcbtvBSW6uiDmHv8KYlAGIBy4l4qC5FGqMKCgCrd9eYg1EU3qzNtIwb9gIPbxWAqOIz1Nu87IrXBhmH1m2PkTPRLjOuQV3sHMEE+0oR6f6G/GHhWOqZbJUsNBMoGd/wITNYbO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717573373; c=relaxed/simple;
-	bh=vD2f9Wi/5/X9VGKXNR2UubXip6jTIdxjN5xkpAvk358=;
+	s=arc-20240116; t=1717573375; c=relaxed/simple;
+	bh=b2A/PcdrrKccrtsXeG6QXAENACXO2gJKvxnCfGcp650=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bldE9QPhoUIVrmUyYzsi3j6RBb/XChf9TaBeAaCfIDHiND34qkICYZsr+sSHusgoZtsCtNNU+98ATyXaN6IB6boD792R2Iuuz/6nu5G5TD7zCgQZitl5BOtP0GGdW40EJqwjGOWbWHRBIzDlcar/Hb45NsKFLZ/fI3v6OVuf4i8=
+	 MIME-Version:Content-Type; b=Q8W0QrAIuoUzhIrB9BvA0iog+oEtVVwc5ktKHpznKic1xMrvkuAZmWanNaqa2hinfTIa1nmT4ZQkFdNeXlevzX+qYthNJOr3Qp8iLYOS/pacvs6YE3lhHfPheJeoXFwm9dKNmqGZGHvF2FQC+SEzpfDPbvcKC4dp5PLtHgPKTDw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4557ge8tB1237314, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4557gWSX11236949, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4557ge8tB1237314
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 4557gWSX11236949
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 5 Jun 2024 15:42:40 +0800
+	Wed, 5 Jun 2024 15:42:32 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Wed, 5 Jun 2024 15:42:40 +0800
+ 15.1.2507.39; Wed, 5 Jun 2024 15:42:32 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Wed, 5 Jun
- 2024 15:42:40 +0800
+ 2024 15:42:32 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <wens@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
-Subject: [PATCH v3 4/4] wireless-regdb: Update regulatory info for Mexico (MX) on 6GHz
-Date: Wed, 5 Jun 2024 15:42:09 +0800
-Message-ID: <20240605074209.8713-4-pkshih@realtek.com>
+Subject: [PATCH v3 2/4] wireless-regdb: Update regulatory info for Morocco (MA) on 6GHz
+Date: Wed, 5 Jun 2024 15:42:07 +0800
+Message-ID: <20240605074209.8713-2-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240605074209.8713-1-pkshih@realtek.com>
 References: <20240605074209.8713-1-pkshih@realtek.com>
@@ -47,62 +47,41 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-The Plenary Session of the Federal Telecommunications Institute (IFT)
-determined, in its IV ordinary session of 2023, to classify the
-5925 - 6425 MHz frequency segment as free spectrum and issued the
-technical operating conditions that allow coexistence with the existing
-services in the country [2], which [1] is the entry page.
+The publication of the Decision ANRT/DG/N07/2021 of May 2021 amending
+and supplementing the technical conditions for the use of radio
+installations composed of low power and short range devices [2], which
+ANNEX 5 defines p.i.r.e. conditions of 5925 - 6425 MHz are 200 mW and 25 mW
+for indoor only and indoor/outdoor respectively.
 
-Within the operating conditions of this band as free spectrum, its use was
-determined for low power indoor and very low power indoor and outdoor
-systems.
-
-In the agreement [3] of section Single Annex 2. Low power systems operating
-indoor is
-	30 dBm (5 dBm over any 1 MHz bandwidth) for Access points
-and
-	24 dBm (-1 dBm over any 1 MHz bandwidth) for Client computer
-
-Very low power systems operating indoors and outdoors is
-	14 dBm (1 dBm over any 1 MHz bandwidth) for User terminal
-
-Considering -1 dBm/MHz for Client computer and smallest channel is 20 MHz,
-limit 12 dBm is adopted.
-
-[1] https://www.ift.org.mx/comunicacion-y-medios/comunicados-ift/es/el-pleno-del-ift-clasifica-la-banda-de-5925-6425-mhz-como-espectro-libre-comunicado-132023-16-de
-[2] https://www.ift.org.mx/sites/default/files/comunicacion-y-medios/comunicados-ift/comunicado13ift_1.pdf
-[3] https://www.dof.gob.mx/nota_detalle.php?codigo=5681829&fecha=07/03/2023#gsc.tab=0
+[1] https://www.anrt.ma/en/lagence/actualites/wifi-6e-now-authorized-morocco
+[2] https://www.anrt.ma/sites/default/files/decision_a2fp_-vf-_mod_07.05.2021.pdf?csrt=14818568393101165775
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-v3: correct source link in db.txt
-v2: update reference [3] to have power limit values, and consider -1 dBm/MHz
-    to set 12 dBm.
+v3: no change
+v2: no change
 ---
- db.txt | 4 ++++
- 1 file changed, 4 insertions(+)
+ db.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/db.txt b/db.txt
-index d3b106526252..966c708bf0df 100644
+index 8773de6ed6a8..99d3f61092b7 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -1293,12 +1293,16 @@ country MW: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
+@@ -1133,10 +1133,13 @@ country LV: DFS-ETSI
+ 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+ 	(57000 - 66000 @ 2160), (40)
  
 +# Source:
-+# https://www.ift.org.mx/sites/default/files/comunicacion-y-medios/comunicados-ift/comunicado13ift_1.pdf
-+# https://www.dof.gob.mx/nota_detalle.php?codigo=5681829&fecha=07/03/2023#gsc.tab=0
- country MX: DFS-FCC
++# https://www.anrt.ma/sites/default/files/decision_a2fp_-vf-_mod_07.05.2021.pdf?csrt=14818568393101165775
+ country MA: DFS-ETSI
  	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (17), AUTO-BW
- 	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
- 	(5490 - 5730 @ 160), (24), DFS
- 	(5735 - 5835 @ 80), (30)
-+	(5925 - 6425 @ 320), (12), NO-OUTDOOR
+ 	(5170 - 5250 @ 80), (20), AUTO-BW
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
++	(5925 - 6425 @ 320), (200 mW), NO-OUTDOOR
  
- # Source:
- # https://www.mcmc.gov.my/skmmgovmy/media/General/CA-No-1-of-2022_-signed_19012022.pdf
+ # MC as part of CEPT accepted decisions 2005/513/EC (5GHz RLAN, EN 301 893)
+ # and 2006/771/EC (amended by 2008/432/EC, Short-Range Devices, EN 300 440)
 -- 
 2.25.1
 
