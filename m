@@ -1,56 +1,124 @@
-Received: from mail.infoupdaters.club (88-209-210-239.pool.panelnet.hu [88.209.210.239])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4F160263
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 03:56:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=88.209.210.239
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B7C25777
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 04:11:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717559798; cv=none; b=c3+uEBtDR669lZCa81WO/+gniNnehnsCo78P68CFd8bD2fWu7xvRuGxcZLrkS4rmf040ZvAHBZZX5ijxQXwC9//oVmLJTOa8jfpEpvhbiFi8+fS9Cv5GkYEy4LRkdWUg/n6cIbqN4/ySspnFLpmEdafaObBAb+STWpixdZVXoHE=
+	t=1717560696; cv=none; b=pxdoFZHE550SVhXkosq/04YvBoMPGhZw1o0Kf24/qsNSKqEg5if9fnfYkWDV7jJkfw/hvQObdeMVpPRQdyjQcdaLMSUhGv3462MoMsuAszjsrXWrxBU6+4evsVDcIVYbArc589LwvFuFY1G0Ni3Ms1ZJlUQhZe6I/dKfnmHWwvc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717559798; c=relaxed/simple;
-	bh=9hm3fRZR2ds9nhUS0SsivqkZwxdadnRLn/uy3Nj82cU=;
-	h=From:Subject:To:Content-Type:Date:Message-Id; b=B6R9EQiGd8YC6BFAT9BjKiBUrPG5O6lanPYXiRn1FrIobK+pO6u5kIm+AfGLiAUeDvyd3CiL+WFmXKqZ5NFNgyRa8mcZFJtGYc+/EtxbjVuWLzinNZ6sjyprDiXfe19JzBLJe7sM5hBCjskbTfLpJRYUZFmdtKLPXK0SWyh7qVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infoupdaters.club; spf=fail smtp.mailfrom=infoupdaters.club; arc=none smtp.client-ip=88.209.210.239
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infoupdaters.club
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=infoupdaters.club
-Received: from HY-62885 (184.170.252.231) by mail.infoupdaters.club for <linux-wireless@vger.kernel.org>; Wed, 5 Jun 2024 05:46:23 +0200 (envelope-from <admin@infoupdaters.club>)
-From: "Srisawad Corp. PCL" <admin@infoupdaters.club>
-Subject: New opportunity for your establishment
-To: <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Reply-To: <doungchai@sawadscorpsocl.com>
-Date: Tue, 4 Jun 2024 20:46:26 -0700
-Message-Id: <2024040620462547CBBD272B-F46E7303ED@infoupdaters.club>
+	s=arc-20240116; t=1717560696; c=relaxed/simple;
+	bh=etF19prCyPnFhMAS/6DWy44pO56niXLPQhsefaibP0s=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=W/KLC1EiW2pjSUHYHnxJojap0QV7oZb8ISP8m459XaQvcLO7kNAwW55bHDDNwCaDnMtt0SjPHYcGLi7MmyVWTif8PeMfgAEH7yVnD+nRo2SiCAxCZvtp/eQmHEedVdl9kQboU9942s4UDj3tdixd8w/IaKJFBivt/4tce8k2JXI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nlyiLByq; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nlyiLByq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB7EDC4AF08
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 04:11:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717560695;
+	bh=etF19prCyPnFhMAS/6DWy44pO56niXLPQhsefaibP0s=;
+	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
+	b=nlyiLByqMD3ygcEpUaHUNOZBO0AM7BK9po9eE/SwyvWm9w5+Ib3Bs6B6U0vR78njr
+	 Nt2krToDOC//r1Nwd/pdiXI2kPS4yLLPKG90Miw4kRKyV3FzwgnyW5Z/YnjJ+YxIhj
+	 VttUfLZiPdU2QoIkmJN6jZDNXj/uEnLsT+AlOTfxAFpYyIxptErXOLe6waFiSUPUyr
+	 2q/Bl/Jqp7HjzTK7/iCWUl0QpJuulFRGsjzd8QADJb+vM6IqpOENjnVb1DGvP6b9Wy
+	 GRwmLiZSs2noS9v3uQ8WbJVk++7crdISWy6oeFM5k8eYkYZO6UdeZSiW0aqRBHlfwM
+	 dy9gQBYJWo3Yw==
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-2eaad2c673fso47977651fa.3
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Jun 2024 21:11:35 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzB+12zsrVBHVP6LFNPmIaPPbTmwl/9Lqwskf8xIAN6TOe3+uvF
+	C6CVoL48+4NlSnP0NfvbnY+eIRd+ymu7/+5sXuESth4V8DXxgT1ygInzQO2y2cofpRreGlEaeBs
+	90tax9qaxxrJ8mGufepmO5zcScgk=
+X-Google-Smtp-Source: AGHT+IEfdJZokykQeRkAQZq9+7/S2636sl+IO6YQ6A77tKEPLEmfhKE9mpxxTNZTe7RuXGJ6wpeVDsoiCa60dGJlncs=
+X-Received: by 2002:a2e:99ce:0:b0:2ea:91c1:f3d5 with SMTP id
+ 38308e7fff4ca-2eac7990e3bmr6670621fa.15.1717560694178; Tue, 04 Jun 2024
+ 21:11:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20240603060558.98791-1-pkshih@realtek.com> <20240603060948.99147-1-pkshih@realtek.com>
+ <CAGb2v65j604KUiVDiXSAbpJQQetGagFj53E8zuk6JqwaDdBk3w@mail.gmail.com> <a97fcc8d9dfd4f9784dace38d0c01351@realtek.com>
+In-Reply-To: <a97fcc8d9dfd4f9784dace38d0c01351@realtek.com>
+Reply-To: wens@kernel.org
+From: Chen-Yu Tsai <wens@kernel.org>
+Date: Wed, 5 Jun 2024 12:11:21 +0800
+X-Gmail-Original-Message-ID: <CAGb2v67Crwo-qiS0hFrUdrjD4NK42_-s6_RhmusfpDd0SDZj2A@mail.gmail.com>
+Message-ID: <CAGb2v67Crwo-qiS0hFrUdrjD4NK42_-s6_RhmusfpDd0SDZj2A@mail.gmail.com>
+Subject: Re: [PATCH 4/4] wireless-regdb: Update regulatory info for Mexico
+ (MX) on 6GHz
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	"wireless-regdb@lists.infradead.org" <wireless-regdb@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Attention,
+On Wed, Jun 5, 2024 at 10:53=E2=80=AFAM Ping-Ke Shih <pkshih@realtek.com> w=
+rote:
+>
+> Chen-Yu Tsai <wens@kernel.org> wrote:
+> > On Mon, Jun 3, 2024 at 2:10=E2=80=AFPM Ping-Ke Shih <pkshih@realtek.com=
+> wrote:
+> > >
+> > > The Plenary Session of the Federal Telecommunications Institute (IFT)
+> > > determined, in its IV ordinary session of 2023, to classify the
+> > > 5925 - 6425 MHz frequency segment as free spectrum and issued the
+> > > technical operating conditions that allow coexistence with the existi=
+ng
+> > > services in the country [2].
+> > >
+> > > Within the operating conditions of this band as free spectrum, its us=
+e was
+> > > determined for low power indoor and very low power indoor and outdoor
+> > > systems.
+> > >
+> > > According to WBA Response to the Mexico IFT 6 GHz Consultation [3]. T=
+he
+> > > Low Power Indoor is
+> > >         33 dBm Max Tx Power (EIRP) & 8dBm/MHz PSD (EIRP) for Access P=
+oints
+> > > and
+> > >         27 dBm Max Tx Power (EIRP) & 2dBm/MHz PSD (EIRP) for Clients
+> > >
+> > > The Very Low Power is 4 dBm Max Tx Power (EIRP)
+> > >
+> > > [1]
+> > https://www.ift.org.mx/comunicacion-y-medios/comunicados-ift/es/el-plen=
+o-del-ift-clasifica-la-banda-de
+> > -5925-6425-mhz-como-espectro-libre-comunicado-132023-16-de
+> >
+> > Not sure what this reference is for?
+>
+> This is entry page of [2]. I will remove it or add description about it.
+>
+> >
+> > > [2]
+> > https://www.ift.org.mx/sites/default/files/comunicacion-y-medios/comuni=
+cados-ift/comunicado13ift_1.pdf
+> > > [3]
+> > https://www.ift.org.mx/sites/default/files/industria/temasrelevantes/co=
+nsultaspublicas/documentos/2021
+> > 0119-cpi6ghz2020-162.pdf
+> >
+> > [2] does not say what limits were adopted, nor that the WBA's
+> > recommendations [3] were adopted in its entirety. Without such
+> > wording, [3] is just a recommendation, not the final rule. This
+> > needs some more information.
+>
+> I will try to search for the adopted power limits. If I can't get that sh=
+ortly,
+> I will only submit 3 patches by v2.
+>
+> A question about TX power value. Is a special value existing to indicate =
+the
+> value is uncertain?
 
-I am writing from Srisawad Corp. PCL. We would like to invest in your 
-project, we have the capacity to fund your project and we are open to 
-discuss on any of these three types of investment plans. We can invest 
-either as a debt/loan finance, equity venture or a combination of debt/loan 
-and equity venture, likewise known as convertible note depending on the 
-investment plan most suitable for your project.
+No such value exists. If the value is uncertain, then we simply can't
+add it to the database.
 
-We are majorly interested in projects with high profit value. Projects that 
-fall within our interest can be funded completely with very considerable 
-and workable terms. Should you be interested please get back to me through 
-the below email for more information. 
 
-Email: doungchai@sawadscorpsocl.com
-
-Kindly let us know what your ideas are.
-
-Doungchai Kaewbootta
-Executive Director/Managing Director
-Srisawad Corp. PCL
-99/392 Srisawad Building, 4th, 6th floor,
-Soi Chaengwattana 10 Intersection 3 (Benjamitr)
-Chaengwattana Road, Thung Song Hong Subdistrict
-Lak Si District, Bangkok 10210
-
+ChenYu
