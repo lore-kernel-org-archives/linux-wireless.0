@@ -1,48 +1,69 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4DE22615
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 18:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 636D21527AA;
+	Wed,  5 Jun 2024 19:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717613298; cv=none; b=iLrfxVzSJ+ZKGnehu9dHv6K0dBGF9+v7taGNMILOmnPZZpt9GuOglCV/2hcIwbJWLApFroNdmQpJ7/9zW2MkBeqj/W8H2rcigPvwm9Nco/ZXq4l5a/Qc4eBsF/xORuMT1IOI14OrWZs1MBfJbzk4Z+yPtgZUfP9Z8arjTJuzNaE=
+	t=1717617107; cv=none; b=OoPAYR6kXidhsBIgBzRVMEVg48UDO510g9ZtNpd4bok/PBxWYYBR5BRwIuJkIR5b4xjF6w56Vk14cV0gSj6jCrEzT1TfjqMoGQ83J046Pvzxb9lHR7fgaT7gW8YawtXCW9eUxtinp5W7wFF+HfizAh0xF2AE0aUXjIyPaOrUK7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717613298; c=relaxed/simple;
-	bh=cqCfkAsNOmlSLOmTV0Or3TW1nWU3XUYLuahdwOQJxB0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SfVxccpn+r9tXwfzm7ifh4oyoag//ADLQfDd+HMRMhHTMHq5pyGw+fTMIo0/gihDG2lpfXFhIEBu1TNipjcrK1ee3JUvVxzwz+c96gPorOmnc/UoFkdjQKumgPeOlFX+TO0zXAghp7SwfbA/VUoVhcBWZRzsURzawBF1oj7Z2ME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=UYC60qbF; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1717617107; c=relaxed/simple;
+	bh=13pNVGD9Kxcf1hFGXjLsg/bvuyKWmCGBqbVx1C7p2fw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UvjUtPojd3Cf8CjgyyKAiwD6RckhYEN/X8c64xguO3m+KWdDYfW2bU72jXLIqTNxelIpnAb5SHo7ECJ4Gkr2gSgovbBDYn32bCTQP2Qy3GbmeqyGt2Q7uRn2nCaxalFK09lTRSmMPE7+tbdTBTLTh6KAlDk1mR1c79bp1sPKupI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hk35WUGP; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UYC60qbF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=unMNqYBaVrJ6Kzd17fzhmqL4lPA4z/W1aBMQUWWHcsw=; b=UYC60qbFFT99fsX2r0PvqZifN8
-	esVTBj7B0YQGbvKJB5rJeL6xbd10xq8s4+91XxypqmVQa4T7Z1eYMcXAr+mzmv8EJstD/nlfypX41
-	NWii7VSBjdShCJgS9WfKutsxUNBv7urJQXOUDZQkUw/aJQ/mohy4R/nRS1kOIj7x2Zgc=;
-Received: from p4ff130d0.dip0.t-ipconnect.de ([79.241.48.208] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sEvQ9-008Gwq-2K;
-	Wed, 05 Jun 2024 20:31:37 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	quic_adisi@quicinc.com,
-	quic_periyasa@quicinc.com,
-	ath12k@lists.infradead.org
-Subject: [RFC v2 2/7] wifi: cfg80211: add support for advertising multiple radios belonging to a wiphy
-Date: Wed,  5 Jun 2024 20:31:25 +0200
-Message-ID: <db7d83ea6d97e118a14029727e9e18d6e47b753d.1717611760.git-series.nbd@nbd.name>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <cover.c104c0bb3a14f4ac26aee71f4979846f6ad87742.1717611760.git-series.nbd@nbd.name>
-References: <cover.c104c0bb3a14f4ac26aee71f4979846f6ad87742.1717611760.git-series.nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hk35WUGP"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1f630e35a01so2140385ad.1;
+        Wed, 05 Jun 2024 12:51:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1717617106; x=1718221906; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rK84/e0NpWu6xN5WA2vo2qIrm/0cYRoieZimvFEhelM=;
+        b=hk35WUGPKOdVLWFXDpQ4LtSg2JKT5ME5H/WGKLmdvtJmwXoHYvCFL8oLcfquZ8uQj4
+         1xNO4L7yQxtru0slwJ/bMRNzSP3SjoUKMPJ33QJFpvB3GQtVCylFxrCsCju6ePL+YFh8
+         TYK6U7DLqEscLMKoiddPmK6B/E4IAb9s6g4KEhA5+tSaXbdijBQw7XLy1scsuAWoHMFH
+         mqSnMUd5skl39RKUmwBUYgs3IzPhfbHMUD9Xioj83LapAf+QgfiVqSF9rpEfKAfaK5gl
+         8k6vdaFF5nJqcTMDj60PcF2oh4TNfZHXJZ2nwnVRt6A/u/1vZX0hobKU/GPerkapRtMR
+         ijFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717617106; x=1718221906;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rK84/e0NpWu6xN5WA2vo2qIrm/0cYRoieZimvFEhelM=;
+        b=wOGBuq2Q6omF44wtfHL+tA++0VN2h/shgX+D2Wm+2M16q5vL+ZwbY5M/sGyN0iUCVV
+         682AKcoWOnblTNMLqyvILk9lv5zR8aBRDxso959qzBYeFYj3jymKGdVeT5Y9UFUBrOe6
+         O6hxN0n5xVpv3UhwRMHPZXmC+iSy0Prj7SGaFOnQEiv9CXoQHae6TMnGrGYb8c4NIjyr
+         QUpjac32icOJWwBabxXgq9NVMrpwt6rw5omXjjQUcVYwinF4eFt3B7DXCBu5CKfXN7jY
+         srDwG8cKy1RER9EVJ1MYSWhVmcoLQKbjeugsCmke97A6pSZUKwZjE4QOvufCXsHBJBaL
+         heHA==
+X-Forwarded-Encrypted: i=1; AJvYcCXHmrHidoClds/KFRP4/Pi4/8PBRIKG+sFEZ+ucIw8HDKUVwQcYQzj4lmK/HzPBRaBr7LQQ2T0k2wQfoo5h+kEsQxytamFbngNuCVRU8CORYx7vF0wFyOi/ofyc/sKUmpY63KEOthPaWuHPkaY=
+X-Gm-Message-State: AOJu0YyW4ayHGhyT30/tm4Zc+hWhjiiu/8NdPaXthOhstiE5hgFZX6Y1
+	n4NWdfi4IxfdL2KuSPCxkbfWwYl9xsKFfA3HuH8D5syz2VlibMEw+KHzlojjL88=
+X-Google-Smtp-Source: AGHT+IG7ECbu4hu8GiJMC/+yTrvM3XzzHcS363edQPc1JVWRsN+LUfSOgqhk9H80IDZhhkTS5m2+xQ==
+X-Received: by 2002:a17:903:2292:b0:1f4:64ba:af9f with SMTP id d9443c01a7336-1f6a5a69a3dmr40243265ad.48.1717617105510;
+        Wed, 05 Jun 2024 12:51:45 -0700 (PDT)
+Received: from localhost.localdomain ([177.21.143.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f6323dde56sm109141285ad.165.2024.06.05.12.51.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jun 2024 12:51:45 -0700 (PDT)
+From: Guilherme Giacomo Simoes <trintaeoitogc@gmail.com>
+To: miriam.rachel.korenblit@intel.com,
+	kvalo@kernel.org,
+	rafael.j.wysocki@intel.com,
+	daniel.lezcano@linaro.org,
+	johannes.berg@intel.com,
+	dmantipov@yandex.ru
+Cc: Guilherme Giacomo Simoes <trintaeoitogc@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] iwlwifi: mvm: adding check if the thermal firmware is running
+Date: Wed,  5 Jun 2024 16:51:28 -0300
+Message-ID: <20240605195129.89353-1-trintaeoitogc@gmail.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,245 +72,48 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The prerequisite for MLO support in cfg80211/mac80211 is that all the links
-participating in MLO must be from the same wiphy/ieee80211_hw. To meet this
-expectation, some drivers may need to group multiple discrete hardware each
-acting as a link in MLO under single wiphy.
-With this change, supported frequencies and interface combinations of each
-individual radio are reported to user space.
-This allows user space to figure out the limitations of what combination of
-channels can be used concurrently.
+In the dmesg is showing the message "failed to read out thermal zone"
+as if the temperature read is failed by don't find the thermal zone.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+After researching and debugging, I see that this specific error is
+occurrenced because the thermal try read the temperature when is started,
+but the firmware is not running yet.
+
+For more legibiliti i change the tt.c for return EAGAIN when this was occurrence.
+After this change, in my computer I compile and install kernel in /boot
+and in my dmesg the message "failed to read out thermal zone" is not show
+any more.
+
+I would like to thanks for Rafael Wysocki <refael.j.wysocki@intel.com> ,
+Kalle Valo <kvalo@kernel.org> and Johannes Berg <johannes@sipsolutions.net>
+for your suggestions in my previous patch.
+
+Signed-off-by: Guilherme Giacomo Simoes <trintaeoitogc@gmail.com>
 ---
- include/net/cfg80211.h       | 38 ++++++++++++++++++-
- include/uapi/linux/nl80211.h | 48 ++++++++++++++++++++++-
- net/wireless/nl80211.c       | 79 +++++++++++++++++++++++++++++++++++++-
- 3 files changed, 165 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 5da9bb0ac6a4..27355e08ae52 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5403,6 +5403,38 @@ struct wiphy_iftype_akm_suites {
- 	int n_akm_suites;
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 8083c4b2ab6b..9aa9e3be39b8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -620,8 +620,14 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
  
-+/**
-+ * struct wiphy_radio_freq_range - wiphy frequency range
-+ * @start_freq:  start range edge frequency (kHz)
-+ * @end_freq:    end range edge frequency (kHz)
-+ */
-+struct wiphy_radio_freq_range {
-+	u32 start_freq;
-+	u32 end_freq;
-+};
-+
-+
-+/**
-+ * struct wiphy_radio - This structure describes a physical radio belonging
-+ * to a wiphy. It is used to describe concurrent-channel capabilities of the
-+ * phy. Only one channel can be active on the radio described by struct
-+ * wiphy_radio.
-+ *
-+ * @freq_range: frequency range that the radio can operate on.
-+ * @n_freq_range: number of elements in @freq_range
-+ *
-+ * @iface_combinations: Valid interface combinations array, should not
-+ *	list single interface types.
-+ * @n_iface_combinations: number of entries in @iface_combinations array.
-+ */
-+struct wiphy_radio {
-+	const struct wiphy_radio_freq_range *freq_range;
-+	int n_freq_range;
-+
-+	const struct ieee80211_iface_combination *iface_combinations;
-+	int n_iface_combinations;
-+};
-+
- #define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
+ 	mutex_lock(&mvm->mutex);
  
- /**
-@@ -5621,6 +5653,9 @@ struct wiphy_iftype_akm_suites {
-  *	A value of %CFG80211_HW_TIMESTAMP_ALL_PEERS indicates the driver
-  *	supports enabling HW timestamping for all peers (i.e. no need to
-  *	specify a mac address).
-+ *
-+ * @radio: radios belonging to this wiphy
-+ * @n_radio: number of radios
-  */
- struct wiphy {
- 	struct mutex mtx;
-@@ -5771,6 +5806,9 @@ struct wiphy {
- 
- 	u16 hw_timestamp_max_peers;
- 
-+	const struct wiphy_radio *radio;
-+	int n_radio;
+-	if (!iwl_mvm_firmware_running(mvm) ||
+-	    mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
++	int res = iwl_mvm_firmware_running(mvm);
 +
- 	char priv[] __aligned(NETDEV_ALIGN);
- };
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f917bc6c9b6f..784bf7501d97 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3401,6 +3401,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_ASSOC_SPP_AMSDU,
- 
-+	NL80211_ATTR_RADIOS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -7999,4 +8001,50 @@ enum nl80211_ap_settings_flags {
- 	NL80211_AP_SETTINGS_SA_QUERY_OFFLOAD_SUPPORT	= 1 << 1,
- };
- 
-+/**
-+ * enum nl80211_wiphy_radio_attrs - wiphy radio attributes
-+ *
-+ * @__NL80211_WIPHY_RADIO_ATTR_INVALID: Invalid
-+ *
-+ * @NL80211_WIPHY_RADIO_ATTR_FREQ_RANGES: Nested array of frequency ranges
-+ *	supported by this radio.
-+ * @NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATIONS: Nested attribute listing
-+ *	the supported interface combinations for this radio. In each nested item,
-+ *	it contains attributes defined in &enum nl80211_if_combination_attrs.
-+ *
-+ * @__NL80211_WIPHY_RADIO_ATTR_LAST: Internal
-+ * @NL80211_WIPHY_RADIO_ATTR_MAX: Highest attribute
-+ */
-+enum nl80211_wiphy_radio_attrs {
-+	__NL80211_WIPHY_RADIO_ATTR_INVALID,
-+
-+	NL80211_WIPHY_RADIO_ATTR_FREQ_RANGES,
-+	NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATIONS,
-+
-+	/* keep last */
-+	__NL80211_WIPHY_RADIO_ATTR_LAST,
-+	NL80211_WIPHY_RADIO_ATTR_MAX = __NL80211_WIPHY_RADIO_ATTR_LAST - 1,
-+};
-+
-+/**
-+ * enum nl80211_wiphy_radio_freq_range - wiphy radio frequency range
-+ *
-+ * @__NL80211_WIPHY_RADIO_FREQ_ATTR_INVALID: Invalid
-+ *
-+ * @NL80211_WIPHY_RADIO_FREQ_ATTR_START: Frequency range start
-+ * @NL80211_WIPHY_RADIO_FREQ_ATTR_END: Frequency range end
-+ *
-+ * @__NL80211_WIPHY_RADIO_FREQ_ATTR_LAST: Internal
-+ * @NL80211_WIPHY_RADIO_FREQ_ATTR_MAX: Highest attribute
-+ */
-+enum nl80211_wiphy_radio_freq_range {
-+	__NL80211_WIPHY_RADIO_FREQ_ATTR_INVALID,
-+
-+	NL80211_WIPHY_RADIO_FREQ_ATTR_START,
-+	NL80211_WIPHY_RADIO_FREQ_ATTR_END,
-+
-+	__NL80211_WIPHY_RADIO_FREQ_ATTR_LAST,
-+	NL80211_WIPHY_RADIO_FREQ_ATTR_MAX = __NL80211_WIPHY_RADIO_FREQ_ATTR_LAST - 1,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7b0ba0fff082..a8e3a08e908d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2399,6 +2399,79 @@ static int nl80211_put_mbssid_support(struct wiphy *wiphy, struct sk_buff *msg)
- 	return -ENOBUFS;
- }
- 
-+static int nl80211_put_radio(struct wiphy *wiphy, struct sk_buff *msg, int idx)
-+{
-+	const struct wiphy_radio *r = &wiphy->radio[idx];
-+	struct nlattr *radio, *freqs, *freq, *nl_combis;
-+	int i;
-+
-+	radio = nla_nest_start(msg, idx);
-+	if (!radio)
-+		return -ENOBUFS;
-+
-+	freqs = nla_nest_start_noflag(msg, NL80211_WIPHY_RADIO_ATTR_FREQ_RANGES);
-+	if (!freqs)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i < r->n_freq_range; i++) {
-+		const struct wiphy_radio_freq_range *range = &r->freq_range[i];
-+		int ret;
-+
-+		freq = nla_nest_start(msg, i);
-+		ret = nla_put_u32(msg, NL80211_WIPHY_RADIO_FREQ_ATTR_START,
-+				  range->start_freq) ||
-+		      nla_put_u32(msg, NL80211_WIPHY_RADIO_FREQ_ATTR_END,
-+				  range->end_freq);
-+		nla_nest_end(msg, freq);
-+
-+		if (ret)
-+			goto nla_put_failure;
++	if (!res) {
++		ret = -EAGAIN;
++		goto out;
 +	}
 +
-+	nla_nest_end(msg, freqs);
-+
-+	nl_combis = nla_nest_start_noflag(msg,
-+					  NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATIONS);
-+	if (!nl_combis)
-+		goto nla_put_failure;
-+
-+	for (i = 0; i < r->n_iface_combinations; i++)
-+		if (nl80211_put_ifcomb_data(msg, true, i + 1,
-+					    &r->iface_combinations[i]))
-+			goto nla_put_failure;
-+
-+	nla_nest_end(msg, nl_combis);
-+	nla_nest_end(msg, radio);
-+	return 0;
-+
-+nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
-+static int nl80211_put_radios(struct wiphy *wiphy, struct sk_buff *msg)
-+{
-+	struct nlattr *radios;
-+	int i;
-+
-+	if (!wiphy->n_radio)
-+		return 0;
-+
-+	radios = nla_nest_start(msg, NL80211_ATTR_RADIOS);
-+	if (!radios)
-+		return -ENOBUFS;
-+
-+	for (i = 0; i < wiphy->n_radio; i++)
-+		if (nl80211_put_radio(wiphy, msg, i))
-+			goto fail;
-+
-+	nla_nest_end(msg, radios);
-+	return 0;
-+
-+fail:
-+	nla_nest_cancel(msg, radios);
-+	return -ENOBUFS;
-+}
-+
- struct nl80211_dump_wiphy_state {
- 	s64 filter_wiphy;
- 	long start;
-@@ -3008,6 +3081,12 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 				rdev->wiphy.hw_timestamp_max_peers))
- 			goto nla_put_failure;
- 
-+		state->split_start++;
-+		break;
-+	case 17:
-+		if (nl80211_put_radios(&rdev->wiphy, msg))
-+			goto nla_put_failure;
-+
- 		/* done */
- 		state->split_start = 0;
- 		break;
++	if (mvm->fwrt.cur_fw_img != IWL_UCODE_REGULAR) {
+ 		ret = -ENODATA;
+ 		goto out;
+ 	}
 -- 
-git-series 0.9.1
+2.45.2
+
