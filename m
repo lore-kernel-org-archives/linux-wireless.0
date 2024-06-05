@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1388A1922F8
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 11:05:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DC61922F7
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 11:05:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717585531; cv=none; b=jVq9tEPablzyDwi9r5lSO0R41y+DA6ltdpBHXw5j1x0fI8PZyqfTy5I8qmpIvKo9tyKHjxAOSI4sK9a/RXp1OgQBfP/Ys6uGcX+kG8sJmrcYRVhiqK6beRUxH4jrHPC1AerAE7ogpieRrq2hw7G/h0LU7ueOTwGZIIbtVvJVc8g=
+	t=1717585532; cv=none; b=tViSFyHiqKtnAfxBDGTh3k34Vl+GF/8QZc5A6J5IXfotLVGXD9oUBDY9JJhfX1z8kWKO00BubEBKflFvw9TgWjr+L3CxwB8Q53pkq+9B3x7TzsXA/DU0NISU+NmwBcX6uQEhhe3/nPEn8E7G7jBQC1TVz/gVh+3Lj5wi0mGlJRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717585531; c=relaxed/simple;
-	bh=kUnXg//oZmZU4rpOmUbkiZiRpfWXlQ6Fy8QCYLOtomI=;
+	s=arc-20240116; t=1717585532; c=relaxed/simple;
+	bh=c6x8OzBkfrC4V1bPeebuxYjfL8DTtyCE11CyD1nEFZw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ejH1U8Nv7+40CEay0U3oMypXrlCCLDknPHOxA3csgRelKxXjf8jUzjnFRyQPZtaFQLqpXoT/uaHQ0oxkWxoIj6Ie8607oTV6QiINjbYqBchWELE4IIIYhJi0Xjx2fldcSmau9X/fFpBb7dJ7SpZ5K0rbKiKOR9D0ztA5bTqfng8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VVNjqoKK; arc=none smtp.client-ip=192.198.163.14
+	 MIME-Version; b=n5m7psFbEr5sXO4qW3+kIXn3IyR0shCXxbOrdYxDsKAhhTO99PPXPp1S3eSBhA8Dw3t5LYNpjI1GK0TZO5g6pCJ102NHSrHs/7/WUMoS6qSKa1FVydHJLAa8aPX5yRRJWkAmGw4L9bT5Kvq2OWG5t5U8x8yIR3S8YCPBn93wIzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mXUdgQW0; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VVNjqoKK"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mXUdgQW0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1717585529; x=1749121529;
+  t=1717585531; x=1749121531;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kUnXg//oZmZU4rpOmUbkiZiRpfWXlQ6Fy8QCYLOtomI=;
-  b=VVNjqoKKUvfltTsvfC62jXS8Y21ffaKlt8mIWschWGIsssM3F/HK9jkb
-   Zii5Ht0n5G9gMWs4ySrOcdLIkwccUsbQjkAyzA70fyj9ZPBc7vFJs01E0
-   NH8mhjY8Sbq4YWECD4uJHHplCecRNXRaLZygWb+dbBaPqshu7LigU2PsX
-   xvxlICBAbMk9zYcVy1gofHmQsBV+I03fu44mm2iva/glmyOzrn/fCwgA2
-   PKKa+lUH07z1zsruN/rQZHBMX3AUWINHmM4coVogbBGcIuo4S1PmeANNU
-   0BYMRKkwy9fZuqRxTbW8l+gg3z5WIoU2RArPL1baZ2Amc7mlyy5o1Lbys
-   Q==;
-X-CSE-ConnectionGUID: BstJ5BvQROOmxh14Xqv2jQ==
-X-CSE-MsgGUID: gP8l17TVQPmU8Nkc0WoZiQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11093"; a="14402196"
+  bh=c6x8OzBkfrC4V1bPeebuxYjfL8DTtyCE11CyD1nEFZw=;
+  b=mXUdgQW0Xf78LkYOww2qIKtGUiKi2wpAlwvAZrwmN2tG/Yf2aSkT0DU3
+   bQlvuxsUcsbqAcoq1YiFbRbZajkWSTSBM35aR4ia6XRC/MeQVZ9U5nPuY
+   5CCNyS3whJ/jARkAOv0OyLHn2ja4ZdTfsfkLHASHEqtE3a/fpUXJ4jlgs
+   TRbApES8seDXUoIAqY1hddwKOBxF9VCvTc3M4YpBZ6is5qX42hzmB2CBV
+   xBICgZ3mSxauybmWlLRPsOkzh6YUEMeDePaFjCF6qL6rdZ1r/Mg10RZAz
+   gLSux6umNUDRNIrA3viHG8E8YJ+3yzLPqkFOqzeAiwxLIsCSLX3CM1PXx
+   A==;
+X-CSE-ConnectionGUID: zw2goqUrRdqQT2ZzIyygzQ==
+X-CSE-MsgGUID: iLQpvJRbQayGGrtG9w/MAg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11093"; a="14402202"
 X-IronPort-AV: E=Sophos;i="6.08,216,1712646000"; 
-   d="scan'208";a="14402196"
+   d="scan'208";a="14402202"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:05:28 -0700
-X-CSE-ConnectionGUID: cfM/Sfo5TASkOJnfJ/7Phw==
-X-CSE-MsgGUID: OWL7Y3PbT9SuCqFyW1Va+g==
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:05:31 -0700
+X-CSE-ConnectionGUID: ROE+0YgWSRa/RRxAlAZQOA==
+X-CSE-MsgGUID: 5RX3X8hKRlKMXRLPxpCNCg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.08,216,1712646000"; 
-   d="scan'208";a="41997403"
+   d="scan'208";a="41997441"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:05:27 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:05:30 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Shaul Triebitz <shaul.triebitz@intel.com>
-Subject: [PATCH wireless 09/11] wifi: iwlwifi: mvm: fix ROC version check
-Date: Wed,  5 Jun 2024 14:05:05 +0300
-Message-Id: <20240605140327.93d86cd188ad.Iceadef5a2f3cfa4a127e94a0405eba8342ec89c1@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 11/11] wifi: iwlwifi: bump min API version for Qu/So devices
+Date: Wed,  5 Jun 2024 14:05:07 +0300
+Message-Id: <20240605140327.ad6d43fe9893.I96f769e7d5be3e6499d260451df781bd694a5142@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240605110507.2044059-1-miriam.rachel.korenblit@intel.com>
 References: <20240605110507.2044059-1-miriam.rachel.korenblit@intel.com>
@@ -62,33 +62,51 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+Stop supporting all FWs older than the max API version.
+These FW versions were supported since v6.5.
 
-For using the ROC command, check that the ROC version
-is *greater or equal* to 3, rather than *equal* to 3.
-The ROC version was added to the TLV starting from
-version 3.
-
-Fixes: 67ac248e4db0 ("wifi: iwlwifi: mvm: implement ROC version 3")
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/cfg/ax210.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 727047d5ddb2..a2a0409672c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4723,7 +4723,7 @@ static int iwl_mvm_roc_station(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index d594694206b3..2e2fcb3807ef 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2023 Intel Corporation
++ * Copyright (C) 2018-2024 Intel Corporation
+  */
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+@@ -13,7 +13,7 @@
+ #define IWL_22000_UCODE_API_MAX	77
  
- 	if (fw_ver == IWL_FW_CMD_VER_UNKNOWN) {
- 		ret = iwl_mvm_send_aux_roc_cmd(mvm, channel, vif, duration);
--	} else if (fw_ver == 3) {
-+	} else if (fw_ver >= 3) {
- 		ret = iwl_mvm_roc_add_cmd(mvm, channel, vif, duration,
- 					  ROC_ACTIVITY_HOTSPOT);
- 	} else {
+ /* Lowest firmware API version supported */
+-#define IWL_22000_UCODE_API_MIN	50
++#define IWL_22000_UCODE_API_MIN	77
+ 
+ /* NVM versions */
+ #define IWL_22000_NVM_VERSION		0x0a1d
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
+index 25952d0bea99..975e8aed1526 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
+@@ -13,7 +13,7 @@
+ #define IWL_AX210_UCODE_API_MAX	89
+ 
+ /* Lowest firmware API version supported */
+-#define IWL_AX210_UCODE_API_MIN	59
++#define IWL_AX210_UCODE_API_MIN	77
+ 
+ /* NVM versions */
+ #define IWL_AX210_NVM_VERSION		0x0a1d
 -- 
 2.34.1
 
