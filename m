@@ -1,199 +1,158 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F9C19148B;
-	Wed,  5 Jun 2024 11:17:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F1019306C
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Jun 2024 11:17:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717586241; cv=none; b=uqgRjRcgOB8KXtHtP6tKfBBJT6HP+Iyv01IATBTLUexk9KjvFxVgYVwol33Rb0/b5xoJ0SZdr8DNpUYk2ACVnb6wga8g1HRtqQtdD/uFHOEQZEz4y+6ClWYi3L2aS7h6RhrgsaPLK74sJG68u8YwKi65Llh3PWgv+u/d91SIYM8=
+	t=1717586244; cv=none; b=LpVMmK+L23Yejizgl7GfQcX6xUNhDQfU1PZUy181YrRGA0QbzWIUMTaHOnDqz9eBiGrVUwd4p5NJgYmpPGp6eitR6JijmyVjatww51V5y+3BaGsiwYKrMfxgAlBuyq8kTjT5EoAlGyq1onAhpiDBVgvhB/KByNp8r35CYjYb7hM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717586241; c=relaxed/simple;
-	bh=T4XzM1jF2tUa5BY+kwAb41B69XIQcAAOzlrO4rZOsn8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=upi2Cf3kMtNeFaxJtC7rOV0PLEVLSugdN3Ul+WrltZf4v26ay1/34m6rcubvspRuk+Cx4ihV3eDBsBPpaHzkJLqYT3N/ImOB6gfbayR6iYz0K69uhVfkPDbOojxUHqd2fJ3EGDG2zp4K3nktyAy4aHvBYkrDQN9mtt7QgGJNs4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=cUxjVX9f; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1717586244; c=relaxed/simple;
+	bh=oqs8DQ9zpniAk7C9rCPfB2RgXLx/iPT/OXGpGu0g8DM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jlZE/2elR2dEIXeU6qglbLR0bxUSDTKZ74B2fFFaB7SwZ6c5sxCH3JhJUQHttWqJk/RszJKNkdY1rE/BuBrV8agXKICm3m5jah0x0osPy0rx8kEsWh877oKtP9Qwbr6e2bSja6aV6nupQs5dpnfVgrKG+e3MjDjX4c54oiHEy9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T8ushLUq; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="cUxjVX9f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1717586237;
-	bh=T4XzM1jF2tUa5BY+kwAb41B69XIQcAAOzlrO4rZOsn8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=cUxjVX9fMQqYNnjKD9e5B7uNMwPhZ4PdF1qkbxSLubRlrrDeM6OGh7RmJMY2a2/p8
-	 BhCnTty3gocbWNtt16voyqg800tlnU7LvPGA8GTBD/mHlGTXXpG94ZpQYU5plydRbf
-	 kUD0NUcgn4zhl4g2Y8kvZ6B0usudC/o9dHBpnAee5CuEObix6Tm52paV5wqvGbaYDs
-	 lItSF22xdlcfHZiYU/LJSsYXQ1u7ENQ2sTSPRTp2FUzYtzUimDrYpiBdDu5iAQDRy0
-	 mO/Vy/WsEaBv0kiIZMluJ8IcGcOaFdkh4rOokTQK4fC2YPlB9Uiun1+MdwcWlywEf6
-	 9ek03xOr91Ahg==
-Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 31E0437804C9;
-	Wed,  5 Jun 2024 11:17:05 +0000 (UTC)
-Message-ID: <b017841b-0e52-4699-af1d-3620f35f79e0@collabora.com>
-Date: Wed, 5 Jun 2024 13:17:03 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T8ushLUq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1717586242; x=1749122242;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=oqs8DQ9zpniAk7C9rCPfB2RgXLx/iPT/OXGpGu0g8DM=;
+  b=T8ushLUqjtJfEhenpj1HSknNCKzF9HX1MrYUMDIZEzBmta8Rdh42g70v
+   qON8fsfsysPaFX2e3+rR0tSgOaLE4IvwbpTVO0+hHWEdOoQ7313XxYkQ2
+   TDqNlz2B/XOeff00jqytYbEWoXlbarTxi4WyKrcBJnvwjmIKKpz4J4o7I
+   t+kRiwsrYnyoFzKfcksyF7xMCUZ402m18pFwfzW/Fmbri/0L2deODhrvf
+   It4nnundN5RjsGnMN+eAMdnCF1pAsbBMJAs44ysp8GgNiz/qoBOrhIfsh
+   wfdqfEbpMlXAzXZPsSHkJqthMBUdX5N+SB6Zi3IsZLsB8exCxHKD5pUc+
+   g==;
+X-CSE-ConnectionGUID: mPYyy51uQmasQE7MuJcWVw==
+X-CSE-MsgGUID: S0XthvZKTpK9rnfoOszCMw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11093"; a="36718038"
+X-IronPort-AV: E=Sophos;i="6.08,216,1712646000"; 
+   d="scan'208";a="36718038"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:07:48 -0700
+X-CSE-ConnectionGUID: /1EcKUgzSimntUTwmPCeyg==
+X-CSE-MsgGUID: DO6JjO29RauLHrMPsbBRSw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,216,1712646000"; 
+   d="scan'208";a="37433755"
+Received: from weis0040.iil.intel.com ([10.12.217.108])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 04:07:46 -0700
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/5] wifi: iwlwifi: mvm: separate non-BSS/ROC EMLSR blocking
+Date: Wed,  5 Jun 2024 14:07:36 +0300
+Message-Id: <20240605140556.461fcf7b95bb.Id0d21dcb739d426ff15ec068b5df8abaab58884d@changeid>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240605110740.2046411-1-miriam.rachel.korenblit@intel.com>
+References: <20240605110740.2046411-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/1] treewide: Align match_string() with
- sysfs_match_string()
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Corey Minyard <minyard@acm.org>, Allen Pais <apais@linux.microsoft.com>,
- Sebastian Reichel <sebastian.reichel@collabora.com>,
- Perry Yuan <perry.yuan@amd.com>,
- Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
- Herbert Xu <herbert@gondor.apana.org.au>, Nuno Sa <nuno.sa@analog.com>,
- Guenter Roeck <linux@roeck-us.net>, Randy Dunlap <rdunlap@infradead.org>,
- Andi Shyti <andi.shyti@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>,
- Lee Jones <lee@kernel.org>, Samuel Holland <samuel@sholland.org>,
- Elad Nachman <enachman@marvell.com>,
- Arseniy Krasnov <AVKrasnov@sberdevices.ru>,
- Johannes Berg <johannes.berg@intel.com>,
- Gregory Greenman <gregory.greenman@intel.com>,
- Benjamin Berg <benjamin.berg@intel.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Robert Richter <rrichter@amd.com>,
- Vinod Koul <vkoul@kernel.org>, Chunfeng Yun <chunfeng.yun@mediatek.com>,
- Linus Walleij <linus.walleij@linaro.org>, Hans de Goede
- <hdegoede@redhat.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Nikita Kravets <teackot@gmail.com>,
- Jiri Slaby <jirislaby@kernel.org>,
- Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
- Stanley Chang <stanley_chang@realtek.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>,
- Abdel Alkuor <abdelalkuor@geotab.com>,
- Kent Overstreet <kent.overstreet@linux.dev>,
- Eric Biggers <ebiggers@google.com>, Kees Cook <keescook@chromium.org>,
- Ingo Molnar <mingo@kernel.org>, "Steven Rostedt (Google)"
- <rostedt@goodmis.org>, Daniel Bristot de Oliveira <bristot@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>,
- Abel Wu <wuyun.abel@bytedance.com>,
- John Johansen <john.johansen@canonical.com>, Mimi Zohar
- <zohar@linux.ibm.com>, Stefan Berger <stefanb@linux.ibm.com>,
- Roberto Sassu <roberto.sassu@huawei.com>,
- Eric Snowberg <eric.snowberg@oracle.com>, Takashi Iwai <tiwai@suse.de>,
- Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
- Mark Brown <broonie@kernel.org>,
- Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>,
- linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
- keyrings@vger.kernel.org, linux-crypto@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org,
- openipmi-developer@lists.sourceforge.net, linux-clk@vger.kernel.org,
- linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-tegra@vger.kernel.org,
- linux-pm@vger.kernel.org, qat-linux@intel.com,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- intel-xe@lists.freedesktop.org, nouveau@lists.freedesktop.org,
- linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
- linux-leds@vger.kernel.org, linux-sunxi@lists.linux.dev,
- linux-omap@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-mtd@lists.infradead.org, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org,
- linux-gpio@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- linux-staging@lists.linux.dev, linux-usb@vger.kernel.org,
- linux-fbdev@vger.kernel.org, linux-bcachefs@vger.kernel.org,
- linux-hardening@vger.kernel.org, cgroups@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org,
- apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
- linux-integrity@vger.kernel.org, alsa-devel@alsa-project.org,
- linux-sound@vger.kernel.org
-Cc: Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin
- <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>,
- "Naveen N. Rao" <naveen.n.rao@linux.ibm.com>,
- Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>,
- Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
- x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
- David Howells <dhowells@redhat.com>, "David S. Miller"
- <davem@davemloft.net>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Len Brown <lenb@kernel.org>, Sergey Shtylyov <s.shtylyov@omp.ru>,
- Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Daniel Scally <djrscally@gmail.com>,
- Sakari Ailus <sakari.ailus@linux.intel.com>,
- Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
- <sboyd@kernel.org>, Florian Fainelli <florian.fainelli@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Heiko Stuebner <heiko@sntech.de>,
- Peter De Schrijver <pdeschrijver@nvidia.com>,
- Prashant Gaikwad <pgaikwad@nvidia.com>,
- Thierry Reding <thierry.reding@gmail.com>,
- Jonathan Hunter <jonathanh@nvidia.com>, Huang Rui <ray.huang@amd.com>,
- "Gautham R. Shenoy" <gautham.shenoy@amd.com>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Viresh Kumar <viresh.kumar@linaro.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>,
- Jani Nikula <jani.nikula@linux.intel.com>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
- Tvrtko Ursulin <tursulin@ursulin.net>, Karol Herbst <kherbst@redhat.com>,
- Lyude Paul <lyude@redhat.com>, Danilo Krummrich <dakr@redhat.com>,
- Jean Delvare <jdelvare@suse.com>,
- Alexander Shishkin <alexander.shishkin@linux.intel.com>,
- Pavel Machek <pavel@ucw.cz>, Chen-Yu Tsai <wens@csie.org>,
- Jernej Skrabec <jernej.skrabec@gmail.com>, Tony Lindgren <tony@atomide.com>,
- Adrian Hunter <adrian.hunter@intel.com>, Hu Ziji <huziji@marvell.com>,
- Ulf Hansson <ulf.hansson@linaro.org>,
- Miquel Raynal <miquel.raynal@bootlin.com>,
- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
- Potnuri Bharat Teja <bharat@chelsio.com>, Eric Dumazet
- <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>,
- Miri Korenblit <miriam.rachel.korenblit@intel.com>,
- Kalle Valo <kvalo@kernel.org>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Matthias Brugger <matthias.bgg@gmail.com>, JC Kuo <jckuo@nvidia.com>,
- Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@bootlin.com>,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
- Sebastian Reichel <sre@kernel.org>,
- Daniel Lezcano <daniel.lezcano@linaro.org>, Zhang Rui <rui.zhang@intel.com>,
- Lukasz Luba <lukasz.luba@arm.com>, Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
- Helge Deller <deller@gmx.de>, Brian Foster <bfoster@redhat.com>,
- Zhihao Cheng <chengzhihao1@huawei.com>, Tejun Heo <tj@kernel.org>,
- Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>,
- Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>, Ben Segall
- <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
- Daniel Bristot de Oliveira <bristot@redhat.com>,
- Valentin Schneider <vschneid@redhat.com>,
- Masami Hiramatsu <mhiramat@kernel.org>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
- Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
- "Serge E. Hallyn" <serge@hallyn.com>,
- Dmitry Kasatkin <dmitry.kasatkin@gmail.com>,
- Clemens Ladisch <clemens@ladisch.de>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>, Liam Girdwood <lgirdwood@gmail.com>,
- Linus Torvalds <torvalds@linux-foundation.org>
-References: <20240603211538.289765-1-andriy.shevchenko@linux.intel.com>
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Content-Language: en-US
-In-Reply-To: <20240603211538.289765-1-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Organization: Intel Israel (74) Limited
+Content-Transfer-Encoding: 8bit
 
-Il 02/06/24 17:57, Andy Shevchenko ha scritto:
-> Make two APIs look similar. Hence convert match_string() to be
-> a 2-argument macro. In order to avoid unneeded churn, convert
-> all users as well. There is no functional change intended.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-For MediaTek
+If non-BSS and remain-on-channel (ROC) blocking were to occur
+simultaneously, they'd step on each other's toes, unblocking
+when not yet supported. Disentangle these bits, and ROC doesn't
+need to use the non_bss_link() function then.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Fixes: a1efeb823084 ("wifi: iwlwifi: mvm: Block EMLSR when a p2p/softAP vif is active")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   | 10 +++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |  5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c |  5 +++--
+ 3 files changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index a2a0409672c3..d2b97e30d9eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4787,6 +4787,7 @@ int iwl_mvm_roc_common(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       const struct iwl_mvm_roc_ops *ops)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct ieee80211_vif *bss_vif = iwl_mvm_get_bss_vif(mvm);
+ 	u32 lmac_id;
+ 	int ret;
+ 
+@@ -4799,9 +4800,12 @@ int iwl_mvm_roc_common(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	 */
+ 	flush_work(&mvm->roc_done_wk);
+ 
+-	ret = iwl_mvm_esr_non_bss_link(mvm, vif, 0, true);
+-	if (ret)
+-		return ret;
++	if (!IS_ERR_OR_NULL(bss_vif)) {
++		ret = iwl_mvm_block_esr_sync(mvm, bss_vif,
++					     IWL_MVM_ESR_BLOCKED_ROC);
++		if (ret)
++			return ret;
++	}
+ 
+ 	guard(mvm)(mvm);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 82080d920d59..cb227dca4f87 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -361,7 +361,9 @@ struct iwl_mvm_vif_link_info {
+  * @IWL_MVM_ESR_BLOCKED_WOWLAN: WOWLAN is preventing the enablement of EMLSR
+  * @IWL_MVM_ESR_BLOCKED_TPT: block EMLSR when there is not enough traffic
+  * @IWL_MVM_ESR_BLOCKED_FW: FW didn't recommended/forced exit from EMLSR
+- * @IWL_MVM_ESR_BLOCKED_NON_BSS: An active non-bssid link's preventing EMLSR
++ * @IWL_MVM_ESR_BLOCKED_NON_BSS: An active non-BSS interface's link is
++ *	preventing EMLSR
++ * @IWL_MVM_ESR_BLOCKED_ROC: remain-on-channel is preventing EMLSR
+  * @IWL_MVM_ESR_EXIT_MISSED_BEACON: exited EMLSR due to missed beacons
+  * @IWL_MVM_ESR_EXIT_LOW_RSSI: link is deactivated/not allowed for EMLSR
+  *	due to low RSSI.
+@@ -378,6 +380,7 @@ enum iwl_mvm_esr_state {
+ 	IWL_MVM_ESR_BLOCKED_TPT		= 0x4,
+ 	IWL_MVM_ESR_BLOCKED_FW		= 0x8,
+ 	IWL_MVM_ESR_BLOCKED_NON_BSS	= 0x10,
++	IWL_MVM_ESR_BLOCKED_ROC		= 0x20,
+ 	IWL_MVM_ESR_EXIT_MISSED_BEACON	= 0x10000,
+ 	IWL_MVM_ESR_EXIT_LOW_RSSI	= 0x20000,
+ 	IWL_MVM_ESR_EXIT_COEX		= 0x40000,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 31bc80cdcb7d..c0322349bfcd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -47,6 +47,7 @@ void iwl_mvm_te_clear_data(struct iwl_mvm *mvm,
+ 
+ static void iwl_mvm_cleanup_roc(struct iwl_mvm *mvm)
+ {
++	struct ieee80211_vif *bss_vif = iwl_mvm_get_bss_vif(mvm);
+ 	struct ieee80211_vif *vif = mvm->p2p_device_vif;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -119,9 +120,9 @@ static void iwl_mvm_cleanup_roc(struct iwl_mvm *mvm)
+ 			iwl_mvm_rm_aux_sta(mvm);
+ 	}
+ 
++	if (vif && !IS_ERR_OR_NULL(bss_vif))
++		iwl_mvm_unblock_esr(mvm, bss_vif, IWL_MVM_ESR_BLOCKED_ROC);
+ 	mutex_unlock(&mvm->mutex);
+-	if (vif)
+-		iwl_mvm_esr_non_bss_link(mvm, vif, 0, false);
+ }
+ 
+ void iwl_mvm_roc_done_wk(struct work_struct *wk)
+-- 
+2.34.1
 
