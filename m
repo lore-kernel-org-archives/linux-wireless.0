@@ -1,109 +1,152 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from dvalin.narfation.org (dvalin.narfation.org [213.160.73.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29EB81798C
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Jun 2024 02:07:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D7A5101CE
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Jun 2024 06:36:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.160.73.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717639637; cv=none; b=esFB7xQHI9gMpsATaDL1728soEkhVrmUT4/c9/nZtELBZYJq+uuVlKlpvQfAWpHoO9HUFpJ8Va4EcnumWj5dMThn3EnwtXOHJfhw9J+mvtKX4d3U9b4OJpftTcxts88FoenBxbycqyIE9EMkk3KqBQUgG1gy374hZwXqGxH5jOM=
+	t=1717655778; cv=none; b=hgd2IFCFiAvS6LjWvT0Kuf8QG0aAcHglcociTGgfOUwFzj0Lr3aAV+eI5eBjtCEYJGYTl8wRu5MkYKEdVnkXSTbFL3tiEiBXNLOUAP9eDm/F13378/RftjXMBUG2UQYb4IIFdRr9wTTGi+barIDVD2DGuTWswyRT5R0zTmKhQC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717639637; c=relaxed/simple;
-	bh=9+tKp1mSo16zp0DXjc1fSarDiR06RXtx/7ECqVjsCCk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qeZ9o2h1dpv1PsAuRUh5elny0XpDTEkpBG+SMv0DWC8RQ/g9VcOfUtWOL5wmQ4thTUT+pZF22e3AzNClCt62ZtqDW3yqHzdGLolnYDelQOGas92dkhhEJDMJztad5LWU+BrlyDMGN1505YHlzo2dmUhASCBU+vo5eCMTfh0j2BI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OVmlhUwr; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1717655778; c=relaxed/simple;
+	bh=QniNBHFBjNpHW42p4169P4nSYU7cMib/5vAn4Yx6I94=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=iv+7GG+U89jP6D48qN7dTKkrJBAdxSMTvZR1ji4kdHmKknVkHf/piZwTcQECd83pxxmTJYNXwZz7Vebz/mZzKm2x1CiEulLA926X1XmOdeh0E5Uv8QH5nBqfZT/kP+xh/ICnu7HifmfLgBeC/1cxrBZUcTI+Y/r+p/W+k+7ujrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org; spf=pass smtp.mailfrom=narfation.org; dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b=CXXAS1/P; arc=none smtp.client-ip=213.160.73.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=narfation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OVmlhUwr"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 455KxBkw007623;
-	Thu, 6 Jun 2024 02:07:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	xo+dRSSiGx6tb5CUOHQoXBNXcFbOU3SmB+4PVbM3LxM=; b=OVmlhUwr1uGnt+Zc
-	G8xjaoEboOVNqm/rRoc42NgR0JvBCltuIHcxmnNyxmSM+3/q8fqh6J7Ex6yOERhC
-	/rcykBgp3zav6SOgckd7T+mffg/4v9xgYnmddrgbZgadRcSEbvBUNMd9/HMLwGj5
-	mZpvCVlyEshvwynHm3RH6JSLMP0gMlMyngJiONDCoVjtUn4qGkzeNJ5fTtBH/HV5
-	RjY+LLMQSbdwPfsyRddce6sBi3dKHRvJwVo/+XE82qdZtNymtQs+k5ZAXDzuKC3s
-	c/0LvrdNHmiLFVA8709oJ4umkqDkotfPnqX/3GG7DeDOfFA+To4PfxOjFW+au4+7
-	uEt6rg==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yj7urbqyk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 06 Jun 2024 02:07:07 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 456276El021585
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 6 Jun 2024 02:07:06 GMT
-Received: from bqiang-SFF.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 5 Jun 2024 19:07:05 -0700
-From: Baochen Qiang <quic_bqiang@quicinc.com>
-To: <johannes@sipsolutions.net>
-CC: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <quic_bqiang@quicinc.com>
-Subject: [PATCH 1/2] wifi: cfg80211: fix typo in cfg80211_calculate_bitrate_he()
-Date: Thu, 6 Jun 2024 10:06:52 +0800
-Message-ID: <20240606020653.33205-2-quic_bqiang@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240606020653.33205-1-quic_bqiang@quicinc.com>
-References: <20240606020653.33205-1-quic_bqiang@quicinc.com>
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="CXXAS1/P"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+	s=20121; t=1717655252;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+	bh=uvawg7ksAXn3cGtmIHO5GFc/WnmihS0YDy3kfH+pyHQ=;
+	b=CXXAS1/PcWSb0T7qSWZ0CtRqIfEfLVtS7lSU6FKRW4XZ87pv0rZbXcV607aBxwJwq+huwT
+	V9N5MxtsddzrCScf/hw9rdszuhdy06kHpTqIomPkDpNrF89YmPdx4sW7CC8JXds0gfcVnL
+	7ufvdI3ZGEbLdyepSY0bNvkM0/JTxhg=
+From: Sven Eckelmann <sven@narfation.org>
+To: Michael-CY Lee <michael-cy.lee@mediatek.com>
+Cc: Ben Greear <greearb@candelatech.com>, linux-wireless@vger.kernel.org,
+ johannes@sipsolutions.net
+Subject: mac80211: scan ignores next_delay calculation after first probe
+Date: Thu, 06 Jun 2024 08:27:30 +0200
+Message-ID: <2540184.6tgchFWduM@ripper>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 8HLEKbboUkjMg-WfA2Wv0ZCOFRRUR7q0
-X-Proofpoint-GUID: 8HLEKbboUkjMg-WfA2Wv0ZCOFRRUR7q0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-05_08,2024-06-05_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=959
- malwarescore=0 mlxscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
- suspectscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405170001
- definitions=main-2406060014
+Content-Type: multipart/signed; boundary="nextPart2441207.8hzESeGDPO";
+ micalg="pgp-sha512"; protocol="application/pgp-signature"
 
-rates_996 is mistakenly written as rates_969, fix it.
+--nextPart2441207.8hzESeGDPO
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
+From: Sven Eckelmann <sven@narfation.org>
+To: Michael-CY Lee <michael-cy.lee@mediatek.com>
+Date: Thu, 06 Jun 2024 08:27:30 +0200
+Message-ID: <2540184.6tgchFWduM@ripper>
+MIME-Version: 1.0
 
-Fixes: c4cbaf7973a7 ("cfg80211: Add support for HE")
-Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
----
- net/wireless/util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hi,
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 2bde8a354631..39e19e2386b7 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1504,7 +1504,7 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
- 		  5120, /*  0.833333... */
- 	};
- 	u32 rates_160M[3] = { 960777777, 907400000, 816666666 };
--	u32 rates_969[3] =  { 480388888, 453700000, 408333333 };
-+	u32 rates_996[3] =  { 480388888, 453700000, 408333333 };
- 	u32 rates_484[3] =  { 229411111, 216666666, 195000000 };
- 	u32 rates_242[3] =  { 114711111, 108333333,  97500000 };
- 	u32 rates_106[3] =  {  40000000,  37777777,  34000000 };
-@@ -1529,7 +1529,7 @@ static u32 cfg80211_calculate_bitrate_he(struct rate_info *rate)
- 	else if (rate->bw == RATE_INFO_BW_80 ||
- 		 (rate->bw == RATE_INFO_BW_HE_RU &&
- 		  rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_996))
--		result = rates_969[rate->he_gi];
-+		result = rates_996[rate->he_gi];
- 	else if (rate->bw == RATE_INFO_BW_40 ||
- 		 (rate->bw == RATE_INFO_BW_HE_RU &&
- 		  rate->he_ru_alloc == NL80211_RATE_INFO_HE_RU_ALLOC_484))
--- 
-2.25.1
+I was debugging some problems when trying to scan for BSS (and they were often 
+not recorded on channel 1) and noticed some potential problems with some code 
+changes by you. Not necesserily the changes itself but the parts which look a 
+little bit like they were missed.
+
+With your commit d60277ac3fc9 ("wifi: mac80211: apply duration for SW scan"), 
+I can now set the duration in SW scans (thank you). But __ieee80211_start_scan 
+just overwrites the calculated next delay of ieee80211_scan_state_send_probe. 
+So for the first channel, the duration still seems to be wrong.
+
+In the past, the version from Ben Greear just overwrote the value 
+IEEE80211_CHANNEL_TIME (from ieee80211_scan_state_send_probe) with the value 
+IEEE80211_CHANNEL_TIME in __ieee80211_start_scan. This slightly odd behavior 
+was introduced in 8a690674e060 ("mac80211: Support on-channel scan option."). 
+And even when it didn't made a lot of sense to me - it didn't change the 
+behavior. But now it seems to be counter productive. Maybe you can check this 
+again and maybe Ben Greear still remembers why this there in the first place.
+
+The discussion is about this part (which overwrites the correct value for 
+next_delay):
+
+static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+				  struct cfg80211_scan_request *req)
+{
+[snip]
+	if (hw_scan) {
+		__set_bit(SCAN_HW_SCANNING, &local->scanning);
+	} else if ((req->n_channels == 1) &&
+		   (req->channels[0] == local->hw.conf.chandef.chan)) {
+[snip]
+
+		if ((req->channels[0]->flags & (IEEE80211_CHAN_NO_IR |
+						IEEE80211_CHAN_RADAR)) ||
+		    !req->n_ssids) {
+			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+			if (req->n_ssids)
+				set_bit(SCAN_BEACON_WAIT, &local->scanning);
+		} else {
+			ieee80211_scan_state_send_probe(local, &next_delay);
+			next_delay = IEEE80211_CHANNEL_TIME;
+		}
+[snip]
+}
+
+
+And here is the code in for ieee80211_scan_state_send_probe which always sets 
+next_delay to the correct value:
+
+static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+					    unsigned long *next_delay)
+{
+[snip]
+	/*
+	 * After sending probe requests, wait for probe responses
+	 * on the channel.
+	 */
+	*next_delay = msecs_to_jiffies(scan_req->duration) >
+		      IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME ?
+		      msecs_to_jiffies(scan_req->duration) - IEEE80211_PROBE_DELAY :
+		      IEEE80211_CHANNEL_TIME;
+	local->next_scan_state = SCAN_DECISION;
+}
+
+
+
+And maybe you have also noticed that your patch missed the calculation for the 
+passive scan in __ieee80211_start_scan. It always sets it to 
+IEEE80211_PASSIVE_CHANNEL_TIME. But I would have guessed that the calculation 
+should also be 
+
+next_delay = msecs_to_jiffies(scan_req->duration) > IEEE80211_PASSIVE_CHANNEL_TIME ?
+	  msecs_to_jiffies(scan_req->duration) :
+	  IEEE80211_PASSIVE_CHANNEL_TIME;
+
+
+Another part which seem to have been missed by your patch is the 
+scan_state_decision helper code in ieee80211_scan_get_channel_time. It looks 
+to me like it could now under-estimate the scan time because it doesn't handle 
+the duration information.
+
+
+Kind regards,
+	Sven
+--nextPart2441207.8hzESeGDPO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQS81G/PswftH/OW8cVND3cr0xT1ywUCZmFW0gAKCRBND3cr0xT1
+yw42AQCiogEOf9A9V5Xws/TlY9axvhn88UVZAOQU94K/90x5QgEAqJQ7G0TdHZYH
+SVw+KbvZY+wXJ+NjS4REuZOE3AON5Qs=
+=RMCq
+-----END PGP SIGNATURE-----
+
+--nextPart2441207.8hzESeGDPO--
+
+
 
