@@ -1,45 +1,48 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F192B139D1B;
-	Thu,  6 Jun 2024 20:33:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F9D513AD30;
+	Thu,  6 Jun 2024 20:33:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717705992; cv=none; b=ToKHnWpbKSvobeNV8OJnzSfdDSLbaBUFIhCSUsGYe+yLlyOONKt4hIT+k9ydlELqOROl4SQpbzy5C8ZccF7upAdykKIc17FMS62tr/vzHZWtd8OzDBBUjr5Jh1qBAoG1nqvu1XbnLMH4HOPjODkOdHDZjTh4wFrjYyW+5qr6hC4=
+	t=1717705992; cv=none; b=Oey5pIq9HrriAkvDK6duFrJuq2iI/Y00BFCLGO9EX6FiZgYtvsCeJYmFxaezA1lSTjreCag8kzo2clACOen9TQTCzveV2nDNMeOrBpjWrxwlVoNj5moVahYbPTkMcSKr7E1wL+CFZRe6XAOgINRZLli3ZFODyxLPJhu6q6D4Rl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1717705992; c=relaxed/simple;
-	bh=O/fIdSuE87jvT+rTXQIXkzqnruiLQx3ImxqfaRKWYqk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LmYzul+2zDAZXcAY9EnzhhmolRCPgIkBxFx/nXfXdRu06hwcS2+RxJGc39PAHExZ9/FgFvA54IkCu4S0Fm4Yei1sDQlDmVaewiscZrRyuzh78PzKoPm+KOylujqtTqSI4WOCQHqAZJqROQLKyWKOVVadZNf3hpj+yvs2pteIjMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=TlZaNFpR; arc=none smtp.client-ip=168.119.38.16
+	bh=yokXtXFUfqclyFGAp2a6WDFNNDfrpZ77U7BOeMXwYEI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Nwb4HZeZI8OcSQ029OIpJH/OUoELh4LuRCkBFFKZyGCvgm9+6rGZmj6GYePJYBnHv7cuehbdMkoSGNnjpXwsIWrAR/62+U8qAr52WJZfoUH2hsuKnoH0BOSSRgrMG3W/Z56nsLyLbWoWghtg25DmnacOOEMBJsVq+AHFj/uGfnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=V9Xc/4qC; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="TlZaNFpR"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="V9Xc/4qC"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=ncgrJTEhoRR3zBhbPk7eARi4Oy+hPL2CM+fE1z0zHPc=; t=1717705989; x=1718915589; 
-	b=TlZaNFpRMd/vNXG8faBshzjdXCDA/mHoycrg00Girak2kcS1P2t8SGUiNS2krxh7+FVjxyi9bvG
-	8r24vcYr8UfxaXcPfC7NSjBUHMy7W/yq3PrVoeujAo6JEZqx1cYNOjNZFadBYGKhe/Srr5wHPL+bs
-	77sputfYj7ZXks3PpTbF75JjwB50NzOXN/0S3kOjTAvefvbEplUMeyKMA8TrVijt1uSW1fWn4UGwH
-	e/tiRsP/poUpEHIg3s1Q6qA3rexHdLq3bJk5U77z4r08dWq1T6dIL0AiLEFLmlHhcD+u3DixaNfCr
-	lp49G3RbPO0QYmVAEidELqBRMAMlFQ/VRE6w==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=7H/FqwBpM+5q3YJTobEqpfZakcN/zmH9Xcq0xGw6tnc=;
+	t=1717705989; x=1718915589; b=V9Xc/4qCBdRnAr05QMtYkKQjQqixFJZsY5cDohfENeAC0uQ
+	oda2LDJAzHt/yD/WF1FIB5XiynEXuWYp5c9bqwx58qToBGa8lRbZjmmBKu0wxlzoWt4MhJFtdEFRu
+	z0GnJkG0GP77NSniYtlFUPGCkeDB33QCpO+zfCig5Xlj8nLfxtBtAwi7Jvo7cEvontQOLLMOV2qGQ
+	IGB9R1mj9byvaJBjVlI3zTfFER/DIaX+4byU9JY/xcq+UlNZsgMSGcXr6B4MlClUgSGTObXJL/xQc
+	BrZ/P6tAlgHw4Bn+txXcicwq2z2VVcRYB3rfZps/BSJ9PAZTXLI2zmqk6rmsBPCQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.97)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1sFJn8-0000000HDhM-2x41;
-	Thu, 06 Jun 2024 22:32:59 +0200
+	id 1sFJnB-0000000HDhM-0WfF;
+	Thu, 06 Jun 2024 22:33:01 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-kernel@vger.kernel.org
 Cc: linux-trace-kernel@vger.kernel.org,
 	netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH v3 0/4] tracing: improve symbolic printing
-Date: Thu,  6 Jun 2024 22:32:00 +0200
-Message-ID: <20240606203255.49433-6-johannes@sipsolutions.net>
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 2/4] tracing/timer: use __print_sym()
+Date: Thu,  6 Jun 2024 22:32:02 +0200
+Message-ID: <20240606203255.49433-8-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.45.1
+In-Reply-To: <20240606203255.49433-6-johannes@sipsolutions.net>
+References: <20240606203255.49433-6-johannes@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,51 +51,66 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Completely forgot about this again ... here's another respin.
+From: Johannes Berg <johannes.berg@intel.com>
 
-v2 was:
- - rebased on 6.9-rc1
- - always search for __print_sym() and get rid of the DYNPRINT flag
-   and associated code; I think ideally we'll just remove the older
-   __print_symbolic() entirely
- - use ':' as the separator instead of "//" since that makes searching
-   for it much easier and it's still not a valid char in an identifier
- - fix RCU
+Use the new __print_sym() in the timer tracing, just to show
+how to convert something. This adds ~80 bytes of .text for a
+saving of ~1.5K of data in my builds.
 
-v3:
- - fix #undef issues
- - fix drop_monitor default
- - rebase on linux-trace/for-next (there were no conflicts)
- - move net patches to 3/4
- - clarify symbol name matching logic (and remove ")" from it)
+Note the format changes from
 
-To recap, it's annoying to have
+print fmt: "success=%d dependency=%s", REC->success, __print_symbolic(REC->dependency, { 0, "NONE" }, { (1 << 0), "POSIX_TIMER" }, { (1 << 1), "PERF_EVENTS" }, { (1 << 2), "SCHED" }, { (1 << 3), "CLOCK_UNSTABLE" }, { (1 << 4), "RCU" }, { (1 << 5), "RCU_EXP" })
 
- irq/65-iwlwifi:-401   [000]    22.790000: kfree_skb:  ...  reason: 0x20000
+to
 
-and much nicer to see
+print fmt: "success=%d dependency=%s", REC->success, __print_symbolic(REC->dependency, { 0, "NONE" }, { 1, "POSIX_TIMER" }, { 2, "PERF_EVENTS" }, { 4, "SCHED" }, { 8, "CLOCK_UNSTABLE" }, { 16, "RCU" }, { 32, "RCU_EXP" })
 
- irq/65-iwlwifi:-401   [000]    22.790000: kfree_skb:  ...  reason: RX_DROP_MONITOR
+since the values are now just printed in the show function as
+pure decimal values.
 
-but this doesn't work now because __print_symbolic() can only
-deal with a hard-coded list (which is actually really big.)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/trace/events/timer.h | 22 +++++++---------------
+ 1 file changed, 7 insertions(+), 15 deletions(-)
 
-So here's __print_sym() which doesn't build the list into the
-kernel image, but creates it at runtime. For userspace, it
-will look the same as __print_symbolic() (it literally shows
-__print_symbolic() to userspace) so no changes are needed,
-but the actual list of values exposed to userspace in there
-is built dynamically. For SKB drop reasons, this then has all
-the reasons known when userspace queries the trace format.
+diff --git a/include/trace/events/timer.h b/include/trace/events/timer.h
+index 1ef58a04fc57..d483abffed78 100644
+--- a/include/trace/events/timer.h
++++ b/include/trace/events/timer.h
+@@ -402,26 +402,18 @@ TRACE_EVENT(itimer_expire,
+ #undef tick_dep_mask_name
+ #undef tick_dep_name_end
+ 
+-/* The MASK will convert to their bits and they need to be processed too */
+-#define tick_dep_name(sdep) TRACE_DEFINE_ENUM(TICK_DEP_BIT_##sdep); \
+-	TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-#define tick_dep_name_end(sdep)  TRACE_DEFINE_ENUM(TICK_DEP_BIT_##sdep); \
+-	TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-/* NONE only has a mask defined for it */
+-#define tick_dep_mask_name(sdep) TRACE_DEFINE_ENUM(TICK_DEP_MASK_##sdep);
+-
+-TICK_DEP_NAMES
+-
+-#undef tick_dep_name
+-#undef tick_dep_mask_name
+-#undef tick_dep_name_end
+-
+ #define tick_dep_name(sdep) { TICK_DEP_MASK_##sdep, #sdep },
+ #define tick_dep_mask_name(sdep) { TICK_DEP_MASK_##sdep, #sdep },
+ #define tick_dep_name_end(sdep) { TICK_DEP_MASK_##sdep, #sdep }
+ 
++TRACE_DEFINE_SYM_LIST(tick_dep_names, TICK_DEP_NAMES);
++
++#undef tick_dep_name
++#undef tick_dep_mask_name
++#undef tick_dep_name_end
++
+ #define show_tick_dep_name(val)				\
+-	__print_symbolic(val, TICK_DEP_NAMES)
++	__print_sym(val, tick_dep_names)
+ 
+ TRACE_EVENT(tick_stop,
+ 
+-- 
+2.45.1
 
-I guess patch 3/4 should go through net-next, so not sure
-how to handle this patch series. Or perhaps, as this will not
-cause conflicts, in fact I've been rebasing it for a long time,
-go through tracing anyway with an Ack from netdev? But I can
-also just wait for the trace patch(es) to land and resubmit the
-net patches after. Assuming this looks good at all :-)
-
-Thanks,
-johannes
-
-%
