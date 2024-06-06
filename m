@@ -1,230 +1,262 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7DD019925A
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Jun 2024 18:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8BA199383
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Jun 2024 18:08:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717697240; cv=none; b=NNQqc7oc1UOXsVCU3QK49e65hE1IGdAbXUuZc7jjwCiJzuh6rpVSrnV8DyNy9y4yo5ugtqMUBrGVJB00Y+Rm8Y3XXH/JRzZRUzCGihT0bENhOnhXIdZd8eavq8pgJ6tpS9CB6ArmF5pmEFJCZqULLHgLz+lpaEXWYazb+xoZ5Bg=
+	t=1717697307; cv=none; b=agtci+mX9lTKYnjOt/I/DzRt/T5s8XzieYanfE9IPrw07972A8dHFg13YDT/CPv9EG5zIJ3VyaNtPD5+nrfG5ZFT1J8NJ0AQWUTZ3yDMR9/J79GTBZmzBm4yYZe6Ol401XZXDPZbBXn8XGJ4j0DPm9Pjr8UjHu/B3Bo3UudCwuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717697240; c=relaxed/simple;
-	bh=MenvBUuGv6mTNIhnGCZr9/oPuif9HJ/2MYXD2LQhCKg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YcI30zfwXGqkR82AYOAIfnNghmmIdG7ZKLOv0K40QfikAXKQKJRa/V6mzgPqWnow9FVofJHcj3RE/9KCUwvxjTq6WWCkwMQ/j/XiEyOjmQUuvszHJkAIzbu8FWIja0dz7EZsWlfB+594KIwPB8FWoEOZW1gfVNGVXSBHHueLEsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=YkOhsdF5; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1717697307; c=relaxed/simple;
+	bh=UuHyBaZqZ0ETTUmxyLtoNi6/bmTPX8y+z8SZWI0RROE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=B1Iyi6j25idtDulZDSSYfii3T/xa06J7ekkB+ZmPxCgGmGC91cLcEztsc4DV5vH2poqMUi5svOcGgYF0pfb6ssY/PatIMAC9qA+LOy0UNbK99U8wmn6SmYGKHW+Ocw7nu0zztwW9C8TrSPMCcceupyXP6IxH5FICN8BE6YH09lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=c+EYy9P8; arc=none smtp.client-ip=209.85.208.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="YkOhsdF5"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=H9Ks4PmBveZAlHQui94XwD5dy02OUcuU876KxxPP2nc=; b=YkOhsdF5HY2cDW0im9bZTLlfc9
-	nzbKUIMaO0wjL1uXnAOGZF16xZO84QyIM0wC2/0lb27xFzlBQRQ0Hee8ZJxLeII3NyYOXb2XEkHGg
-	cjiCHKjN74KwjMQWetfCUfIpgWKkZOh/18YYjtzNiHVk8BrCicLLZNKuTLTzJE9707m0=;
-Received: from p4ff130d0.dip0.t-ipconnect.de ([79.241.48.208] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sFHW7-008aic-37;
-	Thu, 06 Jun 2024 20:07:16 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	quic_adisi@quicinc.com,
-	quic_periyasa@quicinc.com,
-	ath12k@lists.infradead.org
-Subject: [RFC v3 7/8] wifi: mac80211: move code in ieee80211_link_reserve_chanctx to a helper
-Date: Thu,  6 Jun 2024 20:07:12 +0200
-Message-ID: <2d403d1c3bb29f84a74543561326fcdbfbd8e983.1717696995.git-series.nbd@nbd.name>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <cover.386a66ec6a89750d4890f63f0d28582a52b838b5.1717696995.git-series.nbd@nbd.name>
-References: <cover.386a66ec6a89750d4890f63f0d28582a52b838b5.1717696995.git-series.nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="c+EYy9P8"
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2eaad2c673fso18938261fa.3
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Jun 2024 11:08:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1717697302; x=1718302102; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sFgymo/FZ1mBM/so/Gc56Q4p5/VyC1A8hH1xyBB/UOc=;
+        b=c+EYy9P8lDgBwuHqaFbSJFM8bazHHvsGfXD77gqRgnk1nuCEjvbr4/4DUfeHbdezC5
+         zN9p/Vt/gkfp7OXRE9tGUEAcH6ixzIHO/Txl3dlR3mFkDvWNoz45bhTpdqENC8aZiMlO
+         rWnhTS1/O8p5mXBT5S+631P6fQ2UASsOYZlwhZFctAPj/FE6lI+X+iMP0Ju+BA7UiZwP
+         9rcU9RBFzEad6CHbnZlOeB92q4q6tt18KxPsADLihXLTJkgiE+zkMgkNXNX2yfM23C56
+         i/o/qnAuw8egCIsf0j8OwJ3K/TMKhaqqxBD6yJiGHlGylOXpwpJJDmAMFxvltgYZAM8+
+         /1CA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717697302; x=1718302102;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sFgymo/FZ1mBM/so/Gc56Q4p5/VyC1A8hH1xyBB/UOc=;
+        b=smiXoLparoBAH6qjbzbYN7dn+FonaV09/RpgcJ361UDp+OPbrpgyIkD6haE8ZwLAzZ
+         EUeIsxAogin3q1FMP3zs150RN+eZiLAe5zmHz8HtOr3udAA0/OQ51UaFC31nX9w0x31x
+         rnUFT+A1wFasm42cG4ouwN2aQKsJ89oL1QPTRK5FMq5OSpG1xxrBfZvjhftEBtOVJv71
+         7iCuUkMt8rP1usPg7HMZQiiPtNg/rtrjnI5zDewFB+BEgl9y1Bm6PPzbem0MkdWetDea
+         CMTGnneE3wS6Cx/hdDJOb5sd7oti7jF9W3HinIKuzB0buSkyXi6/a46BHfqDOkET6jtr
+         Aq+A==
+X-Forwarded-Encrypted: i=1; AJvYcCVHsZRdxeh+VuiDU+pPWvGxw3f6GftdhJfgtU/lFRDxN5iiDFuESTNWXhI2WmFOjv2JGKOp+09W6XQh2WK/efXPzVHR/Z/Xq1PU2XjZ6bE=
+X-Gm-Message-State: AOJu0Yy6yhMnFP9dahJxew8rkQZbbKUJ6jJxHlyHZ2b5BNkf6DXlUcMN
+	JdClazsvk4FM0Humxo/VOGheuN0gcldiyYgif/U8aStPtIjSW7AbhLkfWrxViD/SEkFFAiqK1y0
+	QTGwgK4++JFme+oXKviFzbzkbYPork2ncP1Ngtw==
+X-Google-Smtp-Source: AGHT+IEvw2Du14s9LhbMiEG3oShp3mxTzmgORDkj+Yh8Hmemm1ygt2yqAchw1+JnWIg+p6IdwXlg7YFgaTVoOQb9ur4=
+X-Received: by 2002:a2e:7d12:0:b0:2ea:8d54:452b with SMTP id
+ 38308e7fff4ca-2eadce3836cmr3770821fa.16.1717697302075; Thu, 06 Jun 2024
+ 11:08:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240605122106.23818-1-brgl@bgdev.pl> <20240605122106.23818-2-brgl@bgdev.pl>
+ <87h6e6qjuh.fsf@kernel.org> <CAMRc=MdiKxtnN+g92RUTXdOydaPV5M2u5iUdKyE2SNvDkdXAjg@mail.gmail.com>
+ <871q5aqiei.fsf@kernel.org> <CAMRc=McacZMP-51hjH+d8=PVe+Wgw4a8xWcv0sRPLJKL_gP=KQ@mail.gmail.com>
+ <87sexqoxm9.fsf@kernel.org>
+In-Reply-To: <87sexqoxm9.fsf@kernel.org>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Thu, 6 Jun 2024 20:08:11 +0200
+Message-ID: <CAMRc=McYAbhL5M1geYtf8LbgJG5x_+ZUFKXRuo7Vff_8ssNoUA@mail.gmail.com>
+Subject: Re: [PATCH v9 1/2] dt-bindings: net: wireless: qcom,ath11k: describe
+ the ath11k on QCA6390
+To: Kalle Valo <kvalo@kernel.org>
+Cc: "David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, devicetree@vger.kernel.org, 
+	ath11k@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	ath12k@lists.infradead.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Reduces indentation in preparation for further changes
+On Thu, Jun 6, 2024 at 6:16=E2=80=AFPM Kalle Valo <kvalo@kernel.org> wrote:
+>
+> Bartosz Golaszewski <brgl@bgdev.pl> writes:
+>
+> > On Thu, Jun 6, 2024 at 4:02=E2=80=AFPM Kalle Valo <kvalo@kernel.org> wr=
+ote:
+> >
+> >>
+> >> Bartosz Golaszewski <brgl@bgdev.pl> writes:
+> >>
+> >> > On Thu, Jun 6, 2024 at 3:30=E2=80=AFPM Kalle Valo <kvalo@kernel.org>=
+ wrote:
+> >> >
+> >> >>
+> >> >> Bartosz Golaszewski <brgl@bgdev.pl> writes:
+> >> >>
+> >> >> > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> >> >> >
+> >> >> > Add a PCI compatible for the ATH11K module on QCA6390 and describ=
+e the
+> >> >> > power inputs from the PMU that it consumes.
+> >> >> >
+> >> >> > Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> >> >> > Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.or=
+g>
+> >> >>
+> >> >> [...]
+> >> >>
+> >> >> > +allOf:
+> >> >> > +  - if:
+> >> >> > +      properties:
+> >> >> > +        compatible:
+> >> >> > +          contains:
+> >> >> > +            const: pci17cb,1101
+> >> >> > +    then:
+> >> >> > +      required:
+> >> >> > +        - vddrfacmn-supply
+> >> >> > +        - vddaon-supply
+> >> >> > +        - vddwlcx-supply
+> >> >> > +        - vddwlmx-supply
+> >> >> > +        - vddrfa0p8-supply
+> >> >> > +        - vddrfa1p2-supply
+> >> >> > +        - vddrfa1p7-supply
+> >> >> > +        - vddpcie0p9-supply
+> >> >> > +        - vddpcie1p8-supply
+> >> >>
+> >> >> Not sure if we discussed this before, but based on this I understan=
+d
+> >> >> that there can't be an DT entry for device pci17cb,1101 without all=
+ the
+> >> >> supply properties? But there are QCA6390 devices with PCI id 17cb:1=
+101
+> >> >> which do not need these supplies and already work. For example, my =
+Dell
+> >> >> XPS 13 x86 laptop is one. Or anyone who manually installs QCA6390 b=
+oard
+> >> >> to their PCI slot and some of them might want to use DT, for exampl=
+e
+> >> >> setting qcom,ath11k-calibration-variant.
+> >> >>
+> >> >> This is not a blocker for me, just making sure that we are not brea=
+king
+> >> >> any existing setups.
+> >> >>
+> >> >
+> >> > If they are already powered up without the need for the PCI pwrctl
+> >> > driver to do it, then they will work alright. Bindings don't affect
+> >> > functionality.
+> >>
+> >> Sure, I'm not worried about functionality. I'm worried that if I
+> >> there's, for example, an ARM based setup which uses DT and wants to us=
+e
+> >> a similar QCA6390 board that I have, and set
+> >> qcom,ath11k-calibration-variant in DT. In other words, I'm worried if
+> >> you are looking at this only for Snapdragon family of boards?
+> >>
+> >
+> > No, what I'm looking at is the entire QCA6390 package. That means WLAN
+> > *and* Bluetooth *and* the PMU that manages power.
+>
+> I think we are just looking at this from different point of views. You
+> are looking at a datasheet (most likely for a Snapdragon based system)
+> and I'm looking what actual devices there are out in the field.
+>
+> > If you're using the QCA6390 on a device-tree system then you should
+> > probably model at least the WLAN node and the PMU and the problem with
+> > supplies is fixed.
+>
+> But why? If there are boards out there who don't need any of this why
+> would they still need to model all this in DT?
+>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/chan.c | 141 ++++++++++++++++++++++-----------------------
- 1 file changed, 72 insertions(+), 69 deletions(-)
+Because this is what is there? The goal of the device tree is to
+describe the hardware. The fact we didn't describe it before doesn't
+make it correct.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 0e899c07bc2b..ac49c2c71d2b 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1060,6 +1060,71 @@ int ieee80211_link_unreserve_chanctx(struct ieee80211_link_data *link)
- 	return 0;
- }
- 
-+static struct ieee80211_chanctx *
-+ieee80211_replace_chanctx(struct ieee80211_local *local,
-+			  const struct ieee80211_chan_req *chanreq,
-+			  enum ieee80211_chanctx_mode mode,
-+			  struct ieee80211_chanctx *curr_ctx)
-+{
-+	struct ieee80211_chanctx *new_ctx, *ctx;
-+
-+	if (!curr_ctx || (curr_ctx->replace_state ==
-+			  IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
-+	    !list_empty(&curr_ctx->reserved_links)) {
-+		/*
-+		 * Another link already requested this context for a
-+		 * reservation. Find another one hoping all links assigned
-+		 * to it will also switch soon enough.
-+		 *
-+		 * TODO: This needs a little more work as some cases
-+		 * (more than 2 chanctx capable devices) may fail which could
-+		 * otherwise succeed provided some channel context juggling was
-+		 * performed.
-+		 *
-+		 * Consider ctx1..3, link1..6, each ctx has 2 links. link1 and
-+		 * link2 from ctx1 request new different chandefs starting 2
-+		 * in-place reserations with ctx4 and ctx5 replacing ctx1 and
-+		 * ctx2 respectively. Next link5 and link6 from ctx3 reserve
-+		 * ctx4. If link3 and link4 remain on ctx2 as they are then this
-+		 * fails unless `replace_ctx` from ctx5 is replaced with ctx3.
-+		 */
-+		list_for_each_entry(ctx, &local->chanctx_list, list) {
-+			if (ctx->replace_state !=
-+			    IEEE80211_CHANCTX_REPLACE_NONE)
-+				continue;
-+
-+			if (!list_empty(&ctx->reserved_links))
-+				continue;
-+
-+			curr_ctx = ctx;
-+			break;
-+		}
-+	}
-+
-+	/*
-+	 * If that's true then all available contexts already have reservations
-+	 * and cannot be used.
-+	 */
-+	if (!curr_ctx || (curr_ctx->replace_state ==
-+			  IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
-+	    !list_empty(&curr_ctx->reserved_links))
-+		return ERR_PTR(-EBUSY);
-+
-+	new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
-+	if (!new_ctx)
-+		return ERR_PTR(-ENOMEM);
-+
-+	new_ctx->replace_ctx = curr_ctx;
-+	new_ctx->replace_state = IEEE80211_CHANCTX_REPLACES_OTHER;
-+
-+	curr_ctx->replace_ctx = new_ctx;
-+	curr_ctx->replace_state = IEEE80211_CHANCTX_WILL_BE_REPLACED;
-+
-+	list_add_rcu(&new_ctx->list, &local->chanctx_list);
-+
-+	return new_ctx;
-+}
-+
- int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
- 				   const struct ieee80211_chan_req *chanreq,
- 				   enum ieee80211_chanctx_mode mode,
-@@ -1067,7 +1132,7 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
- {
- 	struct ieee80211_sub_if_data *sdata = link->sdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_chanctx *new_ctx, *curr_ctx, *ctx;
-+	struct ieee80211_chanctx *new_ctx, *curr_ctx;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-@@ -1077,76 +1142,14 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
- 
- 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
- 	if (!new_ctx) {
--		if (ieee80211_can_create_new_chanctx(local, -1)) {
-+		if (ieee80211_can_create_new_chanctx(local, -1))
- 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
- 							false);
--			if (IS_ERR(new_ctx))
--				return PTR_ERR(new_ctx);
--		} else {
--			if (!curr_ctx ||
--			    (curr_ctx->replace_state ==
--			     IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
--			    !list_empty(&curr_ctx->reserved_links)) {
--				/*
--				 * Another link already requested this context
--				 * for a reservation. Find another one hoping
--				 * all links assigned to it will also switch
--				 * soon enough.
--				 *
--				 * TODO: This needs a little more work as some
--				 * cases (more than 2 chanctx capable devices)
--				 * may fail which could otherwise succeed
--				 * provided some channel context juggling was
--				 * performed.
--				 *
--				 * Consider ctx1..3, link1..6, each ctx has 2
--				 * links. link1 and link2 from ctx1 request new
--				 * different chandefs starting 2 in-place
--				 * reserations with ctx4 and ctx5 replacing
--				 * ctx1 and ctx2 respectively. Next link5 and
--				 * link6 from ctx3 reserve ctx4. If link3 and
--				 * link4 remain on ctx2 as they are then this
--				 * fails unless `replace_ctx` from ctx5 is
--				 * replaced with ctx3.
--				 */
--				list_for_each_entry(ctx, &local->chanctx_list,
--						    list) {
--					if (ctx->replace_state !=
--					    IEEE80211_CHANCTX_REPLACE_NONE)
--						continue;
--
--					if (!list_empty(&ctx->reserved_links))
--						continue;
--
--					curr_ctx = ctx;
--					break;
--				}
--			}
--
--			/*
--			 * If that's true then all available contexts already
--			 * have reservations and cannot be used.
--			 */
--			if (!curr_ctx ||
--			    (curr_ctx->replace_state ==
--			     IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
--			    !list_empty(&curr_ctx->reserved_links))
--				return -EBUSY;
--
--			new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
--			if (!new_ctx)
--				return -ENOMEM;
--
--			new_ctx->replace_ctx = curr_ctx;
--			new_ctx->replace_state =
--					IEEE80211_CHANCTX_REPLACES_OTHER;
--
--			curr_ctx->replace_ctx = new_ctx;
--			curr_ctx->replace_state =
--					IEEE80211_CHANCTX_WILL_BE_REPLACED;
--
--			list_add_rcu(&new_ctx->list, &local->chanctx_list);
--		}
-+		else
-+			new_ctx = ieee80211_replace_chanctx(local, chanreq,
-+							    mode, curr_ctx);
-+		if (IS_ERR(new_ctx))
-+			return PTR_ERR(new_ctx);
- 	}
- 
- 	list_add(&link->reserved_chanctx_list, &new_ctx->reserved_links);
--- 
-git-series 0.9.1
+> Based on the discussions I have heard only Snapdragon systems who
+> require all this configuration you describe. Of course there can be
+> other systems but I have not heard about those.
+>
+
+DT is not configuration, it is description of actual hardware. It
+doesn't matter if Snapdragon systems are the only ones that actually
+*require* this description to make WLAN/BT functional upstream. The
+chipset would be the same on any PCIe board, it's just that the host
+systems wouldn't need to take care with its power sequence. But for a
+dynamic board like this, you don't need DT.
+
+> > But if you don't have the supplies, that's alright for downstream.
+>
+> What do you mean downstream in this context?
+>
+
+I mean: if you wanted to upstream the DT sources, then they should
+include the supplies AND the PMU node. But if you just want to make
+the WLAN run on some vendor kernel then you don't need to think about
+it, it will work.
+
+> >> Again, I don't see this as a blocker. I just want to understand how th=
+is
+> >> should work for all types of devices there are out there.
+> >>
+> >> > But if you have a QCA6390 then you have its PMU too and the bindings
+> >> > model the real-world hardware.
+> >> >
+> >> > IOW: your laptop should be alright but the supplies are really there
+> >> > which warrants adding them to the bindings.
+> >>
+> >> Sorry, not following here. Can you clarify your comment "the supplies
+> >> are really there"? You mean inside the PCI board? But that's not visib=
+le
+> >> to the kernel in anyway, the PCI board just works after I plug it in.
+> >> It's like a regular PCI device. So I don't understand why that should =
+be
+> >> visible in DT, but I can very well be missing something.
+> >>
+> >
+> > I think you're thinking about some kind of detachable PCIe board with
+> > this chipset on it.
+>
+> Exactly, a lot of WLAN boards are like this.
+>
+> > I refer to the QCA6390 chipset itself which is also more than just
+> > PCI. The Bluetooth interface doesn't use PCI at all. On the boards I'm
+> > working on, the chipset is just soldered to the main board.
+>
+> And I guess you are looking at Snapdragon boards only?
+>
+
+But what is your point?
+
+> > If your detachable board "just works" then it must be wired in a way
+> > that enables WLAN the moment it's plugged in but this doesn't happen
+> > over PCI. The chipset has a power input and GPIOs to enable each
+> > module.
+>
+> I don't know how the boards are implemented but it could be so. But from
+> host system point of view it's just a regular PCI device.
+>
+
+And you don't need DT anyway for this type of devices.
+
+> > Also: I doubt you need DT for your detachable board?
+>
+> Sure, I don't need DT but that's not my point. My point is why require
+> these supplies for _all_ devices having PCI id 17cb:1101 (ie. QCA6390)
+> then clearly there are such devices which don't need it? To me that's
+> bad design and, if I'm understanding correctly, prevents use of
+> qcom,ath11k-calibration-variant property. To me having the supplies
+> optional in DT is more approriate.
+>
+
+We require them because *they are physically there*.
+
+Bart
+
+> --
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches
