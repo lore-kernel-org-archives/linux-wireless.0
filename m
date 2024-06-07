@@ -1,48 +1,48 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4180819AA5A;
-	Fri,  7 Jun 2024 16:05:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DB19199EB3
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Jun 2024 16:05:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717776341; cv=none; b=T4ehdNmke335BNIq9L1d8/AGgcXDy6A64Ww6dI8Vo3iVnphTkUi33P4PoZdLt3fT/gmjYB0Bz+HC7Xsa+mUZ2O7V6mkUghipx4AM4eV/6IlVq0SCo4wIWWXnua+0VxVb/gLhzhITEv3lmySQk0bUEdlJDYst4Kq89XNrRy+ynz4=
+	t=1717776357; cv=none; b=uSIgqaYsvjPdYZeqrbqe3TB8Ss2u9P1geCI9xByzGn4sShTKMD+rDKDAzDunYfS970JFb3hbpme6z5WLMhX8YkZIv20Ug76Yr+18oUQs/ifxz6MB/8qOpygqYnGOE/WYWBwHaGLhU7IYkNnO2H9p+o13Ar6U/74YNrsSpDxRIGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717776341; c=relaxed/simple;
-	bh=E4arFM9k6nDnCNLegQCocTifweIoWJFBm9lxLSUeLxg=;
+	s=arc-20240116; t=1717776357; c=relaxed/simple;
+	bh=L0xoNxB36J4Mx9116ONuACgOQV074hsWsLHXB/9Pxxc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g5cwhkwUuofJXBEvK/5UOugsLxh2AYVodhdhZ6/CSuGRqmPbIIaERJIk27FSxRaTYrY6VEikFduatet2CxGhL7J9dsV9/1UsCUe7tGuy9UmETT34xBEBnU3z0H6ts5koSlkwEmbFDGobmfq/hmNVJkbMG2xUPhmu/1zLlrlSODI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=igZr1jmw; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	 MIME-Version; b=EYzqAnhNMlzWiIt4CVboOwtP4akxuN8Q26zzIJmXmDaW8v8T3G6VQrtZdW3SYKKbS9nHcVehxhfpC0CFgZ6IzCWafHDCuouzJF5dbcsv7RvtOCBZpkKzs23fC/PCxm8ced2evPz8mH9G5hVuVivX0ZGBFIlGZEnaFJ7+prFHVHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=CdOGA7UG; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="igZr1jmw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=tKr7lLN/VFwO5+6n6WfNe+lZgTMwnw4xRQwRBA9Nxfs=;
-	t=1717776335; x=1718985935; b=igZr1jmwsPqrez+HHw2xwvLz9nQOok87U1KKpPDF9dt2+cE
-	qszclyYBKq9OmGq7RwBGudeW84cpYzCPbYM6uZwG6UJwv3dJOv7eiZlpBkS3SNMZQMPLEG7+s8lny
-	NcCP8fgkmmuvX6jthPvPPR3QQfuqh9U7tUiVm25x1kS1yx99zlgQ3eD0jcd1Ayq7/ouKNQ0OHQp69
-	g8h4uibCbB1wbvusJx7Ee4qC4kiEM1pZkTdZ7pTcY/hemPz0xLR+GUf15L2vtDruwgZprICX6Qv0z
-	niJMvwNFI8s9TlJhRmgiKEy5l2jzXEZQr+2yh2GA6UKEb6DgiQJOTsUHC6DxSoeg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1sFc5s-00000001Iyu-2Bnz;
-	Fri, 07 Jun 2024 18:05:32 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-kernel@vger.kernel.org
-Cc: linux-trace-kernel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v4 3/4] net: dropreason: use new __print_sym() in tracing
-Date: Fri,  7 Jun 2024 18:04:25 +0200
-Message-ID: <20240607160527.23624-9-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240607160527.23624-6-johannes@sipsolutions.net>
-References: <20240607160527.23624-6-johannes@sipsolutions.net>
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CdOGA7UG"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=BnRLGsQdHzBIFwy2a7a4pMb4QdK2fWR40v5UFjKAhTw=; b=CdOGA7UGs62JgEBz9UhuNTowLb
+	LiR5j2+ZHKeuyrB+WCAvc3Yjzpb/BAHVmnJLxtypAyr0x1VwN1w178EXRYgag+hkaOEa2IOPVooI3
+	4IaYtgEZ9EA0sgqDDfum1YXrM8OtlFjtJIL2k4WP/In1eJvBjipzQNkcKkTSgV3BA0PM=;
+Received: from p4ff13226.dip0.t-ipconnect.de ([79.241.50.38] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1sFc6B-008xPc-18;
+	Fri, 07 Jun 2024 18:05:51 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	quic_adisi@quicinc.com,
+	quic_periyasa@quicinc.com,
+	ath12k@lists.infradead.org
+Subject: [RFC v4 6/9] wifi: mac80211: add radio index to ieee80211_chanctx_conf
+Date: Fri,  7 Jun 2024 18:05:45 +0200
+Message-ID: <6a568ace507286c97a60e2f7cb809c0a31f18ecf.1717776325.git-series.nbd@nbd.name>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <cover.0af6292ae793f7b9927ab6583791b58daedc9104.1717776325.git-series.nbd@nbd.name>
+References: <cover.0af6292ae793f7b9927ab6583791b58daedc9104.1717776325.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,132 +51,73 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+Will be used to explicitly assign a channel context to a wiphy radio.
 
-The __print_symbolic() could only ever print the core
-drop reasons, since that's the way the infrastructure
-works. Now that we have __print_sym() with all the
-advantages mentioned in that commit, convert to that
-and get all the drop reasons from all subsystems. As
-we already have a list of them, that's really easy.
-
-This is a little bit of .text (~100 bytes in my build)
-and saves a lot of .data (~17k).
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/dropreason.h   |  5 +++++
- include/trace/events/skb.h | 16 +++-----------
- net/core/skbuff.c          | 43 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 51 insertions(+), 13 deletions(-)
+ include/net/mac80211.h | 2 ++
+ net/mac80211/chan.c    | 8 +++++---
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/dropreason.h b/include/net/dropreason.h
-index 56cb7be92244..c157070b5303 100644
---- a/include/net/dropreason.h
-+++ b/include/net/dropreason.h
-@@ -42,6 +42,11 @@ struct drop_reason_list {
- extern const struct drop_reason_list __rcu *
- drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM];
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ecfa65ade226..98394970c991 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -250,6 +250,7 @@ struct ieee80211_chan_req {
+  * @min_def: the minimum channel definition currently required.
+  * @ap: the channel definition the AP actually is operating as,
+  *	for use with (wider bandwidth) OFDMA
++ * @radio_idx: index of the wiphy radio used used for this channel
+  * @rx_chains_static: The number of RX chains that must always be
+  *	active on the channel to receive MIMO transmissions
+  * @rx_chains_dynamic: The number of RX chains that must be enabled
+@@ -264,6 +265,7 @@ struct ieee80211_chanctx_conf {
+ 	struct cfg80211_chan_def min_def;
+ 	struct cfg80211_chan_def ap;
  
-+#ifdef CONFIG_TRACEPOINTS
-+const char *drop_reason_lookup(unsigned long long value);
-+void drop_reason_show(struct seq_file *m);
-+#endif
-+
- void drop_reasons_register_subsys(enum skb_drop_reason_subsys subsys,
- 				  const struct drop_reason_list *list);
- void drop_reasons_unregister_subsys(enum skb_drop_reason_subsys subsys);
-diff --git a/include/trace/events/skb.h b/include/trace/events/skb.h
-index 07e0715628ec..8a1a63f9e796 100644
---- a/include/trace/events/skb.h
-+++ b/include/trace/events/skb.h
-@@ -8,15 +8,9 @@
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
- #include <linux/tracepoint.h>
-+#include <net/dropreason.h>
++	int radio_idx;
+ 	u8 rx_chains_static, rx_chains_dynamic;
  
--#undef FN
--#define FN(reason)	TRACE_DEFINE_ENUM(SKB_DROP_REASON_##reason);
--DEFINE_DROP_REASON(FN, FN)
--
--#undef FN
--#undef FNe
--#define FN(reason)	{ SKB_DROP_REASON_##reason, #reason },
--#define FNe(reason)	{ SKB_DROP_REASON_##reason, #reason }
-+TRACE_DEFINE_SYM_FNS(drop_reason, drop_reason_lookup, drop_reason_show);
+ 	bool radar_enabled;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index ec16d7676088..574ae961a7cf 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -638,7 +638,8 @@ ieee80211_chanctx_radar_required(struct ieee80211_local *local,
+ static struct ieee80211_chanctx *
+ ieee80211_alloc_chanctx(struct ieee80211_local *local,
+ 			const struct ieee80211_chan_req *chanreq,
+-			enum ieee80211_chanctx_mode mode)
++			enum ieee80211_chanctx_mode mode,
++			int radio_idx)
+ {
+ 	struct ieee80211_chanctx *ctx;
  
- /*
-  * Tracepoint for free an sk_buff:
-@@ -44,13 +38,9 @@ TRACE_EVENT(kfree_skb,
+@@ -656,6 +657,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
+ 	ctx->conf.rx_chains_dynamic = 1;
+ 	ctx->mode = mode;
+ 	ctx->conf.radar_enabled = false;
++	ctx->conf.radio_idx = radio_idx;
+ 	_ieee80211_recalc_chanctx_min_def(local, ctx, NULL);
  
- 	TP_printk("skbaddr=%p protocol=%u location=%pS reason: %s",
- 		  __entry->skbaddr, __entry->protocol, __entry->location,
--		  __print_symbolic(__entry->reason,
--				   DEFINE_DROP_REASON(FN, FNe)))
-+		  __print_sym(__entry->reason, drop_reason ))
- );
+ 	return ctx;
+@@ -696,7 +698,7 @@ ieee80211_new_chanctx(struct ieee80211_local *local,
  
--#undef FN
--#undef FNe
--
- TRACE_EVENT(consume_skb,
+ 	lockdep_assert_wiphy(local->hw.wiphy);
  
- 	TP_PROTO(struct sk_buff *skb, void *location),
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 466999a7515e..cd1ea6c3e0f8 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -145,6 +145,49 @@ drop_reasons_by_subsys[SKB_DROP_REASON_SUBSYS_NUM] = {
- };
- EXPORT_SYMBOL(drop_reasons_by_subsys);
+-	ctx = ieee80211_alloc_chanctx(local, chanreq, mode);
++	ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
  
-+#ifdef CONFIG_TRACEPOINTS
-+const char *drop_reason_lookup(unsigned long long value)
-+{
-+	unsigned long long subsys_id = value >> SKB_DROP_REASON_SUBSYS_SHIFT;
-+	u32 reason = value & ~SKB_DROP_REASON_SUBSYS_MASK;
-+	const struct drop_reason_list *subsys;
-+
-+	if (subsys_id >= SKB_DROP_REASON_SUBSYS_NUM)
-+		return NULL;
-+
-+	subsys = rcu_dereference(drop_reasons_by_subsys[subsys_id]);
-+	if (!subsys)
-+		return NULL;
-+	if (reason >= subsys->n_reasons)
-+		return NULL;
-+	return subsys->reasons[reason];
-+}
-+
-+void drop_reason_show(struct seq_file *m)
-+{
-+	u32 subsys_id;
-+
-+	rcu_read_lock();
-+	for (subsys_id = 0; subsys_id < SKB_DROP_REASON_SUBSYS_NUM; subsys_id++) {
-+		const struct drop_reason_list *subsys;
-+		u32 i;
-+
-+		subsys = rcu_dereference(drop_reasons_by_subsys[subsys_id]);
-+		if (!subsys)
-+			continue;
-+
-+		for (i = 0; i < subsys->n_reasons; i++) {
-+			if (!subsys->reasons[i])
-+				continue;
-+			seq_printf(m, ", { %u, \"%s\" }",
-+				   (subsys_id << SKB_DROP_REASON_SUBSYS_SHIFT) | i,
-+				   subsys->reasons[i]);
-+		}
-+	}
-+	rcu_read_unlock();
-+}
-+#endif
-+
- /**
-  * drop_reasons_register_subsys - register another drop reason subsystem
-  * @subsys: the subsystem to register, must not be the core
+@@ -1126,7 +1128,7 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 			    !list_empty(&curr_ctx->reserved_links))
+ 				return -EBUSY;
+ 
+-			new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode);
++			new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
+ 			if (!new_ctx)
+ 				return -ENOMEM;
+ 
 -- 
-2.45.2
-
+git-series 0.9.1
