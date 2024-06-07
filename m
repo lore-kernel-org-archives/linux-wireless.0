@@ -1,45 +1,45 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC3C19A29A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DCED19A2A8
 	for <linux-wireless@vger.kernel.org>; Fri,  7 Jun 2024 16:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717776357; cv=none; b=R5jQGm1G/z8eIw9UIlCuPxNtbVOQdlGbNLssBScIk3fmlsiv6p5+7fpJlnOG4rD8lIevOUE/ioyKLFiA0vmvvElLidFpFZEhdg/9IptX0dT6fDd45rCQhdvNbSvOQA8G8fBh9Vu3r/3dDzEtYPwfow7oQuuRF/rP7idr7oYCkRs=
+	t=1717776358; cv=none; b=Z1RglSe5aZ1lJqef39XrMIPMoM7kktkfQFWDeUs/ew1t8NHijzg4S97DdYOhTBetSaAtk0VKKUH4RzHJqFmA3XmNc6SzdYTpPfpJscXdyUEGUTh+LQvQhbZi8z0q2BV/7ZXHcaZOT36J8kTehMrVftIMInEOxo3Rq7Ct3HRO0NI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717776357; c=relaxed/simple;
-	bh=khs6sI6vGHhttbCx7S1NAQ3eqV42Luwwh4uqPQwN1IU=;
+	s=arc-20240116; t=1717776358; c=relaxed/simple;
+	bh=Eo5hwNf1jpd2lF8Ue4dQR4kcHfkFnUxOjriSsc+hC90=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BJPFVkIzLblh2GiHlsemv+3AyW9/ajeylXJ0tiXySrpH+ZqTfePvFxZbBcwGD8riD+U/DjJMV90B+NuEwdqmGPqCHVffoIAEc942Fm8P56dhRRcdCzuuiZ3SYqe/l5fDiJaiX6tDzoUq6stTAV+/QVKuFIun7TPtXwZKuPpFPWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ryWBETr/; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=jnlCFrpaI/nu7W68z0EnM/Ox/T7X/IGIh9alhC8mzbQS3zuY7vR1UP7YdG8fcTyl0yfRe9PnihUEfdbc/2d6ZZt+MsVf2F4XosNasbdwlsMe4mU946s6hP5bJ/pWO3g1nvt5weXhlVnDPZzf/ZbArXLcxhfytcJ3joL/WavblHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=f2cO4n8d; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ryWBETr/"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="f2cO4n8d"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=mssQG0ePFtkfU1+YGOVKXuRtNO6XYOyVvFzpGYrXr5o=; b=ryWBETr/c6sMEhUCAjnJgN7ML9
-	UGNEWEaTLw2nQfvObCg9HXjkAkCTNoGCvWFc9ZS9iufyaeKDjhh/GSNpQu7XMQ8S2XjxyVgJAeb+9
-	v665Ds3nFwyVCNeQhar27q7yaRjFhYdyOq7G57FoBFuzUZ6xtvJIsc6zjjz2ETTnjJBU=;
+	bh=34pDim3q98b+di9DArDJuxpv+10vrgDHS+iLBvplmv0=; b=f2cO4n8dkIQHPI+U9ztWTitSRC
+	Izf7H7d56GfoFWK9lPjXk7/Faidah4mQOVVGIG0K9Se1kNkoY6Tt2shSI6yv/DapHQB60Mf/YxWIa
+	sFON/TSL7XArXmhaB54M81wXQ7tCzfFlG7RYnYZO6EQjazi7ZWni4LxU3KKBCm62O434=;
 Received: from p4ff13226.dip0.t-ipconnect.de ([79.241.50.38] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sFc6A-008xPc-1t;
-	Fri, 07 Jun 2024 18:05:50 +0200
+	id 1sFc6B-008xPc-0I;
+	Fri, 07 Jun 2024 18:05:51 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	quic_adisi@quicinc.com,
 	quic_periyasa@quicinc.com,
 	ath12k@lists.infradead.org
-Subject: [RFC v4 3/9] wifi: cfg80211: extend interface combination check for multi-radio
-Date: Fri,  7 Jun 2024 18:05:42 +0200
-Message-ID: <3399aac5c576f1ffcf5375b33e1692cfdad8e097.1717776325.git-series.nbd@nbd.name>
+Subject: [RFC v4 5/9] wifi: mac80211: add support for DFS with multiple radios
+Date: Fri,  7 Jun 2024 18:05:44 +0200
+Message-ID: <31b407a1a07356e0335dd2604c507f65ddab9615.1717776325.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.0af6292ae793f7b9927ab6583791b58daedc9104.1717776325.git-series.nbd@nbd.name>
 References: <cover.0af6292ae793f7b9927ab6583791b58daedc9104.1717776325.git-series.nbd@nbd.name>
@@ -51,206 +51,66 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a field in struct iface_combination_params to check per-radio
-interface combinations instead of per-wiphy ones.
+DFS can be supported with multi-channel combinations, as long as each DFS
+capable radio only supports one channel.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/cfg80211.h  |  4 ++++
- net/mac80211/util.c     |  5 ++++-
- net/wireless/rdev-ops.h | 17 +++++++++++++++++
- net/wireless/trace.h    |  5 +++++
- net/wireless/util.c     | 33 ++++++++++++++++++++++++++-------
- 5 files changed, 56 insertions(+), 8 deletions(-)
+ net/mac80211/main.c | 32 ++++++++++++++++++++++++--------
+ 1 file changed, 24 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8a9ef59413d8..307b77e166c1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1595,6 +1595,7 @@ struct cfg80211_color_change_settings {
-  *
-  * Used to pass interface combination parameters
-  *
-+ * @radio_idx: wiphy radio index or -1 for global
-  * @num_different_channels: the number of different channels we want
-  *	to use for verification
-  * @radar_detect: a bitmap where each bit corresponds to a channel
-@@ -1608,6 +1609,7 @@ struct cfg80211_color_change_settings {
-  *	the verification
-  */
- struct iface_combination_params {
-+	int radio_idx;
- 	int num_different_channels;
- 	u8 radar_detect;
- 	int iftype_num[NUM_NL80211_IFTYPES];
-@@ -4577,6 +4579,7 @@ struct mgmt_frame_regs {
-  *
-  * @set_hw_timestamp: Enable/disable HW timestamping of TM/FTM frames.
-  * @set_ttlm: set the TID to link mapping.
-+ * @get_radio_mask: get bitmask of radios in use
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -4938,6 +4941,7 @@ struct cfg80211_ops {
- 				    struct cfg80211_set_hw_timestamp *hwts);
- 	int	(*set_ttlm)(struct wiphy *wiphy, struct net_device *dev,
- 			    struct cfg80211_ttlm_params *params);
-+	u32	(*get_radio_mask)(struct wiphy *wiphy, struct net_device *dev);
- };
- 
- /*
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 927f752a0209..0d2927e53114 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3940,6 +3940,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 	int total = 1;
- 	struct iface_combination_params params = {
- 		.radar_detect = radar_detect,
-+		.radio_idx = -1,
- 	};
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
-@@ -4030,7 +4031,9 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
- 	struct ieee80211_chanctx *ctx;
- 	u32 max_num_different_channels = 1;
- 	int err;
--	struct iface_combination_params params = {0};
-+	struct iface_combination_params params = {
-+		.radio_idx = -1,
-+	};
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 43897a5269b6..56ac6410f4b0 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1542,4 +1542,21 @@ rdev_set_ttlm(struct cfg80211_registered_device *rdev,
- 
- 	return ret;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 40fbf397ce74..e9c4cf611e94 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1084,6 +1084,21 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 	return 0;
  }
-+
-+static inline u32
-+rdev_get_radio_mask(struct cfg80211_registered_device *rdev,
-+		    struct net_device *dev)
+ 
++static bool
++ieee80211_ifcomb_check_radar(const struct ieee80211_iface_combination *comb,
++			     int n_comb)
 +{
-+	struct wiphy *wiphy = &rdev->wiphy;
-+	u32 ret;
++	int i;
 +
-+	if (!rdev->ops->get_radio_mask)
-+		return 0;
++	/* DFS is not supported with multi-channel combinations yet */
++	for (i = 0; i < n_comb; i++, comb++)
++		if (comb->radar_detect_widths &&
++		    comb->num_different_channels > 1)
++			return false;
 +
-+	trace_rdev_get_radio_mask(wiphy, dev);
-+	ret = rdev->ops->get_radio_mask(wiphy, dev);
-+	trace_rdev_return_int(wiphy, ret);
-+
-+	return ret;
++	return true;
 +}
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 14cfa0aba93a..12081e81f9c5 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -4081,6 +4081,11 @@ TRACE_EVENT(cfg80211_links_removed,
- 		  __entry->link_mask)
- );
- 
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_get_radio_mask,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
 +
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 2bde8a354631..3da04ceb6054 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -2305,13 +2305,16 @@ static int cfg80211_wdev_bi(struct wireless_dev *wdev)
- 
- static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
- 				       u32 *beacon_int_gcd,
--				       bool *beacon_int_different)
-+				       bool *beacon_int_different,
-+				       int radio_idx)
+ int ieee80211_register_hw(struct ieee80211_hw *hw)
  {
-+	struct cfg80211_registered_device *rdev;
- 	struct wireless_dev *wdev;
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -1173,17 +1188,18 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 			if (comb->num_different_channels > 1)
+ 				return -EINVAL;
+ 		}
+-	} else {
+-		/* DFS is not supported with multi-channel combinations yet */
+-		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
+-			const struct ieee80211_iface_combination *comb;
+-
+-			comb = &local->hw.wiphy->iface_combinations[i];
++	} else if (hw->wiphy->n_radio) {
++		for (i = 0; i < hw->wiphy->n_radio; i++) {
++			const struct wiphy_radio *radio = &hw->wiphy->radio[i];
  
- 	*beacon_int_gcd = 0;
- 	*beacon_int_different = false;
- 
-+	rdev = wiphy_to_rdev(wiphy);
- 	list_for_each_entry(wdev, &wiphy->wdev_list, list) {
- 		int wdev_bi;
- 
-@@ -2319,6 +2322,11 @@ static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
- 		if (wdev->valid_links)
- 			continue;
- 
-+		/* skip wdevs not active on the given wiphy radio */
-+		if (radio_idx >= 0 &&
-+		    !(rdev_get_radio_mask(rdev, wdev->netdev) & BIT(radio_idx)))
-+			continue;
-+
- 		wdev_bi = cfg80211_wdev_bi(wdev);
- 
- 		if (!wdev_bi)
-@@ -2366,14 +2374,19 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
- 					    void *data),
- 			       void *data)
- {
-+	const struct wiphy_radio *radio = NULL;
-+	const struct ieee80211_iface_combination *c, *cs;
- 	const struct ieee80211_regdomain *regdom;
- 	enum nl80211_dfs_regions region = 0;
--	int i, j, iftype;
-+	int i, j, n, iftype;
- 	int num_interfaces = 0;
- 	u32 used_iftypes = 0;
- 	u32 beacon_int_gcd;
- 	bool beacon_int_different;
- 
-+	if (params->radio_idx >= 0)
-+		radio = &wiphy->radio[params->radio_idx];
-+
- 	/*
- 	 * This is a bit strange, since the iteration used to rely only on
- 	 * the data given by the driver, but here it now relies on context,
-@@ -2385,7 +2398,8 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
- 	 * interfaces (while being brought up) and channel/radar data.
- 	 */
- 	cfg80211_calculate_bi_data(wiphy, params->new_beacon_int,
--				   &beacon_int_gcd, &beacon_int_different);
-+				   &beacon_int_gcd, &beacon_int_different,
-+				   params->radio_idx);
- 
- 	if (params->radar_detect) {
- 		rcu_read_lock();
-@@ -2402,13 +2416,18 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
- 			used_iftypes |= BIT(iftype);
+-			if (comb->radar_detect_widths &&
+-			    comb->num_different_channels > 1)
++			if (!ieee80211_ifcomb_check_radar(radio->iface_combinations,
++							  radio->n_iface_combinations))
+ 				return -EINVAL;
+ 		}
++	} else {
++		if (!ieee80211_ifcomb_check_radar(hw->wiphy->iface_combinations,
++						  hw->wiphy->n_iface_combinations))
++			return -EINVAL;
  	}
  
--	for (i = 0; i < wiphy->n_iface_combinations; i++) {
--		const struct ieee80211_iface_combination *c;
-+	if (radio) {
-+		cs = radio->iface_combinations;
-+		n = radio->n_iface_combinations;
-+	} else {
-+		cs = wiphy->iface_combinations;
-+		n = wiphy->n_iface_combinations;
-+	}
-+	for (i = 0; i < n; i++) {
- 		struct ieee80211_iface_limit *limits;
- 		u32 all_iftypes = 0;
- 
--		c = &wiphy->iface_combinations[i];
--
-+		c = &cs[i];
- 		if (num_interfaces > c->max_interfaces)
- 			continue;
- 		if (params->num_different_channels > c->num_different_channels)
+ 	/* Only HW csum features are currently compatible with mac80211 */
 -- 
 git-series 0.9.1
