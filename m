@@ -1,46 +1,46 @@
 Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CE47603F;
-	Sun,  9 Jun 2024 18:22:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1DE177119;
+	Sun,  9 Jun 2024 18:23:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717957381; cv=none; b=Oq5CwOxZgMHkITt4y5zoMgxF12UAq7A5Qq/e0X7EltVVvYThMP6qAWqs6m98dwgGx55htMB2dMB7GEm0vsw4UfPEj61je7F5MuksEWZ7+fnU9+iPpyTmNfd77SYcw1WW8bcDj2s+uqwrHmmcagQh0HEJ8oRZG0zBjzIi4VOmvSs=
+	t=1717957383; cv=none; b=HQos14JwIQTANUJvah9Wt4HRuW3BrTNOnWWA3YJSVZxGsIYGgt77PknZDu4ILCw9VKnsl/pbVgv60/qh1jrORxdjWr7IXwUHtzBz0Wat45hJNSMy89/1pTExQyJkRp4w8Rmaos8UUMceGlFkeKEB1h3fnAYO4m1UbSjiEUrxeio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717957381; c=relaxed/simple;
-	bh=i8K3Ux3Z/cBupX2WMMCK5fZqPW621c1mS4TOzZjAAWE=;
+	s=arc-20240116; t=1717957383; c=relaxed/simple;
+	bh=LUbU/n1NgxZ9o/jU5VEawfYCrXStZSvnsTlPEXFfBns=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=h+YSDgBvCg1te7OZRt4R0oPxUPCM22Byf0h9uCMku9870VCNum0wfjJAbs4XfO35ROGxgSrM/JOKRgz9PbC38kYE5xLH7ITok76dx1fsmxqArrl1JzKjg3DbgrFAyw0yktXDptYJrpL+wtI/ajG4gawwpcuHc5g0XV+94TF7P5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Wzy7dMNm; arc=none smtp.client-ip=198.47.19.142
+	 MIME-Version:Content-Type; b=ky1EPtBuEHSOUK3k8KuNJrGI8zmUj3+b+QZjC/jvSiGr6LQNmT3t9x1WsDUNUWKXMzUZ3rwDdDV2uoR/rg4jDz2GfGcgYI9otJ/eCRptyiWkqDp+I6dWELwueQodjAJczoVZjw4yvZ2paTlkr+o9u7Ftx2Se2X55X8ydCU4+5Mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=JuV+GcOk; arc=none smtp.client-ip=198.47.19.142
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Wzy7dMNm"
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 459IMpvT075158;
-	Sun, 9 Jun 2024 13:22:51 -0500
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="JuV+GcOk"
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 459IMsKs075169;
+	Sun, 9 Jun 2024 13:22:54 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1717957371;
-	bh=YKpb1uxx/sJKyGxHuWsphCI/VgLTO2hem/+/azo+pdE=;
+	s=ti-com-17Q1; t=1717957374;
+	bh=InTJKlyp+itq7Bv0Xtt9P8tR0I50sqpUNLEMeR7dXDU=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=Wzy7dMNmyPBtiNn85Lh9eb9PGSouacVQeWms1E6PiPF3x5z6NWOM5BdJQBDK4VYvw
-	 MKUJX81gU2EaUxJh3ZVSC+qiFTCYMIRLzCU5PX5MI05A5lyTaB/XB/fce8nj1fsKUd
-	 vY+tFxO1dBHk0Yp1RHg4VLBoIF7XzG7DiVRa7nr8=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 459IMpKn053617
+	b=JuV+GcOkQluj7XZH9rYVK9ZfG1a/q0Vl8sHO2sxNWAcixCSdyQ1DWhFglqEYgeyeI
+	 tf1/J8nhwI3l3w56wSVF4VzSZxVuZZLCRYRUxPY1e7u4meMDOggUSCVwwpUyC1B0Ny
+	 G57QBLl0rCmamBE29zrzQnEWu4jE+k2AwiaZuDhQ=
+Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
+	by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 459IMsCm058855
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Sun, 9 Jun 2024 13:22:51 -0500
-Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+	Sun, 9 Jun 2024 13:22:54 -0500
+Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Sun, 9
- Jun 2024 13:22:51 -0500
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
+ Jun 2024 13:22:54 -0500
+Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE110.ent.ti.com
+ (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Sun, 9 Jun 2024 13:22:51 -0500
+ Frontend Transport; Sun, 9 Jun 2024 13:22:54 -0500
 Received: from localhost (uda0389739.dhcp.ti.com [137.167.1.114])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 459IMoBo067823;
-	Sun, 9 Jun 2024 13:22:50 -0500
+	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 459IMr0t034788;
+	Sun, 9 Jun 2024 13:22:53 -0500
 From: <michael.nemanov@ti.com>
 To: Sabeeh Khan <sabeeh-khan@ti.com>, Kalle Valo <kvalo@kernel.org>,
         Johannes
@@ -56,9 +56,9 @@ CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Michael Nemanov
 	<Michael.Nemanov@ti.com>
-Subject: [PATCH v2 14/17] wifi: cc33xx: Add ps.c, ps.h
-Date: Sun, 9 Jun 2024 21:20:59 +0300
-Message-ID: <20240609182102.2950457-15-michael.nemanov@ti.com>
+Subject: [PATCH v2 16/17] wifi: cc33xx: Add Kconfig, Makefile Integrate cc33xx into wireless/ti folder
+Date: Sun, 9 Jun 2024 21:21:01 +0300
+Message-ID: <20240609182102.2950457-17-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240609182102.2950457-1-michael.nemanov@ti.com>
 References: <20240609182102.2950457-1-michael.nemanov@ti.com>
@@ -74,160 +74,83 @@ X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
 From: Michael Nemanov <Michael.Nemanov@ti.com>
 
-80211 power-save modes are handled automictically by HW but
-can be overridden here.
 ---
- drivers/net/wireless/ti/cc33xx/ps.c | 117 ++++++++++++++++++++++++++++
- drivers/net/wireless/ti/cc33xx/ps.h |  16 ++++
- 2 files changed, 133 insertions(+)
- create mode 100644 drivers/net/wireless/ti/cc33xx/ps.c
- create mode 100644 drivers/net/wireless/ti/cc33xx/ps.h
+ drivers/net/wireless/ti/Kconfig         |  1 +
+ drivers/net/wireless/ti/Makefile        |  1 +
+ drivers/net/wireless/ti/cc33xx/Kconfig  | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/Makefile | 10 ++++++++++
+ 4 files changed, 36 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/cc33xx/Kconfig
+ create mode 100644 drivers/net/wireless/ti/cc33xx/Makefile
 
-diff --git a/drivers/net/wireless/ti/cc33xx/ps.c b/drivers/net/wireless/ti/cc33xx/ps.c
+diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
+index 3fcd9e395f72..fa7214d6018c 100644
+--- a/drivers/net/wireless/ti/Kconfig
++++ b/drivers/net/wireless/ti/Kconfig
+@@ -14,6 +14,7 @@ if WLAN_VENDOR_TI
+ source "drivers/net/wireless/ti/wl1251/Kconfig"
+ source "drivers/net/wireless/ti/wl12xx/Kconfig"
+ source "drivers/net/wireless/ti/wl18xx/Kconfig"
++source "drivers/net/wireless/ti/cc33xx/Kconfig"
+ 
+ # keep last for automatic dependencies
+ source "drivers/net/wireless/ti/wlcore/Kconfig"
+diff --git a/drivers/net/wireless/ti/Makefile b/drivers/net/wireless/ti/Makefile
+index 05ee016594f8..9e028a91ec30 100644
+--- a/drivers/net/wireless/ti/Makefile
++++ b/drivers/net/wireless/ti/Makefile
+@@ -3,3 +3,4 @@ obj-$(CONFIG_WLCORE)			+= wlcore/
+ obj-$(CONFIG_WL12XX)			+= wl12xx/
+ obj-$(CONFIG_WL1251)			+= wl1251/
+ obj-$(CONFIG_WL18XX)			+= wl18xx/
++obj-$(CONFIG_CC33XX)			+= cc33xx/
+\ No newline at end of file
+diff --git a/drivers/net/wireless/ti/cc33xx/Kconfig b/drivers/net/wireless/ti/cc33xx/Kconfig
 new file mode 100644
-index 000000000000..e708ef8d5f46
+index 000000000000..0c3ff97dacc7
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/ps.c
-@@ -0,0 +1,117 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
-+ */
++++ b/drivers/net/wireless/ti/cc33xx/Kconfig
+@@ -0,0 +1,24 @@
++# SPDX-License-Identifier: GPL-2.0-only
++config CC33XX
++	tristate "TI CC33XX support"
++	depends on MAC80211
++	select FW_LOADER
++	help
++	  This module contains the main code for TI CC33XX WLAN chips. It abstracts
++	  hardware-specific differences among different chipset families.
++	  Each chipset family needs to implement its own lower-level module
++	  that will depend on this module for the common code.
 +
-+#include "ps.h"
-+#include "tx.h"
-+#include "debug.h"
++	  If you choose to build a module, it will be called cc33xx. Say N if
++	  unsure.
 +
-+int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
-+		       enum cc33xx_cmd_ps_mode_e mode)
-+{
-+	int ret;
-+	u16 timeout = cc->conf.host_conf.conn.dynamic_ps_timeout;
++config CC33XX_SDIO
++	tristate "TI CC33XX SDIO support"
++	depends on CC33XX && MMC
++	help
++	  This module adds support for the SDIO interface of adapters using
++	  TI CC33XX WLAN chipsets.  Select this if your platform is using
++	  the SDIO bus.
 +
-+	switch (mode) {
-+	case STATION_AUTO_PS_MODE:
-+	case STATION_POWER_SAVE_MODE:
-+		cc33xx_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
-+			     mode, timeout);
-+
-+		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, timeout);
-+		if (ret < 0)
-+			return ret;
-+
-+		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
-+		break;
-+
-+	case STATION_ACTIVE_MODE:
-+		cc33xx_debug(DEBUG_PSM, "leaving psm");
-+
-+		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, 0);
-+		if (ret < 0)
-+			return ret;
-+
-+		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
-+		break;
-+
-+	default:
-+		cc33xx_warning("trying to set ps to unsupported mode %d", mode);
-+		ret = -EINVAL;
-+	}
-+
-+	return ret;
-+}
-+
-+static void cc33xx_ps_filter_frames(struct cc33xx *cc, u8 hlid)
-+{
-+	int i;
-+	struct sk_buff *skb;
-+	struct ieee80211_tx_info *info;
-+	unsigned long flags;
-+	int filtered[NUM_TX_QUEUES];
-+	struct cc33xx_link *lnk = &cc->links[hlid];
-+
-+	/* filter all frames currently in the low level queues for this hlid */
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		filtered[i] = 0;
-+		while ((skb = skb_dequeue(&lnk->tx_queue[i]))) {
-+			filtered[i]++;
-+
-+			if (WARN_ON(cc33xx_is_dummy_packet(cc, skb)))
-+				continue;
-+
-+			info = IEEE80211_SKB_CB(skb);
-+			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-+			info->status.rates[0].idx = -1;
-+			ieee80211_tx_status_ni(cc->hw, skb);
-+		}
-+	}
-+
-+	spin_lock_irqsave(&cc->cc_lock, flags);
-+	for (i = 0; i < NUM_TX_QUEUES; i++) {
-+		cc->tx_queue_count[i] -= filtered[i];
-+		if (lnk->wlvif)
-+			lnk->wlvif->tx_queue_count[i] -= filtered[i];
-+	}
-+
-+	spin_unlock_irqrestore(&cc->cc_lock, flags);
-+	cc33xx_handle_tx_low_watermark(cc);
-+}
-+
-+void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
-+			  u8 hlid, bool clean_queues)
-+{
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_vif *vif = cc33xx_wlvif_to_vif(wlvif);
-+
-+	if (WARN_ON_ONCE(wlvif->bss_type != BSS_TYPE_AP_BSS))
-+		return;
-+
-+	if (!test_bit(hlid, wlvif->ap.sta_hlid_map) ||
-+	    test_bit(hlid, &cc->ap_ps_map))
-+		return;
-+
-+	cc33xx_debug(DEBUG_PSM,
-+		     "start mac80211 PSM on hlid %d pkts %d clean_queues %d",
-+		     hlid, cc->links[hlid].allocated_pkts, clean_queues);
-+
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, cc->links[hlid].addr);
-+	if (!sta) {
-+		cc33xx_error("could not find sta %pM for starting ps",
-+			     cc->links[hlid].addr);
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	ieee80211_sta_ps_transition_ni(sta, true);
-+	rcu_read_unlock();
-+
-+	/* do we want to filter all frames from this link's queues? */
-+	if (clean_queues)
-+		cc33xx_ps_filter_frames(cc, hlid);
-+
-+	__set_bit(hlid, &cc->ap_ps_map);
-+}
-diff --git a/drivers/net/wireless/ti/cc33xx/ps.h b/drivers/net/wireless/ti/cc33xx/ps.h
++	  If you choose to build a module, it'll be called cc33xx_sdio.
++	  Say N if unsure.
+diff --git a/drivers/net/wireless/ti/cc33xx/Makefile b/drivers/net/wireless/ti/cc33xx/Makefile
 new file mode 100644
-index 000000000000..47f65b684b52
+index 000000000000..6156f778edee
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/ps.h
-@@ -0,0 +1,16 @@
-+/* SPDX-License-Identifier: GPL-2.0-only
-+ *
-+ * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
-+ */
++++ b/drivers/net/wireless/ti/cc33xx/Makefile
+@@ -0,0 +1,10 @@
++# SPDX-License-Identifier: GPL-2.0
 +
-+#ifndef __PS_H__
-+#define __PS_H__
++cc33xx-objs		= main.o cmd.o io.o event.o tx.o rx.o ps.o acx.o \
++					boot.o init.o scan.o
 +
-+#include "acx.h"
++cc33xx_sdio-objs	= sdio.o
 +
-+int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
-+		       enum cc33xx_cmd_ps_mode_e mode);
-+void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
-+			  u8 hlid, bool clean_queues);
-+
-+#endif /* __PS_H__ */
++cc33xx-$(CONFIG_NL80211_TESTMODE)	+= testmode.o
++obj-$(CONFIG_CC33XX)				+= cc33xx.o
++obj-$(CONFIG_CC33XX_SDIO)			+= cc33xx_sdio.o
 -- 
 2.25.1
 
