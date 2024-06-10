@@ -1,51 +1,51 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 207456F2FA
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2024 08:52:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAF2871B48
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Jun 2024 08:52:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718009554; cv=none; b=D0Exfy7Pjy+xCZ11z6E8jF+SCJH79SQ+QF9zi0mKPJ2wM+tbUinWTduNb0jhM5yb9DuVPZ5u8+R1w3TzPOx6UOE+xfeub43usYXG/CG/WCCz+NstlyMQOck+cix5f/1Z8LIJ/JHPeWv4E7uV1vMEeSW0sOuxI0tVpPUAuCoTRVM=
+	t=1718009556; cv=none; b=BZmYNhXH6BKddFUE6Jj4woEc0pZupRGR1woUEetsOK1pAVW2UJyt7FFNzgklBZSIVii0xssGL5ZEmBglL00ZtU4LhFAgjb1lHbutUfz76iHe7xHGJ9oAV5cLgMxDK7f9ZhsLm1ZtK4wfJYHpGmSnNPh+M936mC0/ebSnsrUprwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718009554; c=relaxed/simple;
-	bh=bv82AK/TSwhf0dZo8VIDFGtc/80T1hRuP/nK89sGS1A=;
+	s=arc-20240116; t=1718009556; c=relaxed/simple;
+	bh=5uk4py0zQd49/zbzmnqUTilSfavER+71vZ+ohtjTp5Y=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nLeKjJDd9R2UQMLI1g1TZp90rivzMFpOlBwVoNTzCWb4VIbAzRSSpy8YAt2On2MVl2gZ7C9xTnJ8zBgOVUPxWNJohH4DS0SWEWv/tCPe4tydIj/80o5SDUPmygvb8C8PmXRi8jxHbMZChjDIx5daTpNX3E4icFBxnYxj31Fsf6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=hz/PpEcC; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=MwuCHh+F/BZ6C6d2QhoP6dYAATC6AEbPgRaUpNOLakzbf/McDMbwjg5KQ87KSom6FUEKe4NSCkCVbcFB+pvtAS0rEviLqoaUCRc++53E3HeUIyUMyvTAz+9mFlXuqDNDf5XIsIt+y31lwRCS1vd50ZF7U2LNaRBVSKyvewbUFZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nOEvfRpe; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hz/PpEcC"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45A0WKUT023208;
-	Mon, 10 Jun 2024 08:52:29 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nOEvfRpe"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45A1TUhl009443;
+	Mon, 10 Jun 2024 08:52:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=BpRzBf3DVLlS1zeEpZwpWni7
-	y4VPIeIi4vsDdkJyb8U=; b=hz/PpEcC5TNxeHDHOlNBk65arV3LhqYMHVguEaY3
-	xhxpqC6rvLIl+4Rjpr2wSvmlY/c5RR9y53xXXsSk1A9C2Dn2oiKF3XVW9d9OBOpm
-	wiWmfKUJN637TMH3dLFG/WlpjtM89Fo8DiOd7m0zbZISL9YV3PVyDz76d0q4UPRc
-	faxVkPUcLe9rYyVYGkKc28fvglB2N1Vorgu/Iavi8TgvndxHjb9KorxWbP1NNcjL
-	JDTIgCu1yDSrYzF9exZ7RAhmETE4ks7gjA7OAbIuW67vghg3Iddd/v9aDwBzoxYd
-	M1xbQj/tMAQ2oTMQuKZt7etzXmtEQ1du/fehoDueqPR7LQ==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymfcv2yd7-1
+	:references:subject:to; s=qcppdkim1; bh=bcEOGKzF42SpbJMqueOVKoiT
+	v+AX7FTQrXL1boUi1js=; b=nOEvfRpe/ijt7IrZO9nI8wl515RXL9Jf6gSU6aa4
+	leyTNWxJ2bAsnYNFd7x/orYOAE71m7BKmgoizrwKMxNO6w/JaCppR/VP97MgnbHZ
+	obwuxxyQMb47yUQPdzYn8/V46NYPcGjxkr9jI1scLshPuIWrIppDOmlwHulyYU7U
+	/ReEcA+IZnPDbyjrFAj8zMQPgaSglx1WEFTJlVrX+zzAGmXSaQKCexjTiIADVQ9i
+	E8iWqnb7sRGXHuzE/QND3dXXV3/4VDgkMwUf8ccFF0cffDJyX6mMXkJJSzMdcopa
+	zRbt7N5aw05WUzb0o25JtpLYQ9EM+YXRsUbmSiuVsBGiaA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymea6k1gg-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Jun 2024 08:52:28 +0000 (GMT)
+	Mon, 10 Jun 2024 08:52:31 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45A8qRQu029453
+	by NALASPPMTA02.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45A8qU6C019521
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Jun 2024 08:52:27 GMT
+	Mon, 10 Jun 2024 08:52:30 GMT
 Received: from hu-vjakkam-hyd.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 10 Jun 2024 01:52:24 -0700
+ 15.2.1544.9; Mon, 10 Jun 2024 01:52:28 -0700
 From: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>, <quic_vjakkam@quicinc.com>
-Subject: [PATCH 2/4] wifi: cfg80211: skip indicating signal for per-STA profile BSSs
-Date: Mon, 10 Jun 2024 14:22:02 +0530
-Message-ID: <1718009524-5579-3-git-send-email-quic_vjakkam@quicinc.com>
+Subject: [PATCH 4/4] wifi: cfg80211: make sure to process all per-STA profiles
+Date: Mon, 10 Jun 2024 14:22:04 +0530
+Message-ID: <1718009524-5579-5-git-send-email-quic_vjakkam@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1718009524-5579-1-git-send-email-quic_vjakkam@quicinc.com>
 References: <1718009524-5579-1-git-send-email-quic_vjakkam@quicinc.com>
@@ -60,101 +60,41 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: ZIvkvj7hYQbeXRgcAn-6kFwco2BdgBBx
-X-Proofpoint-GUID: ZIvkvj7hYQbeXRgcAn-6kFwco2BdgBBx
+X-Proofpoint-GUID: I8cGEHlLhSc2i-6W9KNfCGWvb1hrqZFe
+X-Proofpoint-ORIG-GUID: I8cGEHlLhSc2i-6W9KNfCGWvb1hrqZFe
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-06-10_02,2024-06-06_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 priorityscore=1501 malwarescore=0
- suspectscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405170001 definitions=main-2406100067
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ spamscore=0 phishscore=0 mlxlogscore=951 clxscore=1015 lowpriorityscore=0
+ malwarescore=0 suspectscore=0 adultscore=0 bulkscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405170001
+ definitions=main-2406100067
 
-Currently signal of the BSS entry generated from the per-STA profile
-indicated as zero, but userspace may consider it as high signal
-strength since 0 dBm is a valid RSSI value.
-
-To avoid this don't report the signal to userspace when the BSS entry
-created from a per-STA profile.
+Currently if BSS entry can't be created from any per-STA profile all
+subsequent per-STA profiles in the multi-link element are ignored,
+though they can generate valid BSS entries. To avoid this continue
+processing the remaining per-STA profiles in the multi-link element
+even if BSS entry not created from current per-STA profile.
 
 Signed-off-by: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
 ---
- net/wireless/core.h    |  2 ++
- net/wireless/nl80211.c | 26 +++++++++++++++-----------
- net/wireless/scan.c    |  2 ++
- 3 files changed, 19 insertions(+), 11 deletions(-)
+ net/wireless/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index a48df7cf..4281f85 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -197,6 +197,8 @@ struct cfg80211_internal_bss {
- 	 */
- 	u8 parent_bssid[ETH_ALEN] __aligned(2);
- 
-+	enum bss_source_type bss_source;
-+
- 	/* must be last because of priv member */
- 	struct cfg80211_bss pub;
- };
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8ff5f79..c0a8b35 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10373,17 +10373,21 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 				NL80211_BSS_CHAIN_SIGNAL))
- 		goto nla_put_failure;
- 
--	switch (rdev->wiphy.signal_type) {
--	case CFG80211_SIGNAL_TYPE_MBM:
--		if (nla_put_u32(msg, NL80211_BSS_SIGNAL_MBM, res->signal))
--			goto nla_put_failure;
--		break;
--	case CFG80211_SIGNAL_TYPE_UNSPEC:
--		if (nla_put_u8(msg, NL80211_BSS_SIGNAL_UNSPEC, res->signal))
--			goto nla_put_failure;
--		break;
--	default:
--		break;
-+	if (intbss->bss_source != BSS_SOURCE_STA_PROFILE) {
-+		switch (rdev->wiphy.signal_type) {
-+		case CFG80211_SIGNAL_TYPE_MBM:
-+			if (nla_put_u32(msg, NL80211_BSS_SIGNAL_MBM,
-+					res->signal))
-+				goto nla_put_failure;
-+			break;
-+		case CFG80211_SIGNAL_TYPE_UNSPEC:
-+			if (nla_put_u8(msg, NL80211_BSS_SIGNAL_UNSPEC,
-+				       res->signal))
-+				goto nla_put_failure;
-+			break;
-+		default:
-+			break;
-+		}
- 	}
- 
- 	switch (wdev->iftype) {
 diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 1fad019..2850718 100644
+index 37ebe5a..546758c 100644
 --- a/net/wireless/scan.c
 +++ b/net/wireless/scan.c
-@@ -1866,6 +1866,7 @@ cfg80211_update_known_bss(struct cfg80211_registered_device *rdev,
- 	known->pub.bssid_index = new->pub.bssid_index;
- 	known->pub.use_for &= new->pub.use_for;
- 	known->pub.cannot_use_reasons = new->pub.cannot_use_reasons;
-+	known->bss_source = new->bss_source;
+@@ -3046,7 +3046,7 @@ cfg80211_parse_ml_elem_sta_data(struct wiphy *wiphy,
  
- 	return true;
- }
-@@ -2206,6 +2207,7 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
- 	       IEEE80211_MAX_CHAINS);
- 	tmp.pub.use_for = data->use_for;
- 	tmp.pub.cannot_use_reasons = data->cannot_use_reasons;
-+	tmp.bss_source = data->bss_source;
+ 		bss = cfg80211_inform_single_bss_data(wiphy, &data, gfp);
+ 		if (!bss)
+-			break;
++			continue;
+ 		cfg80211_put_bss(wiphy, bss);
+ 	}
  
- 	switch (data->bss_source) {
- 	case BSS_SOURCE_MBSSID:
 -- 
 2.7.4
 
