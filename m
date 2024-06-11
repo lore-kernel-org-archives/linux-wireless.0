@@ -1,57 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BFA7E782
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 03:10:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF0C16F914
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 03:10:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718075454; cv=none; b=ceH9Cs6fFZTxSdbwNcphB7Qh3Gp5lAsB0AS55gdHgIwjHtQPwSI7PWtqQkaAErpYSOzCgjY2A8YYOjlOEgz1z2GD06n6G6IWFb0ZvKZ1J5V3Wvmp3duuchQBajdOR5f88RkXwk2tc8hSgRaZfB4vjKbDeyt+IpNI+9nacMQlcds=
+	t=1718075458; cv=none; b=mrRdHHrpQ95zSbTiHtvIYpTj9J2AH2T2xWBOuitazfsLm1lk1RjCdX6NDhPKIPZP75mBsT/0o51jIvUmLI166rOT+aktpe03z00dbtf95QUHuKTXIAMy5KSNvepSbwWoanpbKJNy1JTCwqeO2Zeb5VLV+k91QDbqEbEH5K1mGfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718075454; c=relaxed/simple;
-	bh=UEb+j/vp9Mo90Z92RzwtO1hw2r5rkxShLjX46JZahHM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NBK6hTeIUUhyKhlIEhb+MsahP1bC86K1/VUmDCe2P4wIgF2P4WashfQ0aQa8FdYAK+ENHQUxv2C1sXE00zcWZVeyxZ/Ne3SOw/558swrF5S0yV+kqVPJP8lVhmeCzZg+FK13X4p56DTK4rb+pboqCnNoixCx45tDZoHAKPbSZKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=m9VbVC9e; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1718075458; c=relaxed/simple;
+	bh=UNAN3rhffugfFSHJyzZ9LQi1Y4e7v4nL1o7cbxfWxh4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gmUmUbyUEhgP8BK2rrrFgD3V6kPW+ZSewvurO2pSCN3DQka/acISB6neM7xkoiEp2HitcGohtInP5Wluyq/UpeeeMwJ1A+1edjN5yokTeP/KOt5yjZO/u/vt4iwz6mMCfU4jUFd2uL1YLKRZBilf+SPn8xzsKGyuAh0fvAfThuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MuB6A/O1; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="m9VbVC9e"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45ADc7BL016993;
-	Tue, 11 Jun 2024 03:10:40 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MuB6A/O1"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45B2wjHY008531;
+	Tue, 11 Jun 2024 03:10:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lSF7K0QCk2FNSq7F2Me6ONaGFhu/zqjDbTFaln5NWy4=; b=m9VbVC9e7wVshOVq
-	cgm0kIrqPfqk+Z7jrJIpgDkJXTExsDM0R6YjW3oKHkFVtKuW7f1Ak6n76gnnzydM
-	0TWMHnyBUU1FVRqSuI6WRcoxX1x7TDUL+WX5N+3rzMbAHm07Lk21q4eOh58MWHbA
-	+TIMPyUg+rn5BvThlKt60TgeIYPxkVhAyJOFk3tI5kHZjZKov9k8b70cHjQb962J
-	MGFKYps4hJTat2OHgBGX0ZQNJufLVOdwIqrJxarb1JIKO2KmpqrujosRSqH7aAgR
-	ivXHiDUWSze5meXm/59jCW64OUlA2NOVJ+3XyC97KTO4QhERM+DJJKkVtwo5CS6h
-	PIDpxg==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymcnmw3yf-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=ECIsG8AncEKWI7bypJ/0x0
+	Kywyt4sB2Jj9/dj5Ywd4w=; b=MuB6A/O1YArrm4bZmALro1B70vpXtRjGXDtot5
+	31xDn6qNbVq57oyoJmk+/L1dMkEc5bIDIyNbquCec/lwQa8lN+J+sFZa5ZVUrb0b
+	wGGbs76Gx3zDuPFcoFxtg8MOI/pn9DLCJfIV8YtiqSyaoQ2sxDDtLfG4pablWeO1
+	JMKSIsU/EtkpKBhvg1AV7jHqs8ldMxvvpamENxUjd3UIhfgz2VP1YBpaT0Iu6mqU
+	rS4VFD1KdtlXahKWC4b2wBTIqpLYWzSMTjlA42x69VF9ClzexLziMDvdMEsD6Now
+	JRs5ejAk6JRd7RUKGWbBfA5Ag7aVcBql9LaGPs2lrVWI7geA==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ype9100jf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Jun 2024 03:10:40 +0000 (GMT)
+	Tue, 11 Jun 2024 03:10:53 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45B3AdWQ029283
+	by NASANPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45B3AZ4S013729
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Jun 2024 03:10:39 GMT
+	Tue, 11 Jun 2024 03:10:35 GMT
 Received: from hu-aarasahu-blr.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 10 Jun 2024 20:10:37 -0700
+ 15.2.1544.9; Mon, 10 Jun 2024 20:10:34 -0700
 From: Aaradhana Sahu <quic_aarasahu@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Aaradhana Sahu
 	<quic_aarasahu@quicinc.com>
-Subject: [PATCH 2/2] wifi: ath12k: fix uninitialize symbol error on ath12k_peer_assoc_h_he()
-Date: Tue, 11 Jun 2024 08:40:17 +0530
-Message-ID: <20240611031017.297927-3-quic_aarasahu@quicinc.com>
+Subject: [PATCH 0/2] wifi: ath12k: Fix the smatch error
+Date: Tue, 11 Jun 2024 08:40:15 +0530
+Message-ID: <20240611031017.297927-1-quic_aarasahu@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240611031017.297927-1-quic_aarasahu@quicinc.com>
-References: <20240611031017.297927-1-quic_aarasahu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,55 +60,30 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Q6auLuY8fWEc4VZMY1BHnILh4iavVYqO
-X-Proofpoint-ORIG-GUID: Q6auLuY8fWEc4VZMY1BHnILh4iavVYqO
+X-Proofpoint-GUID: nRak0mx027rWXt5hmCij8Tf5ydB7sPIa
+X-Proofpoint-ORIG-GUID: nRak0mx027rWXt5hmCij8Tf5ydB7sPIa
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-06-10_08,2024-06-10_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- impostorscore=0 clxscore=1015 adultscore=0 phishscore=0 spamscore=0
- priorityscore=1501 malwarescore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405170001 definitions=main-2406110022
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0 mlxscore=0
+ adultscore=0 priorityscore=1501 malwarescore=0 phishscore=0 bulkscore=0
+ clxscore=1011 mlxlogscore=592 impostorscore=0 suspectscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405170001
+ definitions=main-2406110024
 
-Smatch throws following errors
+This patch series fix the Smatch error in
+ath12k_mac_op_get_survey() and ath12k_peer_assoc_h_he().
 
-drivers/net/wireless/ath/ath12k/mac.c:1922 ath12k_peer_assoc_h_he() error: uninitialized symbol 'rx_mcs_80'.
-drivers/net/wireless/ath/ath12k/mac.c:1922 ath12k_peer_assoc_h_he() error: uninitialized symbol 'rx_mcs_160'.
-drivers/net/wireless/ath/ath12k/mac.c:1924 ath12k_peer_assoc_h_he() error: uninitialized symbol 'rx_mcs_80'.
+Aaradhana Sahu (2):
+  wifi: ath12k: fix NULL pointer access in ath12k_mac_op_get_survey()
+  wifi: ath12k: fix uninitialize symbol error on
+    ath12k_peer_assoc_h_he()
 
-In ath12k_peer_assoc_h_he() rx_mcs_80 and rx_mcs_160 variables
-remain uninitialized in the following conditions:
-1. Whenever the value of mcs_80 become equal to
-   IEEE80211_HE_MCS_NOT_SUPPORTED then rx_mcs_80 remains uninitialized.
-2. Whenever phy capability is not supported 160 channel width and
-   value of mcs_160 become equal to IEEE80211_HE_MCS_NOT_SUPPORTED
-   then rx_mcs_160 remains uninitialized.
+ drivers/net/wireless/ath/ath12k/mac.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Initialize these variables during declaration.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00188-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 4fea411545bc..3f2fd32d2ed8 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -2050,7 +2050,9 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
- {
- 	const struct ieee80211_sta_he_cap *he_cap = &sta->deflink.he_cap;
- 	int i;
--	u8 ampdu_factor, rx_mcs_80, rx_mcs_160, max_nss;
-+	u8 ampdu_factor, max_nss;
-+	u8 rx_mcs_80 = IEEE80211_HE_MCS_NOT_SUPPORTED;
-+	u8 rx_mcs_160 = IEEE80211_HE_MCS_NOT_SUPPORTED;
- 	u16 mcs_160_map, mcs_80_map;
- 	bool support_160;
- 	u16 v;
+base-commit: a116bf2be795eb1db75fa6a48aa85c397be001a6
 -- 
 2.34.1
 
