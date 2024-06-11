@@ -1,177 +1,380 @@
-Received: from DEU01-FR2-obe.outbound.protection.outlook.com (mail-fr2deu01on2134.outbound.protection.outlook.com [40.107.135.134])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC33A173322
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 07:55:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.135.134
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718092532; cv=fail; b=ugBWijueAizXcm+Od1hHIAq6R+91kR3aJMMOSeEI0m1qHwFztBzB/dA1t9MZQ82S/jUe1bdFdFe6n2v4lUZ9enlUMaslNBaPSBYbQY4Eh97XS3Wz2QbZilBwCZmLHHImcFwAOkOu7z97pdRc8BXPcO7xNmDrrGKCPKUplhL1FIA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718092532; c=relaxed/simple;
-	bh=jll04c5g14r8o/RMwtPD8Je7JDoi/FOQt58d7DXo8Ms=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=qx1kGSrSGtv+mh7EWmE+lD9T4x7dWimSYouZ2PoSGwdvw2OKyn0oQg70LURuZl/paPnEbdS95CJhxjpEukwJYSoCPF4Dx5wx89Pit28+tzhYvAlu2bKJqTEhCi21/Wzhmo69WfzgNfHFYsmOoU86PwGIMeb/jrLstOpzdp4Me2Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=Softing.com; spf=pass smtp.mailfrom=Softing.com; dkim=pass (2048-bit key) header.d=softing.com header.i=@softing.com header.b=QrvZxhNA; arc=fail smtp.client-ip=40.107.135.134
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=Softing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=Softing.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D6B174EE2
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 08:34:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718094894; cv=none; b=SkjTHozq/D4CdZ7mnYOTEdrImJYM6yBJR6q/+FexT5s3DbdVbFWBXexG4NeR9O147Q7rT6zjhDTruRQ95k4AA4zk8FlHFdAXrjjL3HJkRndkRUOde+Rb7vXZXZ5hynaOD2onAKeuSQTGvAxr5zgjb77H1reP4hv2nbioiPdmZoU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718094894; c=relaxed/simple;
+	bh=nCJaf6UmrzeAQuMoiHAzQC7mOrq0vSo3dbJFSSykOw4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZAojCBp8mH4EB1onmp51vzsogszdJI1jvGCiWm7XU9LwLHFRmezj2UEw0h4JRaDIwB9S8cVnmY76CAsZnVDtjvEpaq6rLgM/rse/mGf7RBs2yxqc8EcAKiF2AVpbvV1z/y002z7+E8lncKpyEcfz2ck5tIKrzNWvs5jJpt+rt3E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pOnkP+sf; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=softing.com header.i=@softing.com header.b="QrvZxhNA"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RfahdZ77Qap5eAh7xJ9Fn112ostU/3PvZyRD3jQceTg0d/p3MVa5rQwjX00CzxbnoxndSVPnsMZvhEXP9DGPBkLB56v0Lz5Fnp7jJZ+YKQ0MwWIAYQ/xBnF53xoQ+F23AcMlbOQEFLR0BS48yY+k8kCF1jjgeJQv033GVY/kEeVlOsiSsmyAlC1uo0MeJP00uk1j9rkW/i3eNa3VoikvrqxiB/3j6VRiq28zTT5drB+sE8bT82oWo5JXb6YEf1slP1DhQzABZY6EcXwG39WUZV+CzHRWou1Ct0js3nA34Jd9oi5Q/lCjwcIfM7BChW9VqKme7lUkkVP3hNo/Dew7tQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jll04c5g14r8o/RMwtPD8Je7JDoi/FOQt58d7DXo8Ms=;
- b=KTljpEBP17d0cI0EwpWPCYDqzXATZTTnW9E7NdNBFXRCCf8UxnoxBB8glLPg7r9au9IOhjQxSlVOIh0CKgTbETiODP8OpsqFNHXaX2ibW5sRIkGQCnJ/fKwA/1iGb5r7AQOLUcEmWuoD/IwN+vbpg3hnM5sVJaHoYC71r67lRO86FfC1/rrM8eAFjreKU1tyHtrz1NDOwiO7YonsijVSMb4ZDpuzTevIGMcqvrpwcInSuVDf35nBY8t1DqOWggfkK0434dY+y7VEKgoSFxorYrSmsIx26s7Sj5LhEKGYBCEuoFgNab0h7QuEHpA+Cfeu8l8g53LAeT9IiPQvkYEtZQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=softing.com; dmarc=pass action=none header.from=softing.com;
- dkim=pass header.d=softing.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=softing.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jll04c5g14r8o/RMwtPD8Je7JDoi/FOQt58d7DXo8Ms=;
- b=QrvZxhNAwzidRcUHvqui6IVpjiQUN25g/1nY0xZ4AGPUGgW/igpdvoOIjYnYCAZm3RpneHYTyI0fTlV1hcoHlF1vTAKPilPl2kmep0+bgm/zWlOhK1R8OgcsXfHfC+GPN2M4AvFJN5s6ZqNLzQlNen8WMTuPThLnup6xrl9FLcFg+Z4YlPWZjx1b7F9deS25sHsqGnNpWpXOITziu7pSK+EvX9X2Itf+0BkfYOvjUK2uKz6q26P597A7ZTjrq1Nqcq4V1M859hlZaCq/3lrHqiyE9npq/BQtqOvYEvB2Ad+zeXDXOmU4KzmbA3wFuUofXQEham/3eG4Be1neoYBjPQ==
-Received: from BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM (2603:10a6:b10:43::7) by
- FR4P281MB4302.DEUP281.PROD.OUTLOOK.COM (2603:10a6:d10:127::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7677.17; Tue, 11 Jun 2024 07:55:25 +0000
-Received: from BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM
- ([fe80::8de2:b2ba:4092:939a]) by BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM
- ([fe80::8de2:b2ba:4092:939a%4]) with mapi id 15.20.7677.018; Tue, 11 Jun 2024
- 07:55:25 +0000
-From: "Sperling, Tobias" <Tobias.Sperling@Softing.com>
-To: Kalle Valo <kvalo@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "Le
- Suire, Michael" <Michael.Suire@Softing.com>, "pkshih@realtek.com"
-	<pkshih@realtek.com>, "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: wifi: mac80211: unencrypted message in 4-way handshake
-Thread-Topic: wifi: mac80211: unencrypted message in 4-way handshake
-Thread-Index: Adq7OqrIXwNmhc6ZT92PlJydhITGNgAAMsqAAAhs0lUAHeOR4A==
-Date: Tue, 11 Jun 2024 07:55:25 +0000
-Message-ID:
- <BE1P281MB2420928438977DCED644AFBAEFC72@BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM>
-References:
- <BE1P281MB24208AB02DAEACAE9AF4B5C5EFC62@BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM>
-	<BE1P281MB2420DA2C6AFF94E525306302EFC62@BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM>
- <87le3clmsz.fsf@kernel.org>
-In-Reply-To: <87le3clmsz.fsf@kernel.org>
-Accept-Language: de-DE, en-US
-Content-Language: de-DE
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=Softing.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: BE1P281MB2420:EE_|FR4P281MB4302:EE_
-x-ms-office365-filtering-correlation-id: 2d451329-8c5a-4e3c-b177-08dc89ebda9a
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230031|366007|376005|1800799015|38070700009;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?LY6PhqnPobqemhPktBHToh1MeuzMl4WWZqXlwFzehvt91qtZ2Cm2LNvbcTXx?=
- =?us-ascii?Q?2yx6mLW55eLWdDPaIis9HsL4GGQ881wy0/xZxqJhwpCkod6q2ENZpeioa3qB?=
- =?us-ascii?Q?MUPwQW0An/gMW0ay5G6STU6oIt0H/P0UmePvqYPGqCQWYUDcLSJYCcktPdQh?=
- =?us-ascii?Q?DLQeE9I8s4bM1dcy/U5T1tNgOACKD/5zqa8ygGoTuvh4kpw1gCmkFlRjIk6H?=
- =?us-ascii?Q?/nTeVCBxSmJirdc8RRX0YEElHdExZo+6xFdSMrqTn8cd27ObS8cDYQyhZJ5W?=
- =?us-ascii?Q?ziRvuhH5okqSm/kZ59/zYJVc37s+TX8ml0MOrmNypCe2sR5f6a/etTOBmkJg?=
- =?us-ascii?Q?W2gVMKtoRw8WdopXdumktFp7zT/U9wn/YSnG0YY12M2HpBz34fDK9ZrelrmJ?=
- =?us-ascii?Q?YucK33RPoYdQcRktaWCQ4jr8XPCgw97n9QjXqzthSjT4WwVuvosGAkkK41v2?=
- =?us-ascii?Q?s6W7L0dCD66Luuh1k+eGWk4pcMiotHaFEoLIs2JoB4dz2Pck0Wkedn7NPUDo?=
- =?us-ascii?Q?Hs79JXTt1LXOTwmBCCmNG0YbyDgApfg1mt0IVp+URoj/sPhImg8MVuJ8nWVA?=
- =?us-ascii?Q?/vtfcmOldn5lINta/OdkpP818e58sYK+Ze9TqCbKzJjwQqJRrdn0b1BhlFnd?=
- =?us-ascii?Q?jKXW3JKgKbNrPCGZMS4Z9yhhH+x87bplYLbMHOIw9xmFiDwAkiZhA00fceik?=
- =?us-ascii?Q?J7CteZ8bcSAvajnsceMoyVCMTx/JxzqujyPgU6rnoXh/UEv5/jIi5mqSbFs3?=
- =?us-ascii?Q?Jp3RIQ+zNmziTfpAJb780lmnVzuPBirYNRWiDJ6pq1rGJ2paGPahuLEtAjj8?=
- =?us-ascii?Q?HpEy5ZNeeBDGfdygQ/bZZF+jmFlahKkwShNwt9I5X+AucMw6kodneqCs19e2?=
- =?us-ascii?Q?NJnm6yHvF+sNOS7iAtxCmaPhdijWe2i+kpQiS50amZXM+EpW6u9/6Lbbx/6h?=
- =?us-ascii?Q?XpslB9tRXRK+MMlfEiH7nl8TKdk9aNguDkrECDmkKUtbIzvpsZcjw3CqpHtv?=
- =?us-ascii?Q?QjbcS62Xdr5z3vSDlrI4ypqoNoxcafgB8fOUpTqNeo9xXpqhmuBZ0DRcWVxH?=
- =?us-ascii?Q?Wea4VdGu9DFd1FXsk4uyoTXlD6RUirjMQEpADZt5jwn3mYqZTLAkf9wOATi4?=
- =?us-ascii?Q?Bt1BkM2NkFRyZfvAyOlBSBGOybDk9hu4nIHC7EsqjaPWdUH8baNzHEHLv1Mo?=
- =?us-ascii?Q?SxhpKBouT/JW9SKpUG0yAujPpdZI3+y/2uHexFWFw2s0wU31RTwDMTij+HGd?=
- =?us-ascii?Q?lNSOVMxGdTCqAqaxdIocKY3mdRFmUUPW0fFDJjOus98iMZqNTHkYSw6shK/k?=
- =?us-ascii?Q?80mPO/Y52Fr8Icenf91Amgw0JfuoGfACaaxp+Sf/dxRik+rFwvzmJspzaV2a?=
- =?us-ascii?Q?ZvhC65w=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015)(38070700009);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?0SsO2R1KRS2bXccLWg0I6EOsp0qfQ3RAjjbZz7cQ5sy1rBCiuEkaCsY3avW1?=
- =?us-ascii?Q?jhDLrL7B5xYtJHdA77HBEKGTYYYT6mnpKBme5UNc56ckCo1F3TfmCLo6SlXQ?=
- =?us-ascii?Q?Fr0E7pjisu+WfaSDMdWKwKcAZBJG/5gySrWa8Kp0B6remVUfykiPMvwDb6Mx?=
- =?us-ascii?Q?5l2cRWw69O3mDdDGn4BWN5saDSp/G89P6H2Seuh10nIf6UZ2arn3j8f07OHz?=
- =?us-ascii?Q?iPFv7WmTR4+L1aH1/Mwmyjz+P3Pbr6tC6BLWpVdgsfdufPH2t/Qn7tQXCmK0?=
- =?us-ascii?Q?g56PW32pACV9VJ9Q87kmLzTwkZDHwPrVrkCREAAH6Q6UOmKQj9y9o47aaUCb?=
- =?us-ascii?Q?AGXh2yABTyxNRAYpahnW6RN+qKwghS38TsrLHyPfQodFneTF5jyKlRCu9F/h?=
- =?us-ascii?Q?yD3g+8kUGrBWTvNfdxstz5PoOycZE9o1NXZICzvV/WDnsqlL6aWYozWoSjTz?=
- =?us-ascii?Q?GZLe1kmyERrCO188D+XkSg+d0C9cg9U8YDxQt6WZFWzGRW7Lwe82rphQVpaB?=
- =?us-ascii?Q?ERvBby5QVX6GRecfQQtvAtjxjWD5JvLNG7pz6PhxnHztoRth8RfrHz05PBTC?=
- =?us-ascii?Q?Q2SVFqj8GdMB3A+OuiNOYhTBZPmPzSvX0YKHArGg2/4xHYN+2bRq+B6KRlx+?=
- =?us-ascii?Q?mKjjBCFP+WGOGlEJtzlrFWojEie5n7+UxWZ6CKg23BfEiZxZyCO/tvB6YbvM?=
- =?us-ascii?Q?82+JFf5xHFlodGZ8ektTA22Tks0vNB2cJjb1J+Q0lgdx+Law3G5jjns/TUsS?=
- =?us-ascii?Q?R03MX77I4F11QtnJojJe9Iv45gTrjIfOXz3tAheKSCNMBuCIAGnCRp1VBq2M?=
- =?us-ascii?Q?fhDvoFl0a91xGha4b7ZbVCA59K/8seyEDweyBYcTdqO8jJjdKHkO2+07E6O5?=
- =?us-ascii?Q?c+5+rOnIl7SkC3TZb2+IglO/1CQwlsVKsaitzN89TAzNC3Dkd8fk2aAGPPHb?=
- =?us-ascii?Q?1/qaLd4nZQ45DXtqD+yQ2fmov4dLk7hkAonj/a+x69HosCwfktRyDr3eeBVY?=
- =?us-ascii?Q?w+YjedjzhGkLa+LlWX9MhPuKSclG/Ax48MbJTq9lyD8j8nOzDRluJ5dh82aU?=
- =?us-ascii?Q?xxotHVBzqDUBh5gBE09caYh1O+WAYGjizFBP1tOBPIzevctcuJO4L2mEhBqO?=
- =?us-ascii?Q?j2GCOAKvGtHTyqt8SvWxxPEfmWO9MXXgzVgaPiq99IgR/uReHs0q/katYl+M?=
- =?us-ascii?Q?x9AAglgzKSU1bYawi7c3ZuEbfaLp8gJ1KgzqBi8xPZX8uBvPO8cO873TS1Vp?=
- =?us-ascii?Q?WStTUSH8ETFfmZjQKgUNq4hlQoinXKaHviNfs1/NTrSiaADkk9YN7Yvjda23?=
- =?us-ascii?Q?jTu7821pPGX2gEyRULdwDLbgYg4EPlN6ivsNQkQwBhAgaTObIWfjVRN0cqf7?=
- =?us-ascii?Q?xwd8zKGKIwt9wl1XsnzQRrhf3lzWlpUdTI0mVaFv3EPI83DmZptDfeePJtOb?=
- =?us-ascii?Q?l8DTVXnTaaxglTy9KLQuSzUk165g3ldxpzASF41vO0WmDZSXH1iRpTlLtDMt?=
- =?us-ascii?Q?R3m/+BLHjRVMSx4fg14PfGAjLjiv+e95JWRcAkmTA4kW2lzwujR6WWUUd8Mj?=
- =?us-ascii?Q?eJJsEKQcxN/5f0/7ks2UzGiareZspiFZaJb51y+9z6RSHVih4zi4EFOrGLmY?=
- =?us-ascii?Q?GQ=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pOnkP+sf"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45B4lcKW025638;
+	Tue, 11 Jun 2024 08:34:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	1BJWrxkvZPclq2yoeXHq2sqrZrdT/tf7U112Bq2JHEg=; b=pOnkP+sf99K1Nd0k
+	/AsUwggr0NGaAg8uNkAnXEG0D1/nvZGrE/6GaNRswxmy6N51kX6GwOFd323X653h
+	LjGqnfITQBYBr1+3/DkUeKsVYDblg8jxjWiSOZSSqLemwKDI8km2ORaZ8D+n6TcI
+	fWTGEgPDQSJlktG5B5OyT12KI2gzPKNDxqQd+dark+x8s/PVV0+k8i7IGbe4iA4n
+	7BbbW/VJ2AoWy4TjqJbDOUAXFTrh+h+LvgCKbVnjh++lWXgX/5wuPPh84wcT8kcP
+	6HQ09OXybFI76Pk5JuvtRZG+/cyq7BHfs4y1LEQsnMiD8sbhajRmTtP9xut3Ggpw
+	UvpdiQ==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymgk8wvb3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 11 Jun 2024 08:34:47 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA04.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45B8YldO011503
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 11 Jun 2024 08:34:47 GMT
+Received: from hu-aarasahu-blr.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 11 Jun 2024 01:34:44 -0700
+From: Aaradhana Sahu <quic_aarasahu@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Aaradhana Sahu
+	<quic_aarasahu@quicinc.com>
+Subject: [PATCH v3 1/4] wifi: ath: create common testmode_i.h file for ath drivers
+Date: Tue, 11 Jun 2024 14:04:24 +0530
+Message-ID: <20240611083427.881443-2-quic_aarasahu@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240611083427.881443-1-quic_aarasahu@quicinc.com>
+References: <20240611083427.881443-1-quic_aarasahu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: softing.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BE1P281MB2420.DEUP281.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d451329-8c5a-4e3c-b177-08dc89ebda9a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jun 2024 07:55:25.7153
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: fe3606fa-d397-4238-9997-68dcd7851f64
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qEB/Ljs03V5DWCMUCgsLjd1hISOF1kz8rnlMOmpOA/WQ5Q7V+9bh8fYCvAFlCTu6t7Xe7s2Z8ZnT/UjotjzlD/SQG6M7H74xAzz6esiyY/8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: FR4P281MB4302
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: O5vovCWkHrjNcb3EaP8YJXc29TNjDUkp
+X-Proofpoint-ORIG-GUID: O5vovCWkHrjNcb3EaP8YJXc29TNjDUkp
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-11_04,2024-06-11_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 malwarescore=0
+ priorityscore=1501 suspectscore=0 spamscore=0 bulkscore=0 clxscore=1015
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406110063
 
-> > Hello,
-> >
-> > recently we moved from a 4.9 kernel to 5.4 kernel and observed the
-> > following issue. To rule out that the issue was already fixed we then
-> > tried it with a 6.6 kernel and observed the same issue there, too. To
-> > sum it up, the following issue can be observed with kernel 5.4 and 6.6
-> > but not with 4.9.
-> >
-> > We are using a Cisco AP with EWC (C9210) and EAP-PEAP as
-> > authentication method. Additionally, a session timeout is configured
-> > in the AP (300 s) after which a rekeying is taking place. So every 5
-> > minutes a new four-way handshake is taking place which usually is
-> > completely encrypted. However, while sniffing with an external device
-> > we saw that the fourth packet of the four-way handshake is send
-> > unencrypted by our clients, when it comes to EAP-PEAP. The first three
-> > packets are encrypted as expected. In case of the Cisco AP the attempt
-> > is then rejected with a 4WAY_HANDSHAKE_TIMEOUT leading to a
-> completely
-> > new authentication.
-> >
-> > On our clients we are using wpa_supplicant 2.10 with the same config
-> > on all kernels and therefore would rule out an issue in the
-> > supplicant, as it is working with the same supplicant in kernel 4.9.
-> > As driver we are using ath9k for QCA2066 (starting at kernel 4.9) and
->=20
-> QCA2066 with ath9k? ath9k is a driver for 802.11n hardware and QCA2066
-> is 802.11ax generation, how would that work?
+User space application requires that the testmode interface
+is exactly same between ath drivers. Move testmode_i.h file
+in ath directory to ensure that all ath driver uses same testmode
+interface instead of duplicating testmode_i.h for each ath drivers.
 
-Right, somehow I collected the wrong info for the ath9k driven device. Sorr=
-y
-about that. It's an AR958x adapter for the ath9k driver.
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00210-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
+---
+ drivers/net/wireless/ath/ath11k/testmode.c    | 78 +++++++++----------
+ .../wireless/ath/{ath11k => }/testmode_i.h    | 52 ++++++-------
+ 2 files changed, 65 insertions(+), 65 deletions(-)
+ rename drivers/net/wireless/ath/{ath11k => }/testmode_i.h (53%)
+
+diff --git a/drivers/net/wireless/ath/ath11k/testmode.c b/drivers/net/wireless/ath/ath11k/testmode.c
+index 302d66092b97..5d0680d4053d 100644
+--- a/drivers/net/wireless/ath/ath11k/testmode.c
++++ b/drivers/net/wireless/ath/ath11k/testmode.c
+@@ -10,18 +10,18 @@
+ #include "wmi.h"
+ #include "hw.h"
+ #include "core.h"
+-#include "testmode_i.h"
++#include "../testmode_i.h"
+ 
+ #define ATH11K_FTM_SEGHDR_CURRENT_SEQ		GENMASK(3, 0)
+ #define ATH11K_FTM_SEGHDR_TOTAL_SEGMENTS	GENMASK(7, 4)
+ 
+-static const struct nla_policy ath11k_tm_policy[ATH11K_TM_ATTR_MAX + 1] = {
+-	[ATH11K_TM_ATTR_CMD]		= { .type = NLA_U32 },
+-	[ATH11K_TM_ATTR_DATA]		= { .type = NLA_BINARY,
+-					    .len = ATH11K_TM_DATA_MAX_LEN },
+-	[ATH11K_TM_ATTR_WMI_CMDID]	= { .type = NLA_U32 },
+-	[ATH11K_TM_ATTR_VERSION_MAJOR]	= { .type = NLA_U32 },
+-	[ATH11K_TM_ATTR_VERSION_MINOR]	= { .type = NLA_U32 },
++static const struct nla_policy ath11k_tm_policy[ATH_TM_ATTR_MAX + 1] = {
++	[ATH_TM_ATTR_CMD]		= { .type = NLA_U32 },
++	[ATH_TM_ATTR_DATA]		= { .type = NLA_BINARY,
++					    .len = ATH_TM_DATA_MAX_LEN },
++	[ATH_TM_ATTR_WMI_CMDID]		= { .type = NLA_U32 },
++	[ATH_TM_ATTR_VERSION_MAJOR]	= { .type = NLA_U32 },
++	[ATH_TM_ATTR_VERSION_MINOR]	= { .type = NLA_U32 },
+ };
+ 
+ static struct ath11k *ath11k_tm_get_ar(struct ath11k_base *ab)
+@@ -73,9 +73,9 @@ static void ath11k_tm_wmi_event_unsegmented(struct ath11k_base *ab, u32 cmd_id,
+ 		goto out;
+ 	}
+ 
+-	if (nla_put_u32(nl_skb, ATH11K_TM_ATTR_CMD, ATH11K_TM_CMD_WMI) ||
+-	    nla_put_u32(nl_skb, ATH11K_TM_ATTR_WMI_CMDID, cmd_id) ||
+-	    nla_put(nl_skb, ATH11K_TM_ATTR_DATA, skb->len, skb->data)) {
++	if (nla_put_u32(nl_skb, ATH_TM_ATTR_CMD, ATH_TM_CMD_WMI) ||
++	    nla_put_u32(nl_skb, ATH_TM_ATTR_WMI_CMDID, cmd_id) ||
++	    nla_put(nl_skb, ATH_TM_ATTR_DATA, skb->len, skb->data)) {
+ 		ath11k_warn(ab, "failed to populate testmode unsegmented event\n");
+ 		kfree_skb(nl_skb);
+ 		goto out;
+@@ -140,7 +140,7 @@ static int ath11k_tm_process_event(struct ath11k_base *ab, u32 cmd_id,
+ 
+ 	data_pos = ab->testmode.data_pos;
+ 
+-	if ((data_pos + datalen) > ATH11K_FTM_EVENT_MAX_BUF_LENGTH) {
++	if ((data_pos + datalen) > ATH_FTM_EVENT_MAX_BUF_LENGTH) {
+ 		ath11k_warn(ab, "Invalid ftm event length at %d: %d\n",
+ 			    data_pos, datalen);
+ 		ret = -EINVAL;
+@@ -172,10 +172,10 @@ static int ath11k_tm_process_event(struct ath11k_base *ab, u32 cmd_id,
+ 		goto out;
+ 	}
+ 
+-	if (nla_put_u32(nl_skb, ATH11K_TM_ATTR_CMD,
+-			ATH11K_TM_CMD_WMI_FTM) ||
+-	    nla_put_u32(nl_skb, ATH11K_TM_ATTR_WMI_CMDID, cmd_id) ||
+-	    nla_put(nl_skb, ATH11K_TM_ATTR_DATA, data_pos,
++	if (nla_put_u32(nl_skb, ATH_TM_ATTR_CMD,
++			ATH_TM_CMD_WMI_FTM) ||
++	    nla_put_u32(nl_skb, ATH_TM_ATTR_WMI_CMDID, cmd_id) ||
++	    nla_put(nl_skb, ATH_TM_ATTR_DATA, data_pos,
+ 		    &ab->testmode.eventdata[0])) {
+ 		ath11k_warn(ab, "failed to populate segmented testmode event");
+ 		kfree_skb(nl_skb);
+@@ -235,23 +235,23 @@ static int ath11k_tm_cmd_get_version(struct ath11k *ar, struct nlattr *tb[])
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_TESTMODE,
+ 		   "cmd get version_major %d version_minor %d\n",
+-		   ATH11K_TESTMODE_VERSION_MAJOR,
+-		   ATH11K_TESTMODE_VERSION_MINOR);
++		   ATH_TESTMODE_VERSION_MAJOR,
++		   ATH_TESTMODE_VERSION_MINOR);
+ 
+ 	skb = cfg80211_testmode_alloc_reply_skb(ar->hw->wiphy,
+ 						nla_total_size(sizeof(u32)));
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	ret = nla_put_u32(skb, ATH11K_TM_ATTR_VERSION_MAJOR,
+-			  ATH11K_TESTMODE_VERSION_MAJOR);
++	ret = nla_put_u32(skb, ATH_TM_ATTR_VERSION_MAJOR,
++			  ATH_TESTMODE_VERSION_MAJOR);
+ 	if (ret) {
+ 		kfree_skb(skb);
+ 		return ret;
+ 	}
+ 
+-	ret = nla_put_u32(skb, ATH11K_TM_ATTR_VERSION_MINOR,
+-			  ATH11K_TESTMODE_VERSION_MINOR);
++	ret = nla_put_u32(skb, ATH_TM_ATTR_VERSION_MINOR,
++			  ATH_TESTMODE_VERSION_MINOR);
+ 	if (ret) {
+ 		kfree_skb(skb);
+ 		return ret;
+@@ -277,7 +277,7 @@ static int ath11k_tm_cmd_testmode_start(struct ath11k *ar, struct nlattr *tb[])
+ 		goto err;
+ 	}
+ 
+-	ar->ab->testmode.eventdata = kzalloc(ATH11K_FTM_EVENT_MAX_BUF_LENGTH,
++	ar->ab->testmode.eventdata = kzalloc(ATH_FTM_EVENT_MAX_BUF_LENGTH,
+ 					     GFP_KERNEL);
+ 	if (!ar->ab->testmode.eventdata) {
+ 		ret = -ENOMEM;
+@@ -310,25 +310,25 @@ static int ath11k_tm_cmd_wmi(struct ath11k *ar, struct nlattr *tb[],
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+-	if (!tb[ATH11K_TM_ATTR_DATA]) {
++	if (!tb[ATH_TM_ATTR_DATA]) {
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	if (!tb[ATH11K_TM_ATTR_WMI_CMDID]) {
++	if (!tb[ATH_TM_ATTR_WMI_CMDID]) {
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	buf = nla_data(tb[ATH11K_TM_ATTR_DATA]);
+-	buf_len = nla_len(tb[ATH11K_TM_ATTR_DATA]);
++	buf = nla_data(tb[ATH_TM_ATTR_DATA]);
++	buf_len = nla_len(tb[ATH_TM_ATTR_DATA]);
+ 	if (!buf_len) {
+ 		ath11k_warn(ar->ab, "No data present in testmode wmi command\n");
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	cmd_id = nla_get_u32(tb[ATH11K_TM_ATTR_WMI_CMDID]);
++	cmd_id = nla_get_u32(tb[ATH_TM_ATTR_WMI_CMDID]);
+ 
+ 	/* Make sure that the buffer length is long enough to
+ 	 * hold TLV and pdev/vdev id.
+@@ -409,13 +409,13 @@ static int ath11k_tm_cmd_wmi_ftm(struct ath11k *ar, struct nlattr *tb[])
+ 		goto out;
+ 	}
+ 
+-	if (!tb[ATH11K_TM_ATTR_DATA]) {
++	if (!tb[ATH_TM_ATTR_DATA]) {
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
+-	buf = nla_data(tb[ATH11K_TM_ATTR_DATA]);
+-	buf_len = nla_len(tb[ATH11K_TM_ATTR_DATA]);
++	buf = nla_data(tb[ATH_TM_ATTR_DATA]);
++	buf_len = nla_len(tb[ATH_TM_ATTR_DATA]);
+ 	cmd_id = WMI_PDEV_UTF_CMDID;
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_TESTMODE,
+@@ -476,25 +476,25 @@ int ath11k_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		  void *data, int len)
+ {
+ 	struct ath11k *ar = hw->priv;
+-	struct nlattr *tb[ATH11K_TM_ATTR_MAX + 1];
++	struct nlattr *tb[ATH_TM_ATTR_MAX + 1];
+ 	int ret;
+ 
+-	ret = nla_parse(tb, ATH11K_TM_ATTR_MAX, data, len, ath11k_tm_policy,
++	ret = nla_parse(tb, ATH_TM_ATTR_MAX, data, len, ath11k_tm_policy,
+ 			NULL);
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!tb[ATH11K_TM_ATTR_CMD])
++	if (!tb[ATH_TM_ATTR_CMD])
+ 		return -EINVAL;
+ 
+-	switch (nla_get_u32(tb[ATH11K_TM_ATTR_CMD])) {
+-	case ATH11K_TM_CMD_GET_VERSION:
++	switch (nla_get_u32(tb[ATH_TM_ATTR_CMD])) {
++	case ATH_TM_CMD_GET_VERSION:
+ 		return ath11k_tm_cmd_get_version(ar, tb);
+-	case ATH11K_TM_CMD_WMI:
++	case ATH_TM_CMD_WMI:
+ 		return ath11k_tm_cmd_wmi(ar, tb, vif);
+-	case ATH11K_TM_CMD_TESTMODE_START:
++	case ATH_TM_CMD_TESTMODE_START:
+ 		return ath11k_tm_cmd_testmode_start(ar, tb);
+-	case ATH11K_TM_CMD_WMI_FTM:
++	case ATH_TM_CMD_WMI_FTM:
+ 		return ath11k_tm_cmd_wmi_ftm(ar, tb);
+ 	default:
+ 		return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/ath/ath11k/testmode_i.h b/drivers/net/wireless/ath/testmode_i.h
+similarity index 53%
+rename from drivers/net/wireless/ath/ath11k/testmode_i.h
+rename to drivers/net/wireless/ath/testmode_i.h
+index 91b83873d660..bb71efcf5d12 100644
+--- a/drivers/net/wireless/ath/ath11k/testmode_i.h
++++ b/drivers/net/wireless/ath/testmode_i.h
+@@ -4,56 +4,56 @@
+  * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+-/* "API" level of the ath11k testmode interface. Bump it after every
++/* "API" level of the ath testmode interface. Bump it after every
+  * incompatible interface change.
+  */
+-#define ATH11K_TESTMODE_VERSION_MAJOR 1
++#define ATH_TESTMODE_VERSION_MAJOR 1
+ 
+ /* Bump this after every _compatible_ interface change, for example
+  * addition of a new command or an attribute.
+  */
+-#define ATH11K_TESTMODE_VERSION_MINOR 1
++#define ATH_TESTMODE_VERSION_MINOR 1
+ 
+-#define ATH11K_TM_DATA_MAX_LEN		5000
+-#define ATH11K_FTM_EVENT_MAX_BUF_LENGTH 2048
++#define ATH_TM_DATA_MAX_LEN		5000
++#define ATH_FTM_EVENT_MAX_BUF_LENGTH	2048
+ 
+-enum ath11k_tm_attr {
+-	__ATH11K_TM_ATTR_INVALID		= 0,
+-	ATH11K_TM_ATTR_CMD			= 1,
+-	ATH11K_TM_ATTR_DATA			= 2,
+-	ATH11K_TM_ATTR_WMI_CMDID		= 3,
+-	ATH11K_TM_ATTR_VERSION_MAJOR		= 4,
+-	ATH11K_TM_ATTR_VERSION_MINOR		= 5,
+-	ATH11K_TM_ATTR_WMI_OP_VERSION		= 6,
++enum ath_tm_attr {
++	__ATH_TM_ATTR_INVALID		= 0,
++	ATH_TM_ATTR_CMD			= 1,
++	ATH_TM_ATTR_DATA		= 2,
++	ATH_TM_ATTR_WMI_CMDID		= 3,
++	ATH_TM_ATTR_VERSION_MAJOR	= 4,
++	ATH_TM_ATTR_VERSION_MINOR	= 5,
++	ATH_TM_ATTR_WMI_OP_VERSION	= 6,
+ 
+ 	/* keep last */
+-	__ATH11K_TM_ATTR_AFTER_LAST,
+-	ATH11K_TM_ATTR_MAX		= __ATH11K_TM_ATTR_AFTER_LAST - 1,
++	__ATH_TM_ATTR_AFTER_LAST,
++	ATH_TM_ATTR_MAX			= __ATH_TM_ATTR_AFTER_LAST - 1,
+ };
+ 
+-/* All ath11k testmode interface commands specified in
+- * ATH11K_TM_ATTR_CMD
++/* All ath testmode interface commands specified in
++ * ATH_TM_ATTR_CMD
+  */
+-enum ath11k_tm_cmd {
+-	/* Returns the supported ath11k testmode interface version in
+-	 * ATH11K_TM_ATTR_VERSION. Always guaranteed to work. User space
++enum ath_tm_cmd {
++	/* Returns the supported ath testmode interface version in
++	 * ATH_TM_ATTR_VERSION. Always guaranteed to work. User space
+ 	 * uses this to verify it's using the correct version of the
+ 	 * testmode interface
+ 	 */
+-	ATH11K_TM_CMD_GET_VERSION = 0,
++	ATH_TM_CMD_GET_VERSION = 0,
+ 
+ 	/* The command used to transmit a WMI command to the firmware and
+ 	 * the event to receive WMI events from the firmware. Without
+ 	 * struct wmi_cmd_hdr header, only the WMI payload. Command id is
+-	 * provided with ATH11K_TM_ATTR_WMI_CMDID and payload in
+-	 * ATH11K_TM_ATTR_DATA.
++	 * provided with ATH_TM_ATTR_WMI_CMDID and payload in
++	 * ATH_TM_ATTR_DATA.
+ 	 */
+-	ATH11K_TM_CMD_WMI = 1,
++	ATH_TM_CMD_WMI = 1,
+ 
+ 	/* Boots the UTF firmware, the netdev interface must be down at the
+ 	 * time.
+ 	 */
+-	ATH11K_TM_CMD_TESTMODE_START = 2,
++	ATH_TM_CMD_TESTMODE_START = 2,
+ 
+ 	/* The command used to transmit a FTM WMI command to the firmware
+ 	 * and the event to receive WMI events from the firmware. The data
+@@ -62,5 +62,5 @@ enum ath11k_tm_cmd {
+ 	 * The data payload size could be large and the driver needs to
+ 	 * send segmented data to firmware.
+ 	 */
+-	ATH11K_TM_CMD_WMI_FTM = 3,
++	ATH_TM_CMD_WMI_FTM = 3,
+ };
+-- 
+2.34.1
+
