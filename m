@@ -1,53 +1,57 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2CB174EE4
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 08:34:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68DF8171E64
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Jun 2024 08:34:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718094894; cv=none; b=ECr1emW2nHnSadK70faEvS0qT30xlhqS5QEFhEgLyXEKrUgulwPEr2co9hOjJbmbmZ3kC8E4nZMxUnl1WWFEaIRpLLxl60l9IPwp9vQEfxfgB4zumLXLGEdCcTFzepeJodyfR4ge97jxlKtPaKwxCYuaWSDQN9nceruvpiIIH0A=
+	t=1718094895; cv=none; b=VdM8d9u+V3aYitdZrteZnUSBPupT1ou8k1K1WPHZNKkDkoHQvkmVInEjGn2sDZUbqvbIkwFVxHKi/F/lP+Ztdj7GO5OocUh/rJ2TtkWMuEwUTUZS6w7J/pcnIUxIB9e1yaRN+J6YNWOzgylKJwzAZvvuzgUzx2WmMpYm3Xra1EU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718094894; c=relaxed/simple;
-	bh=N6TIQneVpCwWIxCgye6l99yPSyzKe1w5EQc/Uff8HMU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=O3uLHoyj8oaqTBjoLAf6oVqD9DPJw5r4AD0JNiRglaKnAFuT4lMjm8JrJLVotyMCn3mS/wqZesWcubrSfFIZBQAUWiw4H6DkE/d4MeJLJu1siCqVk9rvqgyakQB+gbxp5OATcHnnY4ZMd3FogTsCWJwAqyUROPeU/JswFN1sgks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=JJBXKsAk; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1718094895; c=relaxed/simple;
+	bh=tK5EBm7IrR6gZ3K2V+F3iXZ34ni3WpFL1NCCZRHS2wE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ijppr2Tzv8PnVk4xbhLMBbBiw5cZuTxT3nVERcen5NcciTorFcgiU8i5AcTfoG5C53IOM7xdN2kHc4zTRSp0U+cPMa1Vhp66nUNJ5Mgak2UaZ98n7WeNSKyooVDO8uAHzNQzfyhhXUyHNDXD/GztaijusMgoJmV7GuxxiCqh4Aw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Z4Pxya6z; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="JJBXKsAk"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45B2XQTU019744;
-	Tue, 11 Jun 2024 08:34:47 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Z4Pxya6z"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45B3DlPM003915;
+	Tue, 11 Jun 2024 08:34:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=tDPsjPzJ9VCj/2mjLljN9/
-	JYw5dtDHCFaig4AQ3sK/I=; b=JJBXKsAkPZNp+os/WElcbu4KGu6S05SV0mKjTY
-	MHbQPKIklaDy30m/4qZQwW6EYOB04BRgyCPFU9DoN1H5QYYuqnWO3+/U5nfrnNhE
-	FhDjEKTHAZ0sou2g51Bewjaa8mLPR1aK4anKERVFvaFNTKXM80C1yIrAMZb/rv0f
-	DiWSZwB5w5/D9QSUFqVHd8W6PT26Yz3f4Q6urBVXJhRgDoy7s9+g+LRLpz66a1x+
-	RtcdWukLbI6mUTfcq3x9E3hQAtY2YsZkDdDR7KuY5Ee63TSxJNwC+KglCdyrBCwP
-	+0lLwIS7SdgXm9T9nOOV5ByUE9pq8+RiLJx+AP/2n+HKGN3g==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymcnmwpq1-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	QvwmRg7k2R+w/utHY+pqd/jehFpbhrNbjJPpFXLrpKU=; b=Z4Pxya6z/QXPeFx8
+	1njvDZPSb15JuF/V4XVdB12CR3PD93Q76kWe7YMdMEHzEUkO6auxrr3DEDdLQPcZ
+	tJyP9jMYrNfo0NlyUjqbpjlhfwj/YR+hnPl3/4HwLYfszWskjz/fi2enXvyohKGB
+	L2YfvRafuuekDwIXgSqefT5DmcWHwKAOAb9L2XVl1POTMcRNzCaLBim/bbdgZ6aW
+	qy025dp2sToEI8C1XgEiCUK9QB3z3KB9RAs/8Y4FB67/Eyv2ctFkIRl2e4SidOj9
+	tXV/ULeRzPRNqTWBLAErPIqHFiifvg+a5mB3xLM0ABRvpY+j/XTbSCbiZ1sdsB4B
+	w2lOGg==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymfcv5ucd-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Jun 2024 08:34:47 +0000 (GMT)
+	Tue, 11 Jun 2024 08:34:49 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA02.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45B8YjQ4000714
+	by NASANPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45B8YmSe027514
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Jun 2024 08:34:45 GMT
+	Tue, 11 Jun 2024 08:34:48 GMT
 Received: from hu-aarasahu-blr.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 11 Jun 2024 01:34:43 -0700
+ 15.2.1544.9; Tue, 11 Jun 2024 01:34:46 -0700
 From: Aaradhana Sahu <quic_aarasahu@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Aaradhana Sahu
 	<quic_aarasahu@quicinc.com>
-Subject: [PATCH v3 0/4] ath12k: Factory test mode support
-Date: Tue, 11 Jun 2024 14:04:23 +0530
-Message-ID: <20240611083427.881443-1-quic_aarasahu@quicinc.com>
+Subject: [PATCH v3 2/4] wifi: ath12k: export ath12k_wmi_tlv_hdr for testmode
+Date: Tue, 11 Jun 2024 14:04:25 +0530
+Message-ID: <20240611083427.881443-3-quic_aarasahu@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240611083427.881443-1-quic_aarasahu@quicinc.com>
+References: <20240611083427.881443-1-quic_aarasahu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,64 +64,53 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: f2wyKBGN6JOOXzP83xGhNH4e98TleOea
-X-Proofpoint-ORIG-GUID: f2wyKBGN6JOOXzP83xGhNH4e98TleOea
+X-Proofpoint-ORIG-GUID: o0iAdSGw-lcjsit5bg1F1xwLSuiAtG3Z
+X-Proofpoint-GUID: o0iAdSGw-lcjsit5bg1F1xwLSuiAtG3Z
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-06-11_04,2024-06-11_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- impostorscore=0 clxscore=1015 adultscore=0 phishscore=0 spamscore=0
- priorityscore=1501 malwarescore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
+ mlxlogscore=862 phishscore=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2405170001 definitions=main-2406110062
 
-Device is booted in factory test mode for calibration.
-The commands are sent from userspace application, which
-is sent to firmware using wmi commands. Firmware sends
-the response to driver as wmi events and driver sends
-these events to the application via netlink message.
+Export ath12k_wmi_tlv_hdr() to further use in the testmode command
+processing.
 
-Also added changes related to correct pdev id access for
-fw test cmd.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00210-QCAHKSWPL_SILICONZ-1
 
-Aaradhana Sahu (3):
-  wifi: ath: create common testmode_i.h file for ath drivers
-  wifi: ath12k: export ath12k_wmi_tlv_hdr for testmode
-  wifi: ath12k: add factory test mode support
-
-Rajat Soni (1):
-  wifi: ath12k: Fill pdev id for fw test cmd
-
+Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
 ---
-v3:
-  -Rebased on latest ToT
-  -Updated Tested-on Tag
-  -Removed second parameter of ath12k_core_start()
-  -Updated copyright
-v2:
-  -Rebased on latest ath ToT
----
+ drivers/net/wireless/ath/ath12k/wmi.c | 2 +-
+ drivers/net/wireless/ath/ath12k/wmi.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath11k/testmode.c    |  78 ++--
- drivers/net/wireless/ath/ath12k/Makefile      |   1 +
- drivers/net/wireless/ath/ath12k/core.c        |  22 +-
- drivers/net/wireless/ath/ath12k/core.h        |  13 +
- drivers/net/wireless/ath/ath12k/debug.h       |   1 +
- drivers/net/wireless/ath/ath12k/dp.c          |   3 +
- drivers/net/wireless/ath/ath12k/mac.c         |  15 +-
- drivers/net/wireless/ath/ath12k/pci.c         |   1 +
- drivers/net/wireless/ath/ath12k/testmode.c    | 422 ++++++++++++++++++
- drivers/net/wireless/ath/ath12k/testmode.h    |  40 ++
- drivers/net/wireless/ath/ath12k/wmi.c         |  39 +-
- drivers/net/wireless/ath/ath12k/wmi.h         |  21 +
- .../wireless/ath/{ath11k => }/testmode_i.h    |  52 +--
- 13 files changed, 634 insertions(+), 74 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath12k/testmode.c
- create mode 100644 drivers/net/wireless/ath/ath12k/testmode.h
- rename drivers/net/wireless/ath/{ath11k => }/testmode_i.h (53%)
-
-
-base-commit: a116bf2be795eb1db75fa6a48aa85c397be001a6
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index d6e1d1398cdb..7aaa534be32f 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -173,7 +173,7 @@ static const struct ath12k_wmi_tlv_policy ath12k_wmi_tlv_policies[] = {
+ 		.min_len = sizeof(struct wmi_p2p_noa_event) },
+ };
+ 
+-static __le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len)
++__le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len)
+ {
+ 	return le32_encode_bits(cmd, WMI_TLV_TAG) |
+ 		le32_encode_bits(len, WMI_TLV_LEN);
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
+index c2b86e187a03..ffb9e3fce767 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.h
++++ b/drivers/net/wireless/ath/ath12k/wmi.h
+@@ -5027,6 +5027,7 @@ int ath12k_wmi_set_bios_cmd(struct ath12k_base *ab, u32 param_id,
+ 			    const u8 *buf, size_t buf_len);
+ int ath12k_wmi_set_bios_sar_cmd(struct ath12k_base *ab, const u8 *psar_table);
+ int ath12k_wmi_set_bios_geo_cmd(struct ath12k_base *ab, const u8 *pgeo_table);
++__le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len);
+ 
+ static inline u32
+ ath12k_wmi_caps_ext_get_pdev_id(const struct ath12k_wmi_caps_ext_params *param)
 -- 
 2.34.1
 
