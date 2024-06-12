@@ -1,114 +1,109 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from komekko.fuwafuwatime.moe (komekko.fuwafuwatime.moe [65.21.224.109])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3245374D3
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Jun 2024 12:21:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD5214E2ED;
+	Wed, 12 Jun 2024 12:30:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.224.109
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718194905; cv=none; b=FE3+sRzrqfasG9j/XnGx4MFaA4C22sS5cwnJG9qv2i3uxRE/UFuHtveBjGfswEW0Mi9tbvxVYeq3xE6No0R38I0XOZ4PTOGVZqlaTpy0aTCq/7sF47rZu7jKH/huekc9oEeTF5Vt1LAMjASmMKEs8hlU4Ivx3woQNGLfXauxDoo=
+	t=1718195444; cv=none; b=NaU5G42Uptkg3nVZm/hRVRG2BQxzqLcMH1jrUWgEQ8EMriHB976KzOecHss2MIGjrTgV6B1VCSEkrmXAxxGe4x5IoGoiHC1aHHzRXWfHEe3/vIujaHBaQIYHUGEnAqh1WI5KhrRoLGTEgke/S/Qe+0Gz51uGCCawoFOri+O2Gus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718194905; c=relaxed/simple;
-	bh=QaEknUqYgvewQQ7tmkOpWp/HOhIINbM4ayCjXHW5vQo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F+0q+hmvBe3gV1Xb2/3RRNLhxHaAT55nYTQo0APH7/xfI3OrD4Nv1ChWX0l1p6N2Z3hUcXBLvhV3EPeU9hsRNrSa5VOvGU0us98qSfWD+zhyrmzaPlih42LLlgTQd8ipZ8AQM4+/HDttic7BIZTX/FsuA12KOvu2umwy9pefmEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=a46BL3wH; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1718195444; c=relaxed/simple;
+	bh=aHiiNTWgtfeiuKP3SpXuVe/tNbTjnwll02QHrngVnys=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SIHPLDGpLZVEmB+O4IqSVcPFDCv/uYBrclVYtMOi7R3Nkar7vsJaHlAePaJ9lJPAl1bXpyqSPpnNkXkDC2vYbNy9VR7lECfPLHMIyenKA466wTqkKgNBBNA2jG5VasMc37gVcVmRNlmhwza3x+6RFeYDMUcPT5RuqVEKcjWLvPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=concord.sh; spf=pass smtp.mailfrom=concord.sh; dkim=pass (2048-bit key) header.d=concord.sh header.i=@concord.sh header.b=UyqqOEqH; arc=none smtp.client-ip=65.21.224.109
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=concord.sh
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=concord.sh
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="a46BL3wH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=hzrc9Fovnr22Aow7tfPfZWXbpnrzvkkkMfDm1YahJfY=; b=a46BL3wHuE1TpqRyZ4DzTJWHoa
-	WIjArBZ3kTmur14OZpQH4f+GbA6XxUGxgsroBQajBlsrIw4TqEm+rIsQUfCJQHyDraTSN13YnHplM
-	ixmG8cIzwgHBPIAH5UxuiiI7nmwyU82Hhdri7yt4yX+YCJzGtEW0q6u3GSHrOuHOwK2Q=;
-Received: from p4ff13dca.dip0.t-ipconnect.de ([79.241.61.202] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sHMys-00Aq6n-0A;
-	Wed, 12 Jun 2024 14:21:34 +0200
-Message-ID: <91704e4c-b43c-4efc-b78d-e67abc35128d@nbd.name>
-Date: Wed, 12 Jun 2024 14:21:24 +0200
+	dkim=pass (2048-bit key) header.d=concord.sh header.i=@concord.sh header.b="UyqqOEqH"
+Received: from megumin.fuwafuwatime.moe (unknown [IPv6:2601:100:8c00:8960::15])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by komekko.fuwafuwatime.moe (Postfix) with ESMTPSA id 6951D114510A;
+	Wed, 12 Jun 2024 15:30:40 +0300 (EEST)
+Received: from localhost (unknown [192.168.1.101])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by megumin.fuwafuwatime.moe (Postfix) with ESMTPSA id 233B010962CE;
+	Wed, 12 Jun 2024 08:30:36 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=concord.sh; s=dkim;
+	t=1718195436;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aHiiNTWgtfeiuKP3SpXuVe/tNbTjnwll02QHrngVnys=;
+	b=UyqqOEqHnNcmGN2aeuDesIeJQCrizrK1vmt7eCpoO/YTTVgnRcbdhbmMpgcJJMrqNTBsoa
+	DRLlbmRvNzRxw+uFPmYzHtGA+hkPjaPhRflIPczwVn0Dr8ZdrcUy7+OKWm+Y3xcZ9+LmpX
+	6MN94O3CX1zd7xDGEMhF6olPS/KStk7rJEXoEmL1W7u/wrMcjKFGmrGXEuu0CYmEfowzwA
+	Q9t+a8l7dYbF/tEExOj3hEQXKms1ZfbPDNZQPcysR2GV2+UqNnaMR5vm7CPHNpSgHwkNmr
+	Ne5BxZAtg43h0Pl5JFaO/6NWIPLIhAzcj2YxJuMk+f0xq0/T/pxTwpjhgdREhQ==
+Authentication-Results: ORIGINATING;
+	auth=pass smtp.auth=me@concord.sh smtp.mailfrom=me@concord.sh
+Date: Wed, 12 Jun 2024 08:30:28 -0400
+From: Kenton Groombridge <me@concord.sh>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Kenton Groombridge <concord@gentoo.org>, johannes@sipsolutions.net, 
+	davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v3] wifi: mac80211: Avoid address calculations via out of
+ bounds array indexing
+Message-ID: <jzpyauk6kltqfs2iqtfxnlxdpddvxi6ir4ki3pmev4ol7mb36w@6zmleyr3zwmt>
+Mail-Followup-To: Kalle Valo <kvalo@kernel.org>, 
+	Kenton Groombridge <concord@gentoo.org>, johannes@sipsolutions.net, davem@davemloft.net, 
+	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
+References: <20240605152218.236061-1-concord@gentoo.org>
+ <871q5amn8e.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC v3 6/8] wifi: mac80211: extend ifcomb check functions for
- multi-radio
-To: Johannes Berg <johannes@sipsolutions.net>,
- Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
- linux-wireless@vger.kernel.org
-Cc: quic_adisi@quicinc.com, ath12k@lists.infradead.org
-References: <cover.386a66ec6a89750d4890f63f0d28582a52b838b5.1717696995.git-series.nbd@nbd.name>
- <bc603fc671010bb720e75881ef0e22d81ec6e2eb.1717696995.git-series.nbd@nbd.name>
- <a337de2e-fe3e-18ed-b55b-9ea2cd21baed@quicinc.com>
- <1f32cb6c-6be8-4e3d-8e8f-2d3c728875a9@nbd.name>
- <479752f5-221d-746b-7513-ba27ef547ac1@quicinc.com>
- <096940e3-713a-4533-ab0f-e82bd647e205@nbd.name>
- <fa7c2aeef854f89eeb03a01a21a8d511417c92b6.camel@sipsolutions.net>
-Content-Language: en-US
-From: Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <fa7c2aeef854f89eeb03a01a21a8d511417c92b6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="qcauyrc6pdu2bf7a"
+Content-Disposition: inline
+In-Reply-To: <871q5amn8e.fsf@kernel.org>
 
-On 12.06.24 14:05, Johannes Berg wrote:
-> On Fri, 2024-06-07 at 13:04 +0200, Felix Fietkau wrote:
->> > > 
->> > > Use the sum of the number of interfaces from each radio instead of the 
->> > > maximum.
->> > 
->> > Oh, then legacy user have misconception of the global interfaces
->> > advertised and try to fail for the allowed limits.
->> 
->> Sure, but that might be an issue either way until user space is updated 
->> and users start looking at the per-radio ifcomb data.
-> 
-> I'm kind of with Karthikeyan here - this could be understood as a
-> regression, since you're now telling userspace something you can't
-> actually do.
 
-Well, we can actually do it, just with some extra restrictions - i.e. 
-the interfaces we create need to be spread across radios to match the 
-per-radio limits.
+--qcauyrc6pdu2bf7a
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> The global data is simply not enough to describe the details of the 
->> radio split.
-> 
-> Obviously, but that doesn't mean the global data as advertised in the
-> existing attributes must be *wrong*. It could be a subset, and the
-> superset data is only available to new implementations.
-So you'd prefer something like picking one radio and advertising its 
-limits instead?
+On 24/06/06 12:31PM, Kalle Valo wrote:
+>=20
+> In wireless we prefer to have the version changelog after '---' line so
+> that it's not included in the actual commit. Not sure if Johannes can
+> fix this during commit.
+>=20
 
-- Felix
+Noted. I can submit a new version with a fixed summary if needed.
+
+--qcauyrc6pdu2bf7a
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQKTBAABCgB9FiEEP+u3AkfbrORB/inCFt7v5V9Ft54FAmZplOFfFIAAAAAALgAo
+aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDNG
+RUJCNzAyNDdEQkFDRTQ0MUZFMjlDMjE2REVFRkU1NUY0NUI3OUUACgkQFt7v5V9F
+t564Rg/+L8KERRtqX2Bxp6u/O6LXz1QCDNwQSbINekkkJrL8w0w/VUKyn15x4ZQv
+JsjfBYg7Qq489v14jikIY5ogqGwDRn7Z7fIBX0FTJh+RJ9Ex+n1ohYigh6PRBITf
+pHVHPPym/y4kBDEE77YLWwmEjyEQA1GTV+GCkk8n+yk0q56Vz1P+rDMQ1keLjkcp
+k44kctmij2XCo55AblJzNZzOaKtTKZMTurE6mTkK6EkLm1vRTPmaBBYbsjiKLP7u
+DXTW3qY3+E6X3/7/NJgYqfks512eKbSfK9YnOY8QXNwMhaZaUG8BQOV/MxDYZImB
+lQwQIMHUQS9ZwGnsRmnVfpn7vK9k/79tWONLXnEK2VxlgBjLP5EBYlYybBMulbP2
+3W14gCc75zKWjav4KEpZvkd78SXQ8yk4PYOrXvFpybb87dOsv6XumVlEK0tS/KVy
+p1EAQaQXyHAe0ZUTWIb5hqzYIpmY0xpzFgTzDxLJrVmRr3Z1XP49I477aR4z7IbI
+7nJ8rjODkn0m/SW+6DGBWiMqOxnYBbCdRJuU+/9DISZW43LTDvMC5aS9esfupBm4
+YAzZmIed+dmnfSJmkbIiH6FFNyT2owUMnyTlQeybSTwDTVz0mziHOE/FqGMMzeFL
+n5026WFp/s/7/p2BX9ckA5lJMygQWpjhcBJFPw1xqqpMIA4WJgc=
+=X+yb
+-----END PGP SIGNATURE-----
+
+--qcauyrc6pdu2bf7a--
