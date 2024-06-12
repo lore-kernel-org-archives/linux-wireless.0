@@ -1,79 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B57F45B5B6;
-	Wed, 12 Jun 2024 12:01:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88317374D3
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Jun 2024 12:05:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718193688; cv=none; b=MrqV8WSy8dn2GVz/jdJ04TCrkj8y54Tk0OmTQuQ9qJxEcEYvBIOeIIiJyTR3E8kR5/+INRPWHgQXetA1T8GZ+d0DIv/+gXKCqdbi4yX/fAjcrSsF9UgoD3ngYHFb8Xt7/NkX8yoG0OKqHiFdPWqDy3T9raayoZZBiEaKC1WhzPw=
+	t=1718193949; cv=none; b=X6hBFEYM6iuBL/+eMB0zir4Zp4woMIcZ0gyQrhZefA0daBeSalGOAFc5ZHPY5jNXBLwCGuaQAisRzswdQ6TkfjvsnU1DDNzteaMPkKvlCw1MBMIGAJ782gOpgeyNkx3GYxFA1gTVHRfuhpXCfv8vLfEXFQ6UcHMbL1Tuv37EZPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718193688; c=relaxed/simple;
-	bh=Tsv48oPtlgTHvx9V3xuPXgrjcGCvx5oPY+03wCrBLEY=;
-	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
-	 Cc:Message-ID:Date; b=aSt6Kaw4l/FBz5qLk7xXAF+2Fb3iWdiGgqpAsREHA52K8WspNkBF+Nbt6iYFqiNgMFZ0SsxaxNXDaH+RoAymEwBge0RIumyRQy2EHfAmxQisL7yoCpXBwJyk3K+RUbF7YJDZvwyXSo1jFSj1E0A6NN0Ydir/aODsKfQcG/gABAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=plBA+azh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718193949; c=relaxed/simple;
+	bh=E4QnWHv8dLIoq+vheL78UIzoMLHsB6bqRQNiyBcbXwY=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=uMZRs1LDo2z8/O9FPMK7Uymfrc1bykLDqU1vRi+oCUUJyNYKBFIJF5bdA4CUQkzkgZxGICMUxHUDQRvYrJ0meiJISrrvECHq+Urdx61VZ8KolE2hf2VicdD/irY0ao93FwO36Gr6oY9cGYD3piwcmC7BaxgQoKgWuxjUAVGSsmc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oSK4cCDB; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="plBA+azh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1C11C3277B;
-	Wed, 12 Jun 2024 12:01:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718193688;
-	bh=Tsv48oPtlgTHvx9V3xuPXgrjcGCvx5oPY+03wCrBLEY=;
-	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-	b=plBA+azhUxAd+ard8rlBITJU9CNxUf3NphVbg3hPOtXGvTdlhRXdinrNQEpQJJ5yk
-	 ICHrhCEz1pyGznF2m2oeCkiGMVBHVaB4aiufbin9W55/7TsZxl0nK9NUKAUrtZuxhU
-	 KTug8AMd7s8cmYAmyBe2E0Hlu9Mng2il8mj67zmFHrG5Axx527Fa8revTlGPeK7zSW
-	 HU2iBuWUtVt2Sa2Jl7R/Bzvmhw7b71rXASKG8fQR6PfRSYmzo8snAb1RYFjNhZeM0v
-	 qcb7gS6d/CEplW0Zn8Bd52ZaPci/c7o1uB9tT6s5XD4nvZ8KAOQMzOSzJpC6C135/y
-	 y0Um1IfNWo18g==
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oSK4cCDB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=E4QnWHv8dLIoq+vheL78UIzoMLHsB6bqRQNiyBcbXwY=;
+	t=1718193947; x=1719403547; b=oSK4cCDBCm0bVboU6j74MsLLjSVjNZOc6Zbj97T5fXX9yEG
+	RBkfY7yHlw6Q9ps9OrSLG8uDB4Hm6wWZAweJEq4SNmu74zQQwF7Efxg8BhCrqHTxaLm4II/kUd1TW
+	9sDku/gEeIlZiixS3s8gSWj4OCWCbCQr0EpXZ7I2HZO8xbKqGs6NtB2N52oIYWt267R1QYYHVkmPY
+	xgRRTX0KZbbdU6XvB/rNpBOdbXbE4z0rFJ4vjxit+3MdAx0lx3YruRlFdHtmhP+QOHy/KX0f1OrT9
+	2ORI5uFldyUQvra6RXSCDD4gA2sz8o+D8eyHKGRwgQYqUFPa5az1Z4DrYQOjcvfQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1sHMjY-0000000AEjC-0yRF;
+	Wed, 12 Jun 2024 14:05:44 +0200
+Message-ID: <fa7c2aeef854f89eeb03a01a21a8d511417c92b6.camel@sipsolutions.net>
+Subject: Re: [RFC v3 6/8] wifi: mac80211: extend ifcomb check functions for
+ multi-radio
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@nbd.name>, Karthikeyan Periyasamy
+	 <quic_periyasa@quicinc.com>, linux-wireless@vger.kernel.org
+Cc: quic_adisi@quicinc.com, ath12k@lists.infradead.org
+Date: Wed, 12 Jun 2024 14:05:43 +0200
+In-Reply-To: <096940e3-713a-4533-ab0f-e82bd647e205@nbd.name>
+References: 
+	<cover.386a66ec6a89750d4890f63f0d28582a52b838b5.1717696995.git-series.nbd@nbd.name>
+	 <bc603fc671010bb720e75881ef0e22d81ec6e2eb.1717696995.git-series.nbd@nbd.name>
+	 <a337de2e-fe3e-18ed-b55b-9ea2cd21baed@quicinc.com>
+	 <1f32cb6c-6be8-4e3d-8e8f-2d3c728875a9@nbd.name>
+	 <479752f5-221d-746b-7513-ba27ef547ac1@quicinc.com>
+	 <096940e3-713a-4533-ab0f-e82bd647e205@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.2 (3.52.2-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 2/6] wifi: brcmfmac: use 'time_left' variable with
- wait_event_timeout()
-From: Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20240603091541.8367-3-wsa+renesas@sang-engineering.com>
-References: <20240603091541.8367-3-wsa+renesas@sang-engineering.com>
-To: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Cc: linux-kernel@vger.kernel.org,
- Wolfram Sang <wsa+renesas@sang-engineering.com>,
- Arend van Spriel <arend.vanspriel@broadcom.com>,
- linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <171819368496.3856519.10394049739413295100.kvalo@kernel.org>
-Date: Wed, 12 Jun 2024 12:01:26 +0000 (UTC)
+X-malware-bazaar: not-scanned
 
-Wolfram Sang <wsa+renesas@sang-engineering.com> wrote:
+On Fri, 2024-06-07 at 13:04 +0200, Felix Fietkau wrote:
+> > >=20
+> > > Use the sum of the number of interfaces from each radio instead of th=
+e=20
+> > > maximum.
+> >=20
+> > Oh, then legacy user have misconception of the global interfaces
+> > advertised and try to fail for the allowed limits.
+>=20
+> Sure, but that might be an issue either way until user space is updated=
+=20
+> and users start looking at the per-radio ifcomb data.
 
-> There is a confusing pattern in the kernel to use a variable named 'timeout' to
-> store the result of wait_event_timeout() causing patterns like:
-> 
-> 	timeout = wait_event_timeout(...)
-> 	if (!timeout) return -ETIMEDOUT;
-> 
-> with all kinds of permutations. Use 'time_left' as a variable to make the code
-> self explaining.
-> 
-> Fix to the proper variable type 'long' while here.
-> 
-> Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+I'm kind of with Karthikeyan here - this could be understood as a
+regression, since you're now telling userspace something you can't
+actually do.
 
-4 patches applied to wireless-next.git, thanks.
+> The global data is simply not enough to describe the details of the=20
+> radio split.
 
-158d5a1b3caa wifi: brcmfmac: use 'time_left' variable with wait_event_timeout()
-0c0668813cc0 wifi: mwl8k: use 'time_left' variable with wait_for_completion_timeout()
-a37f6947ff07 wifi: p54: use 'time_left' variable with wait_for_completion_interruptible_timeout()
-a2ead3445a63 wifi: zd1211rw: use 'time_left' variable with wait_for_completion_timeout()
+Obviously, but that doesn't mean the global data as advertised in the
+existing attributes must be *wrong*. It could be a subset, and the
+superset data is only available to new implementations.
 
--- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20240603091541.8367-3-wsa+renesas@sang-engineering.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+johannes
