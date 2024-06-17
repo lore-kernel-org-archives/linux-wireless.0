@@ -1,107 +1,179 @@
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [78.32.30.218])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B8831A38C7;
-	Mon, 17 Jun 2024 13:21:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.32.30.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AA9C1991D9;
+	Mon, 17 Jun 2024 13:21:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718630482; cv=none; b=MqHa1+LiUssARmedy5SeY7zNGNeGd4OoI3VQS9cRrHJAFPiXHFfbH4tOtMN4OUgzSLrGvFXNzBIAb6R+Vpy5zLsNE5biui8ymuR6+4GnH2ErUR2Hmg5cNdb4EblO23WPoeiquRq2GXk/hj2HhXB/VSt1TOG2hyiRCxy3cRx2SKw=
+	t=1718630488; cv=none; b=lJLZk77xD4A5XNMbwWkz7Ny1MzuZ/wLDGeftM4EISfNB9jCh9k6rqu7MwLqAoq2DNv63Uu8sEs2v9VL2fycQ7vXaQHyLDapDBm1tKsJF79DodrWghMhDS5FXCrRvrEPTpxG4ueECIOsIaqJg/bgDbkZsktkCeLfAv+7h5ZN9DE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718630482; c=relaxed/simple;
-	bh=aizDZvnCDX/j0pRij/wrhNU+Zaq/hXsUCMLAW5X7shE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LFIh2S8tjYT1y7pc7z98oyPpLxq5W8A/KgBiEOP7ewfNSXQrMhtajy+FeXaQ8UGWZ8R65kOiafrqRr08aQjcnJS7kqjFCjsV8An4maOOhgm9k96jgU9WCwOJ7zWv0ps7DSijDNFIGRKYrZCrdyop0ims9Hod9CVdfqZwaLjieak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk; spf=none smtp.mailfrom=armlinux.org.uk; dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b=i5qQH4pU; arc=none smtp.client-ip=78.32.30.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=armlinux.org.uk
+	s=arc-20240116; t=1718630488; c=relaxed/simple;
+	bh=W+Kqzrrisl+xzqP63S4grqOrs6f5pItw2/GgaKQC/zo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=E5zFC5kKIXge8cJTX1/8WlECl5SJqXmX/q32SVcNp6eSeFiM7NrX2/dA3IYqva5InVvL0M8YJXPYDwnsMBpWZ/QNCfIr9nlR2nwkhnDBpaLKErWk5kH4qVVX8sh6ep08WDlmdrdz8m3bMuU3jW6COdQaSY1ofmwGPozNxLl5qSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BFS7RyGe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="i5qQH4pU"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=dgzLUyLL44aNtNUZ4cik5aVlKeZ3MyaadjRq+pbLGk0=; b=i5qQH4pUO+Y/XOIW4KPvJ3rbY2
-	Rxqu80nP7jKjm1a+NyjJYN0Th7nVtE4d/P0uyJNd9RRHvi4oUyVvq8H6eUsAcCHDKJwknelnVwpKq
-	jt+bwUn1P3zDRc6CcLIzJmeyPHr7gGtsjc6seHNb+5uwF1gtyb9RpG8Ydvf0YVjwzy6iFaSs0/BQg
-	jsN0KEGloIhShKT1DDil4mKTWBZzu9Lhyiu3WsBV5ZakUj8/ZACVFO8wxOZmmYIvw4DQz0juNTGFf
-	zbj5eySUNdQ+6eXieJLh9vUg3qgHIgpTtFUHKyHPzeEP+qztohMIuGrNWuSjv8DfRpp1V1Ir6YWrY
-	J7RTak/Q==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:57690)
-	by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <linux@armlinux.org.uk>)
-	id 1sJCID-0005Ic-0O;
-	Mon, 17 Jun 2024 14:21:05 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.94.2)
-	(envelope-from <linux@shell.armlinux.org.uk>)
-	id 1sJCIE-0004w5-Ft; Mon, 17 Jun 2024 14:21:06 +0100
-Date: Mon, 17 Jun 2024 14:21:06 +0100
-From: "Russell King (Oracle)" <linux@armlinux.org.uk>
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Michael Nemanov <michael.nemanov@ti.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless v2] wifi: wlcore: fix wlcore AP mode
-Message-ID: <ZnA4QpyOdcYxg8LE@shell.armlinux.org.uk>
-References: <E1sClp4-00Evu7-8v@rmk-PC.armlinux.org.uk>
- <Zm1CKAKCnuc94oIi@shell.armlinux.org.uk>
- <87tthrn8gf.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BFS7RyGe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68DADC4AF1D;
+	Mon, 17 Jun 2024 13:21:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718630487;
+	bh=W+Kqzrrisl+xzqP63S4grqOrs6f5pItw2/GgaKQC/zo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=BFS7RyGe8sFsnSsWWtQHJG0CH0r5YW2iBQUT0SkDB2wI3g9oTpYf/A5CqG8QqR2Fc
+	 NIUrbwK3zRWjvbEqBk2ts/18UQJ/4dnm/IXx8QgLBaP7AEG1nCjVzVFpJYLzmqiIL1
+	 3HF2qj107Tb9tWNm1CJjhY8XyUQ3rqZt0b9Hq8wwbOmSAuF5dd2y5XywHpASFMku73
+	 1505VgvOY7PtilY+V8nCgeXeDL2PaLJKCDtxOyqGOc/k+p6iN1UKwyvKQ3lQ41hJaJ
+	 IxBLNyz71s5JNsvcKYU2XI0AA8vMiAUdLIIRRqLMBHy+9XS5JPrPaEauqIL1f6F3Oe
+	 RktU5ak/mHUWA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Benjamin Berg <benjamin.berg@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Sasha Levin <sashal@kernel.org>,
+	kvalo@kernel.org,
+	gregory.greenman@intel.com,
+	emmanuel.grumbach@intel.com,
+	ilan.peer@intel.com,
+	shaul.triebitz@intel.com,
+	dan.carpenter@linaro.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.9 19/44] wifi: iwlwifi: mvm: remove stale STA link data during restart
+Date: Mon, 17 Jun 2024 09:19:32 -0400
+Message-ID: <20240617132046.2587008-19-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240617132046.2587008-1-sashal@kernel.org>
+References: <20240617132046.2587008-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87tthrn8gf.fsf@kernel.org>
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.9.5
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 17, 2024 at 01:56:48PM +0300, Kalle Valo wrote:
-> "Russell King (Oracle)" <linux@armlinux.org.uk> writes:
-> 
-> > I see all my TI Wilink patches have been marked as "deferred" in the
-> > wireless patchwork. Please could you explain what the plan is with
-> > these patches, especially this one which fixes a serious frustrating
-> > failing that makes AP mode on this hardware very unreliable and thus
-> > useless.
-> 
-> I'm just swamped with patches, I'll try to look at these soon.
-> 
-> I wish that TI would take a more active role in upstream, for example
-> reviewing and testing patches would help a lot.
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-I believe the problem has been that TI have had an attitude of "we
-only support people using 4.19.38, if you can't reproduce the problem
-there we aren't interested". To see the versions they support:
+[ Upstream commit cc3ba78f202de9752aceb16342ab62bdfbffac7e ]
 
-https://git.ti.com/cgit/wilink8-wlan/build-utilites/tree/patches/kernel_patches?h=r8.9&id=a2ee50aa5190ed3b334373d6cd09b1bff56ffcf7
+If pre-recovery mac80211 tried to disable a link but this disablement
+failed, then there might be a mismatch between mac80211 assuming the
+link has been disabled and the driver still having the data around.
+During recover itself, that is not a problem, but should the link be
+activated again at a later point, iwlwifi will refuse the activation as
+it detects the inconsistent state.
 
-basically, all are ancient.
+Solve this corner-case by iterating the station in the restart cleanup
+handler.
 
-They also appear take the attitude that all the kernel code is ripe
-for them to hack about with - whcih is why this fix has had to be
-reworked so it isn't removing NL80211_FEATURE_FULL_AP_CLIENT_STATE
-for _all_ kernel wireless drivers!
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://msgid.link/20240513132416.d2fd60338055.I840d4fdce5fd49fe69896d928b071067e3730259@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 37 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  | 10 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |  5 +++
+ 3 files changed, 47 insertions(+), 5 deletions(-)
 
-Also, I think they also require one to use their hostapd and
-wpa_supplicant, probably for a similar reason. I know that in some
-of the patches they've hacked in API changes...
-
-Then one can see the attitude of lock-step firmware and driver
-upgrade - you can't use 8.9.1.x.x firmware with their older driver,
-and you can't use 8.9.0.x.x with their newer driver. That, of course,
-is not acceptable to mainline.
-
-So, given all this, IMHO it's probably a good thing TI aren't trying
-to submit their stuff upstream... that is, unless they are willing
-to learn how to "do things correctly".
-
-Maybe I'm being too hard on TI's wireless division, but that seems to
-be what has been going on.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 7ed7444c98715..d2557d9f63e59 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1115,6 +1115,39 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
+ 	RCU_INIT_POINTER(mvmvif->deflink.probe_resp_data, NULL);
+ }
+ 
++static void iwl_mvm_cleanup_sta_iterator(void *data, struct ieee80211_sta *sta)
++{
++	struct iwl_mvm *mvm = data;
++	struct iwl_mvm_sta *mvm_sta;
++	struct ieee80211_vif *vif;
++	int link_id;
++
++	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
++	vif = mvm_sta->vif;
++
++	if (!sta->valid_links)
++		return;
++
++	for (link_id = 0; link_id < ARRAY_SIZE((sta)->link); link_id++) {
++		struct iwl_mvm_link_sta *mvm_link_sta;
++
++		mvm_link_sta =
++			rcu_dereference_check(mvm_sta->link[link_id],
++					      lockdep_is_held(&mvm->mutex));
++		if (mvm_link_sta && !(vif->active_links & BIT(link_id))) {
++			/*
++			 * We have a link STA but the link is inactive in
++			 * mac80211. This will happen if we failed to
++			 * deactivate the link but mac80211 roll back the
++			 * deactivation of the link.
++			 * Delete the stale data to avoid issues later on.
++			 */
++			iwl_mvm_mld_free_sta_link(mvm, mvm_sta, mvm_link_sta,
++						  link_id, false);
++		}
++	}
++}
++
+ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ {
+ 	iwl_mvm_stop_device(mvm);
+@@ -1137,6 +1170,10 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	 */
+ 	ieee80211_iterate_interfaces(mvm->hw, 0, iwl_mvm_cleanup_iterator, mvm);
+ 
++	/* cleanup stations as links may be gone after restart */
++	ieee80211_iterate_stations_atomic(mvm->hw,
++					  iwl_mvm_cleanup_sta_iterator, mvm);
++
+ 	mvm->p2p_device_vif = NULL;
+ 
+ 	iwl_mvm_reset_phy_ctxts(mvm);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+index 36dc291d98dd6..a21e29947475f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
+@@ -515,11 +515,11 @@ static int iwl_mvm_mld_cfg_sta(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	return iwl_mvm_mld_send_sta_cmd(mvm, &cmd);
+ }
+ 
+-static void iwl_mvm_mld_free_sta_link(struct iwl_mvm *mvm,
+-				      struct iwl_mvm_sta *mvm_sta,
+-				      struct iwl_mvm_link_sta *mvm_sta_link,
+-				      unsigned int link_id,
+-				      bool is_in_fw)
++void iwl_mvm_mld_free_sta_link(struct iwl_mvm *mvm,
++			       struct iwl_mvm_sta *mvm_sta,
++			       struct iwl_mvm_link_sta *mvm_sta_link,
++			       unsigned int link_id,
++			       bool is_in_fw)
+ {
+ 	RCU_INIT_POINTER(mvm->fw_id_to_mac_id[mvm_sta_link->sta_id],
+ 			 is_in_fw ? ERR_PTR(-EINVAL) : NULL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index b3450569864eb..7dd8f7f4b4492 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -638,6 +638,11 @@ int iwl_mvm_mld_update_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			   struct ieee80211_sta *sta);
+ int iwl_mvm_mld_rm_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta);
++void iwl_mvm_mld_free_sta_link(struct iwl_mvm *mvm,
++			       struct iwl_mvm_sta *mvm_sta,
++			       struct iwl_mvm_link_sta *mvm_sta_link,
++			       unsigned int link_id,
++			       bool is_in_fw);
+ int iwl_mvm_mld_rm_sta_id(struct iwl_mvm *mvm, u8 sta_id);
+ int iwl_mvm_mld_update_sta_links(struct iwl_mvm *mvm,
+ 				 struct ieee80211_vif *vif,
 -- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
+2.43.0
+
