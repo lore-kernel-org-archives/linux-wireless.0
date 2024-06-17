@@ -1,102 +1,94 @@
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74631195F09;
-	Mon, 17 Jun 2024 09:44:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B421946D2
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2024 10:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718617500; cv=none; b=cm0A5URTCWFH5UBcwtkQSYnTHVKh8215TXBzkHIQfk0kULHvqpgJ0Uj+4iDtAsxcyHXG/2HVTy5De8rVLWry3xFrG7nv4DmJRRzHzwS+yqyIhflZnasQaBTX7+ovuOeGcZhhloFD/tNwT5kWim5cgmRiOM7xPyWVV3MbkIVMIuU=
+	t=1718621033; cv=none; b=GAgU+QKViytZGyjavaB2FW3mvMWW4zzh/XpQ4AZaR4wXo+8iLremnWforOl9Yc6XgrwQKuD9TWFGvz/RgybzbzJm588Ta9q2QdQNkbYIM4kR8pHtT9D8cgdGFBOmBmc9TznuNjxdIyfFCqcQtwMwiT2b8G8DX/7DNAhjRxEndTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718617500; c=relaxed/simple;
-	bh=Zl0H127CyeqOXk7mpS1eDFYTetGfKPwapBTVMhQmSlo=;
-	h=Message-ID:Date:MIME-Version:From:To:Cc:Subject:Content-Type; b=Dh8wo/AegKSQQMo+Tvk42PYJpERHZ35ks4mJ29MUWFw/FIClfrDMzmTvr+/J/cSmFHCTIMAjHcz+PqY19KLNr91PcbfWw5WIp/GkquA2SENTa9GYxXv9/HuQbgY9Yc9u2DLQNyE4/PaBnAnAAYX4jblFxO5f7uwGv5gCdIvnluE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=HVEE4c63; arc=none smtp.client-ip=80.237.130.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1718621033; c=relaxed/simple;
+	bh=rCJPCXIu8LZY5v9GcPLg0APTKd8DO7Lztus0sEHhEFE=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=oTdTpv6LCG2PjM2g8fof91BKgUCT67d2Mq9IMoE0gGJw3p6ZfEnvPZQpkSTshXn2LGZPIiIW7pellhv9B2pCB5/IZhs5a8uNS0j5G18JIUymtLbEQC3MpPrC62SMVYemxR3Goh+nGDvpbzvGqwrzxM0uqQD/JEz+HjM35ahdHsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tjfXdF8y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="HVEE4c63"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:Subject
-	:Reply-To:Cc:To:From:MIME-Version:Date:Message-ID:From:Sender:Reply-To:
-	Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:In-Reply-To:
-	References; bh=y5NFcSqhUTL6fruZ1xgcLxOYcmeMsMeCG+Q/p9D+Di4=; t=1718617498;
-	x=1719049498; b=HVEE4c63RYE7DoCjiOu7ODPQkqgcoMnXqCC/QIcV/iVPX1buMchXKwrAVGDa5
-	Ua7G6mG/5FzNEMikmsnR2Fv8/svixUhgxXchZy1qcRFju5jkCoB1fxlP0r7EUNnQjAEn/YT/2KNty
-	6+AVp9Actax9Cqo9MGztGf2Tp5VtcHfHZnyKyJkpkaCkz864kvKtveEn9bRIlTBPcZtekJKPmcseP
-	uXbZrgcR68bjjszNEODeX5apNUVaUGKSepdkUZ6xQ+IT2GIrM1uI7QGbYFqMC2iDeV2p9JRO+FVAS
-	ggIncKhRXwcqf2pUGI7ztr0XmVoagXI00KpAU09fzxWCBEz2GQ==;
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	id 1sJ8v1-0005bs-TO; Mon, 17 Jun 2024 11:44:56 +0200
-Message-ID: <f16d49f6-01a4-45c7-aabf-ab6a1b8bfe6e@leemhuis.info>
-Date: Mon, 17 Jun 2024 11:44:55 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tjfXdF8y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07A47C2BD10;
+	Mon, 17 Jun 2024 10:43:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718621033;
+	bh=rCJPCXIu8LZY5v9GcPLg0APTKd8DO7Lztus0sEHhEFE=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=tjfXdF8yeQXG7NHwMyvRhY64QiV4Jpi+EKf5H6RnIid2pfXuHgz4FexxL6kJzc6bM
+	 21Rr3WATrrZ6pjTPTs2sHov/GbD7Ixh9ajNTQXVaZar4Hrh2oGP9n1o7IfY1XdDCKg
+	 /zM0VxjwsPkkNIOLxjeGi4U9z1ohT4el28U2+1eHAKM6vB1aY+QbACCrjNM6eQsEIh
+	 Ng3Q7G3qsUYX99+7kKEA4hDVmtP7H2ZbUY86Klz578yjGkhkFoTJSWswBkf77Ym8O/
+	 jJ9vXc8j7vjICWOLp9yTf54rYjtLYkom6eCjlLVSVPFcUzh6GOj/HmBE0IqUfUuAmw
+	 MWqXfnAuYvY/A==
+From: Kalle Valo <kvalo@kernel.org>
+To: Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>,
+  <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>,  Aditya
+ Kumar Singh <quic_adisi@quicinc.com>,  Zachary Smith
+ <dr.z.smith@gmail.com>
+Subject: Re: [PATCH] wifi: ath12k: fix legacy peer association due to
+ missing HT or 6 GHz capabilities
+References: <20240612225336.2303119-1-quic_pradeepc@quicinc.com>
+	<760d99d1-c709-43b5-9d15-c2a0fef98b66@quicinc.com>
+	<a7921a28-6f36-40b4-9d56-284b2c2684a6@quicinc.com>
+	<199dbb00-424c-4827-ae9a-0e657918fc06@quicinc.com>
+Date: Mon, 17 Jun 2024 13:43:50 +0300
+In-Reply-To: <199dbb00-424c-4827-ae9a-0e657918fc06@quicinc.com> (Jeff
+	Johnson's message of "Thu, 13 Jun 2024 15:15:52 -0700")
+Message-ID: <87y173n921.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: "Linux regression tracking (Thorsten Leemhuis)"
- <regressions@leemhuis.info>
-Content-Language: en-US, de-DE
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- Kalle Valo <kvalo@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- Linux kernel regressions list <regressions@lists.linux.dev>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
-Subject: [regression] iwlwifi 0000:02:00.0: Microcode SW error detected.
- Restarting 0x82000000.
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1718617498;0748ce8c;
-X-HE-SMSGID: 1sJ8v1-0005bs-TO
+Content-Type: text/plain
 
-Hi, Thorsten here, the Linux kernel's regression tracker.
+Jeff Johnson <quic_jjohnson@quicinc.com> writes:
 
-Miri, I noticed a report about a regression in bugzilla.kernel.org for
-some code you maintain. As many (most?) kernel developers don't keep an
-eye on the bug tracker, I decided to write this mail. To quote from
-https://bugzilla.kernel.org/show_bug.cgi?id=218946 :
+> On 6/13/2024 11:59 AM, Pradeep Kumar Chitrapu wrote:
+>
+>> 
+>> 
+>> On 6/13/2024 8:42 AM, Jeff Johnson wrote:
+>>> On 6/12/2024 3:53 PM, Pradeep Kumar Chitrapu wrote:
+>>>> Currently SMPS configuration failed when the Information
+>>>> Elements (IEs) did not contain HT or 6 GHz capabilities. This
+>>>> caused legacy peer association to fail as legacy peers do not
+>>>> have HT or 6 GHz capabilities. Fix this by not returning an
+>>>> error when SMPS configuration fails due to the absence of HT
+>>>> or 6 GHz capabilities.
+>>>>
+>>>> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+>>>>
+>>>> Fixes: f0e61dc7ecf9 ("wifi: ath12k: refactor SMPS configuration")
+>>>> Reported-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+>>>
+>>> Per checkpatch:
+>>> WARNING: Reported-by: should be immediately followed by Closes:
+>>> with a URL to the report
+>>> #17:
+>>> Reported-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+>>>
+>>> Is there a separate public bug report from Aditya?
+>> Hi Jeff,
+>> No, this was internal report and does not have weblink associated with 
+>> it. Also, do not want to ignore reportee.
+>
+> I'm unsure what do do here since there is a requirement that an acknowledged
+> reporter have a public link to the bug report.
 
-> The linux Kernel 6.10.0-rc3
-> [   17.124384] iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x82000000.
-> [   17.124405] iwlwifi 0000:02:00.0: Loaded firmware version: 18.168.6.1 6000g2b-6.ucode
-> [   17.124588] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-> [   17.124590] iwlwifi 0000:02:00.0: Status: 0x000002CC, count: 6
-> [   17.124592] iwlwifi 0000:02:00.0: 0x0000198A | ADVANCED_SYSASSERT          
-> [   17.124594] iwlwifi 0000:02:00.0: 0x00015920 | uPc
-> [   17.124596] iwlwifi 0000:02:00.0: 0x00015910 | branchlink1
-> [   17.124597] iwlwifi 0000:02:00.0: 0x00015910 | branchlink2
-> [   17.124599] iwlwifi 0000:02:00.0: 0x0000DBEA | interruptlink1
-> [   17.124600] iwlwifi 0000:02:00.0: 0x00000000 | interruptlink2
-> [   17.124602] iwlwifi 0000:02:00.0: 0x0000005C | data1
-> [   17.124603] iwlwifi 0000:02:00.0: 0x00000008 | data2
-> [   17.124605] iwlwifi 0000:02:00.0: 0x000001DC | line
-> [   17.124606] iwlwifi 0000:02:00.0: 0x11C0C9B1 | beacon time
-> [   17.124608] iwlwifi 0000:02:00.0: 0x006FB64F | tsf low
-> [...]
+I think it's ok to ignore this checkpatch warning. Reported-by without a
+closes tag should be fine.
 
-The reporter later confirmed that 6.9 is working fine.
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-See the ticket for more details. Note, you have to use bugzilla to reach
-the reporter, as I sadly[1] can not CCed them in mails like this.
-
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
-
-[1] because bugzilla.kernel.org tells users upon registration their
-"email address will never be displayed to logged out users"
-
-P.S.: let me use this mail to also add the report to the list of tracked
-regressions to ensure it's doesn't fall through the cracks:
-
-#regzbot introduced: v6.9..v6.10-rc3
-#regzbot title: wifi: iwlwifi: Microcode SW error detected
-#regzbot from: doru iorgulescu
-#regzbot duplicate: https://bugzilla.kernel.org/show_bug.cgi?id=218946
-#regzbot ignore-activity
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
