@@ -1,46 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A413917C018;
-	Mon, 17 Jun 2024 13:25:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8633317737E;
+	Mon, 17 Jun 2024 13:25:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718630732; cv=none; b=Mm9WqImm5O30yzSZ34z9qwEToZilhMgrHqPOG3GPoU+4pW2+a2+kRN5TWQ4VHjEaU7qIsLkmeEcwf7mJXvDiG3iHJA1rC2+rLIHRpA/pOcHVDh2hvXZQMsJdYv2v4Bq2EmB1LKdQj5RuyQxUXZIPKDkkZC2gQwW/6If57RZLu8M=
+	t=1718630735; cv=none; b=aa3joEfwL74iC6pqamHlAva9+1qAcSYG1FS3BS1MAMS2knescbh5ENS+WkleugpP8XqHTtEVhoNmF5TpZjdQ3UhPmurLsAQDmZO0+zV9RWIJ3+SwY73mVmcDgb9MwlSmOK26Dk31GYPn6NXKRdA4QTPy3Lq5yUy6pPVWG+hTUQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718630732; c=relaxed/simple;
-	bh=SIY+XGznWIjYWRnwlRHisYlKO0m1D5ZxOPn78mfuTHc=;
+	s=arc-20240116; t=1718630735; c=relaxed/simple;
+	bh=iWE2UB15Ff60WGB6hHzzKXo7kY7WJ33e1jmtNvHU3Mc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rjbxwDsWO6uWTqoNxHGYZK7i1pJodiXI0dBLmH+sAPxlaBwniIHuXvly4jG+LW8ER5lJB0IN420UQV2LAkZX+B+Nd1tdFZV85rXKiTbgB3ckBRuEa22mePTgW+6ozbei4aUp0zYe9Mfq/ZYyuk06ua6mdxTkNgBP8DcH2i8mvfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rQfC6os0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=S05SbNPRr/RjrzmzqhiyVzDZ4loihpZ0hVsrhO2BM061/elBRUxAhMC5EvjwXwa+iKnVs3pQqGUTKSf70MXtbD/yZeV5s+tf5jAfGHe8LvsW4GAui1W2NSQd6MrpLud2i2hdvp02t5yJWDA3+ajuSLFftuFEuwS3nyH84EoXiY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s0xwZ52C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rQfC6os0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11CE6C4AF49;
-	Mon, 17 Jun 2024 13:25:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s0xwZ52C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42BADC4AF1D;
+	Mon, 17 Jun 2024 13:25:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718630732;
-	bh=SIY+XGznWIjYWRnwlRHisYlKO0m1D5ZxOPn78mfuTHc=;
+	s=k20201202; t=1718630735;
+	bh=iWE2UB15Ff60WGB6hHzzKXo7kY7WJ33e1jmtNvHU3Mc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rQfC6os0L5dYcjdxy/qKtFJirf6SJl1qTsfzzyx/UMzZssFCRhk3hTlZo1H8XTZ2f
-	 ZWYX4VcjbHfePeObjr39zA4u39tWv7nHr1AkoWA+7Fhc8HeZN9IpVlhPIMXRREhUUX
-	 oGju9wZWy2RBRSYuSY+sAgo6Mvhc4jyQ9QFy7kQRa/TsslDqW4v7cKI5WLnkiP00bT
-	 UMkeyF2YhA+ExzLBlCcSgL2Pn5pMqM0uFglwgvvUJFPms+S8ioDDjNrX0WeNtfniHe
-	 gknAhK8MxMWYY1WXMgSLkessqm0/P7izR3uBmPImpCVftKiOeIX/yi3nYsK3ZGz4k+
-	 qNvT7tenqoVIA==
+	b=s0xwZ52CWvRgXPpyYOS+rpTfCBgZn8RDCV/sto4f/VzMgBjnpXLM18eplNH/zMChi
+	 5rdAlfrR5mfsE4tK0DKhAcLpHJY72GvrEQqx+hB1sFPmbVHEDFZxTb9ucRw3d6GwEk
+	 5MpgkaXN6t+B+BXmouTD5ml/RnJK6HmCNvRaiuf9+D8fc97TKwFJqJ0Wx72ssg9onN
+	 7GkeJS+UeUdqYCySZrbOmHyhBNaP/+6RqDbIYGEaVPerRnjO4mXuBHp70kvDLf0S5j
+	 puIFeEKzzdZdm/ZK3AIwZI8iEWPMsaqjCH8Hmt65gIU4UwKKjEeeF3tUFztiW1pbtb
+	 P9Qi7d7hKQUSw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>,
+Cc: Ilan Peer <ilan.peer@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	kvalo@kernel.org,
+	ayala.beker@intel.com,
 	gregory.greenman@intel.com,
 	benjamin.berg@intel.com,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 17/29] wifi: iwlwifi: mvm: properly set 6 GHz channel direct probe option
-Date: Mon, 17 Jun 2024 09:24:21 -0400
-Message-ID: <20240617132456.2588952-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 18/29] wifi: iwlwifi: mvm: Fix scan abort handling with HW rfkill
+Date: Mon, 17 Jun 2024 09:24:22 -0400
+Message-ID: <20240617132456.2588952-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240617132456.2588952-1-sashal@kernel.org>
 References: <20240617132456.2588952-1-sashal@kernel.org>
@@ -55,39 +55,49 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.94
 Content-Transfer-Encoding: 8bit
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 989830d1cf16bd149bf0690d889a9caef95fb5b1 ]
+[ Upstream commit e6dd2936ce7ce94a1915b799f8af8193ec628e87 ]
 
-Ensure that the 6 GHz channel is configured with a valid direct BSSID,
-avoiding any invalid or multicast BSSID addresses.
+When HW rfkill is toggled to disable the RF, the flow to stop scan is
+called. When trying to send the command to abort the scan, since
+HW rfkill is toggled, the command is not sent due to rfkill being
+asserted, and -ERFKILL is returned from iwl_trans_send_cmd(), but this
+is silently ignored in iwl_mvm_send_cmd() and thus the scan abort flow
+continues to wait for scan complete notification and fails. Since it
+fails, the UID to type mapping is not cleared, and thus a warning is
+later fired when trying to stop the interface.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+To fix this, modify the UMAC scan abort flow to force sending the
+scan abort command even when in rfkill, so stop the FW from accessing
+the radio etc.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://msgid.link/20240513132416.91a631a0fe60.I2ea2616af9b8a2eaf959b156c69cf65a2f1204d4@changeid
+Link: https://msgid.link/20240513132416.8cbe2f8c1a97.Iffe235c12a919dafec88eef399eb1f7bae2c5bdb@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index b20d64dbba1ad..686a55515cdec 100644
+index 686a55515cdec..9bb8533874d8e 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1707,7 +1707,10 @@ iwl_mvm_umac_scan_fill_6g_chan_list(struct iwl_mvm *mvm,
- 				break;
- 		}
+@@ -3057,10 +3057,11 @@ static int iwl_mvm_umac_scan_abort(struct iwl_mvm *mvm, int type)
  
--		if (k == idex_b && idex_b < SCAN_BSSID_MAX_SIZE) {
-+		if (k == idex_b && idex_b < SCAN_BSSID_MAX_SIZE &&
-+		    !WARN_ONCE(!is_valid_ether_addr(scan_6ghz_params[j].bssid),
-+			       "scan: invalid BSSID at index %u, index_b=%u\n",
-+			       j, idex_b)) {
- 			memcpy(&pp->bssid_array[idex_b++],
- 			       scan_6ghz_params[j].bssid, ETH_ALEN);
- 		}
+ 	ret = iwl_mvm_send_cmd_pdu(mvm,
+ 				   WIDE_ID(IWL_ALWAYS_LONG_GROUP, SCAN_ABORT_UMAC),
+-				   0, sizeof(cmd), &cmd);
++				   CMD_SEND_IN_RFKILL, sizeof(cmd), &cmd);
+ 	if (!ret)
+ 		mvm->scan_uid_status[uid] = type << IWL_MVM_SCAN_STOPPING_SHIFT;
+ 
++	IWL_DEBUG_SCAN(mvm, "Scan abort: ret=%d\n", ret);
+ 	return ret;
+ }
+ 
 -- 
 2.43.0
 
