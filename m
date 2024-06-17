@@ -1,116 +1,85 @@
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from relay-b01.edpnet.be (relay-b01.edpnet.be [212.71.1.221])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1592913AD28;
-	Mon, 17 Jun 2024 15:40:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5702018A939
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Jun 2024 17:44:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.71.1.221
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718638829; cv=none; b=nVF9v4gDtv+X22zXK0pXN7kFT7B/A8bii/csGlVAliPyOx+4RcgwlUN39/TMUOgg1BeZ1UV9wG0EnA7fj3nJ8Y8gwyErd68oAwvvMJZM+pZelm8Dt6qoCUQRtwgF6d7Nvq300Rbox0q0Hd9V7ADcn2eLrcpUGk26rpoJDIWcXkg=
+	t=1718646280; cv=none; b=hmG4SrhpMrAzcpQw3bDHQrUBeNnfL0yIXWkBuWLUCKEsgo13pITva5sfhXOg2Tjbem5yfU8sntqVXayOFrXznZDIs4zTKbDeH+W0e2KSMYvqmqsBuACVEppaJdiFScT+drDA6ttxc3/e/j456QKbQW2eG9BuEphF8qX+C5FxaQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718638829; c=relaxed/simple;
-	bh=lOamXn3N/pPpYSAmY4TOJJMLx7CGifnlr7hw4fmHfHU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ku9rbAzzfscBT49vlog6JtAvoNMm7vUpbHvOtmEX6uKTUr8JwgEk+nUkxG2/nZCZYe9Ep1yvY+EEcQI2dC6tl1B+ykLRbaA9QGL52MQ/rbE/rpNQV2yX4SYBu34r0rNaVR094g15gxb6t8IdlmYnlbx3El1oW4HtHp2S917t0bo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h/0tV0zl; arc=none smtp.client-ip=209.85.216.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718646280; c=relaxed/simple;
+	bh=fHI9suxn2yhoenFRb/GpaUBgD6FKtYobVow+7IALfwE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qlLKdGdsQx5p98BRcO/a7Fyd9Q+Wq1ClmbPCZIIqtmiYlCHn0k71TIZJgXP4pGnKUc0vEvsx2QHeF2UzoJt93Xx+dCz+rG1FBHMjNWFVGzkWytNH9YpSeLNPt7C8j8S1MNR1PLoXVDvlCOyO8bRKc/+WTO0KmH/7Nx/Cz5W9814=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=vandijck-laurijssen.be; spf=pass smtp.mailfrom=vandijck-laurijssen.be; dkim=pass (2048-bit key) header.d=vandijck-laurijssen.be header.i=@vandijck-laurijssen.be header.b=Pmv3ycVQ; arc=none smtp.client-ip=212.71.1.221
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=vandijck-laurijssen.be
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vandijck-laurijssen.be
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h/0tV0zl"
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2c2e31d319eso3653489a91.1;
-        Mon, 17 Jun 2024 08:40:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718638827; x=1719243627; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=UYKZbKA1IH1qpLBsnDaAu/eGeDN326v+sTxO24RWZEc=;
-        b=h/0tV0zlxboIuVQNIPznQquLeh/OH5Ne9ZPYaPnTuajv2gX3dosOL5CC6A3ni0QNjs
-         bjAHk7iRWkNubjPlS2AAwqr3SnEszPi/NpzzSHxvAZtTlGkLNpk0+abviK70SBKmdoyP
-         mjx9+tyEyFR1Azwm6HTmNSm6jbfCDK8ZQjfrrkvuOMZ/eaUeqppjbtscD6esTnanMC7q
-         n2H8Cy9v3WbjtQ84/4VrsGEZgABETrDaAvz9pVAKCQTFXR9l4D4DAtRmAIy/TterO1x2
-         gYmuILHd1TNqMC8BWP2SCccwYZs987EOKXZZ6IyuUES+Yz7bIhAdtRr1UFXsjyU2w7g0
-         PV3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718638827; x=1719243627;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=UYKZbKA1IH1qpLBsnDaAu/eGeDN326v+sTxO24RWZEc=;
-        b=BlpUx9jbv7NhXQjB7tSqz/uhhFzqFBkblAQqamL2ZgWRiOkOUthQit/kg1k4y+fnrb
-         xaAixQDFUdmKeKq7A60O+VYRME5S+3kXmQtu0cUnxeoQzv6bFxBVV7OJ8tO6f5laBuVd
-         /kTxRkGvmI+kgSGkqKekPgIEr06rt4TUhM/JVpsIELtjVZYU3ScegoyImNWX84xWax9u
-         xhK+L1YMUWgnAavlyhl8AZDPCpg+zShfacxkhbxjkitT4T1b0nLRpNSaxhUI0uTFwmMY
-         rQDImpdruiO9/jcGz17d2qwPKeb2ZzpVbcBnNLX0Gno0Xga5+fjTsqmlGx3eJy/epnsc
-         dPjA==
-X-Forwarded-Encrypted: i=1; AJvYcCXr5FZuZxOs7gNUgA0OFH3R5gEc0bDS3HProBHJ1Qe7kGMaamMVKM2UvGANlP0PsZro9VQTTTe/cuzsKR2eeFHk0N9lZdR1pEni48IUaWbsKWU0TTYUU8O+U0dZAPY97jcWeqMqjt1nGCq/fsg=
-X-Gm-Message-State: AOJu0Yze39gf2ZZL31HEEWPMiz1Xu4Fto2jiugPrUrA+8gZ6yfcb85fG
-	32waAcyw1CUcpp4FTJPYjeDUYmcQqTr/Fuc0nKIhWQ7/naEHculv
-X-Google-Smtp-Source: AGHT+IFHFsKHtLXkZcWv7XUVxV29Z6bbPOrvzMOfmWEj2bjq7IKEVu74hiV3XqolDSUa8zDgMsp85A==
-X-Received: by 2002:a17:90a:ae06:b0:2c2:f6a3:3043 with SMTP id 98e67ed59e1d1-2c4db133ea3mr9702567a91.9.1718638827086;
-        Mon, 17 Jun 2024 08:40:27 -0700 (PDT)
-Received: from [10.102.4.159] ([208.195.13.130])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4c45cc95dsm9152634a91.22.2024.06.17.08.40.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 Jun 2024 08:40:26 -0700 (PDT)
-Message-ID: <37ba6cb0-d887-4fcf-b7dc-c93a5fc5900f@gmail.com>
-Date: Mon, 17 Jun 2024 08:40:23 -0700
+	dkim=pass (2048-bit key) header.d=vandijck-laurijssen.be header.i=@vandijck-laurijssen.be header.b="Pmv3ycVQ"
+X-ASG-Debug-ID: 1718645260-2392345cc4a74c10001-9xRsGE
+Received: from srv21.vandijck-laurijssen.be (77.109.96.193.adsl.dyn.edpnet.net [77.109.96.193]) by relay-b01.edpnet.be with ESMTP id YyM4m9klsVyZiJlo; Mon, 17 Jun 2024 19:27:40 +0200 (CEST)
+X-Barracuda-Envelope-From: dev.kurt@vandijck-laurijssen.be
+X-Barracuda-Effective-Source-IP: 77.109.96.193.adsl.dyn.edpnet.net[77.109.96.193]
+X-Barracuda-Apparent-Source-IP: 77.109.96.193
+Received: from x1.vandijck-laurijssen.be (x1.vandijck-laurijssen.be [IPv6:fd01::1a1d:eaff:fe02:d339])
+	by srv21.vandijck-laurijssen.be (Postfix) with ESMTPSA id AD97C5AA3F7;
+	Mon, 17 Jun 2024 19:27:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=vandijck-laurijssen.be; s=default; t=1718645259;
+	bh=fHI9suxn2yhoenFRb/GpaUBgD6FKtYobVow+7IALfwE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Pmv3ycVQuKVUCtQlCVz6uu7UY2vfjz9nCzjNT7KMsuzGx4QQpDS1cFpOsJJvvxrmo
+	 i+GlyzWgEKX1NroByqzI9AtNOikWW9efFWD+8nEA+gtEn7aufXTQ+6/QmOJJDSYu8T
+	 6ttKSyYNr1Gpv/Hm/R+r//pzg8m1AmpuoK2DRMkuZU4QzIcMQV33xijKl4y175PXiv
+	 lRIyad7NRkj0nVsGZjXM8IniPouwiKg6DW6Oxz937TC62mSdF3+hxf3dxPLSdrPsJ1
+	 HyFz7ryJdnrabPxUsE1wI4sCIvrfVcu0TaJVRfPvZ31eouDhXjg7AdxDxQxrAAlUfA
+	 s25t4XLgFbF+g==
+Date: Mon, 17 Jun 2024 19:27:38 +0200
+From: Kurt Van Dijck <dev.kurt@vandijck-laurijssen.be>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	brcm80211@lists.linux.dev, linux-wireless@vger.kernel.org
+Subject: Re: brcmfmac: implement basic AP-follow-STA
+Message-ID: <ZnByCrJlNQPnLYHe@x1.vandijck-laurijssen.be>
+X-ASG-Orig-Subj: Re: brcmfmac: implement basic AP-follow-STA
+Mail-Followup-To: Kalle Valo <kvalo@kernel.org>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	brcm80211@lists.linux.dev, linux-wireless@vger.kernel.org
+References: <Zmqf7jCqwlQNGM_j@x1.vandijck-laurijssen.be>
+ <87v827k8p2.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: invalid vht params rate 1920 100kbps nss 2 mcs 9
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>, linux-wireless@vger.kernel.org,
- ath10k@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
-References: <fba24cd3-4a1e-4072-8585-8402272788ff@molgen.mpg.de>
- <1faa7eee-ed1e-477b-940d-a5cf4478cf73@gmail.com> <87iky7mvxt.fsf@kernel.org>
-Content-Language: en-US
-From: James Prestwood <prestwoj@gmail.com>
-In-Reply-To: <87iky7mvxt.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <87v827k8p2.fsf@kernel.org>
+X-Barracuda-Connect: 77.109.96.193.adsl.dyn.edpnet.net[77.109.96.193]
+X-Barracuda-Start-Time: 1718645260
+X-Barracuda-URL: https://212.71.1.221:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at edpnet.be
+X-Barracuda-Scan-Msg-Size: 544
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=7.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.126378
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
-Hi Kalle,
+On ma, 17 jun 2024 16:19:53 +0300, Kalle Valo wrote:
+> Kurt Van Dijck <dev.kurt@vandijck-laurijssen.be> writes:
+> 
+> > To be less invasive, this new behaviour is put behind
+> > a module parameter 'ap_follow_sta'.
+> 
+> FWIW module parameters should be avoided, especially for 802.11 protocol
+> level functionality.
 
-On 6/17/24 8:27 AM, Kalle Valo wrote:
-> James Prestwood <prestwoj@gmail.com> writes:
->
->> Hi Paul,
->>
->> On 6/16/24 6:10 AM, Paul Menzel wrote:
->>> Dear Linux folks,
->>>
->>>
->>> Linux 6.10-rc3 (commit a3e18a540541) logged the warning below when
->>> connecting to a public WiFi:
->>>
->>>      ath10k_pci 0000:3a:00.0: invalid vht params rate 1920 100kbps
->>> nss 2 mcs 9
->> This has been reported/discussed [1]. It was hinted that there was a
->> firmware fix for this, but none that I tried got rid of it. I got fed
->> up enough with the logs filling up with this I patched our kernel to
->> remove the warning. AFAICT it appears benign (?). Removing the warning
->> was purely "cosmetic" so other devs stopped complaining about it :)
->>
->> [1] https://www.mail-archive.com/ath10k@lists.infradead.org/msg13406.html
-> More reliable link to the discussion:
->
-> https://lore.kernel.org/ath10k/76a816d983e6c4d636311738396f97971b5523fb.1612915444.git.skhan@linuxfoundation.org/
->
-> I think we should add this workaround I mentioned in 2021:
->
->     "If the firmware still keeps sending invalid rates we should add a
->      specific check to ignore the known invalid values, but not all of
->      them."
->
->     https://lore.kernel.org/ath10k/87h7mktjgi.fsf@codeaurora.org/
->
-> I guess that would be mcs == 7 and rate == 1440?
-I think its more than this combination (Paul's are different). So how 
-many combinations are we willing to add here? Seems like that could get 
-out of hand if there are more than a few invalid combinations. Would we 
-also want to restrict the workaround to specific hardware/firmware?
->
+The module parameter does not add functionality in this case either.
+If it's a problem for merging this patch, I'll be more than happy to send a v2
+without the parameter, with the functionality always active.
+
+Kurt
