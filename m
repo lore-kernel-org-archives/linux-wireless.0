@@ -1,143 +1,107 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from omta036.useast.a.cloudfilter.net (omta036.useast.a.cloudfilter.net [44.202.169.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AFBC1BE86B;
-	Thu, 20 Jun 2024 17:57:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2B41B4C52
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 18:02:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718906264; cv=none; b=OpH2UUf3W6AA0PnHYFvkKgk3VferXxjb4TRSgHrAaJ05fFk1eVwrF/1Brxp2N1NQ+qtjUkRdvVsaPDYUpM4jXa0g2yiO7mforGnhMSjlvTw9IdiCo83X8vmHxYoSvv//JYbiMoR5uaqxHIn5qIa46c9fxhRg1q53vPZutpbwWmA=
+	t=1718906544; cv=none; b=d9XC/CMXKVzkyjQ8mrPntHACjKl2I961WPhpHkFpjVaSPJfCG/9MPxdZsmdGaUb/5rijN3LrXQ06+jI7nEjaIuhw4gz97IZqD+pykzJo+/vvv4jv1LPCMBovretOZT7jk2Zowu8j8JV5pIcY3Dgwn3GvKNs3uUocLRWdB5Xbej4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718906264; c=relaxed/simple;
-	bh=Kq0Le/AzG6nhFQ+X/jkGw++00vhHiyLHVZOAh/AXVkQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T6aJHpvfrPTlexzKzd2CNQODM/bPuLYbQGXbNyy4pdvMInLcoN0lUC5GmBCfrcfz3bI/wt39Bya0kKq1RpLZBBwFunB+VFuG1Yf903PzZJvSD9Fh0nFtmEwYFDeSLQa6Z8BgFMQ39ovMAJ1aZ+DqRdjntBawgyb30Pf+RX8bSJc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jTKbvNiQ; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718906544; c=relaxed/simple;
+	bh=9OYNE5YcPJoW+cycciShcyXeb0c1OGto8YDuhiLt/9E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sz2P5YCB9kL29JZGbjh2XRkfrQ59OhCXn/mNkt8JodcDsHhBX2aLXCdvd8E7xkKv125CGV0Nn94/03vVH3wPEP9l1P6+lWjeHWm/qaDtlajpH5Ig7Tb6BwSlpRcbbNVYFaBLnU8D+1e/IrJaq9nL1kbK4kPkWt/AFtAt4yMjJVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=TrMdy504; arc=none smtp.client-ip=44.202.169.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jTKbvNiQ"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1f9de13d6baso4397325ad.2;
-        Thu, 20 Jun 2024 10:57:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718906263; x=1719511063; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AoRopA5ztbgBJRJEKQhgRyu/McLJD9vC3MN+d4zw/zY=;
-        b=jTKbvNiQWVes0vDEyyG7Shb/nyfrhRKxbMpNfF8B8b/f0f9Aqa0VC8ZUskzSe1BPL+
-         ryoDVXOPPqiNr6jLZfX9kO6WD7hyE9enr/15IaMJgy7dNJUtdTBOvJZUEATjHV8t3KhQ
-         htZ7c8N0On6YyDDIThnOF2AZbAumvdP/MJTwZaV6VBpvbtR1qA8TXBEN2Q/g/UlKF6l5
-         dFVGV+/3cb61ncD6DQzJo8A/DPOLj93NDp7/rbeqLFx4+Vj070wHSC/+xttzIEkdHeN0
-         INk5OUB5zm+Ky+7nNKvRZcOwd5WWukXUlz7r0zE4XXWPNapkB7qOPMDYtwq5EVyzk1FL
-         78kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718906263; x=1719511063;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=AoRopA5ztbgBJRJEKQhgRyu/McLJD9vC3MN+d4zw/zY=;
-        b=n8lyzdvaVfLDeu1utbSDARPIi6PdzVc+i3UGUcyrsugaKFaVIKNCyoIn8AuqWxD8GD
-         feYDm2OQQtQ2cOI71qJnuYZqyMg0s4QbBzmvc4qiw6Ye2Q6dI2wdasainhVv1zfp19TH
-         ADJanZ7BKCffPnpcWV+R/jCdJR+BjP4QWHQtpnKdKIvDoSuGLkHZOG8OBq0vnd6FJLTc
-         qYNmWYYL9lNJ3INGTWC9Rll4ZqUIIzCusmNwi7WoTmXopMr+2TJuFcb8kqiHI5SCmsCF
-         YJXLRSopQnEq0V/C5cePZGntFVsWQLIPsnF74TnY2s4HkKpMGpt+HXlIRynLWVsdJnw2
-         2qbA==
-X-Forwarded-Encrypted: i=1; AJvYcCUCFKQBH8+38o+UYcgQzRI37Gvai1cpSHUJBT+vDxK7FxVO78GnzRtESRvmMq4Ppn8XHKVvdycaXbdgPZBDBb9y1vxr56cAXWHjwI/H0VE=
-X-Gm-Message-State: AOJu0YyH6GniuyTuDAYYEvEDgdwrOqj9g7YgliMm4AMq0Xen3b416bhv
-	TIYnUXTDvF8OJMeRdoDrZCouP0N2pfBLD4PElLpmOLOc12hHGRQPlp8seYzL8a8=
-X-Google-Smtp-Source: AGHT+IFHXkrW2RCg31fg2jAnnLV16IOTYwG6YWnnpIOxreHYDd/8dS8YUOFYNhDpd1HKZjOhC4X4hA==
-X-Received: by 2002:a17:902:d508:b0:1f9:d1f7:3fe5 with SMTP id d9443c01a7336-1f9d1f76f10mr22446525ad.34.1718906262729;
-        Thu, 20 Jun 2024 10:57:42 -0700 (PDT)
-Received: from localhost ([216.228.127.128])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9d6b45389sm13541245ad.216.2024.06.20.10.57.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jun 2024 10:57:42 -0700 (PDT)
-From: Yury Norov <yury.norov@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org
-Cc: Yury Norov <yury.norov@gmail.com>,
-	Alexey Klimov <alexey.klimov@linaro.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jan Kara <jack@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH v4 12/40] wifi: rtw88: optimize the driver by using atomic iterator
-Date: Thu, 20 Jun 2024 10:56:35 -0700
-Message-ID: <20240620175703.605111-13-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240620175703.605111-1-yury.norov@gmail.com>
-References: <20240620175703.605111-1-yury.norov@gmail.com>
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="TrMdy504"
+Received: from eig-obgw-6004a.ext.cloudfilter.net ([10.0.30.197])
+	by cmsmtp with ESMTPS
+	id KIKasX5REAidIKM73sliQ6; Thu, 20 Jun 2024 18:02:21 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id KM72shYDUuv6XKM72sXdOV; Thu, 20 Jun 2024 18:02:21 +0000
+X-Authority-Analysis: v=2.4 cv=YbZ25BRf c=1 sm=1 tr=0 ts=66746ead
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=frY+GlAHrI6frpeK1MvySw==:17
+ a=IkcTkHD0fZMA:10 a=T1WGqf2p2xoA:10 a=wYkD_t78qR0A:10
+ a=u8_TST9jJ4tMlxaXhdEA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=HfKKts8lHZEV18StgAl0ALsIpFvYHBbDUnFqCEnAdRs=; b=TrMdy504Ugni0jbv4PFKWfje9V
+	ClDtpMDCuWWJYypILr/vUVFwgQ/jrR+7jbKpafdafiTG9H7OM1a3m9tzMpVVr214sbB+bt1ntOyb1
+	xiMj3rY77gU+N4r5nY8MjIkcEOCmA4HQk/vClwkCo4znDagw7v4zOnJwLuJCkRCBUwnHUyBPUiw7v
+	MaFluSrchhPqDq47wjsWQlasAIZs6+wmbHsUfpbCs3sjwHV2/CTnA97IusGBwIO6dBYknoLP1IsOL
+	nzSwiGdSiDZga4EWSU9yQtcOSSHGVr0P+QjUk9E09rkG0Tnk1bL+745mR2hnq1JJtS0DMJ1PGairJ
+	t/UW1t/g==;
+Received: from [201.172.173.139] (port=42268 helo=[192.168.15.10])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96.2)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1sKM70-003e3c-2m;
+	Thu, 20 Jun 2024 13:02:18 -0500
+Message-ID: <c8404725-e4c4-453b-b72d-19ab0761da70@embeddedor.com>
+Date: Thu, 20 Jun 2024 12:02:13 -0600
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: iwlwifi: mvm: Fix __counted_by usage in
+ cfg80211_wowlan_nd_*
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+ Kees Cook <kees@kernel.org>
+Cc: benjamin.berg@intel.com, dmantipov@yandex.ru, gregory.greenman@intel.com,
+ gustavoars@kernel.org, haim.dreyfuss@intel.com, johannes.berg@intel.com,
+ kvalo@kernel.org, linux-hardening@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+ luciano.coelho@intel.com, miriam.rachel.korenblit@intel.com,
+ shaul.triebitz@intel.com, yedidya.ben.shimol@intel.com
+References: <20240619211233.work.355-kees@kernel.org>
+ <d9bdb9c1-689e-4b3f-8325-8ee813257d8f@wanadoo.fr>
+Content-Language: en-US
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <d9bdb9c1-689e-4b3f-8325-8ee813257d8f@wanadoo.fr>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 201.172.173.139
+X-Source-L: No
+X-Exim-ID: 1sKM70-003e3c-2m
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.15.10]) [201.172.173.139]:42268
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 5
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfPcv1+1uyMVJb5FYy28v/be37qntSW8LxRDBlLb6TE7fsEPp4j0dK4HpIrkk2Cxq/ObzkRfQcgFWbIOwwgwn8c3bV+HUhdrgQsDRJ8eg3YNDfE/WOrH2
+ GjzBECF3UoBk3716kthHMl6F0+T+DIZnX9214eY4bYR70GDCoeR1Lah5HG12SBZyLrOXBPEGAasXVPSzbtCE/wNxPY85S0M25xc2VsKjoxEwrFk7gu5VHE0X
 
-rtw_pci_tx_kick_off() and rtw89_pci_tx_kick_off_pending() traverse bitmaps
-bit by bit. Simplify it by using atomic for_each_test_and_clear_bit()
-iterator.
 
-Signed-off-by: Yury Norov <yury.norov@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/pci.c | 6 +++---
- drivers/net/wireless/realtek/rtw89/pci.c | 6 ++----
- 2 files changed, 5 insertions(+), 7 deletions(-)
+> My understanding is that 'match', is allocated by :
+>      match = kzalloc(struct_size(match, channels, n_channels), GFP_KERNEL);
+> 
+> So match->n_channels is *0* when iwl_mvm_query_set_freqs() is called.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 30232f7e3ec5..28c0f4c99cf8 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
-  */
- 
-+#include <linux/find_atomic.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include "main.h"
-@@ -790,9 +791,8 @@ static void rtw_pci_tx_kick_off(struct rtw_dev *rtwdev)
- 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
- 	enum rtw_tx_queue_type queue;
- 
--	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++)
--		if (test_and_clear_bit(queue, rtwpci->tx_queued))
--			rtw_pci_tx_kick_off_queue(rtwdev, queue);
-+	for_each_test_and_clear_bit(queue, rtwpci->tx_queued, RTK_MAX_TX_QUEUE_NUM)
-+		rtw_pci_tx_kick_off_queue(rtwdev, queue);
- }
- 
- static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 03bbcf9b6737..deb06cab5974 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2020  Realtek Corporation
-  */
- 
-+#include <linux/find_atomic.h>
- #include <linux/pci.h>
- 
- #include "mac.h"
-@@ -1234,10 +1235,7 @@ static void rtw89_pci_tx_kick_off_pending(struct rtw89_dev *rtwdev)
- 	struct rtw89_pci_tx_ring *tx_ring;
- 	int txch;
- 
--	for (txch = 0; txch < RTW89_TXCH_NUM; txch++) {
--		if (!test_and_clear_bit(txch, rtwpci->kick_map))
--			continue;
--
-+	for_each_test_and_clear_bit(txch, rtwpci->kick_map, RTW89_TXCH_NUM) {
- 		tx_ring = &rtwpci->tx_rings[txch];
- 		__rtw89_pci_tx_kick_off(rtwdev, tx_ring);
- 	}
--- 
-2.43.0
+n_channels is updated in the line before calling kzalloc():
 
+n_channels = iwl_mvm_query_num_match_chans(mvm, d3_data->nd_results, i);
+
+match = kzalloc(struct_size(match, channels, n_channels), GFP_KERNEL);
+
+--
+Gustavo
