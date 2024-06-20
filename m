@@ -1,31 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6239E1AD9DE
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 14:09:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA67D1AE093;
+	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718892541; cv=none; b=cThQU4qfzfW7CreuIai5Ic+g1jdI9xnc9U/sNdaVj/zhPDTngua7juCcADoLMXrqzlbuLrSz1UaKOYJslrzPX/xfXKGwryfTjAzekfj+SMBaGdfH6P/sH26Hc0vOApN7a53m4k52ZKexDYU707syq5T3t5dBbIkHD2+l94IZh+8=
+	t=1718893851; cv=none; b=qm7oL/15LQOXD8fJ3ffk4zGvb1fbAhRtKBAwmiwyUL9mpABDYiFkNH2E7TzuPqj9hwEbmzzfGUSv2vBmEXS1BL2gQU2LTBqqRn2FVfs5ojw38+ksvJH6E6hJVIp/01dJiO7g4rZb2whaG3UQJG/0LR4Jy5UtmyQz7TzwBSwNsPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718892541; c=relaxed/simple;
-	bh=9bJfbKRupOXgKTJN/Kgr1szk1mCSg6BrwEvmo45z+iM=;
-	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
-	 Cc:Message-ID:Date; b=ODbOzzBCHEpIF6RDvWiqXV7TxyEsqfFC1DRBqWWz+JTrYhv9kNGPIJXThngOX5Ke3KetkTO0XCjmeb27LU+mPj72/pRD+fij+Nh9COMa78+sZ+Kk4XJEVA6l/5344FXqquII1sAAe7Jwz2hk3M4Nb66VqR1jOvalHTxu4OIdnBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r6lmXn7Y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718893851; c=relaxed/simple;
+	bh=lFnvmyEqgdYMJeF8dWD9Fuq9BZ+u9+Ev069om7FPMpQ=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=apoVPmhEOHRfcajFi2y8g9R364PHtl+XeiYECm80cFx6k6EW7Rf+gKRH02x3ndhC88xGH7PXlpx1nZTna9awKnulriuo1c1vVQrW3wwRKSZMALfuEa40KOM9vJ6VPYb83kJDEhS9Q650HnmOcr6oVclBAJUMmI7l8cbMs7YzX5o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AutipYDt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r6lmXn7Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 040D5C32786;
-	Thu, 20 Jun 2024 14:08:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AutipYDt"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7E671C4AF0B;
+	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718892540;
-	bh=9bJfbKRupOXgKTJN/Kgr1szk1mCSg6BrwEvmo45z+iM=;
-	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-	b=r6lmXn7YyMWbrxV+GjC510QWKGm33Jsaq0O35EZwfQF0A6tKUI5hO+7CMbQ7Hv/4z
-	 2jf4+rgglzHIibOsqbVkNt49P0CXJwnwp/erEDHDuIVk2psvKuw6Bkpm7H4raZoSUi
-	 zfgnGE0WXP4eKEzfTMc6yFVSxiq478oSlVzxKISTuIqQIgpFwkOWR4bUych5wgCO1t
-	 63Wf0q6j8ICz59kFKquAKFYgS57AYv4M2mf4GXlux2+CYmEBEOZ+qs/OSKzN9eAe/5
-	 ert9LhvYlJJi/zeZ+dCKS82Zujcflmgn5m43D/0cA6VOfUKYEzZZf4y0lV2B81Ihss
-	 RvpJQf46dttKw==
+	s=k20201202; t=1718893850;
+	bh=lFnvmyEqgdYMJeF8dWD9Fuq9BZ+u9+Ev069om7FPMpQ=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=AutipYDt61pdZCchXMSoqgfIdvPa6FKNlhIbdWjsyMmefRUobYSzMDwsaDlyod2kv
+	 sCAqR265rGA6cmHjiRX/iqw4Iqk36RSjWfZ+3ySyVatuPBKp2M1wRPmwzFf9XLTH9E
+	 GoDQGMn/l7y4tHjhFyNij9Esy2NciNDerQmXvuJphkNx9mAlyMqlJcLFNj2qgKPy7E
+	 FRFInMLlYQDRf8ye/ThTL3pQ8O3zaPnYVU22bzjphx0K2SuSbdId/iapNsodUAx523
+	 +K3J38wVFzunMlN5qEtbaf17DADoKcPKWbXk0aRxVztFFunpGHuyDmDb1WhazTy3I/
+	 4QAhhUTNKrDaA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 67D0FC39563;
+	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -33,48 +36,94 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3]wifi: ath12k: Add firmware coredump collection support
-From: Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20240325183414.4016663-1-quic_ssreeela@quicinc.com>
-References: <20240325183414.4016663-1-quic_ssreeela@quicinc.com>
-To: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-Cc: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
- Sowmiya Sree Elavalagan
-	<quic_ssreeela@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <171889253841.918573.15918536206746856053.kvalo@kernel.org>
-Date: Thu, 20 Jun 2024 14:08:59 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v8 00/17] power: sequencing: implement the subsystem and
+ add first users
+From: patchwork-bot+bluetooth@kernel.org
+Message-Id: 
+ <171889385042.4585.381673079448841277.git-patchwork-notify@kernel.org>
+Date: Thu, 20 Jun 2024 14:30:50 +0000
+References: <20240528-pwrseq-v8-0-d354d52b763c@linaro.org>
+In-Reply-To: <20240528-pwrseq-v8-0-d354d52b763c@linaro.org>
+To: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: lgirdwood@gmail.com, broonie@kernel.org, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, marcel@holtmann.org,
+ luiz.dentz@gmail.com, davem@davemloft.net, edumazet@google.com,
+ kuba@kernel.org, pabeni@redhat.com, quic_bgodavar@quicinc.com,
+ quic_rjliao@quicinc.com, kvalo@kernel.org, jjohnson@kernel.org,
+ andersson@kernel.org, konrad.dybcio@linaro.org, bhelgaas@google.com,
+ srinivas.kandagatla@linaro.org, quic_eberman@quicinc.com,
+ caleb.connolly@linaro.org, neil.armstrong@linaro.org,
+ dmitry.baryshkov@linaro.org, elder@kernel.org, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ quic_jjohnson@quicinc.com, ath12k@lists.infradead.org,
+ linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+ bartosz.golaszewski@linaro.org, kernel@quicinc.com,
+ krzysztof.kozlowski@linaro.org, amit.pundir@linaro.org
 
-Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com> wrote:
+Hello:
 
-> In case of firmware assert snapshot of firmware memory is essential for
-> debugging. Add firmware coredump collection support for PCI bus.
-> Collect RDDM and firmware paging dumps from MHI and pack them in TLV
-> format and also pack various memory shared during QMI phase in separate
-> TLVs.  Add necessary header and share the dumps to user space using dev
-> coredump framework. Coredump collection is disabled by default and can
-> be enabled using menuconfig. Dump collected for a radio is 55 MB
-> approximately.
+This series was applied to bluetooth/bluetooth-next.git (master)
+by Luiz Augusto von Dentz <luiz.von.dentz@intel.com>:
+
+On Tue, 28 May 2024 21:03:08 +0200 you wrote:
+> Note: I am resending this series in its entirety once more for
+> discussions and reviews. If there won't be any major objections, I'll
+> then start sending individual bits and pieces to appropriate trees.
 > 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.2.1-00201-QCAHKSWPL_SILICONZ-1
+> Merging strategy: The DT binding and DTS changes are a no-brainer, they
+> can go through the wireless, regulator and arm-msm trees separately. The
+> bluetooth and PCI changes have a build-time dependency on the power
+> sequencing code. The bluetooth changes also have a run-time dependency on
+> the PCI pwrctl part. In order to get it into next I plan to pick up the
+> power sequencing code into my own tree and maintain it. I can then
+> provide an immutable tag for the BT and PCI trees to pull. I wouldn't
+> stress about the BT runtime dependency as it will be fixed once all
+> changes are in next.
 > 
-> Signed-off-by: Sowmiya Sree Elavalagan <quic_ssreeela@quicinc.com>
-> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+> [...]
 
-This didn't compile for me, I added this to pci.c:
+Here is the summary with links:
+  - [v8,01/17] regulator: dt-bindings: describe the PMU module of the QCA6390 package
+    (no matching commit)
+  - [v8,02/17] regulator: dt-bindings: describe the PMU module of the WCN7850 package
+    (no matching commit)
+  - [v8,03/17] dt-bindings: net: bluetooth: qualcomm: describe regulators for QCA6390
+    https://git.kernel.org/bluetooth/bluetooth-next/c/251180e6dba5
+  - [v8,04/17] dt-bindings: net: wireless: qcom,ath11k: describe the ath11k on QCA6390
+    (no matching commit)
+  - [v8,05/17] dt-bindings: net: wireless: describe the ath12k PCI module
+    (no matching commit)
+  - [v8,06/17] arm64: dts: qcom: sm8550-qrd: add the Wifi node
+    (no matching commit)
+  - [v8,07/17] arm64: dts: qcom: sm8650-qrd: add the Wifi node
+    (no matching commit)
+  - [v8,08/17] arm64: dts: qcom: sm8650-hdk: add the Wifi node
+    (no matching commit)
+  - [v8,09/17] arm64: dts: qcom: qrb5165-rb5: add the Wifi node
+    (no matching commit)
+  - [v8,10/17] power: sequencing: implement the pwrseq core
+    (no matching commit)
+  - [v8,11/17] power: pwrseq: add a driver for the PMU module on the QCom WCN chipsets
+    (no matching commit)
+  - [v8,12/17] PCI: hold the rescan mutex when scanning for the first time
+    (no matching commit)
+  - [v8,13/17] PCI/pwrctl: reuse the OF node for power controlled devices
+    (no matching commit)
+  - [v8,14/17] PCI/pwrctl: create platform devices for child OF nodes of the port node
+    (no matching commit)
+  - [v8,15/17] PCI/pwrctl: add PCI power control core code
+    (no matching commit)
+  - [v8,16/17] PCI/pwrctl: add a PCI power control driver for power sequenced devices
+    (no matching commit)
+  - [v8,17/17] Bluetooth: qca: use the power sequencer for QCA6390
+    https://git.kernel.org/bluetooth/bluetooth-next/c/4029dba6b6f1
 
-+#include <linux/vmalloc.h>
-
-Also in the pending branch I made some whitespace in struct ath12k_dump_file_data:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=44ae07628b68375f476895f4fc1e89a570790ac0
-
-Any tips how to test this until we have the debugfs interface to crash the firmware?
-
+You are awesome, thank you!
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20240325183414.4016663-1-quic_ssreeela@quicinc.com/
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
