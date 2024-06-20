@@ -1,93 +1,141 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B604C1B47AF
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 18:05:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C04671BA084
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 18:07:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718906728; cv=none; b=P+q1qPipKXe8WVVVfOtQBMTPEZBONFX7jt/GJ9QFXp8/+j9ARnDQarQ3mOIhq9QjXES7AjvaiSqFlyMGiLpYOoDNNaE8fM5ZGC9vrkN0eK+CFlWBktmIrifK14QVXm8K8jCFzdq50v3DQLdbIYSyNlTqLkTi6fvqzVdVZT246Ws=
+	t=1718906829; cv=none; b=d+MHrkou2g0LPm03l9g3s8F+0xaTBRqvbssYcWwSYOyefDVlyC9V49MEhmGauWpTqyDNsyCzjWYJjDAgP+HimWwlA1Us5RdwEhsX2OaMWlkDqbj84pAIE39qJXahR+6Sug0CkNuVNaRSLJmYBjjvjOMSSF9vnvy7tzPZgObnYYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718906728; c=relaxed/simple;
-	bh=/UyRgHfm+sZS+tI1rHL6/bgIgJ35C5s0UbiOdadK2DQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m/fztP1pBHhdBjxj129xoD1x9estRutlTjaXNb5nbkiiwVsPuaFkaVzU7/L3EcwP+5kXNSy1C/Tfuouj41uPDya3FBXjeyp4wnnrjnVt35jA3S17vY7fOirek1xwTxG5TT3uEh5u6MyvG884K8I2DlkL34Ej8QqTE6R+FxClt68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=FcIls2yS; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1718906829; c=relaxed/simple;
+	bh=29OxgEL3l6wtk/wr9HSlAcydEGnms+qvS9bonjZCeq4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EdNYYZiSj/taAvJx0ZZGyPShDmmOJA1NurpZvT2Y0QG6U/QHCBeC6qbJkvW/ltd6rMaVNbomwh0rFU6U9pRtDl/0FKboRN8FagDXFWeZyMK2iJKr7GoHnrAEZNsZrhmIdH+yDA9nTGeCdcxpPGvD8vuDyVEdD+89VQpS99sQVB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=ZRlXVbMR; arc=none smtp.client-ip=209.85.167.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="FcIls2yS"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7061365d2f3so947964b3a.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:05:26 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ZRlXVbMR"
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-52bc29c79fdso1346962e87.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:07:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1718906726; x=1719511526; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=AyAepGt8zwC+Uy9TBQ5kec4y0GaIIr8mJzAf1XxO3g8=;
-        b=FcIls2ySv07eS1sSqfmhMVLmlXp5q0AYvXBwL8v77Yg1azs+IY8RlYm8fCdMJSwi33
-         3+m5JNJsbqDIoYfSlUkVtnevOawIXqOmMsRx8hmaGrh7uorRG14ckY6ZJb1PcL3LMf5/
-         ABRIwxfI/s9zmELcHNfQIqmVb7H/CwRTRkW0k=
+        d=linux-foundation.org; s=google; t=1718906826; x=1719511626; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=fuatl8An2r1cXJScFESolD1f90VPFvdc9a3mKIi/oro=;
+        b=ZRlXVbMR/fQWGgyhaC2kN5Cf5CuforBWAPutCVMX5X8Kd8HeufSdrbEtweEP8HK8xK
+         NbnuCfUPMENRxAGxCL69MlC6zu08a6+3EBw9ZU1lJw13lpoYnVObWvuBYoCiiOid5xMM
+         Dzn/wOlr7/sXGDW7Om3/+Pw3tVJpBjnUV+u3w=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718906726; x=1719511526;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AyAepGt8zwC+Uy9TBQ5kec4y0GaIIr8mJzAf1XxO3g8=;
-        b=GmJRgm7RYpxhj/ZfOM/l6uWRwg7k1x0hp4x6Mm9SRnFlm9Ie9Hl5CdeC1Kuag8f8ui
-         avHubmZ1Xmna1f2bmoDAds/ywqeh2XKRx9qhr0XXcUMTTm2E0O+wZurBR6gPX7OxElQN
-         yzsQQ322pk0BDcEmyFk9SQJTD/PIYOn1jeNFX0CP+3zifyvBM8aJSL/NzySUJQoBoVK0
-         Sk291XfQYZwfTt0rIfifch80THl4rJ8U8Xo5Rm1cZxxuAo6f3j67cLy8Lvd/tObhqc+N
-         g6cVotTQRoQEih4b1s1KiyzG0MeIPBbz1CRLIHMjtPV7K+/1L+okpYAsZiP+0rp1UkHT
-         nFkA==
-X-Gm-Message-State: AOJu0YwYGynhjeuPC6aOCBlw9zji98fcvyXo4fSykXxAxUkChaEjJcK4
-	28Wchqfgn+FYq0O6ghkJEeeWq0HalZTwQ1CcoDsZL27V0h6e4bivjBQ88MeX1xUwRgGni5+v7KU
-	=
-X-Google-Smtp-Source: AGHT+IFtxCTApS5PLIaX0tBJ9IiKUk5qiPoyB9ue7cA9nZarmfct92p63kyAz41a4pryyVQqjS1i0g==
-X-Received: by 2002:aa7:8b50:0:b0:705:972a:53f with SMTP id d2e1a72fcca58-70629c5bcf1mr6759832b3a.18.1718906725954;
-        Thu, 20 Jun 2024 11:05:25 -0700 (PDT)
-Received: from localhost ([2620:15c:9d:2:3c9c:a224:3ec6:17d2])
-        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-705ccb6bf4fsm12605308b3a.169.2024.06.20.11.05.24
+        d=1e100.net; s=20230601; t=1718906826; x=1719511626;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fuatl8An2r1cXJScFESolD1f90VPFvdc9a3mKIi/oro=;
+        b=rNj+zDgKzVcO0yjciI5R2SefpWequjCpdHWwyM4yYUhDEVwSuPPp+//BbT1Jg8atCV
+         cV6sxcHZef5NJxVAt6TJwZgoZg+C9XERikBjSStlCZaryki4a9UWOtIy7JYdOoLz6Ulc
+         pYzSfNWJN4RDG1dqEN2tLptgVH3iChUT3Oy/BHlzydfbeLhNV0Uf841D4vWRADeOJkV1
+         o0NC1Ih/dX8qJQj2xyn36eC9dFwBSs6fgOrlo70dpGGo+Yxaip1VlxUs4tLf9tf4SacW
+         kOXH2X/i0g7xKkiyNzmP9Wb7TuSfQfVKc3UPDjiKpMNpLMOadrtGfTrE/ey4orCZlky/
+         Qfkw==
+X-Forwarded-Encrypted: i=1; AJvYcCVn/n3WmnOwVq9vApDjwD7KxyggXZFtEbkzGh9w3CGMPBUFelsplEz5mzApU04qGNMLcbCK+mQogjGQ5QjKtUBhCFSwToF1FJa68Ln1cBs=
+X-Gm-Message-State: AOJu0YwZ0YxMiVRnczaZUncFre5TOsNeWamSqr5RY5MQODUp9HLkE7sL
+	id/gN2sODcgB4WCF1uJ7E/6hukaOnUsF6XuvalIicgRO4lbFospkaXR4htBnddHTuypQwOXdyrU
+	zSv4DimSB
+X-Google-Smtp-Source: AGHT+IF4Z7BD2f01EE8BKfz+rhyR+52nKUu7OxsQIP2Ud4TOzCz/znRcfQNTD1oVsEOxysmBA9SJQw==
+X-Received: by 2002:a19:3844:0:b0:52c:999b:5306 with SMTP id 2adb3069b0e04-52ccaa32cfamr4867567e87.17.1718906825810;
+        Thu, 20 Jun 2024 11:07:05 -0700 (PDT)
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com. [209.85.128.48])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a6f56db61e0sm785890366b.49.2024.06.20.11.07.05
+        for <linux-wireless@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 20 Jun 2024 11:05:25 -0700 (PDT)
-Date: Thu, 20 Jun 2024 11:05:24 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Kalle Valo <kvalo@kernel.org>, David Lin <yu-hao.lin@nxp.com>
-Subject: Re: [PATCH] wifi: mwifiex: increase max_num_akm_suites
-Message-ID: <ZnRvZMQJUr4APwUU@google.com>
-References: <20240530130156.1651174-1-s.hauer@pengutronix.de>
+        Thu, 20 Jun 2024 11:07:05 -0700 (PDT)
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-42189d3c7efso13884255e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:07:05 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXjNdVmMpdA+B2AKFm+7SJklWlN4WdKrEH1nMHTW8oobFbRv8USwp6cB1p05L6sUllN/QsrerCCgqZjHQsERgimjudTUbvvcTyBn/uiuJk=
+X-Received: by 2002:a50:96cf:0:b0:57c:5874:4f5c with SMTP id
+ 4fb4d7f45d1cf-57d07ea857fmr5124279a12.32.1718906455555; Thu, 20 Jun 2024
+ 11:00:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240530130156.1651174-1-s.hauer@pengutronix.de>
+References: <20240620175703.605111-1-yury.norov@gmail.com>
+In-Reply-To: <20240620175703.605111-1-yury.norov@gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 20 Jun 2024 11:00:38 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiUTXC452qbypG3jW6XCZGfc8d-iehSavxn5JkQ=sv0zA@mail.gmail.com>
+Message-ID: <CAHk-=wiUTXC452qbypG3jW6XCZGfc8d-iehSavxn5JkQ=sv0zA@mail.gmail.com>
+Subject: Re: [PATCH v4 00/40] lib/find: add atomic find_bit() primitives
+To: Yury Norov <yury.norov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, 
+	"H. Peter Anvin" <hpa@zytor.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"K. Y. Srinivasan" <kys@microsoft.com>, "Md. Haris Iqbal" <haris.iqbal@ionos.com>, 
+	Akinobu Mita <akinobu.mita@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Borislav Petkov <bp@alien8.de>, Chaitanya Kulkarni <kch@nvidia.com>, 
+	Christian Brauner <brauner@kernel.org>, Damien Le Moal <damien.lemoal@opensource.wdc.com>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, David Disseldorp <ddiss@suse.de>, 
+	Edward Cree <ecree.xilinx@gmail.com>, Eric Dumazet <edumazet@google.com>, 
+	Fenghua Yu <fenghua.yu@intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gregory Greenman <gregory.greenman@intel.com>, 
+	Hans Verkuil <hverkuil@xs4all.nl>, Hans de Goede <hdegoede@redhat.com>, 
+	Hugh Dickins <hughd@google.com>, Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Jaroslav Kysela <perex@perex.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, 
+	Jiri Pirko <jiri@resnulli.us>, Jiri Slaby <jirislaby@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
+	Karsten Graul <kgraul@linux.ibm.com>, Karsten Keil <isdn@linux-pingi.de>, 
+	Kees Cook <keescook@chromium.org>, Leon Romanovsky <leon@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, Martin Habets <habetsm.xilinx@gmail.com>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>, Michal Simek <monstr@monstr.eu>, 
+	Nicholas Piggin <npiggin@gmail.com>, Oliver Neukum <oneukum@suse.com>, Paolo Abeni <pabeni@redhat.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+	Ping-Ke Shih <pkshih@realtek.com>, Rich Felker <dalias@libc.org>, Rob Herring <robh@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Sean Christopherson <seanjc@google.com>, 
+	Shuai Xue <xueshuai@linux.alibaba.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
+	Steven Rostedt <rostedt@goodmis.org>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	Thomas Gleixner <tglx@linutronix.de>, Valentin Schneider <vschneid@redhat.com>, 
+	Vitaly Kuznetsov <vkuznets@redhat.com>, Wenjia Zhang <wenjia@linux.ibm.com>, 
+	Will Deacon <will@kernel.org>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	GR-QLogic-Storage-Upstream@marvell.com, alsa-devel@alsa-project.org, 
+	ath10k@lists.infradead.org, dmaengine@vger.kernel.org, iommu@lists.linux.dev, 
+	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org, 
+	linux-mips@vger.kernel.org, linux-net-drivers@amd.com, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-sh@vger.kernel.org, 
+	linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, netdev@vger.kernel.org, 
+	sparclinux@vger.kernel.org, x86@kernel.org, 
+	Alexey Klimov <alexey.klimov@linaro.org>, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, 
+	Matthew Wilcox <willy@infradead.org>, Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>, 
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>, Sergey Shtylyov <s.shtylyov@omp.ru>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Sascha,
+On Thu, 20 Jun 2024 at 10:57, Yury Norov <yury.norov@gmail.com> wrote:
+>
+>
+> The typical lock-protected bit allocation may look like this:
 
-On Thu, May 30, 2024 at 03:01:56PM +0200, Sascha Hauer wrote:
-> The maximum number of AKM suites will be set to two if not specified by
-> the driver. Set it to CFG80211_MAX_NUM_AKM_SUITES to let userspace
-> specify up to ten AKM suites in the akm_suites array.
-> 
-> Without only the first two AKM suites will be used, further ones are
-> ignored.
-> 
-> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-> ---
-> 
-> Current wpa_supplicant/hostapd only put a maximum of two into the
-> akm_suites array as well, a patch changing this can be found here:
-> http://lists.infradead.org/pipermail/hostap/2024-May/042720.html
+If it looks like this, then nobody cares. Clearly the user in question
+never actually cared about performance, and you SHOULD NOT then say
+"let's optimize this that nobody cares about":.
 
-Thanks for the patches and research.
+Yury, I spend an inordinate amount of time just double-checking your
+patches. I ended up having to basically undo one of them just days
+ago.
 
-Possibly dumb question: what's unique about mwifiex here? Everything you
-describe above sounds applicable to all drivers, IIUC, and I don't see
-any other driver that touches max_num_akm_suites.
+New rule: before you send some optimization, you need to have NUMBERS.
 
-Brian
+Some kind of "look, this code is visible in profiles, so we actually care".
+
+Because without numbers, I'm just not going to pull anything from you.
+These insane inlines for things that don't matter need to stop.
+
+And if they *DO* matter, you need to show that they matter.
+
+               Linus
