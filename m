@@ -1,45 +1,45 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73DF41AB8EE
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:25:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F5DA1AB900
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:25:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718882705; cv=none; b=jtqflbX/DPSrQ5aTnJC8Y6/gAMbYeCijtZ7PTf/T9xHsGRQB121zL+AAHBxB8Rn0acuBszbPuhfHPly6GOOybqDykdL+QO5MXqQ6VaiD3IaAv+CQrErq1n18vu0AgbEWoqE+XjZ9B90VRS1Hzl4BnYCO6zxD6WT+RbhAt2rZeB8=
+	t=1718882709; cv=none; b=FpecrZ+Yx4FCR7DXV8X73LRWOi4PuWTCrW9fDy8D08l3kHe3lD7wbkm+U/nJoYuzh7H/I84zFkeVOTgRuNXTwhd1azMRt6KDXAMiwYWZpodBRQoLce8pYYAo963w6RnulupOzQoWiXTA/nCNGuVCwGnZmL44/7+nOS3/oNXblRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718882705; c=relaxed/simple;
-	bh=Eo5hwNf1jpd2lF8Ue4dQR4kcHfkFnUxOjriSsc+hC90=;
+	s=arc-20240116; t=1718882709; c=relaxed/simple;
+	bh=Q+tmcwpANBlkIWAOYG5xvF+QYH9H/ktKdDKijOIuRDI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bF1Mm3ndD3pHHukXedDOrahVy/DHDRzECmzi7y6umnfWtZsZwpgCOHjPfey7P2fg/l9oEoEU9Qeba+OERrirAAo6emJmTUHE3HFt9oUScEWxPpcpPGB2356PjWLbumq8o6PguS/I/6ot4CuN/kkomQzwXxiHRRFQ/SPznxstQNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Q3hN52i8; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=i/kwJIqeg3g/Lcpl4qbNQr/gvLbueZ6MyMJAbaGZnOWZj5OiMiVxQsCDl4IcMlO2kJmo949QL82lLp6xGv4kToZrHz1yjgWQIeT+zIL/I1v6GaLedyNNdQMhlv0PvtU8JD02lSpDwOSQotBmKl7MSR5vdj46LUIYwKd3MGUioGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=HrZmLhT4; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Q3hN52i8"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HrZmLhT4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=34pDim3q98b+di9DArDJuxpv+10vrgDHS+iLBvplmv0=; b=Q3hN52i88wV+Zt4M+5OxWRAq/6
-	xLKWI9TDAV0w/vbAzlEEQe/iNo1sE2nCuT08Q5SG0yFmzBnho3oDLE7bAS2dk+bqHwR8yCM9S+JEc
-	KttzZPtfqF1FQ1FoEtoK8pmQMdnFr9m2sPkpM8n4Nttsa0u+0e3il7J1v6+eZE4DQzNw=;
+	bh=E5CI0wDHvksxh6jXzTcJcoR/Vkw4nSvBxyZsxzfQIAI=; b=HrZmLhT47yf8FnZXdmtr2yKqtQ
+	AkBSAoH0n6AlF2sIzVHLoa12p8Z9aP4dDxBaGub4alTjASAtWhUKBTb4gUVB7WtzHzTefqcl93HXz
+	QYp7Zp5aPzxA/AhXqnEQoT0ABUstwwQjbJgIOJs1hvE5+oJ0SvlVZjQeM2a+/lcnetCo=;
 Received: from p4ff13dca.dip0.t-ipconnect.de ([79.241.61.202] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sKFhM-00Ei9k-36;
-	Thu, 20 Jun 2024 13:11:25 +0200
+	id 1sKFhN-00Ei9k-3B;
+	Thu, 20 Jun 2024 13:11:26 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	quic_adisi@quicinc.com,
 	quic_periyasa@quicinc.com,
 	ath12k@lists.infradead.org
-Subject: [PATCH 05/10] wifi: mac80211: add support for DFS with multiple radios
-Date: Thu, 20 Jun 2024 13:11:17 +0200
-Message-ID: <48c34615b839768f7149180c419c90c0c1f2e27d.1718881762.git-series.nbd@nbd.name>
+Subject: [PATCH 09/10] wifi: mac80211: add wiphy radio assignment and validation
+Date: Thu, 20 Jun 2024 13:11:21 +0200
+Message-ID: <79d039047fbbec5850ef7886c51ac041e3fd30f6.1718881762.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.a7730420cfba0f204a60e4c30e6b0e07b441ff6b.1718881762.git-series.nbd@nbd.name>
 References: <cover.a7730420cfba0f204a60e4c30e6b0e07b441ff6b.1718881762.git-series.nbd@nbd.name>
@@ -51,66 +51,134 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-DFS can be supported with multi-channel combinations, as long as each DFS
-capable radio only supports one channel.
+Validate number of channels and interface combinations per radio.
+Assign each channel context to a radio.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/main.c | 32 ++++++++++++++++++++++++--------
- 1 file changed, 24 insertions(+), 8 deletions(-)
+ net/mac80211/chan.c | 52 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 47 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 40fbf397ce74..e9c4cf611e94 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1084,6 +1084,21 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
- 	return 0;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index ac49c2c71d2b..6cbf314d706f 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -696,14 +696,15 @@ static struct ieee80211_chanctx *
+ ieee80211_new_chanctx(struct ieee80211_local *local,
+ 		      const struct ieee80211_chan_req *chanreq,
+ 		      enum ieee80211_chanctx_mode mode,
+-		      bool assign_on_failure)
++		      bool assign_on_failure,
++		      int radio_idx)
+ {
+ 	struct ieee80211_chanctx *ctx;
+ 	int err;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
++	ctx = ieee80211_alloc_chanctx(local, chanreq, mode, radio_idx);
+ 	if (!ctx)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1067,6 +1068,8 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ 			  struct ieee80211_chanctx *curr_ctx)
+ {
+ 	struct ieee80211_chanctx *new_ctx, *ctx;
++	struct wiphy *wiphy = local->hw.wiphy;
++	const struct wiphy_radio *radio;
+ 
+ 	if (!curr_ctx || (curr_ctx->replace_state ==
+ 			  IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
+@@ -1096,6 +1099,12 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ 			if (!list_empty(&ctx->reserved_links))
+ 				continue;
+ 
++			if (ctx->conf.radio_idx >= 0) {
++				radio = &wiphy->radio[ctx->conf.radio_idx];
++				if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
++					continue;
++			}
++
+ 			curr_ctx = ctx;
+ 			break;
+ 		}
+@@ -1125,6 +1134,34 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ 	return new_ctx;
  }
  
 +static bool
-+ieee80211_ifcomb_check_radar(const struct ieee80211_iface_combination *comb,
-+			     int n_comb)
++ieee80211_find_available_radio(struct ieee80211_local *local,
++			       const struct ieee80211_chan_req *chanreq,
++			       int *radio_idx)
 +{
++	struct wiphy *wiphy = local->hw.wiphy;
++	const struct wiphy_radio *radio;
 +	int i;
 +
-+	/* DFS is not supported with multi-channel combinations yet */
-+	for (i = 0; i < n_comb; i++, comb++)
-+		if (comb->radar_detect_widths &&
-+		    comb->num_different_channels > 1)
-+			return false;
++	*radio_idx = -1;
++	if (!wiphy->n_radio)
++		return true;
 +
-+	return true;
++	for (i = 0; i < wiphy->n_radio; i++) {
++		radio = &wiphy->radio[i];
++		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
++			continue;
++
++		if (!ieee80211_can_create_new_chanctx(local, i))
++			continue;
++
++		*radio_idx = i;
++		return true;
++	}
++
++	return false;
 +}
 +
- int ieee80211_register_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-@@ -1173,17 +1188,18 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 			if (comb->num_different_channels > 1)
- 				return -EINVAL;
- 		}
--	} else {
--		/* DFS is not supported with multi-channel combinations yet */
--		for (i = 0; i < local->hw.wiphy->n_iface_combinations; i++) {
--			const struct ieee80211_iface_combination *comb;
--
--			comb = &local->hw.wiphy->iface_combinations[i];
-+	} else if (hw->wiphy->n_radio) {
-+		for (i = 0; i < hw->wiphy->n_radio; i++) {
-+			const struct wiphy_radio *radio = &hw->wiphy->radio[i];
+ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 				   const struct ieee80211_chan_req *chanreq,
+ 				   enum ieee80211_chanctx_mode mode,
+@@ -1133,6 +1170,7 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_chanctx *new_ctx, *curr_ctx;
++	int radio_idx;
  
--			if (comb->radar_detect_widths &&
--			    comb->num_different_channels > 1)
-+			if (!ieee80211_ifcomb_check_radar(radio->iface_combinations,
-+							  radio->n_iface_combinations))
- 				return -EINVAL;
- 		}
-+	} else {
-+		if (!ieee80211_ifcomb_check_radar(hw->wiphy->iface_combinations,
-+						  hw->wiphy->n_iface_combinations))
-+			return -EINVAL;
- 	}
+ 	lockdep_assert_wiphy(local->hw.wiphy);
  
- 	/* Only HW csum features are currently compatible with mac80211 */
+@@ -1142,9 +1180,10 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+-		if (ieee80211_can_create_new_chanctx(local, -1))
++		if (ieee80211_can_create_new_chanctx(local, -1) &&
++		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+-							false);
++							false, radio_idx);
+ 		else
+ 			new_ctx = ieee80211_replace_chanctx(local, chanreq,
+ 							    mode, curr_ctx);
+@@ -1755,6 +1794,7 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	struct ieee80211_chanctx *ctx;
+ 	u8 radar_detect_width = 0;
+ 	bool reserved = false;
++	int radio_idx;
+ 	int ret;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+@@ -1785,9 +1825,11 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	/* Note: context is now reserved */
+ 	if (ctx)
+ 		reserved = true;
++	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
++		ctx = ERR_PTR(-EBUSY);
+ 	else
+ 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
+-					    assign_on_failure);
++					    assign_on_failure, radio_idx);
+ 	if (IS_ERR(ctx)) {
+ 		ret = PTR_ERR(ctx);
+ 		goto out;
 -- 
 git-series 0.9.1
