@@ -1,45 +1,48 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55001AB8F1
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:32:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851BC763F7
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Jun 2024 11:32:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718883125; cv=none; b=FQ+GI6apSBmTB0ap1q89xdHXh0a9ydCQt+mZr5JrcmBgPp7GIwecIbsZ/lJ4/UkMkBXCN6oLIc1Fn6rSDJ5PIIVxXhTVYeyafRpLkIwP/nVNhbqxjQMS8BIsfFqtqNUKpdy6P5PZt98NjAKGYRXCdNhSreMhksaLH0OF4VyIMhE=
+	t=1718883129; cv=none; b=OA7m9w6mJ82XFdeco4nmr8hVEw7PUptJDCKOjkA8vjiHxtZ4lbfqJrdFl5pkxEROZrO+qGRFoqulYvis9Rv/fBmN8yFpvqqk1CbjtFneH9x4QTjSj0whdeSGMjWTyqDxPE2GXkSIs1K4/DIQYF8kKNwBLT4YLJ63SVuTeBP8Y+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718883125; c=relaxed/simple;
-	bh=RI1Z1JlIBrUAdRNk017e0to5P6YN/kzgTcsJcLl3+gs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jYucfwJRpqC1xKMf9jm12hlINE3an9aEj8xWxVNNyMlok/bw2ykkihPYvJEKcmRxCEB5p4U2bHVOVHGTCmHRA2e3v6qXVia0r2ia6nqtmkw+u1aswxjyJvmJXjXJ2vu+0w0cCSZisxW7nBXM3RstCH+fvgGd3I3xQOjlWzi98DI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Su7Nh402; arc=none smtp.client-ip=46.4.11.11
+	s=arc-20240116; t=1718883129; c=relaxed/simple;
+	bh=MenvBUuGv6mTNIhnGCZr9/oPuif9HJ/2MYXD2LQhCKg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fyz3o/0zdwGHU0pX7KTwptsfkwZQpqlq+Ebgx1sWioM9bICcCj+gqO119nEz0/5Dix3JNCZCX0TIKuIzLuj+/tqkNKdiHouw4VjQ8fkKVigel/AOvO3+JqfPQOfg5D8Fti2hrMbr11pfO1hYyJY5KbgCIAXJaBAplC7KMAXn5Zw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=eK6/1hKb; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Su7Nh402"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="eK6/1hKb"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=HGaqhr+0RrBuPHuYIAQV/iwE8YYIt8jMNvsZUis/wMI=; b=Su7Nh402fj6k5HqJNmgjNfq48E
-	k+VoDY5OrXAF52Sj1HYvurpKSCf0XiPy9xFxSG0868LwGQhH6VoNwl/pCpI5bn+FXOdcEosc+bq0M
-	H3CIVSDjtLaYvaVOBe2ROw4loxbmfoM/X0jLii2zg17ImFmficENs2YYZrb3VeGbAld0=;
+	bh=H9Ks4PmBveZAlHQui94XwD5dy02OUcuU876KxxPP2nc=; b=eK6/1hKbrDJ4e30mXMi/0qe67M
+	YjzJIkFycfq7+CBJ4NaWzFmDBLyGYoCB5urCo7YdzB7l2VBx53vsFHB2MoZSX3DDrB5/WCqth4Ojk
+	RWpge+WWAxusbIB7DMnTKRIK1OQHfgYw84BDkj0/o03Y389rqlaJf1pmc+A7nWtABVn0=;
 Received: from p4ff13dca.dip0.t-ipconnect.de ([79.241.61.202] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sKFhL-00Ei9k-28;
-	Thu, 20 Jun 2024 13:11:23 +0200
+	id 1sKFhN-00Ei9k-2I;
+	Thu, 20 Jun 2024 13:11:25 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	quic_adisi@quicinc.com,
 	quic_periyasa@quicinc.com,
 	ath12k@lists.infradead.org
-Subject: [PATCH 00/10] cfg80211/mac80211: support defining multiple radios per wiphy
-Date: Thu, 20 Jun 2024 13:11:12 +0200
-Message-ID: <cover.a7730420cfba0f204a60e4c30e6b0e07b441ff6b.1718881762.git-series.nbd@nbd.name>
+Subject: [PATCH 08/10] wifi: mac80211: move code in ieee80211_link_reserve_chanctx to a helper
+Date: Thu, 20 Jun 2024 13:11:20 +0200
+Message-ID: <47a67465bfc062e61c73da668a1259b56c5cde00.1718881762.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
+In-Reply-To: <cover.a7730420cfba0f204a60e4c30e6b0e07b441ff6b.1718881762.git-series.nbd@nbd.name>
+References: <cover.a7730420cfba0f204a60e4c30e6b0e07b441ff6b.1718881762.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,85 +51,180 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The prerequisite for MLO support in cfg80211/mac80211 is that all the links
-participating in MLO must be from the same wiphy/ieee80211_hw. To meet this
-expectation, some drivers may need to group multiple discrete hardware each
-acting as a link in MLO under single wiphy.
+Reduces indentation in preparation for further changes
 
-With this change, supported frequencies and interface combinations of each
-individual radio are reported to user space. This allows user space to figure
-out the limitations of what combination of channels can be used concurrently.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/chan.c | 141 ++++++++++++++++++++++-----------------------
+ 1 file changed, 72 insertions(+), 69 deletions(-)
 
-Each mac80211 channel context is assigned to a radio based on radio specific
-frequency ranges and interface combinations.
-
-Even for non-MLO devices, this improves support for devices capable of
-running on multiple channels at the same time.
-
-This is loosely based on Karthikeyan Periyasamy's series
-"[PATCH 00/13] wifi: Add multi physical hardware iface combination support"
-with some differences:
-
- - a struct wiphy_radio is defined, which holds the frequency ranges and
-   a full struct ieee80211_iface_combination array
- - a channel context is explicitly assigned to a radio when created
- - both global and per-radio interface combination limits are checked
-   and enforced on channel context assignment
- - improve comments/docs and attributes
- - add cfg80211 helper for checking radio freq range
-
-Changes since RFC v4:
- - report the first radio's ifcomb as main ifcomb for legacy compatibility
- - report the global wiphy ifcomb separately
- - add mac80211_hwsim support
-
-Changes since RFC v3:
- - fix __ieee80211_get_radio_mask to return per-vif radio mask
- - fix params->radio in ieee80211_check_combinations()
- - fix indentation
- - pass radio_idx in struct iface_combination_params
- - improve get_radio_mask callback
-
-Changes since RFC v2:
- - fix uninitialized variables
- - fix multiple radios with DFS
- - add support for per-radio beacon interval checking
-
-Changes since RFC:
- - replace static per-radio number of channels limit with full ifcomb
-   checks
- - remove band bitmask in favor of only using freq ranges
-
-Felix Fietkau (10):
-  wifi: nl80211: split helper function from nl80211_put_iface_combinations
-  wifi: cfg80211: add support for advertising multiple radios belonging to a wiphy
-  wifi: cfg80211: extend interface combination check for multi-radio
-  wifi: cfg80211: add helper for checking if a chandef is valid on a radio
-  wifi: mac80211: add support for DFS with multiple radios
-  wifi: mac80211: add radio index to ieee80211_chanctx_conf
-  wifi: mac80211: extend ifcomb check functions for multi-radio
-  wifi: mac80211: move code in ieee80211_link_reserve_chanctx to a helper
-  wifi: mac80211: add wiphy radio assignment and validation
-  wifi: mac80211_hwsim: add support for multi-radio wiphy
-
- drivers/net/wireless/virtual/mac80211_hwsim.c |  77 ++++++-
- drivers/net/wireless/virtual/mac80211_hwsim.h |   3 +-
- include/net/cfg80211.h                        |  51 +++++-
- include/net/mac80211.h                        |   2 +-
- include/uapi/linux/nl80211.h                  |  61 ++++++-
- net/mac80211/cfg.c                            |   7 +-
- net/mac80211/chan.c                           | 210 +++++++++++--------
- net/mac80211/ibss.c                           |   2 +-
- net/mac80211/ieee80211_i.h                    |   5 +-
- net/mac80211/iface.c                          |   2 +-
- net/mac80211/main.c                           |  32 ++-
- net/mac80211/util.c                           | 127 +++++++----
- net/wireless/nl80211.c                        | 197 +++++++++++++-----
- net/wireless/rdev-ops.h                       |  17 ++-
- net/wireless/trace.h                          |   5 +-
- net/wireless/util.c                           |  68 +++++-
- 16 files changed, 666 insertions(+), 200 deletions(-)
-
-base-commit: 5bcd9a0a59953b5ff55ac226f903397319bf7f40
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 0e899c07bc2b..ac49c2c71d2b 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1060,6 +1060,71 @@ int ieee80211_link_unreserve_chanctx(struct ieee80211_link_data *link)
+ 	return 0;
+ }
+ 
++static struct ieee80211_chanctx *
++ieee80211_replace_chanctx(struct ieee80211_local *local,
++			  const struct ieee80211_chan_req *chanreq,
++			  enum ieee80211_chanctx_mode mode,
++			  struct ieee80211_chanctx *curr_ctx)
++{
++	struct ieee80211_chanctx *new_ctx, *ctx;
++
++	if (!curr_ctx || (curr_ctx->replace_state ==
++			  IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
++	    !list_empty(&curr_ctx->reserved_links)) {
++		/*
++		 * Another link already requested this context for a
++		 * reservation. Find another one hoping all links assigned
++		 * to it will also switch soon enough.
++		 *
++		 * TODO: This needs a little more work as some cases
++		 * (more than 2 chanctx capable devices) may fail which could
++		 * otherwise succeed provided some channel context juggling was
++		 * performed.
++		 *
++		 * Consider ctx1..3, link1..6, each ctx has 2 links. link1 and
++		 * link2 from ctx1 request new different chandefs starting 2
++		 * in-place reserations with ctx4 and ctx5 replacing ctx1 and
++		 * ctx2 respectively. Next link5 and link6 from ctx3 reserve
++		 * ctx4. If link3 and link4 remain on ctx2 as they are then this
++		 * fails unless `replace_ctx` from ctx5 is replaced with ctx3.
++		 */
++		list_for_each_entry(ctx, &local->chanctx_list, list) {
++			if (ctx->replace_state !=
++			    IEEE80211_CHANCTX_REPLACE_NONE)
++				continue;
++
++			if (!list_empty(&ctx->reserved_links))
++				continue;
++
++			curr_ctx = ctx;
++			break;
++		}
++	}
++
++	/*
++	 * If that's true then all available contexts already have reservations
++	 * and cannot be used.
++	 */
++	if (!curr_ctx || (curr_ctx->replace_state ==
++			  IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
++	    !list_empty(&curr_ctx->reserved_links))
++		return ERR_PTR(-EBUSY);
++
++	new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
++	if (!new_ctx)
++		return ERR_PTR(-ENOMEM);
++
++	new_ctx->replace_ctx = curr_ctx;
++	new_ctx->replace_state = IEEE80211_CHANCTX_REPLACES_OTHER;
++
++	curr_ctx->replace_ctx = new_ctx;
++	curr_ctx->replace_state = IEEE80211_CHANCTX_WILL_BE_REPLACED;
++
++	list_add_rcu(&new_ctx->list, &local->chanctx_list);
++
++	return new_ctx;
++}
++
+ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 				   const struct ieee80211_chan_req *chanreq,
+ 				   enum ieee80211_chanctx_mode mode,
+@@ -1067,7 +1132,7 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ {
+ 	struct ieee80211_sub_if_data *sdata = link->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_chanctx *new_ctx, *curr_ctx, *ctx;
++	struct ieee80211_chanctx *new_ctx, *curr_ctx;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -1077,76 +1142,14 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+-		if (ieee80211_can_create_new_chanctx(local, -1)) {
++		if (ieee80211_can_create_new_chanctx(local, -1))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+ 							false);
+-			if (IS_ERR(new_ctx))
+-				return PTR_ERR(new_ctx);
+-		} else {
+-			if (!curr_ctx ||
+-			    (curr_ctx->replace_state ==
+-			     IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
+-			    !list_empty(&curr_ctx->reserved_links)) {
+-				/*
+-				 * Another link already requested this context
+-				 * for a reservation. Find another one hoping
+-				 * all links assigned to it will also switch
+-				 * soon enough.
+-				 *
+-				 * TODO: This needs a little more work as some
+-				 * cases (more than 2 chanctx capable devices)
+-				 * may fail which could otherwise succeed
+-				 * provided some channel context juggling was
+-				 * performed.
+-				 *
+-				 * Consider ctx1..3, link1..6, each ctx has 2
+-				 * links. link1 and link2 from ctx1 request new
+-				 * different chandefs starting 2 in-place
+-				 * reserations with ctx4 and ctx5 replacing
+-				 * ctx1 and ctx2 respectively. Next link5 and
+-				 * link6 from ctx3 reserve ctx4. If link3 and
+-				 * link4 remain on ctx2 as they are then this
+-				 * fails unless `replace_ctx` from ctx5 is
+-				 * replaced with ctx3.
+-				 */
+-				list_for_each_entry(ctx, &local->chanctx_list,
+-						    list) {
+-					if (ctx->replace_state !=
+-					    IEEE80211_CHANCTX_REPLACE_NONE)
+-						continue;
+-
+-					if (!list_empty(&ctx->reserved_links))
+-						continue;
+-
+-					curr_ctx = ctx;
+-					break;
+-				}
+-			}
+-
+-			/*
+-			 * If that's true then all available contexts already
+-			 * have reservations and cannot be used.
+-			 */
+-			if (!curr_ctx ||
+-			    (curr_ctx->replace_state ==
+-			     IEEE80211_CHANCTX_WILL_BE_REPLACED) ||
+-			    !list_empty(&curr_ctx->reserved_links))
+-				return -EBUSY;
+-
+-			new_ctx = ieee80211_alloc_chanctx(local, chanreq, mode, -1);
+-			if (!new_ctx)
+-				return -ENOMEM;
+-
+-			new_ctx->replace_ctx = curr_ctx;
+-			new_ctx->replace_state =
+-					IEEE80211_CHANCTX_REPLACES_OTHER;
+-
+-			curr_ctx->replace_ctx = new_ctx;
+-			curr_ctx->replace_state =
+-					IEEE80211_CHANCTX_WILL_BE_REPLACED;
+-
+-			list_add_rcu(&new_ctx->list, &local->chanctx_list);
+-		}
++		else
++			new_ctx = ieee80211_replace_chanctx(local, chanreq,
++							    mode, curr_ctx);
++		if (IS_ERR(new_ctx))
++			return PTR_ERR(new_ctx);
+ 	}
+ 
+ 	list_add(&link->reserved_chanctx_list, &new_ctx->reserved_links);
 -- 
 git-series 0.9.1
