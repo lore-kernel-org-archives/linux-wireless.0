@@ -1,38 +1,41 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5847816D4D1
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2024 08:04:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDE5A16D4D1
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2024 08:04:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718957078; cv=none; b=EvUg4C4ap/uxSjd8T+UyXQifpLvkdfbcMpK0xyfFH/a7amkLzOc7nDabkHtVSTVUC6AQ8Rc9p+6V7VHd1FsxALgPEUy1WNpPHM1fuVv28z7LM8mqQ9yU7UPYHsRfxOoScVQRFkBIX5G+r8zL/iX58MkKEQbaWcgsf89/zv7ji+4=
+	t=1718957080; cv=none; b=aAy/bn6n4yWx+6499ofKBWDaYTMffHyQb9BZVAWljZ97JkCpWzZVZrgtNrTdjZa0Icqx64O8xT7wN5bBHzQf+qRVGjaaVlPrFCSWKW+RGH7FpZsd8ChNnv1GgJLw6XGvi7xK6IQVXrf6dpeukDk56FnS5MH9XGIyDpfoR/8AGQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718957078; c=relaxed/simple;
-	bh=Iv87sC5rLSPoAbXTaevYd/Z92Q0UO81IEt4+5tvXf3s=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RYZlqkNXS/EtSNSt5do7fmPpnHELK4A0D2FGHGwI9aJPYiT2TIz4R5SIYP3QUCUAHb0mVZd3PG0IISi1WpqcDQhD246jBdaZJ0XoNML1BDjHglDpn3wk9Ap6i8hTeRATb0rxFipw0i1vxZ7VVvk1DOeapUKA5sFb67Mo3wkioxY=
+	s=arc-20240116; t=1718957080; c=relaxed/simple;
+	bh=weuisKtp7V7ZnJ0ojQ9JLk55onJO8sYaoFdmzRw19J4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TXwzSIanL6qlKH76hmn1/y7zuoSBN3r+IK7YUR0NGUrqrqdum8AU94+7w3cd5XwWVjnDlNvNK/IdUzhzTnMEZO0nlO6k4GBDl02gNvNpHSq8ESeXeBMf1JEtu45TqSvnYCDtH85ovYFQbte9fV7ainfEAcn41tjN3R+f1FHnQ2k=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 45L846mtC3889723, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 45L84Fm343890090, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 45L846mtC3889723
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 45L84Fm343890090
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Jun 2024 16:04:06 +0800
+	Fri, 21 Jun 2024 16:04:15 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Fri, 21 Jun 2024 16:04:06 +0800
+ 15.1.2507.39; Fri, 21 Jun 2024 16:04:16 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 21 Jun
- 2024 16:04:05 +0800
+ 2024 16:04:15 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <wens@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
-Subject: [PATCH v2 1/5] wireless-regdb: Update regulatory info for Argentina (AR) on 6GHz
-Date: Fri, 21 Jun 2024 16:03:44 +0800
-Message-ID: <20240621080348.55504-1-pkshih@realtek.com>
+Subject: [PATCH v2 3/5] wireless-regdb: Update regulatory info for Colombia (CO) on 6GHz
+Date: Fri, 21 Jun 2024 16:03:46 +0800
+Message-ID: <20240621080348.55504-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240621080348.55504-1-pkshih@realtek.com>
+References: <20240621080348.55504-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,18 +47,20 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-NATIONAL COMMUNICATIONS ENTITY issued Technical Characteristics WiFI6
-Equipment on 05/22/2023 by Appendix 1 of [1], which 1) an access point or
-subordinate device may operate in the 5925-7125 MHz band with a Power
-Maximum Radiated Isotropic Equivalent (EIRP) of 30 dBm and a maximum
-EIRP spectral density of 5 dBm in a bandwidth of 1 MHz; 2) A client device
-may operate in the 5925-7125 MHz band with an Isotropic Radiated Power
-equivalent (EIRP) of 24 dBm and a maximum EIRP spectral density of -1 dBm
-over a width of 1 MHz band.
+REPUBLIC OF COLOMBIA, NATIONAL SPECTRUM AGENCY announced RESOLUTION
+No. 000737 OF 2022-11-18 [2] accessed via [1], which specific operating
+conditions inf the band of 5925 - 7125 MHz.
+  - P.I.R.E. maximum 30 dBm and spectral density of P.I.R.E. maximum
+    5 dBm/MHz for the access devices.
+  - P.I.R.E. maximum 24 dBm and spectral density of P.I.R.E. maximum
+    -1 dBm/MHz for client devices.
 
-Considering -1 dBm/MHz for client device, 12 dBm is adopted.
+Permitted indoor use only.
 
-[1] https://www.boletinoficial.gob.ar/detalleAviso/primera/287126/20230524
+Considering -1 dBm/MHz for client devices, 12 dBm is adopted.
+
+[1] https://www.ane.gov.co/SitePages/det-noticias.aspx?p=414
+[2] https://www.ane.gov.co/Sliders/archivos/gesti%C3%B3n%20t%C3%A9cnica/Estudios%20de%20gesti%C3%B3n%20y%20planeaci%C3%B3n/Banda%206%20GHz/Documentos%20decisi%C3%B3n/Resolucion%20000737%20del%2018112022.pdf
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
@@ -65,16 +70,16 @@ v2: no change
  1 file changed, 3 insertions(+)
 
 diff --git a/db.txt b/db.txt
-index 966c708bf0df..9c2c031d9de7 100644
+index 232ca875c6c2..c98749442873 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -89,12 +89,15 @@ country AN: DFS-ETSI
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (27), DFS
+@@ -424,12 +424,15 @@ country CN: DFS-FCC
+ 	(59400 - 63720 @ 2160), (44)
+ 	(63720 - 65880 @ 2160), (28)
  
 +# Source:
-+# https://www.boletinoficial.gob.ar/detalleAviso/primera/287126/20230524
- country AR: DFS-FCC
++# https://www.ane.gov.co/Sliders/archivos/gesti%C3%B3n%20t%C3%A9cnica/Estudios%20de%20gesti%C3%B3n%20y%20planeaci%C3%B3n/Banda%206%20GHz/Documentos%20decisi%C3%B3n/Resolucion%20000737%20del%2018112022.pdf
+ country CO: DFS-FCC
  	(2402 - 2482 @ 40), (20)
  	(5170 - 5250 @ 80), (17), AUTO-BW
  	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
@@ -82,8 +87,8 @@ index 966c708bf0df..9c2c031d9de7 100644
  	(5735 - 5835 @ 80), (30)
 +	(5925 - 7125 @ 320), (12), NO-OUTDOOR
  
- country AS: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
+ country CR: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
 -- 
 2.25.1
 
