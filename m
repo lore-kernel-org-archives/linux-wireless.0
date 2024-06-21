@@ -1,38 +1,38 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F4222A8FE
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2024 05:23:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA57663A
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Jun 2024 05:24:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718947432; cv=none; b=KtGNA/X7jCwinHWcLGf32k2pu7KZNtSXkJcQ+3O55j0p/xrYxFMaS5i5tLmKDWuB3nTpxu8JePnS2mLuhmOFhhfr7TRCPNu7OVmkaLVbk5UY9wrWTQRpu8hrHjWCPtqOcMumBP80KK5kSq8bLzt+pmIIybRm53XmJYsraWzeTMI=
+	t=1718947465; cv=none; b=i/wGtxA/wBjXFZ79S0jhSGMxWIpylDR2sMxJS8314DS9hRZm9/5kBWZT3FqM9RbzidGlUTUDOHgo36yLu2EaboMLNGlmzY5Tiqn2hURFpb/At542EeSXOGZSpKWjC/1siByR04dfGcPHCZWQR4e1jzli6QZ3juJuG0xTWlF9Dm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718947432; c=relaxed/simple;
-	bh=7uPcZ9xX/IbbMC0C++Yxz3+sQZNX8uXau2BG3GRJM78=;
+	s=arc-20240116; t=1718947465; c=relaxed/simple;
+	bh=8hKIzWmzBTXKbNyraNBg03087lxrGhpOOpjAzFjOLec=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MTrdM9BZvE330+q3ucRj1QRQzqG1woAcY4zDx4UNnDS+4+laMaHTJUgUS2RmJ5NdKoQsHdLo0WV/9WHtEs4Ns4WBsFtZHM484Rhed475jSmYnoh/CB/BVgZr8k7sXDzB3ZZ8dWqQDgoiUna5FLKNHL/ghdCTriBHzDoMXSdrdV4=
+	 MIME-Version:Content-Type; b=LlrD1I/Tv/FxswW7Vw3XQIE1muVkriz6mrQhyFQVkA8u5oZiNONOgEc5tCJBO3r0by5Hb7wAVLz1eY0bSO+Dma0fmXiYU0+5Ph6Mdb4o0Jn3ThE6K2iLa9qwn+QFk1LpZUoWXyY9RKMPCz+imUtM6edgfd/6JJzg32zkfYwCpfw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 45L5MbQlA3755629, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 45L5MQRv83755608, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 45L5MbQlA3755629
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 45L5MQRv83755608
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Jun 2024 13:22:37 +0800
+	Fri, 21 Jun 2024 13:22:26 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Fri, 21 Jun 2024 13:22:38 +0800
+ 15.1.2507.39; Fri, 21 Jun 2024 13:22:26 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 21 Jun
- 2024 13:22:37 +0800
+ 2024 13:22:26 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <wens@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
-Subject: [PATCH 6/6] wireless-regdb: Update regulatory info for Mauritius(MU) on 6GHz
-Date: Fri, 21 Jun 2024 13:22:05 +0800
-Message-ID: <20240621052205.28925-6-pkshih@realtek.com>
+Subject: [PATCH 3/6] wireless-regdb: Update regulatory info for Jordan (JO) for 2022
+Date: Fri, 21 Jun 2024 13:22:02 +0800
+Message-ID: <20240621052205.28925-3-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240621052205.28925-1-pkshih@realtek.com>
 References: <20240621052205.28925-1-pkshih@realtek.com>
@@ -47,47 +47,50 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-Information & Communication Technologies Authority released DECISION FOR
-ALLOCATION OF ADDITIONAL SPECTRUM IN THE FREQUENCY RANGE 5945-6425 MHz FOR
-BROADBAND WIRELESS ACCESS SERVICES IN MAURITIUS [1].
-The technical conditions:
+The Hashemite Kingdom of Jordan, Telecommunications Regulatory Authority
+issued pursuant to the provisions of Articles (12A) and (22) of the
+Telecommunications Law No. 31 of 1995, as amended. [1]
 
- - LOW POWER INDOOR (LPI) DEVICES
-   * Maximum mean e.i.r.p.: 23 dBm
-   * Maximum mean e.i.r.p. density: 10 dBm/MHz
-   * indoor use only
- - VERY LOW POWER (VLP) WAS/RLAN DEVICES
-   * Maximum mean e.i.r.p.: 14 dBm
-   * Maximum mean e.i.r.p. density: 1 dBm/MHz
-   * Indoors and outdoors; Use on radio-controlled models is prohibited
+The effective radiated power (EIRP) of devices used in local radio computer
+networks must not exceed the following values:
 
-[1] https://www.icta.mu/documents/2022/08/wifi6e_decision_0822.pdf
+ - 2400-2483.5 MHz: 100 milliwatts (20 dBm)
+ - 5150-5350 MHz: 200 milliwatts (23 dBm)
+ - 5470-5725 MHz: 1 watt (30 dBm)
+ - 5725-5875 MHz: 200 mW (23 dBm)
+ - 5925-6425 MHz:
+   * 25 milliwatts (14 dBm) (for outdoor and portable devices)
+   * 200 milliwatts (23 dBm) (for devices operated indoors only)
+
+[1] https://trc.gov.jo/EchoBusV3.0/SystemAssets/PDF/RSMD/cb9f9a83-43a6-4e66-8432-6e02ecaf465b_RLAN%20Arabic%20%20Final%20-%20clean%20with%2057-71%20GHz.pdf
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- db.txt | 3 +++
- 1 file changed, 3 insertions(+)
+ db.txt | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/db.txt b/db.txt
-index c7371e568b4d..50f4ddb5a808 100644
+index e10c3fc752e9..a742498c1116 100644
 --- a/db.txt
 +++ b/db.txt
-@@ -1301,12 +1301,15 @@ country MT: DFS-ETSI
- 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
- 	(57000 - 66000 @ 2160), (40)
- 
-+# Source:
-+# https://www.icta.mu/documents/2022/08/wifi6e_decision_0822.pdf
- country MU: DFS-FCC
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
- 	(5250 - 5330 @ 80), (24), DFS, AUTO-BW
+@@ -957,10 +957,14 @@ country JM: DFS-FCC
  	(5490 - 5730 @ 160), (24), DFS
  	(5735 - 5835 @ 80), (30)
-+	(5945 - 6425 @ 320), (23), NO-OUTDOOR
+ 
++# Source:
++# https://trc.gov.jo/EchoBusV3.0/SystemAssets/PDF/RSMD/cb9f9a83-43a6-4e66-8432-6e02ecaf465b_RLAN%20Arabic%20%20Final%20-%20clean%20with%2057-71%20GHz.pdf
+ country JO: DFS-JP
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 80), (23)
+-	(5735 - 5835 @ 80), (23)
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5350 @ 80), (23)
++	(5470 - 5725 @ 80), (30)
++	(5725 - 5875 @ 80), (23)
++	(5925 - 6425 @ 320), (23), NO-OUTDOOR
  
  # Source:
- # http://www.cam.gov.mv/docs/tech_standards/TAM-TS-100-2004-WLAN.pdf
+ # https://www.soumu.go.jp/main_content/000635492.pdf
 -- 
 2.25.1
 
