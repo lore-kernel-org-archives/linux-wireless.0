@@ -1,70 +1,99 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 926BE1373
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2024 01:05:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BD6A4C6E
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Jun 2024 02:57:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719191113; cv=none; b=R6yRSbVMpx57uGREcKSMv/eaZWMFZr7Gq3rkWIxJ8mY0VDJefDSR6V0SrZ33biiKa9i/86PHRzXBdcxllBfvLnmYikPfQ5Fn6+Gz+lSzwG3/ik7lz7M8kkPtagIvBlP1dtIksfaRP7Z5KZ++RXF/QgLOj3P41Q471ZE1L3k4ghE=
+	t=1719197841; cv=none; b=GisErqg0p7drOMyZQJehXTJIWRMHHxYMCuI0mjNlK5oEujVf0HgSK2duCx4jyLZQJqIBHd7AOc7aivKf8ySVZdiQPfCG0wUpihR3NvgKz1t28hMdj9rd2mlUVnKma9jBdbWr8Kz90MIcy4O936GzeNhSJrqvMN0vyocUGpPjlLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719191113; c=relaxed/simple;
-	bh=22JuyHDYU6p9wTvzLAoFAAmFcfyj8g2rUAxim4hhHvU=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-reply-to; b=XYTIt3F39VtKFll+1RR1jILeWfWQYNKJLWK7tMLfNArC+rvKMcR+24uOdSPL8deNMx8M4DBxvd38Ifz7Pvb5jGfwVT4YgEbmse2UcVoQ1EUsWI+qX3TX0SQHwIK9Dpu+JnSWBSYYx2H//7X6HH1ShWt3LYynJqxtrRGmbAGx2xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=g6hpOq1e; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="g6hpOq1e"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4W6qWQ4K69z9smn;
-	Mon, 24 Jun 2024 03:05:06 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1719191106;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:in-reply-to:in-reply-to;
-	bh=vpfdx3hd/c/9mVF1tPjLu2yhodg62YVfmJcamqfdi4E=;
-	b=g6hpOq1e3M/tWyWZsDUGLgVTssND49L/V2rF6+Z0fjA1Iqst0nzP6XhVdP9s4oJorNcZGK
-	ab7enjDodBcpoJMTPZ5aC/IuDJEE5wqreJY2bCycexygFsLZ86CHmZYAkv0NyBhN43OzBp
-	Th8apMsDN/vMtsXRrtzy2JxBYHrP+OtB1XdZiW3CLJRegl3/fBTvRsMbe4sRzDn8xds11H
-	QtAb+tk19Ij6SCUKAzFM/Rd3XDT2a4ezFSn+6S/kuuYSA/3qrOE1b6Qb+lqGEOKeyre3G3
-	jmKAp54Pdh93VdKsmzOJQes5o2xXgeu6qNoKxb5CyCYQZChdiHsppEmX+8bOzA==
-Message-ID: <2b9285d92664a1834ae3758a684d1cb4.brian.witte@mailbox.org>
-From: Brian Witte <brian.witte@mailbox.org>
-To: Paul Rotering <rotering@animalcules.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: subscribe
-Date: Sun, 23 Jun 2024 19:55:53 -0500
-In-reply-to: <d6f2e068-ef28-443a-9d4a-6e609dd62b0d@animalcules.com>
-X-MBO-RS-ID: 5650445d78a61bc58c3
-X-MBO-RS-META: 9ou537eu8fwicixgj9rx3tn9g74yzkpg
+	s=arc-20240116; t=1719197841; c=relaxed/simple;
+	bh=n1ztrXnwVSqC1VO6pp5pVnz2j3CCBdYFPNanEFIsGWA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DdYwHxn7X5PjFzGBnufq4xxapU9w1gfDuBydOunMthPhZ+wHb+yKQVBqe+UiCnoSsSdKm9nsAFLaIgRzQ/vfh5f9kakByKmNPQP0fRB9xxtBsoOLM0FTVYZeqZs3c+FKoHEGuk9nKgkJCXvo5Zq5PpaoNpkB7CIdmiyGhibrZn4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 45O2uf7uB2577519, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/2.95/5.92) with ESMTPS id 45O2uf7uB2577519
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 24 Jun 2024 10:56:41 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Mon, 24 Jun 2024 10:56:42 +0800
+Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Mon, 24 Jun
+ 2024 10:56:41 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <wens@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <wireless-regdb@lists.infradead.org>
+Subject: [PATCH v2 4/4] wireless-regdb: Update regulatory info for Macao (MO) for 2024
+Date: Mon, 24 Jun 2024 10:56:23 +0800
+Message-ID: <20240624025623.6021-4-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240624025623.6021-1-pkshih@realtek.com>
+References: <20240624025623.6021-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
 
+MACAU SPECIAL ADMINISTRATIVE REGION OFFICE OF THE CHIEF EXECUTIVE released
+Order from the Chief Executive No. 64/2024, which wireless data
+communications equipment defined as
 
-Paul Rotering <rotering@animalcules.com> writes:
+ - 2400-2483.5MHz 200mW
+ - 5150-5350MHz   200mW
+ - 5470-5725MHz   1W
+ - 5725-5850MHz   1W
+ - 5925-6425MHz   250 mW (for indoor use)
+                  25 mW (for use in outdoor spaces)
 
-> subscribe linux-wireless
+[1] https://bo.io.gov.mo/bo/i/2024/16/despce.asp#64
 
-Hi, Paul
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2:
+   - change 5470-5725MHz to 5470-5730MHz to have 160Mhz bandwidth
+   - keep DFS flag for original ranges since it defined DFS-FCC
+---
+ db.txt | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-The kernel mailing lists now manage subscriptions this way:
-https://subspace.kernel.org/subscribing.html
-
-Here is brief explanation on what changed:
-https://subspace.kernel.org/vger.kernel.org.html#what-happened-to-majordomo
-
-You can subscribe to this list by emailing the email address below:
-linux-wireless+subscribe@vger.kernel.org
-
-You will have to reply to a confirmation email and then you will be able
-to stay up-to-date.
-
+diff --git a/db.txt b/db.txt
+index 648530192b75..c26174cb6a74 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1256,12 +1256,15 @@ country MN: DFS-FCC
+ 	(5735 - 5835 @ 80), (30)
+ 	(5925 - 6425 @ 320), (100mW)
+ 
++# Source:
++# https://bo.io.gov.mo/bo/i/2024/16/despce.asp#64
+ country MO: DFS-FCC
+-	(2402 - 2482 @ 40), (23)
+-	(5170 - 5250 @ 80), (23), AUTO-BW
+-	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
+-	(5490 - 5730 @ 160), (30), DFS
+-	(5735 - 5835 @ 80), (30)
++	(2400 - 2483.5 @ 40), (200 mW)
++	(5150 - 5250 @ 80), (200 mW), AUTO-BW
++	(5250 - 5350 @ 80), (200 mW), DFS, AUTO-BW
++	(5470 - 5730 @ 160), (1000 mW), DFS
++	(5725 - 5850 @ 80), (1000 mW)
++	(5925 - 6425 @ 320), (250mW), NO-OUTDOOR
+ 
+ country MP: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
 -- 
-regards,
-brian witte
+2.25.1
+
