@@ -1,19 +1,19 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 5C68A1741ED;
+	by smtp.subspace.kernel.org (Postfix) with SMTP id E048216DECF;
 	Tue,  2 Jul 2024 12:25:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=42.101.60.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719923142; cv=none; b=VOVQhc+MHCkAmattrVx2Q5E7F5/7gEua9eNm2IVzAqX+xwduziSZ2LsvAJRfPBaQvOHWGL2SvYqPtNvffe6s9+B7MIpOdp+DF319EnVA1RIxPgLCGIhbMkskt6yns6ID8+/j35tCPEbb3cW6RoLamRlmgRI9La0sLBKmI00zXsM=
+	t=1719923142; cv=none; b=bPTBpV5sf8zKb3DZA/b5Vlyk/Sru3CR1BbKEDeh6wOeZtW0sejYO35VwIqT18uA1LAcJccxlCzhPOPMMOn64irsUFRWY2F1bKFPXebQ8/VcvPYM2S4162RJOgDkPYRh3HWTlQvbWpTVYZhowo4+wXC0P0GXdZ8ceEaHfwL11zS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1719923142; c=relaxed/simple;
-	bh=re5hCi09bz4bN2XgE8UnJKMOfANVbB9O+r83cPT08rE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version; b=SUlfMoK7jZ7dmoL6RfYJfCwspcUHtNr4bo5ZO2yiekVuZaM54Zk0bqhlGOS7jfC5tUl7vA2JadadNqPEr6cLMwCgraGai6SnAUYwNgWYm3Go0g2BxihhC5qgAwYQC8sR1Pmp9CeerOG7uFilA29NTxL3QX2zluMmekhfeuIEkow=
+	bh=Xi97Ab9KSnAJutc+jpQwepKwVeNjLKH94VB89Wuz084=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version; b=SB03dfQlem9GN036vwnsFcJdeZOzeSlHHIPL/b2Xtx7dtGFDuWuXpnX2pWSa/YugFpjWKLo2oEIZMcC3D85EwmM0GcWip9HRXy6Q/EWhitdYdvUjvmTc3thPYvZ8r19Yn/i91O9Pp5G7hdrXonwy1Pw4SzbJGXY9RYHZYW+YSuU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com; spf=pass smtp.mailfrom=nfschina.com; arc=none smtp.client-ip=42.101.60.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id 8E4146031A64E;
-	Tue,  2 Jul 2024 20:25:30 +0800 (CST)
+	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id C2C226031A63E;
+	Tue,  2 Jul 2024 20:25:18 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
@@ -23,21 +23,24 @@ Cc: Su Hui <suhui@nfschina.com>,
 	johannes.berg@intel.com,
 	kees@kernel.org,
 	a@bayrepo.ru,
-	colin.i.king@gmail.com,
 	marcan@marcan.st,
+	quic_alokad@quicinc.com,
 	zyytlz.wz@163.com,
 	petr.tesarik.ext@huawei.com,
-	hante.meuleman@broadcom.com,
-	pieter-paul.giesberts@broadcom.com,
-	franky.lin@broadcom.com,
+	duoming@zju.edu.cn,
+	colin.i.king@gmail.com,
+	frankyl@broadcom.com,
+	meuleman@broadcom.com,
+	phaber@broadcom.com,
+	linville@tuxdriver.com,
 	linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless 8/9] wifi: cfg80211: avoid garbage value of 'val' in brcmf_set_key_mgmt()
-Date: Tue,  2 Jul 2024 20:24:51 +0800
-Message-Id: <20240702122450.2213833-9-suhui@nfschina.com>
+Subject: [PATCH wireless 1/9]  wifi: cfg80211: avoid garbage value of 'io_type' in  brcmf_cfg80211_attach()
+Date: Tue,  2 Jul 2024 20:24:44 +0800
+Message-Id: <20240702122450.2213833-2-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20240702122450.2213833-1-suhui@nfschina.com>
 Precedence: bulk
@@ -48,28 +51,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-brcmf_fil_bsscfg_int_get() reads the value of 'val'.
-Initialize 'val' to avoid garbage vlaue.
+ brcmf_fil_cmd_int_get() reads the value of 'io_type' and passes it to
+ brcmf_fil_cmd_data_get(). Initialize 'io_type' to avoid garbage value.
 
-Fixes: 240d61a9ddeb ("brcmfmac: add 802.11w management frame protection support")
+Fixes: 83cf17aa8082 ("brcmfmac: adopt new d11 interface")
 Signed-off-by: Su Hui <suhui@nfschina.com>
 ---
  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2a97d4d7f684..95193e09504f 100644
+index 5fe0e671ecb3..6be7e7bd8ce7 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2085,7 +2085,7 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_cfg80211_profile *profile = &ifp->vif->profile;
- 	struct brcmf_pub *drvr = ifp->drvr;
--	s32 val;
-+	s32 val = 0;
- 	s32 err;
- 	const struct brcmf_tlv *rsn_ie;
- 	const u8 *ie;
+@@ -8249,7 +8249,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct brcmf_if *ifp;
+ 	s32 err = 0;
+-	s32 io_type;
++	s32 io_type = 0;
+ 	u16 *cap = NULL;
+ 
+ 	if (!ndev) {
 -- 
 2.30.2
 
