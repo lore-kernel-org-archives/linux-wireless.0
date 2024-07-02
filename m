@@ -1,19 +1,19 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 10549176ABB;
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 51CEF177986;
 	Tue,  2 Jul 2024 12:25:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=42.101.60.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719923145; cv=none; b=j4nMXqFuEd1SgTTs4yrf3znvihr/NMcJpN7LLY226j7de0NPkpaCMPmqwxuQQZB9C4C9S2NlGK+eQOQzamr1bMEQ5wwoSaa1WiWmY+OYZ7wgrd2h1dbZY82X3COiKFhcO0A9L0LGrpUh9H1oAA9PcCNhpmRTczUEzYF72jcFdvE=
+	t=1719923145; cv=none; b=DRYMCIL+3gspMNgApMuv4dohipM7Bk3YeM/00YmSwEItcU9InOXGvVs2zV57j2BHk8rab4f0VQ1HIlPFm7R5JCLuJHuf5uSarQnL7k3Cq1LK/Jwks9OWpcuo6UIw0oFz44Tnzfyi1U0ya4A0FwYcsI8IRr6l2TIMgSAbt4oN10E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1719923145; c=relaxed/simple;
-	bh=/ybC0azd/YcZ5gUZ1daUGO+ZlGw0Gp2SnfzhyW7qEdc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version; b=PGLcqufQvsrQc0T174bU+NlXtRyrmEgL/88OqceNsmHcT7pna+SSbcukzSN5v7SncREw6lo51fVCOujNa+SaiEicNiv775yTDFlructPq7wr5HwLERMwLVfTjLfAxN9CReoS6j5H+W+M+Tf7emVLd7VdbE7KYZQl3Lf0nNLVXAQ=
+	bh=EZlLmoTtAlTf/n0780AcOKkral2xyrZbpk9+FQd/Nhs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version; b=DplwkL5TnbkFSzH6ErXdiiRY5M8SA0OiHWz5odyKNjazUROtTxsUHVLhjiWA42zlWdk8TmIBvvZuGv0zNvVOpIaz7ni4EghcC+axUosomnsSkq30At+Z7tX5IK+hC7sUIsc1Edg+8GpaaSHKff8vo0MRpWu3/qRMuOmCLdG9E5s=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com; spf=pass smtp.mailfrom=nfschina.com; arc=none smtp.client-ip=42.101.60.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id 846F56031A64B;
-	Tue,  2 Jul 2024 20:25:25 +0800 (CST)
+	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id 9A8766031A649;
+	Tue,  2 Jul 2024 20:25:28 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
@@ -23,20 +23,22 @@ Cc: Su Hui <suhui@nfschina.com>,
 	johannes.berg@intel.com,
 	kees@kernel.org,
 	a@bayrepo.ru,
-	petr.tesarik.ext@huawei.com,
-	justinstitt@google.com,
 	marcan@marcan.st,
 	duoming@zju.edu.cn,
+	petr.tesarik.ext@huawei.com,
 	colin.i.king@gmail.com,
-	antonio@open-mesh.com,
+	meuleman@broadcom.com,
+	frankyl@broadcom.com,
+	linville@tuxdriver.com,
+	pieterpg@broadcom.com,
 	linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless 5/9] wifi: cfg80211: avoid garbage value of 'freq' in brcmf_cfg80211_mgmt_tx()
-Date: Tue,  2 Jul 2024 20:24:48 +0800
-Message-Id: <20240702122450.2213833-6-suhui@nfschina.com>
+Subject: [PATCH wireless 7/9] wifi: cfg80211: avoid garbage value of 'wsec' in brcmf_cfg80211_add_key()
+Date: Tue,  2 Jul 2024 20:24:50 +0800
+Message-Id: <20240702122450.2213833-8-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20240702122450.2213833-1-suhui@nfschina.com>
 Precedence: bulk
@@ -47,28 +49,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-brcmf_fil_cmd_int_get() reads the value of 'freq'.
-Initialize 'freq' to avoid garbage value.
+brcmf_fil_bsscfg_int_get() reads the value of 'wsec'.
+Initialize 'wsec' to avoid garbage value.
 
-Fixes: c2ff8cad6423 ("brcm80211: make mgmt_tx in brcmfmac accept a NULL channel")
+Fixes: f09d0c02b63d ("brcmfmac: use different fw api for encryption,auth. config")
 Signed-off-by: Su Hui <suhui@nfschina.com>
 ---
  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index e672565de437..9a5b1f77c890 100644
+index eb1196db8407..2a97d4d7f684 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5511,7 +5511,7 @@ brcmf_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct brcmf_fil_af_params_le *af_params;
- 	bool ack;
- 	s32 chan_nr;
--	u32 freq;
-+	u32 freq = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
+@@ -2782,7 +2782,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_pub *drvr = cfg->pub;
+ 	struct brcmf_wsec_key *key;
+ 	s32 val;
+-	s32 wsec;
++	s32 wsec = 0;
+ 	s32 err;
+ 	u8 keybuf[8];
+ 	bool ext_key;
 -- 
 2.30.2
 
