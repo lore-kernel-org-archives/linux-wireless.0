@@ -1,19 +1,19 @@
 Received: from mail.nfschina.com (unknown [42.101.60.195])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 51CEF177986;
+	by smtp.subspace.kernel.org (Postfix) with SMTP id 51D31177992;
 	Tue,  2 Jul 2024 12:25:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=42.101.60.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719923145; cv=none; b=DRYMCIL+3gspMNgApMuv4dohipM7Bk3YeM/00YmSwEItcU9InOXGvVs2zV57j2BHk8rab4f0VQ1HIlPFm7R5JCLuJHuf5uSarQnL7k3Cq1LK/Jwks9OWpcuo6UIw0oFz44Tnzfyi1U0ya4A0FwYcsI8IRr6l2TIMgSAbt4oN10E=
+	t=1719923145; cv=none; b=e0qtcwKEIC8M8ZH1y16eD13s2uYBs97h7TLfgZC9ls2DHkFCs8jM2gfFVEobvDGBLW0NdsVdSYUNTVykJNTSVUzAuiX/3En7F9B3JR90NwJj4Pndgx3jd/D7nYkb0fS1dZVxEMyaO1sC5iVZwpk4ExSTLIc0CwwP2RM1CHK7bMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1719923145; c=relaxed/simple;
-	bh=EZlLmoTtAlTf/n0780AcOKkral2xyrZbpk9+FQd/Nhs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version; b=DplwkL5TnbkFSzH6ErXdiiRY5M8SA0OiHWz5odyKNjazUROtTxsUHVLhjiWA42zlWdk8TmIBvvZuGv0zNvVOpIaz7ni4EghcC+axUosomnsSkq30At+Z7tX5IK+hC7sUIsc1Edg+8GpaaSHKff8vo0MRpWu3/qRMuOmCLdG9E5s=
+	bh=N1K5vqUOUCTzc4m7/1paZZiWuB+U2yJoeN9sfduGBOo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DVwRVI/ZdWMiPt6mhR/G3WnWEbRhgWyATfc8XptJt+asglqlsLLXqWdfJG2N3eLRV+dpZMsFxovS8M5wb8XOiNxcKF+vutgl+vAeLOQx3ySJ4xDc72GrVPf79EReCaufA5SMBFNsOtyN6jxX9nl+pTz8rLbzDFmjbK5tIe/TvO4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com; spf=pass smtp.mailfrom=nfschina.com; arc=none smtp.client-ip=42.101.60.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nfschina.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nfschina.com
 Received: from localhost.localdomain (unknown [180.167.10.98])
-	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id 9A8766031A649;
-	Tue,  2 Jul 2024 20:25:28 +0800 (CST)
+	by mail.nfschina.com (MailData Gateway V2.8.8) with ESMTPSA id 4FAA36031A631;
+	Tue,  2 Jul 2024 20:25:14 +0800 (CST)
 X-MD-Sfrom: suhui@nfschina.com
 X-MD-SrcIP: 180.167.10.98
 From: Su Hui <suhui@nfschina.com>
@@ -23,24 +23,34 @@ Cc: Su Hui <suhui@nfschina.com>,
 	johannes.berg@intel.com,
 	kees@kernel.org,
 	a@bayrepo.ru,
+	quic_alokad@quicinc.com,
+	zyytlz.wz@163.com,
 	marcan@marcan.st,
-	duoming@zju.edu.cn,
 	petr.tesarik.ext@huawei.com,
+	duoming@zju.edu.cn,
 	colin.i.king@gmail.com,
-	meuleman@broadcom.com,
-	frankyl@broadcom.com,
+	u.kleine-koenig@pengutronix.de,
+	quic_jjohnson@quicinc.com,
 	linville@tuxdriver.com,
 	pieterpg@broadcom.com,
+	meuleman@broadcom.com,
+	frankyl@broadcom.com,
+	stanley.hsu@cypress.com,
+	wright.feng@cypress.com,
+	ian.lin@infineon.com,
+	chi-hsien.lin@cypress.com,
+	zajec5@gmail.com,
+	antonio@open-mesh.com,
+	franky.lin@broadcom.com,
 	linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	kernel-janitors@vger.kernel.org
-Subject: [PATCH wireless 7/9] wifi: cfg80211: avoid garbage value of 'wsec' in brcmf_cfg80211_add_key()
-Date: Tue,  2 Jul 2024 20:24:50 +0800
-Message-Id: <20240702122450.2213833-8-suhui@nfschina.com>
+Subject: [PATCH wireless 0/9] wifi: cfg80211: avoid some garbage values 
+Date: Tue,  2 Jul 2024 20:24:42 +0800
+Message-Id: <20240702122450.2213833-1-suhui@nfschina.com>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20240702122450.2213833-1-suhui@nfschina.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,28 +59,48 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-brcmf_fil_bsscfg_int_get() reads the value of 'wsec'.
-Initialize 'wsec' to avoid garbage value.
+Clang static checker (scan-build) has some warnings as follows.
 
-Fixes: f09d0c02b63d ("brcmfmac: use different fw api for encryption,auth. config")
-Signed-off-by: Su Hui <suhui@nfschina.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+included from drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c:16
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h:123:2:
+warning:Assigned value is garbage or undefined [core.uninitialized.Assign]
+  123 |         __le32 data_le = cpu_to_le32(*data);
+      |         ^~~~~~~~~~~~~~   ~~~~~~~~~~~~~~~~~~
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c:138:3:warning
+Value stored to 'err' is never read [deadcode.DeadStores]
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index eb1196db8407..2a97d4d7f684 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2782,7 +2782,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_pub *drvr = cfg->pub;
- 	struct brcmf_wsec_key *key;
- 	s32 val;
--	s32 wsec;
-+	s32 wsec = 0;
- 	s32 err;
- 	u8 keybuf[8];
- 	bool ext_key;
+There are some functions like brcmf_fil_{cmd,iovar,basscfg}_int_get() 
+which read the value of its parameter, but some callers have not 
+initialized these parameters which will be read. And this patchset fixes
+these problems.
+
+BTW, maybe merge this patchset into one patch is more better because
+the num of changed code is small. I split it into multiple patches
+because of these different 'Fixes' tags. 
+
+Su Hui (9):
+  wifi: cfg80211: avoid garbage value of 'io_type' in 
+    brcmf_cfg80211_attach()
+  wifi: brcmfmac: avoid garbage value of 'status' in
+    brcmf_c_download_blob()
+  wifi: cfg80211: avoid garbage value of 'noise' in
+    brcmf_cfg80211_dump_survey()
+  wifi: cfg80211: avoid garbage value of 'chanspec' in
+    brcmf_cfg80211_get_channel()
+  wifi: cfg80211: avoid garbage value of 'freq' in
+    brcmf_cfg80211_mgmt_tx()
+  wifi: cfg80211: avoid garbage value of 'wsec' in
+    brcmf_cfg80211_reconfigure_wep()
+  wifi: cfg80211: avoid garbage value of 'wsec' in
+    brcmf_cfg80211_add_key()
+  wifi: cfg80211: avoid garbage value of 'val' in brcmf_set_key_mgmt()
+  wifi: cfg80211: avoid garbage value of 'wsec' in
+    brcmf_cfg80211_{get,config_default}_key()
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c     | 18 +++++++++---------
+ .../broadcom/brcm80211/brcmfmac/common.c       |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
 -- 
 2.30.2
 
