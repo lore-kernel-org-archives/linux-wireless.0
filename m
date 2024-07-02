@@ -1,40 +1,40 @@
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D980D1B582F;
-	Tue,  2 Jul 2024 14:44:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22AA41BA07C;
+	Tue,  2 Jul 2024 14:44:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719931495; cv=none; b=TfKSeT6DeHf5zA8ScLDs6yQmMNfkCD7foPZ0U2X6nbTIW/xZ/iWrHJS5EITKSDbeaKccA1HFvmXKcdXX9JiA9ZMYZLLqxgdGOMOeLyTh0RQbN/IiZhmHR5WQyLjReykzZj692DKOl5vrKECMw/a5aX6NUwpqQMM2Tkk7tWKsmWY=
+	t=1719931496; cv=none; b=cVB8v/rkEybh//5VzXgXOh83KYvOGPVj2dZvDmVwZ40ewDD52+DCLuY4xo7QLxwZD0UXAhDKfHhReYmAcJF3HKP34zygLC6yQ9pEi2RWzNdZAxSrydPRzPsRvMH7Lm7+EYUugK+4O/gdFev/3eN7as+Nr0adYfQ7YQkCGDjf1h0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719931495; c=relaxed/simple;
-	bh=igm8Hsce+3exsKL3ldkATepEb7/+cdyJt0g/twzxO/E=;
+	s=arc-20240116; t=1719931496; c=relaxed/simple;
+	bh=ULktF8naJ9Rw66szNBQ/Dn3wRGt6CrZufx250lGQItc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=f13qYN6d75fqvqAyQy855wMzxAZhMvQG01qJigLTXH7jBiRQ8bni3MtxMjZS7gsUq+xsQ1knOD1/hXcNCWd1fCpFcRfoxFvUO+nn6FH3L2NPh61Ag1B0sileIo6iByFyrVPXJMy0q8sB+0CvRTy/QzDxI8RznmbMn2Ly0MeiC4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=fail (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=Ex0/AGAA reason="signature verification failed"; arc=none smtp.client-ip=79.96.170.134
+	 MIME-Version:Content-Type; b=tU5I/boqjl0THZYAiDMkEzvtvI+YO9fUvzH7n1TX9awSKy8SUrebLwbiXl/0xH9u5SFxqjdy4kGpmUfLv3doQ7nrRaKMSSpVubG1YHlrZD+400vHg7SHqXs1BRcHB1rBbQfGBLR2zwW2/fDQllej0pnAwEVxWR/Tyj+11CjDZj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=fail (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=l0HqeHhC reason="signature verification failed"; arc=none smtp.client-ip=79.96.170.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="Ex0/AGAA"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="l0HqeHhC"
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 6.2.0)
- id ea584e3ebb090532; Tue, 2 Jul 2024 16:44:44 +0200
+ id bc1a8336c5d924f2; Tue, 2 Jul 2024 16:44:46 +0200
 Received: from kreacher.localnet (unknown [195.136.19.94])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 2D65FA562AE;
-	Tue,  2 Jul 2024 16:44:44 +0200 (CEST)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id EFAE0A562AE;
+	Tue,  2 Jul 2024 16:44:45 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
-	s=dkim; t=1719931484;
-	bh=igm8Hsce+3exsKL3ldkATepEb7/+cdyJt0g/twzxO/E=;
+	s=dkim; t=1719931486;
+	bh=ULktF8naJ9Rw66szNBQ/Dn3wRGt6CrZufx250lGQItc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ex0/AGAAQX/vvvEHT/32DS9NyiXCAdcoJ4xJ3fYsipzmIBNMGAwvzxJU62C8PJmFb
-	 eqw1Fu6y8BVtx5EFUCiwCydzn7EVVLssufBnmE/udNswkET/uWOkXFE/BprlWNApOG
-	 SzAnR7G5ZmelE/bAEhco502CjRZQADGuEnVplekIwieK7gbDFK5BChNqZYc1acFtYi
-	 nuswFuWWCd6UBBdmg7U95xsrRahkTBLKtrFWBvdKXs84Bljkamyfbux2j3Ekn/Mj1o
-	 D8oYez5KmhNswvR4xJwdMSnuIEqDTW6TGtMGgqRmdPABnF1ufxOZweg27WTkhd/mcO
-	 M/nzcZI1LnTDQ==
+	b=l0HqeHhC21unW2znGp2teRACF1C2/e0FERuief67K4CY9cIUA6n1jl8fj++UPTmlT
+	 GemRDMr/c53doxI2F5H/bOWPrZjm1OiHk+9boUYueWVkDhE6tWVxU1955ut4nv7DFM
+	 MSrodz6IVa/p3/k0CkYe+13jtyUaEY1Cq/3JZRWPPB/CRbawWdhuNBWKREBwK+6AlJ
+	 IrSzpv0u7FUadI6ORBLPs0iZ1AbT/gX4CVhGehbNOqqy8q6/gaVFICQKjS07gYmW6X
+	 FPcwS6ihSUPZ7AQukrYFiTm2tHCuYTwnm6XEhIW8Dky8mQ9FjsW4mQblILHE6KwWNb
+	 wrMJGUkyrM5mQ==
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To: Linux PM <linux-pm@vger.kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>,
@@ -48,10 +48,10 @@ Cc: LKML <linux-kernel@vger.kernel.org>,
  Jonathan Hunter <jonathanh@nvidia.com>, linux-wireless@vger.kernel.org,
  linux-tegra@vger.kernel.org
 Subject:
- [RESEND][PATCH v1 4/5] thermal: imx: Drop critical trip check from
- imx_set_trip_temp()
-Date: Tue, 02 Jul 2024 16:43:36 +0200
-Message-ID: <2272035.iZASKD2KPV@rjwysocki.net>
+ [RESEND][PATCH v1 2/5] thermal: trip: Add conversion macros for thermal trip
+ priv field
+Date: Tue, 02 Jul 2024 16:41:03 +0200
+Message-ID: <3297884.aeNJFYEL58@rjwysocki.net>
 In-Reply-To: <1890956.tdWV9SEqCh@rjwysocki.net>
 References: <1890956.tdWV9SEqCh@rjwysocki.net>
 Precedence: bulk
@@ -70,41 +70,70 @@ X-DCC--Metrics: v370.home.net.pl 1024; Body=14 Fuz1=14 Fuz2=14
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Because the IMX thermal driver does not flag its critical trip as
-writable, imx_set_trip_temp() will never be invoked for it and so the
-critical trip check can be dropped from there.
+Some drivers will need to store integers in the priv field of struct
+thermal_trip, so add conversion macros for doing this in a consistent
+way and switch over the int340x_thermal driver that already does it and
+uses custom conversion functions to using the new macros.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/thermal/imx_thermal.c |    9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c |   14 +----------
+ include/linux/thermal.h                                      |    3 ++
+ 2 files changed, 5 insertions(+), 12 deletions(-)
 
-Index: linux-pm/drivers/thermal/imx_thermal.c
+Index: linux-pm/include/linux/thermal.h
 ===================================================================
---- linux-pm.orig/drivers/thermal/imx_thermal.c
-+++ linux-pm/drivers/thermal/imx_thermal.c
-@@ -335,21 +335,12 @@ static int imx_set_trip_temp(struct ther
- 			     int temp)
- {
- 	struct imx_thermal_data *data = thermal_zone_device_priv(tz);
--	struct thermal_trip trip;
- 	int ret;
+--- linux-pm.orig/include/linux/thermal.h
++++ linux-pm/include/linux/thermal.h
+@@ -79,6 +79,9 @@ struct thermal_trip {
+ #define THERMAL_TRIP_FLAG_RW	(THERMAL_TRIP_FLAG_RW_TEMP | \
+ 				 THERMAL_TRIP_FLAG_RW_HYST)
  
- 	ret = pm_runtime_resume_and_get(data->dev);
- 	if (ret < 0)
- 		return ret;
++#define THERMAL_TRIP_PRIV_TO_INT(_val_)	(uintptr_t)(_val_)
++#define THERMAL_INT_TO_TRIP_PRIV(_val_)	(void *)(uintptr_t)(_val_)
++
+ struct thermal_zone_device;
  
--	ret = __thermal_zone_get_trip(tz, trip_id, &trip);
--	if (ret)
--		return ret;
+ struct thermal_zone_device_ops {
+Index: linux-pm/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
+===================================================================
+--- linux-pm.orig/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
++++ linux-pm/drivers/thermal/intel/int340x_thermal/int340x_thermal_zone.c
+@@ -62,16 +62,6 @@ static void int340x_thermal_critical(str
+ 		thermal_zone_device_type(zone));
+ }
+ 
+-static inline void *int_to_trip_priv(int i)
+-{
+-	return (void *)(long)i;
+-}
 -
--	/* do not allow changing critical threshold */
--	if (trip.type == THERMAL_TRIP_CRITICAL)
--		return -EPERM;
+-static inline int trip_priv_to_int(const struct thermal_trip *trip)
+-{
+-	return (long)trip->priv;
+-}
 -
- 	/* do not allow passive to be set higher than critical */
- 	if (temp < 0 || temp > trips[IMX_TRIP_CRITICAL].temperature)
- 		return -EINVAL;
+ static int int340x_thermal_read_trips(struct acpi_device *zone_adev,
+ 				      struct thermal_trip *zone_trips,
+ 				      int trip_cnt)
+@@ -106,7 +96,7 @@ static int int340x_thermal_read_trips(st
+ 			break;
+ 
+ 		zone_trips[trip_cnt].type = THERMAL_TRIP_ACTIVE;
+-		zone_trips[trip_cnt].priv = int_to_trip_priv(i);
++		zone_trips[trip_cnt].priv = THERMAL_INT_TO_TRIP_PRIV(i);
+ 		trip_cnt++;
+ 	}
+ 
+@@ -224,7 +214,7 @@ static int int340x_update_one_trip(struc
+ 		break;
+ 	case THERMAL_TRIP_ACTIVE:
+ 		err = thermal_acpi_active_trip_temp(zone_adev,
+-						    trip_priv_to_int(trip),
++						    THERMAL_TRIP_PRIV_TO_INT(trip->priv),
+ 						    &temp);
+ 		break;
+ 	default:
 
 
 
