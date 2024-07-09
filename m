@@ -1,96 +1,142 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8751E155C94
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Jul 2024 10:14:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE5C38FA5;
+	Tue,  9 Jul 2024 10:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720520042; cv=none; b=qhW3VVl1dOkyn1oFKtSbnvuxPuq6JB5IU5bWVbIFegA1Lxnwy+6duzOLiGy8OJXJDEsfmF51q+GmKlgTln8UIVz37RXR2OBIazMBdmBmGMJwq8xLhFPYFDZd76SG1bo65CjKLBZsyK3AmunEaUgwCQgzCeeEF78MZegwmBuKjuo=
+	t=1720520113; cv=none; b=TM5aNLBqUku47RO1QPNUrNw3NKNa5eJicOtPkFGddmRAdvqnrxpA41BXXOLrpofDsoCWGRut1BcrkSaKtwcSXuQ20wYfhFQ6Btl8/RP6taiSRkAOLEKkkJK1m1RSGSqqFU8alFpd/ENRIl8u9qVay8TDdOq8HJmhgV+rD/CXM0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720520042; c=relaxed/simple;
-	bh=bjBluXifPvWRvFSp/FG7ru9ScKbrn+ZytNb9IDlBLt4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RSL+RZBGt4wNJv4gJczfeKSZgLxdSPtmcHDf7oEaaipdfnJBzwh80TF9Jp3MkI+i/X8rfBQDfKqX4N1caSSVM93S445/ao0S5KjZKPU11w5nDEKS1VKK1brPmT+OaaOlPr2dAIKpN2JKprbyEooESSgycRkiatoXm5UihQoXZT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=aQ8xHylU; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1720520113; c=relaxed/simple;
+	bh=tKueqsxqE+0OrUIuFqh4Rl4FDN8EBWKmezJndP6hr30=;
+	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
+	 Cc:Message-ID:Date; b=ignyPmve+3iRU3Jwu71o48tuetcHcpnRA56Yere/9fwCT2y1Lah7FOdm4GSF4Er0xFrZuywqBcSGLYdeigYNeO21sHM9MqG+CTcbCYPqBwUhXfBUK3UO8Wq0soW07lCM7QU7bAuK9zmPnTfDp8rAQ3GVHonuWJg8TdwEsgA3HTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rlNbXPs2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aQ8xHylU"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=VA1WSGsaLUdqTzLpswDk7Qi2nuAy2mxeSf9nD6je938=; b=aQ8xHylUP3K8AxnQTKB2TxUloi
-	rTBiUew+CBFdP3TLawnA5xL450n63ixwUEOKmTeuQFZsKiP5sy4bj4PGchb80hDDtpvxj0GMRwisB
-	aOQjbQLAuYCaxws/GXYsQf4Dyf4+hzTwOfLt5w4lQHZeOp0jx/ikoEkg3dUMqwiOTQvo=;
-Received: from p54ae937c.dip0.t-ipconnect.de ([84.174.147.124] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sR7rC-004NRl-2Q;
-	Tue, 09 Jul 2024 12:13:58 +0200
-Message-ID: <18e1705c-6d8a-44ab-927d-498dc6bba3be@nbd.name>
-Date: Tue, 9 Jul 2024 12:13:58 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rlNbXPs2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15D7DC3277B;
+	Tue,  9 Jul 2024 10:15:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720520113;
+	bh=tKueqsxqE+0OrUIuFqh4Rl4FDN8EBWKmezJndP6hr30=;
+	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+	b=rlNbXPs2nEIFRDCoEcpY9/SHyt6VBtndqvip3jyIXEn/08GS7M2ta7QI0m4k6hDl1
+	 7Mznz/YtMGNbx0mlYUqU+1L0mNFB13LK66Y7YfFygOefTOlBAuJZ2dJdQ7GQidTMXn
+	 StqVQMherfjSEpZ0iKv+B98XgGJgm16sMJJXINamvDnlkS+uJI9h+psMobPeQ3G8vL
+	 54/lHUSJQpEYIBW1qpHBffdoz5F51m8h4eVXSFVzoErUrvwAcBTKkDcVGn47w8RAKu
+	 vvShMwiaSAhZH0iC096ueb+yaqKPh12sGxtZtiMGUJU+k581qOU3TuTU0JtdJyHoec
+	 0MuugLI+V0Cww==
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: pull request: mt76 2024-07-08
-To: Sean Wang <sean.wang@kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
- Kalle Valo <kvalo@kernel.org>
-References: <f5e72ce2-11db-4f19-8aaf-8fd9b62e5a77@nbd.name>
- <87bk37dhpo.fsf@kernel.org>
- <CAGp9Lzp+1xoceuT3Fi=qXpgFyaQyoW_z=TSHrQepByfb6BR-Ow@mail.gmail.com>
-Content-Language: en-US
-From: Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <CAGp9Lzp+1xoceuT3Fi=qXpgFyaQyoW_z=TSHrQepByfb6BR-Ow@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Subject: Re: wifi: mwifiex: Do not return unused priv in
+ mwifiex_get_priv_by_id()
+From: Kalle Valo <kvalo@kernel.org>
+In-Reply-To: <20240703072409.556618-1-s.hauer@pengutronix.de>
+References: <20240703072409.556618-1-s.hauer@pengutronix.de>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ David Lin <yu-hao.lin@nxp.com>, Francesco Dolcini <francesco@dolcini.it>,
+ Brian Norris <briannorris@chromium.org>, kernel@pengutronix.de,
+ Sascha Hauer <s.hauer@pengutronix.de>,
+ Francesco Dolcini <francesco.dolcini@toradex.com>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <172052010908.761847.2107697007150958943.kvalo@kernel.org>
+Date: Tue,  9 Jul 2024 10:15:10 +0000 (UTC)
 
-On 08.07.24 21:27, Sean Wang wrote:
-> Hi nbd,
-> 
-> I have fixed the build warnings for the patchset. The entire patchset,
-> including the fixes, has been pushed
-> to this repository https://github.com/objelf/wireless/commits/mt76/
-> 
-> The specific changes to fix the warnings are included in the following patches:
-> 
-> "wifi: mt76: mt7925: extend mt7925_mcu_uni_roc_event"
-> "wifi: mt76: mt7925: update mt7925_mcu_sta_mld_tlv for MLO"
-> "wifi: mt76: mt7925: add link handling in mt7925_txwi_free"
-> 
-> You can cherry-pick the respective patches or pull the tree as needed.
+Sascha Hauer <s.hauer@pengutronix.de> wrote:
 
-Thanks. Sent the update as v2.
+> mwifiex_get_priv_by_id() returns the priv pointer corresponding to
+> the bss_num and bss_type, but without checking if the priv is actually
+> currently in use.
+> Unused priv pointers do not have a wiphy attached to them which can
+> lead to NULL pointer dereferences further down the callstack.  Fix
+> this by returning only used priv pointers which have priv->bss_mode
+> set to something else than NL80211_IFTYPE_UNSPECIFIED.
+> 
+> Said NULL pointer dereference happened when an Accesspoint was started
+> with wpa_supplicant -i mlan0 with this config:
+> 
+> network={
+>         ssid="somessid"
+>         mode=2
+>         frequency=2412
+>         key_mgmt=WPA-PSK WPA-PSK-SHA256
+>         proto=RSN
+>         group=CCMP
+>         pairwise=CCMP
+>         psk="12345678"
+> }
+> 
+> When waiting for the AP to be established, interrupting wpa_supplicant
+> with <ctrl-c> and starting it again this happens:
+> 
+> | Unable to handle kernel NULL pointer dereference at virtual address 0000000000000140
+> | Mem abort info:
+> |   ESR = 0x0000000096000004
+> |   EC = 0x25: DABT (current EL), IL = 32 bits
+> |   SET = 0, FnV = 0
+> |   EA = 0, S1PTW = 0
+> |   FSC = 0x04: level 0 translation fault
+> | Data abort info:
+> |   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+> |   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+> |   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+> | user pgtable: 4k pages, 48-bit VAs, pgdp=0000000046d96000
+> | [0000000000000140] pgd=0000000000000000, p4d=0000000000000000
+> | Internal error: Oops: 0000000096000004 [#1] PREEMPT SMP
+> | Modules linked in: caam_jr caamhash_desc spidev caamalg_desc crypto_engine authenc libdes mwifiex_sdio
+> +mwifiex crct10dif_ce cdc_acm onboard_usb_hub fsl_imx8_ddr_perf imx8m_ddrc rtc_ds1307 lm75 rtc_snvs
+> +imx_sdma caam imx8mm_thermal spi_imx error imx_cpufreq_dt fuse ip_tables x_tables ipv6
+> | CPU: 0 PID: 8 Comm: kworker/0:1 Not tainted 6.9.0-00007-g937242013fce-dirty #18
+> | Hardware name: somemachine (DT)
+> | Workqueue: events sdio_irq_work
+> | pstate: 00000005 (nzcv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+> | pc : mwifiex_get_cfp+0xd8/0x15c [mwifiex]
+> | lr : mwifiex_get_cfp+0x34/0x15c [mwifiex]
+> | sp : ffff8000818b3a70
+> | x29: ffff8000818b3a70 x28: ffff000006bfd8a5 x27: 0000000000000004
+> | x26: 000000000000002c x25: 0000000000001511 x24: 0000000002e86bc9
+> | x23: ffff000006bfd996 x22: 0000000000000004 x21: ffff000007bec000
+> | x20: 000000000000002c x19: 0000000000000000 x18: 0000000000000000
+> | x17: 000000040044ffff x16: 00500072b5503510 x15: ccc283740681e517
+> | x14: 0201000101006d15 x13: 0000000002e8ff43 x12: 002c01000000ffb1
+> | x11: 0100000000000000 x10: 02e8ff43002c0100 x9 : 0000ffb100100157
+> | x8 : ffff000003d20000 x7 : 00000000000002f1 x6 : 00000000ffffe124
+> | x5 : 0000000000000001 x4 : 0000000000000003 x3 : 0000000000000000
+> | x2 : 0000000000000000 x1 : 0001000000011001 x0 : 0000000000000000
+> | Call trace:
+> |  mwifiex_get_cfp+0xd8/0x15c [mwifiex]
+> |  mwifiex_parse_single_response_buf+0x1d0/0x504 [mwifiex]
+> |  mwifiex_handle_event_ext_scan_report+0x19c/0x2f8 [mwifiex]
+> |  mwifiex_process_sta_event+0x298/0xf0c [mwifiex]
+> |  mwifiex_process_event+0x110/0x238 [mwifiex]
+> |  mwifiex_main_process+0x428/0xa44 [mwifiex]
+> |  mwifiex_sdio_interrupt+0x64/0x12c [mwifiex_sdio]
+> |  process_sdio_pending_irqs+0x64/0x1b8
+> |  sdio_irq_work+0x4c/0x7c
+> |  process_one_work+0x148/0x2a0
+> |  worker_thread+0x2fc/0x40c
+> |  kthread+0x110/0x114
+> |  ret_from_fork+0x10/0x20
+> | Code: a94153f3 a8c37bfd d50323bf d65f03c0 (f940a000)
+> | ---[ end trace 0000000000000000 ]---
+> 
+> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> Acked-by: Brian Norris <briannorris@chromium.org>
+> Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
 
-- Felix
+Patch applied to wireless-next.git, thanks.
+
+c145eea2f75f wifi: mwifiex: Do not return unused priv in mwifiex_get_priv_by_id()
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20240703072409.556618-1-s.hauer@pengutronix.de/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
