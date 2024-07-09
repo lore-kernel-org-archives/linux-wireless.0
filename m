@@ -1,257 +1,73 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CAF015359A
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Jul 2024 08:55:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D33148FED
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Jul 2024 10:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720515323; cv=none; b=JImnsEo/2oFstGu1/GFfMq54O+7LsphaJ3jRKM8NV1JT41b/X8ENPDgMUZbZxUmd1rGeQF94yVLCjR3tmU/cZJxikcOwjJoHLrFgyEmbWCgVM0qqdnG1dVWOgYAeye2aCYfu2/2bXgxKKBFIYqJK0hQGjA9XvnjlUn/oQfPLYsI=
+	t=1720519321; cv=none; b=Y8AlPHEDKO356CBWCcljhBpnnuobSa83s8wQESbJmhQQ0xKHYBflLWCu5IIBwC0lG9mfKpd6cKpkbX7RHnMw6toAWQTpuSPqXAh+NslPX09K6buYT1s4K5bXvlzUMI9ORubArXKI+b9y4vC04N9J4n6iv2VJ0GC2V+xUfVFO47E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720515323; c=relaxed/simple;
-	bh=WctNaj/0b0AhTTZL46DhT9To+2ge/g3Mk9SLXAPttwU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wdx2yxgSzMLanqW3TX3+re90ahClNS58C83CEze5yd1JXFMSaeK5xZgX0QkUKOyTMi9D9Dy7WHReriPoezLWuwt6OGnAqG4nMZKeTFy+tzy3V7F8Cym4txat5Fpsp7D2zkZkGzgH2xWxX6Z6MulJlUkCs4mFbQ6UWYajIrgWXZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=rFG/XDAE; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1720519321; c=relaxed/simple;
+	bh=mKw/X3rakTLwl7xlKQB6vLe7abnjXvv1D9OQhTF2yTE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=g0ID2ZqEuKTXOO/upNCxGSngj/v7S+rz9+vDFO6ytkWGu5z3BemVrT9TLn+Dv/zYKovUCBV32hFz5Qe0GoJ4SZP1hUcQvEusW6dXApJnKK3d3HBCfhfGR45vkIN+pq2D6D64SJ+BJWbrAwS2C1qymkdl6LQ5T1qMFXsgRh2uNQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=AsUHgypZ; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="rFG/XDAE"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=JV/ANj3jKAjuMpJ11DXLC1T9vhymTAa8DJXksYH6ngI=; b=rFG/XDAE7DD3et21DujH4hPzRM
-	qKcgJbGrhM85UXpcfgAgCQj24aOIBQ23cC2MdnKJhUjT4J+2wddnLyRIFf2D86NsmpuonhJAtzfkl
-	QwQFM0vTfJgaRgWxSw+oAUZrsuOZr9m4G9aqxXtZRrEyfJS4p7DIcvWQcYG5GnMBSn8M=;
-Received: from p54ae937c.dip0.t-ipconnect.de ([84.174.147.124] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sR6N0-004Ln4-1G;
-	Tue, 09 Jul 2024 10:38:42 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	quic_adisi@quicinc.com,
-	quic_periyasa@quicinc.com,
-	ath12k@lists.infradead.org
-Subject: [PATCH v5 10/10] wifi: mac80211_hwsim: add support for multi-radio wiphy
-Date: Tue,  9 Jul 2024 10:38:38 +0200
-Message-ID: <3a16838bb7a7d1a072bd7c9d586d17f70fcd8a60.1720514221.git-series.nbd@nbd.name>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <cover.8f108602e7f90e91332f131cc9fa115a669a2bf4.1720514221.git-series.nbd@nbd.name>
-References: <cover.8f108602e7f90e91332f131cc9fa115a669a2bf4.1720514221.git-series.nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="AsUHgypZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=mKw/X3rakTLwl7xlKQB6vLe7abnjXvv1D9OQhTF2yTE=;
+	t=1720519295; x=1721728895; b=AsUHgypZcZbVgzSqUBp4FIsahAUkxfq1G0DvDKwsQoCNSx7
+	/NKFynlKvxIYttzC8UY9VLJOUvRn6Hllwqd5YxVsqSIuf3Locxnoraio5xJwkwusQbtak/hhQt9d1
+	fPblgSItzaAKLdRzyscHqmGe3r8iXVLmgjmVr+IqwtCKWrWh39jS88y7b4wFB+Yz5lZlFRV2ZaKN2
+	RxRgmgXlbQf4kx57acvZYdMijVm/2dnkF8abfvdhr4UpI8S7hCkIsoQA3rg42P48XyUJWwN5l2Rrm
+	qAfzxUT13m3pHM/YOHxII3+JOief2yD2j3k/eyHP3ijWh/nskv17vEaw4AH+RMXQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1sR7f1-0000000E06O-3W8b;
+	Tue, 09 Jul 2024 12:01:24 +0200
+Message-ID: <8253112ae7680260f7c396edb40a65b9ba491763.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 8/9] wifi: mac80211: handle
+ ieee80211_radar_detected() for MLO
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 09 Jul 2024 12:01:22 +0200
+In-Reply-To: <fb93e262-d250-4d19-84dc-28cf893d4a21@quicinc.com>
+References: <20240626045216.3754013-1-quic_adisi@quicinc.com>
+	 <20240626045216.3754013-9-quic_adisi@quicinc.com>
+	 <9cf07d0861d6c8ee8a2004361a37a3ebb9860ea9.camel@sipsolutions.net>
+	 <8079de14-ef9d-454f-862f-704dac821ee3@quicinc.com>
+	 <3ad1b0c648ce1757a06fceafc371d7b8d14fff33.camel@sipsolutions.net>
+	 <03731b8e-16f7-4ca0-a720-c41c296efa23@quicinc.com>
+	 <fb93e262-d250-4d19-84dc-28cf893d4a21@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3 (3.52.3-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-This registers one wiphy radio per supported band. Number of different
-channels is set per radio.
+On Tue, 2024-07-09 at 14:24 +0530, Aditya Kumar Singh wrote:
+>=20
+> So, I was trying as discussed above but I see concurrency issue now.
+>=20
+> In order to mark or let's say to iterate over *all* ctxs (in case NULL=
+=20
+> is passed by driver), that part of code ideally should be under wiphy=20
+> lock right? But ieee80211_radar_detected() is called in an interrupt=20
+> context. Hence, can not take wiphy lock there :(
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/virtual/mac80211_hwsim.c | 74 +++++++++++++++++---
- drivers/net/wireless/virtual/mac80211_hwsim.h |  4 +-
- 2 files changed, 67 insertions(+), 11 deletions(-)
+Not necessarily, ieee80211_iter_chan_contexts_atomic() also iterates
+with RCU protection, for example.
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 8491eb32f760..86ff0ad5992e 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -69,6 +69,10 @@ static bool mlo;
- module_param(mlo, bool, 0444);
- MODULE_PARM_DESC(mlo, "Support MLO");
- 
-+static bool multi_radio;
-+module_param(multi_radio, bool, 0444);
-+MODULE_PARM_DESC(mlo, "Support Multiple Radios per wiphy");
-+
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-@@ -669,6 +673,10 @@ struct mac80211_hwsim_data {
- 	struct ieee80211_iface_limit if_limits[3];
- 	int n_if_limits;
- 
-+	struct ieee80211_iface_combination if_combination_radio;
-+	struct wiphy_radio_freq_range radio_range[NUM_NL80211_BANDS];
-+	struct wiphy_radio radio[NUM_NL80211_BANDS];
-+
- 	u32 ciphers[ARRAY_SIZE(hwsim_ciphers)];
- 
- 	struct mac_address addresses[2];
-@@ -917,6 +925,7 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_MLO_SUPPORT] = { .type = NLA_FLAG },
- 	[HWSIM_ATTR_PMSR_SUPPORT] = NLA_POLICY_NESTED(hwsim_pmsr_capa_policy),
- 	[HWSIM_ATTR_PMSR_RESULT] = NLA_POLICY_NESTED(hwsim_pmsr_peers_result_policy),
-+	[HWSIM_ATTR_MULTI_RADIO] = { .type = NLA_FLAG },
- };
- 
- #if IS_REACHABLE(CONFIG_VIRTIO)
-@@ -4018,6 +4027,7 @@ struct hwsim_new_radio_params {
- 	bool reg_strict;
- 	bool p2p_device;
- 	bool use_chanctx;
-+	bool multi_radio;
- 	bool destroy_on_close;
- 	const char *hwname;
- 	bool no_vif;
-@@ -4094,6 +4104,12 @@ static int append_radio_msg(struct sk_buff *skb, int id,
- 			return ret;
- 	}
- 
-+	if (param->multi_radio) {
-+		ret = nla_put_flag(skb, HWSIM_ATTR_MULTI_RADIO);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
- 	if (param->hwname) {
- 		ret = nla_put(skb, HWSIM_ATTR_RADIO_NAME,
- 			      strlen(param->hwname), param->hwname);
-@@ -5114,6 +5130,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	struct net *net;
- 	int idx, i;
- 	int n_limits = 0;
-+	int n_bands = 0;
- 
- 	if (WARN_ON(param->channels > 1 && !param->use_chanctx))
- 		return -EINVAL;
-@@ -5217,22 +5234,22 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		n_limits++;
- 	}
- 
-+	data->if_combination.radar_detect_widths =
-+				BIT(NL80211_CHAN_WIDTH_5) |
-+				BIT(NL80211_CHAN_WIDTH_10) |
-+				BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+				BIT(NL80211_CHAN_WIDTH_20) |
-+				BIT(NL80211_CHAN_WIDTH_40) |
-+				BIT(NL80211_CHAN_WIDTH_80) |
-+				BIT(NL80211_CHAN_WIDTH_160);
-+
- 	if (data->use_chanctx) {
- 		hw->wiphy->max_scan_ssids = 255;
- 		hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 		hw->wiphy->max_remain_on_channel_duration = 1000;
--		data->if_combination.radar_detect_widths = 0;
- 		data->if_combination.num_different_channels = data->channels;
- 	} else {
- 		data->if_combination.num_different_channels = 1;
--		data->if_combination.radar_detect_widths =
--					BIT(NL80211_CHAN_WIDTH_5) |
--					BIT(NL80211_CHAN_WIDTH_10) |
--					BIT(NL80211_CHAN_WIDTH_20_NOHT) |
--					BIT(NL80211_CHAN_WIDTH_20) |
--					BIT(NL80211_CHAN_WIDTH_40) |
--					BIT(NL80211_CHAN_WIDTH_80) |
--					BIT(NL80211_CHAN_WIDTH_160);
- 	}
- 
- 	if (!n_limits) {
-@@ -5350,6 +5367,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 
- 	for (band = NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
- 		struct ieee80211_supported_band *sband = &data->bands[band];
-+		struct wiphy_radio_freq_range *radio_range;
-+		const struct ieee80211_channel *c;
-+		struct wiphy_radio *radio;
- 
- 		sband->band = band;
- 
-@@ -5423,8 +5443,36 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		mac80211_hwsim_sband_capab(sband);
- 
- 		hw->wiphy->bands[band] = sband;
-+
-+		if (!param->multi_radio)
-+			continue;
-+
-+		c = sband->channels;
-+		radio_range = &data->radio_range[n_bands];
-+		radio_range->start_freq = ieee80211_channel_to_khz(c) - 10000;
-+
-+		c += sband->n_channels - 1;
-+		radio_range->end_freq = ieee80211_channel_to_khz(c) + 10000;
-+
-+		radio = &data->radio[n_bands++];
-+		radio->freq_range = radio_range;
-+		radio->n_freq_range = 1;
-+		radio->iface_combinations = &data->if_combination_radio;
-+		radio->n_iface_combinations = 1;
- 	}
- 
-+	if (param->multi_radio) {
-+		hw->wiphy->radio = data->radio;
-+		hw->wiphy->n_radio = n_bands;
-+
-+		memcpy(&data->if_combination_radio, &data->if_combination,
-+		       sizeof(data->if_combination));
-+		data->if_combination.num_different_channels *= n_bands;
-+	}
-+
-+	if (data->use_chanctx)
-+		data->if_combination.radar_detect_widths = 0;
-+
- 	/* By default all radios belong to the first group */
- 	data->group = 1;
- 	mutex_init(&data->mutex);
-@@ -6042,6 +6090,9 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	else
- 		param.use_chanctx = (param.channels > 1);
- 
-+	if (info->attrs[HWSIM_ATTR_MULTI_RADIO])
-+		param.multi_radio = true;
-+
- 	if (info->attrs[HWSIM_ATTR_REG_HINT_ALPHA2])
- 		param.reg_alpha2 =
- 			nla_data(info->attrs[HWSIM_ATTR_REG_HINT_ALPHA2]);
-@@ -6122,7 +6173,7 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 
- 	param.mlo = info->attrs[HWSIM_ATTR_MLO_SUPPORT];
- 
--	if (param.mlo)
-+	if (param.mlo || param.multi_radio)
- 		param.use_chanctx = true;
- 
- 	if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
-@@ -6815,7 +6866,8 @@ static int __init init_mac80211_hwsim(void)
- 
- 		param.p2p_device = support_p2p_device;
- 		param.mlo = mlo;
--		param.use_chanctx = channels > 1 || mlo;
-+		param.multi_radio = multi_radio;
-+		param.use_chanctx = channels > 1 || mlo || multi_radio;
- 		param.iftypes = HWSIM_IFTYPE_SUPPORT_MASK;
- 		if (param.p2p_device)
- 			param.iftypes |= BIT(NL80211_IFTYPE_P2P_DEVICE);
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.h b/drivers/net/wireless/virtual/mac80211_hwsim.h
-index 28c1db482e79..f32fc3a492b0 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.h
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.h
-@@ -157,6 +157,9 @@ enum hwsim_commands {
-  *	to provide details about peer measurement request (nl80211_peer_measurement_attrs)
-  * @HWSIM_ATTR_PMSR_RESULT: nested attributed used with %HWSIM_CMD_REPORT_PMSR
-  *	to provide peer measurement result (nl80211_peer_measurement_attrs)
-+ * @HWSIM_ATTR_MULTI_RADIO: Register multiple wiphy radios (flag).
-+ *	Adds one radio for each band. Number of supported channels will be set for
-+ *	each radio instead of for the wiphy.
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- enum hwsim_attrs {
-@@ -189,6 +192,7 @@ enum hwsim_attrs {
- 	HWSIM_ATTR_PMSR_SUPPORT,
- 	HWSIM_ATTR_PMSR_REQUEST,
- 	HWSIM_ATTR_PMSR_RESULT,
-+	HWSIM_ATTR_MULTI_RADIO,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
--- 
-git-series 0.9.1
+johannes
