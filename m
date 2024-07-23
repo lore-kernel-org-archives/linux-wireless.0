@@ -1,94 +1,74 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A9714B07C
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Jul 2024 07:10:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A4DD13C672;
+	Tue, 23 Jul 2024 07:53:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721718637; cv=none; b=Mil2tnhpBGEFLNJmYvBQjuElGJlODhgUlZhAf7BtJPfe9sd6y8agNvCtKvVP1tw34Kjg+mxQOE+6Bgh9ec/bSF/1WxyT1QxnNlBvtbkKXM+a3qKaFL4Dl7XsDPLQxhA7Dsfa/1slNAAZMDpDm0gIcoLxTS/hc6VxJGEHlZ/yASQ=
+	t=1721721193; cv=none; b=kjjwiccBuPAiyBMLqjzLAoCogLakOP/wjE0Es/Ic16XB5bRFFlQIcCSNhRon+QbnATYYwWqPCVO+N4OIUhdIvNu+897RIapRbymeJGhnymBEvBhbTAKUiO1c/hFGEXiK8/y08QlA+DIqUKvp7tMX8ppcGDZ1e9LkDoqAb8WUOEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721718637; c=relaxed/simple;
-	bh=oKB1C+u6lt9mYbBSIkxen2Mog0cbm+RkCGld+4tThrA=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VQgchxYcbkZImAm8f+DsOY+Ss4gZpe89CAWUToyGV9WvFZr+UcZoT9MtmwFmmnU6vu26tdoPsk6gDm+Zn/CPYu9t4Pvq4nIaol6BVtS3K3ojopc09DTrnEkjaiXjSLtCUTAkjVJ3Z/FKn3VK1T58v8z3tvZ3jJDeP2dRuZ6xTNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sW9ev-0007O7-Fv; Tue, 23 Jul 2024 09:10:05 +0200
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sW9et-001ZAW-Jr; Tue, 23 Jul 2024 09:10:03 +0200
-Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
-	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sW9et-00FQKO-1h;
-	Tue, 23 Jul 2024 09:10:03 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v3 0/3] mwifiex: add support for WPA-PSK-SHA256
-Date: Tue, 23 Jul 2024 09:09:56 +0200
-Message-Id: <20240723-mwifiex-wpa-psk-sha256-v3-0-025168a91da1@pengutronix.de>
+	s=arc-20240116; t=1721721193; c=relaxed/simple;
+	bh=MPKrWgCJX8kuQqmsrrNaFWSNDTe2jSFjoOdeUwMEZZs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bEzd7Fcmp5llpZzTE93UTxqR7dX0G6cLFH9E6e7EEPeVJvg5IxlDnfUmA0x7kvQKTxtg6Qs86Djvb3Tjwa7ECUJ60rSeF63iOXV6ps4fZ1Ze/dtR1uVE2K2p+Jx0HYiODmjQTzR0lPRTFsfn79WwqkYkXFqtfvIzANoW3JJqovY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=hA9N+9Gc; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="hA9N+9Gc"
+Received: from gaggiata.pivistrello.it (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
+	by mail11.truemail.it (Postfix) with ESMTPA id F3EF01FA1F;
+	Tue, 23 Jul 2024 09:52:59 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1721721180;
+	bh=Zq3WobKhZlNyUclaAoMGdR7zs6lyy9+0XoA9l1rUHls=;
+	h=Received:From:To:Subject;
+	b=hA9N+9GcOG6snopYpbyWDIcrEriP0RqY1wCplHcKLtFQXFmJ3NxjEnazwqZObv2+F
+	 MaB9HbhoP7mC5oD1z+t4sjfeLvdlBgbMpoz7+wI8DckM2vi0TdyzCiSOprKVE08t2G
+	 eDQw1oEPBjIT5StomeCaoZlwzLHLdl+O64SZ27OZe07DjUqVpLanGE3PyhnSODSyV4
+	 /lkyP9+OMEcidNpX2lRs/Hk1Yf1iu7ugaQGYezO0gg3i/ffERL6Hp78nUYVgLMerR1
+	 rA7yoeN8P/fBho0JLPW6cqOZGfykLnIgBoO9tD2YEB/0ZcwSf/eDkR9b6rveX5BAJg
+	 bLuF39c06ovQg==
+Received: by gaggiata.pivistrello.it (Postfix, from userid 1000)
+	id A66747F9A5; Tue, 23 Jul 2024 09:52:59 +0200 (CEST)
+Date: Tue, 23 Jul 2024 09:52:59 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Kalle Valo <kvalo@kernel.org>, David Lin <yu-hao.lin@nxp.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/3] wifi: mwifiex: fix key_mgmt setting
+Message-ID: <Zp9hW-TIoJvPiGFh@gaggiata.pivistrello.it>
+References: <20240723-mwifiex-wpa-psk-sha256-v3-0-025168a91da1@pengutronix.de>
+ <20240723-mwifiex-wpa-psk-sha256-v3-2-025168a91da1@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAERXn2YC/4XNQQ6CMBCF4auQrq0pU6HqynsYFy2dwsQIpMWCI
- dzdwsrEGJf/S+abmQX0hIGds5l5jBSoa1PIXcaqRrc1crKpGQg4CJWX/DGSI5z42GvehzsPjYa
- i5GBBn1wljSgNS8e9R0fTBl9vqRsKQ+df25+Yr+tfMuZccFFoVMJJZYy89NjWz8F3LU17i2x1I
- 3xa6qcFyUJTSFuII5gSvqxlWd55ibyNDQEAAA==
-To: Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, Kalle Valo <kvalo@kernel.org>
-Cc: David Lin <yu-hao.lin@nxp.com>, linux-wireless@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>, 
- Francesco Dolcini <francesco.dolcini@toradex.com>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1721718603; l=1071;
- i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=oKB1C+u6lt9mYbBSIkxen2Mog0cbm+RkCGld+4tThrA=;
- b=IVvcZ5GMSPrgR00UJwomUwOqdhFLFR1O6jOsFXukIC3j8Eqc0o2vsxyMJJr/VXSdScKjI/RW1
- MstwNH1Yz/5C3loZOElVsRC8Ni31m5pJR+j8gFmoWHujCM4eE/Z56+a
-X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
- pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: s.hauer@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240723-mwifiex-wpa-psk-sha256-v3-2-025168a91da1@pengutronix.de>
 
-This series adds support for the WPA-PSK AKM suite with SHA256 as hashing
-method (WPA-PSK-SHA256)
+On Tue, Jul 23, 2024 at 09:09:58AM +0200, Sascha Hauer wrote:
+> bss_config->key_mgmt specifies the AKM suites that are usable in
+> hardware. This variable is set to specific values while iterating
+> over the advertised AKM suites. This means the final value of the
+> variable depends on the order of the entries in the AKM suites
+> array. Instead of setting the variable, just set the relevant bits
+> in the key_mgmt bit field to make us independent of the order of
+> entries.
+> This behaviour is derived from the downstream driver that does the
+> same.
+> Also, set bss_config->key_mgmt to zero explicitly right before the
+> loop. bss_config has been zero allocated by the caller already, but
+> do so again to safe the reader from following the code path.
+> 
+> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
----
-Changes in v3:
-- add patch to replace '=' with '|=' in the key_mgmt setting
-- Link to v2: https://lore.kernel.org/r/20240717-mwifiex-wpa-psk-sha256-v2-0-eb53d5082b62@pengutronix.de
+Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
 
-Changes in v2:
-- set bss_config->protocol to zero to make the code clearer
-- Link to v1: https://lore.kernel.org/r/20240716-mwifiex-wpa-psk-sha256-v1-0-05ae70f37bb3@pengutronix.de
-
----
-Sascha Hauer (3):
-      wifi: mwifiex: simplify WPA flags setting
-      wifi: mwifiex: fix key_mgmt setting
-      wifi: mwifiex: add support for WPA-PSK-SHA256
-
- drivers/net/wireless/marvell/mwifiex/fw.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 32 ++++++++++----------------
- 2 files changed, 13 insertions(+), 20 deletions(-)
----
-base-commit: 0c3836482481200ead7b416ca80c68a29cfdaabd
-change-id: 20240716-mwifiex-wpa-psk-sha256-2d2a9fc3b06b
-
-Best regards,
--- 
-Sascha Hauer <s.hauer@pengutronix.de>
+Francesco
 
