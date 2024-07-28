@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1ED61AB521;
-	Sun, 28 Jul 2024 00:56:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84AEA1AD407;
+	Sun, 28 Jul 2024 00:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722128195; cv=none; b=XFjTf8dR/zbuj0gPmiMgt2AtDlGJ6ueFg7uo5N0wyOH76aRnehRu5DvHVoArLK1jaepNwiI8kuYWUCa2IfmobaYOrsPDYop+qDm6Zm7eKr0qjuyFZQQG2Owg9KWaNeJWog80Xrf1iEOZhZLKw0sl3DA/RZ0rceJonApZCcDRi34=
+	t=1722128204; cv=none; b=jVoviOrGnH/L8uIfd9bO+ogNPWUEgZusaUvFrVsy78h/2LzpyD7mU8G9nQuBe6xPA6U5LBMvTw+HIFs3ZKR2IcI0BVJnc1kn0NsF3K/XGK0rIOFeHau3rUZpan0239kZsiR6p3dshjKre03SQhHrgV91Ki7woaJeM7anZe6iwz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722128195; c=relaxed/simple;
-	bh=ywRTZl9PSRinZJWnNkVu+f7s6qrRzdCjNfRDYMSirAY=;
+	s=arc-20240116; t=1722128204; c=relaxed/simple;
+	bh=qzdVVb2oStn+HphjoGBguQm7zZ4R8M3Kn0CKRXboWHM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mAjbgB1PqC0RL7Pqy31h6w3svggA/gXw8veIJ4m74emDCmRVAvGJn44rD1YoB4P3OdO0rK5iw2HvN1DpqpvpKEe4fRoejseVJwu3Rx355csz4WGODbc0peO5MYneUEm9g4JMzTyZScPXvKOEGR8rqKcwWl/SWMt0kR6g32DsbWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c5U8muym; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=OEXSvi7VltY1vZ+7Mhdm8Sk3Yruu3f+ngdZEDLgFapJCQKvSIivjyvpMFERaG8OkvxtwyZDphwWXjqMfDhLFuJ/Z9nnkt7fePgX5FhHT2oEwNbEJqXDE/MYyMb3pmevPw4fs/MkpY/B/6XHkDbBJyAAmz5JyqEtyzZF8wRoRWks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ojVQnoVl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c5U8muym"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB131C4AF07;
-	Sun, 28 Jul 2024 00:56:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ojVQnoVl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB1B2C4AF07;
+	Sun, 28 Jul 2024 00:56:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722128195;
-	bh=ywRTZl9PSRinZJWnNkVu+f7s6qrRzdCjNfRDYMSirAY=;
+	s=k20201202; t=1722128204;
+	bh=qzdVVb2oStn+HphjoGBguQm7zZ4R8M3Kn0CKRXboWHM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=c5U8muymRSS++PC8viUQvv3ZWiPnOYJ0koq4lpYehSNCxOTFiiNf3E6nEimFL/JOP
-	 W9bcey9NSim2Y4nsoHWIvfRsm776xMUjQV9Zj4dZpffTHRh65IqgL2vELHJV5jpBrx
-	 AzscaUcemmwF6PlQCDgqscRc8wrJyWbPduDF85u7Axj7kIZE8lOGFIaif33sHk0HC5
-	 ygncyrgVYSJdZDTgi3tjFEFomGRFYrBoYgU7axlT7jFjfR0ROeb+eG7YY3gqsMUw9k
-	 UrPUibxbfp9ikAV38838Z2Z+aY8R9XKthXLABKEG19EJw3TW8cZliRzzLdhOKx89xu
-	 rvmvs04liCFhw==
+	b=ojVQnoVlqwYbvEHW1gAeknpwcwsMUsz5RruTT6sc9DZQ/0LBqr7xgoteVsjcNee/A
+	 8hf6UmN4gy5CyIoDy/w7F39rYu+rkI2EJJYsZ7uGuzFzYTidGKDpYAGJTyRSUETz5N
+	 KpbRu78YWw18vZIUTB9VxUXAkKyRWoJvxGf24WMyhZx1UwkEfWgnU8mstf010cg8pm
+	 wCfMld2Glob3ySNgVB8R0eMu5iq+16Wbuf2PGYJUym0JU/Ei6ErmKG+hxfeA4vSZ78
+	 zgTOdYvSmBEut09P5P5yfSjayVfQBY+aTCxQ+pgoL9ds2frqv9Hw4apCgEQwf9ZXpI
+	 dV8Cfqh6RFqvg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -39,12 +39,12 @@ Cc: Johannes Berg <johannes.berg@intel.com>,
 	pabeni@redhat.com,
 	linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 5/6] wifi: nl80211: don't give key data to userspace
-Date: Sat, 27 Jul 2024 20:56:18 -0400
-Message-ID: <20240728005622.1736526-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 3/4] wifi: nl80211: don't give key data to userspace
+Date: Sat, 27 Jul 2024 20:56:37 -0400
+Message-ID: <20240728005638.1737527-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240728005622.1736526-1-sashal@kernel.org>
-References: <20240728005622.1736526-1-sashal@kernel.org>
+In-Reply-To: <20240728005638.1737527-1-sashal@kernel.org>
+References: <20240728005638.1737527-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,7 +53,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.281
+X-stable-base: Linux 4.19.319
 Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 8 deletions(-)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 0d15dd68565cb..e85e8f7b48f92 100644
+index 15f28203445cb..ebd8449f2fcf1 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3723,10 +3723,7 @@ static void get_key_callback(void *c, struct key_params *params)
+@@ -3383,10 +3383,7 @@ static void get_key_callback(void *c, struct key_params *params)
  	struct nlattr *key;
  	struct get_key_cookie *cookie = c;
  
@@ -91,7 +91,7 @@ index 0d15dd68565cb..e85e8f7b48f92 100644
  	     nla_put(cookie->msg, NL80211_ATTR_KEY_SEQ,
  		     params->seq_len, params->seq)) ||
  	    (params->cipher &&
-@@ -3738,10 +3735,7 @@ static void get_key_callback(void *c, struct key_params *params)
+@@ -3398,10 +3395,7 @@ static void get_key_callback(void *c, struct key_params *params)
  	if (!key)
  		goto nla_put_failure;
  
