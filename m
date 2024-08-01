@@ -1,63 +1,55 @@
-Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60638157492
-	for <linux-wireless@vger.kernel.org>; Thu,  1 Aug 2024 10:15:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9658016D4F3
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Aug 2024 11:29:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722507338; cv=none; b=ZS0F9tfroTI2HmC1GA43nLgn0XXSimXmY8GQvWqy1dBggYV23YNhGoTdqzrk5qEFS4+AEH8pCQb7/OZMMEzSkyEicQ3WMbtt+yQOPD1BA9ckbboBaiCzQcJGbTckh75RnC1fh/7p5AjGyByC2x7Q45uRBT66fS5poO5YEfQGtrk=
+	t=1722511777; cv=none; b=LkoS582Dl0eeY+iVsFe/SZfUkTMJxvecOUZ5ELP/GdNbWo1ljm3lKrnHzLTGkDuY/zZf5PuUQzT4/hpIZINTSJ6T7AKwzuhQ6m1xRJAi54sLcF9F8bx21QM13sgvVbG+hTk4ITdo+wOdF8QFgfh8BnD6Mrpmm89rySLBTkMF22g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722507338; c=relaxed/simple;
-	bh=FOCdvMysQKfvcENiV/YXkGLv8TWhqy15B27048kmxds=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pTYpxFTrpjpht+3umDQxPLGHa5clJbLjRHerkBrm+ImO+H2Go4NgnjX4Ky9Aj7n8U9hFyf3WgHKd1OTGv9+F3NJR+s5Qq0Q4mz6UyavPDwQ4kiUG68R7kmSogS/ycVdpHvXziyqXdLxah8OrxNVFdjcdKK6h5jjdMxY0sKpS274=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NFVPw5V2; arc=none smtp.client-ip=209.85.167.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1722511777; c=relaxed/simple;
+	bh=vtWfXqXiFU9Aiu9vENrFC7VX0LITJLzQbQtRyxeBmGg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TeHZu769PlUDvMtFSAkU9+lmMruHZ1zu5B4fxudmKh3kcwq640/k52fl5/DVC8E4fVSoZPv8YxYGBhAwnvWZGLOrXM8nlPAFwIgMwaECRaYqyZwsZIEHSdIH7oIyx10qrEL8FN1S2ZlQ4SqKTSjxXuaP16CLriUl61lS3PIEggI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OhJr5306; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NFVPw5V2"
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-52f01afa11cso10086277e87.0
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Aug 2024 03:15:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1722507334; x=1723112134; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=SKDe4lX/z1/ndk5hg44rYl7hDxWs3doatHrDnvyNy+o=;
-        b=NFVPw5V2oneqFEBrq84/3yWoE/aAJECc24XflVCdssMLnTDp0fwyRQRH2R3NoErP4G
-         8I3cSMnbdCc5DcIDaD2vo/g4He1hhOSYynt6RyWa9s2kRwoUQbmk/BQsC3Ia5FbAEVCQ
-         C+J973yhUCbO+8gyv91fXjtE7NQhMWmhfBJMUMMZkgy6+5AwYOJV7wyl4iuonujuwJ7g
-         dwbslGu6SLEytcxDyoVTYTo1T0M7ean7apMbJ3EwrMf17d0760Zcbiykt02RGFJ7sDUR
-         gWOajv+rtJqYhkab/XlA5/7Ai2We3NhjUXykN16neqtzt9m+b5OhIwtjqXiBwPrAkN8E
-         rV5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722507334; x=1723112134;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=SKDe4lX/z1/ndk5hg44rYl7hDxWs3doatHrDnvyNy+o=;
-        b=TKz1WfV2VuRhTmoTFCjTp2eOXg+YW5lQPQ/XEetn8yMs2e2K0cN9ZFKlrKT63ch7Sg
-         Be4gvw6YGBkf2l5dx/YuxzpqGxUsJ74SHErqO7eNDpoYimYTY1jjI3qmwS8gARdqbyJD
-         ZwPEdJQBgaPTCIntOeZHsqrOJm+A17jLC0bRkG1Cj4go+IILWlZut6uXN+AW2M/IZfRm
-         V/Pfg15xOBOcCnCIgdh/pNGcoUsRpwmRLQy5mT6kV1kKNo5A4oPKQmVe+WWTJdEBVRx+
-         /VxVQd6VXpmFiLU4EdnlpWTby0IGJRNoSkR8EbMMC2sEdkT+e3JuLchOxL4l7h6UJUMb
-         f8KQ==
-X-Gm-Message-State: AOJu0YyoM0bxY7mi7AD/IqDxAfXfYRyrKLoN5z9WUDYv4nj5ix6ld63v
-	rN2shdmE2ynKJn3tkGNZCLp72wOdGOLCWWSjq7LVnl5ZXst5UU67XiZTZJx4L9k=
-X-Google-Smtp-Source: AGHT+IGU8stJDezD8B8p1nXH09RqPbUuI198CRu0ZrUvsAZSPXI4QXpQJZi2o3FT5MvjsJvtrfOKGg==
-X-Received: by 2002:a05:6512:3a83:b0:52e:eacd:bc05 with SMTP id 2adb3069b0e04-530b621b294mr1140939e87.61.1722507333902;
-        Thu, 01 Aug 2024 03:15:33 -0700 (PDT)
-Received: from localhost.localdomain ([2a00:1fa1:82cd:5aa7:1b06:c396:7647:9ebd])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-52fd5c08f74sm2502552e87.152.2024.08.01.03.15.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Aug 2024 03:15:33 -0700 (PDT)
-From: Dmitry Kandybka <d.kandybka@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] wifi: brcmsmac: clean up unnecessary current_ampdu_cnt and related checks
-Date: Thu,  1 Aug 2024 13:15:31 +0300
-Message-ID: <20240801101531.6626-1-d.kandybka@gmail.com>
-X-Mailer: git-send-email 2.43.5
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OhJr5306"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4713101D027258;
+	Thu, 1 Aug 2024 11:29:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	VBja+YZeptS/yfMsPsQcSFqvw/uUsew4MvYPBiibaq4=; b=OhJr5306ETotl4a+
+	ifG7+zbK1KOm9aXLGiwlhI2CRe/lWQj8E5l73jksFMkLPv+oQA7Lf+Z7wSHvOHQg
+	un09mNSC+hWMN1VEFP4Hp2X7QmY4yrzSE8hY5GP0TsYlIVBrjD2IhHbyP3+Jy2H5
+	5biAIiJjMT2lo/SEmDc9oWwLdd7/YHCrUT90bbCTtb1cx/mFm9/NQ+Pssxsh0Ho/
+	2IVcqXeixOkPvH/jINv23IHu5SXFX3pm+YRBGO8HOjNv0/7Ggl8bRCtRftgtz1Oq
+	P4h6vd8u2akAdNVnrSUAgPGm5bGhz3IJojgoheeGEFxkoKlsbuAQCgKgYBraKjyI
+	BUfmHQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40msneekeg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 01 Aug 2024 11:29:29 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 471BTTMv002784
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 1 Aug 2024 11:29:29 GMT
+Received: from lingbok-Birman-PHX.lan (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 1 Aug 2024 04:29:27 -0700
+From: Lingbo Kong <quic_lingbok@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <quic_lingbok@quicinc.com>
+Subject: [PATCH v7 2/3] wifi: ath12k: report station mode receive rate for IEEE 802.11be
+Date: Thu, 1 Aug 2024 19:28:52 +0800
+Message-ID: <20240801112853.85508-3-quic_lingbok@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240801112853.85508-1-quic_lingbok@quicinc.com>
+References: <20240801112853.85508-1-quic_lingbok@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -65,60 +57,138 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: TRaSke6Wq2sF6NuEAhfO2Dy175Q7z_Wm
+X-Proofpoint-ORIG-GUID: TRaSke6Wq2sF6NuEAhfO2Dy175Q7z_Wm
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-01_08,2024-07-31_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 clxscore=1015
+ spamscore=0 mlxscore=0 bulkscore=0 suspectscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2408010073
 
-In 'brcms_c_ffpld_check_txfunfl()', 'current_ampdu_cnt' is hardcoded to
-zero, so 'txunfl_ratio' is always zero as well and some dead code can be
-removed. Compile tested only.
+Currently, the receive rate of EHT of "iw dev xxx station dump" command
+always show an invalid value.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+This is because ath12k does not pass information about the rx_status of EHT
+to mac80211. So, mac80211 not calculate the receive rate.
 
-Signed-off-by: Dmitry Kandybka <d.kandybka@gmail.com>
+To address this issue, add logic for handling rx_status of EHT to the
+ath12k_dp_rx_h_rate() function.
+
+After that, "iw dev xxx station dump" show the correct receive rate.
+Such as:
+
+Station 00:03:7f:12:03:03 (on wlo1)
+        inactive time:  48 ms
+        rx bytes:       59226
+        rx packets:     320
+        tx bytes:       26556
+        tx packets:     191
+        tx retries:     99
+        tx failed:      0
+        beacon loss:    0
+        beacon rx:      79
+        rx drop misc:   68
+        signal:         -95 dBm
+        beacon signal avg:      -20 dBm
+        tx bitrate:     688.2 MBit/s 40MHz EHT-MCS 13 EHT-NSS 2 EHT-GI 0
+        tx duration:    0 us
+        rx bitrate:     619.5 MBit/s 40MHz EHT-MCS 8 EHT-NSS 3 EHT-GI 0
+
+This patch affects the station mode of WCN7850 and QCN9274.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.2.1-00201-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Lingbo Kong <quic_lingbok@quicinc.com>
 ---
- .../broadcom/brcm80211/brcmsmac/ampdu.c       | 22 +------------------
- 1 file changed, 1 insertion(+), 21 deletions(-)
+v7:
+no change
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/ampdu.c
-index 33d17b779201..a767cbb79185 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/ampdu.c
-@@ -351,9 +351,7 @@ static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int fid)
- {
- 	struct ampdu_info *ampdu = wlc->ampdu;
- 	u32 phy_rate = mcs_2_rate(FFPLD_MAX_MCS, true, false);
--	u32 txunfl_ratio;
- 	u8 max_mpdu;
--	u32 current_ampdu_cnt = 0;
- 	u16 max_pld_size;
- 	u32 new_txunfl;
- 	struct brcms_fifo_info *fifo = (ampdu->fifo_tb + fid);
-@@ -389,26 +387,8 @@ static int brcms_c_ffpld_check_txfunfl(struct brcms_c_info *wlc, int fid)
- 	if (fifo->accum_txfunfl < 10)
- 		return 0;
+v6:
+1.rebase against wifi: ath12k: prepare sta data structure for MLO handling
+
+v5:
+no change
+
+v4:
+no change
+
+v3:
+no change
+
+v2:
+no change
+
+ drivers/net/wireless/ath/ath12k/dp_rx.c   | 20 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/rx_desc.h |  2 ++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+index 9ae579e50557..d69918ed813c 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+@@ -2341,6 +2341,23 @@ static void ath12k_dp_rx_h_rate(struct ath12k *ar, struct hal_rx_desc *rx_desc,
+ 		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
+ 		rx_status->bw = ath12k_mac_bw_to_mac80211_bw(bw);
+ 		break;
++	case RX_MSDU_START_PKT_TYPE_11BE:
++		rx_status->rate_idx = rate_mcs;
++
++		if (rate_mcs > ATH12K_EHT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in EHT mode %d\n",
++				    rate_mcs);
++			break;
++		}
++
++		rx_status->encoding = RX_ENC_EHT;
++		rx_status->nss = nss;
++		rx_status->eht.gi = ath12k_mac_eht_gi_to_nl80211_eht_gi(sgi);
++		rx_status->bw = ath12k_mac_bw_to_mac80211_bw(bw);
++		break;
++	default:
++		break;
+ 	}
+ }
  
--	brcms_dbg_ht(wlc->hw->d11core, "ampdu_count %d  tx_underflows %d\n",
--		     current_ampdu_cnt, fifo->accum_txfunfl);
-+	brcms_dbg_ht(wlc->hw->d11core, "tx_underflows %d\n", fifo->accum_txfunfl);
+@@ -2430,7 +2447,7 @@ static void ath12k_dp_rx_deliver_msdu(struct ath12k *ar, struct napi_struct *nap
+ 	spin_unlock_bh(&ab->base_lock);
  
--	/*
--	   compute the current ratio of tx unfl per ampdu.
--	   When the current ampdu count becomes too
--	   big while the ratio remains small, we reset
--	   the current count in order to not
--	   introduce too big of a latency in detecting a
--	   large amount of tx underflows later.
--	 */
--
--	txunfl_ratio = current_ampdu_cnt / fifo->accum_txfunfl;
--
--	if (txunfl_ratio > ampdu->tx_max_funl) {
--		if (current_ampdu_cnt >= FFPLD_MAX_AMPDU_CNT)
--			fifo->accum_txfunfl = 0;
--
--		return 0;
--	}
- 	max_mpdu = min_t(u8, fifo->mcs2ampdu_table[FFPLD_MAX_MCS],
- 			 AMPDU_NUM_MPDU_LEGACY);
+ 	ath12k_dbg(ab, ATH12K_DBG_DATA,
+-		   "rx skb %p len %u peer %pM %d %s sn %u %s%s%s%s%s%s%s%s%s rate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
++		   "rx skb %p len %u peer %pM %d %s sn %u %s%s%s%s%s%s%s%s%s%s rate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+ 		   msdu,
+ 		   msdu->len,
+ 		   peer ? peer->addr : NULL,
+@@ -2441,6 +2458,7 @@ static void ath12k_dp_rx_deliver_msdu(struct ath12k *ar, struct napi_struct *nap
+ 		   (status->encoding == RX_ENC_HT) ? "ht" : "",
+ 		   (status->encoding == RX_ENC_VHT) ? "vht" : "",
+ 		   (status->encoding == RX_ENC_HE) ? "he" : "",
++		   (status->encoding == RX_ENC_EHT) ? "eht" : "",
+ 		   (status->bw == RATE_INFO_BW_40) ? "40" : "",
+ 		   (status->bw == RATE_INFO_BW_80) ? "80" : "",
+ 		   (status->bw == RATE_INFO_BW_160) ? "160" : "",
+diff --git a/drivers/net/wireless/ath/ath12k/rx_desc.h b/drivers/net/wireless/ath/ath12k/rx_desc.h
+index 9d9d7e936cbc..9d1f85956454 100644
+--- a/drivers/net/wireless/ath/ath12k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath12k/rx_desc.h
+@@ -637,6 +637,8 @@ enum rx_msdu_start_pkt_type {
+ 	RX_MSDU_START_PKT_TYPE_11N,
+ 	RX_MSDU_START_PKT_TYPE_11AC,
+ 	RX_MSDU_START_PKT_TYPE_11AX,
++	RX_MSDU_START_PKT_TYPE_11BA,
++	RX_MSDU_START_PKT_TYPE_11BE,
+ };
  
+ enum rx_msdu_start_sgi {
 -- 
-2.43.5
+2.34.1
 
