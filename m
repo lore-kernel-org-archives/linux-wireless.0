@@ -1,90 +1,104 @@
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C6823CB;
-	Sat,  3 Aug 2024 08:00:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80A44136E09
+	for <linux-wireless@vger.kernel.org>; Sat,  3 Aug 2024 13:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722672052; cv=none; b=bq21ZLje84o6duncVUypzDyFB0E1YAI8wrlU8d9MU965CXlMBe6kofO/JD8ZPghEIJ9WwS5wUvBkmsb+mSzAVCA0tpHrpFHJFRXG762rfsyedv0Z8NhU75xmvIsAg68L3ksCk6EuBPoAHQSCsgbAZAdS5HFLek19Uss0L8U50HQ=
+	t=1722692839; cv=none; b=LxOVIlwu0Q1kk1HctYS7wvtKMn1nlNQYKHSUTGHKDkehM7rCS6lzuiZ2oTqrPCbm1jj25kEhr9yvnPK+p+b7pZ/q42hlo/g0C9ABdOwv1OCf3P0PYZMytYAjDDCITmhooBd/CVgYW/sqOgqv0P1iBVmubPkGczRRpkga954YJIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722672052; c=relaxed/simple;
-	bh=7BZuniqS0RL8dVXLxoGBLGj9mqSfa5ynEXFo52LZg+g=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KJv7FblucyFaMcoqc7pNVyifwEc1zNKHfddPDLqJBEE0zV5COMdzpWF6MbxDDpLnHEJdp2D/HumFZvoxdtJk9cVhZyA5ZzyqG964CtUDuSrhmk3GfaFQCiOm10W+gffvMEK1scjLFsPi3njuoTbRIIgscittp43Nlf8xYZwWuQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RxXDzrKT; arc=none smtp.client-ip=209.85.167.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1722692839; c=relaxed/simple;
+	bh=NYA6sYQwjyHrZaAyGTauiIPxEqDC/y2kBfxFAb1PwZY=;
+	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=ZgSnPknyIagYx/lpo3t7PdpCAYbUF8ztxHWDFSTGWplf9FttbY4KDiTHF7qhZ/dDwl0ITIV9e7uwXyv7hdu7cLPc7poS2t0/Hs8fl3l3O7teFNgrMN0sp7B/xJTSVOt6zOVh0WI+SC3FVh4lVSFbY5MUnWoMbNoStZYVOQBuEFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LNQ45uOr; arc=none smtp.client-ip=209.85.208.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RxXDzrKT"
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3db14339fb0so6006278b6e.2;
-        Sat, 03 Aug 2024 01:00:51 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LNQ45uOr"
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-5a309d1a788so11456520a12.3
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Aug 2024 06:47:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1722672050; x=1723276850; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7BZuniqS0RL8dVXLxoGBLGj9mqSfa5ynEXFo52LZg+g=;
-        b=RxXDzrKTFwVyKZKfsycGI5hmvn3xBpX44eoVdhxd1zPRwJpBj8yJp0MkelhqN23qia
-         OFl5tGpu/12zknoy/BQ3J04YfyY4v4SYHblrDItdcu1VRcYXKEVsh1/0fYM8hmJfZ21q
-         igDSz9qB4oGY1vJf8vOS8XQn8uO78U0jddZh4I7Ck9fymzhpabD+G9EAjNnKVJx6Yk+Q
-         rXbqYR7w2pLACbJkMB2b+gqVXAhwgdfg6wAFILsYdTmO31qU5DXgFMwwIp78271Nq991
-         6Uf/G1O80xutaAtBLdzFh3wHiCOrd7Dcll0dN0b4Y84bcNuZhnPKZJnbP8YjOO91PuB0
-         0neA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722672050; x=1723276850;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=broadcom.com; s=google; t=1722692836; x=1723297636; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:subject:user-agent
+         :references:in-reply-to:message-id:date:cc:to:from:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=7BZuniqS0RL8dVXLxoGBLGj9mqSfa5ynEXFo52LZg+g=;
-        b=pCpiiVaNgJDaC6Ubbv8ml4gZihyUddKENOrN+XJDggfhLd0H1gcO9HC+1RhnCsevll
-         zhwTDKIX/Me+ovJmXoGBYYJ9mCI202h7eSmi1TW53frjGxUFNqwee3hFr6mMl9ZWFGFN
-         NrKOYgux4LHsEOkchRl2uBQP41nyqsSgHWzpvBrKbTe4CBABI4Q8VNPyAJyD4x4PFjpL
-         3Wr1hjIhYKLBzh2umUpWiQj81dr1cC/kCGLtyy7FOHbaR8bdksmNVG10wIsajsxZdNpO
-         YKyFUVcr5pA3XcMWR6OmlnwTR0KPOz20/Zai4jnCw9tPMn/OEif8/rNfsE403iyGbSRs
-         FIfg==
-X-Forwarded-Encrypted: i=1; AJvYcCUHkUzCrtO3H4/7fYXr5CbTQooH0JjxS+cuGQCPTEAGHJBYkkh0B/QYe3bfAHym1zK6V44i2ebbffHO7D6SJwo=@vger.kernel.org, AJvYcCWvPcjEZcaoA7zcYrb5JbAqjeHUVkahxFdYCH9bmnzsqbFPAIcEzJIxCJEli48Dk1bse8IZgBh+5nz0p3k=@vger.kernel.org, AJvYcCX4WqwNyn11PLoeZxTgEUjs5Opxl6JaFNunBe9EVSurP/mVaZv+TWF26dMxNKd2dqau04A3oC6Qnt1V@vger.kernel.org
-X-Gm-Message-State: AOJu0YyLXBVIo7CvnzU6Kr6+Q+1bPJzSzulkqLeTSEDZ+PjjiRK9n+Ig
-	GJ+wVV40zH25bIpF1mCGkEFTYCXTL4ukK36qTmjRlvDJ3Y0CiV8=
-X-Google-Smtp-Source: AGHT+IEr7ERk/naO0Iz3UIs9XYIXEimYpZZhriHvIC07pbZhLt3+1M+ito7FYGETjelVqDpu2Vk6sw==
-X-Received: by 2002:a05:6808:23c7:b0:3d9:c48b:ea44 with SMTP id 5614622812f47-3db55809c42mr5974053b6e.15.1722672050339;
-        Sat, 03 Aug 2024 01:00:50 -0700 (PDT)
-Received: from swift.. ([123.122.138.121])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff5905f9b9sm28804935ad.130.2024.08.03.01.00.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 Aug 2024 01:00:50 -0700 (PDT)
-From: LidongLI <wirelessdonghack@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: kvalo@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mark.esler@canonical.com,
-	stf_xl@wp.pl,
-	wirelessdonghack@gmail.com
-Subject: Re: Ubuntu RT2X00 WIFI USB Driver Kernel NULL pointer Dereference&Use-After-Free Vulnerability
-Date: Sat,  3 Aug 2024 15:57:23 +0800
-Message-Id: <20240803075723.1452108-1-wirelessdonghack@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <2024080359-getaway-concave-623e@gregkh>
-References: <2024080359-getaway-concave-623e@gregkh>
+        bh=B5RT1Qu2F1uakgzsI7iEt4bY0NeXn3F9JOiq2sORjJM=;
+        b=LNQ45uOriaKzL9ebRq3WAJ2prO13UtFhrPH7bG6UtUoRVPYaCDX5naQV0+e5ocbfzN
+         25i6ysw0kNEw9HqQJQs5Dx4MCdc+PMjoUapdk9fYuQvRHJY/ve2e+J4cVzEsqhMBMvvA
+         k6mC2KmVXV6UkVjxD2GIa4HwousF3Mw4gPCKI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722692836; x=1723297636;
+        h=content-transfer-encoding:mime-version:subject:user-agent
+         :references:in-reply-to:message-id:date:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=B5RT1Qu2F1uakgzsI7iEt4bY0NeXn3F9JOiq2sORjJM=;
+        b=Jh3gKN/bg2666s1O6xbFxTwon1y4aR++rjLSucfjcgjabTX5l1kltaO3ftb5qqTO5d
+         DS8NytSORkXd1MmsX1ZdV5wAzpQBEad5hhaYFyxZUvUm8H9063wEZNi3vIo73nVSoau+
+         5PHmchnjOusiZ5+B7kM1lmgE21tByxh6ER0fmvO6AUUGixGwejLQharxXDQSQW4l+vi7
+         64/YBjmorjDvtwr3rMToGYGSh2abjS5EO4u8hzefcS+Lg4Y95my0np5A/jJAWQGYXs1F
+         dB1bJSEoToGLmPh6h6qVWsqPFhTQ2l1ab4TMDW7k2XRVDi0GhYNj4g5eTPiZNbT1LsAI
+         icGA==
+X-Gm-Message-State: AOJu0YwkvWSzUzzp0MqHwKkxVN+Mh71TWpPPKuaCVvJ2GvAm08c8S0iF
+	Q3vaa83r4OByZ5ZnQD8fO5ZmuIbwFIk9pjHpqnIIVCAmXWqzJuISMBFAK1z6X5jq7He3JYG/KX9
+	AQBWw
+X-Google-Smtp-Source: AGHT+IH5sxguhxTGPtrzWoIPbbAkQ7FJ4XYNcIEzg1Fzyecpd8e+DAtDtrRTDth4ddyzyAeWlhJzrw==
+X-Received: by 2002:aa7:d5c1:0:b0:5a2:189:6306 with SMTP id 4fb4d7f45d1cf-5b7f40a71c3mr4958811a12.18.1722692835699;
+        Sat, 03 Aug 2024 06:47:15 -0700 (PDT)
+Received: from [192.168.178.38] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5b839c2dbe8sm2389737a12.37.2024.08.03.06.47.14
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 03 Aug 2024 06:47:15 -0700 (PDT)
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+To: Florian Fainelli <florian.fainelli@broadcom.com>, Jacobe Zang <jacobe.zang@wesion.com>
+CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>, Ondrej Jirman <megi@xff.cz>
+Date: Sat, 03 Aug 2024 15:47:15 +0200
+Message-ID: <191187e96b8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+In-Reply-To: <f2cc346e-63b0-4fb7-b954-5dc3e597b7e1@broadcom.com>
+References: <20240802083400.166753-1-arend.vanspriel@broadcom.com>
+ <f2cc346e-63b0-4fb7-b954-5dc3e597b7e1@broadcom.com>
+User-Agent: AquaMail/1.51.5 (build: 105105504)
+Subject: Re: [RFT] wifi: brcmfmac: Add optional lpo clock enable support
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; format=flowed; charset="us-ascii"
 Content-Transfer-Encoding: 8bit
 
-Hi Greg,
+On August 2, 2024 7:28:51 PM Florian Fainelli 
+<florian.fainelli@broadcom.com> wrote:
+
+> On 8/2/24 01:34, Arend van Spriel wrote:
+>> From: Jacobe Zang <jacobe.zang@wesion.com>
+>>
+>> WiFi modules often require 32kHz clock to function. Add support to
+>> enable the clock to PCIe driver and move "brcm,bcm4329-fmac" check
+>> to the top of brcmf_of_probe
+>>
+>> Co-developed-by: Ondrej Jirman <megi@xff.cz>
+>> Signed-off-by: Ondrej Jirman <megi@xff.cz>
+>> Signed-off-by: Jacobe Zang <jacobe.zang@wesion.com>
+>> [arend: handle -EPROBE_DEFER scenario]
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>
+> This looks fine for a cold boot case, how about handling suspend/resume
+> where the clock might have been disabled, do we need to deal with an
+> "always-on" Device Tree property as well as whether the device is
+> enabled for wake-up or not?
+
+Thanks, Florian
+
+When the external LPO is disabled the chip will fallback on the internal (I 
+think). So it is not an issue for wakeup scenario, but if the clock is not 
+enabled upon resume we should deal with it. Could go in separate patch.
+
+I can inquire about my assumption above.
+
+Regards,
+Arend
 
 
-
-Alright, if you have any issues, please feel free to contact us. We believe the issue might be caused by the time.sleep() function set during packet transmission. Please reproduce and investigate."
-
-If you need any adjustments or further assistance, just let me know!
-
-
-
-
-Best regards,
 
