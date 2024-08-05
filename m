@@ -1,108 +1,63 @@
-Received: from smtp.smtpout.orange.fr (smtp-22.smtpout.orange.fr [80.12.242.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17FF913F43B
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Aug 2024 06:50:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.22
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8F313D26B;
+	Mon,  5 Aug 2024 06:55:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722840623; cv=none; b=DFGLfSg6dtqwjbKSwNwjgaMDGUwcbhm2MobWUXj1t0vh8L0iBghw/OoE7e+tuU8dZ+YKuSPnNRUdjqvHZqZq0btw16LIGV6nLPdZeLheZecfNhse+W8eVuM9s05bpJ6AAdUCYB0i1m64sTiME+Sk7JncCQj462E7TqOOJMCrx+U=
+	t=1722840914; cv=none; b=fLOnfsx8J28atW4+f5MS9B32KlNs1rAOkEhIy/zdNfLivoMSeLYK7fzhYF/Z1q2DBpLcLmSa4EhdIjEGrjZUkxnvbOyCP7MrS0rdX2b9L3lhjPy/z4YLkLBY/UH8u5t685Bt7Ebkza8OeanVod9omyH8cWUrKZ7o27BcC7qx8Iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722840623; c=relaxed/simple;
-	bh=UF7et2QqACNgp6O1SUQXlgg+/VGMgi+IZGWPoTIYheU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T6ve9dSS2emTUmQPSlD5XDELv4kmKOFmyLpuRBDlvfI8R8PxamfbRH6hjTb9FkKfAEUlxMre700uwHqKEkHuCXQr4nuq9CLjNOX/qCAarpWhi+53GI4j3KwLPpYZagM0/XcB/J9vxMIrwUp4MAqOMJGnHle9qktOKM2wwwZkL3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=ehzcHu/o; arc=none smtp.client-ip=80.12.242.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1722840914; c=relaxed/simple;
+	bh=RBq77n2Z7CLas5CJdnHsxhWTNoNe6rJNGtk8mVGVHIY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CU3Rjie8Je2uRsTfRCYpKUwmyPJsHG2B/EBhPuHSi6GbMIT9qcMuDjAM6494yn7GCyUjqxXFIk064EbS3001cNzPYe8AvXbgfHL82Hp+8wLG6gg8od/3m6GLLg/qAZ0jkwZXA57pdgnV5aFZ8ZmqPGgAeKXNfoUVeuBu/EsNfZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=cywugoWn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="ehzcHu/o"
-Received: from fedora.home ([90.11.132.44])
-	by smtp.orange.fr with ESMTPA
-	id arOns5eD41n2IarOnsUUL2; Mon, 05 Aug 2024 08:40:55 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1722840055;
-	bh=bhu0kj/E+bTLzKxE31tljXZoIT0Y2DQ63u7XVU/JDPc=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=ehzcHu/oAgH+tJ/8KcriYSs256oALIWR7NiwC25+g8kjWSAuXtxBPK8jP6uoIWYEX
-	 m8K9a8b+oSN0bX1ZgBFfvaWs6rZYxWOOpVkrGWsEvV6FUdXsJM7fMap3f6yPEVp7WQ
-	 zU/SehWywmRy1ZoSMB27mvnmi9pt7nvyRpCGDEE2VIOZkMbhaDt0n/eAA0rVX7EYaG
-	 vitndP/CswLd1ezgrPSET3uqUDBtWAmKJYaVC4bjFqSx9EADHBfB8iXf8buvw52QLc
-	 21Xw1i4Lk3/ZTSEuKoPAUAWASMoK4EwJ9IJtyfzPJCJPicCvtcG9vnT8lTsf7xeLrq
-	 1fdKgLL3K3WDQ==
-X-ME-Helo: fedora.home
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Mon, 05 Aug 2024 08:40:55 +0200
-X-ME-IP: 90.11.132.44
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: stas.yakovlev@gmail.com,
-	kvalo@kernel.org,
-	gregkh@linuxfoundation.org,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	linux-staging@lists.linux.dev,
-	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH v2 0/3] Constify struct lib80211_crypto_ops
-Date: Mon,  5 Aug 2024 08:40:36 +0200
-Message-ID: <cover.1722839425.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="cywugoWn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 238ADC4AF0B;
+	Mon,  5 Aug 2024 06:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1722840913;
+	bh=RBq77n2Z7CLas5CJdnHsxhWTNoNe6rJNGtk8mVGVHIY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cywugoWn1BOeUMK9fm+YRSBivKIRylg7a3SQF77akMWVtDL1j2VJActZDss8szA37
+	 Q6ZfIMaJJTmS957P4UrMg4IQCV5+gJW4oW9SFmPwrdeui0o3FHVbdfwQW6yjANm5M4
+	 8ffAB4IJmxzdWHop4FVxAc8IJuHOYqJUoV0S4xzQ=
+Date: Mon, 5 Aug 2024 08:55:10 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: LidongLI <wirelessdonghack@gmail.com>
+Cc: kvalo@kernel.org, linux-kernel@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	mark.esler@canonical.com, stf_xl@wp.pl
+Subject: Re: Ubuntu RT2X00 WIFI USB Driver Kernel NULL pointer
+ Dereference&Use-After-Free Vulnerability
+Message-ID: <2024080557-mouse-overload-bb56@gregkh>
+References: <2024080359-getaway-concave-623e@gregkh>
+ <20240805022030.1929100-1-wirelessdonghack@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240805022030.1929100-1-wirelessdonghack@gmail.com>
 
-This serie constify struct lib80211_crypto_ops. This sutructure is
-mostly some function pointers, so having it in a read-only section
-when possible is safer.
+On Mon, Aug 05, 2024 at 10:20:30AM +0800, LidongLI wrote:
+> Hi Greg,
+> 
+> We tried it, and after configuring the udev rules, I can run the proof of concept (PoC) and reproduce the previous issue without using sudo
+> 
 
+What did you do exactly with a new udev rule?  Did you give it userspace
+permission to unbind/reset the device?
 
-The 1st patch, update some function prototypes and data structures in
-lib80211.
+As it is today, this requires root permissions and it looks to just be a
+race with the existing kernel driver setting the device up and userspace
+trying to reset the device at the same time, not anything that can
+normally happen in a system from what I can tell.
 
-The 2nd patch constifies some struct lib80211_crypto_ops in lib80211.
-This moves some data to a read-only section, so increase overall
-security.
+thanks,
 
-The 3rd patch does the same for staging/rtl8192e.
-
-Note that the functions have looked in staging/rtl8192e look really
-similar to the ones in lib80211. Maybe it could be removed in favor of
-the latter.
-
-
-Each patch in the serie has been compile tested only.
-
-
-Changes in v2:
-  - patch 1: Update ipw2x00/libipw_wx.c as well   [Simon Horman]
-  - patch 2, 3 : no changes
-
-
-Christophe JAILLET (3):
-  lib80211: Handle const struct lib80211_crypto_ops in lib80211
-  lib80211: Constify struct lib80211_crypto_ops
-  staging: rtl8192e: Constify struct lib80211_crypto_ops
-
- drivers/net/wireless/intel/ipw2x00/libipw_wx.c |  2 +-
- drivers/staging/rtl8192e/rtllib_crypt_ccmp.c   |  2 +-
- drivers/staging/rtl8192e/rtllib_crypt_tkip.c   |  2 +-
- drivers/staging/rtl8192e/rtllib_crypt_wep.c    |  2 +-
- drivers/staging/rtl8192e/rtllib_wx.c           |  2 +-
- include/net/lib80211.h                         |  8 ++++----
- net/wireless/lib80211.c                        | 10 +++++-----
- net/wireless/lib80211_crypt_ccmp.c             |  2 +-
- net/wireless/lib80211_crypt_tkip.c             |  2 +-
- net/wireless/lib80211_crypt_wep.c              |  2 +-
- 10 files changed, 17 insertions(+), 17 deletions(-)
-
--- 
-2.45.2
-
+greg k-h
