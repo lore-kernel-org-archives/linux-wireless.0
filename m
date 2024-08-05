@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CC971684AC
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Aug 2024 19:23:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98B415FA76
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Aug 2024 19:23:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722885821; cv=none; b=bku4xPVd0jZ6pn6gl1z7sdGRvn3C9By9Kg6RspiVUaJARSwBw8e5F9Tsyz+dktBHfC7kOzjVgUFtYr0b13YxE4nE7klIBuuof0XqwiC7FOwy5pY0uO+sFkNN7VEEqfSJQCy8yyqwX4dxBBhfXeI4UbjShq/ZJjM5yRHoHrbHRyA=
+	t=1722885821; cv=none; b=oMZQUGrpJJk0o029WIIKaovOAoXJ8MUnjKKLudlDKPsQISi4zl2PIrrWrv8k1sKlRPA/amXIM1VNT+iQJoJtPrjMhbz/PEg27xjJNmIZwTpSWn8eABj4i7K+c/PEv7kCjsL9UBxVlzM6IEPN8PB1xe/rceaOxcZXWl7nvg3J+E8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1722885821; c=relaxed/simple;
-	bh=r/0Ny4atf7ieDmGQxpk2/z3xO4AUAX5g0mCAP+y3oAU=;
+	bh=J03ohE86hNfK78Mvs7odslTMzBIXPPWVCE/YI/nYEM8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dwJ4ryYpKnV2/wfp665ugAwFBn7yk9iYCzqy2CYFKL2jsoJmyx/2EpVkHzvd73DRHAOWGvs9dlW64bPNG6NxULvlLbIkSrD4XkVvEsbUIVQ+8KAvosBVumvl/TEE53xuQl0UXixBnFSxxKm5EZsTPh96RHsp3qbMAzihiIjQT6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=JVVqFNI4; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=oJZelhyJLTNtIa1S6nvMi9C5qpOaJCuWeMj93DqRo3HHnOX4pnZMznD2bqUtHoHVB2GXpgIHW0wmyUmZ/XtxK1tspL0un9Rm8HQdcTCgaMMmZfhawFDVxo7iG7FkThjBEt4BRi1691/3m5nMbF5NdSEsCKvhLUEXO4CchvXzicA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=E3WafDEE; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JVVqFNI4"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="E3WafDEE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=yje/7W4F7Ip6QJYdGgtFLLYwMDfGj8qX5NBZe9fA8gk=; b=JVVqFNI4TgyRwOjLb2H2fN1yQd
-	lfXSfmfLijDLVI3fU8Gcod5g1vz+NrZvnvrZRvGG3Yup9ID7ejXSmhEtpp61PCGh3gGUugC7Puudq
-	F36qRuAT529QCBqW/Lx38UE3Avqc9feaVdl/BOof63etegBy7lFgszeMZw6bfZgJSJvE=;
+	bh=BN5divBoZf05QiVe1StfbxuoTgGKD7Anik03uL9W9ns=; b=E3WafDEEhEP0BcHcshukRUeA9E
+	8bSI+2GIbEqos+v5257+jsFaoYgRZSGFTv6C2wb4T6Uu8I+WPSywSPWAGut1Vt51OKzmFj9al4RLq
+	apvJGHU0c4tUXBBRwTz9QEb4HKkGuN4nH2bX15hsXKy6m4036ojWS0N0pN+mUmQvvkpQ=;
 Received: from p54ae9b72.dip0.t-ipconnect.de ([84.174.155.114] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sb3Iu-00EHlS-2g;
+	id 1sb3Iu-00EHlS-00;
 	Mon, 05 Aug 2024 21:23:36 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [RFC 5/6] wifi: mac80211: support per-radio filter flags
-Date: Mon,  5 Aug 2024 21:23:33 +0200
-Message-ID: <7a871d4d2ce7adafb14cf971c1fdeb9cd01a4169.1722885720.git-series.nbd@nbd.name>
+Subject: [RFC 1/6] wifi: cfg80211/mac80211: add option for vif allowed radios
+Date: Mon,  5 Aug 2024 21:23:29 +0200
+Message-ID: <c5548aef0d731b7ab3c0811d514d6bb07a076720.1722885720.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.c32cfe64c671566c111b1b7ea426dbd1e8f2c568.1722885720.git-series.nbd@nbd.name>
 References: <cover.c32cfe64c671566c111b1b7ea426dbd1e8f2c568.1722885720.git-series.nbd@nbd.name>
@@ -48,488 +48,393 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This allows drivers to improve filtering of unwanted packets when using
-different combinations of filter/monitor settings on radios.
+This allows users to prevent a vif from affecting radios other than the
+configured ones. This can be useful in cases where e.g. an AP is running
+on one radio, and triggering a scan on another radio should not disturb it.
+
+It enforces the configured radio mask for configured frequencies, scan
+frequency lists and remain-on-channel requests.
+
+Changing the allowed radios list for a vif is supported, but only while
+it is down.
+
+While it is possible to achieve the same by always explicitly specifying
+a frequency list for scan requests and ensuring that the wrong channel/band
+is never accidentally set on an unrelated interface, this change makes
+multi-radio wiphy setups a lot easier to deal with for CLI users.
+
+Follow-up changes build on this to support per-radio monitor, filter and
+started state.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h     |  8 +++-
- net/mac80211/driver-ops.h  | 18 +++++++-
- net/mac80211/ieee80211_i.h | 21 ++++++---
- net/mac80211/iface.c       | 95 ++++++++++++++++++++++++---------------
- net/mac80211/main.c        | 60 +++++++++++++++++--------
- net/mac80211/mesh.c        | 33 ++++++++++----
- net/mac80211/trace.h       | 28 +++++++++++-
- 7 files changed, 196 insertions(+), 67 deletions(-)
+ include/net/cfg80211.h       | 14 +++++++++++-
+ include/uapi/linux/nl80211.h |  5 ++++-
+ net/mac80211/cfg.c           |  7 ++++++-
+ net/mac80211/chan.c          | 13 +++++++---
+ net/mac80211/iface.c         |  1 +-
+ net/mac80211/scan.c          | 10 +++++---
+ net/wireless/nl80211.c       | 46 ++++++++++++++++++++++++++++++++++---
+ net/wireless/scan.c          | 10 +++++---
+ net/wireless/util.c          | 29 +++++++++++++++++++++++-
+ 9 files changed, 123 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d0dcd66e565e..7a5418713dfc 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3921,6 +3921,10 @@ struct ieee80211_prep_tx_info {
-  *	See the section "Frame filtering" for more information.
-  *	This callback must be implemented and can sleep.
-  *
-+ * @config_radio_filter: Configure the radio's RX filter.
-+ *	See the section "Frame filtering" for more information.
-+ *	This callback is optional and can sleep.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index c2a9af1e3c5e..3d7d07027f4f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -769,6 +769,7 @@ static inline void wiphy_read_of_freq_limits(struct wiphy *wiphy)
+  *	belonging to that MU-MIMO groupID; %NULL if not changed
+  * @vht_mumimo_follow_addr: MU-MIMO follow address, used for monitoring
+  *	MU-MIMO packets going to the specified station; %NULL if not changed
++ * @radio_mask: Bitmask of radios that this interface is allowed to operate on.
+  */
+ struct vif_params {
+ 	u32 flags;
+@@ -776,6 +777,7 @@ struct vif_params {
+ 	u8 macaddr[ETH_ALEN];
+ 	const u8 *vht_mumimo_groups;
+ 	const u8 *vht_mumimo_follow_addr;
++	u32 radio_mask;
+ };
+ 
+ /**
+@@ -6222,6 +6224,7 @@ enum ieee80211_ap_reg_power {
+  * @links: array of %IEEE80211_MLD_MAX_NUM_LINKS elements containing @addr
+  *	@ap and @client for each link
+  * @valid_links: bitmap describing what elements of @links are valid
++ * @radio_mask: Bitmask of radios that this interface is allowed to operate on.
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -6335,6 +6338,8 @@ struct wireless_dev {
+ 		};
+ 	} links[IEEE80211_MLD_MAX_NUM_LINKS];
+ 	u16 valid_links;
++
++	u32 radio_mask;
+ };
+ 
+ static inline const u8 *wdev_address(struct wireless_dev *wdev)
+@@ -6521,6 +6526,15 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 				  const struct cfg80211_chan_def *chandef);
+ 
+ /**
++ * cfg80211_wdev_channel_allowed - Check if the wdev may use the channel
 + *
-  * @config_iface_filter: Configure the interface's RX filter.
-  *	This callback is optional and is used to configure which frames
-  *	should be passed to mac80211. The filter_flags is the combination
-@@ -4489,6 +4493,10 @@ struct ieee80211_ops {
- 				 unsigned int changed_flags,
- 				 unsigned int *total_flags,
- 				 u64 multicast);
-+	void (*config_radio_filter)(struct ieee80211_hw *hw,
-+				    unsigned int radio_idx,
-+				    unsigned int changed_flags,
-+				    unsigned int *total_flags);
- 	void (*config_iface_filter)(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
- 				    unsigned int filter_flags,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index cedc12b98bbb..4ee1d78b91c1 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -242,6 +242,24 @@ static inline void drv_configure_filter(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline void drv_config_radio_filter(struct ieee80211_local *local,
-+					   unsigned int radio_idx,
-+					   unsigned int changed_flags,
-+					   unsigned int *total_flags)
-+{
-+	might_sleep();
-+	lockdep_assert_wiphy(local->hw.wiphy);
++ * @wdev: the wireless device
++ * @chan: channel to check
++ */
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan);
 +
-+	if (!local->ops->config_radio_filter)
-+	    return;
++/**
+  * ieee80211_get_response_rate - get basic rate for a given rate
+  *
+  * @sband: the band to look for rates in
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f97f5adc8d51..d31ccee99cc7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2868,6 +2868,9 @@ enum nl80211_commands {
+  *	nested item, it contains attributes defined in
+  *	&enum nl80211_if_combination_attrs.
+  *
++ * @NL80211_ATTR_VIF_RADIO_MASK: Bitmask of allowed radios (u32).
++ *	A value of 0 means all radios.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3416,6 +3419,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_RADIOS,
+ 	NL80211_ATTR_WIPHY_INTERFACE_COMBINATIONS,
+ 
++	NL80211_ATTR_VIF_RADIO_MASK,
 +
-+	trace_drv_config_radio_filter(local, radio_idx, changed_flags,
-+				      total_flags);
-+	local->ops->config_radio_filter(&local->hw, radio_idx, changed_flags,
-+					total_flags);
-+	trace_drv_return_void(local);
-+}
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 85cb71de370f..32d9b9293ff3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -216,6 +216,13 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
++	if (params->radio_mask && params->radio_mask != sdata->wdev.radio_mask) {
++		if (ieee80211_sdata_running(sdata))
++			return -EBUSY;
 +
- static inline void drv_config_iface_filter(struct ieee80211_local *local,
- 					   struct ieee80211_sub_if_data *sdata,
- 					   unsigned int filter_flags,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index acc1a2d0f30f..55bb328b9c70 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1330,7 +1330,19 @@ enum mac80211_scan_state {
- 
- DECLARE_STATIC_KEY_FALSE(aql_disable);
- 
-+struct ieee80211_radio_filter {
-+	/* number of interfaces with corresponding FIF_ flags */
-+	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
-+	    fif_probe_req;
++		sdata->wdev.radio_mask = params->radio_mask;
++	}
 +
-+	/* number of interfaces with allmulti RX */
-+	atomic_t iff_allmultis;
+ 	ret = ieee80211_if_change_type(sdata, type);
+ 	if (ret)
+ 		return ret;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index e8567723e94d..65451ffad1ce 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1166,7 +1166,7 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ static bool
+ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 			       const struct ieee80211_chan_req *chanreq,
+-			       int *radio_idx)
++			       u32 radio_mask, int *radio_idx)
+ {
+ 	struct wiphy *wiphy = local->hw.wiphy;
+ 	const struct wiphy_radio *radio;
+@@ -1177,6 +1177,9 @@ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 		return true;
+ 
+ 	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
 +
-+	unsigned int filter_flags; /* FIF_* */
-+};
-+
- struct ieee80211_radio_data {
-+	struct ieee80211_radio_filter filter;
- 	u32 monitors;
- 	u32 open_count;
- 	bool started;
-@@ -1378,12 +1390,10 @@ struct ieee80211_local {
- 
- 	int open_count;
- 	int monitors, cooked_mntrs;
--	/* number of interfaces with corresponding FIF_ flags */
--	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
--	    fif_probe_req;
-+	struct ieee80211_radio_filter filter;
-+
- 	bool probe_req_reg;
- 	bool rx_mcast_action_reg;
--	unsigned int filter_flags; /* FIF_* */
- 
- 	bool wiphy_ciphers_allocated;
- 
-@@ -1478,9 +1488,6 @@ struct ieee80211_local {
- 
- 	atomic_t agg_queue_stop[IEEE80211_MAX_QUEUES];
- 
--	/* number of interfaces with allmulti RX */
--	atomic_t iff_allmultis;
--
- 	struct rate_control_ref *rate_ctrl;
- 
- 	struct arc4_ctx wep_tx_ctx;
+ 		radio = &wiphy->radio[i];
+ 		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
+ 			continue;
+@@ -1210,7 +1213,9 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+ 		if (ieee80211_can_create_new_chanctx(local, -1) &&
+-		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
++		    ieee80211_find_available_radio(local, chanreq,
++						   sdata->wdev.radio_mask,
++						   &radio_idx))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+ 							false, radio_idx);
+ 		else
+@@ -1880,7 +1885,9 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	/* Note: context is now reserved */
+ 	if (ctx)
+ 		reserved = true;
+-	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
++	else if (!ieee80211_find_available_radio(local, chanreq,
++						 sdata->wdev.radio_mask,
++						 &radio_idx))
+ 		ctx = ERR_PTR(-EBUSY);
+ 	else
+ 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 20a4a19c8ba1..b7617f98cef6 100644
+index d44920c937af..56fed4f69427 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -458,6 +458,39 @@ static int ieee80211_open(struct net_device *dev)
- 	return err;
- }
+@@ -2172,6 +2172,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
  
-+static bool
-+__ieee80211_sdata_set_filter(struct ieee80211_radio_filter *filter,
-+			     struct ieee80211_sub_if_data *sdata, int ofs)
-+{
-+	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
-+		atomic_add(ofs, &filter->iff_allmultis);
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP) {
-+		filter->fif_pspoll += ofs;
-+		filter->fif_probe_req += ofs;
-+	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
-+		filter->fif_probe_req += ofs;
-+	} else {
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool
-+ieee80211_sdata_set_filter(struct ieee80211_sub_if_data *sdata, int ofs)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int i;
-+
-+	for (i = 0; i < local->hw.wiphy->n_radio; i++)
-+		if (sdata->wdev.radio_mask & BIT(i))
-+			__ieee80211_sdata_set_filter(&local->radio_data[i].filter,
-+						     sdata, ofs);
-+
-+	return __ieee80211_sdata_set_filter(&local->filter, sdata, ofs);
-+}
-+
- static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_down)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -514,16 +547,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 	flushed = sta_info_flush(sdata, -1);
- 	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_AP_VLAN && flushed > 0);
+ 	if (ndev) {
+ 		ndev->ieee80211_ptr->use_4addr = params->use_4addr;
++		ndev->ieee80211_ptr->radio_mask = params->radio_mask;
+ 		if (type == NL80211_IFTYPE_STATION)
+ 			sdata->u.mgd.use_4addr = params->use_4addr;
  
--	/* don't count this interface for allmulti while it is down */
--	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
--		atomic_dec(&local->iff_allmultis);
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP) {
--		local->fif_pspoll--;
--		local->fif_probe_req--;
--	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--		local->fif_probe_req--;
--	}
-+	ieee80211_sdata_set_filter(sdata, -1);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b5f2df61c7f6..86188d041263 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1200,7 +1200,9 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				    &local->hw.wiphy->bands[band]->channels[i];
  
- 	if (sdata->dev) {
- 		netif_addr_lock_bh(sdata->dev);
-@@ -796,16 +820,22 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_radio_filter *filter = &local->filter;
- 	int allmulti, sdata_allmulti;
-+	int i, ofs;
+ 				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
+-						     IEEE80211_CHAN_DISABLED))
++						     IEEE80211_CHAN_DISABLED) ||
++				    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++								   tmp_ch))
+ 					continue;
  
- 	allmulti = !!(dev->flags & IFF_ALLMULTI);
- 	sdata_allmulti = !!(sdata->flags & IEEE80211_SDATA_ALLMULTI);
+ 				local->int_scan_req->channels[n_ch] = tmp_ch;
+@@ -1215,14 +1217,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 	} else {
+ 		for (i = 0; i < n_channels; i++) {
+ 			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
+-						  IEEE80211_CHAN_DISABLED))
++						  IEEE80211_CHAN_DISABLED) ||
++			    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++							   channels[i]))
+ 				continue;
  
- 	if (allmulti != sdata_allmulti) {
--		if (dev->flags & IFF_ALLMULTI)
--			atomic_inc(&local->iff_allmultis);
--		else
--			atomic_dec(&local->iff_allmultis);
-+		ofs = (dev->flags & IFF_ALLMULTI) ? 1 : -1;
-+		atomic_add(ofs, &filter->iff_allmultis);
-+		for (i = 0; i < local->hw.wiphy->n_radio; i++) {
-+			if (!(sdata->wdev.radio_mask & BIT(i)))
-+				continue;
-+			filter = &local->radio_data[i].filter;
-+			atomic_add(ofs, &filter->iff_allmultis);
-+		}
- 		sdata->flags ^= IEEE80211_SDATA_ALLMULTI;
- 	}
- 
-@@ -1080,15 +1110,16 @@ void ieee80211_recalc_offload(struct ieee80211_local *local)
- 	}
- }
- 
--void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
--				    const int offset)
-+static void
-+__ieee80211_adjust_monitor_flags(struct ieee80211_radio_filter *filter,
-+				 struct ieee80211_sub_if_data *sdata,
-+				 const int offset)
- {
--	struct ieee80211_local *local = sdata->local;
- 	u32 flags = sdata->u.mntr.flags;
- 
- #define ADJUST(_f, _s)	do {					\
- 	if (flags & MONITOR_FLAG_##_f)				\
--		local->fif_##_s += offset;			\
-+		filter->fif_##_s += offset;			\
- 	} while (0)
- 
- 	ADJUST(FCSFAIL, fcsfail);
-@@ -1100,6 +1131,14 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
- #undef ADJUST
- }
- 
-+void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
-+				    const int offset)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+
-+	__ieee80211_adjust_monitor_flags(&local->filter, sdata, offset);
-+}
-+
- static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -1399,15 +1438,6 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 				goto err_del_interface;
+ 			local->int_scan_req->channels[n_ch] = channels[i];
+ 			n_ch++;
  		}
  
--		if (sdata->vif.type == NL80211_IFTYPE_AP) {
--			local->fif_pspoll++;
--			local->fif_probe_req++;
--
--			ieee80211_configure_filter(local);
--		} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
--			local->fif_probe_req++;
--		}
--
- 		if (sdata->vif.probe_req_reg)
- 			drv_config_iface_filter(local, sdata,
- 						FIF_PROBE_REQ,
-@@ -1445,6 +1475,9 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 			sdata->vif.type != NL80211_IFTYPE_STATION);
- 	}
+-		if (WARN_ON_ONCE(n_ch == 0))
++		if (n_ch == 0)
+ 			goto unlock;
  
-+	if (ieee80211_sdata_set_filter(sdata, 1))
-+		ieee80211_configure_filter(local);
+ 		local->int_scan_req->n_channels = n_ch;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7397a372c78e..7096674c3610 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -829,6 +829,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MLO_TTLM_DLINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_MLO_TTLM_ULINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_ASSOC_SPP_AMSDU] = { .type = NLA_FLAG },
++	[NL80211_ATTR_VIF_RADIO_MASK] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3996,7 +3997,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+ 			(cfg80211_rdev_list_generation << 2)) ||
+-	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr))
++	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr) ||
++	    nla_put_u32(msg, NL80211_ATTR_VIF_RADIO_MASK, wdev->radio_mask))
+ 		goto nla_put_failure;
+ 
+ 	if (rdev->ops->get_channel && !wdev->valid_links) {
+@@ -4312,6 +4314,28 @@ static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
+ 	return -EOPNOTSUPP;
+ }
+ 
++static int nl80211_parse_vif_radio_mask(struct genl_info *info,
++					struct vif_params *params)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct nlattr *attr = info->attrs[NL80211_ATTR_VIF_RADIO_MASK];
++	u32 mask, allowed;
 +
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		rcu_assign_pointer(local->p2p_sdata, sdata);
-@@ -1458,14 +1491,6 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		break;
- 	}
- 
--	/*
--	 * set_multicast_list will be invoked by the networking core
--	 * which will check whether any increments here were done in
--	 * error and sync them down to the hardware as filter flags.
--	 */
--	if (sdata->flags & IEEE80211_SDATA_ALLMULTI)
--		atomic_inc(&local->iff_allmultis);
--
- 	if (coming_up) {
- 		local->open_count++;
- 		for (i = 0; i < local->hw.wiphy->n_radio; i++) {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2ce771744ea8..ce2ed4c06a8c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -34,54 +34,80 @@
- #include "led.h"
- #include "debugfs.h"
- 
--void ieee80211_configure_filter(struct ieee80211_local *local)
-+static void
-+__ieee80211_configure_filter(struct ieee80211_local *local,
-+			   int radio_idx)
++	if (!attr)
++		return 0;
++
++	allowed = BIT(rdev->wiphy.n_radio) - 1;
++	mask = nla_get_u32(attr);
++	if (mask & ~allowed)
++		return -EINVAL;
++
++	if (!mask)
++		mask = allowed;
++	params->radio_mask = mask;
++
++	return 1;
++}
++
+ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
  {
--	u64 mc;
-+	struct ieee80211_radio_filter *filter;
- 	unsigned int changed_flags;
- 	unsigned int new_flags = 0;
-+	u32 monitors;
-+	u64 mc;
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -4364,6 +4388,12 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err > 0)
+ 		change = true;
  
--	if (atomic_read(&local->iff_allmultis))
-+	if (radio_idx >= 0) {
-+		filter = &local->radio_data[radio_idx].filter;
-+		monitors = local->radio_data[radio_idx].monitors;
-+	} else {
-+		filter = &local->filter;
-+		monitors = local->monitors;
-+	}
++	err = nl80211_parse_vif_radio_mask(info, &params);
++	if (err < 0)
++		return err;
++	if (err > 0)
++		change = true;
 +
-+	if (atomic_read(&filter->iff_allmultis))
- 		new_flags |= FIF_ALLMULTI;
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
+ 	else
+@@ -4424,6 +4454,11 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err < 0)
+ 		return err;
  
--	if (local->monitors || test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-+	if (monitors || test_bit(SCAN_SW_SCANNING, &local->scanning) ||
- 	    test_bit(SCAN_ONCHANNEL_SCANNING, &local->scanning))
- 		new_flags |= FIF_BCN_PRBRESP_PROMISC;
- 
--	if (local->fif_probe_req || local->probe_req_reg)
-+	if (filter->fif_probe_req || local->probe_req_reg)
- 		new_flags |= FIF_PROBE_REQ;
- 
--	if (local->fif_fcsfail)
-+	if (filter->fif_fcsfail)
- 		new_flags |= FIF_FCSFAIL;
- 
--	if (local->fif_plcpfail)
-+	if (filter->fif_plcpfail)
- 		new_flags |= FIF_PLCPFAIL;
- 
--	if (local->fif_control)
-+	if (filter->fif_control)
- 		new_flags |= FIF_CONTROL;
- 
--	if (local->fif_other_bss)
-+	if (filter->fif_other_bss)
- 		new_flags |= FIF_OTHER_BSS;
- 
--	if (local->fif_pspoll)
-+	if (filter->fif_pspoll)
- 		new_flags |= FIF_PSPOLL;
- 
- 	if (local->rx_mcast_action_reg)
- 		new_flags |= FIF_MCAST_ACTION;
- 
- 	spin_lock_bh(&local->filter_lock);
--	changed_flags = local->filter_flags ^ new_flags;
-+	changed_flags = filter->filter_flags ^ new_flags;
- 
--	mc = drv_prepare_multicast(local, &local->mc_list);
-+	if (radio_idx < 0)
-+		mc = drv_prepare_multicast(local, &local->mc_list);
- 	spin_unlock_bh(&local->filter_lock);
- 
--	/* be a bit nasty */
--	new_flags |= (1<<31);
- 
--	drv_configure_filter(local, changed_flags, &new_flags, mc);
-+	if (radio_idx < 0) {
-+		/* be a bit nasty */
-+		new_flags |= (1<<31);
++	params.radio_mask = BIT(rdev->wiphy.n_radio) - 1;
++	err = nl80211_parse_vif_radio_mask(info, &params);
++	if (err < 0)
++		return err;
 +
-+		drv_configure_filter(local, changed_flags, &new_flags, mc);
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+@@ -9180,6 +9215,9 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev,
  
--	WARN_ON(new_flags & (1<<31));
-+		WARN_ON(new_flags & (1<<31));
-+	} else {
-+		drv_config_radio_filter(local, radio_idx, changed_flags, &new_flags);
-+	}
-+
-+	filter->filter_flags = new_flags & ~(1<<31);
-+}
-+
-+void ieee80211_configure_filter(struct ieee80211_local *local)
-+{
-+	int i;
+ 	lockdep_assert_wiphy(wdev->wiphy);
  
--	local->filter_flags = new_flags & ~(1<<31);
-+	for (i = -1; i < local->hw.wiphy->n_radio; i++)
-+		__ieee80211_configure_filter(local, i);
++	if (!cfg80211_wdev_channel_allowed(wdev, chan))
++		return false;
++
+ 	if (!cfg80211_beaconing_iface_active(wdev))
+ 		return true;
+ 
+@@ -9392,7 +9430,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			}
+ 
+ 			/* ignore disabled channels */
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 				continue;
+ 
+ 			request->channels[i] = chan;
+@@ -9412,7 +9451,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 				chan = &wiphy->bands[band]->channels[j];
+ 
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & IEEE80211_CHAN_DISABLED ||
++				    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 					continue;
+ 
+ 				request->channels[i] = chan;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index d99319d82205..fd49a2746675 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -956,7 +956,8 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
+ 		struct ieee80211_channel *chan =
+ 			ieee80211_get_channel(&rdev->wiphy, ap->center_freq);
+ 
+-		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
++		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED ||
++		    !cfg80211_wdev_channel_allowed(rdev_req->wdev, chan))
+ 			continue;
+ 
+ 		for (i = 0; i < rdev_req->n_channels; i++) {
+@@ -3485,9 +3486,12 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			continue;
+ 
+ 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
++			struct ieee80211_channel *chan;
++
+ 			/* ignore disabled channels */
+-			if (wiphy->bands[band]->channels[j].flags &
+-						IEEE80211_CHAN_DISABLED)
++			chan = &wiphy->bands[band]->channels[j];
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(creq->wdev, chan))
+ 				continue;
+ 
+ 			/* If we have a wireless request structure and the
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9a7c3adc8a3b..cef7ad288ad6 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -2921,3 +2921,32 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 	return true;
  }
- 
- static void ieee80211_reconfig_filter(struct wiphy *wiphy,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index f94e4be0be12..db4e6028074f 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1170,6 +1170,29 @@ void ieee80211_mbss_info_change_notify(struct ieee80211_sub_if_data *sdata,
- 	wiphy_work_queue(sdata->local->hw.wiphy, &sdata->work);
- }
- 
-+static void
-+__ieee80211_mesh_set_filter(struct ieee80211_radio_filter *filter, int ofs)
-+{
-+	filter->fif_other_bss += ofs;
+ EXPORT_SYMBOL(cfg80211_radio_chandef_valid);
 +
-+	/* mesh ifaces must set allmulti to forward mcast traffic */
-+	atomic_add(ofs, &filter->iff_allmultis);
-+}
-+
-+static void
-+ieee80211_mesh_set_filter(struct ieee80211_sub_if_data *sdata, int ofs)
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan)
 +{
-+	struct ieee80211_local *local = sdata->local;
++	struct wiphy *wiphy = wdev->wiphy;
++	const struct wiphy_radio *radio;
++	struct cfg80211_chan_def chandef;
++	u32 radio_mask;
 +	int i;
 +
-+	__ieee80211_mesh_set_filter(&local->filter, ofs);
-+	for (i = 0; i < local->hw.wiphy->n_radio; i++)
-+		if (sdata->wdev.radio_mask & BIT(i))
-+			__ieee80211_mesh_set_filter(&local->radio_data[i].filter,
-+						    ofs);
-+	ieee80211_configure_filter(local);
++	radio_mask = wdev->radio_mask;
++	if (!wiphy->n_radio || radio_mask == BIT(wiphy->n_radio) - 1)
++		return true;
++
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
++		radio = &wiphy->radio[i];
++		if (!cfg80211_radio_chandef_valid(radio, &chandef))
++			continue;
++
++		return true;
++	}
++
++	return false;
 +}
-+
- int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-@@ -1181,11 +1204,7 @@ int ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 		      BSS_CHANGED_BEACON_INT |
- 		      BSS_CHANGED_MCAST_RATE;
- 
--	local->fif_other_bss++;
--	/* mesh ifaces must set allmulti to forward mcast traffic */
--	atomic_inc(&local->iff_allmultis);
--	ieee80211_configure_filter(local);
--
-+	ieee80211_mesh_set_filter(sdata, 1);
- 	ifmsh->mesh_cc_id = 0;	/* Disabled */
- 	/* register sync ops from extensible synchronization framework */
- 	ifmsh->sync_ops = ieee80211_mesh_sync_ops_get(ifmsh->mesh_sp_id);
-@@ -1249,9 +1268,7 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 	ifmsh->wrkq_flags = 0;
- 	memset(ifmsh->mbss_changed, 0, sizeof(ifmsh->mbss_changed));
- 
--	local->fif_other_bss--;
--	atomic_dec(&local->iff_allmultis);
--	ieee80211_configure_filter(local);
-+	ieee80211_mesh_set_filter(sdata, -1);
- }
- 
- static void ieee80211_mesh_csa_mark_radar(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 0b6b4ebc681a..6504935b11e3 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -610,6 +610,34 @@ TRACE_EVENT(drv_configure_filter,
- 	)
- );
- 
-+TRACE_EVENT(drv_config_radio_filter,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 unsigned int radio,
-+		 unsigned int changed_flags,
-+		 unsigned int *total_flags),
-+
-+	TP_ARGS(local, radio, changed_flags, total_flags),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(unsigned int, radio)
-+		__field(unsigned int, changed)
-+		__field(unsigned int, total)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->radio = radio;
-+		__entry->changed = changed_flags;
-+		__entry->total = *total_flags;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT " radio:%d, changed:%#x total:%#x",
-+		LOCAL_PR_ARG, __entry->radio, __entry->changed, __entry->total
-+	)
-+);
-+
- TRACE_EVENT(drv_config_iface_filter,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
++EXPORT_SYMBOL(cfg80211_wdev_channel_allowed);
 -- 
 git-series 0.9.1
