@@ -1,28 +1,30 @@
 Received: from mail.kaechele.ca (mail.kaechele.ca [54.39.219.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5157639;
-	Mon,  5 Aug 2024 04:01:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF60D1D540;
+	Mon,  5 Aug 2024 04:01:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.39.219.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722830508; cv=none; b=ep+nZc6WERgg7IMr9VVdZL5r7kX8Jhh7EJaUz/H/Q/h85w0ufjcB38usCd+xR24bbvM4Lvugs2A/wnqo+o/08upXQ8idRgIfuS9cXcI5ubfx28iO8BuRzlscHt8uRUIiX5utRqYsl0mJk1seDTG1hwV4rBMSO8hQ5IK//GEJHq8=
+	t=1722830508; cv=none; b=aYLde0xHTZmA6GMc3szFQGekL+Ji+WX/K3ZWU79zBwT8hbimdERlIG1uXDEbLGMjoh6FKX3z4xvlg/vLBaVlARryABSRb8D6t0NbtdKT1OX319NzECdd1qv+jajH3FP/Jk5YJt4alKHt64D9CM0gXId+tlSBHsuSj+aPHtSICks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1722830508; c=relaxed/simple;
-	bh=07+1FVUgYC9ex4rTFJDQlLyNZWVcelgysbLKsmkJBqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Rzxpd93TIDsv4bAdO1PSS0Z0J6sVFOZOFjH0oTWvv6hth1m6weVsXFT3FWhMzneBwwk1XheEJtKAB4rBFPuLQEHS4gmO69MQBhdKIWIoV62fOUNzAEwlGA350VqYKzC7k0d/ko6LsN2w0lJNuz6XjY3iMH651ecNDsKgwsk4YSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca; spf=pass smtp.mailfrom=kaechele.ca; dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b=OF1LGJsi; arc=none smtp.client-ip=54.39.219.105
+	bh=wtAfLNo61IDj3fKY4HBATEJsbrhOhj3m33vUN9Wq2S4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MycK34z5bbaCtUN4FVGaDVVWWbGQh6ly3MVqO/NbhaGfHrl7twtNekLReT/UH8cQ/fDaT6mXvFDWSLrSSINUTxELsK2AcRuPfqRYSM79h05VOwA45qzaH1bpyS1kWRsB2R6KgMV5JypoWcznAI4opPbgksbAzozqZpreeiDZlg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca; spf=pass smtp.mailfrom=kaechele.ca; dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b=XvgT7+Hh; arc=none smtp.client-ip=54.39.219.105
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kaechele.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b="OF1LGJsi"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id C5067C005F;
-	Mon,  5 Aug 2024 00:01:59 -0400 (EDT)
+	dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b="XvgT7+Hh"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 1564BC006F;
+	Mon,  5 Aug 2024 00:02:05 -0400 (EDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kaechele.ca; s=201907;
-	t=1722830523; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding; bh=GsQnhxsqicayvGUucI+ZWGDAQY9dTcFVmUnm38tQ6lo=;
-	b=OF1LGJsioPiIYWkr11cBsPOSimABMCK3Nb9UjZA9q7p+f4fuNp1OSYFbfH+eCe1GuquS5l
-	QphP3P0i1ItRDdVDOSbD7Ura+z9RehCwow5JcrQIQ6vssHQu2TG0gwSMwIW+8glWEj4uZP
-	kPTuSBdtFG6YP4zWIO8zmeRPMemZzBU=
+	t=1722830526; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=ZlzXcLpdIWh+ceUwvMyfQ1ubB1VnnClTDDzKPz0HlIE=;
+	b=XvgT7+Hh79of3fxUqEs062oNTR0sChabKFL9U7f0h+3+yK7u+bFi566bnXmWZrkcB0KJvH
+	KFpIpkeIXAbQxD94lYD5Pqil44cK3mqpjsDprTnPlUFMA03R8VcrYPQKcH4AciyVIU/toG
+	D7BmNq1OSkiMvP764eUVX3JAa3+G+4w=
 From: Felix Kaechele <felix@kaechele.ca>
 To: Marcel Holtmann <marcel@holtmann.org>,
 	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
@@ -41,10 +43,12 @@ Cc: linux-bluetooth@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
 	ath10k@lists.infradead.org,
 	linux-mmc@vger.kernel.org
-Subject: [PATCH 0/4] Add support for QCA9379 hw1.0 SDIO WiFi/BT
-Date: Mon,  5 Aug 2024 00:01:27 -0400
-Message-ID: <20240805040131.450412-1-felix@kaechele.ca>
+Subject: [PATCH 3/4] dt-bindings: net: bluetooth: qualcomm: add QCA9379 compatible
+Date: Mon,  5 Aug 2024 00:01:30 -0400
+Message-ID: <20240805040131.450412-4-felix@kaechele.ca>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240805040131.450412-1-felix@kaechele.ca>
+References: <20240805040131.450412-1-felix@kaechele.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -54,71 +58,34 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-Add support for Qualcomm QCA9379-3 SDIO based adapters.
+Document that the QCA9379, as a member of the QCA6174 family, is
+supported by the existing driver.
 
-The Bluetooth part is straightforward. It simply adds a DT compatible
-string to the existing driver.
+Signed-off-by: Felix Kaechele <felix@kaechele.ca>
+---
+ .../devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml   | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The WiFi part is a followup to the RFC I sent back in February [0], that
-didn't receive any comments.
-
-Since then I aligned the patch closer to what the driver does for the
-QCA6174 rather than the QCA9377, as the latter hasn't been touched in a
-while.
-With that the driver no longer throws errors for non-existent calibration
-data.
-
-The roaming and group re-keying issues still persist, but may not be
-specific to this chipset, as this (or a similar issue) is apparently seen
-on other chipsets as well [1].
-The user impact of this issue is an intermittent loss of connectivity
-while the adapter re-associates. Other than that the connection is
-stable.
-
-I have tested this patch on a Lenovo ThinkSmart View (CD-18781Y) that
-comes with a LITEON WCBN3510A module. The firmware and boardfile used for
-testing was pulled from the original Android image. A file at
-/modem/verinfo/ver_info.txt on the Android image identifies the WiFi
-part as "WLAN.NPL.1.6-00163-QCANPLSWPZ-1" and the Bluetooth part as
-"BTFM.NPL.1.0.4-00002-QCABTFMSWPZ-1".
-
-No firmware files are currently available from public repositories, but
-they should available from the vendor website [2] for customers that have
-the according access.
-
-I can submit the boardfile to the ath10k list once this patch is
-accepted. The one that is included with the Android system image has a
-sha256sum of 65767cca6a1ff88a9899235acdeeed1e9447a2f16f41d38052202835d5bda7d4.
-
-If someone from Qualcomm could add both the WiFi and BT firmwares to the
-linux-firmware repositories that would be much appreciated.
-I'm happy to test any firmware before submission, if desired.
-
-Thanks,
-Felix
-
-[0]: https://lore.kernel.org/ath10k/20240229032700.414415-1-felix@kaechele.ca/T/
-[1]: https://lore.kernel.org/ath10k/c407064a-1c2f-46ec-ac57-32bf9cf6f5c6@gmail.com/T/
-[2]: https://www.qualcomm.com/products/technology/wi-fi/qca9379#Software
-
-Felix Kaechele (4):
-  mmc: sdio: add Qualcomm QCA9379-3 SDIO id
-  wifi: ath10k: add support for QCA9379 hw1.0 SDIO
-  dt-bindings: net: bluetooth: qualcomm: add QCA9379 compatible
-  Bluetooth: hci_qca: add compatible for QCA9379
-
- .../net/bluetooth/qualcomm-bluetooth.yaml     |  2 +
- drivers/bluetooth/hci_qca.c                   |  1 +
- drivers/net/wireless/ath/ath10k/core.c        | 37 +++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h          | 10 +++++
- drivers/net/wireless/ath/ath10k/pci.c         |  2 +
- drivers/net/wireless/ath/ath10k/sdio.c        |  5 ++-
- drivers/net/wireless/ath/ath10k/targaddrs.h   |  3 ++
- include/linux/mmc/sdio_ids.h                  |  1 +
- 8 files changed, 60 insertions(+), 1 deletion(-)
-
-
-base-commit: aefacd7c75edfaf6690819c1990b851f4c7b50cf
+diff --git a/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml b/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
+index 68c5ed111417..f968b0d236e0 100644
+--- a/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
++++ b/Documentation/devicetree/bindings/net/bluetooth/qualcomm-bluetooth.yaml
+@@ -19,6 +19,7 @@ properties:
+       - qcom,qca2066-bt
+       - qcom,qca6174-bt
+       - qcom,qca9377-bt
++      - qcom,qca9379-bt
+       - qcom,wcn3988-bt
+       - qcom,wcn3990-bt
+       - qcom,wcn3991-bt
+@@ -125,6 +126,7 @@ allOf:
+             enum:
+               - qcom,qca2066-bt
+               - qcom,qca6174-bt
++              - qcom,qca9379-bt
+     then:
+       required:
+         - enable-gpios
 -- 
 2.45.2
 
