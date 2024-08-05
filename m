@@ -1,30 +1,28 @@
 Received: from mail.kaechele.ca (mail.kaechele.ca [54.39.219.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AC014A85;
-	Mon,  5 Aug 2024 04:01:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5157639;
+	Mon,  5 Aug 2024 04:01:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.39.219.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722830508; cv=none; b=js8yLRO5mneRaJXiyCrk172jynReI3PGAQDJEQProeWD/MJVjfS7AX64iU0W3sebzV5xzLBc7fN9lzu+Dy9fq/pr63YbRXYw8XPxOgvEK/sjVlmzcEkfm00JlSszCbB0c9SnNQrSitWXsm7Yez61HUoF4+J9WJlH/dFNmmXOCEc=
+	t=1722830508; cv=none; b=ep+nZc6WERgg7IMr9VVdZL5r7kX8Jhh7EJaUz/H/Q/h85w0ufjcB38usCd+xR24bbvM4Lvugs2A/wnqo+o/08upXQ8idRgIfuS9cXcI5ubfx28iO8BuRzlscHt8uRUIiX5utRqYsl0mJk1seDTG1hwV4rBMSO8hQ5IK//GEJHq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1722830508; c=relaxed/simple;
-	bh=3YnJbqK9b5YPtjNt/6Hor6fUr4J7cxCpZMCZNniKbBc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rikv/g4m6m3c6YnSTJi0rCVm6vgXmMvQWJNofZlH3IqPt+VHz8VJfh8itpU923AWRioyIZbwmrTPqTHC2S9GdD67qbcf0tJTLqASt9Brx+l0GijsaNVmajjaJNKiJcw1QufBYgUwhwr0zPJ/Kcq1w6WNUgGWgk/eBP9JrRur8tA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca; spf=pass smtp.mailfrom=kaechele.ca; dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b=Rtxq8szi; arc=none smtp.client-ip=54.39.219.105
+	bh=07+1FVUgYC9ex4rTFJDQlLyNZWVcelgysbLKsmkJBqw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Rzxpd93TIDsv4bAdO1PSS0Z0J6sVFOZOFjH0oTWvv6hth1m6weVsXFT3FWhMzneBwwk1XheEJtKAB4rBFPuLQEHS4gmO69MQBhdKIWIoV62fOUNzAEwlGA350VqYKzC7k0d/ko6LsN2w0lJNuz6XjY3iMH651ecNDsKgwsk4YSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca; spf=pass smtp.mailfrom=kaechele.ca; dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b=OF1LGJsi; arc=none smtp.client-ip=54.39.219.105
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=kaechele.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kaechele.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b="Rtxq8szi"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id EB468C006E;
-	Mon,  5 Aug 2024 00:02:04 -0400 (EDT)
+	dkim=pass (1024-bit key) header.d=kaechele.ca header.i=@kaechele.ca header.b="OF1LGJsi"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id C5067C005F;
+	Mon,  5 Aug 2024 00:01:59 -0400 (EDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kaechele.ca; s=201907;
-	t=1722830525; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=ZJdBD5jNPu7TPf7Xgt3hLiSvXBwsjgNIaKnUkgQaSD8=;
-	b=Rtxq8sziOm1KqtJagLiZyzW5l9x07r1TmVz9lwWzg24bcTw6iRKPzT7GP2UJu0PUJfyuHh
-	ic/id+D78cDNkcci7i8zp+sREs+QBrOFvhDWcnDywTUbjv1ju8KKGipRFQ/OSNX9bPxacH
-	oufWKSb0MdiNux619CgZPSovq5Y+wPE=
+	t=1722830523; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding; bh=GsQnhxsqicayvGUucI+ZWGDAQY9dTcFVmUnm38tQ6lo=;
+	b=OF1LGJsioPiIYWkr11cBsPOSimABMCK3Nb9UjZA9q7p+f4fuNp1OSYFbfH+eCe1GuquS5l
+	QphP3P0i1ItRDdVDOSbD7Ura+z9RehCwow5JcrQIQ6vssHQu2TG0gwSMwIW+8glWEj4uZP
+	kPTuSBdtFG6YP4zWIO8zmeRPMemZzBU=
 From: Felix Kaechele <felix@kaechele.ca>
 To: Marcel Holtmann <marcel@holtmann.org>,
 	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
@@ -43,12 +41,10 @@ Cc: linux-bluetooth@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
 	ath10k@lists.infradead.org,
 	linux-mmc@vger.kernel.org
-Subject: [PATCH 2/4] wifi: ath10k: add support for QCA9379 hw1.0 SDIO
-Date: Mon,  5 Aug 2024 00:01:29 -0400
-Message-ID: <20240805040131.450412-3-felix@kaechele.ca>
+Subject: [PATCH 0/4] Add support for QCA9379 hw1.0 SDIO WiFi/BT
+Date: Mon,  5 Aug 2024 00:01:27 -0400
+Message-ID: <20240805040131.450412-1-felix@kaechele.ca>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240805040131.450412-1-felix@kaechele.ca>
-References: <20240805040131.450412-1-felix@kaechele.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,201 +54,71 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Last-TLS-Session-Version: TLSv1.3
 
-This adds support for the QCA9379-3 SDIO SoC. It is part of the
-QCA6174 SDIO family.
+Add support for Qualcomm QCA9379-3 SDIO based adapters.
 
-While the device is generally working, there are some remaining issues:
-- the card will perform a full reconnect upon expiry of the Group Key
-  renewal interval
-- rx rates are not reported correctly (i.e. always show as 6.0 MBit/s)
+The Bluetooth part is straightforward. It simply adds a DT compatible
+string to the existing driver.
 
-More debugging would need to be done on these, preferably by people with
-access to proper documentation.
+The WiFi part is a followup to the RFC I sent back in February [0], that
+didn't receive any comments.
 
-This change was tested on a device that uses a LITEON WCBN3510A module.
-The module was tested in WPA2 and WPA3 Personal scenarios using iperf3.
-Performance was comparable to the same device using the vendor driver in
-the same environment.
+Since then I aligned the patch closer to what the driver does for the
+QCA6174 rather than the QCA9377, as the latter hasn't been touched in a
+while.
+With that the driver no longer throws errors for non-existent calibration
+data.
 
-Tested-on: QCA9379 hw1.0 SDIO WLAN.NPL.1.6-00163-QCANPLSWPZ-1
+The roaming and group re-keying issues still persist, but may not be
+specific to this chipset, as this (or a similar issue) is apparently seen
+on other chipsets as well [1].
+The user impact of this issue is an intermittent loss of connectivity
+while the adapter re-associates. Other than that the connection is
+stable.
 
-Signed-off-by: Felix Kaechele <felix@kaechele.ca>
----
- drivers/net/wireless/ath/ath10k/core.c      | 37 +++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h        | 10 ++++++
- drivers/net/wireless/ath/ath10k/pci.c       |  2 ++
- drivers/net/wireless/ath/ath10k/sdio.c      |  5 ++-
- drivers/net/wireless/ath/ath10k/targaddrs.h |  3 ++
- 5 files changed, 56 insertions(+), 1 deletion(-)
+I have tested this patch on a Lenovo ThinkSmart View (CD-18781Y) that
+comes with a LITEON WCBN3510A module. The firmware and boardfile used for
+testing was pulled from the original Android image. A file at
+/modem/verinfo/ver_info.txt on the Android image identifies the WiFi
+part as "WLAN.NPL.1.6-00163-QCANPLSWPZ-1" and the Bluetooth part as
+"BTFM.NPL.1.0.4-00002-QCABTFMSWPZ-1".
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b3294287bce1..32d5d4be8830 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -661,6 +661,42 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.delay_unmap_buffer = false,
- 		.mcast_frame_registration = false,
- 	},
-+	{
-+		.id = QCA9379_HW_1_0_DEV_VERSION,
-+		.dev_id = QCA9379_1_0_DEVICE_ID,
-+		.bus = ATH10K_BUS_SDIO,
-+		.name = "qca9379 hw1.0 sdio",
-+		.patch_load_addr = QCA9379_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 19,
-+		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 0,
-+		.fw = {
-+			.dir = QCA9379_HW_1_0_FW_DIR,
-+			.board_size = QCA9379_BOARD_DATA_SZ,
-+			.board_ext_size = QCA9379_BOARD_EXT_DATA_SZ,
-+		},
-+		.rx_desc_ops = &qca988x_rx_desc_ops,
-+		.hw_ops = &qca6174_sdio_ops,
-+		.hw_clk = qca6174_clk,
-+		.target_cpu_freq = 176000000,
-+		.decap_align_bytes = 4,
-+		.n_cipher_suites = 8,
-+		.num_peers = 10,
-+		.ast_skid_limit = 0x10,
-+		.num_wds_entries = 0x20,
-+		.uart_pin_workaround = true,
-+		.tx_stats_over_pktlog = false,
-+		.credit_size_workaround = true,
-+		.bmi_large_size_download = true,
-+		.supports_peer_stats_info = false,
-+		.dynamic_sar_support = false,
-+		.hw_restart_disconnect = false,
-+		.use_fw_tx_credits = true,
-+		.delay_unmap_buffer = false,
-+		.mcast_frame_registration = false,
-+	},
- 	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
- 		.dev_id = 0,
-@@ -3602,6 +3638,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 		break;
- 	case ATH10K_HW_QCA6174:
- 	case ATH10K_HW_QCA9377:
-+	case ATH10K_HW_QCA9379:
- 		ar->regs = &qca6174_regs;
- 		ar->hw_ce_regs = &qcax_ce_regs;
- 		ar->hw_values = &qca6174_values;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 442091c6dfd2..419fa1888e75 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -30,6 +30,7 @@ enum ath10k_bus {
- #define QCA9888_2_0_DEVICE_ID	(0x0056)
- #define QCA9984_1_0_DEVICE_ID	(0x0046)
- #define QCA9377_1_0_DEVICE_ID   (0x0042)
-+#define QCA9379_1_0_DEVICE_ID   (0x0042)
- #define QCA9887_1_0_DEVICE_ID   (0x0050)
- 
- /* QCA988X 1.0 definitions (unsupported) */
-@@ -59,6 +60,9 @@ enum ath10k_bus {
- #define QCA9377_HW_1_0_DEV_VERSION	0x05020000
- #define QCA9377_HW_1_1_DEV_VERSION	0x05020001
- 
-+/* QCA9379 target BMI version signatures */
-+#define QCA9379_HW_1_0_DEV_VERSION	0x05040000
-+
- enum qca6174_pci_rev {
- 	QCA6174_PCI_REV_1_1 = 0x11,
- 	QCA6174_PCI_REV_1_3 = 0x13,
-@@ -115,6 +119,10 @@ enum qca9377_chip_id_rev {
- #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
- #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
- 
-+/* QCA9379 1.0 definitions */
-+#define QCA9379_HW_1_0_FW_DIR		ATH10K_FW_DIR "/QCA9379/hw1.0"
-+#define QCA9379_HW_1_0_PATCH_LOAD_ADDR	0x1234
-+
- /* QCA4019 1.0 definitions */
- #define QCA4019_HW_1_0_DEV_VERSION     0x01000000
- #define QCA4019_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA4019/hw1.0"
-@@ -230,6 +238,7 @@ enum ath10k_hw_rev {
- 	ATH10K_HW_QCA9888,
- 	ATH10K_HW_QCA9984,
- 	ATH10K_HW_QCA9377,
-+	ATH10K_HW_QCA9379,
- 	ATH10K_HW_QCA4019,
- 	ATH10K_HW_QCA9887,
- 	ATH10K_HW_WCN3990,
-@@ -401,6 +410,7 @@ int ath10k_hw_diag_fast_download(struct ath10k *ar,
- #define QCA_REV_9888(ar) ((ar)->hw_rev == ATH10K_HW_QCA9888)
- #define QCA_REV_9984(ar) ((ar)->hw_rev == ATH10K_HW_QCA9984)
- #define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
-+#define QCA_REV_9379(ar) ((ar)->hw_rev == ATH10K_HW_QCA9379)
- #define QCA_REV_40XX(ar) ((ar)->hw_rev == ATH10K_HW_QCA4019)
- #define QCA_REV_WCN3990(ar) ((ar)->hw_rev == ATH10K_HW_WCN3990)
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index c52a16f8078f..6fee3d52d808 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1899,6 +1899,7 @@ void ath10k_pci_irq_msi_fw_mask(struct ath10k *ar)
- 		 *  to mask irq/MSI.
- 		 */
- 		break;
-+	case ATH10K_HW_QCA9379:
- 	case ATH10K_HW_WCN3990:
- 		break;
- 	}
-@@ -1927,6 +1928,7 @@ static void ath10k_pci_irq_msi_fw_unmask(struct ath10k *ar)
- 		 *  to unmask irq/MSI.
- 		 */
- 		break;
-+	case ATH10K_HW_QCA9379:
- 	case ATH10K_HW_WCN3990:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 08a6f36a6be9..24123d23ad5a 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1105,6 +1105,7 @@ static void ath10k_sdio_set_mbox_info(struct ath10k *ar)
- 				ATH10K_HIF_MBOX0_EXT_WIDTH_ROME_2_0;
- 		break;
- 	case (SDIO_DEVICE_ID_ATHEROS_QCA9377 & 0x0F00):
-+	case (SDIO_DEVICE_ID_ATHEROS_QCA9379 & 0x0F00):
- 		mbox_info->ext_info[0].htc_ext_sz =
- 			ATH10K_HIF_MBOX0_EXT_WIDTH_ROME_2_0;
- 		break;
-@@ -2597,7 +2598,8 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 
- 	dev_id_base = (id->device & 0x0F00);
- 	if (dev_id_base != (SDIO_DEVICE_ID_ATHEROS_AR6005 & 0x0F00) &&
--	    dev_id_base != (SDIO_DEVICE_ID_ATHEROS_QCA9377 & 0x0F00)) {
-+	    dev_id_base != (SDIO_DEVICE_ID_ATHEROS_QCA9377 & 0x0F00) &&
-+	    dev_id_base != (SDIO_DEVICE_ID_ATHEROS_QCA9379 & 0x0F00)) {
- 		ret = -ENODEV;
- 		ath10k_err(ar, "unsupported device id %u (0x%x)\n",
- 			   dev_id_base, id->device);
-@@ -2656,6 +2658,7 @@ static void ath10k_sdio_remove(struct sdio_func *func)
- static const struct sdio_device_id ath10k_sdio_devices[] = {
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_ATHEROS, SDIO_DEVICE_ID_ATHEROS_AR6005)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_ATHEROS, SDIO_DEVICE_ID_ATHEROS_QCA9377)},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_ATHEROS, SDIO_DEVICE_ID_ATHEROS_QCA9379)},
- 	{},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index ba37e6c7ced0..1a0f71126683 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -481,6 +481,9 @@ struct host_interest {
- #define QCA9377_BOARD_DATA_SZ     QCA6174_BOARD_DATA_SZ
- #define QCA9377_BOARD_EXT_DATA_SZ 0
- 
-+#define QCA9379_BOARD_DATA_SZ     QCA6174_BOARD_DATA_SZ
-+#define QCA9379_BOARD_EXT_DATA_SZ 0
-+
- #define QCA99X0_BOARD_DATA_SZ	  12288
- #define QCA99X0_BOARD_EXT_DATA_SZ 0
- 
+No firmware files are currently available from public repositories, but
+they should available from the vendor website [2] for customers that have
+the according access.
+
+I can submit the boardfile to the ath10k list once this patch is
+accepted. The one that is included with the Android system image has a
+sha256sum of 65767cca6a1ff88a9899235acdeeed1e9447a2f16f41d38052202835d5bda7d4.
+
+If someone from Qualcomm could add both the WiFi and BT firmwares to the
+linux-firmware repositories that would be much appreciated.
+I'm happy to test any firmware before submission, if desired.
+
+Thanks,
+Felix
+
+[0]: https://lore.kernel.org/ath10k/20240229032700.414415-1-felix@kaechele.ca/T/
+[1]: https://lore.kernel.org/ath10k/c407064a-1c2f-46ec-ac57-32bf9cf6f5c6@gmail.com/T/
+[2]: https://www.qualcomm.com/products/technology/wi-fi/qca9379#Software
+
+Felix Kaechele (4):
+  mmc: sdio: add Qualcomm QCA9379-3 SDIO id
+  wifi: ath10k: add support for QCA9379 hw1.0 SDIO
+  dt-bindings: net: bluetooth: qualcomm: add QCA9379 compatible
+  Bluetooth: hci_qca: add compatible for QCA9379
+
+ .../net/bluetooth/qualcomm-bluetooth.yaml     |  2 +
+ drivers/bluetooth/hci_qca.c                   |  1 +
+ drivers/net/wireless/ath/ath10k/core.c        | 37 +++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h          | 10 +++++
+ drivers/net/wireless/ath/ath10k/pci.c         |  2 +
+ drivers/net/wireless/ath/ath10k/sdio.c        |  5 ++-
+ drivers/net/wireless/ath/ath10k/targaddrs.h   |  3 ++
+ include/linux/mmc/sdio_ids.h                  |  1 +
+ 8 files changed, 60 insertions(+), 1 deletion(-)
+
+
+base-commit: aefacd7c75edfaf6690819c1990b851f4c7b50cf
 -- 
 2.45.2
 
