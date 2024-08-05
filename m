@@ -1,128 +1,148 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-22.smtpout.orange.fr [80.12.242.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A457914BF9B
-	for <linux-wireless@vger.kernel.org>; Mon,  5 Aug 2024 06:39:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6421E149E01
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Aug 2024 06:41:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722839991; cv=none; b=vFCnSrN8jIXpZjpUf4PM3hzWBOPvZ9uzKqJyraP40Yv3Wr73za67uAmrOt7unZQ/vh7DJy0VkO/jqZIQ75OexcU6Atrb3PMeE1jjZUjafFVXUwbGH8bI4tUJ/vEYrra45xofNchLcFqmUe3qzOW6NUs1+CKWtc3dM9ash09UpLc=
+	t=1722840076; cv=none; b=Cn+ZIWUU6dBOUl0VIN2p9I9zTVCscuKEyfYYbsuAuYu1E0NvytGDrVENPbVvMivXRIhIBi5J7UwByMnQoxjqZINlOXKsR/JHp/osx8q5cW1s67EI622ysUNcpzXXqEQXpi/6PetqX6LkWSfTKd5m5WfpmrLlH5iNRw2/kcptQ+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722839991; c=relaxed/simple;
-	bh=TRNV4ubhHsipr5Lxr2FdSIUdP/KKJtbCJAZmfctiF4Q=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Dv5R2yng4v775Hdzg0y/U7Lh4txESWQmsEWYR5ABTRbpukaLr6Fxr/AIvcS2Owmdrl+fhib/uRhoMmUjiqlSB4ORyW4ZoqRDifDSEACN28mawvuRYDl1/ysH1E7aEGtjQediuoixhnO0mIgoNBiWL8zC37EcvLblBl/FgigQpgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sarNI-00039D-Ri; Mon, 05 Aug 2024 08:39:20 +0200
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sarNH-004e48-Lv; Mon, 05 Aug 2024 08:39:19 +0200
-Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
-	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sarNH-000M8i-1u;
-	Mon, 05 Aug 2024 08:39:19 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Date: Mon, 05 Aug 2024 08:39:13 +0200
-Subject: [PATCH v4 1/3] wifi: mwifiex: simplify WPA flags setting
+	s=arc-20240116; t=1722840076; c=relaxed/simple;
+	bh=1vVlM+ddG3u4gl7LGc93Oxc2DWNsUj/ZLGTJnTpYqhM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=UfAC/HZNnFHnCWV0fvG7jFbWmv2IL1gzvnjujDxLmVF3ykymUQdiP/oECivSzPAYOzc54GKIqqBJyUbAj1vcuSGN2+rorHaRkREWgaCuHmMbbYF3CbFczWL62rV57ThJ3D8ZveAyMSX7tP6LETdBemyTvl+iV9IMNRkClQ+Z0ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=oAiuMJFh; arc=none smtp.client-ip=80.12.242.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="oAiuMJFh"
+Received: from fedora.home ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id arOns5eD41n2IarP7sUUaO; Mon, 05 Aug 2024 08:41:14 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1722840074;
+	bh=mJMkslPd4nPyVR0NUNbJ2BCmn3CCKJaHPZ6kqs8kapw=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=oAiuMJFhCQDJqPupslN/Hno9mNLMZkWXBud0oinY200B2BWcq2gV/0TWYBr+z8OiN
+	 ngqXZdeM8Wuv2pXC+94GsGjs4cNsSz5sjL+wvjuw9F9D0vRepQUZg6EE1oWZFuxCEA
+	 73iohyLeVXa78q6IBkS5dEiHvi2qh7D9rWkolMpFXyyxcPmNWoNk4QNCf+ugW5yKDU
+	 9CbLUpGKKbZBg05CKFsy50IHTWh0EB2fEuaLsauL3upIx/gkXpueM2JWGuiW7wuJ3m
+	 +uk6XidzLaH9rNMhnVIi6S+GLdui6dRwxfvIXWhM2KydVO848ps7n79StZf9fKyo4L
+	 itJQ+Bsb/thQw==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Mon, 05 Aug 2024 08:41:14 +0200
+X-ME-IP: 90.11.132.44
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: stas.yakovlev@gmail.com,
+	kvalo@kernel.org,
+	gregkh@linuxfoundation.org,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH v2 2/3] lib80211: Constify struct lib80211_crypto_ops
+Date: Mon,  5 Aug 2024 08:40:38 +0200
+Message-ID: <0cc3741c15f2c502cc85bddda9d6582b5977c8f9.1722839425.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <cover.1722839425.git.christophe.jaillet@wanadoo.fr>
+References: <cover.1722839425.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240805-mwifiex-wpa-psk-sha256-v4-1-e1eee80508e6@pengutronix.de>
-References: <20240805-mwifiex-wpa-psk-sha256-v4-0-e1eee80508e6@pengutronix.de>
-In-Reply-To: <20240805-mwifiex-wpa-psk-sha256-v4-0-e1eee80508e6@pengutronix.de>
-To: Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, Kalle Valo <kvalo@kernel.org>
-Cc: David Lin <yu-hao.lin@nxp.com>, linux-wireless@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>, 
- Francesco Dolcini <francesco.dolcini@toradex.com>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1722839959; l=2494;
- i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=TRNV4ubhHsipr5Lxr2FdSIUdP/KKJtbCJAZmfctiF4Q=;
- b=GYFCkxAE6as6SqgEl/9NTLCApcbnGmffMLnyQBKtPWFTXqcotgzimMecxgDreERiaXmSi98vc
- aVQTtD02+0rCJ3eCtmpf5s5maXaMvxOKr4AQt0+WlOUdGMplp+BfPKR
-X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
- pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: s.hauer@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 8bit
 
-The WPA flags setting only depends on the wpa_versions bitfield and not
-on the AKM suite, so move it out of the switch/case to simplify the code
-a bit. Also set bss_config->protocol to zero explicitly. This is done
-only to make the code clearer, bss_config has been zero alloced by the
-caller, so should be zero already. No functional change intended.
+Now that functions in lib80211 handle "const struct lib80211_crypto_ops",
+some structure can be constified as well.
 
-Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
-Acked-by: Brian Norris <briannorris@chromium.org>
-Link: https://lore.kernel.org/r/20240723-mwifiex-wpa-psk-sha256-v3-1-025168a91da1@pengutronix.de
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Constifying these structures moves some data to a read-only section, so
+increase overall security.
+
+Before:
+   text	   data	    bss	    dec	    hex	filename
+   7273	    604	     16	   7893	   1ed5	net/wireless/lib80211.o
+
+After:
+   text	   data	    bss	    dec	    hex	filename
+   7429	    444	     16	   7889	   1ed1	net/wireless/lib80211.o
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 29 +++++++-------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+Compile tested only.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-index 073c665183b30..51fcae8726ed0 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -46,34 +46,21 @@ int mwifiex_set_secure_params(struct mwifiex_private *priv,
- 
- 	bss_config->key_mgmt_operation |= KEY_MGMT_ON_HOST;
- 
-+	bss_config->protocol = 0;
-+	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_1)
-+		bss_config->protocol |= PROTOCOL_WPA;
-+	if (params->crypto.wpa_versions & NL80211_WPA_VERSION_2)
-+		bss_config->protocol |= PROTOCOL_WPA2;
-+
- 	for (i = 0; i < params->crypto.n_akm_suites; i++) {
- 		switch (params->crypto.akm_suites[i]) {
- 		case WLAN_AKM_SUITE_8021X:
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_1) {
--				bss_config->protocol = PROTOCOL_WPA;
--				bss_config->key_mgmt = KEY_MGMT_EAP;
--			}
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol |= PROTOCOL_WPA2;
--				bss_config->key_mgmt = KEY_MGMT_EAP;
--			}
-+			bss_config->key_mgmt = KEY_MGMT_EAP;
- 			break;
- 		case WLAN_AKM_SUITE_PSK:
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_1) {
--				bss_config->protocol = PROTOCOL_WPA;
--				bss_config->key_mgmt = KEY_MGMT_PSK;
--			}
--			if (params->crypto.wpa_versions &
--			    NL80211_WPA_VERSION_2) {
--				bss_config->protocol |= PROTOCOL_WPA2;
--				bss_config->key_mgmt = KEY_MGMT_PSK;
--			}
-+			bss_config->key_mgmt = KEY_MGMT_PSK;
- 			break;
- 		case WLAN_AKM_SUITE_SAE:
--			bss_config->protocol = PROTOCOL_WPA2;
- 			bss_config->key_mgmt = KEY_MGMT_SAE;
- 			break;
- 		default:
+Changes in v2
+  - No changes
 
+v1: https://lore.kernel.org/all/a1f822093dbd01f39d9afb931bece744273b8b9d.1715443223.git.christophe.jaillet@wanadoo.fr/
+---
+ net/wireless/lib80211.c            | 2 +-
+ net/wireless/lib80211_crypt_ccmp.c | 2 +-
+ net/wireless/lib80211_crypt_tkip.c | 2 +-
+ net/wireless/lib80211_crypt_wep.c  | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/lib80211.c b/net/wireless/lib80211.c
+index 51e31316bcb8..64c447040786 100644
+--- a/net/wireless/lib80211.c
++++ b/net/wireless/lib80211.c
+@@ -234,7 +234,7 @@ static void lib80211_crypt_null_deinit(void *priv)
+ {
+ }
+ 
+-static struct lib80211_crypto_ops lib80211_crypt_null = {
++static const struct lib80211_crypto_ops lib80211_crypt_null = {
+ 	.name = "NULL",
+ 	.init = lib80211_crypt_null_init,
+ 	.deinit = lib80211_crypt_null_deinit,
+diff --git a/net/wireless/lib80211_crypt_ccmp.c b/net/wireless/lib80211_crypt_ccmp.c
+index cca5e1cf089e..5aad139130e1 100644
+--- a/net/wireless/lib80211_crypt_ccmp.c
++++ b/net/wireless/lib80211_crypt_ccmp.c
+@@ -418,7 +418,7 @@ static void lib80211_ccmp_print_stats(struct seq_file *m, void *priv)
+ 		   ccmp->dot11RSNAStatsCCMPDecryptErrors);
+ }
+ 
+-static struct lib80211_crypto_ops lib80211_crypt_ccmp = {
++static const struct lib80211_crypto_ops lib80211_crypt_ccmp = {
+ 	.name = "CCMP",
+ 	.init = lib80211_ccmp_init,
+ 	.deinit = lib80211_ccmp_deinit,
+diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
+index 5c8cdf7681e3..63e68e5e121e 100644
+--- a/net/wireless/lib80211_crypt_tkip.c
++++ b/net/wireless/lib80211_crypt_tkip.c
+@@ -705,7 +705,7 @@ static void lib80211_tkip_print_stats(struct seq_file *m, void *priv)
+ 		   tkip->dot11RSNAStatsTKIPLocalMICFailures);
+ }
+ 
+-static struct lib80211_crypto_ops lib80211_crypt_tkip = {
++static const struct lib80211_crypto_ops lib80211_crypt_tkip = {
+ 	.name = "TKIP",
+ 	.init = lib80211_tkip_init,
+ 	.deinit = lib80211_tkip_deinit,
+diff --git a/net/wireless/lib80211_crypt_wep.c b/net/wireless/lib80211_crypt_wep.c
+index 6ab9957b8f96..3b148c7bef85 100644
+--- a/net/wireless/lib80211_crypt_wep.c
++++ b/net/wireless/lib80211_crypt_wep.c
+@@ -226,7 +226,7 @@ static void lib80211_wep_print_stats(struct seq_file *m, void *priv)
+ 	seq_printf(m, "key[%d] alg=WEP len=%d\n", wep->key_idx, wep->key_len);
+ }
+ 
+-static struct lib80211_crypto_ops lib80211_crypt_wep = {
++static const struct lib80211_crypto_ops lib80211_crypt_wep = {
+ 	.name = "WEP",
+ 	.init = lib80211_wep_init,
+ 	.deinit = lib80211_wep_deinit,
 -- 
-2.39.2
+2.45.2
 
