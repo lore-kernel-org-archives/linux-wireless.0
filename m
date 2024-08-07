@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0CA21B86E5
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Aug 2024 08:09:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E82832868D
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Aug 2024 08:09:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723018166; cv=none; b=lWQZEIN5f5wZSghEmh+26qh1Ez+xU/bEfcbtwQRtSRHIDfjCsgTWaHco4yVRmqMp7YlwMg0NTHq5Eh+rBbfTgWTLAuY3ReFA99H56B8e7MbegfFjdF3OMRQmIcY8nPN1VpPEtCqLCHplJ8sCxXkvLDKi9MLDaHioDhLOkYIXr1g=
+	t=1723018191; cv=none; b=pSHnbusVSTV1+9QIoINIm+obL4xO1IhpI2bPbKQMaV3wAwpO4SM1HrPWYAFbtHxwBDyc0+1yjz4LaIfPMYHfrvBJyEK202JBugX5mlWRn4T8G6KKGT6iJKZIKluQlmEanQScrUB2WIR/HZIkm+JugqqKVutsFuJhNRVm4wL6BMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723018166; c=relaxed/simple;
-	bh=EJ9VBAMc/aqoyTTd5h2qrW7d/km7rQAEKPTXQ3Cfr84=;
+	s=arc-20240116; t=1723018191; c=relaxed/simple;
+	bh=udMylYuK8HYXdKoGhrjwWETQV3x2IYojbCwCuoIuW8E=;
 	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
-	 Cc:Message-ID:Date; b=iM6oWscOyXIBXrGYJHzXn/uKNlFQleU0wmG1K5TGuGWWPzCjw9RINpMflD4uOOIVjYKJ5Q44cjeo9JdZSEG+B6imm/rnQF46XXsre7lZuN1VSWa+Alfq4BUKWtj0KVysYgLKNVoCLIdbxjtHhlRz5BKQ0k8FX1A4ubOfG/AsaP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2RVAzLG; arc=none smtp.client-ip=10.30.226.201
+	 Cc:Message-ID:Date; b=UeUie7Sm/UdXkRI/v+dnQYxjcSi4CCIklQFqRMm5qISZa+QqCd5bTg9V3lbEvb7xEbnAQJDn9NWOJNzfjBGe15Ti3HHFOgkosHTcbOGqWysazQRjshfOlhJBe4ub2msRv58Bp37oLGJ8UlWN+00PPWy/NEyyIhQCGod7GTBgyJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VX1CswZC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2RVAzLG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1AB1C32782;
-	Wed,  7 Aug 2024 08:09:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VX1CswZC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EA98C32782;
+	Wed,  7 Aug 2024 08:09:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723018165;
-	bh=EJ9VBAMc/aqoyTTd5h2qrW7d/km7rQAEKPTXQ3Cfr84=;
+	s=k20201202; t=1723018190;
+	bh=udMylYuK8HYXdKoGhrjwWETQV3x2IYojbCwCuoIuW8E=;
 	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-	b=F2RVAzLGmFka1Gnk+3bGzXGG4Vg3AJrr34jDoEI0J1wHVEuaYAwY2Lj7v6Lk84jQT
-	 f/enDga1CFkLwx7D6INgDsa0uSitF2LUBOUbA2se6JOB3/SRidaBXHBVVPSYnnC5kB
-	 1uVv320SR3lpFLUTRI5QCEJ1HjlDr036ZYFMorkEdgw6sx1qMF2oziWqxPgAhpp1Kr
-	 NUGzShFGi38IJ1zujDXMxqgH941dWYk7q9nGLdMhTGfC9byso9larVBrA66WtrpvHg
-	 aF8ev02MFQHBX8SsNwIdq29//VtVFz9Gu7siKPPRElGUiw33VWllZP3AKGU7HgGU4c
-	 /lGbJiasK2KNA==
+	b=VX1CswZC+CBZs/Im/HFRDf85cQOPfdL9DycPI0/mWqS46tsdam6eeXDEgRV3v63d0
+	 HFVQvYXTW9AMsJQTdyPj93j3Kz+jJ7yGNJu3IJA8B4Xv1IJXZNCcXcB8qzx08PYixn
+	 9r6Zs941ZdBlUE+pu/esW1kgxQ0sAcgH3SIOTcpAkHnMatSVJMG1Z9JScUc3p8WzrQ
+	 mx2lBSt6yYLBnYxaznoX3OhHBJsDcpgqhyCUIRIHkTciK1uM2lm9j+N+gYszcjWfW2
+	 OxvEpkxfFePyxzXhC60rND9hQG0nvf49bUuZRo4R2sviUjT9mPH77joOkNwuoQSsvc
+	 3w4Toe2JbR7lg==
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -33,51 +33,42 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] wifi: ath9k: Remove error checks when creating debugfs
- entries
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: ath12k: restore ASPM for supported hardwares only
 From: Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20240805110225.19690-1-toke@toke.dk>
-References: <20240805110225.19690-1-toke@toke.dk>
-To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
- Wang Ming <machel@vivo.com>, Kalle Valo <quic_kvalo@quicinc.com>,
- Minjie Du <duminjie@vivo.com>, linux-wireless@vger.kernel.org,
- =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgens?=
-	=?utf-8?q?en?= <toke@redhat.com>, dan.g.tob@gmail.com
+In-Reply-To: <20240709055817.3371406-1-quic_adisi@quicinc.com>
+References: <20240709055817.3371406-1-quic_adisi@quicinc.com>
+To: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Cc: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+ Aditya Kumar Singh
+	<quic_adisi@quicinc.com>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <172301816225.3837211.6304660014804789984.kvalo@kernel.org>
-Date: Wed,  7 Aug 2024 08:09:23 +0000 (UTC)
+Message-ID: <172301818779.3837211.5023880648651887884.kvalo@kernel.org>
+Date: Wed,  7 Aug 2024 08:09:49 +0000 (UTC)
 
-Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+Aditya Kumar Singh <quic_adisi@quicinc.com> wrote:
 
-> We should not be checking the return values from debugfs creation at all: the
-> debugfs functions are designed to handle errors of previously called functions
-> and just transparently abort the creation of debugfs entries when debugfs is
-> disabled. If we check the return value and abort driver initialisation, we break
-> the driver if debugfs is disabled (such as when booting with debugfs=off).
+> During PCI based hardware device start up, ASPM is disabled for all. And
+> once firmware is ready, it is restored back. However, not all hardwares
+> (for example QCN9274) supports ASPM. Hence there is a need to conditionally
+> restore ASPM back. Or else, for such hardwares, issue can be seen during
+> sending and receiving packets.
 > 
-> Earlier versions of ath9k accidentally did the right thing by checking the
-> return value, but only for NULL, not for IS_ERR(). This was "fixed" by the two
-> commits referenced below, breaking ath9k with debugfs=off starting from the 6.6
-> kernel (as reported in the Bugzilla linked below).
+> Introduce a new hardware param supports_aspm which identifies whether a
+> given hardware supports ASPM or not and then accordingly restore it.
 > 
-> Restore functionality by just getting rid of the return value check entirely.
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 > 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=219122
-> Fixes: 1e4134610d93 ("wifi: ath9k: use IS_ERR() with debugfs_create_dir()")
-> Fixes: 6edb4ba6fb5b ("wifi: ath9k: fix parameter check in ath9k_init_debug()")
-> Reported-by: Daniel Tobias <dan.g.tob@gmail.com>
-> Tested-by: Daniel Tobias <dan.g.tob@gmail.com>
-> Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+> Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+> Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 > Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-f6ffe7f01847 wifi: ath9k: Remove error checks when creating debugfs entries
+8be12629b428 wifi: ath12k: restore ASPM for supported hardwares only
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20240805110225.19690-1-toke@toke.dk/
+https://patchwork.kernel.org/project/linux-wireless/patch/20240709055817.3371406-1-quic_adisi@quicinc.com/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
