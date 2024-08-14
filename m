@@ -1,54 +1,57 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD9516BE13
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2024 09:44:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A96F16DEB9
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Aug 2024 09:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723628699; cv=none; b=TRnADrPgXe+IT+RLMKvyPkXU91Is5aT4wSMRIqr8YamqQsTsyUGixXF1FXVnXg79HL7NJCttou6KU2KeZca/La1fWOgqzNOXFaT8QqHOhg6Z1UsqM0BV8BBkxRWe3Wi5ovdJYa9vLNUVfuTjwa3cHnRGbVstGydLdDpYE1q9/4s=
+	t=1723628707; cv=none; b=mDttQtHGwbRRr0O5QqCmdeX0UUndO1ybrYF5Vrdy4r9lv06sk4Phv7nddnCNWpoLx0mxHOjbrzxfyNIZpVw0z9aQQdARAfYbKqJ1rQKnFb94nwUsbSyclH9AOhM6g1xIiQeQa6ZN/KfksHsMyZbA9PcIgaoTAo1MDMn8l2eRlbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723628699; c=relaxed/simple;
-	bh=EmyHcYr2R3cztoflD7rbb7zbpa+A3C8cUr8FJATVtho=;
+	s=arc-20240116; t=1723628707; c=relaxed/simple;
+	bh=Oy86LNP9KrOvNuLpy5ACIWOlE8oEdbi5ia9tI1XYA6M=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=li8M9F0uVwmF0nEXIhYePkJjb2vPhbX0+iUq8IYmqJY+RIM/PhRxyxGn1SagMvxrOf5oFruyiA+EWb1KUhRhjqMxRkoy1kkNF/3DuEnk8WjJ28bKmrffaG6jl/3+RvhdlPTh1RK9HYM6pr8JYjH0ybEgfI0V4rGtjF1iDtKu4PQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=IojmXFl9; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=t2pIsy+ye9brgpFTGT9OW6gyA92JIhAeKXPvU7Lp5WLL731o9ba0XV9gwsubwONVFBsQ7worYadlhYS5KpvjkQ0Ag/3riY/JtNrI89d6GLAe0g0QXe/SUH+1DKJg+Wv4Hius315IhBKoMHYBSV2+g1GsISQPMFTUzACD1T1d6dY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=grTQDPcN; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="IojmXFl9"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47E2clv2016977;
-	Wed, 14 Aug 2024 09:44:55 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="grTQDPcN"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47DNFc01032553;
+	Wed, 14 Aug 2024 09:45:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	6CZ3wsDki4Yjq6d7XGf9ovEe9RqWs2nfDi6Xyl1OkuE=; b=IojmXFl9SbHo7oNk
-	gX3u6KGa4FUzL7aJqX1Xk6VrFw5J6xJW9fkhvhwugvWt5XimhfeoEP2eBZBUDSYm
-	PONl3nZrxHY5y5lciecy3cW1Wl6OAGoDKzpFjzltcZs7CysMjfNfdvzHaiJmvS5X
-	aKXtuk42ocfuDC6eenSVhEne4zK97QR3lDQ9Z1jHwHyxakU8+f8qlqq5TWWQyTZp
-	efutjXedHX0PwaPTkIGJQh8WOO37czYz6Ubigj5wYGevUQGFVISlVlIvBOckcwgN
-	ReyLmIVV5eMSkzBKV2dKt15eVTTC4ZzCV0PKYIf5qp2+EZa1sgWV1w0wvMgbQO+K
-	TJP1aQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 410kywgyr1-1
+	F7HuTPC34AQoK6/xhxrg6FTfge3vbMgl0mXb071WtcI=; b=grTQDPcNtXf5k4I8
+	oBLtevmmUGRNBUeyb26mYZbjJ8Nc8UejFOM07mL21L5BiWjrAqOAPB2BwMQABat4
+	BZJT9avyve+xt2/az3sr82b7yn2mjuF1Qn9ZSXB7gMi2xXfSlAn9164Wai0ZuxUg
+	B/ROB4g++gADEX8rRMVR0EIvZHVVT2cpQfkXSYERPQFOTAyUkOR1Z7KnEKk7uYrS
+	XUiVXoyB7waIcUlUKRX1OI79GDhuYhbsnLJ4D2XF6tkVGUx8HMhVA1YziGe6Y9OE
+	Y2H8AzD2TmhmyeNRqekOon1M2cB1PRbKfpgqEw8hhAuXnMGk7t4LiTeCfTP+YhRK
+	AHrNgw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 410437uvp4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Aug 2024 09:44:55 +0000 (GMT)
+	Wed, 14 Aug 2024 09:45:01 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47E9isot010723
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47E9ixUY022033
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Aug 2024 09:44:54 GMT
+	Wed, 14 Aug 2024 09:44:59 GMT
 Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 14 Aug 2024 02:44:52 -0700
+ 15.2.1544.9; Wed, 14 Aug 2024 02:44:57 -0700
 From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-        Raj Kumar Bhagat
-	<quic_rajkbhag@quicinc.com>
-Subject: [RFC PATCH 16/18] wifi: ath12k: convert tasklet to BH workqueue for CE interrupts
-Date: Wed, 14 Aug 2024 15:13:21 +0530
-Message-ID: <20240814094323.3927603-17-quic_rajkbhag@quicinc.com>
+        Balamurugan S
+	<quic_bselvara@quicinc.com>,
+        P Praneesh <quic_ppranees@quicinc.com>,
+        "Raj
+ Kumar Bhagat" <quic_rajkbhag@quicinc.com>
+Subject: [RFC PATCH 18/18] wifi: ath12k: enable ath12k AHB support
+Date: Wed, 14 Aug 2024 15:13:23 +0530
+Message-ID: <20240814094323.3927603-19-quic_rajkbhag@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240814094323.3927603-1-quic_rajkbhag@quicinc.com>
 References: <20240814094323.3927603-1-quic_rajkbhag@quicinc.com>
@@ -64,109 +67,193 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: nT2fBkIlei8ng7udHneMYK64H_SbBArh
-X-Proofpoint-GUID: nT2fBkIlei8ng7udHneMYK64H_SbBArh
+X-Proofpoint-ORIG-GUID: leGvk85LtPd87zBSAIe3GeS0NQ-0EJ8d
+X-Proofpoint-GUID: leGvk85LtPd87zBSAIe3GeS0NQ-0EJ8d
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-14_07,2024-08-13_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=0
- impostorscore=0 mlxscore=0 phishscore=0 malwarescore=0 clxscore=1015
- mlxlogscore=984 priorityscore=1501 bulkscore=0 lowpriorityscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408140067
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ bulkscore=0 suspectscore=0 adultscore=0 mlxscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408140067
 
-Currently in Ath12k, tasklet is used to handle the BH context of CE
-interrupts. However the tasklet is marked deprecated and has some
-design flaws. To replace tasklets, BH workqueue support has been
-added. BH workqueue behaves similarly to regular workqueues except
-that the queued work items are executed in the BH context.
+From: Balamurugan S <quic_bselvara@quicinc.com>
 
-Hence, convert the tasklet to BH workqueue for handling CE interrupts
-in the BH context.
+Currently only PCI devices is supported in Ath12k driver. Refactor
+Ath12k module_init and module_exit to include Ath12k AHB support.
+
+Add Ath12k AHB support in Kconfig with dependency on Remoteproc
+driver. Ath12k AHB support relies on remoteproc driver for firmware
+download, power up/down etc.
 
 Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.3.1-00130-QCAHKSWPL_SILICONZ-1
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00210-QCAHKSWPL_SILICONZ-1
 
+Signed-off-by: Balamurugan S <quic_bselvara@quicinc.com>
+Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
 Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/ce.h  |  2 +-
- drivers/net/wireless/ath/ath12k/pci.c | 14 +++++++-------
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath12k/Kconfig  |  6 ++++
+ drivers/net/wireless/ath/ath12k/Makefile |  1 +
+ drivers/net/wireless/ath/ath12k/ahb.h    | 12 ++++++++
+ drivers/net/wireless/ath/ath12k/core.c   | 35 ++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath12k/pci.c    | 12 ++------
+ drivers/net/wireless/ath/ath12k/pci.h    |  2 ++
+ 6 files changed, 56 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/ce.h b/drivers/net/wireless/ath/ath12k/ce.h
-index 9dd71056e1c5..75c9f8f1f7c6 100644
---- a/drivers/net/wireless/ath/ath12k/ce.h
-+++ b/drivers/net/wireless/ath/ath12k/ce.h
-@@ -159,7 +159,7 @@ struct ath12k_ce_pipe {
- 	void (*send_cb)(struct ath12k_ce_pipe *pipe);
- 	void (*recv_cb)(struct ath12k_base *ab, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
+index f64e7c322216..f787bfe4b3a4 100644
+--- a/drivers/net/wireless/ath/ath12k/Kconfig
++++ b/drivers/net/wireless/ath/ath12k/Kconfig
+@@ -15,6 +15,12 @@ config ATH12K
  
--	struct tasklet_struct intr_tq;
-+	struct work_struct intr_wq;
- 	struct ath12k_ce_ring *src_ring;
- 	struct ath12k_ce_ring *dest_ring;
- 	struct ath12k_ce_ring *status_ring;
+ 	  If you choose to build a module, it'll be called ath12k.
+ 
++config ATH12K_AHB
++	bool "QTI ath12k AHB support"
++	depends on ATH12K && REMOTEPROC
++	help
++	  Enable support for Ath12k AHB bus chipsets, example IPQ5332.
++
+ config ATH12K_DEBUG
+ 	bool "ath12k debugging"
+ 	depends on ATH12K
+diff --git a/drivers/net/wireless/ath/ath12k/Makefile b/drivers/net/wireless/ath/ath12k/Makefile
+index 5a1ed20d730e..4b7b9404d0c6 100644
+--- a/drivers/net/wireless/ath/ath12k/Makefile
++++ b/drivers/net/wireless/ath/ath12k/Makefile
+@@ -23,6 +23,7 @@ ath12k-y += core.o \
+ 	    fw.o \
+ 	    p2p.o
+ 
++ath12k-$(CONFIG_ATH12K_AHB) += ahb.o
+ ath12k-$(CONFIG_ATH12K_DEBUGFS) += debugfs.o debugfs_htt_stats.o
+ ath12k-$(CONFIG_ACPI) += acpi.o
+ ath12k-$(CONFIG_ATH12K_TRACING) += trace.o
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.h b/drivers/net/wireless/ath/ath12k/ahb.h
+index 4a17e041c13a..4fdb493753d7 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.h
++++ b/drivers/net/wireless/ath/ath12k/ahb.h
+@@ -35,4 +35,16 @@ static inline struct ath12k_ahb *ath12k_ab_to_ahb(struct ath12k_base *ab)
+ 	return (struct ath12k_ahb *)ab->drv_priv;
+ }
+ 
++#ifdef CONFIG_ATH12K_AHB
++int ath12k_ahb_init(void);
++void ath12k_ahb_exit(void);
++#else
++static inline int ath12k_ahb_init(void)
++{
++	return 0;
++}
++
++static inline void ath12k_ahb_exit(void) {};
++#endif
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 51252e8bc1ae..a10f0dd295bc 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -9,15 +9,18 @@
+ #include <linux/remoteproc.h>
+ #include <linux/firmware.h>
+ #include <linux/of.h>
++#include "ahb.h"
+ #include "core.h"
+ #include "dp_tx.h"
+ #include "dp_rx.h"
+ #include "debug.h"
+-#include "hif.h"
+-#include "fw.h"
+ #include "debugfs.h"
++#include "fw.h"
++#include "hif.h"
++#include "pci.h"
+ #include "wow.h"
+ 
++static int ahb_err, pci_err;
+ unsigned int ath12k_debug_mask;
+ module_param_named(debug_mask, ath12k_debug_mask, uint, 0644);
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+@@ -1342,5 +1345,31 @@ struct ath12k_base *ath12k_core_alloc(struct device *dev, size_t priv_size,
+ 	return NULL;
+ }
+ 
+-MODULE_DESCRIPTION("Core module for Qualcomm Atheros 802.11be wireless LAN cards.");
++static int ath12k_init(void)
++{
++	ahb_err = ath12k_ahb_init();
++	if (ahb_err)
++		pr_warn("Failed to initialize ath12k AHB device: %d\n", ahb_err);
++
++	pci_err = ath12k_pci_init();
++	if (pci_err)
++		pr_warn("Failed to initialize ath12k PCI device: %d\n", pci_err);
++
++	/* If both failed, return one of the failures (arbitrary) */
++	return ahb_err && pci_err ? ahb_err : 0;
++}
++
++static void ath12k_exit(void)
++{
++	if (!pci_err)
++		ath12k_pci_exit();
++
++	if (!ahb_err)
++		ath12k_ahb_exit();
++}
++
++module_init(ath12k_init)
++module_exit(ath12k_exit)
++
++MODULE_DESCRIPTION("Driver support for Qualcomm Technologies 802.11be WLAN devices");
+ MODULE_LICENSE("Dual BSD/GPL");
 diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 0c393bc30f92..9a50d813e9b4 100644
+index 9a50d813e9b4..f4a868c2275e 100644
 --- a/drivers/net/wireless/ath/ath12k/pci.c
 +++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -425,9 +425,9 @@ static void ath12k_pci_sync_ce_irqs(struct ath12k_base *ab)
+@@ -1627,7 +1627,7 @@ static struct pci_driver ath12k_pci_driver = {
+ 	.driver.pm = &ath12k_pci_pm_ops,
+ };
+ 
+-static int ath12k_pci_init(void)
++int ath12k_pci_init(void)
+ {
+ 	int ret;
+ 
+@@ -1638,16 +1638,10 @@ static int ath12k_pci_init(void)
+ 		return ret;
  	}
- }
  
--static void ath12k_pci_ce_tasklet(struct tasklet_struct *t)
-+static void ath12k_pci_ce_workqueue(struct work_struct *work)
+-	return 0;
++	return ret;
+ }
+-module_init(ath12k_pci_init);
+ 
+-static void ath12k_pci_exit(void)
++void ath12k_pci_exit(void)
  {
--	struct ath12k_ce_pipe *ce_pipe = from_tasklet(ce_pipe, t, intr_tq);
-+	struct ath12k_ce_pipe *ce_pipe = from_work(ce_pipe, work, intr_wq);
- 	int irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + ce_pipe->pipe_num;
- 
- 	ath12k_ce_per_engine_service(ce_pipe->ab, ce_pipe->pipe_num);
-@@ -449,7 +449,7 @@ static irqreturn_t ath12k_pci_ce_interrupt_handler(int irq, void *arg)
- 
- 	disable_irq_nosync(ab->irq_num[irq_idx]);
- 
--	tasklet_schedule(&ce_pipe->intr_tq);
-+	queue_work(system_bh_wq, &ce_pipe->intr_wq);
- 
- 	return IRQ_HANDLED;
+ 	pci_unregister_driver(&ath12k_pci_driver);
  }
-@@ -675,7 +675,7 @@ static int ath12k_pci_config_irq(struct ath12k_base *ab)
- 
- 		irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + i;
- 
--		tasklet_setup(&ce_pipe->intr_tq, ath12k_pci_ce_tasklet);
-+		INIT_WORK(&ce_pipe->intr_wq, ath12k_pci_ce_workqueue);
- 
- 		ret = request_irq(irq, ath12k_pci_ce_interrupt_handler,
- 				  ab_pci->irq_flags, irq_name[irq_idx],
-@@ -962,7 +962,7 @@ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
- 						   PCI_EXP_LNKCTL_ASPMC);
- }
- 
--static void ath12k_pci_kill_tasklets(struct ath12k_base *ab)
-+static void ath12k_pci_cancel_workqueue(struct ath12k_base *ab)
- {
- 	int i;
- 
-@@ -972,7 +972,7 @@ static void ath12k_pci_kill_tasklets(struct ath12k_base *ab)
- 		if (ath12k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
- 			continue;
- 
--		tasklet_kill(&ce_pipe->intr_tq);
-+		cancel_work_sync(&ce_pipe->intr_wq);
- 	}
- }
- 
-@@ -980,7 +980,7 @@ static void ath12k_pci_ce_irq_disable_sync(struct ath12k_base *ab)
- {
- 	ath12k_pci_ce_irqs_disable(ab);
- 	ath12k_pci_sync_ce_irqs(ab);
--	ath12k_pci_kill_tasklets(ab);
-+	ath12k_pci_cancel_workqueue(ab);
- }
- 
- int ath12k_pci_map_service_to_pipe(struct ath12k_base *ab, u16 service_id,
+-
+-module_exit(ath12k_pci_exit);
+-
+-MODULE_DESCRIPTION("Driver support for Qualcomm Technologies PCIe 802.11be WLAN devices");
+-MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/ath/ath12k/pci.h b/drivers/net/wireless/ath/ath12k/pci.h
+index 31584a7ad80e..18648ca11dfc 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.h
++++ b/drivers/net/wireless/ath/ath12k/pci.h
+@@ -145,4 +145,6 @@ void ath12k_pci_stop(struct ath12k_base *ab);
+ int ath12k_pci_start(struct ath12k_base *ab);
+ int ath12k_pci_power_up(struct ath12k_base *ab);
+ void ath12k_pci_power_down(struct ath12k_base *ab, bool is_suspend);
++int ath12k_pci_init(void);
++void ath12k_pci_exit(void);
+ #endif /* ATH12K_PCI_H */
 -- 
 2.34.1
 
