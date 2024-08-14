@@ -1,104 +1,145 @@
-Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com [209.85.222.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13FC022EEF
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2024 23:39:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 069362FB6;
+	Wed, 14 Aug 2024 01:00:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723592382; cv=none; b=t/D/AOFYk6QOTdKjI+Rzv5b29sVLIYsVWx7Z7Ig3Dsnt6KV3n229j+IM1IM+DAKaljVwzI3qDplTkj3OekJxUSZgjLwfHxmcL6GMtBt0RF/fzyhlFQAzYtgOu1cf63qh18trRHPKsLLu69tpX2sQ1mF7FLITJKpwIB75eXxXEko=
+	t=1723597235; cv=none; b=K3bq8RVonj7OP6zkVz3QJMSx4gbj2DHFyM+MJA7XtOMlM/db0a0uPiJ6Y8OmmYi+SDCG1szFS68RIF4ga5BYKJ3bd5SgtNAiH6VU9k4TCin22bTdyASRpT9wQDOy8mZnCgDtMY6/mEXBUEnDoDvDeqHmhKbxGovFE1vlqQuKmEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723592382; c=relaxed/simple;
-	bh=Pd3HOMguHxSzpPeuDioCvnrJlFHD/UK1bGXz5hdR1fo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CbMUcg153A+5ygyiFo8txWWJXuHkjcCOvAaOmWO5Ukdj8qcTk0pnwZ7lIht0YXRncL8lHnZlne7QOY0Wua8D2RtkPDm7UEvXXw4sJoic+KbCloCBXJ+ELnmUzCoTlRPUWgYQwYso2daRXGzOW3zAdNFwas+y27gEtGhrqL6I6dI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=WpTb0Dd6; arc=none smtp.client-ip=209.85.222.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1723597235; c=relaxed/simple;
+	bh=Q4313Nae4Lqc0GNiN7hBuMoANe/tm2lHVmYGLX7lV60=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=vF1gskB7CScQ5oUORewCf030wWY3AUEeqg1W/lkT6JaiLG3xnVK5rY01tj6cTNl5P0bviNuq2N4VzXSvb2P0NfQ9WyKyMi/lb/iIV6M2LZd543rBA8ERSzuxyAPqW/ZYRnJL3NBrgNpafSWvBBefpZwggvy375M5M3EFJtOcTS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=P1aWuNG/; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="WpTb0Dd6"
-Received: by mail-ua1-f51.google.com with SMTP id a1e0cc1a2514c-820f7c6eaa5so2126705241.3
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2024 16:39:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1723592380; x=1724197180; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=98OTBv0aioFqa8eP+pfN2QrHRSjQQBWkH6KFwlgEV7s=;
-        b=WpTb0Dd6NjwUza5QGEsdiAJcn2waNH/7GQM+nR037OH9nQUplH9vn/ms2Ib6synhCt
-         3YClsehnYi5ozpXql/iWSY8eGgXR4NhUwThsXYNJnBZAJ6iz7AUNm+eIk19EQ44L8UmL
-         SuDu2HIgy+ZKlPgScbjwSIGb5uutc8GCHUTb/yRKeubc2jO8FRVxqLNthMPJEs5oUXU4
-         qIUpvct5btfjN1P1WtLmpVQG1w8CJ/l/WgXb/9ZHgYuVDu+xTQU2h25Jm8CVRxeR5V+6
-         slaOoaX8FNCyIdGLaJB+P7H0B/3uFA6V9tqJQpXC5NiMRWiPDky0qPWO2tmxv/iPAlUK
-         JnuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723592380; x=1724197180;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=98OTBv0aioFqa8eP+pfN2QrHRSjQQBWkH6KFwlgEV7s=;
-        b=VjnaAdicWYMJ/Ws2CuLc96R8O8eCnMPQ4h+9DIngfFDPCYlOUlDIa5VuBv6a7iYNaD
-         SXAIXJ89wwuN2zYIDRW7iEt2dEws3vVtt577VneioAILOr/7MOULmVeYIJ/HN43Qgd18
-         FQ4bqejHi3fdLdOv49Vbg6ohiwQ2hS9GkgkTkY4Mype8sphJJ3/INi5IBDB8o77Ge21H
-         5yZeMHTORgDSEqjllHNWBhMonyTW40kGO1BVQW+zP0sd2Gb/V0JkkqERBTR19lLmsE8z
-         1gPVRbbcaANkka5av5i/GSA+bFtaUCKmeaaE6BUqO3G/bOa9+yrpD7NXDZJrXi/Dq9wn
-         fRZg==
-X-Forwarded-Encrypted: i=1; AJvYcCU8GTH10+rwRQfbHPm3aW6rV3SvCTtXmWMb/etyzT+hXouBz0Vq2U/xz5QFU35RunyYNX2g57KcaLGDt44bAZYn3YtZWbs9UnhXaZav+5k=
-X-Gm-Message-State: AOJu0Yyw2W7zuliA0vHr7Yasr5xsMjKnEN4e1DF1w9rR21G2VjDPEHG0
-	mPy8NVMNxROuJVwMy5MJ/60LazihazV9R/+uo09y/OgpR4CeYOhl2u3cnNlIuPM=
-X-Google-Smtp-Source: AGHT+IE48TPAx7DnvwgaTUAY+Kff+tTrcpLLhWszaW51zZJR6kZlFg0WGCb5G5Fvkt7muunVnyyQLw==
-X-Received: by 2002:a05:6102:6ce:b0:48f:df47:a4a8 with SMTP id ada2fe7eead31-497599e66c9mr1595703137.29.1723592379937;
-        Tue, 13 Aug 2024 16:39:39 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-68-80-239.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.80.239])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6bd82ca1ab5sm37630276d6.62.2024.08.13.16.39.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Aug 2024 16:39:39 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.95)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1se175-00AOnT-0P;
-	Tue, 13 Aug 2024 20:39:39 -0300
-Date: Tue, 13 Aug 2024 20:39:39 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
-	quic_bqiang@quicinc.com, kvalo@kernel.org, prestwoj@gmail.com,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	dwmw2@infradead.org, iommu@lists.linux.dev, kernel@quicinc.com,
-	johannes@sipsolutions.net, jtornosm@redhat.com
-Subject: Re: [PATCH RFC/RFT] vfio/pci: Create feature to disable MSI
- virtualization
-Message-ID: <20240813233939.GT1985367@ziepe.ca>
-References: <adcb785e-4dc7-4c4a-b341-d53b72e13467@gmail.com>
- <20240812170014.1583783-1-alex.williamson@redhat.com>
- <20240813163053.GK1985367@ziepe.ca>
- <87r0aspby6.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="P1aWuNG/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1723597231;
+	bh=hxBR2JKtbxevnnw9USR6AjGTYuarhQrbk0EjhnncH00=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=P1aWuNG/WVcKA6KguPTWjJoM4DHtqO4fa9ZBUKUBhGGk9WbLnL3MIEAh2KFTtDGnS
+	 a9yGCewD3nEqvZYHNh6PBvKuij6LTaRz8H1nbAnoaA1X9av0Pnayu3g7b8ej+m4Ehd
+	 LxfRMmL9X8X/G3rOa10xIYhcabf06uPSpHRfyPCn2cHqCmwI32MmHZfNOMOhkxaV9p
+	 zxDVRHw43FKe9p5dStvaFHWxGdDXWQADbr529hGP1YfPabK0FhMAoVowbYJmDZS6d+
+	 la/I33a/W3AphcMe51DuLEFTcXdi3mm0MvKQuozWZFtTGVDORK0pdk5nDLuK1L2o8f
+	 HeCeZbs9Ug4Ug==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Wk90N03WYz4x2J;
+	Wed, 14 Aug 2024 11:00:19 +1000 (AEST)
+Date: Wed, 14 Aug 2024 11:00:19 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+ Johannes Berg <johannes@sipsolutions.net>
+Cc: Ath10k List <ath10k@lists.infradead.org>, Aditya Kumar Singh
+ <quic_adisi@quicinc.com>, Baochen Qiang <quic_bqiang@quicinc.com>, Kalle
+ Valo <quic_kvalo@quicinc.com>, Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>, Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the ath-next tree with the ath tree
+Message-ID: <20240814110019.6be39d14@canb.auug.org.au>
+In-Reply-To: <20240808104348.6846e064@canb.auug.org.au>
+References: <20240808104348.6846e064@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87r0aspby6.ffs@tglx>
+Content-Type: multipart/signed; boundary="Sig_/c825WGxscMug2D7jB7kHQCF";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-On Tue, Aug 13, 2024 at 07:30:41PM +0200, Thomas Gleixner wrote:
-> > Howver, it will still not work in a VM. Making IMS and non-MSI
-> > interrupt controlers work within VMs is still something that needs to
-> > be done.
-> 
-> Sure, but we really want to do that in a generic way and not based on ad
-> hoc workarounds.
+--Sig_/c825WGxscMug2D7jB7kHQCF
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+Hi all,
+
+On Thu, 8 Aug 2024 10:43:48 +1000 Stephen Rothwell <sfr@canb.auug.org.au> w=
+rote:
 >
-> Did the debate around this go anywhere?
+> Today's linux-next merge of the ath-next tree got a conflict in:
+>=20
+>   drivers/net/wireless/ath/ath12k/hw.c
+>=20
+> between commit:
+>=20
+>   38055789d151 ("wifi: ath12k: use 128 bytes aligned iova in transmit pat=
+h for WCN7850")
+>=20
+> from the ath tree and commit:
+>=20
+>   8be12629b428 ("wifi: ath12k: restore ASPM for supported hardwares only")
+>=20
+> from the ath-next tree.
+>=20
+> I fixed it up (see below) and can carry the fix as necessary. This
+> is now fixed as far as linux-next is concerned, but any non trivial
+> conflicts should be mentioned to your upstream maintainer when your tree
+> is submitted for merging.  You may also want to consider cooperating
+> with the maintainer of the conflicting tree to minimise any particularly
+> complex conflicts.
+>=20
+> diff --cc drivers/net/wireless/ath/ath12k/hw.c
+> index 7b0b6a7f4701,76c0e07a88de..000000000000
+> --- a/drivers/net/wireless/ath/ath12k/hw.c
+> +++ b/drivers/net/wireless/ath/ath12k/hw.c
+> @@@ -925,7 -925,7 +925,9 @@@ static const struct ath12k_hw_params at
+>   		.acpi_guid =3D NULL,
+>   		.supports_dynamic_smps_6ghz =3D true,
+>  =20
+>  +		.iova_mask =3D 0,
+> ++
+> + 		.supports_aspm =3D false,
+>   	},
+>   	{
+>   		.name =3D "wcn7850 hw2.0",
+> @@@ -1003,7 -1003,7 +1005,9 @@@
+>   		.acpi_guid =3D &wcn7850_uuid,
+>   		.supports_dynamic_smps_6ghz =3D false,
+>  =20
+>  +		.iova_mask =3D ATH12K_PCIE_MAX_PAYLOAD_SIZE - 1,
+> ++
+> + 		.supports_aspm =3D true,
+>   	},
+>   	{
+>   		.name =3D "qcn9274 hw2.0",
+> @@@ -1077,7 -1077,7 +1081,9 @@@
+>   		.acpi_guid =3D NULL,
+>   		.supports_dynamic_smps_6ghz =3D true,
+>  =20
+>  +		.iova_mask =3D 0,
+> ++
+> + 		.supports_aspm =3D false,
+>   	},
+>   };
+>  =20
 
-No, it got stuck on the impossible situation that there is no existing
-way for the VM to have any idea if IMS will work or is broken. Recall
-Intel was planning to "solve" this by sticking a DVSEC in their
-virtual config space that said to turn off IMS :\
+This is now a conflict between the wireless-next tree and the ath tree.
 
-So using IMS in the real world looked impractical and interest faded a
-bit.
+--=20
+Cheers,
+Stephen Rothwell
 
-But the underlying reasons for IMS haven't gone away and more work is
-coming that will bring it up again...
+--Sig_/c825WGxscMug2D7jB7kHQCF
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Jason
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAma8AaMACgkQAVBC80lX
+0GzgsQf8CVhJeXJ3Fb5qihfwfTMiMiPTEAec9mao3QEzcMpSj2k4Cx80BPSR4xzc
+9NffwOXVpbfK5lQOlKO5DAL4SHXwjLHJIX2gc4pOy0WmjAygFCY3fpC6i3ivCDv/
+Joy5V1yPBEUXxNKJioQOpK4T1vJsTck7YaYGEdCCOxESEwDo15ebeQBm/155Te+p
+c8llPlZhi9I03Vpc+jE8rpmJRpEzH+sIq4dOUNyhmUga0WV7B/p+CV5Yg+8liKB4
+wRqepGWe2JEWx5SkJqESxGmbTyjdc0TwdTeddtXQcf50fyEV/ODNheI2mJmYQx3w
+hQL2b4cEirIu8JR/TWC1aTVSes6NUA==
+=VV+7
+-----END PGP SIGNATURE-----
+
+--Sig_/c825WGxscMug2D7jB7kHQCF--
