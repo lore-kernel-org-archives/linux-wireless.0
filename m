@@ -1,94 +1,76 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8D1316C6A7
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 10:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A7D916F27C;
+	Fri, 16 Aug 2024 10:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723802618; cv=none; b=obgqJ1aQ593Q5mJJltq4uzkA4wCUYLJ6zwR1HNWj5C88pALUga4lWnZPWFfwQG77G5dDf/q51LHfHHJUDE3u0EcE7QhcjzYBMp6Pqcq9gm+61He2+LJrBbd9ojG75D3gZFLfz3FFuKaX2khlVLMzCiZD9taMqbCQv3NuAwh9oTQ=
+	t=1723802841; cv=none; b=I60UT3I+2hScuYl39tWoedEi5BO/nQ1ufdSvc2n6j5foaSzahwxzSYVRCY7czAJ7bkiAM0NuBNGZj1C/Q59czCfEDcIs0lhuxQsRVRoBwJOinPMZE+XSCyiEc2VnD9HwrN0YzyWFwc02PHgjIhMD1ljjjSuPlxq1k/GktlF6PX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723802618; c=relaxed/simple;
-	bh=eWQsbuRXWAzlvnnlT1UQQi/8ux2tQF2eKmbfVbzAM+w=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mHTTsXuIqvovtTOeu6Egvv1xjS9cscV7KY1sC8pfGy/0Fz2F/ihFW5D6k3w56Sv2dSyaEDd4sybweb7SpfXaVrQl5XiVA9VbwKN9lZGGy9SuZWqNxkFbMSbTRUnS1otdUjDsY+APNKo4Rw/KvngFiqnSHNFoWdp/2FY2D1OFfSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=p8vY1Irh; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1723802841; c=relaxed/simple;
+	bh=Mbc+sLuhxuPXBjCsvB2V5cqv1xkV7XhLkdGzIspi/LI=;
+	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
+	 Cc:Message-ID:Date; b=NZyKOD2m/t3n9f2aYjZG96SblwTtXcmBAJBYR3LUCgsBRXCFgjPeBMaygMbVD4napn8CcC/JoUUVjh5h15o0L4D1ThaToOhO+K4fgP2TXXXGzmUxqj79UZpfTJXI094GGGofngzNfH9FIgnRjNBQb8NoL3tJGIuWWWYwr86wMVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NFwpjc6D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="p8vY1Irh"
-X-UUID: aad44c385bb411ef8b96093e013ec31c-20240816
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=zaAas9QhOPswdEwX29L981sav0R3IkIAazBDWezta+g=;
-	b=p8vY1IrhcbMc4vSBkiuXLAaLdm+exomUiIgTifTEik4UFC6NsmRVcsvPGK6i+H71a/CnfN+8bHB4CtodJYJA6MJZF3whFF9RtJdvU6i1f62j0ylCqRV1m83qAiXiEV1Vi3gMNRLvLyaBp5sDmEsZt/+IAoVcepnMDfldAi+phpQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:ad8a3fb5-c046-4b77-9d85-c96b7d352199,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:6dc6a47,CLOUDID:31c0b6c1-acff-4a0f-9582-14bcdf4ed7e0,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
-	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: aad44c385bb411ef8b96093e013ec31c-20240816
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <shayne.chen@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1687346882; Fri, 16 Aug 2024 17:48:19 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 16 Aug 2024 02:48:19 -0700
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 16 Aug 2024 17:48:19 +0800
-From: Shayne Chen <shayne.chen@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>
-CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
-	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
-	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Peter Chiu
-	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 01/12] wifi: mt76: mt7996: use hweight16 to get correct tx antenna
-Date: Fri, 16 Aug 2024 17:46:25 +0800
-Message-ID: <20240816094635.2391-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NFwpjc6D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7083AC4AF0C;
+	Fri, 16 Aug 2024 10:07:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723802841;
+	bh=Mbc+sLuhxuPXBjCsvB2V5cqv1xkV7XhLkdGzIspi/LI=;
+	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+	b=NFwpjc6DxIt0P3Xu9hhXPrfIz1Kb5xMwxH/etzQdi9anH3vhREc2IVmsJO5buK8IP
+	 ArVXsJ3N3cprgO+IUQLwk4MmZY3Bz2J8bMd5dnNRyhBqscgkzi9iJYOsV4tZss43UN
+	 FlHwVCpISLZr9VEaABnsFP4WwrlOT8yVLcclZeotrMyJfRBJJhWiSoDM9wGTCGIhep
+	 CADxlNDl46o6YJCtwySnnNHmHLLY1d9Pb+6W0ypInRFCq++Ib+vLROs7ci//I9lEhy
+	 MLAuQMBB0EUO8x73AC9sI5rfBoKYFJELCTYZ88FG3y3p13WIZxoHKcpo7nBIEaLzTg
+	 5VieUhHUgRi+A==
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wifi: mwifiex: keep mwifiex_cfg80211_ops constant
+From: Kalle Valo <kvalo@kernel.org>
+In-Reply-To: 
+ <20240809-mwifiex-duplicate-mwifiex_cfg80211_ops-v1-1-23e0e6290ace@pengutronix.de>
+References: 
+ <20240809-mwifiex-duplicate-mwifiex_cfg80211_ops-v1-1-23e0e6290ace@pengutronix.de>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Brian Norris <briannorris@chromium.org>,
+ Francesco Dolcini <francesco@dolcini.it>, David Lin <yu-hao.lin@nxp.com>,
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>
+User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
+Message-ID: <172380283788.1488109.5178167432284634889.kvalo@kernel.org>
+Date: Fri, 16 Aug 2024 10:07:19 +0000 (UTC)
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+Sascha Hauer <s.hauer@pengutronix.de> wrote:
 
-The chainmask is u16 so using hweight8 cannot get correct tx_ant.
-Without this patch, the tx_ant of band 2 would be -1 and lead to the
-following issue:
-BUG: KASAN: stack-out-of-bounds in mt7996_mcu_add_sta+0x12e0/0x16e0 [mt7996e]
+> With host_mlme support being added mwifiex_cfg80211_ops is no longer
+> constant, but supplemented with the host_mlme related ops when host_mlme
+> support is enabled. This doesn't work with multiple adapters when only
+> few of then have host_mlme support. Duplicate mwifiex_cfg80211_ops
+> before using it and keep the original constant.
+> 
+> While at it mark mwifiex_cfg80211_ops const to prevent people from
+> changing it again during runtime.
+> 
+> Fixes: 36995892c271c ("wifi: mwifiex: add host mlme for client mode")
+> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+> Acked-by: Brian Norris <briannorris@chromium.org>
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Patch applied to wireless-next.git, thanks.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 2e4fa9f48dfb..e68724e54013 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -1653,7 +1653,7 @@ mt7996_mcu_sta_bfer_tlv(struct mt7996_dev *dev, struct sk_buff *skb,
- {
- 	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
- 	struct mt7996_phy *phy = mvif->phy;
--	int tx_ant = hweight8(phy->mt76->chainmask) - 1;
-+	int tx_ant = hweight16(phy->mt76->chainmask) - 1;
- 	struct sta_rec_bf *bf;
- 	struct tlv *tlv;
- 	static const u8 matrix[4][4] = {
+daaf0dd0398d wifi: mwifiex: keep mwifiex_cfg80211_ops constant
+
 -- 
-2.39.2
+https://patchwork.kernel.org/project/linux-wireless/patch/20240809-mwifiex-duplicate-mwifiex_cfg80211_ops-v1-1-23e0e6290ace@pengutronix.de/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
