@@ -1,221 +1,132 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1681C0DCC
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 17:35:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 379771BDABF;
+	Fri, 16 Aug 2024 17:54:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723829744; cv=none; b=qR+jq9DBCsxeG384qyOg0XaoU711WTHK41+0JRgoAT8IUstFO/w2JqfRf5GReliochG0rKfyBzScvAGZJyyhNy3YmMuClJz9ujtPFfQgqvfVxH7aw86OrNaPZxC4BuxAcGNLnY36by4Yh7Vo0vzKBfXrRwgvG/4xXqjkGXwLJJk=
+	t=1723830887; cv=none; b=EkFSRbzX+EezKCzpAjlRnWzueS6ROJQ9RcRyvyEk31+OX0tBY17hfqAqjXZ5Otn25QnLVn9zoxP0HoY21iWT6BwaUS/ELXLzrUXA9ivnzRUHnlXdXigRCXpW7F/nZE7y61pO0xzCQP1MGG0pDgLvUT6Tmtr8T/q61Ec+UhD/xWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723829744; c=relaxed/simple;
-	bh=IlYzzxtq5fy7uhAzu5u2JVtEeiB5FRAlWMCBrqssWac=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VxU+t0q98U4osqi+msJNNtPm5/Z48hVoKGEmy3StAK9YbWQ8NO9uFq7Lm2QAhQlanHipOSWvRblosdCermtiLwy0Feh/0yS5ePFFREHTjwB0LPAXyBxy1VJh007Hqqmkd9kv5bZig6Wy5P39JhZTy++k0EARlo3LFXihzZSN7do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=kcWYx8fh; arc=none smtp.client-ip=46.4.11.11
+	s=arc-20240116; t=1723830887; c=relaxed/simple;
+	bh=HMB0d+zljnptTuvZ1g8V5KUfYZO4UpuXN546qJSAXp8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=evC2Ab/dGwfTk3Zi1+tLH5iQ4Fg91oAX43qjtXDmrwfIvqbjcEF6ZbW5KRpLpDIB673yRGPOxAiaQyqILxmgiF+VzB/s76Ppy3OiVOr+vqojE8ck4ND3hLVv6zGXTPsIMk3Aw0+kG8Hm/OOdvfEXwlvNe0y7vY1umzyToxYyE2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=drtO67jT; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kcWYx8fh"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="drtO67jT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=OmdGPetB4G83SjQzABQ2lRbTLyOc/EyD59Q72rTeCq0=; b=kcWYx8fhvsuCaOJihHETeOXzJK
-	DhheToQfYMMAtNGmqi+V95r5vaQUNtixXp1Sz+vyF4hZ0U5HffrvD0GXfCJEAYRpapTZQnf2cQZk7
-	r2paqe/Yxzk4LwpTUwE+zRZJ7OJuZNo42czwjwNGlbNt4rlWxYWkH/DZ8iV2K3tS8Hxo=;
-Received: from p54ae95e7.dip0.t-ipconnect.de ([84.174.149.231] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=ux1Pje6IouuaMV0vQ1FJ2Gn5ipMIE7UWoQgOp5npzjk=; b=drtO67jTe4JWRWo5YsvE0LF9zJ
+	xJPioUbqZb8A1vrMJ9br1FZmcWlJJh0aTDsxFIfC6VgA5gDJDwGcb0UmChB4BuQNRR+S1DcZrr82h
+	f3EUA4yjstdJX+q2pk08eWOPY/qh/FP2aVhX3LIJl2/Ohxv5CZellCQ8O5t9bTVeJ01U=;
+Received: from p54ae95e7.dip0.t-ipconnect.de ([84.174.149.231] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sf0rS-000ObE-0Z
-	for linux-wireless@vger.kernel.org;
-	Fri, 16 Aug 2024 19:35:38 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/16] wifi: mt76: connac: add support for passing connection state directly
-Date: Fri, 16 Aug 2024 19:35:23 +0200
-Message-ID: <20240816173529.17873-10-nbd@nbd.name>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240816173529.17873-1-nbd@nbd.name>
-References: <20240816173529.17873-1-nbd@nbd.name>
+	id 1sf19c-000OvR-1u;
+	Fri, 16 Aug 2024 19:54:24 +0200
+Message-ID: <e7435c73-1d01-40e8-82b3-4e5456fccf2f@nbd.name>
+Date: Fri, 16 Aug 2024 19:54:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: mac80211: Fix ieee80211_convert_to_unicast() logic
+To: Jeff Johnson <quic_jjohnson@quicinc.com>,
+ =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
+ Johannes Berg <johannes@sipsolutions.net>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Michael Braun <michael-dev@fami-braun.de>
+Cc: Harsh Kumar Bijlani <hbijlani@qti.qualcomm.com>,
+ Kalyan Tallapragada <ktallapr@qti.qualcomm.com>,
+ Jyothi Chukkapalli <jchukkap@qti.qualcomm.com>,
+ Anirban Sirkhell <anirban@qti.qualcomm.com>,
+ Johannes Berg <johannes.berg@intel.com>, linux-wireless@vger.kernel.org,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ ath12k@lists.infradead.org
+References: <20240815-ieee80211_convert_to_unicast-v1-1-648f0c195474@quicinc.com>
+ <877ccgd7re.fsf@toke.dk> <229bcc37-de76-40ea-a30a-14e54a73265d@quicinc.com>
+From: Felix Fietkau <nbd@nbd.name>
+Content-Language: en-US
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+In-Reply-To: <229bcc37-de76-40ea-a30a-14e54a73265d@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Preparation for improvements to sta handling. No functional changes.
+On 16.08.24 16:30, Jeff Johnson wrote:
+> On 8/16/2024 4:31 AM, Toke Høiland-Jørgensen wrote:
+>> Jeff Johnson <quic_jjohnson@quicinc.com> writes:
+>> 
+>>> The current logic in ieee80211_convert_to_unicast() uses skb_clone()
+>>> to obtain an skb for each individual destination of a multicast
+>>> frame, and then updates the destination address in the cloned skb's
+>>> data buffer before placing that skb on the provided queue.
+>>>
+>>> This logic is flawed since skb_clone() shares the same data buffer
+>>> with the original and the cloned skb, and hence each time the
+>>> destination address is updated, it overwrites the previous destination
+>>> address in this shared buffer. As a result, due to the special handing
+>>> of the first valid destination, all of the skbs will eventually be
+>>> sent to that first destination.
+>> 
+>> Did you actually observe this happen in practice? ieee80211_change_da()
+>> does an skb_ensure_writable() check on the Ethernet header before
+>> writing it, so AFAICT it does not, in fact, overwrite the data of the
+>> original frame.
+> 
+> I'm proxying this change for our internal team, and they have observed that
+> unicast frames are not being sent to the separate STAs.
+> 
+> In response to your reply I went through the code again and it seems the
+> manner in which this functionality fails isn't as it was described to me.
+> 
+> Instead this functionality fails because we'd fail on the first
+> ieee80211_change_da() call and hence goto multicast and where only the
+> original skb would be queued and transmitted as a multicast frame
+> 
+> So the original logic is still faulty, only the actual faulty behavior is not
+> being described correctly: instead of sending multiple unicast frames to the
+> same STA we'd send a single multicast frame.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c |  4 +++-
- .../wireless/mediatek/mt76/mt76_connac_mcu.c    | 17 ++++++++---------
- .../wireless/mediatek/mt76/mt76_connac_mcu.h    |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c |  4 +++-
- drivers/net/wireless/mediatek/mt76/mt7925/mcu.c |  5 ++++-
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c |  4 +++-
- 6 files changed, 22 insertions(+), 14 deletions(-)
+While I agree with switching over to skb_copy (or maybe pskb_copy to 
+reduce realloc on fragmented skbs), it's still not clear to me why 
+ieee80211_change_da fails. It should detect that the packet was cloned, 
+letting pskb_expand_head reallocate the head of the skb.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 3b57d967190a..f6eb9939c3e2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -847,6 +847,7 @@ mt7615_mcu_wtbl_sta_add(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 	struct wtbl_req_hdr *wtbl_hdr;
- 	struct mt7615_sta *msta;
- 	bool new_entry = true;
-+	int conn_state;
- 	int cmd, err;
- 
- 	msta = sta ? (struct mt7615_sta *)sta->drv_priv : &mvif->sta;
-@@ -863,8 +864,9 @@ mt7615_mcu_wtbl_sta_add(struct mt7615_phy *phy, struct ieee80211_vif *vif,
- 		else
- 			mvif->sta_added = true;
- 	}
-+	conn_state = enable ? CONN_STATE_PORT_SECURE : CONN_STATE_DISCONNECT;
- 	mt76_connac_mcu_sta_basic_tlv(&dev->mt76, sskb, vif, link_sta,
--				      enable, new_entry);
-+				      conn_state, new_entry);
- 	if (enable && sta)
- 		mt76_connac_mcu_sta_tlv(phy->mt76, sskb, sta, vif, 0,
- 					MT76_STA_INFO_STATE_ASSOC);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-index 4dce03ddbfa4..7afb9ac30ab9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-@@ -371,7 +371,7 @@ EXPORT_SYMBOL_GPL(mt76_connac_mcu_bss_omac_tlv);
- void mt76_connac_mcu_sta_basic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_link_sta *link_sta,
--				   bool enable, bool newly)
-+				   int conn_state, bool newly)
- {
- 	struct sta_rec_basic *basic;
- 	struct tlv *tlv;
-@@ -382,13 +382,9 @@ void mt76_connac_mcu_sta_basic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
- 	basic = (struct sta_rec_basic *)tlv;
- 	basic->extra_info = cpu_to_le16(EXTRA_INFO_VER);
- 
--	if (enable) {
--		if (newly)
--			basic->extra_info |= cpu_to_le16(EXTRA_INFO_NEW);
--		basic->conn_state = CONN_STATE_PORT_SECURE;
--	} else {
--		basic->conn_state = CONN_STATE_DISCONNECT;
--	}
-+	if (newly && conn_state != CONN_STATE_DISCONNECT)
-+		basic->extra_info |= cpu_to_le16(EXTRA_INFO_NEW);
-+	basic->conn_state = conn_state;
- 
- 	if (!link_sta) {
- 		basic->conn_type = cpu_to_le32(CONNECTION_INFRA_BC);
-@@ -1051,15 +1047,18 @@ int mt76_connac_mcu_sta_cmd(struct mt76_phy *phy,
- 	struct wtbl_req_hdr *wtbl_hdr;
- 	struct tlv *sta_wtbl;
- 	struct sk_buff *skb;
-+	int conn_state;
- 
- 	skb = mt76_connac_mcu_alloc_sta_req(dev, mvif, info->wcid);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
-+	conn_state = info->enable ? CONN_STATE_PORT_SECURE :
-+				    CONN_STATE_DISCONNECT;
- 	link_sta = info->sta ? &info->sta->deflink : NULL;
- 	if (info->sta || !info->offload_fw)
- 		mt76_connac_mcu_sta_basic_tlv(dev, skb, info->vif,
--					      link_sta, info->enable,
-+					      link_sta, conn_state,
- 					      info->newly);
- 	if (info->sta && info->enable)
- 		mt76_connac_mcu_sta_tlv(phy, skb, info->sta,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 4242d436de26..e04ae7eddb01 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1898,7 +1898,7 @@ int mt76_connac_mcu_set_vif_ps(struct mt76_dev *dev, struct ieee80211_vif *vif);
- void mt76_connac_mcu_sta_basic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
- 				   struct ieee80211_vif *vif,
- 				   struct ieee80211_link_sta *link_sta,
--				   bool enable, bool newly);
-+				   int state, bool newly);
- void mt76_connac_mcu_wtbl_generic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
- 				      struct ieee80211_vif *vif,
- 				      struct ieee80211_sta *sta, void *sta_wtbl,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 43f1a45b34ab..10de8b994e2e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -1663,6 +1663,7 @@ int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 	struct ieee80211_link_sta *link_sta;
- 	struct mt7915_sta *msta;
- 	struct sk_buff *skb;
-+	int conn_state;
- 	int ret;
- 
- 	msta = sta ? (struct mt7915_sta *)sta->drv_priv : &mvif->sta;
-@@ -1674,7 +1675,8 @@ int mt7915_mcu_add_sta(struct mt7915_dev *dev, struct ieee80211_vif *vif,
- 		return PTR_ERR(skb);
- 
- 	/* starec basic */
--	mt76_connac_mcu_sta_basic_tlv(&dev->mt76, skb, vif, link_sta, enable,
-+	conn_state = enable ? CONN_STATE_PORT_SECURE : CONN_STATE_DISCONNECT;
-+	mt76_connac_mcu_sta_basic_tlv(&dev->mt76, skb, vif, link_sta, conn_state,
- 				      !rcu_access_pointer(dev->mt76.wcid[msta->wcid.idx]));
- 	if (!enable)
- 		goto out;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 9dc22fbe25d3..473ed54e8710 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -1770,16 +1770,19 @@ mt7925_mcu_sta_cmd(struct mt76_phy *phy,
- 	struct mt76_vif *mvif = (struct mt76_vif *)info->vif->drv_priv;
- 	struct mt76_dev *dev = phy->dev;
- 	struct sk_buff *skb;
-+	int conn_state;
- 
- 	skb = __mt76_connac_mcu_alloc_sta_req(dev, mvif, info->wcid,
- 					      MT7925_STA_UPDATE_MAX_SIZE);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
-+	conn_state = info->enable ? CONN_STATE_PORT_SECURE :
-+				    CONN_STATE_DISCONNECT;
- 	if (info->link_sta)
- 		mt76_connac_mcu_sta_basic_tlv(dev, skb, info->vif,
- 					      info->link_sta,
--					      info->enable, info->newly);
-+					      conn_state, info->newly);
- 	if (info->link_sta && info->enable) {
- 		mt7925_mcu_sta_phy_tlv(skb, info->vif, info->link_sta);
- 		mt7925_mcu_sta_ht_tlv(skb, info->link_sta);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index a1a0df43e1cd..caa0ff619475 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -2163,6 +2163,7 @@ int mt7996_mcu_add_sta(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 	struct ieee80211_link_sta *link_sta;
- 	struct mt7996_sta *msta;
- 	struct sk_buff *skb;
-+	int conn_state;
- 	int ret;
- 
- 	msta = sta ? (struct mt7996_sta *)sta->drv_priv : &mvif->sta;
-@@ -2175,8 +2176,9 @@ int mt7996_mcu_add_sta(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 		return PTR_ERR(skb);
- 
- 	/* starec basic */
-+	conn_state = enable ? CONN_STATE_PORT_SECURE : CONN_STATE_DISCONNECT;
- 	mt76_connac_mcu_sta_basic_tlv(&dev->mt76, skb, vif, link_sta,
--				      enable, newly);
-+				      conn_state, newly);
- 
- 	if (!enable)
- 		goto out;
--- 
-2.44.0
+Please run some more tests to figure out the exact reason for the 
+failure. There might be another hidden bug lurking there, which would 
+get papered over by this change.
 
+- Felix
