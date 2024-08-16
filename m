@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C99C31BF324
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 17:35:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 154CA1BE241
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 17:35:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723829741; cv=none; b=GRQY5lL4VgMajfdOnb6NCO8O8byRbKBfvXp4icuwK/9GFsdMVFnZTvy8HV1p4Kutt2MIltf0nR+zFz9mw5Er3Q0d4llbjmVws3JoRpMdV7yQ8ICoyjCnW5u7TFs6TsBMbdPjBI2n1Xjr8Zjsbf4XGYhj/xliodBFJTI0UrhBjaI=
+	t=1723829742; cv=none; b=qQdIRmq4TbCWszi/+23E1pntSYpOczU6mLeTXcVzM2a1eDlZGYgbZ4RPsOeymsTxAlKHqRpxRtJnImefIa7Zay8CFcrdxWzHMLMA5f+reoIv1v+9zMHHVcCXh0FAmOFmx9jsir9izaJGfgC9KOs7g93bCNt0xo/gIZmqeNXo0Q0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723829741; c=relaxed/simple;
-	bh=OdEKbaFJw5tmylo0Q1lvTvctOC14bj0AhR52G97rJuE=;
+	s=arc-20240116; t=1723829742; c=relaxed/simple;
+	bh=6JvKKnjauzPNUMed2tZgggpq5YMFYaHv5eLeeqPGNCU=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SLoeH5+dnLVv6WC9MSc4tlAchd5N55asjRGkGS1bsfH0/aSNmYvd72U5VifmoyTLiuf3+R44LgIiK2FTGXKbaO2vE6WpT5IGWqNsMKJjSBfkvgaLWHteZ+O8plhNz56JvC3Q+ySwKtVbnr40tNoqWDeeyRfuX7ZPwMLsmlATVrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=tEU3Fd9K; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=emqpScQCBD4sjGUVpKqG0zOFZzEM1EixvZ+0yqFFgFoOqe7rFyb/DvyAGaNUlolQZmqbnGsKnJ1ydTtK9qPH93apqrALIfUuH7UY0tQWcn06sa4gPkjb73m1tYS/e22GAzAw4GCNfoMrMxNQIndkU30PUsToGI9+pN5Q7l3AZEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=jbb04A+J; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tEU3Fd9K"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jbb04A+J"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=o7eZBopJ5GL1TGY41TKBK9+jKOPoROCUIpmy2J1xPgI=; b=tEU3Fd9KqAlXMe7FC6KfDXlUF6
-	4Mi67tZmbdAYx2aHjfT3frX+I2dQxH+YdwrTaUVOIX5oGVDtPJlmokOaftpaMGrTUXaYgm9tR647Q
-	IkFsbynbWaehRyDf5/fiMXIY3XGVqXYclWtMlKK2TzBJUvgKbtLwhZ9CeQ9YrfpTNPqU=;
+	bh=Ckco8k11aZf2VVoEn/18iDBDK/XFXBe4Kf83SDkIRf4=; b=jbb04A+J7nh91Odd/jEMvCVb8y
+	BYSRz0OdWxw8GQOPVeuZ8WS0B2JCcPluwwXlkSwAK1vWye+L3RhFarSs6W+SX5C1sk+fDOlK4hHej
+	Su66x4otK2PcQrAlZL5iFwVZdEQRXkJRAkWintAokRMWfky8J/XsiPrUn2ZDKthlqTuc=;
 Received: from p54ae95e7.dip0.t-ipconnect.de ([84.174.149.231] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sf0rR-000ObE-31
+	id 1sf0rR-000ObE-0j
 	for linux-wireless@vger.kernel.org;
-	Fri, 16 Aug 2024 19:35:38 +0200
+	Fri, 16 Aug 2024 19:35:37 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/16] wifi: mt76: connac: add support for IEEE 802.11 fragmentation
-Date: Fri, 16 Aug 2024 19:35:22 +0200
-Message-ID: <20240816173529.17873-9-nbd@nbd.name>
+Subject: [PATCH 06/16] wifi: mt76: add separate tx scheduling queue for off-channel tx
+Date: Fri, 16 Aug 2024 19:35:19 +0200
+Message-ID: <20240816173529.17873-6-nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240816173529.17873-1-nbd@nbd.name>
 References: <20240816173529.17873-1-nbd@nbd.name>
@@ -48,68 +48,232 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
+Ensure that packets are not sent out to the wrong channel
 
-Add fragmentation index into TXD.DW2 to support IEEE 802.11 fragmentation.
-
-Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h |  7 +++++++
- drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c  | 10 +++++++++-
- 2 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  7 +-
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
+ drivers/net/wireless/mediatek/mt76/tx.c       | 77 +++++++++++++------
+ 3 files changed, 58 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-index 5f132115ebfc..eb4765365b8c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-@@ -355,4 +355,11 @@ enum tx_port_idx {
- 	MT_TX_PORT_IDX_MCU
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index a24186c9a913..6183b021f6eb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -941,8 +941,7 @@ int mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
+ 	mutex_lock(&dev->mutex);
+ 	set_bit(MT76_RESET, &phy->state);
  
-+enum tx_frag_idx {
-+	MT_TX_FRAG_NONE,
-+	MT_TX_FRAG_FIRST,
-+	MT_TX_FRAG_MID,
-+	MT_TX_FRAG_LAST
-+};
+-	ieee80211_stop_queues(phy->hw);
+-
++	mt76_worker_disable(&dev->tx_worker);
+ 	wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(phy), timeout);
+ 	mt76_update_survey(phy);
+ 
+@@ -959,12 +958,11 @@ int mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
+ 
+ 	if (chandef->chan != phy->main_chan)
+ 		memset(phy->chan_state, 0, sizeof(*phy->chan_state));
++	mt76_worker_enable(&dev->tx_worker);
+ 
+ 	ret = dev->drv->set_channel(phy);
+ 
+ 	clear_bit(MT76_RESET, &phy->state);
+-	ieee80211_wake_queues(phy->hw);
+-
+ 	mt76_worker_schedule(&dev->tx_worker);
+ 
+ 	mutex_unlock(&dev->mutex);
+@@ -1548,6 +1546,7 @@ void mt76_wcid_init(struct mt76_wcid *wcid)
+ {
+ 	INIT_LIST_HEAD(&wcid->tx_list);
+ 	skb_queue_head_init(&wcid->tx_pending);
++	skb_queue_head_init(&wcid->tx_offchannel);
+ 
+ 	INIT_LIST_HEAD(&wcid->list);
+ 	idr_init(&wcid->pktid);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 6c054f43e7ce..87048aa27fbf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -361,6 +361,7 @@ struct mt76_wcid {
+ 
+ 	struct list_head tx_list;
+ 	struct sk_buff_head tx_pending;
++	struct sk_buff_head tx_offchannel;
+ 
+ 	struct list_head list;
+ 	struct idr pktid;
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 5cf6edee4d13..1d61d3c62fbb 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -330,6 +330,7 @@ mt76_tx(struct mt76_phy *phy, struct ieee80211_sta *sta,
+ 	struct mt76_wcid *wcid, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct sk_buff_head *head;
+ 
+ 	if (mt76_testmode_enabled(phy)) {
+ 		ieee80211_free_txskb(phy->hw, skb);
+@@ -345,9 +346,15 @@ mt76_tx(struct mt76_phy *phy, struct ieee80211_sta *sta,
+ 
+ 	info->hw_queue |= FIELD_PREP(MT_TX_HW_QUEUE_PHY, phy->band_idx);
+ 
+-	spin_lock_bh(&wcid->tx_pending.lock);
+-	__skb_queue_tail(&wcid->tx_pending, skb);
+-	spin_unlock_bh(&wcid->tx_pending.lock);
++	if ((info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
++	    (info->control.flags & IEEE80211_TX_CTRL_SCAN_TX))
++		head = &wcid->tx_offchannel;
++	else
++		head = &wcid->tx_pending;
 +
- #endif /* __MT76_CONNAC2_MAC_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index b841bf628d02..a3db65254e37 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -391,6 +391,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
- 	bool multicast = is_multicast_ether_addr(hdr->addr1);
- 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 	__le16 fc = hdr->frame_control;
-+	__le16 sc = hdr->seq_ctrl;
- 	u8 fc_type, fc_stype;
- 	u32 val;
++	spin_lock_bh(&head->lock);
++	__skb_queue_tail(head, skb);
++	spin_unlock_bh(&head->lock);
  
-@@ -432,6 +433,13 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
- 	    info->flags & IEEE80211_TX_CTL_USE_MINRATE)
- 		val |= MT_TXD2_FIX_RATE;
+ 	spin_lock_bh(&phy->tx_lock);
+ 	if (list_empty(&wcid->tx_list))
+@@ -478,7 +485,7 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
+ 		return idx;
  
-+	if (ieee80211_has_morefrags(fc) && ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_FIRST);
-+	else if (ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_MID);
-+	else if (!ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_LAST);
-+
- 	txwi[2] |= cpu_to_le32(val);
+ 	do {
+-		if (test_bit(MT76_RESET, &phy->state))
++		if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
+ 			return -EBUSY;
  
- 	if (ieee80211_is_beacon(fc)) {
-@@ -440,7 +448,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
+ 		if (stop || mt76_txq_stopped(q))
+@@ -522,7 +529,7 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
+ 	while (1) {
+ 		int n_frames = 0;
+ 
+-		if (test_bit(MT76_RESET, &phy->state))
++		if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
+ 			return -EBUSY;
+ 
+ 		if (dev->queue_ops->tx_cleanup &&
+@@ -568,7 +575,7 @@ void mt76_txq_schedule(struct mt76_phy *phy, enum mt76_txq_id qid)
+ {
+ 	int len;
+ 
+-	if (qid >= 4)
++	if (qid >= 4 || phy->offchannel)
+ 		return;
+ 
+ 	local_bh_disable();
+@@ -586,7 +593,8 @@ void mt76_txq_schedule(struct mt76_phy *phy, enum mt76_txq_id qid)
+ EXPORT_SYMBOL_GPL(mt76_txq_schedule);
+ 
+ static int
+-mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid)
++mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid,
++			       struct sk_buff_head *head)
+ {
+ 	struct mt76_dev *dev = phy->dev;
+ 	struct ieee80211_sta *sta;
+@@ -594,8 +602,8 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid)
+ 	struct sk_buff *skb;
+ 	int ret = 0;
+ 
+-	spin_lock(&wcid->tx_pending.lock);
+-	while ((skb = skb_peek(&wcid->tx_pending)) != NULL) {
++	spin_lock(&head->lock);
++	while ((skb = skb_peek(head)) != NULL) {
+ 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 		int qid = skb_get_queue_mapping(skb);
+@@ -607,13 +615,13 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid)
+ 			qid = MT_TXQ_PSD;
+ 
+ 		q = phy->q_tx[qid];
+-		if (mt76_txq_stopped(q)) {
++		if (mt76_txq_stopped(q) || test_bit(MT76_RESET, &phy->state)) {
+ 			ret = -1;
+ 			break;
+ 		}
+ 
+-		__skb_unlink(skb, &wcid->tx_pending);
+-		spin_unlock(&wcid->tx_pending.lock);
++		__skb_unlink(skb, head);
++		spin_unlock(&head->lock);
+ 
+ 		sta = wcid_to_sta(wcid);
+ 		spin_lock(&q->lock);
+@@ -621,38 +629,61 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid)
+ 		dev->queue_ops->kick(dev, q);
+ 		spin_unlock(&q->lock);
+ 
+-		spin_lock(&wcid->tx_pending.lock);
++		spin_lock(&head->lock);
  	}
+-	spin_unlock(&wcid->tx_pending.lock);
++	spin_unlock(&head->lock);
  
- 	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
--		u16 seqno = le16_to_cpu(hdr->seq_ctrl);
-+		u16 seqno = le16_to_cpu(sc);
+ 	return ret;
+ }
  
- 		if (ieee80211_is_back_req(hdr->frame_control)) {
- 			struct ieee80211_bar *bar;
++static void
++mt76_txq_free_wcid_offchannel(struct mt76_phy *phy, struct mt76_wcid *wcid)
++{
++	struct sk_buff_head *head = &wcid->tx_offchannel;
++	struct ieee80211_hw *hw = phy->hw;
++	struct sk_buff *skb;
++
++	spin_lock(&head->lock);
++	while ((skb = __skb_dequeue(head)) != NULL)
++		ieee80211_free_txskb(hw, skb);
++	spin_unlock(&head->lock);
++}
++
+ static void mt76_txq_schedule_pending(struct mt76_phy *phy)
+ {
+-	if (list_empty(&phy->tx_list))
++	LIST_HEAD(tx_list);
++
++	if (list_empty(&phy->tx_list) || phy->offchannel)
+ 		return;
+ 
+ 	local_bh_disable();
+ 	rcu_read_lock();
+ 
+ 	spin_lock(&phy->tx_lock);
+-	while (!list_empty(&phy->tx_list)) {
+-		struct mt76_wcid *wcid = NULL;
++	list_splice_init(&phy->tx_list, &tx_list);
++	while (!list_empty(&tx_list)) {
++		struct sk_buff_head *head;
++		struct mt76_wcid *wcid;
+ 		int ret;
+ 
+-		wcid = list_first_entry(&phy->tx_list, struct mt76_wcid, tx_list);
++		wcid = list_first_entry(&tx_list, struct mt76_wcid, tx_list);
+ 		list_del_init(&wcid->tx_list);
+ 
+ 		spin_unlock(&phy->tx_lock);
+-		ret = mt76_txq_schedule_pending_wcid(phy, wcid);
++		if (!phy->offchannel)
++			mt76_txq_free_wcid_offchannel(phy, wcid);
++		head = phy->offchannel ? &wcid->tx_offchannel : &wcid->tx_pending;
++		ret = mt76_txq_schedule_pending_wcid(phy, wcid, head);
+ 		spin_lock(&phy->tx_lock);
+ 
+-		if (ret) {
+-			if (list_empty(&wcid->tx_list))
+-				list_add_tail(&wcid->tx_list, &phy->tx_list);
++		if (skb_queue_empty(&wcid->tx_pending) &&
++		    skb_queue_empty(&wcid->tx_offchannel))
++			continue;
++
++		if (list_empty(&wcid->tx_list))
++			list_add_tail(&wcid->tx_list, &phy->tx_list);
++		if (ret < 0)
+ 			break;
+-		}
+ 	}
+ 	spin_unlock(&phy->tx_lock);
+ 
 -- 
 2.44.0
 
