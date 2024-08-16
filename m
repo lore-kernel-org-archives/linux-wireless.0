@@ -1,58 +1,58 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB350171098
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 09:50:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30BF01714BB
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 09:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723801825; cv=none; b=DjG00ctmsP3yyG3Mou5d+H0WhbhPey3Xa+eg63cG6NY8skCMkaHjulGbe0F2zUAyttSNY+8wkcl4iCjBUDh9YD4JFQ5PPVHsS4f0Oy0BgABQQab4vV3BKY0pUVcZSGJUNa7VwOuNxhLONRRNBIPy5L+QcO+eMCmPUvoYpEF0kIU=
+	t=1723801827; cv=none; b=BLqD+vIEs+9HVM4pQohuiWkA1h2xka5PrMs4wANzzp9KdLYqaDodbHSGmFBHgwJSB3PWp6AMHudIsMPuZmt982WH4Za8f4N8E3D0zjYeajEXXvu0AXEowL2QeK0DwU8SX+73Fv0fQARnsxvqRkfB/ApLzwtfisgylQoox+oTm0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723801825; c=relaxed/simple;
-	bh=NEu2vdVxQ+/oMb0Wc2Y1OvuNERNhgaPt0K8q9MSyQI8=;
+	s=arc-20240116; t=1723801827; c=relaxed/simple;
+	bh=lQHwPwby+ftfXmYYR5pfcTxP9lDuPuMKlTcmuwi5JG8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oVnEFTFQfJoyqbxr0cKjSvA+FQGr+tkkhQVjimrzJY2Psx4O+iCnXy/SOdgHS7GitcD18uxMYo228X2Xs/8oiUyHUPmcvkbcTVpvYzFcaqffe9nLBdelxLh21B+LNdHYdLAeMWaqXhk+VieyMUsmbJijMmI2ErJMaRiSL2lVCpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EqyWnft0; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=KDqisqwLXudi8cTFwH6tHMHVfKLj/UgftIJeR4Zd4edGwYNMpkhMf4tq4BSZc2wt4FhMv0M49SJFR+SgZf2BJ2lQI0FPjTu8ywfRpBo4l5GBrIXu02aC5hsD0HNtEwcEcEOEhI/X/9B/Ri++dORtrDyi4JRl+ePcONg8bxQHeTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=mMvdUXzA; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EqyWnft0"
-X-UUID: f0a6015c5bb411ef8b96093e013ec31c-20240816
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="mMvdUXzA"
+X-UUID: ef58c5965bb411ef8593d301e5c8a9c0-20240816
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=0P8Q5aPYJ95Nkv+yhaexcDyfyP79mJeFOtrPENogz6Q=;
-	b=EqyWnft0RiMIsj3XBm14MaK/F1noCLqhD9XdKVqYF19pyD4LmWuVqsimDzxBmzCMYRcWkvPO4TRuNgNhpVfD4FSlLTNYoCpWrgynR1+gcpJ6HKfqusR69gMByuuyth31wHYgB8TvQ7XmY7pVFDv1+Dn5fFtpXx5Mzez8SKXODlM=;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=3ac/CoJAvnZ57l4lpWdjj1Y8Wm4d7QoaRRF8O7x0jEo=;
+	b=mMvdUXzAgWy7imQRkUQ7vNCyQlcCMz0y5+wLVKct4RF04Jwk6HOsUJx/HTs9kOjYu+3as6sQQPP6n/S1i6ULDfiZBbETv60pe2aTHI47FPuFmo07IU/1iMKTkhjLvpq4H7LanXXme74IMlFm73OAZ9InHnjFowjbRFltCv0auec=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:573665e9-e62f-4544-85f2-3b559ea1748e,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:6dc6a47,CLOUDID:78c6b6c1-acff-4a0f-9582-14bcdf4ed7e0,B
+X-CID-O-INFO: VERSION:1.1.41,REQID:6c9ca8a2-ba48-4d69-a15b-8183cebb6451,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:6dc6a47,CLOUDID:56c6b6c1-acff-4a0f-9582-14bcdf4ed7e0,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
 	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
 	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: f0a6015c5bb411ef8b96093e013ec31c-20240816
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+X-UUID: ef58c5965bb411ef8593d301e5c8a9c0-20240816
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 503935617; Fri, 16 Aug 2024 17:50:16 +0800
+	with ESMTP id 902171879; Fri, 16 Aug 2024 17:50:13 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 16 Aug 2024 17:50:16 +0800
+ 15.2.1118.26; Fri, 16 Aug 2024 17:50:15 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 16 Aug 2024 17:50:16 +0800
+ 15.2.1118.26 via Frontend Transport; Fri, 16 Aug 2024 17:50:15 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Michael-CY Lee
-	<michael-cy.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 12/12] wifi: mt76: mt7996: set IEEE80211_KEY_FLAG_GENERATE_MMIE for other ciphers
-Date: Fri, 16 Aug 2024 17:46:35 +0800
-Message-ID: <20240816094635.2391-11-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Peter Chiu
+	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 05/12] wifi: mt76: mt7996: advertize beacon_int_min_gcd
+Date: Fri, 16 Aug 2024 17:46:28 +0800
+Message-ID: <20240816094635.2391-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20240816094635.2391-1-shayne.chen@mediatek.com>
 References: <20240816094635.2391-1-shayne.chen@mediatek.com>
@@ -64,54 +64,42 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--6.424400-8.000000
-X-TMASE-MatchedRID: 72n23NsrtG5Dn01oiZfuY4Q6iEG+7EHnVNyumldWne3fc2Xd6VJ+yjFa
-	TRf5dTetdwvRxvSoxhzX3CBAz92EpWNvKIW9g24opvwZ9GmdwDNMkOX0UoduuQqiCYa6w8tvxjf
-	J+i+nbHSPvzCryM/S54Ay6p60ZV62fJ5/bZ6npdjKayT/BQTiGkbHfwjbIquItEKd2FZKuTfUvi
-	hDc8zGGPsVh7XWXFhv56vXtoWyuGHAvpLE+mvX8g==
+X-TM-AS-Result: No-10--4.436600-8.000000
+X-TMASE-MatchedRID: hJoPGlKDQFkVAKRaMHqjDj+qcn/TbYs0Xs5nqGvDCfOFAnvBzkQqV/9T
+	oIqmlx19ThbvLLI8RvNI3Y0ZCr7oV+a9R6LXDub0ngIgpj8eDcBpkajQR5gb3savT21DsLD/UEh
+	Wy9W70AHCttcwYNipXxf2ukFm4ENtlNViJYwGR5xLkSe5Uzq3PwzUb5WmzuH2dr83lAQ2WkSqne
+	Bcz+h3ZtKryvPV5ZMDiumysd8Ts3NrUlhyhVbKc6Uwz4WJNe+7dmtRsRmKkASJZPT2ZDPuzPD2Q
+	fzMDLjho65UufHcDvg=
 X-TM-AS-User-Approved-Sender: No
 X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--6.424400-8.000000
+X-TMASE-Result: 10--4.436600-8.000000
 X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 854B1E48823A03FE6D506702CAEB90D599A40A29D76B55F8503079D1F7322EDF2000:8
+X-TM-SNTS-SMTP: 395214C32238876138A90FB0F373515F65F97686783533E8248EBBD7D12D06B62000:8
 X-MTK: N
 
-From: Michael-CY Lee <michael-cy.lee@mediatek.com>
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-When beacon protection is enabled, FW checks MMIE tag & length in the
-beacon for every cipher mode. To pass the check, driver needs to set the
-key flag IEEE80211_KEY_GENERATE_MMIE to let mac80211 generate and
-initialize MMIE.
+Advertize beacon_int_min_gcd as 100 to allow setting different beacon
+intervals on different interfaces.
 
-Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 1ab2fb292266..d43bd5c2432e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -364,14 +364,14 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	case WLAN_CIPHER_SUITE_SMS4:
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
--		wcid_keyidx = &wcid->hw_key_idx2;
--		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
--		fallthrough;
- 	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
- 	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
- 	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
--		if (key->keyidx == 6 || key->keyidx == 7)
-+		if (key->keyidx == 6 || key->keyidx == 7) {
-+			wcid_keyidx = &wcid->hw_key_idx2;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
- 			break;
-+		}
- 		fallthrough;
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+index 283df84f1b43..4d6157e49b16 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -42,6 +42,7 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 				       BIT(NL80211_CHAN_WIDTH_40) |
+ 				       BIT(NL80211_CHAN_WIDTH_80) |
+ 				       BIT(NL80211_CHAN_WIDTH_160),
++		.beacon_int_min_gcd = 100,
+ 	}
+ };
+ 
 -- 
 2.39.2
 
