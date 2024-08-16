@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A5528FF
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 17:35:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C99C31BF324
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Aug 2024 17:35:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723829741; cv=none; b=TpFDwagBoNjWq102mwUehdT/pb4KRRiItz9Osicz46XlgYP/o8SStqChi4524qRNE3juCzO/Rq6Jpju+l0mFPa7J77zOZFCrIuVgMH0FBJuBmugwIEGboyQkzId9FVNHXVtXBk5lBEMknry4CSXY04WXbNbdAD+3C7y678viaGg=
+	t=1723829741; cv=none; b=GRQY5lL4VgMajfdOnb6NCO8O8byRbKBfvXp4icuwK/9GFsdMVFnZTvy8HV1p4Kutt2MIltf0nR+zFz9mw5Er3Q0d4llbjmVws3JoRpMdV7yQ8ICoyjCnW5u7TFs6TsBMbdPjBI2n1Xjr8Zjsbf4XGYhj/xliodBFJTI0UrhBjaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1723829741; c=relaxed/simple;
-	bh=2LOV+1WzlZlL2XqqUwDZtO1qpBt+E2VgUCTGb+7JV3M=;
+	bh=OdEKbaFJw5tmylo0Q1lvTvctOC14bj0AhR52G97rJuE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dncydtHcuAgWPxMeyWpi0yEt2L+7Lyb4hCLwCvuUiUM/40JgW4GAaqUYcbH7q2T9y9tlQrOvSVEDJbPu8PL3p/NH3lkJDU24v3iiX0GgppmsGbtzfc0F4Tw1uLRQRGR7kifxLXqYpQ0fB+EbHiWg3qLwWzfGM7UfGUt/xYC8tQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=PN6LywC8; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=SLoeH5+dnLVv6WC9MSc4tlAchd5N55asjRGkGS1bsfH0/aSNmYvd72U5VifmoyTLiuf3+R44LgIiK2FTGXKbaO2vE6WpT5IGWqNsMKJjSBfkvgaLWHteZ+O8plhNz56JvC3Q+ySwKtVbnr40tNoqWDeeyRfuX7ZPwMLsmlATVrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=tEU3Fd9K; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="PN6LywC8"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tEU3Fd9K"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=IPOp5fyW+dLR8CGG0TNfuWJy6SMrZD7jpLSGrqgL4nU=; b=PN6LywC8uDWY/UgwuhzEUgC/WZ
-	5/35scQo42rVbW6Vk9eEyZbgmDGyZE5FdC4DbNH8SNNQz4fIUVKqtM8iLJiAy4zkZpk675gLnMo60
-	xov/ol0IQppJ7Ogh/CF5lntCpLrs2GhYcK33Na7VRQ4jgju1cAzIcXHrARvjmeKvctqk=;
+	bh=o7eZBopJ5GL1TGY41TKBK9+jKOPoROCUIpmy2J1xPgI=; b=tEU3Fd9KqAlXMe7FC6KfDXlUF6
+	4Mi67tZmbdAYx2aHjfT3frX+I2dQxH+YdwrTaUVOIX5oGVDtPJlmokOaftpaMGrTUXaYgm9tR647Q
+	IkFsbynbWaehRyDf5/fiMXIY3XGVqXYclWtMlKK2TzBJUvgKbtLwhZ9CeQ9YrfpTNPqU=;
 Received: from p54ae95e7.dip0.t-ipconnect.de ([84.174.149.231] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sf0rQ-000ObE-0k
+	id 1sf0rR-000ObE-31
 	for linux-wireless@vger.kernel.org;
-	Fri, 16 Aug 2024 19:35:36 +0200
+	Fri, 16 Aug 2024 19:35:38 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/16] wifi: mt76: mt7603: fix reading target power from eeprom
-Date: Fri, 16 Aug 2024 19:35:15 +0200
-Message-ID: <20240816173529.17873-2-nbd@nbd.name>
+Subject: [PATCH 09/16] wifi: mt76: connac: add support for IEEE 802.11 fragmentation
+Date: Fri, 16 Aug 2024 19:35:22 +0200
+Message-ID: <20240816173529.17873-9-nbd@nbd.name>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240816173529.17873-1-nbd@nbd.name>
 References: <20240816173529.17873-1-nbd@nbd.name>
@@ -48,33 +48,68 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If the ext-PA target power is unset, fall back to the standard EEPROM value.
+From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 
+Add fragmentation index into TXD.DW2 to support IEEE 802.11 fragmentation.
+
+Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7603/init.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h |  7 +++++++
+ drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c  | 10 +++++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-index 6c55c72f28a2..f84c9a06af75 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-@@ -456,11 +456,13 @@ mt7603_init_txpower(struct mt7603_dev *dev,
- 	int target_power = eeprom[MT_EE_TX_POWER_0_START_2G + 2] & ~BIT(7);
- 	u8 *rate_power = &eeprom[MT_EE_TX_POWER_CCK];
- 	bool ext_pa = eeprom[MT_EE_NIC_CONF_0 + 1] & BIT(1);
-+	u8 ext_pa_pwr;
- 	int max_offset, cur_offset;
- 	int i;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
+index 5f132115ebfc..eb4765365b8c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
+@@ -355,4 +355,11 @@ enum tx_port_idx {
+ 	MT_TX_PORT_IDX_MCU
+ };
  
--	if (ext_pa && is_mt7603(dev))
--		target_power = eeprom[MT_EE_TX_POWER_TSSI_OFF] & ~BIT(7);
-+	ext_pa_pwr = eeprom[MT_EE_TX_POWER_TSSI_OFF];
-+	if (ext_pa && is_mt7603(dev) && ext_pa_pwr != 0 && ext_pa_pwr != 0xff)
-+		target_power = ext_pa_pwr & ~BIT(7);
++enum tx_frag_idx {
++	MT_TX_FRAG_NONE,
++	MT_TX_FRAG_FIRST,
++	MT_TX_FRAG_MID,
++	MT_TX_FRAG_LAST
++};
++
+ #endif /* __MT76_CONNAC2_MAC_H */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index b841bf628d02..a3db65254e37 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -391,6 +391,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
+ 	bool multicast = is_multicast_ether_addr(hdr->addr1);
+ 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+ 	__le16 fc = hdr->frame_control;
++	__le16 sc = hdr->seq_ctrl;
+ 	u8 fc_type, fc_stype;
+ 	u32 val;
  
- 	if (target_power & BIT(6))
- 		target_power = -(target_power & GENMASK(5, 0));
+@@ -432,6 +433,13 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
+ 	    info->flags & IEEE80211_TX_CTL_USE_MINRATE)
+ 		val |= MT_TXD2_FIX_RATE;
+ 
++	if (ieee80211_has_morefrags(fc) && ieee80211_is_first_frag(sc))
++		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_FIRST);
++	else if (ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
++		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_MID);
++	else if (!ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
++		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_LAST);
++
+ 	txwi[2] |= cpu_to_le32(val);
+ 
+ 	if (ieee80211_is_beacon(fc)) {
+@@ -440,7 +448,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
+-		u16 seqno = le16_to_cpu(hdr->seq_ctrl);
++		u16 seqno = le16_to_cpu(sc);
+ 
+ 		if (ieee80211_is_back_req(hdr->frame_control)) {
+ 			struct ieee80211_bar *bar;
 -- 
 2.44.0
 
