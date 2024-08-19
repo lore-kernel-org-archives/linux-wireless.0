@@ -1,106 +1,169 @@
-Received: from mail-vk1-f176.google.com (mail-vk1-f176.google.com [209.85.221.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from vps-vb.mhejs.net (vps-vb.mhejs.net [37.28.154.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2981DF684;
-	Mon, 19 Aug 2024 21:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95F04158DC6
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2024 21:50:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.28.154.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724103934; cv=none; b=LnY3gj5k+VHrsZbWET7ZdAw8lTv/qMiL23TD0979oJRA+sY/+oboQsIEpItO0NM6CC2cKwaMorZUif9xO9s+46PWGqujXPuecJL/l7vRJYTu40bdOTIIQuSRYo1vmaQqACB4pJSOhWJtGByoyYf9rfaatsN8Vvn4I3Vs963mS9Q=
+	t=1724104223; cv=none; b=G8/cIhXlUtlKqTgisb3o4PeTKu1yKCOiW0hDelZ+0Vud98yh69kZNWNFQxK/xnVzZlTLK7Fh/M/w0bSpDdU7T0+d62lp9ioMHwEcgfofqnVi/tgl0bu4kxeZailyVzRRNXNJQG2HiJ6HY3Pxa++5/Ly40j8LxKVKXpD4IixqT3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724103934; c=relaxed/simple;
-	bh=uFKjpSKWuJr4EH1NYhsVClFE8GCC/v5Fjf55YsSRT2A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NAQaHWc+wIacClSE2nTJWkodSsGPc9P6vqXdu+eJOgoHeNMlumJG6ZfJofATjshbykVKkbNK3ZKU0EhgJNkYD5XN9Rkl0fnImAEtnQ4YEy5fPFzuysiptSwEsm9rHSQUwwsDjX1K6SJWY2QtJoDAwmpVeR0FORXKcpb5552x/GI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k0RxjCQV; arc=none smtp.client-ip=209.85.221.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k0RxjCQV"
-Received: by mail-vk1-f176.google.com with SMTP id 71dfb90a1353d-4fc92316dc1so736354e0c.0;
-        Mon, 19 Aug 2024 14:45:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724103931; x=1724708731; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+qcuV1/bhqx2+PhvCkmyGByyF97mh0J56XinoCbmJVs=;
-        b=k0RxjCQVjDcQ8g1bFFt4xwZrlu12mhTtiQ9w3MIVFsHeMmsRnRcroB4Jrf/V9ABmN2
-         0RiwM3OymTQISdv23w7x1TIOKRpJ7DRSPx0hSRHfhJH/ITU8iUkE7lOPAeq69c/pUT1e
-         hyybaDo3BHByrk6uj8tKEFl01U7V1rPlOnDmZpj8eMyK9y0G3TMcipgWYJEGu3x0oDgu
-         FHnYR9T6YgRVF1njsBvxwfKq+ZvV+RCOdbNbED0xefIw9rR0JwTUxZUTWqJPtvnpxpNp
-         o3E9NuTXqc/k0XTn2iLuWtmNmsN9Nl+rvqKnOATqb13XLPaK3ufnmovWvWCLDno7SsAD
-         7knA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724103931; x=1724708731;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+qcuV1/bhqx2+PhvCkmyGByyF97mh0J56XinoCbmJVs=;
-        b=QG5REMbJLDCBtrMfoFXGBk7qyF4issv4p99HSjaUTJgRTbMRNJCqHr6/1XLBxwah3F
-         9EBcWAy7jUkdn0z6pwbzfCife5L2ePXwoxktswVEKtBTzMPfOvgTHLGT78cbV0ExfN60
-         0FTnxBYpJYC3zvFJkNJN7a5RqTu95385j1lyMe+lR4MDGMFyVueSiaNNcE0CH0dc6zw0
-         ozUHgxYZ/eoomGMHe0P8WjE1EC3FIXX0UPQuozA4omP42kZ6DgJbXAbqT0cc3rMdnxgW
-         0OXP5IbU4xS5XS4EkE8z79+yuGmOAARABOrjm6QUc78Y8N/N3N1yoife5S2V/kHckC6F
-         W0fw==
-X-Forwarded-Encrypted: i=1; AJvYcCUjHpCsICFfjWy5giPvZ8U5zJQ0LWrF+YcOkDykY5tFMhVnObXAZBs5CDQuOHw3KUt4vzCbBmshaMEqs00=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzHiPDmw1mVJ8Nk7v1KZyCsLNE8/Z3tvv7x2F7v53Ba5uf5/LAf
-	yjJkj4fw3DC/XVioVefS5hEvB9546zw6sEk1I0riVKKRkKN7MgqpY+SntgAg
-X-Google-Smtp-Source: AGHT+IG4fdIKPSGpi6znwnl/h3AS6FOI/WdXtROuRME6Jw3xsWRPAiOCcwMFgbT6xkkgL7eRnITVcA==
-X-Received: by 2002:a05:6122:c94:b0:4f5:2c0c:8528 with SMTP id 71dfb90a1353d-4fc6c9d2fd2mr10081343e0c.11.1724103931211;
-        Mon, 19 Aug 2024 14:45:31 -0700 (PDT)
-Received: from fedora.. ([2800:e6:4001:fca7:b7e8:4418:a953:72f2])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-4fc5b9c872fsm1230429e0c.46.2024.08.19.14.45.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Aug 2024 14:45:30 -0700 (PDT)
-From: =?UTF-8?q?Juan=20Jos=C3=A9=20Arboleda?= <soyjuanarbol@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: miriam.rachel.korenblit@intel.com,
-	kvalo@kernel.org,
-	=?UTF-8?q?Juan=20Jos=C3=A9=20Arboleda?= <soyjuanarbol@gmail.com>
-Subject: [PATCH v2 3/3] iwlwifi: mvm: Replace spaces for tabs in iwl_mvm_vendor_events_idx
-Date: Mon, 19 Aug 2024 16:45:20 -0500
-Message-ID: <715c74c74b336bed81e92e1336bd1a6ddb7b90ff.1724103043.git.soyjuanarbol@gmail.com>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <cover.1724103043.git.soyjuanarbol@gmail.com>
-References: <cover.1724103043.git.soyjuanarbol@gmail.com>
+	s=arc-20240116; t=1724104223; c=relaxed/simple;
+	bh=fd0toK1aRPYWLb3LDFfQzVEEot+1ezgX9pZWh20xmHo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n/LVLmCt/qBBGN2blkUGG7I51DHmmSKaZb9Sh6LN5UdU4YXM4v7mRQegqeaoIhZTwgt0wd90FMxMFK49RmHSwIff6SEpaG2UvatVP0mELgyiFWjLSCLSiYOyuOntoexJIfncBCiIop+Gp1+zBWr7cV2z4QaBoLlhKvbTkt8Meos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maciej.szmigiero.name; spf=pass smtp.mailfrom=maciej.szmigiero.name; arc=none smtp.client-ip=37.28.154.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=maciej.szmigiero.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maciej.szmigiero.name
+Received: from MUA
+	by vps-vb.mhejs.net with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.94.2)
+	(envelope-from <mail@maciej.szmigiero.name>)
+	id 1sg9nr-0005md-DF; Mon, 19 Aug 2024 23:20:39 +0200
+Message-ID: <1377b2e9-4da2-45cb-86f5-5b80fe5ab025@maciej.szmigiero.name>
+Date: Mon, 19 Aug 2024 23:20:34 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] wifi: rtw88: Avoid using macid 0 in AP mode
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Sascha Hauer <sha@pengutronix.de>,
+ Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ Bitterblue Smith <rtl8821cerfe2@gmail.com>
+References: <9174a776-4771-4351-85fa-476e240d8ace@gmail.com>
+ <e4be0a75-43b2-4ae5-9aab-5c4a88e78097@gmail.com>
+ <9356af89520243ccacc0be72b8b03252@realtek.com>
+ <4f052989-5fb9-4c5c-950e-a3d34e6499ab@gmail.com>
+ <d21bc7a0fac8413b9cc443288924ec7b@realtek.com>
+ <91d03fa7-5af0-4ec5-a52c-c2c060e11d4d@gmail.com>
+ <6d1667d2-c86f-4b80-bb32-9ba01164480b@maciej.szmigiero.name>
+ <e8d3c81a47de44e1ba7df08b9de826ee@realtek.com>
+Content-Language: en-US, pl-PL
+From: "Maciej S. Szmigiero" <mail@maciej.szmigiero.name>
+Autocrypt: addr=mail@maciej.szmigiero.name; keydata=
+ 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
+In-Reply-To: <e8d3c81a47de44e1ba7df08b9de826ee@realtek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This patch replaces spaces with tabs in the affected source files to
-adhere to the Linux kernel coding style guidelines.
+On 19.08.2024 04:59, Ping-Ke Shih wrote:
+> Maciej S. Szmigiero <mail@maciej.szmigiero.name> wrote:
+>> On 31.07.2024 14:20, Bitterblue Smith wrote:
+>>> On 31/07/2024 03:47, Ping-Ke Shih wrote:
+>>>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>>>>> On 30/07/2024 09:33, Ping-Ke Shih wrote:
+>>>>>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>>>>>>>
+>>>>>>> In AP mode, the firmware stops transmitting beacons if it receives
+>>>>>>> H2C_CMD_RA_INFO for macid 0.
+>>>>>>>
+>>>>>>> Leave macid 0 unused in AP mode. Macid 1 is already reserved for
+>>>>>>> broadcast/multicast. Assign macid 2 to the first connected client.
+>>>>>>
+>>>>>> Seemingly we missed to set mac_id in TX desc for a long time.
+>>>>>>
+>>>>>> +#define RTW_TX_DESC_W1_MACID GENMASK(7, 0)
+>>>>>>    #define RTW_TX_DESC_W1_QSEL GENMASK(12, 8)
+>>>>>>    #define RTW_TX_DESC_W1_RATE_ID GENMASK(20, 16)
+>>>>>>
+>>>>>> The mac_id should be from rtwvif->mac_id or si->mac_id according to
+>>>>>> operating mode and role.
+>>>>>>
+>>>>>> And I suppose mac_id assignment for AP is mac_id 0 for broadcast/multicast, and
+>>>>>> other mac_id can be used by connected stations regularly.
+>>>>>>
+>>>>>
+>>>>> What about the concurrent AP + station scenario? Will the
+>>>>> station vif use the next available macid, whatever that is?
+>>>>> Just wondering, I don't use concurrent mode.
+>>>>
+>>>> My basic idea is to assign mac_id to each vif when adding vif. For station mode,
+>>>> sta->mac_id will reuse vif->mac_id. For AP mode, I will dynamically allocate an
+>>>> sta->mac_id to a station, and vif->mac_id is to send broadcast/multicast packets
+>>>> that are not belong to a sta. For example,
+>>>>
+>>>>                     vif->mac_id      sta->mac_id
+>>>> vif0 (STA mode)        0               0
+>>>> vif1 (AP mode)         1               2...
+>>>>
+>>>>
+>>>>>
+>>>>> Also, do you mean that you will do all this? It's not clear to me.
+>>>>
+>>>> I can do it. Or are you interested in this?
+>>>>
+>>>
+>>> No, no, it's all yours. :)
+>>>
+>>
+>> It would be nice to have either this submitted fix or alternative one merged soon
+>> since the AP mode is completely broken otherwise (at least on RTL8821CU).
+> 
+> I have sent a patch [2] to replace this one, but still needs
+> patch 1/2 "wifi: rtw88: Fix USB devices not transmitting beacons". [1]
+> 
+> I have tested [1] + [2] can work on PCI devices.
+> Can anyone help to test if [1] + [2] also works on USB devices?
 
-This change is purely stylistic and do not affect the functionality
-of the code.
+I tested these patches on USB RTL8821CU and can confirm that the AP mode seems to
+work as good with your patch [2] as it did with the Bitterblue's one.
 
-Signed-off-by: Juan José Arboleda <soyjuanarbol@gmail.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+The only issue with either your or Bitterblue's patches is that I occasionally get the
+following messages in the kernel log in the AP mode:
+> kernel: [T1234] rtw_8821cu 4-1.2:1.2: error beacon valid
+> kernel: [T1234] rtw_8821cu 4-1.2:1.2: failed to download drv rsvd page
+> kernel: [T1234] rtw_8821cu 4-1.2:1.2: failed to download beacon
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c b/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
-index 080a1587caa5..0f7fa6032c66 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c
-@@ -104,9 +104,9 @@ static const struct wiphy_vendor_command iwl_mvm_vendor_commands[] = {
- };
- 
- enum iwl_mvm_vendor_events_idx {
--        /* 0x0 - 0x3 are deprecated */
--        IWL_MVM_VENDOR_EVENT_IDX_ROAMING_FORBIDDEN = 4,
--        NUM_IWL_MVM_VENDOR_EVENT_IDX
-+	/* 0x0 - 0x3 are deprecated */
-+	IWL_MVM_VENDOR_EVENT_IDX_ROAMING_FORBIDDEN = 4,
-+	NUM_IWL_MVM_VENDOR_EVENT_IDX
- };
- 
- static const struct nl80211_vendor_cmd_info
--- 
-2.46.0
+Around the time these messages are logged ping RTT of a connected (battery powered)
+STA climbs into multiple seconds range so I guess there might be something wrong
+with beacon DTIM update here.
+
+> [1] https://lore.kernel.org/linux-wireless/9174a776-4771-4351-85fa-476e240d8ace@gmail.com/
+> [2] https://lore.kernel.org/linux-wireless/20240819025248.17939-1-pkshih@realtek.com/T/#u
+
+Thanks,
+Maciej
 
