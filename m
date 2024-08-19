@@ -1,105 +1,102 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3249A15E96;
-	Mon, 19 Aug 2024 20:59:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED0A25760;
+	Mon, 19 Aug 2024 21:45:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724101196; cv=none; b=gQsXgbeIErKni4X2yB8DNz0cAY+s9dnRldRlNHpn5s4l/+uShFR81i5nPtz/i4II2YlZog2Mhl35FCJwmJYvbJ3suxlLd/4eWPQutnYQZBqK8Wqh0dsgzx7cta1yEjg6+2tqQGGM0EsaLSl2RvCp0arLl3uUMgX9ePLAJai9KAY=
+	t=1724103923; cv=none; b=RNPyxB8VYcn8qItVacONp3zJZMhuzlS2k7l1iin87v+N7teIZF/VHI7/LQMJ644gRiF+nGiA1XRR43ve7SvP+EQJZDdh3ojKKkqGtNutSM3HuABAfOwCcCHEm32eilKtQLm4PmvGih+Qtcjk1/nV33vIzrfl5IAsNMVIaCU2Uqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724101196; c=relaxed/simple;
-	bh=ZxFkS9fOsned6xG4oSpUEIn6I1VKxDOoFV25OtHhgf4=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=JhyZcikYSkOCBqfgLUo+vw3q+RFMfuOCCjJfwIlJzDWQ1Yo84NVU5nAqwKumyYlcoRo9JZTnHYCjYBFilmWac92NT6Q47t142bT2Tdc+9n8goviLAKkagZQBLX848qz1bp3Jolb0vjcuu/9+mBCIj8Aj5sLhhRySBed+e4Uu3mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fJGCjxMx; arc=none smtp.client-ip=209.85.216.44
+	s=arc-20240116; t=1724103923; c=relaxed/simple;
+	bh=0H8+ikLi4lrFZVnF+jXcoxeqTcE8H64NOLNsMmiXH70=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TFt8clxxNOSlx/DvOWWSituCWLqCjijazUh5oagqs9nrvljghhvNDs0uR2TWsp1sOf8CsQibpU+CmLn5cXymSkjaqTZJsX0g288z74YFgaHiP0dIcLJHiwe+xWP5kL5W0MZZTtvjR2/UcwD3VSdBCaMJU4S5cpv1gxwALqCnZ/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aTZ+aLOP; arc=none smtp.client-ip=209.85.221.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fJGCjxMx"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2d3c5f769d6so3271156a91.3;
-        Mon, 19 Aug 2024 13:59:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aTZ+aLOP"
+Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-4f6e36ea1ebso1589618e0c.0;
+        Mon, 19 Aug 2024 14:45:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724101194; x=1724705994; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=ZxFkS9fOsned6xG4oSpUEIn6I1VKxDOoFV25OtHhgf4=;
-        b=fJGCjxMxdGUQgWs2enuWkzbr3AOn7NektoGn6kMzKb6N+wCR0BxUzmVeUh8L1bTzLJ
-         sN3jholuLo2TsZcP8fZbyn1dF3vWDvde7gAzv1VKlwJK2ocxGHgdNbKdtehq4uEXZ+wY
-         2I5CsuUrG+GyoPtkwQbemqh5eaMMPjyz6yziGCVhCoNMNtUlXUkEA9UHfiR/4usCNfm2
-         NdYSceuXYZRBXJJHU+4ivh5aEPj/YZG4qv9gqoEwiFI12zzDP/tBsvPdNQ0sXzujI97a
-         sulWkUGtViE9FxB90EuNhFlZr/HGUt9cZLq46f5jEjMzZ7y2Vcxk3Jzjf/UZKoaCp1s7
-         0NIA==
+        d=gmail.com; s=20230601; t=1724103920; x=1724708720; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=JaIOdf2ae81aj/Z5O1WuMlZRHKOIrOr89FLA7Smxl7s=;
+        b=aTZ+aLOPqFvp54Nc2kxW+N4rRx6qP/R4ovYyUKTACpptvOUPC6qQGik5QeZDUl+PAn
+         Ck2bXBcUCeOETmNA+knoWkcEkKulSjAwEdHby/e/Bh8DYYlyLxiP4GH9u/VgOw5Nqoev
+         AsMsiAZgEmr8Qim0rE27q7Rxnzz/c8khmlT05i9bNxVM4jFAU8nEteYYbRtLtGpjkGuI
+         U3COHzdSBsODwxqA1afc4PTR2ylEjr0eX3LxnC+J0XE6i8bXdWHNUtffq2NooBKsysj6
+         jiKMXyMVSP8Z0V5HwZ3OoQsYmaoFP7mlP1pAurhvblmgZNebNR/4SadwTFoUvhg9ksqE
+         nfww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724101194; x=1724705994;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ZxFkS9fOsned6xG4oSpUEIn6I1VKxDOoFV25OtHhgf4=;
-        b=qqPBEknDQ64LaS82Bput08d9EwcXx1AsZ8r3vAmWr+igxJc06IHO7W0GYy+eseOvat
-         ToziA0L/9o/VBgPCSHxamr7i6RR9sUTQJKeHc2x7BJStrGjymCrXAVwR1kHcjDf5z3sr
-         6lrth7S4dWhklzhI8ebMG2el3vIL/n6wo6uhhGXv+dgyVo+SFNjobbRzvS7NwMGxKIMu
-         LZDpohIQE8mh+pDqBvLrWuax/soKAP8k5zK5es7lGxLICVlyi1dGPWerjEaf4kfyr0UZ
-         T7BYqmVhz7EyqMIZ9DdzhyJtwFVvMhFhuSvzqbtj1kUo+2mpYeDZ/OG66MCsMpoX/W1M
-         cczw==
-X-Forwarded-Encrypted: i=1; AJvYcCU6LEMbtIPNkMZZdNQyWGQQ2j2dX694uGPxf7kpbzVvTSlKNMXAflns2UBHp0uJkZQpwd/hDMXR2DFdCh2Le4k=@vger.kernel.org, AJvYcCX1gUps9LW7/JPKrUzk4fzbNhcqOjXyCHJyngKdhcIBng8yAFxBrlaX1eNL54rdFxkgqlrS/FmViQ7cF/8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEYAweo0f1AetDAVCd4aaFtHgd+ojnOQaAEUQwY6IPdP7DXqwZ
-	l7fLZOCCiqZOd+Jf67Y5+VdIst7U9BCulXp80C6ugbQKLyWINN2iXnfsoBafydXoP086HWliPMl
-	wCRvTNnBZeLCmr3e2Ut0ciGgjz4Q=
-X-Google-Smtp-Source: AGHT+IFi+AUQxiTAadxuBKsKstA4xZBeuuVjyRNaRBiFtXI5it0qQGSeTLdea/3kDXx4zoxd+cMPxlvLGL2/z4qokvw=
-X-Received: by 2002:a17:90a:d50a:b0:2c9:69cc:3a6f with SMTP id
- 98e67ed59e1d1-2d3e00ebf73mr10771065a91.31.1724101193803; Mon, 19 Aug 2024
- 13:59:53 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1724103920; x=1724708720;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=JaIOdf2ae81aj/Z5O1WuMlZRHKOIrOr89FLA7Smxl7s=;
+        b=BDCVdAMyHXRGYyAqBp84BGR9tf/1X1ghnjwKCBhJqsV6hgIYNZiIFYQb+O2TBYxnpm
+         vS25ojYeOMTVoi2s6c+jax0R1uHcvNA5zQ5DJbG5L7dHlSmcuARquf+OrH/pgZa6V7O7
+         zlAidDe+tyMT29s62MtaPCxySdUP9m+vwR3z1f8py8ODSB6MdRJlpxpdDmfVhQzrmyjh
+         k0ege4guynuftOpE4F8B9EGgGyh/eqeC1kEZkEO5hBovZuPDZSlY6kgVDV7WERZaz9Yt
+         kw5y0WSfmZfxSsduonr0VF93C4YP974XY/YMbDpEInGM/UmQvudNERRyxfSCJWXUueed
+         uzCQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUwVgJ0Uz5Mw63vR1Fn8glbw2PAyOrprya+MC/fGAyv/Hc6Q67QhIkG3U5wsp+7GnEqgB7+Na8AuljxTa8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzN4D9lM0f348DFKi6uug0tXRoTwYMIjHDpUZoSbPOseDvGIrND
+	q/kKfnWdaUgncWH1L91AQA2nIYpbnUt3ZlCaK7nh88MJXWQ1+tzebbsbb/Eq
+X-Google-Smtp-Source: AGHT+IH6RbvwYHHK5ciEI0pst6ZQEkJ8YxAi8y1A/ELyuZV7JU/fdwk0mwetYIzCrot0rsD/zfDmgg==
+X-Received: by 2002:a05:6122:78f:b0:4f2:a973:8ae with SMTP id 71dfb90a1353d-4fcd8a4d62emr561872e0c.5.1724103920638;
+        Mon, 19 Aug 2024 14:45:20 -0700 (PDT)
+Received: from fedora.. ([2800:e6:4001:fca7:b7e8:4418:a953:72f2])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-4fc5b9c872fsm1230429e0c.46.2024.08.19.14.45.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Aug 2024 14:45:20 -0700 (PDT)
+From: =?UTF-8?q?Juan=20Jos=C3=A9=20Arboleda?= <soyjuanarbol@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: miriam.rachel.korenblit@intel.com,
+	kvalo@kernel.org,
+	=?UTF-8?q?Juan=20Jos=C3=A9=20Arboleda?= <soyjuanarbol@gmail.com>
+Subject: [PATCH v2 0/3] Cleanup: Formatting iwlwifi driver
+Date: Mon, 19 Aug 2024 16:45:17 -0500
+Message-ID: <cover.1724103043.git.soyjuanarbol@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Haoyu Li <lihaoyu499@gmail.com>
-Date: Mon, 19 Aug 2024 13:59:41 -0700
-Message-ID: <CAPbMC75nfHS=rV3XJH8Pkc_q_A3UmsCrdTs4DL_0s=Mb6W0N4Q@mail.gmail.com>
-Subject: [net/mac80211] Question about `ieee80211_copy_mbssid_beacon` func:
- misuse of __counted_by
-To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Dear Linux Developers for NETWORKING and MAC80211,
+Code Style Enhancements:
 
-We are curious about the use of `struct cfg80211_mbssid_elems *dst` in
-function `ieee80211_copy_mbssid_beacon`.
-The definition of `struct cfg80211_mbssid_elems` is at
-https://elixir.bootlin.com/linux/v6.10.6/source/include/net/cfg80211.h#L1304.
-```
-struct cfg80211_mbssid_elems {
-u8 cnt;
-struct {
-const u8 *data;
-size_t len;
-} elem[] __counted_by(cnt);
-};
-```
+* Pointer Declarations: Improved spacing consistency.
 
-Our question is: The `elem` member of `struct cfg80211_mbssid_elems`
-is annotated with "__counted_by", which means the array size is
-indicated by `cnt`. Only if we set `cnt` before accessing `elem[i]`,
-the flexible member `elem` can be properly bounds-checked at run-time
-when enabling CONFIG_UBSAN_BOUNDS and CONFIG_FORTIFY_SOURCE. Or there
-will be a warning from each array access that is prior to the
-initialization because the number of elements is zero.
+Macro Improvements:
 
-In function `ieee80211_copy_mbssid_beacon` at
-https://elixir.bootlin.com/linux/v6.10.6/source/net/mac80211/cfg.c#L1073,
-we think it's needed to relocate `dst->cnt = src->cnt` before
-accessing `dst->elem[i]`.
-And https://elixir.bootlin.com/linux/v6.10.6/source/net/mac80211/cfg.c#L1090
-is the same.
+* Enclosed multi-statement macro in a do-while loop.
 
-Here is a fix example of a similar situation :
-https://lore.kernel.org/stable/20240613113225.898955993@linuxfoundation.org/.
+Formatting Standardization:
 
-Please kindly correct us if we missed any key information. Looking
-forward to your response!
+* Replaced spaces with tabs in iwl_mvm_vendor_events_idx.
 
-Best,
-Haoyu Li
+This V2 fixes the compile issue. I had a small confussion with my kernel
+configuration. Now it is tested/compiled.
+
+Best regards,
+Juan
+
+Juan José Arboleda (3):
+  iwlwifi: mvm: Improve code style in pointer declarations
+  iwlwifi: mvm: Enclose multi-statement macro in a do while
+  iwlwifi: mvm: Replace spaces for tabs in iwl_mvm_vendor_events_idx
+
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c      |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c       | 11 +++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c |  6 +++---
+ 3 files changed, 12 insertions(+), 9 deletions(-)
+
+-- 
+2.46.0
+
