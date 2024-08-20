@@ -1,16 +1,16 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8C218E74B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23F9718EFC7
 	for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2024 11:55:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724154940; cv=none; b=uUeOQJEelxR7fUSUvKlC9s+O1j6YEM72BYDP4DIHhYC1Jno4XkMpZIamwJIRcNIaP8IvxSPJj3c9WZmr7TPIskKq2hZ4flIUzhNR4Sw7pLqi49PmT5h4C0PpbpLukVshEODB+RBrm0DdYPtG6RlsFhSFOzUjlZW2MoYpf8v2EH4=
+	t=1724154940; cv=none; b=cp7ZJh7m0T1yj/kUP59u7Es5BfP3uY0985MxR9XIAZHEQJL2Ph5MXXIzteq4qEvg7wvqVwa0bfx37bH5IJK3xC5Vkgrq0os9oZFMBm/6A3dkF3vzQcJxYG3KNPc/1hViYn8Mk3AnCKwxdEe0QpkawTGE0aztfUNQkxSWgiRS+0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724154940; c=relaxed/simple;
-	bh=Dy2rYpe7ga87zMwt7gfk8WBV36PYG+YAWWRPNjyhnG0=;
+	bh=Bp/vNFmehXXKUarTv/nIaYlwD0qtLTsrP1PAtRs8xS4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ovrry+B17EuHYlCnzvOgGQGcT6afhbvHpCU1pv4i/1feO2Vg4a7IiAtGll3mvqXfbTWJwZJGxhdKhgcZAhco4tXipivxuFaXK1X7VOPgg3E5iBihLNX/XoEyVdEoMAqbX/OLtDnSxNpbJCa4hvubrxwviEQ141ZmI6bQmxsElHs=
+	 In-Reply-To:To:Cc; b=N0pPTAEediMcS4k9efeaIsdXgA4bOsBs31GjUsmOaKDduyXnqsNUbk376P766++wPCKYlQeYA/ORiZw5kogwsUgQxnbV+A4HKtAiL2+stSrpO3o+vPVBP7eRiZfeeLLZ+58VjFyKWi0WBieUMA83AqGv70CrUJ5IDORNVhFksDw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
@@ -18,21 +18,20 @@ Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSS-0000An-5X; Tue, 20 Aug 2024 13:55:28 +0200
+	id 1sgNSS-0000Aj-5W; Tue, 20 Aug 2024 13:55:28 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.94.2)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSR-001lLl-FB; Tue, 20 Aug 2024 13:55:27 +0200
+	id 1sgNSR-001lLi-Ej; Tue, 20 Aug 2024 13:55:27 +0200
 Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
 	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSR-00GnIQ-1B;
+	id 1sgNSR-00GnIQ-18;
 	Tue, 20 Aug 2024 13:55:27 +0200
 From: Sascha Hauer <s.hauer@pengutronix.de>
-Date: Tue, 20 Aug 2024 13:55:32 +0200
-Subject: [PATCH 07/31] wifi: mwifiex: pass adapter to
- mwifiex_dnld_cmd_to_fw()
+Date: Tue, 20 Aug 2024 13:55:29 +0200
+Subject: [PATCH 04/31] wifi: mwifiex: drop unnecessary initialization
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240820-mwifiex-cleanup-v1-7-320d8de4a4b7@pengutronix.de>
+Message-Id: <20240820-mwifiex-cleanup-v1-4-320d8de4a4b7@pengutronix.de>
 References: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 In-Reply-To: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 To: Brian Norris <briannorris@chromium.org>, 
@@ -49,11 +48,11 @@ To: Brian Norris <briannorris@chromium.org>,
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
  kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=2048;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=1956;
  i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=Dy2rYpe7ga87zMwt7gfk8WBV36PYG+YAWWRPNjyhnG0=;
- b=AHnT83hR8Of4IOFaciGACi2w940X2VOUZRD3Yl2ZwiPr8es4PYjzUpSa5MqsTAB0VVvXRKQ7g
- XN3h2sITF2kA9CNoRhutQl9BThpQkTgLebOEiB1oeNuTPZfSbTd+4m+
+ bh=Bp/vNFmehXXKUarTv/nIaYlwD0qtLTsrP1PAtRs8xS4=;
+ b=tQFt/SkqPR3aFch1ryciwSJAEcZPQhUZTBaJGsbf/8v79r23b2pPpvJ0JxPeCrK5k7+2g530B
+ /2dKGf/UnEwAr27T/T8h/+0//YU1nUkSWVEAvWQvnBU6UdF+iLmt6gu
 X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
  pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -61,56 +60,53 @@ X-SA-Exim-Mail-From: s.hauer@pengutronix.de
 X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-priv is not needed in mwifiex_dnld_cmd_to_fw(), so pass the adapter to
-it as context pointer.
+Several functions initialize the priv * without actually using the
+initialized value. Drop the initialization.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 6 ++----
+ drivers/net/wireless/marvell/mwifiex/txrx.c   | 3 +--
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index d50a2925d0739..4f814110f750e 100644
+index 48c0d9e9dff71..d50a2925d0739 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
 +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -159,11 +159,9 @@ static int mwifiex_cmd_host_cmd(struct mwifiex_private *priv,
-  * sending. Afterwards, it logs the command ID and action for debugging
-  * and sets up the command timeout timer.
-  */
--static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
-+static int mwifiex_dnld_cmd_to_fw(struct mwifiex_adapter *adapter,
- 				  struct cmd_ctrl_node *cmd_node)
+@@ -472,8 +472,7 @@ void mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter)
+ int mwifiex_process_event(struct mwifiex_adapter *adapter)
  {
--
--	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret;
- 	struct host_cmd_ds_command *host_cmd;
- 	uint16_t cmd_code;
-@@ -742,7 +740,6 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
-  */
- int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter)
+ 	int ret, i;
+-	struct mwifiex_private *priv =
+-		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	struct mwifiex_private *priv;
+ 	struct sk_buff *skb = adapter->event_skb;
+ 	u32 eventcause;
+ 	struct mwifiex_rxinfo *rx_info;
+@@ -808,8 +807,7 @@ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter)
+ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
  {
--	struct mwifiex_private *priv;
- 	struct cmd_ctrl_node *cmd_node;
+ 	struct host_cmd_ds_command *resp;
+-	struct mwifiex_private *priv =
+-		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	struct mwifiex_private *priv;
  	int ret = 0;
- 	struct host_cmd_ds_command *host_cmd;
-@@ -766,7 +763,6 @@ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter)
- 				    struct cmd_ctrl_node, list);
- 
- 	host_cmd = (struct host_cmd_ds_command *) (cmd_node->cmd_skb->data);
--	priv = cmd_node->priv;
- 
- 	if (adapter->ps_state != PS_STATE_AWAKE) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -781,7 +777,7 @@ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter)
- 	spin_unlock_bh(&adapter->cmd_pending_q_lock);
- 
- 	spin_unlock_bh(&adapter->mwifiex_cmd_lock);
--	ret = mwifiex_dnld_cmd_to_fw(priv, cmd_node);
-+	ret = mwifiex_dnld_cmd_to_fw(adapter, cmd_node);
- 
- 	/* Any command sent to the firmware when host is in sleep
- 	 * mode should de-configure host sleep. We should skip the
+ 	uint16_t orig_cmdresp_no;
+ 	uint16_t cmdresp_no;
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index bd91678d26b49..f44e22f245110 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -24,8 +24,7 @@
+ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
+ 			     struct sk_buff *skb)
+ {
+-	struct mwifiex_private *priv =
+-		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	struct mwifiex_private *priv;
+ 	struct rxpd *local_rx_pd;
+ 	struct mwifiex_rxinfo *rx_info = MWIFIEX_SKB_RXCB(skb);
+ 	int ret;
 
 -- 
 2.39.2
