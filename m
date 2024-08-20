@@ -1,16 +1,16 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2261718EFFF
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2024 11:55:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD3F18F2D7
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2024 12:00:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724154956; cv=none; b=XQsKZHcy9n9eZVZ1Tx1QjQ81ex9drtqJfuSgI/tqZ7v9uXVjC4YTACpaNA0kjW22fDzw9wPvKsOOXYt/IyQ7wfAvnMs17ry0GOKjMFngj381lrByM3267TXx7hk+SwwosPIgYLndfExGmlf9YNEtKiJO8q+aDz5sDvBtMPqSE58=
+	t=1724155231; cv=none; b=Uq26pf6+EekpSiXaPQ0gcpn73XmCcXet+tkL8clGnTM4qZWuHjMXyFmsm1+uBxIRIcG7D8qAs79xJ5u1OEUzj5qGse6v9ArS4bpiJogkFJmTxAwDcR/hb5StYo+5fC3X77E3oLzgW44ci8uCfBO4WUU3y8hMjlkUwJpl+jN59uI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724154956; c=relaxed/simple;
-	bh=ub6bLaPuTHcCZMiXbWB6JhIgGt2owL18udvenP083fo=;
+	s=arc-20240116; t=1724155231; c=relaxed/simple;
+	bh=a4wuBptPHFo9gmCPiVVThKDwNP1M7F5R34Dm5VBtJj0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=D8A8rVnXFY0rIjSI66RLwRM36zdPKDaMqxvdYcS3c7DW4lCiIhjEcfGNqr2WvmNN3ne/c+Jp1p45Vq+8gRHTHTEwq4+Y3H8Vv4DwSJHt25Rpfj1uYOYE7UBsi5B7j20hA8w8uSo+I5YwK9GUPA/mG4B2CwJYFotITuigRVyY1Ik=
+	 In-Reply-To:To:Cc; b=g3b8wB6UEdemMCfqnGwzZUWl029dexQdYpGSUQJdU1cCjUSzB0TuFiqaz38wY6KrT9Cn7IKCFk5+10l3JepgcK9BgwnhrRH08qarKhmXtxYHmTlSiEI7JRnFoyZjfZsU2Pp9KNWlfE5tOVGzQ9MjSaY5QWeDpFH+FdbSUiT2O2Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
@@ -18,21 +18,21 @@ Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSS-0000Am-5W; Tue, 20 Aug 2024 13:55:28 +0200
+	id 1sgNXG-0000uO-Ab; Tue, 20 Aug 2024 14:00:26 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.94.2)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSR-001lLn-FN; Tue, 20 Aug 2024 13:55:27 +0200
+	id 1sgNXF-001lN7-Sw; Tue, 20 Aug 2024 14:00:25 +0200
 Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
 	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSR-00GnIQ-1E;
+	id 1sgNSR-00GnIQ-1S;
 	Tue, 20 Aug 2024 13:55:27 +0200
 From: Sascha Hauer <s.hauer@pengutronix.de>
-Date: Tue, 20 Aug 2024 13:55:34 +0200
-Subject: [PATCH 09/31] wifi: mwifiex: deduplicate code in
- mwifiex_cmd_tx_rate_cfg()
+Date: Tue, 20 Aug 2024 13:55:47 +0200
+Subject: [PATCH 22/31] wifi: mwifiex: pass adapter to
+ mwifiex_init_shutdown_fw()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240820-mwifiex-cleanup-v1-9-320d8de4a4b7@pengutronix.de>
+Message-Id: <20240820-mwifiex-cleanup-v1-22-320d8de4a4b7@pengutronix.de>
 References: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 In-Reply-To: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 To: Brian Norris <briannorris@chromium.org>, 
@@ -49,11 +49,11 @@ To: Brian Norris <briannorris@chromium.org>,
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
  kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=3107;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=5046;
  i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=ub6bLaPuTHcCZMiXbWB6JhIgGt2owL18udvenP083fo=;
- b=+PIhpDmqELJBEkl3fyKxfeXdRDT+iSAeqXvKKlf9BHbbmYFR5IJONNEl+Cs/aJb0ZgeQnXQCv
- kzcW4BFT6ffDrauypw3y/RGNBwHdJh/0iOMSHf4hUudkzsEFJ09JSkp
+ bh=a4wuBptPHFo9gmCPiVVThKDwNP1M7F5R34Dm5VBtJj0=;
+ b=Jch8I4JE/geS6HJCBRRb7E+GOOWTnGB3t7WS2mYatNAwsP/DNkwcdEOwlMvb/qKDdc/wKfs/h
+ UY1BVV8RjRQBiD8chWjJp5m8c9r5C5iWrwhxJxs/clmuzlOTsutz6QA
 X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
  pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -61,77 +61,127 @@ X-SA-Exim-Mail-From: s.hauer@pengutronix.de
 X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-The code block inside the if/else is the same with just using
-pbitmap_rates if non NULL or priv->bitmap_rates otherwise. Deduplicate
-the code by picking the correct pointer first and then using it
-unconditionally.
+mwifiex_init_shutdown_fw() shuts down the firmware of the whole adapter,
+not of a single priv, so pass the adapter to this function and use
+mwifiex_adapter_send_cmd().
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 43 +++++++++-----------------
- 1 file changed, 14 insertions(+), 29 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/main.c | 5 +----
+ drivers/net/wireless/marvell/mwifiex/main.h | 2 +-
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 4 +---
+ drivers/net/wireless/marvell/mwifiex/util.c | 6 +++---
+ 6 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index e2800a831c8ed..30dd4e58e2b1d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -157,7 +157,7 @@ mwifiex_cmd_802_11_get_log(struct host_cmd_ds_command *cmd)
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index f42d537cc6ce0..8978934b1115e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1493,8 +1493,6 @@ static void mwifiex_uninit_sw(struct mwifiex_adapter *adapter)
   */
- static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
- 				   struct host_cmd_ds_command *cmd,
--				   u16 cmd_action, u16 *pbitmap_rates)
-+				   u16 cmd_action, const u16 *pbitmap_rates)
+ int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
  {
- 	struct host_cmd_ds_tx_rate_cfg *rate_cfg = &cmd->params.tx_rate_cfg;
- 	struct mwifiex_rate_scope *rate_scope;
-@@ -174,34 +174,19 @@ static int mwifiex_cmd_tx_rate_cfg(struct mwifiex_private *priv,
- 	rate_scope->type = cpu_to_le16(TLV_TYPE_RATE_SCOPE);
- 	rate_scope->length = cpu_to_le16
- 		(sizeof(*rate_scope) - sizeof(struct mwifiex_ie_types_header));
--	if (pbitmap_rates != NULL) {
--		rate_scope->hr_dsss_rate_bitmap = cpu_to_le16(pbitmap_rates[0]);
--		rate_scope->ofdm_rate_bitmap = cpu_to_le16(pbitmap_rates[1]);
--		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
--			rate_scope->ht_mcs_rate_bitmap[i] =
--				cpu_to_le16(pbitmap_rates[2 + i]);
--		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
--			for (i = 0;
--			     i < ARRAY_SIZE(rate_scope->vht_mcs_rate_bitmap);
--			     i++)
--				rate_scope->vht_mcs_rate_bitmap[i] =
--					cpu_to_le16(pbitmap_rates[10 + i]);
--		}
--	} else {
--		rate_scope->hr_dsss_rate_bitmap =
--			cpu_to_le16(priv->bitmap_rates[0]);
--		rate_scope->ofdm_rate_bitmap =
--			cpu_to_le16(priv->bitmap_rates[1]);
--		for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
--			rate_scope->ht_mcs_rate_bitmap[i] =
--				cpu_to_le16(priv->bitmap_rates[2 + i]);
--		if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
--			for (i = 0;
--			     i < ARRAY_SIZE(rate_scope->vht_mcs_rate_bitmap);
--			     i++)
--				rate_scope->vht_mcs_rate_bitmap[i] =
--					cpu_to_le16(priv->bitmap_rates[10 + i]);
--		}
-+	if (!pbitmap_rates)
-+		pbitmap_rates = priv->bitmap_rates;
-+
-+	rate_scope->hr_dsss_rate_bitmap = cpu_to_le16(pbitmap_rates[0]);
-+	rate_scope->ofdm_rate_bitmap = cpu_to_le16(pbitmap_rates[1]);
-+
-+	for (i = 0; i < ARRAY_SIZE(rate_scope->ht_mcs_rate_bitmap); i++)
-+		rate_scope->ht_mcs_rate_bitmap[i] = cpu_to_le16(pbitmap_rates[2 + i]);
-+
-+	if (priv->adapter->fw_api_ver == MWIFIEX_FW_V15) {
-+		for (i = 0; i < ARRAY_SIZE(rate_scope->vht_mcs_rate_bitmap); i++)
-+			rate_scope->vht_mcs_rate_bitmap[i] =
-+				cpu_to_le16(pbitmap_rates[10 + i]);
+-	struct mwifiex_private *priv;
+-
+ 	if (!adapter)
+ 		return 0;
+ 
+@@ -1502,10 +1500,9 @@ int mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
+ 	/* Caller should ensure we aren't suspending while this happens */
+ 	reinit_completion(adapter->fw_done);
+ 
+-	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 	mwifiex_deauthenticate_all(adapter);
+ 
+-	mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
++	mwifiex_init_shutdown_fw(adapter, MWIFIEX_FUNC_SHUTDOWN);
+ 
+ 	mwifiex_uninit_sw(adapter);
+ 	adapter->is_up = false;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index cb3a52c0869c9..114e0141dc01a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1436,7 +1436,7 @@ static inline void mwifiex_enable_wake(struct mwifiex_adapter *adapter)
+ 	}
+ }
+ 
+-int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
++int mwifiex_init_shutdown_fw(struct mwifiex_adapter *adapter,
+ 			     u32 func_init_shutdown);
+ 
+ int mwifiex_add_card(void *card, struct completion *fw_done,
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a25f90034e38d..2a7ed2aad1a34 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -452,7 +452,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 
+ 		mwifiex_disable_auto_ds(priv);
+ 
+-		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
++		mwifiex_init_shutdown_fw(adapter, MWIFIEX_FUNC_SHUTDOWN);
  	}
  
- 	rate_drop = (struct mwifiex_rate_drop_pattern *) ((u8 *) rate_scope +
+ 	mwifiex_remove_card(adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 18ed5015064db..e3a995514efc7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -867,7 +867,7 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 		mwifiex_disable_auto_ds(priv);
+-		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
++		mwifiex_init_shutdown_fw(adapter, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+ 	mwifiex_remove_card(adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 520ea4bc9a3fb..e082c26003cd7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -656,9 +656,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	if (card->udev->state != USB_STATE_NOTATTACHED && !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+-		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
+-							  MWIFIEX_BSS_ROLE_ANY),
+-					 MWIFIEX_FUNC_SHUTDOWN);
++		mwifiex_init_shutdown_fw(adapter, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+ 	mwifiex_dbg(adapter, FATAL,
+diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
+index 078877161ab7c..a8c44cc14f8a2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -137,7 +137,7 @@ int mwifiex_init_fw_complete(struct mwifiex_adapter *adapter)
+  * This function sends init/shutdown command
+  * to firmware.
+  */
+-int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
++int mwifiex_init_shutdown_fw(struct mwifiex_adapter *adapter,
+ 			     u32 func_init_shutdown)
+ {
+ 	u16 cmd;
+@@ -147,12 +147,12 @@ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 	} else if (func_init_shutdown == MWIFIEX_FUNC_SHUTDOWN) {
+ 		cmd = HostCmd_CMD_FUNC_SHUTDOWN;
+ 	} else {
+-		mwifiex_dbg(priv->adapter, ERROR,
++		mwifiex_dbg(adapter, ERROR,
+ 			    "unsupported parameter\n");
+ 		return -1;
+ 	}
+ 
+-	return mwifiex_send_cmd(priv, cmd, HostCmd_ACT_GEN_SET, 0, NULL, true);
++	return mwifiex_adapter_send_cmd(adapter, cmd, HostCmd_ACT_GEN_SET, 0, NULL, true);
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_init_shutdown_fw);
+ 
 
 -- 
 2.39.2
