@@ -1,16 +1,16 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F3F18F2D5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD3F18E048
 	for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2024 12:00:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724155232; cv=none; b=C/cR6jx8xPaFkw0u0BdPD3hBFMdxiMod11jnuhIjk1airJ7fT/4jNWJLW9XKVMQPaR8riHznl5LaPx9B9sMxJCBhnCrX9J5OyoJUEKSBb+9FAbyf62d0Biqe2K8cH0qk2EhpdAzDX+WUvLMvzKCt4Fx9UrjRmEo+bnyoKG2Nhc0=
+	t=1724155231; cv=none; b=LHVKD/cxjXnRnRTLbFQU77MDMGnE4Jll2JPi+Zdk45K3GOq7mn3NDIYWdoKzbzBd1OBqozKV0lrA4fohs6U5yijJtJ4WEUagdTwNGBHJKwyBFI56hUTceAdbkczsIG3h/N4iYdKZnvlWYopstyJkAi+G89mdNUZyahDJGyjEV4E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724155232; c=relaxed/simple;
-	bh=HEhEdThzY+uVINtwXzwbGho/WWVV5DgBTO5dvcE9lNk=;
+	s=arc-20240116; t=1724155231; c=relaxed/simple;
+	bh=NbLRRE/2rj8Js3vruT5fYGNGmwFqeMK5YEVrNf5xIH4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=I1S3+O5Bvutoe1rj2kZuXjJ5VLTMu9XJ9q/9Cuanw3goScGMsGZK3e7XVydpKjxgPI3zDmzo679uaWu/bdsR+6SG5//sFDGKNK/Y69fCGk2lcGWINQqU7s1g0+5Bxv/CKwsFQNhlv83ucOVcz8mrP6fOJIGKLQ+MnArjWxpK9ww=
+	 In-Reply-To:To:Cc; b=rwxlwV3EJem17ehU4qxnIscyNwlrgXbmIg4D1qRD0d2DNYeuIM3WOAo1lf91UeTzDzxe/jrwpLngaL1vzUKYqXE8vOQgviSKGMybYufb4KvPJaVL2U3PS1s342d5qAmOU/XHTZ5gleH6LPVmprIr9JTsqCxNZIGvF/Dncm8c2Pc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
@@ -18,21 +18,20 @@ Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNXG-0000tj-4y; Tue, 20 Aug 2024 14:00:26 +0200
+	id 1sgNXG-0000th-1X; Tue, 20 Aug 2024 14:00:26 +0200
 Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.94.2)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNXF-001lN1-My; Tue, 20 Aug 2024 14:00:25 +0200
+	id 1sgNXF-001lMy-K9; Tue, 20 Aug 2024 14:00:25 +0200
 Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
 	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
 	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sgNSR-00GnIQ-1X;
+	id 1sgNSR-00GnIQ-1V;
 	Tue, 20 Aug 2024 13:55:27 +0200
 From: Sascha Hauer <s.hauer@pengutronix.de>
-Date: Tue, 20 Aug 2024 13:55:52 +0200
-Subject: [PATCH 27/31] wifi: mwifiex: do not use mwifiex_get_priv() in
- mwifiex_dnld_sleep_confirm_cmd()
+Date: Tue, 20 Aug 2024 13:55:50 +0200
+Subject: [PATCH 25/31] wifi: mwifiex: return error on unexpected bss_num
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240820-mwifiex-cleanup-v1-27-320d8de4a4b7@pengutronix.de>
+Message-Id: <20240820-mwifiex-cleanup-v1-25-320d8de4a4b7@pengutronix.de>
 References: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 In-Reply-To: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
 To: Brian Norris <briannorris@chromium.org>, 
@@ -49,11 +48,11 @@ To: Brian Norris <briannorris@chromium.org>,
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
  kernel@pengutronix.de, Sascha Hauer <s.hauer@pengutronix.de>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=1359;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1724154927; l=2733;
  i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=HEhEdThzY+uVINtwXzwbGho/WWVV5DgBTO5dvcE9lNk=;
- b=vLiKh67V6kWSKJW7so2pK07WIBeOHxad5EJ4KyBUZpUxjcOBV7vakUfbqbMqrtKH32k7LaugV
- zvLZDFg9lQSAMqtegsRoWaJyxMj0Kri/rfb5gXijy/uOUc4mg2jTopm
+ bh=NbLRRE/2rj8Js3vruT5fYGNGmwFqeMK5YEVrNf5xIH4=;
+ b=AJLdrzn9DT8g8FDwVuPeWjmHGY0EKOuUmw7q6fY0YqvHz6VZ+yJG5sCSw3vy9qHl8G6Xxse6w
+ zNJbY1fd/oUADAcvCGm6hHdP/K34yD2lA2CMDjh3lvmihmsa0lmj8n/
 X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
  pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -61,40 +60,69 @@ X-SA-Exim-Mail-From: s.hauer@pengutronix.de
 X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY) returns an arbitrary
-priv *, so we can just make up some valid bss_num and bss_type values
-ourselves without calling this function.
+When we receive an event, command response or RX packet on with a
+bss_num we haven't sent then it must be a driver or firmware bug. It
+makes no sense to continue with an arbitrary bss in this case, so print
+an error message and bail out with an error.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 15 +++++++++++----
+ drivers/net/wireless/marvell/mwifiex/txrx.c   |  6 ++----
+ 2 files changed, 13 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 410e548fab074..1b6d50b8078a3 100644
+index 400f1785d0d9e..410e548fab074 100644
 --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
 +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -298,19 +298,15 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_adapter *adapter,
- static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- {
- 	int ret;
--	struct mwifiex_private *priv;
- 	struct mwifiex_opt_sleep_confirm *sleep_cfm_buf =
- 				(struct mwifiex_opt_sleep_confirm *)
- 						adapter->sleep_cfm->data;
- 	struct sk_buff *sleep_cfm_tmp;
+@@ -497,8 +497,11 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
  
--	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 	/* Get BSS number and corresponding priv */
+ 	priv = mwifiex_get_priv_by_id(adapter, EVENT_GET_BSS_NUM(eventcause));
+-	if (!priv)
+-		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	if (!priv) {
++		mwifiex_dbg(adapter, ERROR, "received event on unused bss_num %d\n",
++			    EVENT_GET_BSS_NUM(eventcause));
++		return -EINVAL;
++	}
+ 
+ 	/* Clear BSS_NO_BITS from event */
+ 	eventcause &= EVENT_ID_MASK;
+@@ -861,8 +864,12 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 	/* Get BSS number and corresponding priv */
+ 	priv = mwifiex_get_priv_by_id(adapter,
+ 			     HostCmd_GET_BSS_NO(le16_to_cpu(resp->seq_num)));
+-	if (!priv)
+-		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	if (!priv) {
++		mwifiex_dbg(adapter, ERROR, "received event on unused bss_num %d\n",
++			    HostCmd_GET_BSS_NO(le16_to_cpu(resp->seq_num)));
++		return -EINVAL;
++	}
++
+ 	/* Clear RET_BIT from HostCmd */
+ 	resp->command = cpu_to_le16(orig_cmdresp_no & HostCmd_CMD_ID_MASK);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index 21cfee3290377..0e5247bd642b6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -32,12 +32,10 @@ int mwifiex_handle_rx_packet(struct mwifiex_adapter *adapter,
+ 	local_rx_pd = (struct rxpd *) (skb->data);
+ 	/* Get the BSS number from rxpd, get corresponding priv */
+ 	priv = mwifiex_get_priv_by_id(adapter, local_rx_pd->bss_num & BSS_NUM_MASK);
+-	if (!priv)
+-		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
 -
- 	adapter->seq_num++;
- 	sleep_cfm_buf->seq_num =
- 		cpu_to_le16(HostCmd_SET_SEQ_NO_BSS_INFO
--					(adapter->seq_num, priv->bss_num,
--					 priv->bss_type));
-+					(adapter->seq_num, 0, 0));
- 
- 	mwifiex_dbg(adapter, CMD,
- 		    "cmd: DNLD_CMD: %#x, act %#x, len %d, seqno %#x\n",
+ 	if (!priv) {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "data: priv not found. Drop RX packet\n");
++			    "data: recived RX packet on unused bss_num %d. Dropping it\n",
++			    local_rx_pd->bss_num & BSS_NUM_MASK);
+ 		dev_kfree_skb_any(skb);
+ 		return -1;
+ 	}
 
 -- 
 2.39.2
