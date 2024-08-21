@@ -1,91 +1,114 @@
-Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B588CA31
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2024 19:32:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A362F16FF2A;
+	Wed, 21 Aug 2024 20:26:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724268781; cv=none; b=H5F+Yui0Uj61K8Hq7sP24MeoMUuvmF9DUP8g/UjNTdWq7XkcEOUPr6M0cIN33jQN5i3iRGLVtgMpqn1moU4U70Qe4YYfWntemXZnpSF5kCvydfasC55uArrDo92Lhl/KfCVIWfCziQcBKMVdEnd6ItjAsF84VOyQB6h+0LzqT3U=
+	t=1724272008; cv=none; b=ihtWxdNXEdQpoQWxfnTHNi7WUtNzROIm8SLZPWW7oaHjbV9UVvSvrWGhtuL1sH/S/jn6BFg9+I/nP0sfOX0zi6ghIsnb3wf+qgyyK+QscOEjtdplLGoD3nqY5Hka32zHXv+JEnEJp66AWkrGJHZmRhmfML/A/+JEOqECHiLviRk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724268781; c=relaxed/simple;
-	bh=ljwy/vdQYzq0SlCleqiGWnPhL6kZGy2OwVYbA5OpAmo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YXf7Ded58aDmeb+qOJe3g8c5g+vhKhHa8zTm307kw8sVG5SLgh9wkP4CzOcGDSciDx0Su8LAcD+ufaJXF9R4Iw+/ziN0hqIBHNGMfNNoLCIDn0uYC49VpwxGeluqBMQnleYlJCTZOql5Vps3+fqlLl17OnVEZPXWoKoZAg767EI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=T7r5nGqE; arc=none smtp.client-ip=85.214.62.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
+	s=arc-20240116; t=1724272008; c=relaxed/simple;
+	bh=hC7MVxEnpBSlpjnRjxHCdY9iSHf7+aorJoyKXmBQUak=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=A//KWPa/SOV8geSNsr0jXTleQ+Q7oc0FUqCIu1CY9cOArPTZRhYgWCY+Lwwq6/iBO5gOwyNIUVRHIOb/lkIMWiqTN9IDtwVBeHBWbSvT1YKHZbHjiRCET8bXL7wZoyuQ4VK+oY9dp0rrewaztLyE/3icPN+44z5jDrhWBOXL+AE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gjT/tSGA; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="T7r5nGqE"
-Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 64C718690D;
-	Wed, 21 Aug 2024 21:32:55 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1724268778;
-	bh=Aa6MrW3Cdn81LBB6tl4whpJwkasBOOCzwE4lpYpxQgg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=T7r5nGqEfXuFsjCkkdEn1JqaLXk9fS23vOJl+8cllRu4Q+ZAj2N/Ev+9pt/y+rt8G
-	 6vGpivfzt1ALgKxkyguXj20GFoqEm3T7Uq6mVb7jK9PomDhRm3olH2z0bIx89bH2kQ
-	 CBjEA4Zt9EEJCYY6ge2MpPbQe2S60XD8B0qJz6bMBnM7shN0q4t9EHp2sp0t8RlK6r
-	 U59lhn/zMxnIznvDp4enn4ZzlLCtgoWq0AVSzKNK1YGV2uGOWGU/8t20SnFCmrFL8E
-	 psAIFSyIiplH0RGTJau2wO+k/VPHgjSM3r2IlXos9ffAZWkrvKwgH+aI18Ylh3vk2o
-	 3rKS0fKS1lKZg==
-Message-ID: <533967a1-c01a-4c48-868f-25056a5d20d0@denx.de>
-Date: Wed, 21 Aug 2024 18:10:49 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gjT/tSGA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724272007; x=1755808007;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=hC7MVxEnpBSlpjnRjxHCdY9iSHf7+aorJoyKXmBQUak=;
+  b=gjT/tSGAPoZ74cj+ONfoIrLTCfzvPAXqkfPQIFlRpJtBSDXN0wh1ahFN
+   At/BvGYgYRg0ixSMjGI7jfWXp/g5rEpJxvpSSFA4HUMdNp30TRNgQn+Bw
+   vcf5IFEuP3bnb9zLiECc19TBKynjIxBlnmEBL3GgPP1FKu+VlN9SWKQLO
+   WJopRVDZRudfZb2Yrx3QZmHv+KzAmJjcDPTPnwQMUa/9jHQaAqMd+gV92
+   tw3sDM2ky8tv1Y72Cc6hM+RPLaCmjmS63jddOA+NnFFfe/b9g4dN9CAGT
+   r7pLBfIjUQuy2snntcO23xm50e3R6OQir5s3i2Khm+/Y69MREuexSKBzx
+   g==;
+X-CSE-ConnectionGUID: +EmeEAOEStCXXWQZa+emmA==
+X-CSE-MsgGUID: O0HDUySHROuTH8lSdG5piw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11171"; a="33808684"
+X-IronPort-AV: E=Sophos;i="6.10,164,1719903600"; 
+   d="scan'208";a="33808684"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2024 13:26:46 -0700
+X-CSE-ConnectionGUID: WXVrbJFzRtaMfynGWH7Fjw==
+X-CSE-MsgGUID: t0RvxcXrS1m+eWCAQ8CTtg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,164,1719903600"; 
+   d="scan'208";a="84379320"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmviesa002.fm.intel.com with ESMTP; 21 Aug 2024 13:26:42 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+	id 97766268; Wed, 21 Aug 2024 23:26:41 +0300 (EEST)
+Date: Wed, 21 Aug 2024 23:26:41 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>,
+	Ganapathi Bhat <ganapathi017@gmail.com>,
+	Sharvari Harisangam <sharvari.harisangam@nxp.com>,
+	Xinming Hu <huxinming820@gmail.com>, Kalle Valo <kvalo@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] wifi: mwifiex: Replace one-element arrays with
+ flexible-array members
+Message-ID: <ZsZNgfnEwOcPdCly@black.fi.intel.com>
+References: <Y9xkECG3uTZ6T1dN@work>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] wifi: brcmfmac: add support for TRX firmware download
-To: Florian Fainelli <f.fainelli@gmail.com>,
- Arend Van Spriel <arend.vanspriel@broadcom.com>,
- Kalle Valo <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Chung-Hsien Hsu
- <stanley.hsu@cypress.com>, Chung-Hsien Hsu <chung-hsien.hsu@infineon.com>,
- "Dr. David Alan Gilbert" <linux@treblig.org>,
- "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Carter Chen <carter.chen@infineon.com>,
- Duoming Zhou <duoming@zju.edu.cn>, Erick Archer <erick.archer@outlook.com>,
- Kees Cook <kees@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Mathias Krause <minipli@grsecurity.net>, Matthias Brugger
- <mbrugger@suse.com>, Owen Huang <Owen.Huang@infineon.com>,
- Ulf Hansson <ulf.hansson@linaro.org>, brcm80211-dev-list.pdl@broadcom.com,
- brcm80211@lists.linux.dev
-References: <20240818201533.89669-1-marex@denx.de> <871q2ky3zm.fsf@kernel.org>
- <1916b572558.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <c95f64f1-3ebb-41ca-a935-51c1efa1256a@denx.de>
- <b04c01e5-3e60-4b0b-8984-9d6e0782f5af@gmail.com>
-Content-Language: en-US
-From: Marek Vasut <marex@denx.de>
-In-Reply-To: <b04c01e5-3e60-4b0b-8984-9d6e0782f5af@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
-X-Virus-Status: Clean
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y9xkECG3uTZ6T1dN@work>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-On 8/19/24 8:09 PM, Florian Fainelli wrote:
-
-Hi,
-
->> I did notice just now there is some TRX support for USB broadcom 
->> devices ?
->>
+On Thu, Feb 02, 2023 at 07:32:00PM -0600, Gustavo A. R. Silva wrote:
+> One-element arrays are deprecated, and we are replacing them with flexible
+> array members instead. So, replace one-element arrays with flexible-array
+> members in multiple structures.
 > 
-> TRX is a format that is also used for partitioning flash devices, so 
-> there is probably some room for making a common header:
+> This helps with the ongoing efforts to tighten the FORTIFY_SOURCE
+> routines on memcpy() and help us make progress towards globally
+> enabling -fstrict-flex-arrays=3 [1].
 > 
-> ./Documentation/devicetree/bindings/mtd/partitions/brcm,trx.txt/drivers/mtd/parsers/parser_trx.c
+> This results in no differences in binary output.
 
-Is that format somehow standardized ? I recall it was used on some 
-OpenWRT routers ?
+Sorry for blast from the past, but I have a question here.
 
-It seems the TRXSE (whatever it is) is used more like a carrier for the 
-firmware blob (chunks?) which are pushed into SRAM (?) of the CYW55572 
-device.
+This change seems converts many of the flexible arrays in this driver.
+But what's behind this one?
+
+struct host_cmd_ds_802_11_scan_ext {
+        u32   reserved;
+        u8    tlv_buffer[1];
+} __packed;
+
+
+AFAIU this needs also some care. On the real machine I have got this
+
+elo 16 17:51:58 surfacebook kernel: ------------[ cut here ]------------
+elo 16 17:51:58 surfacebook kernel: memcpy: detected field-spanning write (size 243) of single field "ext_scan->tlv_buffer" at drivers/net/wireless/marvell/mwifiex/scan.c:2239 (size 1)
+elo 16 17:51:58 surfacebook kernel: WARNING: CPU: 0 PID: 498 at drivers/net/wireless/marvell/mwifiex/scan.c:2239 mwifiex_cmd_802_11_scan_ext+0x83/0x90 [mwifiex]
+
+which leads to
+
+        memcpy(ext_scan->tlv_buffer, scan_cfg->tlv_buf, scan_cfg->tlv_buf_len);
+
+but the code allocates 2k or more for the command buffer, so this seems
+quite enough for 243 bytes.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
