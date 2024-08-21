@@ -1,76 +1,67 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D950B1E6165
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Aug 2024 09:16:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FE0620B326;
+	Wed, 21 Aug 2024 10:05:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724231770; cv=none; b=kPhJGGcCd+PUMdtBZUsG3mXDu6YTgnrNZpEbbO3HmNVC3IpuOeUHKjeQ63I5U0mhfCqd/YcIW+lOc/Ad3P63RC96vOhrj0+q7oIzZDWnsaHSo6Jxi0DM+HQfCPHb/wgqu9D96E/0mWPyIo/ak3Z5vLmu6QnPUMwoJCOT0wHnyss=
+	t=1724234728; cv=none; b=ZyaTL43/kNa+IIrPw+bxWZygIT3+pym11jFaDn9VRJDtC+i5d/2oa8X+FhusypjFU9tbHehuPFwmGkPcvZZNtkNjOcenzfPl8ZvTV2ISLA16VmHpJ2rIYHfwlRK7dO5GgJD+VgVoLG/7iZVeMpRWF7IHhPmzOTFA4jOSAWSli+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724231770; c=relaxed/simple;
-	bh=Xp2VmvKHO4q0zrH+xBcCeIKoEe9o4elGaOHCdrpei1Q=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HLJRNMLCv1Yayc0Vmm6WS5v1fTfCqxO0Gbtvr96RnXqlo38Y60kkl6ZxlrzjgJVwMocT+qxr3KuxoosodSzheMkLnVvb33w0fevN6jL9YVVmvWkHux8B3FqEHDbmgcwHclGOwRpvjgtUBkNYBTuAKqQw+E+jDByWjy3TGbNaWyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Hv1LJmd7; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1724234728; c=relaxed/simple;
+	bh=Hqr8Mm8YpR3FTexCXxW6pfgLn7A4XKa4y4ZPd83+qXQ=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=dBdGirLKpxi1+7wvLz0eRQnsBU3CpOpqmwJKipVsiCyFJVdOXUag73j5iwE1eOFAz7Y3F3zK7qb2GewnVeUfkPhxg+dIP8QQf04zeiqbQJNeeNAIp+MAb7c5yUqhrfHI+YZoQuw0akJ5yvFWdbpfAevNToLwK1y90CSRRommpAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pF5kJcJY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Hv1LJmd7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Xp2VmvKHO4q0zrH+xBcCeIKoEe9o4elGaOHCdrpei1Q=;
-	t=1724231767; x=1725441367; b=Hv1LJmd7GVUEB5M21nROYsnMO3ihrcr8ZUFF5X8ndfg1dNv
-	UjbtQZdFIQZW2u7txOJ4DtcRHcG0Zhq9Yqus6PTWbxKaOWpVH6DQ0+mCF4mEqBcCZeJ7LZvjsfIFb
-	qSGPIIyBa9NV6RRuLZuIa1INFRJID7Modur92syfXjayqWfZ3gF+1Nd3hk225qqdZD81At2RFnxON
-	Q1u0qFbKkBLjpAmCl4JPseJI0GqjvMs6LtrYXdx1bdycI0CAm9mpmpKs6GLiH/7ofNVokOD0Zq6oP
-	x+XmAC1v/hWn5/YSRTdjGsEMtEBENGepHZLOLPukzGg1jpm55eXK5RTxhOXeVH4Q==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1sghRl-0000000Aduc-1ZlL;
-	Wed, 21 Aug 2024 11:16:05 +0200
-Message-ID: <c4beca76eee7303af22a9bae67d00fea0efa3b50.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/1] wifi: mac80211: Fix 320 MHz max TPE field parsing.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rory Little <rory@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 Aug 2024 11:16:04 +0200
-In-Reply-To: <20240812213728.1799255-1-rory@candelatech.com>
-References: <20240812213728.1799255-1-rory@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pF5kJcJY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D5C8C32782;
+	Wed, 21 Aug 2024 10:05:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724234727;
+	bh=Hqr8Mm8YpR3FTexCXxW6pfgLn7A4XKa4y4ZPd83+qXQ=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=pF5kJcJYqTsm/4MCgcdJqMGcuFcS1vZx7xdLXTevJW1h/dpDATmSmSuuIdDZEWdVH
+	 8H4wsmwGcFJgHr9meB907n3WPsbb/kxah+ipnAVMzaVv498PYXhW/gRRsUrPWbVAxi
+	 u7mb63tiwFLV72ea5Ak01cEFxzy+ltlrW+LXEAYEtQpRirY6fNE8OnrTghAlv2vLSE
+	 t5STre/3L0FapyGqrL8YkI2RaMTHM7UVAWocziPzAVJkIHWJDlUKchbV57nxObdJRl
+	 n5VxgSXOdXtYE/CDJMTRf4F8SOCeGyR5bk9ox+zbzolZq/pxXB05Z8jKKTNevk7s5O
+	 TOvncUlNeAA0A==
+From: Kalle Valo <kvalo@kernel.org>
+To: Yu Jiaoliang <yujiaoliang@vivo.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,  "David S. Miller"
+ <davem@davemloft.net>,  Eric Dumazet <edumazet@google.com>,  Jakub
+ Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>,
+  linux-wireless@vger.kernel.org,  netdev@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  opensource.kernel@vivo.com
+Subject: Re: [PATCH v1] net: wireless: Use kmemdup_array instead of kmemdup
+ for multiple allocation
+References: <20240821072410.4065645-1-yujiaoliang@vivo.com>
+Date: Wed, 21 Aug 2024 13:05:23 +0300
+In-Reply-To: <20240821072410.4065645-1-yujiaoliang@vivo.com> (Yu Jiaoliang's
+	message of "Wed, 21 Aug 2024 15:24:10 +0800")
+Message-ID: <87ed6igpi4.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
 
-On Mon, 2024-08-12 at 14:37 -0700, Rory Little wrote:
-> Transmit Power Count will be one less than the number of HE fields, so
-> if we do find an extension field, its index will be this number, plus
-> one, rather than two.
->=20
-> This fixes an issue noted in the iwlmvm driver, where clients
-> associated at 320 MHz had degraded performance.
->=20
-> Fixes: 584b4bfff5ce ("wifi: mac80211: pass parsed TPE data to drivers")
-> Signed-off-by: Rory Little <rory@candelatech.com>
+Yu Jiaoliang <yujiaoliang@vivo.com> writes:
+
+> Let the kememdup_array() take care about multiplication and possible
+> overflows.
+>
+> Signed-off-by: Yu Jiaoliang <yujiaoliang@vivo.com>
 > ---
->=20
-> We noticed and recently reported a 20-30% drop in transmit throughput on =
-BE200
-> radios, and have identified the issue as being that the TPE sent to the
-> firmware did not match the TPE reported by the AP. The fault appears to b=
-e an
-> off-by-one error in IE parsing logic. This patch fixes that error.
->=20
+>  net/wireless/util.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-This should be equivalent to my previous fix 5f12dd57a071 ("wifi:
-mac80211: correct EHT EIRP TPE parsing")
+The title prefix should be "wifi: cfg80211:".
 
-johannes
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
