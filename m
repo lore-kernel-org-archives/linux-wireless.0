@@ -1,99 +1,68 @@
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634F4155733;
-	Sat, 24 Aug 2024 07:33:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8675DC148
+	for <linux-wireless@vger.kernel.org>; Sat, 24 Aug 2024 07:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724484805; cv=none; b=qmCjuzik0tMP+tj3Gct/733DAuB1jinbC/P7U8vwDUZU/QjM7E+ERszqdkdih92owNWq9QxQEK/KH3nuoIqnQLds3AtBKv1t7DO+TzQEqsrsTOxBmBBKErJOGUycRzan/R6adFAzmikQC+2UOjnwXXw0RCVr55C/1CyIIV1cS+A=
+	t=1724486210; cv=none; b=OKI6suZJVjExLASBCMJkIImWWSTRCravjYC29cARaXhCBnEoj4PkCTwEnFRpZn+3lDXkWgIQmPcQoYry4mKMyYGtnMbtH/haj03Qxc5Z4sI6kz9dp9S1krHiBPKzIveqoODwvqXe7iQrFBGzmAqdKGiT55+qwJW0xX/lvAeadBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724484805; c=relaxed/simple;
-	bh=6GXKtjujGwEH+GhrHTdQj88RQxkCOT45Z7plPSoEHCE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qcJMvBHK5BZN9MFrFYBL7i7g6XMETKlqhbTyfUf8H1WYleu8AokZUGW//0V6Pkwz6mr/eN28Lu23Zd4fjZEYCGROW9kFAx7lwCMDkAliZaLGNX3jAVjuC0N6aPznSgsxD8JkSWNraZb+lVOKCnvAgeobX3YvLWiY7SnWHLeUEsU=
+	s=arc-20240116; t=1724486210; c=relaxed/simple;
+	bh=NVSIA2ydb2sMBhxnnXNBw9w2sjBFHp+fLud1Y9UXN4I=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SNUVxAlvveSO0MVsyO0F+1e3vMBTqW+mD5kfepGbQhr5hJ0WquXiqJMpvqaoTIEDsr5sPM95qeHAl7tRi1+DgfXngHNgTKTXsGT9/kFP8HlsNi/a6JlsmV2ojHZgFiGVl43yRepPd7/y48SL9Sna1BCpUolWkuZRRhRX2y7f0ac=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WrTCG5W2QzpStD;
-	Sat, 24 Aug 2024 15:31:38 +0800 (CST)
-Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8024414035E;
-	Sat, 24 Aug 2024 15:33:14 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by dggpeml500022.china.huawei.com
- (7.185.36.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Sat, 24 Aug
- 2024 15:33:14 +0800
-From: Hongbo Li <lihongbo22@huawei.com>
-To: <johannes@sipsolutions.net>, <davem@davemloft.net>, <edumazet@google.com>,
-	<kuba@kernel.org>, <pabeni@redhat.com>, <allison.henderson@oracle.com>,
-	<dsahern@kernel.org>, <pshelar@ovn.org>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<rds-devel@oss.oracle.com>, <dccp@vger.kernel.org>, <dev@openvswitch.org>,
-	<linux-afs@lists.infradead.org>, <lihongbo22@huawei.com>
-Subject: [PATCH net-next 4/8] net/core: Use min()/max() to simplify the code
-Date: Sat, 24 Aug 2024 15:40:29 +0800
-Message-ID: <20240824074033.2134514-5-lihongbo22@huawei.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240824074033.2134514-1-lihongbo22@huawei.com>
-References: <20240824074033.2134514-1-lihongbo22@huawei.com>
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WrTkP1cFJzpSw1;
+	Sat, 24 Aug 2024 15:55:09 +0800 (CST)
+Received: from dggpeml500006.china.huawei.com (unknown [7.185.36.76])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0212C1800F2;
+	Sat, 24 Aug 2024 15:56:45 +0800 (CST)
+Received: from localhost.localdomain (10.175.112.70) by
+ dggpeml500006.china.huawei.com (7.185.36.76) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Sat, 24 Aug 2024 15:56:44 +0800
+From: Zhang Changzhong <zhangchangzhong@huawei.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Zhang Changzhong <zhangchangzhong@huawei.com>, Johannes Berg
+	<johannes@sipsolutions.net>, Kalle Valo <kvalo@kernel.org>
+Subject: [PATCH -next,v2] wifi: mac80211: remove redundant unlikely() around IS_ERR()
+Date: Sat, 24 Aug 2024 16:26:43 +0800
+Message-ID: <1724488003-45388-1-git-send-email-zhangchangzhong@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpeml500022.china.huawei.com (7.185.36.66)
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpeml500006.china.huawei.com (7.185.36.76)
 
-Let's use min()/max() to simplify the code and fix the
-Coccinelle/coccicheck warning.
+IS_ERR() already calls unlikely(), so unlikely() is redundant here.
 
-Signed-off-by: Hongbo Li <lihongbo22@huawei.com>
+Signed-off-by: Zhang Changzhong <zhangchangzhong@huawei.com>
 ---
- net/core/pktgen.c | 6 ++----
- net/core/sock.c   | 2 +-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+v1->v2: add "wifi:" prefix to the title
 
-diff --git a/net/core/pktgen.c b/net/core/pktgen.c
-index ea55a758a475..5d4d5ec4a126 100644
---- a/net/core/pktgen.c
-+++ b/net/core/pktgen.c
-@@ -2793,8 +2793,7 @@ static void pktgen_finalize_skb(struct pktgen_dev *pkt_dev, struct sk_buff *skb,
- 		}
- 
- 		i = 0;
--		frag_len = (datalen/frags) < PAGE_SIZE ?
--			   (datalen/frags) : PAGE_SIZE;
-+		frag_len = min(datalen/frags, PAGE_SIZE);
- 		while (datalen > 0) {
- 			if (unlikely(!pkt_dev->page)) {
- 				int node = numa_node_id();
-@@ -2811,8 +2810,7 @@ static void pktgen_finalize_skb(struct pktgen_dev *pkt_dev, struct sk_buff *skb,
- 			if (i == (frags - 1))
- 				skb_frag_fill_page_desc(&skb_shinfo(skb)->frags[i],
- 							pkt_dev->page, 0,
--							(datalen < PAGE_SIZE ?
--							 datalen : PAGE_SIZE));
-+							min(datalen, PAGE_SIZE));
- 			else
- 				skb_frag_fill_page_desc(&skb_shinfo(skb)->frags[i],
- 							pkt_dev->page, 0, frag_len);
-diff --git a/net/core/sock.c b/net/core/sock.c
-index bbe4c58470c3..c9910f48903f 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -3800,7 +3800,7 @@ int sock_prot_inuse_get(struct net *net, struct proto *prot)
- 	for_each_possible_cpu(cpu)
- 		res += per_cpu_ptr(net->core.prot_inuse, cpu)->val[idx];
- 
--	return res >= 0 ? res : 0;
-+	return max(res, 0);
- }
- EXPORT_SYMBOL_GPL(sock_prot_inuse_get);
- 
+ net/mac80211/mesh_pathtbl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index c0a5c75..30c0d89 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -580,7 +580,7 @@ void mesh_fast_tx_cache(struct ieee80211_sub_if_data *sdata,
+ 	prev = rhashtable_lookup_get_insert_fast(&cache->rht,
+ 						 &entry->rhash,
+ 						 fast_tx_rht_params);
+-	if (unlikely(IS_ERR(prev))) {
++	if (IS_ERR(prev)) {
+ 		kfree(entry);
+ 		goto unlock_cache;
+ 	}
 -- 
-2.34.1
+2.9.5
 
