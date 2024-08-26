@@ -1,47 +1,48 @@
-Received: from out162-62-58-216.mail.qq.com (out162-62-58-216.mail.qq.com [162.62.58.216])
+Received: from out203-205-221-231.mail.qq.com (out203-205-221-231.mail.qq.com [203.205.221.231])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4639F171E76;
-	Mon, 26 Aug 2024 12:38:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBFC17E1;
+	Mon, 26 Aug 2024 13:02:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.231
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724675913; cv=none; b=hVrx5+KYscRYhrncF1M9w70V4ndrRnKxXRSm1XkKfkJu9ofqqw/M85VGpIRVjhiHcPujWfw0Yx3thKKJfjHZArgz0tnOd4EvK7d5UYMZy8GvIWc8A2QESxmVCu/RtCk0aHwzhjvWpUd2j3dl2+SXN1tvoy5gqp89FeRgMqPBcJI=
+	t=1724677324; cv=none; b=nKwzU032D2x2+FXT8pUkWcYdmzMSptfg/wGLKJr1uPXn2pXgFa78qKBgJ5vp8Cf3SJTVxHXdUVTIzTJMmn3stb431EbFM96kP24vhFcC84oHk4T77m5RTLdaNtdWtS3NYRoCH5U/zWR6VtN7OUC3YetxzBwFm9UuC3nXw5On4I4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724675913; c=relaxed/simple;
+	s=arc-20240116; t=1724677324; c=relaxed/simple;
 	bh=ccZU3a24KVP9awOdU/7n6f47/VRFRXbCEIAY3d6o7uM=;
 	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=ET1ItSPjN0kpV1b6U5Y0XjkfLouMjJ7s2lZGthgb7/ktbxj1D2CNJGICSLtP5IPy5Uik/zO071g4WPdl51FGLuKANNKF23I9kgyySL/G78lecNi3cVZ4+WZ2oDlYysXnPow20kSlxnZglWA0TAMJE2RQA/QOZd8BNU0H7vpjiEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=AKa1LhDu; arc=none smtp.client-ip=162.62.58.216
+	 MIME-Version; b=aKmyz7LXaLfdJZX+i+yBahaeN5GG8n2jvLLVZvqLfeuRVNJg2SURjjyKYKcInBleRwqHqCSQLW8t3LBr6AbSpweijtzZzIiMz9Zq/bdzwlqGa6xjJ6PlRgG4SDZqy7rxTJ7+r4yA1O3sybyQTst8D/jOOKkCteQTGsMwgoy8v7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=xy6hpfPj; arc=none smtp.client-ip=203.205.221.231
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="AKa1LhDu"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="xy6hpfPj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1724675901; bh=bYvkknN4lY/PzXuYKt7WBFdDB1eWxCqDPPaUzeINxOc=;
+	t=1724677318; bh=bYvkknN4lY/PzXuYKt7WBFdDB1eWxCqDPPaUzeINxOc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=AKa1LhDuu94LHVfbg0hR+EgLYjj+FSJ0yLKSd8dYrrLgp6BkPtsTdbqavgK1cujh+
-	 Zu7fXp3/VW73oXsJ5NXr6R6HSHzgXA1Y+GGmHHXF9W4igJgqJpcPTE3Ol+k62WbD/H
-	 PViyEtI1Z9J32JfnhlXqMdt76A2s5G8vFT9cbnNQ=
+	b=xy6hpfPjzkgMBvmaUBrPaycYp9nNEGhhRSKOG4/JqoRZ3CrVGRQMqozXEsu0VguLx
+	 MqcdHp/oyz17Orx1w9Dl5kXaVjjviQqHEdruAXsrW9fK+UB4WNs+eGDVlIMtlkwlXk
+	 1UE0/tkCgR4v/W30NlEuW/QLEnY9PYFoFW4degZo=
 Received: from pek-lxu-l1.wrs.com ([111.198.225.4])
-	by newxmesmtplogicsvrszb16-1.qq.com (NewEsmtp) with SMTP
-	id 778048C4; Mon, 26 Aug 2024 20:29:56 +0800
-X-QQ-mid: xmsmtpt1724675396tfbb2x19n
-Message-ID: <tencent_A037749680365C4BCC750776D566183C4509@qq.com>
-X-QQ-XMAILINFO: Nt+cTZuZCMyifgW/cBI/x1hPaZW8fHRofdlp7vzxjxMSaBHKfGA2U52/pNBcXt
-	 c0gNrQEiHAU2/aOjUWyOzz+eEEEH8OqV9aVTj5AmQJv0XC2g4tEZKs6D7bVI1tkjrq3mUDVL3OBf
-	 vQ7MUcMclu0fhkMJ1caJXTv0aEQ1jtF4Gt+PFTfsg2BtVdXZXsCM7JDhfHi9u5aavNu2Chs4uzdZ
-	 dlbqzycDFN0IPxHxtomRRSoUyBMEqTdlHDdqGtUzGLXM7gmuFzcwlfEcKtjNY7u50Va9lrwidTub
-	 MenScq2pjM990xwkK/YTFOdKTnLSJry4FBR7OMa1g1CGPvBk/fye4gGs3GDN4jtWRpf9gn8wOumz
-	 aBPL3QIB37l/BFiKWGAtjDcLD1I+bRqziz1Z5u52rxIY/ImrY1WDCNipVZ4WJXnPbHBtD12NMp4p
-	 ASmUPxao7NYt7eVbpp7uiPO1oz9CultHFG1grFL/I2KTKmg5vfO2+6O3HQfmgG+2ZiUS297KSn4j
-	 3wml4bBrxHX2Ue25tOJWL4hm6r6H90acny79hvG+lZuYNSr4B98PCImj64ROwZJbWHgvqvdqy71B
-	 h4PDgwlJ7mqcaWc5BMAOIFHCOOUunBdt0qI6TrM8eKynN7+koYz4c5a7bXd0yEkXstF2uPs9YISg
-	 fP2SHBAxqpb9FmQ3B22gu71moyM+ZCnrAt5tF+lamf4uV1nwt433RKhwdgG+daANnrNSh0Zy3XWK
-	 WKXfBCvppnluQmrZhff5D8j4bOczt6PJKyQqs9LVRLM3+4wlNfap2ueB8kam+ZuN/qyMEohgGkUO
-	 D6hisb7ZSMXNguNYfayUPFZ4EDu9Z210S3TgeW6YvhtgK8MKl8mQlO8SGZLPNEqprCIrRxAnkkGy
-	 7ylgkh/v45Z7hCe6ag60srK972gnz48AK55tO8iZrbULNpjh2FNi3RDR4H7H7do2qESU79SXsjhn
-	 2wYrSAZsmoMMLFSg0O4+m29/deROYVnplL2HFp9Cidp+CR3Y0xFw==
-X-QQ-XMRINFO: OD9hHCdaPRBwq3WW+NvGbIU=
+	by newxmesmtplogicsvrsza15-1.qq.com (NewEsmtp) with SMTP
+	id 771A2A8; Mon, 26 Aug 2024 21:01:55 +0800
+X-QQ-mid: xmsmtpt1724677315tf7m5rx88
+Message-ID: <tencent_0AD5762F67E03DAB364097D036C04B367409@qq.com>
+X-QQ-XMAILINFO: M1rD3f8svNzn/LR6TrDyrzWLVwUKg8NNpXgZaDAVYEFwLZZeMd3vzd46K6TEU0
+	 As715XwSA+fYEH8z4PRxoThPD3Nh31bZFAvQrrPiqvl+/dxz6GtV0d9dTksZNhAnkhkSNZOrxBfZ
+	 Kcc4AHDgNWrIUmPo9BysEwTZvR3ZuXlTmEeOnHxUHuvlC4MeTuNL8jNUSU3UPwSi4Qm+rrx/I1ES
+	 ta7c01eQUbDsl93DrbeTCi6R7BbOJZKHaKBfOoTJragwAokkJYl1rui8yHWUw7qe74jHJCn/tVE2
+	 lTs+XVtaovVF8Vuw2lnjaO1n1yNAX0ddk1buNnTzeLUPqe/2aQOUFln+c2NoQGabjwUKYkOAQHRm
+	 M8CvOx0kincHPdexwMCaEg5V/Q9F0FFNY6WixYmWUm3mBHrFZtTbam2RQ78HvoTbt7CIAVNkTOn0
+	 EOcFduoxGpEySImtLsVjJITec9hUSf/+aMyggh1dKuB6ZhH/DO4F9euxl0DRYdYGGavzeqRPbAhB
+	 f3TFFx14+0P8txfU5kCGZVcpWFb3+DKF0TlHUiziuahm2jqzQ8pMeim7M7bSfwvS8QDrYFOqTYRQ
+	 K0A2dCOC+8jX2eIgk5quJ1rh1i7PMMw0BvO3cR690l8NLOkZkjcs1ZghB1Qsm1yU4h3PWMkVYVHM
+	 6IjKrHXh7pOYastXR6ZzxbPE0j+anASEDGcyhyhi8o4ogHmBT2/5tpsHg2Z6Flh21oTn3TBuDiPa
+	 LcZywsT2HENQJdC0q/CZUhTYBAh38wPPtKc0RBro3xYQw949HUHO8EP2YLeRX2XJHX3XDKS/hewb
+	 Vxc1Lx0fMOf8KFWdzPXN1vhSDpJvbjOV5rtMRyc5RQ14mw+eAQ8GJ3VxP3GA2hcs4mSrRTyc1MOZ
+	 5zDfBTZ3Ygglx6b9IONyiAl7aKXaa3Gpa0MVzCQAExEuEKtSVYhYioqI2PeDL3B0xdLRfCok5oEK
+	 v33Diw5YmdVYoxtfmI/1+SCUEduPx2ZqYPYQpO58ziMuIFdgF385rUCWd3DnReMMjf1/N1GHUg78
+	 Azmt4pKXYjWFlydpH3xIAdCSnWvuxgZAU1lzwdDfZeoz5/4B8pOiDjWonjo7c=
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
 From: Edward Adam Davis <eadavis@qq.com>
 To: gregkh@linuxfoundation.org
 Cc: eadavis@qq.com,
@@ -54,8 +55,8 @@ Cc: eadavis@qq.com,
 	syzbot+92c6dd14aaa230be6855@syzkaller.appspotmail.com,
 	syzkaller-bugs@googlegroups.com
 Subject: [PATCH V4 1/2] wifi: ath6kl: Replace ath6kl_usb_submit_ctrl_in with usb_control_msg_recv
-Date: Mon, 26 Aug 2024 20:29:56 +0800
-X-OQ-MSGID: <20240826122955.2674569-3-eadavis@qq.com>
+Date: Mon, 26 Aug 2024 21:01:55 +0800
+X-OQ-MSGID: <20240826130154.2706792-3-eadavis@qq.com>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <2024082631-upward-zips-f7b8@gregkh>
 References: <2024082631-upward-zips-f7b8@gregkh>
