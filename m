@@ -1,47 +1,47 @@
-Received: from out162-62-57-49.mail.qq.com (out162-62-57-49.mail.qq.com [162.62.57.49])
+Received: from xmbg9.mail.qq.com (xmbg9.mail.qq.com [81.69.217.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA1D17C989;
-	Mon, 26 Aug 2024 13:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9175E1925A4;
+	Mon, 26 Aug 2024 14:49:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.69.217.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724680671; cv=none; b=lmOTAVBGcRJXmIqUm5UTYK7B/jMpRnX/EQ2gTnf/mI9LKS7iNlypHDsdVqXkT0zOShRL+Z08rQ1zB+hG0zZdezYmXFY12AfuNeNFcAXMGKrnN+SZ9+WvNHOAs+SW8KhMGuNrkzL3mUgAihmRL6H1fFMx7kFyuVenZLyq0yEqNhE=
+	t=1724683749; cv=none; b=mhyIldG7hqo7N3qV/EwHM6qc2FxsZz2HgLeX7EaRw04LrxF9J3ZsBNuOwCfxlpZwTtziVm257u9GpicLdc7TpW9BK3LxlQOVTiNXyhIOdYE+HI/GDxh9xpEGGIlimBI21J855RuqE5lRs+LcI4RShmjgVaSe5Ljj/RDn8mImNr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724680671; c=relaxed/simple;
-	bh=vr7oofwZgZfct6HqlKWNzT6ycYxBI0n+s7zmMjcpi4M=;
+	s=arc-20240116; t=1724683749; c=relaxed/simple;
+	bh=scIlDt3bJxc6xjtCfFWzsD60sMCU7dzjdhlTShv6odY=;
 	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=hU85ou+HtI5Ge9fIU/jIuBsIBuw3uZcnAC5oVqiWRIv8D9LQ1EbDJ3MxXkgEp5xL8cvX0Ta7UyjMR6iIpcfvPZajT3eCkDTjQtWfzHcny5bxRqsIRoVb19ma2313i5XR2ODwKNMi/Tq+NBlcP0RM2IJgqin+LNKowH8en+zvKmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=ejKdB4G1; arc=none smtp.client-ip=162.62.57.49
+	 MIME-Version; b=sOP9zgmKhrWtHbKoqUo6Dpys19Gz+lg5ogLcYPurZ+7Magh24RuJDPASgqBdkc+Mn3fU/I9TKoZUZKp5FopNajmZ56R5FmhnI3By+BwfshkHR15r0JpKMZoHSFn6JCaf+Ktcvp0jaqhF4o8H7mI2IrKtvjBR+QoTg3IzKk+G/Dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=M9J34480; arc=none smtp.client-ip=81.69.217.22
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="ejKdB4G1"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="M9J34480"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1724680663; bh=OHgRLzSenWLbC5JQpgLz4xtY6cHLHbUrK3U66N3AWaM=;
+	t=1724683737; bh=4MNoqgFAOdi2a+l9olqRlqs76QuNfFgvKzCU8S9eMFE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ejKdB4G13RzIjs6bAOrBphKmkZ7gSfgleilYyM6Gb+gbeKk3YcrbUApIQ0MJb2EMm
-	 DFWsL+Ra5pCravZJVExP85JwZRqForjuNl99DVmved16gW3H/bseB4+I2yvMf6+lOi
-	 8Q5FYS19zd+iVr2Cy3fYABm+2I3mBCZ6NDVSZcwM=
+	b=M9J344809lRip64V04r7u2HHtiow2rclBETBBHtc+tpcMLhghECfEHMoHxwmDQ7f+
+	 zPqv3qcrZsVCLV+EZwcSV4/2tZppTv4xl5medn7H52JmE+aKy1VrdOqRv5ooHsGEo0
+	 oT/gbQi8cmDaPQpi2ecaQQGuohezlGp8UHtttirg=
 Received: from pek-lxu-l1.wrs.com ([111.198.225.4])
 	by newxmesmtplogicsvrszb16-1.qq.com (NewEsmtp) with SMTP
-	id B12B340A; Mon, 26 Aug 2024 21:44:18 +0800
-X-QQ-mid: xmsmtpt1724679858tld28qu36
-Message-ID: <tencent_A2DE92DC864D89B92ECBAEF2CC8FE7F4C606@qq.com>
-X-QQ-XMAILINFO: MW5hkHoBpWXyI09Aq4gwR2uQtgcCQR4idHhfNGBGz3Iiy0PEFTPLCT8Ve7kUlB
-	 J3emttFsrfj7eSzFRWc8gbM+fXuFNF1fRgMwh+qRAysAxuLsLDgJl2XSsRxhA5UreLLdPTujQtXV
-	 nQijk9n1Jv8PFDio6NTz7dS15so4EvTpfB9HOryeWKqx+n0hmx7HjOh7FP1vz+M1n7gDFZ8HC7B4
-	 M4eyRY9Bu9PZggcntTYT4+Vo/3IfUYgxfsZ+n4h2ue+ZYhR5LyNH8/il0QMdGXbmd9cXc8F5DY0a
-	 MR/dHTGlYL/qqlAful5Z9j4XNaPglB/nNJQrXbtaGxYA1j4mLY4UMpfVa5i90q8YtYUE3S5kta7D
-	 VCWCaZFdgMkHYfJaCNXQ4pQnP4LlAs9zAUxvSaDflmbFpkPeuZPmCG3Akj1LXVKwtFWNiEmVfmBY
-	 4GjVepYFiXcaAXrRFtGxmldhUzETVALTZIonuq20fDXEQxVqWF9L07uETBjWLjg21PF/6huGeovl
-	 AgXxxl6h5NwQcCbRZUZJIFMNC01Ui/p+BX2AKBZzEnoGmoQezqE/fPsPJGecRmSNyzPDzWywwKwM
-	 VmEzy8rPWvlSw3Hp4USDlJ7MOh03emUzN0uLVlbje52AqBNNLnzW5S/SDnz71OCf0ndC4C1YdRK/
-	 0Ll8vtcCrMniWesPuNnikOAJtLmxn89PABDzGL6PimrsZCQSx0wwvS4nnxefIyzt0EH++pipNtwa
-	 CL0CjK2Qploo6tLYinew63Es0FP8uYpIeVyuI2dn99KYr3H+SPzQneDQxQKe2txtSGga3XpSachX
-	 GBC/5dMqWcj8ip+wnWh3oVB0j2JQl92HM8oDjWvFRFE75eTPJ7AzUoUXMFHTpm4pM30+tNvppjdS
-	 VyPmT4TutSaXMNKynOz5lb3YdfNFL3MVUc4a6Tf6mar17Yy5GsCOdS0jqJQPeENF2s5+eFKfnMz8
-	 DAXPWcalud/1iyQESt4Xk6DiDEoY3pIjHZBdywSmEbAJnlKDeHMecTubXR+ePo
-X-QQ-XMRINFO: MSVp+SPm3vtS1Vd6Y4Mggwc=
+	id 778048C4; Mon, 26 Aug 2024 20:29:56 +0800
+X-QQ-mid: xmsmtpt1724675398txss294ka
+Message-ID: <tencent_6E58783A6D402D596E509598E92AED2ACE0A@qq.com>
+X-QQ-XMAILINFO: ObFHHlrAm440+Li0ed4Ju/KdFISCzgiyIsZhE32LhdfS6NJT3itGqxVFPomip9
+	 /qyEM7g0WqB2UycGjeHyIyXbCB4Pn7dMYfQJcvQltwxZG9EKGrtGvOoA+QfXK7Po31jCw77irgR8
+	 93dOZrOnGPOc+IehOlSLEyhBT3IzyGKA/PC7iLkx1Ajg4v18GbZraiFawlo4TWEkl9NaePI71h/T
+	 UGNBJ6oBVarMRxFq2YZa+ClPJfTPMGsdPcl/hUPt3q2WY9OeRdTBLOlev9ZiS3AdP5BH+EyWtSeL
+	 9oQVqc84ukE9OGdE8/Eo/iOJ9QNR0XNHFLs6khZVtSdjusJkSIvYsvPXliGS32HzbxwvRgfhDPyI
+	 FENgToFynVhykRlg8ws9nwAW4rxIIZTQlTELdxWl+NLMLNl0NYPX2EdvXq/QN4qOe4oNYtBKjwm9
+	 9COBA9TlmeUaHsq75Mi5rDSPcTDJUs9EGRf0dZWjBgnedmRNxlmH5nr8zv2Mujuinu0Fgbv7qQXE
+	 Ndb6XAypeqSZ1N2UvPP9XZtwDII7WNz9Lh6TgP9WFx7J7WQKHdR5k4kidP0BQMwxtzS/9y21miD3
+	 s5cFluMyZ9ORTvRv2TdsLCBqCxtzxaEeIURk+HNTMbpxSk3k2bMitdjSmb0LpyIgVGcEl9RV0TQj
+	 AyfK30UjFMFqu21YK8hnJdUgTAy1cqKJBfaa+VsRe12CeD00W5zzfWoVCZOO0i7McZaK/4dxDjWe
+	 XPYkmtbXt/CbnD2eNoWQKSzBfaBvqfpQWqjN02WO0RMr2lRpJXZ6IYQbs+gS0kHn/PeojiMFr6z/
+	 L5A8sxD1IGF2Fl8hwUh1QR8yrYm4tzd0HsKJ6kX9CvlffeLEtsto6Rcnw+4lxr77nJ+pqiZicZXo
+	 NAMDdkfauLwuSrWbTw/gD/P5pi7fqXbItfAAAYyZPYvU3mpb5C4M9+2OBbcrrGb7bLZpoM3TOICg
+	 4yRQ2LcOfozQX8lw6DhQ==
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
 From: Edward Adam Davis <eadavis@qq.com>
 To: gregkh@linuxfoundation.org
 Cc: eadavis@qq.com,
@@ -53,12 +53,13 @@ Cc: eadavis@qq.com,
 	sergei.shtylyov@gmail.com,
 	syzbot+92c6dd14aaa230be6855@syzkaller.appspotmail.com,
 	syzkaller-bugs@googlegroups.com
-Subject: [PATCH V5 1/2] wifi: ath6kl: Replace ath6kl_usb_submit_ctrl_in with usb_control_msg_recv
-Date: Mon, 26 Aug 2024 21:44:19 +0800
-X-OQ-MSGID: <20240826134418.2744882-3-eadavis@qq.com>
+Subject: [PATCH V4 2/2] wifi: ath6kl: remove ath6kl_usb_submit_ctrl_in
+Date: Mon, 26 Aug 2024 20:29:57 +0800
+X-OQ-MSGID: <20240826122955.2674569-4-eadavis@qq.com>
 X-Mailer: git-send-email 2.46.0
-In-Reply-To: <2024082607-foothold-boss-c693@gregkh>
-References: <2024082607-foothold-boss-c693@gregkh>
+In-Reply-To: <20240826122955.2674569-3-eadavis@qq.com>
+References: <2024082631-upward-zips-f7b8@gregkh>
+ <20240826122955.2674569-3-eadavis@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -72,40 +73,71 @@ the length of the data read from the device is not equal to the len, and
 such missing judgments will result in subsequent code using incorrect data.
 
 usb_control_msg_recv() handles the abnormal length of the returned data,
-so using it directly can fix "target's targ_info doesn't match the host's
-targ_info" warning in ath6kl_bmi_get_target_info.
+so using it directly.
 
-Reported-by: syzbot+92c6dd14aaa230be6855@syzkaller.appspotmail.com
+Suggested-by: Greg KH <gregkh@linuxfoundation.org>
 Signed-off-by: Edward Adam Davis <eadavis@qq.com>
 ---
-V1: If the data length returned by the device is 0 return failure
-V2: Directly using USB functions
-V3: Adjust indentation style
-V4: Adjust indentation style
-V5: Update comments, add warning info
-
- drivers/net/wireless/ath/ath6kl/usb.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath6kl/usb.c | 39 +++------------------------
+ 1 file changed, 3 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index 5220809841a6..0458b5a078e1 100644
+index 0458b5a078e1..b1fc66d823b8 100644
 --- a/drivers/net/wireless/ath/ath6kl/usb.c
 +++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -1027,9 +1027,10 @@ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
- 	int ret;
+@@ -901,40 +901,6 @@ static int ath6kl_usb_submit_ctrl_out(struct ath6kl_usb *ar_usb,
+ 	return 0;
+ }
+ 
+-static int ath6kl_usb_submit_ctrl_in(struct ath6kl_usb *ar_usb,
+-				  u8 req, u16 value, u16 index, void *data,
+-				  u32 size)
+-{
+-	u8 *buf = NULL;
+-	int ret;
+-
+-	if (size > 0) {
+-		buf = kmalloc(size, GFP_KERNEL);
+-		if (buf == NULL)
+-			return -ENOMEM;
+-	}
+-
+-	/* note: if successful returns number of bytes transfered */
+-	ret = usb_control_msg(ar_usb->udev,
+-				 usb_rcvctrlpipe(ar_usb->udev, 0),
+-				 req,
+-				 USB_DIR_IN | USB_TYPE_VENDOR |
+-				 USB_RECIP_DEVICE, value, index, buf,
+-				 size, 2000);
+-
+-	if (ret < 0) {
+-		ath6kl_warn("Failed to read usb control message: %d\n", ret);
+-		kfree(buf);
+-		return ret;
+-	}
+-
+-	memcpy((u8 *) data, buf, size);
+-
+-	kfree(buf);
+-
+-	return 0;
+-}
+-
+ static int ath6kl_usb_ctrl_msg_exchange(struct ath6kl_usb *ar_usb,
+ 				     u8 req_val, u8 *req_buf, u32 req_len,
+ 				     u8 resp_val, u8 *resp_buf, u32 *resp_len)
+@@ -954,8 +920,9 @@ static int ath6kl_usb_ctrl_msg_exchange(struct ath6kl_usb *ar_usb,
+ 	}
  
  	/* get response */
--	ret = ath6kl_usb_submit_ctrl_in(ar_usb,
--					ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
--					0, 0, buf, len);
-+	ret = usb_control_msg_recv(ar_usb->udev, 0,
-+				   ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
-+				   USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE,
-+				   0, 0, buf, len, 2000, GFP_KERNEL);
- 	if (ret) {
- 		ath6kl_err("Unable to read the bmi data from the device: %d\n",
- 			   ret);
+-	ret = ath6kl_usb_submit_ctrl_in(ar_usb, resp_val, 0, 0,
+-					resp_buf, *resp_len);
++	ret = usb_control_msg_recv(ar_usb->udev, 0, resp_val,
++				USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE,
++				0, 0, resp_buf, *resp_len, 2000, GFP_KERNEL);
+ 
+ 	return ret;
+ }
 -- 
 2.43.0
-
 
