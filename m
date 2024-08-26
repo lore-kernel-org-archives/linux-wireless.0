@@ -1,98 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out203-205-221-164.mail.qq.com (out203-205-221-164.mail.qq.com [203.205.221.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F174F1482E3
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2024 11:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 064D41487EB;
+	Mon, 26 Aug 2024 11:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724672171; cv=none; b=MZxioCs5GlGQp1BisewYvn6iGmPFdggyDZfk+c4dGRzWuFljucXzDZXGunZUJgeemXzWfF8DqE+7bjnDhhHceZgLYoU7s3yYt5nAgCU1llgje9uA6O8XW7PbmRgOuX9WSSPA8gXY+UIT5kZdhJCqVLMYQvtHgp6VhiSJ4piYeAo=
+	t=1724672348; cv=none; b=nPudaCdp90XzYbXaF0Tx9fXrCu6+w/sSvRx7VrQuoYOuAFaXV8oWVwedERE8xxaxKXSjy0Cok70vUZMYlKQVaiA2RqwNS+Ee99UF81oHZaenXotci9NpYqdgHoRYmbjRu0NGo/ItYbOvAbBurxKSOY8+2ITg0xavMWPBgotZipk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724672171; c=relaxed/simple;
-	bh=M7ZVeTt31TPfn2NErj3fDSYNlMiUS0z1Vu0MbXHiCKQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WjOVt6GlQ24nGeWMmZLfjQ97Ym7i4GbtRBwHtwJzOZUpyOgrj8opg6jfrEI24icd87OVDU9GRqpGMcRWaUn69AhRhTFhcA6rocYKBwECaIxCznVet6i7fGyEiA9iyTOzYJYgv7vTdHWGaO1Kzu9/rye14E3Q7PDSZEnuyPvIU44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pTn9Y6b6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724672348; c=relaxed/simple;
+	bh=E9rYvDBmtX2kTyV8AGiczH2r9nepy7yRTbxdWTOmWFw=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=PgihnfELtq9jkPG5vCp5lzLE/j8H8eQTOtFRMP+4yuycbQm4bubOcsTGWN+Zzimq6z0JTb6g9yHcVH/ts226wRD4hMaxVDP1bmNe24s3RCSwHhl9Lo9KU081DvWRYQGsVw4VRfBmriQlCD4bCRxHX6V4XSWcD8/lrTPEpYipZ+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=KZuydqM3; arc=none smtp.client-ip=203.205.221.164
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pTn9Y6b6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C693FC4AF1A
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2024 11:36:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724672170;
-	bh=M7ZVeTt31TPfn2NErj3fDSYNlMiUS0z1Vu0MbXHiCKQ=;
-	h=References:In-Reply-To:From:Date:Subject:To:List-Id:Cc:From;
-	b=pTn9Y6b6l3UpurD57lkbr9W4WUOgbgA3cOJnQwxzSjVJpuP+0aZSG+wfeHHD4E5TR
-	 iqvqh+MIAQkuYxoRJwh+3WjFOuUE0c8PkF2BuD8N2z0CRsfwA4Pj+9fABL0N8GLCIb
-	 PlrahQ/gq3Z3hm12TN9id+GNrtw0a0pUrKxJbYar8aP21Mqasd4cujFVzbGxMSAU9u
-	 nuFbJ51IHt7BZ5s2iLF1ix3pv0S2rWADEdWq12LE7+hdj193//4zwd6NRbbIzwqQUM
-	 vayxcPo1M+CcXRw4JQeZahN3+mKuq5+yfjrijG4vbmwXiZJBCzYWQLF0VTgxbozoje
-	 yOR6r4RA+5KMA==
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-690ad83d4d7so37729367b3.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2024 04:36:10 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCWL6YuWP7TCMTC7yI9SGaEO9YK42aoVHXu/MxGllLQdYD+BPcYx7gShuWt+58Rw9anonECWzrh5Ah5vWWPI5A==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQx5CZQHdQrRda/jNTQYyZydWoN1B2gWZv+7CrozgQ5rNDe5FW
-	JL3KLihKzjqY+j9q0lEvR04Ws+Pz9cPCQ4RpM9EsryFR+iage61Dyq68PENXG/nZlkhwYf9ax/6
-	GxpG0196AVmje3AwUpwC7OUv7jJI=
-X-Google-Smtp-Source: AGHT+IHNMXnVy2xDsaV6fk55VXC+drYHKaO2gGo1S+tjUmZLFFbZ+OMylNWnPlYG7pyvPuU/XAN12WXsHsSvPpS+4hI=
-X-Received: by 2002:a05:690c:87:b0:64a:7d9b:934 with SMTP id
- 00721157ae682-6c62576b18dmr99768727b3.16.1724672170033; Mon, 26 Aug 2024
- 04:36:10 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="KZuydqM3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1724672338; bh=wsl3YrLaOjovnNCIjsBbtpVNQi+hrP2bmg/zUf5XtxY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=KZuydqM3iPKp+uI8XRLpcrDfOCK7V6aBDrckVDn5g9VPA6BslRjRDF5V2eTgW4mQN
+	 g9Np924SJ1sk7TnPdQD8n/lsAG2UIOmyewvSFr2BwP0ISkn93qdXglLbTe80HsPMi5
+	 c6JoTBa1dXY5997oDKeoa3jwXEmgyjI9ccwkVSfY=
+Received: from pek-lxu-l1.wrs.com ([111.198.225.4])
+	by newxmesmtplogicsvrszc5-2.qq.com (NewEsmtp) with SMTP
+	id 4CA9427D; Mon, 26 Aug 2024 19:19:10 +0800
+X-QQ-mid: xmsmtpt1724671150tfknzi5pi
+Message-ID: <tencent_AAA2EDEACE4478EA6C9C2CA96E8095DCE80A@qq.com>
+X-QQ-XMAILINFO: MyirvGjpKb1jfQte9tgmmBStTXdNzkkWprxDThbE76o3E1Mdlm5xztf1z9OgKs
+	 PM/RdTwqfYO6f+zp1+uoskPubotRqljuP7V7cDJMgXk0ZMlfQUgGsahssWs8uGypzY10TIr7Grai
+	 46Uzm651nuf8+Swbj42DjWLJ05UuFAOIHi9T5KSfwpLJSAE+ZvchymyBfhOuUxM3TbQbAvI4o6HC
+	 4Tm9iQuTqUcLoH5w78Op9nGU1jXmPBo/jP8kDzg38zI76VrJb7bMQWSEzX3WUG4hLbaShe1R1IFN
+	 B14TM4WwQ9i3n6ODI4gow75BMXqE8zV8FDDEXMHbcy+1bBgvT5VIoXjw37BNr7uJSTSbgZpS1k/a
+	 AKniX9U/9sXWA8GPgJJlJ7leMoa0pYrHm9a2fyjX33kSO7EVvDcd3Qy4uZtLb6eysycZcRjN9g2w
+	 xy5JcGOyUtPY0aCpY7WJY/62fhJJfWsMOTJjO0SLFlK9WYfCuTYAl4dTcUtYkxR30m7CzPFieBQj
+	 ag954X7REWdWnNSxXzreIJ7kGpaJeXZSXbgb8Ntk9cLxn164zmHl1axlc1EqsSCq+6MuVfFfuMHP
+	 qe8grOJ9A5wRi9wwvESEF/T4803dFCgM/ZP8i7Zd4rKN8CRrPSMfPt6TylQsH8odh7/YTFSOTTrx
+	 MR+it877zpn6VRUcPnVxyPLhqgmmw6qRGlp36vNIZPejYyUj5id+hPO0SJE7eV6uZsfKIkZ+6O+G
+	 tE9ZiRp9iHDUVgsVHaanQ/4w8/T+/XxJk+iNTieDNLJh8JESb16ynY4kyvgqTjSZJ8lLrAnvTWs4
+	 oFWhmSsFFcSTjPxudeQ+JMs65cQAzDCoZ/pbklO2BbygCivQ70XNDKT4iHJHDjaGmZn5OyuVyp3P
+	 8lb4c7NSnad/iPIazoq/3/MU2mhaxjq0WCodOPZbz3dQWmSfouIoaYC/A8qTXe766SFxgHAkHJNV
+	 SpT3kO/kC28ZNO/AZBlT3/IZMWktz575eYJZVj7nUBuPvyjql/AXRznF5gz+ge
+X-QQ-XMRINFO: MPJ6Tf5t3I/ycC2BItcBVIA=
+From: Edward Adam Davis <eadavis@qq.com>
+To: eadavis@qq.com
+Cc: gregkh@linuxfoundation.org,
+	kvalo@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	sergei.shtylyov@gmail.com,
+	syzbot+92c6dd14aaa230be6855@syzkaller.appspotmail.com,
+	syzkaller-bugs@googlegroups.com
+Subject: [PATCH V3] wifi: ath6kl: Replace ath6kl_usb_submit_ctrl_in with usb_control_msg_recv
+Date: Mon, 26 Aug 2024 19:19:09 +0800
+X-OQ-MSGID: <20240826111909.2608973-2-eadavis@qq.com>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <tencent_2C2C336C9E441B294BB21B6A2558BA34BB08@qq.com>
+References: <tencent_2C2C336C9E441B294BB21B6A2558BA34BB08@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <f5079de6ec52bbd97fd0deaf2df58f8b13e364b7.camel@realtek.com>
-In-Reply-To: <f5079de6ec52bbd97fd0deaf2df58f8b13e364b7.camel@realtek.com>
-From: Josh Boyer <jwboyer@kernel.org>
-Date: Mon, 26 Aug 2024 07:35:00 -0400
-X-Gmail-Original-Message-ID: <CA+5PVA7xrSXQb2pRntPbHY3+gL4rEHCHf0jeBDwkiiv542BuRg@mail.gmail.com>
-Message-ID: <CA+5PVA7xrSXQb2pRntPbHY3+gL4rEHCHf0jeBDwkiiv542BuRg@mail.gmail.com>
-Subject: Re: pull request: rtw89: 8922a: add fw format-1 v0.35.41.0
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-firmware@kernel.org" <linux-firmware@kernel.org>, 
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, Timlee <timlee@realtek.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Mon, Aug 26, 2024 at 5:32=E2=80=AFAM Ping-Ke Shih <pkshih@realtek.com> w=
-rote:
->
-> Hi,
->
-> Add firmware v0.35.41.0 of rtw89 driver for 8922A.
->
-> Thank you
-> Ping-Ke
->
-> ---
-> The following changes since commit 2cdc11a7b3bf06042f1fb179fa1775fde38149=
-1f:
->
->   Merge branch 'mt7925' into 'main' (2024-08-23 11:31:09 +0000)
->
-> are available in the Git repository at:
->
->   https://github.com/pkshih/linux-firmware.git tags/rtw-fw-2024-08-26
+ath6kl_usb_submit_ctrl_in() did not take into account the situation where
+the length of the data read from the device is not equal to the len, and
+such missing judgments will result in subsequent code using incorrect data.
 
-Merged and pushed out.
+usb_control_msg_recv() handles the abnormal length of the returned data,
+so using it directly can fix this warning.
 
-https://gitlab.com/kernel-firmware/linux-firmware/-/merge_requests/282
+Reported-by: syzbot+92c6dd14aaa230be6855@syzkaller.appspotmail.com
+Signed-off-by: Edward Adam Davis <eadavis@qq.com>
+---
+V2 -> V3: Adjust indentation style
 
+ drivers/net/wireless/ath/ath6kl/usb.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-josh
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 5220809841a6..5b1ce4f9ed54 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1027,9 +1027,11 @@ static int ath6kl_usb_bmi_read(struct ath6kl *ar, u8 *buf, u32 len)
+ 	int ret;
+ 
+ 	/* get response */
+-	ret = ath6kl_usb_submit_ctrl_in(ar_usb,
+-					ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
+-					0, 0, buf, len);
++	ret = usb_control_msg_recv(ar_usb->udev, 0,
++				ATH6KL_USB_CONTROL_REQ_RECV_BMI_RESP,
++				USB_DIR_IN | USB_TYPE_VENDOR |
++				USB_RECIP_DEVICE, 0, 0, buf, len, 2000,
++				GFP_KERNEL);
+ 	if (ret) {
+ 		ath6kl_err("Unable to read the bmi data from the device: %d\n",
+ 			   ret);
+-- 
+2.43.0
 
->
-> for you to fetch changes up to 80fa33b94a91a1e45671e8fcd8e80b9efed47834:
->
->   rtw89: 8922a: add fw format-1 v0.35.41.0 (2024-08-26 17:08:00 +0800)
->
-> ----------------------------------------------------------------
-> Chin-Yen Lee (1):
->       rtw89: 8922a: add fw format-1 v0.35.41.0
->
->  WHENCE                  |   1 +
->  rtw89/rtw8922a_fw-1.bin | Bin 0 -> 1583434 bytes
->  2 files changed, 1 insertion(+)
->  create mode 100644 rtw89/rtw8922a_fw-1.bin
->
