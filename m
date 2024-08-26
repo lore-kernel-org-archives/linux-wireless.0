@@ -1,160 +1,250 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4F514830F
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2024 10:17:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A09BA1482E3
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2024 11:01:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724667452; cv=none; b=bWBGrJx/AmZ1VUrDnxyLdR6tda4m8fg9LFU4hDvZi2oKaLSUuAfi4bzTrlwjVijDYG8wtVGoEYT8Nzj137KHSG4P71gr0rt98WFCaKPcbStji1vipbg81aTl425XRRZC3sXIVIPq4Y+MirNtN+j9bPsG+1vZaElLS/4S1yEkOfU=
+	t=1724670097; cv=none; b=i7EOjAX/qzlN8T9T+xtNf/QveQrV1d1uj/PMhu86snMdfT8zjQlzedU0jwE7udQzXYk4n5FbXnwQVA69cvtnQPmFh0wUNE1FBct8BA1+nom32ShxhilkI60oKpIi+oQF3zDnmSJDgkOwf3UVWK4B6ug5W8hzeUGggh8bMzJ9jXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724667452; c=relaxed/simple;
-	bh=+1sSYTJpR0WMXuTFjr+JO8ZWGztuKrRMT2yUDdMrNi0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ShTUyXeOSGTslcT7rbRHVC/peQP+WajzLarVz6u0CwtfQfp8sSOBuEc3ashI/oQW2qzoiJ8Ch/5zeffVCulOvqm15jJuBzgKLcnHRA4p6uFZsnmfqihmFV9GUBkviY9MVJz4Sy0ZDbTOzwhk0MU4wPXJW6xH/6jWZrpdgAsFUSI=
+	s=arc-20240116; t=1724670097; c=relaxed/simple;
+	bh=TJVUFzd8IRffaiUHJfiLnbPNdoNIMddGPSqRbLFtpHc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=drg6EfzoZQxWxhA22SX6Rtb6mLjkTsx60S/1ro5LHEkJIOkLALmJPVg3jDxcbD/GrMCpvSYE4cR5N9mXjQMUZdxuCdZ8udfcpff3XSR7wz3FapJUk7XdJgCPJ4xM4RcqbskToPyfkSlGcJX0W3VsDzMdIwA19NDhcp6yoEC3ZGs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
-	(envelope-from <sha@pengutronix.de>)
-	id 1siWmp-0007gb-3w; Mon, 26 Aug 2024 12:17:23 +0200
-Received: from [2a0a:edc0:2:b01:1d::c5] (helo=pty.whiteo.stw.pengutronix.de)
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1siXTY-00047X-KS; Mon, 26 Aug 2024 13:01:32 +0200
+Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.94.2)
-	(envelope-from <sha@pengutronix.de>)
-	id 1siWmo-003AFu-A3; Mon, 26 Aug 2024 12:17:22 +0200
-Received: from sha by pty.whiteo.stw.pengutronix.de with local (Exim 4.96)
-	(envelope-from <sha@pengutronix.de>)
-	id 1siWmo-0072PO-0e;
-	Mon, 26 Aug 2024 12:17:22 +0200
-Date: Mon, 26 Aug 2024 12:17:22 +0200
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1siXTY-003Ae7-0P; Mon, 26 Aug 2024 13:01:32 +0200
+Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
+	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1siXTX-004aRi-2t;
+	Mon, 26 Aug 2024 13:01:31 +0200
 From: Sascha Hauer <s.hauer@pengutronix.de>
-To: David Lin <yu-hao.lin@nxp.com>
-Cc: Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Kalle Valo <kvalo@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>,
-	Pete Hsieh <tsung-hsien.hsieh@nxp.com>
-Subject: Re: [EXT] [PATCH 10/31] wifi: mwifiex: fix indention
-Message-ID: <ZsxWMgqgUfRXro0Q@pengutronix.de>
-References: <20240820-mwifiex-cleanup-v1-0-320d8de4a4b7@pengutronix.de>
- <20240820-mwifiex-cleanup-v1-10-320d8de4a4b7@pengutronix.de>
- <PA4PR04MB96382C0635603A51371C0E23D18F2@PA4PR04MB9638.eurprd04.prod.outlook.com>
- <ZsxM198_t04j6OMo@pengutronix.de>
- <PA4PR04MB96386A441739C4D35683512FD18B2@PA4PR04MB9638.eurprd04.prod.outlook.com>
+Date: Mon, 26 Aug 2024 13:01:25 +0200
+Subject: [PATCH 04/12] wifi: mwifiex: use adapter as context pointer for
+ mwifiex_hs_activated_event()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <PA4PR04MB96386A441739C4D35683512FD18B2@PA4PR04MB9638.eurprd04.prod.outlook.com>
-X-Sent-From: Pengutronix Hildesheim
-X-URL: http://www.pengutronix.de/
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240826-mwifiex-cleanup-1-v1-4-56e6f8e056ec@pengutronix.de>
+References: <20240826-mwifiex-cleanup-1-v1-0-56e6f8e056ec@pengutronix.de>
+In-Reply-To: <20240826-mwifiex-cleanup-1-v1-0-56e6f8e056ec@pengutronix.de>
+To: Brian Norris <briannorris@chromium.org>, 
+ Francesco Dolcini <francesco@dolcini.it>, Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Sascha Hauer <s.hauer@pengutronix.de>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1724670091; l=7272;
+ i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
+ bh=TJVUFzd8IRffaiUHJfiLnbPNdoNIMddGPSqRbLFtpHc=;
+ b=4Py7UMFgrudSs2e1wc4r8BVuEX3bmCamJvqlRzRnRSbARDzxZP5YXjCJ8Mks8qMZJMPSCdpke
+ pGjjUDp1izIC1q9Xz9UeEDkknMqRobVGEtdrzek6shMO64LePwoGyOc
+X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
+ pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: sha@pengutronix.de
+X-SA-Exim-Mail-From: s.hauer@pengutronix.de
 X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On Mon, Aug 26, 2024 at 09:48:38AM +0000, David Lin wrote:
-> > From: Sascha Hauer <s.hauer@pengutronix.de>
-> > Sent: Monday, August 26, 2024 5:37 PM
-> > To: David Lin <yu-hao.lin@nxp.com>
-> > Cc: Brian Norris <briannorris@chromium.org>; Francesco Dolcini
-> > <francesco@dolcini.it>; Kalle Valo <kvalo@kernel.org>;
-> > linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > kernel@pengutronix.de
-> > Subject: Re: [EXT] [PATCH 10/31] wifi: mwifiex: fix indention
-> > 
-> > Caution: This is an external email. Please take care when clicking links or
-> > opening attachments. When in doubt, report the message using the 'Report
-> > this email' button
-> > 
-> > 
-> > On Thu, Aug 22, 2024 at 09:36:29AM +0000, David Lin wrote:
-> > > > From: Sascha Hauer <s.hauer@pengutronix.de>
-> > > > Sent: Tuesday, August 20, 2024 7:56 PM
-> > > > To: Brian Norris <briannorris@chromium.org>; Francesco Dolcini
-> > > > <francesco@dolcini.it>; Kalle Valo <kvalo@kernel.org>
-> > > > Cc: linux-wireless@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > > > kernel@pengutronix.de; Sascha Hauer <s.hauer@pengutronix.de>
-> > > > Subject: [EXT] [PATCH 10/31] wifi: mwifiex: fix indention
-> > > >
-> > > > Align multiline if() under the opening brace.
-> > > >
-> > > > Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-> > > > ---
-> > > >  drivers/net/wireless/marvell/mwifiex/wmm.c | 12 ++++++------
-> > > >  1 file changed, 6 insertions(+), 6 deletions(-)
-> > > >
-> > > > diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c
-> > > > b/drivers/net/wireless/marvell/mwifiex/wmm.c
-> > > > index bcb61dab7dc86..1b1222c73728f 100644
-> > > > --- a/drivers/net/wireless/marvell/mwifiex/wmm.c
-> > > > +++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
-> > > > @@ -1428,13 +1428,13 @@ mwifiex_dequeue_tx_packet(struct
-> > > > mwifiex_adapter *adapter)
-> > > >         }
-> > > >
-> > > >         if (!ptr->is_11n_enabled ||
-> > > > -               ptr->ba_status ||
-> > > > -               priv->wps.session_enable) {
-> > > > +           ptr->ba_status ||
-> > > > +           priv->wps.session_enable) {
-> > > >                 if (ptr->is_11n_enabled &&
-> > > > -                       ptr->ba_status &&
-> > > > -                       ptr->amsdu_in_ampdu &&
-> > > > -                       mwifiex_is_amsdu_allowed(priv, tid) &&
-> > > > -                       mwifiex_is_11n_aggragation_possible(priv,
-> > ptr,
-> > > > +                   ptr->ba_status &&
-> > > > +                   ptr->amsdu_in_ampdu &&
-> > > > +                   mwifiex_is_amsdu_allowed(priv, tid) &&
-> > > > +                   mwifiex_is_11n_aggragation_possible(priv, ptr,
-> > > >
-> > > > adapter->tx_buf_size))
-> > > >                         mwifiex_11n_aggregate_pkt(priv, ptr,
-> > ptr_index);
-> > > >                         /* ra_list_spinlock has been freed in
-> > > >
-> > > > --
-> > > > 2.39.2
-> > > >
-> > >
-> > > I wonder we still need patch for indent issue here? If so I am sure we
-> > > will need a bunch of similar patches which I don't think really help
-> > > improve mwifiex quality
-> > >
-> > > Actually in its successor Nxpwifi (currently under review), we have
-> > > cleaned up all indent, and checkpatch errors/warnings/checks.
-> > 
-> > BTW you advertised nxpwifi not as a successor to mwifiex, but as the driver to
-> > be used for new chips. This means we still have to deal with the mwifiex driver
-> > in the future to support the old chips, so even if nxpwifi is merged it still makes
-> > sense to clean up mwifiex.
-> > 
-> > Sascha
-> > 
-> 
-> Just like what I listed for the errors/warning/checks of Mwifiex running with checkpatch.
-> Mwifiex has so many issues. As the driver will only support legacy devices and the state of
-> it is "Odd fixes", It is better to fix really bugs of Mwifiex instead of cleanup it.
+mwifiex_hs_activated_event() takes a struct mwifiex_private * as
+context pointer which this function doesn't need directly and the callers
+don't have. Use struct mwifiex_adapter * instead to simplify both the
+function and the callers.
 
-The way you use "legacy" is from a silicon vendors perspective. Many
-real users only start to use a chip when it's already legacy for the
-silicon vendor.
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 44 ++++++++++++---------------
+ drivers/net/wireless/marvell/mwifiex/main.c   | 15 ++-------
+ drivers/net/wireless/marvell/mwifiex/main.h   |  2 +-
+ 3 files changed, 23 insertions(+), 38 deletions(-)
 
-Sascha
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index cdfb307e75131..0c175c6a1b201 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -367,8 +367,7 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
+ 	    (test_bit(MWIFIEX_IS_HS_CONFIGURED, &adapter->work_flags) &&
+ 	     !adapter->sleep_period.period)) {
+ 		adapter->pm_wakeup_card_req = true;
+-		mwifiex_hs_activated_event(mwifiex_get_priv
+-				(adapter, MWIFIEX_BSS_ROLE_ANY), true);
++		mwifiex_hs_activated_event(adapter, true);
+ 	}
+ 
+ 	return ret;
+@@ -784,17 +783,16 @@ int mwifiex_exec_next_cmd(struct mwifiex_adapter *adapter)
+ 
+ 	spin_unlock_bh(&adapter->mwifiex_cmd_lock);
+ 	ret = mwifiex_dnld_cmd_to_fw(priv, cmd_node);
+-	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++
+ 	/* Any command sent to the firmware when host is in sleep
+ 	 * mode should de-configure host sleep. We should skip the
+ 	 * host sleep configuration command itself though
+ 	 */
+-	if (priv && (host_cmd->command !=
+-	     cpu_to_le16(HostCmd_CMD_802_11_HS_CFG_ENH))) {
++	if (host_cmd->command != cpu_to_le16(HostCmd_CMD_802_11_HS_CFG_ENH)) {
+ 		if (adapter->hs_activated) {
+ 			clear_bit(MWIFIEX_IS_HS_CONFIGURED,
+ 				  &adapter->work_flags);
+-			mwifiex_hs_activated_event(priv, false);
++			mwifiex_hs_activated_event(adapter, false);
+ 		}
+ 	}
+ 
+@@ -1160,27 +1158,27 @@ mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
+  * This event is generated by the driver, with a blank event body.
+  */
+ void
+-mwifiex_hs_activated_event(struct mwifiex_private *priv, u8 activated)
++mwifiex_hs_activated_event(struct mwifiex_adapter *adapter, u8 activated)
+ {
+ 	if (activated) {
+ 		if (test_bit(MWIFIEX_IS_HS_CONFIGURED,
+-			     &priv->adapter->work_flags)) {
+-			priv->adapter->hs_activated = true;
+-			mwifiex_update_rxreor_flags(priv->adapter,
++			     &adapter->work_flags)) {
++			adapter->hs_activated = true;
++			mwifiex_update_rxreor_flags(adapter,
+ 						    RXREOR_FORCE_NO_DROP);
+-			mwifiex_dbg(priv->adapter, EVENT,
++			mwifiex_dbg(adapter, EVENT,
+ 				    "event: hs_activated\n");
+-			priv->adapter->hs_activate_wait_q_woken = true;
++			adapter->hs_activate_wait_q_woken = true;
+ 			wake_up_interruptible(
+-				&priv->adapter->hs_activate_wait_q);
++				&adapter->hs_activate_wait_q);
+ 		} else {
+-			mwifiex_dbg(priv->adapter, EVENT,
++			mwifiex_dbg(adapter, EVENT,
+ 				    "event: HS not configured\n");
+ 		}
+ 	} else {
+-		mwifiex_dbg(priv->adapter, EVENT,
++		mwifiex_dbg(adapter, EVENT,
+ 			    "event: hs_deactivated\n");
+-		priv->adapter->hs_activated = false;
++		adapter->hs_activated = false;
+ 	}
+ }
+ 
+@@ -1204,7 +1202,7 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
+ 
+ 	if (phs_cfg->action == cpu_to_le16(HS_ACTIVATE) &&
+ 	    adapter->iface_type != MWIFIEX_USB) {
+-		mwifiex_hs_activated_event(priv, true);
++		mwifiex_hs_activated_event(adapter, true);
+ 		return 0;
+ 	} else {
+ 		mwifiex_dbg(adapter, CMD,
+@@ -1217,11 +1215,11 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
+ 	if (conditions != HS_CFG_CANCEL) {
+ 		set_bit(MWIFIEX_IS_HS_CONFIGURED, &adapter->work_flags);
+ 		if (adapter->iface_type == MWIFIEX_USB)
+-			mwifiex_hs_activated_event(priv, true);
++			mwifiex_hs_activated_event(adapter, true);
+ 	} else {
+ 		clear_bit(MWIFIEX_IS_HS_CONFIGURED, &adapter->work_flags);
+ 		if (adapter->hs_activated)
+-			mwifiex_hs_activated_event(priv, false);
++			mwifiex_hs_activated_event(adapter, false);
+ 	}
+ 
+ 	return 0;
+@@ -1250,9 +1248,7 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
+ 	adapter->hs_activated = false;
+ 	clear_bit(MWIFIEX_IS_HS_CONFIGURED, &adapter->work_flags);
+ 	clear_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags);
+-	mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
+-						    MWIFIEX_BSS_ROLE_ANY),
+-				   false);
++	mwifiex_hs_activated_event(adapter, false);
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
+ 
+@@ -1302,9 +1298,7 @@ mwifiex_process_sleep_confirm_resp(struct mwifiex_adapter *adapter,
+ 	}
+ 	adapter->pm_wakeup_card_req = true;
+ 	if (test_bit(MWIFIEX_IS_HS_CONFIGURED, &adapter->work_flags))
+-		mwifiex_hs_activated_event(mwifiex_get_priv
+-						(adapter, MWIFIEX_BSS_ROLE_ANY),
+-					   true);
++		mwifiex_hs_activated_event(adapter, true);
+ 	adapter->ps_state = PS_STATE_SLEEP;
+ 	cmd->command = cpu_to_le16(command);
+ 	cmd->seq_num = cpu_to_le16(seq_num);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 46acddd03ffd1..588887aa29a79 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -415,10 +415,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 			if (adapter->hs_activated) {
+ 				clear_bit(MWIFIEX_IS_HS_CONFIGURED,
+ 					  &adapter->work_flags);
+-				mwifiex_hs_activated_event
+-					(mwifiex_get_priv
+-					(adapter, MWIFIEX_BSS_ROLE_ANY),
+-					false);
++				mwifiex_hs_activated_event(adapter, false);
+ 			}
+ 		}
+ 
+@@ -438,10 +435,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 			if (adapter->hs_activated) {
+ 				clear_bit(MWIFIEX_IS_HS_CONFIGURED,
+ 					  &adapter->work_flags);
+-				mwifiex_hs_activated_event
+-					(mwifiex_get_priv
+-					 (adapter, MWIFIEX_BSS_ROLE_ANY),
+-					 false);
++				mwifiex_hs_activated_event(adapter, false);
+ 			}
+ 		}
+ 
+@@ -460,10 +454,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 			if (adapter->hs_activated) {
+ 				clear_bit(MWIFIEX_IS_HS_CONFIGURED,
+ 					  &adapter->work_flags);
+-				mwifiex_hs_activated_event
+-					(mwifiex_get_priv
+-					 (adapter, MWIFIEX_BSS_ROLE_ANY),
+-					 false);
++				mwifiex_hs_activated_event(adapter, false);
+ 			}
+ 		}
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index dc07eb11f7752..ce5b80af305a0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1129,7 +1129,7 @@ int mwifiex_ret_enh_power_mode(struct mwifiex_private *priv,
+ 			       struct host_cmd_ds_command *resp,
+ 			       struct mwifiex_ds_pm_cfg *pm_cfg);
+ void mwifiex_process_hs_config(struct mwifiex_adapter *adapter);
+-void mwifiex_hs_activated_event(struct mwifiex_private *priv,
++void mwifiex_hs_activated_event(struct mwifiex_adapter *adapter,
+ 					u8 activated);
+ int mwifiex_set_hs_params(struct mwifiex_private *priv, u16 action,
+ 			  int cmd_type, struct mwifiex_ds_hs_cfg *hs_cfg);
 
 -- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+2.39.2
+
