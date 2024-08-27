@@ -1,124 +1,122 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D67315884D
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 07:49:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3981F10A3E;
+	Tue, 27 Aug 2024 07:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724744987; cv=none; b=Qa7GUszJ/36x4sDgYsRBKnmUrboD6+3xWnP+er3Dc2AT/Qxd08rG5FCyWNHJ8OD2Ajop0HO/GIQudcS7b4XkLChctrUwmkzFw2+LM9nGRGNVHRRbnwQrvSmgoF10N9geGTmH7eNB14Lu4gH3sH8JvfGnppzMvuVIE6HaVmS8eaI=
+	t=1724745097; cv=none; b=V+rmY++0fkEaX2kKe+QUvNY+dZnLHVaRhWdsFYrd7jmRr/QjQC3I1pINgkBCjdBHlsd0aGLeXFRl3XTUp9SBdwdxr8dqCb07SxqOybS0cFsYT6FCM8xx+hlprWNsg7U/MH2gC29JdroH4J1DrVHBePmPD95rciao3zk/DOCkWZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724744987; c=relaxed/simple;
-	bh=fXjPBZpkw76uHOpVzZbfPveywrHcaRNcOsLULPG1l7E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OsiwqQY1lqoUPodklSLsFMV1mL2ukJ29OTLco/zD5myIG1PM5AosREe+O/j9vZjnHYQPX1SDiyjTeoXs/J8K30kZvyuaPLODjom/mQRSqERz/biDBkodCU+7L3Mp99ChI2b0e3SR0yvrzaHf29JXzGhQHHkbwPEoSWyjiuJVc8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=WQxJFBLu; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1724745097; c=relaxed/simple;
+	bh=A8qs4q7GVsI6SJCyqjyFziFlMD2QiJffUEsHEiMiZ6Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PNGAe8wYVJJrSNKzSZHpX075cEkMePfkc9DGaps0HtFw2D9UXZd0rbsHuW2m0GMo0i6caWZpSCn4CUiNMLQGrU8bizRZoQpCKMEWyqQrvoRdj4QB6qN3amybskANBHdidi4ltd+sWdq2WWGH4RaOM3vu2SQc22u3WDSR2duvQg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=jnb/PUW9; arc=none smtp.client-ip=217.70.183.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="WQxJFBLu"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=H15ozmC5XGFDwYBZ7dmHCfE3Uxdn/jqOy44YILQnA4M=; t=1724744986; x=1725954586; 
-	b=WQxJFBLu/bSypeZdD5YzDaCwz99azGcjtbjoTQnKQKkb+nvCr3abPawsmAknmLJol0mYiwyz+Vm
-	7QjW4gv3xaKTKuWC5xndBMjF9oUIlumuUktIZB5oIhHMPpEC1tX1q598G5Sd5O1VscLV8k+p0EoMj
-	PXGCaarZM5XemSnIv9rS/xmcKvGHGUxl1V8Viq74UqitKlqJ73qKbcf6Rm3og+No+lhvVOyDV6El5
-	GqCwaFMEbOWEj29lj2r87bUaHL12et5dvG5UZ/XqyR2WUD71BF6MpldRoZZCgYy69boii6puwYKIX
-	jVerlf8gajpS0t77iWxt3x8QOhB1h9jbO0TA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1siqxT-00000004QuI-0cAp;
-	Tue, 27 Aug 2024 09:49:43 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH] wifi: mac80211: fix RCU list iterations
-Date: Tue, 27 Aug 2024 09:49:40 +0200
-Message-ID: <20240827094939.ed8ac0b2f897.I8443c9c3c0f8051841353491dae758021b53115e@changeid>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="jnb/PUW9"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 1B483C000A;
+	Tue, 27 Aug 2024 07:51:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1724745092;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Iuza3MZuYeVztk8T9uatzi0SnTQGBdcv8/vSMaUtdhc=;
+	b=jnb/PUW9UfKVn0iAjNX2U5SU/ku517IRVUMYgoe4BdpjEwVn4C1kyU6qu585x8Jl3iaSIJ
+	KzntmgtnyeOQqM4p0rymAH9fuUoTFpIxzWplsgVC01DHCQyPfNK+eKwmL41tIEp6wpDASe
+	y76LnqcWypL7zmvQbII7DFebN0CLvN8LuMutG8uoTA9Q826LeY6p6/wKFkYGPJ5Mt9I29+
+	0LcP9ydohXKw48UmlhKhE84RHcHZGaktS948GAJMQmjgdXCus6mBqpOTXIfOX68rYAaGs9
+	IO8dxJtjwwn9I5xAV4AFYLmlllANXjzdAJAKlynbOw1/XXlutmJhF63+2HAjbw==
+Message-ID: <2b167618-473a-4da1-9c10-cba2b9051381@bootlin.com>
+Date: Tue, 27 Aug 2024 09:51:30 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/4] wifi: wilc1000: Fold wilc_get_chipid() into wlan.c
+To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+ Adham Abozaeid <adham.abozaeid@microchip.com>,
+ Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
+ <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+ netdev@vger.kernel.org
+References: <20240823161131.94305-1-marex@denx.de>
+ <20240823161131.94305-2-marex@denx.de>
+From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Content-Language: en-US
+In-Reply-To: <20240823161131.94305-2-marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-GND-Sasl: alexis.lothore@bootlin.com
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Marek,
 
-There are a number of places where RCU list iteration is
-used, but that aren't (always) called with RCU held. Use
-just list_for_each_entry() in most, and annotate iface
-iteration with the required locks.
+On 8/23/24 18:08, Marek Vasut wrote:
+> Do not use wilc_get_chipid() outside of wlan.c . Instead, call
+> wilc_get_chipid() right after the SDIO/SPI interface has been
+> initialized to cache the device chipid, and then use the cached
+> chipid throughout the driver. Make wilc_get_chipid() static and
+> remove its prototype from wlan.h .
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> ---
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Adham Abozaeid <adham.abozaeid@microchip.com>
+> Cc: Ajay Singh <ajay.kathat@microchip.com>
+> Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+> Cc: Conor Dooley <conor+dt@kernel.org>
+> Cc: Eric Dumazet <edumazet@google.com>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: Paolo Abeni <pabeni@redhat.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> ---
+> V2: New patch
+> ---
 
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/chan.c | 4 +++-
- net/mac80211/mlme.c | 2 +-
- net/mac80211/scan.c | 2 +-
- net/mac80211/util.c | 4 +++-
- 4 files changed, 8 insertions(+), 4 deletions(-)
+[...]
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index e8567723e94d..b72e4036526b 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -286,7 +286,9 @@ ieee80211_get_max_required_bw(struct ieee80211_link_data *link)
- 	enum nl80211_chan_width max_bw = NL80211_CHAN_WIDTH_20_NOHT;
- 	struct sta_info *sta;
- 
--	list_for_each_entry_rcu(sta, &sdata->local->sta_list, list) {
-+	lockdep_assert_wiphy(sdata->local->hw.wiphy);
-+
-+	list_for_each_entry(sta, &sdata->local->sta_list, list) {
- 		if (sdata != sta->sdata &&
- 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
- 			continue;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4779a18ab75d..b5b66feb752f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1231,7 +1231,7 @@ static bool ieee80211_add_vht_ie(struct ieee80211_sub_if_data *sdata,
- 		bool disable_mu_mimo = false;
- 		struct ieee80211_sub_if_data *other;
- 
--		list_for_each_entry_rcu(other, &local->interfaces, list) {
-+		list_for_each_entry(other, &local->interfaces, list) {
- 			if (other->vif.bss_conf.mu_mimo_owner) {
- 				disable_mu_mimo = true;
- 				break;
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index b5f2df61c7f6..2dd84fc542b2 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -504,7 +504,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 	 * the scan was in progress; if there was none this will
- 	 * just be a no-op for the particular interface.
- 	 */
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (ieee80211_sdata_running(sdata))
- 			wiphy_work_queue(sdata->local->hw.wiphy, &sdata->work);
- 	}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ced19ce7c51a..0d6e5c51cd90 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -751,7 +751,9 @@ static void __iterate_interfaces(struct ieee80211_local *local,
- 	struct ieee80211_sub_if_data *sdata;
- 	bool active_only = iter_flags & IEEE80211_IFACE_ITER_ACTIVE;
- 
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list,
-+				lockdep_is_held(&local->iflist_mtx) ||
-+				lockdep_is_held(&local->hw.wiphy->mtx)) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
- 			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
+> +static u32 wilc_get_chipid(struct wilc *wilc)
+> +{
+> +	u32 chipid = 0;
+> +	u32 rfrevid = 0;
+> +
+> +	if (wilc->chipid == 0) {
+> +		wilc->hif_func->hif_read_reg(wilc, WILC_CHIPID, &chipid);
+If we search for WILC_CHIPID in the whole driver, there are still two places
+manually reading this register. Shouldn't those places also benefit from
+wilc_get_chipid ?
+
+> +		wilc->hif_func->hif_read_reg(wilc, WILC_RF_REVISION_ID,
+> +					     &rfrevid);
+> +		if (!is_wilc1000(chipid)) {
+> +			wilc->chipid = 0;
+
+While at it, since you have trimmed the update parameter, it would be nice to
+also fix this return value (ie make wilc_getchipid() not return 0 but a real
+error code if we can not read the chip id.
+
+Thanks,
+
+Alexis
 -- 
-2.46.0
+Alexis Lothoré, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
 
