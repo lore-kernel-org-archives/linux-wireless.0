@@ -1,42 +1,37 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B40A04C6E;
-	Tue, 27 Aug 2024 00:52:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286B11758E;
+	Tue, 27 Aug 2024 02:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724719935; cv=none; b=UfdPkdATvGGx6q1TRl9iXHI9dIXAKbhWu5as0qpaOGaZZcXz0GFmJHFKPWAx4TzL5hs8zy+Ts8E4anbngSGdk75DIzqprOJWtXaTyRPpMdOwzlZUqjfVTXm2LSv+bSdaL/1YLSmParyLRFfwbL1EuuXFNL3aBqN8VK71K13ndLM=
+	t=1724727314; cv=none; b=PK9e1GS3170PZwLBGxF/PnwXa0lT4TKtHfBAciKqC9NJT+nwXE7du9U/TrLj9dbMqnnZN05JkVrYN/wlyBNbj+wUQHEYm6vTPiqrNTznXoEDeqSMaCG27ZJ1nT17NR+Ao+prJ/wZQIMkRs0+H++7wv8SPeB83SkDJ8557FPZsXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724719935; c=relaxed/simple;
-	bh=o1NOOnd+S2fw7jpL4TBPLu70Zd0V9CqR2ZNRWxzWeg8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dsDejUvoVipTD8mLTa+Y944qsO37ajCfdj+5ByObOy2+dnCYT1JbLg7mzJHSPxnaL90jKDiB3FyFFbSg/wDmaT7SxsHY80MHbKKO7eP/+UWvA8f3cRp4ik4NSpVbhENUAn7qWyWE4bvdubfQsM03FQ4KYCqacPhxP0GWGmh5UQU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=BUMm+JkO; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="BUMm+JkO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=mo9Re
-	kydLbB7jgzAG9tKGwNs3MPYoPW5XcLMY7TfLYE=; b=BUMm+JkOP11YShiv4MQKc
-	qxhSVi8AxYkjAoysbb1n/R2HUR4FrMdJASg1xrKKKg5T/O8qfcz/uk1xO4DHT0jG
-	KO8nyfeBSuSfvcfwhJzYDYbmWceL7u/isk+rnx2ji/B75BnUvS0bVBIpaxNVyrYf
-	tdyhxnX6S8dyv10x24C008=
-Received: from localhost.localdomain (unknown [111.35.190.113])
-	by gzga-smtp-mta-g3-1 (Coremail) with SMTP id _____wD3n_EDI81mpfKyAA--.7028S4;
-	Tue, 27 Aug 2024 08:51:31 +0800 (CST)
-From: David Wang <00107082@163.com>
-To: miriam.rachel.korenblit@intel.com,
-	kvalo@kernel.org,
-	johannes.berg@intel.com,
-	gregory.greenman@intel.com,
-	pagadala.yesu.anjaneyulu@intel.com,
-	dan.carpenter@linaro.org,
-	daniel.gabay@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	David Wang <00107082@163.com>
-Subject: [PATCH] wifi: iwlwifi: acpi/dsm: cache error retcode for iwl_acpi_get_dsm
-Date: Tue, 27 Aug 2024 08:51:14 +0800
-Message-Id: <20240827005114.4950-1-00107082@163.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1724727314; c=relaxed/simple;
+	bh=H4mKPRXojt/PtFyQoJcO+CZAJ2xLOvJt8iri7FSTkuw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=H1P4OOdwEOQuVBvAOWqQKw7Yu9r9fUpYRFUIEEFdcZpoBrkIQ5auKAEVDEI3DY7pa+47uK3SXq+nqup+vSNh7AXIcEgPZox4n3sFc4wkSpohnbPU1j7IXsHKZCkAj1PaZd8eJYlPBZ7CinFAqHRILio6M0jEafOGvuxJjWcQLrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4WtBqJ0v4NzQqp3;
+	Tue, 27 Aug 2024 10:50:20 +0800 (CST)
+Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
+	by mail.maildlp.com (Postfix) with ESMTPS id 70B30180AE7;
+	Tue, 27 Aug 2024 10:55:08 +0800 (CST)
+Received: from huawei.com (10.90.53.73) by dggpeml500022.china.huawei.com
+ (7.185.36.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 27 Aug
+ 2024 10:55:08 +0800
+From: Hongbo Li <lihongbo22@huawei.com>
+To: <johannes@sipsolutions.net>, <davem@davemloft.net>, <edumazet@google.com>,
+	<kuba@kernel.org>, <pabeni@redhat.com>, <kvalo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<lihongbo22@huawei.com>
+Subject: [PATCH -next v2] wifi: mac80211: use max to simplify the code
+Date: Tue, 27 Aug 2024 11:03:02 +0800
+Message-ID: <20240827030302.1006179-1-lihongbo22@huawei.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,68 +39,85 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3n_EDI81mpfKyAA--.7028S4
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWrWkWw4rAr47uFykXF4kCrg_yoW5GryxpF
-	129a12krWDAa1Ut3Z3tF4Sywn5Wwsru39xCrZ7G34UJr1DWr1SgrW5Gr12vay8Zwn7Jay5
-	ZF47tF15Kr4kZr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piGjg7UUUUU=
-X-CM-SenderInfo: qqqrilqqysqiywtou0bp/1tbiMxRIqmXAncCIewAAsO
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpeml500022.china.huawei.com (7.185.36.66)
 
-On some HW, acpi _DSM query would failed for iwlwifi device
-and everytime when network is reactiaved (boot,
-suspend/resume, manually restart network, etc.),
-bunch of kernel warning shows up together:
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-  ACPI: \: failed to evaluate _DSM bf0212f2-788f-c64d-a5b3-1f738e285ade (0x1001)
-since iwlwifi would make 8 acpi/dsm queries for lari config.
-But for iwlwifi, it is safe to cache the _DSM errors,
-since it is not possible to correct it without upgrading BIOS.
-With this patch, those kernel warnings would only show up once when
-booting the system and unnecessary acpi/dsm queries are avoid.
+The following Coccinelle/coccicheck warning reported by
+minmax.cocci:
+    WARNING opportunity for max()
+Let's use max() to simplify the code and fix the warning.
 
-Signed-off-by: David Wang <00107082@163.com>
+Signed-off-by: Hongbo Li <lihongbo22@huawei.com>
+
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+v2:
+  - change the commit title
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index 79774c8c7ff4..3f98f522daac 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -30,6 +30,8 @@ static const size_t acpi_dsm_size[DSM_FUNC_NUM_FUNCS] = {
- 	[DSM_FUNC_ENABLE_11BE] =		sizeof(u32),
- };
+v1: https://patchwork.kernel.org/project/linux-wireless/patch/20240824074033.2134514-2-lihongbo22@huawei.com/
+---
+ net/mac80211/driver-ops.h | 2 +-
+ net/mac80211/mlme.c       | 2 +-
+ net/mac80211/scan.c       | 6 ++----
+ net/mac80211/tdls.c       | 2 +-
+ 4 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index d382d9729e85..6b75c7eeff25 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -971,7 +971,7 @@ drv_mgd_protect_tdls_discover(struct ieee80211_local *local,
+ 		return;
+ 	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
  
-+static int acpi_dsm_func_retcode[DSM_FUNC_NUM_FUNCS] = {0};
-+
- static int iwl_acpi_get_handle(struct device *dev, acpi_string method,
- 			       acpi_handle *ret_handle)
+-	link_id = link_id > 0 ? link_id : 0;
++	link_id = max(link_id, 0);
+ 
+ 	trace_drv_mgd_protect_tdls_discover(local, sdata);
+ 	if (local->ops->mgd_protect_tdls_discover)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4779a18ab75d..60a7631f0457 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -5375,7 +5375,7 @@ ieee80211_determine_our_sta_mode_auth(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_conn_settings *conn)
  {
-@@ -169,6 +171,10 @@ int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
- 	if (WARN_ON(func >= ARRAY_SIZE(acpi_dsm_size)))
- 		return -EINVAL;
+ 	ieee80211_determine_our_sta_mode(sdata, sband, NULL, wmm_used,
+-					 req->link_id > 0 ? req->link_id : 0,
++					 max(req->link_id, 0),
+ 					 conn);
+ }
  
-+	/* If HW return an error once, do not bother try again. */
-+	if (acpi_dsm_func_retcode[func])
-+		return acpi_dsm_func_retcode[func];
-+
- 	expected_size = acpi_dsm_size[func];
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index b5f2df61c7f6..e77c9f07b046 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1013,10 +1013,8 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 */
+ 	if ((chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)) ||
+ 	    !scan_req->n_ssids) {
+-		*next_delay = msecs_to_jiffies(scan_req->duration) >
+-			      IEEE80211_PASSIVE_CHANNEL_TIME ?
+-			      msecs_to_jiffies(scan_req->duration) :
+-			      IEEE80211_PASSIVE_CHANNEL_TIME;
++		*next_delay = max(msecs_to_jiffies(scan_req->duration),
++				  IEEE80211_PASSIVE_CHANNEL_TIME);
+ 		local->next_scan_state = SCAN_DECISION;
+ 		if (scan_req->n_ssids)
+ 			set_bit(SCAN_BEACON_WAIT, &local->scanning);
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index f07b40916485..719739def96c 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -919,7 +919,7 @@ ieee80211_tdls_build_mgmt_packet_data(struct ieee80211_sub_if_data *sdata,
+ 	int ret;
+ 	struct ieee80211_link_data *link;
  
- 	/* Currently all ACPI DSMs are either 8-bit or 32-bit */
-@@ -177,6 +183,7 @@ int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
- 
- 	ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV, func,
- 				       &iwl_guid, &tmp, expected_size);
-+	acpi_dsm_func_retcode[func] = ret;
- 	if (ret)
- 		return ret;
- 
+-	link_id = link_id >= 0 ? link_id : 0;
++	link_id = max(link_id, 0);
+ 	rcu_read_lock();
+ 	link = rcu_dereference(sdata->link[link_id]);
+ 	if (WARN_ON(!link))
 -- 
-2.39.2
+2.34.1
 
