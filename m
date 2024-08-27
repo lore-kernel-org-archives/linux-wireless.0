@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 737EA19D8BE
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 09:55:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8D118D65C
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 09:55:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724752526; cv=none; b=FpiVdpIdFaipYx1P37muv/U0DZfyH7ZiSSqpXwHqutOU2SDuYZQfiFW7sVvTm4s2/xiI2RzfJG6SqQ2SLiJty2v8OZ8m0AT4QbNN7tfyfJ/kNjR1nBEptu4TVj6BKaLXf/690dUDMZvpKUFxQ5GeV2K6V6/ijWxti/O6q7wFuQY=
+	t=1724752529; cv=none; b=kScjwNGnbfncSvVmaShHK/3Bh6KvFkBUN+cJ10PiziQ/hL3EfRRC5AD2J+IzDCItZFLK3KYZmEsAJU9WB4WxxECBAlBpDKCBWhgyh0wSYLRR2JQLbHiuu/LrvhhrxW3sCsC1oVAy+EwgFT15B7VPs7MXJ7upqie8Hx8m2WOJgrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724752526; c=relaxed/simple;
-	bh=sy3UC0jpZYvY06jJ0HSVoBLqnzOVyrUJZ0roEgf/EJ0=;
+	s=arc-20240116; t=1724752529; c=relaxed/simple;
+	bh=cf7mpzTdqUDvGoAVcBpjwHE1ffg0pBxCHe73Jt3WpaQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y7sxBbbAKOdynZtXVmCEpmZfp8UoLiPUF6UuIzpJ/oL4YYW5xQxSwAOI6Dd0s6eqk/rQEpQVaS62kfw7YMN7WBHNdSzEMEPJaJy4w5Xr6RRudtsl5NiErCfcj6zbwuTqepmLugzqg/Lf7SoU4B9OWCpwbFzTJMg/qyEueRmKu/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=iFIbbl7T; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=jj9Y8FoIRQZOHGic7EQuhkQR1ldu6dt8yjkmyJqWZbxhLtaMNpOMNg7/ajAtledUFxi3TFSKiKef/9re20poBI/T6uTgAPZ3UftioL6IIG9ZXOKG0/kg+KmQias/zLQ2u/M3tfcY/hutU4tx0BgiMFVQDsG5+Er+5kMUSOj60HM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=s56hYQC/; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="iFIbbl7T"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="s56hYQC/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=uoPXKbmZwZ+KOhTqLqZJ1bgvfMx+gMlFOmRT7urAHNE=; b=iFIbbl7TfOLnRvtQkq6QyDEJRu
-	7M2vh0k5PhLVYgUdVxeM1xgAuzNhIMDoP5Nm8jGWteSXGIqmuTWdp85DhwFC0X/UcSaD/CHYzeMvC
-	+S/24DfhQD3oR/l9VPI1WnHE16H0N6z9vIEJsSC3FwKAB0GcA9Va2fCz7nOD+vGWI+IM=;
+	bh=p3aHoapBM2LKw2r5UIeTGMAjRnbjJJNj/hAyCtC44pk=; b=s56hYQC/VI5cSffrpPmLkvqKDc
+	1soXI0xbBux3AsXzOLTVjODPZMvvzRVmmcJr2m4rTMhaumuDl+9kc3mrFPAOjdDkE1ff7iguah1H0
+	k2oGBUOZ1Xy1IG2NJUQh8Pk/CCGFzcm3KRxah6Z1YE8OEcnY87LT3noPB2LRPXl8nS7o=;
 Received: from p57a6f9a5.dip0.t-ipconnect.de ([87.166.249.165] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1sisWo-004Ww8-0t
+	id 1sisWn-004Ww8-1x
 	for linux-wireless@vger.kernel.org;
-	Tue, 27 Aug 2024 11:30:18 +0200
+	Tue, 27 Aug 2024 11:30:17 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 22/24] wifi: mt76: mt7915: always query station rx rate from firmware
-Date: Tue, 27 Aug 2024 11:30:09 +0200
-Message-ID: <20240827093011.18621-22-nbd@nbd.name>
+Subject: [PATCH v2 19/24] wifi: mt76: mt7915: improve hardware restart reliability
+Date: Tue, 27 Aug 2024 11:30:06 +0200
+Message-ID: <20240827093011.18621-19-nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <20240827093011.18621-1-nbd@nbd.name>
 References: <20240827093011.18621-1-nbd@nbd.name>
@@ -48,28 +48,104 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When offloading is enabled, the software rx path may not have the latest
-rate information.
+- use reconfig_complete to restart mac_work / queues
+- reset full wtbl after firmware init
+- clear wcid and vif mask to avoid leak
+- fix sta poll list corruption
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7915/mac.c   | 27 ++++++++++---------
+ .../net/wireless/mediatek/mt76/mt7915/main.c  | 12 +++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   |  2 ++
+ 3 files changed, 28 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+index fc03cb499e71..54974ff72a5b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
+@@ -1463,26 +1463,27 @@ mt7915_mac_full_reset(struct mt7915_dev *dev)
+ 		if (!mt7915_mac_restart(dev))
+ 			break;
+ 	}
+-	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	if (i == 10)
+ 		dev_err(dev->mt76.dev, "chip full reset failed\n");
+ 
++	spin_lock_bh(&dev->mt76.sta_poll_lock);
++	while (!list_empty(&dev->mt76.sta_poll_list))
++		list_del_init(dev->mt76.sta_poll_list.next);
++	spin_unlock_bh(&dev->mt76.sta_poll_lock);
++
++	memset(dev->mt76.wcid_mask, 0, sizeof(dev->mt76.wcid_mask));
++	dev->mt76.vif_mask = 0;
++
++	i = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7915_WTBL_STA);
++	dev->mt76.global_wcid.idx = i;
++	dev->recovery.hw_full_reset = false;
++
++	mutex_unlock(&dev->mt76.mutex);
++
+ 	ieee80211_restart_hw(mt76_hw(dev));
+ 	if (ext_phy)
+ 		ieee80211_restart_hw(ext_phy->hw);
+-
+-	ieee80211_wake_queues(mt76_hw(dev));
+-	if (ext_phy)
+-		ieee80211_wake_queues(ext_phy->hw);
+-
+-	dev->recovery.hw_full_reset = false;
+-	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mphy.mac_work,
+-				     MT7915_WATCHDOG_TIME);
+-	if (ext_phy)
+-		ieee80211_queue_delayed_work(ext_phy->hw,
+-					     &ext_phy->mac_work,
+-					     MT7915_WATCHDOG_TIME);
+ }
+ 
+ /* system error recovery */
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index db2cf6e11cf3..d75e8dea1fbd 100644
+index e80db20035ab..51885484aab6 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -1094,8 +1094,7 @@ static void mt7915_sta_statistics(struct ieee80211_hw *hw,
- 	struct rate_info *txrate = &msta->wcid.rate;
- 	struct rate_info rxrate = {};
+@@ -1682,6 +1682,17 @@ mt7915_net_fill_forward_path(struct ieee80211_hw *hw,
+ }
+ #endif
  
--	if (is_mt7915(&phy->dev->mt76) &&
--	    !mt7915_mcu_get_rx_rate(phy, vif, sta, &rxrate)) {
-+	if (!mt7915_mcu_get_rx_rate(phy, vif, sta, &rxrate)) {
- 		sinfo->rxrate = rxrate;
- 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_BITRATE);
- 	}
++static void
++mt7915_reconfig_complete(struct ieee80211_hw *hw,
++			 enum ieee80211_reconfig_type reconfig_type)
++{
++	struct mt7915_phy *phy = mt7915_hw_phy(hw);
++
++	ieee80211_wake_queues(hw);
++	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
++				     MT7915_WATCHDOG_TIME);
++}
++
+ const struct ieee80211_ops mt7915_ops = {
+ 	.add_chanctx = ieee80211_emulate_add_chanctx,
+ 	.remove_chanctx = ieee80211_emulate_remove_chanctx,
+@@ -1740,4 +1751,5 @@ const struct ieee80211_ops mt7915_ops = {
+ 	.net_fill_forward_path = mt7915_net_fill_forward_path,
+ 	.net_setup_tc = mt76_wed_net_setup_tc,
+ #endif
++	.reconfig_complete = mt7915_reconfig_complete,
+ };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 81375b5d0021..72c8e574dfb7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -2362,6 +2362,8 @@ int mt7915_mcu_init_firmware(struct mt7915_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	mt76_connac_mcu_del_wtbl_all(&dev->mt76);
++
+ 	if ((mtk_wed_device_active(&dev->mt76.mmio.wed) &&
+ 	     is_mt7915(&dev->mt76)) ||
+ 	    !mtk_wed_get_rx_capa(&dev->mt76.mmio.wed))
 -- 
 2.46.0
 
