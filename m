@@ -1,71 +1,87 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2031854;
-	Tue, 27 Aug 2024 02:57:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FC828689
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 03:06:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724727432; cv=none; b=TRkmiThGlPBxCEEsteHft3Wq5iMax/mecUu0pg20YlZOZtc3zJ+7SFivgPY3kP+lsHqDxdYA9pWah6DIDPTMv3v/QGls1hnN67+jJjr8edQCIHyi7RMuDs/dTQk6UeyltA8KV8gZGbmyiLUE479Ymjj5ICnY18xTt9hgVjcSPt4=
+	t=1724728011; cv=none; b=sv0rx7/pYM/IwgBArrxsPIy7lOPfBOKZgua+d+VojLuWA1/xoY8y7p+5XkZWQS31+MbkkFk+ongWsvOiq8UaqGncKj3nZ97fW0SJehCNOxYj1AxyYt8jy/XgTpnNSXXkJhjdlRs2TFRU5ze6LmwTgeG/1AFu6bcvq5TVUBq3HNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724727432; c=relaxed/simple;
-	bh=VP5jQVZScWJwGt7yDpFbs3p1qV4NI6oB+QQ5/y+MDEQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=XpOr9ZE2IRHz9uYsJq6XL/reKB2iQAaVnQzHEKQE3tgJHd3NJxcRj5Q7H/r8JcdjUtKSfNA9+mRWX1ui8psjC9jMhvEIhUeIZJE1KvqzRt92MmFgWm1bzZrnSWgFWDUsDkDiWkCq16D4OCrhcwZoYUMzYWn3gpe9ZruaCgwyQt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WtByZ3wDtzyRD0;
-	Tue, 27 Aug 2024 10:56:38 +0800 (CST)
-Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
-	by mail.maildlp.com (Postfix) with ESMTPS id 6889B18007C;
-	Tue, 27 Aug 2024 10:57:07 +0800 (CST)
-Received: from [10.67.111.104] (10.67.111.104) by
- dggpeml500022.china.huawei.com (7.185.36.66) with Microsoft SMTP Server
+	s=arc-20240116; t=1724728011; c=relaxed/simple;
+	bh=BQRDsvGw2HffR8qITihy+EHjTWc9Wz1ol4MajA/kz3E=;
+	h=From:To:CC:Subject:In-Reply-To:References:MIME-Version:
+	 Content-Type:Message-ID:Date; b=oxZhy6U/qipSJnFHdcY4w1K5BnDlUO6jxwi0gAkh8WA+9ho0eRHOnD3chqlD5zO5eW80eJ4RQvnEFWUWR+P3S2msPw39SjCYHjepNCcUwC7ideDRW1ruPchjzPp2j1K4Hes/mdWv1KpGGrjCGqUlfIEeHRbySOLUur7lyLCEDXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=RoH0divm; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="RoH0divm"
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 47R36jzgE528939, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
+	t=1724728006; bh=BQRDsvGw2HffR8qITihy+EHjTWc9Wz1ol4MajA/kz3E=;
+	h=From:To:CC:Subject:In-Reply-To:References:MIME-Version:
+	 Content-Type:Message-ID:Date;
+	b=RoH0divmEnj5w4VZQALlt0w0qDcI5/WuJ3CNqN8Aacw/o8bMmp4BeROKOa1ZwC5fP
+	 owGY+Ue+L4uldMMbyR7tfwbctOduxD5GnQMXrwM57ashyOP4M0OToufWavA+WJ5S/6
+	 fUthaRy4RhIT1EjuozcNvnt/QRiTRwNHYAemQc27La8zTNv+JK0Tc8vhzhJpnNEQtH
+	 EnV25K6qeNOvCL7leDaL0YoFprLM9Jc/CpIK6McSppImrFWlbalQ7jJkPiF0CkJZQf
+	 RthsPOdm20y4vpVt/eZtACyohmMhNDKesv9fkPKbQlbpQMIGTXd8fF2d6d82XP0r7y
+	 4guQY91NJn5/g==
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/3.02/5.92) with ESMTPS id 47R36jzgE528939
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 11:06:45 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Tue, 27 Aug 2024 10:57:07 +0800
-Message-ID: <4a92bb68-7fe7-4bf2-885f-e07b06ea82aa@huawei.com>
-Date: Tue, 27 Aug 2024 10:57:06 +0800
+ 15.1.2507.39; Tue, 27 Aug 2024 11:06:46 +0800
+Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
+ (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Tue, 27 Aug
+ 2024 11:06:45 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+CC: <kevin_yang@realtek.com>
+Subject: Re: [PATCH 1/8] wifi: rtw89: pass chan to rfk_band_changed()
+In-Reply-To: <20240819091724.33730-2-pkshih@realtek.com>
+References: <20240819091724.33730-1-pkshih@realtek.com> <20240819091724.33730-2-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH net-next 0/8] Use max/min to simplify the code
-Content-Language: en-US
-To: Jakub Kicinski <kuba@kernel.org>
-CC: <johannes@sipsolutions.net>, <davem@davemloft.net>, <edumazet@google.com>,
-	<pabeni@redhat.com>, <allison.henderson@oracle.com>, <dsahern@kernel.org>,
-	<pshelar@ovn.org>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <rds-devel@oss.oracle.com>, <dccp@vger.kernel.org>,
-	<dev@openvswitch.org>, <linux-afs@lists.infradead.org>
-References: <20240824074033.2134514-1-lihongbo22@huawei.com>
- <20240826144404.03fce39c@kernel.org>
-From: Hongbo Li <lihongbo22@huawei.com>
-In-Reply-To: <20240826144404.03fce39c@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpeml500022.china.huawei.com (7.185.36.66)
+Content-Type: text/plain
+Message-ID: <fdadd4b4-f3d0-47b4-9388-56c2de47ffb7@RTEXMBS04.realtek.com.tw>
+Date: Tue, 27 Aug 2024 11:06:45 +0800
+X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
+ RTEXMBS04.realtek.com.tw (172.21.6.97)
 
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-
-On 2024/8/27 5:44, Jakub Kicinski wrote:
-> On Sat, 24 Aug 2024 15:40:25 +0800 Hongbo Li wrote:
->> Many Coccinelle/coccicheck warning reported by minmax.cocci
->> in net module, such as:
->>          WARNING opportunity for max()
->>          WARNING opportunity for min()
->>
->> Let's use max/min to simplify the code and fix these warnings.
->> These patch have passed compilation test.
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
 > 
-> This set does not build.
+> Originally, all chips have implemented rfk_band_changed() and access chan
+> with hard-code RTW89_CHANCTX_0 in it. But, it's problematic when the chip
+> supports multiple channels.
 > 
-Do you mean some patches will go to other branches (such as mac80211)?
+> So, change the prototype of rfk_band_changed() and pass chan ahead. And,
+> we will refine the implementation of each chip in the following.
+> 
+> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Thanks,
-Hongbo
-> 
+8 patch(es) applied to rtw-next branch of rtw.git, thanks.
+
+7c31f102030f wifi: rtw89: pass chan to rfk_band_changed()
+e3a2f20991fe wifi: rtw89: 8851b: use right chanctx whenever possible in RFK flow
+fcad7da7d3fc wifi: rtw89: 8852a: use right chanctx whenever possible in RFK flow
+50b3da25abc6 wifi: rtw89: 8852bx: use right chanctx whenever possible in RFK flow
+395bd59c95fd wifi: rtw89: 8852c: use right chanctx whenever possible in RFK flow
+abc129676897 wifi: rtw89: 8922a: use right chanctx whenever possible in RFK flow
+d03b3d7493f5 wifi: rtw89: rename roc_entity_idx to roc_chanctx_idx
+fef63150940c wifi: rtw89: introduce chip support link number and driver MLO capability
+
+---
+https://github.com/pkshih/rtw.git
+
