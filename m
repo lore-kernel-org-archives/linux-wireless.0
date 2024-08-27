@@ -1,115 +1,129 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133CD19D892
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 09:30:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9AA19DF59
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Aug 2024 09:53:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724751027; cv=none; b=lgsKu0TXMfiq27231AHI/OoovdJ5KEeWYirYvfkstCBUVjzXRRN/j5aI2lOxLwtuKjmjcXmRbF6f2Ic9ltUsOQccTDyayPpkwJQm+YHfC62f6gSDwGFPjhsPwBmxrg/LAL6AzgrlJLQP/rsAbviA3/A+nwlBzJJk3q5I1OB7Rv4=
+	t=1724752409; cv=none; b=GFHPgZoLhwvf+Po4DgLQlWXz4f2Ol2a2aQ6IRqkAwpLYN61wzVW25PNyItNj45n4eIBBuklFAmlTxuKESCJaZ/hTcnWR2dmIcGoMZam7tlw+Wjda+Nghks7SIkwBwodrDnbwALq44Z0ZZrPe4oSdNB6SYSMkLGuJSGKJYsMFm+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724751027; c=relaxed/simple;
-	bh=c7VQa2Shzq0tfXJcBbD8NDsBVIPo8Bho+BHFmEZEmSs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ojStW1SITENzFFVJn/A8h2qagQPW6Zm0cGV9i/+KOjHbkmwF88Ne3w2XJ2swvg/6AX0uX5G7YhTZkuK+LQSMfTh3o9GbXnyM+4KUWvSCNo8YstG2dRYwMB/4I9BopnabpxVk20pIAHKOmtJrqUkYa1MrYvMLzcJAMzIWXgCDtaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=sybjJqCH; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1724752409; c=relaxed/simple;
+	bh=UOdt3ZcbGkDZ1SwFjxgBBFABMkdt+sCTJtJNXOm2tAo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZqJkqlCNbsimEefJIiikmEpyQJDCFA1qA0w7sZWpUcKVWccXw+GuvApeOSklLddMC2YRVHP240ISH5VsnI9iZJS8qPTgrHCrahSgvdX+DuRP8BqyGDDBRiR5+ofhYD+oRiMnmXc1l6oWgPYUaVoTaWDGGYMpFt5S7JU72qmFviU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=P9zCBjKJ; arc=none smtp.client-ip=217.70.183.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="sybjJqCH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=lcVyuUicRRhXCplCXvqzxttxivfcC7q69xcwPRvf6/o=; b=sybjJqCHtZYTaLj79DCK/89NbI
-	wwGaUOWvFbScT3ccMcmn6mSJq3IqdPeZxQ5fJxsX+rcRaj1ICWSj9lojwM8vT8FEdLqUHMnvmnCKQ
-	Ww3n92Y1SwGdCDvuDgeg6nvhQmRv/cuBivBM/s2Oxzetd5aw0U98+8fGEZGnyHZ1VUS4=;
-Received: from p57a6f9a5.dip0.t-ipconnect.de ([87.166.249.165] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sisWl-004Ww8-13;
-	Tue, 27 Aug 2024 11:30:15 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: Benjamin Lin <benjamin-jw.lin@mediatek.com>
-Subject: [PATCH v2 09/24] wifi: mt76: connac: add support for IEEE 802.11 fragmentation
-Date: Tue, 27 Aug 2024 11:29:56 +0200
-Message-ID: <20240827093011.18621-9-nbd@nbd.name>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20240827093011.18621-1-nbd@nbd.name>
-References: <20240827093011.18621-1-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="P9zCBjKJ"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 353FD240006;
+	Tue, 27 Aug 2024 09:53:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1724752398;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=y2UWgNbznlgDwOQIBrAHEbDApGWxpuKWx9dAxpz1gjM=;
+	b=P9zCBjKJWl582JJD3/HjXyZpuUO+JItFYBT63PkLORyX8FpJ0pXxxLPdlzymWT6i8x0DdI
+	vy5CD9rK+hMUpEjsq3mtOw8Om6KvF5/+3SLSaunzXl2nXhp1Pa96rCBKFfGfdJRaptCKsa
+	cMaw1la5QTTp7VSxlYp9Az1r4QnQwlUIZVDHsLa2IiGT1zJB5cT8NdA/799TNycT3LckfG
+	odEnbaz+jHflQXrWVnR3AZ1lA6bPEBaoqz5WvJ13ie2AciwKBf0b9Hz6zFey3i4RiJ+Q7A
+	kxFVHaGD98Vwu9hceHgs7ZvlZPPRoCB/aGMD8pTczgZzv7vjdZKtgUpt9GrcGQ==
+Message-ID: <a9e673b1-43f3-4341-a035-3e1265b8a544@bootlin.com>
+Date: Tue, 27 Aug 2024 11:53:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: wilc1000: Keep slot powered on during
+ suspend/resume
+To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
+Cc: Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>
+References: <20240821183823.163268-1-marex@denx.de>
+From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Content-Language: en-US
+In-Reply-To: <20240821183823.163268-1-marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-GND-Sasl: alexis.lothore@bootlin.com
 
-From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
+On 8/21/24 20:37, Marek Vasut wrote:
+> The WILC3000 can suspend and enter low power state. According to local
+> measurements, the WILC3000 consumes the same amount of power if the slot
+> is powered up and WILC3000 is suspended, and if the WILC3000 is powered
+> off. Use the former option, keep the WILC3000 powered up as that allows
+> for things like WoWlan to work.
+> 
+> Note that this is tested on WILC3000 only, not on WILC1000 .
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> ---
+> Cc: Ajay Singh <ajay.kathat@microchip.com>
+> Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: linux-wireless@vger.kernel.org
+> ---
+>  drivers/net/wireless/microchip/wilc1000/sdio.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/microchip/wilc1000/sdio.c b/drivers/net/wireless/microchip/wilc1000/sdio.c
+> index 683a35c682a8f..41122199d51eb 100644
+> --- a/drivers/net/wireless/microchip/wilc1000/sdio.c
+> +++ b/drivers/net/wireless/microchip/wilc1000/sdio.c
+> @@ -973,7 +973,6 @@ static int wilc_sdio_suspend(struct device *dev)
+>  {
+>  	struct sdio_func *func = dev_to_sdio_func(dev);
+>  	struct wilc *wilc = sdio_get_drvdata(func);
+> -	int ret;
+>  
+>  	dev_info(dev, "sdio suspend\n");
+>  
+> @@ -987,13 +986,7 @@ static int wilc_sdio_suspend(struct device *dev)
+>  
+>  	wilc_sdio_disable_interrupt(wilc);
+>  
+> -	ret = wilc_sdio_reset(wilc);
+> -	if (ret) {
+> -		dev_err(&func->dev, "Fail reset sdio\n");
+> -		return ret;
+> -	}
+> -
+> -	return 0;
+> +	return sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+>  }
 
-Add fragmentation index into TXD.DW2 to support IEEE 802.11 fragmentation.
+This change breaks suspend/resume on my wilc1000 setup (sama5d2 wlsom evk +
+wilc1000 sd):
 
-Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h |  7 +++++++
- drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c  | 10 +++++++++-
- 2 files changed, 16 insertions(+), 1 deletion(-)
+# echo mem > /sys/power/state
+PM: suspend entry (deep)
+Filesystems sync: 0.055 seconds
+Freezing user space processes
+Freezing user space processes completed (elapsed 0.018 seconds)
+OOM killer disabled.
+Freezing remaining freezable tasks
+Freezing remaining freezable tasks completed (elapsed 0.006 seconds)
+wilc1000_sdio mmc0:0001:1: sdio suspend
+wilc1000_sdio mmc0:0001:1: PM: dpm_run_callback(): pm_generic_suspend returns -22
+wilc1000_sdio mmc0:0001:1: PM: failed to suspend async: error -22
+PM: Some devices failed to suspend, or early wake event detected
+OOM killer enabled.
+Restarting tasks ... done.
+random: crng reseeded on system resumption
+PM: suspend exit
+sh: write error: Invalid argument
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-index 5f132115ebfc..eb4765365b8c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac2_mac.h
-@@ -355,4 +355,11 @@ enum tx_port_idx {
- 	MT_TX_PORT_IDX_MCU
- };
- 
-+enum tx_frag_idx {
-+	MT_TX_FRAG_NONE,
-+	MT_TX_FRAG_FIRST,
-+	MT_TX_FRAG_MID,
-+	MT_TX_FRAG_LAST
-+};
-+
- #endif /* __MT76_CONNAC2_MAC_H */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index b841bf628d02..a3db65254e37 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -391,6 +391,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
- 	bool multicast = is_multicast_ether_addr(hdr->addr1);
- 	u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 	__le16 fc = hdr->frame_control;
-+	__le16 sc = hdr->seq_ctrl;
- 	u8 fc_type, fc_stype;
- 	u32 val;
- 
-@@ -432,6 +433,13 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
- 	    info->flags & IEEE80211_TX_CTL_USE_MINRATE)
- 		val |= MT_TXD2_FIX_RATE;
- 
-+	if (ieee80211_has_morefrags(fc) && ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_FIRST);
-+	else if (ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_MID);
-+	else if (!ieee80211_has_morefrags(fc) && !ieee80211_is_first_frag(sc))
-+		val |= FIELD_PREP(MT_TXD2_FRAG, MT_TX_FRAG_LAST);
-+
- 	txwi[2] |= cpu_to_le32(val);
- 
- 	if (ieee80211_is_beacon(fc)) {
-@@ -440,7 +448,7 @@ mt76_connac2_mac_write_txwi_80211(struct mt76_dev *dev, __le32 *txwi,
- 	}
- 
- 	if (info->flags & IEEE80211_TX_CTL_INJECTED) {
--		u16 seqno = le16_to_cpu(hdr->seq_ctrl);
-+		u16 seqno = le16_to_cpu(sc);
- 
- 		if (ieee80211_is_back_req(hdr->frame_control)) {
- 			struct ieee80211_bar *bar;
+But I have to dig more to really understand the root cause.
+
 -- 
-2.46.0
+Alexis Lothoré, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
 
