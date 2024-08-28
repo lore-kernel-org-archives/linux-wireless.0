@@ -1,261 +1,195 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from APC01-PSA-obe.outbound.protection.outlook.com (mail-psaapc01on2117.outbound.protection.outlook.com [40.107.255.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C1715F3E6;
-	Wed, 28 Aug 2024 07:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724830611; cv=none; b=AzCHQndHG4tzVrHL2wF/X+x/YTGeKa1ACEV8IrkQDMcfRH1HFZbxiYWkvP01RklDf3Equo3hiqTlgXEKjLVekxs2xNYSVtSUrwz7xtRUF2rnLqwqRjpDTnTKsf5cmb5NX2IcP7BZprIuZ0O9WG/c5gDeTvXfsFEhJYhwBFKIOiI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724830611; c=relaxed/simple;
-	bh=/xq+keQ9L4ZNt85CyDSNycADysq9RCBUiBxhtxa/Iwk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k7B7Pqc62m+pvxfblADHDc9bcUPu8PxUFqZpUiu8XNKD5/i358YzGAM3QdB3sQdrx6EY8Tj1yv92f0xeoSioOEaafDMAqg1igVO8ludvFM8ILJBmXHwxZfoQF3uX5aErje0QIOYnFRBW5F1GdYuLM+d4m+msgH22dEvzDj3Ue9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=H2ar1Yok; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="H2ar1Yok"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724830610; x=1756366610;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=/xq+keQ9L4ZNt85CyDSNycADysq9RCBUiBxhtxa/Iwk=;
-  b=H2ar1Yok25pi+Kjooqsv1UczyAUUlNoP8bWM4FBSDuXXlf2rKPyeXym4
-   jqA6UcFci2qzgKZnw1yoSHKHKABImBJ9G6xqR3YWbq+wSCmvrLs/2AZ/a
-   qhbdbcU7IYn7pKk5IEuQ9B0RaLELQ32DVviI7p8ft/0FhNHvQ6IJ2XDhE
-   0nX990KVtMq6JUOpAcr0cTQPt0Btt1zVS1vt5Ov5sOvW9TmaVrjv38CN7
-   x64pK57CAiOF74wYbPiYiDBt0/n/qPXcdYv2zkPLDZsEQwNeT6Z0o4M3L
-   9ReesIR2X04F0GLeIhk+DVHkaeEE4lKHasXeN76D/IN3npLtSjt844LhP
-   Q==;
-X-CSE-ConnectionGUID: 2o/aJOm2S6anlSvglcOjhA==
-X-CSE-MsgGUID: oAsKtUhtT++quR74AO8GTw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11177"; a="23505455"
-X-IronPort-AV: E=Sophos;i="6.10,182,1719903600"; 
-   d="scan'208";a="23505455"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2024 00:36:49 -0700
-X-CSE-ConnectionGUID: FA6h6co/QC6+TreJRX3JCw==
-X-CSE-MsgGUID: rt6KCRb7RfqPS0cb8yUseA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,182,1719903600"; 
-   d="scan'208";a="63475108"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by orviesa006.jf.intel.com with ESMTP; 28 Aug 2024 00:36:45 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sjDEQ-000Kbk-0Y;
-	Wed, 28 Aug 2024 07:36:42 +0000
-Date: Wed, 28 Aug 2024 15:36:28 +0800
-From: kernel test robot <lkp@intel.com>
-To: Hongbo Li <lihongbo22@huawei.com>, johannes@sipsolutions.net,
-	davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-	pabeni@redhat.com, allison.henderson@oracle.com, dsahern@kernel.org,
-	pshelar@ovn.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	rds-devel@oss.oracle.com, dccp@vger.kernel.org, dev@openvswitch.org,
-	linux-afs@lists.infradead.org, lihongbo22@huawei.com
-Subject: Re: [PATCH net-next 4/8] net/core: Use min()/max() to simplify the
- code
-Message-ID: <202408281516.thVNxpEo-lkp@intel.com>
-References: <20240824074033.2134514-5-lihongbo22@huawei.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6B715530C;
+	Wed, 28 Aug 2024 07:41:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.255.117
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724830879; cv=fail; b=VmSUg7Pto3oF7S/okqFLITzWj2CH52H4kz/ajIxYppBS3xOBmxB3fDEdVIG6KdwIWLUALiUuxS2Cdj3PkT4q+VPHFciaGMkjLsIXZwm8HxRQSTioeEs+0IB0bqjNysejfWvQ95ugy1c1hjs11vj/dhAy7EFho39IXqhjmUUrbRk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724830879; c=relaxed/simple;
+	bh=pvBFedbixSkiqWuMD5ggRHBeHefsL/vzl60gVabib1c=;
+	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
+	 To:Cc:MIME-Version; b=FFsClXNOcYmVwF3gUjCSNQP2aOUdWp6UHIO/IJlYye7jDPJvIuZnCBxWrmJsOW+62cSI2D3xdl61FnW55maQtzgp265CePlobaV5XfZIhJrK0APvHOkeB6dI1sFf3qpzoiilOVHnfiV9pV7lFPyfbFtwsOZJ/1IQZPkV9WjzlV0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wesion.com; spf=pass smtp.mailfrom=wesion.com; arc=fail smtp.client-ip=40.107.255.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wesion.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wesion.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=rmzkBad7fD0G88L62NnVgyEQTag00YcSCuLYiej0+VxA3rxiQ0n6z+jFrbSqadEluUZpUgErOwnF8l9BCHUn3SoiKCuAae6Bbr4KyFEuu0wWg7NstRrYnEqGF3bVAzMxQaPrdaF/rHpnA/2KnULy/s4oB0W1SfeXbyDmbT1epNitLZ00+7nFRvGx7jEXEV736/TbIOl5rLk0YxfnzZc1Hrr/hO+YeSE45OdDykqtGFU0dx7EdqmKgLEmWGi1STb8rOE2vJuZORXRQufC8/bciMNfBJtdM/7Qf3o3ko/YmER7vrwdAE8LPtvy2IM0KDNDFCjhM0I3I3ZALDqLEtNARg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KbxQ8CN2hEqCPJsO4yOc2S/gFbfZhs3WhsZPY+vH/Dw=;
+ b=YLn5TI2z0H6mKpPrLqJd/1DIU47X6gBffj33kXR4cm7kTEV/4ngQz842Oo1fz2bec/BEH2QZ/6jnvo2E7h9RzUhlPpsSW7EUGilVoTu3SPyEboeXwkRDnVTzcSiwCdt4m34NgFIAZZ4UrbnflfEtH9semiI9C+LhJ836rBpjeamzzZpVaGfvITSkJ5SUOvxk+NXN0CbqBgWSc35wGU1QWnBo40TjnyJ1m2H/DV8cMrEleqnwBdvaShVtPTaPzo3+eilPvFPbRlHerUvpJOk2gCeLMoTmR5q1T92H9zA2uCIZbq37sDV0iKuq2z+Jv/lw+wEMaUdmEbFdNzWffltaKg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wesion.com; dmarc=pass action=none header.from=wesion.com;
+ dkim=pass header.d=wesion.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=wesion.com;
+Received: from TYZPR03MB7001.apcprd03.prod.outlook.com (2603:1096:400:26a::14)
+ by KL1PR03MB7765.apcprd03.prod.outlook.com (2603:1096:820:ec::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7897.25; Wed, 28 Aug
+ 2024 07:41:13 +0000
+Received: from TYZPR03MB7001.apcprd03.prod.outlook.com
+ ([fe80::78dd:5e68:1a9c:36c0]) by TYZPR03MB7001.apcprd03.prod.outlook.com
+ ([fe80::78dd:5e68:1a9c:36c0%4]) with mapi id 15.20.7875.019; Wed, 28 Aug 2024
+ 07:41:12 +0000
+From: Jacobe Zang <jacobe.zang@wesion.com>
+Date: Wed, 28 Aug 2024 15:40:48 +0800
+Subject: [PATCH v12 1/5] dt-bindings: net: wireless: brcm4329-fmac: add
+ pci14e4,449d
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240828-wireless-mainline-v12-1-9064ac7acf1d@wesion.com>
+References: <20240828-wireless-mainline-v12-0-9064ac7acf1d@wesion.com>
+In-Reply-To: <20240828-wireless-mainline-v12-0-9064ac7acf1d@wesion.com>
+To: Kalle Valo <kvalo@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+ Paolo Abeni <pabeni@redhat.com>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, van Spriel <arend@broadcom.com>, 
+ Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+ Jacobe Zang <jacobe.zang@wesion.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1724830868; l=1081;
+ i=jacobe.zang@wesion.com; s=20240828; h=from:subject:message-id;
+ bh=pvBFedbixSkiqWuMD5ggRHBeHefsL/vzl60gVabib1c=;
+ b=oumwvwKsr4rsnjUzj/ymaZJUCcAdLSZzTt0dZ0c+HZNpMwWtLiUzaw5W/dJYhoPcYHpaPcM0+
+ woIw6ggrgZiAFHwDx5OnuL9zS4D2Ammt39TrAbA4ypRgLz4vFvqhvM+
+X-Developer-Key: i=jacobe.zang@wesion.com; a=ed25519;
+ pk=CkP5TjIqHSwHJwZXTGtadoXZucYvakXcO3HjbR6FoeU=
+X-ClientProxiedBy: TYCP286CA0372.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:79::20) To TYZPR03MB7001.apcprd03.prod.outlook.com
+ (2603:1096:400:26a::14)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240824074033.2134514-5-lihongbo22@huawei.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYZPR03MB7001:EE_|KL1PR03MB7765:EE_
+X-MS-Office365-Filtering-Correlation-Id: a17b7d7b-1f05-48b3-31a5-08dcc734ca73
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|52116014|366016|1800799024|376014|7416014|921020|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?TjlTWS9mZ1pSVVZjdHNHTE9HWXJjcU42Q2ZUT1Z5cjB5aVNSUHIzdWhMUlpz?=
+ =?utf-8?B?cjlETDB4dUxYS3l6RXpramcvNDBUS2NadHVDWVlQNGR0c244WEYvRGlKS25K?=
+ =?utf-8?B?NDFOSHpJOTlKTnluVEhXdG11WUdDMnlpVjAyUVNFaFM3SWJjU2pXZG9IUEhX?=
+ =?utf-8?B?b3lEaFFNTXlUQit4MlRvU0Z2RzBuYnJibGRVUVBud09YeGp1L3pVelZTa0Nz?=
+ =?utf-8?B?Ulg2cjF1SHAwd1FoWE9FTEVQL2hDcnVEMHdYU3FWWTdJQnpXTWpnb2tBa0NB?=
+ =?utf-8?B?Mm1kSnZ1djRGN3JKQ25OWC9GYzI1NnRkSXhqTGE4cm83R1N4UnNqeGpmMVpW?=
+ =?utf-8?B?NHY5V3BpL2NWOWJWU1VyV3lUWG5JTG0rR0NRZ1AyT1VEWG5OMFNEOFVoM3F5?=
+ =?utf-8?B?b1VGQ0hmck1PS0EvRkhPSVZ5b2tnU2lEbGw5aWRvVUpXMkFaSjNjNGh2bTlj?=
+ =?utf-8?B?dllER0ZMTGdGWFdTMzdyMTc4MUE2VlhDUDkwN3QwUXRGYW9DY2dXeGNJSTYr?=
+ =?utf-8?B?V0tONllZbnZMdHhoYWo0QTFPV2QvdlUxejZpY2IvVjNnN0ZrNWRIK1BweDhW?=
+ =?utf-8?B?R05ndjBxYXpTMVM2TnlOTjk2QkdXV0lGaFFsT3NSRHNhNkVoVTRUYjJoN0Zi?=
+ =?utf-8?B?c3VDeGJsSXN6SkN6YWRGK29ac3JqaXlhQlpKaDE0aVZrNUxkQVp0U0JZVmk0?=
+ =?utf-8?B?TGVCS0c4QkJGTTdiYmNSZXhnWkZGMzZnT2Q5QVhxdkg5cXpaZm4zMzh0WkVL?=
+ =?utf-8?B?T1NsS245WW0xaUhwY3JnZ0pnMVRab0hDRkJJVnd6empMRnBMYnNWQVB2WFpN?=
+ =?utf-8?B?bXRDMVFzNWtpVlNPN1FkOGx2SnJDc2FrMy85SS9DRnBYanNCWFVQQ2dhTnNY?=
+ =?utf-8?B?cUhPRzFESlpRdFFyN01pT2F4bFcreEdRZ2ZLMVFWOWlVUmpuZzM4d3NGbDQ5?=
+ =?utf-8?B?eER2YUhrUFNaTG9oQ0xidkRrZmNGdEVPUFVnOFFucmFMek5TdHc5ekxra0Uw?=
+ =?utf-8?B?M1M5Sk1WUlNWTHJUbGFuME50Y1pGalM0SGRSVGhtTW9RQUtYVUpCK2RxSjMr?=
+ =?utf-8?B?OW9VWHBUN3MvSEpJYTBibFp1Y2lVTkRxWlh2T3lXdEVvRmhydjBldGVnOHJF?=
+ =?utf-8?B?M25nVGlvUmI5bW9KeXJXZTJ4Z3AyaWd3bDZMUnhrZ2dNQU1QZWphd3RwV0pN?=
+ =?utf-8?B?M2FVNCt4d3lmZlFsRVVqbEg0a2o4MmFocUZHMVFyNkxjYmpBOEt5KzRuZDdV?=
+ =?utf-8?B?ZDVsenlUaWNYRjh6Z3hDQVBnM2F5dXVrRHY4ME50WHlqU2UwbzEyVk5MWFFD?=
+ =?utf-8?B?a3V0RUQ2UUJVNjcvZlZpREFPYVpOMXdKa0Z1UkRucDBwT2d4Wm5NQTcxOFQv?=
+ =?utf-8?B?NDJ0d05Ud1ZBODV4cnVxL2hEZDBFa0svc0F3d3J5VWFDU01zZEZ1aXJWTFJU?=
+ =?utf-8?B?YlplcWN6RmM5UjlmdkhJUW9BOVc4Q2QyQnE0UlQraTBIaG1qWUNXV0FtZTlh?=
+ =?utf-8?B?RTBsUE81UlRia0hPYzFvNXJURE92UlNFc3paUUpuRXlubG5aWkF0Y3FETWM0?=
+ =?utf-8?B?OFJJdGY4N0crWmJoMDYrQXpGclNmWUhiQ1d6ZFZibTlTSlJYUklVUTFnN0Ja?=
+ =?utf-8?B?dTdVUENDUmZiWmU1OHJGc2F5S3ZqZEVYNkhpdGU1d2owR2htTVVVL1BobzJH?=
+ =?utf-8?B?andrVDdUd3pIMFMxSEZSWDRyajI4aDNvZU1mNktJR0ppWHMydUozNloxdzNh?=
+ =?utf-8?B?Zm8xY3I3bnh1R2N1dWJWbVY3aVhLTEwzYldPejYxRmtkNGdWU3EwUXFUdWR5?=
+ =?utf-8?B?M2dYQmxuWmI1N2ZTK3crcHFQclloZjlQajI4bGZiaHZETkEybkdnZHA5dTdZ?=
+ =?utf-8?B?YWI1aFk2MkFFR05SeGFsYTdkTnV1RGNKZk16NFVUYldVMUVwYzVDYkI4Zy9V?=
+ =?utf-8?Q?SnYhE+WGqC8=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR03MB7001.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(366016)(1800799024)(376014)(7416014)(921020)(38350700014);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?LzBxWkQ0anRoKy8vWUxCby9KcHd0cjRYQmtmUDRURFNkQnczMElhQmNMQnkw?=
+ =?utf-8?B?eXFmN0xBQmVQQW5UNUI2ZnBudzFWRmN0R056S252cFVBT1JJNTVhTGRicmVN?=
+ =?utf-8?B?N0NCTHppSmhmWi9KcnBUYTg3YWdPSWZaYVhCamxDNGpPanNEdkFRaWg2OFFm?=
+ =?utf-8?B?RUhBYUJCM1o4aHY2OFVaR3FSOFRtSm1FazlSeHl6UmhYMkVaaEZKRzRJaWMx?=
+ =?utf-8?B?UVlBODg1dkdUQXF5L3lvUE1ldnYvQVZXeVFEb3J2Y04yVVFyS2hhaDA3eWly?=
+ =?utf-8?B?cjRIUjBET2tYZEFGNGl5elBUWFRhZUZRbFNUTmZyUGx3c3E0eXZiZTJDQnRj?=
+ =?utf-8?B?UlVVQWtjZXFNWDQxTlVTUmsxRE1GWkFhUUpKR0U0YW5vb2pjUFBYbFlRVzZE?=
+ =?utf-8?B?aGtvSTlab2lleGd1VlBvRmx5WG5jeExtYXJ6ZFNoMjJOVENTUnBxU2Y4QVNZ?=
+ =?utf-8?B?cW1uYXppekFxSXFVNGVydU9hK29qbkVIZENrNGZCaldDZWYwZ0FSeG40U2tO?=
+ =?utf-8?B?dGlOK2N4cklYN2RzckhDM1ZEQzRRakR6TDk3MW05WlphSXFoOGZHRzV1bG5S?=
+ =?utf-8?B?bGdkWXJOWER5VThGNmU0SnZxVDI0YXpVN2xnUzBNMlhCdG5Uc2ltcENtUHlQ?=
+ =?utf-8?B?TFN4SFdsbTgrMW1XSjdkY2dFeHo5cjlTUmozNHRkeUNXR3BOdUxXSkZ4SmV5?=
+ =?utf-8?B?R2NTVGVlNzljTWM0M3kzSWZzaUlVMlVDZ21TeTh3ekduc2FabEI3SUVJdTZz?=
+ =?utf-8?B?WEk4YXVHZ2d3bFJyYmxXOFM5QjRkQ0FnbmNseFlwb1FWSERQb1lLZ1ZSeitL?=
+ =?utf-8?B?TXJDNlh3SWgrUmlaV0tmS0R1NXJlWUdTN3pyck1LeGZJeTVGVU1wRExJdTVs?=
+ =?utf-8?B?QmdXa1E5OGFVcUZKOVcvWlo1MkdwRE1jVGU3Q3dxQ2ptYW9acHBKbkdTNXlt?=
+ =?utf-8?B?SWlmeWZDVmFUQlVlOE9BaXp6aEtTSFVMUm5qUWdVWnlaVlA0ZWJEL3B3VlJm?=
+ =?utf-8?B?ZmdhY2dOd0hZWFJSZDVzNHhWNml0RUZBY013dEJOWmJKekZxakNnN3BadGxV?=
+ =?utf-8?B?UWFiMHF6UVN4b3ZtMWh6MEdPSEh2WjVIUVEzQXNIQWt2bHlQT0h2WFlWS3Ez?=
+ =?utf-8?B?bkVEa1VOSXRLUDZMZkZWaWxJY0ZwbSs1a0k0QU10V0dpQ2ZOeU9aOWREcE1U?=
+ =?utf-8?B?dkdwbmw1WSsycUI0Q0ozNUVZaEhnN0VUVUYwdFZiM3RJRkRHTmxMdkYyaDhY?=
+ =?utf-8?B?YWQ2bGhxRjhRelVqZDZLU0ZUa1oxVTNVTTZaYnlRNlNLeGlqbEIwYUVzYmt3?=
+ =?utf-8?B?dDAxS1J6eFhKSHVFekU3NWdIc2FvTG5aaHR6ZVlrMi9ndGtmem5sZ29kTG1G?=
+ =?utf-8?B?ZHBuWmN4R2lIQmFmOHNiTlRqemc4QnUveEdkc1N2bENCbFhDMjd2UVNWN3Nv?=
+ =?utf-8?B?WFd5Z3o0Rmh0Mm9XcE41WU5Gb0QyZmNYMzdmandJcWxXRFNIeERpNE5UTW9H?=
+ =?utf-8?B?N2Y3WUtLOFNES3dmNndRZkQ4ZzJiQlVIT2paSGpoelIzUERGRC90QlVBYlg1?=
+ =?utf-8?B?YVYvNjk3WU9jUk5RbUJZMmRJejdoNytxVDBmNXl2QWlTbVpYS09JNUVxT3kx?=
+ =?utf-8?B?SnUza1BVTENCOHFGdHdBdFNsUXRKWXNCb0U4YmxEYWI3NUo4YXM3VGw3djcx?=
+ =?utf-8?B?V3k1RUVYMmIvaTJYdkhsWWRSMVJvMGRmbVpoZ29yaWs4K1IxTXdjL2VDQ3Jy?=
+ =?utf-8?B?aWU0SUNNVm54aXlKcGlDYkpidlVCSVl1ZmVFeTFQNGFIWDB2Rm9KdU9zUWNO?=
+ =?utf-8?B?M0E1TUJiMXFoTXQwS1lhWE5WSnBDOHFmVUdtVy9CSGVLUDhJYWFTNGxuTkFG?=
+ =?utf-8?B?Wjh0UTRIRW1tVEVUMzR4OWs2Z3lDenArQ05lZXNVc2pIc2FZNzdmOGZuRjFo?=
+ =?utf-8?B?cDEranByR01pR2IxZmt4dUNaUk0vQWlVQTBCeTd3T3ZiS282UldsT1pIaVZY?=
+ =?utf-8?B?b0l2NmJDUVd6bC8wVFltdGpIRkV4OGxqbUkzVjV4VG9vVmV0SGNpdW51K3hB?=
+ =?utf-8?B?U0dHaWFQcWJnc2ppSWEvQ0lOUzREbVpCQkVDSDNyNVNLWE5ZZnY5UlN1cXVq?=
+ =?utf-8?B?VWNOTDF2YmYxL3lXckordmg5dnBXcnJsbnQzK0lPd3IxMjUwYTJ5ZGRqQmRm?=
+ =?utf-8?B?V0E9PQ==?=
+X-OriginatorOrg: wesion.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a17b7d7b-1f05-48b3-31a5-08dcc734ca73
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR03MB7001.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Aug 2024 07:41:12.9172
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 2dc3bd76-7ac2-4780-a5b7-6c6cc6b5af9b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: epirFcV3s6jJuebo3oFrLTQaB5jNKEIugu8NeFe9YS3d+kiyim0MCmpSzsUu/s1HDD7IOxVbMp6pZIz7+LdDKg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR03MB7765
 
-Hi Hongbo,
+It's the device id used by AP6275P which is the Wi-Fi module
+used by Rockchip's RK3588 evaluation board and also used in
+some other RK3588 boards.
 
-kernel test robot noticed the following build errors:
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Jacobe Zang <jacobe.zang@wesion.com>
+---
+ Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-[auto build test ERROR on net-next/main]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Hongbo-Li/net-mac80211-use-max-to-simplify-the-code/20240826-154029
-base:   net-next/main
-patch link:    https://lore.kernel.org/r/20240824074033.2134514-5-lihongbo22%40huawei.com
-patch subject: [PATCH net-next 4/8] net/core: Use min()/max() to simplify the code
-config: hexagon-allmodconfig (https://download.01.org/0day-ci/archive/20240828/202408281516.thVNxpEo-lkp@intel.com/config)
-compiler: clang version 20.0.0git (https://github.com/llvm/llvm-project 08e5a1de8227512d4774a534b91cb2353cef6284)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240828/202408281516.thVNxpEo-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408281516.thVNxpEo-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from net/core/pktgen.c:126:
-   In file included from include/linux/ptrace.h:10:
-   In file included from include/linux/pid_namespace.h:7:
-   In file included from include/linux/mm.h:2228:
-   include/linux/vmstat.h:517:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
-     517 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
-         |                               ~~~~~~~~~~~ ^ ~~~
-   In file included from net/core/pktgen.c:129:
-   In file included from include/linux/interrupt.h:11:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:14:
-   In file included from arch/hexagon/include/asm/io.h:328:
-   include/asm-generic/io.h:548:31: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     548 |         val = __raw_readb(PCI_IOBASE + addr);
-         |                           ~~~~~~~~~~ ^
-   include/asm-generic/io.h:561:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     561 |         val = __le16_to_cpu((__le16 __force)__raw_readw(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/little_endian.h:37:51: note: expanded from macro '__le16_to_cpu'
-      37 | #define __le16_to_cpu(x) ((__force __u16)(__le16)(x))
-         |                                                   ^
-   In file included from net/core/pktgen.c:129:
-   In file included from include/linux/interrupt.h:11:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:14:
-   In file included from arch/hexagon/include/asm/io.h:328:
-   include/asm-generic/io.h:574:61: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     574 |         val = __le32_to_cpu((__le32 __force)__raw_readl(PCI_IOBASE + addr));
-         |                                                         ~~~~~~~~~~ ^
-   include/uapi/linux/byteorder/little_endian.h:35:51: note: expanded from macro '__le32_to_cpu'
-      35 | #define __le32_to_cpu(x) ((__force __u32)(__le32)(x))
-         |                                                   ^
-   In file included from net/core/pktgen.c:129:
-   In file included from include/linux/interrupt.h:11:
-   In file included from include/linux/hardirq.h:11:
-   In file included from ./arch/hexagon/include/generated/asm/hardirq.h:1:
-   In file included from include/asm-generic/hardirq.h:17:
-   In file included from include/linux/irq.h:20:
-   In file included from include/linux/io.h:14:
-   In file included from arch/hexagon/include/asm/io.h:328:
-   include/asm-generic/io.h:585:33: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     585 |         __raw_writeb(value, PCI_IOBASE + addr);
-         |                             ~~~~~~~~~~ ^
-   include/asm-generic/io.h:595:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     595 |         __raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
-   include/asm-generic/io.h:605:59: warning: performing pointer arithmetic on a null pointer has undefined behavior [-Wnull-pointer-arithmetic]
-     605 |         __raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
-         |                                                       ~~~~~~~~~~ ^
->> net/core/pktgen.c:2796:14: error: call to '__compiletime_assert_743' declared with 'error' attribute: min(datalen/frags, (1UL << 12)) signedness error
-    2796 |                 frag_len = min(datalen/frags, PAGE_SIZE);
-         |                            ^
-   include/linux/minmax.h:129:19: note: expanded from macro 'min'
-     129 | #define min(x, y)       __careful_cmp(min, x, y)
-         |                         ^
-   include/linux/minmax.h:105:2: note: expanded from macro '__careful_cmp'
-     105 |         __careful_cmp_once(op, x, y, __UNIQUE_ID(x_), __UNIQUE_ID(y_))
-         |         ^
-   include/linux/minmax.h:100:2: note: expanded from macro '__careful_cmp_once'
-     100 |         BUILD_BUG_ON_MSG(!__types_ok(x,y,ux,uy),        \
-         |         ^
-   note: (skipping 2 expansions in backtrace; use -fmacro-backtrace-limit=0 to see all)
-   include/linux/compiler_types.h:498:2: note: expanded from macro '_compiletime_assert'
-     498 |         __compiletime_assert(condition, msg, prefix, suffix)
-         |         ^
-   include/linux/compiler_types.h:491:4: note: expanded from macro '__compiletime_assert'
-     491 |                         prefix ## suffix();                             \
-         |                         ^
-   <scratch space>:6:1: note: expanded from here
-       6 | __compiletime_assert_743
-         | ^
-   7 warnings and 1 error generated.
-
-
-vim +2796 net/core/pktgen.c
-
-  2769	
-  2770	static void pktgen_finalize_skb(struct pktgen_dev *pkt_dev, struct sk_buff *skb,
-  2771					int datalen)
-  2772	{
-  2773		struct timespec64 timestamp;
-  2774		struct pktgen_hdr *pgh;
-  2775	
-  2776		pgh = skb_put(skb, sizeof(*pgh));
-  2777		datalen -= sizeof(*pgh);
-  2778	
-  2779		if (pkt_dev->nfrags <= 0) {
-  2780			skb_put_zero(skb, datalen);
-  2781		} else {
-  2782			int frags = pkt_dev->nfrags;
-  2783			int i, len;
-  2784			int frag_len;
-  2785	
-  2786	
-  2787			if (frags > MAX_SKB_FRAGS)
-  2788				frags = MAX_SKB_FRAGS;
-  2789			len = datalen - frags * PAGE_SIZE;
-  2790			if (len > 0) {
-  2791				skb_put_zero(skb, len);
-  2792				datalen = frags * PAGE_SIZE;
-  2793			}
-  2794	
-  2795			i = 0;
-> 2796			frag_len = min(datalen/frags, PAGE_SIZE);
-  2797			while (datalen > 0) {
-  2798				if (unlikely(!pkt_dev->page)) {
-  2799					int node = numa_node_id();
-  2800	
-  2801					if (pkt_dev->node >= 0 && (pkt_dev->flags & F_NODE))
-  2802						node = pkt_dev->node;
-  2803					pkt_dev->page = alloc_pages_node(node, GFP_KERNEL | __GFP_ZERO, 0);
-  2804					if (!pkt_dev->page)
-  2805						break;
-  2806				}
-  2807				get_page(pkt_dev->page);
-  2808	
-  2809				/*last fragment, fill rest of data*/
-  2810				if (i == (frags - 1))
-  2811					skb_frag_fill_page_desc(&skb_shinfo(skb)->frags[i],
-  2812								pkt_dev->page, 0,
-  2813								min(datalen, PAGE_SIZE));
-  2814				else
-  2815					skb_frag_fill_page_desc(&skb_shinfo(skb)->frags[i],
-  2816								pkt_dev->page, 0, frag_len);
-  2817	
-  2818				datalen -= skb_frag_size(&skb_shinfo(skb)->frags[i]);
-  2819				skb->len += skb_frag_size(&skb_shinfo(skb)->frags[i]);
-  2820				skb->data_len += skb_frag_size(&skb_shinfo(skb)->frags[i]);
-  2821				i++;
-  2822				skb_shinfo(skb)->nr_frags = i;
-  2823			}
-  2824		}
-  2825	
-  2826		/* Stamp the time, and sequence number,
-  2827		 * convert them to network byte order
-  2828		 */
-  2829		pgh->pgh_magic = htonl(PKTGEN_MAGIC);
-  2830		pgh->seq_num = htonl(pkt_dev->seq_num);
-  2831	
-  2832		if (pkt_dev->flags & F_NO_TIMESTAMP) {
-  2833			pgh->tv_sec = 0;
-  2834			pgh->tv_usec = 0;
-  2835		} else {
-  2836			/*
-  2837			 * pgh->tv_sec wraps in y2106 when interpreted as unsigned
-  2838			 * as done by wireshark, or y2038 when interpreted as signed.
-  2839			 * This is probably harmless, but if anyone wants to improve
-  2840			 * it, we could introduce a variant that puts 64-bit nanoseconds
-  2841			 * into the respective header bytes.
-  2842			 * This would also be slightly faster to read.
-  2843			 */
-  2844			ktime_get_real_ts64(&timestamp);
-  2845			pgh->tv_sec = htonl(timestamp.tv_sec);
-  2846			pgh->tv_usec = htonl(timestamp.tv_nsec / NSEC_PER_USEC);
-  2847		}
-  2848	}
-  2849	
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+index e564f20d8f415..2c2093c77ec9a 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+@@ -53,6 +53,7 @@ properties:
+           - pci14e4,4488  # BCM4377
+           - pci14e4,4425  # BCM4378
+           - pci14e4,4433  # BCM4387
++          - pci14e4,449d  # BCM43752
+ 
+   reg:
+     description: SDIO function number for the device (for most cases
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
