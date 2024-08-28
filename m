@@ -1,121 +1,116 @@
-Received: from mail.w1.fi (mail.w1.fi [212.71.239.96])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27FD515B122
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2024 07:58:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.71.239.96
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FF4F15AAC1;
+	Wed, 28 Aug 2024 07:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724831890; cv=none; b=Mdu4k3AVqaB1Pds/7FdyvV0r3JhgVjlvscSB2Aa+iOagkNUyh1AJxGuShk6AACaAzLMkj99pwHnprV8WMzlFnjb5q1jsXY3SkliCb6Gp6yTk6hqLpOu7xw3h7arY9nPF2X/OZRJBE5okWAVE6fzBtdtSETE1LWKQBt9LgriWQhc=
+	t=1724831992; cv=none; b=XB05evKiPTYKN+dh+NMjeiLDTiQK3EUUO0oESPqirK+tarOcsIS4k/jzr8FNbLDdKB2cMslsaGTrFSta3/xP4mAMjj9nPdEkApViJP6iBCNDR/1JsCI4gUITmzRJCrh2bCW8L3ZrS5DMO1no7GOk94VaNgpstQvRk44LreHO22g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724831890; c=relaxed/simple;
-	bh=LIQRNli3CllbOGaGJ54BgGgTcZ+YlPlQWmX0Z5C/3uc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ep8eMWBhFSa8/L88ZFnXxbYfKHJr9vw9kHUd51lpirKoBIkPfJiFusMlvoUGscIkqGoAaxwvySBEU6Gbxdq6EiqhHezHVKMBO3WnqTa8ITBemGypbHU2Xc2rRsE3eE3KLG1WO2bFjgBgRIPWUeRWN8lEJ+n3Je+IwavdBxES3vU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=w1.fi; spf=pass smtp.mailfrom=w1.fi; dkim=pass (2048-bit key) header.d=w1.fi header.i=@w1.fi header.b=IGLoHxpQ; arc=none smtp.client-ip=212.71.239.96
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=w1.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=w1.fi
+	s=arc-20240116; t=1724831992; c=relaxed/simple;
+	bh=1mT8u2WLwDiFrnGewTawEhlP5powxsf7TK/dgaKx/5Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ry/3qNRyJMcliootQ9hFIUdwGTble6Ajjo2f7aZTOF7XtQKoCw+OFd5D0SyXggLpdB9TSfJzsnutcc9rU0OWZcJ+ZPPW0J6a6BUnmp8vyg2LWmZRLOMLwBKO1/QuHQpGBrvDqbkAtAM4QZU8C5rwNdVAawSaKHwAhDTNheH2vsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jpYRJUvs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=w1.fi header.i=@w1.fi header.b="IGLoHxpQ"
-Received: from localhost (localhost [127.0.0.1])
-	by mail.w1.fi (Postfix) with ESMTP id 391AF11B51;
-	Wed, 28 Aug 2024 07:49:54 +0000 (UTC)
-X-Virus-Scanned: Debian amavisd-new at w1.fi
-Received: from mail.w1.fi ([127.0.0.1])
-	by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id SRAMAlCFpuJl; Wed, 28 Aug 2024 07:49:17 +0000 (UTC)
-Received: by jm (sSMTP sendmail emulation); Wed, 28 Aug 2024 10:49:14 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=w1.fi; s=default;
-	t=1724831357; bh=LIQRNli3CllbOGaGJ54BgGgTcZ+YlPlQWmX0Z5C/3uc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IGLoHxpQAXvbOBW5pKulr/J/RuNGgiWC+FjTMoEf0zXNYIo58RoyoYMmQzhqZG61x
-	 kqUfOMbi0ZrKIGjbnN3Wa8IY0NKb8Wxd7TSk7BcYAB4rpcSfXC6qowfVsBtpHkjuom
-	 Urhe/DJMawyxVa2GRhjB8RFCCdy2bG+ZvmPNdH5UCjhClOokn4xadka3O5phC79A3l
-	 dozJTC+k4XgkvQmBBCOLv+AYtn+nGd3PewSPr4VBn7enBLHuBVg6vvUtaAxyUMySxy
-	 kPlB3ZF5V0xRBopDteHimRQnuDmFz+ZTq6hwXzJf0Ayl1ts/1VeYCXiOLyWUkXiUPd
-	 YvEKbNufwum1Q==
-Date: Wed, 28 Aug 2024 10:49:14 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-wireless@vger.kernel.org,
-	hostap@lists.infradead.org
-Subject: Re: WiFi constantly changes association
-Message-ID: <Zs7WegloyrfZdRu9@w1.fi>
-References: <eb86cf20-2b1b-4871-82a4-441ba81752dc@rowland.harvard.edu>
- <9f32e4ff8b59f137208d99c40fd166f81e8de4bc.camel@sipsolutions.net>
- <52752800050fdd10e3d883cb4870624455d1b34e.camel@sipsolutions.net>
- <9cd7bc93-090a-4fcd-9af1-af6ff108064b@rowland.harvard.edu>
- <25391c67947d47c4cb75e89664a882905e125863.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jpYRJUvs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC3C1C5831F;
+	Wed, 28 Aug 2024 07:59:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724831991;
+	bh=1mT8u2WLwDiFrnGewTawEhlP5powxsf7TK/dgaKx/5Q=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=jpYRJUvsfJBCQzVwnrJoRDcKvy2vXBo6p1uf6ik1Aopxj5p5ibCaiXUPJoC32pQt/
+	 tLAJe16PBImPjsDI8ZpyM/P6Nkrh8hDQHMSTyv4kp7VKLHKmDFwcvDm0dttlymhklZ
+	 443N5FnJ/gmf5SLFiwLltlbkhBcNL+5MRc7iG7l0x42Vhd1ld8cZGlXqDzCdVewONw
+	 QUnbyyQGCu9RxDCGfccziYXGC7vv+jL0xph6EYrDckcnf73JCsm9oRO0/IVmcJw0T9
+	 Odrc70EyL98iWEP5nzabyWQJ6m+z4grfz9nQixy4unu/N/yJ1MNOGr8i8Ji+lGPZW2
+	 EfNVs5iOruolw==
+Message-ID: <33d0151d-7708-45da-8414-b161892db937@kernel.org>
+Date: Wed, 28 Aug 2024 09:59:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <25391c67947d47c4cb75e89664a882905e125863.camel@sipsolutions.net>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 0/5] Add AP6276P wireless support
+To: Jacobe Zang <jacobe.zang@wesion.com>, Kalle Valo <kvalo@kernel.org>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, van Spriel <arend@broadcom.com>,
+ Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Ondrej Jirman <megi@xff.cz>, Sai Krishna <saikrishnag@marvell.com>
+References: <20240828-wireless-mainline-v12-0-9064ac7acf1d@wesion.com>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20240828-wireless-mainline-v12-0-9064ac7acf1d@wesion.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Aug 28, 2024 at 09:19:05AM +0200, Johannes Berg wrote:
-> On Tue, 2024-08-27 at 15:09 -0400, Alan Stern wrote:
-> > Well, I'd prefer to avoid unnecessary roaming because of the short 
-> > interruptions in service that it causes.
+On 28/08/2024 09:40, Jacobe Zang wrote:
+> Signed-off-by: Jacobe Zang <jacobe.zang@wesion.com>
+> ---
+> These add AP6275P wireless support on Khadas Edge2. Enable 32k clock
+> for Wi-Fi module and extend the hardware IDs table in the brcmfmac
+> driver for it to attach.
 > 
-> Right, but the interruptions for you are much longer because it _fails_.
-> Perhaps wpa_supplicant should remember that, and not attempt to use FT
-> when it keeps failing.
 
-That depends on what exactly is failing.. I did not bother going through
-all the details of the debug log since it seemed to be missing
-something. I did notice one of the APs using comeback mechanism which is
-a sign of the STA having an older entry on it and PMF being used. That
-is actually not a failure but part of the expected behavior for
-protecting against disconnection attacks. One would need to have a full
-log from the first initial connection to the point of a failed
-reassociation. Ideally, I'd like to see that from wpa_supplicant stdout
-with -ddt on the command line instead of syslog.
+I saw v12 and responded to it. This is confusing. Also to other people
+if they start reviewing different copies.
 
-> > Below is an extract from the system log for a period of about two 
-> > minutes, running with wpa_supplicant's -dd option set for verbose 
-> > debugging.  As of the start of the extract, the system had been 
-> > associated with an AP for about five minutes.  The log shows a few 
-> > spontaneous reassociations and some errors.  I hardly understand any of 
-> > it, so thanks for your efforts to make sense of what it shows.
-> 
-> I'm not sure I understand it either ... I don't see anything that
-> _caused_ the roaming.
+Please read carefully submitting. This is v12, so I don't get why such
+basic submission guidelines are not respected here.
 
-Indeed. That log is not sufficient to debug this.
+Best regards,
+Krzysztof
 
-> > Aug 27 14:49:06 strephon systemd[1]: Starting NetworkManager-dispatcher.service - Network Manager Script Dispatcher Service...
-> > Aug 27 14:49:06 strephon systemd[1]: Started NetworkManager-dispatcher.service - Network Manager Script Dispatcher Service.
-> > Aug 27 14:49:17 strephon systemd[1]: NetworkManager-dispatcher.service: Deactivated successfully.
-> > Aug 27 14:49:41 strephon wpa_supplicant[5906]: wlan0: PMKSA-CACHE-ADDED 48:b4:c3:80:58:a1 1
-> > Aug 27 14:49:41 strephon wpa_supplicant[5906]: wlan0: PMKSA-CACHE-ADDED 48:b4:c3:81:c8:e2 1
-> > Aug 27 14:49:41 strephon wpa_supplicant[5906]: wlan0: SME: Trying to authenticate with 48:b4:c3:81:b8:03 (SSID='Harvard Secure' freq=6215 MHz)
-> > Aug 27 14:49:41 strephon kernel: wlan0: disconnect from AP 48:b4:c3:81:b1:a0 for new auth to 48:b4:c3:81:b8:03
-> > Aug 27 14:49:41 strephon kernel: wlan0: authenticate with 48:b4:c3:81:b8:03 (local address=3e:de:7e:33:e6:22)
-> > Aug 27 14:49:41 strephon kernel: wlan0: send auth to 48:b4:c3:81:b8:03 (try 1/3)
-> 
-> But I don't know what causes this? Maybe a higher debug level would show
-> something here? But also I don't know too much about wpa_supplicant
-> behaviour, so perhaps someone on the list can chime in what might've
-> caused it to decide to roam here.
-
-This is clearly missing entries. Maybe something in syslog is filtering
-things out? Like I noted above, debug log directly from wpa_supplicant
-stdout would be better way of getting a complete log in a form that
-could be analyzed without having to guess what exactly happened in this
-type of a case.
-
-Something external(?) seemed to do some management of the PMKSA cache
-here. It is not what that is. If it is NetworkManager through the
-wpa_supplicant D-Bus interface, it is possible that wpa_supplicant does
-not log all the details in its debug log. If that is indeed the case, I
-would recommend testing this with NM disabled or with a closer look at
-NM debug log to see what it is trying to do here. Adding PMKSA cache
-entries should not result in roaming, but removing them could if
-something is removing the currently used PMKSA entry. I'd expect
-wpa_supplicant debug log to include more detaild about that, though.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
