@@ -1,144 +1,99 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87506156C76;
-	Wed, 28 Aug 2024 08:18:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 899E48288F;
+	Wed, 28 Aug 2024 08:40:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724833135; cv=none; b=rvGClujkgby0DilW2SAzwcVbGlwwV0jirRryvcyMGVz/KecTeE/Q3zEByvEF8sRwAiXIABmxqFAQJcDArII1OgtiBvwqST2TzDhuVErlnfwzi+b6r9Ui4ijz6M/DpUqnHVwrDBCAyNOjnVYd67FMTW6aFjhZHbOXMwcgTx5A50c=
+	t=1724834403; cv=none; b=cxFdTn4MncM4vLbgMaraHy7hkNIhpqI9gh3mA9OwtBojAie5Q3QDUlWtDSoxe3ppVixbUwXOUhT+IwQGP2AecjYBw9JY8Y8umqhge7OwUGJ9r1X/PiBkSTggOh2RfFdCdR+fFcmBcOIVlTXMCGQr4DMW4bmeziDC3e17OSwTBU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724833135; c=relaxed/simple;
-	bh=67B6v/6kWDCPcgu7Pcf8hglMBU4sht72HbJJzGDX+hM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h0JJzD6Dl1IZGwANrX+IbfBwCCn5bD806xnem8fd11s+m1PTCkYD1kNb8+tMgG9b8ucj7RxRs66so9YPROgQumm8wlnfAxq9pq6Md+YitPf9clltM+B45ClEV13jYwblFJF8d3rBwd9kjgCmkf1pKsodm092V8dHK3M1ON//p5o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LGrHmquO; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1724834403; c=relaxed/simple;
+	bh=0HWRfDd54b3BuG2cpFuZ6yg3/1DHi4Ybs0PZ1T+lW4I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CR4FkRpEWrhgGKfZmyEzlV/FtTbnFngYQdXhPL0kGiGiQ77Td2TGcqh+vrP7MqkupFmOA2JktZMrnMqr99lOTaRLBqvD5mf8AhLAT9+1Ir5ok8csgW8VFAd9v13fLu56qaXN6IcPqS4NraFjWYygW4RKUAPxWchE4jKeMlW1prY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=YvfKY8zJ; arc=none smtp.client-ip=217.70.183.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LGrHmquO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724833132; x=1756369132;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=67B6v/6kWDCPcgu7Pcf8hglMBU4sht72HbJJzGDX+hM=;
-  b=LGrHmquOn5zT9TVFHIU4sxfg1UM5XkQb4kaNytYQL7UsN0xpED2iBDLY
-   RYJ6DjZqGAFczZdm3+0k17z1+V7yvO1/crpnEgon2A4C8Nb1roZa7Mbbo
-   GIbF4EuWD4PkVYqzDinEZGyRRsfs0aO2LL7Zmo6Hr0mr0ld2UKr+T6CuB
-   lvP5Df0qozQXmQeE2yidEWKix2JkXjBywkt9T2OZAPcqgOqqW0GiRDBkp
-   ROfbDKvNUlmgxE2XZHj8MlnZnUMm+oLhxqNKyO7eHXhk7ib6U/M99ZMEW
-   YPBqfHFpvkR6KJLEeEDZVVpYiz+HxUtTqndGOGNwwEJVRKnXdGZ8HHxSt
-   g==;
-X-CSE-ConnectionGUID: aYzC4WEDRtqg929oIcwbHw==
-X-CSE-MsgGUID: MF6627CcTSmr7Pqid5IbtA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11177"; a="27116297"
-X-IronPort-AV: E=Sophos;i="6.10,182,1719903600"; 
-   d="scan'208";a="27116297"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2024 01:18:49 -0700
-X-CSE-ConnectionGUID: /m5d2NY2SqGMdEIBjX52gw==
-X-CSE-MsgGUID: EXNrMRjESJuptaz/EpjDPQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,182,1719903600"; 
-   d="scan'208";a="63141243"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 28 Aug 2024 01:18:46 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sjDt5-000KeU-2Q;
-	Wed, 28 Aug 2024 08:18:43 +0000
-Date: Wed, 28 Aug 2024 16:17:50 +0800
-From: kernel test robot <lkp@intel.com>
-To: Hongbo Li <lihongbo22@huawei.com>, johannes@sipsolutions.net,
-	davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-	pabeni@redhat.com, allison.henderson@oracle.com, dsahern@kernel.org,
-	pshelar@ovn.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, rds-devel@oss.oracle.com,
-	dccp@vger.kernel.org, dev@openvswitch.org,
-	linux-afs@lists.infradead.org, lihongbo22@huawei.com
-Subject: Re: [PATCH net-next 4/8] net/core: Use min()/max() to simplify the
- code
-Message-ID: <202408281628.FtNGguag-lkp@intel.com>
-References: <20240824074033.2134514-5-lihongbo22@huawei.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="YvfKY8zJ"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 86532FF807;
+	Wed, 28 Aug 2024 08:39:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1724834398;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9up7nYUE/ukYG/OGlmxgbSAen/k79vZIafVGFfUrJxw=;
+	b=YvfKY8zJz5jH0xMZ+nT1CKEokyf2Uk2CbMNpPd49TXCDJQk6KDt2jspQp6hwM2kS7P0fjV
+	4YU5U2S9AGrepKntyUG/t43Bzz7zePQ5J8lEykewh/jIpa5y1XZ/RHEfbnmK2zc8k6RdmZ
+	vD/PDpaxs7AvF45+I35iUf0ODaizY6rQrvNvrqFozRtFmB842OPQJ0Qp+JfVLP37rRA9jE
+	2owUW+aWIUwMaz6+zbapZYXDrX7WAnnxgg7EOfK+jNsAqpzTeKVJM0ssLVehL7ffX5/40s
+	NYX9k1CUzSKyb1RfiFxzGU5wcmM3Y/kowOqTgSz+p0DoWtPbA0ZEeDxXdv/THQ==
+Message-ID: <e2130ebe-1c17-412a-a8ca-ac7c1f5b5bb4@bootlin.com>
+Date: Wed, 28 Aug 2024 10:39:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240824074033.2134514-5-lihongbo22@huawei.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/5] wifi: wilc1000: Fold wilc_get_chipid() into wlan.c
+To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+ Adham Abozaeid <adham.abozaeid@microchip.com>,
+ Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
+ <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+ netdev@vger.kernel.org
+References: <20240827164042.53698-1-marex@denx.de>
+ <20240827164042.53698-2-marex@denx.de>
+From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Content-Language: en-US
+In-Reply-To: <20240827164042.53698-2-marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-GND-Sasl: alexis.lothore@bootlin.com
 
-Hi Hongbo,
+On 8/27/24 18:37, Marek Vasut wrote:
+> Do not use wilc_get_chipid() outside of wlan.c . Instead, call
+> wilc_get_chipid() right after the SDIO/SPI interface has been
+> initialized to cache the device chipid, and then use the cached
+> chipid throughout the driver. Make wilc_get_chipid() static and
+> remove its prototype from wlan.h . Make wilc_get_chipid() return
+> a proper return value instead of a chipid.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> ---
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Adham Abozaeid <adham.abozaeid@microchip.com>
+> Cc: Ajay Singh <ajay.kathat@microchip.com>
+> Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+> Cc: Conor Dooley <conor+dt@kernel.org>
+> Cc: Eric Dumazet <edumazet@google.com>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Kalle Valo <kvalo@kernel.org>
+> Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+> Cc: Marek Vasut <marex@denx.de>
+> Cc: Paolo Abeni <pabeni@redhat.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
 
-kernel test robot noticed the following build errors:
+nit: The remaining wilc_getchipid() call in netdev.c should have been removed in
+this very same commit (it is removed in a later patch in this series, but it
+makes this commit depend on the last one).
 
-[auto build test ERROR on net-next/main]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Hongbo-Li/net-mac80211-use-max-to-simplify-the-code/20240826-154029
-base:   net-next/main
-patch link:    https://lore.kernel.org/r/20240824074033.2134514-5-lihongbo22%40huawei.com
-patch subject: [PATCH net-next 4/8] net/core: Use min()/max() to simplify the code
-config: powerpc-allmodconfig (https://download.01.org/0day-ci/archive/20240828/202408281628.FtNGguag-lkp@intel.com/config)
-compiler: powerpc64-linux-gcc (GCC) 14.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240828/202408281628.FtNGguag-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408281628.FtNGguag-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from <command-line>:
-   net/core/pktgen.c: In function 'pktgen_finalize_skb':
->> include/linux/compiler_types.h:510:45: error: call to '__compiletime_assert_991' declared with attribute error: min(datalen/frags, (1UL << 16)) signedness error
-     510 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |                                             ^
-   include/linux/compiler_types.h:491:25: note: in definition of macro '__compiletime_assert'
-     491 |                         prefix ## suffix();                             \
-         |                         ^~~~~~
-   include/linux/compiler_types.h:510:9: note: in expansion of macro '_compiletime_assert'
-     510 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |         ^~~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
-      39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-         |                                     ^~~~~~~~~~~~~~~~~~
-   include/linux/minmax.h:100:9: note: in expansion of macro 'BUILD_BUG_ON_MSG'
-     100 |         BUILD_BUG_ON_MSG(!__types_ok(x,y,ux,uy),        \
-         |         ^~~~~~~~~~~~~~~~
-   include/linux/minmax.h:105:9: note: in expansion of macro '__careful_cmp_once'
-     105 |         __careful_cmp_once(op, x, y, __UNIQUE_ID(x_), __UNIQUE_ID(y_))
-         |         ^~~~~~~~~~~~~~~~~~
-   include/linux/minmax.h:129:25: note: in expansion of macro '__careful_cmp'
-     129 | #define min(x, y)       __careful_cmp(min, x, y)
-         |                         ^~~~~~~~~~~~~
-   net/core/pktgen.c:2796:28: note: in expansion of macro 'min'
-    2796 |                 frag_len = min(datalen/frags, PAGE_SIZE);
-         |                            ^~~
-
-
-vim +/__compiletime_assert_991 +510 include/linux/compiler_types.h
-
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  496  
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  497  #define _compiletime_assert(condition, msg, prefix, suffix) \
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  498  	__compiletime_assert(condition, msg, prefix, suffix)
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  499  
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  500  /**
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  501   * compiletime_assert - break build and emit msg if condition is false
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  502   * @condition: a compile-time constant condition to check
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  503   * @msg:       a message to emit if condition is false
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  504   *
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  505   * In tradition of POSIX assert, this macro will break the build if the
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  506   * supplied condition is *false*, emitting the supplied error message if the
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  507   * compiler has support to do so.
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  508   */
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  509  #define compiletime_assert(condition, msg) \
-eb5c2d4b45e3d2 Will Deacon 2020-07-21 @510  	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-eb5c2d4b45e3d2 Will Deacon 2020-07-21  511  
+Reviewed-by: Alexis Lothoré <alexis.lothore@bootlin.com>
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Alexis Lothoré, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
+
