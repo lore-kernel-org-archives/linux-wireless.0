@@ -1,148 +1,105 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.w1.fi (mail.w1.fi [212.71.239.96])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 561AC15854A
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2024 08:50:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28D515B12A
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2024 08:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.71.239.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724835051; cv=none; b=js/xPbP64JbteN4sYif24txeCaCFIlHhdC2UaT//w9Liab7y2RW9wjHZfAhdKVQCK3CkJAFNMrn3oRfiKU8xUdSPWa9/Ps3i+rHhjj2oeRr9orhbpHcqBfgbIAu8t6SvjLzWQYbaUmAS1BBwQBOlPUJJXqg48WJDVxJDOK6DW6w=
+	t=1724835072; cv=none; b=FHD8WjVVGrGyr0hQRbClaREcwrvD52o8U2bn3T3IoPi6J276gz1EteQ2jkMLtuuv4Oxh+lXxVyMPHqCA+f9A32PxVvC4TRiHuUoyJk7mWa7Zxt7C3NNXmK0duyT43Jb2ECNx6YXlO/Cx8XdqRy5II9vsXwyg5EIgOuCcCW3hMqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724835051; c=relaxed/simple;
-	bh=c9g+rp5fVpjbqkIfSqp3slDFY2jz+ztPwAXbFeXQ8t4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I4zEEnFqC+nyrv8Vv+PjmjZ7M2hLNImkfh89XF71ns4GnyVu5shRxfxYJfrCgnOs7qeDQwPxvanVYZ7cqUCHwPfGR5bcPGl/E+P6uZt3cLnCu00l+95q0i1ff+SZnAs2q8OlicwncDuvqNTfeCu29CJlRI/IznbUwzn/kNQfgCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=fFTk7Dl2; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1724835072; c=relaxed/simple;
+	bh=Q1XZ0wlkhbLl65+rtGUZ4JkoYZ3+W2MKU5sYnZveBIk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eeYN+A75q1D7wFw19T7bmxvpVxjhfVbaAJyWRwEYOJ1oOiEhZE055KvveyUzqy65tyAqufDwhwnSdif6izYsNpEszB40Bam2zKbgmoxhzeaG/N++kZaycYF1YFEaiYVM47LpSf0/TQn/4b2IeDNbrgVo4tDt5XXpdAVZyee1myQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=w1.fi; spf=pass smtp.mailfrom=w1.fi; dkim=pass (2048-bit key) header.d=w1.fi header.i=@w1.fi header.b=W0+CVSkc; arc=none smtp.client-ip=212.71.239.96
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=w1.fi
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=w1.fi
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fFTk7Dl2"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-2d60f48a2ccso5298042a91.3
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Aug 2024 01:50:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1724835050; x=1725439850; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=shRY5stjFi+JLGkJ+y51t2hwTW4qiG9k0qtRydA83MA=;
-        b=fFTk7Dl2INvgRC5i4K2ReeFoFvV8NCV71aqONMtVZFEYofYU34KYq/tU/A+0L3VUfd
-         S23GNQS0yv34LARi1ouwusPS0133aE/oIMgPg+qYiKVnN9TGezH5V5oEl6zAeC1n0XiI
-         BlF5P9o7gSuT+8JWQVV4GVtwi6ws60b99DYY0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724835050; x=1725439850;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=shRY5stjFi+JLGkJ+y51t2hwTW4qiG9k0qtRydA83MA=;
-        b=t90pjUaoBrILlVSc7tIOFS+89KL3G8g1fp60eIs5+/9kQITICVJySuc9xm0yM0DMbr
-         TTKBYs4QDnnlp6SbLUGgoAYSJdMCrJ8EXfgFpOpcpW3JX/dLMV4R49zIHdyyB+ODOlPD
-         KpAA3qetMLNNDudBWsx7xq0tEvO2+p3QSjloLt5iIRCcH3GPGFE8Bn9q2bCtaRd4kIu+
-         BvyackBMkIQTse8IscpMbc5SawjHoObQYfntwnWnjKqi/BqfYe020HoRP69YWtnN8d46
-         qDXgm5MYdi5GAtj6iFujWy6n7xH3Q9r/THVIWu7au0HxseKOpSN3Hr945XJ6ynZuOVmF
-         Is0A==
-X-Gm-Message-State: AOJu0YxJwymbQ0Yfo2Vtv82ops0EAKVKC3l6YEnJ4j11MtiS496ZlAzw
-	qGBxHJjt4ULuXNHX2ip8ZUccaoz9Iytsn60hdPLJPlwcuRUD3O428qc5BLn28w==
-X-Google-Smtp-Source: AGHT+IGq6FJZLa1EEfe8Q6XnN8zV+OXKNWera5wQWyN99473BRSN9pCh6Zwq68D6ro5+GxN5M0vYQA==
-X-Received: by 2002:a17:90a:de8e:b0:2d3:da82:2728 with SMTP id 98e67ed59e1d1-2d646d5eba9mr15834309a91.41.1724835049454;
-        Wed, 28 Aug 2024 01:50:49 -0700 (PDT)
-Received: from [10.176.68.61] ([192.19.176.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d844640ab6sm1127894a91.42.2024.08.28.01.50.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Aug 2024 01:50:48 -0700 (PDT)
-Message-ID: <22fdbe11-830a-4084-aa5e-1b7294f3a7fd@broadcom.com>
-Date: Wed, 28 Aug 2024 10:50:43 +0200
+	dkim=pass (2048-bit key) header.d=w1.fi header.i=@w1.fi header.b="W0+CVSkc"
+Received: from localhost (localhost [127.0.0.1])
+	by mail.w1.fi (Postfix) with ESMTP id 5BDA911B7B;
+	Wed, 28 Aug 2024 08:51:08 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at w1.fi
+Received: from mail.w1.fi ([127.0.0.1])
+	by localhost (mail.w1.fi [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id FNE6e9g8VPJl; Wed, 28 Aug 2024 08:50:15 +0000 (UTC)
+Received: by jm (sSMTP sendmail emulation); Wed, 28 Aug 2024 11:50:13 +0300
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=w1.fi; s=default;
+	t=1724835015; bh=Q1XZ0wlkhbLl65+rtGUZ4JkoYZ3+W2MKU5sYnZveBIk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=W0+CVSkcGjpiQ3EZ5ZAPUrNsofTDNM/vmUCm9dTnYAo8Udy++aJsvtmyhTcO/AEZh
+	 7djEDgWK/U7K1422kJRVEv8NALdgxOkA7XEHlyuYpP/K6dpHnDlXjLDIC9MOFLhm8Q
+	 Eb+/X8z5OvV7pN/f1kpaHe1T1f0T+lLzHUi3SC7Cyj/hlpWTk33nEpnV1ZXZ4+OjtY
+	 Sjf54VVcgFDaPWfM8aUGDOZLaifcc/rLLe/NYn6fLPaFNHy5vyoF8N1l/L410W6Jdn
+	 vq1jVpDZhhU3AAttvcIZDFNHLuetKjlRJgoX5N5ukNBf4srB6lTRW0bbKJv0Xf6/QZ
+	 9egrCl/F2nroQ==
+Date: Wed, 28 Aug 2024 11:50:13 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-wireless@vger.kernel.org,
+	hostap@lists.infradead.org
+Subject: Re: WiFi constantly changes association
+Message-ID: <Zs7kxVAHmCaeOxSH@w1.fi>
+References: <eb86cf20-2b1b-4871-82a4-441ba81752dc@rowland.harvard.edu>
+ <9f32e4ff8b59f137208d99c40fd166f81e8de4bc.camel@sipsolutions.net>
+ <52752800050fdd10e3d883cb4870624455d1b34e.camel@sipsolutions.net>
+ <9cd7bc93-090a-4fcd-9af1-af6ff108064b@rowland.harvard.edu>
+ <25391c67947d47c4cb75e89664a882905e125863.camel@sipsolutions.net>
+ <Zs7WegloyrfZdRu9@w1.fi>
+ <f6ea69035f7ff32edc2575765641689e469f764a.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 3/5] dt-bindings: net: wireless: brcm4329-fmac: change
- properties enum structure
-To: Jacobe Zang <jacobe.zang@wesion.com>, Kalle Valo <kvalo@kernel.org>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com
-References: <20240828-wireless-mainline-v12-0-9064ac7acf1d@wesion.com>
- <20240828-wireless-mainline-v12-3-9064ac7acf1d@wesion.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Autocrypt: addr=arend.vanspriel@broadcom.com; keydata=
- xsFNBGP96SABEACfErEjSRi7TA1ttHYaUM3GuirbgqrNvQ41UJs1ag1T0TeyINqG+s6aFuO8
- evRHRnyAqTjMQoo4tkfy21XQX/OsBlgvMeNzfs6jnVwlCVrhqPkX5g5GaXJnO3c4AvXHyWik
- SOd8nOIwt9MNfGn99tkRAmmsLaMiVLzYfg+n3kNDsqgylcSahbd+gVMq+32q8QA+L1B9tAkM
- UccmSXuhilER70gFMJeM9ZQwD/WPOQ2jHpd0hDVoQsTbBxZZnr2GSjSNr7r5ilGV7a3uaRUU
- HLWPOuGUngSktUTpjwgGYZ87Edp+BpxO62h0aKMyjzWNTkt6UVnMPOwvb70hNA2v58Pt4kHh
- 8ApHky6IepI6SOCcMpUEHQuoKxTMw/pzmlb4A8PY//Xu/SJF8xpkpWPVcQxNTqkjbpazOUw3
- 12u4EK1lzwH7wjnhM3Fs5aNBgyg+STS1VWIwoXJ7Q2Z51odh0XecsjL8EkHbp9qHdRvZQmMu
- Ns8lBPBkzpS7y2Q6Sp7DcRvDfQQxPrE2sKxKLZVGcRYAD90r7NANryRA/i+785MSPUNSTWK3
- MGZ3Xv3fY7phISvYAklVn/tYRh88Zthf6iDuq86m5mr+qOO8s1JnCz6uxd/SSWLVOWov9Gx3
- uClOYpVsUSu3utTta3XVcKVMWG/M+dWkbdt2KES2cv4P5twxyQARAQABzS9BcmVuZCB2YW4g
- U3ByaWVsIDxhcmVuZC52YW5zcHJpZWxAYnJvYWRjb20uY29tPsLBhwQTAQgAMRYhBLX1Z69w
- T4l/vfdb0pZ6NOIYA/1RBQJj/ek9AhsDBAsJCAcFFQgJCgsFFgIDAQAACgkQlno04hgD/VGw
- 8A//VEoGTamfCks+a12yFtT1d/GjDdf3i9agKMk3esn08JwjJ96x9OFFl2vFaQCSiefeXITR
- K4T/yT+n/IXntVWT3pOBfb343cAPjpaZvBMh8p32z3CuV1H0Y+753HX7gdWTEojGWaWmKkZh
- w3nGoRZQEeAcwcF3gMNwsM5Gemj7aInIhRLUeoKh/0yV85lNE1D7JkyNheQ+v91DWVj5/a9X
- 7kiL18fH1iC9kvP3lq5VE54okpGqUj5KE5pmHNFBp7HZO3EXFAd3Zxm9ol5ic9tggY0oET28
- ucARi1wXLD/oCf1R9sAoWfSTnvOcJjG+kUwK7T+ZHTF8YZ4GAT3k5EwZ2Mk3+Rt62R81gzRF
- A6+zsewqdymbpwgyPDKcJ8YUHbqvspMQnPTmXNk+7p7fXReVPOYFtzzfBGSCByIkh1bB45jO
- +TM5ZbMmhsUbqA0dFT5JMHjJIaGmcw21ocgBcLsJ730fbLP/L08udgWHywPoq7Ja7lj5W0io
- ZDLz5uQ6CEER6wzD07vZwSl/NokljVexnOrwbR3wIhdr6B0Hc/0Bh7T8gpeM+QcK6EwJBG7A
- xCHLEacOuKo4jinf94YQrOEMnOmvucuQRm9CIwZrQ69Mg6rLn32pA4cK4XWQN1N3wQXnRUnb
- MTymLAoxE4MInhDVsZCtIDFxMVvBUgZiZZszN33OwU0EY/3pIgEQAN35Ii1Hn90ghm/qlvz/
- L+wFi3PTQ90V6UKPv5Q5hq+1BtLA6aj2qmdFBO9lgO9AbzHo8Eizrgtxp41GkKTgHuYChijI
- kdhTVPm+Pv44N/3uHUeFhN3wQ3sTs1ZT/0HhwXt8JvjqbhvtNmoGosZvpUCTwiyM1VBF/ICT
- ltzFmXd5z7sEuDyZcz9Q1t1Bb2cmbhp3eIgLmVA4Lc9ZS3sK1UMgSDwaR4KYBhF0OKMC1OH8
- M5jfcPHR8OLTLIM/Thw0YIUiYfj6lWwWkb82qa4IQvIEmz0LwvHkaLU1TCXbehO0pLWB9HnK
- r3nofx5oMfhu+cMa5C6g3fBB8Z43mDi2m/xM6p5c3q/EybOxBzhujeKN7smBTlkvAdwQfvuD
- jKr9lvrC2oKIjcsO+MxSGY4zRU0WKr4KD720PV2DCn54ZcOxOkOGR624d5bhDbjw1l2r+89V
- WLRLirBZn7VmWHSdfq5Xl9CyHT1uY6X9FRr3sWde9kA/C7Z2tqy0MevXAz+MtavOJb9XDUlI
- 7Bm0OPe5BTIuhtLvVZiW4ivT2LJOpkokLy2K852u32Z1QlOYjsbimf77avcrLBplvms0D7j6
- OaKOq503UKfcSZo3lF70J5UtJfXy64noI4oyVNl1b+egkV2iSXifTGGzOjt50/efgm1bKNkX
- iCVOYt9sGTrVhiX1ABEBAAHCwXYEGAEIACAWIQS19WevcE+Jf733W9KWejTiGAP9UQUCY/3p
- PgIbDAAKCRCWejTiGAP9UaC/EACZvViKrMkFooyACGaukqIo/s94sGuqxj308NbZ4g5jgy/T
- +lYBzlurnFmIbJESFOEq0MBZorozDGk+/p8pfAh4S868i1HFeLivVIujkcL6unG1UYEnnJI9
- uSwUbEqgA8vwdUPEGewYkPH6AaQoh1DdYGOleQqDq1Mo62xu+bKstYHpArzT2islvLdrBtjD
- MEzYThskDgDUk/aGPgtPlU9mB7IiBnQcqbS/V5f01ZicI1esy9ywnlWdZCHy36uTUfacshpz
- LsTCSKICXRotA0p6ZiCQloW7uRH28JFDBEbIOgAcuXGojqYx5vSM6o+03W9UjKkBGYFCqjIy
- Ku843p86Ky4JBs5dAXN7msLGLhAhtiVx8ymeoLGMoYoxqIoqVNaovvH9y1ZHGqS/IYXWf+jE
- H4MX7ucv4N8RcsoMGzXyi4UbBjxgljAhTYs+c5YOkbXfkRqXQeECOuQ4prsc6/zxGJf7MlPy
- NKowQLrlMBGXT4NnRNV0+yHmusXPOPIqQCKEtbWSx9s2slQxmXukPYvLnuRJqkPkvrTgjn5d
- eSE0Dkhni4292/Nn/TnZf5mxCNWH1p3dz/vrT6EIYk2GSJgCLoTkCcqaM6+5E4IwgYOq3UYu
- AAgeEbPV1QeTVAPrntrLb0t0U5vdwG7Xl40baV9OydTv7ghjYZU349w1d5mdxg==
-In-Reply-To: <20240828-wireless-mainline-v12-3-9064ac7acf1d@wesion.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f6ea69035f7ff32edc2575765641689e469f764a.camel@sipsolutions.net>
 
-On 8/28/2024 9:40 AM, Jacobe Zang wrote:
-> Add "brcm,bcm4329-fmac" as fallback compatible for wireless devices that
-> used PCI ID based compatible. So that can pass the compatible check in
-> driver.
+On Wed, Aug 28, 2024 at 09:55:09AM +0200, Johannes Berg wrote:
+> But for example:
+> 
+> > wpa_supplicant[5906]: wlan0: FT: RSNE mismatch between Beacon/ProbeResp and FT protocol Reassociation Response frame
+> 
+> is something that perhaps could result in an FT-blocklist or something
+> for the BSSID in question, or perhaps even the whole network since it's
+> likely to be a single controller/unified installation or so.
 
-Hi Jacobe,
+Somehow I managed to miss then entry.. This is something that I'd be
+quite interested in getting more details for since this seems to show a
+clear interoperability issue with the FT reassociation implementation
+between the AP and the STA.. I'd like to see the full wpa_supplicant
+debug sequence that started from selecting the AP and how it resulted in
+this mismatch.
 
-Using the driver implementation as an argument for adding the fallback 
-compatible to the bindings does sound wrong. The most importants rule 
-about the bindings is that it is independent of kernel and/or driver 
-implementation.
+Is there any idea which AP devices are used in the network? It is
+clearly misbehaving if the wpa_supplicant debug log entries are accurate
+on what RSNE values it uses:
 
-Now this actually overlaps my patch series from couple of weeks ago 
-which also covered some other existing DTS files for Apple platforms. So 
-my proposal here is to drop this patch for now. I will give it another 
-shot in v2 of my series after yours is (finally) applied. We can always 
-hope ;-) That does also mean the compatible check in the driver should 
-not be moved in brcmf_of_probe(). Also the Khadas Edge2 DTS file should 
-not use the fallback compatible yet. I can include it in my series later.
+RSNE in Beacon/ProbeResp - hexdump(len=32): 30 1e 01 00 00 0f ac 04 01 00 00 0f ac 04 02 00 00 0f ac 05 00 0f ac 03 e8 00 00 00 00 0f ac 06
+RSNE in FT protocol Reassociation Response frame - hexdump(len=44): 30 2a 01 00 00 0f ac 04 01 00 00 0f ac 04 02 00 00 0f ac 01 00 0f ac 03 e8 00 01 00 ff 84 62 84 5a a3 06 82 4f b4 2d 43 36 76 87 4b
 
-Regards,
-Arend
+It is expected to add the PMKID entry for FT, but the AP changed its
+list of AKM suites (!?) and removed the group management cipher suite.
+Such changes are not allowed and the STA has to stop since those would
+be a clear indication of an active downgrade attack. While
+wpa_supplicant could in theory prevent FT attempts with this AP for some
+time from the view point of interoperability workarounds, I'm not
+exactly happy about such a change since it could make it easier to
+perform various attacks.
 
-> Signed-off-by: Jacobe Zang <jacobe.zang@wesion.com>
-> ---
->   .../bindings/net/wireless/brcm,bcm4329-fmac.yaml     | 20 +++++++++++---------
->   1 file changed, 11 insertions(+), 9 deletions(-)
+As far as the AKM suite lists are concerned, the RSNE from scan results
+indicated 00-0F-AC:5 (802.1X with SHA-256) and 00-0F-AC:3 (FT with
+802.1X) while the RSNE from Reassocation Response frame indicated
+00-0F-AC:1 (802.1X with SHA-1) and 00-0F-AC:3 (FT with 802.1X). This
+feels really strange. Either the AP has a really broken FT
+implementation or something has messed up with scan results.. Since this
+attempt is on the 6 GHz band, I'm assuming the AP has other BSSs on the
+2.4 and 5 GHz bands and it might be possible that there are differences
+in which AKMs are enabled on different bands. That would be a bit
+strange configuration of the AP, but still, possible. It would be nice
+to get full scan results that show the RSNE values from all bands.
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
