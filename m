@@ -1,99 +1,104 @@
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69DB41AC8A9
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2024 16:54:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.58.85.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D73F71B3B3B
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2024 19:23:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724950444; cv=none; b=BfkuMhfc2J81SNXb5q79LSICI0pbnOZcETbbsS9h4MdbW6kjLeqlArwRYxiu/4pgBeMgU78MvCp2pBDv59vd+IQ/rUr9Cjc+eH8N1Q3sQJsEDoWqgrfQ96bm/IzZdGbWyLchU9wvdpeAxhSKpbgxVzAgRsP0jdKLjPmY4oXP478=
+	t=1724959438; cv=none; b=uAHMiS7WsqxsuBU4gRzYuKiSdh6R9YtPiqm1kNfwQtXNHpeHsCEJkPs1Xja1kG2UEU/hxqFmTu7mUbkTVp4rbUDgERrVeMrXvaiAMN3zWzP+pBEk6+d9rKs9aFJXXqahsWFkErEfeR2SF+LuzWU7an7kxvQEcnKiozwQbRNkUrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724950444; c=relaxed/simple;
-	bh=UoLoOB2Y8L0wIdsTjatE6Mokw5WON2Nes+vsOhNrNI8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 MIME-Version:Content-Type; b=cGC17jl8sJV5bMaen+ZZr18CtMA3Uaj+o4e5ngydsE4+qCEG9N5FRKy/s7cjcnqFV7ruGKW5fBjk2TuH1M6o1k10oI/+4lZHgTRJOd+wjOMxePhdHxajcv/zO1ipLGwd/bc+vEnajrsSno1rljmLcxyo0Icu9IpLgvvF8tEm1m4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM; spf=pass smtp.mailfrom=aculab.com; arc=none smtp.client-ip=185.58.85.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aculab.com
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-61-FBG4t32LNkyHw8q_JE8r3A-1; Thu, 29 Aug 2024 17:47:25 +0100
-X-MC-Unique: FBG4t32LNkyHw8q_JE8r3A-1
-Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
- (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Thu, 29 Aug
- 2024 17:46:40 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Thu, 29 Aug 2024 17:46:40 +0100
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'David Howells' <dhowells@redhat.com>, Hongbo Li <lihongbo22@huawei.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"davem@davemloft.net" <davem@davemloft.net>, "edumazet@google.com"
-	<edumazet@google.com>, "kuba@kernel.org" <kuba@kernel.org>,
-	"pabeni@redhat.com" <pabeni@redhat.com>, "allison.henderson@oracle.com"
-	<allison.henderson@oracle.com>, "dsahern@kernel.org" <dsahern@kernel.org>,
-	"pshelar@ovn.org" <pshelar@ovn.org>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "rds-devel@oss.oracle.com"
-	<rds-devel@oss.oracle.com>, "dccp@vger.kernel.org" <dccp@vger.kernel.org>,
-	"dev@openvswitch.org" <dev@openvswitch.org>, "linux-afs@lists.infradead.org"
-	<linux-afs@lists.infradead.org>
-Subject: RE: [PATCH net-next 7/8] net/rxrpc: Use min() to simplify the code
-Thread-Topic: [PATCH net-next 7/8] net/rxrpc: Use min() to simplify the code
-Thread-Index: AQHa+SLFq2P4KoingEmrGUtsMJSbQLI+cc1Q
-Date: Thu, 29 Aug 2024 16:46:40 +0000
-Message-ID: <bc839f1e4e3241bf8c0f3eb81f6c5b3f@AcuMS.aculab.com>
-References: <1b1ee6e6-ff2e-45d6-bfe2-1f8efaba7b38@huawei.com>
- <20240824074033.2134514-8-lihongbo22@huawei.com>
- <20240824074033.2134514-1-lihongbo22@huawei.com>
- <563923.1724501215@warthog.procyon.org.uk>
- <948381.1724833077@warthog.procyon.org.uk>
-In-Reply-To: <948381.1724833077@warthog.procyon.org.uk>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
+	s=arc-20240116; t=1724959438; c=relaxed/simple;
+	bh=u2kSpaqBhHX//FJbyTIP3K05Rb9NQAxpVzeK0AhOri8=;
+	h=From:Content-Type:Mime-Version:Subject:Date:References:To:
+	 In-Reply-To:Message-Id; b=LoMbLBiSFghTeB+SUMIbqvjqWF7PtJEyLnCI69Z1CI8pnbBlJ2H6dEOxuZkwTgWu+2vO+euRV+PPtuQ2l6L2knkXm3XHNemdrjOoDFQwdraM+WtQMwxKkX4vOHIqDyt+cHeQzJ+Ry67xvzoZIuH5JxXSINGpUbRESy6Uk8CpteE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WHk4R0Mc; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WHk4R0Mc"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-a8684c31c60so127980966b.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2024 12:23:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1724959435; x=1725564235; darn=vger.kernel.org;
+        h=message-id:in-reply-to:to:references:date:subject:mime-version
+         :content-transfer-encoding:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=HO4tnhwrrZCUlUncuULn09iYvhoNuJlaZiOhTGhRhiM=;
+        b=WHk4R0Mc4h05VMNEsKQBX1cRR5r9OjdElgDbRevw2fDrx5Sg59a3wKhtFfVYuVLUU3
+         8OpKAdnN2EuzhFAVD/yLq7JArV5u04PPmIpWcJf2Zw/xmueM2Lf719j49hgWIzN3kFDD
+         gF7TNz3c24144pfOT93zCLAPrvWpYxomaB217ITMMRg46Jhyk7BRhBivM0LiuHbopmM9
+         q/u9vZNjhMOIrZnJG4k6H2SK/q+MtxHfzAwr26QdHTIJa1tQcFwjXF5EYzCyQAyVTKVl
+         xkYWUtEKTvQ/Vomex+A8Lrkz5z9PLPH6HbeVXE/GgNSECR2Orrh7J40afbFquysnS6l2
+         ZdQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724959435; x=1725564235;
+        h=message-id:in-reply-to:to:references:date:subject:mime-version
+         :content-transfer-encoding:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=HO4tnhwrrZCUlUncuULn09iYvhoNuJlaZiOhTGhRhiM=;
+        b=o0MNfm9EFCqVYcNQxF1Z+x0RjCLU/42G+ZflVrtOsYC0KYdRc44DION/VcfkE+c+5P
+         u4BHuht0mfAsLLx8pWKZTegQxcaqIUItug41olPKL9NcToKBoTRLADxYq3FFZtPweQQy
+         Qjru2Elr+5C43VLdI+5VDDtzRyzpTXxWPJdPST+LqmJwdR6vn12KWnf5wYYx7eu6N8b/
+         6i0oZqvgcWIzs0bZfOhmiEuggyi+akheJVowAr3BpY2qL1pJCjdkXjRp1MtTFt+xm9gd
+         hCr4hh5rVP5BbELozhXQqUKQNHjQf0LT4ZD+Z+h/0OBeK89KyxYC8S7DaMtGWQWn1LJh
+         /iQw==
+X-Gm-Message-State: AOJu0Yx3yG0P9onvE/FTQ7rTSIzjLFVvkOIBswscf8dUbmRBJ4j9/v6M
+	hFUguK9lLRqRKncqs4uNrNZjRBJKS+qmCQdKIrW0qZbvrBlebQkh62/mZFvQ
+X-Google-Smtp-Source: AGHT+IFrr2ntqAENac/6XVIFUU1Ud/2BKbtwczjOXD0udOpZO6Uf9qnlsIzCFoLCSw94B1geG0vhDw==
+X-Received: by 2002:a17:907:ea3:b0:a86:ad4e:c468 with SMTP id a640c23a62f3a-a897fad4ee1mr368855666b.58.1724959434764;
+        Thu, 29 Aug 2024 12:23:54 -0700 (PDT)
+Received: from smtpclient.apple ([169.224.81.5])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a8988feb453sm111315666b.36.2024.08.29.12.23.53
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 29 Aug 2024 12:23:54 -0700 (PDT)
+From: MOHAMMAD RASIM <mohammad.rasim96@gmail.com>
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.600.62\))
+Subject: Re: [question] is it possible to enable monitor mode /packet
+ injection on wcn3990
+Date: Thu, 29 Aug 2024 22:23:42 +0300
+References: <CACq04CG8WCGDxf6Krx3bjxHU5OtYJJNOtD77TtPQhTfdy6ey_g@mail.gmail.com>
+ <56BBE89F-FF40-47C4-A4B9-F492FD8F6E2A@gmail.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <56BBE89F-FF40-47C4-A4B9-F492FD8F6E2A@gmail.com>
+Message-Id: <8117B84C-5C0F-4005-9738-9F8249A0E31C@gmail.com>
+X-Mailer: Apple Mail (2.3774.600.62)
 
-From: David Howells <dhowells@redhat.com>
-> Sent: 28 August 2024 09:18
+
+
+> On 11 Aug 2024, at 8:30=E2=80=AFPM, MOHAMMAD RASIM =
+<mohammad.rasim96@gmail.com> wrote:
 >=20
-> Hongbo Li <lihongbo22@huawei.com> wrote:
+> Hi,
+> I have a device that has the wcn3990 wifi chip that uses the =
+ath10k_snoc driver, i tried to put it in monitor mode, the "set monitor" =
+mode command succeed but can't get any scanning working after that, does =
+the chip support such mode?has anyone tried monitor mode with this chip =
+or other snoc chips?
 >=20
-> > I see reason is u8, so may I use min_t(u8, sp->ack.reason,
-> > RXRPC_ACK__INVALID)?
->=20
-> No, please don't use min_t(<unsigned type>, ...) if umin() will do.  IIRC=
-,
-> some arches can't do byte-level arithmetic.
+> Regards
 
-Not to mention all the places where the wrong type has been used and
-significant bits masked off before the comparison.
+ So after testing and following this: =
+https://gitlab.com/sdm845-mainline/linux/-/issues/45#note_2073028221
 
-Is there even a problem with min() here?
-It should be fine unless sp->ack.reason is a signed type.
-In which case things are probably horribly wrong if it is negative.
+It seems it is possible but unstable, I was able to capture some traffic =
+one time only, after that every time I try to capture in raw mode the =
+firmware crashes or fails to load some file like board-2.bin
 
-Looking at the code I'm not even sure that min() is right.
-It really ought to be used for counters/sizes.
-This is a bit like the (broken) suggestion of replacing:
-=09return rval < 0 ? rval : 0;
-with
-=09return min(rval, 0);
 
-=09David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1=
-PT, UK
-Registration No: 1397386 (Wales)
+[  440.761935] ath10k_snoc 18800000.wifi: failed to fetch board data for =
+bus=3Dsnoc,qmi-board-id=3D0,qmi-chip-id=3D0 from =
+ath10k/WCN3990/hw1.0/board-2.bin
+[  440.762047] ath10k_snoc 18800000.wifi: failed to find board file fw =
+entry
+[  440.762059] ath10k_snoc 18800000.wifi: failed to fetch board-2.bin or =
+board.bin from ath10k/WCN3990/hw1.0
 
