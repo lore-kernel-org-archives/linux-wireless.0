@@ -1,76 +1,88 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED177125D5
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Aug 2024 01:10:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485732206E
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Aug 2024 01:26:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724980251; cv=none; b=uHRpb2DAymnW7tLAam8jRPVP97Rqf4Z4UCLu9Rfj60/Mp//t4stBdoLJj/BDoj55B/NPMl1f4nXBbeCjwv6OTbNw0sDBCsqV817gy0lhWlEF3poTf/cZxF+0La4POODkq1p0hZYZS0WjRZJ2/1pBXlajiqknSYy1RZzo8xUUaHI=
+	t=1724981202; cv=none; b=W7bpRlHe3Fwr/D0/m5Nb/G2VKTg1OQ7eDMBg1W5xDuXlS57EZGHcOBAgYqbyb4i3FtgQPeATS7ZlFlsx3VJo5FpiV+IkDRJbryO7zu2W6u8WkKPmYmma8Lsle7kK0pKEVmkkpBJHLBFyRlJt+YaQwJFstVHEMW/MQRlqxtf033c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724980251; c=relaxed/simple;
-	bh=pi20ADWuwgRbMRRF4/YhbHG+lVHy3Fk05Lttep704mY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JrJJG1cPrcEqQo+5XVenswThpaR2Fw1pW+geb6uxZro8Y0s4UylO5+6+Tvnmxaum5Vce2m1t1TY0L8q5Q4zEzF2fChn/JKk4uQ/doF4zb9/t6MwIirOSZECk8ravq6enf/Jz5bHj+/JQZq1ulJOgMQ7/k3imK/qD6rjmLGNGtUc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Ww0S34L36z18MwQ;
-	Fri, 30 Aug 2024 09:09:55 +0800 (CST)
-Received: from kwepemd500012.china.huawei.com (unknown [7.221.188.25])
-	by mail.maildlp.com (Postfix) with ESMTPS id DA9E718010A;
-	Fri, 30 Aug 2024 09:10:45 +0800 (CST)
-Received: from huawei.com (10.90.53.73) by kwepemd500012.china.huawei.com
- (7.221.188.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Fri, 30 Aug
- 2024 09:10:45 +0800
-From: Li Zetao <lizetao1@huawei.com>
-To: <toke@toke.dk>, <kvalo@kernel.org>
-CC: <lizetao1@huawei.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH -next] ath9k: use clamp() in ar9003_aic_cal_post_process()
-Date: Fri, 30 Aug 2024 09:18:58 +0800
-Message-ID: <20240830011858.603514-1-lizetao1@huawei.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1724981202; c=relaxed/simple;
+	bh=jQzodvY/Yoj8iH8rXPtwlvVMW7gAQA9N7fKgKL3EEo8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NJ1MpuIF3MUveyJROnSaesi83yZrtpj9KzKA67ls/9xYy8A/6YlydCc15N/lJ9qEV4qp7jToIaAQ1w9bE+94TzPtXyhpRUQ8/MMniR6JyYAcBQ2wUpoO1A0KcGEcKPQ/XmZUSWoY295NsHMul8PyCVikrl77mG5uQeQHRnTOxgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=UBljODCt; arc=none smtp.client-ip=85.214.62.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="UBljODCt"
+Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: marex@denx.de)
+	by phobos.denx.de (Postfix) with ESMTPSA id 028E1886CC;
+	Fri, 30 Aug 2024 03:26:37 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+	s=phobos-20191101; t=1724981198;
+	bh=nYuQYQ+zZDHIDzW3EQnhfgQmIbcoUTz/b0dgJudnvxs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=UBljODCtoU548beP9XSsVvkOYn/+N+uq3K8DCRieU2L9iuwm/10AorcWKHOe+wtoy
+	 4rKwG+BRf5XxLNrDy7OPf2Doyy5+hMcLdzR7sXS7rAUE7pILQMZtke/y8BrIcqw8XZ
+	 Q7kQOtES3Prbe7qe/AHwMj3adhq59im9lsLI1uoC4n/gtd0qeklsa1n+pj9AglP5ZL
+	 OhGbNn372pEcY9+b4dyQXtkcINPb6D8/hOm9v7lol1rG/qdWqxAIIQCKUTaOB1xImV
+	 oKZKJOFflu1cuqJ96BAlBdbr60mPS+cLFwPBvMftWoE6DqVjsmcaasKFgKZBduV4lG
+	 +XiLZHxTfCZvg==
+Message-ID: <5ba25a08-dc7f-4eb6-8982-e7a246178ba0@denx.de>
+Date: Fri, 30 Aug 2024 00:23:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemd500012.china.huawei.com (7.221.188.25)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: wilc1000: Keep slot powered on during
+ suspend/resume
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Ajay.Kathat@microchip.com, alexis.lothore@bootlin.com,
+ linux-wireless@vger.kernel.org, claudiu.beznea@tuxon.dev
+References: <20240821183823.163268-1-marex@denx.de>
+ <a9e673b1-43f3-4341-a035-3e1265b8a544@bootlin.com>
+ <60a52cac-964e-40d6-aa96-7bbf34d9c4ac@denx.de>
+ <63266019-bbf0-4f26-9700-e0303a892b2b@bootlin.com>
+ <0518770b-8975-4681-a32e-e82f540d9a73@microchip.com>
+ <5229bc7c-564d-4195-a6ff-579dbe5c3a49@denx.de>
+ <ae40b138-77ad-4044-9448-784be6964195@microchip.com>
+ <12b79e2b-08ca-4ba0-8abb-6f1d0be65b3c@denx.de> <874j73e1dp.fsf@kernel.org>
+Content-Language: en-US
+From: Marek Vasut <marex@denx.de>
+In-Reply-To: <874j73e1dp.fsf@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
 
-When it needs to get a value within a certain interval, using clamp()
-makes the code easier to understand than min(max()).
+On 8/29/24 6:32 PM, Kalle Valo wrote:
+> Marek Vasut <marex@denx.de> writes:
+> 
+>> Since this driver does not reload the firmware into the card on
+>> resume, the card has to be kept powered on during suspend/resume
+>> cycle. The card can NOT be powered off during suspend/resume cycle,
+>> otherwise the firmware is lost.
+>>
+>> Without this flag, the card may be powered off during suspend/resume
+>> cycle. It possibly does not happen on the Atmel controller, but it
+>> does on the STM32MP15xx ARM MMCI one.
+>>
+>> Now, since the card does consume about the same amount of power
+>> whether it is powered OFF or whether it is powered ON but suspended, I
+>> opt for the later option -- keep the card powered ON, suspend it, and
+>> that's what this patch does. This also allows us to support WoWlan
+>> then.
+> 
+> Are you also taking into account hibernation? During hibernation the
+> device will be powered off. I can't remember the details right now but
+> wanted to mention this.
 
-Signed-off-by: Li Zetao <lizetao1@huawei.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index d0f1e8bcc846..45a7ca660f47 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -409,13 +409,11 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 		sram.valid = true;
- 
- 		sram.rot_dir_att_db =
--			min(max(rot_dir_path_att_db,
--				(int16_t)ATH_AIC_MIN_ROT_DIR_ATT_DB),
--			    ATH_AIC_MAX_ROT_DIR_ATT_DB);
-+			clamp(rot_dir_path_att_db, (int16_t)ATH_AIC_MIN_ROT_DIR_ATT_DB,
-+			      ATH_AIC_MAX_ROT_DIR_ATT_DB);
- 		sram.rot_quad_att_db =
--			min(max(rot_quad_path_att_db,
--				(int16_t)ATH_AIC_MIN_ROT_QUAD_ATT_DB),
--			    ATH_AIC_MAX_ROT_QUAD_ATT_DB);
-+			clamp(rot_quad_path_att_db, (int16_t)ATH_AIC_MIN_ROT_QUAD_ATT_DB,
-+			      ATH_AIC_MAX_ROT_QUAD_ATT_DB);
- 
- 		aic->aic_sram[i] = (SM(sram.vga_dir_sign,
- 				       AR_PHY_AIC_SRAM_VGA_DIR_SIGN) |
--- 
-2.34.1
-
+I don't think I am. Isn't hibernation actually a full shutdown, so the 
+hardware does get reinitialized ?
