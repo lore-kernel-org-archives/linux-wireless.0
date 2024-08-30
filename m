@@ -1,88 +1,149 @@
-Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485732206E
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Aug 2024 01:26:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34FE627473
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Aug 2024 01:54:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724981202; cv=none; b=W7bpRlHe3Fwr/D0/m5Nb/G2VKTg1OQ7eDMBg1W5xDuXlS57EZGHcOBAgYqbyb4i3FtgQPeATS7ZlFlsx3VJo5FpiV+IkDRJbryO7zu2W6u8WkKPmYmma8Lsle7kK0pKEVmkkpBJHLBFyRlJt+YaQwJFstVHEMW/MQRlqxtf033c=
+	t=1724982864; cv=none; b=j5UVQaiAes3aF4rl+sS9jxYvF9YzwtFRgRE5touYr++ibLzaCGeE5bLsU//pfqwMg+kuP6kSvrHNB6Q2C2IY3sKBGaFjCLBgyvZNnZAwfdR9eaJzdA1rv/MSlbvA+FlbtZWqHhYrhgQP2slFba13VwqMqk4eY++YCJZ2Yeno0LM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724981202; c=relaxed/simple;
-	bh=jQzodvY/Yoj8iH8rXPtwlvVMW7gAQA9N7fKgKL3EEo8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NJ1MpuIF3MUveyJROnSaesi83yZrtpj9KzKA67ls/9xYy8A/6YlydCc15N/lJ9qEV4qp7jToIaAQ1w9bE+94TzPtXyhpRUQ8/MMniR6JyYAcBQ2wUpoO1A0KcGEcKPQ/XmZUSWoY295NsHMul8PyCVikrl77mG5uQeQHRnTOxgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=UBljODCt; arc=none smtp.client-ip=85.214.62.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
+	s=arc-20240116; t=1724982864; c=relaxed/simple;
+	bh=5XLqbgGCLZfCfYvrUzds5KrqCTlmkAPbD8+4fybO4nw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RpJxR+c6c42/nT8cOEQVgiFNQJl4CcNzQKLhmPGOlyojEo/fRQ1iO3kCDs9K/+cLmSyNuzyp+hgASIEmcIh1U7F3Cr8BZPqw6djcCaPPRYP8HVPzduwnk7UsHIPh5Ssqlz3ZGPCQol6M+/jFHr61cRKGzYsKr5NF+dcsyLeVk9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Vfnbx4HX; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="UBljODCt"
-Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 028E1886CC;
-	Fri, 30 Aug 2024 03:26:37 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1724981198;
-	bh=nYuQYQ+zZDHIDzW3EQnhfgQmIbcoUTz/b0dgJudnvxs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=UBljODCtoU548beP9XSsVvkOYn/+N+uq3K8DCRieU2L9iuwm/10AorcWKHOe+wtoy
-	 4rKwG+BRf5XxLNrDy7OPf2Doyy5+hMcLdzR7sXS7rAUE7pILQMZtke/y8BrIcqw8XZ
-	 Q7kQOtES3Prbe7qe/AHwMj3adhq59im9lsLI1uoC4n/gtd0qeklsa1n+pj9AglP5ZL
-	 OhGbNn372pEcY9+b4dyQXtkcINPb6D8/hOm9v7lol1rG/qdWqxAIIQCKUTaOB1xImV
-	 oKZKJOFflu1cuqJ96BAlBdbr60mPS+cLFwPBvMftWoE6DqVjsmcaasKFgKZBduV4lG
-	 +XiLZHxTfCZvg==
-Message-ID: <5ba25a08-dc7f-4eb6-8982-e7a246178ba0@denx.de>
-Date: Fri, 30 Aug 2024 00:23:06 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Vfnbx4HX"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47TIGtr7028780;
+	Fri, 30 Aug 2024 01:54:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=WnLv4pdq+EyUjJ75h9GulT
+	ycBwILJtRBraCLytMa3p4=; b=Vfnbx4HX+NdYvjVWUVB7icBC3dQd95ZT4GB/3j
+	/PMYXo3bBRoubi7mw3RKH/qvnmi554kvo0DEByOg2ufwudDmxD8+IZWv9lWTpx9G
+	FPTHL9jWh8DmCKdBaCO55m8nLxmLCcomqjLzSYYPq7lp5n4UzfONzPuHDoj+WLC0
+	+wUXlu7WEmvNwW/PMsRJVrOrXAWtvHk0BCY8cNB/o/od5PwKTaDzIYyiFudu/47F
+	PjPInNjdOZemOWZ54kJ1BzMGZSLDyh+jT4+YHk8yb2yhb31tgXPAiBjMCTmsEC4N
+	V8Kx9iLljUv7O5N+J5OTze5o6SHOBVWqDKZcHUowCjxqdWdw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41ax4mgtpx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 30 Aug 2024 01:54:10 +0000 (GMT)
+Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47U1s9Me002460
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 30 Aug 2024 01:54:09 GMT
+Received: from Z2-SFF-G9-MQ.ap.qualcomm.com (10.80.80.8) by
+ nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 29 Aug 2024 18:54:08 -0700
+From: Miaoqing Pan <quic_miaoqing@quicinc.com>
+To: <kvalo@kernel.org>
+CC: <quic_jjohnson@quicinc.com>, <ath10k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>,
+        Miaoqing Pan <quic_miaoqing@quicinc.com>
+Subject: [PATCH] wifi: ath10k: fix the stack frame size warning in ath10k_remain_on_channel
+Date: Fri, 30 Aug 2024 09:53:49 +0800
+Message-ID: <20240830015349.1083226-1-quic_miaoqing@quicinc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: wilc1000: Keep slot powered on during
- suspend/resume
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Ajay.Kathat@microchip.com, alexis.lothore@bootlin.com,
- linux-wireless@vger.kernel.org, claudiu.beznea@tuxon.dev
-References: <20240821183823.163268-1-marex@denx.de>
- <a9e673b1-43f3-4341-a035-3e1265b8a544@bootlin.com>
- <60a52cac-964e-40d6-aa96-7bbf34d9c4ac@denx.de>
- <63266019-bbf0-4f26-9700-e0303a892b2b@bootlin.com>
- <0518770b-8975-4681-a32e-e82f540d9a73@microchip.com>
- <5229bc7c-564d-4195-a6ff-579dbe5c3a49@denx.de>
- <ae40b138-77ad-4044-9448-784be6964195@microchip.com>
- <12b79e2b-08ca-4ba0-8abb-6f1d0be65b3c@denx.de> <874j73e1dp.fsf@kernel.org>
-Content-Language: en-US
-From: Marek Vasut <marex@denx.de>
-In-Reply-To: <874j73e1dp.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
-X-Virus-Status: Clean
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01c.na.qualcomm.com (10.47.97.35)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: U5elr_1K-dDnI5PrBxac_BZuhzjeViFZ
+X-Proofpoint-ORIG-GUID: U5elr_1K-dDnI5PrBxac_BZuhzjeViFZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-29_06,2024-08-29_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ impostorscore=0 spamscore=0 suspectscore=0 adultscore=0 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2408300012
 
-On 8/29/24 6:32 PM, Kalle Valo wrote:
-> Marek Vasut <marex@denx.de> writes:
-> 
->> Since this driver does not reload the firmware into the card on
->> resume, the card has to be kept powered on during suspend/resume
->> cycle. The card can NOT be powered off during suspend/resume cycle,
->> otherwise the firmware is lost.
->>
->> Without this flag, the card may be powered off during suspend/resume
->> cycle. It possibly does not happen on the Atmel controller, but it
->> does on the STM32MP15xx ARM MMCI one.
->>
->> Now, since the card does consume about the same amount of power
->> whether it is powered OFF or whether it is powered ON but suspended, I
->> opt for the later option -- keep the card powered ON, suspend it, and
->> that's what this patch does. This also allows us to support WoWlan
->> then.
-> 
-> Are you also taking into account hibernation? During hibernation the
-> device will be powered off. I can't remember the details right now but
-> wanted to mention this.
+Fix the following W=1 kernel build warning:
 
-I don't think I am. Isn't hibernation actually a full shutdown, so the 
-hardware does get reinitialized ?
+drivers/net/wireless/ath/ath10k/mac.c: In function ‘ath10k_remain_on_channel’:
+drivers/net/wireless/ath/ath10k/mac.c:7980:1: warning: the frame size of 1064 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+
+Compile tested only.
+
+Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 35 ++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a5da32e87106..9bfa55dede31 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7899,7 +7899,7 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = (void *)vif->drv_priv;
+-	struct wmi_start_scan_arg arg;
++	struct wmi_start_scan_arg *arg = NULL;
+ 	int ret = 0;
+ 	u32 scan_time_msec;
+ 
+@@ -7936,20 +7936,25 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 
+ 	scan_time_msec = ar->hw->wiphy->max_remain_on_channel_duration * 2;
+ 
+-	memset(&arg, 0, sizeof(arg));
+-	ath10k_wmi_start_scan_init(ar, &arg);
+-	arg.vdev_id = arvif->vdev_id;
+-	arg.scan_id = ATH10K_SCAN_ID;
+-	arg.n_channels = 1;
+-	arg.channels[0] = chan->center_freq;
+-	arg.dwell_time_active = scan_time_msec;
+-	arg.dwell_time_passive = scan_time_msec;
+-	arg.max_scan_time = scan_time_msec;
+-	arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
+-	arg.scan_ctrl_flags |= WMI_SCAN_FILTER_PROBE_REQ;
+-	arg.burst_duration_ms = duration;
++	arg = kzalloc(sizeof(*arg), GFP_KERNEL);
++	if (!arg) {
++		ret = -ENOMEM;
++		goto exit;
++	}
+ 
+-	ret = ath10k_start_scan(ar, &arg);
++	ath10k_wmi_start_scan_init(ar, arg);
++	arg->vdev_id = arvif->vdev_id;
++	arg->scan_id = ATH10K_SCAN_ID;
++	arg->n_channels = 1;
++	arg->channels[0] = chan->center_freq;
++	arg->dwell_time_active = scan_time_msec;
++	arg->dwell_time_passive = scan_time_msec;
++	arg->max_scan_time = scan_time_msec;
++	arg->scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
++	arg->scan_ctrl_flags |= WMI_SCAN_FILTER_PROBE_REQ;
++	arg->burst_duration_ms = duration;
++
++	ret = ath10k_start_scan(ar, arg);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to start roc scan: %d\n", ret);
+ 		spin_lock_bh(&ar->data_lock);
+@@ -7975,6 +7980,8 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
+ 
+ 	ret = 0;
+ exit:
++	kfree(arg);
++
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+ }
+-- 
+2.25.1
+
