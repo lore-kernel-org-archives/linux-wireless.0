@@ -1,29 +1,29 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5826BFCA;
-	Sat, 31 Aug 2024 02:05:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 467071865C;
+	Sat, 31 Aug 2024 02:06:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725069935; cv=none; b=IG6wz2sJq8cga6z1Y2XnnQX9ZZA/AfVyHRe8V/EfREvtwGbHEce/3rfnGaQteEXIMC9jv8yMlAnZ76dvfFyfbhDeFW604QHpbvwQ1L0vwSvbKECRYqGwSAoEiF+6PB/fU0tdGFAfAi53hKCwYucKAdLj2KyCdlAq4QYWHocGxck=
+	t=1725069963; cv=none; b=saXn8XKDYHVBBwUSeFRcptqS6ldGm3+N6eIEuIaMi2uHzefczd9CVn1uSheDviJigm2TegNMH/ULsfCx5+4RWAGDsRX6Yxx+sSuqlB+Vdr98QsN/oqt3t/qyDsqjLx30TE8RLIHHNkzSOXsFG8pRzRhXXaA/tGCh4dYHnCQh6cc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725069935; c=relaxed/simple;
-	bh=Q1SNNG9W7ef1hqVdI0Qsork16INSEJRnz5CvBADlNwg=;
+	s=arc-20240116; t=1725069963; c=relaxed/simple;
+	bh=NTT6omI+1h722IadGdfo3Cu5+r9CNZ+yAF34IF8fqzU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ULMG6kf/WzS/lzZranX4U1qABkW+TxHvqjX9+hblgTAA5QdOd4u/Acl24/90mVUO6E7RiWPTXS9iYNpG/Acs4Eto7BnooWpNTRgI5OWqWvrbzPn05+rrQ87THnjAuEJ47+jSy1HWkf+g4mPDwEjWhe6y/TFc7YsJO1VXjbvDcDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+	 MIME-Version:Content-Type; b=BpbAWAFEPp1N0ZsIhBEageS0NjFrP1Dw0c7aSMzd3iy+Alf+gJqZ74UdxtsUOMo04wrq2k+zJuo2jdbivxj7yK4q2Rgva6YZ4b/V+/V96n6/jni7oBg52DVpJ/rRMII4f3Cv3zhPnOz/KaFHrlpNyLIEJKdbFe7jcsKcWpBqFRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Wwdbh1Dd5zpVB5;
-	Sat, 31 Aug 2024 10:03:44 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WwddL2XF8z2CpGh;
+	Sat, 31 Aug 2024 10:05:10 +0800 (CST)
 Received: from kwepemd500012.china.huawei.com (unknown [7.221.188.25])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2D0CD18010A;
-	Sat, 31 Aug 2024 10:05:30 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 128A31A016C;
+	Sat, 31 Aug 2024 10:05:25 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by kwepemd500012.china.huawei.com
  (7.221.188.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Sat, 31 Aug
- 2024 10:05:28 +0800
+ 2024 10:05:23 +0800
 From: Li Zetao <lizetao1@huawei.com>
 To: <florian.fainelli@broadcom.com>, <andrew@lunn.ch>, <olteanv@gmail.com>,
 	<davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
@@ -38,9 +38,9 @@ To: <florian.fainelli@broadcom.com>, <andrew@lunn.ch>, <olteanv@gmail.com>,
 CC: <netdev@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
 	<linux-sunxi@lists.linux.dev>, <linux-rockchip@lists.infradead.org>,
 	<linux-stm32@st-md-mailman.stormreply.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH net-next 12/12] wifi: wilc1000: Convert using devm_clk_get_optional_enabled() in wilc_bus_probe()
-Date: Sat, 31 Aug 2024 10:13:34 +0800
-Message-ID: <20240831021334.1907921-13-lizetao1@huawei.com>
+Subject: [PATCH net-next 07/12] net: lantiq_xrx200: Convert using devm_clk_get_enabled() in xrx200_probe()
+Date: Sat, 31 Aug 2024 10:13:29 +0800
+Message-ID: <20240831021334.1907921-8-lizetao1@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240831021334.1907921-1-lizetao1@huawei.com>
 References: <20240831021334.1907921-1-lizetao1@huawei.com>
@@ -55,50 +55,70 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  kwepemd500012.china.huawei.com (7.221.188.25)
 
-Use devm_clk_get_optional_enabled() instead of devm_clk_get_optional() +
+Use devm_clk_get_enabled() instead of devm_clk_get() +
 clk_prepare_enable(), which can make the clk consistent with the device
 life cycle and reduce the risk of unreleased clk resources. Since the
 device framework has automatically released the clk resource, there is
-no need to execute clk_disable_unprepare(clk) on the error path.
+no need to execute clk_disable_unprepare(clk) on the error path, drop
+the err_unprepare_clk label, and the original error process can change to
+the err_uninit_dma error path. Some comments have also been adjusted.
 
 Signed-off-by: Li Zetao <lizetao1@huawei.com>
 ---
- drivers/net/wireless/microchip/wilc1000/spi.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/ethernet/lantiq_xrx200.c | 17 +++--------------
+ 1 file changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wireless/microchip/wilc1000/spi.c
-index 5ff940c53ad9..05b577b1068e 100644
---- a/drivers/net/wireless/microchip/wilc1000/spi.c
-+++ b/drivers/net/wireless/microchip/wilc1000/spi.c
-@@ -228,12 +228,11 @@ static int wilc_bus_probe(struct spi_device *spi)
- 	if (ret < 0)
- 		goto netdev_cleanup;
+diff --git a/drivers/net/ethernet/lantiq_xrx200.c b/drivers/net/ethernet/lantiq_xrx200.c
+index 07904a528f21..976748551643 100644
+--- a/drivers/net/ethernet/lantiq_xrx200.c
++++ b/drivers/net/ethernet/lantiq_xrx200.c
+@@ -589,8 +589,8 @@ static int xrx200_probe(struct platform_device *pdev)
+ 	if (priv->chan_tx.dma.irq < 0)
+ 		return -ENOENT;
  
--	wilc->rtc_clk = devm_clk_get_optional(&spi->dev, "rtc");
-+	wilc->rtc_clk = devm_clk_get_optional_enabled(&spi->dev, "rtc");
- 	if (IS_ERR(wilc->rtc_clk)) {
- 		ret = PTR_ERR(wilc->rtc_clk);
- 		goto netdev_cleanup;
- 	}
--	clk_prepare_enable(wilc->rtc_clk);
+-	/* get the clock */
+-	priv->clk = devm_clk_get(dev, NULL);
++	/* get the clock and enable clock gate */
++	priv->clk = devm_clk_get_enabled(dev, NULL);
+ 	if (IS_ERR(priv->clk)) {
+ 		dev_err(dev, "failed to get clock\n");
+ 		return PTR_ERR(priv->clk);
+@@ -605,11 +605,6 @@ static int xrx200_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
  
- 	dev_info(&spi->dev, "Selected CRC config: crc7=%s, crc16=%s\n",
- 		 enable_crc7 ? "on" : "off", enable_crc16 ? "on" : "off");
-@@ -266,7 +265,6 @@ static int wilc_bus_probe(struct spi_device *spi)
+-	/* enable clock gate */
+-	err = clk_prepare_enable(priv->clk);
+-	if (err)
+-		goto err_uninit_dma;
+-
+ 	/* set IPG to 12 */
+ 	xrx200_pmac_mask(priv, PMAC_RX_IPG_MASK, 0xb, PMAC_RX_IPG);
+ 
+@@ -628,13 +623,10 @@ static int xrx200_probe(struct platform_device *pdev)
+ 
+ 	err = register_netdev(net_dev);
+ 	if (err)
+-		goto err_unprepare_clk;
++		goto err_uninit_dma;
+ 
  	return 0;
  
- power_down:
--	clk_disable_unprepare(wilc->rtc_clk);
- 	wilc_wlan_power(wilc, false);
- netdev_cleanup:
- 	wilc_netdev_cleanup(wilc);
-@@ -280,7 +278,6 @@ static void wilc_bus_remove(struct spi_device *spi)
- 	struct wilc *wilc = spi_get_drvdata(spi);
- 	struct wilc_spi *spi_priv = wilc->bus_data;
+-err_unprepare_clk:
+-	clk_disable_unprepare(priv->clk);
+-
+ err_uninit_dma:
+ 	xrx200_hw_cleanup(priv);
  
--	clk_disable_unprepare(wilc->rtc_clk);
- 	wilc_netdev_cleanup(wilc);
- 	kfree(spi_priv);
+@@ -654,9 +646,6 @@ static void xrx200_remove(struct platform_device *pdev)
+ 	/* remove the actual device */
+ 	unregister_netdev(net_dev);
+ 
+-	/* release the clock */
+-	clk_disable_unprepare(priv->clk);
+-
+ 	/* shut down hardware */
+ 	xrx200_hw_cleanup(priv);
  }
 -- 
 2.34.1
