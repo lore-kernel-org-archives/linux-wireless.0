@@ -1,146 +1,81 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0CF8DF71;
-	Mon,  2 Sep 2024 09:01:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30D22D7B8
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Sep 2024 09:09:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725267668; cv=none; b=k4Q7LXZ1UY5X8rti4o9/t5+5XN89ya598MGzuam87DTuucqDaUaBi7hnmIr1lwVg+q6xGwr7lQBRXXPAPprPtMyHzr6gTmihRaMONr05qiv7D+TrjqjdQ/aM1g9QELgFm02RMPtdPtTWanQ4YKYViBYn9mGxkV3xOtEMm08AnyI=
+	t=1725268187; cv=none; b=HJekyqBlzxNjNUvco8khNoVgy7BCv6Zv8tYX4dgTAqsLI6oH0EY5UBmJ0R+0laTzwu+OVy6MlHUjhHB/xWUO2eZV63UmReJbI/t6Sm5IKoOHvpvhg7+uWqRy/KUs0o5PfTY88lhUiig6mSMXaC9OmrYFyT+Lin+fZca/55INdXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725267668; c=relaxed/simple;
-	bh=DeE2ACGbq72KzqysLxPXuHQEe4//m6Oifjw5h6reQeE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NTJCBAG3C4MQoxYPcbB8PcA6Cxl3X2DtLFIo42EOhQPjcoaSLAY2LEHwb9DxNdzb4h1HSxMF/Lcbkynws2s8Eu1Eu9Q6IRqqhcJVkdigASh1zTx7dWFjpyQTZj9j7Pci9QcubYYA7IC7rHmmxFr/L0z7VfjKaYCZUtI4s1p6WWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=GfezLxj1; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1725268187; c=relaxed/simple;
+	bh=uTgaWv7VOoRmD+8oYePEjExTXryEBpcBaBwy2JLtuV4=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=N3/jcluJtkwdmTXoiPFv7eAUOxUpNh1JBeTmivy1/o1mEc5fzv3UuprLiJg5FLZdd0fOEboPbIiwK0PCEpZIHBg+M4ZYA8SHAKtVh/NT4/CawDm3FreuOIwNOUKF71cOBcGuwyoKOlKRcxJR4El+BQ82D8fdcysjt1Bn0zHzfwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q/aKJaVf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="GfezLxj1"
-X-UUID: def011d4690911ef8b96093e013ec31c-20240902
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=a8pwBEAn/PiKve4MsqUFcYOogJa73FkNa5F6NZMlHrI=;
-	b=GfezLxj1BLhQFL8Tq+kgY1nedV0f5Xpz0ZUqX2339mCdYdchpswcFZziRRnzBDdC9DVNZdWNQS9680FAzoxcSF27IDQEx1hC/aJ4s1SAtWKFQFe+k+fcKOGMpYAz6bHghgixYTUflGFg+8lQ1vdT7OiTenuKF+D82V4YsZltSV0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:ecd700e6-745f-42d3-a8a0-a792a504965e,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6dc6a47,CLOUDID:38db8dcf-7921-4900-88a1-3aef019a55ce,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
-	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: def011d4690911ef8b96093e013ec31c-20240902
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
-	(envelope-from <mingyen.hsieh@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1685570361; Mon, 02 Sep 2024 17:00:58 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Mon, 2 Sep 2024 17:00:58 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Mon, 2 Sep 2024 17:00:58 +0800
-From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
-	<Soul.Huang@mediatek.com>, <Leon.Yen@mediatek.com>,
-	<Michael.Lo@mediatek.com>, <Eric-SY.Chang@mediatek.com>,
-	<km.lin@mediatek.com>, <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
-	<posh.sun@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
-	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, Michael Lo <michael.lo@mediatek.com>,
-	<stable@vger.kernel.org>, Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Subject: [PATCH] wifi: mt76: mt7925: fix a potential association failure upon resuming
-Date: Mon, 2 Sep 2024 17:00:54 +0800
-Message-ID: <20240902090054.15806-1-mingyen.hsieh@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q/aKJaVf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDD71C4CEC2;
+	Mon,  2 Sep 2024 09:09:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1725268187;
+	bh=uTgaWv7VOoRmD+8oYePEjExTXryEBpcBaBwy2JLtuV4=;
+	h=From:Date:Subject:To:Cc:From;
+	b=Q/aKJaVfo5jA7pTiLsqea8QNkfrUHihXiwrhZ1BqPyYPlb0egAEDfXy4Uuvf4JR3R
+	 tH8SiLcbiDD1biSTNx6TjZwoLRHSw73Jlwn+kjsQOn0d6KpEiLbiycbcIgFCIZ7dIm
+	 WXKDk082IP1hDfuK6lo9wSceWdVpfcQ4HCQPMFWMhsdHMq1MxoXgf9NFolDzvR/fOA
+	 9JrFYxP2b4aa8jhoA3/DUgEEWicva4ZTVf/o+0horzCEJl9f8NQ3XBtA5XeOKyeSF+
+	 AEoQTEduOeDaHg55GonjPd6ABQ2RDALrrLOafHuHcj65yHlXUtCLGS9/M+sBKaZ9Y3
+	 UQKJxxIK4FTew==
+From: Simon Horman <horms@kernel.org>
+Date: Mon, 02 Sep 2024 10:09:37 +0100
+Subject: [PATCH v2] MAINTAINERS: wifi: cw1200: add net-cw1200.h
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240902-wifi-mnt-v2-1-f5ad1f36e993@kernel.org>
+X-B4-Tracking: v=1; b=H4sIANCA1WYC/23MQQ6CMBCF4auQWVtDSyHqynsYFsXOwEQtZkqqh
+ vTuVtYu/5eXb4WIwhjhVK0gmDjyHEqYXQXXyYURFfvSYGpj64Pu1IuJ1SMsqiMyBo07+pag3J+
+ CxO+NuvSlJ47LLJ9NTvq3/kGSVlo1NDQDtd5a5843lID3/Swj9DnnL4LzrDehAAAA
+To: Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org
+X-Mailer: b4 0.14.0
 
-From: Michael Lo <michael.lo@mediatek.com>
+This is part of an effort [1] to assign a section in MAINTAINERS to header
+files that relate to Networking. In this case the files with "net" in
+their name.
 
-In multi-channel scenarios, the granted channel must be aborted before
-suspending. Otherwise, the firmware will be put into a wrong state,
-resulting in an association failure after resuming.
+[1] https://lore.kernel.org/netdev/20240821-net-mnt-v2-0-59a5af38e69d@kernel.org/
 
-With this patch, the granted channel will be aborted before suspending
-if necessary.
+It seems that net-cw1200.h is part of the CW1200 WLAN driver and
+this it is appropriate to add it to the section for that driver.
 
-Cc: stable@vger.kernel.org
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Signed-off-by: Michael Lo <michael.lo@mediatek.com>
-Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+Signed-off-by: Simon Horman <horms@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/main.c  | 15 +++++++++++++++
- .../net/wireless/mediatek/mt76/mt7925/mt7925.h    |  1 +
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c   |  2 ++
- 3 files changed, 18 insertions(+)
+Changes in v2:
+- As suggested by Kalle Valo
+  + Add to section for CW1200 WLAN driver instead of wireless drivers
+  + Simplify subject of patch
+- Update link in patch description to link to v2 rather than v1 of
+  corresponding series for Networking
+- Link to v1: https://lore.kernel.org/r/20240816-wifi-mnt-v1-1-3fb3bf5d44aa@kernel.org
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index 8c0768bf9343..7c05aebd3c20 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -439,6 +439,19 @@ static void mt7925_roc_iter(void *priv, u8 *mac,
- 	mt7925_mcu_abort_roc(phy, &mvif->bss_conf, phy->roc_token_id);
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8766f3e5e87e..d705e22f1d28 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5951,6 +5951,7 @@ F:	Documentation/process/cve.rst
+ CW1200 WLAN driver
+ S:	Orphan
+ F:	drivers/net/wireless/st/cw1200/
++F:	include/linux/platform_data/net-cw1200.h
  
-+void mt7925_roc_abort_sync(struct mt792x_dev *dev)
-+{
-+	struct mt792x_phy *phy = &dev->phy;
-+
-+	del_timer_sync(&phy->roc_timer);
-+	cancel_work_sync(&phy->roc_work);
-+	if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
-+		ieee80211_iterate_interfaces(mt76_hw(dev),
-+					     IEEE80211_IFACE_ITER_RESUME_ALL,
-+					     mt7925_roc_iter, (void *)phy);
-+}
-+EXPORT_SYMBOL_GPL(mt7925_roc_abort_sync);
-+
- void mt7925_roc_work(struct work_struct *work)
- {
- 	struct mt792x_phy *phy;
-@@ -1109,6 +1122,8 @@ static void mt7925_mac_link_sta_remove(struct mt76_dev *mdev,
- 	msta = (struct mt792x_sta *)link_sta->sta->drv_priv;
- 	mlink = mt792x_sta_to_link(msta, link_id);
- 
-+	mt7925_roc_abort_sync(dev);
-+
- 	mt76_connac_free_pending_tx_skbs(&dev->pm, &mlink->wcid);
- 	mt76_connac_pm_wake(&dev->mphy, &dev->pm);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-index 669f3a079d04..c5ea431998e0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -307,6 +307,7 @@ int mt7925_mcu_set_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
- 		       enum mt7925_roc_req type, u8 token_id);
- int mt7925_mcu_abort_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
- 			 u8 token_id);
-+void mt7925_roc_abort_sync(struct mt792x_dev *dev);
- int mt7925_mcu_fill_message(struct mt76_dev *mdev, struct sk_buff *skb,
- 			    int cmd, int *wait_seq);
- int mt7925_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index 6e4f4e78c350..39305c39362f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -449,6 +449,8 @@ static int mt7925_pci_suspend(struct device *device)
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
- 
-+	mt7925_roc_abort_sync(dev);
-+
- 	err = mt792x_mcu_drv_pmctrl(dev);
- 	if (err < 0)
- 		goto restore_suspend;
--- 
-2.45.2
+ CX18 VIDEO4LINUX DRIVER
+ M:	Andy Walls <awalls@md.metrocast.net>
 
