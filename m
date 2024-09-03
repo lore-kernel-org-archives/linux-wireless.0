@@ -1,88 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC50B1C6F7B;
-	Tue,  3 Sep 2024 18:59:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8CC41D7E48;
+	Tue,  3 Sep 2024 19:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725389966; cv=none; b=a8vTxcTNbsX4g+0XTizP7P8Oa4eBcFD3CmG20lsjxHyJLg/i98s2k6I1He0TgQxjqCbDGazp3rCqH10scf/ebq1+wc7E/nzYTf6jlCOmj5oNqW4sdClLk2xmhqZh3YdAP3vQzjQblpN2yP4WwQ1dCPuySOoTAJ3vO682ZxsfHLk=
+	t=1725391933; cv=none; b=jI9pF7NHtJvFLqRtmgvCqK3lJJOoMkroJTk3auWep6YXbaXgJNPyL11TmbsrzHxNR57DIt1U8IcokdkT2iK0otnYSoglCnrxdJ9nxBleJIaX2P3B5o2JIGY2JtMbevDzQSBBOUh8GlatiWCSaunxeHVcC26EZJCHU3ieWTmEays=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725389966; c=relaxed/simple;
-	bh=9TTFd2hhLualP7P0anivRWZJQY9eJQxI1ngy05lrXxo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HpDmymoLsrdL7wdhCHTs44IoYUHYW01aY4hFI1moC98MLbAXV3p41w/K9e6Gqb/gBeLJNoQlL4e6HzpNyH+XrX8gx0CBGJOC97PjlBjepQAXLdQNVwFePOusKouBlUYWuC6F5An0XxczORXJ9PpACgMQSyUTNG9ak44AycGfimg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J1F7Uwdp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725391933; c=relaxed/simple;
+	bh=8MLINbjMjqhdCMB4oHAJTmm2kpqKjua9hh+xhjX/6rY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WWBXOOdykD5Q3ZT/VXn8L7wxYZ9EU0TbBNitYxKsFy0ZB2KT/ySB8XLqMbtCzMW7xJDEM633UH/AfDwVeNpFRZuUDxu6MMY+mK+BlihVd1mhp5I4F35XLqbQf91HIYbSeIvlHJ0St6pdzLEOC2qu3/PQKhFO/oJ5WLI73olU0Ik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=lZ77E8Fx; arc=none smtp.client-ip=85.214.62.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J1F7Uwdp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F1ACC4CECD;
-	Tue,  3 Sep 2024 18:59:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725389966;
-	bh=9TTFd2hhLualP7P0anivRWZJQY9eJQxI1ngy05lrXxo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=J1F7UwdpA/pPZEwuZ0/4B+dyQecUZs4ue4kj+s2CJEyPYfHPZ0IqIEJOgD3Ifhorx
-	 5qMQc8p2qsGAGR9PPwxY9F2GjEfx2J9/X8wMagcmlpMy0GAGaBedOOiO/PT/oyqrlB
-	 C8HqFblUQ905PsjMgdgNV5ftgrRJJRB8r4+njGopFECEoSKrtgJe7QtYL76ssT3E0G
-	 kW2RBzcGNjIUnx4QxV6/rgUR1A+sbfP67u4Hx3nU7DmTxE7ijdJOpaJLhzHiP9g3Yd
-	 gCT0r06mtKL3lS7yikFsz7UR2Wf12g+lGZcRwizQ2K/b56Oq4UdTYc1jUQIAfPzQc2
-	 KBcc6yWpODipw==
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5343d2af735so5630239e87.1;
-        Tue, 03 Sep 2024 11:59:26 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUe2hfD/BMdqCHn0fVZCLVzo9p6SmTBWxQnBo+IbzeHCtfRnfTdFULvQDZUqhzhApVrPtozdmKRmYRxeFHtAaE=@vger.kernel.org, AJvYcCV5wGXPampX2hK6/vsEbNlbnXjKpgRhfuFYlV/Xe3mn//saIXU/3Ppxp/nNg057jm5Q9R5eqmQbX3B68mmj@vger.kernel.org, AJvYcCWzvkCJBOwuIfhdHD+sDYyjfnWGwZSQtjrhTckZEUnUyk+VLEl6+1jnyUi4NKP4cFX8wLc40n7b@vger.kernel.org, AJvYcCXZxC87KyH4g79omGOdHlAwMvyDC4e8klMo/QTpd6XQNYMSstYERHMymD6YesOXOEqbAai9AHPR9ycp@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKmWtvaZEFW8fm250Gjap1jTkJzUzlW2wQNKEgk3vkGZkGRNlc
-	NB2s1SzZFMbKIUBR6wiWq0CSaOaIEPymr5IDeJpzM+nBVRYnB+Xd6zwuhk51LjMf7+0ehJwxjSy
-	kYA7sXLBvfpi+xXojBCDXngL79g==
-X-Google-Smtp-Source: AGHT+IFpL/WAwaJEUddqnN23QW8H5LGR9Grih1m7MNNFfq750+qLMqm2X5GBNRTbFyO1BzABy+6jr6rWs+y4p6UfciU=
-X-Received: by 2002:a05:6512:3d8d:b0:52e:7f18:176b with SMTP id
- 2adb3069b0e04-53546afd8famr11677026e87.11.1725389964567; Tue, 03 Sep 2024
- 11:59:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="lZ77E8Fx"
+Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: marex@denx.de)
+	by phobos.denx.de (Postfix) with ESMTPSA id 77B8B88327;
+	Tue,  3 Sep 2024 21:32:07 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+	s=phobos-20191101; t=1725391928;
+	bh=wAAGGYTcJTdpi12h28wfzT/1+6+AXdlZu8G4suh51LQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=lZ77E8FxWp7XsQ0t0sCuLVsNCo3zYdstE9SpyH/codX9JZWniDiVYtPiIxzdleJ1V
+	 0aEf+eWlKzRyREzdSCP/PbeKbC0jt+WpQs5y4k8e1OON17VkVnUp+1d9hLgwsiqIQB
+	 yF7GaK0/8lf9mO/vXonSX+KEimur/Wp2a8iLSOVorOS34p8VpqqCCMxcc9Fbq0CUUm
+	 OEhcJ9g0DiGaqXRz04D3QFyQwrbeouqtZ2wFI/SJjPj53AFLLZ55PVvDzB3RHcpn+d
+	 zWoxvEbb2KDw2XGThEwssXIaYu/lnNxWaalB2idUR91RsCnBTsNCaYDG1Z0xsNlsol
+	 LN+mKzFkRJFjw==
+Message-ID: <57a7eac4-23c7-42ac-ade5-233c24a288c6@denx.de>
+Date: Tue, 3 Sep 2024 21:30:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240902225534.130383-1-vassilisamir@gmail.com>
- <20240902225534.130383-8-vassilisamir@gmail.com> <172537438003.978249.2559307502514402788.robh@kernel.org>
- <ZtckM-uRzxAnS15o@smile.fi.intel.com>
-In-Reply-To: <ZtckM-uRzxAnS15o@smile.fi.intel.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 3 Sep 2024 13:59:09 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqJ+bQx-0KsN3ZWsZbQuAs0rV9DDTAjT_jJy2OBfH1WXeA@mail.gmail.com>
-Message-ID: <CAL_JsqJ+bQx-0KsN3ZWsZbQuAs0rV9DDTAjT_jJy2OBfH1WXeA@mail.gmail.com>
-Subject: Re: [PATCH v1 7/7] of/irq: Make use of irq_get_trigger_type()
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Vasileios Amoiridis <vassilisamir@gmail.com>, nico@fluxnic.net, pabeni@redhat.com, 
-	daniel@ffwll.ch, davem@davemloft.net, kuba@kernel.org, olteanv@gmail.com, 
-	saravanak@google.com, linux-kernel@vger.kernel.org, mripard@kernel.org, 
-	edumazet@google.com, netdev@vger.kernel.org, 
-	brcm80211-dev-list.pdl@broadcom.com, f.fainelli@gmail.com, 
-	linux-wireless@vger.kernel.org, airlied@gmail.com, linus.walleij@linaro.org, 
-	brcm80211@lists.linux.dev, andrew@lunn.ch, devicetree@vger.kernel.org, 
-	linux@armlinux.org.uk, alsi@bang-olufsen.dk, tzimmermann@suse.de, 
-	kvalo@kernel.org, arend.vanspriel@broadcom.com, 
-	maarten.lankhorst@linux.intel.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/5] dt-bindings: wireless: wilc1000: Document WILC3000
+ compatible string
+To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
+ linux-wireless@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ "David S. Miller" <davem@davemloft.net>,
+ Adham Abozaeid <adham.abozaeid@microchip.com>,
+ Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
+ <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+ netdev@vger.kernel.org
+References: <20240829004510.178016-1-marex@denx.de>
+ <52e7b6d2-5d31-4ae1-bf1d-44e63a22774d@bootlin.com>
+Content-Language: en-US
+From: Marek Vasut <marex@denx.de>
+In-Reply-To: <52e7b6d2-5d31-4ae1-bf1d-44e63a22774d@bootlin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
 
-On Tue, Sep 3, 2024 at 9:59=E2=80=AFAM Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
->
-> On Tue, Sep 03, 2024 at 09:39:43AM -0500, Rob Herring (Arm) wrote:
-> > On Tue, 03 Sep 2024 00:55:34 +0200, Vasileios Amoiridis wrote:
->
-> ...
->
-> > Applied, thanks!
->
-> It was fast :-)
+On 9/3/24 6:09 PM, Alexis Lothoré wrote:
+> Hello everyone,
 
-You're right. I didn't really look at that and was catching up from holiday=
-s.
+Hi,
 
-> Vasileios, consider my previous comment as a material for followup,
-> if Rob likes the idea.
+> On 8/29/24 02:44, Marek Vasut wrote:
+>> Document compatible string for the WILC3000 chip. The chip is similar
+>> to WILC1000, except that the register layout is slightly different and
+>> it does not support WPA3/SAE.
+>>
+>> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>> Signed-off-by: Marek Vasut <marex@denx.de>
+> 
+> [...]
+> 
+>>   .../bindings/net/wireless/microchip,wilc1000.yaml           | 6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+>> index 2460ccc082371..5d40f22765bb6 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+>> +++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+>> @@ -16,7 +16,11 @@ description:
+>>   
+>>   properties:
+>>     compatible:
+>> -    const: microchip,wilc1000
+>> +    oneOf:
+>> +      - items:
+>> +          - const: microchip,wilc3000
+>> +          - const: microchip,wilc1000
+>> +      - const: microchip,wilc1000
+>>   
+>>     reg: true
+> 
+> Following this series first revision, I have been taking a look at how to
+> implement bluetooth feature for wilc3000 (the chip supports Bluetooth LE through
+> a separated UART, see [1]), and I am facing some constraints. I feel like the
+> possible solutions would conflict with this new binding, so even if I am a bit
+> late to the party, I would like to expose the issue before the binding is merged
+> in case we can find something which would allow to add bluetooth support without
+> too much pain after the wlan part.
+> 
+> Downstream driver currently does not implement bluetooth as a standard bluetooth
+> driver (module in drivers/bluetooth, registering a HCI device) but only performs
+> a minimal set of operations directly in the wlan part ([2]). Getting a version
+> valid for upstream would need the following points to be addressed:
+> 1. despite being controlled from a serial port for nominal operations, the
+> bluetooth part also depends on the "wlan" bus (spi or sdio) for initialization
+> 2. yet init steps are not performed on any kind of subsystem ops but through
+> writes to a custom chardev
+> 3. the driver does not register itself a hci interface, it is expected to be
+> done by userspace (hciattach).
+> 
+> It is only after those 3 steps that the chip can be used with standard hci
+> commands over serial port. IMHO 1 is the biggest point, because it means that
+> **a bluetooth driver for wilc3000 needs access to the bus used by wlan part**
+> (so only describing the bluetooth part of the chip as a child node of an uart
+> controller is not enough). Aside from bus access, I also expect some
+> interactions between bluetooth and wifi (eg: power management, sleep/wakeup)
 
-Yes. I've dropped the patch for now.
+Just a quick idea -- what about having a phandle to the BT UART node in 
+the wilc3000 node ? Then the wilc driver can check if the phandle is 
+available and valid, and attach the BT part to the UART, while also 
+doing all the necessary power sequencing and bus accesses via SDIO/SPI.
 
-Rob
+Like this:
+
+&uart10 {
+   status = "okay";
+};
+
+&mmc20 {
+   ...
+   wifi@0 {
+     compatible = "microchip,wilc1000";
+     microchip,bt-uart = <&uart10>; // OPTIONAL
+     ...
+   };
+};
