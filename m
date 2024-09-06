@@ -1,219 +1,139 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 962661411DE
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Sep 2024 06:45:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A6F40879;
+	Fri,  6 Sep 2024 07:17:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725605105; cv=none; b=uqdV/+VOJY3DSwA9OwMmMwc5WuTnmydj/v+YDe6+u75qbxI1SfVGmRsTFvl9Ptikglxk6yM2YPOHP9LK4U7poQbaMcFaVNLxDbryoUDYA4J1zdfFS/UP7j40DV3JVfKV4M8PldOnxVHcpD67fuqikh78Tjp2jMBra3cMLYdZyyQ=
+	t=1725607065; cv=none; b=VJCUcKzL3yjn7SzhGoAo0U0sB89YIEL4TgHAjFcRKw3M0ktGJUvUmB6l7aMdZP8gdDSNZ48lVELPFh/Df8oUYHEe5PeR/Kl+SZq5zre2nSiwlxLapmFq2+HgQworY/9VgQolJLpqebMxJQofRvngzDmwBojK06n+uCgXC2H/rt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725605105; c=relaxed/simple;
-	bh=mi0j3jRCszXuAmTRCu6CA7/gvY+GnkH5Busx87UO5Aw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bb4eai69Ov18/JZWX19bc4t1gB8ilgQb8nZHpRiHxP54N66W5WnZdPDVV/whsrDxjXM5+99Dl334PplmXIR4YJHyzPIhNGbpyunDlF0UIFgrgx0++Gxppc7GTTYG9xByEj2KTTg9PxjU3ZqYhJqW+JSoe3k+OIWt5QmnKDgS0kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=SJtYrj/Z; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1725607065; c=relaxed/simple;
+	bh=WgZ7zR8zKn5zumPzuMyTEMOyPSBrys9J6Q+8kLgo2xQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=koyrTaNHfGofs2yohcGiEMqiACXQGv2S6uVtlvyQmqJwYeM6hlc43My9xfbm1rtwbVkoYAfc9k2OmSOenn/JKHLqj1dURvsJ4qOgPXVx9K30s+D6TiM3vUoy65QV85kOefsGanJdOFWVArk1vwGjZkY9tm2i6vNqw7nhjoVOCes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=D3vI11jn; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="SJtYrj/Z"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 485IQ4Xg028299;
-	Fri, 6 Sep 2024 06:44:56 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="D3vI11jn"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 485IPpnH019562;
+	Fri, 6 Sep 2024 07:17:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	EyFcu8rSrv7blSej1lK28y93o1qGOwrr9zZxKBk7J1o=; b=SJtYrj/ZIGgvhKQZ
-	kf0kPabOe6m9l99ARFGGMRHwy1E+GXW3I73UbrGF6eqBWU8jKNU4o60EE4Kv2sy1
-	8IKUpFNAQH2VbnPKJuWno+w9Ms1OIXnkCdiPs6cWGHD1qfss8yOhZnvDtzWftDKg
-	kV08YsuP+TMQ3GmTXYUobqTsPWPW0cGbDoE6heSkUZHJFTGS8venf0L+mrCPS1z7
-	VTUqN9P77F4X7TsWmZyFR8H0XyxfSppCpaUgfhxppADqfjdoFex4FPnvENgrttAk
-	F1BC5aFl5UxnVIwCsfB8DhQNRGzom/qxp5Tbs2a1e4/LbbJoxv2kz0XkwHtZ442H
-	Gxwgdw==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41fhwu1bm8-1
+	xjBkVuHx5tmNXoe8jTAz2MZ+SIuGr4IBJ4WvYnMmroQ=; b=D3vI11jn+ZiefM4m
+	ZvYVo+CRCSF7vmeHAgJDeqrpPuSeDGR2DuwBIzT3jyb64d6Ji8G4zT3mlMUGf9XB
+	vVn3Cr1NMb/PJ+omuN7h06EUBqaAeEl5UrhEC6q6jbsOUVpAUxXwZvs19rwi1yeJ
+	1sox9fO5AReUyAfAxiiVaUZAOQgz062I+lfQFRyTtpL635uIHJ3yCkLMehtMkfhr
+	sjL9rkHBJ0MixNODwDGonUyLFHgx1HtRPeQtbihGf2S9L4PB0325vHk4XhNNve2i
+	R8G5Otb2EoAzhn6Kh1pckzrK4Rhi0nhkRRWxbmra5nnyvMyGX3jt0B3848P5q5LQ
+	A7JZtA==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41fhwu1dek-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 06 Sep 2024 06:44:55 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4866itQF018413
+	Fri, 06 Sep 2024 07:17:37 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4867HbVq026270
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 6 Sep 2024 06:44:55 GMT
-Received: from hu-adisi-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Thu, 5 Sep 2024 23:44:53 -0700
-From: Aditya Kumar Singh <quic_adisi@quicinc.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Aditya Kumar Singh
-	<quic_adisi@quicinc.com>
-Subject: [PATCH v6 6/8] wifi: mac80211: handle DFS per link
-Date: Fri, 6 Sep 2024 12:14:24 +0530
-Message-ID: <20240906064426.2101315-7-quic_adisi@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240906064426.2101315-1-quic_adisi@quicinc.com>
-References: <20240906064426.2101315-1-quic_adisi@quicinc.com>
+	Fri, 6 Sep 2024 07:17:37 GMT
+Received: from [10.151.41.25] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 6 Sep 2024
+ 00:17:34 -0700
+Message-ID: <8f64a4ab-abf5-4afe-bc4f-725fc89d27ec@quicinc.com>
+Date: Fri, 6 Sep 2024 12:47:31 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ath11k: allow missing memory-regions
+To: Caleb Connolly <caleb.connolly@linaro.org>,
+        Jeff Johnson
+	<jjohnson@kernel.org>, Kalle Valo <kvalo@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <ath11k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>
+References: <20240904095815.1572186-2-caleb.connolly@linaro.org>
+Content-Language: en-US
+From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+In-Reply-To: <20240904095815.1572186-2-caleb.connolly@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+ nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 8Imdrf5X_swjIi_68OprBwKYC1_w6y0U
-X-Proofpoint-GUID: 8Imdrf5X_swjIi_68OprBwKYC1_w6y0U
+X-Proofpoint-ORIG-GUID: Fkny-sO44lEgSpwv8d--Zod8DZd72V0k
+X-Proofpoint-GUID: Fkny-sO44lEgSpwv8d--Zod8DZd72V0k
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-05_17,2024-09-05_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- bulkscore=0 priorityscore=1501 clxscore=1015 impostorscore=0 spamscore=0
- mlxscore=0 malwarescore=0 suspectscore=0 mlxlogscore=999 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2408220000 definitions=main-2409060048
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 adultscore=0 suspectscore=0
+ clxscore=1011 mlxscore=0 mlxlogscore=898 phishscore=0 impostorscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2408220000 definitions=main-2409060051
 
-In order to support DFS with MLO, handle the link ID now passed from
-cfg80211, adjust the code to do everything per link and call the
-notifications to cfg80211 correctly.
+On 9/4/2024 3:27 PM, Caleb Connolly wrote:
+> On SC7280 platforms which are running with TrustZone, it is not
+> necessary to manually map the memory regions used by the wifi hardware.
+> However, ath11k will currently fail to load unless both memory regions
+> are specified.
+> 
+> This breaks wifi on the rb3gen2 which only specifies the firmware memory
+> region and does not use the CE region.
+> 
+> Adjust the order of operations in ath11k_ahb_fw_resources_init() to
+> check for the wifi-firmware subnode before attempting to parse the
+> memory regions.
+> 
+> Signed-off-by: Caleb Connolly <caleb.connolly@linaro.org>
+> ---
+> Cc: linux-arm-msm@vger.kernel.org
+> ---
+>  drivers/net/wireless/ath/ath11k/ahb.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+> index 634d385fd9ad..e24f8da565db 100644
+> --- a/drivers/net/wireless/ath/ath11k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath11k/ahb.c
+> @@ -999,20 +999,20 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
+>  	 */
+>  	if (!ab->hw_params.fixed_fw_mem)
+>  		return 0;
+>  
+> -	ret = ath11k_ahb_setup_msa_resources(ab);
+> -	if (ret) {
+> -		ath11k_err(ab, "failed to setup msa resources\n");
+> -		return ret;
+> -	}
+> -
+>  	node = of_get_child_by_name(host_dev->of_node, "wifi-firmware");
+>  	if (!node) {
+>  		ab_ahb->fw.use_tz = true;
+>  		return 0;
+>  	}
+>  
+> +	ret = ath11k_ahb_setup_msa_resources(ab);
+> +	if (ret) {
+> +		ath11k_err(ab, "failed to setup msa resources\n");
+> +		return ret;
+> +	}
+> +
+>  	info.fwnode = &node->fwnode;
+>  	info.parent = host_dev;
+>  	info.name = node->name;
+>  	info.dma_mask = DMA_BIT_MASK(32);
 
-Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
----
- net/mac80211/cfg.c  | 26 ++++++++++++++++++--------
- net/mac80211/link.c | 10 ++++++++++
- net/mac80211/util.c | 28 +++++++++++++++++++---------
- 3 files changed, 47 insertions(+), 17 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 67dd780530fb..57e66c671e2e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3467,6 +3467,7 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_chan_req chanreq = { .oper = *chandef };
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_link_data *link_data;
- 	int err;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
-@@ -3474,16 +3475,20 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	if (!list_empty(&local->roc_list) || local->scanning)
- 		return -EBUSY;
- 
-+	link_data = sdata_dereference(sdata->link[link_id], sdata);
-+	if (!link_data)
-+		return -ENOLINK;
-+
- 	/* whatever, but channel contexts should not complain about that one */
--	sdata->deflink.smps_mode = IEEE80211_SMPS_OFF;
--	sdata->deflink.needed_rx_chains = local->rx_chains;
-+	link_data->smps_mode = IEEE80211_SMPS_OFF;
-+	link_data->needed_rx_chains = local->rx_chains;
- 
--	err = ieee80211_link_use_channel(&sdata->deflink, &chanreq,
-+	err = ieee80211_link_use_channel(link_data, &chanreq,
- 					 IEEE80211_CHANCTX_SHARED);
- 	if (err)
- 		return err;
- 
--	wiphy_delayed_work_queue(wiphy, &sdata->deflink.dfs_cac_timer_work,
-+	wiphy_delayed_work_queue(wiphy, &link_data->dfs_cac_timer_work,
- 				 msecs_to_jiffies(cac_time_ms));
- 
- 	return 0;
-@@ -3494,16 +3499,21 @@ static void ieee80211_end_cac(struct wiphy *wiphy,
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_link_data *link_data;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		link_data = sdata_dereference(sdata->link[link_id], sdata);
-+		if (!link_data)
-+			continue;
-+
- 		wiphy_delayed_work_cancel(wiphy,
--					  &sdata->deflink.dfs_cac_timer_work);
-+					  &link_data->dfs_cac_timer_work);
- 
--		if (sdata->wdev.links[0].cac_started) {
--			ieee80211_link_release_channel(&sdata->deflink);
--			sdata->wdev.links[0].cac_started = false;
-+		if (sdata->wdev.links[link_id].cac_started) {
-+			ieee80211_link_release_channel(link_data);
-+			sdata->wdev.links[link_id].cac_started = false;
- 		}
- 	}
- }
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index b4378969cbf1..0bbac64d5fa0 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -77,6 +77,16 @@ void ieee80211_link_stop(struct ieee80211_link_data *link)
- 			  &link->color_change_finalize_work);
- 	wiphy_work_cancel(link->sdata->local->hw.wiphy,
- 			  &link->csa.finalize_work);
-+
-+	if (link->sdata->wdev.links[link->link_id].cac_started) {
-+		wiphy_delayed_work_cancel(link->sdata->local->hw.wiphy,
-+					  &link->dfs_cac_timer_work);
-+		cfg80211_cac_event(link->sdata->dev,
-+				   &link->conf->chanreq.oper,
-+				   NL80211_RADAR_CAC_ABORTED,
-+				   GFP_KERNEL, link->link_id);
-+	}
-+
- 	ieee80211_link_release_channel(link);
- }
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c4fd60fbcfd4..2e37d2639074 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3471,20 +3471,30 @@ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	struct cfg80211_chan_def chandef;
-+	struct ieee80211_link_data *link;
-+	unsigned int link_id;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		wiphy_delayed_work_cancel(local->hw.wiphy,
--					  &sdata->deflink.dfs_cac_timer_work);
--
--		if (sdata->wdev.links[0].cac_started) {
--			chandef = sdata->vif.bss_conf.chanreq.oper;
--			ieee80211_link_release_channel(&sdata->deflink);
--			cfg80211_cac_event(sdata->dev,
--					   &chandef,
-+		for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS;
-+		     link_id++) {
-+			link = sdata_dereference(sdata->link[link_id],
-+						 sdata);
-+			if (!link)
-+				continue;
-+
-+			wiphy_delayed_work_cancel(local->hw.wiphy,
-+						  &link->dfs_cac_timer_work);
-+
-+			if (!sdata->wdev.links[link_id].cac_started)
-+				continue;
-+
-+			chandef = link->conf->chanreq.oper;
-+			ieee80211_link_release_channel(link);
-+			cfg80211_cac_event(sdata->dev, &chandef,
- 					   NL80211_RADAR_CAC_ABORTED,
--					   GFP_KERNEL, 0);
-+					   GFP_KERNEL, link_id);
- 		}
- 	}
- }
--- 
-2.34.1
+ath11k_ahb_setup_msa_resources(ab), will only read the device-tree and
+save the memory addresses/size form device-tree to ab_ahb->fw.
+These saved address, only used if "wifi-firmware" node is defined.
+This the node "wifi-firmware" is not defined it is considered to be
+running with TrustZone, and saved addresses are not of use.
 
+This changes looks fine.
