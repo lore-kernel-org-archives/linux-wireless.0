@@ -1,110 +1,223 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A1520B04
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Sep 2024 17:40:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529A654278;
+	Mon,  9 Sep 2024 19:30:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725903633; cv=none; b=gtt6W0RhHfAR4DPG2w17nXALtO5ozlKYcHMjQj7cH+tNOep/FLhDJvON+4W7hzeTqpvfyKHDrDJbuGKLMZIChjecssNi2q0LRqRbJrB0rzJr9eTHxyOztw3kKAWZZZiodeJa/r4NMAvv3L5CI8SZbmVN0dP5weHSuJS367fel+M=
+	t=1725910258; cv=none; b=ELTN9D7+4579J3svsompwNtyXb0kfydb7T1BI2/WVOH245rguOS74qJZl+EjOrM+OxU8ZUKaZVnyq/IvdiiuYt6UEOvxg1k9GU2GuCFZFYlbXkPTpoLCAPMU+hJJC2U2I5iTa44kIZ78VD6uEnKW0qlybpAEZcpK3S03OfchZ4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725903633; c=relaxed/simple;
-	bh=AtmZVGQ1z32CRVXcR1nEktBUb28OAe2Lo7zj4Sh7yw0=;
-	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
-	 Cc:Message-ID:Date; b=Bbcfd80d8u5+wDoPq2SVvCdTgPi8avzI7px+mdOsom9DUn2ictm0RRMKPQ/efRqKpD5A4+ojNbu28Lv9xumY5BSZzSCmsh52IuOI05n7xAKe6HufDjLA2QdcWHGRo2IZn4Oc8zrtxOlgyI3Pzk7R/v+R8FRDcJ20q8duXsmmZFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HKm1U9H0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1725910258; c=relaxed/simple;
+	bh=qr56DtYrHdgiZV3g/LYYA83yl2OUOV6K9evFrYVfxrs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HoNjl/6iJDz2YVOgjrlPNWzn6eoGs2Jb7rWoDxLtABKgarE/RRS7vBQRPXbnzcJxv/Zs3bc//IbbezJiCYVQj0XapgniBe4RHeypei0z6/6az1OIdEvLfx6K+TfA4MwUoFHNTbOOU/3LBvw7zGnISO6Xk9XxEtAOpnt4FhrQF4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=LG4IeG2n; arc=none smtp.client-ip=85.214.62.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HKm1U9H0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED7F7C4CEC5;
-	Mon,  9 Sep 2024 17:40:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725903632;
-	bh=AtmZVGQ1z32CRVXcR1nEktBUb28OAe2Lo7zj4Sh7yw0=;
-	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-	b=HKm1U9H0EHhag0g5R13J65bO/jr33meW90Ak1eN73Dzsxh5eYMGFN8+dixJQH9I0r
-	 Qf5U4qmWbuAxYKY/CL7nVBsXC72hvT4WcKutBw9jMsh28mE1rfBoMXKeWmijSPFEN0
-	 PHWqJCsNou61Sdn/mRzN7FE7sBcWfDUzb5RNOqKtdgyh7vmwOIxhstws5b08vu6KW9
-	 KGv6wiSQ3Cxx3Y/LlprFalQGvqn1SCfebYyfsRfKW9Mw3nDDan+nALJgk6rc/Vh7I+
-	 ipoUyJJFmbNF9Jjzc2dUFOdLYl1o9AW42oEcG6OpewyKda4kVXkAlGMHW4z8x/ohFi
-	 BtF0oZicOV8/Q==
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="LG4IeG2n"
+Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: marex@denx.de)
+	by phobos.denx.de (Postfix) with ESMTPSA id 2FC2E88E14;
+	Mon,  9 Sep 2024 21:30:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+	s=phobos-20191101; t=1725910254;
+	bh=/XXpCFsK+/vXumao/BTZm/NVu5PoJrUWn4nPaw2TDaA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=LG4IeG2n96Xndwu4pZz1AemrEIq+l6/PNgKS53gxcFL0CsZSDFvHsRaX6dgvaB7P9
+	 Mn8WPtGfwU7v3eRpEUFuR69aCw7kZrztlRGVtXJo/+lR5zR0OgDqYMAxGc7eGmnbQ9
+	 J98AfVM/97nVlrJ7ukY9l1b9L2W36Z4SNRA1BqJwHlg8Hwg2FCAHbD2guU9cVka8er
+	 1MlCkXmCJ47BL++dWa/tnZcO8lHOg0Str3/JVHS45dqM4wgydoZ+arRUx6VtdhbQdg
+	 ATcSoqTSuv2/3iA69qPrYYEULJs1pZ3KsMw0/mnOIC/BtWBC+coqrpf4YzTCu2HHjp
+	 sEyFVgChz5AWQ==
+From: Marek Vasut <marex@denx.de>
+To: linux-wireless@vger.kernel.org
+Cc: Marek Vasut <marex@denx.de>,
+	=?UTF-8?q?Alexis=20Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Adham Abozaeid <adham.abozaeid@microchip.com>,
+	Ajay Singh <ajay.kathat@microchip.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Kalle Valo <kvalo@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Rob Herring <robh@kernel.org>,
+	devicetree@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH v5 3/9] wifi: wilc1000: Fold chip_allow_sleep()/chip_wakeup() into wlan.c
+Date: Mon,  9 Sep 2024 21:29:44 +0200
+Message-ID: <20240909193035.69823-3-marex@denx.de>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240909193035.69823-1-marex@denx.de>
+References: <20240909193035.69823-1-marex@denx.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Subject: Re: pull-request: ath-next-20240909
-From: Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <13914e4d-92d4-4ccd-a7d5-86c5a17426e8@quicinc.com>
-References: <13914e4d-92d4-4ccd-a7d5-86c5a17426e8@quicinc.com>
-To: Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
- <ath11k@lists.infradead.org>, <ath12k@lists.infradead.org>,
- <quic_jjohnson@quicinc.com>, <quic_kvalo@quicinc.com>
-User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <172590362906.2257202.15489777283532077082.kvalo@kernel.org>
-Date: Mon,  9 Sep 2024 17:40:30 +0000 (UTC)
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
 
-Jeff Johnson <quic_jjohnson@quicinc.com> wrote:
+Neither chip_allow_sleep()/chip_wakeup() is used outside of wlan.c .
+Make both functions static and remove both the exported symbol and
+entries from wlan.h .
 
-> The following changes since commit ae98f5c9fd8ba84cd408b41faa77e65bf1b4cdfa:
-> 
->   Merge tag 'ath-next-20240812' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath (2024-08-13 12:58:32 +0300)
-> 
-> are available in the Git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git tags/ath-next-20240909
-> 
-> for you to fetch changes up to 02f454f9aa6255d99611d6a4e37edd08812878df:
-> 
->   wifi: ath12k: Avoid -Wflex-array-member-not-at-end warnings (2024-09-05 19:20:21 +0300)
-> 
-> ----------------------------------------------------------------
-> ath.git patches for v6.12
-> 
-> This is once again a fairly light pull request since ath12k is still
-> working on MLO-related changes, and the other drivers are mostly in
-> maintenance mode.
-> 
-> ath12k
-> 
-> * Fix a frame-larger-than warning seen with debug builds
-> * Fix flex-array-member-not-at-end warnings
-> 
-> ath11k
-> 
-> * Fix flex-array-member-not-at-end warnings
-> 
-> ath9k
-> 
-> * Fix a syzbot-reported issue on USB-based devices
-> 
-> ----------------------------------------------------------------
-> Gustavo A. R. Silva (2):
->       wifi: ath11k: Avoid -Wflex-array-member-not-at-end warnings
->       wifi: ath12k: Avoid -Wflex-array-member-not-at-end warnings
-> 
-> Miaoqing Pan (1):
->       wifi: ath12k: fix the stack frame size warning in ath12k_mac_op_hw_scan
-> 
-> Toke Høiland-Jørgensen (1):
->       wifi: ath9k_htc: Use __skb_set_length() for resetting urb before resubmit
-> 
->  drivers/net/wireless/ath/ath11k/core.h   |  8 ++++-
->  drivers/net/wireless/ath/ath11k/dp.h     | 23 --------------
->  drivers/net/wireless/ath/ath12k/core.h   |  8 ++++-
->  drivers/net/wireless/ath/ath12k/dp.h     | 12 -------
->  drivers/net/wireless/ath/ath12k/mac.c    | 54 ++++++++++++++++++--------------
->  drivers/net/wireless/ath/ath9k/hif_usb.c |  6 ++--
->  6 files changed, 46 insertions(+), 65 deletions(-)
+Make chip_allow_sleep() return error code in preparation for the
+follow up patches.
 
-Pulled, thanks.
+Move acquire_bus() and release_bus() to avoid forward declaration
+of chip_allow_sleep()/chip_wakeup().
 
-fe57beb026ef Merge tag 'ath-next-20240909' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
+Reviewed-by: Alexis Lothoré <alexis.lothore@bootlin.com>
+Signed-off-by: Marek Vasut <marex@denx.de>
+---
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Adham Abozaeid <adham.abozaeid@microchip.com>
+Cc: Ajay Singh <ajay.kathat@microchip.com>
+Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+V2: New patch
+V3: No change
+V4: Add RB from Alexis
+V5: No change
+---
+ .../net/wireless/microchip/wilc1000/wlan.c    | 47 +++++++++----------
+ .../net/wireless/microchip/wilc1000/wlan.h    |  2 -
+ 2 files changed, 23 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/wireless/microchip/wilc1000/wlan.c
+index 5b7dd37267de0..d228c5df82628 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.c
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -12,20 +12,6 @@
+ 
+ #define WAKE_UP_TRIAL_RETRY		10000
+ 
+-static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
+-{
+-	mutex_lock(&wilc->hif_cs);
+-	if (acquire == WILC_BUS_ACQUIRE_AND_WAKEUP && wilc->power_save_mode)
+-		chip_wakeup(wilc);
+-}
+-
+-static inline void release_bus(struct wilc *wilc, enum bus_release release)
+-{
+-	if (release == WILC_BUS_RELEASE_ALLOW_SLEEP && wilc->power_save_mode)
+-		chip_allow_sleep(wilc);
+-	mutex_unlock(&wilc->hif_cs);
+-}
+-
+ static void wilc_wlan_txq_remove(struct wilc *wilc, u8 q_num,
+ 				 struct txq_entry_t *tqe)
+ {
+@@ -555,7 +541,7 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
+ 	return rqe;
+ }
+ 
+-void chip_allow_sleep(struct wilc *wilc)
++static int chip_allow_sleep(struct wilc *wilc)
+ {
+ 	u32 reg = 0;
+ 	const struct wilc_hif_func *hif_func = wilc->hif_func;
+@@ -584,7 +570,7 @@ void chip_allow_sleep(struct wilc *wilc)
+ 	while (--trials) {
+ 		ret = hif_func->hif_read_reg(wilc, to_host_from_fw_reg, &reg);
+ 		if (ret)
+-			return;
++			return ret;
+ 		if ((reg & to_host_from_fw_bit) == 0)
+ 			break;
+ 	}
+@@ -594,28 +580,28 @@ void chip_allow_sleep(struct wilc *wilc)
+ 	/* Clear bit 1 */
+ 	ret = hif_func->hif_read_reg(wilc, wakeup_reg, &reg);
+ 	if (ret)
+-		return;
++		return ret;
+ 	if (reg & wakeup_bit) {
+ 		reg &= ~wakeup_bit;
+ 		ret = hif_func->hif_write_reg(wilc, wakeup_reg, reg);
+ 		if (ret)
+-			return;
++			return ret;
+ 	}
+ 
+ 	ret = hif_func->hif_read_reg(wilc, from_host_to_fw_reg, &reg);
+ 	if (ret)
+-		return;
++		return ret;
+ 	if (reg & from_host_to_fw_bit) {
+ 		reg &= ~from_host_to_fw_bit;
+ 		ret = hif_func->hif_write_reg(wilc, from_host_to_fw_reg, reg);
+ 		if (ret)
+-			return;
+-
++			return ret;
+ 	}
++
++	return 0;
+ }
+-EXPORT_SYMBOL_GPL(chip_allow_sleep);
+ 
+-void chip_wakeup(struct wilc *wilc)
++static void chip_wakeup(struct wilc *wilc)
+ {
+ 	u32 ret = 0;
+ 	u32 clk_status_val = 0, trials = 0;
+@@ -674,7 +660,20 @@ void chip_wakeup(struct wilc *wilc)
+ 	if (wilc->io_type == WILC_HIF_SPI)
+ 		wilc->hif_func->hif_reset(wilc);
+ }
+-EXPORT_SYMBOL_GPL(chip_wakeup);
++
++static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire)
++{
++	mutex_lock(&wilc->hif_cs);
++	if (acquire == WILC_BUS_ACQUIRE_AND_WAKEUP && wilc->power_save_mode)
++		chip_wakeup(wilc);
++}
++
++static inline void release_bus(struct wilc *wilc, enum bus_release release)
++{
++	if (release == WILC_BUS_RELEASE_ALLOW_SLEEP && wilc->power_save_mode)
++		chip_allow_sleep(wilc);
++	mutex_unlock(&wilc->hif_cs);
++}
+ 
+ void host_wakeup_notify(struct wilc *wilc)
+ {
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/wireless/microchip/wilc1000/wlan.h
+index ae187192a79c6..e75a5c8aaecec 100644
+--- a/drivers/net/wireless/microchip/wilc1000/wlan.h
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
+@@ -438,8 +438,6 @@ void wilc_wfi_p2p_rx(struct wilc_vif *vif, u8 *buff, u32 size);
+ bool wilc_wfi_mgmt_frame_rx(struct wilc_vif *vif, u8 *buff, u32 size);
+ void host_wakeup_notify(struct wilc *wilc);
+ void host_sleep_notify(struct wilc *wilc);
+-void chip_allow_sleep(struct wilc *wilc);
+-void chip_wakeup(struct wilc *wilc);
+ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
+ 			 u32 count);
+ int wilc_wlan_init(struct net_device *dev);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/13914e4d-92d4-4ccd-a7d5-86c5a17426e8@quicinc.com/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.45.2
 
