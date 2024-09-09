@@ -1,108 +1,81 @@
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658111AD3FC;
-	Mon,  9 Sep 2024 09:39:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2711741C8;
+	Mon,  9 Sep 2024 09:41:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725874767; cv=none; b=cNbsCKTBWCw7SeU+4fWIbFIYKxX4lYKKZPtk9NXtfoPFLihiIBhgpNvErb3DS5Ce+ITyzXmf+8JNIrujv0rQ+InwOUHyW9wORnfm9T8VnTt2BIu51L2bROVjJYzxJk6mqiLk5uLl9HAI0RMNl6QwLnqFlurQDrmtiANgmDP7LGY=
+	t=1725874869; cv=none; b=g+Ip87ArXzWc5sjm/51uur3PeNAke3T9uzGta012jMbe9BcIZHsU/63Wbu2WpPNFINa2ULwDPDpBVyZwVj5lqZwqTaf63fUc73OiwOYM/xnoHSNbr+RWxl2Tjs9QjDOLTqvyvQBpil2yquo4LHpnR0M/twswDTUbcIFKh0eOP9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725874767; c=relaxed/simple;
-	bh=lBf/CNQ88ALyzNV0GvFdAbVq64+WOreVBfo10rTF9yo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=HWqY1uTckFXFXebzHsD0mz/fkSYvVJUwgpCwsLzahAYDbzjDPySQ+uiX9jUt/xeztmM4BhJYYUWYROG1YlCiFgY22EP9MPdroYBtemB/rKu1Xp8bakXxGMM8fDlU0lsmszS/KDmGSYwRqjISkLaYIx4xFQmjH7p0G42F+Q3bt5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ENx3/TxX; arc=none smtp.client-ip=198.47.19.142
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1725874869; c=relaxed/simple;
+	bh=3N42rW920d6Vugk4DbxBfxF+GZkBmGZde1OUtyetVwE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=oMuU/gfrxwY3vxZR0RZ3cHqciUcxye0Mn3OFBzb633IDoTNbYJrauhRf8rQHnslDdoCxsTNDDP0kVgSQl75OTZ+qdAjGTu03xpodAh1HFhhdmbzYK4lS4BXmh/5IgDfk2UCHSXJC19obMlV4bwkaN9kexLPKvZiqNGhUBtjJDpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=a/qR3uOJ; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ENx3/TxX"
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 4899d4vt094424;
-	Mon, 9 Sep 2024 04:39:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1725874744;
-	bh=2WKxLYR2ujHMEycARUDpMqJCzOD5eM5Uqny1jowdwfc=;
-	h=Date:Subject:To:CC:References:From:In-Reply-To;
-	b=ENx3/TxXbpvjL/1NAd3/K+7EdnPRX2BeMuWxjvo9v3S2OREThfIgE6ZuEDPyz40rM
-	 hTRr1z6wKpJ2C/iB2awzkq1yx/qKGUk6wGt2TlAVlgdIZIc4j7y3f/KCYlV8Aq/3TF
-	 bdKQ+4SBvQOvUOUe8WKvkIKm9AOXwrMnwFohYFis=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-	by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 4899d4oT061987
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 9 Sep 2024 04:39:04 -0500
-Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Mon, 9
- Sep 2024 04:39:04 -0500
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Mon, 9 Sep 2024 04:39:04 -0500
-Received: from [10.250.149.85] ([10.250.149.85])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4899cxi2035247;
-	Mon, 9 Sep 2024 04:39:00 -0500
-Message-ID: <c2886640-e342-4b2f-8c24-02c6edd901eb@ti.com>
-Date: Mon, 9 Sep 2024 13:38:58 +0400
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="a/qR3uOJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=3rF3U3vmHpfPcmokJPPRhAa75wEQKBtpcfNTesoYMyU=;
+	t=1725874863; x=1727084463; b=a/qR3uOJUb3aWpbUQkI6Vc5NIUlzeVgK6gbFD1A2IL2MJsT
+	dcSsnzpy75lJY6qb0/a3dygL91yh03Dy7/3qKOd6iDYP4RxUn7TGcohNMjdqL3OP8MMj0D6YDTzgt
+	aDrfpqzUpTY+tGbHhQex3/IA1MD1mZTjqMQmMIXjNCILxY98DYFTqwOR2Tq5Q8lf+vUcpuKz8Aztt
+	hlr9eQH7upJa/93oaNciJFH3QVGw9iXXWJi7HYAZl9rD1vsdlIzpY9Ayxe/79xN7V+IwjXMaGYoIb
+	ERCFnxuVlNClBqdZ6J3qMOfRjMFUoUdSOFXh2ur8fwyGxJMtzYi4Wh2zLL5Am1Kg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.97)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1snaDC-00000002I2K-201P;
+	Mon, 09 Sep 2024 10:57:30 +0200
+Message-ID: <dac6bfc0a0d5b92fdcb0d330d5e4839d2e119154.camel@sipsolutions.net>
+Subject: Re: linux-next: build warnings after merge of the wireless-next tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stephen Rothwell <sfr@canb.auug.org.au>, Kalle Valo <kvalo@kernel.org>
+Cc: Aditya Kumar Singh <quic_adisi@quicinc.com>, Wireless
+	 <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List
+	 <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+	 <linux-next@vger.kernel.org>
+Date: Mon, 09 Sep 2024 10:57:29 +0200
+In-Reply-To: <20240909183924.73c3c91d@canb.auug.org.au>
+References: <20240909183924.73c3c91d@canb.auug.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next v2 3/3] wifi: wlcore: sdio: Use helper to
- define resources
-To: Vasileios Amoiridis <vassilisamir@gmail.com>,
-        <arend.vanspriel@broadcom.com>, <kvalo@kernel.org>
-CC: <knaerzche@gmail.com>, <leitao@debian.org>, <linus.walleij@linaro.org>,
-        <javierm@redhat.com>, <linux-wireless@vger.kernel.org>,
-        <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>,
-        <linux-kernel@vger.kernel.org>, <sabeeh-khan@ti.com>
-References: <20240904154919.118513-1-vassilisamir@gmail.com>
- <20240904154919.118513-4-vassilisamir@gmail.com>
-Content-Language: en-US
-From: "Khan, Sabeeh" <sabeeh-khan@ti.com>
-In-Reply-To: <20240904154919.118513-4-vassilisamir@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-malware-bazaar: not-scanned
 
-Hi Vasileios,
+On Mon, 2024-09-09 at 18:39 +1000, Stephen Rothwell wrote:
+> Hi all,
+>=20
+> After merging the wireless-next tree, today's linux-next build (htmldocs)
+> produced these warnings:
+>=20
+> next/Documentation/driver-api/80211/cfg80211:14: next/include/net/cfg8021=
+1.h:6219: WARNING: Inline strong start-string without end-string.
+> next/Documentation/driver-api/80211/cfg80211:14: next/include/net/cfg8021=
+1.h:6219: WARNING: Inline strong start-string without end-string.
+> next/Documentation/driver-api/80211/cfg80211:14: next/include/net/cfg8021=
+1.h:6219: WARNING: Inline strong start-string without end-string.
+>=20
+> Introduced by commit
+>=20
+>   62c16f219a73 ("wifi: cfg80211: move DFS related members to links[] in w=
+ireless_dev")
+>=20
 
-On 9/4/2024 7:49 PM, Vasileios Amoiridis wrote:
-> Resources definition can become simpler and more organised by
-> using the dedicated helpers.
->
-> Signed-off-by: Vasileios Amoiridis <vassilisamir@gmail.com>
-> ---
->  drivers/net/wireless/ti/wlcore/sdio.c | 11 ++++-------
->  1 file changed, 4 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-> index 9e1b644beba9..a73207bbe5d7 100644
-> --- a/drivers/net/wireless/ti/wlcore/sdio.c
-> +++ b/drivers/net/wireless/ti/wlcore/sdio.c
-> @@ -323,15 +323,12 @@ static int wl1271_probe(struct sdio_func *func,
->  
->  	memset(res, 0x00, sizeof(res));
->  
-> -	res[0].start = irq;
-> -	res[0].flags = IORESOURCE_IRQ | irq_get_trigger_type(irq);
-> -	res[0].name = "irq";
-> -
-> +	res[0] = DEFINE_RES_IRQ_NAMED(irq, "irq");
-> +	res[0].flags |= irq_get_trigger_type(irq);
->  
->  	if (wakeirq > 0) {
-> -		res[1].start = wakeirq;
-> -		res[1].flags = IORESOURCE_IRQ | irq_get_trigger_type(wakeirq);
-> -		res[1].name = "wakeirq";
-> +		res[1] = DEFINE_RES_IRQ_NAMED(wakeirq, "wakeirq");
-> +		res[1].flags |= irq_get_trigger_type(wakeirq);
->  		num_irqs = 2;
->  	} else {
->  		num_irqs = 1;
+Thanks for the report. kernel-doc htmldocs isn't part of the process I
+usually do.
 
-Tested-by: Sabeeh Khan <sabeeh-khan@ti.com>
-Reviewed-by: Sabeeh Khan <sabeeh-khan@ti.com>
-
+I don't even really know what this means, but I'll try to figure out a
+way to fix it. Looks like it's due to the @ references there, which I'm
+not sure are correct anyway, so I guess I'll just remove those.
+johannes
