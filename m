@@ -1,40 +1,40 @@
 Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94133187856;
-	Mon,  9 Sep 2024 19:30:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6DF179202;
+	Mon,  9 Sep 2024 19:31:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725910260; cv=none; b=C1fTDK9sOq+KGSR53b8J6f71BRgb6wlTl3oKgglSO8gaiORFEwZw5bXAaG9PNc+AGbi5wfIDMwaBfe5YqHQ1i/YlRLhZvOCYjDZ2kTMtzH7Cxo2yg63zt8grVHCzUg+n/aAhXxBiXWC8Bnlca2KJVfbOsuGVOK1Ju5t1gupXbsE=
+	t=1725910262; cv=none; b=T6+RIDQ3hzuLm5+2hibwef0T8DH9+1goT+RxR45+2OrwljT3sgpbL0UoPeAUDNILtjktlx1v2rE2SZsl4115unIrvLMFs7DH18L8Frr/Ip5NJ59xHLQ3ymM6LGcJMciz07iIWTbS3T67ywO5zyjtZEj3/nc/sLvdnLCbP63mT1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725910260; c=relaxed/simple;
-	bh=YjTqvMzagJuYOyJovCgcMuy1VZe1LKi1pVIbHww1TFc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DWlrcAjt05HI9Y9IOQYTnWBzXYMCzdO8F6Z/x+DOYYl7ZCKyGZ82hqsPIauumTL/LWx26WbcKU1EDPccR4y8dxUL9Z99/XRpSmtuH7RbnsT/btrmgNg0qXmBe0LY7Sx6vwEmX2X6N/9zjrpWhknpKTdPv/I3MTgeVTWxlb2roTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=CjU9oRyB; arc=none smtp.client-ip=85.214.62.61
+	s=arc-20240116; t=1725910262; c=relaxed/simple;
+	bh=TGsM2nbsgYeN1qvun3GmhvoA72IQJgGmewH4XXBbxTM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aOWNDAOhEgWxdQQqhpKUApfPVrvkE+n0ApDKpE5Zh1B9igjh0EaP72UvQAMx5OB+o9OKU0ftOZMOQzzVYCJA7mX+BcUdpZrlgvBJDf/+1yO0UM96JU7kwuHYDObuicWUMslRSPwrTOqEoRuVyTj9acQiwwM/QGmWOSEVEuSoxp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=U1CdgNN6; arc=none smtp.client-ip=85.214.62.61
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="CjU9oRyB"
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="U1CdgNN6"
 Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
 	(No client certificate requested)
 	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 0DF3688E22;
-	Mon,  9 Sep 2024 21:30:53 +0200 (CEST)
+	by phobos.denx.de (Postfix) with ESMTPSA id 9867C88D08;
+	Mon,  9 Sep 2024 21:30:55 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1725910253;
-	bh=uh5AN6xDKGE1pzc2KNoilnB4rzgHoJXgd2N+hYXJPcg=;
-	h=From:To:Cc:Subject:Date:From;
-	b=CjU9oRyBgMnnDPUNHce+OXT2tiF+ffA3mGOwE793g72W4CTOrh/aN+5+bCa3Lonfc
-	 D4F65NF2q3wpLsw9jAMnHpKDagujGnZvyUmcTpSt+IpZyOoT1KlOCek2Kj/QlGA26V
-	 jt1tJA2aA9f66sBOvI92nOOHMblPg8DB1xKk+vZfd4LJ530ozj5BLVxhERsdT4UK6b
-	 2elbjnRaF3wHZTa1JWwCDaoy3uwo8jOAQsGay4wTL4nrpwRCTxff9URo++skatbuRB
-	 8f7fNqXbkrKbQf5p6hOa3xMFK1AtZmZBeSZ6TRvWHn/FXZvFLmmIYPIFGic/Pi2PJe
-	 CRx8f6GyNNLpg==
+	s=phobos-20191101; t=1725910256;
+	bh=LL276++mvlxqbQAS+Owso/jjjlzOFM6kcl7PROOgzQw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=U1CdgNN6LX1zTwbI/fB9d67DEFhxCor9UT586WL+MvF6YC48mOcK0IvDanS6goWlq
+	 u0yVeZN4cLAH3yIrHMDOW+BrS53CFGr6dnsJei4td3fSZrTjoUI6wdG49X8sUFRnT2
+	 fNQ0q3KT6ApqLOeDIGUDLut2yq6dwCl5/jakXNDQ8wyD2lHRx02rahQBvRMPk0JFs9
+	 9TdIQ74L1Sg/yKgnBTHR9A1CuwEOeAYMFJ67cSBsBz+Exa0ZDwkJiDQhDfj05q1b8v
+	 bsD3JELumjP8NgzOAOmP1oFq8XPpHjtZb4HJ2EO24X3Dhjr0ndqcfqH8to71fZMgbL
+	 gPn/bit5+/uew==
 From: Marek Vasut <marex@denx.de>
 To: linux-wireless@vger.kernel.org
 Cc: Marek Vasut <marex@denx.de>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
 	"David S. Miller" <davem@davemloft.net>,
 	Adham Abozaeid <adham.abozaeid@microchip.com>,
 	Ajay Singh <ajay.kathat@microchip.com>,
@@ -49,10 +49,12 @@ Cc: Marek Vasut <marex@denx.de>,
 	Rob Herring <robh@kernel.org>,
 	devicetree@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [PATCH v5 1/9] dt-bindings: wireless: wilc1000: Document WILC3000 compatible string
-Date: Mon,  9 Sep 2024 21:29:42 +0200
-Message-ID: <20240909193035.69823-1-marex@denx.de>
+Subject: [PATCH v5 6/9] wifi: wilc1000: Remove cmd53_buf() allocation
+Date: Mon,  9 Sep 2024 21:29:47 +0200
+Message-ID: <20240909193035.69823-6-marex@denx.de>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240909193035.69823-1-marex@denx.de>
+References: <20240909193035.69823-1-marex@denx.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,11 +66,8 @@ Content-Transfer-Encoding: 8bit
 X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
 X-Virus-Status: Clean
 
-Document compatible string for the WILC3000 chip. The chip is similar
-to WILC1000, except that the register layout is slightly different and
-it does not support WPA3/SAE.
+The cmd53_buf is a 4 byte buffer, embed it into the struct wilc_sdio.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Marek Vasut <marex@denx.de>
 ---
 Cc: "David S. Miller" <davem@davemloft.net>
@@ -87,30 +86,52 @@ Cc: devicetree@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
 Cc: netdev@vger.kernel.org
 ---
-V2: - Use WILC1000 as fallback compatible string for WILC3000
-V3: - Swap the wilc1000/wilc3000 compatible order
-V4: - Add RB from Krzysztof
-V5: No change
+V5: New patch
 ---
- .../bindings/net/wireless/microchip,wilc1000.yaml           | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/microchip/wilc1000/sdio.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-index 2460ccc082371..5d40f22765bb6 100644
---- a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-@@ -16,7 +16,11 @@ description:
+diff --git a/drivers/net/wireless/microchip/wilc1000/sdio.c b/drivers/net/wireless/microchip/wilc1000/sdio.c
+index c26447289b71b..6d01a838ab184 100644
+--- a/drivers/net/wireless/microchip/wilc1000/sdio.c
++++ b/drivers/net/wireless/microchip/wilc1000/sdio.c
+@@ -31,7 +31,7 @@ struct wilc_sdio {
+ 	bool irq_gpio;
+ 	u32 block_size;
+ 	bool isinit;
+-	u8 *cmd53_buf;
++	u8 cmd53_buf[4];
+ };
  
- properties:
-   compatible:
--    const: microchip,wilc1000
-+    oneOf:
-+      - items:
-+          - const: microchip,wilc3000
-+          - const: microchip,wilc1000
-+      - const: microchip,wilc1000
+ struct sdio_cmd52 {
+@@ -149,12 +149,6 @@ static int wilc_sdio_probe(struct sdio_func *func,
+ 	if (!sdio_priv)
+ 		return -ENOMEM;
  
-   reg: true
+-	sdio_priv->cmd53_buf = kzalloc(sizeof(u32), GFP_KERNEL);
+-	if (!sdio_priv->cmd53_buf) {
+-		ret = -ENOMEM;
+-		goto free;
+-	}
+-
+ 	ret = wilc_cfg80211_init(&wilc, &func->dev, WILC_HIF_SDIO,
+ 				 &wilc_hif_sdio);
+ 	if (ret)
+@@ -207,7 +201,6 @@ static int wilc_sdio_probe(struct sdio_func *func,
+ 	irq_dispose_mapping(wilc->dev_irq_num);
+ 	wilc_netdev_cleanup(wilc);
+ free:
+-	kfree(sdio_priv->cmd53_buf);
+ 	kfree(sdio_priv);
+ 	return ret;
+ }
+@@ -219,7 +212,6 @@ static void wilc_sdio_remove(struct sdio_func *func)
+ 
+ 	clk_disable_unprepare(wilc->rtc_clk);
+ 	wilc_netdev_cleanup(wilc);
+-	kfree(sdio_priv->cmd53_buf);
+ 	kfree(sdio_priv);
+ }
  
 -- 
 2.45.2
