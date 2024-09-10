@@ -1,90 +1,81 @@
-Received: from dvalin.narfation.org (dvalin.narfation.org [213.160.73.56])
+Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [217.70.183.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE06F17E00A
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Sep 2024 09:08:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.160.73.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB8218859A;
+	Tue, 10 Sep 2024 09:13:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725959309; cv=none; b=kW8R8yQaQSR0KINeIXtaiz5TpslCNzSknilTHrt5/Qvf7g1L03hi+C76L+7Wb94JiWP2C+TZWhB1uNS+FGv3zpK7k8xQtHE39nwAYXikieDpu10KicMw9A0uCYES4vi453eXarT7rgBwV5m/FONaBfCDPXqX7B/ckb/KOsusHgI=
+	t=1725959592; cv=none; b=LB7bcXCQADYf2+l9rbRYj8TNrEpPwuEc1WfyUKbz72E4luCug86erRc6lT0ojZM5/jfBIhnnfMI+NTPuYZkLJdBmqmcZgT+mFRrGnnNJ6JThZX+Y4YkZOCc38l935qWIK2i78g4VZ5akpD4YFs/k9t24/AxOt01EVbIshwhUUcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725959309; c=relaxed/simple;
-	bh=3MlfUCNCizxM+vaowacNNmhThJDVKWE7xxtYAlgjY/A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Z3yVVLwryZpJBkawuFaRoKYAPRhZNqDi8t9qoCmXa+r87uKv+pX4r2JTKITPrEvEhyKD4/7W/T8NaGzw+AhLhZ4LDExxhvif8B+RRPiCj5q4FHHPsG9mK+xVVo9FcSwbCepuKSbrGDubpu3nwF9co3CCd4ivU0EjN1K5zUUQn28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org; spf=pass smtp.mailfrom=narfation.org; dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b=BSOBTfkc; arc=none smtp.client-ip=213.160.73.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=narfation.org
+	s=arc-20240116; t=1725959592; c=relaxed/simple;
+	bh=qTZxGGcz619C/JiS7yoQ1fa+JJZ6Jyz4D/6axGk5MYo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Nud7f+QTgJpMEQNL5SxixrSmgM+FFqz0EqU4NG8Yn7GcbI6HZZh9D5Y3kKjSYj/O+E70GNbY8w7J/j4bV2dbP0FNqx75Jcme7mSIgpU1/uUmXiCkkBN3HhC+gVCH3F15f8gmDNzwItJEvhRM5BhU2ZpBPJxYUA7KmdPpg6+74io=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=FFw35lxd; arc=none smtp.client-ip=217.70.183.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="BSOBTfkc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-	s=20121; t=1725958858;
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="FFw35lxd"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 3334020002;
+	Tue, 10 Sep 2024 09:13:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1725959588;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=sM+7PPwYWN07NlwtJn7Vg3Kbt0LlTirc1KeW5XQhyvw=;
-	b=BSOBTfkcS6PsWA+UZr7YHUMUdR7mx3phmN6MaayXimpKGNiHCMIayJnWSpnqeiDsqo3riA
-	mVWPOJHvLQ5kRj/XXsldlPJdbc2mzwHzEv/N+UEWIOCvfD/8AviIh+u75RFW8690nBlw5g
-	xoXRyBWOgAiDTIEME0KUmyk1TKxi9/8=
-From: Sven Eckelmann <sven@narfation.org>
-To: Jeff Johnson <quic_jjohnson@quicinc.com>, ath11k@lists.infradead.org
-Cc: ath10k <ath10k@lists.infradead.org>, ath11k <ath11k@lists.infradead.org>,
- ath12k <ath12k@lists.infradead.org>,
- linux-wireless <linux-wireless@vger.kernel.org>,
- Kalle Valo <quic_kvalo@quicinc.com>, Robert Marko <robert.marko@sartura.hr>
-Subject: Re: New staging repos for ath1*k firmware
-Date: Tue, 10 Sep 2024 11:00:52 +0200
-Message-ID: <3772134.MHq7AAxBmi@ripper>
-In-Reply-To:
- <CA+HBbNFQ+25u_PK2j3vYtiCZwv+shVAVeAHKqQCwhyCopORt4Q@mail.gmail.com>
-References:
- <bac97f31-4a70-4c4c-8179-4ede0b32f869@quicinc.com>
- <CA+HBbNFQ+25u_PK2j3vYtiCZwv+shVAVeAHKqQCwhyCopORt4Q@mail.gmail.com>
+	bh=SkHrPrPvv0ycqknuXki++Kh1vXcSnQQukH5IsHU8Cww=;
+	b=FFw35lxdII0wpy7i8uEBnaJ1xWXdTCjN9gKXMXDw61r1pMH8KPf6RcBHkYpnJY0q33/U21
+	6ygqzJEzAGe9TgDs2LQH4C9JUrIT04VcvBvHiWVyZquOdoL6rEebCul7sz66ToEcYUmW5A
+	G78xXIZlJsQP2dFQDHPS1XrrXJU3NHxlvYWYWoKo/B+Q/OwkZfzRIZCnnXrP6J0MjCNTxP
+	VJdK/dxD+IPr5jDttNe3pc09iv8CpLb90FvFH6c0+NW5UNKtKtsLGIR0Yg4aFJUOMSKGZw
+	QSY/uDVRnQwTMUThTudscaNTbOb56sCg3g7sVnv3w9epiIIOgvKOLwYAEVYZZA==
+Message-ID: <5ae8121f-8ead-4d7e-9fbd-417c273474e5@bootlin.com>
+Date: Tue, 10 Sep 2024 11:13:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1945126.taCxCBeP46";
- micalg="pgp-sha512"; protocol="application/pgp-signature"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 4/9] wifi: wilc1000: Fill in missing error handling
+To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+ Adham Abozaeid <adham.abozaeid@microchip.com>,
+ Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
+ <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+ netdev@vger.kernel.org
+References: <20240909193035.69823-1-marex@denx.de>
+ <20240909193035.69823-4-marex@denx.de>
+From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+Content-Language: en-US
+In-Reply-To: <20240909193035.69823-4-marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-GND-Sasl: alexis.lothore@bootlin.com
 
---nextPart1945126.taCxCBeP46
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
-From: Sven Eckelmann <sven@narfation.org>
-Subject: Re: New staging repos for ath1*k firmware
-Date: Tue, 10 Sep 2024 11:00:52 +0200
-Message-ID: <3772134.MHq7AAxBmi@ripper>
-MIME-Version: 1.0
+On 9/9/24 21:29, Marek Vasut wrote:
+> Add error handling to chip_wakeup() and propagate the errors throughout
+> the entire driver. Add error handling to acquire_bus()/release_bus() and
+> host_sleep_notify()/host_wakeup_notify() functions as a result as well.
+> Fill the error handling to all call sites.
 
-On Thursday, 7 March 2024 09:39:26 CEST Robert Marko wrote:
-> Can I please ask for IPQ6018 firmware to be updated to 2.9.0.1 as well?
-> 
+Out of curiosity, what tree/branch are you using as a base for this series ? I
+wanted to pull it locally to also test it on wilc1000, but it fails to apply
+this patch, and the failure points to a conflict with one of my patch which has
+been merged quite some time ago in wireless-next:
+https://lore.kernel.org/all/20240613-wilc_suspend-v1-4-c2f766d0988c@bootlin.com/
 
-I've asked them via their support platform. They closed the ticket after Jeff 
-uploaded the 2.7.0.1 firmware (which was given to him by the firmware team).
+Thanks,
+Alexis
 
-I will ask again...
-
-(Btw. thanks to Jeff and Kalle for managing the new firmware repositories - I 
-just hope that you get better input from the firmware teams)
-
-Kind regards,
-	Sven
---nextPart1945126.taCxCBeP46
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQS81G/PswftH/OW8cVND3cr0xT1ywUCZuAKxAAKCRBND3cr0xT1
-y8lKAPwNsSwdxLSmTikf4A4zjnUCpxxZhriK+7u8hhJ+kTvhrQD+K4pV0rseDTTc
-JqCq029XRTiTr4WcIPL8mUWrOeGZTww=
-=7gwb
------END PGP SIGNATURE-----
-
---nextPart1945126.taCxCBeP46--
-
-
+-- 
+Alexis Lothoré, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
 
