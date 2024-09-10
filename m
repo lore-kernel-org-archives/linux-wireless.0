@@ -1,37 +1,39 @@
-Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4959719004B;
-	Tue, 10 Sep 2024 10:08:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75C6A1922F1;
+	Tue, 10 Sep 2024 10:18:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725962915; cv=none; b=MP5CgEtbr0hP9e3yuQbrpFIVoc2bE1HP+Xt0AJKm/4u0VNSmtNL5lNfNpZWXpLyUudkH2ypbSes9m4Bj5m5POlzSoFrLbNuOYLgUu/GZQDutfU9THsbeP4S2+s+/nFWJq0yE3WhJz1Ayy0+nshWu9dOpTukO6Oabkg+SbEuw+8Q=
+	t=1725963520; cv=none; b=p5JGP7+irwLf98fRKaiQRUZG+SIh6uYfvGjxUvkPFfoHoooqjRmfION0KwfAVAKraJx2t8ikZAIm4lVVESaw5jKra6kwC3LvtNfg9DXKXrc9Dq/ze357vGvQvSxL91Z55iA6RlNoShv8FwHf4kk0db8sM82Txi74T4sIrlHOxF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725962915; c=relaxed/simple;
-	bh=MsadThRw8OXCzOuitomaL4tJiz9fo5k0uXDvNjCJyKA=;
+	s=arc-20240116; t=1725963520; c=relaxed/simple;
+	bh=BytnPY46mnPRDlB8ROZftu1Csx92PsKunJhrjNZ8cYk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gBWDXtLkFHf0sBTrUqwqawq65mUFj8D3cU02b2yAWD5l+fjCSrva+1Atix7IJNE87MnlPSTI/o7jY5i4YbWYk5XXQhlKYG1bdG57vDBPx0ipc8r5cz0StqQSrZvvv6KGVK4MvL2aXKl32wlLEhYvv144t4CsPcG1Tq9Pi0S/pWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=pRJ/yPSw; arc=none smtp.client-ip=217.70.183.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	 In-Reply-To:Content-Type; b=qoPd3YkyENJ5N5VRCIIde2atoArRvk8S7XFpZ79Q53phqKu08AgVMC/h7S+ieU4brxD/2mUXhjDCAU6w6IRka0GWLndIKjgUKyZ80L0nm7h3UfmkJYNh1Fb/L68Pso407Ve7+8FgEBHbnPH7/YAAHl3ccuAxVLzAL6m9kMV2s0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=r84AtY2E; arc=none smtp.client-ip=85.214.62.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="pRJ/yPSw"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 4F566FF80C;
-	Tue, 10 Sep 2024 10:08:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1725962906;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=F4PgUjTOWwPVIX4EB9xYj1NObgUhDRb+IK1VTWtcj08=;
-	b=pRJ/yPSw6CaewFWDpJPP/Oqf0BN4WrwCcaHuyaereJUCVodYE5M3Pt86Nrxg/ugeZU7LsM
-	jgaIKZbAQuaGzDeledQ2y1FLYi8SAG5u+VBd2lAmva3obxcy0vL8oohMSYPh9POEgLxdn6
-	IK0pJRrtgcK1es0zaMFhUXQvdbAnzhrxRgDXLedCIlsEd5rcwwy9pJ9InrnKG3zG1xld04
-	hFlAPXVvNitrz9GhW1KL05gfSJMLJ/j/ivAdh8KSBvuX8WUcIRgrociBVqTUcjBFKrZM63
-	lIMa8Ut3QF6MPpv/wNF0yz0TuufEq/WE+0z8g0bTfGQI7uOkAyZQW6OusubBRg==
-Message-ID: <769f1405-62fc-4457-a958-b644c706140f@bootlin.com>
-Date: Tue, 10 Sep 2024 12:08:25 +0200
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="r84AtY2E"
+Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: marex@denx.de)
+	by phobos.denx.de (Postfix) with ESMTPSA id 0468E88F5F;
+	Tue, 10 Sep 2024 12:18:30 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+	s=phobos-20191101; t=1725963512;
+	bh=ziKQobiBowH8lBD7d0jJWzB9mGazXQuMiiUtscv86V4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=r84AtY2EzH6Et5nkj+QJ8IikvqlGOCB7SLOFRg+dfCrFZQYyrMCRrtgU5uEcVTIxz
+	 dkdePWg97mUE9VunxI65jprc6i9CLaNyxa/AlqLC0o9LA99pw9EELOEFvUvbuQJyzM
+	 CAuvuCigb68XubUhGtYz4A2WQIHgVc2WtXskdSq9HfeFiINoQYjrkibbUVpserFoxc
+	 lFTns48qX1JloYXOWjiW2EcbYBd8hMGh5nJaN33Jx9G9yRHn27oc2f39ajE8ynzr60
+	 9/zBk/oPuEDbKbkS5mWOaKrKzK/jlDSjMvtxrtSldrl6JRUegQ6WwIdym3YZEQ3nj8
+	 bEaQPq+WDeLYw==
+Message-ID: <3f576f28-2ef4-4f00-9c01-38837ee6b3d6@denx.de>
+Date: Tue, 10 Sep 2024 11:45:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,9 +41,9 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 8/9] wifi: wilc1000: Register wiphy after reading out
- chipid
-To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5 4/9] wifi: wilc1000: Fill in missing error handling
+To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
+ linux-wireless@vger.kernel.org
 Cc: "David S. Miller" <davem@davemloft.net>,
  Adham Abozaeid <adham.abozaeid@microchip.com>,
  Ajay Singh <ajay.kathat@microchip.com>,
@@ -52,60 +54,28 @@ Cc: "David S. Miller" <davem@davemloft.net>,
  Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
  netdev@vger.kernel.org
 References: <20240909193035.69823-1-marex@denx.de>
- <20240909193035.69823-8-marex@denx.de>
-From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
+ <20240909193035.69823-4-marex@denx.de>
+ <5ae8121f-8ead-4d7e-9fbd-417c273474e5@bootlin.com>
 Content-Language: en-US
-In-Reply-To: <20240909193035.69823-8-marex@denx.de>
-Content-Type: text/plain; charset=UTF-8
+From: Marek Vasut <marex@denx.de>
+In-Reply-To: <5ae8121f-8ead-4d7e-9fbd-417c273474e5@bootlin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-GND-Sasl: alexis.lothore@bootlin.com
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
 
-On 9/9/24 21:29, Marek Vasut wrote:
-> Register wiphy after reading out chipid, so the chipid can be
-> used to determine chip features and not advertise WPA3/SAE
-> support to userspace on WILC3000. Note that wilc_netdev_cleanup()
-> will deregister the wiphy in fail path.
+On 9/10/24 11:13 AM, Alexis Lothoré wrote:
+> On 9/9/24 21:29, Marek Vasut wrote:
+>> Add error handling to chip_wakeup() and propagate the errors throughout
+>> the entire driver. Add error handling to acquire_bus()/release_bus() and
+>> host_sleep_notify()/host_wakeup_notify() functions as a result as well.
+>> Fill the error handling to all call sites.
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
+> Out of curiosity, what tree/branch are you using as a base for this series ? I
+> wanted to pull it locally to also test it on wilc1000, but it fails to apply
+> this patch, and the failure points to a conflict with one of my patch which has
+> been merged quite some time ago in wireless-next:
+> https://lore.kernel.org/all/20240613-wilc_suspend-v1-4-c2f766d0988c@bootlin.com/
+next-20240909 with this extra patch:
 
-[...]
-
-> @@ -1804,14 +1803,8 @@ static struct wilc *wilc_create_wiphy(struct device *dev)
->  				BIT(NL80211_IFTYPE_P2P_GO) |
->  				BIT(NL80211_IFTYPE_P2P_CLIENT);
->  	wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-> -	wiphy->features |= NL80211_FEATURE_SAE;
->  	set_wiphy_dev(wiphy, dev);
->  	wl->wiphy = wiphy;
-> -	ret = wiphy_register(wiphy);
-> -	if (ret) {
-> -		wiphy_free(wiphy);
-> -		return NULL;
-> -	}
-
-If I am reading the patch correctly, there are still some failure paths in
-wilc_cfg80211_init which try to call wiphy_unregister on the (not registered
-anymore in there) wphy.
->  	return wl;
->  }
->  
-> @@ -1861,6 +1854,14 @@ int wilc_cfg80211_init(struct wilc **wilc, struct device *dev, int io_type,
->  }
->  EXPORT_SYMBOL_GPL(wilc_cfg80211_init);
->  
-> +int wilc_cfg80211_register(struct wilc *wilc)
-> +{
-> +	wilc->wiphy->features |= NL80211_FEATURE_SAE;
-
-Even if I get the general need, it feels weird to have parts of the wphy init
-performed in wilc_create_wiphy, and some parts (the features field) here.
-Wouldn't it work to just move wilc_create_wiphy content here, since wphy will
-not be usable anyway before eventually registering it ?
-
-Alexis
-
--- 
-Alexis Lothoré, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
-
+wifi: wilc1000: Keep slot powered on during suspend/resume
