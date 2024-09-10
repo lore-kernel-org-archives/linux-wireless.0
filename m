@@ -1,37 +1,37 @@
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
+Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2FC91E493;
-	Tue, 10 Sep 2024 12:25:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855E21862B8;
+	Tue, 10 Sep 2024 12:33:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725971141; cv=none; b=CUzdDYNkjKZ9dZIU4u6HUAZ6RYRqFUa+koVmNfzdBfj5BYe+RkJHTe9g2QN6bpyhCr4sT4us4bclGi98bhvJf1ndMpjY3wBXff6td3uDIEFLt/dqozCpBJ9SYHCnyysiNhlvKdQzPfn1An0YkWer2Z2UJtQly9w7NIpEKXTjX88=
+	t=1725971634; cv=none; b=HzJtxYyoPt3UfNRU2ytfQl+MIvfJC2eZRyItPkdi7YjUmAvFPN2z0Ov/mrj8y+dYNVAQZlzkTDZ8IwllED5BAn4auZy3fSPN3xgWIgD9rdNDBM2nWlb0tDvODdUA3aNG5i4ZNfOUBNcPK2a2CYWXaZurKgkjvn2OEIShlid9k04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725971141; c=relaxed/simple;
-	bh=OMDSp5/Scq6iGEBLf6P33nmQuXTYma1nRerLRIhRCu0=;
+	s=arc-20240116; t=1725971634; c=relaxed/simple;
+	bh=HuWj02VIN8Ocf8mbmtc1L+Bn3PmRey727QcI9q3Y6XE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=erTi0JJLeLrsNSaIBEm06XKi8HJMGaBFjAUEO7Aii3Nk1BWh/I5noZHTYbI7Czmivq4XbEmJuolcHPuyeFj6t938ShOmH36xjG1/Jy1g/Q+RvuF3htA91vE2OlnixllwGXA3nZfug7eA1ecb13RXK8dZCVcYW0GuE3oliWOoBaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=eaiUbQ1C; arc=none smtp.client-ip=217.70.183.196
+	 In-Reply-To:Content-Type; b=vDC73zI/2nKaAErUmmOfHJ9U006YBKeyMb4BTCRe0X75Ksz2Ci7iHdJMXpWj/DpNRtIYkF51iF6fD8Xifwr03NRc2TLtNxEhrsOIdqpBwx/IYZ2Pp28V4kxFMEpensTbVec+tNCMXbwuJh1xNWf/2or9En3SWZ2GcmxYKaBcmOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=dvBN11br; arc=none smtp.client-ip=217.70.183.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="eaiUbQ1C"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id A8C6DE0003;
-	Tue, 10 Sep 2024 12:25:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="dvBN11br"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 99A6C60006;
+	Tue, 10 Sep 2024 12:33:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1725971130;
+	t=1725971625;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=d+7aZSAX39l5tdqwbylF7EfYeuJBz04pb9137b2agq0=;
-	b=eaiUbQ1CClsBDHx3q7LpzGyghHC3cKwfdsdBYasHfAc1aM89VC+pKbHnk9oSdYCaR2Xkdd
-	+R+dfE8d/CYsrVxCjShCKYWcPAYf/puARsiXzUfFCqB69UvKnLCwDBy4CZY1D4nR2xWjeH
-	ChshwGvdyo2eQrKyOJsz1/fhe1+XkOji7eu24bHJhbpsYK5ffZEuICCrnYCPrwn/cUaVRw
-	Oxy4UTAHOaMq7HmvJUyrZfJvvvhkFnLWIZRUKZuKXi43oijar5fl7BxngMUuhWrgMeV9pL
-	/pz4FepFSS6LMBMl5SxGQXB5exX4/OGgpIkS6xDLFpIvTJYMSEqg5ZV7VCr6Mg==
-Message-ID: <02f856ea-3d5d-48e5-a0f7-fdac2de30ddd@bootlin.com>
-Date: Tue, 10 Sep 2024 14:25:29 +0200
+	bh=6f4Np0cokaH3gxapqx1PNtK4LPPwRh70Qjvz4BkTjXk=;
+	b=dvBN11brAErEHv09m7cbuwh5HER71BmxS/ZkXlRlxAngW5e4ZfV/qsreGFOgFKUh6pXHq+
+	cwaNEaMpJ0O8xXwWn+A9mrwV5WVOZYLOnZqNQhLZJolYUwRa3bZgg6a2Af7x8PBPi/zpd+
+	o+oIQtffxgujc9LcKMgiD5ZQBRwY+TzYt2C2gKjOt98LM4dnLiimONbcjODe6Jo+kM9U3d
+	+Ti8fmnY0y92ga5d/Oivrlpzm2yTLz6ZnZabLn/9VrXSaGBzXz7Qb1KDP3I2oqnugsG/Bz
+	onda+m98m2r+rinBCE+T5S0TPgqw+Qf8X/7IHNyCnJTf6Eh1FsWx3DwKuxZ/wQ==
+Message-ID: <bdc95cac-b64e-44a7-ab52-bff5dcb81b2d@bootlin.com>
+Date: Tue, 10 Sep 2024 14:33:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,8 +39,8 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 5/9] wifi: wilc1000: Fold wilc_create_wiphy() into
- cfg80211.c
+Subject: Re: [PATCH v5 8/9] wifi: wilc1000: Register wiphy after reading out
+ chipid
 To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
 Cc: "David S. Miller" <davem@davemloft.net>,
  Adham Abozaeid <adham.abozaeid@microchip.com>,
@@ -52,24 +52,52 @@ Cc: "David S. Miller" <davem@davemloft.net>,
  Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
  netdev@vger.kernel.org
 References: <20240909193035.69823-1-marex@denx.de>
- <20240909193035.69823-5-marex@denx.de>
+ <20240909193035.69823-8-marex@denx.de>
+ <769f1405-62fc-4457-a958-b644c706140f@bootlin.com>
+ <7a938ca9-8099-4901-9f05-c3347c38fc53@denx.de>
 From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
 Content-Language: en-US
-In-Reply-To: <20240909193035.69823-5-marex@denx.de>
+In-Reply-To: <7a938ca9-8099-4901-9f05-c3347c38fc53@denx.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-GND-Sasl: alexis.lothore@bootlin.com
 
-On 9/9/24 21:29, Marek Vasut wrote:
-> The wilc_create_wiphy() is not used outside of cfg80211.c .
-> Make the function static and remove its entry from cfg80211.h
+On 9/10/24 12:53, Marek Vasut wrote:
+> On 9/10/24 12:08 PM, Alexis Lothoré wrote:
+>> On 9/9/24 21:29, Marek Vasut wrote:
+
+[...]
+
+>>>   EXPORT_SYMBOL_GPL(wilc_cfg80211_init);
+>>>   +int wilc_cfg80211_register(struct wilc *wilc)
+>>> +{
+>>> +    wilc->wiphy->features |= NL80211_FEATURE_SAE;
+>>
+>> Even if I get the general need, it feels weird to have parts of the wphy init
+>> performed in wilc_create_wiphy, and some parts (the features field) here.
+>> Wouldn't it work to just move wilc_create_wiphy content here, since wphy will
+>> not be usable anyway before eventually registering it ?
+> That's what I thought initially too, but look closely at wilc_create_wiphy():
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
+> struct wilc *wilc_create_wiphy(struct device *dev)
+> {
+> ...
+> struct wiphy *wiphy;
+> struct wilc *wl;
+> ...
+> wiphy = wiphy_new(&wilc_cfg80211_ops, sizeof(*wl));
+> ...
+> wl = wiphy_priv(wiphy); // <----------- HERE , *wl is struct wilc
+> ...
+> return wl;
+> }
+> 
+> That 'struct wilc' is allocated as part of wiphy_new() and used all around the
+> place before we reach wiphy_register() much later on.
 
-It looks like I messed up my r-b on previous email, so in case it could have
-confused some scripts or automation:
-
-Reviewed-by: Alexis Lothoré <alexis.lothore@bootlin.com>
+Meh, true. We could still let any part affecting the struct wilc in
+wilc_create_wiphy, and move any wphy configuration in wilc_cfg80211_register,
+but then I am not sure anymore if it makes things better.
 
 -- 
 Alexis Lothoré, Bootlin
