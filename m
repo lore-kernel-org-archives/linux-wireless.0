@@ -1,149 +1,62 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
+Received: from IgnazServer.ignaz.org (IgnazServer.ignaz.org [37.252.120.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99FC2175D4C
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Sep 2024 11:28:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE1C1891D1;
+	Wed, 18 Sep 2024 11:47:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.252.120.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726658913; cv=none; b=DNNWrwIGOUSZY82BSH+OPAnEcfbuTWkUa1d7jNaPJDkKGzX9cW9LJ4/gCKQKxaFFqX9VXygAdr1/CG6dcwdKiXJRTlSqTp+FgoHj6DHWl1vwZ/E1GxPQceJZ5pFyFE1Gxzl9AyOSvthQqjif733fU+lru+9M3MUgOaFMkFzyhJ4=
+	t=1726660041; cv=none; b=RjN8BR6MnoUGBrOuwFT0Pb8j1KE2FBwMfIInZ/Nbt31B43R1+2gYINGYYcdZ3ZaeheGwivgdDz/A4e1PmxDbSj1QcEnp1ZmKGzkwUMc8ux5Do6cjmMR1/fND3cDVHvEZjKL6sYpFTgtiMCkUvvhRarENCwMdzmFk9NDNW/eEuCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726658913; c=relaxed/simple;
-	bh=7zvvUqfJMerN1dudzoqv+U2wF5Z3UUUimESx3IGTZBg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=gygJ9VmuuuitPagxmfrKs7d2oNJg75ZQi6e2TwR8UszQkfDhOQxZJHUfYy1CsDvDPSvPNtTyexsgSlj5V969LW/B3KFurnNv+ylYCphOKd22EnamRJya97ApYb18yCvKru9BLwUlT/zYF8VbM4FLoM9RCS61x7rzijDHS0yOPr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sqsr3-00045p-FJ; Wed, 18 Sep 2024 13:28:17 +0200
-Received: from [2a0a:edc0:0:1101:1d::28] (helo=dude02.red.stw.pengutronix.de)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sqsr2-008noO-Pz; Wed, 18 Sep 2024 13:28:16 +0200
-Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
-	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1sqsZr-0086AC-1F;
-	Wed, 18 Sep 2024 13:10:31 +0200
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Date: Wed, 18 Sep 2024 13:10:36 +0200
-Subject: [PATCH v2 11/12] wifi: mwifiex: move common settings out of
- switch/case
+	s=arc-20240116; t=1726660041; c=relaxed/simple;
+	bh=tXfQxu9o0kTobDRH0kn6VMSl6eo2i9H/kFSAbxk8rYI=;
+	h=From:To:Cc:Subject:References:In-Reply-To:Message-ID:Date:
+	 Content-Type:MIME-Version; b=fzOc3luvyRU2LlbhdwAb+90bT7XC3Lx68PzntVPBGctvJprhwdcBtKNjgJV9ek/hZp01T/j79btUTR6+ZHRgwu3AvFGrAWxX0UjYbosXp0bj+ZsMufCINZPxDrpPVhpyVTloHN41eEZJEGoOZRpUpAHW+PwudHX0sHRez72Z65Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ignaz.org; spf=pass smtp.mailfrom=ignaz.org; arc=none smtp.client-ip=37.252.120.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ignaz.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ignaz.org
+Received: from ignaz.org (localhost.localdomain [127.0.0.1])
+	by IgnazServer.ignaz.org (IgnazServer) with ESMTPSA id 0CC1642B74;
+	Wed, 18 Sep 2024 13:47:18 +0200 (CEST)
+From: Marcel =?utf-8?b?V2Vpw59lbmJhY2g=?= <mweissenbach@ignaz.org>
+To: stable@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Cc: regressions@lists.linux.dev, linux-wireless@vger.kernel.org
+Subject: RE: RTL8852BE wifi no longer working after 6.11 upgrade
+References: <63a3ef5acd70454e9f8db114204e2e2d@realtek.com>
+In-Reply-To: <63a3ef5acd70454e9f8db114204e2e2d@realtek.com>
+Message-ID: <20240918114718.Horde.TpiB1MVH0uadLCQXUbR5WtB@ignaz.org>
+User-Agent: Horde Application Framework 5
+Date: Wed, 18 Sep 2024 11:47:18 +0000
+Content-Type: text/plain; charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240918-mwifiex-cleanup-1-v2-11-2d0597187d3c@pengutronix.de>
-References: <20240918-mwifiex-cleanup-1-v2-0-2d0597187d3c@pengutronix.de>
-In-Reply-To: <20240918-mwifiex-cleanup-1-v2-0-2d0597187d3c@pengutronix.de>
-To: Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, Kalle Valo <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- David Lin <yu-hao.lin@nxp.com>, kernel@pengutronix.de, 
- Sascha Hauer <s.hauer@pengutronix.de>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1726657831; l=2972;
- i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=7zvvUqfJMerN1dudzoqv+U2wF5Z3UUUimESx3IGTZBg=;
- b=3/WxUQz1oQv3DXrz5BTlwxFFsFDfwZLngDEyUbrcAG4BLrV8N2pi+vHr4RxiioQd2BnlPc5HI
- GXOYTiTDoQVAW2SHQTz+lfLrmgtG61LG/WToNn9gYwrcQSnR8HgLFN/
-X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
- pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: s.hauer@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 8bit
 
-In mwifiex_add_virtual_intf() several settings done in a switch/case
-are the same in all cases. Move them out of the switch/case to
-deduplicate the code.
-
-bss_started is not initialized in all switch/case branches, but it is
-only used in AP mode in the driver, so it doesn't hurt to move its
-initialization out of the switch/case as well.
-
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
-Reviewed-by: Francesco Dolcini <francesco@dolcini.it>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 8746943c17788..2ce54a3fc32f8 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3005,7 +3005,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EFAULT);
- 		}
- 
--		priv->wdev.wiphy = wiphy;
- 		priv->wdev.iftype = NL80211_IFTYPE_STATION;
- 
- 		if (type == NL80211_IFTYPE_UNSPECIFIED)
-@@ -3014,8 +3013,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			priv->bss_mode = type;
- 
- 		priv->bss_type = MWIFIEX_BSS_TYPE_STA;
--		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
--		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
- 
- 		break;
-@@ -3035,14 +3032,10 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EFAULT);
- 		}
- 
--		priv->wdev.wiphy = wiphy;
- 		priv->wdev.iftype = NL80211_IFTYPE_AP;
- 
- 		priv->bss_type = MWIFIEX_BSS_TYPE_UAP;
--		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
--		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_UAP;
--		priv->bss_started = 0;
- 		priv->bss_mode = type;
- 
- 		break;
-@@ -3062,7 +3055,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 			return ERR_PTR(-EFAULT);
- 		}
- 
--		priv->wdev.wiphy = wiphy;
- 		/* At start-up, wpa_supplicant tries to change the interface
- 		 * to NL80211_IFTYPE_STATION if it is not managed mode.
- 		 */
-@@ -3075,10 +3067,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		 */
- 		priv->bss_type = MWIFIEX_BSS_TYPE_P2P;
- 
--		priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
--		priv->bss_priority = 0;
- 		priv->bss_role = MWIFIEX_BSS_ROLE_STA;
--		priv->bss_started = 0;
- 
- 		if (mwifiex_cfg80211_init_p2p_client(priv)) {
- 			memset(&priv->wdev, 0, sizeof(priv->wdev));
-@@ -3092,6 +3081,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 		return ERR_PTR(-EINVAL);
- 	}
- 
-+	priv->wdev.wiphy = wiphy;
-+	priv->bss_priority = 0;
-+	priv->bss_started = 0;
-+	priv->frame_type = MWIFIEX_DATA_FRAME_TYPE_ETH_II;
-+
- 	dev = alloc_netdev_mqs(sizeof(struct mwifiex_private *), name,
- 			       name_assign_type, ether_setup,
- 			       IEEE80211_NUM_ACS, 1);
-
--- 
-2.39.5
-
+First of all, thank you so much for your time and work!
+ 
+I hope i don't cause any confusion and this question may be based on my lack of  understanding the patch, i almost don't dare to ask, but does this quirk only gets into affect, when someone uses the same mainboard i use? Is this an rather rare case that probably won't effect other people?
+ 
+I can't judge that so please don't get me wrong, but i feel a bit uneasy about this. I assume that most fist time Linux users that have similar (but not the same) platform, where this quirk will not get applied and they end up with non-working wifi, just notice that wifi doesn't work and give up on Linux and remember it as "My Wifi even didn't work there".
+ 
+As a long time Gentoo user, i have the capability to build my own kernel and provide feedback that can help fix this issue, but i assume most users don't. I would assume an Ubuntu users will just remove the Ubuntu partition and calls it a day continuing using Windows. I am a bit worried and wonder, if there maybe a way to fix that, that is independent on my specific hardware/mainboard.
+ 
+Of course, feel free to correct me if i am getting something wrong here, im neither an Kernel nor C expert and thank you for your time again.
+ 
+"Ping-Ke Shih" pkshih@realtek.com – 2024年9月18日 18:00
+> Marcel Weißenbach <mweissenbach@ignaz.org> wrote:
+> > Setting ret to -1 did the job, wifi works again as expected.
+> > 
+> > Here is the output of dmidecode
+> > https://ignaz.org/nextcloud/index.php/s/tZdjYYdyeWpHPH4
+> > 
+> 
+> I wrote a quirk according to your dmidecode [1]. Please try if this can
+> still work to you. If yes, please help to reply a Tested-by tag there.
+> Thanks. 
+> 
+> [1] https://lore.kernel.org/linux-wireless/20240918085551.54611-1-pkshih@realtek.com/T/#u
+> 
+>
