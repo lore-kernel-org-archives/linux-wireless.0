@@ -1,151 +1,162 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD76CB663
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Sep 2024 06:27:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8A91C683;
+	Fri, 20 Sep 2024 06:30:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726813652; cv=none; b=KAjcbEhH4aBA7TimXTR9n0zbCcWb0dfutVs5M15tG7I/CDmh10PjtOKNaRJsXm9xyjPQqfctUtaU9BGAnLJ96gmnvmV7FAO7dYLHgq7LF7rx2j67OaK3cOQbrJ1K5mMW0bpj0IF5hjvGG4aXzicQr0oR1orzYEEiGMuHE9b0Cb8=
+	t=1726813854; cv=none; b=cnAZ3rRZtfA8jSChjAm2tAFDU2nhxeqN4oWGL2jYxElUJtsQsEotmZU5O50/g94iMA4TitPWL0IeaQEYFLYN7xIetbqTXLDDVC3Rj70S9x1eJGhd9h8AO03dJMgAgyyKxqQDBQ4dHeBsbbNRuczwgtDlHAAWEPzeSdsYO02cT9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726813652; c=relaxed/simple;
-	bh=2oCWAS0vsgQQ01bQYmSMGGxDngcvV8w1Bf+FkGQuRzo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:Content-Type:
-	 MIME-Version; b=D5VuVvMwvZgGClVXb1di0V0qJUuCtmpLZwLE415YP3+n3I5sezd8HrKNI9JMy4iRr1ra0awGAciSx8aEfacraABcqdZrkGgtBanifK1CqDKSDCxPJsvEAh+tVtbaunV+QfO1nJuefm+qRaAY8EDvSKhT/VTUKdkbE1YoaQmJOWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=Nj7I2y5f; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="Nj7I2y5f"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 48K6REC30669408, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1726813634; bh=2oCWAS0vsgQQ01bQYmSMGGxDngcvV8w1Bf+FkGQuRzo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version;
-	b=Nj7I2y5fk2nrTBJRca4F9m2jcOv0bCjOSBpONPZHS3afqNA3bQ4moOdMVVASZg2oa
-	 +fVuR+FsiUVeHIYCTHCPfhaSjKTBa2OraHN3IvzNwxG/2CC2G4HjHcWylJqIG/Q6e3
-	 Ph7WIh/RlbGiMo4ONAKH6IPAI2xfM9lWVE7NFHtBHmLz5d1Gu4Oz+U0A2N6Xgune5i
-	 ABOkK0ZSvlGsZYl24/lHzVnjQXNzmieudiCwN5X0L6M8PT36jBxn5xeqFSZ5z23hny
-	 Rl4xjqA6GVe82azyKiEuc9t1K5NTr0K48FEXyLk4nVV3x61A++Rkaa8wJOfT9t+hQ7
-	 e0617kZC4KNRA==
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/3.05/5.92) with ESMTPS id 48K6REC30669408
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Sep 2024 14:27:14 +0800
-Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+	s=arc-20240116; t=1726813854; c=relaxed/simple;
+	bh=pUsj6zi6XSx6GhIlGdt1Hl9sG+23RLjq3jnloPOfGSA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=rxDIsaTHi3kWq43/mRml/2YUdB9q/6XVJyZcbfYOnOEMi1uTbtpezOSHa3YNGc6CcCZyVewtNvSv5//QyWFnKLfJDN3h10xzcg5k4JcqMR5i+r+6fvsULmxIW4EO156J0uVbl2awpoEm+AurSY7y6NuNUYqBNzrEVDMBFLfNbtg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4X92BV2t0Fz2DcJj;
+	Fri, 20 Sep 2024 14:13:22 +0800 (CST)
+Received: from dggpemf200006.china.huawei.com (unknown [7.185.36.61])
+	by mail.maildlp.com (Postfix) with ESMTPS id 140801401DC;
+	Fri, 20 Sep 2024 14:14:03 +0800 (CST)
+Received: from [10.67.120.129] (10.67.120.129) by
+ dggpemf200006.china.huawei.com (7.185.36.61) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Fri, 20 Sep 2024 14:27:14 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 20 Sep 2024 14:27:14 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f]) by
- RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f%11]) with mapi id
- 15.01.2507.035; Fri, 20 Sep 2024 14:27:14 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "pbrobinson@gmail.com" <pbrobinson@gmail.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2 2/2] wifi: rtw88: use ieee80211_purge_tx_queue() to purge TX skb
-Thread-Topic: [PATCH v2 2/2] wifi: rtw88: use ieee80211_purge_tx_queue() to
- purge TX skb
-Thread-Index: AQHa9DSxPPAHrjHHCkiWzpTbPs2zeLIygfOAgC3gdzA=
-Date: Fri, 20 Sep 2024 06:27:14 +0000
-Message-ID: <ac879ce2d8cd4574a9e88dca03d72a54@realtek.com>
-References: <20240822014255.10211-1-pkshih@realtek.com>
- <20240822014255.10211-2-pkshih@realtek.com> 
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ 15.2.1544.11; Fri, 20 Sep 2024 14:14:02 +0800
+Message-ID: <2c5ccfff-6ab4-4aea-bff6-3679ff72cc9a@huawei.com>
+Date: Fri, 20 Sep 2024 14:14:02 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH net 2/2] page_pool: fix IOMMU crash when driver has
+ already unbound
+To: Ilias Apalodimas <ilias.apalodimas@linaro.org>, Jesper Dangaard Brouer
+	<hawk@kernel.org>
+CC: <davem@davemloft.net>, <kuba@kernel.org>, <pabeni@redhat.com>,
+	<liuyonglong@huawei.com>, <fanghaiqing@huawei.com>, <zhangkun09@huawei.com>,
+	Robin Murphy <robin.murphy@arm.com>, Alexander Duyck
+	<alexander.duyck@gmail.com>, IOMMU <iommu@lists.linux.dev>, Wei Fang
+	<wei.fang@nxp.com>, Shenwei Wang <shenwei.wang@nxp.com>, Clark Wang
+	<xiaoning.wang@nxp.com>, Eric Dumazet <edumazet@google.com>, Tony Nguyen
+	<anthony.l.nguyen@intel.com>, Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Alexander Lobakin <aleksander.lobakin@intel.com>, Alexei Starovoitov
+	<ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend
+	<john.fastabend@gmail.com>, Saeed Mahameed <saeedm@nvidia.com>, Leon
+ Romanovsky <leon@kernel.org>, Tariq Toukan <tariqt@nvidia.com>, Felix Fietkau
+	<nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee
+	<ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang
+	<sean.wang@mediatek.com>, Kalle Valo <kvalo@kernel.org>, Matthias Brugger
+	<matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, Andrew Morton
+	<akpm@linux-foundation.org>, <imx@lists.linux.dev>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <intel-wired-lan@lists.osuosl.org>,
+	<bpf@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-mm@kvack.org>
+References: <20240918111826.863596-1-linyunsheng@huawei.com>
+ <20240918111826.863596-3-linyunsheng@huawei.com>
+ <CAC_iWjK=G7Oo5=pN2QunhasgDC6NyC1L+96jigX7u9ad+PbYng@mail.gmail.com>
+ <894a3c2c-22f9-45b9-a82b-de7320066b42@kernel.org>
+ <cdfecd37-31d7-42d2-a8d8-92008285b42e@huawei.com>
+ <0e8c7a7a-0e2a-42ec-adbc-b29f6a514517@kernel.org>
+ <CAC_iWj+3JvPY2oqVOdu0T1Wt6-ukoy=dLc72u1f55yY23uOTbA@mail.gmail.com>
+Content-Language: en-US
+From: Yunsheng Lin <linyunsheng@huawei.com>
+In-Reply-To: <CAC_iWj+3JvPY2oqVOdu0T1Wt6-ukoy=dLc72u1f55yY23uOTbA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemf200006.china.huawei.com (7.185.36.61)
 
-Ping-Ke Shih wrote:
->=20
-> Hi Peter,
->=20
-> Could you please test v2 again? Thanks.
+On 2024/9/20 13:29, Ilias Apalodimas wrote:
+> Hi Jesper,
+> 
+> On Fri, 20 Sept 2024 at 00:04, Jesper Dangaard Brouer <hawk@kernel.org> wrote:
+>>
+>>
+>>
+>> On 19/09/2024 13.15, Yunsheng Lin wrote:
+>>> On 2024/9/19 17:42, Jesper Dangaard Brouer wrote:
+>>>>
+>>>> On 18/09/2024 19.06, Ilias Apalodimas wrote:
+>>>>>> In order not to do the dma unmmapping after driver has already
+>>>>>> unbound and stall the unloading of the networking driver, add
+>>>>>> the pool->items array to record all the pages including the ones
+>>>>>> which are handed over to network stack, so the page_pool can
+>>>>>> do the dma unmmapping for those pages when page_pool_destroy()
+>>>>>> is called.
+>>>>>
+>>>>> So, I was thinking of a very similar idea. But what do you mean by
+>>>>> "all"? The pages that are still in caches (slow or fast) of the pool
+>>>>> will be unmapped during page_pool_destroy().
+>>>>
+>>>> I really dislike this idea of having to keep track of all outstanding pages.
+>>>>
+>>>> I liked Jakub's idea of keeping the netdev around for longer.
+>>>>
+>>>> This is all related to destroying the struct device that have points to
+>>>> the DMA engine, right?
+>>>
+>>> Yes, the problem seems to be that when device_del() is called, there is
+>>> no guarantee hw behind the 'struct device ' will be usable even if we
+>>> call get_device() on it.
+>>>
+>>>>
+>>>> Why don't we add an API that allow netdev to "give" struct device to
+>>>> page_pool.  And then the page_poll will take over when we can safely
+>>>> free the stuct device?
+>>>
+>>> By 'allow netdev to "give" struct device to page_pool', does it mean
+>>> page_pool become the driver for the device?
+>>> If yes, it seems that is similar to jakub's idea, as both seems to stall
+>>> the calling of device_del() by not returning when the driver unloading.
+>>
+>> Yes, this is what I mean. (That is why I mentioned Jakub's idea).
 
-Still no reply from peter though.=20
+I am not sure what dose the API that allows netdev to "give" struct device
+to page_pool look like or how to implement the API yet, but the obvious way
+to stall the calling of device_del() is to wait for the inflight page to
+come back in page_pool_destroy(), which seems the same as the jakub's
+way from the viewpoint of user, and jakub's way seems more elegant than
+waiting in page_pool_destroy().
 
->=20
-> Ping-Ke Shih <pkshih@realtek.com> wrote:
-> > When removing kernel modules by:
-> >    rmmod rtw88_8723cs rtw88_8703b rtw88_8723x rtw88_sdio rtw88_core
-> >
-> > Driver uses skb_queue_purge() to purge TX skb, but not report tx status
-> > causing "Have pending ack frames!" warning. Use ieee80211_purge_tx_queu=
-e()
-> > to correct this.
-> >
-> > Since ieee80211_purge_tx_queue() doesn't take locks, to prevent racing
-> > between TX work and purge TX queue, flush and destroy TX work in advanc=
-e.
-> >
-> >    wlan0: deauthenticating from aa:f5:fd:60:4c:a8 by local
-> >      choice (Reason: 3=3DDEAUTH_LEAVING)
-> >    ------------[ cut here ]------------
-> >    Have pending ack frames!
-> >    WARNING: CPU: 3 PID: 9232 at net/mac80211/main.c:1691
-> >        ieee80211_free_ack_frame+0x5c/0x90 [mac80211]
-> >    CPU: 3 PID: 9232 Comm: rmmod Tainted: G         C
-> >        6.10.1-200.fc40.aarch64 #1
-> >    Hardware name: pine64 Pine64 PinePhone Braveheart
-> >       (1.1)/Pine64 PinePhone Braveheart (1.1), BIOS 2024.01 01/01/2024
-> >    pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=3D--)
-> >    pc : ieee80211_free_ack_frame+0x5c/0x90 [mac80211]
-> >    lr : ieee80211_free_ack_frame+0x5c/0x90 [mac80211]
-> >    sp : ffff80008c1b37b0
-> >    x29: ffff80008c1b37b0 x28: ffff000003be8000 x27: 0000000000000000
-> >    x26: 0000000000000000 x25: ffff000003dc14b8 x24: ffff80008c1b37d0
-> >    x23: ffff000000ff9f80 x22: 0000000000000000 x21: 000000007fffffff
-> >    x20: ffff80007c7e93d8 x19: ffff00006e66f400 x18: 0000000000000000
-> >    x17: ffff7ffffd2b3000 x16: ffff800083fc0000 x15: 0000000000000000
-> >    x14: 0000000000000000 x13: 2173656d61726620 x12: 6b636120676e6964
-> >    x11: 0000000000000000 x10: 000000000000005d x9 : ffff8000802af2b0
-> >    x8 : ffff80008c1b3430 x7 : 0000000000000001 x6 : 0000000000000001
-> >    x5 : 0000000000000000 x4 : 0000000000000000 x3 : 0000000000000000
-> >    x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000003be8000
-> >    Call trace:
-> >     ieee80211_free_ack_frame+0x5c/0x90 [mac80211]
-> >     idr_for_each+0x74/0x110
-> >     ieee80211_free_hw+0x44/0xe8 [mac80211]
-> >     rtw_sdio_remove+0x9c/0xc0 [rtw88_sdio]
-> >     sdio_bus_remove+0x44/0x180
-> >     device_remove+0x54/0x90
-> >     device_release_driver_internal+0x1d4/0x238
-> >     driver_detach+0x54/0xc0
-> >     bus_remove_driver+0x78/0x108
-> >     driver_unregister+0x38/0x78
-> >     sdio_unregister_driver+0x2c/0x40
-> >     rtw_8723cs_driver_exit+0x18/0x1000 [rtw88_8723cs]
-> >     __do_sys_delete_module.isra.0+0x190/0x338
-> >     __arm64_sys_delete_module+0x1c/0x30
-> >     invoke_syscall+0x74/0x100
-> >     el0_svc_common.constprop.0+0x48/0xf0
-> >     do_el0_svc+0x24/0x38
-> >     el0_svc+0x3c/0x158
-> >     el0t_64_sync_handler+0x120/0x138
-> >     el0t_64_sync+0x194/0x198
-> >    ---[ end trace 0000000000000000 ]---
-> >
-> > Reported-by: Peter Robinson <pbrobinson@gmail.com>
-> > Closes:
-> >
-> https://lore.kernel.org/linux-wireless/CALeDE9OAa56KMzgknaCD3quOgYuEHFx9_=
-hcT=3DOFgmMAb+8MPyA@mail.gmail.
-> > com/
-> > Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> Keeping track of inflight packets that need to be unmapped is
+> certainly more complex. Delaying the netdevice destruction certainly
+> solves the problem but there's a huge cost IMHO. Those devices might
+> stay there forever and we have zero guarantees that the network stack
+> will eventually release (and unmap) those packets. What happens in
+> that case? The user basically has to reboot the entire machine, just
+> because he tries to bring an interface down and up again.
 
-I added some test code to be easier to reproduce this problem on USB device=
-=20
-named 8723DU, and this patch can fix the problem, so=20
+Yes.
+The problem seems to be how long page_pool is allowed to stall the driver
+unloading? Does the driver unload stalling affect some feature like device
+hotplug?
+As the problem in [1], the stall might be forever due to caching in the
+network stack as discussed in [2], and there might be some other caching
+we don't know yet.
 
-Tested-by: Ping-Ke Shih <pkshih@realtek.com> # 8723DU
+The stalling log in [1] is caused by the caching in skb_attempt_defer_free(),
+we may argue that a timeout is needed for those kind of caching, but Eric
+seemed to think otherwise in commit log of [3]:
+"As Eric pointed out/predicted there's no guarantee that
+applications will read / close their sockets so a page pool page
+may be stuck in a socket (but not leaked) forever."
 
+1. https://lore.kernel.org/netdev/20240814075603.05f8b0f5@kernel.org/T/#me2f2c89fbeb7f92a27d54a85aab5527efedfe260
+2. https://lore.kernel.org/netdev/20240814075603.05f8b0f5@kernel.org/T/#m2687f25537395401cd6a810ac14e0e0d9addf97e
+3. https://lore.kernel.org/netdev/ZWfuyc13oEkp583C@makrotopia.org/T/
 
+> 
+> Thanks
+> /Ilias
+>>
+>>
+>>> If no, it seems that the problem is still existed when the driver for
+>>> the device has unbound after device_del() is called.
