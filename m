@@ -1,48 +1,59 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAAD414AD19
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 10:07:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F02E86FDC
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 11:29:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727258882; cv=none; b=Aq7t4d8YOEmp4TIyVLB+ZeOhuyTYibWLNNvNMDEi75ER4Am0PZCfRTiBKb4a7DgKJwOSxOKwLs9qScIFODp3hpf8zDrluNQDQ7+3QCwFUj5WghF3zMCOHhNaX4C2+4RCAQYFoIVPlqqPq2hwUaFoz6lnqRF6NJ00/LgFFfiqKe4=
+	t=1727263743; cv=none; b=lb9UDUj9AEWi1ePdAdpGUWLRW6lCiVzfOPN0akl48p/X5NE+cronQhUVoDP+EcaRwqzFNeGLhXjFwg1nnuyVDODWY2cs+ILaF4V1O91OgerGnGdB6tqDJzBxVhIyF1IZO8Jcc6n0ILE6XdA/8gNDSZGARtHQKUyrVye/XLR1QOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727258882; c=relaxed/simple;
-	bh=+38GOmygiW9XUvstBAjolEL2L0r0UfsO4V78w/iowXc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=rabyUwh6yxRfbCZDd+9xv5dH2V/dtcYLEW+hUGQCdRqbNsg6RzkcBfmcTcniZzhGuik41K6Fxl4IP/NnE42/hlpKySS6XiBpQJZGQ7IJr6nofT6GL35f+OtpAwxFC0Q61Mb9aTuuEknE20AQCVz7AVeHQt4UmXe5I7MFDz19hMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=aLclYhix; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1727263743; c=relaxed/simple;
+	bh=wiAhu38/lZACRlv5pXXy3jtwSC4Oq3wSBLHfPfizgRE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=PEVJ8rMP4N/vSo8VgRSiijfyJCwuA3Zg7QaUPm8J8D/rbREZI2XVlOswpStoKGy+JZw9NsPHV0787EjdZ7j+mv3S1sdsp+Cv6Vaq5FCj0mKUCZJZllJNeRmGGg1hXmjK26edl59p9bMw+fPeUwZWkeQococTyHGQZnwipl5GSvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FS0DNDLn; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="aLclYhix"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48P8kIXw031702;
-	Wed, 25 Sep 2024 10:07:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	+38GOmygiW9XUvstBAjolEL2L0r0UfsO4V78w/iowXc=; b=aLclYhixJFdzp2l6
-	+84y8J0zjgp9vX8HotS6Qrxxv4Dtl4TxcgD8DwOuB4ii+xsJoK3ihhUBVTU1Claq
-	EOG2y6RFa01QACSsK6yn93NvYuzQXVO4uq0bLy6al14y1c+u8Ali/76tZjLmqwen
-	8Rp7VdJ7io3ukHI+aujVw4+pHXZ/towcwzKucdLdFL7KEGr/hWcRjPA0krmrvy59
-	IhTKrduCOsLhXYEgQq3wJ0SyxEeadXdXlhIQ71o2WGkPnN+JQJaQhjKu6I9qJ+qr
-	afKwqq/bh+DUJM82mTdqXfageoP/I4UJI0DW1C9yW/EEBnXG5ZA14Umb1CqENMcW
-	KvW8Mg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41sph6utx7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Sep 2024 10:07:54 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 48PA7ruh012546
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Sep 2024 10:07:53 GMT
-Received: from [10.231.195.67] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 25 Sep
- 2024 03:07:52 -0700
-Message-ID: <fd90d471-503b-4f58-ae11-bae2afab08c7@quicinc.com>
-Date: Wed, 25 Sep 2024 18:07:50 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FS0DNDLn"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-42cbb08a1a5so63066555e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 04:29:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1727263740; x=1727868540; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=IQL6xWa9HHBUaHaRglGfs0VlwV9GZStm9rjfA5XbkBs=;
+        b=FS0DNDLne3+zlM0NQNtyxT7szr/B3qofkkZNc/RtaVz5YghAAOO4PlRhZF7JnDJFob
+         sweOKFbFUEiQudU1G1VatkyUiXgeov92P9CDPZopvCL8g/tdTkLKSyw4NJJ2eNddultJ
+         pW1E2Lk6OHODFDEWeuVHkN27wCWriu8w82fCR0S/07PrmZJCzXTFXLOvijtyysCDbQGe
+         xVDrQSmfM/wZJLw5H04XHsvBRqrBn5EaEtVB7rqe7WAX/G3qKjZ7OCMtfpEjUuJY+2zO
+         i3gKbVx++IL3j3Il3IquYDaRNqg73hnzzmFGX6MzzwenBEXttNGN5E8dieGKBk7sDzg/
+         ZpmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727263740; x=1727868540;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IQL6xWa9HHBUaHaRglGfs0VlwV9GZStm9rjfA5XbkBs=;
+        b=bmqd1UpmGJR4NkTHeokZLcZJ7bkEiWJquGSt21bwvcA7047mI31jQwSExr191rwrpT
+         1edWxieXZESBgUQI7akT52jB7bAJqum4+Bkb3hN8t907Y8v2FWoyEPh5qFUExpoddBHp
+         QbM+RXvq69aPI9HrEZjkvNekvS3MikDCwiYXdir3lYvLFKvofH+kd6KKWbcJgTYHTfpB
+         UU1KljnLC+lB61/ZFEgxWLhhHcUq8g2cHAoP4oDCQkmTMRIAuh6MXcUJXt2HhKfEaRof
+         HUNMG/FZxk4iQujnCwe53/499K29/RRmUfDPxWhrJB7Z49GVQbam+auk6NhecfBBMxv0
+         8KTg==
+X-Forwarded-Encrypted: i=1; AJvYcCXtM2YEwUZAhYM16OWkK7U/O18QpBl9l5UP1uzKTiLggMCphuRYQoSwMSMiqLejuxxDGaNjflmpdA3zV4ggeg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxvAAu31SnjytLaZDfCB5BoqxKAjHTDUcCLTUd41NOzLgemcPjs
+	CHj1bMLjTyeB+239bsYnwlbaqfSxYfKMdAKVlpfFa3pEaBVsptlM
+X-Google-Smtp-Source: AGHT+IGFd/mQeW+O6VbaXNREenRP3gAWL0dXWWhGxGhPtGHQQMy8pYQQ1iKpDwt2JjqU3Efmt9PO8w==
+X-Received: by 2002:a05:600c:4f0f:b0:42c:ba1f:543e with SMTP id 5b1f17b1804b1-42e9613635amr16206295e9.26.1727263739784;
+        Wed, 25 Sep 2024 04:28:59 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.193])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42e9027450asm38837835e9.0.2024.09.25.04.28.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Sep 2024 04:28:59 -0700 (PDT)
+Message-ID: <d621b3ed-86f5-40d4-b826-79615a2def6e@gmail.com>
+Date: Wed, 25 Sep 2024 14:28:56 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,75 +61,142 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: ath11k/WCN6855 neighbor report request made immediately after
- connection gets no response (with MFP)
-To: James Prestwood <prestwoj@gmail.com>,
-        "open list:MEDIATEK MT76 WIRELESS
- LAN DRIVER" <linux-wireless@vger.kernel.org>
-CC: "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-References: <eb41d8ec-c4f1-474e-a938-099f27aa94e3@gmail.com>
+Subject: Re: [PATCH 18/20] wifi: rtw88: Add rtw8821a.{c,h}
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <ade57ca1-444f-49e2-b49e-f4b9da65b2cc@gmail.com>
+ <f25d00ab-4481-4540-956b-bc1028a501e1@gmail.com>
+ <e365c61d730d4f49915b543dcb0063d5@realtek.com>
+ <dafaac0c-fb55-4406-b8ff-69aa66d3fd06@gmail.com>
+ <1aca96c68f914f90b6d1baf8780e6ce4@realtek.com>
+ <bebaa40a-1c7a-4b1e-99cd-7c7aac7c76f4@gmail.com>
+ <f583e9470ca84234ad2e00f3a0371664@realtek.com>
+ <38553e79-6747-4ab3-9bf4-fa7f2af852cd@gmail.com>
+ <73de8e7135554ae9a0f7968780644515@realtek.com>
+ <b4c9ff5c-a8ca-401f-aa79-3798239ffd57@gmail.com>
+ <9c991498a48043d0b0b06dc05356cbae@realtek.com>
 Content-Language: en-US
-From: Baochen Qiang <quic_bqiang@quicinc.com>
-In-Reply-To: <eb41d8ec-c4f1-474e-a938-099f27aa94e3@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: kZUCtKEp1hFLA3jxvBaUhA7splbbZ8qG
-X-Proofpoint-ORIG-GUID: kZUCtKEp1hFLA3jxvBaUhA7splbbZ8qG
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- impostorscore=0 bulkscore=0 spamscore=0 clxscore=1011 mlxlogscore=999
- mlxscore=0 adultscore=0 phishscore=0 suspectscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2408220000 definitions=main-2409250069
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <9c991498a48043d0b0b06dc05356cbae@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 25/09/2024 04:25, Ping-Ke Shih wrote:
+> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>> On 23/09/2024 08:47, Ping-Ke Shih wrote:
+>>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>>>>>>>>>> +
+>>>>>>>>>> +const struct rtw_chip_info rtw8812a_hw_spec = {
+>>>>>>>>>
+>>>>>>>>> Is it possible moving 8812a to individual file?
+>>>>>>>>> Since you have rtw8812au.c and rtw8821au.c.
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> I think it is possible. But most of the code is common to both chips.
+>>>>>>>> Only the IQ calibration could be moved.
+>>>>>>>
+>>>>>>> Yep, depend on how much IQK code echo chip has.
+>>>>>>>
+>>>>>>
+>>>>>> The IQ calibration for RTL8812AU is about 700 lines.
+>>>>>
+>>>>> rtw8812au  -----> (a) rtw8812a
+>>>>>                         |
+>>>>>                         v
+>>>>>                   (b) rtw8821a_common  (hard to give a name)
+>>>>>                         ^
+>>>>>                         |
+>>>>> rtw8821au  -----> (c) rtw8821a
+>>>>>
+>>>>> Put all common code to (b). IQK code in (a) or (c).
+>>>>>
+>>>>> I feel you have thought above picture already. What are problems we will encounter?
+>>>>> Many export symbols? If so, how about below?
+>>>>>
+>>>>> rtw8812au  -----> (1) rtw8812a
+>>>>>     +---------+
+>>>>>               +-> (2) rtw8821a_common  (hard to give a name)
+>>>>>     +---------+
+>>>>> rtw8821au  -----> (3) rtw8821a
+>>>>>
+>>>>> Put rtw8812a_hw_spec and rtw8821a_hw_spec in (2). Only IQK code in (1) and (3)
+>>>>> respectively, and export IQK entry only. Does it work?
+>>>>>
+>>>>>
+>>>> For the name of the common module, I was thinking rtw88_88xxa.ko.
+>>>>
+>>>> I wonder, what is the goal? To put the code in separate kernel
+>>>> modules, or just separate files?
+>>>
+>>> I would like to reduce runtime memory. As I asked, how many IQK code are different
+>>> from them? If you have separated and compiled them, can you share size by the
+>>> output of 'size' command?
+>>>
+>>
+>> I separated the IQK code into two files (still just one module).
+>> size says:
+>>
+>>    text    data     bss     dec     hex filename
+>>    7192      32       0    7224    1c38 rtw8821a-iqk.o
+>>   12319      40       0   12359    3047 rtw8812a-iqk.o
+>>
+>> This is x86_64.
+>>
+>>>>
+>>>> I think we can have rtw88xxa.c (common code), rtw8821a.c (IQK code,
+>>>> rtw8821a_hw_spec, bluetooth stuff), and rtw8812a.c (IQK code,
+>>>> rtw8812a_hw_spec, some efuse stuff, channel switching)... if these
+>>>> three files compile into a single module, rtw88_88xxa.ko.
+>>>>
+>>>> If each file compiles into a module of its own, we have circular
+>>>> dependencies: rtw8821a_hw_spec -> common code -> IQK code.
+>>>> If *_hw_spec go in the common module, it still depends on both of
+>>>> the other two modules, so what use is it?
+>>>
+>>> If we have dependency of common code -> IQK code, we can't save runtime
+>>> memory, because common code reference to both IQK code. So I felt
+>>> dependency of IQK code would be rtw8812au --> IQK code as above second
+>>> diagram.
+>>>
+>>> But if the work is complicated and save not few runtime memory, we can
+>>> use simple design as current did.
+>>>
+>>>
+>>
+>> The IQK code can be separated into different modules if I duplicate
+>> rtw8821a_ops and rtw8821a_pwr_track, and rtw8821a_phy_pwrtrack takes
+>> a pointer to the IQK function. Then your first diagram above can work.
+> 
+> Not sure the "duplicate" you meant. If it only a struct, that would be fine.
+> Not prefer duplicate of tables.
+> 
 
+Yes, it's a struct rtw_chip_ops.
 
-On 9/19/2024 8:21 PM, James Prestwood wrote:
-> Hi,
->=20
-> I noticed an issue when we started putting ath11k clients on a WPA3 net=
-work which seems to be related to the fact that management frame protecti=
-on is enabled (works fine on WPA2 no MFP). Immediately after an initial a=
-ssociation a neighbor report request goes out and we get no response from=
- the AP. After getting a PCAP in one case we noticed the neighbor report =
-request went out unencrypted, though still had the CCMP IV parameter. The=
- content of the request was the unencrypted request, and something like 1=
-5 bytes of 0x00 padding. I will say, this initial PCAP was made through t=
-he AP vendor so perhaps it automatically added the right keys to decrypt =
-the frame, this could be a red herring. I tried on my home network and it=
- was hit or miss, sometimes I would get a response but sometimes I wouldn=
-'t, but I did see the frame was always encrypted in my home network case =
-though when adding the PMK directly in wireshark I couldn't decrypt it, w=
-here on other hardware like iwlwifi I could.
-is your home network also WPA3?
+>>
+>> The tables also take up a bit of space:
+>>
+>>   text    data     bss     dec     hex filename
+>>   16832       0       0   16832    41c0 rtw8821a_table.o
+>>   21552       0       0   21552    5430 rtw8812a_table.o
+> 
+> Good point. 
+> 
+>>
+>> I don't know how many kilobytes is enough to make it worth
+>> creating two more modules.
+> 
+> I think we can list all *.o related to rtw8821a/8812a, and check the
+> percentage to make decisions. I mean if it occupies 50%, I will prefer
+> to have separated module. But I don't have an exact number now. 
+> 
 
-and how did you get the PMK? is it generated by IWD and printed as debug =
-message?
-
->=20
-> Some time after the connection neighbor reports work fine. I'm not sure=
- of a time frame or delay required that gets them working, but it makes m=
-e suspect that ath11k doesn't have the keys fully added in the firmware b=
-efore userspace gets signaled as "connected". Running the same scenario o=
-n ath10k or iwlwifi has no issues. This neighbor report request immediate=
-ly after connecting is IWD's default behavior, so its relatively easy to =
-test by just restarting IWD.
-I captured a WPA3 SAE PCAP too, but only can find some unencrypted ADDBA =
-req/resp frames. for those encrypted action frames I am still struggling =
-to decrypt them
-
->=20
-> Since the neighbor reports work fine after some time its not really a c=
-ritical issue but I wanted to bring it up just in case.
->=20
-> Thanks,
->=20
-> James
->=20
-
+   text    data     bss     dec     hex filename
+  12319      40       0   12359    3047 rtw8812a-iqk.o
+  21552       0       0   21552    5430 rtw8812a_table.o
+   7192      32       0    7224    1c38 rtw8821a-iqk.o
+  16832       0       0   16832    41c0 rtw8821a_table.o
+  29445     429       0   29874    74b2 rtw8821a.o
+=========
+  87340 total. So it's about 38% for 8812a and 27% for 8821a.
+Maybe a bit more in the final version.
