@@ -1,113 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m101-out-mua-2.websupport.se (m101-out-mua-2.websupport.se [109.235.175.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 979921B07D7;
-	Wed, 25 Sep 2024 12:13:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C15FD1D5AC8;
+	Wed, 25 Sep 2024 17:00:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.235.175.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727266430; cv=none; b=GxAXEXBM23MKqPAKK3ofJNWjjhbZ0nN2k4PbdTsMsCoR271/djLKobiW23kskQ+bbWRObg1G6YCHzj0XD7nCsA8uz1GUQPdPlScKx/D3iSQaDDp08beNYVX4HF3F5O88PiokrZ5Q02s/SlWBOGlWmEbbf9q5P23/gnq4Y5M+ZMU=
+	t=1727283626; cv=none; b=akiHT/vwZNihpMrsWJtBMBNOeVuDzNY8a38drrr4TK0hMlWRhoTHX+OHP6WY1/hD+3vHiXbBZfskCbSlnznxY6HY70jSgNGWAZ/aNsv+r1stX6inJADM0lUTbl8U2cszHHac77Aq3Hl3a4+LkjIYfW4RYTxZjNqm7jLI8w5V/s8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727266430; c=relaxed/simple;
-	bh=9pfYlAgLwWtJ0bQCsbD+2e5EHHneINBPCQH6bPb+y8o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CzXvrdQW+c5pbBSWp8ar7EjuSISOzgrGzdCeT+2HgukjZLp+XZ64yX+3hN7oJ0cY0yMeTOXi8/reQM5iWcAftWyKM21nJEstFIkFPOjiJEFZGv8UwaTeXHG3tAYbqGl5MohKLI56hnzp/CAh8jc+GTrxeYA5tqwuh9DmnRdOd6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GJW9zGr3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727283626; c=relaxed/simple;
+	bh=eAIWmxSIB/wFH+b+hWZW8MT1OROPOx/GVZI1Yx2S4VE=;
+	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Message-ID:Content-Type; b=LyiaEcswYENSMACke7lxQf4YigjBt0TqhibtxgmcbyABum2FkvBlGayD5/wiespGzKRbq/ltMqw9yBiIWFFrVc+ZuOL/RsEeTiqWhPYHzNRJ6gzsbaApo1JECfWQvVVlCTu97xADYhXz9+qt1dPZOFMyiORNHbk15f/S1MdSQH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=technux.se; spf=pass smtp.mailfrom=technux.se; dkim=pass (2048-bit key) header.d=technux.se header.i=@technux.se header.b=VNDvciX6; arc=none smtp.client-ip=109.235.175.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=technux.se
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=technux.se
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GJW9zGr3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19306C4CEC7;
-	Wed, 25 Sep 2024 12:13:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727266430;
-	bh=9pfYlAgLwWtJ0bQCsbD+2e5EHHneINBPCQH6bPb+y8o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GJW9zGr3a6QI7yTsz4L9JxLBDvv+ojrby8OaLsgDHfrSccYwEcWSL169dg0fnkbcV
-	 P7WiMwdYNXSgjsXbaPxv4YiCvpeUgpjyuYn34hOiF7IRC51g4xB9i+9Utcrvl2pRkU
-	 9eZJox6H0AZNMtGBX8C2ulcASoEpabyA1UlpkcbLo/c3SHriH9bvWDn8RIHkqmiQ+O
-	 ogEjLHMZ6D9hqyx454PPugUaw+zl+927OuJXeD0N+1wtvDAFZjp4Pp+hFVKVDPUiJi
-	 YcezEyWVC5J0YfjifFpVvfdnRYZZ1gMs/jUOqPxM29TPq+4A/zXhCY3hgBgV4BAJ0z
-	 AjD7HlQMbsmug==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Brian Norris <briannorris@chromium.org>,
-	Kalle Valo <kvalo@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	kees@kernel.org,
-	yu-hao.lin@nxp.com,
-	dmantipov@yandex.ru,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 055/139] wifi: mwifiex: Fix memcpy() field-spanning write warning in mwifiex_cmd_802_11_scan_ext()
-Date: Wed, 25 Sep 2024 08:07:55 -0400
-Message-ID: <20240925121137.1307574-55-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240925121137.1307574-1-sashal@kernel.org>
-References: <20240925121137.1307574-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=technux.se header.i=@technux.se header.b="VNDvciX6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=technux.se; s=mail;
+	t=1727283613; bh=QbAxxAUT7/ekJWsQXn9co2hKZ92a2vCXMCEDtmEY8F0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=VNDvciX6EkDFlP1Qnn8scL/mda5zRwMXB6db0WnyH91KrzhlBRFvI4xOPlb5o7+oM
+	 k6Xqx2gFHAkGCh3dAmVwvFR/j9ympFOEG14dwtFKMKcm2Boa+TJ8RqaaEys5ppPAz8
+	 Mpw5LjU5ji/CIuKRXYh4MjVEADxPM+I0Yqp1MsSGyW+ABj4+bqVncMOv/PIkhdi5C3
+	 qN3gb7lHoqKI7fs6VdpcqzUqrlc6n5c1y9NUWPcD0gBCWmMxMR0oBevHAyjKAmziU7
+	 fiZDNqAiS7j2WAOeEVPNIKUgCWUW41I4BXzL7f4MngDku7rP2vY4wAq/6jA8+RXj6i
+	 ffKBjnpEhxjEQ==
+Received: from m101-u7-ing.websupport.se (unknown [10.30.7.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	by m101-out-mua-2.websupport.se (Postfix) with ESMTPS id 4XDNJY0f0Gz1ZvN;
+	Wed, 25 Sep 2024 19:00:13 +0200 (CEST)
+X-Authenticated-Sender: petter@technux.se
+Authentication-Results: m101-u7-ing.websupport.se;
+	auth=pass smtp.auth=petter@technux.se smtp.mailfrom=petter@technux.se
+Received: from roundcube.ws.int (unknown [109.235.175.25])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: petter@technux.se)
+	by m101-u7-ing.websupport.se (Postfix) with ESMTPSA id 4XDNJW6j6Yz110k;
+	Wed, 25 Sep 2024 19:00:11 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.52
-Content-Transfer-Encoding: 8bit
+Date: Wed, 25 Sep 2024 19:00:11 +0200
+From: petter@technux.se
+To: Johannes Berg <johannes@sipsolutions.net>,
+ linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Cc: stable@vger.kernel.org, Sasha Levin <sashal@kernel.org>,
+ rtl8821cerfe2@gmail.com, morrownr@gmail.com, s.hauer@pengutronix.de
+Subject: Re: rtw88: rtw8822cu: Kernel warning in cfg80211: disconnect_work at
+ net/wireless/core.h:231 on CPU 0
+In-Reply-To: <13c3221f0cf2c5586dc34e8dcf6758c9e4e6cd4c.camel@sipsolutions.net>
+References: <80de30f72595480a2e061dc462191c9f@technux.se>
+ <9d243087654c4f3492d0046b7444c6a6@realtek.com>
+ <13c3221f0cf2c5586dc34e8dcf6758c9e4e6cd4c.camel@sipsolutions.net>
+User-Agent: Roundcube Webmail/1.6.9
+Message-ID: <9e98937d781c990615ef27ee0c858ff9@technux.se>
+X-Sender: petter@technux.se
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+X-Out-Spamd-Result: default: False [-0.10 / 1000.00];
+	MIME_GOOD(-0.10)[text/plain];
+	FROM_EQ_ENVFROM(0.00)[];
+	ASN(0.00)[asn:41528, ipnet:109.235.175.0/24, country:SE];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	WS_IP_WHITELIST(0.00)[109.235.175.25];
+	FROM_NO_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+]
+X-Out-Rspamd-Server: m101-rspamd-out-4
+X-Rspamd-Pre-Result: action=no action;
+	module=multimap;
+	Matched map: WS_IP_WHITELIST
+X-Out-Rspamd-Queue-Id: 4XDNJW6j6Yz110k
+X-Rspamd-Action: no action
+X-purgate-type: clean
+X-purgate-Ad: Categorized by eleven eXpurgate (R) http://www.eleven.de
+X-purgate: This mail is considered clean (visit http://www.eleven.de for further information)
+X-purgate: clean
+X-purgate-size: 1598
+X-purgate-ID: 155908::1727283613-C743DF5A-F3B00CA5/0/0
+Feedback-ID: m101:technux.se
 
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-[ Upstream commit 498365e52bebcbc36a93279fe7e9d6aec8479cee ]
 
-Replace one-element array with a flexible-array member in
-`struct host_cmd_ds_802_11_scan_ext`.
+On 2024-09-25 08:19, Johannes Berg wrote:
+> On Wed, 2024-09-25 at 03:30 +0000, Ping-Ke Shih wrote:
+> 
+> 
+>> I think the cause is picking commit 268f84a82753
+>> ("wifi: cfg80211: check wiphy mutex is held for wdev mutex"), and
+>> cfg80211_is_all_idle() called by disconnect_work() uses wdev_lock()
+>> but not wiphy_lock().
+> 
+> Yeah seems like a stable only problem (CC them), this is with kernel
+> version 6.6.51-00141-ga1649b6f8ed6 according to the warning.
+> 
+>> I'm not sure if we should simply revert the picked commit 268f84a82753
+>> or should pick more commits.
+> 
+> I don't see why it was picked up in the first place, so I guess I'd say
+> remove it. We won't want to redo the locking on a stable kernel, I'd
+> think.
+> 
 
-With this, fix the following warning:
+Thanks! I tried reverting 268f84a82753, then as you guys expected the 
+issue is gone. So will continue to run with this commit reverted. But 
+would be good if we can decide
+how to handle this for stable releases (such as 6.6) and see if we can 
+revert it their also in upcoming 6.6.53.
 
-elo 16 17:51:58 surfacebook kernel: ------------[ cut here ]------------
-elo 16 17:51:58 surfacebook kernel: memcpy: detected field-spanning write (size 243) of single field "ext_scan->tlv_buffer" at drivers/net/wireless/marvell/mwifiex/scan.c:2239 (size 1)
-elo 16 17:51:58 surfacebook kernel: WARNING: CPU: 0 PID: 498 at drivers/net/wireless/marvell/mwifiex/scan.c:2239 mwifiex_cmd_802_11_scan_ext+0x83/0x90 [mwifiex]
-
-Reported-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Closes: https://lore.kernel.org/linux-hardening/ZsZNgfnEwOcPdCly@black.fi.intel.com/
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://patch.msgid.link/ZsZa5xRcsLq9D+RX@elsanto
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/marvell/mwifiex/fw.h   | 2 +-
- drivers/net/wireless/marvell/mwifiex/scan.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 62f3c9a52a1d5..a3be37526697b 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -1587,7 +1587,7 @@ struct host_cmd_ds_802_11_scan_rsp {
- 
- struct host_cmd_ds_802_11_scan_ext {
- 	u32   reserved;
--	u8    tlv_buffer[1];
-+	u8    tlv_buffer[];
- } __packed;
- 
- struct mwifiex_ie_types_bss_mode {
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 72904c275461e..5be817d9854a6 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2543,8 +2543,7 @@ int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv,
- 	ext_scan_resp = &resp->params.ext_scan;
- 
- 	tlv = (void *)ext_scan_resp->tlv_buffer;
--	buf_left = le16_to_cpu(resp->size) - (sizeof(*ext_scan_resp) + S_DS_GEN
--					      - 1);
-+	buf_left = le16_to_cpu(resp->size) - (sizeof(*ext_scan_resp) + S_DS_GEN);
- 
- 	while (buf_left >= sizeof(struct mwifiex_ie_types_header)) {
- 		type = le16_to_cpu(tlv->type);
--- 
-2.43.0
-
+>> By the way, I think the latest kernel will not throw these messages.
+> 
+> Agree, that seems unlikely.
+> 
+> johannes
+Sounds good. I will see if I can give it a try on later kernel also, to 
+verify. It will require some work to get my device up and running on a 
+later version so might take some time until I can give feedback. I was a 
+bit fooled that I got the issue when moving from 6.6.30 to 6.6.51 + 
+cherry-picking all latest rtw88 related changes for my LM842 (8822cu) 
+usb dongle, but great that you guys figured it out so quickly.
