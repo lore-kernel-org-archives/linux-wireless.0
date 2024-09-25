@@ -1,114 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 733271AED35;
-	Wed, 25 Sep 2024 11:40:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8B318FC74
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 11:46:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727264413; cv=none; b=Z7SPXzcqQ2Zh1aVkr3srEh8cn3joBU5x/zJng0geEpp0psJTKbgWlI0MDkb0cavmRBbVvdE/NgTzSK1L6agKOvCcuh6648f51WArc+aICOpotw+ayrwCzSoQYyicwdPS4E63SsPnBqPg6A7i5MkwsilBgajEeoCC3Fs2zaLjKrM=
+	t=1727264776; cv=none; b=XhE4o1zpOmYglCGXEIXvTEzVv5Oe2i5ZX9E5WdL0s67CQ0yDsztS3UDuuphQTEUAJm00bOLM7lawV205YmDG39XdeeLVXTi/x3ugFtCfCOiLb+Mm3r5/gt5j0arIOyO5jqlSSS7mXn4l4gUlzApKl/tILLnlc6Ub1k8kh+Q7nBM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727264413; c=relaxed/simple;
-	bh=m6g1/T++F9gxi9y9LjBZx6JGGbo3MyCMDcOYnbkWviQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oUw7t84p/mTgO6lhpzdBMwtIeqWTH651vHIiwRFJ9lG+86yxz0kZpAiMJHWYrzDqVnMdVDZBIiXLWKmBh+nkWI+9kHRZ8oU+86yvreR7AoABsxQ+A436l6Kq6M+wAZljXvtFY6InCYSwE4ysV9ZtFh4358KpDYGrTqL/lRstmjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KGsKLIq+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727264776; c=relaxed/simple;
+	bh=v9Ae7jmMHQFlMZbF32j43dVF7Z2aG+EUS6iAxFUVHpc=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=hCnEPRwiVooYqzN0CxJzPUM/LVFwaoQo8tKqxxgUguFIpxVJaopacrvUhvPw+DLafamlnVqOflETbO6gtf6W3nAfRq+0bw7UH/g28t/Ozl9ecTNHA8fnvLBoGVXZ/h3tQGgv2uB0onX/nxYtYwAV1sIW1QYs9lqhmAIy3zZVt4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=biwR2LcK; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KGsKLIq+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86EECC4CEC3;
-	Wed, 25 Sep 2024 11:40:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727264413;
-	bh=m6g1/T++F9gxi9y9LjBZx6JGGbo3MyCMDcOYnbkWviQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=KGsKLIq+DiDd2MdCt4VO1r8N48ZMFfX/ItBM4Y/q9qofpnHBWo0TEI7OP8NpibRJi
-	 wPduOmhaPuYTMLbozAbEeZwmF1oS6LXsP8smFFH8iysUeaiU5EpNR1TupqrqSHMhvZ
-	 uJprZUNZz0Igw+EAGLZJyDXbDihsEYSjGr/lx+NWMOE2ZE9WzQrsmPCNytKn1+OHcR
-	 i+BtHhu9b55FDaw9hw95HPXw/LnnfscwT6Eaf2tge++SYk1eVxUovb3LVnIGH5NLOS
-	 eQ5R3BmFvb91sdojYqKDxvijpBELO/fgufGKKZQRcuvj56FTJ4jJWX8gFsFxsjUOyD
-	 BFLGhOib72F8Q==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Brian Norris <briannorris@chromium.org>,
-	Kalle Valo <kvalo@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	francesco.dolcini@toradex.com,
-	kees@kernel.org,
-	yu-hao.lin@nxp.com,
-	dmantipov@yandex.ru,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.11 085/244] wifi: mwifiex: Fix memcpy() field-spanning write warning in mwifiex_cmd_802_11_scan_ext()
-Date: Wed, 25 Sep 2024 07:25:06 -0400
-Message-ID: <20240925113641.1297102-85-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240925113641.1297102-1-sashal@kernel.org>
-References: <20240925113641.1297102-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="biwR2LcK"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-42cbc22e1c4so54241825e9.2
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 04:46:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1727264772; x=1727869572; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:cc:to:subject:from
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9kSH3gAmDvaE0TWu0Zw1tqUtUV0KUVsDtyl6cBRmYm4=;
+        b=biwR2LcKsvTJakT56vf3OL+C26ggHnAotYzYzj8PY+ZKJkxVgKnEjFiFtTHobdApr/
+         SRIX5B1BFhr3piMb613B7eWjjQxJ60/RKqgNRNbEiEg2oOhot//bSL75W2psVR9pXdkA
+         nRYjcHTJVDPIZ7wj6czQYYMC8y/XFR5mL2UPanIw61J9pUcKvhFBjK+ShtGtTyYyf7+x
+         6I51FMHNcYjMTfTir2vF+nByVshyhd3opomoOv15xFtzh7Z7bprOFpTgYiK+xqkgw7dd
+         wYAgAj+lCTtOIdIGBA1c8D/AlApHzQ7GcmJXt4f1+shH5m7nDz6+LTkcrS8IYSwrs5tA
+         bywg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727264772; x=1727869572;
+        h=content-transfer-encoding:content-language:cc:to:subject:from
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=9kSH3gAmDvaE0TWu0Zw1tqUtUV0KUVsDtyl6cBRmYm4=;
+        b=R7BAbjqVfr2mpF8Gd5MarJZpAizLIywEb2hy2JRgRjIylc9XY25wUoWNbPclWMHWI+
+         GHftLaTcS63Sl75QrZ/t+qQfbqLLUPmaQ+C0qlQgpZOgcv3pE2aZ/f3/rShGZbj50LvE
+         xIjiTuNzoe+ow43wzPJXUhc2fXqTC6ep/fQLdfoJoPjOuB0raLN6EJFQlnp745ep3/gW
+         ug+1DpbkPKhHQeeeKrAWOpDr2vm/PN0Ero8KXlUA3jzNaQZVox9IrB/7kjNChjZjU6sW
+         bb6ElJQxxQO1pdiypTeUBWxYdPVgtFX+cTu4U68nTKjHODRjZmHAcwRKvouyjuQw3bIS
+         dk0w==
+X-Gm-Message-State: AOJu0Yz8DnYraYT0IunJF6qA+sa5PYWTHpFYJshCG+tAp0jKx244g8DO
+	IunLS8mk0lz7Zmx6Pc/2Tqpaj1wXubCxW1KdJ5nBoSlMpKeJx2jVLEc6vA==
+X-Google-Smtp-Source: AGHT+IE9bV1ugpIU4zBrLev1tRW11fTNLqfQ5ku0FKbvcZiGSSYCzAcLrVD7uGQmqQc0U8p75iHK5Q==
+X-Received: by 2002:a05:600c:3b87:b0:426:51dc:f6cd with SMTP id 5b1f17b1804b1-42e961173e8mr13054495e9.18.1727264772084;
+        Wed, 25 Sep 2024 04:46:12 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.193])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37cbc31f3ddsm3731628f8f.103.2024.09.25.04.46.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 25 Sep 2024 04:46:11 -0700 (PDT)
+Message-ID: <6e7ecb47-7ea0-433a-a19f-05f88a2edf6b@gmail.com>
+Date: Wed, 25 Sep 2024 14:46:10 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.11
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: rtw88: USB devices randomly stop receiving anything
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Hi,
 
-[ Upstream commit 498365e52bebcbc36a93279fe7e9d6aec8479cee ]
+I have this problem with RTL8811CU, RTL8723DU, RTL8811AU, RTL8812AU.
+I assume all USB devices are affected. If I have qBittorrent running,
+the wifi stops working after a few hours:
 
-Replace one-element array with a flexible-array member in
-`struct host_cmd_ds_802_11_scan_ext`.
+Sep 24 00:48:21 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:21 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:23 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:23 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:25 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:25 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:27 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:27 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:29 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:29 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:31 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:31 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:33 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:33 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:35 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:35 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:37 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:37 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:39 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:39 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:41 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-BEACON-LOSS
+Sep 24 00:48:41 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:42 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: CTRL-EVENT-DISCONNECTED bssid=... reason=4 locally_generated=1
+Sep 24 00:48:42 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: Added BSSID ... into ignore list, ignoring for 10 seconds
+Sep 24 00:48:42 ideapad2 NetworkManager[433]: <info>  [1727128122.0377] device (wlp3s0f3u2i2): supplicant interface state: completed -> disconnected
+Sep 24 00:48:45 ideapad2 NetworkManager[433]: <info>  [1727128125.6030] device (wlp3s0f3u2i2): supplicant interface state: disconnected -> scanning
+Sep 24 00:48:47 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: Removed BSSID ... from ignore list (clear)
+Sep 24 00:48:47 ideapad2 wpa_supplicant[1290]: wlp3s0f3u2i2: SME: Trying to authenticate with ... (SSID='...' freq=2472 MHz)
+Sep 24 00:48:50 ideapad2 kernel: wlp3s0f3u2i2: authenticate with ... (local address=,,,)
+Sep 24 00:48:51 ideapad2 NetworkManager[433]: <info>  [1727128131.2488] device (wlp3s0f3u2i2): supplicant interface state: scanning -> authenticating
+Sep 24 00:48:51 ideapad2 kernel: wlp3s0f3u2i2: send auth to ... (try 1/3)
+Sep 24 00:48:51 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:52 ideapad2 kernel: wlp3s0f3u2i2: send auth to ... (try 2/3)
+Sep 24 00:48:52 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:53 ideapad2 kernel: wlp3s0f3u2i2: send auth to ... (try 3/3)
+Sep 24 00:48:53 ideapad2 kernel: rtw_8723du 1-2:1.2: failed to get tx report from firmware
+Sep 24 00:48:54 ideapad2 kernel: wlp3s0f3u2i2: authentication with ... timed out
 
-With this, fix the following warning:
+After this all scans return nothing. The chip is still alive,
+though. The LED blinks during the scans (it's hardware-controlled)
+and another device in monitor mode can see the probe requests.
 
-elo 16 17:51:58 surfacebook kernel: ------------[ cut here ]------------
-elo 16 17:51:58 surfacebook kernel: memcpy: detected field-spanning write (size 243) of single field "ext_scan->tlv_buffer" at drivers/net/wireless/marvell/mwifiex/scan.c:2239 (size 1)
-elo 16 17:51:58 surfacebook kernel: WARNING: CPU: 0 PID: 498 at drivers/net/wireless/marvell/mwifiex/scan.c:2239 mwifiex_cmd_802_11_scan_ext+0x83/0x90 [mwifiex]
+I confirmed that even C2H stop coming. I used aireplay-ng to send
+some authentication or association frames (can't remember) which
+require TX ACK report. I saw "failed to get tx report from firmware"
+and no C2H.
 
-Reported-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Closes: https://lore.kernel.org/linux-hardening/ZsZNgfnEwOcPdCly@black.fi.intel.com/
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Acked-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://patch.msgid.link/ZsZa5xRcsLq9D+RX@elsanto
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/marvell/mwifiex/fw.h   | 2 +-
- drivers/net/wireless/marvell/mwifiex/scan.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+While qBittorrent is needed to trigger this bug, simply downloading
+a random Linux iso did not do the job. "Other" torrents did. It's
+unclear why. Maybe it's uploading that triggers the bug.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 3adc447b715f6..5b072120e3f21 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -1587,7 +1587,7 @@ struct host_cmd_ds_802_11_scan_rsp {
- 
- struct host_cmd_ds_802_11_scan_ext {
- 	u32   reserved;
--	u8    tlv_buffer[1];
-+	u8    tlv_buffer[];
- } __packed;
- 
- struct mwifiex_ie_types_bss_mode {
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 0326b121747cb..17ce84f5207e3 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2530,8 +2530,7 @@ int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv,
- 	ext_scan_resp = &resp->params.ext_scan;
- 
- 	tlv = (void *)ext_scan_resp->tlv_buffer;
--	buf_left = le16_to_cpu(resp->size) - (sizeof(*ext_scan_resp) + S_DS_GEN
--					      - 1);
-+	buf_left = le16_to_cpu(resp->size) - (sizeof(*ext_scan_resp) + S_DS_GEN);
- 
- 	while (buf_left >= sizeof(struct mwifiex_ie_types_header)) {
- 		type = le16_to_cpu(tlv->type);
--- 
-2.43.0
+I left iperf3 running all day and nothing happened. Only qBittorrent
+can break it.
 
+RTL8822CE doesn't have this problem. I can use qBittorrent with it
+just fine.
+
+I mounted debugfs and dumped the MAC registers during a scan using
+this command:
+
+for i in {00..20}; do sleep 0.5; cat /sys/kernel/debug/ieee80211/phy2/rtw88/mac_{0..7} > dead-$i.txt; done
+
+I thought maybe some RX URBs failed silently and rtw88 stopped
+sending them to the device (== stopped requesting data from it),
+but that's not the case. [1]
+
+I have the device in this state right now. Is there anything else
+I should look at?
+
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/drivers/net/wireless/realtek/rtw88/usb.c?h=v6.10.11&id=25eaef533bf3ccc6fee5067aac16f41f280e343e#n641
