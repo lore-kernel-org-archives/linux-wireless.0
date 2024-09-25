@@ -1,148 +1,94 @@
-Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0D46137775
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 11:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8AA1714C4;
+	Wed, 25 Sep 2024 11:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727263993; cv=none; b=Sp0a9nc3glpHQ101FZRci4CeXdsyxZtKXVZgqsHsK+gtvgZfzbGbaRaeJNRAPj7kMHEO1ZILozX2nywtx2+ZzoKBHyhcfJWnxP/EnP1gYH3LxS06kT0r6wQLT7WYD/VKQlvp9zBm4jmiJh1cfhGDd4YRADUVPrtUS4w14ipEmh0=
+	t=1727264206; cv=none; b=On+7LDec1pXApPcn5eSH22eZ2kDALURO7i0DZtKj36MZk2dAEDUv4NH7xX4Wi6+3xtGdivxsV1jiyACTSfHq+YNEd2wTpvFwHf9fVExXpD0EuanzGZM0fvNUa41Oa5iDTXtHSc8TzOv0TO+utG6I2JYlqSpzK8dqLuRy6tVYNtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727263993; c=relaxed/simple;
-	bh=tc8uqoCNRNdrD17ZB4QzB7ejHnXWxueD1dikRRayNIA=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To; b=X1yafpD7pkORr55s/9CrnE4/jfWoKJrCvFcq5FtE+Pa7Z0Zqx5WQ8NlVtNd9G2LCeUEQPYgNmpg9NGZPqs8xUfh0qwWlMTx2cv66xd+EiK+jmqHpg2gpQUDu5G9/0D05vkbRddFN8iJnbEkwpoCzQ/6RlGxuvnFAxyZXBSSBZ7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZIAXVSqS; arc=none smtp.client-ip=209.85.166.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1727264206; c=relaxed/simple;
+	bh=DHKg4G/Asx6z3gXHGGyKUwxi9cSsvXk2f1FXaNNbvXE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LrXv/fs1/YOxe0uFcFRA3NhcY/zsj8lmgVHWGVsNa2bweXGomDegmxFF+CWwCUi3Ge4aapp02rEox0WcU+r15ZReIgkUByW6Qq5k4ODBq0K/6xlp7bohEvJEAbB3GyoqbfyyVI5csCTTPqRZLNqeTPOCZpC2pnyqpiwmRNNJgXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ljHd64K5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZIAXVSqS"
-Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-82aab679b7bso235728939f.0
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2024 04:33:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1727263991; x=1727868791; darn=vger.kernel.org;
-        h=in-reply-to:from:content-language:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tc8uqoCNRNdrD17ZB4QzB7ejHnXWxueD1dikRRayNIA=;
-        b=ZIAXVSqSGn0YV7iJ4pVLZcv32jkvY5UUqPrNpN1Lo40qbS71pvnmn0JQKdL/o+Qxu5
-         r6JEMqHJSP6XTixT4IIN62ya6VfUDtOmWzyvTBSC/4jD1OT3qaX9uZ/7+VHKoYjfeWQt
-         JZZVDTHzv/t8Oe/bNw+I09Zzof6z2VtXj5W78W9h6Su3VrQtuTuaJ+cdYOF6vxnLJuRS
-         9NSNmibQizXOyMTDM/wj0rq5yQZ57r6f7Aku8PwwoA+NY1YqAjhjYk9U50scUyy66CIf
-         dtDOGaJL85MRHTcEbtlOWf74mFXEo2hTXgGP+FFKXVkUF/0Y+5YCb8neYk1JPRMtXSwU
-         wG2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1727263991; x=1727868791;
-        h=in-reply-to:from:content-language:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=tc8uqoCNRNdrD17ZB4QzB7ejHnXWxueD1dikRRayNIA=;
-        b=eHSM6TtofVgNPx4ORQ9BgkBQuRtb4bm/7981cRDZScgPPAMYJ12DOaml0u6MjMuHy3
-         OHY3qWlXBZcUZqqRXikuGRbLdFyWnHAO0m/0ZX+DSc0TZqKbNMMLqgfKmUfdUjZ8YNMQ
-         5cTi0p9A0AuZla6d6FsJC9QUf/q+donaQwwZAqh3xcoBt3FV9U/V7cA+Ob0Trz8yZfrW
-         XdQy/6jg0sF8Q97QhKTk5aX8fvOJwflB40O+fyT2n0eB+OX8XQFskfl8hYIhJKD1jomT
-         UCH9eYR2K07m+0z8N3Q8mh/RB/H43x7UIu0OAgLlByl2F9Ld8Gz1RfVYUeHNgwPNU3cH
-         eMKw==
-X-Forwarded-Encrypted: i=1; AJvYcCUk9u8JLRoO7i/QqYiupE76QT1I5Q+RW1X0cECoHxJjhZluSDsxmpHaW4J9IifqeiQU0kH8lZe3DjGTAs4wUQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9MyBKpplnO/B9X2xL+PLc4OKFp56lomRaqMVKujTCzzyxl6du
-	UvUtZZAdbaQdcqUbp8cQwwUGxfZVlWCNBXZNv0EY3vS2MzwMKRXl
-X-Google-Smtp-Source: AGHT+IHYHRWH8mBWxmgeETnntNhbzxDj98PIYcEbLrgqoXhejrC12/4mSvk/PAlAQKZ3evNhvlxTFA==
-X-Received: by 2002:a05:6602:1694:b0:82d:3c2:9118 with SMTP id ca18e2360f4ac-83247f89baemr302888339f.16.1727263990549;
-        Wed, 25 Sep 2024 04:33:10 -0700 (PDT)
-Received: from [10.163.199.22] ([64.125.133.166])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4d40f0e92ddsm991918173.24.2024.09.25.04.33.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Sep 2024 04:33:09 -0700 (PDT)
-Content-Type: multipart/mixed; boundary="------------VLjyUQCgADLx2t4IVYMshR58"
-Message-ID: <0d1dab88-66a0-48c1-bdbe-777d07c3132e@gmail.com>
-Date: Wed, 25 Sep 2024 04:33:05 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ljHd64K5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62B0EC4CECD;
+	Wed, 25 Sep 2024 11:36:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727264206;
+	bh=DHKg4G/Asx6z3gXHGGyKUwxi9cSsvXk2f1FXaNNbvXE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=ljHd64K5cZHqx/TxBajqaiTzPIsPWwPDTzy92WB4BpK7/fGXDKX4BVLzL+a9MFRg7
+	 pUrC8P7BhSiBUJhTqg/2TyxxtSBRA/9yVREifcx/KAs8pjxYKN64umC07amPpg6bIm
+	 04akAXVe7Om1+uMui+DR0qt8+n6ZhYXWbkgj6oE4SRhB19V/wvaIqe78GE7H5gKrmS
+	 lNV6r5/aQsx3UZsCmunfFIREx7e44k2En2P1CQY7/QsRI8YXOx7Z7XD0pvoU+wdWkf
+	 Mlr5f+Ev23c77E/j5lAgU+XklSVBzKRi27/dsdiUKS2ZQ2X7x6KOv4ilUB5q2rbKxJ
+	 jQF8ZTEU4ChPA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Dmitry Kandybka <d.kandybka@gmail.com>,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Kalle Valo <quic_kvalo@quicinc.com>,
+	Sasha Levin <sashal@kernel.org>,
+	kvalo@kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.11 002/244] wifi: ath9k: fix possible integer overflow in ath9k_get_et_stats()
+Date: Wed, 25 Sep 2024 07:23:43 -0400
+Message-ID: <20240925113641.1297102-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240925113641.1297102-1-sashal@kernel.org>
+References: <20240925113641.1297102-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: ath11k/WCN6855 neighbor report request made immediately after
- connection gets no response (with MFP)
-To: Baochen Qiang <quic_bqiang@quicinc.com>,
- "open list:MEDIATEK MT76 WIRELESS LAN DRIVER"
- <linux-wireless@vger.kernel.org>
-Cc: "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>
-References: <eb41d8ec-c4f1-474e-a938-099f27aa94e3@gmail.com>
- <fd90d471-503b-4f58-ae11-bae2afab08c7@quicinc.com>
-Content-Language: en-US
-From: James Prestwood <prestwoj@gmail.com>
-In-Reply-To: <fd90d471-503b-4f58-ae11-bae2afab08c7@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.11
+Content-Transfer-Encoding: 8bit
 
-This is a multi-part message in MIME format.
---------------VLjyUQCgADLx2t4IVYMshR58
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+From: Dmitry Kandybka <d.kandybka@gmail.com>
 
-SGkgQmFvY2hlbiwNCg0KT24gOS8yNS8yNCAzOjA3IEFNLCBCYW9jaGVuIFFpYW5nIHdyb3Rl
-Og0KPg0KPiBPbiA5LzE5LzIwMjQgODoyMSBQTSwgSmFtZXMgUHJlc3R3b29kIHdyb3RlOg0K
-Pj4gSGksDQo+Pg0KPj4gSSBub3RpY2VkIGFuIGlzc3VlIHdoZW4gd2Ugc3RhcnRlZCBwdXR0
-aW5nIGF0aDExayBjbGllbnRzIG9uIGEgV1BBMyBuZXR3b3JrIHdoaWNoIHNlZW1zIHRvIGJl
-IHJlbGF0ZWQgdG8gdGhlIGZhY3QgdGhhdCBtYW5hZ2VtZW50IGZyYW1lIHByb3RlY3Rpb24g
-aXMgZW5hYmxlZCAod29ya3MgZmluZSBvbiBXUEEyIG5vIE1GUCkuIEltbWVkaWF0ZWx5IGFm
-dGVyIGFuIGluaXRpYWwgYXNzb2NpYXRpb24gYSBuZWlnaGJvciByZXBvcnQgcmVxdWVzdCBn
-b2VzIG91dCBhbmQgd2UgZ2V0IG5vIHJlc3BvbnNlIGZyb20gdGhlIEFQLiBBZnRlciBnZXR0
-aW5nIGEgUENBUCBpbiBvbmUgY2FzZSB3ZSBub3RpY2VkIHRoZSBuZWlnaGJvciByZXBvcnQg
-cmVxdWVzdCB3ZW50IG91dCB1bmVuY3J5cHRlZCwgdGhvdWdoIHN0aWxsIGhhZCB0aGUgQ0NN
-UCBJViBwYXJhbWV0ZXIuIFRoZSBjb250ZW50IG9mIHRoZSByZXF1ZXN0IHdhcyB0aGUgdW5l
-bmNyeXB0ZWQgcmVxdWVzdCwgYW5kIHNvbWV0aGluZyBsaWtlIDE1IGJ5dGVzIG9mIDB4MDAg
-cGFkZGluZy4gSSB3aWxsIHNheSwgdGhpcyBpbml0aWFsIFBDQVAgd2FzIG1hZGUgdGhyb3Vn
-aCB0aGUgQVAgdmVuZG9yIHNvIHBlcmhhcHMgaXQgYXV0b21hdGljYWxseSBhZGRlZCB0aGUg
-cmlnaHQga2V5cyB0byBkZWNyeXB0IHRoZSBmcmFtZSwgdGhpcyBjb3VsZCBiZSBhIHJlZCBo
-ZXJyaW5nLiBJIHRyaWVkIG9uIG15IGhvbWUgbmV0d29yayBhbmQgaXQgd2FzIGhpdCBvciBt
-aXNzLCBzb21ldGltZXMgSSB3b3VsZCBnZXQgYSByZXNwb25zZSBidXQgc29tZXRpbWVzIEkg
-d291bGRuJ3QsIGJ1dCBJIGRpZCBzZWUgdGhlIGZyYW1lIHdhcyBhbHdheXMgZW5jcnlwdGVk
-IGluIG15IGhvbWUgbmV0d29yayBjYXNlIHRob3VnaCB3aGVuIGFkZGluZyB0aGUgUE1LIGRp
-cmVjdGx5IGluIHdpcmVzaGFyayBJIGNvdWxkbid0IGRlY3J5cHQgaXQsIHdoZXJlIG9uIG90
-aGVyIGhhcmR3YXJlIGxpa2UgaXdsd2lmaSBJIGNvdWxkLg0KPiBpcyB5b3VyIGhvbWUgbmV0
-d29yayBhbHNvIFdQQTM/DQo+DQo+IGFuZCBob3cgZGlkIHlvdSBnZXQgdGhlIFBNSz8gaXMg
-aXQgZ2VuZXJhdGVkIGJ5IElXRCBhbmQgcHJpbnRlZCBhcyBkZWJ1ZyBtZXNzYWdlPw0KDQpJ
-IGFjdHVhbGx5IGhhZCB0byBtb2RpZnkgSVdEIHRvIHByaW50IG91dCB0aGUgUE1LIGFmdGVy
-IGl0IGRlcml2ZWQgaXQuIA0KV1BBMyBtYWtlcyB0aGlzIGEgaHVnZSBwYWluIHNpbmNlIHRo
-ZSBQTUsgZGlmZmVycyBiZXR3ZWVuIFNBRSBleGNoYW5nZXMuDQoNCkkndmUgYXR0YWNoZWQg
-YW4gSVdEIGRpZmYgdGhhdCBwcmludHMgb3V0IHRoZSBQTUssIHdoaWNoIGNhbiBiZSBhZGRl
-ZCB0byANCndpcmVzaGFyayBpZiB0aGF0IGhlbHBzLg0KDQo+DQo+PiBTb21lIHRpbWUgYWZ0
-ZXIgdGhlIGNvbm5lY3Rpb24gbmVpZ2hib3IgcmVwb3J0cyB3b3JrIGZpbmUuIEknbSBub3Qg
-c3VyZSBvZiBhIHRpbWUgZnJhbWUgb3IgZGVsYXkgcmVxdWlyZWQgdGhhdCBnZXRzIHRoZW0g
-d29ya2luZywgYnV0IGl0IG1ha2VzIG1lIHN1c3BlY3QgdGhhdCBhdGgxMWsgZG9lc24ndCBo
-YXZlIHRoZSBrZXlzIGZ1bGx5IGFkZGVkIGluIHRoZSBmaXJtd2FyZSBiZWZvcmUgdXNlcnNw
-YWNlIGdldHMgc2lnbmFsZWQgYXMgImNvbm5lY3RlZCIuIFJ1bm5pbmcgdGhlIHNhbWUgc2Nl
-bmFyaW8gb24gYXRoMTBrIG9yIGl3bHdpZmkgaGFzIG5vIGlzc3Vlcy4gVGhpcyBuZWlnaGJv
-ciByZXBvcnQgcmVxdWVzdCBpbW1lZGlhdGVseSBhZnRlciBjb25uZWN0aW5nIGlzIElXRCdz
-IGRlZmF1bHQgYmVoYXZpb3IsIHNvIGl0cyByZWxhdGl2ZWx5IGVhc3kgdG8gdGVzdCBieSBq
-dXN0IHJlc3RhcnRpbmcgSVdELg0KPiBJIGNhcHR1cmVkIGEgV1BBMyBTQUUgUENBUCB0b28s
-IGJ1dCBvbmx5IGNhbiBmaW5kIHNvbWUgdW5lbmNyeXB0ZWQgQUREQkEgcmVxL3Jlc3AgZnJh
-bWVzLiBmb3IgdGhvc2UgZW5jcnlwdGVkIGFjdGlvbiBmcmFtZXMgSSBhbSBzdGlsbCBzdHJ1
-Z2dsaW5nIHRvIGRlY3J5cHQgdGhlbQ0KPg0KPj4gU2luY2UgdGhlIG5laWdoYm9yIHJlcG9y
-dHMgd29yayBmaW5lIGFmdGVyIHNvbWUgdGltZSBpdHMgbm90IHJlYWxseSBhIGNyaXRpY2Fs
-IGlzc3VlIGJ1dCBJIHdhbnRlZCB0byBicmluZyBpdCB1cCBqdXN0IGluIGNhc2UuDQo+Pg0K
-Pj4gVGhhbmtzLA0KPj4NCj4+IEphbWVzDQo+Pg0K
---------------VLjyUQCgADLx2t4IVYMshR58
-Content-Type: text/x-patch; charset=UTF-8; name="print-pmk.patch"
-Content-Disposition: attachment; filename="print-pmk.patch"
-Content-Transfer-Encoding: base64
+[ Upstream commit 3f66f26703093886db81f0610b97a6794511917c ]
 
-ZGlmZiAtLWdpdCBhL3NyYy9zYWUuYyBiL3NyYy9zYWUuYwppbmRleCA5N2MwYWYwNS4uZjJj
-ZWJlMDkgMTAwNjQ0Ci0tLSBhL3NyYy9zYWUuYworKysgYi9zcmMvc2FlLmMKQEAgLTg1Nyw2
-ICs4NTcsMjAgQEAgc3RhdGljIGJvb2wgc2FlX3ZlcmlmeV9jb25maXJtKHN0cnVjdCBzYWVf
-c20gKnNtLCBjb25zdCB1aW50OF90ICpmcmFtZSkKICAgICAgICByZXR1cm4gdHJ1ZTsKIH0K
-IAorI2luY2x1ZGUgPHN0ZGlvLmg+CisKK3N0YXRpYyB2b2lkIHByaW50X3Btayh1aW50OF90
-ICpwbWspCit7CisgICAgICAgdW5zaWduZWQgaW50IGk7CisKKyAgICAgICBwcmludGYoIlBN
-SzogIik7CisKKyAgICAgICBmb3IgKGkgPSAwOyBpIDwgMzI7IGkrKykKKyAgICAgICAgICAg
-ICAgIHByaW50ZigiJTAyeCIsIHBta1tpXSk7CisKKyAgICAgICBwcmludGYoIlxuIik7Cit9
-CisKIHN0YXRpYyBpbnQgc2FlX3Byb2Nlc3NfY29uZmlybShzdHJ1Y3Qgc2FlX3NtICpzbSwg
-Y29uc3QgdWludDhfdCAqZnJvbSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBj
-b25zdCB1aW50OF90ICpmcmFtZSwgc2l6ZV90IGxlbikKIHsKQEAgLTg4MCw2ICs4OTQsOCBA
-QCBzdGF0aWMgaW50IHNhZV9wcm9jZXNzX2NvbmZpcm0oc3RydWN0IHNhZV9zbSAqc20sIGNv
-bnN0IHVpbnQ4X3QgKmZyb20sCiAgICAgICAgaGFuZHNoYWtlX3N0YXRlX3NldF9wbWtpZChz
-bS0+aGFuZHNoYWtlLCBzbS0+cG1raWQpOwogICAgICAgIGhhbmRzaGFrZV9zdGF0ZV9zZXRf
-cG1rKHNtLT5oYW5kc2hha2UsIHNtLT5wbWssIDMyKTsKIAorICAgICAgIHByaW50X3Btayhz
-bS0+cG1rKTsKKwogICAgICAgIHNtLT5zdGF0ZSA9IFNBRV9TVEFURV9BQ0NFUFRFRDsKIAog
-ICAgICAgIGlmICghc20tPmhhbmRzaGFrZS0+YXV0aGVudGljYXRvcikgewoK
+In 'ath9k_get_et_stats()', promote TX stats counters to 'u64'
+to avoid possible integer overflow. Compile tested only.
 
---------------VLjyUQCgADLx2t4IVYMshR58--
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Signed-off-by: Dmitry Kandybka <d.kandybka@gmail.com>
+Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Link: https://patch.msgid.link/20240725111743.14422-1-d.kandybka@gmail.com
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d84e3ee7b5d90..886a102e5b025 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1325,11 +1325,11 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc = hw->priv;
+ 	int i = 0;
+ 
+-	data[i++] = (sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_pkts_all +
++	data[i++] = ((u64)sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_pkts_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].tx_pkts_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].tx_pkts_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].tx_pkts_all);
+-	data[i++] = (sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_bytes_all +
++	data[i++] = ((u64)sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BE)].tx_bytes_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_BK)].tx_bytes_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VI)].tx_bytes_all +
+ 		     sc->debug.stats.txstats[PR_QNUM(IEEE80211_AC_VO)].tx_bytes_all);
+-- 
+2.43.0
+
