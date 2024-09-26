@@ -1,140 +1,113 @@
-Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B1F5136357
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2024 14:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20FEB15B99D;
+	Thu, 26 Sep 2024 15:58:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727360822; cv=none; b=jkHtDZP6lTIrLMwEE2VYcXlmYlyAr0AinGz6nFxnvYbZ7qBp92u/T9NffOE+MJQskIVqwNerwhN8iVMErTSuKTZZfILoEksnK3IEM+ozK7sZjQUEFbQOD8zoFYeKF8jFIV8BUtpi5iIVobmqsOevPvzxONne3zrm0JzmYyawQlw=
+	t=1727366323; cv=none; b=Q0Z024gVYP278b96Nt9xsq1szqfdmkyW03euMkYK7QWxEweq1u/4hrVlw6NluItVJ7vzqTIuk6lD11OFU0PGfsE9RB98PDqAywjyFWt7BDBj6h0pY6QvGZ8OC+H6tGcrhNFli/dOLplYTR6keiVKXJ42vI6ukBGH2qxfhBRwWvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727360822; c=relaxed/simple;
-	bh=+UG6KlHn70G5XrAq/IXOtWSKOl2G6F3h3ODVWL6Urcw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=E4IN7DhKalFWpyKBXAQ3MgbzQc1W7poWWbe1w/iaeXsqkEf+9mTdmY0PG664nVpcWE1HCJ3U6cNr0aHhnplGr0gS6re36M/SS0zb0Yy0DpRFoyqnLWv2aMvaijbrmxM73k7XC9MOogS3kODBIPOnv2jCX1pTAttWpDiVDRdjqNw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
-Received: from local
-	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-	 (Exim 4.98)
-	(envelope-from <daniel@makrotopia.org>)
-	id 1stpFg-000000005jn-1lUu;
-	Thu, 26 Sep 2024 14:13:52 +0000
-Date: Thu, 26 Sep 2024 15:13:44 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Shayne Chen <shayne.chen@mediatek.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Evelyn Tsai <evelyn.tsai@mediatek.com>,
-	linux-mediatek <linux-mediatek@lists.infradead.org>,
-	StanleyYP Wang <StanleyYP.Wang@mediatek.com>
-Subject: Re: [PATCH 1/3] wifi: mt76: mt7996: extend flexibility of
- mt7996_mcu_get_eeprom()
-Message-ID: <ZvVsGKmHHX2q_HRx@makrotopia.org>
-References: <20240926032440.15978-1-shayne.chen@mediatek.com>
+	s=arc-20240116; t=1727366323; c=relaxed/simple;
+	bh=igJ0G0OPnz/B3elCb/RuWY5dnt8N4bIiq+BlerzgzHw=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=aUDxV1FNXN4UcwoFvqwRnPK7iuAnvim8bNJNnN3cU6qRtaaZkcdLIYTCF7MC3kVelJB92pJMPJNpS4p0x0pTn1OIC8iYyPu04mQk6p44j767he2OhvJzyzTsehM84JXwsbpwNtBGP8+QH+Jod7TqhoH4ePvzgxrfRvmbPSwnArA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bHTsQPcS; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bHTsQPcS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A0ABC4CECE;
+	Thu, 26 Sep 2024 15:58:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727366321;
+	bh=igJ0G0OPnz/B3elCb/RuWY5dnt8N4bIiq+BlerzgzHw=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=bHTsQPcSbxg85P9pIQPwMha5ShcMWjEr/16SMRgqIGc0KVuAdbzGQqlSA3sdEFtsh
+	 3maWznzVTHKHJO0pw13fpAHWusOih98hmsvwVVTKK9XrqwhyUZT987WGqV561PhFDK
+	 qD/q603YAskungMGSk5lQ+8a6irk64cgCLQ0kpDOorQIwbyu56uWdUjdO/ManXyc5W
+	 PszVvAFG/yhxfismT8Vr/bbp+R9fyLR0hylngWnCOwnxxNkkx5LEHu050RMiALBJ9+
+	 psF+INAfbFocSty46NMOk95uBDe6GW+nuEi4dOff+V1avkzMsyc9BzGna602i4YqN7
+	 0eMI67mlN0Pkw==
+From: Kalle Valo <kvalo@kernel.org>
+To: Vladislav Efanov <VEfanov@ispras.ru>
+Cc: Johannes Berg <johannes@sipsolutions.net>,  "David S. Miller"
+ <davem@davemloft.net>,  Eric Dumazet <edumazet@google.com>,  Jakub
+ Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>,  "John W.
+ Linville" <linville@tuxdriver.com>,  linux-wireless@vger.kernel.org,
+  netdev@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  lvc-project@linuxtesting.org
+Subject: Re: [PATCH] cfg80211: Convert WARN_ON() to warning message
+References: <20240926133446.25445-1-VEfanov@ispras.ru>
+Date: Thu, 26 Sep 2024 18:58:37 +0300
+In-Reply-To: <20240926133446.25445-1-VEfanov@ispras.ru> (Vladislav Efanov's
+	message of "Thu, 26 Sep 2024 16:34:38 +0300")
+Message-ID: <874j629zki.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240926032440.15978-1-shayne.chen@mediatek.com>
+Content-Type: text/plain
 
-On Thu, Sep 26, 2024 at 11:24:38AM +0800, Shayne Chen wrote:
-> Support passing customized buffer pointer and length to
-> mt7996_mcu_get_eeprom().
-> 
-> This is the preparation for adding more variants support which needs to
-> prefetch FEM module from efuse, and also fixes potential OOB issue when
-> reading the last efuse block.
-> 
-> Co-developed-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
-> Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
-> Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Vladislav Efanov <VEfanov@ispras.ru> writes:
 
-Tested-by: Daniel Golle <daniel@makrotopia.org>
-
+> syzkaller got the following warning:
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 9992 at net/wireless/ibss.c:36 __cfg80211_ibss
+>
+> This warning is the result of the race condition between the following
+> events:
+>
+> event1                          event2                      event3
+> __ieee80211_sta_join_ibss()        |                          |
+> creates new cgf80211_bss           |                          |
+> structure.                         |                          |
+> Calls cfg80211_ibss_joined()       |                          |
+> which will scheduled               |                          |
+> new event_work.                    |                          |
+>                          ieee80211_ibss_disconnect()          |
+>                          is called due to connection          |
+>                          dropped/ibss leaves to               |
+>                          remove cfg80211_bss structure.       |
+>                                                 event_work starts.
+>                                           __cfg80211_ibss_joined()
+>                                           is called and WARNING is
+>                                           detected due to
+>                                           cfg80211_bss structure was
+>                                           removed by event2.
+>
+> It is a normal situation when connection is dropped during handshaking.
+> So it looks reasonable to replace WARN_ON() with warning message to
+> prevent false alarm.
+>
+> Found by Linux Verification Center (linuxtesting.org) with syzkaller.
+> Fixes: 04a773ade068 ("cfg80211/nl80211: add IBSS API")
+> Signed-off-by: Vladislav Efanov <VEfanov@ispras.ru>
 > ---
->  drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c |  9 +++++++--
->  drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    | 14 ++++++++++----
->  drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  2 +-
->  3 files changed, 18 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
-> index 4a8237118287..861aba68a725 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
-> @@ -86,8 +86,13 @@ static int mt7996_eeprom_load(struct mt7996_dev *dev)
->  		/* read eeprom data from efuse */
->  		block_num = DIV_ROUND_UP(MT7996_EEPROM_SIZE, eeprom_blk_size);
->  		for (i = 0; i < block_num; i++) {
-> -			ret = mt7996_mcu_get_eeprom(dev, i * eeprom_blk_size);
-> -			if (ret < 0)
-> +			u32 len = eeprom_blk_size;
-> +
-> +			if (i == block_num - 1)
-> +				len = MT7996_EEPROM_SIZE % eeprom_blk_size;
-> +			ret = mt7996_mcu_get_eeprom(dev, i * eeprom_blk_size,
-> +						    NULL, len);
-> +			if (ret && ret != -EINVAL)
->  				return ret;
->  		}
->  	}
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-> index 327337b31279..fa7832f625d7 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-> @@ -3548,7 +3548,7 @@ int mt7996_mcu_set_eeprom(struct mt7996_dev *dev)
->  				 &req, sizeof(req), true);
->  }
+>  net/wireless/ibss.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+> index e6fdb0b8187d..93c8bee12bdf 100644
+> --- a/net/wireless/ibss.c
+> +++ b/net/wireless/ibss.c
+> @@ -34,8 +34,10 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
+>  	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid, NULL, 0,
+>  			       IEEE80211_BSS_TYPE_IBSS, IEEE80211_PRIVACY_ANY);
 >  
-> -int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset)
-> +int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_len)
->  {
->  	struct {
->  		u8 _rsv[4];
-> @@ -3577,15 +3577,21 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset)
->  	valid = le32_to_cpu(*(__le32 *)(skb->data + 16));
->  	if (valid) {
->  		u32 addr = le32_to_cpu(*(__le32 *)(skb->data + 12));
-> -		u8 *buf = (u8 *)dev->mt76.eeprom.data + addr;
-> +
-> +		if (!buf)
-> +			buf = (u8 *)dev->mt76.eeprom.data + addr;
-> +		if (!buf_len || buf_len > MT7996_EEPROM_BLOCK_SIZE)
-> +			buf_len = MT7996_EEPROM_BLOCK_SIZE;
->  
->  		skb_pull(skb, 48);
-> -		memcpy(buf, skb->data, MT7996_EEPROM_BLOCK_SIZE);
-> +		memcpy(buf, skb->data, buf_len);
-> +	} else {
-> +		ret = -EINVAL;
->  	}
->  
->  	dev_kfree_skb(skb);
->  
-> -	return 0;
-> +	return ret;
->  }
->  
->  int mt7996_mcu_get_eeprom_free_block(struct mt7996_dev *dev, u8 *block_num)
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-> index ab8c9070630b..55aa5f6ab77d 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-> @@ -476,7 +476,7 @@ int mt7996_mcu_set_fixed_rate_ctrl(struct mt7996_dev *dev,
->  int mt7996_mcu_set_fixed_field(struct mt7996_dev *dev, struct ieee80211_vif *vif,
->  			       struct ieee80211_sta *sta, void *data, u32 field);
->  int mt7996_mcu_set_eeprom(struct mt7996_dev *dev);
-> -int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset);
-> +int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_len);
->  int mt7996_mcu_get_eeprom_free_block(struct mt7996_dev *dev, u8 *block_num);
->  int mt7996_mcu_get_chip_config(struct mt7996_dev *dev, u32 *cap);
->  int mt7996_mcu_set_ser(struct mt7996_dev *dev, u8 action, u8 set, u8 band);
-> -- 
-> 2.39.2
-> 
+> -	if (WARN_ON(!bss))
+> +	if (!bss) {
+> +		pr_warn("cfg80211: cfg80211_bss with bssid %s not found.\n", bssid);
+>  		return;
+> +	}
+
+If it's a normal case (disclaimer: didn't investigate that) the warning
+message could be more descriptive. I suspect the user is just confused
+after seeing that.
+
+Also 'wifi:' missing from subject.
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
