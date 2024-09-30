@@ -1,61 +1,90 @@
-Received: from amphora2.sui-inter.net (amphora2.sui-inter.net [80.74.147.34])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8BF417C7A3;
-	Mon, 30 Sep 2024 08:47:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.74.147.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23BAD13DB92
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Sep 2024 08:50:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727686045; cv=none; b=elRSvsQOok5QT5z7R79ud9ByCyyBIXOrKRHQIuBruRt0bgYitWu44cnqxx7Q2Shm9DOws/S5n/Vao3C5OttQ2OExNBgK4YdhfUJFeyQmWKBLxJK/xV3tc97XlKxiaIScu2yr/spTaHg8ihgDhkR9IHWMia1WnD/PIv/D0OJc+y0=
+	t=1727686206; cv=none; b=GaEw6XGgqckHBvy6ON+GDZ20qnTZEWDp7LMoKjmaxX/1bHF1kpfM3+Tc7YaRsxDkeXj9H4dZFybdBTKRudARufKzksIHDyuYGzNWUcwh+7rwSIuk9NCremYIbYc0gDBoRp3MjLJ38xttzywI2VFFIlGDL+drb/yEju3pPUgCS34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727686045; c=relaxed/simple;
-	bh=QxhZnwlrbbVVbS/DyQWT/dfY83S0RBvX1CzyA0kvaDk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i377IY6KKe/09pSu65eRDE9+89d4DhCVv0sMPhjM4H4Nht58bm8W/vUKz1MlbNxqMk9rHauzWleZCXQQI7wMDEKd2XGnp1W3wX8RLXgTSFwIFdu71saKeO7FabBIPorNiGH1vDIWNjCnxbfbszz3uo1w5Eq/k58fnLdVye+MvHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hqv.ch; spf=none smtp.mailfrom=hqv.ch; arc=none smtp.client-ip=80.74.147.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hqv.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=hqv.ch
-Received: from [192.168.172.95] (localhost [127.0.0.1]) by amphora2.sui-inter.net (Postfix) with ESMTPSA id 76C5A96824BD;
-	Mon, 30 Sep 2024 10:41:59 +0200 (CEST)
-Authentication-Results: amphora.sui-inter.net;
-        spf=pass (sender IP is 178.197.176.65) smtp.mailfrom=rs@hqv.ch smtp.helo=[192.168.172.95]
-Received-SPF: pass (amphora.sui-inter.net: connection is authenticated)
-Message-ID: <e93e1dd6-c215-4168-83e9-b8199599bc09@hqv.ch>
-Date: Mon, 30 Sep 2024 10:41:58 +0200
+	s=arc-20240116; t=1727686206; c=relaxed/simple;
+	bh=xpuNvtbie8KRHvHviAeyKrcJoFgn2ujGgkdiXYHW55s=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TheWssjB7OD+7Eede2Kf8sH/pEZIEfy9RqMuuPsckzS3UDOfp5QLcqNizJsDz+vbaskQwPkLwbM5n8ZapWKbaAlKScQWv+uafbcBfyPUbjnTUrXHXoGdNuZPKkgcF41XejpndlNAFzkOj6KmHz0yluMQLOZGEBWbcEbr0piY71Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=yDQ0qU7D; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=lepPxfJE; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yDQ0qU7D";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="lepPxfJE"
+From: Martin Kaistra <martin.kaistra@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1727686201;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ckv9nAlTD6BnATcKYD5DwGaJEX2aVRsjR9zKuct5KDg=;
+	b=yDQ0qU7DqmUcX008OwqPzNFJs9Pkr8oV1t1ojO0zawxd8RkbmxRGnFFhV65wd5GsGDuw7X
+	212JBP9a8f8A7DkEyBdAXigdcGTYsPhSzWmR6Ii+//8wx5L+5dPQ/qRPfqyDiOM3L1Hq5i
+	ycfTSgn2vxB+XLzt9rjjAuPyiLLEPsQEeyttu3tp49442joZmzZgxRjJCQ9b9cEmL5cCPh
+	QKKvk8UVVuUAAjEY626kf8n9Mcc4/bBic+xcvWOyIZywLFXB8JNuJSr9nZib6e/6irKY3/
+	XMxEZp3rGyvM/OCPdOZ5n8UBMMIyQwR9YtgKGSY6twYwjjdOavQlp7H2lzPbjw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1727686201;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ckv9nAlTD6BnATcKYD5DwGaJEX2aVRsjR9zKuct5KDg=;
+	b=lepPxfJE0TWt0JuB+VfIGW7IgMhMXMD55z1w/PiFi5pHrJdGck80sRIFkS8tg2whCqzVH1
+	txzHJp71gY7L07CA==
+To: linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH] wifi: rtl8xxxu: Perform update_beacon_work when beaconing is enabled
+Date: Mon, 30 Sep 2024 10:49:55 +0200
+Message-Id: <20240930084955.455241-1-martin.kaistra@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 00/22] wifi: nxpwifi: create nxpwifi to support iw61x
-To: David Lin <yu-hao.lin@nxp.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, briannorris@chromium.org, kvalo@kernel.org,
- francesco@dolcini.it, tsung-hsien.hsieh@nxp.com, s.hauer@pengutronix.de
-References: <20240930063701.2566520-1-yu-hao.lin@nxp.com>
-Content-Language: en-US, de-CH
-From: Reto Schneider <rs@hqv.ch>
-In-Reply-To: <20240930063701.2566520-1-yu-hao.lin@nxp.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi David,
+In STA+AP concurrent mode, performing a scan operation on one vif
+temporarily stops beacons on the other. When the scan is completed,
+beacons are enabled again with BSS_CHANGED_BEACON_ENABLED.
 
-Answering here because an OEM proposed using the IW612 in an upcoming 
-product of my employer.
+We can observe that no beacons are being sent when just
+rtl8xxxu_start_tx_beacon() is being called.
 
-On 30.09.24 08:36, David Lin wrote:
-> [1] We had considered adding IW61x to mwifiex, however due to FW
->      architecture, host command interface and supported features are
->      significantly different, doing this on mwifiex will carry a lot of
->      burdens. The effort of making sure no regression is also a huge effort.
->      We must create a new driver nxpwifi. Subsequent NXP chipsets will be
->      added and sustained on nxpwifi only.
+Thus, also perform update_beacon_work in order to restore beaconing.
 
-As developer, this sounds like a huge red flag. In the long-term 
-interest of my employer, I'd oppose using this type of hardware in our 
-products even if you manage to upstream the driver (as is).
+Fixes: cde8848cad0b ("wifi: rtl8xxxu: Add beacon functions")
+Signed-off-by: Martin Kaistra <martin.kaistra@linutronix.de>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Kind regards,
-Reto
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+index 7891c988dd5f0..f95898f68d68a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+@@ -5058,10 +5058,12 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
+-		if (bss_conf->enable_beacon)
++		if (bss_conf->enable_beacon) {
+ 			rtl8xxxu_start_tx_beacon(priv);
+-		else
++			schedule_delayed_work(&priv->update_beacon_work, 0);
++		} else {
+ 			rtl8xxxu_stop_tx_beacon(priv);
++		}
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_BEACON)
+-- 
+2.39.5
 
