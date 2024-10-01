@@ -1,53 +1,66 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 733CE19DF52
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Oct 2024 09:27:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CADA919D8BC
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Oct 2024 09:31:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727774862; cv=none; b=nbd8fAzx7QTk4OOLc1yQQVzRP5Xs7YXhbKS8j46fqDPOC+P7dPwPIHi17aRaUaQ01z1ROqGitPLeLvh7uQR5/zmsTkWQpTRzbsEXzOzM3oP4HHcTQPStW/tasDhkNzyp/W4pYAgvGJwpOD1SP0oxekdtONy8I2E5PujC39+1NSo=
+	t=1727775095; cv=none; b=XwsR5M/26tvqyNB1tSnx4p6wTDbPXFbvPsjjoDry4kFKl+P2SftDC+/vvaODP4io4LG/Pvz/W53sjq/XQNib5HG+k9N84x25W00CBrmMnY0GHcc0OTCqwSc0dPae7+3oMmyLOUQ/VHcJ7avdfY+KSLfWrJm2YFYxQGf+bT7wnB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727774862; c=relaxed/simple;
-	bh=j9eZbNHNJoTpBSYNi257vpEpW7cvu76o7o3uHwGKn1o=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qsYEVSuuJh/J7o8VGi7R/MPMQF9rSnMxV5yCxQpTbZK+RDebcjC/eHVLG875j+Sk1OXNQaV5wsTbNOi6XKE7hJxKZ20ACf45K/DflIcxYkUyuNtm4ly3k9/px66cUgUDBTYFGdaUfalZUHXwno847McFHGdZGf8YdudjzZjXBoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=e6tN1/vp; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1727775095; c=relaxed/simple;
+	bh=3tF4vbOgijTWD/UA3To8SloNHamCgS7uM+qqDFP9V/c=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=W3RmGxoS+Kx9QxS/jpRZaLtRGutC0euTPOc878YroxFbfvMUWJuoU3fvZ791kgOrfmGztoD0y7Wn1NxTDRfnXGLLRd086I51Fi1tO6CGTDmeN8zU2aGgXWehurfPSKOkxS/LqNxf2otRjMEbbGSyWjoccXy5mJtO9rAjNECKSds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GOFuA9mc; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="e6tN1/vp"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48UNr61p017398;
-	Tue, 1 Oct 2024 09:27:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=77KAl9WNIh+ryKl/Z/b0mL
-	IrSKbidlpmzl11FBr6qrQ=; b=e6tN1/vpEWaCFzMRwWRDsScHwp9/pilif5V639
-	J3Gry28qGcRNqSxjBUFe1eMPgrCoNAQMurK5bcphk04pjPn6CO7y6NsmMEdUZliM
-	ghyUgLWxiU1p1E63OwqTtJMHQuFNqK5SGhYLgjnNYsGLCQJVg1Tnd9UU9tccjxpN
-	K/FJG+rjzVeYmZ+ovmR1kTjsM1tJ85tbohIcljLS/4+wGoi0dxCXhcj4myHG/A20
-	83zbWFybemRAriajbrBUQlo5Uq3uPw9tcsKnipshRJ4lJxIba6kx9OFXvLZw42sy
-	zUgLv87iJcUGgjVcUs57J03UTXGT2lbRXgsgas39dQoPb6vg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41xa12qsc5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 01 Oct 2024 09:27:36 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4919RZAY028680
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 1 Oct 2024 09:27:35 GMT
-Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 1 Oct 2024 02:27:33 -0700
-From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Rameshkumar Sundaram
-	<quic_ramess@quicinc.com>
-Subject: [PATCH v2] wifi: ath12k: fix use-after-free in ath12k_dp_cc_cleanup()
-Date: Tue, 1 Oct 2024 14:56:52 +0530
-Message-ID: <20241001092652.3134334-1-quic_ramess@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GOFuA9mc"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-20b90984971so19136225ad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2024 02:31:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1727775093; x=1728379893; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ST2qop5iFMqE5KADf9pmpkXfU9fvzDZibt0hwBbJQEw=;
+        b=GOFuA9mcJcxYKLj8n59njvVSCbbaoDKGrVgV8KTOm/kPbrb3a208xXRX8F5U3db6/I
+         fsQzqngcA2TXUhHF5HzJRgmDNgbmvtMb5OM6m2xyZlt5VoXtZxVSd56Uz78t590G1Gi7
+         RJ2BRetA7sVrQUp4Fxnhw9mA2fBTx1IQGpbPVGVOhIhDVUIxdH04A3fDgVw4c2MgQajc
+         N0ssqexO6+fK7D7XXUj4vk2RLfZk2yHqJIgU5fdAZs7A/wTi0a4ATwB6Y5XWXJTdkqC/
+         kQFf6HwpYtkLRrFbwtYkvpDmFBbVI7GQvh3ptJZ/OiYOL8G51G7EdgViq8+4W72qlb9S
+         4MOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1727775093; x=1728379893;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ST2qop5iFMqE5KADf9pmpkXfU9fvzDZibt0hwBbJQEw=;
+        b=PT/hAGIKbw9MEHKDauV0abCG8nzhv0JaPxQV51ZnciOm6FqX0g9SD8tXV2WkI+BN47
+         6vEwzjweY2iuPa1VXYeAeyRPOB9Se28yz6AX/iwiVC8yk2Omx5iEz2J7YeBR913uqrkK
+         WKNfOHD/rK0i/PPmHzxw610T0t96efofyvJjAhfyjAMgxv/qSv1epmiK67uYqblcQOrh
+         dPH2Yl/b2scfLty9QaLZoxaQSMCoiRp/NrASRG6PTSQPqW08T/8Lm/ED4d4tAYX1EQS4
+         +9yDByS4u+iJ+k9pS6dDRJ1w+FuQ/jcQqv7ehV226pALBACPY1XI/fpwDWvyMycg++v/
+         hs6w==
+X-Gm-Message-State: AOJu0YzU3FJffZLZ+QRT/4STO4Pp5MPqK8c74O/IO3L5Vu/QdC+u0bWU
+	gfUOJTMw+dTmj7r0KaLADL3BEa5+b6ndoS47EDyuBx0hqXAj5q0OFn62jo01
+X-Google-Smtp-Source: AGHT+IHG5EenjYVqfoJiFPgSc8gutfeDjszNYLoPqiXmipJ2sn5RtbzuOzcjylw2HFqIfsAlKUBJzA==
+X-Received: by 2002:a17:902:f552:b0:20b:91f5:aae8 with SMTP id d9443c01a7336-20b91f5bc8bmr65947215ad.55.1727775092889;
+        Tue, 01 Oct 2024 02:31:32 -0700 (PDT)
+Received: from localhost.localdomain (59-124-166-19.hinet-ip.hinet.net. [59.124.166.19])
+        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-20b37d68906sm66102625ad.38.2024.10.01.02.31.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Oct 2024 02:31:32 -0700 (PDT)
+From: Ping-Ke Shih <pkshih@gmail.com>
+To: wens@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	wireless-regdb@lists.infradead.org
+Subject: [PATCH 2/2] wireless-regdb: Update regulatory info for Serbia (RS) for 2024
+Date: Tue,  1 Oct 2024 17:30:49 +0800
+Message-Id: <20241001093049.37515-2-pkshih@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241001093049.37515-1-pkshih@gmail.com>
+References: <20241001093049.37515-1-pkshih@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,127 +68,89 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 4t2yKACM63F7Pda9huGAcN9LBBXPwE0C
-X-Proofpoint-GUID: 4t2yKACM63F7Pda9huGAcN9LBBXPwE0C
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- impostorscore=0 priorityscore=1501 lowpriorityscore=0 suspectscore=0
- bulkscore=0 malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0
- adultscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2408220000 definitions=main-2410010061
 
-During ath12k module removal, in ath12k_core_deinit(),
-ath12k_mac_destroy() un-registers ah->hw from mac80211 and frees
-the ah->hw as well as all the ar's in it. After this
-ath12k_core_soc_destroy()-> ath12k_dp_free()-> ath12k_dp_cc_cleanup()
-tries to access one of the freed ar's from pending skb.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-This is because during mac destroy, driver failed to flush few
-data packets, which were accessed later in ath12k_dp_cc_cleanup()
-and freed, but using ar from the packet led to this use-after-free.
+Serbia government released radio frequency range on February 5, 2024 [1].
+Based on Article 100, paragraph 5 of the Law on Electronic Communications
+and Article 17, paragraph 1 and Article 42, paragraph 1 of the Law on
+Government.
 
-BUG: KASAN: use-after-free in ath12k_dp_cc_cleanup.part.0+0x5e2/0xd40 [ath12k]
-Write of size 4 at addr ffff888150bd3514 by task modprobe/8926
-CPU: 0 UID: 0 PID: 8926 Comm: modprobe Not tainted
-6.11.0-rc2-wt-ath+ #1746
-Hardware name: Intel(R) Client Systems NUC8i7HVK/NUC8i7HVB, BIOS
-HNKBLi70.86A.0067.2021.0528.1339 05/28/2021
+ * 2400 - 2483.5 MHz
+   - reference [1] page 114-115, section 2400 MHz - 2450 MHz, 8th row
+     * EN 300 328
+       - 20 dBm
+ * 5150 - 5350 MHz
+   - reference [1] page 120-121, section 5150 MHz - 5250 MHz, 8th row
+     reference [1] page 121,     section 5250 MHz - 5255 MHz, 8th row
+     reference [1] page 121,     section 5255 MHz - 5350 MHz, 8th row
+     * EN 301 893
+       - 23 dBM (Without TPC)
+       - 5250 - 5350 MHz, DFS
+ * 5470 - 5725 MHz
+   - reference [1] page 122,     section 5470 MHz - 5570 MHz, 8th row
+     reference [1] page 122,     section 5570 MHz - 5650 MHz, 6th row
+     reference [1] page 123,     section 5650 MHz - 5725 MHz, 8th row
+     * EN 301 893
+       - 27 dBm (Without TPC)
+       - 5470 - 5725 MHz, DFS
+ * 5725 - 5875 MHz
+   - reference [1] page 123,     section 5725 MHz - 5830 MHz, 12th row
+     * EN 302 502
+       - 24 dBm
+       - 5725 - 5850 MHz, DFS
+ * 5925 - 6425 MHz
+   - reference [1] page 124,     section 5925 MHz - 6700 MHz, 6th row
+     * EN 303 687
+       - 23 dBm, LPI
+ * 57 - 66 GHz
+   - reference [1] page 158,     section 57 GHz - 58.2 GHz, 7th row
+     * EN 302 567
+       - 40 dBm
 
-Call Trace:
-  <TASK>
-  dump_stack_lvl+0x7d/0xe0
-  print_address_description.constprop.0+0x33/0x3a0
-  print_report+0xb5/0x260
-  ? kasan_addr_to_slab+0x24/0x80
-  kasan_report+0xd8/0x110
-  ? ath12k_dp_cc_cleanup.part.0+0x5e2/0xd40 [ath12k]
-  ? ath12k_dp_cc_cleanup.part.0+0x5e2/0xd40 [ath12k]
-  kasan_check_range+0xf3/0x1a0
-  __kasan_check_write+0x14/0x20
-  ath12k_dp_cc_cleanup.part.0+0x5e2/0xd40 [ath12k]
-  ath12k_dp_free+0x178/0x420 [ath12k]
-  ath12k_core_stop+0x176/0x200 [ath12k]
-  ath12k_core_deinit+0x13f/0x210 [ath12k]
-  ath12k_pci_remove+0xad/0x1c0 [ath12k]
-  pci_device_remove+0x9b/0x1b0
-  device_remove+0xbf/0x150
-  device_release_driver_internal+0x3c3/0x580
-  ? __kasan_check_read+0x11/0x20
-  driver_detach+0xc4/0x190
-  bus_remove_driver+0x130/0x2a0
-  driver_unregister+0x68/0x90
-  pci_unregister_driver+0x24/0x240
-  ? find_module_all+0x13e/0x1e0
-  ath12k_pci_exit+0x10/0x20 [ath12k]
-  __do_sys_delete_module+0x32c/0x580
-  ? module_flags+0x2f0/0x2f0
-  ? kmem_cache_free+0xf0/0x410
-  ? __fput+0x56f/0xab0
-  ? __fput+0x56f/0xab0
-  ? debug_smp_processor_id+0x17/0x20
-  __x64_sys_delete_module+0x4f/0x70
-  x64_sys_call+0x522/0x9f0
-  do_syscall_64+0x64/0x130
-  entry_SYSCALL_64_after_hwframe+0x4b/0x53
-RIP: 0033:0x7f8182c6ac8b
+[1] https://www.ratel.rs/uploads/documents/empire_plugin/Uredba%20o%20utvrdjivanju%20Plana%20namene%20radiofrekvencijskih%20opsega.pdf
+[2] EN 302 328 https://www.etsi.org/deliver/etsi_en/300300_300399/300328/02.02.02_60/en_300328v020202p.pdf
+[3] EN 302 066 https://www.etsi.org/deliver/etsi_en/302000_302099/302066/02.02.00_20/en_302066v020200a.pdf
+[4] EN 301 893 https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.01.01_60/en_301893v020101p.pdf
+[5] EN 302 502 https://www.etsi.org/deliver/etsi_en/302500_302599/302502/02.01.01_60/en_302502v020101p.pdf
+[6] EN 303 687 https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.01.01_60/en_303687v010101p.pdf
+[7] EN 302 567 https://www.etsi.org/deliver/etsi_en/302500_302599/302567/02.01.01_60/en_302567v020101p.pdf
 
-Commit 24de1b7b231c ("wifi: ath12k: fix flush failure in recovery
-scenarios") added the change to decrement the pending packets count
-in case of recovery which make sense as ah->hw as well all
-ar's in it are intact during recovery, but during core deinit there
-is no use in decrementing packets count or waking up the empty waitq
-as the module is going to be removed also ar's from pending skb's
-can't be used and the packets should just be released back.
-
-To fix this, avoid accessing ar from skb->cb when driver is being
-unregistered.
-
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00214-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-
-Fixes: 24de1b7b231c ("wifi: ath12k: fix flush failure in recovery scenarios")
-Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-v2:
- - Skipped skb accounting with UNREGISTERING flag instead of vif check.
+v1:
+  - copy stuffs from reverted "SR".
+  - add missing stuffs of "5725 - 5875 MHz" and "57 - 66 GHz"
 ---
- drivers/net/wireless/ath/ath12k/dp.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ db.txt | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
-index ecd3b5c76d26..2ab2a7d45be9 100644
---- a/drivers/net/wireless/ath/ath12k/dp.c
-+++ b/drivers/net/wireless/ath/ath12k/dp.c
-@@ -1202,10 +1202,16 @@ static void ath12k_dp_cc_cleanup(struct ath12k_base *ab)
- 			if (!skb)
- 				continue;
+diff --git a/db.txt b/db.txt
+index 54310fb5736d..93043733c3b0 100644
+--- a/db.txt
++++ b/db.txt
+@@ -1637,13 +1637,15 @@ country RO: DFS-ETSI
+ #  EU decision 2005/513/EC: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02005D0513-20070213
+ #  EU decision 2006/771/EC: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02008D0432-20080611
+ # Harmonized CEPT countries (July 2019): https://www.ecodocdb.dk/download/25c41779-cd6e/Rec7003e.pdf
++# https://www.ratel.rs/uploads/documents/empire_plugin/Uredba%20o%20utvrdjivanju%20Plana%20namene%20radiofrekvencijskih%20opsega.pdf
+ country RS: DFS-ETSI
+-	(2400 - 2483.5 @ 40), (100 mW)
+-	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+-	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+-	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
+-	# short range devices (ETSI EN 300 440-1)
+-	(5725 - 5875 @ 80), (25 mW)
++	(2400 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), AUTO-BW
++	(5250 - 5350 @ 80), (23), DFS, AUTO-BW
++	(5470 - 5725 @ 160), (27), DFS
++	(5725 - 5850 @ 80), (24), DFS, AUTO-BW
++	(5850 - 5875 @ 80), (24), AUTO-BW
++	(5925 - 6425 @ 320), (23), NO-OUTDOOR
+ 	# 60 GHz band channels 1-4, ref: Etsi En 302 567
+ 	(57000 - 66000 @ 2160), (40)
  
--			skb_cb = ATH12K_SKB_CB(skb);
--			ar = skb_cb->ar;
--			if (atomic_dec_and_test(&ar->dp.num_tx_pending))
--				wake_up(&ar->dp.tx_empty_waitq);
-+			/* if we are unregistering, hw would've been destroyed and
-+			 * ar is no longer valid.
-+			 */
-+			if (!(test_bit(ATH12K_FLAG_UNREGISTERING, &ab->dev_flags))) {
-+				skb_cb = ATH12K_SKB_CB(skb);
-+				ar = skb_cb->ar;
-+
-+				if (atomic_dec_and_test(&ar->dp.num_tx_pending))
-+					wake_up(&ar->dp.tx_empty_waitq);
-+			}
- 
- 			dma_unmap_single(ab->dev, ATH12K_SKB_CB(skb)->paddr,
- 					 skb->len, DMA_TO_DEVICE);
-
-base-commit: 8ed36fe71fd60c851540839b105fd1fddc870c61
 -- 
-2.34.1
+2.25.1
 
