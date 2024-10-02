@@ -1,68 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E6B1E767E
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Oct 2024 10:58:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF167DA81
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Oct 2024 11:45:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727866699; cv=none; b=fTkEf5K/IAtCfO48aee+7lrv201ps+aZuSU3dnXts+kxVzkr0lqmGv51HBp6H7HuLL+kTl2Egdonjdf15krDh5ronfDUZh1IcbePG0RUYCRukXRz5eUrSp12dsNduvxQv1WFfznawO+pqBaBW4wi8jD3PEVVqhMZ4olbg5rYoRQ=
+	t=1727869522; cv=none; b=SO9q5nfEgm8eAJNuVfb+FA+D2bcko5kyqLlXSiHafHDzljPW3QwPihs8w8okV/xIfj8q4DZOpseZTWlaH7EmskxFH3d7qWM5XHsxaOjhlkE0XB8KllB1ELFpaMAv1Ymf16y8E+lmzhpCpGzU++8dGOg9Gn8XLJzj2Q9XVKhfEqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727866699; c=relaxed/simple;
-	bh=QYzEODDbfD/4xRiXL5Sl4SU6AqLpXLCW7+mKlh/WDI4=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=dsOEyYidnqxsyKElRg1TEOBujV00uux0h1ECgWAPdE0x2qGpp52bJqQT8IQ4Z5iECXQzPstrD2K+0j6k+x2TVFSm69qfL8Z+bFopyVQE/ALVzHs38LXqKryrmWJqQQCEgLMTI2sJw7EdhDxKoSTKmGxzpFhqgUH/A8eglTPPrUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r3H9I6p/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727869522; c=relaxed/simple;
+	bh=M2wfzZF5AIA32pJsIcHAGu7UkB3eBEE5rGzMrySODos=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Z+Hp5jmQgh0gTPSaIIczGTYtq+5WgbfyHUW8Cr7bS/ATXK6vixPaB3HUxQxH3joR4qxlCuwewhz2Y5L7cPVI36dV4dQlwQd0TeyFl7AWnDCyB3mHZLpsm0UJ1Oq+EysyemikYsMMT2C7ALfSrgbfB4NaBcfVIWhjqpEs5yIjDIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=m9usIuWJ; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r3H9I6p/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10434C4AF50;
-	Wed,  2 Oct 2024 10:58:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727866699;
-	bh=QYzEODDbfD/4xRiXL5Sl4SU6AqLpXLCW7+mKlh/WDI4=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=r3H9I6p/RKToDdQiaIJq0zuBGioEY7X44nVQDIWQkVINtz3L7xllSOjFiPpEo4qA5
-	 y2dotK7J3Tclz0heck3K/IbhLpnY/NBUm0T0D/kKRR9QloY9/wmC2HO+V8L4KK3nr+
-	 cgCYwXNU+O7I9A0JkkufeDsKHSOcLzlnkexE8MLzbFqC2AxWh4QL/XtczjnNhYVKYY
-	 kitEETQCwFHPkFzm1ntbWlZgTHREaKINf/gM7RnzqQnzwGNNLwWWb2ezGnuSD6h/UU
-	 Z0oTZ0SvyZ8IIVDAwq5b2FQdwAcfiEb80tSPVnSVrkBvY3aTH0PCpvviWsx5kguUmG
-	 ocqIjDj8wV4rA==
-From: Kalle Valo <kvalo@kernel.org>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-  Ping-Ke Shih <pkshih@realtek.com>,  Sascha Hauer <sha@pengutronix.de>
-Subject: Re: rtw88: alloc_skb(32768, GFP_ATOMIC) fails, driver gets stuck
-References: <6e7ecb47-7ea0-433a-a19f-05f88a2edf6b@gmail.com>
-	<baca0d5d-072e-4003-ab4a-ecc524d6b89b@gmail.com>
-Date: Wed, 02 Oct 2024 13:58:16 +0300
-In-Reply-To: <baca0d5d-072e-4003-ab4a-ecc524d6b89b@gmail.com> (Bitterblue
-	Smith's message of "Mon, 30 Sep 2024 23:56:09 +0300")
-Message-ID: <878qv693g7.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="m9usIuWJ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=fVk+NGWzlqynA2fGxfPlosGQpmk77cREH3bKeJVExzU=; b=m9usIuWJSW3mzCE5C9/CDmb2ta
+	Hx1q26o3EsT5HMnKgLut10hw7qTxSZm/kA6s2blbyJBOZiA1E1cX8DPzLPUOoIxDQtqzZvTHTzQ8S
+	ZMrpS/aWVXOhKqLHlHy97nQkRfNqPxqfpNwNTUdcta8TlZNwvzii5L8kpMcie1aDANTA=;
+Received: from p4ff130c8.dip0.t-ipconnect.de ([79.241.48.200] helo=localhost.localdomain)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1svxnC-003vyr-1k;
+	Wed, 02 Oct 2024 13:45:18 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 02/11] wifi: mac80211: use vif radio mask to limit ibss scan frequencies
+Date: Wed,  2 Oct 2024 13:45:08 +0200
+Message-ID: <fa77d4843c4e986db81960c7f859d0750e2b9e8d.1727869380.git-series.nbd@nbd.name>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <cover.cb088351ab8df44310eee259bf2dbec858702463.1727869380.git-series.nbd@nbd.name>
+References: <cover.cb088351ab8df44310eee259bf2dbec858702463.1727869380.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> writes:
+Reject frequencies not supported by any radio that the vif is allowed to use.
 
-> I still don't know why qBittorrent is required to trigger this bug,
-> but I found the problem.
->
-> alloc_skb fails (silently) therefore the RX URB is not submitted
-> ever again. There are only 4 RX URBs.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/scan.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Why is alloc_skb() failing silently? Or is that by design? I was under
-impression that we should not have error messages for allocation
-failures but is that only for kmalloc() & co?
-
-I did a quick look and in wireless drivers some of the alloc_skb()
-callers print an error and some fail silently. I think we should start
-printing errors for all alloc_skb() calls. Thoughts?
-
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index adb88c06b598..8b77b782696c 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1200,7 +1200,9 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				    &local->hw.wiphy->bands[band]->channels[i];
+ 
+ 				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
+-						     IEEE80211_CHAN_DISABLED))
++						     IEEE80211_CHAN_DISABLED) ||
++				    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++								   tmp_ch))
+ 					continue;
+ 
+ 				local->int_scan_req->channels[n_ch] = tmp_ch;
+@@ -1215,14 +1217,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 	} else {
+ 		for (i = 0; i < n_channels; i++) {
+ 			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
+-						  IEEE80211_CHAN_DISABLED))
++						  IEEE80211_CHAN_DISABLED) ||
++			    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++							   channels[i]))
+ 				continue;
+ 
+ 			local->int_scan_req->channels[n_ch] = channels[i];
+ 			n_ch++;
+ 		}
+ 
+-		if (WARN_ON_ONCE(n_ch == 0))
++		if (n_ch == 0)
+ 			goto unlock;
+ 
+ 		local->int_scan_req->n_channels = n_ch;
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+git-series 0.9.1
