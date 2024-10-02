@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B640C1E493F
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Oct 2024 11:45:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6D51EC019
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Oct 2024 11:45:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727869522; cv=none; b=dW42WWD65FlF22mqCV9p00lYSY8KfDbtBEeG/tnqs7Y9jRpdlBDpNO12V1LPNbsUVlcrtvq3vWYjsNM1bFIv8SFpg9keIAedX8fVxbJbofG27/HJdR/tt1Z+/Mz5QGw5cv9W5yX7DgVGV1hrx5YCpGoUJ9ikU7YRjark4XS48ew=
+	t=1727869523; cv=none; b=btcg4+6/+tE1L/vsgFGYPJ9AwUuN3oJ8LtwpyVxyweqEhzZ1gGkHXbfyWhkcjFWbrXy6mejdIBx0+uJvyEpjCX35lUhAFJQna78VZHG0txqbFEqAuQWda5sL2DcYKx9vEJx4gWx4QYLaKhoxlWIfBXwn5Z7Xb4l/R6MBSApJwrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727869522; c=relaxed/simple;
-	bh=n/Mzf715m+sCYdkCxwVEMqCB6/rvf/731mnKpTRcVk0=;
+	s=arc-20240116; t=1727869523; c=relaxed/simple;
+	bh=UkjF4HOro5aN8DiZTQ3QsDvednMYB+Spm+V0JtIFPlY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g2QdHhArFGlDHq8n5AOmhXMhbK8kLxdzZhO9cwOx0L/+jE4KtkU4Ab5KGnvJEdFaVZ3QBOyvubStN38wK5QATVn3WKsud2yt7QqdQdm7Y7/IRMvuWnx5OgybNzdqfmTX/5b2NlxVz27XeO0RXxu0y3qVo0B0VopgN/VeKyjpwFo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=spG+thht; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=mCagKROBsT1PsA6uOamDnprq7fNiIatL1c5WcNFjaraweJPfxXIW5ZLSA43N/xLJ3rdqgARV+zftuRZMjJyYXEW3E0Z6/b0meoTxZOJqFo9TrBL6iKbaKjK4iOqUB61O+X5ilPsSpELgukVZgT/fUOFYB7jIK7d0dIVMVYRhY/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=IOtHLEpf; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="spG+thht"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="IOtHLEpf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=lQPPZUOvE5Dareo4vzGXUbjuDhpxEPa/6kxwTlCGcsA=; b=spG+thhtI3lreMmKHpdiQJ8jsy
-	BHay+N+Q/WszKW4ueZPuUwr01U1ADoUbaL4gzM5yr2KsHwT7mRaXuL1hjMWnosQpTDJy+rKpQ7OXj
-	jjdjZ9YZAzMeb0OxAFkkS4GrAOHbxIaT07XB3bZpLzrDykq19lke4wvZUkulLBvWvt3s=;
+	bh=+W2n1arQ3UlR5HI1TCcncXTPZc4iGYQAVL4hD78CJNg=; b=IOtHLEpf6gAfsQG+Aa1do/PunK
+	eEmEJMnyh7GwyPzIkI2UCk1RWSXK0TCsjBfj9mxzrm87b7dqI1oYHVywugLF7W60V/DtOPenWbbrO
+	PkMwcb1h7RkODogKdMqwT3uLtFoX1FY/QM6XFAbQoHQ1v23KurERwCruwvSDA0r9kmN8=;
 Received: from p4ff130c8.dip0.t-ipconnect.de ([79.241.48.200] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1svxnC-003vyr-33;
-	Wed, 02 Oct 2024 13:45:19 +0200
+	id 1svxnE-003vyr-00;
+	Wed, 02 Oct 2024 13:45:20 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH 04/11] wifi: cfg80211: report per wiphy radio antenna mask
-Date: Wed,  2 Oct 2024 13:45:10 +0200
-Message-ID: <4d15424f7c9f755e542cefa26ed79c958e57e387.1727869380.git-series.nbd@nbd.name>
+Subject: [PATCH 09/11] wifi: mac80211: add support for the monitor SKIP_TX flag
+Date: Wed,  2 Oct 2024 13:45:15 +0200
+Message-ID: <9b8964dd77a82e603e177ba0b714082972ae70ce.1727869380.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.cb088351ab8df44310eee259bf2dbec858702463.1727869380.git-series.nbd@nbd.name>
 References: <cover.cb088351ab8df44310eee259bf2dbec858702463.1727869380.git-series.nbd@nbd.name>
@@ -48,74 +48,65 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-With multi-radio devices, each radio typically gets a fixed set of antennas.
-In order to be able to disable specific antennas for some radios, user space
-needs to know which antenna mask bits are assigned to which radio.
+Do not pass locally sent packets to monitor interfaces with this flag set.
+Skip processing tx packets on the status call entirely if no monitor
+interfaces without this flag are present.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/cfg80211.h       | 4 ++++
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 4 +++-
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h | 2 +-
+ net/mac80211/iface.c       | 2 ++
+ net/mac80211/status.c      | 5 ++++-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 73df4a8e8cce..8bb5fb80cd7b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5436,6 +5436,8 @@ struct wiphy_radio_freq_range {
-  * @iface_combinations: Valid interface combinations array, should not
-  *	list single interface types.
-  * @n_iface_combinations: number of entries in @iface_combinations array.
-+ *
-+ * @antenna_mask: bitmask of antennas connected to this radio.
-  */
- struct wiphy_radio {
- 	const struct wiphy_radio_freq_range *freq_range;
-@@ -5443,6 +5445,8 @@ struct wiphy_radio {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4f0390918b60..d697e9dab70d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1370,7 +1370,7 @@ struct ieee80211_local {
+ 	spinlock_t queue_stop_reason_lock;
  
- 	const struct ieee80211_iface_combination *iface_combinations;
- 	int n_iface_combinations;
+ 	int open_count;
+-	int monitors, cooked_mntrs;
++	int monitors, cooked_mntrs, tx_mntrs;
+ 	/* number of interfaces with corresponding FIF_ flags */
+ 	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
+ 	    fif_probe_req;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3aefc62034ba..54060ba97b98 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1094,6 +1094,8 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+ 	ADJUST(CONTROL, control);
+ 	ADJUST(CONTROL, pspoll);
+ 	ADJUST(OTHER_BSS, other_bss);
++	if (!(flags & MONITOR_FLAG_SKIP_TX))
++		local->tx_mntrs += offset;
+ 
+ #undef ADJUST
+ }
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index d1cf987de13b..eb889cda8bf9 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -927,6 +927,9 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ 			if (!ieee80211_sdata_running(sdata))
+ 				continue;
+ 
++			if (sdata->u.mntr.flags & MONITOR_FLAG_SKIP_TX)
++				continue;
 +
-+	u32 antenna_mask;
- };
- 
- #define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d31ccee99cc7..1b8827f920ff 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -8036,6 +8036,8 @@ enum nl80211_ap_settings_flags {
-  * @NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION: Supported interface
-  *	combination for this radio. Attribute may be present multiple times
-  *	and contains attributes defined in &enum nl80211_if_combination_attrs.
-+ * @NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK: bitmask (u32) of antennas
-+ *	connected to this radio.
-  *
-  * @__NL80211_WIPHY_RADIO_ATTR_LAST: Internal
-  * @NL80211_WIPHY_RADIO_ATTR_MAX: Highest attribute
-@@ -8046,6 +8048,7 @@ enum nl80211_wiphy_radio_attrs {
- 	NL80211_WIPHY_RADIO_ATTR_INDEX,
- 	NL80211_WIPHY_RADIO_ATTR_FREQ_RANGE,
- 	NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION,
-+	NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
- 
- 	/* keep last */
- 	__NL80211_WIPHY_RADIO_ATTR_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8f86b23e106a..5c54e1793539 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2428,7 +2428,9 @@ static int nl80211_put_radio(struct wiphy *wiphy, struct sk_buff *msg, int idx)
- 	if (!radio)
- 		return -ENOBUFS;
- 
--	if (nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_INDEX, idx))
-+	if (nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_INDEX, idx) ||
-+	    nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
-+			r->antenna_mask))
- 		goto nla_put_failure;
- 
- 	for (i = 0; i < r->n_freq_range; i++) {
+ 			if ((sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) &&
+ 			    !send_to_cooked)
+ 				continue;
+@@ -1099,7 +1102,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	 * This is a bit racy but we can avoid a lot of work
+ 	 * with this test...
+ 	 */
+-	if (!local->monitors && (!send_to_cooked || !local->cooked_mntrs)) {
++	if (!local->tx_mntrs && (!send_to_cooked || !local->cooked_mntrs)) {
+ 		if (status->free_list)
+ 			list_add_tail(&skb->list, status->free_list);
+ 		else
 -- 
 git-series 0.9.1
