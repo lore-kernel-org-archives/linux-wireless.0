@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7657412C81F
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 07:58:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9175053363
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 07:58:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727942305; cv=none; b=tA/BsESE0rg7+aaGSDCS+e8c89YkvZjTWWFM+rQEfjhTcIJ5lNaLsMgBJFZGjXwA+fHGyUwC0umt9w9Qo48DtLzOqO3tR+8FF5bSOMS+onZSOsmdNUx3K3Yh1tfYQBDSpcBnKpIN5T8eigGayi3+IAh8xu1Q0m1HVF3bnrXfQ30=
+	t=1727942305; cv=none; b=VKzwsvieoqWL87NTyGsuq2j0Q1p6BfSQXv/U+f2tA7d3SAdQepk+EyYp0x5tDP6nH4SVol05wQiVe7s2VwBaMn78hy33SU9jaYQ0/A4evi+r9XQVsN9jCXh9YwQuiAc18adcN/kW8YfLRhr078NjVQavLi/YvYRe7+qyhM7XWOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1727942305; c=relaxed/simple;
-	bh=xUgaYz79GxFR1GQrQDWmp4OtTlrYoBYn58IJXdJBluA=;
+	bh=Dw7Y0jzvNivvpgwKd8VSMM8gfiYC9Dt4aF6AerVRlbo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HArCHrlQDuLjFL6Umbah8vU2KFYkikQwqk4jskEyNvjG+eip34Y0lK4SJRBVJbM5sTO7Sj4wLT/5C0R4ihzpKwLXV+95vCsbB7pBxi1CZ/FaZBHfxVBt5pfTBIB9W3F90a29sEM2wF8J5VEtluzijgGofd79EpWlDZuUorytYRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=eBipITDZ; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=GiMO+VAwJEJd8DojRBmKlHZZDj/aEF3ltbqf1CYtwMqJXj65DXjT8C5kUGQtAIchWPSPB/ZIwRn/kPrqZExw/6d9wenjnVD1xgTfFfBHp/cWgBpgAop6Kvxq4cwbiun3sWDKDOEM7eRTBjgCrsawTdxV/V4AyA6YwN+N64Sfyb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=aCifDHLX; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="eBipITDZ"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aCifDHLX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=cu4zdu8H80yHsbZlGeDdHatvTPvLHYyfWSV93GBhXQQ=; b=eBipITDZeC/0x65Oxg5IFoZlPn
-	XK3m9ovrIBZFjtVHadK1I1cubvUnAkklzKqHPsxDJlhx6fYE/hkNDpvKpIvDkiRo2XiTVJ5qY5C0D
-	TI8wmEOlGYAhA/3ZpIT2fWXQznZBZGyPwkRQAfJPu6886W2NdPMxM9ey+QuKrj/qtMJw=;
+	bh=bI1wSKSrLjmirXjKeOkoA/wz++t+HhBQM2Gi7sKAvq8=; b=aCifDHLXjcEIOoegidcBT342rJ
+	S4tp4Tpa6cHg76DWyBWlfA6EOTGOcUzImrrcjB2vWQufBsNBQ84OyphwvyHFnMSgs1iEN9i1TWezC
+	BsPnFQvJ31YXC5u6x5LMN2PA2BSdZ/ITYjuDFAlD7V/vkDkns8C5K4cMTkPTt9jVGAXQ=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1swGj7-004Jgh-2M;
-	Thu, 03 Oct 2024 09:58:21 +0200
+	id 1swGj6-004Jgh-2D;
+	Thu, 03 Oct 2024 09:58:20 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 06/11] wifi: cfg80211: pass net_device to .set_monitor_channel
-Date: Thu,  3 Oct 2024 09:58:14 +0200
-Message-ID: <8f0d4a28a35b7efccc80e71101b38c82de20f6ba.1727942154.git-series.nbd@nbd.name>
+Subject: [PATCH v2 01/11] wifi: cfg80211: add option for vif allowed radios
+Date: Thu,  3 Oct 2024 09:58:09 +0200
+Message-ID: <5b1da33c10f63ee696fbd53a1552a65faac039bf.1727942154.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.debd54967c43dd95013c56efa390ea6117062373.1727942154.git-series.nbd@nbd.name>
 References: <cover.debd54967c43dd95013c56efa390ea6117062373.1727942154.git-series.nbd@nbd.name>
@@ -48,199 +48,327 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Preparation for allowing multiple monitor interfaces with different channels
-on a multi-radio wiphy.
+This allows users to prevent a vif from affecting radios other than the
+configured ones. This can be useful in cases where e.g. an AP is running
+on one radio, and triggering a scan on another radio should not disturb it.
+
+Changing the allowed radios list for a vif is supported, but only while
+it is down.
+
+While it is possible to achieve the same by always explicitly specifying
+a frequency list for scan requests and ensuring that the wrong channel/band
+is never accidentally set on an unrelated interface, this change makes
+multi-radio wiphy setups a lot easier to deal with for CLI users.
+
+By itself, this patch only enforces the radio mask for scanning requests
+and remain-on-channel. Follow-up changes build on this to limit configured
+frequencies.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c        | 1 +
- drivers/net/wireless/marvell/libertas/cfg.c        | 1 +
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 3 ++-
- include/net/cfg80211.h                             | 1 +
- net/mac80211/cfg.c                                 | 1 +
- net/wireless/chan.c                                | 3 ++-
- net/wireless/core.h                                | 1 +
- net/wireless/nl80211.c                             | 2 +-
- net/wireless/rdev-ops.h                            | 5 +++--
- net/wireless/trace.h                               | 8 +++++---
- net/wireless/wext-compat.c                         | 2 +-
- 11 files changed, 19 insertions(+), 9 deletions(-)
+ include/net/cfg80211.h       | 12 +++++++-
+ include/uapi/linux/nl80211.h |  5 +++-
+ net/wireless/core.c          |  2 +-
+ net/wireless/nl80211.c       | 60 ++++++++++++++++++++++++++++++++-----
+ net/wireless/scan.c          | 10 ++++--
+ net/wireless/util.c          | 29 ++++++++++++++++++-
+ 6 files changed, 107 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index e8f1d30a8d73..a1a0a9223e74 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1493,6 +1493,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- }
- 
- static int wil_cfg80211_set_channel(struct wiphy *wiphy,
-+				    struct net_device *dev,
- 				    struct cfg80211_chan_def *chandef)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index b700c213d10c..c1f462bb6a3f 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -486,6 +486,7 @@ static int lbs_add_wps_enrollee_tlv(u8 *tlv, const u8 *ie, size_t ie_len)
-  */
- 
- static int lbs_cfg_set_monitor_channel(struct wiphy *wiphy,
-+				       struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef)
- {
- 	struct lbs_private *priv = wiphy_priv(wiphy);
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index eb37b228d54e..9977be0020fe 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -231,6 +231,7 @@ struct wilc_vif *wilc_get_wl_to_vif(struct wilc *wl)
- }
- 
- static int set_channel(struct wiphy *wiphy,
-+		       struct net_device *dev,
- 		       struct cfg80211_chan_def *chandef)
- {
- 	struct wilc *wl = wiphy_priv(wiphy);
-@@ -1424,7 +1425,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	int ret;
- 
--	ret = set_channel(wiphy, &settings->chandef);
-+	ret = set_channel(wiphy, dev, &settings->chandef);
- 	if (ret != 0)
- 		netdev_err(dev, "Error in setting channel\n");
- 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8bb5fb80cd7b..4dd537da0873 100644
+index 69ec1eb41a09..73df4a8e8cce 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4696,6 +4696,7 @@ struct cfg80211_ops {
- 					     struct ieee80211_channel *chan);
+@@ -6223,6 +6223,7 @@ enum ieee80211_ap_reg_power {
+  *	entered.
+  * @links.cac_time_ms: CAC time in ms
+  * @valid_links: bitmap describing what elements of @links are valid
++ * @radio_mask: Bitmask of radios that this interface is allowed to operate on.
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -6335,6 +6336,8 @@ struct wireless_dev {
+ 		unsigned int cac_time_ms;
+ 	} links[IEEE80211_MLD_MAX_NUM_LINKS];
+ 	u16 valid_links;
++
++	u32 radio_mask;
+ };
  
- 	int	(*set_monitor_channel)(struct wiphy *wiphy,
-+				       struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef);
+ static inline const u8 *wdev_address(struct wireless_dev *wdev)
+@@ -6521,6 +6524,15 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 				  const struct cfg80211_chan_def *chandef);
  
- 	int	(*scan)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 847304a3a29a..b1ea7006f8d3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -879,6 +879,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- }
+ /**
++ * cfg80211_wdev_channel_allowed - Check if the wdev may use the channel
++ *
++ * @wdev: the wireless device
++ * @chan: channel to check
++ */
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan);
++
++/**
+  * ieee80211_get_response_rate - get basic rate for a given rate
+  *
+  * @sband: the band to look for rates in
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f97f5adc8d51..d31ccee99cc7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2868,6 +2868,9 @@ enum nl80211_commands {
+  *	nested item, it contains attributes defined in
+  *	&enum nl80211_if_combination_attrs.
+  *
++ * @NL80211_ATTR_VIF_RADIO_MASK: Bitmask of allowed radios (u32).
++ *	A value of 0 means all radios.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3416,6 +3419,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_RADIOS,
+ 	NL80211_ATTR_WIPHY_INTERFACE_COMBINATIONS,
  
- static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
-+					 struct net_device *dev,
- 					 struct cfg80211_chan_def *chandef)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index e579d7e1425f..035f3b099d0f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -1628,6 +1628,7 @@ bool cfg80211_reg_check_beaconing(struct wiphy *wiphy,
- EXPORT_SYMBOL(cfg80211_reg_check_beaconing);
++	NL80211_ATTR_VIF_RADIO_MASK,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev,
- 				 struct cfg80211_chan_def *chandef)
- {
- 	if (!rdev->ops->set_monitor_channel)
-@@ -1635,7 +1636,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 	if (!cfg80211_has_monitors_only(rdev))
- 		return -EBUSY;
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 661adfc77644..870ecd8d6197 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1386,6 +1386,8 @@ void cfg80211_init_wdev(struct wireless_dev *wdev)
+ 	/* allow mac80211 to determine the timeout */
+ 	wdev->ps_timeout = -1;
  
--	return rdev_set_monitor_channel(rdev, chandef);
-+	return rdev_set_monitor_channel(rdev, dev, chandef);
- }
- 
- bool cfg80211_any_usable_channels(struct wiphy *wiphy,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3b3e3cd7027a..4c45f994a8c0 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -516,6 +516,7 @@ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
- }
- 
- int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev,
- 				 struct cfg80211_chan_def *chandef);
- 
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
++	wdev->radio_mask = BIT(wdev->wiphy->n_radio) - 1;
++
+ 	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
+ 	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d2c1fd98dc03..7845548b15b9 100644
+index 9ab777e0bd4d..7f3bd35c8a3b 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -3564,7 +3564,7 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
- 	case NL80211_IFTYPE_MESH_POINT:
- 		return cfg80211_set_mesh_channel(rdev, wdev, &chandef);
- 	case NL80211_IFTYPE_MONITOR:
--		return cfg80211_set_monitor_channel(rdev, &chandef);
-+		return cfg80211_set_monitor_channel(rdev, dev, &chandef);
- 	default:
+@@ -829,6 +829,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MLO_TTLM_DLINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_MLO_TTLM_ULINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
+ 	[NL80211_ATTR_ASSOC_SPP_AMSDU] = { .type = NLA_FLAG },
++	[NL80211_ATTR_VIF_RADIO_MASK] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3996,7 +3997,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
+ 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
+ 			rdev->devlist_generation ^
+ 			(cfg80211_rdev_list_generation << 2)) ||
+-	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr))
++	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr) ||
++	    nla_put_u32(msg, NL80211_ATTR_VIF_RADIO_MASK, wdev->radio_mask))
+ 		goto nla_put_failure;
+ 
+ 	if (rdev->ops->get_channel && !wdev->valid_links) {
+@@ -4312,6 +4314,29 @@ static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
+ 	return -EOPNOTSUPP;
+ }
+ 
++static int nl80211_parse_vif_radio_mask(struct genl_info *info,
++					u32 *radio_mask)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct nlattr *attr = info->attrs[NL80211_ATTR_VIF_RADIO_MASK];
++	u32 mask, allowed;
++
++	if (!attr) {
++		*radio_mask = 0;
++		return 0;
++	}
++
++	allowed = BIT(rdev->wiphy.n_radio) - 1;
++	mask = nla_get_u32(attr);
++	if (mask & ~allowed)
++		return -EINVAL;
++	if (!mask)
++		mask = allowed;
++	*radio_mask = mask;
++
++	return 1;
++}
++
+ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -4319,6 +4344,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	int err;
+ 	enum nl80211_iftype otype, ntype;
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	u32 radio_mask = 0;
+ 	bool change = false;
+ 
+ 	memset(&params, 0, sizeof(params));
+@@ -4332,8 +4359,6 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
+-		struct wireless_dev *wdev = dev->ieee80211_ptr;
+-
+ 		if (ntype != NL80211_IFTYPE_MESH_POINT)
+ 			return -EINVAL;
+ 		if (otype != NL80211_IFTYPE_MESH_POINT)
+@@ -4364,6 +4389,12 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err > 0)
+ 		change = true;
+ 
++	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
++	if (err < 0)
++		return err;
++	if (err && netif_running(dev))
++		return -EBUSY;
++
+ 	if (change)
+ 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
+ 	else
+@@ -4372,11 +4403,11 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!err && params.use_4addr != -1)
+ 		dev->ieee80211_ptr->use_4addr = params.use_4addr;
+ 
+-	if (change && !err) {
+-		struct wireless_dev *wdev = dev->ieee80211_ptr;
++	if (radio_mask)
++		wdev->radio_mask = radio_mask;
+ 
++	if (change && !err)
+ 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_SET_INTERFACE);
+-	}
+ 
+ 	return err;
+ }
+@@ -4387,6 +4418,7 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
+ 	struct sk_buff *msg;
++	u32 radio_mask;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 
+@@ -4424,6 +4456,10 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (err < 0)
+ 		return err;
+ 
++	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
++	if (err < 0)
++		return err;
++
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+@@ -4465,6 +4501,9 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
  		break;
  	}
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index f5adbf6b5c84..adb6105bbb7d 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -445,11 +445,12 @@ rdev_libertas_set_mesh_channel(struct cfg80211_registered_device *rdev,
  
- static inline int
- rdev_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+			 struct net_device *dev,
- 			 struct cfg80211_chan_def *chandef)
- {
- 	int ret;
--	trace_rdev_set_monitor_channel(&rdev->wiphy, chandef);
--	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, chandef);
-+	trace_rdev_set_monitor_channel(&rdev->wiphy, dev, chandef);
-+	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, dev, chandef);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
++	if (radio_mask)
++		wdev->radio_mask = radio_mask;
++
+ 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
+ 			       rdev, wdev, NL80211_CMD_NEW_INTERFACE) < 0) {
+ 		nlmsg_free(msg);
+@@ -9180,6 +9219,9 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev,
+ 
+ 	lockdep_assert_wiphy(wdev->wiphy);
+ 
++	if (!cfg80211_wdev_channel_allowed(wdev, chan))
++		return false;
++
+ 	if (!cfg80211_beaconing_iface_active(wdev))
+ 		return true;
+ 
+@@ -9392,7 +9434,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 			}
+ 
+ 			/* ignore disabled channels */
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 				continue;
+ 
+ 			request->channels[i] = chan;
+@@ -9412,7 +9455,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 				chan = &wiphy->bands[band]->channels[j];
+ 
+-				if (chan->flags & IEEE80211_CHAN_DISABLED)
++				if (chan->flags & IEEE80211_CHAN_DISABLED ||
++				    !cfg80211_wdev_channel_allowed(wdev, chan))
+ 					continue;
+ 
+ 				request->channels[i] = chan;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 59a90bf3c0d6..279af47651c1 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -956,7 +956,8 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
+ 		struct ieee80211_channel *chan =
+ 			ieee80211_get_channel(&rdev->wiphy, ap->center_freq);
+ 
+-		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
++		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED ||
++		    !cfg80211_wdev_channel_allowed(rdev_req->wdev, chan))
+ 			continue;
+ 
+ 		for (i = 0; i < rdev_req->n_channels; i++) {
+@@ -3515,9 +3516,12 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 			continue;
+ 
+ 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
++			struct ieee80211_channel *chan;
++
+ 			/* ignore disabled channels */
+-			if (wiphy->bands[band]->channels[j].flags &
+-						IEEE80211_CHAN_DISABLED)
++			chan = &wiphy->bands[band]->channels[j];
++			if (chan->flags & IEEE80211_CHAN_DISABLED ||
++			    !cfg80211_wdev_channel_allowed(creq->wdev, chan))
+ 				continue;
+ 
+ 			/* If we have a wireless request structure and the
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index f49b55724f83..9ccc9602ac25 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -2923,3 +2923,32 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
+ 	return true;
  }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 97c21b627791..dc217086c155 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1318,19 +1318,21 @@ TRACE_EVENT(rdev_libertas_set_mesh_channel,
- );
- 
- TRACE_EVENT(rdev_set_monitor_channel,
--	TP_PROTO(struct wiphy *wiphy,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 struct cfg80211_chan_def *chandef),
- 	TP_ARGS(wiphy, chandef),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
-+		NETDEV_ENTRY
- 		CHAN_DEF_ENTRY
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
- 		CHAN_DEF_ASSIGN(chandef);
- 	),
--	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT,
--		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG)
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_PR_ARG)
- );
- 
- TRACE_EVENT(rdev_auth,
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 2371069f3c43..fd3d01359807 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -830,7 +830,7 @@ static int cfg80211_wext_siwfreq(struct net_device *dev,
- 			ret = -EINVAL;
- 			break;
- 		}
--		ret = cfg80211_set_monitor_channel(rdev, &chandef);
-+		ret = cfg80211_set_monitor_channel(rdev, dev, &chandef);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 		freq = cfg80211_wext_freq(wextfreq);
+ EXPORT_SYMBOL(cfg80211_radio_chandef_valid);
++
++bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
++				   struct ieee80211_channel *chan)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	const struct wiphy_radio *radio;
++	struct cfg80211_chan_def chandef;
++	u32 radio_mask;
++	int i;
++
++	radio_mask = wdev->radio_mask;
++	if (!wiphy->n_radio || radio_mask == BIT(wiphy->n_radio) - 1)
++		return true;
++
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
++	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
++		radio = &wiphy->radio[i];
++		if (!cfg80211_radio_chandef_valid(radio, &chandef))
++			continue;
++
++		return true;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL(cfg80211_wdev_channel_allowed);
 -- 
 git-series 0.9.1
