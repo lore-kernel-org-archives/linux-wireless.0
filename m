@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917D0126C09
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 07:58:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2668012C473
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 07:58:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727942304; cv=none; b=a44c2QX+ZYGMMErxMq3jLIrm+iQq0G0yKlLumUQhC9sAydYlDXnzf20YLatIs/ts59SXi2wd9TEjJON3JG3U6hcvKQKDDBloqO9BEPGQ/coj2g/zC9TQ4U9KQe2Q/ou/1IH1kvUssZTz1aqxCcvPHyvF+jWLd4eWx1zFbwiI5jg=
+	t=1727942304; cv=none; b=TsCOvKEgKtp1tpzjr8nJURMZn45QDTd+Q6vdLE/n7LaACndG+gckwt4ML68tXcYE5yBovaZct/12096i6ubKniLCwJQBlRU2DZcON35jBE2x3fB5ge49dX+zDFnCjbdiqpLiWP/tTqurgiGl42xJNcWYFXGrkZYzUvEIx8x0+Tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1727942304; c=relaxed/simple;
-	bh=9b1r371dXfsr5GGHdKw/qqZZEeab3yMNevt7+uxIk5c=;
+	bh=/UWeShPxKJg9mCvNie8xIuziy/LvDgBTyiIWWI3BpJ8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h4R2ze8E/sT7MxHBRrj/qFprMNDp7N7XKKRyKtfADeGjdN4cL18w2wFwaPxc4x/0wPeuEyuanAlBSLUsR2BUhdreKesThA0Lm7eDdakJro+gPV/Cq+/a6OOaLsMcvKglEpo5ceWuWEi1wXIrLmfS6rJh6k2CdnJwvI+RxpKOw50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Rx67XKp6; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=hmN3D5wsF0601Yibne60PSaEW+hcYAw/6ddWCNjeFN+ePEv+s04wXxCiHciCrfQPcMqdD2/SBNBPsv9HboEIVle3SVVWTIUG1qwgfGQS/+39fGG38/p5onSkpEbLu3BPkl/XiEZEDJJCSThipiv0F0gYdQWJil92Xt1/AfeBxHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=EqbZLMkg; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Rx67XKp6"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EqbZLMkg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=JKdxbtz294+SY4saxVNZMFSMY56j5WQ8YjlOIX5wAd4=; b=Rx67XKp6ZM3jfQtTupBIBIz5qC
-	k7Tnxua/vFYNvvhfeW1gp7TAFgXBF7xN59c1umdTuaEhbYU8iOlN/8H9cUP4YjnL5o04Oq2C1Abqx
-	kBCSAGdK4sTLN44RC8c/aCik5sLZL8huNmcq55OGTWfZOGqDSDvkksnhy+2mtuOGxNPA=;
+	bh=kQeLPEcYIRu1eH/cWq7yoDL/PgiPQBHYYMrgL9uRlwM=; b=EqbZLMkg2sapouZQxa4zYkbNXr
+	ZGsxeaxB/aX3FWpc5VJf/FbGY8Z3OTgJ9vwy3y97Q3pwCEmcV+4xv2pJw+ydf7aQ010sFe3cJEaH7
+	4Qp5FdhVSG2gd0IyEae6PzymuT4QJnDV16O7I1MtUSMVsrWFVDEYn5jIsnbblROxJMRc=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1swGj6-004Jgh-35;
+	id 1swGj7-004Jgh-14;
 	Thu, 03 Oct 2024 09:58:21 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v2 02/11] wifi: mac80211: use vif radio mask to limit ibss scan frequencies
-Date: Thu,  3 Oct 2024 09:58:10 +0200
-Message-ID: <f41b5a66279c2a106f69042d64aa2bf0f9ce81c6.1727942154.git-series.nbd@nbd.name>
+Subject: [PATCH v2 04/11] wifi: cfg80211: report per wiphy radio antenna mask
+Date: Thu,  3 Oct 2024 09:58:12 +0200
+Message-ID: <be2cb63f97aa2c05fa358d2eeb8bc1a0f8a46596.1727942154.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.debd54967c43dd95013c56efa390ea6117062373.1727942154.git-series.nbd@nbd.name>
 References: <cover.debd54967c43dd95013c56efa390ea6117062373.1727942154.git-series.nbd@nbd.name>
@@ -48,65 +48,74 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reject frequencies not supported by any radio that the vif is allowed to use.
+With multi-radio devices, each radio typically gets a fixed set of antennas.
+In order to be able to disable specific antennas for some radios, user space
+needs to know which antenna mask bits are assigned to which radio.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/scan.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ include/net/cfg80211.h       | 4 ++++
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 4 +++-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index adb88c06b598..2ca75cf17242 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -1176,14 +1176,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				unsigned int n_channels)
- {
- 	struct ieee80211_local *local = sdata->local;
--	int ret = -EBUSY, i, n_ch = 0;
-+	int ret = -EINVAL, i, n_ch = 0;
- 	enum nl80211_band band;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 73df4a8e8cce..8bb5fb80cd7b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5436,6 +5436,8 @@ struct wiphy_radio_freq_range {
+  * @iface_combinations: Valid interface combinations array, should not
+  *	list single interface types.
+  * @n_iface_combinations: number of entries in @iface_combinations array.
++ *
++ * @antenna_mask: bitmask of antennas connected to this radio.
+  */
+ struct wiphy_radio {
+ 	const struct wiphy_radio_freq_range *freq_range;
+@@ -5443,6 +5445,8 @@ struct wiphy_radio {
  
- 	lockdep_assert_wiphy(local->hw.wiphy);
+ 	const struct ieee80211_iface_combination *iface_combinations;
+ 	int n_iface_combinations;
++
++	u32 antenna_mask;
+ };
  
- 	/* busy scanning */
--	if (local->scan_req)
-+	if (local->scan_req) {
-+		ret = -EBUSY;
- 		goto unlock;
-+	}
+ #define CFG80211_HW_TIMESTAMP_ALL_PEERS	0xffff
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index d31ccee99cc7..1b8827f920ff 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -8036,6 +8036,8 @@ enum nl80211_ap_settings_flags {
+  * @NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION: Supported interface
+  *	combination for this radio. Attribute may be present multiple times
+  *	and contains attributes defined in &enum nl80211_if_combination_attrs.
++ * @NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK: bitmask (u32) of antennas
++ *	connected to this radio.
+  *
+  * @__NL80211_WIPHY_RADIO_ATTR_LAST: Internal
+  * @NL80211_WIPHY_RADIO_ATTR_MAX: Highest attribute
+@@ -8046,6 +8048,7 @@ enum nl80211_wiphy_radio_attrs {
+ 	NL80211_WIPHY_RADIO_ATTR_INDEX,
+ 	NL80211_WIPHY_RADIO_ATTR_FREQ_RANGE,
+ 	NL80211_WIPHY_RADIO_ATTR_INTERFACE_COMBINATION,
++	NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
  
- 	/* fill internal scan request */
- 	if (!channels) {
-@@ -1200,7 +1202,9 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				    &local->hw.wiphy->bands[band]->channels[i];
+ 	/* keep last */
+ 	__NL80211_WIPHY_RADIO_ATTR_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7f3bd35c8a3b..d2c1fd98dc03 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2428,7 +2428,9 @@ static int nl80211_put_radio(struct wiphy *wiphy, struct sk_buff *msg, int idx)
+ 	if (!radio)
+ 		return -ENOBUFS;
  
- 				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
--						     IEEE80211_CHAN_DISABLED))
-+						     IEEE80211_CHAN_DISABLED) ||
-+				    !cfg80211_wdev_channel_allowed(&sdata->wdev,
-+								   tmp_ch))
- 					continue;
+-	if (nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_INDEX, idx))
++	if (nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_INDEX, idx) ||
++	    nla_put_u32(msg, NL80211_WIPHY_RADIO_ATTR_ANTENNA_MASK,
++			r->antenna_mask))
+ 		goto nla_put_failure;
  
- 				local->int_scan_req->channels[n_ch] = tmp_ch;
-@@ -1215,14 +1219,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 	} else {
- 		for (i = 0; i < n_channels; i++) {
- 			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
--						  IEEE80211_CHAN_DISABLED))
-+						  IEEE80211_CHAN_DISABLED) ||
-+			    !cfg80211_wdev_channel_allowed(&sdata->wdev,
-+							   channels[i]))
- 				continue;
- 
- 			local->int_scan_req->channels[n_ch] = channels[i];
- 			n_ch++;
- 		}
- 
--		if (WARN_ON_ONCE(n_ch == 0))
-+		if (n_ch == 0)
- 			goto unlock;
- 
- 		local->int_scan_req->n_channels = n_ch;
+ 	for (i = 0; i < r->n_freq_range; i++) {
 -- 
 git-series 0.9.1
