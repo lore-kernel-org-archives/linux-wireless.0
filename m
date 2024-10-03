@@ -1,39 +1,39 @@
 Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3879A186E46
-	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 13:25:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AAB68C07
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Oct 2024 13:49:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727961954; cv=none; b=hbTqJbFdBNu9dURteuJ0re7AziigAen0kNU83FW5s2yeeODCSp7r45hDfMnT1mBKSWyO3bV35NARVmFKsTC94b/SYtBRP9/DNvtiDE8hxu0KLxJqSvI/qneIBY2K1XkRGWqUyLgOHyIANvcrMhK4TqP1T8PZsIiSDDo1Oyykjdk=
+	t=1727963359; cv=none; b=NmgXonAD04KN/KK/d7RXR31771dgfed1B3P/UNUvV/gs3arPadLwzghGJlFO8DC/rDYwf2bEoIBdwmGCFi+cIA+UsioJ0Pz5TLCOJb0Tau9do580trCgibQrnmtn5bJ+mHWNcUHsus5vhZlWylYhSruRhHVafEgIP9qypP0Ae7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727961954; c=relaxed/simple;
-	bh=LojP7bAAjR53TpIzOgGbf1XLM8sKSczZwbv0BYhxR0Q=;
+	s=arc-20240116; t=1727963359; c=relaxed/simple;
+	bh=Au+vH3Ul2AH870PbHTY6fBQWPnwE+hIIZy3Xl+rBTZk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NaqsSdvaeQrkOpkerdbDHwj4uH4AMVKLM93hjLEXq6LZOp3GG5LRDmEdBPhRF2qcyPWky37vjneD6DUDJcqUI2jI5kXnO5X2OduIH+jRuDnGxs/UK+M+rwWboEGCvUEH54kZD3EwdvprGKDX4AQpF3Q5ilSuWY6lR5ocpSZdjwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=JXaxl6+p; arc=none smtp.client-ip=85.214.62.61
+	 In-Reply-To:Content-Type; b=fOKr8iB4hKkSAPbGEZ4x4tnJYpNhFF8u85FybW54NGD/kp7js63m9Bfkyk2repg/rU2JZqpN0gSc/6WCOuklbns3HcZF3WwUXfC9b1HF8lautZRcHUzQXPE2JAHir639Mwgf9uGKh7OUPPdEQDGyOnEZ5gf/L9gjoWYGqfI8dbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=bflVE0Qs; arc=none smtp.client-ip=85.214.62.61
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="JXaxl6+p"
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="bflVE0Qs"
 Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
 	(No client certificate requested)
 	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 46797882EF;
-	Thu,  3 Oct 2024 15:25:51 +0200 (CEST)
+	by phobos.denx.de (Postfix) with ESMTPSA id 02224885B3;
+	Thu,  3 Oct 2024 15:49:14 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1727961951;
-	bh=y6BxYfe8mbUmdeYNrizupkQmuVKyQXKXIq/T2to1UWc=;
+	s=phobos-20191101; t=1727963355;
+	bh=pySa0ZEjzpolSCt1gyo8y5CwZMP3CKgL4mSy9UJIWLc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=JXaxl6+p+6BMZMAkcXIwa6+NO9JoXGGpkk9SyL5x+GftI/pl0y0xa9nZ780iNlpdv
-	 Wd2l2MljoKWFdUAMrbT+Tk7y9W9jT3PFnJdlt8ALVgGs7KCl4Yzscu9WPyfaivbdEc
-	 92xuj++ELDrN7oi23svFXVvsxej4NfZYFX6Ndb6hLeXfHq6+BmzpJTnwpPbIKVVZGJ
-	 qAt0U00FvCQagGv9CTkbWbgP9YdJGOaqa0Zc2cMWQ6SklFkFyFAnmMzIFaa4ninwif
-	 zWxrn4vpHmc84xhr7TCx+zHS3s2TqFXhZB7md8RzDMQ7h8RiYpBBM4BnzqguHItuZo
-	 g2ZNWCljM73jQ==
-Message-ID: <089601b8-7bab-4369-822d-9ce1f0091f82@denx.de>
-Date: Thu, 3 Oct 2024 15:25:50 +0200
+	b=bflVE0QscQyqqIXeZAQ65jNUon4XXwA5u7nnP1+ZRn8w8yjOYDB65h7nLsBFQRR2c
+	 AWJGsslM2z21QvEydyI7bla9oCW7J3Bm5pueC//TgynfI1JNyKJXvdlOx4hVk9S3HV
+	 GLM/1RJ2MHhpMnneyoPXTXVLQE2Cbh9YuaGTurazVLucLioy3wOKWEuY0+fwmaCeQI
+	 nxvFrdVTtWQYiIdONmlhKEz53x/XBO7Nds4MQ4jG7cZPaDKnCnqKBAfyojU+ZMMfx3
+	 cBZZ9KEDjtfWoI09UllSoIG1U/8nmB6cflSK25wILS/5r1LwYAjvvYpD2kPS6bIrbn
+	 54B/xVtyhTSEA==
+Message-ID: <42e5e310-dc89-4e6e-bf8d-7d1e83e923d0@denx.de>
+Date: Thu, 3 Oct 2024 15:18:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,69 +41,76 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: wilc1000: Set MAC after operation mode
+Subject: Re: [PATCH v2] wifi: wilc1000: Keep slot powered on during
+ suspend/resume
 To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
- linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Kalle Valo <kvalo@kernel.org>
-References: <20240926195308.2823595-1-marex@denx.de>
- <8d90714b-3646-4cfb-8b2c-89b21b1d8000@bootlin.com>
+ Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org, Ajay Singh <ajay.kathat@microchip.com>,
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>
+References: <20240926195113.2823392-1-marex@denx.de>
+ <87ed5481ro.fsf@kernel.org> <b3429a32-111b-4bab-9f4f-84c75bb3a049@denx.de>
+ <372e6f65-79f1-4a64-a323-2939269a8a45@bootlin.com>
+ <1e7351db-366b-4e4a-b423-92867f24cbb5@denx.de>
+ <923ee7fa-d7fe-40b4-802a-b89d9b84c20d@bootlin.com>
 Content-Language: en-US
 From: Marek Vasut <marex@denx.de>
-In-Reply-To: <8d90714b-3646-4cfb-8b2c-89b21b1d8000@bootlin.com>
+In-Reply-To: <923ee7fa-d7fe-40b4-802a-b89d9b84c20d@bootlin.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
 X-Virus-Status: Clean
 
-On 10/3/24 2:32 PM, Alexis Lothoré wrote:
-> Hello Marek,
-
-Hi,
-
-> On 9/26/24 21:52, Marek Vasut wrote:
->> It seems it is necessary to set WILC MAC address after operation mode,
->> otherwise the MAC address of the WILC MAC is reset back to what is in
->> nvmem. This causes a failure to associate with AP after the WILC MAC
->> address was overridden by userspace.
+On 10/3/24 2:58 PM, Alexis Lothoré wrote:
+> On 10/3/24 12:49, Marek Vasut wrote:
+>> On 10/3/24 10:31 AM, Alexis Lothoré wrote:
+>>> On 9/29/24 17:23, Marek Vasut wrote:
+>>>> On 9/28/24 1:18 PM, Kalle Valo wrote:
+>>>>> Marek Vasut <marex@denx.de> writes:
+>>>>>
+>>>>>> The WILC3000 can suspend and enter low power state. According to local
+>>>>>> measurements, the WILC3000 consumes the same amount of power if the slot
+>>>>>> is powered up and WILC3000 is suspended, and if the WILC3000 is powered
+>>>>>> off. Use the former option, keep the WILC3000 powered up as that allows
+>>>>>> for things like WoWlan to work.
+>>>>>>
+>>>>>> Note that this is tested on WILC3000 only, not on WILC1000 .
+>>>>>>
+>>>>>> Signed-off-by: Marek Vasut <marex@denx.de>
+>>>>>> ---
+>>>>>> Cc: Ajay Singh <ajay.kathat@microchip.com>
+>>>>>> Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+>>>>>> Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+>>>>>> Cc: Kalle Valo <kvalo@kernel.org>
+>>>>>> Cc: Marek Vasut <marex@denx.de>
+>>>>>> Cc: linux-wireless@vger.kernel.org
+>>>>>> ---
+>>>>>> V2: Rebase on next-20240926
+>>>>>
+>>>>> BTW I recommend using wireless-next as the baseline for wireless
+>>>>> patches. For example, wireless-next is not pulled to linux-next during
+>>>>> merge windows or other patches in linux-next might create unnecessary
+>>>>> conflicts. Of course most of the cases using linux-next is fine.
+>>>> I didn't know there was one such tree, added to remotes, thanks !
+>>>
+>>> +1, as already mentioned in previous revisions, I would gladly test wilc3000
+>>> changes on both wilc3000 and wilc1000 on my platform, and having the series on
+>>> top of wireless-next would allow to do it on top of any change also affecting
+>>> the driver in wireless-next :)
 >>
->> Test case:
->> "
->> ap$ cat << EOF > hostap.conf
->> interface=wlan0
->> ssid=ssid
->> hw_mode=g
->> channel=6
->> wpa=2
->> wpa_passphrase=pass
->> wpa_key_mgmt=WPA-PSK
->> EOF
->> ap$ hostapd -d hostap.conf
->> ap$ ifconfig wlan0 10.0.0.1
->> "
+>> I just had a look at a diff between wireless-next/main and next/master 20241003
+>> for drivers/net/wireless/microchip , there are no changes to the driver between
+>> the two trees, so it should be possible to test this patch on either tree. Can
+>> you give it a try ? Ideally test this patch separately on WILC1000 across
+>> suspend/resume and check if it works. You might need the MMC controller fix
+>> which sets struct mmc_host .pm_caps |= MMC_PM_KEEP_POWER for your controller ,
+>> unless this is already upstream.
 >>
->> "
->> sta$ ifconfig wlan0 hw ether 00:11:22:33:44:55
->> sta$ wpa_supplicant -i wlan0 -c <(wpa_passphrase ssid pass)
->> sta$ ifconfig wlan0 10.0.0.2
->> sta$ ping 10.0.0.1 # fails without this patch
->> "
+>> The WILC3000 series depends on this patch.
 >>
->> AP still indicates SA with original MAC address from nvmem without this patch:
->> "
->> nl80211: RX frame da=ff:ff:ff:ff:ff:ff sa=60:01:23:45:67:89 bssid=ff:ff:ff:ff:ff:ff ...
->>                                            ^^^^^^^^^^^^^^^^^
->> "
-> 
-> Good catch, thanks for the fix. I tracked a bit the issue history and it seems
-> to have been introduced by my recent change about reading the mac address early
-> from the chip nvmem (to set correctly mac address reported to userspace once net
-> device has been registered). I indeed reproduce the issue, and reverting the
-> commit below makes it disappear, so the following can be added:
-> 
-> Fixes: 83d9b54ee5d4 ("wifi: wilc1000: read MAC address from fuse at probe")
-> 
->> Signed-off-by: Marek Vasut <marex@denx.de>
-> 
-> Tested-by: Alexis Lothoré <alexis.lothore@bootlin.com>
-Nice, thanks !
+> Meh, you are right, I have read too fast your answer to my initial question
+> about used base branch, and omitted the suspend/resume patch (I assumed it
+> conflicted because of some other patches in wireless-next).
+Nope, it conflicted because I (again) didn't include cover letter with 
+the WILC3000 series, which mentions this information. I really need to 
+find some suitable tooling to manage the cover letters, branch 
+description does not seem to cut it quite as I hoped it would.
