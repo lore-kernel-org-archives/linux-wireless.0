@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E5441D8A03
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53B4A1D8A0F
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728073333; cv=none; b=Exl+iSCKcoGdy4NVKRyGAjyNjwnEjdzroWQ7b8EzQkrE9mt5EI4Gctw6zzYD3FRnwDdc2XY4bw7skNqH3OXwurkejcHRNGsUERDB3iaQnV7VdVSasJoVcORBba8240Wn2lhGb8FXGoGov8tvGe21OK4VaCatDsr4Kg6tWIjRXNA=
+	t=1728073333; cv=none; b=BLClJeEgXKvxdKPTOcCYPls8Pnq0gu4hkAs1AqcLS4q51VYUDmNcmjL5RwpWmdhtE5CZijPWICnjIGBW6dBvSuxTn7IRbHNk0nxBsfBftzOKGj4HWWj6A1G/+VSaiLIsaL0OSyPN13+ls0xzgsmNT98VM5mQW9FyW3Qf4lHlnfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728073333; c=relaxed/simple;
-	bh=Dw7Y0jzvNivvpgwKd8VSMM8gfiYC9Dt4aF6AerVRlbo=;
+	bh=9+6QACUb+GhnZBZC6bGuSL4roRCNT1wWjwIVB6Mm7Ow=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qk6DWLNfEwWCmeiqNr1wznX/OG9sGLmTi2ay01Cz/Sm2e64H2KrFgtq3Yt7VSBybcJ7KYn/JVlwn8elFBRRgiLBa+1Q5nyNzMTA+VYSnv+bOYDwFe9DTaCsZthul2DZOoJP7Ggh/HmmTi9MnHBRnX55OudqtDqWVpsmtl2q5BY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=nBbhsI2a; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=uLn34/KihaRh8yTbuICiJEaKBEfOcTD94RlSXie0gFsvOwLobX0XBm6cidUqZT9XTtHCZspCBT0UvLULxFXGGZ8RXCHZ2APxGdqjtBg1HX0r5J7/7gmonUOiYuU5v3iXbKYCEJFMOEvMfnlX9ze51FtCfayCVIkC+OdGJOTmxZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=IrqP+A4l; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="nBbhsI2a"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="IrqP+A4l"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=bI1wSKSrLjmirXjKeOkoA/wz++t+HhBQM2Gi7sKAvq8=; b=nBbhsI2ahwm5Xxwd3aO6UybTht
-	CyfwpdcMftME7HkTa6rTugFTNKZlTJ65LUATFsgSCYwmf4nnBMYr8s2VVhCcRxaANYOtKoECro862
-	n4xlfxQ6z1zSYztKEfHQqGdVHvHJLjdZj9Sub5b0kHokTn5wNdHu4LtnWxA1EhMmtgi4=;
+	bh=Z8ylunqAvnBjE6nhboz5X7aY/14jSbwOaRzAWcLmtOw=; b=IrqP+A4lZcKKrTR6XSJYjLmRLg
+	9zIMJOWS5IdhBCasZdgcA/B55Ke03iMIcIORWYXsl7TziHuUicuYtkv2QOHEQD+lNiPji4Y7OA0os
+	fVNfK3T7jsnW2ZyMweKvRDiibKREBrTrwuVg/8NM7YxRO2a2m8pQVUIrS2KPfxIC1Z68=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1swooM-004jVl-0k;
-	Fri, 04 Oct 2024 22:22:02 +0200
+	id 1swooN-004jVl-2F;
+	Fri, 04 Oct 2024 22:22:03 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v3 01/11] wifi: cfg80211: add option for vif allowed radios
-Date: Fri,  4 Oct 2024 22:21:51 +0200
-Message-ID: <5b1da33c10f63ee696fbd53a1552a65faac039bf.1728063865.git-series.nbd@nbd.name>
+Subject: [PATCH v3 07/11] wifi: mac80211: add flag to opt out of virtual monitor support
+Date: Fri,  4 Oct 2024 22:21:57 +0200
+Message-ID: <17d878796b36fbadffa677f418e300c0058c485e.1728063865.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
 References: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
@@ -48,327 +48,367 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This allows users to prevent a vif from affecting radios other than the
-configured ones. This can be useful in cases where e.g. an AP is running
-on one radio, and triggering a scan on another radio should not disturb it.
-
-Changing the allowed radios list for a vif is supported, but only while
-it is down.
-
-While it is possible to achieve the same by always explicitly specifying
-a frequency list for scan requests and ensuring that the wrong channel/band
-is never accidentally set on an unrelated interface, this change makes
-multi-radio wiphy setups a lot easier to deal with for CLI users.
-
-By itself, this patch only enforces the radio mask for scanning requests
-and remain-on-channel. Follow-up changes build on this to limit configured
-frequencies.
+This is useful for multi-radio devices that are capable of monitoring on
+multiple channels simultanenously. When this flag is set, each monitor
+interface is passed to the driver individually and can have a configured
+channel.
+The vif mac address for non-active monitor interfaces is cleared, in order
+to allow the driver to tell them apart from active ones.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/cfg80211.h       | 12 +++++++-
- include/uapi/linux/nl80211.h |  5 +++-
- net/wireless/core.c          |  2 +-
- net/wireless/nl80211.c       | 60 ++++++++++++++++++++++++++++++++-----
- net/wireless/scan.c          | 10 ++++--
- net/wireless/util.c          | 29 ++++++++++++++++++-
- 6 files changed, 107 insertions(+), 11 deletions(-)
+ include/net/mac80211.h    |  6 +++++-
+ net/mac80211/cfg.c        | 44 +++++++++++++++++++++++++---------------
+ net/mac80211/chan.c       | 14 ++++++++++++-
+ net/mac80211/debugfs.c    |  1 +-
+ net/mac80211/driver-ops.c |  1 +-
+ net/mac80211/iface.c      | 22 +++++++++++++++-----
+ net/mac80211/rx.c         |  3 +++-
+ net/mac80211/tx.c         |  6 +++--
+ net/mac80211/util.c       | 14 +++++++++----
+ 9 files changed, 83 insertions(+), 28 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 69ec1eb41a09..73df4a8e8cce 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -6223,6 +6223,7 @@ enum ieee80211_ap_reg_power {
-  *	entered.
-  * @links.cac_time_ms: CAC time in ms
-  * @valid_links: bitmap describing what elements of @links are valid
-+ * @radio_mask: Bitmask of radios that this interface is allowed to operate on.
-  */
- struct wireless_dev {
- 	struct wiphy *wiphy;
-@@ -6335,6 +6336,8 @@ struct wireless_dev {
- 		unsigned int cac_time_ms;
- 	} links[IEEE80211_MLD_MAX_NUM_LINKS];
- 	u16 valid_links;
-+
-+	u32 radio_mask;
- };
- 
- static inline const u8 *wdev_address(struct wireless_dev *wdev)
-@@ -6521,6 +6524,15 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
- 				  const struct cfg80211_chan_def *chandef);
- 
- /**
-+ * cfg80211_wdev_channel_allowed - Check if the wdev may use the channel
-+ *
-+ * @wdev: the wireless device
-+ * @chan: channel to check
-+ */
-+bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
-+				   struct ieee80211_channel *chan);
-+
-+/**
-  * ieee80211_get_response_rate - get basic rate for a given rate
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index be916e1e5e1d..1343ea4f8103 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2679,6 +2679,11 @@ struct ieee80211_txq {
+  *	a virtual monitor interface when monitor interfaces are the only
+  *	active interfaces.
   *
-  * @sband: the band to look for rates in
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f97f5adc8d51..d31ccee99cc7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2868,6 +2868,9 @@ enum nl80211_commands {
-  *	nested item, it contains attributes defined in
-  *	&enum nl80211_if_combination_attrs.
-  *
-+ * @NL80211_ATTR_VIF_RADIO_MASK: Bitmask of allowed radios (u32).
-+ *	A value of 0 means all radios.
++ * @IEEE80211_HW_NO_VIRTUAL_MONITOR: The driver would like to be informed
++ *	of any monitor interface, as well as their configured channel.
++ *	This is useful for supporting multiple monitor interfaces on different
++ *	channels.
 + *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3416,6 +3419,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_RADIOS,
- 	NL80211_ATTR_WIPHY_INTERFACE_COMBINATIONS,
+  * @IEEE80211_HW_NO_AUTO_VIF: The driver would like for no wlanX to
+  *	be created.  It is expected user-space will create vifs as
+  *	desired (and thus have them named as desired).
+@@ -2838,6 +2843,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS,
+ 	IEEE80211_HW_MFP_CAPABLE,
+ 	IEEE80211_HW_WANT_MONITOR_VIF,
++	IEEE80211_HW_NO_VIRTUAL_MONITOR,
+ 	IEEE80211_HW_NO_AUTO_VIF,
+ 	IEEE80211_HW_SW_CRYPTO_CONTROL,
+ 	IEEE80211_HW_SUPPORT_FAST_XMIT,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b1ea7006f8d3..a67f38bc3961 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -105,8 +105,11 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
+ 	}
  
-+	NL80211_ATTR_VIF_RADIO_MASK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ 	/* also validate MU-MIMO change */
+-	monitor_sdata = wiphy_dereference(local->hw.wiphy,
+-					  local->monitor_sdata);
++	if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++		monitor_sdata = sdata;
++	else
++		monitor_sdata = wiphy_dereference(local->hw.wiphy,
++						  local->monitor_sdata);
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 661adfc77644..870ecd8d6197 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1386,6 +1386,8 @@ void cfg80211_init_wdev(struct wireless_dev *wdev)
- 	/* allow mac80211 to determine the timeout */
- 	wdev->ps_timeout = -1;
+ 	if (!monitor_sdata &&
+ 	    (params->vht_mumimo_groups || params->vht_mumimo_follow_addr))
+@@ -114,7 +117,9 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
  
-+	wdev->radio_mask = BIT(wdev->wiphy->n_radio) - 1;
-+
- 	if ((wdev->iftype == NL80211_IFTYPE_STATION ||
- 	     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
- 	     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9ab777e0bd4d..7f3bd35c8a3b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -829,6 +829,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_MLO_TTLM_DLINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
- 	[NL80211_ATTR_MLO_TTLM_ULINK] = NLA_POLICY_EXACT_LEN(sizeof(u16) * 8),
- 	[NL80211_ATTR_ASSOC_SPP_AMSDU] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_VIF_RADIO_MASK] = { .type = NLA_U32 },
- };
+ 	/* apply all changes now - no failures allowed */
  
- /* policy for the key attributes */
-@@ -3996,7 +3997,8 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 	    nla_put_u32(msg, NL80211_ATTR_GENERATION,
- 			rdev->devlist_generation ^
- 			(cfg80211_rdev_list_generation << 2)) ||
--	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr))
-+	    nla_put_u8(msg, NL80211_ATTR_4ADDR, wdev->use_4addr) ||
-+	    nla_put_u32(msg, NL80211_ATTR_VIF_RADIO_MASK, wdev->radio_mask))
- 		goto nla_put_failure;
+-	if (monitor_sdata && ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
++	if (monitor_sdata &&
++		(ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) ||
++		 ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)))
+ 		ieee80211_set_mu_mimo_follow(monitor_sdata, params);
  
- 	if (rdev->ops->get_channel && !wdev->valid_links) {
-@@ -4312,6 +4314,29 @@ static int nl80211_valid_4addr(struct cfg80211_registered_device *rdev,
- 	return -EOPNOTSUPP;
- }
+ 	if (params->flags) {
+@@ -889,22 +894,25 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
  
-+static int nl80211_parse_vif_radio_mask(struct genl_info *info,
-+					u32 *radio_mask)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct nlattr *attr = info->attrs[NL80211_ATTR_VIF_RADIO_MASK];
-+	u32 mask, allowed;
-+
-+	if (!attr) {
-+		*radio_mask = 0;
-+		return 0;
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (cfg80211_chandef_identical(&local->monitor_chanreq.oper,
+-				       &chanreq.oper))
+-		return 0;
++	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
++		if (cfg80211_chandef_identical(&local->monitor_chanreq.oper,
++						   &chanreq.oper))
++			return 0;
+ 
+-	sdata = wiphy_dereference(local->hw.wiphy,
+-				  local->monitor_sdata);
+-	if (!sdata)
+-		goto done;
++		sdata = wiphy_dereference(wiphy, local->monitor_sdata);
++		if (!sdata)
++			goto done;
 +	}
+ 
+-	if (cfg80211_chandef_identical(&sdata->vif.bss_conf.chanreq.oper,
++	if (rcu_access_pointer(sdata->deflink.conf->chanctx_conf) &&
++		cfg80211_chandef_identical(&sdata->vif.bss_conf.chanreq.oper,
+ 				       &chanreq.oper))
+ 		return 0;
+ 
+ 	ieee80211_link_release_channel(&sdata->deflink);
+ 	ret = ieee80211_link_use_channel(&sdata->deflink, &chanreq,
+-					 IEEE80211_CHANCTX_EXCLUSIVE);
++					 IEEE80211_CHANCTX_SHARED);
+ 	if (ret)
+ 		return ret;
+ done:
+@@ -3053,7 +3061,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 	if (wdev) {
+ 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
+ 				return -EOPNOTSUPP;
+ 
+@@ -3101,7 +3110,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 	}
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			has_monitor = true;
+ 			continue;
+ 		}
+@@ -3111,7 +3121,8 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 		sdata->vif.bss_conf.txpower_type = txp_type;
+ 	}
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 			continue;
+ 		ieee80211_recalc_txpower(sdata, update_txp_type);
+ 	}
+@@ -4302,7 +4313,8 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
+ 	if (chanctx_conf) {
+ 		*chandef = link->conf->chanreq.oper;
+ 		ret = 0;
+-	} else if (local->open_count > 0 &&
++	} else if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
++		   local->open_count > 0 &&
+ 		   local->open_count == local->monitors &&
+ 		   sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+ 		*chandef = local->monitor_chanreq.oper;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index fbc3b28953a6..c375c86dd38c 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -339,6 +339,10 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 		case NL80211_IFTYPE_NAN:
+ 			continue;
++		case NL80211_IFTYPE_MONITOR:
++			WARN_ON_ONCE(!ieee80211_hw_check(&local->hw,
++							 NO_VIRTUAL_MONITOR));
++			fallthrough;
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 		case NL80211_IFTYPE_OCB:
+@@ -347,7 +351,6 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+ 		case NUM_NL80211_IFTYPES:
+-		case NL80211_IFTYPE_MONITOR:
+ 		case NL80211_IFTYPE_P2P_CLIENT:
+ 		case NL80211_IFTYPE_P2P_GO:
+ 			WARN_ON_ONCE(1);
+@@ -956,6 +959,10 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 			if (!link->sdata->u.mgd.associated)
+ 				continue;
+ 			break;
++		case NL80211_IFTYPE_MONITOR:
++			if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++				continue;
++			break;
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_MESH_POINT:
+@@ -968,6 +975,11 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
+ 		if (rcu_access_pointer(link->conf->chanctx_conf) != &chanctx->conf)
+ 			continue;
+ 
++		if (link->sdata->vif.type == NL80211_IFTYPE_MONITOR) {
++			rx_chains_dynamic = rx_chains_static = local->rx_chains;
++			break;
++		}
 +
-+	allowed = BIT(rdev->wiphy.n_radio) - 1;
-+	mask = nla_get_u32(attr);
-+	if (mask & ~allowed)
-+		return -EINVAL;
-+	if (!mask)
-+		mask = allowed;
-+	*radio_mask = mask;
-+
-+	return 1;
-+}
-+
- static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		switch (link->smps_mode) {
+ 		default:
+ 			WARN_ONCE(1, "Invalid SMPS mode %d\n",
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 02b5476a4376..b777240c924e 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -456,6 +456,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(SUPPORTS_DYNAMIC_PS),
+ 	FLAG(MFP_CAPABLE),
+ 	FLAG(WANT_MONITOR_VIF),
++	FLAG(NO_VIRTUAL_MONITOR),
+ 	FLAG(NO_AUTO_VIF),
+ 	FLAG(SW_CRYPTO_CONTROL),
+ 	FLAG(SUPPORT_FAST_XMIT),
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index fe868b521622..8179310595ac 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -65,6 +65,7 @@ int drv_add_interface(struct ieee80211_local *local,
+ 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+ 		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
++		     !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
+ 		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))))
+ 		return -EINVAL;
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6ef0990d3d29..3aefc62034ba 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -279,8 +279,13 @@ static int _ieee80211_change_mac(struct ieee80211_sub_if_data *sdata,
+ 	ret = eth_mac_addr(sdata->dev, sa);
+ 
+ 	if (ret == 0) {
+-		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
+-		ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
++		if (check_dup) {
++			memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
++			ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
++		} else {
++			memset(sdata->vif.addr, 0, ETH_ALEN);
++			memset(sdata->vif.bss_conf.addr, 0, ETH_ALEN);
++		}
+ 	}
+ 
+ 	/* Regardless of eth_mac_addr() return we still want to add the
+@@ -699,9 +704,11 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		ieee80211_recalc_idle(local);
+ 		ieee80211_recalc_offload(local);
+ 
+-		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
++		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 			break;
+ 
++		ieee80211_link_release_channel(&sdata->deflink);
+ 		fallthrough;
+ 	default:
+ 		if (!going_down)
+@@ -1131,7 +1138,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+-	if (local->monitor_sdata)
++	if (local->monitor_sdata ||
++	    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 		return 0;
+ 
+ 	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
+@@ -1193,6 +1201,9 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
  {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-@@ -4319,6 +4344,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 	int err;
- 	enum nl80211_iftype otype, ntype;
- 	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	u32 radio_mask = 0;
- 	bool change = false;
+ 	struct ieee80211_sub_if_data *sdata;
  
- 	memset(&params, 0, sizeof(params));
-@@ -4332,8 +4359,6 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
++	if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++		return;
++
+ 	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -1328,7 +1339,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 718f02f0a181..b35e1b472e82 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -840,6 +840,9 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		bool last_monitor = list_is_last(&sdata->u.mntr.list,
+ 						 &local->mon_list);
+ 
++		if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++			ieee80211_handle_mu_mimo_mon(sdata, origskb, rtap_space);
++
+ 		if (!monskb)
+ 			monskb = ieee80211_make_monitor_skb(local, &origskb,
+ 							    rate, rtap_space,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a9ee86982259..f55f0518b35e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1763,7 +1763,8 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			vif = &sdata->vif;
+ 			break;
+ 		}
+@@ -3952,7 +3953,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 
+ 	switch (tx.sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
++		if ((tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
++		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
+ 			vif = &tx.sdata->vif;
+ 			break;
+ 		}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f94faa86ba8a..279210fabd35 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -756,7 +756,8 @@ static void __iterate_interfaces(struct ieee80211_local *local,
+ 				lockdep_is_held(&local->hw.wiphy->mtx)) {
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_MONITOR:
+-			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
++			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) &&
++			    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 				continue;
+ 			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
+@@ -1873,8 +1874,10 @@ int ieee80211_reconfig(struct ieee80211_local *local)
  	}
  
- 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
--		struct wireless_dev *wdev = dev->ieee80211_ptr;
--
- 		if (ntype != NL80211_IFTYPE_MESH_POINT)
- 			return -EINVAL;
- 		if (otype != NL80211_IFTYPE_MESH_POINT)
-@@ -4364,6 +4389,12 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 	if (err > 0)
- 		change = true;
- 
-+	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
-+	if (err < 0)
-+		return err;
-+	if (err && netif_running(dev))
-+		return -EBUSY;
-+
- 	if (change)
- 		err = cfg80211_change_iface(rdev, dev, ntype, &params);
- 	else
-@@ -4372,11 +4403,11 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
- 	if (!err && params.use_4addr != -1)
- 		dev->ieee80211_ptr->use_4addr = params.use_4addr;
- 
--	if (change && !err) {
--		struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	if (radio_mask)
-+		wdev->radio_mask = radio_mask;
- 
-+	if (change && !err)
- 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_SET_INTERFACE);
--	}
- 
- 	return err;
- }
-@@ -4387,6 +4418,7 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	struct vif_params params;
- 	struct wireless_dev *wdev;
- 	struct sk_buff *msg;
-+	u32 radio_mask;
- 	int err;
- 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 
-@@ -4424,6 +4456,10 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	if (err < 0)
- 		return err;
- 
-+	err = nl80211_parse_vif_radio_mask(info, &radio_mask);
-+	if (err < 0)
-+		return err;
-+
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
- 		return -ENOMEM;
-@@ -4465,6 +4501,9 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		break;
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++		    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++			continue;
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 		    ieee80211_sdata_running(sdata)) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (WARN_ON(res))
+@@ -1887,11 +1890,14 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	 */
+ 	if (res) {
+ 		list_for_each_entry_continue_reverse(sdata, &local->interfaces,
+-						     list)
++						     list) {
++			if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++			    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
++				continue;
+ 			if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+-			    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+ 			    ieee80211_sdata_running(sdata))
+ 				drv_remove_interface(local, sdata);
++		}
+ 		ieee80211_handle_reconfig_failure(local);
+ 		return res;
  	}
- 
-+	if (radio_mask)
-+		wdev->radio_mask = radio_mask;
-+
- 	if (nl80211_send_iface(msg, info->snd_portid, info->snd_seq, 0,
- 			       rdev, wdev, NL80211_CMD_NEW_INTERFACE) < 0) {
- 		nlmsg_free(msg);
-@@ -9180,6 +9219,9 @@ static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev,
- 
- 	lockdep_assert_wiphy(wdev->wiphy);
- 
-+	if (!cfg80211_wdev_channel_allowed(wdev, chan))
-+		return false;
-+
- 	if (!cfg80211_beaconing_iface_active(wdev))
- 		return true;
- 
-@@ -9392,7 +9434,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 			}
- 
- 			/* ignore disabled channels */
--			if (chan->flags & IEEE80211_CHAN_DISABLED)
-+			if (chan->flags & IEEE80211_CHAN_DISABLED ||
-+			    !cfg80211_wdev_channel_allowed(wdev, chan))
- 				continue;
- 
- 			request->channels[i] = chan;
-@@ -9412,7 +9455,8 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 
- 				chan = &wiphy->bands[band]->channels[j];
- 
--				if (chan->flags & IEEE80211_CHAN_DISABLED)
-+				if (chan->flags & IEEE80211_CHAN_DISABLED ||
-+				    !cfg80211_wdev_channel_allowed(wdev, chan))
- 					continue;
- 
- 				request->channels[i] = chan;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 59a90bf3c0d6..279af47651c1 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -956,7 +956,8 @@ static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
- 		struct ieee80211_channel *chan =
- 			ieee80211_get_channel(&rdev->wiphy, ap->center_freq);
- 
--		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-+		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED ||
-+		    !cfg80211_wdev_channel_allowed(rdev_req->wdev, chan))
- 			continue;
- 
- 		for (i = 0; i < rdev_req->n_channels; i++) {
-@@ -3515,9 +3516,12 @@ int cfg80211_wext_siwscan(struct net_device *dev,
- 			continue;
- 
- 		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
-+			struct ieee80211_channel *chan;
-+
- 			/* ignore disabled channels */
--			if (wiphy->bands[band]->channels[j].flags &
--						IEEE80211_CHAN_DISABLED)
-+			chan = &wiphy->bands[band]->channels[j];
-+			if (chan->flags & IEEE80211_CHAN_DISABLED ||
-+			    !cfg80211_wdev_channel_allowed(creq->wdev, chan))
- 				continue;
- 
- 			/* If we have a wireless request structure and the
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f49b55724f83..9ccc9602ac25 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -2923,3 +2923,32 @@ bool cfg80211_radio_chandef_valid(const struct wiphy_radio *radio,
- 	return true;
- }
- EXPORT_SYMBOL(cfg80211_radio_chandef_valid);
-+
-+bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
-+				   struct ieee80211_channel *chan)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	const struct wiphy_radio *radio;
-+	struct cfg80211_chan_def chandef;
-+	u32 radio_mask;
-+	int i;
-+
-+	radio_mask = wdev->radio_mask;
-+	if (!wiphy->n_radio || radio_mask == BIT(wiphy->n_radio) - 1)
-+		return true;
-+
-+	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
-+	for (i = 0; i < wiphy->n_radio; i++) {
-+		if (!(radio_mask & BIT(i)))
-+			continue;
-+
-+		radio = &wiphy->radio[i];
-+		if (!cfg80211_radio_chandef_valid(radio, &chandef))
-+			continue;
-+
-+		return true;
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(cfg80211_wdev_channel_allowed);
 -- 
 git-series 0.9.1
