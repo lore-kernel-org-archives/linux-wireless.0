@@ -1,39 +1,33 @@
-Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93354146A63;
-	Fri,  4 Oct 2024 11:47:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 710E615748E;
+	Fri,  4 Oct 2024 14:05:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728042423; cv=none; b=Q1yZccx4p6E3J5B3MbA007xjBpdZQ2aA4tGS4frotihj7oTLm9qDMJj8FA4y3hMFf4nYb87taBgSdxscEZZMLrLTwoY0sp1gTG+OG5zTTpnLCpofhWjVSw8vUj3qKAim9dApvLYPyfiaqgkPk7PrXTcfhynxRQenKxDg+OHqJmM=
+	t=1728050718; cv=none; b=rLqPugWdZGi0BZbQ5j4XWHid+qNcUdVu2Epf/lwZMigXOcW6hziO4xuvGt9Eb76NbAXkMaLV3P3F+uysrOgYmabm014ROYUKvjSKYhsdqIz5jtMgz9cuBzaH3VpPvWU4RVhX1pBQnExXTZOW3+ai6euH+yNhNHgpezN9H4//jHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728042423; c=relaxed/simple;
-	bh=fNomv74+MMs3OOhe1I+2XGyxeAWZaBagLDg4xS45uvo=;
+	s=arc-20240116; t=1728050718; c=relaxed/simple;
+	bh=r1ip39nUci3wd+1qGKAxN2UBv3DvG6xjpPaTHDk+aiU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JgXuzPgLi0q97Jd4Q4j7gT+5kFapOPoOdgb/XvgeUjY28lYQEeXAXo6HtTr3Pk7JFc4eSpoKgR07X8pOYw9ldQDpPdb7xebsLO/IYO83VbQHwD62jwaemOIcTgfGrs8bRpPWqUYmtYw0w/8M6a9GNayaZXRXWbMlFZwX1YKghbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=iY/jynM6; arc=none smtp.client-ip=85.214.62.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
+	 In-Reply-To:Content-Type; b=KatrwgJ06NxSEi/lyl4UDVUS2QgUj+5qS5USZHMu9upc4m/O/LtO+mviXY6GXWI6mXfJYJ+kVy+iW91+9W6wotlg1TLP2FyGMwa2TmbcktAuZtEj64EwW9v7odW9qqWRS4gxMlhECcY8wHGEk8VLF+fJxmoyOdNjPH4HDlN1w8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A1CeaMXe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="iY/jynM6"
-Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 3390088B63;
-	Fri,  4 Oct 2024 13:46:59 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1728042420;
-	bh=3Ja09wpbBxa1NtiRC6tfKDerDwaf10x8kXLxoP0+/xI=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A1CeaMXe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56A1CC4CEC6;
+	Fri,  4 Oct 2024 14:05:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728050718;
+	bh=r1ip39nUci3wd+1qGKAxN2UBv3DvG6xjpPaTHDk+aiU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=iY/jynM6Zj230DcG0ZOi+BSbGYCBSs6wS3U1ZYKfaRrbA7uVco7y2NGHH303MRDuL
-	 LMaUam8rVgaxMpO5EBVV3b5BFCYj7qnqFcLqJAU0X2ANJPleqNYQg6bOLoc1tyg2cS
-	 05eMXZ351YQfvEIYAt+wAuogPK+9rH5VlIgRurv7yZFLzeWWb0tOeGecsDytBbCriU
-	 /nP1jOM/Z0gz5aitsttxDfDKlZ8H0rvuCWcJXZdIhEMM0z8t6kSMfv/au6EJ0GtWgi
-	 Ne74ZbvFM7L3R5+kbTgf47T7GXElTE5vX2G9A5YkEOXqtyqIQrf3e29AdJHfg2t6Qz
-	 XJQL2g0b1gNQA==
-Message-ID: <31c7dd86-ff8f-4745-8d33-07f8f8037d44@denx.de>
-Date: Fri, 4 Oct 2024 13:42:03 +0200
+	b=A1CeaMXeodZXW93IGZn/a/cNmcjyuR+fnQx6x4XWJTX0Qm6hhsfsf8ynVskXbQ9xt
+	 NQFZut7zkU8mVXu4+1dlbewT6+eleXgqB+JpI5cpRKQ2TpV/pkcHk32DSw3ss18T2X
+	 vewDNFT8oFs7i0rBODRFnY4NwzmjAoALhzePGdBh+OJBJdDKJJgVC1ScLw0BKd4+3w
+	 duDrebnG4CmXhOBI0vHA/tCpvf0+9qE9RRmszYudVDIeER1T9Rv5dUMI3Viv2q73PB
+	 VFj0SYo4Twy+1U1FgjxLu3ZU+ccx+Go3yDOXk/DT3CAdeqJMcxxBVNw+ykGPBavBf2
+	 ERRpTdQHhMMBw==
+Message-ID: <08e849ec-25ad-4c88-94f7-4fde84d1ff71@kernel.org>
+Date: Fri, 4 Oct 2024 16:05:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,48 +35,91 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 7/7] wifi: wilc1000: Add WILC3000 support
-To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
- linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
- "David S. Miller" <davem@davemloft.net>,
- Adham Abozaeid <adham.abozaeid@microchip.com>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
- <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20241003111529.41232-1-marex@denx.de>
- <20241003111529.41232-7-marex@denx.de>
- <206e5a5a-25ad-43d1-b8d3-53ecbfecb755@bootlin.com>
+Subject: Re: [PATCH 31/51] nfc: trf7970a: Switch to
+ __pm_runtime_put_autosuspend()
+To: Sakari Ailus <sakari.ailus@linux.intel.com>,
+ Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20241004094101.113349-1-sakari.ailus@linux.intel.com>
+ <20241004094134.113878-1-sakari.ailus@linux.intel.com>
 Content-Language: en-US
-From: Marek Vasut <marex@denx.de>
-In-Reply-To: <206e5a5a-25ad-43d1-b8d3-53ecbfecb755@bootlin.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
-X-Virus-Status: Clean
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20241004094134.113878-1-sakari.ailus@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 10/4/24 10:46 AM, Alexis Lothoré wrote:
-> On 10/3/24 13:14, Marek Vasut wrote:
->> From: Ajay Singh <ajay.kathat@microchip.com>
->>
->> Add support for the WILC3000 chip. The chip is similar to WILC1000,
->> except that the register layout is slightly different and it does
->> not support WPA3/SAE.
->>
->> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
->> Signed-off-by: Marek Vasut <marex@denx.de>
+On 04/10/2024 11:41, Sakari Ailus wrote:
+> pm_runtime_put_autosuspend() will soon be changed to include a call to
+> pm_runtime_mark_last_busy(). This patch switches the current users to
+
+Please do not use "This commit/patch/change", but imperative mood. See
+longer explanation here:
+https://elixir.bootlin.com/linux/v5.17.1/source/Documentation/process/submitting-patches.rst#L95
+
+> __pm_runtime_put_autosuspend() which will continue to have the
+> functionality of old pm_runtime_put_autosuspend().
 > 
+> Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+> ---
+>  drivers/nfc/trf7970a.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Reviewed-by: Alexis Lothoré <alexis.lothore@bootlin.com>
-> 
-> And for the basic feature set (basic sta scenario, basic ap scenario):
-> 
-> Tested-by: Alexis Lothoré <alexis.lothore@bootlin.com>
-> Tested-on: WILC1000SD 07 SDIO WILC_WIFI_FW_REL_16_1_2
-> Tested-on: WILC1000SD 07 SPI WILC_WIFI_FW_REL_16_1_2
-> Tested-on: WILC3000 A SDIO WILC_WIFI_FW_REL_16_1_1
-> Tested-on: WILC3000 A SPI WILC_WIFI_FW_REL_16_1_1
-Thank you
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 9e1a34e23af2..4549f1960a27 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -1093,7 +1093,7 @@ static void trf7970a_switch_rf_off(struct trf7970a *trf)
+>  	trf->state = TRF7970A_ST_RF_OFF;
+>  
+>  	pm_runtime_mark_last_busy(trf->dev);
+> -	pm_runtime_put_autosuspend(trf->dev);
+> +	__pm_runtime_put_autosuspend(trf->dev);
+
+But why? Nothing in commit msg explains why you cannot use the new API here.
+
+Best regards,
+Krzysztof
+
