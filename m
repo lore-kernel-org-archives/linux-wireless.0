@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A69F11D8A07
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A9571D8A0B
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728073332; cv=none; b=c48HgT6ig/PVZHOHXtIwaUdE0yrBxiYv/o01xg+sJtpLjdAgrbJ06Zq0Wj2Gi+pucuFW5+KeLPX+ruT5xCM+giRJlhohpWxfUAlPAZ2g7HhykftJsq5/lC9MgG0qosbf60D6aDyS4/kdHIbUwzfgpgGMXxQXUD9mIriW3NdGUk8=
+	t=1728073332; cv=none; b=Yb/ZAzEUTnjAO3/Ss/vrKdQFKdIID0ZiYi+zHj3RrAxuSOUd6l78o0RuWMHgBdk0W1Vfrv8GFBSCZOBXLl5MCndiAovHqNtTz4mzpWDS/jXKIUzncCuHcbx5JAh0mPIQHblyLug2Ivih1gFfCW1OcV1JJ9JQ2NhdRBIw0NdyWS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728073332; c=relaxed/simple;
-	bh=f5R/zk2Ad4Z9vn5oqS4B93z+tE/meUVUTTgWK0X70d4=;
+	bh=a3mSckHP8g/RM9HHBrzFb4xvOiIsckxcSLNsiulrz1w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LoqVT9hPLa8ffLW0SAIz9HjNIRmzveZXK/+lJG8ze6WKKpuPZVfAfLva/hlfqt/JTwiQF/IiTOwMp4DGsn7KtdpKq1jfkGphv0vGEj8xAb7sIQL3z6X0M+R4XmVsxwPJTTxP70lAU/eZwqaE836Vgp++LADFQ3Wkb4sf7Crz0Y0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=OPTFYrie; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=u859P4nXymJOOfvpVkkXWfliond1f4j/uWBAkm6hn5rcHFzQsMc//soyUySQ+HneFSVg5CEj0AecHNNzLSggnCH4DOj0hws1Nbn7WxR/mUljAIXriBZrIzJKCtr3feEhz5zsSHe7DHkXiU1vAY8SJa47g9HjzjXC8DDdmrXmluA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=fgZXKIlO; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="OPTFYrie"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="fgZXKIlO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=HMREsktTjCWYGxrmPAaUNBwes3G+pzjn93Qy+wWj2fw=; b=OPTFYrieQvP9MAe419Vc4wH+wX
-	JVcAykE+Y7kGvSycLwbU2cJpS/dw4jVEaqD9IEedYc2hRsegIsmJVswKYxgITWvgtydEalrBoIh5m
-	28s0Ib0Ch+03Du9ez7jCxyngll735XmtRXNM6U9VdPEhOGZ2WHn4zXl+65uPffYjpVVg=;
+	bh=hZfnHovJ0HT5hhZaNjyFfLUm91UujzJV4iiwbyTwd90=; b=fgZXKIlOsm8cmPTxCdi8l9UnxV
+	gUe6jw3sdJ+VMQ8jYuU3JxnJyD7ccsuOwzDaOB7U46c9hrgQTaAEIIJLM/0d3dN4V5bBiM4jXsHNA
+	1npedJbWh59Gokq8vaWbJ96+ZKDhUFGzwClqpGgllbDnf4qqg6KKYv9JjJyYURg1lxBU=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1swooN-004jVl-0d;
-	Fri, 04 Oct 2024 22:22:03 +0200
+	id 1swooN-004jVl-31;
+	Fri, 04 Oct 2024 22:22:04 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v3 05/11] wifi: mac80211: remove status->ampdu_delimiter_crc
-Date: Fri,  4 Oct 2024 22:21:55 +0200
-Message-ID: <25fb453c8ef836c6ade5b3ecad50d80477241851.1728063865.git-series.nbd@nbd.name>
+Subject: [PATCH v3 08/11] wifi: cfg80211: add monitor SKIP_TX flag
+Date: Fri,  4 Oct 2024 22:21:58 +0200
+Message-ID: <0272a15db8a9a147b9ec6f32ec03d7cc3163d0e6.1728063865.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
 References: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
@@ -48,75 +48,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This was never used by any driver, so remove it to free up some space.
+This can be used to indicate that the user is not interested in receiving
+locally sent packets on the monitor interface.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- include/net/mac80211.h | 6 +-----
- net/mac80211/rx.c      | 7 +------
- 2 files changed, 2 insertions(+), 11 deletions(-)
+ include/net/cfg80211.h       | 1 +
+ include/uapi/linux/nl80211.h | 2 ++
+ net/wireless/nl80211.c       | 1 +
+ 3 files changed, 4 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 954dff901b69..be916e1e5e1d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1448,8 +1448,6 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_AMPDU_IS_LAST: this subframe is the last subframe of the A-MPDU
-  * @RX_FLAG_AMPDU_DELIM_CRC_ERROR: A delimiter CRC error has been detected
-  *	on this subframe
-- * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-- *	is stored in the @ampdu_delimiter_crc field)
-  * @RX_FLAG_MIC_STRIPPED: The mic was stripped of this packet. Decryption was
-  *	done by the hardware
-  * @RX_FLAG_ONLY_MONITOR: Report frame only to monitor interfaces without
-@@ -1521,7 +1519,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_AMPDU_LAST_KNOWN	= BIT(12),
- 	RX_FLAG_AMPDU_IS_LAST		= BIT(13),
- 	RX_FLAG_AMPDU_DELIM_CRC_ERROR	= BIT(14),
--	RX_FLAG_AMPDU_DELIM_CRC_KNOWN	= BIT(15),
-+	/* one free bit at 15 */
- 	RX_FLAG_MACTIME			= BIT(16) | BIT(17),
- 	RX_FLAG_MACTIME_PLCP_START	= 1 << 16,
- 	RX_FLAG_MACTIME_START		= 2 << 16,
-@@ -1618,7 +1616,6 @@ enum mac80211_rx_encoding {
-  * @rx_flags: internal RX flags for mac80211
-  * @ampdu_reference: A-MPDU reference number, must be a different value for
-  *	each A-MPDU but the same for each subframe within one A-MPDU
-- * @ampdu_delimiter_crc: A-MPDU delimiter CRC
-  * @zero_length_psdu_type: radiotap type of the 0-length PSDU
-  * @link_valid: if the link which is identified by @link_id is valid. This flag
-  *	is set only when connection is MLO.
-@@ -1656,7 +1653,6 @@ struct ieee80211_rx_status {
- 	s8 signal;
- 	u8 chains;
- 	s8 chain_signal[IEEE80211_MAX_CHAINS];
--	u8 ampdu_delimiter_crc;
- 	u8 zero_length_psdu_type;
- 	u8 link_valid:1, link_id:4;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4dd537da0873..de6c585fb1c2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2278,6 +2278,7 @@ enum monitor_flags {
+ 	MONITOR_FLAG_OTHER_BSS		= BIT(NL80211_MNTR_FLAG_OTHER_BSS),
+ 	MONITOR_FLAG_COOK_FRAMES	= BIT(NL80211_MNTR_FLAG_COOK_FRAMES),
+ 	MONITOR_FLAG_ACTIVE		= BIT(NL80211_MNTR_FLAG_ACTIVE),
++	MONITOR_FLAG_SKIP_TX		= BIT(NL80211_MNTR_FLAG_SKIP_TX),
  };
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 59ad24a71141..718f02f0a181 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -508,18 +508,13 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 			flags |= IEEE80211_RADIOTAP_AMPDU_IS_LAST;
- 		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_ERROR)
- 			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_ERR;
--		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
--			flags |= IEEE80211_RADIOTAP_AMPDU_DELIM_CRC_KNOWN;
- 		if (status->flag & RX_FLAG_AMPDU_EOF_BIT_KNOWN)
- 			flags |= IEEE80211_RADIOTAP_AMPDU_EOF_KNOWN;
- 		if (status->flag & RX_FLAG_AMPDU_EOF_BIT)
- 			flags |= IEEE80211_RADIOTAP_AMPDU_EOF;
- 		put_unaligned_le16(flags, pos);
- 		pos += 2;
--		if (status->flag & RX_FLAG_AMPDU_DELIM_CRC_KNOWN)
--			*pos++ = status->ampdu_delimiter_crc;
--		else
--			*pos++ = 0;
-+		*pos++ = 0;
- 		*pos++ = 0;
- 	}
  
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1b8827f920ff..6d11437596b9 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4703,6 +4703,7 @@ enum nl80211_survey_info {
+  *	overrides all other flags.
+  * @NL80211_MNTR_FLAG_ACTIVE: use the configured MAC address
+  *	and ACK incoming unicast packets.
++ * @NL80211_MNTR_FLAG_SKIP_TX: do not pass local tx packets
+  *
+  * @__NL80211_MNTR_FLAG_AFTER_LAST: internal use
+  * @NL80211_MNTR_FLAG_MAX: highest possible monitor flag
+@@ -4715,6 +4716,7 @@ enum nl80211_mntr_flags {
+ 	NL80211_MNTR_FLAG_OTHER_BSS,
+ 	NL80211_MNTR_FLAG_COOK_FRAMES,
+ 	NL80211_MNTR_FLAG_ACTIVE,
++	NL80211_MNTR_FLAG_SKIP_TX,
+ 
+ 	/* keep last */
+ 	__NL80211_MNTR_FLAG_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7845548b15b9..333f06d3ca40 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4203,6 +4203,7 @@ static const struct nla_policy mntr_flags_policy[NL80211_MNTR_FLAG_MAX + 1] = {
+ 	[NL80211_MNTR_FLAG_OTHER_BSS] = { .type = NLA_FLAG },
+ 	[NL80211_MNTR_FLAG_COOK_FRAMES] = { .type = NLA_FLAG },
+ 	[NL80211_MNTR_FLAG_ACTIVE] = { .type = NLA_FLAG },
++	[NL80211_MNTR_FLAG_SKIP_TX] = { .type = NLA_FLAG },
+ };
+ 
+ static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
 -- 
 git-series 0.9.1
