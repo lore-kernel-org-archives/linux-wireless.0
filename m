@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A6A1D8A0D
-	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4F31D89FE
+	for <linux-wireless@vger.kernel.org>; Fri,  4 Oct 2024 20:22:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728073332; cv=none; b=d/BCVir1K4VNyYHOwNRDaSjwKoSMqxWbUxhbMNOTpP3AD9NpVYLXWWPEM+rQmzB45zRu4A0vDe5PnI8RxK8/n+Oq7ffkg8upVOPplWCUkxQcomY32FvVXQqhDJLooRi/8do6+Tf/yON+aVXnixXJe5pO2QEenyCdF9hBWpPy0Wk=
+	t=1728073333; cv=none; b=QIblE1yYm1d/TUW4qbNfFYvhDxo+jm7u9BDJwYEImNqRfcfyR+7ztf98bBRlZtWJ9nnDZlKaUUvAnmpbe7RpdE5MOYdaJIoF6P5M4Uwc7TwMsnk5ljzQG1LwlwSPQM+gPSPtbav7B0PAzDRRcwTfZxq4Lvr4jSvAfJpY1/uk5vQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728073332; c=relaxed/simple;
-	bh=IEAbqq+I332EB5KcW4QoGRh5oMSAxsgCCbI4B2ZE2vo=;
+	s=arc-20240116; t=1728073333; c=relaxed/simple;
+	bh=9b1r371dXfsr5GGHdKw/qqZZEeab3yMNevt7+uxIk5c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jykJ2GG5VGcr7HScmTXL7O4ZyhI12H2kZO7ExYr1KNNe3pYrKqWGFPZWeesVbNQOSiRAgeR92YTtFzI70jlYLDeksUn7zmAC+LtjWEEN/z3yV6cmXKOcXaDlean7U4lKfKEyox3/JRcgccray2+hzIsW8HYP64/jFhZrJCHhIg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=BN2BQTXx; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=stDZorzCxJFGsue/FuRPpWHRGEeG3SF5cDAf11Ma9YmjaZAJzm3gVfq3R+DnSNvfArHd11a1t6UTgGcaPfrmxTuHkGBqvRaCJtNh5vyoxMoTCYxG7QGOvmRUmvJ6EAM7z3lMi5WDzwf0VXGHQkyriv/0QP/kSioMj9LPLAV0Ofw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=g55GCEis; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BN2BQTXx"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="g55GCEis"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=0DJf3PQnsoPEh+Zigym2+5abQ8Zd/z8FuqATMhQR4iA=; b=BN2BQTXxNV7MvyfHclVG8SEAi3
-	51g95VZdkNLGkl7WdS8pQ9DpxeTnKPJHdqSU6bV9ZLMqRx6QBSJnKxqwLsPsUwxbu8Puyr6ZfmQmz
-	SEp4dHH1jhyFcAwyj7/shMp43oHNHIs1hOaKEEJ5kv2IOs/DkdDSjxuj+SpNGBAMM8CQ=;
+	bh=JKdxbtz294+SY4saxVNZMFSMY56j5WQ8YjlOIX5wAd4=; b=g55GCEisSg2rlMHoy8/1IBlB8K
+	nTXJC/E0AGV6cGnzhcwEsr4a0tCcnlSjIxbEP8zo4ohBVmPne5b/dQ79QNAY3CaQ/KCVziaDgTAA2
+	TE6vvLaF7trG9BRn8emHxSmkQkSPDz3heHjoRvFTBTxUbZ08qurlvV+MwIuteeBm4+08=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1swooO-004jVl-1O;
-	Fri, 04 Oct 2024 22:22:04 +0200
+	id 1swooM-004jVl-1b;
+	Fri, 04 Oct 2024 22:22:02 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v3 10/11] wifi: mac80211: refactor ieee80211_rx_monitor
-Date: Fri,  4 Oct 2024 22:22:00 +0200
-Message-ID: <e84e98e944e5fc79ad069f5e05a8ff93b9b1d5d8.1728063865.git-series.nbd@nbd.name>
+Subject: [PATCH v3 02/11] wifi: mac80211: use vif radio mask to limit ibss scan frequencies
+Date: Fri,  4 Oct 2024 22:21:52 +0200
+Message-ID: <f41b5a66279c2a106f69042d64aa2bf0f9ce81c6.1728063865.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
 References: <cover.b9e938930e3d3683952cc034fde2a2e938e0b6f8.1728063865.git-series.nbd@nbd.name>
@@ -48,98 +48,65 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Rework the monitor mode interface iteration to get rid of the last_monitor
-condition. Preparation for further filtering received monitor packets.
+Reject frequencies not supported by any radio that the vif is allowed to use.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/rx.c | 54 ++++++++++++++++++++++++------------------------
- 1 file changed, 28 insertions(+), 26 deletions(-)
+ net/mac80211/scan.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b35e1b472e82..5e43905fd26c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -762,8 +762,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 		     struct ieee80211_rate *rate)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index adb88c06b598..2ca75cf17242 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1176,14 +1176,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				unsigned int n_channels)
  {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(origskb);
--	struct ieee80211_sub_if_data *sdata;
--	struct sk_buff *monskb = NULL;
-+	struct ieee80211_sub_if_data *sdata, *prev_sdata = NULL;
-+	struct sk_buff *skb, *monskb = NULL;
- 	int present_fcs_len = 0;
- 	unsigned int rtap_space = 0;
- 	struct ieee80211_sub_if_data *monitor_sdata =
-@@ -837,8 +837,10 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_space);
+ 	struct ieee80211_local *local = sdata->local;
+-	int ret = -EBUSY, i, n_ch = 0;
++	int ret = -EINVAL, i, n_ch = 0;
+ 	enum nl80211_band band;
  
- 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
--		bool last_monitor = list_is_last(&sdata->u.mntr.list,
--						 &local->mon_list);
-+		if (!prev_sdata) {
-+			prev_sdata = sdata;
-+			continue;
-+		}
+ 	lockdep_assert_wiphy(local->hw.wiphy);
  
- 		if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
- 			ieee80211_handle_mu_mimo_mon(sdata, origskb, rtap_space);
-@@ -846,34 +848,34 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 		if (!monskb)
- 			monskb = ieee80211_make_monitor_skb(local, &origskb,
- 							    rate, rtap_space,
--							    only_monitor &&
--							    last_monitor);
-+							    false);
-+		if (!monskb)
-+			continue;
- 
--		if (monskb) {
--			struct sk_buff *skb;
-+		skb = skb_clone(monskb, GFP_ATOMIC);
-+		if (!skb)
-+			continue;
- 
--			if (last_monitor) {
--				skb = monskb;
--				monskb = NULL;
--			} else {
--				skb = skb_clone(monskb, GFP_ATOMIC);
--			}
-+		skb->dev = prev_sdata->dev;
-+		dev_sw_netstats_rx_add(skb->dev, skb->len);
-+		netif_receive_skb(skb);
-+		prev_sdata = sdata;
+ 	/* busy scanning */
+-	if (local->scan_req)
++	if (local->scan_req) {
++		ret = -EBUSY;
+ 		goto unlock;
 +	}
  
--			if (skb) {
--				skb->dev = sdata->dev;
--				dev_sw_netstats_rx_add(skb->dev, skb->len);
--				netif_receive_skb(skb);
--			}
-+	if (prev_sdata) {
-+		if (monskb)
-+			skb = monskb;
-+		else
-+			skb = ieee80211_make_monitor_skb(local, &origskb,
-+							 rate, rtap_space,
-+							 only_monitor);
-+		if (skb) {
-+			skb->dev = prev_sdata->dev;
-+			dev_sw_netstats_rx_add(skb->dev, skb->len);
-+			netif_receive_skb(skb);
+ 	/* fill internal scan request */
+ 	if (!channels) {
+@@ -1200,7 +1202,9 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				    &local->hw.wiphy->bands[band]->channels[i];
+ 
+ 				if (tmp_ch->flags & (IEEE80211_CHAN_NO_IR |
+-						     IEEE80211_CHAN_DISABLED))
++						     IEEE80211_CHAN_DISABLED) ||
++				    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++								   tmp_ch))
+ 					continue;
+ 
+ 				local->int_scan_req->channels[n_ch] = tmp_ch;
+@@ -1215,14 +1219,16 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 	} else {
+ 		for (i = 0; i < n_channels; i++) {
+ 			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
+-						  IEEE80211_CHAN_DISABLED))
++						  IEEE80211_CHAN_DISABLED) ||
++			    !cfg80211_wdev_channel_allowed(&sdata->wdev,
++							   channels[i]))
+ 				continue;
+ 
+ 			local->int_scan_req->channels[n_ch] = channels[i];
+ 			n_ch++;
  		}
--
--		if (last_monitor)
--			break;
- 	}
  
--	/* this happens if last_monitor was erroneously false */
--	dev_kfree_skb(monskb);
--
--	/* ditto */
- 	if (!origskb)
- 		return NULL;
+-		if (WARN_ON_ONCE(n_ch == 0))
++		if (n_ch == 0)
+ 			goto unlock;
  
+ 		local->int_scan_req->n_channels = n_ch;
 -- 
 git-series 0.9.1
