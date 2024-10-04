@@ -1,81 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618B214F108;
-	Fri,  4 Oct 2024 10:03:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C0E1D5AD8;
+	Fri,  4 Oct 2024 11:46:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728036213; cv=none; b=Q91F4HpcfXzIQSC+yGJUGQx9dRDCAxCkC5xo9YuNk3ny90voLj9aPU5yoxkcXHVFnkozrNM14H/Cdp7cSTUCevChA4TcynBnP4d+4boXeYTXww5+m8yru9sdTi8gWubwLceZD5Zn3mqhTvCOD63pXs3JnWXXzjcKYD1upOq3jjQ=
+	t=1728042392; cv=none; b=AW3W8UZt54EcgSFmNla0mIgjiYiH/3a/N33iLFZnR5wCgbw0Eo4kk7FT7QbwCXzpM7ZULF6qQIa8MchS0kf0OQiH3pIiCCkeLi6qax5k7i5J0is1c69v+a9WxNVS13EWqLrkw1BrXAO+0Xn1HGeu6VvO71+ZeX2Iy1gszbJbVyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728036213; c=relaxed/simple;
-	bh=/u/BTCA2RCcOV7Qrd+JkcQvXdbVt8hEgOqSwOK3/wqg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=dFrONPVuEWQpoJjs6UQ+RdeynTn/3Y1tPW5Hqn0o8+S5pFY/T3N5wmLgeI1KXwVBQ8IpJlxSKTgbQP1Qw0bvoLOzXxwR7uP0T/Wgz0WHPhlTKTsuAxfgw6oPGsS73X5+wdNEstkKZWNr/lolAfUvGLSrpGNE0osxablcepuoGRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mFPjPb8V; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728042392; c=relaxed/simple;
+	bh=2L7VjJ4OyUB7xsUyQLlFIb71AfZScuDHuP5qtOXaNZQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lcGRzUFdI8OVgqHnvWhvZNNMWJydwGI1jiMoHjkAFpliIQ9Xaz5B37orm1pk5lEQ1D0DWAFlGl8y25AUJoR+oXcFrsVhLBFF9Oqg8V+aYB8y5ZF94yzrDVWYdkmyRgcG6J5vIfDdPVNSpKo/G8tU8umwQhFY0aCg6lbbkzWKiDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=ynn/LqzF; arc=none smtp.client-ip=85.214.62.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mFPjPb8V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CB65C4CEC6;
-	Fri,  4 Oct 2024 10:03:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728036212;
-	bh=/u/BTCA2RCcOV7Qrd+JkcQvXdbVt8hEgOqSwOK3/wqg=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=mFPjPb8VsyXMk+h0p1fcTGJzwq+WZb9ypQl/T73zLBp/S/BhmB8+ckK5XT6Hhty02
-	 IjJOKlNwftij9QjF65y6wD/WWUwjm3DCS/egIKDUwGhNwRchB5ksPIIdSPPc0QIjIX
-	 9WQ1sYXx5SzFnxJDMd64ZRH5OB/b6U9xBFtN9Lcwjz1alVJJjf/XHRZ3HN019F22tm
-	 6EBwh1YcLeta+xUhql81NYtO4I1slXoLETvQbUrjs//NCIDy3kd2zgjerjVQoDnOIK
-	 qhwADEjBA3WcQ0Z/ImNvAjHWvsdtdziykixudtZKHwEYlU4+G8NA3VFQhUjIvstmTd
-	 QAL3aHngX2XQQ==
-From: Simon Horman <horms@kernel.org>
-Date: Fri, 04 Oct 2024 11:03:22 +0100
-Subject: [PATCH RFC net 2/2] MAINTAINERS: Add headers and mailing list to
- UDP section
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="ynn/LqzF"
+Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: marex@denx.de)
+	by phobos.denx.de (Postfix) with ESMTPSA id B0893889E9;
+	Fri,  4 Oct 2024 13:46:21 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+	s=phobos-20191101; t=1728042382;
+	bh=4NUQsyhLZSbmevh275HRv8N4MNRmtfX0PQ1NeQOt1Mg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ynn/LqzFXbwlA1YBYjPQy7RYxKnix1N+UWtsAKn4kQE+QuGl+3PgfJtYLhjZ55mYK
+	 jhm7TmjIwXvqnhyisM+pCKGE9aXAftDiCsv2g+9wE/l+UCVh1aJn1YJRCI37LHeXoL
+	 /Xm0vaRDeDHcyoJsHj0oS8aNWJg9uUrMfiDrT3/RTsc6oxbIW6+FZsbpdHwf3GT1/+
+	 egeA1FFMWgdHky4dSDDujRaxZaiAZGZbCgF3yQzkGhSlRyU8uQMM1M+J/Lop7AQkm6
+	 ypZ79WW4vdrNlH/ao/TkFM5P43SAJjrFDT3gkdKXynIz0hikIPnkXYsyLOOwlJrT9m
+	 lV/MJEGcGbQ5A==
+From: Marek Vasut <marex@denx.de>
+To: linux-wireless@vger.kernel.org
+Cc: Marek Vasut <marex@denx.de>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Adham Abozaeid <adham.abozaeid@microchip.com>,
+	Ajay Singh <ajay.kathat@microchip.com>,
+	=?UTF-8?q?Alexis=20Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Kalle Valo <kvalo@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Rob Herring <robh@kernel.org>,
+	devicetree@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH v8 1/7] dt-bindings: wireless: wilc1000: Document WILC3000 compatible string
+Date: Fri,  4 Oct 2024 13:44:10 +0200
+Message-ID: <20241004114551.40236-1-marex@denx.de>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20241004-maint-net-hdrs-v1-2-41fd555aacc5@kernel.org>
-References: <20241004-maint-net-hdrs-v1-0-41fd555aacc5@kernel.org>
-In-Reply-To: <20241004-maint-net-hdrs-v1-0-41fd555aacc5@kernel.org>
-To: "David S. Miller" <davem@davemloft.net>, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, 
- Willem de Bruijn <willemdebruijn.kernel@gmail.com>, 
- linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
- netdev@vger.kernel.org
-X-Mailer: b4 0.14.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
+X-Virus-Status: Clean
 
-Add netdev mailing list and some more udp.h headers to the UDP section.
-This is now more consistent with the TCP section.
+Document compatible string for the WILC3000 chip. The chip is similar
+to WILC1000, except that the register layout is slightly different and
+it does not support WPA3/SAE.
 
-Signed-off-by: Simon Horman <horms@kernel.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Marek Vasut <marex@denx.de>
 ---
- MAINTAINERS | 4 ++++
- 1 file changed, 4 insertions(+)
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Adham Abozaeid <adham.abozaeid@microchip.com>
+Cc: Ajay Singh <ajay.kathat@microchip.com>
+Cc: Alexis Lothoré <alexis.lothore@bootlin.com>
+Cc: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Eric Dumazet <edumazet@google.com>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Kalle Valo <kvalo@kernel.org>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Paolo Abeni <pabeni@redhat.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: devicetree@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+V2: - Use WILC1000 as fallback compatible string for WILC3000
+V3: - Swap the wilc1000/wilc3000 compatible order
+V4: - Add RB from Krzysztof
+V5: No change
+V6: - Rebase on next-20240926
+V7: - Rebase on next-20241003 / wireless-next/main 5a4d42c1688c
+      with v2 wifi: wilc1000: Keep slot powered on during suspend/resume
+V8: No change
+---
+ .../bindings/net/wireless/microchip,wilc1000.yaml           | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ea3ea2c0d3fa..1ce8c86cdbaa 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -24184,8 +24184,12 @@ F:	drivers/usb/host/xhci*
+diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+index 2460ccc082371..5d40f22765bb6 100644
+--- a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+@@ -16,7 +16,11 @@ description:
  
- USER DATAGRAM PROTOCOL (UDP)
- M:	Willem de Bruijn <willemdebruijn.kernel@gmail.com>
-+L:	netdev@vger.kernel.org
- S:	Maintained
- F:	include/linux/udp.h
-+F:	include/net/udp.h
-+F:	include/trace/events/udp.h
-+F:	include/uapi/linux/udp.h
- F:	net/ipv4/udp.c
- F:	net/ipv6/udp.c
+ properties:
+   compatible:
+-    const: microchip,wilc1000
++    oneOf:
++      - items:
++          - const: microchip,wilc3000
++          - const: microchip,wilc1000
++      - const: microchip,wilc1000
  
-
+   reg: true
+ 
 -- 
 2.45.2
 
