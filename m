@@ -1,58 +1,54 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A506132139
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Oct 2024 10:18:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91431211C
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Oct 2024 10:42:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728123531; cv=none; b=fe+RYs+qRnXFGpGb6SrNIdu/0Osyq3nOtLNFD2eExuE3+SSwyGMeuIvy2AZqOPRnmibg6nhOlV2rB3sk/Mf2E+0cKi+Z6obKh+/pb77dpodjB0RA4ELhhOn8cO/WxQKJaNVgZ3wUq778ser5nQzqWGk/TaLVo9izuJjjZW6VHMA=
+	t=1728124951; cv=none; b=ZoCNGnSiFoo7eOG89sK/CVQrUsrNr3yKH7CQzA6gws41HrWYZs/gS7zitMFu1LFnli3ruu4HvnuhFQsXVycm+WbmFskw5FbxJtsD4Rv9+arS31xwK4SsFewoZfx9cXX2nFEY5EEcuGJElmeGGMJ3CWilJffxoUwB0av7nICpfno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728123531; c=relaxed/simple;
-	bh=dLe7mhvzSp/nzPnygzZmxI6MI1OZCged7qpQ+hnOfxg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rXOSiDIo+0q2YD5psRcGiISuymx+r3dCdYyarvnkZrY3zeVZ//wrmpjq+8QfSjOCaZl3Bm1rK0a39GNDJw1gfIe5TneRznf5GNTjv/i53UGCrDPCvqndoYyeMjoOksk1FDzsKl07BOvYiZCg1K5fMaFy4PcnOyQP2wLCzsBVf/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MHRENZQg; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1728124951; c=relaxed/simple;
+	bh=dPGrMPtiYgvySe8ML/Abi3aGejlKZD23o9FgvOgs/MA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=B0UDRikXNcPx7V5TAB5Gl68bs2T9vGStQcZYn4NkBhbjw0QOcMiWsqqK/8yZBAC7CgRG5T708bi/0dPKMSkF5vJbMTDsTpwl5DtMqRt7VJLO3dTY8IwvQoupQVJFWdBeMUfiHXJD/7ZJEoq2fLDc7l4QHlTHwzOX+407IZqaJBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=a4zvPcUN; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MHRENZQg"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4959SMWU013267;
-	Sat, 5 Oct 2024 10:18:44 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="a4zvPcUN"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49599gP8013549;
+	Sat, 5 Oct 2024 10:42:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	v27mHNnd5HRTzSD+RTl+dc7os5j1MhwktM5AYuSXGzk=; b=MHRENZQgVIEKhyhL
-	olFc5PfNM0KJGfvrrxkF86AFVtt7lknhBhc2SoEkGPQ2wpwaErs7R5TKIV+iFyD/
-	QyBu22+Eg0eqCw09gqAIw8hobtEsd0tSlvPg8udu4YIUnwzbrNs6rtNkgZQtpT1i
-	VW/glWbu9lRunyhmD9QC52csnfkswPeduQ+ookt0FA6qJE5mLp3MdsUe6VpJMRur
-	8dWh1KWH538qpi0OoBhbGVK5R+4fiSkQYgQGtcspJF0UiCcGu4fiMwJBU7FJx92a
-	A8ukCeZ3GLJ++417gZkMO+jhCq/mC8eP/LIi6dfCt2Hn5I2H/f0TVIC8NS48RqvK
-	LX52xg==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 422xqnrcbc-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=fnBcAwxkv5yMCHIFUP/uWZ
+	S5VgvXkDojEJ6l6ZxTKTQ=; b=a4zvPcUNensfGE8GybfgHxWnp8xCoSjW5Sc2m1
+	klXIHIjYG9khX4dMvEOyonT9t5RKWMrogiUiIWobJbn60GMhjt4yc3QFD8s7pkg4
+	4W3JT10n+CdWl586Wd/IZd2GEUjjyx7Okl++po2dJjAg87j4rV0jSarGFpAGiZPO
+	n5pbouNUeUUWwwA3cgLC2P9yiJXMzw7TNoACknaM+7eXiGwYKHdiI6MjkQRSoCei
+	IX6mQijZRAwrr3SCaPW647nHZRl8D5MFQDNzFGUqlUcGDacwjSzYPE/a0yFn9nmH
+	VVTmPdyGF3QMJJ7ZUbTJiZO+sXK/KhmZsqoHvXCn8nQrF6bA==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 422xq9rddt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 05 Oct 2024 10:18:43 +0000 (GMT)
+	Sat, 05 Oct 2024 10:42:26 +0000 (GMT)
 Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 495AIgU3022598
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 495AgPOd003834
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 5 Oct 2024 10:18:42 GMT
+	Sat, 5 Oct 2024 10:42:25 GMT
 Received: from hu-rdevanat-blr.qualcomm.com (10.80.80.8) by
  nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sat, 5 Oct 2024 03:18:40 -0700
+ 15.2.1544.9; Sat, 5 Oct 2024 03:42:23 -0700
 From: Roopni Devanathan <quic_rdevanat@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Dinesh Karthikeyan
 	<quic_dinek@quicinc.com>,
         Roopni Devanathan <quic_rdevanat@quicinc.com>
-Subject: [PATCH v2 3/4] wifi: ath12k: Support pdev Transmit Multi-user stats
-Date: Sat, 5 Oct 2024 15:48:15 +0530
-Message-ID: <20241005101816.3314728-4-quic_rdevanat@quicinc.com>
+Subject: [PATCH v2] wifi: ath12k: Support Pdev OBSS Stats
+Date: Sat, 5 Oct 2024 16:12:06 +0530
+Message-ID: <20241005104206.3327143-1-quic_rdevanat@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241005101816.3314728-1-quic_rdevanat@quicinc.com>
-References: <20241005101816.3314728-1-quic_rdevanat@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,426 +57,141 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01c.na.qualcomm.com (10.47.97.35)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: hGycVTsyPdDYwDHK5a-M1sNjOoAa9yLL
-X-Proofpoint-GUID: hGycVTsyPdDYwDHK5a-M1sNjOoAa9yLL
+X-Proofpoint-ORIG-GUID: r8sOp4HADw4GkWikFEFamA-1ar6zWMXu
+X-Proofpoint-GUID: r8sOp4HADw4GkWikFEFamA-1ar6zWMXu
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 impostorscore=0
- malwarescore=0 mlxscore=0 phishscore=0 spamscore=0 suspectscore=0
- adultscore=0 mlxlogscore=999 priorityscore=1501 lowpriorityscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410050076
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
+ spamscore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
+ bulkscore=0 suspectscore=0 malwarescore=0 adultscore=0 mlxlogscore=999
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410050079
 
 From: Dinesh Karthikeyan <quic_dinek@quicinc.com>
 
-Add support to request multi-user stats from firmware for transmitter
-through HTT stats type 17. These stats give information about multi-
-user MIMO, OFDMA and MPDU for different Wi-Fi standards.
+Add support to request pdev OBSS stats from firmware through stats
+type 23. These stats give information about PPDUs transmitted or
+tried to be transmitted in Spatial Reuse Groups(SRG), Parameterized
+Spatial Reuse(PSR) and non-PSR groups.
 
 Sample output:
 -------------
-echo 17 > /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats_type
+echo 23 > /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats_type
 cat /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats
-HTT_TX_PDEV_MU_MIMO_SCH_STATS_TLV:
-mu_mimo_sch_posted = 0
-mu_mimo_sch_failed = 0
-mu_mimo_ppdu_posted = 0
-
-ac_mu_mimo_sch_posted_per_group_index 0 (SU) = 0
-ac_mu_mimo_sch_posted_per_group_index 1 (TOTAL STREAMS = 2) = 0
+HTT_PDEV_OBSS_PD_STATS_TLV:
+num_spatial_reuse_tx = 0
+num_spatial_reuse_opportunities = 0
+num_non_srg_opportunities = 0
+num_non_srg_ppdu_tried = 0
 .....
 
-ax_mu_mimo_sch_posted_per_group_index 0 (SU) = 0
-ax_mu_mimo_sch_posted_per_group_index 1 (TOTAL STREAMS = 2) = 0
+HTT_PDEV_OBSS_PD_PER_AC_STATS:
+Access Category 0 (best effort)
+num_non_srg_ppdu_tried = 0
+num_non_srg_ppdu_success = 0
+num_srg_ppdu_tried = 0
+num_srg_ppdu_success = 0
+
+Access Category 1 (background)
+num_non_srg_ppdu_tried = 0
+num_non_srg_ppdu_success = 0
+num_srg_ppdu_tried = 0
+num_srg_ppdu_success = 0
 .....
-
-be_mu_mimo_sch_posted_per_group_index 0 (SU) = 0
-be_mu_mimo_sch_posted_per_group_index 1 (TOTAL STREAMS = 2) = 0
-.....
-
-11ac MU_MIMO SCH STATS:
-ac_mu_mimo_sch_nusers_0 = 0
-ac_mu_mimo_sch_nusers_1 = 0
-ac_mu_mimo_sch_nusers_2 = 0
-ac_mu_mimo_sch_nusers_3 = 0
-
-11ax MU_MIMO SCH STATS:
-ax_mu_mimo_sch_nusers_0 = 0
-ax_mu_mimo_sch_nusers_1 = 0
-ax_mu_mimo_sch_nusers_2 = 0
-.....
-
-11be MU_MIMO SCH STATS:
-be_mu_mimo_sch_nusers_0 = 0
-be_mu_mimo_sch_nusers_1 = 0
-be_mu_mimo_sch_nusers_2 = 0
-.....
-
-11ax OFDMA SCH STATS:
-ax_ofdma_sch_nusers_0 = 0
-ax_ul_ofdma_basic_sch_nusers_0 = 0
-ax_ul_ofdma_bsr_sch_nusers_0 = 0
-ax_ul_ofdma_bar_sch_nusers_0 = 0
-ax_ul_ofdma_brp_sch_nusers_0 = 0
-.....
-
-11ax UL MUMIMO SCH STATS:
-ax_ul_mumimo_basic_sch_nusers_0 = 0
-ax_ul_mumimo_brp_sch_nusers_0 = 0
-
-ax_ul_mumimo_basic_sch_nusers_1 = 0
-ax_ul_mumimo_brp_sch_nusers_1 = 0
-.....
-
-HTT_TX_PDEV_MUMIMO_GRP_STATS:
-dl_mumimo_grp_tputs_observed (per bin = 300 mbps) =  0:0, 1:0, 2:0, 3:0,
-4:0, 5:0, 6:0, 7:0, 8:0, 9:0
-dl_mumimo_grp eligible =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
-dl_mumimo_grp_ineligible =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
-.....
-
-HTT_TX_PDEV_MU_MIMO_AC_MPDU_STATS:
-ac_mu_mimo_mpdus_queued_usr_0 = 0
-ac_mu_mimo_mpdus_tried_usr_0 = 0
-ac_mu_mimo_mpdus_failed_usr_0 = 0
-.....
-
-HTT_TX_PDEV_MU_MIMO_AX_MPDU_STATS:
-ax_mu_mimo_mpdus_queued_usr_0 = 0
-ax_mu_mimo_mpdus_tried_usr_0 = 0
-ax_mu_mimo_mpdus_failed_usr_0 = 0
-.....
-
-HTT_TX_PDEV_AX_MU_OFDMA_MPDU_STATS:
-ax_mu_ofdma_mpdus_queued_usr_0 = 0
-ax_mu_ofdma_mpdus_tried_usr_0 = 0
-ax_mu_ofdma_mpdus_failed_usr_0 = 0
-.....
-
-11ac MU_MIMO SCH STATS:
-ac_mu_mimo_sch_nusers_0 = 0
-ac_mu_mimo_sch_nusers_1 = 0
-ac_mu_mimo_sch_nusers_2 = 0
-ac_mu_mimo_sch_nusers_3 = 0
-.....
-
-Note: MCC firmware version -
-WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4 does not
-print stats because MCC firmware reports an event, but there are no
-tags or data. The length of the received TLV is 0.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00214-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4
 
 Signed-off-by: Dinesh Karthikeyan <quic_dinek@quicinc.com>
 Signed-off-by: Roopni Devanathan <quic_rdevanat@quicinc.com>
 ---
- .../wireless/ath/ath12k/debugfs_htt_stats.c   | 304 ++++++++++++++++++
- .../wireless/ath/ath12k/debugfs_htt_stats.h   |  79 +++++
- 2 files changed, 383 insertions(+)
+v2:
+ - Updated dependencies. No change in code.
+---
+Depends-on:
+[PATCH v2] wifi: ath12k: Modify print_array_to_buf() to support arrays with 1-based semantics
+Link: https://lore.kernel.org/all/20241004085915.1788951-1-quic_rdevanat@quicinc.com/
+
+[PATCH v2 0/4] wifi: ath12k: Support Ring, SFM, Transmit MU, SelfGen stats, CCA stats
+Link: https://lore.kernel.org/ath12k/20241005101816.3314728-1-quic_rdevanat@quicinc.com/
+---
+ .../wireless/ath/ath12k/debugfs_htt_stats.c   | 68 +++++++++++++++++++
+ .../wireless/ath/ath12k/debugfs_htt_stats.h   | 24 +++++++
+ 2 files changed, 92 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
-index 2acc95ab32f7..ad2919bcb11c 100644
+index bf6864711980..d890679a3f16 100644
 --- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
 +++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
-@@ -2083,6 +2083,301 @@ ath12k_htt_print_sfm_client_user_tlv(const void *tag_buf, u16 tag_len,
+@@ -2437,6 +2437,71 @@ ath12k_htt_print_pdev_stats_cca_counters_tlv(const void *tag_buf, u16 tag_len,
  	stats_req->buf_len = len;
  }
  
 +static void
-+ath12k_htt_print_tx_pdev_mu_mimo_sch_stats_tlv(const void *tag_buf, u16 tag_len,
-+					       struct debug_htt_stats_req *stats_req)
++ath12k_htt_print_pdev_obss_pd_stats_tlv(const void *tag_buf, u16 tag_len,
++					struct debug_htt_stats_req *stats_req)
 +{
-+	const struct ath12k_htt_tx_pdev_mu_mimo_sch_stats_tlv *htt_stats_buf = tag_buf;
++	const struct ath12k_htt_pdev_obss_pd_stats_tlv *htt_stats_buf = tag_buf;
 +	u8 *buf = stats_req->buf;
 +	u32 len = stats_req->buf_len;
 +	u32 buf_len = ATH12K_HTT_STATS_BUF_SIZE;
 +	u8 i;
++	static const char *access_cat_names[ATH12K_HTT_NUM_AC_WMM] = {"best effort",
++								      "background",
++								      "video", "voice"};
 +
 +	if (tag_len < sizeof(*htt_stats_buf))
 +		return;
 +
++	len += scnprintf(buf + len, buf_len - len, "HTT_PDEV_OBSS_PD_STATS_TLV:\n");
++	len += scnprintf(buf + len, buf_len - len, "num_spatial_reuse_tx = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_sr_tx_transmissions));
 +	len += scnprintf(buf + len, buf_len - len,
-+			 "HTT_TX_PDEV_MU_MIMO_SCH_STATS_TLV:\n");
-+	len += scnprintf(buf + len, buf_len - len, "mu_mimo_sch_posted = %u\n",
-+			 le32_to_cpu(htt_stats_buf->mu_mimo_sch_posted));
-+	len += scnprintf(buf + len, buf_len - len, "mu_mimo_sch_failed = %u\n",
-+			 le32_to_cpu(htt_stats_buf->mu_mimo_sch_failed));
-+	len += scnprintf(buf + len, buf_len - len, "mu_mimo_ppdu_posted = %u\n",
-+			 le32_to_cpu(htt_stats_buf->mu_mimo_ppdu_posted));
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "\nac_mu_mimo_sch_posted_per_group_index %u (SU) = %u\n", 0,
-+			 le32_to_cpu(htt_stats_buf->ac_mu_mimo_per_grp_sz[0]));
-+	for (i = 1; i < ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS; i++) {
++			 "num_spatial_reuse_opportunities = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_spatial_reuse_opportunities));
++	len += scnprintf(buf + len, buf_len - len, "num_non_srg_opportunities = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_non_srg_opportunities));
++	len += scnprintf(buf + len, buf_len - len, "num_non_srg_ppdu_tried = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_non_srg_ppdu_tried));
++	len += scnprintf(buf + len, buf_len - len, "num_non_srg_ppdu_success = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_non_srg_ppdu_success));
++	len += scnprintf(buf + len, buf_len - len, "num_srg_opportunities = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_srg_opportunities));
++	len += scnprintf(buf + len, buf_len - len, "num_srg_ppdu_tried = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_srg_ppdu_tried));
++	len += scnprintf(buf + len, buf_len - len, "num_srg_ppdu_success = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_srg_ppdu_success));
++	len += scnprintf(buf + len, buf_len - len, "num_psr_opportunities = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_psr_opportunities));
++	len += scnprintf(buf + len, buf_len - len, "num_psr_ppdu_tried = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_psr_ppdu_tried));
++	len += scnprintf(buf + len, buf_len - len, "num_psr_ppdu_success = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_psr_ppdu_success));
++	len += scnprintf(buf + len, buf_len - len, "min_duration_check_flush_cnt = %u\n",
++			 le32_to_cpu(htt_stats_buf->num_obss_min_dur_check_flush_cnt));
++	len += scnprintf(buf + len, buf_len - len, "sr_ppdu_abort_flush_cnt = %u\n\n",
++			 le32_to_cpu(htt_stats_buf->num_sr_ppdu_abort_flush_cnt));
++
++	len += scnprintf(buf + len, buf_len - len, "HTT_PDEV_OBSS_PD_PER_AC_STATS:\n");
++	for (i = 0; i < ATH12K_HTT_NUM_AC_WMM; i++) {
++		len += scnprintf(buf + len, buf_len - len, "Access Category %u (%s)\n",
++				 i, access_cat_names[i]);
 +		len += scnprintf(buf + len, buf_len - len,
-+				 "ac_mu_mimo_sch_posted_per_group_index %u ", i);
++				 "num_non_srg_ppdu_tried = %u\n",
++				 le32_to_cpu(htt_stats_buf->num_non_srg_tried_per_ac[i]));
 +		len += scnprintf(buf + len, buf_len - len,
-+				 "(TOTAL STREAMS = %u) = %u\n", i + 1,
-+				 le32_to_cpu(htt_stats_buf->ac_mu_mimo_per_grp_sz[i]));
-+	}
-+
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS; i++) {
++				 "num_non_srg_ppdu_success = %u\n",
++				 le32_to_cpu(htt_stats_buf->num_non_srg_success_ac[i]));
++		len += scnprintf(buf + len, buf_len - len, "num_srg_ppdu_tried = %u\n",
++				 le32_to_cpu(htt_stats_buf->num_srg_tried_per_ac[i]));
 +		len += scnprintf(buf + len, buf_len - len,
-+				 "ac_mu_mimo_sch_posted_per_group_index %u ",
-+				 i + ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS);
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "(TOTAL STREAMS = %u) = %u\n",
-+				 i + ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS + 1,
-+				 le32_to_cpu(htt_stats_buf->ac_mu_mimo_grp_sz_ext[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			 "\nax_mu_mimo_sch_posted_per_group_index %u (SU) = %u\n", 0,
-+			 le32_to_cpu(htt_stats_buf->ax_mu_mimo_per_grp_sz[0]));
-+	for (i = 1; i < ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_mu_mimo_sch_posted_per_group_index %u ", i);
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "(TOTAL STREAMS = %u) = %u\n", i + 1,
-+				 le32_to_cpu(htt_stats_buf->ax_mu_mimo_per_grp_sz[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len,
-+			"\nbe_mu_mimo_sch_posted_per_group_index %u (SU) = %u\n", 0,
-+			le32_to_cpu(htt_stats_buf->be_mu_mimo_per_grp_sz[0]));
-+	for (i = 1; i < ATH12K_HTT_TX_NUM_BE_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "be_mu_mimo_sch_posted_per_group_index %u ", i);
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "(TOTAL STREAMS = %u) = %u\n", i + 1,
-+				 le32_to_cpu(htt_stats_buf->be_mu_mimo_per_grp_sz[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n11ac MU_MIMO SCH STATS:\n");
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len, "ac_mu_mimo_sch_nusers_");
-+		len += scnprintf(buf + len, buf_len - len, "%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ac_mu_mimo_sch_nusers[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n11ax MU_MIMO SCH STATS:\n");
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len, "ax_mu_mimo_sch_nusers_");
-+		len += scnprintf(buf + len, buf_len - len, "%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_mu_mimo_sch_nusers[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n11be MU_MIMO SCH STATS:\n");
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_BE_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len, "be_mu_mimo_sch_nusers_");
-+		len += scnprintf(buf + len, buf_len - len, "%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->be_mu_mimo_sch_nusers[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "\n11ax OFDMA SCH STATS:\n");
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_OFDMA_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ofdma_sch_nusers_%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ofdma_sch_nusers[i]));
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_ofdma_basic_sch_nusers_%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_ofdma_nusers[i]));
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_ofdma_bsr_sch_nusers_%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_ofdma_bsr_nusers[i]));
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_ofdma_bar_sch_nusers_%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_ofdma_bar_nusers[i]));
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_ofdma_brp_sch_nusers_%u = %u\n\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_ofdma_brp_nusers[i]));
-+	}
-+
-+	len += scnprintf(buf + len, buf_len - len, "11ax UL MUMIMO SCH STATS:\n");
-+	for (i = 0; i < ATH12K_HTT_TX_NUM_UL_MUMIMO_USER_STATS; i++) {
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_mumimo_basic_sch_nusers_%u = %u\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_mumimo_nusers[i]));
-+		len += scnprintf(buf + len, buf_len - len,
-+				 "ax_ul_mumimo_brp_sch_nusers_%u = %u\n\n", i,
-+				 le32_to_cpu(htt_stats_buf->ax_ul_mumimo_brp_nusers[i]));
-+	}
-+
-+	stats_req->buf_len = len;
-+}
-+
-+static void
-+ath12k_htt_print_tx_pdev_mumimo_grp_stats_tlv(const void *tag_buf, u16 tag_len,
-+					      struct debug_htt_stats_req *stats_req)
-+{
-+	const struct ath12k_htt_tx_pdev_mumimo_grp_stats_tlv *htt_stats_buf = tag_buf;
-+	u8 *buf = stats_req->buf;
-+	u32 len = stats_req->buf_len;
-+	u32 buf_len = ATH12K_HTT_STATS_BUF_SIZE;
-+	int j;
-+
-+	if (tag_len < sizeof(*htt_stats_buf))
-+		return;
-+
-+	len += scnprintf(buf + len, buf_len - len, "HTT_TX_PDEV_MUMIMO_GRP_STATS:\n");
-+	len += print_array_to_buf(buf, len,
-+				  "dl_mumimo_grp_tputs_observed (per bin = 300 mbps)",
-+				  htt_stats_buf->dl_mumimo_grp_tputs,
-+				  ATH12K_HTT_STATS_MUMIMO_TPUT_NUM_BINS, "\n");
-+	len += print_array_to_buf(buf, len, "dl_mumimo_grp eligible",
-+				  htt_stats_buf->dl_mumimo_grp_eligible,
-+				  ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ, "\n");
-+	len += print_array_to_buf(buf, len, "dl_mumimo_grp_ineligible",
-+				  htt_stats_buf->dl_mumimo_grp_ineligible,
-+				  ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ, "\n");
-+	len += scnprintf(buf + len, buf_len - len, "dl_mumimo_grp_invalid:\n");
-+	for (j = 0; j < ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ; j++) {
-+		len += scnprintf(buf + len, buf_len - len, "grp_id = %u", j);
-+		len += print_array_to_buf(buf, len, "",
-+					  htt_stats_buf->dl_mumimo_grp_invalid,
-+					  ATH12K_HTT_STATS_MAX_INVALID_REASON_CODE,
-+					  "\n");
-+	}
-+
-+	len += print_array_to_buf(buf, len, "ul_mumimo_grp_best_grp_size",
-+				  htt_stats_buf->ul_mumimo_grp_best_grp_size,
-+				  ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ, "\n");
-+	len += print_array_to_buf_index(buf, len, "ul_mumimo_grp_best_num_usrs = ", 1,
-+					htt_stats_buf->ul_mumimo_grp_best_usrs,
-+					ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS, "\n");
-+	len += print_array_to_buf(buf, len,
-+				  "ul_mumimo_grp_tputs_observed (per bin = 300 mbps)",
-+				  htt_stats_buf->ul_mumimo_grp_tputs,
-+				  ATH12K_HTT_STATS_MUMIMO_TPUT_NUM_BINS, "\n\n");
-+
-+	stats_req->buf_len = len;
-+}
-+
-+static void
-+ath12k_htt_print_tx_pdev_mu_mimo_mpdu_stats_tlv(const void *tag_buf, u16 tag_len,
-+						struct debug_htt_stats_req *stats_req)
-+{
-+	const struct ath12k_htt_tx_pdev_mpdu_stats_tlv *htt_stats_buf = tag_buf;
-+	u8 *buf = stats_req->buf;
-+	u32 len = stats_req->buf_len;
-+	u32 buf_len = ATH12K_HTT_STATS_BUF_SIZE;
-+	u32 user_index;
-+	u32 tx_sched_mode;
-+
-+	if (tag_len < sizeof(*htt_stats_buf))
-+		return;
-+
-+	user_index = __le32_to_cpu(htt_stats_buf->user_index);
-+	tx_sched_mode = __le32_to_cpu(htt_stats_buf->tx_sched_mode);
-+
-+	if (tx_sched_mode == ATH12K_HTT_STATS_TX_SCHED_MODE_MU_MIMO_AC) {
-+		if (!user_index)
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "HTT_TX_PDEV_MU_MIMO_AC_MPDU_STATS:\n");
-+
-+		if (user_index < ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS) {
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_mpdus_queued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_queued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_mpdus_tried_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_tried_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_mpdus_failed_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_failed_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_mpdus_requeued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_requeued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_err_no_ba_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->err_no_ba_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ac_mu_mimo_mpdu_underrun_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdu_underrun_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					"ac_mu_mimo_ampdu_underrun_usr_%u = %u\n\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->ampdu_underrun_usr));
-+		}
-+	}
-+
-+	if (tx_sched_mode == ATH12K_HTT_STATS_TX_SCHED_MODE_MU_MIMO_AX) {
-+		if (!user_index)
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "HTT_TX_PDEV_MU_MIMO_AX_MPDU_STATS:\n");
-+
-+		if (user_index < ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS) {
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_mpdus_queued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_queued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_mpdus_tried_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_tried_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_mpdus_failed_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_failed_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_mpdus_requeued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_requeued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_err_no_ba_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->err_no_ba_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_mpdu_underrun_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdu_underrun_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_mimo_ampdu_underrun_usr_%u = %u\n\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->ampdu_underrun_usr));
-+		}
-+	}
-+
-+	if (tx_sched_mode == ATH12K_HTT_STATS_TX_SCHED_MODE_MU_OFDMA_AX) {
-+		if (!user_index)
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "HTT_TX_PDEV_AX_MU_OFDMA_MPDU_STATS:\n");
-+
-+		if (user_index < ATH12K_HTT_TX_NUM_OFDMA_USER_STATS) {
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_mpdus_queued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_queued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_mpdus_tried_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_tried_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_mpdus_failed_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_failed_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_mpdus_requeued_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdus_requeued_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_err_no_ba_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->err_no_ba_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_mpdu_underrun_usr_%u = %u\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->mpdu_underrun_usr));
-+			len += scnprintf(buf + len, buf_len - len,
-+					 "ax_mu_ofdma_ampdu_underrun_usr_%u = %u\n\n",
-+					 user_index,
-+					 le32_to_cpu(htt_stats_buf->ampdu_underrun_usr));
-+		}
++				 "num_srg_ppdu_success = %u\n\n",
++				 le32_to_cpu(htt_stats_buf->num_srg_success_per_ac[i]));
 +	}
 +
 +	stats_req->buf_len = len;
@@ -489,151 +200,70 @@ index 2acc95ab32f7..ad2919bcb11c 100644
  static int ath12k_dbg_htt_ext_stats_parse(struct ath12k_base *ab,
  					  u16 tag, u16 len, const void *tag_buf,
  					  void *user_data)
-@@ -2236,6 +2531,15 @@ static int ath12k_dbg_htt_ext_stats_parse(struct ath12k_base *ab,
- 	case HTT_STATS_SFM_CLIENT_USER_TAG:
- 		ath12k_htt_print_sfm_client_user_tlv(tag_buf, len, stats_req);
+@@ -2607,6 +2672,9 @@ static int ath12k_dbg_htt_ext_stats_parse(struct ath12k_base *ab,
+ 	case HTT_STATS_PDEV_CCA_COUNTERS_TAG:
+ 		ath12k_htt_print_pdev_stats_cca_counters_tlv(tag_buf, len, stats_req);
  		break;
-+	case HTT_STATS_TX_PDEV_MU_MIMO_STATS_TAG:
-+		ath12k_htt_print_tx_pdev_mu_mimo_sch_stats_tlv(tag_buf, len, stats_req);
-+		break;
-+	case HTT_STATS_TX_PDEV_MUMIMO_GRP_STATS_TAG:
-+		ath12k_htt_print_tx_pdev_mumimo_grp_stats_tlv(tag_buf, len, stats_req);
-+		break;
-+	case HTT_STATS_TX_PDEV_MPDU_STATS_TAG:
-+		ath12k_htt_print_tx_pdev_mu_mimo_mpdu_stats_tlv(tag_buf, len, stats_req);
++	case HTT_STATS_PDEV_OBSS_PD_TAG:
++		ath12k_htt_print_pdev_obss_pd_stats_tlv(tag_buf, len, stats_req);
 +		break;
  	default:
  		break;
  	}
 diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
-index ed6eb5935e2d..bd764ddd5394 100644
+index b37ba1256ce5..597334830d02 100644
 --- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
 +++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
-@@ -132,6 +132,7 @@ enum ath12k_dbg_htt_ext_stats_type {
- 	ATH12K_DBG_HTT_EXT_STATS_TX_SELFGEN_INFO	= 12,
- 	ATH12K_DBG_HTT_EXT_STATS_SRNG_INFO		= 15,
+@@ -134,6 +134,7 @@ enum ath12k_dbg_htt_ext_stats_type {
  	ATH12K_DBG_HTT_EXT_STATS_SFM_INFO		= 16,
-+	ATH12K_DBG_HTT_EXT_STATS_PDEV_TX_MU		= 17,
+ 	ATH12K_DBG_HTT_EXT_STATS_PDEV_TX_MU		= 17,
+ 	ATH12K_DBG_HTT_EXT_STATS_PDEV_CCA_STATS		= 19,
++	ATH12K_DBG_HTT_EXT_STATS_PDEV_OBSS_PD_STATS	= 23,
  
  	/* keep this last */
  	ATH12K_DBG_HTT_NUM_EXT_STATS,
-@@ -155,6 +156,7 @@ enum ath12k_dbg_htt_tlv_tag {
- 	HTT_STATS_TX_DE_ENQUEUE_PACKETS_TAG		= 21,
- 	HTT_STATS_TX_DE_ENQUEUE_DISCARD_TAG		= 22,
- 	HTT_STATS_TX_DE_CMN_TAG				= 23,
-+	HTT_STATS_TX_PDEV_MU_MIMO_STATS_TAG		= 25,
- 	HTT_STATS_SFM_CMN_TAG				= 26,
- 	HTT_STATS_SRING_STATS_TAG			= 27,
- 	HTT_STATS_TX_PDEV_SCHEDULER_TXQ_STATS_TAG	= 36,
-@@ -174,6 +176,7 @@ enum ath12k_dbg_htt_tlv_tag {
- 	HTT_STATS_TX_DE_COMPL_STATS_TAG			= 65,
- 	HTT_STATS_WHAL_TX_TAG				= 66,
- 	HTT_STATS_TX_PDEV_SIFS_HIST_TAG			= 67,
-+	HTT_STATS_TX_PDEV_MPDU_STATS_TAG		= 74,
+@@ -184,6 +185,7 @@ enum ath12k_dbg_htt_tlv_tag {
+ 	HTT_STATS_TX_PDEV_MPDU_STATS_TAG		= 74,
  	HTT_STATS_SCHED_TXQ_SCHED_ORDER_SU_TAG		= 86,
  	HTT_STATS_SCHED_TXQ_SCHED_INELIGIBILITY_TAG	= 87,
++	HTT_STATS_PDEV_OBSS_PD_TAG			= 88,
  	HTT_STATS_HW_WAR_TAG				= 89,
-@@ -182,6 +185,7 @@ enum ath12k_dbg_htt_tlv_tag {
- 	HTT_STATS_TX_SELFGEN_AC_SCHED_STATUS_STATS_TAG	= 111,
- 	HTT_STATS_TX_SELFGEN_AX_SCHED_STATUS_STATS_TAG	= 112,
- 	HTT_STATS_MU_PPDU_DIST_TAG			= 129,
-+	HTT_STATS_TX_PDEV_MUMIMO_GRP_STATS_TAG		= 130,
- 	HTT_STATS_TX_SELFGEN_BE_ERR_STATS_TAG		= 137,
- 	HTT_STATS_TX_SELFGEN_BE_STATS_TAG		= 138,
- 	HTT_STATS_TX_SELFGEN_BE_SCHED_STATUS_STATS_TAG	= 139,
-@@ -708,12 +712,35 @@ struct ath12k_htt_tx_de_compl_stats_tlv {
- 	__le32 tqm_bypass_frame;
+ 	HTT_STATS_SCHED_TXQ_SUPERCYCLE_TRIGGER_TAG	= 100,
+ 	HTT_STATS_PDEV_CTRL_PATH_TX_STATS_TAG		= 102,
+@@ -1024,4 +1026,26 @@ struct ath12k_htt_pdev_cca_stats_hist_v1_tlv {
+ 	__le32 collection_interval;
  } __packed;
  
-+enum ath12k_htt_tx_mumimo_grp_invalid_reason_code_stats {
-+	ATH12K_HTT_TX_MUMIMO_GRP_VALID,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_NUM_MU_USERS_EXCEEDED_MU_MAX_USERS,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_SCHED_ALGO_NOT_MU_COMPATIBLE_GID,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_NON_PRIMARY_GRP,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_ZERO_CANDIDATES,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_MORE_CANDIDATES,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_GROUP_SIZE_EXCEED_NSS,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_GROUP_INELIGIBLE,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_GROUP_EFF_MU_TPUT_OMBPS,
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_MAX_REASON_CODE,
-+};
-+
- #define ATH12K_HTT_NUM_AC_WMM				0x4
- #define ATH12K_HTT_MAX_NUM_SBT_INTR			4
- #define ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS		4
- #define ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS		8
- #define ATH12K_HTT_TX_NUM_BE_MUMIMO_USER_STATS		8
- #define ATH12K_HTT_TX_PDEV_STATS_NUM_TX_ERR_STATUS	7
-+#define ATH12K_HTT_TX_NUM_OFDMA_USER_STATS		74
-+#define ATH12K_HTT_TX_NUM_UL_MUMIMO_USER_STATS		8
-+#define ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ		8
-+#define ATH12K_HTT_STATS_MUMIMO_TPUT_NUM_BINS		10
-+
-+#define ATH12K_HTT_STATS_MAX_INVALID_REASON_CODE \
-+	ATH12K_HTT_TX_MUMIMO_GRP_INVALID_MAX_REASON_CODE
-+#define ATH12K_HTT_TX_NUM_MUMIMO_GRP_INVALID_WORDS \
-+	(ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ * ATH12K_HTT_STATS_MAX_INVALID_REASON_CODE)
- 
- struct ath12k_htt_tx_selfgen_cmn_stats_tlv {
- 	__le32 mac_id__word;
-@@ -922,4 +949,56 @@ struct ath12k_htt_sfm_client_user_tlv {
- 	DECLARE_FLEX_ARRAY(__le32, dwords_used_by_user_n);
- } __packed;
- 
-+struct ath12k_htt_tx_pdev_mu_mimo_sch_stats_tlv {
-+	__le32 mu_mimo_sch_posted;
-+	__le32 mu_mimo_sch_failed;
-+	__le32 mu_mimo_ppdu_posted;
-+	__le32 ac_mu_mimo_sch_nusers[ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS];
-+	__le32 ax_mu_mimo_sch_nusers[ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS];
-+	__le32 ax_ofdma_sch_nusers[ATH12K_HTT_TX_NUM_OFDMA_USER_STATS];
-+	__le32 ax_ul_ofdma_nusers[ATH12K_HTT_TX_NUM_OFDMA_USER_STATS];
-+	__le32 ax_ul_ofdma_bsr_nusers[ATH12K_HTT_TX_NUM_OFDMA_USER_STATS];
-+	__le32 ax_ul_ofdma_bar_nusers[ATH12K_HTT_TX_NUM_OFDMA_USER_STATS];
-+	__le32 ax_ul_ofdma_brp_nusers[ATH12K_HTT_TX_NUM_OFDMA_USER_STATS];
-+	__le32 ax_ul_mumimo_nusers[ATH12K_HTT_TX_NUM_UL_MUMIMO_USER_STATS];
-+	__le32 ax_ul_mumimo_brp_nusers[ATH12K_HTT_TX_NUM_UL_MUMIMO_USER_STATS];
-+	__le32 ac_mu_mimo_per_grp_sz[ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS];
-+	__le32 ax_mu_mimo_per_grp_sz[ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS];
-+	__le32 be_mu_mimo_sch_nusers[ATH12K_HTT_TX_NUM_BE_MUMIMO_USER_STATS];
-+	__le32 be_mu_mimo_per_grp_sz[ATH12K_HTT_TX_NUM_BE_MUMIMO_USER_STATS];
-+	__le32 ac_mu_mimo_grp_sz_ext[ATH12K_HTT_TX_NUM_AC_MUMIMO_USER_STATS];
-+} __packed;
-+
-+struct ath12k_htt_tx_pdev_mumimo_grp_stats_tlv {
-+	__le32 dl_mumimo_grp_best_grp_size[ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ];
-+	__le32 dl_mumimo_grp_best_num_usrs[ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS];
-+	__le32 dl_mumimo_grp_eligible[ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ];
-+	__le32 dl_mumimo_grp_ineligible[ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ];
-+	__le32 dl_mumimo_grp_invalid[ATH12K_HTT_TX_NUM_MUMIMO_GRP_INVALID_WORDS];
-+	__le32 dl_mumimo_grp_tputs[ATH12K_HTT_STATS_MUMIMO_TPUT_NUM_BINS];
-+	__le32 ul_mumimo_grp_best_grp_size[ATH12K_HTT_STATS_NUM_MAX_MUMIMO_SZ];
-+	__le32 ul_mumimo_grp_best_usrs[ATH12K_HTT_TX_NUM_AX_MUMIMO_USER_STATS];
-+	__le32 ul_mumimo_grp_tputs[ATH12K_HTT_STATS_MUMIMO_TPUT_NUM_BINS];
-+} __packed;
-+
-+enum ath12k_htt_stats_tx_sched_modes {
-+	ATH12K_HTT_STATS_TX_SCHED_MODE_MU_MIMO_AC = 0,
-+	ATH12K_HTT_STATS_TX_SCHED_MODE_MU_MIMO_AX,
-+	ATH12K_HTT_STATS_TX_SCHED_MODE_MU_OFDMA_AX,
-+	ATH12K_HTT_STATS_TX_SCHED_MODE_MU_OFDMA_BE,
-+	ATH12K_HTT_STATS_TX_SCHED_MODE_MU_MIMO_BE
-+};
-+
-+struct ath12k_htt_tx_pdev_mpdu_stats_tlv {
-+	__le32 mpdus_queued_usr;
-+	__le32 mpdus_tried_usr;
-+	__le32 mpdus_failed_usr;
-+	__le32 mpdus_requeued_usr;
-+	__le32 err_no_ba_usr;
-+	__le32 mpdu_underrun_usr;
-+	__le32 ampdu_underrun_usr;
-+	__le32 user_index;
-+	__le32 tx_sched_mode;
++struct ath12k_htt_pdev_obss_pd_stats_tlv {
++	__le32 num_obss_tx_ppdu_success;
++	__le32 num_obss_tx_ppdu_failure;
++	__le32 num_sr_tx_transmissions;
++	__le32 num_spatial_reuse_opportunities;
++	__le32 num_non_srg_opportunities;
++	__le32 num_non_srg_ppdu_tried;
++	__le32 num_non_srg_ppdu_success;
++	__le32 num_srg_opportunities;
++	__le32 num_srg_ppdu_tried;
++	__le32 num_srg_ppdu_success;
++	__le32 num_psr_opportunities;
++	__le32 num_psr_ppdu_tried;
++	__le32 num_psr_ppdu_success;
++	__le32 num_non_srg_tried_per_ac[ATH12K_HTT_NUM_AC_WMM];
++	__le32 num_non_srg_success_ac[ATH12K_HTT_NUM_AC_WMM];
++	__le32 num_srg_tried_per_ac[ATH12K_HTT_NUM_AC_WMM];
++	__le32 num_srg_success_per_ac[ATH12K_HTT_NUM_AC_WMM];
++	__le32 num_obss_min_dur_check_flush_cnt;
++	__le32 num_sr_ppdu_abort_flush_cnt;
 +} __packed;
 +
  #endif
+
+base-commit: 8ed36fe71fd60c851540839b105fd1fddc870c61
+prerequisite-patch-id: faf46024c8b5c094e201d392109e7f94dcecdd49
+prerequisite-patch-id: c4662f64bc7be141322b7e37145e52ea4ab4e182
+prerequisite-patch-id: 4d37990775694f110ce3e87096231fe8855f09f5
+prerequisite-patch-id: 5959fd18b497d29cad98d36dcce59a876ffe8ca2
+prerequisite-patch-id: ecac67f6fce1dd4d5089dbc3da840e311f6a7218
 -- 
 2.25.1
 
