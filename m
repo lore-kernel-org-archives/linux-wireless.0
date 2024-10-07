@@ -1,113 +1,129 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CFB18C353;
-	Mon,  7 Oct 2024 21:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C88B184549
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 22:03:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728337404; cv=none; b=KUqx9qLsxr1UBVPEoj4EPJz1dWEHlAi3m8nX4AHd00ORSVR9M8m+ZorhmcnaHbmPQZqbpsFdVffIJJv0N6cE0HcbWEt7uWUvcL2jVWJjIvHRm51HkIsBb/2vji0+R2PJiD6TX/GmgjxUj4lPv8PCHqy79RY/nFCs6Hz3zUScc8o=
+	t=1728338595; cv=none; b=bkuPpow19AsGFrOt7eF8bbW3pTt6BWcAjXZxFKQ6G1HJHbKRBbVvNQc/b6wkcorJV+EvEhTUlYg212xQNUvsgIJM9A+fAJirmeEKr+mtpoXN08AJ0JqsoGMREBNEKrMw3CgUDUsfOzD/h9MvRt8G5eoIxy92Q04k3Vune3v/BGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728337404; c=relaxed/simple;
-	bh=dk7MXR8ygYKqpEaSGxCglxcsK0GdIRoQgY2dSaCNdOI=;
-	h=From:To:CC:In-Reply-To:References:Subject:Message-ID:Date:
-	 MIME-Version:Content-Type; b=kKFQNM9rzhaC0A6O/3mkd50VGFfonR5418Q/iH3ztw23pis1e7n1WLe+1okWocORk094jaupj0hFxk+2em303PH2yvmPLKx9/WAog25gwsbx5BbhT6RqVXnIscA1Vo9iE4eKoU1dBPFYaGFTlHaz1+uMw4UrfZGtUSC8N4bUGLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Zv8Zb1Dk; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1728338595; c=relaxed/simple;
+	bh=G5irQUwlfQc4dnR16J4zN42O15wf9ke6hkjoG9x2flk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=KRl0pMhmLqFz6RgHqHY+7R+AAzoVoHiT7pYq4SNPY42zvcPiiC8xMAgNLuZ1mEmwmeX6l/AowD/pvPaSQlf10WtWW2MhWx+251AgPDoSu5K6SlWNc3psGtTDaSuHcS0myEqND7SwGDxbaH03sMZTbRcqy7444v7v5GC9c783NRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cehFEhLn; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Zv8Zb1Dk"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 497ErML0026919;
-	Mon, 7 Oct 2024 21:43:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	yVDSPx6cXwuYsEAcMa9+AEfdYg+qCvtyRFW1/8tXxvM=; b=Zv8Zb1DkaBBBIYdm
-	RikhO7uR3sdkGPaatmJTBk2cvMaaTAa/WFtFIx4sLSbqxwkdGOItep+ukY6fb6bm
-	WSLEy9zYsoOVSuLvwLhsRvdCg1ZJ3UbJVBBcxk4eyyh0E0E+hHVcuL58awAFj6R8
-	y+5DC7D2/0Qe/vNYzxRHz7URg1NelQvM6/Qp5N930UisYGx9Ijl8e+nZvzNcEt/M
-	n0sAysWJ+rbUACSV4Vmd5j/A2d/RVe6+x5FMPXArNkTFoit+FxEkKSSr66N/x9p0
-	TgqyjJe1lgf3Crkox3dQOrvD+SkotHKrfp0qys2AE9Eh7G6vzW2+mz146/jBIG3g
-	MFAkMQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 422xq9wcy9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 07 Oct 2024 21:43:13 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 497LhDFa030138
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 7 Oct 2024 21:43:13 GMT
-Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 7 Oct 2024
- 14:43:12 -0700
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
-        "Jakub
- Kicinski" <kuba@kernel.org>, Kees Cook <kees@kernel.org>,
-        Paolo Abeni
-	<pabeni@redhat.com>,
-        Baochen Qiang <quic_bqiang@quicinc.com>,
-        Arnd Bergmann
-	<arnd@kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>,
-        Rameshkumar Sundaram
-	<quic_ramess@quicinc.com>,
-        <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-In-Reply-To: <20241004095420.637091-1-arnd@kernel.org>
-References: <20241004095420.637091-1-arnd@kernel.org>
-Subject: Re: [PATCH] wifi: ath12k: fix one more memcpy size error
-Message-ID: <172833739297.2581613.4397682908224722962.b4-ty@quicinc.com>
-Date: Mon, 7 Oct 2024 14:43:12 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cehFEhLn"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-42cb57f8b41so66709575e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2024 15:03:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728338592; x=1728943392; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=a0Vdevx6K2jJipKcQbe18Enpyou2NSleEhs1/GJHS7A=;
+        b=cehFEhLntDlNqSb9EeQEBeRAXy+wPI7BxTKddQC9ELBBx4Syy8XisUYzOjoeE9iW9c
+         RAJFLIPo55Lhf5SicdCtGyD0+4dPgfIvwfOO4lTCMOorHhauQEmTHuhgu4h8E9fR46Lo
+         UAf+rZCd07VHXAXZaJGdA6al+aQ9b03Dh4lsu/jv3Caal6gcci5LQn1PT5jd4eW1wbi0
+         rwqOGvcNDW5f8haazqWa3uiMGAORzeALpvrWcKcxNEsP2RoA73iZ08x4oUIGFBKVGQ5f
+         A9v7Jr9Sy3qqdrPyvleNcmVzxB0ywzrjGQkyVbelPwd2q5V7Jdnh1iYYoexgIkDx4nwl
+         Q3bA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728338592; x=1728943392;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=a0Vdevx6K2jJipKcQbe18Enpyou2NSleEhs1/GJHS7A=;
+        b=MlroIKE/50OHVc0HJ946Ap6kWH9h0dg8R+8jykkb9W4TpH/pmK1Y0EkkfhdSfZaUUq
+         EIVuN6e0oe7ZsYUMEMDg26sChmzpYuRelIs0yGllP0ZdIFIx+4b3F29uYruDLmJmMNgL
+         1yXtFTkj5Q/2Q/xawBzrNfK3KZgVhmoiE8qch8E1CeZf3WDU93q7Kwul9P8NvXOLr957
+         N4wjsbl6jH+4dpIXspd7DGopZqapEq9nqIB5aEJLbFDorm/kvZz5s+ooDhVsjDy3heef
+         ODJIrC5Nks4bopxTQzXemEX1PfIUorNT5yPAc9VQxb3d8zrR1HOTvUFJxMk1BKQO7qKQ
+         h7VA==
+X-Forwarded-Encrypted: i=1; AJvYcCWSmF7fwbw6cTllP7ilf3lZzB33O4Dbs7zGRfaU/gvxaE6ZgoUP47kRURrB26qZQVPkZ0Y56eybgvUhcpMyLw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyyhVb8GJBk5tK5fmEZfEvrvNKfMmz5Vy3QsrJXUUxrKGKVyzT8
+	YeDh/WcXfSSL4knbBuXkb1CILBcWvAyrc5CKJ5EsDghCsL30jZZS4ZO6dw==
+X-Google-Smtp-Source: AGHT+IFVgOlfjCrMizkrsla+g1vpCqRRsCW+PaUpzvwoDiUXjINkIRNTRybI7x4C7QaNgpoaNj+v3A==
+X-Received: by 2002:adf:cd06:0:b0:37c:d270:e5cf with SMTP id ffacd0b85a97d-37d0e779b4emr10704649f8f.33.1728338591680;
+        Mon, 07 Oct 2024 15:03:11 -0700 (PDT)
+Received: from [192.168.0.50] ([79.113.150.231])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37d1690f265sm6544123f8f.19.2024.10.07.15.03.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Oct 2024 15:03:11 -0700 (PDT)
+Message-ID: <4d710785-4733-4f04-878c-53d2684d744e@gmail.com>
+Date: Tue, 8 Oct 2024 01:03:08 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: rtw88: alloc_skb(32768, GFP_ATOMIC) fails, driver gets stuck
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Sascha Hauer <sha@pengutronix.de>
+References: <6e7ecb47-7ea0-433a-a19f-05f88a2edf6b@gmail.com>
+ <baca0d5d-072e-4003-ab4a-ecc524d6b89b@gmail.com>
+ <ff98c33e797c4df3aee29a46229ee7ee@realtek.com>
+Content-Language: en-US
+In-Reply-To: <ff98c33e797c4df3aee29a46229ee7ee@realtek.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.0
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: xv8KleO3pv__tTsy16lyVkRdlU1eV_Cx
-X-Proofpoint-GUID: xv8KleO3pv__tTsy16lyVkRdlU1eV_Cx
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 phishscore=0
- spamscore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
- bulkscore=0 suspectscore=0 malwarescore=0 adultscore=0 mlxlogscore=684
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410070149
 
-
-On Fri, 04 Oct 2024 09:54:13 +0000, Arnd Bergmann wrote:
-> A previous patch addressed a fortified-memcpy warning on older compilers,
-> but there is still a warning on gcc-14 in some configurations:
+On 01/10/2024 04:25, Ping-Ke Shih wrote:
+> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>>
+>> alloc_skb fails (silently) therefore the RX URB is not submitted
+>> ever again. There are only 4 RX URBs.
 > 
-> In file included from include/linux/string.h:390,
->                  from drivers/net/wireless/ath/ath12k/wow.c:7:
-> drivers/net/wireless/ath/ath12k/wow.c: In function 'ath12k_wow_convert_8023_to_80211.isra':
-> include/linux/fortify-string.h:114:33: error: '__builtin_memcpy' accessing 18446744073709551610 or more bytes at offsets 0 and 0 overlaps 9223372036854775797 bytes at offset -9223372036854775803 [-Werror=restrict]
-> include/linux/fortify-string.h:679:26: note: in expansion of macro '__fortify_memcpy_chk'
->   679 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
->       |                          ^~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath12k/wow.c:199:25: note: in expansion of macro 'memcpy'
->   199 |                         memcpy(pat + a3_ofs - pkt_ofs,
->       |                         ^~~~~~
+> Though only 4 RX URB, it might be possible more than 4 RX skb. 
+> In rtw_usb_read_port_complete(), queue RX skb into rtwusb->rx_queue, and kick
+> off rx_work. It means some RX skb are inflight, but not sure how many.
 > 
-> [...]
+>>
+>> static void rtw_usb_rx_resubmit(struct rtw_usb *rtwusb, struct rx_usb_ctrl_block *rxcb)
+>> {
+>>         struct rtw_dev *rtwdev = rtwusb->rtwdev;
+>>         int error;
+>>
+>>         rxcb->rx_skb = alloc_skb(RTW_USB_MAX_RECVBUF_SZ, GFP_ATOMIC);
+>>         if (!rxcb->rx_skb)
+>>                 return;
+>>
+>>         usb_fill_bulk_urb(rxcb->rx_urb, rtwusb->udev,
+>>                           usb_rcvbulkpipe(rtwusb->udev, rtwusb->pipe_in),
+>>                           rxcb->rx_skb->data, RTW_USB_MAX_RECVBUF_SZ,
+>>                           rtw_usb_read_port_complete, rxcb);
+>>
+>>         error = usb_submit_urb(rxcb->rx_urb, GFP_ATOMIC);
+>>
+>> I added an error message there:
+>>
+>>         rxcb->rx_skb = alloc_skb(RTW_USB_MAX_RECVBUF_SZ, GFP_ATOMIC);
+>>         if (!rxcb->rx_skb) {
+>>                 rtw_err(rtwdev, "failed to allocate rx_skb\n");
+>>                 return;
+>>         }
+> 
+> My first thought is to change GFP_ATOMIC to GFP_KERNEL, but kernel documentation
+> notes that 
+> "NEVER SLEEP IN A COMPLETION HANDLER. These are often called in atomic context."
+> However, I feel it is possible to do rtw_usb_rx_resubmit() in a work.
+> 
 
-Applied, thanks!
+Yes, maybe even in the existing rx_work.
 
-[1/1] wifi: ath12k: fix one more memcpy size error
-      commit: 19c23eb61fa4c802e6e0aaf74d6f7dcbe99f0ba3
+> Another thought is to allocate a new skb with size urb->actual_length, and
+> copy received data to the new skb, and queue to rtwusb->rx_queue. Then reuse
+> the original rx_skb. This thought is based on what urb->actual_length would
+> be smaller than RTW_USB_MAX_RECVBUF_SZ, but not very sure if this is fact. 
+> 
+> 
 
-Best regards,
--- 
-Jeff Johnson <quic_jjohnson@quicinc.com>
-
+I think actual_length is often close to RTW_USB_MAX_RECVBUF_SZ (32768).
+Only with RTL8723DU it's small, probably around 1600 bytes, because it
+doesn't use aggregation.
