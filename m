@@ -1,119 +1,68 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31AF018C036;
-	Sun,  6 Oct 2024 22:53:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C9CF17999
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 03:27:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728255206; cv=none; b=drQxcZejQz3pxamtKVShfWJNQ+jr9dBGgXwECOmgAZCguakSSwYuDpvOYbb6n0pnLbRdejRtVxr9Rk0FUYHfh6bdYiHATyOvY/LBMx3ezUvqtmvzei5MZfy6OrtfnIAvfgXa/kIXevVI7jBigfIsm7Owi87rNORHW6V9lxf1yzI=
+	t=1728271672; cv=none; b=emxIPD4zTFE2IkG1M6dBQfwXzN4Qg343vNR25SUs4Pb8ZVzN6HDQif+qQBa4Hs9RaQQEY5QUtQOv7n/RFej/LSXoFDyWsbBJ1vcvK7slVr98eRmIvEzvN041RlQafeaxc5BhS1snF6lQ3o5Q92aAwZ0kQx6SpvHRJsdX17JWCs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728255206; c=relaxed/simple;
-	bh=JbGT4PmDiLI+8OespZr+BZTeb1MTifSY8Tb5f9KoutA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FMQrjbB9pws4iQCK1YAehmhZDmlpBUykbCjz4UQcDoCKuY0NdHx4ohhQ7OoT+XbBXhJ6wTwu8lzHigFYWtDqp67xMnM4T2IdnVCyZWk2r5iVRI0eT0pq/hDtt3LvPPlXlvXnieBHxDO23SgJIIVeiOV2dzHJ1erpfcG6Kg2Az0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Hn+nhNYR; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
+	s=arc-20240116; t=1728271672; c=relaxed/simple;
+	bh=qVO1g+cGILr+migH4IAk5G+/RneP2PQyhnhSxr4chpM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=hTYtN0vBJ6nrQtqfvGd/APOgDNoVD58uxS/TpMGEmglW98jH8E6NInPvge/A/U6wMb2WrVO1s09SjTfvZQbh/QRjswBxBouq7cF4P6jPmu6HxwzMSGE9sk6TVq+2VMu9HBLBw9nlhospQ97WgLae9qtabGdhXWjKJRafx/vj78c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sXfqT3ph; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Hn+nhNYR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=sDoC0AjVQEZ6NF4cxvoGmjALQJWw/amCL5+nVShqYGk=; b=Hn+nhNYRmPY9LuMg
-	UuUkcWjibQkAzlxdn6I3XcRDdItv/07roMzfUs/ndRg/yvAadGc2UiPYnkdbj2mjjLiG+yF10k4Dv
-	AuqtcVnAEY0/30eyFMCJaUpiQO0Kzo6zGc4qV6voSGsq09SeNxGqpE+FrVZg0h6qIyJZf0dx2WJlg
-	eG4hzB1hrFMn1661rwSbIlt0pSygWlD5BG5EZgJPltnEJRz5UKcZBC3bMtDz6Cem8Dy/qxba3SOxy
-	l/9luSTZ9+puHjDQGKNgCoCpQL73Sw6OhnNQOUgSpj16JfiJeJCbQSkgslGyZlNOwRurLw6oFA5xQ
-	tvHE7CPqpxL8yn/WPw==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1sxa7d-009LcO-0I;
-	Sun, 06 Oct 2024 22:53:05 +0000
-From: linux@treblig.org
-To: johannes@sipsolutions.net,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 1/2] cfg80211: Remove unused cfg80211_background_cac_abort
-Date: Sun,  6 Oct 2024 23:53:02 +0100
-Message-ID: <20241006225303.121445-2-linux@treblig.org>
-X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241006225303.121445-1-linux@treblig.org>
-References: <20241006225303.121445-1-linux@treblig.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sXfqT3ph"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F17F4C4CEC6;
+	Mon,  7 Oct 2024 03:27:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1728271672;
+	bh=qVO1g+cGILr+migH4IAk5G+/RneP2PQyhnhSxr4chpM=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
+	b=sXfqT3phJ/lSvX4eE8KF0lQSRmtal01Iyd99fzD5tlNzJ0385NrVPbp7ks/VTBE9N
+	 X4m9v7aOmJq/X4GZmOjt9+jW+sCsKB2bDZ1e+BInTaGa6rIQ2YbRQRcF4J1EXz8G5X
+	 vTImk28QArSuH61nHlYl6saCKIC0r26qoEOfJOGb/DQFUegBzbBy4P3oyFLbgm1ogz
+	 8WgTB5QtfXQohbNjsoYEShfEWscZyssZ5xz6bSIVmIlprxjTQbzYmlOfzzFV3TlnhQ
+	 O97ULICrTt0BII+ThT3jC1h2cEG3VnwJi5VvPmJTeueXstG7/s/LmWVwf3m85D8a9B
+	 uQrgKpcKVGFCw==
+Received: from wens.tw (localhost [127.0.0.1])
+	by wens.tw (Postfix) with ESMTP id 4EE7F5FA88;
+	Mon,  7 Oct 2024 11:27:49 +0800 (CST)
+From: Chen-Yu Tsai <wens@kernel.org>
+To: Ping-Ke Shih <pkshih@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+In-Reply-To: <20241001093049.37515-1-pkshih@gmail.com>
+References: <20241001093049.37515-1-pkshih@gmail.com>
+Subject: Re: [PATCH 1/2] Revert "wireless-regdb: Update regulatory info for
+ Serbia (SR) for 2024"
+Message-Id: <172827166928.1242641.13961845240628425833.b4-ty@kernel.org>
+Date: Mon, 07 Oct 2024 11:27:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+On Tue, 01 Oct 2024 17:30:48 +0800, Ping-Ke Shih wrote:
+> The country alpha2 of Serbia is RS instead SR, so revert it.
+> 
+> This reverts commit 388c80ccba39d4ff4957a5d153c461aaac53e22e.
+> 
+> 
 
-cfg80211_background_cac_abort() is unused.
-It got renamed from cfg80211_offchan_cac_abort by commit
-a95bfb876fa8 ("cfg80211: rename offchannel_chain structs to background_chain to avoid confusion with ETSI standard")
+Applied to master in wens/wireless-regdb.git, thanks!
 
-and that was originally added in commit
-1507b1531981 ("cfg80211: move offchan_cac_event to a dedicated work")
-but never used.
+[1/2] Revert "wireless-regdb: Update regulatory info for Serbia (SR) for 2024"
+      https://git.kernel.org/wens/wireless-regdb/c/dbfae475bf85
+[2/2] wireless-regdb: Update regulatory info for Serbia (RS) for 2024
+      https://git.kernel.org/wens/wireless-regdb/c/b44edb2eaf3a
 
-To me it looks like the queue is still used (I see a queue_work
-in __cfg80211_radar_event), so I think it's just the wrapper that's
-unused.
-
-Remove cfg80211_background_cac_abort.
-
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
- include/net/cfg80211.h | 9 ---------
- net/wireless/mlme.c    | 8 --------
- 2 files changed, 17 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 69ec1eb41a09..fd843a519329 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -8752,15 +8752,6 @@ void cfg80211_cac_event(struct net_device *netdev,
- 			enum nl80211_radar_event event, gfp_t gfp,
- 			unsigned int link_id);
- 
--/**
-- * cfg80211_background_cac_abort - Channel Availability Check offchan abort event
-- * @wiphy: the wiphy
-- *
-- * This function is called by the driver when a Channel Availability Check
-- * (CAC) is aborted by a offchannel dedicated chain.
-- */
--void cfg80211_background_cac_abort(struct wiphy *wiphy);
--
- /**
-  * cfg80211_gtk_rekey_notify - notify userspace about driver rekeying
-  * @dev: network device
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 4dac81854721..8ec236bbbc7c 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -1226,14 +1226,6 @@ void cfg80211_background_cac_abort_wk(struct work_struct *work)
- 				      NL80211_RADAR_CAC_ABORTED);
- }
- 
--void cfg80211_background_cac_abort(struct wiphy *wiphy)
--{
--	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
--
--	queue_work(cfg80211_wq, &rdev->background_cac_abort_wk);
--}
--EXPORT_SYMBOL(cfg80211_background_cac_abort);
--
- int
- cfg80211_start_background_radar_detection(struct cfg80211_registered_device *rdev,
- 					  struct wireless_dev *wdev,
+Best regards,
 -- 
-2.46.2
+Chen-Yu Tsai <wens@kernel.org>
 
