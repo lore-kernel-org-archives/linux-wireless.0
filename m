@@ -1,106 +1,260 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F37E17740;
-	Mon,  7 Oct 2024 17:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3D8012B143
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 17:39:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728322211; cv=none; b=geZB3FScdYr2dmlbl/l76kDAHol81a1TXuPwD2GJDVaibwNOyhQuBnFMX65PCnAsctuM5WxdvEYomfm+MZk0V2QdZWZIpUTKFU7RQbgYnZ5vPBr+Sva5rYTrt2VTT4jSoPFhLDyLmQ2I2mAyjwWvjW5LRTW5ksRQyfZjqBPXDzg=
+	t=1728322745; cv=none; b=Yx+QGlgacsl87hZ3OiHE4dN6ZHg4u3tNL/UpzfUIhnV3gMb4G+Kfb2en8Tic2QMTsjmcLjO7QyFatYldJ+PWMWqUMIa984s8rPN9XOKfXxLICb1wMnT1xrvBSfLMH+hzOIfamvLfJjPASDtJxwnwGjNiakVIHdh2Bo6syed9W/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728322211; c=relaxed/simple;
-	bh=KExhS6quS1V4EUyu0mZRHKERFsQ/vsL1TLj4EjRdFGI=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=St8CIDXhftnlBODZHXiErNArYB61XiacAZfOdAHTi66UtDglQE+H8QcxuDAYZ6zllNVRVzaRh9YF8MQcAHLlt+vbIVuYNb/UfagRIzANFA9pE8m9h6AX5wTluCBMeqj04OR47S/LHyRLh++fP5/6nSBn5X78ELkbpy93jK00IN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=GYPAHP7k; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1728322745; c=relaxed/simple;
+	bh=PJyqJf7t1w3Lc2RWRM8uhcfUGQwrksolMz70HkKMAIU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=sGfsXMu/8Usr1Y5hkKhh77ZqoyJEGCIy3Vk8EIlWeuRXw9Ch089xblr1JyP5QCyzzBtLBeZf0aOPD/Dp/VpO5K7QqEmGPhp4NEUoZJTfaSZUqAaNYoAYp3ZqarrYARFKkTYnqavhjC59+HIi78yDywDWnB+1jy1pUcv9O2a8bmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=I9vzMXax; arc=none smtp.client-ip=67.231.154.164
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="GYPAHP7k"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=DZ5PBbvmh600KyglS3wsWLHfo8lfLmkNDgy5pOUZEGs=;
-	t=1728322210; x=1729531810; b=GYPAHP7kuM5HFqo4lAxSvdmHBy8h/qd9eQG3b63T9lw68JW
-	K17Pn34NxbySmKSKOQw0xzVKkcfMXGLrTAAgJeMz5Rz4FHTwwknGWg1+R0MsHSnwgye34YKP9do6G
-	6OpVWK4043MqZtJOwQQ0tEwved213LvJzVX+CDkdLG7XEgPIL6/TKdclW9MKnHWLlml/CzBOTUuUJ
-	ZicUlEDj019Ob0r+w0sLW1VUwDu85pCAQSEtXyjRP7sDl6y7+TfTAwydE6WhFU9maKCX6Ek9ajdz3
-	Yry2+gjoAG9XW4zj3wcilj7b7LoPA5bE4GM4oMCqOeKBoYj2CviL2gvq0yS0aoZw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1sxrYZ-00000003Soc-2SRY;
-	Mon, 07 Oct 2024 19:30:03 +0200
-Message-ID: <bad9e220ad3d2625d23b3d7230d6876aa726dd78.camel@sipsolutions.net>
-Subject: Re: [PATCH RFC net 1/2] MAINTAINERS: consistently exclude wireless
- files from NETWORKING [GENERAL]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Horman <horms@kernel.org>, Kalle Valo <kvalo@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>,  Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
- <pabeni@redhat.com>, Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
- linux-kernel@vger.kernel.org,  linux-wireless@vger.kernel.org,
- netdev@vger.kernel.org
-Date: Mon, 07 Oct 2024 19:30:02 +0200
-In-Reply-To: <20241007141305.GD32733@kernel.org>
-References: <20241004-maint-net-hdrs-v1-0-41fd555aacc5@kernel.org>
-	 <20241004-maint-net-hdrs-v1-1-41fd555aacc5@kernel.org>
-	 <87setb7us5.fsf@kernel.org> <20241007141305.GD32733@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="I9vzMXax"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 1DB3CC0006F
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 17:38:54 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (unknown [50.251.239.81])
+	by mail3.candelatech.com (Postfix) with ESMTP id 7B25013C2B0;
+	Mon,  7 Oct 2024 10:38:54 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7B25013C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1728322734;
+	bh=PJyqJf7t1w3Lc2RWRM8uhcfUGQwrksolMz70HkKMAIU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=I9vzMXax0Pu6PvUQGRRYD1RMeRuq25osao1dcuI46rZtv+Tqk8zErq/64gEonGtpL
+	 vDhjUWu5x/u6eQ7sr0p3w2PfEbaupf6y/sviyWrM0NrJkpN2nvIMJ8tJRLmmoPNFId
+	 7HeRLNdOKppLMb78St9g2o3zQxKUV8OcVyQWWJIg=
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] wifi: mac80211: Assign tx-stats to the proper link.
+Date: Mon,  7 Oct 2024 10:38:51 -0700
+Message-ID: <20241007173851.2207849-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20241007173851.2207849-1-greearb@candelatech.com>
+References: <20241007173851.2207849-1-greearb@candelatech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-MDID: 1728322735-EPuJFRTlTNvI
+X-MDID-O:
+ us5;at1;1728322735;EPuJFRTlTNvI;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On Mon, 2024-10-07 at 15:13 +0100, Simon Horman wrote:
-> On Fri, Oct 04, 2024 at 06:27:38PM +0300, Kalle Valo wrote:
-> > Simon Horman <horms@kernel.org> writes:
-> >=20
-> > > We already exclude wireless drivers from the netdev@ traffic, to
-> > > delegate it to linux-wireless@, and avoid overwhelming netdev@.
-> > >=20
-> > > Many of the following wireless-related sections MAINTAINERS
-> > > are already not included in the NETWORKING [GENERAL] section.
-> > > For consistency, exclude those that are.
-> > >=20
-> > > * 802.11 (including CFG80211/NL80211)
-> > > * MAC80211
-> > > * RFKILL
-> > >=20
-> > > Signed-off-by: Simon Horman <horms@kernel.org>
-> > > ---
-> > >  MAINTAINERS | 11 +++++++++++
-> > >  1 file changed, 11 insertions(+)
-> > >=20
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index c27f3190737f..ea3ea2c0d3fa 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -16197,8 +16197,19 @@ F:	lib/random32.c
-> > >  F:	net/
-> > >  F:	tools/net/
-> > >  F:	tools/testing/selftests/net/
-> > > +X:	Documentation/networking/mac80211-injection.rst
-> > > +X:	Documentation/networking/mac80211_hwsim/
-> > > +X:	Documentation/networking/regulatory.rst
-> > > +X:	include/net/cfg80211.h
-> > > +X:	include/net/ieee80211_radiotap.h
-> > > +X:	include/net/iw_handler.h
-> > > +X:	include/net/mac80211.h
-> > > +X:	include/net/wext.h
-> >=20
-> > Should we add also lib80211.h?
->=20
-> Thanks, I missed that one. Perhaps it should have:
->=20
-> * An F: entry in the MAC80211
+From: Ben Greear <greearb@candelatech.com>
 
-I suppose it should rather be in the 802.11 entry rather than the
-MAC80211 one. I don't like the code anyway, but it's there for now :)
+For drivers that can report the tx link-id, account tx
+stats against that link.  If we cannot determine tx link,
+then use deflink.
 
-johannes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/status.c | 74 +++++++++++++++++++++++++++++++------------
+ 1 file changed, 53 insertions(+), 21 deletions(-)
+
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b41b867f43b2..8a3ea9219a15 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -41,6 +41,26 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_tx_status_irqsafe);
+ 
++static struct link_sta_info*
++ieee80211_get_tx_link_sta(struct sta_info *sta, struct ieee80211_tx_info *info)
++{
++	u8 link_id = IEEE80211_LINK_UNSPECIFIED;
++	struct link_sta_info *l_sta_info;
++
++	if (!sta)
++		return NULL;
++
++	if (info)
++		link_id = u32_get_bits(info->control.flags, IEEE80211_TX_CTRL_MLO_LINK);
++
++	if (link_id != IEEE80211_LINK_UNSPECIFIED) {
++		l_sta_info = rcu_access_pointer(sta->link[link_id]);
++		if (l_sta_info)
++			return l_sta_info;
++	}
++	return &sta->deflink;
++}
++
+ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 					    struct sta_info *sta,
+ 					    struct sk_buff *skb)
+@@ -48,6 +68,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	int ac;
++	struct link_sta_info *link_sta = ieee80211_get_tx_link_sta(sta, info);
+ 
+ 	if (info->flags & (IEEE80211_TX_CTL_NO_PS_BUFFER |
+ 			   IEEE80211_TX_CTL_AMPDU |
+@@ -72,7 +93,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 	info->flags |= IEEE80211_TX_INTFL_RETRANSMISSION;
+ 	info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 
+-	sta->deflink.status_stats.filtered++;
++	link_sta->status_stats.filtered++;
+ 
+ 	/*
+ 	 * Clear more-data bit on filtered frames, it might be set
+@@ -826,6 +847,7 @@ static void ieee80211_lost_packet(struct sta_info *sta,
+ {
+ 	unsigned long pkt_time = STA_LOST_PKT_TIME;
+ 	unsigned int pkt_thr = STA_LOST_PKT_THRESHOLD;
++	struct link_sta_info *link_sta;
+ 
+ 	/* If driver relies on its own algorithm for station kickout, skip
+ 	 * mac80211 packet loss mechanism.
+@@ -838,7 +860,8 @@ static void ieee80211_lost_packet(struct sta_info *sta,
+ 	    !(info->flags & IEEE80211_TX_STAT_AMPDU))
+ 		return;
+ 
+-	sta->deflink.status_stats.lost_packets++;
++	link_sta = ieee80211_get_tx_link_sta(sta, info);
++	link_sta->status_stats.lost_packets++;
+ 	if (sta->sta.tdls) {
+ 		pkt_time = STA_LOST_TDLS_PKT_TIME;
+ 		pkt_thr = STA_LOST_PKT_THRESHOLD;
+@@ -851,14 +874,14 @@ static void ieee80211_lost_packet(struct sta_info *sta,
+ 	 * mechanism.
+ 	 * For non-TDLS, use STA_LOST_PKT_THRESHOLD and STA_LOST_PKT_TIME
+ 	 */
+-	if (sta->deflink.status_stats.lost_packets < pkt_thr ||
+-	    !time_after(jiffies, sta->deflink.status_stats.last_pkt_time + pkt_time))
++	if (link_sta->status_stats.lost_packets < pkt_thr ||
++	    !time_after(jiffies, link_sta->status_stats.last_pkt_time + pkt_time))
+ 		return;
+ 
+ 	cfg80211_cqm_pktloss_notify(sta->sdata->dev, sta->sta.addr,
+-				    sta->deflink.status_stats.lost_packets,
++				    link_sta->status_stats.lost_packets,
+ 				    GFP_ATOMIC);
+-	sta->deflink.status_stats.lost_packets = 0;
++	link_sta->status_stats.lost_packets = 0;
+ }
+ 
+ static int ieee80211_tx_get_rates(struct ieee80211_hw *hw,
+@@ -970,8 +993,12 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 	fc = hdr->frame_control;
+ 
+ 	if (status->sta) {
++		struct link_sta_info *link_sta;
++
+ 		sta = container_of(status->sta, struct sta_info, sta);
+ 
++		link_sta = ieee80211_get_tx_link_sta(sta, info);
++
+ 		if (info->flags & IEEE80211_TX_STATUS_EOSP)
+ 			clear_sta_flag(sta, WLAN_STA_SP);
+ 
+@@ -988,7 +1015,7 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
+ 		    (ieee80211_is_data(hdr->frame_control)) &&
+ 		    (rates_idx != -1))
+-			sta->deflink.tx_stats.last_rate =
++			link_sta->tx_stats.last_rate =
+ 				info->status.rates[rates_idx];
+ 
+ 		if ((info->flags & IEEE80211_TX_STAT_AMPDU_NO_BACK) &&
+@@ -1034,9 +1061,9 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			return;
+ 		} else if (ieee80211_is_data_present(fc)) {
+ 			if (!acked && !noack_success)
+-				sta->deflink.status_stats.msdu_failed[tid]++;
++				link_sta->status_stats.msdu_failed[tid]++;
+ 
+-			sta->deflink.status_stats.msdu_retries[tid] +=
++			link_sta->status_stats.msdu_retries[tid] +=
+ 				retry_count;
+ 		}
+ 
+@@ -1144,12 +1171,15 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 	int rates_idx, retry_count;
+ 	bool acked, noack_success, ack_signal_valid;
+ 	u16 tx_time_est;
++	struct link_sta_info *link_sta;
+ 
+ 	if (pubsta) {
+ 		sta = container_of(pubsta, struct sta_info, sta);
+ 
++		link_sta = ieee80211_get_tx_link_sta(sta, info);
++
+ 		if (status->n_rates)
+-			sta->deflink.tx_stats.last_rate_info =
++			link_sta->tx_stats.last_rate_info =
+ 				status->rates[status->n_rates - 1].rate_idx;
+ 	}
+ 
+@@ -1179,8 +1209,8 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 		struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+ 		if (!acked && !noack_success)
+-			sta->deflink.status_stats.retry_failed++;
+-		sta->deflink.status_stats.retry_count += retry_count;
++			link_sta->status_stats.retry_failed++;
++		link_sta->status_stats.retry_count += retry_count;
+ 
+ 		if (ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS)) {
+ 			if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+@@ -1189,13 +1219,12 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 							acked, info->status.tx_time);
+ 
+ 			if (acked) {
+-				sta->deflink.status_stats.last_ack = jiffies;
++				link_sta->status_stats.last_ack = jiffies;
+ 
+-				if (sta->deflink.status_stats.lost_packets)
+-					sta->deflink.status_stats.lost_packets = 0;
++				link_sta->status_stats.lost_packets = 0;
+ 
+ 				/* Track when last packet was ACKed */
+-				sta->deflink.status_stats.last_pkt_time = jiffies;
++				link_sta->status_stats.last_pkt_time = jiffies;
+ 
+ 				/* Reset connection monitor */
+ 				if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+@@ -1203,10 +1232,10 @@ void ieee80211_tx_status_ext(struct ieee80211_hw *hw,
+ 					sdata->u.mgd.probe_send_count = 0;
+ 
+ 				if (ack_signal_valid) {
+-					sta->deflink.status_stats.last_ack_signal =
++					link_sta->status_stats.last_ack_signal =
+ 							 (s8)info->status.ack_signal;
+-					sta->deflink.status_stats.ack_signal_filled = true;
+-					ewma_avg_signal_add(&sta->deflink.status_stats.avg_ack_signal,
++					link_sta->status_stats.ack_signal_filled = true;
++					ewma_avg_signal_add(&link_sta->status_stats.avg_ack_signal,
+ 							    -info->status.ack_signal);
+ 				}
+ 			} else if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+@@ -1270,8 +1299,11 @@ void ieee80211_tx_rate_update(struct ieee80211_hw *hw,
+ 
+ 	rate_control_tx_status(local, &status);
+ 
+-	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL))
+-		sta->deflink.tx_stats.last_rate = info->status.rates[0];
++	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
++		struct link_sta_info *link_sta = ieee80211_get_tx_link_sta(sta, info);
++
++		link_sta->tx_stats.last_rate = info->status.rates[0];
++	}
+ }
+ EXPORT_SYMBOL(ieee80211_tx_rate_update);
+ 
+-- 
+2.42.0
+
