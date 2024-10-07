@@ -1,44 +1,44 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6CF01DDC19;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD861DDA3B;
 	Mon,  7 Oct 2024 18:15:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728324956; cv=none; b=kxLAQfFFaqB1Y+vqeLltDryIHytbZ9htPItZb6vG8DG6xL+SdVKUik3zSrNgrRltHLQ4/p3VgRZPeanZEn6KpjQAI199MgZIJzP2134t8OWtQQsbnRHg2d90SCBt/I2vFPoqYsT2/D/pw5ldfihFqceuDgSlHIECNYdjAcaztKE=
+	t=1728324957; cv=none; b=ky1Ehy3GhWhub7TclFT4GHw4kAg3Sum95p35OevOqPumqwmF8BfxXpGPv2CIrFZRSYifb5KG6ErRUaStpRPxwTSzcQSWhoXWlvpjB/CKQ4u0ycQ9z05ufUs6rigU0Sa2KAqegiTsORd/thIVvYnuag/V51Fzh+KIerHzred7QV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728324956; c=relaxed/simple;
-	bh=pZacWOFIAim5AEhAgNXAN2f1snSR49nZoWYqivycqD4=;
+	s=arc-20240116; t=1728324957; c=relaxed/simple;
+	bh=/EkMCLx0AbP10BCKySQUIgQd8w6wQL20RgEYBd7heQ4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rmWe2AMi5NGkjfUX7Ooz7OeqHh55iHndM5HO7Ny05PLPEUZhLr1Dr2XgkrpoSQ9hYUDOFjSt8xSO0gdyl9QdvD4Gl7lOBwZPYYQPHcHfboUjneHHX1PjSssBsumydegCsHfZazXnlE/Z9NHfgpCqxcCRrCTJ4YU9UjOUQQ3K2S0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oO2iQcWb; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=f0LuUZyElVfJQVbEL9IGVZzIJ0czGvwpVFkk2PP775zFjXO52+2V5agpKHuOC+KUW9KCoNGcPdL0OocnjUW4y0UYezUPqIiemv6HDGOXkmn0s2U3dChIjh+N/zDgexK9D/YL7rMWVLsCd7upof8Qi8L/Oeqc9kbyPe/+6txZE5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=WplmWmq4; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oO2iQcWb"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="WplmWmq4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=ptGWsTVt8njZ4Flc4XnLbsrxlD+iHZEfaFzIqKK7X6I=;
-	t=1728324955; x=1729534555; b=oO2iQcWbqdOkyjwpwjXoUn2umPjc0AG3SyVzTaaW++uuO/a
-	7yxh8ERdLbax4qYQyl/f8Vt8PQaEvjrTDDKVMWTX+4FbhyHYK2xTN5+T8rS110Mr/pViQ4rWwFYKY
-	dDxoMLORDe/eGhramT22qqpTINw8YCluoZ3eoKg5zZPdGlxF28GrXFBgehVU3PrX5fZG3kveAhdw3
-	YZX4Q90RYIYfzf2kn/yvfvOveqoPG3o5P1Etj56swAa5BjslisjYrW+j+aGo24rsYWSVFy4AEFed9
-	v32445vG+lOnUhSgpPLF+BriA7cSZL2PxwfTIlcOy4IzOCiMMi3gqidxzH6COqHg==;
+	Resent-Cc:Resent-Message-ID; bh=L/qJQRiy1F0iW63iLg2xKj6+4X+m0wja3F7ZSKNSsKo=;
+	t=1728324954; x=1729534554; b=WplmWmq4t8tMfinw+Lv8YxvClK6/RiwUt8rg6xrlf45b/2C
+	Nr48a1p9vVTZ8fompag3mgmvKewFkgz+RiOyl8I3O0KcHfeBD9jDFSFfmh48o9OfTdRmIreRgj43I
+	H8wtMG3K9BxPRKSeWYYWKuu/naiXyC/3Kz2ghu5ZHlA5EuxmMOPQDOR/LRuKPFiIIrxHY3bct0NXi
+	XiLTwJjEdRWvAyoJUKvS4QSqGnYJVRVr1ZWw3lS+mcZyYvax3Y9P3Rdg7zTXy+dCZPsjR8gr+6cXz
+	dgzp1i6/qSnySLlRSDhQg8eEcuYx98oNMMGXZR3ObmFYAgxdd6CH1f/kcbK7DTBg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1sxsGu-00000003TpG-1bGS;
-	Mon, 07 Oct 2024 20:15:52 +0200
+	id 1sxsGt-00000003TpG-38rP;
+	Mon, 07 Oct 2024 20:15:51 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	linux-staging@lists.linux.dev,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] wifi: libertas: don't include lib80211.h
-Date: Mon,  7 Oct 2024 20:10:53 +0200
-Message-ID: <20241007201545.98aa15212cd5.I74bc1f334c02043a238303d3e71c955d0d9b01b0@changeid>
+Subject: [PATCH 2/5] wifi: mwifiex: don't include lib80211.h
+Date: Mon,  7 Oct 2024 20:10:52 +0200
+Message-ID: <20241007201545.74be9cca3eb8.I47b2e8e2d09c0a0be1f8346478d3d908b4021abd@changeid>
 X-Mailer: git-send-email 2.46.2
 In-Reply-To: <20241007181545.63207-7-johannes@sipsolutions.net>
 References: <20241007181545.63207-7-johannes@sipsolutions.net>
@@ -52,26 +52,40 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This isn't used in this driver, and should't be, so
-remove the include.
+This really should never have been used, it's ancient code,
+but then the driver needs its own define for NUM_WEP_KEYS.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/libertas/mesh.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/ioctl.h | 2 +-
+ drivers/net/wireless/marvell/mwifiex/main.h  | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.h b/drivers/net/wireless/marvell/libertas/mesh.h
-index 44c4cd0230a8..e37db10e82a9 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.h
-+++ b/drivers/net/wireless/marvell/libertas/mesh.h
-@@ -7,7 +7,6 @@
+diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+index 516159b721d3..74747d3a379a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
++++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+@@ -8,7 +8,7 @@
+ #ifndef _MWIFIEX_IOCTL_H_
+ #define _MWIFIEX_IOCTL_H_
  
- 
- #include <net/iw_handler.h>
 -#include <net/lib80211.h>
++#define NUM_WEP_KEYS	4
  
- #include "host.h"
- #include "dev.h"
+ enum {
+ 	MWIFIEX_SCAN_TYPE_UNCHANGED = 0,
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 566adce3413c..366590236ed7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -19,7 +19,6 @@
+ #include <linux/if_arp.h>
+ #include <linux/etherdevice.h>
+ #include <net/sock.h>
+-#include <net/lib80211.h>
+ #include <linux/vmalloc.h>
+ #include <linux/firmware.h>
+ #include <linux/ctype.h>
 -- 
 2.46.2
 
