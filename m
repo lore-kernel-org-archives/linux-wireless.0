@@ -1,99 +1,103 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6432318BBB7
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 21:32:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16C5918C02F
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Oct 2024 21:43:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728336749; cv=none; b=i/rcuLUnmTeBJURsSeqVr/FLSLHD8kIu9lRsPGnFxhNvCLCUDXSvtGAV8u6tCI+MVybaZeBdlXVK1M8iuwnnPvwvB0EiyYWIIo+1yZZyAABqDpIQRCxEVj/YGub9GkU/hqEXp/bJL+7m2iIDbGZNTglNaeeLFDwicK4A9j1XQxw=
+	t=1728337398; cv=none; b=lmpAMJMWai3pcJmkc0nY0OGJ0q5W92mQ4VLgral+bjX2cstp5N2htDbSpYuyV0rtBV6cEhIHZNJkEcdDN/N2kL41FGE5StoEdaIhAXAOB058n2fDAu1dZd+p3hqzZgpE65n7A1pUTWWTNz42mlWy+0OXqLFYSiQ9KOlZZDylnwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728336749; c=relaxed/simple;
-	bh=gL5/7aoZZbjUZOM1kABtEgwg/a+SkrQ2Kv6ccoibTis=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BIjiM3iHgNvDnFOVxyOrNhR+pvHWytfGOCbqMKAirWkJfVa0PcAp+5V7G6orb2kcKvgSPlsLRHahs+IbsVS0qc/Vci1i1IRCT2O0AUAShGv4U6+IMKWpB+AyVq0lc5XpGoSsjM8jyrSsKB8NgysBELkAnIi5OxG+mKMA+dMslSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Gt9m/nbM; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728337398; c=relaxed/simple;
+	bh=HLO4h7Er2dQCkigbay7dw3b/iyit9Xqpj1z6PBvMPF0=;
+	h=From:To:CC:In-Reply-To:References:Subject:Message-ID:Date:
+	 MIME-Version:Content-Type; b=cMD6jJ42jpSyLaH2NFg8dZG0ZtE1cr1HCdEJAZUJe4A/tI/XzxiKD3lveidqv1H/UVHROuzzHKC+oHujTjaFzNMeZrmIVbXmKbqiU6KPyEFZhko06wAcLCGvkF1ECRBknW2WFGmwhPMHSMQoxviaoLbkXk1J/N/eivHhCfMDLoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=gs7vFJ6w; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gt9m/nbM"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a995627a0daso181584666b.3
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Oct 2024 14:32:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728336747; x=1728941547; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ekm5gKz417Yao8spvCZDf7dM5FZumrXk9Uz0nUEH35E=;
-        b=Gt9m/nbMDmjt2yK0HSjWP2u1CKzAFd5oqD1Pgu0B1o3mOGgIJrSK5iqF52/UCVJK7c
-         Ndljtbp57hpn7cZOrv3mSJPAfxUIMd1JOb0QQ+VDBXOK1pxVvtcy0SlSuJXK7gRiUyIL
-         4Zzsxg4QxVySW84GcKmBkoQnefTPegDbnq6l/5E7LlqgZyEfL/j/SBpttjGdJaFuRdRn
-         aKaR61kdxV07Drm5VaPBWe0qsKlGZI7R5p1Kd7NQvq7kDfwbQTxwBJbStFry9oRy+EVr
-         pAuJUgbxDfzVUjJlKxJpn/LyY1IheQPrrG81h0vRdm7WCp2jIgaadGytD/13pbLuNHkx
-         jyQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728336747; x=1728941547;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ekm5gKz417Yao8spvCZDf7dM5FZumrXk9Uz0nUEH35E=;
-        b=TvfS4J6KZbgbf/QQINL3ztS0CQfiJbBfXwjQo/DDBxwcXU82ZThEJxuG4A9ijh/WPw
-         lVsoQeQgfC0ohz4faCEkcJP+qM2/iB3n6b9YWWTIIN6tb6/HdC4r4RCIs90uDJFgQC8v
-         8EtEg+MldEUawCoYyg16ZgPx0DShdKVavoNHmGRcdkmUhUaLeHaxrYnrnk8VRGELckxU
-         ekKYJx5pwne9H8hc8uPNHEfoFIdmBhiiwUdX/a2ja2JyvoOCLfeWX4OrnJ34R4TJYX3Y
-         3K2ArwcPcjZcF7exLZnwBHKfDcNTU6OGPqhJdhMp7ZQj3Y0n6DKZBGcOz9Ebz5wpUGKR
-         D5ag==
-X-Forwarded-Encrypted: i=1; AJvYcCWpx6WGPi2XPZOk//+snpxudZfCMUpLkMBPOunZtEdsWMH5KSFpgAMc+zLMt1P9hid2kXzOuDVcSKGJv9SGxQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxxiskydsngWNR/Rek5ddnMzVYnjWaDqoTbY6+yqbCwEzc/BYRb
-	jhgw50TohlQNrxD4fYX8kJGAbE0wrwsgAlBkcwB7x3xs+/Whlw3M6/3jIPS2
-X-Google-Smtp-Source: AGHT+IGgR2EkpaGxTSdHmhGbKh+kRFvmuzoBYzdgJGsL0ZyNNvwMDINlinsWWqTJqdZxhuJ58Vq+Iw==
-X-Received: by 2002:a17:907:318d:b0:a90:41a9:7c3e with SMTP id a640c23a62f3a-a991c0af160mr1376735766b.65.1728336746406;
-        Mon, 07 Oct 2024 14:32:26 -0700 (PDT)
-Received: from [192.168.2.105] (p54a0712c.dip0.t-ipconnect.de. [84.160.113.44])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a994ada19fcsm270665266b.183.2024.10.07.14.32.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Oct 2024 14:32:26 -0700 (PDT)
-Message-ID: <b6ff86e3-56a1-43d3-83b2-01818684f076@gmail.com>
-Date: Mon, 7 Oct 2024 23:32:25 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="gs7vFJ6w"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 497E1okP032476;
+	Mon, 7 Oct 2024 21:43:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	+s+ezLTtzWkWD64tzndFcNBEwJ0x/KwCHp1AAUBTMZ4=; b=gs7vFJ6w9TJmYo+o
+	Nq6PuzHxx56+5i5Y8E2FnVgtdqQImLkblO6WImVEgzXqKpu6Vrty1VlpbFJhIWwF
+	7jKCI5I90DUhMSkxSN82P9gOCgcfkVnYZBxwEu0FDfqaq/CfgjXxZyCOaWRzrtA4
+	UeCbWjcWWwkMifmW5XwSnF0dhPwr2LcuUVlz4skd4ejXVqigyHa1adJsA6jw+CCH
+	5TUDIFlG1ghrmnzs1Mt6G5v+vh2HJ+nXwPb6IlXdW8LD0lgRru3D0J8zmRmv/+js
+	TNkZ3WhlknqGAWjVjYpuK893DbFVcrkpKflLEmh/a9DieEdgmtggjUAAHKOgvTwI
+	WDZFhw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 422xv8dcpb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 07 Oct 2024 21:43:13 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 497LhDDq030133
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 7 Oct 2024 21:43:13 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 7 Oct 2024
+ 14:43:12 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+To: <ath12k@lists.infradead.org>,
+        Roopni Devanathan
+	<quic_rdevanat@quicinc.com>
+CC: <linux-wireless@vger.kernel.org>
+In-Reply-To: <20241004085915.1788951-1-quic_rdevanat@quicinc.com>
+References: <20241004085915.1788951-1-quic_rdevanat@quicinc.com>
+Subject: Re: [PATCH v2] wifi: ath12k: Modify print_array_to_buf() to
+ support arrays with 1-based semantics
+Message-ID: <172833739273.2581613.18143201251976678958.b4-ty@quicinc.com>
+Date: Mon, 7 Oct 2024 14:43:12 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/6] staging: rtl8192e: delete the driver
-To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-staging@lists.linux.dev, Johannes Berg <johannes.berg@intel.com>
-References: <20241007182706.66888-8-johannes@sipsolutions.net>
- <20241007202707.d0e59cdd2cdc.I8e4d74a6e1d09eefe1f5e2e208735ba2ccef1d4f@changeid>
-Content-Language: en-US
-From: Philipp Hortmann <philipp.g.hortmann@gmail.com>
-In-Reply-To: <20241007202707.d0e59cdd2cdc.I8e4d74a6e1d09eefe1f5e2e208735ba2ccef1d4f@changeid>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: xrjqsasKux_IHq2G6hChfrVE9Vy29x-e
+X-Proofpoint-GUID: xrjqsasKux_IHq2G6hChfrVE9Vy29x-e
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ impostorscore=0 phishscore=0 malwarescore=0 suspectscore=0 bulkscore=0
+ spamscore=0 mlxlogscore=494 adultscore=0 clxscore=1015 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
+ definitions=main-2410070149
 
-On 10/7/24 20:26, Johannes Berg wrote:
-> From: Johannes Berg<johannes.berg@intel.com>
+
+On Fri, 04 Oct 2024 14:29:15 +0530, Roopni Devanathan wrote:
+> The API print_array_to_buf() currently supports printing
+> arrays with 0 indexing. In some cases, a few arrays need
+> to be printed with 1-based indexing, i.e., array should be
+> printed, starting with 1.
 > 
-> This driver is using lib80211 and any driver that plans to ever
-> leave staging should never have done that, so remove the driver
-> to enable cleaning up lib80211 into libipw inside the old Intel
-> drivers.
+> Add a new version of print_array_to_buf(), named
+> print_array_to_buf_index(), which implements the functionality
+> of print_array_to_index(), but with an extra variable, pointing
+> to the index starting with which the array should be printed.
+> Modify print_array_to_buf() to call
+> print_array_to_buf_index() with 0 as the starting index.
 > 
-> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
-> ---
+> [...]
 
-Hi Johannes,
+Applied, thanks!
 
-this driver is not only working, it is also supporting a form factor 
-that is usable and is available on the used hardware market.
+[1/1] wifi: ath12k: Modify print_array_to_buf() to support arrays with 1-based semantics
+      commit: e985dc55029707b7019819d570bae4225effd2e4
 
-Is it possible to migrate the driver from lib80211 to libipw?
+Best regards,
+-- 
+Jeff Johnson <quic_jjohnson@quicinc.com>
 
-It does not have to be you who is doing this. How urgent is it to remove 
-this driver?
-
-Thanks for your support.
-
-Bye Philipp
