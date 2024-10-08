@@ -1,115 +1,100 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7981E32BB
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Oct 2024 07:57:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E577923A0
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Oct 2024 08:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728374259; cv=none; b=D7NdLguigRi89jZYgHKO1BabL6Gy3Smz/fw0ncRdAp2/EmkjnSCd4whIJpQz56LzDDKjPdLoYwr9ncvHRj1IYwr+v9UeVLAoxp/UblL/Uk53geqU8gmNFFku/Ds9dpTnAoOT0qPPHNp5TWIGH7bSIQXgxM83+eC4w35ZF9IcdLk=
+	t=1728377374; cv=none; b=Q761wC9hJIe7kRIdvcPWgZrwH+MAiT2NLIigT6XBbX/Hujs6RzYXTJtqgaH3uZzzCOY9jeqnAVbhLP5K+ipc48A1SfntfvCW60j/x10e12DnER+aDVLPo43sOruwil4CI48IRl1JCwJ54Qslzl7CfVMM9BSoXiDfTnkNLk13S0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728374259; c=relaxed/simple;
-	bh=fopNFE7NuhHMHpnzHuKTmDO/ZQRsyCWbQabMrLz2hGY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e64AJsZuSG6aZ5DmO42mk4ORTbh3y4dV+FppUj+XARMUZLVgW0uFvFQ/0xGGjReF0RlozpGKEWzNpO+AF9XuGwKCAMaEw37Ocj0t6VfmJ+TgN2/m4k6v3Xu8lYn2bfXnjUbSGsI/sI32L1s8DbySdgwbPe7fXIDQR42mcR2FWhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=C4loo5g8; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1728377374; c=relaxed/simple;
+	bh=kYtbuiOa/QQD3gP7crBGHopFIjpD0XL8QxLdDPshqbE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Etm+cXhzhjnggn/Q9Yn2UoHK5GTrOBg7ObFW52MB7ZoaNohADXkoeJ7TM7kJacLedHV9Yqt4ffTFanU5Z+jJqEeqGt0htDD+dfhf+zYWEPpNgXLZLSDBzb5wtCNzRF69D5dvcKtqYfgQZmf3zhSCJnjcVBqcmTOEoWKb4hchplU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=JGWVDFdC; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="C4loo5g8"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=vC4tB9wjEBfLq1aagX37WEC/zEjzqPNvnEf8WCHKNTs=; b=C4loo5g8xMJVbcYV4MGbRIwLEs
-	u2B8ilRZyKIdQqJJ3AQVLdn4+Bkw4260GFi6XSKInwvlCdRs1/2xa3tFoqfnxrrbbBEYwm2EkBN8N
-	EE2M6zznqDAVk+hvKVYJhuA1u7i5MxWPGEjZ4qI9aWJPRfEnNYYkYgtZUJnSsVlXu2E0=;
-Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1sy4ZN-006H62-1Z;
-	Tue, 08 Oct 2024 09:23:45 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v4 00/11] wifi: cfg80211/mac80211: improve support for multiple radios
-Date: Tue,  8 Oct 2024 09:23:33 +0200
-Message-ID: <cover.bd168805c299851d01269473eb64e7b05edc41d6.1728372192.git-series.nbd@nbd.name>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="JGWVDFdC"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4984TVgS010058;
+	Tue, 8 Oct 2024 08:49:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	DSy7UTjBLw12etpFlwiEM1P+BXe0S0NJNh1K6d0Pgc4=; b=JGWVDFdCi8H/DofM
+	S+DgLIKSSckxRm40E5I77HEYqV7HAZlEJXeHnagrj0uY9+ncKPQOztTH02GBenFQ
+	KrXiVHz+OZefcZCV/LKjba9I6xCnhEo5z08fE6iiAtEvdi8/908093+40/xdwB4G
+	XDBN9BDn7BQHdAR9/FcD14VrqYCFrTKD+CIhu0pJQ8Pw8A+4t7vyPu1Tj3eUeFlH
+	anbI2JZY7GWyT8FUt6wzBfqUJ/JC0S/6o+IZy/csfLl+X0jlztrqdAeK4QaLN3ee
+	Sz0pJvbgPpSM3IKArO9X4VMapksHehamLpRXypaih9Ugd450W15PqM/LUiX9XJfz
+	njjtpw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 424wrc0jvt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 08 Oct 2024 08:49:25 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4988nPJM029107
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 8 Oct 2024 08:49:25 GMT
+Received: from [10.152.202.18] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 8 Oct 2024
+ 01:49:23 -0700
+Message-ID: <6fc2d696-5d8c-42a0-9264-57f048093b74@quicinc.com>
+Date: Tue, 8 Oct 2024 14:19:20 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: mac80211: re-order assigning channel in activate
+ links
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>
+References: <20241001085034.2745669-1-quic_adisi@quicinc.com>
+ <93df47a867ee1f8d84cabdbc953707eab2ea3704.camel@sipsolutions.net>
+ <6504caf7-e9d5-49ff-983e-73335f8ee3a1@quicinc.com>
+ <97054998-0793-4c71-a202-dd5167fcc24d@quicinc.com>
+ <a66621974d1bdaf4ef9c922907786cf757cb4fac.camel@sipsolutions.net>
+Content-Language: en-US
+From: Aditya Kumar Singh <quic_adisi@quicinc.com>
+In-Reply-To: <a66621974d1bdaf4ef9c922907786cf757cb4fac.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 3Oa_dI6R6wepz2mlXmDFYNUu1pysRLF8
+X-Proofpoint-ORIG-GUID: 3Oa_dI6R6wepz2mlXmDFYNUu1pysRLF8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
+ impostorscore=0 suspectscore=0 mlxscore=0 clxscore=1015 spamscore=0
+ adultscore=0 priorityscore=1501 phishscore=0 lowpriorityscore=0
+ mlxlogscore=785 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410080057
 
-This series adds support for restricting vifs to a set of radios.
-The allowed radios mask is used to restrict scanning, off-channel activity,
-and can be used by the driver to selectively enable monitoring and manage
-radio state.
-It also adds support for monitoring on multiple channels at the same time.
+On 10/8/24 13:06, Johannes Berg wrote:
+> On Tue, 2024-10-08 at 10:43 +0530, Aditya Kumar Singh wrote:
+>>
+>>
+>> Is your testing complete? Do you see any issues with this change?
+> 
+> Yeah, it can be made to work, but we're still discussing the best way
+> with some internals (slowly, due to the holidays in Israel).
+> 
+> I think you can just leave this patch as is, and I'll keep it pending in
+> patchwork until we figure it out, and then I'll just amend it with the
+> iwlwifi changes when I merge it.
 
-Changes since RFC:
- - split cfg80211 and mac80211 changes
- - remove mac80211 per-radio tracking for monitor state
- - remove per-radio start/stop calls
- - remove radio index from rx status
- - rewrite multi-channel monitor support
+Sure, thanks.
 
-Changes since PATCH:
- - fix commit commit descriptions regarding remain-on-channel
- - fix return code in ibss scan change
- - fix wdev->radio_mask initialization
 
-Changes since PATCH v2:
- - fix build error with tracing on .set_monitor_channel change
-
-Changes since PATCH v3:
- - fix another tracing build error
-
-Felix Fietkau (11):
-  wifi: cfg80211: add option for vif allowed radios
-  wifi: mac80211: use vif radio mask to limit ibss scan frequencies
-  wifi: mac80211: use vif radio mask to limit creating chanctx
-  wifi: cfg80211: report per wiphy radio antenna mask
-  wifi: mac80211: remove status->ampdu_delimiter_crc
-  wifi: cfg80211: pass net_device to .set_monitor_channel
-  wifi: mac80211: add flag to opt out of virtual monitor support
-  wifi: cfg80211: add monitor SKIP_TX flag
-  wifi: mac80211: add support for the monitor SKIP_TX flag
-  wifi: mac80211: refactor ieee80211_rx_monitor
-  wifi: mac80211: filter on monitor interfaces based on configured channel
-
- drivers/net/wireless/ath/wil6210/cfg80211.c        |  1 +-
- drivers/net/wireless/marvell/libertas/cfg.c        |  1 +-
- drivers/net/wireless/microchip/wilc1000/cfg80211.c |  3 +-
- include/net/cfg80211.h                             | 18 ++++-
- include/net/mac80211.h                             | 12 +--
- include/uapi/linux/nl80211.h                       | 10 ++-
- net/mac80211/cfg.c                                 | 45 ++++++----
- net/mac80211/chan.c                                | 27 +++++-
- net/mac80211/debugfs.c                             |  1 +-
- net/mac80211/driver-ops.c                          |  1 +-
- net/mac80211/ieee80211_i.h                         |  2 +-
- net/mac80211/iface.c                               | 24 +++--
- net/mac80211/rx.c                                  | 71 ++++++++-------
- net/mac80211/scan.c                                | 16 ++-
- net/mac80211/status.c                              |  5 +-
- net/mac80211/tx.c                                  |  6 +-
- net/mac80211/util.c                                | 14 ++-
- net/wireless/chan.c                                |  3 +-
- net/wireless/core.c                                |  2 +-
- net/wireless/core.h                                |  1 +-
- net/wireless/nl80211.c                             | 67 +++++++++++---
- net/wireless/rdev-ops.h                            |  5 +-
- net/wireless/scan.c                                | 10 +-
- net/wireless/trace.h                               | 10 +-
- net/wireless/util.c                                | 29 ++++++-
- net/wireless/wext-compat.c                         |  2 +-
- 26 files changed, 289 insertions(+), 97 deletions(-)
-
-base-commit: 5a4d42c1688c88f3be6aef46b0ea6c32694cd2b8
 -- 
-git-series 0.9.1
+Aditya
+
