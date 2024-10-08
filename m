@@ -1,69 +1,104 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDA6414E2F5
-	for <linux-wireless@vger.kernel.org>; Tue,  8 Oct 2024 07:37:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 784C41C304C
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Oct 2024 07:57:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728373024; cv=none; b=t2CbiKKFJm+QyvdHlkDqR9olE13CJTlaaBsQ2U+rQOLm6XLe0g/upGfCUiiwcq05CBwU2G/E4U6hazE9yoeCTU6BkP9H3fLLDTfJ+UMsGKJcSOuJdmgp0fDCgPjbQEiof51fV0Nax0mq1Tngn9uZvQ1yi2sysjEyK36sBfZMqsQ=
+	t=1728374251; cv=none; b=BK91ZttIFZUmKy9oAkfhCXULodjfb+abPoWM0ZbIbeI4G5raqO6PoreELUlX8vKjxzCKVCdTvCh3VlmwMW+L+LmNjtMMuS3/84bjKmp3k89PFn+dGGtwPBY3Phd8QdZZJ55Ey9V1sNnnTD4j6f79j/roNW838s+6RSXA+mZt5OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728373024; c=relaxed/simple;
-	bh=XvGKBMhZDMW4oeX0knao9Wj8IrRJFInNfUY359OFN7o=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=SjlXXctBjtwQ9UUH1zx2o+fe75nGHqB/LQ5UDPeGw148En/sLqIEMYaG4Q+0K0qlBivY4Pw4rV1soaGuX8STEAbZ/8pYu1smxCqxEhTB+XQmft+Dr6qz9CDwa+OUP9cRz95kVNDPPTnxDm4iLVK0PzJFEkKaxAKT1gccphQnhcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=aTuzmyHm; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1728374251; c=relaxed/simple;
+	bh=aeUM8FvkcJXeh2rEzqfiDIyJPOV315gxg9y2Ll80+6w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=LEB6Uza/u/m3LBybYL9/7Z89B7dZ9CLLnY6kV7hIRwq/lJhI/Xk7Om35jcgQV+oapE2B+rMj6Jdh9aHrmkkM+BH6duexyTOa0R1pK4ZyRmKPsfESFYUOPxw2eGUTwJLUpQ2vAdtEmzCFPigTvMARhvDdTLQYXF1jJViNgifv9TA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=iu1bHZW+; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="aTuzmyHm"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=XvGKBMhZDMW4oeX0knao9Wj8IrRJFInNfUY359OFN7o=;
-	t=1728373023; x=1729582623; b=aTuzmyHmnsw9v3JU9fLfRVl5YYzjfxrjrv1qJvdUJvCgdLu
-	9xwdS0EgTo5hiJD7W+iMfwsjYtOnHZLNXCpr85xnHZ67gSaIGd9+wroYOdiw/OwKHMhAvcrJX04Z6
-	PeIiVLb+jzCxCne+TWNlB6ZphHUi107AJE45dAq6hTQXuPXvJm/qzvW2cvmmhlGeloF6GqzPQiWDf
-	E95LAgFrNn3sZAswbJrN0dEWSndTiax5+tzEZ5EOY6zCxX+U9zI5gWms4f5/2HzF+Q4+D0cn94Szd
-	YM7I5GwcoMfD1Yr1xPSGlhf9mcREXJBFXaMamhmUEI0kqeAFKDsC3gu9OMCB3N1g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1sy4mB-000000048Tr-0dAa;
-	Tue, 08 Oct 2024 09:36:59 +0200
-Message-ID: <a66621974d1bdaf4ef9c922907786cf757cb4fac.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] wifi: mac80211: re-order assigning channel in
- activate links
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Aditya Kumar Singh <quic_adisi@quicinc.com>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
-Date: Tue, 08 Oct 2024 09:36:58 +0200
-In-Reply-To: <97054998-0793-4c71-a202-dd5167fcc24d@quicinc.com>
-References: <20241001085034.2745669-1-quic_adisi@quicinc.com>
-	 <93df47a867ee1f8d84cabdbc953707eab2ea3704.camel@sipsolutions.net>
-	 <6504caf7-e9d5-49ff-983e-73335f8ee3a1@quicinc.com>
-	 <97054998-0793-4c71-a202-dd5167fcc24d@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="iu1bHZW+"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=wdfuZ/s3Yt6/3Pc5yrFI9iwVpSkMn8jgFUdSBK0EWBY=; b=iu1bHZW+iowYosNDSh8jyLLfZu
+	Q3wn7kWoLjiGGbQWZSXXw4iIe/plQOdFB3l3QhZZSHwcwtu9fA20WbfZxX5znmnOg6UuDKjS67gzb
+	gc5TjqK6TWi0pswCO+G1EhIF9Y4WIjGPnJQx2lcMaWs8OVKOIXzzMUdSDpUDHmYV5qAc=;
+Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1sy4ZO-006H62-0L;
+	Tue, 08 Oct 2024 09:23:46 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v4 03/11] wifi: mac80211: use vif radio mask to limit creating chanctx
+Date: Tue,  8 Oct 2024 09:23:36 +0200
+Message-ID: <7ca99ea35e60b4cbcbb6e0ea9cb73d5e1134798b.1728372192.git-series.nbd@nbd.name>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <cover.bd168805c299851d01269473eb64e7b05edc41d6.1728372192.git-series.nbd@nbd.name>
+References: <cover.bd168805c299851d01269473eb64e7b05edc41d6.1728372192.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2024-10-08 at 10:43 +0530, Aditya Kumar Singh wrote:
->=20
->=20
-> Is your testing complete? Do you see any issues with this change?
+Reject frequencies not supported by any radio that the vif is allowed to use.
 
-Yeah, it can be made to work, but we're still discussing the best way
-with some internals (slowly, due to the holidays in Israel).
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/chan.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-I think you can just leave this patch as is, and I'll keep it pending in
-patchwork until we figure it out, and then I'll just amend it with the
-iwlwifi changes when I merge it.
-
-johannes
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index cca6d14084d2..fbc3b28953a6 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1169,7 +1169,7 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ static bool
+ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 			       const struct ieee80211_chan_req *chanreq,
+-			       int *radio_idx)
++			       u32 radio_mask, int *radio_idx)
+ {
+ 	struct wiphy *wiphy = local->hw.wiphy;
+ 	const struct wiphy_radio *radio;
+@@ -1180,6 +1180,9 @@ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 		return true;
+ 
+ 	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
+ 		radio = &wiphy->radio[i];
+ 		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
+ 			continue;
+@@ -1213,7 +1216,9 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+ 		if (ieee80211_can_create_new_chanctx(local, -1) &&
+-		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
++		    ieee80211_find_available_radio(local, chanreq,
++						   sdata->wdev.radio_mask,
++						   &radio_idx))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+ 							false, radio_idx);
+ 		else
+@@ -1883,7 +1888,9 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	/* Note: context is now reserved */
+ 	if (ctx)
+ 		reserved = true;
+-	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
++	else if (!ieee80211_find_available_radio(local, chanreq,
++						 sdata->wdev.radio_mask,
++						 &radio_idx))
+ 		ctx = ERR_PTR(-EBUSY);
+ 	else
+ 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
+-- 
+git-series 0.9.1
