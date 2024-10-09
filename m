@@ -1,45 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6183C175D4C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618DE187FF2
 	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:26:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728462364; cv=none; b=eBUT9sPmFsxx3L/uIfGn0PHwBvsnTObVPjYV1xiQhNArdQ3JOwApY0nqt+oJmO69c7eB5fzEU+g74RnDJMgVxkkc9BZb+FPK7it6lpJncYWj6Eq1rUm8Hk0lav+jyShEO2XmIf7Ks3KqvKvP8aVBWF6Tl4KKjEy7oLMSsMW7MkQ=
+	t=1728462364; cv=none; b=C/pruQp7Voe99RWnGvmeittbBw/7nnneWuGSMwbXW19UvUVYq2Ei/zDme3ip13MrhpifwLyVkZnVjCTB5zhxT/F8cRjCfCgHoiLPau5yovJBU7Ruo0mOTmaYOsjNyZhqFQM9qU9noYD0F6h4zxijq+4jfmpoF+eTX4SlWjpB3dI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728462364; c=relaxed/simple;
-	bh=P930Ykv+h5orKUs9MbaG2mbVd9rewG7DgduGrxcEl9Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EU/4xXOnxNFZPRJ2xnKgo1YSCCPSqVTP8lezYdXE82vi3KDjoTZ9uz90c1RLtuO9C1ROm9e8GhP81mKYndQI2eF99MfThak4SSw6b1FlVTf2dxVVIPhwPwj1O01dENYHWbkozEJHuI6SQ6j0ee1s86w8fDR9DgzBRb+LXDilczg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=mX1nHg/p; arc=none smtp.client-ip=46.4.11.11
+	bh=b/yLIkg/yiNfvehRW02BhyWkWPJmKk72iWusrDk8o6g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PHHjGgfQFxAKlDqbqNLLTWFk/e/aAoA1qi0DC9I0/mjyrMqaJXGurptyeA4dktz5VIiEQH4d/spZE5lfU3K5dPDl+3Gk2cFCIL070Rq/FmT37yxEKUFFtDoRqPLoF6gW1WfzDAsb2Kz3WsEPxeY6id8VU/hBsXlyivgx3KoWTOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=RNggVLpZ; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="mX1nHg/p"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="RNggVLpZ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=as6tTioBB5ZgfyOAWWB0bnvPyZPVXbmoFiHLzy8mT/E=; b=mX1nHg/pdMI0bSApqd8caQKDRZ
-	4ix1WMDTBJaTOlhSj04paFK5bRL+TzVUrcOQAOkeQwYnTNqwaS3GWYZNnJV3LvzvmwsBcscVNVUWE
-	mvpP4cd95hXbuvaGateMDQyzO1Aiios796opbebr1I9tPSKCSnzl+ur7DoRA2nxjYu1s=;
+	bh=7l2QtOp5DjY/MwHqoe19TOPD5Gm6OJ6wM+QafhonUok=; b=RNggVLpZXZeAiQmftSIhGyhRA5
+	vfRwj1qACIUEylFOuxegAszW92s55wlBkvW4vPcz9ZWGfn6agPzLUgxg9h7ge+Vmn3REz0ZULvR35
+	9FHjNUbt18esKrYc9FYSsmM/Q0wGTFWWVs9Nqh1vwucHJLv9QmduyvOwwsv6gLASdY8s=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1syS14-006e0I-19;
-	Wed, 09 Oct 2024 10:25:54 +0200
+	id 1syS12-006e0I-2i;
+	Wed, 09 Oct 2024 10:25:52 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v5 06/11] wifi: cfg80211: pass net_device to .set_monitor_channel
-Date: Wed,  9 Oct 2024 10:25:47 +0200
-Message-ID: <35fa652dbfebf93343f8b9a08fdef0467a2a02dc.1728462320.git-series.nbd@nbd.name>
+Subject: [PATCH v5 00/11] wifi: cfg80211/mac80211: improve support for multiple radios
+Date: Wed,  9 Oct 2024 10:25:41 +0200
+Message-ID: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
-In-Reply-To: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
-References: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,200 +45,76 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Preparation for allowing multiple monitor interfaces with different channels
-on a multi-radio wiphy.
+This series adds support for restricting vifs to a set of radios.
+The allowed radios mask is used to restrict scanning, off-channel activity,
+and can be used by the driver to selectively enable monitoring and manage
+radio state.
+It also adds support for monitoring on multiple channels at the same time.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c        |  1 +
- drivers/net/wireless/marvell/libertas/cfg.c        |  1 +
- drivers/net/wireless/microchip/wilc1000/cfg80211.c |  3 ++-
- include/net/cfg80211.h                             |  1 +
- net/mac80211/cfg.c                                 |  1 +
- net/wireless/chan.c                                |  3 ++-
- net/wireless/core.h                                |  1 +
- net/wireless/nl80211.c                             |  2 +-
- net/wireless/rdev-ops.h                            |  5 +++--
- net/wireless/trace.h                               | 10 ++++++----
+Changes since RFC:
+ - split cfg80211 and mac80211 changes
+ - remove mac80211 per-radio tracking for monitor state
+ - remove per-radio start/stop calls
+ - remove radio index from rx status
+ - rewrite multi-channel monitor support
+
+Changes since PATCH:
+ - fix commit commit descriptions regarding remain-on-channel
+ - fix return code in ibss scan change
+ - fix wdev->radio_mask initialization
+
+Changes since PATCH v2:
+ - fix build error with tracing on .set_monitor_channel change
+
+Changes since PATCH v3:
+ - fix another tracing build error
+
+Changes since PATCH v4:
+ - add missing documentation
+ - clean up commit description and return code handling for ibss scan
+ - do not report invalid radio antenna mask
+
+Felix Fietkau (11):
+  wifi: cfg80211: add option for vif allowed radios
+  wifi: mac80211: use vif radio mask to limit ibss scan frequencies
+  wifi: mac80211: use vif radio mask to limit creating chanctx
+  wifi: cfg80211: report per wiphy radio antenna mask
+  wifi: mac80211: remove status->ampdu_delimiter_crc
+  wifi: cfg80211: pass net_device to .set_monitor_channel
+  wifi: mac80211: add flag to opt out of virtual monitor support
+  wifi: cfg80211: add monitor SKIP_TX flag
+  wifi: mac80211: add support for the monitor SKIP_TX flag
+  wifi: mac80211: refactor ieee80211_rx_monitor
+  wifi: mac80211: filter on monitor interfaces based on configured channel
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  1 +-
+ drivers/net/wireless/marvell/libertas/cfg.c        |  1 +-
+ drivers/net/wireless/microchip/wilc1000/cfg80211.c |  3 +-
+ include/net/cfg80211.h                             | 21 ++++-
+ include/net/mac80211.h                             | 12 +--
+ include/uapi/linux/nl80211.h                       | 10 ++-
+ net/mac80211/cfg.c                                 | 45 ++++++----
+ net/mac80211/chan.c                                | 27 +++++-
+ net/mac80211/debugfs.c                             |  1 +-
+ net/mac80211/driver-ops.c                          |  1 +-
+ net/mac80211/ieee80211_i.h                         |  2 +-
+ net/mac80211/iface.c                               | 24 +++--
+ net/mac80211/rx.c                                  | 71 ++++++++-------
+ net/mac80211/scan.c                                | 22 ++---
+ net/mac80211/status.c                              |  5 +-
+ net/mac80211/tx.c                                  |  6 +-
+ net/mac80211/util.c                                | 14 ++-
+ net/wireless/chan.c                                |  3 +-
+ net/wireless/core.c                                |  2 +-
+ net/wireless/core.h                                |  1 +-
+ net/wireless/nl80211.c                             | 68 ++++++++++++--
+ net/wireless/rdev-ops.h                            |  5 +-
+ net/wireless/scan.c                                | 10 +-
+ net/wireless/trace.h                               | 10 +-
+ net/wireless/util.c                                | 29 ++++++-
  net/wireless/wext-compat.c                         |  2 +-
- 11 files changed, 20 insertions(+), 10 deletions(-)
+ 26 files changed, 295 insertions(+), 101 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index e8f1d30a8d73..a1a0a9223e74 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1493,6 +1493,7 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- }
- 
- static int wil_cfg80211_set_channel(struct wiphy *wiphy,
-+				    struct net_device *dev,
- 				    struct cfg80211_chan_def *chandef)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index b700c213d10c..c1f462bb6a3f 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -486,6 +486,7 @@ static int lbs_add_wps_enrollee_tlv(u8 *tlv, const u8 *ie, size_t ie_len)
-  */
- 
- static int lbs_cfg_set_monitor_channel(struct wiphy *wiphy,
-+				       struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef)
- {
- 	struct lbs_private *priv = wiphy_priv(wiphy);
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index eb37b228d54e..9977be0020fe 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -231,6 +231,7 @@ struct wilc_vif *wilc_get_wl_to_vif(struct wilc *wl)
- }
- 
- static int set_channel(struct wiphy *wiphy,
-+		       struct net_device *dev,
- 		       struct cfg80211_chan_def *chandef)
- {
- 	struct wilc *wl = wiphy_priv(wiphy);
-@@ -1424,7 +1425,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct wilc_vif *vif = netdev_priv(dev);
- 	int ret;
- 
--	ret = set_channel(wiphy, &settings->chandef);
-+	ret = set_channel(wiphy, dev, &settings->chandef);
- 	if (ret != 0)
- 		netdev_err(dev, "Error in setting channel\n");
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 636b9b32aa31..045866b9ffb9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4696,6 +4696,7 @@ struct cfg80211_ops {
- 					     struct ieee80211_channel *chan);
- 
- 	int	(*set_monitor_channel)(struct wiphy *wiphy,
-+				       struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef);
- 
- 	int	(*scan)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 847304a3a29a..b1ea7006f8d3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -879,6 +879,7 @@ static int ieee80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- }
- 
- static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
-+					 struct net_device *dev,
- 					 struct cfg80211_chan_def *chandef)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index e579d7e1425f..035f3b099d0f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -1628,6 +1628,7 @@ bool cfg80211_reg_check_beaconing(struct wiphy *wiphy,
- EXPORT_SYMBOL(cfg80211_reg_check_beaconing);
- 
- int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev,
- 				 struct cfg80211_chan_def *chandef)
- {
- 	if (!rdev->ops->set_monitor_channel)
-@@ -1635,7 +1636,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 	if (!cfg80211_has_monitors_only(rdev))
- 		return -EBUSY;
- 
--	return rdev_set_monitor_channel(rdev, chandef);
-+	return rdev_set_monitor_channel(rdev, dev, chandef);
- }
- 
- bool cfg80211_any_usable_channels(struct wiphy *wiphy,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 3b3e3cd7027a..4c45f994a8c0 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -516,6 +516,7 @@ static inline unsigned int elapsed_jiffies_msecs(unsigned long start)
- }
- 
- int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+				 struct net_device *dev,
- 				 struct cfg80211_chan_def *chandef);
- 
- int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ab87587df408..72749cdda091 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3567,7 +3567,7 @@ static int __nl80211_set_channel(struct cfg80211_registered_device *rdev,
- 	case NL80211_IFTYPE_MESH_POINT:
- 		return cfg80211_set_mesh_channel(rdev, wdev, &chandef);
- 	case NL80211_IFTYPE_MONITOR:
--		return cfg80211_set_monitor_channel(rdev, &chandef);
-+		return cfg80211_set_monitor_channel(rdev, dev, &chandef);
- 	default:
- 		break;
- 	}
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index f5adbf6b5c84..adb6105bbb7d 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -445,11 +445,12 @@ rdev_libertas_set_mesh_channel(struct cfg80211_registered_device *rdev,
- 
- static inline int
- rdev_set_monitor_channel(struct cfg80211_registered_device *rdev,
-+			 struct net_device *dev,
- 			 struct cfg80211_chan_def *chandef)
- {
- 	int ret;
--	trace_rdev_set_monitor_channel(&rdev->wiphy, chandef);
--	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, chandef);
-+	trace_rdev_set_monitor_channel(&rdev->wiphy, dev, chandef);
-+	ret = rdev->ops->set_monitor_channel(&rdev->wiphy, dev, chandef);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 97c21b627791..d5c9bb614fa6 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -1318,19 +1318,21 @@ TRACE_EVENT(rdev_libertas_set_mesh_channel,
- );
- 
- TRACE_EVENT(rdev_set_monitor_channel,
--	TP_PROTO(struct wiphy *wiphy,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 struct cfg80211_chan_def *chandef),
--	TP_ARGS(wiphy, chandef),
-+	TP_ARGS(wiphy, netdev, chandef),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
-+		NETDEV_ENTRY
- 		CHAN_DEF_ENTRY
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-+		NETDEV_ASSIGN;
- 		CHAN_DEF_ASSIGN(chandef);
- 	),
--	TP_printk(WIPHY_PR_FMT ", " CHAN_DEF_PR_FMT,
--		  WIPHY_PR_ARG, CHAN_DEF_PR_ARG)
-+	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", " CHAN_DEF_PR_FMT,
-+		  WIPHY_PR_ARG, NETDEV_PR_ARG, CHAN_DEF_PR_ARG)
- );
- 
- TRACE_EVENT(rdev_auth,
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 2371069f3c43..fd3d01359807 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -830,7 +830,7 @@ static int cfg80211_wext_siwfreq(struct net_device *dev,
- 			ret = -EINVAL;
- 			break;
- 		}
--		ret = cfg80211_set_monitor_channel(rdev, &chandef);
-+		ret = cfg80211_set_monitor_channel(rdev, dev, &chandef);
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 		freq = cfg80211_wext_freq(wextfreq);
+base-commit: 5a4d42c1688c88f3be6aef46b0ea6c32694cd2b8
 -- 
 git-series 0.9.1
