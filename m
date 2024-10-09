@@ -1,112 +1,104 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2221178CC5
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:25:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61885178CC5
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:26:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728462346; cv=none; b=iyc/1C8LRz3qg2XFqJ747n7TMV0L7lY64IMH8Cc9OtHa+kpnv+k9XMRVg58UcEes10O+MzkS+PXTkil2F/vtCE4ezGVuighza86hgUfgjPtKWIC3Es4JdxZaZbnTEuApg4Chs4gZosHuVTKCsuPaD5hlETjpLLUyYRgAmLUmOAQ=
+	t=1728462363; cv=none; b=TreVtJTuhnO8T4zEjJMKEie1VrcN/4FKx8urJo67Z+aY13jlm9H2Yb6FCW4QU6Hz2J3pRzq4LcfhdMTjrEdhhLauqsz8O/kpXXEwxvvc2d1D7x6r60HOa5ivqHKYARMzrPmYMEk5BUN2sqUioaE0BC2sjYT/DYXHujhgGBiVBvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728462346; c=relaxed/simple;
-	bh=NGMRGCmKorB9h3VMalUupB456+qTD0rV5nQOgIVkf4A=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=fRBA8iP23OysVBqAdt3EYg9pWQZN8nrvv8PPjRrdSZiewzmHXevhV42nLs7vViqicUqemNg0ngFp392gTZnH2AExmJ2m4mBZC8ioZSlVRMlZ6Ti79SXLB4BMbZ4CWLJQSLRaMAmebTbci5OXsgQnFB0jBJA6VQjvNVgYLIL8A6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Woekskbq; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728462363; c=relaxed/simple;
+	bh=aeUM8FvkcJXeh2rEzqfiDIyJPOV315gxg9y2Ll80+6w=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fHW8Ik9mz1MIoaIED2dneD7jv6ltLv10Uz1YlBBaBSrnT+gt4O4rDIxxXiZar+nV9E6uw8c9dycEnYUvSpq/LNM57krMQ3NVOf8nyWKIZhOrlYb1ZaxzVmPuw+qhjFnxVkyEPdogtnAHEZEkcZGwjr9RgSXTGFdAk7KgaGaNT+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=DXIKU6Xu; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Woekskbq"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43058268d91so7973425e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2024 01:25:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728462343; x=1729067143; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=aLJVWehmFbOOxGZYpNzLo94Hs3PFFYW5teQQXPK7uLQ=;
-        b=WoekskbqsMfYinhS1i6r0dI05mepbo0VCYHYCCRgwzLxdy46LMhAR3xSFiBCSonfjv
-         pPSmw34H1PJVYghDWJqo/lGspz4JcYnNM9eWvDZX7YsSlbWGWcuFfHvCA6abQIHh4QRV
-         Gjsv2e60xymFkg62eOQ3jDRP9ISkXmmrWrfsbWfam6q/JnrIH3xptqAgnlEeUI1BluEu
-         0TUq0o+Gx3k3ZraVZ7l0ckzRX+vgcCXbP9I4QRh69nJnpyglL6l2GZijZQr7xmKDopbh
-         yVpKipKCie4eFYsUhJgpQuC5xCTSU7f7oZbosSq4Yh4Dc11sV6EELdY6KoHS5snZnV1e
-         cM3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728462343; x=1729067143;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=aLJVWehmFbOOxGZYpNzLo94Hs3PFFYW5teQQXPK7uLQ=;
-        b=FN6PZRXnaa8stTF9pIqBmfvCMCbhIyg470QR4xbpKo0MDMC6qkhnvIIT10t+S/WQeM
-         YPS6Jgbov8qG+vXmTVvaHqxQvvuO9Hi+c8Hqr+MPHZxM1j3S0QwrQDoYaMc4WuarWeeE
-         N4FlGFMroV7sIq40o+oBcRAY9XH9v4oO1ilyueqNdUahFDrVbvbUmNzdTCOSgmirBgiz
-         mxkSwd3SiS3HetvR0oNsAK/xKC7F0MvZHJjFuewhkIsvV2Q6LyLdvfF3owknIckhTseB
-         nEcafQnaA7jutcTHBcYp1BiK3+ddZVAorfT/tIwPEWJ2pTMVgRu3+lKBEGfMYtIErI/j
-         NEbg==
-X-Gm-Message-State: AOJu0YxOwsuKcW6pHaK+U4K/2pBiPYSjoWsPxAqGfOW9Br+4BcYTa6gF
-	KcDsweEWd2nk0vJJ3cQE6ZfYEfR4Mm7tAq46JNZrDxQBS7JUWdCn
-X-Google-Smtp-Source: AGHT+IGaeKaBN/+yVM5/82DOl5S9YcoWJ5/O5SoqGkr+H4MgcLO9os/k5x/8836Up417G2gPyPEoWg==
-X-Received: by 2002:a05:600c:4f52:b0:42c:b9c7:f54b with SMTP id 5b1f17b1804b1-430ccf4c22dmr13919255e9.16.1728462342941;
-        Wed, 09 Oct 2024 01:25:42 -0700 (PDT)
-Received: from localhost (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-430d748d445sm12590565e9.44.2024.10.09.01.25.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 09 Oct 2024 01:25:42 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="DXIKU6Xu"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=wdfuZ/s3Yt6/3Pc5yrFI9iwVpSkMn8jgFUdSBK0EWBY=; b=DXIKU6XuEW0pPeyudRsccHDlBf
+	ZtW2BmRNw6IrruuMel1dYxXbB0QLioh8WH7gu61MuyYdgdN/i+bnVRJz8JFkdxBpxza5RTb7vhl7w
+	zHN+fkiKeRyqNhJzDlQ29xozLW+uaHHB/puWrh3hnQPVHlgaDafhsoUOiamDM++VB71Y=;
+Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1syS13-006e0I-1y;
+	Wed, 09 Oct 2024 10:25:53 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH v5 03/11] wifi: mac80211: use vif radio mask to limit creating chanctx
+Date: Wed,  9 Oct 2024 10:25:44 +0200
+Message-ID: <95ea1f6fc5bd1614a0c7952b6c67726e3fd635fb.1728462320.git-series.nbd@nbd.name>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
+References: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 09 Oct 2024 10:25:41 +0200
-Message-Id: <D4R4RHZM9GWX.2V6MHL6HW9YG3@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 00/11] wifi: ath12k: some fixes and clean up for
- monitor mode
-From: "Nicolas Escande" <nico.escande@gmail.com>
-To: "Kang Yang" <quic_kangyang@quicinc.com>, <ath12k@lists.infradead.org>
-X-Mailer: aerc 0.18.2-0-ge037c095a049
-References: <20241008073534.1195-1-quic_kangyang@quicinc.com>
-In-Reply-To: <20241008073534.1195-1-quic_kangyang@quicinc.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue Oct 8, 2024 at 9:35 AM CEST, Kang Yang wrote:
-> This patch set does some fixes and clean up for monitor mode.
->
-> v2: rebase on tag: ath-202410072115.
->
-> Kang Yang (11):
->   wifi: ath12k: remove unused variable monitor_present
->   wifi: ath12k: optimize storage size for struct ath12k
->   wifi: ath12k: fix struct hal_rx_ppdu_end_user_stats
->   wifi: ath12k: fix struct hal_rx_ppdu_start
->   wifi: ath12k: fix struct hal_rx_phyrx_rssi_legacy_info
->   wifi: ath12k: fix struct hal_rx_mpdu_start
->   wifi: ath12k: properly handling the state variables of monitor mode
->   wifi: ath12k: delete NSS and TX power setting for monitor vdev
->   wifi: ath12k: use tail MSDU to get MSDU information
->   wifi: ath12k: fix A-MSDU indication in monitor mode
->   wifi: ath12k: delete mon reap timer
->
->  drivers/net/wireless/ath/ath12k/core.c   |   5 ++
->  drivers/net/wireless/ath/ath12k/core.h   |  23 +++--
->  drivers/net/wireless/ath/ath12k/dp.c     |  25 ------
->  drivers/net/wireless/ath/ath12k/dp_mon.c | 108 ++++++++++++-----------
->  drivers/net/wireless/ath/ath12k/hal_rx.h |  53 ++++++-----
->  drivers/net/wireless/ath/ath12k/mac.c    |  24 +++--
->  6 files changed, 114 insertions(+), 124 deletions(-)
->
->
-> base-commit: b9545f4570fcfebe982439de7c9106e55b4bf756
+Reject frequencies not supported by any radio that the vif is allowed to use.
 
-Hello,
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/chan.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-Two quick questions there:
- - If monitor works for wcn7850 shouldn't you set supports_monitor=3Dtrue i=
-n hw.c
-   Or does it still require more work for it work ?
- - This whole series seems to have been tested only with wcn7850 and not qc=
-n9274
-   Is it still not supported on qcn9274 ?
-
-Thanks
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index cca6d14084d2..fbc3b28953a6 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1169,7 +1169,7 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
+ static bool
+ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 			       const struct ieee80211_chan_req *chanreq,
+-			       int *radio_idx)
++			       u32 radio_mask, int *radio_idx)
+ {
+ 	struct wiphy *wiphy = local->hw.wiphy;
+ 	const struct wiphy_radio *radio;
+@@ -1180,6 +1180,9 @@ ieee80211_find_available_radio(struct ieee80211_local *local,
+ 		return true;
+ 
+ 	for (i = 0; i < wiphy->n_radio; i++) {
++		if (!(radio_mask & BIT(i)))
++			continue;
++
+ 		radio = &wiphy->radio[i];
+ 		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
+ 			continue;
+@@ -1213,7 +1216,9 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
+ 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
+ 	if (!new_ctx) {
+ 		if (ieee80211_can_create_new_chanctx(local, -1) &&
+-		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
++		    ieee80211_find_available_radio(local, chanreq,
++						   sdata->wdev.radio_mask,
++						   &radio_idx))
+ 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
+ 							false, radio_idx);
+ 		else
+@@ -1883,7 +1888,9 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
+ 	/* Note: context is now reserved */
+ 	if (ctx)
+ 		reserved = true;
+-	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
++	else if (!ieee80211_find_available_radio(local, chanreq,
++						 sdata->wdev.radio_mask,
++						 &radio_idx))
+ 		ctx = ERR_PTR(-EBUSY);
+ 	else
+ 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
+-- 
+git-series 0.9.1
