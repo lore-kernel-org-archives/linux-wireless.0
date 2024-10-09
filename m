@@ -1,130 +1,204 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26F6188CD8
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:36:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E47D6187561
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:36:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728462968; cv=none; b=cK2h1cCc5MSO5J9CqRP60xF3eNDEPGq6QEuRH9IN5bMsoaT2ATIp+gtt6Fh5bAd8nmj1APq2Ks0WwBfdLlznJAJ65DzbgrNQRyIKv1abRTlxMd0X+B4HydBy7RSZLaEJnx6p+S4ECTirvlXOgspUrmvdK75QyR//qCjX/pslbCk=
+	t=1728463003; cv=none; b=reKAe4IIcpgmnHmJrTis8z+Y3UeiJw6bK9NkR7aPZX1nqmG6HetKGE14gdmcbjHeoaBSxveOVip3qczccIcL2TThwibbLzQsIS1iQHOEZdCYtQZFU+vugwJYIxrJUJMdttQckm+Rt9ID7nNplbVZLzjkytAsEqgXqdb+C4JJQh0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728462968; c=relaxed/simple;
-	bh=WUhKtY+Pha2Bi1kOHcd9KnsPgaXA9rHMLMwo5HBuwP0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=PhS9vZ2XnCxxyHSUfOfo/8eOFsV/MjGrEBljT8xIZDv+NLictRp5xFl7GO+Vzt8GL5F3/DV8o/ZR/rpVpHU7i3M/VdzatVCEkSp6EHiQp51GyN9sToqqA2793fgTA2WYRBuf5Ns4KQa4WRMPwqw/aaUWjWJBpqngwxJLs8W9X/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OF81mdv2; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1728463003; c=relaxed/simple;
+	bh=bwupmCthuGaQS+qMZ/7SrXy7Oyd/5BoNqSfbGXSX0bk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WUZY0BGik1pbBB2TvarWiZx19dcJFOqZYdqYRBdsd3GqeCSr0duIY9wUOUh+fUu4ofkuUazz7k2MWKAwoqai9baNLXTNyBlSecyASCtdMgk4JzZnb3qqxxLQGdd/sD/nTf6FOImORkfgP0NsHxGvfEaFxuPK6dpuwwI0d/hrSZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dlcKQg3a; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OF81mdv2"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 498KxEon017879;
-	Wed, 9 Oct 2024 08:36:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ahCNDTY0nVOifi3pmg+ZttAOzsh0sxA+SIzoiLNG0+o=; b=OF81mdv2xWKyLDbr
-	k08kF9JiDMJ/tG0BVN7Q0sDZNGbZVh1xD2Mr5etMlyLd8zTg4qU0HxziNQpQJAeR
-	t7UbRUa37gzdQyJPDQzSOztGkZMI5QSGkaJ1unkFyIJ/LY95iyk52BGrR4d5p1e/
-	UOPXcRgU6s6BJfVwKjoxtyJe1wkhUjs0/T/bWXJ2F5aYAU47zo3tatI/Ixi8GUc4
-	oX4X9Dqb/G5C1Bwr/iW58+jSRFBljAMtAtD5bW/Q9z5qAi750iVuAQ6l1lWGoQw9
-	OJv9z11e6ZjZw4buGdWerXwpVnmLKGNKFf0vbw7pHOPQ1HTgbXvgVED0uBMGuV5I
-	o6IGZA==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 425c8qsdvv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 09 Oct 2024 08:36:01 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4998Zx3g030162
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 9 Oct 2024 08:35:59 GMT
-Received: from [10.253.72.222] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 9 Oct 2024
- 01:35:58 -0700
-Message-ID: <fc004753-2e5d-4694-9c35-8a4c4ccab7ed@quicinc.com>
-Date: Wed, 9 Oct 2024 16:35:55 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dlcKQg3a"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1728463001;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=mOyNV1blUkGi8SBN/l2nmGqTH8tAJ4tec1wRLOcI2Z8=;
+	b=dlcKQg3a8m+Ov6dKMeyzaVgzv5GTg/ltRgXo6J2rEa/VbSXMTlOF36tYdo4ROEvCY6DTnH
+	pmlsL6Ol4Q95DfEcPMvKsk4hgHB4hb+Tgt7AjwR3orCVzVmQqdlSbSC7oIE2Ll0ZJHFSiU
+	A2cJiEeFaoC2Ro2OAOXoC43KMkpb6C4=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-361-5Zzkte11NHOwbIzIey8vCQ-1; Wed, 09 Oct 2024 04:36:40 -0400
+X-MC-Unique: 5Zzkte11NHOwbIzIey8vCQ-1
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-7acca6cbe87so1142923985a.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Oct 2024 01:36:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728462999; x=1729067799;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mOyNV1blUkGi8SBN/l2nmGqTH8tAJ4tec1wRLOcI2Z8=;
+        b=fxIcGbqf4vHhLwBhIm3wGarhvvwOJMlxILIXuxm9B4/O3wO5XcwFjmqixqwQjP5k/O
+         CE2yMu4LVZcsh3THM7uXtp598abz2FjaJ6VTuEDdXrJVh0qWD+XJIUgvUqT3ySsTmHNv
+         5GG2Hi+78HpvxlXVibdZPOy2rT444SttiAntmV7hYRuRy9fjzij4k6c4sBc+dX9m1GKg
+         h3uLGKSEeOYz7t1s0Uod1qWNkXC2cnC0ZjHa+8gZVVweoWTig/+aiEq35SgxtTeUCW8O
+         6SSplC+2K2brrcYPjKCLEe4oUPZrBIWfIM4YZM5/ux9RIjMDHwXnuAVA9TMIO/DnFY66
+         IbxA==
+X-Forwarded-Encrypted: i=1; AJvYcCWzHpSdk6is1NlIdf+x99rWZPu6FBzSN/sJpa8q1Pib+913sdm/JIYRC6wArem6hHNexlgIsy78jDMflF49lQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKRbQFZS1/YFOwduvyFS2zdb9ESTPhcT6oyFjDbGHtfFWrqMag
+	otb3raCWrYHWcPOCKdrD0HYX+Bah4R69x1XhYHJJq0WwtwO9bYgg19udV2PaNohPDvwoGQsRpsW
+	JyyUvQTd9wNw5OsvYF7KTv1K1xga5NARkx2JkAYHiMckCSXqZJUGXORg2fq4O0hS/
+X-Received: by 2002:a05:620a:29c7:b0:7a2:1db:e286 with SMTP id af79cd13be357-7b0874cd670mr234483885a.52.1728462999275;
+        Wed, 09 Oct 2024 01:36:39 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFU56nfNbRn4xRa9L06f5Bja7V/qokH03xrDBZWS39o5ckdxWurQft3H7j0iSjtDvnBZDt4+Q==
+X-Received: by 2002:a05:620a:29c7:b0:7a2:1db:e286 with SMTP id af79cd13be357-7b0874cd670mr234479185a.52.1728462998841;
+        Wed, 09 Oct 2024 01:36:38 -0700 (PDT)
+Received: from eisenberg.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7ae75615aa2sm439643585a.14.2024.10.09.01.36.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Oct 2024 01:36:38 -0700 (PDT)
+From: Philipp Stanner <pstanner@redhat.com>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>,
+	GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>,
+	Philipp Stanner <pstanner@redhat.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Chen Ni <nichen@iscas.ac.cn>,
+	Ricky Wu <ricky_wu@realtek.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Breno Leitao <leitao@debian.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Hannes Reinecke <hare@suse.de>,
+	John Garry <john.g.garry@oracle.com>,
+	Soumya Negi <soumya.negi97@gmail.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Yi Liu <yi.l.liu@intel.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Eric Auger <eric.auger@redhat.com>,
+	Ye Bin <yebin10@huawei.com>,
+	=?UTF-8?q?Marek=20Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>,
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+	Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
+	Rui Salvaterra <rsalvaterra@gmail.com>,
+	Marc Zyngier <maz@kernel.org>
+Cc: linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	linux-sound@vger.kernel.org
+Subject: [RFC PATCH 00/13] Remove implicit devres from pci_intx()
+Date: Wed,  9 Oct 2024 10:35:06 +0200
+Message-ID: <20241009083519.10088-1-pstanner@redhat.com>
+X-Mailer: git-send-email 2.46.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/11] wifi: ath12k: some fixes and clean up for
- monitor mode
-To: Nicolas Escande <nico.escande@gmail.com>, <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-References: <20241008073534.1195-1-quic_kangyang@quicinc.com>
- <D4R4RHZM9GWX.2V6MHL6HW9YG3@gmail.com>
-Content-Language: en-US
-From: Kang Yang <quic_kangyang@quicinc.com>
-In-Reply-To: <D4R4RHZM9GWX.2V6MHL6HW9YG3@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: PxBfLCA3YSSheeR7-ZLgWBkXz2o4qQrp
-X-Proofpoint-ORIG-GUID: PxBfLCA3YSSheeR7-ZLgWBkXz2o4qQrp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0
- priorityscore=1501 mlxscore=0 spamscore=0 phishscore=0 clxscore=1011
- bulkscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2409260000 definitions=main-2410090056
+Content-Transfer-Encoding: 8bit
 
+Hi all,
 
+this series removes a problematic feature from pci_intx(). That function
+sometimes implicitly uses devres for automatic cleanup. We should get
+rid of this implicit behavior.
 
-On 10/9/2024 4:25 PM, Nicolas Escande wrote:
-> On Tue Oct 8, 2024 at 9:35 AM CEST, Kang Yang wrote:
->> This patch set does some fixes and clean up for monitor mode.
->>
->> v2: rebase on tag: ath-202410072115.
->>
->> Kang Yang (11):
->>    wifi: ath12k: remove unused variable monitor_present
->>    wifi: ath12k: optimize storage size for struct ath12k
->>    wifi: ath12k: fix struct hal_rx_ppdu_end_user_stats
->>    wifi: ath12k: fix struct hal_rx_ppdu_start
->>    wifi: ath12k: fix struct hal_rx_phyrx_rssi_legacy_info
->>    wifi: ath12k: fix struct hal_rx_mpdu_start
->>    wifi: ath12k: properly handling the state variables of monitor mode
->>    wifi: ath12k: delete NSS and TX power setting for monitor vdev
->>    wifi: ath12k: use tail MSDU to get MSDU information
->>    wifi: ath12k: fix A-MSDU indication in monitor mode
->>    wifi: ath12k: delete mon reap timer
->>
->>   drivers/net/wireless/ath/ath12k/core.c   |   5 ++
->>   drivers/net/wireless/ath/ath12k/core.h   |  23 +++--
->>   drivers/net/wireless/ath/ath12k/dp.c     |  25 ------
->>   drivers/net/wireless/ath/ath12k/dp_mon.c | 108 ++++++++++++-----------
->>   drivers/net/wireless/ath/ath12k/hal_rx.h |  53 ++++++-----
->>   drivers/net/wireless/ath/ath12k/mac.c    |  24 +++--
->>   6 files changed, 114 insertions(+), 124 deletions(-)
->>
->>
->> base-commit: b9545f4570fcfebe982439de7c9106e55b4bf756
-> 
-> Hello,
-> 
-> Two quick questions there:
->   - If monitor works for wcn7850 shouldn't you set supports_monitor=true in hw.c
->     Or does it still require more work for it work ?
+To do so, a pci_intx() version that is always-managed, and one that is
+never-managed are provided. Then, all pci_intx() users are ported to the
+version they need. Afterwards, pci_intx() can be cleaned up and the
+users of the never-managed version be ported back to pci_intx().
 
-Yes, still have many monitor mode patches. Will set this hw parameter in 
-those patches.
+This way we'd get this PCI API consistent again.
 
+The last patch obviously reverts the previous patches that made drivers
+use pci_intx_unmanaged(). But this way it's easier to review and
+approve. It also makes sure that each checked out commit should provide
+correct behavior, not just the entire series as a whole.
 
->   - This whole series seems to have been tested only with wcn7850 and not qcn9274
->     Is it still not supported on qcn9274 ?
+Merge plan for this would be to enter through the PCI tree.
 
-Actually, this is classic monitor mode for wcn7850, not sure whether 
-qcn9274 supports it(I think theoretically it is supported).
-As far as I know, they are using full monitor mode.
+Please say so if you've got concerns with the general idea behind the
+RFC.
 
-> 
-> Thanks
+Regards,
+P.
+
+Philipp Stanner (13):
+  PCI: Prepare removing devres from pci_intx()
+  ALSA: hda: hda_intel: Use always-managed version of pcim_intx()
+  drivers/xen: Use never-managed version of pci_intx()
+  net/ethernet: Use never-managed version of pci_intx()
+  net/ntb: Use never-managed version of pci_intx()
+  misc: Use never-managed version of pci_intx()
+  vfio/pci: Use never-managed version of pci_intx()
+  PCI: MSI: Use never-managed version of pci_intx()
+  ata: Use always-managed version of pci_intx()
+  staging: rts5280: Use always-managed version of pci_intx()
+  wifi: qtnfmac: use always-managed version of pcim_intx()
+  HID: amd_sfh: Use always-managed version of pcim_intx()
+  Remove devres from pci_intx()
+
+ drivers/ata/ahci.c                            |  2 +-
+ drivers/ata/ata_piix.c                        |  2 +-
+ drivers/ata/pata_rdc.c                        |  2 +-
+ drivers/ata/sata_sil24.c                      |  2 +-
+ drivers/ata/sata_sis.c                        |  2 +-
+ drivers/ata/sata_uli.c                        |  2 +-
+ drivers/ata/sata_vsc.c                        |  2 +-
+ drivers/hid/amd-sfh-hid/amd_sfh_pcie.c        |  4 ++--
+ drivers/hid/amd-sfh-hid/sfh1_1/amd_sfh_init.c |  2 +-
+ .../wireless/quantenna/qtnfmac/pcie/pcie.c    |  2 +-
+ drivers/pci/devres.c                          | 24 +++----------------
+ drivers/pci/pci.c                             | 14 +----------
+ drivers/staging/rts5208/rtsx.c                |  2 +-
+ include/linux/pci.h                           |  1 +
+ sound/pci/hda/hda_intel.c                     |  2 +-
+ 15 files changed, 18 insertions(+), 47 deletions(-)
+
+-- 
+2.46.1
 
