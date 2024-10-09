@@ -1,74 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6FCA18DF9B;
-	Wed,  9 Oct 2024 09:24:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672E018A6DD
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 09:33:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728465856; cv=none; b=umX9dahKiJR2/2NWcZR+q4Ks89NU27QE6IhxSQYEzSnwIWDXiytBD23en7S4gGGKtNcDHWj+Ki9l3v3e7djsFwWhPQu92nmCjgptf2B3RNxk5lKond7la3NguatbnHE2pc3h5xGorz3xudg8jXuQvbxD2R+V3rwnBDdE8kY3aQ8=
+	t=1728466433; cv=none; b=aO6JVS/oNXz7JKwe/9ZqdUz12W+givbKhQeXISHqDemG+ioy5/xAhba9raFIOB5bnUxYRX4487m2PfiRtzXmROtPQAzsEiL0tJighJ5iZp2csHWNZT12FOqg3psFne3udX5o1xDMIfwsqM6W1/jE49pKbEmaFeNfacTDDwUuV40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728465856; c=relaxed/simple;
-	bh=CeAcCFSG0upiX0sX8oPnUv4FroqjC4xoAZb4ww6hE4U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DjNDbZpeJfwFSJckwKYNqvs3trJ6zbqwCiGpKjSlvcplvUVl9gSDTimkeGDtP3WRELXdX9jmdMQz1i4oQTnOwsZSxvTgY0i66Lx7cvpTs6ca6gteEB8GUr2NNARpM01D+YXL9Ye/52e1a6oNE+RSIek9APoCd0A1oH4bcMDcJTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=VnZXh9Pl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728466433; c=relaxed/simple;
+	bh=2vzkDDouvWOCpgJdPcTrsyYeS0crOoJ/ZMxGW26nt1k=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=tXnPj4ruJYScT+MEsAT39YhjHkCmKEBD1InKGhQxSIBp3QakKW6rIGPVMJrnfHZL16xg0Ugu0Nuy00bShC4bIVrSt5h+zSwO2fZG92h5qQtd6IDVNQXnqrVo6AMnd9ppwpsGssvB1hSiAVyL1cGGwAxaWwGcRRvqPFGnJ1lVSEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=t3Y4Hl/V; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="VnZXh9Pl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB039C4CEC5;
-	Wed,  9 Oct 2024 09:24:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1728465855;
-	bh=CeAcCFSG0upiX0sX8oPnUv4FroqjC4xoAZb4ww6hE4U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VnZXh9PlavE2pdP76iGTSNwmJc8hDYzG+Y+4bSTpEdREplm5vPLgqy4MAt5Pc5FWC
-	 0gDTJ6+BwWhrnDy46rByfRHf2nTjPRMY/pSnFcb9+SnZYJGrCYbuhomA5PiVUwjfjT
-	 4LlumT1vdqgc4HJnMi725mj1g+cXH0y7+QPz8QeM=
-Date: Wed, 9 Oct 2024 11:24:12 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Kalle Valo <kvalo@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Next Mailing List <linux-next@vger.kernel.org>,
-	Tree Davies <tdavies@darkphysics.net>
-Subject: Re: linux-next: manual merge of the wireless-next tree with Linus'
- tree
-Message-ID: <2024100941-gulp-tasty-f969@gregkh>
-References: <20241009114455.52db31ad@canb.auug.org.au>
- <2024100945-engross-appraisal-d1f0@gregkh>
- <317aeb02110105be1483d13c204bfb48d4d19c61.camel@sipsolutions.net>
- <2024100917-footsie-anatomist-fd06@gregkh>
- <e572bee3a1c2600b09cb2fd5d09a2e95b4e0faa0.camel@sipsolutions.net>
- <2024100941-gaining-sprang-826b@gregkh>
- <287ad9eeb94f1e326c22fdcb74c94ef3fde84115.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="t3Y4Hl/V"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=oRsGgSNV4RqhW+Q3MvpQBOQn2z+Uv3OrZlNf2AAYSDQ=;
+	t=1728466432; x=1729676032; b=t3Y4Hl/VWNgULNBkRxuzWjnn0WwLpHBiXDj02cqGDwpiuS6
+	KhioUy/ntc5fEW/MsZda0y6ObBqslG0uVOuQcaXZ38z9QFijPwJshE5BjO339k6MJkE3uMgU2ZZe4
+	MEgoj4q9Ij5yJugmINWf5MyivbuRJpgwO3Hu6D8JzqDB9ZyiJ9G86BEpQxjAp8h8z+uJ3LNNeMS9P
+	xfgBuuSUToIH2bj4ozDg2LKd9psRLSEqh8UMsifZlUV+mRzX8uvQTXLXhD/oVNWTwlnBM611xvFTP
+	afR3cD/EugnB49YoYlfZvaB354zbsiateGwAgpXFPsyV05c52HhlESMXrSpTwrWg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1sySc6-000000054DR-2qay;
+	Wed, 09 Oct 2024 11:04:10 +0200
+Message-ID: <6a2029dcaf7724b8d4516807097541f09268f828.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] wifi: iwlwifi: Report link-id for transmitted
+ frames.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Wed, 09 Oct 2024 11:04:10 +0200
+In-Reply-To: <20241007173851.2207849-1-greearb@candelatech.com>
+References: <20241007173851.2207849-1-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <287ad9eeb94f1e326c22fdcb74c94ef3fde84115.camel@sipsolutions.net>
+X-malware-bazaar: not-scanned
 
-On Wed, Oct 09, 2024 at 10:30:12AM +0200, Johannes Berg wrote:
-> On Wed, 2024-10-09 at 09:27 +0200, Greg Kroah-Hartman wrote:
-> > > 
-> > > I can push out the net-next merge (& revert) soon, and then it'll all be
-> > > cleaner?
-> > 
-> > Sure, I'll wait, just let me know what commit to merge at, from what
-> > tree, whenever you have it ready.
-> > 
-> 
-> I've done all that now, so you could merge wireless-next/main up to its
-> head, which right now is a0efa2f362a6 ("Merge net-next/main to resolve
-> conflicts").
+Hi,
 
-Sure, will do so now.  That branch has a lot of non-staging stuff in it
-but git can figure it out when it's all merged together so all is good!
+So ... I suppose I kind of get it, your product doesn't really need
+things upstream and so you don't care all _that_ much, but I'd still
+appreciate if you could take a bit more care.
 
-thanks,
+There's always a large amount of friction with patches you send, which
+at this point makes me not even want to really look at them, and then I
+wonder if I should just fix it up or send it back ... Yes I can and do
+fix trivial things, but it really isn't something I feel I should need
+to be doing all the time.
 
-greg k-h
+And yes, I also understand you want to just throw ideas over the wall,
+but really in a v2 patchset I think we're beyond that. I'd also
+appreciate not seeing obviously wrong patches (e.g. with a ton of marker
+comments or prints left in them) since that just detracts from the
+purpose, but that's not relevant to this patchset here.
+
+Anyway ...
+
+Here, the subject should've had "v2", and in the commit message, below a
+--- marker, a description of what you changed.
+
+>  		memset(&info->status, 0, sizeof(info->status));
+>  		info->flags &=3D ~(IEEE80211_TX_STAT_ACK | IEEE80211_TX_STAT_TX_FILTER=
+ED);
+> +		if (link_sta_id !=3D -1)
+> +			info->control.flags =3D u32_replace_bits(info->control.flags, link_st=
+a_id, IEEE80211_TX_CTRL_MLO_LINK);
+
+That line is clearly too long for no reason at all, and same below.
+
+johannes
