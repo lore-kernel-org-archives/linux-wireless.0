@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61885178CC5
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:26:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACBA1885B5
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 08:26:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728462363; cv=none; b=TreVtJTuhnO8T4zEjJMKEie1VrcN/4FKx8urJo67Z+aY13jlm9H2Yb6FCW4QU6Hz2J3pRzq4LcfhdMTjrEdhhLauqsz8O/kpXXEwxvvc2d1D7x6r60HOa5ivqHKYARMzrPmYMEk5BUN2sqUioaE0BC2sjYT/DYXHujhgGBiVBvM=
+	t=1728462363; cv=none; b=S0RUSygRG7MceSQ0TKf/fdFmK55ANYNILCe+2wY7zzXHHZh4TgkJ6vxx/NVp+JZzwIWRzWSCI20j7LeLGk2jyxsMXmCo64tEe+qZoS0LClpQ3zatFcZc3UjICGTabMkKcqhyG3UeNEcwl5uiobxezFvXqp2UjpQHHZT3c5F9TTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728462363; c=relaxed/simple;
-	bh=aeUM8FvkcJXeh2rEzqfiDIyJPOV315gxg9y2Ll80+6w=;
+	bh=IEAbqq+I332EB5KcW4QoGRh5oMSAxsgCCbI4B2ZE2vo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fHW8Ik9mz1MIoaIED2dneD7jv6ltLv10Uz1YlBBaBSrnT+gt4O4rDIxxXiZar+nV9E6uw8c9dycEnYUvSpq/LNM57krMQ3NVOf8nyWKIZhOrlYb1ZaxzVmPuw+qhjFnxVkyEPdogtnAHEZEkcZGwjr9RgSXTGFdAk7KgaGaNT+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=DXIKU6Xu; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=tUg343Z6Rtgioy6K4uZ+SYtUaS7ud2T5JlJf/xUcYo/GieYh2BRxFj5KPLoBncT1XbkQ0LKPKRwnUji+YW64J9xVrtVZgFlaCv+qMiTYe0d1AkFsyk75ju4YSJqQ2dvn3wCTlIc2kR659WkcxtqgO+oQ4N4lAnFJVAbeMyTuWhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=F0acAJS8; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="DXIKU6Xu"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="F0acAJS8"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=wdfuZ/s3Yt6/3Pc5yrFI9iwVpSkMn8jgFUdSBK0EWBY=; b=DXIKU6XuEW0pPeyudRsccHDlBf
-	ZtW2BmRNw6IrruuMel1dYxXbB0QLioh8WH7gu61MuyYdgdN/i+bnVRJz8JFkdxBpxza5RTb7vhl7w
-	zHN+fkiKeRyqNhJzDlQ29xozLW+uaHHB/puWrh3hnQPVHlgaDafhsoUOiamDM++VB71Y=;
+	bh=0DJf3PQnsoPEh+Zigym2+5abQ8Zd/z8FuqATMhQR4iA=; b=F0acAJS8M9q0BCNe16kkmhTO9O
+	lGZQpPugAS4CrYUyb2nZgHEfIYmkF4Ewoesv9QRl68ftsHV8L/KWYyxZpvY7rWbA0C7/mVLVZbSLQ
+	n+mBA2K9DQ873WWinL7dmQ0QLcvpvS7MHSZ82WxzcOjtRbCMGUKEMzgpcST2xhj5hUCQ=;
 Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1syS13-006e0I-1y;
-	Wed, 09 Oct 2024 10:25:53 +0200
+	id 1syS15-006e0I-1U;
+	Wed, 09 Oct 2024 10:25:55 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH v5 03/11] wifi: mac80211: use vif radio mask to limit creating chanctx
-Date: Wed,  9 Oct 2024 10:25:44 +0200
-Message-ID: <95ea1f6fc5bd1614a0c7952b6c67726e3fd635fb.1728462320.git-series.nbd@nbd.name>
+Subject: [PATCH v5 10/11] wifi: mac80211: refactor ieee80211_rx_monitor
+Date: Wed,  9 Oct 2024 10:25:51 +0200
+Message-ID: <d57d82f109643894325beb9db6da8f001fc533eb.1728462320.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.46.0
 In-Reply-To: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
 References: <cover.7a6c6087b8cacec78525ec7f4f4d38c649d4a647.1728462320.git-series.nbd@nbd.name>
@@ -48,57 +48,98 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reject frequencies not supported by any radio that the vif is allowed to use.
+Rework the monitor mode interface iteration to get rid of the last_monitor
+condition. Preparation for further filtering received monitor packets.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/chan.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ net/mac80211/rx.c | 54 ++++++++++++++++++++++++------------------------
+ 1 file changed, 28 insertions(+), 26 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index cca6d14084d2..fbc3b28953a6 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1169,7 +1169,7 @@ ieee80211_replace_chanctx(struct ieee80211_local *local,
- static bool
- ieee80211_find_available_radio(struct ieee80211_local *local,
- 			       const struct ieee80211_chan_req *chanreq,
--			       int *radio_idx)
-+			       u32 radio_mask, int *radio_idx)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b35e1b472e82..5e43905fd26c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -762,8 +762,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		     struct ieee80211_rate *rate)
  {
- 	struct wiphy *wiphy = local->hw.wiphy;
- 	const struct wiphy_radio *radio;
-@@ -1180,6 +1180,9 @@ ieee80211_find_available_radio(struct ieee80211_local *local,
- 		return true;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(origskb);
+-	struct ieee80211_sub_if_data *sdata;
+-	struct sk_buff *monskb = NULL;
++	struct ieee80211_sub_if_data *sdata, *prev_sdata = NULL;
++	struct sk_buff *skb, *monskb = NULL;
+ 	int present_fcs_len = 0;
+ 	unsigned int rtap_space = 0;
+ 	struct ieee80211_sub_if_data *monitor_sdata =
+@@ -837,8 +837,10 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	ieee80211_handle_mu_mimo_mon(monitor_sdata, origskb, rtap_space);
  
- 	for (i = 0; i < wiphy->n_radio; i++) {
-+		if (!(radio_mask & BIT(i)))
+ 	list_for_each_entry_rcu(sdata, &local->mon_list, u.mntr.list) {
+-		bool last_monitor = list_is_last(&sdata->u.mntr.list,
+-						 &local->mon_list);
++		if (!prev_sdata) {
++			prev_sdata = sdata;
 +			continue;
-+
- 		radio = &wiphy->radio[i];
- 		if (!cfg80211_radio_chandef_valid(radio, &chanreq->oper))
- 			continue;
-@@ -1213,7 +1216,9 @@ int ieee80211_link_reserve_chanctx(struct ieee80211_link_data *link,
- 	new_ctx = ieee80211_find_reservation_chanctx(local, chanreq, mode);
- 	if (!new_ctx) {
- 		if (ieee80211_can_create_new_chanctx(local, -1) &&
--		    ieee80211_find_available_radio(local, chanreq, &radio_idx))
-+		    ieee80211_find_available_radio(local, chanreq,
-+						   sdata->wdev.radio_mask,
-+						   &radio_idx))
- 			new_ctx = ieee80211_new_chanctx(local, chanreq, mode,
- 							false, radio_idx);
- 		else
-@@ -1883,7 +1888,9 @@ int _ieee80211_link_use_channel(struct ieee80211_link_data *link,
- 	/* Note: context is now reserved */
- 	if (ctx)
- 		reserved = true;
--	else if (!ieee80211_find_available_radio(local, chanreq, &radio_idx))
-+	else if (!ieee80211_find_available_radio(local, chanreq,
-+						 sdata->wdev.radio_mask,
-+						 &radio_idx))
- 		ctx = ERR_PTR(-EBUSY);
- 	else
- 		ctx = ieee80211_new_chanctx(local, chanreq, mode,
++		}
+ 
+ 		if (ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
+ 			ieee80211_handle_mu_mimo_mon(sdata, origskb, rtap_space);
+@@ -846,34 +848,34 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		if (!monskb)
+ 			monskb = ieee80211_make_monitor_skb(local, &origskb,
+ 							    rate, rtap_space,
+-							    only_monitor &&
+-							    last_monitor);
++							    false);
++		if (!monskb)
++			continue;
+ 
+-		if (monskb) {
+-			struct sk_buff *skb;
++		skb = skb_clone(monskb, GFP_ATOMIC);
++		if (!skb)
++			continue;
+ 
+-			if (last_monitor) {
+-				skb = monskb;
+-				monskb = NULL;
+-			} else {
+-				skb = skb_clone(monskb, GFP_ATOMIC);
+-			}
++		skb->dev = prev_sdata->dev;
++		dev_sw_netstats_rx_add(skb->dev, skb->len);
++		netif_receive_skb(skb);
++		prev_sdata = sdata;
++	}
+ 
+-			if (skb) {
+-				skb->dev = sdata->dev;
+-				dev_sw_netstats_rx_add(skb->dev, skb->len);
+-				netif_receive_skb(skb);
+-			}
++	if (prev_sdata) {
++		if (monskb)
++			skb = monskb;
++		else
++			skb = ieee80211_make_monitor_skb(local, &origskb,
++							 rate, rtap_space,
++							 only_monitor);
++		if (skb) {
++			skb->dev = prev_sdata->dev;
++			dev_sw_netstats_rx_add(skb->dev, skb->len);
++			netif_receive_skb(skb);
+ 		}
+-
+-		if (last_monitor)
+-			break;
+ 	}
+ 
+-	/* this happens if last_monitor was erroneously false */
+-	dev_kfree_skb(monskb);
+-
+-	/* ditto */
+ 	if (!origskb)
+ 		return NULL;
+ 
 -- 
 git-series 0.9.1
