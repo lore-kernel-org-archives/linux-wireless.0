@@ -1,85 +1,112 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672E018A6DD
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Oct 2024 09:33:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27A4C18A92C;
+	Wed,  9 Oct 2024 09:38:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728466433; cv=none; b=aO6JVS/oNXz7JKwe/9ZqdUz12W+givbKhQeXISHqDemG+ioy5/xAhba9raFIOB5bnUxYRX4487m2PfiRtzXmROtPQAzsEiL0tJighJ5iZp2csHWNZT12FOqg3psFne3udX5o1xDMIfwsqM6W1/jE49pKbEmaFeNfacTDDwUuV40=
+	t=1728466729; cv=none; b=prFeuXZjxjZBc93wv8edNPbqcUY1KofiAl5gt6F1U2olnTZJTVY7jBw0FAp1AH+Jtmz3qOitdoP5botYwkKbfXAtgai+BMC4YUUNhLYpkII8cQnbCd7JqpmMbACAT84AYuY6e30o/UgM0a2NpudWHZITDXhXhddnwoFDsVleVjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728466433; c=relaxed/simple;
-	bh=2vzkDDouvWOCpgJdPcTrsyYeS0crOoJ/ZMxGW26nt1k=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tXnPj4ruJYScT+MEsAT39YhjHkCmKEBD1InKGhQxSIBp3QakKW6rIGPVMJrnfHZL16xg0Ugu0Nuy00bShC4bIVrSt5h+zSwO2fZG92h5qQtd6IDVNQXnqrVo6AMnd9ppwpsGssvB1hSiAVyL1cGGwAxaWwGcRRvqPFGnJ1lVSEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=t3Y4Hl/V; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1728466729; c=relaxed/simple;
+	bh=Jw9m9MFXObg+vZ7wq05G3wqyWtyj3AK1eBeQfJJK90U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FBlxEih2Csikk9VWf4y7W32fhYH4ScQE7t2bYKCeDP3giTH2VRNUpP9HVnbJmTsdAAEc1U9vteu+PNRk6E1rZBJsHb748tm6n5wVcPCDGwXrjBbuHGus/jVA863Kve8xMVKb3t9GLN7RA3XKnJ7MPKhq4ScYwVtTEUw39Ma8gGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AcLymq+h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="t3Y4Hl/V"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=oRsGgSNV4RqhW+Q3MvpQBOQn2z+Uv3OrZlNf2AAYSDQ=;
-	t=1728466432; x=1729676032; b=t3Y4Hl/VWNgULNBkRxuzWjnn0WwLpHBiXDj02cqGDwpiuS6
-	KhioUy/ntc5fEW/MsZda0y6ObBqslG0uVOuQcaXZ38z9QFijPwJshE5BjO339k6MJkE3uMgU2ZZe4
-	MEgoj4q9Ij5yJugmINWf5MyivbuRJpgwO3Hu6D8JzqDB9ZyiJ9G86BEpQxjAp8h8z+uJ3LNNeMS9P
-	xfgBuuSUToIH2bj4ozDg2LKd9psRLSEqh8UMsifZlUV+mRzX8uvQTXLXhD/oVNWTwlnBM611xvFTP
-	afR3cD/EugnB49YoYlfZvaB354zbsiateGwAgpXFPsyV05c52HhlESMXrSpTwrWg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1sySc6-000000054DR-2qay;
-	Wed, 09 Oct 2024 11:04:10 +0200
-Message-ID: <6a2029dcaf7724b8d4516807097541f09268f828.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/2] wifi: iwlwifi: Report link-id for transmitted
- frames.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Wed, 09 Oct 2024 11:04:10 +0200
-In-Reply-To: <20241007173851.2207849-1-greearb@candelatech.com>
-References: <20241007173851.2207849-1-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AcLymq+h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B808BC4CEC5;
+	Wed,  9 Oct 2024 09:38:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1728466728;
+	bh=Jw9m9MFXObg+vZ7wq05G3wqyWtyj3AK1eBeQfJJK90U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AcLymq+hoDLhN3h3N8nHp58BgFOa4jDynBqk5dzipxHtlbGOU9EoJHZr1xWIGUvqd
+	 1/8BzU9GNB5AWykOOa82//nU/OkQpZ2Tl07ETsLRXZZMd4MYEMeaOwuFdvt3dbdEkn
+	 E0Fd5uSJFrxi3J4FjD1qWeIfBp1sHnDUf7i3tpjk=
+Date: Wed, 9 Oct 2024 11:38:45 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Philipp Stanner <pstanner@redhat.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+	Sergey Shtylyov <s.shtylyov@omp.ru>,
+	Basavaraj Natikar <basavaraj.natikar@amd.com>,
+	Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <bentiss@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Alex Dubov <oakad@yahoo.com>,
+	Sudarsana Kalluru <skalluru@marvell.com>,
+	Manish Chopra <manishc@marvell.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+	Igor Mitsyanko <imitsyanko@quantenna.com>,
+	Sergey Matyukevich <geomatsi@gmail.com>,
+	Kalle Valo <kvalo@kernel.org>, Sanjay R Mehta <sanju.mehta@amd.com>,
+	Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <allenbh@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Chen Ni <nichen@iscas.ac.cn>, Ricky Wu <ricky_wu@realtek.com>,
+	Al Viro <viro@zeniv.linux.org.uk>, Breno Leitao <leitao@debian.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Hannes Reinecke <hare@suse.de>,
+	John Garry <john.g.garry@oracle.com>,
+	Soumya Negi <soumya.negi97@gmail.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Christian Brauner <brauner@kernel.org>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
+	Marek =?iso-8859-1?Q?Marczykowski-G=F3recki?= <marmarek@invisiblethingslab.com>,
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+	Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
+	Rui Salvaterra <rsalvaterra@gmail.com>,
+	Marc Zyngier <maz@kernel.org>, linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-input@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-staging@lists.linux.dev, kvm@vger.kernel.org,
+	xen-devel@lists.xenproject.org, linux-sound@vger.kernel.org
+Subject: Re: [RFC PATCH 10/13] staging: rts5280: Use always-managed version
+ of pci_intx()
+Message-ID: <2024100936-brunette-flannels-0d82@gregkh>
+References: <20241009083519.10088-1-pstanner@redhat.com>
+ <20241009083519.10088-11-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241009083519.10088-11-pstanner@redhat.com>
 
-Hi,
+On Wed, Oct 09, 2024 at 10:35:16AM +0200, Philipp Stanner wrote:
+> pci_intx() is a hybrid function which can sometimes be managed through
+> devres. To remove this hybrid nature from pci_intx(), it is necessary to
+> port users to either an always-managed or a never-managed version.
+> 
+> rts5208 enables its PCI-Device with pcim_enable_device(). Thus, it needs the
+> always-managed version.
+> 
+> Replace pci_intx() with pcim_intx().
+> 
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> ---
+>  drivers/staging/rts5208/rtsx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-So ... I suppose I kind of get it, your product doesn't really need
-things upstream and so you don't care all _that_ much, but I'd still
-appreciate if you could take a bit more care.
-
-There's always a large amount of friction with patches you send, which
-at this point makes me not even want to really look at them, and then I
-wonder if I should just fix it up or send it back ... Yes I can and do
-fix trivial things, but it really isn't something I feel I should need
-to be doing all the time.
-
-And yes, I also understand you want to just throw ideas over the wall,
-but really in a v2 patchset I think we're beyond that. I'd also
-appreciate not seeing obviously wrong patches (e.g. with a ton of marker
-comments or prints left in them) since that just detracts from the
-purpose, but that's not relevant to this patchset here.
-
-Anyway ...
-
-Here, the subject should've had "v2", and in the commit message, below a
---- marker, a description of what you changed.
-
->  		memset(&info->status, 0, sizeof(info->status));
->  		info->flags &=3D ~(IEEE80211_TX_STAT_ACK | IEEE80211_TX_STAT_TX_FILTER=
-ED);
-> +		if (link_sta_id !=3D -1)
-> +			info->control.flags =3D u32_replace_bits(info->control.flags, link_st=
-a_id, IEEE80211_TX_CTRL_MLO_LINK);
-
-That line is clearly too long for no reason at all, and same below.
-
-johannes
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
