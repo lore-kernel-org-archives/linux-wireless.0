@@ -1,153 +1,141 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98A6E1BB6BC
-	for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2024 08:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3BFE1BC9FE
+	for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2024 08:38:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728549211; cv=none; b=r54DSP/1TxjBOnqS5nUVMmnM1C+A8EuOJkVbFtQ8TDnO9WNFnf3x8AxThOc+tFaaUiu/9xya8PPXE8DzqGp0iAAN0HLwKUKTHYTVI1eCMX3eqxhqNz/ZUSv+VYzmfRY8ksz3br6sxnLVuOjp39J/cKueZ1H3kYccJ3EPjrC8BD8=
+	t=1728549509; cv=none; b=fnc2rtdjTuu1IAt+R7TpXFOEso24geZTO6FkF7afZBtS7ziyOq37DchXy674h6DgP9yoYb/LcPlaPe2HAiv6N3+0EjHNIK6NLtcmRrEYkfhuzXizaKUkvtUXhV3MnG6gt2H51Bt5SwTH4WjdpqdNRN7GVgmvF6f/QDnzbzutm6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728549211; c=relaxed/simple;
-	bh=XvNkbaBk9fuSrUkNDofqyfLNh6yl7vhOJSKqfqMOpdQ=;
-	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
-	 Date:MIME-Version; b=RwbdURAVC5b2dWTa0I84tfj2Uv1oeqwmMVidVtQYbj9JQpQHRq/Dpj/zPJKZ97iDO47BOONnPuLbDM69Eev8aaUSXGOcRciF5/SD7RgPW+dIQe75HOPBl+Ex0lpT+nZ7qWcVbE7VeD9oT8UqbWG9k0CgsP7TAOvuGHcKnl1sCt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZaCwO2iO; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1728549509; c=relaxed/simple;
+	bh=IbXZN8+em4qmu181esZmO46qOkR2Ae4aAkvuq6zuxig=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p3Ti142laoCsU/u2X4Pyrbai3+Zsrbl3pNzDb6QaHzpvBPXMDW+2DuSscnKv/v8BR0pfMqtXDRPnPbv6yRfDO7IjzKxAEKqqaZ2HoAvi6xGhVCfXu5qpQ5WaMhhj8Jp/3bJqNKw0Q32bu5HiKU6TruE6rIklKRwRSpNGu+OQtMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=XA6FM2w3; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZaCwO2iO"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5398e33155fso742464e87.3
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2024 01:33:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1728549208; x=1729154008; darn=vger.kernel.org;
-        h=user-agent:mime-version:date:content-transfer-encoding
-         :disposition-notification-to:references:in-reply-to:cc:to:from
-         :subject:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=2ALuJHQTIaTyeGGIsf0qaNPHAoVHdjzrLKpjXltEptY=;
-        b=ZaCwO2iOivTK96wU5lbNkiSq+2GDg/yfsJssURPX3Wk33NhlPWcpuSYXR5J6Ey6BOZ
-         qsKUSpm2cVO9/Lr/zea3DLBCzfoX1tfVEDLHI98xUPsRFOhJq6V5Rro+WJ4hFvLR5oQf
-         X5iiRfEkfmRBOFAX7OCg85TjsgNAkl3838cHMPnTciREE2nPNJsmEIMWbywRJhMztOpr
-         MSgmcqgXeavHc8cFwrXA47u3WbWZiQvNdoyhb8eOAexaCvsB19ML8Id/cgEYmi+FJKsl
-         dAqHMvHVw7XWH3Z9z+pCVK8yTOMtGmzxMhAGdY1bz6WpLTZox0k+7MmdDD0038w3ScS1
-         7tvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1728549208; x=1729154008;
-        h=user-agent:mime-version:date:content-transfer-encoding
-         :disposition-notification-to:references:in-reply-to:cc:to:from
-         :subject:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2ALuJHQTIaTyeGGIsf0qaNPHAoVHdjzrLKpjXltEptY=;
-        b=ERdB0USpARYf16SLI7PeaojFTUD87Oqk2DYy7+9iAYV+Hl6OZBhUIs8oLwLOWpsu7I
-         GDP9qsyeDFaVdpGueZwtYntsdl2UZIYorjcy8eZVmeNIpBPvj2XAlWWNm7Oja+aS1CXo
-         sn/n2+t/Jlag0luxQqy/2GaWeJ6ANgLf3g9hpkE/2ykTBlENQbUrXnvsQELkmDKZpIL6
-         RBTUkzY5DwtnMoQ/2AwK8494LMnXBHNAY6is6B8Mh9n4Ta6kXa8J7WTy3YtsuepAM6vV
-         dhYRROpD/p+P1m0cbjijF8zuEXAcP3+UZOdVYg4FmqcM5ujee0JZN3+3BkS81HCe61QI
-         +AhA==
-X-Gm-Message-State: AOJu0YwM2v+2qOlvdPJ3upSORc3pQwqw7dwqT+nzrHkhCb8zsDGYi3sm
-	r1vJG02hNKXRO6/zHNbhkmEO23gu0WQt0jaEeWWzU8MbePV3Tpyj8CIr5XNsyOk=
-X-Google-Smtp-Source: AGHT+IGNzMqygvX2xI9kUBdqUG+FECfKBk2luYkrbliiHxrEKSmwSn93q8Z3zclHo/NGvsnNpMpMHg==
-X-Received: by 2002:a05:6512:3190:b0:536:553f:3eec with SMTP id 2adb3069b0e04-539c488d8aemr3704512e87.5.1728549207323;
-        Thu, 10 Oct 2024 01:33:27 -0700 (PDT)
-Received: from [192.168.50.84] ([193.22.231.59])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-539cb8f0f7bsm157771e87.234.2024.10.10.01.33.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Oct 2024 01:33:26 -0700 (PDT)
-Message-ID: <2c5c0d485df7b334ea0bfbb87325a5fbc7b52663.camel@gmail.com>
-Subject: Re: [PATCH] wifi: rtw88: coex: remove rf4ce unused code
-From: Dmitry Kandybka <d.kandybka@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org, Dmitry
- Antipov <dmantipov@yandex.ru>
-In-Reply-To: <20240820055244.128644-1-d.kandybka@gmail.com>
-References: <20240820055244.128644-1-d.kandybka@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 10 Oct 2024 11:19:59 +0300
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XA6FM2w3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=53H0FS/43Qy88qbPHeuWCvIdr5qtkCkUQylpAvIoxQU=; b=XA6FM2w3hqchG4EpY237uxH4va
+	3g5HLfDmA3Bf+yhsY87R7lLuZp0NRZRGAbotKNSYwR78KeSOXy3TosnQ7kJoeLhNx0xQNYfkCGgMf
+	7mTvlmhDDBHL0OfsBm6nmGJO4hDxvoSgj9zSsuljdx8xT3DSLhd30xRrEietVnq5oLpk=;
+Received: from p54ae98e8.dip0.t-ipconnect.de ([84.174.152.232] helo=Maecks.lan)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1syoga-007293-35;
+	Thu, 10 Oct 2024 10:38:17 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@kernel.org,
+	Steven Liu <steven.liu@mediatek.com>,
+	Evelyn Tsai <Evelyn.Tsai@mediatek.com>,
+	Paul <paul@asiarf.com>,
+	Shayne Chen <Shayne.Chen@mediatek.com>
+Subject: [PATCH wireless] wifi: mt76: mt7915: add module param to select 5 GHz or 6 GHz on MT7916
+Date: Thu, 10 Oct 2024 10:38:16 +0200
+Message-ID: <20241010083816.51880-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Evolution 3.54.0 (by Flathub.org) 
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2024-08-20 at 08:52 +0300, Dmitry Kandybka wrote:
-> In 'rtw_coex_run_coex', 'rf4ce_en' is hardcoded to false,
-> so 'rtw_coex_action_rf4ce(rtwdev)' is never executed.
-> Assuming that rf4ce was never fully implemented,
-> remove lookalike leftovers. Compile tested only.
->=20
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
->=20
-> Fixes: a9359faaa47d ("rtw88: coex: add the mechanism for RF4CE")
-> Signed-off-by: Dmitry Kandybka <d.kandybka@gmail.com>
-> ---
-> =C2=A0drivers/net/wireless/realtek/rtw88/coex.c | 30 +-------------------=
+From: Shayne Chen <shayne.chen@mediatek.com>
+
+Due to a limitation in available memory, the MT7916 firmware can only
+handle either 5 GHz or 6 GHz at a time. It does not support runtime
+switching without a full restart.
+
+On older firmware, this accidentally worked to some degree due to missing
+checks, but couldn't be supported properly, because it left the 6 GHz
+channels uncalibrated.
+Newer firmware refuses to start on either band if the passed EEPROM
+data indicates support for both.
+
+Deal with this limitation by using a module parameter to specify the
+preferred band in case both are supported.
+
+Fixes: b4d093e321bd ("mt76: mt7915: add 6 GHz support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-> =C2=A01 file changed, 1 insertion(+), 29 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/coex.c
-> b/drivers/net/wireless/realtek/rtw88/coex.c
-> index de3332eb7a22..1fbcf701e7b7 100644
-> --- a/drivers/net/wireless/realtek/rtw88/coex.c
-> +++ b/drivers/net/wireless/realtek/rtw88/coex.c
-> @@ -1591,31 +1591,6 @@ static void rtw_coex_action_freerun(struct rtw_dev
-> *rtwdev)
-> =C2=A0	rtw_coex_tdma(rtwdev, false, 100);
-> =C2=A0}
-> =C2=A0
-> -static void rtw_coex_action_rf4ce(struct rtw_dev *rtwdev)
-> -{
-> -	const struct rtw_chip_info *chip =3D rtwdev->chip;
-> -	struct rtw_efuse *efuse =3D &rtwdev->efuse;
-> -	u8 table_case, tdma_case;
-> -
-> -	rtw_dbg(rtwdev, RTW_DBG_COEX, "[BTCoex], %s()\n", __func__);
-> -
-> -	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
-> -	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
-> -
-> -	if (efuse->share_ant) {
-> -		/* Shared-Ant */
-> -		table_case =3D 9;
-> -		tdma_case =3D 16;
-> -	} else {
-> -		/* Non-Shared-Ant */
-> -		table_case =3D 100;
-> -		tdma_case =3D 100;
-> -	}
-> -
-> -	rtw_coex_table(rtwdev, false, table_case);
-> -	rtw_coex_tdma(rtwdev, false, tdma_case);
-> -}
-> -
-> =C2=A0static void rtw_coex_action_bt_whql_test(struct rtw_dev *rtwdev)
-> =C2=A0{
-> =C2=A0	const struct rtw_chip_info *chip =3D rtwdev->chip;
-> @@ -2531,7 +2506,6 @@ static void rtw_coex_run_coex(struct rtw_dev
-> *rtwdev, u8 reason)
-> =C2=A0	struct rtw_coex *coex =3D &rtwdev->coex;
-> =C2=A0	struct rtw_coex_dm *coex_dm =3D &coex->dm;
-> =C2=A0	struct rtw_coex_stat *coex_stat =3D &coex->stat;
-> -	bool rf4ce_en =3D false;
-> =C2=A0
-> =C2=A0	lockdep_assert_held(&rtwdev->mutex);
-> =C2=A0
-> @@ -2587,9 +2561,7 @@ static void rtw_coex_run_coex(struct rtw_dev
-> *rtwdev, u8 reason)
-> =C2=A0	coex_stat->wl_coex_mode =3D COEX_WLINK_2G1PORT;
-> =C2=A0
-> =C2=A0	if (coex_stat->bt_disabled) {
-> -		if (coex_stat->wl_connected && rf4ce_en)
-> -			rtw_coex_action_rf4ce(rtwdev);
-> -		else if (!coex_stat->wl_connected)
-> +		if (!coex_stat->wl_connected)
-> =C2=A0			rtw_coex_action_wl_not_connected(rtwdev);
-> =C2=A0		else
-> =C2=A0			rtw_coex_action_wl_only(rtwdev);
-Hello Ping-Ke Shih,
-This is kindly reminder. Could you pay some attention to this patch and
-clarify if the rf4ce is actual for this moment and future?
---=20
-Best regards,
-Dmitry Kandybka
+ .../wireless/mediatek/mt76/mt7915/eeprom.c    | 21 +++++++++++++++++--
+ .../net/wireless/mediatek/mt76/mt7915/init.c  |  4 ++--
+ 2 files changed, 21 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index bfdbc15abaa9..928e0b07a9bf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -2,9 +2,14 @@
+ /* Copyright (C) 2020 MediaTek Inc. */
+ 
+ #include <linux/firmware.h>
++#include <linux/moduleparam.h>
+ #include "mt7915.h"
+ #include "eeprom.h"
+ 
++static bool enable_6ghz;
++module_param(enable_6ghz, bool, 0644);
++MODULE_PARM_DESC(enable_6ghz, "Enable 6 GHz instead of 5 GHz on hardware that supports both");
++
+ static int mt7915_eeprom_load_precal(struct mt7915_dev *dev)
+ {
+ 	struct mt76_dev *mdev = &dev->mt76;
+@@ -170,8 +175,20 @@ static void mt7915_eeprom_parse_band_config(struct mt7915_phy *phy)
+ 			phy->mt76->cap.has_6ghz = true;
+ 			return;
+ 		case MT_EE_V2_BAND_SEL_5GHZ_6GHZ:
+-			phy->mt76->cap.has_5ghz = true;
+-			phy->mt76->cap.has_6ghz = true;
++			if (enable_6ghz) {
++				phy->mt76->cap.has_6ghz = true;
++				u8p_replace_bits(&eeprom[MT_EE_WIFI_CONF + band],
++						 MT_EE_V2_BAND_SEL_6GHZ,
++						 MT_EE_WIFI_CONF0_BAND_SEL);
++			} else {
++				phy->mt76->cap.has_5ghz = true;
++				u8p_replace_bits(&eeprom[MT_EE_WIFI_CONF + band],
++						 MT_EE_V2_BAND_SEL_5GHZ,
++						 MT_EE_WIFI_CONF0_BAND_SEL);
++			}
++			/* force to buffer mode */
++			dev->flash_mode = true;
++
+ 			return;
+ 		default:
+ 			phy->mt76->cap.has_2ghz = true;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+index 6bef96e3d2a3..f82216d1bda0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -1239,14 +1239,14 @@ int mt7915_register_device(struct mt7915_dev *dev)
+ 	if (ret)
+ 		goto unreg_dev;
+ 
+-	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
+-
+ 	if (phy2) {
+ 		ret = mt7915_register_ext_phy(dev, phy2);
+ 		if (ret)
+ 			goto unreg_thermal;
+ 	}
+ 
++	ieee80211_queue_work(mt76_hw(dev), &dev->init_work);
++
+ 	dev->recovery.hw_init_done = true;
+ 
+ 	ret = mt7915_init_debugfs(&dev->phy);
+-- 
+2.46.0
+
