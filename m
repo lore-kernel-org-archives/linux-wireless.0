@@ -1,79 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4354E170A37;
-	Wed, 16 Oct 2024 06:57:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 887011B2185
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2024 06:57:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729061851; cv=none; b=KjirwOc4Pysl6fve5awXxbw0KrWRZpxCAEoHiFP3xhB1tOPkRlgZiaeRoK2HAWzRH65M8ruKAl2vNO+R6hWrn3Z6NazXQ2csVkjvwDsPmtL7zgvam6B750JogUgNsEVnDPu1zAy63kZKjiYE5Gof5VE0nefNcW6tmMbaOmps1yU=
+	t=1729061854; cv=none; b=BQp7F11DuKC8HyS5FJUcClCrl5Q/B2NGWFFbN+CYjEb90l4walQZdg7xVJ42tMx9vYqXQpVt4fOMaeKQOhtWUjyif3Q99AFi98t3Aj6EuhTHtRxebV8uzN4GhvkRnBjT7z1vhZiKCo0Ztn/1QrpqvBiupfZ4+uta/ERXaxM/kxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729061851; c=relaxed/simple;
-	bh=nueV4zW9DYaKNQYqepHGVVpmRCUZwWuMQ6ahTdofusk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ezfOWWBooWFJC4pENqlLALda262kd0XKp5UKw/4SnfyPlyIRZbyQhT84x46HdE6TQNsRCUE/ATLkpwVwF5ltxOER6MdrhFkz7d2dTl0BZU0TnxE6QQHXlbGo59EXtDBoJy7oIPK/C7CrXJt1r76SYsFLwzgZy8hDb/YYDQg3hyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fCnTvzid; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729061854; c=relaxed/simple;
+	bh=InGQwgRUwRmq0nZmxhopByRtt0CM2zTE2LiNtiWP0b0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=nJf8teqxWWtlVG4HeArDLcYthloxwUHCTNUnhCDDrQdKBdfQi4ZDQHDV5kPSKATp4aIf7zqshnUJIakPGhTeLwUlB2J7UHlraE8mxfsSaRyEwDzXz63znQTefW5cB/MeY2jF2NpssdasgP5jB14zvHxTz98QOooZfTjYAKytKiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XAsXsWRH; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fCnTvzid"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5067EC4CEC5;
-	Wed, 16 Oct 2024 06:57:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729061851;
-	bh=nueV4zW9DYaKNQYqepHGVVpmRCUZwWuMQ6ahTdofusk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fCnTvzidshFBNh5H2Dwnz5y11dT8NyAFjt5jPCgNdiPfN432LHzDuivAILLKq/LVl
-	 uQIn6u5fQ7SLcYtOIv6XsuIjCymgNBgbDQEStSiDpn1zqVtFqRf4vmFXAZwYMPGzxs
-	 2uaf2M2saJOrZpdXlYl5cFhDoqgPG46UN19TYAXNBB0WHYN7SBk/1PWhATsxOeNFhI
-	 NKSqhXLJPmb8ryrZn1Hmq1vzq+N3eTBlyv2gKau7czgPt9DTbkZGP6e/ycbfxws+MG
-	 0XAqujvHS0UCrU/H58qO/oYZsufioCZlhNnnWERReb3anQuGTAUP4cEISvfylGuGX6
-	 8/ZrhRDDlHyFA==
-Date: Wed, 16 Oct 2024 08:57:27 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	Kalle Valo <kvalo@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Jeff Johnson <jjohnson@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v2 00/22] wifi: ath12k: add Ath12k AHB driver support for
- IPQ5332
-Message-ID: <ou5kgedz5aga4dtda6k23uhybcjy7mfwie74p6q3qyn5bdajz7@ftejp7lqrise>
-References: <20241015182637.955753-1-quic_rajkbhag@quicinc.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XAsXsWRH"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49G6uYXb023604;
+	Wed, 16 Oct 2024 06:57:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=wWfzjLw4U6Jo1db/Aj6CiD
+	zNuFC62h0y6qerJMx2sI0=; b=XAsXsWRHx+i4C5UbLx3XhTPNb7rGlQMR1q7JPH
+	Dm5ZwkFOTxydmzTcLRaRLj1tgLmuYY2BaN6DjyRm6tB7pCb1doITbSAmGWCOqhKc
+	cA4XV4i3xu+0+FG8H2bR3MQEqLJpivuYh2BeYIKxaddsYtzVbwzg7qaTHvLMkz3+
+	QDIGL0mFNcmMZpvKiLgHWBP7U5YWWBHrNXMDC4rY24gCukRS/H/AKuwcsbK1whYG
+	h1s4/ydGv2cq07obWlVQXESlc7gVgah9LVNh9l6BEIxkODawjjINZKwyltFZx4fG
+	lyoaBntAT8VXGQrNrqUBbTyLshxliYnUZq6o5RhCq1yu3w7Q==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42a8nq002c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 16 Oct 2024 06:57:25 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49G6vO31031142
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 16 Oct 2024 06:57:24 GMT
+Received: from kangyang.ap.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 15 Oct 2024 23:57:22 -0700
+From: Kang Yang <quic_kangyang@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
+Subject: [PATCH v3 00/11] wifi: ath12k: some fixes and clean up for monitor mode
+Date: Wed, 16 Oct 2024 14:56:49 +0800
+Message-ID: <20241016065700.1090-1-quic_kangyang@quicinc.com>
+X-Mailer: git-send-email 2.34.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20241015182637.955753-1-quic_rajkbhag@quicinc.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: Z8xA1wfw39QT1nmorU9fXUuh9EtCJg8b
+X-Proofpoint-GUID: Z8xA1wfw39QT1nmorU9fXUuh9EtCJg8b
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ malwarescore=0 impostorscore=0 mlxlogscore=846 priorityscore=1501
+ suspectscore=0 adultscore=0 spamscore=0 bulkscore=0 clxscore=1015
+ mlxscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410160044
 
-On Tue, Oct 15, 2024 at 11:56:15PM +0530, Raj Kumar Bhagat wrote:
-> Currently, Ath12k driver only supports WiFi devices that are based on
-> PCI bus. New Ath12k device IPQ5332 is based on AHB bus. Hence, add
-> Ath12k AHB support for IPQ5332.
-> 
-> IPQ5332 is IEEE802.11be 2 GHz 2x2 Wifi device. To bring-up IPQ5332
-> device:
-> - Add hardware parameters for IPQ5332.
-> - CE and CMEM register address space in IPQ5332 is separate from WCSS
->   register space. Hence, add logic to remap CE and CMEM register
->   address.
-> - Add support for fixed QMI firmware memory for IPQ5332.
-> - Support userPD handling for WCSS secure PIL driver to enable ath12k
->   AHB support.
-> 
-> Depends-On: [PATCH V7 0/5] remove unnecessary q6 clocks
-> Depends-On: [PATCH V2 0/4] Add new driver for WCSS secure PIL loading
-> Link: https://lore.kernel.org/all/20240820055618.267554-1-quic_gokulsri@quicinc.com/
-> Link: https://lore.kernel.org/all/20240829134021.1452711-1-quic_gokulsri@quicinc.com/
+This patch set does some fixes and clean up for monitor mode.
+
+v3: rebase on tag: ath/main(ath-202410111606).
+v2: rebase on tag: ath-202410072115.
+
+Kang Yang (11):
+  wifi: ath12k: remove unused variable monitor_present
+  wifi: ath12k: optimize storage size for struct ath12k
+  wifi: ath12k: fix struct hal_rx_ppdu_end_user_stats
+  wifi: ath12k: fix struct hal_rx_ppdu_start
+  wifi: ath12k: fix struct hal_rx_phyrx_rssi_legacy_info
+  wifi: ath12k: fix struct hal_rx_mpdu_start
+  wifi: ath12k: properly handling the state variables of monitor mode
+  wifi: ath12k: delete NSS and TX power setting for monitor vdev
+  wifi: ath12k: use tail MSDU to get MSDU information
+  wifi: ath12k: fix A-MSDU indication in monitor mode
+  wifi: ath12k: delete mon reap timer
+
+ drivers/net/wireless/ath/ath12k/core.c   |   5 ++
+ drivers/net/wireless/ath/ath12k/core.h   |  23 +++--
+ drivers/net/wireless/ath/ath12k/dp.c     |  25 ------
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 107 +++++++++++++----------
+ drivers/net/wireless/ath/ath12k/hal_rx.h |  53 ++++++-----
+ drivers/net/wireless/ath/ath12k/mac.c    |  24 +++--
+ 6 files changed, 115 insertions(+), 122 deletions(-)
 
 
-These are series targetting other subsystems. I do not understand why
-you created such dependency. It does not look needed and for sure is not
-good: nothing here can be tested, nothing can be applied.
-
-Best regards,
-Krzysztof
+base-commit: 69eabe24843f238e79a6dbbd2b3fcc8eef39d6b8
+-- 
+2.34.1
 
