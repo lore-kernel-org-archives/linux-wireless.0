@@ -1,118 +1,123 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70ED215381A;
-	Fri, 18 Oct 2024 05:32:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD9617CA17
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Oct 2024 05:46:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729229536; cv=none; b=ZUThU/nbx5pwuNS9zcC6Vciw8diOS3F/fSlIwL7FoRSJT6yvT9XggtTTuEOuiXudDArnU6B8KOE4448dfMA+EjUWDtG8sNphFNrwo4m7MIeoWqLQ0OFj2b3dpNEcMG8j4VFjr9bvn9yahVnaWN3+c9lFZKXEqezN9xAnZs9jcvA=
+	t=1729230416; cv=none; b=emjfRBMJj6iR6gVZRJ3/T4kBbYFRq61hF+yDCMLaLNiRy6DgxxH/GRzYKkFcrYQ779Xy3j3xnLmrsBTdPc5ukMP9kqbfQ2HjtgTlMBrH5ttmnb0iJT+ibnCfyZ7xdospcOjMn48pehzBMr3bNLD7L5DxIXRygG0HMiWllcf2D7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729229536; c=relaxed/simple;
-	bh=aCuJTRQqAlzX4ksRnTcNehM+fFAx64niezjkxYpEhr8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ofl9t8HJJi5pm5t/Op+UT2JnHzcGmJwvno8fZvxygau27aeroOs4caMpXkwULQN9/HEF/j14PuZ0AB+tCLkjjADawvNZkVqbdetOoO+bR1VnQc9pmLEy33PTRRytGu7QBBGPyvkJpbOgFzsm9rKNTM3JG8TTZaxvxFemOk9d8R0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=toS/p7b5; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1729230416; c=relaxed/simple;
+	bh=/pjFIMzsuQfmoB9hBHritRa1k681wXY58hfEj25D29w=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oAZ/BhofT9c5FY+sgracVVWpIP245zST1jN5edWXiimxbkhaq13cGDR4mIwzz0RF93yyQa3HCCy0/i/LpNjUBMjyhmdbYIH5Hu0g/L++58h2h9UYVbVuGzM47y/ddKrVY1b8fNICITaF0frIbsCaFO3YcfHarKVlIIq1HBREk9k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Paho3Ixi; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="toS/p7b5"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 49I5W0CL01553263, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1729229520; bh=aCuJTRQqAlzX4ksRnTcNehM+fFAx64niezjkxYpEhr8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=toS/p7b5YwKXs8ylP6rav5JQO0idGy8gGEKAXQaR9FqmxIFK5tcnnz2Yi4kSBqn7I
-	 mNRduwkuAp/FLnA2HS7Nk7Viax57bolOuO9A9uEMceKgLGA/tImzAm42SZ8SShMHf4
-	 gDOLuxYuljym3SZ9wCinm95gUGPRs0+KRA7GM1HTiI+O0Nl+GnkUJvISn3cXrSMHxW
-	 TYVlgUN8zcBxwIQJ85uCUrO6QnznXjbnWstlrNoT5e4adLU/TA3UT6qJPXMa0BBgxD
-	 59LgFkOzgH/gczJuRHQCCoW8f7XPLhh9d99RS5m1RVataq7N6Y+H5R7wSr8t5Np1rd
-	 CFBvOBx5R8VHQ==
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 49I5W0CL01553263
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 18 Oct 2024 13:32:00 +0800
-Received: from RTEXDAG02.realtek.com.tw (172.21.6.101) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Paho3Ixi"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49I1gNMA022066;
+	Fri, 18 Oct 2024 05:46:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	oDjMkjWkI4vyW5bveH/t0zlOacnVpuxfJw7TV23/5x0=; b=Paho3IxiCbR9NV9m
+	yScuFMzd2jxZa1nK0+qNiW5dFSO9nHgR/w/3ZYuYXnbSf8JvyoOUQmesR8uAfWad
+	Gn3rfChvG4OesCt03yLTUVHK6lQbB+CbGqgQFwFUqzjoZ0JblrUlB7Jrwonfif/x
+	d2gNvDy6lmIOJptdWpn5yg5ukU/eIcNbKtDM24xTgSBWEAp8KT8ISi9T8Lf6gL/Q
+	QlJvnU7zOI5Z11Bz/jshZVINpow8a0Q81n2HOPGnkv5TgzEwA2R3OWe224ghVAas
+	BP2zoE77+up9QgIqJLVNFIfTtdn0djafpepNYFOHwpJuxLV4f3h+PMTaA6gByemO
+	NqKVww==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42be8c8gsm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 18 Oct 2024 05:46:51 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49I5kpcU017379
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 18 Oct 2024 05:46:51 GMT
+Received: from kangyang.ap.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Fri, 18 Oct 2024 13:32:00 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXDAG02.realtek.com.tw (172.21.6.101) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 18 Oct 2024 13:32:00 +0800
-Received: from RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f]) by
- RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f%11]) with mapi id
- 15.01.2507.035; Fri, 18 Oct 2024 13:32:00 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Mohammed Anees <pvmohammedanees2003@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Kalle Valo <kvalo@kernel.org>, kernel test robot <lkp@intel.com>
-Subject: RE: [PATCH v2] wifi: rtw88: Refactor looping in rtw_phy_store_tx_power_by_rate
-Thread-Topic: [PATCH v2] wifi: rtw88: Refactor looping in
- rtw_phy_store_tx_power_by_rate
-Thread-Index: AQHbIGuMqxz8Rb2d/UazSc++jiptXbKL/LXg
-Date: Fri, 18 Oct 2024 05:32:00 +0000
-Message-ID: <87a0854a459549a5addfd39ab94669c1@realtek.com>
-References: <20241017080638.13074-1-pvmohammedanees2003@gmail.com>
-In-Reply-To: <20241017080638.13074-1-pvmohammedanees2003@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ 15.2.1544.9; Thu, 17 Oct 2024 22:46:49 -0700
+From: Kang Yang <quic_kangyang@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
+Subject: [PATCH v5 6/8] wifi: ath12k: delete NSS and TX power setting for monitor vdev
+Date: Fri, 18 Oct 2024 13:46:18 +0800
+Message-ID: <20241018054620.2080-7-quic_kangyang@quicinc.com>
+X-Mailer: git-send-email 2.34.1.windows.1
+In-Reply-To: <20241018054620.2080-1-quic_kangyang@quicinc.com>
+References: <20241018054620.2080-1-quic_kangyang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: mKgqYme_X41Cp0x_8CkXwTD5cEx46tSO
+X-Proofpoint-ORIG-GUID: mKgqYme_X41Cp0x_8CkXwTD5cEx46tSO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
+ spamscore=0 bulkscore=0 phishscore=0 mlxscore=0 suspectscore=0
+ mlxlogscore=683 lowpriorityscore=0 impostorscore=0 priorityscore=1501
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410180034
 
-Mohammed Anees <pvmohammedanees2003@gmail.com> wrote:
-> The previous implementation included an unnecessary else
-> condition paired with a continue statement. Since a check
-> is already performed to determine if the band is either
-> 2G or 5G, the else condition will never be triggered.
-> We can remove this check.
->=20
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: https://lore.kernel.org/oe-kbuild-all/202410171143.OnFlgIwK-lkp@i=
-ntel.com/
+ath12k_mac_monitor_vdev_create() will set NSS and TX power for monitor
+vdev. But this is not needed for monitor vdev.
 
-no need this Closes link because of typo of v1. I will remove this during m=
-erging.=20
+So delete them.
 
-> Signed-off-by: Mohammed Anees <pvmohammedanees2003@gmail.com>
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 14 --------------
+ 1 file changed, 14 deletions(-)
 
-> ---
-> v2:
-> - Changed from using a pointer approach to a simpler if-else structure fo=
-r clarity.
-> ---
->  drivers/net/wireless/realtek/rtw88/phy.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wirel=
-ess/realtek/rtw88/phy.c
-> index 37ef80c9091d..8b9f8f73c14c 100644
-> --- a/drivers/net/wireless/realtek/rtw88/phy.c
-> +++ b/drivers/net/wireless/realtek/rtw88/phy.c
-> @@ -1470,10 +1470,8 @@ static void rtw_phy_store_tx_power_by_rate(struct =
-rtw_dev *rtwdev,
->                 rate =3D rates[i];
->                 if (band =3D=3D PHY_BAND_2G)
->                         hal->tx_pwr_by_rate_offset_2g[rfpath][rate] =3D o=
-ffset;
-> -               else if (band =3D=3D PHY_BAND_5G)
-> -                       hal->tx_pwr_by_rate_offset_5g[rfpath][rate] =3D o=
-ffset;
->                 else
-> -                       continue;
-> +                       hal->tx_pwr_by_rate_offset_5g[rfpath][rate] =3D o=
-ffset;
->         }
->  }
->=20
-> --
-> 2.47.0
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index c292ac45d780..d4b3c7899281 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1147,7 +1147,6 @@ static int ath12k_mac_monitor_vdev_create(struct ath12k *ar)
+ 	struct ath12k_wmi_vdev_create_arg arg = {};
+ 	int bit, ret;
+ 	u8 tmp_addr[6];
+-	u16 nss;
+ 
+ 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+ 
+@@ -1187,19 +1186,6 @@ static int ath12k_mac_monitor_vdev_create(struct ath12k *ar)
+ 		return ret;
+ 	}
+ 
+-	nss = hweight32(ar->cfg_tx_chainmask) ? : 1;
+-	ret = ath12k_wmi_vdev_set_param_cmd(ar, ar->monitor_vdev_id,
+-					    WMI_VDEV_PARAM_NSS, nss);
+-	if (ret) {
+-		ath12k_warn(ar->ab, "failed to set vdev %d chainmask 0x%x, nss %d :%d\n",
+-			    ar->monitor_vdev_id, ar->cfg_tx_chainmask, nss, ret);
+-		return ret;
+-	}
+-
+-	ret = ath12k_mac_txpower_recalc(ar);
+-	if (ret)
+-		return ret;
+-
+ 	ar->allocated_vdev_map |= 1LL << ar->monitor_vdev_id;
+ 	ar->ab->free_vdev_map &= ~(1LL << ar->monitor_vdev_id);
+ 	ar->num_created_vdevs++;
+-- 
+2.34.1
 
