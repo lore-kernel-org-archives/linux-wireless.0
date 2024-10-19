@@ -1,86 +1,85 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E10D18C910
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2024 06:31:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40DE98472;
+	Sat, 19 Oct 2024 15:32:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729319511; cv=none; b=DEl1iJvQoGQPgPbRG4wbSIGtumfU0kNGPznBM+6aihkwOnvPr+dg+PyoaDXlKvwv5pdxSFDmqVUEEjjYjMSvDueLDX+w2wK4Ml3tZk/xZ+ybyFY3alwST2UcgCQYwHwomfnCn52T/knT6Omvz8+ue/XPe8BnXNr7y+ylpKkQA7s=
+	t=1729351944; cv=none; b=rEU54tV++pfk4AIKw3YEWBKbr5YtjMy+wnzh6D97onG/AyO3TG9lku5BkzFqY6jwtcnjhXRxHHcPxZoA6n1W1c1OqxrDJcsNQpgPdAawVtwS/H9jO61y7aEgHG3O5BpevyFuN4af4/Mj1O12SDhDN5ZOWZPTKIJRxp8HK7+aEP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729319511; c=relaxed/simple;
-	bh=dSrj7xZYdBtRyrbg1RhHPpzbtGug5wYupjOHGJz2S2Y=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rX3HX4cvz0etkqz1khkx7Ii2iGhl1x2jOugBnEjSMhC0gbh6ZkOo1iQT+/Rv7CCPVXdPswP7F95aCTzVWHC7KRkvBvjkSaVz0g/Qz9MxznY1O2acY9g8EVUqKEuhElnKeknyUGxUzpK4gHYUwSysgSoysQOY5O7wRZmP8fmoaf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=QoDXVIq1; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1729351944; c=relaxed/simple;
+	bh=tMbXRc4YDc45MT1d2qKMPKKlX3fx86b90pw720KiDfI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XUGSnK5+pau/TjjUYf0TwJr0O5s6VWj8pk96Wk9ixm6VmuPg2Ti9xsDpaiWDAe7jPOOypTuvOeFHUJNRxVXemWv0LO2ubEQnWxpOGph+y0TzSS80I+MD0Sdk7ukLAkeRfwIp2Xpcm488lBf3djQ+aOw8T0dIWS8bcMS2hTlL30g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JYkm51N2; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="QoDXVIq1"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 49J6VjchE3226386, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1729319505; bh=dSrj7xZYdBtRyrbg1RhHPpzbtGug5wYupjOHGJz2S2Y=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=QoDXVIq1f1pE+ernA89uRNcTy5LUCuHYnPatru1Fx/wcdMdVTsZTWtMnyIJJfUKLK
-	 0lVbkJIkCqSN0lFaaOH6jqlpAN3U4W5qJ8fgWv3+xaGBOwEO2Q5Tk37PqU8ER/XpPo
-	 MPFQcjPc6zajK5tdohRatfAzXmER62DZA6Gi4EZeqFkAA4nhNqzfi0tRMod4vOuiR4
-	 Yg1XMZbVDbHTIXS10BkRbtV6faHzESU/Bocvm4VXVoZMBHyTColvIMSsKJsQEA0eeW
-	 X/xiiouR632yTfeX5gQRZWbHMrCKk0vXVu3TJhOYWplb37GCp8/orBD99dhhmw5W8N
-	 lh9iDdcvXqQPg==
-Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 49J6VjchE3226386
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2024 14:31:45 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Sat, 19 Oct 2024 14:31:45 +0800
-Received: from [127.0.1.1] (172.16.22.200) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Sat, 19 Oct
- 2024 14:31:45 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ku920601@realtek.com>
-Subject: [PATCH] wifi: rtw89: coex: Set Wi-Fi/Bluetooth priority for Wi-Fi scan case
-Date: Sat, 19 Oct 2024 14:31:31 +0800
-Message-ID: <20241019063131.9462-1-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JYkm51N2"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-71e681bc315so2042233b3a.0;
+        Sat, 19 Oct 2024 08:32:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1729351942; x=1729956742; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tMbXRc4YDc45MT1d2qKMPKKlX3fx86b90pw720KiDfI=;
+        b=JYkm51N23CZq+6QS9vEVq92VR/egxaVNxF0xb/qtGiyTuDkmt1YLcqVGHyKb5AAzok
+         PSEuNwcKT6+oTvoEecV56nK4DI1pqDf8iVDxPz+voNq0XDSwmfjb9rXFr5oSLjnime2y
+         QVw4hhKnSiYBVT9YwYjNE1vttUzc76Jl8WPFRYqBVzKkK7wdGiqewe7Zvwzwu+jl1r6O
+         oyjqQ/KgZR5scQooDwaXv4kXDNsK/JgD/PXqWOkkHRrWMJiIpEYNSTm+XCGeYlJVVqK6
+         KqwlEYYtKzQinzcbvRb0xYFWgW7ZKR/9ApHK1fMBoad0NBjQNh6U7Pdv9XyINPKIsBQN
+         E7WA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729351942; x=1729956742;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tMbXRc4YDc45MT1d2qKMPKKlX3fx86b90pw720KiDfI=;
+        b=IeMElZdPF+mOUV+P8Ny0Y0rqfd78I678T8BADbokmVjLldu0JLmues6zIHVuCO/WoJ
+         zlDPX7sjNvNxY7gRsVrxxJuI9Pwb41X9iSsD/OKsNP1/qMTmXz1hbGzwdThgPaiJaRny
+         USJxrvsmu0klFhl+CmCf5yomKhLv1BK1EVGS/5CEA6hfMCV3F2voLRAuo2rsA/9X47Be
+         FUfuO6dtXIMb72OMmaEyg8T1EJUsmR1prSnaQv11seMeU9LYe2cql6lVkhvp298nntgg
+         M+LIfHKxPfrxXMNRumGbv/lkFEmjsIsRLK9PcWCBwz7GfL7FT7xJkNffhncAPFDpLp+8
+         1Vcg==
+X-Forwarded-Encrypted: i=1; AJvYcCUn7NNEnm5vQN389MsZeckeAKZoMTh5E7nTftzSXOSHsmKCatXhiPUwi0GvPogWZMb++k9KlVWbl3n/VEwR6wY=@vger.kernel.org, AJvYcCXlgPwjrMPsXcrk9LSDQ6eiaW4rZ061DDQ9/BbvALG4YZwlmxBvSOd3PcvVTrA8WzH3KXdbUnfffqWqh7E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6v4ayLbGWfc4urG3YZN3jn/lbiul8jXzBDOXPbL1d/+PkEXuO
+	vzokL5fsFo25RqEuwFhopUe15jWoWmGfF4+kLwltM6XOdeYAPc3NAsn6bj7jcjy4YvVemzugzBo
+	3FmAcVemoWmfk/1Q0Vsub3Z3cEg==
+X-Google-Smtp-Source: AGHT+IFJna+hBKXImW8Ukhf2hjuSYeoPJcv9SN4RAswAP5PzwhWWEEM29I8Tn+A3FSx/U4+sO1kd59bFe5ksAV0udi4=
+X-Received: by 2002:a05:6a00:2da2:b0:71e:6a99:4732 with SMTP id
+ d2e1a72fcca58-71ea4255c3emr7246225b3a.11.1729351942310; Sat, 19 Oct 2024
+ 08:32:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+References: <20240801202359.794035-1-frut3k7@gmail.com> <20241009065051.51143-1-frut3k7@gmail.com>
+ <b58b5b2e-bf9f-480c-810b-2cef29aab82c@quicinc.com> <CAKEyCaDUfn4jtCdTt9JJ-Qe+CCudORPwcjj5i5=G28ANc+eCRg@mail.gmail.com>
+ <87ed4dr5pj.fsf@kernel.org>
+In-Reply-To: <87ed4dr5pj.fsf@kernel.org>
+From: =?UTF-8?Q?Pawe=C5=82_Owoc?= <frut3k7@gmail.com>
+Date: Sat, 19 Oct 2024 17:32:10 +0200
+Message-ID: <CAKEyCaD-1GO1NL-=1E92BE9=XKa2PymOAY14vMmtwYGLsPjeUg@mail.gmail.com>
+Subject: Re: [PATCH v2] wifi: ath10k: add channel 177 for 5 GHz band
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Jeff Johnson <quic_jjohnson@quicinc.com>, Jeff Johnson <jjohnson@kernel.org>, 
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Ching-Te Ku <ku920601@realtek.com>
-
-The priority table should be changed according to what the in using
-Bluetooth application is. To avoid Bluetooth audio + HID (mouse) will
-trigger the lag experience, update the priority table.
-
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 989e6e882c6e..8a65722dd1fd 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -3853,7 +3853,7 @@ void rtw89_btc_set_policy_v1(struct rtw89_dev *rtwdev, u16 policy_type)
- 				     s_def[CXST_ENULL].cxtbl, s_def[CXST_ENULL].cxtype);
- 			break;
- 		case BTC_CXP_OFFE_2GBWMIXB:
--			_slot_set(btc, CXST_E2G, 0, 0xea5a5555, SLOT_MIX);
-+			_slot_set(btc, CXST_E2G, 0, tbl_w1, SLOT_MIX);
- 			_slot_set_le(btc, CXST_EBT, s_def[CXST_EBT].dur,
- 				     s_def[CXST_EBT].cxtbl, s_def[CXST_EBT].cxtype);
- 			break;
--- 
-2.25.1
-
+On Fri, Oct 18, 2024 at 1:49=E2=80=AFPM Kalle Valo <kvalo@kernel.org> wrote=
+:
+>
+> I wonder how this works with QCA6174, unfortunately I'm not able to test
+> that.
+>
+I only tested on QCA988X, QCA9984 and IPQ4019 as clients.
+> --
+> https://patchwork.kernel.org/project/linux-wireless/list/
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
+tches
