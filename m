@@ -1,176 +1,217 @@
-Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
+Received: from mx0b-0024c301.pphosted.com (mx0b-0024c301.pphosted.com [148.163.153.153])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765DE16DECB;
-	Tue, 22 Oct 2024 10:43:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729593836; cv=none; b=QzrvBavePwxYQN3Mrrsof5NwNSnxARDZGhTsKYk7xEo+cYG4tQPxEfUZB9AG4DXIIppAx6mU03wypxplYNqKEWYd5RfQC03TWemHRG9HheaUcQHqUJcDv9uN3Y09ZsuRBDEe+Cx5hH42bHi1MeY/0+IaHp8Up86SNQtZKtJ62/o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729593836; c=relaxed/simple;
-	bh=3L/mfArSh02i4CZyNQjoKh10X4Lo25gJRXejPnC009o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YqvV6cRHax8USWv/7Z/ESqeN8KFaRh4JxUsrNeo4aAh9u78I3QSpetUf+p+XJ4Ji7tN8uwY/4Z4iu3hRYcplLM1ygZhVv9tWqum4gLb9IWhbLOYsmZTDy1NbkvTHMjYuCV1M5T2O5D2xgVJRINJ0rSHP+BSEgQEEXX1Z2KrfaHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=SZ3ybE8w; arc=none smtp.client-ip=217.70.183.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D61199254
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2024 10:57:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.153.153
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729594627; cv=fail; b=NnkSMfsz58pYLT6YzjKtusxhN37u0UUxFlM+4sbcTy/6FeAr7YPOdbYXmidYa/bJr12Ivd9GzDqY9Gv04iKgjC3/kEess0pvoVAAw89GIt3ZPaJ8SqctPwiiGG68FJS9bkQppQkDDwoWpSW0RU1/xqg9TYLr2TyH9WaRgBPGkAo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729594627; c=relaxed/simple;
+	bh=wzW1kbFKYhFkvpDsqw5yBnSF3v1qpUo+2axeNe+JrrI=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=cL5r1p7IbS4ow0ej9GXj/JtxyUsyInV6aG7F9UbpEpAYP8VPH4XxQk/x6LZ/46/M1R7iXLstSp8o6vSuF7EtvjLhSNEYfzjGHnRhb1THhzYEQOzW7w/gUW2UZojHgXnAFQjM6+iFHu1vkmLe1F+ZYvclHZAz16CTrSspJM9drwk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=silabs.com; spf=pass smtp.mailfrom=silabs.com; dkim=pass (2048-bit key) header.d=silabs.com header.i=@silabs.com header.b=Tsk4jwIb; dkim=pass (1024-bit key) header.d=silabs.com header.i=@silabs.com header.b=BCrVlr/u; arc=fail smtp.client-ip=148.163.153.153
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=silabs.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=silabs.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="SZ3ybE8w"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id D096B40002;
-	Tue, 22 Oct 2024 10:43:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1729593825;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=p4qsrG6uruQTTTq/+4Xc9VuG+K4ys0k5jHgZ1t4x9E0=;
-	b=SZ3ybE8wllmqN+BvxV9heeYAnisb5Zp9aRtSqWEpYyBD+7i/vk+39TSmXk0gvfEEE8eaQn
-	3kdpvnsC8+o0sEVquJ5nuQUY18YYGVGM1d2vplYckrd1sRWsN9J6TNgWxjsufyIikKo0bw
-	V8gcdM0G3Lmpx3GvFWf0Ysv+b0qAJa3ph33r/hQ4NvJlqJlx9Wh56mXJm82WBrPzrc6Vof
-	cRhevYdxHFnBCvCYUS3hdqkuDu/6kQ8UVFVAKQb460nY2L2HZB1cK0BauIS7w2xjzC8k4V
-	/73GdVHpiKKWdKTS9jx27hJRl0vIGzLKoYXGgaBw678kvkeHXnPNXEMI1ffarA==
-Message-ID: <c9e98811-15f5-427a-82f7-2e7fff4a9873@bootlin.com>
-Date: Tue, 22 Oct 2024 12:43:44 +0200
+	dkim=pass (2048-bit key) header.d=silabs.com header.i=@silabs.com header.b="Tsk4jwIb";
+	dkim=pass (1024-bit key) header.d=silabs.com header.i=@silabs.com header.b="BCrVlr/u"
+Received: from pps.filterd (m0101742.ppops.net [127.0.0.1])
+	by mx0a-0024c301.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49M8NxOE015824;
+	Tue, 22 Oct 2024 05:15:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=silabs.com; h=
+	content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps12202023;
+	 bh=b2BgCYcIcCKZi/j01AWsXF/igcZVcEmICfmsKU6yDdQ=; b=Tsk4jwIboEi3
+	5P1Tm9wA0zP0lfhl1WmEE2lp5lpY6Du9CTzx3n3IO70u8Cdb8kKu9U8DrcNs8cXU
+	dJ76hVWnFHksO5IfYnov5KnRL53D7Fto4N+Jpmv2yqUwM17kuP+Hct4ASThKfk0X
+	+3MrNySuKMQEb4gNs6DhYJa9V3jKvmEKJWtyef32fvjxfZkyeNoRRAM7zKPstQ6V
+	6Z2xr1uOqHhKe47Zp/lWPsFYRE/rjscxSKagqkKkfQUyld7+D5NOS75QlIKhf0zm
+	1BmKmRAhwYb0HCj80jCnJAnprC1y6u6hkwP9NWeutjQmocd7ZYnc5AQvD34AZP7c
+	iJbg2Hb8Nw==
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+	by mx0a-0024c301.pphosted.com (PPS) with ESMTPS id 42c6qcdc5h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Oct 2024 05:15:31 -0500 (CDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=pGvmqsl8Wud5bMmHhgekcfNci8gvpAecaagiNOn8QRBpg56SZRkHF+yvOcVDWsY72mLvIU/6SoKjngkzzg0fPPDCb3qwkQWTXYshdpZU2/WLADVh8UQzLeCukIWBUJiN53IUNcVn/ETjxccg0uAvrN/z/mbfif5ZQaizHYpRvB0LEhS/M0nE1md0aw6yVPjtRImxmwXIvyNcIVWTSL2OExSKdwrmz+cWFNTpzFQsCNrFcROpjdmrtX9xOKpzUFUl5rcoUzqAdnaCAQsnvseDKxoi7/tac4zDMgygSwRv8OPzBpfLRyGCKaRSclQvrT/v/8tvpBlv7xi0PqvJTkerJA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=b2BgCYcIcCKZi/j01AWsXF/igcZVcEmICfmsKU6yDdQ=;
+ b=UPxHcwRtMu8tfBlEIxKWYMncgpr1pAv4bmJkNvdF610SLZwzRsMh0tEaZb+n92McGG+B++l0hksIwNtBev4Bwz7WvJSVSbKuPjIJLrAa2C+qi1TXiDNwmejb+S83M/IcI2tGJJdfO0lT5Z7GBP6mK1Te4ZkiCGTeP4UPsG7y6M03Ry11Cy/xniiFh5NzmcLBi21Y49MCMUue+BSIdeyKQ7ue/jE5sivJNCspsxlaYajLdhVviSbKJIhI+2YelWPh18RpqOsy2vspEgIwsnviv5Af4NLc7NuG1h5gh7V3ZwOvbpZSxrdXpQo1EnR8rsXh3ZAPtmDwBhfrU2oN/qlbjA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=silabs.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=b2BgCYcIcCKZi/j01AWsXF/igcZVcEmICfmsKU6yDdQ=;
+ b=BCrVlr/u0iSZcPzCbtXpa+Z/TTiTZmXA/bvgvgDEJohUsXbLqBkTVwRRmpRWpXMik7IVaYGdyBN7Mgr7ve/jHrzGWkMLbv2UexJn57jw/QTbzxAejsoW5mUlvytwhLPs3fLmOgCfIODsQh29LZwEtl3fWYe7AG5wXbBYKFfIN/0=
+Received: from IA1PR11MB7773.namprd11.prod.outlook.com (2603:10b6:208:3f0::21)
+ by IA1PR11MB7856.namprd11.prod.outlook.com (2603:10b6:208:3f5::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8069.29; Tue, 22 Oct
+ 2024 10:15:30 +0000
+Received: from IA1PR11MB7773.namprd11.prod.outlook.com
+ ([fe80::e78:8cb8:9f49:4005]) by IA1PR11MB7773.namprd11.prod.outlook.com
+ ([fe80::e78:8cb8:9f49:4005%6]) with mapi id 15.20.8069.027; Tue, 22 Oct 2024
+ 10:15:29 +0000
+From: =?ISO-8859-1?Q?J=E9r=F4me?= Pouiller <jerome.pouiller@silabs.com>
+To: kvalo@kernel.org, gregkh@linuxfoundation.org,
+        linux-wireless@vger.kernel.org, Yuan Can <yuancan@huawei.com>
+Subject: Re: [PATCH] wifi: wfx: Fix error handling in wfx_core_init()
+Date: Tue, 22 Oct 2024 12:15:23 +0200
+Message-ID: <3950964.R56niFO833@nb0018864>
+Organization: Silicon Labs
+In-Reply-To: <20241022090453.84679-1-yuancan@huawei.com>
+References: <20241022090453.84679-1-yuancan@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+X-ClientProxiedBy: SA1P222CA0061.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:2c1::14) To IA1PR11MB7773.namprd11.prod.outlook.com
+ (2603:10b6:208:3f0::21)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: wilc1000: Rework bus locking
-To: Marek Vasut <marex@denx.de>, linux-wireless@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
- Adham Abozaeid <adham.abozaeid@microchip.com>,
- Ajay Singh <ajay.kathat@microchip.com>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
- <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
- netdev@vger.kernel.org
-References: <20241022013855.284783-1-marex@denx.de>
-From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Content-Language: en-US
-In-Reply-To: <20241022013855.284783-1-marex@denx.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: alexis.lothore@bootlin.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: IA1PR11MB7773:EE_|IA1PR11MB7856:EE_
+X-MS-Office365-Filtering-Correlation-Id: cc6298eb-0b2a-4ded-d72c-08dcf2827482
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|52116014|1800799024|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?iso-8859-1?Q?Y9hQj5FJ6yECezFHmdsy7GAZ/4tc3P3mPigukudGIDbxZa94PVxvpihZjH?=
+ =?iso-8859-1?Q?NSYZ173dpxmKRWyDTls7TkbazmhRxYCS3oypM92nJ8dUbWC4cVsugnuK3A?=
+ =?iso-8859-1?Q?dITuKHFQaps4nllCJFdZLEb0jMkYpCf6SSoGzligaZS3JzobxUKpg7v7qn?=
+ =?iso-8859-1?Q?Dbb6ewOKlIfjM8jXSmNuvoONlyOCqYsKioWMH6/lWDUGuEqhcrUb0zS7C6?=
+ =?iso-8859-1?Q?n4VA5pskd/Fa1NnVhnL5eZ1Z2nsxLn+FwEfKqHq69tqLfjhqiEBY07y3tY?=
+ =?iso-8859-1?Q?pvwS25zIKJvbbYf2stWa0DFmGsQu+1rkpD8Ha9ndbef/tExvKDsBweHK4X?=
+ =?iso-8859-1?Q?HEH/Z7t+ex44eJFnNjaR3tl6S0rZD0BMLsmBlWFa5k3ANwPH/Xy+Uy9Bx/?=
+ =?iso-8859-1?Q?Id/it8rytaelzgcM0hlPyaqkQns3gN4ppSdjUPm9zWK37O2SnE67IDd1Ew?=
+ =?iso-8859-1?Q?JPYvJ3pZnP4vbtibAM+cJvcHSgzSAB6efK9x7nkDMrqVZadnACm4hRne4S?=
+ =?iso-8859-1?Q?ecTEzxq2qJL7LU3EpUYgIKT9nvB12BrBtFCZvYMOQrgzUq7m1ER3EuisXh?=
+ =?iso-8859-1?Q?KvYOVHHvbzA2n8xxmlSIIMH2ovQC4nlhh3mlNk9IU4SWhZdje83wymDPcO?=
+ =?iso-8859-1?Q?2f4DF16ZxYQ/NBjYJsT0ewayeLtaWdCUek/SOxbjU8JncfI6R49//uIIqx?=
+ =?iso-8859-1?Q?ys2pNXmpn7MPgO6uTNKt9/RURsCrkAaWDBV4NDXBmt2PJoT96MwUKk43q9?=
+ =?iso-8859-1?Q?tNUI8yNEkKvc9nhhjKnIERMVklt1JSzgwoFr2lmXvN42BB6Rn/OQI9QrH4?=
+ =?iso-8859-1?Q?yiCeojqS216tutUdzpoSDh8Hy37tYT5Msqt7RgfSVAxxJk16Wc+tbUmjyi?=
+ =?iso-8859-1?Q?jU5FcLwr/v8oDM9ao7XHEKDRoA+/bmihdbYWNaTsmsq0CkgrEkqyHmWWAc?=
+ =?iso-8859-1?Q?Lvbs/PNO18T9qdJVuiW8lcnvwUUJnDgiOlluVxZSa2CE5LRED54PmLEhL/?=
+ =?iso-8859-1?Q?CiCAObmlA0UL/WsPuKthw8GwYArtJX2bdQ24dtcoRdDFGVlixGsMgl4LlB?=
+ =?iso-8859-1?Q?GBzkS34P6mlIRFODWNlB4qTPLW+kfRf4qxYFD/+Slt/vS7PeDt7nakMEtj?=
+ =?iso-8859-1?Q?qP4WReOAem69ZePR9wTCGjF//i6QUSXHE3l9FP6mH5ZVmWcwUyxsNuoqJi?=
+ =?iso-8859-1?Q?3KZ0IhVkNNUA8EX5/RsUViCsS//NpA3DDxOwaL8kZLnJKF/huRh/oe9fi7?=
+ =?iso-8859-1?Q?VzyoYvYbOkFumx8eFQl8bsHQagl1VSMUyZU4dO3fMrE/Gt1JuaZtrvjLoB?=
+ =?iso-8859-1?Q?AbtBhRq8ANBw803XHI8knoHajrUzhCPQymtE98VDzqnO3Y9Nu66cK/BUr6?=
+ =?iso-8859-1?Q?NAhQM9+H8+Wr9nWumtf3R157H5beEn6XUblwXlQwyQm7yXDAJPYss=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7773.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(52116014)(1800799024)(38350700014);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?iso-8859-1?Q?HxcNVc94L0SmedjcepNi0roblz4eZQj18NMLRf3sP99RgUiNA0ljUQeIgp?=
+ =?iso-8859-1?Q?dtAmH1NP6qhO+y7n30ljeSM7Hfjak2a8vzr2BI9KZfBQT4Rcuwp5tJFarD?=
+ =?iso-8859-1?Q?WKOhjxYNzTbvCZSL6EjNet5m0FmP338Raf9D1rbxrY+LRjOkpwMBXgae4b?=
+ =?iso-8859-1?Q?XyIBlpCwvX5lL1TUc3EshqT/v65ogtjO7QwUbrvzfBOtECBFFDamB19EUL?=
+ =?iso-8859-1?Q?Ts+9H3UF4/ucb7WhKEWqOYAu+ZglbQEG0FWZ6tVm1IFWHyW4KMbduJ1Cj3?=
+ =?iso-8859-1?Q?eFVvvmjbgbea9uBPQ9rii1kMC8qOFJ8aD8sUmtsO8X6PnCDc0Lk0cxc/PE?=
+ =?iso-8859-1?Q?pugGmcZtEZwsNqXCspeY+PVPsXO0q2k5YzU8Xtn/znMIsRUPsCbxe+rrt8?=
+ =?iso-8859-1?Q?eyOHg7NBFaJP5XsFrymQUsN+W7pXJWBwRBLoB81+nAyGbksA46aZuvv/bd?=
+ =?iso-8859-1?Q?OHd7tqRyatb8f/XeMUmUa3NEa1ckZNRBhp6IWZObBh6Uz8VRIjL3JzztaA?=
+ =?iso-8859-1?Q?jBYGoYolbmXxAHqUWv8FJnID1UqVuLSWpuToiUZby+4iPTl3ZTOL1i2/68?=
+ =?iso-8859-1?Q?OrsL/w2LfX4ODvgfGmGSjV2SFDaGJLCjztm54+4V4SnUQzEt6/D3ZYHXoc?=
+ =?iso-8859-1?Q?DnmL47qTSYz0d+L/eEKC0HFnDC8tOP6GCZlME6hilmImQ6OJEuOfG9u2IZ?=
+ =?iso-8859-1?Q?6LtIfHN5guCd5Fu+g7Emp4ej1AAwr4EXJSnuTDczUA0PMBHQXAArfb9AMD?=
+ =?iso-8859-1?Q?ioA8/Y1EipzxEacVyT7+HxgSFOv6ZU9MxdRBJJk732yTZtlK4ROsGIcdIj?=
+ =?iso-8859-1?Q?dpLOnLjVMK+E+JFMzvp0DZvpau72G3RueEaEEFKRTQobtlKQTEAZgwuWOs?=
+ =?iso-8859-1?Q?BEsSRQF8WGlx4vVdRxGWAqWa/zItMHYURDIR5FITMJNpPttt0INkXxZ79I?=
+ =?iso-8859-1?Q?7XDyONHu4ut6tDH0Pc+tw8RIsGSj5+r51kIDlZpBH5HdwUTV/4hbBo39om?=
+ =?iso-8859-1?Q?Div2K/BUN8ttmuwA1KuswlvoadTjyh9QPQs3tG49KGw6lOp03pzbKwesfr?=
+ =?iso-8859-1?Q?e20Fb7nBqOwTaKYWSbjE3Q+n5DMDsXASlIt6AAv2GDLFb1xXHOGvoYRDUF?=
+ =?iso-8859-1?Q?0nhUYT8p/fdV17eSJt7+1Uj4eXaFlR5m0KL3pHB6zXW1advLh7BAiY3cKp?=
+ =?iso-8859-1?Q?c74L9t7ZsbIiKJ1H8vE9mzCBi7YQgQGCGU/hiUUo1TCoyVFM16fJ9UOQvZ?=
+ =?iso-8859-1?Q?itRI+RLpFiPzHImjZTUCzm6dv6kALR6gXN4nhwQ5NvyD4DETwP6pCMzOi9?=
+ =?iso-8859-1?Q?yNMupHbDDhYcJi7/VhRz9SmhK/LsErHr55D3qczpl9ZgOlbKnXbYsfxGBW?=
+ =?iso-8859-1?Q?zyuL5FMf3pVhVI5+kzZQgDZofyt1s2ld98WmCBndTlynx4+YK6cdlxiFIR?=
+ =?iso-8859-1?Q?NwRmS8XJ1rTLMmrISmuR5zDSIr2l2ekG8a54wfWkdewtR2npYColRfsmYT?=
+ =?iso-8859-1?Q?aPHY8/524YRbe43wGwOmRqdEYQLucONEA1w80c6QdXXYiwINElSTScxM1b?=
+ =?iso-8859-1?Q?lccdSLOzLQ8qcMk4csDJYavmZY8E1L68V8N4eFpaG0c8/d5mtT1ixGEXV4?=
+ =?iso-8859-1?Q?kFJMY7dMJV28X9b91xGNgD9GO5p9dW8a1u?=
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cc6298eb-0b2a-4ded-d72c-08dcf2827482
+X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7773.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2024 10:15:29.5892
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: fCXov25pZ4yb7YoLkSyOKBeKQ207grPdJHIgJtZitj32b7dpjBfv4wh+zpeeBJUhh8NFBXow2w7CYiyEsidnow==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB7856
+X-Proofpoint-GUID: hgHU0oII_ZCqmAyMwYn3oerD0GbSy4-h
+X-Proofpoint-ORIG-GUID: hgHU0oII_ZCqmAyMwYn3oerD0GbSy4-h
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-22_09,2024-10-21_01,2024-09-30_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
+ malwarescore=0 phishscore=0 mlxscore=0 mlxlogscore=999 priorityscore=1501
+ bulkscore=0 suspectscore=0 lowpriorityscore=0 spamscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.21.0-2409260000
+ definitions=main-2410220066
 
-Hi Marek,
-
-On 10/22/24 03:38, Marek Vasut wrote:
-> The bus locking in this driver is broken and produces subtle race
-> condition with ksdioirqd and its mmc_claim_host()/mmc_release_host()
-> usage in case of SDIO bus. Rework the locking to avoid this race
-> condition.
-> 
-> The problem is the hif_cs mutex used in acquire_bus()/release_bus(),
-> which makes it look like calling acquire_bus() results in exclusive
-> access to the bus, but that is not true for SDIO bus. For SDIO bus,
-> to obtain exclusive access (any access, really), it is necessary to
-> call sdio_claim_host(), which is a wrapper around mmc_claim_host(),
-> which does its own locking. The acquire_bus() does not do that, but
-> the SDIO interface implementation does call sdio_claim_host() and
-> sdio_release_host() every single command, which is problematic. To
-> make things worse, wilc_sdio_interrupt() implementation called from
-> ksdioirqd first calls sdio_release_host(), then interrupt handling
-> and finally sdio_claim_host().
-> 
-> The core problem is that sdio_claim_host() cannot be done per command,
-> but has to be done per register/data IO which consists of multiple
-> commands.
-
-Is it really true ? What makes you say that we can not perform multiple
-operations under the same exclusive sdio section ?
-
-Usually the WILC register read/write consists of 3x CMD52
-> to push in CSA pointer address and 1x CMD53 to read/write data to that
-> address. Most other accesses are also composed of multiple commands.
-> 
-> Currently, if ksdioirqd wakes up and attempts to read SDIO_CCCR_INTx
-> to get pending SDIO IRQs in sdio_get_pending_irqs(), it can easily
-> perform that transfer between two consecutive CMD52 which are pushing
-> in the CSA pointer address and possibly disrupt the WILC operation.
-> This is undesired behavior.
-
-I agree about the observation, and then I disagree about the statement above on
-sdio_claim_host/sdio_release_host not meant to be used for multiple commands.
-I see plenty of sdio wireless drivers performing multiple sdio operations under
-the same sdio exclusive bus access section, either explicitely in their code, or
-through a sdio dedicated helper (eg: sdio_enable_func, sdio_disable_func).
-
-But more concerns below
-> 
-> Rework the locking.
-> 
-> Introduce new .hif_claim/.hif_release callbacks which implement bus
-> specific locking. Lock/unlock SDIO bus access using sdio_claim_host()
-> and sdio_release_host(), lock/unlock SPI bus access using the current
-> hif_cs mutex moved purely into the spi.c interface. Make acquire_bus()
-> and release_bus() call the .hif_claim/.hif_release() callbacks and do
-> not access the hif_cs mutex from there at all.
-> 
-> Remove any SDIO bus locking used directly in commands and the broken
-> SDIO bus unlocking in wilc_sdio_interrupt(), this is no longer needed.
-> Fix up SDIO initialization code which newly needs sdio_claim_host()
-> and sdio_release_host(), since it cannot depend on the locking being
-> done per-command anymore.
-> 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-
-[...]
-
->  
-> -static void wilc_sdio_interrupt(struct sdio_func *func)
-> +static void wilc_sdio_claim(struct wilc *wilc)
-> +{
-> +	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
-> +
-> +	sdio_claim_host(func);
-> +}
-> +
-> +static void wilc_sdio_release(struct wilc *wilc)
+On Tuesday 22 October 2024 11:04:53 CEST Yuan Can wrote:
+> The wfx_core_init() returns without checking the retval from
+> sdio_register_driver().
+> If the sdio_register_driver() failed, the module failed to install,
+> leaving the wfx_spi_driver not unregistered.
+>=20
+> Fixes: a7a91ca5a23d ("staging: wfx: add infrastructure for new driver")
+> Signed-off-by: Yuan Can <yuancan@huawei.com>
+> ---
+>  drivers/net/wireless/silabs/wfx/main.c | 17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/silabs/wfx/main.c b/drivers/net/wireles=
+s/silabs/wfx/main.c
+> index e7198520bdff..64441c8bc460 100644
+> --- a/drivers/net/wireless/silabs/wfx/main.c
+> +++ b/drivers/net/wireless/silabs/wfx/main.c
+> @@ -480,10 +480,23 @@ static int __init wfx_core_init(void)
 >  {
-> +	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
+>         int ret =3D 0;
+>=20
+> -       if (IS_ENABLED(CONFIG_SPI))
+> +       if (IS_ENABLED(CONFIG_SPI)) {
+>                 ret =3D spi_register_driver(&wfx_spi_driver);
+> -       if (IS_ENABLED(CONFIG_MMC) && !ret)
+> +               if (ret)
+> +                       goto out;
+> +       }
+> +       if (IS_ENABLED(CONFIG_MMC)) {
+>                 ret =3D sdio_register_driver(&wfx_sdio_driver);
+> +               if (ret)
+> +                       goto unregister_spi;
+> +       }
 > +
->  	sdio_release_host(func);
-> +}
-
-So with this series, we end up with some bus-specific operations needing some
-locking, but is now up to the upper layer to control this locking. This feels
-wrong. The driver has a dedicated sdio layer, so if we need some locking for
-sdio-specific operations, it should be handled autonomously by the sdio layer,
-right ?
-
-[...]
-
->  static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
-> diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/wireless/microchip/wilc1000/wlan.h
-> index b9e7f9222eadd..ade2db95e8a0f 100644
-> --- a/drivers/net/wireless/microchip/wilc1000/wlan.h
-> +++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
-> @@ -403,6 +403,8 @@ struct wilc_hif_func {
->  	void (*disable_interrupt)(struct wilc *nic);
->  	int (*hif_reset)(struct wilc *wilc);
->  	bool (*hif_is_init)(struct wilc *wilc);
-> +	void (*hif_claim)(struct wilc *wilc);
-> +	void (*hif_release)(struct wilc *wilc);
-
-So IIUC, your series push the hif_cs lock into each bus layer of the driver,
-remove any explicit call to bus-specific locking mechanism from those layers,
-and makes the upper layer control the locking. As mentioned above, I don't
-understand why those layers can not manage the bus-specific locking by
-themselves (which would be a big win for the upper layer).
-For SDIO specifically, I feel like letting the layer handle those claim/release
-would even allow to remove this hif_cs mutex (but we may still need a lock for
-SPI side)
-
-But I may be missing something, so feel free to prove me wrong.
+> +       return 0;
+> +
+> +unregister_spi:
+> +       if (IS_ENABLED(CONFIG_SPI))
+> +               spi_unregister_driver(&wfx_spi_driver);
+> +out:
+>         return ret;
+>  }
+>  module_init(wfx_core_init);
 
 
--- 
-Alexis Lothoré, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Reviewed-by: J=E9r=F4me Pouiller <jerome.pouiller@silabs.com>
+
+--=20
+J=E9r=F4me Pouiller
+
+
