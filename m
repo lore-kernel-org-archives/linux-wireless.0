@@ -1,118 +1,138 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB4011991CC
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2024 09:57:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A071F18E02D;
+	Tue, 22 Oct 2024 10:21:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729591071; cv=none; b=hDOCvb3Cil+0TLq2A2c7C+z94wFnxf8ooq6b4KnPAb40olZoFQWaihTVmy4qXqSxs1X/yA6AUDGs3+e++BuZjmJt90VVf/CL/hmtu65mYx0aQNZACYBRC0YVwVYLEF1QYV0laqVSE3EmKBq4m+BAuqmxdMNVR9zcSOxLHD0GAoI=
+	t=1729592478; cv=none; b=fKtJiP/wdtUBYfR+rX6alcFxskPuCSF9fY6hoP21/4AVggVMn5f2L8YqF3LP+QNYho3nPQMwpL/7tLVleQz+vSV1yY9pLxFMQDCWsqA8voRebUwUPZHox7MrkNBVSlcrQFpSYsrUaj6XSf/OPVKEMCjBKpPDb/OrKDkcKuqStHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729591071; c=relaxed/simple;
-	bh=Z6dKNwVETYKa4690g17q5VlS/mmQvHhfpIjCFuk8s2c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FdLrn9EAUwLzxsP2TIisOgVWvQAF4akanojwulSebS4Ce6S5C3ySHjp10VwIh3lFR1l90Xsjo64gyoNhc9JfM46W5PzMpW6g7857ehYBe9AxnxmiIUz90woc3+aOwcB+lVPFGxuA/0p2Fbdj8DzZ/rRRZs1Qc5pWI3JucUjdLDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cf0qjZCA; arc=none smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1729592478; c=relaxed/simple;
+	bh=H/OQLMP1D3Pzj6veo2hkf4Mks7xnJVi14u2jVIBrjuU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=qVMZ/4Xz/ifPkxV0bKxTWMpDUdSzVNE5G/zepuCAGJEYabCu17nhpT87TvwmCGoYbV4bwvEeTGhMR8Hx/9ULtdGDui0zyi0FftEtvtpVJDvGsjoZ/XREP47K72TpEAuCPi5fJy8NaNuA6KsK6+fpI69mL7J8LpZhrXbrMM/6WAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nXcnw76O; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cf0qjZCA"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-539e59dadebso6760198e87.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2024 02:57:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1729591068; x=1730195868; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HvTNyLNGAHIQ6cpxYTM3zWA6pjUJiTbrO2qEq3VuoYw=;
-        b=cf0qjZCA0KSByW+TG9sIpgT8hhcKYEcg58y34rv7GLwquMdsHLBJIzm+2nYqY4aGRg
-         PvtGF6QrGspqES7yQY5N+gIxZMK1KcfMwr4clar2OPCOIPB7X4hxVUfFsabQEiUe/Nkh
-         1BMf4IRyvGTLbeN8ufihN+d/+sUem9KVZ2zH8jOUIy5TjacS7Y5c7Yg9lzum+1hwPvI2
-         RhAdubp8vXEsZ+21Seukv0eai1g/PB5Lj/nyNinwqQLEB6rjn8mN3YS0RNUuW+n5Zw9e
-         d+PLTVR6MZZxcZ2vrdHuG6L3UF2e1IEP8JaL6768JTj1+ZPWMBoiWl1UQ1hRZjkzn+Pp
-         sf+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729591068; x=1730195868;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HvTNyLNGAHIQ6cpxYTM3zWA6pjUJiTbrO2qEq3VuoYw=;
-        b=CjLHzwhiMe7kbfULPHpkIMsmB/BTb0MFoB1J1vpV62TjPOV3YM7egp8k/o5FnP3X3N
-         AQsdrdOSc6k/DS61kjKPoYvAKzV+RSxbPvUd/62VM5/x24TQ/iI7mp/DlTHQn7geHn04
-         V/ej7uQIEvGkdcyEp9U/cDnw/Zi9rhBh8lododHPqqjfScrB8J6fcHdZciViZI/X6pS3
-         Hr/0+cylyn1ohndJPBoJVj6Bj4DKz2RyI2UGmP0XWXCh3w88E+C/D0kKjHXt1lRYUeYa
-         mAxZA7hQBWQnmKOQaYrATPTpsucAkNdB1LMVbWUlLFdZCklPdnQd77knFV0zXwp0HNRc
-         vXew==
-X-Forwarded-Encrypted: i=1; AJvYcCURWXSPu3JOR385M2V9bW0Oislm67shfQ8y0NJo/Z06sUgxBCshZ17a72vuORQy1uZgqa5DWUVnBtmMe4ASrQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyX0Ao0/1g20RL/anJxp2u7EJ388Jh7So5BbbR4DtLtNaNfOoqS
-	DlVE6R5Eeu3oLRL7XESiaZ36nsloJFik5K92UMXVHMoAya3OrHM5nZ+Uj+in55I=
-X-Google-Smtp-Source: AGHT+IHVu91T26e5E//xB6XfjAMTT+PWPADj71F+BMcbekDOXThdc77eC6SbwTZMrGx5Pm1w5zcDNg==
-X-Received: by 2002:a05:6512:220a:b0:539:da76:c77e with SMTP id 2adb3069b0e04-53a1520bd15mr6361012e87.5.1729591067825;
-        Tue, 22 Oct 2024 02:57:47 -0700 (PDT)
-Received: from eriador.lumag.spb.ru (2001-14ba-a0c3-3a00--b8c.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::b8c])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-53a223efbcesm728504e87.72.2024.10.22.02.57.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Oct 2024 02:57:47 -0700 (PDT)
-Date: Tue, 22 Oct 2024 12:57:45 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To: Miaoqing Pan <quic_miaoqing@quicinc.com>
-Cc: kvalo@kernel.org, quic_jjohnson@quicinc.com, 
-	ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] wifi: ath11k: add firmware-name device tree property
-Message-ID: <smgbishqbin4kcpshqvue3ivvfko2l6rj2w4ikwydosbkq6kde@pdbzhklj7znm>
-References: <20241001033053.2084360-1-quic_miaoqing@quicinc.com>
- <20241001033053.2084360-3-quic_miaoqing@quicinc.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nXcnw76O"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49M8rwPu029542;
+	Tue, 22 Oct 2024 10:20:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	N+s6AQopGnxwcBNHC7PWJg7SZl5oszgpZ1Oj13OA6Es=; b=nXcnw76OAD9D9zCC
+	lZmabVRP2PFvS4nXp3K+TRdePhwI1PZbfGbsqU0nLMIKMo4MLfaO/4RaTcHY7lhY
+	XYuVOocnS1c9oWMz0BH75+HNr8AYyp6XMvVpD6NawuR3uuqtcC6JtbLFciquw0Uh
+	u5Gnnju8ApTKBevv4CWChXTmUsPHvK89VuqluG/xALP1456VYxZSaPYaCWYHugpC
+	DK6qcQNrHOoPdTXwQMv6EcpLGxMH+2vKmAPuNMa98maUEif2xDE18+ioAJx9VBF+
+	DdzkPH/olh7IHPcgJexjNuoIn/GQs5cM6ZLWh3b3iCp23RFzE/G+ClFITPdHmyo/
+	U6KFJA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42c6vc7y3t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Oct 2024 10:20:56 +0000 (GMT)
+Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49MAKtVM014405
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 22 Oct 2024 10:20:55 GMT
+Received: from [10.253.13.77] (10.80.80.8) by nalasex01c.na.qualcomm.com
+ (10.47.97.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 22 Oct
+ 2024 03:20:53 -0700
+Message-ID: <1c5f5c93-db06-4490-af2e-bbce2d184c94@quicinc.com>
+Date: Tue, 22 Oct 2024 18:20:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241001033053.2084360-3-quic_miaoqing@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] wifi: ath11k: add firmware-name device tree property
+To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+CC: <kvalo@kernel.org>, <quic_jjohnson@quicinc.com>,
+        <ath11k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20241001033053.2084360-1-quic_miaoqing@quicinc.com>
+ <20241001033053.2084360-3-quic_miaoqing@quicinc.com>
+ <smgbishqbin4kcpshqvue3ivvfko2l6rj2w4ikwydosbkq6kde@pdbzhklj7znm>
+Content-Language: en-US
+From: Miaoqing Pan <quic_miaoqing@quicinc.com>
+In-Reply-To: <smgbishqbin4kcpshqvue3ivvfko2l6rj2w4ikwydosbkq6kde@pdbzhklj7znm>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01c.na.qualcomm.com (10.47.97.35)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ookBtTEFOklfLVemqbibubzxo3qtZxKi
+X-Proofpoint-ORIG-GUID: ookBtTEFOklfLVemqbibubzxo3qtZxKi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ priorityscore=1501 impostorscore=0 lowpriorityscore=0 suspectscore=0
+ spamscore=0 phishscore=0 bulkscore=0 mlxscore=0 adultscore=0
+ mlxlogscore=860 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410220066
 
-On Tue, Oct 01, 2024 at 11:30:52AM +0800, Miaoqing Pan wrote:
-> QCA6698AQ uses different firmware/bdf/regdb with existing WCN6855
-> firmware, which is customized for IoE platforms. And the 'pci-device-id +
-> soc-hw-version + soc-hw-sub-version' may not be enough to identify the
-> correct firmware directory path.
 
-Why is it so? What makes it so different from the existing platforms
-that you can not use WCN6855 firmware?
+
+On 10/22/2024 5:57 PM, Dmitry Baryshkov wrote:
+> On Tue, Oct 01, 2024 at 11:30:52AM +0800, Miaoqing Pan wrote:
+>> QCA6698AQ uses different firmware/bdf/regdb with existing WCN6855
+>> firmware, which is customized for IoE platforms. And the 'pci-device-id +
+>> soc-hw-version + soc-hw-sub-version' may not be enough to identify the
+>> correct firmware directory path.
+> 
+> Why is it so? What makes it so different from the existing platforms
+> that you can not use WCN6855 firmware?
+
+Just as I said, a new customized firmware for IoE devices.
 
 > 
-> The device tree allows "firmware-name" to define the firmware path,
->     wifi@c000000 {
-
-You are describing platform node, while the commit message talks about
-the PCIe devices. Could you please clarify, whether it is a PCIe device
-or an AHB device?
-
->         firmware-name = "QCA6698AQ";
-
-Could we please follow the approach that has been defined in the commit
-5abf259772df ("wifi: ath10k: support board-specific firmware
-overrides")? In other words, instead of creating another directory under
-ath11k, create a subdir under the WCN6855/hwN.M/ which contains your
-device-specific data.
-
->         status = "okay";
->     };
+>>
+>> The device tree allows "firmware-name" to define the firmware path,
+>>      wifi@c000000 {
 > 
-> Tested-on: QCA6698AQ hw2.1 PCI WLAN.HSP.1.1-04402-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+> You are describing platform node, while the commit message talks about
+> the PCIe devices. Could you please clarify, whether it is a PCIe device
+> or an AHB device?
+
+PCIe device. The change is for sa8775p/qcs8300 those non-AHB boards.
+
 > 
-> Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
+>>          firmware-name = "QCA6698AQ";
+> 
+> Could we please follow the approach that has been defined in the commit
+> 5abf259772df ("wifi: ath10k: support board-specific firmware
+> overrides")? In other words, instead of creating another directory under
+> ath11k, create a subdir under the WCN6855/hwN.M/ which contains your
+> device-specific data.
 
-P.S. please CC linux-arm-msm for future respins of this series or for
-all other submissions that concern board-specific DT data on MSM
-platforms.
+Sure, thanks, will update.
 
-> ---
->  drivers/net/wireless/ath/ath11k/core.c | 12 ++++++++++++
->  drivers/net/wireless/ath/ath11k/core.h | 11 +++--------
->  2 files changed, 15 insertions(+), 8 deletions(-)
+> 
+>>          status = "okay";
+>>      };
+>>
+>> Tested-on: QCA6698AQ hw2.1 PCI WLAN.HSP.1.1-04402-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+>>
+>> Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
+> 
+> P.S. please CC linux-arm-msm for future respins of this series or for
+> all other submissions that concern board-specific DT data on MSM
+> platforms.
+
+ok.
+
+> 
+>> ---
+>>   drivers/net/wireless/ath/ath11k/core.c | 12 ++++++++++++
+>>   drivers/net/wireless/ath/ath11k/core.h | 11 +++--------
+>>   2 files changed, 15 insertions(+), 8 deletions(-)
+>>
 > 
 
--- 
-With best wishes
-Dmitry
