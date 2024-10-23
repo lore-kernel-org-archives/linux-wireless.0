@@ -1,46 +1,46 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834CC146D7F;
-	Wed, 23 Oct 2024 06:04:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60A41146D7F;
+	Wed, 23 Oct 2024 06:04:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729663485; cv=none; b=GattI8nBtzbrzU2CnazprV4nlOX6B7ydSzMo6/jUWb38oWRMNzh6Wmcp41MoZS7tQ6IL4qkOylHQlSRljXx64KK5Hza0RD5TOELyoSsHt7Zoh7NvaCWrX2Egs00jA08kzkJEWAE1kminZzQj1R7ufbMVJmy9uZaUoK2OllbTpO0=
+	t=1729663490; cv=none; b=jTazDbtB+bbld8Ihx+23RQkOfJVks7z7UotwmqSOmXA/JjGbltfjCy4h3usJ9IHUE1R6rntejjBZqYX6geQb4ZcCnmhKSykYWE7Mg+/c01HGJuT2QsqeMYICc4nRScAg5Tfj42BfiCOdHZGJlw5CcG5hcPW7rPrHgZLuiz3w6i4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729663485; c=relaxed/simple;
-	bh=8s5rDsO9kuMqJeoEdB8vaTUwSA98jrBSlJjVKTQholY=;
+	s=arc-20240116; t=1729663490; c=relaxed/simple;
+	bh=cnYYxvw2lVcifHIOM7/Z+dgyp96zMVBY83rJdzBzFjs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KEqb3Z5yCBZe0NUKbkTTrvQPjcc9B3kSOjYqv9o+YCU8tYEUWTwmn35e62RDKs2euGHclLHdeG03dBPN9zhCsTjvbIiKe6CoJLUcWvER243PIzNvFcrEhgY5GSbjchIvTedlwiXbcjKUmzVMUBMyOz/BFM9apEbtgTmgRzw9avM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=emRfnz7a; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=KiGNKFi8vlXaEzjRIFNGxb/bfD+U2DFQvHnwrB4FEeF7C965IBeyTfqdpyrjYfy86VQEZjqgyvO5VpU4XEZdT9K2WjI81518N5XJ/hp+rxClSwUd2Qs61B7aPgd1dfNFR3XdkjjL384g38k80WfUb86VmD8H79tv1F3AcwjoF+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ngm3FG0t; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="emRfnz7a"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49MLa9GB025148;
-	Wed, 23 Oct 2024 06:04:37 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ngm3FG0t"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49MLa3g0025438;
+	Wed, 23 Oct 2024 06:04:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	LLveBCIlg+6rbX3Q1bTENMsw4b12OySwJCCxOrvzrVc=; b=emRfnz7a7TPmnwk+
-	Lwo0mpQ3jieHFGc67aFMbSdsPi1oA0I8xV8a6tfZPvDfKfUOTvFpqdYDxMtacyFZ
-	Z3DZeH6aiEfoipwYVdTXqq8zjddKDEnfncdti7F9979CYQuRSMxk6OcaSfpQSOZd
-	9xL2pOWPFZhLT6cFQwj792QgWbx12pkCp1hBVOB9gYbALgnLuncrXsVqWr/17n/N
-	wZrSJYWIIdrkvXdnFE6sxyxXT9nV8wcWAFLgCP9pUbgYOJZTh82X3/j7bOE23cQl
-	hCZP2Xk4GBN4mv+DJc6FgS2QGI8y20u4qj3PbdfyUj8//JwojdFOub7lxg4GFjvq
-	xdZhVA==
+	IsiY7yt8JQwkr/CGYzfeuyrwP4Vfcc8zvfnje5HZERo=; b=Ngm3FG0tISNV7E8W
+	QeYJG+gD9SATa0CZOpF5Z6+qs9/8b4/eImhv4fFdgVWAyEju0RA7g1sPw5NxsGoA
+	I4FZff3X1PFlDm971la/64Ime9qT/2gWEb1R/Q9YHMEoGs4LcICAX38ocHy9/4ty
+	HCpF80kLewszCbYx6lR9PeMvIAJyNIogxERFAupE7k+qtu9wflb/J+Orx/tP1Evi
+	qXHKxGXFs6Rxgrrvt8by4hS/OjCQpWJYPVf2gQC66kMm4Etja6C2Yn7TZHS3ev6V
+	qigx2wdFTtq0woiWDd7/mAKnrbC8im9aY5XsY+96HImCqnPejsQ1Xko+EeHd0OE5
+	FiryRA==
 Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em41s1bn-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em4091ds-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Oct 2024 06:04:36 +0000 (GMT)
+	Wed, 23 Oct 2024 06:04:45 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49N64ZFK018052
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49N64iH3018169
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Oct 2024 06:04:35 GMT
+	Wed, 23 Oct 2024 06:04:44 GMT
 Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 22 Oct 2024 23:04:30 -0700
+ 15.2.1544.9; Tue, 22 Oct 2024 23:04:40 -0700
 From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>,
@@ -54,14 +54,10 @@ CC: <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>,
  Andersson" <andersson@kernel.org>,
         Konrad Dybcio <konradybcio@kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        Karthikeyan Periyasamy
-	<quic_periyasa@quicinc.com>,
-        Harshitha Prem <quic_hprem@quicinc.com>,
-        "Kalle
- Valo" <quic_kvalo@quicinc.com>
-Subject: [RFC PATCH 4/6] wifi: ath12k: Send partner device details in QMI MLO capability
-Date: Wed, 23 Oct 2024 11:33:50 +0530
-Message-ID: <20241023060352.605019-5-quic_rajkbhag@quicinc.com>
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Subject: [RFC PATCH 6/6] arm64: dts: qcom: ipq9574: Add WiFi nodes for RDP433
+Date: Wed, 23 Oct 2024 11:33:52 +0530
+Message-ID: <20241023060352.605019-7-quic_rajkbhag@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241023060352.605019-1-quic_rajkbhag@quicinc.com>
 References: <20241023060352.605019-1-quic_rajkbhag@quicinc.com>
@@ -77,173 +73,140 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 7JEmwAdaPTXdNGLVkK95vixaRFkPjOKL
-X-Proofpoint-ORIG-GUID: 7JEmwAdaPTXdNGLVkK95vixaRFkPjOKL
+X-Proofpoint-ORIG-GUID: 9PUw3ig0SLfGvau46ldcCLW5RnzmvIWJ
+X-Proofpoint-GUID: 9PUw3ig0SLfGvau46ldcCLW5RnzmvIWJ
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 clxscore=1015 mlxscore=0 suspectscore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 lowpriorityscore=0 spamscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ impostorscore=0 spamscore=0 phishscore=0 mlxlogscore=754
+ lowpriorityscore=0 clxscore=1015 malwarescore=0 bulkscore=0 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2409260000 definitions=main-2410230035
 
-From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+The RDP433 is a Qualcomm Reference Design Platform based on the
+IPQ9574. It has three QCN9274 WiFi devices connected to PCIe1, PCIe2,
+and PCIe3. These devices are also connected among themselves via
+WSI connection. This WSI connection is essential to exchange control
+information among these devices
 
-Currently, QMI MLO host capability is sent with the details of
-local links and hw_link id only for particular device but in case
-of multi device group abstraction, it has to include the details
-of hw_link_id, num_local_links of every partner device that is
-involved in the group during QMI MLO capability exchange.
+The WSI connection in RDP433 is represented below:
 
-Add changes to send partner device details in QMI MLO capability
-exchange.
+          +-------+        +-------+        +-------+
+          | pcie2 |        | pcie3 |        | pcie1 |
+          |       |        |       |        |       |
+   +----->|  wsi  |------->|  wsi  |------->|  wsi  |-----+
+   |      | idx 0 |        | idx 1 |        | idx 2 |     |
+   |      +-------+        +-------+        +-------+     |
+   +------------------------------------------------------+
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Based on the above, the WSI properties for QCN9274 at pcie2 are:
+ qcom,wsi-group-id = 0
+ qcom,wsi-index = 0
+ qcom,wsi-num-devices = 3;
 
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-Signed-off-by: Harshitha Prem <quic_hprem@quicinc.com>
-Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
+Hence, add WiFi nodes with WSI properties for all three QCN9274
+devices connected to RDP433.
+
+Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/qmi.c | 86 ++++++++++++++++++++++-----
- 1 file changed, 70 insertions(+), 16 deletions(-)
+ arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts | 62 ++++++++++++++++++++-
+ 1 file changed, 61 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index 5ebfe13b5313..689171b7b19f 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -2016,17 +2016,19 @@ static const struct qmi_elem_info qmi_wlanfw_wlan_ini_resp_msg_v01_ei[] = {
- 	},
+diff --git a/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts b/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
+index 165ebbb59511..2241e20ad42a 100644
+--- a/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
++++ b/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
+@@ -3,7 +3,7 @@
+  * IPQ9574 RDP433 board device tree source
+  *
+  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ /dts-v1/;
+@@ -27,6 +27,26 @@ &pcie1 {
+ 	perst-gpios = <&tlmm 26 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 27 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		wifi1@0 {
++			compatible = "pci17cb,1109";
++			reg = <0x0 0x0 0x0 0x0 0x0>;
++			status = "okay";
++
++			wsi {
++				qcom,wsi-group-id = <0>;
++				qcom,wsi-index = <2>;
++				qcom,wsi-num-devices = <3>;
++			};
++		};
++	};
  };
  
--static void ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
--				      struct qmi_wlanfw_host_cap_req_msg_v01 *req)
-+static int ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
-+				     struct qmi_wlanfw_host_cap_req_msg_v01 *req)
- {
- 	struct wlfw_host_mlo_chip_info_s_v01 *info;
-+	struct ath12k_hw_group *ag = ab->ag;
-+	struct ath12k_base *partner_ab;
- 	u8 hw_link_id = 0;
--	int i;
-+	int i, j, ret;
+ &pcie2_phy {
+@@ -40,6 +60,26 @@ &pcie2 {
+ 	perst-gpios = <&tlmm 29 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 30 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		wifi2@0 {
++			compatible = "pci17cb,1109";
++			reg = <0x0 0x0 0x0 0x0 0x0>;
++			status = "okay";
++
++			wsi {
++				qcom,wsi-group-id = <0>;
++				qcom,wsi-index = <0>;
++				qcom,wsi-num-devices = <3>;
++			};
++		};
++	};
+ };
  
--	if (!ab->ag->mlo_capable) {
-+	if (!ag->mlo_capable) {
- 		ath12k_dbg(ab, ATH12K_DBG_QMI,
- 			   "MLO is disabled hence skip QMI MLO cap");
--		return;
-+		return 0;
- 	}
+ &pcie3_phy {
+@@ -53,6 +93,26 @@ &pcie3 {
+ 	perst-gpios = <&tlmm 32 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 33 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
++
++	pcie@0 {
++		device_type = "pci";
++		reg = <0x0 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges;
++
++		wifi3@0 {
++			compatible = "pci17cb,1109";
++			reg = <0x0 0x0 0x0 0x0 0x0>;
++			status = "okay";
++
++			wsi {
++				qcom,wsi-group-id = <0>;
++				qcom,wsi-index = <1>;
++				qcom,wsi-num-devices = <3>;
++			};
++		};
++	};
+ };
  
- 	if (!ab->qmi.num_radios || ab->qmi.num_radios == U8_MAX) {
-@@ -2035,7 +2037,13 @@ static void ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
- 		ath12k_dbg(ab, ATH12K_DBG_QMI,
- 			   "skip QMI MLO cap due to invalid num_radio %d\n",
- 			   ab->qmi.num_radios);
--		return;
-+		return 0;
-+	}
-+
-+	if (ab->device_id == ATH12K_INVALID_DEVICE_ID) {
-+		ath12k_err(ab, "failed to send MLO cap due to invalid device id\n");
-+		ret = -EINVAL;
-+		return ret;
- 	}
- 
- 	req->mlo_capable_valid = 1;
-@@ -2043,27 +2051,71 @@ static void ath12k_host_cap_parse_mlo(struct ath12k_base *ab,
- 	req->mlo_chip_id_valid = 1;
- 	req->mlo_chip_id = ab->device_id;
- 	req->mlo_group_id_valid = 1;
--	req->mlo_group_id = 0;
-+	req->mlo_group_id = ag->id;
- 	req->max_mlo_peer_valid = 1;
- 	/* Max peer number generally won't change for the same device
- 	 * but needs to be synced with host driver.
- 	 */
- 	req->max_mlo_peer = ab->hw_params->max_mlo_peer;
- 	req->mlo_num_chips_valid = 1;
--	req->mlo_num_chips = 1;
-+	req->mlo_num_chips = ag->num_devices;
- 
--	info = &req->mlo_chip_info[0];
--	info->chip_id = ab->device_id;
--	info->num_local_links = ab->qmi.num_radios;
-+	mutex_lock(&ag->mutex_lock);
-+	for (i = 0; i < ag->num_devices; i++) {
-+		info = &req->mlo_chip_info[i];
-+		partner_ab = ag->ab[i];
-+
-+		if (partner_ab->device_id == ATH12K_INVALID_DEVICE_ID) {
-+			ath12k_err(ab, "failed to send MLO cap due to invalid partner device id\n");
-+			ret = -EINVAL;
-+			goto device_cleanup;
-+		}
-+
-+		info->chip_id = partner_ab->device_id;
-+		info->num_local_links = partner_ab->qmi.num_radios;
- 
--	for (i = 0; i < info->num_local_links; i++) {
--		info->hw_link_id[i] = hw_link_id;
--		info->valid_mlo_link_id[i] = 1;
-+		ath12k_dbg(ab, ATH12K_DBG_QMI, "MLO device id %d num_link %d\n",
-+			   info->chip_id, info->num_local_links);
- 
--		hw_link_id++;
-+		for (j = 0; j < info->num_local_links; j++) {
-+			info->hw_link_id[j] = hw_link_id;
-+			info->valid_mlo_link_id[j] = 1;
-+
-+			hw_link_id++;
-+		}
- 	}
- 
-+	if (hw_link_id <= 0)
-+		ag->mlo_capable = false;
-+
- 	req->mlo_chip_info_valid = 1;
-+
-+	mutex_unlock(&ag->mutex_lock);
-+	return 0;
-+
-+device_cleanup:
-+	for (i = i - 1; i >= 0; i--) {
-+		info = &req->mlo_chip_info[i];
-+
-+		memset(info, 0, sizeof(*info));
-+	}
-+
-+	req->mlo_num_chips = 0;
-+	req->mlo_num_chips_valid = 0;
-+
-+	req->max_mlo_peer = 0;
-+	req->max_mlo_peer_valid = 0;
-+	req->mlo_group_id = 0;
-+	req->mlo_group_id_valid = 0;
-+	req->mlo_chip_id = 0;
-+	req->mlo_chip_id_valid = 0;
-+	req->mlo_capable = 0;
-+	req->mlo_capable_valid = 0;
-+
-+	ag->mlo_capable = false;
-+	mutex_unlock(&ag->mutex_lock);
-+
-+	return ret;
- }
- 
- static int ath12k_qmi_host_cap_send(struct ath12k_base *ab)
-@@ -2111,7 +2163,9 @@ static int ath12k_qmi_host_cap_send(struct ath12k_base *ab)
- 		req.nm_modem |= PLATFORM_CAP_PCIE_GLOBAL_RESET;
- 	}
- 
--	ath12k_host_cap_parse_mlo(ab, &req);
-+	ret = ath12k_host_cap_parse_mlo(ab, &req);
-+	if (ret < 0)
-+		goto out;
- 
- 	ret = qmi_txn_init(&ab->qmi.handle, &txn,
- 			   qmi_wlanfw_host_cap_resp_msg_v01_ei, &resp);
+ &sdhc_1 {
 -- 
 2.34.1
 
