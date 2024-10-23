@@ -1,39 +1,39 @@
 Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF1EF1FF035;
-	Wed, 23 Oct 2024 14:45:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 685821FF03F;
+	Wed, 23 Oct 2024 14:45:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729694714; cv=none; b=Tgg65DtoZazfr6hBosyhe1hXGH/PvDHZidCpJOEb9xOLt9zqpXeLjPY/5EIbIjGHHjumjur1bbTOKgg+2y10L+Xtuxl8vB8XZ3IMa7mixocMlcnLl8a11ElryS+GMNLavvbbUsIbSZDy7aKbs1ChdO30r7OrswLWZlAe3Sm7mgI=
+	t=1729694716; cv=none; b=Nytt9TObUIF3WFC3Ya4ZwIbeewg/OXvyfF0193YIqTa+OC1/ZB0rTInIPD7pCJGSYtmimhBAkUwUH3RzYfz5s7K4YQmXqg8CJJePQtQUD/jFJv1zF3AeV53WMRqbra6iTAaprjFl7fs1CAVTg/508Mp2LjUBeu0DZPm9qXulDhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729694714; c=relaxed/simple;
-	bh=gVRZmGDbSSe3eE9Wa/shHPOp5LGbVJEKYHUbkOttPNE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jV4HWD4iUtT7YnSoiZqXIjCDVSM3my3uj1wggCE722VZZcEDl03PyOQgr4g5pm3HLc5JeA0d592SX6NXFGxh72/DGthSRHNUR/Xazi5DPTxuYiY3OIE9kUWVRdEpyISuLszBd14qUSB4DiVKxPnmWbRpOupGzZLy9PDPoRI1XHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=Dr82H/qv; arc=none smtp.client-ip=85.214.62.61
+	s=arc-20240116; t=1729694716; c=relaxed/simple;
+	bh=6yfuYs9FDjhr1rsn439xikumOxfSQGSOzq5tsTvlqr8=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=A8mBiB8NODgYpZ7QLIO71orEtA6Zl8epn/w/t+nCXu8uVtr59WHLMAZk3FfEMxBqW6hPW9hajRKrdNRKUbM3h19z+q4lazDiNFfvUGf4pHHY3FZfboj3o9UYNwQ9mj1eIBhfDPxyVqpQqUWBNMSzX7YefZWaJAxH7Vxq3aUNGyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=iLF1D32t; arc=none smtp.client-ip=85.214.62.61
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="Dr82H/qv"
+	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="iLF1D32t"
 Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
 	(No client certificate requested)
 	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id 2FE0F8926F;
-	Wed, 23 Oct 2024 16:45:05 +0200 (CEST)
+	by phobos.denx.de (Postfix) with ESMTPSA id BD46B892E7;
+	Wed, 23 Oct 2024 16:45:11 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1729694711;
-	bh=gz9H38d2hsPWIqXhhStTpviHMUHd9U6Jhiq3f7k4l70=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Dr82H/qvBgqrQ9fq456Rh+c8cmgK1VSc/0OPUhlC4Ch5k+SasRbJRKfZ9kYAqxuFo
-	 +fknygzTdUyhJj5Zz8Z0XmIoSGCSUI1mM6wqvEY+xQI2GarF0ycfhKQMGYnIqqLa64
-	 ybzZVhGV2ahsqkYDk8KIfhUUK1BM1fVe7HGtMymCzQZfrBuJx/bWtqHt3mwZphDU95
-	 3F6SmHcY/S1qYXedvziK+zFFfyJt2maYGnjplA1rfStvLkNOdgHHf5hJ0GuQDdoJfh
-	 Qg6e8VAKVNkY/u9my4jpu2d6SzBdA/UZRm8chKvKQMM0IS830C0/EULyzIJUnRilLU
-	 znXKEs8xhX4fQ==
-Message-ID: <3b2e85a2-5dd2-4368-9f94-422b7766297a@denx.de>
-Date: Wed, 23 Oct 2024 16:26:54 +0200
+	s=phobos-20191101; t=1729694712;
+	bh=iP7R+Xoa/cG1QNMF0ABrkiWzNuGFfXedNXUIzYy86UQ=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+	b=iLF1D32tRqApL4xq7DAZ/A4kgyKIiriL2vrCzJ+Ka9HgnXrba4eI3PdYTZHgKVoyj
+	 XLaJKheLFz980jschA2bqqOaBUsPugzun/RI1l4z1g1F56XdTeydT0ZdAzsZsNf9Ue
+	 73lRd/GsarJVx9MMi/fF/woz/xBSsGHXj32O6y+TvUCSOyInTmfUnr30oveK9Gj1rJ
+	 /8JCZxPRhfbObestW4RKrU2YXQgHDBGO0EfeBh7+32dlhL9Uv+F599/LMqwLrUjBkA
+	 Agm53wM6ElTeNjlLMxcCYYMecgKudOtEh2whkdJUgnKZJLz7A562RnAyz2BQKJbt/T
+	 /c7EtJ6wgA15w==
+Message-ID: <5e2a5056-78ac-4be0-83ca-4aa55f524535@denx.de>
+Date: Wed, 23 Oct 2024 16:44:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,79 +41,58 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+From: Marek Vasut <marex@denx.de>
 Subject: Re: [PATCH] wifi: wilc1000: Rework bus locking
-To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>,
+To: Ajay.Kathat@microchip.com, alexis.lothore@bootlin.com,
  linux-wireless@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
- Adham Abozaeid <adham.abozaeid@microchip.com>,
- Ajay Singh <ajay.kathat@microchip.com>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Conor Dooley
- <conor+dt@kernel.org>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Kalle Valo <kvalo@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
- netdev@vger.kernel.org
+Cc: davem@davemloft.net, adham.abozaeid@microchip.com,
+ claudiu.beznea@tuxon.dev, conor+dt@kernel.org, edumazet@google.com,
+ kuba@kernel.org, kvalo@kernel.org, krzk+dt@kernel.org, pabeni@redhat.com,
+ robh@kernel.org, devicetree@vger.kernel.org, netdev@vger.kernel.org
 References: <20241022013855.284783-1-marex@denx.de>
  <c9e98811-15f5-427a-82f7-2e7fff4a9873@bootlin.com>
  <8e28ba76-ecfa-49b6-89b5-1edabb22129d@denx.de>
- <71c93145-f7ed-485a-99f2-fab9529e6bcb@bootlin.com>
+ <a4c8c489-c6b9-4a38-84ab-f08409baccff@microchip.com>
 Content-Language: en-US
-From: Marek Vasut <marex@denx.de>
-In-Reply-To: <71c93145-f7ed-485a-99f2-fab9529e6bcb@bootlin.com>
+In-Reply-To: <a4c8c489-c6b9-4a38-84ab-f08409baccff@microchip.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
 X-Virus-Status: Clean
 
-On 10/23/24 9:54 AM, Alexis Lothoré wrote:
+On 10/23/24 9:17 AM, Ajay.Kathat@microchip.com wrote:
 
-Hello Alexis,
+Hello Ajay,
 
->>                                   ksdioirqd() { // option 2
->>                                     claim_bus
->>                                     CMD52 0x0f, lets read SDIO_CCCR_INTx
->>                                     release_bus
->>                                   }
+>> What I am trying to say is this:
 >>
->> That's what this patch implements, to avoid the interference.
->>
->> Maybe I should include the infographics? Or reword this somehow?
+>> With current code, this can happen, which is not good, because transfers
+>> from multiple threads can be interleaved and interfere with each other:
 > 
-> What I may have misunderstood is your first sentence ("sdio_claim_host() cannot
-> be done per command, but has to be done per register/data IO which consists of
-> multiple commands", especially command VS reg/data io), but your graph clarified
-> it for me, thanks, so in the end we agree on this :) That may just be me having
-> poorly interpreted, so no need to add the graphs to the commit
+> Did you observe any bus failure in your test setup with SDIO. Is there any
+> configure to recreate it.
 
-You're welcome. As long as we can understand each other with one extra 
-round trip, all is good :)
+I am observing sporadic command and data CRC errors on STM32MP157F 
+system with SDIO WILC3000.
 
-> [...]
+> The SDIO transfer may appear to be split into into multiple transaction but
+> these calls should not impact each other since most of them are updating the
+> different registers except WILC_SDIO_FBR_CSA_REG register, which is used for
+> CSA read/write. If needed, wilc_sdio_set_func0_csa_address() can be modified
+> to club the 3x CMD52 and 1x CMD53 into a single transfer API.
 > 
->>>>    static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
->>>> diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.h b/drivers/net/
->>>> wireless/microchip/wilc1000/wlan.h
->>>> index b9e7f9222eadd..ade2db95e8a0f 100644
->>>> --- a/drivers/net/wireless/microchip/wilc1000/wlan.h
->>>> +++ b/drivers/net/wireless/microchip/wilc1000/wlan.h
->>>> @@ -403,6 +403,8 @@ struct wilc_hif_func {
->>>>        void (*disable_interrupt)(struct wilc *nic);
->>>>        int (*hif_reset)(struct wilc *wilc);
->>>>        bool (*hif_is_init)(struct wilc *wilc);
->>>> +    void (*hif_claim)(struct wilc *wilc);
->>>> +    void (*hif_release)(struct wilc *wilc);
->>>
->>> So IIUC, your series push the hif_cs lock into each bus layer of the driver,
->>> remove any explicit call to bus-specific locking mechanism from those layers,
->>> and makes the upper layer control the locking. As mentioned above, I don't
->>> understand why those layers can not manage the bus-specific locking by
->>> themselves (which would be a big win for the upper layer).
->>
->> Because of acquire_bus()/release_bus() which I think is an attempt to serialize
->> bus access across multiple complex operations (=commands sent to the card), see
->> above.
-> 
-> Taking a further look at some examples in the driver, I see that indeed the
-> "scope" of acquire_bus/release_bus is larger than simple bus operations. So I
-> withdraw my proposal which was wrong.
-All right.
+> In my opinion, If sdio_claim_host() is moved to acquire_bus() API then the
+> SDIO bus will be claimed longer than required especially in
+> wilc_wlan_handle_txq() API. Ideally, calling sdio_claim_host() call just
+> before the transfer is enough but now the SDIO I/O bus would be continuously
+> blocked for multiple independent SDIO transactions that is not necessary.
+
+Why would that pose a problem ?
+
+I am more concerned that ksdioirqd can insert a command transfer right 
+in the middle of CMD52/CMD53 register read composite transfer, because 
+while ksdioirqd does use proper sdio_claim/release_host, this driver 
+does it per-SDIO-command instead of per the whole e.g. register read 
+"transaction".
+
+[...]
