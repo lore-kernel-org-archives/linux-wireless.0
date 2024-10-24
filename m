@@ -1,94 +1,107 @@
-Received: from forward101d.mail.yandex.net (forward101d.mail.yandex.net [178.154.239.212])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E267B1CFEA9;
-	Thu, 24 Oct 2024 11:30:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.212
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23E401A0BC4;
+	Thu, 24 Oct 2024 11:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729769404; cv=none; b=NgHm+zW3hXUHh7NWhQHTPq/EXV06OzSEsHpZmEnmIrO6w95fp0A7iEczV4Ty0fmog4u+dQ9tVvEn2/cl0om/it9tuVkpNMsUGnuynRB8RtINObuECJA353AS7yShR5YRydqE691cG7hjMD8LvjVi1K5X7/9IqGqsLIBslZMMCjs=
+	t=1729770523; cv=none; b=PEeYKYIFXxeMLAAcnn4D5AaGZJkPCMnJQd3BApVBdkDZsSRH0q6ewArP5UcsvRRkgZnNnLtuEQEvS23xYybn6wW/1hGDvU+A1KKjsHQrEHqbHAvfyP8JF9mxKSYvDVE3jaOS5UA7rwu8iNzl6M6sVcZi2cQng2Q2DS4f2lyTkv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729769404; c=relaxed/simple;
-	bh=Es75ymu6TA/72wlDe6DDLYMi/A2MnDf7PCeFMC1cgZI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Wi8X34UzfOaxjZyoIcPRz+/0D+BUJPh6IInKuF/NgAUn8bEIuzaevkbzzDXsEsKsrTrNOlaLjgDq9GNLouSxlgNgmSM0gPHYypfs0QYW0JoSvluvh5Sm0Cur0eldIHfFZS5TTr7W6IIWeZVeC/LXwl8jPa8akE7+WnD4EPNDqX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=JOJfgHMx; arc=none smtp.client-ip=178.154.239.212
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1729770523; c=relaxed/simple;
+	bh=d+qe/+ODoW5q7XT1R1VfgK5+hBdUWlBAmc0IyODhTEU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=CskCdefWEBekP4KZanOuT8kxWmoujjFFfiqzNf1QyFlF4Y7LckclSsRz+L71nf2yub/ypZXeM3bwQlFYkQqs9fS0jxcPvR/zuAA0MiB7k0TxztMp2cXt7hAe9unTRrStR/c5ojFclYWtQQ7+9LyNkv6zkl7mzoKwVgNuEy8cmKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jv9NaMRk; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="JOJfgHMx"
-Received: from mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:3e0b:0:640:c81:0])
-	by forward101d.mail.yandex.net (Yandex) with ESMTPS id 0CC126098B;
-	Thu, 24 Oct 2024 14:29:54 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id oTSTCcEXxKo0-UX2muSCE;
-	Thu, 24 Oct 2024 14:29:53 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1729769393; bh=++B3dviPbcmr1FsTl+ZLaUiYpKOFDaZ1XAfNcpeoR9s=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=JOJfgHMxsjwfzb6e7ZRo572aX5p16jgqex2ssh8DF6cH4XPKnPEQN8V6R8USJLoT9
-	 A+UslEmN8ffoG8cwhxNtUPZRs9l9Y0YvfG5n+6NAbXjjtzpfoVp4WoFL/QRm8u1Cg6
-	 +rtyQA3ulg6pOFwIb34gcP3eeGhmUfP5Q2Zo1lGE=
-Authentication-Results: mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-hardening@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH v2 1/2] wifi: ath12k: annotate skb of struct ath12k_ce_ring with __counted_by
-Date: Thu, 24 Oct 2024 14:29:11 +0300
-Message-ID: <20241024112912.106104-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jv9NaMRk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1729770521; x=1761306521;
+  h=from:to:cc:subject:in-reply-to:references:date:
+   message-id:mime-version;
+  bh=d+qe/+ODoW5q7XT1R1VfgK5+hBdUWlBAmc0IyODhTEU=;
+  b=jv9NaMRkIVM+KcS9sb7u8LIIvIDxYkXI3Gy/94ZY6Sia71Sm/tf0k4ec
+   Vj5pbISK3MXNgF1wkTvmY4kX9RKCZNMRCg6WlHzAGkCc1Ts/9NCwi0822
+   CpRj9Q7j+6BJE3zvo4hI392fi68Mv/zK0aIIFWRTqhoFgZzmMCG3aJRzI
+   xvpuDfIODQUjLbxrqy06wAkpH2CboieUHnZXLxU7gm/ckOiDkWHGUo/pz
+   EO8AOYGJVsdxH+50BLWEPEC5cFwHcijEmyLBF9EbS7txmj5kHxJr9mcyK
+   stM2hdnml2/ajY0b82bRTQcIGcCWq4L7uAP0HQ6MB6q0NUM9aosUHsyw+
+   w==;
+X-CSE-ConnectionGUID: leMACKUsREK04hfvB33ECA==
+X-CSE-MsgGUID: lAzpuLPSTwi9HBvMR1zhRg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11235"; a="46884354"
+X-IronPort-AV: E=Sophos;i="6.11,229,1725346800"; 
+   d="scan'208";a="46884354"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2024 04:48:40 -0700
+X-CSE-ConnectionGUID: KZjPdK6kSvSUdStGO1YFkw==
+X-CSE-MsgGUID: 9RK3dTjhQg26wkfpdI3qGA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.11,229,1725346800"; 
+   d="scan'208";a="111385152"
+Received: from ubik.fi.intel.com (HELO localhost) ([10.237.72.184])
+  by fmviesa001.fm.intel.com with ESMTP; 24 Oct 2024 04:48:29 -0700
+From: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+To: Philipp Stanner <pstanner@redhat.com>, Jonathan Corbet <corbet@lwn.net>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Giovanni Cabiddu <giovanni.cabiddu@intel.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>,
+ Boris Brezillon <bbrezillon@kernel.org>, Arnaud Ebalard
+ <arno@natisbad.org>, Srujana Challa <schalla@marvell.com>, Miri Korenblit
+ <miriam.rachel.korenblit@intel.com>, Kalle Valo <kvalo@kernel.org>, Serge
+ Semin <fancer.lancer@gmail.com>, Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Kevin Cernekee <cernekee@gmail.com>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Mark Brown <broonie@kernel.org>, David Lechner
+ <dlechner@baylibre.com>, Philipp Stanner <pstanner@redhat.com>, Uwe
+ =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, Jie Wang
+ <jie.wang@intel.com>, Tero Kristo <tero.kristo@linux.intel.com>, Adam
+ Guerin <adam.guerin@intel.com>, Shashank Gupta <shashank.gupta@intel.com>,
+ Przemek Kitszel <przemyslaw.kitszel@intel.com>, Bharat Bhushan
+ <bbhushan2@marvell.com>, Nithin Dabilpuram <ndabilpuram@marvell.com>,
+ Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach
+ <emmanuel.grumbach@intel.com>, Gregory Greenman
+ <gregory.greenman@intel.com>, Benjamin Berg <benjamin.berg@intel.com>,
+ Yedidya Benshimol <yedidya.ben.shimol@intel.com>, Breno Leitao
+ <leitao@debian.org>, Florian Fainelli <florian.fainelli@broadcom.com>,
+ Ilpo =?utf-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-ide@vger.kernel.org, qat-linux@intel.com,
+ linux-crypto@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-sound@vger.kernel.org,
+ alexander.shishkin@linux.intel.com
+Subject: Re: [PATCH v4 05/10] intel_th: pci: Replace deprecated PCI functions
+In-Reply-To: <20241016124136.41540-6-pstanner@redhat.com>
+References: <20241016124136.41540-1-pstanner@redhat.com>
+ <20241016124136.41540-6-pstanner@redhat.com>
+Date: Thu, 24 Oct 2024 14:48:27 +0300
+Message-ID: <878qudvi0k.fsf@ubik.fi.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-According to 'ath12k_ce_alloc_ring()', annotate flexible array
-member 'skb' of 'struct ath12k_ce_ring' with '__counted_by()'
-to improve runtime bounds checking when CONFIG_UBSAN_BOUNDS is
-enabled. Compile tested only.
+Philipp Stanner <pstanner@redhat.com> writes:
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
-v2: add related comment in ath12k_ce_alloc_ring()
----
- drivers/net/wireless/ath/ath12k/ce.c | 3 +++
- drivers/net/wireless/ath/ath12k/ce.h | 2 +-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+> pcim_iomap_table() and pcim_iomap_regions_request_all() have been
+> deprecated by the PCI subsystem in commit e354bb84a4c1 ("PCI: Deprecate
+> pcim_iomap_table(), pcim_iomap_regions_request_all()").
+>
+> Replace these functions with their successors, pcim_iomap() and
+> pcim_request_all_regions().
+>
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
 
-diff --git a/drivers/net/wireless/ath/ath12k/ce.c b/drivers/net/wireless/ath/ath12k/ce.c
-index be0d669d31fc..23d984da2341 100644
---- a/drivers/net/wireless/ath/ath12k/ce.c
-+++ b/drivers/net/wireless/ath/ath12k/ce.c
-@@ -550,6 +550,9 @@ ath12k_ce_alloc_ring(struct ath12k_base *ab, int nentries, int desc_sz)
- 	if (!ce_ring)
- 		return ERR_PTR(-ENOMEM);
- 
-+	/* Note nentries should be set before populating skb[],
-+	 * otherwise __counted_by() might raise false positives.
-+	 */
- 	ce_ring->nentries = nentries;
- 	ce_ring->nentries_mask = nentries - 1;
- 
-diff --git a/drivers/net/wireless/ath/ath12k/ce.h b/drivers/net/wireless/ath/ath12k/ce.h
-index 857bc5f9e946..6967e3891030 100644
---- a/drivers/net/wireless/ath/ath12k/ce.h
-+++ b/drivers/net/wireless/ath/ath12k/ce.h
-@@ -135,7 +135,7 @@ struct ath12k_ce_ring {
- 	u32 hal_ring_id;
- 
- 	/* keep last */
--	struct sk_buff *skb[];
-+	struct sk_buff *skb[] __counted_by(nentries);
- };
- 
- struct ath12k_ce_pipe {
--- 
-2.47.0
+Acked-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
 
+Regards,
+--
+Alex
