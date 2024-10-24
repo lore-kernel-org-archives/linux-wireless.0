@@ -1,44 +1,46 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DE31A76B0;
-	Thu, 24 Oct 2024 07:42:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAEE41AC8B9;
+	Thu, 24 Oct 2024 07:42:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729755736; cv=none; b=HJrdxUWyXlWardYCZIWct8+WhZMrhFWx6jtS3/PaeZRS+Oan1EpEVyoVDlM6aQ33ZqW7jbvTQHrUDiX8pEKzMEACtz82tGMhd3Vu/JXgAX9pwJIZNPuxJe+Qo9Jf9Tgx5/ObWhfE2tWAKRqRzNK/JWYfrcCtzFdg8EPfA4Wd7HE=
+	t=1729755740; cv=none; b=FLAb2HxpIuF1JYbT44fdAP1wOxVf4s43I8wLH2jD9qCzeT9TtPESg2FHgU3f8sa56GZUCZvh2oPxrnJ8Ff0YiELNtNyZVCC2/Ftsc5f/y6v4c9zEczMWVt8vA/ookhP8jk924FRATkxFor2ZR0zdvLg9fjwnuyiwwR5OYLHbM4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729755736; c=relaxed/simple;
-	bh=N50ZQr4UI2FkUci7BJLOsdnNoEBca6hfIAg+HgBIZMA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fmfPzCu5KqqHmLAHgRrZvN+VlXI5tD0CfEvgl9GQoiXOzGra85iqbjG+3248TENTfzDZZ9fpao3oUOG912BUbXJqiMw5gfPELNwUjYSoq5Gci83uTbkNIfOCoDPEnoGUohnLI/Rgbp7DAQRXG2UIcaE+a04kwsDoGUYxElxCt2k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H3InDzAz; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1729755740; c=relaxed/simple;
+	bh=qsRqvK76S3ups7ElipLSRytsqF4KKob6IkpG+FZ+TcE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Dw4dvXfmBPFV9aGaXQBeZhIaU+tENPozAsYROzkSsAia8eA5yPECw5kIWw4YaU7FjIzt4yesU1biJCsIWDC8ZCcpWGvQuBfvn/MuUwpRHIqNB25b76KqzdFMZCAIaDaelxcxrfSjump9juQ+rot08p2vKFc4vhaDnH7UarJFduI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Nhotgdvi; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H3InDzAz"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49NNgStL027468;
-	Thu, 24 Oct 2024 07:42:07 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Nhotgdvi"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49NLNKTk025624;
+	Thu, 24 Oct 2024 07:42:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=Psowjo8/4dp9MRXeqNJ9ul
-	yPSJmjyL5Q08XlY52RyAc=; b=H3InDzAzde0XEVeRe/GFGAuCIx2kzVUXxT0Bmh
-	+SYA/0JYBXEEQyITB3ZBV2wFZsxuuEst1rhj74f9xDPtgywiM7WkSWTbuJH9E9/E
-	rcKyoiWyM25VPvZXeCHpYnC9W78X8oV8KAfSK53i4fLmnWExdoFO3laJoRJh3oyx
-	VIC3V3ZV/UtdYrd3EBhzfwMuHiaa95nvaEKc4wZrWBjNTBte6KPQjuJtkLWDaPPX
-	BJMFGMvSEPzk/NreTqvRqgYBXaQ7FSANwzrwMQlw5JUiGrj89Bq+73n48EccCwbE
-	JL6XC1xXP/PayAlLsJS0LImarj4b/HhbQZ/EdM1hh+DrRbgQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em3wmus2-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Bh6viNY/CMUSxXuYICO/0PagqIHUhjSm/VjBvclHGP4=; b=NhotgdvilXO4fXko
+	6zn33HzfnsHhsBuL/SEiAtw9fKZDRymxKGxDcr2Z1p26l9Qy4cgKMr5H3CK7PMGg
+	2vUd2asDLvEtMN+X7Cq73VkGqJjq04IakIS5fAwQXgcGdfE5VZ77/latKeX87xhz
+	gJIrPEWqSppXlc9LNEQ1iCcK9cGolhnAp8PEGV6HArkm93vUdlJHdxDxlK7bsYsB
+	2VvPg6FHsC6FSsQCdRt/QR0a6WH8UX+C2JFD5fpkqHHfpySeWHD+AjIzmN8A/o7N
+	VuK5X6RD9SGzS+A9SnamMhCwSGuV/dcMnTwuGeFXyLJ5ldG2uvhlQTuNaqlHMlFM
+	4vaOAA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em40cwtj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 24 Oct 2024 07:42:06 +0000 (GMT)
+	Thu, 24 Oct 2024 07:42:12 +0000 (GMT)
 Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49O7g5n9017220
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49O7gBg9010103
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 24 Oct 2024 07:42:05 GMT
+	Thu, 24 Oct 2024 07:42:11 GMT
 Received: from Z2-SFF-G9-MQ.ap.qualcomm.com (10.80.80.8) by
  nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Thu, 24 Oct 2024 00:42:02 -0700
+ 15.2.1544.9; Thu, 24 Oct 2024 00:42:08 -0700
 From: Miaoqing Pan <quic_miaoqing@quicinc.com>
 To: <kvalo@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
         <conor+dt@kernel.org>
@@ -48,10 +50,12 @@ CC: <quic_jjohnson@quicinc.com>, <ath11k@lists.infradead.org>,
         <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Miaoqing Pan
 	<quic_miaoqing@quicinc.com>
-Subject: [RESEND PATCH v2 0/2] wifi: ath11k: support board-specific firmware overrides
-Date: Thu, 24 Oct 2024 15:41:42 +0800
-Message-ID: <20241024074144.179868-1-quic_miaoqing@quicinc.com>
+Subject: [RESEND PATCH v2 2/2] wifi: ath11k: support board-specific firmware overrides
+Date: Thu, 24 Oct 2024 15:41:44 +0800
+Message-ID: <20241024074144.179868-3-quic_miaoqing@quicinc.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241024074144.179868-1-quic_miaoqing@quicinc.com>
+References: <20241024074144.179868-1-quic_miaoqing@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,15 +68,15 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01c.na.qualcomm.com (10.47.97.35)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: QiIimIlAcLvJ3dnngJeM_Bdi7tKAurn3
-X-Proofpoint-ORIG-GUID: QiIimIlAcLvJ3dnngJeM_Bdi7tKAurn3
+X-Proofpoint-ORIG-GUID: E_k9KHY1nt4Tq5jkynsrBzO-NP3J8YT2
+X-Proofpoint-GUID: E_k9KHY1nt4Tq5jkynsrBzO-NP3J8YT2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
- mlxlogscore=910 lowpriorityscore=0 malwarescore=0 suspectscore=0
- spamscore=0 mlxscore=0 impostorscore=0 clxscore=1011 priorityscore=1501
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ impostorscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ lowpriorityscore=0 clxscore=1015 malwarescore=0 bulkscore=0 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2409260000 definitions=main-2410240059
 
 QCA6698AQ IP core is the same as WCN6855 hw2.1, but it has different RF,
@@ -88,24 +92,70 @@ For example:
 - ath11k/WCN6855/hw2.1/qca6698aq/amss.bin,
   ath11k/WCN6855/hw2.1/qca6698aq/m3.bin
 
+Tested-on: QCA6698AQ hw2.1 PCI WLAN.HSP.1.1-04402-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+
 Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
 ---
-v2: follow the approach that has been defined in the commit
-5abf259772df ("wifi: ath10k: support board-specific firmware
-overrides").
----
+ drivers/net/wireless/ath/ath11k/core.c | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath11k/core.h | 11 +++--------
+ 2 files changed, 19 insertions(+), 8 deletions(-)
 
-Miaoqing Pan (2):
-  dt-bindings: net: wireless: ath11k-pci: add firmware-name property
-  wifi: ath11k: support board-specific firmware overrides
-
- .../bindings/net/wireless/qcom,ath11k-pci.yaml   |  7 +++++++
- drivers/net/wireless/ath/ath11k/core.c           | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath11k/core.h           | 11 +++--------
- 3 files changed, 26 insertions(+), 8 deletions(-)
-
-
-base-commit: cd8aa3af7491a1f7a5b81e53dbe62a38433c2d4b
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index be67382c00f6..775e48551522 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1178,6 +1178,22 @@ static int ath11k_core_create_chip_id_board_name(struct ath11k_base *ab, char *n
+ 					       ATH11K_BDF_NAME_CHIP_ID);
+ }
+ 
++void ath11k_core_create_firmware_path(struct ath11k_base *ab,
++				      const char *filename,
++				      void *buf, size_t buf_len)
++{	const char *board_name = NULL;
++
++	of_property_read_string(ab->dev->of_node, "firmware-name", &board_name);
++
++	if (board_name)
++		snprintf(buf, buf_len, "%s/%s/%s/%s", ATH11K_FW_DIR,
++			 ab->hw_params.fw.dir, board_name, filename);
++	else
++		snprintf(buf, buf_len, "%s/%s/%s", ATH11K_FW_DIR,
++			 ab->hw_params.fw.dir, filename);
++}
++EXPORT_SYMBOL(ath11k_core_create_firmware_path);
++
+ const struct firmware *ath11k_core_firmware_request(struct ath11k_base *ab,
+ 						    const char *file)
+ {
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 09c37e19a168..ce4102cfed4d 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -1249,6 +1249,9 @@ bool ath11k_core_coldboot_cal_support(struct ath11k_base *ab);
+ 
+ const struct firmware *ath11k_core_firmware_request(struct ath11k_base *ab,
+ 						    const char *filename);
++void ath11k_core_create_firmware_path(struct ath11k_base *ab,
++				      const char *filename,
++				      void *buf, size_t buf_len);
+ 
+ static inline const char *ath11k_scan_state_str(enum ath11k_scan_state state)
+ {
+@@ -1295,14 +1298,6 @@ static inline struct ath11k *ath11k_ab_to_ar(struct ath11k_base *ab,
+ 	return ab->pdevs[ath11k_hw_mac_id_to_pdev_id(&ab->hw_params, mac_id)].ar;
+ }
+ 
+-static inline void ath11k_core_create_firmware_path(struct ath11k_base *ab,
+-						    const char *filename,
+-						    void *buf, size_t buf_len)
+-{
+-	snprintf(buf, buf_len, "%s/%s/%s", ATH11K_FW_DIR,
+-		 ab->hw_params.fw.dir, filename);
+-}
+-
+ static inline const char *ath11k_bus_str(enum ath11k_bus bus)
+ {
+ 	switch (bus) {
 -- 
 2.25.1
 
