@@ -1,97 +1,74 @@
-Received: from forward201a.mail.yandex.net (forward201a.mail.yandex.net [178.154.239.92])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4BA31CEE8D;
-	Thu, 24 Oct 2024 11:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.92
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B6E31CBA12;
+	Thu, 24 Oct 2024 11:29:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729769249; cv=none; b=XKpQIhHGW6bX2QwsqavLpZspHofuQcSu22+EUi7CE8xsmQ5iThtZL3NXgpkxo2RaUZ+aFXQCGuMJs8IfpKFHTxEweZyWqDgn2IYESnFpqFwrMFlrkPCRbbV499eyqld9mdtG7naO4/Wz+Wo/xgOoIfNX4V+1cBqPh/4dWtGU1uI=
+	t=1729769385; cv=none; b=aqj8hph4Ff1KDrGxvEKwpXEKk9erbOr7UJVJESyZQDTOOc93znvimL9iyQmD4sEf8UO7TQD4kZSX8Elq3Y+/CN/G9a5+laY0KqdlEYt6C+2zK5DASO+N3i9mWIol46Rc2Ew9odwsAhpKU0/KqLaDbZ8riBp38/yljjMiPtIOVew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729769249; c=relaxed/simple;
-	bh=f7+wRqBTJ87IJr/ynVG7exWhEStmBKg0qfZz4iY8hg0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EfEaT3ORdF87AbKKZcvjZd2ZYU6OMZLRTb5CXwmrV7y3pcs9F7EQTyxJ0TPAtNu8sIL5DMYkJNBy3sbo2805fWG6nhC2lmZabfaD5YNTMCKs2Fb7r+nY1QuHN++w7IDzbE+ioRkHex1HSYZSttIkY32GxSFWr+aEKF2/4yWe+r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=MaMAVTd+; arc=none smtp.client-ip=178.154.239.92
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1729769385; c=relaxed/simple;
+	bh=M3SPXFxd0M5Pja/l4U1rx9aMurEI2UhSG0xevsZsJpc=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ID63lom4A4iBRyrKWPLnhuZU63WW/78JEg4FDRKllgNm19tYi89hrK1BdP8Ri98GzxQI0wBRzeb9LUkxDW2JkJiMRGa6vCQfo1K83mGDyuDtIiIgqWmPfXy9roc9TjlrCJKeG6fqy1fhQ/DP/ZO0W461H+cbJ+qKF+1VSGp9Tg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=mEF7Txeh; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="MaMAVTd+"
-Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d100])
-	by forward201a.mail.yandex.net (Yandex) with ESMTPS id D0C1269E3D;
-	Thu, 24 Oct 2024 14:19:40 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:4c80:0:640:a0f:0])
-	by forward100a.mail.yandex.net (Yandex) with ESMTPS id DEE3246D53;
-	Thu, 24 Oct 2024 14:19:32 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id SJSJZc7btmI0-tSXkcIaZ;
-	Thu, 24 Oct 2024 14:19:32 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1729768772; bh=RuHddOqR/K2dqzEnBWeCDYyPNgYNh3MglBHsKDZdNAs=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=MaMAVTd+yg34vniGo/dTY+oZGPvVzyZ8zkoV3+t5YvWgl/IW9CnWVDuSHj2b+Jre3
-	 uVPHXyiQJZc5ZeESeUNvbOgNQGaglLJ551H69vbDe/9Hwa2sSF7pZH0fO28+XK4Vj+
-	 NMao/81op8LIcnwrcpkMLpljXnkdbjgFZyQ7bNPw=
-Authentication-Results: mail-nwsmtp-smtp-production-main-51.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-hardening@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH v2 1/3] wifi: ath11k: annotate skb of struct ath11k_ce_ring with __counted_by
-Date: Thu, 24 Oct 2024 14:19:19 +0300
-Message-ID: <20241024111921.93105-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.47.0
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="mEF7Txeh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=M3SPXFxd0M5Pja/l4U1rx9aMurEI2UhSG0xevsZsJpc=;
+	t=1729769383; x=1730978983; b=mEF7TxehD/uUEV7IQPjovjvSv0aNhjS8pNf21iznjCEEt9M
+	2PihDETtdXQr0uVinquR2ZJWkl+b+JcGoYZwHtkoxgWxI9yCWCeQgfet0UnevIbE+O1k05xu81Dqu
+	mYN/NwTe0fr2EHYMaJlke8K9XLZwxgDYoSPKqXRBUHGKEGv0ltAjIgtBar2zndeCh3hzlfTuUHirP
+	ZhkzuTHWJfWTEmNmdXUcv7iRFia7h+eH7jvC8aBEfl/PRj1nAnBgq3AvJkue7IO3ByInzgX/EnFgk
+	rSXokbaHl0T7Gv0zsWYNc3mRPfTruDZMmfAogRD6D3tjR78Hx+SJWTvADg/mjxMQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1t3w28-00000003c8g-47nV;
+	Thu, 24 Oct 2024 13:29:41 +0200
+Message-ID: <997febfc4f565bb7fa101c582ab5604d8021c6ea.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH 1/2] net: netlink: add nla_get_*_default() accessors
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 24 Oct 2024 13:29:40 +0200
+In-Reply-To: <20241024131807.0a6c07355832.I3df6aac71d38a5baa1c0a03d0c7e82d4395c030e@changeid>
+References: 
+	<20241024131807.0a6c07355832.I3df6aac71d38a5baa1c0a03d0c7e82d4395c030e@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-According to 'ath11k_ce_alloc_ring()', annotate flexible array
-member 'skb' of 'struct ath11k_ce_ring' with '__counted_by()'
-to improve runtime bounds checking when CONFIG_UBSAN_BOUNDS is
-enabled. Compile tested only.
+On Thu, 2024-10-24 at 13:18 +0200, Johannes Berg wrote:
+>=20
+> +MAKE_NLA_GET_DEFAULT(u8, nla_get_u8);
+> +MAKE_NLA_GET_DEFAULT(u16, nla_get_u16);
+> +MAKE_NLA_GET_DEFAULT(u32, nla_get_u32);
+> +MAKE_NLA_GET_DEFAULT(u64, nla_get_u64);
+> +MAKE_NLA_GET_DEFAULT(unsigned long, nla_get_msecs);
+> +MAKE_NLA_GET_DEFAULT(s8, nla_get_s8);
+> +MAKE_NLA_GET_DEFAULT(s16, nla_get_s16);
+> +MAKE_NLA_GET_DEFAULT(s32, nla_get_s32);
+> +MAKE_NLA_GET_DEFAULT(s64, nla_get_s64);
+> +MAKE_NLA_GET_DEFAULT(s16, nla_get_le16);
+> +MAKE_NLA_GET_DEFAULT(s32, nla_get_le32);
+> +MAKE_NLA_GET_DEFAULT(s64, nla_get_le64);
+> +MAKE_NLA_GET_DEFAULT(s16, nla_get_be16);
+> +MAKE_NLA_GET_DEFAULT(s32, nla_get_be32);
+> +MAKE_NLA_GET_DEFAULT(s64, nla_get_be64);
+>=20
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
-v2: add related comment in ath11k_ce_alloc_ring()
----
- drivers/net/wireless/ath/ath11k/ce.c | 3 +++
- drivers/net/wireless/ath/ath11k/ce.h | 2 +-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+I obviously messed that up completely, but you get the point ...
 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index e66e86bdec20..56d616a8506a 100644
---- a/drivers/net/wireless/ath/ath11k/ce.c
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -620,6 +620,9 @@ ath11k_ce_alloc_ring(struct ath11k_base *ab, int nentries, int desc_sz)
- 	if (ce_ring == NULL)
- 		return ERR_PTR(-ENOMEM);
- 
-+	/* Note nentries should be set before populating skb[],
-+	 * otherwise __counted_by() might raise false positives.
-+	 */
- 	ce_ring->nentries = nentries;
- 	ce_ring->nentries_mask = nentries - 1;
- 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.h b/drivers/net/wireless/ath/ath11k/ce.h
-index bcde2fcf02cf..9c54244970ce 100644
---- a/drivers/net/wireless/ath/ath11k/ce.h
-+++ b/drivers/net/wireless/ath/ath11k/ce.h
-@@ -162,7 +162,7 @@ struct ath11k_ce_ring {
- 	u32 hal_ring_id;
- 
- 	/* keep last */
--	struct sk_buff *skb[];
-+	struct sk_buff *skb[] __counted_by(nentries);
- };
- 
- struct ath11k_ce_pipe {
--- 
-2.47.0
-
+johannes
