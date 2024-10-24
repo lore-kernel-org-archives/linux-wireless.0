@@ -1,113 +1,116 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9CEC8F0;
-	Thu, 24 Oct 2024 00:26:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 430B81BC41;
+	Thu, 24 Oct 2024 00:55:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729729595; cv=none; b=Pnq6RaJYmzTf8mVr/NVtHKYd0YX428IfmU241Our9/Ctz6LVkFQxZvqNUPtrpowR05x2HH5FGFRcS73wbnhVzAolQ63rawsVhPaMk2U68mxZMO+LHG2mCG9+LYgS3Wauf7HqQR+ZfAhOybBoVhSQOaj+jrdsLzc0j/LGR/gahDk=
+	t=1729731330; cv=none; b=XhmL3PCZDgJ3/IJdwBRok1DMj8P+fMM2WCU9Ujpaf6c6FmUqxAGDHaC5FmBDpIq32VKe2Kgzw7Qwu37Baz8/GxpAWip+2uy36eBzr/1cnuQ0pJQvFkrkiecQB2C55DPrqIlluXP6bn8OK7g7jZWrfDhbhVdM0e7fyFl7L6rbY6o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729729595; c=relaxed/simple;
-	bh=YrpthfNQ+GbzT8ZULqGupYFXckIUsqgDSEk29sp/mao=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jh2/OFcIo6OSlhTp31XjkHPgnePU4+rIjb6Xj7uAL/5GXgNkKhL55KvXjWdrBt4aVTZGGoDyYt+vQw1WRfwiGuvVxMN4WxNsh/vUQUo5fTSTum/7uB7ShNTcENv3ht7Y1hg4Wj+bzvB/6iI8xhnq3pcbkW69MRv5Utfqaj600fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=YKIbY8zF; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1729731330; c=relaxed/simple;
+	bh=ve7awyesf+L2FQP5aITjBG5N/MbRQhV2+bWQg/HIrv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=EjX6UjXuV/Lx8sxPrJpgn36AJRWtdnnW7Ic2ciJUDL/WzXn4K/c/imr/azaN0jWk9QTKOOU/UB2WyA65pbnCykGJTbnq4R02llbZ1QutDHJbSncqSeMxb6uByhWvXUv5/7a7KXrZlEegiv5WnPCXHBfjqQOStsOqZRXQ/qPiZY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=J+KR9HM4; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="YKIbY8zF"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49NMZ7U8009410;
-	Thu, 24 Oct 2024 00:26:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	nveTTtWi/IOzGp+i8IafJAXKLu4PpCQzTMgEOopL/30=; b=YKIbY8zF9m81YdLY
-	eDqZgjebdjMgDPxKaAgnrrAtJpxJb7zTMeCqHuC354iKKOYCFfTHG++Waf7vsoYg
-	AE4YpT0uWzVbkOSzBF1NigyG2kV8kq4bI4JsRfRRVtvJs9oHDz+Ql+5Hvmrq10IU
-	ormAlqoo8Soe7tqvZNoLPfwNbyMKAJn7zBPmuiFlY3blUAmvFSZRlPyo1GHjOb91
-	kfUtQlBQ0Wm4izjU7G0WD7SrD2H1zksUSo72hWKRJjo5Att7KBM3FBKmJ3n8yBtP
-	58y9TZEzEJIbOjaP8Ja3nFWx4Ap9YFZYey4XOSXJTQgKIKfuUzxMDXuqa1x22reH
-	rd9iow==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42em43bu7p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 24 Oct 2024 00:26:26 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 49O0QOTI007707
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 24 Oct 2024 00:26:24 GMT
-Received: from Z2-SFF-G9-MQ.ap.qualcomm.com (10.80.80.8) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 23 Oct 2024 17:26:22 -0700
-From: Miaoqing Pan <quic_miaoqing@quicinc.com>
-To: <kvalo@kernel.org>
-CC: <quic_jjohnson@quicinc.com>, <ath11k@lists.infradead.org>,
-        <linux-wireless@vger.kernel.org>, <dmitry.baryshkov@linaro.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        Miaoqing Pan <quic_miaoqing@quicinc.com>
-Subject: [PATCH v2 1/2] dt-bindings: net: wireless: ath11k-pci: add firmware-name property
-Date: Thu, 24 Oct 2024 08:25:13 +0800
-Message-ID: <20241024002514.92290-2-quic_miaoqing@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241024002514.92290-1-quic_miaoqing@quicinc.com>
-References: <20241024002514.92290-1-quic_miaoqing@quicinc.com>
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="J+KR9HM4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=201702; t=1729731323;
+	bh=INF+v9OTMCWoYD6UjquXwU45gu5BOm53e7zA3Gi0bMs=;
+	h=Date:From:To:Cc:Subject:From;
+	b=J+KR9HM4l9G9vfJHh16cm82r+SpBc9Y7wer5O8GrQwIoP6qE/12iiB1lP//H9yeS/
+	 xUsQf2fjWQd1htwTquciIwp7xtL1HyC77PxTMIKWooZcfzMSifGjCfDMRcQCw92Qjb
+	 2J94IXVOknnBDBQ/NO1TZyEeW5xoRw+TXJOxSddHMsgfXzgCwcRvaBARZr+TQUAwKl
+	 z2NAm5YhV7RSm6CkDffxtOBVF4jqj5Cs0EYX23qezETt/G1+UcBUNkTgJHZrHBo01u
+	 6Ke2cKV4a18Hd+whwVWAsw//Bu3MJByclkswVof7XVlMrkBcnZx+H311eAcHBIf4Hq
+	 KdBSEvSaS+AsQ==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4XYnWt5xmYz4w2R;
+	Thu, 24 Oct 2024 11:55:22 +1100 (AEDT)
+Date: Thu, 24 Oct 2024 11:55:23 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@kernel.org>, Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>, Emmanuel Grumbach
+ <emmanuel.grumbach@intel.com>, Johannes Berg <johannes.berg@intel.com>,
+ Wireless <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List
+ <linux-kernel@vger.kernel.org>, Linux Next Mailing List
+ <linux-next@vger.kernel.org>, Miri Korenblit
+ <miriam.rachel.korenblit@intel.com>
+Subject: linux-next: manual merge of the wireless-next tree with the
+ wireless tree
+Message-ID: <20241024115523.4cd35dde@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: GzuOzPjS9vULtfaAwblaFWC9LftpY708
-X-Proofpoint-ORIG-GUID: GzuOzPjS9vULtfaAwblaFWC9LftpY708
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- adultscore=0 mlxlogscore=999 spamscore=0 malwarescore=0 impostorscore=0
- phishscore=0 bulkscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
- definitions=main-2410240000
+Content-Type: multipart/signed; boundary="Sig_/wRwc9EsvMoDoJdweKTHRfR=";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-This is the same optional property that defined in qcom,ath10k.yaml. It's
-useful for the platform / board to specify firmware through device-tree.
+--Sig_/wRwc9EsvMoDoJdweKTHRfR=
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
----
- .../devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml  | 7 +++++++
- 1 file changed, 7 insertions(+)
+Hi all,
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml
-index a71fdf05bc1e..2aa81690f7d5 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k-pci.yaml
-@@ -1,5 +1,6 @@
- # SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
- # Copyright (c) 2023 Linaro Limited
-+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
- %YAML 1.2
- ---
- $id: http://devicetree.org/schemas/net/wireless/qcom,ath11k-pci.yaml#
-@@ -29,6 +30,12 @@ properties:
-       string to uniquely identify variant of the calibration data for designs
-       with colliding bus and device ids
- 
-+  firmware-name:
-+    maxItems: 1
-+    description:
-+      If present, a board or platform specific string used to lookup firmware
-+      files for the device.
-+
-   vddrfacmn-supply:
-     description: VDD_RFA_CMN supply regulator handle
- 
--- 
-2.25.1
+Today's linux-next merge of the wireless-next tree got a conflict in:
 
+  net/mac80211/cfg.c
+
+between commit:
+
+  8dd0498983ee ("wifi: mac80211: Fix setting txpower with emulate_chanctx")
+
+from the wireless tree and commit:
+
+  c4382d5ca1af ("wifi: mac80211: update the right link for tx power")
+
+from the wireless-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+diff --cc net/mac80211/cfg.c
+index 6dfc61a9acd4,6c0b228523cb..000000000000
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@@ -3046,7 -3070,7 +3070,8 @@@ static int ieee80211_set_tx_power(struc
+  	enum nl80211_tx_power_setting txp_type =3D type;
+  	bool update_txp_type =3D false;
+  	bool has_monitor =3D false;
+ +	int old_power =3D local->user_power_level;
++ 	int user_power_level;
+ =20
+  	lockdep_assert_wiphy(local->hw.wiphy);
+ =20
+
+--Sig_/wRwc9EsvMoDoJdweKTHRfR=
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmcZmvsACgkQAVBC80lX
+0GyWEAf/WYW2gIK9rSU6Os4+LTBytJGSrY21OVGZNc7sogfQ+Of3UMxc1wxaQ/Jx
+XNnf5Uuhi6fe/BgsGbF3nHstkHgXtioHSwfAhfgg/ecuFdT4e2z79JWZhFnaCpnK
+WTWw32T8Cnqm7lP2/bUYTB2jxiX53FmYYEYEFNh0Oxen+GoC8tMtdexfGn7eE5X1
+bMjwRHvTFYdyHJq7VZ7Qwt9JEasm1KEVv/Oo/Uh/f5DS2QJAuljV+SzkVfxJGU3X
+EixNuaIZuCLEgbzmjp78pOQw+lDiu2q2xaYoDjAvgn+yHd/7zncSoaIgvTAzAkx5
+uvQhVmznkMpSHdj+oTzwt9pdeadq3g==
+=cioX
+-----END PGP SIGNATURE-----
+
+--Sig_/wRwc9EsvMoDoJdweKTHRfR=--
