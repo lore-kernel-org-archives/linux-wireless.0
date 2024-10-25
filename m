@@ -1,133 +1,281 @@
 Received: from e2i340.smtp2go.com (e2i340.smtp2go.com [103.2.141.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D30AB19993F
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2024 08:02:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 828171CFECE
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Oct 2024 08:26:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.2.141.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729843343; cv=none; b=AkzSII0cRUOVnq6Z0Vk7Yw4TaRWAKEwWT/nTDUUmdIMpYeootwwbtd7h/WEW0+v9sJ60tmgLdOTNLksaVB717OKZ80rWyMtPh1brq73v+oat3596dfjMa6t/Hs2BkIoqtMMwqmbEixnSjvcJ64cANMWFwvUsVVKOndCOwMDZJPw=
+	t=1729844798; cv=none; b=m89leB9wOdguYRPRv9rySWDWcTcfmP4JirEieSDUo5nl7pLRUf3VMVZPm/sG3D0agDBLiE9Qvn8jnnwyZGJ8U84ekC9k9PdYaOY8FlkqQ9YJqPIQPWdqKYSwQAfFcCnhvVvWYTIlOW8NwCvT3ebCf2fSJeOk8alkEGjujxlo4LA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729843343; c=relaxed/simple;
-	bh=eFhDUENnS8zGkZbRU4y5LCpVMnWoZuLkbJIlmtBmFSU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UGChX4XjSvWgL0++fCwvC1pTMlD/JCj9TEEOSICA88RzDwHnQR0JEGFAKqHpGiNzkx4+XEOSblMB74+slyWIFkKjJWDIreKQBhHT85woVhi4J1fhcIJAEKKVZRLujsfnACdViakhiBfzEE8pvAlmq0ho8woFOzHlvOtmcfMyaT4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=fail (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=b7LuS1B6 reason="unknown key version"; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=IQuA1WMf; arc=none smtp.client-ip=103.2.141.84
+	s=arc-20240116; t=1729844798; c=relaxed/simple;
+	bh=7eFcQEIvBRhl18swlptD4ddj7Zc4ehZzReoGa/gH0zA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=bYJtDRLMNhO9UvdZhn0k2Il4NSkl2FTCUqXT7QmTK+8ZrjJo0uhIYPg+oRM09MAQ2jYjBuNdfJLatOZgcoJjs/a89ESJFo1t6y6/kOTxM+2IubErE5N+WlQiKGpQa3U6iKe/AVxELEBVYtRpFjwlJR+kNrSpa9gLrUpSVFvShjw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=fail (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=A5YKQLtX reason="unknown key version"; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=S0S3eAgo; arc=none smtp.client-ip=103.2.141.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="unknown key version" (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="b7LuS1B6";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="IQuA1WMf"
+	dkim=fail reason="unknown key version" (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="A5YKQLtX";
+	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="S0S3eAgo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=smtpservice.net; s=maxzs0.a1-4.dyn; x=1729844240; h=Feedback-ID:
-	X-Smtpcorp-Track:Message-ID:Subject:To:From:Date:Reply-To:Sender:
+	d=smtpservice.net; s=maxzs0.a1-4.dyn; x=1729845694; h=Feedback-ID:
+	X-Smtpcorp-Track:Message-Id:Date:Subject:To:From:Reply-To:Sender:
 	List-Unsubscribe:List-Unsubscribe-Post;
-	bh=GvO/Y+A5F9D+Z7v2M3j3RiYz27Q9b0KXTCFNKhL41cQ=; b=b7LuS1B6GRQ1fafUoPhLg13+vX
-	shdXOtgUdAE6PM9bFF8fB28e4+MVTRRjUtRS/dffGrTi8p2OW6gE1XKDhqvghdTb2NqoCYliN2P/f
-	nSvgATSrR6vIqlbQnH7Wl6eLyp4ubSSAlpb1AXLjP9+pwHc6PAaC3U2QZb1hhTr7CAF21wSTHEHXU
-	EJq4LXmTkaoGSmKR6SuWqpSRAsIw6U+7d29Z1P3ZgCKgAWwbH5snxL0hXqtWPxOFRRaN7sSZFwwFA
-	TxxxFHc16V17ML2XNBCdxe8MnSYkH6Y2V1g/RXt7cizYvtutAA5x0S4wTsc+6fNuQ/dogFpePD5PC
-	XzIauIhw==;
+	bh=YfS8lecAdepFQaM/ZpxsCooHN0CCYe5nh7n3SVBoO7Q=; b=A5YKQLtXFb2A3l+eEfTl6R8qti
+	PUksZiVImY0Teo2qoaviXjBu2JKagItniZh1EJ4/Py58W8pFNT3A5tziyMcZjShayJHIQpPEutBov
+	E7PVEhKMRQsm1fKAMBjWIvXcvO0bjlXd+O5QU4YHVDM4ZDhQr+ddPrSzPFhYiclYKnacPz2cAfKtR
+	2z0XjeAMt2O2mKuQCKr6JZwYpC/vedJ+LFpt9ekaW993JFcjoNTsV3LV6+o5YDS1c0iv3NG9yTV1p
+	fhw0r8wGdEN2SB7lOrtoa+dtllqCbtXqkqlIG+flSgngnY3Sil0eQ3Vt0Luox1yosxwhkaJcVYewo
+	/BV8eEsg==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1729843340; h=from : subject
+ i=@triplefau.lt; q=dns/txt; s=s510616; t=1729844794; h=from : subject
  : to : message-id : date;
- bh=GvO/Y+A5F9D+Z7v2M3j3RiYz27Q9b0KXTCFNKhL41cQ=;
- b=IQuA1WMfQxqQ2q1CqazdWtUHZoRm66YqXYYdWlk2PXmdUjAWf0WQPs8ANLN7G1imK+er/
- gJHxofkeMMC6f+m6OCuAE8t0ObdAypK4EHC3LjlVWvU/1lFDpNnU4Eys3bcrKMrNvYjvbLA
- rdjMufeu6Q56tzDqyFl4SgkLDxrrxPDunKknv7E9i8fzlLsn2P1Pb808M8E3bqwF3r+C9UO
- aAp9KbBTy+Wi1SCOJOKhYJ5078db39xHtcp/x4rapl65gBGmrHVVl0ZHdlnBC4vFfHLvRQV
- DXZjNMG6VgvGjrWe5gJmr46yBVh0Tkj1rEAPWclrSHKPgHkULVJY0To4qvcA==
+ bh=YfS8lecAdepFQaM/ZpxsCooHN0CCYe5nh7n3SVBoO7Q=;
+ b=S0S3eAgo2rwe8UbrN5Z/FrEv5QPq1aiHO1v468yyjOE+Y3xO56vg7u78DGUH6pS9lfryE
+ aydokIKlLZuXE9A7FI/dZYh7bWaQk4QFouhomdiNXI2D3fiPyz8ijLIOd80F+f0CTtayj0P
+ qnEpEm70AwJSvQqIDHaGIKi5M3xxV5MOCLxTgAd8A+skticBHQVlWvmJbDbyNlsvivzDBWe
+ l5P+qF0JthROMIn4UvTTlq2aCqM/lzz2C/N92LkX4oJ8kQuZPqtjfWhX7dwk4tXVvaQ4dSa
+ K+2a5PnkPnVbJVerJ1RYPR52qiVy5YlJ0N2T6B0wkyX1Z0CREO1/VKJlCVqA==
 Received: from [10.172.233.58] (helo=SmtpCorp) by smtpcorp.com with esmtpsa
  (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
  (Exim 4.94.2-S2G) (envelope-from <repk@triplefau.lt>)
- id 1t4FGg-TRjzcT-EX; Fri, 25 Oct 2024 08:01:58 +0000
+ id 1t4FeB-TRjx7e-9f; Fri, 25 Oct 2024 08:26:15 +0000
 Received: from [10.12.239.196] (helo=localhost) by smtpcorp.com with esmtpsa
  (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
  (Exim 4.97.1-S2G) (envelope-from <repk@triplefau.lt>)
- id 1t4FGg-FnQW0hQ1BVS-kG4P; Fri, 25 Oct 2024 08:01:58 +0000
-Date: Fri, 25 Oct 2024 10:01:52 +0200
+ id 1t4FeA-FnQW0hQ1gPJ-oCUT; Fri, 25 Oct 2024 08:26:15 +0000
 From: Remi Pommarel <repk@triplefau.lt>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: oe-kbuild@lists.linux.dev, ath10k@lists.infradead.org,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- lkp@intel.com, oe-kbuild-all@lists.linux.dev,
- Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
  Cedric Veilleux <veilleux.cedric@gmail.com>,
- Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>
-Subject: Re: [PATCH v2 2/2] wifi: ath10k: Flush only requested txq in
- ath10k_flush()
-Message-ID: <ZxtQcCZlQOfqkTEa@pilgrim>
-References: <0f55986ebe34f2b5aa4ccbcb0bed445324099fbd.1729586267.git.repk@triplefau.lt>
- <60d579e2-5eb7-4239-9a23-95fa4b32f351@stanley.mountain>
+ Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>,
+ Remi Pommarel <repk@triplefau.lt>
+Subject: [PATCH v3 1/2] wifi: ath10k: Implement ieee80211 flush_sta callback
+Date: Fri, 25 Oct 2024 10:23:47 +0200
+Message-Id: <cecfe1de13d74c59e3e6428ee4a9c99bd1572884.1729844329.git.repk@triplefau.lt>
+X-Mailer: git-send-email 2.40.0
+In-Reply-To: <cover.1729844329.git.repk@triplefau.lt>
+References: <cover.1729844329.git.repk@triplefau.lt>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <60d579e2-5eb7-4239-9a23-95fa4b32f351@stanley.mountain>
-X-Smtpcorp-Track: whgkS4h3vGUg.3q6evoicc_Ge.X8o_8wGqRHF
-Feedback-ID: 510616m:510616apGKSTK:510616sqkavGCBqD
+Content-Transfer-Encoding: 8bit
+X-Smtpcorp-Track: xbCQIfxb--Um.WjWBzdeZH9n5.-M5ohwNiKmg
+Feedback-ID: 510616m:510616apGKSTK:510616sZZiruM_TR
 X-Report-Abuse: Please forward a copy of this message, including all headers,
  to <abuse-report@smtp2go.com>
 
-Hi,
+When a STA reassociates, mac80211's _sta_info_move_state() waits for all
+pending frame to be flushed before removing the key (so that no frame
+get sent unencrypted after key removable [0]). When a driver does not
+implement the flush_sta callback, ieee80211_flush_queues() is called
+instead which effectively stops the whole queue until it is completely
+drained.
 
-On Fri, Oct 25, 2024 at 10:44:09AM +0300, Dan Carpenter wrote:
-> Hi Remi,
-> 
-> kernel test robot noticed the following build warnings:
-> 
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Remi-Pommarel/wifi-ath10k-Implement-ieee80211-flush_sta-callback/20241022-172038
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git ath-next
-> patch link:    https://lore.kernel.org/r/0f55986ebe34f2b5aa4ccbcb0bed445324099fbd.1729586267.git.repk%40triplefau.lt
-> patch subject: [PATCH v2 2/2] wifi: ath10k: Flush only requested txq in ath10k_flush()
-> config: parisc-randconfig-r071-20241024 (https://download.01.org/0day-ci/archive/20241025/202410251152.A5axJliR-lkp@intel.com/config)
-> compiler: hppa-linux-gcc (GCC) 14.1.0
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-> | Closes: https://lore.kernel.org/r/202410251152.A5axJliR-lkp@intel.com/
-> 
-> New smatch warnings:
-> drivers/net/wireless/ath/ath10k/mac.c:8076 _ath10k_mac_wait_tx_complete() error: uninitialized symbol 'empty'.
-> 
-> vim +/empty +8076 drivers/net/wireless/ath/ath10k/mac.c
-> 
-> c4f7022f0ef0aa Remi Pommarel     2024-10-22  8062  static void _ath10k_mac_wait_tx_complete(struct ath10k *ar,
-> c4f7022f0ef0aa Remi Pommarel     2024-10-22  8063  					 unsigned long queues)
-> 5e3dd157d7e70f Kalle Valo        2013-06-12  8064  {
-> affd321733eebc Michal Kazior     2013-07-16  8065  	bool skip;
-> d4298a3a8c92a1 Nicholas Mc Guire 2015-06-15  8066  	long time_left;
-> c4f7022f0ef0aa Remi Pommarel     2024-10-22  8067  	unsigned int q;
-> 5e3dd157d7e70f Kalle Valo        2013-06-12  8068  
-> 5e3dd157d7e70f Kalle Valo        2013-06-12  8069  	/* mac80211 doesn't care if we really xmit queued frames or not
-> d6dfe25c8bb200 Marcin Rokicki    2017-02-20  8070  	 * we'll collect those frames either way if we stop/delete vdevs
-> d6dfe25c8bb200 Marcin Rokicki    2017-02-20  8071  	 */
-> 548db54cc1890b Michal Kazior     2013-07-05  8072  
-> affd321733eebc Michal Kazior     2013-07-16  8073  	if (ar->state == ATH10K_STATE_WEDGED)
-> 828853ac58265c Wen Gong          2018-08-28  8074  		return;
-> affd321733eebc Michal Kazior     2013-07-16  8075  
-> d4298a3a8c92a1 Nicholas Mc Guire 2015-06-15 @8076  	time_left = wait_event_timeout(ar->htt.empty_tx_wq, ({
-> 5e3dd157d7e70f Kalle Valo        2013-06-12  8077  			bool empty;
-> affd321733eebc Michal Kazior     2013-07-16  8078  
-> edb8236df4d042 Michal Kazior     2013-07-05  8079  			spin_lock_bh(&ar->htt.tx_lock);
-> c4f7022f0ef0aa Remi Pommarel     2024-10-22  8080  			for_each_set_bit(q, &queues, ar->hw->queues) {
-> 
-> Smatch is concerned that there might not be any set bits.  (You know that the
-> compiler is automatically going to ininitialize empty to false so it costs
-> nothing to initialize it to false explicitly and silence this warning).
+The ath10k driver configure all STAs of one vdev to share the same
+queue. So when flushing one STA this is the whole vdev queue that is
+blocked until completely drained causing Tx to other STA to also stall
+this whole time.
 
-Actually I think empty should be true here, if there is no queue to
-wait for being drained then no need to wait at all. Will send a v3
-with that fixed.
+One easy way to reproduce the issue is to connect two STAs (STA0 and
+STA1) to an ath10k AP. While Generating a bunch of traffic from AP to
+STA0 (e.g. fping -l -p 20 <STA0-IP>) disconnect STA0 from AP without
+clean disassociation (e.g. remove power, reboot -f). Then as soon as
+STA0 is effectively disconnected from AP (either after inactivity
+timeout or forced with iw dev AP station del STA0), its queues get
+flushed using ieee80211_flush_queues(). This causes STA1 to suffer a
+connectivity stall for about 5 seconds (see ATH10K_FLUSH_TIMEOUT_HZ).
 
-Thanks for the report and the analysis.
+Implement a flush_sta callback in ath10k to wait only for a specific
+STA pending frames to be drained (without stopping the whole HW queue)
+to fix that.
 
+[0]: commit 0b75a1b1e42e ("wifi: mac80211: flush queues on STA removal")
+
+Reported-by: Cedric Veilleux <veilleux.cedric@gmail.com>
+Closes: https://lore.kernel.org/all/CA+Xfe4FjUmzM5mvPxGbpJsF3SvSdE5_wgxvgFJ0bsdrKODVXCQ@mail.gmail.com/
+Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+---
+ drivers/net/wireless/ath/ath10k/core.h   |  2 ++
+ drivers/net/wireless/ath/ath10k/htt.h    |  4 +++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 31 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c    | 40 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/txrx.c   |  9 ++++--
+ 5 files changed, 82 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 446dca74f06a..4ec2faa055c0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -558,6 +558,8 @@ struct ath10k_sta {
+ 	u8 rate_ctrl[ATH10K_TID_MAX];
+ 	u32 rate_code[ATH10K_TID_MAX];
+ 	int rtscts[ATH10K_TID_MAX];
++	wait_queue_head_t empty_tx_wq;
++	atomic_t num_fw_queued;
+ };
+ 
+ #define ATH10K_VDEV_SETUP_TIMEOUT_HZ	(5 * HZ)
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 603f6de62b0a..d150f9330941 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -2452,6 +2452,10 @@ int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt);
+ void ath10k_htt_tx_mgmt_dec_pending(struct ath10k_htt *htt);
+ int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
+ 				   bool is_presp);
++void ath10k_htt_tx_sta_inc_pending(struct ath10k_htt *htt,
++				   struct ieee80211_sta *sta);
++void ath10k_htt_tx_sta_dec_pending(struct ath10k_htt *htt,
++				   struct ieee80211_sta *sta);
+ 
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 9725feecefd6..211752bd0f65 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -195,6 +195,37 @@ void ath10k_htt_tx_mgmt_dec_pending(struct ath10k_htt *htt)
+ 	htt->num_pending_mgmt_tx--;
+ }
+ 
++void ath10k_htt_tx_sta_inc_pending(struct ath10k_htt *htt,
++				   struct ieee80211_sta *sta)
++{
++	struct ath10k_sta *arsta;
++
++	if (!sta)
++		return;
++
++	arsta = (struct ath10k_sta *)sta->drv_priv;
++
++	atomic_inc(&arsta->num_fw_queued);
++}
++
++void ath10k_htt_tx_sta_dec_pending(struct ath10k_htt *htt,
++				   struct ieee80211_sta *sta)
++{
++	struct ath10k_sta *arsta;
++	int v;
++
++	if (!sta)
++		return;
++
++	arsta = (struct ath10k_sta *)sta->drv_priv;
++
++	v = atomic_dec_if_positive(&arsta->num_fw_queued);
++	if (v < 0)
++		WARN_ON_ONCE(1);
++	if (v == 0)
++		wake_up(&arsta->empty_tx_wq);
++}
++
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = htt->ar;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 646e1737d4c4..86386a0af14d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4423,6 +4423,8 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 		spin_unlock_bh(&ar->htt.tx_lock);
+ 	}
+ 
++	ath10k_htt_tx_sta_inc_pending(&ar->htt, sta);
++
+ 	ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb, false);
+ 	if (unlikely(ret)) {
+ 		ath10k_warn(ar, "failed to push frame: %d\n", ret);
+@@ -4432,6 +4434,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 		if (is_mgmt)
+ 			ath10k_htt_tx_mgmt_dec_pending(htt);
+ 		spin_unlock_bh(&ar->htt.tx_lock);
++		ath10k_htt_tx_sta_dec_pending(&ar->htt, sta);
+ 
+ 		return ret;
+ 	}
+@@ -7474,7 +7477,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 		arsta->peer_ps_state = WMI_PEER_PS_STATE_DISABLED;
+ 		INIT_WORK(&arsta->update_wk, ath10k_sta_rc_update_wk);
+ 		INIT_WORK(&arsta->tid_config_wk, ath10k_sta_tid_cfg_wk);
+-
++		init_waitqueue_head(&arsta->empty_tx_wq);
+ 		for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
+ 			ath10k_mac_txq_init(sta->txq[i]);
+ 	}
+@@ -8098,6 +8101,40 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
++static void ath10k_flush_sta(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			     struct ieee80211_sta *sta)
++{
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = hw->priv;
++	bool skip;
++	long time_left;
++
++	/* TODO do we need drop implemented here ? */
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state == ATH10K_STATE_WEDGED)
++		goto out;
++
++	time_left = wait_event_timeout(arsta->empty_tx_wq, ({
++			bool empty;
++
++			empty = atomic_read(&arsta->num_fw_queued) == 0;
++
++			skip = (ar->state == ATH10K_STATE_WEDGED) ||
++			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
++					&ar->dev_flags);
++
++			(empty || skip);
++		}), ATH10K_FLUSH_TIMEOUT_HZ);
++
++	if (time_left == 0 || skip)
++		ath10k_warn(ar, "failed to flush sta txq (sta %pM skip %i ar-state %i): %ld\n",
++			    sta->addr, skip, ar->state, time_left);
++out:
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ /* TODO: Implement this function properly
+  * For now it is needed to reply to Probe Requests in IBSS mode.
+  * Probably we need this information from FW.
+@@ -9444,6 +9481,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.set_rts_threshold		= ath10k_set_rts_threshold,
+ 	.set_frag_threshold		= ath10k_mac_op_set_frag_threshold,
+ 	.flush				= ath10k_flush,
++	.flush_sta			= ath10k_flush_sta,
+ 	.tx_last_beacon			= ath10k_tx_last_beacon,
+ 	.set_antenna			= ath10k_set_antenna,
+ 	.get_antenna			= ath10k_get_antenna,
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index da3bc35e41aa..5b6750ef7d19 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -86,9 +86,12 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	spin_unlock_bh(&htt->tx_lock);
+ 
+ 	rcu_read_lock();
+-	if (txq && txq->sta && skb_cb->airtime_est)
+-		ieee80211_sta_register_airtime(txq->sta, txq->tid,
+-					       skb_cb->airtime_est, 0);
++	if (txq && txq->sta) {
++		if (skb_cb->airtime_est)
++			ieee80211_sta_register_airtime(txq->sta, txq->tid,
++						       skb_cb->airtime_est, 0);
++		ath10k_htt_tx_sta_dec_pending(htt, txq->sta);
++	}
+ 	rcu_read_unlock();
+ 
+ 	if (ar->bus_param.dev_type != ATH10K_DEV_TYPE_HL)
 -- 
-Remi
+2.40.0
+
