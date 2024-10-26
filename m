@@ -1,36 +1,36 @@
-Received: from msa.smtpout.orange.fr (smtp-72.smtpout.orange.fr [80.12.242.72])
+Received: from smtp.smtpout.orange.fr (smtp-19.smtpout.orange.fr [80.12.242.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C112242AAD;
-	Sat, 26 Oct 2024 15:35:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFEED225D7;
+	Sat, 26 Oct 2024 16:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729956907; cv=none; b=cpEsq0YfqDcbqjdKa/j60dZPL5JRUMkjH+NuFGIJBtEXAkiHGZipjh8yaZ504rlq0smEXT1brc7Fud+yMSg3kx/iubQEfWtKLhKcBzPPI8TGbRrSEOOPWIYuyjso0waFrs2LdRmK9/Tae6t/BTTWX0J72UQIbISirsApZubrAuE=
+	t=1729959799; cv=none; b=rlnBfp6yO3Oy/QEUn96bTQIVXGGUOK/u8B8ghIeUcQ32a6Mkxeb68NCqk5FILmtE5AlzX48G2NcfEAYE/qEgLCapI4Mcfz5R/eYu+Be6aGPDFJCho4sPib/jpC9pXKazHe4PY9ZUJTnkO6ICM7wWfWQcHS5WccDggyoNAa8qslg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729956907; c=relaxed/simple;
-	bh=q0wFGvQNEXFxoWWcyEln5NmTQ3Zd/GO9h+dUjTGdXEo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fli1/8iE+J43c4zuO/YFFcPCQULPtxZLXVsMiovI8/oGGkjJDdm7maJ6X2t4jCOPuEbmz1O4P5iDdLblzcF0WqhKqZbm60oqJGNARDHZSUadBa2zHW2L0JQ0lF0QcxNPhi1eDTsQqTXqWWStAdhEacBXlm7+oky0fX/s5aW8tjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=OavfMbRi; arc=none smtp.client-ip=80.12.242.72
+	s=arc-20240116; t=1729959799; c=relaxed/simple;
+	bh=gl0XiPLYaqdtqKKx4lPB9skPJRd+FpZJgXItJNF9m0M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Kha1wIJScKADyGQojX45uI1Kg8b2+XGenxKyj4c/yFw2lRnWx9QFn/g0I7xmo6v6GTp1oMczZYr0oysPx12XkGB8LrHhSkPXEwp/u9GKhlhcaMH1toHzaCG7quWJfNwF60GIYJeWACzHI6ygOgKEPfKxhVEGA2wcYassG3Am5eQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=iyjbS9op; arc=none smtp.client-ip=80.12.242.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="OavfMbRi"
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="iyjbS9op"
 Received: from localhost.localdomain ([90.11.132.44])
 	by smtp.orange.fr with ESMTPA
-	id 4ioetj5Ryfe2v4ioetca9f; Sat, 26 Oct 2024 17:35:01 +0200
+	id 4hm8ti93L6VsB4hm8tSAdp; Sat, 26 Oct 2024 16:28:21 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1729956901;
-	bh=ah32deZFqehUA+7YVjigqrMZ336hzswVoe6QO6zHvM0=;
+	s=t20230301; t=1729952901;
+	bh=3mCVTqLTLwLxDDxxUVv7c+N1HoRAEqgJx3RUI6Owy48=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=OavfMbRiLm/L901yWoIEDArxt+EFwwRZcmuS6GChSaN+NnkBZvq38ssbPsLc+9Lrm
-	 eKcQPjvGgjtaZR1pYuDJUrGN8rz2oaY04b3NtO6UWDK1m00A73pptp/7li1ipNz/qL
-	 4CYYfJLYafZeenkdUTMFWx4l7qNLFyPrgR5eSKfvaEjKoYdug9Y41vsNBvIC3btfQB
-	 6CWZyQQNO2lfA1vp13CxtLKPK5/0p7OvXXGfGRSSMxw+ZtsDxRI7oFUA6EWybL5JEE
-	 sL3zYZPV0icxH+ZaI35+HRavu4PTi8C7NubFbe6ivI4jPZtlnIcTgldQSGxSUa60fb
-	 um9e9JlYPdwbA==
+	b=iyjbS9opdblEW7ao/BnvEMIWt92+ICTcHrMkjYn8grOFmGOPYd7Pih3mxGR3flbKK
+	 TkEp5gTUhGGD/6pALo2Ba2eKCI632ykQjht8kBhBuIbEHgAa0i7+pPHlc7E2qys3OO
+	 R3rEQmtNhb6n0fjejSSRPMZ2ruOW2Ron+BvFmPHY3deJyVHrEsn6ZhQhTbeUe2DNKs
+	 LXTV9QlQckHH5tEhx1YWSoEmtsttUxPxKI5ILhRB05iruMQD7tYuRTn8ahFhXs3sV6
+	 14TmBa1QZajLQLN/SRFwcRhiOxZUrnfxQS8l0SgNDTEyMXq8RaJTP2BECLLj6cHMjj
+	 YS/CHI0k8A1qw==
 X-ME-Helo: localhost.localdomain
 X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sat, 26 Oct 2024 17:35:01 +0200
+X-ME-Date: Sat, 26 Oct 2024 16:28:21 +0200
 X-ME-IP: 90.11.132.44
 From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 To: Johannes Berg <johannes@sipsolutions.net>,
@@ -40,9 +40,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
 	Johannes Berg <johannes.berg@intel.com>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH v2] wifi: cfg80211: Fix an error handling path in nl80211_start_ap()
-Date: Sat, 26 Oct 2024 17:34:49 +0200
-Message-ID: <eae54ce066d541914f272b10cab7b263c08eced3.1729956868.git.christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] rtnetlink: Fix an error handling path in rtnl_newlink()
+Date: Sat, 26 Oct 2024 16:28:08 +0200
+Message-ID: <881a292603df853c52c6197ea23cc44ed9141b86.1729952851.git.christophe.jaillet@wanadoo.fr>
 X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -61,14 +61,6 @@ Fixes: 62262dd00c31 ("wifi: cfg80211: disallow SMPS in AP mode")
 Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
 Compile tested only
-
-Changes in v2:
-  - Fix the subject
-
-v1: apparently never reached lore, certainly because of the duplicated
-subject with [1]
-
-[1]: https://lore.kernel.org/all/eca90eeb4d9e9a0545772b68aeaab883d9fe2279.1729952228.git.christophe.jaillet@wanadoo.fr/
 ---
  net/wireless/nl80211.c | 6 ++++--
  1 file changed, 4 insertions(+), 2 deletions(-)
