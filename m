@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832041DA10E
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42DC1D967B
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730116538; cv=none; b=Wzt6544Z+Id4f5qqurnXftnLX/0cbXKk5JQV+PPfADvCFxaxyh/EEIFNLUKXAJWU74YgsIuJE5KnrikCd2RcN22HXQZ1+fi26nGCNWPPFxMRu2OgAfYWxrcUUkpSJULyES4XPV7uCPZzKfBQAUYAy+z1CTaVk3T9L8llIxiZUfw=
+	t=1730116538; cv=none; b=EqmgCAQ0LjeWfmKGIOVkX1L0Wj7Salyzu1BEQcZCAkF6R348jzCMZ0T/snTwpQE0YazgR04ZdgbCZf4uGkywNYmv0Ilq7m84ce1DHQH8YldRPUXZx1HT9FPOdxG+WvbX9pxpkGE+oYX2qMSupHThhT1gD5ByHhMN1ShiJCtN02k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730116538; c=relaxed/simple;
-	bh=CMbbOAmthbmXMn1749ddLBBDFumfh095jiL9J8wy3dE=;
+	bh=HNANnP5pp0eHgV1/ZZ7RO8lKm15HdBMNPlLQzqfr8LY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Lg8FfvGmQx5DfZmHtt4DT2QNUImzXIZSTE6/jaqC+0phbXnS/NStfOgd92qRimJuKeIxZjrR5oLzfOUL9H93GhNiqx1jUd0U1BBH4168EBG/nafq91P44IBpvv26+i9FFzNFaPY6rk7AaYqIoehMrbUi7NNgIZIPyw5rKsBPFjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VZ7asAxt; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=eQtx76Xm1p1l92Yfp/aa7AGMfG26yNzwgqC7e92UADqivQim2StI5cPHv/eTEDaDuCR6khlVHTS4VhWrgl9A6giExbVaMqHSS+V4M5L3ErrZWpniC59Bo8bxdeyjleUtyAFbsOKwMvut98uar//SbaYJHNMd2LbWccqcQcDfvvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ThbPhlXG; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VZ7asAxt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ThbPhlXG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730116537; x=1761652537;
+  t=1730116534; x=1761652534;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CMbbOAmthbmXMn1749ddLBBDFumfh095jiL9J8wy3dE=;
-  b=VZ7asAxtnkEZtq8z50UTfAx34admEjWNXnav8qBSEeEdFGabZNP20pta
-   unkjZuUemK2ykzSE7NAqOgYdGMTl6VVhD+MDBW/O6mKWLqgil2/SYyF8O
-   wlmZqgSfd8qFq214brTKsRblnSYbAG87u7TFCdiGkK9kKJZo+daoKOF1j
-   brpQc2rJ2BHMrNuPMUMj6wWG7vTJMRWGg6k6EEkDgdAlUkOhJRT2Kbdks
-   7oBlXfSWa7RwxUFkoWkBefoFsaQ9VnI2/v3wjm+yjdeA6kFiCfXv/1hs/
-   K54wOKKKlTomkzIbXPXYyt49CmPKZfG2I/RPusL66qDDpnZNJIXGiLWbk
-   Q==;
-X-CSE-ConnectionGUID: 6BLeYXyIQdegiaRsO2y5cg==
-X-CSE-MsgGUID: g6alG3VbSiWEjTRfu3T0eA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813925"
+  bh=HNANnP5pp0eHgV1/ZZ7RO8lKm15HdBMNPlLQzqfr8LY=;
+  b=ThbPhlXGwLjSN8GwDZhIdh3e+LhqMeHVrj8gC0WPiziGGcnUZXjErouL
+   3FlSTU92gWYx3bsmT3/2g4nFFqFrqn3CeBLqA7yAmsXlpaS0uPMK1Ivb6
+   sGcj4XpZM6fbaA4fj6KYtsd9524DkeEuXg+OcnE3IfPSTU5Iqo0VrYWIV
+   C+NACaLP/v5F+X+NVDkpJbpOhfz3CZuEmkl8ytkkZ+l0cO8KyH/xG9wQq
+   /NOpnFVNeuOnx+egNOksfd80uO9n/yByMEk0jBuW6ILVBSwVnLsw2+5QP
+   AWPXkRMr2J79FJXnsdwGvcHkrrBriGhQUj4otNCSBZzUDl8BGiMX0O5P4
+   w==;
+X-CSE-ConnectionGUID: 3wqVGYU0RuygfPVq+Y0rWg==
+X-CSE-MsgGUID: SnqSHdzpTIyV8Lcp8o0d2w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813912"
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="29813925"
+   d="scan'208";a="29813912"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:37 -0700
-X-CSE-ConnectionGUID: hqYMKuweTwimlM4HrhsOLQ==
-X-CSE-MsgGUID: IMJUhK+QQIe+L/py3BehkA==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:33 -0700
+X-CSE-ConnectionGUID: i34Na10eSgmDbS/q6xqS6A==
+X-CSE-MsgGUID: qHXhE2EHR6eDH4LaNvihrA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="112432642"
+   d="scan'208";a="112432608"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:35 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:31 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/15] wifi: iwlwifi: mvm: don't call power_update_mac in fast suspend
-Date: Mon, 28 Oct 2024 13:54:59 +0200
-Message-Id: <20241028135215.2636b358c870.I36717b4cff98eaa79182e0f3b5404f71aeeaf2f9@changeid>
+Subject: [PATCH 11/15] wifi: iwlwifi: move IWL_LMAC_*_INDEX to fw/api/context.h
+Date: Mon, 28 Oct 2024 13:54:56 +0200
+Message-Id: <20241028135215.48443f1c1819.I1cfe8c6c58153031d44f81edc0f8731077666355@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
 References: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
@@ -62,33 +62,42 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Those macros are currently in fw/api/binding.h, which should really not
+be included in newer code, where this API is not used.
+Just move it.
 
-We don't have any interface anyway.
-Trying to send a command after the D3_CONFIG command is also a really
-bad idea.
-No harm done since this function wouldn't send anything to the firmware
-anyway.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/binding.h | 2 --
+ drivers/net/wireless/intel/iwlwifi/fw/api/context.h | 3 +++
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 16a9738dcdc9..84c2c87b017f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -3682,8 +3682,6 @@ void iwl_mvm_fast_suspend(struct iwl_mvm *mvm)
- 		IWL_ERR(mvm,
- 			"fast suspend: couldn't send D3_CONFIG_CMD %d\n", ret);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
+index 2397fdc37fc5..9b942c4aabd9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/binding.h
+@@ -56,8 +56,6 @@ struct iwl_binding_cmd {
+ } __packed; /* BINDING_CMD_API_S_VER_2 */
  
--	WARN_ON(iwl_mvm_power_update_mac(mvm));
--
- 	ret = iwl_trans_d3_suspend(mvm->trans, false, false);
- 	if (ret)
- 		IWL_ERR(mvm, "fast suspend: trans_d3_suspend failed %d\n", ret);
+ #define IWL_BINDING_CMD_SIZE_V1	sizeof(struct iwl_binding_cmd_v1)
+-#define IWL_LMAC_24G_INDEX		0
+-#define IWL_LMAC_5G_INDEX		1
+ 
+ /* The maximal number of fragments in the FW's schedule session */
+ #define IWL_MVM_MAX_QUOTA 128
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/context.h b/drivers/net/wireless/intel/iwlwifi/fw/api/context.h
+index 1fa5678c1cd6..a9fa5f054ce0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/context.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/context.h
+@@ -40,4 +40,7 @@ enum iwl_ctxt_action {
+ 	FW_CTXT_ACTION_REMOVE,
+ }; /* COMMON_CONTEXT_ACTION_API_E_VER_1 */
+ 
++#define IWL_LMAC_24G_INDEX		0
++#define IWL_LMAC_5G_INDEX		1
++
+ #endif /* __iwl_fw_api_context_h__ */
 -- 
 2.34.1
 
