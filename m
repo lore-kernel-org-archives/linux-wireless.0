@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A3D31D9587
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A36A81D95B5
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730116531; cv=none; b=ic3CBc0XoIl0PwZIchRR/pxefoIl5YRRAimHdkNX0WqpvoNsFR4//CVwTHX6jblRMbK6TvSIxYLPBVG6tLivPajcvKUuf3aR/zh2uea+mABs+sUF0C0yfQbrjNF4E9PgM94exlB6vMmCf2NGH3ySQINUXA76zzAiMNwDs+5Z9U8=
+	t=1730116533; cv=none; b=PJY3J2wr8fTYyIU69k01LjagIX+QqKQd0MyHaNBByTMQUyxNFbGj9G+69oMiFnVJt19Z8fq3Lyh43TfBzUPgOCJGtM1xVHj6ZRAIAPImuZqJkfhRLJ4cTjp9O1+epjVTA26UUC14fCnUL+66WiLtvoR+TUtvWyBOkjGAe2pAqxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730116531; c=relaxed/simple;
-	bh=QJ2MJx2/lvwsGXKtk5ldRpmxQpefw4lUXB/nG/T8IEU=;
+	s=arc-20240116; t=1730116533; c=relaxed/simple;
+	bh=pBlu0dLY9etlexjJygupcmU7lhZc+sU0rYdX/jGbjuA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=WDg6ptas54GUD56Tq+O/ViumkenhBtlvbcmBrGWrPLfJcuKA0pqfu93rmE0UPG08O21/HeY85qRKvwsvmmyp6nokwuFwEbMY2jfA3V4TS8sJVpk8DRoub9iYGjxeHobBbqGkQcGK28TDCp8q1AkMB4Ln3/b5Igldrrjdwyj9TYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aBTMnPxs; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=ZACbtbu/90xRws3qjwD8rtFP/Tp1CMqCTDkAqOzu517zwx3kL2qGhgcjqAxatblU4AZwmSR8lywxPb6muAdKBVbTFKG/Sa2DaUpGkczvYg55KIhqx9uRtuixJ7pZ1MF70iTeKgYEl4P/562cd74n+Um6570NX0+rrfVtV+8V6as=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aTtatIll; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aBTMnPxs"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aTtatIll"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730116530; x=1761652530;
+  t=1730116532; x=1761652532;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=QJ2MJx2/lvwsGXKtk5ldRpmxQpefw4lUXB/nG/T8IEU=;
-  b=aBTMnPxsrn2EoAWdMKFcxxFLePYLc6nUfG8TkLL3yCONU19DISCJ1KIE
-   MYIAJLiCz5k4lsJZfUpseDOlRVg4Y0sDg1V/8dVOmA3CFmfzj/LxGxIEI
-   O7WUx99CoEd5j8mzZbtXjdQ5l/YGyel2BdU/vyrpC4cAuchZ0j0d8ztfE
-   nWATyeWV6RqV4AhX6YWCOSxE/sIjAP84Fil2+daSXfd4nBFDkSF2AyR5l
-   hZrj0HJAPpYeMZAz0+tXWH62eh6rGNwtClpK3bKYibSX70o12Lr/PRSMO
-   4fpDDJzCwb35m5XJw0iWm//FuLUiPMO6mD8AQ05TzO+Sa9MSANZnRFL9R
-   A==;
-X-CSE-ConnectionGUID: /1kDXj/jQ86JktT9cZxw9g==
-X-CSE-MsgGUID: 1IJEpVYzQcKHbMB8AGWdFg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813900"
+  bh=pBlu0dLY9etlexjJygupcmU7lhZc+sU0rYdX/jGbjuA=;
+  b=aTtatIllbKuXiIplL+VZdwsC8wypsUZZsxpu/cOceN/jr7dxVgwGr3a7
+   p8mtl5xbyLbhoS59HM8mNcs/jThfUMnSvEsisnMis0FQAhNQVup+y0pS2
+   +aql83NKCsHzUiu7k9AV/zQztx6ZoDOAV/b38+VAjZb1u+yCYVkZcpjS3
+   OJdxdC0Mp1x0mMUMCyrBF5HabzfvMoOEcEwfSyfWyk4xoPNDDu0ItAzWz
+   N2gk/I1xpFjCk2JWwZ5rqp1Orq0yrqld/PXn4uIqPSzU3VmG1gYq/qGhl
+   GGxsmq/qcfW0dsat43ssgj6Y/mrcKbYAz6TP6gG5l7zTda4VKnj1J6FSH
+   Q==;
+X-CSE-ConnectionGUID: rbSSUNL1R1md5vRssp47mQ==
+X-CSE-MsgGUID: ThKETcx8T8+CobIGFbi/Jw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813907"
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="29813900"
+   d="scan'208";a="29813907"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:28 -0700
-X-CSE-ConnectionGUID: puYmZS95SliBPAZnHGOyaw==
-X-CSE-MsgGUID: Pw7oTdUaSMOQSPGWXPbf+g==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:30 -0700
+X-CSE-ConnectionGUID: LD1FZF20T3mQwAqB9/eRRw==
+X-CSE-MsgGUID: 6IhYKRHiQjqX7huNGl0fGQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="112432592"
+   d="scan'208";a="112432598"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:25 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:28 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>
-Subject: [PATCH 07/15] wifi: iwlwifi: mvm: support new initiator and responder command version
-Date: Mon, 28 Oct 2024 13:54:52 +0200
-Message-Id: <20241028135215.264826832f16.Iad4fdcd177a9c4bcb0839d3f87c793b4f83eb2c7@changeid>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/15] wifi: iwlwifi: mvm: tell iwlmei when we finished suspending
+Date: Mon, 28 Oct 2024 13:54:54 +0200
+Message-Id: <20241028135215.525287b90af2.Ibf183824471ea5580d9276d104444e53191e6900@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
 References: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
@@ -62,71 +62,54 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Add support for range_request_cmd version 15. This version adds a
-testing option flag to use bad secure LTF Tx key. The command struct
-itself is not changed.
-Add support for responder config command version 11. This version only
-adds a flag which is part of the MVM_FTM_RESP_FLAGS and does not
-require any special handling.
+Since we no longer shut down the device in suspend, we also no longer
+call iwl_mvm_mei_device_state() and this is a problem because iwlmei
+expects this to be called when it runs its own suspend sequence. It
+checks mei->device_down in iwl_mei_remove() which is called upon
+suspend.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Fix this by telling iwlmei when we're done accessing the device.
+When we'll wake up, the device should be untouched if CSME didn't use it
+during the suspend time. If CSME used it, we'll notice it through the
+CSR_FUNC_SCRATCH register.
+
+Fixes: e8bb19c1d590 ("wifi: iwlwifi: support fast resume")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/location.h   | 4 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c | 2 +-
- 3 files changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-index 30a54c7fa001..15aab3bbb7e9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-@@ -616,6 +616,9 @@ struct iwl_tof_range_req_ap_entry_v2 {
-  *	continue with the session and will provide the LMR feedback.
-  * @IWL_INITIATOR_AP_FLAGS_TEST_INCORRECT_SAC: send an incorrect SAC in the
-  *	first NDP exchange. This is used for testing.
-+ * @IWL_INITIATOR_AP_FLAGS_TEST_BAD_SLTF: use incorrect secure LTF tx key. This
-+ *	is used for testing. Only supported from version 15 of the range request
-+ *	command.
-  */
- enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_ASAP = BIT(1),
-@@ -633,6 +636,7 @@ enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_PMF = BIT(14),
- 	IWL_INITIATOR_AP_FLAGS_TERMINATE_ON_LMR_FEEDBACK = BIT(15),
- 	IWL_INITIATOR_AP_FLAGS_TEST_INCORRECT_SAC = BIT(16),
-+	IWL_INITIATOR_AP_FLAGS_TEST_BAD_SLTF = BIT(17),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 4616a5b394c0..23ccbe7b74c0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1237,6 +1237,7 @@ int __iwl_mvm_mac_start(struct iwl_mvm *mvm)
+ 	fast_resume = mvm->fast_resume;
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index 55245f913286..77cfad6707f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -1063,6 +1063,8 @@ int iwl_mvm_ftm_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 						   IWL_FW_CMD_VER_UNKNOWN);
+ 	if (fast_resume) {
++		iwl_mvm_mei_device_state(mvm, true);
+ 		ret = iwl_mvm_fast_resume(mvm);
+ 		if (ret) {
+ 			iwl_mvm_stop_device(mvm);
+@@ -1371,10 +1372,13 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm, bool suspend)
+ 		iwl_mvm_rm_aux_sta(mvm);
  
- 		switch (cmd_ver) {
-+		case 15:
-+			/* Version 15 has the same struct as 14 */
- 		case 14:
- 			err = iwl_mvm_ftm_start_v14(mvm, vif, req);
- 			break;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
-index e4caa362f597..e6e468e81ab3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.c
-@@ -131,7 +131,7 @@ iwl_mvm_ftm_responder_cmd(struct iwl_mvm *mvm,
+ 	if (suspend &&
+-	    mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_22000)
++	    mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_22000) {
+ 		iwl_mvm_fast_suspend(mvm);
+-	else
++		/* From this point on, we won't touch the device */
++		iwl_mvm_mei_device_state(mvm, false);
++	} else {
+ 		iwl_mvm_stop_device(mvm);
++	}
  
- 	lockdep_assert_held(&mvm->mutex);
- 
--	if (cmd_ver == 10) {
-+	if (cmd_ver >= 10) {
- 		cmd.band =
- 			iwl_mvm_phy_band_from_nl80211(chandef->chan->band);
- 	}
+ 	iwl_mvm_async_handlers_purge(mvm);
+ 	/* async_handlers_list is empty and will stay empty: HW is stopped */
 -- 
 2.34.1
 
