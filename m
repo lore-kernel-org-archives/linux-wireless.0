@@ -1,55 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2891D966A
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9B31D9699
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2024 11:55:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730116534; cv=none; b=TIt4QR+2b/rDT5NKaqLH07ELI1UTPbr+Ww1EyUmfeOfnrWVGli654MELnvk7hvHd8PAZSgALSuT/H0OEr00PJ0ys9ulhJtMBGkNS8GZUf6oBGl6rG/x1fnS+SsOWQ7oyOKvU31ue/GYde9n4va6EjpLykI1MkM+myd4Sv8foydQ=
+	t=1730116535; cv=none; b=XbaHO4LmM/ebqvXFVx//UVYPBGlWWTM97NDmkPRJQlKQnY/ttkibGlB0KPNP4PuQvI5O+6UyJMWap30VDYqR/StTkVCUAsQs2QxRj/WWSQmszWu6H2Y4+fdFKpo+7O66QooXWey6gNLucC44tilmFy4PJ8kjJaUVJAeOJb0PzE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730116534; c=relaxed/simple;
-	bh=XW5nlOpaXGipEl+zf2Nml6x0rKQWkGaW+ks5Di+R9s8=;
+	s=arc-20240116; t=1730116535; c=relaxed/simple;
+	bh=E2imZeqBATpmgWFII4SeoylyWq1A2PQ4yakO2GM5Gmk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ld71C/S9B40/Evcr6cv2RPA9Md0b2NsiFKpEBnq9tp8kn/tImOTqdfE+Qb3zWeQUwFns+aeMzAlnOG8yZH4QQgjkBlmuR2YnAuWtYl1V4TKrdDg6icMjiq/R2vjqy7BHpdg/O6GlWEZosaVL+Ip8Sz6muT3GZpd4c/7uCPts5UM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YbvCoLFT; arc=none smtp.client-ip=198.175.65.17
+	 MIME-Version; b=J9KXuue9jEc6Aa23bTNh89h1gFJ/fJXXNkaUtt5uSxDrbalkemmUcqTapEfHt7VdT3VUvrNOieLk3iDHNsl8wzEp89vXKQeCseVRk/+itelJ50dNtuAeq2oOciRWJJrtgi4ZBT6O8n7KHPorFb87wyTYWMWH5LEGrWqKS3aeSZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kEbAcU9c; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YbvCoLFT"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kEbAcU9c"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730116533; x=1761652533;
+  t=1730116534; x=1761652534;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=XW5nlOpaXGipEl+zf2Nml6x0rKQWkGaW+ks5Di+R9s8=;
-  b=YbvCoLFTCRJ7wTJsp0ne3qOjucalkIVcGsDVJ1JKs7x1Z1VISgnDAx12
-   SxCpbZoTp4dLFAwDWlUqfVqmljtjoKSM16Bn+yJcp/rPnXvvLePX9beWf
-   ItbmBEgSkr4EPx8gVHaN7Stum+nhbB6VnuZENdG2zv8sJGJ1Q5g+YCBxa
-   I/o7lxfz0iNv2lgFW+DMWFxsJtvMgtqETj/9ERDNsKKNb21LoBRxaFJRi
-   j8TXuH9B7LhYLclxx/ePtBvY/E7VvWnJurMrC7D4CkyMrrWJb19mv+w57
-   qMvyw7M3nRfzVwl/1QGHhHlAxhDdvZkD5zq3YEb8TicxiwVzWRjivIVNv
-   A==;
-X-CSE-ConnectionGUID: ifpAIMOZSU+s1hS9elsECw==
-X-CSE-MsgGUID: PPHos19qTWyiGK7281Pb+g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813909"
+  bh=E2imZeqBATpmgWFII4SeoylyWq1A2PQ4yakO2GM5Gmk=;
+  b=kEbAcU9chZWa9OKJsuUsFZKOvsT1QNAaUYEIl9HsfrwTq7269XIwa1ZG
+   eoOt9Ryyn1mRiLHmtgMKSMNARQUa7ZeJOT5CgzTNCAaScmumBGJe+uhA/
+   MccPHWmFRuY8paATdO327R/CNbUdw6h0zwZFAXMnF0Jj1ozeFBbweBIZM
+   BaLZgiCj/1JBky0KKpNDjw+2tRVjMi+XXiy+2G30lofu7LCU5k4OBrYka
+   MIoWrjMassuoClzbd3YQFd+OVVsb65a6zDjac9WLpxfMqJjSHSOv9LxIj
+   rkB5o2aLmTPWDIHalWrLmFvQkCu8bQWstekIbD0Pid0ZhIwOM69g+Vvof
+   g==;
+X-CSE-ConnectionGUID: Yd3lo0/DTEKBPJAfkKYtMg==
+X-CSE-MsgGUID: q0u095cwSE2uBt7L8dLXJA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11238"; a="29813917"
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="29813909"
+   d="scan'208";a="29813917"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:31 -0700
-X-CSE-ConnectionGUID: JJLoAZdnQUOLlz3acD5biw==
-X-CSE-MsgGUID: q4K8FdxHRpmt+RCBtol8hQ==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:34 -0700
+X-CSE-ConnectionGUID: VCcwK4pGST6GTc6yoywXVA==
+X-CSE-MsgGUID: 4A5GVXkWStW2GVOmaTu1gg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="112432603"
+   d="scan'208";a="112432611"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:29 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 04:55:32 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/15] wifi: iwlwifi: be less noisy if the NIC is dead in S3
-Date: Mon, 28 Oct 2024 13:54:55 +0200
-Message-Id: <20241028135215.3a18682261e5.I18f336a4537378a4c1a8537d7246cee1fc82b42c@changeid>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 12/15] wifi: iwlwifi: bump minimum API version in BZ/SC to 92
+Date: Mon, 28 Oct 2024 13:54:57 +0200
+Message-Id: <20241028135215.525fe67393b6.Idbb031cf68d04b7c0c2b9fbc7d79181c538994f6@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
 References: <20241028115500.351123-1-miriam.rachel.korenblit@intel.com>
@@ -62,132 +61,40 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Stop supporting older FWs.
 
-If the NIC is dead upon resume, try to catch the error earlier and exit
-earlier. We'll print less error messages and get to the same recovery
-path as before: reload the firmware.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dump.c   | 11 ++++++++---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 13 +++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c    | 18 +++++++++++++-----
- .../net/wireless/intel/iwlwifi/pcie/trans.c    |  2 ++
- 4 files changed, 30 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dump.c b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-index 3cabdeb53e99..8e0c85a1240d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dump.c
-@@ -537,13 +537,18 @@ bool iwl_fwrt_read_err_table(struct iwl_trans *trans, u32 base, u32 *err_id)
- 		/* cf. struct iwl_error_event_table */
- 		u32 valid;
- 		__le32 err_id;
--	} err_info;
-+	} err_info = {};
-+	int ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+index ea40d402681d..cd1fe8490ae5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+@@ -13,7 +13,7 @@
+ #define IWL_BZ_UCODE_API_MAX	94
  
- 	if (!base)
- 		return false;
+ /* Lowest firmware API version supported */
+-#define IWL_BZ_UCODE_API_MIN	90
++#define IWL_BZ_UCODE_API_MIN	92
  
--	iwl_trans_read_mem_bytes(trans, base,
--				 &err_info, sizeof(err_info));
-+	ret = iwl_trans_read_mem_bytes(trans, base,
-+				       &err_info, sizeof(err_info));
-+
-+	if (ret)
-+		return true;
-+
- 	if (err_info.valid && err_id)
- 		*err_id = le32_to_cpu(err_info.err_id);
+ /* NVM versions */
+ #define IWL_BZ_NVM_VERSION		0x0a1d
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+index 635fed641c19..fc5e6e44c6aa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+@@ -13,7 +13,7 @@
+ #define IWL_SC_UCODE_API_MAX	94
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index e95ffe303547..c70da7281551 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1074,12 +1074,13 @@ int iwl_trans_read_config32(struct iwl_trans *trans, u32 ofs,
- void iwl_trans_debugfs_cleanup(struct iwl_trans *trans);
- #endif
+ /* Lowest firmware API version supported */
+-#define IWL_SC_UCODE_API_MIN	90
++#define IWL_SC_UCODE_API_MIN	92
  
--#define iwl_trans_read_mem_bytes(trans, addr, buf, bufsize)		      \
--	do {								      \
--		if (__builtin_constant_p(bufsize))			      \
--			BUILD_BUG_ON((bufsize) % sizeof(u32));		      \
--		iwl_trans_read_mem(trans, addr, buf, (bufsize) / sizeof(u32));\
--	} while (0)
-+#define iwl_trans_read_mem_bytes(trans, addr, buf, bufsize)	\
-+	({							\
-+		if (__builtin_constant_p(bufsize))		\
-+			BUILD_BUG_ON((bufsize) % sizeof(u32));	\
-+		iwl_trans_read_mem(trans, addr, buf,		\
-+				   (bufsize) / sizeof(u32));	\
-+	})
- 
- int iwl_trans_write_imr_mem(struct iwl_trans *trans, u32 dst_addr,
- 			    u64 src_addr, u32 byte_cnt);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index fae9eabfa56e..a6082150deab 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -3107,7 +3107,6 @@ static void iwl_mvm_d3_disconnect_iter(void *data, u8 *mac,
- 		ieee80211_resume_disconnect(vif);
- }
- 
--
- static bool iwl_mvm_check_rt_status(struct iwl_mvm *mvm,
- 				   struct ieee80211_vif *vif)
- {
-@@ -3706,22 +3705,31 @@ int iwl_mvm_fast_resume(struct iwl_mvm *mvm)
- 	iwl_fw_dbg_read_d3_debug_data(&mvm->fwrt);
- 
- 	if (iwl_mvm_check_rt_status(mvm, NULL)) {
-+		IWL_ERR(mvm,
-+			"iwl_mvm_check_rt_status failed, device is gone during suspend\n");
- 		set_bit(STATUS_FW_ERROR, &mvm->trans->status);
- 		iwl_mvm_dump_nic_error_log(mvm);
- 		iwl_dbg_tlv_time_point(&mvm->fwrt,
- 				       IWL_FW_INI_TIME_POINT_FW_ASSERT, NULL);
- 		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
- 					false, 0);
--		return -ENODEV;
-+		mvm->trans->state = IWL_TRANS_NO_FW;
-+		ret = -ENODEV;
-+
-+		goto out;
- 	}
- 	ret = iwl_mvm_d3_notif_wait(mvm, &d3_data);
-+
-+	if (ret) {
-+		IWL_ERR(mvm, "Couldn't get the d3 notif %d\n", ret);
-+		mvm->trans->state = IWL_TRANS_NO_FW;
-+	}
-+
-+out:
- 	clear_bit(IWL_MVM_STATUS_IN_D3, &mvm->status);
- 	mvm->trans->system_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
- 	mvm->fast_resume = false;
- 
--	if (ret)
--		IWL_ERR(mvm, "Couldn't get the d3 notif %d\n", ret);
--
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 3b9943eb6934..d19b3bd0866b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1643,6 +1643,8 @@ int iwl_trans_pcie_d3_resume(struct iwl_trans *trans,
- out:
- 	if (*status == IWL_D3_STATUS_ALIVE)
- 		ret = iwl_pcie_d3_handshake(trans, false);
-+	else
-+		trans->state = IWL_TRANS_NO_FW;
- 
- 	return ret;
- }
+ /* NVM versions */
+ #define IWL_SC_NVM_VERSION		0x0a1d
 -- 
 2.34.1
 
