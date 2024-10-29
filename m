@@ -1,59 +1,59 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988011E048B
-	for <linux-wireless@vger.kernel.org>; Tue, 29 Oct 2024 08:33:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1F8204037;
+	Tue, 29 Oct 2024 09:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730190838; cv=none; b=sHEm4qrtYyZ8BRk4h9FRD5u0nNObjRJlO85qvgiItdHS+FK52vmsDIlgKJ0aIoVfxXY9fYiQSJI4sLDJSWscRyF2HJo7+sCSGLdO2BWHqi5iJuC4HbbcExIoFt/s3sza2rdux/eJcq4YMB11tFDN+CZ7C1dRPBc6Pc/t+c1KUkU=
+	t=1730193140; cv=none; b=BkwLsjkYxNoffyf2O0iCdwlpMotGekuBq1VNDwkq8tcIn2iyL0GrtXuwVJ0ILSiymb0TZFPkCzD1zNQaKPBFWNycBkTV/z8diu+d6K08CwblZzVU8WYVtxuga5dghnp3hn7JShrEIjqfZowkNff3QbBgGF3uFU7w0Ohjgl5Vd9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730190838; c=relaxed/simple;
-	bh=ysRCRit5VIxbHWG3YUhU/VJelVejFaOAiPNch6P/sgk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KQ2hVfebyFuWGx1j0qhdsM6GE5C99qZfReMCTnufWrMDgvEN6Ahw8R8Kv5Ps7eWbLLKmwlGzYKYRq7E1P6iEQiKVREUtdMCUMvPZFdl8506w4lc8gFf46gbDt1lMfbgR3bjN70YQMuB54osdU/K4bhJTOpjIjY2MBPNksd0kNlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BvKhgSSq; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BvKhgSSq"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49SKYPkG012047;
-	Tue, 29 Oct 2024 08:33:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=ND7P14RGUCa/3njBpgO0LodGoDDkZ/lSdMM
-	fyom5wfM=; b=BvKhgSSqCsAl0YzUAj0gW9Xw3KcLV07EgCLb/XoW7OGXS1XDM47
-	4JMcZowBdQY8WgmV3vbjsojEnd16OzXxIhv+BpsqXz4m2LFyHyTMKmvfNTD1t5NE
-	6kUB/tebAQZVULoynoOjIxFEZaGxOIjDikOvANrv5p/LqTuEJUjOovwV9CMQjTHN
-	4cJdVAhKHngr4UjOktqaaV5uwlDVsUCKm1wjN0pP2sHK7YDpmCXZ1DoWHgM7Qt9M
-	jhbf6wBHKY0oVEUFAxP0l33zUhXwIq861urO0mv3FVdf+BwY3RNVBOfO14a3aR1C
-	NF4c5+4UcixYHBw6fcpmYeFIJgALiSbI6KA==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42gp4dyxy5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Oct 2024 08:33:51 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 49T8Xmd9008331;
-	Tue, 29 Oct 2024 08:33:48 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 42gsgkvtk3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Oct 2024 08:33:48 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49T8Xmel008325;
-	Tue, 29 Oct 2024 08:33:48 GMT
-Received: from hu-devc-hyd-u22-c.qualcomm.com ([10.213.97.93])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 49T8Xlne008323
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Oct 2024 08:33:47 +0000
-Received: by hu-devc-hyd-u22-c.qualcomm.com (Postfix, from userid 460767)
-	id 055964A8; Tue, 29 Oct 2024 14:03:47 +0530 (+0530)
-From: Balaji Pothunoori <quic_bpothuno@quicinc.com>
-To: ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Balaji Pothunoori <quic_bpothuno@quicinc.com>
-Subject: [PATCH] wifi: ath11k: Suspend hardware before firmware mode off for WCN6750
-Date: Tue, 29 Oct 2024 14:03:40 +0530
-Message-Id: <20241029083340.3010798-1-quic_bpothuno@quicinc.com>
+	s=arc-20240116; t=1730193140; c=relaxed/simple;
+	bh=F/rVR4l5Scy7U0//a0Uhui1AH5VjS0Dg/jmTcL8ws14=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=b+NSfhGKSyhLc5HvoQ9FKbO60q+RWqjDpMFHw5sd/Q/stnJDiYRwTSN3sTSlolYqpp1elKcKccVZ1YCjRGSmtU6EJk4+C7dKihlxMSwkLgWYTHzCjA1YkM4ZsRwPzlbFG4FuRGPwJ6vVLeojiBGqvJep62HUXaHuqYfLLXJMakw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: deb7e8c495d511efa216b1d71e6e1362-20241029
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
+	HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
+	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT
+	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED
+	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
+	CIE_BAD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
+	AMN_T1, AMN_GOOD, AMN_C_TI, AMN_C_BU
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.38,REQID:fea1eefe-9061-43ed-9117-463ccb5cf6bd,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-10
+X-CID-INFO: VERSION:1.1.38,REQID:fea1eefe-9061-43ed-9117-463ccb5cf6bd,IP:0,URL
+	:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:-10
+X-CID-META: VersionHash:82c5f88,CLOUDID:9defbc8387e5e00f07b5071d8410f52e,BulkI
+	D:241029171208PR0B2CCJ,BulkQuantity:0,Recheck:0,SF:66|841|38|17|19|102,TC:
+	nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,
+	COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-UUID: deb7e8c495d511efa216b1d71e6e1362-20241029
+X-User: xiaopei01@kylinos.cn
+Received: from xiaopei-pc.. [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <xiaopei01@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1551847879; Tue, 29 Oct 2024 17:12:06 +0800
+From: Pei Xiao <xiaopei01@kylinos.cn>
+To: pkshih@realtek.com,
+	linux-wireless@vger.kernel.org,
+	kvalo@kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: xiaopeitux@foxmail.com,
+	xiongxin@kylinos.cn,
+	Pei Xiao <xiaopei01@kylinos.cn>
+Subject: [PATCH] net: wireless: realtek/rtw89: Add check null return of kmalloc
+Date: Tue, 29 Oct 2024 17:12:01 +0800
+Message-Id: <82dd45fe7faed8f558841643a0593202b2da90c5.1730192926.git.xiaopei01@kylinos.cn>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -62,179 +62,37 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: _onm_X5DIw0JJ4VfGMo2aKwI7XeYTKBK
-X-Proofpoint-GUID: _onm_X5DIw0JJ4VfGMo2aKwI7XeYTKBK
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- priorityscore=1501 mlxlogscore=999 clxscore=1011 spamscore=0
- lowpriorityscore=0 malwarescore=0 bulkscore=0 adultscore=0 phishscore=0
- mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2410290067
 
-During rmmod, the ath11k host driver sends a QMI MODE OFF command
-to firmware.
-As part of this command, firmware initiates WLAN de-initialization
-and accesses certain UMAC registers during this process.
-Currently, on WCN6750 WLAN hardware, the system is in a sleep state when
-firmware receives the QMI MODE OFF command.
-This results in a firmware/hardware reset while accessing the UMAC hardware
-registers during sleep state.
+kmalloc may fail, return might be NULL and will cause
+NULL pointer dereference later.
 
-To avoid this, add logic to send WCN6750 hardware specific
-WMI_PDEV_SUSPEND_AND_DISABLE_INTR command to firmware prior to sending
-the QMI MODE OFF command.
-This will cause firmware to cease all activities and put the device in
-a powered-on state that prevents access to registers which have been
-powered off.
-
-Signed-off-by: Balaji Pothunoori <quic_bpothuno@quicinc.com>
+Signed-off-by: Pei Xiao <xiaopei01@kylinos.cn>
 ---
- drivers/net/wireless/ath/ath11k/core.c | 45 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/hw.h   |  1 +
- 2 files changed, 46 insertions(+)
+ drivers/net/wireless/realtek/rtw89/coex.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index be67382c00f6..a9aefb1a705d 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -123,6 +123,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.tx_ring_size = DP_TCL_DATA_RING_SIZE,
- 		.smp2p_wow_exit = false,
- 		.support_dual_stations = false,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.hw_rev = ATH11K_HW_IPQ6018_HW10,
-@@ -207,6 +208,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
- 		.support_dual_stations = false,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "qca6390 hw2.0",
-@@ -296,6 +298,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
- 		.support_dual_stations = true,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "qcn9074 hw1.0",
-@@ -379,6 +382,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
- 		.support_dual_stations = false,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "wcn6855 hw2.0",
-@@ -468,6 +472,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
- 		.support_dual_stations = true,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "wcn6855 hw2.1",
-@@ -555,6 +560,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
- 		.support_dual_stations = true,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "wcn6750 hw1.0",
-@@ -637,6 +643,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = true,
- 		.support_fw_mac_sequence = true,
- 		.support_dual_stations = false,
-+		.pdev_suspend = true,
- 	},
- 	{
- 		.hw_rev = ATH11K_HW_IPQ5018_HW10,
-@@ -719,6 +726,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = false,
- 		.support_dual_stations = false,
-+		.pdev_suspend = false,
- 	},
- 	{
- 		.name = "qca2066 hw2.1",
-@@ -808,6 +816,7 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
- 		.smp2p_wow_exit = false,
- 		.support_fw_mac_sequence = true,
- 		.support_dual_stations = true,
-+		.pdev_suspend = false,
- 	},
- };
- 
-@@ -1669,11 +1678,47 @@ static int ath11k_core_pdev_create(struct ath11k_base *ab)
- 	return ret;
- }
- 
-+static void ath11k_core_pdev_suspend_target(struct ath11k_base *ab)
-+{
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	unsigned long time_left;
-+	int ret;
-+	int i;
-+
-+	if (!ab->hw_params.pdev_suspend)
-+		return;
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+
-+		reinit_completion(&ab->htc_suspend);
-+
-+		ret = ath11k_wmi_pdev_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR,
-+					      pdev->pdev_id);
-+		if (ret) {
-+			ath11k_warn(ab, "could not suspend target :%d\n", ret);
-+			/* pointless to try other pdevs */
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index b60c8bd4537b..092f882147cd 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -2507,6 +2507,8 @@ static void btc_fw_set_monreg(struct rtw89_dev *rtwdev)
+ 	if (ver->fcxmreg == 7) {
+ 		sz = struct_size(v7, regs, n);
+ 		v7 = kmalloc(sz, GFP_KERNEL);
++		if (!v7)
 +			return;
-+		}
-+
-+		time_left = wait_for_completion_timeout(&ab->htc_suspend, 3 * HZ);
-+
-+		if (!time_left) {
-+			ath11k_warn(ab, "suspend timed out - target pause event never came\n");
-+			/* pointless to try other pdevs */
+ 		v7->type = RPT_EN_MREG;
+ 		v7->fver = ver->fcxmreg;
+ 		v7->len = n;
+@@ -2521,6 +2523,8 @@ static void btc_fw_set_monreg(struct rtw89_dev *rtwdev)
+ 	} else {
+ 		sz = struct_size(v1, regs, n);
+ 		v1 = kmalloc(sz, GFP_KERNEL);
++		if (!v1)
 +			return;
-+		}
-+	}
-+}
-+
- static void ath11k_core_pdev_destroy(struct ath11k_base *ab)
- {
- 	ath11k_spectral_deinit(ab);
- 	ath11k_thermal_unregister(ab);
- 	ath11k_mac_unregister(ab);
-+	ath11k_core_pdev_suspend_target(ab);
- 	ath11k_hif_irq_disable(ab);
- 	ath11k_dp_pdev_free(ab);
- 	ath11k_debugfs_pdev_destroy(ab);
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
-index 300322535766..52d9f4c13b13 100644
---- a/drivers/net/wireless/ath/ath11k/hw.h
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -227,6 +227,7 @@ struct ath11k_hw_params {
- 	bool smp2p_wow_exit;
- 	bool support_fw_mac_sequence;
- 	bool support_dual_stations;
-+	bool pdev_suspend;
- };
- 
- struct ath11k_hw_ops {
+ 		v1->fver = ver->fcxmreg;
+ 		v1->reg_num = n;
+ 		memcpy(v1->regs, chip->mon_reg, flex_array_size(v1, regs, n));
 -- 
 2.34.1
 
