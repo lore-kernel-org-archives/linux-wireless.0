@@ -1,46 +1,46 @@
-Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A4AF20A5D7;
-	Tue, 29 Oct 2024 17:24:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.249
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D5D209F2D;
+	Tue, 29 Oct 2024 17:24:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730222695; cv=none; b=kBhqWRnILyDBf2yNPuvtVMKh8tyCQAcf5XZlYtN6QJZary86UT9uXX3AADLiFZcJg7E1z8JfQ77OSryqJd0cCwzCIMNF+Ar+EY3iRMYrsxB6FW3cJfg6vPuRXnSxvDHHyth8nSOCP8+9/dfjjENwPtobUHrzcwdpIrhjvmGz23w=
+	t=1730222696; cv=none; b=VjcB9gSqk1IFJx+aA5jbjJkVVqrSK23NE+SGaGws9ZWqNoRlKpOaGLL+es0SeBeIGBw8zkWG+dOa9RRFAxVxHcd0jo/FT4wHGMKWDXB4R6NsFD9OzTVjklWSh+otybvMvFtzOOzZDDk21Tf5CF1xhJMyAdEMs7tmO5R94l2TRKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730222695; c=relaxed/simple;
-	bh=R6tpvRyIpwX4pXsdqHoRg3bE5Z7lDq0QLETfgR6SyRs=;
+	s=arc-20240116; t=1730222696; c=relaxed/simple;
+	bh=zZ2qcuzeBPRL4P9gY11bt5OMBdVk4Flb+n1iO5se0E0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nJzVhrwu5tLXm2E1o+h11PAHAXlvC2ruYfGMPCHMFbd/rzIcrt05Fq+uq/umImt9wvQxZNmiwZW6hws5qn1Gn94vefmA3PunvTlXh3WsL94EAep3blrIjbYGm8AMk7MgwWvJ9+sgq/J5UrbB5NCZujN5dPMhSedV4+rczwpDa0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=FBWd1QQY; arc=none smtp.client-ip=198.47.23.249
+	 MIME-Version:Content-Type; b=RYdxC52wGPPqSTWw9+ZvBsAiCeaPWJa4rdQ9wut9iesgk2ttHnCG9fYbDL7iw5keY/XB1QDkP3QyBADmFXx5x5wr2Ew0v1ItByda2ME0rXayBaea37mBUnQZlJqUADUI3/HaePahuZkqWaeJ4dtSo/C6NUcC4fyEX2coKSBckbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=IIAQj6A3; arc=none smtp.client-ip=198.47.23.248
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FBWd1QQY"
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-	by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 49THOjEG127653;
-	Tue, 29 Oct 2024 12:24:45 -0500
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IIAQj6A3"
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+	by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 49THOe9g051077;
+	Tue, 29 Oct 2024 12:24:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1730222685;
-	bh=fVF+Yae9zuym8XN0sRP46oIer23L3hr3RjHm+d4FVXs=;
+	s=ti-com-17Q1; t=1730222681;
+	bh=YnOpcKSJGTwzC0jDQzSIB+iE2qq7xz64EaDLMKAEWCw=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=FBWd1QQYH8IdfaMbDEdG5xOeiaBUXLjoTumbEgLnTBziKBWQxGSc067/HTfAbZ4G9
-	 W0u/l5d7t2bKDyXKvsP3w7FTmRcK7m4ABU0ZyyvBj93NO0cWJhk4kh5+tzwHF3aNpk
-	 WUwmYxeTdhmB04B9SxxXnhQTj8XYUYFGd47t/h3s=
-Received: from DLEE114.ent.ti.com (dlee114.ent.ti.com [157.170.170.25])
-	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 49THOj5m072591
+	b=IIAQj6A3EN2CkHSgd9+GKpyZ9878fqb0XPB6Gkf/LhJZ79XrcpXHvrhwo+BXwEsS/
+	 55BvhoXiZlDatawfcUY9mFiW3q0KPN11fiKjU+Q4J8VcjmWeRhuCztCpH7WNY28tl6
+	 bZZqFomeQkkuODK9m/9STPkHOmtjxSkbUtH+2Cdc=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+	by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 49THOest092333
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 29 Oct 2024 12:24:45 -0500
-Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
+	Tue, 29 Oct 2024 12:24:40 -0500
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Tue, 29
- Oct 2024 12:24:44 -0500
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ Oct 2024 12:24:40 -0500
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Tue, 29 Oct 2024 12:24:44 -0500
+ Frontend Transport; Tue, 29 Oct 2024 12:24:40 -0500
 Received: from localhost (udb0389739.dhcp.ti.com [137.167.1.149])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 49THOhlb065882;
-	Tue, 29 Oct 2024 12:24:44 -0500
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 49THOdna006517;
+	Tue, 29 Oct 2024 12:24:40 -0500
 From: Michael Nemanov <michael.nemanov@ti.com>
 To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
@@ -52,9 +52,9 @@ To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         <netdev@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC: Sabeeh Khan <sabeeh-khan@ti.com>, Michael Nemanov <michael.nemanov@ti.com>
-Subject: [PATCH v4 16/17] wifi: cc33xx: Add testmode.c, testmode.h
-Date: Tue, 29 Oct 2024 19:23:53 +0200
-Message-ID: <20241029172354.4027886-17-michael.nemanov@ti.com>
+Subject: [PATCH v4 13/17] wifi: cc33xx: Add scan.c, scan.h
+Date: Tue, 29 Oct 2024 19:23:50 +0200
+Message-ID: <20241029172354.4027886-14-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241029172354.4027886-1-michael.nemanov@ti.com>
 References: <20241029172354.4027886-1-michael.nemanov@ti.com>
@@ -68,158 +68,111 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-Allows a user-space tools to access FW APIs via CFG80211_TESTMODE
-infrastructure.
+Handles the scan process.
+Scan starts via cc33xx_op_hw_scan (main.c) which calls cc33xx_scan.
+Scan channels are packed and sent to HW where scanning is managed by
+FW concurrently to other roles without driver intervention.
+Scan results are handled like normal management frames
+and are sent to MAC80211. HW notifies driver of scan completion via
+dedicated event which triggers a call to cc33xx_scan_completed.
 
 Signed-off-by: Michael Nemanov <michael.nemanov@ti.com>
 ---
- drivers/net/wireless/ti/cc33xx/testmode.c | 349 ++++++++++++++++++++++
- drivers/net/wireless/ti/cc33xx/testmode.h |  12 +
- 2 files changed, 361 insertions(+)
- create mode 100644 drivers/net/wireless/ti/cc33xx/testmode.c
- create mode 100644 drivers/net/wireless/ti/cc33xx/testmode.h
+ drivers/net/wireless/ti/cc33xx/scan.c | 735 ++++++++++++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/scan.h | 385 ++++++++++++++
+ 2 files changed, 1120 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/cc33xx/scan.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/scan.h
 
-diff --git a/drivers/net/wireless/ti/cc33xx/testmode.c b/drivers/net/wireless/ti/cc33xx/testmode.c
+diff --git a/drivers/net/wireless/ti/cc33xx/scan.c b/drivers/net/wireless/ti/cc33xx/scan.c
 new file mode 100644
-index 000000000000..b845610c5a30
+index 000000000000..90e48d870723
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/testmode.c
-@@ -0,0 +1,349 @@
++++ b/drivers/net/wireless/ti/cc33xx/scan.c
+@@ -0,0 +1,735 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#include <net/genetlink.h>
-+
 +#include "cc33xx.h"
-+#include "acx.h"
-+#include "io.h"
-+#include "testmode.h"
++#include "debug.h"
++#include "cmd.h"
++#include "scan.h"
++#include "tx.h"
++#include "conf.h"
 +
-+#define CC33XX_TM_MAX_DATA_LENGTH 1024
-+
-+enum cc33xx_tm_commands {
-+	CC33XX_TM_CMD_UNSPEC,
-+	CC33XX_TM_CMD_TEST,
-+	CC33XX_TM_CMD_INTERROGATE,
-+	CC33XX_TM_CMD_CONFIGURE,
-+	CC33XX_TM_CMD_NVS_PUSH,		/* Not in use. Keep to not break ABI */
-+	CC33XX_TM_CMD_SET_PLT_MODE,
-+	CC33XX_TM_CMD_RECOVER,		/* Not in use. Keep to not break ABI */
-+	CC33XX_TM_CMD_GET_MAC,
-+
-+	__CC33XX_TM_CMD_AFTER_LAST
-+};
-+
-+enum cc33xx_tm_attrs {
-+	CC33XX_TM_ATTR_UNSPEC,
-+	CC33XX_TM_ATTR_CMD_ID,
-+	CC33XX_TM_ATTR_ANSWER,
-+	CC33XX_TM_ATTR_DATA,
-+	CC33XX_TM_ATTR_IE_ID,
-+	CC33XX_TM_ATTR_PLT_MODE,
-+
-+	__CC33XX_TM_ATTR_AFTER_LAST
-+};
-+
-+#define CC33XX_TM_ATTR_MAX (__CC33XX_TM_ATTR_AFTER_LAST - 1)
-+
-+static struct nla_policy cc33xx_tm_policy[CC33XX_TM_ATTR_MAX + 1] = {
-+	[CC33XX_TM_ATTR_CMD_ID] =	{ .type = NLA_U32 },
-+	[CC33XX_TM_ATTR_ANSWER] =	{ .type = NLA_U8 },
-+	[CC33XX_TM_ATTR_DATA] =		{ .type = NLA_BINARY,
-+					  .len = CC33XX_TM_MAX_DATA_LENGTH },
-+	[CC33XX_TM_ATTR_IE_ID] =	{ .type = NLA_U32 },
-+	[CC33XX_TM_ATTR_PLT_MODE] =	{ .type = NLA_U32 },
-+};
-+
-+static int cc33xx_tm_cmd_test(struct cc33xx *cc, struct nlattr *tb[])
++static void cc33xx_adjust_channels(struct scan_param *scan_param,
++				   struct cc33xx_scan_channels *cmd_channels,
++				   enum scan_request_type scan_type)
 +{
-+	int ret, len;
-+	u16 buf_len;
-+	struct sk_buff *skb;
-+	void *buf;
-+	u8 answer = 0;
++	struct conn_scan_ch_info	*ch_info_list;
++	struct conn_scan_dwell_info	*dwell_info;
++	struct conn_scan_ch_params	*channel;
++	struct conn_scan_ch_params	*ch_params_list;
 +
-+	if (!tb[CC33XX_TM_ATTR_DATA])
-+		return -EINVAL;
++	u8 *passive;
++	u8 *dfs;
++	u8 *active;
++	int i, j;
++	u8 band;
 +
-+	buf = nla_data(tb[CC33XX_TM_ATTR_DATA]);
-+	buf_len = nla_len(tb[CC33XX_TM_ATTR_DATA]);
-+
-+	if (tb[CC33XX_TM_ATTR_ANSWER])
-+		answer = nla_get_u8(tb[CC33XX_TM_ATTR_ANSWER]);
-+
-+	if (buf_len > sizeof(struct cc33xx_command))
-+		return -EMSGSIZE;
-+
-+	mutex_lock(&cc->mutex);
-+
-+	if (unlikely(cc->state != CC33XX_STATE_ON)) {
-+		ret = -EINVAL;
-+		goto out;
++	if (scan_type == SCAN_REQUEST_CONNECT_PERIODIC_SCAN) {
++		ch_info_list	= scan_param->u.periodic.channel_list;
++		dwell_info	= scan_param->u.periodic.dwell_info;
++		active		= (u8 *)&scan_param->u.periodic.active;
++		passive		= (u8 *)&scan_param->u.periodic.passive;
++		dfs		= (u8 *)&scan_param->u.periodic.dfs;
++	} else {
++		ch_info_list	= scan_param->u.one_shot.channel_list;
++		dwell_info	= scan_param->u.one_shot.dwell_info;
++		active		= (u8 *)&scan_param->u.one_shot.active;
++		passive		= (u8 *)&scan_param->u.one_shot.passive;
++		dfs		= (u8 *)&scan_param->u.one_shot.dfs;
 +	}
 +
-+	ret = cc33xx_cmd_test(cc, buf, buf_len, answer);
-+	if (ret < 0) {
-+		cc33xx_warning("testmode cmd test failed: %d", ret);
-+		goto out;
++	memcpy(passive, cmd_channels->passive, sizeof(cmd_channels->passive));
++	memcpy(active, cmd_channels->active, sizeof(cmd_channels->active));
++	*dfs = cmd_channels->dfs;
++
++	ch_params_list = cmd_channels->channels_2;
++	for (i = 0; i < MAX_CHANNELS_2GHZ; ++i) {
++		ch_info_list[i].channel	= ch_params_list[i].channel;
++		ch_info_list[i].flags = ch_params_list[i].flags;
++		ch_info_list[i].tx_power_att = ch_params_list[i].tx_power_att;
 +	}
 +
-+	if (answer) {
-+		/* If we got bip calibration answer print radio status */
-+		struct cc33xx_cmd_cal_p2g *params =
-+			(struct cc33xx_cmd_cal_p2g *)buf;
-+		s16 radio_status = (s16)le16_to_cpu(params->radio_status);
++	channel = &ch_params_list[0];
++	band = NL80211_BAND_2GHZ;
++	dwell_info[band].min_duration     = channel->min_duration;
++	dwell_info[band].max_duration     = channel->max_duration;
++	dwell_info[band].passive_duration = channel->passive_duration;
 +
-+		if (params->test.id == TEST_CMD_P2G_CAL && radio_status < 0)
-+			cc33xx_warning("testmode cmd: radio status=%d",
-+				       radio_status);
-+		else
-+			cc33xx_info("testmode cmd: radio status=%d",
-+				    radio_status);
-+
-+		len = nla_total_size(buf_len);
-+		skb = cfg80211_testmode_alloc_reply_skb(cc->hw->wiphy, len);
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
-+
-+		if (nla_put(skb, CC33XX_TM_ATTR_DATA, buf_len, buf)) {
-+			kfree_skb(skb);
-+			ret = -EMSGSIZE;
-+			goto out;
-+		}
-+
-+		ret = cfg80211_testmode_reply(skb);
++	ch_params_list = cmd_channels->channels_5;
++	for (j = 0; j < MAX_CHANNELS_5GHZ; ++i, ++j) {
++		ch_info_list[i].channel = ch_params_list[j].channel;
++		ch_info_list[i].flags = ch_params_list[j].flags;
++		ch_info_list[i].tx_power_att = ch_params_list[j].tx_power_att;
 +	}
 +
-+out:
-+	mutex_unlock(&cc->mutex);
-+
-+	return ret;
++	channel = &ch_params_list[0];
++	band = NL80211_BAND_5GHZ;
++	dwell_info[band].min_duration     = channel->min_duration;
++	dwell_info[band].max_duration     = channel->max_duration;
++	dwell_info[band].passive_duration = channel->passive_duration;
 +}
 +
-+static int cc33xx_tm_cmd_interrogate(struct cc33xx *cc, struct nlattr *tb[])
++static int cc33xx_cmd_build_probe_req(struct cc33xx *cc,
++				      struct cc33xx_vif *wlvif, u8 role_id,
++				      u8 scan_type, const u8 *ssid,
++				      size_t ssid_len, const u8 *ie0,
++				      size_t ie0_len, const u8 *ie1,
++				      size_t ie1_len, bool sched_scan)
 +{
++	struct ieee80211_vif *vif = cc33xx_wlvif_to_vif(wlvif);
++	struct sk_buff *skb = NULL;
++	struct cc33xx_cmd_set_ies *cmd;
 +	int ret;
-+	struct cc33xx_command *cmd;
-+	struct sk_buff *skb;
-+	u8 ie_id;
-+
-+	if (!tb[CC33XX_TM_ATTR_IE_ID])
-+		return -EINVAL;
-+
-+	ie_id = nla_get_u8(tb[CC33XX_TM_ATTR_IE_ID]);
-+
-+	mutex_lock(&cc->mutex);
-+
-+	if (unlikely(cc->state != CC33XX_STATE_ON)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
 +
 +	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
 +	if (!cmd) {
@@ -227,231 +180,1042 @@ index 000000000000..b845610c5a30
 +		goto out;
 +	}
 +
-+	ret = cc33xx_cmd_debug_inter(cc, ie_id, cmd,
-+				     sizeof(struct acx_header), sizeof(*cmd));
-+	if (ret < 0) {
-+		cc33xx_warning("testmode cmd interrogate failed: %d", ret);
-+		goto out_free;
-+	}
-+
-+	skb = cfg80211_testmode_alloc_reply_skb(cc->hw->wiphy, sizeof(*cmd));
++	skb = ieee80211_probereq_get(cc->hw, vif->addr, ssid,
++				     ssid_len, ie0_len + ie1_len);
 +	if (!skb) {
 +		ret = -ENOMEM;
 +		goto out_free;
 +	}
 +
-+	if (nla_put(skb, CC33XX_TM_ATTR_DATA, sizeof(*cmd), cmd)) {
-+		kfree_skb(skb);
-+		ret = -EMSGSIZE;
++	if (ie0_len)
++		skb_put_data(skb, ie0, ie0_len);
++
++	if (ie1_len)
++		skb_put_data(skb, ie1, ie1_len);
++
++	cmd->scan_type = scan_type;
++	cmd->role_id = role_id;
++
++	cmd->len = cpu_to_le16(skb->len - sizeof(struct ieee80211_hdr_3addr));
++
++	if (skb->data) {
++		memcpy(cmd->data,
++		       skb->data + sizeof(struct ieee80211_hdr_3addr), le16_to_cpu(cmd->len));
++	}
++
++	usleep_range(10000, 11000);
++	ret = cc33xx_cmd_send(cc, CMD_SET_PROBE_IE, cmd, sizeof(*cmd), 0);
++
++	if (ret < 0) {
++		cc33xx_warning("cmd set_template failed: %d", ret);
 +		goto out_free;
 +	}
 +
-+	ret = cfg80211_testmode_reply(skb);
-+	if (ret < 0)
-+		goto out_free;
-+
 +out_free:
++	dev_kfree_skb(skb);
 +	kfree(cmd);
-+
 +out:
-+	mutex_unlock(&cc->mutex);
-+
 +	return ret;
 +}
 +
-+static int cc33xx_tm_cmd_configure(struct cc33xx *cc, struct nlattr *tb[])
++static void cc33xx_started_vifs_iter(void *data, u8 *mac,
++				     struct ieee80211_vif *vif)
 +{
-+	int ret;
-+	u16 buf_len;
-+	void *buf;
-+	u8 ie_id;
++	struct cc33xx_vif *wlvif = cc33xx_vif_to_data(vif);
++	bool active = false;
++	int *count = (int *)data;
 +
-+	if (!tb[CC33XX_TM_ATTR_DATA])
-+		return -EINVAL;
-+	if (!tb[CC33XX_TM_ATTR_IE_ID])
-+		return -EINVAL;
++	/* count active interfaces according to interface type.
++	 * checking only bss_conf.idle is bad for some cases, e.g.
++	 * we don't want to count sta in p2p_find as active interface.
++	 */
++	switch (wlvif->bss_type) {
++	case BSS_TYPE_STA_BSS:
++		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++			active = true;
++		break;
 +
-+	ie_id = nla_get_u8(tb[CC33XX_TM_ATTR_IE_ID]);
-+	buf = nla_data(tb[CC33XX_TM_ATTR_DATA]);
-+	buf_len = nla_len(tb[CC33XX_TM_ATTR_DATA]);
++	case BSS_TYPE_AP_BSS:
++		if (wlvif->cc->active_sta_count > 0)
++			active = true;
++		break;
 +
-+	if (buf_len > sizeof(struct cc33xx_command))
-+		return -EMSGSIZE;
-+
-+	mutex_lock(&cc->mutex);
-+	ret = cc33xx_cmd_debug(cc, ie_id, buf, buf_len);
-+	mutex_unlock(&cc->mutex);
-+
-+	if (ret < 0) {
-+		cc33xx_warning("testmode cmd configure failed: %d", ret);
-+		return ret;
++	default:
++		break;
 +	}
++
++	if (active)
++		(*count)++;
++}
++
++static int cc33xx_count_started_vifs(struct cc33xx *cc)
++{
++	int count = 0;
++
++	ieee80211_iterate_active_interfaces_atomic(cc->hw,
++						   IEEE80211_IFACE_ITER_RESUME_ALL,
++						   cc33xx_started_vifs_iter,
++						   &count);
++	return count;
++}
++
++static int cc33xx_scan_get_channels(struct cc33xx *cc,
++				    struct ieee80211_channel *req_channels[],
++				    u32 n_channels, u32 n_ssids,
++				    struct conn_scan_ch_params *channels,
++				    u32 band, bool radar, bool passive,
++				    unsigned int start, unsigned int max_channels,
++				    u8 *n_pactive_ch, int scan_type)
++{
++	unsigned int i, j;
++	u32 flags;
++	bool force_passive = !n_ssids;
++	u32 min_dwell_time_active, max_dwell_time_active;
++	u32 dwell_time_passive, dwell_time_dfs;
++	struct conn_scan_ch_params *ch;
++	struct ieee80211_channel *req_ch;
++
++	/* configure dwell times according to scan type */
++	if (scan_type == SCAN_TYPE_SEARCH) {
++		struct conf_scan_settings *c = &cc->conf.host_conf.scan;
++		bool active_vif_exists = !!cc33xx_count_started_vifs(cc);
++
++		min_dwell_time_active = active_vif_exists ?
++						c->min_dwell_time_active :
++						c->min_dwell_time_active_long;
++		max_dwell_time_active = active_vif_exists ?
++						c->max_dwell_time_active :
++						c->max_dwell_time_active_long;
++		dwell_time_passive = c->dwell_time_passive;
++		dwell_time_dfs = c->dwell_time_dfs;
++	} else {
++		struct conf_sched_scan_settings *c =
++					&cc->conf.host_conf.sched_scan;
++		u32 delta_per_probe;
++
++		delta_per_probe = (band == NL80211_BAND_5GHZ) ?
++					c->dwell_time_delta_per_probe_5 :
++					c->dwell_time_delta_per_probe;
++
++		min_dwell_time_active = c->base_dwell_time +
++			 n_ssids * c->num_probe_reqs * delta_per_probe;
++
++		max_dwell_time_active = min_dwell_time_active;
++		max_dwell_time_active += c->max_dwell_time_delta;
++		dwell_time_passive = c->dwell_time_passive;
++		dwell_time_dfs = c->dwell_time_dfs;
++	}
++
++	min_dwell_time_active = DIV_ROUND_UP(min_dwell_time_active, 1000);
++	max_dwell_time_active = DIV_ROUND_UP(max_dwell_time_active, 1000);
++	dwell_time_passive = DIV_ROUND_UP(dwell_time_passive, 1000);
++	dwell_time_dfs = DIV_ROUND_UP(dwell_time_dfs, 1000);
++
++	for (i = 0, j = start; i < n_channels && j < max_channels; i++) {
++		flags = req_channels[i]->flags;
++		ch = &channels[j];
++		req_ch = req_channels[i];
++
++		if (force_passive)
++			flags |= IEEE80211_CHAN_NO_IR;
++
++		if (req_ch->band == band && !(flags & IEEE80211_CHAN_DISABLED) &&
++		    (!!(flags & IEEE80211_CHAN_RADAR) == radar) &&
++		    /* if radar is set, we ignore the passive flag */
++		    (radar || !!(flags & IEEE80211_CHAN_NO_IR) == passive)) {
++			if (flags & IEEE80211_CHAN_RADAR) {
++				ch->flags |= SCAN_CHANNEL_FLAGS_DFS;
++
++				ch->passive_duration =
++					cpu_to_le16(dwell_time_dfs);
++			} else {
++				ch->passive_duration =
++					cpu_to_le16(dwell_time_passive);
++			}
++
++			ch->min_duration = cpu_to_le16(min_dwell_time_active);
++			ch->max_duration = cpu_to_le16(max_dwell_time_active);
++
++			ch->tx_power_att = req_ch->max_power;
++			ch->channel = req_ch->hw_value;
++
++			if (n_pactive_ch && band == NL80211_BAND_2GHZ &&
++			    ch->channel >= 12 && ch->channel <= 14 &&
++			    (flags & IEEE80211_CHAN_NO_IR) && !force_passive) {
++				/* pactive channels treated as DFS */
++				ch->flags = SCAN_CHANNEL_FLAGS_DFS;
++
++				/* n_pactive_ch is counted down from the end of
++				 * the passive channel list
++				 */
++				(*n_pactive_ch)++;
++				cc33xx_debug(DEBUG_SCAN, "n_pactive_ch = %d",
++					     *n_pactive_ch);
++			}
++
++			cc33xx_debug(DEBUG_SCAN, "freq %d, ch. %d, flags 0x%x, power %d, min/max_dwell %d/%d%s%s",
++				     req_ch->center_freq, req_ch->hw_value,
++				     req_ch->flags, req_ch->max_power,
++				     min_dwell_time_active,
++				     max_dwell_time_active,
++				     flags & IEEE80211_CHAN_RADAR ? ", DFS" : "",
++				     flags & IEEE80211_CHAN_NO_IR ? ", NO-IR" : "");
++			j++;
++		}
++	}
++
++	return j - start;
++}
++
++static bool cc33xx_set_scan_chan_params(struct cc33xx *cc,
++					struct cc33xx_scan_channels *cfg,
++					struct ieee80211_channel *channels[],
++					u32 n_channels, u32 n_ssids,
++					int scan_type)
++{
++	u8 n_pactive_ch = 0;
++
++	cfg->passive[0] = cc33xx_scan_get_channels(cc, channels, n_channels,
++						   n_ssids, cfg->channels_2,
++						   NL80211_BAND_2GHZ, false,
++						   true, 0, MAX_CHANNELS_2GHZ,
++						   &n_pactive_ch, scan_type);
++
++	cfg->active[0] = cc33xx_scan_get_channels(cc, channels, n_channels,
++						  n_ssids, cfg->channels_2,
++						  NL80211_BAND_2GHZ, false,
++						  false, cfg->passive[0],
++						  MAX_CHANNELS_2GHZ,
++						  &n_pactive_ch, scan_type);
++
++	cfg->passive[1] = cc33xx_scan_get_channels(cc, channels, n_channels,
++						   n_ssids, cfg->channels_5,
++						   NL80211_BAND_5GHZ, false,
++						   true, 0, MAX_CHANNELS_5GHZ,
++						   &n_pactive_ch, scan_type);
++
++	cfg->dfs = cc33xx_scan_get_channels(cc, channels, n_channels, n_ssids,
++					    cfg->channels_5, NL80211_BAND_5GHZ,
++					    true, true, cfg->passive[1],
++					    MAX_CHANNELS_5GHZ, &n_pactive_ch,
++					    scan_type);
++
++	cfg->active[1] = cc33xx_scan_get_channels(cc, channels, n_channels,
++						  n_ssids, cfg->channels_5,
++						  NL80211_BAND_5GHZ, false,
++						  false,
++						  cfg->passive[1] + cfg->dfs,
++						  MAX_CHANNELS_5GHZ,
++						  &n_pactive_ch, scan_type);
++
++	cfg->passive_active = n_pactive_ch;
++
++	cc33xx_debug(DEBUG_SCAN, "2.4GHz: active %d passive %d",
++		     cfg->active[0], cfg->passive[0]);
++	cc33xx_debug(DEBUG_SCAN, "5GHz: active %d passive %d",
++		     cfg->active[1], cfg->passive[1]);
++	cc33xx_debug(DEBUG_SCAN, "DFS: %d", cfg->dfs);
++
++	return  cfg->passive[0] || cfg->active[0] || cfg->passive[1] ||
++		cfg->active[1] || cfg->dfs;
++}
++
++static int cc33xx_scan_send(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			    struct cfg80211_scan_request *req)
++{
++	struct cc33xx_cmd_scan_params *cmd;
++	struct cc33xx_scan_channels *cmd_channels = NULL;
++	struct cc33xx_ssid *cmd_ssid;
++	u16 alloc_size;
++	int ret;
++	int i;
++
++	alloc_size =  sizeof(*cmd) + (sizeof(struct cc33xx_ssid) * req->n_ssids);
++	cmd = kzalloc(alloc_size, GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* scan on the dev role if the regular one is not started */
++	if (cc33xx_is_p2p_mgmt(wlvif))
++		cmd->role_id = wlvif->dev_role_id;
++	else
++		cmd->role_id = wlvif->role_id;
++
++	if (WARN_ON(cmd->role_id == CC33XX_INVALID_ROLE_ID)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	cmd->scan_type = SCAN_REQUEST_ONE_SHOT;
++	cmd->rssi_threshold = -127;
++	cmd->snr_threshold = 0;
++
++	for (i = 0; i < ETH_ALEN; i++)
++		cmd->bssid[i] = req->bssid[i];
++	cmd->ssid_from_list = 0;
++	cmd->filter = 0;
++	WARN_ON(req->n_ssids > 1);
++
++	/* configure channels */
++	cmd_channels = kzalloc(sizeof(*cmd_channels), GFP_KERNEL);
++	if (!cmd_channels) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	cc33xx_set_scan_chan_params(cc, cmd_channels, req->channels,
++				    req->n_channels, req->n_ssids,
++				    SCAN_TYPE_SEARCH);
++
++	cc33xx_adjust_channels(&cmd->params, cmd_channels, cmd->scan_type);
++	if (req->n_ssids > 0) {
++		cmd->ssid_from_list = 1;
++		cmd->num_of_ssids = req->n_ssids;
++		cmd_ssid = (struct cc33xx_ssid *)((u8 *)cmd + sizeof(*cmd));
++
++		cmd_ssid->len = req->ssids[0].ssid_len;
++		memcpy(cmd_ssid->ssid, req->ssids[0].ssid, cmd_ssid->len);
++		cmd_ssid->type = (req->ssids[0].ssid_len) ?
++				SCAN_SSID_TYPE_HIDDEN : SCAN_SSID_TYPE_PUBLIC;
++	}
++
++	ret = cc33xx_cmd_build_probe_req(cc, wlvif, cmd->role_id, cmd->scan_type,
++					 req->ssids ? req->ssids[0].ssid : NULL,
++					 req->ssids ? req->ssids[0].ssid_len : 0,
++					 req->ie, req->ie_len, NULL, 0, false);
++	if (ret < 0) {
++		cc33xx_error("PROBE request template failed");
++		goto out;
++	}
++
++	cc33xx_dump(DEBUG_SCAN, "SCAN: ", cmd, alloc_size);
++
++	ret = cc33xx_cmd_send(cc, CMD_SCAN, cmd, alloc_size, 0);
++	if (ret < 0) {
++		cc33xx_error("SCAN failed");
++		goto out;
++	}
++
++out:
++	kfree(cmd_channels);
++	kfree(cmd);
++	return ret;
++}
++
++static int cc33xx_scan_sched_scan_ssid_list(struct cc33xx *cc,
++					    struct cc33xx_vif *wlvif,
++					struct cfg80211_sched_scan_request *req,
++					    struct cc33xx_cmd_ssid_list *cmd)
++{
++	struct cfg80211_match_set *sets = req->match_sets;
++	struct cfg80211_ssid *ssids = req->ssids;
++	int ret = 0, i, j, n_match_ssids = 0;
++
++	/* count the match sets that contain SSIDs */
++	for (i = 0; i < req->n_match_sets; i++) {
++		if (sets[i].ssid.ssid_len > 0)
++			n_match_ssids++;
++	}
++
++	/* No filter, no ssids or only bcast ssid */
++	if (!n_match_ssids && (!req->n_ssids ||
++			       (req->n_ssids == 1 && req->ssids[0].ssid_len == 0)))
++		goto out;
++
++	cmd->role_id = wlvif->role_id;
++	if (!n_match_ssids) {
++		/* No filter, with ssids */
++
++		for (i = 0; i < req->n_ssids; i++) {
++			cmd->ssids[cmd->n_ssids].type = (ssids[i].ssid_len) ?
++				SCAN_SSID_TYPE_HIDDEN : SCAN_SSID_TYPE_PUBLIC;
++			cmd->ssids[cmd->n_ssids].len = ssids[i].ssid_len;
++			memcpy(cmd->ssids[cmd->n_ssids].ssid, ssids[i].ssid,
++			       ssids[i].ssid_len);
++			cmd->n_ssids++;
++		}
++	} else {
++		/* Add all SSIDs from the filters */
++		for (i = 0; i < req->n_match_sets; i++) {
++			/* ignore sets without SSIDs */
++			if (!sets[i].ssid.ssid_len)
++				continue;
++
++			cmd->ssids[cmd->n_ssids].type = SCAN_SSID_TYPE_PUBLIC;
++			cmd->ssids[cmd->n_ssids].len = sets[i].ssid.ssid_len;
++			memcpy(cmd->ssids[cmd->n_ssids].ssid,
++			       sets[i].ssid.ssid, sets[i].ssid.ssid_len);
++			cmd->n_ssids++;
++		}
++		if (req->n_ssids > 1 || (req->n_ssids == 1 && req->ssids[0].ssid_len > 0)) {
++			/* Mark all the SSIDs passed in the SSID list as HIDDEN,
++			 * so they're used in probe requests.
++			 */
++			for (i = 0; i < req->n_ssids; i++) {
++				if (!req->ssids[i].ssid_len)
++					continue;
++
++				for (j = 0; j < cmd->n_ssids; j++) {
++					if (req->ssids[i].ssid_len == cmd->ssids[j].len &&
++					    !memcmp(req->ssids[i].ssid,
++						    cmd->ssids[j].ssid,
++						    req->ssids[i].ssid_len)) {
++						cmd->ssids[j].type =
++							SCAN_SSID_TYPE_HIDDEN;
++						break;
++					}
++				}
++				/* Fail if SSID isn't present in the filters */
++				if (j == cmd->n_ssids) {
++					ret = -EINVAL;
++					goto out;
++				}
++			}
++		}
++	}
++
++	return cmd->n_ssids;
++out:
++	if (ret < 0)
++		return ret;
 +
 +	return 0;
 +}
 +
-+static int cc33xx_tm_detect_fem(struct cc33xx *cc, struct nlattr *tb[])
++int cc33xx_sched_scan_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			    struct cfg80211_sched_scan_request *req,
++			    struct ieee80211_scan_ies *ies)
 +{
-+	/* return FEM type */
-+	int ret, len;
-+	struct sk_buff *skb;
++	struct cc33xx_cmd_scan_params *cmd;
++	struct cc33xx_cmd_ssid_list *ssid_list;
++	struct cc33xx_scan_channels *cmd_channels = NULL;
++	struct conf_sched_scan_settings *c = &cc->conf.host_conf.sched_scan;
++	int ret;
++	int n_ssids = 0;
++	int alloc_size = sizeof(*cmd);
 +
-+	ret = cc33xx_plt_start(cc, PLT_FEM_DETECT);
-+	if (ret < 0)
-+		goto out;
-+
-+	mutex_lock(&cc->mutex);
-+
-+	len = nla_total_size(sizeof(cc->fem_manuf));
-+	skb = cfg80211_testmode_alloc_reply_skb(cc->hw->wiphy, len);
-+	if (!skb) {
++	ssid_list = kzalloc(sizeof(*ssid_list), GFP_KERNEL);
++	if (!ssid_list) {
 +		ret = -ENOMEM;
-+		goto out_mutex;
++		goto out_ssid_free;
 +	}
 +
-+	if (nla_put(skb, CC33XX_TM_ATTR_DATA, sizeof(cc->fem_manuf),
-+		    &cc->fem_manuf)) {
-+		kfree_skb(skb);
-+		ret = -EMSGSIZE;
-+		goto out_mutex;
++	n_ssids = cc33xx_scan_sched_scan_ssid_list(cc, wlvif, req, ssid_list);
++	if (n_ssids < 0)
++		return n_ssids;
++
++	if (n_ssids <= 5) {
++		alloc_size += (n_ssids * sizeof(struct cc33xx_ssid));
++	} else { /* n_ssids > 5 */
++		ssid_list->scan_type = SCAN_REQUEST_CONNECT_PERIODIC_SCAN;
++		ret = cc33xx_cmd_send(cc, CMD_CONNECTION_SCAN_SSID_CFG,
++				      ssid_list, sizeof(*ssid_list), 0);
++		if (ret < 0) {
++			cc33xx_error("cmd sched scan ssid list failed");
++			goto out_ssid_free;
++		}
 +	}
 +
-+	ret = cfg80211_testmode_reply(skb);
++	cmd = kzalloc(alloc_size, GFP_KERNEL);
++	if (!cmd) {
++		ret = -ENOMEM;
++		goto out_free;
++	}
 +
-+out_mutex:
-+	mutex_unlock(&cc->mutex);
++	cmd->role_id = wlvif->role_id;
 +
-+	/* We always stop plt after DETECT mode */
-+	cc33xx_plt_stop(cc);
-+out:
++	if (WARN_ON(cmd->role_id == CC33XX_INVALID_ROLE_ID)) {
++		ret = -EINVAL;
++		goto out_free;
++	}
++
++	cmd->scan_type = SCAN_REQUEST_CONNECT_PERIODIC_SCAN;
++	cmd->rssi_threshold = c->rssi_threshold;
++	cmd->snr_threshold = c->snr_threshold;
++
++	cmd->filter = 1;
++	cmd->num_of_ssids = n_ssids;
++
++	cc33xx_debug(DEBUG_CMD, "ssid list num of n_ssids %d", n_ssids);
++	if (n_ssids > 0 && n_ssids <= 5) {
++		cmd->ssid_from_list = 1;
++		memcpy((u8 *)cmd + sizeof(*cmd), ssid_list->ssids,
++		       n_ssids * sizeof(struct cc33xx_ssid));
++	}
++
++	cmd_channels = kzalloc(sizeof(*cmd_channels), GFP_KERNEL);
++	if (!cmd_channels) {
++		ret = -ENOMEM;
++		goto out_free;
++	}
++
++	/* configure channels */
++	cc33xx_set_scan_chan_params(cc, cmd_channels, req->channels,
++				    req->n_channels, req->n_ssids,
++				    SCAN_TYPE_PERIODIC);
++	cc33xx_adjust_channels(&cmd->params, cmd_channels, cmd->scan_type);
++
++	memcpy(cmd->params.u.periodic.sched_scan_plans, req->scan_plans,
++	       sizeof(struct sched_scan_plan_cmd) * req->n_scan_plans);
++
++	cmd->params.u.periodic.sched_scan_plans_num = req->n_scan_plans;
++
++	cc33xx_debug(DEBUG_SCAN,
++		     "interval[0]: %d, iterations[0]: %d, num_plans: %d",
++		     cmd->params.u.periodic.sched_scan_plans[0].interval,
++		     cmd->params.u.periodic.sched_scan_plans[0].iterations,
++		     cmd->params.u.periodic.sched_scan_plans_num);
++
++	ret = cc33xx_cmd_build_probe_req(cc, wlvif, cmd->role_id, cmd->scan_type,
++					 req->ssids ? req->ssids[0].ssid : NULL,
++					 req->ssids ? req->ssids[0].ssid_len : 0,
++					 ies->ies[NL80211_BAND_2GHZ],
++					 ies->len[NL80211_BAND_2GHZ],
++					 ies->common_ies,
++					 ies->common_ie_len, true);
++
++	if (ret < 0) {
++		cc33xx_error("PROBE request template failed");
++		goto out_free;
++	}
++
++	cc33xx_dump(DEBUG_SCAN, "SCAN: ", cmd, alloc_size);
++
++	ret = cc33xx_cmd_send(cc, CMD_SCAN, cmd, alloc_size, 0);
++	if (ret < 0) {
++		cc33xx_error("SCAN failed");
++		goto out_free;
++	}
++
++out_free:
++	kfree(cmd_channels);
++	kfree(cmd);
++
++out_ssid_free:
++	kfree(ssid_list);
++
 +	return ret;
 +}
 +
-+static int cc33xx_tm_cmd_set_plt_mode(struct cc33xx *cc, struct nlattr *tb[])
++static int __cc33xx_scan_stop(struct cc33xx *cc,
++			      struct cc33xx_vif *wlvif, u8 scan_type)
 +{
-+	u32 val;
++	struct cc33xx_cmd_scan_stop *stop;
 +	int ret;
 +
-+	if (!tb[CC33XX_TM_ATTR_PLT_MODE])
-+		return -EINVAL;
++	stop = kzalloc(sizeof(*stop), GFP_KERNEL);
++	if (!stop)
++		return -ENOMEM;
 +
-+	val = nla_get_u32(tb[CC33XX_TM_ATTR_PLT_MODE]);
++	stop->role_id = wlvif->role_id;
++	stop->scan_type = scan_type;
 +
-+	switch (val) {
-+	case PLT_OFF:
-+		ret = cc33xx_plt_stop(cc);
-+		break;
-+	case PLT_ON:
-+	case PLT_CHIP_AWAKE:
-+		ret = cc33xx_plt_start(cc, val);
-+		break;
-+	case PLT_FEM_DETECT:
-+		ret = cc33xx_tm_detect_fem(cc, tb);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
++	ret = cc33xx_cmd_send(cc, CMD_STOP_SCAN, stop, sizeof(*stop), 0);
++	if (ret < 0) {
++		cc33xx_error("failed to send sched scan stop command");
++		goto out_free;
 +	}
 +
++out_free:
++	kfree(stop);
 +	return ret;
 +}
 +
-+static int cc33xx_tm_cmd_get_mac(struct cc33xx *cc, struct nlattr *tb[])
++void cc33xx_scan_sched_scan_stop(struct cc33xx *cc,
++				 struct cc33xx_vif *wlvif)
 +{
-+	struct sk_buff *skb;
-+	u8 zero_mac[ETH_ALEN] = {0};
-+	int ret = 0;
++	__cc33xx_scan_stop(cc, wlvif, SCAN_REQUEST_CONNECT_PERIODIC_SCAN);
++}
++
++static int cc33xx_scan_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			     struct cfg80211_scan_request *req)
++{
++	return cc33xx_scan_send(cc, wlvif, req);
++}
++
++int cc33xx_scan_stop(struct cc33xx *cc, struct cc33xx_vif *wlvif)
++{
++	return __cc33xx_scan_stop(cc, wlvif, SCAN_REQUEST_ONE_SHOT);
++}
++
++void cc33xx_scan_complete_work(struct work_struct *work)
++{
++	struct delayed_work *dwork;
++	struct cc33xx *cc;
++	struct cfg80211_scan_info info = {
++		.aborted = false,
++	};
++
++	dwork = to_delayed_work(work);
++	cc = container_of(dwork, struct cc33xx, scan_complete_work);
 +
 +	mutex_lock(&cc->mutex);
 +
-+	if (!cc->plt) {
-+		ret = -EINVAL;
++	if (unlikely(cc->state != CC33XX_STATE_ON))
 +		goto out;
++
++	if (cc->scan.state == CC33XX_SCAN_STATE_IDLE)
++		goto out;
++
++	/* Rearm the tx watchdog just before idling scan. This
++	 * prevents just-finished scans from triggering the watchdog
++	 */
++	cc33xx_rearm_tx_watchdog_locked(cc);
++
++	cc->scan.state = CC33XX_SCAN_STATE_IDLE;
++	memset(cc->scan.scanned_ch, 0, sizeof(cc->scan.scanned_ch));
++	cc->scan.req = NULL;
++	cc->scan_wlvif = NULL;
++
++	if (cc->scan.failed) {
++		cc33xx_info("Scan completed due to error.");
++		cc33xx_queue_recovery_work(cc);
 +	}
 +
-+	if (memcmp(zero_mac, cc->efuse_mac_address, ETH_ALEN) == 0) {
-+		ret = -EOPNOTSUPP;
-+		goto out;
-+	}
++	cc33xx_cmd_regdomain_config_locked(cc);
 +
-+	skb = cfg80211_testmode_alloc_reply_skb(cc->hw->wiphy, ETH_ALEN);
-+	if (!skb) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	if (nla_put(skb, CC33XX_TM_ATTR_DATA,
-+		    ETH_ALEN, cc->efuse_mac_address)) {
-+		kfree_skb(skb);
-+		ret = -EMSGSIZE;
-+		goto out;
-+	}
-+
-+	ret = cfg80211_testmode_reply(skb);
-+	if (ret < 0)
-+		goto out;
++	ieee80211_scan_completed(cc->hw, &info);
 +
 +out:
 +	mutex_unlock(&cc->mutex);
-+	return ret;
 +}
 +
-+int cc33xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		  void *data, int len)
++int cc33xx_scan(struct cc33xx *cc, struct ieee80211_vif *vif, const u8 *ssid,
++		size_t ssid_len, struct cfg80211_scan_request *req)
 +{
-+	struct cc33xx *cc = hw->priv;
-+	struct nlattr *tb[CC33XX_TM_ATTR_MAX + 1];
-+	u32 nla_cmd;
-+	int err;
++	struct cc33xx_vif *wlvif = cc33xx_vif_to_data(vif);
 +
-+	err = nla_parse_deprecated(tb, CC33XX_TM_ATTR_MAX, data, len,
-+				   cc33xx_tm_policy, NULL);
-+	if (err)
-+		return err;
++	if (cc->scan.state != CC33XX_SCAN_STATE_IDLE)
++		return -EBUSY;
 +
-+	if (!tb[CC33XX_TM_ATTR_CMD_ID])
-+		return -EINVAL;
++	cc->scan.state = CC33XX_SCAN_STATE_2GHZ_ACTIVE;
 +
-+	nla_cmd = nla_get_u32(tb[CC33XX_TM_ATTR_CMD_ID]);
-+
-+	/* Only SET_PLT_MODE is allowed in case of mode PLT_CHIP_AWAKE */
-+	if (cc->plt_mode == PLT_CHIP_AWAKE &&
-+	    nla_cmd != CC33XX_TM_CMD_SET_PLT_MODE)
-+		return -EOPNOTSUPP;
-+
-+	switch (nla_cmd) {
-+	case CC33XX_TM_CMD_TEST:
-+		return cc33xx_tm_cmd_test(cc, tb);
-+	case CC33XX_TM_CMD_INTERROGATE:
-+		return cc33xx_tm_cmd_interrogate(cc, tb);
-+	case CC33XX_TM_CMD_CONFIGURE:
-+		return cc33xx_tm_cmd_configure(cc, tb);
-+	case CC33XX_TM_CMD_SET_PLT_MODE:
-+		return cc33xx_tm_cmd_set_plt_mode(cc, tb);
-+	case CC33XX_TM_CMD_GET_MAC:
-+		return cc33xx_tm_cmd_get_mac(cc, tb);
-+	default:
-+		return -EOPNOTSUPP;
++	if (ssid_len && ssid) {
++		cc->scan.ssid_len = ssid_len;
++		memcpy(cc->scan.ssid, ssid, ssid_len);
++	} else {
++		cc->scan.ssid_len = 0;
 +	}
++
++	cc->scan_wlvif = wlvif;
++	cc->scan.req = req;
++	memset(cc->scan.scanned_ch, 0, sizeof(cc->scan.scanned_ch));
++
++	/* we assume failure so that timeout scenarios are handled correctly */
++	cc->scan.failed = true;
++	ieee80211_queue_delayed_work(cc->hw, &cc->scan_complete_work,
++				     msecs_to_jiffies(CC33XX_SCAN_TIMEOUT));
++
++	cc33xx_scan_start(cc, wlvif, req);
++
++	return 0;
 +}
-diff --git a/drivers/net/wireless/ti/cc33xx/testmode.h b/drivers/net/wireless/ti/cc33xx/testmode.h
++
++inline void cc33xx_scan_sched_scan_results(struct cc33xx *cc)
++{
++	ieee80211_sched_scan_results(cc->hw);
++}
++
++void cc33xx_scan_completed(struct cc33xx *cc, struct cc33xx_vif *wlvif)
++{
++	cc->scan.failed = false;
++	cancel_delayed_work(&cc->scan_complete_work);
++	ieee80211_queue_delayed_work(cc->hw, &cc->scan_complete_work,
++				     msecs_to_jiffies(0));
++}
+diff --git a/drivers/net/wireless/ti/cc33xx/scan.h b/drivers/net/wireless/ti/cc33xx/scan.h
 new file mode 100644
-index 000000000000..58f336202925
+index 000000000000..144ab1ebb2d4
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/testmode.h
-@@ -0,0 +1,12 @@
++++ b/drivers/net/wireless/ti/cc33xx/scan.h
+@@ -0,0 +1,385 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#ifndef __TESTMODE_H__
-+#define __TESTMODE_H__
++#ifndef __SCAN_H__
++#define __SCAN_H__
 +
-+int cc33xx_tm_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		  void *data, int len);
++#include "cc33xx.h"
 +
-+#endif /* __TESTMODE_H__ */
++#define CC33XX_SCAN_TIMEOUT    30000 /* msec */
++
++enum {
++	CC33XX_SCAN_STATE_IDLE,
++	CC33XX_SCAN_STATE_2GHZ_ACTIVE,
++	CC33XX_SCAN_STATE_2GHZ_PASSIVE,
++	CC33XX_SCAN_STATE_5GHZ_ACTIVE,
++	CC33XX_SCAN_STATE_5GHZ_PASSIVE,
++	CC33XX_SCAN_STATE_DONE
++};
++
++struct conn_scan_ch_params {
++	__le16 min_duration;
++	__le16 max_duration;
++	__le16 passive_duration;
++
++	u8  channel;
++	u8  tx_power_att;
++
++	/* bit 0: DFS channel; bit 1: DFS enabled */
++	u8  flags;
++
++	u8  padding[3];
++} __packed;
++
++enum {
++	SCAN_SSID_TYPE_PUBLIC = 0,
++	SCAN_SSID_TYPE_HIDDEN = 1,
++};
++
++#define MAX_CHANNELS_2GHZ	14
++#define MAX_CHANNELS_4GHZ	4
++#define MAX_CHANNELS_5GHZ	32
++
++#define SCAN_MAX_CYCLE_INTERVALS 16
++#define SCHED_SCAN_MAX_SSIDS 16
++
++/******************************************************************************
++ * ** ***                                                               *** ** *
++ * ** ***                          SCAN API                             *** ** *
++ * ** ***                                                               *** ** *
++ ******************************************************************************/
++
++#define CONN_SCAN_MAX_BAND                          (2)
++#define CONN_SCAN_MAX_CHANNELS_ALL_BANDS            (46)
++#define SCAN_MAX_SCHED_SCAN_PLANS           (12)
++
++enum scan_request_type {
++	SCAN_REQUEST_NONE,
++	SCAN_REQUEST_CONNECT_PERIODIC_SCAN,
++	SCAN_REQUEST_ONE_SHOT,
++	SCAN_REQUEST_SURVEY_SCAN,
++	SCAN_NUM_OF_REQUEST_TYPE
++};
++
++/******************************************************************************
++ *	ID:     CMD_SCAN
++ *	Desc:   This command will start scan process depending scan request
++ *		type
++ *	Return: CMD_COMPLETE
++ *****************************************************************************/
++/* struct cc33xx_ssid - SSIDs connection scan description
++ *
++ * @type: SSID type - SCAN_SSID_TYPE_HIDDEN/SCAN_SSID_TYPE_PUBLIC
++ *
++ * @len:  Length of the ssid
++ *
++ * @ssid: SSID
++ */
++struct cc33xx_ssid {
++	u8 type;
++	u8 len;
++	u8 ssid[IEEE80211_MAX_SSID_LEN];
++	u8 padding[2];
++} __packed;
++
++/**
++ * struct cc33xx_cmd_ssid_list - scan SSID list description
++ *
++ * @header:             cc33xx command header
++ *
++ * @role_id:            roleID
++ *
++ * @scan_type:          Scan request type
++ *
++ * @n_ssids:            Number of SSID in the list. MAX 16 entries
++ *
++ * @ssids:              SSIDs to scan for (active scan only)
++ *
++ * @padding:            padding bytes for alignment
++ */
++struct cc33xx_cmd_ssid_list {
++	struct cc33xx_cmd_header header;
++
++	u8 role_id;
++	u8 scan_type;
++	u8 n_ssids;
++	struct cc33xx_ssid ssids[SCHED_SCAN_MAX_SSIDS];
++	u8 padding;
++} __packed;
++
++/**
++ * struct conn_scan_dwell_info - Channels duration info per band
++ *
++ * @min_duration:        Min duration (in ms)
++ *
++ * @max_duration:        Max duration (in ms)
++ *
++ * @passive_duration:    Duration to use for passive scans (in ms)
++ */
++struct conn_scan_dwell_info {
++	__le16  min_duration;
++	__le16  max_duration;
++	__le16  passive_duration;
++} __packed;
++
++/**
++ * struct conn_scan_ch_info - Channels info
++ *
++ * @channel:            channel number (channel_e)
++ *
++ * @tx_power_att:    TX power level in dbm
++ *
++ * @flags:       0 - DFS channel, 1 - DFS enabled (to be included in active scan)
++ */
++struct conn_scan_ch_info {
++	u8   channel;
++	u8   tx_power_att;
++	u8   flags;
++} __packed;
++
++/**
++ * struct scan_one_shot_info - ONE_SHOT scan param
++ *
++ * @passive:		Number of passive scan channels in bands BG,A
++ *
++ * @active:		Number of active scan channels in bands BG,A
++ *
++ * @dfs:		Number of DFS channels in A band
++ *
++ * @channel_list:	Channel list info
++ *			BG band channels are set from place 0 and forward.
++ *			A band channels are from CONN_SCAN_MAX_CHANNELS_BG and forward.
++ *			6Ghz band channels are from CONN_SCAN_MAX_CHANNELS_A_BG and forward.
++ *
++ * @dwell_info:		Scan duration time info per band
++ *
++ * @reserved:
++ *
++ */
++struct scan_one_shot_info {
++	u8  passive[CONN_SCAN_MAX_BAND];
++	u8  active[CONN_SCAN_MAX_BAND];
++	u8  dfs;
++
++	struct conn_scan_ch_info    channel_list[CONN_SCAN_MAX_CHANNELS_ALL_BANDS];
++	struct conn_scan_dwell_info dwell_info[CONN_SCAN_MAX_BAND];
++	u8  reserved;
++};
++
++/**
++ * struct sched_scan_plan_cmd - Scan plans for scheduled scan
++ *
++ * Each scan plan consists of the number of iterations to scan and the
++ * interval between scans. When a scan plan finishes (i.e., it was run
++ * for the specified number of iterations), the next scan plan is
++ * executed. The scan plans are executed in the order they appear in
++ * the array (lower index first). The last scan plan will run infinitely
++ * (until requested to stop), thus must not specify the number of
++ * iterations. All other scan plans must specify the number of
++ * iterations.
++ *
++ * @interval:        In seconds
++ *
++ * @iterations:      zero to indefinitely
++ */
++struct sched_scan_plan_cmd {
++	u32 interval;
++	u32 iterations;
++};
++
++/* struct periodicScanParams_t - Periodic scan param
++ *
++ * @sched_scan_plans:	Scan plans for a scheduled scan (defined in supplicant's driver.h)
++ *				interval and iterations
++ *
++ * @sched_scan_plans_num:Number of scan plans in sched_scan_plans array
++ *
++ * @passive:		Number of passive scan channels in bands BG,A
++ *
++ * @active:		Number of active scan channels in bands BG,A
++ *
++ * @dfs:		number of DFS channels in A band
++ *
++ * @channel_list:	Channel list info.
++ *			BG band channels are set from place 0 and forward.
++ *			A band channels are set from CONN_SCAN_MAX_CHANNELS_BG and forward.
++ *			6Ghz band are set from CONN_SCAN_MAX_CHANNELS_A_BG and forward.
++ *
++ * @dwell_info:		Scan duration time info per band
++ *
++ */
++struct scan_periodic_info {
++	struct sched_scan_plan_cmd  sched_scan_plans[SCAN_MAX_SCHED_SCAN_PLANS];
++	u16 sched_scan_plans_num;
++
++	u8 passive[CONN_SCAN_MAX_BAND];
++	u8 active[CONN_SCAN_MAX_BAND];
++	u8 dfs;
++
++	struct conn_scan_ch_info      channel_list[CONN_SCAN_MAX_CHANNELS_ALL_BANDS];
++	struct conn_scan_dwell_info   dwell_info[CONN_SCAN_MAX_BAND];
++} __packed;
++
++/**
++ * struct scan_param - union for ONE_SHOT/PERIODIC scan param
++ *
++ * @u:                union of scan type
++ *
++ * @u.one_shot:       ONE_SHOT scan param
++ *
++ * @u.periodic:       Periodic scan param
++ */
++struct scan_param {
++	union {
++		struct scan_one_shot_info    one_shot;
++		struct scan_periodic_info    periodic;
++	} u;
++} __packed;
++
++/**
++ * struct cc33xx_cmd_scan_params - scan configured param
++ *
++ * @header:             cc33xx command header
++ *
++ * @scan_type:          ONE_SHOT/PERIODIC scan
++ *
++ * @role_id:            role ID
++ *
++ * @params:             Scan parameter for ONE_SHOT/PERIODIC Scan
++ *
++ * @rssi_threshold:     RSSI threshold for basic filter
++ *
++ * @snr_threshold:      SNR threshold for basic filter
++ *
++ * @bssid:              BSSID to scan for
++ *
++ * @padding:            padding bytes for alignment
++ *
++ * @ssid_from_list:     0 - if there are more than 5 SSIDs entries
++ *                           (list was sent SSID CONFIGURE COMMAND),
++ *                      1 - 5 or less SSIDs entries, the list is at the end of the scan command
++ *
++ * @filter:		0 - not using filter and all the beacons/probe response frame
++ *                      forward to upper mac,  1 - using filter
++ *
++ * @num_of_ssids:		Number of SSIDs
++ */
++struct cc33xx_cmd_scan_params {
++	struct cc33xx_cmd_header header;
++	u8 scan_type;
++	u8 role_id;
++
++	struct scan_param   params;
++	s8 rssi_threshold; /* for filtering (in dBm) */
++	s8 snr_threshold;  /* for filtering (in dB) */
++
++	u8 bssid[ETH_ALEN];
++	u8 padding[2];
++
++	u8 ssid_from_list; /* use ssid from configured ssid list */
++	u8 filter;         /* forward only results with matching ssids */
++
++	u8 num_of_ssids;
++} __packed;
++
++/******************************************************************************
++ *	ID:     CMD_SET_PROBE_IE
++ *	Desc:   This command will  set the Info elements data for
++ *		probe request
++ *	Return: CMD_COMPLETE
++ *******************************************************************************/
++#define MAX_EXTRA_IES_LEN 512
++/**
++ * struct cc33xx_cmd_set_ies - Probe request info elements
++ *
++ * @header:       cc33xx command header
++ *
++ * @scan_type:    ONE_SHOT/PERIODIC scan
++ *
++ * @role_id:      roleID
++ *
++ * @data:         info element buffer
++ *
++ * @len:          info element length
++ */
++struct cc33xx_cmd_set_ies {
++	struct cc33xx_cmd_header header;
++	u8 scan_type;
++	u8 role_id;
++	__le16 len;
++	u8                   data[MAX_EXTRA_IES_LEN];
++} __packed;
++
++/******************************************************************************
++ *	ID:     CMD_STOP_SCAN
++ *	Desc:   This command will stop scan process depending scan request
++ *		type, and if early termination is on
++ *	Return: CMD_COMPLETE
++ ******************************************************************************/
++/**
++ * struct cc33xx_cmd_scan_stop - scan stop param
++ *
++ * @header:              cc33xx command header
++ *
++ * @scan_type:           Scan request type
++ *
++ * @role_id:             role ID
++ *
++ * @is_ET:               TRUE - Early termination is on, FALSE - no ET
++ *
++ * @padding:             padding bytes for alignment
++ */
++struct cc33xx_cmd_scan_stop {
++	struct cc33xx_cmd_header header;
++
++	u8 scan_type;
++	u8 role_id;
++	u8 is_ET;
++	u8 padding;
++} __packed;
++
++int cc33xx_scan_stop(struct cc33xx *cc, struct cc33xx_vif *wlvif);
++void cc33xx_scan_completed(struct cc33xx *cc, struct cc33xx_vif *wlvif);
++int cc33xx_sched_scan_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			    struct cfg80211_sched_scan_request *req,
++			    struct ieee80211_scan_ies *ies);
++void cc33xx_scan_sched_scan_stop(struct cc33xx *cc, struct cc33xx_vif *wlvif);
++
++int cc33xx_scan(struct cc33xx *cc, struct ieee80211_vif *vif,
++		const u8 *ssid, size_t ssid_len,
++		struct cfg80211_scan_request *req);
++void cc33xx_scan_complete_work(struct work_struct *work);
++void cc33xx_scan_sched_scan_results(struct cc33xx *cc);
++
++enum {
++	SCAN_SSID_FILTER_ANY      = 0,
++	SCAN_SSID_FILTER_SPECIFIC = 1,
++	SCAN_SSID_FILTER_LIST     = 2,
++	SCAN_SSID_FILTER_DISABLED = 3
++};
++
++#define SCAN_CHANNEL_FLAGS_DFS		BIT(0) /* channel is passive until an
++						* activity is detected on it
++						*/
++#define SCAN_CHANNEL_FLAGS_DFS_ENABLED	BIT(1)
++
++struct cc33xx_scan_channels {
++	u8 passive[CONN_SCAN_MAX_BAND]; /* number of passive scan channels */
++	u8 active[CONN_SCAN_MAX_BAND];  /* number of active scan channels */
++	u8 dfs;		   /* number of dfs channels in 5ghz */
++	u8 passive_active; /* number of passive before active channels 2.4ghz */
++
++	struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
++	struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
++	struct conn_scan_ch_params channels_4[MAX_CHANNELS_4GHZ];
++};
++
++enum {
++	SCAN_TYPE_SEARCH	= 0,
++	SCAN_TYPE_PERIODIC	= 1,
++	SCAN_TYPE_TRACKING	= 2,
++};
++
++#endif /* __CC33XX_SCAN_H__ */
 -- 
 2.34.1
 
