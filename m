@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9B719EEC0
-	for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2024 14:18:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C535E156CF;
+	Thu, 31 Oct 2024 14:19:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730384335; cv=none; b=WZ3QNbnQhS42n04crST3YXF7YW5CXiG58XwW5Cj0zUZqIpZdlISbrNsM7n5SFBCj36IwtbI/J/YPFhda7F4o+neuxQlwnXwS6R62vnEOqY3MPe4d7565vRQNxSWAB5a2cmP54o4PHqIcJhMzU/q7YJQQY+rTXtzLR13J/FnPsvQ=
+	t=1730384370; cv=none; b=JVJXDVbF/j16BE++eWFvh2sxGKia2kmqBOVXX+0HGREDHf/Fg1eDGfQ7wctcbjPt5z+4Kr4qaqiJFweP2xDsgbI7PEVN7qRYD0/RCUxsdepnCN1tFxjK4UM7YRG1sogDUV1OHEgT/N9bzYVqZeZMkfOD9sJHAkNW/DNQP4kV0QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730384335; c=relaxed/simple;
-	bh=uDiapnInvBCmn8/tufC6OPO0vr2eWKKkPy+v6Qk0DMA=;
+	s=arc-20240116; t=1730384370; c=relaxed/simple;
+	bh=QJxJNeaj3gC0NUWb5CZdw1212FbzauRiC0Vy6rHljeA=;
 	h=Content-Type:MIME-Version:Subject:From:In-Reply-To:References:To:
-	 Cc:Message-ID:Date; b=fqQCYZ2aXMQSBJqy46isnWFbg2VD0elt8sdN7kI0giCL7mpMp0oMZ7ySBoien7JmpXgRG37x59pNf2oFyHl5IAvTdN8VRGJORnU33v/+g6ZDve3ZFb0NZYljbyhv/KDDVojmTGGYF8CosDHUSxLQGB6uC29cJdMCgpNBYJ6Iq3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GL94M9TB; arc=none smtp.client-ip=10.30.226.201
+	 Cc:Message-ID:Date; b=rlG930XlDFo3Vtu/kfr5BzBoHP6g5qMBFwVdN60sV/h7WI1ztbXVu/TBtU+B4PxaqTg/EtfG4XL01hdKkFQwAS2/MW/f0R5wmXEcLoOzp8Mxdv01IyhzAkvILnUCvw3xQwRnuTrnhpIDTPnUBBAuDKs7H8S0QKcAS/Dbu6KE3aw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kh2Io39h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GL94M9TB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F29C7C4AF51;
-	Thu, 31 Oct 2024 14:18:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kh2Io39h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 598ACC4DDED;
+	Thu, 31 Oct 2024 14:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730384335;
-	bh=uDiapnInvBCmn8/tufC6OPO0vr2eWKKkPy+v6Qk0DMA=;
+	s=k20201202; t=1730384370;
+	bh=QJxJNeaj3gC0NUWb5CZdw1212FbzauRiC0Vy6rHljeA=;
 	h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-	b=GL94M9TBCKphLqMbhdGDAsWfYs4B8jVFR0nIoztoID2jjOBvTebp2EgQU391bqyX/
-	 LmHwwJVLrSO1yAoKSkgyTMIdThiTdXe4u5N2Nj0HewCF08SinMyZcVf8k8yMkZN9Av
-	 0T+zVNTo+x5nx/HcqHrNrhHbNAN1ZPhXdqIL6JHntGVw8XjU75qYrqLaeBaid+p7wn
-	 s+X5maGAXwyJwCe/uVLd0ueyIrinw+P+/uaS853ld21789agxljj0F/5CojdUnwxIP
-	 PTToiRmgbAsWIACJk372PF8a9GaiRedowfkJKG0oEzXM45daypYosO2IgTsiHGv+Af
-	 0M+Uewydg9mMQ==
+	b=kh2Io39hLbpuvosOg5J3WXfTKR9/K1A1ix/WnkWrIN+lp+0OtxXR7MGxCYdQxX7y4
+	 ugKYAwZGMcg1j1Ws0wDzr/vtgpFzMdloxNyRJ/zxGo29x8HslTGxjZU7MqWHJDX6BL
+	 XYwsG35daO/ZmVKe2hTWE+VtGubQ50qEq3M2eUXEA2tnsl4tTfumK4UsMx+9bI8Khm
+	 9nmacdkhLIkjro5fSrQ19rTCq+39YbzktZBwn57T9tVJ0DuWoeLPAFFgLf4befL4KB
+	 I3ire0G0CviGopLWv9LcHEBje7mf1ZXo3hH6+LOwlfDwhLVcV2YxH9zPyCabz9jWii
+	 Pk9tGhbHcj6eQ==
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -33,35 +33,39 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] wifi: wfx: Fix error handling in wfx_core_init()
+Content-Transfer-Encoding: 7bit
+Subject: Re: wifi: brcm80211: Remove unused dma_txflush()
 From: Kalle Valo <kvalo@kernel.org>
-In-Reply-To: <20241022090453.84679-1-yuancan@huawei.com>
-References: <20241022090453.84679-1-yuancan@huawei.com>
-To: Yuan Can <yuancan@huawei.com>
-Cc: <jerome.pouiller@silabs.com>, <gregkh@linuxfoundation.org>,
- <linux-wireless@vger.kernel.org>, <yuancan@huawei.com>
+In-Reply-To: <20241025204651.244627-1-linux@treblig.org>
+References: <20241025204651.244627-1-linux@treblig.org>
+To: linux@treblig.org
+Cc: arend.vanspriel@broadcom.com, kees@kernel.org, erick.archer@outlook.com,
+ linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
+ "Dr. David Alan Gilbert" <linux@treblig.org>
 User-Agent: pwcli/0.1.1-git (https://github.com/kvalo/pwcli/) Python/3.11.2
-Message-ID: <173038433204.539202.14907836259811918738.kvalo@kernel.org>
-Date: Thu, 31 Oct 2024 14:18:53 +0000 (UTC)
+Message-ID: <173038436681.539202.501004601707648947.kvalo@kernel.org>
+Date: Thu, 31 Oct 2024 14:19:28 +0000 (UTC)
 
-Yuan Can <yuancan@huawei.com> wrote:
+linux@treblig.org wrote:
 
-> The wfx_core_init() returns without checking the retval from
-> sdio_register_driver().
-> If the sdio_register_driver() failed, the module failed to install,
-> leaving the wfx_spi_driver not unregistered.
+> From: "Dr. David Alan Gilbert" <linux@treblig.org>
 > 
-> Fixes: a7a91ca5a23d ("staging: wfx: add infrastructure for new driver")
-> Signed-off-by: Yuan Can <yuancan@huawei.com>
-> Reviewed-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> dma_fxflush() has been unused since 2013's
+> commit 7b2385b95363 ("brcmsmac: rework of mac80211 .flush() callback
+> operation")
+> 
+> Remove it.
+> 
+> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
 Patch applied to wireless-next.git, thanks.
 
-3b88a9876779 wifi: wfx: Fix error handling in wfx_core_init()
+1e52d0061a83 wifi: brcm80211: Remove unused dma_txflush()
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20241022090453.84679-1-yuancan@huawei.com/
+https://patchwork.kernel.org/project/linux-wireless/patch/20241025204651.244627-1-linux@treblig.org/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
