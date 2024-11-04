@@ -1,140 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6A0D1B3933
-	for <linux-wireless@vger.kernel.org>; Mon,  4 Nov 2024 11:13:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DFE71494B1;
+	Mon,  4 Nov 2024 11:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730718832; cv=none; b=Rn+jQztjMr/nc/Wvzxv0BHdm6CElPV4N8NhD7x8xaxcNBzNppuI71I8t+yhtSd3gFdl8hDbJMGpYU0ltdGsge6LTO4Fgeij8bkbzoJtkuZGZMlk7+6vnlr2ZQbfFNpnzJMCfEDF/4av1gw+nFq9yDgz/UYoACo51/Nyt8xjyeuk=
+	t=1730721580; cv=none; b=IWD4u9ybYB4DsCUmkMI/9hwKC2WQ9xugBdbduy0Q9aTuXQT/B3GK1GixGbc/NO66TprsERyE8fbUCc4/YkYr4in1b5mozuyrCdfFXgaevkY/n8mNcKqBeItE8/G5AXqxBT2Dc1oQn2mW9edZO17tjWLSVWKn/rlqN/b1UeFZy1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730718832; c=relaxed/simple;
-	bh=X9Es2YNbaqU6K64HSrwfnFwfae6RM4V8eJVc5Imb+DI=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=oXUu3rDrgl6/DGb7BXznVpC4meCIDwImsOMUW4vGA2BeK/rwEeK72pYSeSYf0xho1Ty9+dqizwatgqv89Dxum+qxel5j7USGXS1Z9AdroyrkgK0VdEgXgh870+KTBmfD6BcKMK0aEmtxl6u0wO0pSJ9OC2CCSEoKV4+iV9iWRfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aAEsJC+4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730721580; c=relaxed/simple;
+	bh=sGKJtMWxxvXs5sFEcBa/3FeTHFjzuJv8X8Z52ULYNeE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=o2dFw2O5zaS0IT1oa8GOAwcGD6JNidmwKu4fmegkX7yGVIMPYkeUYMBcvjN1+Gmx5macb3bHerwvIsQrYOUbffw01piCFuZGKc0ycdB5o0KYCzupqVQjWj0fvOmW2QNCeodC1Ohwmev8wgVdAOaqXio1s9e+Ib4qLDplBnFUE3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net; spf=pass smtp.mailfrom=gmx.net; dkim=pass (2048-bit key) header.d=gmx.net header.i=wahrenst@gmx.net header.b=X6MHqqtS; arc=none smtp.client-ip=212.227.17.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aAEsJC+4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BB56C4CECE;
-	Mon,  4 Nov 2024 11:13:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730718832;
-	bh=X9Es2YNbaqU6K64HSrwfnFwfae6RM4V8eJVc5Imb+DI=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=aAEsJC+4lnHKbqlEpohYUwFCxUQk+VHwRzxM/glkoGCJoOuM12qSB94A7w7KyfRf8
-	 Ifsp10ok8E3WeM+MTjyNe9DW1X6duAEABzIbGZEXrg8SU12uMBrkwZEqgiTiEUfXqu
-	 DEd7V7XhyDU3IJy4+QR/Pooh0Q5SmjC20nmObRJRaqxF8/3ekLj40T1yBOYLZ9Eks0
-	 5/a5TwMAVVFJ6+X++CTnYBZALIwP9kheUjrq+WbXsMM5U8zUy//SJUfAXxLfVVINkX
-	 3ZYKPOesthI58+vNUb1/2HKmDfnot68ZIGaucg5Gb7fbvPgASBJb3eUB1X3FtdMUa4
-	 1bTnvHVq2Mftg==
-From: Kalle Valo <kvalo@kernel.org>
-To: Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/8] wifi: ath12k: MLO support part 2
-References: <20241101151705.165987-1-kvalo@kernel.org>
-	<935b7f88-a48f-48b5-9e5b-b333cafec25f@quicinc.com>
-Date: Mon, 04 Nov 2024 13:13:49 +0200
-In-Reply-To: <935b7f88-a48f-48b5-9e5b-b333cafec25f@quicinc.com> (Jeff
-	Johnson's message of "Fri, 1 Nov 2024 09:51:59 -0700")
-Message-ID: <87ttcn6yky.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=gmx.net header.i=wahrenst@gmx.net header.b="X6MHqqtS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.net;
+	s=s31663417; t=1730721568; x=1731326368; i=wahrenst@gmx.net;
+	bh=sGKJtMWxxvXs5sFEcBa/3FeTHFjzuJv8X8Z52ULYNeE=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=X6MHqqtS8FMXore6mcXONS5MSQouaDC7nOs1ZwIDOsxTrbSv/PzfjzNAn91/nWR/
+	 KYieFCuMDRwqfa9yT2a3Ii+JACTCB3jxckoISvCN/tWCeEA6LJv2ppbLjWYTA56OL
+	 tyu7tpaOU7FPyKj1WoLl+ri33byQOA/V7iHFawF407REstlCpwyON1oG3blj7OB/N
+	 iCHNHgyxbmY2xSu6hCCVwNHAJ+wx+/z3YSAkqQQzo37G0fN8Hs79nX1ZDECY4gpKF
+	 nvwPmkDC2mGifVZCz3wcK48gLyhrqJiaYsRxIqoQo4xGA26hdSn6x6Ujf9ahUQcOm
+	 9+AV/UKMOJCS8ihUIA==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.1.105] ([37.4.248.43]) by mail.gmx.net (mrgmx105
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1N8XPt-1tuTuz0r4b-00qyC6; Mon, 04
+ Nov 2024 12:59:28 +0100
+Message-ID: <86ef2465-3b5c-47c8-9e81-ad5b545bcfe4@gmx.net>
+Date: Mon, 4 Nov 2024 12:59:27 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: brcmfmac: error messages while entering suspend
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+ Arend van Spriel <aspriel@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
+ SHA-cyfmac-dev-list@infineon.com, Kalle Valo <kvalo@kernel.org>,
+ linux-mmc <linux-mmc@vger.kernel.org>
+References: <a825587c-e6f6-45f8-8ac0-a1a5642a5333@gmx.net>
+ <16169285-d838-46f3-8be1-3639f573062e@broadcom.com>
+Content-Language: en-US
+From: Stefan Wahren <wahrenst@gmx.net>
+In-Reply-To: <16169285-d838-46f3-8be1-3639f573062e@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:AjFgiyDaDf5ylcrmVegqIF0rMOfd2QpbMehUKgmPr2s/GUb4hGw
+ D4hTOVL2AM2m9EEkM2PSh427WENCUX+uTPnEYOwWAQSzskTiBYJ/IsqPzVgo+IB7OX47BI7
+ vlP0H12dHI0kmAE/1o9vuJmS6K+08UXNuu+SxXPAjEPeJVDBAJ8oY3nECtczAPirl5+FjXc
+ 777a0Gug4Ixf/ORCj7KjA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:oNWZOlCc22Y=;1lqqmxpicEB3A2NIs9LYwOK1S+W
+ zrGyBDOomdL02xNGlO2Y6HG+sWFPQmSZ5bEiePQVIzEyPs03Pwmkr8IpeDxJOYZGcSO1QlwRd
+ mJZ0tG8gzweN6xN1uTlo6mDKgI6ZgpfMxXLbC5eSjYrv0WE3/BJmIwCr8gudf9ZKpsuxHd092
+ BTzLhkgi2kfeYIFWIZOJPoe1pLQ9MDX9rOJBo735Mai3CKx6FX8TJdlm0NE+tyX0WhpWFU60p
+ oQOz072vlzPBNZWFuHwXSk/bZyAXgptp19/KdnnMJ7g480epUz75ymmk1z8XdLw6MkwW8uuCa
+ 7mtFmWVaA1xH5DB5Si2mpOw+PQYw8euxTDfhkZYnFEuarOx+P7/5Vi9478gzw7AqnmidlU0JN
+ 5MqfD/ka915cIan/gzQwUoFv1l3E15tk0NW2/X0uDu/S6WbdxL3i1IVrceb1HJFv3sH59NTVG
+ GOY5PAffLgVJgTXUDp5qh6lr4bEiIOw6P/Hzc0PwVcJWv5FeNzCuU0ctc/yL/JmjQJYgLx1we
+ 32kPL4mgmiwChPY/pZREW2iCpdt2k/SYZsG5kNusS7Z8odbyyBO0f41j4aCjH4bTyI2GTwO5i
+ ak5g9qmLDeJELBz25KVodO0c/7N1l19Wzlh7EGxNKdGBHG/EwcvEY8j+MvOtkI5UQ1Fn/Qy+R
+ SEE66PewNL74aXNUwQScuGhXyygYnSqUwb9aMX1A/UXHILb73ugzKbO77zrhjCca+jeH/sJrl
+ mUor5sTjyBY4zCIDb1srUXi05rkjfTA2IFejRd0FbUv6vg1v55hXPL45doMLCGn3f7MHUVkTm
+ plK1tsB21hTBe2woDP1XYvlg==
 
-Jeff Johnson <quic_jjohnson@quicinc.com> writes:
+Hi Arend,
 
-> On 11/1/2024 8:16 AM, Kalle Valo wrote:
+[add Johannes]
+
+Am 04.11.24 um 11:06 schrieb Arend van Spriel:
+> On November 3, 2024 12:01:55 PM Stefan Wahren <wahrenst@gmx.net> wrote:
 >
->> From: Kalle Valo <quic_kvalo@quicinc.com>
->> 
->> Here we continue to refactor mac.c to support multiple links and extend peer
->> assoc WMI command to support MLO.
->> 
->> Please review.
->> 
->> v2:
->> 
->> * patch 1: use err_vdev_del
->> 
->> * patch 2: ath12k_mac_mlo_get_vdev_args(): switch
->> wiphy_dereference()
->> 
->> * patch 2: use struct ath12k_wmi_mac_addr_params instead adding struct wmi_mac_addr
->> 
->> * patch 3: ath12k_mac_station_post_remove(): assign
->> ahsta->links_map before rcu_assign_pointer()
->> 
->> * patch 3: ath12k_mac_station_unauthorize(): fi* confusing comment about __sta_info_destroy_part2()
->> 
->> * patch 4: debugfs.c: copyright year
->> 
->> * patch 5: ath12k_peer_mlo_create(): remove parenthesis from the
->>   warning message
->> 
->> * patch 5: ATH12K_ML_PEER_ID_VALID: move to peer.h and rename to ATH12K_PEER_ML_ID_VALID
->> 
->> * patch 5: rename struct ath12k_peer::ml_peer_id to peer_id
->> 
->> * patch 5: use ath12k_peer_ml_*() naming style in peer.c
->> 
->> * patch 7: improve commit message a bit
->> 
->> * patch 7: struct wmi_peer_assoc_mlo_partner_info: add _params to name
->> 
->> v1: https://patchwork.kernel.org/project/linux-wireless/cover/20241023133004.2253830-1-kvalo@kernel.org/
->> 
->> Kalle Valo (2):
->>   wifi: ath12k: ath12k_mac_vdev_create(): use goto for error handling
->>   wifi: ath12k: introduce ath12k_hw_warn()
->> 
->> Sriram R (6):
->>   wifi: ath12k: MLO vdev bringup changes
->>   wifi: ath12k: Refactor sta state machine
->>   wifi: ath12k: Add helpers for multi link peer creation and deletion
->>   wifi: ath12k: add multi-link flag in peer create command
->>   wifi: ath12k: add helper to find multi-link station
->>   wifi: ath12k: Add MLO peer assoc command support
->> 
->>  drivers/net/wireless/ath/ath12k/core.h  |  25 ++
->>  drivers/net/wireless/ath/ath12k/debug.c |   6 +-
->>  drivers/net/wireless/ath/ath12k/debug.h |   5 +-
->>  drivers/net/wireless/ath/ath12k/mac.c   | 504 +++++++++++++++++++-----
->>  drivers/net/wireless/ath/ath12k/peer.c  | 115 ++++++
->>  drivers/net/wireless/ath/ath12k/peer.h  |  12 +
->>  drivers/net/wireless/ath/ath12k/wmi.c   | 191 ++++++++-
->>  drivers/net/wireless/ath/ath12k/wmi.h   | 115 ++++++
->>  8 files changed, 848 insertions(+), 125 deletions(-)
->> 
->> 
->> base-commit: fa934bf3e0a825ee09f035c6580af513187d59a2
+>> Hi,
+>> I'm currently working on s2idle support for Raspberry Pi 3B+ (BCM43455
+>> SDIO). During the tests with I noticed harmless, but annoying error
+>> messages from brcmfmac like this:
+>>
+>> [=C2=A0 383.186640] PM: suspend entry (s2idle)
+>> [=C2=A0 383.190107] Filesystems sync: 0.003 seconds
+>> [=C2=A0 383.247470] Freezing user space processes
+>> [=C2=A0 383.250291] Freezing user space processes completed (elapsed 0.=
+002
+>> seconds)
+>> [=C2=A0 383.250379] OOM killer disabled.
+>> [=C2=A0 383.250385] Freezing remaining freezable tasks
+>> [=C2=A0 383.251677] Freezing remaining freezable tasks completed (elaps=
+ed
+>> 0.001 seconds)
+>> [=C2=A0 384.292071] ieee80211 phy0: brcmf_fil_cmd_data: bus is down. we=
+ have
+>> nothing to do.
+>> [=C2=A0 384.292079] ieee80211 phy0: brcmf_cfg80211_get_tx_power: error =
+(-5)
+>>
+>> These errors are not new and I assume they have always been there. I'm
+>> not an expert here, so I want to know is the problem here that the SDIO
+>> interface is shutdown before brcmfmac is suspended or lies the issue
+>> within brcmfmac suspend itself?
 >
-> with this series I see a new warning with gcc:
-> drivers/net/wireless/ath/ath12k/mac.c: In function 'ath12k_bss_assoc':
-> drivers/net/wireless/ath/ath12k/mac.c:3080:1: warning: the frame size
-> of 1040 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+> Hi Stefan,
+>
+> Upon suspend we execute the remove path and cleaning the interfaces.
+> We notify cfg80211 about the removal, which in turn will notify
+> userspace, but is tries to obtain the tx power from brcmfmac. However,
+> at this stage the communication with the dongle is already gone. These
+> messages are also seen in the module unload scenario. It seems a bit
+> redundant to query a device that is going to be removed. So it could
+> be fixed by chiming down those message or avoid it completely by
+> changing the behavior in cfg80211.
+chiming down all the affected messages (i reported only one example
+here) sounds strange to me. Maybe Johannes has also a opinion about this.
 
-What GCC version are you using and can you privately share your .config?
-I'm guessing it's coming from peer_arg which was already in
-ath12k_bss_assoc() before this patchset:
+Regards
+>
+> Regards,
+> Arend
+>
+>> Here is a calltrace for the error above:
+>>
+>> [=C2=A0 384.291308]=C2=A0 brcmf_fil_cmd_data+0xe0/0x114 [brcmfmac] (P)
+>> [=C2=A0 384.291347]=C2=A0 brcmf_fil_iovar_data_get+0xcc/0x134 [brcmfmac=
+] (L)
+>> [=C2=A0 384.291384]=C2=A0 brcmf_fil_iovar_data_get+0xcc/0x134 [brcmfmac=
+]
+>> [=C2=A0 384.291420]=C2=A0 brcmf_cfg80211_get_tx_power+0x58/0xd4 [brcmfm=
+ac]
+>> [=C2=A0 384.291458]=C2=A0 nl80211_send_iface+0x1e8/0x584 [cfg80211]
+>> [=C2=A0 384.291549]=C2=A0 nl80211_notify_iface+0x58/0xd4 [cfg80211]
+>> [=C2=A0 384.291615]=C2=A0 _cfg80211_unregister_wdev+0x40/0x27c [cfg8021=
+1]
+>> [=C2=A0 384.291682]=C2=A0 cfg80211_unregister_wdev+0x14/0x20 [cfg80211]
+>> [=C2=A0 384.291748]=C2=A0 brcmf_p2p_ifp_removed+0x6c/0x98 [brcmfmac]
+>> [=C2=A0 384.291785]=C2=A0 brcmf_remove_interface+0x170/0x1ec [brcmfmac]
+>> [=C2=A0 384.291822]=C2=A0 brcmf_detach+0x60/0xfc [brcmfmac]
+>> [=C2=A0 384.291859]=C2=A0 brcmf_sdio_remove+0x4c/0x188 [brcmfmac]
+>> [=C2=A0 384.291896]=C2=A0 brcmf_sdiod_remove+0x24/0xa4 [brcmfmac]
+>> [=C2=A0 384.291933]=C2=A0 brcmf_ops_sdio_suspend+0x100/0x1c8 [brcmfmac]
+>> [=C2=A0 384.291971]=C2=A0 pm_generic_suspend+0x2c/0x44
+>> [=C2=A0 384.291982]=C2=A0 dpm_run_callback.constprop.0+0x74/0x134
+>> [=C2=A0 384.291993]=C2=A0 device_suspend+0x110/0x3d0
+>> [=C2=A0 384.292002]=C2=A0 async_suspend+0x24/0x3c
+>> [=C2=A0 384.292012]=C2=A0 async_run_entry_fn+0x34/0xe0
+>> [=C2=A0 384.292022]=C2=A0 process_one_work+0x150/0x294
+>> [=C2=A0 384.292032]=C2=A0 worker_thread+0x2dc/0x3dc
+>> [=C2=A0 384.292041]=C2=A0 kthread+0x118/0x11c
+>> [=C2=A0 384.292049]=C2=A0 ret_from_fork+0x10/0x20
+>>
+>> Best regards
+>
+>
 
-	struct ath12k_wmi_peer_assoc_arg peer_arg;
-
-And indeed it's a large struct, we shouldn't allocate that from the
-stack.
-
-> we should clean this up with a subsequent patch
-
-Agreed.
-
-> I'm taking the current series into 'pending'
-
-Thanks.
-
--- 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
