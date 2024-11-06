@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D2A51FB3C5;
-	Wed,  6 Nov 2024 12:52:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889951D86E8;
+	Wed,  6 Nov 2024 13:17:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730897563; cv=none; b=hNzdtWHi7Uqy7HDeu8DFjr1seege8p+YzFuAwhSLV0bw9QCJB+H7N94Ed0HJb7cMOS1H4F/ledufbERQklDs/Hu85GqSxEdeoMx29WnF5OD4138HBfb/sSG57x48S92cHpcMJbhh+fsRJNL/M2Y/VFUmevv7+B4JoLjpKKlYCz4=
+	t=1730899073; cv=none; b=ZkUjDoDQH2pAc9CSuRqlgC4bk1s3knzV3KI6Q0A3K1gtjJpiSipXBbUaY4tp99SUrFTPBhEDuGG7xIoWKr4N+9h+I9ys8PwD0wZlGXFO+Xjns+ceu580B5hrim4vAS5+jrKZeUFbCzlkfGxqIVpwq8fM7rK85ddJUaE5zZ8WZd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730897563; c=relaxed/simple;
-	bh=2M2I++DUSdEn1sGEWVFtsJyB/I35YML1tyUWBNfgQ18=;
+	s=arc-20240116; t=1730899073; c=relaxed/simple;
+	bh=6CRcIfyoeGPi0/MH8GutbMLbXGNWOcZhoylJleAhcms=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lXIxfJmbApw3tR9b3a37nuQWB5YLpD4oalWSHcI/XDZTOdHYfKrtlKfN5ZcwMzc2FCXX4ZZQqhZjSKL4dMGmdU8B5MTu9wfO8LvXfJ6dSwjy8gxbh0HAPfRxVMwUOEA2fl/TqP9OYL+GM/q/FugU38v8gg9WvYHTzVI3HvO4sek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=WDy5ji7P; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=t0CSwj9p8VWy6QDlGLZZJM5IBdKXXZGRljk8sUWCMXRLOwcCyJKTr58KH2XBfJHYBH1mEFlIDYo+igwSqCKj4UaYcHNpPdKYADkXGgN+xB/khnPfEraXzOu6T3nJAe57/hBW/lCcyXAPHZeDHrD25Ot3kRXLer4V7CJSOkOqrVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=kfD5I14R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="WDy5ji7P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 697F1C4CECD;
-	Wed,  6 Nov 2024 12:52:42 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="kfD5I14R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F971C4CECD;
+	Wed,  6 Nov 2024 13:17:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1730897562;
-	bh=2M2I++DUSdEn1sGEWVFtsJyB/I35YML1tyUWBNfgQ18=;
+	s=korg; t=1730899073;
+	bh=6CRcIfyoeGPi0/MH8GutbMLbXGNWOcZhoylJleAhcms=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=WDy5ji7Py4CZxrkqwCTLq53RHDfUYRJqTt5+MFLWW/U4yisEVyHDGsSiTmp1PHeoT
-	 8RYrGdFDLUD51YhsuapGMlUS7YyY3YnKoUv34YKjXVO5bGOLDwklGA2Vy5zkZLsfl1
-	 fV3+FuwklLBC+u+b1ZoBBahA4sv9EYpl3PHAM/WE=
+	b=kfD5I14RLAHrnX2g8EVAP+2c8IeKWJk2q8GaJ2So3OZgmCrd16evccH8K38FF2wMP
+	 ghBrf+2KAr/dJqI7mOFVVlBglfwzCkawPMZv/UvDcul8ATB8jXyrVV/XhG8q+M6Ysv
+	 vhHttXt1ZaM9pmZ7z5HFvingPLWvK1QPt+35bjqo=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -31,12 +31,12 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Kalle Valo <kvalo@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <ville.syrjala@linux.intel.com>
-Subject: [PATCH 6.6 095/151] wifi: iwlegacy: Clear stale interrupts before resuming device
-Date: Wed,  6 Nov 2024 13:04:43 +0100
-Message-ID: <20241106120311.488852278@linuxfoundation.org>
+Subject: [PATCH 5.4 452/462] wifi: iwlegacy: Clear stale interrupts before resuming device
+Date: Wed,  6 Nov 2024 13:05:45 +0100
+Message-ID: <20241106120342.670841022@linuxfoundation.org>
 X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241106120308.841299741@linuxfoundation.org>
-References: <20241106120308.841299741@linuxfoundation.org>
+In-Reply-To: <20241106120331.497003148@linuxfoundation.org>
+References: <20241106120331.497003148@linuxfoundation.org>
 User-Agent: quilt/0.67
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -49,7 +49,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-6.6-stable review patch.  If anyone has any objections, please let me know.
+5.4-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -210,7 +210,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/net/wireless/intel/iwlegacy/common.c
 +++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -4972,6 +4972,8 @@ il_pci_resume(struct device *device)
+@@ -4969,6 +4969,8 @@ il_pci_resume(struct device *device)
  	 */
  	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
  
