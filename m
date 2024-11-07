@@ -1,45 +1,46 @@
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6066821442E;
-	Thu,  7 Nov 2024 12:53:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8F42101A1;
+	Thu,  7 Nov 2024 12:53:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730983984; cv=none; b=AjmuuKen+pTLDsqA/qWxig+25zXNsUaAgzrMA/5VhGfFPdn10lmC894MMld5+WCPZD/yf2B4lFd4gWAKUN7739NLxrtiQBaikr1fJzFEYyGZcgPRPef0X29ZL7bFinWYHR2l8KOAISOsXm0FA8kdY9HrP2j8QzR9aLEuYInENQ0=
+	t=1730983987; cv=none; b=tn0kJiETDjhN2f7juC2hPH6K315uh3DOu4zxpwsnHelu+4WgNe9PudTml2J9qcJtJ/DhhwY0b5dbCzrc8kDifLrJ32uN3ijFmtv3d67uR/aa4+leUFnh5bo6ZTPHJMGQzCRVDYD8uFbrsVFMusx14jOc4SZaC5FyF+rwQJH8REI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730983984; c=relaxed/simple;
-	bh=Hf/7G60jaXIYK35ZCiFWQtP4c0TpBzXdq4DbMODo9/I=;
+	s=arc-20240116; t=1730983987; c=relaxed/simple;
+	bh=6cHKr+wfiiogbejYnMLD0LdbcbGA4BDdEeUn2O+K3O0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EGUeYkwars3uCgvpcefRmDd5Mpf5md5wyI6L8nIH2Hud0+d9CsuIDROReXcFdyfUai+NxCy+he5RRrznawRpo2+xkgutSJxveetnJ9XFKocO5FAhTCIDD1jEBfbdGO8DUrpAo2JxcJztHqsvll0w4ur7GcaeiwZtAADZ5VG5yzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=JfhY4Hns; arc=none smtp.client-ip=198.47.19.142
+	 MIME-Version:Content-Type; b=Zo0xglvwNYUW54rJ5DTJZwajiEK857AxxMzCTP79BxNfSTWrnVFPg7c2N6zdlUz/Tx0FKmWmAM8uf+fP/qmAt6R00whC9TRwdn/Bwcwj5RxFTglBDVlh00G4344e5oog3DEVvIh2w4Pq/xakOQf6g1DA5bexCovWv4Ih/tLOvjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=GEJCcGOd; arc=none smtp.client-ip=198.47.19.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="JfhY4Hns"
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqtNP049083;
-	Thu, 7 Nov 2024 06:52:55 -0600
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GEJCcGOd"
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqxmU073901;
+	Thu, 7 Nov 2024 06:52:59 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1730983975;
-	bh=pfy1yy2gwNFOPkKPmfB3NTYFBRwvCDDq0Cd7DByNqtk=;
+	s=ti-com-17Q1; t=1730983979;
+	bh=3kC/T8kYABRP+bgBGlTrGCzGjj2W0s1hDujCc4snWHk=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=JfhY4HnsSgB35a40iyw8hb8dQa9d3JlyN4yKfez4tJNKmhnuGOO5siYnYC0W1nNh3
-	 4vJy1J936IIsEeSsvGdH3XwrlH0tXndDipGA/8fA56loYQ9xellKWu6YliwB31Uh14
-	 9hik7sz0Tdbs6xVZ90dExvwgBy3dS0CUrekLyu3U=
-Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
-	by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4A7Cqtoj100090;
-	Thu, 7 Nov 2024 06:52:55 -0600
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+	b=GEJCcGOdrTdOOqOPrA4XUkNpnpRdXpbS/QFqcpVwP5+AtfRe5PXnFNQP5QxEuD70I
+	 8/ZLIGMg1Nc8aUMJwcfmyFy+uthJT/mjcNqmgmYkwPpgaq/x9vouNDeqLUBqXMNxws
+	 k3QS2SoAYuibK9/+ns+DBe+j1OQUsTp/CkCaVw/Y=
+Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
+	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 4A7CqxtO011195
+	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 7 Nov 2024 06:52:59 -0600
+Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Thu, 7
- Nov 2024 06:52:55 -0600
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
+ Nov 2024 06:52:59 -0600
+Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Thu, 7 Nov 2024 06:52:55 -0600
+ Frontend Transport; Thu, 7 Nov 2024 06:52:59 -0600
 Received: from localhost (udb0389739.dhcp.ti.com [137.167.1.149])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqsaZ054901;
-	Thu, 7 Nov 2024 06:52:54 -0600
+	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4A7Cqwl6038536;
+	Thu, 7 Nov 2024 06:52:59 -0600
 From: Michael Nemanov <michael.nemanov@ti.com>
 To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
@@ -51,9 +52,9 @@ To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         <netdev@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC: Sabeeh Khan <sabeeh-khan@ti.com>, Michael Nemanov <michael.nemanov@ti.com>
-Subject: [PATCH v5 12/17] wifi: cc33xx: Add init.c, init.h
-Date: Thu, 7 Nov 2024 14:52:04 +0200
-Message-ID: <20241107125209.1736277-13-michael.nemanov@ti.com>
+Subject: [PATCH v5 15/17] wifi: cc33xx: Add ps.c, ps.h
+Date: Thu, 7 Nov 2024 14:52:07 +0200
+Message-ID: <20241107125209.1736277-16-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241107125209.1736277-1-michael.nemanov@ti.com>
 References: <20241107125209.1736277-1-michael.nemanov@ti.com>
@@ -67,274 +68,153 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-High-level init code for new vifs
+80211 power-save modes are handled automictically by HW but
+can be overridden here.
 
 Signed-off-by: Michael Nemanov <michael.nemanov@ti.com>
 ---
- drivers/net/wireless/ti/cc33xx/init.c | 231 ++++++++++++++++++++++++++
- drivers/net/wireless/ti/cc33xx/init.h |  15 ++
- 2 files changed, 246 insertions(+)
- create mode 100644 drivers/net/wireless/ti/cc33xx/init.c
- create mode 100644 drivers/net/wireless/ti/cc33xx/init.h
+ drivers/net/wireless/ti/cc33xx/ps.c | 108 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/ps.h |  16 +++++
+ 2 files changed, 124 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/ps.h
 
-diff --git a/drivers/net/wireless/ti/cc33xx/init.c b/drivers/net/wireless/ti/cc33xx/init.c
+diff --git a/drivers/net/wireless/ti/cc33xx/ps.c b/drivers/net/wireless/ti/cc33xx/ps.c
 new file mode 100644
-index 000000000000..ff1fab1e0104
+index 000000000000..768f1f2fc3f1
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/init.c
-@@ -0,0 +1,231 @@
++++ b/drivers/net/wireless/ti/cc33xx/ps.c
+@@ -0,0 +1,108 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#include <linux/firmware.h>
-+#include "acx.h"
-+#include "cmd.h"
-+#include "conf.h"
-+#include "event.h"
++#include "ps.h"
 +#include "tx.h"
-+#include "init.h"
++#include "debug.h"
 +
-+static int cc33xx_init_phy_vif_config(struct cc33xx *cc,
-+				      struct cc33xx_vif *wlvif)
++int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++		       enum cc33xx_cmd_ps_mode_e mode)
 +{
 +	int ret;
++	u16 timeout = cc->conf.host_conf.conn.dynamic_ps_timeout;
 +
-+	ret = cc33xx_acx_slot(cc, wlvif, DEFAULT_SLOT_TIME);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int cc33xx_init_sta_beacon_filter(struct cc33xx *cc,
-+					 struct cc33xx_vif *wlvif)
-+{
-+	int ret;
-+
-+	ret = cc33xx_acx_beacon_filter_table(cc, wlvif);
-+	if (ret < 0)
-+		return ret;
-+
-+	/* disable beacon filtering until we get the first beacon */
-+	ret = cc33xx_acx_beacon_filter_opt(cc, wlvif, false);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static int cc33xx_ap_init_templates(struct cc33xx *cc,
-+				    struct ieee80211_vif *vif)
-+{
-+	struct cc33xx_vif *wlvif = cc33xx_vif_to_data(vif);
-+	int ret;
-+
-+	/* when operating as AP we want to receive external beacons for
-+	 * configuring ERP protection.
-+	 */
-+	ret = cc33xx_acx_beacon_filter_opt(cc, wlvif, false);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+static void cc33xx_set_ba_policies(struct cc33xx *cc, struct cc33xx_vif *wlvif)
-+{
-+	/* Reset the BA RX indicators */
-+	wlvif->ba_allowed = true;
-+	cc->ba_rx_session_count = 0;
-+
-+	/* BA is supported in STA/AP modes */
-+	wlvif->ba_support = (wlvif->bss_type != BSS_TYPE_AP_BSS &&
-+				wlvif->bss_type != BSS_TYPE_STA_BSS);
-+}
-+
-+/* vif-specifc initialization */
-+static int cc33xx_init_sta_role(struct cc33xx *cc, struct cc33xx_vif *wlvif)
-+{
-+	int ret = cc33xx_acx_group_address_tbl(cc, true, NULL, 0);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	/* Beacon filtering */
-+	ret = cc33xx_init_sta_beacon_filter(cc, wlvif);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+/* vif-specific initialization */
-+static int cc33xx_init_ap_role(struct cc33xx *cc, struct cc33xx_vif *wlvif)
-+{
-+	int ret;
-+
-+	/* initialize Tx power */
-+	ret = cc33xx_acx_tx_power(cc, wlvif, wlvif->power_level);
-+	if (ret < 0)
-+		return ret;
-+
-+	if (cc->radar_debug_mode)
-+		cc33xx_cmd_generic_cfg(cc, wlvif,
-+				       CC33XX_CFG_FEATURE_RADAR_DEBUG,
-+				       cc->radar_debug_mode, 0);
-+
-+	return 0;
-+}
-+
-+int cc33xx_init_vif_specific(struct cc33xx *cc, struct ieee80211_vif *vif)
-+{
-+	struct cc33xx_vif *wlvif = cc33xx_vif_to_data(vif);
-+	struct conf_tx_settings *tx_settings = &cc->conf.host_conf.tx;
-+	struct conf_tx_ac_category *conf_ac = &tx_settings->ac_conf0;
-+	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
-+	u8 ps_scheme = cc->conf.mac.ps_scheme;
-+	int ret, i;
-+
-+	/* consider all existing roles before configuring psm. */
-+
-+	if (cc->ap_count == 0 && is_ap) { /* first AP */
-+		ret = cc33xx_acx_sleep_auth(cc, CC33XX_PSM_ELP);
++	switch (mode) {
++	case STATION_AUTO_PS_MODE:
++	case STATION_POWER_SAVE_MODE:
++		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, timeout);
 +		if (ret < 0)
 +			return ret;
 +
-+		/* unmask ap events */
-+		cc->event_mask |= cc->ap_event_mask;
++		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
++		break;
 +
-+	/* first STA, no APs */
-+	} else if (cc->sta_count == 0 && cc->ap_count == 0 && !is_ap) {
-+		u8 sta_auth = cc->conf.host_conf.conn.sta_sleep_auth;
-+		/* Configure for power according to debugfs */
-+		if (sta_auth != CC33XX_PSM_ILLEGAL)
-+			ret = cc33xx_acx_sleep_auth(cc, sta_auth);
-+		/* Configure for ELP power saving */
-+		else
-+			ret = cc33xx_acx_sleep_auth(cc, CC33XX_PSM_ELP);
-+
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	/* Mode specific init */
-+	if (is_ap) {
-+		ret = cc33xx_init_ap_role(cc, wlvif);
-+		if (ret < 0)
-+			return ret;
-+	} else {
-+		ret = cc33xx_init_sta_role(cc, wlvif);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	cc33xx_init_phy_vif_config(cc, wlvif);
-+
-+	/* Default TID/AC configuration */
-+	if (WARN_ON(tx_settings->ac_conf_count != tx_settings->tid_conf_count) ||
-+	    WARN_ON(tx_settings->ac_conf_count != CONF_TX_MAX_AC_COUNT))
-+		return -EINVAL;
-+
-+	for (i = 0; i < tx_settings->tid_conf_count; i++) {
-+		/* If no ps poll is used, send legacy ps scheme in cmd */
-+		if (ps_scheme == PS_SCHEME_NOPSPOLL)
-+			ps_scheme = PS_SCHEME_LEGACY;
-+
-+		ret = cc33xx_tx_param_cfg(cc, wlvif, conf_ac->ac,
-+					  conf_ac->cw_min, conf_ac->cw_max,
-+					  conf_ac->aifsn, conf_ac->tx_op_limit,
-+					  false, ps_scheme, conf_ac->is_mu_edca,
-+					  conf_ac->mu_edca_aifs,
-+					  conf_ac->mu_edca_ecw_min_max,
-+					  conf_ac->mu_edca_timer);
-+
++	case STATION_ACTIVE_MODE:
++		ret = cc33xx_cmd_ps_mode(cc, wlvif, mode, 0);
 +		if (ret < 0)
 +			return ret;
 +
-+		conf_ac++;
++		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
++		break;
++
++	default:
++		cc33xx_warning("trying to set ps to unsupported mode %d", mode);
++		ret = -EINVAL;
 +	}
 +
-+	/* Mode specific init - post mem init */
-+	if (is_ap)
-+		ret = cc33xx_ap_init_templates(cc, vif);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	/* Configure initiator BA sessions policies */
-+	cc33xx_set_ba_policies(cc, wlvif);
-+
-+	return 0;
-+}
-+
-+int cc33xx_hw_init(struct cc33xx *cc)
-+{
-+	cc33xx_acx_init_mem_config(cc);
-+
-+	cc->last_fw_rls_idx = 0;
-+	cc->partial_rx.status = CURR_RX_START;
-+	return 0;
-+}
-+
-+int cc33xx_download_ini_params_and_wait(struct cc33xx *cc)
-+{
-+	struct cc33xx_cmd_ini_params_download *cmd;
-+	size_t command_size = ALIGN((sizeof(*cmd) + sizeof(cc->conf)), 4);
-+	int ret;
-+
-+	cc33xx_set_max_buffer_size(cc, INI_MAX_BUFFER_SIZE);
-+
-+	cc33xx_debug(DEBUG_ACX,
-+		     "Downloading INI configurations to FW, payload Length: %zu",
-+		     sizeof(cc->conf));
-+
-+	cmd = kzalloc(command_size, GFP_KERNEL);
-+	if (!cmd) {
-+		cc33xx_set_max_buffer_size(cc, CMD_MAX_BUFFER_SIZE);
-+		return -ENOMEM;
-+	}
-+
-+	cmd->length = cpu_to_le32(sizeof(cc->conf));
-+
-+	/* copy INI file params payload */
-+	memcpy((cmd->payload), &cc->conf, sizeof(cc->conf));
-+
-+	ret = cc33xx_cmd_send(cc, CMD_DOWNLOAD_INI_PARAMS,
-+			      cmd, command_size, 0);
-+	if (ret < 0) {
-+		cc33xx_warning("download INI params to FW command sending failed: %d",
-+			       ret);
-+	} else {
-+		cc33xx_debug(DEBUG_BOOT, "INI Params downloaded successfully");
-+	}
-+
-+	cc33xx_set_max_buffer_size(cc, CMD_MAX_BUFFER_SIZE);
-+	kfree(cmd);
 +	return ret;
 +}
-diff --git a/drivers/net/wireless/ti/cc33xx/init.h b/drivers/net/wireless/ti/cc33xx/init.h
++
++static void cc33xx_ps_filter_frames(struct cc33xx *cc, u8 hlid)
++{
++	int i;
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *info;
++	unsigned long flags;
++	int filtered[NUM_TX_QUEUES];
++	struct cc33xx_link *lnk = &cc->links[hlid];
++
++	/* filter all frames currently in the low level queues for this hlid */
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		filtered[i] = 0;
++		while ((skb = skb_dequeue(&lnk->tx_queue[i]))) {
++			filtered[i]++;
++
++			if (WARN_ON(cc33xx_is_dummy_packet(cc, skb)))
++				continue;
++
++			info = IEEE80211_SKB_CB(skb);
++			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++			info->status.rates[0].idx = -1;
++			ieee80211_tx_status_ni(cc->hw, skb);
++		}
++	}
++
++	spin_lock_irqsave(&cc->cc_lock, flags);
++	for (i = 0; i < NUM_TX_QUEUES; i++) {
++		cc->tx_queue_count[i] -= filtered[i];
++		if (lnk->wlvif)
++			lnk->wlvif->tx_queue_count[i] -= filtered[i];
++	}
++
++	spin_unlock_irqrestore(&cc->cc_lock, flags);
++	cc33xx_handle_tx_low_watermark(cc);
++}
++
++void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			  u8 hlid, bool clean_queues)
++{
++	struct ieee80211_sta *sta;
++	struct ieee80211_vif *vif = cc33xx_wlvif_to_vif(wlvif);
++
++	if (WARN_ON_ONCE(wlvif->bss_type != BSS_TYPE_AP_BSS))
++		return;
++
++	if (!test_bit(hlid, wlvif->ap.sta_hlid_map) ||
++	    test_bit(hlid, &cc->ap_ps_map))
++		return;
++
++	rcu_read_lock();
++	sta = ieee80211_find_sta(vif, cc->links[hlid].addr);
++	if (!sta) {
++		cc33xx_error("could not find sta %pM for starting ps",
++			     cc->links[hlid].addr);
++		rcu_read_unlock();
++		return;
++	}
++
++	ieee80211_sta_ps_transition_ni(sta, true);
++	rcu_read_unlock();
++
++	/* do we want to filter all frames from this link's queues? */
++	if (clean_queues)
++		cc33xx_ps_filter_frames(cc, hlid);
++
++	__set_bit(hlid, &cc->ap_ps_map);
++}
+diff --git a/drivers/net/wireless/ti/cc33xx/ps.h b/drivers/net/wireless/ti/cc33xx/ps.h
 new file mode 100644
-index 000000000000..b0bc6a548611
+index 000000000000..47f65b684b52
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/init.h
-@@ -0,0 +1,15 @@
++++ b/drivers/net/wireless/ti/cc33xx/ps.h
+@@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#ifndef __INIT_H__
-+#define __INIT_H__
++#ifndef __PS_H__
++#define __PS_H__
 +
-+#include "cc33xx.h"
++#include "acx.h"
 +
-+int cc33xx_hw_init(struct cc33xx *cc);
-+int cc33xx_download_ini_params_and_wait(struct cc33xx *cc);
-+int cc33xx_init_vif_specific(struct cc33xx *cc, struct ieee80211_vif *vif);
++int cc33xx_ps_set_mode(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++		       enum cc33xx_cmd_ps_mode_e mode);
++void cc33xx_ps_link_start(struct cc33xx *cc, struct cc33xx_vif *wlvif,
++			  u8 hlid, bool clean_queues);
 +
-+#endif /* __INIT_H__ */
++#endif /* __PS_H__ */
 -- 
 2.34.1
 
