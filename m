@@ -1,46 +1,46 @@
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E6B2212188;
-	Thu,  7 Nov 2024 12:52:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CBA212D10;
+	Thu,  7 Nov 2024 12:52:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730983972; cv=none; b=Sd0fZ0rY0aY2JsRONJWePdeof0e8ZrtP1aidAhIBUXYB5v3xeQV1i5Pyf10u8//CY7X9k+fAbSLjHNSiGryuT8hDWMH3tJLW6RmFCwjai8YEisuPNgjGoQus/mqHuHDOJkKbvuyEIEiqL7IfgoEMwbi03upousCkDlQ01OyWzR8=
+	t=1730983977; cv=none; b=GRGIVe0sZK/LNXSvOJWpsCzLJEGeBBHCY26oTnazysYtSj9AdeYBU3iZwpM+Fya3hErEl/V+jrDyANclanCtOvEJCVJjyudUW6q8IxkuMKexqWhQkq1m6ZGE3Lx1DtUEqo04lAEz8yXj4nJDU0iMnk3WU91tC5VguPhtudqRgQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730983972; c=relaxed/simple;
-	bh=0zA88ojAQhYclRfbpCEidZHhpgM1g/WSCdBILP5PXO8=;
+	s=arc-20240116; t=1730983977; c=relaxed/simple;
+	bh=HYzOAaWuisgIsp1/MpKHI7xtqAXJCQluHLd5y69CNqQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cVnQWHiaXpB3tqqABd5J4Vu6EiEdwzBXYh+xn6dqIV0CSKIk7B+gg6jJ0QFZ6tXQE9sIvN2J5YauOrfORgtYff84722M6+XubTaRhEfnOkdIzSUT4Aopl2+PvQaMUoPGCeqZZDhjEDAXaE9Amo7MZFU1WyDE0nULCRkKKfaoPoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=grNSQncn; arc=none smtp.client-ip=198.47.19.142
+	 MIME-Version:Content-Type; b=l70lgs6ZmkWSEU7S7mRN/FDPRXUXmIerfejMQA9/+yc/nSYd23Vssaw2SNJmBRqZyaj+XKa5D+lH6sSuoYlBS87zfJfqPGPTA5h5NvVOibbZTLbZzLTLCnogt407Vzj2NOfDa77XWYFdbRi+xXlk83gPdLrVmzT9RhWR1JY99dE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=q1ciL5fM; arc=none smtp.client-ip=198.47.19.141
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="grNSQncn"
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqhpN049061;
-	Thu, 7 Nov 2024 06:52:43 -0600
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="q1ciL5fM"
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqmQH073880;
+	Thu, 7 Nov 2024 06:52:48 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1730983963;
-	bh=V7tfcBB0+f4u5HvHRbGAKLVJq8+z08unEIMxXvXXpb8=;
+	s=ti-com-17Q1; t=1730983968;
+	bh=7b1MLeew0wppspPKdb4sMbnfVhaeT7HEweeVebDjg/M=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=grNSQncnhrhYOqrnelRPOFwtV/b5pWJSuf5JENAY2X7HZ4TPOWby3P2GMcKInlALQ
-	 PpELcWlU7NPbqK5VbkSobj0rzgQ8XJanhNBxPCvQrFO216+YSkCTt6f9kOntz32+fr
-	 mxMOB6Daj6hGso3lpjxvb+LalSUlldEDg20pvfnE=
-Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
-	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 4A7CqhgA011118
+	b=q1ciL5fM69QEzgQJ/2ffrrFJHRd4KGHz4NUv2bYLSLlBVEmqP5L7AnOsjd5bU0Tar
+	 X7lLI38fg+i5/BNKUXYTu3X2jQE79vtmm0P9S4d/WBx4t4wOUN3O+jnLM2FymMV6Yh
+	 GRpS4MexfXFnWMmr7XV1/X4j8Ib1Qzg9yv3b+EQs=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 4A7CqmK4060347
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 7 Nov 2024 06:52:43 -0600
-Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
+	Thu, 7 Nov 2024 06:52:48 -0600
+Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Thu, 7
- Nov 2024 06:52:42 -0600
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ Nov 2024 06:52:47 -0600
+Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Thu, 7 Nov 2024 06:52:42 -0600
+ Frontend Transport; Thu, 7 Nov 2024 06:52:47 -0600
 Received: from localhost (udb0389739.dhcp.ti.com [137.167.1.149])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4A7Cqgqx038388;
-	Thu, 7 Nov 2024 06:52:42 -0600
+	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 4A7CqkJL038423;
+	Thu, 7 Nov 2024 06:52:47 -0600
 From: Michael Nemanov <michael.nemanov@ti.com>
 To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
@@ -52,9 +52,9 @@ To: Kalle Valo <kvalo@kernel.org>, "David S . Miller" <davem@davemloft.net>,
         <netdev@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC: Sabeeh Khan <sabeeh-khan@ti.com>, Michael Nemanov <michael.nemanov@ti.com>
-Subject: [PATCH v5 04/17] wifi: cc33xx: Add sdio.c, io.c, io.h
-Date: Thu, 7 Nov 2024 14:51:56 +0200
-Message-ID: <20241107125209.1736277-5-michael.nemanov@ti.com>
+Subject: [PATCH v5 07/17] wifi: cc33xx: Add event.c, event.h
+Date: Thu, 7 Nov 2024 14:51:59 +0200
+Message-ID: <20241107125209.1736277-8-michael.nemanov@ti.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241107125209.1736277-1-michael.nemanov@ti.com>
 References: <20241107125209.1736277-1-michael.nemanov@ti.com>
@@ -68,729 +68,463 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-sdio.c implements SDIO transport functions. These are bound into
-struct cc33xx_if_operations and accessed via io.h in order to abstract
-multiple transport interfaces such as SPI in the future.
-The CC33xx driver supports the SDIO in-band IRQ option so the IRQ from
-the device received here as well.
-Unlike wl1xxx products, there is no longer mapping between
-HW and SDIO / SPI address space of any kind.
-There are only 3 valid addresses for control, data and status
-transactions each with a predefined structure.
+Unlike in wlcore, events are queued on linked list
+(cc->event_list) and are handled outside the IRQ
+context. This will be more clear when looking at main.c
 
 Signed-off-by: Michael Nemanov <michael.nemanov@ti.com>
 ---
- drivers/net/wireless/ti/cc33xx/io.c   | 129 +++++++
- drivers/net/wireless/ti/cc33xx/io.h   |  26 ++
- drivers/net/wireless/ti/cc33xx/sdio.c | 530 ++++++++++++++++++++++++++
- 3 files changed, 685 insertions(+)
- create mode 100644 drivers/net/wireless/ti/cc33xx/io.c
- create mode 100644 drivers/net/wireless/ti/cc33xx/io.h
- create mode 100644 drivers/net/wireless/ti/cc33xx/sdio.c
+ drivers/net/wireless/ti/cc33xx/event.c | 362 +++++++++++++++++++++++++
+ drivers/net/wireless/ti/cc33xx/event.h |  71 +++++
+ 2 files changed, 433 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/cc33xx/event.c
+ create mode 100644 drivers/net/wireless/ti/cc33xx/event.h
 
-diff --git a/drivers/net/wireless/ti/cc33xx/io.c b/drivers/net/wireless/ti/cc33xx/io.c
+diff --git a/drivers/net/wireless/ti/cc33xx/event.c b/drivers/net/wireless/ti/cc33xx/event.c
 new file mode 100644
-index 000000000000..59696004efe9
+index 000000000000..099abbeddba4
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/io.c
-@@ -0,0 +1,129 @@
++++ b/drivers/net/wireless/ti/cc33xx/event.c
+@@ -0,0 +1,362 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#include "cc33xx.h"
-+#include "debug.h"
++#include "acx.h"
++#include "event.h"
++#include "ps.h"
 +#include "io.h"
-+#include "tx.h"
++#include "scan.h"
 +
-+bool cc33xx_set_block_size(struct cc33xx *cc)
++#define CC33XX_WAIT_EVENT_FAST_POLL_COUNT 20
++
++struct cc33xx_event_mailbox {
++	__le32 events_vector;
++
++	u8 number_of_scan_results;
++	u8 number_of_sched_scan_results;
++
++	__le16 channel_switch_role_id_bitmap;
++
++	s8 rssi_snr_trigger_metric[NUM_OF_RSSI_SNR_TRIGGERS];
++
++	/* bitmap of removed links */
++	__le32 hlid_removed_bitmap;
++
++	/* rx ba constraint */
++	__le16 rx_ba_role_id_bitmap; /* 0xfff means any role. */
++	__le16 rx_ba_allowed_bitmap;
++
++	/* bitmap of roc completed (by role id) */
++	__le16 roc_completed_bitmap;
++
++	/* bitmap of stations (by role id) with bss loss */
++	__le16 bss_loss_bitmap;
++
++	/* bitmap of stations (by HLID) which exceeded max tx retries */
++	__le16 tx_retry_exceeded_bitmap;
++
++	/* time sync high msb*/
++	__le16 time_sync_tsf_high_msb;
++
++	/* bitmap of inactive stations (by HLID) */
++	__le16 inactive_sta_bitmap;
++
++	/* time sync high lsb*/
++	__le16 time_sync_tsf_high_lsb;
++
++	/* rx BA win size indicated by RX_BA_WIN_SIZE_CHANGE_EVENT_ID */
++	u8 rx_ba_role_id;
++	u8 rx_ba_link_id;
++	u8 rx_ba_win_size;
++	u8 padding;
++
++	/* smart config */
++	u8 sc_ssid_len;
++	u8 sc_pwd_len;
++	u8 sc_token_len;
++	u8 padding1;
++	u8 sc_ssid[32];
++	u8 sc_pwd[64];
++	u8 sc_token[32];
++
++	/* smart config sync channel */
++	u8 sc_sync_channel;
++	u8 sc_sync_band;
++
++	/* time sync low msb*/
++	__le16 time_sync_tsf_low_msb;
++
++	/* radar detect */
++	u8 radar_channel;
++	u8 radar_type;
++
++	/* time sync low lsb*/
++	__le16 time_sync_tsf_low_lsb;
++
++	u8 ble_event[260];
++
++} __packed;
++
++struct event_node {
++	struct llist_node node;
++	struct cc33xx_event_mailbox event_data;
++};
++
++void deffer_event(struct cc33xx *cc,
++		  const void *event_payload, size_t event_length)
 +{
-+	if (cc->if_ops->set_block_size) {
-+		cc->if_ops->set_block_size(cc->dev, CC33XX_BUS_BLOCK_SIZE);
-+		cc33xx_debug(DEBUG_CC33xx,
-+			     "Set BLKsize to %d", CC33XX_BUS_BLOCK_SIZE);
-+		return true;
-+	}
++	struct event_node *event_node;
 +
-+	cc33xx_debug(DEBUG_CC33xx, "Could not set BLKsize");
-+	return false;
-+}
-+
-+void cc33xx_disable_interrupts_nosync(struct cc33xx *cc)
-+{
-+	cc->if_ops->disable_irq(cc->dev);
-+}
-+
-+void cc33xx_irq(void *cookie);
-+void cc33xx_enable_interrupts(struct cc33xx *cc)
-+{
-+	cc->if_ops->enable_irq(cc->dev);
-+
-+	cc33xx_irq(cc);
-+}
-+
-+void cc33xx_io_reset(struct cc33xx *cc)
-+{
-+	if (cc->if_ops->reset)
-+		cc->if_ops->reset(cc->dev);
-+}
-+
-+void cc33xx_io_init(struct cc33xx *cc)
-+{
-+	if (cc->if_ops->init)
-+		cc->if_ops->init(cc->dev);
-+}
-+
-+/* Raw target IO, address is not translated */
-+static int __must_check cc33xx_raw_write(struct cc33xx *cc, int addr,
-+					 void *buf, size_t len, bool fixed)
-+{
-+	int ret;
-+
-+	if (test_bit(CC33XX_FLAG_IO_FAILED, &cc->flags) ||
-+	    WARN_ON((test_bit(CC33XX_FLAG_IN_ELP, &cc->flags) &&
-+		     addr != HW_ACCESS_ELP_CTRL_REG)))
-+		return -EIO;
-+
-+	ret = cc->if_ops->write(cc->dev, addr, buf, len, fixed);
-+	if (ret && cc->state != CC33XX_STATE_OFF)
-+		set_bit(CC33XX_FLAG_IO_FAILED, &cc->flags);
-+
-+	return ret;
-+}
-+
-+int __must_check cc33xx_raw_read(struct cc33xx *cc, int addr,
-+				 void *buf, size_t len, bool fixed)
-+{
-+	int ret;
-+
-+	if (test_bit(CC33XX_FLAG_IO_FAILED, &cc->flags) ||
-+	    WARN_ON((test_bit(CC33XX_FLAG_IN_ELP, &cc->flags) &&
-+		     addr != HW_ACCESS_ELP_CTRL_REG)))
-+		return -EIO;
-+
-+	ret = cc->if_ops->read(cc->dev, addr, buf, len, fixed);
-+	if (ret && cc->state != CC33XX_STATE_OFF)
-+		set_bit(CC33XX_FLAG_IO_FAILED, &cc->flags);
-+
-+	return ret;
-+}
-+
-+int __must_check cc33xx_write(struct cc33xx *cc, int addr,
-+			      void *buf, size_t len, bool fixed)
-+{
-+	return cc33xx_raw_write(cc, addr, buf, len, fixed);
-+}
-+
-+void claim_core_status_lock(struct cc33xx *cc)
-+{
-+	/* When accessing core-status data (read or write) the transport lock
-+	 * should be held.
-+	 */
-+	cc->if_ops->interface_claim(cc->dev);
-+}
-+
-+void release_core_status_lock(struct cc33xx *cc)
-+{
-+	/* After accessing core-status data (read or write) the transport lock
-+	 * should be released.
-+	 */
-+	cc->if_ops->interface_release(cc->dev);
-+}
-+
-+void cc33xx_power_off(struct cc33xx *cc)
-+{
-+	int ret = 0;
-+
-+	if (!test_bit(CC33XX_FLAG_GPIO_POWER, &cc->flags))
++	if (WARN_ON(event_length != sizeof(event_node->event_data)))
 +		return;
 +
-+	if (cc->if_ops->power)
-+		ret = cc->if_ops->power(cc->dev, false);
-+	if (!ret)
-+		clear_bit(CC33XX_FLAG_GPIO_POWER, &cc->flags);
++	event_node = kzalloc(sizeof(*event_node), GFP_KERNEL);
++	if (WARN_ON(!event_node))
++		return;
++
++	memcpy(&event_node->event_data,
++	       event_payload, sizeof(event_node->event_data));
++
++	llist_add(&event_node->node, &cc->event_list);
++	queue_work(cc->freezable_wq, &cc->irq_deferred_work);
 +}
 +
-+int cc33xx_power_on(struct cc33xx *cc)
++static inline struct llist_node *get_event_list(struct cc33xx *cc)
 +{
-+	int ret = 0;
++	struct llist_node *node;
 +
-+	if (cc->if_ops->power)
-+		ret = cc->if_ops->power(cc->dev, true);
-+	if (ret == 0)
-+		set_bit(CC33XX_FLAG_GPIO_POWER, &cc->flags);
++	node = llist_del_all(&cc->event_list);
++	if (!node)
++		return NULL;
++
++	return llist_reverse_order(node);
++}
++
++void flush_deferred_event_list(struct cc33xx *cc)
++{
++	struct event_node *event_node, *tmp;
++	struct llist_node *event_list;
++
++	event_list = get_event_list(cc);
++	llist_for_each_entry_safe(event_node, tmp, event_list, node) {
++		kfree(event_node);
++	}
++}
++
++static int wait_for_event_or_timeout(struct cc33xx *cc, u32 mask, bool *timeout)
++{
++	u32 event;
++	unsigned long timeout_time;
++	u16 poll_count = 0;
++	int ret = 0;
++	struct event_node *event_node, *tmp;
++	struct llist_node *event_list;
++	u32 vector;
++
++	*timeout = false;
++
++	timeout_time = jiffies + msecs_to_jiffies(CC33XX_EVENT_TIMEOUT);
++
++	do {
++		if (time_after(jiffies, timeout_time)) {
++			*timeout = true;
++			goto out;
++		}
++
++		poll_count++;
++		if (poll_count < CC33XX_WAIT_EVENT_FAST_POLL_COUNT)
++			usleep_range(50, 51);
++		else
++			usleep_range(1000, 5000);
++
++		vector = 0;
++		event_list = get_event_list(cc);
++		llist_for_each_entry_safe(event_node, tmp, event_list, node) {
++			vector |= le32_to_cpu(event_node->event_data.events_vector);
++		}
++
++		event  = vector & mask;
++	} while (!event);
++
++out:
 +
 +	return ret;
 +}
-diff --git a/drivers/net/wireless/ti/cc33xx/io.h b/drivers/net/wireless/ti/cc33xx/io.h
++
++int cc33xx_wait_for_event(struct cc33xx *cc, enum cc33xx_wait_event event,
++			  bool *timeout)
++{
++	u32 local_event;
++
++	switch (event) {
++	case CC33XX_EVENT_PEER_REMOVE_COMPLETE:
++		local_event = PEER_REMOVE_COMPLETE_EVENT_ID;
++		break;
++
++	case CC33XX_EVENT_DFS_CONFIG_COMPLETE:
++		local_event = DFS_CHANNELS_CONFIG_COMPLETE_EVENT;
++		break;
++
++	default:
++		/* event not implemented */
++		return 0;
++	}
++	return wait_for_event_or_timeout(cc, local_event, timeout);
++}
++
++static void cc33xx_event_sched_scan_completed(struct cc33xx *cc, u8 status)
++{
++	if (cc->mac80211_scan_stopped) {
++		cc->mac80211_scan_stopped = false;
++	} else {
++		if (cc->sched_vif) {
++			ieee80211_sched_scan_stopped(cc->hw);
++			cc->sched_vif = NULL;
++		}
++	}
++}
++
++static void cc33xx_event_channel_switch(struct cc33xx *cc,
++					unsigned long roles_bitmap,
++				 bool success)
++{
++	struct cc33xx_vif *wlvif;
++	struct ieee80211_vif *vif;
++
++	cc33xx_for_each_wlvif(cc, wlvif) {
++		if (wlvif->role_id == CC33XX_INVALID_ROLE_ID ||
++		    !test_bit(wlvif->role_id, &roles_bitmap))
++			continue;
++
++		if (!test_and_clear_bit(WLVIF_FLAG_CS_PROGRESS,
++					&wlvif->flags))
++			continue;
++
++		vif = cc33xx_wlvif_to_vif(wlvif);
++
++		if (wlvif->bss_type == BSS_TYPE_STA_BSS) {
++			ieee80211_chswitch_done(vif, success, 0);
++			cancel_delayed_work(&wlvif->channel_switch_work);
++		} else {
++			set_bit(WLVIF_FLAG_BEACON_DISABLED, &wlvif->flags);
++			ieee80211_csa_finish(vif, 0);
++		}
++	}
++}
++
++static void cc33xx_disconnect_sta(struct cc33xx *cc, unsigned long sta_bitmap)
++{
++	u32 num_packets = cc->conf.host_conf.tx.max_tx_retries;
++	struct cc33xx_vif *wlvif;
++	struct ieee80211_vif *vif;
++	struct ieee80211_sta *sta;
++	const u8 *addr;
++	int h;
++
++	for_each_set_bit(h, &sta_bitmap, CC33XX_MAX_LINKS) {
++		bool found = false;
++		/* find the ap vif connected to this sta */
++		cc33xx_for_each_wlvif_ap(cc, wlvif) {
++			if (!test_bit(h, wlvif->ap.sta_hlid_map))
++				continue;
++			found = true;
++			break;
++		}
++		if (!found)
++			continue;
++
++		vif = cc33xx_wlvif_to_vif(wlvif);
++		addr = cc->links[h].addr;
++
++		rcu_read_lock();
++		sta = ieee80211_find_sta(vif, addr);
++		if (sta)
++			ieee80211_report_low_ack(sta, num_packets);
++
++		rcu_read_unlock();
++	}
++}
++
++static void cc33xx_event_max_tx_failure(struct cc33xx *cc,
++					unsigned long sta_bitmap)
++{
++	cc33xx_disconnect_sta(cc, sta_bitmap);
++}
++
++static void cc33xx_event_roc_complete(struct cc33xx *cc)
++{
++	if (cc->roc_vif)
++		ieee80211_ready_on_channel(cc->hw);
++}
++
++static void cc33xx_event_beacon_loss(struct cc33xx *cc,
++				     unsigned long roles_bitmap)
++{
++	/* We are HW_MONITOR device. On beacon loss - queue
++	 * connection loss work. Cancel it on REGAINED event.
++	 */
++	struct cc33xx_vif *wlvif;
++	struct ieee80211_vif *vif;
++	int delay = cc->conf.host_conf.conn.synch_fail_thold;
++
++	delay *= cc->conf.host_conf.conn.bss_lose_timeout;
++
++	cc33xx_for_each_wlvif_sta(cc, wlvif) {
++		if (wlvif->role_id == CC33XX_INVALID_ROLE_ID ||
++		    !test_bit(wlvif->role_id, &roles_bitmap))
++			continue;
++
++		vif = cc33xx_wlvif_to_vif(wlvif);
++
++		/* don't attempt roaming in case of p2p */
++		if (wlvif->p2p) {
++			ieee80211_connection_loss(vif);
++			continue;
++		}
++
++		/* if the work is already queued, it should take place.
++		 * We don't want to delay the connection loss
++		 * indication any more.
++		 */
++		ieee80211_queue_delayed_work(cc->hw,
++					     &wlvif->connection_loss_work,
++					     msecs_to_jiffies(delay));
++
++		ieee80211_cqm_beacon_loss_notify(vif, GFP_KERNEL);
++	}
++}
++
++void process_deferred_events(struct cc33xx *cc)
++{
++	struct event_node *event_node, *tmp;
++	struct llist_node *event_list;
++	u32 vector;
++
++	event_list = get_event_list(cc);
++
++	llist_for_each_entry_safe(event_node, tmp, event_list, node) {
++		struct cc33xx_event_mailbox *event_data;
++
++		event_data = &event_node->event_data;
++
++		vector = le32_to_cpu(event_node->event_data.events_vector);
++
++		if (vector & SCAN_COMPLETE_EVENT_ID) {
++			if (cc->scan_wlvif)
++				cc33xx_scan_completed(cc, cc->scan_wlvif);
++		}
++
++		if (vector & PERIODIC_SCAN_COMPLETE_EVENT_ID)
++			cc33xx_event_sched_scan_completed(cc, 1);
++
++		if (vector & BSS_LOSS_EVENT_ID) {
++			u16 bss_loss_bitmap = le16_to_cpu(event_data->bss_loss_bitmap);
++
++			cc33xx_event_beacon_loss(cc, bss_loss_bitmap);
++		}
++
++		if (vector & MAX_TX_FAILURE_EVENT_ID) {
++			u16 tx_retry_exceeded_bitmap =
++				le16_to_cpu(event_data->tx_retry_exceeded_bitmap);
++
++			cc33xx_event_max_tx_failure(cc, tx_retry_exceeded_bitmap);
++		}
++
++		if (vector & PERIODIC_SCAN_REPORT_EVENT_ID)
++			cc33xx_scan_sched_scan_results(cc);
++
++		if (vector & CHANNEL_SWITCH_COMPLETE_EVENT_ID) {
++			u16 channel_switch_role_id_bitmap =
++				le16_to_cpu(event_data->channel_switch_role_id_bitmap);
++
++			cc33xx_event_channel_switch(cc, channel_switch_role_id_bitmap, true);
++		}
++
++		if (vector & REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID)
++			cc33xx_event_roc_complete(cc);
++
++		kfree(event_node);
++	}
++}
+diff --git a/drivers/net/wireless/ti/cc33xx/event.h b/drivers/net/wireless/ti/cc33xx/event.h
 new file mode 100644
-index 000000000000..cc5abd428d99
+index 000000000000..7952f0b7b4aa
 --- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/io.h
-@@ -0,0 +1,26 @@
++++ b/drivers/net/wireless/ti/cc33xx/event.h
+@@ -0,0 +1,71 @@
 +/* SPDX-License-Identifier: GPL-2.0-only
 + *
 + * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
 + */
 +
-+#ifndef __IO_H__
-+#define __IO_H__
++#ifndef __EVENT_H__
++#define __EVENT_H__
++
++/* Mbox events
++ *
++ * The event mechanism is based on a pair of event buffers (buffers A and
++ * B) at fixed locations in the target's memory. The host processes one
++ * buffer while the other buffer continues to collect events. If the host
++ * is not processing events, an interrupt is issued to signal that a buffer
++ * is ready. Once the host is done with processing events from one buffer,
++ * it signals the target (with an ACK interrupt) that the event buffer is
++ * free.
++ */
++
++enum {
++	RSSI_SNR_TRIGGER_0_EVENT_ID              = BIT(0),
++	RSSI_SNR_TRIGGER_1_EVENT_ID              = BIT(1),
++	RSSI_SNR_TRIGGER_2_EVENT_ID              = BIT(2),
++	RSSI_SNR_TRIGGER_3_EVENT_ID              = BIT(3),
++	RSSI_SNR_TRIGGER_4_EVENT_ID              = BIT(4),
++	RSSI_SNR_TRIGGER_5_EVENT_ID              = BIT(5),
++	RSSI_SNR_TRIGGER_6_EVENT_ID              = BIT(6),
++	RSSI_SNR_TRIGGER_7_EVENT_ID              = BIT(7),
++
++	EVENT_MBOX_ALL_EVENT_ID			 = 0x7fffffff,
++};
++
++enum {
++	SCAN_COMPLETE_EVENT_ID                   = BIT(8),
++	RADAR_DETECTED_EVENT_ID                  = BIT(9),
++	CHANNEL_SWITCH_COMPLETE_EVENT_ID         = BIT(10),
++	BSS_LOSS_EVENT_ID                        = BIT(11),
++	MAX_TX_FAILURE_EVENT_ID                  = BIT(12),
++	DUMMY_PACKET_EVENT_ID                    = BIT(13),
++	INACTIVE_STA_EVENT_ID                    = BIT(14),
++	PEER_REMOVE_COMPLETE_EVENT_ID            = BIT(15),
++	PERIODIC_SCAN_COMPLETE_EVENT_ID          = BIT(16),
++	BA_SESSION_RX_CONSTRAINT_EVENT_ID        = BIT(17),
++	REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID      = BIT(18),
++	DFS_CHANNELS_CONFIG_COMPLETE_EVENT       = BIT(19),
++	PERIODIC_SCAN_REPORT_EVENT_ID            = BIT(20),
++	RX_BA_WIN_SIZE_CHANGE_EVENT_ID           = BIT(21),
++	SMART_CONFIG_SYNC_EVENT_ID               = BIT(22),
++	SMART_CONFIG_DECODE_EVENT_ID             = BIT(23),
++	TIME_SYNC_EVENT_ID                       = BIT(24),
++	FW_LOGGER_INDICATION                     = BIT(25),
++};
++
++/* events the driver might want to wait for */
++enum cc33xx_wait_event {
++	CC33XX_EVENT_ROLE_STOP_COMPLETE,
++	CC33XX_EVENT_PEER_REMOVE_COMPLETE,
++	CC33XX_EVENT_DFS_CONFIG_COMPLETE
++};
++
++#define NUM_OF_RSSI_SNR_TRIGGERS 8
 +
 +struct cc33xx;
 +
-+void cc33xx_disable_interrupts_nosync(struct cc33xx *cc);
-+void cc33xx_enable_interrupts(struct cc33xx *cc);
-+void cc33xx_io_reset(struct cc33xx *cc);
-+void cc33xx_io_init(struct cc33xx *cc);
-+int __must_check cc33xx_raw_read(struct cc33xx *cc, int addr,
-+				 void *buf, size_t len, bool fixed);
-+int __must_check cc33xx_write(struct cc33xx *cc, int addr,
-+			      void *buf, size_t len, bool fixed);
-+void claim_core_status_lock(struct cc33xx *cc);
-+void release_core_status_lock(struct cc33xx *cc);
-+void cc33xx_power_off(struct cc33xx *cc);
-+int cc33xx_power_on(struct cc33xx *cc);
-+int cc33xx_translate_addr(struct cc33xx *cc, int addr);
-+bool cc33xx_set_block_size(struct cc33xx *cc);
-+
-+#endif /* __IO_H__ */
-diff --git a/drivers/net/wireless/ti/cc33xx/sdio.c b/drivers/net/wireless/ti/cc33xx/sdio.c
-new file mode 100644
-index 000000000000..835e627e2514
---- /dev/null
-+++ b/drivers/net/wireless/ti/cc33xx/sdio.c
-@@ -0,0 +1,530 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright (C) 2022-2024 Texas Instruments Incorporated - https://www.ti.com/
-+ */
-+
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/host.h>
-+#include <linux/gpio.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/of_irq.h>
-+
-+#include "cc33xx.h"
-+#include "io.h"
-+
-+#ifndef SDIO_VENDOR_ID_TI
-+#define SDIO_VENDOR_ID_TI		0x0097
-+#endif
-+
-+#define SDIO_DEVICE_ID_CC33XX_NO_EFUSE	0x4076
-+#define SDIO_DEVICE_ID_TI_CC33XX	0x4077
-+
-+struct cc33xx_sdio_glue {
-+	struct device *dev;
-+	struct platform_device *core;
-+};
-+
-+static void cc33xx_sdio_claim(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+}
-+
-+static void cc33xx_sdio_release(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_release_host(func);
-+}
-+
-+static void cc33xx_sdio_set_block_size(struct device *child,
-+				       unsigned int blksz)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+	sdio_set_block_size(func, blksz);
-+	sdio_release_host(func);
-+}
-+
-+static int __must_check cc33xx_sdio_raw_read(struct device *child, int addr,
-+					     void *buf, size_t len, bool fixed)
-+{
-+	int ret;
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+
-+	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG)) {
-+		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
-+		dev_dbg(child->parent, "sdio read 52 addr 0x%x, byte 0x%02x\n",
-+			addr, ((u8 *)buf)[0]);
-+	} else {
-+		if (fixed)
-+			ret = sdio_readsb(func, buf, addr, len);
-+		else
-+			ret = sdio_memcpy_fromio(func, buf, addr, len);
-+
-+		dev_dbg(child->parent, "sdio read 53 addr 0x%x, %zu bytes\n",
-+			addr, len);
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (WARN_ON(ret))
-+		dev_err(child->parent, "sdio read failed (%d)\n", ret);
-+
-+	return ret;
-+}
-+
-+static int __must_check cc33xx_sdio_raw_write(struct device *child, int addr,
-+					      void *buf, size_t len, bool fixed)
-+{
-+	int ret;
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+
-+	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG)) {
-+		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
-+	} else {
-+		if (fixed)
-+			ret = sdio_writesb(func, addr, buf, len);
-+		else
-+			ret = sdio_memcpy_toio(func, addr, buf, len);
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (WARN_ON(ret))
-+		dev_err(child->parent, "sdio write failed (%d)\n", ret);
-+
-+	return ret;
-+}
-+
-+static int cc33xx_sdio_power_on(struct cc33xx_sdio_glue *glue)
-+{
-+	int ret;
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+	struct mmc_card *card = func->card;
-+
-+	ret = pm_runtime_get_sync(&card->dev);
-+	if (ret < 0) {
-+		pm_runtime_put_noidle(&card->dev);
-+		dev_err(glue->dev, "%s: failed to get_sync(%d)\n",
-+			__func__, ret);
-+
-+		return ret;
-+	}
-+
-+	sdio_claim_host(func);
-+	sdio_enable_func(func);
-+	sdio_release_host(func);
-+
-+	return 0;
-+}
-+
-+static int cc33xx_sdio_power_off(struct cc33xx_sdio_glue *glue)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+	struct mmc_card *card = func->card;
-+
-+	sdio_claim_host(func);
-+	sdio_disable_func(func);
-+	sdio_release_host(func);
-+
-+	/* Let runtime PM know the card is powered off */
-+	pm_runtime_put(&card->dev);
-+	return 0;
-+}
-+
-+static int cc33xx_sdio_set_power(struct device *child, bool enable)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+
-+	if (enable)
-+		return cc33xx_sdio_power_on(glue);
-+	else
-+		return cc33xx_sdio_power_off(glue);
-+}
-+
-+/**
-+ *	inband_irq_handler - Called from the MMC subsystem when the
-+ *	function's IRQ is signaled.
-+ *	@func: an SDIO function of the card
-+ *
-+ *	Note that the host is already claimed when handler is invoked.
-+ */
-+static void inband_irq_handler(struct sdio_func *func)
-+{
-+	struct cc33xx_sdio_glue *glue = sdio_get_drvdata(func);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	if (WARN_ON(!pdev_data->irq_handler))
-+		return;
-+
-+	pdev_data->irq_handler(pdev);
-+}
-+
-+static void cc33xx_enable_async_interrupt(struct sdio_func *func)
-+{
-+	u8 reg_val;
-+	const int CCCR_REG_16_ADDR = 0x16;
-+	const int ENABLE_ASYNC_IRQ_BIT = BIT(1);
-+
-+	reg_val = sdio_f0_readb(func, CCCR_REG_16_ADDR, NULL);
-+	reg_val |= ENABLE_ASYNC_IRQ_BIT;
-+	sdio_f0_writeb(func, reg_val, CCCR_REG_16_ADDR, NULL);
-+}
-+
-+static void cc33xx_sdio_enable_irq(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+	cc33xx_enable_async_interrupt(func);
-+	sdio_claim_irq(func, inband_irq_handler);
-+	sdio_release_host(func);
-+}
-+
-+static void cc33xx_sdio_disable_irq(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct sdio_func *func = dev_to_sdio_func(glue->dev);
-+
-+	sdio_claim_host(func);
-+	sdio_release_irq(func);
-+	sdio_release_host(func);
-+}
-+
-+static void cc33xx_enable_line_irq(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	enable_irq(pdev_data->gpio_irq_num);
-+}
-+
-+static void cc33xx_disable_line_irq(struct device *child)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	disable_irq_nosync(pdev_data->gpio_irq_num);
-+}
-+
-+static void cc33xx_set_irq_handler(struct device *child, void *handler)
-+{
-+	struct cc33xx_sdio_glue *glue = dev_get_drvdata(child->parent);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	pdev_data->irq_handler = handler;
-+}
-+
-+static const struct cc33xx_if_operations sdio_ops_gpio_irq = {
-+	.interface_claim	= cc33xx_sdio_claim,
-+	.interface_release	= cc33xx_sdio_release,
-+	.read			= cc33xx_sdio_raw_read,
-+	.write			= cc33xx_sdio_raw_write,
-+	.power			= cc33xx_sdio_set_power,
-+	.set_block_size	= cc33xx_sdio_set_block_size,
-+	.set_irq_handler	= cc33xx_set_irq_handler,
-+	.disable_irq		= cc33xx_disable_line_irq,
-+	.enable_irq		= cc33xx_enable_line_irq,
-+};
-+
-+static const struct cc33xx_if_operations sdio_ops_inband_irq = {
-+	.interface_claim	= cc33xx_sdio_claim,
-+	.interface_release	= cc33xx_sdio_release,
-+	.read			= cc33xx_sdio_raw_read,
-+	.write			= cc33xx_sdio_raw_write,
-+	.power			= cc33xx_sdio_set_power,
-+	.set_block_size	= cc33xx_sdio_set_block_size,
-+	.set_irq_handler	= cc33xx_set_irq_handler,
-+	.disable_irq		= cc33xx_sdio_disable_irq,
-+	.enable_irq		= cc33xx_sdio_enable_irq,
-+};
-+
-+#ifdef CONFIG_OF
-+static const struct cc33xx_family_data cc33xx_data = {
-+	.name = "cc33xx",
-+	.cfg_name = "ti-connectivity/cc33xx-conf.bin",
-+	.nvs_name = "ti-connectivity/cc33xx-nvs.bin",
-+};
-+
-+static const struct of_device_id cc33xx_sdio_of_match_table[] = {
-+	{ .compatible = "ti,cc3300", .data = &cc33xx_data },
-+	{ }
-+};
-+
-+static int cc33xx_probe_of(struct device *dev, int *irq, int *wakeirq,
-+			   struct cc33xx_platdev_data *pdev_data)
-+{
-+	struct device_node *np = dev->of_node;
-+	const struct of_device_id *of_id;
-+
-+	of_id = of_match_node(cc33xx_sdio_of_match_table, np);
-+	if (!of_id)
-+		return -ENODEV;
-+
-+	pdev_data->family = of_id->data;
-+
-+	*irq = irq_of_parse_and_map(np, 0);
-+
-+	*wakeirq = irq_of_parse_and_map(np, 1);
-+
-+	return 0;
-+}
-+#else
-+static int cc33xx_probe_of(struct device *dev, int *irq, int *wakeirq,
-+			   struct cc33xx_platdev_data *pdev_data)
-+{
-+	return -ENODATA;
-+}
-+#endif /* CONFIG_OF */
-+
-+static irqreturn_t gpio_irq_hard_handler(int irq, void *cookie)
-+{
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+static irqreturn_t gpio_irq_thread_handler(int irq, void *cookie)
-+{
-+	struct sdio_func *func = cookie;
-+	struct cc33xx_sdio_glue *glue = sdio_get_drvdata(func);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	if (WARN_ON(!pdev_data->irq_handler))
-+		return IRQ_HANDLED;
-+
-+	pdev_data->irq_handler(pdev);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int sdio_cc33xx_probe(struct sdio_func *func,
-+			     const struct sdio_device_id *id)
-+{
-+	struct cc33xx_platdev_data *pdev_data;
-+	struct cc33xx_sdio_glue *glue;
-+	struct resource res[1];
-+	mmc_pm_flag_t mmcflags;
-+	int ret = -ENOMEM;
-+	int gpio_irq, wakeirq, irq_flags;
-+
-+	/* We are only able to handle the wlan function */
-+	if (func->num != 0x02)
-+		return -ENODEV;
-+
-+	pdev_data = devm_kzalloc(&func->dev, sizeof(*pdev_data), GFP_KERNEL);
-+	if (!pdev_data)
-+		return -ENOMEM;
-+
-+	glue = devm_kzalloc(&func->dev, sizeof(*glue), GFP_KERNEL);
-+	if (!glue)
-+		return -ENOMEM;
-+
-+	glue->dev = &func->dev;
-+
-+	/* Grab access to FN0 for ELP reg. */
-+	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+
-+	/* Use block mode for transferring over one block size of data */
-+	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
-+
-+	ret = cc33xx_probe_of(&func->dev, &gpio_irq, &wakeirq, pdev_data);
-+	if (ret)
-+		goto out;
-+
-+	/* if sdio can keep power while host is suspended, enable wow */
-+	mmcflags = sdio_get_host_pm_caps(func);
-+
-+	sdio_set_drvdata(func, glue);
-+
-+	/* Tell PM core that we don't need the card to be powered now */
-+	pm_runtime_put_noidle(&func->dev);
-+
-+	glue->core = platform_device_alloc("cc33xx", PLATFORM_DEVID_AUTO);
-+	if (!glue->core) {
-+		dev_err(glue->dev, "can't allocate platform_device");
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	glue->core->dev.parent = &func->dev;
-+
-+	if (gpio_irq) {
-+		irq_flags = irqd_get_trigger_type(irq_get_irq_data(gpio_irq));
-+
-+		irq_set_status_flags(gpio_irq, IRQ_NOAUTOEN);
-+
-+		if (irq_flags & (IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW))
-+			irq_flags |= IRQF_ONESHOT;
-+
-+		ret = request_threaded_irq(gpio_irq, gpio_irq_hard_handler,
-+					   gpio_irq_thread_handler,
-+					   irq_flags, glue->core->name, func);
-+		if (ret) {
-+			dev_err(glue->dev, "can't register GPIO IRQ handler\n");
-+			goto out_dev_put;
-+		}
-+
-+		pdev_data->gpio_irq_num = gpio_irq;
-+
-+		if ((mmcflags & MMC_PM_KEEP_POWER) &&
-+		    (enable_irq_wake(gpio_irq) == 0))
-+			pdev_data->pwr_in_suspend = true;
-+
-+		pdev_data->if_ops = &sdio_ops_gpio_irq;
-+	} else {
-+		pdev_data->if_ops = &sdio_ops_inband_irq;
-+	}
-+
-+	if (wakeirq > 0) {
-+		res[0].start = wakeirq;
-+		res[0].flags = IORESOURCE_IRQ |
-+			irqd_get_trigger_type(irq_get_irq_data(wakeirq));
-+		res[0].name = "wakeirq";
-+
-+		ret = platform_device_add_resources(glue->core, res, 1);
-+		if (ret) {
-+			dev_err(glue->dev, "can't add resources\n");
-+			goto out_dev_put;
-+		}
-+	}
-+
-+	ret = platform_device_add_data(glue->core, pdev_data,
-+				       sizeof(*pdev_data));
-+	if (ret) {
-+		dev_err(glue->dev, "can't add platform data\n");
-+		goto out_dev_put;
-+	}
-+
-+	ret = platform_device_add(glue->core);
-+	if (ret) {
-+		dev_err(glue->dev, "can't add platform device\n");
-+		goto out_dev_put;
-+	}
-+	return 0;
-+
-+out_dev_put:
-+	platform_device_put(glue->core);
-+
-+	if (pdev_data->gpio_irq_num)
-+		free_irq(pdev_data->gpio_irq_num, func);
-+
-+out:
-+	return ret;
-+}
-+
-+static void sdio_cc33xx_remove(struct sdio_func *func)
-+{
-+	struct cc33xx_sdio_glue *glue = sdio_get_drvdata(func);
-+	struct platform_device *pdev = glue->core;
-+	struct cc33xx_platdev_data *pdev_data = dev_get_platdata(&pdev->dev);
-+
-+	/* Undo decrement done above in sdio_cc33xx_probe */
-+	pm_runtime_get_noresume(&func->dev);
-+
-+	platform_device_unregister(glue->core);
-+
-+	if (pdev_data->gpio_irq_num) {
-+		free_irq(pdev_data->gpio_irq_num, func);
-+		if (pdev_data->pwr_in_suspend)
-+			disable_irq_wake(pdev_data->gpio_irq_num);
-+	} else {
-+		sdio_claim_host(func);
-+		sdio_release_irq(func);
-+		sdio_release_host(func);
-+	}
-+}
-+
-+#ifdef CONFIG_PM
-+static int cc33xx_suspend(struct device *dev)
-+{
-+	/* Tell MMC/SDIO core it's OK to power down the card
-+	 * (if it isn't already), but not to remove it completely
-+	 */
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct cc33xx_sdio_glue *glue = sdio_get_drvdata(func);
-+	struct cc33xx *cc = platform_get_drvdata(glue->core);
-+	mmc_pm_flag_t sdio_flags;
-+	int ret = 0;
-+
-+	if (!cc) {
-+		dev_err(dev, "no wilink module was probed\n");
-+		goto out;
-+	}
-+
-+	dev_dbg(dev, "cc33xx suspend. keep_device_power: %d\n",
-+		cc->keep_device_power);
-+
-+	if (cc->keep_device_power) {
-+		sdio_flags = sdio_get_host_pm_caps(func);
-+
-+		if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-+			dev_err(dev, "can't keep power while host is suspended\n");
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		/* keep power while host suspended */
-+		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+		if (ret) {
-+			dev_err(dev, "error while trying to keep power\n");
-+			goto out;
-+		}
-+	}
-+out:
-+	return ret;
-+}
-+
-+static int cc33xx_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops cc33xx_sdio_pm_ops = {
-+	.suspend	= cc33xx_suspend,
-+	.resume		= cc33xx_resume,
-+};
-+#endif
-+
-+static const struct sdio_device_id cc33xx_devices[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_CC33XX) },
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_CC33XX_NO_EFUSE) },
-+	{}
-+};
-+
-+MODULE_DEVICE_TABLE(sdio, cc33xx_devices);
-+
-+static struct sdio_driver cc33xx_sdio_driver = {
-+	.name		= "cc33xx_sdio",
-+	.id_table	= cc33xx_devices,
-+	.probe		= sdio_cc33xx_probe,
-+	.remove		= sdio_cc33xx_remove,
-+#ifdef CONFIG_PM
-+	.drv = {
-+		.pm = &cc33xx_sdio_pm_ops,
-+	},
-+#endif /* CONFIG_PM */
-+};
-+
-+module_sdio_driver(cc33xx_sdio_driver);
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_DESCRIPTION("SDIO transport for Texas Instruments CC33xx WLAN driver");
-+MODULE_AUTHOR("Michael Nemanov <michael.nemanov@ti.com>");
-+MODULE_AUTHOR("Sabeeh Khan <sabeeh-khan@ti.com>");
++int cc33xx_wait_for_event(struct cc33xx *cc, enum cc33xx_wait_event event,
++			  bool *timeout);
++void deffer_event(struct cc33xx *cc, const void *event_payload, size_t event_length);
++void process_deferred_events(struct cc33xx *cc);
++void flush_deferred_event_list(struct cc33xx *cc);
++
++#endif /* __EVENT_H__ */
 -- 
 2.34.1
 
