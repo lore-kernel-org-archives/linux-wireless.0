@@ -1,87 +1,100 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2CB20ED
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2024 00:01:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AAA7494
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2024 01:01:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731456067; cv=none; b=Owlm4m/o8lzAgBLSzAJOLq2uqM70Y25AbmuAay09/NeaQyuMUA+PlVUMub6re2xblPufD7oDwS99Di+NqXhYSrnu7dvQ8tjgQUca0kl0yTgPp0mlCod2QWRmOKgvBmVLC8ds3WlZy1VqmOUWdvAqAB4+Zal6ol9uOE6OGwwDudM=
+	t=1731459704; cv=none; b=M0ndUm0fSTzAky/JAKpODlrSltdcD0bnL3GqdsTbfErWQSRGOSitebQTUWhOZ337x0h72e4CknSfCgd4kg1KkE3InfVHAgVDsYAO7/2tAlmnHpaAV1Nl/PV1g4F1Nx0BfIruUjBILPPDQlGNyJGZVF8cAHtN9kjYPstVnNhk2yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731456067; c=relaxed/simple;
-	bh=FoGmaHNM63GqBq0BQy8qKOtath3he6N2gYMwzHPG5lI=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=n51QyxUzkv1+ONvVVjJYlph2QQHh1A+7Mbr/mPZPKJJfzDN/iICaON2aQxmRo5ODLynZt7HPhQ59XkIVUdA3IEgMqJhDL+iOTIwlSlGxqvxK9CbIEgsI8fK3idQxjplROHu5+c/9mVDQqa6fvIcl7juiF8DfBtOfZXC/P9zR1G0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com; spf=none smtp.mailfrom=mojatatu.com; dkim=pass (2048-bit key) header.d=mojatatu-com.20230601.gappssmtp.com header.i=@mojatatu-com.20230601.gappssmtp.com header.b=NOYshMNV; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mojatatu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mojatatu.com
+	s=arc-20240116; t=1731459704; c=relaxed/simple;
+	bh=F/XX2tF0c8NOk1yQl2IJQgwhQBkg4X9mlaQ8+4IQD9U=;
+	h=From:To:CC:In-Reply-To:References:Subject:Message-ID:Date:
+	 MIME-Version:Content-Type; b=Nh+IEgQhmbDXxbP4XE9m4V3qQ/G4wJ0g7ISGbXbRsCGYaRjx1PkImo87r615Y79p/JlUc/KLf1mYNYMatsUDk02IPSmsW/gpS3JSjk1k+WhJX2wnQNIiHynzQjnobOXGUlFI2wg6IYZJQK8+c4wbRgSZB7oKxlNIJLbymTFWR3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KYNLcJLi; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mojatatu-com.20230601.gappssmtp.com header.i=@mojatatu-com.20230601.gappssmtp.com header.b="NOYshMNV"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7240fa50694so4893627b3a.1
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Nov 2024 16:01:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mojatatu-com.20230601.gappssmtp.com; s=20230601; t=1731456064; x=1732060864; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=FoGmaHNM63GqBq0BQy8qKOtath3he6N2gYMwzHPG5lI=;
-        b=NOYshMNVjSOTVgdvo3zfE6mXikzn4pYqNHipj0T21Z3Hebul9xRMKp7a+PtzsHjzKZ
-         XalpWnvHO7XPWIqwHoQXHBVX9K7RF+rSzyQF9iW+lRslUFGXvpspzxj36JfvPnMILaJJ
-         ClgMLJgafCGgmuBE5k1X0cmnHNG0enMQz9c9mlZD8wjOhxi8wcMf5DtcwcdAjpQBiyQq
-         q/iPcgNsM4k/VdpGffIFODf3oOV6u5iYjUkC70Z4DzhYfGu8bZQnhBFOFMG1HNLGjoQn
-         kNLzSSZadhtSSVvoVUVQx7Etq2EIHBbt20cykdaPXgR1UGzMpqFx46YUgsDb3qc9R72R
-         0tWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1731456064; x=1732060864;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=FoGmaHNM63GqBq0BQy8qKOtath3he6N2gYMwzHPG5lI=;
-        b=dc7kXROPQ1usdoqbkJa3nrEBkOfqzq3OKowiJXSC9IfgLz84QDK48LcN4gkJV8wkDQ
-         baVp63+j5/GQF0BuynluDv9liRTCu54lWBj37k7QTDkAJB/lexnXJRDHOMY+pHHUOKW/
-         mkNre9GuSuZRobJHIIEVlnUNqgrfJ9Yy3JkUCw5EhB4Djc3WvSfRNK6BI2rQNW89Udh6
-         P7IaQ1LRl/xc/oSoVDm+BGn6lu8nD7kte6DYJNCwfkjxjgdMoSOOE+zEFUrj8B84KzjV
-         FyagX6vzzJy0vRwPtxCuC2aLaPcVUR87pZ554ewlPZ4GsigAl0F5wvTLuDSiMmw/9atp
-         8TKw==
-X-Forwarded-Encrypted: i=1; AJvYcCUJBoBpuzwDxGLVCJQ1q7kFDPrHCl/q7Ce1sx8vcGa/qhM7tXq6zgzEO35SkwczaCUu7I+JhlJOZ3i4HHOCUQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxOZc4OtJkZRoEjDg0gnejmkDgY2mWlOuI1G+YXCGUpHMzGnVZo
-	KzfsKF46x/u7ljAJq+zDbXFj5u2gLLKzvz+/vRfK209oRDgZ/iA7tSZHiz3BmD4GjeUyob2ZJwk
-	3Lv5kzmhdB3y/4759WuO4rsI6maATJJqUTn/e
-X-Google-Smtp-Source: AGHT+IEYm3xrjN3OhpDff0TCYzAQLcLBy7Ie7ujNcFbKW96oksbJ7FAxRHHehy6fUA3rjkmHB85DZUo8zI+0z4ZkvRQ=
-X-Received: by 2002:a05:6a20:734b:b0:1db:eb2c:a74 with SMTP id
- adf61e73a8af0-1dc7037a94dmr1440958637.12.1731456063780; Tue, 12 Nov 2024
- 16:01:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KYNLcJLi"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACMRqtJ003799;
+	Wed, 13 Nov 2024 01:01:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	uXbDbEEiTa9fJcd/jlFzr++MTPHsqqWij8ewzpn3plA=; b=KYNLcJLiVPP8JG4C
+	SpWY+tyQERpagK+8QUDB0spzXFiSIce22ZF18QSPXY3LxZBdxM75Iv6Xyd8VeVKN
+	WuZmort5NpvbDJraxgfOFkU6VESvIHDHEXSGZyLpWo8xIfROEBls3v8fC+lib2Ir
+	nek6oAOpYrn0MhjDe1RfAsJh3mlS48VS9uHD7xCU5Sr8AEi9eGYTz8oG40AOLT7e
+	dJM5F9JpYMoDYoZwuk/BPRCJH5DI9Ni0XgI3OwZhYMBMClXxvZhMMV6bgscmu8wh
+	ypyMmWIjIiHnWqAglmBDbXnC2MScakdD/UpPb5FcjdGARVsMdkAs+Y9SzKDX6W0H
+	E5UDVA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42t0gm110d-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 13 Nov 2024 01:01:40 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AD11dLe016862
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 13 Nov 2024 01:01:39 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 12 Nov
+ 2024 17:01:39 -0800
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+To: <ath11k@lists.infradead.org>,
+        Balaji Pothunoori
+	<quic_bpothuno@quicinc.com>
+CC: <linux-wireless@vger.kernel.org>
+In-Reply-To: <20241030114625.2416942-1-quic_bpothuno@quicinc.com>
+References: <20241030114625.2416942-1-quic_bpothuno@quicinc.com>
+Subject: Re: [PATCH] wifi: ath11k: Fix unexpected return buffer manager
+ error for WCN6750/WCN6855
+Message-ID: <173145969903.2685813.5929707088344586586.b4-ty@quicinc.com>
+Date: Tue, 12 Nov 2024 17:01:39 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Date: Tue, 12 Nov 2024 19:00:52 -0500
-Message-ID: <CAM0EoMmoLXpz70sF6z301OccU-ghgNSOad9cQVhizipy-is-Lw@mail.gmail.com>
-Subject: 0x19: Call For Submissions open!
-To: people <people@netdevconf.info>
-Cc: Linux Kernel Network Developers <netdev@vger.kernel.org>, Christie Geldart <christie@ambedia.com>, 
-	Kimberley Jeffries <kimberleyjeffries@gmail.com>, lwn@lwn.net, 
-	Lael Santos <lael.santos@expertisesolutions.com.br>, 
-	"board@netdevconf.org" <board@netdevconf.info>, linux-wireless <linux-wireless@vger.kernel.org>, 
-	netfilter-devel@vger.kernel.org, lartc@vger.kernel.org, 
-	Bruno Banelli <bruno.banelli@sartura.hr>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 8aY5Bgutcy8R8a9qHWD1ZPH3dzNm78a8
+X-Proofpoint-GUID: 8aY5Bgutcy8R8a9qHWD1ZPH3dzNm78a8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ spamscore=0 clxscore=1015 mlxscore=0 mlxlogscore=508 lowpriorityscore=0
+ impostorscore=0 adultscore=0 priorityscore=1501 malwarescore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
+ definitions=main-2411130006
 
-We are pleased to announce the opening of Call For Submissions(CFS)
-for Netdev conf 0x19.
-Netdev conf 0x19 is going to be a hybrid conference with the physical
-component being in Zagreb, Croatia.
 
-For overview of topics, submissions and requirements please visit:
-https://netdevconf.info/0x19/pages/submit-proposal.html
-For all submitted sessions, we employ a blind review process carried
-out by the Program Committee.
+On Wed, 30 Oct 2024 17:16:25 +0530, Balaji Pothunoori wrote:
+> The following error messages were encountered while parsing fragmented RX
+> packets for WCN6750/WCN6855:
+> 
+> ath11k 17a10040.wifi: invalid return buffer manager 4
+> 
+> This issue arose due to a hardcoded check for HAL_RX_BUF_RBM_SW3_BM
+> introduced in 'commit 71c748b5e01e ("ath11k: Fix unexpected return buffer
+> manager error for QCA6390")'
+> 
+> [...]
 
-Important dates:
-Closing of CFS: Jan 17th, 2025
-Notification by: Jan 26th, 2025
-Conference dates: March 10th-14th 2025
+Applied, thanks!
 
-Please take this opportunity to share your work and ideas with the community
+[1/1] wifi: ath11k: Fix unexpected return buffer manager error for WCN6750/WCN6855
+      commit: 78e154d42f2c72905fe66a400847e1b2b101b7b2
 
-cheers,
-jamal (on behalf of the Netdev Society)
+Best regards,
+-- 
+Jeff Johnson <quic_jjohnson@quicinc.com>
+
