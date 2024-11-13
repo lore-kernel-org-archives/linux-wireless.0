@@ -1,138 +1,146 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3803F7E0E8
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2024 01:56:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57211762D0
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2024 02:33:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731463016; cv=none; b=G4PunkOo0vWXv3xSuNjQyWfEGdKzKm4VjV06DZ6MzTlp4FIKiyWK+2lUmBWnKuU3m6Zq5zxUopiI4QHV6Fn4gHC+qklxR76Owy3OVbZ2jB748dBY6dk/ZmoWps7CLsvB6M+EX7yScydJgU6JvrLwiD/tIXvrpYJIn8oPZ7sN/cg=
+	t=1731465230; cv=none; b=Dm2tjVe6/v+Q+cnQqug0PPD83v/58KToj5bX+g3IOjaxViuAndd3Xknfb3silYi21xa6odNdRcYCg0tf5rAdP4WnzbL+f8rGxvHJi86li0hc5nDu1JvE2DDj3zytN/A/fGDLu8plZqse8SumW3/mgSwuvQ843rOCTTad5ciy0Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731463016; c=relaxed/simple;
-	bh=EoZOyrDiTv1SjeMO5f0r9CrtHmSPZiOya5wJmRbYWr8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=irN0/IxTmmvppRSGNXh1X33g6O1DZnWxn33+eH5odZ3DIU1a8et26BvnRorb5j2JawpIPUS1rmiLLz8DkHFc/uBr8rznAUh3USOjQ8P1bGv2CKXCUEAvyrd/vWGiHdH/Gnmx97LD5ZS9saemDUTPG6p41U1c2lqpUKE0SNBBcPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Syiqf0rn; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1731465230; c=relaxed/simple;
+	bh=iEZTjTmcpJIBBcGnvT4u3X2lZP03q4k4byGKAngMeys=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Xx8QoC01/AVqbYHo5XhvcN823RLCgCUdVHVOYLmboPv2cK5JqTWc5+TWTnsT3W5+6QB/4N71M9UOtNhuPnNf0uuuJIu3W9N76s8lecdv35WyR+YZQA0l0tdmHAWwDDYOUuZSarbyDLFaazDyO3PLswWDs80r+FIJHt8lobYKysE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XBJbvMw4; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Syiqf0rn"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACMRURh019976;
-	Wed, 13 Nov 2024 01:56:52 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XBJbvMw4"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACMRqCo015276;
+	Wed, 13 Nov 2024 02:33:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Hdo54KNX6U9BaDxLyHu5BcLqMgjTZ9yLofe90SH96LI=; b=Syiqf0rn5DW44VIX
-	K/TWjaiJ2VDf1ZeNbT/JmD7E2d3SIcOx7HsAlz56LKrsEuTIgV1oeJHAADukJHmT
-	XQQntoAHDTFjorLHhqdgs99w0LjwQRcHr0drvNpplqI0Qyly6BcGOWyKlprcmqCI
-	mapU7uLM6yWJz0pFolG8iOpOLEq4az96hr9Ub7ekdEbT+tlyK9KDI2Ofhuu3lPHW
-	/QhmJG9sKEd/X7ldV0KauoB4L1xMskfiwa8AK/hwplcr5k31BclY92eP8sSyRKdk
-	EaUdClLlzHua/JNNgt4z/PWtgOfK+eJK/+Iv1jzLebI+4Eqy1484ZBs98GHgE4KB
-	MrtX0Q==
+	4dZ68sUjASBve/nu1HZkyHCc9jcE9aOR+f/w4xyAF3Y=; b=XBJbvMw4Zb+w8ToI
+	S3QQ+n9KP9bCbiSBQe3LQjvet12KcWnJlaBOp0iY388fKcFqL8LVg9dSFJO4+fRo
+	5zCQppHLMhNcJ3bcfFxd8+encJYcxDWJUCqlIGoTmh0sNtqkm81Zkkabo8Wz3Amn
+	2eLhaFfkCyPy2pfcJmMZPd1rGVF4gnQgGfwNNjxxEvwahbPEqOW163bKjnTn0txq
+	VUxf2AWdF6rb++xcopU9ldQl3Ik8cEJ5Rfg6K+J66FQctyZsd4mADuT3S/MyIEeG
+	x1Z9Vf0q0cFAVLUuiMK/pOuTE2uUJXhmyqnl9ig12GyMGZwWJXomUKr/ebTBM3Be
+	7U2WfA==
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42uc60duf2-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42v1vftyvd-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 01:56:51 +0000 (GMT)
+	Wed, 13 Nov 2024 02:33:42 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AD1uonh028169
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AD2XfvB013027
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Nov 2024 01:56:50 GMT
-Received: from bqiang-SFF.qca.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 12 Nov 2024 17:56:49 -0800
-From: Baochen Qiang <quic_bqiang@quicinc.com>
-To: <ath11k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <quic_bqiang@quicinc.com>
-Subject: [PATCH 5/6] wifi: ath11k: move locking outside of ath11k_mac_get_fw_stats()
-Date: Wed, 13 Nov 2024 09:56:30 +0800
-Message-ID: <20241113015631.3105-6-quic_bqiang@quicinc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241113015631.3105-1-quic_bqiang@quicinc.com>
-References: <20241113015631.3105-1-quic_bqiang@quicinc.com>
+	Wed, 13 Nov 2024 02:33:41 GMT
+Received: from [10.231.195.67] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 12 Nov
+ 2024 18:33:40 -0800
+Message-ID: <ffa411d1-89d3-4278-9f62-828c27c0afe0@quicinc.com>
+Date: Wed, 13 Nov 2024 10:33:38 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/8] wifi: ath12k: Add MLO station state change handling
+To: Kalle Valo <kvalo@kernel.org>
+CC: <ath12k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+References: <20241106142617.660901-1-kvalo@kernel.org>
+ <20241106142617.660901-2-kvalo@kernel.org>
+ <f75d7222-514b-4c6f-985d-e6ffd67e317a@quicinc.com>
+ <877c984eym.fsf@kernel.org>
+Content-Language: en-US
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+In-Reply-To: <877c984eym.fsf@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 18iVTIzaqSCbj1m87ipQ5S0hZop2Sotq
-X-Proofpoint-ORIG-GUID: 18iVTIzaqSCbj1m87ipQ5S0hZop2Sotq
+X-Proofpoint-GUID: sEhvNHcIUkmfGBAN67PA7MK2rGGekLve
+X-Proofpoint-ORIG-GUID: sEhvNHcIUkmfGBAN67PA7MK2rGGekLve
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
- phishscore=0 suspectscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- lowpriorityscore=0 priorityscore=1501 clxscore=1015 mlxscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
- definitions=main-2411130015
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ suspectscore=0 spamscore=0 clxscore=1015 phishscore=0 bulkscore=0
+ mlxlogscore=867 malwarescore=0 priorityscore=1501 lowpriorityscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411130020
 
-Currently ath11k_mac_get_fw_stats() is acquiring/releasing ar->conf_mutex by itself.
-In order to reuse this function in a context where that lock is already taken, move
-lock handling to its callers, then the function itself only has to assert it.
 
-There is only one caller now, i.e., ath11k_mac_op_sta_statistics(), so add lock handling
-there.
 
-Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.37
+On 11/13/2024 12:03 AM, Kalle Valo wrote:
+> Baochen Qiang <quic_bqiang@quicinc.com> writes:
+> 
+>> On 11/6/2024 10:26 PM, Kalle Valo wrote:
+>>> +static int ath12k_mac_assign_link_sta(struct ath12k_hw *ah,
+>>> +				      struct ath12k_sta *ahsta,
+>>> +				      struct ath12k_link_sta *arsta,
+>>> +				      struct ath12k_vif *ahvif,
+>>> +				      u8 link_id)
+>>> +{
+>>> +	struct ieee80211_sta *sta = ath12k_ahsta_to_sta(ahsta);
+>>> +	struct ieee80211_link_sta *link_sta;
+>>> +	struct ath12k_link_vif *arvif;
+>>> +
+>>> +	lockdep_assert_wiphy(ah->hw->wiphy);
+>>> +
+>>> +	if (!arsta || link_id >= IEEE80211_MLD_MAX_NUM_LINKS)
+>>> +		return -EINVAL;
+>>> +
+>>> +	arvif = wiphy_dereference(ah->hw->wiphy, ahvif->link[link_id]);
+>>> +	if (!arvif)
+>>> +		return -EINVAL;
+>>> +
+>>> +	memset(arsta, 0, sizeof(*arsta));
+>>> +
+>>> +	link_sta = wiphy_dereference(ah->hw->wiphy, sta->link[link_id]);
+>>> +	if (!link_sta)
+>>> +		return -EINVAL;
+>>> +
+>>> +	ether_addr_copy(arsta->addr, link_sta->addr);
+>>> +
+>>> +	/* logical index of the link sta in order of creation */
+>>> +	arsta->link_idx = ahsta->num_peer++;
+>>> +
+>>> +	arsta->link_id = link_id;
+>>> +	ahsta->links_map |= BIT(arsta->link_id);
+>>
+>> would be better to put this after rcu_assign_pointer()?
+> 
+> My thinking is that it's racy anyway so it doesn't really matter.
+> links_map is not really protected properly right now but luckily there's
+> only one function which accesses outside of the wiphy lock. My plan is
+> to fix that in a later patch.
+> 
+>>> +	arsta->arvif = arvif;
+>>> +	arsta->ahsta = ahsta;
+>>> +	arsta->state = IEEE80211_STA_NONE;
+>>> +	wiphy_work_init(&arsta->update_wk, ath12k_sta_rc_update_wk);
+>>> +
+>>> +	rcu_assign_pointer(ahsta->link[link_id], arsta);
+>>> +
+>>> +	synchronize_rcu();
+>>
+>> what are we waiting for here?
+> 
+> That's a good question. I didn't analyse that thoroughly but I'm just
+> making sure here that all readers have access to the new arsta before we
+> return to mac80211. 
+why would readers have to access arsta BEFORE returning to mac80211? any potential race conditions?
 
-Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+and even if it is necessary, how could synchronize_rcu() guarantee that? synchronize_rcu() is used to make sure all readers have exited from RCU read critical section, I don;t see how it could make sure a newly assigned entry get accessed.
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 318fd0bb6fe5..0ff430931bfd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -9007,12 +9007,10 @@ static int ath11k_mac_get_fw_stats(struct ath11k *ar, u32 pdev_id,
- 	struct stats_request_params req_param;
- 	int ret;
- 
--	mutex_lock(&ar->conf_mutex);
-+	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (ar->state != ATH11K_STATE_ON) {
--		ret = -ENETDOWN;
--		goto err_unlock;
--	}
-+	if (ar->state != ATH11K_STATE_ON)
-+		return -ENETDOWN;
- 
- 	req_param.pdev_id = pdev_id;
- 	req_param.vdev_id = vdev_id;
-@@ -9026,9 +9024,6 @@ static int ath11k_mac_get_fw_stats(struct ath11k *ar, u32 pdev_id,
- 		   "debug get fw stat pdev id %d vdev id %d stats id 0x%x\n",
- 		   pdev_id, vdev_id, stats_id);
- 
--err_unlock:
--	mutex_unlock(&ar->conf_mutex);
--
- 	return ret;
- }
- 
-@@ -9066,6 +9061,7 @@ static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
- 
- 	ath11k_mac_put_chain_rssi(sinfo, arsta, "ppdu", false);
- 
-+	mutex_lock(&ar->conf_mutex);
- 	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_CHAIN_SIGNAL)) &&
- 	    arsta->arvif->vdev_type == WMI_VDEV_TYPE_STA &&
- 	    ar->ab->hw_params.supports_rssi_stats &&
-@@ -9081,6 +9077,7 @@ static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
- 	    !(ath11k_mac_get_fw_stats(ar, ar->pdev->pdev_id, 0,
- 				      WMI_REQUEST_VDEV_STAT)))
- 		signal = arsta->rssi_beacon;
-+	mutex_unlock(&ar->conf_mutex);
- 
- 	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
- 		   "sta statistics db2dbm %u rssi comb %d rssi beacon %d\n",
--- 
-2.25.1
+> The delay shouldn't be that long anyway, I hope.
+> 
 
