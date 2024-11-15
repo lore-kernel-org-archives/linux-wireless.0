@@ -1,33 +1,33 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8735C1F6660;
-	Fri, 15 Nov 2024 21:22:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A3D031F9415;
+	Fri, 15 Nov 2024 21:22:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731705768; cv=none; b=mrRX2FLwfw1LDMfW0nD1EyV8czuINzux5Nv6zVR2zTs3n0lFf8MGFIKW7inG0iUg/xSw8z+w+piwvj1IvPt+eYKzP7xutg2hzNpoGhOa2qoqC7k35oO6d7H6QRx6QJuguCAhTo2JSJqLraUwul9twrc430BaQY68cNk5WzWYTK0=
+	t=1731705769; cv=none; b=VL5HFZGM4AFsgD9jRk6B/pNqw+FyI4Gcg8VfQcAO37TiLf2lTwV2qcKOprI66pNddQ/NZTBar+ukZxbkdB+tvttzjEWWcPbmQ9rEZH2SN7qHA+91dZRRKR941CecLIIF8Fti+0Zsc0OtwIY6NTdSiRAbR06zoIMTGsv0zWlpR6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731705768; c=relaxed/simple;
-	bh=FBespDsrUUO+ONnMewnsIPMme/D9NR8kKMNLs+x15Kc=;
+	s=arc-20240116; t=1731705769; c=relaxed/simple;
+	bh=xJhUVlHCco4pWg4EFN1n4/t3XCL5N0nSeGjs+gygfLk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=jJAnFZ9cTMIyjrl8TN9KMBHf9jwCE8XOLZAPHtosSe2RYFIMr6GOTLMrqe9+f5dkBLn4Bo9oKbblTB259VpFLnIl2++l/a31WojJ3/iDS0nmXuerL29KjI6O0J7JLzwert0tZ3MyFOvxagXme3dZrAnW8hpZVIdpT5gUcNcGfKk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=imd3kVk/; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=Hn+AqAilpWonGOCQJZKqRHgRECU4pmaJFQ1EMpEpPYaZ/oWaC3/bmQn/F7HA6xr7bnVLFvjLLea8mmj3n7MRb7cGQCQezn/s5FR/GBTXGMdzQSolZ6h/iAvl0wDRWwJkTSsnrGKUnF8evN+oD3m9Wy1vUtVHG/QRWSunNw6ifpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=AQnLLRjE; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="imd3kVk/"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="AQnLLRjE"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 256D9206BCE9;
+	by linux.microsoft.com (Postfix) with ESMTPSA id 8FF32206BCEB;
 	Fri, 15 Nov 2024 13:22:43 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 256D9206BCE9
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 8FF32206BCEB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1731705763;
-	bh=cDb5q9ey4rgvzuTMFsMkjW3R4ZHiX3a+lRd3JDjV6+Q=;
+	bh=GmA2v8FrQkDc3PawrRu1NLBJUu3qRf/naCkvRhlPz0Q=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=imd3kVk/tJhJYNa/xeixDhpAwYPvx4IlSinPbk/21FlgSBXFMaFV4APntdnbxA1fq
-	 WRyS0aWoUlD4yY9/jG3e/ehoXMMrIljBVBgBQNEO519W/APj0YYahRFp6DV4wrhONm
-	 8XT+qK7qOCSuyxWBlS/5K7TjbCkS44CjtifGQlCE=
+	b=AQnLLRjERYrPiRXzVPhEVdOI2zLkiaTTtu0h8ex88Rh4yJJCvweeNDaisxPAM4okm
+	 aUzZzyLz5s6fIGp2xPOyrtkNts2+H40xXXXdKkNXjhayIPxOfHe+ruxbTRrUqhXle2
+	 46t8LcG0ioPljSxshglWdZxLMsfg/70LBRvzOJRk=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Fri, 15 Nov 2024 21:22:36 +0000
-Subject: [PATCH 06/22] mm: kmemleak: Convert timeouts to secs_to_jiffies()
+Date: Fri, 15 Nov 2024 21:22:38 +0000
+Subject: [PATCH 08/22] drm/xe: Convert timeout to secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -36,7 +36,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241115-converge-secs-to-jiffies-v1-6-19aadc34941b@linux.microsoft.com>
+Message-Id: <20241115-converge-secs-to-jiffies-v1-8-19aadc34941b@linux.microsoft.com>
 References: <20241115-converge-secs-to-jiffies-v1-0-19aadc34941b@linux.microsoft.com>
 In-Reply-To: <20241115-converge-secs-to-jiffies-v1-0-19aadc34941b@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -120,31 +120,22 @@ Changes made with the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- mm/kmemleak.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/gpu/drm/xe/xe_device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mm/kmemleak.c b/mm/kmemleak.c
-index 0400f5e8ac60de555f43d85f1d36f67e48b4ebed..2c099d0819b1896390b842af76069a46bffabc23 100644
---- a/mm/kmemleak.c
-+++ b/mm/kmemleak.c
-@@ -1816,7 +1816,7 @@ static int kmemleak_scan_thread(void *arg)
- 	 * Wait before the first scan to allow the system to fully initialize.
- 	 */
- 	if (first_run) {
--		signed long timeout = msecs_to_jiffies(SECS_FIRST_SCAN * 1000);
-+		signed long timeout = secs_to_jiffies(SECS_FIRST_SCAN);
- 		first_run = 0;
- 		while (timeout && !kthread_should_stop())
- 			timeout = schedule_timeout_interruptible(timeout);
-@@ -2202,7 +2202,7 @@ void __init kmemleak_init(void)
- 		return;
+diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
+index a1987b554a8d2aa42b29301f2853edddfda7fda5..bb3338ef4191e76128611eeb9531c9d2089db85a 100644
+--- a/drivers/gpu/drm/xe/xe_device.c
++++ b/drivers/gpu/drm/xe/xe_device.c
+@@ -502,7 +502,7 @@ static int wait_for_lmem_ready(struct xe_device *xe)
+ 	drm_dbg(&xe->drm, "Waiting for lmem initialization\n");
  
- 	jiffies_min_age = msecs_to_jiffies(MSECS_MIN_AGE);
--	jiffies_scan_wait = msecs_to_jiffies(SECS_SCAN_WAIT * 1000);
-+	jiffies_scan_wait = secs_to_jiffies(SECS_SCAN_WAIT);
+ 	start = jiffies;
+-	timeout = start + msecs_to_jiffies(60 * 1000); /* 60 sec! */
++	timeout = start + secs_to_jiffies(60); /* 60 sec! */
  
- 	object_cache = KMEM_CACHE(kmemleak_object, SLAB_NOLEAKTRACE);
- 	scan_area_cache = KMEM_CACHE(kmemleak_scan_area, SLAB_NOLEAKTRACE);
+ 	do {
+ 		if (signal_pending(current))
 
 -- 
 2.34.1
