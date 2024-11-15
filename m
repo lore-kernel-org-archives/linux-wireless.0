@@ -1,103 +1,154 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 132681E22FE
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2024 21:17:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F248818B463;
+	Fri, 15 Nov 2024 21:22:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731705436; cv=none; b=WYW3tUJLeoqiZm3sUw80/OZ85jCDZgV8ZaRQrHNuthjecYUh7yuHZRenDTHV2w7srsFOq+KHvapCVNaXKxJ9XLQnnkXtUmX1oD9V26mZoO8vW8Idl1/5lQCGArgFTHTt9ztJm3nP77ktUsAFWTGVkZ4GoJnN9juZCODzCTiPp/0=
+	t=1731705764; cv=none; b=bARVhpoO88P9F3P6zhHQq2MDn1B2WrW119xpPvSU+/fyTwdajIaddGIJnua4pn3k04UPNAQNE6WYfPG/UlfRtymeL0sF+t9FJtiUaWEKHJ64Nep6uIjmEMYxnM+xypm5bohy2bxn/Qf274Z4IwTBVw7F0GABbs7EHcapAOn3fWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731705436; c=relaxed/simple;
-	bh=ItrJO6GnyTWKpkm0UVUIrNiT9AvyRUn//ZlyilbEqx4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=rx3NKn9y7CsZMdzib0f8rMFZomY/qxkaMYluT/U88XX2P7UX84yL848yHBuiSiXOdmcknUK31p0yY+hlH0qdlcGrT2TlMN7Wv9PoiSny+Mnq7rWSE0P8AZB0MV2mc2nvJir0bIDOgUhPc48T5nnM2+ipMfvp2dMVi/gwiV9SEIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=bKuk8XTT; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1731705764; c=relaxed/simple;
+	bh=2iWwhGMiOXyDUdwM0ZnOEDU3u4Uun5dVYtqdWB2sR+Q=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=TnGjljdAd3L8mx8BYGads/9PFgCqdElZZ9Ao3+O2A/NV8GyOo7RTQyJD7CHfIqk0XAQH59nuShHdLqRYuU8GpHIpt3yC5Q4jTNFt/D4/YBrNkyTLYSjJqxj4sgJtbdEV6tY5jYzI9kynjUfBIY1JT4nCcGvYSfDJAfHBwDEMJ/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=TpPSBC6Q; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="bKuk8XTT"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AFHJ9mf032612;
-	Fri, 15 Nov 2024 21:17:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	BDD4hDYSMtQB7r+4wOQB8dBNuLSOjGFor0EJalXUfXY=; b=bKuk8XTTSs4nimBj
-	5q6kQSm1MJSdZrufwqwM9A5qUDH+3KgdqlZvMrUT0CBJ5vOyEz/NJupCe8oTywEu
-	NV/sqGFa8fqkdHzHUCaw4e3YB5WL11gBwFCZ2oMhQRKRc3ksEeb52HS/6V4jb8WI
-	xlEx5ASmfkjsgTSfStXztiNw03IYJ3jnEx0j4xqBGWN6/9RzMTTmI+Xa8BvrUYfB
-	yOcyJTfdU8UbmEfYsMT/sO8vRTAn/Kr1SECuwgcIP9oi5bYwM6hotw1aHIfCdlrE
-	cz70mW2it+RvvJr1B4jRPLzAK1JufS4QQoTHBuddsA7nJB1V34FI/8pIKCHGCKZ0
-	uzJ+1g==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42wjqamnev-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 21:17:10 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AFLH9LB028316
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 Nov 2024 21:17:09 GMT
-Received: from [10.111.176.23] (10.49.16.6) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 15 Nov
- 2024 13:17:09 -0800
-Message-ID: <76039296-5677-4597-b3ea-a70c7832543d@quicinc.com>
-Date: Fri, 15 Nov 2024 13:17:08 -0800
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="TpPSBC6Q"
+Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 1682D206BCE4;
+	Fri, 15 Nov 2024 13:22:42 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 1682D206BCE4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1731705762;
+	bh=Q64Lap8gGilYnZS8wBYuXVtg6CkDWFgIDR5hpRb/qKY=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=TpPSBC6Q0pyCMIPKcOfsvZX/wWIHu4+ejmKY8xw+0GecDvIAUfgwshz01AoOkZ0WD
+	 k4gHIei/egZSo7W0NlMAlHYHatQ5bzRsbZtX1NOQvIcE9aFKMDcUHtqmglM484AIGB
+	 /3Fdhfw7EN1qT/zCvUp8095p9P9VmicZ+TZgDM0I=
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Date: Fri, 15 Nov 2024 21:22:31 +0000
+Subject: [PATCH 01/22] netfilter: conntrack: Cleanup timeout definitions
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 3/4] wifi: ath12k: Support SoC Common Stats
-To: Roopni Devanathan <quic_rdevanat@quicinc.com>,
-        <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Dinesh Karthikeyan
-	<quic_dinek@quicinc.com>
-References: <20241115062854.1919672-1-quic_rdevanat@quicinc.com>
- <20241115062854.1919672-4-quic_rdevanat@quicinc.com>
-Content-Language: en-US
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-In-Reply-To: <20241115062854.1919672-4-quic_rdevanat@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: uCZKrM5iuJ0JvuiyzhfxNAEBGGzd0sfX
-X-Proofpoint-ORIG-GUID: uCZKrM5iuJ0JvuiyzhfxNAEBGGzd0sfX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- adultscore=0 phishscore=0 lowpriorityscore=0 priorityscore=1501
- spamscore=0 mlxscore=0 mlxlogscore=967 bulkscore=0 malwarescore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411150179
+Message-Id: <20241115-converge-secs-to-jiffies-v1-1-19aadc34941b@linux.microsoft.com>
+References: <20241115-converge-secs-to-jiffies-v1-0-19aadc34941b@linux.microsoft.com>
+In-Reply-To: <20241115-converge-secs-to-jiffies-v1-0-19aadc34941b@linux.microsoft.com>
+To: Pablo Neira Ayuso <pablo@netfilter.org>, 
+ Jozsef Kadlecsik <kadlec@netfilter.org>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack <daniel@zonque.org>, 
+ Haojian Zhuang <haojian.zhuang@gmail.com>, 
+ Robert Jarzmik <robert.jarzmik@free.fr>, 
+ Russell King <linux@armlinux.org.uk>, Heiko Carstens <hca@linux.ibm.com>, 
+ Vasily Gorbik <gor@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>, 
+ Oded Gabbay <ogabbay@kernel.org>, 
+ Lucas De Marchi <lucas.demarchi@intel.com>, 
+ =?utf-8?q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Jeroen de Borst <jeroendb@google.com>, 
+ Praveen Kaligineedi <pkaligineedi@google.com>, 
+ Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ =?utf-8?q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>, 
+ Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>, 
+ Jeff Johnson <jjohnson@kernel.org>, 
+ Catalin Marinas <catalin.marinas@arm.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Jack Wang <jinpu.wang@cloud.ionos.com>, 
+ Marcel Holtmann <marcel@holtmann.org>, 
+ Johan Hedberg <johan.hedberg@gmail.com>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Florian Fainelli <florian.fainelli@broadcom.com>, 
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Josh Poimboeuf <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
+ Miroslav Benes <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>, 
+ Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>, Lucas Stach <l.stach@pengutronix.de>, 
+ Russell King <linux+etnaviv@armlinux.org.uk>, 
+ Christian Gmeiner <christian.gmeiner@gmail.com>, 
+ Louis Peens <louis.peens@corigine.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>
+Cc: netfilter-devel@vger.kernel.org, coreteam@netfilter.org, 
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr, 
+ linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+ linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org, 
+ linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ ath11k@lists.infradead.org, linux-mm@kvack.org, 
+ linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev, 
+ linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org, 
+ live-patching@vger.kernel.org, linux-sound@vger.kernel.org, 
+ etnaviv@lists.freedesktop.org, oss-drivers@corigine.com, 
+ linuxppc-dev@lists.ozlabs.org, 
+ Anna-Maria Behnsen <anna-maria@linutronix.de>, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+X-Mailer: b4 0.14.2
 
-On 11/14/2024 10:28 PM, Roopni Devanathan wrote:
-> From: Dinesh Karthikeyan <quic_dinek@quicinc.com>
-> 
-> Add support to request SoC stat from firmware through HTT stat
-> type 38. This stat gives drop count of SoC.
-> 
-> Note: MCC firmware version -
-> WLAN.HMT.1.0-03427-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.15378.4 does not
-> support tag HTT_STATS_SOC_TXRX_STATS_COMMON_TAG(125).
-> 
-> Sample output:
-> -------------
-> echo 38 > /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats_type
-> cat /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats
-> HTT_SOC_COMMON_STATS_TLV:
-> soc_drop_count = 0x0000000000000000
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Dinesh Karthikeyan <quic_dinek@quicinc.com>
-> Signed-off-by: Roopni Devanathan <quic_rdevanat@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+None of the higher order definitions are used anymore, so remove
+definitions for minutes, hours, and days timeouts. Convert the seconds
+denominated timeouts to secs_to_jiffies()
+
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+---
+ net/netfilter/nf_conntrack_proto_sctp.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
+
+diff --git a/net/netfilter/nf_conntrack_proto_sctp.c b/net/netfilter/nf_conntrack_proto_sctp.c
+index 4cc97f971264ed779434ab4597dd0162586b3736..6c95ac96fa42a39acafb5b88a7cf8898010e911c 100644
+--- a/net/netfilter/nf_conntrack_proto_sctp.c
++++ b/net/netfilter/nf_conntrack_proto_sctp.c
+@@ -39,20 +39,15 @@ static const char *const sctp_conntrack_names[] = {
+ 	[SCTP_CONNTRACK_HEARTBEAT_SENT]		= "HEARTBEAT_SENT",
+ };
+ 
+-#define SECS  * HZ
+-#define MINS  * 60 SECS
+-#define HOURS * 60 MINS
+-#define DAYS  * 24 HOURS
+-
+ static const unsigned int sctp_timeouts[SCTP_CONNTRACK_MAX] = {
+-	[SCTP_CONNTRACK_CLOSED]			= 10 SECS,
+-	[SCTP_CONNTRACK_COOKIE_WAIT]		= 3 SECS,
+-	[SCTP_CONNTRACK_COOKIE_ECHOED]		= 3 SECS,
+-	[SCTP_CONNTRACK_ESTABLISHED]		= 210 SECS,
+-	[SCTP_CONNTRACK_SHUTDOWN_SENT]		= 3 SECS,
+-	[SCTP_CONNTRACK_SHUTDOWN_RECD]		= 3 SECS,
+-	[SCTP_CONNTRACK_SHUTDOWN_ACK_SENT]	= 3 SECS,
+-	[SCTP_CONNTRACK_HEARTBEAT_SENT]		= 30 SECS,
++	[SCTP_CONNTRACK_CLOSED]			= secs_to_jiffies(10),
++	[SCTP_CONNTRACK_COOKIE_WAIT]		= secs_to_jiffies(3),
++	[SCTP_CONNTRACK_COOKIE_ECHOED]		= secs_to_jiffies(3),
++	[SCTP_CONNTRACK_ESTABLISHED]		= secs_to_jiffies(210),
++	[SCTP_CONNTRACK_SHUTDOWN_SENT]		= secs_to_jiffies(3),
++	[SCTP_CONNTRACK_SHUTDOWN_RECD]		= secs_to_jiffies(3),
++	[SCTP_CONNTRACK_SHUTDOWN_ACK_SENT]	= secs_to_jiffies(3),
++	[SCTP_CONNTRACK_HEARTBEAT_SENT]		= secs_to_jiffies(3),
+ };
+ 
+ #define	SCTP_FLAG_HEARTBEAT_VTAG_FAILED	1
+
+-- 
+2.34.1
 
