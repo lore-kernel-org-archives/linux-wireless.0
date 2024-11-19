@@ -1,313 +1,156 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756FA1CCB35
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2024 15:35:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E131CD1FA;
+	Tue, 19 Nov 2024 15:47:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732030561; cv=none; b=Rj/ntRDjuUA1/a1c7QQvA6+WMd22R/1GEUpdvf0onRwuYi167BEIqucrY02kq+g2OEmydBo6BHvWyKkDMvQ+Q+0SFf/zbskxphbiVL0lmYRyBeidAg4LPhYZyUMOe6hNBsixRfkoX3YLedDtayeE8Bf3VBcEwq3vrZwGCbvT73U=
+	t=1732031275; cv=none; b=do7jifA/j9BbTXL49xAr9en2YRpZKGGF63vALZ9ie4Qx0h03ZYSPZYuKFjneiBXhNBI5jMJLf249YwxhlJ+JOgjz6fDpCsg0KlUf3JPW4wvRH/q3+5YkSYrmDqnipjcsx00F/gMbd8nrb9vTJYXupjXyNoSpcIzTqRHto1de4F8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732030561; c=relaxed/simple;
-	bh=JLbZFaBNdt2zv06Ya9LuIXFXlV6nLbzpUxCHOkHPjH0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=XCFb4Cxi9VnhROwQcr9G7zCPm1Rty+fiDILVGiIRGU9DhJfV+tR/uAd2EXM/PzDPaQc3NcDnVJOBUrMxS2iDZnaTUh3kujmbfS8DBAljS8eyYm/n3JE2yq/TdJkS9F8TFrYLXjOg7H4ST5v9ooxFlBy2vED4pGzIrIZQyJl7E9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a1dRIShe; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1732031275; c=relaxed/simple;
+	bh=5MF/eHFxhz4lLiYgNMoLEJmeQOGm6mspTqQslf4kDSA=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=fe7+p7puCF+9QHwLIjsMx0oPoiN5NEXA5UgWBES5h+Hn/gd7F8ZhVLOg/2+WfuRwOsnCoN7t/4KGNiiuz1XRx3EaNWA+WfMGesFN4zUwUSON11yRzDdySOOrolG1z79xdr0nOSA46GBip6Q8mcTifOigQ5+oezQN+eRgC7oXAnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=TZbPbM8h; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a1dRIShe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1732030559; x=1763566559;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=JLbZFaBNdt2zv06Ya9LuIXFXlV6nLbzpUxCHOkHPjH0=;
-  b=a1dRIShef+QYg9qghbnR+rztd+yJVsBhWl0A28vdGRfwvIbn/Ixuh7XX
-   By4BNkSLNf4Wkuf4tzyO0zpxAo1tfBtllYByGslI2m73Jwt2SmjJNv+Bc
-   Cd/GE0ffR2s33Zmc/iyFg501OFpNav6M+mnxJMUmE5WO4wnjaDNa/k63y
-   X5XHni0XlTsyal4YFpet/wbnUManG9vOigCz4bRq1sOyKFP+W+Pw2q4wn
-   60bTHoBFMlg6WWqz7GgvLEP36NFTBLy/ljfbSo0LaARQawCDLUQybBuMN
-   5v09wUwIL9L+/63WEK2JRFd9iN5/xkCNiKJrs6YHKMdTdmraZI/+qEY9J
-   A==;
-X-CSE-ConnectionGUID: 5dYvX1HsTZiuC0qDshhI5g==
-X-CSE-MsgGUID: HnXTNpLYQz+2fIP4y0wimg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11261"; a="32284166"
-X-IronPort-AV: E=Sophos;i="6.12,166,1728975600"; 
-   d="scan'208";a="32284166"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2024 07:35:59 -0800
-X-CSE-ConnectionGUID: X66TWO1gQNaG+J/UgCLwlg==
-X-CSE-MsgGUID: 8bnctkrtR6SVqEVErhiErA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,166,1728975600"; 
-   d="scan'208";a="89180923"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2024 07:35:58 -0800
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] wifi: mac80211: fix a queue stall in certain cases of CSA
-Date: Tue, 19 Nov 2024 17:35:40 +0200
-Message-Id: <20241119173108.5ea90828c2cc.I4f89e58572fb71ae48e47a81e74595cac410fbac@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241119153540.594699-1-miriam.rachel.korenblit@intel.com>
-References: <20241119153540.594699-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="TZbPbM8h"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AJ7tGMx004845;
+	Tue, 19 Nov 2024 15:47:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	X087BfXQg6BD2sjwe/yB8ONSWahVOcFU4h791bEZ9Vk=; b=TZbPbM8hEKGGsMq+
+	vFjKsZP4Bl78ijmIuXj9kmJimJIjYXCZji2UMt0dTmwpa8tchlDy8c++rHbsp6rg
+	KRaDzBGWw/I4JiJKMVaJm31U+4lyIJKM3wJk1FDur2vZIGmTCE1fUUPVn5zI+oie
+	XfD//vhss4Y0XDy6iHcfuBAjhWWBGDCBh2dQqxNMzpN+k0dRubp0LPH2+9k6KbjT
+	sUAhTzrJBjNmtkx/esoNcShR3oLXYHYacBkrR6ULX021DOqDfzCufNaoExGU8lAc
+	8f8aU6PdFTWlCXzoaBcosg960FYKkYHNec34kGbAIXh4cxQEsDeNfyepvCbA60Hg
+	SkMSgA==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4308y7ty0f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 19 Nov 2024 15:47:46 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AJFljoW020030
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 19 Nov 2024 15:47:45 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 19 Nov
+ 2024 07:47:44 -0800
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Tue, 19 Nov 2024 07:47:38 -0800
+Subject: [PATCH 1/3] wifi: ath11k: mark some QMI driver event helpers as
+ noinline
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20241119-ath11k-noinline-v1-1-4ec0a8aa30b2@quicinc.com>
+References: <20241119-ath11k-noinline-v1-0-4ec0a8aa30b2@quicinc.com>
+In-Reply-To: <20241119-ath11k-noinline-v1-0-4ec0a8aa30b2@quicinc.com>
+To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        "Nathan
+ Chancellor" <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Bill Wendling <morbo@google.com>,
+        Justin Stitt <justinstitt@google.com>,
+        "Arnd Bergmann" <arnd@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath11k@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <llvm@lists.linux.dev>,
+        Jeff Johnson
+	<quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.14.0
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ANTenyc0ixLNJC7vqakfpwpD54qyl3Hy
+X-Proofpoint-ORIG-GUID: ANTenyc0ixLNJC7vqakfpwpD54qyl3Hy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 phishscore=0
+ spamscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0 suspectscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411190117
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+When compiling the ath11k driver using clang with KASAN enabled, the
+following warning is observed:
 
-If we got an unprotected action frame with CSA and then we heard the
-beacon with the CSA IE, we'll block the queues with the CSA reason
-twice. Since this reason is refcounted, we won't wake up the queues
-since we wake them up only once and the ref count will never reach 0.
-This led to blocked queues that prevented any activity (even
-disconnection wouldn't reset the queue state and the only way to recover
-would be to reload the kernel module.
+drivers/net/wireless/ath/ath11k/qmi.c:3199:13: warning: stack frame size (1560) exceeds limit (1024) in 'ath11k_qmi_driver_event_work' [-Wframe-larger-than]
 
-Fix this by not refcounting the CSA reason.
-It becomes now pointless to maintain the csa_blocked_queues state.
-Remove it.
+This is similar to the issue found in ath12k/qmi.c that was discussed
+in [1] and fixed with [2]. The issue is that clang inlining can
+explode stack usage.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: 414e090bc41d ("wifi: mac80211: restrict public action ECSA frame handling")
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=219447
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Just as in ath12k, ath11k_qmi_driver_event_work() itself is a pretty
+lightweight function, but it dispatches to several other functions
+which do the real work:
+
+ath11k_qmi_driver_event_work()
+	ath11k_qmi_event_server_arrive()
+		ath11k_qmi_fw_ind_register_send()
+		ath11k_qmi_host_cap_send() *
+		ath11k_qmi_event_load_bdf()
+	ath11k_qmi_event_mem_request()
+		ath11k_qmi_respond_fw_mem_request()
+	ath11k_qmi_event_load_bdf()
+	ath11k_qmi_wlanfw_m3_info_send() *
+		ath11k_qmi_m3_load()
+	ath11k_qmi_process_coldboot_calibration()
+
+Of these, the two marked with * have non-trivial stack usage. Mark
+those functions as 'noinline_for_stack' to prevent them from being
+inlined in ath12k_qmi_driver_event_work(), thereby eliminating the
+excessive stack usage.
+
+Note that this approach is a bit more "surgical" than the ath12k
+approach as only the two functions with the largest stack usage are
+modified.
+
+Link: https://msgid.link/bc214795-1c51-4cb7-922f-67d6ef98bff2@quicinc.com # [1]
+Link: https://patch.msgid.link/20241028-ath12k_qmi_driver_event_work-v1-1-0d532eb593fa@quicinc.com # [2]
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  2 +-
- include/net/mac80211.h                        |  4 +-
- net/mac80211/cfg.c                            |  3 +-
- net/mac80211/ieee80211_i.h                    | 49 +++++++++++++++----
- net/mac80211/iface.c                          | 12 ++---
- net/mac80211/mlme.c                           |  2 -
- net/mac80211/util.c                           | 23 ++-------
- 7 files changed, 50 insertions(+), 45 deletions(-)
+ drivers/net/wireless/ath/ath11k/qmi.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index a7a10e716e65..e96ddaeeeeff 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1967,7 +1967,7 @@ void iwl_mvm_channel_switch_error_notif(struct iwl_mvm *mvm,
- 	if (csa_err_mask & (CS_ERR_COUNT_ERROR |
- 			    CS_ERR_LONG_DELAY_AFTER_CS |
- 			    CS_ERR_TX_BLOCK_TIMER_EXPIRED))
--		ieee80211_channel_switch_disconnect(vif, true);
-+		ieee80211_channel_switch_disconnect(vif);
- 	rcu_read_unlock();
- }
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 7a22483b35cd..5759fc521316 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -1704,7 +1704,9 @@ static const struct qmi_elem_info qmi_wlfw_fw_init_done_ind_msg_v01_ei[] = {
+ 	},
+ };
  
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 333e0fae6796..5b712582f9a9 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6770,14 +6770,12 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success,
- /**
-  * ieee80211_channel_switch_disconnect - disconnect due to channel switch error
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-- * @block_tx: if %true, do not send deauth frame.
-  *
-  * Instruct mac80211 to disconnect due to a channel switch error. The channel
-  * switch can request to block the tx and so, we need to make sure we do not send
-  * a deauth frame in this case.
-  */
--void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif,
--					 bool block_tx);
-+void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif);
- 
- /**
-  * ieee80211_request_smps - request SM PS transition
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6dfc61a9acd4..cddd1d1d0d43 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3674,13 +3674,12 @@ void ieee80211_csa_finish(struct ieee80211_vif *vif, unsigned int link_id)
- }
- EXPORT_SYMBOL(ieee80211_csa_finish);
- 
--void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif, bool block_tx)
-+void ieee80211_channel_switch_disconnect(struct ieee80211_vif *vif)
+-static int ath11k_qmi_host_cap_send(struct ath11k_base *ab)
++/* clang stack usage explodes if this is inlined */
++static noinline_for_stack
++int ath11k_qmi_host_cap_send(struct ath11k_base *ab)
  {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_local *local = sdata->local;
- 
--	sdata->csa_blocked_queues = block_tx;
- 	sdata_info(sdata, "channel switch failed, disconnecting\n");
- 	wiphy_work_queue(local->hw.wiphy, &ifmgd->csa_connection_drop_work);
- }
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3d3c9139ff5e..7a0242e937d3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1106,8 +1106,6 @@ struct ieee80211_sub_if_data {
- 
- 	unsigned long state;
- 
--	bool csa_blocked_queues;
--
- 	char name[IFNAMSIZ];
- 
- 	struct ieee80211_fragment_cache frags;
-@@ -2411,17 +2409,13 @@ void ieee80211_send_4addr_nullfunc(struct ieee80211_local *local,
- 				   struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
- 			     struct ieee80211_hdr *hdr, bool ack, u16 tx_time);
--
-+unsigned int
-+ieee80211_get_vif_queues(struct ieee80211_local *local,
-+			 struct ieee80211_sub_if_data *sdata);
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
- 				     unsigned long queues,
- 				     enum queue_stop_reason reason,
- 				     bool refcounted);
--void ieee80211_stop_vif_queues(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata,
--			       enum queue_stop_reason reason);
--void ieee80211_wake_vif_queues(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata,
--			       enum queue_stop_reason reason);
- void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
- 				     unsigned long queues,
- 				     enum queue_stop_reason reason,
-@@ -2432,6 +2426,43 @@ void ieee80211_wake_queue_by_reason(struct ieee80211_hw *hw, int queue,
- void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
- 				    enum queue_stop_reason reason,
- 				    bool refcounted);
-+static inline void
-+ieee80211_stop_vif_queues(struct ieee80211_local *local,
-+			  struct ieee80211_sub_if_data *sdata,
-+			  enum queue_stop_reason reason)
-+{
-+	ieee80211_stop_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, true);
-+}
-+
-+static inline void
-+ieee80211_wake_vif_queues(struct ieee80211_local *local,
-+			  struct ieee80211_sub_if_data *sdata,
-+			  enum queue_stop_reason reason)
-+{
-+	ieee80211_wake_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, true);
-+}
-+static inline void
-+ieee80211_stop_vif_queues_norefcount(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     enum queue_stop_reason reason)
-+{
-+	ieee80211_stop_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, false);
-+}
-+static inline void
-+ieee80211_wake_vif_queues_norefcount(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     enum queue_stop_reason reason)
-+{
-+	ieee80211_wake_queues_by_reason(&local->hw,
-+					ieee80211_get_vif_queues(local, sdata),
-+					reason, false);
-+}
- void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 			       struct sk_buff *skb);
- void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6ef0990d3d29..af9055252e6d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -2364,18 +2364,14 @@ void ieee80211_vif_block_queues_csa(struct ieee80211_sub_if_data *sdata)
- 	if (ieee80211_hw_check(&local->hw, HANDLES_QUIET_CSA))
- 		return;
- 
--	ieee80211_stop_vif_queues(local, sdata,
--				  IEEE80211_QUEUE_STOP_REASON_CSA);
--	sdata->csa_blocked_queues = true;
-+	ieee80211_stop_vif_queues_norefcount(local, sdata,
-+					     IEEE80211_QUEUE_STOP_REASON_CSA);
+ 	struct qmi_wlanfw_host_cap_req_msg_v01 req;
+ 	struct qmi_wlanfw_host_cap_resp_msg_v01 resp;
+@@ -2570,7 +2572,9 @@ static void ath11k_qmi_m3_free(struct ath11k_base *ab)
+ 	m3_mem->size = 0;
  }
  
- void ieee80211_vif_unblock_queues_csa(struct ieee80211_sub_if_data *sdata)
+-static int ath11k_qmi_wlanfw_m3_info_send(struct ath11k_base *ab)
++/* clang stack usage explodes if this is inlined */
++static noinline_for_stack
++int ath11k_qmi_wlanfw_m3_info_send(struct ath11k_base *ab)
  {
- 	struct ieee80211_local *local = sdata->local;
- 
--	if (sdata->csa_blocked_queues) {
--		ieee80211_wake_vif_queues(local, sdata,
--					  IEEE80211_QUEUE_STOP_REASON_CSA);
--		sdata->csa_blocked_queues = false;
--	}
-+	ieee80211_wake_vif_queues_norefcount(local, sdata,
-+					     IEEE80211_QUEUE_STOP_REASON_CSA);
- }
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0303972c23e4..111066928b96 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2636,8 +2636,6 @@ ieee80211_sta_process_chanswitch(struct ieee80211_link_data *link,
- 	 */
- 	link->conf->csa_active = true;
- 	link->u.mgd.csa.blocked_tx = csa_ie.mode;
--	sdata->csa_blocked_queues =
--		csa_ie.mode && !ieee80211_hw_check(&local->hw, HANDLES_QUIET_CSA);
- 
- 	wiphy_work_queue(sdata->local->hw.wiphy,
- 			 &ifmgd->csa_connection_drop_work);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9f96c4dc037a..38c30e4ddda9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -657,7 +657,7 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_wake_queues);
- 
--static unsigned int
-+unsigned int
- ieee80211_get_vif_queues(struct ieee80211_local *local,
- 			 struct ieee80211_sub_if_data *sdata)
- {
-@@ -669,7 +669,8 @@ ieee80211_get_vif_queues(struct ieee80211_local *local,
- 		queues = 0;
- 
- 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
--			queues |= BIT(sdata->vif.hw_queue[ac]);
-+			if (sdata->vif.hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
-+				queues |= BIT(sdata->vif.hw_queue[ac]);
- 		if (sdata->vif.cab_queue != IEEE80211_INVAL_HW_QUEUE)
- 			queues |= BIT(sdata->vif.cab_queue);
- 	} else {
-@@ -724,24 +725,6 @@ void ieee80211_flush_queues(struct ieee80211_local *local,
- 	__ieee80211_flush_queues(local, sdata, 0, drop);
- }
- 
--void ieee80211_stop_vif_queues(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata,
--			       enum queue_stop_reason reason)
--{
--	ieee80211_stop_queues_by_reason(&local->hw,
--					ieee80211_get_vif_queues(local, sdata),
--					reason, true);
--}
--
--void ieee80211_wake_vif_queues(struct ieee80211_local *local,
--			       struct ieee80211_sub_if_data *sdata,
--			       enum queue_stop_reason reason)
--{
--	ieee80211_wake_queues_by_reason(&local->hw,
--					ieee80211_get_vif_queues(local, sdata),
--					reason, true);
--}
--
- static void __iterate_interfaces(struct ieee80211_local *local,
- 				 u32 iter_flags,
- 				 void (*iterator)(void *data, u8 *mac,
+ 	struct m3_mem_region *m3_mem = &ab->qmi.m3_mem;
+ 	struct qmi_wlanfw_m3_info_req_msg_v01 req;
+
 -- 
-2.34.1
+2.42.0
 
