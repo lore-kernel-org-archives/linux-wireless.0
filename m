@@ -1,472 +1,261 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1808E571
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2024 00:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0EBA1B813
+	for <linux-wireless@vger.kernel.org>; Tue, 19 Nov 2024 00:50:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731976404; cv=none; b=T4W57mz/rBigEyOerBb9WE4OquFX9dsMwnBjAkVJKAqXEI16yrd6GszDwy8/fVYyZ7By0v3AKR4E7EH0cmhYDyEELRbhJHhvxSGj0NGAfsiSeeDsK9+4a8ytszxXEa15nBCIAEzKetLi9XJOlUmyO381vRbROLh7hYx1U7X0dvk=
+	t=1731977419; cv=none; b=t8XszW7AznRvmltw3Ab0uKnV1fzc71VTH6yz1ocxH88nNygz3H57ErS8eU0HE5BGzAhDWEfMKpWMT1GJrzuEvZPZaDznPYCVBjcdexOsrxdLk9imgONeXrs3Zz/r0qiVwDabhtxDYu6c7V/xqPyede4KeKeOxjiOgVCJ/HJg03s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731976404; c=relaxed/simple;
-	bh=e+pfw0xLbIpAqoF5Y03phEK7Jt1X1U6nt/SqVrw0RSY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=B2rY0NKKUWuckxqx1Zm7s9IzL5L7MFdnNPGAHGXR3lowNb7G8Cb6cOqxaOKBe1XP4qFmDochper7qxfRKxWFKF+wggAyIbBmqqFxefmVzX2HvAWCgUy4p2zSXVI/mgwZO0Q0nBEq3v2MeDOgg7WFUb2Lv8sJDDqu6qsgXuk8D4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cEijMIdM; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1731977419; c=relaxed/simple;
+	bh=fAawL3LouvsVGA879Atbsr3agjy2SMBRQXELBzAvheQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=NlpyskxzX7dTnxtShA0KeIYd2fo6DQsagAngznOitFu9DphhfaDT4SaYd8svbSqglaZRnS00xU2JIPFVLje9ZMVMzsmky7AlDYA5kOQXNmU0ju/U9pZHpRhzbL+8wtBS8/py+lu0omxCWSH6byyEUZ+6joUNMJ/53ZwvqGB3CNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=WDSGYo25; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cEijMIdM"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AIGGpjU030154;
-	Tue, 19 Nov 2024 00:33:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	oXsY3AHTiIagJojBxQW95e4F11XzUwxI+MJGje4cqD0=; b=cEijMIdM+E91psR+
-	vxW/VXaXeIlXQwv+zdYpKkzXik7ohF6jRXg2bi1eODqt3gpjNHNCLAnjiViBIDAU
-	yj2RDeAe0l60YuGwRGF/xWh43+KL1sNej0ciTz+Fgfh/vaCBExYReF99ZpnFbkDc
-	PhpMAJkRmNch48CXJpI8Q1efM6XcPEjpMkA/lgAfO5rZcJa2p9imosXed0IzmG3Q
-	JmUExOuQSD1Q5s6lGc+WP5GXLeMTjl7koyvW9onoM/A1J0Apsi5WanY797Qd0e/n
-	XjdnfhmQpLKuwuqc+OQRVVQQ5s0QK9NaFrq7Duex4lxTdkPdEdHs69uWUHDybBgR
-	RXgl7g==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4308y68y86-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 19 Nov 2024 00:33:20 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AJ0XK2j018069
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 19 Nov 2024 00:33:20 GMT
-Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="WDSGYo25"
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 4AJ0o1Iq91559892, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
+	t=1731977401; bh=fAawL3LouvsVGA879Atbsr3agjy2SMBRQXELBzAvheQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=WDSGYo25u6XFfptXvV3yDSf3KISPzdrmSD0+nEFNOGpQX/vbo+AuykVBBZxg2Maw9
+	 L83pN4c0gYmHVSlIE6yKlqc4EKoy7Ta9DUvJaeFCKPRMjjOHKxSv8qX6PHO9RbbrxR
+	 /6N+oAagIniVNnhGgkfQejEtvny1I/vQ4/Yx6nygSQpB+ibZ3+VdwkyVpMnwEcVAAd
+	 jyoEsL6QyusnfxVmNgYidcTo3xVvSkFqSkhfE3z8N84FuTp6/yh8j0psrrurZvjLba
+	 2F/SH3Yly4a/YCce4mvCMuGSM2GYrdRR4tqcCkdo+YfwbmfbotJlFK7gumjxfK4YAV
+	 0ybWnVNDkpRCg==
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 4AJ0o1Iq91559892
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 19 Nov 2024 08:50:01 +0800
+Received: from RTEXMBS01.realtek.com.tw (172.21.6.94) by
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 18 Nov 2024 16:33:18 -0800
-From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy
-	<quic_periyasa@quicinc.com>
-Subject: [PATCH 8/8] wifi: ath12k: Avoid explicit type cast in monitor status parse handler
-Date: Tue, 19 Nov 2024 06:02:48 +0530
-Message-ID: <20241119003248.1579567-9-quic_periyasa@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241119003248.1579567-1-quic_periyasa@quicinc.com>
-References: <20241119003248.1579567-1-quic_periyasa@quicinc.com>
+ 15.1.2507.39; Tue, 19 Nov 2024 08:50:01 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS01.realtek.com.tw (172.21.6.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Tue, 19 Nov 2024 08:50:01 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f]) by
+ RTEXMBS04.realtek.com.tw ([fe80::2882:4142:db9:db1f%11]) with mapi id
+ 15.01.2507.035; Tue, 19 Nov 2024 08:50:01 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Sascha Hauer <sha@pengutronix.de>
+Subject: RE: [PATCH 2/2] wifi: rtw88: usb: Preallocate and reuse the RX skbs
+Thread-Topic: [PATCH 2/2] wifi: rtw88: usb: Preallocate and reuse the RX skbs
+Thread-Index: AQHbNuoNEfF0t/4FMkGEgXvFb6QbxLK8ywXw
+Date: Tue, 19 Nov 2024 00:50:01 +0000
+Message-ID: <3a9104bb97db4df6a285e94291fd84c7@realtek.com>
+References: <28b09f4d-5271-470d-99b6-a0bbe0224739@gmail.com>
+ <4e83ae71-60e2-4f24-a251-18cd59543d6d@gmail.com>
+In-Reply-To: <4e83ae71-60e2-4f24-a251-18cd59543d6d@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+x-kse-serverinfo: RTEXMBS01.realtek.com.tw, 9
+x-kse-antispam-interceptor-info: fallback
+x-kse-antivirus-interceptor-info: fallback
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 7AmKtVDDJL3kBawC68D1LjsHliR23ic3
-X-Proofpoint-GUID: 7AmKtVDDJL3kBawC68D1LjsHliR23ic3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- mlxlogscore=999 suspectscore=0 mlxscore=0 bulkscore=0 malwarescore=0
- lowpriorityscore=0 spamscore=0 clxscore=1015 adultscore=0 phishscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411190003
+X-KSE-AntiSpam-Interceptor-Info: fallback
 
-Currently, monitor status parse procedure handles all the supported TLV
-tags. Each TLV tag has its own data structure for parsing. Now, this
-handler is passed the tlv_data as a u8 pointer, so explicit type cast
-conversion happens for every TLV tag parsing. Therefore, avoid the
-explicit type conversion by changing the tlv_data type from a u8 pointer
-to a const void pointer.
-
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-
-Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/dp_mon.c | 126 +++++++++--------------
- 1 file changed, 47 insertions(+), 79 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
-index 37127771291f..22a27ce32b40 100644
---- a/drivers/net/wireless/ath/ath12k/dp_mon.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
-@@ -10,11 +10,10 @@
- #include "dp_tx.h"
- #include "peer.h"
- 
--static void ath12k_dp_mon_rx_handle_ofdma_info(void *rx_tlv,
--					       struct hal_rx_user_status *rx_user_status)
-+static void
-+ath12k_dp_mon_rx_handle_ofdma_info(const struct hal_rx_ppdu_end_user_stats *ppdu_end_user,
-+				   struct hal_rx_user_status *rx_user_status)
- {
--	struct hal_rx_ppdu_end_user_stats *ppdu_end_user = rx_tlv;
--
- 	rx_user_status->ul_ofdma_user_v0_word0 =
- 		__le32_to_cpu(ppdu_end_user->usr_resp_ref);
- 	rx_user_status->ul_ofdma_user_v0_word1 =
-@@ -35,7 +34,7 @@ ath12k_dp_mon_rx_populate_byte_count(const struct hal_rx_ppdu_end_user_stats *st
- }
- 
- static void
--ath12k_dp_mon_rx_populate_mu_user_info(void *rx_tlv,
-+ath12k_dp_mon_rx_populate_mu_user_info(const struct hal_rx_ppdu_end_user_stats *rx_tlv,
- 				       struct hal_rx_mon_ppdu_info *ppdu_info,
- 				       struct hal_rx_user_status *rx_user_status)
- {
-@@ -73,11 +72,9 @@ ath12k_dp_mon_rx_populate_mu_user_info(void *rx_tlv,
- 	ath12k_dp_mon_rx_populate_byte_count(rx_tlv, ppdu_info, rx_user_status);
- }
- 
--static void ath12k_dp_mon_parse_vht_sig_a(u8 *tlv_data,
-+static void ath12k_dp_mon_parse_vht_sig_a(const struct hal_rx_vht_sig_a_info *vht_sig,
- 					  struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_vht_sig_a_info *vht_sig =
--			(struct hal_rx_vht_sig_a_info *)tlv_data;
- 	u32 nsts, group_id, info0, info1;
- 	u8 gi_setting;
- 
-@@ -119,11 +116,9 @@ static void ath12k_dp_mon_parse_vht_sig_a(u8 *tlv_data,
- 		u32_get_bits(info1, HAL_RX_VHT_SIG_A_INFO_INFO1_SU_MU_CODING);
- }
- 
--static void ath12k_dp_mon_parse_ht_sig(u8 *tlv_data,
-+static void ath12k_dp_mon_parse_ht_sig(const struct hal_rx_ht_sig_info *ht_sig,
- 				       struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_ht_sig_info *ht_sig =
--			(struct hal_rx_ht_sig_info *)tlv_data;
- 	u32 info0 = __le32_to_cpu(ht_sig->info0);
- 	u32 info1 = __le32_to_cpu(ht_sig->info1);
- 
-@@ -136,11 +131,9 @@ static void ath12k_dp_mon_parse_ht_sig(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
- }
- 
--static void ath12k_dp_mon_parse_l_sig_b(u8 *tlv_data,
-+static void ath12k_dp_mon_parse_l_sig_b(const struct hal_rx_lsig_b_info *lsigb,
- 					struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_lsig_b_info *lsigb =
--			(struct hal_rx_lsig_b_info *)tlv_data;
- 	u32 info0 = __le32_to_cpu(lsigb->info0);
- 	u8 rate;
- 
-@@ -170,11 +163,9 @@ static void ath12k_dp_mon_parse_l_sig_b(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
- }
- 
--static void ath12k_dp_mon_parse_l_sig_a(u8 *tlv_data,
-+static void ath12k_dp_mon_parse_l_sig_a(const struct hal_rx_lsig_a_info *lsiga,
- 					struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_lsig_a_info *lsiga =
--			(struct hal_rx_lsig_a_info *)tlv_data;
- 	u32 info0 = __le32_to_cpu(lsiga->info0);
- 	u8 rate;
- 
-@@ -212,14 +203,13 @@ static void ath12k_dp_mon_parse_l_sig_a(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
- }
- 
--static void ath12k_dp_mon_parse_he_sig_b2_ofdma(u8 *tlv_data,
--						struct hal_rx_mon_ppdu_info *ppdu_info)
-+static void
-+ath12k_dp_mon_parse_he_sig_b2_ofdma(const struct hal_rx_he_sig_b2_ofdma_info *ofdma,
-+				    struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_he_sig_b2_ofdma_info *he_sig_b2_ofdma =
--			(struct hal_rx_he_sig_b2_ofdma_info *)tlv_data;
- 	u32 info0, value;
- 
--	info0 = __le32_to_cpu(he_sig_b2_ofdma->info0);
-+	info0 = __le32_to_cpu(ofdma->info0);
- 
- 	ppdu_info->he_data1 |= HE_MCS_KNOWN | HE_DCM_KNOWN | HE_CODING_KNOWN;
- 
-@@ -250,11 +240,10 @@ static void ath12k_dp_mon_parse_he_sig_b2_ofdma(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_OFDMA;
- }
- 
--static void ath12k_dp_mon_parse_he_sig_b2_mu(u8 *tlv_data,
--					     struct hal_rx_mon_ppdu_info *ppdu_info)
-+static void
-+ath12k_dp_mon_parse_he_sig_b2_mu(const struct hal_rx_he_sig_b2_mu_info *he_sig_b2_mu,
-+				 struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_he_sig_b2_mu_info *he_sig_b2_mu =
--			(struct hal_rx_he_sig_b2_mu_info *)tlv_data;
- 	u32 info0, value;
- 
- 	info0 = __le32_to_cpu(he_sig_b2_mu->info0);
-@@ -277,11 +266,10 @@ static void ath12k_dp_mon_parse_he_sig_b2_mu(u8 *tlv_data,
- 	ppdu_info->nss = u32_get_bits(info0, HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_NSTS);
- }
- 
--static void ath12k_dp_mon_parse_he_sig_b1_mu(u8 *tlv_data,
--					     struct hal_rx_mon_ppdu_info *ppdu_info)
-+static void
-+ath12k_dp_mon_parse_he_sig_b1_mu(const struct hal_rx_he_sig_b1_mu_info *he_sig_b1_mu,
-+				 struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_he_sig_b1_mu_info *he_sig_b1_mu =
--			(struct hal_rx_he_sig_b1_mu_info *)tlv_data;
- 	u32 info0 = __le32_to_cpu(he_sig_b1_mu->info0);
- 	u16 ru_tones;
- 
-@@ -292,11 +280,10 @@ static void ath12k_dp_mon_parse_he_sig_b1_mu(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_MIMO;
- }
- 
--static void ath12k_dp_mon_parse_he_sig_mu(u8 *tlv_data,
--					  struct hal_rx_mon_ppdu_info *ppdu_info)
-+static void
-+ath12k_dp_mon_parse_he_sig_mu(const struct hal_rx_he_sig_a_mu_dl_info *he_sig_a_mu_dl,
-+			      struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_he_sig_a_mu_dl_info *he_sig_a_mu_dl =
--			(struct hal_rx_he_sig_a_mu_dl_info *)tlv_data;
- 	u32 info0, info1, value;
- 	u16 he_gi = 0, he_ltf = 0;
- 
-@@ -427,11 +414,9 @@ static void ath12k_dp_mon_parse_he_sig_mu(u8 *tlv_data,
- 	ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_MIMO;
- }
- 
--static void ath12k_dp_mon_parse_he_sig_su(u8 *tlv_data,
-+static void ath12k_dp_mon_parse_he_sig_su(const struct hal_rx_he_sig_a_su_info *he_sig_a,
- 					  struct hal_rx_mon_ppdu_info *ppdu_info)
- {
--	struct hal_rx_he_sig_a_su_info *he_sig_a =
--			(struct hal_rx_he_sig_a_su_info *)tlv_data;
- 	u32 info0, info1, value;
- 	u32 dcm;
- 	u8 he_dcm = 0, he_stbc = 0;
-@@ -580,15 +565,15 @@ static void ath12k_dp_mon_parse_he_sig_su(u8 *tlv_data,
- static enum hal_rx_mon_status
- ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 				  struct ath12k_mon_data *pmon,
--				  u32 tlv_tag, u8 *tlv_data, u32 userid)
-+				  u32 tlv_tag, const void *tlv_data,
-+				  u32 userid)
- {
- 	struct hal_rx_mon_ppdu_info *ppdu_info = &pmon->mon_ppdu_info;
- 	u32 info[7];
- 
- 	switch (tlv_tag) {
- 	case HAL_RX_PPDU_START: {
--		struct hal_rx_ppdu_start *ppdu_start =
--			(struct hal_rx_ppdu_start *)tlv_data;
-+		const struct hal_rx_ppdu_start *ppdu_start = tlv_data;
- 
- 		u64 ppdu_ts = ath12k_le32hilo_to_u64(ppdu_start->ppdu_start_ts_63_32,
- 						     ppdu_start->ppdu_start_ts_31_0);
-@@ -615,8 +600,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 	case HAL_RX_PPDU_END_USER_STATS: {
--		struct hal_rx_ppdu_end_user_stats *eu_stats =
--			(struct hal_rx_ppdu_end_user_stats *)tlv_data;
-+		const struct hal_rx_ppdu_end_user_stats *eu_stats = tlv_data;
- 		u32 tid_bitmap;
- 
- 		info[0] = __le32_to_cpu(eu_stats->info0);
-@@ -673,8 +657,8 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 				&ppdu_info->userstats[userid];
- 			ppdu_info->num_users += 1;
- 
--			ath12k_dp_mon_rx_handle_ofdma_info(tlv_data, rxuser_stats);
--			ath12k_dp_mon_rx_populate_mu_user_info(tlv_data, ppdu_info,
-+			ath12k_dp_mon_rx_handle_ofdma_info(eu_stats, rxuser_stats);
-+			ath12k_dp_mon_rx_populate_mu_user_info(eu_stats, ppdu_info,
- 							       rxuser_stats);
- 		}
- 		ppdu_info->mpdu_fcs_ok_bitmap[0] = __le32_to_cpu(eu_stats->rsvd1[0]);
-@@ -682,8 +666,8 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 	case HAL_RX_PPDU_END_USER_STATS_EXT: {
--		struct hal_rx_ppdu_end_user_stats_ext *eu_stats =
--			(struct hal_rx_ppdu_end_user_stats_ext *)tlv_data;
-+		const struct hal_rx_ppdu_end_user_stats_ext *eu_stats = tlv_data;
-+
- 		ppdu_info->mpdu_fcs_ok_bitmap[2] = __le32_to_cpu(eu_stats->info1);
- 		ppdu_info->mpdu_fcs_ok_bitmap[3] = __le32_to_cpu(eu_stats->info2);
- 		ppdu_info->mpdu_fcs_ok_bitmap[4] = __le32_to_cpu(eu_stats->info3);
-@@ -729,8 +713,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 
- 	case HAL_PHYRX_RSSI_LEGACY: {
--		struct hal_rx_phyrx_rssi_legacy_info *rssi =
--			(struct hal_rx_phyrx_rssi_legacy_info *)tlv_data;
-+		const struct hal_rx_phyrx_rssi_legacy_info *rssi = tlv_data;
- 
- 		info[0] = __le32_to_cpu(rssi->info0);
- 		info[1] = __le32_to_cpu(rssi->info1);
-@@ -748,8 +731,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 	case HAL_RXPCU_PPDU_END_INFO: {
--		struct hal_rx_ppdu_end_duration *ppdu_rx_duration =
--			(struct hal_rx_ppdu_end_duration *)tlv_data;
-+		const struct hal_rx_ppdu_end_duration *ppdu_rx_duration = tlv_data;
- 
- 		info[0] = __le32_to_cpu(ppdu_rx_duration->info0);
- 		ppdu_info->rx_duration =
-@@ -760,8 +742,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 	case HAL_RX_MPDU_START: {
--		struct hal_rx_mpdu_start *mpdu_start =
--			(struct hal_rx_mpdu_start *)tlv_data;
-+		const struct hal_rx_mpdu_start *mpdu_start = tlv_data;
- 		struct dp_mon_mpdu *mon_mpdu = pmon->mon_mpdu;
- 		u16 peer_id;
- 
-@@ -790,8 +771,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	case HAL_MON_BUF_ADDR: {
- 		struct dp_rxdma_mon_ring *buf_ring = &ab->dp.rxdma_mon_buf_ring;
--		struct dp_mon_packet_info *packet_info =
--			(struct dp_mon_packet_info *)tlv_data;
-+		const struct dp_mon_packet_info *packet_info = tlv_data;
- 		int buf_id = u32_get_bits(packet_info->cookie,
- 					  DP_RXDMA_BUF_COOKIE_BUF_ID);
- 		struct sk_buff *msdu;
-@@ -823,8 +803,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 	}
- 	case HAL_RX_MSDU_END: {
--		struct rx_msdu_end_qcn9274 *msdu_end =
--			(struct rx_msdu_end_qcn9274 *)tlv_data;
-+		const struct rx_msdu_end_qcn9274 *msdu_end = tlv_data;
- 		bool is_first_msdu_in_mpdu;
- 		u16 msdu_end_info;
- 
-@@ -1603,7 +1582,7 @@ ath12k_dp_mon_tx_gen_prot_frame(struct dp_mon_tx_ppdu_info *tx_ppdu_info)
- static enum dp_mon_tx_tlv_status
- ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 				  struct ath12k_mon_data *pmon,
--				  u16 tlv_tag, u8 *tlv_data, u32 userid)
-+				  u16 tlv_tag, const void *tlv_data, u32 userid)
- {
- 	struct dp_mon_tx_ppdu_info *tx_ppdu_info;
- 	enum dp_mon_tx_tlv_status status = DP_MON_TX_STATUS_PPDU_NOT_DONE;
-@@ -1613,8 +1592,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 
- 	switch (tlv_tag) {
- 	case HAL_TX_FES_SETUP: {
--		struct hal_tx_fes_setup *tx_fes_setup =
--					(struct hal_tx_fes_setup *)tlv_data;
-+		const struct hal_tx_fes_setup *tx_fes_setup = tlv_data;
- 
- 		info[0] = __le32_to_cpu(tx_fes_setup->info0);
- 		tx_ppdu_info->ppdu_id = __le32_to_cpu(tx_fes_setup->schedule_id);
-@@ -1625,8 +1603,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_TX_FES_STATUS_END: {
--		struct hal_tx_fes_status_end *tx_fes_status_end =
--			(struct hal_tx_fes_status_end *)tlv_data;
-+		const struct hal_tx_fes_status_end *tx_fes_status_end = tlv_data;
- 		u32 tst_15_0, tst_31_16;
- 
- 		info[0] = __le32_to_cpu(tx_fes_status_end->info0);
-@@ -1643,8 +1620,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_RX_RESPONSE_REQUIRED_INFO: {
--		struct hal_rx_resp_req_info *rx_resp_req_info =
--			(struct hal_rx_resp_req_info *)tlv_data;
-+		const struct hal_rx_resp_req_info *rx_resp_req_info = tlv_data;
- 		u32 addr_32;
- 		u16 addr_16;
- 
-@@ -1689,8 +1665,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_PCU_PPDU_SETUP_INIT: {
--		struct hal_tx_pcu_ppdu_setup_init *ppdu_setup =
--			(struct hal_tx_pcu_ppdu_setup_init *)tlv_data;
-+		const struct hal_tx_pcu_ppdu_setup_init *ppdu_setup = tlv_data;
- 		u32 addr_32;
- 		u16 addr_16;
- 
-@@ -1736,8 +1711,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_TX_QUEUE_EXTENSION: {
--		struct hal_tx_queue_exten *tx_q_exten =
--			(struct hal_tx_queue_exten *)tlv_data;
-+		const struct hal_tx_queue_exten *tx_q_exten = tlv_data;
- 
- 		info[0] = __le32_to_cpu(tx_q_exten->info0);
- 
-@@ -1749,8 +1723,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_TX_FES_STATUS_START: {
--		struct hal_tx_fes_status_start *tx_fes_start =
--			(struct hal_tx_fes_status_start *)tlv_data;
-+		const struct hal_tx_fes_status_start *tx_fes_start = tlv_data;
- 
- 		info[0] = __le32_to_cpu(tx_fes_start->info0);
- 
-@@ -1761,8 +1734,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_TX_FES_STATUS_PROT: {
--		struct hal_tx_fes_status_prot *tx_fes_status =
--			(struct hal_tx_fes_status_prot *)tlv_data;
-+		const struct hal_tx_fes_status_prot *tx_fes_status = tlv_data;
- 		u32 start_timestamp;
- 		u32 end_timestamp;
- 
-@@ -1789,8 +1761,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 
- 	case HAL_TX_FES_STATUS_START_PPDU:
- 	case HAL_TX_FES_STATUS_START_PROT: {
--		struct hal_tx_fes_status_start_prot *tx_fes_stat_start =
--			(struct hal_tx_fes_status_start_prot *)tlv_data;
-+		const struct hal_tx_fes_status_start_prot *tx_fes_stat_start = tlv_data;
- 		u64 ppdu_ts;
- 
- 		info[0] = __le32_to_cpu(tx_fes_stat_start->info0);
-@@ -1805,8 +1776,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_TX_FES_STATUS_USER_PPDU: {
--		struct hal_tx_fes_status_user_ppdu *tx_fes_usr_ppdu =
--			(struct hal_tx_fes_status_user_ppdu *)tlv_data;
-+		const struct hal_tx_fes_status_user_ppdu *tx_fes_usr_ppdu = tlv_data;
- 
- 		info[0] = __le32_to_cpu(tx_fes_usr_ppdu->info0);
- 
-@@ -1849,8 +1819,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 		break;
- 
- 	case HAL_RX_FRAME_BITMAP_ACK: {
--		struct hal_rx_frame_bitmap_ack *fbm_ack =
--			(struct hal_rx_frame_bitmap_ack *)tlv_data;
-+		const struct hal_rx_frame_bitmap_ack *fbm_ack = tlv_data;
- 		u32 addr_32;
- 		u16 addr_16;
- 
-@@ -1868,8 +1837,7 @@ ath12k_dp_mon_tx_parse_status_tlv(struct ath12k_base *ab,
- 	}
- 
- 	case HAL_MACTX_PHY_DESC: {
--		struct hal_tx_phy_desc *tx_phy_desc =
--			(struct hal_tx_phy_desc *)tlv_data;
-+		const struct hal_tx_phy_desc *tx_phy_desc = tlv_data;
- 
- 		info[0] = __le32_to_cpu(tx_phy_desc->info0);
- 		info[1] = __le32_to_cpu(tx_phy_desc->info1);
--- 
-2.34.1
-
+Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiBUaGUg
+VVNCIGRyaXZlciB1c2VzIGZvdXIgVVNCIFJlcXVlc3QgQmxvY2tzIGZvciBSWC4gQmVmb3JlIHN1
+Ym1pdHRpbmcNCj4gb25lLCBpdCBhbGxvY2F0ZXMgYSAzMjc2OCBieXRlIHNrYiBmb3IgdGhlIFJY
+IGRhdGEuIFRoaXMgYWxsb2NhdGlvbiBjYW4NCj4gZmFpbCwgbWF5YmUgZHVlIHRvIHRlbXBvcmFy
+eSBtZW1vcnkgZnJhZ21lbnRhdGlvbi4gV2hlbiB0aGUgYWxsb2NhdGlvbg0KPiBmYWlscywgdGhl
+IGNvcnJlc3BvbmRpbmcgVVJCIGlzIG5ldmVyIHN1Ym1pdHRlZCBhZ2Fpbi4gQWZ0ZXIgZm91ciBz
+dWNoDQo+IGFsbG9jYXRpb24gZmFpbHVyZXMsIGFsbCBSWCBzdG9wcyBiZWNhdXNlIHRoZSBkcml2
+ZXIgaXMgbm90IHJlcXVlc3RpbmcNCj4gZGF0YSBmcm9tIHRoZSBkZXZpY2UgYW55bW9yZS4NCj4g
+DQo+IERvbid0IGFsbG9jYXRlIGEgMzI3NjggYnl0ZSBza2Igd2hlbiBzdWJtaXR0aW5nIGEgVVNC
+IFJlcXVlc3QgQmxvY2sNCj4gKHdoaWNoIGhhcHBlbnMgdmVyeSBvZnRlbikuIEluc3RlYWQgcHJl
+YWxsb2NhdGUgOCBzdWNoIHNrYnMsIGFuZCByZXVzZQ0KPiB0aGVtIG92ZXIgYW5kIG92ZXIuIElm
+IGFsbCA4IGFyZSBidXN5LCBhbGxvY2F0ZSBhIG5ldyBvbmUuIFRoaXMgaXMNCj4gcHJldHR5IHJh
+cmUuIElmIHRoZSBhbGxvY2F0aW9uIGZhaWxzLCB1c2UgYSB3b3JrIHRvIHRyeSBhZ2FpbiBsYXRl
+ci4NCj4gV2hlbiB0aGVyZSBhcmUgZW5vdWdoIGZyZWUgc2ticyBhZ2FpbiwgZnJlZSB0aGUgZXhj
+ZXNzIHNrYnMuDQo+IA0KPiBBbHNvLCB1c2UgV1FfQkggZm9yIHRoZSBSWCB3b3JrcXVldWUuIFdp
+dGggYSBub3JtYWwgb3IgaGlnaCBwcmlvcml0eQ0KPiB3b3JrcXVldWUgdGhlIHNrYnMgYXJlIHBy
+b2Nlc3NlZCB0b28gc2xvd2x5IHdoZW4gdGhlIHN5c3RlbSBpcyBldmVuIGENCj4gbGl0dGxlIGJ1
+c3ksIGxpa2Ugd2hlbiBvcGVuaW5nIGEgbmV3IHBhZ2UgaW4gYSBicm93c2VyLCBhbmQgdGhlIGRy
+aXZlcg0KPiBydW5zIG91dCBvZiBmcmVlIHNrYnMgYW5kIGFsbG9jYXRlcyBhIGxvdCBvZiBuZXcg
+b25lcy4NCj4gDQo+IE1vdmUgQzJIX0FEQVBUSVZJVFkgdG8gdGhlIGMyaCB3b3JrcXVldWUgaW5z
+dGVhZCBvZiBoYW5kbGluZyBpdCBkaXJlY3RseQ0KPiBmcm9tIHJ0d19md19jMmhfY21kX3J4X2ly
+cXNhZmUoKSwgd2hpY2ggcnVucyBpbiB0aGUgUlggd29ya3F1ZXVlLiBJdA0KPiByZWFkcyBoYXJk
+d2FyZSByZWdpc3RlcnMsIHdoaWNoIGlzIG5vdCAiaXJxc2FmZSIgd2l0aCBVU0IuDQoNClRoaXMg
+cGFydCBzaG91bGQgYmUgaW4gYSBzZXBhcmF0ZWQgcGF0Y2guIA0KDQo+IA0KPiBUaGlzIGlzIG1v
+cmUgb3IgbGVzcyB3aGF0IHRoZSBvdXQtb2YtdHJlZSBSZWFsdGVrIGRyaXZlcnMgZG8sIGV4Y2Vw
+dA0KPiB0aGV5IHVzZSBhIHRhc2tsZXQgaW5zdGVhZCBvZiBhIEJIIHdvcmtxdWV1ZS4NCj4gDQo+
+IFRlc3RlZCB3aXRoIFJUTDg3MjNEVSwgUlRMODgyMUFVLCBSVEw4ODEyQVUsIFJUTDg4MTJCVSwg
+UlRMODgyMkNVLA0KPiBSVEw4ODExQ1UuDQo+IA0KPiBDbG9zZXM6IGh0dHBzOi8vbG9yZS5rZXJu
+ZWwub3JnL2xpbnV4LXdpcmVsZXNzLzZlN2VjYjQ3LTdlYTAtNDMzYS1hMTlmLTA1Zjg4YTJlZGY2
+YkBnbWFpbC5jb20vDQo+IFNpZ25lZC1vZmYtYnk6IEJpdHRlcmJsdWUgU21pdGggPHJ0bDg4MjFj
+ZXJmZTJAZ21haWwuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
+cnR3ODgvZncuYyAgfCAgNyArLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3
+ODgvdXNiLmMgfCA3MyArKysrKysrKysrKysrKysrKysrKy0tLS0NCj4gIGRyaXZlcnMvbmV0L3dp
+cmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmggfCAgMyArDQo+ICAzIGZpbGVzIGNoYW5nZWQsIDY3
+IGluc2VydGlvbnMoKyksIDE2IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvZncuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3JlYWx0ZWsvcnR3ODgvZncuYw0KPiBpbmRleCBlNmU5OTQ2ZmJmNDQuLjAyMzg5YjdjNjg3NiAx
+MDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9mdy5jDQo+
+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvZncuYw0KPiBAQCAtMzMy
+LDYgKzMzMiw5IEBAIHZvaWQgcnR3X2Z3X2MyaF9jbWRfaGFuZGxlKHN0cnVjdCBydHdfZGV2ICpy
+dHdkZXYsIHN0cnVjdCBza19idWZmICpza2IpDQo+ICAgICAgICAgY2FzZSBDMkhfUkFfUlBUOg0K
+PiAgICAgICAgICAgICAgICAgcnR3X2Z3X3JhX3JlcG9ydF9oYW5kbGUocnR3ZGV2LCBjMmgtPnBh
+eWxvYWQsIGxlbik7DQo+ICAgICAgICAgICAgICAgICBicmVhazsNCj4gKyAgICAgICBjYXNlIEMy
+SF9BREFQVElWSVRZOg0KPiArICAgICAgICAgICAgICAgcnR3X2Z3X2FkYXB0aXZpdHlfcmVzdWx0
+KHJ0d2RldiwgYzJoLT5wYXlsb2FkLCBsZW4pOw0KPiArICAgICAgICAgICAgICAgYnJlYWs7DQo+
+ICAgICAgICAgZGVmYXVsdDoNCj4gICAgICAgICAgICAgICAgIHJ0d19kYmcocnR3ZGV2LCBSVFdf
+REJHX0ZXLCAiQzJIIDB4JXggaXNuJ3QgaGFuZGxlZFxuIiwgYzJoLT5pZCk7DQo+ICAgICAgICAg
+ICAgICAgICBicmVhazsNCj4gQEAgLTM2NywxMCArMzcwLDYgQEAgdm9pZCBydHdfZndfYzJoX2Nt
+ZF9yeF9pcnFzYWZlKHN0cnVjdCBydHdfZGV2ICpydHdkZXYsIHUzMiBwa3Rfb2Zmc2V0LA0KPiAg
+ICAgICAgICAgICAgICAgcnR3X2Z3X3NjYW5fcmVzdWx0KHJ0d2RldiwgYzJoLT5wYXlsb2FkLCBs
+ZW4pOw0KPiAgICAgICAgICAgICAgICAgZGV2X2tmcmVlX3NrYl9hbnkoc2tiKTsNCj4gICAgICAg
+ICAgICAgICAgIGJyZWFrOw0KPiAtICAgICAgIGNhc2UgQzJIX0FEQVBUSVZJVFk6DQo+IC0gICAg
+ICAgICAgICAgICBydHdfZndfYWRhcHRpdml0eV9yZXN1bHQocnR3ZGV2LCBjMmgtPnBheWxvYWQs
+IGxlbik7DQo+IC0gICAgICAgICAgICAgICBkZXZfa2ZyZWVfc2tiX2FueShza2IpOw0KPiAtICAg
+ICAgICAgICAgICAgYnJlYWs7DQo+ICAgICAgICAgZGVmYXVsdDoNCj4gICAgICAgICAgICAgICAg
+IC8qIHBhc3Mgb2Zmc2V0IGZvciBmdXJ0aGVyIG9wZXJhdGlvbiAqLw0KPiAgICAgICAgICAgICAg
+ICAgKigodTMyICopc2tiLT5jYikgPSBwa3Rfb2Zmc2V0Ow0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3JlYWx0ZWsvcnR3ODgvdXNiLmMNCj4gaW5kZXggNzI3NTY5ZDRlZjRiLi41YzJkZmEyY2VkOTIg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3ODgvdXNiLmMN
+Cj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuYw0KPiBAQCAt
+NTg1LDcgKzU4NSw3IEBAIHN0YXRpYyB2b2lkIHJ0d191c2JfcnhfaGFuZGxlcihzdHJ1Y3Qgd29y
+a19zdHJ1Y3QgKndvcmspDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZ290byBz
+a2lwX3BhY2tldDsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgfQ0KPiANCj4gLSAgICAgICAg
+ICAgICAgICAgICAgICAgc2tiID0gYWxsb2Nfc2tiKHNrYl9sZW4sIEdGUF9LRVJORUwpOw0KPiAr
+ICAgICAgICAgICAgICAgICAgICAgICBza2IgPSBhbGxvY19za2Ioc2tiX2xlbiwgR0ZQX0FUT01J
+Qyk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGlmICghc2tiKSB7DQo+ICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgcnR3X2RiZyhydHdkZXYsIFJUV19EQkdfVVNCLA0KPiAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgImZhaWxlZCB0byBhbGxvY2F0ZSBS
+WCBza2Igb2Ygc2l6ZSAldVxuIiwNCj4gQEAgLTYxMiw3ICs2MTIsMTEgQEAgc3RhdGljIHZvaWQg
+cnR3X3VzYl9yeF9oYW5kbGVyKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4gICAgICAgICAg
+ICAgICAgICAgICAgICAgcnhfZGVzYyArPSBuZXh0X3BrdDsNCj4gICAgICAgICAgICAgICAgIH0g
+d2hpbGUgKHJ4X2Rlc2MgKyBwa3RfZGVzY19zeiA8IHJ4X3NrYi0+ZGF0YSArIHJ4X3NrYi0+bGVu
+KTsNCj4gDQo+IC0gICAgICAgICAgICAgICBkZXZfa2ZyZWVfc2tiX2FueShyeF9za2IpOw0KPiAr
+ICAgICAgICAgICAgICAgaWYgKHNrYl9xdWV1ZV9sZW4oJnJ0d3VzYi0+cnhfZnJlZV9xdWV1ZSkg
+Pj0NCj4gKyAgICAgICAgICAgICAgICAgICBSVFdfVVNCX1JYX1NLQl9OVU0gLSBSVFdfVVNCX1JY
+Q0JfTlVNKQ0KPiArICAgICAgICAgICAgICAgICAgICAgICBkZXZfa2ZyZWVfc2tiX2FueShyeF9z
+a2IpOw0KPiArICAgICAgICAgICAgICAgZWxzZQ0KPiArICAgICAgICAgICAgICAgICAgICAgICBz
+a2JfcXVldWVfdGFpbCgmcnR3dXNiLT5yeF9mcmVlX3F1ZXVlLCByeF9za2IpOw0KDQpXaHkgbm90
+IGp1c3QgcXVldWUgYW5kIHJldXNlIHJ4X3NrYiBmb3IgYWxsPyBUaGF0IHdvdWxkIGJlIHNpbXBs
+ZXIuIA0KDQo+ICAgICAgICAgfQ0KPiAgfQ0KPiANCj4gQEAgLTYyMSwyMyArNjI1LDU3IEBAIHN0
+YXRpYyB2b2lkIHJ0d191c2JfcmVhZF9wb3J0X2NvbXBsZXRlKHN0cnVjdCB1cmIgKnVyYik7DQo+
+ICBzdGF0aWMgdm9pZCBydHdfdXNiX3J4X3Jlc3VibWl0KHN0cnVjdCBydHdfdXNiICpydHd1c2Is
+IHN0cnVjdCByeF91c2JfY3RybF9ibG9jayAqcnhjYikNCj4gIHsNCj4gICAgICAgICBzdHJ1Y3Qg
+cnR3X2RldiAqcnR3ZGV2ID0gcnR3dXNiLT5ydHdkZXY7DQo+ICsgICAgICAgc3RydWN0IHNrX2J1
+ZmYgKnJ4X3NrYjsNCj4gKyAgICAgICBnZnBfdCBwcmlvcml0eSA9IGluX2ludGVycnVwdCgpID8g
+R0ZQX0FUT01JQyA6IEdGUF9LRVJORUw7DQoNCkkgcmVtZW1iZXIgaW5faW50ZXJydXB0KCkgaXMg
+bm90IHJlY29tbWVuZGVkLiBDYW4ndCB3ZSBwYXNzIG5lY2Vzc2FyeSBnZnBfdA0KdmlhIGZ1bmN0
+aW9uIGFyZ3VtZW50IGJ5IGNhbGxlcnM/DQoNCj4gICAgICAgICBpbnQgZXJyb3I7DQo+IA0KPiAt
+ICAgICAgIHJ4Y2ItPnJ4X3NrYiA9IGFsbG9jX3NrYihSVFdfVVNCX01BWF9SRUNWQlVGX1NaLCBH
+RlBfQVRPTUlDKTsNCj4gLSAgICAgICBpZiAoIXJ4Y2ItPnJ4X3NrYikNCj4gLSAgICAgICAgICAg
+ICAgIHJldHVybjsNCj4gKyAgICAgICByeF9za2IgPSBza2JfZGVxdWV1ZSgmcnR3dXNiLT5yeF9m
+cmVlX3F1ZXVlKTsNCj4gKyAgICAgICBpZiAoIXJ4X3NrYikNCj4gKyAgICAgICAgICAgICAgIHJ4
+X3NrYiA9IGFsbG9jX3NrYihSVFdfVVNCX01BWF9SRUNWQlVGX1NaLCBwcmlvcml0eSk7DQo+ICsN
+Cj4gKyAgICAgICBpZiAoIXJ4X3NrYikNCj4gKyAgICAgICAgICAgICAgIGdvdG8gdHJ5X2xhdGVy
+Ow0KPiArDQo+ICsgICAgICAgcnhjYi0+cnhfc2tiID0gcnhfc2tiOw0KPiArDQo+ICsgICAgICAg
+c2tiX3Jlc2V0X3RhaWxfcG9pbnRlcihyeGNiLT5yeF9za2IpOw0KPiArICAgICAgIHJ4Y2ItPnJ4
+X3NrYi0+bGVuID0gMDsNCg0KSG93IGFib3V0IG1vdmluZyB0aGVzZSBpbml0aWFsaXphdGlvbiB1
+cHdhcmQgYmVmb3JlICcgcnhjYi0+cnhfc2tiID0gcnhfc2tiOyc/DQpTdGF0ZW1lbnRzIGNhbiBi
+ZSBzaG9ydGVyLCBhbmQgaXQgaXMgcmVhc29uYWJsZSB0byBpbml0aWFsaXplIGRhdGEgYmVmb3Jl
+DQphc3NpZ25tZW50LiANCg0KPiANCj4gICAgICAgICB1c2JfZmlsbF9idWxrX3VyYihyeGNiLT5y
+eF91cmIsIHJ0d3VzYi0+dWRldiwNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICB1c2JfcmN2
+YnVsa3BpcGUocnR3dXNiLT51ZGV2LCBydHd1c2ItPnBpcGVfaW4pLA0KPiAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIHJ4Y2ItPnJ4X3NrYi0+ZGF0YSwgUlRXX1VTQl9NQVhfUkVDVkJVRl9TWiwN
+Cj4gICAgICAgICAgICAgICAgICAgICAgICAgICBydHdfdXNiX3JlYWRfcG9ydF9jb21wbGV0ZSwg
+cnhjYik7DQo+IA0KPiAtICAgICAgIGVycm9yID0gdXNiX3N1Ym1pdF91cmIocnhjYi0+cnhfdXJi
+LCBHRlBfQVRPTUlDKTsNCj4gKyAgICAgICBlcnJvciA9IHVzYl9zdWJtaXRfdXJiKHJ4Y2ItPnJ4
+X3VyYiwgcHJpb3JpdHkpOw0KDQpOb3Qgc3VyZSBpZiAncHJpb3JpdHknIGZpdHMgdGhlIG1lYW5p
+bmcuIE1heWJlIG1hbnkga2VybmVsIGNvZGUganVzdA0KdXNlcyAnZ2ZwJy4NCg0KPiAgICAgICAg
+IGlmIChlcnJvcikgew0KPiAtICAgICAgICAgICAgICAga2ZyZWVfc2tiKHJ4Y2ItPnJ4X3NrYik7
+DQo+ICsgICAgICAgICAgICAgICBza2JfcXVldWVfdGFpbCgmcnR3dXNiLT5yeF9mcmVlX3F1ZXVl
+LCByeGNiLT5yeF9za2IpOw0KPiArDQo+ICAgICAgICAgICAgICAgICBpZiAoZXJyb3IgIT0gLUVO
+T0RFVikNCj4gICAgICAgICAgICAgICAgICAgICAgICAgcnR3X2VycihydHdkZXYsICJFcnIgc2Vu
+ZGluZyByeCBkYXRhIHVyYiAlZFxuIiwNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBlcnJvcik7DQoNClNpbmNlIGhlcmUgcnhjYi0+cnhfc2tiICE9IE5VTEwsIHdpbGwgaXQgYmUg
+YSBwcm9ibGVtPyBUaGUgcnhjYiB3aWxsIG5vdCBiZQ0Kc3VibWl0dGVkIGFnYWluPyBTaG91bGQg
+YWxsIGVycm9yIGNhc2VzIGdvIHRvIHRyeV9sYXRlciBsYWJlbD8NCg0KDQo+ICsNCj4gKyAgICAg
+ICAgICAgICAgIGlmIChlcnJvciA9PSAtRU5PTUVNKQ0KPiArICAgICAgICAgICAgICAgICAgICAg
+ICBnb3RvIHRyeV9sYXRlcjsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICByZXR1cm47DQo+
+ICsNCj4gK3RyeV9sYXRlcjoNCj4gKyAgICAgICByeGNiLT5yeF9za2IgPSBOVUxMOw0KPiArICAg
+ICAgIHF1ZXVlX3dvcmsocnR3dXNiLT5yeHdxLCAmcnR3dXNiLT5yeF91cmJfd29yayk7DQo+ICt9
+DQo+ICsNCj4gK3N0YXRpYyB2b2lkIHJ0d191c2JfcnhfcmVzdWJtaXRfd29yayhzdHJ1Y3Qgd29y
+a19zdHJ1Y3QgKndvcmspDQo+ICt7DQo+ICsgICAgICAgc3RydWN0IHJ0d191c2IgKnJ0d3VzYiA9
+IGNvbnRhaW5lcl9vZih3b3JrLCBzdHJ1Y3QgcnR3X3VzYiwgcnhfdXJiX3dvcmspOw0KPiArICAg
+ICAgIHN0cnVjdCByeF91c2JfY3RybF9ibG9jayAqcnhjYjsNCj4gKyAgICAgICBpbnQgaTsNCj4g
+Kw0KPiArICAgICAgIGZvciAoaSA9IDA7IGkgPCBSVFdfVVNCX1JYQ0JfTlVNOyBpKyspIHsNCj4g
+KyAgICAgICAgICAgICAgIHJ4Y2IgPSAmcnR3dXNiLT5yeF9jYltpXTsNCj4gKw0KPiArICAgICAg
+ICAgICAgICAgaWYgKCFyeGNiLT5yeF9za2IpDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHJ0
+d191c2JfcnhfcmVzdWJtaXQocnR3dXNiLCByeGNiKTsNCj4gICAgICAgICB9DQo+ICB9DQo+IA0K
+PiBAQCAtNjUzLDggKzY5MSw3IEBAIHN0YXRpYyB2b2lkIHJ0d191c2JfcmVhZF9wb3J0X2NvbXBs
+ZXRlKHN0cnVjdCB1cmIgKnVyYikNCj4gICAgICAgICAgICAgICAgICAgICB1cmItPmFjdHVhbF9s
+ZW5ndGggPCAyNCkgew0KPiAgICAgICAgICAgICAgICAgICAgICAgICBydHdfZXJyKHJ0d2Rldiwg
+ImZhaWxlZCB0byBnZXQgdXJiIGxlbmd0aDolZFxuIiwNCj4gICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB1cmItPmFjdHVhbF9sZW5ndGgpOw0KPiAtICAgICAgICAgICAgICAgICAgICAg
+ICBpZiAoc2tiKQ0KPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRldl9rZnJlZV9z
+a2JfYW55KHNrYik7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIHNrYl9xdWV1ZV90YWlsKCZy
+dHd1c2ItPnJ4X2ZyZWVfcXVldWUsIHNrYik7DQo+ICAgICAgICAgICAgICAgICB9IGVsc2Ugew0K
+PiAgICAgICAgICAgICAgICAgICAgICAgICBza2JfcHV0KHNrYiwgdXJiLT5hY3R1YWxfbGVuZ3Ro
+KTsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgc2tiX3F1ZXVlX3RhaWwoJnJ0d3VzYi0+cnhf
+cXVldWUsIHNrYik7DQo+IEBAIC02NjIsNiArNjk5LDggQEAgc3RhdGljIHZvaWQgcnR3X3VzYl9y
+ZWFkX3BvcnRfY29tcGxldGUoc3RydWN0IHVyYiAqdXJiKQ0KPiAgICAgICAgICAgICAgICAgfQ0K
+PiAgICAgICAgICAgICAgICAgcnR3X3VzYl9yeF9yZXN1Ym1pdChydHd1c2IsIHJ4Y2IpOw0KPiAg
+ICAgICAgIH0gZWxzZSB7DQo+ICsgICAgICAgICAgICAgICBza2JfcXVldWVfdGFpbCgmcnR3dXNi
+LT5yeF9mcmVlX3F1ZXVlLCBza2IpOw0KPiArDQo+ICAgICAgICAgICAgICAgICBzd2l0Y2ggKHVy
+Yi0+c3RhdHVzKSB7DQo+ICAgICAgICAgICAgICAgICBjYXNlIC1FSU5WQUw6DQo+ICAgICAgICAg
+ICAgICAgICBjYXNlIC1FUElQRToNCj4gQEAgLTY3OSw4ICs3MTgsNiBAQCBzdGF0aWMgdm9pZCBy
+dHdfdXNiX3JlYWRfcG9ydF9jb21wbGV0ZShzdHJ1Y3QgdXJiICp1cmIpDQo+ICAgICAgICAgICAg
+ICAgICAgICAgICAgIHJ0d19lcnIocnR3ZGV2LCAic3RhdHVzICVkXG4iLCB1cmItPnN0YXR1cyk7
+DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGJyZWFrOw0KPiAgICAgICAgICAgICAgICAgfQ0K
+PiAtICAgICAgICAgICAgICAgaWYgKHNrYikNCj4gLSAgICAgICAgICAgICAgICAgICAgICAgZGV2
+X2tmcmVlX3NrYl9hbnkoc2tiKTsNCj4gICAgICAgICB9DQo+ICB9DQo+IA0KPiBAQCAtODY4LDE2
+ICs5MDUsMjYgQEAgc3RhdGljIHN0cnVjdCBydHdfaGNpX29wcyBydHdfdXNiX29wcyA9IHsNCj4g
+IHN0YXRpYyBpbnQgcnR3X3VzYl9pbml0X3J4KHN0cnVjdCBydHdfZGV2ICpydHdkZXYpDQo+ICB7
+DQo+ICAgICAgICAgc3RydWN0IHJ0d191c2IgKnJ0d3VzYiA9IHJ0d19nZXRfdXNiX3ByaXYocnR3
+ZGV2KTsNCj4gKyAgICAgICBzdHJ1Y3Qgc2tfYnVmZiAqcnhfc2tiOw0KPiArICAgICAgIGludCBp
+Ow0KPiANCj4gLSAgICAgICBydHd1c2ItPnJ4d3EgPSBjcmVhdGVfc2luZ2xldGhyZWFkX3dvcmtx
+dWV1ZSgicnR3ODhfdXNiOiByeCB3cSIpOw0KPiArICAgICAgIHJ0d3VzYi0+cnh3cSA9IGFsbG9j
+X3dvcmtxdWV1ZSgicnR3ODhfdXNiOiByeCB3cSIsIFdRX0JILCAwKTsNCj4gICAgICAgICBpZiAo
+IXJ0d3VzYi0+cnh3cSkgew0KPiAgICAgICAgICAgICAgICAgcnR3X2VycihydHdkZXYsICJmYWls
+ZWQgdG8gY3JlYXRlIFJYIHdvcmsgcXVldWVcbiIpOw0KPiAgICAgICAgICAgICAgICAgcmV0dXJu
+IC1FTk9NRU07DQo+ICAgICAgICAgfQ0KPiANCj4gICAgICAgICBza2JfcXVldWVfaGVhZF9pbml0
+KCZydHd1c2ItPnJ4X3F1ZXVlKTsNCj4gKyAgICAgICBza2JfcXVldWVfaGVhZF9pbml0KCZydHd1
+c2ItPnJ4X2ZyZWVfcXVldWUpOw0KPiANCj4gICAgICAgICBJTklUX1dPUksoJnJ0d3VzYi0+cnhf
+d29yaywgcnR3X3VzYl9yeF9oYW5kbGVyKTsNCj4gKyAgICAgICBJTklUX1dPUksoJnJ0d3VzYi0+
+cnhfdXJiX3dvcmssIHJ0d191c2JfcnhfcmVzdWJtaXRfd29yayk7DQo+ICsNCj4gKyAgICAgICBm
+b3IgKGkgPSAwOyBpIDwgUlRXX1VTQl9SWF9TS0JfTlVNOyBpKyspIHsNCj4gKyAgICAgICAgICAg
+ICAgIHJ4X3NrYiA9IGFsbG9jX3NrYihSVFdfVVNCX01BWF9SRUNWQlVGX1NaLCBHRlBfS0VSTkVM
+KTsNCj4gKyAgICAgICAgICAgICAgIGlmIChyeF9za2IpDQo+ICsgICAgICAgICAgICAgICAgICAg
+ICAgIHNrYl9xdWV1ZV90YWlsKCZydHd1c2ItPnJ4X2ZyZWVfcXVldWUsIHJ4X3NrYik7DQo+ICsg
+ICAgICAgfQ0KPiANCj4gICAgICAgICByZXR1cm4gMDsNCj4gIH0NCj4gQEAgLTkwMiw2ICs5NDks
+OCBAQCBzdGF0aWMgdm9pZCBydHdfdXNiX2RlaW5pdF9yeChzdHJ1Y3QgcnR3X2RldiAqcnR3ZGV2
+KQ0KPiANCj4gICAgICAgICBmbHVzaF93b3JrcXVldWUocnR3dXNiLT5yeHdxKTsNCj4gICAgICAg
+ICBkZXN0cm95X3dvcmtxdWV1ZShydHd1c2ItPnJ4d3EpOw0KPiArDQo+ICsgICAgICAgc2tiX3F1
+ZXVlX3B1cmdlKCZydHd1c2ItPnJ4X2ZyZWVfcXVldWUpOw0KPiAgfQ0KPiANCj4gIHN0YXRpYyBp
+bnQgcnR3X3VzYl9pbml0X3R4KHN0cnVjdCBydHdfZGV2ICpydHdkZXYpDQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3VzYi5oIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvcmVhbHRlay9ydHc4OC91c2IuaA0KPiBpbmRleCA4NjY5N2E1YzAxMDMuLjliNjk1
+YjY4OGIyNCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4
+OC91c2IuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3VzYi5o
+DQo+IEBAIC0zOCw2ICszOCw3IEBADQo+ICAjZGVmaW5lIFJUV19VU0JfUlhBR0dfVElNRU9VVCAg
+ICAgICAgICAxMA0KPiANCj4gICNkZWZpbmUgUlRXX1VTQl9SWENCX05VTSAgICAgICAgICAgICAg
+IDQNCj4gKyNkZWZpbmUgUlRXX1VTQl9SWF9TS0JfTlVNICAgICAgICAgICAgIDgNCj4gDQo+ICAj
+ZGVmaW5lIFJUV19VU0JfRVBfTUFYICAgICAgICAgICAgICAgICA0DQo+IA0KPiBAQCAtODEsNyAr
+ODIsOSBAQCBzdHJ1Y3QgcnR3X3VzYiB7DQo+IA0KPiAgICAgICAgIHN0cnVjdCByeF91c2JfY3Ry
+bF9ibG9jayByeF9jYltSVFdfVVNCX1JYQ0JfTlVNXTsNCj4gICAgICAgICBzdHJ1Y3Qgc2tfYnVm
+Zl9oZWFkIHJ4X3F1ZXVlOw0KPiArICAgICAgIHN0cnVjdCBza19idWZmX2hlYWQgcnhfZnJlZV9x
+dWV1ZTsNCj4gICAgICAgICBzdHJ1Y3Qgd29ya19zdHJ1Y3Qgcnhfd29yazsNCj4gKyAgICAgICBz
+dHJ1Y3Qgd29ya19zdHJ1Y3QgcnhfdXJiX3dvcms7DQo+ICB9Ow0KPiANCj4gIHN0YXRpYyBpbmxp
+bmUgc3RydWN0IHJ0d191c2JfdHhfZGF0YSAqcnR3X3VzYl9nZXRfdHhfZGF0YShzdHJ1Y3Qgc2tf
+YnVmZiAqc2tiKQ0KPiAtLQ0KPiAyLjQ3LjANCg0K
