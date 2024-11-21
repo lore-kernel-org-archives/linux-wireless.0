@@ -1,139 +1,130 @@
-Received: from phobos.denx.de (phobos.denx.de [85.214.62.61])
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50D228EA;
-	Thu, 21 Nov 2024 04:16:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.214.62.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0D3BBA3D;
+	Thu, 21 Nov 2024 07:09:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732162592; cv=none; b=gyT+C5AoMHPHfLQySlkLBbsTYr80WqvM+6I0heqbOL0Am4OgXeb6m4FNnR7+38QTivUBgXvDqqVZomsY8D7PlYoMCffBfVKNE9OemE8TAifQJaJyHwpmJFvpZzYj9sGBHAJs3rrkcrH+IOzHghvBim17AcT1/zZRqLKEHBDT1sE=
+	t=1732172970; cv=none; b=ZViv3ckgGVwzOpbTERvTACEcbcYPzIIQnFxRHF7xosUiMQNbOFl5T96w6e4US3m1IaFpcR6tgzNMF5mzbE+fFPW/jymhEF0hJEyYC/BYyUU1O7fA6pkxddmlmxBc0SlcZ9WcrrVwcWS7CFPKmz+Z6PhBGRYXkBqLANEZDnzN9MM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732162592; c=relaxed/simple;
-	bh=Y+/X5y+yOOcp+eDwa/X5cH1NJiN6/TPYFLkSwME5Pj8=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=WxX5lNZSL/NmnW3FD5QL5G45c12+IliL0aszK2BZx6UGrNeZJDUzzqEZVmYin/SJ60X02xEuxQGPJbH3Hc8sw90gWkPSnwa7p+5r8wAdmfcmdH6bMMNueZoT5WtuKYsnu/Qnf3rJKTwL81nU+ije8+7tFahXYUet4jhq9n+lvI0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de; spf=pass smtp.mailfrom=denx.de; dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b=ndoCggms; arc=none smtp.client-ip=85.214.62.61
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=denx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=denx.de
+	s=arc-20240116; t=1732172970; c=relaxed/simple;
+	bh=aLFFCjrkdkrZhCu/NyexcMDYEcrLWZtaulB8rWwll78=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=LW2M6PrN66e3IluBniNjDLEoM2X66mcYOlM7hm3YCat+jCEERbyZFn9S8+T+P6M9uo33HNw/cf/2hGiy530r8Afm1JDrvjz8Vc6N9+K1DxchX1uh0+AepVRQxBbduGiAV2dxqJ4aoJg2oyjyhrGnpkAwhvKxnXHosnniKFtBlgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OC4obv+v; arc=none smtp.client-ip=209.85.215.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=denx.de header.i=@denx.de header.b="ndoCggms"
-Received: from [127.0.0.1] (p578adb1c.dip0.t-ipconnect.de [87.138.219.28])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: marex@denx.de)
-	by phobos.denx.de (Postfix) with ESMTPSA id DBBC189650;
-	Thu, 21 Nov 2024 05:16:21 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
-	s=phobos-20191101; t=1732162583;
-	bh=0UnkVnltLG3gtKs1MUzm4I6PyPNWkwlXSmfZHQuFfgQ=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=ndoCggmsvv8eO0/3DCC7mFyFaabjhnTYuVsZPSrTG0UODUfK5xphPnOtd2jwx01yL
-	 7MgOBm6kIxIZqYNsVJgL6pIppZ+Jb7jcn1tsogiu89XD+MYhrWdCpcTWP/Ukp7+959
-	 IBznUbMpWtrH+mSNk8/G4IDzNrIithOnZBF+KcjD8zCxQW2sGej9IrCFk7bKqmwEy3
-	 LtJs+jTyh4k2UIFkad1SqFMn8RqJv63HrAC1+V2f7FU+85nw6nFchV8YZ3umKQAlZG
-	 csSKpwY/45SNIsI01Los1ct6iaQSobFZUDKnGADXlVB9XOQ8eyd9djMfUUeKFOhBQt
-	 0BMPNqGVwmg6A==
-Message-ID: <c4d655d5-93d3-41dd-a958-c9305ab82fcd@denx.de>
-Date: Thu, 21 Nov 2024 02:39:40 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OC4obv+v"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-7ee7e87f6e4so524040a12.2;
+        Wed, 20 Nov 2024 23:09:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732172968; x=1732777768; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=K/bV5oWLDBC27cWZHR043yZGMTpwFi3iERVni6jKJ+U=;
+        b=OC4obv+vbiKp4YIQt3CdXhJU2oo3JAUqi0oFX9YID3Gx3Ax+uJ07TCl4ZjYid3bKoc
+         W+1zXHPT4+Xgrvt1lokvJ4PwgzdfTLixoRfsB1hWrfjlDWYuHcJJSf1qv6HVw7ZXAzRd
+         K8ESZj9fYHphSm07mvF3COUfpCPcksW9f5q5luBV8Mh8sVGS/gk9vn9gSBr3/UPD9llQ
+         gGS8xcbFG1wVrCmwMO8AECwoXAbc+l7ZjHTmU0P19X/z7ZdOABzQ0513TKQDKf9pr4sS
+         /s/pS+JFZ5tf96VCiRWp55J16k7f0+ORd4Rw4jOMsboVdfH519ewh4xsASx6HXRq0w5p
+         hAxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732172968; x=1732777768;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=K/bV5oWLDBC27cWZHR043yZGMTpwFi3iERVni6jKJ+U=;
+        b=k6GfBpKusBS1z2g5pxReLpSsw6gQeh7pVvfNnA1A4ZX7U1X3M0QjGxqN0opLccGNPY
+         Z1q8C+JDRwDqt4NDDKN+Z4Z1UYzzICux3aa8BnmUWUa8vprTH+iy1KgNYIfZMFVhsk5w
+         +EeznJ0Ux62B7s+1L9JzlyrmgXxKMOwhuGkFlubeGfNYTs2zBJ63C7nuvcvtFFaKNfc0
+         CfrW1s08Qy4m3MX7kPtjj3/PjwEdDcDZ3Scu69MG7GN8xCgmFarDfs1ySFeEReIVvVhi
+         oIGc0lmpIOF6JboRvZppWncbbw+ohWcgq5eyQIN8094DFdpPHOu/lhOAd4GqxSYfGI8h
+         THNg==
+X-Forwarded-Encrypted: i=1; AJvYcCXa5SxrNFaTinMR5UfxRy+ZNLI/0pRMlcNbMDkhOLE4YSdQ5X7k04ZepFkLE5fQHr92bBsoUyXsNMv1RAU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsKFCwytwRu4rjzk0iUL8GMSrkoDt8lFaTKxpEBOXOtmDUm0J+
+	1wM79SpgZghxnsCwx0FRT2cLO8ySxL9y6sAjJ6ucDT0nPZZrt44KoPm4AVCZ
+X-Gm-Gg: ASbGncuoVRA4W2yffNFFE9kUl9zmnEaI4tRNZb2bCyD0csnHfb5asVhq9fuMRfeDl1w
+	ECykh2xLJwHnkx7/5XT+/mqS5UlXVf90txqL4tJEFtci2FPdaodoxvIB/ev8/OQGe5WfiTlEuxp
+	zqrcCRQowKDmeEYjUTuIZCS/sDVuixIJyxuO2qw4Pl3G+znVOX5lw3jV12fL3OpgNR3aypjLcc+
+	w4Hi65+q7sz6CU17CsPc0qJZYnIZuUNZOuh2vJP5aGB+Z3Q3X0maK8=
+X-Google-Smtp-Source: AGHT+IEHtgwWOWAxj1UqicM0Uxnp4+dMA2ZTYHHv9dEZXodElmUipdeypRzYo+JScji7D9JjaMV7kA==
+X-Received: by 2002:a05:6a20:2449:b0:1cf:6c86:231c with SMTP id adf61e73a8af0-1ddaf0b8a56mr6867894637.26.1732172967753;
+        Wed, 20 Nov 2024 23:09:27 -0800 (PST)
+Received: from [192.168.122.73] ([103.12.224.66])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ead03356fbsm2479723a91.31.2024.11.20.23.09.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Nov 2024 23:09:27 -0800 (PST)
+From: Renjaya Raga Zenta <ragazenta@gmail.com>
+Date: Thu, 21 Nov 2024 14:09:27 +0700
+Subject: [PATCH] brcmfmac: fix brcmf_vif_clear_mgmt_ies when stopping AP
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: wilc1000: Rework bus locking
-From: Marek Vasut <marex@denx.de>
-To: Ajay.Kathat@microchip.com, alexis.lothore@bootlin.com,
- linux-wireless@vger.kernel.org
-Cc: davem@davemloft.net, adham.abozaeid@microchip.com,
- claudiu.beznea@tuxon.dev, conor+dt@kernel.org, edumazet@google.com,
- kuba@kernel.org, kvalo@kernel.org, krzk+dt@kernel.org, pabeni@redhat.com,
- robh@kernel.org, devicetree@vger.kernel.org, netdev@vger.kernel.org
-References: <20241022013855.284783-1-marex@denx.de>
- <c9e98811-15f5-427a-82f7-2e7fff4a9873@bootlin.com>
- <8e28ba76-ecfa-49b6-89b5-1edabb22129d@denx.de>
- <a4c8c489-c6b9-4a38-84ab-f08409baccff@microchip.com>
- <5e2a5056-78ac-4be0-83ca-4aa55f524535@denx.de>
- <880baad9-be3d-41b2-bea3-620f915ca397@microchip.com>
- <9d20b408-72a4-49f0-aca6-108dfdd65f99@denx.de>
- <16e5c8d7-64ac-424e-9430-b683ae16a34e@denx.de>
- <9888f605-ee68-4bd3-8d1d-aeef247d23d0@microchip.com>
- <fcdfa93a-2db4-49ad-8947-ca43be329250@denx.de>
- <260a505e-53ec-4f1d-94fe-2b71af48f1b7@denx.de>
- <b61b5b11-b078-4cf5-bb40-7c3ff8ffa972@microchip.com>
- <b287f8f9-600e-4e69-b7ec-25990275575e@denx.de>
-Content-Language: en-US
-In-Reply-To: <b287f8f9-600e-4e69-b7ec-25990275575e@denx.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: clamav-milter 0.103.8 at phobos.denx.de
-X-Virus-Status: Clean
+Message-Id: <20241121-brcmfmac-v1-1-02fc3fb427c2@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAKbcPmcC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIxNDQyND3aSi5Ny03MRkXWPTtCSLRMPEFCMjQyWg8oKi1LTMCrBR0bG1tQA
+ KlAmqWgAAAA==
+X-Change-ID: 20241121-brcmfmac-35fb8a1ad221
+To: Arend van Spriel <aspriel@gmail.com>, 
+ Franky Lin <franky.lin@broadcom.com>, 
+ Hante Meuleman <hante.meuleman@broadcom.com>, Kalle Valo <kvalo@kernel.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com, 
+ SHA-cyfmac-dev-list@infineon.com, linux-kernel@vger.kernel.org, 
+ Renjaya Raga Zenta <ragazenta@gmail.com>
+X-Mailer: b4 0.14.2
 
-On 11/16/24 8:57 PM, Marek Vasut wrote:
-> On 11/15/24 9:04 PM, Ajay.Kathat@microchip.com wrote:
-> 
-> Hello Ajay,
-> 
->>>>>> Can you explain how to prevent that or shall we disable uAPSD
->>>>>> altogether ?
->>>>>
->>>>> Could you please share the test procedure and logs. I am occupied 
->>>>> at the
->>>>> moment but I shall make some time to look into it and get a better
->>>>> understanding.
->>>>
->>>> The simplest test procedure is this:
->>>>
->>>> $ while true ; do ifconfig wlan0 up ; ifconfig wlan0 down ; done
->>>>
->>>> As for the logs, MMCI controller sporadically reports either Command or
->>>> Data CRC error, so likely the SDIO response (from WILC to Host) is
->>>> corrupted.
->>>
->>> Are there any news ?
->>
->> I did test the same procedure in my setup, but I couldn't reproduce 
->> this issue
->> even after running it for a long duration. In my test setup, I used the
->> sama5d27-som1-ek1 host and wilc3000 firmware version 16.3.
->>
->> I think this issue could be related to the host MMCI controller driver.
->> Normally, the wilc SDIO bus failures are captured by driver logs with 
->> an error
->> code (e.g., timeout), but if the MMCI controller is outputting the 
->> warning
->> message, then the error could be related to it. Does the MMCI 
->> controller error
->> point to any specific function?
-> 
-> Either CMD52 or CMD53 errors out with CRC error, this is recognized by 
-> the controller. That points to sporadic CRC error during SDIO transfer.
-> 
->> Which host was used to test this scenario, and
->> is it possible to test with different host or different configuration 
->> on the
->> same host
-> 
-> I am observing sporadic command and data CRC errors on STM32MP157F 
-> system with SDIO WILC3000.
-> 
-> , like disabling power save on the host?
-> I already tested disabling power save.
-> 
-> Can you explain why does uAPSD (iw ...set power_save off) adversely 
-> affect SDIO bus stability ?
-> 
-> Can you explain how to prevent that or shall we disable uAPSD altogether ?
-> 
-> Is there any way to make the WILC firmware produce debug output , so we 
-> can figure out what is going on "on the other side" ?
-> 
-> Are you able to provide me (maybe off-list) some debug firmware build ?
-> (or can I get firmware sources and build and debug my own WILC firmware 
-> on the Cortus CPU?)
-> 
-> I can trigger the SDIO errors even without being connected to any AP , 
-> so this is something between the WILC and the SDIO host, the radio is 
-> likely not involved , right ?
+This removes the following error log when stopping AP:
 
-Any news ?
+ieee80211 phy0: brcmf_vif_set_mgmt_ie: vndr ie set error : -52
+
+It happened if
+1) previously wlan interface was in station mode (wpa_supplicant) and
+   connected to a hotspot
+2) then started AP mode (hostapd)
+3) and then stopped AP mode.
+
+The error happened when it tried to clear BRCMF_VNDR_IE_PRBREQ_FLAG.
+This flag is not set in `brcmf_config_ap_mgmt_ie`, but
+BRCMF_VNDR_IE_ASSOCRSP_FLAG is set instead.
+
+Signed-off-by: Renjaya Raga Zenta <ragazenta@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index e19c14ba35f60433de3702873b0a776945d0e548..ac958848935c920d446b64ac650d40968606cc4d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5022,12 +5022,16 @@ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+ s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif)
+ {
+ 	static const s32 pktflags[] = {
+-		BRCMF_VNDR_IE_PRBREQ_FLAG,
+ 		BRCMF_VNDR_IE_PRBRSP_FLAG,
+ 		BRCMF_VNDR_IE_BEACON_FLAG
+ 	};
+ 	int i;
+ 
++	if (vif->wdev.iftype == NL80211_IFTYPE_AP)
++		brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_ASSOCRSP_FLAG, NULL, 0);
++	else
++		brcmf_vif_set_mgmt_ie(vif, BRCMF_VNDR_IE_PRBREQ_FLAG, NULL, 0);
++
+ 	for (i = 0; i < ARRAY_SIZE(pktflags); i++)
+ 		brcmf_vif_set_mgmt_ie(vif, pktflags[i], NULL, 0);
+ 
+
+---
+base-commit: df8a2f6dc114b2c5c7685a069f717f2b06186b74
+change-id: 20241121-brcmfmac-35fb8a1ad221
+
+Best regards,
+-- 
+Renjaya Raga Zenta <ragazenta@gmail.com>
+
