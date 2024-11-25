@@ -1,30 +1,30 @@
 Received: from mail.ionic.de (ionic.de [145.239.234.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F92121345;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9A82D052;
 	Mon, 25 Nov 2024 03:51:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=145.239.234.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732506719; cv=none; b=FoUH4SEMzHJuty132vGJasGtfO8EHY16OV81JjOunggugEeQbI/0oKG7zvtsMwLZAvfg2r5dzPTquOiwz1kXlxDe6AVFoR1Z540GPHES5c1tF1jowt+YVZpZeR5mRQpUc/Hl9oDziyjD5HnXJklv9sRHxcrfbxu75E1dKWOZ5ME=
+	t=1732506719; cv=none; b=jeFQe4RvGf2DMRbg3NqPgD9n+BkYyxHeUyqIAy/Sf1z07vpwWQmnwhNp7QW+KHBz0mUsa1gbu5ehMTBZzsDMKhlrXb6q9EUflZQsfj2AJDPBrJEsbnzbsZSmz/JcL5AJwfZqfyyCTFOZhRbcK+j71r5C/od4oIqS6ixPRLQESk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1732506719; c=relaxed/simple;
-	bh=B0CUVB3BiReU1INqg0ftqJTFKqCT/0KKba8biA8OdJ0=;
+	bh=DN2g4ZHT+mEUQwKRS2uJbaQDq8nZOw1i3/GADcXe3KM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QaJQgiS94PlhbKd39VOSEkHVd2wDAJ27Ql+j3/tlHpN12BA9Bq2i+5PFaSAYJE/N+rbwGEIlTqPtYHPSicxzyS1zAg9hOy1aE41nDm2fKXaDDTigV3E9RmIc7hRr5Kaevjn3RX7I1I3SMC/k9A4Fnfu4BZ2cEr4IaPl2zoomLVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ionic.de; spf=pass smtp.mailfrom=ionic.de; dkim=pass (1024-bit key) header.d=ionic.de header.i=@ionic.de header.b=EGXpzYAF; arc=none smtp.client-ip=145.239.234.145
+	 MIME-Version; b=SaviGpFyThqtmUMyHRVGP0ZFeEz+A9oiO0X+mjnGKm9FTkDbQ1vfkde2QFKZlYTgvkDuZ0678jy50J9VT8uBotwJKC8p12Mu/S8A+N2KdoqiDFVolGDGCvIyAs62yX0BFNc1YvDj+LBxC4C7aHvaIkub9nzrPGG9EmvXE8B4xeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ionic.de; spf=pass smtp.mailfrom=ionic.de; dkim=pass (1024-bit key) header.d=ionic.de header.i=@ionic.de header.b=BlTEBWpV; arc=none smtp.client-ip=145.239.234.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ionic.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionic.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ionic.de header.i=@ionic.de header.b="EGXpzYAF"
+	dkim=pass (1024-bit key) header.d=ionic.de header.i=@ionic.de header.b="BlTEBWpV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ionic.de; s=default;
-	t=1732506709; bh=B0CUVB3BiReU1INqg0ftqJTFKqCT/0KKba8biA8OdJ0=;
+	t=1732506710; bh=DN2g4ZHT+mEUQwKRS2uJbaQDq8nZOw1i3/GADcXe3KM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EGXpzYAFlJabh352FD9ZEGRCrkJnoaPntThsMRA/hR3WriXXhcAOIeNPHj26jj7xi
-	 bplzQfOik2+bnP1z4McwoxGhnHbQQBrH9c4kJzf848nSUQx5hrZ77UBRN376Zd3iyK
-	 EWkUUvnuYOnIvnUcmFn6Ge9KmyW6/nB8y/jQ260M=
+	b=BlTEBWpV4kuIL+1fMS8p847xYpPDDP4R3d1iOBDTal1JvmToNZtH7NbWJINDDq472
+	 /jphI5Y8QjAQ1tRdZ4gLZaVUIwQaJyG2sHl1hVPBeo6ypaM5WIzBUQXpUK+irLJabo
+	 9BtTcRaVl4cXi42EefwlprBxMAyaourlzLefysfk=
 Received: from grml.local.home.ionic.de (unknown [IPv6:2a00:11:fb41:7a00:21b:21ff:fe5e:dddc])
-	by mail.ionic.de (Postfix) with ESMTPSA id 382F9148870B;
-	Mon, 25 Nov 2024 04:51:49 +0100 (CET)
+	by mail.ionic.de (Postfix) with ESMTPSA id 028AB1488710;
+	Mon, 25 Nov 2024 04:51:50 +0100 (CET)
 From: Mihai Moldovan <ionic@ionic.de>
 To: ath11k@lists.infradead.org,
 	ath12k@lists.infradead.org,
@@ -41,9 +41,9 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-arm-msm@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [RFC] [PATCH v2 07/13] wifi: ath11k: add QRTR endpoint ID hif feature
-Date: Mon, 25 Nov 2024 04:50:22 +0100
-Message-ID: <9cebc829e915888bce0190e3791f425a9a54a02f.1732506261.git.ionic@ionic.de>
+Subject: [RFC] [PATCH v2 10/13] wifi: ath11k: bind to QRTR endpoint ID in ath11k_qmi_init_service
+Date: Mon, 25 Nov 2024 04:50:25 +0100
+Message-ID: <8768f055a92edb14d5f7bab8e497f437f06272b9.1732506261.git.ionic@ionic.de>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <cover.1732506261.git.ionic@ionic.de>
 References: <cover.1732506261.git.ionic@ionic.de>
@@ -55,39 +55,47 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This will allow fetching the QRTR endpoint ID via hardware-specific
-means.
+If possible, fetch the QRTR endpoint ID in ath11k_qmi_init_service, just
+before calling qmi_handle_init, and make it available in the qmi_handle.
+
+qmi_helpers will then automatically bind to this endpoint for us.
+
+This finally allows using multiple ath11k-based cards with the same QRTR
+node/port combination to work simultanenous (and, for that matter, at
+all).
 
 Signed-off-by: Mihai Moldovan <ionic@ionic.de>
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-05266-QCAHSTSWPLZ_V2_TO_X86-1
 ---
- drivers/net/wireless/ath/ath11k/hif.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath11k/qmi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/hif.h b/drivers/net/wireless/ath/ath11k/hif.h
-index 674ff772b181..07ba45c9924a 100644
---- a/drivers/net/wireless/ath/ath11k/hif.h
-+++ b/drivers/net/wireless/ath/ath11k/hif.h
-@@ -31,6 +31,7 @@ struct ath11k_hif_ops {
- 	void (*ce_irq_enable)(struct ath11k_base *ab);
- 	void (*ce_irq_disable)(struct ath11k_base *ab);
- 	void (*get_ce_msi_idx)(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
-+	int (*set_qrtr_endpoint_id)(struct ath11k_base *ab);
- };
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 5759fc521316..604d7211b980 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -15,6 +15,7 @@
+ #include <linux/ioport.h>
+ #include <linux/firmware.h>
+ #include <linux/of_irq.h>
++#include <net/sock.h>
  
- static inline void ath11k_hif_ce_irq_enable(struct ath11k_base *ab)
-@@ -146,4 +147,12 @@ static inline void ath11k_get_ce_msi_idx(struct ath11k_base *ab, u32 ce_id,
- 		*msi_data_idx = ce_id;
- }
+ #define SLEEP_CLOCK_SELECT_INTERNAL_BIT	0x02
+ #define HOST_CSTATE_BIT			0x04
+@@ -3315,6 +3316,13 @@ int ath11k_qmi_init_service(struct ath11k_base *ab)
+ 	ab->qmi.ab = ab;
  
-+static inline int ath11k_set_qrtr_endpoint_id(struct ath11k_base *ab)
-+{
-+	if (!ab->hif.ops->set_qrtr_endpoint_id)
-+		return -EOPNOTSUPP;
-+	else
-+		return ab->hif.ops->set_qrtr_endpoint_id(ab);
-+}
+ 	ab->qmi.target_mem_mode = ab->hw_params.fw_mem_mode;
 +
- #endif /* _HIF_H_ */
++	ret = ath11k_set_qrtr_endpoint_id(ab);
++	if (ret) {
++		ath11k_warn(ab, "failed to set QRTR endpoint ID: %d\n", ret);
++		ath11k_warn(ab, "only one device per system will be supported\n");
++	}
++
+ 	ret = qmi_handle_init(&ab->qmi.handle, ATH11K_QMI_RESP_LEN_MAX,
+ 			      &ath11k_qmi_ops, ath11k_qmi_msg_handlers);
+ 	if (ret < 0) {
 -- 
 2.45.2
 
