@@ -1,67 +1,52 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A79A23
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2024 01:32:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7E7B8F5C
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2024 02:28:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732671135; cv=none; b=IeGwb/K+xV8j6jC6NkTxctfz0XzERDSju5hyrt7vXmBSjsVV53x3BBDKPzwhxltC9FPqHfuUDh62VKceLuzDWSZKZ7qpz/nEL3gt6oMLv2Vu9mfeBaqe03NlG1I9T3BBLPVNOhwxRCXv014w9dot6c1ommXjVumCQGnKNOftm9A=
+	t=1732674489; cv=none; b=QkJSxhaSmLENQCzl/xSzmm1aRIRcDS6Joa2BGsouaF2ikUrzgTczEokufnhFtUBvMiqBZqsrbD8rPiscpgEkATtRwtVCd9Swe8Q4HJlPJo/21RmsJPLWo8tnaMN5Jp3aaFB9tBxiUD0R1QvEztxRVqGjsFVjaYfzm4GAw/JFFi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732671135; c=relaxed/simple;
-	bh=Xs8py6+DQDcAhivKKHrp24KumOs1jpd1Y6aTw86UFfY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XOfAbANV78PIdF7XkbGvcwtLNBncNB7gZRUTVc3OuA7apsGPZt8hw+fc96Ne30cJhrsBbd7oUjF1z/huEmG06RnEylHSYQVp7zy4umaYR20+6sxChR/nrHpK6zP9WdqRQsJ5VvCZAkRxXo7M6oSg6X6HrL2oh+NfFXSZkPVafqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KOSuL26f; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732674489; c=relaxed/simple;
+	bh=lo//PJN0C6GCoKsuD5k8guqJGsWbtU1klMa4HM3z5cU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=f8j4Xqeq3e7TwCHdvQJQLAOW/CLG84eukq4vyM7NYViJhDKHDuQyGRIDCUgxmVzHTrch1Ssl3rr+IRivjb1jVvtXVN36XmUJN4zC3PQFcJAAsCR3mKKX6+/mIo6cQtIUf0b5MsOlK99e65Rz/TwuKxlEcxgiC6o6Io/8X0s5ebI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XUdEDOXn; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KOSuL26f"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-7fc88476a02so387217a12.2
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2024 17:32:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732671133; x=1733275933; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=aVKiElbX1G/Llu1UB7E/2V7jIT5D9hjhB8BONhE5Lhc=;
-        b=KOSuL26fxsJA3mPkK9hZMH1q59Aa413LKAaLjGy0M8wDiocmwUlisQQv64TLaKAMYp
-         V1cls9XfNBEUGtgP1Ceh+K3kVPG84vBh1EApzqcjJT4Ro/YI/tIaAY11Ck5fc9X4oN4j
-         9Y5bIL/ECzXehmJ4hir6rL3gwOrsp84LGOIFW6eno6zwy4zQri1PISAackykBkqyhq5J
-         PvUHY/5hLKVoR8VwNjnt0FLq4aDygVxLxKPDauNgDTftuf9CadjfZsJVOxMYQMe9LQxY
-         HfbMyoUXo/DoesvKHQ5Vf6GxH3xo1vJC4pogga2zXlUhVi0iLSwMm+mdHUL9SeXTIdR7
-         4nOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732671133; x=1733275933;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=aVKiElbX1G/Llu1UB7E/2V7jIT5D9hjhB8BONhE5Lhc=;
-        b=OlRWll9SHJUDz6n7nDjakXMslDqnnGunOMCzt/DJ0sdGwBVnHlaokfudqw5Kg+IkUL
-         GdcWR7bn0vrXbMx0GKsNiODeWAR/LBd1Hsxzy9uVCOLoAvxhO/q6GtpbDPRH2NiLZ0a9
-         eL6PHxVcTmuMVFu0x32Q6EFWxoHCZ6kbaR6rmiG9eTtp8wulH8TNcH8aWaPrwPluu4nb
-         kLaf9KuoQ1ZdV/fTIS0bikP/nBMv42WEmxXc9aT2/vdECWJ3eJDcTjXhos0xjVQiLSFN
-         5wVQWIcvgCG09KXxa7/wuqKRbR2OWCYxIbARP/tLy3mQtGRUSxTjErppI/tZIAp8k1s+
-         jGeA==
-X-Gm-Message-State: AOJu0YxvozYw190+dyP0SALiGEf2I1dT/+/0FMscdRMUPX75kWLVh1C0
-	s/OLtl0XsBnY/zeFtyIxoNqEVcHaqSsbpwEgK+s50qdFyHRjESuj
-X-Gm-Gg: ASbGncucexREY3peNoKSILAcYwrWdZ9/3uCgNXr8esGqAnwsjjOJLESDDHRY314aip5
-	X5o1+7R19oMs20YccEg65tyDXhV3yDqGXkGLPfm0GB/z2J+jzc9MFjsm5nCFNcX7nTkFk0bRBFm
-	nmaxcNYn4EvHsBPYsY3bd0Emiu4AmCUcxSVrSv2MCFu/THtPm/iNnGEVwMd0SpEPZ4EanXdHoQj
-	DXec5QMTfM1e9A8jTr2CqAfszbp8cvcNd2+/Po79+XAymQ67Xpke0+OacwJDozhHdCMWxrEacdB
-	4wYfRN/DG8oV37TQ
-X-Google-Smtp-Source: AGHT+IGF0AWXVhwQgKp852jMAYbzZeHUusfk5AVedXEbtlYU3QAlauARD3i8MDGg8I1fO4/aUsRJDg==
-X-Received: by 2002:a05:6a20:2444:b0:1db:a919:27ea with SMTP id adf61e73a8af0-1e0e0b71e9emr2343943637.41.1732671133234;
-        Tue, 26 Nov 2024 17:32:13 -0800 (PST)
-Received: from localhost.localdomain (59-124-166-19.hinet-ip.hinet.net. [59.124.166.19])
-        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-724e3e636f7sm8964534b3a.183.2024.11.26.17.32.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2024 17:32:12 -0800 (PST)
-From: Ping-Ke Shih <pkshih@gmail.com>
-To: wens@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	wireless-regdb@lists.infradead.org
-Subject: [PATCH] wireless-regdb: Update regulatory info for Azerbaijan (AZ) on 6GHz for 2024
-Date: Wed, 27 Nov 2024 17:32:08 +0800
-Message-Id: <20241127093208.4693-1-pkshih@gmail.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XUdEDOXn"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AQKLXWf006763;
+	Wed, 27 Nov 2024 02:27:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=qC4SGT9DFDAwSW9hYNzONl
+	YrXnRIro+hC0CFg7X7Ut4=; b=XUdEDOXnaBZi0dzNrXMrrKphAMssqgaVcwS6hG
+	RipxkE2PG6QAy9rZBSuMuXL47Zcf2pHWSIrd5neq1fCeRo4GOKtv0zxnM1q6lgNY
+	NumF8JTQvW6rPZHJBw3joTRyiAE2Q35ziSlpz0ShXXGLlCeDM2GtbZIcJOfds19n
+	nnro5s8pJr+UKNg9Ib3Tx/TTWTDlro2A2CsI9qWiHYN5x7icLKjfMbrIyZ+PzsVj
+	tLXbCgoCHQ9V92G9lJvhA60pXcD7WIIpqSvZ0QBGgOKjJT5ilbv7p22vtDcPrnlW
+	QGRZkgg8Q/9aVvEQd0pLsnQ1hO/Z0a83Xx6gGsZuxx8OZ46w==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 434ts1mwqp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Nov 2024 02:27:58 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4AR2RvqI001477
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 27 Nov 2024 02:27:57 GMT
+Received: from yuzha-gv.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 26 Nov 2024 18:27:56 -0800
+From: "Yu Zhang(Yuriy)" <quic_yuzha@quicinc.com>
+To: <kvalo@kernel.org>
+CC: <quic_jjohnson@quicinc.com>, <ath11k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, Mihai Moldovan <ionic@ionic.de>
+Subject: [PATCH v3] wifi: ath11k: support DBS and DFS compatibility
+Date: Wed, 27 Nov 2024 10:27:42 +0800
+Message-ID: <20241127022742.4016870-1-quic_yuzha@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,46 +54,145 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: -Zk1Y3FxWH-qfoG1CbNRlGfqNFf8oDp_
+X-Proofpoint-ORIG-GUID: -Zk1Y3FxWH-qfoG1CbNRlGfqNFf8oDp_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 mlxlogscore=999 spamscore=0 adultscore=0 malwarescore=0
+ impostorscore=0 phishscore=0 priorityscore=1501 mlxscore=0 suspectscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2411270020
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Now some chips which support 'support_dual_stations' will enable DBS,
+but will disable DFS. Restructure the ath11k_mac_setup_iface_combinations
+function to support DBS and DFS compatibility.
 
-The ICTA established under the Ministry of Digital Development and
-Transport of the Republic of Azerbaijan announced in June-September,
-the State Commission for Radio Frequencies responded positively to 17
-applications.
+About 'support_dual_station' feature can refer:
+https://msgid.link/20230714023801.2621802-2-quic_cjhuang@quicinc.com
 
-At the meeting of the State Commission, taking into account the
-Decision No. (20) 01 of the Electronic Communications Committee of the
-Pan-European Conference of Postal and Telecommunications Administrations
-(ECC Decision (20) 01) and international experience, the "Conditions for
-the use of the 5945-6425 MHz radio frequency band for Wireless Access
-Systems (WAS), including Radio Local Area Networks (RLAN)" were approved.
+Add a ieee80211_iface_combination to support DBS and DFS compatibility,
+one combination can support DFS(same with non dual sta), another
+combination can support DBS. When running different scenarios that will
+use different ieee80211_iface_combination due to mac80211 will go through
+all of possible interface combinations.
 
-ECC/DEC(20)01 defines:
+In addition, maximum number of interfaces of these types should be total
+allowed in this group.
 
-* 5945-6425 MHz
-  - LPI, 23 dBm, indoor use only (adopted)
-  - VLP, 14 dBm, indoor/outdoor
+The chips affected are:
 
-[1] https://icta.az/show-media-news/iyun-sentyabr-aylarinda-radiotezlikler-uzre-dovlet-komissiyasi-17-muracieti-musbet-cavablandirib?
+ QCA6390 hw2.0
+ WCN6855 hw2.0
+ WCN6855 hw2.1
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Other chips are not affected.
+
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.1.0.1-00410-QCAHKSWPL_SILICONZ-2
+Tested-on: IPQ6018 hw1.0 AHB WLAN.HK.2.1.0.1-01161-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04402-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1.
+Tested-by: Mihai Moldovan <ionic@ionic.de>
+Tested-on: QCA6390 hw2.0 PCI WLAN.HST.1.0.1-05266-QCAHSTSWPLZ_V2_TO_X86-1
+
+Signed-off-by: Yu Zhang(Yuriy) <quic_yuzha@quicinc.com>
 ---
- db.txt | 1 +
- 1 file changed, 1 insertion(+)
+v2:
+ - Add tested-on IPQ8074 and IPQ6018.
+v3:
+ - Add tested-on QCA6390.  
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 42 +++++++++++++++------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
 
-diff --git a/db.txt b/db.txt
-index 5710545da0b6..24195fcac004 100644
---- a/db.txt
-+++ b/db.txt
-@@ -180,6 +180,7 @@ country AZ: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
- 	(5170 - 5250 @ 80), (18), AUTO-BW
- 	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
-+	(5945 - 6425 @ 320), (23), NO-OUTDOOR
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 31ae9b384a29..aa63f5e20f2b 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -9911,12 +9911,17 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ieee80211_iface_combination *combinations;
+ 	struct ieee80211_iface_limit *limits;
+-	int n_limits;
++	int n_limits, n_combos;
+ 	bool p2p;
  
- # BA as part of CEPT accepted decisions 2005/513/EC (5GHz RLAN, EN 301 893)
- # and 2006/771/EC (amended by 2008/432/EC, Short-Range Devices, EN 300 440)
+ 	p2p = ab->hw_params.interface_modes & BIT(NL80211_IFTYPE_P2P_DEVICE);
+ 
+-	combinations = kzalloc(sizeof(*combinations), GFP_KERNEL);
++	if (ab->hw_params.support_dual_stations)
++		n_combos = 2;
++	else
++		n_combos = 1;
++
++	combinations = kcalloc(n_combos, sizeof(*combinations), GFP_KERNEL);
+ 	if (!combinations)
+ 		return -ENOMEM;
+ 
+@@ -9931,7 +9936,9 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
+ 		return -ENOMEM;
+ 	}
+ 
++	limits[0].max = 1;
+ 	limits[0].types |= BIT(NL80211_IFTYPE_STATION);
++	limits[1].max = 16;
+ 	limits[1].types |= BIT(NL80211_IFTYPE_AP);
+ 	if (IS_ENABLED(CONFIG_MAC80211_MESH) &&
+ 	    ab->hw_params.interface_modes & BIT(NL80211_IFTYPE_MESH_POINT))
+@@ -9941,25 +9948,24 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
+ 	combinations[0].n_limits = n_limits;
+ 	combinations[0].beacon_int_infra_match = true;
+ 	combinations[0].beacon_int_min_gcd = 100;
++	combinations[0].max_interfaces = 16;
++	combinations[0].num_different_channels = 1;
++	combinations[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++						BIT(NL80211_CHAN_WIDTH_20) |
++						BIT(NL80211_CHAN_WIDTH_40) |
++						BIT(NL80211_CHAN_WIDTH_80) |
++						BIT(NL80211_CHAN_WIDTH_80P80) |
++						BIT(NL80211_CHAN_WIDTH_160);
+ 
+ 	if (ab->hw_params.support_dual_stations) {
+ 		limits[0].max = 2;
+-		limits[1].max = 1;
+-
+-		combinations[0].max_interfaces = ab->hw_params.num_vdevs;
+-		combinations[0].num_different_channels = 2;
+-	} else {
+-		limits[0].max = 1;
+-		limits[1].max = 16;
+ 
+-		combinations[0].max_interfaces = 16;
+-		combinations[0].num_different_channels = 1;
+-		combinations[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+-							BIT(NL80211_CHAN_WIDTH_20) |
+-							BIT(NL80211_CHAN_WIDTH_40) |
+-							BIT(NL80211_CHAN_WIDTH_80) |
+-							BIT(NL80211_CHAN_WIDTH_80P80) |
+-							BIT(NL80211_CHAN_WIDTH_160);
++		combinations[1].limits = limits;
++		combinations[1].n_limits = n_limits;
++		combinations[1].beacon_int_infra_match = true;
++		combinations[1].beacon_int_min_gcd = 100;
++		combinations[1].max_interfaces = ab->hw_params.num_vdevs;
++		combinations[1].num_different_channels = 2;
+ 	}
+ 
+ 	if (p2p) {
+@@ -9970,7 +9976,7 @@ static int ath11k_mac_setup_iface_combinations(struct ath11k *ar)
+ 	}
+ 
+ 	ar->hw->wiphy->iface_combinations = combinations;
+-	ar->hw->wiphy->n_iface_combinations = 1;
++	ar->hw->wiphy->n_iface_combinations = n_combos;
+ 
+ 	return 0;
+ }
 -- 
-2.25.1
+2.34.1
 
