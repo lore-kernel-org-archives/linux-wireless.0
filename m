@@ -1,90 +1,114 @@
-Received: from mail-0201.mail-europe.com (mail-0201.mail-europe.com [51.77.79.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDF688831
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2024 20:41:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.77.79.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A79A23
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Nov 2024 01:32:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732653672; cv=none; b=pgV3MLX5TNWBzwFRYPcbFDhQO5peGmS3LnRxzv9tTR+MrZlBXrhY9WAvQn31M62eHi4JJj2WH5d1QtQZ8cgC1iJuqNntx6wzjRRoL9Wz5WbF/FnMys5n6tz//Az2woIAayI7Vfiaqt2X+Xcl9xSNHFjUAZRPhnepp1rvBSR+q0E=
+	t=1732671135; cv=none; b=IeGwb/K+xV8j6jC6NkTxctfz0XzERDSju5hyrt7vXmBSjsVV53x3BBDKPzwhxltC9FPqHfuUDh62VKceLuzDWSZKZ7qpz/nEL3gt6oMLv2Vu9mfeBaqe03NlG1I9T3BBLPVNOhwxRCXv014w9dot6c1ommXjVumCQGnKNOftm9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732653672; c=relaxed/simple;
-	bh=BHATuqEzXWan9Ue6g78j5Ob25RfRPbaHVDtMMsQf9QQ=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=tu0Eg5QzBj5eTTlenYRYsB7mn43WiY4xX2xWNYDZ/f4aEsV8WBVOvAy+mSXChonBLrOr3Yl0vjFAsPfZ1MEXaDJSux/c+C6kC+1Bk4VO8DSn0S9OByX8lRt/G+WYkOVPW1Lan09Qinmi1DLRdOlf+m8cl9kQUEV1tYbXfgVOFKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=monroe.io; spf=pass smtp.mailfrom=monroe.io; dkim=pass (2048-bit key) header.d=monroe.io header.i=@monroe.io header.b=ZvS5CaD4; arc=none smtp.client-ip=51.77.79.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=monroe.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=monroe.io
+	s=arc-20240116; t=1732671135; c=relaxed/simple;
+	bh=Xs8py6+DQDcAhivKKHrp24KumOs1jpd1Y6aTw86UFfY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XOfAbANV78PIdF7XkbGvcwtLNBncNB7gZRUTVc3OuA7apsGPZt8hw+fc96Ne30cJhrsBbd7oUjF1z/huEmG06RnEylHSYQVp7zy4umaYR20+6sxChR/nrHpK6zP9WdqRQsJ5VvCZAkRxXo7M6oSg6X6HrL2oh+NfFXSZkPVafqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KOSuL26f; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=monroe.io header.i=@monroe.io header.b="ZvS5CaD4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=monroe.io;
-	s=protonmail; t=1732653653; x=1732912853;
-	bh=KG/Kg0ePMdkfS4t5EFLIRwRC4Dq4IlcBVb7Xm75eJbU=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector:
-	 List-Unsubscribe:List-Unsubscribe-Post;
-	b=ZvS5CaD4YYZpKp/QfYVYA9QemezOwhZM6t4YgEV39H93i3QtHsjsItpbWecNF680e
-	 FVBvdFM+NiNbxPx+bef6wr7sa4cP5YP8GrkyXZLx2tPVp66we2OZxYHWaTqxP2hmq5
-	 gomYJnk7xfZfcEXoZIK0fIxtYEu2xO1euXiZ9ZpI8Qa9OKtyFOM5nC5cjDdvuPLbKc
-	 v6dVm/2I4u6GBDP72Ihb1PTwtLwNYjULMeA1OxmKTJaq8NFHzdTb5RAmdOL5a+78PS
-	 0Kk+DdNIZD/y3XHbjvFmlz6EVSsimdzp4u5tKSBActfwrMZIPXgfY/N/r4AjO8OI16
-	 EGOuhQTU6qeJA==
-Date: Tue, 26 Nov 2024 20:40:49 +0000
-To: Felix Fietkau <nbd@nbd.name>, Johannes Berg <johannes.berg@intel.com>
-From: Chad Monroe <chad@monroe.io>
-Cc: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>, Shayne Chen <shayne.chen@mediatek.com>, Evelyn Tsai <evelyn.tsai@mediatek.com>, Ryder Lee <ryder.lee@mediatek.com>, linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org, Chad Monroe <chad@monroe.io>
-Subject: [PATCH] wifi: mt76: mt7996: exclude tx backoff time from airtime
-Message-ID: <88821d8f08e2715927939b35e630a06171962636.1732653612.git.chad@monroe.io>
-Feedback-ID: 9731019:user:proton
-X-Pm-Message-ID: 8f0a5ca459019cf184da20d2b34238f678a70372
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KOSuL26f"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-7fc88476a02so387217a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2024 17:32:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1732671133; x=1733275933; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=aVKiElbX1G/Llu1UB7E/2V7jIT5D9hjhB8BONhE5Lhc=;
+        b=KOSuL26fxsJA3mPkK9hZMH1q59Aa413LKAaLjGy0M8wDiocmwUlisQQv64TLaKAMYp
+         V1cls9XfNBEUGtgP1Ceh+K3kVPG84vBh1EApzqcjJT4Ro/YI/tIaAY11Ck5fc9X4oN4j
+         9Y5bIL/ECzXehmJ4hir6rL3gwOrsp84LGOIFW6eno6zwy4zQri1PISAackykBkqyhq5J
+         PvUHY/5hLKVoR8VwNjnt0FLq4aDygVxLxKPDauNgDTftuf9CadjfZsJVOxMYQMe9LQxY
+         HfbMyoUXo/DoesvKHQ5Vf6GxH3xo1vJC4pogga2zXlUhVi0iLSwMm+mdHUL9SeXTIdR7
+         4nOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732671133; x=1733275933;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=aVKiElbX1G/Llu1UB7E/2V7jIT5D9hjhB8BONhE5Lhc=;
+        b=OlRWll9SHJUDz6n7nDjakXMslDqnnGunOMCzt/DJ0sdGwBVnHlaokfudqw5Kg+IkUL
+         GdcWR7bn0vrXbMx0GKsNiODeWAR/LBd1Hsxzy9uVCOLoAvxhO/q6GtpbDPRH2NiLZ0a9
+         eL6PHxVcTmuMVFu0x32Q6EFWxoHCZ6kbaR6rmiG9eTtp8wulH8TNcH8aWaPrwPluu4nb
+         kLaf9KuoQ1ZdV/fTIS0bikP/nBMv42WEmxXc9aT2/vdECWJ3eJDcTjXhos0xjVQiLSFN
+         5wVQWIcvgCG09KXxa7/wuqKRbR2OWCYxIbARP/tLy3mQtGRUSxTjErppI/tZIAp8k1s+
+         jGeA==
+X-Gm-Message-State: AOJu0YxvozYw190+dyP0SALiGEf2I1dT/+/0FMscdRMUPX75kWLVh1C0
+	s/OLtl0XsBnY/zeFtyIxoNqEVcHaqSsbpwEgK+s50qdFyHRjESuj
+X-Gm-Gg: ASbGncucexREY3peNoKSILAcYwrWdZ9/3uCgNXr8esGqAnwsjjOJLESDDHRY314aip5
+	X5o1+7R19oMs20YccEg65tyDXhV3yDqGXkGLPfm0GB/z2J+jzc9MFjsm5nCFNcX7nTkFk0bRBFm
+	nmaxcNYn4EvHsBPYsY3bd0Emiu4AmCUcxSVrSv2MCFu/THtPm/iNnGEVwMd0SpEPZ4EanXdHoQj
+	DXec5QMTfM1e9A8jTr2CqAfszbp8cvcNd2+/Po79+XAymQ67Xpke0+OacwJDozhHdCMWxrEacdB
+	4wYfRN/DG8oV37TQ
+X-Google-Smtp-Source: AGHT+IGF0AWXVhwQgKp852jMAYbzZeHUusfk5AVedXEbtlYU3QAlauARD3i8MDGg8I1fO4/aUsRJDg==
+X-Received: by 2002:a05:6a20:2444:b0:1db:a919:27ea with SMTP id adf61e73a8af0-1e0e0b71e9emr2343943637.41.1732671133234;
+        Tue, 26 Nov 2024 17:32:13 -0800 (PST)
+Received: from localhost.localdomain (59-124-166-19.hinet-ip.hinet.net. [59.124.166.19])
+        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-724e3e636f7sm8964534b3a.183.2024.11.26.17.32.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Nov 2024 17:32:12 -0800 (PST)
+From: Ping-Ke Shih <pkshih@gmail.com>
+To: wens@kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	wireless-regdb@lists.infradead.org
+Subject: [PATCH] wireless-regdb: Update regulatory info for Azerbaijan (AZ) on 6GHz for 2024
+Date: Wed, 27 Nov 2024 17:32:08 +0800
+Message-Id: <20241127093208.4693-1-pkshih@gmail.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-This helps to make STA airtime counters more accurate.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Chad Monroe <chad@monroe.io>
-Suggested-by: Ryder Lee <ryder.lee@mediatek.com>
+The ICTA established under the Ministry of Digital Development and
+Transport of the Republic of Azerbaijan announced in June-September,
+the State Commission for Radio Frequencies responded positively to 17
+applications.
+
+At the meeting of the State Commission, taking into account the
+Decision No. (20) 01 of the Electronic Communications Committee of the
+Pan-European Conference of Postal and Telecommunications Administrations
+(ECC Decision (20) 01) and international experience, the "Conditions for
+the use of the 5945-6425 MHz radio frequency band for Wireless Access
+Systems (WAS), including Radio Local Area Networks (RLAN)" were approved.
+
+ECC/DEC(20)01 defines:
+
+* 5945-6425 MHz
+  - LPI, 23 dBm, indoor use only (adopted)
+  - VLP, 14 dBm, indoor/outdoor
+
+[1] https://icta.az/show-media-news/iyun-sentyabr-aylarinda-radiotezlikler-uzre-dovlet-komissiyasi-17-muracieti-musbet-cavablandirib?
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/init.c | 4 ++++
- drivers/net/wireless/mediatek/mt76/mt7996/regs.h | 3 +++
- 2 files changed, 7 insertions(+)
+ db.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net=
-/wireless/mediatek/mt76/mt7996/init.c
-index f6a010b61a8a..afc4884f7ba2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -460,6 +460,10 @@ mt7996_mac_init_band(struct mt7996_dev *dev, u8 band)
- =09mt76_clear(dev, MT_WF_RMAC_MIB_AIRTIME4(band),
- =09=09   MT_WF_RMAC_MIB_QOS23_BACKOFF);
-=20
-+=09/* clear backoff time for Tx duration */
-+=09mt76_clear(dev, MT_WTBLOFF_ACR(band),
-+=09=09   MT_WTBLOFF_ADM_BACKOFFTIME);
-+
- =09/* clear backoff time and set software compensation for OBSS time */
- =09mask =3D MT_WF_RMAC_MIB_OBSS_BACKOFF | MT_WF_RMAC_MIB_ED_OFFSET;
- =09set =3D FIELD_PREP(MT_WF_RMAC_MIB_OBSS_BACKOFF, 0) |
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h b/drivers/net=
-/wireless/mediatek/mt76/mt7996/regs.h
-index 06e307b5b02e..1876a968c92d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-@@ -175,6 +175,9 @@ enum offs_rev {
- #define MT_WTBLOFF_RSCR_RCPI_MODE=09=09GENMASK(31, 30)
- #define MT_WTBLOFF_RSCR_RCPI_PARAM=09=09GENMASK(25, 24)
-=20
-+#define MT_WTBLOFF_ACR(_band)=09=09=09MT_WTBLOFF(_band, 0x010)
-+#define MT_WTBLOFF_ADM_BACKOFFTIME=09=09BIT(29)
-+
- /* ETBF: band 0(0x820ea000), band 1(0x820fa000), band 2(0x830ea000) */
- #define MT_WF_ETBF_BASE(_band)=09=09=09__BASE(WF_ETBF_BASE, (_band))
- #define MT_WF_ETBF(_band, ofs)=09=09=09(MT_WF_ETBF_BASE(_band) + (ofs))
---=20
-2.39.5
-
+diff --git a/db.txt b/db.txt
+index 5710545da0b6..24195fcac004 100644
+--- a/db.txt
++++ b/db.txt
+@@ -180,6 +180,7 @@ country AZ: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (18), AUTO-BW
+ 	(5250 - 5330 @ 80), (18), DFS, AUTO-BW
++	(5945 - 6425 @ 320), (23), NO-OUTDOOR
+ 
+ # BA as part of CEPT accepted decisions 2005/513/EC (5GHz RLAN, EN 301 893)
+ # and 2006/771/EC (amended by 2008/432/EC, Short-Range Devices, EN 300 440)
+-- 
+2.25.1
 
