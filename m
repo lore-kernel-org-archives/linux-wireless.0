@@ -1,76 +1,58 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A482A5A79B;
-	Thu, 28 Nov 2024 06:09:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20F9D15E5CA
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Nov 2024 11:10:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732774186; cv=none; b=kisRzzAoM1BtLZyo7vFI0HXvnuSE9PguypTrH/QebnUQJlwHONjQiwxTMYIEcaacPl0ApxtkJ3aOru7s7ppNUtZG4MtWTwbUxlM+HFYzws1k0cbCElzDnBRqzU4hmasAGCe6WK3mR08A0phphMvc9jQdBLgGpG/1kHBwGSH0Ikg=
+	t=1732792216; cv=none; b=M/A08keCVxSQLw/X7GDsP22c65TbNpDmj8ptWv05iuOcMsBwYWdTOFzV8TRy7xI8s59x4sp7vhnD20XVHWgUo3GKcwjduWuJNNQciikUxdtyAJiejKBraNbHYIhOYKpzy2fZrv0SotdbtB5Yd8V0NhHeY7qNmgUzFehuPQVdMHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732774186; c=relaxed/simple;
-	bh=FNFX5D6OzAkZN2wzTw875Y3hkNNVy9wZYzC+ym6hvSM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=muLvEskLxJIH4xnYVJKLj6HZPN6zwS5DuSiqCrQEK95DomMP/uJtqLt5IWr/TZd10kgrD1S99cVYQ3J0LkFQDWvO+HAAZJTDLi5ZYxb4dJ4v6P6+eda7gl8azPVw5npKekENCtsaC+sOUwL91VmPEZ0tgtPMj1uGY67mpX3n69k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JVYCFcgd; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1732792216; c=relaxed/simple;
+	bh=ZlJbP5PEKm9Gvr6JxIIZcNgqj41xhLDBT0VelOe/U5U=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=t5rPCGt+BRIkpIg1IKHT/ezVFeu1wW8iFinVXlYHd8jWwdNFLMB4nWBBLDSYQN9Uajdam1P1Iw1aR3GXuuqeho1YDh8BiT2aIHwDCdMr1cSHJf+nF+ZLYlExb8qc76v3+HiTedIGEApFlRDiIV+AC5x7i7iUkXoEpa0uB9/Y92U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ZIUGpLAU; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JVYCFcgd"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-7e6d04f74faso328590a12.1;
-        Wed, 27 Nov 2024 22:09:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1732774184; x=1733378984; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=n2sl7DBRBj5Zmz6ctNu6EcUwAGJvkhaL3L7D0PuR0LU=;
-        b=JVYCFcgd+FzHGFVljUFGLBJTckFmzVR4VN/b5uJ/MQUdlpEWpHPUeK02eOtaAGkYsU
-         +kSj5OIJw3srFJeboQ5iuHrxJUX4nE8JRJ5Hq8GT9aL6ujnypUEJWk4UW34qTGfb8TgH
-         AuL/NGnLMI/i5DAAYfU5sYAqqm59Qye9CW6dT6PQfgJAK7FaK+42k8NBQgrLbJ0z9w69
-         LX6b+dEXRSUhH9g3/W36npTjAMkrsOgV/H47Uq9B75o9bz+a788hN61+fNv1hrj+mwWu
-         ZmvhHCT6dmrdgQzGk/HL4+7WxGAjHfJccay+cBj8A8wtTGe1+IebpfosVO+l5BkyQFxG
-         o0gw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732774184; x=1733378984;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=n2sl7DBRBj5Zmz6ctNu6EcUwAGJvkhaL3L7D0PuR0LU=;
-        b=T6iglUW+72v20H3WO9NOkNQ2roMllBcipatl0HgFHu8SKPvcZAJlzplpa5zLAJTQft
-         o1UbH2NwuQWvcUxdeQcSamb3Qps95ifHAxeQ3+tT5q7F1SrT0n+S/DEaTpiMTm9doG/M
-         3QDSrai5fgdPSZIxdzIR8KOoRPv/rMbxV6R5AU7WF5BAJskY4DODnwlDhv7O+5DSMdA3
-         M/3bVvkSdpNZldEr1fUQDuL1tqYfbWqB5LdoWvDZMK2/3RaL9Jqz0TiKESLj21+cJEAE
-         u4qc6gLYuzYjOYTSCwqfgMaGMkpdKXdeYHUMtNgITrvku23GNjCchbdKuNvnF8qNjozU
-         icCQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX6hPohhm1AElJ1WxSH6fIjijCyxBGdPA923GO9rof92Kww9Pd4FB9QBNmpUlugxpX+2UTmabpEbHBZW76dBJc=@vger.kernel.org, AJvYcCX8ZPYxhLCR6Km5gV+Tq1vK5xXn9ofKJEO2r0CiJk5RzxlQEUZs/PPZLXCOkV7gDnJs2exCzbijdRqm9WU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyO4gXBBhjNN2yM734quxxYK5XhVoeoyrv6Om53HzzXg4KpOP7T
-	ufwduQSjT9mBEFzXG11WQG5Qnqu/iQYcqImf/3xzd4JIncforxO9
-X-Gm-Gg: ASbGncsYRoPhfjB5kag0MOOuzdDlGRdYapL76azPE/SgFWn5NltlBLH/kCTsGqotvMm
-	RbMjnozxWalPsKkHGP/+TZOMNTlfovk/oOK6cPCm4psVMzXiNO7Q2RHaQz43Gd5T88vw6QKWhXd
-	T2kpXSWxcnepAHw8usojp8K0TfR2frtISjSdgGsGu56vPkXo6M+1n43/2Lb0kvZ2TVq9rmEfuR8
-	yxEKBYTFe6zR0wT42SZrwLmjQcBGdjfpXpep4GYU7f5iEYIgGYbCjDwH6M=
-X-Google-Smtp-Source: AGHT+IFZPjyCmsQWAiAm+6M27f4qo+6s3Q2xz+nj6OTaaxFwdNlTWRqmmwWrbADa4Y/wOn9Ajf8AmA==
-X-Received: by 2002:a17:902:ebc4:b0:205:7007:84fa with SMTP id d9443c01a7336-2151d870174mr34999085ad.28.1732774183312;
-        Wed, 27 Nov 2024 22:09:43 -0800 (PST)
-Received: from LAPTOP-SQ5KB8RN.lan ([222.249.179.118])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-215218f479asm5642875ad.41.2024.11.27.22.09.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Nov 2024 22:09:42 -0800 (PST)
-From: Baichuan Qi <zghbqbc@gmail.com>
-To: quic_vthiagar@quicinc.com
-Cc: ath11k@lists.infradead.org,
-	jjohnson@kernel.org,
-	kvalo@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	markus.elfring@web.de,
-	zghbqbc@gmail.com
-Subject: Re: Re: [PATCH v5] NAK
-Date: Thu, 28 Nov 2024 14:09:31 +0800
-Message-Id: <20241128060931.94100-1-zghbqbc@gmail.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ZIUGpLAU"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AS8nm2L027087;
+	Thu, 28 Nov 2024 11:10:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	K6a/nSDyUPxxdYsx8Hmq6h7PrjFE4OAYqACwMdz0YNU=; b=ZIUGpLAUTaLbyiNE
+	jZuCPkb6HgcSroT+7m12BmUZCkL25o9EQQ7Ret9m7lpYRp2lt6NsSC8uzb54EG2S
+	ABDvXCvxc8EGy/FnIHHxX2AULxXvhbs+Mm3Yujp3a15fnSii8QlcQxee5DYpFqDN
+	sswz0IpY6jeueISR/tc/N63dGNG0HWR6gNXDEQ2i1K8tSJevyqaKX6wP042EkPj5
+	kYFXpQG94kSoXM5cwyy1AsoYKOHTgIjXL9GjGP8e6pqeVfw8ZtfJjkjriK9qH8FF
+	NtzVrIGbgwRABcSlULCYD8TRjGfs1ln61G8vzWKNIOcZWulVIGT27w7BjFmko/qw
+	bvaFuw==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43673jacg8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Nov 2024 11:10:11 +0000 (GMT)
+Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4ASBAAsL013039
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Nov 2024 11:10:10 GMT
+Received: from hu-rdevanat-blr.qualcomm.com (10.80.80.8) by
+ nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 28 Nov 2024 03:10:08 -0800
+From: Roopni Devanathan <quic_rdevanat@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Pradeep Kumar Chitrapu
+	<quic_pradeepc@quicinc.com>,
+        Roopni Devanathan <quic_rdevanat@quicinc.com>
+Subject: [PATCH 1/2] wifi: ath12k: Support Transmit Rate Buffer Stats
+Date: Thu, 28 Nov 2024 16:39:48 +0530
+Message-ID: <20241128110949.3672364-2-quic_rdevanat@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <f0077f4f-922d-56b1-a5b7-bb01e4462e87@quicinc.com>
-References: <f0077f4f-922d-56b1-a5b7-bb01e4462e87@quicinc.com>
+In-Reply-To: <20241128110949.3672364-1-quic_rdevanat@quicinc.com>
+References: <20241128110949.3672364-1-quic_rdevanat@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -78,44 +60,234 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01c.na.qualcomm.com (10.47.97.35)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: krWqvtAAh2uL2DO0PfCQRaiY8mbQQ7NB
+X-Proofpoint-ORIG-GUID: krWqvtAAh2uL2DO0PfCQRaiY8mbQQ7NB
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ malwarescore=0 adultscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
+ mlxlogscore=999 priorityscore=1501 clxscore=1015 suspectscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2411280088
 
-Thanks for your reply
+From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 
-The reason I submit this patch is that the current 
-`ath11k_ce_rx_post_pipe()` NULL pointer check does not ensure 
-that `dest_ring` is NON-NULL. And it is not clear to show the 
-filtering of tx ce pipes
+Add support to request transmit rate buffer stats from firmware through
+HTT stats type 31. These stats give information such as MCS, NSS and
+bandwidth of transmit and input buffer.
 
-> This does not really fix any real issue. Please check ath11k_ce_alloc_pipe()
-> where initialization would fail if anyone of pipe->dest_ring and
-> pipe->status_ring allocation fails for ce pipe used for Rx.
+Sample output:
+-------------
+echo 31 > /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats_type
+cat /sys/kernel/debug/ath12k/pci-0000\:06\:00.0/mac0/htt_stats
+HTT_STATS_PDEV_TX_RATE_TXBF_STATS:
+Legacy OFDM Rates: 6 Mbps: 0, 9 Mbps: 0, 12 Mbps: 0, 18 Mbps: 0
+24 Mbps: 0, 36 Mbps: 0, 48 Mbps: 0, 54 Mbps: 0
+tx_ol_mcs =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0
+tx_ibf_mcs =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0
+tx_txbf_mcs =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0, 13:0
+tx_ol_nss =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
+tx_ibf_nss =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
+tx_txbf_nss =  0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
+tx_ol_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+half_tx_ol_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+quarter_tx_ol_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+tx_ibf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+half_tx_ibf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+quarter_tx_ibf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+tx_txbf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+half_tx_txbf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
+quarter_tx_txbf_bw =  0:0, 1:0, 2:0, 3:0, 4:0
 
-When the driver is running normally, the results of the 
-following three are equal:
+HTT_STATS_PDEV_TXBF_FLAG_RETURN_STATS:
+TXBF_reason_code_stats: 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00214-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+Signed-off-by: Roopni Devanathan <quic_rdevanat@quicinc.com>
 ---
-(pipe->dest_ring || pipe->status_ring) // current code
-(pipe->dest_ring && pipe->status_ring)
-(pipe->dest_ring)
----
-However, when some errors occur and `dest_ring` is abnormal,
-the OR operation cannot guarantee that the pointer is NON-NULL.
+ .../wireless/ath/ath12k/debugfs_htt_stats.c   | 95 +++++++++++++++++++
+ .../wireless/ath/ath12k/debugfs_htt_stats.h   | 32 +++++++
+ 2 files changed, 127 insertions(+)
 
-> This will always fail as the caller loops through all the supported ce pipes
-> and ce pipes used for Tx will not have either dest_ring or status_ring.
-> Please ensure the patch is tested properly.
+diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
+index d8f137bfba7b..d72eb22a719b 100644
+--- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
++++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.c
+@@ -2576,6 +2576,98 @@ ath12k_htt_print_pdev_obss_pd_stats_tlv(const void *tag_buf, u16 tag_len,
+ 	stats_req->buf_len = len;
+ }
+ 
++static void
++ath12k_htt_print_pdev_tx_rate_txbf_stats_tlv(const void *tag_buf, u16 tag_len,
++					     struct debug_htt_stats_req *stats_req)
++{
++	const struct ath12k_htt_pdev_txrate_txbf_stats_tlv *htt_stats_buf = tag_buf;
++	u32 buf_len = ATH12K_HTT_STATS_BUF_SIZE;
++	u32 len = stats_req->buf_len;
++	u8 *buf = stats_req->buf;
++	u8 i;
++
++	if (tag_len < sizeof(*htt_stats_buf))
++		return;
++
++	len += scnprintf(buf + len, buf_len - len,
++			 "HTT_STATS_PDEV_TX_RATE_TXBF_STATS:\n");
++	len += scnprintf(buf + len, buf_len - len, "Legacy OFDM Rates: 6 Mbps: %u, ",
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[0]));
++	len += scnprintf(buf + len, buf_len - len, "9 Mbps: %u, 12 Mbps: %u, ",
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[1]),
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[2]));
++	len += scnprintf(buf + len, buf_len - len, "18 Mbps: %u\n",
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[3]));
++	len += scnprintf(buf + len, buf_len - len, "24 Mbps: %u, 36 Mbps: %u, ",
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[4]),
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[5]));
++	len += scnprintf(buf + len, buf_len - len, "48 Mbps: %u, 54 Mbps: %u\n",
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[6]),
++			 le32_to_cpu(htt_stats_buf->tx_legacy_ofdm_rate[7]));
++
++	len += print_array_to_buf(buf, len, "tx_ol_mcs", htt_stats_buf->tx_su_ol_mcs,
++				  ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS, "\n");
++	len += print_array_to_buf(buf, len, "tx_ibf_mcs", htt_stats_buf->tx_su_ibf_mcs,
++				  ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS, "\n");
++	len += print_array_to_buf(buf, len, "tx_txbf_mcs", htt_stats_buf->tx_su_txbf_mcs,
++				  ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS, "\n");
++	len += print_array_to_buf_index(buf, len, "tx_ol_nss", 1,
++					htt_stats_buf->tx_su_ol_nss,
++					ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS,
++					"\n");
++	len += print_array_to_buf_index(buf, len, "tx_ibf_nss", 1,
++					htt_stats_buf->tx_su_ibf_nss,
++					ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS,
++					"\n");
++	len += print_array_to_buf_index(buf, len, "tx_txbf_nss", 1,
++					htt_stats_buf->tx_su_txbf_nss,
++					ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS,
++					"\n");
++	len += print_array_to_buf(buf, len, "tx_ol_bw", htt_stats_buf->tx_su_ol_bw,
++				  ATH12K_HTT_TXBF_NUM_BW_CNTRS, "\n");
++	for (i = 0; i < ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES; i++)
++		len += print_array_to_buf(buf, len, i ? "quarter_tx_ol_bw" :
++					  "half_tx_ol_bw",
++					  htt_stats_buf->ol[i],
++					  ATH12K_HTT_TXBF_NUM_BW_CNTRS,
++					  "\n");
++
++	len += print_array_to_buf(buf, len, "tx_ibf_bw", htt_stats_buf->tx_su_ibf_bw,
++				  ATH12K_HTT_TXBF_NUM_BW_CNTRS, "\n");
++	for (i = 0; i < ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES; i++)
++		len += print_array_to_buf(buf, len, i ? "quarter_tx_ibf_bw" :
++					  "half_tx_ibf_bw",
++					  htt_stats_buf->ibf[i],
++					  ATH12K_HTT_TXBF_NUM_BW_CNTRS,
++					  "\n");
++
++	len += print_array_to_buf(buf, len, "tx_txbf_bw", htt_stats_buf->tx_su_txbf_bw,
++				  ATH12K_HTT_TXBF_NUM_BW_CNTRS, "\n");
++	for (i = 0; i < ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES; i++)
++		len += print_array_to_buf(buf, len, i ? "quarter_tx_txbf_bw" :
++					  "half_tx_txbf_bw",
++					  htt_stats_buf->txbf[i],
++					  ATH12K_HTT_TXBF_NUM_BW_CNTRS,
++					  "\n");
++	len += scnprintf(buf + len, buf_len - len, "\n");
++
++	len += scnprintf(buf + len, buf_len - len,
++			 "HTT_STATS_PDEV_TXBF_FLAG_RETURN_STATS:\n");
++	len += scnprintf(buf + len, buf_len - len, "TXBF_reason_code_stats: 0:%u, 1:%u,",
++			 le32_to_cpu(htt_stats_buf->txbf_flag_set_mu_mode),
++			 le32_to_cpu(htt_stats_buf->txbf_flag_set_final_status));
++	len += scnprintf(buf + len, buf_len - len, " 2:%u, 3:%u, 4:%u, 5:%u, ",
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_verified_txbf_mode),
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_disable_p2p_access),
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_max_nss_in_he160),
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_disable_uldlofdma));
++	len += scnprintf(buf + len, buf_len - len, "6:%u, 7:%u\n\n",
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_mcs_threshold_val),
++			 le32_to_cpu(htt_stats_buf->txbf_flag_not_set_final_status));
++
++	stats_req->buf_len = len;
++}
++
+ static void ath12k_htt_print_dlpager_entry(const struct ath12k_htt_pgs_info *pg_info,
+ 					   int idx, char *str_buf)
+ {
+@@ -3508,6 +3600,9 @@ static int ath12k_dbg_htt_ext_stats_parse(struct ath12k_base *ab,
+ 	case HTT_STATS_PDEV_OBSS_PD_TAG:
+ 		ath12k_htt_print_pdev_obss_pd_stats_tlv(tag_buf, len, stats_req);
+ 		break;
++	case HTT_STATS_PDEV_TX_RATE_TXBF_STATS_TAG:
++		ath12k_htt_print_pdev_tx_rate_txbf_stats_tlv(tag_buf, len, stats_req);
++		break;
+ 	case HTT_STATS_DLPAGER_STATS_TAG:
+ 		ath12k_htt_print_dlpager_stats_tlv(tag_buf, len, stats_req);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
+index cf3c88f8d1b2..859f5c846016 100644
+--- a/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
++++ b/drivers/net/wireless/ath/ath12k/debugfs_htt_stats.h
+@@ -135,6 +135,7 @@ enum ath12k_dbg_htt_ext_stats_type {
+ 	ATH12K_DBG_HTT_EXT_STATS_PDEV_TX_MU		= 17,
+ 	ATH12K_DBG_HTT_EXT_STATS_PDEV_CCA_STATS		= 19,
+ 	ATH12K_DBG_HTT_EXT_STATS_PDEV_OBSS_PD_STATS	= 23,
++	ATH12K_DBG_HTT_EXT_STATS_PDEV_TX_RATE_TXBF	= 31,
+ 	ATH12K_DBG_HTT_EXT_STATS_DLPAGER_STATS		= 36,
+ 	ATH12K_DBG_HTT_EXT_PHY_COUNTERS_AND_PHY_STATS	= 37,
+ 	ATH12K_DBG_HTT_EXT_VDEVS_TXRX_STATS		= 38,
+@@ -197,6 +198,7 @@ enum ath12k_dbg_htt_tlv_tag {
+ 	HTT_STATS_HW_WAR_TAG				= 89,
+ 	HTT_STATS_SCHED_TXQ_SUPERCYCLE_TRIGGER_TAG	= 100,
+ 	HTT_STATS_PDEV_CTRL_PATH_TX_STATS_TAG		= 102,
++	HTT_STATS_PDEV_TX_RATE_TXBF_STATS_TAG		= 108,
+ 	HTT_STATS_TX_SELFGEN_AC_SCHED_STATUS_STATS_TAG	= 111,
+ 	HTT_STATS_TX_SELFGEN_AX_SCHED_STATUS_STATS_TAG	= 112,
+ 	HTT_STATS_DLPAGER_STATS_TAG			= 120,
+@@ -1068,6 +1070,36 @@ struct ath12k_htt_pdev_obss_pd_stats_tlv {
+ 	__le32 num_sr_ppdu_abort_flush_cnt;
+ } __packed;
+ 
++#define ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS		14
++#define ATH12K_HTT_TX_PDEV_STATS_NUM_LEGACY_OFDM_STATS		8
++#define ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS		8
++#define ATH12K_HTT_TXBF_NUM_BW_CNTRS				5
++#define ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES			2
++
++struct ath12k_htt_pdev_txrate_txbf_stats_tlv {
++	__le32 tx_su_txbf_mcs[ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS];
++	__le32 tx_su_ibf_mcs[ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS];
++	__le32 tx_su_ol_mcs[ATH12K_HTT_TX_BF_RATE_STATS_NUM_MCS_COUNTERS];
++	__le32 tx_su_txbf_nss[ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS];
++	__le32 tx_su_ibf_nss[ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS];
++	__le32 tx_su_ol_nss[ATH12K_HTT_TX_PDEV_STATS_NUM_SPATIAL_STREAMS];
++	__le32 tx_su_txbf_bw[ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 tx_su_ibf_bw[ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 tx_su_ol_bw[ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 tx_legacy_ofdm_rate[ATH12K_HTT_TX_PDEV_STATS_NUM_LEGACY_OFDM_STATS];
++	__le32 txbf[ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES][ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 ibf[ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES][ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 ol[ATH12K_HTT_TXBF_NUM_REDUCED_CHAN_TYPES][ATH12K_HTT_TXBF_NUM_BW_CNTRS];
++	__le32 txbf_flag_set_mu_mode;
++	__le32 txbf_flag_set_final_status;
++	__le32 txbf_flag_not_set_verified_txbf_mode;
++	__le32 txbf_flag_not_set_disable_p2p_access;
++	__le32 txbf_flag_not_set_max_nss_in_he160;
++	__le32 txbf_flag_not_set_disable_uldlofdma;
++	__le32 txbf_flag_not_set_mcs_threshold_val;
++	__le32 txbf_flag_not_set_final_status;
++} __packed;
++
+ enum ath12k_htt_stats_page_lock_state {
+ 	ATH12K_HTT_STATS_PAGE_LOCKED	= 0,
+ 	ATH12K_HTT_STATS_PAGE_UNLOCKED	= 1,
+-- 
+2.25.1
 
-I tested [PATCH v5] and indeed the wrong return value will lead 
-to wrong results when the pointer is null.
-
-Please refer to [PATCH v4].
-Link: https://lore.kernel.org/ath11k/20241127114310.26085-1-zghbqbc@gmail.com/
-Although it does not return an error code, it can ensure that 
-when an unknown error occurs and causes the status of 
-`dest_ring` and `status_ring` to be different, the subsequent 
-code will not access the null pointer, which will only 
-cause the driver to fall into loops.
-
-Thanks for you read.
-
-Thanks
-Baichuan Qi
