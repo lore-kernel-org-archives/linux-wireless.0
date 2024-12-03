@@ -1,51 +1,85 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D3841FA84F;
-	Tue,  3 Dec 2024 16:45:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E39CE1FA179
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Dec 2024 17:47:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733244346; cv=none; b=t4U2TH2LIrE3UFC6HAZr58cJcDKk4a9K11UkSr18ytOOBLpW3bCpZQC5gbxuDAgRIGDYn19k4o6CnyvvSXUoP2nDgasUklmjvGcRyhO6l+KnmXfSyMuZbojZ23viRpK5+eXSjNPkT04LTerbA8/Hn05kzjrmBCOIbvwr3xMWqSA=
+	t=1733248049; cv=none; b=PZt4blqwC19DyIxKLBpXVlP6rx0GPqHAv06wQSsYwag1ZFxlAg5uUs3/b/YsePP/tZgtRGii+9GRwslmyyOtY7rI2bXw6FjLzQF1pNlZeALb0TxVlUYuWntfAvjKCLY1Q/HMyAq1Nuns8SqG8OmBBWnrJpxPylT358OcqYzUsg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733244346; c=relaxed/simple;
-	bh=BA76lR64G5jRwbmzef8LeHyHC95CSwPtwI8o3wr8d7w=;
+	s=arc-20240116; t=1733248049; c=relaxed/simple;
+	bh=Q95+gOI7pTAZtpI5+UrdylhdkgXfWijiKSsgRKgGNcI=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=KVuxDt8SvRdbrfvLlUUeDhTsZXXD2PZzeNeWDU6mdqwF1Ndmrt/bMPTCE7/IhrfOjBDeIkoIXNUEcNL5OzIiaPVy1ZjumcJIrobpjLuM3G8qpmP2W973ekDuZcPYGFjA1IYKW2nUubownMykDIC0e2IsaYCN+6a3/TB+V2wgGw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HP7WJfHY; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HP7WJfHY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=1kn7esNHtCHkPR0o4sIQLKTBnvYJD1ZCR1/40e9RrWY=;
-	t=1733244345; x=1734453945; b=HP7WJfHYLdEgvw3B2UEcvhqocbS7w0bxsER1u/qJLQpfefd
-	MjdpsUTtxuuNIGTKU1QHZzqipnRImGzrrJhSLpSUWaGhwzXuj7DvZS2kBmICFOWDyBys+FnKZ63jr
-	y9aT40VmNZERooPO6tbmugA5386+8U5JwPp11CDsb+S+Xstvfqy9m73ecNGaHvQiDHEVVaA+l7wPU
-	6aAhowpvX/e9QmtSgfTOBhzxjFbulk/ICwdL7dj1PJ17N5FIb6v8twBu11Q2yU4w2VnQ6kYJBHKQR
-	oXIUSVLKcK6j0oOQ7MjYvVkm9IyA1Xwawee5MniDRQ49EMHr42asK/AMUubP53fA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1tIW1s-000000035wi-0cie;
-	Tue, 03 Dec 2024 17:45:40 +0100
-Message-ID: <dcbf9bee124097e131a11f744b32bbeabc250c98.camel@sipsolutions.net>
-Subject: Re: [PATCH] net: wireless: sme: Initialize n_channels before
- accessing channels in cfg80211_conn_scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Haoyu Li
-	 <lihaoyu499@gmail.com>
-Cc: Kees Cook <kees@kernel.org>, "Gustavo A . R . Silva"
- <gustavoars@kernel.org>,  Jeff Johnson <quic_jjohnson@quicinc.com>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-hardening@vger.kernel.org, stable@vger.kernel.org
-Date: Tue, 03 Dec 2024 17:45:39 +0100
-In-Reply-To: <238df0b9-d1db-4f72-8238-828ea20ad1d9@embeddedor.com>
-References: <20241203152049.348806-1-lihaoyu499@gmail.com>
-	 <fa9ef37903db0f81654451104b1407f60f85ce5d.camel@sipsolutions.net>
-	 <238df0b9-d1db-4f72-8238-828ea20ad1d9@embeddedor.com>
+	 Content-Type:MIME-Version; b=iQXP28RXZJStjR15o93q/XbRwmr5Hsqc/VLQXU2Wl2kjkA+iUcBrIOgYffhIVC3PGVp5+wiMq5sSlvlInYz69bZBsuOSE1bKNgwnuXU6rhZ4P3GuG/pefB+mggrEk7iU/W91vuOay95OFV4YVWoNILPluCO7jx8s0/OumTvJJ1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from ptz.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::77] helo=[IPv6:::1])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <l.stach@pengutronix.de>)
+	id 1tIWyE-0003sq-Mm; Tue, 03 Dec 2024 18:45:58 +0100
+Message-ID: <fc624e3fd4a4a38dedf02e31be9e4f1c85fb40a0.camel@pengutronix.de>
+Subject: Re: [PATCH 09/22] drm/etnaviv: Convert timeouts to secs_to_jiffies()
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Easwar Hariharan <eahariha@linux.microsoft.com>, Pablo Neira Ayuso
+ <pablo@netfilter.org>, Jozsef Kadlecsik <kadlec@netfilter.org>, "David S.
+ Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub
+ Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>, Simon Horman
+ <horms@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>,  Nicolas Palix
+ <nicolas.palix@imag.fr>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang
+ <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>,
+ Russell King <linux@armlinux.org.uk>, Heiko Carstens <hca@linux.ibm.com>,
+ Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev
+ <agordeev@linux.ibm.com>, Christian Borntraeger
+ <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, Ofir
+ Bitton <obitton@habana.ai>, Oded Gabbay <ogabbay@kernel.org>, Lucas De
+ Marchi <lucas.demarchi@intel.com>, Thomas =?ISO-8859-1?Q?Hellstr=F6m?=
+ <thomas.hellstrom@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
+ <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie
+ <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Jeroen de Borst
+ <jeroendb@google.com>, Praveen Kaligineedi <pkaligineedi@google.com>,
+ Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ James Smart <james.smart@broadcom.com>, Dick Kennedy
+ <dick.kennedy@broadcom.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Roger Pau =?ISO-8859-1?Q?Monn=E9?=
+ <roger.pau@citrix.com>, Jens Axboe <axboe@kernel.dk>, Kalle Valo
+ <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, Catalin Marinas
+ <catalin.marinas@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Jack
+ Wang <jinpu.wang@cloud.ionos.com>, Marcel Holtmann <marcel@holtmann.org>,
+ Johan Hedberg <johan.hedberg@gmail.com>, Luiz Augusto von Dentz
+ <luiz.dentz@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Florian Fainelli <florian.fainelli@broadcom.com>, Ray Jui
+ <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Broadcom
+ internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Xiubo
+ Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,  Josh Poimboeuf
+ <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>, Miroslav Benes
+ <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>, Joe Lawrence
+ <joe.lawrence@redhat.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, Russell King <linux+etnaviv@armlinux.org.uk>, Christian
+ Gmeiner <christian.gmeiner@gmail.com>,  Louis Peens
+ <louis.peens@corigine.com>, Michael Ellerman <mpe@ellerman.id.au>, Nicholas
+ Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>,
+ Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>
+Cc: netfilter-devel@vger.kernel.org, coreteam@netfilter.org, 
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr, 
+ linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+ linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org, 
+ linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ ath11k@lists.infradead.org, linux-mm@kvack.org,
+ linux-bluetooth@vger.kernel.org,  linux-staging@lists.linux.dev,
+ linux-rpi-kernel@lists.infradead.org,  ceph-devel@vger.kernel.org,
+ live-patching@vger.kernel.org,  linux-sound@vger.kernel.org,
+ etnaviv@lists.freedesktop.org,  oss-drivers@corigine.com,
+ linuxppc-dev@lists.ozlabs.org, Anna-Maria Behnsen <anna-maria@linutronix.de>
+Date: Tue, 03 Dec 2024 18:45:50 +0100
+In-Reply-To: <20241115-converge-secs-to-jiffies-v1-9-19aadc34941b@linux.microsoft.com>
+References: 
+	<20241115-converge-secs-to-jiffies-v1-0-19aadc34941b@linux.microsoft.com>
+	 <20241115-converge-secs-to-jiffies-v1-9-19aadc34941b@linux.microsoft.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.52.4 (3.52.4-2.fc40) 
@@ -55,42 +89,49 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:900:1d::77
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On Tue, 2024-12-03 at 10:20 -0600, Gustavo A. R. Silva wrote:
+Am Freitag, dem 15.11.2024 um 21:22 +0000 schrieb Easwar Hariharan:
+> Changes made with the following Coccinelle rules:
 >=20
-> "Right now, any addition of a counted_by annotation must also
-> include an open-coded assignment of the counter variable after
-> the allocation:
+> @@ constant C; @@
 >=20
->    p =3D alloc(p, array, how_many);
->    p->counter =3D how_many;
+> - msecs_to_jiffies(C * 1000)
+> + secs_to_jiffies(C)
+>=20
+> @@ constant C; @@
+>=20
+> - msecs_to_jiffies(C * MSEC_PER_SEC)
+> + secs_to_jiffies(C)
+>=20
+Thanks, applied to etnaviv/next.
 
-Not sure where you copied that from, but quite obviously Kees didn't
-follow that guidance in e3eac9f32ec0 ("wifi: cfg80211: Annotate struct
-cfg80211_scan_request with __counted_by"), otherwise we wouldn't have
-this patch.
+Regards,
+Lucas
 
->   -- Built-in Function: TYPE __builtin_counted_by_ref (PTR)
-
-Even with that though, we still have to actually implement it, and make
-sure we use struct_size everywhere when we allocate these things... In
-fact we probably need a new allocation function, not just struct_size,
-but rather kzalloc_struct_size(...) or so.
-
-Which e3eac9f32ec0 didn't do, and which anyway we still don't do e.g. in
-nl80211_trigger_scan() because we have multiple variable things in the
-allocation, so we *can't*.
-
-That therefore doesn't even help here.
-
-So that's not a very convincing argument. In a way moving again to "you
-need the newest unreleased compiler" makes it *worse*, not *better*?
-
-But of course if you do that now it'll basically mean again nobody is
-running it and you get to kick the can further down the road ... I still
-think it's a failed experiment. It didn't do any good here as far as I
-can tell, and we've spent a ton of time on it.
-
-johannes
+> Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+> ---
+>  drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c b/drivers/gpu/drm/e=
+tnaviv/etnaviv_cmdbuf.c
+> index 721d633aece9d4c81f0019e4c55884f26ee61c60..0f5a2c885d0ab7029c7248e15=
+d6ea3c31823b782 100644
+> --- a/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
+> +++ b/drivers/gpu/drm/etnaviv/etnaviv_cmdbuf.c
+> @@ -100,7 +100,7 @@ int etnaviv_cmdbuf_init(struct etnaviv_cmdbuf_suballo=
+c *suballoc,
+>  		mutex_unlock(&suballoc->lock);
+>  		ret =3D wait_event_interruptible_timeout(suballoc->free_event,
+>  						       suballoc->free_space,
+> -						       msecs_to_jiffies(10 * 1000));
+> +						       secs_to_jiffies(10));
+>  		if (!ret) {
+>  			dev_err(suballoc->dev,
+>  				"Timeout waiting for cmdbuf space\n");
+>=20
 
