@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E387153BF6
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 18:54:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C725198A06
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 18:54:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733770467; cv=none; b=SPqPpAfSTKLl7+9+wzWG/tfBMbk6vO3qU0TMPeettY5tcebmXluxW9yVgti58UkoRRyRxQib2XyDRJvu82IOFhayU0lgeUZFRPTVEBDH9flz4Ep/J9BQ9A0ZBx++yUgZM8oumjZOojOqYCamT+GyNHUlxSrakN9PcTuxvMHDjGg=
+	t=1733770469; cv=none; b=h+RYdaC8/d6LP9tPWWdQPkOgA5vTIM7rft2f2x9/9UXl2jGavLnool9VUj+WF7ycCndPtg5t0YRc+HGS4RnSjtfZJyqJMxqWrEHmfYcS5z3vWwwFNecBFyBU+4B0BITO/d76w8WCkdv867VNaf0fhlmDTozZaVGaY+kuZC0Wxos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733770467; c=relaxed/simple;
-	bh=Z/R7g7fEQlRtz94pv6c2LJlmem3SXt6N/CdFdM0AE0w=;
+	s=arc-20240116; t=1733770469; c=relaxed/simple;
+	bh=R3x4fB3fgIOZ4yHe2Exvv4Idzn8sQ2bxalc4Ocqijx4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uxTLtaCC380wC6sp8uvND8TX5FDDKwVct65Bq4j7F1YpB+oHBjCRK7s1G9gCTwyacoBhyoX7Jg2+D27qw9HzopXn3GW1gjne6ezd4YDTP34+Q1CvaSKC6Jj3V2cVdjQDCzxhckefRNVJyB/GQc5eY6v9dffM0C6AmIrmoXwuhqY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E/qGUdZl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=hqEtXeZi8/09pphXOQdAyxKZP2EEEF81YnOrWQSwHoC2L/e26WnvwbC9wtF1Yvx/Wi11PnBQS+hW9p9+/BQzK5+9LnI+MwlS25Sy+NcB0OUNP7mUJlMj9cwe5Af6Y66GcoejIvfB/FjEX/tFUKNxywJxaJy7Mw3DAqh+1l5/px4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rjc8vorl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E/qGUdZl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27216C4CEE2;
-	Mon,  9 Dec 2024 18:54:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rjc8vorl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FAD7C4CEDF;
+	Mon,  9 Dec 2024 18:54:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733770466;
-	bh=Z/R7g7fEQlRtz94pv6c2LJlmem3SXt6N/CdFdM0AE0w=;
+	s=k20201202; t=1733770468;
+	bh=R3x4fB3fgIOZ4yHe2Exvv4Idzn8sQ2bxalc4Ocqijx4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=E/qGUdZlMc7iEuwB4NtW/KrLc+79XO6nhPqm3EElwRPY/bve7KKljiNcLzQPD4L9T
-	 cN9dswY5vR0qN2qlNpc4D1TthuCtazUDSCdyLmDpAzqKeO2TBU0fZiq1Wy8C6YZJ+c
-	 En8TtEKQtqtYFGv4RnpPNSnZWBiV9P2ATIA24tRsS2J8hzEElYGTXwOPDECCV6QeDJ
-	 1VBp/T773JkN/7DVALF3hWwQ91HDKU5xOMQlRvpdo4RhW+Qu7jL1gr26IXZKlOJzSU
-	 3eUYkMoZX0dfD9mjYc9DbjcsWPLkO7uUF4gOZxrNp4LC2fEsNEX2fSoZKXolsXfk4n
-	 jSvo2SqJ8SkzQ==
+	b=Rjc8vorlViuTUrCiYrny0uCTRqsH0FlwkwjMsHhHlDZelDEY5vzsE4tmQIq6LctIk
+	 XU1OCsUR3KzgmJ3YHaYt/bH7cxRXEVotCKFpNilpUbuPTxcieTTB9ivNSlL0e29cZk
+	 MhwnMjHo3h12r9LnkF+B87BmaGL6qVwn7XVcTg12hTkBA5GnhXrRWbsXZ1A6mRfAp8
+	 P3DeJ+1j6HmfDFodod3tG35ssWK9+PYToKA3z/C6VbDZ4Rq8OxKtRe+dbJHE7E02QR
+	 y+H0TRcwDYLnSwQBxWnEKonzLR+j3eFhlGHB+NUzlZtxxDKy1QoZaHQ96moGV7MRQv
+	 GXLwjjV2yuM4A==
 From: Kalle Valo <kvalo@kernel.org>
 To: ath12k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/9] wifi: ath12k: add helper function to init partner cmem configuration
-Date: Mon,  9 Dec 2024 20:54:15 +0200
-Message-Id: <20241209185421.376381-4-kvalo@kernel.org>
+Subject: [PATCH 5/9] wifi: ath12k: Refactor radio frequency information
+Date: Mon,  9 Dec 2024 20:54:17 +0200
+Message-Id: <20241209185421.376381-6-kvalo@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20241209185421.376381-1-kvalo@kernel.org>
 References: <20241209185421.376381-1-kvalo@kernel.org>
@@ -45,10 +45,12 @@ Content-Transfer-Encoding: 8bit
 
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 
-In the Inter Multi-Link Operation, the primary device is expected to receive
-the partner device buffer. Therefore, each device initializes the partner
-device buffer in their cmem configuration. So add a helper function to
-initialize the partner device buffer in their cmem configuration.
+Currently, radio stores the low frequency and high frequency information as
+separate variables. However, cfg80211 already provides a suitable data
+structure struct wiphy_radio_freq_range to store this information efficiently.
+Additionally, for multi radio per wiphy infrastructure, this frequency range
+information is essential. In future patches using struct wiphy_radio_freq_range
+makes the code simpler.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -56,70 +58,50 @@ Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ
 Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 Signed-off-by: Kalle Valo <quic_kvalo@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.c |  5 ++++-
- drivers/net/wireless/ath/ath12k/dp.c   | 13 +++++++++++++
- drivers/net/wireless/ath/ath12k/dp.h   |  1 +
- 3 files changed, 18 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/core.h | 3 +--
+ drivers/net/wireless/ath/ath12k/mac.c  | 8 ++++----
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index af642b466ea0..ff79cb910523 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -930,7 +930,7 @@ int ath12k_mac_mlo_ready(struct ath12k_hw_group *ag)
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index d7caa58bb262..d09ebcdde94f 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -711,8 +711,7 @@ struct ath12k {
+ 	bool monitor_started;
+ 	int monitor_vdev_id;
  
- static int ath12k_core_mlo_setup(struct ath12k_hw_group *ag)
- {
--	int ret;
-+	int ret, i;
+-	u32 freq_low;
+-	u32 freq_high;
++	struct wiphy_radio_freq_range freq_range;
  
- 	if (!ag->mlo_capable || ag->num_devices == 1)
- 		return 0;
-@@ -939,6 +939,9 @@ static int ath12k_core_mlo_setup(struct ath12k_hw_group *ag)
- 	if (ret)
- 		return ret;
+ 	bool nlo_enabled;
  
-+	for (i = 0; i < ag->num_devices; i++)
-+		ath12k_dp_partner_cc_init(ag->ab[i]);
-+
- 	ret = ath12k_mac_mlo_ready(ag);
- 	if (ret)
- 		goto err_mlo_teardown;
-diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
-index 9a7df54bf570..9e5a4e75f2f6 100644
---- a/drivers/net/wireless/ath/ath12k/dp.c
-+++ b/drivers/net/wireless/ath/ath12k/dp.c
-@@ -1522,6 +1522,19 @@ static int ath12k_dp_cmem_init(struct ath12k_base *ab,
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index dc61fe761090..1bf89be1cccc 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -708,8 +708,8 @@ static struct ath12k *ath12k_mac_get_ar_by_chan(struct ieee80211_hw *hw,
+ 		return ar;
+ 
+ 	for_each_ar(ah, ar, i) {
+-		if (channel->center_freq >= ar->freq_low &&
+-		    channel->center_freq <= ar->freq_high)
++		if (channel->center_freq >= KHZ_TO_MHZ(ar->freq_range.start_freq) &&
++		    channel->center_freq <= KHZ_TO_MHZ(ar->freq_range.end_freq))
+ 			return ar;
+ 	}
+ 	return NULL;
+@@ -10203,8 +10203,8 @@ static void ath12k_mac_update_ch_list(struct ath12k *ar,
+ 			band->channels[i].flags |= IEEE80211_CHAN_DISABLED;
+ 	}
+ 
+-	ar->freq_low = freq_low;
+-	ar->freq_high = freq_high;
++	ar->freq_range.start_freq = MHZ_TO_KHZ(freq_low);
++	ar->freq_range.end_freq = MHZ_TO_KHZ(freq_high);
  }
  
-+void ath12k_dp_partner_cc_init(struct ath12k_base *ab)
-+{
-+	struct ath12k_hw_group *ag = ab->ag;
-+	int i;
-+
-+	for (i = 0; i < ag->num_devices; i++) {
-+		if (ag->ab[i] == ab)
-+			continue;
-+
-+		ath12k_dp_cmem_init(ab, &ag->ab[i]->dp, ATH12K_DP_RX_DESC);
-+	}
-+}
-+
- static int ath12k_dp_cc_init(struct ath12k_base *ab)
- {
- 	struct ath12k_dp *dp = &ab->dp;
-diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
-index d3f3d39a1cd0..7700828375e3 100644
---- a/drivers/net/wireless/ath/ath12k/dp.h
-+++ b/drivers/net/wireless/ath/ath12k/dp.h
-@@ -1806,6 +1806,7 @@ void ath12k_dp_vdev_tx_attach(struct ath12k *ar, struct ath12k_link_vif *arvif);
- void ath12k_dp_free(struct ath12k_base *ab);
- int ath12k_dp_alloc(struct ath12k_base *ab);
- void ath12k_dp_cc_config(struct ath12k_base *ab);
-+void ath12k_dp_partner_cc_init(struct ath12k_base *ab);
- int ath12k_dp_pdev_alloc(struct ath12k_base *ab);
- void ath12k_dp_pdev_pre_alloc(struct ath12k *ar);
- void ath12k_dp_pdev_free(struct ath12k_base *ab);
+ static u32 ath12k_get_phy_id(struct ath12k *ar, u32 band)
 -- 
 2.39.5
 
