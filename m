@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4B7A160799
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4BC416F288
 	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 04:36:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733718962; cv=none; b=Wvc9hGEDMKTMNMXIUVFyycfBLXADHS6jiKoKxpZHvf0wfl615FCqhk6PKomqvEzMLozXLBUGQBRU6UohfSknIyLkb6whptYF9888FwhpM/DMpUxH9dBZDFLV1rGgB8/DGJUG0YDwKkG/pOG3L4Bs/WFbdBYt9MoUyKm4YwrJ8eI=
+	t=1733718962; cv=none; b=PYTWgRQqbwDXxltmriyK3YlNqCT/3ppTCx2Up6vqRsqnl/wy5aL/ooQg7LWstGdUhslN7fPhvkj+Wyihk3h9TJB/orxodKtyoCAH0clThs+SiYfuOXQTDshUeAeiyFSS3SbYjF76vswiAMPSRbrHZsnWcK7pu4PxwCs0ivOT3Uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733718962; c=relaxed/simple;
-	bh=83tUZJ6NHvdQri7jF0me9UhRmeINh6Os4y1s0HOlHP0=;
+	bh=SrFuC2cACAF9b4v9Yx/EtOo47eh8ATqR+yQQGwdO6wc=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=diCqW67EnAtRtS7+5urf/MCOZ/XSy9sGLQk4cmdULYx6fz8n1g24JoNch0RB13k3GupHFWg4bRqzBhLk5IiNyGd3T7n9+x5fFHkq5oHzVSZWuAUqpim9qp7O36XW4SpfUWr2lxb+AQu4lnnyUzYLluFjE1c4TZWfgPFxcmnI2rE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkqVNOGv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=d+HseKH1wXH5lSGOBZYj9uQ1EbLMXy9ONrk9ndZgLJTXWI/ZfgzlWLmfxi+91HAEc4Vr1rNrJ4pYDn0iZsuxl6AoMbqd47suvrNSpsfZRiYH2RoVQpRLyKXa2BElb+CXv08oChphuSfmKHa7h1ECHOnCNjh5ED9Rm9v/LRQjEE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pwbtnceu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkqVNOGv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DB36C4CEDD;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pwbtnceu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E8AEC4CEE0;
 	Mon,  9 Dec 2024 04:36:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1733718962;
-	bh=83tUZJ6NHvdQri7jF0me9UhRmeINh6Os4y1s0HOlHP0=;
+	bh=SrFuC2cACAF9b4v9Yx/EtOo47eh8ATqR+yQQGwdO6wc=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=YkqVNOGv9hWjy8aY+iyOxTReT1wCQsPNIzql50Um8JdP35bB1JuTeKxjEOFWVOGqJ
-	 63zj/C8/MY0TwLIzEZoFRxYd+jWm+4OwKQOxljhBwcGgAh07zWazKwoLanb5FjHU4N
-	 E+6ObAbUWSUXqUDWFijtWoMXUzakuHCS1d9GtNcWKa2Yds4uYPjE14llQ7QAEb9Oqm
-	 cN/2d1iOP69SE/tIsqY49z54b5xTOZ2yXp3VasLYGmPUbTG701z42ASS7wWFpR+fJo
-	 DLrz0KbkkqrtlBnIMtgaw0v+KjS31V3p0A7FtfGYgHg+g/Rh5/i4WkRLx6fjFnXQiW
-	 uCCnYU4tgnoIQ==
+	b=Pwbtnceuqm4YMJxKKWizBUvwIB07cHMFoi5T6VGWTnGnj8DeWZStVmFl4dkYTP0tx
+	 qYAjjIbPMezu15Y3zI/qthcce1zE8g1jh1PrxCZts3ZPeLQkNWMYogmbJVTilJlgPK
+	 vamGbcgYEsLe+iPm2AtGmWh77KGkVVl0Vs8u41iEYY0mLj0SfCe0cnr/Uatt0cjnE2
+	 q3vFZ5xzMUcAZ3VXvvqKYS9PJ48IWybg3mKvFlRkuOqWjX7nIhKFdpThc1heevrWMy
+	 VS9iFwE4JUMqp4Uy3NcaBN+a43bSi6YHSTikvyEUNXSpxKPW2wDDNyG8FeVQQ0CUV5
+	 2wc4Tafi3p2BQ==
 Received: from wens.tw (localhost [127.0.0.1])
-	by wens.tw (Postfix) with ESMTP id 82B325F870;
+	by wens.tw (Postfix) with ESMTP id 933FA5FD3D;
 	Mon,  9 Dec 2024 12:35:59 +0800 (CST)
 From: Chen-Yu Tsai <wens@kernel.org>
 To: Ping-Ke Shih <pkshih@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org, 
- combuster@gmail.com
-In-Reply-To: <20241118011503.4694-1-pkshih@gmail.com>
-References: <20241118011503.4694-1-pkshih@gmail.com>
-Subject: Re: [PATCH v2] wireless-regdb: assert and correct maximum
- bandwidth within frequency difference
-Message-Id: <173371895950.3369899.17402064216179762683.b4-ty@kernel.org>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+In-Reply-To: <20241116082516.8819-1-pkshih@gmail.com>
+References: <20241116082516.8819-1-pkshih@gmail.com>
+Subject: Re: [PATCH] wireless-regdb: Update regulatory info for Syria (SY)
+ for 2020
+Message-Id: <173371895959.3369899.2451835461936606249.b4-ty@kernel.org>
 Date: Mon, 09 Dec 2024 12:35:59 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -49,16 +48,47 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Mon, 18 Nov 2024 09:15:03 +0800, Ping-Ke Shih wrote:
-> Since kernel will reject max bandwidth being larger than freq_diff in
-> is_valid_reg_rule(), as well reject it ahead.
+On Sat, 16 Nov 2024 16:25:16 +0800, Ping-Ke Shih wrote:
+> Syrian Arab Republic, Telecommunications and Post Regulatory Authority
+> released regulations for Short range devices approved by Board of
+> Commissioners Resolution No. 18 dated 3/14/2020 [2] via page [1].
 > 
+> In page 8, section WIDEBAND DATA TRANSMISSION SYSTEMS defines
 > 
+> * 2400-2483.5 MHz
+>   - 100 mW EIRP
+>   - Indoor only
+>   - EN 300 328
+> * 5150-5250 MHz
+>   - 200 mW EIRP
+>   - Indoor only
+>   - EN 301 893
+> * 5250-5350 MHz
+>   - 200 mW EIRP
+>   - Indoor only
+>   - EN 301 893
+>     * DFS
+> * 5470-5725 MHz
+>   - 200 mW EIRP
+>   - Indoor
+>   - EN 301 893
+>     * DFS
+> * 5725-5875 MHz
+>   - 200 mW EIRP
+>   - Indoor only
+>   - EN 302 502 (In [2], EN 301 893 should be a typo)
+>     * DFS: 5725 - 5850
+> * 57-66 GHz
+>   - 40 dBm EIRP
+>   - Indoor only
+>   - EN 302 567
+> 
+> [...]
 
 Applied to master in wens/wireless-regdb.git, thanks!
 
-[1/1] wireless-regdb: assert and correct maximum bandwidth within frequency difference
-      https://git.kernel.org/wens/wireless-regdb/c/b43aeb518a07
+[1/1] wireless-regdb: Update regulatory info for Syria (SY) for 2020
+      https://git.kernel.org/wens/wireless-regdb/c/68588bffdc5c
 
 Best regards,
 -- 
