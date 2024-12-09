@@ -1,102 +1,83 @@
-Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC99148855;
-	Mon,  9 Dec 2024 05:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.166.238
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72F11C1F22
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 05:43:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733722553; cv=none; b=kW2zJCiApPs5ahEnEYq/vuxf8Y+aFmWR188LLC6vi30SwaSfz2IK4cpH1AN5Hlo6A/Mn7r6iRUSkjs3wXIUfTJrfQKd4YvhzqJ6GNazi8LNelIyyV/NWEqtxxN2A0wkIcjBOycNST6hfxPI39y0fn7P/tGkL2Nhln3EkX89Bivw=
+	t=1733723023; cv=none; b=K7JPUszjyRSJ7p1UyFN53h8fgvmDXn7rL0kRr0IvvVCCwmf68z/DkroT1UKfwXoFeqbfIB+7+GGmDPShmgoiugifiZV9Oa4my2uy/O/MLwcDTvS2L6Tp3al/CJjeQRiVI20RV/FieTc3bT4pjFGgBXtKZmojYUAOdzdMiKUxoQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733722553; c=relaxed/simple;
-	bh=z7iM/covW97ys+D32rC5qV8I6qBJB+AFReA3wSZATSs=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FVS8guwnWoThS26dPnDhKwtiM2riDxoMz3Vwkh1fjx+jYbsa3ukxldA7exP+3HlMY/Eb9TuZCbSKt8R8K058AErMz2DBNe/9/evGOm8iJqedwBkIb2OhY37OFYjIukF8Lorqef/MCMZyH+EsCK3YPSPAdAU02iRIJrWYenRh3RA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; arc=none smtp.client-ip=205.220.166.238
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
-Received: from pps.filterd (m0250809.ppops.net [127.0.0.1])
-	by mx0a-0064b401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B95RCwE025154;
-	Sun, 8 Dec 2024 21:35:43 -0800
-Received: from ala-exchng02.corp.ad.wrs.com (ala-exchng02.wrs.com [147.11.82.254])
-	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 43cwy1s0q9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-	Sun, 08 Dec 2024 21:35:43 -0800 (PST)
-Received: from ala-exchng01.corp.ad.wrs.com (147.11.82.252) by
- ALA-EXCHNG02.corp.ad.wrs.com (147.11.82.254) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.43; Sun, 8 Dec 2024 21:35:42 -0800
-Received: from pek-lpg-core1.wrs.com (147.11.136.210) by
- ala-exchng01.corp.ad.wrs.com (147.11.82.252) with Microsoft SMTP Server id
- 15.1.2507.43 via Frontend Transport; Sun, 8 Dec 2024 21:35:40 -0800
-From: <jianqi.ren.cn@windriver.com>
-To: <rand.sec96@gmail.com>, <gregkh@linuxfoundation.org>
-CC: <stable@vger.kernel.org>, <m@bues.ch>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH 6.1.y] ssb: Fix potential NULL pointer dereference in ssb_device_uevent()
-Date: Mon, 9 Dec 2024 14:33:33 +0800
-Message-ID: <20241209063333.3426999-1-jianqi.ren.cn@windriver.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1733723023; c=relaxed/simple;
+	bh=2XGS5XE2xWUUOq2FbFiSDqlbztXyN40EGyjjOW3tvcE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=e6XB0CluXJ3CR7+KQ19mrdnY+8d0bdZKWhFI8H1MInJVCLUorGW4l4rKt0Dlyi/9cdio7nvt0TvG3DJjDZ/WCLatddx0hDGWZMNXL4fmUC/iQ4i9cH5mFQd7WTEyCTMd5iX3PAbYE3sgvQ17wsDO+f2zE23bi0F9h3ghrE5WcTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kMlMB6zX; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kMlMB6zX"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-aa67af4dc60so133056566b.2
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Dec 2024 21:43:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1733723020; x=1734327820; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LvxE9KWeFX/OQsOjGIozVp+veKIzqMmU1Jx+cc8a3is=;
+        b=kMlMB6zXnCSRW11XxudyjTvqngpTQBgL5unlvBSnSw+EjWA0EDQPXWAUc6/5IU8XbR
+         D6kIuiezLEopksvmuzTNGcMG11r/H2fV0M2XP5JMkFMqFbUg6U+4dwRse8HBrVQcJcR8
+         S/5WE5Uw7vCc46i+q/ZLPa0tu3tDrloD5ISeqMtyuNCLtU7FgCUu4vdw2vHhDbZQ+15F
+         uowkiXLrd+2gYSN0vfXXu3KIbvDt4vfbonwZI7EoNW/wBT8TRHuOnbSUAnHabjnONavz
+         70oa1pW1Ld3Kei2RDeBKrSS32sqtayzR2oEFMfAHx+h4dNITnBAAsPkPqANs4oeeK66V
+         uv2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733723020; x=1734327820;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LvxE9KWeFX/OQsOjGIozVp+veKIzqMmU1Jx+cc8a3is=;
+        b=gB41dbkn5SlCgzqm03iOWbn6AT7Wememh3YeMxhIgF15Tr6awjDteK7HRbLrGXeNNJ
+         5HSavZpxprLIReD3GAcCAtEBSZS15X32sV9GxrlJbSBsDsdh9MOuCgX7mze2Ssj9but0
+         8EI1gIz2SeG6G4N7Ew8wvHKgsxYkNVjIpMaGGX+qaoNgZzH7aWgWNLxF8pO00dM1rbub
+         SoA0E8hn/+EErH76StOlqmiJp50WZAeiz9T6Gy02oNnQgeMInQ/jbUjrWqAYxpeBrz3r
+         DUBHhR/FEx723OKFBLJEe5lbm0TydCDqwB4MeVakfuft+SbdAXyNhUq5hkfdl5mARxZ5
+         +McQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVvCy5Dl8e102KbZ44velREcW5ktVtU2msVMFdRHlhOR8BH2PMQCyhqV9JV+QLpBx5J3gC1VWRbwM3m9Y3yBQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyAQZDJKdUbkBC4WLR7VzA7EJl3YKL9lwH728eC2e+5ZLBHdW4R
+	RGqPGxcpysms+0SLoV7D3kj2NyuWhj3vJ+aPqWqeOANifkYFjC1HMufRJtCsK5gC1rO8awYCAOY
+	MEQKFKryt6O2kFEuUz/ZhkbW/7Qc=
+X-Gm-Gg: ASbGncsUVvRKf7WY/tss0XCSnlQbFU8QljNrfMSj6Y0WxXFQ3KaoaRLfiK7idQYCFqV
+	nT7bioRZD7aOXetmhkqsATXt7l2z730o=
+X-Google-Smtp-Source: AGHT+IGGePJo+9N4Of4PeXOzooY+Gs9piE89hotQoUrmoId59x6OpJsYaqkpE1HlgA0Tb6qsnt0CfpTgn3festfQL9Y=
+X-Received: by 2002:a17:906:3090:b0:aa6:800a:1292 with SMTP id
+ a640c23a62f3a-aa6800a1c31mr295375066b.25.1733723019879; Sun, 08 Dec 2024
+ 21:43:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: SiBZPaKevIPTTAKJ3DrdTYBHXsaLpCLe
-X-Authority-Analysis: v=2.4 cv=eePHf6EH c=1 sm=1 tr=0 ts=675681af cx=c_pps a=K4BcnWQioVPsTJd46EJO2w==:117 a=K4BcnWQioVPsTJd46EJO2w==:17 a=RZcAm9yDv7YA:10 a=bC-a23v3AAAA:8 a=pGLkceISAAAA:8 a=HH5vDtPzAAAA:8 a=VwQbUJbxAAAA:8 a=t7CeM3EgAAAA:8
- a=maAJvPpQ-1jnF_CgM8MA:9 a=-FEs8UIgK8oA:10 a=FO4_E8m0qiDe52t0p3_H:22 a=QM_-zKB-Ew0MsOlNKMB5:22 a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-GUID: SiBZPaKevIPTTAKJ3DrdTYBHXsaLpCLe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-09_02,2024-12-06_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 impostorscore=0
- lowpriorityscore=0 suspectscore=0 mlxlogscore=686 priorityscore=1501
- spamscore=0 phishscore=0 malwarescore=0 mlxscore=0 adultscore=0
- bulkscore=0 classifier=spam authscore=0 adjust=0 reason=mlx scancount=1
- engine=8.21.0-2411120000 definitions=main-2412090044
+References: <20241021071506.24320-1-pkshih@gmail.com> <CAGb2v64FojDNF+9fhdE5LhMJRYr0Tk9s+uPkVYD=pYsdHLggrA@mail.gmail.com>
+In-Reply-To: <CAGb2v64FojDNF+9fhdE5LhMJRYr0Tk9s+uPkVYD=pYsdHLggrA@mail.gmail.com>
+From: Ping-Ke Shih <pkshih@gmail.com>
+Date: Mon, 9 Dec 2024 13:43:28 +0800
+Message-ID: <CAHrRpu=q-AQyp15iqDyB=6hcPL289BgpQnDRNNDoOEz6FrAFzg@mail.gmail.com>
+Subject: Re: [PATCH] wireless-regdb: Update regulatory info for Oman (OM)
+To: wens@kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org, 
+	wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Rand Deeb <rand.sec96@gmail.com>
+Chen-Yu Tsai <wens@kernel.org> wrote=EF=BC=9A
 
-[ Upstream commit 789c17185fb0f39560496c2beab9b57ce1d0cbe7 ]
+> > +       (5490 - 5725 @ 160), (27), DFS
+>              ^
+>            typo? It says 5470 above.
+>
+> I can fix it when applying.
+>
 
-The ssb_device_uevent() function first attempts to convert the 'dev' pointer
-to 'struct ssb_device *'. However, it mistakenly dereferences 'dev' before
-performing the NULL check, potentially leading to a NULL pointer
-dereference if 'dev' is NULL.
-
-To fix this issue, move the NULL check before dereferencing the 'dev' pointer,
-ensuring that the pointer is valid before attempting to use it.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@kernel.org>
-Link: https://msgid.link/20240306123028.164155-1-rand.sec96@gmail.com
-Signed-off-by: Jianqi Ren <jianqi.ren.cn@windriver.com>
----
- drivers/ssb/main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
-index d52e91258e98..aae50a5dfb57 100644
---- a/drivers/ssb/main.c
-+++ b/drivers/ssb/main.c
-@@ -341,11 +341,13 @@ static int ssb_bus_match(struct device *dev, struct device_driver *drv)
- 
- static int ssb_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- {
--	struct ssb_device *ssb_dev = dev_to_ssb_dev(dev);
-+	struct ssb_device *ssb_dev;
- 
- 	if (!dev)
- 		return -ENODEV;
- 
-+	ssb_dev = dev_to_ssb_dev(dev);
-+
- 	return add_uevent_var(env,
- 			     "MODALIAS=ssb:v%04Xid%04Xrev%02X",
- 			     ssb_dev->id.vendor, ssb_dev->id.coreid,
--- 
-2.25.1
-
+Sorry for the typo.
+Please fix it. Thanks.
