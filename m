@@ -1,190 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66E97F48C
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 16:16:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF8164595B;
+	Mon,  9 Dec 2024 16:57:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733761004; cv=none; b=j7GjPfDEBr+Oowk+P46q9JypckF4hzS/Wu01ITLQKPRXMmgFcyWBjKpQpQ4PugXTIje6vbNDzmyrZjherALbg+J1vF82dhfbLo6O2u9PCsv4eJzo5wGLCImDP5ZNYAwX5Sgovqn3e2uNdKZLohB0oQiStKxw7U1EV0wRnzVPEeM=
+	t=1733763445; cv=none; b=mN8a/Adpo4V8kw29BsDvBFa/0MwEMjPIlbDOptCteCoznO7fC9ZrDwIidk/u4WjvZlHg8WvhZsgKS++oxhtRyO0Wq+7CEVM35Xb7KDFbD8aTf7NvyEZDfVWhPfbAIZEjuKnTdNqNurbROmkYH0ArvtYher9ciBnFD+7NR6AUv8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733761004; c=relaxed/simple;
-	bh=8FfxgXmfC9gs/7flLYGDDNER1UbjpUe7zlpO3Odosks=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FVfzZIX6AOicfYyaUZNsqOC+cih+E5BZ4Aa8BK7ta7bNkFwC8luzye9a7iqeR32uj1liSz2LXBTlFXQN0XfGWxhiFqelwl90H/nFg1kXxDFoUsD3wlPaxKq514IuTX6pEYqP+yREbXxOCPV85VbzLgjdM//3ENQeSU5qIyjWYWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tSdTQI+I; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733763445; c=relaxed/simple;
+	bh=VXVypR7+/+RG3iaRFQ0F+qXchVenNb5v+YQrQf/r4wE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QQRx5wmMILi1pJQsZ9B6MU46a8YikkpHmFnK93GFy7QpW7kKzQsi4dWj5OLijIHAFaYTjTM+XeErlRxmDjmmMKqOOSDMirsIsEoPYvQ4aOLNX0Z9btX0ZhgCKfEawEF+GLTwFJ4Lrio4MWyNrdPa4FIGIg9U2taQ27wrFsgHXlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=CDtPWHfM; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSdTQI+I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F9C9C4CEDE
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 16:16:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733761004;
-	bh=8FfxgXmfC9gs/7flLYGDDNER1UbjpUe7zlpO3Odosks=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
-	b=tSdTQI+I2gacX+uDadoBz6DuOPYN19XqyPDwvMl5XR6XNUybS8Deh3RBaEGXXr8pe
-	 VOrudVNqhtbfR/C5OCRkFzL2z1bXRsaqYzKjcfEzcjS6nvb6dUPKOrIma9ppX+oGyS
-	 +Nh6NDkBjPk17urRVak/towuwc2VmRl1PE70+fMb0dlKjKnowNXHPx28duj76E0iJ+
-	 /94YJWMdA43V3EW1Kts76pOQj9EUzkuBHgM2ooZkn25l0y2MDBlSkJY4hDLzyL3dd6
-	 9vwKC+hpjW4iFynbTYC+GYydqXHiOdw1RdynWQRUy6Ui7H7uONPxV/Bu59rR+3yDg9
-	 4HxqRHkxWQOqw==
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-30033e07ef3so31983921fa.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2024 08:16:44 -0800 (PST)
-X-Gm-Message-State: AOJu0YyVpz8k/1GCKEmKqtxGKEGjGAL8yy2q5CpaF03LRQ7U93E9jJut
-	5pnJfHEP05YvTQXGckr5gJoILdWFaDZSTXtcjM4TQFHw77ofBzwJ2qoLVslZOvd67n1Px/B8D/w
-	hJdrXcT+Mm+pu9rHa7fzb7ltGMM0=
-X-Google-Smtp-Source: AGHT+IGY9ZVDQM4U8JOXqDkXclkkXG/p36yYXPtJohDi7YJnFzX3vT35on1T6bKnRyhYorwaUDSU3n6PbTZIOFTprxA=
-X-Received: by 2002:a05:651c:1516:b0:2ff:e4e6:2543 with SMTP id
- 38308e7fff4ca-3002defdce5mr44409831fa.21.1733761002675; Mon, 09 Dec 2024
- 08:16:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="CDtPWHfM"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B9Aw0UR014664;
+	Mon, 9 Dec 2024 16:57:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	lmnf1RAWG1/r/QjoLHIK8Rs4Tc8Fb7MBEn2G+vD/+ho=; b=CDtPWHfMAoZwQfmi
+	SkHQH6LibRhvWSG0Z/a/Ezl+OBOvgiXHJ5+0sueED6nR8lyyMaZweCye/KoBZfqz
+	05zoXCl32lWHTbl1zRS30sBCnVn8Q4O1Rv7h4dlLA7dyawDL/4wjH1GpRv+cuOeC
+	nWVV2s8Y/G2oYqW/mKmXvJLePIpzPCib6PwJ4akzjm24sZ+oYLE0ulKLrcUoBzgH
+	4JbqwMiJfTl0owd4ABbbBQ7y05x5psarCXleogdzTDtYTdisLP/9b7yyUwg/RAGm
+	zBsGWaIqW2g9vqSwvWVr7d2TTWLtp8yu7YsYozfz5k59m30NDouZ/3IqUtwCxpWI
+	DynxlA==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43dy8ts6vk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 09 Dec 2024 16:57:13 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4B9GvCx3022748
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 9 Dec 2024 16:57:12 GMT
+Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Mon, 9 Dec 2024 08:57:09 -0800
+From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>,
+        "Rob
+ Herring" <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        "Conor
+ Dooley" <conor+dt@kernel.org>,
+        Jeff Johnson <jjohnson@kernel.org>, <linux-kernel@vger.kernel.org>,
+        Balamurugan S <quic_bselvara@quicinc.com>,
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Subject: [PATCH v3 02/13] wifi: ath12k: fix incorrect CE addresses
+Date: Mon, 9 Dec 2024 22:26:33 +0530
+Message-ID: <20241209165644.1680167-3-quic_rajkbhag@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241209165644.1680167-1-quic_rajkbhag@quicinc.com>
+References: <20241209165644.1680167-1-quic_rajkbhag@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <274D81C2-56C7-4042-96F9-A04A92BEAEFD@dipier.ro>
-In-Reply-To: <274D81C2-56C7-4042-96F9-A04A92BEAEFD@dipier.ro>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Tue, 10 Dec 2024 00:16:28 +0800
-X-Gmail-Original-Message-ID: <CAGb2v651G_dtC4Nzh4f9rQQ4w8KajAR0xb-8DbcedXiYcnz7jA@mail.gmail.com>
-Message-ID: <CAGb2v651G_dtC4Nzh4f9rQQ4w8KajAR0xb-8DbcedXiYcnz7jA@mail.gmail.com>
-Subject: Re: wireless-regdb: Update regulatory rules for Armenia (AM) on 2.4
- and 5 GHz
-To: tina@dipier.ro
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 5XKMJoZd7klinnnPSo__RI8Wh0_Y0D3E
+X-Proofpoint-GUID: 5XKMJoZd7klinnnPSo__RI8Wh0_Y0D3E
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ priorityscore=1501 mlxlogscore=845 clxscore=1015 mlxscore=0 spamscore=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
+ definitions=main-2412090132
 
-Hi,
+From: Balamurugan S <quic_bselvara@quicinc.com>
 
-On Mon, Dec 9, 2024 at 11:49=E2=80=AFPM <tina@dipier.ro> wrote:
->
-> Public Services Regulatory Commission of the Republic of Armenia has rele=
-ased two amendments to its 2011 Decision =E2=84=96169=D5=86 on Approval of =
-the Procedure for Issuing Permits for the Use of Radio Frequencies.
->
-> 1. Amendment =E2=84=96159=D5=86, on permit of usage of radio frequency ra=
-nges without permit, released on May 11, 2012, available at https://www.psr=
-c.am/contents/document/4749 (choose language =E2=86=92 HY)
->
-> <=E2=80=A6> Based on Article 5, Part 1, Point 1(d) and Point 2(b), Articl=
-e 6, Part 1 and Part 2, Point 1, and Article 17, Part 5 of the Law of the R=
-epublic of Armenia "On Electronic Communication," as well as Article 70, Pa=
-rt 1 of the Law of the Republic of Armenia "On Legal Acts," the Public Serv=
-ices Regulatory Commission of the Republic of Armenia decides:
-> To amend Points 4 and 5 of the annex to the decision =E2=84=96169N of Apr=
-il 13, 2011, by the Public Services Regulatory Commission of the Republic o=
-f Armenia titled "Approval of the Procedure for Granting Permissions for th=
-e Use of Radio Frequencies," by restating them with a new wording. <=E2=80=
-=A6>
-> "4. No permission is required for:
-> <=E2=80=A6>
-> 9) The use of broadband wireless access equipment operating in the 2400=
-=E2=80=932483.5 MHz radio frequency band with a power of up to 100 mW.
-> <=E2=80=A6>=E2=80=9D
->
->
-> 2. Amendment =E2=84=96295-=D5=86, on permit of usage of radio frequency r=
-anges without permit, released on August 23, 2023, available at https://www=
-.psrc.am/contents/document/11375 (choose language =E2=86=92 HY)
+In the current ath12k implementation, the CE addresses
+CE_HOST_IE_ADDRESS and CE_HOST_IE_2_ADDRESS are incorrect. These
+values were inherited from ath11k, but ath12k does not currently use
+them.
 
-Please try to change any non-ASCII characters down to ASCII.
-And please wrap commit messages to under 80 characters per line.
+However, the Ath12k AHB support relies on these addresses. Therefore,
+corrects the CE addresses for ath12k.
 
-> <=E2=80=A6> Based on Articles 33 and 34 of the Law "On Normative Legal Ac=
-ts," the Public Services Regulatory Commission of the Republic of Armenia d=
-ecides:
-> To amend Subpoint 10 of Point 4 of the annex to Decision =E2=84=96169-N o=
-f April 13, 2011, of the Public Services Regulatory Commission of the Repub=
-lic of Armenia, titled "Approval of the Procedure for Granting Permissions =
-for the Use of Radio Frequencies," as follows:
-> "10) For the use of local network equipment operating in the 5150-5350 MH=
-z and 5470-5875 MHz radio frequency bands with an effective radiated power =
-(e.r.p.) of up to 100 mW (only indoors, as well as in airplanes during all =
-phases of flight), utilizing dynamic frequency selection (DFS) and transmit=
-ter power control (TPC).=E2=80=9D <=E2=80=A6>
+Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.3.1-00130-QCAHKSWPL_SILICONZ-1
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00210-QCAHKSWPL_SILICONZ-1
 
-This mentions TPC, which we don't actually support. We adopted reducing
-the maximum EIRP by 3 dBm, on the basis of that is what the ETSI regulation=
-s
-do.
+Signed-off-by: Balamurugan S <quic_bselvara@quicinc.com>
+Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/ce.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-You don't need to include the actual text, which makes the commit
-message really long.
+diff --git a/drivers/net/wireless/ath/ath12k/ce.h b/drivers/net/wireless/ath/ath12k/ce.h
+index 1a14b9fb86b8..f6ed98dd31a3 100644
+--- a/drivers/net/wireless/ath/ath12k/ce.h
++++ b/drivers/net/wireless/ath/ath12k/ce.h
+@@ -39,8 +39,8 @@
+ #define PIPEDIR_INOUT_H2H	4 /* bidirectional, host to host */
+ 
+ /* CE address/mask */
+-#define CE_HOST_IE_ADDRESS	0x00A1803C
+-#define CE_HOST_IE_2_ADDRESS	0x00A18040
++#define CE_HOST_IE_ADDRESS	0x75804C
++#define CE_HOST_IE_2_ADDRESS	0x758050
+ #define CE_HOST_IE_3_ADDRESS	CE_HOST_IE_ADDRESS
+ 
+ #define CE_HOST_IE_3_SHIFT	0xC
+-- 
+2.34.1
 
-Just list the bits that are updated, and provide links to the justification=
-.
-And pointers to the actual item would be nice. So something like the
-following:
-
-1. For 2.4 GHz range, based on reworded subparagraph 9 from
-   https://www.psrc.am/contents/document/4749
-
-   * 2400 - 2483.5
-     - 100 mW EIRP
-     - indoor use only
-
-2. For 5 GHz range, based on reworded subparagraph 10 from
-   https://www.psrc.am/contents/document/11375
-   which also supersedes the previous document
-
-   * 5150 - 5350
-     - 100 mW EIRP
-     - indoor use only
-     - DFS required
-     - TPC required, reduce limit by 3 dBm to 17 dBm
-
-    same for the other range.
-
-> Essentially, this two documents define this frequencies as permitted:
-> - 2400 - 2483.5 MHz @ 100 mW
-> - 5150 - 5350 MHz @ 100 mW with DFS, outdoor usage forbidden
-> - 5470 - 5875 MHz @ 100 mW) with DFS, outdoor usage forbidden
->
-> However, I am not sure if AUTO-BW option here is required. As far as I kn=
-ow, there is currently no limitation on bandwidth usage in IEEE 802.11 set =
-of protocols in Armenia.
-
-Normally any additional notes should be written under the "---" so that
-when we apply the patch, it doesn't get included.
-
-AUTO-BW is just for stitching together adjacent bands that have different
-requirements. Since you aren't doing that here, it isn't needed.
-
-
-Also, we require a Signed-off-by line from you, like with all kernel patche=
-s.
-
-> ---
-> db.txt | 10 +++++++---
-> 1 file changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/db.txt b/db.txt
-> index e282e3b..5d5ba22 100644
-> --- a/db.txt
-> +++ b/db.txt
-> @@ -81,10 +81,14 @@ country AL: DFS-ETSI
->         # short range devices (ETSI EN 300 440-1)
->         (5725 - 5875 @ 80), (25 mW)
->
-> +# Source (in Armenian):
-> +# 2.4 GHz https://www.psrc.am/contents/document/4749
-> +# 5 GHz https://www.psrc.am/contents/document/11375
-> +
-> country AM: DFS-ETSI
-> -       (2402 - 2482 @ 40), (20)
-> -       (5170 - 5250 @ 20), (18)
-> -       (5250 - 5330 @ 20), (18), DFS
-> +       (2400 - 2483.5 @ 40), (100 mW)
-> +       (5150 - 5350 @ 160), (100 mW), NO-OUTDOOR, AUTO-BW, DFS
-> +       (5470 - 5875 @ 160), (100 mW), NO-OUTDOOR, AUTO-BW, DFS
-
-Drop the AUTO-BW, as mentioned.
-
-ChenYu
-
-
-> country AN: DFS-ETSI
->         (2402 - 2482 @ 40), (20)
-> --
-> 2.45.2
