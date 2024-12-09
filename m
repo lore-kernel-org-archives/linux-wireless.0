@@ -1,265 +1,263 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D301015534B;
-	Mon,  9 Dec 2024 16:57:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C291C14F9F3
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Dec 2024 16:59:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733763481; cv=none; b=VqDPeIqui17jryKw4+r712UuqyNtt5O0rwX4eqeLApyGNdPlBFbRb7JrINZsk9dAP8uAmUfMHG06RKQ+Ai/W7krsSXmw8lVpYb8jWbZ7xvQ+UY3Ll9BZIfgW/7uKR/X9rw31bTXJ6BCrBgq8g5bevBLi+d9LDx3TROdBRa2ZZj8=
+	t=1733763565; cv=none; b=pwpRi/0r7/UUuTyCScCb2dEE4TNJ0hXpvS8TBTIPhk5CQm6D90bNKMD1M4pbtjCfQI/RwJcMHjwOia8n69//qlf7g3UsIOddtRTMPoYeo8EIy/+Guso4PhSvNMmemh0AYiuMPeyJJSekpb6AzftXWeLvDFp+fHoXks/X98hXEIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733763481; c=relaxed/simple;
-	bh=wQnGWxW/lsCQklEB8sPLffgLUWX4VCLMzTrRwYYaBlM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X8OlRQ+YofqCVr21oZBO7Eg5NTQ/eOxT3/3q8Bf1Ej3uIjdQOnQvVP4zcnw1rV/Ml2OzuGjifuJJsPTvrMy64C/H7Q0QZqQQrIRZlRqrz+H+mwwcFQ/FXXeE9Ep/P3aAybA6QOFxwkbXUaREjLhXHT93L8W0g1ayM8PE2MTyYA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=IXhqE4ed; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1733763565; c=relaxed/simple;
+	bh=FbVMyUbjHZe0YiaBg4dwHYEgjTViDfUdOA0iGinnFF8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:Subject:From:Content-Type; b=LJxkhWGVCONpGlzxOo+JJmrSzUMPu+8Lslntl18mzgfqRIPgwOkF5fH9+2/iHeI+UHx+zKeHCbL4ZEQ6tNPPJdrlJnmQcThfjVG/zrxtCEzEMTsQUk37rYyZ19wOBBPiEO2p2QnerUPajxKDrLX5V4kjSo09lA2b3SwBg8zFMKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KnZDB9Dm; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="IXhqE4ed"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B9Gnpff001738;
-	Mon, 9 Dec 2024 16:57:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8F6IIIUDruDCqpHYbeb8jF26ziBHJJCbUJR/ebXKLX8=; b=IXhqE4edXpWyQzvH
-	93YA6h0T/O+F7b9belOgvFbR9sC1VyJ1yGalEwgs5WXQeakLxjd4K9KvcilyqLnU
-	czoVGIpJ+lyDhs42emcJiBOQpB6usAZLXyqYchGyq0T4kqqIgwRCEqAR2rcsURPg
-	l7yKMYAQjVg8gIARIUUV3ZbfiTRn84sjQAokqOyJnI+QkoxUoT8GFeofZIUCfXLf
-	aQp7fExj5dThO+OyNRHzL86s00Ga65F3kONlbdDa+II+UiW+h9GO0bmjcSga5sJV
-	pJTNibJy3rqwk3xeDO0fM6ppvBahHIUagd7qXEkqhCGSB9yqgKc01qjeH8A7bFWp
-	aMh44w==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43cdc6dnuk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 09 Dec 2024 16:57:54 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4B9GvrRJ019445
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 9 Dec 2024 16:57:53 GMT
-Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 9 Dec 2024 08:57:49 -0800
-From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>,
-        "Rob
- Herring" <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        "Conor
- Dooley" <conor+dt@kernel.org>,
-        Jeff Johnson <jjohnson@kernel.org>, <linux-kernel@vger.kernel.org>,
-        Balamurugan S <quic_bselvara@quicinc.com>,
-        "P
- Praneesh" <quic_ppranees@quicinc.com>,
-        Raj Kumar Bhagat
-	<quic_rajkbhag@quicinc.com>
-Subject: [PATCH v3 13/13] wifi: ath12k: enable ath12k AHB support
-Date: Mon, 9 Dec 2024 22:26:44 +0530
-Message-ID: <20241209165644.1680167-14-quic_rajkbhag@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241209165644.1680167-1-quic_rajkbhag@quicinc.com>
-References: <20241209165644.1680167-1-quic_rajkbhag@quicinc.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KnZDB9Dm"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B9Aw5cR015555
+	for <linux-wireless@vger.kernel.org>; Mon, 9 Dec 2024 16:59:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=Cqe63yc5xMHZNxkyy44oKS
+	u0NiQwLPXvmI/sCAdZVs4=; b=KnZDB9DmYlvUmWzXYdoGodEbX4bfnwZsP2SFG2
+	jTYaAGOrO5PoChf0XgDWuIqyJPvyottdzc0Cyjl+CgDMTcl1J8vC/qO22wATaFqV
+	RN2P8jir0x7vTLe/G3Z4QJBPIVODhTC4k29Dse/U1i2eeY76BFRJkix2v5hUC5je
+	GC0nqQQ18FGrO3uMDvSLftSowubRI9OFHR1YoMWIny318hmxELAY1+EHzHubxqT6
+	z9c6hxOe5nfan/00P6UHbbeg+UR7ZRHYKkXgvpX+5+pgkffFT8mXXkFJQcNPCvoe
+	tWKSpvqgpU0vV89UbS3v2jTkVRk/I+kVHCiX74/7gQ4lkqXw==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43dy8ts75v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2024 16:59:22 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-2ee6b027a90so7214979a91.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2024 08:59:22 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733763562; x=1734368362;
+        h=content-transfer-encoding:from:content-language:subject:cc:to
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Cqe63yc5xMHZNxkyy44oKSu0NiQwLPXvmI/sCAdZVs4=;
+        b=N1F8p2pJg41yw3wZT3Z1vSqpHWenKzdofNR0YkmTxVkR7kHik1PmdnCfZPk61WLdI2
+         i753H9TS4+pzjKwLwNgzOmRPn/cJKJu2SNuDKTic4AFH7mCWyxBkQZdGA1Fhbln+C/VC
+         KR2Mlt6sXgnEnWsFv3WxUA1cpXNGodr9SXjb6q7ZdMRUTYdhyMytIizwiMotMVsylsc1
+         hkLKWEh5Vs3Hb2wrMXFAx344+bEbJmo3tTlN5CNjTqjtAY9V9UInW4wNyR9PTdjsDftt
+         gJ8Jqg6z/mF9fqvMlNhQxR788zH+8KL2/JyYhylMW36Bj1PiVaMBwovv1NT26MTVdPu9
+         tjzg==
+X-Gm-Message-State: AOJu0YzOzP742jURUCB1eiPf9g3DRm0ER3/N5/ZpgZw0mkgqcXh9C2JN
+	7I5dQdXoNHbZZ19tz+TCAx6FFkPrMd6yKeu3WmZ/T9WXbe7SyEjnS21Zqk6VwP/Vcx/eKKJfmUt
+	8BAhn+lZYrqNTl0O+ArYHeOLVFedmtX9kYNcCBtCA0mHwS6gZ2h8Pkw8RJ+EFVKfhFpanQr3c5Q
+	==
+X-Gm-Gg: ASbGnct0W0Xrm+anSUraiWMxgSy5dtlPavrbfVpH7KgyJxjudj7yQGiWl4yVXSM+Gs6
+	WgEr/+0cBgngUFKDzG7S8MsqRhCyovkW9ppOswa+EdVot9RBLoBPATjCqSIPTuArZaI7oup7G+L
+	0eTmTc2rFNWCJgnmTGwjawzPqcvxK3yQaqRHM41jOtLbZsJDTR3ReyWLdIC5VPE7+ThdBNoyHKK
+	f16ZIdcRLzzsE5tjzldWQkGu02O7EZEweN6RPkfVJrl2FBDNHQfKMZGhQuiZeyE26AIR/dHlC2i
+	gPmf3Mftraw=
+X-Received: by 2002:a17:90b:4a:b0:2ee:f80c:6892 with SMTP id 98e67ed59e1d1-2efcf136579mr1784495a91.3.1733763561666;
+        Mon, 09 Dec 2024 08:59:21 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGZTS9C4BJCt9kyZwlO+HpR3HB57Lvf55z4w/IcHcKXNKbG36kHwnh/zlS856HJiwhcX+J1gQ==
+X-Received: by 2002:a17:90b:4a:b0:2ee:f80c:6892 with SMTP id 98e67ed59e1d1-2efcf136579mr1784451a91.3.1733763561217;
+        Mon, 09 Dec 2024 08:59:21 -0800 (PST)
+Received: from [10.81.24.74] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ef2701def5sm10113787a91.31.2024.12.09.08.59.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Dec 2024 08:59:20 -0800 (PST)
+Message-ID: <1bcdaf98-6078-4f79-a989-2e5db9400585@oss.qualcomm.com>
+Date: Mon, 9 Dec 2024 08:59:19 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, jjohnson@kernel.org, kvalo@kernel.org
+Subject: pull-request: ath-next-20241209
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: CSsKsfVAGmJqoy_5ZHE7N9rjovRlb9IY
-X-Proofpoint-GUID: CSsKsfVAGmJqoy_5ZHE7N9rjovRlb9IY
+X-Proofpoint-ORIG-GUID: SrUKrMipqPqjI-PRW3fosgC7Hml9r4_W
+X-Proofpoint-GUID: SrUKrMipqPqjI-PRW3fosgC7Hml9r4_W
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
- mlxlogscore=999 malwarescore=0 bulkscore=0 lowpriorityscore=0
- clxscore=1015 suspectscore=0 spamscore=0 phishscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412090132
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
+ priorityscore=1501 mlxlogscore=999 clxscore=1015 mlxscore=0 spamscore=0
+ lowpriorityscore=0 malwarescore=0 bulkscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2411120000
+ definitions=main-2412090132
 
-From: Balamurugan S <quic_bselvara@quicinc.com>
+The following changes since commit 2b94751626a6d49bbe42a19cc1503bd391016bd5:
 
-Currently only PCI devices are supported in Ath12k driver. Refactor
-Ath12k module_init and module_exit to include Ath12k AHB support.
+  wifi: cw1200: Fix potential NULL dereference (2024-10-31 16:20:02 +0200)
 
-Add Ath12k AHB support in Kconfig with dependency on Remoteproc
-driver. Ath12k AHB support relies on remoteproc driver for firmware
-download, power up/down etc.
+are available in the Git repository at:
 
-Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.3.1-00130-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.1.1-00210-QCAHKSWPL_SILICONZ-1
+  git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git tags/ath-next-20241209
 
-Signed-off-by: Balamurugan S <quic_bselvara@quicinc.com>
-Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
-Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
-Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/Kconfig  |  6 ++++
- drivers/net/wireless/ath/ath12k/Makefile |  1 +
- drivers/net/wireless/ath/ath12k/ahb.h    | 12 ++++++++
- drivers/net/wireless/ath/ath12k/core.c   | 35 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath12k/pci.c    | 12 ++------
- drivers/net/wireless/ath/ath12k/pci.h    |  2 ++
- 6 files changed, 56 insertions(+), 12 deletions(-)
+for you to fetch changes up to da8656797ae10b524a7a0c3d5eeb6237fa3ddd70:
 
-diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
-index 52a1bb19e3da..b2bfcaca00b3 100644
---- a/drivers/net/wireless/ath/ath12k/Kconfig
-+++ b/drivers/net/wireless/ath/ath12k/Kconfig
-@@ -15,6 +15,12 @@ config ATH12K
- 
- 	  If you choose to build a module, it'll be called ath12k.
- 
-+config ATH12K_AHB
-+	bool "QTI ath12k AHB support"
-+	depends on ATH12K && REMOTEPROC && QCOM_Q6V5_WCSS_SEC
-+	help
-+	  Enable support for Ath12k AHB bus chipsets, example IPQ5332.
-+
- config ATH12K_DEBUG
- 	bool "ath12k debugging"
- 	depends on ATH12K
-diff --git a/drivers/net/wireless/ath/ath12k/Makefile b/drivers/net/wireless/ath/ath12k/Makefile
-index b5bb3e2599cd..4aeb6b95baa4 100644
---- a/drivers/net/wireless/ath/ath12k/Makefile
-+++ b/drivers/net/wireless/ath/ath12k/Makefile
-@@ -23,6 +23,7 @@ ath12k-y += core.o \
- 	    fw.o \
- 	    p2p.o
- 
-+ath12k-$(CONFIG_ATH12K_AHB) += ahb.o
- ath12k-$(CONFIG_ATH12K_DEBUGFS) += debugfs.o debugfs_htt_stats.o
- ath12k-$(CONFIG_ACPI) += acpi.o
- ath12k-$(CONFIG_ATH12K_TRACING) += trace.o
-diff --git a/drivers/net/wireless/ath/ath12k/ahb.h b/drivers/net/wireless/ath/ath12k/ahb.h
-index 0dbbbfd45eab..fc21211c01dd 100644
---- a/drivers/net/wireless/ath/ath12k/ahb.h
-+++ b/drivers/net/wireless/ath/ath12k/ahb.h
-@@ -65,4 +65,16 @@ static inline struct ath12k_ahb *ath12k_ab_to_ahb(struct ath12k_base *ab)
- 	return (struct ath12k_ahb *)ab->drv_priv;
- }
- 
-+#ifdef CONFIG_ATH12K_AHB
-+int ath12k_ahb_init(void);
-+void ath12k_ahb_exit(void);
-+#else
-+static inline int ath12k_ahb_init(void)
-+{
-+	return 0;
-+}
-+
-+static inline void ath12k_ahb_exit(void) {};
-+#endif
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index 49d1ac15cb7a..941924630bcb 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -9,15 +9,18 @@
- #include <linux/remoteproc.h>
- #include <linux/firmware.h>
- #include <linux/of.h>
-+#include "ahb.h"
- #include "core.h"
- #include "dp_tx.h"
- #include "dp_rx.h"
- #include "debug.h"
--#include "hif.h"
--#include "fw.h"
- #include "debugfs.h"
-+#include "fw.h"
-+#include "hif.h"
-+#include "pci.h"
- #include "wow.h"
- 
-+static int ahb_err, pci_err;
- unsigned int ath12k_debug_mask;
- module_param_named(debug_mask, ath12k_debug_mask, uint, 0644);
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
-@@ -1685,5 +1688,31 @@ struct ath12k_base *ath12k_core_alloc(struct device *dev, size_t priv_size,
- 	return NULL;
- }
- 
--MODULE_DESCRIPTION("Core module for Qualcomm Atheros 802.11be wireless LAN cards.");
-+static int ath12k_init(void)
-+{
-+	ahb_err = ath12k_ahb_init();
-+	if (ahb_err)
-+		pr_warn("Failed to initialize ath12k AHB device: %d\n", ahb_err);
-+
-+	pci_err = ath12k_pci_init();
-+	if (pci_err)
-+		pr_warn("Failed to initialize ath12k PCI device: %d\n", pci_err);
-+
-+	/* If both failed, return one of the failures (arbitrary) */
-+	return ahb_err && pci_err ? ahb_err : 0;
-+}
-+
-+static void ath12k_exit(void)
-+{
-+	if (!pci_err)
-+		ath12k_pci_exit();
-+
-+	if (!ahb_err)
-+		ath12k_ahb_exit();
-+}
-+
-+module_init(ath12k_init)
-+module_exit(ath12k_exit)
-+
-+MODULE_DESCRIPTION("Driver support for Qualcomm Technologies 802.11be WLAN devices");
- MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 06cff3849ab8..a5ae66f0ee1f 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -1821,7 +1821,7 @@ static struct pci_driver ath12k_pci_driver = {
- 	.driver.pm = &ath12k_pci_pm_ops,
- };
- 
--static int ath12k_pci_init(void)
-+int ath12k_pci_init(void)
- {
- 	int ret;
- 
-@@ -1832,16 +1832,10 @@ static int ath12k_pci_init(void)
- 		return ret;
- 	}
- 
--	return 0;
-+	return ret;
- }
--module_init(ath12k_pci_init);
- 
--static void ath12k_pci_exit(void)
-+void ath12k_pci_exit(void)
- {
- 	pci_unregister_driver(&ath12k_pci_driver);
- }
--
--module_exit(ath12k_pci_exit);
--
--MODULE_DESCRIPTION("Driver support for Qualcomm Technologies PCIe 802.11be WLAN devices");
--MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/ath/ath12k/pci.h b/drivers/net/wireless/ath/ath12k/pci.h
-index 31584a7ad80e..18648ca11dfc 100644
---- a/drivers/net/wireless/ath/ath12k/pci.h
-+++ b/drivers/net/wireless/ath/ath12k/pci.h
-@@ -145,4 +145,6 @@ void ath12k_pci_stop(struct ath12k_base *ab);
- int ath12k_pci_start(struct ath12k_base *ab);
- int ath12k_pci_power_up(struct ath12k_base *ab);
- void ath12k_pci_power_down(struct ath12k_base *ab, bool is_suspend);
-+int ath12k_pci_init(void);
-+void ath12k_pci_exit(void);
- #endif /* ATH12K_PCI_H */
--- 
-2.34.1
+  wifi: ath12k: introduce mlo_capable flag for device group (2024-12-05 14:34:10 -0800)
 
+----------------------------------------------------------------
+ath.git patches for v6.14
+
+This development cycle featured multiple patchsets to ath12k to
+support the new 802.11be MLO feature, although the feature is still
+incomplete. Also in ath12k, there were other feature patches.  In
+ath11k, support was added for QCA6698AQ. And there was the usual set
+of bug fixes and cleanups across most drivers, notable being the
+addition of "noinline_for_stack" to some functions to avoid "stack
+frame size" warnings when compiling with clang.
+
+----------------------------------------------------------------
+Aditya Kumar Singh (2):
+      wifi: ath12k: ath12k_bss_assoc(): MLO support
+      wifi: ath12k: rename mlo_capable_flags to single_chip_mlo_supp
+
+Balaji Pothunoori (2):
+      wifi: ath11k: Suspend hardware before firmware mode off for WCN6750
+      wifi: ath11k: Fix unexpected return buffer manager error for WCN6750/WCN6855
+
+Barnabás Czémán (1):
+      wifi: wcn36xx: fix channel survey memory allocation size
+
+Dinesh Karthikeyan (4):
+      wifi: ath12k: Support Downlink Pager Stats
+      wifi: ath12k: Support phy counter and TPC stats
+      wifi: ath12k: Support SoC Common Stats
+      wifi: ath12k: Support Transmit PER Rate Stats
+
+Dmitry Antipov (5):
+      wifi: ath9k: miscellaneous spelling fixes
+      wifi: ath11k: cleanup struct ath11k_vif
+      wifi: ath11k: cleanup struct ath11k_reg_tpc_power_info
+      wifi: ath11k: cleanup struct ath11k_mon_data
+      wifi: ath11k: miscellaneous spelling fixes
+
+Jeff Johnson (4):
+      wifi: ath12k: mark QMI driver event helpers as noinline
+      wifi: ath11k: mark some QMI driver event helpers as noinline
+      wifi: ath11k: mark ath11k_dp_rx_mon_mpdu_pop() as noinline
+      wifi: ath11k: mark ath11k_wow_convert_8023_to_80211() as noinline
+
+Kalle Valo (5):
+      wifi: ath12k: ath12k_mac_vdev_create(): use goto for error handling
+      wifi: ath12k: introduce ath12k_hw_warn()
+      wifi: ath12k: convert struct ath12k::wmi_mgmt_tx_work to struct wiphy_work
+      wifi: ath12k: ath12k_mac_op_set_key(): fix uninitialized symbol 'ret'
+      wifi: ath12k: ath12k_mac_op_sta_rc_update(): use mac80211 provided link id
+
+Karol Przybylski (1):
+      wifi: ath12k: Fix for out-of bound access error
+
+Karthikeyan Periyasamy (10):
+      wifi: ath12k: Refactor core startup
+      wifi: ath12k: add ath12k_ab_to_ah() and ath12k_ab_set_ah()
+      wifi: ath12k: add ath12k_get_num_hw()
+      wifi: ath12k: introduce QMI firmware ready flag
+      wifi: ath12k: move ATH12K_FLAG_REGISTERED handling to ath12k_mac_register()
+      wifi: ath12k: introduce device group abstraction
+      wifi: ath12k: refactor core start based on hardware group
+      wifi: ath12k: move struct ath12k_hw from per device to group
+      wifi: ath12k: send QMI host capability after device group is ready
+      wifi: ath12k: introduce mlo_capable flag for device group
+
+Miaoqing Pan (1):
+      wifi: ath11k: add support for QCA6698AQ
+
+P Praneesh (1):
+      wifi: ath12k: Fix endianness issue in struct hal_tlv_64_hdr
+
+Rameshkumar Sundaram (4):
+      wifi: ath12k: add reo queue lookup table for ML peers
+      wifi: ath12k: modify chanctx iterators for MLO
+      wifi: ath12k: ath12k_mac_station_add(): fix potential rx_stats leak
+      wifi: ath12k: defer vdev creation for MLO
+
+Roopni Devanathan (1):
+      wifi: ath12k: Fix inappropriate use of print_array_to_buf_index()
+
+Sidhanta Sahu (1):
+      wifi: ath12k: Support MBSSID Control Frame Stats
+
+Sriram R (16):
+      wifi: ath12k: MLO vdev bringup changes
+      wifi: ath12k: Refactor sta state machine
+      wifi: ath12k: Add helpers for multi link peer creation and deletion
+      wifi: ath12k: add multi-link flag in peer create command
+      wifi: ath12k: add helper to find multi-link station
+      wifi: ath12k: Add MLO peer assoc command support
+      wifi: ath12k: Add MLO station state change handling
+      wifi: ath12k: support change_sta_links() mac80211 op
+      wifi: ath12k: add primary link for data path operations
+      wifi: ath12k: use arsta instead of sta
+      wifi: ath12k: Use mac80211 vif's link_conf instead of bss_conf
+      wifi: ath12k: Use mac80211 sta's link_sta instead of deflink
+      wifi: ath12k: ath12k_mac_op_tx(): MLO support
+      wifi: ath12k: ath12k_mac_op_flush(): MLO support
+      wifi: ath12k: ath12k_mac_op_ampdu_action(): MLO support
+      wifi: ath12k: do not return invalid link id for scan link
+
+Toke Høiland-Jørgensen (1):
+      wifi: ath9k: Add RX inactivity detection and reset chip when it occurs
+
+ drivers/net/wireless/ath/ath11k/core.c             |  132 ++
+ drivers/net/wireless/ath/ath11k/core.h             |    4 +-
+ drivers/net/wireless/ath/ath11k/dp.h               |    1 -
+ drivers/net/wireless/ath/ath11k/dp_rx.c            |   14 +-
+ drivers/net/wireless/ath/ath11k/hal.h              |    6 +-
+ drivers/net/wireless/ath/ath11k/hal_rx.c           |    3 +-
+ drivers/net/wireless/ath/ath11k/hw.h               |    1 +
+ drivers/net/wireless/ath/ath11k/mac.c              |    6 +-
+ drivers/net/wireless/ath/ath11k/mhi.c              |    1 +
+ drivers/net/wireless/ath/ath11k/pci.c              |    3 +
+ drivers/net/wireless/ath/ath11k/pcic.c             |   13 +-
+ drivers/net/wireless/ath/ath11k/qmi.c              |    8 +-
+ drivers/net/wireless/ath/ath11k/wow.c              |    6 +-
+ drivers/net/wireless/ath/ath12k/core.c             |  482 ++++-
+ drivers/net/wireless/ath/ath12k/core.h             |  134 +-
+ drivers/net/wireless/ath/ath12k/debug.c            |    6 +-
+ drivers/net/wireless/ath/ath12k/debug.h            |    5 +-
+ .../net/wireless/ath/ath12k/debugfs_htt_stats.c    |  681 ++++++-
+ .../net/wireless/ath/ath12k/debugfs_htt_stats.h    |  218 ++-
+ drivers/net/wireless/ath/ath12k/dp.c               |   70 +-
+ drivers/net/wireless/ath/ath12k/dp.h               |    3 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c            |   96 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.h            |    6 +-
+ drivers/net/wireless/ath/ath12k/hal_desc.h         |    2 +-
+ drivers/net/wireless/ath/ath12k/hal_rx.c           |   12 +-
+ drivers/net/wireless/ath/ath12k/mac.c              | 2003 +++++++++++++++-----
+ drivers/net/wireless/ath/ath12k/mac.h              |   16 +-
+ drivers/net/wireless/ath/ath12k/pci.c              |   10 +
+ drivers/net/wireless/ath/ath12k/peer.c             |  223 ++-
+ drivers/net/wireless/ath/ath12k/peer.h             |   23 +-
+ drivers/net/wireless/ath/ath12k/qmi.c              |  167 +-
+ drivers/net/wireless/ath/ath12k/qmi.h              |   20 +
+ drivers/net/wireless/ath/ath12k/wmi.c              |  207 +-
+ drivers/net/wireless/ath/ath12k/wmi.h              |  115 ++
+ drivers/net/wireless/ath/ath9k/antenna.c           |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c         |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c        |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    2 +
+ drivers/net/wireless/ath/ath9k/channel.c           |    2 +-
+ drivers/net/wireless/ath/ath9k/common-spectral.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |    1 +
+ drivers/net/wireless/ath/ath9k/debug.h             |    1 +
+ drivers/net/wireless/ath/ath9k/dfs.c               |    2 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c           |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |    4 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |    2 +-
+ drivers/net/wireless/ath/ath9k/link.c              |   33 +-
+ drivers/net/wireless/ath/ath9k/mac.h               |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c              |    3 +-
+ drivers/net/wireless/ath/ath9k/wow.c               |    6 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |    2 +-
+ drivers/net/wireless/ath/wcn36xx/main.c            |    5 +-
+ 54 files changed, 4042 insertions(+), 736 deletions(-)
