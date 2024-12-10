@@ -1,144 +1,146 @@
-Received: from bout3.ijzerbout.nl (bout3.ijzerbout.nl [136.144.140.114])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A833122B5AE
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2024 20:58:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=136.144.140.114
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2F5AC2397A5;
+	Tue, 10 Dec 2024 22:02:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733864333; cv=none; b=mN82jxSMISLs3fRbiIFdMXCQ2XgT8bGnrKdBNdTPX2CagtjATmh/gqHOrnWj54ypE1ciZ0p87V/71r96DosaDxJzRpBlUnzM59iOc7vu3mdaSi78q3BxPwiIc+G49WEQTkKRwjoofnwcq5nIrcoOc6Evu2hweMApvoo6n+0iRho=
+	t=1733868164; cv=none; b=NOzVcnJ0WKnWPOrShNpLkVYOYVxQ4xohnpJm/uGXwNclBzzrb99D9q+Fxn7Nd5Cx4IkaTi2QS98A+teOKtXkYSpL3wOU8AW7zQ2/t1m3GfttxYmahtmwXTyH7Y6dOWqt0NJGs1m/rXPOstPKi7sPVIj5rMooeOMSjnZKbwb79cg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733864333; c=relaxed/simple;
-	bh=v2raCaWN3IG/5w/aOn1R+icWgs90NdTA6z+LvPlbe1o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IJSJAB2rM8leJ37M3hyXc44k672SHniHtGKtZhfDxtB+Fn73GD0Y9EVwnq9B95SSczLoW2/JQMHJrmVJLOPkrSkaZvZJFBN93W7pmaABUMYj8NB8ITrCBu6Ew/y/bWrstii5e0B31xjc6V3D66sz9Oa1o96e8lGlGcuZ/7yRnG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ijzerbout.nl; spf=pass smtp.mailfrom=ijzerbout.nl; dkim=pass (4096-bit key) header.d=ijzerbout.nl header.i=@ijzerbout.nl header.b=OArvQjGJ; arc=none smtp.client-ip=136.144.140.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ijzerbout.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ijzerbout.nl
+	s=arc-20240116; t=1733868164; c=relaxed/simple;
+	bh=u09CnohGmZhgZmVWK3D3VhRZAlg6uIpt8CXcoyq628k=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=SrEQeExl408Ax+36Oja+X4/yjRWqtakiqWnyAdxV9Qcfvg6oYgRQmykvtxlaCNK3LngKVMPQr0ZYJ29vj8z74Nstdeftapa4NfSIicBnbyyCQnZjOr5WZjhgUuBA1BBE+Vwt8AUypt6rOAnAe40Bs0qAdpqcFDeahXuB95abjVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=D0ztEAtB; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=ijzerbout.nl header.i=@ijzerbout.nl header.b="OArvQjGJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ijzerbout.nl; s=key;
-	t=1733864319; bh=v2raCaWN3IG/5w/aOn1R+icWgs90NdTA6z+LvPlbe1o=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=OArvQjGJNCmsOR94itS7QtZxcp/cZbSiLL9l9fSA0rrBt/8AXT1jSbc4cR2z8/tmu
-	 1OzHqoh/vyDUAvJO7k1U6X5GXLog723yXC4mTWoDS0MOcv3AQfM9k2Sx3jjwloZ71z
-	 BJnUzK6U9fS7nmNLBOvNl79OkdEsMlcJsg8qscN6mXFA0cxSmoNYNm62Fr2pC8KJhA
-	 DaPqaqh8iks88o7wNFLMB2egi+bjH/NNJ7XPCv01GBJk7F7+OlW5dXWJWb9UZ/ypPn
-	 38GOlhRVE6h2BXvmB1t0vkE0dhZinC6zfiX6RILZsYfInwKQSBZT0dJYqbVTeIO0Sl
-	 4uCGz0UmVaKh4K5GmsKgJaXrheMibsSf3lW/X0rykBE/T+WAG37xLZHRLoeRAmUgo6
-	 jXpbjwPiRNXtNQSLfaWfT4o2kGb1miFj/K//+StV37fC504TFutA/7srb4uuBm6HNt
-	 4uoWH6xj++V6Ww60iAdApQ4NP/juEavaqXe1irj7DMakfHS/heWNjb0fKIXcFYfqAt
-	 s4fnyzQH3M4+0dqeUYgPqWvPm3OUEa3BWNYkFP+LDd/69lx8qM8mowTL6tuCZoRyGx
-	 260VYLC+EvbzBe6PWSshjA8r4jWtxnRE5P5IyjVbkq2ok59tp00cENA332NYBu6Ao8
-	 vgn92l7uTueQ93G4xp4pM3ow=
-Received: from [IPV6:2a10:3781:99:1:1ac0:4dff:fea7:ec3a] (racer.ijzerbout.nl [IPv6:2a10:3781:99:1:1ac0:4dff:fea7:ec3a])
-	by bout3.ijzerbout.nl (Postfix) with ESMTPSA id 1D46118E519;
-	Tue, 10 Dec 2024 21:58:34 +0100 (CET)
-Message-ID: <bfd41680-060f-4bd8-a289-f4ef69429c30@ijzerbout.nl>
-Date: Tue, 10 Dec 2024 21:58:31 +0100
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="D0ztEAtB"
+Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
+	by linux.microsoft.com (Postfix) with ESMTPSA id B8E722047229;
+	Tue, 10 Dec 2024 14:02:36 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B8E722047229
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1733868156;
+	bh=p+8g58BSBlt5b8YhFCU18nddw3DZx2oHU0RyK/mdTxg=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=D0ztEAtB7CqvQGSZsYp+tRN4xkI1U+Pf0qGPT6ILcEXORWxv5WkL8NhY8sec+1ep2
+	 o0YIUC89qlYyBwdj7sp7PypSXEaSKBYajv+HMKS2o/OP0mphIdTsuM5S4VkeWurXmd
+	 SYBz6bHa118hfuIgWOgwAoVQLPZwu51P6o2dfTvU=
+From: Easwar Hariharan <eahariha@linux.microsoft.com>
+Date: Tue, 10 Dec 2024 22:02:33 +0000
+Subject: [PATCH v3 02/19] coccinelle: misc: Add secs_to_jiffies script
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/7] wifi: ath12k: move struct ath12k_hw from per device
- to group
-To: Kalle Valo <kvalo@kernel.org>, ath12k@lists.infradead.org,
- Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
- Harshitha Prem <quic_hprem@quicinc.com>,
- Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-References: <20241204163216.433795-1-kvalo@kernel.org>
- <20241204163216.433795-6-kvalo@kernel.org>
-Content-Language: en-US
-From: Kees Bakker <kees@ijzerbout.nl>
-In-Reply-To: <20241204163216.433795-6-kvalo@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20241210-converge-secs-to-jiffies-v3-2-ddfefd7e9f2a@linux.microsoft.com>
+References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
+In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
+To: Pablo Neira Ayuso <pablo@netfilter.org>, 
+ Jozsef Kadlecsik <kadlec@netfilter.org>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>, Julia Lawall <Julia.Lawall@inria.fr>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, Daniel Mack <daniel@zonque.org>, 
+ Haojian Zhuang <haojian.zhuang@gmail.com>, 
+ Robert Jarzmik <robert.jarzmik@free.fr>, 
+ Russell King <linux@armlinux.org.uk>, Heiko Carstens <hca@linux.ibm.com>, 
+ Vasily Gorbik <gor@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Sven Schnelle <svens@linux.ibm.com>, Ofir Bitton <obitton@habana.ai>, 
+ Oded Gabbay <ogabbay@kernel.org>, 
+ Lucas De Marchi <lucas.demarchi@intel.com>, 
+ =?utf-8?q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Jeroen de Borst <jeroendb@google.com>, 
+ Praveen Kaligineedi <pkaligineedi@google.com>, 
+ Shailend Chand <shailend@google.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+ James Smart <james.smart@broadcom.com>, 
+ Dick Kennedy <dick.kennedy@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ =?utf-8?q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>, 
+ Jens Axboe <axboe@kernel.dk>, Kalle Valo <kvalo@kernel.org>, 
+ Jeff Johnson <jjohnson@kernel.org>, 
+ Catalin Marinas <catalin.marinas@arm.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Jack Wang <jinpu.wang@cloud.ionos.com>, 
+ Marcel Holtmann <marcel@holtmann.org>, 
+ Johan Hedberg <johan.hedberg@gmail.com>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Florian Fainelli <florian.fainelli@broadcom.com>, 
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, 
+ Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+ Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>, 
+ Josh Poimboeuf <jpoimboe@kernel.org>, Jiri Kosina <jikos@kernel.org>, 
+ Miroslav Benes <mbenes@suse.cz>, Petr Mladek <pmladek@suse.com>, 
+ Joe Lawrence <joe.lawrence@redhat.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Takashi Iwai <tiwai@suse.com>, Louis Peens <louis.peens@corigine.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Naveen N Rao <naveen@kernel.org>, Madhavan Srinivasan <maddy@linux.ibm.com>
+Cc: netfilter-devel@vger.kernel.org, coreteam@netfilter.org, 
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cocci@inria.fr, 
+ linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, 
+ linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org, 
+ linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ ath11k@lists.infradead.org, linux-mm@kvack.org, 
+ linux-bluetooth@vger.kernel.org, linux-staging@lists.linux.dev, 
+ linux-rpi-kernel@lists.infradead.org, ceph-devel@vger.kernel.org, 
+ live-patching@vger.kernel.org, linux-sound@vger.kernel.org, 
+ oss-drivers@corigine.com, linuxppc-dev@lists.ozlabs.org, 
+ Anna-Maria Behnsen <anna-maria@linutronix.de>, 
+ Easwar Hariharan <eahariha@linux.microsoft.com>
+X-Mailer: b4 0.14.2
 
-Op 04-12-2024 om 17:32 schreef Kalle Valo:
-> From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
->
-> Currently, hardware abstractions (ah) of different radio bands are tightly
-> coupled to a single device (ab). But, with hardware device group abstraction
-> (ag), multiple radios across different devices in a group can form different
-> combinations of hardware abstractions (ah) within the group. Hence, the mapping
-> between ah to ab can be removed and instead it can be mapped with struct
-> ath12k_hw_group (ag).
-> [...]
-> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-> [...]
-> -void ath12k_mac_destroy(struct ath12k_base *ab)
-> +void ath12k_mac_destroy(struct ath12k_hw_group *ag)
->   {
->   	struct ath12k_pdev *pdev;
-> +	struct ath12k_base *ab = ag->ab[0];
-> +	int i, j;
->   	struct ath12k_hw *ah;
-> -	int i;
->   
-> -	for (i = 0; i < ab->num_radios; i++) {
-> -		pdev = &ab->pdevs[i];
-> -		if (!pdev->ar)
-> +	for (i = 0; i < ag->num_devices; i++) {
-> +		ab = ag->ab[i];
-> +		if (!ab)
->   			continue;
->   
-> -		pdev->ar = NULL;
-> +		for (j = 0; j < ab->num_radios; j++) {
-> +			pdev = &ab->pdevs[j];
-> +			if (!pdev->ar)
-> +				continue;
-> +			pdev->ar = NULL;
-> +		}
->   	}
->   
->   	for (i = 0; i < ath12k_get_num_hw(ab); i++) {
-> @@ -10942,26 +10945,59 @@ void ath12k_mac_destroy(struct ath12k_base *ab)
->   	}
->   }
->   
-The new ath12k_mac_destroy() looks suspicious with respect to "ab".
-Here is the new function with comments.
+This script finds and suggests conversions of timeout patterns that
+result in seconds-denominated timeouts to use the new secs_to_jiffies()
+API in include/linux/jiffies.h for better readability.
 
-void ath12k_mac_destroy(struct ath12k_hw_group *ag)
-{
-         struct ath12k_pdev *pdev;
-         struct ath12k_base *ab = ag->ab[0];
-==> here ag->ab[0] is used before checking if ag->num_devices is greater 
-than zero
-==> If ag->num_devices will never be zero then this first assignment 
-will be repeated in the next for-loop
-==> if ag->num_devices can be zero then you need to confirm that 
-ag->ab[0] is non-NULL
+Suggested-by: Anna-Maria Behnsen <anna-maria@linutronix.de>
+Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+---
+ scripts/coccinelle/misc/secs_to_jiffies.cocci | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-         int i, j;
-         struct ath12k_hw *ah;
-
-         for (i = 0; i < ag->num_devices; i++) {
-                 ab = ag->ab[i];
-                 if (!ab)
-=>> This if check indicates that ab can be NULL
-                         continue;
-
-                 for (j = 0; j < ab->num_radios; j++) {
-                         pdev = &ab->pdevs[j];
-                         if (!pdev->ar)
-                                 continue;
-                         pdev->ar = NULL;
-                 }
-         }
-
-==> Now ab is going to be used, but as shown above, ab can be NULL
-         for (i = 0; i < ath12k_get_num_hw(ab); i++) {
-                 ah = ath12k_ab_to_ah(ab, i);
-                 if (!ah)
-                         continue;
-
-                 ath12k_mac_hw_destroy(ah);
-                 ath12k_ab_set_ah(ab, i, NULL);
-         }
-}
+diff --git a/scripts/coccinelle/misc/secs_to_jiffies.cocci b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+new file mode 100644
+index 0000000000000000000000000000000000000000..8bbb2884ea5db939c63fd4513cf5ca8c977aa8cb
+--- /dev/null
++++ b/scripts/coccinelle/misc/secs_to_jiffies.cocci
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0-only
++///
++/// Find usages of:
++/// - msecs_to_jiffies(value*1000)
++/// - msecs_to_jiffies(value*MSEC_PER_SEC)
++///
++// Confidence: High
++// Copyright: (C) 2024 Easwar Hariharan, Microsoft
++// Keywords: secs, seconds, jiffies
++//
++
++virtual patch
++
++@depends on patch@ constant C; @@
++
++- msecs_to_jiffies(C * 1000)
+++ secs_to_jiffies(C)
++
++@depends on patch@ constant C; @@
++
++- msecs_to_jiffies(C * MSEC_PER_SEC)
+++ secs_to_jiffies(C)
 
 -- 
-Kees
+2.43.0
+
