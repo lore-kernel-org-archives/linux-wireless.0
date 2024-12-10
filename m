@@ -1,33 +1,34 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 33F0823EA65;
-	Tue, 10 Dec 2024 22:02:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 57D6824039D;
+	Tue, 10 Dec 2024 22:02:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733868171; cv=none; b=dyrqJosgAqBUypYYs7k9asIairvli+Hfh9TvBquK/hMMGwCtl+oBMo9U4idiwAbAs4ym1ppYcRKGbiBgxgPi3gpLZEu7by+CX5KeGUsNsn0ufgyYXb2gPUXfEq3UGpt9EWfig89wv5HMWDHPyIfNvs+Vr5w3zaQ6ugLxRLilUmc=
+	t=1733868172; cv=none; b=s15A3aV7ud0jzBURE8kd/x46/MOZ8wFNHOxQpMF3cZcGeJiIgHMEg0pt/lrRhUOQgmq1JA6zSbZX9oWX0sy/Nrq2yykdMi3BvGrcD8CZHdLT0k51APz7/DOWLS1rNlDvyala1hawUlUuT0DH620HNKeyBwjmrlzi5y3ublDXE/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733868171; c=relaxed/simple;
-	bh=54d8m4Eim8lD4getFnvzmfrDLMUyr8KHezV0gwHZcPA=;
+	s=arc-20240116; t=1733868172; c=relaxed/simple;
+	bh=frqXhZTljXQf4Hj4uuht2qQqPwJblQXtPO/1Lu5KZMY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=IMJSOgiQkwoDdgJb5/dhbe7rQXMiGnr6KHTcqrI9FXFd2QKhbcqglOMpRkWwD1qDcvohpoMcvvCxIdOtFx8devNZ1qCFoDo2aA0v7xxFOJuUlYB8IbqC/su8K8kNoyQH0/Hsbr6P8WwKUnP3kYIH/ctfOeEcYSwTyQeNofzxax0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=MyS1GphF; arc=none smtp.client-ip=13.77.154.182
+	 In-Reply-To:To:Cc; b=YOnQaoY+9hX6/pTVbvk1NRIbUjXaHCQIZsoVEgLkYm2ozCb2gkniUrzRylwUEfMZDcTn3rCg9RgOQfXbV6/jGFpApl4EHoeksuaLr8JqMUH6Rw9IP6moxHXPQiz5vmqEMficrT1og0zbvPLp57nVPPIcmGIYZJsKsxX2AMShtlE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ey2u4hFu; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="MyS1GphF"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ey2u4hFu"
 Received: from eahariha-devbox.internal.cloudapp.net (unknown [40.91.112.99])
-	by linux.microsoft.com (Postfix) with ESMTPSA id CC9872047232;
-	Tue, 10 Dec 2024 14:02:38 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CC9872047232
+	by linux.microsoft.com (Postfix) with ESMTPSA id 4B3EA204722C;
+	Tue, 10 Dec 2024 14:02:37 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 4B3EA204722C
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1733868158;
-	bh=Nu1FTDRwT3eJ8G3TZ1SOaVXDK1brjinK2gy4k85VNBc=;
+	s=default; t=1733868157;
+	bh=pNf1urZZ7beXITMyG6cNpTQM4ujE/reyCjI7dxR8TrA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=MyS1GphFvmGr2JHW6tyCf5nlmMH9PAcPu/qJOqDicxYHN3ga/E8mPiUpYdOmKe+08
-	 ESmMPf61fW9R/vd5fEqw2UI0IyMH9O+5zBGiCitLbR/PLOMP+sV+LtAwK3GV6cBnMZ
-	 qMuvwZX6TCbpYuenDC/gzSBNDFt3OVWamZA4/4ys=
+	b=ey2u4hFur56upsg36Bzzf5E6sp9TxIQJWauHtVHyZKWxl2TYAXbOMES9gB/LrtTHt
+	 EMIcdvfnDr4nFfA+fPKgnRb6wrIZBNFQYmxUUa3IOMgJ6rbLPy51pP+s0wIlgpVbyY
+	 W7PI6jGCodUt7pK+WAXoxoZrhQg9ZJ/5kGvj+4iw=
 From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Date: Tue, 10 Dec 2024 22:02:44 +0000
-Subject: [PATCH v3 13/19] gve: Convert timeouts to secs_to_jiffies()
+Date: Tue, 10 Dec 2024 22:02:36 +0000
+Subject: [PATCH v3 05/19] powerpc/papr_scm: Convert timeouts to
+ secs_to_jiffies()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -36,7 +37,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241210-converge-secs-to-jiffies-v3-13-ddfefd7e9f2a@linux.microsoft.com>
+Message-Id: <20241210-converge-secs-to-jiffies-v3-5-ddfefd7e9f2a@linux.microsoft.com>
 References: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 In-Reply-To: <20241210-converge-secs-to-jiffies-v3-0-ddfefd7e9f2a@linux.microsoft.com>
 To: Pablo Neira Ayuso <pablo@netfilter.org>, 
@@ -121,33 +122,22 @@ the following Coccinelle rules:
 
 Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
 ---
- drivers/net/ethernet/google/gve/gve_tx_dqo.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/powerpc/platforms/pseries/papr_scm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/google/gve/gve_tx_dqo.c b/drivers/net/ethernet/google/gve/gve_tx_dqo.c
-index f879426cb5523a7e150f363b5e57b9d472b5817c..394debc62268aadf2579f9b516e045cb48287e7c 100644
---- a/drivers/net/ethernet/google/gve/gve_tx_dqo.c
-+++ b/drivers/net/ethernet/google/gve/gve_tx_dqo.c
-@@ -1146,8 +1146,7 @@ static void gve_handle_miss_completion(struct gve_priv *priv,
- 	/* jiffies can wraparound but time comparisons can handle overflows. */
- 	pending_packet->timeout_jiffies =
- 			jiffies +
--			msecs_to_jiffies(GVE_REINJECT_COMPL_TIMEOUT *
--					 MSEC_PER_SEC);
-+			secs_to_jiffies(GVE_REINJECT_COMPL_TIMEOUT);
- 	add_to_list(tx, &tx->dqo_compl.miss_completions, pending_packet);
+diff --git a/arch/powerpc/platforms/pseries/papr_scm.c b/arch/powerpc/platforms/pseries/papr_scm.c
+index f84ac9fbe203c111046464b9100866dddae687bb..f7c9271bda58433f395648063e60409a8d3c11d9 100644
+--- a/arch/powerpc/platforms/pseries/papr_scm.c
++++ b/arch/powerpc/platforms/pseries/papr_scm.c
+@@ -544,7 +544,7 @@ static int drc_pmem_query_health(struct papr_scm_priv *p)
  
- 	*bytes += pending_packet->skb->len;
-@@ -1191,8 +1190,7 @@ static void remove_miss_completions(struct gve_priv *priv,
- 		pending_packet->state = GVE_PACKET_STATE_TIMED_OUT_COMPL;
- 		pending_packet->timeout_jiffies =
- 				jiffies +
--				msecs_to_jiffies(GVE_DEALLOCATE_COMPL_TIMEOUT *
--						 MSEC_PER_SEC);
-+				secs_to_jiffies(GVE_DEALLOCATE_COMPL_TIMEOUT);
- 		/* Maintain pending packet in another list so the packet can be
- 		 * unallocated at a later time.
- 		 */
+ 	/* Jiffies offset for which the health data is assumed to be same */
+ 	cache_timeout = p->lasthealth_jiffies +
+-		msecs_to_jiffies(MIN_HEALTH_QUERY_INTERVAL * 1000);
++		secs_to_jiffies(MIN_HEALTH_QUERY_INTERVAL);
+ 
+ 	/* Fetch new health info is its older than MIN_HEALTH_QUERY_INTERVAL */
+ 	if (time_after(jiffies, cache_timeout))
 
 -- 
 2.43.0
