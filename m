@@ -1,121 +1,127 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1653F19DF4B;
-	Tue, 10 Dec 2024 13:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C6931B3957;
+	Tue, 10 Dec 2024 14:43:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733837661; cv=none; b=bvb8t9jSKTO8PPrCyJbvXHa5651pTKwL3KkSKs4a2U40V9HPg+kjqcQLHcu0I7cyRsgFlwIDvudNmbcy5yOphrCs810rR/2EgtPVKTMq2id7DjWIwd15fx77PKaA7UdNYdCUAhQIqBPdUz+mB+i1ZpLveP9t1VxUHO/pMO9Zo88=
+	t=1733841810; cv=none; b=UwXyPMxZjh4ZscMNCXi4UcFMMzf8bDLMJa71H9fpPuWeueqS0MzztG2ng6vFsCXruAgfj1UNNCpgXtgMeYusoNcHzinhXsDrAD1zH6lJoqNC8o3YN+bc9OYDozYVa8qRY1rvfSTMJW0eoPRowZNggWLYJr93zfr6ZG1/AeuUHUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733837661; c=relaxed/simple;
-	bh=g3iQbcQOr7dyQ3EfYALIA3Med08yMRWpX7nADQuGN3g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HRjC9Bt6/HfFbntutvDCo56XWhvFw8KR6zSmWbZaj3QGZdnN60OkE3YS+7wrTH2hFKd+/cLJymb0uhpAE+6O9uzVHnpflZlYOtcl0HMCNdytkOsJeE/Oe7BIw/vz00pzQays/u1CBmyQiXNtqyEHvLQMAPcUoVFI9YclmsP/Lp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=q75z1BSq; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1733841810; c=relaxed/simple;
+	bh=OIOg3i6GmupoayxlzqZOAzNU9HER/nFfNrL+yjjmx7k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BMdI29Ge/pkxql2Qpz95XXZLJj/SMdMMwM3HosUo8a7yUccjPMMCdIeyJmjJ8OaCkguJMN6PbhW4pI0yva1IIqxR9YY4atQLREdh8iZIQS893nHFHNi04mIsMYoKT2NIM4SQsnIwiLLY7jVxXR4rotSGDVqR8F2QdYOluyIRG/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Qv3zxdvV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="q75z1BSq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=ZA0Z+XbKwoZy17m9SInn+B77xWbHgPSpbFAiZ9LdHZ0=; t=1733837660; x=1735047260; 
-	b=q75z1BSqZQTtrTdSG/K6tsgS6gcd4NbyZreGx6YLD5H/jDocC/uUKa32qgi8jxhnJyrAOmPPj2L
-	WeMZhj/yWM9wQLEDXHe27srPWzElFvCk+TplU5nBe85//9nY0NF24xmQrgwd/gPKYJuPyvXLlUocR
-	wdstqDP7Gk/iyOVtnqNaeWIgp2jOFJC3xRFLcyzRXUIyPN5uMBqB6R+wqbXLLCER3u4OLk5UGFMpS
-	He04w85WTk744DuJzxfJLhIxte5osEcMVzkQqS2XB/w97iC/+WvQtwwWhMyqxt3dudBD4TL1QBOEr
-	tu2ghB5gyECPBvKcplVzTR1OBB6s9h2NiUFg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1tKzs4-0000000CMeq-2ebh;
-	Tue, 10 Dec 2024 14:01:48 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: pull-request: wireless-2024-12-10
-Date: Tue, 10 Dec 2024 14:01:04 +0100
-Message-ID: <20241210130145.28618-3-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Qv3zxdvV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B50D4C4CED6;
+	Tue, 10 Dec 2024 14:43:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733841810;
+	bh=OIOg3i6GmupoayxlzqZOAzNU9HER/nFfNrL+yjjmx7k=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Qv3zxdvVPQQy67KhewuBcjyI9qr6cX7pECvrw5iSayt8c2vCO3oJ6crkCNNJshyGx
+	 7LyvFYY7cldCo92TA/hieV0CIxlpUKCtF9FhrErTidjWWpB4pdj1bTwL3kymF1vUl7
+	 ZMNGVDB9U220Wr5JNpVwHJrANfPOgj0o2q9QeHZKwZzJYcCql3zbkHiX8ytSLO9EB9
+	 u8tpaDXlrt32WO0U+qioSOojECsqy4IYm7RXSs3UbDs2ag40rU0uV2s4BTk1n2SdoU
+	 +4DZTEH8jTAIm7jm46a1EvcsHQYKmIARwNC+NQ4Mxwj13Rtp6gYcO+ZHdlTY54nq3o
+	 skPREHURqy5vA==
+Message-ID: <2d86b600-a7b1-4f7f-87ba-c167ec8c0405@kernel.org>
+Date: Tue, 10 Dec 2024 15:43:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 07/13] wifi: ath12k: add support for fixed QMI firmware
+ memory
+To: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+References: <20241210074159.2637933-1-quic_rajkbhag@quicinc.com>
+ <20241210074159.2637933-8-quic_rajkbhag@quicinc.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20241210074159.2637933-8-quic_rajkbhag@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi,
+On 10/12/2024 08:41, Raj Kumar Bhagat wrote:
+> +		case CALDB_MEM_REGION_TYPE:
+> +			/* Cold boot calibration is not enabled in Ath12k. Hence,
+> +			 * assign paddr = 0.
+> +			 * Once cold boot calibration is enabled add support to
+> +			 * assign reserved memory from DT.
+> +			 */
+> +			ab->qmi.target_mem[idx].paddr = 0;
+> +			ab->qmi.target_mem[idx].v.ioaddr = NULL;
+> +			ab->qmi.target_mem[idx].size = ab->qmi.target_mem[i].size;
+> +			ab->qmi.target_mem[idx].type = ab->qmi.target_mem[i].type;
+> +			idx++;
+> +			break;
+> +		case M3_DUMP_REGION_TYPE:
+> +			dev_node = of_find_node_by_name(NULL, "m3_dump");
 
-For now, we have a reasonably small number of fixes :)
-FWIW our tree was based on -rc1 but net only pulled it
-later, but it should now pull only wireless into net.
+NAK
 
-Please pull and let us know if there's any problem.
-
-Thanks,
-johannes
+That's neither correct name nor documented in the bindings. You created
+now undocumented ABI. Even with incorrect name. :/
 
 
+> +			if (!dev_node || of_address_to_resource(dev_node, 0, &m3_res)) {
+> +				ath12k_err(ab, "m3_dump not defined in device-tree\n");
+> +				ret = -EINVAL;
+> +				goto out;
+> +			}
+> +
 
-The following changes since commit 40384c840ea1944d7c5a392e8975ed088ecf0b37:
 
-  Linux 6.13-rc1 (2024-12-01 14:28:56 -0800)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2024-12-10
-
-for you to fetch changes up to f1d3334d604cc32db63f6e2b3283011e02294e54:
-
-  wifi: cfg80211: sme: init n_channels before channels[] access (2024-12-06 10:45:22 +0100)
-
-----------------------------------------------------------------
-A small set of fixes:
- - avoid CSA warnings during link removal
-   (by changing link bitmap after remove)
- - fix # of spatial streams initialisation
- - fix queues getting stuck in some CSA cases
-   and resume failures
- - fix interface address when switching monitor mode
- - fix MBSS change flags 32-bit stack corruption
- - more UBSAN __counted_by "fixes" ...
- - fix link ID netlink validation
-
-----------------------------------------------------------------
-Aditya Kumar Singh (1):
-      wifi: cfg80211: clear link ID from bitmap during link delete after clean up
-
-Benjamin Lin (1):
-      wifi: mac80211: fix station NSS capability initialization order
-
-Emmanuel Grumbach (2):
-      wifi: mac80211: wake the queues in case of failure in resume
-      wifi: mac80211: fix a queue stall in certain cases of CSA
-
-Felix Fietkau (1):
-      wifi: mac80211: fix vif addr when switching from monitor to station
-
-Haoyu Li (2):
-      wifi: mac80211: init cnt before accessing elem in ieee80211_copy_mbssid_beacon
-      wifi: cfg80211: sme: init n_channels before channels[] access
-
-Issam Hamdi (1):
-      wifi: mac80211: fix mbss changed flags corruption on 32 bit systems
-
-Lin Ma (1):
-      wifi: nl80211: fix NL80211_ATTR_MLO_LINK_ID off-by-one
-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |  2 +-
- include/net/mac80211.h                            |  7 ++--
- net/mac80211/cfg.c                                | 17 +++++---
- net/mac80211/ieee80211_i.h                        | 49 ++++++++++++++++++-----
- net/mac80211/iface.c                              | 23 ++++-------
- net/mac80211/mesh.c                               |  6 +--
- net/mac80211/mlme.c                               |  2 -
- net/mac80211/util.c                               | 26 +++---------
- net/wireless/nl80211.c                            |  2 +-
- net/wireless/sme.c                                |  1 +
- net/wireless/util.c                               |  3 +-
- 11 files changed, 76 insertions(+), 62 deletions(-)
+Best regards,
+Krzysztof
