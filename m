@@ -1,137 +1,129 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f205.google.com (mail-il1-f205.google.com [209.85.166.205])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0904A15AAC1
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2024 04:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68D29165F01
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Dec 2024 04:41:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733977900; cv=none; b=Ys57vA+CbBSasQhqDaoGLbdFxlWdTchhu4xxNfbEJ+GtzAU6stO/+dB2AmAmOJ4WPGXuIi/wDbubKJ6NodCHa8F0xFO2JYz0WFJ/U/Sb0n8LjVs3QF8wyVTlxnT3IymAFa8cg9tagDCdUAa91x9uG19203dxivupEAm/W+aOioU=
+	t=1733978486; cv=none; b=ceGibxCLHuFUdhsJD6yT8adLkgYcra2cWam/osMj2ofG7q19X9MexqrSUBjIKSGC53q1Ec0x00zI1vJDYlSkuPbpGpJRthCgACX6BdaugmE+pQaLuIMVNYyGpuJ/LuNWdR9b+RqPJLLdNFqCTe18VoeZuWuLYpnezEzD8PKKMUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733977900; c=relaxed/simple;
-	bh=5YZA2j3sUfOMpP0SPfYfSizTKfq/iiwV6Ec1/cBNMr4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gcn73mV96bgs6rD/qMXgfjehG7VjZ/XEBIZb3l11xliMcyDxQnCJT7GjcHW7xCXKsl2k3Kx7rqyf5TeYKJvhfXPOyMiLBTS2Tur/wFcxRkU6yysW/t2avGm1K7VKrQ/k+Nl2vMyiuyKCb62x8CD2W99tC9z0ZIMun+QkdjJFhSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RUgTBK8X; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RUgTBK8X"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1733977898; x=1765513898;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=5YZA2j3sUfOMpP0SPfYfSizTKfq/iiwV6Ec1/cBNMr4=;
-  b=RUgTBK8XzoW1oJa8Wxx/z/aoKMWe/D06tcg/IO8RHXDm1pPEbZzwZKs9
-   L9UGduCxjq1Z9u+0bwEOzx7lyCXix9WjBk3kzvqRp8JJ/mOxpU/un5vRs
-   H1rtH+/H63ble+id/E613Q/PfiLs/ea4aUuew0z/WQ/vmEzUyqtm1mSun
-   U0QLoLO8yo2l88CyUfDkzyGKhAXaH7hVXpmQHCRUgHYc5xudYTENA2ykx
-   Wd/AD2rMWdkixQkrtYNvRXtru8WLeU2pQOQ9MEQ9/5NGrFLaNzWf0edL/
-   wq7Fz5QLhMv7kQlKbaTZ6SVJVDta9LggVFKYk65k3LUF6mixMqCdYuSt9
-   Q==;
-X-CSE-ConnectionGUID: pIZcPFbZQWyD18sBsK3d/g==
-X-CSE-MsgGUID: jsIt75IuStmJvK/Io86jAw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11283"; a="34253916"
-X-IronPort-AV: E=Sophos;i="6.12,227,1728975600"; 
-   d="scan'208";a="34253916"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Dec 2024 20:31:37 -0800
-X-CSE-ConnectionGUID: y7HqZ6/nRhmgxnByBUnGiw==
-X-CSE-MsgGUID: iZW5l9gJRBqFExCC25+png==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,227,1728975600"; 
-   d="scan'208";a="101114606"
-Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 11 Dec 2024 20:31:35 -0800
-Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tLarN-0007Qr-0n;
-	Thu, 12 Dec 2024 04:31:33 +0000
-Date: Thu, 12 Dec 2024 12:30:40 +0800
-From: kernel test robot <lkp@intel.com>
-To: sean.wang@kernel.org, nbd@nbd.name, lorenzo.bianconi@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, sean.wang@mediatek.com,
-	deren.wu@mediatek.com, mingyen.hsieh@mediatek.com,
-	linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH 12/17] wifi: mt76: mt7925: Update
- mt7925_unassign_vif_chanctx for per-link BSS
-Message-ID: <202412121200.voBerw6W-lkp@intel.com>
-References: <20241211011926.5002-12-sean.wang@kernel.org>
+	s=arc-20240116; t=1733978486; c=relaxed/simple;
+	bh=mRUP88o1vYUkBTOYZZUrYwZIPtL1QkuhuFKt1jdzph4=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=ROsbnXZsLswcnSdsdxvSniIRe7ZTQybU5gK2Ej8y7WihfQG0ug6U4ueSOjenE5U4eTh3ecGn5lt75bqByjS/ejLAiucCE8aXsqDcGZL03h7KtOlV+dm8OB3fg+sorAkD7UEDAPjWK7oNzLltEDkM1BVNsOlDeZ1ACwAm5B8F1SI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.205
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f205.google.com with SMTP id e9e14a558f8ab-3a9d075bdc3so4481425ab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2024 20:41:24 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733978483; x=1734583283;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=6i+UFR5QAg/htQWbJqPb5ENw5otoHq5vhy8B41aRmTk=;
+        b=V4/nA8RdKtpaQ6RkMz2CaCm6qQEt49jMX/A/Q88GZsP9ESkYyQRd/Q47vC3fV+wa0g
+         /6DSyJadAocn6yxpvimIGKJgXg88ZD9HusQGMHnaR+6YHrEO9KsqmojbV+kNsXQ62SJe
+         zbaKLP5YPWeybXcfAYOaXffTl214L+GpaJb0CwHRRfqM9hHfU7h/ws84nWfhQbB66g8g
+         MKw5Et/MC/8cczgpwSdDAp8mQjC+WyeS2juEl5TgdspH9tMzmxK6Fy6yarcZGs+vYGy9
+         9pMYxhgysjH6wmfkQD0sv7XfOds/jqWnlkhVuRaCRtffbwnILv8Rd3QzelY+xK/4oFgA
+         GUmA==
+X-Forwarded-Encrypted: i=1; AJvYcCVoBdNA3afW/eIvIpABC+tVFDRBBYrmAqvvLCOGAU0Plps/5eZU1azqKqZDpD6uucCkcvsMZVFsxTQbNq5cgw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMiqt4m9d2PqoRr9CuiKfFgMEbuDDoboCVkfrNKSm3yPYsgCvh
+	0BlBocPGptf2FkugwbFLRXBipvZA4gYvHbS/C/ECbgqWfarLJKAF6ZMOEn35fTJ6Fv4j5uZrNJN
+	mt/4E7o4qncD7RRQn2G5ZZ2eaaWn3JleqY837ZRYc3rU9PMuq88w1BiQ=
+X-Google-Smtp-Source: AGHT+IF7hZOGQsYnWyD1jmnUwVNk6byVH4UmYE20sGt2xhakUPRENmuUv35XY2FYWd8tXd4KVyiTVLHau2gQeV+IScDc0mqeyy9j
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241211011926.5002-12-sean.wang@kernel.org>
+X-Received: by 2002:a05:6e02:1486:b0:3a6:ad61:7ff8 with SMTP id
+ e9e14a558f8ab-3ac48d9eb3dmr23195855ab.12.1733978483669; Wed, 11 Dec 2024
+ 20:41:23 -0800 (PST)
+Date: Wed, 11 Dec 2024 20:41:23 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <675a6973.050a0220.17f54a.0050.GAE@google.com>
+Subject: [syzbot] [wireless?] BUG: sleeping function called from invalid
+ context in wext_netdev_notifier_call
+From: syzbot <syzbot+3647b9259b77c1bb8e94@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Hello,
 
-kernel test robot noticed the following build warnings:
+syzbot found the following issue on:
 
-[auto build test WARNING on wireless-next/main]
-[also build test WARNING on wireless/main linus/master v6.13-rc2 next-20241211]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+HEAD commit:    4c49f38e20a5 net: stmmac: fix TSO DMA API usage causing oops
+git tree:       net
+console output: https://syzkaller.appspot.com/x/log.txt?x=11614820580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1362a5aee630ff34
+dashboard link: https://syzkaller.appspot.com/bug?extid=3647b9259b77c1bb8e94
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-url:    https://github.com/intel-lab-lkp/linux/commits/sean-wang-kernel-org/wifi-mt76-mt7925-Fix-incorrect-MLD-address-in-bss_mld_tlv-for-MLO-support/20241211-092359
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20241211011926.5002-12-sean.wang%40kernel.org
-patch subject: [PATCH 12/17] wifi: mt76: mt7925: Update mt7925_unassign_vif_chanctx for per-link BSS
-config: sh-allyesconfig (https://download.01.org/0day-ci/archive/20241212/202412121200.voBerw6W-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241212/202412121200.voBerw6W-lkp@intel.com/reproduce)
+Unfortunately, I don't have any reproducer for this issue yet.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202412121200.voBerw6W-lkp@intel.com/
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/09256902989e/disk-4c49f38e.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/2b41c0f5233f/vmlinux-4c49f38e.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/7bb9fdcd5331/bzImage-4c49f38e.xz
 
-All warnings (new ones prefixed by >>):
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+3647b9259b77c1bb8e94@syzkaller.appspotmail.com
 
-   drivers/net/wireless/mediatek/mt76/mt7925/main.c: In function 'mt7925_unassign_vif_chanctx':
->> drivers/net/wireless/mediatek/mt76/mt7925/main.c:2082:36: warning: variable 'pri_link_conf' set but not used [-Wunused-but-set-variable]
-    2082 |         struct ieee80211_bss_conf *pri_link_conf;
-         |                                    ^~~~~~~~~~~~~
+BUG: sleeping function called from invalid context at kernel/locking/rwsem.c:1523
+in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 12894, name: kworker/u8:18
+preempt_count: 0, expected: 0
+RCU nest depth: 1, expected: 0
+INFO: lockdep is turned off.
+CPU: 1 UID: 0 PID: 12894 Comm: kworker/u8:18 Not tainted 6.13.0-rc1-syzkaller-00183-g4c49f38e20a5 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+Workqueue: bond0 bond_mii_monitor
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ __might_resched+0x5d4/0x780 kernel/sched/core.c:8758
+ down_read+0x8e/0xa40 kernel/locking/rwsem.c:1523
+ wireless_nlevent_flush net/wireless/wext-core.c:351 [inline]
+ wext_netdev_notifier_call+0x1f/0x120 net/wireless/wext-core.c:371
+ notifier_call_chain+0x1a5/0x3f0 kernel/notifier.c:85
+ netdev_state_change+0x11f/0x1a0 net/core/dev.c:1378
+ linkwatch_do_dev+0x112/0x170 net/core/link_watch.c:182
+ ethtool_op_get_link+0x15/0x60 net/ethtool/ioctl.c:62
+ bond_check_dev_link+0x1f1/0x3f0 drivers/net/bonding/bond_main.c:873
+ bond_miimon_inspect drivers/net/bonding/bond_main.c:2740 [inline]
+ bond_mii_monitor+0x49a/0x3170 drivers/net/bonding/bond_main.c:2962
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+bridge0: port 2(bridge_slave_1) entered blocking state
+bridge0: port 2(bridge_slave_1) entered forwarding state
 
 
-vim +/pri_link_conf +2082 drivers/net/wireless/mediatek/mt76/mt7925/main.c
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-621e9e22b8d031 Sean Wang      2024-07-06  2073  
-621e9e22b8d031 Sean Wang      2024-07-06  2074  static void mt7925_unassign_vif_chanctx(struct ieee80211_hw *hw,
-621e9e22b8d031 Sean Wang      2024-07-06  2075  					struct ieee80211_vif *vif,
-621e9e22b8d031 Sean Wang      2024-07-06  2076  					struct ieee80211_bss_conf *link_conf,
-621e9e22b8d031 Sean Wang      2024-07-06  2077  					struct ieee80211_chanctx_conf *ctx)
-621e9e22b8d031 Sean Wang      2024-07-06  2078  {
-621e9e22b8d031 Sean Wang      2024-07-06  2079  	struct mt792x_chanctx *mctx = (struct mt792x_chanctx *)ctx->drv_priv;
-621e9e22b8d031 Sean Wang      2024-07-06  2080  	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
-621e9e22b8d031 Sean Wang      2024-07-06  2081  	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-621e9e22b8d031 Sean Wang      2024-07-06 @2082  	struct ieee80211_bss_conf *pri_link_conf;
-621e9e22b8d031 Sean Wang      2024-07-06  2083  	struct mt792x_bss_conf *mconf;
-621e9e22b8d031 Sean Wang      2024-07-06  2084  
-621e9e22b8d031 Sean Wang      2024-07-06  2085  	mutex_lock(&dev->mt76.mutex);
-621e9e22b8d031 Sean Wang      2024-07-06  2086  
-621e9e22b8d031 Sean Wang      2024-07-06  2087  	if (ieee80211_vif_is_mld(vif)) {
-621e9e22b8d031 Sean Wang      2024-07-06  2088  		mconf = mt792x_vif_to_link(mvif, link_conf->link_id);
-621e9e22b8d031 Sean Wang      2024-07-06  2089  		pri_link_conf = mt792x_vif_to_bss_conf(vif, mvif->deflink_id);
-621e9e22b8d031 Sean Wang      2024-07-06  2090  
-621e9e22b8d031 Sean Wang      2024-07-06  2091  		if (vif->type == NL80211_IFTYPE_STATION &&
-621e9e22b8d031 Sean Wang      2024-07-06  2092  		    mconf == &mvif->bss_conf)
-ef9f0dc93583f5 Ming Yen Hsieh 2024-12-10  2093  			mt7925_mcu_add_bss_info(&dev->phy, NULL, link_conf,
-621e9e22b8d031 Sean Wang      2024-07-06  2094  						NULL, false);
-621e9e22b8d031 Sean Wang      2024-07-06  2095  	} else {
-621e9e22b8d031 Sean Wang      2024-07-06  2096  		mconf = &mvif->bss_conf;
-621e9e22b8d031 Sean Wang      2024-07-06  2097  	}
-621e9e22b8d031 Sean Wang      2024-07-06  2098  
-621e9e22b8d031 Sean Wang      2024-07-06  2099  	mctx->bss_conf = NULL;
-621e9e22b8d031 Sean Wang      2024-07-06  2100  	mconf->mt76.ctx = NULL;
-621e9e22b8d031 Sean Wang      2024-07-06  2101  	mutex_unlock(&dev->mt76.mutex);
-621e9e22b8d031 Sean Wang      2024-07-06  2102  }
-621e9e22b8d031 Sean Wang      2024-07-06  2103  
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
