@@ -1,70 +1,90 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 699711DACA9
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2024 12:16:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A37D1C3C0F
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2024 12:30:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734092169; cv=none; b=GxwHvu1H40t4RnHMn+n5Av4TBJwzyt97WCdOShr/DEYzzwbXmyE4ESZzui0knqYRr7MWc009VS+enXmYbtM/fJx5fNzJbJ+aBAKC5DGDG/E9D4R74THmQLQ8ehPCX3opoOWQTC9hmGL2MM2KsEPdAtJqUVf2mQ1QliOWSTGVTwE=
+	t=1734093059; cv=none; b=CVZdyx2fQEK23vb13a90hMAtO169gvIxewHIDmhgRfY7SA0DEkQlMT7QPfQfoKFPCmg7GmLpR/7uybickt25MWo5f/SBbwO9nzAxziO5nQxAHhjYbQyQgwcxi92K7428FVkqvv+VxGlNTjo+8wubCm2aBBLVRkj/OKSceK8I4Ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734092169; c=relaxed/simple;
-	bh=R//ukypql+khoX4YCIORwikDeWONqhkiJt2y9J/uHsc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=dcJyquh3BUY/xJszMOMmkcZF6WBPBifUjfA4UDKn5hI7/WQ/unOb5nJqzAi+jedGAqJclbwgNyjD8SrFiR+Ww7hrwqppnsdnNtkjhJO9tiFMRrTiF068vtHUQn0ji4Mgc15+GqPa7SIZtnFz7RWLEph0bNQ+iO70KSZMj9Hbz4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=sczxFCQl; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1734093059; c=relaxed/simple;
+	bh=PKDUULVAMXns0jfJsLVTDdJ791zKbT5H6xg5jxQ3GtA=;
+	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=tKdPs15AnRvwodokLAPsQ/mBmmZHEe9YPasUV+Tc7TSKimsS99SmiszTfrkIsmsXMPxpsgme+pK/CFHZqJz06+DqIUypkZdz1x+jw2/g0lsGSIabT4jmb6UrBPVfHBp4aNUxGHZN3kgQHq3ANCFldec2LwHtyxy6Rc7sjs99qdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=g6uh2Dao; arc=none smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="sczxFCQl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=R//ukypql+khoX4YCIORwikDeWONqhkiJt2y9J/uHsc=;
-	t=1734092166; x=1735301766; b=sczxFCQlVZR2D9xI6QFirBpDAr4X3qy9ccwpKDGna0hv+Cd
-	RG216vpoc1poT0M9MnYwk9UbUSdd/btC8JpbxFv3CO8KHs9P95iP3ICovc+i1wPMOM1WqT3iSnKQU
-	t+qpGwF489KUd3UMAcNk5WOYDR0TZe/tasdQrzhsJldfFmj0+Kb7qTQRFgKXMBKgG6S5vmp42BOK3
-	IKuZMG4pDtRFg7JTRlG1tFDn36FbqE+w3VGEA1YG/ZMZbcT0De0mr6aYEqiLciGr4kk0Fynu1gxp6
-	W8tQmNetOV0smgkJjKeOZfxViTf4eSvHzw/vF0PGuUXqwrVwpJBn00g8dVhirkng==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1tM4aQ-0000000FVsl-341C;
-	Fri, 13 Dec 2024 13:16:02 +0100
-Message-ID: <a850fd692db3458301eb5b7388110a3ec6ec0d01.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: ieee80211: update Indoor AFC standard power type
- definition
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Veerendranath Jakkam <quic_vjakkam@quicinc.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 13 Dec 2024 13:16:02 +0100
-In-Reply-To: <20241213121146.2398269-1-quic_vjakkam@quicinc.com>
-References: <20241213121146.2398269-1-quic_vjakkam@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.54.2 (3.54.2-1.fc41) 
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g6uh2Dao"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-aa679ad4265so538345566b.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Dec 2024 04:30:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1734093055; x=1734697855; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:subject:user-agent
+         :references:in-reply-to:message-id:date:cc:to:from:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PKDUULVAMXns0jfJsLVTDdJ791zKbT5H6xg5jxQ3GtA=;
+        b=g6uh2DaoYXqDk6c85HBUJS63y4PLPgJKLmG3t6Jfyb3Ebs9rP+0YfFHhDfpLHLMvPD
+         EeJABbdarub7PN9RZzAwG7rGe5xMoQBj871QWRkD4qvShuA2qduAPaM3SK9V/ziXhibL
+         7CSnVMKrmA5ZHgffq8xBJMUipmQpaDXl60xlE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734093055; x=1734697855;
+        h=content-transfer-encoding:mime-version:subject:user-agent
+         :references:in-reply-to:message-id:date:cc:to:from
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=PKDUULVAMXns0jfJsLVTDdJ791zKbT5H6xg5jxQ3GtA=;
+        b=H0D1afay3PyxL9fVF3Qe4RlDnyyytFDWYTf3NbWOjGHsVppQA+Hj1BVHKGk/pYEn6h
+         9/xvofZjoGk1R2EeELBu+MI0cBNfPMk05Lj6d2iiE/nE0LGQF/X/ulSuJZU7NopKENxJ
+         XlUrPCeKoLz/s1uKJxnUe91CvrrJv10W8W6jbrsJljZ1C42tKVm0eD0pjABETd+S5Zg0
+         I7PhqdB+NpL2mgAEjj3g9SK/qSljeFTK8T5YIJE5tOGUeENkXrvNWwpfjXFzHajm/QoY
+         NL7NxXbjXlF3t9pdik5lNbgugOOoVdWGyLE0DTMNfJ0+S5DI3exeanlZLdUpPQxXbrOc
+         RvWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXS+ZjuYhu59x2SNFrBq/wh3gtx/7GwfToNeWDdO8swd/F5pTJdwCA40bfp0fU0hvReHZbqPy60sWKRru54bw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzDtKAfGHdgLwWZ81/V5fYJmx5OSYB/U2K0HF3P53ccLTshDb1o
+	jIFg3nD9t8rkm74lIa01xgwxYyDL5WlyHKA5+fg8KJ1UgBE9EBRl9L545j4QLnA8Nq26X5ARyot
+	Pew==
+X-Gm-Gg: ASbGnctWqch49BYwN1pbnjer4k+QCmT99xjarUTWQEuxZiUkm2HpI8S0K62oJFmMbmA
+	X9JFMsyNzsIkinXlUeQKnZyk9kSLou9jFsi/Mcex2oY/C8W1gvWkI0RXA8TH99zrBJ4CpA/af6K
+	L3iWL8mixRI2glcTj/+rPo10k5x6Nx+wRWZQWz3mhcgrRyUGzFFPnafDciy1lMh2l1rskS2j+zt
+	E4uPBiHh/Ehk/yp+oOx3Sr/nwBv6o+nVdYymKu7Rc0LmCmp5gY56n3b8xfuetHCZyXzVQ7X4auo
+	97J8S/rvHgXuSKWpxo8=
+X-Google-Smtp-Source: AGHT+IGW3eefhRqIgjibYM85/YaHYF7RzRPB6gQTjk/RpN4nD9nWvHYTCSy36DIuyLkWGXwXueH7/Q==
+X-Received: by 2002:a17:906:1342:b0:aab:8311:951f with SMTP id a640c23a62f3a-aab8311966bmr190048166b.6.1734093055335;
+        Fri, 13 Dec 2024 04:30:55 -0800 (PST)
+Received: from [192.168.178.38] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aa699487854sm590958366b.13.2024.12.13.04.30.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 13 Dec 2024 04:30:54 -0800 (PST)
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+To: Dmitry Antipov <dmantipov@yandex.ru>
+CC: Kalle Valo <kvalo@kernel.org>, <linux-wireless@vger.kernel.org>, <lvc-project@linuxtesting.org>
+Date: Fri, 13 Dec 2024 13:30:55 +0100
+Message-ID: <193c0002418.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+In-Reply-To: <20241210070441.836362-1-dmantipov@yandex.ru>
+References: <20241210070441.836362-1-dmantipov@yandex.ru>
+User-Agent: AquaMail/1.54.0 (build: 105400535)
+Subject: Re: [PATCH] wifi: brcmsmac: add gain range check to wlc_phy_iqcal_gainparams_nphy()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; format=flowed; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2024-12-13 at 17:41 +0530, Veerendranath Jakkam wrote:
-> Update 6 GHz regulatory info subfield mask and Indoor AFC standard power
-> type definitions to align with spec changes introduced in the Draft
-> P802.11Revme_D4.2, Figure 9-896 and Table E-13.
->=20
+On December 10, 2024 8:04:45 AM Dmitry Antipov <dmantipov@yandex.ru> wrote:
 
-Huh. That seems like a change explicitly *designed* to break backward
-compatibility? Should we accept the old value from older APs or so?
-Otherwise we can't connect in some scenarios, I think?
+> In 'wlc_phy_iqcal_gainparams_nphy()', add gain range check to WARN()
+> instead of possible out-of-bounds 'tbl_iqcal_gainparams_nphy' access.
+> Compile tested only.
+>
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Or at least should we say here in the commit message or so why backward
-compatibility was broken, and that it was for other clients that didn't
-behave well or something but our code was already fine?
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> ---
+> drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 3 +++
+> 1 file changed, 3 insertions(+)
 
-Or am I completely confused about it?
 
-johannes
