@@ -1,135 +1,143 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40745207DE0
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 16:51:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 011ACBA49
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 17:42:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734367865; cv=none; b=pJ9Ls5wWRp9Ldy3OsCp1OcGF2J1m0M4na8lyNoTFl2dmpcs+pIJDrggiInnWWckxnpL00xVVvgVJDnpftHAH5k6zQSR48ALdfhRRX0BCq/7SyVlcZwu1QgETljyMKVY4EkgGU5qqHd2WFViJTOx1ABclRQRlazEL6bO0vv2bo8c=
+	t=1734370956; cv=none; b=jOV2Ei0nkEYFXeaflC+2nsuv+UPqx11hXimjcU4F2HY2SWZSzcTi086/jOfXUSYVlrI60kmhK32LuHCZf8mvaJUDzKOMArz7gQhEdC2V+7tftytFUPnAILBTVq8WNTzkVGpQFCZqe8J+2hV2bQ0EhcVxio5MVCLrA8jFbGbGWhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734367865; c=relaxed/simple;
-	bh=41pdPmUIVXAqHSup3nG97a+OnZhqonVA8oMg2NvxWrg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Mr0ZSW4/wIsUxHF/Yssqk9mQTuvKha2mYsz+oSXbG/wOCwkTlTRt6IHy6zpHQHD2IqQvUJqlP48vl17eyB48bekBVv6YpOJXApcyim/9vChaRJkBO8WIk39CG1IWK/Xs6zZHyKuP6IbTktfERTVc1y4bK9KWPTbIJ5gkZVHYWDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gIzLm85r; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1734370956; c=relaxed/simple;
+	bh=FzBgXJ2oqftrqGic3ilmm7FupGer4Xx5dLKxqAXHo40=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ryCFbRxR0vh9N+eOvthdvUQGVzrRl0zn91PzApO/mQaDfa7PxQtOYIp7cLQO/3Ygrf6cbGi3lyWW0r7VlZHzeT/LtPh8OmwYmJtlNY4C6Ms+pmThXTBUXQcU1XZnGnsEbsi8fkN9KlOSAdgtUEFsGFPGNQKzT+YtxzrRMqVTmhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IK6SNdE2; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gIzLm85r"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BGD0fYK023764
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 16:51:02 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IK6SNdE2"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BGFgDSN015305
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 17:42:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	A30SR6P2F4Bg88v0mF0YsJP4SvSWPa5Vxlr8SxbBJ4U=; b=gIzLm85r/NWGsYkC
-	CDGSTMCeZqK0iOjwHLBHp+GI+rbv7N2b6sJtdR+V5cYxsjUmNgnfAc0G515UNrSV
-	5iyd2fWQWdjUmc7kavgCI/dclLVs+7HSTkUqzNR+6lOIk5aCU7v1TMnAtwZGkdoa
-	jtziw1QqHn3ygtVY30geFIkbHklKfLMRTFX1v6rSROKMpxuu/O6XsZD9sApUioLQ
-	YRsC2pit+Ju6pHKKSddxaBi+C+XL7+Yr77OcJURYyRes6+x+QniSdbFaylUKnjmJ
-	IBSsjThz59sh0vA528a/6KjJA7tM7+M+E8QuwDyPwSTtu0ut6PZYQoodVHjwKH74
-	FzE8UA==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43jmqcgk5b-1
+	HjKOhOtfabRZ5nEO9n/1yOFFRqHnkg/SRrR6pEhJkhw=; b=IK6SNdE279w28Lkt
+	9Xx7YTWL4jF2vNdy5Yo9f0CnBUn3rgKvFsg7kxPzf0knDDLWyT2vaIdt4FOtOqeN
+	vVAhHyD9kJICC4WfBlHl9/D7ZHPj0j8rr4QoS4oOQVgdPve4NndocuMqoinySLTo
+	8HH/ihrWR7F8pRnN02XAGduxTliyPaFZoYUq/x3e3GZzTHu8DNdYtxsknHESJU/Q
+	ZvbywaDSNxdLZ8j2kQUbhldqHi5EgZJ3e1fowHCqqvpzcjzmtNSA+IQa7wEB46Z4
+	CnBwyVZGEZJnoilsoWSpqyOj2vppOooVmCfBP1ZXzfW51wtaIOWpSVQBY84GotaZ
+	hCqgkA==
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43jq350ad3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 16:51:01 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-728e3ae8112so3303525b3a.0
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 08:51:01 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 17:42:32 +0000 (GMT)
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-725d8bdc634so3551208b3a.3
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2024 09:42:32 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734367861; x=1734972661;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=A30SR6P2F4Bg88v0mF0YsJP4SvSWPa5Vxlr8SxbBJ4U=;
-        b=VdEJ9Avl46y1AukLfEeWQFTJXv+zofVEOVjlLU7edSkTjEFRZJ42icoo2VYGAJdvlc
-         a8Y0c1LnFnxjpTj3cCqA7sMiCcwGHKgOrx9hLyo56zcWR554S0JzRMhIsVNAPXvvfOLz
-         UFmLy0b13jnJAUbfj9P3d5au36hxG2/hpqGTIsxE7+75don6SPkH3wL0aqR3V7hFa8Ad
-         6h0HV/S6qsPJ/0ipEiqAK7NeWhcswIl2Q65s/eMkMznVr5UQmcoImfYgrBkPXeAK8oM7
-         vBNRbmJEo6YNXIEJOnh0Ok2CK8XtImZXYpB0Qd1FzRCcxlC2WvxCLePVZWtpttsyNisi
-         JYiQ==
-X-Gm-Message-State: AOJu0YxNM8EIk3qs30jDrGTImWpVXKeNWnv0nem32g8nlYUVA4IbnmLI
-	lHVUl8H7dr1BVmM0/xMTc8Y9RHM1tTWyIeuUK/INDtjsSMSa72avfN7ZBd/8lucVszKi+CLVsoW
-	E1twBEDPyBxaqvD67Mf3afSxFsS8x90jGfEBI0c01ndSF+qzxQSmgw1chIN0PzLNByg==
-X-Gm-Gg: ASbGncsXX4j/dnv7ZMs+kaOesD8LpDBBRBvOW4WLXyhQ9HAMDof206IuojaJUGvcErn
-	jR+MqyR6/nEgP7Je0H2L9kskSOtwObPnQF5yNsypWJeGCUlon6OHovpA33/9y79jDS/gDTgEwj9
-	689jiME2hAeuV1e9lnF5genpVRkGidyup/McPCbDa72MPN3Gj6PpAM9w2IegooSWgo6gJipwQN4
-	vHoSmbFpc8SpAJgFSyneF5KdkfqF435vuBYAFCUQZUIUJp1ppz5Gb6sfTo93yXBxU9vL7O1n0z+
-	of/Wq+DLMbKwQ9LS1g==
-X-Received: by 2002:a05:6a00:330a:b0:729:597:4f97 with SMTP id d2e1a72fcca58-7290c243231mr20951651b3a.20.1734367860705;
-        Mon, 16 Dec 2024 08:51:00 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHHE+RXhL7PwjdEM8OJ4eq1C6kH23qH1FIqxLWVJgsjJzzTgC5L8N+5TXVmtuDizMBEjICTEA==
-X-Received: by 2002:a05:6a00:330a:b0:729:597:4f97 with SMTP id d2e1a72fcca58-7290c243231mr20951615b3a.20.1734367860303;
-        Mon, 16 Dec 2024 08:51:00 -0800 (PST)
-Received: from [169.254.0.1] (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72918bcde43sm4937486b3a.194.2024.12.16.08.50.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Dec 2024 08:51:00 -0800 (PST)
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-To: ath12k@lists.infradead.org, Kalle Valo <kvalo@kernel.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20241209185421.376381-1-kvalo@kernel.org>
-References: <20241209185421.376381-1-kvalo@kernel.org>
-Subject: Re: [PATCH 0/9] wifi: ath12k: MLO support part 8
-Message-Id: <173436785972.3413746.2874349352867763991.b4-ty@oss.qualcomm.com>
-Date: Mon, 16 Dec 2024 08:50:59 -0800
+        d=1e100.net; s=20230601; t=1734370951; x=1734975751;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HjKOhOtfabRZ5nEO9n/1yOFFRqHnkg/SRrR6pEhJkhw=;
+        b=Bd5WMAfIg5uODb9qRRtREgZk7jEg09zcJ7GdAdemH5kVDmy5WxDHKuCw7xMtwvnkrS
+         kgELBIFimO8s8kss4UGKiKwFpzVON19vmPNiZPPf+BTZZKTGf7/5NShu8XO/RnFakmnA
+         c7c68vx0sVRQnsrVv2iW3ZmIU9xRXVUbztUaBabUUyxD/MzApsVMvdYQTPvFcKkqeP28
+         Z/9R2XHt/Q/9mAs/p4rSdABxHoCmqBXV/9ThikHQXcI36z7jItXgP6CcPIQuIX8MFDR6
+         14Hg3egiUfYnT+ScaOA9XNqcAZQC17FVxiy1r5evx87ivnreQMVvdDqvEoDuoLOdI+cC
+         XdZw==
+X-Forwarded-Encrypted: i=1; AJvYcCW6dpH8nIXmKvLHzsNjc8XExvyfHa7g1LOLhPLhVUpNmP0vlx0ZguKhYKw4bNiPuhL4MCn6Az1EGto5uAImQw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1n/C0Sm3g5mPVD8wktzsZDUhXm9yP2XBqT4x1qXK+e8jjhE2f
+	2FQ6GJ+JvSWpttB7eLcQ3/zjKH7aoC575YXHMuu+WIXVQPlSrumh/z7UZ+VPXR7TfGsHssGNx7Y
+	nCdExjzHb7YdTrS88AXtSZEaOeP9mpvR3+9yPz76dKX+o7hqVbutZ0332XAznvyvpXZmegyJqRw
+	==
+X-Gm-Gg: ASbGncuOvPgsgHj5oFbK1RW5QO9pUf7ACMrKQsIGM04fgq7+Kn24G3Px0rv8zyoD4nh
+	7xL4oQJDJg5PrzOcs9RCVd5YjOHEHc8LYHPgkT6xx9emTegxd90nz798JGsrijJJaEN1rwrMKGi
+	vCQzi+qTQEjFnPuZzsl/bdhkn8bP5wI6pAV8qARy2zyHWnBL+ZR07QMWlMpcD+EAUn0q/J3dux8
+	UaX1gVvqZRVxRQjWL+p8yWVk9yXqe35j+Rup4ui/TFF4rtvtvcmCgN4k8IpXRm66CaCUWWzFafb
+	bH9ciU1BVlmfk+CF13p0GdnaEysf6SE69+FmGCRR2I3akpujeg==
+X-Received: by 2002:a05:6a21:394a:b0:1e0:c7cf:bc1f with SMTP id adf61e73a8af0-1e1dfbfbcc9mr21344272637.9.1734370951411;
+        Mon, 16 Dec 2024 09:42:31 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG9ZShurGJ6psrZg1E607y+KqkVBSLOzZJ4dyp3CDrawBJvh1vBEoz4BBtlBRcyCTb0aJAA4Q==
+X-Received: by 2002:a05:6a21:394a:b0:1e0:c7cf:bc1f with SMTP id adf61e73a8af0-1e1dfbfbcc9mr21344239637.9.1734370951037;
+        Mon, 16 Dec 2024 09:42:31 -0800 (PST)
+Received: from [192.168.1.111] (c-73-202-227-126.hsd1.ca.comcast.net. [73.202.227.126])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-801d5c3297asm4385909a12.70.2024.12.16.09.42.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Dec 2024 09:42:30 -0800 (PST)
+Message-ID: <20eb00d1-5d92-4a88-baca-cc0ccb78bd03@oss.qualcomm.com>
+Date: Mon, 16 Dec 2024 09:42:29 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.0
-X-Proofpoint-GUID: CKh_t977TmceROiaK5iKAoOm1eJzPWn6
-X-Proofpoint-ORIG-GUID: CKh_t977TmceROiaK5iKAoOm1eJzPWn6
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] wifi: ath9k: simplify internal time management
+To: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Dmitry Antipov <dmantipov@yandex.ru>
+Cc: Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org,
+        lvc-project@linuxtesting.org
+References: <20241209155027.636400-1-dmantipov@yandex.ru>
+ <20241209155027.636400-3-dmantipov@yandex.ru> <877c877tbf.fsf@toke.dk>
+ <8734iqkwae.fsf@toke.dk>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <8734iqkwae.fsf@toke.dk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: 7ndOh7OaxWIF-rT_jXtM9ov4LBF5pTTw
+X-Proofpoint-ORIG-GUID: 7ndOh7OaxWIF-rT_jXtM9ov4LBF5pTTw
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 spamscore=0 mlxscore=0 clxscore=1015
- malwarescore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ spamscore=0 malwarescore=0 clxscore=1015 mlxlogscore=895 impostorscore=0
+ mlxscore=0 suspectscore=0 bulkscore=0 adultscore=0 phishscore=0
  priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412160140
+ engine=8.19.0-2411120000 definitions=main-2412160147
 
-
-On Mon, 09 Dec 2024 20:54:12 +0200, Kalle Valo wrote:
-> Getting MLO to work with QCN9274 is getting close, this should be the second to
-> last patchset. Small patches this time. Minor changes to data path to support
-> MLO, some interface combination rework and few fixes.
+On 12/14/2024 9:29 AM, Toke Høiland-Jørgensen wrote:
+> Toke Høiland-Jørgensen <toke@toke.dk> writes:
 > 
-> Please review.
+>> Dmitry Antipov <dmantipov@yandex.ru> writes:
+>>
+>>> Prefer 'ktime_t' over 'struct timespec64' for 'struct ath_chanctx' and
+>>> 'struct ath_softc' timestamps, choose standard kernel time API over an
+>>> ad-hoc math in 'chanctx_event_delta()' and 'ath9k_hw_get_tsf_offset()',
+>>> adjust related users. Compile tested only.
+>>>
+>>> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+>>
+>> Nice cleanup! Just one formatting nit:
+>>
+>> [...]
+>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>> index 2f137856a823..cf664a0dedaa 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>> @@ -247,10 +247,8 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+>>>  	if (!sc->cur_chan->offchannel && start) {
+>>>  		/* restore per chanctx TSF timer */
+>>>  		if (sc->cur_chan->tsf_val) {
+>>> -			u32 offset;
+>>> -
+>>> -			offset = ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts,
+>>> -							 NULL);
+>>> +			u32 offset = ath9k_hw_get_tsf_offset
+>>> +				(sc->cur_chan->tsf_ts, 0);
+>>
+>> This turned into a really odd line break. Let's just keep the variable
+>> definition on its own line like it was before, so we can keep the
+>> function call the way it is as well...
 > 
-> Aditya Kumar Singh (3):
->   wifi: ath12k: fix ath12k_qmi_alloc_chunk() to handle too large
->     allocations
->   wifi: ath12k: fix ar->supports_6ghz usage during hw register
->   wifi: ath12k: pass link ID during MLO while delivering skb
+> And since Jeff has agreed to fix the line break when applying, with that
+> fixed:
 > 
-> [...]
+> Acked-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> 
 
-Applied, thanks!
-
-[1/9] wifi: ath12k: move to HW link id based reveive handling
-      commit: e536c8690cf423f47e5e2f491134d3511edbbaf2
-[2/9] wifi: ath12k: add partner device buffer support in receive data path
-      commit: fc1e7e004b1808da38c862d57fccfad631a1445a
-[3/9] wifi: ath12k: add helper function to init partner cmem configuration
-      commit: 5a8abdf88deac066c4c4a224e45b80088ea94ff0
-[4/9] wifi: ath12k: introduce interface combination cleanup helper
-      commit: 2e4b8a49191ea9df8430cb6e8af7429eadd54709
-[5/9] wifi: ath12k: Refactor radio frequency information
-      commit: 4b861d256235c0c94d1a09e4dd888accc0eec5e9
-[6/9] wifi: ath12k: advertise multi device interface combination
-      commit: 03156d08d9ae768bffc0eba5eeeede868f52331f
-[7/9] wifi: ath12k: fix ath12k_qmi_alloc_chunk() to handle too large allocations
-      commit: c14725f359ef982923f3bc7e222c7687ffe4e496
-[8/9] wifi: ath12k: fix ar->supports_6ghz usage during hw register
-      commit: 95740fb0d3dbe276bf414c44cea0c35948407800
-[9/9] wifi: ath12k: pass link ID during MLO while delivering skb
-      commit: 1d015d783da57b002fda75b29aa3b886724c0129
-
-Best regards,
--- 
-Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-
+Please check:
+https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git/commit/?h=pending&id=d953ce0fcc7ce69edb5a3a39ea3a98ba2347976d
