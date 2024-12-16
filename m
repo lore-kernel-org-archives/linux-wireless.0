@@ -1,31 +1,31 @@
 Received: from todd.t-8ch.de (todd.t-8ch.de [159.69.126.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3010C204088;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C29F12036FB;
 	Mon, 16 Dec 2024 11:30:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.69.126.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734348612; cv=none; b=bfHzIxVKqksnh56S3aaHxIRxxLDc3aJLyE8tFCwuBzoQO17vJWxtuaf0x3OeAWgGgpBNAwrvMSk+R7TMMSWPqVytuFcR4hXnbIYvZmabSOvrSz6TmAJ4e9IC/r5y32QVzr75hvP3R43VpDIrZJLENaWimhPX8oxKzAdupG7YeqI=
+	t=1734348613; cv=none; b=emAIEJWJ20t/1+8cXvkrqCIpCpBJkcc+Aosv887XJzcolzLxQmrL8Bhb642mftjhva6YDQA9AwxjYZk+ha782eolLX5M6UAAM3MKcr6zK/jBBMu8r/3TtzTPpVQ5aQT7u2X22ifJ0qpXkEjoD9AMpMCO32X3gcE/IQJfTFLNerA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734348612; c=relaxed/simple;
-	bh=JUvh5Dx2l/+Mrwzrx/iMp7KZDIeHbhdYYiSmxE4g8fA=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=cE2v1CgYxetJ2gK7hjWzTiF6oqmtj2uZ4Ls0r6LGxDuQLlIEPgYcdRke5b/6GrGOCSVE2/jTXqMnFrT/ZVcY4P7A98fpE/5qnG5/gGPNFOAE0EYLA7lao/KS97ocpP1wT2ighW1m4bbq6Ci9idsrynfhbrW4nz8+P/8bhv0J2RM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=VHI0wlCD; arc=none smtp.client-ip=159.69.126.157
+	s=arc-20240116; t=1734348613; c=relaxed/simple;
+	bh=LP0tcqhCQKDxykPnUl4J7/vxYNglPUyx52VJJRyK4Uw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Irh9jsC7FF/cxpoapHBBBMMcgJmKraZwqjsBbHLmXLNE/NAGyjzSlqQynHDUXb9LJ2SrymMG7rEKF+5uuhE6pOFv3ZxS/e1OnEC6KODVRcoZWl5hgFqEvwwoncdqLs0WAHEKwcYxXeIhAbs8QhIrAGjUnUaSf2a877sqq16uA4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net; spf=pass smtp.mailfrom=weissschuh.net; dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b=s6aGcSZr; arc=none smtp.client-ip=159.69.126.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=weissschuh.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="VHI0wlCD"
+	dkim=pass (1024-bit key) header.d=weissschuh.net header.i=@weissschuh.net header.b="s6aGcSZr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=weissschuh.net;
 	s=mail; t=1734348609;
-	bh=JUvh5Dx2l/+Mrwzrx/iMp7KZDIeHbhdYYiSmxE4g8fA=;
-	h=From:Subject:Date:To:Cc:From;
-	b=VHI0wlCDyW/jP9DialLz+I7jJmwLuU0INHcOgoxx/dquSdJPNqqYpC1osbUbCCf1k
-	 YuI0B8ZeNmbPpXscQLlKZWW9RnhcH26QxgrZrUnA4FT8skHUQueYWiuPOEjc6jAPqD
-	 DuwJtIByFlMi0O3ohQMQSzdAt0ZM71JGl8XjVmDk=
+	bh=LP0tcqhCQKDxykPnUl4J7/vxYNglPUyx52VJJRyK4Uw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
+	b=s6aGcSZrGVqvDrQbcbiGF1LTadRWUQooaVWEpT+ahwjGvuGFl08mWKnUFEJcV7iI8
+	 H/HRPKrgf9wdNTO632BGPRVlKfH5MngclkaVyE91WHP5Oo4EPfSadSdthSc00/0fbV
+	 6lZLtLDLbjVnEeQnEetHrKOt+jHAamJZpXcWWXRY=
 From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Subject: [PATCH net-next 0/5] net: constify 'struct bin_attribute'
-Date: Mon, 16 Dec 2024 12:30:07 +0100
-Message-Id: <20241216-sysfs-const-bin_attr-net-v1-0-ec460b91f274@weissschuh.net>
+Date: Mon, 16 Dec 2024 12:30:11 +0100
+Subject: [PATCH net-next 4/5] netxen_nic: constify 'struct bin_attribute'
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -34,10 +34,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIAD8PYGcC/x2MQQqEMAwAvyI5G2hLFfEri4jWuJtLXJogivh3u
- 3scmJkLlDKTQl9dkGln5U0K+LqC9JnkTchLYQguRB98g3rqqpg2UcOZZZzMMgoZxqVLzlHTti5
- Cyb+ZVj7+6xf8BKHDYLjvB7d7I5d0AAAA
-X-Change-ID: 20241215-sysfs-const-bin_attr-net-4d8c00e56604
+Message-Id: <20241216-sysfs-const-bin_attr-net-v1-4-ec460b91f274@weissschuh.net>
+References: <20241216-sysfs-const-bin_attr-net-v1-0-ec460b91f274@weissschuh.net>
+In-Reply-To: <20241216-sysfs-const-bin_attr-net-v1-0-ec460b91f274@weissschuh.net>
 To: Roopa Prabhu <roopa@nvidia.com>, 
  Nikolay Aleksandrov <razor@blackwall.org>, 
  "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
@@ -52,11 +51,11 @@ Cc: bridge@lists.linux.dev, netdev@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
  =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1734348609; l=1098;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1734348609; l=3257;
  i=linux@weissschuh.net; s=20221212; h=from:subject:message-id;
- bh=JUvh5Dx2l/+Mrwzrx/iMp7KZDIeHbhdYYiSmxE4g8fA=;
- b=VkfVs0bcajaHYCJYMGf9Uh3Fo9j3++fEj5L1Y8PZ5nJx3J6SLn5P/kvsiUQiSg6m4AB/JybSr
- uF0lPdTef1YC912T6IhcTwpm5L3RkuTWFt7FxFX53/W7qemshagi0Ls
+ bh=LP0tcqhCQKDxykPnUl4J7/vxYNglPUyx52VJJRyK4Uw=;
+ b=xrUP4dfP++DJeELPTbe/WudLHPR9ilyLrf3xKiItMg7i9sug99xl0qxBV6r7A6pa8evklD6BY
+ zTxM6pprabHBolgCpV9RuWhhlN+Lv9RVEowSNER9XN3ojFBBeKUSjQY
 X-Developer-Key: i=linux@weissschuh.net; a=ed25519;
  pk=KcycQgFPX2wGR5azS7RhpBqedglOZVgRPfdFSPB1LNw=
 
@@ -66,24 +65,85 @@ accidental or malicious modifications.
 
 Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
 ---
-Thomas Weißschuh (5):
-      net: bridge: constify 'struct bin_attribute'
-      net: phy: ks8995: constify 'struct bin_attribute'
-      wlcore: sysfs: constify 'struct bin_attribute'
-      netxen_nic: constify 'struct bin_attribute'
-      qlcnic: constify 'struct bin_attribute'
+ drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
- .../net/ethernet/qlogic/netxen/netxen_nic_main.c   | 20 +++----
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_sysfs.c  | 70 +++++++++++-----------
- drivers/net/phy/spi_ks8995.c                       |  8 +--
- drivers/net/wireless/ti/wlcore/sysfs.c             |  4 +-
- net/bridge/br_sysfs_br.c                           |  6 +-
- 5 files changed, 54 insertions(+), 54 deletions(-)
----
-base-commit: 2d8308bf5b67dff50262d8a9260a50113b3628c6
-change-id: 20241215-sysfs-const-bin_attr-net-4d8c00e56604
+diff --git a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+index 9cff0a8ffb2c55de195983051e4e7f8568528c0f..3383ee1dad14e2cb40062b27f32a7cffb6f3fac2 100644
+--- a/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
++++ b/drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c
+@@ -2832,7 +2832,7 @@ netxen_sysfs_validate_crb(struct netxen_adapter *adapter,
+ 
+ static ssize_t
+ netxen_sysfs_read_crb(struct file *filp, struct kobject *kobj,
+-		struct bin_attribute *attr,
++		const struct bin_attribute *attr,
+ 		char *buf, loff_t offset, size_t size)
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+@@ -2860,7 +2860,7 @@ netxen_sysfs_read_crb(struct file *filp, struct kobject *kobj,
+ 
+ static ssize_t
+ netxen_sysfs_write_crb(struct file *filp, struct kobject *kobj,
+-		struct bin_attribute *attr,
++		const struct bin_attribute *attr,
+ 		char *buf, loff_t offset, size_t size)
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+@@ -2901,7 +2901,7 @@ netxen_sysfs_validate_mem(struct netxen_adapter *adapter,
+ 
+ static ssize_t
+ netxen_sysfs_read_mem(struct file *filp, struct kobject *kobj,
+-		struct bin_attribute *attr,
++		const struct bin_attribute *attr,
+ 		char *buf, loff_t offset, size_t size)
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+@@ -2922,7 +2922,7 @@ netxen_sysfs_read_mem(struct file *filp, struct kobject *kobj,
+ }
+ 
+ static ssize_t netxen_sysfs_write_mem(struct file *filp, struct kobject *kobj,
+-		struct bin_attribute *attr, char *buf,
++		const struct bin_attribute *attr, char *buf,
+ 		loff_t offset, size_t size)
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+@@ -2946,20 +2946,20 @@ static ssize_t netxen_sysfs_write_mem(struct file *filp, struct kobject *kobj,
+ static const struct bin_attribute bin_attr_crb = {
+ 	.attr = { .name = "crb", .mode = 0644 },
+ 	.size = 0,
+-	.read = netxen_sysfs_read_crb,
+-	.write = netxen_sysfs_write_crb,
++	.read_new = netxen_sysfs_read_crb,
++	.write_new = netxen_sysfs_write_crb,
+ };
+ 
+ static const struct bin_attribute bin_attr_mem = {
+ 	.attr = { .name = "mem", .mode = 0644 },
+ 	.size = 0,
+-	.read = netxen_sysfs_read_mem,
+-	.write = netxen_sysfs_write_mem,
++	.read_new = netxen_sysfs_read_mem,
++	.write_new = netxen_sysfs_write_mem,
+ };
+ 
+ static ssize_t
+ netxen_sysfs_read_dimm(struct file *filp, struct kobject *kobj,
+-		struct bin_attribute *attr,
++		const struct bin_attribute *attr,
+ 		char *buf, loff_t offset, size_t size)
+ {
+ 	struct device *dev = kobj_to_dev(kobj);
+@@ -3082,7 +3082,7 @@ netxen_sysfs_read_dimm(struct file *filp, struct kobject *kobj,
+ static const struct bin_attribute bin_attr_dimm = {
+ 	.attr = { .name = "dimm", .mode = 0644 },
+ 	.size = sizeof(struct netxen_dimm_cfg),
+-	.read = netxen_sysfs_read_dimm,
++	.read_new = netxen_sysfs_read_dimm,
+ };
+ 
+ 
 
-Best regards,
 -- 
-Thomas Weißschuh <linux@weissschuh.net>
+2.47.1
 
