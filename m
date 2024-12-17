@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39321F6695
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2024 15:09:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127081F7082
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Dec 2024 15:26:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734448190; cv=none; b=Y2usxNQH5poMYPk1OsoNiuMNR0oo/XHJ3LCa2+X3n69aeMnZZ6Mbe62JlFDPDzm6vL7aUQlD7yvyic3QthROItlTaXVvzTjLsMF0ZdgSBTDJQk3gCqJEMjMSRSecy/NScQvhA6nklqlEos3IMkk/7MvItm/NN4Q9i3juADKNW40=
+	t=1734449204; cv=none; b=uAJkEOLaCgmWcYa/dGuvMuWckrsY3FvXSV9VcrB3/ASYjMm+hmV4rVHXkXUYC4qtkGVRlWMzystuSDHEL8UMgf/RBRyX3OsHPq72c7bBzD9u8iVqRYhUzWNobURZaL7UCufOoBQE/FpBIlXuM4akrbdDibWOnFOqGiA16LyWGb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734448190; c=relaxed/simple;
-	bh=b6Ee/2FJS6CMMcv99DMPkaHN/TkaYLJhpK/5ku1jAy0=;
+	s=arc-20240116; t=1734449204; c=relaxed/simple;
+	bh=XI6WlXJy7+nA87hZkua9BKN48HVzS6jDxkY/GJOikNk=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=JX/Sr5F43m275yichmrNvjgW3K9dtrd/JXziCVSfROBGssV0Z/4eN5lzrJM6zlwypeI2IeejAlxLpPbpNltHS9DSsj5an7UjpRvUrLxajCUykMGMvy4PLGD3zYveHWA2bn5eau6aNt+Z0sFkzwS7rzRTrR5ChVtr4njmP42rMLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pgTGAvQ1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=XnBXCsdzT6NRamFgbDAkPu2eJKyih029Yt0H3MXKSmdfPA9Rpe9x0ZY/Jam1ZknKYQnH+G82HgfOLNSi+WIV+nrVqkIw950pF99jY1qUlj5PHqBtCYcb82hUQPLpkPTnsQqYQW8CPsUlEshlONPSCM0xIlDWSIdLzlMRnD56ohU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C85Rboko; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pgTGAvQ1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D8C8C4CED4;
-	Tue, 17 Dec 2024 15:09:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C85Rboko"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8447C4CED3;
+	Tue, 17 Dec 2024 15:26:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734448190;
-	bh=b6Ee/2FJS6CMMcv99DMPkaHN/TkaYLJhpK/5ku1jAy0=;
+	s=k20201202; t=1734449203;
+	bh=XI6WlXJy7+nA87hZkua9BKN48HVzS6jDxkY/GJOikNk=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=pgTGAvQ1jUoSGI2MvOGG13oa2mPn7jtJDSXm3Ej82B6I7OXyeof+rmdv6GdiIQotp
-	 05f8qQWP6jwQC8LF0/JwRsEdJ1buQqobHGPPVdMWWQF+26hgHkH3rgPP/RKK2Xj7Lb
-	 Z/Hq5YcPclIQHgcGPcNqEKycaFQ5Xyx98Mi+MOt7vF894+h4/0apapJecJYnqgElIQ
-	 d/Csh5FXpayrOEtp2AP7xItrM1AZUAD/0LL+s7TMzOTP82yX7RSh0jX/67SQl6MRtG
-	 etWes5T5K5hx/HIZh3rhBPeX6RszJ4P+8RgCex4wb+6qAcIyTXn2/ny3I6VHcczHGx
-	 nuQ7024eLUSxA==
+	b=C85RbokoKSqVSac6qK5mSE52TLo4LGcN30H3L49gWdyr3E8WEARKD2nsIEUQIPxeS
+	 YekjBrafEgs/S4uG/emVfpRx7YryX51t03i8uHuGVj4B0ayQE38vyKBXDg1Ru1Sa3x
+	 DrluZ56weqbXIpSDhNQnGZ7jPoM+POo+ZCMN/ZmUm9fpBsxYv9TkNWNfH0S7q0KDhR
+	 fXZa9/sCZFPQxqz/lfzD5oVPjQ/j6sQkkgLI5dtiP4NIFvSfrJTIpPV6jT9SoweEGC
+	 KXfQXMfnvoAaDuMqrzqOkwN7XB6MCPQuIlBojJMvNzYAQRfEnoZHIzz6SenhNbI0sl
+	 fg/kKoR2oUshw==
 From: Kalle Valo <kvalo@kernel.org>
 To: Roopni Devanathan <quic_rdevanat@quicinc.com>
 Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>,  Rajat
@@ -33,10 +33,10 @@ Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>,  Rajat
 Subject: Re: [PATCH v4 2/2] wifi: ath12k: Support pdev Puncture Stats
 References: <20241217055408.1293764-1-quic_rdevanat@quicinc.com>
 	<20241217055408.1293764-3-quic_rdevanat@quicinc.com>
-Date: Tue, 17 Dec 2024 17:09:47 +0200
+Date: Tue, 17 Dec 2024 17:26:41 +0200
 In-Reply-To: <20241217055408.1293764-3-quic_rdevanat@quicinc.com> (Roopni
 	Devanathan's message of "Tue, 17 Dec 2024 11:24:08 +0530")
-Message-ID: <87y10el51g.fsf@kernel.org>
+Message-ID: <87ttb2l49a.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -107,18 +107,57 @@ Roopni Devanathan <quic_rdevanat@quicinc.com> writes:
 [...]
 
 > +static const char*
-> +ath12k_htt_get_punct_dir_type_str(enum ath12k_htt_stats_direction direction,
-> +				  struct debug_htt_stats_req *stats_req)
+> +ath12k_htt_get_punct_ppdu_type_str(enum ath12k_htt_stats_ppdu_type ppdu_type,
+> +				   struct debug_htt_stats_req *stats_req)
 > +{
-> +	const char *direction_str = "unknown";
+> +	const char *ppdu_type_str = "unknown";
 > +	u32 len = stats_req->buf_len;
-
-[...]
-
+> +
+> +	switch (ppdu_type) {
+> +	case ATH12K_HTT_STATS_PPDU_TYPE_MODE_SU:
+> +		ppdu_type_str = "su";
+> +		break;
+> +	case ATH12K_HTT_STATS_PPDU_TYPE_DL_MU_MIMO:
+> +		ppdu_type_str = "dl_mu_mimo";
+> +		break;
+> +	case ATH12K_HTT_STATS_PPDU_TYPE_UL_MU_MIMO:
+> +		ppdu_type_str = "ul_mu_mimo";
+> +		break;
+> +	case ATH12K_HTT_STATS_PPDU_TYPE_DL_MU_OFDMA:
+> +		ppdu_type_str = "dl_mu_ofdma";
+> +		break;
+> +	case ATH12K_HTT_STATS_PPDU_TYPE_UL_MU_OFDMA:
+> +		ppdu_type_str = "ul_mu_ofdma";
+> +		break;
+> +	default:
+> +		break;
+> +	}
 > +
 > +	stats_req->buf_len = len;
+> +	return ppdu_type_str;
+> +}
 
-What's the idea with len here? I don't get it.
+Also here I don't get why the len variable is needed. I would just
+simplify this and the previous function to:
+
+static const char*
+ath12k_htt_get_punct_ppdu_type_str(enum ath12k_htt_stats_ppdu_type ppdu_type,
+				   struct debug_htt_stats_req *stats_req)
+{
+	switch (ppdu_type) {
+	case ATH12K_HTT_STATS_PPDU_TYPE_MODE_SU:
+		return "su";
+	case ATH12K_HTT_STATS_PPDU_TYPE_DL_MU_MIMO:
+		return "dl_mu_mimo";
+	case ATH12K_HTT_STATS_PPDU_TYPE_UL_MU_MIMO:
+		return "ul_mu_mimo";
+	case ATH12K_HTT_STATS_PPDU_TYPE_DL_MU_OFDMA:
+		return "dl_mu_ofdma";
+	case ATH12K_HTT_STATS_PPDU_TYPE_UL_MU_OFDMA:
+		return "ul_mu_ofdma";
+	default:
+		return "unknown";
+	}
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
