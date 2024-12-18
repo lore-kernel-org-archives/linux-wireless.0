@@ -1,307 +1,120 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED1A835948
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2024 22:35:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4AD1FCD0F
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2024 23:25:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734561355; cv=none; b=RN1hiCzzfro90Aj7Lt1MnJKT+H/+9qUWPilVwhoVanME8WHrZCzxuL8fTb1t3XIh69VWPdlR31HqRVEqJcDwq33fhVYRgGZPtqJFmMi8tzrpRvUJJdKK1TgnTVmn5+hMMuFYYeAT6xYWWF+ssHT3Z36VbK/DmDVOIrywl64BkCc=
+	t=1734564335; cv=none; b=ifXyYQJAZ5P/z008LDcgndW2fqDi5vbI2JaEcojy0JboRUsdv6x6Y0SWW2dZ70zifLrG3A+SK85BFi/bCYZEhuiaZ2Is7dByyw1uG06nzeNOgI0sOrqPnSGbYYOSYawPxO8n8zIcTdzqltUSswTc8FKe1MHRF2bbzfKXmjlzkrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734561355; c=relaxed/simple;
-	bh=3xcfigb3IHA0dIzCFqWTaaCVsIsQHsvxJCOp7P1LawM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=cYbU4JWHb94TUuQpUbz0+tu5VXpUf4S2xrAVQmmE6LFir/3QBv0I1Eh41Nj+L4VHrrexYUFwAqnrVPJAYGJ93RhESbjovDVAjGGafCpU50M9M37/qM0jKcpeJTLCIzLwRFAaTZklXgZQi5ZkAxPpZAIPTyIHnYpP9mEnKzNQbDo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FxKXScZZ; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1734564335; c=relaxed/simple;
+	bh=YxMBilccdrtnhH8Sv5CFR7ls05C1lZqJGjGWXSaOwDc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lQjEil4MaRFY0uRvXtm3jsdmx/6ERgQBMzL7FjwnhMOilJeY3iD1U1pkFxYI4TBHGzOJkOwQkT/CSrjOxE+pHnziTHJUHy18HjTBeNz4LO+Et3K3r3+96EKvYbZOVRGFzorlCbG7cSBFlD77bxtd5Rgs/4FakE/9cwdMHHsXqv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=loWDNKmB; arc=none smtp.client-ip=148.163.129.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FxKXScZZ"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-5d27243ba8bso230219a12.2
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2024 14:35:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1734561352; x=1735166152; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=fJ2gHbKoqM9i6XR47e0TKuDWjHxNW1wjgSVRL5Of1nA=;
-        b=FxKXScZZ7VRTtGdCQryQwwZyAtpGMEK03bm2cSetmRstrjFZTIcNOvRPUosXOlChs0
-         cHL+sxXm2H9HhUSTm86jld238cro8vHW1tVJEBgoCxQkYIJybs+cT1f4Zu5k0a1+6+b+
-         TfSRKZ6HXpeOtxWfAoG6hohUT94DIHk9oM2tHHs2KcPqF6GmYXdZGfzXrhnZmid6IryW
-         VeE/CHCddMEMwTAmaQE7S1qnin4nU8AUBMxfPCtsYu/CmTT4T1LrzsPtwkg0WwHZOUu1
-         06VIE9gME1pa2QCtt0uMMjReJV8Xl6K/+yILRdMHaG11uYT1Ks7B/jJDBdxUInQ1RrwS
-         ADvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734561352; x=1735166152;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fJ2gHbKoqM9i6XR47e0TKuDWjHxNW1wjgSVRL5Of1nA=;
-        b=wnsx/r+lgs+s2KRK5kTOhGTBGWtqpuLpBfavl+i0TlSyQMIEqszK0Zmz5AL3Gdmt5H
-         kSyT2bd3TgrgJPRkx8Lw82twiGRVLGWRd/QrG+tDhrYUqWfqlEyjnkG42LIPcatSrBPr
-         d2OhqJHVp4R0b8JeRDCIRGKjrjgz2Se+Fl83Ddi6hKLQl2g9RdYgmMA/8D9TYQwLA6nv
-         w4MFAjVE4e3nQG/9dHxQsgzTlHo1G/b70lGJyP9swkl2UR6Q31IMFtJSCvYC1FJk20fl
-         33uQn7u5uo9zffTpVeSI0Vz6UiJJoIVmwyIa6cVgC5VKmsw5taV6fGe1D06veVrK5iY3
-         wswQ==
-X-Gm-Message-State: AOJu0YwvY+J1P3jWJlEkJ2NSVwyo3N+HBVPJCyhjKj1HaY9SWLxmnq4Z
-	nD5B2zBwnBgqtlZIhXm1rdgc/Is6RJu5OcSgCnvHTYfMzTMxdh7YINLBTQ==
-X-Gm-Gg: ASbGncuRu7S7XB6qkAKjQdYIzfIiUhVDFuN7+4cUNwdPLQc+1fmPArKgCt72C2gaagS
-	Pj85q5xv3PvAc6SjwKMSZkgELQTplPz/RjtgaMqquDNu5lqfQqzQfdoQ9Qw9oDerQIplMzWqDZG
-	dG7kDfCfEQAc/ZMrHX9MpKZKi8KsabuUtsCDEmQ/TqAXErFFMlxgj9GYTIj+n8OdqFJOAnqWXaH
-	SPSQAOkFRNBUsDdVYa+V4kjz+itzL0aj6OPxICbtWwW5Ptwt9Xq+Fh7uhiGigTu
-X-Google-Smtp-Source: AGHT+IEVpcU9MNdtEQm0e1NVe8/EEGqOLuSoNYo8AZx6K3dfkVM789CeZAs60eEWp+iWxftZwgxxOQ==
-X-Received: by 2002:a05:6402:51c8:b0:5d2:729f:995b with SMTP id 4fb4d7f45d1cf-5d7ee418449mr4175303a12.24.1734561351905;
-        Wed, 18 Dec 2024 14:35:51 -0800 (PST)
-Received: from [192.168.0.50] ([79.119.240.80])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d80679eebcsm6200a12.41.2024.12.18.14.35.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 18 Dec 2024 14:35:50 -0800 (PST)
-Message-ID: <9cee7a34-c38d-4128-824d-0ec139ca5a4e@gmail.com>
-Date: Thu, 19 Dec 2024 00:35:49 +0200
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="loWDNKmB"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 973A8C40074
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Dec 2024 23:25:25 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (unknown [50.251.239.81])
+	by mail3.candelatech.com (Postfix) with ESMTP id 26EA913C2B0;
+	Wed, 18 Dec 2024 15:25:25 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 26EA913C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1734564325;
+	bh=YxMBilccdrtnhH8Sv5CFR7ls05C1lZqJGjGWXSaOwDc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=loWDNKmBbjl3yKqAlt6j1Afa8Mud7wRm5wipW/th2aLNKb3vovltfM9HEjXwMbiGQ
+	 AhIFmplOas2C9WefPCmWexyqcFl52p9fvwisvf7PGasVOfaXHZSPx8/137fmC93k0r
+	 9D3Mm9TloLxa211oN6Fx5YXuayX08Oo1g7/C10RI=
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v5 2/3] wifi: iwlwifi: Report link-id for transmitted frames.
+Date: Wed, 18 Dec 2024 15:25:18 -0800
+Message-ID: <20241218232519.3156080-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20241218232519.3156080-1-greearb@candelatech.com>
+References: <20241218232519.3156080-1-greearb@candelatech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH v2 3/3] wifi: rtw88: usb: Preallocate and reuse the RX skbs
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, Sascha Hauer <sha@pengutronix.de>
-References: <8c9d4f9d-ebd8-4dc0-a0c4-9ebe430521dd@gmail.com>
-Content-Language: en-US
-In-Reply-To: <8c9d4f9d-ebd8-4dc0-a0c4-9ebe430521dd@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-MDID: 1734564326-RwsU4mAgTzAG
+X-MDID-O:
+ us5;ut7;1734564326;RwsU4mAgTzAG;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-The USB driver uses four USB Request Blocks for RX. Before submitting
-one, it allocates a 32768 byte skb for the RX data. This allocation can
-fail, maybe due to temporary memory fragmentation. When the allocation
-fails, the corresponding URB is never submitted again. After four such
-allocation failures, all RX stops because the driver is not requesting
-data from the device anymore.
+From: Ben Greear <greearb@candelatech.com>
 
-Don't allocate a 32768 byte skb when submitting a USB Request Block
-(which happens very often). Instead preallocate 8 such skbs, and reuse
-them over and over. If all 8 are busy, allocate a new one. This is
-pretty rare. If the allocation fails, use a work to try again later.
-When there are enough free skbs again, free the excess skbs.
+This will let upper stack properly record stats per link.
 
-Also, use WQ_BH for the RX workqueue. With a normal or high priority
-workqueue the skbs are processed too slowly when the system is even a
-little busy, like when opening a new page in a browser, and the driver
-runs out of free skbs and allocates a lot of new ones.
-
-This is more or less what the out-of-tree Realtek drivers do, except
-they use a tasklet instead of a BH workqueue.
-
-Tested with RTL8723DU, RTL8821AU, RTL8812AU, RTL8812BU, RTL8822CU,
-RTL8811CU.
-
-Closes: https://lore.kernel.org/linux-wireless/6e7ecb47-7ea0-433a-a19f-05f88a2edf6b@gmail.com/
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-v2:
- - Pass the appropriate gfp_t flags as a parameter to
-   rtw_usb_rx_resubmit() instead of using in_interrupt(). Call it "gfp"
-   instead of "priority".
- - Initialise rx_skb a little earlier in rtw_usb_rx_resubmit().
- - Move C2H_ADAPTIVITY in a new patch (2/3).
- - Allow the driver to allocate 4 more persistent skbs after the initial
-   8.
----
- drivers/net/wireless/realtek/rtw88/usb.c | 79 +++++++++++++++++++-----
- drivers/net/wireless/realtek/rtw88/usb.h |  3 +
- 2 files changed, 67 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 4dbd5167faa4..b405f8317021 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -585,7 +585,7 @@ static void rtw_usb_rx_handler(struct work_struct *work)
- 				goto skip_packet;
- 			}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index c9867d26361b..c8b5d5cd3298 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1709,6 +1709,14 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 	u8 lq_color;
+ 	u16 next_reclaimed, seq_ctl;
+ 	bool is_ndp = false;
++	struct ieee80211_link_sta *link_sta;
++	int link_sta_id = -1;
++
++	rcu_read_lock();
++	link_sta = rcu_dereference(mvm->fw_id_to_link_sta[sta_id]);
++	if (link_sta)
++		link_sta_id = link_sta->link_id;
++	rcu_read_unlock();
  
--			skb = alloc_skb(skb_len, GFP_KERNEL);
-+			skb = alloc_skb(skb_len, GFP_ATOMIC);
- 			if (!skb) {
- 				rtw_dbg(rtwdev, RTW_DBG_USB,
- 					"failed to allocate RX skb of size %u\n",
-@@ -612,32 +612,70 @@ static void rtw_usb_rx_handler(struct work_struct *work)
- 			rx_desc += next_pkt;
- 		} while (rx_desc + pkt_desc_sz < rx_skb->data + rx_skb->len);
+ 	__skb_queue_head_init(&skbs);
  
--		dev_kfree_skb_any(rx_skb);
-+		if (skb_queue_len(&rtwusb->rx_free_queue) >= RTW_USB_RX_SKB_NUM)
-+			dev_kfree_skb_any(rx_skb);
-+		else
-+			skb_queue_tail(&rtwusb->rx_free_queue, rx_skb);
- 	}
- }
+@@ -1732,6 +1740,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
  
- static void rtw_usb_read_port_complete(struct urb *urb);
+ 		memset(&info->status, 0, sizeof(info->status));
+ 		info->flags &= ~(IEEE80211_TX_STAT_ACK | IEEE80211_TX_STAT_TX_FILTERED);
++		info->status.tx_link_id = link_sta_id + 1;
  
--static void rtw_usb_rx_resubmit(struct rtw_usb *rtwusb, struct rx_usb_ctrl_block *rxcb)
-+static void rtw_usb_rx_resubmit(struct rtw_usb *rtwusb,
-+				struct rx_usb_ctrl_block *rxcb,
-+				gfp_t gfp)
- {
- 	struct rtw_dev *rtwdev = rtwusb->rtwdev;
-+	struct sk_buff *rx_skb;
- 	int error;
+ 		/* inform mac80211 about what happened with the frame */
+ 		switch (status & TX_STATUS_MSK) {
+@@ -2048,6 +2057,7 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
+ 	struct iwl_mvm_sta *mvmsta = NULL;
+ 	struct sk_buff *skb;
+ 	int freed;
++	struct ieee80211_link_sta *link_sta;
  
--	rxcb->rx_skb = alloc_skb(RTW_USB_MAX_RECVBUF_SZ, GFP_ATOMIC);
--	if (!rxcb->rx_skb)
--		return;
-+	rx_skb = skb_dequeue(&rtwusb->rx_free_queue);
-+	if (!rx_skb)
-+		rx_skb = alloc_skb(RTW_USB_MAX_RECVBUF_SZ, gfp);
-+
-+	if (!rx_skb)
-+		goto try_later;
-+
-+	skb_reset_tail_pointer(rx_skb);
-+	rx_skb->len = 0;
-+
-+	rxcb->rx_skb = rx_skb;
- 
- 	usb_fill_bulk_urb(rxcb->rx_urb, rtwusb->udev,
- 			  usb_rcvbulkpipe(rtwusb->udev, rtwusb->pipe_in),
- 			  rxcb->rx_skb->data, RTW_USB_MAX_RECVBUF_SZ,
- 			  rtw_usb_read_port_complete, rxcb);
- 
--	error = usb_submit_urb(rxcb->rx_urb, GFP_ATOMIC);
-+	error = usb_submit_urb(rxcb->rx_urb, gfp);
- 	if (error) {
--		kfree_skb(rxcb->rx_skb);
-+		skb_queue_tail(&rtwusb->rx_free_queue, rxcb->rx_skb);
-+
- 		if (error != -ENODEV)
- 			rtw_err(rtwdev, "Err sending rx data urb %d\n",
- 				error);
-+
-+		if (error == -ENOMEM)
-+			goto try_later;
-+	}
-+
-+	return;
-+
-+try_later:
-+	rxcb->rx_skb = NULL;
-+	queue_work(rtwusb->rxwq, &rtwusb->rx_urb_work);
-+}
-+
-+static void rtw_usb_rx_resubmit_work(struct work_struct *work)
-+{
-+	struct rtw_usb *rtwusb = container_of(work, struct rtw_usb, rx_urb_work);
-+	struct rx_usb_ctrl_block *rxcb;
-+	int i;
-+
-+	for (i = 0; i < RTW_USB_RXCB_NUM; i++) {
-+		rxcb = &rtwusb->rx_cb[i];
-+
-+		if (!rxcb->rx_skb)
-+			rtw_usb_rx_resubmit(rtwusb, rxcb, GFP_ATOMIC);
- 	}
- }
- 
-@@ -653,15 +691,16 @@ static void rtw_usb_read_port_complete(struct urb *urb)
- 		    urb->actual_length < 24) {
- 			rtw_err(rtwdev, "failed to get urb length:%d\n",
- 				urb->actual_length);
--			if (skb)
--				dev_kfree_skb_any(skb);
-+			skb_queue_tail(&rtwusb->rx_free_queue, skb);
- 		} else {
- 			skb_put(skb, urb->actual_length);
- 			skb_queue_tail(&rtwusb->rx_queue, skb);
- 			queue_work(rtwusb->rxwq, &rtwusb->rx_work);
- 		}
--		rtw_usb_rx_resubmit(rtwusb, rxcb);
-+		rtw_usb_rx_resubmit(rtwusb, rxcb, GFP_ATOMIC);
- 	} else {
-+		skb_queue_tail(&rtwusb->rx_free_queue, skb);
-+
- 		switch (urb->status) {
- 		case -EINVAL:
- 		case -EPIPE:
-@@ -679,8 +718,6 @@ static void rtw_usb_read_port_complete(struct urb *urb)
- 			rtw_err(rtwdev, "status %d\n", urb->status);
- 			break;
- 		}
--		if (skb)
--			dev_kfree_skb_any(skb);
- 	}
- }
- 
-@@ -868,16 +905,26 @@ static struct rtw_hci_ops rtw_usb_ops = {
- static int rtw_usb_init_rx(struct rtw_dev *rtwdev)
- {
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
-+	struct sk_buff *rx_skb;
-+	int i;
- 
--	rtwusb->rxwq = create_singlethread_workqueue("rtw88_usb: rx wq");
-+	rtwusb->rxwq = alloc_workqueue("rtw88_usb: rx wq", WQ_BH, 0);
- 	if (!rtwusb->rxwq) {
- 		rtw_err(rtwdev, "failed to create RX work queue\n");
- 		return -ENOMEM;
+ 	if (WARN_ONCE(sta_id >= mvm->fw->ucode_capa.num_stations ||
+ 		      tid > IWL_MAX_TID_COUNT,
+@@ -2064,6 +2074,8 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
+ 		return;
  	}
  
- 	skb_queue_head_init(&rtwusb->rx_queue);
-+	skb_queue_head_init(&rtwusb->rx_free_queue);
- 
- 	INIT_WORK(&rtwusb->rx_work, rtw_usb_rx_handler);
-+	INIT_WORK(&rtwusb->rx_urb_work, rtw_usb_rx_resubmit_work);
++	link_sta = rcu_dereference(mvm->fw_id_to_link_sta[sta_id]);
 +
-+	for (i = 0; i < RTW_USB_RX_SKB_NUM; i++) {
-+		rx_skb = alloc_skb(RTW_USB_MAX_RECVBUF_SZ, GFP_KERNEL);
-+		if (rx_skb)
-+			skb_queue_tail(&rtwusb->rx_free_queue, rx_skb);
-+	}
+ 	__skb_queue_head_init(&reclaimed_skbs);
  
- 	return 0;
- }
-@@ -890,7 +937,7 @@ static void rtw_usb_setup_rx(struct rtw_dev *rtwdev)
- 	for (i = 0; i < RTW_USB_RXCB_NUM; i++) {
- 		struct rx_usb_ctrl_block *rxcb = &rtwusb->rx_cb[i];
- 
--		rtw_usb_rx_resubmit(rtwusb, rxcb);
-+		rtw_usb_rx_resubmit(rtwusb, rxcb, GFP_KERNEL);
+ 	/*
+@@ -2087,6 +2099,9 @@ static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+ 		else
+ 			info->flags &= ~IEEE80211_TX_STAT_ACK;
++
++		if (link_sta)
++			info->status.tx_link_id = link_sta->link_id + 1;
  	}
- }
  
-@@ -902,6 +949,8 @@ static void rtw_usb_deinit_rx(struct rtw_dev *rtwdev)
- 
- 	flush_workqueue(rtwusb->rxwq);
- 	destroy_workqueue(rtwusb->rxwq);
-+
-+	skb_queue_purge(&rtwusb->rx_free_queue);
- }
- 
- static int rtw_usb_init_tx(struct rtw_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 86697a5c0103..9b695b688b24 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -38,6 +38,7 @@
- #define RTW_USB_RXAGG_TIMEOUT		10
- 
- #define RTW_USB_RXCB_NUM		4
-+#define RTW_USB_RX_SKB_NUM		8
- 
- #define RTW_USB_EP_MAX			4
- 
-@@ -81,7 +82,9 @@ struct rtw_usb {
- 
- 	struct rx_usb_ctrl_block rx_cb[RTW_USB_RXCB_NUM];
- 	struct sk_buff_head rx_queue;
-+	struct sk_buff_head rx_free_queue;
- 	struct work_struct rx_work;
-+	struct work_struct rx_urb_work;
- };
- 
- static inline struct rtw_usb_tx_data *rtw_usb_get_tx_data(struct sk_buff *skb)
+ 	/*
 -- 
-2.47.1
+2.42.0
 
