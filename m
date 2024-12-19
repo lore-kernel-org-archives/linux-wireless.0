@@ -1,79 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C55F1A2642
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2024 19:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8A2C1A76CB
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Dec 2024 19:09:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734634850; cv=none; b=exAWUrhxzM+rYFZV7LLDTtFhDVx1fVcIJHx0h7h+iqjQWOc/oppo7zjqbMH6w3v54S0TZdrlVCsCeZ6sAFN0IRcH/e/3Jhxl6VbVWgcet3TzDmv6N48GMfurHKOfKMmIgN9zguO0uWm08/5VpqhRgYYwFhAsE/HGf58mhOG8RhY=
+	t=1734635344; cv=none; b=tUYIeWhCwmbQoxZUkroBDBoeScUjxqwlvnFtdXgzcfOlF2oaBrgaffizDkvnCRDIeNLVWftySsRR3CIr51Lw1BNYCTLRIjAylaTW+d/+BvZSTcvTKyHeHvGXaZ8o3i+3Y3lBFpcT5BCfQVck3Ny3ykaYuBF0lE/GJ0Bn+FRrgjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734634850; c=relaxed/simple;
-	bh=SLUiY2wcJTTS1vhLSMh30EAozyggKUvkNGh0Q+o/XSw=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=Z7Lq2evvFa/TQpclh9gELzpmiMDh/vcbghesG2uLyGVi9B4PZKrs8R8+pDhf7RzuO05kPG+vO82yvARaEyeEH8/gvOJ54LQdZ77+Rm9limIs1Ac5nqiWnltwdP+oqWH2tepcx8IRKwpM5o/eaq1hON/NNpHtccuXLnFztr0leF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uxTy9tnt; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734635344; c=relaxed/simple;
+	bh=WIMID/G/JbmjNUP8I25RgPU31SnEIrctLG+JgLp6usg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OJxs+uGPIxdvXHPjC1CAnxS2PO+DgoDsgSQ2FRfiO6LC3hLPPzFg7sdPJvi2xGISMDzbm0fndc2fKjvnL9+gLKcCvCoao3esWG3LIlVVAZVX2TGeqGigWYaaBCqaPxYzw/ibes1GpwLEXwaqJDGLoK7yxopjabEYwShLUGZRCLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EcFQrg+M; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uxTy9tnt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24A8CC4CECE;
-	Thu, 19 Dec 2024 19:00:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734634850;
-	bh=SLUiY2wcJTTS1vhLSMh30EAozyggKUvkNGh0Q+o/XSw=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=uxTy9tntNULSO1OXehOzoZEm7BKhuD+EJx0F0nY7DaMsW3euc8VVAT+9f4Xul9J7I
-	 Vhmk/2wfAHVGoDnVTzccTHVEXX+u+huDqrAvbaHSNiWwvKf8/llMJnV2UASGM6tf1L
-	 cUYJVvJw5koMR17BVhBPoRNOAel01rDkrk9hIPoXWvK2cSHKaQeEJRB+dq8WdICqWZ
-	 2doG8g8J9zbUh9b5JdV+5rJX+1RVZjBMFucW+rbh1KilqIqVerrKXrFfOpTIpj8cBM
-	 MsK+hRm7/OQaBMY5ckqVSbY3zXRPLLFpnWSKU/zf7FAykeoTrffIKEcYIJzySIGatw
-	 OB+5iHYJryUsw==
-From: Kalle Valo <kvalo@kernel.org>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-  Ping-Ke Shih <pkshih@realtek.com>,  Sascha Hauer <sha@pengutronix.de>
-Subject: Re: [PATCH] wifi: rtw88: Add USB PHY configuration
-References: <a3b87566-4e11-4fc2-8c51-db592e56af13@gmail.com>
-Date: Thu, 19 Dec 2024 21:00:46 +0200
-In-Reply-To: <a3b87566-4e11-4fc2-8c51-db592e56af13@gmail.com> (Bitterblue
-	Smith's message of "Thu, 19 Dec 2024 18:20:33 +0200")
-Message-ID: <871py3sdk1.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EcFQrg+M"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJHKmIp015057;
+	Thu, 19 Dec 2024 19:09:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=Y9feI2JUBwkJCvzz6V1r9y
+	Fr0fx6Vk4uQjBQj063kCI=; b=EcFQrg+MOtW8nFF99Dxc2FmkTzD1/YIsOE7tV7
+	i4CT50tpyEUkuKSzesGXj5C2RHKR+sW+MR/UkkahgOX3hat9PqbRG/V/kyXDQKCY
+	7GnKf5NYptlEUhYlRa+8znlNnTXySqeT1q+f7t+sAeqIQQ7D9MT1D8Zi1e1ULXDz
+	vzYRsg+Gvn8UnkQO4dWejROdzng6hBpLbPkS3ms+BGXsYGUownB4RzqV7K6z9wsK
+	JPp5p9rOa8lM2MwQLySLtg20CFknUVV6yf2HdrZgAGGWqzOARaL+BzNC9qCkK9LC
+	tDFNmjuArdyL+ivmYn40XSdbsA7cvZXn0UhDbkmeVN0ybyAw==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43mqt80821-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Dec 2024 19:08:59 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BJJ8xnk009132
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 19 Dec 2024 19:08:59 GMT
+Received: from msinada-linux.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 19 Dec 2024 11:08:58 -0800
+From: Muna Sinada <quic_msinada@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Ramya Gnanasekar
+	<quic_rgnanase@quicinc.com>,
+        Muna Sinada <quic_msinada@quicinc.com>
+Subject: [PATCH] wifi: ath12k: set flag for mgmt no-ack frames in Tx completion
+Date: Thu, 19 Dec 2024 11:08:45 -0800
+Message-ID: <20241219190845.605116-1-quic_msinada@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: NiuqUt-k5_1UNvCvZLHUTOOBWvFou5hO
+X-Proofpoint-GUID: NiuqUt-k5_1UNvCvZLHUTOOBWvFou5hO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999
+ malwarescore=0 impostorscore=0 phishscore=0 clxscore=1011
+ lowpriorityscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2412190152
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> writes:
+From: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
 
-> Add some extra configuration for USB devices. Currently only RTL8822BU
-> version (cut) D needs this. The new code makes use of the existing
-> usb3_param_8822b array from rtw8822b.c.
->
-> A user reported that TP-Link Archer T3U in USB 3 mode was randomly
-> disconnecting from USB:
->
-> [ 26.036502] usb 2-2: new SuperSpeed USB device number 3 using xhci_hcd
-> ...
-> [ 27.576491] usb 2-2: USB disconnect, device number 3
-> [ 28.621528] usb 2-2: new SuperSpeed USB device number 4 using xhci_hcd
-> ...
-> [ 45.984521] usb 2-2: USB disconnect, device number 4
-> ...
-> [ 46.845585] usb 2-2: new SuperSpeed USB device number 5 using xhci_hcd
-> ...
-> [ 94.400380] usb 2-2: USB disconnect, device number 5
-> ...
-> [ 95.590421] usb 2-2: new SuperSpeed USB device number 6 using xhci_hcd
->
-> This patch fixes that.
->
-> Link: https://github.com/lwfinger/rtw88/issues/262.
+IEEE80211_TX_STAT_NOACK_TRANSMITTED flag signifies that frame was
+successfully transmitted without any errors when no-ack is requested.
 
-I think the dot in the end of link is not needed. Maybe Ping can remove that?
+In WMI Tx management completion path, driver is not setting
+IEEE80211_TX_STAT_NOACK_TRANSMITTED flag for the frames with
+IEEE80211_TX_CTL_NO_ACK. Without this flag, the management frame
+statistics will not track such frames.
 
+Add IEEE80211_TX_STAT_NOACK_TRANSMITTED flag as part of the flags in
+skb transmit information when WMI is processing Tx completion for
+management frames.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Ramya Gnanasekar <quic_rgnanase@quicinc.com>
+Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/wmi.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 562b0615ed06..a098d4303a63 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -5362,6 +5362,9 @@ static int wmi_process_mgmt_tx_comp(struct ath12k *ar, u32 desc_id,
+ 	if ((!(info->flags & IEEE80211_TX_CTL_NO_ACK)) && !status)
+ 		info->flags |= IEEE80211_TX_STAT_ACK;
+ 
++	if ((info->flags & IEEE80211_TX_CTL_NO_ACK) && !status)
++		info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
++
+ 	ieee80211_tx_status_irqsafe(ath12k_ar_to_hw(ar), msdu);
+ 
+ 	num_mgmt = atomic_dec_if_positive(&ar->num_pending_mgmt_tx);
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
