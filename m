@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA68230984;
-	Fri, 20 Dec 2024 17:13:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CBFE1A01BD;
+	Fri, 20 Dec 2024 17:13:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734714800; cv=none; b=EkrB1kA1McrfL9X8cO9XTYC0qOwxW09RnYywUoDL2uqWINCSPrhujL+hWyIrYaCd9+6kfVgIKJU0cY6Z8rQQTE+7U24BzWxRDkagOnRRkvG6acFRxayD+8sf1JK0gw4r0X7zIW2SDtht108omHMfik56/RVUbs1fHGHRpWD4+xA=
+	t=1734714830; cv=none; b=ccpVolMbq9bo4tuXD4iu8jzfLKViaNy7FYE3ZwveweBFjQWNZSaAwxkSH4kC4DivFml+zZyEp1plYpSYR31g9IIrGfrDYGcIwD7DMoLwCNC5+5zFvhOsaiU4PDtKOtNo/lqqIUuWvHBkwQusoqYMdhOWQGeNU0ZJJcuNK+87B/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734714800; c=relaxed/simple;
-	bh=kBtmxMQmmk01nRGleFCsIKpQsxjI3b4W+GcH87wpo9E=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EbDIcWXM8cxuUW/ujs5sowFS2cvmApVZez21dJ5tN42VR6ZIvNa55IFKdBPm7CYHrjLmglmVtJH1BCy13Lf+OkvJkaBNRhHdk/MnWHwTTJEb+SvsbuVTu2xGXiVslIaFFUZ1idqD21LmJtAuPNxAa1O4TKgsRXbF+N1hWdivXJY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gCZb/gl3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734714830; c=relaxed/simple;
+	bh=7/ky7wjBDGDXL74FY0a86N3C6OqFGMhTWisUfsrZ5YU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TGopepukUzwZBkS3zPNemnfqprol1eZJQgkaAfI6ooMOI5hX+YYVhRWc8UCtuHZdfr41jrIq4JQs/kbh05m2Z9EmCGGek4084XDgc5D1QIVRW1HdEHzF2TyFJdJJV2gJLlGGh/eZlK1iGecfXaaE2Iz2gn95agwtSm3YW/LRlcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWrPVZiT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gCZb/gl3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 315A4C4CECD;
-	Fri, 20 Dec 2024 17:13:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWrPVZiT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1183C4CECD;
+	Fri, 20 Dec 2024 17:13:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734714800;
-	bh=kBtmxMQmmk01nRGleFCsIKpQsxjI3b4W+GcH87wpo9E=;
+	s=k20201202; t=1734714829;
+	bh=7/ky7wjBDGDXL74FY0a86N3C6OqFGMhTWisUfsrZ5YU=;
 	h=From:To:Cc:Subject:Date:From;
-	b=gCZb/gl3XnAgtJVf28ibnq5c9hu+3TTP9e9SQKCxOv/wrQt4rzZBGM0X46kU4ftBT
-	 wsDobzXGDHQO6GPdwrz/uszzIvge54mnmftZRp5tLEBr2kfd2uTT+/RTNEgzmjZMBr
-	 i6EifrYnc/0inBY9Izsmkt2sHtWMfew8F9bFJspXlwz1FDnbRBptYj0+TTRLP8Q3rG
-	 N7KgYmkEdy2wty/CHPiQMStGGvWf32+LAkw6yp9fYzptYjQ2GA8mzv0jcUtIhBIP8L
-	 3V4csNJOb/669APXdvGFAE+cuOy6sKsTeveChFbIhn5s6CrzbGZNHvYkstKJ8yMCzT
-	 QQABUx7si/U8A==
+	b=TWrPVZiT1U/ZwRCnsFXLYZq9OX1GaxpwzCWjFQFkmEonPPRcBPHBDik1vuNuz5RPk
+	 JXyXtwn62JtfdV1gIVvxxI/vfUPam6Tbx0LwRnWZzfXGPVUmVoJ4WMxMfoL31wLO5A
+	 XT6qhyeQ4jAFt53pcueg3B8ipVcV02NgoI65FCI5BMATc2wvSw8OoW2C8yyo4ZEUA7
+	 4QcfHph5P6bXDwARJXF3NgCJl5Udqt/xPpJYob1w0C5FhEHgSjQP985C4G5Dkda8Gc
+	 NUOCxPc6eHzoHaPyLx+XP0d+K3gLsRE7T2k4N7l8dy531uFp1bxFXymSdKjAAnmASC
+	 JwVbFZg9W4ljQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,9 +34,9 @@ Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 01/12] wifi: mac80211: wake the queues in case of failure in resume
-Date: Fri, 20 Dec 2024 12:13:06 -0500
-Message-Id: <20241220171317.512120-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 1/9] wifi: mac80211: wake the queues in case of failure in resume
+Date: Fri, 20 Dec 2024 12:13:39 -0500
+Message-Id: <20241220171347.512287-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -46,7 +46,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.121
+X-stable-base: Linux 5.15.175
 Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 738f1f139a90..e8326e09d1b3 100644
+index 85d3d2034d43..cc78d3cba45e 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -2436,6 +2436,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+@@ -2374,6 +2374,9 @@ int ieee80211_reconfig(struct ieee80211_local *local)
  			WARN(1, "Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.\n");
  		else
  			WARN(1, "Hardware became unavailable during restart.\n");
