@@ -1,200 +1,139 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02605D51C;
-	Mon, 23 Dec 2024 01:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9655C85270;
+	Mon, 23 Dec 2024 04:24:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734917540; cv=none; b=C6NiJclHe5KUZf/ZjkT85xcXzRkz3tlYg0iOCgCgNHw+tZxdCzfJ0UvKLumXvWTAWfGj1u3OWPl1lfJPaqhGrQVcXIjSWnf0D0Ngi/RlHs6SWoy7gdrPv6ZeKzzYipVW6BvJQLXTBh2BkX4M9Xe38zFOonjQ2ZuZi+CEOjCrxdk=
+	t=1734927880; cv=none; b=j/j/xIVyY7EEIVVBGvXboW1p2b/W4DWI+iAzRMvvaVyiYmqTXfAA3wlQYI0unK/uwNG2OJZtcOOk2vzcx7qkSlyauBrBPuhjd8c00cnnexjba0YGZKSDdqECJg8NDRa2u+RhFW9sm3GtIe3xJ+7R45pmODUdyDdeQjChuoK6OpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734917540; c=relaxed/simple;
-	bh=Vzt2yWayyGwEtq8qqinHsCHCd+kyX4AP0wsBNlM9wGU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rqNST7X48PXO4sDy+kEionN5YdQgtvejlLwmcMPAtLI4kRHcD2UHyD1WRCRbXc4yU/tAQadfS0VhfxaZf0IWD5KTVFRfjQXJnZ2wMCcmRVU2ZQkHLzXVTRm1+OVc1pzm863lyu704b58K+O1fIQXyMWOY+e/t4OicQ+3TgwMl/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=hAjtiWKo; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
+	s=arc-20240116; t=1734927880; c=relaxed/simple;
+	bh=zFgLApFNMhAUyw2nOibAlkeaJEy+7t+pRx1G3mbd8fc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Vhr7pfAXLeNsCAKF0xX0KUdkulp5MtkH7zeG7M7mEYMkopsPEnu0dS2/QvFHdgOBn0Xi4bDZ1Cx8AQJhbNQWPAndobtrqaEIq8i8pk0p2X8sdq1Wt7Tcoaio6rkF5EZGlm601fHmEF/6udyPe4zowZax+t7sUftdoykYRe6gK6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=QFdkfx8G; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="hAjtiWKo"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=VSlmuOAizwRPWEm5J9NFh9+rLZv8nYz4wRTA61eWOmg=; b=hAjtiWKoHUkKFM9K
-	fBSrTfNFGTS1jZlshaf3Mjcwe2cBlti3uxNjy0GN7ejGgR9o/ErklSynjpyHEbbo2HM7Ym0PR5St0
-	jeAQY3Lc3KnbRe9AZUEGFA0IpkV6pHaDI2zVqp12+jOLY1/UGBwG4C6EY6skJLxzb0B5kBIzo7Imo
-	Gfr/c+7wj4m2Q16V2LAC9RqOqCn/rWmae5Qao8AsxgPf/Lg6jLbAgJzquhHaT0epCboUGHDl+mt+1
-	hR8fzKhBfFQxvArzY7hndTxK20swJXTJPQ0sg8ofkRRTVl0GVDVFq3GzoPcGc5jbyyuP8Eug1FPg1
-	S/Np++w6oKpKI+XNpQ==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1tPXIk-006oGv-2I;
-	Mon, 23 Dec 2024 01:32:06 +0000
-From: linux@treblig.org
-To: miriam.rachel.korenblit@intel.com,
-	kvalo@kernel.org,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 4/6] iwlwifi: Remove unused iwl_mvm_ftm_add_pasn_sta
-Date: Mon, 23 Dec 2024 01:32:00 +0000
-Message-ID: <20241223013202.340180-5-linux@treblig.org>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20241223013202.340180-1-linux@treblig.org>
-References: <20241223013202.340180-1-linux@treblig.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="QFdkfx8G"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BN3CT71007799;
+	Mon, 23 Dec 2024 04:24:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	07KN7FjkG/mIIcZlvzIW/LaKGeNa/Ht1lAI/yHaqYko=; b=QFdkfx8G/9BDbO4e
+	mG5cIyfXbplpz177i/pqRTATrunZidav/0XdkxfeDSGae6r9r2rmJ6kehOjyTi7q
+	rRjqqwJRY6ebBVXEnrwAJPctZSOub/Cp5wtJnYvH6tlV2/UhALWxndlwOZovXdMF
+	Iua6Oab+GAyF/1Ailitq3rGa7WGKgEnEwQCvfh9GbsJAl6Yhg+1nOCSdBE7ZnzYA
+	zI2yDJ4Azg5sUB1BJbwXdFkezT6CeCida6rem/V7uIgBl3lJ/WPa4lfjAgAfq1Mz
+	tiL86W3uXJCXpxmzDzrf/Y071NQeQaZpYnWl6xpu4a0d9wj4IV6JbBkkiY5AcLUO
+	9DMlbw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43pyrpr797-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 23 Dec 2024 04:24:30 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BN4OTAR014780
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 23 Dec 2024 04:24:29 GMT
+Received: from [10.151.41.196] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 22 Dec
+ 2024 20:24:25 -0800
+Message-ID: <de313b43-4e90-4b3a-a233-917a963810c8@quicinc.com>
+Date: Mon, 23 Dec 2024 09:53:59 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v3 1/5] dt-bindings: net: wireless: Describe ath12k
+ PCI module with WSI
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+        Jeff Johnson
+	<jeff.johnson@oss.qualcomm.com>,
+        <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, Kalle Valo <kvalo@kernel.org>,
+        "Rob
+ Herring" <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        "Conor
+ Dooley" <conor+dt@kernel.org>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        "Bjorn
+ Andersson" <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+References: <20241105180444.770951-1-quic_rajkbhag@quicinc.com>
+ <20241105180444.770951-2-quic_rajkbhag@quicinc.com>
+ <9cbdca90-e76c-4ebb-a236-a0edbd94a629@oss.qualcomm.com>
+ <62c599b5-20b2-4e1e-810d-e4502abbc682@oss.qualcomm.com>
+ <768ef22a-855b-472d-9432-49db7daaf2df@oss.qualcomm.com>
+Content-Language: en-US
+From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+In-Reply-To: <768ef22a-855b-472d-9432-49db7daaf2df@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: le6esRrgP00FhDPFggP_x5IMCb6Eqw9a
+X-Proofpoint-GUID: le6esRrgP00FhDPFggP_x5IMCb6Eqw9a
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 clxscore=1015
+ lowpriorityscore=0 phishscore=0 impostorscore=0 bulkscore=0
+ mlxlogscore=999 priorityscore=1501 malwarescore=0 spamscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2412230036
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+On 12/21/2024 3:35 AM, Konrad Dybcio wrote:
+> On 20.12.2024 10:47 PM, Jeff Johnson wrote:
+>> On 12/20/2024 12:03 PM, Konrad Dybcio wrote:
+>>> On 5.11.2024 7:04 PM, Raj Kumar Bhagat wrote:
+>>>> The QCN9274 WiFi device supports WSI (WLAN Serial Interface). WSI is used
+>>>> to exchange specific control information across radios using a doorbell
+>>>> mechanism. This WSI connection is essential for exchanging control
+>>>> information among these devices. The WSI interface in the QCN9274 includes
+>>>> TX and RX ports, which are used to connect multiple WSI-supported devices
+>>>> together, forming a WSI group.
+>>>>
+>>>> Describe QCN9274 PCI wifi device with WSI interface.
+>>>>
+>>>> Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+>>>> ---
+>>>
+>>> I think this description is missing the key points:
+>>>
+>>> * what is that control information (power, data, radio stuff?)
+>>> * what happens when the OS is unaware of all of this (i.e. what happens when
+>>>   we don't send any configuration)
+>>> * is this configurable, or does this describe a physical wiring topology
+>>>   (what/who decides which of the group configurations detailed below take
+>>>    effect)
+>>>
+>>> And the ultimate question:
+>>> * can the devices not just talk among themselves and negotiate that?
+>>>
+>>> Though AFAICU PCIe P2P communication is a shaky topic, so perhaps the answer
+>>> to the last question is 'no'
+>>>
+>>> Konrad
+>>
+>> We already pushed the non-RFC version to our -next tree so we cannot update
+>> the commit description without a forced push.
+>>
+>> https://lore.kernel.org/all/20241211153432.775335-2-kvalo@kernel.org/
+>>
+>> However, Raj Kumar can submit an update to the description in the file, which
+>> is probably the better place to have this information anyway.
+> 
+> Sounds good
+> 
 
-iwl_mvm_ftm_add_pasn_sta() was added in 2020 by
-commit 0739a7d70e00 ("iwlwifi: mvm: initiator: add option for adding a
-PASN responder")
-but hasn't been used.
-
-Remove it.
-
-That was the only caller of iwl_mvm_ftm_remove_pasn_sta().
-
-Remove it.
-
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 101 ------------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   4 -
- 2 files changed, 105 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index b26141c30c61..f7034fa40c26 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -46,107 +46,6 @@ struct iwl_mvm_ftm_iter_data {
- 	u8 *tk;
- };
- 
--int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
--			     u8 *addr, u32 cipher, u8 *tk, u32 tk_len,
--			     u8 *hltk, u32 hltk_len)
--{
--	struct iwl_mvm_ftm_pasn_entry *pasn = kzalloc(sizeof(*pasn),
--						      GFP_KERNEL);
--	u32 expected_tk_len;
--
--	lockdep_assert_held(&mvm->mutex);
--
--	if (!pasn)
--		return -ENOBUFS;
--
--	iwl_mvm_ftm_remove_pasn_sta(mvm, addr);
--
--	pasn->cipher = iwl_mvm_cipher_to_location_cipher(cipher);
--
--	switch (pasn->cipher) {
--	case IWL_LOCATION_CIPHER_CCMP_128:
--	case IWL_LOCATION_CIPHER_GCMP_128:
--		expected_tk_len = WLAN_KEY_LEN_CCMP;
--		break;
--	case IWL_LOCATION_CIPHER_GCMP_256:
--		expected_tk_len = WLAN_KEY_LEN_GCMP_256;
--		break;
--	default:
--		goto out;
--	}
--
--	/*
--	 * If associated to this AP and already have security context,
--	 * the TK is already configured for this station, so it
--	 * shouldn't be set again here.
--	 */
--	if (vif->cfg.assoc) {
--		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--		struct ieee80211_bss_conf *link_conf;
--		unsigned int link_id;
--		struct ieee80211_sta *sta;
--		u8 sta_id;
--
--		rcu_read_lock();
--		for_each_vif_active_link(vif, link_conf, link_id) {
--			if (memcmp(addr, link_conf->bssid, ETH_ALEN))
--				continue;
--
--			sta_id = mvmvif->link[link_id]->ap_sta_id;
--			sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
--			if (!IS_ERR_OR_NULL(sta) && sta->mfp)
--				expected_tk_len = 0;
--			break;
--		}
--		rcu_read_unlock();
--	}
--
--	if (tk_len != expected_tk_len ||
--	    (hltk_len && hltk_len != sizeof(pasn->hltk))) {
--		IWL_ERR(mvm, "Invalid key length: tk_len=%u hltk_len=%u\n",
--			tk_len, hltk_len);
--		goto out;
--	}
--
--	if (!expected_tk_len && !hltk_len) {
--		IWL_ERR(mvm, "TK and HLTK not set\n");
--		goto out;
--	}
--
--	memcpy(pasn->addr, addr, sizeof(pasn->addr));
--
--	if (hltk_len) {
--		memcpy(pasn->hltk, hltk, sizeof(pasn->hltk));
--		pasn->flags |= IWL_MVM_PASN_FLAG_HAS_HLTK;
--	}
--
--	if (tk && tk_len)
--		memcpy(pasn->tk, tk, sizeof(pasn->tk));
--
--	list_add_tail(&pasn->list, &mvm->ftm_initiator.pasn_list);
--	return 0;
--out:
--	kfree(pasn);
--	return -EINVAL;
--}
--
--void iwl_mvm_ftm_remove_pasn_sta(struct iwl_mvm *mvm, u8 *addr)
--{
--	struct iwl_mvm_ftm_pasn_entry *entry, *prev;
--
--	lockdep_assert_held(&mvm->mutex);
--
--	list_for_each_entry_safe(entry, prev, &mvm->ftm_initiator.pasn_list,
--				 list) {
--		if (memcmp(entry->addr, addr, sizeof(entry->addr)))
--			continue;
--
--		list_del(&entry->list);
--		kfree(entry);
--		return;
--	}
--}
--
- static void iwl_mvm_ftm_reset(struct iwl_mvm *mvm)
- {
- 	struct iwl_mvm_loc_entry *e, *t;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index e8a82dc49892..fbb2cf6ab0be 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -2530,10 +2530,6 @@ int iwl_mvm_ftm_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- void iwl_mvm_ftm_abort(struct iwl_mvm *mvm, struct cfg80211_pmsr_request *req);
- void iwl_mvm_ftm_initiator_smooth_config(struct iwl_mvm *mvm);
- void iwl_mvm_ftm_initiator_smooth_stop(struct iwl_mvm *mvm);
--int iwl_mvm_ftm_add_pasn_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
--			     u8 *addr, u32 cipher, u8 *tk, u32 tk_len,
--			     u8 *hltk, u32 hltk_len);
--void iwl_mvm_ftm_remove_pasn_sta(struct iwl_mvm *mvm, u8 *addr);
- 
- /* TDLS */
- 
--- 
-2.47.1
-
+Sure, will submit an update to the description.
