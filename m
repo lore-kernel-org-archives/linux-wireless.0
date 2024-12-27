@@ -1,54 +1,58 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60472BAF7
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Dec 2024 08:01:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0ACDE5D8F0
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Dec 2024 08:01:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735286489; cv=none; b=B2zp9vC3YMdiWBI3pGhF1xMT+s0wJWYWvlNEkPJkNiX++LjrbdbANVNSYJoRV10URw4zvQU9MTpQ+LhJflO8/OxNW1sAG8511LabIcDGXbHOuWE/pGZS88f58KsxyDIuxPMYRtvWpO+lAkYsf3uvg9TnlcPnxTKG36Y9K51wYzs=
+	t=1735286491; cv=none; b=I0g3NfFmASdTekUwvUWDkyqB/RQFDhWCSM3NCoTM0znQPNcfSy9xQOORE1Q/rKbJwUB7Wef2azx8evNMBtyKp555U0zdko+EiBDX8gAj3oEQCAcrKaQdwnNEne03ii+htO/tema8r1gUf+cGoclCLrOVtM8gJYkcGn6voVYBEyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735286489; c=relaxed/simple;
-	bh=kCmstekM9ePzRwTtQKXJD+2Lu/xe/cVtIdeTdWD8UM8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=d4WCJW1DISATQ0P+9DPO9nYpG9WgImEDeXHkGszstGXgNCHg4Baiyf0MKvRBE45LpN57/vT8gUdZBv7Vd//ceDpI2tNb+hDgsmLUJLmw6FQ60yf1IVYp1D+SuMgPpIzixu1oDZHOiVmzJkXh7d6vC1WyRmSNKA+M4YEbIFMZbwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UKj/p/Ja; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1735286491; c=relaxed/simple;
+	bh=XOm55/LIVqi5UJE6fq00fM3Qj22Ye0PVPJwJrxMIx1A=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BLDzLm07lUQLn4k3yU9rYkMyavqDxbwGS8e8Q3qCEUrdVhDOdRso3jf0RC731k4vhN73Z9M0nMH7oaaXqaMTJV16QHmeBef6XL3tmR7YpZ4YpFtetUyBdvphppJNCJckkEcLvQ5fkUrc1JDLIiUoxujqs5rlURmd8DJSKbHFhNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aVeeTAs1; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UKj/p/Ja"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aVeeTAs1"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1735286487; x=1766822487;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=kCmstekM9ePzRwTtQKXJD+2Lu/xe/cVtIdeTdWD8UM8=;
-  b=UKj/p/JaIJMM4RJQXIZkMoTXrpXFA68H52Mrp4JGZojxzdRWTky4tzh4
-   NwpHgpYDxJlZ4nnVpchD9bz/HMRD2nfVAxtQsMDG790diSSR9ND141ju8
-   3tyiZs/+UaH6ygB6RJXsrEZVFkCtR4KyMzhEGK0Jp4Ttafml/jf5e+OMS
-   xr5On96hBYp9Ir7J80om/8+Uh0Pj0QUHLSv9ud3d4KSEBTPqPVYdAPsgm
-   /jbPa0fRZopIY2vmY9fW8aN6kyUOeKq48l7Tbf6JEzn/O2zpgMf7zCUZd
-   QqzN6zzopa2rC6iAgAWb+SJ9UV+iJJsVjhXRekXebDdDqzLwLnMVca3bZ
-   A==;
-X-CSE-ConnectionGUID: v+9AOlEaSK2EyAzVdreS3g==
-X-CSE-MsgGUID: yWy/PwjKRrSK6mSttyetgQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11297"; a="46690904"
+  t=1735286489; x=1766822489;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=XOm55/LIVqi5UJE6fq00fM3Qj22Ye0PVPJwJrxMIx1A=;
+  b=aVeeTAs1vdBabfmggeaW6LvYCmp5tWEwkg7kWOXA8xjxyj/nKiPyX5Hh
+   /+A7BTUa0k6q6DaZ/PiSkht2mlhsimumFwZTc5+Tt6SBoeTKqZ1SUfa4A
+   2acQPy8p3q7ZD09oHbcewKwSBFtO2PnsHYGV+mwHvwAcuopsOJQwIGsxQ
+   OylrMrHfHu856mcglPbHrjQ8q7kgwK5nccQWH9MDm43sVOzDYBOkYAL5C
+   gvnPZvNwWDCmjfz2kCl3y7NH/+goQwnQZ/ZNb3Gq2JKZdydC2o27ce3qX
+   WpP+gTbtqlFdfNlTUjw+VsNzPbVphCWRPIswCPeML/DodNeYvwulIFZmr
+   Q==;
+X-CSE-ConnectionGUID: TzUdnaMbQvGDG/v0CsZTag==
+X-CSE-MsgGUID: Cqj3K7YkSSiwPiZt61kpyw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11297"; a="46690913"
 X-IronPort-AV: E=Sophos;i="6.12,268,1728975600"; 
-   d="scan'208";a="46690904"
+   d="scan'208";a="46690913"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:25 -0800
-X-CSE-ConnectionGUID: p3uiw9DrQGO29Ut7Iy/jfg==
-X-CSE-MsgGUID: uFR87OEvSYOjrBZNzZ7Y4g==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:28 -0800
+X-CSE-ConnectionGUID: JzIxjwYkQdeFcLc9gm55ew==
+X-CSE-MsgGUID: iM4YjirxRr2zXof4ESSwwQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,268,1728975600"; 
-   d="scan'208";a="99858190"
+   d="scan'208";a="99858208"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:24 -0800
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:27 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/17] wifi: iwlwifi: updates - 27-12-24
-Date: Fri, 27 Dec 2024 10:00:55 +0200
-Message-Id: <20241227080112.1098419-1-miriam.rachel.korenblit@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/17] wifi: iwlwifi: mvm: remove warning on unallocated BAID
+Date: Fri, 27 Dec 2024 10:00:57 +0200
+Message-Id: <20241227095718.4360f2b9e185.I447f9a5fc6dfdc78ec238200338e2da040ee7e61@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241227080112.1098419-1-miriam.rachel.korenblit@intel.com>
+References: <20241227080112.1098419-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,75 +62,56 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-This series contains a rework of the error handling,
-along with a few cleanups and features.
+Due to the firmware allocating the BAID, we can only install
+the data structure after the BAID is valid from the firmware's
+point of view. As a result, the firmware can start sending
+frame release notifications to the driver immediately. This
+isn't supposed to happen by protocol, since the peer STA is
+not expected to use the blockack session until the AddBA has
+a response. However, firmware doesn't know that, our RX path
+can't know when it was, so simply don't WARN in this case but
+only have a debug message.
 
-Thanks,
-Miri
-----
+Since the BAID comes from firmware, also use IWL_FW_CHECK()
+instead of a warning for the validity check.
 
-Benjamin Berg (1):
-  wifi: iwlwifi: mvm: skip short statistics window when updating EMLSR
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-Emmanuel Grumbach (2):
-  wifi: iwlwifi: mvm: rename iwl_dev_tx_power_common::mac_context_id
-  wifi: iwlwifi: s/iwl_mvm_ctdp_cmd/iwl_ctdp_cmd/
-
-Johannes Berg (13):
-  wifi: iwlwifi: differentiate NIC error types
-  wifi: iwlwifi: mvm: remove warning on unallocated BAID
-  wifi: iwlwifi: fw: read STEP table from correct UEFI var
-  wifi: iwlwifi: context-info: add kernel-doc markers
-  wifi: iwlwifi: return ERR_PTR from opmode start()
-  wifi: iwlwifi: restrict driver retry loops to timeouts
-  wifi: iwlwifi: mvm: restrict MAC start retry to timeouts
-  wifi: iwlwifi: mvm: remove STARTING state
-  wifi: iwlwifi: mvm: clean up FW restart a bit
-  wifi: iwlwifi: unify cmd_queue_full() into nic_error()
-  wifi: iwlwifi: mvm: restart device through NMI
-  wifi: iwlwifi: rework firmware error handling
-  wifi: iwlwifi: iwl_fw_error_collect() is always called sync
-
-Somashekhar(Som) (1):
-  wifi: iwlwifi: interpret STEP URM BIOS configuration
-
- .../net/wireless/intel/iwlwifi/dvm/mac80211.c |  11 ++
- drivers/net/wireless/intel/iwlwifi/dvm/main.c |  78 +++++---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  34 ++++
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |  16 ++
- .../net/wireless/intel/iwlwifi/fw/api/phy.h   |  12 +-
- .../net/wireless/intel/iwlwifi/fw/api/power.h |   8 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |   4 +-
- .../wireless/intel/iwlwifi/fw/regulatory.c    |   1 +
- .../wireless/intel/iwlwifi/fw/regulatory.h    |  23 +++
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c  |  70 +++++--
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h  |  23 +++
- .../intel/iwlwifi/iwl-context-info-gen3.h     |  40 ++--
- .../wireless/intel/iwlwifi/iwl-context-info.h |  30 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   9 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-op-mode.h  |  79 +++++++-
- .../net/wireless/intel/iwlwifi/iwl-trans.c    | 109 +++++++++-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  66 ++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   7 -
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |   4 -
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  34 ++--
- .../wireless/intel/iwlwifi/mvm/mld-mac80211.c |  36 ----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   6 -
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  | 186 +++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  16 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  12 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c   |   2 +-
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |   8 +
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |   2 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  11 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |   4 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |   4 +-
- 33 files changed, 664 insertions(+), 287 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index c03cb7cc2f1c..09fd8752046e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -636,15 +636,21 @@ static void iwl_mvm_release_frames_from_notif(struct iwl_mvm *mvm,
+ 	IWL_DEBUG_HT(mvm, "Frame release notification for BAID %u, NSSN %d\n",
+ 		     baid, nssn);
+ 
+-	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID ||
+-			 baid >= ARRAY_SIZE(mvm->baid_map)))
++	if (IWL_FW_CHECK(mvm,
++			 baid == IWL_RX_REORDER_DATA_INVALID_BAID ||
++			 baid >= ARRAY_SIZE(mvm->baid_map),
++			 "invalid BAID from FW: %d\n", baid))
+ 		return;
+ 
+ 	rcu_read_lock();
+ 
+ 	ba_data = rcu_dereference(mvm->baid_map[baid]);
+-	if (WARN(!ba_data, "BAID %d not found in map\n", baid))
++	if (!ba_data) {
++		IWL_DEBUG_RX(mvm,
++			     "Got valid BAID %d but not allocated, invalid frame release!\n",
++			     baid);
+ 		goto out;
++	}
+ 
+ 	/* pick any STA ID to find the pointer */
+ 	sta_id = ffs(ba_data->sta_mask) - 1;
 -- 
 2.34.1
 
