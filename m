@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76DE214F132
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Dec 2024 08:01:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 253C01552E0
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Dec 2024 08:01:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735286507; cv=none; b=l/cNDx7NTjIrKUmQKCHYG12j81IZTc0SGVVdB32i3plP0cEcFpvSGcilPX1Wt5PHJyE+29uN0+lQ2LkbgGp0whtxW2hr+9O8tDfHWL8MCHYfWJEK/GMtLf50i/EyfUfRVWsuB0qN/2jGkewqJ7oueJyD17B5/KGb+GZ1PkHdMxc=
+	t=1735286508; cv=none; b=Dh1680AiLeDCug3EhfpTx6ACGAlpgB32VIu9jchb1jdxwG5s768G5rfwygR61zXYQ/PTPz8uCWnITlwSMGarsSICUQD+XbCevEIWMlZ1NRlObVE2gk+vegDRjE3Gi9L+IBfeWR0Os7IXubTt+QQIcwCRoT9DOrDdkQvZm6BWEWU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735286507; c=relaxed/simple;
-	bh=GY/n8NDGc23Xcik/UnVapgxz1Bn97hOjtLqU82PBYKU=;
+	s=arc-20240116; t=1735286508; c=relaxed/simple;
+	bh=1M0hPQBjZutLl/U++CNoIvpelQwiHgBMwQrcC6PG/Gw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=g5YJAUH5Y8mcqxdFOGWjfTd3DweLooXIvlpNNrZnbQYuIbV9+1XSgroq6iqlLFxxDoqHVQf8tNiUv6pBICZadhBWYrsIenl9KB2epWwFtRNWvJDszSzdEy/muZydMjP1IkmvO9L/z//UASCRbkbu76EbgWUFxNHQyEDHTa7z6Lg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CiDkOdp0; arc=none smtp.client-ip=198.175.65.13
+	 MIME-Version; b=CjgChX4ubYGw27wi/T5TMr9TQYry3P4RpZbkTUZ2drSpTQeCv5hRcdFmbx1vP9UqGRdZKCV52J8q22u1o7zB/BvQ1vdw5FgZ0Cnqkgq37TMaZV2n+U7rKc1d7KGHp97QjbEvWHLYgngyGk2O9naMbdf0qYKrUGORvSbYVdzOLlA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bRJFbzpn; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CiDkOdp0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bRJFbzpn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1735286505; x=1766822505;
+  t=1735286507; x=1766822507;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=GY/n8NDGc23Xcik/UnVapgxz1Bn97hOjtLqU82PBYKU=;
-  b=CiDkOdp0vonttu+dXSS4I9CZwPGCMeZOfiHY9YrK4yZ0+7sMOJ54MSgt
-   PsBHhmb1CgLe4YXR7rneL4IxG5s9BhnTIUVXfYM6KVMjNtU9oLToj5JoS
-   Tz+uVaFXSSl4fDdZkf2G6hem227WMfldUa1aN492z1aMAiqNGuaWZ4AAf
-   cSXOviQx9NyRrl+YlmKdDpXNtGHsjRIL4gi0gCRFo9/D+OmBsyemLlzdL
-   yRqaFZ944LjBV+6kTSJ+FS54NcFNglO+iD76hL6KVMfdq3wwr0qHSAvVS
-   R5KZQnMABPFxn88YipHKnmx7H1cfuADmiMoegjoUlTgR6zej1WrKM1dO4
+  bh=1M0hPQBjZutLl/U++CNoIvpelQwiHgBMwQrcC6PG/Gw=;
+  b=bRJFbzpn5YMEy0eFsw0jN5W5heC0wKZcSMOfu4moolvmZLegmtk6IsEl
+   gDKSN4iD6+mOjzY6PM9Oh/Hi2Pk8iL4xAoO7tTNKVqEXVsSrOO2bVBbds
+   LVFLO+gDJ0mGukA32O/BEHU5z0ivFs3dh124Px3wdPscOW3iBYcShfdXs
+   7lG7ewC64ElIn3kRQrigZILlBUO+ush+WywKfswYq9Y1hHBazZpFxSwh4
+   BeGDvkcdtu3imFzSERC0umlRRI5nUmRI8c8JlFrmgJ4ylxzSDBzwMegdG
+   KcqQ/GbKz06c+GCOqJh6E/87NjQOH6F2/WPDoL1TuQR0Q/vA17le1m4Mt
    Q==;
-X-CSE-ConnectionGUID: iW8eq5NeS3yUwKY/YuGCSA==
-X-CSE-MsgGUID: IyIq5b9ORNq6o0U9Nb8Ptw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11297"; a="46690974"
+X-CSE-ConnectionGUID: AHzaBGJDSCyzuDoLGl3GWA==
+X-CSE-MsgGUID: n7u7h6XPSnGx7Lqxqy8ERw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11297"; a="46691001"
 X-IronPort-AV: E=Sophos;i="6.12,268,1728975600"; 
-   d="scan'208";a="46690974"
+   d="scan'208";a="46691001"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:43 -0800
-X-CSE-ConnectionGUID: VRlWtuhBSQuaejXMlHvFOQ==
-X-CSE-MsgGUID: 9t5Z23jPTZquBsAig0guhQ==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:47 -0800
+X-CSE-ConnectionGUID: 8NrTtivYT6KhDPNer8XYaQ==
+X-CSE-MsgGUID: bi+E0SuuQPytrcFul0WGYA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,268,1728975600"; 
-   d="scan'208";a="99858414"
+   d="scan'208";a="99858456"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:41 -0800
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2024 00:01:45 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 12/17] wifi: iwlwifi: mvm: remove STARTING state
-Date: Fri, 27 Dec 2024 10:01:07 +0200
-Message-Id: <20241227095718.c55d73436521.I08e9f6a71d56f86872bca4d4e3048faa113a7120@changeid>
+Subject: [PATCH 15/17] wifi: iwlwifi: mvm: restart device through NMI
+Date: Fri, 27 Dec 2024 10:01:10 +0200
+Message-Id: <20241227095718.96b732029d20.I2e729f402db58a76cea620b6f62a02da49a10b48@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241227080112.1098419-1-miriam.rachel.korenblit@intel.com>
 References: <20241227080112.1098419-1-miriam.rachel.korenblit@intel.com>
@@ -64,81 +64,67 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Now that the retry loop only happens when timeouts occur
-and firmware errors are different, we no longer need the
-STARTING state with all the infrastructure for it.
+When some channel context manipulations fail, the device
+is going to be restarted to try to recover. Make this go
+through a real FW restart via an NMI so the transport is
+aware of it and can later handle escalation, and to make
+it easier to restructure the code later.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +--------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 3 ---
- 3 files changed, 1 insertion(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 1 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 2 +-
+ 3 files changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b3c75484dafd..6b58231add55 100644
+index 9a6dd59fbc6c..039d0d6ed61d 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1300,14 +1300,8 @@ int iwl_mvm_mac_start(struct ieee80211_hw *hw)
+@@ -5412,7 +5412,7 @@ iwl_mvm_switch_vif_chanctx_swap(struct iwl_mvm *mvm,
  
- 	/* we are starting the mac not in error flow, and restart is enabled */
- 	if (!test_bit(IWL_MVM_STATUS_HW_RESTART_REQUESTED, &mvm->status) &&
--	    iwlwifi_mod_params.fw_restart) {
-+	    iwlwifi_mod_params.fw_restart)
- 		max_retry = IWL_MAX_INIT_RETRY;
--		/*
--		 * This will prevent mac80211 recovery flows to trigger during
--		 * init failures
--		 */
--		set_bit(IWL_MVM_STATUS_STARTING, &mvm->status);
--	}
+ out_restart:
+ 	/* things keep failing, better restart the hw */
+-	iwl_mvm_nic_restart(mvm);
++	iwl_force_nmi(mvm->trans);
+ 	return ret;
+ }
  
- 	for (retry = 0; retry <= max_retry; retry++) {
- 		ret = __iwl_mvm_mac_start(mvm);
-@@ -1316,7 +1310,6 @@ int iwl_mvm_mac_start(struct ieee80211_hw *hw)
+@@ -5448,7 +5448,7 @@ iwl_mvm_switch_vif_chanctx_reassign(struct iwl_mvm *mvm,
  
- 		IWL_ERR(mvm, "mac start retry %d\n", retry);
- 	}
--	clear_bit(IWL_MVM_STATUS_STARTING, &mvm->status);
- 
- 	mutex_unlock(&mvm->mutex);
+ out_restart:
+ 	/* things keep failing, better restart the hw */
+-	iwl_mvm_nic_restart(mvm);
++	iwl_force_nmi(mvm->trans);
+ 	return ret;
+ }
  
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 2ad615293c75..d0ba9e0f15b7 100644
+index 40a609533eb2..dbf32bf5760b 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1401,8 +1401,6 @@ DEFINE_GUARD(mvm, struct iwl_mvm *, mutex_lock(&_T->mutex), mutex_unlock(&_T->mu
-  * @IWL_MVM_STATUS_IN_D3: in D3 (or at least about to go into it)
-  * @IWL_MVM_STATUS_SUPPRESS_ERROR_LOG_ONCE: suppress one error log
-  *	if this is set, when intentionally triggered
-- * @IWL_MVM_STATUS_STARTING: starting mac,
-- *	used to disable restart flow while in STARTING state
-  */
- enum iwl_mvm_status {
- 	IWL_MVM_STATUS_HW_RFKILL,
-@@ -1414,7 +1412,6 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
- 	IWL_MVM_STATUS_IN_D3,
- 	IWL_MVM_STATUS_SUPPRESS_ERROR_LOG_ONCE,
--	IWL_MVM_STATUS_STARTING,
- };
+@@ -2586,7 +2586,6 @@ void iwl_mvm_tcm_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ void iwl_mvm_tcm_rm_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ u8 iwl_mvm_tcm_load_percentage(u32 airtime, u32 elapsed);
  
- struct iwl_mvm_csme_conn_info {
+-void iwl_mvm_nic_restart(struct iwl_mvm *mvm);
+ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif);
+ void iwl_mvm_connection_loss(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 623122cadd32..de815504183c 100644
+index 13a24030acdb..ef54ba818d1f 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -2051,9 +2051,6 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 	 */
- 	if (!mvm->fw_restart && fw_error) {
- 		iwl_fw_error_collect(&mvm->fwrt, false);
--	} else if (test_bit(IWL_MVM_STATUS_STARTING,
--			    &mvm->status)) {
--		IWL_ERR(mvm, "Starting mac, retry will be triggered anyway\n");
- 	} else if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
- 		struct iwl_mvm_reprobe *reprobe;
+@@ -2025,7 +2025,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
+ 	module_put(THIS_MODULE);
+ }
  
+-void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
++static void iwl_mvm_nic_restart(struct iwl_mvm *mvm)
+ {
+ 	iwl_abort_notification_waits(&mvm->notif_wait);
+ 	iwl_dbg_tlv_del_timers(mvm->trans);
 -- 
 2.34.1
 
