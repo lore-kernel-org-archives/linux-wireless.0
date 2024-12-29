@@ -1,56 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5CA19883C
-	for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2024 14:45:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9863E194A60
+	for <linux-wireless@vger.kernel.org>; Sun, 29 Dec 2024 14:45:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735483530; cv=none; b=Z7V+HUBUfEdOPiOTT4vs00hx1P8ruipwXH/2mKhgQ0+nPL0rYDvxMhH5hKFUub12yEOkJ0LzN1VS/Brwc9/jCjqNEDZH8BzkDq7r/0c0o4luFc/3ItsPE+NtXro4ZfgF4cv8ExPgBujLr08PSKCQ+BJlbmajZTNYX94Ug2eaTFA=
+	t=1735483533; cv=none; b=JtILOmrlgDnw7eNvnYVx8z6mSCVeICdBj3O1Whm6+MZuBXdeOoHXnVVznvPlqKoZ12cMBLGIQxwPTnZDQfXzre6Tgm6cS6ShDBOX1/Uy4bV8lrTFJyCx1zKSRjZ3OAaiM1JBRaFVzgn4H9eT0RmClwjHA5wPfn+U/ASp04iGA4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735483530; c=relaxed/simple;
-	bh=CFvbiM7q2ncfW/FkuHO+TjO4es/gYLM4+ocmcO6p688=;
+	s=arc-20240116; t=1735483533; c=relaxed/simple;
+	bh=WVPIIrJyx/rnJptzHTWXvKZeRVttxjQbmGLLRr70Tb0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aIjoOBoZpPIxR4ZlTZkXj2x0/lTL+eqk206jHB80UgWrBgmw3MSZky+0+L4frAlIyAq7t2bk86k7JGF3SASZIChf8jUis9t7MY+7mf6xUsM8elcmTjmNfgghiJ1AYxgAO8hy1YQQtO/zzDQqqR3E6OKed8eMDMifn7BYpFijYxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Gfev4JAr; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=MAFWfQwi3sM8FAqFIm+oCNNa4AVH6KBoATYdFQ6zmN4fl5eO5rEFg01PafuruMeZScGs3BsgRARCsVdPZiT6z22DROVHefkym08fwMUEFN1UEcbeHKzI2a/tchFmxEKdNOZisoYLN68xIx5+tnj/uAT+6tBUOVzjNXXPmojPzPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RIiOuOTS; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Gfev4JAr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RIiOuOTS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1735483529; x=1767019529;
+  t=1735483532; x=1767019532;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CFvbiM7q2ncfW/FkuHO+TjO4es/gYLM4+ocmcO6p688=;
-  b=Gfev4JAr26xjKzgSbnNXLKl97OprS35YdViqe7s2goG5Tf8wx08NpGic
-   2jwkMi6MkG4ULQtCw/DKsIls7yLaIbyyRPOS74vH/dzE4XvNNeioNPtuS
-   +uM4YNMl4/25NeUALD4uJhXi5Rb9A+GpZ8awPKch+olZe7GQnKHcNizjd
-   vkFv2Eq1PaLWi9q9yUgl40GbImXlt5ov2T1ulB5xmyG7yJZ9qmubIGDnU
-   b8YB5h/nhLuFbjjNjFtfzb58+vgpx/TOSO/EHBACufcSS+BfLAk/j9+0z
-   rWBRmLUDhIZ6mTGKh+sIQU8FbL+a5jEinPFOmzmOQcMutrkev3N96eTbp
-   g==;
-X-CSE-ConnectionGUID: p0JPTqG/Raa1bcx/znZrAQ==
-X-CSE-MsgGUID: INgDhFnfRsC9vN4HZOUdMQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11299"; a="39572464"
+  bh=WVPIIrJyx/rnJptzHTWXvKZeRVttxjQbmGLLRr70Tb0=;
+  b=RIiOuOTSj0opJm7M9fmav1K4+0EYdxbD6ZO79Rt5qAAiaJEGKyiMYYBm
+   cZVdFdI16HZHdk+tf+Zsub12s+u/mK96mFiCHdbzQND3XGLwMSMGHIsni
+   Bs58O4RuIr4O9fwW1zTDqEiMT0GhhgxQagL4+BHO6QL9AutOmdjYyW0tm
+   C/jyzVTpQKzv+xZWgFXRr8Zgn55iNjvKzUgnLlpmbpIuiE6153Ur8zdCM
+   6Ovxud6TU6ZbGDmWudtJHxtZPtXonweuK++YBgzuC1Eij7lAn8XRePYUr
+   L1qbjIZqiV6CVAnf0epwOHl6NlAxg4b2qPFjCPVp40pa+Ly4JkKurXh6o
+   w==;
+X-CSE-ConnectionGUID: IzgLaWawRqWvBUW85C/s/A==
+X-CSE-MsgGUID: OP11MJBfSxGHjcu9HLlx1g==
+X-IronPort-AV: E=McAfee;i="6700,10204,11299"; a="39572471"
 X-IronPort-AV: E=Sophos;i="6.12,274,1728975600"; 
-   d="scan'208";a="39572464"
+   d="scan'208";a="39572471"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 06:45:29 -0800
-X-CSE-ConnectionGUID: TMgDu8U8R4qXuJVtfsHJtw==
-X-CSE-MsgGUID: dVvKoIZPTWqqOicrVFvV9w==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 06:45:32 -0800
+X-CSE-ConnectionGUID: wXW3qn2pSQa+MAW0ecBZkg==
+X-CSE-MsgGUID: LyUHdP8tTHqB54ILy7JzuA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="105656988"
+   d="scan'208";a="105656999"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 06:45:27 -0800
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Dec 2024 06:45:30 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Minjie Du <duminjie@vivo.com>,
+	Jason Wang <wangborong@cdjrlc.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/17] wifi: iwlwifi: Remove a duplicate assignment in iwl_dbgfs_amsdu_len_write()
-Date: Sun, 29 Dec 2024 16:44:49 +0200
-Message-Id: <20241229164246.b1b0dadc2e9e.Ie57cbe8039b9f388632141447ac910b6fcc3d0c0@changeid>
+Subject: [PATCH 16/17] wifi: iwlwifi: mvm: Fix comment typo
+Date: Sun, 29 Dec 2024 16:44:51 +0200
+Message-Id: <20241229164246.76502dda646b.I0a1d012eaa1cd8d39430cde981cae8c4cc058442@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241229144452.3151163-1-miriam.rachel.korenblit@intel.com>
 References: <20241229144452.3151163-1-miriam.rachel.korenblit@intel.com>
@@ -63,30 +63,28 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Minjie Du <duminjie@vivo.com>
+The double `the' is duplicated in the comment, remove one.
 
-Delete a duplicate statement from this function implementation.
-
-Signed-off-by: Minjie Du <duminjie@vivo.com>
-Link: https://msgid.link/20230705114934.16523-1-duminjie@vivo.com
+Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 2472a78ada47..6ec1cae5314a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -463,7 +463,6 @@ static ssize_t iwl_dbgfs_amsdu_len_write(struct ieee80211_link_sta *link_sta,
- 	if (amsdu_len) {
- 		mvm_link_sta->orig_amsdu_len = link_sta->agg.max_amsdu_len;
- 		link_sta->agg.max_amsdu_len = amsdu_len;
--		link_sta->agg.max_amsdu_len = amsdu_len;
- 		for (i = 0; i < ARRAY_SIZE(link_sta->agg.max_tid_amsdu_len); i++)
- 			link_sta->agg.max_tid_amsdu_len[i] = amsdu_len;
- 	} else {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+index 7cab5373c8ae..5e7e2926be0c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c
+@@ -31,7 +31,7 @@ u8 iwl_mvm_get_channel_width(const struct cfg80211_chan_def *chandef)
+ 
+ /*
+  * Maps the driver specific control channel position (relative to the center
+- * freq) definitions to the the fw values
++ * freq) definitions to the fw values
+  */
+ u8 iwl_mvm_get_ctrl_pos(const struct cfg80211_chan_def *chandef)
+ {
 -- 
 2.34.1
 
