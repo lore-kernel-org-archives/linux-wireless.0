@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A85F815C13A
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D441616F8F5
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735835728; cv=none; b=OaBbTju1piMoh71w/6K0PZmgab2PSk+rFGjhhIP7GnWbnFqCYWuqFyGbwwnVn7PPYcqt/D7QtTxFmBkESWNcVFsVLbYq4+mSJxLa3T3s+94uBHyR/ib2lTjru05h5RDLKZIGagUYgvr6umy4dj6foPrrcuhAavQSunWZ112ZxfE=
+	t=1735835726; cv=none; b=N1VZGgVsEqre2/d5jcPXbgqWPkCKYjFc7pMD/ryPCs/6i+60XzQl9rMKHsJ0/g/a/bd0Ogxqk/Mx1oI7QXq8DNWQBcJgWlK0AY90zTuJiI+xeXpoF4wHCMMW2U9+Jgyvlxa4ptKHL1EqnSILvJE1zMhFU0xMbZzBcXZuQaTotq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735835728; c=relaxed/simple;
-	bh=+OntNVOZwR8h4AS9uQnle7bEUvwiEA3ES24vc3K+f4Q=;
+	s=arc-20240116; t=1735835726; c=relaxed/simple;
+	bh=e4B6Sf6Nh6+A2oO3ovral4ECyor7MYdB8K80rwgaEcQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LAM35/oJB8zJut5oQPXZjQmkSVjmHYKOk+BiuFGxIib3zpWzI1DY7y/PceLgvz/bRrXBr9l/v0qRyeOIvog+MI20ZU/T4JrskPdhfOOiehewlzEc87340TxJaY5gKHkp+gxVGEINpYljkPbuYzMGy72y0C9qD2creWQOIrwn7oI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=d6kXICVD; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=Tf5TXEJVWwpghi4Me3aNorm3X4wNlvElmFCILFDwem9B9nXDvk+4Ti8qIjUnygWnEoEcbgvdutJMeX5OvVIfpjlTz0W+EPxJFvK4S9OJ/MLitcMAVIygT8v0aWjytgeeIVfsKbL732nWCPxCMwFGFiDw09sFxuTdpcr1H0lNsnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=jOa4872p; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="d6kXICVD"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jOa4872p"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=7CH0uX9srTwe8DgkLJ2e5KZygrm/XWanP/NwEhmmdr0=; b=d6kXICVDOXAHE8b2oxTDdmsgtz
-	bpxIePyIodnL3sHkKEzYrCFdfjVVcJi1tHRbY/uKJJNw+Zvqy+lH4XtV/sdbHLl0gGNTvhElvdSJA
-	y01ToNnYexy3F0gfORHqTTWJxLCBC7nYx1AuCagDkh+TS1q0ibPSn23bWuwqopTnwcnw=;
+	bh=9JfTwmyw/8JxfsQbpi9/GeIy3z6B2Sd6pc/YK/eWaLM=; b=jOa4872pCkIPDotG7QTO8eL8a+
+	ytL1mChd6TIDDFuYLfUHV1sQMOohP7af5HlTorkI56AAaAQb2a+mazeu7dkWHX2wnglXDJdFoRWex
+	ByhrhxG9svDDcmAMr0nn0SII62romilIZiv4mwzZ/4C7Mu4NmjkxWxbBufNXZt/LR1hs=;
 Received: from p4ff13c5f.dip0.t-ipconnect.de ([79.241.60.95] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1tTOAD-0008GS-11
+	id 1tTOAF-0008GS-0u
 	for linux-wireless@vger.kernel.org;
-	Thu, 02 Jan 2025 17:35:13 +0100
+	Thu, 02 Jan 2025 17:35:15 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/24] wifi: mt76: add multi-radio remain_on_channel functions
-Date: Thu,  2 Jan 2025 17:34:56 +0100
-Message-ID: <20250102163508.52945-12-nbd@nbd.name>
+Subject: [PATCH 24/24] wifi: mt76: mt7996: fix monitor mode
+Date: Thu,  2 Jan 2025 17:35:08 +0100
+Message-ID: <20250102163508.52945-24-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250102163508.52945-1-nbd@nbd.name>
 References: <20250102163508.52945-1-nbd@nbd.name>
@@ -48,198 +48,72 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This allows a driver using the generic channel context functions to
-temporarily switch to another channel for off-channel rx/tx.
+Enable sniffer mode via MCU command in order to properly enable promiscuous
+mode on the device.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/channel.c  | 96 +++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mac80211.c |  3 +
- drivers/net/wireless/mediatek/mt76/mt76.h     | 12 +++
- drivers/net/wireless/mediatek/mt76/scan.c     |  2 +-
- 4 files changed, 112 insertions(+), 1 deletion(-)
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  1 +
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 21 +++++++++++++++++++
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  1 +
+ 3 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
-index 541b32cb1f65..455c30700475 100644
---- a/drivers/net/wireless/mediatek/mt76/channel.c
-+++ b/drivers/net/wireless/mediatek/mt76/channel.c
-@@ -280,3 +280,99 @@ void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 	dev->drv->vif_link_remove(phy, vif, &vif->bss_conf, mlink);
- 	kfree(mlink);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 77b97324f7d7..27826577dffc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -368,6 +368,7 @@ static void mt7996_set_monitor(struct mt7996_phy *phy, bool enabled)
+ 	mt76_rmw_field(dev, MT_DMA_DCR0(phy->mt76->band_idx),
+ 		       MT_DMA_DCR0_RXD_G5_EN, enabled);
+ 	mt7996_phy_set_rxfilter(phy);
++	mt7996_mcu_set_sniffer_mode(phy, enabled);
  }
-+
-+static void mt76_roc_complete(struct mt76_phy *phy)
-+{
-+	struct mt76_vif_link *mlink = phy->roc_link;
-+
-+	if (!phy->roc_vif)
-+		return;
-+
-+	if (mlink)
-+		mlink->mvif->roc_phy = NULL;
-+	if (phy->main_chandef.chan)
-+		mt76_set_channel(phy, &phy->main_chandef, false);
-+	mt76_put_vif_phy_link(phy, phy->roc_vif, phy->roc_link);
-+	phy->roc_vif = NULL;
-+	phy->roc_link = NULL;
-+	ieee80211_remain_on_channel_expired(phy->hw);
-+}
-+
-+void mt76_roc_complete_work(struct work_struct *work)
-+{
-+	struct mt76_phy *phy = container_of(work, struct mt76_phy, roc_work.work);
-+	struct mt76_dev *dev = phy->dev;
-+
-+	mutex_lock(&dev->mutex);
-+	mt76_roc_complete(phy);
-+	mutex_unlock(&dev->mutex);
-+}
-+
-+void mt76_abort_roc(struct mt76_phy *phy)
-+{
-+	struct mt76_dev *dev = phy->dev;
-+
-+	cancel_delayed_work_sync(&phy->roc_work);
-+
-+	mutex_lock(&dev->mutex);
-+	mt76_roc_complete(phy);
-+	mutex_unlock(&dev->mutex);
-+}
-+
-+int mt76_remain_on_channel(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   struct ieee80211_channel *chan, int duration,
-+			   enum ieee80211_roc_type type)
-+{
-+	struct cfg80211_chan_def chandef = {};
-+	struct mt76_phy *phy = hw->priv;
-+	struct mt76_dev *dev = phy->dev;
-+	struct mt76_vif_link *mlink;
-+	int ret = 0;
-+
-+	phy = dev->band_phys[chan->band];
-+	if (!phy)
-+		return -EINVAL;
-+
-+	mutex_lock(&dev->mutex);
-+
-+	if (phy->roc_vif || dev->scan.phy == phy) {
-+		ret = -EBUSY;
-+		goto out;
-+	}
-+
-+	mlink = mt76_get_vif_phy_link(phy, vif);
-+	if (IS_ERR(mlink)) {
-+		ret = PTR_ERR(mlink);
-+		goto out;
-+	}
-+
-+	mlink->mvif->roc_phy = phy;
-+	phy->roc_vif = vif;
-+	phy->roc_link = mlink;
-+	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_HT20);
-+	mt76_set_channel(phy, &chandef, true);
-+	ieee80211_ready_on_channel(hw);
-+	ieee80211_queue_delayed_work(phy->hw, &phy->roc_work,
-+				     msecs_to_jiffies(duration));
-+
-+out:
-+	mutex_unlock(&dev->mutex);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mt76_remain_on_channel);
-+
-+int mt76_cancel_remain_on_channel(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif)
-+{
-+	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
-+	struct mt76_vif_data *mvif = mlink->mvif;
-+	struct mt76_phy *phy = mvif->roc_phy;
-+
-+	if (!phy)
-+		return 0;
-+
-+	mt76_abort_roc(phy);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mt76_cancel_remain_on_channel);
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 1d5abe40b0c3..cea5c70cfc23 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -431,6 +431,7 @@ mt76_phy_init(struct mt76_phy *phy, struct ieee80211_hw *hw)
  
- 	INIT_LIST_HEAD(&phy->tx_list);
- 	spin_lock_init(&phy->tx_lock);
-+	INIT_DELAYED_WORK(&phy->roc_work, mt76_roc_complete_work);
- 
- 	if ((void *)phy != hw->priv)
- 		return 0;
-@@ -1998,5 +1999,7 @@ void mt76_vif_cleanup(struct mt76_dev *dev, struct ieee80211_vif *vif)
- 
- 	rcu_assign_pointer(mvif->link[0], NULL);
- 	mt76_abort_scan(dev);
-+	if (mvif->roc_phy)
-+		mt76_abort_roc(mvif->roc_phy);
+ static int mt7996_add_interface(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 6abd666ff19d..58fc06a69539 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -4496,6 +4496,27 @@ int mt7996_mcu_wed_rro_reset_sessions(struct mt7996_dev *dev, u16 id)
+ 				 sizeof(req), true);
  }
- EXPORT_SYMBOL_GPL(mt76_vif_cleanup);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index b61f1eb138e8..132148f7b107 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -787,6 +787,7 @@ struct mt76_vif_link {
- struct mt76_vif_data {
- 	struct mt76_vif_link __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
  
-+	struct mt76_phy *roc_phy;
- 	u16 valid_links;
- 	u8 deflink_id;
- };
-@@ -809,6 +810,10 @@ struct mt76_phy {
- 	bool offchannel;
- 	bool radar_enabled;
- 
-+	struct delayed_work roc_work;
-+	struct ieee80211_vif *roc_vif;
-+	struct mt76_vif_link *roc_link;
++int mt7996_mcu_set_sniffer_mode(struct mt7996_phy *phy, bool enabled)
++{
++	struct mt7996_dev *dev = phy->dev;
++	struct {
++		u8 band_idx;
++		u8 _rsv[3];
++		__le16 tag;
++		__le16 len;
++		u8 enable;
++		u8 _pad[3];
++	} __packed req = {
++		.band_idx = phy->mt76->band_idx,
++		.tag = 0,
++		.len = cpu_to_le16(sizeof(req) - 4),
++		.enable = enabled,
++	};
 +
- 	struct mt76_chanctx *chanctx;
++	return mt76_mcu_send_msg(&dev->mt76, MCU_WM_UNI_CMD(SNIFFER), &req,
++				 sizeof(req), true);
++}
++
+ int mt7996_mcu_set_txpower_sku(struct mt7996_phy *phy)
+ {
+ #define TX_POWER_LIMIT_TABLE_RATE	0
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index 18ae2e3ad71b..1cfcac51a338 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -621,6 +621,7 @@ void mt7996_mcu_rx_event(struct mt7996_dev *dev, struct sk_buff *skb);
+ void mt7996_mcu_exit(struct mt7996_dev *dev);
+ int mt7996_mcu_get_all_sta_info(struct mt7996_phy *phy, u16 tag);
+ int mt7996_mcu_wed_rro_reset_sessions(struct mt7996_dev *dev, u16 id);
++int mt7996_mcu_set_sniffer_mode(struct mt7996_phy *phy, bool enabled);
  
- 	struct mt76_channel_state *chan_state;
-@@ -1521,6 +1526,11 @@ int mt76_switch_vif_chanctx(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif_chanctx_switch *vifs,
- 			    int n_vifs,
- 			    enum ieee80211_chanctx_switch_mode mode);
-+int mt76_remain_on_channel(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			   struct ieee80211_channel *chan, int duration,
-+			   enum ieee80211_roc_type type);
-+int mt76_cancel_remain_on_channel(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif);
- int mt76_testmode_cmd(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		      void *data, int len);
- int mt76_testmode_dump(struct ieee80211_hw *hw, struct sk_buff *skb,
-@@ -1572,6 +1582,8 @@ int mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
- 		     bool offchannel);
- void mt76_scan_work(struct work_struct *work);
- void mt76_abort_scan(struct mt76_dev *dev);
-+void mt76_roc_complete_work(struct work_struct *work);
-+void mt76_abort_roc(struct mt76_phy *phy);
- struct mt76_vif_link *mt76_get_vif_phy_link(struct mt76_phy *phy,
- 					    struct ieee80211_vif *vif);
- void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index 9f3485be5747..1c4f9deaaada 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -134,7 +134,7 @@ int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mutex_lock(&dev->mutex);
- 
--	if (dev->scan.req) {
-+	if (dev->scan.req || phy->roc_vif) {
- 		ret = -EBUSY;
- 		goto out;
- 	}
+ static inline u8 mt7996_max_interface_num(struct mt7996_dev *dev)
+ {
 -- 
 2.47.1
 
