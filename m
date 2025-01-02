@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84B6156960
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA80155A52
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735835723; cv=none; b=bqNC9bDhq93fJpOlnZMtGJ2crxOVfxFh4f/Eaf2v98F7Jz4KCnCBd/UUDTjfVXsGYvUM/06dRv1yO7Ge8h494YwP2hkr+xoCxxDmakBFWiS/kagfO3i5eMDKL+Q9PzaZYHdqFeb3JakjomwDfwJONA9+5ymetewXwrInYwWDBnc=
+	t=1735835723; cv=none; b=pAK+1PWY/LtLbePiClhC7vWWYzys6qTfVMhZ4YWc4gue1+zGUiftrcSVSDJHFNvcOoXDQiqqIf3lLBQJ0jMVchbNixJ2e8cy5LhbSzCnBX9CVYQuaRDx28MTIfKZgC8RYSNAn1pfK50IdEj27hC4lL6ZARMw3btgyq16EWns7E4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1735835723; c=relaxed/simple;
-	bh=dB6lCXP55oNpgNaUI8X8y4CB2qtrcedyv2LrtxbXLKU=;
+	bh=Fk9WmCt+w+/b9qjzmHq9c0eToBv9V0JWoxlR9TW8i0Y=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IlEDwwKkkNvT6d/fbOLkKXIk5KcsxTyi1V0swSWMB2S/fLPa25XJBHnSnJylD+d+pgTx56vTOYGl2B9oAEb1dNWPElI7rumncNaQTqcItz5aW4ZWtO69PZRRnCnmxJvlanFYBEa1WL8fNqWIIDy4GyUYqoqtvFNJLvELo55aQks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=GjCtEfNP; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=cLtIGFideXbycJlhete/vAJy3a6NDpT7jILK6j2N/OCY3RMYCNOLf+bJsHf1F1YxybETRCjbRm07uMV5oll1xwYP1nv8wMiboolJsE+oCsgLpNrQ5c4HF4hy7ok51Jb8lL9amtYrv9mF4WBJrU5uxyariymnit5ycRqvPaSkj6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=mAt8bQVy; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="GjCtEfNP"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="mAt8bQVy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=oqcjqOUsW1hABBrcMN4Zy818V8XB8nwkwZZuNTqGWLc=; b=GjCtEfNP76+QqtJz3HF63hd5Ho
-	XXdXU2B8dh5eNmp8Tf543vdszTEeRflyXgV7TvGDpuj2mTxWG3CSgEi0TKNNKd22BtX+IAYCnKVRy
-	A527hRKdwFMI+szWPvE8+zZZg1nZIx6NWH1Pe96TeqFgjTGwl+fPVDYxNGbEj0mMrhn0=;
+	bh=B6NT21+nWdT1ZPlUht8DY6Dvi4GFqgeWZPjHPkE/Tj8=; b=mAt8bQVyNNBXj1GlX2o/TMtd0f
+	mubqENqiRb+D0dVAWWrJx5xFYRtxczMc8Gb8UPnt4m8pDNSemkiQ6kpCKvywvKskB6zZkNGmvvZ/D
+	SZQadHJqwshFXb8Rqcwqvhl9jb0e/Lmg93nsNy6uqfLz4a6fSkkSAQaNz0N/3AulrKwA=;
 Received: from p4ff13c5f.dip0.t-ipconnect.de ([79.241.60.95] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1tTOAD-0008GS-1V
+	id 1tTOAC-0008GS-0B
 	for linux-wireless@vger.kernel.org;
-	Thu, 02 Jan 2025 17:35:13 +0100
+	Thu, 02 Jan 2025 17:35:12 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/24] wifi: mt76: mt7996: use emulated hardware scan support
-Date: Thu,  2 Jan 2025 17:34:57 +0100
-Message-ID: <20250102163508.52945-13-nbd@nbd.name>
+Subject: [PATCH 04/24] wifi: mt76: add vif link specific data structure
+Date: Thu,  2 Jan 2025 17:34:48 +0100
+Message-ID: <20250102163508.52945-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250102163508.52945-1-nbd@nbd.name>
 References: <20250102163508.52945-1-nbd@nbd.name>
@@ -48,43 +48,89 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Preparation for supporting multiple radios on a single wiphy
+Preparation for splitting link data from vif data for MLO support.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/init.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 4 ++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h | 53 +++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-index 5b23ca1554cb..1ebac1905c22 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -442,6 +442,9 @@ mt7996_init_wiphy(struct ieee80211_hw *hw, struct mtk_wed_device *wed)
- 
- 	wiphy->available_antennas_rx = phy->mt76->antenna_mask;
- 	wiphy->available_antennas_tx = phy->mt76->antenna_mask;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 1782ebc7085e..669cbd63f403 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -766,6 +766,15 @@ struct mt76_vif_link {
+ 	u8 beacon_rates_idx;
+ 	struct ieee80211_chanctx_conf *ctx;
+ 	struct mt76_wcid *wcid;
++	struct mt76_vif_data *mvif;
++	struct rcu_head rcu_head;
++};
 +
-+	wiphy->max_scan_ssids = 4;
-+	wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- }
++struct mt76_vif_data {
++	struct mt76_vif_link __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
++
++	u16 valid_links;
++	u8 deflink_id;
+ };
  
- static void
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 9f1460eca4f4..d7e33e3b04ac 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1522,8 +1522,8 @@ const struct ieee80211_ops mt7996_ops = {
- 	.ampdu_action = mt7996_ampdu_action,
- 	.set_rts_threshold = mt7996_set_rts_threshold,
- 	.wake_tx_queue = mt76_wake_tx_queue,
--	.sw_scan_start = mt76_sw_scan,
--	.sw_scan_complete = mt76_sw_scan_complete,
-+	.hw_scan = mt76_hw_scan,
-+	.cancel_hw_scan = mt76_cancel_hw_scan,
- 	.release_buffered_frames = mt76_release_buffered_frames,
- 	.get_txpower = mt76_get_txpower,
- 	.channel_switch_beacon = mt7996_channel_switch_beacon,
+ struct mt76_phy {
+@@ -1168,6 +1177,10 @@ static inline int mt76_wed_dma_setup(struct mt76_dev *dev, struct mt76_queue *q,
+ 	for (i = 0; i < ARRAY_SIZE((dev)->q_rx); i++)	\
+ 		if ((dev)->q_rx[i].ndesc)
+ 
++
++#define mt76_dereference(p, dev) \
++	rcu_dereference_protected(p, lockdep_is_held(&(dev)->mutex))
++
+ struct mt76_dev *mt76_alloc_device(struct device *pdev, unsigned int size,
+ 				   const struct ieee80211_ops *ops,
+ 				   const struct mt76_driver_ops *drv_ops);
+@@ -1755,4 +1768,44 @@ void mt76_wcid_init(struct mt76_wcid *wcid);
+ void mt76_wcid_cleanup(struct mt76_dev *dev, struct mt76_wcid *wcid);
+ void mt76_wcid_add_poll(struct mt76_dev *dev, struct mt76_wcid *wcid);
+ 
++static inline void
++mt76_vif_init(struct ieee80211_vif *vif, struct mt76_vif_data *mvif)
++{
++	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
++
++	mlink->mvif = mvif;
++	rcu_assign_pointer(mvif->link[0], mlink);
++}
++
++static inline void
++mt76_vif_cleanup(struct mt76_dev *dev, struct ieee80211_vif *vif)
++{
++	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
++	struct mt76_vif_data *mvif = mlink->mvif;
++
++	rcu_assign_pointer(mvif->link[0], NULL);
++}
++
++static inline struct mt76_vif_link *
++mt76_vif_link(struct mt76_dev *dev, struct ieee80211_vif *vif, int link_id)
++{
++	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
++	struct mt76_vif_data *mvif = mlink->mvif;
++
++	return mt76_dereference(mvif->link[link_id], dev);
++}
++
++static inline struct mt76_vif_link *
++mt76_vif_conf_link(struct mt76_dev *dev, struct ieee80211_vif *vif,
++		   struct ieee80211_bss_conf *link_conf)
++{
++	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
++	struct mt76_vif_data *mvif = mlink->mvif;
++
++	if (link_conf == &vif->bss_conf)
++		return mlink;
++
++	return mt76_dereference(mvif->link[link_conf->link_id], dev);
++}
++
+ #endif
 -- 
 2.47.1
 
