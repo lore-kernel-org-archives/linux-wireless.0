@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1174156236
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0D615381A
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735835725; cv=none; b=CY93BHo2TwSgwXcQ7tLKlEH7xRg/S1HCbzpb9UgW4DeFLkdrVgAJI+ve9xjPDWgvLj9qjRvYYWuJoV+RF4TXysXgsUknw2aBA6saeHwGeXBuf4Dh2nJrHRIdeVyx06dI+oVrLiHia90hYQvbnIB/zTqR3WZWQNsKHDPRg3Emjo0=
+	t=1735835725; cv=none; b=Sc9IxFcIUrhPmwnLB6dj9fbOJDUcwY8Z3FO5V43WK/fuAFZCXptKx3jiQlal7E14Movq+8ECfBErIL4MUz5YzudLVwSV8xGSsr8MFIQJrFfW/kTgb+XcGrTCz7HdxnW3423Nuecd2SRXMV8f/9gfUHOxYml+kW88+tG+Cm8t/fk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1735835725; c=relaxed/simple;
-	bh=hU3zsoyQudQJkeEa5bTrRLZbbt35IrFNZx4ebX73aU4=;
+	bh=/d2VKEZTPeKNlSNnRFWudfikp4hFadFMTn1rvHmp9iw=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Sgj8FVsn8RYd1xDtRKtXeeye+OS+vv00F6M8EBeMHQ2edNXQwmcItMrRHsLeTQRgyynDyQ3L/3lllt1kbOpy/AVbCR2FRK7otEspUGIfrqSD4jPUehwSo3yXYFvx5u8rZ4E8/NPL3XK+nV5veOgQoK2zsosrMIP+Uc2KcqCq8yU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=AgVtuNTM; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=Xj4845JRPU+ITERJiHGm0AZZMFKSVUjxU3geCrfbz8ssdaffK2bLUho469/UIhSgEI62I1RmpHxd+qNdRY3A8agCVjvv/RvBkOfj8yvwfrQw4KqzdGvmw4oX/q/TFbeRcAxTcdJIOLwjlwVfyw42CzhoHDhE9pKPiPPVSqkulPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=KB1ZL4fA; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="AgVtuNTM"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KB1ZL4fA"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=F6q0Gs2cisZX3A2+pb3h3nEtSB0K9yy33G/tF3zmInY=; b=AgVtuNTMIZjvuLk4D3hfEonSPb
-	VZuPFj77avOHqEuhV1WX7DpnJXANcii4A8pxSYpncGrOYV5bbwgYUydzByCC8B394jUiIDx2dls27
-	qBWa68l/vUWVv9Iwrz1WIFgm2XnoLdiPl2NGzNCooD7u+SQByKqLggSis8g/7dU67MX4=;
+	bh=/37xu0HUGTvzMnxQiW2OBl+VUTEM2NI1CsVGPMUYurI=; b=KB1ZL4fAp5bfRmSxoZ4y4lfvmb
+	2KkLn6m0KX3FvQXwnxEaFadVkazaVlnZwhyIClD1lkAf6DysrMRlx5Ban+J+aPs/jlVumG6TaSglI
+	FFYM3j2tuGNidGHLP7F79aispUewMD64CDo0dc4LjKKPnEub/wolapP4DBA9cs7Q5O4Y=;
 Received: from p4ff13c5f.dip0.t-ipconnect.de ([79.241.60.95] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1tTOAD-0008GS-03
+	id 1tTOAE-0008GS-1v
 	for linux-wireless@vger.kernel.org;
-	Thu, 02 Jan 2025 17:35:13 +0100
+	Thu, 02 Jan 2025 17:35:14 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/24] wifi: mt76: add multi-radio support to tx scheduling
-Date: Thu,  2 Jan 2025 17:34:54 +0100
-Message-ID: <20250102163508.52945-10-nbd@nbd.name>
+Subject: [PATCH 20/24] wifi: mt76: mt7996: prepare mt7996_mcu_update_bss_color for MLO support
+Date: Thu,  2 Jan 2025 17:35:04 +0100
+Message-ID: <20250102163508.52945-20-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250102163508.52945-1-nbd@nbd.name>
 References: <20250102163508.52945-1-nbd@nbd.name>
@@ -48,111 +48,114 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Look up the phy for each scheduled txq. Only run one scheduling loop per hw.
+Pass in struct mt76_vif_link in order to update the correct link.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/tx.c | 33 ++++++++++++++-----------
- 1 file changed, 19 insertions(+), 14 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/main.c  | 34 +++++--------------
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   |  6 ++--
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  3 +-
+ 3 files changed, 13 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index ce193e625666..af0c50c983ec 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -489,7 +489,7 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
- 
- 	do {
- 		if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
--			return -EBUSY;
-+			break;
- 
- 		if (stop || mt76_txq_stopped(q))
- 			break;
-@@ -522,24 +522,16 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
- static int
- mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
- {
--	struct mt76_queue *q = phy->q_tx[qid];
- 	struct mt76_dev *dev = phy->dev;
- 	struct ieee80211_txq *txq;
- 	struct mt76_txq *mtxq;
- 	struct mt76_wcid *wcid;
-+	struct mt76_queue *q;
- 	int ret = 0;
- 
- 	while (1) {
- 		int n_frames = 0;
- 
--		if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
--			return -EBUSY;
--
--		if (dev->queue_ops->tx_cleanup &&
--		    q->queued + 2 * MT_TXQ_FREE_THR >= q->ndesc) {
--			dev->queue_ops->tx_cleanup(dev, q, false);
--		}
--
- 		txq = ieee80211_next_txq(phy->hw, qid);
- 		if (!txq)
- 			break;
-@@ -549,6 +541,16 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
- 		if (!wcid || test_bit(MT_WCID_FLAG_PS, &wcid->flags))
- 			continue;
- 
-+		phy = mt76_dev_phy(dev, wcid->phy_idx);
-+		if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
-+			continue;
-+
-+		q = phy->q_tx[qid];
-+		if (dev->queue_ops->tx_cleanup &&
-+		    q->queued + 2 * MT_TXQ_FREE_THR >= q->ndesc) {
-+			dev->queue_ops->tx_cleanup(dev, q, false);
-+		}
-+
- 		if (mtxq->send_bar && mtxq->aggr) {
- 			struct ieee80211_txq *txq = mtxq_to_txq(mtxq);
- 			struct ieee80211_sta *sta = txq->sta;
-@@ -578,7 +580,7 @@ void mt76_txq_schedule(struct mt76_phy *phy, enum mt76_txq_id qid)
- {
- 	int len;
- 
--	if (qid >= 4 || phy->offchannel)
-+	if (qid >= 4)
- 		return;
- 
- 	local_bh_disable();
-@@ -680,9 +682,14 @@ static void mt76_txq_schedule_pending(struct mt76_phy *phy)
- 
- void mt76_txq_schedule_all(struct mt76_phy *phy)
- {
-+	struct mt76_phy *main_phy = &phy->dev->phy;
- 	int i;
- 
- 	mt76_txq_schedule_pending(phy);
-+
-+	if (phy != main_phy && phy->hw == main_phy->hw)
-+		return;
-+
- 	for (i = 0; i <= MT_TXQ_BK; i++)
- 		mt76_txq_schedule(phy, i);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 95d915045cf7..ab875abfbd0a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -540,29 +540,6 @@ static void mt7996_configure_filter(struct ieee80211_hw *hw,
+ 	mutex_unlock(&dev->mt76.mutex);
  }
-@@ -693,6 +700,7 @@ void mt76_tx_worker_run(struct mt76_dev *dev)
- 	struct mt76_phy *phy;
- 	int i;
  
-+	mt76_txq_schedule_all(&dev->phy);
- 	for (i = 0; i < ARRAY_SIZE(dev->phys); i++) {
- 		phy = dev->phys[i];
- 		if (!phy)
-@@ -748,9 +756,6 @@ void mt76_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
- 	struct mt76_phy *phy = hw->priv;
- 	struct mt76_dev *dev = phy->dev;
- 
--	if (!test_bit(MT76_STATE_RUNNING, &phy->state))
--		return;
+-static void
+-mt7996_update_bss_color(struct ieee80211_hw *hw,
+-			struct ieee80211_vif *vif,
+-			struct cfg80211_he_bss_color *bss_color)
+-{
+-	struct mt7996_dev *dev = mt7996_hw_dev(hw);
 -
- 	mt76_worker_schedule(&dev->tx_worker);
+-	switch (vif->type) {
+-	case NL80211_IFTYPE_AP: {
+-		struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
+-
+-		if (mvif->deflink.mt76.omac_idx > HW_BSSID_MAX)
+-			return;
+-		fallthrough;
+-	}
+-	case NL80211_IFTYPE_STATION:
+-		mt7996_mcu_update_bss_color(dev, vif, bss_color);
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-
+ static u8
+ mt7996_get_rates_table(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		       bool beacon, bool mcast)
+@@ -618,9 +595,9 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
+ 				    struct ieee80211_bss_conf *info,
+ 				    u64 changed)
+ {
+-	struct mt76_vif_link *mvif = (struct mt76_vif_link *)vif->drv_priv;
+ 	struct mt7996_phy *phy = mt7996_hw_phy(hw);
+ 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	struct mt76_vif_link *mvif = mt76_vif_conf_link(&dev->mt76, vif, info);
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+@@ -662,8 +639,13 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_HE_OBSS_PD)
+ 		mt7996_mcu_add_obss_spr(phy, vif, &info->he_obss_pd);
+ 
+-	if (changed & BSS_CHANGED_HE_BSS_COLOR)
+-		mt7996_update_bss_color(hw, vif, &info->he_bss_color);
++	if (changed & BSS_CHANGED_HE_BSS_COLOR) {
++		if ((vif->type == NL80211_IFTYPE_AP &&
++		    mvif->omac_idx <= HW_BSSID_MAX) ||
++		   vif->type == NL80211_IFTYPE_STATION)
++			mt7996_mcu_update_bss_color(dev, mvif,
++						    &info->he_bss_color);
++	}
+ 
+ 	if (changed & (BSS_CHANGED_BEACON |
+ 		       BSS_CHANGED_BEACON_ENABLED)) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 8ae98b724668..83c079debf9a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -4143,16 +4143,16 @@ int mt7996_mcu_add_obss_spr(struct mt7996_phy *phy, struct ieee80211_vif *vif,
+ 	return mt7996_mcu_set_obss_spr_bitmap(phy, he_obss_pd);
  }
- EXPORT_SYMBOL_GPL(mt76_wake_tx_queue);
+ 
+-int mt7996_mcu_update_bss_color(struct mt7996_dev *dev, struct ieee80211_vif *vif,
++int mt7996_mcu_update_bss_color(struct mt7996_dev *dev,
++				struct mt76_vif_link *mlink,
+ 				struct cfg80211_he_bss_color *he_bss_color)
+ {
+ 	int len = sizeof(struct bss_req_hdr) + sizeof(struct bss_color_tlv);
+-	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
+ 	struct bss_color_tlv *bss_color;
+ 	struct sk_buff *skb;
+ 	struct tlv *tlv;
+ 
+-	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, &mvif->deflink.mt76, len);
++	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, mlink, len);
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index 604b67ea12e4..0774ffdde65d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -531,7 +531,8 @@ int mt7996_mcu_add_tx_ba(struct mt7996_dev *dev,
+ int mt7996_mcu_add_rx_ba(struct mt7996_dev *dev,
+ 			 struct ieee80211_ampdu_params *params,
+ 			 bool add);
+-int mt7996_mcu_update_bss_color(struct mt7996_dev *dev, struct ieee80211_vif *vif,
++int mt7996_mcu_update_bss_color(struct mt7996_dev *dev,
++				struct mt76_vif_link *mlink,
+ 				struct cfg80211_he_bss_color *he_bss_color);
+ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			  struct ieee80211_bss_conf *link_conf);
 -- 
 2.47.1
 
