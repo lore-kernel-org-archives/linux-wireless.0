@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0D615381A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72A9169AE6
 	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735835725; cv=none; b=Sc9IxFcIUrhPmwnLB6dj9fbOJDUcwY8Z3FO5V43WK/fuAFZCXptKx3jiQlal7E14Movq+8ECfBErIL4MUz5YzudLVwSV8xGSsr8MFIQJrFfW/kTgb+XcGrTCz7HdxnW3423Nuecd2SRXMV8f/9gfUHOxYml+kW88+tG+Cm8t/fk=
+	t=1735835725; cv=none; b=I0m1fa1yY4tjkjC617+D2wWX2ruQKOJx1JbPC//ZUe8R9up7C/GWu1sT9JAW9ufqIb7BQVK1Hnh34KQw2DRjRFLiVrMY3BuCWstSC8F/YCn2g02iEDz1KY2nzrdjoqqwRbfzzB2lXBqBA0zBWzlWkZT9R8dqGo/+Fg6PxBOPc+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1735835725; c=relaxed/simple;
-	bh=/d2VKEZTPeKNlSNnRFWudfikp4hFadFMTn1rvHmp9iw=;
+	bh=1z4PxIW/tBVxqLmsKM4YTRBkY6Ws5o+GuLqKjgxJQak=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xj4845JRPU+ITERJiHGm0AZZMFKSVUjxU3geCrfbz8ssdaffK2bLUho469/UIhSgEI62I1RmpHxd+qNdRY3A8agCVjvv/RvBkOfj8yvwfrQw4KqzdGvmw4oX/q/TFbeRcAxTcdJIOLwjlwVfyw42CzhoHDhE9pKPiPPVSqkulPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=KB1ZL4fA; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=N05OhLaPrlZ//utbjusOoCyNn1ryEd36LiEU5c5TrGXGQNRTzzTi+zrUERxPsj83zcvkF9n6bOz5ax07ZsiG7WFL8WS7QOYYhS96+95m9YUBumCUulQDLCkqwjN9namffuabVJm+6N1pcWFMKlFXpk7CNUYFVXD8j5tp+q2p//4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=XWvOeEoU; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KB1ZL4fA"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XWvOeEoU"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=/37xu0HUGTvzMnxQiW2OBl+VUTEM2NI1CsVGPMUYurI=; b=KB1ZL4fAp5bfRmSxoZ4y4lfvmb
-	2KkLn6m0KX3FvQXwnxEaFadVkazaVlnZwhyIClD1lkAf6DysrMRlx5Ban+J+aPs/jlVumG6TaSglI
-	FFYM3j2tuGNidGHLP7F79aispUewMD64CDo0dc4LjKKPnEub/wolapP4DBA9cs7Q5O4Y=;
+	bh=ii0sHpg9Gt/0Mg7Do4M5834MeL9iR4iEjaZ0OAPazyQ=; b=XWvOeEoULMZcEtPAq5+U6x8bFy
+	zkKoXGfZMQ5cFimuCixPrUFKLNXjqNypniQj79Q8WWw3E/exTosayOI47DqOKvbe9a/rNEd+QNJgw
+	d7wSVn0ACCjufS69csn5h/NOdEkjtN+Uhfrd/3U6Chf5kkbfnTes13LKqZMWVxfSm4ug=;
 Received: from p4ff13c5f.dip0.t-ipconnect.de ([79.241.60.95] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1tTOAE-0008GS-1v
+	id 1tTOAE-0008GS-0s
 	for linux-wireless@vger.kernel.org;
 	Thu, 02 Jan 2025 17:35:14 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 20/24] wifi: mt76: mt7996: prepare mt7996_mcu_update_bss_color for MLO support
-Date: Thu,  2 Jan 2025 17:35:04 +0100
-Message-ID: <20250102163508.52945-20-nbd@nbd.name>
+Subject: [PATCH 18/24] wifi: mt76: mt7996: prepare mt7996_mcu_set_timing for MLO support
+Date: Thu,  2 Jan 2025 17:35:02 +0100
+Message-ID: <20250102163508.52945-18-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250102163508.52945-1-nbd@nbd.name>
 References: <20250102163508.52945-1-nbd@nbd.name>
@@ -48,114 +48,64 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Pass in struct mt76_vif_link in order to update the correct link.
+Pass in struct ieee80211_bss_conf in order to use link specific data.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 34 +++++--------------
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   |  6 ++--
- .../wireless/mediatek/mt76/mt7996/mt7996.h    |  3 +-
- 3 files changed, 13 insertions(+), 30 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    | 7 ++++---
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h | 3 ++-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 95d915045cf7..ab875abfbd0a 100644
+index a1f1dee56dea..95d915045cf7 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -540,29 +540,6 @@ static void mt7996_configure_filter(struct ieee80211_hw *hw,
- 	mutex_unlock(&dev->mt76.mutex);
- }
+@@ -643,7 +643,7 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
  
--static void
--mt7996_update_bss_color(struct ieee80211_hw *hw,
--			struct ieee80211_vif *vif,
--			struct cfg80211_he_bss_color *bss_color)
--{
--	struct mt7996_dev *dev = mt7996_hw_dev(hw);
--
--	switch (vif->type) {
--	case NL80211_IFTYPE_AP: {
--		struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
--
--		if (mvif->deflink.mt76.omac_idx > HW_BSSID_MAX)
--			return;
--		fallthrough;
--	}
--	case NL80211_IFTYPE_STATION:
--		mt7996_mcu_update_bss_color(dev, vif, bss_color);
--		break;
--	default:
--		break;
--	}
--}
--
- static u8
- mt7996_get_rates_table(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       bool beacon, bool mcast)
-@@ -618,9 +595,9 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_bss_conf *info,
- 				    u64 changed)
- {
--	struct mt76_vif_link *mvif = (struct mt76_vif_link *)vif->drv_priv;
- 	struct mt7996_phy *phy = mt7996_hw_phy(hw);
- 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
-+	struct mt76_vif_link *mvif = mt76_vif_conf_link(&dev->mt76, vif, info);
+ 		if (slottime != phy->slottime) {
+ 			phy->slottime = slottime;
+-			mt7996_mcu_set_timing(phy, vif);
++			mt7996_mcu_set_timing(phy, vif, info);
+ 		}
+ 	}
  
- 	mutex_lock(&dev->mt76.mutex);
- 
-@@ -662,8 +639,13 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_HE_OBSS_PD)
- 		mt7996_mcu_add_obss_spr(phy, vif, &info->he_obss_pd);
- 
--	if (changed & BSS_CHANGED_HE_BSS_COLOR)
--		mt7996_update_bss_color(hw, vif, &info->he_bss_color);
-+	if (changed & BSS_CHANGED_HE_BSS_COLOR) {
-+		if ((vif->type == NL80211_IFTYPE_AP &&
-+		    mvif->omac_idx <= HW_BSSID_MAX) ||
-+		   vif->type == NL80211_IFTYPE_STATION)
-+			mt7996_mcu_update_bss_color(dev, mvif,
-+						    &info->he_bss_color);
-+	}
- 
- 	if (changed & (BSS_CHANGED_BEACON |
- 		       BSS_CHANGED_BEACON_ENABLED)) {
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 8ae98b724668..83c079debf9a 100644
+index e694edf4fa9b..e9d449bd55ef 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -4143,16 +4143,16 @@ int mt7996_mcu_add_obss_spr(struct mt7996_phy *phy, struct ieee80211_vif *vif,
- 	return mt7996_mcu_set_obss_spr_bitmap(phy, he_obss_pd);
+@@ -1108,13 +1108,14 @@ int mt7996_mcu_add_bss_info(struct mt7996_phy *phy, struct ieee80211_vif *vif,
+ 				     MCU_WMWA_UNI_CMD(BSS_INFO_UPDATE), true);
  }
  
--int mt7996_mcu_update_bss_color(struct mt7996_dev *dev, struct ieee80211_vif *vif,
-+int mt7996_mcu_update_bss_color(struct mt7996_dev *dev,
-+				struct mt76_vif_link *mlink,
- 				struct cfg80211_he_bss_color *he_bss_color)
+-int mt7996_mcu_set_timing(struct mt7996_phy *phy, struct ieee80211_vif *vif)
++int mt7996_mcu_set_timing(struct mt7996_phy *phy, struct ieee80211_vif *vif,
++			  struct ieee80211_bss_conf *link_conf)
  {
- 	int len = sizeof(struct bss_req_hdr) + sizeof(struct bss_color_tlv);
 -	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
- 	struct bss_color_tlv *bss_color;
+ 	struct mt7996_dev *dev = phy->dev;
++	struct mt76_vif_link *mlink = mt76_vif_conf_link(&dev->mt76, vif, link_conf);
  	struct sk_buff *skb;
- 	struct tlv *tlv;
  
--	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, &mvif->deflink.mt76, len);
-+	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, mlink, len);
+-	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, &mvif->deflink.mt76,
++	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, mlink,
+ 					 MT7996_BSS_UPDATE_MAX_SIZE);
  	if (IS_ERR(skb))
  		return PTR_ERR(skb);
- 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index 604b67ea12e4..0774ffdde65d 100644
+index 2b5c7cb7e817..604b67ea12e4 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -531,7 +531,8 @@ int mt7996_mcu_add_tx_ba(struct mt7996_dev *dev,
- int mt7996_mcu_add_rx_ba(struct mt7996_dev *dev,
- 			 struct ieee80211_ampdu_params *params,
- 			 bool add);
--int mt7996_mcu_update_bss_color(struct mt7996_dev *dev, struct ieee80211_vif *vif,
-+int mt7996_mcu_update_bss_color(struct mt7996_dev *dev,
-+				struct mt76_vif_link *mlink,
- 				struct cfg80211_he_bss_color *he_bss_color);
- int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			  struct ieee80211_bss_conf *link_conf);
+@@ -562,7 +562,8 @@ int mt7996_mcu_set_radar_th(struct mt7996_dev *dev, int index,
+ 			    const struct mt7996_dfs_pattern *pattern);
+ int mt7996_mcu_set_radio_en(struct mt7996_phy *phy, bool enable);
+ int mt7996_mcu_set_rts_thresh(struct mt7996_phy *phy, u32 val);
+-int mt7996_mcu_set_timing(struct mt7996_phy *phy, struct ieee80211_vif *vif);
++int mt7996_mcu_set_timing(struct mt7996_phy *phy, struct ieee80211_vif *vif,
++			  struct ieee80211_bss_conf *link_conf);
+ int mt7996_mcu_get_chan_mib_info(struct mt7996_phy *phy, bool chan_switch);
+ int mt7996_mcu_get_temperature(struct mt7996_phy *phy);
+ int mt7996_mcu_set_thermal_throttling(struct mt7996_phy *phy, u8 state);
 -- 
 2.47.1
 
