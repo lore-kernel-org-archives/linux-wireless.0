@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74B5B38F91
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84FC15B102
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Jan 2025 16:35:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735835724; cv=none; b=cFkdibdmmHadyVUkRagMe7OCZpFIyuxe2vYq+WZhFef1kIt3Mob6Fk7cR31GFNq4QoXDGeowfxsZQdclUHsxR1koqr0AucTIzh5gj/AR4cNwugrkB2k0Tht4BrLPr+QPEzsv5ergrDQMoC5sZzUNbatxQA+jGtiC6UzAVC22Qzg=
+	t=1735835724; cv=none; b=lxjxgbXJXi5uRj9PrMNaljMLVHUZrzC57QFWh1adgDC7x7hpBO5dcFUuXs7G53R1Vbw9kQX0Ot+DtSBn43kSTg11IuLddaY75F+Jkk7MLG+vXZ4kCSdelA8Fx7ikA1wbjAAXBF8UTDL7Oj0/MRUYFc14rrXArWiEBDFk3t1M24Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1735835724; c=relaxed/simple;
-	bh=1vTk87zdYIfMzFlN7aZy9U48ie2qqX3cM2rhsxMK/1Q=;
+	bh=dPcEJaFw3qHUMuzexlQ1n5nbwd49y06N7w5+rBaJPL0=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VdD/uIYj/8RxdpnvYS1oLogeujOL+mShrvalCWg6pBxr7sap10UWV83cOOOmmXBIKtooyD4xeoc/I49FY8sJWdWxTwDbTwBqTZAdFtndsL/BJFeBuk8ZVWVrG1z9+yuIbMsQinOx3Wz24nopFe+bmkY7VUMtK4PY/H6dpJSgPmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=mPZCehzX; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=ZR5Tut0IPXs4hC/gVNv589ZUlqVbOWjsl6mf6PcjDpb2qiLAIWUf4eRFi0STA8Q+uScNQKyXJmiR2tpBDy8u+5lJAyhGqN8DbsQODMYHEBEZM14sNvvIjmZVIs4VCNZP6c1tFgEExKlRR2vezNvtLRz3ELr/3JTQJymULRrbpDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=SNt6P+Z2; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="mPZCehzX"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="SNt6P+Z2"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=MyHCHHwLkoPKDxHDoopbF85uamuUjEuoz8sburiUOsQ=; b=mPZCehzXjn0M4SB+vuEHjriC5m
-	GvPsy8TCxkufXVMdCE1TEIWTA18TmoK7PFG/MteW069KuxdYd4ymzT/QszltsIv4hB9M0Tp3NN+wu
-	//ysvStt63zlVXG59XKAswVgKEeIIjFEIjxmV+7sus1rzETavqj0peVWr80hSRiv8pLc=;
+	bh=9V4q8q/mEq84lgkClq0xcRIVO5ykbhtNB4ZIMfGamf8=; b=SNt6P+Z2m5roGKKUJMUirUNvz/
+	5NPdCnUhk742EtTKPauvO6XiA9VLCTc4yzSUiFyvBdvHwlg5giX7Vb91/35nnqCKP71WxBAUz3pXk
+	YPXKdv/9mZ9yhDaeEOVFlAuH9pKNOWcf9znl7eAogeUKAmej8lLTIXxY1fBB7fCHmyes=;
 Received: from p4ff13c5f.dip0.t-ipconnect.de ([79.241.60.95] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1tTOAE-0008GS-0G
+	id 1tTOAD-0008GS-0a
 	for linux-wireless@vger.kernel.org;
-	Thu, 02 Jan 2025 17:35:14 +0100
+	Thu, 02 Jan 2025 17:35:13 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 17/24] wifi: mt76: mt7996: prepare mt7996_mcu_set_tx for MLO support
-Date: Thu,  2 Jan 2025 17:35:01 +0100
-Message-ID: <20250102163508.52945-17-nbd@nbd.name>
+Subject: [PATCH 11/24] wifi: mt76: add multi-radio support to scanning code
+Date: Thu,  2 Jan 2025 17:34:55 +0100
+Message-ID: <20250102163508.52945-11-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250102163508.52945-1-nbd@nbd.name>
 References: <20250102163508.52945-1-nbd@nbd.name>
@@ -48,99 +48,178 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Pass in struct ieee80211_bss_conf in order to use link specific data.
+When scanning on a phy/vif combination that does not have an active link,
+create a temporary link in order to ensure that we have a valid wcid.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/main.c   | 7 ++++---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    | 9 +++++----
- drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h | 3 ++-
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/channel.c | 62 +++++++++++++++++++-
+ drivers/net/wireless/mediatek/mt76/mt76.h    |  6 ++
+ drivers/net/wireless/mediatek/mt76/scan.c    | 11 +++-
+ 3 files changed, 77 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index ae4fad290785..a1f1dee56dea 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -469,7 +469,8 @@ mt7996_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	       unsigned int link_id, u16 queue,
- 	       const struct ieee80211_tx_queue_params *params)
- {
--	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
-+	struct mt7996_dev *dev = mt7996_hw_dev(hw);
-+	struct mt7996_vif_link *mlink = mt7996_vif_link(dev, vif, link_id);
- 	static const u8 mq_to_aci[] = {
- 		[IEEE80211_AC_VO] = 3,
- 		[IEEE80211_AC_VI] = 2,
-@@ -478,7 +479,7 @@ mt7996_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	};
+diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
+index a577a01e4cc2..541b32cb1f65 100644
+--- a/drivers/net/wireless/mediatek/mt76/channel.c
++++ b/drivers/net/wireless/mediatek/mt76/channel.c
+@@ -4,6 +4,20 @@
+  */
+ #include "mt76.h"
  
- 	/* firmware uses access class index */
--	mvif->deflink.queue_params[mq_to_aci[queue]] = *params;
-+	mlink->queue_params[mq_to_aci[queue]] = *params;
- 	/* no need to update right away, we'll get BSS_CHANGED_QOS */
++static struct mt76_vif_link *
++mt76_alloc_mlink(struct mt76_dev *dev, struct mt76_vif_data *mvif)
++{
++	struct mt76_vif_link *mlink;
++
++	mlink = kzalloc(dev->drv->link_data_size, GFP_KERNEL);
++	if (!mlink)
++		return NULL;
++
++	mlink->mvif = mvif;
++
++	return mlink;
++}
++
+ static int
+ mt76_phy_update_channel(struct mt76_phy *phy,
+ 			struct ieee80211_chanctx_conf *conf)
+@@ -108,7 +122,7 @@ int mt76_assign_vif_chanctx(struct ieee80211_hw *hw,
  
- 	return 0;
-@@ -656,7 +657,7 @@ static void mt7996_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	/* ensure that enable txcmd_mode after bss_info */
- 	if (changed & (BSS_CHANGED_QOS | BSS_CHANGED_BEACON_ENABLED))
--		mt7996_mcu_set_tx(dev, vif);
-+		mt7996_mcu_set_tx(dev, vif, info);
- 
- 	if (changed & BSS_CHANGED_HE_OBSS_PD)
- 		mt7996_mcu_add_obss_spr(phy, vif, &info->he_obss_pd);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index a66ccc2512af..e694edf4fa9b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -3145,7 +3145,8 @@ int mt7996_mcu_set_hdr_trans(struct mt7996_dev *dev, bool hdr_trans)
- 				     MCU_WM_UNI_CMD(RX_HDR_TRANS), true);
+ 	mlink = mt76_vif_conf_link(dev, vif, link_conf);
+ 	if (!mlink) {
+-		mlink = kzalloc(dev->drv->link_data_size, GFP_KERNEL);
++		mlink = mt76_alloc_mlink(dev, mvif);
+ 		if (!mlink) {
+ 			ret = -ENOMEM;
+ 			goto out;
+@@ -220,3 +234,49 @@ int mt76_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 	return ret;
  }
+ EXPORT_SYMBOL_GPL(mt76_switch_vif_chanctx);
++
++struct mt76_vif_link *mt76_get_vif_phy_link(struct mt76_phy *phy,
++					    struct ieee80211_vif *vif)
++{
++	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
++	struct mt76_vif_data *mvif = mlink->mvif;
++	struct mt76_dev *dev = phy->dev;
++	int i, ret;
++
++	for (i = 0; i < ARRAY_SIZE(mvif->link); i++) {
++		mlink = mt76_dereference(mvif->link[i], dev);
++		if (!mlink)
++			continue;
++
++		if (mt76_vif_link_phy(mlink) == phy)
++			return mlink;
++	}
++
++	if (!dev->drv->vif_link_add)
++		return ERR_PTR(-EINVAL);
++
++	mlink = mt76_alloc_mlink(dev, mvif);
++	if (!mlink)
++		return ERR_PTR(-ENOMEM);
++
++	mlink->offchannel = true;
++	ret = dev->drv->vif_link_add(phy, vif, &vif->bss_conf, mlink);
++	if (ret) {
++		kfree(mlink);
++		return ERR_PTR(ret);
++	}
++
++	return mlink;
++}
++
++void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
++			   struct mt76_vif_link *mlink)
++{
++	struct mt76_dev *dev = phy->dev;
++
++	if (IS_ERR_OR_NULL(mlink) || !mlink->offchannel)
++		return;
++
++	dev->drv->vif_link_remove(phy, vif, &vif->bss_conf, mlink);
++	kfree(mlink);
++}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 85b2f21acd70..b61f1eb138e8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -777,6 +777,7 @@ struct mt76_vif_link {
+ 	u8 basic_rates_idx;
+ 	u8 mcast_rates_idx;
+ 	u8 beacon_rates_idx;
++	bool offchannel;
+ 	struct ieee80211_chanctx_conf *ctx;
+ 	struct mt76_wcid *wcid;
+ 	struct mt76_vif_data *mvif;
+@@ -942,6 +943,7 @@ struct mt76_dev {
+ 		struct cfg80211_scan_request *req;
+ 		struct ieee80211_channel *chan;
+ 		struct ieee80211_vif *vif;
++		struct mt76_vif_link *mlink;
+ 		struct mt76_phy *phy;
+ 		int chan_idx;
+ 	} scan;
+@@ -1570,6 +1572,10 @@ int mt76_set_channel(struct mt76_phy *phy, struct cfg80211_chan_def *chandef,
+ 		     bool offchannel);
+ void mt76_scan_work(struct work_struct *work);
+ void mt76_abort_scan(struct mt76_dev *dev);
++struct mt76_vif_link *mt76_get_vif_phy_link(struct mt76_phy *phy,
++					    struct ieee80211_vif *vif);
++void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
++			   struct mt76_vif_link *mlink);
  
--int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif)
-+int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif,
-+		      struct ieee80211_bss_conf *link_conf)
+ /* usb */
+ static inline bool mt76u_urb_error(struct urb *urb)
+diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
+index d186a68b0fb8..9f3485be5747 100644
+--- a/drivers/net/wireless/mediatek/mt76/scan.c
++++ b/drivers/net/wireless/mediatek/mt76/scan.c
+@@ -18,6 +18,7 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
+ 
+ 	if (dev->scan.chan && phy->main_chandef.chan)
+ 		mt76_set_channel(phy, &phy->main_chandef, false);
++	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
+ 	memset(&dev->scan, 0, sizeof(dev->scan));
+ 	ieee80211_scan_completed(phy->hw, &info);
+ }
+@@ -33,7 +34,7 @@ mt76_scan_send_probe(struct mt76_dev *dev, struct cfg80211_ssid *ssid)
  {
- #define MCU_EDCA_AC_PARAM	0
- #define WMM_AIFS_SET		BIT(0)
-@@ -3154,12 +3155,12 @@ int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif)
- #define WMM_TXOP_SET		BIT(3)
- #define WMM_PARAM_SET		(WMM_AIFS_SET | WMM_CW_MIN_SET | \
- 				 WMM_CW_MAX_SET | WMM_TXOP_SET)
--	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
-+	struct mt7996_vif_link *link = mt7996_vif_conf_link(dev, vif, link_conf);
- 	struct {
- 		u8 bss_idx;
- 		u8 __rsv[3];
- 	} __packed hdr = {
--		.bss_idx = mvif->deflink.mt76.idx,
-+		.bss_idx = link->mt76.idx,
- 	};
- 	struct sk_buff *skb;
- 	int len = sizeof(hdr) + IEEE80211_NUM_ACS * sizeof(struct edca);
-@@ -3172,7 +3173,7 @@ int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif)
- 	skb_put_data(skb, &hdr, sizeof(hdr));
+ 	struct cfg80211_scan_request *req = dev->scan.req;
+ 	struct ieee80211_vif *vif = dev->scan.vif;
+-	struct mt76_vif_link *mvif = (struct mt76_vif_link *)vif->drv_priv;
++	struct mt76_vif_link *mvif = dev->scan.mlink;
+ 	enum nl80211_band band = dev->scan.chan->band;
+ 	struct mt76_phy *phy = dev->scan.phy;
+ 	struct ieee80211_tx_info *info;
+@@ -122,6 +123,7 @@ int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct mt76_phy *phy = hw->priv;
+ 	struct mt76_dev *dev = phy->dev;
++	struct mt76_vif_link *mlink;
+ 	int ret = 0;
  
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
--		struct ieee80211_tx_queue_params *q = &mvif->deflink.queue_params[ac];
-+		struct ieee80211_tx_queue_params *q = &link->queue_params[ac];
- 		struct edca *e;
- 		struct tlv *tlv;
+ 	if (hw->wiphy->n_radio > 1) {
+@@ -137,10 +139,17 @@ int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index 7b12b1f8898b..2b5c7cb7e817 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -543,7 +543,8 @@ int mt7996_mcu_add_rate_ctrl(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta, bool changed);
- int mt7996_set_channel(struct mt76_phy *mphy);
- int mt7996_mcu_set_chan_info(struct mt7996_phy *phy, u16 tag);
--int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif);
-+int mt7996_mcu_set_tx(struct mt7996_dev *dev, struct ieee80211_vif *vif,
-+		      struct ieee80211_bss_conf *link_conf);
- int mt7996_mcu_set_fixed_rate_ctrl(struct mt7996_dev *dev,
- 				   void *data, u16 version);
- int mt7996_mcu_set_fixed_field(struct mt7996_dev *dev, struct ieee80211_vif *vif,
++	mlink = mt76_get_vif_phy_link(phy, vif);
++	if (IS_ERR(mlink)) {
++		ret = PTR_ERR(mlink);
++		goto out;
++	}
++
+ 	memset(&dev->scan, 0, sizeof(dev->scan));
+ 	dev->scan.req = &req->req;
+ 	dev->scan.vif = vif;
+ 	dev->scan.phy = phy;
++	dev->scan.mlink = mlink;
+ 	ieee80211_queue_delayed_work(dev->phy.hw, &dev->scan_work, 0);
+ 
+ out:
 -- 
 2.47.1
 
