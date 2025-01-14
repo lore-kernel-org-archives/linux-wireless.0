@@ -1,58 +1,58 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B29F22DC56
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2025 10:11:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAA8230D08
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2025 10:11:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736849511; cv=none; b=nHcUjqdkPUl7SKMg7940cEKrDIhUAEbdHseEzRbe69GU0LN36sU4l0gyVPTG/b8aXFqsp9iXYhXilh8EWRt1HaujA/ipDyZ0DwWoUEAn9tczbViSZAlRHdqCi9RvPsG9Xxt/AErw6hYNj5lBBvpaF/pfKuRwU4E0dEbxtVYyLhs=
+	t=1736849512; cv=none; b=UmDjVUkgmZkaa5cAPPcsJyxts2FKPkt3vxC27jn9Nm9aEuAPl/dvndKqpq6FRBNk8bWK7m2DSCCGi73j2Sf5jShxUV30z2yGLjrXQDIoxa6Cv1TQBqFbfNpN1Y8J7NyD3bDgqEvVts+ulBRNwQc6nC2bzTUSUrPnNYZ0qPAD0zM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736849511; c=relaxed/simple;
-	bh=Z/02pLS7f2plpWke29jgHNSgaHBB17AQNGUerNU6EzM=;
+	s=arc-20240116; t=1736849512; c=relaxed/simple;
+	bh=/6Fwg7FVdNAEJt+CSsbzDCH6vQDs0IjrQNZ3ERKllfE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A1qSTpuPUFy0B8SWXy0+5Ehz7wKJmHVgXhCYmTtuEmCkfT5kn43W3rVYDeAIeu7mctAuXYEQuqWZxtAhfvUOv8fzHO8iirhjVbsXx7AKpTkTEOge+JRcYAYK7D1gIVcOxu8hgIPJE5Z5ovttV1CD7GWWbI7VJkNtX7Jgf3AcWHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=LmiGfj2G; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=SdiUlxdrX/Uf1Twzg4jB7f1Z9B3cYYCNfIu9UtWnT0YIIQl1IVhbWBHhNy0BWnBW/C0dAlXwXByGU2uLOS2lvCXcMp0WFBSb+huSSKdNf1cGz2lRbtNpYukzUlZdwQQg30gDcBorzFc0S/eJZLu6yxswUaSRDADoFAbeAdm6NlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=X3+SUroY; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LmiGfj2G"
-X-UUID: f2f34dd0d25f11ef99858b75a2457dd9-20250114
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="X3+SUroY"
+X-UUID: f2ab92c4d25f11ef99858b75a2457dd9-20250114
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=UHzbOEmiqnQIkKhhSqNXU6yfTUCIaRQzxl1hYiaXUpA=;
-	b=LmiGfj2GYIDI3BSjHz5+EDyQS+LhhmmrFPt9FO45RLWN23nU4ygrioob20ynrAHPGNnd0XQhXlWIWzaf1gLZsZtsQNoVqYEgalCRFz+8uVc7m49rAvwY0DRATqhTukJgA/B0V/lE+OvGcmynr5s16zcC7kdfsiBHsYSCTpoeuK4=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=hZz/0IpmNdfWsDGsFwwv59akzDPBITWuCxkPMSi/v5E=;
+	b=X3+SUroY58aJOjD4ME/rNVum74pxupzDjDxnJwPS4F3lwReS9i8VTMluLHVh1mZK+sClM34F9biW5LkfqVtpuMzrBQBQYBv4UAGOI+Zc1svknb6X9Gm5N7XRU36rHHmFHP2o9ZPnC0qzGuCPkfYkNQUHRVKAW9tbl5fbioHwdRU=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.46,REQID:b49422c9-742c-4ae2-b579-1c68351f94c4,IP:0,U
+X-CID-O-INFO: VERSION:1.1.46,REQID:3a3d22f8-ec7a-42bb-8903-36bc7da90dae,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:60aa074,CLOUDID:a4d4dc37-e11c-4c1a-89f7-e7a032832c40,B
+X-CID-META: VersionHash:60aa074,CLOUDID:8dd9de0e-078a-483b-8929-714244d25c49,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
 	,IP:nil,URL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
 	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: f2f34dd0d25f11ef99858b75a2457dd9-20250114
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+X-UUID: f2ab92c4d25f11ef99858b75a2457dd9-20250114
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 647262749; Tue, 14 Jan 2025 18:11:41 +0800
+	with ESMTP id 1860028688; Tue, 14 Jan 2025 18:11:40 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Tue, 14 Jan 2025 18:11:40 +0800
+ 15.2.1258.28; Tue, 14 Jan 2025 18:11:39 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.28 via Frontend Transport; Tue, 14 Jan 2025 18:11:40 +0800
+ 15.2.1258.28 via Frontend Transport; Tue, 14 Jan 2025 18:11:39 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Michael-CY Lee
-	<michael-cy.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 8/9] wifi: mt76: mt7996: fix beacon command during disabling
-Date: Tue, 14 Jan 2025 18:10:25 +0800
-Message-ID: <20250114101026.3587702-8-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Benjamin Lin
+	<benjamin-jw.lin@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 4/9] wifi: mt76: mt7996: fix incorrect indexing of MIB FW event
+Date: Tue, 14 Jan 2025 18:10:21 +0800
+Message-ID: <20250114101026.3587702-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250114101026.3587702-1-shayne.chen@mediatek.com>
 References: <20250114101026.3587702-1-shayne.chen@mediatek.com>
@@ -66,80 +66,101 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-From: Michael-CY Lee <michael-cy.lee@mediatek.com>
+From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 
-When stopping AP, mac80211 frees beacon template before it calls
-driver's stop_ap operation. In other words, on the path of stopping
-AP, ieee80211_beacon_get_template() must returns NULL in
-mt7996_mcu_add_beacon(). In such case mt7996 immediately returns
--EINVAL without telling FW to disable the beacon.
+Fix wrong calculation of the channel times due to incorrect
+interpretation from the FW event.
 
-This commit refactors mt7996_mcu_add_beacon() so that FW can be
-correctly informed when disabling AP interface.
-
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
+Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
-Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 26 +++++++++++--------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 45 ++++++++++++-------
+ 1 file changed, 29 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 9879c108cd0e..dcca8b931237 100644
+index 58fc06a69539..9fb54388d975 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -2520,7 +2520,7 @@ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct sk_buff *skb, *rskb;
- 	struct tlv *tlv;
- 	struct bss_bcn_content_tlv *bcn;
--	int len;
-+	int len, extra_len = 0;
+@@ -3678,6 +3678,13 @@ int mt7996_mcu_get_chip_config(struct mt7996_dev *dev, u32 *cap)
  
- 	if (link_conf->nontransmitted)
- 		return 0;
-@@ -2534,28 +2534,32 @@ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		return PTR_ERR(rskb);
+ int mt7996_mcu_get_chan_mib_info(struct mt7996_phy *phy, bool chan_switch)
+ {
++	enum {
++		IDX_TX_TIME,
++		IDX_RX_TIME,
++		IDX_OBSS_AIRTIME,
++		IDX_NON_WIFI_TIME,
++		IDX_NUM
++	};
+ 	struct {
+ 		struct {
+ 			u8 band;
+@@ -3687,16 +3694,15 @@ int mt7996_mcu_get_chan_mib_info(struct mt7996_phy *phy, bool chan_switch)
+ 			__le16 tag;
+ 			__le16 len;
+ 			__le32 offs;
+-		} data[4];
++		} data[IDX_NUM];
+ 	} __packed req = {
+ 		.hdr.band = phy->mt76->band_idx,
+ 	};
+-	/* strict order */
+ 	static const u32 offs[] = {
+-		UNI_MIB_TX_TIME,
+-		UNI_MIB_RX_TIME,
+-		UNI_MIB_OBSS_AIRTIME,
+-		UNI_MIB_NON_WIFI_TIME,
++		[IDX_TX_TIME] = UNI_MIB_TX_TIME,
++		[IDX_RX_TIME] = UNI_MIB_RX_TIME,
++		[IDX_OBSS_AIRTIME] = UNI_MIB_OBSS_AIRTIME,
++		[IDX_NON_WIFI_TIME] = UNI_MIB_NON_WIFI_TIME,
+ 	};
+ 	struct mt76_channel_state *state = phy->mt76->chan_state;
+ 	struct mt76_channel_state *state_ts = &phy->state_ts;
+@@ -3705,7 +3711,7 @@ int mt7996_mcu_get_chan_mib_info(struct mt7996_phy *phy, bool chan_switch)
+ 	struct sk_buff *skb;
+ 	int i, ret;
  
- 	skb = ieee80211_beacon_get_template(hw, vif, &offs, link_conf->link_id);
--	if (!skb) {
-+	if (link_conf->enable_beacon && !skb) {
- 		dev_kfree_skb(rskb);
- 		return -EINVAL;
- 	}
- 
--	if (skb->len > MT7996_MAX_BEACON_SIZE) {
--		dev_err(dev->mt76.dev, "Bcn size limit exceed\n");
--		dev_kfree_skb(rskb);
--		dev_kfree_skb(skb);
--		return -EINVAL;
--	}
-+	if (skb) {
-+		if (skb->len > MT7996_MAX_BEACON_SIZE) {
-+			dev_err(dev->mt76.dev, "Bcn size limit exceed\n");
-+			dev_kfree_skb(rskb);
-+			dev_kfree_skb(skb);
-+			return -EINVAL;
-+		}
- 
--	info = IEEE80211_SKB_CB(skb);
--	info->hw_queue |= FIELD_PREP(MT_TX_HW_QUEUE_PHY, mlink->band_idx);
-+		extra_len = skb->len;
-+	}
- 
--	len = ALIGN(sizeof(*bcn) + MT_TXD_SIZE + skb->len, 4);
-+	len = ALIGN(sizeof(*bcn) + MT_TXD_SIZE + extra_len, 4);
- 	tlv = mt7996_mcu_add_uni_tlv(rskb, UNI_BSS_INFO_BCN_CONTENT, len);
- 	bcn = (struct bss_bcn_content_tlv *)tlv;
- 	bcn->enable = link_conf->enable_beacon;
- 	if (!bcn->enable)
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < IDX_NUM; i++) {
+ 		req.data[i].tag = cpu_to_le16(UNI_CMD_MIB_DATA);
+ 		req.data[i].len = cpu_to_le16(sizeof(req.data[i]));
+ 		req.data[i].offs = cpu_to_le32(offs[i]);
+@@ -3724,17 +3730,24 @@ int mt7996_mcu_get_chan_mib_info(struct mt7996_phy *phy, bool chan_switch)
  		goto out;
  
-+	info = IEEE80211_SKB_CB(skb);
-+	info->hw_queue |= FIELD_PREP(MT_TX_HW_QUEUE_PHY, mlink->band_idx);
-+
- 	mt7996_mcu_beacon_cont(dev, link_conf, rskb, skb, bcn, &offs);
- 	if (link_conf->bssid_indicator)
- 		mt7996_mcu_beacon_mbss(rskb, skb, bcn, &offs);
+ #define __res_u64(s) le64_to_cpu(res[s].data)
+-	state->cc_tx += __res_u64(1) - state_ts->cc_tx;
+-	state->cc_bss_rx += __res_u64(2) - state_ts->cc_bss_rx;
+-	state->cc_rx += __res_u64(2) + __res_u64(3) - state_ts->cc_rx;
+-	state->cc_busy += __res_u64(0) + __res_u64(1) + __res_u64(2) + __res_u64(3) -
++	state->cc_tx += __res_u64(IDX_TX_TIME) - state_ts->cc_tx;
++	state->cc_bss_rx += __res_u64(IDX_RX_TIME) - state_ts->cc_bss_rx;
++	state->cc_rx += __res_u64(IDX_RX_TIME) +
++			__res_u64(IDX_OBSS_AIRTIME) -
++			state_ts->cc_rx;
++	state->cc_busy += __res_u64(IDX_TX_TIME) +
++			  __res_u64(IDX_RX_TIME) +
++			  __res_u64(IDX_OBSS_AIRTIME) +
++			  __res_u64(IDX_NON_WIFI_TIME) -
+ 			  state_ts->cc_busy;
+-
+ out:
+-	state_ts->cc_tx = __res_u64(1);
+-	state_ts->cc_bss_rx = __res_u64(2);
+-	state_ts->cc_rx = __res_u64(2) + __res_u64(3);
+-	state_ts->cc_busy = __res_u64(0) + __res_u64(1) + __res_u64(2) + __res_u64(3);
++	state_ts->cc_tx = __res_u64(IDX_TX_TIME);
++	state_ts->cc_bss_rx = __res_u64(IDX_RX_TIME);
++	state_ts->cc_rx = __res_u64(IDX_RX_TIME) + __res_u64(IDX_OBSS_AIRTIME);
++	state_ts->cc_busy = __res_u64(IDX_TX_TIME) +
++			    __res_u64(IDX_RX_TIME) +
++			    __res_u64(IDX_OBSS_AIRTIME) +
++			    __res_u64(IDX_NON_WIFI_TIME);
+ #undef __res_u64
+ 
+ 	dev_kfree_skb(skb);
 -- 
 2.39.2
 
