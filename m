@@ -1,106 +1,68 @@
-Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10A721ACE12;
-	Tue, 14 Jan 2025 15:44:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B751465AC
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jan 2025 18:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736869495; cv=none; b=GaLnmOBYkLkeg7xepdL+rVO9wwNrzSe4W048cLwkPLef10bzrEVqGiYt0gvpNg6QIh04Ya091hfUsxEwR4SIHBDWJFJXrWkF3rPtPgsZzdOHt0ZZlf1LynGfsprOXmj++LhvkBIWhBTf4eYy1agL9iAAaprzDLwEJIx1lSuk1sk=
+	t=1736879311; cv=none; b=b+ZB90unSXcGVYCA2KMgAB1H6YmWbDT8PqBeMqLYsl+bhv7Us6or+pC3kxyXhON3OL7dX42h2s1lhezs9lAgqieDOS3dmT1NuuZlDkMj7PwhbPRae8m/iQHHgdu5JYyJv5qZ/L/EG9dlxUfn4OWxJ7H9863wIqq4tnRlLOVSFks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736869495; c=relaxed/simple;
-	bh=zxszI9t4R+vVNc8ZZxGix0Ap6as/A7QwELeAUTlB5cY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Olk5JYqZRS9PGn+ZC2tfXJvMd2xSXhS+Z7Aa4rG0pfoKKNUliA0TJFozKkgrN3RaMWjb57z/VZX15zSrsZxBtHmCQrrTv6IvZsZHYZzy2qWrl28IbIq1NvtSvCZzH6hq7AY143g5nCUhc26ih68O0s5+m8mhtnn+fPk6N6b0oYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=jj4Rg+Bv; arc=none smtp.client-ip=217.70.183.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1736879311; c=relaxed/simple;
+	bh=WOY4AGPayNCfR8xPWYGzZU8DRPDN3/lPA1u+hsfXMts=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
+	 MIME-Version:Content-Type; b=ETk/BHpcIO8bvJ+e1I+VjwpbT+YLK3Wfm0kRSQ72h58o5sI85JAb2xMur8RcXVi7sRgTnX9C3e4iBX+TbS5QqljX6v0LI5HloNMninBavFKnN6qkh/qx1bdHERxfNKnuzcvQkZDJo3HMzvLiYgChgBrpkUxBfWnX/igIhn5c3ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jGQn2wEj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="jj4Rg+Bv"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id DE85E1C0006;
-	Tue, 14 Jan 2025 15:44:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1736869491;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sOgokNd7tUxraq3YOmrF/cAoQHoDhiKkeICtOBBMWJk=;
-	b=jj4Rg+BvaolhW+cNk+OACp8+RfkIfkn/BsU/H3aKFvAeo3MAWH9lg0Evl5JFWi0HUyGxMO
-	6CLgkSHmE8XHNlDt1cxJU4ZD9txaULF73w9Dsd2hA91EXCR1hKih9FBvqS/Q6YPHsZ4Vbj
-	9ZWEwtXnCW75zMQn3Qb/GDChfp8hIEd1Refp8Bhrez1LfgAhsFqMyXIv8LP8814sTdmhdR
-	gUyEX/0BsPt1TCExCXhUjbGlObaBp5m6Wt0OBTE0Uj01s2MA3Kukf7Xw22ejds/LKYFXXw
-	53chAyKu5bTQ9DXDi04Einh1t1iwn4wPC3ix2PoElQRniPp/1cMYwY/Lc8dHqA==
-Message-ID: <d26a4283-a4fe-4ec6-9601-c239281335ac@bootlin.com>
-Date: Tue, 14 Jan 2025 16:44:50 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jGQn2wEj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7441C4CEDD;
+	Tue, 14 Jan 2025 18:28:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1736879311;
+	bh=WOY4AGPayNCfR8xPWYGzZU8DRPDN3/lPA1u+hsfXMts=;
+	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+	b=jGQn2wEjtVcKWRvODJf4C7GHXI2/xzIs2PbVZMVIxzHdFYDT0b/t6OR3mB/eMOwL0
+	 PeTh60xa7c2VOu5L/rkYwS9O/NtM4KosXq0ZF38ufm76EUrakME1WGkt8Xhy4/Xhws
+	 4zvr+FBZILRRa/Abw+cwmEcgQTndDfvEIsmO+jW0VgQl73bP99mfsLNH8HZloZCaye
+	 i/zlA2uAb0oySy0sClv0gnPpPAABX/UxCuqreC7dqPXk+NZSSp2/6f09cgEmLviO+H
+	 7z8g1Q/eHLpyPx67FltqBNGy9zN+sM7phBgKy57Bq/20txatJuTTI98dYFwD3AdVGo
+	 89NQttngDrJxQ==
+From: Kalle Valo <kvalo@kernel.org>
+To: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Cc: <ath12k@lists.infradead.org>,  <linux-wireless@vger.kernel.org>,  Jeff
+ Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: Re: [PATCH v4 1/4] wifi: ath12k: Refactor ath12k_hw set helper
+ function argument
+References: <20250112071630.4059410-1-quic_periyasa@quicinc.com>
+	<20250112071630.4059410-2-quic_periyasa@quicinc.com>
+Date: Tue, 14 Jan 2025 20:28:28 +0200
+In-Reply-To: <20250112071630.4059410-2-quic_periyasa@quicinc.com> (Karthikeyan
+	Periyasamy's message of "Sun, 12 Jan 2025 12:46:27 +0530")
+Message-ID: <87plkpp7w3.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: wilc1000: unregister wiphy only after netdev
- registration
-To: Kalle Valo <kvalo@kernel.org>
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Marek Vasut <marex@denx.de>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250114-wilc1000_modprobe-v1-1-ad19d46f0c07@bootlin.com>
- <87frllr3h1.fsf@kernel.org>
- <165a166c-d402-48d9-a190-44a710fa4d1c@bootlin.com>
- <87bjw9r0qd.fsf@kernel.org>
-Content-Language: en-US
-From: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-In-Reply-To: <87bjw9r0qd.fsf@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: alexis.lothore@bootlin.com
+Content-Type: text/plain
 
-On 1/14/25 14:20, Kalle Valo wrote:
-> Alexis Lothoré <alexis.lothore@bootlin.com> writes:
+Karthikeyan Periyasamy <quic_periyasa@quicinc.com> writes:
 
-[...]
+> Currently, ath12k_hw is placed inside the ath12k_hw_group. However, the
+> ath12k_hw set helper function takes the device handle and the index as
+> parameters. Here, the index parameter is specific to the group handle.
+> Therefore, change this helper function argument from the device handle to
+> the group handle.
+>
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+>
+> Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+> Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
->>>> @Kalle: 89a7616e1715 (the faulty commit) is only in wireless-next for
->>>> now IIUC, so I did not provide any Fixes: tag to prevent any faulty SHA1
->>>> if those commits end up being picked in stable tree (however, the faulty
->>>> commit _has_ a Fixes tag). Please let me know if we should proceed
->>>> differently.
->>>
->>> Hmm, I don't really follow you here. I feel that always adding the Fixes
->>> tag is the safest option, that way it's clear for everyone what commit
->>> we are fixing.
->>
->> I was thinking about the fact that the faulty commit SHA1 may change because of
->> a merge, and then break the Fixes: tag, but maybe I am overthinking.
-> 
-> Ah, now I understand. Actually commit id doesn't change during a merge
-> so we are safe in that regard. The commit id only changes if there's a
-> rebase in the tree and we don't rebase wireless trees (unless something
-> really drastic has happened).
-
-ACK
-
->> So if it's ok for you, I would like to add the Fixes tag
->>> but I can't find commit 89a7616e1715 anywhere.
->>
->> Gaah, indeed that's not the correct SHA1. The faulty commit in wireless-next is
->> in fact commit 1be94490b6b8 ("wifi: wilc1000: unregister wiphy only if it has
->> been registered")
-> 
-> Thanks, so I'm planning to add this during commit:
-> 
-> Fixes: 1be94490b6b8 ("wifi: wilc1000: unregister wiphy only if it has been registered")
-> 
-> Is that ok?
-
-Ok for me, thanks !
-
-Alexis
-
+Acked-by: Kalle Valo <kvalo@kernel.org>
 
 -- 
-Alexis Lothoré, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
