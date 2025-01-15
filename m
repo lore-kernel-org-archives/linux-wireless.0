@@ -1,163 +1,77 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [178.154.239.83])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B10651791F4
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2025 17:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 847BB3C47B
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jan 2025 17:18:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.83
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736960574; cv=none; b=kSF4YpL+k8XqcLqCxLx0FttPlxklddGS0pCMIbKtfnmNmXQEb6N/hVTrsasUXSd1T4OCZ9OsniqJBCQpuEgnIboaKTLwEnckAtu4yaujSJEpB7tSppO00h6N0Mie7UMbLy1i+Y1KI7c5HqbZO9Wh39t75RspHGIKmyUj0mvc+C0=
+	t=1736961493; cv=none; b=VDTRGrrnj0pHQWg5AtIUSZxtA8RNn/u2gznSo7qK9NP3dxq2nme6gosJEk642R5BSWvwPCCRQQjWx+6oMADwY8Krq+kse1sMvGUegIVg8zl+uOW3erfqLsdq4W6tZFqEKizpQgAF7kWUUEjBQ+gZy8INXeqEBMDojxlhgVDTWSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736960574; c=relaxed/simple;
-	bh=5hQSDYoG5kemTizSc2BHURHca27FwjbzlSQx85vaRZA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=k14BmXeVxJaZxV3MrsPuKyfDzuP+wyml5EIU+u7KCvgD/Z4SRKYJ7qxN/aSc+uUEeiOm/r3AcGi4l85KIo7IsDa+bnY72p6KdwkXzXnGbYOdZPN2hJoIWqdDNSTCoZ6gl/6uIDkDaN6ldEkrI54AzFwEqJm9UefbnW3807AG/Dk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=lgU/KrzC; arc=none smtp.client-ip=148.163.129.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1736961493; c=relaxed/simple;
+	bh=FmSLBYjaZJQWFfTP0n5FDOf/H3NEOazG5MZorU41l6U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DI7XD4utMmxgOKIBdH0EwtFihdhTYBNeD4yFB7OeaIBTJ8uzaQ3cvYB3k4StAF0SMAnKNt31+zFxGN9iF/kPPqE1rkQRV7F/OXsdmIG+LLfdvit+6k3hJDJ8kRvABGpytABrdudQy5TbASFvv5ceC5bI3qfnpSP3gm6sNPVC3fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=DY+V/mn7; arc=none smtp.client-ip=178.154.239.83
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="lgU/KrzC"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C2A18B001A4;
-	Wed, 15 Jan 2025 17:02:40 +0000 (UTC)
-Received: from [192.168.100.159] (unknown [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id 18ADD13C2B0;
-	Wed, 15 Jan 2025 09:02:32 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 18ADD13C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1736960552;
-	bh=5hQSDYoG5kemTizSc2BHURHca27FwjbzlSQx85vaRZA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lgU/KrzChy+D8ZkiiazooQiXZxfKfFVXQ8eBKBD/W5LukraTCLaPXZDwwtpOGuH4t
-	 LOj4gV5n5ooGSBqqLAvJAWM3bcMZDgW69ioM0r0XrO3OYxe6AVlctt+TzRZWZlANfZ
-	 B1m1laGZnDoBtKqGhHqj1eENIqoifPUJhV/eIOsI=
-Message-ID: <31d7e5e7-2290-76fc-2440-16d6e5df3dca@candelatech.com>
-Date: Wed, 15 Jan 2025 09:02:31 -0800
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="DY+V/mn7"
+Received: from mail-nwsmtp-smtp-production-main-31.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-31.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:171e:0:640:d7a4:0])
+	by forward100a.mail.yandex.net (Yandex) with ESMTPS id 48D7F46C5D;
+	Wed, 15 Jan 2025 20:18:02 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-31.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 0IUVK7BOjmI0-ZgDXOlln;
+	Wed, 15 Jan 2025 20:18:01 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1736961481; bh=qZRhmIsrehHWA3U2yNn2uH0uObZYRRnW7zUK4qmCK7Y=;
+	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=DY+V/mn7pWkd/ldTa/dMrsy1ikuCoHSdV5H7CT4mZfrFE/5x4rNF4PyBfixO0Ermm
+	 wjJWFds3Lgh2ChomWtncVY0wLh13pV8SXRD1V/pLAL4HmEW4Br0b6Ti+sn0c52HDLF
+	 LmXGWyes4gKJrBGdb8K8kCy2aukMgWRp9YC/XqrY=
+Authentication-Results: mail-nwsmtp-smtp-production-main-31.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH 2/2] wifi: ath9k: use unsigned long for activity check timestamp
+Date: Wed, 15 Jan 2025 20:17:50 +0300
+Message-ID: <20250115171750.259917-2-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.48.0
+In-Reply-To: <20250115171750.259917-1-dmantipov@yandex.ru>
+References: <20250115171750.259917-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH RFC 0/7] wifi: cfg80211/mac80211: add support to handle
- per link statistics of multi-link station
-To: Sarika Sharma <quic_sarishar@quicinc.com>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-References: <20250110042449.1158789-1-quic_sarishar@quicinc.com>
- <38a7b894-9528-123a-28b8-fd9613fe4a13@candelatech.com>
- <5d5b4723-95a2-41c1-be26-534bb5ff1abe@quicinc.com>
-Content-Language: en-US
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <5d5b4723-95a2-41c1-be26-534bb5ff1abe@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-MDID: 1736960563-9jm2Ll2GQoG5
-X-MDID-O:
- us5;ut7;1736960563;9jm2Ll2GQoG5;<greearb@candelatech.com>;535bfda298b524f45ffb92fb019ae3e8
-X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On 1/14/25 21:11, Sarika Sharma wrote:
-> On 1/10/2025 10:23 PM, Ben Greear wrote:
->> On 1/9/25 20:24, Sarika Sharma wrote:
->>> Current implementation of NL80211_CMD_GET_STATION does not work
->>> for multi-link operation(MLO) since in case of MLO only deflink
->>> (or one of the links) is considered and not all links.
->>>
->>> Hence, add the link_sinfo structure to provide infrastructure
->>> for link-level station statistics for multi-link operation(MLO).
->>>
->>> Additionally, accumulated stats for MLO are included in a concise
->>> manner to provide a comprehensive overview of the ML stations.
->>>
->>> NOTE:
->>>     1. Current code changes are done to get an early feedback on design.
->>>     2. Once RFC patches are approved will add the required driver changes.
->>>     3. Ath12k changes are included in this series for reference to other
->>>        driver changes.
->>
->>> Alternate approach:
->>>     - Keep sinfo structure as it is and use this for non-ML or
->>>       accumulated statistics for ML station.
->>>     - Add link sinfo for links with only certain link specific statistics.
->>>     - Keep mac_op_sta_statistics at MLD level and let driver fill the
->>>       MLO and link level data, if driver not filling let mac80211 fill
->>>       the data.
->>>     - Corresponding changes done to embed statistics into the NL message
->>>       based on the sinfo/link_sinfo.
->>
->> My suggestions for general approach to this:
->>
->> 1)  current sinfo stats should report totals for all links,
->> but it should not sum them up at query time because links come
->> and go.  So driver/firmware/mac80211 or whatever is keeping count
->> of the stats needs to count the total tx/rx/ packets/bytes/whatever
->> as it happens.
-> 
-> Alternate approach is not considered here, because some fields at station level could not be much meaningful like rx_beacon, pertid ,etc.
-> I believe the total count is better to do from links data in cfg80211/mac80211, as if link's data is provided it is easy to aggregate them, during query time.
-> 
-> Also removed link_data is maintained in implemented approach, so that could be helpful if any link go down.
-> 
->>
->> 2)  Per-link stats can be over duration of the link object.
->>
->> 3)  For sinfo logic that currently reports tx/rx mcs rate and such that cannot
->> be summed, use 'best' link's for those values.  Effectively, this probably means highest
->> frequency is 'best' link.
-> 
-> Every fields have it's own way of best, so based on field need to check what is best for this field value? but some parameters not have much meaning at MLO 
-> level like rx_beacon, pertid, etc. So keeping best of it, will be useful here?
-> 
-> or you mean need to check for best frequency link and take this link data as MLO data? if yes? will it be useful here?
+Since 'rx_active_check_time' of 'struct ath_softc' is in jiffies,
+prefer 'unsigned long' over 'u32' to avoid possible truncation in
+'ath_hw_rx_inactive_check()'. Found with clang's -Wshorten-64-to-32,
+compile tested only.
 
-My goal is to allow legacy user-space to report something useful for MLO netdevs, and in my opinion, reporting
-tx/rx mcs rates in this case should use the highest frequency link that is active.
+Fixes: b5f871ab4913 ("wifi: ath9k: Add RX inactivity detection and reset chip when it occurs")
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
->> 4) Add per-link stats data that looks very much like 'sinfo' data struct and user-space
->> that can support that could then get detailed per-link stats at same time it is getting
->> per netdev 'sinfo' stats.
-> 
-> Again, some fields that are in sinfo structure could not be very useful at link level like generation, sta_info, etc. So keeping same structure for station 
-> level and link level is not very useful, instead better to split the structure, fields for station level and some fields at link level.
-> 
->>
->> 5) Assuming there will never be more than 3 links for any radios supported by Linux in the near future,
->> embed the 3 link's 'sinfo-like' stats data structure in the per-netdev sinfo stats struct
->> so that we can get all 3 link's data at same time that we are getting the other stats.
->> That should save calls into the driver and ensure that per-links stats can be gathered
->> at exactly the same time.
-> 
-> Yes, I agree currently it's 3 only, but everywhere we are using max-15, so explicitly keeping it 3 here isn't questionable? In future also it will not be useful.
-
-Changing a 3 to a 4 is easy future change, and should not affect user-space API one
-way or another.  If we can simplify code and stats memory allocation by using a smaller
-link count for stats gathering, I think we should do that.  As soon as something supporting
-more than 3 links exists, we can increase it.
-
-But, it is not a big deal to me, so if you like the other approach, I'll not
-argue further.
-
-Thanks,
-Ben
-
-> 
->>
->> Thanks,
->> Ben
->>
-> 
-> Currently, addressing the comments on current implemented approach.
-> 
-> 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 65c2250db33d..62442be6dd56 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -1017,7 +1017,7 @@ struct ath_softc {
+ 
+ 	u8 gtt_cnt;
+ 	u32 intrstatus;
+-	u32 rx_active_check_time;
++	unsigned long rx_active_check_time;
+ 	u32 rx_active_count;
+ 	u16 ps_flags; /* PS_* */
+ 	bool ps_enabled;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+2.48.0
 
