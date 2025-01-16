@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9D61A0BF3
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2025 11:19:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 865A924A7C2
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jan 2025 11:20:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737026368; cv=none; b=qDHOJ4Ywb+KljFrjO4nvDWvZbwXE9pPSSRh/qUWSWotpYp1nQBUxip9lm4a/ylU6ErI90vLp+llzD30kBGxqY75QKN3sR91+WZ5p6N3AIHgO2k8FkcqnFELXgeDemtNhADgUx5iIlcnoonu8cYL32JSs3hAL/E9N9HCg/zopVHo=
+	t=1737026410; cv=none; b=t4zzrcrbvTQRnkP/a2Vm/gVArLsBgQLWSMFoEPRmDYzXmJcFD+RKXbXuKh6I37E5Jft13n4nTEjQ7nPtpR7Fq8/yy1vgO/n0mw53rJ7/3EeVWU1miLY9irGEm1CsbbQ4eLOb+IpIvL8CwQfnc7ZZnTRXoocknfOvFZ+tV7tX860=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737026368; c=relaxed/simple;
-	bh=4j2SySHk3aVtQzs9NyYvQH+p1sjwQc3KJjTJCIYSSus=;
+	s=arc-20240116; t=1737026410; c=relaxed/simple;
+	bh=IEj348cec9mrFd8D8WOywh2sB05s+NOpFd9KoiSKj98=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=cqBGVGaPq2Xz0coGQuWEAp/bBz7bgOQ18Yy6BiR+s0zETfe2K+4gwAchFgcyaEjut0hKeyBu91ry0fr8w9Cqbr2izMarl8l4FG5bQsDaCYERxQd4n6j3ank33BeyqaxjhJZP1woZNXUX5UGMq1uw7rMGiSecw2l04h2peO4RGdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OdoA0kVO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=C/vS2coNSmIND2UerickOYOaVqFk63GYtCmjdtf+ahP3zpfP3eUvMj+MWQlOZWVsfw6tpXz8+BZKS//xHLgwPf9QeFVzjPV6ME09USXML2VLhzCsQ6bfzwqjAZpoftgvvUaYUDH59uDR51U+m7dryva2/kz1d9oAe4lybqj7ZaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MNGO9xGc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OdoA0kVO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 334A3C4CED6;
-	Thu, 16 Jan 2025 11:19:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MNGO9xGc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8844C4CED6;
+	Thu, 16 Jan 2025 11:20:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1737026365;
-	bh=4j2SySHk3aVtQzs9NyYvQH+p1sjwQc3KJjTJCIYSSus=;
+	s=k20201202; t=1737026410;
+	bh=IEj348cec9mrFd8D8WOywh2sB05s+NOpFd9KoiSKj98=;
 	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=OdoA0kVOY/UcmdoX+FXmGtriXiFLj6P1cQw1PCPAOHBS8tfGcrzDeBbADhInpiWoY
-	 Qq8blEfZ5dkzaArC2tEJ/yD9InOoOirsZ3hqkIVekzCOgv4C+pAagI6any3SKtQg3q
-	 wu1KKilxJYqu9rMqnEdbPAOXkB/I1G8uwaza2dxygZspqY5qeYpA9Mf+Spj+CX64TA
-	 J7E90tVLPukMLJRDaqm7Tu7Bp/Ca5oiNn/CyjMf30rg2+5bY0FZ0okJapL2hs+RVxt
-	 IGugFfXrhRANCIdfxXeNU0TeJD/ElRdczH59rdVXNeehYyKf1wmcb6bSPNbc86ZOL7
-	 OH0dAjEYew0YQ==
+	b=MNGO9xGcM8uPJBXXkrQ28uo2Il0NpV/85Z/Ma4ed8oCgZb4ndX46gr33oHQxf9oKc
+	 vH3XD/E9bQwE+YW280OtMqSHS5/9BxObeZdOnElrsUS5sn2MBD+9V+Dd79qmHe63b2
+	 zTbvBUYaF7YGBUGZQPdkm8BRyQwnHYPTLKPHXnUXEySiWejeGpbiPWeMhL95OXYdX5
+	 6Ay0rdxpW8XcANJtups8EmK2j5OtpSNXXkXTkEbzyHvhZ3jx+rJhs+Y5NFHdZM8B+S
+	 Etdklrlnfi29+LiFFvwDvaHX9l15oaG8DCvhmkTdtLJtP+wP/O0O6Dhjem7T1oAuT+
+	 uBVmTpSscUSPA==
 From: Kalle Valo <kvalo@kernel.org>
 To: Dmitry Antipov <dmantipov@yandex.ru>
 Cc: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
   linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wifi: ath9k: cleanup struct ath_tx_control and
- ath_tx_prepare()
+Subject: Re: [PATCH 2/2] wifi: ath9k: use unsigned long for activity check
+ timestamp
 References: <20250115171750.259917-1-dmantipov@yandex.ru>
-Date: Thu, 16 Jan 2025 13:19:23 +0200
-In-Reply-To: <20250115171750.259917-1-dmantipov@yandex.ru> (Dmitry Antipov's
-	message of "Wed, 15 Jan 2025 20:17:49 +0300")
-Message-ID: <87y0zbm2f8.fsf@kernel.org>
+	<20250115171750.259917-2-dmantipov@yandex.ru>
+Date: Thu, 16 Jan 2025 13:20:07 +0200
+In-Reply-To: <20250115171750.259917-2-dmantipov@yandex.ru> (Dmitry Antipov's
+	message of "Wed, 15 Jan 2025 20:17:50 +0300")
+Message-ID: <87tt9zm2e0.fsf@kernel.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -48,15 +49,16 @@ Content-Type: text/plain
 
 Dmitry Antipov <dmantipov@yandex.ru> writes:
 
-> After switching to mac80211 software queues, pointer to 'struct ath_node'
-> in 'struct ath_tx_control' is still assigned but not actually used. So drop
-> it and cleanup related things in 'ath_tx_prepare()'. Compile tested only.
+> Since 'rx_active_check_time' of 'struct ath_softc' is in jiffies,
+> prefer 'unsigned long' over 'u32' to avoid possible truncation in
+> 'ath_hw_rx_inactive_check()'. Found with clang's -Wshorten-64-to-32,
+> compile tested only.
 >
-> Fixes: 50f08edf9809 ("ath9k: Switch to using mac80211 intermediate software queues.")
+> Fixes: b5f871ab4913 ("wifi: ath9k: Add RX inactivity detection and reset chip when it occurs")
 > Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 
-I don't think cleanup patches should have a Fixes tag. This is not
-fixing a user visible issue.
+I don't think this should have a Fixes either. Jeff, can you remove
+these during commit?
 
 -- 
 https://patchwork.kernel.org/project/linux-wireless/list/
