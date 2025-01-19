@@ -1,57 +1,53 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE39A157A46
-	for <linux-wireless@vger.kernel.org>; Sun, 19 Jan 2025 08:37:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2DDB1B0403
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Jan 2025 13:58:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737275859; cv=none; b=MKmKI/nhhS5w4ySvUM1FSEUHi/4PRU61wFYM0msMqU3a6jZP/8xhfn84i1tELBfogLyy9kZfOoIBpIsjm3pAyQT6Nuy600U8wjGOYcJ3lwiRQCbR6nSx3xTQnOcQIDfxzssrxbE1PDv/3lxY1lXLOexeWfrR0gK137nuZX6Ia8I=
+	t=1737295101; cv=none; b=jX8NII8U2wgi01xB/dy0JSboJjto7p1nbCLk2O3ZFMP08PsSmHBOmZJSv6etSeVAK7Hw2QvCW9oVRI420sR/WCceOfB8NMC96nVED9v5LUOPgIYY/l8McxTDhou/sj2MHDjHF8JsGTtuEoEF4jKUyhRV0C2daA4tg56CK2OSRdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737275859; c=relaxed/simple;
-	bh=7H5Ich5CbUX8p1SEp3QPrgLHqa6KHlJl6GcXCWDkxhw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=raxmO/ijKxQ4DYyAIMRNhBaPvOwZ9QWvgPIDAlKk5920DvEfynVsxTH/yzOHcqhQylmhqOUQc0af30tBvfWJ1/GOorPtOe9I015Jx87vXxIy6sZn3kZS2e4bfNE6A+pqa5/eNjSGnduzqDkp1JDV8lLtOI63XtMCDSsmhsRUHG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=kqTXNy8v; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1737295101; c=relaxed/simple;
+	bh=YgStsOVgXL+26HgGHVsSwA44XKff9hC+bDYlTBaBsXs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hfkdeTEw9zDyZKkbS7DqyGYhRqWxgRbSmCjkCy5BhOhUmCgAS6j0gLEWD7l1M5MXz/Q2BmxzunNj9YrRmPHejTaV42B6pQuPDLcZfGCndJj3+wI4LXTc05SwzeiCS8xFhD7HA3UzLkWJDvcryYs2cZCTqYDje94/GO3UcH3Asts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=kBzWzRnf; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kqTXNy8v"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50J69qfI024661;
-	Sun, 19 Jan 2025 08:37:28 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kBzWzRnf"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50J7HtYb013413;
+	Sun, 19 Jan 2025 13:58:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	OgoDrtc5xPKmJuhAFx+eLRurUBvA0O2Nm9s+2snvxhE=; b=kqTXNy8vkBCaPwp9
-	fiPUBslny2fIJENTJY4c1SNKVsg6uhqjIizLRWOLiYZzdHLe/yZWkONnUyZTrWNO
-	/zw2IXbdBg6Zjjxbxb5AKLYSiiKfrH9ewZmdcpccsbPcfCb2D6TOHwg8N4UW2ikW
-	Vf6RGUR/CnS0dEYnNPY4NjqGwV9OPjOzw2hqAKo43DZEBwxxJp+wNDYDaFLXKnuW
-	zw75XiC5tx8bkj4KlrvAiJK3rcVkWz2YfUSBq7WjY1tSO2nusANsxEuqZAEd8FKs
-	iPV6DGPitFradWoP3IHrxZDQyFtpVjNFMU1B9hAC6DmV6NHgSrRLlOio+vwHhSuX
-	QLIl6A==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 448ky4gmeu-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=I2AmqruUOLD6/2jeqltzi8
+	h0g74jC1oDguA9vUDmlOo=; b=kBzWzRnf7wrgRky2nNTbiSpimv+m5PI10wHudM
+	MFBRTAqBrTlHnmVMczWPpJc3km0/rEZxnqhlWZQTJK3gl13PQiDIRqTBN/0ylN4n
+	Vf/pMv1cXQOZ2LQtvdfhwMVVl3jqtZpj57d/wa9+JdrW1Ci0o9VAipJbyEx+csF4
+	4IZkVcMVnofMg6QOr04Jxtzj+ZB5YmHj/vtZgoFTXVYpHUheKJ1OY/U2d2ElBNXZ
+	kXVuzMheOPJJj+f6YaV+7+hRRi5FXsgifxXW0F6Z87F+Hg8GllRIepXD82IY6ZUi
+	Ccq8dKSfNsH361ACW3KwjBP69LKtQLypeRXoMrw1nkt3ZkJQ==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 448vv40cx1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 19 Jan 2025 08:37:28 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50J8bR1C016570
+	Sun, 19 Jan 2025 13:58:12 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50JDwBLL021364
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 19 Jan 2025 08:37:27 GMT
-Received: from hu-aarasahu-blr.qualcomm.com (10.80.80.8) by
- nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+	Sun, 19 Jan 2025 13:58:11 GMT
+Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 19 Jan 2025 00:37:25 -0800
-From: Aaradhana Sahu <quic_aarasahu@quicinc.com>
+ 15.2.1544.9; Sun, 19 Jan 2025 05:58:09 -0800
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-        Aaradhana Sahu
-	<quic_aarasahu@quicinc.com>
-Subject: [PATCH v10 2/4] wifi: ath12k: export ath12k_wmi_tlv_hdr for testmode
-Date: Sun, 19 Jan 2025 14:06:55 +0530
-Message-ID: <20250119083657.1937557-3-quic_aarasahu@quicinc.com>
+        Karthikeyan Periyasamy
+	<quic_periyasa@quicinc.com>
+Subject: [PATCH v3 00/10] wifi: ath12k: Add peer extended Rx statistics debugfs support
+Date: Sun, 19 Jan 2025 19:27:41 +0530
+Message-ID: <20250119135751.2221902-1-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250119083657.1937557-1-quic_aarasahu@quicinc.com>
-References: <20250119083657.1937557-1-quic_aarasahu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,75 +56,87 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: MoR0eY8oO37pY2Jyl3BA8JVYlMH30Vj5
-X-Proofpoint-ORIG-GUID: MoR0eY8oO37pY2Jyl3BA8JVYlMH30Vj5
+X-Proofpoint-GUID: 5QCLBY2hjRJnKQ1ByYbyXCiINE0yK_dg
+X-Proofpoint-ORIG-GUID: 5QCLBY2hjRJnKQ1ByYbyXCiINE0yK_dg
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-18_10,2025-01-16_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
- suspectscore=0 clxscore=1015 spamscore=0 mlxscore=0 bulkscore=0
- lowpriorityscore=0 adultscore=0 malwarescore=0 mlxlogscore=874
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501190071
+ definitions=2025-01-19_01,2025-01-16_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
+ mlxscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ impostorscore=0 clxscore=1015 spamscore=0 adultscore=0 mlxlogscore=765
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501190106
 
-Export ath12k_wmi_tlv_hdr() to further use in the testmode command
-processing.
+Currently, peer extended Rx statistics are not supported. Peer extended Rx
+statistics are collected form the TLV data reported in the monitor status
+Rx path. Therefore, add support for TLV tag parser handling and debugfs
+to configure and dump the collected information. Additionally, this series
+does not impact the WCN7850.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+Depends-On:
+	[PATCH v2 00/14] wifi: ath12k: Enable monitor ring for updating station dump in QCN9274
+	https://lore.kernel.org/all/20241223060132.3506372-1-quic_ppranees@quicinc.com/
 
-Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/wmi.c | 4 ++--
- drivers/net/wireless/ath/ath12k/wmi.h | 3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+v3:
+ wifi: ath12k: Add peer extended Rx statistics debugfs support
+  - avoid ext_rx_stats filter overwrite in default filter setting
+v2:
+ wifi: ath12k: Add HAL_PHYRX_GENERIC_U_SIG TLV parsing support
+ wifi: ath12k: Add HAL_PHYRX_GENERIC_EHT_SIG TLV parsing support
+  - fixed the length calculation in the EHT radiotap procedure
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 4dd6cdf84571..246b8aab49a9 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: BSD-3-Clause-Clear
- /*
-  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- #include <linux/skbuff.h>
- #include <linux/ctype.h>
-@@ -173,7 +173,7 @@ static const struct ath12k_wmi_tlv_policy ath12k_wmi_tlv_policies[] = {
- 		.min_len = sizeof(struct wmi_p2p_noa_event) },
- };
- 
--static __le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len)
-+__le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len)
- {
- 	return le32_encode_bits(cmd, WMI_TLV_TAG) |
- 		le32_encode_bits(len, WMI_TLV_LEN);
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index b6a197389277..00d024d4eb2c 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: BSD-3-Clause-Clear */
- /*
-  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
-+ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
-  */
- 
- #ifndef ATH12K_WMI_H
-@@ -5754,6 +5754,7 @@ int ath12k_wmi_set_bios_cmd(struct ath12k_base *ab, u32 param_id,
- 			    const u8 *buf, size_t buf_len);
- int ath12k_wmi_set_bios_sar_cmd(struct ath12k_base *ab, const u8 *psar_table);
- int ath12k_wmi_set_bios_geo_cmd(struct ath12k_base *ab, const u8 *pgeo_table);
-+__le32 ath12k_wmi_tlv_hdr(u32 cmd, u32 len);
- 
- static inline u32
- ath12k_wmi_caps_ext_get_pdev_id(const struct ath12k_wmi_caps_ext_params *param)
+Balamurugan Mahalingam (2):
+  wifi: ath12k: Add EHT MCS support in Extended Rx statistics
+  wifi: ath12k: Refactor the format of peer rate table information
+
+Karthikeyan Periyasamy (7):
+  wifi: ath12k: Add HAL_PHYRX_GENERIC_U_SIG TLV parsing support
+  wifi: ath12k: Add HAL_PHYRX_GENERIC_EHT_SIG TLV parsing support
+  wifi: ath12k: Add HAL_RX_PPDU_START_USER_INFO TLV parsing support
+  wifi: ath12k: Add HAL_PHYRX_OTHER_RECEIVE_INFO TLV parsing support
+  wifi: ath12k: Update the peer id in PPDU end user stats TLV
+  wifi: ath12k: Add EHT rate statistics support
+  wifi: ath12k: Add peer extended Rx statistics debugfs support
+
+P Praneesh (1):
+  wifi: ath12k: fix the ampdu id fetch in the HAL_RX_MPDU_START TLV
+
+ drivers/net/wireless/ath/ath12k/Makefile      |    2 +-
+ drivers/net/wireless/ath/ath12k/core.h        |   11 +-
+ drivers/net/wireless/ath/ath12k/debugfs.c     |  100 +-
+ drivers/net/wireless/ath/ath12k/debugfs.h     |   21 +-
+ drivers/net/wireless/ath/ath12k/debugfs_sta.c |  336 ++++++
+ drivers/net/wireless/ath/ath12k/debugfs_sta.h |   24 +
+ drivers/net/wireless/ath/ath12k/dp_mon.c      | 1064 ++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/dp_rx.c       |   15 +
+ drivers/net/wireless/ath/ath12k/hal_rx.h      |  430 ++++++-
+ drivers/net/wireless/ath/ath12k/mac.c         |   19 +-
+ drivers/net/wireless/ath/ath12k/mac.h         |    6 +-
+ drivers/net/wireless/ath/ath12k/rx_desc.h     |   10 +-
+ 12 files changed, 1976 insertions(+), 62 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath12k/debugfs_sta.c
+ create mode 100644 drivers/net/wireless/ath/ath12k/debugfs_sta.h
+
+
+base-commit: e7ef944b3e2c31b608800925e784f67596375770
+prerequisite-patch-id: afb04ab90da26435239077de723d1276946a194a
+prerequisite-patch-id: 1b12bea72973c14f461b8202eed9432f27932876
+prerequisite-patch-id: a6719494f46b8568504be8c64255676e67b4deda
+prerequisite-patch-id: 054756eb1705babff324a743e62685bb78035198
+prerequisite-patch-id: 889c4a0174fac23261705a42b46e923d7e7a0a18
+prerequisite-patch-id: ea0321fbd8a59c09191873f59b6aea8225f4b8e5
+prerequisite-patch-id: 3c8ccb635d319f8755649e445b68feb615fd82c4
+prerequisite-patch-id: d516b2a3196218f42fdf4567516a1fd2c8b4c40f
+prerequisite-patch-id: a2c59b4e468384e27d934a986e5fe9a951685fd9
+prerequisite-patch-id: 359fecf93ef53f39243cc1b3466ab06fbd33cc71
+prerequisite-patch-id: bf0b6542c65299c0bfa7fef2da6f09dd8453c39f
+prerequisite-patch-id: 1dc79cafb399be590d1e418afcc5a719ae35834f
+prerequisite-patch-id: fb1e39f2dce024ff692b0e6b112dc90c6a43ad00
+prerequisite-patch-id: 9ea3943ae0b6e6a5a09cb648eaa35f8087967ac3
 -- 
 2.34.1
 
