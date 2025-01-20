@@ -1,50 +1,50 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9431B0435;
-	Mon, 20 Jan 2025 09:48:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E7F51B0F0B;
+	Mon, 20 Jan 2025 09:49:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737366540; cv=none; b=NhyU6fHrZ4ob+IusjenZbZ34LREQSTS/M9oazRlJL6cZcRYAI3Vh1+nk9lRskC07+j1hVUq9CWjw/vmYeigpNRekl1Ga7tOwjHAwHtAkCTaCWGyWygi1vhlfprLNVV7IYCPCqYvL99Vqt/wE8fPA41nKEll3Oi6DeBwQBAJ7Zxs=
+	t=1737366542; cv=none; b=ukjqN/KkEoWmyvekWfjVcUeikiiMH606qMdjAF97OqdsQACYr7GJCoA5tFmD8OZpnCH/PXy9Dx39AifoAsqB6728SnCB+U3tkKUCaOGXu0jy0bYEfXbPeRtPgqF2AXxLV+/HkWv+RDQ6PMx1PWAuSNOHaVfP16+acvoqcRVi4uQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737366540; c=relaxed/simple;
-	bh=eI6bUO76ZCGRVuvZnIDubXWP8BQ3261ExG8vxGz8X8M=;
+	s=arc-20240116; t=1737366542; c=relaxed/simple;
+	bh=x91T47JCD9kUEfsZtBD0gMONiIaK3ZFLzxYUoRAmzhk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=hJrSHioQuluspsKu7F5oBqwVyzoreGbjsx/5PGPFawQAdzOTb4+xf6sse9oGXWwESclhX9ClX8O6Yrz1CTBEagpPWPBzLGV91Kmcx/dglw+mjhwNIZCNvPlz2+SjxhO/GPWXL1a5f85PyqgNoWCaeBcJJI/jMkck+/sC1FOLmwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ZvtkxV9H; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:CC; b=m5Zf3Ri9M9ElMS/67aBx+TUhTMwKa2PPXezbTEs2zfshEbPJdVdel04mnLJy6/Z2ILzomKIMGTJRKMgJiW5nuPYTdtBVOHpabtEHqivx3SO6IBhzcxP2/QDO9RX2RhPKjMl3ycBpArPO0lgzPvfM/H6F83uZj2cPInRUkP+CKOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pNKbb7bb; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ZvtkxV9H"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50K9RaeH014433;
-	Mon, 20 Jan 2025 09:48:55 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pNKbb7bb"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50K7HoiM011766;
+	Mon, 20 Jan 2025 09:48:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	BDQHH4jMREkbEeCTVmx2EsVjl8gHmKo7qd3cXINLy/U=; b=ZvtkxV9H9/IZjifj
-	v6gS/z+CXzPY+hHk3122DGfGmVHV2hYQ8lRNFuT2/9QyJrpIjxg7MDwL6FQG6Wmv
-	I7heWQdAciVpwrHSwsOuJR5HGntyvjh3ed1ma/qwU8a3GBQvO8mJq6GdBzAFe6Sw
-	7zcpgU89gzL3sxKIODFw86uJOe75gwhs2+0vjvSv11ZHD+WPXwyZ/1NwaWUSHCjq
-	VfuIZjkbaDRiJoys+a5FVKZxvUtIweS6W6ws4YasDv9q5FGOj56F4erfC0eBn9wc
-	IkvjCK+3e7UHBQFEdYc+u9kgIzSHg9ebY43Zk/6J76E/xiAbCoBfxLADM1Dgvj5d
-	1ZPgDQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 449kvh81md-1
+	PiVP4ZNR1jPHjTXytk+PgMSUIfF/Zxg2VHl5D4U+cgU=; b=pNKbb7bb9WjpcKWC
+	iybCbt7H98rWSnBOOQr/mZ1B+Z4CgOl8gQDhr8tD5t9oGmfb+oQ3QerHUtGzSH/b
+	1UyZuwvra10fA39K3zMaiogj261AZg7n6N07gFtUMPo+bamSMJfZBvj7lbz5p0LC
+	6DolWtpLTlBo1kqL9GgVdBUMpBIay251WX7tuDrPCi8omA8/t0Cj8+nBQ5BtDm4J
+	tA6KecdqsKCNI4qD3B4xvM43RBNXOvre+0mDniI4CjqyrUeGncUVVfJCY3dq3vHj
+	qpF7ZCABNFBsEERnDGAdXTXQRx2Y9n5VYwi4Uc2Ip0BUKbRBjqS0pUUIAocAdvDe
+	m8hHqg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 449hykrbwp-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Mon, 20 Jan 2025 09:48:55 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50K9ms3X023468
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50K9mfHk005391
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 20 Jan 2025 09:48:54 GMT
+	Mon, 20 Jan 2025 09:48:41 GMT
 Received: from hu-adisi-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 20 Jan 2025 01:48:51 -0800
+ 15.2.1544.9; Mon, 20 Jan 2025 01:48:38 -0800
 From: Aditya Kumar Singh <quic_adisi@quicinc.com>
-Date: Mon, 20 Jan 2025 15:18:26 +0530
-Subject: [PATCH v2 06/10] wifi: ath12k: fix
- ath12k_core_pre_reconfigure_recovery() with grouping
+Date: Mon, 20 Jan 2025 15:18:22 +0530
+Subject: [PATCH v2 02/10] wifi: ath12k: add reference counting for core
+ attachment to hardware group
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,7 +53,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20250120-fix_reboot_issues_with_hw_grouping-v2-6-b7d073bb2a22@quicinc.com>
+Message-ID: <20250120-fix_reboot_issues_with_hw_grouping-v2-2-b7d073bb2a22@quicinc.com>
 References: <20250120-fix_reboot_issues_with_hw_grouping-v2-0-b7d073bb2a22@quicinc.com>
 In-Reply-To: <20250120-fix_reboot_issues_with_hw_grouping-v2-0-b7d073bb2a22@quicinc.com>
 To: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
@@ -71,74 +71,140 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: OeXKrCk-DbuiDswL1v-Ye3xkMrmual5O
-X-Proofpoint-ORIG-GUID: OeXKrCk-DbuiDswL1v-Ye3xkMrmual5O
+X-Proofpoint-GUID: X_u0jeJwTWvOmfgh24gogG9RQKa-zY0o
+X-Proofpoint-ORIG-GUID: X_u0jeJwTWvOmfgh24gogG9RQKa-zY0o
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-20_02,2025-01-20_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- lowpriorityscore=0 malwarescore=0 priorityscore=1501 spamscore=0
- bulkscore=0 phishscore=0 mlxlogscore=999 impostorscore=0 adultscore=0
- suspectscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501200081
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 mlxlogscore=999 clxscore=1015 spamscore=0
+ suspectscore=0 malwarescore=0 mlxscore=0 bulkscore=0 adultscore=0
+ phishscore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2501200081
 
-Currently, ath12k_core_pre_reconfigure_recovery() reconfigures all radios
-within the same group. During grouping and driver going for a recovery,
-this function is called as many times as there are devices in the group.
-Consequently, it performs the same reconfiguration multiple times, which
-is unnecessary.
+Currently, driver does not manage reference counting for attaching and
+detaching cores to/from hardware groups. This can lead to issues when
+multiple cores are involved. Or with same core, attach/detach is called
+multiple times back to back.
 
-To prevent this, add a check to continue if the action has already been
-taken.
+Fix this issue by using reference counting.
 
-To simplify the management of various flags, the reason for hardware queues
-being stopped is used as a check instead of introducing a new flag.
+With that, it is now ensured that the core is properly attached or detached
+from the hardware group and even back to back calls will not alter the
+count.
 
-While at it, also add missing wiphy locks. Wiphy lock is required since
-ath12k_mac_drain_tx() which is called by
-ath12k_core_pre_reconfigure_recovery() needs this lock to be held by the
-caller.
+Additionally, add some debug logs during the attachment and detachment
+events for better debugging and tracking.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 
 Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/ath/ath12k/core.c | 47 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath12k/core.h | 15 +----------
+ 2 files changed, 44 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index 988fb25778b9d3b62544719200ca505eb6bcfd80..548af77ba892928c3e73fd7c917ad344b35e6883 100644
+index 1959c59cb2bb18aeec215b9d309468b7c6716752..05a914a3f8555236deeab89729d02527e7b4d786 100644
 --- a/drivers/net/wireless/ath/ath12k/core.c
 +++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1281,6 +1281,18 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
- 		if (!ah || ah->state == ATH12K_HW_STATE_OFF)
- 			continue;
+@@ -603,9 +603,49 @@ u32 ath12k_core_get_max_num_tids(struct ath12k_base *ab)
+ 	return TARGET_NUM_TIDS(SINGLE);
+ }
  
-+		wiphy_lock(ah->hw->wiphy);
++static inline
++void ath12k_core_to_group_ref_get(struct ath12k_base *ab)
++{
++	struct ath12k_hw_group *ag = ab->ag;
 +
-+		/* If queue 0 is stopped, it is safe to assume that all
-+		 * other queues are stopped by driver via
-+		 * ieee80211_stop_queues() below. This means, there is
-+		 * no need to stop it again and hence continue
-+		 */
-+		if (ieee80211_queue_stopped(ah->hw, 0)) {
-+			wiphy_unlock(ah->hw->wiphy);
-+			continue;
-+		}
++	lockdep_assert_held(&ag->mutex);
 +
- 		ieee80211_stop_queues(ah->hw);
++	if (ab->hw_group_ref) {
++		ath12k_dbg(ab, ATH12K_DBG_BOOT, "core already attached to group %d\n",
++			   ag->id);
++		return;
++	}
++
++	ab->hw_group_ref = true;
++	ag->num_started++;
++
++	ath12k_dbg(ab, ATH12K_DBG_BOOT, "core attached to group %d, num_started %d\n",
++		   ag->id, ag->num_started);
++}
++
++static inline
++void ath12k_core_to_group_ref_put(struct ath12k_base *ab)
++{
++	struct ath12k_hw_group *ag = ab->ag;
++
++	lockdep_assert_held(&ag->mutex);
++
++	if (!ab->hw_group_ref) {
++		ath12k_dbg(ab, ATH12K_DBG_BOOT, "core already de-attached from group %d\n",
++			   ag->id);
++		return;
++	}
++
++	ab->hw_group_ref = false;
++	ag->num_started--;
++
++	ath12k_dbg(ab, ATH12K_DBG_BOOT, "core de-attached from group %d, num_started %d\n",
++		   ag->id, ag->num_started);
++}
++
+ static void ath12k_core_stop(struct ath12k_base *ab)
+ {
+-	ath12k_core_stopped(ab);
++	ath12k_core_to_group_ref_put(ab);
  
- 		for (j = 0; j < ah->num_radio; j++) {
-@@ -1303,6 +1315,8 @@ static void ath12k_core_pre_reconfigure_recovery(struct ath12k_base *ab)
- 			idr_destroy(&ar->txmgmt_idr);
- 			wake_up(&ar->txmgmt_empty_waitq);
- 		}
-+
-+		wiphy_unlock(ah->hw->wiphy);
- 	}
+ 	if (!test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags))
+ 		ath12k_qmi_firmware_stop(ab);
+@@ -841,9 +881,8 @@ static int ath12k_core_start(struct ath12k_base *ab,
+ 		/* ACPI is optional so continue in case of an error */
+ 		ath12k_dbg(ab, ATH12K_DBG_BOOT, "acpi failed: %d\n", ret);
  
- 	wake_up(&ab->wmi_ab.tx_credits_wq);
+-	if (!test_bit(ATH12K_FLAG_RECOVERY, &ab->dev_flags))
+-		/* Indicate the core start in the appropriate group */
+-		ath12k_core_started(ab);
++	/* Indicate the core start in the appropriate group */
++	ath12k_core_to_group_ref_get(ab);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index ee595794a7aee83a7695fb57d6b8e2e74eabf3aa..e20551a8838622dfaaff8943915b0a251d5b4e86 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -1052,6 +1052,7 @@ struct ath12k_base {
+ 
+ 	struct ath12k_hw_group *ag;
+ 	struct ath12k_wsi_info wsi_info;
++	bool hw_group_ref;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+@@ -1210,20 +1211,6 @@ static inline struct ath12k_hw_group *ath12k_ab_to_ag(struct ath12k_base *ab)
+ 	return ab->ag;
+ }
+ 
+-static inline void ath12k_core_started(struct ath12k_base *ab)
+-{
+-	lockdep_assert_held(&ab->ag->mutex);
+-
+-	ab->ag->num_started++;
+-}
+-
+-static inline void ath12k_core_stopped(struct ath12k_base *ab)
+-{
+-	lockdep_assert_held(&ab->ag->mutex);
+-
+-	ab->ag->num_started--;
+-}
+-
+ static inline struct ath12k_base *ath12k_ag_to_ab(struct ath12k_hw_group *ag,
+ 						  u8 device_id)
+ {
 
 -- 
 2.34.1
