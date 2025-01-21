@@ -1,246 +1,106 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE59188006;
-	Tue, 21 Jan 2025 01:33:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D983BBE5
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2025 04:40:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737423204; cv=none; b=LS5nKtpx57r/wB/0qKQBsuJWny0XTJfiGWokpT5D4VTOEjbbshu0TxX46L7U+3uoI28Iur9WeDt17B9FVwX3w8ZM/15silY+teL+6714BKESDRT8U+ckNWqehhGjO4yCQJ0PxtfcOztmm1BOpU6BDJMFax09OQY7qNeQOlzEgRM=
+	t=1737434419; cv=none; b=eJWKAGa9FfyaxHPHrBL/e5p9hHPpke9YxcmT+wyT9vDCLAX1jWRHhrgDwX5OTZ3Cc7jHgC1XDPG4TaR+KoeCTuWHzXWyPuBLRY5leQyl1/9DVgQiBtM8yRev7MIKKsiNgNGrcgQJ03icwwLbEsq4GFWVznujEtbu+e2CBbI8ZxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737423204; c=relaxed/simple;
-	bh=CRXk7XMa0DMM/R41q7VZUzVo85QJLovxKxX3D4dGsPo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j2LPrqeJeFr+O6Pd+S0ozCCvY+cgA1EADF+mrAsP9gbDb/KOBngQR0vg2rT8srRj+22++n13JDnO/sdS1GkVZ5q4F+NHH4MU4pCjVYImtqs7m3H/orpD9JHCIT4CdHkMKsHJYqQWhmX5A0KT9q56+TnSFYcL2D5DPB9MFRk377g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=JgaXl73f; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
+	s=arc-20240116; t=1737434419; c=relaxed/simple;
+	bh=jBsflptO+lzsQFEiG4Ykc2dSZYPFyJY+htKPxciWwOg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ZBgoFRRC7P56JAj5gTR4BURVDr+NoHjcywotaWBoLUmo+Vsu64BluDk/RX2byXgiAYCR7t2K61M4AG4jB+XZxf9AvYjt39syRRKvC8vNLTPQHRedfXft6XSbEjYWn/dl054KuuIwbDPJXZ6Q/SZOTHGpTUl5ENH5rerFybdttCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XRIjjuFN; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="JgaXl73f"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=vyjyO37Ga6Gx8qYJ0PsYqbzurBUaw5cOYROc+FVJCFA=; b=JgaXl73flt2ljOVl
-	RXhN0K8JszqUNYjxo++gzd6NqllkY8DiNIfgqCEO/nNRAT6EtASF/37RAeCVAO7QTFuuoHv0RRbGL
-	l810z7Gi12fNQ47oz+9EfL5hEM/o44iRFTtVneZelgNgoSm5JPYg/M3YI3dxYaNk4MVb3C3H0kZaA
-	QaMKXRpe9hY3fKW+ug+qDyLRkHRPA2F6p3VfCpcdKgv9/N8IJflTWpweDhG1RrX45l8nXIuzBjKx7
-	7oNz6moW2+9LWTZMqp/OQQA3X/dLp4lhgSus+wn1RQPJjjyIV925N0wb/8NdCWMNbcMzisku+lrgW
-	e9XytQV/dpTTEhN5lQ==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1ta38Y-00BEI2-06;
-	Tue, 21 Jan 2025 01:33:02 +0000
-From: linux@treblig.org
-To: kvalo@kernel.org,
-	libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH 2/3] wifi: libertas: Remove unused cmd functions
-Date: Tue, 21 Jan 2025 01:32:59 +0000
-Message-ID: <20250121013300.433538-3-linux@treblig.org>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250121013300.433538-1-linux@treblig.org>
-References: <20250121013300.433538-1-linux@treblig.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XRIjjuFN"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50KNGsVE014241;
+	Tue, 21 Jan 2025 04:40:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	eLZ66EA0oEnYbbajR85OhvcVgHaE3xcQ3t0bbCkABPw=; b=XRIjjuFNZwfF8ig4
+	a+HnoPMHkPzGkyW+/9SInnpIj7zYvJnLaoc5SvXqblpowlDkw7/LiCETiQFlN148
+	ff6GkdYHvC5lxT10tEc5M6EFizWG7986mR5RKEA4zH2AemvxyklVgXyFM4/qfZh+
+	iUrOol8Boa/G4bfGMZJexIzp9O+/Octg2ANM00pGlXy22I6qbr+14C16479xXv13
+	KDlkqBhCQwOxncOPCe00OMLIzPSGNQjfgtTGS8+UYCeQeaKin7Ss86Luzkn+aSg3
+	mazKbceOhBSqUZRHEXe3ENavHQl4tsw9Rss6oZiBOYZkW+oqWUj0zk04wCr8Gqqf
+	z8wTNA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 449xxcgk9v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Jan 2025 04:40:12 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50L4eBoW021583
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 21 Jan 2025 04:40:11 GMT
+Received: from [10.152.202.18] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 20 Jan
+ 2025 20:40:09 -0800
+Message-ID: <b38164bf-3ea3-41d4-8387-330623257ad8@quicinc.com>
+Date: Tue, 21 Jan 2025 10:10:06 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] wifi: ath12k: Add WMI control path stats infra
+To: Ramya Gnanasekar <ramya.gnanasekar@oss.qualcomm.com>,
+        <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, Rajat Soni <rajat.soni@oss.qualcomm.com>
+References: <20250120184447.658660-1-ramya.gnanasekar@oss.qualcomm.com>
+From: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Content-Language: en-US
+In-Reply-To: <20250120184447.658660-1-ramya.gnanasekar@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: W4p38yunCZkTZwmfCqte6pnyVepkPfTO
+X-Proofpoint-GUID: W4p38yunCZkTZwmfCqte6pnyVepkPfTO
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-21_02,2025-01-20_03,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0
+ impostorscore=0 lowpriorityscore=0 mlxlogscore=735 mlxscore=0 bulkscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501210035
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+On 1/21/25 00:14, Ramya Gnanasekar wrote:
+> @@ -559,6 +559,13 @@ struct ath12k_debug {
+>   	struct dentry *debugfs_pdev;
+>   	struct dentry *debugfs_pdev_symlink;
+>   	struct ath12k_dbg_htt_stats htt_stats;
+> +	struct ath12k_wmi_ctrl_path_stats_list wmi_ctrl_path_stats;
+> +	enum wmi_tlv_tag wmi_ctrl_path_stats_tagid;
+> +	struct completion wmi_ctrl_path_stats_rcvd;
+> +	u8 wmi_ctrl_path_stats_reqid;
+> +	/* To protect wmi_list manipulation */
+> +	spinlock_t  wmi_ctrl_path_stats_lock;
 
-lbs_get_snmp_mib(), lbs_set_power_adapt_cfg(), lbs_set_tpc_cfg()
-and lbs_set_tx_power() have been unused since 2010's
-commit e86dc1ca4676 ("Libertas: cfg80211 support")
+nit: extra space between type and name
 
-Remove them.
+@@ -92,6 +243,11 @@ void ath12k_debugfs_register(struct ath12k *ar)
+>   	}
+>   
+>   	ath12k_debugfs_htt_stats_register(ar);
+> +
+> +	if (test_bit(WMI_TLV_SERVICE_CTRL_PATH_STATS_REQUEST,
+> +		     ar->ab->wmi_ab.svc_map))
+> +		ath12k_debugfs_wmi_ctrl_stats_register(ar);
+> +
+>   }
 
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
- drivers/net/wireless/marvell/libertas/cmd.c | 129 --------------------
- drivers/net/wireless/marvell/libertas/cmd.h |  10 --
- 2 files changed, 139 deletions(-)
+drivers/net/wireless/ath/ath12k/debugfs.c:251: Blank lines aren't necessary before a close brace '}'
 
-diff --git a/drivers/net/wireless/marvell/libertas/cmd.c b/drivers/net/wireless/marvell/libertas/cmd.c
-index 5a525da434c2..4032bbd28acd 100644
---- a/drivers/net/wireless/marvell/libertas/cmd.c
-+++ b/drivers/net/wireless/marvell/libertas/cmd.c
-@@ -452,46 +452,6 @@ int lbs_set_snmp_mib(struct lbs_private *priv, u32 oid, u16 val)
- 	return ret;
- }
- 
--/**
-- *  lbs_get_snmp_mib - Get an SNMP MIB value
-- *
-- *  @priv:	A pointer to &struct lbs_private structure
-- *  @oid:	The OID to retrieve from the firmware
-- *  @out_val:	Location for the returned value
-- *
-- *  returns:	0 on success, error on failure
-- */
--int lbs_get_snmp_mib(struct lbs_private *priv, u32 oid, u16 *out_val)
--{
--	struct cmd_ds_802_11_snmp_mib cmd;
--	int ret;
--
--	memset(&cmd, 0, sizeof (cmd));
--	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
--	cmd.action = cpu_to_le16(CMD_ACT_GET);
--	cmd.oid = cpu_to_le16(oid);
--
--	ret = lbs_cmd_with_response(priv, CMD_802_11_SNMP_MIB, &cmd);
--	if (ret)
--		goto out;
--
--	switch (le16_to_cpu(cmd.bufsize)) {
--	case sizeof(u8):
--		*out_val = cmd.value[0];
--		break;
--	case sizeof(u16):
--		*out_val = le16_to_cpu(*((__le16 *)(&cmd.value)));
--		break;
--	default:
--		lbs_deb_cmd("SNMP_CMD: (get) unhandled OID 0x%x size %d\n",
--		            oid, le16_to_cpu(cmd.bufsize));
--		break;
--	}
--
--out:
--	return ret;
--}
--
- /**
-  *  lbs_get_tx_power - Get the min, max, and current TX power
-  *
-@@ -524,31 +484,6 @@ int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
- 	return ret;
- }
- 
--/**
-- *  lbs_set_tx_power - Set the TX power
-- *
-- *  @priv:	A pointer to &struct lbs_private structure
-- *  @dbm:	The desired power level in dBm
-- *
-- *  returns: 	   	0 on success, error on failure
-- */
--int lbs_set_tx_power(struct lbs_private *priv, s16 dbm)
--{
--	struct cmd_ds_802_11_rf_tx_power cmd;
--	int ret;
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
--	cmd.action = cpu_to_le16(CMD_ACT_SET);
--	cmd.curlevel = cpu_to_le16(dbm);
--
--	lbs_deb_cmd("SET_RF_TX_POWER: %d dBm\n", dbm);
--
--	ret = lbs_cmd_with_response(priv, CMD_802_11_RF_TX_POWER, &cmd);
--
--	return ret;
--}
--
- /**
-  *  lbs_set_monitor_mode - Enable or disable monitor mode
-  *  (only implemented on OLPC usb8388 FW)
-@@ -1440,70 +1375,6 @@ void lbs_ps_confirm_sleep(struct lbs_private *priv)
- }
- 
- 
--/**
-- * lbs_set_tpc_cfg - Configures the transmission power control functionality
-- *
-- * @priv:	A pointer to &struct lbs_private structure
-- * @enable:	Transmission power control enable
-- * @p0:		Power level when link quality is good (dBm).
-- * @p1:		Power level when link quality is fair (dBm).
-- * @p2:		Power level when link quality is poor (dBm).
-- * @usesnr:	Use Signal to Noise Ratio in TPC
-- *
-- * returns:	0 on success
-- */
--int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
--		int8_t p2, int usesnr)
--{
--	struct cmd_ds_802_11_tpc_cfg cmd;
--	int ret;
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
--	cmd.action = cpu_to_le16(CMD_ACT_SET);
--	cmd.enable = !!enable;
--	cmd.usesnr = !!usesnr;
--	cmd.P0 = p0;
--	cmd.P1 = p1;
--	cmd.P2 = p2;
--
--	ret = lbs_cmd_with_response(priv, CMD_802_11_TPC_CFG, &cmd);
--
--	return ret;
--}
--
--/**
-- * lbs_set_power_adapt_cfg - Configures the power adaptation settings
-- *
-- * @priv:	A pointer to &struct lbs_private structure
-- * @enable:	Power adaptation enable
-- * @p0:		Power level for 1, 2, 5.5 and 11 Mbps (dBm).
-- * @p1:		Power level for 6, 9, 12, 18, 22, 24 and 36 Mbps (dBm).
-- * @p2:		Power level for 48 and 54 Mbps (dBm).
-- *
-- * returns:	0 on Success
-- */
--
--int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
--		int8_t p1, int8_t p2)
--{
--	struct cmd_ds_802_11_pa_cfg cmd;
--	int ret;
--
--	memset(&cmd, 0, sizeof(cmd));
--	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
--	cmd.action = cpu_to_le16(CMD_ACT_SET);
--	cmd.enable = !!enable;
--	cmd.P0 = p0;
--	cmd.P1 = p1;
--	cmd.P2 = p2;
--
--	ret = lbs_cmd_with_response(priv, CMD_802_11_PA_CFG , &cmd);
--
--	return ret;
--}
--
--
- struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
- 	uint16_t command, struct cmd_header *in_cmd, int in_cmd_size,
- 	int (*callback)(struct lbs_private *, unsigned long, struct cmd_header *),
-diff --git a/drivers/net/wireless/marvell/libertas/cmd.h b/drivers/net/wireless/marvell/libertas/cmd.h
-index d7be232f5739..a95c2651e67f 100644
---- a/drivers/net/wireless/marvell/libertas/cmd.h
-+++ b/drivers/net/wireless/marvell/libertas/cmd.h
-@@ -105,19 +105,9 @@ int lbs_get_tx_power(struct lbs_private *priv, s16 *curlevel, s16 *minlevel,
- 
- int lbs_set_snmp_mib(struct lbs_private *priv, u32 oid, u16 val);
- 
--int lbs_get_snmp_mib(struct lbs_private *priv, u32 oid, u16 *out_val);
--
- 
- /* Commands only used in wext.c, assoc. and scan.c */
- 
--int lbs_set_power_adapt_cfg(struct lbs_private *priv, int enable, int8_t p0,
--		int8_t p1, int8_t p2);
--
--int lbs_set_tpc_cfg(struct lbs_private *priv, int enable, int8_t p0, int8_t p1,
--		int8_t p2, int usesnr);
--
--int lbs_set_tx_power(struct lbs_private *priv, s16 dbm);
--
- int lbs_set_deep_sleep(struct lbs_private *priv, int deep_sleep);
- 
- int lbs_set_host_sleep(struct lbs_private *priv, int host_sleep);
 -- 
-2.48.1
-
+Aditya
