@@ -1,55 +1,66 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C771BF7E8
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2025 09:19:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF1A1B0422
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2025 09:38:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737451160; cv=none; b=CrLLWhNBd+LLnGSV6UyPK33KtGxtd17YgORl2xcGBfyi3Il0owCuwREXonrDVae8HgDjWx75zczW+ui1J6im6e5VbZn3CRNvaFPLnNCK8PgHHGol4Uf59NQudK+5vr2N4H+9NIawKkusLjRDyJM9Ky7F62moevG5xtq17KzaiJA=
+	t=1737452319; cv=none; b=sX0x14aFHR90QflT5sxmrcbJnlUk6c40pukmkKYlLYUA6LzqLP9VfldG7pKFerMUMAcB6TIaD3FDU6VPvydSwWmdps7YMjfsT61AmUGD5G/NPIWAbLi/ZoxMJfqcmEZ4WObajkoS7y7V0YLG3YCN5HrwRj71gksLMZo72LoVqzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737451160; c=relaxed/simple;
-	bh=3vCxESQE5Cq2A8xt7Qh6LPOAKLIYSEAADsV8+CpOoUA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d3HRpHyx9eli6MD2f1Lo8wwUFYnbCq4cNM8C65TxWPSmPfLbKqpClMExc4oCT3QPYONZ4c96cniFjtJdDM0dBrLsJn2rcD5O7Ja/r6bE7bl56Z4uVSF8tSWj2ytj3aE0adH42uEOD0m4EJnCIu/3ok9rtaPfprgRfyNb7vaVx1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=WJXjJ1/n; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1737452319; c=relaxed/simple;
+	bh=RL3kKElF6nFODZWuDdlz+JuQWkXZK1hUVs2vl2N8I/s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=koogF9mFQtBRV2AbL1tF0imLrYa/QBNvtwl1k4chxXRqeO5AsgY5BA9EM4Fr0I1VAW4qCmmTeSrsm+dwSUYTofh1FsZtBN8vYG6uW/+BQQXzM8XqKfL689tZAl1cMjUYsffVJRnwPmV1FYv+fZGw6Ky9yDSZ3ixeskUMqRykcB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PmuKZcVL; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="WJXjJ1/n"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50L8Yv0R001671;
-	Tue, 21 Jan 2025 09:19:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	7n+wY55W5+gPQo5ttFtrDZ7JQZFqZ2z68ygZHULIQ28=; b=WJXjJ1/naIUn5BuE
-	RtHIvu0i9d26olBlytQZKUkiSRp19YF3Lsadq0ZR4dELL/avzK1pK2MwhdNOcM3W
-	ykT8SGBHCEZCAp49nnkDQUPOnuqRWqogn6QmptIOsnUFcc2cssXoUWKecTS0y5UO
-	Z8XIuukM330eaWh4uugBX7EBnCRrV0XWOqbwoHRGdKDwD+i/AgKeGSkoqEaOl4w9
-	uA6hojRObWAu6xZCCUpxZ6q0dJlqKL+yHQY8MA//YwcJxRHHDZAgG5OZkmMcb2FJ
-	S6GsXbUKN8TIzQ3HLRe/sTYEFKitZRTkhWsIyUPxI5i2jbh1y0w1PuyhfdgGbiFd
-	oP632g==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44a866r5ty-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 09:19:15 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50L9JE8l026437
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 21 Jan 2025 09:19:14 GMT
-Received: from kangyang.ap.qualcomm.com (10.80.80.8) by
- nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 21 Jan 2025 01:19:13 -0800
-From: Kang Yang <quic_kangyang@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <quic_kangyang@quicinc.com>
-Subject: [PATCH v8 3/4] wifi: ath12k: use correct WMI command to set country code for WCN7850
-Date: Tue, 21 Jan 2025 17:18:43 +0800
-Message-ID: <20250121091844.1987-4-quic_kangyang@quicinc.com>
-X-Mailer: git-send-email 2.34.1.windows.1
-In-Reply-To: <20250121091844.1987-1-quic_kangyang@quicinc.com>
-References: <20250121091844.1987-1-quic_kangyang@quicinc.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PmuKZcVL"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-38a8b17d7a7so2740360f8f.2
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jan 2025 01:38:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1737452315; x=1738057115; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=8aWBFwCxuTMNSEwJNIJNMuustMzcc59od6w7veOripo=;
+        b=PmuKZcVLRSf4DK3qo36h4M5nDbUbZOAHN+6aNwfQwUXT66YfvPcU/zdTYns0WiC+Vu
+         hpnhnew1Thg7j7OHSeDhugdofaupkMsxPEzNwmnSyRaP1S+Cou/wl0dEcCKNwqv7Vl2G
+         xlhxaBmwq2bEL2IG9inWZVLhHEdpwVRVAkq2IVy75EOfRDPtwRPTvua+C9vQBOyv/7H6
+         BQilIHJ+fvJejKPQD7OJHw0KqxDiM898vYIGvRw6UjMYDVdYJbhFYwUdbDcz/lYFw4pv
+         ELE622aGSIvFnXdSwg5hF+1fbdNV4MzrI5vZufWgNnae9JWPdLc4TKGTQf3wN8oM6GD1
+         lLoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1737452315; x=1738057115;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8aWBFwCxuTMNSEwJNIJNMuustMzcc59od6w7veOripo=;
+        b=GnomEKodZlc/IK1/wV5TQ183xqpHSVKyfL+h0wGasojphX1vkvjbY+DxVcA8Xm5wYE
+         nOHAbzT3KefUDgHZgqnWnn/ABRMCM3taZu5jVb1M+ngRfvQaqp/iidyP09eIiuRXH07k
+         RqeE0sdojtqGG/ytGBMrBI1qSttBztOT58w/nxadLWnFYFfYGi0DsnXokX3VYGCdfvIb
+         Qip4v0ORC0xKSB8DEZ75AQVYLdQO3jYCeWuL7gBRM64gcYMU55k8k73YZiaTI6j+ldf9
+         btWwugK8X5rXcXwLNxCrGXtQdfz3C3alYNkAB4yVtMYc64MhzfaFSvDXiNlMQ47CSUxu
+         //2w==
+X-Gm-Message-State: AOJu0YypAhnO2lVpfOMO5AXK+7t+QV7P3sF8kis9oBVCaEkar9WBpbec
+	nSwusEoDox8GsIbX8jDavJA0myFCue/iktIN7o0lhknjzjd9NQjzFwPEEA==
+X-Gm-Gg: ASbGncuxhLmxipZlbnCM8B2Qo7iA8G22nJPK7njXaljdr3mKPVWKbiXoAvih/6dn+6Y
+	rqyX9QL606be6J2aAJtjQJGW1z4t4C0hIrgEagg9Pa/XqT/aXixHcm+Ar86l2Xind+ovdXIlOUF
+	ycR9fLxSjCQpMe3Ap5bwWxr5VaB9mWsabNtY6g8eY+6F0UrF3mLCcALO2KmwCRMXYwxNxMgWogS
+	mMNfJEomdWc6cHfwAmgeu2aNo0JhZsCi7s12BIzFyJh3xHJE6P2phRS5rCQnVjEVGOAOvmczVUM
+	/zfOdjqm27jZAigddNGM9R5Id4o=
+X-Google-Smtp-Source: AGHT+IGe6ZZbfjEVfRn72Mek0BAT7AU+yqft+pgybUOtamCDVmNeN3NqhM9C/Xq7qne6eBPntBylHA==
+X-Received: by 2002:a05:6000:2a9:b0:38a:86fe:52b5 with SMTP id ffacd0b85a97d-38bf566274amr16918094f8f.14.1737452315428;
+        Tue, 21 Jan 2025 01:38:35 -0800 (PST)
+Received: from syracuse.iliad.local (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-38bf32221a8sm12993488f8f.37.2025.01.21.01.38.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jan 2025 01:38:35 -0800 (PST)
+From: Nicolas Escande <nico.escande@gmail.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] wifi: ath12k: add support of station average signal strength
+Date: Tue, 21 Jan 2025 10:38:34 +0100
+Message-ID: <20250121093834.25132-1-nico.escande@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,143 +68,98 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: S_71uFrGO0Ba_dxCgY2nESnaLs8cKC6r
-X-Proofpoint-ORIG-GUID: S_71uFrGO0Ba_dxCgY2nESnaLs8cKC6r
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-21_04,2025-01-21_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxscore=0
- mlxlogscore=999 lowpriorityscore=0 phishscore=0 malwarescore=0 spamscore=0
- adultscore=0 suspectscore=0 impostorscore=0 clxscore=1015
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2501210076
 
-From: Wen Gong <quic_wgong@quicinc.com>
+This adds support for reporting to the kernel the average rssi. This is
+done the same way as it was done in ath11k. A simple ewma (with the same
+parameters) is updated with each rssi update.
 
-When userspace try to set country code by NL80211_REGDOM_SET_BY_USER
-hint(like iw reg set XX), it will pass new country code to ath12k.
-Then ath12k will set this new country code to firmware by
-WMI_SET_INIT_COUNTRY_CMDID. But for WCN7850, this WMI command won't
-take effect.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 
-For AP based chips(QCN92xx), WMI_SET_INIT_COUNTRY_CMDID is the correct
-command. However, for STATION based chips(WCN7850), it need to use
-WMI_SET_CURRENT_COUNTRY_CMDID.
-
-Add flag current_cc_support in hardware parameters. It is used to
-distinguish AP/STA platform. After that, the firmware will work
-normal and the regulatory feature works well for WCN7850.
-
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-
-Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
-Signed-off-by: Kang Yang <quic_kangyang@quicinc.com>
+Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
 ---
- drivers/net/wireless/ath/ath12k/hw.c  |  6 ++++++
- drivers/net/wireless/ath/ath12k/hw.h  |  1 +
- drivers/net/wireless/ath/ath12k/reg.c | 29 ++++++++++++++++-----------
- 3 files changed, 24 insertions(+), 12 deletions(-)
+v2:
+  - removed spurious exta new line at the beggining of core.h
 
-diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
-index b7b583fadb5a..65c52e3217c5 100644
---- a/drivers/net/wireless/ath/ath12k/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/hw.c
-@@ -928,6 +928,8 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.iova_mask = 0,
- 
- 		.supports_aspm = false,
-+
-+		.current_cc_support = false,
- 	},
- 	{
- 		.name = "wcn7850 hw2.0",
-@@ -1008,6 +1010,8 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.iova_mask = ATH12K_PCIE_MAX_PAYLOAD_SIZE - 1,
- 
- 		.supports_aspm = true,
-+
-+		.current_cc_support = true,
- 	},
- 	{
- 		.name = "qcn9274 hw2.0",
-@@ -1084,6 +1088,8 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.iova_mask = 0,
- 
- 		.supports_aspm = false,
-+
-+		.current_cc_support = false,
- 	},
+v1: https://lore.kernel.org/ath12k/20250117172819.3357534-1-nico.escande@gmail.com/
+  - initial version
+---
+ drivers/net/wireless/ath/ath12k/core.h   | 4 ++++
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 2 ++
+ drivers/net/wireless/ath/ath12k/mac.c    | 5 +++++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index ee595794a7aee..83af4381b79ff 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -15,6 +15,7 @@
+ #include <linux/ctype.h>
+ #include <linux/firmware.h>
+ #include <linux/panic_notifier.h>
++#include <linux/average.h>
+ #include "qmi.h"
+ #include "htc.h"
+ #include "wmi.h"
+@@ -477,6 +478,8 @@ struct ath12k_wbm_tx_stats {
+ 	u64 wbm_tx_comp_stats[HAL_WBM_REL_HTT_TX_COMP_STATUS_MAX];
  };
  
-diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
-index 8d52182e28ae..8067b103e266 100644
---- a/drivers/net/wireless/ath/ath12k/hw.h
-+++ b/drivers/net/wireless/ath/ath12k/hw.h
-@@ -190,6 +190,7 @@ struct ath12k_hw_params {
- 	bool reoq_lut_support:1;
- 	bool supports_shadow_regs:1;
- 	bool supports_aspm:1;
-+	bool current_cc_support:1;
- 
- 	u32 num_tcl_banks;
- 	u32 max_tx_ring;
-diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wireless/ath/ath12k/reg.c
-index aecfd55aef59..c7b0d66f4874 100644
---- a/drivers/net/wireless/ath/ath12k/reg.c
-+++ b/drivers/net/wireless/ath/ath12k/reg.c
-@@ -48,6 +48,7 @@ ath12k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct ath12k_wmi_init_country_arg arg;
-+	struct wmi_set_current_country_arg current_arg = {};
- 	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
- 	struct ath12k *ar = ath12k_ah_to_ar(ah, 0);
- 	int ret, i;
-@@ -77,23 +78,27 @@ ath12k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++DECLARE_EWMA(avg_rssi, 10, 8)
++
+ struct ath12k_link_sta {
+ 	struct ath12k_link_vif *arvif;
+ 	struct ath12k_sta *ahsta;
+@@ -496,6 +499,7 @@ struct ath12k_link_sta {
+ 	u64 rx_duration;
+ 	u64 tx_duration;
+ 	u8 rssi_comb;
++	struct ewma_avg_rssi avg_rssi;
+ 	u8 link_id;
+ 	struct ath12k_rx_peer_stats *rx_stats;
+ 	struct ath12k_wbm_tx_stats *wbm_tx_stats;
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+index 5a21961cfd465..e53d5674b4368 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+@@ -2157,6 +2157,7 @@ static void ath12k_dp_mon_rx_update_peer_su_stats(struct ath12k *ar,
  		return;
+ 
+ 	arsta->rssi_comb = ppdu_info->rssi_comb;
++	ewma_avg_rssi_add(&arsta->avg_rssi, ppdu_info->rssi_comb);
+ 
+ 	num_msdu = ppdu_info->tcp_msdu_count + ppdu_info->tcp_ack_msdu_count +
+ 		   ppdu_info->udp_msdu_count + ppdu_info->other_msdu_count;
+@@ -2329,6 +2330,7 @@ ath12k_dp_mon_rx_update_user_stats(struct ath12k *ar,
+ 		return;
+ 
+ 	arsta->rssi_comb = ppdu_info->rssi_comb;
++	ewma_avg_rssi_add(&arsta->avg_rssi, ppdu_info->rssi_comb);
+ 
+ 	num_msdu = user_stats->tcp_msdu_count + user_stats->tcp_ack_msdu_count +
+ 		   user_stats->udp_msdu_count + user_stats->other_msdu_count;
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 2d062b5904a8e..5be8cf0e41279 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -5403,6 +5403,7 @@ static int ath12k_mac_station_add(struct ath12k *ar,
+ 		}
  	}
  
--	/* Set the country code to the firmware and wait for
--	 * the WMI_REG_CHAN_LIST_CC EVENT for updating the
--	 * reg info
--	 */
--	arg.flags = ALPHA_IS_SET;
--	memcpy(&arg.cc_info.alpha2, request->alpha2, 2);
--	arg.cc_info.alpha2[2] = 0;
--
- 	/* Allow fresh updates to wiphy regd */
- 	ah->regd_updated = false;
++	ewma_avg_rssi_init(&arsta->avg_rssi);
+ 	return 0;
  
- 	/* Send the reg change request to all the radios */
- 	for_each_ar(ah, ar, i) {
--		ret = ath12k_wmi_send_init_country_cmd(ar, &arg);
--		if (ret)
--			ath12k_warn(ar->ab,
--				    "INIT Country code set to fw failed : %d\n", ret);
-+		if (ar->ab->hw_params->current_cc_support) {
-+			memcpy(&current_arg.alpha2, request->alpha2, 2);
-+			ret = ath12k_wmi_send_set_current_country_cmd(ar, &current_arg);
-+			if (ret)
-+				ath12k_warn(ar->ab,
-+					    "failed set current country code: %d\n", ret);
-+		} else {
-+			arg.flags = ALPHA_IS_SET;
-+			memcpy(&arg.cc_info.alpha2, request->alpha2, 2);
-+			arg.cc_info.alpha2[2] = 0;
+ free_peer:
+@@ -10054,6 +10055,10 @@ static void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 	/* TODO: Use real NF instead of default one. */
+ 	sinfo->signal = arsta->rssi_comb + ATH12K_DEFAULT_NOISE_FLOOR;
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
 +
-+			ret = ath12k_wmi_send_init_country_cmd(ar, &arg);
-+			if (ret)
-+				ath12k_warn(ar->ab,
-+					    "failed set INIT Country code: %d\n", ret);
-+		}
++	sinfo->signal_avg = ewma_avg_rssi_read(&arsta->avg_rssi) +
++		ATH12K_DEFAULT_NOISE_FLOOR;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
+ }
  
- 		wiphy_lock(wiphy);
- 		ath12k_mac_11d_scan_stop(ar);
+ static int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
 -- 
-2.34.1
+2.48.1
 
