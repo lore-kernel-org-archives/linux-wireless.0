@@ -1,33 +1,33 @@
 Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 96C891581E0
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 96C2F157A6C
 	for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 16:28:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737995310; cv=none; b=rW/7HNuoACWZDVLUqLdbiapL1eqYBuEYEZW+YQ2dwoycdcJDpP1UbyIpicMgOZvCyP8bpGyP610jaEG+bMN0qDc2lXWs6W23lcCsltn4VNjsHv8SaglcQL/lBHJoQfElInLEWHWaqb+uHtWY/xs6IdAisPWBHe1sUu1pQZGpcqM=
+	t=1737995310; cv=none; b=YV3HpBsnG4cdKM//zyq1mSzlt1ndKo0egcH3dw4YtsYDfIYj7gLcdhDH/6imgBd35TpOltmA3iAeHOjTF0Cwime+reOiOVeXk1B2pOuRetjyY8U6RzqrLHbJ/atGS9XGxHYR9puhFhCdBSEOfOhBp1gaafSA30dWk8nKPqzbclc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1737995310; c=relaxed/simple;
-	bh=jyWRkI7gZpVh6dEPjf/9l49zMY2tOn8tJIhC8fjqiMQ=;
+	bh=+c9rJuQHj4MN/yByGlQ4vZcWoPEK5SOttbmvTjut6b8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WTkiZcvWohKe3mKuxyAdUenyDzG/4gTIduI20ViNF1ckYTFwH4sNYtlsJU0FEEi9T0JvQO58f1F0WzpJO3FUf18SsAG9IaKyiyf1amvjh6iz0hNK0qt0BXUfJNlQaF1vkuTyeS2OEeHAFucss7QeQa+JBqsXQjRXsPeEAiRs0m0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=NkmSar4E; arc=none smtp.client-ip=5.252.227.236
+	 MIME-Version; b=oXh9uU1ckKYfCD8F0n97f3ycAFLwl9X+Ekg7/MFr/alHOY1AAuctlQJJ+zDE9nvvmnO4RVB63TaWz6BHU8o3JfVfL0jW/9AfYbgvb0jDwnYXxhg8LHP/5s2XNVhrM/EmjfabjBz4Fy+1TfQwsOAcTCpDDRpSr3A8NHnf0JOJpbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=km95iETQ; arc=none smtp.client-ip=5.252.227.236
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="NkmSar4E"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="km95iETQ"
 From: Alexander Wetzel <Alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1737995297;
-	bh=jyWRkI7gZpVh6dEPjf/9l49zMY2tOn8tJIhC8fjqiMQ=;
+	s=wetzel-home; t=1737995298;
+	bh=+c9rJuQHj4MN/yByGlQ4vZcWoPEK5SOttbmvTjut6b8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NkmSar4EerbznuKd6+pNvanfF5zSQQK3ksmo7e4uLZPw80YsJlUe9YbKONA4aKNoj
-	 7Dba6KkVKtclIYtFHnSVAeFtQ/SyESWKxphc9zmgqLIg15CTjvRQpuujnXsxtUp+dD
-	 gZs1z1VkFM04IMN1NvNikPzwelGLkrg4Ax4GYPSM=
+	b=km95iETQUX3YC3i98HXkh1leUaQBROxkkiB/ZevXOI5AOevFZ08qi4T8YqW1LIx/f
+	 +1BnG3NrtZFb5jkjeUCdHvqDnkHQQ90nL5aup/Wsg1qvA4iPJfQCcIziHXLe5ynjdp
+	 WUAhfVHlepzFzLkQxToML//rlPyjkP6Oj/GXq0yE=
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net,
 	Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [RFC PATCH 06/13] wifi: mac80211: Add new TX queues to replace legacy TX
-Date: Mon, 27 Jan 2025 17:26:18 +0100
-Message-ID: <20250127162625.20747-7-Alexander@wetzel-home.de>
+Subject: [RFC PATCH 10/13] wifi: mac80211: Simplify AMPDU handling
+Date: Mon, 27 Jan 2025 17:26:22 +0100
+Message-ID: <20250127162625.20747-11-Alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250127162625.20747-1-Alexander@wetzel-home.de>
 References: <20250127162625.20747-1-Alexander@wetzel-home.de>
@@ -41,811 +41,654 @@ Content-Transfer-Encoding: 8bit
 
 From: Alexander Wetzel <alexander@wetzel-home.de>
 
-Add new mac80211 internal TX queues (TXQs) for cases which can't be
-handled with the existing queues:
+With all drivers now using TXQ we can simplify the AMPDU handling
+and avoid stopping the queues when enabling or disabling it.
 
-1) per-vif fallback queue for all non-bufferable frames
-2) per-vif "noqueue" helper queue
-3) per-sta "noqueue" helper queue for sta
-
-The "noqueue" queues are intended for frames which can't be queued but
-still use the queue/dequeue functions to prepare the frames. This is
-intended to be used for offchannel, disassoc and null-func PS frames in
-another patch. For now these frames continue to use the legacy TX path.
-
-All other frames previously using the legacy TX path are switched over
-to the new per-vif fallback queue, including TX on monitor interfaces.
+Move AMPDU handling fully into ieee80211_tx_dequeue() and use the
+flag %IEEE80211_TXQ_AMPDU to detect if AMPDU is operational.
 
 Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 ---
- include/net/mac80211.h        |  34 ++++++--
- net/mac80211/debugfs_netdev.c |  46 ++++++-----
- net/mac80211/driver-ops.h     |  29 +++++--
- net/mac80211/ieee80211_i.h    |  19 +++++
- net/mac80211/iface.c          | 146 ++++++++++++++++++++++------------
- net/mac80211/tx.c             | 115 +++++++++++++-------------
- net/mac80211/util.c           |  64 ++++++++-------
- 7 files changed, 282 insertions(+), 171 deletions(-)
+ net/mac80211/agg-tx.c      | 127 ++-----------------------------
+ net/mac80211/debugfs_sta.c |   2 -
+ net/mac80211/ieee80211_i.h |   5 +-
+ net/mac80211/main.c        |   1 -
+ net/mac80211/mesh.c        |  13 +---
+ net/mac80211/rx.c          |   9 +--
+ net/mac80211/sta_info.c    |   3 -
+ net/mac80211/sta_info.h    |  30 ++++----
+ net/mac80211/tx.c          | 149 ++++---------------------------------
+ 9 files changed, 38 insertions(+), 301 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index c3cd62dc63e0..41d91d69d61f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -97,9 +97,14 @@
-  * linking it to ieee80211_handle_wake_tx_queue() or implementing a custom
-  * handler.
-  *
-- * Intermediate queues (struct ieee80211_txq) are kept per-sta per-tid, with
-- * another per-sta for non-data/non-mgmt and bufferable management frames, and
-- * a single per-vif queue for multicast data frames.
-+ * Intermediate queues (struct ieee80211_txq) are kept for:
-+ *  - per-sta per-tid
-+ *  - per-sta for non-data/non-mgmt and bufferable management frames
-+ *  - per-sta "noqueue" helper queue for sta (mac80211 internal only)
-+ *  - per-vif queue for broadcast/multicast data frames
-+ *  - per-vif fallback queue (mac80211 internal only)
-+ *  - per-vif "noqueue" helper queue (mac80211 internal only)
-+ * The "mac80211 internal only" queues must be ignored by drivers.
-  *
-  * The driver is expected to initialize its private per-queue data for stations
-  * and interfaces in the .add_interface and .sta_add ops.
-@@ -1965,9 +1970,18 @@ enum ieee80211_neg_ttlm_res {
-  * enum ieee80211_vif_txq - per-vif intermediate queues (txqi)
-  *
-  * @IEEE80211_VIF_TXQ_MULTICAST: queue for broadcast/multicast data frames.
-+ * @IEEE80211_VIF_TXQ_FALLBACK: last resort queue for frames unable to use any
-+ *	other queue.
-+ * @IEEE80211_VIF_TXQ_NOQUEUE: "queue" for non-sta frames which must be
-+ *	send out immediately, like  offchannel, null-func and disassoc frames.
-+ *	(Queued frames will be transmitted by the queueing process and not wait
-+ *	for a queue run like normal iTXQs.)
-+ *
-  */
- enum ieee80211_vif_txq {
- 	IEEE80211_VIF_TXQ_MULTICAST,
-+	IEEE80211_VIF_TXQ_FALLBACK,
-+	IEEE80211_VIF_TXQ_NOQUEUE,
- 	IEEE80211_VIF_TXQ_NUM,
- };
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 61f2cac37728..69663e51d2bb 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -138,45 +138,6 @@ void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+ }
  
-@@ -2457,6 +2471,12 @@ struct ieee80211_link_sta {
- 	struct ieee80211_sta_txpwr txpwr;
- };
- 
-+/* To identify the NOQUEUE iTXQs vif->txq[IEEE80211_VIF_TXQ_NOQUEUE] and
-+ * sta->txq[IEEE80211_TXQ_NOQUEUE] we set the tid for these queues to
-+ * IEEE80211_TXQ_NOQUEUE (IEEE80211_NUM_TIDS + 1)
-+ */
-+#define IEEE80211_TXQ_NOQUEUE	(IEEE80211_NUM_TIDS + 1)
-+
- /**
-  * struct ieee80211_sta - station table entry
-  *
-@@ -2495,8 +2515,10 @@ struct ieee80211_link_sta {
-  *	For non MLO STA it will point to the deflink data. For MLO STA
-  *	ieee80211_sta_recalc_aggregates() must be called to update it.
-  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
-- * @txq: per-TID data TX queues; note that the last entry (%IEEE80211_NUM_TIDS)
-- *	is used for non-data frames
-+ * @txq: per-TID data TX queues; note that the last two queues are not for TIDs:
-+ *	%IEEE80211_NUM_TIDS is used for non-data frames and
-+ *	%IEEE80211_TXQ_NOQUEUE is for frames which can't wait in any of the
-+ *	other queues and must be send out immediately.
-  * @deflink: This holds the default link STA information, for non MLO STA all link
-  *	specific STA information is accessed through @deflink or through
-  *	link[0] which points to address of @deflink. For MLO Link STA
-@@ -2530,7 +2552,7 @@ struct ieee80211_sta {
- 
- 	bool support_p2p_ps;
- 
--	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
-+	struct ieee80211_txq *txq[IEEE80211_TXQ_NOQUEUE + 1];
- 
- 	u16 valid_links;
- 	struct ieee80211_link_sta deflink;
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index e3541e29b879..c86fcb179582 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -619,28 +619,38 @@ static ssize_t ieee80211_if_fmt_aqm(
- 	struct txq_info *txqi;
- 	int len;
- 
--	if (!sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST])
--		return 0;
+-/*
+- * When multiple aggregation sessions on multiple stations
+- * are being created/destroyed simultaneously, we need to
+- * refcount the global queue stop caused by that in order
+- * to not get into a situation where one of the aggregation
+- * setup or teardown re-enables queues before the other is
+- * ready to handle that.
+- *
+- * These two functions take care of this issue by keeping
+- * a global "agg_queue_stop" refcount.
+- */
+-static void __acquires(agg_queue)
+-ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+-{
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
 -
--	txqi = to_txq_info(sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST]);
-+	len = scnprintf(buf,
-+			buflen,
-+			"id ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets flags\n");
+-	/* we do refcounting here, so don't use the queue reason refcounting */
+-
+-	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
+-		ieee80211_stop_queue_by_reason(
+-			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+-			false);
+-	__acquire(agg_queue);
+-}
+-
+-static void __releases(agg_queue)
+-ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
+-{
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+-
+-	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
+-		ieee80211_wake_queue_by_reason(
+-			&sdata->local->hw, queue,
+-			IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+-			false);
+-	__release(agg_queue);
+-}
+-
+ static void
+ ieee80211_agg_stop_txq(struct sta_info *sta, int tid)
+ {
+@@ -224,40 +185,6 @@ ieee80211_agg_start_txq(struct sta_info *sta, int tid, bool enable)
+ 	local_bh_enable();
+ }
  
- 	spin_lock_bh(&local->fq.lock);
- 	rcu_read_lock();
+-/*
+- * splice packets from the STA's pending to the local pending,
+- * requires a call to ieee80211_agg_splice_finish later
+- */
+-static void __acquires(agg_queue)
+-ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
+-			     struct tid_ampdu_tx *tid_tx, u16 tid)
+-{
+-	struct ieee80211_local *local = sdata->local;
+-	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
+-	unsigned long flags;
+-
+-	ieee80211_stop_queue_agg(sdata, tid);
+-
+-	if (WARN(!tid_tx,
+-		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
+-		 tid))
+-		return;
+-
+-	if (!skb_queue_empty(&tid_tx->pending)) {
+-		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+-		/* copy over remaining packets */
+-		skb_queue_splice_tail_init(&tid_tx->pending,
+-					   &local->pending[queue]);
+-		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-	}
+-}
+-
+-static void __releases(agg_queue)
+-ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
+-{
+-	ieee80211_wake_queue_agg(sdata, tid);
+-}
+-
+ static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -267,23 +194,8 @@ static void ieee80211_remove_tid_tx(struct sta_info *sta, int tid)
  
--	len = scnprintf(buf,
--			buflen,
--			"ac backlog-bytes backlog-packets new-flows drops marks overlimit collisions tx-bytes tx-packets\n"
--			"%u %u %u %u %u %u %u %u %u %u\n",
--			txqi->txq.ac,
--			txqi->tin.backlog_bytes,
--			txqi->tin.backlog_packets,
--			txqi->tin.flows,
--			txqi->cstats.drop_count,
--			txqi->cstats.ecn_mark,
--			txqi->tin.overlimit,
--			txqi->tin.collisions,
--			txqi->tin.tx_bytes,
--			txqi->tin.tx_packets);
-+	for (int i = 0; i < IEEE80211_VIF_TXQ_NUM; i++) {
-+		if (!sdata->vif.txq[i])
-+			break;
-+
-+		txqi = to_txq_info(sdata->vif.txq[i]);
-+		len += scnprintf(buf + len,
-+				 buflen - len,
-+				 "%u %u %u %u %u %u %u %u %u %u %u 0x%lx(%s%s%s%s)\n",
-+				 txqi->txq.tid,
-+				 txqi->txq.ac,
-+				 txqi->tin.backlog_bytes,
-+				 txqi->tin.backlog_packets,
-+				 txqi->tin.flows,
-+				 txqi->cstats.drop_count,
-+				 txqi->cstats.ecn_mark,
-+				 txqi->tin.overlimit,
-+				 txqi->tin.collisions,
-+				 txqi->tin.tx_bytes,
-+				 txqi->tin.tx_packets,
-+				 txqi->flags,
-+				 test_bit(IEEE80211_TXQ_STOP, &txqi->flags) ? "STOP" : "RUN",
-+				 test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags) ? " AMPDU" : "",
-+				 test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags) ? " NO-AMSDU" : "",
-+				 test_bit(IEEE80211_TXQ_DIRTY, &txqi->flags) ? " DIRTY" : "");
-+	}
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
  
- 	rcu_read_unlock();
- 	spin_unlock_bh(&local->fq.lock);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index bf3393340fb9..3a7980b5a00a 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1356,18 +1356,31 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
- 		return;
- 	}
+-	/*
+-	 * When we get here, the TX path will not be lockless any more wrt.
+-	 * aggregation, since the OPERATIONAL bit has long been cleared.
+-	 * Thus it will block on getting the lock, if it occurs. So if we
+-	 * stop the queue now, we will not get any more packets, and any
+-	 * that might be being processed will wait for us here, thereby
+-	 * guaranteeing that no packets go to the tid_tx pending queue any
+-	 * more.
+-	 */
+-
+-	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
+-
+ 	/* future packets must not find the tid_tx struct any more */
+ 	ieee80211_assign_tid_tx(sta, tid, NULL);
+-
+-	ieee80211_agg_splice_finish(sta->sdata, tid);
+-
+ 	kfree_rcu(tid_tx, rcu_head);
+ }
  
--	if (!check_sdata_in_driver(sdata))
-+	if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR)) {
-+		if (local->monitor_sdata) {
-+			sdata = local->monitor_sdata;
-+			if (!check_sdata_in_driver(sdata))
-+				return;
-+		}
-+	} else if (!check_sdata_in_driver(sdata)) {
- 		return;
-+	}
+@@ -355,6 +267,10 @@ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
  
- 	trace_drv_wake_tx_queue(local, sdata, txq);
+ 	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
  
--	/* Driver support for MPDU txqi support is optional */
--	if (unlikely(txq->txq.tid == IEEE80211_NUM_TIDS &&
--		     ((sdata->vif.type == NL80211_IFTYPE_STATION &&
--		       !ieee80211_hw_check(&sdata->local->hw, STA_MMPDU_TXQ)) ||
--		      (sdata->vif.type != NL80211_IFTYPE_STATION &&
--		       !ieee80211_hw_check(&sdata->local->hw,
--					   BUFF_MMPDU_TXQ))))) {
 +	/*
-+	 * Driver support for MPDU txqi support is optional.
-+	 * IEEE80211_TXQ_NOQUEUE's txqi's are mac80211 internal and not
-+	 * intended to be handled by the drivers.
++	 * After this packets are no longer handed through
++	 * to the driver
 +	 */
-+	if (unlikely(WARN_ON(txq->txq.tid == IEEE80211_TXQ_NOQUEUE) ||
-+		     (txq->txq.tid == IEEE80211_NUM_TIDS &&
-+		      (!txq->txq.sta ||
-+		       (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+			!ieee80211_hw_check(&sdata->local->hw, STA_MMPDU_TXQ)) ||
-+		       (sdata->vif.type != NL80211_IFTYPE_STATION &&
-+			!ieee80211_hw_check(&sdata->local->hw,
-+					    BUFF_MMPDU_TXQ)))))) {
- 		ieee80211_handle_wake_tx_queue(&local->hw, &txq->txq);
- 		return;
+ 	ieee80211_agg_stop_txq(sta, tid);
+ 
+ 	spin_unlock_bh(&sta->lock);
+@@ -365,13 +281,6 @@ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 	del_timer_sync(&tid_tx->addba_resp_timer);
+ 	del_timer_sync(&tid_tx->session_timer);
+ 
+-	/*
+-	 * After this packets are no longer handed right through
+-	 * to the driver but are put onto tid_tx->pending instead,
+-	 * with locking to ensure proper access.
+-	 */
+-	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
+-
+ 	/*
+ 	 * There might be a few packets being processed right now (on
+ 	 * another CPU) that have already gotten past the aggregation
+@@ -395,12 +304,7 @@ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 	ret = drv_ampdu_action(local, sta->sdata, &params);
+ 
+ 	/* HW shall not deny going back to legacy */
+-	if (WARN_ON(ret)) {
+-		/*
+-		 * We may have pending packets get stuck in this case...
+-		 * Not bothering with a workaround for now.
+-		 */
+-	}
++	WARN_ON(ret);
+ 
+ 	/*
+ 	 * In the case of AGG_STOP_DESTROY_STA, the driver won't
+@@ -535,9 +439,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		       "BA request denied - HW unavailable for %pM tid %d\n",
+ 		       sta->sta.addr, tid);
+ 		spin_lock_bh(&sta->lock);
+-		ieee80211_agg_splice_packets(sdata, tid_tx, tid);
+ 		ieee80211_assign_tid_tx(sta, tid, NULL);
+-		ieee80211_agg_splice_finish(sdata, tid);
+ 		spin_unlock_bh(&sta->lock);
+ 
+ 		ieee80211_agg_start_txq(sta, tid, false);
+@@ -710,7 +612,6 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 		goto err_unlock_sta;
  	}
+ 
+-	skb_queue_head_init(&tid_tx->pending);
+ 	__set_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+ 
+ 	tid_tx->timeout = timeout;
+@@ -765,24 +666,6 @@ static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
+ 	       sta->sta.addr, tid);
+ 
+ 	drv_ampdu_action(local, sta->sdata, &params);
+-
+-	/*
+-	 * synchronize with TX path, while splicing the TX path
+-	 * should block so it won't put more packets onto pending.
+-	 */
+-	spin_lock_bh(&sta->lock);
+-
+-	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
+-	/*
+-	 * Now mark as operational. This will be visible
+-	 * in the TX path, and lets it go lock-free in
+-	 * the common case.
+-	 */
+-	set_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
+-	ieee80211_agg_splice_finish(sta->sdata, tid);
+-
+-	spin_unlock_bh(&sta->lock);
+-
+ 	ieee80211_agg_start_txq(sta, tid, true);
+ }
+ 
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index a67a9d316008..890c01d848e5 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -343,8 +343,6 @@ static ssize_t sta_agg_status_do_read(struct wiphy *wiphy, struct file *file,
+ 		p += scnprintf(p, bufsz + buf - p, "\t\t%x", !!tid_tx);
+ 		p += scnprintf(p, bufsz + buf - p, "\t%#.2x",
+ 				tid_tx ? tid_tx->dialog_token : 0);
+-		p += scnprintf(p, bufsz + buf - p, "\t%03d",
+-				tid_tx ? skb_queue_len(&tid_tx->pending) : 0);
+ 		p += scnprintf(p, bufsz + buf - p, "\n");
+ 	}
+ 
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8aceec18ffaf..25fdc8ce8644 100644
+index 25fdc8ce8644..9c00c4e60cfc 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -1623,6 +1623,25 @@ IEEE80211_WDEV_TO_SUB_IF(struct wireless_dev *wdev)
- 	return container_of(wdev, struct ieee80211_sub_if_data, wdev);
- }
+@@ -1248,7 +1248,6 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_DRIVER,
+ 	IEEE80211_QUEUE_STOP_REASON_PS,
+ 	IEEE80211_QUEUE_STOP_REASON_CSA,
+-	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+ 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+ 	IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL,
+@@ -1466,8 +1465,6 @@ struct ieee80211_local {
+ 	struct tasklet_struct tx_pending_tasklet;
+ 	struct tasklet_struct wake_txqs_tasklet;
  
-+static inline struct ieee80211_sub_if_data *
-+ieee80211_get_tx_sdata(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		sdata = container_of(sdata->bss,
-+				     struct ieee80211_sub_if_data, u.ap);
-+	/*
-+	 * local->monitor_sdata can only be set without
-+	 * %IEEE80211_HW_NO_VIRTUAL_MONITOR, no need to check it here.
-+	 */
-+	else if (unlikely(sdata->vif.type == NL80211_IFTYPE_MONITOR) &&
-+		 sdata->local->monitor_sdata &&
-+		 !(sdata->u.mntr.flags & (MONITOR_FLAG_ACTIVE |
-+					  MONITOR_FLAG_COOK_FRAMES)))
-+		sdata = rcu_dereference(sdata->local->monitor_sdata);
-+
-+	return sdata;
-+}
-+
- static inline struct ieee80211_supported_band *
- ieee80211_get_sband(struct ieee80211_sub_if_data *sdata)
- {
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6b29bcc40a88..9b2d0b3ae132 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1124,11 +1124,63 @@ static void ieee80211_sdata_init(struct ieee80211_local *local,
- 	 * MLD connection, we get a separate allocation for it.
- 	 */
- 	ieee80211_link_init(sdata, -1, &sdata->deflink, &sdata->vif.bss_conf);
-+
-+	for (int i = 0; i < NUM_NL80211_BANDS; i++) {
-+		struct ieee80211_supported_band *sband;
-+
-+		sband = local->hw.wiphy->bands[i];
-+		sdata->rc_rateidx_mask[i] =
-+			sband ? (1 << sband->n_bitrates) - 1 : 0;
-+		if (sband) {
-+			__le16 cap;
-+			u16 *vht_rate_mask;
-+
-+			memcpy(sdata->rc_rateidx_mcs_mask[i],
-+			       sband->ht_cap.mcs.rx_mask,
-+			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
-+
-+			cap = sband->vht_cap.vht_mcs.rx_mcs_map;
-+			vht_rate_mask = sdata->rc_rateidx_vht_mcs_mask[i];
-+			ieee80211_get_vht_mask_from_cap(cap, vht_rate_mask);
-+		} else {
-+			memset(sdata->rc_rateidx_mcs_mask[i], 0,
-+			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
-+			memset(sdata->rc_rateidx_vht_mcs_mask[i], 0,
-+			       sizeof(sdata->rc_rateidx_vht_mcs_mask[i]));
-+		}
-+	}
-+}
-+
-+static void ieee80211_vif_txq_init(struct ieee80211_sub_if_data *sdata,
-+				   int txq_offset, int txq_size, int num_queues)
-+{
-+	void *buffer = (char *)sdata + txq_offset;
-+
-+	/* Fallback queue */
-+	ieee80211_txq_init(sdata, NULL, buffer, IEEE80211_NUM_TIDS);
-+
-+	if (num_queues == 1)
-+		return;
-+
-+	/* Immediate TX helper queue */
-+	buffer += txq_size;
-+	ieee80211_txq_init(sdata, NULL, buffer, IEEE80211_TXQ_NOQUEUE);
-+
-+	if (num_queues == 2)
-+		return;
-+
-+	/* Multicast queue */
-+	buffer += txq_size;
-+	ieee80211_txq_init(sdata, NULL, buffer, 0);
- }
- 
- int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
-+	int size = ALIGN(sizeof(*sdata) + local->hw.vif_data_size,
-+			 sizeof(void *));
-+	int txq_size = ALIGN(sizeof(struct txq_info) + local->hw.txq_data_size,
-+			     sizeof(void *));
- 	int ret;
- 
- 	ASSERT_RTNL();
-@@ -1138,7 +1190,7 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	    WARN_ON(ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)))
- 		return 0;
- 
--	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
-+	sdata = kzalloc(size + txq_size, GFP_KERNEL);
- 	if (!sdata)
- 		return -ENOMEM;
- 
-@@ -1150,7 +1202,7 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	sdata->wdev.wiphy = local->hw.wiphy;
- 
- 	ieee80211_sdata_init(local, sdata);
+-	atomic_t agg_queue_stop[IEEE80211_MAX_QUEUES];
 -
-+	ieee80211_vif_txq_init(sdata, size, txq_size, 1);
- 	ieee80211_set_default_queues(sdata);
+ 	/* number of interfaces with allmulti RX */
+ 	atomic_t iff_allmultis;
  
- 	if (ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF)) {
-@@ -2077,8 +2129,12 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- {
- 	struct net_device *ndev = NULL;
- 	struct ieee80211_sub_if_data *sdata = NULL;
--	struct txq_info *txqi;
--	int ret, i;
-+	int size = ALIGN(sizeof(*sdata) + local->hw.vif_data_size,
-+			 sizeof(void *));
-+	int txq_size = ALIGN(sizeof(struct txq_info) + local->hw.txq_data_size,
-+			     sizeof(void *));
-+	int num_txqs = 2;
-+	int ret;
+@@ -2110,7 +2107,7 @@ int ieee80211_probe_mesh_link(struct wiphy *wiphy, struct net_device *dev,
+ void __ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_fast_tx *fast_tx,
+-			   struct sk_buff *skb, bool ampdu,
++			   struct sk_buff *skb,
+ 			   const u8 *da, const u8 *sa);
+ void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
+ 			  struct sta_info *sta, struct sk_buff *skb);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index f13c14fa82e8..0416ab7e1ca7 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -999,7 +999,6 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
  
- 	ASSERT_RTNL();
- 	lockdep_assert_wiphy(local->hw.wiphy);
-@@ -2086,8 +2142,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	if (type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN) {
- 		struct wireless_dev *wdev;
- 
--		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
--				GFP_KERNEL);
-+		sdata = kzalloc(size + 2 * txq_size, GFP_KERNEL);
- 		if (!sdata)
- 			return -ENOMEM;
- 		wdev = &sdata->wdev;
-@@ -2098,17 +2153,14 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		memcpy(sdata->vif.addr, wdev->address, ETH_ALEN);
- 		ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
- 	} else {
--		int size = ALIGN(sizeof(*sdata) + local->hw.vif_data_size,
--				 sizeof(void *));
--		int txq_size = 0;
--
--		if (type != NL80211_IFTYPE_AP_VLAN &&
--		    (type != NL80211_IFTYPE_MONITOR ||
--		     (params->flags & MONITOR_FLAG_ACTIVE)))
--			txq_size += sizeof(struct txq_info) +
--				    local->hw.txq_data_size;
-+		if (type == NL80211_IFTYPE_AP_VLAN)
-+			num_txqs = 0;
-+		else if (type == NL80211_IFTYPE_MONITOR)
-+			num_txqs = 1;
-+		else
-+			num_txqs = 3;
- 
--		ndev = alloc_netdev_mqs(size + txq_size,
-+		ndev = alloc_netdev_mqs(size + num_txqs * txq_size,
- 					name, name_assign_type,
- 					ieee80211_if_setup, 1, 1);
- 		if (!ndev)
-@@ -2147,14 +2199,12 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 		ether_addr_copy(sdata->vif.bss_conf.addr, sdata->vif.addr);
- 		memcpy(sdata->name, ndev->name, IFNAMSIZ);
- 
--		if (txq_size) {
--			txqi = netdev_priv(ndev) + size;
--			ieee80211_txq_init(sdata, NULL, txqi, 0);
--		}
--
- 		sdata->dev = ndev;
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_head_init(&local->pending[i]);
+-		atomic_set(&local->agg_queue_stop[i], 0);
  	}
+ 	tasklet_setup(&local->tx_pending_tasklet, ieee80211_tx_pending);
+ 	tasklet_setup(&local->wake_txqs_tasklet, ieee80211_wake_txqs);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 974081324aa4..4fc91fe743c6 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -753,11 +753,9 @@ bool ieee80211_mesh_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_mesh_fast_tx *entry;
+ 	struct ieee80211s_hdr *meshhdr;
+ 	u8 sa[ETH_ALEN] __aligned(2);
+-	struct tid_ampdu_tx *tid_tx;
+ 	struct sta_info *sta;
+ 	bool copy_sa = false;
+ 	u16 ethertype;
+-	u8 tid;
  
-+	if (num_txqs)
-+		ieee80211_vif_txq_init(sdata, size, txq_size, num_txqs);
-+
- 	/* initialise type-independent data */
- 	sdata->wdev.wiphy = local->hw.wiphy;
- 
-@@ -2167,30 +2217,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	wiphy_delayed_work_init(&sdata->dec_tailroom_needed_wk,
- 				ieee80211_delayed_tailroom_dec);
- 
--	for (i = 0; i < NUM_NL80211_BANDS; i++) {
--		struct ieee80211_supported_band *sband;
--		sband = local->hw.wiphy->bands[i];
--		sdata->rc_rateidx_mask[i] =
--			sband ? (1 << sband->n_bitrates) - 1 : 0;
--		if (sband) {
--			__le16 cap;
--			u16 *vht_rate_mask;
--
--			memcpy(sdata->rc_rateidx_mcs_mask[i],
--			       sband->ht_cap.mcs.rx_mask,
--			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
--
--			cap = sband->vht_cap.vht_mcs.rx_mcs_map;
--			vht_rate_mask = sdata->rc_rateidx_vht_mcs_mask[i];
--			ieee80211_get_vht_mask_from_cap(cap, vht_rate_mask);
--		} else {
--			memset(sdata->rc_rateidx_mcs_mask[i], 0,
--			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
--			memset(sdata->rc_rateidx_vht_mcs_mask[i], 0,
--			       sizeof(sdata->rc_rateidx_vht_mcs_mask[i]));
--		}
--	}
--
- 	ieee80211_set_default_queues(sdata);
- 
- 	/* setup type-dependent data */
-@@ -2237,10 +2263,29 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	return 0;
- }
- 
--void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
-+static void ieee80211_purge_txqs(struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_txq *txq = sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST];
-+	struct sta_info *sta;
- 
-+	list_for_each_entry(sta, &sdata->local->sta_list, list) {
-+		if (sdata != sta->sdata)
-+			continue;
-+		ieee80211_purge_sta_txqs(sta);
-+	}
-+
-+	for (int i = IEEE80211_VIF_TXQ_MULTICAST;
-+	     i <= IEEE80211_VIF_TXQ_FALLBACK;
-+	     i++) {
-+		if (sdata->vif.txq[i])
-+			ieee80211_txq_purge(sdata->local,
-+					    to_txq_info(sdata->vif.txq[i]));
-+	}
-+
-+	synchronize_rcu();
-+}
-+
-+void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
-+{
- 	ASSERT_RTNL();
- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
- 
-@@ -2248,10 +2293,7 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- 	list_del_rcu(&sdata->list);
- 	mutex_unlock(&sdata->local->iflist_mtx);
- 
--	if (txq)
--		ieee80211_txq_purge(sdata->local, to_txq_info(txq));
--
--	synchronize_rcu();
-+	ieee80211_purge_txqs(sdata);
- 
- 	cfg80211_unregister_wdev(&sdata->wdev);
- 
-@@ -2300,6 +2342,8 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- 	list_for_each_entry_safe(sdata, tmp, &unreg_list, list) {
- 		bool netdev = sdata->dev;
- 
-+		ieee80211_purge_txqs(sdata);
-+
- 		/*
- 		 * Remove IP addresses explicitly, since the notifier will
- 		 * skip the callbacks if wdev->registered is false, since
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 581b3d97e278..c59cebc66ac6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1300,31 +1300,37 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_txq *txq = NULL;
- 
--	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
--	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK))
-+		/* Offchannel queue can't be used, yet */
- 		return NULL;
- 
--	if (!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
--	    unlikely(!ieee80211_is_data_present(hdr->frame_control))) {
-+	if (unlikely(vif->type == NL80211_IFTYPE_MONITOR ||
-+		     info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM ||
-+		     info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
-+		goto out;
-+
-+	if (unlikely(!(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
-+		     !ieee80211_is_data_present(hdr->frame_control))) {
- 		if ((!ieee80211_is_mgmt(hdr->frame_control) ||
- 		     ieee80211_is_bufferable_mmpdu(skb) ||
- 		     vif->type == NL80211_IFTYPE_STATION) &&
- 		    sta && sta->uploaded) {
- 			txq = sta->sta.txq[IEEE80211_NUM_TIDS];
- 		}
--	} else if (sta) {
-+	} else if (likely(sta)) {
- 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 
--		if (!sta->uploaded)
--			return NULL;
-+		if (unlikely(!sta->uploaded))
-+			goto out;
- 
- 		txq = sta->sta.txq[tid];
- 	} else {
- 		txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
- 	}
- 
-+out:
- 	if (!txq)
--		return NULL;
-+		txq = vif->txq[IEEE80211_VIF_TXQ_FALLBACK];
- 
- 	return to_txq_info(txq);
- }
-@@ -1446,12 +1452,13 @@ static void ieee80211_txq_enqueue(struct ieee80211_local *local,
- 
- 	spin_lock_bh(&fq->lock);
- 	/*
--	 * For management frames, don't really apply codel etc.,
-+	 * For management frames (tid set to IEEE80211_NUM_TIDS
-+	 * or IEEE80211_TXQ_NOQUEUE), don't really apply codel etc.,
- 	 * we don't want to apply any shaping or anything we just
--	 * want to simplify the driver API by having them on the
--	 * txqi.
-+	 * want to simplify the driver API and mac80211 internal
-+	 * handling by having them on the txqi.
- 	 */
--	if (unlikely(txqi->txq.tid == IEEE80211_NUM_TIDS)) {
-+	if (unlikely(txqi->txq.tid >= IEEE80211_NUM_TIDS)) {
- 		IEEE80211_SKB_CB(skb)->control.flags |=
- 			IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
- 		__skb_queue_tail(&txqi->frags, skb);
-@@ -1509,14 +1516,26 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
- 	txqi->txq.vif = &sdata->vif;
- 
- 	if (!sta) {
--		sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST] = &txqi->txq;
--		txqi->txq.tid = 0;
--		txqi->txq.ac = IEEE80211_AC_BE;
-+		if (tid == IEEE80211_TXQ_NOQUEUE) {
-+			sdata->vif.txq[IEEE80211_VIF_TXQ_NOQUEUE] =
-+				&txqi->txq;
-+			txqi->txq.ac = IEEE80211_AC_VO;
-+		} else if (tid == IEEE80211_NUM_TIDS) {
-+			sdata->vif.txq[IEEE80211_VIF_TXQ_FALLBACK] =
-+				&txqi->txq;
-+			txqi->txq.ac = IEEE80211_AC_VO;
-+		} else {
-+			sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST] =
-+				&txqi->txq;
-+			txqi->txq.ac = IEEE80211_AC_BE;
-+		}
- 
-+		txqi->txq.tid = tid;
- 		return;
- 	}
- 
--	if (tid == IEEE80211_NUM_TIDS)
-+	/* for %IEEE80211_NUM_TIDS and %IEEE80211_TXQ_NOQUEUE*/
-+	if (tid >= IEEE80211_NUM_TIDS)
- 		txqi->txq.ac = IEEE80211_AC_VO;
- 	else
- 		txqi->txq.ac = ieee80211_ac_from_tid(tid);
-@@ -1628,16 +1647,13 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
- 				struct sta_info *sta,
- 				struct sk_buff *skb)
- {
--	struct ieee80211_vif *vif;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = &sdata->vif;
- 	struct txq_info *txqi;
- 
--	if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
--		return false;
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data, u.ap);
-+	info->control.vif = vif;
- 
-+	sdata = ieee80211_get_tx_sdata(sdata);
- 	vif = &sdata->vif;
- 	txqi = ieee80211_get_txq(local, vif, sta, skb);
- 
-@@ -1645,7 +1661,6 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
+ 	if (ctrl_flags & IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP)
+ 		return false;
+@@ -799,15 +797,6 @@ bool ieee80211_mesh_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	if (!sta)
  		return false;
  
- 	ieee80211_txq_enqueue(local, txqi, skb);
--
- 	schedule_and_wake_txq(local, txqi);
- 
- 	return true;
-@@ -3794,7 +3809,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
- 	struct ieee80211_hdr *hdr;
--	struct sk_buff *skb = NULL;
-+	struct sk_buff *skb;
- 	struct fq *fq = &local->fq;
- 	struct fq_tin *tin = &txqi->tin;
- 	struct ieee80211_tx_info *info;
-@@ -3803,7 +3818,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	struct ieee80211_vif *vif = txq->vif;
- 	int q = vif->hw_queue[txq->ac];
- 	unsigned long flags;
--	bool q_stopped;
-+	int qsr;
- 
- 	WARN_ON_ONCE(softirq_count() == 0);
- 
-@@ -3812,10 +3827,21 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 
- begin:
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--	q_stopped = local->queue_stop_reasons[q];
-+	qsr = local->queue_stop_reasons[q];
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
--	if (unlikely(q_stopped)) {
-+	if (unlikely(qsr &&
-+		     (txq->tid != IEEE80211_TXQ_NOQUEUE ||
-+		      (qsr & ~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL))))) {
-+		/* Drop off-channel frames if queues are stopped for any reason
-+		 * other than off-channel operation. Never queue them.
-+		 */
-+		if (unlikely(txq->tid == IEEE80211_TXQ_NOQUEUE)) {
-+			WARN(1, "mac80211: Drop noqueue TX. qsr=%i\n", qsr);
-+			ieee80211_txq_purge(local, txqi);
-+			return NULL;
-+		}
-+
- 		/* mark for waking later */
- 		set_bit(IEEE80211_TXQ_DIRTY, &txqi->flags);
- 		return NULL;
-@@ -3936,36 +3962,6 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	switch (tx.sdata->vif.type) {
--	case NL80211_IFTYPE_MONITOR:
--		if ((tx.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
--		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
--			vif = &tx.sdata->vif;
--			break;
--		}
--		tx.sdata = rcu_dereference(local->monitor_sdata);
--		if (tx.sdata &&
--		    ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF)) {
--			vif = &tx.sdata->vif;
--			info->hw_queue =
--				vif->hw_queue[skb_get_queue_mapping(skb)];
--		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
--			ieee80211_free_txskb(&local->hw, skb);
--			goto begin;
--		} else {
--			info->control.vif = NULL;
--			return skb;
--		}
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		tx.sdata = container_of(tx.sdata->bss,
--					struct ieee80211_sub_if_data, u.ap);
--		fallthrough;
--	default:
--		vif = &tx.sdata->vif;
--		break;
+-	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+-	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-	if (tid_tx) {
+-		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
+-			return false;
+-		if (tid_tx->timeout)
+-			tid_tx->last_tx = jiffies;
 -	}
 -
- encap_out:
- 	info->control.vif = vif;
- 
-@@ -4143,7 +4139,7 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
- 	if (!txq->sta)
+ 	skb = skb_share_check(skb, GFP_ATOMIC);
+ 	if (!skb)
  		return true;
+@@ -832,7 +821,7 @@ bool ieee80211_mesh_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	    ether_addr_copy(meshhdr->eaddr2, sa);
  
--	if (unlikely(txq->tid == IEEE80211_NUM_TIDS))
-+	if (unlikely(txq->tid >= IEEE80211_NUM_TIDS))
- 		return true;
+ 	skb_push(skb, 2 * ETH_ALEN);
+-	__ieee80211_xmit_fast(sdata, sta, &entry->fast_tx, skb, tid_tx,
++	__ieee80211_xmit_fast(sdata, sta, &entry->fast_tx, skb,
+ 			      entry->mpath->dst, sdata->vif.addr);
  
- 	sta = container_of(txq->sta, struct sta_info, sta);
-@@ -4636,7 +4632,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_sub_if_data, u.ap);
+ 	return true;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index fa4d9a270de9..1ff86e5969d4 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2801,13 +2801,6 @@ ieee80211_rx_mesh_fast_forward(struct ieee80211_sub_if_data *sdata,
  
- 	info->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;
--	info->control.vif = &sdata->vif;
+ 	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-	if (tid_tx) {
+-		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
+-			return false;
+-
+-		if (tid_tx->timeout)
+-			tid_tx->last_tx = jiffies;
+-	}
  
- 	if (key)
- 		info->control.hw_key = &key->conf;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index b65e08de0a00..c5b4dfab09e5 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -320,65 +320,73 @@ void ieee80211_handle_wake_tx_queue(struct ieee80211_hw *hw,
+ 	ieee80211_aggr_check(sdata, sta, skb);
+ 
+@@ -2821,7 +2814,7 @@ ieee80211_rx_mesh_fast_forward(struct ieee80211_sub_if_data *sdata,
+ 	skb->dev = sdata->dev;
+ 	memcpy(&eth, skb->data, ETH_HLEN - 2);
+ 	skb_pull(skb, 2);
+-	__ieee80211_xmit_fast(sdata, sta, &entry->fast_tx, skb, tid_tx,
++	__ieee80211_xmit_fast(sdata, sta, &entry->fast_tx, skb,
+ 			      eth.h_dest, eth.h_source);
+ 	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_unicast);
+ 	IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_frames);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index ef5e466c5a3d..46695bcac4a7 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -178,9 +178,6 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
+ 		kfree(sta->ampdu_mlme.tid_start_tx[i]);
+ 		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
+-		if (!tid_tx)
+-			continue;
+-		ieee80211_purge_tx_queue(&local->hw, &tid_tx->pending);
+ 		kfree(tid_tx);
+ 	}
  }
- EXPORT_SYMBOL(ieee80211_handle_wake_tx_queue);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 9f89fb5bee37..20ae7f5a8760 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -113,15 +113,17 @@ enum ieee80211_sta_info_flags {
+ #define HT_AGG_BURST_RETRIES		3
+ #define HT_AGG_RETRIES_PERIOD		(15 * HZ)
  
-+static void __ieee80211_wake_txq(struct ieee80211_local *local,
-+				 struct ieee80211_txq *txq)
-+{
-+	struct txq_info *txqi = to_txq_info(txq);
-+	struct fq *fq = &local->fq;
-+
-+	if (WARN_ON(!txq))
-+		return;
-+	if (test_and_clear_bit(IEEE80211_TXQ_DIRTY, &txqi->flags)) {
-+		spin_unlock(&fq->lock);
-+		drv_wake_tx_queue(local, txqi);
-+		spin_lock(&fq->lock);
-+	}
-+}
-+
- static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_vif *vif = &sdata->vif;
- 	struct fq *fq = &local->fq;
-+	struct ieee80211_vif *vif;
- 	struct ps_data *ps = NULL;
--	struct txq_info *txqi;
+-#define HT_AGG_STATE_DRV_READY		0
+-#define HT_AGG_STATE_RESPONSE_RECEIVED	1
+-#define HT_AGG_STATE_OPERATIONAL	2
+-#define HT_AGG_STATE_STOPPING		3
+-#define HT_AGG_STATE_WANT_START		4
+-#define HT_AGG_STATE_WANT_STOP		5
+-#define HT_AGG_STATE_START_CB		6
+-#define HT_AGG_STATE_STOP_CB		7
+-#define HT_AGG_STATE_SENT_ADDBA		8
++/* txqi queues using aggregation have %IEEE80211_TXQ_AMPDU set */
++enum ieee80211_ht_agg_state {
++	HT_AGG_STATE_DRV_READY,
++	HT_AGG_STATE_RESPONSE_RECEIVED,
++	HT_AGG_STATE_STOPPING,
++	HT_AGG_STATE_WANT_START,
++	HT_AGG_STATE_WANT_STOP,
++	HT_AGG_STATE_START_CB,
++	HT_AGG_STATE_STOP_CB,
++	HT_AGG_STATE_SENT_ADDBA,
++};
+ 
+ DECLARE_EWMA(avg_signal, 10, 8)
+ enum ieee80211_agg_stop_reason {
+@@ -157,7 +159,6 @@ struct sta_info;
+  * @rcu_head: rcu head for freeing structure
+  * @session_timer: check if we keep Tx-ing on the TID (by timeout value)
+  * @addba_resp_timer: timer for peer's response to addba request
+- * @pending: pending frames queue -- use sta's spinlock to protect
+  * @sta: station we are attached to
+  * @dialog_token: dialog token for aggregation session
+  * @timeout: session timeout value to be filled in ADDBA requests
+@@ -176,16 +177,15 @@ struct sta_info;
+  * the array holding it must hold the aggregation mutex.
+  *
+  * The TX path can access it under RCU lock-free if, and
+- * only if, the state has the flag %HT_AGG_STATE_OPERATIONAL
+- * set. Otherwise, the TX path must also acquire the spinlock
+- * and re-check the state, see comments in the tx code
+- * touching it.
++ * only if, the aggregation is operational (txq has the flag
++ * %IEEE80211_TXQ_AMPDU set). Otherwise, the TX path must also
++ * acquire the spinlock and re-check the state, see comments
++ * in the tx code touching it.
+  */
+ struct tid_ampdu_tx {
+ 	struct rcu_head rcu_head;
+ 	struct timer_list session_timer;
+ 	struct timer_list addba_resp_timer;
+-	struct sk_buff_head pending;
  	struct sta_info *sta;
- 	int i;
+ 	unsigned long state;
+ 	unsigned long last_tx;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 065c139eca92..d7cd27320df2 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1102,77 +1102,6 @@ ieee80211_tx_h_calculate_duration(struct ieee80211_tx_data *tx)
  
- 	local_bh_disable();
- 	spin_lock(&fq->lock);
+ /* actual transmit path */
  
-+	if (WARN_ON(!sdata))
-+		goto out;
- 	if (!test_bit(SDATA_STATE_RUNNING, &sdata->state))
- 		goto out;
- 
-+	sdata = ieee80211_get_tx_sdata(sdata);
-+	vif = &sdata->vif;
-+
- 	if (sdata->vif.type == NL80211_IFTYPE_AP)
- 		ps = &sdata->bss->ps;
- 
-+	/* %IEEE80211_VIF_TXQ_NOQUEUE must be ignored here */
-+
-+	if (ac == IEEE80211_AC_VO) {
-+		__ieee80211_wake_txq(local,
-+				     vif->txq[IEEE80211_VIF_TXQ_FALLBACK]);
-+	}
-+
-+	if (ac == IEEE80211_AC_BE && vif->txq[IEEE80211_VIF_TXQ_MULTICAST] &&
-+	    (!ps || !atomic_read(&ps->num_sta_ps)))
-+		__ieee80211_wake_txq(local,
-+				     vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
-+
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
- 		if (sdata != sta->sdata)
- 			continue;
- 
--		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-+		/* IEEE80211_TXQ_NOQUEUE must be ignored here. */
-+		for (i = 0; i <= IEEE80211_NUM_TIDS; i++) {
- 			struct ieee80211_txq *txq = sta->sta.txq[i];
- 
- 			if (!txq)
- 				continue;
- 
--			txqi = to_txq_info(txq);
+-static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+-				  struct sk_buff *skb,
+-				  struct ieee80211_tx_info *info,
+-				  struct tid_ampdu_tx *tid_tx,
+-				  int tid)
+-{
+-	bool queued = false;
+-	bool reset_agg_timer = false;
+-	struct sk_buff *purge_skb = NULL;
 -
- 			if (ac != txq->ac)
- 				continue;
- 
--			if (!test_and_clear_bit(IEEE80211_TXQ_DIRTY,
--						&txqi->flags))
--				continue;
+-	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+-		reset_agg_timer = true;
+-	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
+-		/*
+-		 * nothing -- this aggregation session is being started
+-		 * but that might still fail with the driver
+-		 */
+-	} else if (!tx->sta->sta.txq[tid]) {
+-		spin_lock(&tx->sta->lock);
+-		/*
+-		 * Need to re-check now, because we may get here
+-		 *
+-		 *  1) in the window during which the setup is actually
+-		 *     already done, but not marked yet because not all
+-		 *     packets are spliced over to the driver pending
+-		 *     queue yet -- if this happened we acquire the lock
+-		 *     either before or after the splice happens, but
+-		 *     need to recheck which of these cases happened.
+-		 *
+-		 *  2) during session teardown, if the OPERATIONAL bit
+-		 *     was cleared due to the teardown but the pointer
+-		 *     hasn't been assigned NULL yet (or we loaded it
+-		 *     before it was assigned) -- in this case it may
+-		 *     now be NULL which means we should just let the
+-		 *     packet pass through because splicing the frames
+-		 *     back is already done.
+-		 */
+-		tid_tx = rcu_dereference_protected_tid_tx(tx->sta, tid);
 -
--			spin_unlock(&fq->lock);
--			drv_wake_tx_queue(local, txqi);
--			spin_lock(&fq->lock);
-+			__ieee80211_wake_txq(local, txq);
+-		if (!tid_tx) {
+-			/* do nothing, let packet pass through */
+-		} else if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+-			reset_agg_timer = true;
+-		} else {
+-			queued = true;
+-			if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
+-				clear_sta_flag(tx->sta, WLAN_STA_SP);
+-				ps_dbg(tx->sta->sdata,
+-				       "STA %pM aid %d: SP frame queued, close the SP w/o telling the peer\n",
+-				       tx->sta->sta.addr, tx->sta->sta.aid);
+-			}
+-			info->control.vif = &tx->sdata->vif;
+-			info->control.flags |= IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
+-			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+-			__skb_queue_tail(&tid_tx->pending, skb);
+-			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
+-				purge_skb = __skb_dequeue(&tid_tx->pending);
+-		}
+-		spin_unlock(&tx->sta->lock);
+-
+-		if (purge_skb)
+-			ieee80211_free_txskb(&tx->local->hw, purge_skb);
+-	}
+-
+-	/* reset session timer */
+-	if (reset_agg_timer)
+-		tid_tx->last_tx = jiffies;
+-
+-	return queued;
+-}
+-
+ void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
+ 			  struct sta_info *sta, struct sk_buff *skb)
+ {
+@@ -1208,7 +1137,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	bool aggr_check = false;
+-	int tid;
+ 
+ 	memset(tx, 0, sizeof(*tx));
+ 	tx->skb = skb;
+@@ -1242,30 +1170,6 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
  		}
  	}
+ 
+-	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+-	    !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
+-	    ieee80211_hw_check(&local->hw, AMPDU_AGGREGATION) &&
+-	    !ieee80211_hw_check(&local->hw, TX_AMPDU_SETUP_IN_HW)) {
+-		struct tid_ampdu_tx *tid_tx;
 -
--	if (!vif->txq[IEEE80211_VIF_TXQ_MULTICAST])
--		goto out;
+-		tid = ieee80211_get_tid(hdr);
+-		tid_tx = rcu_dereference(tx->sta->ampdu_mlme.tid_tx[tid]);
+-		if (!tid_tx && aggr_check) {
+-			ieee80211_aggr_check(sdata, tx->sta, skb);
+-			tid_tx = rcu_dereference(tx->sta->ampdu_mlme.tid_tx[tid]);
+-		}
 -
--	txqi = to_txq_info(vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+-		if (tid_tx) {
+-			bool queued;
 -
--	if (!test_and_clear_bit(IEEE80211_TXQ_DIRTY, &txqi->flags) ||
--	    (ps && atomic_read(&ps->num_sta_ps)) ||
--	     ac != vif->txq[IEEE80211_VIF_TXQ_MULTICAST]->ac)
--		goto out;
+-			queued = ieee80211_tx_prep_agg(tx, skb, info,
+-						       tid_tx, tid);
 -
--	spin_unlock(&fq->lock);
+-			if (unlikely(queued))
+-				return TX_QUEUED;
+-		}
+-	}
 -
--	drv_wake_tx_queue(local, txqi);
--	local_bh_enable();
--	return;
- out:
- 	spin_unlock(&fq->lock);
- 	local_bh_enable();
+ 	if (is_multicast_ether_addr(hdr->addr1)) {
+ 		tx->flags &= ~IEEE80211_TX_UNICAST;
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+@@ -3556,7 +3460,7 @@ ieee80211_tx_skb_fixup(struct sk_buff *skb, netdev_features_t features)
+ void __ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 			   struct sta_info *sta,
+ 			   struct ieee80211_fast_tx *fast_tx,
+-			   struct sk_buff *skb, bool ampdu,
++			   struct sk_buff *skb,
+ 			   const u8 *da, const u8 *sa)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -3631,11 +3535,8 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 				struct sk_buff *skb)
+ {
+ 	u16 ethertype = (skb->data[12] << 8) | skb->data[13];
+-	struct ieee80211_hdr *hdr = (void *)fast_tx->hdr;
+-	struct tid_ampdu_tx *tid_tx = NULL;
+ 	struct sk_buff *next;
+ 	struct ethhdr eth;
+-	u8 tid = IEEE80211_NUM_TIDS;
+ 
+ 	/* control port protocol needs a lot of special handling */
+ 	if (cpu_to_be16(ethertype) == sdata->control_port_protocol)
+@@ -3649,17 +3550,6 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 	if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
+ 		return false;
+ 
+-	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+-		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+-		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-		if (tid_tx) {
+-			if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state))
+-				return false;
+-			if (tid_tx->timeout)
+-				tid_tx->last_tx = jiffies;
+-		}
+-	}
+-
+ 	memcpy(&eth, skb->data, ETH_HLEN - 2);
+ 
+ 	/* after this point (skb is modified) we cannot return false */
+@@ -3669,7 +3559,7 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 
+ 	skb_list_walk_safe(skb, skb, next) {
+ 		skb_mark_not_on_list(skb);
+-		__ieee80211_xmit_fast(sdata, sta, fast_tx, skb, tid_tx,
++		__ieee80211_xmit_fast(sdata, sta, fast_tx, skb,
+ 				      eth.h_dest, eth.h_source);
+ 	}
+ 
+@@ -3783,9 +3673,19 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		goto begin;
+ 	}
+ 
+-	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
+-		info->flags |= (IEEE80211_TX_CTL_AMPDU |
+-				IEEE80211_TX_CTL_DONTFRAG);
++	ieee80211_aggr_check(tx.sdata, tx.sta, skb);
++
++	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags)) {
++		struct tid_ampdu_tx *tid_tx;
++
++		tid_tx = rcu_dereference(tx.sta->ampdu_mlme.tid_tx[txq->tid]);
++		if (!WARN_ON_ONCE(!tid_tx)) {
++			tid_tx->last_tx = jiffies;
++
++			info->flags |= (IEEE80211_TX_CTL_AMPDU |
++					IEEE80211_TX_CTL_DONTFRAG);
++		}
++	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+ 		if (!ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)) {
+@@ -4153,7 +4053,6 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		sta = NULL;
+ 
+ 	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, sta, skb));
+-	ieee80211_aggr_check(sdata, sta, skb);
+ 
+ 	if (sta) {
+ 		struct ieee80211_fast_tx *fast_tx;
+@@ -4398,11 +4297,9 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_tx_info *info;
+ 	struct ieee80211_local *local = sdata->local;
+-	struct tid_ampdu_tx *tid_tx;
+ 	struct sk_buff *seg, *next;
+ 	unsigned int skbs = 0, len = 0;
+ 	u16 queue;
+-	u8 tid;
+ 
+ 	queue = ieee80211_select_queue(sdata, sta, skb);
+ 	skb_set_queue_mapping(skb, queue);
+@@ -4416,22 +4313,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	ieee80211_aggr_check(sdata, sta, skb);
+-
+-	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+-	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+-	if (tid_tx) {
+-		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+-			/* fall back to non-offload slow path */
+-			__ieee80211_subif_start_xmit(skb, dev, 0,
+-						     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC,
+-						     NULL);
+-			return;
+-		}
+-
+-		if (tid_tx->timeout)
+-			tid_tx->last_tx = jiffies;
+-	}
+-
+ 	skb = ieee80211_tx_skb_fixup(skb, ieee80211_sdata_netdev_features(sdata));
+ 	if (!skb)
+ 		return;
 -- 
 2.48.1
 
