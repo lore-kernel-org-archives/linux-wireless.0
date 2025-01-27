@@ -1,55 +1,55 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF1811FF1AC
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 11:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AAA21FCFD6
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 11:41:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737978060; cv=none; b=boDz93H4LroZ4U0KfPtrr4unUOLkFZv5ySKwP/jTpZW1eLtMk/z5zbDBKpQ8fAWGFxDSmhMmCEU7FaWcaG7muNreAVGabQRsoKUvojJeJ2GMQ5ybFexR2fxuIizHYiruUs9bl+r7CDHbDXjd9ROfixIzmf48rDs0dQ6mRoY3c7M=
+	t=1737978066; cv=none; b=o+VE9EG6DeJhRGmyPXZW8wQGGTRIHuvRMsJzYeF1GaR2D6LGvR4wf2Go7EToKKSvMHnSD9Rj4QZmmn7zzOf0s6FZbqVj4sJD9X3AMIlBWc+XewN7yTims2NHFQctIKUeS9nqbNzoPhRXpMv1Geb2A/T/bp36htk4eQ286pZqcQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737978060; c=relaxed/simple;
-	bh=WWVGLZWnHBW863bk1Okm6h4S5agS8UwEbzgK3IEuTwk=;
+	s=arc-20240116; t=1737978066; c=relaxed/simple;
+	bh=pP9jjtRZuOGFAaVor5bROLB3+NEpInJHQj5eHNG8244=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gIrnNBxbcV5aCjOw6tSkFd92Gb420MOWl8sIYsNvya9EwdEi6aPDCF/Dw7Zs+49Ck2NyfDyVr47eemDkonUGSJvh3514tt0fau7dxkQC4hJlLAA4Yaq5pyUILdoNfi/iW32nzfTkNJHO2Y5YWktqc9gihITYGwmtTYXXhwy/kRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=HgALFlVM; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=SMx6aEhrK1dcbX8WnUNL+eoXLtSI+pWdv+chWIUEGmZinRxzXnjW+9hnDJoSt3avyY0mF08yH4Atw9aEUkmogl28p31PDx89Y4kxHu8QiTukKri9KcKJI7F7pLi7KaOhBaawZ16biTSF29BwUC11ZFY3aReLSVxR1DHuHEpRDRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cIUZK9R6; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HgALFlVM"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50RB6sC1011401;
-	Mon, 27 Jan 2025 11:40:55 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cIUZK9R6"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50R6Lm4P002069;
+	Mon, 27 Jan 2025 11:40:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	RJOVsJpVsfcwYdsKQMchvLKtZjghS53PHeZzGrd8rQk=; b=HgALFlVMSKqfPsNF
-	uH/g+a1EPYKcyfTdw4x575th8Z4u/iY7xRF18sUOY/kv/CBFSGbMli6qYhjojQCO
-	dlAPbmmkeUlJtZwtpfCvgwOzIV9FJz+XXTb/cf3wjL95unXskQQA332COtZCA+cL
-	BMmHePJGi1+XbYvzpOMh1W+vSFVi8TMJr6ZE/Nk5/OFXQop6+D1XH0PySXvNA1yh
-	IE1BJXXOe/d/OHPfTU8HEswT62M7fXunliZGRRpiJtpqXUmicrfBL8KnGpmzB60V
-	PmVXdwH5ckmuqoRS7AwVg4Yw6CAJ6Yo/6TG6NxJRpRtGQa5+rn3kjtqn0cLSoUT8
-	WuqkMA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44e90105hd-1
+	BpY2zOGG8lpXGuEgY9nRb2DUojRVgbv2cgfRc43ADRA=; b=cIUZK9R6wL23BYq3
+	sK0An8xIMrvOdpKxwh9Z9JfhMjScd1/8dUN3Nba1KT7dlDwzoq+uIfuXKHbLK0Pz
+	J/p8I/d7F/GbZy3F9/cMQuhtSbblTCyy9ELYE5fFykAhXRYTdgu9FtIjxzlm7SqX
+	UP/CCbFxJdj12GhTRQ9de1xXxliH//KVwNNgROb7kCIo6+wFOYzCR8uBNGu0gQUd
+	uH+a7CqjPCtamg8L6HW3v9I/yact8zEmYLidaxyHven/VuqrVZWUGiy/WZzcfw9R
+	gebVOkRykCJf67F0v/WPb8JgdgsB1865p5q6vkK/v8iq0XwRD/OnMU67ojh5wXMG
+	pi0Z4Q==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44e4su0q29-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 27 Jan 2025 11:40:55 +0000 (GMT)
+	Mon, 27 Jan 2025 11:40:59 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50RBesOD008529
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 50RBewIV007520
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 27 Jan 2025 11:40:54 GMT
+	Mon, 27 Jan 2025 11:40:58 GMT
 Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 27 Jan 2025 03:40:52 -0800
+ 15.2.1544.9; Mon, 27 Jan 2025 03:40:56 -0800
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>, P Praneesh <quic_ppranees@quicinc.com>,
         Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
         Nicolas Escande
 	<nico.escande@gmail.com>
-Subject: [PATCH v3 3/7] wifi: ath12k: Avoid fetch Error bitmap and decap format from Rx TLV
-Date: Mon, 27 Jan 2025 17:10:26 +0530
-Message-ID: <20250127114030.43479-4-quic_periyasa@quicinc.com>
+Subject: [PATCH v3 5/7] wifi: ath12k: change the status update in the monitor Rx
+Date: Mon, 27 Jan 2025 17:10:28 +0530
+Message-ID: <20250127114030.43479-6-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250127114030.43479-1-quic_periyasa@quicinc.com>
 References: <20250127114030.43479-1-quic_periyasa@quicinc.com>
@@ -65,26 +65,25 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: yd5jucyICygiIWNmHqtBey44l93TXt4F
-X-Proofpoint-ORIG-GUID: yd5jucyICygiIWNmHqtBey44l93TXt4F
+X-Proofpoint-ORIG-GUID: XX01lkw4TahJe-YIlY7hMK1DMK7O-YHI
+X-Proofpoint-GUID: XX01lkw4TahJe-YIlY7hMK1DMK7O-YHI
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-27_05,2025-01-27_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- spamscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0
- mlxlogscore=963 phishscore=0 clxscore=1015 bulkscore=0 adultscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=854
+ clxscore=1015 suspectscore=0 impostorscore=0 malwarescore=0 mlxscore=0
+ lowpriorityscore=0 priorityscore=1501 spamscore=0 phishscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2411120000 definitions=main-2501270093
 
 From: P Praneesh <quic_ppranees@quicinc.com>
 
-Currently, error bitmap and decap format information are fetched from the
-MSDU Rx TLV data. This logic is inherited from ath11k. However, for ath12k
-802.11be hardware, the Rx TLV will not be present in the MSDU data.
-Instead, this information is reported separately under the MSDU END TLV
-tag. Therefore, remove the existing fetch code, handle the MSDU END TLV
-tag and fetch the above information to store it in the mon_mpdu data
-structure for use in the merge MSDU procedure.
+Currently, in the monitor Rx path, status is filled from the RX TLV header
+present in the MSDU data. This logic is inherited from ath11k. However, in
+the ath12k 802.11be hardware, the Rx TLV header is not present in the MSDU
+data. This information is reported under various TLV tags. Therefore, avoid
+the existing status filling by accumulating the needed information in the
+PPDU information structure and fill the status.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -93,174 +92,229 @@ Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
 Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 Tested-by: Nicolas Escande <nico.escande@gmail.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_mon.c | 58 ++++++++++--------------
- 1 file changed, 23 insertions(+), 35 deletions(-)
+ drivers/net/wireless/ath/ath12k/core.h   |  16 ++-
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 138 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/hal_rx.h |   5 +-
+ 3 files changed, 151 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 3f908fd8161c..350fa4b9088e 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -525,9 +525,19 @@ struct ath12k_sta {
+ 	enum ieee80211_sta_state state;
+ };
+ 
+-#define ATH12K_MIN_5GHZ_FREQ 4150
+-#define ATH12K_MIN_6GHZ_FREQ 5925
+-#define ATH12K_MAX_6GHZ_FREQ 7115
++#define ATH12K_HALF_20MHZ_BW	10
++#define ATH12K_2GHZ_MIN_CENTER	2412
++#define ATH12K_2GHZ_MAX_CENTER	2484
++#define ATH12K_5GHZ_MIN_CENTER	4900
++#define ATH12K_5GHZ_MAX_CENTER	5920
++#define ATH12K_6GHZ_MIN_CENTER	5935
++#define ATH12K_6GHZ_MAX_CENTER	7115
++#define ATH12K_MIN_2GHZ_FREQ	(ATH12K_2GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW - 1)
++#define ATH12K_MAX_2GHZ_FREQ	(ATH12K_2GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW + 1)
++#define ATH12K_MIN_5GHZ_FREQ	(ATH12K_5GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MAX_5GHZ_FREQ	(ATH12K_5GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MIN_6GHZ_FREQ	(ATH12K_6GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MAX_6GHZ_FREQ	(ATH12K_6GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW)
+ #define ATH12K_NUM_CHANS 101
+ #define ATH12K_MAX_5GHZ_CHAN 173
+ 
 diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
-index e9f53ac169b4..5be47c94bed1 100644
+index 5be47c94bed1..778866628a8d 100644
 --- a/drivers/net/wireless/ath/ath12k/dp_mon.c
 +++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
-@@ -1733,30 +1733,26 @@ static void ath12k_dp_mon_rx_msdus_set_payload(struct ath12k *ar,
+@@ -1731,18 +1731,128 @@ static void ath12k_dp_mon_rx_msdus_set_payload(struct ath12k *ar,
+ 	skb_pull(head_msdu, rx_pkt_offset + l2_hdr_offset);
+ }
  
++static void
++ath12k_dp_mon_fill_rx_stats_info(struct ath12k *ar,
++				 struct hal_rx_mon_ppdu_info *ppdu_info,
++				 struct ieee80211_rx_status *rx_status)
++{
++	u32 center_freq = ppdu_info->freq;
++
++	rx_status->freq = center_freq;
++	rx_status->bw = ath12k_mac_bw_to_mac80211_bw(ppdu_info->bw);
++	rx_status->nss = ppdu_info->nss;
++	rx_status->rate_idx = 0;
++	rx_status->encoding = RX_ENC_LEGACY;
++	rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
++
++	if (center_freq >= ATH12K_MIN_6GHZ_FREQ &&
++	    center_freq <= ATH12K_MAX_6GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_6GHZ;
++	} else if (center_freq >= ATH12K_MIN_2GHZ_FREQ &&
++		   center_freq <= ATH12K_MAX_2GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_2GHZ;
++	} else if (center_freq >= ATH12K_MIN_5GHZ_FREQ &&
++		   center_freq <= ATH12K_MAX_5GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_5GHZ;
++	} else {
++		rx_status->band = NUM_NL80211_BANDS;
++	}
++}
++
++static void
++ath12k_dp_mon_fill_rx_rate(struct ath12k *ar,
++			   struct hal_rx_mon_ppdu_info *ppdu_info,
++			   struct ieee80211_rx_status *rx_status)
++{
++	struct ieee80211_supported_band *sband;
++	enum rx_msdu_start_pkt_type pkt_type;
++	u8 rate_mcs, nss, sgi;
++	bool is_cck;
++
++	pkt_type = ppdu_info->preamble_type;
++	rate_mcs = ppdu_info->rate;
++	nss = ppdu_info->nss;
++	sgi = ppdu_info->gi;
++
++	switch (pkt_type) {
++	case RX_MSDU_START_PKT_TYPE_11A:
++	case RX_MSDU_START_PKT_TYPE_11B:
++		is_cck = (pkt_type == RX_MSDU_START_PKT_TYPE_11B);
++		if (rx_status->band < NUM_NL80211_BANDS) {
++			sband = &ar->mac.sbands[rx_status->band];
++			rx_status->rate_idx = ath12k_mac_hw_rate_to_idx(sband, rate_mcs,
++									is_cck);
++		}
++		break;
++	case RX_MSDU_START_PKT_TYPE_11N:
++		rx_status->encoding = RX_ENC_HT;
++		if (rate_mcs > ATH12K_HT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in HT mode %d\n",
++				     rate_mcs);
++			break;
++		}
++		rx_status->rate_idx = rate_mcs + (8 * (nss - 1));
++		if (sgi)
++			rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
++		break;
++	case RX_MSDU_START_PKT_TYPE_11AC:
++		rx_status->encoding = RX_ENC_VHT;
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_VHT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in VHT mode %d\n",
++				     rate_mcs);
++			break;
++		}
++		if (sgi)
++			rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
++		break;
++	case RX_MSDU_START_PKT_TYPE_11AX:
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_HE_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in HE mode %d\n",
++				    rate_mcs);
++			break;
++		}
++		rx_status->encoding = RX_ENC_HE;
++		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
++		break;
++	case RX_MSDU_START_PKT_TYPE_11BE:
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_EHT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in EHT mode %d\n",
++				    rate_mcs);
++			break;
++		}
++		rx_status->encoding = RX_ENC_EHT;
++		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
++		break;
++	default:
++		ath12k_dbg(ar->ab, ATH12K_DBG_DATA,
++			   "monitor receives invalid preamble type %d",
++			    pkt_type);
++		break;
++	}
++}
++
  static struct sk_buff *
  ath12k_dp_mon_rx_merg_msdus(struct ath12k *ar,
--			    struct sk_buff *head_msdu, struct sk_buff *tail_msdu,
--			    struct ieee80211_rx_status *rxs, bool *fcs_err)
-+			    struct dp_mon_mpdu *mon_mpdu,
-+			    struct ieee80211_rx_status *rxs)
+ 			    struct dp_mon_mpdu *mon_mpdu,
++			    struct hal_rx_mon_ppdu_info *ppdu_info,
+ 			    struct ieee80211_rx_status *rxs)
  {
  	struct ath12k_base *ab = ar->ab;
  	struct sk_buff *msdu, *mpdu_buf, *prev_buf, *head_frag_list;
-+	struct sk_buff *head_msdu, *tail_msdu;
- 	struct hal_rx_desc *rx_desc, *tail_rx_desc;
--	u8 *hdr_desc, *dest, decap_format;
-+	u8 *hdr_desc, *dest, decap_format = mon_mpdu->decap_format;
+ 	struct sk_buff *head_msdu, *tail_msdu;
+-	struct hal_rx_desc *rx_desc, *tail_rx_desc;
++	struct hal_rx_desc *rx_desc;
+ 	u8 *hdr_desc, *dest, decap_format = mon_mpdu->decap_format;
  	struct ieee80211_hdr_3addr *wh;
--	u32 err_bitmap, frag_list_sum_len = 0;
-+	u32 frag_list_sum_len = 0;
++	struct ieee80211_channel *channel;
+ 	u32 frag_list_sum_len = 0;
++	u8 channel_num = ppdu_info->chan_num;
  
  	mpdu_buf = NULL;
-+	head_msdu = mon_mpdu->head;
-+	tail_msdu = mon_mpdu->tail;
- 
+ 	head_msdu = mon_mpdu->head;
+@@ -1751,9 +1861,29 @@ ath12k_dp_mon_rx_merg_msdus(struct ath12k *ar,
  	if (!head_msdu)
  		goto err_merge_fail;
  
--	rx_desc = (struct hal_rx_desc *)head_msdu->data;
- 	tail_rx_desc = (struct hal_rx_desc *)tail_msdu->data;
+-	tail_rx_desc = (struct hal_rx_desc *)tail_msdu->data;
++	ath12k_dp_mon_fill_rx_stats_info(ar, ppdu_info, rxs);
++
++	if (unlikely(rxs->band == NUM_NL80211_BANDS ||
++		     !ath12k_ar_to_hw(ar)->wiphy->bands[rxs->band])) {
++		ath12k_dbg(ar->ab, ATH12K_DBG_DATA,
++			   "sband is NULL for status band %d channel_num %d center_freq %d pdev_id %d\n",
++			   rxs->band, channel_num, ppdu_info->freq, ar->pdev_idx);
++
++		spin_lock_bh(&ar->data_lock);
++		channel = ar->rx_channel;
++		if (channel) {
++			rxs->band = channel->band;
++			channel_num =
++				ieee80211_frequency_to_channel(channel->center_freq);
++		}
++		spin_unlock_bh(&ar->data_lock);
++	}
++
++	if (rxs->band < NUM_NL80211_BANDS)
++		rxs->freq = ieee80211_channel_to_frequency(channel_num,
++							   rxs->band);
  
--	err_bitmap = ath12k_dp_rx_h_mpdu_err(ab, tail_rx_desc);
--	if (err_bitmap & HAL_RX_MPDU_ERR_FCS)
--		*fcs_err = true;
--
--	decap_format = ath12k_dp_rx_h_decap_type(ab, tail_rx_desc);
--
- 	ath12k_dp_rx_h_ppdu(ar, tail_rx_desc, rxs);
+-	ath12k_dp_rx_h_ppdu(ar, tail_rx_desc, rxs);
++	ath12k_dp_mon_fill_rx_rate(ar, ppdu_info, rxs);
  
  	if (decap_format == DP_RX_DECAP_TYPE_RAW) {
-@@ -1985,7 +1981,8 @@ static void ath12k_dp_mon_update_radiotap(struct ath12k *ar,
- 
- static void ath12k_dp_mon_rx_deliver_msdu(struct ath12k *ar, struct napi_struct *napi,
- 					  struct sk_buff *msdu,
--					  struct ieee80211_rx_status *status)
-+					  struct ieee80211_rx_status *status,
-+					  u8 decap)
- {
- 	static const struct ieee80211_radiotap_he known = {
- 		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
-@@ -1997,7 +1994,6 @@ static void ath12k_dp_mon_rx_deliver_msdu(struct ath12k *ar, struct napi_struct
- 	struct ieee80211_sta *pubsta = NULL;
- 	struct ath12k_peer *peer;
- 	struct ath12k_skb_rxcb *rxcb = ATH12K_SKB_RXCB(msdu);
--	u8 decap = DP_RX_DECAP_TYPE_RAW;
- 	bool is_mcbc = rxcb->is_mcbc;
- 	bool is_eapol_tkip = rxcb->is_eapol;
- 
-@@ -2010,8 +2006,6 @@ static void ath12k_dp_mon_rx_deliver_msdu(struct ath12k *ar, struct napi_struct
- 		status->flag |= RX_FLAG_RADIOTAP_HE;
- 	}
- 
--	if (!(status->flag & RX_FLAG_ONLY_MONITOR))
--		decap = ath12k_dp_rx_h_decap_type(ar->ab, rxcb->rx_desc);
- 	spin_lock_bh(&ar->ab->base_lock);
- 	peer = ath12k_dp_rx_h_find_peer(ar->ab, msdu);
- 	if (peer && peer->sta) {
-@@ -2068,25 +2062,23 @@ static void ath12k_dp_mon_rx_deliver_msdu(struct ath12k *ar, struct napi_struct
- }
- 
- static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
--				    struct sk_buff *head_msdu, struct sk_buff *tail_msdu,
-+				    struct dp_mon_mpdu *mon_mpdu,
- 				    struct hal_rx_mon_ppdu_info *ppduinfo,
- 				    struct napi_struct *napi)
- {
- 	struct ath12k_pdev_dp *dp = &ar->dp;
- 	struct sk_buff *mon_skb, *skb_next, *header;
+ 		ath12k_dp_mon_rx_msdus_set_payload(ar, head_msdu, tail_msdu);
+@@ -2071,7 +2201,7 @@ static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
  	struct ieee80211_rx_status *rxs = &dp->rx_status;
--	bool fcs_err = false;
-+	u8 decap = DP_RX_DECAP_TYPE_RAW;
+ 	u8 decap = DP_RX_DECAP_TYPE_RAW;
  
--	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar,
--					      head_msdu, tail_msdu,
--					      rxs, &fcs_err);
-+	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar, mon_mpdu, rxs);
+-	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar, mon_mpdu, rxs);
++	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar, mon_mpdu, ppduinfo, rxs);
  	if (!mon_skb)
  		goto mon_deliver_fail;
  
- 	header = mon_skb;
- 	rxs->flag = 0;
+diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+index 6f10e4222ba6..c753eb2a03ad 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
+@@ -509,7 +509,10 @@ struct hal_rx_mpdu_start {
  
--	if (fcs_err)
-+	if (mon_mpdu->err_bitmap & HAL_RX_MPDU_ERR_FCS)
- 		rxs->flag = RX_FLAG_FAILED_FCS_CRC;
- 
- 	do {
-@@ -2103,8 +2095,12 @@ static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
- 			rxs->flag |= RX_FLAG_ALLOW_SAME_PN;
- 		}
- 		rxs->flag |= RX_FLAG_ONLY_MONITOR;
-+
-+		if (!(rxs->flag & RX_FLAG_ONLY_MONITOR))
-+			decap = mon_mpdu->decap_format;
-+
- 		ath12k_dp_mon_update_radiotap(ar, ppduinfo, mon_skb, rxs);
--		ath12k_dp_mon_rx_deliver_msdu(ar, napi, mon_skb, rxs);
-+		ath12k_dp_mon_rx_deliver_msdu(ar, napi, mon_skb, rxs, decap);
- 		mon_skb = skb_next;
- 	} while (mon_skb);
- 	rxs->flag = 0;
-@@ -2112,7 +2108,7 @@ static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
- 	return 0;
- 
- mon_deliver_fail:
--	mon_skb = head_msdu;
-+	mon_skb = mon_mpdu->head;
- 	while (mon_skb) {
- 		skb_next = mon_skb->next;
- 		dev_kfree_skb_any(mon_skb);
-@@ -2318,7 +2314,6 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
- 	struct hal_rx_mon_ppdu_info *ppdu_info = &pmon->mon_ppdu_info;
- 	struct dp_mon_mpdu *tmp;
- 	struct dp_mon_mpdu *mon_mpdu = pmon->mon_mpdu;
--	struct sk_buff *head_msdu, *tail_msdu;
- 	enum hal_rx_mon_status hal_status;
- 
- 	hal_status = ath12k_dp_mon_parse_rx_dest(ar, pmon, skb);
-@@ -2327,13 +2322,9 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
- 
- 	list_for_each_entry_safe(mon_mpdu, tmp, &pmon->dp_rx_mon_mpdu_list, list) {
- 		list_del(&mon_mpdu->list);
--		head_msdu = mon_mpdu->head;
--		tail_msdu = mon_mpdu->tail;
- 
--		if (head_msdu && tail_msdu) {
--			ath12k_dp_mon_rx_deliver(ar, head_msdu,
--						 tail_msdu, ppdu_info, napi);
--		}
-+		if (mon_mpdu->head && mon_mpdu->tail)
-+			ath12k_dp_mon_rx_deliver(ar, mon_mpdu, ppdu_info, napi);
- 
- 		kfree(mon_mpdu);
- 	}
-@@ -3018,16 +3009,13 @@ ath12k_dp_mon_tx_process_ppdu_info(struct ath12k *ar,
- 				   struct dp_mon_tx_ppdu_info *tx_ppdu_info)
- {
- 	struct dp_mon_mpdu *tmp, *mon_mpdu;
--	struct sk_buff *head_msdu, *tail_msdu;
- 
- 	list_for_each_entry_safe(mon_mpdu, tmp,
- 				 &tx_ppdu_info->dp_tx_mon_mpdu_list, list) {
- 		list_del(&mon_mpdu->list);
--		head_msdu = mon_mpdu->head;
--		tail_msdu = mon_mpdu->tail;
- 
--		if (head_msdu)
--			ath12k_dp_mon_rx_deliver(ar, head_msdu, tail_msdu,
-+		if (mon_mpdu->head)
-+			ath12k_dp_mon_rx_deliver(ar, mon_mpdu,
- 						 &tx_ppdu_info->rx_status, napi);
- 
- 		kfree(mon_mpdu);
+ struct hal_rx_msdu_end {
+ 	__le32 info0;
+-	__le32 rsvd0[18];
++	__le32 rsvd0[9];
++	__le16 info00;
++	__le16 info01;
++	__le32 rsvd00[8];
+ 	__le32 info1;
+ 	__le32 rsvd1[10];
+ 	__le32 info2;
 -- 
 2.34.1
 
