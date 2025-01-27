@@ -1,110 +1,83 @@
-Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9411A8837
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 15:21:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
+Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 96B98156C79
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 16:28:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737991263; cv=none; b=OPVVT/3a3dCTA1VI+vfozhTmzC1DPq1iIPQx6DLfylcIR46zjmZ4QsjJvw0dwRQODvbCgYrhpPKHoW4/rySLNzcnH2heng7eRcje03ZN2veQZJgy4fpW5DW2hFLG8lOfzA/zKbrrljQ0BK4bfdQEy4CY6nHbAB/xI4wNgTKHOY0=
+	t=1737995310; cv=none; b=AsWznS1feQiSRLRpmrUzf+sGNNyWEVgdJ7qySXCb9rcRf3bLUdchyi/km8usTReIGLSzmsN0+7UzKGP5o4WLdfREbcrrO2lNFbf/mnL/NTysdsXHGSaWPOD1Dfy214kkbuw2Uay3uyKMXYJkuBh1XRJbT9AFbq6B5m2hGQy8o9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737991263; c=relaxed/simple;
-	bh=P4YLS630pj+sIKngIzZXNX0CJaDfpIWSuim3VbvJgFA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y+dRbQVZqmtLkAeG35FqXHBPa/eK18RnR86ixsaHXYw8DqhxRWyC/FLy4GosWxjjVQt+61iPiTNsXfMZCfN0K4nmwV9Zp+6q++rmQ2Dhr/4dtaCENXRqscGNDsmfp8kn1ZfdGRoL0fukYNr5/Ze0r2wgFNZHTslUulxfdxfgLDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G01oNOl1; arc=none smtp.client-ip=209.85.222.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1737995310; c=relaxed/simple;
+	bh=0hSQuwsn3oHCk2z5sQdHgygazfzOWqU0DtQIn02OqlA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=W0ji+QQsusKBkSz9qTF2ehyxzOyDIQeleLgP6JI5kixJT9zqf6WQq0bnDVp8afaFvaJAZ2j3I7pNsk05m7z0O8juqHDn+gwavePhfhjqhM4Oz7vPZ0jk8PW2vKs/Vs5FYu8r7ig8PWf5TPPbYbK0UilVdZUdQ+dBOYojw085rEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=vyPoN4Og; arc=none smtp.client-ip=5.252.227.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G01oNOl1"
-Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-7be3d681e74so409472685a.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2025 07:21:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1737991260; x=1738596060; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=iT8ApVhyv4PImzhWoKA6aW6GniXAQEVDWB5FBbwyYQc=;
-        b=G01oNOl1hH8vfH/dDz2OE28Uo2NdjB3SwIN+fhwhQPwIZ8AifnSzegGN/CB5T+zIpi
-         rMXa8XAySfKN6o3ZPcNzDHoIQZl93Jd2Qnvp+WGLSXe+0G3ALdcvWgMQhGLcCdENIRB2
-         4ecIYakUyB5MvKxDMw6uQDbmzwqwGcWgnB7AbtRVxpaJdxLYmHYeK5Y923mNDdra+qcH
-         6FySyMEp9imbBSrZbwXLQvKSW18rgD/VNXxF2H5ptudhOTJobq/nbcYBZF6w92TnF6XH
-         hnplcj+LasLyJTn3aXt4bGZi3SX8Vj4NMK72eEJPHuAXI0OUtqWHEoceEfoJnxUOKVG8
-         K5hg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737991260; x=1738596060;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=iT8ApVhyv4PImzhWoKA6aW6GniXAQEVDWB5FBbwyYQc=;
-        b=r5FGokceQKBaDgUmh9xrWL+5uR0hVyWAbAGIerAg++Awt5/oPNsVh6Q0iqCcU3ukTK
-         1iGJIYCz6UB0e75OYRgwfesKPXVPb4sqZzFCPN5RJ5w66hudbDut9QNE2Cgj+NHW+2zv
-         SDImAFtMiin3i+0rVlphQvPJ5yr/ptfYqFr+1ZkGE4kqX4auPVjMmWLceYeRbpyJFcIg
-         9plEIuiF5qAA4SmaKqYLZntKACXRrljgYSVdgrMNFUU40Pu1UN/d9HhNBigF4PTTx+Jc
-         mkRtbBvFADBtYAVi58z/AfPZ1BBLqLI/xK08FBkgjlP2KUl0pPTuM5Hf6qu3BtegL0jX
-         zxOQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWzWmhCbekb6nw7NsNkeUs6TRkF70hyFNlKub9wEva/RH+IGPtyEoZhCYiaefXH+nAbvuelV4pbZVQSajyaZA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxy4sf53Y9/8nxYo6AvEqFQ7YkFfNScrSULsElz8oRm4Yu56cH9
-	wgUBkmJlAHYvju8IrCzmEZs+CiIAHeLqrrYWrgJfCe4g6KgFpZMbP7Zlog==
-X-Gm-Gg: ASbGncvQZgMUfo6rzAWchprnypw93jf/8CrOehydYt/D0Hv7bA2qCtKi2fv/EgdbhP+
-	7elBICWN+TEFrmZAct7G/GZfkxBq9aXk7aSrtwXqQW3MlBWFO8hsAVIxtmUlxpBObfTEJlZSsM1
-	PHSb9fcMT1Af2XpXG21XQhp2jd4VPL8881rFEfAVNbh+7jlr8sGgawtyYgXDJ+vsNRMIW9PxcSt
-	7ytWKshyd48oS26KACb4mH4/tsb9HfJFt1KcYstXywLoXUIU8E3PAwUt74c69fP3O/CO+kAk5kZ
-	Ciw/2/ap
-X-Google-Smtp-Source: AGHT+IEnJnp2cYoqDLWX58VIryul0pkwYiNqA2q/DFh580edzsdHDFRBVnOr5g0yz59lplOB/9utZw==
-X-Received: by 2002:a05:620a:25cd:b0:7b6:d65a:d6ea with SMTP id af79cd13be357-7be63279052mr6779176285a.46.1737991260487;
-        Mon, 27 Jan 2025 07:21:00 -0800 (PST)
-Received: from [10.100.121.195] ([152.193.78.90])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7be9ae7ec43sm398710085a.24.2025.01.27.07.20.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Jan 2025 07:20:59 -0800 (PST)
-Message-ID: <375f302d-7597-4880-96c7-e301e8c7cb4d@gmail.com>
-Date: Mon, 27 Jan 2025 07:20:57 -0800
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="vyPoN4Og"
+From: Alexander Wetzel <Alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+	s=wetzel-home; t=1737995298;
+	bh=0hSQuwsn3oHCk2z5sQdHgygazfzOWqU0DtQIn02OqlA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=vyPoN4Ogm52eDMo8skvJPZ/7MUcKXbe/VjSOirTlP8Ia04+LCU1v+TsflTSgeLKIN
+	 s7wh2YXJbHSZOkZm0/64SgkT5pxcyfcMDjlqtsoFwmn8UH21ZOy9buj5rrR6CFFTal
+	 QpCAubgBFJeS4FnC531/jozA/DXp99KO0AdTYI3w=
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Alexander Wetzel <Alexander@wetzel-home.de>
+Subject: [RFC PATCH 08/13] wifi: mac80211: Call ieee80211_tx_h_select_key only once
+Date: Mon, 27 Jan 2025 17:26:20 +0100
+Message-ID: <20250127162625.20747-9-Alexander@wetzel-home.de>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250127162625.20747-1-Alexander@wetzel-home.de>
+References: <20250127162625.20747-1-Alexander@wetzel-home.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: brcmfmac SAE/WPA3 negotiation - Part 2
-To: KeithG <ys3al35l@gmail.com>
-Cc: Denis Kenzior <denkenz@gmail.com>,
- Arend Van Spriel <arend.vanspriel@broadcom.com>, connman@lists.linux.dev,
- brcm80211@lists.linux.dev, linux-wireless@vger.kernel.org,
- iwd@lists.linux.dev
-References: <CAG17S_OwtNxetb7XzsxkZcygH_CWkZx15evQZkThb3WjqpiKTQ@mail.gmail.com>
- <CAG17S_Oq+RGOZpE+xa-CV8=VtmJu7G8GWxfVYqg1edEG9wC+yA@mail.gmail.com>
- <CAG17S_NdA9LdwmA_XfvPOVrhCdqp+BOtAssH0=RE-VSjg=WFnA@mail.gmail.com>
- <CAG17S_O6Bpc+JhhUuDvE70a+ef9wt9D7jG1gMJDNo1qZCUOg8w@mail.gmail.com>
- <194115affe0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
- <CAG17S_O7HbPFB0gubWWP9P-Oecps8K_LG0Y7YDo5DbNGKSLjpA@mail.gmail.com>
- <CAG17S_MwJC+h7O-htyUxEgB4zHKeGf+9B4QaQ6ZLiVStU_Egkw@mail.gmail.com>
- <CAG17S_NfqFjjaWj6vGS1HXux6JDy0QKcg8aQAR=aOzNGhO0a3w@mail.gmail.com>
- <eace9233-1b65-4793-8abe-abd3c640dba8@gmail.com>
- <CAG17S_MfQ+FjWQJoiNs30rt4u1O9Z_FXFB7BiS6RAQsG9ReNkA@mail.gmail.com>
- <CAG17S_OigLj3j=tS2BKYpoKOWKVs=XOBS-YFn26SzF9r+ZpLzA@mail.gmail.com>
- <CAG17S_Pj6UaA-yaGDUCwr8+M+L760PU0NvB1sAzGGNCp4xKatg@mail.gmail.com>
- <8c36a8c0-0246-4009-b79b-890e1f0a7aaa@gmail.com>
- <CAG17S_NNtyU0eXzsWgrjJEjcqDHPLrbSkvnEboSg-fZebdV3dg@mail.gmail.com>
-Content-Language: en-US
-From: James Prestwood <prestwoj@gmail.com>
-In-Reply-To: <CAG17S_NNtyU0eXzsWgrjJEjcqDHPLrbSkvnEboSg-fZebdV3dg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi Keith,
+ieee80211_tx_dequeue() already calls ieee80211_tx_h_select_key() when
+needed. Move it from invoke_tx_handlers_early() to invoke_tx_handlers()
+to avoid calling it twice for TXQs.
 
-On 1/27/25 7:09 AM, KeithG wrote:
-> I just tried this and it connected 2x once from a saved key and a
-> second time from a new key.
-> Will continue testing and let you know, but this may be it!
-> Thanks so much for all the support.
+Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
+---
+ net/mac80211/tx.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-Thanks for the feedback. If you continue to see issues with this 
-configuration let us know. I'm probably going to just disable PMKSA on 
-brcmfmac for the time being.
-
-Thanks,
-
-James
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d50ca692f348..748edc3dc63a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1691,7 +1691,6 @@ static int invoke_tx_handlers_early(struct ieee80211_tx_data *tx)
+ 	CALL_TXH(ieee80211_tx_h_check_assoc);
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
+ 	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
+-	CALL_TXH(ieee80211_tx_h_select_key);
+ 
+  txh_done:
+ 	if (unlikely(res == TX_DROP)) {
+@@ -1759,6 +1758,17 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 
+ 	if (r)
+ 		return r;
++
++	r = ieee80211_tx_h_select_key(tx);
++	if (unlikely(r != TX_CONTINUE)) {
++		I802_DEBUG_INC(tx->local->tx_handlers_drop);
++		if (tx->skb)
++			ieee80211_free_txskb(&tx->local->hw, tx->skb);
++		else
++			ieee80211_purge_tx_queue(&tx->local->hw, &tx->skbs);
++		return -1;
++	}
++
+ 	return invoke_tx_handlers_late(tx);
+ }
+ 
+-- 
+2.48.1
 
