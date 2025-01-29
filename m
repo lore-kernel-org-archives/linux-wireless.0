@@ -1,112 +1,210 @@
-Received: from mail.hypatia.paranoidlabs.org (hypatia.paranoidlabs.org [45.11.248.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 157411B4257
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2025 12:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.11.248.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82206184
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jan 2025 12:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738152651; cv=none; b=urUzqgR53ZNwAzb4pflQyCuu8wMhS8MPzi/l9WlRw5lRXkqAjc/PY74Kwcp5xAbflzFOc0VvPjoGVNgdhO+pJpjQxpyGmnqYA0NuUX29CKXIZRRQw/v0qlDjilYh8rvYs0tIdo5My7h0pJjPiElazvyuiUa64O7hruKVz9cgSRA=
+	t=1738154350; cv=none; b=Vzbnp9UnXKH++DIhOgei/tNVjBaTQw5ACG3l1/oNE/Ct0ep+qoT3H0XJJnxWTB+EWnCvNXFXsqHgU2AftN1AqnSiH5huGzUboFGMaXxmCp+QBDJrCyjJKgG8Plx+fjZOYFp+8ue11GBeJxYb/0/pS/bRKjRuP3M2+4Gd4dO44Bw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738152651; c=relaxed/simple;
-	bh=AXsmmS0pX71sBLE9DJ3+irvoubuqFKdOj3JT3VbLZQE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aA/Gdp21vnlIZ8oxJ7j7Z2oZ8QfrZf9lY3ZzIFHdZSD3e1OoETJijy1uu4WSfLQJSNvQFxw6nCHeayLwizYzq+5wkTGybnZ+PemCxIgxESarEFCR+Ur06TH6gbq/hs0iFYdJQUNfmAnssLt+MOfxzJ7RjKCol96AoQfe3L4qTs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paranoidlabs.org; spf=pass smtp.mailfrom=paranoidlabs.org; dkim=pass (2048-bit key) header.d=paranoidlabs.org header.i=@paranoidlabs.org header.b=X4uui67t; dkim=permerror (0-bit key) header.d=paranoidlabs.org header.i=@paranoidlabs.org header.b=wg0+NsCI; arc=none smtp.client-ip=45.11.248.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=paranoidlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=paranoidlabs.org
+	s=arc-20240116; t=1738154350; c=relaxed/simple;
+	bh=vJWVTXm93TmEvhMMt5leccWh1RH7Vk4xrJFHq6fVe44=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=FsDMRuqfi5oklV2PecChSYjAnEgBZCul2xj3bzQ3OMprCRWAvoITFEbgyhMewB1meVn1pin3iJP90wqRha3KLhTMH/YmZ18dBEREoAglm5FHoaEmQhNDzeublz2dw0BRNWJNzMyM/kq5Vf5wJOGfkadQkMYbr8ipQE5iViBHwzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=L11Q5YZH; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=paranoidlabs.org header.i=@paranoidlabs.org header.b="X4uui67t";
-	dkim=permerror (0-bit key) header.d=paranoidlabs.org header.i=@paranoidlabs.org header.b="wg0+NsCI"
-Received: from caph.lan (unknown [IPv6:2a02:1748:dd4e:ded0::3ab])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.hypatia.paranoidlabs.org (PlabsMail) with ESMTPSA id 1E9C43AEC1;
-	Wed, 29 Jan 2025 12:01:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=paranoidlabs.org;
-	s=rsa-20210101; t=1738152105;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ldVEcmtinS/lY7ECt5uwSWw8v2LtBLA5DVqAw8pk09c=;
-	b=X4uui67tRuNT1IvAdfBJAIsloobVMTR3WLJ3YO840r4T1YTBzWuPGkNPFSPL+VmlQOcVd8
-	ISbCQRf2/P3MD0GEB/lnNeHvz0MxyVv44f4vEfg/7P/IvEHqlh21M7x8C68eZ1AcbR8fDT
-	HKkQ72QUPfcxzSYTlEtr8OKOZsw9DSZSLT/BGB2WAUEmolXU3pLfb3vE4NLJsHMII6IXyn
-	9BfuVO0mOe1aEXZr2H98ZFQI9S0HZpLuFbgWBTrujaKMaOiRo73ZREykoxQD4mKX9Nb8fH
-	rcvChUf6g/BAgwCSp3+fodEcAZsIrvzGjSsmZJ01dGit+VSGU7tbCBcIHjW8ig==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=paranoidlabs.org;
-	s=ed25519-20210101; t=1738152105;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ldVEcmtinS/lY7ECt5uwSWw8v2LtBLA5DVqAw8pk09c=;
-	b=wg0+NsCITUZ88Y5NT0t3xJ+QUM+cslRdBsTah5rQvQJYZuQH+RgR53tmpc/N1f/ZaXWyLo
-	EnxgIECMZ50WaoBQ==
-From: Jakob Riepler <jakob.riepler@paranoidlabs.org>
-To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org,
-	Jakob Riepler <jakob.riepler@paranoidlabs.org>
-Subject: [PATCH] wireless-regdb: Update regulatory rules for Austria (AT)
-Date: Wed, 29 Jan 2025 12:25:55 +0100
-Message-ID: <20250129112554.27296-2-jakob.riepler@paranoidlabs.org>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="L11Q5YZH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1738154349; x=1769690349;
+  h=date:from:to:cc:subject:message-id;
+  bh=vJWVTXm93TmEvhMMt5leccWh1RH7Vk4xrJFHq6fVe44=;
+  b=L11Q5YZHwDVMKpGlAWPRbT+xXhfoVifd/qVTE219It6HFOM41xLGeqyk
+   OOGgjWEpWG3Qda/almdk4fflCzae2Iq1O/czo/Gxj+x9hADx0XYpR46Yn
+   tf+bW+aKK0xfqqjVhLawQPyWoiwfOljuVp6dldDl1iMUYfAKwuGnxcdjB
+   NUxhLUnROadwDZTwR91KNIplJh6ZIV0fm+jTl79cU0XhRCnQGfZwfy9lM
+   VxuClb7E87N2SIffrZo16hRN9TbKcoE44wC1CmykxH03Yl6yrWjKtKixS
+   Ag8DvJWloHDs3z2lho86YFxp8jvXr1/VjxEiimaGbZqbpJDfiK8KYNDgJ
+   g==;
+X-CSE-ConnectionGUID: GEblxMfTRR++uJ1/mqsegg==
+X-CSE-MsgGUID: 36oVHVHuQ1eJk5Ma12OdIA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11329"; a="42415469"
+X-IronPort-AV: E=Sophos;i="6.13,243,1732608000"; 
+   d="scan'208";a="42415469"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jan 2025 04:38:57 -0800
+X-CSE-ConnectionGUID: At1VvQYDS/Crmt9JAgr4/w==
+X-CSE-MsgGUID: +k81I81RThSQw4QDaxZAWw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.13,243,1732608000"; 
+   d="scan'208";a="108995899"
+Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
+  by orviesa006.jf.intel.com with ESMTP; 29 Jan 2025 04:38:55 -0800
+Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1td7LI-000iwf-39;
+	Wed, 29 Jan 2025 12:38:52 +0000
+Date: Wed, 29 Jan 2025 20:37:55 +0800
+From: kernel test robot <lkp@intel.com>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+ linux-wireless@vger.kernel.org
+Subject: [wireless:for-next] BUILD SUCCESS
+ 3319569bf9d8b4d8c5aaf0d410b620210c4bb317
+Message-ID: <202501292041.MQRPzCSd-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-According to the Austrian "Frequenznutzungsverordnung" Attachement 2
-page 404
-(https://www.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40251378/II_61_2023_Anlage_2.pdf),
-Austria extended the usable range according to the EU SRD Band 75a (Implementing
-decision 2019/1345, current consolidated version:
-https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A02006D0771%2801%29-20220210&qid=1738145465756)
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
+branch HEAD: 3319569bf9d8b4d8c5aaf0d410b620210c4bb317  Merge tag 'ath-current-20250124' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
 
-This probably applies to most other countries that are part of CEPT
-and/or EU but I'm not good enough with international law to be sure
-about others.
-It might be worth checking and updating this for many more countries.
+elapsed time: 1090m
 
-This also updates two outdated links (the RTR one was a 404, the CEPT
-one redirects with a warning that this link wil stop working).
-Specifically the CEPT one might need updating for all other countries as
-well (also the link now seems to refer to a newer version of the document
-than the originally referenced one. v2.2.1 is from 2021 and was updated
-to include the 66-71GHz range as well).
+configs tested: 132
+configs skipped: 5
 
-Signed-off-by: Jakob Riepler <jakob.riepler@paranoidlabs.org>
----
- db.txt | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-diff --git a/db.txt b/db.txt
-index e282e3b..8a5c0bd 100644
---- a/db.txt
-+++ b/db.txt
-@@ -114,8 +114,8 @@ country AS: DFS-FCC
- #  EU decision 2005/513/EC: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02005D0513-20070213
- #  EU decision 2006/771/EC: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02008D0432-20080611
- #  EU decision 2021/1067/EC: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32021D1067&from=EN
--# Harmonized CEPT countries (July 2019): https://www.ecodocdb.dk/download/25c41779-cd6e/Rec7003e.pdf
--# AT: https://www.rtr.at/en/tk/Spektrum5GHz/1997_bmvit-info-052010en.pdf
-+# Harmonized CEPT countries (February 2021): https://docdb.cept.org/download/25c41779-cd6e/Rec7003e.pdf
-+# AT: https://www.rtr.at/TKP/was_wir_tun/telekommunikation/spectrum/bands/1997_bmvit-info-052010en.pdf
- # AT: acceptance https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2014_II_63/BGBLA_2014_II_63.pdfsig
- country AT: DFS-ETSI
- 	(2400 - 2483.5 @ 40), (100 mW)
-@@ -126,8 +126,8 @@ country AT: DFS-ETSI
- 	(5725 - 5875 @ 80), (25 mW)
- 	# 6 GHz band
- 	(5945 - 6425 @ 160), (23), NO-OUTDOOR, wmmrule=ETSI
--	# 60 GHz band channels 1-4 (ETSI EN 302 567)
--	(57000 - 66000 @ 2160), (40)
-+	# 60 GHz band channels 1-6 (ETSI EN 302 567)
-+	(57000 - 71000 @ 2160), (40)
- 
- # Source:
- # 'Item' in the comments below refers to each numbered rule found at:
--- 
-2.47.1
+tested configs:
+alpha                             allnoconfig    gcc-14.2.0
+alpha                            allyesconfig    gcc-14.2.0
+arc                              allmodconfig    gcc-13.2.0
+arc                               allnoconfig    gcc-13.2.0
+arc                              allyesconfig    gcc-13.2.0
+arc                   randconfig-001-20250129    gcc-13.2.0
+arc                   randconfig-002-20250129    gcc-13.2.0
+arm                              allmodconfig    gcc-14.2.0
+arm                               allnoconfig    clang-17
+arm                              allyesconfig    gcc-14.2.0
+arm                   milbeaut_m10v_defconfig    clang-20
+arm                       omap2plus_defconfig    gcc-14.2.0
+arm                          pxa910_defconfig    gcc-14.2.0
+arm                   randconfig-001-20250129    gcc-14.2.0
+arm                   randconfig-002-20250129    clang-20
+arm                   randconfig-003-20250129    gcc-14.2.0
+arm                   randconfig-004-20250129    gcc-14.2.0
+arm                           sama7_defconfig    clang-16
+arm                        spear3xx_defconfig    clang-16
+arm                        vexpress_defconfig    gcc-14.2.0
+arm64                            allmodconfig    clang-18
+arm64                             allnoconfig    gcc-14.2.0
+arm64                 randconfig-001-20250129    gcc-14.2.0
+arm64                 randconfig-002-20250129    gcc-14.2.0
+arm64                 randconfig-003-20250129    gcc-14.2.0
+arm64                 randconfig-004-20250129    gcc-14.2.0
+csky                              allnoconfig    gcc-14.2.0
+csky                  randconfig-001-20250129    gcc-14.2.0
+csky                  randconfig-002-20250129    gcc-14.2.0
+hexagon                          allmodconfig    clang-20
+hexagon                           allnoconfig    clang-20
+hexagon                          allyesconfig    clang-18
+hexagon               randconfig-001-20250129    clang-19
+hexagon               randconfig-002-20250129    clang-20
+i386                             allmodconfig    gcc-12
+i386                              allnoconfig    gcc-12
+i386                             allyesconfig    gcc-12
+i386        buildonly-randconfig-001-20250129    clang-19
+i386        buildonly-randconfig-002-20250129    gcc-12
+i386        buildonly-randconfig-003-20250129    clang-19
+i386        buildonly-randconfig-004-20250129    clang-19
+i386        buildonly-randconfig-005-20250129    clang-19
+i386        buildonly-randconfig-006-20250129    gcc-12
+i386                                defconfig    clang-19
+loongarch                        allmodconfig    gcc-14.2.0
+loongarch                         allnoconfig    gcc-14.2.0
+loongarch             randconfig-001-20250129    gcc-14.2.0
+loongarch             randconfig-002-20250129    gcc-14.2.0
+m68k                             allmodconfig    gcc-14.2.0
+m68k                             allyesconfig    gcc-14.2.0
+m68k                          atari_defconfig    gcc-14.2.0
+m68k                          hp300_defconfig    gcc-14.2.0
+microblaze                       allmodconfig    gcc-14.2.0
+microblaze                       allyesconfig    gcc-14.2.0
+mips                        bcm47xx_defconfig    clang-20
+mips                      bmips_stb_defconfig    clang-18
+mips                      maltaaprp_defconfig    clang-20
+mips                          rb532_defconfig    clang-17
+nios2                 randconfig-001-20250129    gcc-14.2.0
+nios2                 randconfig-002-20250129    gcc-14.2.0
+openrisc                          allnoconfig    gcc-14.2.0
+openrisc                         allyesconfig    gcc-14.2.0
+openrisc                            defconfig    gcc-14.2.0
+openrisc                  or1klitex_defconfig    gcc-14.2.0
+parisc                           allmodconfig    gcc-14.2.0
+parisc                            allnoconfig    gcc-14.2.0
+parisc                           allyesconfig    gcc-14.2.0
+parisc                              defconfig    gcc-14.2.0
+parisc                randconfig-001-20250129    gcc-14.2.0
+parisc                randconfig-002-20250129    gcc-14.2.0
+powerpc                          allmodconfig    gcc-14.2.0
+powerpc                           allnoconfig    gcc-14.2.0
+powerpc                          allyesconfig    clang-16
+powerpc                      arches_defconfig    gcc-14.2.0
+powerpc                     ep8248e_defconfig    gcc-14.2.0
+powerpc                      pmac32_defconfig    clang-20
+powerpc               randconfig-001-20250129    clang-20
+powerpc               randconfig-002-20250129    clang-20
+powerpc               randconfig-003-20250129    gcc-14.2.0
+powerpc                     sequoia_defconfig    clang-17
+powerpc                     tqm8541_defconfig    clang-15
+powerpc                      tqm8xx_defconfig    clang-20
+powerpc64             randconfig-001-20250129    clang-16
+powerpc64             randconfig-002-20250129    clang-18
+powerpc64             randconfig-003-20250129    clang-20
+riscv                            allmodconfig    clang-20
+riscv                             allnoconfig    gcc-14.2.0
+riscv                            allyesconfig    clang-20
+riscv                               defconfig    clang-19
+riscv                    nommu_k210_defconfig    clang-15
+riscv                 randconfig-001-20250129    gcc-14.2.0
+riscv                 randconfig-002-20250129    gcc-14.2.0
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-20
+s390                             allyesconfig    gcc-14.2.0
+s390                                defconfig    clang-15
+s390                  randconfig-001-20250129    clang-20
+s390                  randconfig-002-20250129    clang-17
+sh                               allmodconfig    gcc-14.2.0
+sh                               allyesconfig    gcc-14.2.0
+sh                                  defconfig    gcc-14.2.0
+sh                          kfr2r09_defconfig    gcc-14.2.0
+sh                          r7785rp_defconfig    gcc-14.2.0
+sh                    randconfig-001-20250129    gcc-14.2.0
+sh                    randconfig-002-20250129    gcc-14.2.0
+sh                          rsk7201_defconfig    gcc-14.2.0
+sparc                            allmodconfig    gcc-14.2.0
+sparc                 randconfig-001-20250129    gcc-14.2.0
+sparc                 randconfig-002-20250129    gcc-14.2.0
+sparc64                             defconfig    gcc-14.2.0
+sparc64               randconfig-001-20250129    gcc-14.2.0
+sparc64               randconfig-002-20250129    gcc-14.2.0
+um                               allmodconfig    clang-20
+um                                allnoconfig    clang-18
+um                               allyesconfig    gcc-12
+um                                  defconfig    clang-20
+um                             i386_defconfig    gcc-12
+um                    randconfig-001-20250129    gcc-12
+um                    randconfig-002-20250129    gcc-12
+um                           x86_64_defconfig    clang-15
+x86_64                           alldefconfig    gcc-12
+x86_64                            allnoconfig    clang-19
+x86_64                           allyesconfig    clang-19
+x86_64      buildonly-randconfig-001-20250129    clang-19
+x86_64      buildonly-randconfig-002-20250129    gcc-12
+x86_64      buildonly-randconfig-003-20250129    gcc-12
+x86_64      buildonly-randconfig-004-20250129    gcc-12
+x86_64      buildonly-randconfig-005-20250129    gcc-12
+x86_64      buildonly-randconfig-006-20250129    clang-19
+x86_64                              defconfig    gcc-11
+xtensa                randconfig-001-20250129    gcc-14.2.0
+xtensa                randconfig-002-20250129    gcc-14.2.0
 
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
