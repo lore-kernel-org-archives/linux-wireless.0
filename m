@@ -1,115 +1,134 @@
-Received: from ksmg01.maxima.ru (ksmg01.maxima.ru [81.200.124.38])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E9A1BEF90;
-	Thu, 30 Jan 2025 12:44:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.200.124.38
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C3B21E9B19
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2025 15:06:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738241103; cv=none; b=ENAa8C1YivMzSeMLbjmRoinP+1+NZATUTkGlJblPR/xMvWqdiJemy9Pbxajixw3XUdubUopsjMVHOmz6w9JV0IisCHSwWoyW8QfWQAHv7xhnTMjbmgaI2xcTHVUzSZpauDpVgq4g+AGClxShnXLds+YWifKCXID2uorS+H68XHg=
+	t=1738249565; cv=none; b=dEWI6dLKoRALb8sLHOOnbPCoDuVrn9f95qxyXTtauEXFoKl4YP6c7TDvGKEpFvMhJufItfVw0neI6/O6NViWabnOJB6haYL2N5Y3rTYVFNEstxGSgmgWk11zBmZinHnlXU3f+IjPMq2+1uFwDsNrttfL9T9p1gELvERAuW1UqPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738241103; c=relaxed/simple;
-	bh=GYCaJ5Vr7sOpcdfGmr8b+XBHEremvLtD3Iw/o2W4P1g=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ajx6jrOMfp4VMd0g3zKS3snIi3Jouwa1i3G7fmGJEGa++Sj/UGB6kKeDVj8Eko78Oq7UhPe0DQLw6fwTC9FTydwcltmm5AGYsxu+LHYvtg++xn4qGQBlIkru0fkcDoo7ECLsTY15HCGlkIL0dMJ4fb21LptNwJd0hSrs5P/Pv1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mt-integration.ru; spf=pass smtp.mailfrom=mt-integration.ru; dkim=pass (2048-bit key) header.d=mt-integration.ru header.i=@mt-integration.ru header.b=uxU/ZMFq; arc=none smtp.client-ip=81.200.124.38
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mt-integration.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mt-integration.ru
+	s=arc-20240116; t=1738249565; c=relaxed/simple;
+	bh=m8O1+Jxn4sYWG1PpKDtLtU3xBPy/tTU9TRDPR2NtmP8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=q2NR0A/O2/lejQyybDVU8MK8+WfPxFqO4vOYy5NORWItOELKZDyOLBYFNd8z/OFsC8OOQdHSHm+9WuUJIJav027HIrB4dWb03/iVtomtP3/Atn2tZAuYAzVTfTMgyq/Td3kOL/Z54mQjM0yGdZ50XQsAT2/vCZCptptQHC29N+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=GLG3dHKw; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mt-integration.ru header.i=@mt-integration.ru header.b="uxU/ZMFq"
-Received: from ksmg01.maxima.ru (localhost [127.0.0.1])
-	by ksmg01.maxima.ru (Postfix) with ESMTP id CA145C0011;
-	Thu, 30 Jan 2025 15:35:31 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 ksmg01.maxima.ru CA145C0011
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mt-integration.ru;
-	s=sl; t=1738240531; bh=twHoKyIKefEek4uasdsBCb2/LDkuVcyX27qfI5boU4U=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=uxU/ZMFqpjy5Kfw/khXqjLNSSkX71WRZcsHs6lpGFzI3z0Kr3QNICGQMco9ZJ5nVN
-	 1iBc8VS9sHJCBXiiEMdVpHgiDIfzZ75Z6W6NLrApNSh7ScEN+T4XAs0nzPuRQHGx+u
-	 6FQFPvMUuGdHP8+TdelguAX8CAofx4G9JRG6bxuaTTFAKLmpzFxP3bSxiGHevoZx/l
-	 zFo4bSJ5VsttK4MIOswTvl6lD9f0l6pz2aHHCCNICi96Y1Usc9C5cpz5IAJ6nOJL34
-	 dLQTB8scFgk1MUIMgzTKirWgNBZ7EdMtFhcZFwJOrLl/AyqGeIDyYUs7rY5d7DIrei
-	 q3UHi4Ra5pWEw==
-Received: from ksmg01.maxima.ru (autodiscover.maxima.ru [81.200.124.61])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "*.maxima.ru", Issuer "GlobalSign GCC R3 DV TLS CA 2020" (verified OK))
-	by ksmg01.maxima.ru (Postfix) with ESMTPS;
-	Thu, 30 Jan 2025 15:35:31 +0300 (MSK)
-Received: from localhost.maximatelecom.ru (5.1.51.69) by mmail-p-exch01.mt.ru
- (81.200.124.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.1544.4; Thu, 30 Jan
- 2025 15:35:30 +0300
-From: Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>, "John W. Linville"
-	<linville@tuxdriver.com>, Michael Wu <flamingice@sourmilk.net>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lvc-project@linuxtesting.org>,
-	<syzbot+2e5c1e55b9e5c28a3da7@syzkaller.appspotmail.com>
-Subject: [PATCH] wifi: nl80211: override all other flags if MONITOR_FLAG_COOK_FRAMES is set
-Date: Thu, 30 Jan 2025 17:34:21 +0500
-Message-ID: <20250130123432.4534-1-v.shevtsov@mt-integration.ru>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="GLG3dHKw"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50U9J9ZB002095
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2025 15:06:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	MzgOHo4QYuDJoNHCjDaUQbI1mKIJTtDENiPvY5AnCw4=; b=GLG3dHKwZciIhzDX
+	6JRpjvpLXljjyFU1FxigvCV+wfrBdLjY3LlAz8iVFSQ3BdU1R0gxPRnuGWgo1Sxk
+	1dd4RHB8nS+FUCg/bQtYSSIF8xT0NHdlb1aVemfyv9BuOuI7GIYNDLqNiZFYuNfp
+	VPYBJaScJuxLxXwebUfDp+htt6BTaUV7zXerXI8+MYiKOAWbWasFyPJ/QNWdzLWZ
+	3UNWmhQJkfFmf/kK3LZiWI3C68KPB76bKx1Ogu0WZNDf2UPm66Z15NmXmtCYNGyh
+	sDAcCABxRq2c6sMR28B7Y/nYFkBS+T3gdfZfcWVx7wnwCDptrBClDIN4PAVN/OQu
+	Xu5iWQ==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44g6pbgsd5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2025 15:06:02 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2ee3206466aso3883499a91.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2025 07:06:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738249561; x=1738854361;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MzgOHo4QYuDJoNHCjDaUQbI1mKIJTtDENiPvY5AnCw4=;
+        b=Nw/WZ88o2PfObEBy4REnCVKhMwoMyDXonKN7RkNs2ReKyeWb1p2IQGNpmbqLaXP1JH
+         knQSjqFvy1qmpdb0BeLbM296W04IUPFpUJeFc9gD/zzbujydRx3wJXsi74xTgxWWrsvq
+         MRolIjTrYKNdERTzJ8vAM1wpwe9+ix/VoRq9kmMzeqglGryvOsSTtkTw3XDq8QhHu8jL
+         gZJCBL5y3t2qcTXStnXFJBQEom6TZ+0Y5FlKDpfL0yJ8c7BIpt1bqivTznprXkjMIJtd
+         EinIbaZpl1bzf1IT38G1w4iESUEwLFY0zh5SC8EKWIgSl3Sv3ahDy3KQEXpr3TtveEoX
+         4L7g==
+X-Gm-Message-State: AOJu0Yw1u0lHJhSx8HvxS2aF8MQiJYtvtnoMsY+DfKpJ/xozBV0WcbeQ
+	QKKyUpdjE5lyA9DQd6mdnfHjqy/kOFPTaqzpSSLzKs+mV9OzT2LHdpeqRK/tnkP0uE83ZdJEXpP
+	TrUDQlMXimrggmlYdCP1hyw77hjDXI8RaFbkFjOGfsyQTYODNXUNqsGfIko9330Arkw==
+X-Gm-Gg: ASbGncs3yLCpmznGQDc/ZaloHGk1CIT+8OeItvZ3GtE2jQs5+XQql9sWzv+ybyuzfSM
+	rzHT7AC9r/PlBh2pmiuyMEfpSIfw5L2e/sHdqVN7rmvwTuYP1+YVDkkAieilKH6B75C+fmqF5he
+	4pnnViFyqM7BumDuuljnsKnrtV9hlofkVfp0EajN+XZaOeUevYpoGbquGymIf+O0CrCHxqOdbEK
+	2/Zu/xa/H9VlkqtTlWGaYsXNWkIVvVmPPJF1q45sPKdyfvmpfWPDqnPU/dPX5TvBWLULCUHPX43
+	e+JNhmLckHqn9gLyo2Ck5Orw9dImIph7WT5tBSOtj8Osw821ISSqoTa9+p6sYuoz+LbYI/a1NA=
+	=
+X-Received: by 2002:a05:6a00:388:b0:725:d64c:f122 with SMTP id d2e1a72fcca58-72fe2ccbc83mr5582698b3a.2.1738249560644;
+        Thu, 30 Jan 2025 07:06:00 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEZJOtFuOthZ1xpjDBt60v7h4CpA3Phg2tECzGuyjHVsd95FEciWhbGWItjAKyhqnv5DillyQ==
+X-Received: by 2002:a05:6a00:388:b0:725:d64c:f122 with SMTP id d2e1a72fcca58-72fe2ccbc83mr5582663b3a.2.1738249560184;
+        Thu, 30 Jan 2025 07:06:00 -0800 (PST)
+Received: from [192.168.1.111] (c-73-202-227-126.hsd1.ca.comcast.net. [73.202.227.126])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe653a9f3sm1541750b3a.75.2025.01.30.07.05.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 30 Jan 2025 07:05:59 -0800 (PST)
+Message-ID: <b155f782-feea-4b99-8edd-e499e313294e@oss.qualcomm.com>
+Date: Thu, 30 Jan 2025 07:05:57 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: mt-exch-01.mt.ru (91.220.120.210) To mmail-p-exch01.mt.ru
- (81.200.124.61)
-X-KSMG-AntiPhishing: NotDetected, bases: 2025/01/30 10:59:00
-X-KSMG-AntiSpam-Auth: dmarc=none header.from=mt-integration.ru;spf=none smtp.mailfrom=mt-integration.ru;dkim=none
-X-KSMG-AntiSpam-Envelope-From: v.shevtsov@mt-integration.ru
-X-KSMG-AntiSpam-Info: LuaCore: 50 0.3.50 df4aeb250ed63fd3baa80a493fa6caee5dd9e10f, {rep_avail}, {Tracking_one_url, url3}, {Tracking_uf_ne_domains}, {Tracking_from_domain_doesnt_match_to}, ksmg01.maxima.ru:7.1.1;syzkaller.appspot.com:7.1.1,5.0.1;81.200.124.61:7.1.2;mt-integration.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1, FromAlignment: s, ApMailHostAddress: 81.200.124.61
-X-KSMG-AntiSpam-Interceptor-Info: scan successful
-X-KSMG-AntiSpam-Lua-Profiles: 190685 [Jan 30 2025]
-X-KSMG-AntiSpam-Method: none
-X-KSMG-AntiSpam-Rate: 0
-X-KSMG-AntiSpam-Status: not_detected
-X-KSMG-AntiSpam-Version: 6.1.1.7
-X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2025/01/30 07:21:00 #27156911
-X-KSMG-AntiVirus-Status: NotDetected, skipped
-X-KSMG-LinksScanning: NotDetected, bases: 2025/01/30 10:59:00
-X-KSMG-Message-Action: skipped
-X-KSMG-Rule-ID: 7
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv2] wifi: ath12k: Avoid napi_sync before napi_enable
+To: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
+        Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
+        ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Avula Sri Charan <quic_asrichar@quicinc.com>
+References: <20250124090058.3194299-1-quic_tamizhr@quicinc.com>
+ <dd37c366-21f5-470b-9d4c-24ae2808c4bd@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <dd37c366-21f5-470b-9d4c-24ae2808c4bd@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: ZoQGJTDNpZzg-6Hyocjr80QhyoZQfQR5
+X-Proofpoint-ORIG-GUID: ZoQGJTDNpZzg-6Hyocjr80QhyoZQfQR5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-30_06,2025-01-30_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 adultscore=0 phishscore=0
+ impostorscore=0 mlxscore=0 suspectscore=0 spamscore=0 mlxlogscore=999
+ bulkscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2411120000 definitions=main-2501300114
 
-It is possible to set both MONITOR_FLAG_COOK_FRAMES and MONITOR_FLAG_ACTIVE
-flags simultaneously on the same monitor interface from the userspace. This
-causes a sub-interface to be created with no IEEE80211_SDATA_IN_DRIVER bit
-set because the monitor interface is in the cooked state and it takes
-precedence over all other states. When the interface is then being deleted
-the kernel calls WARN_ONCE() from check_sdata_in_driver() because of missing
-that bit.
+On 1/24/2025 8:55 PM, Aditya Kumar Singh wrote:
+> On 1/24/25 14:30, Tamizh Chelvam Raja wrote:
+>> From: Avula Sri Charan <quic_asrichar@quicinc.com>
+>>
+>> In case of MHI error a reset work will be queued
+>> which will try napi_disable after napi_synchronize.
+> 
+> nit: always better to refer function name with () at end. I guess Jeff 
+> can fix in pending?
 
-Fix this by overriding all flags if MONITOR_FLAG_COOK_FRAMES is set because
-this flag is incompatible with other monitor flags being set.
+I fixed this, as well as did some other grammar & formatting fixes.
 
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+Please check:
+https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git/commit/?h=pending&id=a644c8784220b7d5dd0a10a45c5e6779605778a5
 
-Fixes: 66f7ac50ed7c (nl80211: Add monitor interface configuration flags)
-Reported-by: syzbot+2e5c1e55b9e5c28a3da7@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=2e5c1e55b9e5c28a3da7
-Signed-off-by: Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>
----
- net/wireless/nl80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d7d3da0f6833..1338b0a06f8d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4220,6 +4220,10 @@ static int parse_monitor_flags(struct nlattr *nla, u32 *mntrflags)
- 		if (flags[flag])
- 			*mntrflags |= (1<<flag);
- 
-+	/* MONITOR_FLAG_COOK_FRAMES must override all other flags */
-+	if (*mntrflags & MONITOR_FLAG_COOK_FRAMES)
-+		*mntrflags = MONITOR_FLAG_COOK_FRAMES;
-+
- 	*mntrflags |= MONITOR_FLAG_CHANGED;
- 
- 	return 0;
--- 
-2.48.1
+> 
+>>
+>> As the napi will be only enabled after qmi_firmware_ready
+>> event trying napi_synchronize before napi_enable will
+>> result in indefinite sleep in case of a firmware crash
+>> in QMI init sequence.
+>>
+>> To avoid this introduce napi_enabled flag to check
+>> if napi is enabled or not before calling napi_synchronize.
+>>
+>> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+>>
+>> Signed-off-by: Avula Sri Charan <quic_asrichar@quicinc.com>
+>> Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+>> ---
+> 
+> Reviewed-by: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+> 
 
