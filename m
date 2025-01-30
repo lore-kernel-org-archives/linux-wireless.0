@@ -1,93 +1,79 @@
-Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB0C19C561
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jan 2025 09:57:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.27.33.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 538EC1EEE6;
+	Thu, 30 Jan 2025 12:36:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738231079; cv=none; b=bBg9xUeytLV/Z+rtTAH+EZgnLMt41nWI9z25E2Nn2ecY1uryrDs9xgxcj5mPyGvAuomSlmX1TKsI4fIXZbA1BJnPNzzVgR31nWPmCh4OVHWq9feAxPMblKKswCN57+sl+ZheS6l3OduU3DMRhEUZdjHunlaucj5R+oAAbqGIBSs=
+	t=1738240594; cv=none; b=FKxISG0vzWWJbys3FS7g8J4bXdQ7kDGZji1sOSZdGss9ua+VVp+A3opaPhGuMcEy+o0fLxUlAOw0uFagb41oYfkIXAzn6Ypa5tGToHpZg4/T6OFnBrIcniXvE7o/KSu483WYcw/D2zm97/MKUrQ5ggNq5ZarM5e1qoE+hVSdDxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738231079; c=relaxed/simple;
-	bh=Dv2Z+6bVMvXwet2VrBhZc5kxtnNUesmhBOyXn9ypccQ=;
+	s=arc-20240116; t=1738240594; c=relaxed/simple;
+	bh=92+SzlRAkjhakdFgxl0KMmzfQ3P1vecIc37HwkXXxJM=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Lev2yrY2QCZbsoavRqT8RvzKqnVKh1fKRtNVgl+wxqunDYUXEkZkPAvo+saPKMsd+VlGIdHM8lxGkOKvyRuh5sa8D4t8XHD3BFQ/JwOjt1ceBf9VXAHtdQ/uUmERzueFVGHH5CGzRJJRdfpdhxXYh6ZJ4lkuk7ALrERSGtsnmUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=srs.iliad.fr; arc=none smtp.client-ip=212.27.33.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=srs.iliad.fr
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-	by ns.iliad.fr (Postfix) with ESMTP id B4ADD20166;
-	Thu, 30 Jan 2025 10:57:46 +0100 (CET)
-Received: from [192.168.108.70] (freebox.vlq16.iliad.fr [213.36.7.13])
-	by ns.iliad.fr (Postfix) with ESMTP id A5511200CE;
-	Thu, 30 Jan 2025 10:57:46 +0100 (CET)
-Message-ID: <1a6316872ecb6b49cbaab70d5e8fd01e78fe0ba6.camel@freebox.fr>
-Subject: Re: [PATCH v9 6/9] wifi: ath12k: add support for setting fixed HE
- rate/GI/LTF
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>, 
-	ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Muna Sinada <quic_msinada@quicinc.com>, 
-	Jeff Johnson <quic_jjohnson@quicinc.com>
-Date: Thu, 30 Jan 2025 10:57:46 +0100
-In-Reply-To: <dedfdb8e-c5b4-42fa-bd76-ca866ab1cf41@quicinc.com>
-References: <20250114003813.2783550-1-quic_pradeepc@quicinc.com>
-	 <20250114003813.2783550-7-quic_pradeepc@quicinc.com>
-	 <f5c6d874e9d7682d52c5ed107a0ede952b5cf53f.camel@freebox.fr>
-	 <5861c953-436e-4f36-ae8b-5ef52fceb3b6@quicinc.com>
-	 <2aba18dc3448b5a60a1a06b33fa591e562927693.camel@freebox.fr>
-	 <961df6e7-0b5c-4972-9324-5c4d430cb172@quicinc.com>
-	 <54d456f00aa8a806768099df55dc9f2ef734209b.camel@freebox.fr>
-	 <dedfdb8e-c5b4-42fa-bd76-ca866ab1cf41@quicinc.com>
-Organization: Freebox
+	 Content-Type:MIME-Version; b=UQ6rPSwGN2xSHrw+Z6107fb84cZbT1f5xO5NzhWLvvyM4VuoNtMAI0piJI5nFG7n2SyYrMi8NV7ED7dP3NL1yzRzA2ePeczR+1/IGL/6yWWt44vcImU3wWd+llArXJdNM16yNOEGMqKUT5y2S1mwAzKixpPQXhd6A/N3A+WfGjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=p2thcdV6; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="p2thcdV6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=92+SzlRAkjhakdFgxl0KMmzfQ3P1vecIc37HwkXXxJM=;
+	t=1738240593; x=1739450193; b=p2thcdV6MCTVCjtLO/4RwBOZapmm7CYGCxNWf5gG2zHDwuh
+	a8S/rIk9V+aloOzE6P6hpQpzgP4CNWJgBjzsihwaq/JOhvjrfhvCoILib6+NS62hUh+m+AMLrfpVw
+	1mKH7BLWz+lqHBVTimZHQz/0GB8BMhSynlp9NXXFek+r8XYimr2pfhLJsZSViADl1Bo+Euc59RlDY
+	Y50jfQYnOtKCdXxz1ulivaVzkAOXTt/hpiDaabkwWnZykBy29dhRk2abtLD5GMzSQetWuWHw8pF/m
+	BFU9SSxU/dlM7da4C101StfGdvQEjbMhTPxEHk9g3BoN9Tm5tQC+r4hYz4myGjIw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1tdTmX-0000000F59r-0V26;
+	Thu, 30 Jan 2025 13:36:29 +0100
+Message-ID: <14c5edc71a74049c49d51960249b0aefc77208be.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: nl80211: override all other flags if
+ MONITOR_FLAG_COOK_FRAMES is set
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vitaliy Shevtsov <v.shevtsov@mt-integration.ru>
+Cc: "John W. Linville" <linville@tuxdriver.com>, Michael Wu
+	 <flamingice@sourmilk.net>, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org, 
+	syzbot+2e5c1e55b9e5c28a3da7@syzkaller.appspotmail.com
+Date: Thu, 30 Jan 2025 13:36:28 +0100
+In-Reply-To: <20250130123432.4534-1-v.shevtsov@mt-integration.ru>
+References: <20250130123432.4534-1-v.shevtsov@mt-integration.ru>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+User-Agent: Evolution 3.54.3 (3.54.3-1.fc41) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
+On Thu, 2025-01-30 at 17:34 +0500, Vitaliy Shevtsov wrote:
+> It is possible to set both MONITOR_FLAG_COOK_FRAMES and MONITOR_FLAG_ACTI=
+VE
+> flags simultaneously on the same monitor interface from the userspace. Th=
+is
+> causes a sub-interface to be created with no IEEE80211_SDATA_IN_DRIVER bi=
+t
+> set because the monitor interface is in the cooked state and it takes
+> precedence over all other states. When the interface is then being delete=
+d
+> the kernel calls WARN_ONCE() from check_sdata_in_driver() because of miss=
+ing
+> that bit.
+>=20
+> Fix this by overriding all flags if MONITOR_FLAG_COOK_FRAMES is set becau=
+se
+> this flag is incompatible with other monitor flags being set.
+>=20
 
-On Wed, 2025-01-29 at 11:30 -0800, Pradeep Kumar Chitrapu wrote:
+That seems wrong, reject it instead. Anyway we should probably remove
+cooked mode.
 
-Hello,
-
-
-> Yes, your understanding is correct..
-
-So your patch actually does two things:
-  - add support for fixed rate
-  - fix default value sent for GI config to the firmware
-
-> If peer support SGI, param_value 1 is sent to firmware where firmware
-> switches between SGI/LGI based on packet error rate. This param value
-> 1 corresponds to NL80211_TXRATE_FORCE_SGI in nl80211.
-
-Is this what we really want ?
-
-I understand the nl80211 enum like this:
-
-NL80211_TXRATE_FORCE_SGI:
- =3D> if STA supports SGI: use SGI only
- =3D> if STA does not support SGI: use LGI only (or SGI only ? IDK)
-
-NL80211_TXRATE_FORCE_LGI:
- =3D> always use LGI
-
-NL80211_TXRATE_DEFAULT_GI (no forcing)
- =3D> if STA does not support SGI: use LGI only
- =3D> if STA supports SGI: implementation defined, most likely SGI/LGI
-chosen by rate control
-
-
-Assuming my understanding is correct, should you not adapt
-ath12k_peer_assoc_h_ht() to match this semantic ?
-
---=20
-Maxime
-
-
-
+johannes
