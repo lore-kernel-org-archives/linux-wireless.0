@@ -1,122 +1,98 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B1DF1F4723
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Feb 2025 07:30:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15F71E7C34
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Feb 2025 07:55:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738567808; cv=none; b=IUhtqPzNknj5/WzN2yAakyYJR/inDN5DkIrcuDSNKk2xU/eQ1dl20vwxgthsMdWP1l9Jip4gX2xY6N1MmHIKwzTo3zx8O7UbKwSyptHZOp6psXgmLBisvPAG+8MJRv6+/PtIpYlTdD1FWbd/rWKnMSPI06GFEYFFFhJey2RByfQ=
+	t=1738569357; cv=none; b=OXc3DGSCBCfjFb41G+gWtCRekqvha/ybVrY7aPW7Yom2K/YgZ/HU2iEdB0jFyXEtYw48RHDbWis3UOnE6ds73xPyNqaK+IBzbOAeF/339dQCTeqkzHdOJSWa2FJGPfI3G6KdOeYxCvK31KMehipaC/CNrG0Mulnm6xUCsCkQidE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738567808; c=relaxed/simple;
-	bh=EyvjFGm/fyqwDNRUVHVF9IjZ8RH3WbflF1SE/X2R3tQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N0veqkpsqWvaXXE322OeQUzd3/O8/J/bmSc6fl/FOWcYjXIher5JWIjskqipH1diNwGbtIqnVlVYu2HjWj8RJkSSa3CoP3ux3/8KDUZFGcnLISJafrnDyL4/l9u7UNLITdDQWY4yK8EcB1w0vIKPkMH8KYfTODrdnCiA2oDS1GI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=EIb3QucS; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1738569357; c=relaxed/simple;
+	bh=cB/6R/uPmo6nYAsKqz2dT25TCb3S/99YqDPNmbePsB8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NKNd56IJrQ3GvBzqniq5WekQizTvEtEkryjA4MIW8aWFGPOezVX+7RRzITvmupetY1rUSuMsUWLMZtUu/iwyd+4Yt1q5sHWd99iUejugW2fsxDz+xTLspyADBdj7+TEfkfhqBAKyeWtM2qFsygTc08lu/k8NxGGW4hiGmMMcdGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=iqial1KN; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xKTky4ow; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="EIb3QucS"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 5137U4Y801321574, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1738567805; bh=EyvjFGm/fyqwDNRUVHVF9IjZ8RH3WbflF1SE/X2R3tQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=EIb3QucSd+rutkXe6SEmjay8GsCDt+lIyGDh3jOmjFXf8rQOkq/UwC0kUlsnDI4Op
-	 bK9qAxwdHeOn4TpFwANKzpgBOcoVHBYsS+rRdp4zm9lqvBffb1G+OVMv96DaHwZJWh
-	 CBggeMWOf8cLVzV+XaMwfkcA5InYlCN1tcRj+M3q3WrF30tJCGcrHwlwqKCF3ehZld
-	 iAPhMqaEWeURTypL0aBQh54wjm//9PSWig1Nx5hsJ5jaFZc1cQfVB27fbCXakwbWs0
-	 ohGOf1NHbvvHKNXYoqmOMrV5jJWgOoVG91GJNg7uJ7qaOgZaSfVhQfp39dtGMuW8++
-	 QBEM7RvY6nXPQ==
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 5137U4Y801321574
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Mon, 3 Feb 2025 15:30:04 +0800
-Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Mon, 3 Feb 2025 15:30:04 +0800
-Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
- (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Mon, 3 Feb
- 2025 15:30:03 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <echuang@realtek.com>
-Subject: [PATCH 4/4] wifi: rtw89: fw: validate multi-firmware header before getting its size
-Date: Mon, 3 Feb 2025 15:29:11 +0800
-Message-ID: <20250203072911.47313-5-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250203072911.47313-1-pkshih@realtek.com>
-References: <20250203072911.47313-1-pkshih@realtek.com>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="iqial1KN";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xKTky4ow"
+Message-ID: <19b8059a-c5f6-4467-8b42-31e70b9fe1f3@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1738569354;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LqAdnxTeWR2og1f8+dCmfZgZ3A2auklMtjMbaPTk19M=;
+	b=iqial1KNCVKsA46MkErqkJJZWxV3lnBLrREERCVkjGi8k0PtHSEg4JOlpQqLD7WFfYQRZJ
+	0Abmqsxl1+OiTWTatrYSHINOKCJyOHmOM+ORYDK7io8LWk3iw4jpbUkO47n4YJkziztYuA
+	mixD4xJxaHRGUIWAPWgAa0rEf2XRdCJVy+dHTSupejEvMnGbbXxp+OYD2jJUMES6Zw9LmA
+	yiRnFM039WN6fFRxr8jzHfIxUkGLDbT0La57ZFcXDCQDCqgTzk55PoFvPsNtvqXXwYYbKU
+	SKdd52zHtzN4Wdcb5Qpai1wstpPEKibAr8xL4kbGMMlV0IHX5hhIUeV9RWn2ZA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1738569354;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LqAdnxTeWR2og1f8+dCmfZgZ3A2auklMtjMbaPTk19M=;
+	b=xKTky4owNtQbGmvLt+ZFvdeM92vIS5RSvPi3wg4lRN1xLdxk6csw0CVOpQm0u/B/pmCfcP
+	gcRK6Wro14bpYbCQ==
+Date: Mon, 3 Feb 2025 08:55:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
- RTEXMBS04.realtek.com.tw (172.21.6.97)
+Subject: Re: [PATCH v2] wifi: rtl8xxxu: Enable AP mode for RTL8192CU
+ (RTL8188CUS)
+To: Ping-Ke Shih <pkshih@realtek.com>, Ezra Buehler <ezra@easyb.ch>,
+ linux-wireless@vger.kernel.org
+Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>,
+ Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+ Johannes Berg <johannes.berg@intel.com>,
+ Reto Schneider <reto.schneider@husqvarnagroup.com>,
+ Ezra Buehler <ezra.buehler@husqvarnagroup.com>
+References: <20250122071512.10165-1-ezra@easyb.ch>
+ <393aa422-3ac8-40e7-aa2f-62956a844005@RTEXMBS04.realtek.com.tw>
+Content-Language: de-DE
+From: Martin Kaistra <martin.kaistra@linutronix.de>
+In-Reply-To: <393aa422-3ac8-40e7-aa2f-62956a844005@RTEXMBS04.realtek.com.tw>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-To access firmware elements appended after multi-firmware, add its size
-as offset to get start address of firmware elements.
+Am 03.02.25 um 03:40 schrieb Ping-Ke Shih:
+> Ezra Buehler <ezra@easyb.ch> wrote:
+> 
+>> From: Ezra Buehler <ezra.buehler@husqvarnagroup.com>
+>>
+>> This allows the driver to be used in wireless access point mode on the
+>> AT91SAM9G25-based GARDENA smart Gateway.
+>>
+>> Unfortunately, the data throughput in AP mode appears to be lower than
+>> with the vendor driver (or in STA mode). Especially when sending, the
+>> data rate is significantly lower. My measurements performed with iperf3
+>> and an Edimax EW-7811Un (VID: 7392, PID: 7811) showed a maximum TX rate
+>> of about 4 Mbits/sec compared to the ~24 Mbits/sec measured with the
+>> rtl8192cu driver.
+>>
+>> Although the performance might be good enough for our use case, this is
+>> something that should be further looked into.
+>>
+>> Signed-off-by: Ezra Buehler <ezra.buehler@husqvarnagroup.com>
+> 
+> 1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-         +-----+-------+------+---------+--------------+ --
-         | sig | fw_nr | rsvd | version | reserved     |   \
-         +---------------------------------------------+   |
- fw 0    | cv | type | mp | rsvd | shift | size | rsvd |   |
-         +---------------------------------------------+   |
- fw 1    | cv | type | mp | rsvd | shift | size | rsvd |   |
-         +---------------------------------------------+   |
- fw N-1  |                  ...                        |   |
-         +=============================================+   | mfw size
-         |               fw 0 content                  |   |
-         +=============================================+   |
-         |               fw 1 content                  |   |
-         +=============================================+   |
-         |                  ...                        |   |
-         +=============================================+   |
-         |               fw N -1 content               |   |
-         +=============================================+ --/
-         |             fw element TLV X                |
-         +=============================================+
-         |             fw element TLV Y                |
-         +=============================================+
-         |             fw element TLV Z                |
-         +=============================================+
+Is there a reason for not setting macid in rtl8xxxu_fill_txdesc_v1() and 
+rtl8xxxu_update_rate_mask() like it was done for the gen2 case?
 
-To avoid Coverity warning when getting mfw size, validate it header ahead.
+> 
+> 4828f572b20b wifi: rtl8xxxu: Enable AP mode for RTL8192CU (RTL8188CUS)
+> 
+> ---
+> https://github.com/pkshih/rtw.git
+> 
 
-Addresses-Coverity-ID: 1544385 ("Untrusted array index read")
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/fw.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 68e80e54ab5f..35b86970db2a 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -586,12 +586,17 @@ static u32 rtw89_mfw_get_size(struct rtw89_dev *rtwdev)
- 		(const struct rtw89_mfw_hdr *)firmware->data;
- 	const struct rtw89_mfw_info *mfw_info;
- 	u32 size;
-+	int ret;
- 
- 	if (mfw_hdr->sig != RTW89_MFW_SIG) {
- 		rtw89_warn(rtwdev, "not mfw format\n");
- 		return 0;
- 	}
- 
-+	ret = rtw89_mfw_validate_hdr(rtwdev, firmware, mfw_hdr);
-+	if (ret)
-+		return ret;
-+
- 	mfw_info = &mfw_hdr->info[mfw_hdr->fw_nr - 1];
- 	size = le32_to_cpu(mfw_info->shift) + le32_to_cpu(mfw_info->size);
- 
--- 
-2.25.1
 
