@@ -1,98 +1,104 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15F71E7C34
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Feb 2025 07:55:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DC91E7C34
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Feb 2025 07:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738569357; cv=none; b=OXc3DGSCBCfjFb41G+gWtCRekqvha/ybVrY7aPW7Yom2K/YgZ/HU2iEdB0jFyXEtYw48RHDbWis3UOnE6ds73xPyNqaK+IBzbOAeF/339dQCTeqkzHdOJSWa2FJGPfI3G6KdOeYxCvK31KMehipaC/CNrG0Mulnm6xUCsCkQidE=
+	t=1738569368; cv=none; b=qBr6gOhIqYr8QHUKW3rcso3hVtXU53tYrp2LDdAJ5a+H+vVxc4oCBehhxxxxYTYWvHPdv0KvfgVojWcgt1XcR1HLlzCVTmt7ATwPd4swL1etBCbU1t4WL+4BiYS7kX92EuILsEt7NHe+hHA9Z5PNIOVQyGzer95JND4YcGoVGjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738569357; c=relaxed/simple;
-	bh=cB/6R/uPmo6nYAsKqz2dT25TCb3S/99YqDPNmbePsB8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NKNd56IJrQ3GvBzqniq5WekQizTvEtEkryjA4MIW8aWFGPOezVX+7RRzITvmupetY1rUSuMsUWLMZtUu/iwyd+4Yt1q5sHWd99iUejugW2fsxDz+xTLspyADBdj7+TEfkfhqBAKyeWtM2qFsygTc08lu/k8NxGGW4hiGmMMcdGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=iqial1KN; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=xKTky4ow; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1738569368; c=relaxed/simple;
+	bh=CEJpjcxSbO0fJhi98dQGGvrwSS8BJsqTJRSDF24wZz0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CQFlLk/eoj7rTuVh+F0lcF/wW6n9hpBGLc5gXT+vvN3SuZcwOf6Bart9J7hgOkBqyk30k6JThvoPusnOwy9Osee0C+zs9kKlxQngsKOZgoXzNKxgjU1oByuEawUWDmnudtpLDpYOdHhFYctj0o2BMDHroNW/gmEOGD1z+DejP6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=GiCsftvM; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="iqial1KN";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="xKTky4ow"
-Message-ID: <19b8059a-c5f6-4467-8b42-31e70b9fe1f3@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1738569354;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LqAdnxTeWR2og1f8+dCmfZgZ3A2auklMtjMbaPTk19M=;
-	b=iqial1KNCVKsA46MkErqkJJZWxV3lnBLrREERCVkjGi8k0PtHSEg4JOlpQqLD7WFfYQRZJ
-	0Abmqsxl1+OiTWTatrYSHINOKCJyOHmOM+ORYDK7io8LWk3iw4jpbUkO47n4YJkziztYuA
-	mixD4xJxaHRGUIWAPWgAa0rEf2XRdCJVy+dHTSupejEvMnGbbXxp+OYD2jJUMES6Zw9LmA
-	yiRnFM039WN6fFRxr8jzHfIxUkGLDbT0La57ZFcXDCQDCqgTzk55PoFvPsNtvqXXwYYbKU
-	SKdd52zHtzN4Wdcb5Qpai1wstpPEKibAr8xL4kbGMMlV0IHX5hhIUeV9RWn2ZA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1738569354;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LqAdnxTeWR2og1f8+dCmfZgZ3A2auklMtjMbaPTk19M=;
-	b=xKTky4owNtQbGmvLt+ZFvdeM92vIS5RSvPi3wg4lRN1xLdxk6csw0CVOpQm0u/B/pmCfcP
-	gcRK6Wro14bpYbCQ==
-Date: Mon, 3 Feb 2025 08:55:53 +0100
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="GiCsftvM"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 513673iq009303;
+	Mon, 3 Feb 2025 07:56:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=rIKVqs6srmjXj89c0Lhu5H
+	KpeL5yplUu6T2wV1qKBHw=; b=GiCsftvMEP0laGtEuIBKW0usJe9RXl7KWVxpbl
+	rPuNhODRT5ydxX5O9BdSGzWEcRHqYWdd/Yd9gfjZjFtER7vFpojHKDXaIauYFHwh
+	7VBd2jiXCINkXDjTiE/PWUN6WVhimGGDA0qCqf0jgqmoV2o2hB0TTYoLFJ1DnZ38
+	H05GhceZtA1OdfjKT0JqSGv5Z2dYNudNKbHCmo6bP9VKPMzDcH56jNvP7PYAiOws
+	31aiH7Zcb7LMkWB5tvnEAs/9OZkboXm1a8Dakon5xLuGBFBFFTv2a6CzMIBgDn1+
+	8aIUAKXBlmLJHO49+mbHt4nk0Q3i7YDXxmWK15TEfCdqjxjA==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44jr888776-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 03 Feb 2025 07:56:00 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5137u0tD009516
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 3 Feb 2025 07:56:00 GMT
+Received: from hu-bmahalin-lv.qualcomm.com (10.49.16.6) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Sun, 2 Feb 2025 23:55:59 -0800
+From: Balamurugan Mahalingam <quic_bmahalin@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <quic_bmahalin@quicinc.com>
+Subject: [PATCH v3 0/2]  wifi: ath12k: Add support for MLO Multicast Handling
+Date: Sun, 2 Feb 2025 23:55:36 -0800
+Message-ID: <20250203075538.3982875-1-quic_bmahalin@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] wifi: rtl8xxxu: Enable AP mode for RTL8192CU
- (RTL8188CUS)
-To: Ping-Ke Shih <pkshih@realtek.com>, Ezra Buehler <ezra@easyb.ch>,
- linux-wireless@vger.kernel.org
-Cc: Jes Sorensen <Jes.Sorensen@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Johannes Berg <johannes.berg@intel.com>,
- Reto Schneider <reto.schneider@husqvarnagroup.com>,
- Ezra Buehler <ezra.buehler@husqvarnagroup.com>
-References: <20250122071512.10165-1-ezra@easyb.ch>
- <393aa422-3ac8-40e7-aa2f-62956a844005@RTEXMBS04.realtek.com.tw>
-Content-Language: de-DE
-From: Martin Kaistra <martin.kaistra@linutronix.de>
-In-Reply-To: <393aa422-3ac8-40e7-aa2f-62956a844005@RTEXMBS04.realtek.com.tw>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: H4GippJyAqvAt-xMMC-IxE-H94yFG-rd
+X-Proofpoint-GUID: H4GippJyAqvAt-xMMC-IxE-H94yFG-rd
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-03_03,2025-01-31_02,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
+ impostorscore=0 phishscore=0 mlxscore=0 priorityscore=1501 adultscore=0
+ bulkscore=0 mlxlogscore=749 lowpriorityscore=0 spamscore=0 clxscore=1015
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2501170000 definitions=main-2502030064
 
-Am 03.02.25 um 03:40 schrieb Ping-Ke Shih:
-> Ezra Buehler <ezra@easyb.ch> wrote:
-> 
->> From: Ezra Buehler <ezra.buehler@husqvarnagroup.com>
->>
->> This allows the driver to be used in wireless access point mode on the
->> AT91SAM9G25-based GARDENA smart Gateway.
->>
->> Unfortunately, the data throughput in AP mode appears to be lower than
->> with the vendor driver (or in STA mode). Especially when sending, the
->> data rate is significantly lower. My measurements performed with iperf3
->> and an Edimax EW-7811Un (VID: 7392, PID: 7811) showed a maximum TX rate
->> of about 4 Mbits/sec compared to the ~24 Mbits/sec measured with the
->> rtl8192cu driver.
->>
->> Although the performance might be good enough for our use case, this is
->> something that should be further looked into.
->>
->> Signed-off-by: Ezra Buehler <ezra.buehler@husqvarnagroup.com>
-> 
-> 1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+Patch 1 updates the HTT TCL metadata version to use the new bit definitions
+	of the field to pass additional information from Host to Firmware.
 
-Is there a reason for not setting macid in rtl8xxxu_fill_txdesc_v1() and 
-rtl8xxxu_update_rate_mask() like it was done for the gen2 case?
+Patch 2 moves the MLO Multicast frame duplication logic to the driver to
+	have more flexibility to update the HTT TCL metadata with the global
+	sequence and with a special vdev id to indicate Multicast handling
 
-> 
-> 4828f572b20b wifi: rtl8xxxu: Enable AP mode for RTL8192CU (RTL8188CUS)
-> 
-> ---
-> https://github.com/pkshih/rtw.git
-> 
+v3:
+	Updated the code to handle the ARP transmit failure from AP side during secure mode.
 
+v2: https://patchwork.kernel.org/project/linux-wireless/patch/20250203025016.3851279-3-quic_bmahalin@quicinc.com/
+	Optimized vdev id arithmetic for more readability based on feedback.
+	Updated code documentation on intentional reset of meta_data_flag value.
+	Rebased on top of master branch.
+
+v1: https://patchwork.kernel.org/project/linux-wireless/patch/20250109184932.1593157-3-quic_bmahalin@quicinc.com/
+
+Balamurugan Mahalingam (2):
+  wifi: ath12k: Update HTT_TCL_METADATA version and bit mask definitions
+  wifi: ath12k: Add support for MLO Multicast handling in driver
+
+ drivers/net/wireless/ath/ath12k/core.h  |   1 +
+ drivers/net/wireless/ath/ath12k/dp.h    |  27 ++++--
+ drivers/net/wireless/ath/ath12k/dp_tx.c |  28 +++++-
+ drivers/net/wireless/ath/ath12k/dp_tx.h |   4 +-
+ drivers/net/wireless/ath/ath12k/mac.c   | 124 +++++++++++++++++++++++-
+ 5 files changed, 167 insertions(+), 17 deletions(-)
+
+
+base-commit: a10b8b584b8bcb7559f068ce247fc27d0c4850ca
+-- 
+2.34.1
 
