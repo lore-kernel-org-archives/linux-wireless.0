@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CEC42163AF
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Feb 2025 17:43:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBDCC21639B
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Feb 2025 17:43:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738691005; cv=none; b=LkrkeNdZvzaLsta1C/p7cSbd9RVa26/sPg+OQoXjv/vjf2mcDWpsK84FtTn3MA2Ew+g5xnY5VxKxR8J8C11zj0R/1zl1y8kf8SsTwCoLjdj4Dg2OqlbgFXaXMbqzF38HZ6YN7sMTj/8YtBKBVhlZSBzFOjnh46/49v0IhIkx1ro=
+	t=1738691008; cv=none; b=X7DXmpWUc0gY8OHd8c7sjAg2LCnkYzEEmnEF0i2EgXcS/oFsb4cptOR8ZyfnJ2NV5ygHZWo8bm7LGsalrDbOh0V9tITjt78i56SIjx3c1mIyDXRQyIqJTiZO1AgYY/X8Sqwg02mrVAulMlt1EBQ3uWuEFyeGnmv/W1qtMTjPDkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738691005; c=relaxed/simple;
-	bh=t+deIdyCmvk1FEur4WeRssBNhqVH6PunIegI3E6mjo8=;
+	s=arc-20240116; t=1738691008; c=relaxed/simple;
+	bh=e3/mHnTAuXyZN/A9ohxIHcpjB3/hv4A7Iiq91DKrGTw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tdo675O5TH+a6hbL1x9+xPVybBVnt4wAA1S9yWjngkDsS16hqH+EdQPcC/trTwm9DxNx2fZV8/JG/+rjP7v2RgaqwG9WF0X7Br/NlGrx8yU3ElECWEKKBZSoOy4sGOD8txK0k1ch2g0XSKtRcqm9tFHwgEN1zJvE8h/G1oEkrbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MdPig1WZ; arc=none smtp.client-ip=192.198.163.7
+	 MIME-Version; b=b7Q4aNXbGrqzWnwhy9QZUwn26vwx5x5VtfMpYFMY5tTEZT0mPvt+lJsHA33ouTnMD1X0fVE3NpdTJ/DdGEOYhcF9ZehxwrSGX1MU3iEkqtTspfRc6FEvQjkvOjdJDC8u1IH0K6hHzMGZOnUPBcfHv75aSSpITqUCSbKT7tZggLk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mNKmt3IC; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MdPig1WZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mNKmt3IC"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738691003; x=1770227003;
+  t=1738691007; x=1770227007;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=t+deIdyCmvk1FEur4WeRssBNhqVH6PunIegI3E6mjo8=;
-  b=MdPig1WZKJjmyfyqIRf7cQVls5GKtKdb2LhqOQKQmkIZQLHPB2eJNwZi
-   auaNZNlkg6gyWNJduMwlZ1NXjeMH3CE7daHyGcuasZXKh4aG8wM8TkMER
-   pC5AUKTygX2rKGP57pZAxr/GH1jL4LV8n0axxu8fwUD434jncN6rYjh2k
-   fJmpOtR1a0lbjmSPw7ry4NnLkNGY4ZGvi4CTVc3OVjhqms4urNit0KBZ+
-   7QngoNYkpAT2Itu4GSVLPaZqVPkbVVodsAeWMrvQ0kZb8c93xKDGw+Mwu
-   oV0mByWpl+yOS1dOHVArS5eLuUrKiSlOCnsQ73DluGJpfP5wMiPBkqIXs
-   Q==;
-X-CSE-ConnectionGUID: ryWsl1tjQgWa2gL2GTbpiw==
-X-CSE-MsgGUID: CThwwXb8RTaQ3HsOGCriDQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585395"
+  bh=e3/mHnTAuXyZN/A9ohxIHcpjB3/hv4A7Iiq91DKrGTw=;
+  b=mNKmt3ICFuk05vXK68iTkNWx8fsC/0oJjVPgMcnStBCKmBJi3BRL8kn2
+   zGdDVx5ODqgUltDPYnXaZ6En/ICn0KlV02Uw3D9P6HzHVD/koBZ8lA1jh
+   oznupTORwq5XtfY3a5qDnavDH0hd0JDnc/p4ftFBVpy2AaPktVJrLH3y9
+   C+D0vEnkAX7cEV1yiHIcpjNFs4qXmkGK+k9sTZtwwUk2E0p30q+sjrbRq
+   TgyBPOqgzuWLwdhD1LagY5iwanl/Co/DAW002VFUT6fbmejN29wAwFCj9
+   4OY1IemqqVKDEuyXVn+/fhTgxP2mcUlDzYqOZZQCH306ZeLFhaeAzjw2c
+   A==;
+X-CSE-ConnectionGUID: zq63VNyHRE+jZ9/GQuhrOw==
+X-CSE-MsgGUID: XMH9wEa+Ta2h+TjvF/O9pw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585414"
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="64585395"
+   d="scan'208";a="64585414"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:44 -0800
-X-CSE-ConnectionGUID: i6nsXv65Q2y1EeGdNfuaYQ==
-X-CSE-MsgGUID: L7rjov1LSeSrSn/KP8yfwA==
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:49 -0800
+X-CSE-ConnectionGUID: roiiktjpSty82MTXMc/67g==
+X-CSE-MsgGUID: jpIYCsTrRrSTetY9+pgnOQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="115696730"
+   d="scan'208";a="115696759"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:42 -0800
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:47 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 06/20] wifi: mac80211: fix MLE non-inheritance parsing
-Date: Tue,  4 Feb 2025 19:42:03 +0200
-Message-Id: <20250204193721.934e0a1e392e.If5b95dc3c80208e0c62d8895fb6152aa54b6620b@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 09/20] wifi: mac80211_hwsim: enable strict mode
+Date: Tue,  4 Feb 2025 19:42:06 +0200
+Message-Id: <20250204193721.a2c633d41edf.I61ec37d20fe97699d47fce252dc4ae2e4475fc51@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
 References: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
@@ -65,257 +64,28 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The code is erroneously applying the non-inheritance element
-to the inner elements rather than the outer, which is clearly
-completely wrong. Fix it by finding the MLE basic element at
-the beginning, and then applying the non-inheritance for the
-outer parsing.
+Since we use hwsim for testing e.g. the hostapd implementation,
+enable strict mode to catch errors that would otherwise not be
+caught.
 
-While at it, do some general cleanups such as not allowing
-callers to try looking for a specific non-transmitted BSS
-and link at the same time.
-
-Fixes: 45ebac4f059b ("wifi: mac80211: Parse station profile from association response")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/mlme.c  |   1 +
- net/mac80211/parse.c | 127 ++++++++++++++++++++++++++++---------------
- 2 files changed, 83 insertions(+), 45 deletions(-)
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 04e1ea43b2df..ca5eaa0bd6ed 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -5052,6 +5052,7 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 		parse_params.start = bss_ies->data;
- 		parse_params.len = bss_ies->len;
- 		parse_params.bss = cbss;
-+		parse_params.link_id = -1;
- 		bss_elems = ieee802_11_parse_elems_full(&parse_params);
- 		if (!bss_elems) {
- 			ret = false;
-diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
-index cd318c1c67be..3d5d6658fe8d 100644
---- a/net/mac80211/parse.c
-+++ b/net/mac80211/parse.c
-@@ -47,6 +47,8 @@ struct ieee80211_elems_parse {
- 	/* The EPCS Multi-Link element in the original elements */
- 	const struct element *ml_epcs_elem;
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
+index cf6a331d4042..d0d9dab7f11f 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -5345,6 +5345,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
+ 	ieee80211_hw_set(hw, TDLS_WIDER_BW);
+ 	ieee80211_hw_set(hw, SUPPORTS_MULTI_BSSID);
++	ieee80211_hw_set(hw, STRICT);
  
-+	bool multi_link_inner;
-+
- 	/*
- 	 * scratch buffer that can be used for various element parsing related
- 	 * tasks, e.g., element de-fragmentation etc.
-@@ -152,12 +154,11 @@ ieee80211_parse_extension_element(u32 *crc,
- 			switch (le16_get_bits(mle->control,
- 					      IEEE80211_ML_CONTROL_TYPE)) {
- 			case IEEE80211_ML_CONTROL_TYPE_BASIC:
--				if (elems_parse->ml_basic_elem) {
-+				if (elems_parse->multi_link_inner) {
- 					elems->parse_error |=
- 						IEEE80211_PARSE_ERR_DUP_NEST_ML_BASIC;
- 					break;
- 				}
--				elems_parse->ml_basic_elem = elem;
- 				break;
- 			case IEEE80211_ML_CONTROL_TYPE_RECONF:
- 				elems_parse->ml_reconf_elem = elem;
-@@ -866,21 +867,36 @@ ieee80211_mle_get_sta_prof(struct ieee80211_elems_parse *elems_parse,
- 	}
- }
- 
--static void ieee80211_mle_parse_link(struct ieee80211_elems_parse *elems_parse,
--				     struct ieee80211_elems_parse_params *params)
-+static const struct element *
-+ieee80211_prep_mle_link_parse(struct ieee80211_elems_parse *elems_parse,
-+			      struct ieee80211_elems_parse_params *params,
-+			      struct ieee80211_elems_parse_params *sub)
- {
- 	struct ieee802_11_elems *elems = &elems_parse->elems;
- 	struct ieee80211_mle_per_sta_profile *prof;
--	struct ieee80211_elems_parse_params sub = {
--		.mode = params->mode,
--		.action = params->action,
--		.from_ap = params->from_ap,
--		.link_id = -1,
--	};
--	ssize_t ml_len = elems->ml_basic_len;
--	const struct element *non_inherit = NULL;
-+	const struct element *tmp;
-+	ssize_t ml_len;
- 	const u8 *end;
- 
-+	if (params->mode < IEEE80211_CONN_MODE_EHT)
-+		return NULL;
-+
-+	for_each_element_extid(tmp, WLAN_EID_EXT_EHT_MULTI_LINK,
-+			       elems->ie_start, elems->total_len) {
-+		const struct ieee80211_multi_link_elem *mle =
-+			(void *)tmp->data + 1;
-+
-+		if (!ieee80211_mle_size_ok(tmp->data + 1, tmp->datalen - 1))
-+			continue;
-+
-+		if (le16_get_bits(mle->control, IEEE80211_ML_CONTROL_TYPE) !=
-+		    IEEE80211_ML_CONTROL_TYPE_BASIC)
-+			continue;
-+
-+		elems_parse->ml_basic_elem = tmp;
-+		break;
-+	}
-+
- 	ml_len = cfg80211_defragment_element(elems_parse->ml_basic_elem,
- 					     elems->ie_start,
- 					     elems->total_len,
-@@ -891,26 +907,26 @@ static void ieee80211_mle_parse_link(struct ieee80211_elems_parse *elems_parse,
- 					     WLAN_EID_FRAGMENT);
- 
- 	if (ml_len < 0)
--		return;
-+		return NULL;
- 
- 	elems->ml_basic = (const void *)elems_parse->scratch_pos;
- 	elems->ml_basic_len = ml_len;
- 	elems_parse->scratch_pos += ml_len;
- 
- 	if (params->link_id == -1)
--		return;
-+		return NULL;
- 
- 	ieee80211_mle_get_sta_prof(elems_parse, params->link_id);
- 	prof = elems->prof;
- 
- 	if (!prof)
--		return;
-+		return NULL;
- 
- 	/* check if we have the 4 bytes for the fixed part in assoc response */
- 	if (elems->sta_prof_len < sizeof(*prof) + prof->sta_info_len - 1 + 4) {
- 		elems->prof = NULL;
- 		elems->sta_prof_len = 0;
--		return;
-+		return NULL;
- 	}
- 
- 	/*
-@@ -919,13 +935,17 @@ static void ieee80211_mle_parse_link(struct ieee80211_elems_parse *elems_parse,
- 	 * the -1 is because the 'sta_info_len' is accounted to as part of the
- 	 * per-STA profile, but not part of the 'u8 variable[]' portion.
- 	 */
--	sub.start = prof->variable + prof->sta_info_len - 1 + 4;
-+	sub->start = prof->variable + prof->sta_info_len - 1 + 4;
- 	end = (const u8 *)prof + elems->sta_prof_len;
--	sub.len = end - sub.start;
-+	sub->len = end - sub->start;
- 
--	non_inherit = cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
--					     sub.start, sub.len);
--	_ieee802_11_parse_elems_full(&sub, elems_parse, non_inherit);
-+	sub->mode = params->mode;
-+	sub->action = params->action;
-+	sub->from_ap = params->from_ap;
-+	sub->link_id = -1;
-+
-+	return cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
-+				      sub->start, sub->len);
- }
- 
- static void
-@@ -973,15 +993,19 @@ ieee80211_mle_defrag_epcs(struct ieee80211_elems_parse *elems_parse)
- struct ieee802_11_elems *
- ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
- {
-+	struct ieee80211_elems_parse_params sub = {};
- 	struct ieee80211_elems_parse *elems_parse;
--	struct ieee802_11_elems *elems;
- 	const struct element *non_inherit = NULL;
--	u8 *nontransmitted_profile;
--	int nontransmitted_profile_len = 0;
-+	struct ieee802_11_elems *elems;
- 	size_t scratch_len = 3 * params->len;
-+	bool multi_link_inner = false;
- 
- 	BUILD_BUG_ON(offsetof(typeof(*elems_parse), elems) != 0);
- 
-+	/* cannot parse for both a specific link and non-transmitted BSS */
-+	if (WARN_ON(params->link_id >= 0 && params->bss))
-+		return NULL;
-+
- 	elems_parse = kzalloc(struct_size(elems_parse, scratch, scratch_len),
- 			      GFP_ATOMIC);
- 	if (!elems_parse)
-@@ -998,34 +1022,47 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
- 	ieee80211_clear_tpe(&elems->tpe);
- 	ieee80211_clear_tpe(&elems->csa_tpe);
- 
--	nontransmitted_profile = elems_parse->scratch_pos;
--	nontransmitted_profile_len =
--		ieee802_11_find_bssid_profile(params->start, params->len,
--					      elems, params->bss,
--					      nontransmitted_profile);
--	elems_parse->scratch_pos += nontransmitted_profile_len;
--	non_inherit = cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
--					     nontransmitted_profile,
--					     nontransmitted_profile_len);
-+	/*
-+	 * If we're looking for a non-transmitted BSS then we cannot at
-+	 * the same time be looking for a second link as the two can only
-+	 * appear in the same frame carrying info for different BSSes.
-+	 *
-+	 * In any case, we only look for one at a time, as encoded by
-+	 * the WARN_ON above.
-+	 */
-+	if (params->bss) {
-+		int nontx_len =
-+			ieee802_11_find_bssid_profile(params->start,
-+						      params->len,
-+						      elems, params->bss,
-+						      elems_parse->scratch_pos);
-+		sub.start = elems_parse->scratch_pos;
-+		sub.mode = params->mode;
-+		sub.len = nontx_len;
-+		sub.action = params->action;
-+		sub.link_id = params->link_id;
-+
-+		/* consume the space used for non-transmitted profile */
-+		elems_parse->scratch_pos += nontx_len;
-+
-+		non_inherit = cfg80211_find_ext_elem(WLAN_EID_EXT_NON_INHERITANCE,
-+						     sub.start, nontx_len);
-+	} else {
-+		/* must always parse to get elems_parse->ml_basic_elem */
-+		non_inherit = ieee80211_prep_mle_link_parse(elems_parse, params,
-+							    &sub);
-+		multi_link_inner = true;
-+	}
- 
- 	elems->crc = _ieee802_11_parse_elems_full(params, elems_parse,
- 						  non_inherit);
- 
--	/* Override with nontransmitted profile, if found */
--	if (nontransmitted_profile_len) {
--		struct ieee80211_elems_parse_params sub = {
--			.mode = params->mode,
--			.start = nontransmitted_profile,
--			.len = nontransmitted_profile_len,
--			.action = params->action,
--			.link_id = params->link_id,
--		};
--
-+	/* Override with nontransmitted/per-STA profile if found */
-+	if (sub.len) {
-+		elems_parse->multi_link_inner = multi_link_inner;
- 		_ieee802_11_parse_elems_full(&sub, elems_parse, NULL);
- 	}
- 
--	ieee80211_mle_parse_link(elems_parse, params);
--
- 	ieee80211_mle_defrag_reconf(elems_parse);
- 
- 	ieee80211_mle_defrag_epcs(elems_parse);
+ 	if (param->mlo) {
+ 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_MLO;
 -- 
 2.34.1
 
