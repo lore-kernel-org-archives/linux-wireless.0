@@ -1,55 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 817902163AA
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Feb 2025 17:43:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7AE5216E06
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Feb 2025 17:43:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738691017; cv=none; b=Ns0hvFUR+GZRMofTS0vclQthv8sqrf4wpXaj/objaWNedT5o8fw1L22XX1MR7WvDRdL3hUf5NN6EtsvfT8KomyNxxd1P0X/7yRJzeXS0RqwMoPDpM3xlrtc3OEP8PEaVGznWr24yD+5PwMwC2VuXIe9VoQyiAebs2WuMPhi3n7I=
+	t=1738691030; cv=none; b=g2WFkWoIciXGopWdDD3fWjmOKybeXOxIWHIEj1SIq8Joi6CWFQn+aP7MTJZgECvQwcBdJt2iUud3WTshbGs/MRA6Eid1x5ob1KTUVteIgDLfSFE1ztaVbjl9zmP5RsRisRpDVg/XiXmr8hSEXDowUcakhRV3LF+ji3GjLBZBhCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738691017; c=relaxed/simple;
-	bh=rSm6LXx7JvYtiHgCc1JuZ2gdgSUIvmh46dzZk8SCGXc=;
+	s=arc-20240116; t=1738691030; c=relaxed/simple;
+	bh=MNlP4Dk8vhDgQu2Mvx+0N+59VI6PM+9CJtlfN6vCKWs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YexGnCTVizgTgVwZP1Bjl4JBiljEpkK9TTEFcj34gjKo5tUPFBgrmOLyEom0OmKzonDrph9/MgCPSdycn15FmsB/t8ctTxP6DKRPQ4KUNbgLXrqCPeWE6SrTrPw8j6SwgDJx/LcKFzSqf0M4SwXoG/Hsaqu9LmXvIITOsmKPqn0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RazaQm3I; arc=none smtp.client-ip=192.198.163.7
+	 MIME-Version; b=bAlpXUktDzXbyrTJBClkeSF+Zmh2H1wfg2QR39dHwWB9AixEcVHMmD0rYvj96auQK/AnhxKtq6atvMXKTkhl+u8OmabR/0h+7veUUXpcLTGnTJo8brxLqoM8Wrml2n0t/8PqMBoVL+/YcnRdHog+ytJyV6J2n/t6pDRs4riIyCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=chJW5q+/; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RazaQm3I"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="chJW5q+/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738691016; x=1770227016;
+  t=1738691029; x=1770227029;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=rSm6LXx7JvYtiHgCc1JuZ2gdgSUIvmh46dzZk8SCGXc=;
-  b=RazaQm3ICokE5JXpRPmLNTNtUvtpDCFpZaqDbUEZhEyK63LXwrvrlptt
-   IyBxY1wDl8WuqHg7fEGtuVZxJXp4uYOWxbIGWHI2I6xrzK67qFRS8GQZF
-   OKAGJsxG8eEDRAYBbMNiyPolFr0Mb/rAeM9OxvgMjpwLINk4JErMfLMuY
-   YcxEFkaRKellMFWT4569bpTJgxcBpsm55SEus4FcGdYo43P3cs7kbg3sC
-   o4Wd7LoDuqtEwf9wcX2x2evaUAecFLINLZSy47+PeynNBOQGjmqY4G/Lp
-   AIqueODlP5MQqeTnB4aiaczRon0cLWW9jPvlgAH8Ynfm4UV24sGyv0V3b
+  bh=MNlP4Dk8vhDgQu2Mvx+0N+59VI6PM+9CJtlfN6vCKWs=;
+  b=chJW5q+/qKy+CH5upVHWYufsnvfHjka2aofouAgfLkwmqppeA5eswZZE
+   P4yDVfoVM5nAhVaV+XLmqt/fWOpyOL5jcXP9HTiJ9Q8d9rjtxgtyuc9mx
+   OtWrzGHOFypw+481d/cphMuuyWCX+jgqBPqnQFAa7rmaMMcoLpknYxDM0
+   ZVSIDVuz8f0KXjRoCZaVropw/uef8j7MGFuzBBLj9U5ZId288tjlz7YQJ
+   Q8085vXKl6IvUuJz9i8Szqy+n9VLTUysaSL1lCbAFyvwY96c+6eSqIIDm
+   EbxbYAr8fFj4Byk0VEjuwd8SZifhOE8Q/YDxwtLfUXhTCkH9TdhQLEZA6
    g==;
-X-CSE-ConnectionGUID: lL3CjKHnTQi1zLmWbu6n/Q==
-X-CSE-MsgGUID: 9CbYag1rTHyrJoVeYViYLQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585429"
+X-CSE-ConnectionGUID: PXU1w2pRRbaFvXhKBqh/Fg==
+X-CSE-MsgGUID: tbzTLiLoSOWwVogHqIYXgQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585442"
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="64585429"
+   d="scan'208";a="64585442"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:53 -0800
-X-CSE-ConnectionGUID: wFtOgTrrT4m21Wt8j+JuGg==
-X-CSE-MsgGUID: uYarqxnkQgakKTULuZzwqQ==
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:57 -0800
+X-CSE-ConnectionGUID: BioZUFisRlSwGzDvWnOpPQ==
+X-CSE-MsgGUID: 19Ersva0QhyIjcXWumx1cQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="115696783"
+   d="scan'208";a="115696808"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:52 -0800
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:55 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/20] wifi: mac80211: set ieee80211_prep_tx_info::link_id upon Auth Rx
-Date: Tue,  4 Feb 2025 19:42:09 +0200
-Message-Id: <20250204193721.d640f0cb6480.I1fc5c0da26b143f5b07191eb592f01f7083d55ae@changeid>
+Subject: [PATCH 14/20] wifi: mac80211: don't unconditionally call drv_mgd_complete_tx()
+Date: Tue,  4 Feb 2025 19:42:11 +0200
+Message-Id: <20250204193721.2fc6ee9c1367.Ie6a3cdca070612a0aa4b3c6914ab9ed602d1f456@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
 References: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
@@ -62,89 +63,32 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This will be used by the low level driver.
-Note that link_id  will be 0 in case of a non-MLO authentication.
-Also fix a call-site of mgd_prepare_tx() where the link_id was not
-populated.
+We might not have called drv_mgd_prepare_tx(), so only call
+drv_mgd_complete_tx() under the same conditions.
 
-Update the documentation to reflect the current state
-ieee80211_prep_tx_info::link_id is also available in mgd_complete_tx().
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- include/net/mac80211.h    | 4 ++--
- net/mac80211/driver-ops.h | 3 ++-
- net/mac80211/mlme.c       | 4 +++-
- 3 files changed, 7 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 398d4e30b0db..22d32419e8a0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -7,7 +7,7 @@
-  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2024 Intel Corporation
-+ * Copyright (C) 2018 - 2025 Intel Corporation
-  */
- 
- #ifndef MAC80211_H
-@@ -3830,7 +3830,7 @@ enum ieee80211_reconfig_type {
-  * @was_assoc: set if this call is due to deauth/disassoc
-  *	while just having been associated
-  * @link_id: the link id on which the frame will be TX'ed.
-- *	Only used with the mgd_prepare_tx() method.
-+ *	0 for a non-MLO connection.
-  */
- struct ieee80211_prep_tx_info {
- 	u16 duration;
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 5acecc7bd4a9..307587c8a003 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -2,7 +2,7 @@
- /*
- * Portions of this file
- * Copyright(c) 2016 Intel Deutschland GmbH
--* Copyright (C) 2018-2019, 2021-2024 Intel Corporation
-+* Copyright (C) 2018-2019, 2021-2025 Intel Corporation
- */
- 
- #ifndef __MAC80211_DRIVER_OPS
-@@ -955,6 +955,7 @@ static inline void drv_mgd_complete_tx(struct ieee80211_local *local,
- 		return;
- 	WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
- 
-+	info->link_id = info->link_id < 0 ? 0 : info->link_id;
- 	trace_drv_mgd_complete_tx(local, sdata, info->duration,
- 				  info->subtype, info->success);
- 	if (local->ops->mgd_complete_tx)
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 49d2796654ed..8879f82878b4 100644
+index c2bb78002a4e..d44252c0c27a 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -8,7 +8,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2024 Intel Corporation
-+ * Copyright (C) 2018 - 2025 Intel Corporation
-  */
+@@ -3976,7 +3976,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (tx)
+ 		ieee80211_flush_queues(local, sdata, false);
  
- #include <linux/delay.h>
-@@ -4725,6 +4725,8 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
- 	status_code = le16_to_cpu(mgmt->u.auth.status_code);
+-	drv_mgd_complete_tx(sdata->local, sdata, &info);
++	if (tx || frame_buf)
++		drv_mgd_complete_tx(sdata->local, sdata, &info);
  
-+	info.link_id = ifmgd->auth_data->link_id;
-+
- 	if (auth_alg != ifmgd->auth_data->algorithm ||
- 	    (auth_alg != WLAN_AUTH_SAE &&
- 	     auth_transaction != ifmgd->auth_data->expected_transaction) ||
+ 	/* clear AP addr only after building the needed mgmt frames */
+ 	eth_zero_addr(sdata->deflink.u.mgd.bssid);
 -- 
 2.34.1
 
