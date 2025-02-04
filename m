@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADD81216E09
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0737216E0A
 	for <linux-wireless@vger.kernel.org>; Tue,  4 Feb 2025 17:43:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738691032; cv=none; b=dXzi5hEsXATU99QXyL4jM/oqAQ4xCZca23WP9/wi6glY6Bqgr3efFkF9/osY1OEzJwrXVN3Bof0o10yzP32q/juvk7WfixFH2FzvCJUswpt1YDPVG27/Vu7sbqmTqOFuEHhlJtZ5lzTCs2dpx21EnLI1ufB3DYZ5Kr2QUxHrZBk=
+	t=1738691032; cv=none; b=lHJSZOwBir01uvSbJ/7CC+5RQQa3F0O1REuoufJEFdV2/XB6LCgDA9dNAkAIdSEdOl3X5/NRR38Hvu8RQ5PSb56RtDdC8b7im9j+TGoFNLVHuo+GvYo8dAa76kA2kTc7I1R+LM2CUMdQpxno7drMkNPKczx3bpfvYSTe0W63w3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738691032; c=relaxed/simple;
-	bh=JSIxL35e/4dQ025+uMXUDi4XIPK/zNZMnKhmRNl4zOo=;
+	bh=gZMD+ynmVD5lyQG7Hf4jaCdjR5Sddc/qp4lj1ahTe7c=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=F2wlsUjpTc6Ncaegq44zWQVqYDNtUTzSMn9D7T1nZh4+34/DRjZ41gchpvkJHnQXKocGlmblZm7MHdFPYuGy8e8Ux/dX0KafkUVRSviA4ORqoF7lvCSlLVeOPdrynYbQLvm3mxS2ZXXMOKkupRp7fgkI9odtvOCHEX85HteSIA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VYhSP05F; arc=none smtp.client-ip=192.198.163.7
+	 MIME-Version; b=EcCPdy2lX5Djbc0b3FD5vEeNbbF/+33G7BoYp+VmDPIra8m5ye9auZs7YMcC8SpmLMvsnK4qdzXoBEQG70IJLqMZGvBhRxZIeQWkq0XfTSTWZaHBZgwLQrNFp8nux9im1uW583nqD8W5a1/yTbnM3zKZq09XeotuPg62uJMRisY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NZ4QCNlF; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VYhSP05F"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NZ4QCNlF"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738691030; x=1770227030;
+  t=1738691031; x=1770227031;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JSIxL35e/4dQ025+uMXUDi4XIPK/zNZMnKhmRNl4zOo=;
-  b=VYhSP05FOSOYzFxiiqx8ocGCIxlg+jN8UPwIyI/l6nSDkVMnbnOjkR8u
-   2cCIsDPdWx49cMaRT3Bel6B0AboGVudkW5aY6uc3WpYhbRbSJQK1GCTfF
-   52oIGpAnq3LtiuWNu8x1hOnMwXekVLyC4djmMGKC7GbJdMJK0xcXQLWEG
-   RXb7FZvXvfo77XZkjGtr8xmiuAzmwD0zHrDYC3bvp8Adw/ahTDKihMdVn
-   zHw+I0D1KPh6AwCFRFUcf0qfbyJNnmM8gtD7MgwZUgKrp3UVekFIjW1ym
-   SPLq3Lqbe7fiT2t2FfZ/LGvL6WimaqpcOVDIO6wb/B33oVIl2YJ4YNh7d
-   A==;
-X-CSE-ConnectionGUID: l4jR4VG6SoahO91V8exKDg==
-X-CSE-MsgGUID: 9vhk2vFhR4i97MWr+MQhEA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585466"
+  bh=gZMD+ynmVD5lyQG7Hf4jaCdjR5Sddc/qp4lj1ahTe7c=;
+  b=NZ4QCNlFCLOSshRCVMAl732YykI8rIRs2yAzUNKZYtP3fV4+3FfiLq0h
+   CFdNYHXBo3iJk9bCRUpmW8nW6nCpmNAPGkXXUXUd+RXlw+YUmSzUOgWwI
+   SteoIFLDR7zf9w7aNJzrvBmVYOUNGxn9O3qFvRZPt++e6sAMdvujo8e0l
+   QSFpCaDKNbBlpODoLuvAb+kYG8OpAKAdaHHStSoYaR7R1AhTpGtWJegqA
+   cXe6oepti3hA6GXlU2JP9QLiSXl2Ah6AgzZVosUaArWK2kcBV6L6kmRET
+   m6N9r/gRBUSIcdNrxFyx7c/3xHv8eo45i6EkcFKHTmE8DBGjtGuicfnO0
+   Q==;
+X-CSE-ConnectionGUID: aXcsH15yQLClg5XRIUOExQ==
+X-CSE-MsgGUID: VCWQXzT7RQeFLZs1mMWEdQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="64585446"
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="64585466"
+   d="scan'208";a="64585446"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:43:01 -0800
-X-CSE-ConnectionGUID: 6hfBcVwpR7+6qMNU44JuMQ==
-X-CSE-MsgGUID: 3Q7LxGZtT0OKPeGdB8vK4w==
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:58 -0800
+X-CSE-ConnectionGUID: KrRwnniJRu6bR4KIvR1zjQ==
+X-CSE-MsgGUID: Jb6wA8uTR/qnIUCo2g/6Ow==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.13,259,1732608000"; 
-   d="scan'208";a="115696842"
+   d="scan'208";a="115696819"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:43:00 -0800
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2025 09:42:57 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 17/20] wifi: mac80211: enable removing assoc link
-Date: Tue,  4 Feb 2025 19:42:14 +0200
-Message-Id: <20250204193721.4a62954f6777.I8f62609a682fdf3f703872d0fce63ab6a4780a7e@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 15/20] wifi: mac80211: always send max agg subframe num in strict mode
+Date: Tue,  4 Feb 2025 19:42:12 +0200
+Message-Id: <20250204193721.ae614855f30d.Icd1f93fabc9705e4e760d834095c29b60b934d9e@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
 References: <20250204174217.1161638-1-miriam.rachel.korenblit@intel.com>
@@ -65,31 +64,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-With the previous patch to no longer access deflink for aggregation
-it seems we no longer access the deflink for MLO stations (MLDs) so
-we can allow removing the assoc link.
+Instead of only sending the correct number for EHT and up,
+always send the correct number as it should be in strict
+mode.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/mlme.c | 3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/agg-tx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d44252c0c27a..3c0d11290b7f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -10392,9 +10392,6 @@ int ieee80211_mgd_assoc_ml_reconf(struct ieee80211_sub_if_data *sdata,
- 	if (WARN_ON(!sta))
- 		return -ENOLINK;
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 61f2cac37728..92120f905149 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -9,7 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2023 Intel Corporation
++ * Copyright (C) 2018 - 2024 Intel Corporation
+  */
  
--	if (rem_links & BIT(sta->sta.deflink.link_id))
--		return -EINVAL;
--
- 	/* Adding links to the set of valid link is done only after a successful
- 	 * ML reconfiguration frame exchange. Here prepare the data for the ML
- 	 * reconfiguration frame construction and allocate the required
+ #include <linux/ieee80211.h>
+@@ -464,7 +464,8 @@ static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
+ 	sta->ampdu_mlme.addba_req_num[tid]++;
+ 	spin_unlock_bh(&sta->lock);
+ 
+-	if (sta->sta.deflink.eht_cap.has_eht) {
++	if (sta->sta.deflink.eht_cap.has_eht ||
++	    ieee80211_hw_check(&local->hw, STRICT)) {
+ 		buf_size = local->hw.max_tx_aggregation_subframes;
+ 	} else if (sta->sta.deflink.he_cap.has_he) {
+ 		buf_size = min_t(u16, local->hw.max_tx_aggregation_subframes,
 -- 
 2.34.1
 
