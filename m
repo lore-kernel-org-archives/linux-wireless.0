@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B55A19BBA
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Feb 2025 12:56:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D14D612B94
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Feb 2025 12:56:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738760176; cv=none; b=qvPqSGuawSeYWtZnc0ojYhG4JCtBp5B7Vc2yUnBgnp8O0n7fhVbequYqF4xNE+NHX6Jnfrv4mGw/7784tuvoppJxn2IyLeM1anBMYBgN7hUwAggCqvY8e4Sxr9Ce+qOF7qOq/Z06VJm3XnJ0Dgx8UcogsR9lu5km8q6rEMxJz2I=
+	t=1738760177; cv=none; b=nZk7nvaADt41klBRVC7aRvu8++/wbJ+jOC7q67VgD6BB/FACv20Vwdzr88Vh25AKvl6z+3mvu3a13Na+lqFMjnYJGYQJJxmXnVJb6jYKmCZ2gh2b1jQCla8Mx6bZ8NdaVy6fesT9WbUd63ydE8j+WdH/GQk+otfQNOgWZmezeUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738760176; c=relaxed/simple;
-	bh=YgAqTqJY/4xxjL0+zNgcB965K4H4nF9o/VhJKdXp0pc=;
+	s=arc-20240116; t=1738760177; c=relaxed/simple;
+	bh=oaEJlJYJdPwB7fLpRjY+KWVl/b11cKJdGvAwOzJEjNc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IdhWSYkl4TGyCwKlThS+0rCMf2fOKGS3VgvOOmDk4YIP3GOdM6e+RO9mlXLag0yqqirkOXbTCwt9KDhbxhkscYqNd1rcOPQlHfPfvHa3BAyLOLXk+PDKY1Mzmm2022M2KuLJJS5sEVycFY5wnThbkdsKHb3BBMDOrDvpxmLF4Wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IRr3HaOt; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=FWsU0kpUEnXElmHl46BywDoI7Nd53nwc2KaupKebhI7E99+1E+Sp1e9++qlMGZM2VYGwqAso93jDQC75hfSMExIbx7xZk2PHaKje2BaK+3m78Ll0Kud069Rqxp5Y2q4ZHNntExXSJSrif086RYJIoFHp6NkYj0s33uNOz/+8W/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cV1OYz/O; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IRr3HaOt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cV1OYz/O"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738760171; x=1770296171;
+  t=1738760175; x=1770296175;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YgAqTqJY/4xxjL0+zNgcB965K4H4nF9o/VhJKdXp0pc=;
-  b=IRr3HaOtJSXraHd1WTurCIXieNGrGjulKWuBmFW1lxCAuo76/m6noXLb
-   rSn0Nhc8YuiN6DMbiEHkUOqi/MZQX3Os1POP9KCYOUJcqwjfx8xFKkioK
-   /z9z8PEjomey2FguqVjvLbSjnVZWUIJMRaMmCCir+v2jMz4vGRiYZHkft
-   95L/6+ZzlZZ4doKV++AvLkbr96GdPbzbfV6UynB/lR+/4UfcR8Ebd/k9W
-   /ttMHecKt49cQxBTBtk2SdyVSVloBkRP2g2dml/cSrQDaVHJwdHW62MEc
-   2pZSfFySpBqZ5nVrpIYCLsddSMoXe6r4h6x3SZa3jUpZjJnaUgviFf88K
-   A==;
-X-CSE-ConnectionGUID: LJUzj4ydQLKXN3GKpYsbVg==
-X-CSE-MsgGUID: /Y4C6kQuRy+JVIWB679T0w==
-X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="42159172"
+  bh=oaEJlJYJdPwB7fLpRjY+KWVl/b11cKJdGvAwOzJEjNc=;
+  b=cV1OYz/OQi/p+uChvle1UqW7uEF7A5bu4I6jWjmHVyZopkejoxiOipmL
+   klPtWhjD0rLIkq1fQemR38gSmYXRBPjwNesZzlEtIWxUw57u1ELNJ2qXc
+   2oaBjoFKkqNWat+V9XejqSp8CS6dNqGeWn7NWJKeJwuLR6WBfuD+ZKy2w
+   sSXydpvt435Wqnj8fZkZKV/WMOOYQWVaESs68RkSrW3gd71ds0bt0K6eT
+   mkwlZ7gTEhs4nVE3gYXqaOmtAKedQbK3bd2n2Co2aqi8eEBWHOGvfdagh
+   68PpSgkTjW50av4zBdRf5mwwHhk+cDEXHeTR/Ba905jhwjBYjgJW8BhwX
+   g==;
+X-CSE-ConnectionGUID: CzDh+33qQlm+pw+OztntmQ==
+X-CSE-MsgGUID: 7I+34TugR+e38ZgyOM7CGA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="42159180"
 X-IronPort-AV: E=Sophos;i="6.13,261,1732608000"; 
-   d="scan'208";a="42159172"
+   d="scan'208";a="42159180"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 04:56:11 -0800
-X-CSE-ConnectionGUID: SkPaNuU+QPyUwMRMQPAfJw==
-X-CSE-MsgGUID: DnO9CAsfRu6nzwtmyuCIfw==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 04:56:14 -0800
+X-CSE-ConnectionGUID: w/sehM+ZQCikCTB0cHw5sw==
+X-CSE-MsgGUID: cB0wlffPQRy/IthAb//nSA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="110745454"
+   d="scan'208";a="110745460"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 04:56:10 -0800
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 04:56:13 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/19] wifi: iwlwifi: mvm: rename and move iwl_mvm_eval_dsm_rfi() to iwl_rfi_is_enabled_in_bios()
-Date: Wed,  5 Feb 2025 14:55:33 +0200
-Message-Id: <20250205145347.b7ac9d05234e.Ieb623d7e8dca6bb6a5733682b31e4ff1e39373f0@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 06/19] wifi: iwlwifi: don't warn during reprobe
+Date: Wed,  5 Feb 2025 14:55:35 +0200
+Message-Id: <20250205145347.76425b10e5a0.I3bf0de2eb090a8b94c4e36d93dd91df61fadb808@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250205125548.1963070-1-miriam.rachel.korenblit@intel.com>
 References: <20250205125548.1963070-1-miriam.rachel.korenblit@intel.com>
@@ -63,126 +62,34 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+During reprobe, the sw state is being destroyd, and so is the
+connection. When the peer STA is being removed, the opmode sends a
+command to flush the TXQs of the STA and uses iwl_trans_wait_txq_empty.
 
-Renamed iwl_mvm_eval_dsm_rfi() to iwl_rfi_is_enabled_in_bios() to better
-reflect the function's operation. Additionally, moved the function to the
-regulatory.c file for better organization. optimize local variable
-usage in it.
+This one warns if the FW is not alive, but it really shouldn't if
+there is a FW error - and return silently instead, just like we do when
+sending a hcmd.
 
-Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/regulatory.c    | 31 +++++++++++++++++
- .../wireless/intel/iwlwifi/fw/regulatory.h    |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 34 +------------------
- 3 files changed, 34 insertions(+), 33 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-index ea435ee94312..63320689e05d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-@@ -674,3 +674,34 @@ bool iwl_puncturing_is_allowed_in_bios(u32 puncturing, u16 mcc)
- 	}
- }
- IWL_EXPORT_SYMBOL(iwl_puncturing_is_allowed_in_bios);
-+
-+bool iwl_rfi_is_enabled_in_bios(struct iwl_fw_runtime *fwrt)
-+{
-+	/* default behaviour is disabled */
-+	u32 value = 0;
-+	int ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_RFI_CONFIG, &value);
-+
-+	if (ret < 0) {
-+		IWL_DEBUG_RADIO(fwrt, "Failed to get DSM RFI, ret=%d\n", ret);
-+		return false;
-+	}
-+
-+	value &= DSM_VALUE_RFI_DISABLE;
-+	/* RFI BIOS CONFIG value can be 0 or 3 only.
-+	 * i.e 0 means DDR and DLVR enabled. 3 means DDR and DLVR disabled.
-+	 * 1 and 2 are invalid BIOS configurations, So, it's not possible to
-+	 * disable ddr/dlvr separately.
-+	 */
-+	if (!value) {
-+		IWL_DEBUG_RADIO(fwrt, "DSM RFI is evaluated to enable\n");
-+		return true;
-+	} else if (value == DSM_VALUE_RFI_DISABLE) {
-+		IWL_DEBUG_RADIO(fwrt, "DSM RFI is evaluated to disable\n");
-+	} else {
-+		IWL_DEBUG_RADIO(fwrt,
-+				"DSM RFI got invalid value, value=%d\n", value);
-+	}
-+
-+	return false;
-+}
-+IWL_EXPORT_SYMBOL(iwl_rfi_is_enabled_in_bios);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-index b355d7bef14c..ed61bc35ef5b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-@@ -167,6 +167,8 @@ enum iwl_dsm_values_rfi {
- #define DSM_VALUE_RFI_DISABLE	(DSM_VALUE_RFI_DLVR_DISABLE |\
- 				 DSM_VALUE_RFI_DDR_DISABLE)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 49c8507d1a6b..8ba24903a870 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -671,6 +671,9 @@ IWL_EXPORT_SYMBOL(iwl_trans_txq_enable_cfg);
  
-+bool iwl_rfi_is_enabled_in_bios(struct iwl_fw_runtime *fwrt);
-+
- enum iwl_dsm_masks_reg {
- 	DSM_MASK_CHINA_22_REG = BIT(2)
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index df49dd2e2026..5a9ce7dba714 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1213,38 +1213,6 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
- 		IWL_DEBUG_RADIO(mvm, "failed to send TAS_CONFIG (%d)\n", ret);
- }
- 
--static bool iwl_mvm_eval_dsm_rfi(struct iwl_mvm *mvm)
--{
--	u32 value = 0;
--	/* default behaviour is disabled */
--	bool bios_enable_rfi = false;
--	int ret = iwl_bios_get_dsm(&mvm->fwrt, DSM_FUNC_RFI_CONFIG, &value);
--
--
--	if (ret < 0) {
--		IWL_DEBUG_RADIO(mvm, "Failed to get DSM RFI, ret=%d\n", ret);
--		return bios_enable_rfi;
--	}
--
--	value &= DSM_VALUE_RFI_DISABLE;
--	/* RFI BIOS CONFIG value can be 0 or 3 only.
--	 * i.e 0 means DDR and DLVR enabled. 3 means DDR and DLVR disabled.
--	 * 1 and 2 are invalid BIOS configurations, So, it's not possible to
--	 * disable ddr/dlvr separately.
--	 */
--	if (!value) {
--		IWL_DEBUG_RADIO(mvm, "DSM RFI is evaluated to enable\n");
--		bios_enable_rfi = true;
--	} else if (value == DSM_VALUE_RFI_DISABLE) {
--		IWL_DEBUG_RADIO(mvm, "DSM RFI is evaluated to disable\n");
--	} else {
--		IWL_DEBUG_RADIO(mvm,
--				"DSM RFI got invalid value, value=%d\n", value);
--	}
--
--	return bios_enable_rfi;
--}
--
- static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
+ int iwl_trans_wait_txq_empty(struct iwl_trans *trans, int queue)
  {
- 	struct iwl_lari_config_change_cmd cmd;
-@@ -1631,7 +1599,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	iwl_mvm_uats_init(mvm);
- 
- 	if (iwl_rfi_supported(mvm)) {
--		if (iwl_mvm_eval_dsm_rfi(mvm))
-+		if (iwl_rfi_is_enabled_in_bios(&mvm->fwrt))
- 			iwl_rfi_send_config_cmd(mvm, NULL);
- 	}
- 
++	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
++		return -EIO;
++
+ 	if (WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
+ 		      "bad state = %d\n", trans->state))
+ 		return -EIO;
 -- 
 2.34.1
 
