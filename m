@@ -1,200 +1,133 @@
-Received: from mail-ed1-f100.google.com (mail-ed1-f100.google.com [209.85.208.100])
+Received: from mail-io1-f80.google.com (mail-io1-f80.google.com [209.85.166.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4F8222258A
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Feb 2025 05:21:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3332248B9
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Feb 2025 06:05:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738819298; cv=none; b=t+dTnh3GRQGXosZxD5HDXX93xcY2Uz526wv/7HU1QhNsIA34Kfi0SM8HkwkncC/EX4eXXpCAboEjNcuwQJZYpinXJ+jD1BOW8Oj2Qc4fzNeKtjnMUDR49qX3zbv6aN4ZN8MoNEezMOOQw4eoRByEfXFeonQjmeKzN+FH8r1TmMM=
+	t=1738821920; cv=none; b=kCdpegESmCuzqOlKD+0g+HDsI7U1wsQWAts7pscziccx3e6vSrV0Gdvg8comTsgDyroiX0BButwBSriFb0px3e/TfdCltao6Rz5tZ6OFp8cZp6x/Lt+MDu281iQekQADa1zDl8PZ0zX/Hd0y/u0XLyWdGyF8wAPhzO+5Fsc2UNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738819298; c=relaxed/simple;
-	bh=fMVr7qFL+cRYpNCU1acUph+KfjFdj44f7OgeU21s32E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ga2I92/kzqE5IPK6qlALXpYxG3pckT9lzopUtvTdJcqXcY88z9Lc2yTTzbOzjVr7ABrhRifcC4n5ajnzq03gDw+5wKz72oBt5CQur7wMhW6QV/9XN4xUUr297gbYA5qvRP6xOZtWdw6t8pfuRlnVLhNUK7AyC7FXPCHaJIhMyPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=W8xuRfyj; arc=none smtp.client-ip=209.85.208.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="W8xuRfyj"
-Received: by mail-ed1-f100.google.com with SMTP id 4fb4d7f45d1cf-5dce4a5d8a0so937139a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2025 21:21:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1738819293; x=1739424093; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bdHVYTQfcccNoKDFaDK7nnVwIj0vWvmHUufF6M15JVk=;
-        b=W8xuRfyj+jYzC5bbCKR2wje3v3pSVLpQfTB8H9CMwfb4GcOA83LsuPyOhemOcW5QfH
-         xocRl53Ett0OqyQTBTO0Yj+qUeb1T63zb4DHtRSXJls0OMxsDoCzAaZodeIYxZx4oiTB
-         sl0UIitmoQNtoTIWtcOqYOkCSkpe0MdG5wk+RjtbUNP0gCrb9crEqaiTG9Fthc21Vb5G
-         5EDA2BoAKLpwF/8RJskFzog3nXgdoiiLWnxGPZIor+1QEMwWlz8UK/SM1L592Pd2PeT+
-         /E7eQ5Djbwb9C8fPxf/Uk5HgAW5//usImW5Exp2ztE/ILaMo7N+gF4j36nvfrQcG/G3z
-         Or8g==
+	s=arc-20240116; t=1738821920; c=relaxed/simple;
+	bh=tiaOYm5pYA+aGstwxdQX/EYDi0r3XD/mgYm932MZdqk=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=c5qmQivPO/7MMQ0pINV3yHR8KMQLp6PujpTsnuoUnya3mXrIdehWgV+1Uor7yZMj/nzXMnjYBFTLq7n2z37MMaDv5wMw9RFSH9CyA84tBudiNtZD+ZOF/MPWNlMRAvEKqBw9bThUwLaEIQEo2YkQ9fxf/yMk/bhOtMx9uM7K/OA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f80.google.com with SMTP id ca18e2360f4ac-845dee0425cso47805539f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Feb 2025 22:05:18 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738819293; x=1739424093;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=bdHVYTQfcccNoKDFaDK7nnVwIj0vWvmHUufF6M15JVk=;
-        b=aqpivVSrG86fjI3xE6S2Vl7qcORCgqW6EU/f9DAJ2wP6Q3xj4J5T0cXj9EA1Jh1/aG
-         ErRAsQerVw8VMzdemocFuu21cmqztxZbb04e9dIZjMdt4M0y8bbPzey1tssyIuPx9qZZ
-         sfVFktI/ezpP+h1jW1sSpWmsigU1eusPiUs4+jutzOVvp7F+fheJ68bLbsX7oRjnJvy9
-         j+LVLnr6iR4h8CRXBJlGfsozuXJ0tBsXA5DVh9jSn5HgmQNoiX0es/SDYx1rVzDZYkg9
-         /SoFSy5CgUGHzdVjSPIcGLRWimV/321J5qW+M7KSCbUmMvZCxo7NRbl5u477XcllXVD1
-         MW8w==
-X-Forwarded-Encrypted: i=1; AJvYcCUvF1LZjtx0z6n+9hd/i3XmBiNUzBj2MJ6b+I2Cf64tYUNYt3TMMSqpm4fapTe8rI/SJXPzzuKSW54p3HsCAQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyMWCsIvLIXHF8m23EnRM6doSrB0RzAN1jBxLiYZEEEyT87S465
-	0J2AUUIdm9J5ZEYUFjo8cHP5WAx0xARpEq43W45ZW4acfoRGRGHctlTxKkvEdX6LWFxHy5fiY5H
-	29DUwne8dRRS3rkPVMcmJ2hMcHSDFIN+24GB8QbCn5p45wibR
-X-Gm-Gg: ASbGnct0AylWOJ1BQyT7wFpsm5ooFyB7IcWSWHCTBb6UfpGMOoZZzyYrWc1Nb6ErY+N
-	MR1PJe4uOVPBO/GIAmBrbArY4555G3v9sTQYr8vwMIqVYLntLaZGUZjrX5OUnIU3+UQK66wc7Gk
-	uLUIX/y1I3HLIwV+x1xV/A9VyeHiKyzcJBxHE6RUv0yuAqhvE2YaFNK+RUDGPy8BWm86h58xVtu
-	9nWTOvjQWAAgojPAz/uWxxnzhoHnIWKNop+WcjM90wD4Rn0MIw5uYZ28QzCQFEsHR1FqzgfVhTz
-	EyPUQo+aSZSIAmP8tLLAlWE9
-X-Google-Smtp-Source: AGHT+IFl089+rm1zmjN8iG+9/13B8VrWSPOdNpDBwWTsJRYlUmvKdrLpWygnLduVxQtW4kKWbhPWJgyCJ0BB
-X-Received: by 2002:a05:6402:4404:b0:5d9:ad1:dafc with SMTP id 4fb4d7f45d1cf-5dcdb762de1mr11066307a12.25.1738819292786;
-        Wed, 05 Feb 2025 21:21:32 -0800 (PST)
-Received: from c7-smtp-2023.dev.purestorage.com ([2620:125:9017:12:36:3:5:0])
-        by smtp-relay.gmail.com with ESMTPS id a640c23a62f3a-ab773548c81sm1221366b.204.2025.02.05.21.21.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Feb 2025 21:21:32 -0800 (PST)
-X-Relaying-Domain: purestorage.com
-Received: from dev-ushankar.dev.purestorage.com (dev-ushankar.dev.purestorage.com [IPv6:2620:125:9007:640:7:70:36:0])
-	by c7-smtp-2023.dev.purestorage.com (Postfix) with ESMTP id 8A789340576;
-	Wed,  5 Feb 2025 22:21:31 -0700 (MST)
-Received: by dev-ushankar.dev.purestorage.com (Postfix, from userid 1557716368)
-	id 366DAE40ECA; Wed,  5 Feb 2025 22:21:31 -0700 (MST)
-From: Uday Shankar <ushankar@purestorage.com>
-Date: Wed, 05 Feb 2025 22:21:30 -0700
-Subject: [PATCH v3 1/2] net, treewide: define and use MAC_ADDR_STR_LEN
+        d=1e100.net; s=20230601; t=1738821917; x=1739426717;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1TO+9rzBupMNMiq/QelljNSbWiGr9BXU5LdVRKfddWs=;
+        b=V/xF5IYSHA37+C1gx/KEjr2A6bIYTDEfp7uDQ9e1ZWYj04erx738kzrkasVQBo9Hzz
+         lCihzqwhDoHQLS8/eNc/Alcy8z6c7MW7X316BBCPIe8Tglp22sNeEOPFzhxzvftmZljL
+         70z53UaM1SwXvW2CrMHZjY3yFzN6FfMg1xodfCJqbG53jGDLUncWqLBy05Mcn1KJV8bS
+         jdARvppOdWdkB2JLih6WASH3NcNShoO0HlsBSVynoCLh8AraBK7jGg4ZBDupB9QiZGpq
+         FcBC2qJ11wL7eIkmgDgDIu9NagGnefvcUFPRvyDe1e+hE9PiRzGMI6JkgMG3S0Exvshi
+         HH7A==
+X-Forwarded-Encrypted: i=1; AJvYcCWw7+cG3hjmtv94LhkCNCoMfXxAryeQP7E7e6IJ7NAKlGCvtEwch4iFfRouybjWmDkEwmnZlx4xpczvXaIyWA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw6X/xgDDzSn2TZzpdGnWIkjNs2fei3e51eWk/yYuCZdpH1xpxs
+	bIgc69LJGkCT71zkVVUQp7MNLKoFRxoOu9xHOpTPOAlUonFNaw7n0LeL3FxXNXH3P3jwzuicEbz
+	3lEBXijv4CKvyyvOKMcv/VuPwN8xaT1lPs3j1xC474Ixh4SfscECx4lg=
+X-Google-Smtp-Source: AGHT+IHXrAJssA2VQ4xK5u6Qf66UNd7a1rvB1Rp/Mk4i5onARVBr6UVxz4Lben11D22LMBOjbh+MKIxvR+//hl7rNmYXxUf2EQrq
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250205-netconsole-v3-1-132a31f17199@purestorage.com>
-References: <20250205-netconsole-v3-0-132a31f17199@purestorage.com>
-In-Reply-To: <20250205-netconsole-v3-0-132a31f17199@purestorage.com>
-To: Breno Leitao <leitao@debian.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
- =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>, 
- Simon Horman <horms@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
- Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org, 
- Uday Shankar <ushankar@purestorage.com>
-X-Mailer: b4 0.14.2
+X-Received: by 2002:a05:6e02:138c:b0:3d0:4b0d:b226 with SMTP id
+ e9e14a558f8ab-3d04f917cd9mr53494645ab.21.1738821917351; Wed, 05 Feb 2025
+ 22:05:17 -0800 (PST)
+Date: Wed, 05 Feb 2025 22:05:17 -0800
+In-Reply-To: <678d7183.050a0220.303755.005f.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <67a4511d.050a0220.19061f.05f7.GAE@google.com>
+Subject: Re: [syzbot] [wireless?] WARNING in ieee80211_tdls_build_mgmt_packet_data
+From: syzbot <syzbot+e55106f8389651870be0@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-There are a few places in the tree which compute the length of the
-string representation of a MAC address as 3 * ETH_ALEN - 1. Define a
-constant for this and use it where relevant. No functionality changes
-are expected.
+syzbot has found a reproducer for the following issue on:
 
-Signed-off-by: Uday Shankar <ushankar@purestorage.com>
+HEAD commit:    92514ef226f5 Merge tag 'for-6.14-rc1-tag' of git://git.ker..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=137124a4580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=1909f2f0d8e641ce
+dashboard link: https://syzkaller.appspot.com/bug?extid=e55106f8389651870be0
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=167aadf8580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=117aadf8580000
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/7feb34a89c2a/non_bootable_disk-92514ef2.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/c4d8b91f8769/vmlinux-92514ef2.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/c24ec4365966/bzImage-92514ef2.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+e55106f8389651870be0@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 5309 at net/mac80211/tdls.c:611 ieee80211_tdls_add_setup_cfm_ies net/mac80211/tdls.c:611 [inline]
+WARNING: CPU: 0 PID: 5309 at net/mac80211/tdls.c:611 ieee80211_tdls_add_ies net/mac80211/tdls.c:762 [inline]
+WARNING: CPU: 0 PID: 5309 at net/mac80211/tdls.c:611 ieee80211_tdls_build_mgmt_packet_data+0x329c/0x4080 net/mac80211/tdls.c:984
+Modules linked in:
+CPU: 0 UID: 0 PID: 5309 Comm: syz-executor211 Not tainted 6.14.0-rc1-syzkaller-00034-g92514ef226f5 #0
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+RIP: 0010:ieee80211_tdls_add_setup_cfm_ies net/mac80211/tdls.c:611 [inline]
+RIP: 0010:ieee80211_tdls_add_ies net/mac80211/tdls.c:762 [inline]
+RIP: 0010:ieee80211_tdls_build_mgmt_packet_data+0x329c/0x4080 net/mac80211/tdls.c:984
+Code: f5 ff ff e8 06 49 3d f6 90 0f 0b 90 4c 8b 7c 24 10 e9 7e fe ff ff e8 f3 48 3d f6 90 0f 0b 90 e9 70 fe ff ff e8 e5 48 3d f6 90 <0f> 0b 90 e9 62 fe ff ff 44 89 f1 80 e1 07 80 c1 03 38 c1 0f 8c c7
+RSP: 0018:ffffc9000d2270c0 EFLAGS: 00010293
+RAX: ffffffff8b82153b RBX: ffff888042af8d80 RCX: ffff888000ee8000
+RDX: 0000000000000000 RSI: ffffffff8c0ab8e0 RDI: ffffffff8c608a00
+RBP: ffffc9000d227260 R08: ffffffff901b5177 R09: 1ffffffff2036a2e
+R10: dffffc0000000000 R11: fffffbfff2036a2f R12: dffffc0000000000
+R13: 0000000000000017 R14: 0000000000000000 R15: ffff888041d91640
+FS:  0000555566989380(0000) GS:ffff88801fc00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00002000000021c0 CR3: 000000004515a000 CR4: 0000000000352ef0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ ieee80211_tdls_prep_mgmt_packet+0x3b6/0x860 net/mac80211/tdls.c:1058
+ ieee80211_tdls_mgmt+0x8cf/0x10a0 net/mac80211/tdls.c:1299
+ rdev_tdls_mgmt net/wireless/rdev-ops.h:927 [inline]
+ nl80211_tdls_mgmt+0x4d8/0x770 net/wireless/nl80211.c:12537
+ genl_family_rcv_msg_doit net/netlink/genetlink.c:1115 [inline]
+ genl_family_rcv_msg net/netlink/genetlink.c:1195 [inline]
+ genl_rcv_msg+0xb14/0xec0 net/netlink/genetlink.c:1210
+ netlink_rcv_skb+0x1e3/0x430 net/netlink/af_netlink.c:2543
+ genl_rcv+0x28/0x40 net/netlink/genetlink.c:1219
+ netlink_unicast_kernel net/netlink/af_netlink.c:1322 [inline]
+ netlink_unicast+0x7f6/0x990 net/netlink/af_netlink.c:1348
+ netlink_sendmsg+0x8e4/0xcb0 net/netlink/af_netlink.c:1892
+ sock_sendmsg_nosec net/socket.c:713 [inline]
+ __sock_sendmsg+0x221/0x270 net/socket.c:728
+ ____sys_sendmsg+0x52a/0x7e0 net/socket.c:2568
+ ___sys_sendmsg net/socket.c:2622 [inline]
+ __sys_sendmsg+0x269/0x350 net/socket.c:2654
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f1284b95c69
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 01 1a 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffcdf2a63b8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f1284b95c69
+RDX: 0000000000000000 RSI: 0000200000000000 RDI: 0000000000000005
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+ </TASK>
+
+
 ---
- drivers/net/netconsole.c           | 2 +-
- drivers/nvmem/brcm_nvram.c         | 2 +-
- drivers/nvmem/layouts/u-boot-env.c | 2 +-
- include/linux/if_ether.h           | 3 +++
- lib/net_utils.c                    | 4 +---
- net/mac80211/debugfs_sta.c         | 5 +++--
- 6 files changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/netconsole.c b/drivers/net/netconsole.c
-index 86ab4a42769a49eebe5dd6f01dafafc6c86ec54f..6db5af2d8d059fa5c072194545d4408eec19b4a9 100644
---- a/drivers/net/netconsole.c
-+++ b/drivers/net/netconsole.c
-@@ -675,7 +675,7 @@ static ssize_t remote_mac_store(struct config_item *item, const char *buf,
- 
- 	if (!mac_pton(buf, remote_mac))
- 		goto out_unlock;
--	if (buf[3 * ETH_ALEN - 1] && buf[3 * ETH_ALEN - 1] != '\n')
-+	if (buf[MAC_ADDR_STR_LEN] && buf[MAC_ADDR_STR_LEN] != '\n')
- 		goto out_unlock;
- 	memcpy(nt->np.remote_mac, remote_mac, ETH_ALEN);
- 
-diff --git a/drivers/nvmem/brcm_nvram.c b/drivers/nvmem/brcm_nvram.c
-index b810df727b446b1762a1851750f743e0de6e8788..b4cf245fb2467d281111001bb7ed8db5993a09b2 100644
---- a/drivers/nvmem/brcm_nvram.c
-+++ b/drivers/nvmem/brcm_nvram.c
-@@ -100,7 +100,7 @@ static int brcm_nvram_read_post_process_macaddr(void *context, const char *id, i
- {
- 	u8 mac[ETH_ALEN];
- 
--	if (bytes != 3 * ETH_ALEN - 1)
-+	if (bytes != MAC_ADDR_STR_LEN)
- 		return -EINVAL;
- 
- 	if (!mac_pton(buf, mac))
-diff --git a/drivers/nvmem/layouts/u-boot-env.c b/drivers/nvmem/layouts/u-boot-env.c
-index 731e6f4f12b2bf28e4547d128954a095545ad461..436426d4e8f910b51b92f88acddfbb40d374587a 100644
---- a/drivers/nvmem/layouts/u-boot-env.c
-+++ b/drivers/nvmem/layouts/u-boot-env.c
-@@ -37,7 +37,7 @@ static int u_boot_env_read_post_process_ethaddr(void *context, const char *id, i
- {
- 	u8 mac[ETH_ALEN];
- 
--	if (bytes != 3 * ETH_ALEN - 1)
-+	if (bytes != MAC_ADDR_STR_LEN)
- 		return -EINVAL;
- 
- 	if (!mac_pton(buf, mac))
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index 8a9792a6427ad9cf58b50c79cbfe185615800dcb..61b7335aa037c7232a0caa45572043057c02dde3 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -19,6 +19,9 @@
- #include <linux/skbuff.h>
- #include <uapi/linux/if_ether.h>
- 
-+/* XX:XX:XX:XX:XX:XX */
-+#define MAC_ADDR_STR_LEN (3 * ETH_ALEN - 1)
-+
- static inline struct ethhdr *eth_hdr(const struct sk_buff *skb)
- {
- 	return (struct ethhdr *)skb_mac_header(skb);
-diff --git a/lib/net_utils.c b/lib/net_utils.c
-index 42bb0473fb22f977409f7a6792bb1340f4e911c3..215cda672fee1b5a029c2b61529c6813c0edab11 100644
---- a/lib/net_utils.c
-+++ b/lib/net_utils.c
-@@ -7,11 +7,9 @@
- 
- bool mac_pton(const char *s, u8 *mac)
- {
--	size_t maxlen = 3 * ETH_ALEN - 1;
- 	int i;
- 
--	/* XX:XX:XX:XX:XX:XX */
--	if (strnlen(s, maxlen) < maxlen)
-+	if (strnlen(s, MAC_ADDR_STR_LEN) < MAC_ADDR_STR_LEN)
- 		return false;
- 
- 	/* Don't dirty result unless string is valid MAC. */
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index a67a9d3160086ac492d77092a0c8a74d2384b28c..11d51e348339f1eec1a7d3fd04b1439aaed64593 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -457,11 +457,12 @@ static ssize_t link_sta_addr_read(struct file *file, char __user *userbuf,
- 				  size_t count, loff_t *ppos)
- {
- 	struct link_sta_info *link_sta = file->private_data;
--	u8 mac[3 * ETH_ALEN + 1];
-+	u8 mac[MAC_ADDR_STR_LEN + 2];
- 
- 	snprintf(mac, sizeof(mac), "%pM\n", link_sta->pub->addr);
- 
--	return simple_read_from_buffer(userbuf, count, ppos, mac, 3 * ETH_ALEN);
-+	return simple_read_from_buffer(userbuf, count, ppos, mac,
-+				       MAC_ADDR_STR_LEN + 1);
- }
- 
- LINK_STA_OPS(addr);
-
--- 
-2.34.1
-
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
