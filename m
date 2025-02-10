@@ -1,110 +1,138 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 067602E628
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2025 09:48:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C1951C5F26;
+	Mon, 10 Feb 2025 10:18:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739180909; cv=none; b=BPl/a84ouDv/B0shHPVropJlblyYQeyopk+OuGF6Skf4wUOoFldL8XeEmpBcA09/Gw2XlS7TVJbO30Vw/pF6isI6ZEYdvr0T6bnR2aguTw5eOjKn7hkuG3j72UKVJiLQrbuQbSw8dgrQe2xg+elQzh2mf2QfFNvmd2Mz34v4qvo=
+	t=1739182704; cv=none; b=F2gSdwFvNgvAU29lE5m4lPuCV2c1GT6XDxDqghylAyjvTDzSi/KrJEuUWl53rl7MAiEhrltNNcgK2lK9UZ9+oIU2pgM6EWP75P4Vu+pSNgUzeP1b4Rj+8h3QkRXYmLfTXj5Ay4/ICh+2Czk/urL46xAGF0TH1H2By6XtKjY2ZD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739180909; c=relaxed/simple;
-	bh=Uq9LEFwqXD/ohngq9zlUzUQyXKiamR8ZOhOnBCMIfoo=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=dc+xDFx0VzjMPxGt7KXoNqt5lETMDytTDyHd1tRSQBPhdHatK4nZARoPbSDXr9j+I0skfs+tQxuyaBU1SfkFfCXpDT4sMknmMfEZJu7mO5Poaz4E92BevSIHAlWLKtaaGgDxtdfvwoYfSX/UljAxL3rNzzYsz97MtEAUGQ+doWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=TCccnZ5L; arc=none smtp.client-ip=209.85.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=freebox.fr
+	s=arc-20240116; t=1739182704; c=relaxed/simple;
+	bh=hdD/lkpi+9/YArLnX7wjSWSXiDV5h4tehxtqm9TMWBI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=O/oej/mr+GixexbPVGXyFhr+S4Mcb86TLnDB+/JkfDGut3mMlJLMfS9fcqlMWmaAJ03XG7QVzSL/JsBbEiqKLpmlzhF0CNMaiE+wVT+MChZS3khvY/aTy90X8yMw3ozf7g5uRfp9wi8hkNZ+D1gMTGoTxsYVtj768pdVDXWbgOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gK4IzSh7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="TCccnZ5L"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-436281c8a38so26814155e9.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2025 01:48:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1739180904; x=1739785704; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=9sWAuiljb6qgt2soNGlWZPwj09N7VzIfmlBHhiUbhLQ=;
-        b=TCccnZ5LsFw4rYRxnzOgGlGdv5PLrFAlfcGOy7MYMsZPvnadO6Gizq+klrrUDGp/Z0
-         OzFKcR70xcmfb9WxVwlr6VqMagrgA4rnCnW9XNzjBi+lz5DBlVMuwAUB8xF+KUqF77Sn
-         SgQ5G6kz3Id/dNe36VRUi+bWekUwyt7oC1kI+lPHPEh5oSSomoQJK7y5mFYApDtOXg4i
-         nE23/DpGF9HP5cwCqAmrSjhd5ii3qtCGrE1nAUC69j4o+nPs5OgFfzxDYtABM7StKR71
-         0FsMsuUvMvskT9VoEyn/9MhjIRkkX+kPvBJ2BOKXwXruLGjbXWSsRnz6vDx2eAGcGLoq
-         LzKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739180904; x=1739785704;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9sWAuiljb6qgt2soNGlWZPwj09N7VzIfmlBHhiUbhLQ=;
-        b=KuoLcHuZc9Q3STEMYK+mdAjtGX0CigyI1O/kkUHbiaIDW8kYHGYSvTSMFwHOQPYd10
-         rfqtSytnkgFWiDqx02ohgY3jwwjY67NEM0TA/vy87BMK+wHQvLDqJ4qBY5m0m2HHch5J
-         0E5c5dUxPPf1v30MN4s/1bpykdj57sEbTveHEcvTTqE5F0NBewnhJTNEau+KX4g7Z/pc
-         wCSVgUJZ2cslMW5RHFq5mxQCEsVF8OCDqgbDaIZEdgJRsbdF2mE2MPmW2FHeNpJPDC2N
-         hQTzUl/0coNiNIsGwrw9+4wKj7kO/hURX4YxGL2p9XB9vGuyPR3epRrsDm8vFI+ri5ea
-         LhOQ==
-X-Gm-Message-State: AOJu0YxPqat7egyWWbAWJyg7IV8GCfZGaxT8pNWF6Njv5lW1UHHXkQnO
-	GDxmGYs3crWbl1yY0iO27SWbodo0XSKrE38icM5e2AMtwYdMH4E4ciri+Hm97PE=
-X-Gm-Gg: ASbGncsSNSaJvtvpmqsdXe0g2jIf26NgNm4d+E+MuzCbxfClg6ql/PooDEeyp9RL7Hk
-	9QmhZ3a7CNqKWjUf4yAtl/IKwRWz3UgqAXZvkhRdLdPcLHdTRQNt/LLqRwNgSl7b0OIJFicDFIa
-	OIzLJlL0jBWh8vj9WVR4b11soRUmZZ48QSSp9WriynQL+pTuyC+3ukZqKeKxFlhz9znhQix4DQw
-	19oP3mTz6FCvyQqPccxnGGwVYZTvL3vptz2et3xciYpKs8OulPMoXxguichGSYh2s+kMa2Mjlo9
-	Hqplnifajc40M9uXpVJ9Jh+07pxGl5+esYc7voymizqzCoo=
-X-Google-Smtp-Source: AGHT+IFQo8xzQ94CgaklwWkOTUBMlFg9l5Wqvm7POmCkzaGuaqB1WbSYEchbGaMfjn/MbKEPCg+lxA==
-X-Received: by 2002:a05:600c:a4b:b0:434:fa55:eb56 with SMTP id 5b1f17b1804b1-43924987b41mr101980005e9.7.1739180903971;
-        Mon, 10 Feb 2025 01:48:23 -0800 (PST)
-Received: from [192.168.108.121] (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4391d5283b2sm145015155e9.0.2025.02.10.01.48.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Feb 2025 01:48:23 -0800 (PST)
-Message-ID: <17a9044d-4bab-40df-a119-8c43ebd60bc2@freebox.fr>
-Date: Mon, 10 Feb 2025 10:48:23 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gK4IzSh7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F4AC4CEE8;
+	Mon, 10 Feb 2025 10:18:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1739182703;
+	bh=hdD/lkpi+9/YArLnX7wjSWSXiDV5h4tehxtqm9TMWBI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=gK4IzSh74oV/PMAN1TbaccYqTPFi0h7UTglCsSjtFjav+ORarQK5IRT46evSWva6X
+	 07YtQDeu5hNh5+LuXZdxzhxqUUf7hPym0CUnuozXL+jyGKdXh2xUmq2ORwSiav4IT/
+	 0O6N+IWb2GebzH6YXE9aMoZLamQSZgGy9911O83PB1J8q0h1u+330BIQcFezeBuHZi
+	 5Jiehf+kgxw4ln6Ze+buR8B8MIST3xzDTrT5uyHH5iwnf7SuTHI4LEP/DExaZypRi8
+	 xsMrti9j4f7prV6w/bHTjKccBfsgwfe2YvwohgqCYFN/kyHLiDo7GZupseF4HqNdke
+	 xJ6Q3mH0tkwPw==
+Received: from mchehab by mail.kernel.org with local (Exim 4.98)
+	(envelope-from <mchehab+huawei@kernel.org>)
+	id 1thQrt-00000006CiO-43NZ;
+	Mon, 10 Feb 2025 11:18:21 +0100
+From: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+	"Jonathan Corbet" <corbet@lwn.net>,
+	"Mauro Carvalho Chehab" <mchehab+huawei@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 04/27] ABI: sysfs-class-rfkill: fix kernelversion tags
+Date: Mon, 10 Feb 2025 11:17:53 +0100
+Message-ID: <b2e38f7857e8fddad03401a2ae6c5af5ca8db507.1739182025.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <cover.1739182025.git.mchehab+huawei@kernel.org>
+References: <cover.1739182025.git.mchehab+huawei@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Pablo MARTIN-GOMEZ <pmartin-gomez@freebox.fr>
-Subject: Re: [PATCH] ieee80211: fix interopt issue with MT7927 chipset
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20250120114551.1542812-1-pmartin-gomez@freebox.fr>
-Content-Language: en-US
-In-Reply-To: <20250120114551.1542812-1-pmartin-gomez@freebox.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 
-On 20/01/2025 12:45, Pablo Martin-Gomez wrote:
-> -	/* on 2.4 GHz, if it supports 40 MHz, the result is 3 */
-> -	if (he_cap->phy_cap_info[0] &
-> -	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G)
-> -		return 3;
-> +	/* 20 MHz-only non-AP STA */
-> +	if (!from_ap && (he_cap->phy_cap_info[0] &
-> +	    (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
-> +	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G |
-> +	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
-> +	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)) == 0)
-> +		return 4;
->   
-> -	/* on 2.4 GHz, these three bits are reserved, so should be 0 */
->   	if (he_cap->phy_cap_info[0] &
-> -	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G)
-> +	    (IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G |
-> +	     IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
->   		count += 3;
->   
->   	if (he_cap->phy_cap_info[0] &
+Some kernelversion tags are missing colons. Add them to comply with
+ABI description and produce right results when converted to html/pdf.
 
-This patch is still reading reserved bits depending on the band being 
-used. I wanted to do a new version of the patch to avoid doing that by 
-passing the current band to ieee80211_eht_mcs_nss_size(). Unfortunately, 
-ieee80211_eht_mcs_nss_size() is called by ieee80211_eht_capa_size_ok() 
-which itself is called in places where the band is not known. So I'm not 
-sure I can do better than this.
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+---
+ Documentation/ABI/removed/sysfs-class-rfkill |  2 +-
+ Documentation/ABI/stable/sysfs-class-rfkill  | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Best regards,
-
-Pablo MG
+diff --git a/Documentation/ABI/removed/sysfs-class-rfkill b/Documentation/ABI/removed/sysfs-class-rfkill
+index f25174eafd55..20cb688af173 100644
+--- a/Documentation/ABI/removed/sysfs-class-rfkill
++++ b/Documentation/ABI/removed/sysfs-class-rfkill
+@@ -4,7 +4,7 @@ For details to this subsystem look at Documentation/driver-api/rfkill.rst.
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/claim
+ Date:		09-Jul-2007
+-KernelVersion	v2.6.22
++KernelVersion:	v2.6.22
+ Contact:	linux-wireless@vger.kernel.org
+ Description:	This file was deprecated because there no longer was a way to
+ 		claim just control over a single rfkill instance.
+diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
+index 037979f7dc4b..67b605e3dd16 100644
+--- a/Documentation/ABI/stable/sysfs-class-rfkill
++++ b/Documentation/ABI/stable/sysfs-class-rfkill
+@@ -16,7 +16,7 @@ Description: 	The rfkill class subsystem folder.
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/name
+ Date:		09-Jul-2007
+-KernelVersion	v2.6.22
++KernelVersion:	v2.6.22
+ Contact:	linux-wireless@vger.kernel.org
+ Description: 	Name assigned by driver to this key (interface or driver name).
+ Values: 	arbitrary string.
+@@ -24,7 +24,7 @@ Values: 	arbitrary string.
+ 
+ What: 		/sys/class/rfkill/rfkill[0-9]+/type
+ Date:		09-Jul-2007
+-KernelVersion	v2.6.22
++KernelVersion:	v2.6.22
+ Contact:	linux-wireless@vger.kernel.org
+ Description: 	Driver type string ("wlan", "bluetooth", etc).
+ Values: 	See include/linux/rfkill.h.
+@@ -32,7 +32,7 @@ Values: 	See include/linux/rfkill.h.
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/persistent
+ Date:		09-Jul-2007
+-KernelVersion	v2.6.22
++KernelVersion:	v2.6.22
+ Contact:	linux-wireless@vger.kernel.org
+ Description: 	Whether the soft blocked state is initialised from non-volatile
+ 		storage at startup.
+@@ -44,7 +44,7 @@ Values: 	A numeric value:
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/state
+ Date:		09-Jul-2007
+-KernelVersion	v2.6.22
++KernelVersion:	v2.6.22
+ Contact:	linux-wireless@vger.kernel.org
+ Description: 	Current state of the transmitter.
+ 		This file was scheduled to be removed in 2014, but due to its
+@@ -67,7 +67,7 @@ Values: 	A numeric value.
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/hard
+ Date:		12-March-2010
+-KernelVersion	v2.6.34
++KernelVersion:	v2.6.34
+ Contact:	linux-wireless@vger.kernel.org
+ Description: 	Current hardblock state. This file is read only.
+ Values: 	A numeric value.
+@@ -81,7 +81,7 @@ Values: 	A numeric value.
+ 
+ What:		/sys/class/rfkill/rfkill[0-9]+/soft
+ Date:		12-March-2010
+-KernelVersion	v2.6.34
++KernelVersion:	v2.6.34
+ Contact:	linux-wireless@vger.kernel.org
+ Description:	Current softblock state. This file is read and write.
+ Values: 	A numeric value.
+-- 
+2.48.1
 
