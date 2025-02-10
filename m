@@ -1,315 +1,244 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC0A022F391;
-	Mon, 10 Feb 2025 13:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB8271C07D8
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2025 13:50:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739194320; cv=none; b=LiMp/ul9ghd8BpfBLLI0O3n2NFTiB7CQ9j2F59D48vlfN1CLN5OGxQaeXmR11xtlg3wES34m8H5dL+Ht/gWXQOdyHNV47X7iOKFEnBOFjtzUqn5FKrztUj+LCC1pp14Q/ZMREBsxYI9bFRH07IjsGMZQuOcW9/+cL3KESaK+1Ro=
+	t=1739195441; cv=none; b=R5iz5TVZTm7tRn4W4PVeg69QyJudCgjzxgGsrhaIqmcxbQuzMpFbZpvpfm+tqCLOcVi4+zXpoC+HmdzIZRCSXbPknxU2vSWt8XKUotxtn1LzXKH6iw0gGE9UoYeutr6c5B4dy01+SHfEvfW0wztOZg58NvhwoOPB3KWvBAuJfNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739194320; c=relaxed/simple;
-	bh=S62S2UlhWL8rb4qI3arpOLtfToV24VE5G0QJtgwZSd0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OQWXBtUbYnThfG/6OAitlzsAJkwhJMESV/xx0bHz9AhJD4/BcWDYvERLKeOUDXnuR7BIcDzeDmN+OW7Q5RPjlAGtE+nP/TnLEw3AjBMYcwHZ6jkWjINbOnXycgMllofNljnH1dy9hhfmBVX4mVSZQflgbqbQCRkIi4Agodxplfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nffdMbBG; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1739195441; c=relaxed/simple;
+	bh=DKEoPLdrdrGN9NYJLSxi7YhFVgcfDlUvH3Pk2bNSW2Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=A4ViiFZX9CCmsKPVQXzDtkRfohbUr3D9VluRXx/CApjNQNvndawyZ3vkCkPfQmh8gn6ZaYh05ive03EOb0q2NTBrsq65YCC4XYMRSEFjxFyGphsmsjl02MmW5mtH9KlSVyoxfMgHwrq8VI2C+5texMDrgzvgO3NHpHXNtfNFNLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=IezBZhJ9; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nffdMbBG"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-21f2f386cbeso79691785ad.0;
-        Mon, 10 Feb 2025 05:31:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1739194317; x=1739799117; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Jk0dxyoWsu5lRO3R+Rz0JbRWJlXzABQyZSbO//NLaUs=;
-        b=nffdMbBGq5lRsBHSKBMadMqqfvyNNIlS/Cwc0MJ8f5IjZ0ZM8CJ7MDNWwGKkIkPLwD
-         sNoBNIOiI1IijsKGyf5LY6Y+C+5qhsDvy1UGnLTF/Duy4nMS5gddV4vec1jGHXSHWg6s
-         3lkEXfN8NNhZFk4QQ8s9Ih0qRK1w6wiyPMM2lXv4yuIgZaSKFo5iEJHrtjDTkvO/C1U+
-         zXGPLiaOJY3eCP0eey8tTDFg4SlZUIljtNUGx0ODDjT7JctZHM00Qnh0Mw2IxDxO1KEd
-         lFr7THRh2MguPSVDWqrG99FzeT6AqvaLCgEB5AhQFFU3ObQXPskEWG/qKj7xhKLf+0Zd
-         zoKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739194317; x=1739799117;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Jk0dxyoWsu5lRO3R+Rz0JbRWJlXzABQyZSbO//NLaUs=;
-        b=Sh9kWjIkqyYtZ22e9ExP4Ov/74UYvtpEw1RZIRf/efSdISDm9H7v7rkFZocUtrqD38
-         uvkO7M+1rHAzW0I+76wsxAzKKrgmjhXLkFpIgp0BUEqju5/eLqGMo4UFUWvNQsx/iTSP
-         DsF5rE8MjuDH0uNH4KSibkyscog4TAbUgArFjBv35qrRImTwyTCCXhCKlxwQ1akRpU4H
-         gs58jqSuslrHYHPY9L5hFxS3crDMQZ6RohZQG92SfLpfGZr8mInwBc1jQEruIfWApRuO
-         cr1e7mqTBcnd4cE6r+Xzu/1shjut3znfcF14I/8+D4hqnGAC+5rOa2dYpNolENshCFn1
-         m+8g==
-X-Forwarded-Encrypted: i=1; AJvYcCUrK+VWuoYr6B/Ne4jB1R2ZUPbpyMS0YldA+a1u+J5VpPGZXAJBhWja8/HI8Ia2pNx6EFxFD2Mc+ARO@vger.kernel.org, AJvYcCVOJ61EGvPjXK6udrbZiqXTrfAYEOrXjv96hA887G1RS7DpzAUhibkPLparCSk2B/SGqSOTPu7YTvW//Ncokfn1@vger.kernel.org, AJvYcCW9QrpdJDp2XMn/coPc4/h0ex9HU6Ceq1AkVOSu2HP3mrRf4Dh6rEq2om4AdNyAIRA224U=@vger.kernel.org, AJvYcCWA3IQTOFw19Q6Id2o+2eyHuF2iWZmx+Wo7wsH4EeeTMeneszkBu7vAA5xVf/b/M4IbS3WzwyrMFXpnZQ==@vger.kernel.org, AJvYcCWRySya22sXNlPKrzo9fVmhjs9finoANLKgbAdaU0mS1AmJGQtTHe9HxDjU+DE8c7aJ4OKnQ1o0tVemaL9Y@vger.kernel.org, AJvYcCWrFw9uYdgUHpAZIWqjoQGokJGCysqoEcMAdbI8WoEcdbajJr6Ns3Ozh9Hia+d2NdJgEEaN48xj9kXmRw==@vger.kernel.org, AJvYcCX545YPGlgLOGcxOsqSPBvyB7I/8QklTCYXoCY8phm9K4fdAUWH2xftH8J99DgYr8zYqzG2PbOsrwP/lBsLt3k=@vger.kernel.org, AJvYcCXPM/5ENZCrCHopPOZDzn11LWCRT4ENN+T64+SDSTTGRExoTgY03cMmVqJWmQzpPUuMFpxvg3J1dgp4@vger.kernel.org
-X-Gm-Message-State: AOJu0YwlylsSwM8ldxxANAExZ339B+4vX1jUewGqZxYAv9gMlKDgKsGc
-	2jGBSZUdNyzQaefRl8IdsNmqeh3Po3Wk64YMWhdB/oMP0GyyxkuHorJPcQ34x7A=
-X-Gm-Gg: ASbGncsY6uiUeM/oeYV3ChmbIgycsUXFyrQrOlNhUOE6FWKtOsfQh8FHZ9qsiCmwrnS
-	ML4rm9MSF4kU92WVf/gy+ctkZP1vzU+qBMVbkZfQkuMag25JtCAUVfClMRJPG7JMDQWdROIgrbY
-	ZelWqnAvsFWlXMSJV7UrLE5z5ZF9bKjYWxpXycCRHftztss7OkvxcgY84Ysc7SRYe3m8vFNjx8a
-	CzmfrYymaX5FfwyPRk708YyJFDdN4BaoSk5mK0FH7pHuxLzh3Kh+RV7S5ATocB0RIeIYRrEWxZW
-	3ky8wQ==
-X-Google-Smtp-Source: AGHT+IFvHDtUC7UviecjfNl3hpHTbMhh0EOi41PhfMqFPmLkJsOvzu+7RGuTxjt6Zfs/TZjuhdiWxA==
-X-Received: by 2002:a17:902:f60a:b0:21e:feac:8b99 with SMTP id d9443c01a7336-21f4e10da1bmr232900525ad.0.1739194317162;
-        Mon, 10 Feb 2025 05:31:57 -0800 (PST)
-Received: from ws.. ([103.167.140.11])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21f3653af3bsm78799445ad.57.2025.02.10.05.31.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Feb 2025 05:31:56 -0800 (PST)
-From: Xiao Liang <shaw.leon@gmail.com>
-To: netdev@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Kuniyuki Iwashima <kuniyu@amazon.com>,
-	Jakub Kicinski <kuba@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	David Ahern <dsahern@kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Simon Horman <horms@kernel.org>,
-	Shuah Khan <shuah@kernel.org>,
-	Donald Hunter <donald.hunter@gmail.com>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Stefan Schmidt <stefan@datenfreihafen.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Steffen Klassert <steffen.klassert@secunet.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	linux-rdma@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	osmocom-net-gprs@lists.osmocom.org,
-	bpf@vger.kernel.org,
-	linux-ppp@vger.kernel.org,
-	wireguard@lists.zx2c4.com,
-	linux-wireless@vger.kernel.org,
-	b.a.t.m.a.n@lists.open-mesh.org,
-	bridge@lists.linux.dev,
-	linux-wpan@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH net-next v9 11/11] selftests: net: Add test cases for link and peer netns
-Date: Mon, 10 Feb 2025 21:30:02 +0800
-Message-ID: <20250210133002.883422-12-shaw.leon@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250210133002.883422-1-shaw.leon@gmail.com>
-References: <20250210133002.883422-1-shaw.leon@gmail.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="IezBZhJ9"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51A8h5VY015701;
+	Mon, 10 Feb 2025 13:50:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	izAZ47/J8OLX0F+QPE3KgdL1yhaG7hVSK5i+tO6h29M=; b=IezBZhJ9REwXNtZD
+	3fokGFoP1l/DSWLh3NwYamCfOC8xoDDEPm4znlbsPfNSrq207FKhDzuGOqcomYuZ
+	O0p9WykQu32IqTUoZSiMyYgSuexKJGcGyQ20FffEevpCaf2trZEbNhH2CfcRMll0
+	M5/tdATAwNNmn0VLInDpCKdJkgxADuh25hReoG7XNu41raoVTVAIKifLSAJm1OkD
+	8O3zAsS3t65C22C7uVh2/nExdBBZ/Xq+BRrdRWohZNJ9K1mATBQrfGS2FN3FwGWt
+	21hApWX4EeNxVPQ5ce0s+oBkUpzMs1z4dBVW9ywrKO0JW2R7BdWfqoaWzeCH//Gu
+	fdEsGg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44qe6nrtcn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 10 Feb 2025 13:50:35 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51ADoYQl005131
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 10 Feb 2025 13:50:34 GMT
+Received: from [10.216.14.138] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 10 Feb
+ 2025 05:50:31 -0800
+Message-ID: <a825284b-431f-696b-3f76-f13763e46438@quicinc.com>
+Date: Mon, 10 Feb 2025 19:20:26 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v9 2/9] wifi: ath12k: Add HAL_PHYRX_GENERIC_EHT_SIG TLV
+ parsing support
+To: Mahendran P <quic_mahep@quicinc.com>, <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, P Praneesh <quic_ppranees@quicinc.com>,
+        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+References: <20250206013854.174765-1-quic_periyasa@quicinc.com>
+ <20250206013854.174765-3-quic_periyasa@quicinc.com>
+ <7a27d2d0-6630-f074-b426-04b199f3821d@quicinc.com>
+Content-Language: en-US
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+In-Reply-To: <7a27d2d0-6630-f074-b426-04b199f3821d@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: MY_zXsDh3V241IGcpFYYMWzeHIljt2EV
+X-Proofpoint-ORIG-GUID: MY_zXsDh3V241IGcpFYYMWzeHIljt2EV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-10_08,2025-02-10_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ phishscore=0 mlxlogscore=999 impostorscore=0 suspectscore=0
+ lowpriorityscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2501170000 definitions=main-2502100115
 
- - Add test for creating link in another netns when a link of the same
-   name and ifindex exists in current netns.
- - Add test to verify that link is created in target netns directly -
-   no link new/del events should be generated in link netns or current
-   netns.
- - Add test cases to verify that link-netns is set as expected for
-   various drivers and combination of namespace-related parameters.
 
-Signed-off-by: Xiao Liang <shaw.leon@gmail.com>
----
- tools/testing/selftests/net/Makefile      |   1 +
- tools/testing/selftests/net/config        |   5 +
- tools/testing/selftests/net/link_netns.py | 141 ++++++++++++++++++++++
- tools/testing/selftests/net/netns-name.sh |  10 ++
- 4 files changed, 157 insertions(+)
- create mode 100755 tools/testing/selftests/net/link_netns.py
 
-diff --git a/tools/testing/selftests/net/Makefile b/tools/testing/selftests/net/Makefile
-index 73ee88d6b043..df07a38f884f 100644
---- a/tools/testing/selftests/net/Makefile
-+++ b/tools/testing/selftests/net/Makefile
-@@ -35,6 +35,7 @@ TEST_PROGS += cmsg_so_mark.sh
- TEST_PROGS += cmsg_so_priority.sh
- TEST_PROGS += cmsg_time.sh cmsg_ipv6.sh
- TEST_PROGS += netns-name.sh
-+TEST_PROGS += link_netns.py
- TEST_PROGS += nl_netdev.py
- TEST_PROGS += srv6_end_dt46_l3vpn_test.sh
- TEST_PROGS += srv6_end_dt4_l3vpn_test.sh
-diff --git a/tools/testing/selftests/net/config b/tools/testing/selftests/net/config
-index 5b9baf708950..ab55270669ec 100644
---- a/tools/testing/selftests/net/config
-+++ b/tools/testing/selftests/net/config
-@@ -107,3 +107,8 @@ CONFIG_XFRM_INTERFACE=m
- CONFIG_XFRM_USER=m
- CONFIG_IP_NF_MATCH_RPFILTER=m
- CONFIG_IP6_NF_MATCH_RPFILTER=m
-+CONFIG_IPVLAN=m
-+CONFIG_CAN=m
-+CONFIG_CAN_DEV=m
-+CONFIG_CAN_VXCAN=m
-+CONFIG_NETKIT=y
-diff --git a/tools/testing/selftests/net/link_netns.py b/tools/testing/selftests/net/link_netns.py
-new file mode 100755
-index 000000000000..aab043c59d69
---- /dev/null
-+++ b/tools/testing/selftests/net/link_netns.py
-@@ -0,0 +1,141 @@
-+#!/usr/bin/env python3
-+# SPDX-License-Identifier: GPL-2.0
-+
-+import time
-+
-+from lib.py import ksft_run, ksft_exit, ksft_true
-+from lib.py import ip
-+from lib.py import NetNS, NetNSEnter
-+from lib.py import RtnlFamily
-+
-+
-+LINK_NETNSID = 100
-+
-+
-+def test_event() -> None:
-+    with NetNS() as ns1, NetNS() as ns2:
-+        with NetNSEnter(str(ns2)):
-+            rtnl = RtnlFamily()
-+
-+        rtnl.ntf_subscribe("rtnlgrp-link")
-+
-+        ip(f"netns set {ns2} {LINK_NETNSID}", ns=str(ns1))
-+        ip(f"link add netns {ns1} link-netnsid {LINK_NETNSID} dummy1 type dummy")
-+        ip(f"link add netns {ns1} dummy2 type dummy", ns=str(ns2))
-+
-+        ip("link del dummy1", ns=str(ns1))
-+        ip("link del dummy2", ns=str(ns1))
-+
-+        time.sleep(1)
-+        rtnl.check_ntf()
-+        ksft_true(rtnl.async_msg_queue.empty(),
-+                  "Received unexpected link notification")
-+
-+
-+def validate_link_netns(netns, ifname, link_netnsid) -> bool:
-+    link_info = ip(f"-d link show dev {ifname}", ns=netns, json=True)
-+    if not link_info:
-+        return False
-+    return link_info[0].get("link_netnsid") == link_netnsid
-+
-+
-+def test_link_net() -> None:
-+    configs = [
-+        # type, common args, type args, fallback to dev_net
-+        ("ipvlan", "link dummy1", "", False),
-+        ("macsec", "link dummy1", "", False),
-+        ("macvlan", "link dummy1", "", False),
-+        ("macvtap", "link dummy1", "", False),
-+        ("vlan", "link dummy1", "id 100", False),
-+        ("gre", "", "local 192.0.2.1", True),
-+        ("vti", "", "local 192.0.2.1", True),
-+        ("ipip", "", "local 192.0.2.1", True),
-+        ("ip6gre", "", "local 2001:db8::1", True),
-+        ("ip6tnl", "", "local 2001:db8::1", True),
-+        ("vti6", "", "local 2001:db8::1", True),
-+        ("sit", "", "local 192.0.2.1", True),
-+        ("xfrm", "", "if_id 1", True),
-+    ]
-+
-+    with NetNS() as ns1, NetNS() as ns2, NetNS() as ns3:
-+        net1, net2, net3 = str(ns1), str(ns2), str(ns3)
-+
-+        # prepare link netnsid  and a dummy link needed by certain drivers
-+        ip(f"netns set {net3} {LINK_NETNSID}", ns=str(net2))
-+        ip("link add dummy1 type dummy", ns=net3)
-+
-+        cases = [
-+            # source, "netns", "link-netns", expected link-netns
-+            (net3, None, None, None, None),
-+            (net3, net2, None, None, LINK_NETNSID),
-+            (net2, None, net3, LINK_NETNSID, LINK_NETNSID),
-+            (net1, net2, net3, LINK_NETNSID, LINK_NETNSID),
-+        ]
-+
-+        for src_net, netns, link_netns, exp1, exp2 in cases:
-+            tgt_net = netns or src_net
-+            for typ, cargs, targs, fb_dev_net in configs:
-+                cmd = "link add"
-+                if netns:
-+                    cmd += f" netns {netns}"
-+                if link_netns:
-+                    cmd += f" link-netns {link_netns}"
-+                cmd += f" {cargs} foo type {typ} {targs}"
-+                ip(cmd, ns=src_net)
-+                if fb_dev_net:
-+                    ksft_true(validate_link_netns(tgt_net, "foo", exp1),
-+                              f"{typ} link_netns validation failed")
-+                else:
-+                    ksft_true(validate_link_netns(tgt_net, "foo", exp2),
-+                              f"{typ} link_netns validation failed")
-+                ip(f"link del foo", ns=tgt_net)
-+
-+
-+def test_peer_net() -> None:
-+    types = [
-+        "vxcan",
-+        "netkit",
-+        "veth",
-+    ]
-+
-+    with NetNS() as ns1, NetNS() as ns2, NetNS() as ns3, NetNS() as ns4:
-+        net1, net2, net3, net4 = str(ns1), str(ns2), str(ns3), str(ns4)
-+
-+        ip(f"netns set {net3} {LINK_NETNSID}", ns=str(net2))
-+
-+        cases = [
-+            # source, "netns", "link-netns", "peer netns", expected
-+            (net1, None, None, None, None),
-+            (net1, net2, None, None, None),
-+            (net2, None, net3, None, LINK_NETNSID),
-+            (net1, net2, net3, None, None),
-+            (net2, None, None, net3, LINK_NETNSID),
-+            (net1, net2, None, net3, LINK_NETNSID),
-+            (net2, None, net2, net3, LINK_NETNSID),
-+            (net1, net2, net4, net3, LINK_NETNSID),
-+        ]
-+
-+        for src_net, netns, link_netns, peer_netns, exp in cases:
-+            tgt_net = netns or src_net
-+            for typ in types:
-+                cmd = "link add"
-+                if netns:
-+                    cmd += f" netns {netns}"
-+                if link_netns:
-+                    cmd += f" link-netns {link_netns}"
-+                cmd += f" foo type {typ}"
-+                if peer_netns:
-+                    cmd += f" peer netns {peer_netns}"
-+                ip(cmd, ns=src_net)
-+                ksft_true(validate_link_netns(tgt_net, "foo", exp),
-+                          f"{typ} peer_netns validation failed")
-+                ip(f"link del foo", ns=tgt_net)
-+
-+
-+def main() -> None:
-+    ksft_run([test_event, test_link_net, test_peer_net])
-+    ksft_exit()
-+
-+
-+if __name__ == "__main__":
-+    main()
-diff --git a/tools/testing/selftests/net/netns-name.sh b/tools/testing/selftests/net/netns-name.sh
-index 6974474c26f3..0be1905d1f2f 100755
---- a/tools/testing/selftests/net/netns-name.sh
-+++ b/tools/testing/selftests/net/netns-name.sh
-@@ -78,6 +78,16 @@ ip -netns $NS link show dev $ALT_NAME 2> /dev/null &&
-     fail "Can still find alt-name after move"
- ip -netns $test_ns link del $DEV || fail
- 
-+#
-+# Test no conflict of the same name/ifindex in different netns
-+#
-+ip -netns $NS link add name $DEV index 100 type dummy || fail
-+ip -netns $NS link add netns $test_ns name $DEV index 100 type dummy ||
-+    fail "Can create in netns without moving"
-+ip -netns $test_ns link show dev $DEV >> /dev/null || fail "Device not found"
-+ip -netns $NS link del $DEV || fail
-+ip -netns $test_ns link del $DEV || fail
-+
- echo -ne "$(basename $0) \t\t\t\t"
- if [ $RET_CODE -eq 0 ]; then
-     echo "[  OK  ]"
+On 2/10/2025 4:23 PM, Mahendran P wrote:
+> On 2/6/2025 7:08 AM, Karthikeyan Periyasamy wrote:
+>> Currently, monitor is not enabled. However, in the future, the monitor
+>> will be enabled. Therefore, add the necessary HAL_PHYRX_GENERIC_EHT_SIG
+>> TLV parsing support in monitor Rx path, which help to populate the EHT
+>> radiotap data.
+>>
+>> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+>> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+>>
+>> Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
+>> Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+>> Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+>> Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+>> ---
+>>   drivers/net/wireless/ath/ath12k/dp_mon.c | 548 +++++++++++++++++++++--
+>>   drivers/net/wireless/ath/ath12k/hal_rx.h | 136 +++++-
+>>   2 files changed, 638 insertions(+), 46 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+>> index 61fd481b7a3b..dd17607d470d 100644
+>> --- a/drivers/net/wireless/ath/ath12k/dp_mon.c
+>> +++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+>> @@ -13,6 +13,9 @@
+>>   #define ATH12K_LE32_DEC_ENC(value, dec_bits, enc_bits)	\
+>>   		u32_encode_bits(le32_get_bits(value, dec_bits), enc_bits)
+>>   
+>> +#define ATH12K_LE64_DEC_ENC(value, dec_bits, enc_bits) \
+>> +		u32_encode_bits(le64_get_bits(value, dec_bits), enc_bits)
+> 
+> u64_encode_bits?
+> 
+
+No, Its not needed. Here we need to decode from the u64 and get assign 
+to u32 as defined by eht radiotap header.
+
+
+>> @@ -836,6 +1239,9 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k *ar,
+>>   		case HAL_RX_PREAMBLE_11AX:
+>>   			ppdu_info->he_flags = 1;
+>>   			break;
+>> +		case HAL_RX_PREAMBLE_11BE:
+>> +			ppdu_info->is_eht = true;
+>> +			break;
+>>   		default:
+>>   			break;
+>>   		}
+>> @@ -961,6 +1367,21 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k *ar,
+>>   	case HAL_PHYRX_GENERIC_U_SIG:
+>>   		ath12k_dp_mon_hal_rx_parse_u_sig_hdr(tlv_data, ppdu_info);
+>>   		break;
+>> +	case HAL_PHYRX_GENERIC_EHT_SIG:
+>> +		/* Handle the case where aggregation is in progress
+>> +		 * or the current TLV is one of the TLVs which should be
+>> +		 * aggregated
+>> +		 */
+>> +		if (!ppdu_info->tlv_aggr.in_progress) {
+>> +			ppdu_info->tlv_aggr.in_progress = true;
+>> +			ppdu_info->tlv_aggr.tlv_tag = tlv_tag;
+>> +			ppdu_info->tlv_aggr.cur_len = 0;
+>> +		}
+>> +
+>> +		ppdu_info->is_eht = true;
+>> +
+>> +		ath12k_dp_mon_hal_aggr_tlv(ppdu_info, tlv_len, tlv_data);
+>> +		break;
+>>   	case HAL_DUMMY:
+>>   		return HAL_RX_MON_STATUS_BUF_DONE;
+>>   	case HAL_RX_PPDU_END_STATUS_DONE:
+>> @@ -1158,22 +1579,59 @@ static void ath12k_dp_mon_update_radiotap(struct ath12k *ar,
+>>   		rxs->ampdu_reference = ampdu_id;
+>>   	}
+>>   
+>> -	if (ppduinfo->eht_usig) {
+>> +	if (ppduinfo->is_eht || ppduinfo->eht_usig) {
+>>   		struct ieee80211_radiotap_tlv *tlv;
+>> +		struct ieee80211_radiotap_eht *eht;
+>>   		struct ieee80211_radiotap_eht_usig *usig;
+>> -		u16 len = sizeof(*usig);
+>> +		u16 len = 0, i, eht_len, usig_len;
+>> +		u8 user;
+>> +
+>> +		if (ppduinfo->is_eht) {
+>> +			eht_len = struct_size(eht,
+>> +					      user_info,
+>> +					      ppduinfo->eht_info.num_user_info);
+>> +			len += sizeof(*tlv) + eht_len;
+>> +		}
+>> +
+>> +		if (ppduinfo->eht_usig) {
+>> +			usig_len = sizeof(*usig);
+>> +			len += sizeof(*tlv) + usig_len;
+>> +		}
+>>   
+>>   		rxs->flag |= RX_FLAG_RADIOTAP_TLV_AT_END;
+>>   		rxs->encoding = RX_ENC_EHT;
+>>   
+>>   		skb_reset_mac_header(mon_skb);
+>>   
+>> -		tlv = skb_push(mon_skb, sizeof(*tlv) + len);
+>> -		tlv->type = cpu_to_le16(IEEE80211_RADIOTAP_EHT_USIG);
+>> -		tlv->len = cpu_to_le16(len);
+>> +		tlv = skb_push(mon_skb, len);
+>> +
+>> +		if (ppduinfo->is_eht) {
+>> +			tlv->type = cpu_to_le16(IEEE80211_RADIOTAP_EHT);
+>> +			tlv->len = cpu_to_le16(eht_len);
+>>   
+>> -		usig = (struct ieee80211_radiotap_eht_usig *)tlv->data;
+>> -		*usig = ppduinfo->usig;
+>> +			eht = (struct ieee80211_radiotap_eht *)tlv->data;
+>> +			eht->known = ppduinfo->eht_info.eht.known;
+>> +
+>> +			for (i = 0;
+>> +			     i < ARRAY_SIZE(eht->data) &&
+>> +			     i < ARRAY_SIZE(ppduinfo->eht_info.eht.data);
+>> +			     i++)
+>> +				eht->data[i] = ppduinfo->eht_info.eht.data[i];
+>> +
+>> +			for (user = 0; user < ppduinfo->eht_info.num_user_info; user++)
+>> +				put_unaligned_le32(ppduinfo->eht_info.user_info[user],
+>> +						   &eht->user_info[user]);
+>> +
+>> +			tlv = (struct ieee80211_radiotap_tlv *)&tlv->data[eht_len];
+>> +		}
+>> +
+>> +		if (ppduinfo->eht_usig) {
+>> +			tlv->type = cpu_to_le16(IEEE80211_RADIOTAP_EHT_USIG);
+>> +			tlv->len = cpu_to_le16(usig_len);
+>> +
+>> +			usig = (struct ieee80211_radiotap_eht_usig *)tlv->data;
+>> +			*usig = ppduinfo->u_sig_info.usig;
+>> +		}
+>>   	} else if (ppduinfo->he_mu_flags) {
+>>   		rxs->flag |= RX_FLAG_RADIOTAP_HE_MU;
+>>   		rxs->encoding = RX_ENC_HE;
+>> diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+>> index 2da16f27e76c..959f2283294c 100644
+>> --- a/drivers/net/wireless/ath/ath12k/hal_rx.h
+>> +++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
+>> @@ -71,6 +71,8 @@ enum hal_rx_preamble {
+>>   	HAL_RX_PREAMBLE_11N,
+>>   	HAL_RX_PREAMBLE_11AC,
+>>   	HAL_RX_PREAMBLE_11AX,
+>> +	HAL_RX_PREAMBLE_11BA,
+> 
+> is it needed?
+> 
+
+It will be good to have the defined values in the enum instead of 
+initialise the HAL_RX_PREAMBLE_11BE = 6 directly.
+
+>> +	HAL_RX_PREAMBLE_11BE,
+>>   	HAL_RX_PREAMBLE_MAX,
+>>   };
+>>   
+
 -- 
-2.48.1
-
+Karthikeyan Periyasamy
+--
+கார்த்திகேயன் பெரியசாமி
