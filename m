@@ -1,116 +1,94 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from resqmta-a2p-658780.sys.comcast.net (resqmta-a2p-658780.sys.comcast.net [96.103.146.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7608267AFB
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Feb 2025 22:26:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05F1E45027
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2025 01:27:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.103.146.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739312775; cv=none; b=VSKu52C2QVqhB7AfLoNoLexRHNLlY6HWy6yBpjorBArx1wt0acg1YAgUbsYIKwX3KHJXkBlhlqT7YCoiT9YyGKJW3NkwavK7JryJCjMTMfz+0Y6vSZVtbo5iKXdN9iLntvErx0oZgNeJ6Mb3OpSe2IQyzGeXYCeUX+cGktIl8YU=
+	t=1739323659; cv=none; b=hnC1INLiby4b0WCce8njVdZWIhIsdE8blZenTLpbacR8/FZ2G/Zihg1uThW3B0u59j00BhH8W0bNhGgAXQwWr5Ai00MnL9zsOTY4gVtNfd91nUQwrH3vyqTlGGR7/LuPuKuwupR8OMvGe4OMWL9OBDuuvFug41PEvd49AQ/KD+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739312775; c=relaxed/simple;
-	bh=WMQZ4G6KGSATIk2HAhb3UOeSAY7+nKsmS0IBKr1z/4Y=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=eKb0mvgsvuoos2sUHz+2znqXvURoQWKnjqEkr4neqk1JSyXF7PcmLww4u5MWfGP0Jl0ffuWjRJkIwOdrgaRcUan2Cw41flRHeVdMuWzoJ4z9XqbFLeyv7PuCyXxUyCj0jdvVGWidGhHxrScTgOC/oOtTrhHB0QkQB1MGSp76veA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gw7Es3nj; arc=none smtp.client-ip=209.85.218.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1739323659; c=relaxed/simple;
+	bh=huMXU5PkK5OaSxJhp+YkycjSdx7SpClR99y4NMzsgPU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FaSe6tJ6ONtc77MpbxyRUArTATwRr/tW4OYeOPVqtHdsW8hpCv/unJmRY1MsfHK1a4Zs85LUOY8iG26Ry6nNIbg2+KhCl6wJmgd4itd3jEqbEzErZVJQNETgnuxFXeVKby2cLJSPlc9KxDXOsowBGsSunomLtxfIUQIYgUV9odo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=comcast.net; spf=pass smtp.mailfrom=comcast.net; dkim=pass (2048-bit key) header.d=comcast.net header.i=@comcast.net header.b=1ssrvXkW; arc=none smtp.client-ip=96.103.146.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=comcast.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=comcast.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gw7Es3nj"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-ab7e9254bb6so133668866b.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Feb 2025 14:26:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1739312772; x=1739917572; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0fTULECwBuzzTX7pSLnSQoHxx4aAeFdJAs05MrYoVJg=;
-        b=gw7Es3njJTjkjbjDLCjr88g0nFCfOKu23LCIGnrijaS3yrWQywPU+MyiqSIc3VJke9
-         Viv8QRQtTdXL6kKz9qKYZp7fUN74/eEj9uhzA3yZuS7GKG8NC33rps2+zyuJ6PbZaZxw
-         3sa7a+f9o1T/7SRd/oIsaFUp9EeytWEC5Hoo3nLYKZRzygGaT3yoMiTbEml/aMKDIbyp
-         BdB1F0d/xgGR7IO6lqYrqhK3MaZ7BaylxLxJt2Nrgo0VAUKUlYWrY2ZjayVlonxqrZ95
-         ZOqviYKmdvDtwWaQpUNdFOfIvPZOQgBy97hkQ6OCdLXkDZrrS2umQ3qirw//QWbN1rrx
-         wg2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739312772; x=1739917572;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0fTULECwBuzzTX7pSLnSQoHxx4aAeFdJAs05MrYoVJg=;
-        b=ZJdD7/LrYt+jDVhIG4C+2oHOzRry8EMPd0+thaiDDhmPQhrcZU3E3IGt0N0urI+JiV
-         rIUXhZGuR5ok7QsbrveKdb7JwMZHFF4aCWupHo7t5LH9WaNtT+1I+s8U2F+Fy5q8DqtW
-         sYATF0NXustSMeJfXgwtANJnzMhAmtVMEEqPSD8KdqjE9JOaWThxRa0RsFJpGLrpw3b6
-         tLNIneXOKFj8G9r8MWc5iczf9hymky2ydmbagqHHfKFX/CH9hxmKvLnaxEdQMAYkIJ9k
-         t+Ng7tf/ZCLWaBKMJ+Hs5A6cRCHzIxxl/om1CiNyCVcK+eJp5J+CgRIepno9lr0LyxNt
-         N4Rw==
-X-Gm-Message-State: AOJu0Yy14y1MicOytyZ5zVu9Gi9nW4G/abarMxyH0AcbYPqaZrIfZbVQ
-	JpmvawkO7CFFFKGmLUeEpxO15L7+FbHdlINjHHudFGPmGvuGZJ/fZXq0KQ==
-X-Gm-Gg: ASbGncs5PpVmlLyCoO7sElSuZiIxDreVSo7yvNZpjrxnzkBri8lJvBIeOn+IwhNcXx7
-	fYy2C1rgJRy1T7qREzRUK3edIJhk9N+62NUFSpHld6NOFhZoaeOC/4CVSOwpyk7FBoEqtN6QWrY
-	qR8r/Ng/weJSmgmlesNz/g54F1ULSpBYsuJWk3Kad1dbKExs4dZvztAAn8cT4RDJQy0PiuyP+4F
-	iPAEX7wRqecg24juW8BZbBx2o24CYxXqJ12proBIW58N5xlNmGwufiaHnQccw7C/qHr8j447xkA
-	WEU8La7ZWsgp6SCV72YG/I8L
-X-Google-Smtp-Source: AGHT+IF4CuNeb/uBtwZKMJf0n2wp8/3yvZWxKaaJzIwsdFFCFn4EmKbYIKLaLSl7tPUk/bHJ0/ZqJQ==
-X-Received: by 2002:a17:907:94c5:b0:aac:619:e914 with SMTP id a640c23a62f3a-ab7f33b480amr77530666b.16.1739312772000;
-        Tue, 11 Feb 2025 14:26:12 -0800 (PST)
-Received: from [192.168.0.50] ([79.119.240.253])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab7e386014dsm188617966b.55.2025.02.11.14.26.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Feb 2025 14:26:11 -0800 (PST)
-Message-ID: <6bb6443a-3e2a-4cd4-83b9-34d2eb235654@gmail.com>
-Date: Wed, 12 Feb 2025 00:26:11 +0200
+	dkim=pass (2048-bit key) header.d=comcast.net header.i=@comcast.net header.b="1ssrvXkW"
+Received: from resomta-a2p-647975.sys.comcast.net ([96.103.145.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 256/256 bits)
+	(Client did not present a certificate)
+	by resqmta-a2p-658780.sys.comcast.net with ESMTPS
+	id i19utWe19mJX8i1Uqt1O6h; Wed, 12 Feb 2025 01:25:00 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=comcast.net;
+	s=20190202a; t=1739323500;
+	bh=sqsQOneILkPAi5s6Ecy2iy5+xQ+mWTe+ZD3pipY5ZnU=;
+	h=Received:Received:From:To:Subject:Date:Message-ID:MIME-Version:
+	 Xfinity-Spam-Result;
+	b=1ssrvXkWS5BeQIgIfdtTJqqxJhRgUQXrfOO95mYkU4cG4TFaDAmCkHWtAymswOEP1
+	 D89SFq+h9zqku0txnROyYHmbyTbzMq7qSnvhu1mNz56/BOGl49D3NnJfqp5naqNCzo
+	 rgF1rLm/bzj0cbMCwfqZLPrYQELa5okn7iO488AGN60aCTKqCDkX6poACpGygPcAc+
+	 oAuWFdAy12x78WhmDoN/GobspqKG5Xrh5+KQCptbgFCX1XhurIsJjbWYr8ITD+8uR+
+	 Xk5wKLLxL4iGMlhNNxAg63ml7vqo3QHBoF335I3sH5Y5kDpMwth+IYrzkbUjnef6nd
+	 r0JdZyPQnY+YQ==
+Received: from jack-livingood.hsd1.ca.comcast.net
+ ([IPv6:2601:647:4d81:b870::c894])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 256/256 bits)
+	(Client did not present a certificate)
+	by resomta-a2p-647975.sys.comcast.net with ESMTPSA
+	id i1UftMnGEnjISi1Uktf2bR; Wed, 12 Feb 2025 01:24:57 +0000
+From: jack Livingood <jacklivingood@comcast.net>
+To: sfr@canb.auug.org.au
+Cc: tiwai@suse.de,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Jack Livingood <jacklivingood@comcast.net>
+Subject: [PATCH 1/4] sounds: firewire: isight: changed strcpy to strscpy
+Date: Tue, 11 Feb 2025 17:23:46 -0800
+Message-ID: <20250212012346.83516-1-jacklivingood@comcast.net>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH 8/8] wifi: rtw88: Extend rtw_debugfs_get_tx_pwr_tbl() for
- RTL8814AU
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-References: <21111380-5db6-4a72-ace9-f18b5bcd525c@gmail.com>
-Content-Language: en-US
-In-Reply-To: <21111380-5db6-4a72-ace9-f18b5bcd525c@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CMAE-Envelope: MS4xfHAiJ30Wmtx29GpTwxjkHtaV2oqyinE5N36XH0KTPLa0/Vl93uTAar6MbtN8PmQ+0Ju2JbZd/uGT951ivvrvEg2y+Eo0bkZoSDFNlZ0k7wHcVy/vX7qR
+ 22ilMV4o4Md4T6iHXlC7v4UgCGLX+c1SpZe10h+QVmEofQ+9eUL3IoqziY+xlhInIV0rdJgy3zhIYJQbrGuLZDLOXY0iqO7CbuSKtfD61pwKCfFsGVEEH+hn
+ yiha/LRQ7ZhxRAsti0NzRljNwL8KHVGszK8ORpa+s6MYIEWIk5sPvBvarGBwvoq3GvFttBc5lDpq2HF9sV7OtvuFcVu+U+chVpDCUpOZ9UBPkClPtXrsr6RX
+ XgHuCXyRF8spZ4dkKC2nVRN+VBoF5FfpAxwiF66YBAAa//XrGnE=
 
-Make it print the TX power details for RF paths C and D, and for 3SS and
-4SS rates.
+From: Jack Livingood <jacklivingood@comcast.net>
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+fixed a spelling issue in the commit made previous
+
+Signed-off-by: Jack Livingood <jacklivingood@comcast.net>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ sound/firewire/isight.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 1adb03d1210a..0efb5c19b90e 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -708,20 +708,14 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
- 		   "path", "rate", "pwr", "base", "byr", "lmt", "sar", "rem");
+diff --git a/sound/firewire/isight.c b/sound/firewire/isight.c
+index 806f82c9ceee..e9617fc0a532 100644
+--- a/sound/firewire/isight.c
++++ b/sound/firewire/isight.c
+@@ -637,13 +637,13 @@ static int isight_probe(struct fw_unit *unit,
  
- 	mutex_lock(&hal->tx_power_mutex);
--	for (path = RF_PATH_A; path <= RF_PATH_B; path++) {
-+	for (path = RF_PATH_A; path <= RF_PATH_D; path++) {
- 		/* there is no CCK rates used in 5G */
- 		if (hal->current_band_type == RTW_BAND_5G)
- 			rate = DESC_RATE6M;
- 		else
- 			rate = DESC_RATE1M;
+ 	card->private_free = isight_card_free;
  
--		/* now, not support vht 3ss and vht 4ss*/
--		for (; rate <= DESC_RATEVHT2SS_MCS9; rate++) {
--			/* now, not support ht 3ss and ht 4ss*/
--			if (rate > DESC_RATEMCS15 &&
--			    rate < DESC_RATEVHT1SS_MCS0)
--				continue;
--
-+		for (; rate <= DESC_RATEVHT4SS_MCS9; rate++) {
- 			rtw_get_tx_power_params(rtwdev, path, rate, bw,
- 						ch, regd, &pwr_param);
+-	strcpy(card->driver, "iSight");
+-	strcpy(card->shortname, "Apple iSight");
++	strscpy(card->driver, "iSight");
++	strscpy(card->shortname, "Apple iSight");
+ 	snprintf(card->longname, sizeof(card->longname),
+ 		 "Apple iSight (GUID %08x%08x) at %s, S%d",
+ 		 fw_dev->config_rom[3], fw_dev->config_rom[4],
+ 		 dev_name(&unit->device), 100 << fw_dev->max_speed);
+-	strcpy(card->mixername, "iSight");
++	strscpy(card->mixername, "iSight");
  
+ 	err = isight_create_pcm(isight);
+ 	if (err < 0)
 -- 
 2.48.1
 
