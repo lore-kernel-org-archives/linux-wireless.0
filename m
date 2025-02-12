@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7A1205AA6
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2025 08:57:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 183C11D63C0
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Feb 2025 09:10:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739350668; cv=none; b=PuU6T7DLxlasLXjwuKj8wIAxTkDi/P1xZpPOMoiwQ3QC03Do1ffhrSdMQPaJR3ZoPm2NjPNkmU4p8B/ZShm85BO6MLzlOLlpbDRz3wRFNjg/p/rJX2IRfY9ol3cHFkBcU97WDzP4LjsErfHiK75OFocGN7TkA3gF3S+d38RCnsc=
+	t=1739351458; cv=none; b=Ie8VprSr6y0+4hOvBdkM7gfMZyGoR7BHNA91O8NcpzoUFllS9AAGVgzoOmzmSuqL2QmA8oT2eiJmN9u755wzF2zUpbl0mwqohCwzVDGPVUJIpfAM4apkHxPSP1n210vnZWoLswW+yAyw74Yz3DRF4K6oKk0cBa2r+Db5VwB/lJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739350668; c=relaxed/simple;
-	bh=AVqaqDgKTBD9UCgA5nDwYKhma1UIFvgSO+jt9SHCNsI=;
+	s=arc-20240116; t=1739351458; c=relaxed/simple;
+	bh=mx9RIlCZgzJ7uz/BeSuOXWrUXbBpNI8HQtY+HIUHhMU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=omoFXj7DmM3JJRy0GNhOgl0sqRiOmMEQjABQKGWQiIDc4/tOUGVBE/NeAOoe/hUvj/i8X7e/VJJH7ekOkBwe06930ua9oUy4h8foDwt3dF+Crl7qcsfTTeVARsSMC/xp9zCn9zkSTbYWqgYZA9zWK98NAJvyFfdLnOBxFmwlCpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cucnSEtC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=T6E2dhw+j/XKP84ST5ZENg5LXmK7YuRGGVodJaCoi+xSFvn4zX0Au1NRUGCpW77gmM5uMpJbeKzh0g+du9snUgKydB8kPETowN3IOUckD7XI8/IdE4MrIZghTB9WfmrD1CvSPJ7VKoNangxtUSHgNdhMxcufLru73pFz9uMUgS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BZbAF63R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cucnSEtC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF331C4CEDF;
-	Wed, 12 Feb 2025 08:57:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BZbAF63R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 635CBC4CEDF;
+	Wed, 12 Feb 2025 09:10:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739350668;
-	bh=AVqaqDgKTBD9UCgA5nDwYKhma1UIFvgSO+jt9SHCNsI=;
+	s=k20201202; t=1739351457;
+	bh=mx9RIlCZgzJ7uz/BeSuOXWrUXbBpNI8HQtY+HIUHhMU=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=cucnSEtCrn4bQMRCOzy6PRgEl4x1MupJwdAHyG6G6y6u/+mNm3aX0bFbhYQj2QVDp
-	 WHGqW80jR5JT0p4cB9eBaxgFZJ0K2mgN7llgZ2c0q0FZkgcal21HK4ae3dvaIpeSqY
-	 OCHgBvaqW6Ssf9cS2OxQfu6u+wWS70/+nPv+BZMOaNe2xvF03HXF6TM0Uee18nnAEi
-	 vqBtCJHzAjBlPkf8IL9ItDHXfwuHrgkxFl8ECUsBzXTUZMPSorUsEh1V7HxJPzSyRf
-	 iyBvGbQ5D8CwuCzF1SIbG70gaRJZlRoRU60d1D84kfiC6grf3Wd0GiNY8mqm5NI0ds
-	 Nk+SIEvD231VQ==
+	b=BZbAF63RFxKRcZlS6kP5HcuiOvJ8Qk15ohuX8qcbGiR3jAu4FgACIGs54VY3035LS
+	 lz7a8UaWuyquoglU5YhzPVIAs4jI44nIIgpSNWxHxQ1oziEQ8QYaHxeionQHTHYDxD
+	 wyRepqr5crJqeDZjsbiwiTlmzA1Cjyln5ixCzqr8QJ2vaxzwADOwIVzcbLKKUct44o
+	 L5mHCHti1ANtUreS42qmmo0KB5fdaO+7h5eEw4RO6nahtTEwtrHVuxHCMX9eaooRuV
+	 h15zZpCkVnkFUEXl6DWSRyuSfz3BogoaNN/EM7mPAX/Y0hCNcMxkcLruu9KrCm2qMV
+	 Wb+ohUVhGVkKQ==
 Received: from wens.tw (localhost [127.0.0.1])
-	by wens.tw (Postfix) with ESMTP id EFA255FB64;
-	Wed, 12 Feb 2025 16:57:44 +0800 (CST)
+	by wens.tw (Postfix) with ESMTP id 78CA35FA14;
+	Wed, 12 Feb 2025 17:10:54 +0800 (CST)
 From: Chen-Yu Tsai <wens@kernel.org>
 To: linux-wireless@vger.kernel.org, 
- =?utf-8?q?Robert_J=C3=B6rdens?= <rj@quartiq.de>
+ Jakob Riepler <jakob.riepler@paranoidlabs.org>
 Cc: wireless-regdb@lists.infradead.org
-In-Reply-To: <20250125011210.56371-1-rj@quartiq.de>
-References: <20250125011210.56371-1-rj@quartiq.de>
-Subject: Re: [PATCH] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band
- in ETSI/CEPT
-Message-Id: <173935066497.2471378.13516689980592599167.b4-ty@kernel.org>
-Date: Wed, 12 Feb 2025 16:57:44 +0800
+In-Reply-To: <20250129112554.27296-2-jakob.riepler@paranoidlabs.org>
+References: <20250129112554.27296-2-jakob.riepler@paranoidlabs.org>
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Austria
+ (AT)
+Message-Id: <173935145447.2475945.11593216402469454481.b4-ty@kernel.org>
+Date: Wed, 12 Feb 2025 17:10:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,25 +46,23 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
-On Sat, 25 Jan 2025 02:12:10 +0100, Robert Jördens wrote:
-> This increases the allowed bandwidth from 160 to 320 MHz for the
-> 5945-6425 MHz band to support 802.11be (Wi-Fi 7) EHT-320 for the
-> ETSI/CEPT harmonized countries (EU + CH/LI/NO and TR).
-> 
-> Previously the bandwidth limit was set to 160 MHz to match 802.11ax
-> (including the 6 GHz extension called Wi-Fi 6e). This limit is not
-> supported by the current regulatory documents and should be relaxed to
-> 320 MHz.
+On Wed, 29 Jan 2025 12:25:55 +0100, Jakob Riepler wrote:
+> According to the Austrian "Frequenznutzungsverordnung" Attachement 2
+> page 404
+> (https://www.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40251378/II_61_2023_Anlage_2.pdf),
+> Austria extended the usable range according to the EU SRD Band 75a (Implementing
+> decision 2019/1345, current consolidated version:
+> https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A02006D0771%2801%29-20220210&qid=1738145465756)
 > 
 > [...]
 
 Applied to master in wens/wireless-regdb.git, thanks!
 
-[1/1] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band in ETSI/CEPT
-      https://git.kernel.org/wens/wireless-regdb/c/6c7cbccaee12
+[1/1] wireless-regdb: Update regulatory rules for Austria (AT)
+      https://git.kernel.org/wens/wireless-regdb/c/f9f6b306a830
 
 Best regards,
 -- 
