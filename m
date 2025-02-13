@@ -1,55 +1,74 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4481B227EAE
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2025 13:45:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0141C22154E;
+	Thu, 13 Feb 2025 14:36:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739454325; cv=none; b=jj0dqJD4mZ2q1b9SGxq46X+/gbiDxBo7uGFRWC8smiKnRKx46W/Lt5b3oimkupa4k02fzRTanAlY7J3/uxI7gU2SskASQGHRtow+IU6ZrqQwaByTfLAWIwv1G/PAF+ioBpWfZtdpImOtuL+aJpw6EJTxkutxXALxGarkUWEj5BM=
+	t=1739457395; cv=none; b=TeZJDfThHVMc+qATS3775Uue3if41X/ykK7Y51YuNn+LRi+JpEQaqYyKUFi4eLVGoKKA91pSLSFMsoxg2nlzP5xnuf60egPFobD78eDmfPgSYdgTCrQvfEKEpJf+avyODdNdIzG/Ae0uSOSLm0GY5fsnLHQXriaf4io/xb83uLk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739454325; c=relaxed/simple;
-	bh=G26gZAp8vQrjQXoyEY74nTIBCXh9jZuCZI1ejdGjVYs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nPnnTbp8W4SHdlubxoWQsKbAa7OrYQyXl7ekxejDwvJdIJg6MlKl1KM2mf6NDLVpSlaMexoSJ+2KYU76uQ6YLZEEUrEY1t5l8SqAGaD4VoKDL5ckJEI6HKlPd48n3LrHorym3vSBY5+ZENg2Pxdr960JfT1opGcyMagZrPKg7u8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TlsqAbci; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1739457395; c=relaxed/simple;
+	bh=9E38dq9mGR1MYPwVS38VQSpnRQAMRh37n1Six6KCqa0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=gi1g2sI+p6WL0mfUpn8yCbPgXjKVYHnnEdYRGThQbwXhJa+QtI23Oj+c6x5P2mXKjmRTzcuG5cm4FEkmeLvOE9rm2ODol68Eike5JysllomtcaX6Gw1E1otsBDrxG+XxvqXn2VeS6LBIaskP07CaBU8UjqSPB+kktvabWhq6RPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I+hCG0Aq; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TlsqAbci"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1739454324; x=1770990324;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=G26gZAp8vQrjQXoyEY74nTIBCXh9jZuCZI1ejdGjVYs=;
-  b=TlsqAbciv5l91XnDrmeGah8MXJc43WLvxJTAk38dWrDLQqxU688nOtXH
-   okMRVJ+LqZSD0wsMBL00wCUa4Z4pjoq8bgGn7V+cDTZQULHrWWZuUbUAY
-   R75atbJLi3OkuBqGmK29/Ha4HgcYPCUSddzFts/De3fED5gbz2z22L1wR
-   wMEqBmCU7KZurHN+XxPwFy26XnyaDEsI+/zi5T/i52DBuw/eSr9fpqaNv
-   SIPv0rXAIK+r0ovThwaoG5a5HhvwqveM+cThBajDJNiLxcU3SCgU92UM5
-   pcfMbHJipctdb2WtjcFOT04FTqfdVjUxMNEZ2Y3ZdtSfUDdhJ+5QxSktt
-   Q==;
-X-CSE-ConnectionGUID: TxlCyHysSFKv39l8n64WMA==
-X-CSE-MsgGUID: 5hVkyiPSQBK2RdHDrx4CEw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11344"; a="43805508"
-X-IronPort-AV: E=Sophos;i="6.13,282,1732608000"; 
-   d="scan'208";a="43805508"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2025 05:45:23 -0800
-X-CSE-ConnectionGUID: 3uEVSvpLQkO1gclBcjhFJQ==
-X-CSE-MsgGUID: RGcxz4wHSZ+AsP6pSqC2DA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,282,1732608000"; 
-   d="scan'208";a="118234162"
-Received: from weis0041.iil.intel.com ([10.12.217.187])
-  by fmviesa004.fm.intel.com with ESMTP; 13 Feb 2025 05:45:21 -0800
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>,
-	Dan Carpenter <dan.carpenter@linaro.org>
-Subject: [PATCH] wifi: mac80211: Fix possible integer promotion issue
-Date: Fri, 14 Feb 2025 09:47:21 +0200
-Message-Id: <20250214074721.1613549-1-ilan.peer@intel.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I+hCG0Aq"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-220e83d65e5so2581725ad.1;
+        Thu, 13 Feb 2025 06:36:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739457393; x=1740062193; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jUHLay+y48anjs7ExKk+CakAJpazy6tSeUYS+Xwbn7I=;
+        b=I+hCG0AqYJSJMhZaBvxLd0TkmNDkIqdHx86SDUrcLl8HdIa4+6VFsBTFKkGONMp7Hs
+         jDKz/0jZSYo/v81Gg3wKVekUnCbWoFdhbK3CzbdlIa+e60s92H10YdmJZqXEtfXtv8l8
+         9FTPIoBgwfVCytEmB94oI4UYPq07qywW9TcxNk6j8kChZ+SDEQLOjPxhdzX8/WH0rOCg
+         lh8WOotf1X+JQ/fVGGdZ4heu6dWzbGYWRUEye2r0hmJljX07/JTkyRAEd925rTC+oPEC
+         9fJVu7EwlyKIAH6YZdgFqtd6DU4lsxz3w/SbHl+of37c0m0oWsKi9x+zrCJukFrPmU0n
+         B9Mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739457393; x=1740062193;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jUHLay+y48anjs7ExKk+CakAJpazy6tSeUYS+Xwbn7I=;
+        b=neVFBc/ESMx0mLpOXuTO017dqkA/LyHnT25XuR3x/lJveksc0l3CZHYHKUsBCwdGt7
+         QbzKGnhjNLbQ8kv7Q8kW7p2XtRo6ZN8d9m7LOjATPMsiJcqf7PoawqWm+COG/g82Xk/5
+         th0Z2TQjftTK43jBnrSbKkngq0zETNq4d/g4dIw03AhLxHz0hVG+f5xIm8d+Mz9RP88M
+         uU70/fEC562fdpeEmvcY/8k2TcGe4T08jcI2xH6PpvUkpiF/idge8RYVqeagAB0yDEAd
+         yHVaKKAxaSaNxJEGKr8bHB3kYd81vFsIAskOrR4skXoKrRtYTIfD0kZ1n0QBVSGS8DLj
+         KElw==
+X-Forwarded-Encrypted: i=1; AJvYcCUO6S1gMqid65jrDHbDS511A9ZgyunZiS5H0XH1q2Mvf790KVk1z+el/SCKrjvcEkF3YKfO/B8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzLG0EqmEpNTUZvK0JYKfk9KuJBwBE8QNBzgXU9lS9zSapqkYgV
+	WLWGDU4snTlyz4Zcle3k8ObLgC06u08M5SdSHWOtDiWlT/68El8nCNXQz7IQ
+X-Gm-Gg: ASbGncumN4ssdq4kb5/SOdg1p+EKGjshyTL3lbRY1Wlvjag/EzldPRbPdujgW+hrEtb
+	/fvYNu+SzWtZxZA0RfLGri7vDfQjGzhkfbhIuxIAzhoG3GYxOGzMzD/pUGXgMkj5szyh7kl/k4z
+	s4TON8h7A+Ph2so/tCjEloCUC2iLIhEA2xbOTBpFsSwov8Dzb9+2XMH5fe4wLgxlNPXK4k6vXrr
+	aLsjDSomVE/JUGVLCc471L81yq/Ly8lh56IllkNpOsQVUpzVlcBTRsAmiYQCIYcZObIzTP7c3Da
+	W246Z6vrpFmHQr8zt5AWzkNUFP3AYFNSNdVIHx/ZebQC1iq56rqV287bTTXz8N2JvA==
+X-Google-Smtp-Source: AGHT+IHF3keZm+rb3LzCteXeeX4A5FDH1raI65VRKbJbOHB5Csv/B4vuTeBLTUnj78FyDPgas6dRDQ==
+X-Received: by 2002:a05:6a00:194b:b0:730:937f:e823 with SMTP id d2e1a72fcca58-7322c443706mr11701063b3a.24.1739457392932;
+        Thu, 13 Feb 2025 06:36:32 -0800 (PST)
+Received: from localhost.localdomain (118-232-8-190.dynamic.kbronet.com.tw. [118.232.8.190])
+        by smtp.googlemail.com with ESMTPSA id 41be03b00d2f7-adb5a92d37asm1256690a12.72.2025.02.13.06.36.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Feb 2025 06:36:32 -0800 (PST)
+From: Zenm Chen <zenmchen@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	pkshih@realtek.com,
+	stable@vger.kernel.org,
+	zenmchen@gmail.com
+Subject: RE: [PATCH v6.12] wifi: rtw89: pci: disable PCIE wake bit when PCIE deinit
+Date: Thu, 13 Feb 2025 22:36:29 +0800
+Message-ID: <20250213143629.3249-1-zenmchen@gmail.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <2025021330-squatting-routing-4279@gregkh>
+References: <2025021330-squatting-routing-4279@gregkh>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,28 +77,21 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Fix a possible integer promotion issue in mac80211 in ieee80211_ml_epcs()
+> > > It also needs to go to 6.13.y too, right?  Please provide backports for
+> > > both as we can not take them only for older kernels as you would have a
+> > > regression when upgrading.
+> >
+> > Hi Greg,
+> >
+> > Thanks for reminding! The patch for kernel 6.13 is here:
+> > https://lore.kernel.org/stable/20250211130432.1091-1-zenmchen@gmail.com/T/#u
+> >
+> > Tested with RTL8852BE on Arch Linux (kernel version: 6.13.2-arch1-1)
+> > and it did fix the issue.
+> 
+> Ok, thanks, but can you now resend the 6.12.y version?
 
-Fixes: de86c5f60839 ("wifi: mac80211: Add support for EPCS configuration")
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I resent the patch for kernel 6.12.y, please tell me if I did it incorrectly, thanks.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 4e8f0a5f6251..23d85a1abbc5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -10704,7 +10704,7 @@ static void ieee80211_ml_epcs(struct ieee80211_sub_if_data *sdata,
- 						  elems->ml_epcs_len,
- 						  scratch, scratch_len,
- 						  IEEE80211_MLE_SUBELEM_FRAGMENT);
--		if (len < sizeof(control))
-+		if (len < (ssize_t)sizeof(control))
- 			continue;
- 
- 		pos = scratch + sizeof(control);
--- 
-2.34.1
+https://lore.kernel.org/stable/20250213142946.3111-1-zenmchen@gmail.com/T/#u
 
