@@ -1,48 +1,67 @@
-Received: from forward200b.mail.yandex.net (forward200b.mail.yandex.net [178.154.239.157])
+Received: from smtp-fw-80008.amazon.com (smtp-fw-80008.amazon.com [99.78.197.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10FD8EC4
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2025 05:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB4D920766E;
+	Thu, 13 Feb 2025 06:20:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=99.78.197.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739425771; cv=none; b=an7Dz+ScnjaHkZZgnro6qzxcpwgl0W57VSAazpnqtKeJ74UegcuFvdHeypIAT9p3UUcg5AcT7qOsqtwowDn3AjxfIGRXzRexT1u4XrjRAHKmXoP6oHkUVkQJ7tWfNap4SW8To8XcNDUeBMH8FjqzKkWVO2UQbQPic9CtEd86oRo=
+	t=1739427652; cv=none; b=KPamYYd/kfAiLkNVwM9frj9ZfXkJbpUsAJHYtXbC86STbmtuDG0Fp3qWKYLgmW7s2FkjHcwtGG05XHEjPI8DLGK87XEljsjjgrBnphAYGQ4OxtPFzJSK5rZc9WvNCFGEJKNer+K/SY2YZlNGcA28RZ7oR9q+Qy1nfFhUsKORy44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739425771; c=relaxed/simple;
-	bh=Yn/UfSBqRpuguLRrIT5Hz2gIRDqadEEtW2VBgweP6Wg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FBSeLldrWBI5qB3FP3xfW+xpHzuC78EIRlsp0L9Mw+mKGKkJihEDfarZgXT5t5L5LzPl6gjzh21c/petWXgZPZCd83u9Jyl1WyTszpxsO4jEJhjMubevifeIZf8XyLKgM4QD34HAyYzf0gYNzaYmgrW+n5YfGA1EmhHLny9gjXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=hIxm1mqp; arc=none smtp.client-ip=178.154.239.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1739427652; c=relaxed/simple;
+	bh=yi8Ds+rvTqCkr4AEhdDx106k9cpqjnHqkzb+kOgIoPY=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=k0qjCe4fcGytDkPlpHQQGmKhvu4i/roiwN5zae3sPApBE37LsriDE4dIGEPYDHLuSfj59zJoIoN7UtpScREXiPAzgSm6D2leJvbaCrYaBdBbErMeTnac/yIk9tRuZRYUEs7PY6+k4/+vWzJiDiAB85isruIJ+ZxJ6SgB1PcTv3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.co.jp; dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b=lD82rsbR; arc=none smtp.client-ip=99.78.197.219
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="hIxm1mqp"
-Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d102])
-	by forward200b.mail.yandex.net (Yandex) with ESMTPS id BF1D8660B1
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2025 08:42:59 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net [IPv6:2a02:6b8:c08:188a:0:640:98b0:0])
-	by forward102b.mail.yandex.net (Yandex) with ESMTPS id 306F8609B0;
-	Thu, 13 Feb 2025 08:42:52 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id ogIPT7BOoGk0-jy4cx0XU;
-	Thu, 13 Feb 2025 08:42:51 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1739425371; bh=4Ru8J80Juh6jMbYEnNt+sl9rI0+u4066ZJZRVtexvKU=;
-	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-	b=hIxm1mqpz06iPAivGG6TvXFdZ5Q4DA31pp8lCOtPVAbuY5TehM6RwRqJhxmEWjKLO
-	 XM9c2wfhGoPjjsxXv5/TNqhXaCcSRW5Up7NQORENj7pXR0jH6JtEd6W8Hw/pg/AkEn
-	 Ti0hi4CDh1WTqT2njkfNPaUX25aFi9PpIziFKi78=
-Authentication-Results: mail-nwsmtp-smtp-production-main-45.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH v3] wifi: rtw89: rtw8852b{t}: fix TSSI debug timestamps
-Date: Thu, 13 Feb 2025 08:42:48 +0300
-Message-ID: <20250213054248.1284672-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <2a466aad362d456abbc4bde0a592483c@realtek.com>
-References: <2a466aad362d456abbc4bde0a592483c@realtek.com>
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="lD82rsbR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1739427651; x=1770963651;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=y0qqspgyXFQAiVZhV1is4ipJluGgHz+aCeCybrjLYs8=;
+  b=lD82rsbRUA1s05HFp36u9KEP2nYnQQfURmf2nx3i+VvSSFd2YRte+adE
+   JzCPoOmLzU3sZcJJHmDzIUJM7SBlt7FnW09PVvIx+caneYm1mSQE9ayC3
+   AkzngNe3/QJ9ZpepPVQTsgOhLlQZerpNgdafxGeFMFUJv1mYgl/qFLG7y
+   4=;
+X-IronPort-AV: E=Sophos;i="6.13,282,1732579200"; 
+   d="scan'208";a="169268254"
+Received: from pdx4-co-svc-p1-lb2-vlan3.amazon.com (HELO smtpout.prod.us-west-2.prod.farcaster.email.amazon.dev) ([10.25.36.214])
+  by smtp-border-fw-80008.pdx80.corp.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2025 06:20:49 +0000
+Received: from EX19MTAUWA001.ant.amazon.com [10.0.21.151:11164]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.32.208:2525] with esmtp (Farcaster)
+ id 6c86040e-10d2-4a2e-98fc-c45ba71a877d; Thu, 13 Feb 2025 06:20:48 +0000 (UTC)
+X-Farcaster-Flow-ID: 6c86040e-10d2-4a2e-98fc-c45ba71a877d
+Received: from EX19D004ANA001.ant.amazon.com (10.37.240.138) by
+ EX19MTAUWA001.ant.amazon.com (10.250.64.204) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.1258.39;
+ Thu, 13 Feb 2025 06:20:48 +0000
+Received: from 6c7e67bfbae3.amazon.com (10.37.244.7) by
+ EX19D004ANA001.ant.amazon.com (10.37.240.138) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.1544.14;
+ Thu, 13 Feb 2025 06:20:40 +0000
+From: Kuniyuki Iwashima <kuniyu@amazon.com>
+To: <shaw.leon@gmail.com>
+CC: <alex.aring@gmail.com>, <andrew+netdev@lunn.ch>,
+	<b.a.t.m.a.n@lists.open-mesh.org>, <bpf@vger.kernel.org>,
+	<bridge@lists.linux.dev>, <davem@davemloft.net>, <donald.hunter@gmail.com>,
+	<dsahern@kernel.org>, <edumazet@google.com>, <herbert@gondor.apana.org.au>,
+	<horms@kernel.org>, <kuba@kernel.org>, <kuniyu@amazon.com>,
+	<linux-can@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-kselftest@vger.kernel.org>, <linux-ppp@vger.kernel.org>,
+	<linux-rdma@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-wpan@vger.kernel.org>, <miquel.raynal@bootlin.com>,
+	<netdev@vger.kernel.org>, <osmocom-net-gprs@lists.osmocom.org>,
+	<pabeni@redhat.com>, <shuah@kernel.org>, <stefan@datenfreihafen.org>,
+	<steffen.klassert@secunet.com>, <wireguard@lists.zx2c4.com>
+Subject: Re: [PATCH net-next v9 05/11] net: ip_tunnel: Use link netns in newlink() of rtnl_link_ops
+Date: Thu, 13 Feb 2025 15:20:31 +0900
+Message-ID: <20250213062031.4547-1-kuniyu@amazon.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20250210133002.883422-6-shaw.leon@gmail.com>
+References: <20250210133002.883422-6-shaw.leon@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,116 +69,76 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D040UWB002.ant.amazon.com (10.13.138.89) To
+ EX19D004ANA001.ant.amazon.com (10.37.240.138)
 
-According to Ping-Ke, the vendor driver measures 'tssi_alimk_time' of
-'struct rtw89_tssi_info' in microseconds. So adjust rtw8852b{t}-specific
-'_tssi_alimentk()' to not mess the former with nanoseconds and print both
-per-call and accumulated times. Compile tested only.
+From: Xiao Liang <shaw.leon@gmail.com>
+Date: Mon, 10 Feb 2025 21:29:56 +0800
+> When link_net is set, use it as link netns instead of dev_net(). This
+> prepares for rtnetlink core to create device in target netns directly,
+> in which case the two namespaces may be different.
+> 
+> Convert common ip_tunnel_newlink() to accept an extra link netns
+> argument. Don't overwrite ip_tunnel.net in ip_tunnel_init().
 
-Fixes: 7f18a70d7b4d ("wifi: rtw89: 8852b: rfk: add TSSI")
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
-v3: do not mess s64 vs. ktime_t and print the former as signed
-v2: actually use microseconds and print both times
----
- drivers/net/wireless/realtek/rtw89/core.h          |  2 +-
- drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c  | 13 +++++++------
- drivers/net/wireless/realtek/rtw89/rtw8852bt_rfk.c | 13 +++++++------
- 3 files changed, 15 insertions(+), 13 deletions(-)
+Why... ?  see a comment below.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index b3fdd8eded21..eb2a6b90c940 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5141,7 +5141,7 @@ struct rtw89_tssi_info {
- 	u32 alignment_backup_by_ch[RF_PATH_MAX][TSSI_MAX_CH_NUM][TSSI_ALIMK_VALUE_NUM];
- 	u32 alignment_value[RF_PATH_MAX][TSSI_ALIMK_MAX][TSSI_ALIMK_VALUE_NUM];
- 	bool alignment_done[RF_PATH_MAX][TSSI_ALIMK_MAX];
--	u32 tssi_alimk_time;
-+	u64 tssi_alimk_time;
- };
- 
- struct rtw89_power_trim_info {
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
-index ef47a5facc83..8b1cc8b71d1f 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c
-@@ -3585,7 +3585,8 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 	u8 ch_idx = _tssi_ch_to_idx(rtwdev, channel);
- 	struct rtw8852bx_bb_tssi_bak tssi_bak;
- 	s32 aliment_diff, tssi_cw_default;
--	u32 start_time, finish_time;
-+	ktime_t start_time;
-+	s64 this_time;
- 	u32 bb_reg_backup[8] = {0};
- 	const s16 *power;
- 	u8 band;
-@@ -3613,7 +3614,7 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 		return;
- 	}
- 
--	start_time = ktime_get_ns();
-+	start_time = ktime_get();
- 
- 	if (chan->band_type == RTW89_BAND_2G)
- 		power = power_2g;
-@@ -3738,12 +3739,12 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 	rtw8852bx_bb_restore_tssi(rtwdev, phy, &tssi_bak);
- 	rtw8852bx_bb_tx_mode_switch(rtwdev, phy, 0);
- 
--	finish_time = ktime_get_ns();
--	tssi_info->tssi_alimk_time += finish_time - start_time;
-+	this_time = ktime_us_delta(ktime_get(), start_time);
-+	tssi_info->tssi_alimk_time += this_time;
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_RFK,
--		    "[TSSI PA K] %s processing time = %d ms\n", __func__,
--		    tssi_info->tssi_alimk_time);
-+		    "[TSSI PA K] %s processing time = %lld us (acc = %llu us)\n",
-+		    __func__, this_time, tssi_info->tssi_alimk_time);
- }
- 
- void rtw8852b_dpk_init(struct rtw89_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852bt_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8852bt_rfk.c
-index 336a83e1d46b..07c31929222e 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852bt_rfk.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852bt_rfk.c
-@@ -3663,7 +3663,8 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 	u8 ch_idx = _tssi_ch_to_idx(rtwdev, channel);
- 	struct rtw8852bx_bb_tssi_bak tssi_bak;
- 	s32 aliment_diff, tssi_cw_default;
--	u32 start_time, finish_time;
-+	ktime_t start_time;
-+	s64 this_time;
- 	u32 bb_reg_backup[8] = {};
- 	const s16 *power;
- 	u8 band;
-@@ -3675,7 +3676,7 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 		    "======> %s   channel=%d   path=%d\n", __func__, channel,
- 		    path);
- 
--	start_time = ktime_get_ns();
-+	start_time = ktime_get();
- 
- 	if (chan->band_type == RTW89_BAND_2G)
- 		power = power_2g;
-@@ -3802,12 +3803,12 @@ static void _tssi_alimentk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
- 	rtw8852bx_bb_restore_tssi(rtwdev, phy, &tssi_bak);
- 	rtw8852bx_bb_tx_mode_switch(rtwdev, phy, 0);
- 
--	finish_time = ktime_get_ns();
--	tssi_info->tssi_alimk_time += finish_time - start_time;
-+	this_time = ktime_us_delta(ktime_get(), start_time);
-+	tssi_info->tssi_alimk_time += this_time;
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_RFK,
--		    "[TSSI PA K] %s processing time = %d ms\n", __func__,
--		    tssi_info->tssi_alimk_time);
-+		    "[TSSI PA K] %s processing time = %lld us (acc = %llu us)\n",
-+		    __func__, this_time, tssi_info->tssi_alimk_time);
- }
- 
- void rtw8852bt_dpk_init(struct rtw89_dev *rtwdev)
--- 
-2.48.1
 
+[...]
+> diff --git a/net/ipv4/ip_gre.c b/net/ipv4/ip_gre.c
+> index 1fe9b13d351c..26d15f907551 100644
+> --- a/net/ipv4/ip_gre.c
+> +++ b/net/ipv4/ip_gre.c
+> @@ -1413,7 +1413,8 @@ static int ipgre_newlink(struct net_device *dev,
+>  	err = ipgre_netlink_parms(dev, data, tb, &p, &fwmark);
+>  	if (err < 0)
+>  		return err;
+> -	return ip_tunnel_newlink(dev, tb, &p, fwmark);
+> +	return ip_tunnel_newlink(params->link_net ? : dev_net(dev), dev, tb, &p,
+
+This is duplicate at all call sites, let's move it into
+ip_tunnel_newlink() by passing params.
+
+
+> +				 fwmark);
+>  }
+>  
+>  static int erspan_newlink(struct net_device *dev,
+> 
+> 
+> diff --git a/net/ipv4/ip_tunnel.c b/net/ipv4/ip_tunnel.c
+> index 09b73acf037a..618a50d5c0c2 100644
+> --- a/net/ipv4/ip_tunnel.c
+> +++ b/net/ipv4/ip_tunnel.c
+> @@ -1213,11 +1213,11 @@ void ip_tunnel_delete_nets(struct list_head *net_list, unsigned int id,
+>  }
+>  EXPORT_SYMBOL_GPL(ip_tunnel_delete_nets);
+>  
+> -int ip_tunnel_newlink(struct net_device *dev, struct nlattr *tb[],
+> -		      struct ip_tunnel_parm_kern *p, __u32 fwmark)
+> +int ip_tunnel_newlink(struct net *net, struct net_device *dev,
+> +		      struct nlattr *tb[], struct ip_tunnel_parm_kern *p,
+> +		      __u32 fwmark)
+>  {
+>  	struct ip_tunnel *nt;
+> -	struct net *net = dev_net(dev);
+>  	struct ip_tunnel_net *itn;
+>  	int mtu;
+>  	int err;
+> @@ -1326,7 +1326,9 @@ int ip_tunnel_init(struct net_device *dev)
+>  	}
+>  
+>  	tunnel->dev = dev;
+> -	tunnel->net = dev_net(dev);
+> +	if (!tunnel->net)
+> +		tunnel->net = dev_net(dev);
+
+Isn't tunnel->net always non-NULL ?
+
+ip_tunnel_newlink
+-> netdev_priv(dev)->net = net
+-> register_netdevice(dev)
+  -> dev->netdev_ops->ndo_init(dev)
+    -> ip_tunnel_init(dev)
+      -> netdev_priv(dev)->net = dev_net(dev)
