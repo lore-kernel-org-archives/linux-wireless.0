@@ -1,33 +1,33 @@
 Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BAB73200CD
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BA9C8D517
 	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 15:32:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739719949; cv=none; b=X5eUCk1FHmpVLK/7BbYENm2MnRnkpQVYCoL2wlEfahpw6qFQAqDh1Kbdm2zzH7Wy7Tu9Bq+10geXrqxQTIEqTKfaDfmdUAswudnrxQ8FBRzAFm6bOD/EX1xBKNw6wkR71FB6MXnLswnEb5mNngB7j1DH/AjPZTln88YI6z48wns=
+	t=1739719950; cv=none; b=qehTCkoSGOarerjUfK9qe5cGIxohNxD+T7IZ/L6fMZI9oa8fVYj1a77063psMpSHJd/OZbX3tF2hTbbdDoL8p8QYIpYmwhZMkAlulxmzQ6HHAs/Foiq6vQlflKtn3d8bPmOyKdKSbG/DYrMM8lIjcPQSeAhNd7tjU4dkavQLkZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739719949; c=relaxed/simple;
-	bh=DOL8xWV9mZqqn3FitN3QXm+f4P1XEz8jx32VaT57Ii4=;
+	s=arc-20240116; t=1739719950; c=relaxed/simple;
+	bh=uhja3bHBvT6/2JHEF8DkTI5CLL2G/BY082Im3dZo7z0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hWugs4F4TWLX0Mkx4x07YvT2JIEDVf+YBw5/1khdEsBLV8kt0JWTRHkWD61BYp6jzyJdVvoVfzb+tIna6K0wRUNlvlNcSZm3oVBKPDS0F0xYZeXn/1+Ez6IIQ1QoWGX39v4cUoWeslVpVVEaLj4U0OW8GdCjTRKmWIVJTVC2+lg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=Eb5PpiNn; arc=none smtp.client-ip=5.252.227.236
+	 MIME-Version; b=SmPpvbLgmEO4nIAmaJVbl/HGVS/HLLe4zusNsswIqXhp5q3jUK9KK8aG0HwSBGdyMXt6rD36/I9HAimkkBQsDxEg2tPyHYzUNKTYfroLvNNp5oufe1CsOg7rTRqI2MzN6qpOFfhI54lCsjxHpQX3n2OPgDRf3f5FxuQdVqg5iz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=k5YMtdI2; arc=none smtp.client-ip=5.252.227.236
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="Eb5PpiNn"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="k5YMtdI2"
 From: Alexander Wetzel <Alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
 	s=wetzel-home; t=1739719938;
-	bh=DOL8xWV9mZqqn3FitN3QXm+f4P1XEz8jx32VaT57Ii4=;
+	bh=uhja3bHBvT6/2JHEF8DkTI5CLL2G/BY082Im3dZo7z0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Eb5PpiNnti3ID7soRxfJ/sNdsrA0LdB+/dlonRhastsODDTmhekDX+v68BmzqVHoi
-	 fxVB7x/OAPKHAB9q68vYzwzrRflHOEsmSuI5taDieFJr6AxL6Jg2TdX9ojMFnAPXty
-	 1FwIw1EpOZ6l5OsLE9h906b3PmFg4dhrpc+ixXW4=
+	b=k5YMtdI2o+7kGGJMEW+Io7TRfvDlTPMjKdEdvvg84oilgVf5vuOehJz8ryaiBHeo5
+	 LQp79ngatVUJZ+DBDJq+22qAz5N0wC1NMsXYRJa2DKb9rhSTu0HAFbR5VxeWwLm+Bf
+	 nezl2I77ebD6AFAf1AuE7l8CHVknRcpicXTIv6nU=
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
 	Alexander Wetzel <alexander@wetzel-home.de>
-Subject: [PATCH 05/10] wifi: mac80211: Stop using legacy TX path
-Date: Sun, 16 Feb 2025 16:31:55 +0100
-Message-ID: <20250216153200.1318604-6-Alexander@wetzel-home.de>
+Subject: [PATCH 03/10] wifi: mac80211: Convert vif->txq to an array
+Date: Sun, 16 Feb 2025 16:31:53 +0100
+Message-ID: <20250216153200.1318604-4-Alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250216153200.1318604-1-Alexander@wetzel-home.de>
 References: <20250216153200.1318604-1-Alexander@wetzel-home.de>
@@ -41,512 +41,487 @@ Content-Transfer-Encoding: 8bit
 
 From: Alexander Wetzel <alexander@wetzel-home.de>
 
-Stop using the legacy TX path within mac80211 and start using TXQs to
-handle the not queueable offchannel, disassoc and null-func PS frames.
-
-ieee80211_tx() will queue these frames into either the per-vif or
-per-sta helper TXQ. But instead of scheduling a queue run the frame will
-immediately be dequeued again and handed over to the driver.
-
-With that functionality mac80211 is now only using TXQs to send frames.
+Mac80211 needs additional TX queues to handle all TX within TXQs.
+Convert vif->txq to an array, allowing other patches to extend vif TXQs.
 
 Signed-off-by: Alexander Wetzel <alexander@wetzel-home.de>
 ---
- net/mac80211/tx.c   | 307 +++++++-------------------------------------
- net/mac80211/util.c |  12 +-
- 2 files changed, 55 insertions(+), 264 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c             |  8 ++++----
+ drivers/net/wireless/ath/ath9k/ath9k.h            |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c  |  3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c  |  5 +++--
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c |  3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7915/main.c  |  6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c  |  5 +++--
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c  |  5 +++--
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c  |  5 +++--
+ drivers/net/wireless/realtek/rtw88/mac80211.c     |  4 ++--
+ drivers/net/wireless/realtek/rtw88/main.c         |  2 +-
+ drivers/net/wireless/realtek/rtw89/mac80211.c     |  2 +-
+ include/net/mac80211.h                            | 15 +++++++++++++--
+ net/mac80211/cfg.c                                |  8 ++++++--
+ net/mac80211/debugfs_netdev.c                     |  4 ++--
+ net/mac80211/iface.c                              |  6 ++++--
+ net/mac80211/tx.c                                 |  8 ++++----
+ net/mac80211/util.c                               |  7 ++++---
+ 19 files changed, 64 insertions(+), 40 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 600c34fe10ad..6190674c8517 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1301,9 +1301,13 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_txq *txq = NULL;
- 
--	if (unlikely(info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK))
--		/* Offchannel queue can't be used, yet */
--		return NULL;
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
-+		if (sta)
-+			txq = sta->sta.txq[IEEE80211_TID_NOQUEUE];
-+		else
-+			txq = vif->txq[IEEE80211_VIF_TXQ_NOQUEUE];
-+		goto out;
-+	}
- 
- 	if (unlikely(vif->type == NL80211_IFTYPE_MONITOR ||
- 		     info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM ||
-@@ -1643,10 +1647,10 @@ void ieee80211_txq_teardown_flows(struct ieee80211_local *local)
- 	spin_unlock_bh(&fq->lock);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c61b95a928da..53df2a9102a7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4297,7 +4297,7 @@ struct ieee80211_txq *ath10k_mac_txq_lookup(struct ath10k *ar,
+ 	if (peer->sta)
+ 		return peer->sta->txq[tid];
+ 	else if (peer->vif)
+-		return peer->vif->txq;
++		return peer->vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	else
+ 		return NULL;
  }
+@@ -5539,7 +5539,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	mutex_lock(&ar->conf_mutex);
  
--static bool ieee80211_queue_skb(struct ieee80211_local *local,
--				struct ieee80211_sub_if_data *sdata,
--				struct sta_info *sta,
--				struct sk_buff *skb)
-+static struct txq_info *ieee80211_queue_skb(struct ieee80211_local *local,
-+					    struct ieee80211_sub_if_data *sdata,
-+					    struct sta_info *sta,
-+					    struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = &sdata->vif;
-@@ -1658,143 +1662,12 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
- 	vif = &sdata->vif;
- 	txqi = ieee80211_get_txq(local, vif, sta, skb);
+ 	memset(arvif, 0, sizeof(*arvif));
+-	ath10k_mac_txq_init(vif->txq);
++	ath10k_mac_txq_init(vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
  
--	if (!txqi)
--		return false;
--
- 	ieee80211_txq_enqueue(local, txqi, skb);
+ 	arvif->ar = ar;
+ 	arvif->vif = vif;
+@@ -5985,7 +5985,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&ar->data_lock);
  
--	schedule_and_wake_txq(local, txqi);
--
--	return true;
--}
--
--static bool ieee80211_tx_frags(struct ieee80211_local *local,
--			       struct ieee80211_vif *vif,
--			       struct sta_info *sta,
--			       struct sk_buff_head *skbs,
--			       bool txpending)
--{
--	struct ieee80211_tx_control control = {};
--	struct sk_buff *skb, *tmp;
--	unsigned long flags;
--
--	skb_queue_walk_safe(skbs, skb, tmp) {
--		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--		int q = info->hw_queue;
--
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--		if (WARN_ON_ONCE(q >= local->hw.queues)) {
--			__skb_unlink(skb, skbs);
--			ieee80211_free_txskb(&local->hw, skb);
--			continue;
--		}
--#endif
--
--		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--		if (local->queue_stop_reasons[q] ||
--		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
--			if (unlikely(info->flags &
--				     IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
--				if (local->queue_stop_reasons[q] &
--				    ~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL)) {
--					/*
--					 * Drop off-channel frames if queues
--					 * are stopped for any reason other
--					 * than off-channel operation. Never
--					 * queue them.
--					 */
--					spin_unlock_irqrestore(
--						&local->queue_stop_reason_lock,
--						flags);
--					ieee80211_purge_tx_queue(&local->hw,
--								 skbs);
--					return true;
--				}
--			} else {
--
--				/*
--				 * Since queue is stopped, queue up frames for
--				 * later transmission from the tx-pending
--				 * tasklet when the queue is woken again.
--				 */
--				if (txpending)
--					skb_queue_splice_init(skbs,
--							      &local->pending[q]);
--				else
--					skb_queue_splice_tail_init(skbs,
--								   &local->pending[q]);
--
--				spin_unlock_irqrestore(&local->queue_stop_reason_lock,
--						       flags);
--				return false;
--			}
--		}
--		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--		info->control.vif = vif;
--		control.sta = sta ? &sta->sta : NULL;
--
--		__skb_unlink(skb, skbs);
--		drv_tx(local, &control, skb);
--	}
--
--	return true;
--}
--
--/*
-- * Returns false if the frame couldn't be transmitted but was queued instead.
-- */
--static bool __ieee80211_tx(struct ieee80211_local *local,
--			   struct sk_buff_head *skbs, struct sta_info *sta,
--			   bool txpending)
--{
--	struct ieee80211_tx_info *info;
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_vif *vif;
--	struct sk_buff *skb;
--	bool result;
--
--	if (WARN_ON(skb_queue_empty(skbs)))
--		return true;
--
--	skb = skb_peek(skbs);
--	info = IEEE80211_SKB_CB(skb);
--	sdata = vif_to_sdata(info->control.vif);
--	if (sta && !sta->uploaded)
--		sta = NULL;
--
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_MONITOR:
--		if ((sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) ||
--		    ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
--			vif = &sdata->vif;
--			break;
--		}
--		sdata = rcu_dereference(local->monitor_sdata);
--		if (sdata && ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF)) {
--			vif = &sdata->vif;
--			info->hw_queue =
--				vif->hw_queue[skb_get_queue_mapping(skb)];
--		} else if (ieee80211_hw_check(&local->hw, QUEUE_CONTROL)) {
--			ieee80211_purge_tx_queue(&local->hw, skbs);
--			return true;
--		} else
--			vif = NULL;
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data, u.ap);
--		fallthrough;
--	default:
--		vif = &sdata->vif;
--		break;
--	}
--
--	result = ieee80211_tx_frags(local, vif, sta, skbs, txpending);
--
--	WARN_ON_ONCE(!skb_queue_empty(skbs));
-+	if (likely(txqi->txq.tid != IEEE80211_TID_NOQUEUE))
-+		schedule_and_wake_txq(local, txqi);
+ 	ath10k_peer_cleanup(ar, arvif->vdev_id);
+-	ath10k_mac_txq_unref(ar, vif->txq);
++	ath10k_mac_txq_unref(ar, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
  
--	return result;
-+	return txqi;
+ 	if (vif->type == NL80211_IFTYPE_MONITOR) {
+ 		ar->monitor_arvif = NULL;
+@@ -6002,7 +6002,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	ath10k_mac_vif_tx_unlock_all(arvif);
+ 	spin_unlock_bh(&ar->htt.tx_lock);
+ 
+-	ath10k_mac_txq_unref(ar, vif->txq);
++	ath10k_mac_txq_unref(ar, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 
+ out:
+ 	mutex_unlock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a728cc0387df..d681a9a2f377 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -437,7 +437,7 @@ ath_node_to_tid(struct ath_node *an, u8 tidno)
+ 	if (sta)
+ 		txq = sta->txq[tidno % ARRAY_SIZE(sta->txq)];
+ 	else
+-		txq = vif->txq;
++		txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 
+ 	return (struct ath_atx_tid *) txq->drv_priv;
  }
- 
- /*
-@@ -1929,22 +1802,20 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_tx_prepare_skb);
- 
--/*
-- * Returns false if the frame couldn't be transmitted but was queued instead.
-- */
--static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
--			 struct sta_info *sta, struct sk_buff *skb,
--			 bool txpending)
-+static void ieee80211_tx(struct ieee80211_sub_if_data *sdata,
-+			 struct sta_info *sta, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_data tx;
- 	ieee80211_tx_result res_prepare;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	bool result = true;
-+	bool noqueue = info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
-+	struct ieee80211_tx_control control;
-+	struct txq_info *txqi;
- 
- 	if (unlikely(skb->len < 10)) {
- 		dev_kfree_skb(skb);
--		return true;
-+		return;
- 	}
- 
- 	/* initialises tx */
-@@ -1952,9 +1823,9 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 
- 	if (unlikely(res_prepare == TX_DROP)) {
- 		ieee80211_free_txskb(&local->hw, skb);
--		return true;
-+		return;
- 	} else if (unlikely(res_prepare == TX_QUEUED)) {
--		return true;
-+		return;
- 	}
- 
- 	/* set up hw_queue value early */
-@@ -1964,15 +1835,23 @@ static bool ieee80211_tx(struct ieee80211_sub_if_data *sdata,
- 			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
- 
- 	if (invoke_tx_handlers_early(&tx))
--		return true;
-+		return;
- 
--	if (ieee80211_queue_skb(local, sdata, tx.sta, tx.skb))
--		return true;
-+	txqi = ieee80211_queue_skb(local, sdata, tx.sta, tx.skb);
-+
-+	if (likely(!noqueue))
-+		return;
- 
--	if (!invoke_tx_handlers_late(&tx))
--		result = __ieee80211_tx(local, &tx.skbs, tx.sta, txpending);
-+	/* Noqueue frames bypass the normal TX and go out immediately */
- 
--	return result;
-+	if (sta && sta->uploaded)
-+		control.sta = txqi->txq.sta;
-+	else
-+		control.sta = NULL;
-+
-+	skb = ieee80211_tx_dequeue(&local->hw, &txqi->txq);
-+	if (!WARN_ON(!skb))
-+		drv_tx(local, &control, skb);
- }
- 
- /* device xmit handlers */
-@@ -2062,7 +1941,7 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	ieee80211_set_qos_hdr(sdata, skb);
--	ieee80211_tx(sdata, sta, skb, false);
-+	ieee80211_tx(sdata, sta, skb);
- }
- 
- static bool ieee80211_validate_radiotap_len(struct sk_buff *skb)
-@@ -3676,7 +3555,6 @@ void __ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_hdr *hdr = (void *)fast_tx->hdr;
- 	struct ieee80211_tx_info *info;
- 	struct ieee80211_tx_data tx;
--	ieee80211_tx_result r;
- 	int hw_headroom = sdata->local->hw.extra_tx_headroom;
- 	int extra_head = fast_tx->hdr_len - (ETH_HLEN - 2);
- 
-@@ -3732,22 +3610,7 @@ void __ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 	tx.sta = sta;
- 	tx.key = fast_tx->key;
- 
--	if (ieee80211_queue_skb(local, sdata, sta, skb))
--		return;
--
--	tx.skb = skb;
--	r = ieee80211_xmit_fast_finish(sdata, sta, fast_tx->pn_offs,
--				       fast_tx->key, &tx);
--	tx.skb = NULL;
--	if (r == TX_DROP)
--		goto free;
--
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data, u.ap);
--
--	__skb_queue_tail(&tx.skbs, skb);
--	ieee80211_tx_frags(local, &sdata->vif, sta, &tx.skbs, false);
-+	ieee80211_queue_skb(local, sdata, sta, skb);
- 	return;
- 
- free:
-@@ -4522,65 +4385,6 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
- }
- 
--
--
--static bool __ieee80211_tx_8023(struct ieee80211_sub_if_data *sdata,
--				struct sk_buff *skb, struct sta_info *sta,
--				bool txpending)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_tx_control control = {};
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_sta *pubsta = NULL;
--	unsigned long flags;
--	int q = info->hw_queue;
--
--	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--
--	if (local->queue_stop_reasons[q] ||
--	    (!txpending && !skb_queue_empty(&local->pending[q]))) {
--		if (txpending)
--			skb_queue_head(&local->pending[q], skb);
--		else
--			skb_queue_tail(&local->pending[q], skb);
--
--		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--		return false;
--	}
--
--	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--	if (sta && sta->uploaded)
--		pubsta = &sta->sta;
--
--	control.sta = pubsta;
--
--	drv_tx(local, &control, skb);
--
--	return true;
--}
--
--static bool ieee80211_tx_8023(struct ieee80211_sub_if_data *sdata,
--			      struct sk_buff *skb, struct sta_info *sta,
--			      bool txpending)
--{
--	struct ieee80211_local *local = sdata->local;
--	struct sk_buff *next;
--	bool ret = true;
--
--	if (ieee80211_queue_skb(local, sdata, sta, skb))
--		return true;
--
--	skb_list_walk_safe(skb, skb, next) {
--		skb_mark_not_on_list(skb);
--		if (!__ieee80211_tx_8023(sdata, skb, sta, txpending))
--			ret = false;
--	}
--
--	return ret;
--}
--
- static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 				struct net_device *dev, struct sta_info *sta,
- 				struct ieee80211_key *key, struct sk_buff *skb)
-@@ -4659,8 +4463,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	sta->deflink.tx_stats.bytes[queue] += len;
- 
- 	ieee80211_tpt_led_trig_tx(local, len);
--
--	ieee80211_tx_8023(sdata, skb, sta, false);
-+	ieee80211_queue_skb(local, sdata, sta, skb);
- 
- 	return;
- 
-@@ -4767,19 +4570,13 @@ void ieee80211_clear_tx_pending(struct ieee80211_local *local)
- 	}
- }
- 
--/*
-- * Returns false if the frame couldn't be transmitted but was queued instead,
-- * which in this case means re-queued -- take as an indication to stop sending
-- * more pending frames.
-- */
--static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
-+static void ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 				     struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 	struct ieee80211_hdr *hdr;
--	bool result;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 
- 	sdata = vif_to_sdata(info->control.vif);
-@@ -4791,34 +4588,25 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
- 				rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
- 			if (unlikely(!chanctx_conf)) {
- 				dev_kfree_skb(skb);
--				return true;
-+				return;
- 			}
- 			info->band = chanctx_conf->def.chan->band;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 014777c9cc5d..df7bc70f6744 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1597,12 +1597,12 @@ int iwl_mvm_post_channel_switch(struct ieee80211_hw *hw,
  		}
--		result = ieee80211_tx(sdata, NULL, skb, true);
-+		ieee80211_tx(sdata, NULL, skb);
- 	} else if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
- 		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
- 			dev_kfree_skb(skb);
--			return true;
-+			return;
- 		}
+ 	} else if (vif->type == NL80211_IFTYPE_AP && mvmvif->csa_blocks_tx) {
+ 		struct iwl_mvm_txq *mvmtxq =
+-			iwl_mvm_txq_from_mac80211(vif->txq);
++			iwl_mvm_txq_from_mac80211(vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
  
- 		if (IS_ERR(sta) || (sta && !sta->uploaded))
- 			sta = NULL;
+ 		clear_bit(IWL_MVM_TXQ_STATE_STOP_AP_CSA, &mvmtxq->state);
  
--		result = ieee80211_tx_8023(sdata, skb, sta, true);
-+		ieee80211_queue_skb(local, sdata, sta, skb);
- 	} else {
--		struct sk_buff_head skbs;
--
--		__skb_queue_head_init(&skbs);
--		__skb_queue_tail(&skbs, skb);
--
--		hdr = (struct ieee80211_hdr *)skb->data;
- 		sta = sta_info_get(sdata, hdr->addr1);
--
--		result = __ieee80211_tx(local, &skbs, sta, true);
-+		ieee80211_tx(sdata, sta, skb);
+ 		local_bh_disable();
+-		iwl_mvm_mac_itxq_xmit(hw, vif->txq);
++		iwl_mvm_mac_itxq_xmit(hw, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 		ieee80211_iterate_stations_atomic(hw, iwl_mvm_post_csa_tx, hw);
+ 		local_bh_enable();
+ 
+@@ -5712,7 +5712,7 @@ int iwl_mvm_pre_channel_switch(struct iwl_mvm *mvm,
+ 			break;
+ 
+ 		mvmvif->csa_blocks_tx = true;
+-		mvmtxq = iwl_mvm_txq_from_mac80211(vif->txq);
++		mvmtxq = iwl_mvm_txq_from_mac80211(vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 		set_bit(IWL_MVM_TXQ_STATE_STOP_AP_CSA, &mvmtxq->state);
+ 		ieee80211_iterate_stations_atomic(mvm->hw,
+ 						  iwl_mvm_csa_block_txqs,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 3e8b1ec76169..6f385e2a77ad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -35,6 +35,7 @@ mt7603_stop(struct ieee80211_hw *hw, bool suspend)
+ static int
+ mt7603_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt7603_vif *mvif = (struct mt7603_vif *)vif->drv_priv;
+ 	struct mt7603_dev *dev = hw->priv;
+ 	struct mt76_txq *mtxq;
+@@ -73,7 +74,7 @@ mt7603_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	eth_broadcast_addr(bc_addr);
+ 	mt7603_wtbl_init(dev, idx, mvif->idx, bc_addr);
+ 
+-	mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	mtxq = (struct mt76_txq *)txq->drv_priv;
+ 	mtxq->wcid = idx;
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], &mvif->sta.wcid);
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 2e7b05eeef7a..81ab5d8b7c8e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -179,6 +179,7 @@ static int get_omac_idx(enum nl80211_iftype type, u64 mask)
+ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
+ 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
+@@ -231,8 +232,8 @@ static int mt7615_add_interface(struct ieee80211_hw *hw,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+ 
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], &mvif->sta.wcid);
+-	if (vif->txq) {
+-		mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	if (txq) {
++		mtxq = (struct mt76_txq *)txq->drv_priv;
+ 		mtxq->wcid = idx;
  	}
--
--	return result;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 4fb30589fa7a..c02639af7df0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -280,6 +280,7 @@ static void
+ mt76x02_vif_init(struct mt76x02_dev *dev, struct ieee80211_vif *vif,
+ 		 unsigned int idx)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt76x02_vif *mvif = (struct mt76x02_vif *)vif->drv_priv;
+ 	struct mt76_txq *mtxq;
+ 
+@@ -289,7 +290,7 @@ mt76x02_vif_init(struct mt76x02_dev *dev, struct ieee80211_vif *vif,
+ 	mvif->group_wcid.idx = MT_VIF_WCID(idx);
+ 	mt76_wcid_init(&mvif->group_wcid, 0);
+ 
+-	mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	mtxq = (struct mt76_txq *)txq->drv_priv;
+ 	rcu_assign_pointer(dev->mt76.wcid[MT_VIF_WCID(idx)], &mvif->group_wcid);
+ 	mtxq->wcid = MT_VIF_WCID(idx);
  }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 3aa31c5cefa6..020d74b573ec 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -204,6 +204,7 @@ static void mt7915_init_bitrate_mask(struct ieee80211_vif *vif)
+ static int mt7915_add_interface(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt7915_vif *mvif = (struct mt7915_vif *)vif->drv_priv;
+ 	struct mt7915_dev *dev = mt7915_hw_dev(hw);
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
+@@ -259,9 +260,8 @@ static int mt7915_add_interface(struct ieee80211_hw *hw,
  
- /*
-@@ -4830,7 +4618,6 @@ void ieee80211_tx_pending(struct tasklet_struct *t)
- 						     tx_pending_tasklet);
- 	unsigned long flags;
- 	int i;
--	bool txok;
+ 	mt7915_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+-
+-	if (vif->txq) {
+-		mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	if (txq) {
++		mtxq = (struct mt76_txq *)txq->drv_priv;
+ 		mtxq->wcid = idx;
+ 	}
  
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 13e58c328aff..625e0268f81c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -292,6 +292,7 @@ static void mt7921_stop(struct ieee80211_hw *hw, bool suspend)
+ static int
+ mt7921_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+ 	struct mt792x_phy *phy = mt792x_hw_phy(hw);
+@@ -334,8 +335,8 @@ mt7921_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	ewma_rssi_init(&mvif->bss_conf.rssi);
+ 
+ 	rcu_assign_pointer(dev->mt76.wcid[idx], &mvif->sta.deflink.wcid);
+-	if (vif->txq) {
+-		mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	if (txq) {
++		mtxq = (struct mt76_txq *)txq->drv_priv;
+ 		mtxq->wcid = idx;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 98daf80ac131..c776f33705ab 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -356,6 +356,7 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ {
+ 	struct mt792x_bss_conf *mconf = mt792x_link_conf_to_mconf(link_conf);
+ 	struct ieee80211_vif *vif = link_conf->vif;
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt792x_vif *mvif = mconf->vif;
+ 	struct mt76_txq *mtxq;
+ 	int idx, ret = 0;
+@@ -398,8 +399,8 @@ static int mt7925_mac_link_bss_add(struct mt792x_dev *dev,
+ 	if (ret)
+ 		goto out;
+ 
+-	if (vif->txq) {
+-		mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	if (txq) {
++		mtxq = (struct mt76_txq *)txq->drv_priv;
+ 		mtxq->wcid = idx;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 69dd565d8319..77ea8878e197 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -229,6 +229,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 			struct ieee80211_bss_conf *link_conf,
+ 			struct mt76_vif_link *mlink)
+ {
++	struct ieee80211_txq *txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct mt7996_vif_link *link = container_of(mlink, struct mt7996_vif_link, mt76);
+ 	struct mt7996_phy *phy = mphy->priv;
+ 	struct mt7996_dev *dev = phy->dev;
+@@ -267,8 +268,8 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	mt7996_mac_wtbl_update(dev, idx,
+ 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
+ 
+-	if (vif->txq) {
+-		mtxq = (struct mt76_txq *)vif->txq->drv_priv;
++	if (txq) {
++		mtxq = (struct mt76_txq *)txq->drv_priv;
+ 		mtxq->wcid = idx;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 026fbf4ad9cc..f689e37c4f7d 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -162,7 +162,7 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
+ 	rtwvif->stats.rx_cnt = 0;
+ 	rtwvif->scan_req = NULL;
+ 	memset(&rtwvif->bfee, 0, sizeof(struct rtw_bfee));
+-	rtw_txq_init(rtwdev, vif->txq);
++	rtw_txq_init(rtwdev, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 	INIT_LIST_HEAD(&rtwvif->rsvd_page_list);
+ 
+ 	mutex_lock(&rtwdev->mutex);
+@@ -239,7 +239,7 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	rtw_leave_lps_deep(rtwdev);
+ 
+-	rtw_txq_cleanup(rtwdev, vif->txq);
++	rtw_txq_cleanup(rtwdev, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 	rtw_remove_rsvd_page(rtwdev, rtwvif);
+ 
+ 	eth_zero_addr(rtwvif->mac_addr);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index e4f9b744f24d..8ba10a1dfcce 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -626,7 +626,7 @@ static void rtw_reset_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 
+ 	rtw_bf_disassoc(rtwdev, vif, NULL);
+ 	rtw_vif_assoc_changed(rtwvif, NULL);
+-	rtw_txq_cleanup(rtwdev, vif->txq);
++	rtw_txq_cleanup(rtwdev, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 
+ 	rtw_release_macid(rtwdev, rtwvif->mac_id);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
+index 778ca8589284..c36afe809255 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
+@@ -181,7 +181,7 @@ static int rtw89_ops_add_interface(struct ieee80211_hw *hw,
+ 
+ 	rtw89_init_vif(rtwdev, rtwvif, mac_id, port);
+ 
+-	rtw89_core_txq_init(rtwdev, vif->txq);
++	rtw89_core_txq_init(rtwdev, vif->txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 
+ 	if (!rtw89_rtwvif_in_list(rtwdev, rtwvif)) {
+ 		list_add_tail(&rtwvif->list, &rtwdev->rtwvifs_list);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 22d32419e8a0..11552c872f2a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1966,6 +1966,17 @@ enum ieee80211_neg_ttlm_res {
+ 	NEG_TTLM_RES_SUGGEST_PREFERRED
+ };
+ 
++/**
++ * enum ieee80211_vif_txq - per-vif intermediate queues (txqi)
++ *
++ * @IEEE80211_VIF_TXQ_MULTICAST: queue for broadcast/multicast data frames.
++ * @IEEE80211_VIF_TXQ_NUM: max number of available vif TXQs.
++ */
++enum ieee80211_vif_txq {
++	IEEE80211_VIF_TXQ_MULTICAST,
++	IEEE80211_VIF_TXQ_NUM,
++};
++
+ /**
+  * struct ieee80211_vif - per-interface data
+  *
+@@ -2020,7 +2031,7 @@ enum ieee80211_neg_ttlm_res {
+  *	for this interface.
+  * @drv_priv: data area for driver use, will always be aligned to
+  *	sizeof(void \*).
+- * @txq: the multicast data TX queue
++ * @txq: per-vif iTXQs (see enum ieee80211_vif_txq for available queues)
+  * @offload_flags: 802.3 -> 802.11 enapsulation offload flags, see
+  *	&enum ieee80211_offload_flags.
+  * @mbssid_tx_vif: Pointer to the transmitting interface if MBSSID is enabled.
+@@ -2039,7 +2050,7 @@ struct ieee80211_vif {
+ 	u8 cab_queue;
+ 	u8 hw_queue[IEEE80211_NUM_ACS];
+ 
+-	struct ieee80211_txq *txq;
++	struct ieee80211_txq *txq[IEEE80211_VIF_TXQ_NUM];
+ 
+ 	netdev_features_t netdev_features;
+ 	u32 driver_flags;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 5785fe30adaa..805dd0a799bc 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4634,12 +4634,16 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
  	rcu_read_lock();
  
-@@ -4856,11 +4643,9 @@ void ieee80211_tx_pending(struct tasklet_struct *t)
- 			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
- 						flags);
- 
--			txok = ieee80211_tx_pending_skb(local, skb);
-+			ieee80211_tx_pending_skb(local, skb);
- 			spin_lock_irqsave(&local->queue_stop_reason_lock,
- 					  flags);
--			if (!txok)
--				break;
+ 	if (wdev) {
++		struct ieee80211_txq *txq;
++
+ 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+-		if (!sdata->vif.txq) {
++		txq = sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST];
++
++		if (!txq) {
+ 			ret = 1;
+ 			goto out;
  		}
+-		ieee80211_fill_txq_stats(txqstats, to_txq_info(sdata->vif.txq));
++		ieee80211_fill_txq_stats(txqstats, to_txq_info(txq));
+ 	} else {
+ 		/* phy stats */
+ 		txqstats->filled |= BIT(NL80211_TXQ_STATS_BACKLOG_PACKETS) |
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 54c479910d05..73de4c6d420e 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -619,10 +619,10 @@ static ssize_t ieee80211_if_fmt_aqm(
+ 	struct txq_info *txqi;
+ 	int len;
+ 
+-	if (!sdata->vif.txq)
++	if (!sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST])
+ 		return 0;
+ 
+-	txqi = to_txq_info(sdata->vif.txq);
++	txqi = to_txq_info(sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 
+ 	spin_lock_bh(&local->fq.lock);
+ 	rcu_read_lock();
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e01beda8c414..c6966836817f 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -2238,6 +2238,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_txq *txq = sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST];
++
+ 	ASSERT_RTNL();
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+ 
+@@ -2245,8 +2247,8 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ 	list_del_rcu(&sdata->list);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
+ 
+-	if (sdata->vif.txq)
+-		ieee80211_txq_purge(sdata->local, to_txq_info(sdata->vif.txq));
++	if (txq)
++		ieee80211_txq_purge(sdata->local, to_txq_info(txq));
+ 
+ 	synchronize_rcu();
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 914fba53d7f1..e0a63668c785 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1321,7 +1321,7 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 
+ 		txq = sta->sta.txq[tid];
+ 	} else {
+-		txq = vif->txq;
++		txq = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
  	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 	if (!txq)
+@@ -1485,10 +1485,10 @@ void ieee80211_txq_remove_vlan(struct ieee80211_local *local,
+ 
+ 	ap = container_of(sdata->bss, struct ieee80211_sub_if_data, u.ap);
+ 
+-	if (!ap->vif.txq)
++	if (!ap->vif.txq[IEEE80211_VIF_TXQ_MULTICAST])
+ 		return;
+ 
+-	txqi = to_txq_info(ap->vif.txq);
++	txqi = to_txq_info(ap->vif.txq[IEEE80211_VIF_TXQ_MULTICAST]);
+ 	tin = &txqi->tin;
+ 
+ 	spin_lock_bh(&fq->lock);
+@@ -1510,7 +1510,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 	txqi->txq.vif = &sdata->vif;
+ 
+ 	if (!sta) {
+-		sdata->vif.txq = &txqi->txq;
++		sdata->vif.txq[IEEE80211_VIF_TXQ_MULTICAST] = &txqi->txq;
+ 		txqi->txq.tid = 0;
+ 		txqi->txq.ac = IEEE80211_AC_BE;
+ 
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8d776696df3b..7df94e1c8c7c 100644
+index 7f02bd5891eb..9f99128d6219 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -353,8 +353,6 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- 
- 	if (WARN_ON(!sdata))
- 		goto out;
--	if (!test_bit(SDATA_STATE_RUNNING, &sdata->state))
--		goto out;
- 
- 	sdata = ieee80211_get_tx_sdata(sdata);
- 	vif = &sdata->vif;
-@@ -429,6 +427,9 @@ _ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
- 			for (ac = 0; ac < n_acs; ac++) {
- 				int ac_queue = sdata->vif.hw_queue[ac];
- 
-+				if (unlikely(!ieee80211_sdata_running(sdata)))
-+					continue;
-+
- 				if (ac_queue == i ||
- 				    sdata->vif.cab_queue == i)
- 					__ieee80211_wake_txqs(sdata, ac);
-@@ -1190,8 +1191,13 @@ void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 		if (sdata->vif.type != NL80211_IFTYPE_STATION ||
- 		    !(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
-+			/*
-+			 * Use offchannel txq and tx to avoid raceing
-+			 * the frame with tearing down sta txq's
-+			 */
- 			IEEE80211_SKB_CB(skb)->flags |=
--				IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+				IEEE80211_TX_INTFL_DONT_ENCRYPT |
-+				IEEE80211_TX_INTFL_OFFCHAN_TX_OK;
- 
- 		ieee80211_tx_skb(sdata, skb);
+@@ -324,6 +324,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_vif *vif = &sdata->vif;
++	struct ieee80211_txq *txq_mc = vif->txq[IEEE80211_VIF_TXQ_MULTICAST];
+ 	struct fq *fq = &local->fq;
+ 	struct ps_data *ps = NULL;
+ 	struct txq_info *txqi;
+@@ -364,13 +365,13 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ 		}
  	}
+ 
+-	if (!vif->txq)
++	if (!txq_mc)
+ 		goto out;
+ 
+-	txqi = to_txq_info(vif->txq);
++	txqi = to_txq_info(txq_mc);
+ 
+ 	if (!test_and_clear_bit(IEEE80211_TXQ_DIRTY, &txqi->flags) ||
+-	    (ps && atomic_read(&ps->num_sta_ps)) || ac != vif->txq->ac)
++	    (ps && atomic_read(&ps->num_sta_ps)) || ac != txq_mc->ac)
+ 		goto out;
+ 
+ 	spin_unlock(&fq->lock);
 -- 
 2.48.1
 
