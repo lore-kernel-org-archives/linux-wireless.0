@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D06B018FDD8
-	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 09:43:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82C65190482
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 09:43:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739699035; cv=none; b=gUO5BjzOP7p/uWSvhgO4Vm/Cm61Eda8QhsBI9OSD+KU6YK46k+tAMGZ5QoxEUsbHYYkpTj0fsrdyQrL9wJqwnS1nO8uYGGt6vsT0NefddxGsOEKGqrnS8ZxwJvUMw2y+PHJQF/ODQQ+YWE89OkAlmcf1m70NBEbFojXpxdpKNXM=
+	t=1739699038; cv=none; b=YZ8+eW2YwFoXfiK30AZcIXaRCsWhPFCaI+H3pvXnPJP5xBL5QCULitdyTglC2Xf1OuAAI0IcbmUuYwMNtdu68NCT8fVx4f59XphYChZ6Uq1VDyGwABKXSNSsuoKIF8l/ht/4suwvcpXuA/1gTWwph5Zi6YdkjPp6yYkReq4qRSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739699035; c=relaxed/simple;
-	bh=iv4K39IAZG3QFBX2GVdd2po6RJWHDN8fkAL+IEfoNOY=;
+	s=arc-20240116; t=1739699038; c=relaxed/simple;
+	bh=DWghO8YnJLBgMprukG+wSMTKXUOeuw07YLNEFFqjhnA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=uG1JBhx7WBYgNlZEuplcCqqeKTVKyuT4KlmzaK4Qla3bs7dJXGvYAhCcHW5rIkbsW1vrdpsGiTE1sHCVZ6SPU6NKhUtCLoxtoARaEdONfuA6Bf5SrS9YdDXOu87Utrs586WOkG4pMOJJUBdvt/S2Ab+knkbIT4hG0umhOnGDWoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LAje2BlS; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=C6kqYmDOYgJxZa6SQI0Oalzc3LHTG/A643gJ8erEjGlig57gZdJX9zPVFiUJEvVjIw2aeW4F3E+aTBKLEvFuwrm1AbhhDY7ZddtG7WEwP7pVnmquF1xcAms6NoBOUBz7lsK6vVu6ZfQCkA9bCX5v7yCEDS2f/af1v6N7g1foeYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mKwhqN9x; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LAje2BlS"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mKwhqN9x"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1739699034; x=1771235034;
+  t=1739699037; x=1771235037;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=iv4K39IAZG3QFBX2GVdd2po6RJWHDN8fkAL+IEfoNOY=;
-  b=LAje2BlSu7y/czi8ZgWsV04zvonmx3ox/UUCgVsu3dpZBe3wAjU2odhJ
-   9lVsoHewQCOvEvtXNvjt0tJh5QrOy9i+3txhsGJA2VcZGnFQqRgqBkk6J
-   1nvj/s/8DybGT5tDHKlSnvAF9lRRVC93FB0eBY+CDDe8bQG5Eg3IYPBVH
-   PVX5LshI4i57VGnbPVJeziGs4ZEDvFfqJzYPPflB14EwHJfTYTpvca0B9
-   LuEKpqWDVUAxH8A0icQkfm5xeTBBKby9xUVtVBqxwfAmXyHjwo9svW0g4
-   W14973AN4dCrLXRnZYaHNPghOysqvMg8mjtFsrteZTjf4kIOJgJl79JKn
-   A==;
-X-CSE-ConnectionGUID: oD3IJMoWQMeeihqgQI23rg==
-X-CSE-MsgGUID: 3Y7tIgcmQxi6gMWmGfQcbQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11346"; a="40323384"
+  bh=DWghO8YnJLBgMprukG+wSMTKXUOeuw07YLNEFFqjhnA=;
+  b=mKwhqN9xsocZR/K+YU6XiEo0eYsSRQuSJ2IDIhly/FClBY7Jb7QpZmP2
+   XOyPWKwu960fZ00SyPAdj/fXUv6NiAk4a1OdLlmLmcQp3wRUX8dBKtv5/
+   02wjLEwn10Fn/iz5dpdVvn8COrE4k8UnNR1jgy6xPscr714h5u3hQQa1H
+   j3+wctn49tkUWA9dLokAXzZ6kCGUKAb5zQWEYSO6/AhauCUdrW986ITlv
+   88qpjB0QUjJNO7FfF5DVFDJOvrO3UcMfKStOTrDw+x86vNsVDOdIjQuMR
+   p9AbH4VCUI4ILUdbW5eFGsdVphd1o+qQKUBN5lP1m8amdnaPAePwm/tMz
+   w==;
+X-CSE-ConnectionGUID: 98ukeNfDRsWe1fHXoSpB4w==
+X-CSE-MsgGUID: L4CDEk8LTCOBMfPYFWX4jw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11346"; a="40323388"
 X-IronPort-AV: E=Sophos;i="6.13,290,1732608000"; 
-   d="scan'208";a="40323384"
+   d="scan'208";a="40323388"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:54 -0800
-X-CSE-ConnectionGUID: SAcItA0YT5GBuKH+SdHzOg==
-X-CSE-MsgGUID: SkvuNQNHR8yNYuUNyf8lzw==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:56 -0800
+X-CSE-ConnectionGUID: IBJJEJRYQDqLMWt4uRyE9Q==
+X-CSE-MsgGUID: Lll1v32QRpKO8jRKylhtCg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="118785241"
+   d="scan'208";a="118785243"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:53 -0800
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:55 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/42] wifi: iwlwifi: mld: add file low_latency.h/c
-Date: Sun, 16 Feb 2025 11:42:53 +0200
-Message-Id: <20250216111648.5069651eef22.I75c5b55b9705aac89f2469e4d88033632425c842@changeid>
+Subject: [PATCH 16/42] wifi: iwlwifi: mld: add file mcc.h/c
+Date: Sun, 16 Feb 2025 11:42:55 +0200
+Message-Id: <20250216111648.51d1f50c48be.I4b7abd423406053c349e9a98b4b3597e562f0074@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250216094321.537988-1-miriam.rachel.korenblit@intel.com>
 References: <20250216094321.537988-1-miriam.rachel.korenblit@intel.com>
@@ -61,431 +61,374 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-this file is handling low latency functionality
+this file is handling mobile country/regdomain functionality
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/mld/low_latency.c  | 335 ++++++++++++++++++
- .../wireless/intel/iwlwifi/mld/low_latency.h  |  68 ++++
- 2 files changed, 403 insertions(+)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/low_latency.h
+ drivers/net/wireless/intel/iwlwifi/mld/mcc.c | 329 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mld/mcc.h |  17 +
+ 2 files changed, 346 insertions(+)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/mcc.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/mcc.h
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mcc.c b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
 new file mode 100644
-index 000000000000..439fc10a4a41
+index 000000000000..daca14e208bd
 --- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.c
-@@ -0,0 +1,335 @@
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
+@@ -0,0 +1,329 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
-+ * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024 Intel Corporation
 + */
++
++#include <net/cfg80211.h>
++#include <net/mac80211.h>
++
++#include <fw/dbg.h>
++#include <iwl-nvm-parse.h>
++
 +#include "mld.h"
-+#include "iface.h"
-+#include "low_latency.h"
 +#include "hcmd.h"
-+#include "power.h"
++#include "mcc.h"
 +
-+#define MLD_LL_WK_INTERVAL_MSEC 500
-+#define MLD_LL_PERIOD (HZ * MLD_LL_WK_INTERVAL_MSEC / 1000)
-+#define MLD_LL_ACTIVE_WK_PERIOD (HZ * 10)
-+
-+/* packets/MLD_LL_WK_PERIOD seconds */
-+#define MLD_LL_ENABLE_THRESH 100
-+
-+static bool iwl_mld_calc_low_latency(struct iwl_mld *mld,
-+				     unsigned long timestamp)
++/* It is the caller's responsibility to free the pointer returned here */
++static struct iwl_mcc_update_resp_v8 *
++iwl_mld_parse_mcc_update_resp_v8(const struct iwl_rx_packet *pkt)
 +{
-+	struct iwl_mld_low_latency *ll = &mld->low_latency;
-+	bool global_low_latency = false;
-+	u8 num_rx_q = mld->trans->num_rx_queues;
++	const struct iwl_mcc_update_resp_v8 *mcc_resp_v8 = (const void *)pkt->data;
++	int n_channels = __le32_to_cpu(mcc_resp_v8->n_channels);
++	struct iwl_mcc_update_resp_v8 *resp_cp;
++	int notif_len = struct_size(resp_cp, channels, n_channels);
 +
-+	for (int mac_id = 0; mac_id < NUM_MAC_INDEX_DRIVER; mac_id++) {
-+		u32 total_vo_vi_pkts = 0;
-+		bool ll_period_expired;
++	if (iwl_rx_packet_payload_len(pkt) != notif_len)
++		return ERR_PTR(-EINVAL);
 +
-+		/* If it's not initialized yet, it means we have not yet
-+		 * received/transmitted any vo/vi packet on this MAC.
-+		 */
-+		if (!ll->window_start[mac_id])
-+			continue;
++	resp_cp = kmemdup(mcc_resp_v8, notif_len, GFP_KERNEL);
++	if (!resp_cp)
++		return ERR_PTR(-ENOMEM);
 +
-+		ll_period_expired =
-+			time_after(timestamp, ll->window_start[mac_id] +
-+				   MLD_LL_ACTIVE_WK_PERIOD);
++	return resp_cp;
++}
 +
-+		if (ll_period_expired)
-+			ll->window_start[mac_id] = timestamp;
++/* It is the caller's responsibility to free the pointer returned here */
++static struct iwl_mcc_update_resp_v8 *
++iwl_mld_parse_mcc_update_resp_v5_v6(const struct iwl_rx_packet *pkt)
++{
++	const struct iwl_mcc_update_resp_v4 *mcc_resp_v4 = (const void *)pkt->data;
++	struct iwl_mcc_update_resp_v8 *resp_cp;
++	int n_channels = __le32_to_cpu(mcc_resp_v4->n_channels);
++	int resp_len;
 +
-+		for (int q = 0; q < num_rx_q; q++) {
-+			struct iwl_mld_low_latency_packets_counters *counters =
-+				&mld->low_latency.pkts_counters[q];
++	if (iwl_rx_packet_payload_len(pkt) !=
++	    struct_size(mcc_resp_v4, channels, n_channels))
++		return ERR_PTR(-EINVAL);
 +
-+			spin_lock_bh(&counters->lock);
++	resp_len = struct_size(resp_cp, channels, n_channels);
++	resp_cp = kzalloc(resp_len, GFP_KERNEL);
++	if (!resp_cp)
++		return ERR_PTR(-ENOMEM);
 +
-+			total_vo_vi_pkts += counters->vo_vi[mac_id];
++	resp_cp->status = mcc_resp_v4->status;
++	resp_cp->mcc = mcc_resp_v4->mcc;
++	resp_cp->cap = cpu_to_le32(le16_to_cpu(mcc_resp_v4->cap));
++	resp_cp->source_id = mcc_resp_v4->source_id;
++	resp_cp->geo_info = mcc_resp_v4->geo_info;
++	resp_cp->n_channels = mcc_resp_v4->n_channels;
++	memcpy(resp_cp->channels, mcc_resp_v4->channels,
++	       n_channels * sizeof(__le32));
 +
-+			if (ll_period_expired)
-+				counters->vo_vi[mac_id] = 0;
++	return resp_cp;
++}
 +
-+			spin_unlock_bh(&counters->lock);
-+		}
++/* It is the caller's responsibility to free the pointer returned here */
++static struct iwl_mcc_update_resp_v8 *
++iwl_mld_update_mcc(struct iwl_mld *mld, const char *alpha2,
++		   enum iwl_mcc_source src_id)
++{
++	int resp_ver = iwl_fw_lookup_notif_ver(mld->fw, LONG_GROUP,
++					       MCC_UPDATE_CMD, 0);
++	struct iwl_mcc_update_cmd mcc_update_cmd = {
++		.mcc = cpu_to_le16(alpha2[0] << 8 | alpha2[1]),
++		.source_id = (u8)src_id,
++	};
++	struct iwl_mcc_update_resp_v8 *resp_cp;
++	struct iwl_rx_packet *pkt;
++	struct iwl_host_cmd cmd = {
++		.id = MCC_UPDATE_CMD,
++		.flags = CMD_WANT_SKB,
++		.data = { &mcc_update_cmd },
++		.len[0] = sizeof(mcc_update_cmd),
++	};
++	int ret;
++	u16 mcc;
 +
-+		/* enable immediately with enough packets but defer
-+		 * disabling only if the low-latency period expired and
-+		 * below threshold.
-+		 */
-+		if (total_vo_vi_pkts > MLD_LL_ENABLE_THRESH)
-+			mld->low_latency.result[mac_id] = true;
-+		else if (ll_period_expired)
-+			mld->low_latency.result[mac_id] = false;
++	IWL_DEBUG_LAR(mld, "send MCC update to FW with '%c%c' src = %d\n",
++		      alpha2[0], alpha2[1], src_id);
 +
-+		global_low_latency |= mld->low_latency.result[mac_id];
++	ret = iwl_mld_send_cmd(mld, &cmd);
++	if (ret)
++		return ERR_PTR(ret);
++
++	pkt = cmd.resp_pkt;
++
++	/* For Wifi-7 radios, we get version 8
++	 * For Wifi-6E radios, we get version 6
++	 * For Wifi-6 radios, we get version 5, but 5, 6, and 4 are compatible.
++	 */
++	switch (resp_ver) {
++	case 5:
++	case 6:
++		resp_cp = iwl_mld_parse_mcc_update_resp_v5_v6(pkt);
++		break;
++	case 8:
++		resp_cp = iwl_mld_parse_mcc_update_resp_v8(pkt);
++		break;
++	default:
++		IWL_FW_CHECK_FAILED(mld, "Unknown MCC_UPDATE_CMD version %d\n", resp_ver);
++		resp_cp = ERR_PTR(-EINVAL);
 +	}
 +
-+	return global_low_latency;
++	if (IS_ERR(resp_cp))
++		goto exit;
++
++	mcc = le16_to_cpu(resp_cp->mcc);
++
++	IWL_FW_CHECK(mld, !mcc, "mcc can't be 0: %d\n", mcc);
++
++	IWL_DEBUG_LAR(mld,
++		      "MCC response status: 0x%x. new MCC: 0x%x ('%c%c')\n",
++		      le32_to_cpu(resp_cp->status), mcc, mcc >> 8, mcc & 0xff);
++
++exit:
++	iwl_free_resp(&cmd);
++	return resp_cp;
 +}
 +
-+static void iwl_mld_low_latency_iter(void *_data, u8 *mac,
-+				     struct ieee80211_vif *vif)
++/* It is the caller's responsibility to free the pointer returned here */
++struct ieee80211_regdomain *
++iwl_mld_get_regdomain(struct iwl_mld *mld,
++		      const char *alpha2,
++		      enum iwl_mcc_source src_id,
++		      bool *changed)
 +{
-+	struct iwl_mld *mld = _data;
-+	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
-+	bool prev = mld_vif->low_latency_causes & LOW_LATENCY_TRAFFIC;
-+	bool low_latency;
++	struct ieee80211_regdomain *regd = NULL;
++	struct iwl_mcc_update_resp_v8 *resp;
++	u8 resp_ver = iwl_fw_lookup_notif_ver(mld->fw, IWL_ALWAYS_LONG_GROUP,
++					      MCC_UPDATE_CMD, 0);
 +
-+	if (WARN_ON(mld_vif->fw_id >= ARRAY_SIZE(mld->low_latency.result)))
++	IWL_DEBUG_LAR(mld, "Getting regdomain data for %s from FW\n", alpha2);
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	resp = iwl_mld_update_mcc(mld, alpha2, src_id);
++	if (IS_ERR(resp)) {
++		IWL_DEBUG_LAR(mld, "Could not get update from FW %ld\n",
++			      PTR_ERR(resp));
++		resp = NULL;
++		goto out;
++	}
++
++	if (changed) {
++		u32 status = le32_to_cpu(resp->status);
++
++		*changed = (status == MCC_RESP_NEW_CHAN_PROFILE ||
++			    status == MCC_RESP_ILLEGAL);
++	}
++	IWL_DEBUG_LAR(mld, "MCC update response version: %d\n", resp_ver);
++
++	regd = iwl_parse_nvm_mcc_info(mld->trans->dev, mld->cfg,
++				      __le32_to_cpu(resp->n_channels),
++				      resp->channels,
++				      __le16_to_cpu(resp->mcc),
++				      __le16_to_cpu(resp->geo_info),
++				      le32_to_cpu(resp->cap), resp_ver);
++
++	if (IS_ERR(regd)) {
++		IWL_DEBUG_LAR(mld, "Could not get parse update from FW %ld\n",
++			      PTR_ERR(regd));
++		goto out;
++	}
++
++	IWL_DEBUG_LAR(mld, "setting alpha2 from FW to %s (0x%x, 0x%x) src=%d\n",
++		      regd->alpha2, regd->alpha2[0],
++		      regd->alpha2[1], resp->source_id);
++
++	mld->mcc_src = resp->source_id;
++
++	if (!iwl_puncturing_is_allowed_in_bios(mld->bios_enable_puncturing,
++					       le16_to_cpu(resp->mcc)))
++		ieee80211_hw_set(mld->hw, DISALLOW_PUNCTURING);
++	else
++		__clear_bit(IEEE80211_HW_DISALLOW_PUNCTURING, mld->hw->flags);
++
++out:
++	kfree(resp);
++	return regd;
++}
++
++/* It is the caller's responsibility to free the pointer returned here */
++static struct ieee80211_regdomain *
++iwl_mld_get_current_regdomain(struct iwl_mld *mld,
++			      bool *changed)
++{
++	return iwl_mld_get_regdomain(mld, "ZZ",
++				     MCC_SOURCE_GET_CURRENT, changed);
++}
++
++void iwl_mld_update_changed_regdomain(struct iwl_mld *mld)
++{
++	struct ieee80211_regdomain *regd;
++	bool changed;
++
++	regd = iwl_mld_get_current_regdomain(mld, &changed);
++
++	if (IS_ERR_OR_NULL(regd))
 +		return;
 +
-+	low_latency = mld->low_latency.result[mld_vif->fw_id];
-+
-+	if (prev != low_latency)
-+		iwl_mld_vif_update_low_latency(mld, vif, low_latency,
-+					       LOW_LATENCY_TRAFFIC);
++	if (changed)
++		regulatory_set_wiphy_regd(mld->wiphy, regd);
++	kfree(regd);
 +}
 +
-+static void iwl_mld_low_latency_wk(struct wiphy *wiphy, struct wiphy_work *wk)
++static int iwl_mld_apply_last_mcc(struct iwl_mld *mld,
++				  const char *alpha2)
 +{
-+	struct iwl_mld *mld = container_of(wk, struct iwl_mld,
-+					   low_latency.work.work);
-+	unsigned long timestamp = jiffies;
-+	bool low_latency_active;
-+
-+	if (mld->fw_status.in_hw_restart)
-+		return;
-+
-+	/* It is assumed that the work was scheduled only after checking
-+	 * at least MLD_LL_PERIOD has passed since the last update.
-+	 */
-+
-+	low_latency_active = iwl_mld_calc_low_latency(mld, timestamp);
-+
-+	/* Update the timestamp now after the low-latency calculation */
-+	mld->low_latency.timestamp = timestamp;
-+
-+	/* If low-latency is active we need to force re-evaluation after
-+	 * 10 seconds, so that we can disable low-latency when
-+	 * the low-latency traffic ends.
-+	 *
-+	 * Otherwise, we don't need to run the work because there is nothing to
-+	 * disable.
-+	 *
-+	 * Note that this has no impact on the regular scheduling of the
-+	 * updates triggered by traffic - those happen whenever the
-+	 * MLD_LL_PERIOD timeout expire.
-+	 */
-+	if (low_latency_active)
-+		wiphy_delayed_work_queue(mld->wiphy, &mld->low_latency.work,
-+					 MLD_LL_ACTIVE_WK_PERIOD);
-+
-+	ieee80211_iterate_active_interfaces(mld->hw,
-+					    IEEE80211_IFACE_ITER_NORMAL,
-+					    iwl_mld_low_latency_iter, mld);
-+}
-+
-+int iwl_mld_low_latency_init(struct iwl_mld *mld)
-+{
-+	struct iwl_mld_low_latency *ll = &mld->low_latency;
-+	unsigned long ts = jiffies;
-+
-+	ll->pkts_counters = kcalloc(mld->trans->num_rx_queues,
-+				    sizeof(*ll->pkts_counters), GFP_KERNEL);
-+	if (!ll->pkts_counters)
-+		return -ENOMEM;
-+
-+	for (int q = 0; q < mld->trans->num_rx_queues; q++)
-+		spin_lock_init(&ll->pkts_counters[q].lock);
-+
-+	wiphy_delayed_work_init(&ll->work, iwl_mld_low_latency_wk);
-+
-+	ll->timestamp = ts;
-+
-+	/* The low-latency window_start will be initialized per-MAC on
-+	 * the first vo/vi packet received/transmitted.
-+	 */
-+
-+	return 0;
-+}
-+
-+void iwl_mld_low_latency_free(struct iwl_mld *mld)
-+{
-+	struct iwl_mld_low_latency *ll = &mld->low_latency;
-+
-+	kfree(ll->pkts_counters);
-+	ll->pkts_counters = NULL;
-+}
-+
-+void iwl_mld_low_latency_restart_cleanup(struct iwl_mld *mld)
-+{
-+	struct iwl_mld_low_latency *ll = &mld->low_latency;
-+
-+	ll->timestamp = jiffies;
-+
-+	memset(ll->window_start, 0, sizeof(ll->window_start));
-+	memset(ll->result, 0, sizeof(ll->result));
-+
-+	for (int q = 0; q < mld->trans->num_rx_queues; q++)
-+		memset(ll->pkts_counters[q].vo_vi, 0,
-+		       sizeof(ll->pkts_counters[q].vo_vi));
-+}
-+
-+static int iwl_mld_send_low_latency_cmd(struct iwl_mld *mld, bool low_latency,
-+					u16 mac_id)
-+{
-+	struct iwl_mac_low_latency_cmd cmd = {
-+		.mac_id = cpu_to_le32(mac_id)
-+	};
-+	u16 cmd_id = WIDE_ID(MAC_CONF_GROUP, LOW_LATENCY_CMD);
++	struct ieee80211_regdomain *regd;
++	u32 used_src;
++	bool changed;
 +	int ret;
 +
-+	if (low_latency) {
-+		/* Currently we don't care about the direction */
-+		cmd.low_latency_rx = 1;
-+		cmd.low_latency_tx = 1;
-+	}
++	/* save the last source in case we overwrite it below */
++	used_src = mld->mcc_src;
 +
-+	ret = iwl_mld_send_cmd_pdu(mld, cmd_id, &cmd);
-+	if (ret)
-+		IWL_ERR(mld, "Failed to send low latency command\n");
++	/* Notify the firmware we support wifi location updates */
++	regd = iwl_mld_get_current_regdomain(mld, NULL);
++	if (!IS_ERR_OR_NULL(regd))
++		kfree(regd);
 +
++	/* Now set our last stored MCC and source */
++	regd = iwl_mld_get_regdomain(mld, alpha2, used_src,
++				     &changed);
++	if (IS_ERR_OR_NULL(regd))
++		return -EIO;
++
++	/* update cfg80211 if the regdomain was changed */
++	if (changed)
++		ret = regulatory_set_wiphy_regd_sync(mld->wiphy, regd);
++	else
++		ret = 0;
++
++	kfree(regd);
 +	return ret;
 +}
 +
-+static void iwl_mld_vif_set_low_latency(struct iwl_mld_vif *mld_vif, bool set,
-+					enum iwl_mld_low_latency_cause cause)
++int iwl_mld_init_mcc(struct iwl_mld *mld)
 +{
-+	if (set)
-+		mld_vif->low_latency_causes |= cause;
-+	else
-+		mld_vif->low_latency_causes &= ~cause;
-+}
++	const struct ieee80211_regdomain *r;
++	struct ieee80211_regdomain *regd;
++	char mcc[3];
++	int retval;
 +
-+void iwl_mld_vif_update_low_latency(struct iwl_mld *mld,
-+				    struct ieee80211_vif *vif,
-+				    bool low_latency,
-+				    enum iwl_mld_low_latency_cause cause)
-+{
-+	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
-+	bool prev;
++	/* try to replay the last set MCC to FW */
++	r = wiphy_dereference(mld->wiphy, mld->wiphy->regd);
 +
-+	prev = iwl_mld_vif_low_latency(mld_vif);
-+	iwl_mld_vif_set_low_latency(mld_vif, low_latency, cause);
++	if (r)
++		return iwl_mld_apply_last_mcc(mld, r->alpha2);
 +
-+	low_latency = iwl_mld_vif_low_latency(mld_vif);
-+	if (low_latency == prev)
-+		return;
++	regd = iwl_mld_get_current_regdomain(mld, NULL);
++	if (IS_ERR_OR_NULL(regd))
++		return -EIO;
 +
-+	if (iwl_mld_send_low_latency_cmd(mld, low_latency, mld_vif->fw_id)) {
-+		/* revert to previous low-latency state */
-+		iwl_mld_vif_set_low_latency(mld_vif, prev, cause);
-+		return;
++	if (!iwl_bios_get_mcc(&mld->fwrt, mcc)) {
++		kfree(regd);
++		regd = iwl_mld_get_regdomain(mld, mcc, MCC_SOURCE_BIOS, NULL);
++		if (IS_ERR_OR_NULL(regd))
++			return -EIO;
 +	}
 +
-+	if (low_latency)
-+		iwl_mld_leave_omi_bw_reduction(mld);
++	retval = regulatory_set_wiphy_regd_sync(mld->wiphy, regd);
 +
-+	if (ieee80211_vif_type_p2p(vif) != NL80211_IFTYPE_P2P_CLIENT)
-+		return;
-+
-+	iwl_mld_update_mac_power(mld, vif, false);
++	kfree(regd);
++	return retval;
 +}
 +
-+static bool iwl_mld_is_vo_vi_pkt(struct ieee80211_hdr *hdr)
++static void iwl_mld_find_assoc_vif_iterator(void *data, u8 *mac,
++					    struct ieee80211_vif *vif)
 +{
-+	u8 tid;
-+	static const u8 tid_to_mac80211_ac[] = {
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VO,
-+		IEEE80211_AC_VO,
-+	};
++	bool *assoc = data;
 +
-+	if (!hdr || !ieee80211_is_data_qos(hdr->frame_control))
-+		return false;
-+
-+	tid = ieee80211_get_tid(hdr);
-+	if (tid >= IWL_MAX_TID_COUNT)
-+		return false;
-+
-+	return tid_to_mac80211_ac[tid] < IEEE80211_AC_VI;
++	if (vif->type == NL80211_IFTYPE_STATION &&
++	    vif->cfg.assoc)
++		*assoc = true;
 +}
 +
-+void iwl_mld_low_latency_update_counters(struct iwl_mld *mld,
-+					 struct ieee80211_hdr *hdr,
-+					 struct ieee80211_sta *sta,
-+					 u8 queue)
++static bool iwl_mld_is_a_vif_assoc(struct iwl_mld *mld)
 +{
-+	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
-+	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(mld_sta->vif);
-+	struct iwl_mld_low_latency_packets_counters *counters;
-+	unsigned long ts = jiffies ? jiffies : 1;
-+	u8 fw_id = mld_vif->fw_id;
++	bool assoc = false;
 +
-+	/* we should have failed op mode init if NULL */
-+	if (WARN_ON_ONCE(!mld->low_latency.pkts_counters))
-+		return;
-+
-+	if (WARN_ON_ONCE(fw_id >= ARRAY_SIZE(counters->vo_vi) ||
-+			 queue >= mld->trans->num_rx_queues))
-+		return;
-+
-+	if (mld->low_latency.stopped)
-+		return;
-+
-+	if (!iwl_mld_is_vo_vi_pkt(hdr))
-+		return;
-+
-+	counters = &mld->low_latency.pkts_counters[queue];
-+
-+	spin_lock_bh(&counters->lock);
-+	counters->vo_vi[fw_id]++;
-+	spin_unlock_bh(&counters->lock);
-+
-+	/* Initialize the window_start on the first vo/vi packet */
-+	if (!mld->low_latency.window_start[fw_id])
-+		mld->low_latency.window_start[fw_id] = ts;
-+
-+	if (time_is_before_jiffies(mld->low_latency.timestamp + MLD_LL_PERIOD))
-+		wiphy_delayed_work_queue(mld->wiphy, &mld->low_latency.work,
-+					 0);
++	ieee80211_iterate_active_interfaces_atomic(mld->hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   iwl_mld_find_assoc_vif_iterator,
++						   &assoc);
++	return assoc;
 +}
 +
-+void iwl_mld_low_latency_stop(struct iwl_mld *mld)
++void iwl_mld_handle_update_mcc(struct iwl_mld *mld, struct iwl_rx_packet *pkt)
 +{
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	mld->low_latency.stopped = true;
-+
-+	wiphy_delayed_work_cancel(mld->wiphy, &mld->low_latency.work);
-+}
-+
-+void iwl_mld_low_latency_restart(struct iwl_mld *mld)
-+{
-+	struct iwl_mld_low_latency *ll = &mld->low_latency;
-+	bool low_latency = false;
-+	unsigned long ts = jiffies;
++	struct iwl_mcc_chub_notif *notif = (void *)pkt->data;
++	enum iwl_mcc_source src;
++	char mcc[3];
++	struct ieee80211_regdomain *regd;
++	bool changed;
 +
 +	lockdep_assert_wiphy(mld->wiphy);
 +
-+	ll->timestamp = ts;
-+	mld->low_latency.stopped = false;
-+
-+	for (int mac = 0; mac < NUM_MAC_INDEX_DRIVER; mac++) {
-+		ll->window_start[mac] = 0;
-+		low_latency |= ll->result[mac];
-+
-+		for (int q = 0; q < mld->trans->num_rx_queues; q++) {
-+			spin_lock_bh(&ll->pkts_counters[q].lock);
-+			ll->pkts_counters[q].vo_vi[mac] = 0;
-+			spin_unlock_bh(&ll->pkts_counters[q].lock);
-+		}
++	if (iwl_mld_is_a_vif_assoc(mld) &&
++	    notif->source_id == MCC_SOURCE_WIFI) {
++		IWL_DEBUG_LAR(mld, "Ignore mcc update while associated\n");
++		return;
 +	}
 +
-+	/* if low latency is active, force re-evaluation to cover the case of
-+	 * no traffic.
-+	 */
-+	if (low_latency)
-+		wiphy_delayed_work_queue(mld->wiphy, &ll->work, MLD_LL_PERIOD);
++	mcc[0] = le16_to_cpu(notif->mcc) >> 8;
++	mcc[1] = le16_to_cpu(notif->mcc) & 0xff;
++	mcc[2] = '\0';
++	src = notif->source_id;
++
++	IWL_DEBUG_LAR(mld,
++		      "RX: received chub update mcc cmd (mcc '%s' src %d)\n",
++		      mcc, src);
++	regd = iwl_mld_get_regdomain(mld, mcc, src, &changed);
++	if (IS_ERR_OR_NULL(regd))
++		return;
++
++	if (changed)
++		regulatory_set_wiphy_regd(mld->hw->wiphy, regd);
++	kfree(regd);
 +}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/low_latency.h b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.h
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mcc.h b/drivers/net/wireless/intel/iwlwifi/mld/mcc.h
 new file mode 100644
-index 000000000000..f59684d235af
+index 000000000000..2b31e5b5e2ed
 --- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/low_latency.h
-@@ -0,0 +1,68 @@
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mcc.h
+@@ -0,0 +1,17 @@
 +/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
 +/*
 + * Copyright (C) 2024 Intel Corporation
 + */
-+#ifndef __iwl_mld_low_latency_h__
-+#define __iwl_mld_low_latency_h__
++#ifndef __iwl_mld_mcc_h__
++#define __iwl_mld_mcc_h__
 +
-+/**
-+ * struct iwl_mld_low_latency_packets_counters - Packets counters
-+ * @lock: synchronize the counting in data path against the worker
-+ * @vo_vi: per-mac, counts the number of TX and RX voice and video packets
-+ */
-+struct iwl_mld_low_latency_packets_counters {
-+	spinlock_t lock;
-+	u32 vo_vi[NUM_MAC_INDEX_DRIVER];
-+} ____cacheline_aligned_in_smp;
++int iwl_mld_init_mcc(struct iwl_mld *mld);
++void iwl_mld_handle_update_mcc(struct iwl_mld *mld, struct iwl_rx_packet *pkt);
++void iwl_mld_update_changed_regdomain(struct iwl_mld *mld);
++struct ieee80211_regdomain *
++iwl_mld_get_regdomain(struct iwl_mld *mld,
++		      const char *alpha2,
++		      enum iwl_mcc_source src_id,
++		      bool *changed);
 +
-+/**
-+ * enum iwl_mld_low_latency_cause - low-latency set causes
-+ *
-+ * @LOW_LATENCY_TRAFFIC: indicates low-latency traffic was detected
-+ * @LOW_LATENCY_DEBUGFS: low-latency mode set from debugfs
-+ * @LOW_LATENCY_VIF_TYPE: low-latency mode set because of vif type (AP)
-+ */
-+enum iwl_mld_low_latency_cause {
-+	LOW_LATENCY_TRAFFIC	= BIT(0),
-+	LOW_LATENCY_DEBUGFS	= BIT(1),
-+	LOW_LATENCY_VIF_TYPE	= BIT(2),
-+};
-+
-+/**
-+ * struct iwl_mld_low_latency - Manage low-latency detection and activation.
-+ * @work: this work is used to detect low-latency by monitoring the number of
-+ *	voice and video packets transmitted in a period of time. If the
-+ *	threshold is reached, low-latency is activated. When active,
-+ *	it is deactivated if the threshold is not reached within a
-+ *	10-second period.
-+ * @timestamp: timestamp of the last update.
-+ * @window_start: per-mac, timestamp of the start of the current window. when
-+ *	the window is over, the counters are reset.
-+ * @pkts_counters: per-queue array voice/video packet counters
-+ * @result: per-mac latest low-latency result
-+ * @stopped: if true, ignore the requests to update the counters
-+ */
-+struct iwl_mld_low_latency {
-+	struct wiphy_delayed_work work;
-+	unsigned long timestamp;
-+	unsigned long window_start[NUM_MAC_INDEX_DRIVER];
-+	struct iwl_mld_low_latency_packets_counters *pkts_counters;
-+	bool result[NUM_MAC_INDEX_DRIVER];
-+	bool stopped;
-+};
-+
-+int iwl_mld_low_latency_init(struct iwl_mld *mld);
-+void iwl_mld_low_latency_free(struct iwl_mld *mld);
-+void iwl_mld_low_latency_restart_cleanup(struct iwl_mld *mld);
-+void iwl_mld_vif_update_low_latency(struct iwl_mld *mld,
-+				    struct ieee80211_vif *vif,
-+				    bool low_latency,
-+				    enum iwl_mld_low_latency_cause cause);
-+void iwl_mld_low_latency_update_counters(struct iwl_mld *mld,
-+					 struct ieee80211_hdr *hdr,
-+					 struct ieee80211_sta *sta,
-+					 u8 queue);
-+void iwl_mld_low_latency_stop(struct iwl_mld *mld);
-+void iwl_mld_low_latency_restart(struct iwl_mld *mld);
-+
-+#endif /* __iwl_mld_low_latency_h__ */
++#endif /* __iwl_mld_mcc_h__ */
 -- 
 2.34.1
 
