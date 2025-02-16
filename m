@@ -1,33 +1,36 @@
 Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7901D194094
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 78FD419342E
 	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 15:32:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739719952; cv=none; b=NpfbpIlteIpeaptm0thqQi9Cjew9wzjhs0wI6hURI12gs3uxboQVkccGAFrPKXNIo5apr4VIW1oqh9X1T4rYFNIHRTzENVr4A9RpoarTf8TCDBH/ShGUAILuQ1qy3GswyjnDFBgU1moJaYbyUz5ngQoor0atEdQtoZBNTYVLMeE=
+	t=1739719952; cv=none; b=UeEjovKcqI+s+0Ts33Wca/UVhWBX8ZaAn3aTCYQDG3X9UzaWx98bORNHplwb78T+0CVh/AYb6rB2jfOPWK/1jxVixBHDeuNeoCjIc61Y46uwIC2/SMv98tPrGvdxGSQ4KOQe6ZJ+j+1qij/z73aL15DpjEhiqa7itJaMuud1kXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1739719952; c=relaxed/simple;
-	bh=AT6gNZ+ZY9nDCdTLwY2vUjfPAKn5slzsIRsvRqba0N4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b9G7ZfGiLrZ5ZkaSGI9mFhNK5kQD70HbaYmSk+mtYvPSGEArdGg0G8mEoeQe3DmeXDZvnw0eu0P9POYbunMQIsae8haOnaxRH8ZwfkKzMkY3dxoI8H6qj8A+JauhISV06lwvq1OOeV+meGi7Dbppx2v5+CTg7h4qHVYQSdg0cRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=xwSbaLpm; arc=none smtp.client-ip=5.252.227.236
+	bh=n6U23k8AFNA04V67wNs4lfznbuylpgi8vMsU7I1Ivq8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MKQ2rXWqYPLAYJtKCt14khYGnmz2RCH6HZEFAeYj7ZwMSxDrSlsM7ZfaerUnvJobHlYjmM4XYYBC580hAecHcJMz+dtrCo3grwd/7LHTFVqzdDsCu0FVI53bi1cIl3iW61uM2z5O64nHNVTbgQXeDqJ64jvjOMSmXNyL/9osfMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=oLsgAzIp; arc=none smtp.client-ip=5.252.227.236
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="xwSbaLpm"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="oLsgAzIp"
 From: Alexander Wetzel <Alexander@wetzel-home.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1739719937;
-	bh=AT6gNZ+ZY9nDCdTLwY2vUjfPAKn5slzsIRsvRqba0N4=;
-	h=From:To:Cc:Subject:Date;
-	b=xwSbaLpmkSA9lLayIvbS7j+BrlQN1P6KyFqiKIKHxOBjdzkzhaUCrEcccpsY8lZcO
-	 tzhRvRYrjPY0Lf5qfdju2IAouFLF6H3qRLUOvC+/82SCKi+oOaSvqawDhRzHndcDR8
-	 cI2Y4YL3H1F3srHspC64NBIDdRuGKvsM5/7kFcYU=
+	s=wetzel-home; t=1739719938;
+	bh=n6U23k8AFNA04V67wNs4lfznbuylpgi8vMsU7I1Ivq8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=oLsgAzIp1lB17jlrO2zZy5fXYAfuea+urXRacBelD2YAxb9O2Xfc1Wicr5ML88id5
+	 JNc3zMru18AluyvaZMxGBoG+E4BIfJ5jMHg1cyex0xRtk9MKfsIpiOfHplyjSU/Ir7
+	 PEP3SCSEIDrmbWZ4tNEg0xnSDupcgBX4U6HdMvSA=
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
 	Alexander Wetzel <Alexander@wetzel-home.de>
-Subject: [PATCH 00/10] Convert mac80211 to TXQs only
-Date: Sun, 16 Feb 2025 16:31:50 +0100
-Message-ID: <20250216153200.1318604-1-Alexander@wetzel-home.de>
+Subject: [PATCH 10/10] wifi: mac80211: Cleanup *ieee80211_wake_txq* naming
+Date: Sun, 16 Feb 2025 16:32:00 +0100
+Message-ID: <20250216153200.1318604-11-Alexander@wetzel-home.de>
 X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250216153200.1318604-1-Alexander@wetzel-home.de>
+References: <20250216153200.1318604-1-Alexander@wetzel-home.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -36,102 +39,112 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series switches all TX handling in mac80211 over to TXQs.
-TXQs can take over buffering in many - potentially even all - cases
-where we use separate solutions so far.
-This reduces the complexity of the TX path and making it simpler to use
-TX in mac8021.
+ieee80211_wake_txq() and ieee80211_wake_txqs() are not used.
+Rename:
+	_ieee80211_wake_txqs()  -> ieee80211_wake_txqs()
+	__ieee80211_wake_txqs() -> _ieee80211_wake_txqs()
+	__ieee80211_wake_txq()  -> ieee80211_wake_txq()
 
-These patches continue the work to get rid of the legacy TX path we
-started drivers with
-https://lore.kernel.org/r/20221009163040.25637-1-alexander@wetzel-home.de
+Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
+---
+ net/mac80211/iface.c |  2 +-
+ net/mac80211/util.c  | 20 ++++++++++----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-and was inspired by this old discussion on the wireless mailing list:
-https://lore.kernel.org/r/1507217947.2387.60.camel@sipsolutions.net/
-
-Changes compared to RFC v1 are documented in the individual patches.
-
-A quick overview of the patches in the series:
-  wifi: mac80211: move rate control setup
-	Broken off from "Add new TX queues to replace legacy TX" as
-	requested. Moves some exiting code around.
-
-  wifi: mac80211: Always provide the MMPDU TXQ
-	When only using TXQs for TX we akways need this.
-	Creates and uses MMPDU TXQs even for drivers not supporting
-	them.
-
-  wifi: mac80211: Convert vif->txq to an array
-	We need some more TXQs for the patch below. Create them.
-
-  wifi: mac80211: Add new TX queues to replace legacy TX
-	This starts the core of the move to TXQs.
-	Creats all the missing TXQs and updates the support function for
-	them. It also directly switches traffic to them, when possible.
-	(Only offchannel is sticking to legacy TX after that.)
-
-  wifi: mac80211: Stop using legacy TX path
-	Drop the legacy TX functions and move offchannel TX to the new
-	alternate TXQ path named TXQ_NOQUEUE (so far).
-        With that mac80211 has two TX paths both using TXQ:
-         - The existing one, which uses the TXQ for queuing and
-         - TXQ_NOQUEUE. Which just puts frames into a TXQ and
-           immediately sends out the frame by also calling drv_tx() for
-           it. There never can be more than one frame in any of these
-           TXQs. They never see a wake_tx_queue call by the driver or
-           mac80211.
-
-  wifi: mac80211: Call ieee80211_tx_h_select_key only once
-	A optimization which could be without the patches, too. Would
-	just be done differently. (Not required)
-
-  wifi: mac80211: Rename IEEE80211_TX_INTFL_OFFCHAN_TX_OK
-	Rename the flag used to select the NOQUEU TX path to make its
-	use more obvious.
-
-  wifi: mac80211: Simplify AMPDU handling
-	Uses TXQs to buffer frames when AMPDU is started/stopped.
-
-  wifi: mac80211: Migrate TX to kthread
-	Moves all TX operation except TXQ_NOQUEUE to a new kthread.
-        This hooks into the existing txq scheduling and uses
-	local->active_txqs to determine which TXQs need to run.
-
-  wifi: mac80211: Cleanup *ieee80211_wake_txq* naming
-	Rename a few functions.
-
- drivers/net/wireless/ath/ath10k/mac.c         |   8 +-
- drivers/net/wireless/ath/ath9k/ath9k.h        |   2 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   6 +-
- .../net/wireless/mediatek/mt76/mt7603/main.c  |   3 +-
- .../net/wireless/mediatek/mt76/mt7615/main.c  |   5 +-
- .../net/wireless/mediatek/mt76/mt76x02_util.c |   3 +-
- .../net/wireless/mediatek/mt76/mt7915/main.c  |   6 +-
- .../net/wireless/mediatek/mt76/mt7921/main.c  |   5 +-
- .../net/wireless/mediatek/mt76/mt7925/main.c  |   5 +-
- .../net/wireless/mediatek/mt76/mt7996/main.c  |   5 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c |   4 +-
- drivers/net/wireless/realtek/rtw88/main.c     |   2 +-
- drivers/net/wireless/realtek/rtw89/mac80211.c |   2 +-
- include/net/mac80211.h                        |  60 +-
- net/mac80211/agg-tx.c                         | 129 +---
- net/mac80211/cfg.c                            |   8 +-
- net/mac80211/debugfs_netdev.c                 |  46 +-
- net/mac80211/debugfs_sta.c                    |   2 -
- net/mac80211/driver-ops.h                     |  28 +-
- net/mac80211/ieee80211_i.h                    |  32 +-
- net/mac80211/iface.c                          | 144 ++--
- net/mac80211/main.c                           |   9 +-
- net/mac80211/mesh.c                           |  13 +-
- net/mac80211/mlme.c                           |   2 +-
- net/mac80211/offchannel.c                     |   2 +-
- net/mac80211/rx.c                             |  11 +-
- net/mac80211/scan.c                           |   2 +-
- net/mac80211/sta_info.c                       |   6 +-
- net/mac80211/sta_info.h                       |  30 +-
- net/mac80211/tx.c                             | 616 ++++--------------
- net/mac80211/util.c                           | 162 +++--
- 31 files changed, 534 insertions(+), 824 deletions(-)
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 0437e87ec8f2..2a2aaec68d58 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -467,7 +467,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+-	synchronize_rcu(); /* flush _ieee80211_wake_txqs() */
++	synchronize_rcu(); /* flush ieee80211_wake_txqs() */
+ 
+ 	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
+ 	if (cancel_scan)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d1e2775e1abc..7070c2312dc4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -320,8 +320,8 @@ EXPORT_SYMBOL(ieee80211_handle_wake_tx_queue);
+ 
+ __releases(&local->fq->lock)
+ __acquires(&local->fq->lock)
+-static void __ieee80211_wake_txq(struct ieee80211_local *local,
+-				 struct ieee80211_txq *txq)
++static void ieee80211_wake_txq(struct ieee80211_local *local,
++			       struct ieee80211_txq *txq)
+ {
+ 	struct txq_info *txqi = to_txq_info(txq);
+ 	struct fq *fq = &local->fq;
+@@ -334,7 +334,7 @@ static void __ieee80211_wake_txq(struct ieee80211_local *local,
+ 	}
+ }
+ 
+-static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
++static void _ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct fq *fq = &local->fq;
+@@ -365,11 +365,11 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ 	 */
+ 
+ 	if (ac == txq_fb->ac)
+-		__ieee80211_wake_txq(local, txq_fb);
++		ieee80211_wake_txq(local, txq_fb);
+ 
+ 	if (txq_mc && ac == txq_mc->ac &&
+ 	    (!ps || !atomic_read(&ps->num_sta_ps)))
+-		__ieee80211_wake_txq(local, txq_mc);
++		ieee80211_wake_txq(local, txq_mc);
+ 
+ 	/* STA TXQs */
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+@@ -390,7 +390,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ 				continue;
+ 
+ 			/* releases and retakes fq->lock */
+-			__ieee80211_wake_txq(local, txq);
++			ieee80211_wake_txq(local, txq);
+ 		}
+ 	}
+ out:
+@@ -401,7 +401,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
+ static void
+ __releases(&local->queue_stop_reason_lock)
+ __acquires(&local->queue_stop_reason_lock)
+-_ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
++ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int n_acs = IEEE80211_NUM_ACS;
+@@ -428,7 +428,7 @@ _ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
+ 
+ 				if (ac_queue == i ||
+ 				    sdata->vif.cab_queue == i)
+-					__ieee80211_wake_txqs(sdata, ac);
++					_ieee80211_wake_txqs(sdata, ac);
+ 			}
+ 		}
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, *flags);
+@@ -472,13 +472,13 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+ 		tasklet_schedule(&local->tx_pending_tasklet);
+ 
+ 	/*
+-	 * Calling _ieee80211_wake_txqs here can be a problem because it may
++	 * Calling ieee80211_wake_txqs here can be a problem because it may
+ 	 * release queue_stop_reason_lock which has been taken by
+ 	 * __ieee80211_wake_queue's caller. It is certainly not very nice to
+ 	 * release someone's lock, but it is fine because all the callers of
+ 	 * __ieee80211_wake_queue call it right before releasing the lock.
+ 	 */
+-	_ieee80211_wake_txqs(local, flags);
++	ieee80211_wake_txqs(local, flags);
+ }
+ 
+ static int ac_has_active_txq(struct ieee80211_local *local)
 -- 
 2.48.1
+
