@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F6318DB08
-	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 09:43:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B399118DB00
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Feb 2025 09:43:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739699029; cv=none; b=MNOyPTYAzyv4zZaxwAj7taRwyLJ1uC2GSMQaTRBbyRmN3DGbHVrYTmk4Y4fLAkV/GJcRPIwz72QcrxCG4lfRrE+R3WjqxNqq1/zozKmLdHotwddVjwNs7Qm+TcIXS4gUrgoZfY4BJRYhMMmCKx/HGHbWY8GK8s62VABT3fq4hk4=
+	t=1739699031; cv=none; b=DGtSOiNH6T4sCTFI4O0wMmfus3Twf3icUhHs7Cz+oDlV1eXuh4dWrcAsZUCRic0Vaaj5OU9lYC3y1vJyWG81kA/dDeC7y8nVJZYwjzp87mmHsnOCNJ6j/lYJ/AoOJX7R5jPqtCXq1kDMhZM4Pj4nkrUNJP3Ep9/9CZ6pwhPiS0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739699029; c=relaxed/simple;
-	bh=8hXNhuFiAC3CI45Npuy3kdehu5tyqzxyCEOJo2Q+/CM=;
+	s=arc-20240116; t=1739699031; c=relaxed/simple;
+	bh=6iKIba30iWoSB9BOkpfz3OqrUaQEKhNGZoPqy6XykZA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=clo+BYb9j3mzSqGob/S/sXqm0S6v1DPWuEy3rS5UlTXbxcmvQhw+ymYHke2aUHmiiidwTyxcscZL9M7Ox7aljjbGfVaWuVpYNRBRv5rsdoBd6ZahbQOiPf9PK9wnIW5Nd2xL6gwjw85zIz31K4p+9OhuQH+w7lTNVn5TrzjTwAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NsbJRkdP; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=JYxFFucj/WmJt+BnWaXd74sSnwZi9SCHfpUv6c2ZAJQ8rQA/UC2xzF6DxiLQnTahkY7kEm9NKSVjOla1K9yZiHk/lfKhFAqoaUYVqKqkW+mbchN6xr2q0aGgq+5S0z4ifZhiRWEfQWDQo8ZprhCfP3BgRbuK05XgiyUgRqPBXNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=h/Xgu4MB; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NsbJRkdP"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="h/Xgu4MB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1739699026; x=1771235026;
+  t=1739699029; x=1771235029;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8hXNhuFiAC3CI45Npuy3kdehu5tyqzxyCEOJo2Q+/CM=;
-  b=NsbJRkdPFilIsvA9RB590IjbDuBdcKOeH06P4zSYSW+YPRBzBDjMzfGw
-   df3sxg3Q8qXIq0Yx5SYRJpP/4ZWjx5HX4oqQmhdaQjZrVwyvyWIn8pe1Z
-   9w/4bGnc5UycbwA7JxzUC3MN6BTixk6dkYPPu0s3MAOutTZq8EJRryrS6
-   7rCJ0+EDAm6N1OM6WeSi9fYhQMY0fA6e1LI6bQOQsQoPXis+EUAqiLzAu
-   Wrf2JR2UkUyTQAo9aikyQPRUSRua/bEVepspaodQP2xZ8yjTY7IdQD5gb
-   t2MleZC5UCxJ6s/qVpBIXjxaq7EyszB4u9Up1EKRhwdMQaqf2TbPrKH/I
-   Q==;
-X-CSE-ConnectionGUID: DZd3z3mJTOScYxpA148CwQ==
-X-CSE-MsgGUID: /ep8cN3fRnm4EOlIRUgFZQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11346"; a="40323371"
+  bh=6iKIba30iWoSB9BOkpfz3OqrUaQEKhNGZoPqy6XykZA=;
+  b=h/Xgu4MBruhaIHVNWZuUvOUy3Gp97iV7JMeQXPr9rpD3JwGHjtwwYqbt
+   EHkmKag49o7/f8Gdgf40mSEZJ4DdytwMUnrpqo5KoakbpbA67uILhR8wE
+   5sFkL/XtJOe/MzL+oJDupZYiEpc1KTGOQvHkshJ53oeTCiGoguGvkXnfs
+   6WS0+ADlhCyHdt7nME21pRY6sj7KHSKrN/deM1fTb38T2vzGOzJEG1t69
+   exZwBpjiKw7GH7dXcxsFxu+pYbaxeitKt9PQ0weBbw2a/pBNzmsqI2IAz
+   JmHuXw1hsqcmefby+etFfaYEq6SV7YqeYNF6mijNjwGD/Tqo+rXHyWv0i
+   w==;
+X-CSE-ConnectionGUID: CIqrMNWcQNiLooRFamjorw==
+X-CSE-MsgGUID: DXnkZvM6T8ag00yRurBvNg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11346"; a="40323375"
 X-IronPort-AV: E=Sophos;i="6.13,290,1732608000"; 
-   d="scan'208";a="40323371"
+   d="scan'208";a="40323375"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:46 -0800
-X-CSE-ConnectionGUID: IPcQtCM2RIKnxB5T5ha+Rg==
-X-CSE-MsgGUID: pyEXSLYmRZCuMooZ/t2WVg==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:49 -0800
+X-CSE-ConnectionGUID: gDv4oSJ1TdGu1lBvVPMc/g==
+X-CSE-MsgGUID: AI7sG1KbRSGCDy5Q3O25WA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="118785227"
+   d="scan'208";a="118785232"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:45 -0800
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2025 01:43:47 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/42] wifi: iwlwifi: mld: add file fw.c
-Date: Sun, 16 Feb 2025 11:42:47 +0200
-Message-Id: <20250216111648.358e364ea3eb.I44dc2b28e071f3f127b360a4b63b10eb42a900fb@changeid>
+Subject: [PATCH 10/42] wifi: iwlwifi: mld: add file iface.h/c
+Date: Sun, 16 Feb 2025 11:42:49 +0200
+Message-Id: <20250216111648.2d9de839e5b1.Ibb83c6a99c67eaa21e74ffa0e83596468c2a65ca@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250216094321.537988-1-miriam.rachel.korenblit@intel.com>
 References: <20250216094321.537988-1-miriam.rachel.korenblit@intel.com>
@@ -61,554 +61,933 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
+this file is handling the driver-level vif object
+
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/fw.c | 536 ++++++++++++++++++++
- 1 file changed, 536 insertions(+)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/fw.c
+ .../net/wireless/intel/iwlwifi/mld/iface.c    | 671 ++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/mld/iface.h    | 234 ++++++
+ 2 files changed, 905 insertions(+)
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/iface.c
+ create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/iface.h
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/fw.c b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
 new file mode 100644
-index 000000000000..ec93af362cfc
+index 000000000000..0d1803ab665e
 --- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/fw.c
-@@ -0,0 +1,536 @@
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+@@ -0,0 +1,671 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
 + * Copyright (C) 2024-2025 Intel Corporation
 + */
++#include <net/cfg80211.h>
 +
-+#include "mld.h"
-+
-+#include "fw/api/alive.h"
-+#include "fw/api/scan.h"
-+#include "fw/api/rx.h"
-+#include "fw/dbg.h"
-+#include "fw/pnvm.h"
++#include "iface.h"
 +#include "hcmd.h"
-+#include "iwl-nvm-parse.h"
-+#include "power.h"
-+#include "mcc.h"
-+#include "led.h"
-+#include "coex.h"
-+#include "regulatory.h"
-+#include "thermal.h"
++#include "key.h"
++#include "mlo.h"
++#include "mac80211.h"
 +
-+static int iwl_mld_send_tx_ant_cfg(struct iwl_mld *mld)
++#include "fw/api/context.h"
++#include "fw/api/mac.h"
++#include "fw/api/time-event.h"
++#include "fw/api/datapath.h"
++
++/* Cleanup function for struct iwl_mld_vif, will be called in restart */
++void iwl_mld_cleanup_vif(void *data, u8 *mac, struct ieee80211_vif *vif)
 +{
-+	struct iwl_tx_ant_cfg_cmd cmd;
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct iwl_mld *mld = mld_vif->mld;
++	struct iwl_mld_link *link;
 +
-+	lockdep_assert_wiphy(mld->wiphy);
++	/* EMLSR is turned back on during recovery */
++	vif->driver_flags &= ~IEEE80211_VIF_EML_ACTIVE;
 +
-+	cmd.valid = cpu_to_le32(iwl_mld_get_valid_tx_ant(mld));
++	mld_vif->roc_activity = ROC_NUM_ACTIVITIES;
 +
-+	IWL_DEBUG_FW(mld, "select valid tx ant: %u\n", cmd.valid);
++	for_each_mld_vif_valid_link(mld_vif, link) {
++		iwl_mld_cleanup_link(mld_vif->mld, link);
 +
-+	return iwl_mld_send_cmd_pdu(mld, TX_ANT_CONFIGURATION_CMD, &cmd);
-+}
-+
-+static int iwl_mld_send_rss_cfg_cmd(struct iwl_mld *mld)
-+{
-+	struct iwl_rss_config_cmd cmd = {
-+		.flags = cpu_to_le32(IWL_RSS_ENABLE),
-+		.hash_mask = BIT(IWL_RSS_HASH_TYPE_IPV4_TCP) |
-+			     BIT(IWL_RSS_HASH_TYPE_IPV4_UDP) |
-+			     BIT(IWL_RSS_HASH_TYPE_IPV4_PAYLOAD) |
-+			     BIT(IWL_RSS_HASH_TYPE_IPV6_TCP) |
-+			     BIT(IWL_RSS_HASH_TYPE_IPV6_UDP) |
-+			     BIT(IWL_RSS_HASH_TYPE_IPV6_PAYLOAD),
-+	};
-+
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	/* Do not direct RSS traffic to Q 0 which is our fallback queue */
-+	for (int i = 0; i < ARRAY_SIZE(cmd.indirection_table); i++)
-+		cmd.indirection_table[i] =
-+			1 + (i % (mld->trans->num_rx_queues - 1));
-+	netdev_rss_key_fill(cmd.secret_key, sizeof(cmd.secret_key));
-+
-+	return iwl_mld_send_cmd_pdu(mld, RSS_CONFIG_CMD, &cmd);
-+}
-+
-+static int iwl_mld_config_scan(struct iwl_mld *mld)
-+{
-+	struct iwl_scan_config cmd = {
-+		.tx_chains = cpu_to_le32(iwl_mld_get_valid_tx_ant(mld)),
-+		.rx_chains = cpu_to_le32(iwl_mld_get_valid_rx_ant(mld))
-+	};
-+
-+	return iwl_mld_send_cmd_pdu(mld, WIDE_ID(LONG_GROUP, SCAN_CFG_CMD),
-+				    &cmd);
-+}
-+
-+static void iwl_mld_alive_imr_data(struct iwl_trans *trans,
-+				   const struct iwl_imr_alive_info *imr_info)
-+{
-+	struct iwl_imr_data *imr_data = &trans->dbg.imr_data;
-+
-+	imr_data->imr_enable = le32_to_cpu(imr_info->enabled);
-+	imr_data->imr_size = le32_to_cpu(imr_info->size);
-+	imr_data->imr2sram_remainbyte = imr_data->imr_size;
-+	imr_data->imr_base_addr = imr_info->base_addr;
-+	imr_data->imr_curr_addr = le64_to_cpu(imr_data->imr_base_addr);
-+
-+	if (imr_data->imr_enable)
-+		return;
-+
-+	for (int i = 0; i < ARRAY_SIZE(trans->dbg.active_regions); i++) {
-+		struct iwl_fw_ini_region_tlv *reg;
-+
-+		if (!trans->dbg.active_regions[i])
++		/* Correctly allocated primary link in non-MLO mode */
++		if (!ieee80211_vif_is_mld(vif) &&
++		    link_id == 0 && link == &mld_vif->deflink)
 +			continue;
 +
-+		reg = (void *)trans->dbg.active_regions[i]->data;
++		if (vif->active_links & BIT(link_id))
++			continue;
 +
-+		/* We have only one DRAM IMR region, so we
-+		 * can break as soon as we find the first
-+		 * one.
-+		 */
-+		if (reg->type == IWL_FW_INI_REGION_DRAM_IMR) {
-+			trans->dbg.unsupported_region_msk |= BIT(i);
-+			break;
-+		}
++		/* Should not happen as link removal should always succeed */
++		WARN_ON(1);
++		if (link != &mld_vif->deflink)
++			kfree_rcu(link, rcu_head);
++		RCU_INIT_POINTER(mld_vif->link[link_id], NULL);
 +	}
++
++	ieee80211_iter_keys(mld->hw, vif, iwl_mld_cleanup_keys_iter, NULL);
++
++	CLEANUP_STRUCT(mld_vif);
 +}
 +
-+static bool iwl_alive_fn(struct iwl_notif_wait_data *notif_wait,
-+			 struct iwl_rx_packet *pkt, void *data)
++static int iwl_mld_send_mac_cmd(struct iwl_mld *mld,
++				struct iwl_mac_config_cmd *cmd)
 +{
-+	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
-+	struct iwl_mld *mld =
-+		container_of(notif_wait, struct iwl_mld, notif_wait);
-+	struct iwl_trans *trans = mld->trans;
-+	u32 version = iwl_fw_lookup_notif_ver(mld->fw, LEGACY_GROUP,
-+					      UCODE_ALIVE_NTFY, 0);
-+	struct iwl_alive_ntf_v6 *palive;
-+	bool *alive_valid = data;
-+	struct iwl_umac_alive *umac;
-+	struct iwl_lmac_alive *lmac1;
-+	struct iwl_lmac_alive *lmac2 = NULL;
-+	u32 lmac_error_event_table;
-+	u32 umac_error_table;
-+	u16 status;
-+
-+	if (version < 6 || version > 7 || pkt_len != sizeof(*palive))
-+		return false;
-+
-+	palive = (void *)pkt->data;
-+
-+	iwl_mld_alive_imr_data(trans, &palive->imr);
-+
-+	umac = &palive->umac_data;
-+	lmac1 = &palive->lmac_data[0];
-+	lmac2 = &palive->lmac_data[1];
-+	status = le16_to_cpu(palive->status);
-+
-+	trans->sku_id[0] = le32_to_cpu(palive->sku_id.data[0]);
-+	trans->sku_id[1] = le32_to_cpu(palive->sku_id.data[1]);
-+	trans->sku_id[2] = le32_to_cpu(palive->sku_id.data[2]);
-+
-+	IWL_DEBUG_FW(mld, "Got sku_id: 0x0%x 0x0%x 0x0%x\n",
-+		     trans->sku_id[0], trans->sku_id[1], trans->sku_id[2]);
-+
-+	lmac_error_event_table =
-+		le32_to_cpu(lmac1->dbg_ptrs.error_event_table_ptr);
-+	iwl_fw_lmac1_set_alive_err_table(trans, lmac_error_event_table);
-+
-+	if (lmac2)
-+		trans->dbg.lmac_error_event_table[1] =
-+			le32_to_cpu(lmac2->dbg_ptrs.error_event_table_ptr);
-+
-+	umac_error_table = le32_to_cpu(umac->dbg_ptrs.error_info_addr) &
-+		~FW_ADDR_CACHE_CONTROL;
-+
-+	if (umac_error_table >= trans->cfg->min_umac_error_event_table)
-+		iwl_fw_umac_set_alive_err_table(trans, umac_error_table);
-+	else
-+		IWL_ERR(mld, "Not valid error log pointer 0x%08X\n",
-+			umac_error_table);
-+
-+	*alive_valid = status == IWL_ALIVE_STATUS_OK;
-+
-+	IWL_DEBUG_FW(mld,
-+		     "Alive ucode status 0x%04x revision 0x%01X 0x%01X\n",
-+		     status, lmac1->ver_type, lmac1->ver_subtype);
-+
-+	if (lmac2)
-+		IWL_DEBUG_FW(mld, "Alive ucode CDB\n");
-+
-+	IWL_DEBUG_FW(mld,
-+		     "UMAC version: Major - 0x%x, Minor - 0x%x\n",
-+		     le32_to_cpu(umac->umac_major),
-+		     le32_to_cpu(umac->umac_minor));
-+
-+	if (version >= 7)
-+		IWL_DEBUG_FW(mld, "FW alive flags 0x%x\n",
-+			     le16_to_cpu(palive->flags));
-+
-+	iwl_fwrt_update_fw_versions(&mld->fwrt, lmac1, umac);
-+
-+	return true;
-+}
-+
-+#define MLD_ALIVE_TIMEOUT		(2 * HZ)
-+#define MLD_INIT_COMPLETE_TIMEOUT	(2 * HZ)
-+
-+static void iwl_mld_print_alive_notif_timeout(struct iwl_mld *mld)
-+{
-+	struct iwl_trans *trans = mld->trans;
-+	struct iwl_pc_data *pc_data;
-+	u8 count;
-+
-+	IWL_ERR(mld,
-+		"SecBoot CPU1 Status: 0x%x, CPU2 Status: 0x%x\n",
-+		iwl_read_umac_prph(trans, UMAG_SB_CPU_1_STATUS),
-+		iwl_read_umac_prph(trans,
-+				   UMAG_SB_CPU_2_STATUS));
-+#define IWL_FW_PRINT_REG_INFO(reg_name) \
-+	IWL_ERR(mld, #reg_name ": 0x%x\n", iwl_read_umac_prph(trans, reg_name))
-+
-+	IWL_FW_PRINT_REG_INFO(WFPM_LMAC1_PD_NOTIFICATION);
-+
-+	IWL_FW_PRINT_REG_INFO(HPM_SECONDARY_DEVICE_STATE);
-+
-+	/* print OTP info */
-+	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_ADDR);
-+	IWL_FW_PRINT_REG_INFO(WFPM_MAC_OTP_CFG7_DATA);
-+#undef IWL_FW_PRINT_REG_INFO
-+
-+	pc_data = trans->dbg.pc_data;
-+	for (count = 0; count < trans->dbg.num_pc; count++, pc_data++)
-+		IWL_ERR(mld, "%s: 0x%x\n", pc_data->pc_name,
-+			pc_data->pc_address);
-+}
-+
-+static int iwl_mld_load_fw_wait_alive(struct iwl_mld *mld)
-+{
-+	const struct fw_img *fw =
-+		iwl_get_ucode_image(mld->fw, IWL_UCODE_REGULAR);
-+	static const u16 alive_cmd[] = { UCODE_ALIVE_NTFY };
-+	struct iwl_notification_wait alive_wait;
-+	bool alive_valid = false;
 +	int ret;
 +
 +	lockdep_assert_wiphy(mld->wiphy);
-+
-+	iwl_init_notification_wait(&mld->notif_wait, &alive_wait,
-+				   alive_cmd, ARRAY_SIZE(alive_cmd),
-+				   iwl_alive_fn, &alive_valid);
-+
-+	iwl_dbg_tlv_time_point(&mld->fwrt, IWL_FW_INI_TIME_POINT_EARLY, NULL);
-+
-+	ret = iwl_trans_start_fw(mld->trans, fw, true);
-+	if (ret) {
-+		iwl_remove_notification(&mld->notif_wait, &alive_wait);
-+		return ret;
-+	}
-+
-+	ret = iwl_wait_notification(&mld->notif_wait, &alive_wait,
-+				    MLD_ALIVE_TIMEOUT);
-+
-+	if (ret) {
-+		if (ret == -ETIMEDOUT)
-+			iwl_fw_dbg_error_collect(&mld->fwrt,
-+						 FW_DBG_TRIGGER_ALIVE_TIMEOUT);
-+		iwl_mld_print_alive_notif_timeout(mld);
-+		goto alive_failure;
-+	}
-+
-+	if (!alive_valid) {
-+		IWL_ERR(mld, "Loaded firmware is not valid!\n");
-+		ret = -EIO;
-+		goto alive_failure;
-+	}
-+
-+	iwl_trans_fw_alive(mld->trans, 0);
-+
-+	return 0;
-+
-+alive_failure:
-+	iwl_trans_stop_device(mld->trans);
-+	return ret;
-+}
-+
-+int iwl_mld_run_fw_init_sequence(struct iwl_mld *mld)
-+{
-+	struct iwl_notification_wait init_wait;
-+	struct iwl_init_extended_cfg_cmd init_cfg = {};
-+	static const u16 init_complete[] = {
-+		INIT_COMPLETE_NOTIF,
-+	};
-+	int ret;
-+
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	ret = iwl_mld_load_fw_wait_alive(mld);
-+	if (ret)
-+		return ret;
-+
-+	mld->trans->step_urm =
-+		!!(iwl_read_umac_prph(mld->trans, CNVI_PMU_STEP_FLOW) &
-+		   CNVI_PMU_STEP_FLOW_FORCE_URM);
-+
-+	ret = iwl_pnvm_load(mld->trans, &mld->notif_wait,
-+			    &mld->fw->ucode_capa);
-+	if (ret) {
-+		IWL_ERR(mld, "Timeout waiting for PNVM load %d\n", ret);
-+		goto init_failure;
-+	}
-+
-+	iwl_dbg_tlv_time_point(&mld->fwrt, IWL_FW_INI_TIME_POINT_AFTER_ALIVE,
-+			       NULL);
-+
-+	iwl_init_notification_wait(&mld->notif_wait,
-+				   &init_wait,
-+				   init_complete,
-+				   ARRAY_SIZE(init_complete),
-+				   NULL, NULL);
 +
 +	ret = iwl_mld_send_cmd_pdu(mld,
-+				   WIDE_ID(SYSTEM_GROUP, INIT_EXTENDED_CFG_CMD),
-+				   &init_cfg);
-+	if (ret) {
-+		IWL_ERR(mld, "Failed to send init config command: %d\n", ret);
-+		iwl_remove_notification(&mld->notif_wait, &init_wait);
-+		goto init_failure;
-+	}
++				   WIDE_ID(MAC_CONF_GROUP, MAC_CONFIG_CMD),
++				   cmd);
++	if (ret)
++		IWL_ERR(mld, "Failed to send MAC_CONFIG_CMD ret = %d\n", ret);
 +
-+	ret = iwl_wait_notification(&mld->notif_wait, &init_wait,
-+				    MLD_INIT_COMPLETE_TIMEOUT);
-+	if (ret) {
-+		IWL_ERR(mld, "Failed to get INIT_COMPLETE %d\n", ret);
-+		goto init_failure;
-+	}
-+
-+	if (!mld->nvm_data) {
-+		mld->nvm_data = iwl_get_nvm(mld->trans, mld->fw, 0, 0);
-+		if (IS_ERR(mld->nvm_data)) {
-+			ret = PTR_ERR(mld->nvm_data);
-+			mld->nvm_data = NULL;
-+			IWL_ERR(mld, "Failed to read NVM: %d\n", ret);
-+			goto init_failure;
-+		}
-+	}
-+
-+	return 0;
-+
-+init_failure:
-+	iwl_trans_stop_device(mld->trans);
 +	return ret;
 +}
 +
-+int iwl_mld_load_fw(struct iwl_mld *mld)
++int iwl_mld_mac80211_iftype_to_fw(const struct ieee80211_vif *vif)
 +{
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		return vif->p2p ? FW_MAC_TYPE_P2P_STA : FW_MAC_TYPE_BSS_STA;
++	case NL80211_IFTYPE_AP:
++		return FW_MAC_TYPE_GO;
++	case NL80211_IFTYPE_MONITOR:
++		return FW_MAC_TYPE_LISTENER;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		return FW_MAC_TYPE_P2P_DEVICE;
++	case NL80211_IFTYPE_ADHOC:
++		return FW_MAC_TYPE_IBSS;
++	default:
++		WARN_ON_ONCE(1);
++	}
++	return FW_MAC_TYPE_BSS_STA;
++}
++
++static bool iwl_mld_is_nic_ack_enabled(struct iwl_mld *mld,
++				       struct ieee80211_vif *vif)
++{
++	const struct ieee80211_supported_band *sband;
++	const struct ieee80211_sta_he_cap *own_he_cap;
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	/* This capability is the same for all bands,
++	 * so take it from one of them.
++	 */
++	sband = mld->hw->wiphy->bands[NL80211_BAND_2GHZ];
++	own_he_cap = ieee80211_get_he_iftype_cap_vif(sband, vif);
++
++	return own_he_cap && (own_he_cap->he_cap_elem.mac_cap_info[2] &
++			       IEEE80211_HE_MAC_CAP2_ACK_EN);
++}
++
++/* fill the common part for all interface types */
++static void iwl_mld_mac_cmd_fill_common(struct iwl_mld *mld,
++					struct ieee80211_vif *vif,
++					struct iwl_mac_config_cmd *cmd,
++					u32 action)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct ieee80211_bss_conf *link_conf;
++	unsigned int link_id;
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	cmd->id_and_color = cpu_to_le32(mld_vif->fw_id);
++	cmd->action = cpu_to_le32(action);
++
++	cmd->mac_type =
++		cpu_to_le32(iwl_mld_mac80211_iftype_to_fw(vif));
++
++	memcpy(cmd->local_mld_addr, vif->addr, ETH_ALEN);
++
++	if (iwlwifi_mod_params.disable_11ax)
++		return;
++
++	cmd->nic_not_ack_enabled =
++		cpu_to_le32(!iwl_mld_is_nic_ack_enabled(mld, vif));
++
++	/* If we have MLO enabled, then the firmware needs to enable
++	 * address translation for the station(s) we add. That depends
++	 * on having EHT enabled in firmware, which in turn depends on
++	 * mac80211 in the code below.
++	 * However, mac80211 doesn't enable HE/EHT until it has parsed
++	 * the association response successfully, so just skip all that
++	 * and enable both when we have MLO.
++	 */
++	if (ieee80211_vif_is_mld(vif)) {
++		if (vif->type == NL80211_IFTYPE_AP)
++			cmd->he_ap_support = cpu_to_le16(1);
++		else
++			cmd->he_support = cpu_to_le16(1);
++
++		cmd->eht_support = cpu_to_le32(1);
++		return;
++	}
++
++	for_each_vif_active_link(vif, link_conf, link_id) {
++		if (!link_conf->he_support)
++			continue;
++
++		if (vif->type == NL80211_IFTYPE_AP)
++			cmd->he_ap_support = cpu_to_le16(1);
++		else
++			cmd->he_support = cpu_to_le16(1);
++
++		/* EHT, if supported, was already set above */
++		break;
++	}
++}
++
++static void iwl_mld_fill_mac_cmd_sta(struct iwl_mld *mld,
++				     struct ieee80211_vif *vif, u32 action,
++				     struct iwl_mac_config_cmd *cmd)
++{
++	struct ieee80211_bss_conf *link;
++	u32 twt_policy = 0;
++	int link_id;
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	WARN_ON(vif->type != NL80211_IFTYPE_STATION);
++
++	/* We always want to hear MCAST frames, if we're not authorized yet,
++	 * we'll drop them.
++	 */
++	cmd->filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_GRP);
++
++	/* Adding a MAC ctxt with is_assoc set is not allowed in fw
++	 * (and shouldn't happen)
++	 */
++	if (vif->cfg.assoc && action != FW_CTXT_ACTION_ADD) {
++		cmd->client.is_assoc = 1;
++
++		if (!iwl_mld_vif_from_mac80211(vif)->authorized)
++			cmd->client.data_policy |=
++				cpu_to_le16(COEX_HIGH_PRIORITY_ENABLE);
++	} else {
++		/* Allow beacons to pass through as long as we are not
++		 * associated
++		 */
++		cmd->filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_BEACON);
++	}
++
++	cmd->client.assoc_id = cpu_to_le16(vif->cfg.aid);
++
++	if (ieee80211_vif_is_mld(vif)) {
++		u16 esr_transition_timeout =
++			u16_get_bits(vif->cfg.eml_cap,
++				     IEEE80211_EML_CAP_TRANSITION_TIMEOUT);
++
++		cmd->client.esr_transition_timeout =
++			min_t(u16, IEEE80211_EML_CAP_TRANSITION_TIMEOUT_128TU,
++			      esr_transition_timeout);
++		cmd->client.medium_sync_delay =
++			cpu_to_le16(vif->cfg.eml_med_sync_delay);
++	}
++
++	for_each_vif_active_link(vif, link, link_id) {
++		if (!link->he_support)
++			continue;
++
++		if (link->twt_requester)
++			twt_policy |= TWT_SUPPORTED;
++		if (link->twt_protected)
++			twt_policy |= PROTECTED_TWT_SUPPORTED;
++		if (link->twt_broadcast)
++			twt_policy |= BROADCAST_TWT_SUPPORTED;
++	}
++
++	if (!iwlwifi_mod_params.disable_11ax)
++		cmd->client.data_policy |= cpu_to_le16(twt_policy);
++
++	if (vif->probe_req_reg && vif->cfg.assoc && vif->p2p)
++		cmd->filter_flags |=
++			cpu_to_le32(MAC_CFG_FILTER_ACCEPT_PROBE_REQ);
++
++	if (vif->p2p)
++		cmd->client.ctwin =
++			cpu_to_le32(vif->bss_conf.p2p_noa_attr.oppps_ctwindow &
++				    IEEE80211_P2P_OPPPS_CTWINDOW_MASK);
++}
++
++static void iwl_mld_fill_mac_cmd_ap(struct iwl_mld *mld,
++				    struct ieee80211_vif *vif,
++				    struct iwl_mac_config_cmd *cmd)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	WARN_ON(vif->type != NL80211_IFTYPE_AP);
++
++	cmd->filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_PROBE_REQ);
++
++	/* in AP mode, pass beacons from other APs (needed for ht protection).
++	 * When there're no any associated station, which means that we are not
++	 * TXing anyway, don't ask FW to pass beacons to prevent unnecessary
++	 * wake-ups.
++	 */
++	if (mld_vif->num_associated_stas)
++		cmd->filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_BEACON);
++}
++
++static void iwl_mld_go_iterator(void *_data, u8 *mac, struct ieee80211_vif *vif)
++{
++	bool *go_active = _data;
++
++	if (ieee80211_vif_type_p2p(vif) == NL80211_IFTYPE_P2P_GO &&
++	    iwl_mld_vif_from_mac80211(vif)->ap_ibss_active)
++		*go_active = true;
++}
++
++static bool iwl_mld_p2p_dev_has_extended_disc(struct iwl_mld *mld)
++{
++	bool go_active = false;
++
++	/* This flag should be set to true when the P2P Device is
++	 * discoverable and there is at least a P2P GO. Setting
++	 * this flag will allow the P2P Device to be discoverable on other
++	 * channels in addition to its listen channel.
++	 * Note that this flag should not be set in other cases as it opens the
++	 * Rx filters on all MAC and increases the number of interrupts.
++	 */
++	ieee80211_iterate_active_interfaces(mld->hw,
++					IEEE80211_IFACE_ITER_RESUME_ALL,
++					iwl_mld_go_iterator, &go_active);
++
++	return go_active;
++}
++
++static void iwl_mld_fill_mac_cmd_p2p_dev(struct iwl_mld *mld,
++					 struct ieee80211_vif *vif,
++					 struct iwl_mac_config_cmd *cmd)
++{
++	bool ext_disc = iwl_mld_p2p_dev_has_extended_disc(mld);
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	/* Override the filter flags to accept all management frames. This is
++	 * needed to support both P2P device discovery using probe requests and
++	 * P2P service discovery using action frames
++	 */
++	cmd->filter_flags = cpu_to_le32(MAC_CFG_FILTER_ACCEPT_CONTROL_AND_MGMT);
++
++	if (ext_disc)
++		cmd->p2p_dev.is_disc_extended = cpu_to_le32(1);
++}
++
++static void iwl_mld_fill_mac_cmd_ibss(struct iwl_mld *mld,
++				      struct ieee80211_vif *vif,
++				      struct iwl_mac_config_cmd *cmd)
++{
++	lockdep_assert_wiphy(mld->wiphy);
++
++	WARN_ON(vif->type != NL80211_IFTYPE_ADHOC);
++
++	cmd->filter_flags |= cpu_to_le32(MAC_CFG_FILTER_ACCEPT_BEACON |
++					 MAC_CFG_FILTER_ACCEPT_PROBE_REQ |
++					 MAC_CFG_FILTER_ACCEPT_GRP);
++}
++
++static int
++iwl_mld_rm_mac_from_fw(struct iwl_mld *mld, struct ieee80211_vif *vif)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct iwl_mac_config_cmd cmd = {
++		.action = cpu_to_le32(FW_CTXT_ACTION_REMOVE),
++		.id_and_color = cpu_to_le32(mld_vif->fw_id),
++	};
++
++	return iwl_mld_send_mac_cmd(mld, &cmd);
++}
++
++int iwl_mld_mac_fw_action(struct iwl_mld *mld, struct ieee80211_vif *vif,
++			  u32 action)
++{
++	struct iwl_mac_config_cmd cmd = {};
++
++	lockdep_assert_wiphy(mld->wiphy);
++
++	if (action == FW_CTXT_ACTION_REMOVE)
++		return iwl_mld_rm_mac_from_fw(mld, vif);
++
++	iwl_mld_mac_cmd_fill_common(mld, vif, &cmd, action);
++
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		iwl_mld_fill_mac_cmd_sta(mld, vif, action, &cmd);
++		break;
++	case NL80211_IFTYPE_AP:
++		iwl_mld_fill_mac_cmd_ap(mld, vif, &cmd);
++		break;
++	case NL80211_IFTYPE_MONITOR:
++		cmd.filter_flags =
++			cpu_to_le32(MAC_CFG_FILTER_PROMISC |
++				    MAC_CFG_FILTER_ACCEPT_CONTROL_AND_MGMT |
++				    MAC_CFG_FILTER_ACCEPT_BEACON |
++				    MAC_CFG_FILTER_ACCEPT_PROBE_REQ |
++				    MAC_CFG_FILTER_ACCEPT_GRP);
++		break;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		iwl_mld_fill_mac_cmd_p2p_dev(mld, vif, &cmd);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		iwl_mld_fill_mac_cmd_ibss(mld, vif, &cmd);
++		break;
++	default:
++		WARN(1, "not supported yet\n");
++		return -EOPNOTSUPP;
++	}
++
++	return iwl_mld_send_mac_cmd(mld, &cmd);
++}
++
++IWL_MLD_ALLOC_FN(vif, vif)
++
++/* Constructor function for struct iwl_mld_vif */
++static int
++iwl_mld_init_vif(struct iwl_mld *mld, struct ieee80211_vif *vif)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
 +	int ret;
 +
 +	lockdep_assert_wiphy(mld->wiphy);
 +
-+	ret = iwl_trans_start_hw(mld->trans);
++	mld_vif->mld = mld;
++	mld_vif->roc_activity = ROC_NUM_ACTIVITIES;
++
++	ret = iwl_mld_allocate_vif_fw_id(mld, &mld_vif->fw_id, vif);
 +	if (ret)
 +		return ret;
 +
-+	ret = iwl_mld_run_fw_init_sequence(mld);
-+	if (ret)
-+		return ret;
-+
-+	mld->fw_status.running = true;
++	if (!mld->fw_status.in_hw_restart) {
++		wiphy_work_init(&mld_vif->emlsr.unblock_tpt_wk,
++				iwl_mld_emlsr_unblock_tpt_wk);
++		wiphy_delayed_work_init(&mld_vif->emlsr.check_tpt_wk,
++					iwl_mld_emlsr_check_tpt);
++		wiphy_delayed_work_init(&mld_vif->emlsr.prevent_done_wk,
++					iwl_mld_emlsr_prevent_done_wk);
++		wiphy_delayed_work_init(&mld_vif->emlsr.tmp_non_bss_done_wk,
++					iwl_mld_emlsr_tmp_non_bss_done_wk);
++	}
 +
 +	return 0;
 +}
 +
-+void iwl_mld_stop_fw(struct iwl_mld *mld)
++int iwl_mld_add_vif(struct iwl_mld *mld, struct ieee80211_vif *vif)
 +{
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	iwl_abort_notification_waits(&mld->notif_wait);
-+
-+	iwl_fw_dbg_stop_sync(&mld->fwrt);
-+
-+	iwl_trans_stop_device(mld->trans);
-+
-+	mld->fw_status.running = false;
-+}
-+
-+static void iwl_mld_restart_disconnect_iter(void *data, u8 *mac,
-+					    struct ieee80211_vif *vif)
-+{
-+	if (vif->type == NL80211_IFTYPE_STATION)
-+		ieee80211_hw_restart_disconnect(vif);
-+}
-+
-+void iwl_mld_send_recovery_cmd(struct iwl_mld *mld, u32 flags)
-+{
-+	u32 error_log_size = mld->fw->ucode_capa.error_log_size;
-+	struct iwl_fw_error_recovery_cmd recovery_cmd = {
-+		.flags = cpu_to_le32(flags),
-+	};
-+	struct iwl_host_cmd cmd = {
-+		.id = WIDE_ID(SYSTEM_GROUP, FW_ERROR_RECOVERY_CMD),
-+		.flags = CMD_WANT_SKB,
-+		.data = {&recovery_cmd, },
-+		.len = {sizeof(recovery_cmd), },
-+	};
-+	int ret;
-+
-+	/* no error log was defined in TLV */
-+	if (!error_log_size)
-+		return;
-+
-+	if (flags & ERROR_RECOVERY_UPDATE_DB) {
-+		/* no buf was allocated upon NIC error */
-+		if (!mld->error_recovery_buf)
-+			return;
-+
-+		cmd.data[1] = mld->error_recovery_buf;
-+		cmd.len[1] =  error_log_size;
-+		cmd.dataflags[1] = IWL_HCMD_DFL_NOCOPY;
-+		recovery_cmd.buf_size = cpu_to_le32(error_log_size);
-+	}
-+
-+	ret = iwl_mld_send_cmd(mld, &cmd);
-+
-+	/* we no longer need the recovery buffer */
-+	kfree(mld->error_recovery_buf);
-+	mld->error_recovery_buf = NULL;
-+
-+	if (ret) {
-+		IWL_ERR(mld, "Failed to send recovery cmd %d\n", ret);
-+		return;
-+	}
-+
-+	if (flags & ERROR_RECOVERY_UPDATE_DB) {
-+		struct iwl_rx_packet *pkt = cmd.resp_pkt;
-+		u32 pkt_len = iwl_rx_packet_payload_len(pkt);
-+		u32 resp;
-+
-+		if (IWL_FW_CHECK(mld, pkt_len != sizeof(resp),
-+				 "Unexpected recovery cmd response size %u (expected %zu)\n",
-+				 pkt_len, sizeof(resp)))
-+			goto out;
-+
-+		resp = le32_to_cpup((__le32 *)cmd.resp_pkt->data);
-+		if (!resp)
-+			goto out;
-+
-+		IWL_ERR(mld,
-+			"Failed to send recovery cmd blob was invalid %d\n",
-+			resp);
-+
-+		ieee80211_iterate_interfaces(mld->hw, 0,
-+					     iwl_mld_restart_disconnect_iter,
-+					     NULL);
-+	}
-+
-+out:
-+	iwl_free_resp(&cmd);
-+}
-+
-+static int iwl_mld_config_fw(struct iwl_mld *mld)
-+{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
 +	int ret;
 +
 +	lockdep_assert_wiphy(mld->wiphy);
 +
-+	iwl_fw_disable_dbg_asserts(&mld->fwrt);
-+	iwl_get_shared_mem_conf(&mld->fwrt);
-+
-+	ret = iwl_mld_send_tx_ant_cfg(mld);
++	ret = iwl_mld_init_vif(mld, vif);
 +	if (ret)
 +		return ret;
 +
-+	ret = iwl_mld_send_bt_init_conf(mld);
++	ret = iwl_mld_mac_fw_action(mld, vif, FW_CTXT_ACTION_ADD);
 +	if (ret)
-+		return ret;
++		RCU_INIT_POINTER(mld->fw_id_to_vif[mld_vif->fw_id], NULL);
 +
-+	ret = iwl_set_soc_latency(&mld->fwrt);
-+	if (ret)
-+		return ret;
++	return ret;
++}
 +
-+	iwl_mld_configure_lari(mld);
++int iwl_mld_rm_vif(struct iwl_mld *mld, struct ieee80211_vif *vif)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	int ret;
 +
-+	ret = iwl_mld_config_temp_report_ths(mld);
-+	if (ret)
-+		return ret;
++	lockdep_assert_wiphy(mld->wiphy);
 +
-+#ifdef CONFIG_THERMAL
-+	ret = iwl_mld_config_ctdp(mld, mld->cooling_dev.cur_state,
-+				  CTDP_CMD_OPERATION_START);
-+	if (ret)
-+		return ret;
++	ret = iwl_mld_mac_fw_action(mld, vif, FW_CTXT_ACTION_REMOVE);
++
++	if (WARN_ON(mld_vif->fw_id >= ARRAY_SIZE(mld->fw_id_to_vif)))
++		return -EINVAL;
++
++	RCU_INIT_POINTER(mld->fw_id_to_vif[mld_vif->fw_id], NULL);
++
++	iwl_mld_cancel_notifications_of_object(mld, IWL_MLD_OBJECT_TYPE_VIF,
++					       mld_vif->fw_id);
++
++	return ret;
++}
++
++void iwl_mld_set_vif_associated(struct iwl_mld *mld,
++				struct ieee80211_vif *vif)
++{
++	struct ieee80211_bss_conf *link;
++	unsigned int link_id;
++
++	for_each_vif_active_link(vif, link, link_id) {
++		if (iwl_mld_link_set_associated(mld, vif, link))
++			IWL_ERR(mld, "failed to update link %d\n", link_id);
++	}
++
++	iwl_mld_recalc_multicast_filter(mld);
++}
++
++static void iwl_mld_get_fw_id_bss_bitmap_iter(void *_data, u8 *mac,
++					      struct ieee80211_vif *vif)
++{
++	u8 *fw_id_bitmap = _data;
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++
++	if (ieee80211_vif_type_p2p(vif) != NL80211_IFTYPE_STATION)
++		return;
++
++	*fw_id_bitmap |= BIT(mld_vif->fw_id);
++}
++
++u8 iwl_mld_get_fw_bss_vifs_ids(struct iwl_mld *mld)
++{
++	u8 fw_id_bitmap = 0;
++
++	ieee80211_iterate_interfaces(mld->hw,
++				     IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER,
++				     iwl_mld_get_fw_id_bss_bitmap_iter,
++				     &fw_id_bitmap);
++
++	return fw_id_bitmap;
++}
++
++void iwl_mld_handle_probe_resp_data_notif(struct iwl_mld *mld,
++					  struct iwl_rx_packet *pkt)
++{
++	const struct iwl_probe_resp_data_notif *notif = (void *)pkt->data;
++	struct iwl_probe_resp_data *old_data, *new_data;
++	struct ieee80211_vif *vif;
++	struct iwl_mld_link *mld_link;
++
++	IWL_DEBUG_INFO(mld, "Probe response data notif: noa %d, csa %d\n",
++		       notif->noa_active, notif->csa_counter);
++
++	if (IWL_FW_CHECK(mld, le32_to_cpu(notif->mac_id) >=
++			 ARRAY_SIZE(mld->fw_id_to_vif),
++			 "mac id is invalid: %d\n",
++			 le32_to_cpu(notif->mac_id)))
++		return;
++
++	vif = wiphy_dereference(mld->wiphy,
++				mld->fw_id_to_vif[le32_to_cpu(notif->mac_id)]);
++
++	/* the firmware gives us the mac_id (and not the link_id), mac80211
++	 * gets a vif and not a link, bottom line, this flow is not MLD ready
++	 * yet.
++	 */
++	if (WARN_ON(!vif) || ieee80211_vif_is_mld(vif))
++		return;
++
++	if (notif->csa_counter != IWL_PROBE_RESP_DATA_NO_CSA &&
++	    notif->csa_counter >= 1)
++		ieee80211_beacon_set_cntdwn(vif, notif->csa_counter);
++
++	if (!vif->p2p)
++		return;
++
++	mld_link = &iwl_mld_vif_from_mac80211(vif)->deflink;
++
++	new_data = kzalloc(sizeof(*new_data), GFP_KERNEL);
++	if (!new_data)
++		return;
++
++	memcpy(&new_data->notif, notif, sizeof(new_data->notif));
++
++	/* noa_attr contains 1 reserved byte, need to substruct it */
++	new_data->noa_len = sizeof(struct ieee80211_vendor_ie) +
++			    sizeof(new_data->notif.noa_attr) - 1;
++
++	/*
++	 * If it's a one time NoA, only one descriptor is needed,
++	 * adjust the length according to len_low.
++	 */
++	if (new_data->notif.noa_attr.len_low ==
++	    sizeof(struct ieee80211_p2p_noa_desc) + 2)
++		new_data->noa_len -= sizeof(struct ieee80211_p2p_noa_desc);
++
++	old_data = wiphy_dereference(mld->wiphy, mld_link->probe_resp_data);
++	rcu_assign_pointer(mld_link->probe_resp_data, new_data);
++
++	if (old_data)
++		kfree_rcu(old_data, rcu_head);
++}
++
++void iwl_mld_handle_uapsd_misbehaving_ap_notif(struct iwl_mld *mld,
++					       struct iwl_rx_packet *pkt)
++{
++	struct iwl_uapsd_misbehaving_ap_notif *notif = (void *)pkt->data;
++	struct ieee80211_vif *vif;
++
++	if (IWL_FW_CHECK(mld, notif->mac_id >= ARRAY_SIZE(mld->fw_id_to_vif),
++			 "mac id is invalid: %d\n", notif->mac_id))
++		return;
++
++	vif = wiphy_dereference(mld->wiphy, mld->fw_id_to_vif[notif->mac_id]);
++
++	if (WARN_ON(!vif) || ieee80211_vif_is_mld(vif))
++		return;
++
++	IWL_WARN(mld, "uapsd misbehaving AP: %pM\n", vif->bss_conf.bssid);
++}
++
++void iwl_mld_handle_datapath_monitor_notif(struct iwl_mld *mld,
++					   struct iwl_rx_packet *pkt)
++{
++	struct iwl_datapath_monitor_notif *notif = (void *)pkt->data;
++	struct ieee80211_bss_conf *link;
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_sta_he_cap *he_cap;
++	struct ieee80211_vif *vif;
++	struct iwl_mld_vif *mld_vif;
++
++	if (notif->type != cpu_to_le32(IWL_DP_MON_NOTIF_TYPE_EXT_CCA))
++		return;
++
++	link = iwl_mld_fw_id_to_link_conf(mld, notif->link_id);
++	if (WARN_ON(!link))
++		return;
++
++	vif = link->vif;
++	if (WARN_ON(!vif) || vif->type != NL80211_IFTYPE_STATION ||
++	    !vif->cfg.assoc)
++		return;
++
++	if (!link->chanreq.oper.chan ||
++	    link->chanreq.oper.chan->band != NL80211_BAND_2GHZ ||
++	    link->chanreq.oper.width < NL80211_CHAN_WIDTH_40)
++		return;
++
++	mld_vif = iwl_mld_vif_from_mac80211(vif);
++
++	/* this shouldn't happen *again*, ignore it */
++	if (mld_vif->cca_40mhz_workaround != CCA_40_MHZ_WA_NONE)
++		return;
++
++	mld_vif->cca_40mhz_workaround = CCA_40_MHZ_WA_RECONNECT;
++
++	/*
++	 * This capability manipulation isn't really ideal, but it's the
++	 * easiest choice - otherwise we'd have to do some major changes
++	 * in mac80211 to support this, which isn't worth it. This does
++	 * mean that userspace may have outdated information, but that's
++	 * actually not an issue at all.
++	 */
++	sband = mld->wiphy->bands[NL80211_BAND_2GHZ];
++
++	WARN_ON(!sband->ht_cap.ht_supported);
++	WARN_ON(!(sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40));
++	sband->ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++
++	he_cap = ieee80211_get_he_iftype_cap_vif(sband, vif);
++
++	if (he_cap) {
++		/* we know that ours is writable */
++		struct ieee80211_sta_he_cap *he = (void *)(uintptr_t)he_cap;
++
++		WARN_ON(!he->has_he);
++		WARN_ON(!(he->he_cap_elem.phy_cap_info[0] &
++			  IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G));
++		he->he_cap_elem.phy_cap_info[0] &=
++			~IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
++	}
++
++	ieee80211_disconnect(vif, true);
++}
++
++void iwl_mld_reset_cca_40mhz_workaround(struct iwl_mld *mld,
++					struct ieee80211_vif *vif)
++{
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_sta_he_cap *he_cap;
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return;
++
++	if (mld_vif->cca_40mhz_workaround == CCA_40_MHZ_WA_NONE)
++		return;
++
++	/* Now we are just reconnecting with the new capabilities,
++	 * but remember to reset the capabilities when we disconnect for real
++	 */
++	if (mld_vif->cca_40mhz_workaround == CCA_40_MHZ_WA_RECONNECT) {
++		mld_vif->cca_40mhz_workaround = CCA_40_MHZ_WA_RESET;
++		return;
++	}
++
++	/* Now cca_40mhz_workaround == CCA_40_MHZ_WA_RESET */
++
++	sband = mld->wiphy->bands[NL80211_BAND_2GHZ];
++
++	sband->ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++
++	he_cap = ieee80211_get_he_iftype_cap_vif(sband, vif);
++
++	if (he_cap) {
++		/* we know that ours is writable */
++		struct ieee80211_sta_he_cap *he = (void *)(uintptr_t)he_cap;
++
++		he->he_cap_elem.phy_cap_info[0] |=
++			IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_IN_2G;
++	}
++
++	mld_vif->cca_40mhz_workaround = CCA_40_MHZ_WA_NONE;
++}
++
++struct ieee80211_vif *iwl_mld_get_bss_vif(struct iwl_mld *mld)
++{
++	unsigned long fw_id_bitmap = iwl_mld_get_fw_bss_vifs_ids(mld);
++	int fw_id;
++
++	if (hweight8(fw_id_bitmap) != 1)
++		return NULL;
++
++	fw_id = __ffs(fw_id_bitmap);
++
++	return wiphy_dereference(mld->wiphy,
++				 mld->fw_id_to_vif[fw_id]);
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.h b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+new file mode 100644
+index 000000000000..7d0dfbe0ab48
+--- /dev/null
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+@@ -0,0 +1,234 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/*
++ * Copyright (C) 2024-2025 Intel Corporation
++ */
++#ifndef __iwl_mld_iface_h__
++#define __iwl_mld_iface_h__
++
++#include <net/mac80211.h>
++
++#include "link.h"
++#include "session-protect.h"
++#include "d3.h"
++
++enum iwl_mld_cca_40mhz_wa_status {
++	CCA_40_MHZ_WA_NONE,
++	CCA_40_MHZ_WA_RESET,
++	CCA_40_MHZ_WA_RECONNECT,
++};
++
++/**
++ * enum iwl_mld_emlsr_blocked - defines reasons for which EMLSR is blocked
++ *
++ * These blocks are applied/stored per-VIF.
++ *
++ * @IWL_MLD_EMLSR_BLOCKED_PREVENTION: Prevent repeated EMLSR enter/exit
++ * @IWL_MLD_EMLSR_BLOCKED_WOWLAN: WOWLAN is preventing EMLSR
++ * @IWL_MLD_EMLSR_BLOCKED_FW: FW did not recommend MLO
++ * @IWL_MLD_EMLSR_BLOCKED_ROC: remain-on-channel is preventing EMLSR
++ * @IWL_MLD_EMLSR_BLOCKED_NON_BSS: An active non-BSS interface's link is
++ *      preventing EMLSR
++ * @IWL_MLD_EMLSR_BLOCKED_TMP_NON_BSS: An expected active non-BSS interface's
++ *      link is preventing EMLSR. This is a temporary blocking that is set when
++ *      there is an indication that a non-BSS interface is to be added.
++ * @IWL_MLD_EMLSR_BLOCKED_TPT: throughput is too low to make EMLSR worthwhile
++ */
++enum iwl_mld_emlsr_blocked {
++	IWL_MLD_EMLSR_BLOCKED_PREVENTION	= 0x1,
++	IWL_MLD_EMLSR_BLOCKED_WOWLAN		= 0x2,
++	IWL_MLD_EMLSR_BLOCKED_FW		= 0x4,
++	IWL_MLD_EMLSR_BLOCKED_ROC		= 0x8,
++	IWL_MLD_EMLSR_BLOCKED_NON_BSS		= 0x10,
++	IWL_MLD_EMLSR_BLOCKED_TMP_NON_BSS	= 0x20,
++	IWL_MLD_EMLSR_BLOCKED_TPT		= 0x40,
++};
++
++/**
++ * enum iwl_mld_emlsr_exit - defines reasons for exiting EMLSR
++ *
++ * Reasons to exit EMLSR may be either link specific or even specific to a
++ * combination of links.
++ *
++ * @IWL_MLD_EMLSR_EXIT_BLOCK: Exit due to a block reason being set
++ * @IWL_MLD_EMLSR_EXIT_MISSED_BEACON: Exit due to missed beacons
++ * @IWL_MLD_EMLSR_EXIT_FAIL_ENTRY: FW failed to enter EMLSR
++ * @IWL_MLD_EMLSR_EXIT_CSA: EMLSR prevented due to channel switch on link
++ * @IWL_MLD_EMLSR_EXIT_EQUAL_BAND: EMLSR prevented as both links share the band
++ * @IWL_MLD_EMLSR_EXIT_BANDWIDTH: Bandwidths of primary and secondary links are
++ *      not equal
++ * @IWL_MLD_EMLSR_EXIT_LOW_RSSI: Link RSSI is unsuitable for EMLSR
++ * @IWL_MLD_EMLSR_EXIT_LINK_USAGE: Exit EMLSR due to low TPT on secondary link
++ * @IWL_MLD_EMLSR_EXIT_BT_COEX: Exit EMLSR due to BT coexistence
++ * @IWL_MLD_EMLSR_EXIT_CHAN_LOAD: Exit EMLSR because the primary channel is not
++ *	loaded enough to justify EMLSR.
++ * @IWL_MLD_EMLSR_EXIT_RFI: Exit EMLSR due to RFI
++ */
++enum iwl_mld_emlsr_exit {
++	IWL_MLD_EMLSR_EXIT_BLOCK		= 0x1,
++	IWL_MLD_EMLSR_EXIT_MISSED_BEACON	= 0x2,
++	IWL_MLD_EMLSR_EXIT_FAIL_ENTRY		= 0x4,
++	IWL_MLD_EMLSR_EXIT_CSA			= 0x8,
++	IWL_MLD_EMLSR_EXIT_EQUAL_BAND		= 0x10,
++	IWL_MLD_EMLSR_EXIT_BANDWIDTH		= 0x20,
++	IWL_MLD_EMLSR_EXIT_LOW_RSSI		= 0x40,
++	IWL_MLD_EMLSR_EXIT_LINK_USAGE		= 0x80,
++	IWL_MLD_EMLSR_EXIT_BT_COEX		= 0x100,
++	IWL_MLD_EMLSR_EXIT_CHAN_LOAD		= 0x200,
++	IWL_MLD_EMLSR_EXIT_RFI			= 0x400,
++};
++
++/**
++ * struct iwl_mld_emlsr - per-VIF data about EMLSR operation
++ *
++ * @primary: The current primary link
++ * @selected_primary: Primary link as selected during the last link selection
++ * @selected_links: Links as selected during the last link selection
++ * @blocked_reasons: Reasons preventing EMLSR from being enabled
++ * @last_exit_reason: Reason for the last EMLSR exit
++ * @last_exit_ts: Time of the last EMLSR exit (if @last_exit_reason is non-zero)
++ * @exit_repeat_count: Number of times EMLSR was exited for the same reason
++ * @unblock_tpt_wk: Unblock EMLSR because the throughput limit was reached
++ * @check_tpt_wk: a worker to check if IWL_MLD_EMLSR_BLOCKED_TPT should be
++ *	added, for example if there is no longer enough traffic.
++ * @prevent_done_wk: Worker to remove %IWL_MLD_EMLSR_BLOCKED_PREVENTION
++ * @tmp_non_bss_done_wk: Worker to remove %IWL_MLD_EMLSR_BLOCKED_TMP_NON_BSS
++ */
++struct iwl_mld_emlsr {
++	struct_group(zeroed_on_not_authorized,
++		u8 primary;
++
++		u8 selected_primary;
++		u16 selected_links;
++
++		enum iwl_mld_emlsr_blocked blocked_reasons;
++
++		enum iwl_mld_emlsr_exit last_exit_reason;
++		unsigned long last_exit_ts;
++		u8 exit_repeat_count;
++	);
++
++	struct wiphy_work unblock_tpt_wk;
++	struct wiphy_delayed_work check_tpt_wk;
++
++	struct wiphy_delayed_work prevent_done_wk;
++	struct wiphy_delayed_work tmp_non_bss_done_wk;
++};
++
++/**
++ * struct iwl_mld_vif - virtual interface (MAC context) configuration parameters
++ *
++ * @fw_id: fw id of the mac context.
++ * @session_protect: session protection parameters
++ * @ap_sta: pointer to AP sta, for easier access to it.
++ *	Relevant only for STA vifs.
++ * @authorized: indicates the AP station was set to authorized
++ * @bigtks: BIGTKs of the AP, for beacon protection.
++ *	Only valid for STA. (FIXME: needs to be per link)
++ * @num_associated_stas: number of associated STAs. Relevant only for AP mode.
++ * @ap_ibss_active: whether the AP/IBSS was started
++ * @roc_activity: the id of the roc_activity running. Relevant for p2p device
++ *	only. Set to %ROC_NUM_ACTIVITIES when not in use.
++ * @cca_40mhz_workaround: When we are connected in 2.4 GHz and 40 MHz, and the
++ *	environment is too loaded, we work around this by reconnecting to the
++ *	same AP with 20 MHz. This manages the status of the workaround.
++ * @beacon_inject_active: indicates an active debugfs beacon ie injection
++ * @low_latency_causes: bit flags, indicating the causes for low-latency,
++ *	see @iwl_mld_low_latency_cause.
++ * @mld: pointer to the mld structure.
++ * @deflink: default link data, for use in non-MLO,
++ * @link: reference to link data for each valid link, for use in MLO.
++ * @emlsr: information related to EMLSR
++ * @wowlan_data: data used by the wowlan suspend flow
++ * @use_ps_poll: use ps_poll frames
++ * @disable_bf: disable beacon filter
++ * @dbgfs_slink: debugfs symlink for this interface
++ */
++struct iwl_mld_vif {
++	/* Add here fields that need clean up on restart */
++	struct_group(zeroed_on_hw_restart,
++		u8 fw_id;
++		struct iwl_mld_session_protect session_protect;
++		struct ieee80211_sta *ap_sta;
++		bool authorized;
++		struct ieee80211_key_conf __rcu *bigtks[2];
++		u8 num_associated_stas;
++		bool ap_ibss_active;
++		u32 roc_activity;
++		enum iwl_mld_cca_40mhz_wa_status cca_40mhz_workaround;
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++		bool beacon_inject_active;
 +#endif
++		u8 low_latency_causes;
++	);
++	/* And here fields that survive a fw restart */
++	struct iwl_mld *mld;
++	struct iwl_mld_link deflink;
++	struct iwl_mld_link __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
 +
-+	ret = iwl_configure_rxq(&mld->fwrt);
-+	if (ret)
-+		return ret;
++	struct iwl_mld_emlsr emlsr;
 +
-+	ret = iwl_mld_send_rss_cfg_cmd(mld);
-+	if (ret)
-+		return ret;
++#if CONFIG_PM_SLEEP
++	struct iwl_mld_wowlan_data wowlan_data;
++#endif
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	bool use_ps_poll;
++	bool disable_bf;
++	struct dentry *dbgfs_slink;
++#endif
++};
 +
-+	ret = iwl_mld_config_scan(mld);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwl_mld_update_device_power(mld, false);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwl_mld_init_mcc(mld);
-+	if (ret)
-+		return ret;
-+
-+	if (mld->fw_status.in_hw_restart) {
-+		iwl_mld_send_recovery_cmd(mld, ERROR_RECOVERY_UPDATE_DB);
-+		iwl_mld_time_sync_fw_config(mld);
-+	}
-+
-+	iwl_mld_led_config_fw(mld);
-+
-+	ret = iwl_mld_init_ppag(mld);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwl_mld_init_sar(mld);
-+	if (ret)
-+		return ret;
-+
-+	ret = iwl_mld_init_sgom(mld);
-+	if (ret)
-+		return ret;
-+
-+	iwl_mld_init_tas(mld);
-+	iwl_mld_init_uats(mld);
-+
-+	return 0;
-+}
-+
-+int iwl_mld_start_fw(struct iwl_mld *mld)
++static inline struct iwl_mld_vif *
++iwl_mld_vif_from_mac80211(struct ieee80211_vif *vif)
 +{
-+	int ret;
-+
-+	lockdep_assert_wiphy(mld->wiphy);
-+
-+	ret = iwl_mld_load_fw(mld);
-+	if (IWL_FW_CHECK(mld, ret, "Failed to start firmware %d\n", ret)) {
-+		iwl_fw_dbg_error_collect(&mld->fwrt, FW_DBG_TRIGGER_DRIVER);
-+		goto error;
-+	}
-+
-+	IWL_DEBUG_INFO(mld, "uCode started.\n");
-+
-+	ret = iwl_mld_config_fw(mld);
-+	if (ret)
-+		goto error;
-+
-+	return 0;
-+
-+error:
-+	iwl_mld_stop_fw(mld);
-+	return ret;
++	return (void *)vif->drv_priv;
 +}
++
++#define iwl_mld_link_dereference_check(mld_vif, link_id)		\
++	rcu_dereference_check((mld_vif)->link[link_id],			\
++			      lockdep_is_held(&mld_vif->mld->wiphy->mtx))
++
++#define for_each_mld_vif_valid_link(mld_vif, mld_link)			\
++	for (int link_id = 0; link_id < ARRAY_SIZE((mld_vif)->link);	\
++	     link_id++)							\
++		if ((mld_link = iwl_mld_link_dereference_check(mld_vif, link_id)))
++
++/* Retrieve pointer to mld link from mac80211 structures */
++static inline struct iwl_mld_link *
++iwl_mld_link_from_mac80211(struct ieee80211_bss_conf *bss_conf)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(bss_conf->vif);
++
++	return iwl_mld_link_dereference_check(mld_vif, bss_conf->link_id);
++}
++
++int iwl_mld_mac80211_iftype_to_fw(const struct ieee80211_vif *vif);
++
++/* Cleanup function for struct iwl_mld_vif, will be called in restart */
++void iwl_mld_cleanup_vif(void *data, u8 *mac, struct ieee80211_vif *vif);
++int iwl_mld_mac_fw_action(struct iwl_mld *mld, struct ieee80211_vif *vif,
++			  u32 action);
++int iwl_mld_add_vif(struct iwl_mld *mld, struct ieee80211_vif *vif);
++int iwl_mld_rm_vif(struct iwl_mld *mld, struct ieee80211_vif *vif);
++void iwl_mld_set_vif_associated(struct iwl_mld *mld,
++				struct ieee80211_vif *vif);
++u8 iwl_mld_get_fw_bss_vifs_ids(struct iwl_mld *mld);
++void iwl_mld_handle_probe_resp_data_notif(struct iwl_mld *mld,
++					  struct iwl_rx_packet *pkt);
++
++void iwl_mld_handle_datapath_monitor_notif(struct iwl_mld *mld,
++					   struct iwl_rx_packet *pkt);
++
++void iwl_mld_handle_uapsd_misbehaving_ap_notif(struct iwl_mld *mld,
++					       struct iwl_rx_packet *pkt);
++
++void iwl_mld_reset_cca_40mhz_workaround(struct iwl_mld *mld,
++					struct ieee80211_vif *vif);
++
++static inline bool iwl_mld_vif_low_latency(const struct iwl_mld_vif *mld_vif)
++{
++	return !!mld_vif->low_latency_causes;
++}
++
++struct ieee80211_vif *iwl_mld_get_bss_vif(struct iwl_mld *mld);
++
++#endif /* __iwl_mld_iface_h__ */
 -- 
 2.34.1
 
