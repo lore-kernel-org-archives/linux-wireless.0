@@ -1,150 +1,73 @@
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 88D0119259D
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2025 08:17:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CEF11519A3
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Feb 2025 08:42:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739780262; cv=none; b=qj6WPfS/9dcZ1G3SKnzmQtxGy0AJwFtrDoodomsD55N6ydhDvRVe5g4bGPz8ip9fRbbFDkLcvwp0SeEI6l5D1IEnjvR+ps/W0dYb2jK6kUU28JAqeWv+JLY7U76qZ2xOeTDfaG7Z8wM2wCe4C3QitMEpkLdc7ZQMywA/Du5bN1A=
+	t=1739781778; cv=none; b=BnmXVWM+PSTRBPvlAe8q2egGmD73QPGQBFbexsnwCzMwVTRqTz2VQPDoYy0W0mgchHRymGClk/DJ34oAxStG2xppvKxYqBDivusu7XYVghN9+5ElNAPTQp/DsTbY4WiAWGkeg/K6VDL7LQuo7MXegaW3Z0/G1ahd370064e2JR8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739780262; c=relaxed/simple;
-	bh=XcKPGs7W7qwnW4V6Ira6eRFtRXWI0MVldvJMmYfwXYY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BQBUhtOAPwAN4YqBEWPUzhPEYorLw+LAA9PikRz2KDgGFrBw8q5GYTJo7BjKX4JFT6EmIZvg6qwCeOA2n+SvAjgUBO8OcvcBSFXGV9Op7T8AE6YQsV3Dxv+s3Y8vir1m2mCpZzAcsMu4FKWDIqkGH7wYFGiOkmKtNsUox107+pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=xA33+qFz; arc=none smtp.client-ip=5.252.227.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+	s=arc-20240116; t=1739781778; c=relaxed/simple;
+	bh=20I+LfMUT4WvbPbuFu/qFIyN8YQICY7KETDi19APdL8=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=lq0b5w6c9UqaWq18lrHi1yMBzDRBpukhYepYMb8jkEuJ7weZ4ILBqWou4t/BSYyfLSYnuh88il8xty2H63ATBk1Cx5isxBp8E7qsDvlne5fea8GVFRNhrGFy/plHUo9UFaAix3bv/k9bg9UD1MzyBs3QsadHa5iNznRqbXzpaTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=D7gJqpNr; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="xA33+qFz"
-From: Alexander Wetzel <Alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1739780253;
-	bh=XcKPGs7W7qwnW4V6Ira6eRFtRXWI0MVldvJMmYfwXYY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=xA33+qFzE+oDalTXp4AWmh00hesIEQLPAn92WyqlNRu43nj2wc14dxEIdVFV0aKRp
-	 7tgrNfOiWFNjUoBUHBgtk44GS5dTySJySd/tKiStqtTRLFgwvVeYC6fHWM+qXxPVSc
-	 vT919sNHT8C2R1QE9eh5PPKYb0CIv6ScqRKVBDaM=
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alexander Wetzel <Alexander@wetzel-home.de>
-Subject: [PATCH v2 10/10] wifi: mac80211: Cleanup *ieee80211_wake_txq* naming
-Date: Mon, 17 Feb 2025 09:17:21 +0100
-Message-ID: <20250217081721.45110-11-Alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250217081721.45110-1-Alexander@wetzel-home.de>
-References: <20250217081721.45110-1-Alexander@wetzel-home.de>
+	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="D7gJqpNr"
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 51H8gocP72807484, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
+	t=1739781770; bh=20I+LfMUT4WvbPbuFu/qFIyN8YQICY7KETDi19APdL8=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=D7gJqpNrQVHrsM2XKDgtxjGIRlHwHpOUczYL8FVzVcebQS5B5TwkhgWfjdzsoSTFr
+	 C1z/fXhDPekDobi8sL+PA3dbs+8K7DSeuXmGjOLoTLiNNkg028uHq0C0XnopIoq6Xf
+	 YZgqRv3KG+l6t+4pkld2Z2Zmz6CKTMqiNJyBmb/cEbyBbVg79zF8MB+FsTAMUdl7Ca
+	 OCNDU9eS5IM7yYE3HGxk1ko9md7wmlcHnV578MZB/3Z5KwMVh1HldLXcFy9fcrJvGN
+	 uCFSLFhHYSZc1EYU36JgXCYTt/HCWcGOaE64jh97gnZrQPT8rv13VxJJPvhbLNxqt9
+	 azw0ZUQSD2YSg==
+Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
+	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 51H8gocP72807484
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 17 Feb 2025 16:42:50 +0800
+Received: from RTEXMBS05.realtek.com.tw (172.21.6.98) by
+ RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Mon, 17 Feb 2025 16:42:50 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
+ RTEXMBS05.realtek.com.tw (172.21.6.98) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Mon, 17 Feb 2025 16:42:49 +0800
+Received: from RTEXMBS04.realtek.com.tw ([fe80::f515:f604:42fb:a42b]) by
+ RTEXMBS04.realtek.com.tw ([fe80::f515:f604:42fb:a42b%5]) with mapi id
+ 15.01.2507.035; Mon, 17 Feb 2025 16:42:49 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v2 1/8] wifi: rtw88: Fix rtw_mac_power_switch() for RTL8814AU
+Thread-Topic: [PATCH v2 1/8] wifi: rtw88: Fix rtw_mac_power_switch() for
+ RTL8814AU
+Thread-Index: AQHbf/TUzVnDQrRvUUmqwMCff8C/drNLL9hg
+Date: Mon, 17 Feb 2025 08:42:49 +0000
+Message-ID: <c0cac4a479a14218a8c7c1cd5fccd087@realtek.com>
+References: <12ab9180-45e9-40e5-98e0-6ef7b6c463d5@gmail.com>
+ <749490ce-6663-4c82-bdf2-8df1e237fd74@gmail.com>
+In-Reply-To: <749490ce-6663-4c82-bdf2-8df1e237fd74@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ieee80211_wake_txq() and ieee80211_wake_txqs() are not used.
-Rename:
-	_ieee80211_wake_txqs()  -> ieee80211_wake_txqs()
-	__ieee80211_wake_txqs() -> _ieee80211_wake_txqs()
-	__ieee80211_wake_txq()  -> ieee80211_wake_txq()
-
-Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
----
- net/mac80211/iface.c |  2 +-
- net/mac80211/util.c  | 20 ++++++++++----------
- 2 files changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0437e87ec8f2..2a2aaec68d58 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -467,7 +467,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
--	synchronize_rcu(); /* flush _ieee80211_wake_txqs() */
-+	synchronize_rcu(); /* flush ieee80211_wake_txqs() */
- 
- 	cancel_scan = rcu_access_pointer(local->scan_sdata) == sdata;
- 	if (cancel_scan)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7125a5004776..e85ecbda9afa 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -320,8 +320,8 @@ EXPORT_SYMBOL(ieee80211_handle_wake_tx_queue);
- 
- __releases(&local->fq->lock)
- __acquires(&local->fq->lock)
--static void __ieee80211_wake_txq(struct ieee80211_local *local,
--				 struct ieee80211_txq *txq)
-+static void ieee80211_wake_txq(struct ieee80211_local *local,
-+			       struct ieee80211_txq *txq)
- {
- 	struct txq_info *txqi = to_txq_info(txq);
- 	struct fq *fq = &local->fq;
-@@ -334,7 +334,7 @@ static void __ieee80211_wake_txq(struct ieee80211_local *local,
- 	}
- }
- 
--static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
-+static void _ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct fq *fq = &local->fq;
-@@ -365,11 +365,11 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- 	 */
- 
- 	if (ac == txq_fb->ac)
--		__ieee80211_wake_txq(local, txq_fb);
-+		ieee80211_wake_txq(local, txq_fb);
- 
- 	if (txq_mc && ac == txq_mc->ac &&
- 	    (!ps || !atomic_read(&ps->num_sta_ps)))
--		__ieee80211_wake_txq(local, txq_mc);
-+		ieee80211_wake_txq(local, txq_mc);
- 
- 	/* STA TXQs */
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-@@ -390,7 +390,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- 				continue;
- 
- 			/* releases and retakes fq->lock */
--			__ieee80211_wake_txq(local, txq);
-+			ieee80211_wake_txq(local, txq);
- 		}
- 	}
- out:
-@@ -401,7 +401,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- static void
- __releases(&local->queue_stop_reason_lock)
- __acquires(&local->queue_stop_reason_lock)
--_ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
-+ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int n_acs = IEEE80211_NUM_ACS;
-@@ -428,7 +428,7 @@ _ieee80211_wake_txqs(struct ieee80211_local *local, unsigned long *flags)
- 
- 				if (ac_queue == i ||
- 				    sdata->vif.cab_queue == i)
--					__ieee80211_wake_txqs(sdata, ac);
-+					_ieee80211_wake_txqs(sdata, ac);
- 			}
- 		}
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, *flags);
-@@ -472,13 +472,13 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
- 		tasklet_schedule(&local->tx_pending_tasklet);
- 
- 	/*
--	 * Calling _ieee80211_wake_txqs here can be a problem because it may
-+	 * Calling ieee80211_wake_txqs here can be a problem because it may
- 	 * release queue_stop_reason_lock which has been taken by
- 	 * __ieee80211_wake_queue's caller. It is certainly not very nice to
- 	 * release someone's lock, but it is fine because all the callers of
- 	 * __ieee80211_wake_queue call it right before releasing the lock.
- 	 */
--	_ieee80211_wake_txqs(local, flags);
-+	ieee80211_wake_txqs(local, flags);
- }
- 
- static int ac_has_active_txq(struct ieee80211_local *local)
--- 
-2.48.1
-
+Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiBydHdf
+bWFjX3Bvd2VyX3N3aXRjaCgpIGNoZWNrcyBiaXQgOCBvZiBSRUdfU1lTX1NUQVRVUzEgdG8gc2Vl
+IGlmIHRoZQ0KPiBjaGlwIGlzIHBvd2VyZWQgb24uIFRoaXMgYml0IGFwcGVhcnMgdG8gYmUgYWx3
+YXlzIG9uIGluIHRoZSBSVEw4ODE0QVUsDQo+IHNvIGlnbm9yZSBpdC4NCj4gDQo+IFNpZ25lZC1v
+ZmYtYnk6IEJpdHRlcmJsdWUgU21pdGggPHJ0bDg4MjFjZXJmZTJAZ21haWwuY29tPg0KDQpBY2tl
+ZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQoNCg0K
