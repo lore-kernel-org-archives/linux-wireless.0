@@ -1,53 +1,58 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A01264F90
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:30:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE5E2676D3
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:30:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740087051; cv=none; b=ZbKGfHg3zIAetlSWHLipEmYPnX1GtjoXjooVTqBw3fcF5r/p8ifJYp1FdX/NcKMKzrnNoXqBxPuIHi28wI8f5jAvbaeZH+06HZ6jhY65ZVrNPYwmFMlaSZ9zKvH/471m7Pg97UIThi6amXJLdPH4EkafVRVq1KW9Ud1IMBjIa9U=
+	t=1740087052; cv=none; b=Go4l7FMEa/3ScIcz+NeJhVJq8xB29zgNZJ8N7UJ8fEQzCGgHhiJ1d1HWQlJNHcYRGoWax/FekCOAb94PD+vtYpsnXuezsa9h+R8t5d6bevm7amm/FSnwxlpSITO0x+W787hLA37At6pFS+16bPWTV+1dOJSzZj1qG2humH52OaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740087051; c=relaxed/simple;
-	bh=RRzAjxVwvvsltnpCtnIhy0r/vNYyqNgr6qg/Y2xqYTo=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZpN3KnusV2WIGOVJ8hrJ5mpwl5hX+YUkxS67N6pFUaXvTmILcd8+BlusEA8AehO/OBA7tVU33wrs4joRQGTewaPYFZOHJ65GobPp0hBf8FzB3W2q1QxNH++r/HLRXID9fzVL1gyL9o17thmMBssjAbC/xFBI3KD7sG2GchOZTE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Z9ecfPiD; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1740087052; c=relaxed/simple;
+	bh=4xKRmkx9EN1YyoR77x96abpsL0Vcy6BW2t4yx0FtGks=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZmD/OBHBfrpIy0/naLpW2ZPw56EaMBO4QDXyyIadsFX0URj/KAL97LMZdrmAkhzudmYJo87So6bN2vLuhd0+FOb1UvTUA2UXW4SbcmhI/nN4xoRLqFHI7VRgFPsbpVi83Rd7eQi1eB5j2iNJJ1H1tT9NM7f0rsOwWIQmY3j6ta4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DS29vu2n; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Z9ecfPiD"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51KHUmnt002702;
-	Thu, 20 Feb 2025 21:30:39 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DS29vu2n"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51KKwjTc026612;
+	Thu, 20 Feb 2025 21:30:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=EowWK+urfnVevq4mwnYu/c
-	paPJyTR2E0jVwHYzCaztI=; b=Z9ecfPiDYa8M/Au1B0z+UvPv2uKap1DOA4VkM4
-	h1AwbI0H8n4/smybT2QABiZsY6uPtS6M/+yiHFz0cOaFxSvHmnU8Zp/wd8Rozf3p
-	TGywf9XL3DymTsd9Jca34Tjjl57pHFCREy/TS6OT2xSqZOVYY+crkDsFA71HPVKl
-	0ZSz+Y9fosb/Ud+B5wuY8NkUFYIEzP0HVkhKuzUfQz+9gjMGu0FvYhz00n0owWNY
-	j+hudzoANTkYGz9iHsHSNeF6SGAedolEbVjkTG1Wz+kajpIBDL3lWXa8o2eiTmMQ
-	tJFzLfVEmhwM4e4YWOkkgRnpaTprK+/tsEcFbUOhTO8HBhIQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44vyy2fg02-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tmJ0Se7R6ZXpox3qvgG8itdr8HcIb6ldAjjnTfSSOls=; b=DS29vu2nr9lAqu3M
+	yj0AeigNM2udS5tewUDgnQIGpt/FgOLuxPr6IO0DYfOemdZyC3ynkCB8VtllW3IG
+	hyDhtOHQKFQIBN+O2D9QgaI6Q49DxcMRLsUKmsSyWtdu0QQB6mLOCuzDPcxfdKPV
+	9Gmw+RLlN1MZnNDQSvI+3EznFGplmzXpUnIq+QwM7M4aZInkb1OB6pTFso/X0dZ8
+	dLuCFoWzZGRnMoVznWTbVhABqYyGEwaL7K/2QpQOt2gDuPadKi272JoHhfR90dmH
+	X2RxY+gCj5XdZ+dYgbF4YnEQNvMGbfyj/xuh4FEM9gy0f+pEdnNKuG9hD0ItUoGI
+	ofvqZg==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44x2r3sp61-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Feb 2025 21:30:39 +0000 (GMT)
+	Thu, 20 Feb 2025 21:30:42 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51KLUcw4016254
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51KLUg5k024184
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Feb 2025 21:30:38 GMT
+	Thu, 20 Feb 2025 21:30:42 GMT
 Received: from ath12k-linux1.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Thu, 20 Feb 2025 13:30:38 -0800
+ 15.2.1544.9; Thu, 20 Feb 2025 13:30:41 -0800
 From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Pradeep Kumar Chitrapu
-	<quic_pradeepc@quicinc.com>
-Subject: [PATCH V11 0/9] wifi: ath12k: add MU-MIMO and 160 MHz bandwidth support
-Date: Thu, 20 Feb 2025 13:30:16 -0800
-Message-ID: <20250220213025.2722206-1-quic_pradeepc@quicinc.com>
+	<quic_pradeepc@quicinc.com>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+Subject: [PATCH V11 9/9] wifi: ath12k: add extended NSS bandwidth support for 160 MHz
+Date: Thu, 20 Feb 2025 13:30:25 -0800
+Message-ID: <20250220213025.2722206-10-quic_pradeepc@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250220213025.2722206-1-quic_pradeepc@quicinc.com>
+References: <20250220213025.2722206-1-quic_pradeepc@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,86 +65,109 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: J3X6Gnl08wt6hwEKPuyg0myIPs4Pn-zh
-X-Proofpoint-GUID: J3X6Gnl08wt6hwEKPuyg0myIPs4Pn-zh
+X-Proofpoint-ORIG-GUID: ztRLeQzcdj5PrD6sgs4K1-siiLIZYW_7
+X-Proofpoint-GUID: ztRLeQzcdj5PrD6sgs4K1-siiLIZYW_7
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-20_09,2025-02-20_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0
- lowpriorityscore=0 clxscore=1015 adultscore=0 phishscore=0 mlxlogscore=999
- bulkscore=0 malwarescore=0 impostorscore=0 priorityscore=1501 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2502100000 definitions=main-2502200143
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ bulkscore=0 phishscore=0 mlxlogscore=999 suspectscore=0 priorityscore=1501
+ mlxscore=0 spamscore=0 adultscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
+ definitions=main-2502200143
 
-Add support for
-1. enabling MU-MIMO in HE and EHT modes from hardware
-2. setting fixed HE rate/GI/LTF
-3. 160 MHz bandwidth in HE mode
-4. extended NSS bandwidth support
+Currently rx and tx MCS map for 160 MHz under HE capabilities
+are not updating properly, when 160 MHz is configured with NSS
+lesser than max NSS support. Fix this by utilizing
+nss_ratio_enabled and nss_ratio_info fields sent by firmware
+in service ready event.
+
+However, if firmware advertises EXT NSS BW support in VHT caps
+as 1(1x2) and when nss_ratio_info indicates 1:1, reset the EXT
+NSS BW Support in VHT caps to 0 which indicates 1x1. This is
+to avoid incorrectly choosing 1:2 NSS ratio when using the
+default VHT caps advertised by firmware.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
-changes in v11:
- patch 1/9:
-  - fix return values in ath12k_mac_set_he_txbf_conf() and
-    ath12k_mac_vif_recalc_sta_he_txbf()
- patch 6/9:
-  - fix missing he_mcs initialization in ath12k_mac_init_arvif()
+Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 33 ++++++++++++++++++++++-----
+ 1 file changed, 27 insertions(+), 6 deletions(-)
 
-changes in v10:
- patch 6/9:
-  - use ath12k_ahsta_to_sta()
-  - fix rcu_dereference warning in ath12k_mac_set_bitrate_mask_iter()
-  - change return type for ath12k_mac_validate_fixed_rate_settings()
-  - improve readability by adhering to nl80211 definitions of GI
-    NL80211_TXRATE_DEFAULT_GI. Introduce ath12k_mac_nlgi_to_wmigi()
-    for conversion.
- patch 7/9:
-  - do not change default MODE_11AC_VHT160 in
-    ath12k_mac_get_phymode_vht() as it breaks clients which do not
-    set VHT_CAP_SUPP_CHAN_WIDTH_160MHZ.
- patch 8/9:
-  - Use IEEE80211_VHT_CAP_EXT_NSS_BW_MASK along with
-    IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ for determining VHT160
-    phymode.
-
-changes in v9: rebase on top of master branch with mlo changes
- patch 1/9 and 2/9:
-  - fetch link_conf using ath12k_mac_get_link_bss_conf()
-    instead of arvif->vif->bss_conf before mlo
- patch 6/9
-  - fetch mcs/nss values from sta->link[] instead of sta->deflink
-  - fix spelling of 'incompatibility'
- patch 8/9
-  - replace sta->deflink.addr with arsta->addr in
-    ath12k_peer_assoc_h_vht
- patch 9/9
-  - replace sta->deflink.rx_nss with link_sta->rx_nss
-
-changes in v8:
- - rebase and resolve KASAN warnings reported by Jeff in v7, in patch 6/9.
-
-Pradeep Kumar Chitrapu (9):
-  wifi: ath12k: push HE MU-MIMO params to hardware
-  wifi: ath12k: push EHT MU-MIMO params to hardware
-  wifi: ath12k: move HE MCS mapper to a separate function
-  wifi: ath12k: generate rx and tx mcs maps for supported HE mcs
-  wifi: ath12k: fix TX and RX MCS rate configurations in HE mode
-  wifi: ath12k: add support for setting fixed HE rate/GI/LTF
-  wifi: ath12k: clean up 80P80 support
-  wifi: ath12k: add support for 160 MHz bandwidth
-  wifi: ath12k: add extended NSS bandwidth support for 160 MHz
-
- drivers/net/wireless/ath/ath12k/core.h |    2 +
- drivers/net/wireless/ath/ath12k/mac.c  | 1141 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath12k/mac.h  |   17 +
- drivers/net/wireless/ath/ath12k/wmi.c  |   24 +-
- drivers/net/wireless/ath/ath12k/wmi.h  |  107 ++-
- 5 files changed, 1069 insertions(+), 222 deletions(-)
-
-
-base-commit: f22471c17f5849b2f20e2c56ec9fcd9dd8d5bf28
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 89a89bdd5dfc..e2eb6e135388 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -2729,8 +2729,10 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 	max_nss = min(max_nss, ar->num_tx_chains);
+ 
+ 	if (arg->peer_phymode == MODE_11AX_HE160) {
+-		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
++		tx_nss = ath12k_get_nss_160mhz(ar, ar->num_tx_chains);
+ 		rx_nss = min(arg->peer_nss, tx_nss);
++
++		arg->peer_nss = min(link_sta->rx_nss, ar->num_rx_chains);
+ 		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
+ 
+ 		if (!rx_nss) {
+@@ -6959,6 +6961,12 @@ ath12k_create_vht_cap(struct ath12k *ar, u32 rate_cap_tx_chainmask,
+ 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(rxmcs_map);
+ 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(txmcs_map);
+ 
++	/* Check if the HW supports 1:1 NSS ratio and reset
++	 * EXT NSS BW Support field to 0 to indicate 1:1 ratio
++	 */
++	if (ar->pdev->cap.nss_ratio_info == WMI_NSS_RATIO_1_NSS)
++		vht_cap.cap &= ~IEEE80211_VHT_CAP_EXT_NSS_BW_MASK;
++
+ 	return vht_cap;
+ }
+ 
+@@ -7141,11 +7149,12 @@ static void ath12k_mac_set_hemcsmap(struct ath12k *ar,
+ 				    struct ieee80211_sta_he_cap *he_cap)
+ {
+ 	struct ieee80211_he_mcs_nss_supp *mcs_nss = &he_cap->he_mcs_nss_supp;
+-	u16 txmcs_map, rxmcs_map;
++	u8 maxtxnss_160 = ath12k_get_nss_160mhz(ar, ar->num_tx_chains);
++	u8 maxrxnss_160 = ath12k_get_nss_160mhz(ar, ar->num_rx_chains);
++	u16 txmcs_map_160 = 0, rxmcs_map_160 = 0;
++	u16 txmcs_map = 0, rxmcs_map = 0;
+ 	u32 i;
+ 
+-	rxmcs_map = 0;
+-	txmcs_map = 0;
+ 	for (i = 0; i < 8; i++) {
+ 		if (i < ar->num_tx_chains &&
+ 		    (ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift) & BIT(i))
+@@ -7158,12 +7167,24 @@ static void ath12k_mac_set_hemcsmap(struct ath12k *ar,
+ 			rxmcs_map |= IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2);
+ 		else
+ 			rxmcs_map |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
++
++		if (i < maxtxnss_160 &&
++		    (ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift) & BIT(i))
++			txmcs_map_160 |= IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2);
++		else
++			txmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
++
++		if (i < maxrxnss_160 &&
++		    (ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift) & BIT(i))
++			rxmcs_map_160 |= IEEE80211_HE_MCS_SUPPORT_0_11 << (i * 2);
++		else
++			rxmcs_map_160 |= IEEE80211_HE_MCS_NOT_SUPPORTED << (i * 2);
+ 	}
+ 
+ 	mcs_nss->rx_mcs_80 = cpu_to_le16(rxmcs_map & 0xffff);
+ 	mcs_nss->tx_mcs_80 = cpu_to_le16(txmcs_map & 0xffff);
+-	mcs_nss->rx_mcs_160 = cpu_to_le16(rxmcs_map & 0xffff);
+-	mcs_nss->tx_mcs_160 = cpu_to_le16(txmcs_map & 0xffff);
++	mcs_nss->rx_mcs_160 = cpu_to_le16(rxmcs_map_160 & 0xffff);
++	mcs_nss->tx_mcs_160 = cpu_to_le16(txmcs_map_160 & 0xffff);
+ }
+ 
+ static void ath12k_mac_copy_he_cap(struct ath12k *ar,
 -- 
 2.34.1
 
