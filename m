@@ -1,389 +1,117 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80D072676D5
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:30:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 490F820CCCA
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:41:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740087052; cv=none; b=Xil9m0h58bR0Y7yjv8t510IedHzqvqFMzcsVHauNbwIigrnbJ6XneTevFNF3xJlsgA/LSO3lm1WEXm0fMQV8GLDk62/4dVLUypKNRSYqP1t338oJCMwsscuAlaDQtGKhIk/Y7A6tW3tdH8HmM5XQulFaxKpyJBDdVkkY5FwI3I8=
+	t=1740087663; cv=none; b=JA0wN3V+qjt+OJb2WO2yL/jtmZYWlCpjoEW+gi8oGc5tGunlLsuitE5KGXynt5qlZcHPM5o7FTGqJvlIVyTKXcj/+lhN+ZVg/u5jgovi8GEca6h5C+ta/jCtwH3y0ihzS69vDkn+2ZARYHinwANInn/MoIFM6oDzuSqDPTIYqwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740087052; c=relaxed/simple;
-	bh=+EjtHljF0iaEB/16j0YSSSVFQQQaSmbO8+uwUqPfHbk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JxbR0/evSTXXj6GYUboEoZ6BgE/9DUZfIsWbilibDQ7dxvK1+EQM891IXxaO2g4IbA1iYrC6wqfr4PLO7T13RF0cVQocGrNquTplH/31ZxvhHJteJ6WoRNxPiGZUTGctqtvm3PhDa2nhjKDYc0fjaVhVm7zofFTK7hjtCPhWajk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fgj7V1w0; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1740087663; c=relaxed/simple;
+	bh=qlPKGTRLbcEupI3qxYmLW0lxbRCSwL2+qubKggmS32g=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Gz9E34E91cV05H4uAo6UFq34dyUm8ysx+qh0mYI0BXTEVQlvTaQ093g946lKxhMcq/KgCSVwH4eOFPzr3k+OWahKVMoodHyv4vCFuBqVCE5UVeJ3crN6XH0qt24z/EA0/HXDEjzweTxm2g/6rADFGgNyS5NwsMPMnHnKMkSZYbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ixcsmn9t; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fgj7V1w0"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51KH6qQA020394;
-	Thu, 20 Feb 2025 21:30:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ixcsmn9t"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51KAkFP5011936
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:41:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lUDfjZD7e6vhWbvNPh3c1aXn/Z7ttayTz8mwM96UIrg=; b=fgj7V1w04hbiX+iH
-	iBt16uxZ828KXXJ3Y0qsjLM9+0wok5e45d9nQHmUYgdRwUqhYMFK9BzjQZIc8Ay6
-	8jwgpL49VEq82/pLn1jQcMZOJnQi5QKsTYL7uUl4IAZmHfJt5f11DORZf/jNpg9l
-	tK1ysxkPmRv9sZn1dc0ht+1Fy2BiKb6w4vdifbkFaOzb4jRRlXflKTE2PpPyHVkd
-	ruYusnqiQF28y/Ecvwdb5F34v48qZxSwHEei/nJBC/D3uEYWVTR+YT3TB3pEq0m1
-	ZNax19lGqzfQn++3Mpb5UKpZ4S0nAlOymlwyDdUf4+LSUDeF4LSCgHDLWXUNFMU9
-	TM5QaQ==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44x06t263c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Feb 2025 21:30:42 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51KLUfMD017272
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 20 Feb 2025 21:30:41 GMT
-Received: from ath12k-linux1.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Thu, 20 Feb 2025 13:30:41 -0800
-From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
-To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Pradeep Kumar Chitrapu
-	<quic_pradeepc@quicinc.com>,
-        P Praneesh <quic_ppranees@quicinc.com>,
-        "Jeff
- Johnson" <quic_jjohnson@quicinc.com>
-Subject: [PATCH V11 8/9] wifi: ath12k: add support for 160 MHz bandwidth
-Date: Thu, 20 Feb 2025 13:30:24 -0800
-Message-ID: <20250220213025.2722206-9-quic_pradeepc@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250220213025.2722206-1-quic_pradeepc@quicinc.com>
-References: <20250220213025.2722206-1-quic_pradeepc@quicinc.com>
+	sXm8CbCeOCA2MHGIdHbWnAtzNNGJ+p2GLkT+nZHKxRY=; b=Ixcsmn9tcJp2Dhim
+	nFanieDkrWfO+w9H4Z2GHGhf5PHydblsU17TaCOpuUd+7CjY8v5fvZvlHVPnKDTs
+	UCaaOWnFnBVroRJrlDBBQNulAG66rgsXIlJUQJrXJYi+rnS9YhLiwHqgsU6FNMfS
+	ybcRlodg/LeTH5vERUSLp9wn53he8uxTnqlQYOAKsWNQS/d6zOI2qAFHh/vHQPSk
+	Nphvie/FmvcUjXYJDGe+TIi/4YNUizto+S3YsARoEVyjD0EW+mGhgNBvsg64lsHv
+	RDj/zjdTPQ6d7XijfwV/TsKb8US0uXXeuUqDypBfIK0J3g7FgbJdP4NFWgKVhSdY
+	dNDrnw==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44x2xb9pct-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 21:41:01 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-220c86e46ebso25271695ad.0
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Feb 2025 13:41:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740087660; x=1740692460;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sXm8CbCeOCA2MHGIdHbWnAtzNNGJ+p2GLkT+nZHKxRY=;
+        b=l9X1sIZEt5d7hN82ZxCvVTb9z83IdO/p4X0jZRv4I5j1HxWyHeCC1p1AR6x4SdKMWf
+         7qFOWkHz68lW1kS6TYzGE2xCcP/2db3E5UkKI7qoO5RplQ3FIPtAriDxd8lPCw+g0AGo
+         D/ZXKdOWnqyBj46zm+Jz3KxF07x4J36rWLyreKnXTnP4R6TrhMJbHX/ql3PDrk7QUxkK
+         LqnrnJTg4A1XlRm5+n8ek+2K1sOBj4NsBsd7C8Qq2PkuE81mB8KU5blRmMjz3xDNSTZ1
+         VZCy2Nu0HPlgWeCVvoce0LUvMVBQ4901c8t6rtJXsjn1ZeqMbXllzxCjzd5IZVpNPJv1
+         uVNA==
+X-Gm-Message-State: AOJu0Ywk055hG0xHEXBZXBB3+pvq0C0uLTUtHrHnJJN6KidYNAEIVShF
+	2TXkLfoagwYFMADZYCwo2Z8Ry6izYx1rXbt/fXr9FmWYvrHIO9duAQ65H9fD59PBmqJUOoc8WRX
+	Uin3rYuuSxDpr6W04Ojos3oQLPlX4nO4YLnutq33maeDd0ne3MeUNDdEiHr7gPBpMEwIwrElQaQ
+	==
+X-Gm-Gg: ASbGnctrPUksoVO69zcsFBO9b4trhh7ZL/7QSYhmlNGr8gNBd+D3LV70pISyB0sHCZS
+	e3SE4+VLcobPz0SsZ32h3/dsBEaPF5wE4/O/iendYu40QNe4gbMsF09wVQPwfF4UrpdAtVh8yL1
+	ZFdZ7kndvY70+KzrrWFRGLuw0llvAP9pdb/MuYLzrBi1OTrr2g4CozGjuuR4+B+kdq9BgaMfrzp
+	7QaYLq4ycckBo59CcUNdmovOE7KVME+D7gQmKJ9kUJIE242TkgMqvZML9Ia5e31JD2L+4VG7JBm
+	PgVwrX7IPJe20tiODoh4WyJM2ZW93lLYG5Wxjtgorw==
+X-Received: by 2002:a17:902:f60a:b0:21f:752f:f2b1 with SMTP id d9443c01a7336-221a1102975mr4455315ad.30.1740087660134;
+        Thu, 20 Feb 2025 13:41:00 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG6nbFDufrU5Thv1T/a7ckrxD6ab/wasTHLWyWamR+AS/BVxp/tYhweWgIUOY3IIHFAixrEtw==
+X-Received: by 2002:a17:902:f60a:b0:21f:752f:f2b1 with SMTP id d9443c01a7336-221a1102975mr4455045ad.30.1740087659685;
+        Thu, 20 Feb 2025 13:40:59 -0800 (PST)
+Received: from [169.254.0.1] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-220d545cf8fsm125252215ad.152.2025.02.20.13.40.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Feb 2025 13:40:59 -0800 (PST)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: ath12k@lists.infradead.org, P Praneesh <praneesh.p@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20250219053640.223734-1-praneesh.p@oss.qualcomm.com>
+References: <20250219053640.223734-1-praneesh.p@oss.qualcomm.com>
+Subject: Re: [PATCH] wifi: ath12k: remove redundant declaration of
+ ath12k_dp_rx_h_find_peer()
+Message-Id: <174008765913.757811.10414072274409589241.b4-ty@oss.qualcomm.com>
+Date: Thu, 20 Feb 2025 13:40:59 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 9uvVwnmimBVHFR5pJTs1ngcH4JQS2x7K
-X-Proofpoint-GUID: 9uvVwnmimBVHFR5pJTs1ngcH4JQS2x7K
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.0
+X-Proofpoint-GUID: ow90GH_ThbJLNjp2dSzzBS822RqMKs9R
+X-Proofpoint-ORIG-GUID: ow90GH_ThbJLNjp2dSzzBS822RqMKs9R
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-20_09,2025-02-20_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
- clxscore=1015 spamscore=0 malwarescore=0 priorityscore=1501 bulkscore=0
- impostorscore=0 mlxlogscore=999 phishscore=0 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2502100000 definitions=main-2502200143
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ malwarescore=0 lowpriorityscore=0 phishscore=0 impostorscore=0 spamscore=0
+ mlxlogscore=796 clxscore=1015 priorityscore=1501 adultscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
+ definitions=main-2502200144
 
-Add support to configure maximum NSS in 160 MHz bandwidth.
-Firmware advertises support for handling NSS ratio information
-as a part of service ready ext event using nss_ratio_enabled
-flag. Save this information in ath12k_pdev_cap to calculate
-NSS ratio.
 
-Additionally, reorder the code by moving
-ath12k_peer_assoc_h_phymode() before ath12k_peer_assoc_h_vht()
-to ensure that arg->peer_phymode correctly reflects the bandwidth
-in the max NSS calculation.
+On Wed, 19 Feb 2025 11:06:40 +0530, P Praneesh wrote:
+> The current code in dp_rx.h declares the ath12k_dp_rx_h_find_peer() twice.
+> Fix this by removing one of the redundant declarations of
+> ath12k_dp_rx_h_find_peer() to ensure that the function is declared only
+> once.
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+> 
+> [...]
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
+Applied, thanks!
 
-Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
-Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
-Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/core.h |  2 +
- drivers/net/wireless/ath/ath12k/mac.c  | 88 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath12k/mac.h  |  2 +
- drivers/net/wireless/ath/ath12k/wmi.c  | 19 +++++-
- drivers/net/wireless/ath/ath12k/wmi.h  | 28 ++++++++
- 5 files changed, 126 insertions(+), 13 deletions(-)
+[1/1] wifi: ath12k: remove redundant declaration of ath12k_dp_rx_h_find_peer()
+      commit: cb9a978a20a4481dd59c3ea8c6fee36b3dac2b47
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 3fac4f00d383..894972725e8a 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -800,6 +800,8 @@ struct ath12k_pdev_cap {
- 	struct ath12k_band_cap band[NUM_NL80211_BANDS];
- 	u32 eml_cap;
- 	u32 mld_cap;
-+	bool nss_ratio_enabled;
-+	u8 nss_ratio_info;
- };
- 
- struct mlo_timestamp {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 049a3c4c22e0..89a89bdd5dfc 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -2271,6 +2271,34 @@ ath12k_peer_assoc_h_vht_limit(u16 tx_mcs_set,
- 	return tx_mcs_set;
- }
- 
-+static u8 ath12k_get_nss_160mhz(struct ath12k *ar,
-+				u8 max_nss)
-+{
-+	u8 nss_ratio_info = ar->pdev->cap.nss_ratio_info;
-+	u8 max_sup_nss = 0;
-+
-+	switch (nss_ratio_info) {
-+	case WMI_NSS_RATIO_1BY2_NSS:
-+		max_sup_nss = max_nss >> 1;
-+		break;
-+	case WMI_NSS_RATIO_3BY4_NSS:
-+		ath12k_warn(ar->ab, "WMI_NSS_RATIO_3BY4_NSS not supported\n");
-+		break;
-+	case WMI_NSS_RATIO_1_NSS:
-+		max_sup_nss = max_nss;
-+		break;
-+	case WMI_NSS_RATIO_2_NSS:
-+		ath12k_warn(ar->ab, "WMI_NSS_RATIO_2_NSS not supported\n");
-+		break;
-+	default:
-+		ath12k_warn(ar->ab, "invalid nss ratio received from fw: %d\n",
-+			    nss_ratio_info);
-+		break;
-+	}
-+
-+	return max_sup_nss;
-+}
-+
- static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
- 				    struct ath12k_link_vif *arvif,
- 				    struct ath12k_link_sta *arsta,
-@@ -2288,6 +2316,7 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
- 	u8 max_nss, vht_mcs;
- 	int i, vht_nss, nss_idx;
- 	bool user_rate_valid = true;
-+	u32 rx_nss, tx_nss, nss_160;
- 
- 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
- 
-@@ -2392,10 +2421,24 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
- 	/* TODO:  Check */
- 	arg->tx_max_mcs_nss = 0xFF;
- 
--	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   arsta->addr, arg->peer_max_mpdu, arg->peer_flags);
-+	if (arg->peer_phymode == MODE_11AC_VHT160) {
-+		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
-+		rx_nss = min(arg->peer_nss, tx_nss);
-+		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
-+
-+		if (!rx_nss) {
-+			ath12k_warn(ar->ab, "invalid max_nss\n");
-+			return;
-+		}
-+
-+		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
-+		arg->peer_bw_rxnss_override |= nss_160;
-+	}
- 
--	/* TODO: rxnss_override */
-+	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
-+		   "mac vht peer %pM max_mpdu %d flags 0x%x nss_override 0x%x\n",
-+		   arsta->addr, arg->peer_max_mpdu, arg->peer_flags,
-+		   arg->peer_bw_rxnss_override);
- }
- 
- static int ath12k_mac_get_max_he_mcs_map(u16 mcs_map, int nss)
-@@ -2488,6 +2531,7 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
- 	u16 he_tx_mcs = 0, v = 0;
- 	int he_nss, nss_idx;
- 	bool user_rate_valid = true;
-+	u32 rx_nss, tx_nss, nss_160;
- 
- 	if (WARN_ON(ath12k_mac_vif_link_chan(vif, link_id, &def)))
- 		return;
-@@ -2682,10 +2726,27 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
- 			max_nss = i + 1;
- 	}
- 	arg->peer_nss = min(link_sta->rx_nss, max_nss);
-+	max_nss = min(max_nss, ar->num_tx_chains);
-+
-+	if (arg->peer_phymode == MODE_11AX_HE160) {
-+		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
-+		rx_nss = min(arg->peer_nss, tx_nss);
-+		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
-+
-+		if (!rx_nss) {
-+			ath12k_warn(ar->ab, "invalid max_nss\n");
-+			return;
-+		}
-+
-+		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
-+		arg->peer_bw_rxnss_override |= nss_160;
-+	}
- 
- 	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
--		   "mac he peer %pM nss %d mcs cnt %d\n",
--		   arsta->addr, arg->peer_nss, arg->peer_he_mcs_count);
-+		   "mac he peer %pM nss %d mcs cnt %d nss_override 0x%x\n",
-+		   arsta->addr, arg->peer_nss,
-+		   arg->peer_he_mcs_count,
-+		   arg->peer_bw_rxnss_override);
- }
- 
- static void ath12k_peer_assoc_h_he_6ghz(struct ath12k *ar,
-@@ -2926,11 +2987,12 @@ static enum wmi_phy_mode ath12k_mac_get_phymode_vht(struct ath12k *ar,
- 						    struct ieee80211_link_sta *link_sta)
- {
- 	if (link_sta->bandwidth == IEEE80211_STA_RX_BW_160) {
--		if (link_sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ)
-+		if (link_sta->vht_cap.cap & (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
-+		    IEEE80211_VHT_CAP_EXT_NSS_BW_MASK))
- 			return MODE_11AC_VHT160;
- 
- 		/* not sure if this is a valid case? */
--		return MODE_11AC_VHT160;
-+		return MODE_UNKNOWN;
- 	}
- 
- 	if (link_sta->bandwidth == IEEE80211_STA_RX_BW_80)
-@@ -6874,10 +6936,8 @@ ath12k_create_vht_cap(struct ath12k *ar, u32 rate_cap_tx_chainmask,
- 
- 	ath12k_set_vht_txbf_cap(ar, &vht_cap.cap);
- 
--	/* TODO: Enable back VHT160 mode once association issues are fixed */
--	/* Disabling VHT160 and VHT80+80 modes */
--	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
--	vht_cap.cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
-+	/* 80P80 is not supported */
-+	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
- 
- 	rxmcs_map = 0;
- 	txmcs_map = 0;
-@@ -11516,7 +11576,8 @@ ath12k_mac_setup_radio_iface_comb(struct ath12k *ar,
- 	comb[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
- 					BIT(NL80211_CHAN_WIDTH_20) |
- 					BIT(NL80211_CHAN_WIDTH_40) |
--					BIT(NL80211_CHAN_WIDTH_80);
-+					BIT(NL80211_CHAN_WIDTH_80) |
-+					BIT(NL80211_CHAN_WIDTH_160);
- 
- 	return 0;
- }
-@@ -11890,6 +11951,9 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	ieee80211_hw_set(hw, SUPPORTS_TX_FRAG);
- 	ieee80211_hw_set(hw, REPORTS_LOW_ACK);
- 
-+	if (cap->nss_ratio_enabled)
-+		ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
-+
- 	if ((ht_cap & WMI_HT_CAP_ENABLED) || is_6ghz) {
- 		ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
-diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
-index d54b7e39dc6b..16badb1e2b99 100644
---- a/drivers/net/wireless/ath/ath12k/mac.h
-+++ b/drivers/net/wireless/ath/ath12k/mac.h
-@@ -38,6 +38,8 @@ struct ath12k_generic_iter {
- #define IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11	BIT(24)
- 
- #define ATH12K_CHAN_WIDTH_NUM			14
-+#define ATH12K_BW_NSS_MAP_ENABLE		BIT(31)
-+#define ATH12K_PEER_RX_NSS_160MHZ		GENMASK(2, 0)
- 
- #define ATH12K_TX_POWER_MAX_VAL	70
- #define ATH12K_TX_POWER_MIN_VAL	0
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 86dee5fecf4b..013099705174 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -529,6 +529,10 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 		pdev_cap->he_mcs = le32_to_cpu(mac_caps->he_supp_mcs_5g);
- 		pdev_cap->tx_chain_mask = le32_to_cpu(mac_caps->tx_chain_mask_5g);
- 		pdev_cap->rx_chain_mask = le32_to_cpu(mac_caps->rx_chain_mask_5g);
-+		pdev_cap->nss_ratio_enabled =
-+			WMI_NSS_RATIO_EN_DIS_GET(mac_caps->nss_ratio);
-+		pdev_cap->nss_ratio_info =
-+			WMI_NSS_RATIO_INFO_GET(mac_caps->nss_ratio);
- 	} else {
- 		return -EINVAL;
- 	}
-@@ -1037,11 +1041,24 @@ int ath12k_wmi_vdev_down(struct ath12k *ar, u8 vdev_id)
- static void ath12k_wmi_put_wmi_channel(struct ath12k_wmi_channel_params *chan,
- 				       struct wmi_vdev_start_req_arg *arg)
- {
-+	u32 center_freq1 = arg->band_center_freq1;
-+
- 	memset(chan, 0, sizeof(*chan));
- 
- 	chan->mhz = cpu_to_le32(arg->freq);
- 	chan->band_center_freq1 = cpu_to_le32(arg->band_center_freq1);
--	chan->band_center_freq2 = 0;
-+	if (arg->mode == MODE_11AX_HE160) {
-+		if (arg->freq > center_freq1)
-+			chan->band_center_freq1 =
-+					cpu_to_le32(center_freq1 + 40);
-+		else
-+			chan->band_center_freq1 =
-+					cpu_to_le32(center_freq1 - 40);
-+
-+		chan->band_center_freq2 = cpu_to_le32(arg->band_center_freq1);
-+	} else {
-+		chan->band_center_freq2 = 0;
-+	}
- 
- 	chan->info |= le32_encode_bits(arg->mode, WMI_CHAN_INFO_MODE);
- 	if (arg->passive)
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index aa7fe4234695..c989a6fa4568 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -2306,6 +2306,21 @@ enum wmi_direct_buffer_module {
- 	WMI_DIRECT_BUF_MAX
- };
- 
-+/**
-+ * enum wmi_nss_ratio - NSS ratio received from FW during service ready ext event
-+ * @WMI_NSS_RATIO_1BY2_NSS: Max nss of 160MHz is equals to half of the max nss of 80MHz
-+ * @WMI_NSS_RATIO_3BY4_NSS: Max nss of 160MHz is equals to 3/4 of the max nss of 80MHz
-+ * @WMI_NSS_RATIO_1_NSS: Max nss of 160MHz is equals to the max nss of 80MHz
-+ * @WMI_NSS_RATIO_2_NSS: Max nss of 160MHz is equals to two times the max nss of 80MHz
-+ */
-+
-+enum wmi_nss_ratio {
-+	WMI_NSS_RATIO_1BY2_NSS,
-+	WMI_NSS_RATIO_3BY4_NSS,
-+	WMI_NSS_RATIO_1_NSS,
-+	WMI_NSS_RATIO_2_NSS
-+};
-+
- struct ath12k_wmi_pdev_band_arg {
- 	u32 pdev_id;
- 	u32 start_freq;
-@@ -2622,6 +2637,12 @@ struct ath12k_wmi_hw_mode_cap_params {
- } __packed;
- 
- #define WMI_MAX_HECAP_PHY_SIZE                 (3)
-+#define WMI_NSS_RATIO_EN_DIS_BITPOS    BIT(0)
-+#define WMI_NSS_RATIO_EN_DIS_GET(_val) \
-+	le32_get_bits(_val, WMI_NSS_RATIO_EN_DIS_BITPOS)
-+#define WMI_NSS_RATIO_INFO_BITPOS              GENMASK(4, 1)
-+#define WMI_NSS_RATIO_INFO_GET(_val) \
-+	le32_get_bits(_val, WMI_NSS_RATIO_INFO_BITPOS)
- 
- /* pdev_id is present in lower 16 bits of pdev_and_hw_link_ids in
-  * ath12k_wmi_mac_phy_caps_params & ath12k_wmi_caps_ext_params.
-@@ -2663,6 +2684,13 @@ struct ath12k_wmi_mac_phy_caps_params {
- 	__le32 he_cap_info_2g_ext;
- 	__le32 he_cap_info_5g_ext;
- 	__le32 he_cap_info_internal;
-+	__le32 wireless_modes;
-+	__le32 low_2ghz_chan_freq;
-+	__le32 high_2ghz_chan_freq;
-+	__le32 low_5ghz_chan_freq;
-+	__le32 high_5ghz_chan_freq;
-+	__le32 nss_ratio;
-+
- } __packed;
- 
- struct ath12k_wmi_hal_reg_caps_ext_params {
+Best regards,
 -- 
-2.34.1
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
