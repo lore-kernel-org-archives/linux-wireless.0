@@ -1,130 +1,69 @@
-Received: from mail-il1-f206.google.com (mail-il1-f206.google.com [209.85.166.206])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7F219ABC3
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2025 15:44:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.206
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B501014EC62
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2025 16:44:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740584661; cv=none; b=nG+RN9fKalz1jDDPsxnBzzDXaWzHRaW1NuqaAPZU8RA4rIPA1TEWIHRkvW/7uIFtNjBr+uKNxHpDLdUigJba9PCHuD4Tzo9aUDt+FLDVVFKsBZ4QXy//8chWE5IaKhKLaiqgW3HvGefWK3Yi0X/DKgMIREacRh+s7l7K9+o6c/w=
+	t=1740588267; cv=none; b=Afx7pRzfJ0rB0k1C84oottoTkQPLGajqR7PlFXXaXXuSwLFhrzDrvI12EDGs8O7FmbaiJo8aGbPQ0DHDrBB7kTc7oYdIpU9uw30l9X6uFOzaKK3bH+x4BeMMtRb3o0fzfnAXJjkE5SEQZsFUzPiX9UFVhmlvbqUoKNZziTSwcbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740584661; c=relaxed/simple;
-	bh=jQWGtiwUMbK9EpvVC6A07sD50bV3LE9jiqhidCemgEM=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=pqCTyFCtNNzpVyvtYZU9ifC5SE6UmcKfOZnoGgq0Es+Ld7UBWizTwlGpRvgJ77Cp94UHjbW+H/m1+d868lE2cjSYwAQkrGVH/leTH+sCcz/FZiORWiNzUpBzf9Q4zoj5QpwqGv6ejZUMweO/5mXQMPHbGackVod6Zw0ikXBwDRE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.206
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-il1-f206.google.com with SMTP id e9e14a558f8ab-3ce3bbb2b9dso57832525ab.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2025 07:44:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740584659; x=1741189459;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gW3c0T4SQd+xntB/X6MFD4fJslBbj6oN4QbWpGD4aAk=;
-        b=XWzaa2elAgrFyaL3UkfJD/HKnntlTfNo/KGxIS9B9AVcHTNhB11gegIUkdowqDeVqm
-         vdpjKM/Tw+PPzM1jHocwCJFNS92hJcQiXb8AZW0Irry5poIAKL0YDtaJHGg3cLxhE4Km
-         kxknF4UWt5/XYKkEyuex1iE+1Eb/k4GH2G2mopN0Mpmknq1fiZiBqYJEgqky62RvkPEQ
-         DdSIT9fAaoB7XRckkTB65CWT+G2YINA5b1+JPMRANBWJ7VqqvsFTBykmdtuR0snklHhQ
-         c/yHGPDm3AGioqKuYbMW/P1in9OgphZ59pqj7sIXh8uh4jU6YVq7EFpgnaDjVO2yVxK1
-         00Ng==
-X-Forwarded-Encrypted: i=1; AJvYcCXKfo+hAXcUjDVaX+3NqsqiqpO8yRZflTxSSRr/OtI60zpW+mixTuoVB/4oNaWg6t6s4cvLsaqCyJXKHg5udQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+gY4++QJO1OpQDum729yAYreCZIMILePGXvZhW5F21rMlg/QD
-	fi//V3sZUPsXOvUoW28tWZoCamNCSzc4m7K4PucjUZBUs9rRRAqvJWHY+rZAdPIDnjdUOMaFB0j
-	K254CeB/MkQRHovvJ7ah1B1zdy64TX4SEwCUdHADuLLW1W+OWOjsDmbk=
-X-Google-Smtp-Source: AGHT+IFHAPreiTBW/x4aw1EHkJ+xwFEwTp7VKuG/mVJow7Yr8RLePATwqXZ4fsrz1nfOajC8ztz3lRiQ+gIc4ySw3aLXDkSDqeA7
+	s=arc-20240116; t=1740588267; c=relaxed/simple;
+	bh=bo9T8ojXtui1TXdtJPKM3TpchjaapRwHEqTXns48zrI=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=pNRFV69b5G05ftna5BISPopQmUbu+Dt22baar1S9jhsxH4Px85YQNmhgXGB6b2x940DcEok9PT4CZgQevhv5rZCyZZNvExCRLyCOptnNfz3O3ytrimr9bNkFsdcaEV8ZdSedMm0QKKqPIoUdZc/kpdK94UQWggDrWr7V17L7w4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=edVlc3rM; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="edVlc3rM"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=bo9T8ojXtui1TXdtJPKM3TpchjaapRwHEqTXns48zrI=;
+	t=1740588265; x=1741797865; b=edVlc3rMDEawXNMx8ildINCvZLKLWJDy6GlxQ+37qeQoQBU
+	xmNlis+S9w9dFnN8Za9F6V/jYqOvrZG7ptbNxIoqoItj1H8/SEddH8O0seKvzxsNonE+zVT+xgXfK
+	MHEuqVCspFn/NM07JFnPXzeHLggptWEqmyifn+r9itcM2bhFn9YZ0ZVhNO8gWFcK8atuQC3C0BY1f
+	IY6K/2zbxD3CRfPj9jBpF7I1og0ooAy3JYzEK81cNRQq5LpdPB4rYg73JzTlXsizVmPcP4hcVmXSy
+	01tlM8QkkceaFoA0jbjpmSBStrVS/C8bbt0bIRRs8TZaJbPmnyjh6Nulo4I7NMwg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1tnKWE-0000000BcUG-2J7l;
+	Wed, 26 Feb 2025 17:44:22 +0100
+Message-ID: <cced003772c7174f4b2c9bf59d1b556c25b23bce.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 00/10] Convert mac80211 to TXQs only
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alexander Wetzel <alexander@wetzel-home.de>, 
+	linux-wireless@vger.kernel.org
+Date: Wed, 26 Feb 2025 17:44:21 +0100
+In-Reply-To: <8fa3ffd9-ebaa-4db1-8d1d-ed0cb6802872@wetzel-home.de>
+References: <20250220104426.82011-1-Alexander@wetzel-home.de>
+	 <1fa2f33a67ee1c6e537095888df44c7adeae64d2.camel@sipsolutions.net>
+	 <8fa3ffd9-ebaa-4db1-8d1d-ed0cb6802872@wetzel-home.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.54.3 (3.54.3-1.fc41) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a92:c545:0:b0:3d1:78f8:7490 with SMTP id
- e9e14a558f8ab-3d30487a027mr64643795ab.14.1740584659314; Wed, 26 Feb 2025
- 07:44:19 -0800 (PST)
-Date: Wed, 26 Feb 2025 07:44:19 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <67bf36d3.050a0220.38b081.01ff.GAE@google.com>
-Subject: [syzbot] [wireless?] KMSAN: uninit-value in cfg80211_tx_mlme_mgmt
-From: syzbot <syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com>
-To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+X-malware-bazaar: not-scanned
 
-Hello,
+On Wed, 2025-02-26 at 17:42 +0100, Alexander Wetzel wrote:
+>=20
+> I'll try to reproduce that. Are there some instructions somewhere to get=
+=20
+> a comparable testsetup to the one you are using?
+>=20
 
-syzbot found the following issue on:
+I'm just using the UML based tests:
 
-HEAD commit:    ff202c5028a1 Merge tag 'soc-fixes-6.14' of git://git.kerne..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=12d447a4580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=aca5947365998f67
-dashboard link: https://syzkaller.appspot.com/bug?extid=5a7b40bcb34dea5ca959
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-userspace arch: i386
+https://w1.fi/cgit/hostap/tree/tests/hwsim/vm/README
 
-Unfortunately, I don't have any reproducer for this issue yet.
+my current kernel .config is here:
+https://p.sipsolutions.net/4d1a905718fa54e3.txt
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/788b15dfbf95/disk-ff202c50.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/48f236cd3e71/vmlinux-ff202c50.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/b92116dbc946/bzImage-ff202c50.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com
-
- cfg80211_wiphy_work+0x396/0x860 net/wireless/core.c:435
- process_one_work kernel/workqueue.c:3236 [inline]
- process_scheduled_works+0xc1a/0x1e80 kernel/workqueue.c:3317
- worker_thread+0xea7/0x14f0 kernel/workqueue.c:3398
- kthread+0x6b9/0xef0 kernel/kthread.c:464
- ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:148
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
- </TASK>
----[ end trace 0000000000000000 ]---
-=====================================================
-BUG: KMSAN: uninit-value in cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
- cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
- ieee80211_report_disconnect net/mac80211/mlme.c:4238 [inline]
- ieee80211_sta_connection_lost+0xfa/0x150 net/mac80211/mlme.c:7811
- ieee80211_sta_work+0x1dea/0x4ef0
- ieee80211_iface_work+0x1900/0x1970 net/mac80211/iface.c:1684
- cfg80211_wiphy_work+0x396/0x860 net/wireless/core.c:435
- process_one_work kernel/workqueue.c:3236 [inline]
- process_scheduled_works+0xc1a/0x1e80 kernel/workqueue.c:3317
- worker_thread+0xea7/0x14f0 kernel/workqueue.c:3398
- kthread+0x6b9/0xef0 kernel/kthread.c:464
- ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:148
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
-
-Local variable frame_buf created at:
- ieee80211_sta_connection_lost+0x43/0x150 net/mac80211/mlme.c:7806
- ieee80211_sta_work+0x1dea/0x4ef0
-
-CPU: 1 UID: 0 PID: 4086 Comm: kworker/u8:16 Tainted: G        W          6.14.0-rc3-syzkaller-00267-gff202c5028a1 #0
-Tainted: [W]=WARN
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 02/12/2025
-Workqueue: events_unbound cfg80211_wiphy_work
-=====================================================
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+johannes
