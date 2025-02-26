@@ -1,43 +1,43 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A818272906
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Feb 2025 07:52:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2AF272916;
+	Wed, 26 Feb 2025 07:52:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740556328; cv=none; b=QQDhSTeIZcxEnHcmAdMME17n7HoTB464i/DCmhBij1kjzRP9vCV+Sy8bv1nFs3OZIv3vRVN9hVjlIPnQ7Dd7XVfzYhn7KYL/tR4bvFAu9QCYydFritFc9NcGft+Pj9W7YdrviTo/zUro9jyYdu6B8iwgliz38rk2wud1rTVV2AY=
+	t=1740556334; cv=none; b=XKP/lbwTBtqiBvFt/QyrYsMmTiJp6dUBZlblDCmDcXlVcY3DUoHyKi93Td0fEOkRnXfHY5JEpOJJOBJEBnNcmQBnYZdaKDRAYuQNVFU9qgIxLnznbb43UiMknw38qpJsO8QvtDvWz+b14zrgbAnyvMKWrotVwmugqpdrYdsAfMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740556328; c=relaxed/simple;
-	bh=8q1jvqSZE10xA0/k7HkFfMVi5DJEmclN4Xd07HajAiM=;
+	s=arc-20240116; t=1740556334; c=relaxed/simple;
+	bh=MSqyOvq+ccdpPBzQ1gR2eQJitjUEoKiW7KKwqkYY4JM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Bp5cPIXjamzL+pr4ADA25QTA1GQvP2TikibmLysnYVXE5/XIkxqLqTQReVDc5nYD8mlqNUmeJxSOQOliDRIVcBdyiNiyRFrDRtW6e1ZCf2wLkM1Zr9U1621yN8d307Xp+BsLXBWj3gSFoENEbv0SKl7f3WZAzGPOTz/3eiMMk8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Uf72j6Cd; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=Ia30nvdC4Hok3e6G7j7sYDgNbIwrqn7CjzSpgL01IQNG3nDYyXsj7Q9MdH5GvN7iuEtRhZ2eoTzajKJkdb0VtCxIfkALwDlpLL23Ck9tImH64+eqQgCLOhbqkZVEe3651hbH69TJ4kUFJ7W72MKEkkyyG3rRZzLaeRmSTX/yJ40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=avcbERJY; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Uf72j6Cd"
-X-UUID: 8b995ec6f41611ef8eb9c36241bbb6fb-20250226
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="avcbERJY"
+X-UUID: 8b65f7a2f41611ef8eb9c36241bbb6fb-20250226
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=D0LubxO8PuasDsqF+Jzui2u+PCebgr1V/Ea3bk4B4q0=;
-	b=Uf72j6CdHblN80jwVRnUqdety3C1dkzNxWOACe5uvK9kNpmMkhatZM6jUSwq2Ulm4tMKcfWYLgGi3xwbjncNSjerZCM6mhUrd7WjQ03FCFz4r8ue5QIFV4BfOUXFeUdEIJMPK6VYJHF454eKWw3kcGoc7WCJhafArVwD/hNR/Fc=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=UXvURHGA0Ly9RLku7bEzjTDSfzHNqrwmlaHlSPi6+TM=;
+	b=avcbERJYpaZx4N8YsBWfMZgA9K7BSlJXvCBzda2sa+8kj9BBM8Ptlfzfeqc8ervrxpKrmCBe4bxNS/OoqF8BFpqPWEUTPsx1lOItM/9dx8fmZIpA97tl3bC3KFwarm0XPrmY6mINzmyPViFfhL8RJ4FMbITjJujHwnNhy1FXWGg=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.46,REQID:63b61f69-62be-449f-b184-9489fc2f1f84,IP:0,U
+X-CID-O-INFO: VERSION:1.1.46,REQID:a585f456-e7ba-4162-9fac-2b08793a9312,IP:0,U
 	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
 	:release,TS:-5
-X-CID-META: VersionHash:60aa074,CLOUDID:10af93a4-5c06-4e72-8298-91cabc9efadf,B
+X-CID-META: VersionHash:60aa074,CLOUDID:6d7e4629-e0f8-414e-b8c3-b75c08217be8,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
 	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
 	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 8b995ec6f41611ef8eb9c36241bbb6fb-20250226
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+X-UUID: 8b65f7a2f41611ef8eb9c36241bbb6fb-20250226
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1623184083; Wed, 26 Feb 2025 15:51:54 +0800
+	with ESMTP id 1025367379; Wed, 26 Feb 2025 15:51:53 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1258.28; Wed, 26 Feb 2025 15:51:52 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -52,10 +52,10 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
 	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
-	<mingyen.hsieh@mediatek.com>
-Subject: [PATCH 6/6] wifi: mt76: mt7925: add MTCL support to enhance the reulatory compliance
-Date: Wed, 26 Feb 2025 15:51:23 +0800
-Message-ID: <20250226075123.3981253-6-mingyen.hsieh@mediatek.com>
+	<mingyen.hsieh@mediatek.com>, <stable@vger.kernel.org>
+Subject: [PATCH 4/6] wifi: mt76: mt7925: remove unused acpi function for clc
+Date: Wed, 26 Feb 2025 15:51:21 +0800
+Message-ID: <20250226075123.3981253-4-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250226075123.3981253-1-mingyen.hsieh@mediatek.com>
 References: <20250226075123.3981253-1-mingyen.hsieh@mediatek.com>
@@ -70,56 +70,29 @@ Content-Type: text/plain
 
 From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Apply the MTCL configuration to improving channel availability and
-regulatory compliance if MTCL table is supported.
+The code for handling ACPI configuration in CLC was copied from the mt7921
+driver but is not utilized in the mt7925 implementation. So removes the
+unused functionality to clean up the codebase.
 
+Cc: stable@vger.kernel.org
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7925/init.c    | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/init.c b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-index 8561ab310f16..1bd30a857be5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-@@ -64,8 +64,15 @@ void mt7925_regd_be_ctrl(struct mt792x_dev *dev, u8 *alpha2)
- 	struct mt7925_clc_rule_v2 *rule;
- 	struct mt7925_clc *clc;
- 	bool old = dev->has_eht, new = true;
-+	u32 mtcl_conf = mt792x_acpi_get_mtcl_conf(&dev->phy, alpha2);
- 	u8 *pos;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index 602ac3c31976..3fd75216889f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -3421,7 +3421,6 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
  
-+	if (mtcl_conf != MT792X_ACPI_MTCL_INVALID &&
-+	    (((mtcl_conf >> 4) & 0x3) == 0)) {
-+		new = false;
-+		goto out;
-+	}
-+
- 	if (!phy->clc[MT792x_CLC_BE_CTRL])
- 		goto out;
- 
-@@ -101,11 +108,21 @@ mt7925_regd_channel_update(struct wiphy *wiphy, struct mt792x_dev *dev)
- {
- #define IS_UNII_INVALID(idx, sfreq, efreq) \
- 	(!(dev->phy.clc_chan_conf & BIT(idx)) && (cfreq) >= (sfreq) && (cfreq) <= (efreq))
-+#define MT7925_UNII_59G_IS_VALID	0x1
-+#define MT7925_UNII_6G_IS_VALID	0x1e
- 	struct ieee80211_supported_band *sband;
- 	struct mt76_dev *mdev = &dev->mt76;
- 	struct ieee80211_channel *ch;
-+	u32 mtcl_conf = mt792x_acpi_get_mtcl_conf(&dev->phy, mdev->alpha2);
- 	int i, cfreq;
- 
-+	if (mtcl_conf != MT792X_ACPI_MTCL_INVALID) {
-+		if ((mtcl_conf & 0x3) == 0)
-+			dev->phy.clc_chan_conf &= ~MT7925_UNII_59G_IS_VALID;
-+		if (((mtcl_conf >> 2) & 0x3) == 0)
-+			dev->phy.clc_chan_conf &= ~MT7925_UNII_6G_IS_VALID;
-+	}
-+
- 	sband = wiphy->bands[NL80211_BAND_5GHZ];
- 	if (!sband)
- 		return;
+ 		.idx = idx,
+ 		.env = env_cap,
+-		.acpi_conf = mt792x_acpi_get_flags(&dev->phy),
+ 	};
+ 	int ret, valid_cnt = 0;
+ 	u8 *pos, *last_pos;
 -- 
 2.34.1
 
