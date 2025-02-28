@@ -1,79 +1,78 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30779230BD8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 662E0230BE0
 	for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 19:56:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740772611; cv=none; b=RAMANKM00k/2WQgAUZJxm7ZcavhE1Vo5TMGu4vG5xueCGGXZKR5dT92ONECcMjBp139Dnsz8PynPxx6mhl+nQj4CNpVcqrr7y11ByKZawe8qS8cH5VeEWyDG3tiR4ENLaqO3x8uL1THeOsp3ueR1x7s8OChg1V3Fp3KO9hURdrU=
+	t=1740772611; cv=none; b=t5Hq/CGQxL4S5ab4oYbEFx6ijo936MHnExCyX4EVJR5W15bMrD4+RrtGLoFpfzsKfcsu3QtmZJNoIBz9SHyJViyUJ/zuI2R+KROZoUByf1yCmwEcWY2V+mNztv3QfVtHdVE4i+FppzpsYuP6ulF81t61e3EDllwPZgorgb2Me6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1740772611; c=relaxed/simple;
-	bh=+6G95sNAYpGpdt4lhVmJqI8SNanPeyKH7ztqZOfCHv8=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=M6oe4yVPJyQS3QzY4a9su0U02PisfppPYBXjvi+/SwLAGh7KJkFjN9X4VKfsjY1m2v38CyOMB3RzCMrvbj7xJrizxb0Q9iQnQiDvyrGioP/jzQRj8rSromTJJDWO58A5v9lsLV4zQ8o1R/M/llTpyg0JiGtECEUphy0cmyvlbB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kZ3zcWUm; arc=none smtp.client-ip=205.220.180.131
+	bh=nR7GxmEXg7VGItWZ6hJDTqU2JJXxAoyRBDwxDJpinzY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Ta8GvbbfeSfI6p+g38O63CGtUraS4KF4lHoapv7/kb4GIaWNk+uIX8Ec/5l0PcMhRpkMIpPZcAXQnbv3qcCWoaiGwGwDxEpshwscogu/JZjNm2yI47utYkYDqUnd9eDTaokR2sAfH/0lPUdHMd16lsJyEme8a1vPNOPXCZB7roI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Pqkq5q9z; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kZ3zcWUm"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51SAXHMf018843
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 19:56:48 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Pqkq5q9z"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51SAXIBX020355
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 19:56:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	content-transfer-encoding:content-type:date:from:in-reply-to
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	3qF8i7KVqrk2V7E1Rt7ZLTFnAeJWhkQ3hP5vJGtB1q0=; b=kZ3zcWUmiyyutS9b
-	nkiOjjG5CMxIX4ph7bYxDcpQU4I6AqH8JjMp0CfGJTZECwR+u3jkCg7BFSRLXyhO
-	KDZR7lncO0IHG/kH7I+obZ9qh6jg4pqWaooQnDk0KlhGS23yrPflIZybXBhOToaK
-	YtLywEbiP0zsolTrN8QfHfnX/r0pisHvN52rieydk0f/JmkfMZYCjXtpR7Ox2HeL
-	mVvHzj9zRkAalqH5GBnPgOantdcehwV/qQtslJNDe3JEygdORu4MeLljSuPdc1C9
-	TflLbeCcvIjYGos6ZyEHzg9by5Zgr9gL80nRsa9oSN4hKqFfkWJ0IrK+tDMxSdFG
-	21D9aw==
+	J9y/X4woGoV6thmMJzh3rYyjcSrpjUI+L7VLsGt3e5s=; b=Pqkq5q9zcXCCigNv
+	BhtAgnQtUgCcDbYd0HidlT7gCkc9cPBe6Xhqypdv1Oyjw3wc5KsSRqoyQz0t/AF2
+	WtbiipqzSf5bvVn889boBxc9+e/7+SwGzZHYEv1OpK28hzIicdDvE9PVOIDhTeNJ
+	RPm+Um/lXECM6o1GC9AB+XPcZLRBJnNsa7SMiBfIOGAxaP6AIUUPhaE+QjIk2ShO
+	0QdqOL20XukxwH5U/cjB7kiigiA+wUBg2Q/u6I8O+E3+zJt0wZrKcURDMwMWkX3V
+	Z7lQRGt91DVeGyj5x+tkfQ1UeeS55BEG823FBGH7Vo4FzcwrTNd4CShFX5ECE29v
+	HCBWqw==
 Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 451prnaecd-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4539uphw59-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 19:56:48 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-220cd43c75aso91835975ad.3
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 11:56:48 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 19:56:49 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2234c09240fso46912055ad.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Feb 2025 11:56:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740772606; x=1741377406;
+        d=1e100.net; s=20230601; t=1740772608; x=1741377408;
         h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:x-gm-message-state:from:to:cc
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=3qF8i7KVqrk2V7E1Rt7ZLTFnAeJWhkQ3hP5vJGtB1q0=;
-        b=X206iv/x9vC4WVspP6HP8UJ2F/jE/PxnvD7z88gekiZdZt9fpEORbE4LgrsUvOm4Lt
-         AiYGczhpQkrg4dEd6jBjcWs5vvC9ieEb1sprzD+k2f36WZopiY89ONX9YuUB5TrEg8p7
-         p3ekVPxEAfmfLupjiPr1tU8TnRvgvbiFc8N2DfOV926WUSSKhJ6/CqTnGLesze/EeSDq
-         dSHxBh4uK7pqRSAEdnbE19+sFrNvclzvnpR9QKkiWtQ81Ajqfu4bL+0Bj2YI6ZETVcVL
-         Zw0bWmPZn7UHnrXdi3aXV7d74W2+o8pyhjB9OWN8cTQ35egytBpo5218ooq4GF/OtzVu
-         IXZg==
-X-Forwarded-Encrypted: i=1; AJvYcCVuD/k0pwvfAgoBI3fEj2LA88yKLqTjB/80cwZmm+o289T2xZIhNIQJ3oX0Voi5oE30b0OGRowOPwTQYVwNSw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzbtXhcxm3cgArS586No83KtKqanzaCfF5kJBhDrjUbAC2Nxq6U
-	cT3PDdyq8I/qcbUjYWJtukaMpBPD26YXeYsMpvNSaVsok/Hjlo/Yk/LSLd+F/7eADNs349EYUcm
-	hVSL69CGYlN/0exqH9Pxwsp7yopm4rWNTwScHWjqoDcZMgSylsaYyKnIDqAKEFOJfYQ==
-X-Gm-Gg: ASbGncvoIZr0DZTw6e6OHw7AcFtdjsrv74+uEayGUwgYtNLr2g2h0HXhN+YoQ8p089J
-	ioZ6ytaD294If0NXH1EQXm3a4HcP/cA6gcHQhlnlfxJpE32rWIX52kVa4KIXRUPW08x9Qpx8pNm
-	haIDI9WBD3t4vz7gs3xZ4xVSiVM5klu4DGLE2RPLYlKAgw7Xff+yGz6v9xvHYI+Q72NQRrqyfnY
-	I7HUSw7a99Ea72AYI4pTwvqMUdFB3V0uVQtBmU2yGq5DXZNwtGIJVfw5RsQ2+fLRgnUf7eJx6eF
-	DEQOw6BUWzV2Jrp6BOTzND06IVVXYCJ16sEWYAVS4Qb3Bk0jCSSt
-X-Received: by 2002:a17:903:2302:b0:21d:dfae:300c with SMTP id d9443c01a7336-22368f60a53mr72832525ad.3.1740772606363;
-        Fri, 28 Feb 2025 11:56:46 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IExZWp04s694oFSfVY12xSazXlY3K9MyoNC3J9R+QbrD1vGsWlXV56BmqnqfXnoa/uEc4Vg7g==
-X-Received: by 2002:a17:903:2302:b0:21d:dfae:300c with SMTP id d9443c01a7336-22368f60a53mr72832265ad.3.1740772605982;
-        Fri, 28 Feb 2025 11:56:45 -0800 (PST)
+        bh=J9y/X4woGoV6thmMJzh3rYyjcSrpjUI+L7VLsGt3e5s=;
+        b=KLLQJpNTtwaOqInC0SbkhQGragtCYnu+/ZmRvAs7jep8V2zhGRwQuS3MDAal772/ZH
+         hw8IkwItOqET24XWdY0RdYNp2q4taAriCIeg6a+W/yLU1XQGqsSQ2VJXSUo85TLBMS6C
+         Mp3jiHCo33NdfgEjYDb97+24CLWJQHVho7TC4alGEw4GF1G4AEiTc4HB57nES0NbEMQt
+         Gg8kxhDvGS4Tuz3mCpj7U8vbZnrYTHZmN6VqkiNm4PNh6m9WuGRaVj7u/d7Y7UWa+oA6
+         qaTCpfAQKs4nho2mn9UXUFnwoUn0B/9ZJd8ouOvPnzTMRYh/aUDI3NJhOFguY8XbQU6N
+         MrVA==
+X-Gm-Message-State: AOJu0YyR0mwrIYTSo7DmySYiqV9wN75nSkpJqeD0/Rgf+DZM5xm+Mb8I
+	imnUMomugqkhdTnh9dwtjtF9bCd31ToKWYmwcge4BMEPIy76fJX98oZYW+3Lcvlgid1Y4Twk24N
+	/E5d/KBtrIIhVHWVFE3Nh5jGphb/VUhGdkHAybgS7O2rE/fwXgxUWzuUlNoV/Vft+bg==
+X-Gm-Gg: ASbGncuOtGQhuyikLdwhdNbGoytF+KUGAe6isuvs2UcvMHVYbbLOVZa2Ll6QjNP4wk0
+	tNXTLFrzbQkDQ9o0URAtLZKjkQHQwxRLJw2iJ4CsLV/lsVICvuGHHx8GHgN5NqN0OsEDF+VY4k5
+	nmecxVePPA7ASPDeo9/om2DgNXMwiLqu6vzF9TMO25fjfc9LpfIuM74lWJTpXe5RMAn1H7x6xog
+	LvdDJBnlbxfMPIkgdjS0UsCZbYw3n2TlODmTWXIaPyKuMnntSYneeToeg/o57OBTf4WiRIrNUpu
+	pVYpYvlXz/6UvTaR6WPYam4X9zJBO6VycxZEWqIs2XWE5qfGV1AP
+X-Received: by 2002:a17:903:244d:b0:215:9470:7e82 with SMTP id d9443c01a7336-22368f71b7amr67121435ad.4.1740772608512;
+        Fri, 28 Feb 2025 11:56:48 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IF4j10JGtHmNwKP72SX75j17DpyBXdLgOH+c6J+R8rMSYaNZsEjsrcf7abSJqj4W0twfzCrjg==
+X-Received: by 2002:a17:903:244d:b0:215:9470:7e82 with SMTP id d9443c01a7336-22368f71b7amr67121175ad.4.1740772608147;
+        Fri, 28 Feb 2025 11:56:48 -0800 (PST)
 Received: from [169.254.0.1] (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223505336ecsm37140165ad.244.2025.02.28.11.56.44
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-223505336ecsm37140165ad.244.2025.02.28.11.56.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Feb 2025 11:56:45 -0800 (PST)
+        Fri, 28 Feb 2025 11:56:47 -0800 (PST)
 From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-To: ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-        linux-wireless@vger.kernel.org,
-        Aloka Dixit <aloka.dixit@oss.qualcomm.com>
-In-Reply-To: <20250210182718.408891-1-aloka.dixit@oss.qualcomm.com>
-References: <20250210182718.408891-1-aloka.dixit@oss.qualcomm.com>
-Subject: Re: [PATCH v4 0/5] wifi:ath11k/ath12k: refactor tx_arvif retrieval
-Message-Id: <174077260480.4132177.11927601453604393606.b4-ty@oss.qualcomm.com>
-Date: Fri, 28 Feb 2025 11:56:44 -0800
+To: ath12k@lists.infradead.org, Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Cc: linux-wireless@vger.kernel.org, Vinith Kumar R <quic_vinithku@quicinc.com>
+In-Reply-To: <20241122173432.2064858-1-quic_tamizhr@quicinc.com>
+References: <20241122173432.2064858-1-quic_tamizhr@quicinc.com>
+Subject: Re: [PATCH] wifi: ath12k: Report proper tx completion status to
+ mac80211
+Message-Id: <174077260737.4132177.15272767288760816552.b4-ty@oss.qualcomm.com>
+Date: Fri, 28 Feb 2025 11:56:47 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -83,41 +82,37 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.0
-X-Proofpoint-ORIG-GUID: gGKx0eTqRJjqtDMqsPWvcrUjQD0dMyz7
-X-Proofpoint-GUID: gGKx0eTqRJjqtDMqsPWvcrUjQD0dMyz7
+X-Proofpoint-ORIG-GUID: iEsA4h87TXzh3hZRdsTPVel7J8JF1X0a
+X-Proofpoint-GUID: iEsA4h87TXzh3hZRdsTPVel7J8JF1X0a
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-28_06,2025-02-28_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- spamscore=0 clxscore=1015 mlxscore=0 adultscore=0 mlxlogscore=905
- suspectscore=0 phishscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1015
+ adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+ impostorscore=0 mlxscore=0 lowpriorityscore=0 malwarescore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2502100000 definitions=main-2502280144
 
 
-On Mon, 10 Feb 2025 10:27:13 -0800, Aloka Dixit wrote:
-> MLO MBSSID series for cfg80211/mac80211, which is in review here
-> https://patchwork.kernel.org/project/linux-wireless/list/?series=902914&state=%2A&archive=both,
-> changes the way transmitted profile data is stored for each link.
-> As drivers currently retrieve 'arvif' for transmitted profile at
-> multiple places, MLO MBSSID changes will becomes unnecessarily
-> bloated with RCU operations for every retrieval. Refactor 'tx_arvif'
-> to avoid this.
+On Fri, 22 Nov 2024 23:04:32 +0530, Tamizh Chelvam Raja wrote:
+> Currently Tx completion for few exception packets are received from
+> firmware and the tx status updated to mac80211. The tx status values of
+> HAL_WBM_REL_HTT_TX_COMP_STATUS_DROP and HAL_WBM_REL_HTT_TX_COMP_STATUS_TTL
+> are considered as tx failure and reported as tx failure to mac80211.
+> But these failure status is due to internal firmware tx drop and these
+> packets were not tried to transmit in the air.
+> In case of mesh this invalid tx status report might trigger mpath broken
+> issue due to increase in mpath fail average.
+> So do not report these tx status as tx failure instead free the skb
+> by calling ieee80211_free_txskb(), and that will be accounted as dropped
+> frame.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/5] wifi: ath11k: refactor transmitted arvif retrieval
-      commit: ab8a17bc63e2d187ea4602e1d1b9baf10c7b252d
-[2/5] wifi: ath11k: pass tx arvif for MBSSID and EMA beacon generation
-      commit: 8e30bfad4dc96c27f52b84b3fc5928252dafee5d
-[3/5] wifi: ath12k: refactor transmitted arvif retrieval
-      commit: 20fe6390b503f0c8fa15a73720fdceb2c3745c87
-[4/5] wifi: ath12k: pass tx arvif for MBSSID and EMA beacon generation
-      commit: 5f1e9f2cbc2b8aff6a2bef9b67c09c8ac8923285
-[5/5] wifi: ath12k: pass BSSID index as input for EMA
-      commit: f4f5ee5e3a21830c3c4f1925108dbc7c3c070574
+[1/1] wifi: ath12k: Report proper tx completion status to mac80211
+      commit: d2d9c9b8de725e1006d3aa3d18678a732f5d3584
 
 Best regards,
 -- 
