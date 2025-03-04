@@ -1,113 +1,155 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mail.as201155.net (mail.as201155.net [185.84.6.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83769156886
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 00:39:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 161BF33D8
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 01:22:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.84.6.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741048783; cv=none; b=CTeP3RQWvvWlcKMeJazBx0nrQDa/WIDpF1oCSlxXynszsTmIWKqIoQ4fkzCKwOPIfllumnOpBcRWLWmX40cxkuPCguSGtZkORSldKdubh6RJlE49SLpJh8MZw8kbrUllYZuYc791fxqXr2Az+T5Y5ExXDimHzJe0R1lXyPWqNxM=
+	t=1741051344; cv=none; b=H0HO1/xQtA28e99/WYnq6CJbQP8or96bIGBe2lIe4bdHgYY2s+ujFA/QlSeZ4dml6/5emUAXmPRS+aoFLEfZCbdKb97S6kcoG53LqLp7aV6IU9X7DWWVyixZdjRBM3yCfB4jGThnle0UEOQL2VUgSNiouWg6Uk4E/V1bAQ7hLCk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741048783; c=relaxed/simple;
-	bh=/hAlStDO55Q3DQARbK3ZZ7M0IwnAq3giWsAx8qPaUlE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=t/9lNO50bW/NnotvdT1d9+du34AYK4MbWXld10AT6cUQZOmfrFJ4r3E9J5m1LbAeGbWQkGi+n2SfoyWIj2/6JeZJOdQUK2aMfJvMQqJbQKHp/P7y9ZgriJLmu37xOBTenzUHZ5Kf0eglFb6x+QTzMnnnwmREG//gGKu4BoMGQZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pyuF4SvD; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1741051344; c=relaxed/simple;
+	bh=mLhj81vlIEwFWncn3e9o4Uci5lS9oGNLWnya803hnSI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=HlhnbE5Aaxc9DeM51Jq5nb23j/qmx7k2KMNri5eZk4Z2CpCIuuLsBB4K83OqfCeH4He7kCuqNG9v2QA4r+KZymfrsVML+6xYHkraE1K/f88ILtEcRHXabS8kl20zYiXudN6qR1slsIoy0T0Ll1s3cG049siodPI12UDMU/hCXPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dd-wrt.com; spf=pass smtp.mailfrom=dd-wrt.com; dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b=gRRi2PDw; arc=none smtp.client-ip=185.84.6.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dd-wrt.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dd-wrt.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pyuF4SvD"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 523NXSkX006765;
-	Tue, 4 Mar 2025 00:39:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	U7DbHjqKNRXjGTrqpA/bSALW6+Ball2Agi5PKn4Cw8k=; b=pyuF4SvDje836hAf
-	WWfiAPdpwWCbLqDPRqXx95E8wxodlsxAdGg4bJw/WKZVOjYWNRWJzI6M/DIv5eyn
-	UE6CKTBfY3UkZJJq2M+iy6fmNTr1jsBLK6OPY+5h5RIfHToDT6Vd7rITmItkocpW
-	9FDD03NAEBjdo+EpmjsdhqOlWcPrwUrTZcLG7gLEgCWTx29D2oxYAxGHYO/c5UFK
-	AOmtlCdAerpyG6oswT0r64WrcuufdwlHb3FcKC7a+LF/yiAdrBeE/XERxX8o+FMF
-	x8YdVLUiCiBjdXzzWT8q5vra4ky2gSt1wVo0HGh/KBVF4LnOeo+Udwj1V9GFoDkQ
-	fn0Hyg==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 455p6tg3j5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 04 Mar 2025 00:39:36 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5240dZJm000982
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 4 Mar 2025 00:39:35 GMT
-Received: from [10.227.106.66] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 3 Mar 2025
- 16:39:34 -0800
-Message-ID: <10aa25c3-293d-41e3-8140-52e6dae26fa4@quicinc.com>
-Date: Mon, 3 Mar 2025 16:39:06 -0800
+	dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b="gRRi2PDw"
+Received: from smtps.newmedia-net.de ([2a05:a1c0:0:de::167]:40640 helo=webmail.newmedia-net.de)
+	by mail.as201155.net with esmtps  (TLS1) tls TLS_RSA_WITH_AES_256_CBC_SHA
+	(Exim 4.97.1)
+	(envelope-from <s.gottschall@dd-wrt.com>)
+	id 1tpGzC-000000007vD-24Db
+	for linux-wireless@vger.kernel.org;
+	Tue, 04 Mar 2025 02:22:19 +0100
+X-SASI-Hits: BODYTEXTP_SIZE_3000_LESS 0.000000, BODY_SIZE_2000_2999 0.000000,
+	BODY_SIZE_5000_LESS 0.000000, BODY_SIZE_7000_LESS 0.000000,
+	CTE_8BIT 0.000000, DKIM_ALIGNS 0.000000, DKIM_SIGNATURE 0.000000,
+	HTML_00_01 0.050000, HTML_00_10 0.050000, IN_REP_TO 0.000000,
+	LEGITIMATE_SIGNS 0.000000, MULTIPLE_REAL_RCPTS 0.000000,
+	NO_CTA_URI_FOUND 0.000000, NO_FUR_HEADER 0.000000, NO_REAL_NAME 0.000000,
+	NO_URI_HTTPS 0.000000, OUTBOUND 0.000000, OUTBOUND_SOPHOS 0.000000,
+	REFERENCES 0.000000, SENDER_NO_AUTH 0.000000, SUSP_DH_NEG 0.000000,
+	__ANY_URI 0.000000, __BODY_NO_MAILTO 0.000000, __BULK_NEGATE 0.000000,
+	__CC_NAME 0.000000, __CC_NAME_DIFF_FROM_ACC 0.000000,
+	__CC_REAL_NAMES 0.000000, __CTE 0.000000, __DKIM_ALIGNS_1 0.000000,
+	__DKIM_ALIGNS_2 0.000000, __DQ_NEG_DOMAIN 0.000000, __DQ_NEG_HEUR 0.000000,
+	__DQ_NEG_IP 0.000000, __FROM_DOMAIN_IN_ANY_CC1 0.000000,
+	__FROM_DOMAIN_IN_RCPT 0.000000, __FROM_NAME_NOT_IN_ADDR 0.000000,
+	__FUR_RDNS_SOPHOS 0.000000, __HAS_CC_HDR 0.000000, __HAS_FROM 0.000000,
+	__HAS_MSGID 0.000000, __HAS_REFERENCES 0.000000, __HAS_X_MAILER 0.000000,
+	__IN_REP_TO 0.000000, __MIME_TEXT_ONLY 0.000000, __MIME_TEXT_P 0.000000,
+	__MIME_TEXT_P1 0.000000, __MIME_VERSION 0.000000, __NO_HTML_TAG_RAW 0.000000,
+	__OUTBOUND_SOPHOS_FUR 0.000000, __OUTBOUND_SOPHOS_FUR_IP 0.000000,
+	__OUTBOUND_SOPHOS_FUR_RDNS 0.000000, __PHISH_SPEAR_SUBJ_TEAM 0.000000,
+	__RCVD_PASS 0.000000, __REFERENCES 0.000000, __SANE_MSGID 0.000000,
+	__SUBJ_ALPHA_END 0.000000, __SUBJ_STARTS_S_BRACKETS 0.000000,
+	__TO_MALFORMED_2 0.000000, __TO_NO_NAME 0.000000, __URI_MAILTO 0.000000,
+	__URI_NO_WWW 0.000000, __URI_NS 0.000000, __X_MAILSCANNER 0.000000
+X-SASI-Probability: 7%
+X-SASI-RCODE: 200
+X-SASI-Version: Antispam-Engine: 5.1.4, AntispamData: 2025.3.4.2728
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=dd-wrt.com; s=mikd;
+	h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From; bh=9sxp9U+dzW7OeUOHNwxhZq8nfGGENFrrlflsGmnQzVU=;
+	b=gRRi2PDw5usLuI+tXtVR71PqRNqNvcXTvj8B/B1EfbCAq5S4ltSZlBD/iHl5IkFdJLyWpCQNHp2crDYADF+cvCKoyS+SeN/2HQxXJ0+KwZJC4WGR/eE73xA39raeEODLz3inxJltLO0TladNcVXxQM7NRIQUlSBTDWptrUKHajI=;
+From: s.gottschall@dd-wrt.com
+To: linux-wireless@vger.kernel.org
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: [PATCH 1/1] wil6210: fix support for sparrow chipsets
+Date: Tue,  4 Mar 2025 08:21:31 +0700
+Message-Id: <20250304012131.25970-2-s.gottschall@dd-wrt.com>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20250304012131.25970-1-s.gottschall@dd-wrt.com>
+References: <20250304012131.25970-1-s.gottschall@dd-wrt.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] wifi: mac80211: Create separate links for VLAN
- interfaces
-Content-Language: en-GB
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-References: <20250118015400.1919688-1-quic_msinada@quicinc.com>
- <20250118015400.1919688-2-quic_msinada@quicinc.com>
- <a5c7e7a5160c11c93052bb3f862a8089b0617bec.camel@sipsolutions.net>
-From: Muna Sinada <quic_msinada@quicinc.com>
-In-Reply-To: <a5c7e7a5160c11c93052bb3f862a8089b0617bec.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=HZbuTjE8 c=1 sm=1 tr=0 ts=67c64bc8 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=k_xDEjxOtJk6ogS88m0A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: LmU79wKfAUt_UiwpwssOMn2h0ceZ_f31
-X-Proofpoint-ORIG-GUID: LmU79wKfAUt_UiwpwssOMn2h0ceZ_f31
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-03_11,2025-03-03_04,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- adultscore=0 mlxscore=0 spamscore=0 clxscore=1015 phishscore=0 bulkscore=0
- priorityscore=1501 impostorscore=0 suspectscore=0 malwarescore=0
- mlxlogscore=552 classifier=spam authscore=0 adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2502100000 definitions=main-2503040003
+Content-Transfer-Encoding: 8bit
+Received-SPF: pass (webmail.newmedia-net.de: localhost is always allowed.) client-ip=127.0.0.1; envelope-from=s.gottschall@dd-wrt.com; helo=webmail.newmedia-net.de;
+X-SA-Exim-Connect-IP: 127.0.0.1
+X-SA-Exim-Mail-From: s.gottschall@dd-wrt.com
+X-SA-Exim-Scanned: No (on webmail.newmedia-net.de); SAEximRunCond expanded to false
+X-NMN-MailScanner-Information: Please contact the ISP for more information
+X-NMN-MailScanner-ID: 1tpGys-000C4T-K3
+X-NMN-MailScanner: Found to be clean
+X-NMN-MailScanner-From: s.gottschall@dd-wrt.com
+X-Received:  from localhost.localdomain ([127.0.0.1] helo=webmail.newmedia-net.de)
+	by webmail.newmedia-net.de with esmtp (Exim 4.72)
+	(envelope-from <s.gottschall@dd-wrt.com>)
+	id 1tpGys-000C4T-K3; Tue, 04 Mar 2025 02:21:58 +0100
 
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 
+the wil6210 driver irq handling code is unconditionally writing
+edma irq registers which are supposed to be only used on Talyn chipsets.
+This however leade to a chipset hang on the older sparrow chipset
+generation and firmware will not even boot.
+Fix that by simply checking for edma support before handling these
+registers.
 
-On 2/28/2025 4:46 AM, Johannes Berg wrote:
-> On Fri, 2025-01-17 at 17:53 -0800, Muna Sinada wrote:
->> +static void ieee80211_update_apvlan_links(struct ieee80211_sub_if_data *sdata)
->> +{
->> +	struct ieee80211_sub_if_data *vlan;
->> +	struct ieee80211_link_data *link;
->> +	u16 master_links = sdata->vif.valid_links;
->> +	u16 new_links, vlan_links;
->> +	unsigned long add;
->> +
->> +	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list) {
->> +		int link_id;
->> +
->> +		if (!vlan)
->> +			continue;
->> +
->> +		/* No support for 4addr with MLO yet */
->> +		if (vlan->wdev.use_4addr)
->> +			return;
-> 
-> That's weird, how would it happen that the vlan has 4-addr but you
-> cannot check the main 'sdata' value? We don't even let you set that, I
-> believe?
->
-The AP_VLAN interface type is utilized by two features currently:
-Dynamic VLAN and WDS (4addr). I am extending the AP_VLAN MLO link
-handling when utilizing Dynamic VLAN. MLO 4addr feature will also
-utilize this link handling but since the feature itself has not been
-supported yet, I am checking for it and highlighting that the feature
-is not supported yet. 
+Tested on Netgear R9000
+
+Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 26 ++++++++++++--------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 67172385a5d6..89d4394cedcf 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -179,9 +179,11 @@ void wil_mask_irq(struct wil6210_priv *wil)
+ 	wil_dbg_irq(wil, "mask_irq\n");
  
+ 	wil6210_mask_irq_tx(wil);
+-	wil6210_mask_irq_tx_edma(wil);
++	if (wil->use_enhanced_dma_hw)
++		wil6210_mask_irq_tx_edma(wil);
+ 	wil6210_mask_irq_rx(wil);
+-	wil6210_mask_irq_rx_edma(wil);
++	if (wil->use_enhanced_dma_hw)
++		wil6210_mask_irq_rx_edma(wil);
+ 	wil6210_mask_irq_misc(wil, true);
+ 	wil6210_mask_irq_pseudo(wil);
+ }
+@@ -190,10 +192,12 @@ void wil_unmask_irq(struct wil6210_priv *wil)
+ {
+ 	wil_dbg_irq(wil, "unmask_irq\n");
+ 
+-	wil_w(wil, RGF_DMA_EP_RX_ICR + offsetof(struct RGF_ICR, ICC),
+-	      WIL_ICR_ICC_VALUE);
+-	wil_w(wil, RGF_DMA_EP_TX_ICR + offsetof(struct RGF_ICR, ICC),
+-	      WIL_ICR_ICC_VALUE);
++	if (wil->use_enhanced_dma_hw) {
++		wil_w(wil, RGF_DMA_EP_RX_ICR + offsetof(struct RGF_ICR, ICC),
++		      WIL_ICR_ICC_VALUE);
++		wil_w(wil, RGF_DMA_EP_TX_ICR + offsetof(struct RGF_ICR, ICC),
++		      WIL_ICR_ICC_VALUE);
++	}
+ 	wil_w(wil, RGF_DMA_EP_MISC_ICR + offsetof(struct RGF_ICR, ICC),
+ 	      WIL_ICR_ICC_MISC_VALUE);
+ 	wil_w(wil, RGF_INT_GEN_TX_ICR + offsetof(struct RGF_ICR, ICC),
+@@ -845,10 +849,12 @@ void wil6210_clear_irq(struct wil6210_priv *wil)
+ 		    offsetof(struct RGF_ICR, ICR));
+ 	wil_clear32(wil->csr + HOSTADDR(RGF_DMA_EP_TX_ICR) +
+ 		    offsetof(struct RGF_ICR, ICR));
+-	wil_clear32(wil->csr + HOSTADDR(RGF_INT_GEN_RX_ICR) +
+-		    offsetof(struct RGF_ICR, ICR));
+-	wil_clear32(wil->csr + HOSTADDR(RGF_INT_GEN_TX_ICR) +
+-		    offsetof(struct RGF_ICR, ICR));
++	if (wil->use_enhanced_dma_hw) {
++		wil_clear32(wil->csr + HOSTADDR(RGF_INT_GEN_RX_ICR) +
++			    offsetof(struct RGF_ICR, ICR));
++		wil_clear32(wil->csr + HOSTADDR(RGF_INT_GEN_TX_ICR) +
++			    offsetof(struct RGF_ICR, ICR));
++	}
+ 	wil_clear32(wil->csr + HOSTADDR(RGF_DMA_EP_MISC_ICR) +
+ 		    offsetof(struct RGF_ICR, ICR));
+ 	wmb(); /* make sure write completed */
+-- 
+2.35.3
+
