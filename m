@@ -1,43 +1,43 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEED3152E02
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 06:29:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED441F4CA2
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 06:29:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741069767; cv=none; b=r5d9ZnVh8Rey07XnuLZdVr04LqsUu/cOoPU8SUY9MWpFAjrZtlFCPMgSRoJm4oLYv3f3V87VkBguMzfSV1W6MRxw5l5Yhh2c2Uvqt6j39ckmHCvQMH+nJ0URxidgtrvV9NcsAhFdcuEP7jERWUGaDZkPayY9AG/2f0JOzCjRvLo=
+	t=1741069767; cv=none; b=AOUORDFL60QN3xPue3iVjBwDQku8tyrwJk/EtZHuVzsyUwPm09C2PQfU38hyJSzWNkNXQ0ELeTXRXTeWywgoPBocN+Ui1f9YjEwXqKSkCtkG7pcWqX1r+q/QvG7uuIka3JuOtH3PwJaGKuLeXS7H4+al0rmOvjU09EWANz6K444=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1741069767; c=relaxed/simple;
-	bh=MhdGOWyDb3J3sLkjQUBKJ44AgLT4mn8KkeheNyyeJ20=;
+	bh=8gldDFQ/10N/C8mqj9xFISn4aRowSxmxy7v2YGLvYTQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OdsnhH0M3cysJC0KuYj/TDvrhpRnX4dY4FmHvQcJ+T1I54PeqrP0w7wpmLzl0BsY+aJhkg+8DaSW0W11snDzYz27pcQ5+gyx1tGLTuO+jxs0Zi5f66XjGEWYZA3AQdvZxl5XcYhnszCdpd4awMsWbXuT3VEbfJDjWuN2UCfPy5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Vrc+E5AN; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=i9BHYq7IR7E9MltHORcESMm3RUPqG+9o1dgUCCsrPLllmrlZrjU/S+NLmwot1MA9cAIuNPKZa3bjQkf9gL71GBRtJkSCsY35ZWwDX0I4mevmd3YgE4ffgYpmYEChwbqvoccERJI6EUoyRZV4Bo6jgkHVnEt+8DLBHqjn5V5+5kY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=NIYnj+H+; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Vrc+E5AN"
-X-UUID: ff85eb92f8c111efaae1fd9735fae912-20250304
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="NIYnj+H+"
+X-UUID: ffa8b8b6f8c111efaae1fd9735fae912-20250304
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=QL63nKQ5zhGPJAzD3ldqXor2EXRLJquzuUF6q4duBX0=;
-	b=Vrc+E5ANc2K/IEW4qtvKqNs7xHVRBaw0caeLynstjmezrArivF3yHcHv2+ikyMelT3DUcIJLn7DPSO5Qzuicb4/qRjvv2aE8cPl47AU68pvqMhBeBPpuRrYX3NrSMe9fYPmtxgM2Slp/HKQ4OdhFbZNs7UjCqjjxHW7Ens/Fym4=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=j/HVpDGzBXQjJv2bGOxwfmi6+FyWhwo+vM7BJywrBb0=;
+	b=NIYnj+H+0Sf4r5gnE3cEex7qZVWuCLvrqFS6tnxV3cQjtaLzWjakjp4K0HjyymNYX3KUvu401TCsWSx1Z15qA/kt+vH2TWYhsYTyUAniH09hSBwQ8OM3E1vYiOQXMlOBqTuoPFtNScK4knbxY+DfvOGsC0kEDLXBhryNiyWpgnM=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:53a8fe7b-b406-456d-93a2-8b97ebff2b1c,IP:0,UR
+X-CID-O-INFO: VERSION:1.2.1,REQID:9029db37-6d13-480c-9229-3083e9ea762c,IP:0,UR
 	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:-5
-X-CID-META: VersionHash:0ef645f,CLOUDID:c99bd1b5-a2a1-4ef3-9ef9-e116773da0a7,B
+X-CID-META: VersionHash:0ef645f,CLOUDID:cfa11e03-a373-400e-87fc-32443f153737,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
 	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
 	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: ff85eb92f8c111efaae1fd9735fae912-20250304
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+X-UUID: ffa8b8b6f8c111efaae1fd9735fae912-20250304
+Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
 	(envelope-from <mingyen.hsieh@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1516777867; Tue, 04 Mar 2025 14:29:17 +0800
+	with ESMTP id 1702792017; Tue, 04 Mar 2025 14:29:17 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1258.28; Tue, 4 Mar 2025 14:29:16 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -52,9 +52,9 @@ CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
 	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
 	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
 	<mingyen.hsieh@mediatek.com>
-Subject: [PATCH v2 6/6] wifi: mt76: mt7925: add MTCL support to enhance the reulatory compliance
-Date: Tue, 4 Mar 2025 14:28:54 +0800
-Message-ID: <20250304062854.829194-6-mingyen.hsieh@mediatek.com>
+Subject: [PATCH v2 3/6] wifi: mt76: mt7925: update the channel usage when the regd domain changed
+Date: Tue, 4 Mar 2025 14:28:51 +0800
+Message-ID: <20250304062854.829194-3-mingyen.hsieh@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250304062854.829194-1-mingyen.hsieh@mediatek.com>
 References: <20250304062854.829194-1-mingyen.hsieh@mediatek.com>
@@ -69,58 +69,137 @@ Content-Type: text/plain
 
 From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-Apply the MTCL configuration to improving channel availability and
-regulatory compliance if MTCL table is supported.
+The 5.9/6GHz channel license of a certain platform device has been
+regulated in various countries. That may be difference with standard Liunx
+regulatory domain settings. In this case, when .reg_notifier() called for
+regulatory change, mt7925 chipset should update the channel usage based on
+CLC data.
 
 Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 ---
 v2: no change
 ---
- .../net/wireless/mediatek/mt76/mt7925/init.c    | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7925/init.c  | 42 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  7 +++-
+ .../wireless/mediatek/mt76/mt7925/mt7925.h    |  3 +-
+ 3 files changed, 50 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/init.c b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-index 8561ab310f16..1bd30a857be5 100644
+index 94d7b762fe40..8561ab310f16 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/init.c
-@@ -64,8 +64,15 @@ void mt7925_regd_be_ctrl(struct mt792x_dev *dev, u8 *alpha2)
- 	struct mt7925_clc_rule_v2 *rule;
- 	struct mt7925_clc *clc;
- 	bool old = dev->has_eht, new = true;
-+	u32 mtcl_conf = mt792x_acpi_get_mtcl_conf(&dev->phy, alpha2);
- 	u8 *pos;
+@@ -96,15 +96,57 @@ void mt7925_regd_be_ctrl(struct mt792x_dev *dev, u8 *alpha2)
+ 	mt7925_set_stream_he_eht_caps(phy);
+ }
  
-+	if (mtcl_conf != MT792X_ACPI_MTCL_INVALID &&
-+	    (((mtcl_conf >> 4) & 0x3) == 0)) {
-+		new = false;
-+		goto out;
++static void
++mt7925_regd_channel_update(struct wiphy *wiphy, struct mt792x_dev *dev)
++{
++#define IS_UNII_INVALID(idx, sfreq, efreq) \
++	(!(dev->phy.clc_chan_conf & BIT(idx)) && (cfreq) >= (sfreq) && (cfreq) <= (efreq))
++	struct ieee80211_supported_band *sband;
++	struct mt76_dev *mdev = &dev->mt76;
++	struct ieee80211_channel *ch;
++	int i, cfreq;
++
++	sband = wiphy->bands[NL80211_BAND_5GHZ];
++	if (!sband)
++		return;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		cfreq = ch->center_freq;
++
++		/* UNII-4 */
++		if (IS_UNII_INVALID(0, 5845, 5925))
++			ch->flags |= IEEE80211_CHAN_DISABLED;
 +	}
 +
- 	if (!phy->clc[MT792x_CLC_BE_CTRL])
- 		goto out;
- 
-@@ -101,11 +108,21 @@ mt7925_regd_channel_update(struct wiphy *wiphy, struct mt792x_dev *dev)
++	sband = wiphy->bands[NL80211_BAND_6GHZ];
++	if (!sband)
++		return;
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		cfreq = ch->center_freq;
++
++		/* UNII-5/6/7/8 */
++		if (IS_UNII_INVALID(1, 5925, 6425) ||
++		    IS_UNII_INVALID(2, 6425, 6525) ||
++		    IS_UNII_INVALID(3, 6525, 6875) ||
++		    IS_UNII_INVALID(4, 6875, 7125))
++			ch->flags |= IEEE80211_CHAN_DISABLED;
++	}
++}
++
+ void mt7925_regd_update(struct mt792x_dev *dev)
  {
- #define IS_UNII_INVALID(idx, sfreq, efreq) \
- 	(!(dev->phy.clc_chan_conf & BIT(idx)) && (cfreq) >= (sfreq) && (cfreq) <= (efreq))
-+#define MT7925_UNII_59G_IS_VALID	0x1
-+#define MT7925_UNII_6G_IS_VALID	0x1e
- 	struct ieee80211_supported_band *sband;
  	struct mt76_dev *mdev = &dev->mt76;
- 	struct ieee80211_channel *ch;
-+	u32 mtcl_conf = mt792x_acpi_get_mtcl_conf(&dev->phy, mdev->alpha2);
- 	int i, cfreq;
+ 	struct ieee80211_hw *hw = mdev->hw;
++	struct wiphy *wiphy = hw->wiphy;
  
-+	if (mtcl_conf != MT792X_ACPI_MTCL_INVALID) {
-+		if ((mtcl_conf & 0x3) == 0)
-+			dev->phy.clc_chan_conf &= ~MT7925_UNII_59G_IS_VALID;
-+		if (((mtcl_conf >> 2) & 0x3) == 0)
-+			dev->phy.clc_chan_conf &= ~MT7925_UNII_6G_IS_VALID;
-+	}
-+
- 	sband = wiphy->bands[NL80211_BAND_5GHZ];
- 	if (!sband)
+ 	if (!dev->regd_change)
  		return;
+ 
+ 	mt7925_mcu_set_clc(dev, mdev->alpha2, dev->country_ie_env);
++	mt7925_regd_channel_update(wiphy, dev);
+ 	mt7925_mcu_set_channel_domain(hw->priv);
+ 	mt7925_set_tx_sar_pwr(hw, NULL);
+ 	dev->regd_change = false;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index e73320c5d8c0..602ac3c31976 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -859,6 +859,7 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 	int ret, i, len, offset = 0;
+ 	u8 *clc_base = NULL, hw_encap = 0;
+ 
++	dev->phy.clc_chan_conf = 0xff;
+ 	if (mt7925_disable_clc ||
+ 	    mt76_is_usb(&dev->mt76))
+ 		return 0;
+@@ -3428,6 +3429,7 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 	if (!clc)
+ 		return 0;
+ 
++	req.ver = clc->ver;
+ 	pos = clc->data + sizeof(*seg) * clc->t0.nr_seg;
+ 	last_pos = clc->data + le32_to_cpu(*(__le32 *)(clc->data + 4));
+ 	while (pos < last_pos) {
+@@ -3445,6 +3447,7 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		memcpy(req.type, rule->type, 2);
+ 
+ 		req.size = cpu_to_le16(seg->len);
++		dev->phy.clc_chan_conf = clc->ver == 1 ? 0xff : rule->flag;
+ 		skb = __mt76_mcu_msg_alloc(&dev->mt76, &req,
+ 					   le16_to_cpu(req.size) + sizeof(req),
+ 					   sizeof(req), GFP_KERNEL);
+@@ -3460,8 +3463,10 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		valid_cnt++;
+ 	}
+ 
+-	if (!valid_cnt)
++	if (!valid_cnt) {
++		dev->phy.clc_chan_conf = 0xff;
+ 		return -ENOENT;
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+index e6ca9021f487..71811734592c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+@@ -147,7 +147,8 @@ struct mt7925_clc_rule {
+ 	u8 alpha2[2];
+ 	u8 type[2];
+ 	u8 seg_idx;
+-	u8 rsv[3];
++	u8 flag; /* UNII4~8 ctrl flag */
++	u8 rsv[2];
+ } __packed;
+ 
+ struct mt7925_clc_segment {
 -- 
 2.34.1
 
