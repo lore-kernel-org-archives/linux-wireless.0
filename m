@@ -1,44 +1,44 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E2AC25F997
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 16:25:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A568292F8B
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Mar 2025 16:44:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741105525; cv=none; b=qUCTb20zj8BbnGen6mgW/9oymBP5LfxjJCoPCb2fQJiw0TTMx9KZCqf+BsVcg39ssosqiRQWOb2OSkevnliIskpSF6FSBFyd+RSzP5RlNsFT4CZg+VnghMeSD0r/2PeRzE9zwkKE3//eqxrOKzmYIXJdN3sp/i20pNvNk30Xe6k=
+	t=1741106661; cv=none; b=NumfWV0xVu55wraXAzcx+SClQ5Papn5fsE2MhwkOeOk3IINNSga+S0BXUYTzcMRCVmjtV+6PBY/dEHR84Z5+eFcs3rv7lvOi3kCFEsAEnJKULBGSfmmtOstgQhTzXL9PTlWIz3bNROySQay7KkK9B75uUDW9uszoqa9knzUDBs4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741105525; c=relaxed/simple;
-	bh=bPuiev1Lj/xPqCqcLWdPqKYecCN/NiFoBvd8HHeacFs=;
+	s=arc-20240116; t=1741106661; c=relaxed/simple;
+	bh=guJBGzO1Eha8HKDWqHhA8DOn1M/7asKrN5QKZ8a9S/Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aO5oVHJR1NWir/ecH2pvWb55YAStx+0rn8Qzix9RpVtVjGVi5It69LD2LTN9fCFzCIJKcndxXeNYOln6nEcC5ShoRMMIOY1GE8BAzeNvBFOOvgP8BnwA3Cbvn2f9KFLp/6kbj6Rxu2i4LjYLtj/etYnJWkwBJPzeKwCtDVC3eRQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=bLTIdQEm; arc=none smtp.client-ip=212.77.101.10
+	 Content-Type:Content-Disposition:In-Reply-To; b=syPZrbtR8Q1bt3Euzi4DbEYyEE1Fypr32kY1qXjuGzZPvMC7hVHlg2AQ6vQ3igzOd8L6DYV1d0qzcZtzFD7A59LgzSr0+i5hWxT8eq/k/Q7J+nTY8yIt6/Gu+5Ho/DK/Y8qQ6ySNwM9kWMRXwDtdrUSAbjeyzdJLqtcZZlaT5qk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=F20UWdmX; arc=none smtp.client-ip=212.77.101.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="bLTIdQEm"
-Received: (wp-smtpd smtp.wp.pl 41216 invoked from network); 4 Mar 2025 17:18:38 +0100
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="F20UWdmX"
+Received: (wp-smtpd smtp.wp.pl 37206 invoked from network); 4 Mar 2025 17:44:07 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1741105118; bh=YGaOD8qb+M12OOf2VHInJ5YTUjhilS5zhgPt44cDZ9U=;
+          t=1741106648; bh=C5H8MPAgBlTLIuqQ/Qmct0NSdBHozxJNJSqyQOSH4rE=;
           h=From:To:Cc:Subject;
-          b=bLTIdQEmOvl6EUcI1VLNyMjC227FlQib2a5cM1ZwzhogjRMHWSFGUDDvGQzaEX4ow
-           s1O8FLApZfTisOwIKrSJpRhXaP5kGQ3Tzgn9tq6jkzCpy+DRSDuEa35fZy+ftHVLLk
-           pjFAUkuiafOqHEJcRT098RlCgmVDtB5y+SuPDWQyIgmlfKRTmz98CrxaKXo5ytpeRM
-           0Rx/aJiTgYjlaLNybImt/H8WXrH4jaLDiXxNR0iqC6i9ZJ6Zxu5AmJnVXwcN7vTFtR
-           q4Xf/zy6fjOk5QuzWrpbyMHOJKVL8Q5F8E9URoSEqKecquJ1OuVDlUfbZusQyUCpdZ
-           uyUBR9EkLXzUw==
+          b=F20UWdmX0fzyD7DH6Tk+FbkxEP9fwGqZT5bVw1CJKXvp8+iQgHW1hX++YI1Qkr1S1
+           us8+PuXP5jKFx8eFPq7sxZpxnCRDcrZqqoPlhazFPfr9EyTP3Pe8SZUQBZZrWyYj91
+           VwwTejvKtAstp3XE8rH4Xe2NTPlJIR2M3M8X8dhExZ1STjkuD+EVD6pfVjsNxLOIS6
+           dwdgJxfJxRrMMfGv1tQ8jEy7k9OpH+I2/Vb/+xNO7YD57AMYsOCSlCqIGYcXFBduTI
+           Hce2kTUdQRAy/bMzBZVsrjCXThkWcxFbsCC1WBw3xTxnY3Q1XFsnCrfUUJNqKIyati
+           5aHIERV2VPPjg==
 Received: from 89-64-3-211.dynamic.chello.pl (HELO localhost) (stf_xl@wp.pl@[89.64.3.211])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <arnd@kernel.org>; 4 Mar 2025 17:18:38 +0100
-Date: Tue, 4 Mar 2025 17:18:39 +0100
+          for <vulab@iscas.ac.cn>; 4 Mar 2025 17:44:07 +0100
+Date: Tue, 4 Mar 2025 17:44:07 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+To: Wentao Liang <vulab@iscas.ac.cn>
+Cc: kvalo@kernel.org, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: iwlegacy: avoid size increase
-Message-ID: <20250304161839.GA67578@wp.pl>
-References: <20250304144210.997531-1-arnd@kernel.org>
+Subject: Re: [PATCH] iwlegacy/4965: Cancel deferred work on device init
+ failure
+Message-ID: <20250304164407.GB67578@wp.pl>
+References: <20250304031603.1989-1-vulab@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,44 +47,49 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250304144210.997531-1-arnd@kernel.org>
-X-WP-MailID: 4aad8192ebf0d930be3400092d1eddae
+In-Reply-To: <20250304031603.1989-1-vulab@iscas.ac.cn>
+X-WP-MailID: d28b2ad49f0eaad49278b304ef4372e6
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [4XPU]                               
+X-WP-SPAM: NO 0000000 [YUPU]                               
 
-On Tue, Mar 04, 2025 at 03:42:07PM +0100, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> My previous patch caused a slight code size increase when DEBUG_FS is disabled,
-> as Stanislaw Gruszka pointed out.
-> 
-> Fix this with an added IS_ENABLED() check.
-> 
-> Fixes: cf6b9ba172dd ("wifi: iwlegacy: don't warn for unused variables with DEBUG_FS=n")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Hi
+
+On Tue, Mar 04, 2025 at 11:16:03AM +0800, Wentao Liang wrote:
+> In __il4965_up(), deferred work is not canceled in time when device
+> initialization fails. This is harmless if the device has not started.
+> However, in il4965_bg_restart(), if the device remains operational
+> in any state other than S_FW_ERROR or S_EXIT_PENDING, a dereference
+> operation needs to be performed when __il4965_up() fails.
+>
+> Add il4965_cancel_deferred_work() to the failure path of
+> __il4965_up() to prevent potential errors. Even if the current code
+> does not exhibit the described issues, adding this change can prevent
+> future problems at minimal cost, improving the robustness of the code.
+
+I think preventing potential future problems in this legacy driver
+is not necessary since the driver will not be developed further.
+
+> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 > ---
-> Ideally this would be folded into my original fix. If that's not possible,
-> please apply on top.
-
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
-
->  drivers/net/wireless/intel/iwlegacy/4965-rs.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> index f754fb979546..0e5130d1fccd 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> @@ -2495,6 +2495,9 @@ il4965_rs_dbgfs_set_mcs(struct il_lq_sta *lq_sta, u32 * rate_n_flags, int idx)
->  	u8 valid_tx_ant;
->  	u8 ant_sel_tx;
+> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> index 05c4af41bdb9..3b21bd79f3a9 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> @@ -5591,6 +5591,8 @@ __il4965_up(struct il_priv *il)
+>  	__il4965_down(il);
+>  	clear_bit(S_EXIT_PENDING, &il->status);
 >  
-> +	if (!IS_ENABLED(CONFIG_MAC80211_DEBUGFS))
-> +		return;
-> +
->  	il = lq_sta->drv;
->  	valid_tx_ant = il->hw_params.valid_tx_ant;
->  	if (lq_sta->dbg_fixed_rate) {
+> +	il4965_cancel_deferred_work(il);
+
+We can not cancel here as we have il->mutex locked, it will
+deadlock in case of some pending work that holds the mutex.
+
+>  	/* tried to restart and config the device for as long as our
+>  	 * patience could withstand */
+>  	IL_ERR("Unable to initialize device after %d attempts.\n", i);
 > -- 
-> 2.39.5
+> 2.42.0.windows.2
 > 
