@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 720C727C178
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 22:05:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64EA527C86D
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 22:05:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741298723; cv=none; b=q0F+2aggJreK+5YJ6H4gxv5b9Jh0xjVqcBCqK1fp5yk7sDm9BpYm8+IeimdJ2C9wX2ZEkwH7K13QFKKiJgjhaVmCvZlRQNaUHYQVnLermRIOloxxGofuaUgiRPPSLWryR/nWIo9L+grHfSsYglMGInpGReQh/VO8rnIfXT5yTDM=
+	t=1741298725; cv=none; b=RNgJ6VIyMPu+y5qO20ayNbJQjsZu122PKfOmMBiJegcqZ5mVzku24Br2W4TsoBIcpfdCx6VKgnUowHy426ab3kItXQq9+oqqMQxHK7JGSY6M6bVpT31MV6SWTbXefzrXjNDd5R13vMY4x6Hu8+DthiOeW5NZ4Nt8djr2RLP8Yu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741298723; c=relaxed/simple;
-	bh=bcd4UQWMKvC6bmrmjeZmoG55v00e9DSiCKaXv8YO56g=;
+	s=arc-20240116; t=1741298725; c=relaxed/simple;
+	bh=Pj0p2paligLz2ZvpOs3SXHK7UYAOvX5cSNksAWAn4lM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R/0Pk2MfMmil3ZrXCahQAoY+s1kUFI89dlsdqGHJoDFg5gyoQuVx2PQ5bil55VaFpFLBIi7DUKhPTmlFGgMpSThcyeD1jVLDLL+jdGT2WjIz1Ha/vU6rdEg0T/0JUpnHvMmJgFEOPNLIefYDrlpEjKFbJPOz5YoaEfNCIohS98g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hjuh5ADm; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version; b=McPLe6L8+snXcvH9KYHrCMq8gwvQoyTEF5R1F4T+eVID1TD+B1pp2GsIgUiL1xUXbqzW0IgsKGHge8CDwYQ8hk8ZndaHoB81LpQfKPHcHgUN9+ZB9N6h9mKzwNoB5AspMMw6UDnwxjmxWyzfpN5oOe76JR/yTvFsd6xdFZdw56Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SAex0EPB; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hjuh5ADm"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SAex0EPB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741298722; x=1772834722;
+  t=1741298723; x=1772834723;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bcd4UQWMKvC6bmrmjeZmoG55v00e9DSiCKaXv8YO56g=;
-  b=hjuh5ADmGLyo3NEt7T25qqbbGoLUvfHqQjCP0UPAM3CmcjJ0+TubtD1Z
-   c2OWHOZW3opyfHh8W/0UqMuie8CdCcS+pTqFbgoGpu+6d0fyYGxvKhBpX
-   TMXt0xOpNmfDYkFbxqbpG7/NYOAshmFExSRdZKoGREkVPUcdJYwGc49GB
-   Aaoz4MpK7n3rpDy3Tr6WJxPXP1/gHgugYl4fAYtSXUsw7cj3Gjosde5gD
-   wcCQWGwaQ0l55jhvAr7pqZ+nZhv62gMAIzYyXmjbDhQzk4LlgOtOjE1qb
-   w19N8WHydRwl927CP3iRIKkLpOhQ+YtBAbTBVzVbVWBFmhqlv8GzeIBHF
-   g==;
-X-CSE-ConnectionGUID: /Y3RGJKeSWOQragEv2ijuA==
-X-CSE-MsgGUID: v+3W+3UlRJKbVpi6V9yE7g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="42474265"
+  bh=Pj0p2paligLz2ZvpOs3SXHK7UYAOvX5cSNksAWAn4lM=;
+  b=SAex0EPBYVVP/OKjn5t48DEHLZvcVST36M9droa9oFwEAFX6wBz6E3/Z
+   sxvZmJSUHXsAFloML/+k1WGG0lt9GhSKBHaqx4yonHoK/hFvlIHB20VAU
+   CHBpnxMgbtS9pnfKQ52hTvIzOW3UyzdVeE13wdOTWg1Qq7ssx+W6dI7CJ
+   5G6zMd13/W/J0HnsVobXGShuT+cpDVQ0LybG75s/2DO+ubW50q1uYVK1j
+   QxPx/OrI/1UB/ymaGIEcW67esjCoDfZhltTJiGnITgbldl0+mod7opw62
+   mlZPqn4EsWnqpdumljnYLjmsKFkhZBAJSM6HPFLBbKr0b4ivbm8WJDvON
+   A==;
+X-CSE-ConnectionGUID: 8VzFgrYvRXy8J4ZzzpqR/g==
+X-CSE-MsgGUID: TWf1o+UTRJGUQXBzniemyQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="42474269"
 X-IronPort-AV: E=Sophos;i="6.14,227,1736841600"; 
-   d="scan'208";a="42474265"
+   d="scan'208";a="42474269"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:19 -0800
-X-CSE-ConnectionGUID: jn3srsK+QgKNkTLDEMsilg==
-X-CSE-MsgGUID: +h/brc+wRryXM66CaSte1w==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:20 -0800
+X-CSE-ConnectionGUID: hYGgJS2RSimSsiB63e0htw==
+X-CSE-MsgGUID: cCSH9aSdQ32kno9Sqthqxw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="120061896"
+   d="scan'208";a="120061905"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:16 -0800
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:19 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 07/15] wifi: iwlwifi: mark Br device not integrated
-Date: Fri,  7 Mar 2025 00:04:46 +0200
-Message-Id: <20250307000213.22320378ddc2.I197129383e5441c8139cbb0e810ae0b71198a37c@changeid>
+	Daniel Gabay <daniel.gabay@intel.com>
+Subject: [PATCH wireless-next 09/15] wifi: iwlwifi: w/a FW SMPS mode selection
+Date: Fri,  7 Mar 2025 00:04:48 +0200
+Message-Id: <20250307000213.bf1bbf64f072.I2c793ff1fc2a6779a95faaee1ded348100fd97f1@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250306220454.543262-1-miriam.rachel.korenblit@intel.com>
 References: <20250306220454.543262-1-miriam.rachel.korenblit@intel.com>
@@ -62,33 +62,92 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Daniel Gabay <daniel.gabay@intel.com>
 
-This is a discrete device, don't mark it as integrated.
-This also means we cannot set the LTR delay.
+The FW is now responsible of determining the SMPS mode.
+If the user disabled power save in a certain vif, we send the vif-level
+power command to clear out the POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK bit
+for that vif.
+But erroneously, the FW checks DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK in
+the device-level command to determine the SMPS mode.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+To W/A this, send also the device-level command when the power save of a
+vif changes, and disable power save if there is any vif that has power
+save disabled.
+
+Signed-off-by: Daniel Gabay <daniel.gabay@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 15 +++++++++++++++
+ .../net/wireless/intel/iwlwifi/mvm/mld-mac80211.c |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  3 +++
+ 3 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-index e58fe8210988..09df9037c91d 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-@@ -148,11 +148,9 @@ const struct iwl_cfg_trans_params iwl_br_trans_cfg = {
- 	.mq_rx_supported = true,
- 	.rf_id = true,
- 	.gen2 = true,
--	.integrated = true,
- 	.umac_prph_offset = 0x300000,
- 	.xtal_latency = 12000,
- 	.low_latency_xtal = true,
--	.ltr_delay = IWL_CFG_TRANS_LTR_DELAY_2500US,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 20aaef913e3f..1e916a0ce082 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4100,6 +4100,20 @@ iwl_mvm_sta_state_authorized_to_assoc(struct iwl_mvm *mvm,
+ 	return 0;
+ }
  
- const char iwl_br_name[] = "Intel(R) TBD Br device";
++void iwl_mvm_smps_workaround(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			     bool update)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++
++	if (!iwl_mvm_has_rlc_offload(mvm))
++		return;
++
++	mvmvif->ps_disabled = !vif->cfg.ps;
++
++	if (update)
++		iwl_mvm_power_update_mac(mvm);
++}
++
+ /* Common part for MLD and non-MLD modes */
+ int iwl_mvm_mac_sta_state_common(struct ieee80211_hw *hw,
+ 				 struct ieee80211_vif *vif,
+@@ -4192,6 +4206,7 @@ int iwl_mvm_mac_sta_state_common(struct ieee80211_hw *hw,
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
+ 		ret = iwl_mvm_sta_state_assoc_to_authorized(mvm, vif, sta,
+ 							    callbacks);
++		iwl_mvm_smps_workaround(mvm, vif, true);
+ 	} else if (old_state == IEEE80211_STA_AUTHORIZED &&
+ 		   new_state == IEEE80211_STA_ASSOC) {
+ 		ret = iwl_mvm_sta_state_authorized_to_assoc(mvm, vif, sta,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+index 341a2a7a49ec..78d7153a0cfc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2022-2024 Intel Corporation
++ * Copyright (C) 2022-2025 Intel Corporation
+  */
+ #include "mvm.h"
+ 
+@@ -887,6 +887,7 @@ static void iwl_mvm_mld_vif_cfg_changed_station(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	if (changes & BSS_CHANGED_PS) {
++		iwl_mvm_smps_workaround(mvm, vif, false);
+ 		ret = iwl_mvm_power_update_mac(mvm);
+ 		if (ret)
+ 			IWL_ERR(mvm, "failed to update power mode\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b6e0b63cbd3c..f6391c7a3e29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -3031,4 +3031,7 @@ iwl_mvm_send_ap_tx_power_constraint_cmd(struct iwl_mvm *mvm,
+ 					struct ieee80211_vif *vif,
+ 					struct ieee80211_bss_conf *bss_conf,
+ 					bool is_ap);
++
++void iwl_mvm_smps_workaround(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
++			     bool update);
+ #endif /* __IWL_MVM_H__ */
 -- 
 2.34.1
 
