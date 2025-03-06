@@ -1,54 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA50B20AF69
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 11:49:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02E1B20AF8D
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 11:49:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741261753; cv=none; b=eXOH4e6PhG9pMsl9B42Vz1SV2lzp9F+j7iHRXiSGWagvje4kKDINTGGZ6yoPiZ+dEbDJctrok4FKyyNRIwJ+KCKeHYqNZ83Sc7MAuleGtIbyVF5VElJJwcshkp9mkfuZ2Jp1bzHyLtpZqkQhcFIL9dvkuvzeEezUTZaiRnZnulU=
+	t=1741261754; cv=none; b=uTmRMQF+GuD9ej6BbpOzZEDXfbNn9DtQUqy99e0D75qoNOgujqId5jngoE6sn6LrYPI2fGzMHcrFTj5HtMJaizcbdiz9iOZKBG7sGXrCfFwjjlTrEG3Jy1HABQJFWqN9XjEmOqt2UXXu1yXFcDokbxuRp0qyF3weh3IYB4eAUTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741261753; c=relaxed/simple;
-	bh=iKg7xnPuy40w1VC5Z9rTJh4qis2fv4uTp7BLYhhiWfM=;
+	s=arc-20240116; t=1741261754; c=relaxed/simple;
+	bh=fJEr3aww8jhIlGGUZnSWrFYY4mHTE0hyHSsWOgAwZRg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oLXxAmJqo0ALjw4/109Okvahj/LGz/WxPTpUsyQZ7gHeybtgjTp0PC28vaRFe6zmqrY8yoV98H5QsIHc1w1PC/fbbZ2Qd1r3X4YhSsVCFF8aUHUEpvZOh1HilG1Ay+VyByclNBQjl929GLg4vlL37HFwIjoKhqlNxW5WyvM+sPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ShRfr7Z6; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=sGoGSrJF97GIEqQJGXyfaRUqtPl1nyZ3abTQ20CAwnpY8jnyAz4PfsfNGIrtxwSFIvUdw0rsyd/KYfN24yfNwXtWzcV8gtaZzmVGETK7XV8btho6kAuDkDuLAcmKfmN5fv3FfkOcEWZ+3m2ascEHbvZ3uV7qV62N6Xf5NprygCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a04chZsu; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ShRfr7Z6"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a04chZsu"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741261752; x=1772797752;
+  t=1741261753; x=1772797753;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=iKg7xnPuy40w1VC5Z9rTJh4qis2fv4uTp7BLYhhiWfM=;
-  b=ShRfr7Z6WNK6Va/oAYlV40LfxyyaBLQthictHFHzVdXXBBoXBMOLDULC
-   RUR97zlyc8Fy3quItI2wS/NMPg8rKUqW4a4uOh3eI0IYTYPqY5ZyMDHcE
-   p62fmipwEAi1hNTkvPmxPFmbpvtyh7zJlNAjCuN/cjdlcvGddP4aoVqBa
-   6TUqfX/AfK66FJKgFVqCOnRhu5dk7CJkjGa32psIdeNjD6l7T44nmgPgZ
-   bNs3efMxwT8/ZKwYG98W6Rw4LuYHf9sha/xCwvz7rLUqffEeDdqJKPkbn
-   3H2FIN1adzX9NRYK2YxHQjAPhqEqyZWC8QE9vsVFBMHz010Vp/Bb8GRnf
-   A==;
-X-CSE-ConnectionGUID: qVGMY9+kROKuBJ5jv0gxwQ==
-X-CSE-MsgGUID: DnT4MH98QgqtAlB9btZHew==
-X-IronPort-AV: E=McAfee;i="6700,10204,11363"; a="52474500"
+  bh=fJEr3aww8jhIlGGUZnSWrFYY4mHTE0hyHSsWOgAwZRg=;
+  b=a04chZsuYCqiENQtz7sr0lVibRrp009+RrgrJ5o9P7mUa27Ci7iF9B9b
+   Ou6WNf0jOF2+3WYAajJ2xq+jtOTNTpBAkhZ1WW4m6EKZuqW1ozg9KvMLD
+   /xe1VWnZGUoGm6zp9T6wwCB5rgwkGqFnhRI8NRfKCBM2JcmjrEUDjCIyJ
+   478sXlFP/Wcf86M9fj4sS03nZdMMrpQ3GQ+TiIWC8YxWdQ57EhTsgT5Pw
+   +ylC0o1EE7cjNVkAt9qrf78LVYPOMQ5toZElE83gelFgwdTuIjUhx3JL+
+   rQSquOU3YijVgqbV2NGOBgxIcr6/FQ1N7sqQI3ubEsJ5BU+Fp/bmhZ6tR
+   g==;
+X-CSE-ConnectionGUID: 0rOQKa6qTkS6OIlGKFOeVw==
+X-CSE-MsgGUID: ddNhCtp9StODWmtOs0shdA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11363"; a="52474513"
 X-IronPort-AV: E=Sophos;i="6.14,226,1736841600"; 
-   d="scan'208";a="52474500"
+   d="scan'208";a="52474513"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 03:49:10 -0800
-X-CSE-ConnectionGUID: EsvbQirZRT++bEBtdZ6J2A==
-X-CSE-MsgGUID: f2RF6cxYR/iuuYISAVT/jw==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 03:49:13 -0800
+X-CSE-ConnectionGUID: 50fm+7zhSNOXqU4LxVkQDQ==
+X-CSE-MsgGUID: TEbJRFZ+R22MNbatk+mN1Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="119915510"
+   d="scan'208";a="119915530"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 03:49:08 -0800
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 03:49:11 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next 01/19] wifi: iwlwifi: bump FW API to 97 for BZ/SC/DC devices
-Date: Thu,  6 Mar 2025 13:48:37 +0200
-Message-Id: <20250306134558.003982747060.Iee3bbd245e7bc750b92624f7085afef02e7dbdc6@changeid>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH wireless-next 03/19] wifi: iwlwifi: fix the ECKV UEFI variable name
+Date: Thu,  6 Mar 2025 13:48:39 +0200
+Message-Id: <20250306134558.f1ca48767a2a.I2bc9d72c1dc2c4d7028f0265634a940c2fadbbb5@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250306114855.4170261-1-miriam.rachel.korenblit@intel.com>
 References: <20250306114855.4170261-1-miriam.rachel.korenblit@intel.com>
@@ -61,54 +62,64 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Start supporting API version 97 for new devices.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
+This UEFI variable name was badly named. Fix its name and also use the
+right GUID to find it: we need to use the BT_WIFI (a.k.a. Common) GUID.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 8 +++++---
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.h | 4 ++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index 64a5bbb45c83..e0ec9d6337e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+index 78bd0eb7aa92..b4438b1f8dad 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright(c) 2021-2024 Intel Corporation
++ * Copyright(c) 2021-2025 Intel Corporation
+  */
  
- /* Highest firmware API version supported */
--#define IWL_BZ_UCODE_API_MAX	96
-+#define IWL_BZ_UCODE_API_MAX	97
+ #include "iwl-drv.h"
+@@ -681,8 +681,10 @@ int iwl_uefi_get_eckv(struct iwl_fw_runtime *fwrt, u32 *extl_clk)
+ 	struct uefi_cnv_var_eckv *data;
+ 	int ret = 0;
  
- /* Lowest firmware API version supported */
- #define IWL_BZ_UCODE_API_MIN	92
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-index 69176b59b4de..e58fe8210988 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-@@ -9,7 +9,7 @@
- #include "fw/api/txq.h"
+-	data = iwl_uefi_get_verified_variable(fwrt->trans, IWL_UEFI_ECKV_NAME,
+-					      "ECKV", sizeof(*data), NULL);
++	data = iwl_uefi_get_verified_variable_guid(fwrt->trans,
++						   &IWL_EFI_WIFI_BT_GUID,
++						   IWL_UEFI_ECKV_NAME,
++						   "ECKV", sizeof(*data), NULL);
+ 	if (IS_ERR(data))
+ 		return -EINVAL;
  
- /* Highest firmware API version supported */
--#define IWL_DR_UCODE_API_MAX	96
-+#define IWL_DR_UCODE_API_MAX	97
- 
- /* Lowest firmware API version supported */
- #define IWL_DR_UCODE_API_MIN	96
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index eb56af9a8411..e5c01ae87699 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
- 
- /* Highest firmware API version supported */
--#define IWL_SC_UCODE_API_MAX	96
-+#define IWL_SC_UCODE_API_MAX	97
- 
- /* Lowest firmware API version supported */
- #define IWL_SC_UCODE_API_MIN	92
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+index 0c8943a8bd01..eb3c05417da3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright(c) 2021-2024 Intel Corporation
++ * Copyright(c) 2021-2025 Intel Corporation
+  */
+ #ifndef __iwl_fw_uefi__
+ #define __iwl_fw_uefi__
+@@ -19,7 +19,7 @@
+ #define IWL_UEFI_WTAS_NAME		L"UefiCnvWlanWTAS"
+ #define IWL_UEFI_SPLC_NAME		L"UefiCnvWlanSPLC"
+ #define IWL_UEFI_WRDD_NAME		L"UefiCnvWlanWRDD"
+-#define IWL_UEFI_ECKV_NAME		L"UefiCnvWlanECKV"
++#define IWL_UEFI_ECKV_NAME		L"UefiCnvCommonECKV"
+ #define IWL_UEFI_DSM_NAME		L"UefiCnvWlanGeneralCfg"
+ #define IWL_UEFI_WBEM_NAME		L"UefiCnvWlanWBEM"
+ #define IWL_UEFI_PUNCTURING_NAME	L"UefiCnvWlanPuncturing"
 -- 
 2.34.1
 
