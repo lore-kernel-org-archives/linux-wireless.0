@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A196520AF77
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 10:43:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109AF20B1E2
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 10:43:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741257836; cv=none; b=mQdcK3hUKVgvxrUVU7na3Lb+nlU378m4+bj1iVeLR2qAQuMm6LI58V846ntIUKIY7+V8PHHZ2lmDldLED6xdzQww33xni1FM7Hto/m4Wb7X6DPN/6qFs/GrwDMMKhjeap4cR4sELsp73mqdbkaKWFdOndvNsLm7P3OtPwU3VaAI=
+	t=1741257838; cv=none; b=PjqJYITkPJYV6C7N80MgdX70xaV7tP7XioSiUtvFdowEpXyfv0AxUe+qmIWef42tEShsTbU9f5kOkhCgWaWgDCL5wK/jqfA3586YiRCQkKX710nVultM8Qd0uU2+CWfroiLGWVs2/lyW0z6iE0qoYVTafHEYUpuGMoYOIWLVHB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741257836; c=relaxed/simple;
-	bh=qNu7cBgx21Jtj0k1YDhalz/PZF88UWia1kyMtsuxMy0=;
+	s=arc-20240116; t=1741257838; c=relaxed/simple;
+	bh=gsIIy478v8/6nY9cvDyZuNEbjerd5nropVjWreVv+qI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=VOnyi5GtJ8EZaUpj1Iwm+mc7zmeHO2Y2lrHkb79Yc/qemBE3lKu0QIcey2Sp4+289DN0j6Ow0MHbJsR84NX0xshJy9XWUYW48/pTKiF2JWuLsNXgEuECBBMyiA7ya2q9Itk/WjvBPJBTmXtd6Aq9vs6l82kBYSXomCbQYRLfuwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=W1Syc5z6; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=h6aI3Gg51Rhx4nYtoOfjvrfYEArjUVbpWVK4mz5s709BJCBTRkFrA19HOeu2/ZOk05Bx+CkSsrO8UXvqkQV1pzJP5evNU91FV1KkFF9qLnwqP7jO6LeSahXgjz/5CtpO2pnoTm/qpaNXpElkmxrXArJOi1h/Qbt/VBr+tkJmByE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YZHN5cIP; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="W1Syc5z6"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YZHN5cIP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741257835; x=1772793835;
+  t=1741257837; x=1772793837;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qNu7cBgx21Jtj0k1YDhalz/PZF88UWia1kyMtsuxMy0=;
-  b=W1Syc5z6IWCtQ5RFNvhUMd42TGUhnQVH7fs2AySWPtmoVN0IRpI/LGEy
-   TCwODVBnQy+mZXnS2GcN9uHskU4hlXysENOQnGEubUHJq8+wPrYDoDKaw
-   xLn2+PUrcbcxEAdIdqIJ0Ml8DiKXMMlivvxwkpJvipsDW9H/n4joiCJj/
-   uDoS37LagcJxWZQilkVoCJCtUDdYX02GqyvI5Bh0ZdSrr0qIKDOLk10ag
-   C2ODDW1y5eCgmbPOj8sJ8LmDKPepOHZuQxY465SnWFHY9NlRVFahozEnU
-   uN0fU/aKmeWamACXXuaeeVm6wzfkTPYm6p37NNSqDXNPnFptq0vz1SoqB
-   g==;
-X-CSE-ConnectionGUID: IswiAmx5Tz6MMgacgHH5Sw==
-X-CSE-MsgGUID: O+fXaULwQ/2MbS4SPEk7hw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11363"; a="29844499"
+  bh=gsIIy478v8/6nY9cvDyZuNEbjerd5nropVjWreVv+qI=;
+  b=YZHN5cIPyuHU+WxxKg7qTdo8/bxgjDCpGiCaRVAPDD197H5Uk1hlvx27
+   QYuTsAN8TN6uwR+kkgJjCxKwA4/903x+0zD6qElBuXhvvFsx5A4/7lSmd
+   2JQm1cH1gbr7wpcVRj4ryjsVTwt2u9uG8DNc84lq/RTY6xoHzSk+3ZGju
+   U9P38PmFEyHpHo99DSB3Ml+xj4IOeTnXA2DLKrEXlvtADsPYtbSos3TVG
+   eQKI4xQqyV6rxVaDTnimnuuzJwDrxKenOckYnaKUcke+wgszaYQhoOlKK
+   56mwBFxEsLLEkvHqLyCwjyTjTWAdchCwoTjQkC+7Rza5OqJ5GiWPIv5DK
+   A==;
+X-CSE-ConnectionGUID: DnSHaI/jSo6Z7AflAEJLrQ==
+X-CSE-MsgGUID: e3h2Q+ZOSlKjenuPsWeKlg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11363"; a="29844513"
 X-IronPort-AV: E=Sophos;i="6.14,225,1736841600"; 
-   d="scan'208";a="29844499"
+   d="scan'208";a="29844513"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:43:54 -0800
-X-CSE-ConnectionGUID: g3KadxVUTLa8XzTYxAJTNA==
-X-CSE-MsgGUID: CXd2/C7+QVash/3xSVVT/w==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:43:57 -0800
+X-CSE-ConnectionGUID: froFF3XWRZqEV4URd5UnLA==
+X-CSE-MsgGUID: bH6caF1iTTuQpotNAQYs6w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,225,1736841600"; 
-   d="scan'208";a="118797765"
+   d="scan'208";a="118797777"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:43:52 -0800
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:43:56 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
 	Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH wireless-next 10/15] wifi: mac80211: fix warning on disconnect during failed ML reconf
-Date: Thu,  6 Mar 2025 12:43:21 +0200
-Message-Id: <20250306124057.7275233ffcd2.I599d5ff69092a65e916e2acd25137ae9df8debe8@changeid>
+Subject: [PATCH wireless-next 12/15] wifi: mac80211: Notify cfg80211 about added link addresses
+Date: Thu,  6 Mar 2025 12:43:23 +0200
+Message-Id: <20250306124057.f686a1690c92.I2aa16801f07321a580dd7dce4a074a3486f627f1@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250306104326.4105722-1-miriam.rachel.korenblit@intel.com>
 References: <20250306104326.4105722-1-miriam.rachel.korenblit@intel.com>
@@ -63,32 +62,34 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-If multi-link reconfiguration fails, we can disconnect with a local link
-already allocated but the BSS entry not assigned yet, which leads to a
-warning in cfg80211. Add a check to avoid the warning.
+When ML reconfiguration is done and new links are added, update
+cfg80211 with the addresses of the newly added links.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/mlme.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 85ae66197674..f3bf66d4ce6a 100644
+index f3bf66d4ce6a..60a585caa96d 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -4466,7 +4466,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 			struct ieee80211_link_data *link;
+@@ -10135,8 +10135,11 @@ void ieee80211_process_ml_reconf_resp(struct ieee80211_sub_if_data *sdata,
+ 	done_data.len = orig_len;
+ 	done_data.added_links = link_mask;
  
- 			link = sdata_dereference(sdata->link[link_id], sdata);
--			if (!link)
-+			if (!link || !link->conf->bss)
- 				continue;
- 			cfg80211_unlink_bss(local->hw.wiphy, link->conf->bss);
- 			link->conf->bss = NULL;
+-	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++)
++	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
+ 		done_data.links[link_id].bss = add_links_data->link[link_id].bss;
++		done_data.links[link_id].addr =
++			add_links_data->link[link_id].addr;
++	}
+ 
+ 	cfg80211_mlo_reconf_add_done(sdata->dev, &done_data);
+ 	kfree(sdata->u.mgd.reconf.add_links_data);
 -- 
 2.34.1
 
