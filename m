@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B715527CB0D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA5D27CB1C
 	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 22:05:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741298727; cv=none; b=am75obChdjjDOnGriju85dhx790ogW1BAGXjdw45rwsZuKBv/euXl+q85TCWOHuec5F09N9ykZShZ/qNwRrCslE96YpzgweRP0JiYDEBulWp81FLf6rOnmf/aHbDfO8nFPcdhywVrr3zTjC2zVWsOPUbtrXbJydcMoqkB6pTSaE=
+	t=1741298729; cv=none; b=gP6C5X/UAiqf2h6OlHm9RYpi4m81/YokJf0JbzuxYvbsJ6XTtMKPFIZYib+jxDwFsPbazTsIbRV4qkGR/ns/1Kd0VZw1Kqy9E50/zl6JU5llfVkx7hPul4gZYmey4tcUOPkm9jaCJKXX+ez88AN3cOAKVV1GstS0ZF6tV/vxkec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741298727; c=relaxed/simple;
-	bh=dFoIkK4Zq5SfnobMXIBldKnjGlGvNU0JEJa612kG4Vw=;
+	s=arc-20240116; t=1741298729; c=relaxed/simple;
+	bh=+syhqyEU7ZeN3xxAqNsIFIuAmJpnrWfr6M2cgkxY0gQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iq4tKunU/Pk70LEiQgJSgSkFUXKVg99th9cRE21AXLIOG4H67ebrS1lJKcNxgqaZG4nheo0zLoVJew/nAoOb6N0uhhRP0RLtUlUWwm0xRgvwJnGeZtyYRMaPWV4Gotyk9LjZ++JQvLhLV1uMX8V6PjqpTLYvl5wdou3o+RfhtOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Fh3c7/IQ; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version; b=EdHfqvmvGV/gKMiUG+W1ze7sbkoF1YGyQB8PZnw3X7f3uAzrS9qZJgeO+3pLmNyWrL++OW5scRhtajGSNwt6cRLqBt4XOlpxeIGfZM+WI8OMfi52a2euo0ncUzYDZiRwSszmNqcj/ICDBL5DE/rcBakVkGvypTb+BMs2eMm0Ztg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WICiSGHj; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Fh3c7/IQ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WICiSGHj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1741298726; x=1772834726;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=dFoIkK4Zq5SfnobMXIBldKnjGlGvNU0JEJa612kG4Vw=;
-  b=Fh3c7/IQok7VKT1NWCgP0suR0fhY4bE6E/1O+DCEtpbYQZ3XHb6mnDHL
-   XFKqmIvLAFw98O5sf2ghlqCQUwh+o2EnFDuAjSJmB1Q7dwiFm/bl+pRHh
-   0inztxlYdVUaw8RWxwnc7YBK1OmDbn8Ih8Ll2iQ1z6LZkmV2QVbTi+btY
-   l91WTDLgqrL6BScqXGhNew3dJ3ALsidNUo+EbQPQet6xrjI6wtfWGY3Yf
-   QZML3hgbj+bjd2WNpkHGFUIZCoIR/RGpsX6NumDyiqcCLwHpjxMjE1Mr/
-   3tdC5iCC8A7/AnjU3yrNqtxwKfLwQvgX/l0PD4nEHkaQB6RVb2suxTRj3
-   g==;
-X-CSE-ConnectionGUID: qA5QGuRaR8i2ezVn9+qpWw==
-X-CSE-MsgGUID: z6EEEr64Ql+M1jLLU5UW7A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="42474278"
+  bh=+syhqyEU7ZeN3xxAqNsIFIuAmJpnrWfr6M2cgkxY0gQ=;
+  b=WICiSGHjJWKBCZrvRPN8WenSof7dB5lDRYQQsKqXDJg8oYScH+Asuw2t
+   00ZrZJFqJiKAmIOthOjUwI8v5FrOUzdV8jMSN4sEIUhlSCXnPX/B/VpLr
+   NvuUspTLmT0IZQHXyRg4MLoqDQHhiE8J1By7YXSK1b0p55bX4lvbZwxBx
+   08wnVd60SYqMW9O95QrUdnN5tnVhbWRnzyZa3mUCfkoSJHA62E1Bga5L+
+   /w0fhaT9xQW1/gqZQF4iZv/VOyLAWWkHAPCreq4KE9Yb4t9hXqS600s74
+   Qiqvhfni5n7KocTl8qx3YO9D9+cNw/uO7cSARBMTYgq9sX30Vx8gvGH3n
+   A==;
+X-CSE-ConnectionGUID: 5Q5ueCdRR9mGCFbNAPZapA==
+X-CSE-MsgGUID: iGed50tfS9GFvQWOEMXxmA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="42474285"
 X-IronPort-AV: E=Sophos;i="6.14,227,1736841600"; 
-   d="scan'208";a="42474278"
+   d="scan'208";a="42474285"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:23 -0800
-X-CSE-ConnectionGUID: Cx8/P6aGQmqCf/Yg4UWboQ==
-X-CSE-MsgGUID: kuhibOppT62n8IpQoziXhg==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:26 -0800
+X-CSE-ConnectionGUID: qlGQx5hqQ/yR9eZV+5y8/g==
+X-CSE-MsgGUID: HXbwOQY3RTaWRxtv8+6LQA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="120061910"
+   d="scan'208";a="120061914"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:22 -0800
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 14:05:25 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next 11/15] wifi: iwlwifi: bump FW API to 98 for BZ/SC/DR devices
-Date: Fri,  7 Mar 2025 00:04:50 +0200
-Message-Id: <20250307000213.0d44d64f0dd0.I333f1e7fa31f9da1d40f668660c1e25b93ff469e@changeid>
+Subject: [PATCH wireless-next 13/15] wifi: iwlwifi: don't warn when if there is a FW error
+Date: Fri,  7 Mar 2025 00:04:52 +0200
+Message-Id: <20250307000213.44d20a682276.I9332506af1997faefcf0bdb51d98d5e874051722@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250306220454.543262-1-miriam.rachel.korenblit@intel.com>
 References: <20250306220454.543262-1-miriam.rachel.korenblit@intel.com>
@@ -61,80 +61,38 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Start supporting API version 98 for those devices.
+iwl_trans_reclaim is warning if it is called when the FW is not alive.
+But if it is called when there is a pending restart, i.e. after a FW
+error, there is no need to warn, instead - return silently.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index e0ec9d6337e4..d7636f817b01 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 1632ab20a23f..ea67df09fc01 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -2,7 +2,7 @@
  /*
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2024 Intel Corporation
-+ * Copyright (C) 2018-2025 Intel Corporation
+  * Copyright (C) 2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+- * Copyright (C) 2019-2021, 2023-2024 Intel Corporation
++ * Copyright (C) 2019-2021, 2023-2025 Intel Corporation
   */
- #include <linux/module.h>
- #include <linux/stringify.h>
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
- 
- /* Highest firmware API version supported */
--#define IWL_BZ_UCODE_API_MAX	97
-+#define IWL_BZ_UCODE_API_MAX	98
- 
- /* Lowest firmware API version supported */
- #define IWL_BZ_UCODE_API_MIN	92
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-index 09df9037c91d..282b9b846c3a 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2024 Intel Corporation
-+ * Copyright (C) 2024-2025 Intel Corporation
-  */
- #include <linux/module.h>
- #include <linux/stringify.h>
-@@ -9,7 +9,7 @@
- #include "fw/api/txq.h"
- 
- /* Highest firmware API version supported */
--#define IWL_DR_UCODE_API_MAX	97
-+#define IWL_DR_UCODE_API_MAX	98
- 
- /* Lowest firmware API version supported */
- #define IWL_DR_UCODE_API_MIN	96
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index 46c2f3f105ee..a9fc9e8ec431 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -1,7 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2024 Intel Corporation
-+ * Copyright (C) 2018-2025 Intel Corporation
-  */
- #include <linux/module.h>
- #include <linux/stringify.h>
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
- 
- /* Highest firmware API version supported */
--#define IWL_SC_UCODE_API_MAX	97
-+#define IWL_SC_UCODE_API_MAX	98
- 
- /* Lowest firmware API version supported */
- #define IWL_SC_UCODE_API_MIN	92
+ #include <linux/kernel.h>
+ #include <linux/bsearch.h>
+@@ -639,6 +639,9 @@ IWL_EXPORT_SYMBOL(iwl_trans_tx);
+ void iwl_trans_reclaim(struct iwl_trans *trans, int queue, int ssn,
+ 		       struct sk_buff_head *skbs, bool is_flush)
+ {
++	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
++		return;
++
+ 	if (WARN_ONCE(trans->state != IWL_TRANS_FW_ALIVE,
+ 		      "bad state = %d\n", trans->state))
+ 		return;
 -- 
 2.34.1
 
