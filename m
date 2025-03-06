@@ -1,90 +1,61 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C64207DE2
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Mar 2025 10:44:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 117AA53BE;
+	Thu,  6 Mar 2025 10:47:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741257843; cv=none; b=EBS3PsUPuAPDOgXRmiWxLKGvUZ6j80xgecZp8j17D/QrdvOnwAb/z3gfEHrUh5yx68mLJO8m9kc3C9vOA6xgnuPmQubLioAth3Kf4NP0owwGsfdp8A7BzUQ5qamgiVuwKOFYmpkzlBfzLLWN4PGoVIg+vpgbxDPLfp6yK5LBYdU=
+	t=1741258030; cv=none; b=bmORlZwM2gZAuri9Fg+ZFAEQR1qvXzSyIf35IDXKJ+eWWKh2NqCo8orO1hYzzVV083GR4F8mubwtT136XyeEaHKdPBLutJKCYuvYTPlqa31yKcIBxqmbo1JrJzss4IPJe9Y0V/5IR5UQo7h8wmAfI9SmXdDXs42mAl2GJHxwXt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741257843; c=relaxed/simple;
-	bh=rcmeEKUl0grt5NqQFQ066GwHAD1piFf/75GVuUnDpDI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=afiw6P1nb6IFVar12YObwLBYsQPpTIWGoR4n4u1K9vcRqIP9kP3EfhjhFFOK0swsovZ46Ybk3e+Yux2V72ApVe+RklCeXbRp5UAEF0MUY4ly4lMxr9uzUDH94igeroig2RiaLZ6tF1QogpJjsQ5hEv8NRxhP3iRp8A6D/sDfy/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CtsNgFwK; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1741258030; c=relaxed/simple;
+	bh=Ei8/TdAUY4MIp/W0ZRr89XJzXkRIf8JF3XfjB2v/OUA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OVbtZd1RM1Tefd9SCODG7pyBk+VrvC9J6o+fdZO3qfnClhJSWYKixAqd3jn23883eo8oigpmjp/7BCozwXCe+fpWdQkhQaBHAr7nSdeIEzDQ8yvHu5maioGir++lShU3mBYORI8ExNxfdaJqa0Fbtn+v4qvrNxpTTxzvolaGMtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=0bCRZKZK; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CtsNgFwK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741257842; x=1772793842;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rcmeEKUl0grt5NqQFQ066GwHAD1piFf/75GVuUnDpDI=;
-  b=CtsNgFwKUggoPTdaUwq9Hs9lpRY1LmXU13utxDKXEW8rdbJ8/YhBF0br
-   H08KX7zjhfwm6oC51i5Bu330SJBn1VJzXoMllnFw9N2vqXD5ZVKQbeiBm
-   daOzKgVz11g+nOb5K7u7K82msfizLsb/a9S0ovlA1YAG6I1VqTMjryQaW
-   FX9hT5HYTf3Z2J6IFZ8vfn0pot3zEykTWxnoaIPmANi1JypIAx/9XKCVB
-   0YqR1fRnkt4c7lVrUIeAwDFsGp+8lLWCYv5QXWdN3WpqCIaurQh+BXivD
-   PBkWbHe5MoXk3+Wlj7DBzqsMCnpNTBaC/2G2JgkvbfPmcBK62Fmfm4zR2
-   A==;
-X-CSE-ConnectionGUID: PuSxc7ATSQSj7bes/Y7qig==
-X-CSE-MsgGUID: nqjkTic4RreEFd8P1ottPw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11363"; a="29844524"
-X-IronPort-AV: E=Sophos;i="6.14,225,1736841600"; 
-   d="scan'208";a="29844524"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:44:02 -0800
-X-CSE-ConnectionGUID: hnrAqSpNTgCuZyi9LrmwRw==
-X-CSE-MsgGUID: /0tSTrmhSN2Newe66c511g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,225,1736841600"; 
-   d="scan'208";a="118797792"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2025 02:44:00 -0800
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 15/15] wifi: mac80211: set WMM in ML reconfiguration
-Date: Thu,  6 Mar 2025 12:43:26 +0200
-Message-Id: <20250306124057.2b473bffdbcb.I362c3101d3f523a8db37c16cd7b5f573d76a36e6@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250306104326.4105722-1-miriam.rachel.korenblit@intel.com>
-References: <20250306104326.4105722-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="0bCRZKZK"
+Received: from francesco-nb (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
+	by mail11.truemail.it (Postfix) with ESMTPA id C46B51FA1F;
+	Thu,  6 Mar 2025 11:47:06 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1741258027;
+	bh=4bFsppBmUI1sbWwR4MbcAjn9VKeKRasxbk8loR8DIas=; h=From:To:Subject;
+	b=0bCRZKZKrcALGFzhDXi8RKinWDpJFspD3K7uXUPqJ9KdIqL5L1AVrNfBDObhR39Jn
+	 hSBixTWeVEk6XT3v65+FbcezTAyy/3+z9eo7k2Yvs/5OWdFlhtc3wny3FcNNiWwx4X
+	 Zglt2ysRuz5Bq2vRuw9el+JKFyGBztcdfLbTwFQ8tQAOayo4wNsF58BkLRoo3ari1B
+	 VTL3vX5D8AwDxJe2uI/+ElEuhXcgApp4MfICqm7Vi+ktbSgpM/2s2B7gXcq35USsMQ
+	 +WihhAAG8u/5uM4cDoSVemCHkYhEMF+byq+cPZHvl3DQbXrWdxvvns5if/MsXnpAHO
+	 ULZM1lSiIFCyQ==
+Date: Thu, 6 Mar 2025 11:47:05 +0100
+From: Francesco Dolcini <francesco@dolcini.it>
+To: linux@treblig.org
+Cc: briannorris@chromium.org, francesco@dolcini.it, kvalo@kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: Remove unused mwifiex_uap_del_sta_data
+Message-ID: <20250306104705.GD19853@francesco-nb>
+References: <20250204012512.390209-1-linux@treblig.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250204012512.390209-1-linux@treblig.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Feb 04, 2025 at 01:25:12AM +0000, linux@treblig.org wrote:
+> From: "Dr. David Alan Gilbert" <linux@treblig.org>
+> 
+> The last use of mwifiex_uap_del_sta_data() was removed in 2014 by
+> commit dda9ddeb2638 ("mwifiex: do not delete station entries in del_sta
+> handler")
+> 
+> Remove it.
+> 
+> Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
 
-In the per-STA profiles for added links in multi-link reconfiguration
-the WMM element should be included. Fix that.
-dfjhds
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 94d9d9ca42fe..bfd3653a5b84 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -10435,6 +10435,7 @@ int ieee80211_mgd_assoc_ml_reconf(struct ieee80211_sub_if_data *sdata,
- 			return -ENOMEM;
- 
- 		data->assoc_link_id = -1;
-+		data->wmm = true;
- 
- 		uapsd_supported = true;
- 		ieee80211_ml_reconf_selectors(userspace_selectors);
--- 
-2.34.1
+Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
 
