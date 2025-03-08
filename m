@@ -1,55 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67E41EDA00
-	for <linux-wireless@vger.kernel.org>; Sat,  8 Mar 2025 21:06:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2B9374FF
+	for <linux-wireless@vger.kernel.org>; Sat,  8 Mar 2025 21:06:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741467987; cv=none; b=o15EgVUuNyNT7gdGk/vXulIudsfFVlG4GP1qea5pZkOWAbehHgFwx8rulREJKrMzfI389xcCXtNWaUUruuTkFLlCjkyDwnLatvNBN1NI6G6Fx/hAzupmgrC6h37AMczoA8QQ7/o+GVYRA5RuEvj1kYLxgLCK+ouBUbLkuGeAsDI=
+	t=1741467990; cv=none; b=Ll/tKz0rkEtaISVzyo9DHq76XupVOT+Jbr+5jYwpwlvhATGxYfy4tiJHfKait7VhIMNkFw4PMetpZ9c+2H8jYQc4papVJeYUXewj/7S6UK1TUBC64QJsGAFHMk0yiuuk5gRpw36wOY8vAJV+jw3qsuj73sRHjXP2EGPL798/VMk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741467987; c=relaxed/simple;
-	bh=kdBYZdaB8/26drJFity98xmPQnxsQqiq068PnVbHqac=;
+	s=arc-20240116; t=1741467990; c=relaxed/simple;
+	bh=s94LcA9sw7TLrMkJh5mCQaXdgRMBn6WyiEpLoQBX5DI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FUQyagchgAtLQcBpkRcjGNxzRU3RKcgh35zQw4yvK5RF9ltHxoXM9mmhUBk4hA4RB6rTK3qWG0TZBxaA/ZAGzZaEvDNSIZt+qmsKmGwp1+uLLF8RjAWj9xBSp2vDFEA3CO6D79L5q5Fm5hFkJI3ooLpT5MUbfxPIPgCMPCaMfcU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lUKo3vLb; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=LSlkIYw+lAe379Oi/rYH1N4rtyAYzoDeR2XtzGgESVXhzL43vBfC+JyV8UWbMAMzXvVSb838DS3xNruR/6YaVde6n9psS9lWWLy7L3dG3PloDSb799KZQPVORHNetIy9SzN2oLPllKpau8ktU608mXxYfBqyGel1XulpqfWIi7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mcD4WDiT; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lUKo3vLb"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mcD4WDiT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741467986; x=1773003986;
+  t=1741467989; x=1773003989;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kdBYZdaB8/26drJFity98xmPQnxsQqiq068PnVbHqac=;
-  b=lUKo3vLbSWmKXvH5hMNSce2aPLjpa61fSwBiU7yzxo41NZSXk4CBFgMJ
-   FKD9AyZrYDdvxBRYxvZVRAFK9RG56o2fECSb0/O3AFB4Ghm5i6LAcflZr
-   7k+gem/JGCi1GTSC0+4UGMu3sjpBpJ4qK5huVpI9A5qSOEnx+6b8hi3mz
-   NfIjuJsWYNXn7SWJJ7mE4TP+AhiVJ438uHYRXxZ09EYx/YZTpYAce03/u
-   Lfrohe6QbBRkjvdaGZ46SE4smP8pikpgufGxIjzJNeKeL6G+P/0mabeQD
-   O95pgkeBcRon/YuzWncMtpDpOgNowD8SO2dyOXGr4t4EWS17HykY5SnWM
-   A==;
-X-CSE-ConnectionGUID: N1IAg9ASSjK7dPJmv/GIqg==
-X-CSE-MsgGUID: KQvsV4S1TxiQDbM9xjOxXA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11367"; a="42413041"
+  bh=s94LcA9sw7TLrMkJh5mCQaXdgRMBn6WyiEpLoQBX5DI=;
+  b=mcD4WDiTGfN1e2elFwFXe85d+mwm9wIq+Uwe6r91y7B3xRQYW4GbDnrn
+   4JrVfYGUsU1k8cRoh3Cw6lXvdpo/nYheIUWhD1W3etYesCj3oIonOhW46
+   Sb+N/r6k++1s1C+1U2t+MF7qOfKxVnnQOEIZXMdujWq5MdeCg2UGGS79F
+   kmcPRyHNIIh87nV5eOKqV5EyJRRfr/xiwIUaKysjqYNONLZgVsP9oydbA
+   9GTaoeAD4BlZVKmY/lA8mnZRPyxv2IKf+y/7kMBronRKCn0sQyNirCKTw
+   vCxb50mawi9UPknryLlrUqdEMS0rHhCRR4e/N1HmbTLbEMt6ZrmqtxFqm
+   w==;
+X-CSE-ConnectionGUID: MJedEzBURdOrdwacfXk+tA==
+X-CSE-MsgGUID: d6+gzIf3RmC1oO1tpXakNg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11367"; a="42413059"
 X-IronPort-AV: E=Sophos;i="6.14,233,1736841600"; 
-   d="scan'208";a="42413041"
+   d="scan'208";a="42413059"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:03:58 -0800
-X-CSE-ConnectionGUID: gEAuHhTMTb+XsM3Motn7Jg==
-X-CSE-MsgGUID: Drkt7a3KTtePDZShnLPWTw==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:04:01 -0800
+X-CSE-ConnectionGUID: 4mPAFaCpRvWrouUF3vY/Gw==
+X-CSE-MsgGUID: HjXvuOtGT62HqGpY85eO3g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,233,1736841600"; 
-   d="scan'208";a="124644361"
+   d="scan'208";a="124644369"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:03:57 -0800
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:04:00 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH RESEND wireless-next 03/15] wifi: mac80211: mlme: support extended MLD capa/ops in assoc
-Date: Sat,  8 Mar 2025 23:03:29 +0200
-Message-Id: <20250308225541.2e555beb0a76.I623f59023b47ec202fc0c7520f2b5f575b439927@changeid>
+	Johannes Berg <johannes.berg@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH RESEND wireless-next 05/15] wifi: mac80211: fix U-APSD check in ML reconfiguration
+Date: Sat,  8 Mar 2025 23:03:31 +0200
+Message-Id: <20250308225541.b4674be12a38.I01959e448c6a2a3e8bc5d561bbae9e8d2cca616a@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250308210341.2302222-1-miriam.rachel.korenblit@intel.com>
 References: <20250308210341.2302222-1-miriam.rachel.korenblit@intel.com>
@@ -64,116 +65,39 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Support passing the value from userspace on to the AP in the
-association and ML link reconfiguration requests. We may need
-to also add a driver value to or in with the field, but for
-now have no feature that is controlled by the driver.
+If U-APSD isn't enabled by us, then IEEE80211_STA_UAPSD_ENABLED
+won't be set, but the AP can still support it in that case. Only
+require U-APSD from the AP if we enabled it, don't require it to
+be disabled on the AP if we didn't.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/mlme.c        | 32 ++++++++++++++++++++++++++++++--
- 2 files changed, 32 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5f92619f8584..a36563a07b3b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -462,6 +462,8 @@ struct ieee80211_mgd_assoc_data {
- 
- 	unsigned int assoc_link_id;
- 
-+	__le16 ext_mld_capa_ops;
-+
- 	u8 fils_nonces[2 * FILS_NONCE_LEN];
- 	u8 fils_kek[FILS_MAX_KEK_LEN];
- 	size_t fils_kek_len;
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 613959f19713..87ebeec2877d 100644
+index 87ebeec2877d..426c0246fe1f 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -1943,6 +1943,21 @@ ieee80211_assoc_add_ml_elem(struct ieee80211_sub_if_data *sdata,
- 	}
- 	skb_put_data(skb, &mld_capa_ops, sizeof(mld_capa_ops));
+@@ -10492,12 +10492,11 @@ int ieee80211_mgd_assoc_ml_reconf(struct ieee80211_sub_if_data *sdata,
+ 			}
+ 		}
  
-+	/* Many APs have broken parsing of the extended MLD capa/ops field,
-+	 * dropping (re-)association request frames or replying with association
-+	 * response with a failure status if it's present. Without a clear
-+	 * indication as to whether the AP supports parsing this field or not do
-+	 * not include it in the common information unless strict mode is set.
-+	 */
-+	if (ieee80211_hw_check(&local->hw, STRICT) &&
-+	    assoc_data->ext_mld_capa_ops) {
-+		ml_elem->control |=
-+			cpu_to_le16(IEEE80211_MLC_BASIC_PRES_EXT_MLD_CAPA_OP);
-+		common->len += 2;
-+		skb_put_data(skb, &assoc_data->ext_mld_capa_ops,
-+			     sizeof(assoc_data->ext_mld_capa_ops));
-+	}
-+
- 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
- 		u16 link_present_elems[PRESENT_ELEMS_MAX] = {};
- 		const u8 *extra_elems;
-@@ -2112,6 +2127,7 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		/* max common info field in basic multi-link element */
- 		size += sizeof(struct ieee80211_mle_basic_common_info) +
- 			2 + /* capa & op */
-+			2 + /* ext capa & op */
- 			2; /* EML capa */
+-		/* Require U-APSD support to be similar to the current valid
+-		 * links
+-		 */
+-		if (uapsd_supported !=
+-		    !!(sdata->u.mgd.flags & IEEE80211_STA_UAPSD_ENABLED)) {
++		/* Require U-APSD support if we enabled it */
++		if (sdata->u.mgd.flags & IEEE80211_STA_UAPSD_ENABLED &&
++		    !uapsd_supported) {
+ 			err = -EINVAL;
++			sdata_info(sdata, "U-APSD on but not available on (all) new links\n");
+ 			goto err_free;
+ 		}
  
- 		/*
-@@ -9366,6 +9382,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	else
- 		memcpy(assoc_data->ap_addr, cbss->bssid, ETH_ALEN);
- 
-+	assoc_data->ext_mld_capa_ops = cpu_to_le16(req->ext_mld_capa_ops);
-+
- 	if (ifmgd->associated) {
- 		u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
- 
-@@ -10136,7 +10154,7 @@ void ieee80211_process_ml_reconf_resp(struct ieee80211_sub_if_data *sdata,
- static struct sk_buff *
- ieee80211_build_ml_reconf_req(struct ieee80211_sub_if_data *sdata,
- 			      struct ieee80211_mgd_assoc_data *add_links_data,
--			      u16 removed_links)
-+			      u16 removed_links, __le16 ext_mld_capa_ops)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_mgmt *mgmt;
-@@ -10185,6 +10203,9 @@ ieee80211_build_ml_reconf_req(struct ieee80211_sub_if_data *sdata,
- 			var_common_size += 2;
- 	}
- 
-+	if (ext_mld_capa_ops)
-+		var_common_size += 2;
-+
- 	/* Add the common information length */
- 	size += common_size + var_common_size;
- 
-@@ -10269,6 +10290,12 @@ ieee80211_build_ml_reconf_req(struct ieee80211_sub_if_data *sdata,
- 		skb_put_data(skb, &mld_capa_ops, sizeof(mld_capa_ops));
- 	}
- 
-+	if (ext_mld_capa_ops) {
-+		ml_elem->control |=
-+			cpu_to_le16(IEEE80211_MLC_RECONF_PRES_EXT_MLD_CAPA_OP);
-+		skb_put_data(skb, &ext_mld_capa_ops, sizeof(ext_mld_capa_ops));
-+	}
-+
- 	if (sdata->u.mgd.flags & IEEE80211_STA_ENABLE_RRM)
- 		capab |= WLAN_CAPABILITY_RADIO_MEASURE;
- 
-@@ -10535,7 +10562,8 @@ int ieee80211_mgd_assoc_ml_reconf(struct ieee80211_sub_if_data *sdata,
- 	 * is expected to send the ML reconfiguration response frame on the link
- 	 * on which the request was received.
- 	 */
--	skb = ieee80211_build_ml_reconf_req(sdata, data, req->rem_links);
-+	skb = ieee80211_build_ml_reconf_req(sdata, data, req->rem_links,
-+					    cpu_to_le16(req->ext_mld_capa_ops));
- 	if (!skb) {
- 		err = -ENOMEM;
- 		goto err_free;
 -- 
 2.34.1
 
