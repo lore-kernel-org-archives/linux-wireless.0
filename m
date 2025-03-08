@@ -1,56 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11CFC1F5855
-	for <linux-wireless@vger.kernel.org>; Sat,  8 Mar 2025 21:06:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 593C81A4E9D
+	for <linux-wireless@vger.kernel.org>; Sat,  8 Mar 2025 21:06:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741467991; cv=none; b=mlo6+iWwKQOriUenq25IJg2WPhtp2xfjocK8YecdOqU+PDfuWRrQ9H4eUsdVtvgWviB+fe/JFjmLAiGGNkyG3n9NN0WXaK70Emaq/ZpXs767rfTGd7Kle6tyKzN5cLI/vKku4/oqsMXkAxznYKXm9EZ1kMo/IQbRLt5JK/Clbn4=
+	t=1741467998; cv=none; b=eYB/NqrQYE84BtildWL5O8J+h05BZ+xtQuNAjvHL3Fb2nXTPjRnRjG3f2hq2UPE20Mxu2mwd6ZfBX9hCeOv8RuES+fGDqKXykmvCKY//JA8pdnwUqz0HF6Ulw2XSqk5at8Ce5h/cc7bXEwtxLPrUVHzzb0Oi50/RB9U9DFzponA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741467991; c=relaxed/simple;
-	bh=kV8ByCW6K5X2ZXVPep4O8twqq18glwwBKDg6P0NDwrI=;
+	s=arc-20240116; t=1741467998; c=relaxed/simple;
+	bh=nNDNwW2ZN1Qp/TQmf5OAJQWk2mHc8zN7tz9Fxb4t+Q4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aqShivfuOr6Dp8Bl24Lkgp3EuSW7WqF7CvhWxf3vZdO22bDCz32j/fFQImC/nL3O61ct/Hf6gF+14nbSYnGZOwgyQK0wFEJhjqud/DkSLAdkAbXldoRoBV2SrVZDKhp4JBSpvgrNc1U6tqVlhTDBOToWKOqbCNz3hmRa7v3l3us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Iux4Mr1M; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=U04mIPpvMbNojAEunGkWKVIh8TzGEJ00FmdZU4cFvdUmlge95k9K3eUCOuR5OJYehYODaPSpKWT26A4snKSTGv2UYdJ3Fm68RSDXJFdRrq40dTlvGgM+X/Zb+cjKKCqGTncP6nyBC/Be0H5W/VYTwj78yRmwsdKtyhmFoE5CfWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=azE0hwlu; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Iux4Mr1M"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="azE0hwlu"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741467989; x=1773003989;
+  t=1741467997; x=1773003997;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=kV8ByCW6K5X2ZXVPep4O8twqq18glwwBKDg6P0NDwrI=;
-  b=Iux4Mr1MpCA+cJuEGsQB4ozvbi/K1kGBdR4q/tUg3+3tKZfPvCRVbQR9
-   lMXKL2xS51w+kc/rTF0woKsKpyd16XlHQOcTA74qfSTC565pgqx72iNXl
-   uhguS5Twdc8JeweJVPkTN4U+ivcpxrH/YxOU4o3b808vzMrEYULNDVc00
-   WlYEBWHXH0u+GqBqXmCPGKsRJOctIkenQOnhw669XRx4HHN6OEManMJlE
-   3EywFZMyhe9bKsMtbashNo4YdjPEv8nrvQCMLmBUDbFoc/pnwRO/0Wf3y
-   ge0YV/ulHVuNxH2D0VrF2XhFlHiUoqQ6KKUbeoozuk+Je4s+xirYOU71k
-   g==;
-X-CSE-ConnectionGUID: irxRDn2dQSab9JBfi05zMw==
-X-CSE-MsgGUID: psyGKCRZSd23qrl4/jvIbQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11367"; a="42413043"
+  bh=nNDNwW2ZN1Qp/TQmf5OAJQWk2mHc8zN7tz9Fxb4t+Q4=;
+  b=azE0hwlu9oZJ4H4eJa6Eh+FGxW4fup04xDgikas/CtEAs0Llf5ncy7yf
+   xx16jA/2qzILmzo2WrfQUkIouoWT5Tzr3bctWInNXsf76hZ/QycZLbqfw
+   Z6Gua5C8Z7UGQqr2PEmIUBuf9rwyuZzZumxL7siKNvYdXt6WNVuEgZUE7
+   dZQvHFCW1PnG0dT1+Zx0JFbh1fTqUXVlqV6XCIGMYPUMMiVVi4Wk79+de
+   GbkRzVt71AgD9+leutS6GfjSysxS/sWvfFXmXjTKJJEGyNKgJ5Gifd1z4
+   c8H3GI4bUZoKgGkdWyBe5yo4WUdSNImpANpNL11Ciu+qmXk09IJRAWAYg
+   Q==;
+X-CSE-ConnectionGUID: SAH+7BpDTd+0UjnsyuSGVg==
+X-CSE-MsgGUID: AuzQ46sFSguZyW3JnoAgAg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11367"; a="42413065"
 X-IronPort-AV: E=Sophos;i="6.14,233,1736841600"; 
-   d="scan'208";a="42413043"
+   d="scan'208";a="42413065"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:04:00 -0800
-X-CSE-ConnectionGUID: PnChQJW4Rr2W3Sp4aKYiQQ==
-X-CSE-MsgGUID: /4mXbObaRRSByjiV5/YFpQ==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:04:03 -0800
+X-CSE-ConnectionGUID: lMAH/DYNSBGQABUCVIxNog==
+X-CSE-MsgGUID: 1JqiwWZGRwaV0innl5nbmw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,233,1736841600"; 
-   d="scan'208";a="124644365"
+   d="scan'208";a="124644375"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:03:58 -0800
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2025 13:04:02 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
-	Somashekhar Puttagangaiah <somashekhar.puttagangaiah@intel.com>
-Subject: [PATCH RESEND wireless-next 04/15] wifi: cfg80211: allow IR in 20 MHz configurations
-Date: Sat,  8 Mar 2025 23:03:30 +0200
-Message-Id: <20250308225541.d3ab352a73ff.I8a8f79e1c9eb74936929463960ee2a324712fe51@changeid>
+	Johannes Berg <johannes.berg@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH RESEND wireless-next 06/15] wifi: cfg80211: improve supported_selector documentation
+Date: Sat,  8 Mar 2025 23:03:32 +0200
+Message-Id: <20250308225541.ba402ff47314.I502b56111b62ea0be174ae76bd03684ae1d4aefb@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250308210341.2302222-1-miriam.rachel.korenblit@intel.com>
 References: <20250308210341.2302222-1-miriam.rachel.korenblit@intel.com>
@@ -63,195 +63,53 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Some regulatory bodies doesn't allow IR (initiate radioation) on a
-specific subband, but allows it for channels with a bandwidth of 20 MHz.
-Add a channel flag that indicates that, and consider it in
-cfg80211_reg_check_beaconing.
+Improve the documentation for supported BSS selectors to make it more
+precise.
 
-While on it, fix the kernel doc of enum nl80211_reg_rule_flags and
-change it to use BIT().
-
-Signed-off-by: Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Co-developed-by: Somashekhar Puttagangaiah <somashekhar.puttagangaiah@intel.com>
-Signed-off-by: Somashekhar Puttagangaiah <somashekhar.puttagangaiah@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 52 ++++++++++++++++++++----------------
- net/wireless/chan.c          |  8 +++++-
- net/wireless/nl80211.c       |  4 +++
- net/wireless/reg.c           |  4 ++-
- 5 files changed, 46 insertions(+), 25 deletions(-)
----
-v3: changed 'Soft AP' and 'active scan' to 'activity',
-added S-O-B after Co-developed-by,
-and fixed the S-O-B to match the 'from'
+ include/net/cfg80211.h       | 4 ++--
+ include/uapi/linux/nl80211.h | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 29b9cf0fe6c8..0d423830a8ed 100644
+index 0d423830a8ed..c61894c1265a 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -127,6 +127,8 @@ struct wiphy;
-  *	even if it is otherwise disabled.
-  * @IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP: Allow using this channel for AP operation
-  *	with very low power (VLP), even if otherwise set to NO_IR.
-+ * @IEEE80211_CHAN_ALLOW_20MHZ_ACTIVITY: Allow activity on a 20 MHz channel,
-+ *	even if otherwise set to NO_IR.
-  */
- enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_DISABLED			= BIT(0),
-@@ -155,6 +157,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_NO_6GHZ_AFC_CLIENT	= BIT(23),
- 	IEEE80211_CHAN_CAN_MONITOR		= BIT(24),
- 	IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP	= BIT(25),
-+	IEEE80211_CHAN_ALLOW_20MHZ_ACTIVITY     = BIT(26),
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
+@@ -3148,10 +3148,10 @@ enum cfg80211_assoc_req_flags {
+  *	included in the Current AP address field of the Reassociation Request
+  *	frame.
+  * @flags:  See &enum cfg80211_assoc_req_flags
+- * @supported_selectors: supported selectors in IEEE 802.11 format
++ * @supported_selectors: supported BSS selectors in IEEE 802.11 format
+  *	(or %NULL for no change).
+  *	If %NULL, then support for SAE_H2E should be assumed.
+- * @supported_selectors_len: Length of supported_selectors in octets.
++ * @supported_selectors_len: number of supported BSS selectors
+  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
+  *	will be used in ht_capa.  Un-supported values will be ignored.
+  * @ht_capa_mask:  The bits of ht_capa which are to be used.
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c59075acdb10..95287289b3b4 100644
+index 95287289b3b4..a945ad223cfd 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -4335,6 +4335,8 @@ enum nl80211_wmm_rule {
-  *	otherwise completely disabled.
-  * @NL80211_FREQUENCY_ATTR_ALLOW_6GHZ_VLP_AP: This channel can be used for a
-  *	very low power (VLP) AP, despite being NO_IR.
-+ * @NL80211_FREQUENCY_ATTR_ALLOW_20MHZ_ACTIVITY: This channel can be acitve in
-+ *	20 MHz bandwidth, despite being NO_IR.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -4379,6 +4381,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_6GHZ_AFC_CLIENT,
- 	NL80211_FREQUENCY_ATTR_CAN_MONITOR,
- 	NL80211_FREQUENCY_ATTR_ALLOW_6GHZ_VLP_AP,
-+	NL80211_FREQUENCY_ATTR_ALLOW_20MHZ_ACTIVITY,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -4590,31 +4593,34 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_NO_6GHZ_AFC_CLIENT: Client connection to AFC AP not allowed
-  * @NL80211_RRF_ALLOW_6GHZ_VLP_AP: Very low power (VLP) AP can be permitted
-  *	despite NO_IR configuration.
-+ * @NL80211_RRF_ALLOW_20MHZ_ACTIVITY: Allow activity in 20 MHz bandwidth,
-+ *	despite NO_IR configuration.
-  */
- enum nl80211_reg_rule_flags {
--	NL80211_RRF_NO_OFDM		= 1<<0,
--	NL80211_RRF_NO_CCK		= 1<<1,
--	NL80211_RRF_NO_INDOOR		= 1<<2,
--	NL80211_RRF_NO_OUTDOOR		= 1<<3,
--	NL80211_RRF_DFS			= 1<<4,
--	NL80211_RRF_PTP_ONLY		= 1<<5,
--	NL80211_RRF_PTMP_ONLY		= 1<<6,
--	NL80211_RRF_NO_IR		= 1<<7,
--	__NL80211_RRF_NO_IBSS		= 1<<8,
--	NL80211_RRF_AUTO_BW		= 1<<11,
--	NL80211_RRF_IR_CONCURRENT	= 1<<12,
--	NL80211_RRF_NO_HT40MINUS	= 1<<13,
--	NL80211_RRF_NO_HT40PLUS		= 1<<14,
--	NL80211_RRF_NO_80MHZ		= 1<<15,
--	NL80211_RRF_NO_160MHZ		= 1<<16,
--	NL80211_RRF_NO_HE		= 1<<17,
--	NL80211_RRF_NO_320MHZ		= 1<<18,
--	NL80211_RRF_NO_EHT		= 1<<19,
--	NL80211_RRF_PSD			= 1<<20,
--	NL80211_RRF_DFS_CONCURRENT	= 1<<21,
--	NL80211_RRF_NO_6GHZ_VLP_CLIENT	= 1<<22,
--	NL80211_RRF_NO_6GHZ_AFC_CLIENT	= 1<<23,
--	NL80211_RRF_ALLOW_6GHZ_VLP_AP	= 1<<24,
-+	NL80211_RRF_NO_OFDM                 = 1 << 0,
-+	NL80211_RRF_NO_CCK                  = 1 << 1,
-+	NL80211_RRF_NO_INDOOR               = 1 << 2,
-+	NL80211_RRF_NO_OUTDOOR              = 1 << 3,
-+	NL80211_RRF_DFS                     = 1 << 4,
-+	NL80211_RRF_PTP_ONLY                = 1 << 5,
-+	NL80211_RRF_PTMP_ONLY               = 1 << 6,
-+	NL80211_RRF_NO_IR                   = 1 << 7,
-+	__NL80211_RRF_NO_IBSS               = 1 << 8,
-+	NL80211_RRF_AUTO_BW                 = 1 << 11,
-+	NL80211_RRF_IR_CONCURRENT           = 1 << 12,
-+	NL80211_RRF_NO_HT40MINUS            = 1 << 13,
-+	NL80211_RRF_NO_HT40PLUS             = 1 << 14,
-+	NL80211_RRF_NO_80MHZ                = 1 << 15,
-+	NL80211_RRF_NO_160MHZ               = 1 << 16,
-+	NL80211_RRF_NO_HE                   = 1 << 17,
-+	NL80211_RRF_NO_320MHZ               = 1 << 18,
-+	NL80211_RRF_NO_EHT                  = 1 << 19,
-+	NL80211_RRF_PSD                     = 1 << 20,
-+	NL80211_RRF_DFS_CONCURRENT          = 1 << 21,
-+	NL80211_RRF_NO_6GHZ_VLP_CLIENT      = 1 << 22,
-+	NL80211_RRF_NO_6GHZ_AFC_CLIENT      = 1 << 23,
-+	NL80211_RRF_ALLOW_6GHZ_VLP_AP       = 1 << 24,
-+	NL80211_RRF_ALLOW_20MHZ_ACTIVITY    = 1 << 25,
- };
- 
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 9f918b77b40e..4cdb74a3f38c 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -6,7 +6,7 @@
+@@ -2881,9 +2881,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_VIF_RADIO_MASK: Bitmask of allowed radios (u32).
+  *	A value of 0 means all radios.
   *
-  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright 2018-2024	Intel Corporation
-+ * Copyright 2018-2025	Intel Corporation
-  */
- 
- #include <linux/export.h>
-@@ -1497,6 +1497,12 @@ bool cfg80211_reg_check_beaconing(struct wiphy *wiphy,
- 	if (cfg->reg_power == IEEE80211_REG_VLP_AP)
- 		permitting_flags |= IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP;
- 
-+	if ((cfg->iftype == NL80211_IFTYPE_P2P_GO ||
-+	     cfg->iftype == NL80211_IFTYPE_AP) &&
-+	    (chandef->width == NL80211_CHAN_WIDTH_20_NOHT ||
-+	     chandef->width == NL80211_CHAN_WIDTH_20))
-+		permitting_flags |= IEEE80211_CHAN_ALLOW_20MHZ_ACTIVITY;
-+
- 	return _cfg80211_reg_can_beacon(wiphy, chandef, cfg->iftype,
- 					check_no_ir ? IEEE80211_CHAN_NO_IR : 0,
- 					permitting_flags);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e2e8c368fbbf..aee49d43cf86 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1235,6 +1235,10 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 		if ((chan->flags & IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP) &&
- 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_ALLOW_6GHZ_VLP_AP))
- 			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_ALLOW_20MHZ_ACTIVITY) &&
-+		    nla_put_flag(msg,
-+				 NL80211_FREQUENCY_ATTR_ALLOW_20MHZ_ACTIVITY))
-+			goto nla_put_failure;
- 	}
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2dd0533e7660..9314f7fcd54b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -5,7 +5,7 @@
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright      2017  Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2024 Intel Corporation
-+ * Copyright (C) 2018 - 2025 Intel Corporation
+- * @NL80211_ATTR_SUPPORTED_SELECTORS: supported selectors, array of
+- *	supported selectors as defined by IEEE 802.11 7.3.2.2 but without the
+- *	length restriction (at most %NL80211_MAX_SUPP_SELECTORS).
++ * @NL80211_ATTR_SUPPORTED_SELECTORS: supported BSS Membership Selectors, array
++ *	of supported selectors as defined by IEEE Std 802.11-2020 9.4.2.3 but
++ *	without the length restriction (at most %NL80211_MAX_SUPP_SELECTORS).
+  *	This can be used to provide a list of selectors that are implemented
+  *	by the supplicant. If not given, support for SAE_H2E is assumed.
   *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -1602,6 +1602,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_PSD;
- 	if (rd_flags & NL80211_RRF_ALLOW_6GHZ_VLP_AP)
- 		channel_flags |= IEEE80211_CHAN_ALLOW_6GHZ_VLP_AP;
-+	if (rd_flags & NL80211_RRF_ALLOW_20MHZ_ACTIVITY)
-+		channel_flags |= IEEE80211_CHAN_ALLOW_20MHZ_ACTIVITY;
- 	return channel_flags;
- }
- 
 -- 
 2.34.1
 
