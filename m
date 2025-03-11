@@ -1,151 +1,69 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from ns.iliad.fr (ns.iliad.fr [212.27.33.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C113B1DE8A8
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2025 06:27:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFE81386DA
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2025 07:54:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.27.33.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741674472; cv=none; b=RMqvkPGzk102NzQoVwiQubfYMSGSJW2aFfPjh/bxJisZAzxFIdU369o1oBbKfplfhD63XZdbZUEYamnNxQw2oPuhLdqCRXMeAK9LOc8K/sI1ppDd3VM9ZP2TJtzVIHt2X+ceLYFEet7LDZyEqAn4KDgGVPr3iKt6eowzAPYFkgg=
+	t=1741679701; cv=none; b=iJqbdiFky/pbdS7pIVE3WdJ0IsDz3ClWc3jcJyLHTiqzwvj8/XZLcrWTCCsczefk29SOjkUq/zJQQWQfVSF2P+/bHeW4RBDyS6izDJKXhiGosVLQZHWc0fADf9jzwk+WvVzoFvU3aO3c7tmz3Pwam/hj74rE4nNtswpU/oeGeuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741674472; c=relaxed/simple;
-	bh=zQAgmaBTBSBzbG0pOc9NxcA2P9fXuxmJHI4Ku/6Gfoo=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IrdIfzuO5J5VJcfwgYH3xUwL4ioSNliZZ+mflFZ91mI/IrsbJimoltFghzaXIgtqTUNrIhv+w+8i4ryUprRX5D7VcURmC4HbpNW5ZK0j6IeXkEAscfDYeE+TKYWDaLmFN5xudbtWOI9rYv/0EVNN8lYEuK4A+3qYWjsoNO/Nh20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Olvv6ep+; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Olvv6ep+"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52B19CZ5014492;
-	Tue, 11 Mar 2025 06:27:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	k92y4hrpWKj2/gw4AWKYYwrdS6rTh1R4QVWyg9ReKVI=; b=Olvv6ep+NT52EDKP
-	N2d28bWv7x2x/J3EXCFCjDay7MguAusu+NTMPy3zMBy5p8ywG0Xo8cpg6xlQ0BKS
-	cfOfN4MwZ2RqjiKLImPHdCtpT8xIi90ic6UL2Uf/nXq3s11HhFiSBl2Coskkl6S2
-	DEqk/Ofd7zb/c1bTb3g8qHZDhimSVHMtsLh/0w2t9knQcn+HoDjbWD6Bqh+eA5y0
-	VxVA+wQUmTl2y1WTB4xpRgi6WPQhX6i0/vRb5hehLyQkAdT7CrFmpLkTg4GxcvJV
-	CH40ywPiHjiSaIoq6clFwPDGPQbXVpijAAO1nC3P97Ddxxrl7LA5D0nV+coKiw/j
-	ve7Wqw==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45ab8m0qr0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Mar 2025 06:27:40 +0000 (GMT)
-Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52B6ROoK017769
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 11 Mar 2025 06:27:24 GMT
-Received: from hu-sarishar-blr.qualcomm.com (10.80.80.8) by
- nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Mon, 10 Mar 2025 23:27:22 -0700
-From: Sarika Sharma <quic_sarishar@quicinc.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Sarika Sharma
-	<quic_sarishar@quicinc.com>
-Subject: [PATCH wireless-next v4 06/11] wifi: cfg80211: add flag to indicate driver supports ML station statistics
-Date: Tue, 11 Mar 2025 11:56:49 +0530
-Message-ID: <20250311062654.1407532-7-quic_sarishar@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250311062654.1407532-1-quic_sarishar@quicinc.com>
-References: <20250311062654.1407532-1-quic_sarishar@quicinc.com>
+	s=arc-20240116; t=1741679701; c=relaxed/simple;
+	bh=6eNz3aUj514kRVoHnE40M3YwtuEL8LJehUeuymyk6gQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=rCTzGBPvC+bTR9P6qwS/22wTJloXlCETAtV2ilcUxxXWu9geNtRyW1ciznHkZqKM6Mnmpg5VQWJPAhhvQFaQx9JTiTgPfhG/uLWH+/ipEAb7lZ3GDcrun5yTDXPRFCg2Me1tInUTZ57oAwNnmhWg/nqqekJyc6QcE0r8JdvOm3Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=srs.iliad.fr; arc=none smtp.client-ip=212.27.33.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=srs.iliad.fr
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+	by ns.iliad.fr (Postfix) with ESMTP id 3E911206DF;
+	Tue, 11 Mar 2025 08:54:55 +0100 (CET)
+Received: from [192.168.108.70] (freebox.vlq16.iliad.fr [213.36.7.13])
+	by ns.iliad.fr (Postfix) with ESMTP id 25AAB200F9;
+	Tue, 11 Mar 2025 08:54:55 +0100 (CET)
+Message-ID: <041375dcdb6fd3afacd297f85036d4f3ca73cc6f.camel@freebox.fr>
+Subject: Re: [PATCH v4 1/5] wifi: cfg80211: Add Support to Set RTS Threshold
+ for each Radio
+From: Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To: Roopni Devanathan <quic_rdevanat@quicinc.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Mar 2025 08:54:55 +0100
+In-Reply-To: <809bd94d-66d5-4621-9475-b9a8a9370b62@quicinc.com>
+References: <20250129155246.155587-1-quic_rdevanat@quicinc.com>
+	 <20250129155246.155587-2-quic_rdevanat@quicinc.com>
+	 <edcaf289872243a7a5a794ebccdc39094e130d3e.camel@freebox.fr>
+	 <809bd94d-66d5-4621-9475-b9a8a9370b62@quicinc.com>
+Organization: Freebox
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01c.na.qualcomm.com (10.45.79.139)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 2lhv-TfBieEpKNqeVJIA3OwxydxeQNKX
-X-Authority-Analysis: v=2.4 cv=K9nYHzWI c=1 sm=1 tr=0 ts=67cfd7dc cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=CilbYTUr6xf_O_4wI94A:9 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: 2lhv-TfBieEpKNqeVJIA3OwxydxeQNKX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-11_01,2025-03-07_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- impostorscore=0 spamscore=0 mlxlogscore=999 clxscore=1015
- priorityscore=1501 mlxscore=0 bulkscore=0 malwarescore=0 suspectscore=0
- adultscore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
- definitions=main-2503110042
 
-Currently, while filling NL attributes for the link level station
-statistics, valid_links is checked. There might be the case when
-driver offload link station statistics and does not provide per-link
-statistics.
 
-Hence, add flag WIPHY_FLAG_SUPPORTS_MLO_STA_PER_LINK_STATS in wiphy
-structure to indicate that driver supports per link station statistics.
-Set this flag if driver supports per-link station statistics and
-check this flag while filling the station_info structure
-for MLO and while embedding the info into NL message.
+On Tue, 2025-03-11 at 09:38 +0530, Roopni Devanathan wrote:
+>=20
 
-Signed-off-by: Sarika Sharma <quic_sarishar@quicinc.com>
----
- include/net/cfg80211.h | 7 +++++++
- net/wireless/nl80211.c | 2 +-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+> I hope this will resolve the said problems. Thanks for pointing it
+> out.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a7f7bfbc87f3..0874b0c54ef4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2158,6 +2158,9 @@ struct link_station_info {
-  * @local_pm: local mesh STA power save mode
-  * @peer_pm: peer mesh STA power save mode
-  * @nonpeer_pm: non-peer mesh STA power save mode
-+ * @is_per_link_stats_support: false- for non-ML STA and for ML STA,if driver
-+ *	offload link decisions and do not provide per-link statistics.
-+ *	true- if driver provides per-link statistics.
-  * @assoc_link_id: Indicates MLO link ID of the AP, with which the station
-  *	completed (re)association. This information filled for both MLO
-  *	and non-MLO STA connections when the AP affiliated with an MLD.
-@@ -2201,6 +2204,7 @@ struct station_info {
- 	enum nl80211_mesh_power_mode peer_pm;
- 	enum nl80211_mesh_power_mode nonpeer_pm;
- 
-+	bool is_per_link_stats_support;
- 	u8 assoc_link_id;
- 	u8 mld_addr[ETH_ALEN] __aligned(2);
- 	const u8 *assoc_resp_ies;
-@@ -5065,6 +5069,8 @@ struct cfg80211_ops {
-  * @WIPHY_FLAG_SUPPORTS_NSTR_NONPRIMARY: support connection to non-primary link
-  *	of an NSTR mobile AP MLD.
-  * @WIPHY_FLAG_DISABLE_WEXT: disable wireless extensions for this device
-+ * @WIPHY_FLAG_SUPPORTS_MLO_STA_PER_LINK_STATS: The driver does not offload
-+ *	link decisions and provide per-link statistics for MLO STA.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
-@@ -5093,6 +5099,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_HAS_CHANNEL_SWITCH		= BIT(23),
- 	WIPHY_FLAG_NOTIFY_REGDOM_BY_DRIVER	= BIT(24),
- 	WIPHY_FLAG_CHANNEL_CHANGE_ON_BEACON     = BIT(25),
-+	WIPHY_FLAG_SUPPORTS_MLO_STA_PER_LINK_STATS = BIT(26),
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 619427513361..522bcad71874 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6906,7 +6906,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		    &sinfo->sta_flags))
- 		goto nla_put_failure;
- 
--	if (sinfo->valid_links) {
-+	if (sinfo->is_per_link_stats_support && sinfo->valid_links) {
- 		/* TODO: Add accumulated stats for packets, bytes for
- 		 *	 better representation at MLO level.
- 		 */
--- 
-2.34.1
+
+No problem is at registration time, not un-registration:
+
+
+CPU0                                   CPU1
+wiphy_register()
+                                       wiphy_dump()
+                                       rcfg->rts_threshold deref
+wiphy->radio_cfg allocation
+
+
+--=20
+Maxime
+
+
 
