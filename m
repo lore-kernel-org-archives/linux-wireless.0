@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C61C1EDA3A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A203221D595
 	for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2025 10:36:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741689411; cv=none; b=Mz3bFagpf7R05fXuuWCRa6U0mKwYg2LYFtCV9JpIHQkUvdUbnumxK35SB7huMQkjSBYOG6qrLMqYf75+H9PyC7H/GymUZZGOS/OV5HZhRyn5btInQcMGOSl1SSpP3lxyZ2mwuJOEWu9U/T1RwasMB1j25gsSINRtQz1Vznrvr1A=
+	t=1741689411; cv=none; b=ApMw/FGh09vgJ1/7H1mgkxNFi7vnLI+rJVHnPpwUuiwiZCz+6mmUUTn9REf4ukgRsZ65Zzm+D6U2VsMLgaCSX/Qd5qG5AiijX8NZgs0mx08SvDX6pUqr4mfG6St+D1QgW46Vulo0FLb3aSYewAqAw1xSFJNHREs6bAYDczOVJZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1741689411; c=relaxed/simple;
-	bh=dSX4d1EeNUTLLDYI9ddhR0ASfkx7HGwlLNnzcfAdQng=;
+	bh=Gw4S8ijClos13IW8ZiahgurKKRP9cfox8fMl50mhCoQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WC9R0E4DPekQRIZn7+GBhNjGEhZ2XNXbM9aHs7XXgQ3B3DTYgyG9pRkhQpU9moEQ5gosgMXzfqYt2RlZwehkCucA/PCKkLtYz81LA85E8DNWRzJYEKdFgOL6+H8Q6NPdekQahAwqfS4W5QmRgl1bSRlwalA61poJ8rMAS2dX6Vo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=WxEpu0Kl; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=YJNp4Vt5og0umPhqUTGWrJvX06H6wU6iV+G2oPm1Ccg1DiJ3wzQ92uLEiTFAbgpq7FTVrTgHsWj2YDUktbEUpPx/VmgZm29J7i//JIb0uYUuYymXrt+NVXNLyn8eGWclVqsFm7zmdhb1148NDM7RTiWoR1Pz0YzoBGVukMwsfEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=qzMktbHU; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WxEpu0Kl"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="qzMktbHU"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=oLaZvO9DxVzsN1sEUz8kiDYT+pGndG6HZEeNimvJtbQ=; b=WxEpu0KlbhW0GPTcavf1+Fcc2w
-	SrX3EEOZCWgvqL77rV3xzk+ZtGyqseo7RF+Ui9leBVUh38xX7thTURBAfm9zhzFDOfRDGESxJaxE/
-	5ZVwLImMixCVE/dwlBPe7Vi42AuKHuaTDrN8GrJcV3P5xkkhLYzYMxoiop3Ne4ECxkgs=;
+	bh=Jq+zKftjKXIIJhXv5Rv3yFPYsMdU3EzFIBuM3d25TA0=; b=qzMktbHUjD2aTeKeMg4VlEpump
+	uGATGB0sfPSeuDzVFxZw+IAb6Q6p0mhOdnMvYC9vyJv94kO7UjymYkzNN9gBZ1VSyWsMtVfJtnVLq
+	WVFQVhUdAiOBsojJXmpI5lIMoauu0UX9d9dH74emarEUuEOeFLW9DSf+d2jfFYN9t7PE=;
 Received: from p5b206ef1.dip0.t-ipconnect.de ([91.32.110.241] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1trwyc-00Ftvh-2R
+	id 1trwyd-00Ftvh-0D
 	for linux-wireless@vger.kernel.org;
-	Tue, 11 Mar 2025 11:36:46 +0100
+	Tue, 11 Mar 2025 11:36:47 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/8] wifi: mt76: mt7996: fix SER reset trigger on WED reset
-Date: Tue, 11 Mar 2025 11:36:39 +0100
-Message-ID: <20250311103646.43346-2-nbd@nbd.name>
+Subject: [PATCH 4/8] wifi: mt76: scan: set vif offchannel link for scanning/roc
+Date: Tue, 11 Mar 2025 11:36:41 +0100
+Message-ID: <20250311103646.43346-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250311103646.43346-1-nbd@nbd.name>
 References: <20250311103646.43346-1-nbd@nbd.name>
@@ -48,45 +48,59 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Rex Lu <rex.lu@mediatek.com>
+The driver needs to know what vif link to use
 
-The firmware needs a specific trigger when WED is being reset due to an
-ethernet reset condition. This helps prevent further L1 SER failure.
-
-Signed-off-by: Rex Lu <rex.lu@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.h  | 3 ++-
- drivers/net/wireless/mediatek/mt76/mt7996/mmio.c | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/channel.c | 3 +++
+ drivers/net/wireless/mediatek/mt76/mt76.h    | 2 ++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-index bd1ba00e1bc6..5fdc47dad28c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-@@ -896,7 +896,8 @@ enum {
- 	UNI_CMD_SER_SET_RECOVER_L3_TX_DISABLE,
- 	UNI_CMD_SER_SET_RECOVER_L3_BF,
- 	UNI_CMD_SER_SET_RECOVER_L4_MDP,
--	UNI_CMD_SER_SET_RECOVER_FULL,
-+	UNI_CMD_SER_SET_RECOVER_FROM_ETH,
-+	UNI_CMD_SER_SET_RECOVER_FULL = 8,
- 	UNI_CMD_SER_SET_SYSTEM_ASSERT,
- 	/* action */
- 	UNI_CMD_SER_ENABLE = 1,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-index 7a8ee6c75cf2..9d37f8238746 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-@@ -281,7 +281,7 @@ static int mt7996_mmio_wed_reset(struct mtk_wed_device *wed)
- 	if (test_and_set_bit(MT76_STATE_WED_RESET, &mphy->state))
- 		return -EBUSY;
+diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
+index 6a35c6ebd823..e7b839e74290 100644
+--- a/drivers/net/wireless/mediatek/mt76/channel.c
++++ b/drivers/net/wireless/mediatek/mt76/channel.c
+@@ -293,6 +293,7 @@ struct mt76_vif_link *mt76_get_vif_phy_link(struct mt76_phy *phy,
+ 		kfree(mlink);
+ 		return ERR_PTR(ret);
+ 	}
++	rcu_assign_pointer(mvif->offchannel_link, mlink);
  
--	ret = mt7996_mcu_set_ser(dev, UNI_CMD_SER_TRIGGER, UNI_CMD_SER_SET_RECOVER_L1,
-+	ret = mt7996_mcu_set_ser(dev, UNI_CMD_SER_TRIGGER, UNI_CMD_SER_SET_RECOVER_FROM_ETH,
- 				 mphy->band_idx);
- 	if (ret)
- 		goto out;
+ 	return mlink;
+ }
+@@ -301,10 +302,12 @@ void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 			   struct mt76_vif_link *mlink)
+ {
+ 	struct mt76_dev *dev = phy->dev;
++	struct mt76_vif_data *mvif = mlink->mvif;
+ 
+ 	if (IS_ERR_OR_NULL(mlink) || !mlink->offchannel)
+ 		return;
+ 
++	rcu_assign_pointer(mvif->offchannel_link, NULL);
+ 	dev->drv->vif_link_remove(phy, vif, &vif->bss_conf, mlink);
+ 	kfree(mlink);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 7596191252dc..c16a6743ad64 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -351,6 +351,7 @@ struct mt76_wcid {
+ 	u8 hw_key_idx;
+ 	u8 hw_key_idx2;
+ 
++	u8 offchannel:1;
+ 	u8 sta:1;
+ 	u8 sta_disabled:1;
+ 	u8 amsdu:1;
+@@ -787,6 +788,7 @@ struct mt76_vif_link {
+ 
+ struct mt76_vif_data {
+ 	struct mt76_vif_link __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
++	struct mt76_vif_link __rcu *offchannel_link;
+ 
+ 	struct mt76_phy *roc_phy;
+ 	u16 valid_links;
 -- 
 2.47.1
 
