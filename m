@@ -1,75 +1,72 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B67A3226177;
-	Tue, 11 Mar 2025 09:25:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C204C233725
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2025 10:20:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741685144; cv=none; b=iuzP3edgLt9+cyPvQxioepQ045SSC0zOrWHoifx1r/rUFl3mZ5wKQq15+cMAhU4iDOFM+cjCwHLo2mb17u/bXVB+sRAOheykc+kT+UfN3/z/VtTVh/tmbs26CVqEkt9VhOUd+FWfel0kHmJDR1RPLZ8tEequ8AEiOA9u0iP8/R0=
+	t=1741688429; cv=none; b=N6snJTVTNWDw08ntiHo6PeyeUxOHGsXfXKvgqVr5qJAB4aAdmzFxQurb8vyYi4sfrzvZFttKIHqlIKgKdhSZYyNyQp84Ckn3lPL3/TNjb5hP6fO8XkbcwD52QdpdxLMQdxdIPrI/QuTR0qB1rqQkayHD81q42uGBpeCIDy+Gw0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741685144; c=relaxed/simple;
-	bh=jVA0botF/7UpaHDHr2fUbl6zp4iOX2aREWoTuBm1Q34=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sKWveViwo1Krh8VSqEV4MoPXxp3hFjlqeMM96EPhF0fS1yrAPmaOODFARWtsDVR7ReUZMDz/Kz1NlWuH482ReEGpe2wFenIPtgtzCwK63ZBNKguiW0JFaUao60ed+CJhaTJF4/z5uClOSVI6Jvs5Yo5mS8ze9HHXVQwDgt+B69o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Kx1LbNKc; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1741688429; c=relaxed/simple;
+	bh=XbqcDnyf2HNvuHhkinyP/laFl2H+DxYFR0NJcVlXYQw=;
+	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
+	 MIME-Version:Date; b=ocKcI9D7lrh/Ii9S/4KrrtbZ5Ov4HHSsdGA9HeYl2h0VFvTctiwRePscD3oJceoPZTvTznGFr0105YNpTYHrAvPT2hxmdNOfX+TKUFm9M8uVFYXERdfhDwfIP2jN9L+vaSU8LBaHRPAwQuFi8e2fBTqCGWT4MrUam7Qrq3SRsGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=tlFlCdfT; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Kx1LbNKc"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tlFlCdfT"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=38XthFMU8LX6ecctMEDvh0zBZBH4c/+JYLRIrlgjMLo=;
-	t=1741685142; x=1742894742; b=Kx1LbNKcCmt4Rjb1S4OqFL7SEMRDdqurfDNz6Pue5GUELpB
-	pgAN8SPiKegWDIbASptbzSChgB9hYGEbJktWN9IRzivsCHnEKO6+OTmwXgJUymAnDmbDgqlGFfS78
-	beY9TS5Fnk+W0oipXdp5G+Eb2pOe5ql/UoPZ1r3gksDbExPw6O/CV4gokMABHoQrGDecWiVFiZ9M+
-	mURTbXvObHiBA7NKp+/8p5RxNIetWsSqp+uVsrw7x9D0m6MY1u/yvuqNTXOEKBWGIi0RyDfxuCaZe
-	mqtNPmnLG1HrpXkARM4brPOONLZUtMLkJqY0T12vkPSX/uHxsphGLoFCtTnnFnTg==;
+	d=sipsolutions.net; s=mail; h=Date:MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Cc:To:From:Subject:Message-ID:Sender:
+	Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=ak/6gHLFtxLiBPZaYRNIFIndlh/sye4y350MTKklSIA=;
+	t=1741688427; x=1742898027; b=tlFlCdfTN7adGJCsY8HUrW54tE4u/ePYjo93b5fJBoe2x5q
+	Ib8WRBeE8PkWnWo+iiXQ6MbLT+G6AoV/dh26m5mzJuQe0YZln8USaxyOiBKclfgHosEnP1Ubqo+hZ
+	4DRM8hN9lqQhdxcQN2o7BMTyOIVrTinY7V4cWg+1Y4w6f91F6IbOaAr+dV1390IOkPt3m7xqqydEI
+	RPRDAF2q8yfa3mA5nMgUkOB0Pxbjx1/JkONv0ZBOO18xzeVjaupSGLcin4ibfpj1Xny4AZdp4cSoZ
+	0dG2kilcIeD351fOmKSgxZIyO9ZJrZCktAQZqd6/9LJA95FvIwWVrhSiGk0WGLrQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1trvrN-00000007lXx-3rWn;
-	Tue, 11 Mar 2025 10:25:14 +0100
-Message-ID: <12b44f58b339aa92f1b17fb7b33e30a920aad86c.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211: Add __nonstring annotations for
- unterminated strings
+	id 1trwil-00000007nF5-3kmC;
+	Tue, 11 Mar 2025 11:20:24 +0100
+Message-ID: <7cdc6950ba188625d691e8fd4726ef6872f6afa1.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v4 1/4] wifi: cfg80211: Add support to
+ get EMLSR capabilities of non-AP MLD
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Kees Cook <kees@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>
-Cc: "David S. Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>,  Jakub Kicinski	 <kuba@kernel.org>, Paolo Abeni
- <pabeni@redhat.com>, Kalle Valo <kvalo@kernel.org>,  Julia Lawall
- <Julia.Lawall@inria.fr>, En-Wei Wu <en-wei.wu@canonical.com>, Shaul
- Triebitz	 <shaul.triebitz@intel.com>, Alexander Wetzel
- <alexander@wetzel-home.de>,  Emmanuel Grumbach
- <emmanuel.grumbach@intel.com>, linux-wireless@vger.kernel.org,
- netdev@vger.kernel.org, kernel test robot <lkp@intel.com>, Miri Korenblit
- <miriam.rachel.korenblit@intel.com>, 	linux-kernel@vger.kernel.org, 
-	syzbot+d6eb9cee2885ec06f5e3@syzkaller.appspotmail.com, 
-	linux-hardening@vger.kernel.org
-Date: Tue, 11 Mar 2025 10:25:10 +0100
-In-Reply-To: <20250310222318.work.395-kees@kernel.org>
-References: <20250310222318.work.395-kees@kernel.org>
+To: Rameshkumar Sundaram <quic_ramess@quicinc.com>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, Ramasamy
+ Kaliappan <quic_rkaliapp@quicinc.com>
+In-Reply-To: <20250306062157.1185769-2-quic_ramess@quicinc.com>
+References: <20250306062157.1185769-1-quic_ramess@quicinc.com>
+	 <20250306062157.1185769-2-quic_ramess@quicinc.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.54.3 (3.54.3-1.fc41) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Date: Tue, 11 Mar 2025 10:48:04 +0100
+User-Agent: Evolution 3.54.3 (3.54.3-1.fc41) 
 X-malware-bazaar: not-scanned
 
-On Mon, 2025-03-10 at 15:23 -0700, Kees Cook wrote:
->=20
->  drivers/net/wireless/virtual/virt_wifi.c     | 2 +-
->  drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 2 +-
+> =20
+> @@ -7095,7 +7096,8 @@ int cfg80211_check_station_change(struct wiphy *wip=
+hy,
+>  		if (params->ext_capab || params->link_sta_params.ht_capa ||
+>  		    params->link_sta_params.vht_capa ||
+>  		    params->link_sta_params.he_capa ||
+> -		    params->link_sta_params.eht_capa)
+> +		    params->link_sta_params.eht_capa ||
+> +		    params->eml_cap_present)
+>  			return -EINVAL;
+>  		if (params->sta_flags_mask & BIT(NL80211_STA_FLAG_SPP_AMSDU))
+>  			return -EINVAL;
 >=20
 
-That's not mac80211?
-
-Also, I have no idea how you came up with the CC list but it seems
-excessive. :)
+EMLSR doesn't make sense for TDLS stations either, does it?
 
 johannes
