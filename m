@@ -1,42 +1,45 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C5BCBA34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BED92206BD
 	for <linux-wireless@vger.kernel.org>; Tue, 11 Mar 2025 10:36:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741689411; cv=none; b=QQ1vCyimbn6tLFkmDgSR+n7GUzMEGkDG0dATcqHp1T4WJ59p+nD4Im6iZAysuFHZkQNOyhgC4tOaCRHgz2Yg+vFeVLGlDxxfYWCW4lkMNuMURPMXC/gNN7Ujots3PJyvaQFAmR75laTgUkJZv3DpfK+Gk58burKY/Rv4/IWPyYM=
+	t=1741689412; cv=none; b=tv9+ATyktygrlw3V+ETRh9oKuv5Lc9dnr1fhylf0HD+YmN6ofnwDTJzZBnbXlRmTWedEUcO3nLfFzFtiQF/P46IzHGddbo7nuCNgEfFHhWZVAWXCw49Gw+cQmQx0vmq11odBxnOb4XUSa3ofYDWa/0bFGr2yhxDcQGtFMMMW8/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741689411; c=relaxed/simple;
-	bh=xP3JRMo5cb+KqWKZUjJLcAiTzpBS5zOP9R1JM4O1YVc=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=T+rDCthv1s7fIiXDvNMXr7ItVUtjuI4bUX33p/rGhOwEtGkGtocoSo2W4okydsy/0oJie94yMT0t1cbkfvkTWs6AcjGz6bn1I/icjr7FLMPlR43Gl379s197q/6eUxo0jJwyFlkbn6Q9Ey/isjFpmoP/bY3SGEOAplbcc6ru13c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=cJSkhWj7; arc=none smtp.client-ip=46.4.11.11
+	s=arc-20240116; t=1741689412; c=relaxed/simple;
+	bh=BcMRkG/soWvQKcOcsU1YNcWcIXIuez97A5gSbEOQjho=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=T3vR/ngv5OkNlBOGffjlVyFA+grj8/trE2MvQ00t28QRX3RWQu5n0wfipT8Cdg7ZVyn8FVIOwnlYxnsRGEyGTEYr7jWaddivjz1dGh1bdDhUQjZ6r6wihj7jxyOVkj8Uc+ZIWO/etiHGzihvi+/L6Y9+VBpFiqVKU0uCM7667S8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=EkQFR+Rr; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="cJSkhWj7"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EkQFR+Rr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=9NCxpZNojQQjEUuHh2Lq1+sj8Q45dWHAzEHe4remo/Y=; b=cJSkhWj7c5FY5ajaWutnaQKpA+
-	NpSghzsoSD4zwUXNvmjdp9gn74b9U0TLR55Fi64DbyzXVIQpsA4IaOQIky0lwtIqS1YJvGN4Uo1sm
-	QqRsGR3AJklLuYZsrGb5kbMnXq4lnsdhYneRlZKzPSO7N8/8VSqEEX/IpAGkXfF94Cp0=;
+	bh=0uqhX57dyoWIH8t2PzPsS9ws5JDhtcSOc1h7GGuPQX4=; b=EkQFR+RrFEvGBDUIRWU5Brxeq5
+	ddfXikZPkQeHOiwa0R6KWIuXh7rf2NIMZErfNlvmbTlQeCpsYOEob7WuhDMva2i34nGD2uBXUsLJL
+	Yu/SLT3JaWL7hbZ08Rei18a8Ofmdxia4ZRcgokYqyr0F4zCH5Sy9YsTxavSPm/uTqZKY=;
 Received: from p5b206ef1.dip0.t-ipconnect.de ([91.32.110.241] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1trwyc-00Ftvh-1r
+	id 1trwyd-00Ftvh-0k
 	for linux-wireless@vger.kernel.org;
-	Tue, 11 Mar 2025 11:36:46 +0100
+	Tue, 11 Mar 2025 11:36:47 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/8] wifi: mt76: mt7996: revise TXS size
-Date: Tue, 11 Mar 2025 11:36:38 +0100
-Message-ID: <20250311103646.43346-1-nbd@nbd.name>
+Subject: [PATCH 5/8] wifi: mt76: mt7996: use the correct vif link for scanning/roc
+Date: Tue, 11 Mar 2025 11:36:42 +0100
+Message-ID: <20250311103646.43346-5-nbd@nbd.name>
 X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20250311103646.43346-1-nbd@nbd.name>
+References: <20250311103646.43346-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -45,55 +48,100 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Benjamin Lin <benjamin-jw.lin@mediatek.com>
+Use the newly added offchannel_link pointer in vif data
 
-Size of MPDU/PPDU TXS is 12 DWs.
-In mt7996/mt7992, last 4 DWs are reserved, so TXS size was mistakenly
-considered to be 8 DWs. However, in mt7990, 9th DW of TXS starts to be used.
-
-Signed-off-by: Benjamin Lin <benjamin-jw.lin@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h | 3 +++
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c       | 4 ++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   | 40 +++++++++++++------
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |  1 +
+ 2 files changed, 28 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
-index db0c29e65185..487ad716f872 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h
-@@ -314,6 +314,9 @@ enum tx_frag_idx {
- #define MT_TXFREE_INFO_COUNT		GENMASK(27, 24)
- #define MT_TXFREE_INFO_STAT		GENMASK(29, 28)
- 
-+#define MT_TXS_HDR_SIZE			4 /* Unit: DW */
-+#define MT_TXS_SIZE			12 /* Unit: DW */
-+
- #define MT_TXS0_BW			GENMASK(31, 29)
- #define MT_TXS0_TID			GENMASK(28, 26)
- #define MT_TXS0_AMPDU			BIT(25)
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 019c925ae600..33a8049d3356 100644
+index 162d1552602e..9dfc8106ebec 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -1399,7 +1399,7 @@ bool mt7996_rx_check(struct mt76_dev *mdev, void *data, int len)
- 		mt7996_mac_tx_free(dev, data, len);
- 		return false;
- 	case PKT_TYPE_TXS:
--		for (rxd += 4; rxd + 8 <= end; rxd += 8)
-+		for (rxd += MT_TXS_HDR_SIZE; rxd + MT_TXS_SIZE <= end; rxd += MT_TXS_SIZE)
- 			mt7996_mac_add_txs(dev, rxd);
- 		return false;
- 	case PKT_TYPE_RX_FW_MONITOR:
-@@ -1442,7 +1442,7 @@ void mt7996_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
- 		mt7996_mcu_rx_event(dev, skb);
- 		break;
- 	case PKT_TYPE_TXS:
--		for (rxd += 4; rxd + 8 <= end; rxd += 8)
-+		for (rxd += MT_TXS_HDR_SIZE; rxd + MT_TXS_SIZE <= end; rxd += MT_TXS_SIZE)
- 			mt7996_mac_add_txs(dev, rxd);
- 		dev_kfree_skb(skb);
- 		break;
+@@ -831,7 +831,8 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 	u8 band_idx = (info->hw_queue & MT_TX_HW_QUEUE_PHY) >> 2;
+ 	u8 p_fmt, q_idx, omac_idx = 0, wmm_idx = 0;
+ 	bool is_8023 = info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP;
+-	struct mt76_vif_link *mvif;
++	struct mt76_vif_link *mlink = NULL;
++	struct mt7996_vif *mvif;
+ 	u16 tx_count = 15;
+ 	u32 val;
+ 	bool inband_disc = !!(changed & (BSS_CHANGED_UNSOL_BCAST_PROBE_RESP |
+@@ -839,11 +840,18 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 	bool beacon = !!(changed & (BSS_CHANGED_BEACON |
+ 				    BSS_CHANGED_BEACON_ENABLED)) && (!inband_disc);
+ 
+-	mvif = vif ? (struct mt76_vif_link *)vif->drv_priv : NULL;
+-	if (mvif) {
+-		omac_idx = mvif->omac_idx;
+-		wmm_idx = mvif->wmm_idx;
+-		band_idx = mvif->band_idx;
++	if (vif) {
++		mvif = (struct mt7996_vif *)vif->drv_priv;
++		if (wcid->offchannel)
++			mlink = rcu_dereference(mvif->mt76.offchannel_link);
++		if (!mlink)
++			mlink = &mvif->deflink.mt76;
++	}
++
++	if (mlink) {
++		omac_idx = mlink->omac_idx;
++		wmm_idx = mlink->wmm_idx;
++		band_idx = mlink->band_idx;
+ 	}
+ 
+ 	if (inband_disc) {
+@@ -909,13 +917,13 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
+ 			     is_multicast_ether_addr(hdr->addr1);
+ 		u8 idx = MT7996_BASIC_RATES_TBL;
+ 
+-		if (mvif) {
+-			if (mcast && mvif->mcast_rates_idx)
+-				idx = mvif->mcast_rates_idx;
+-			else if (beacon && mvif->beacon_rates_idx)
+-				idx = mvif->beacon_rates_idx;
++		if (mlink) {
++			if (mcast && mlink->mcast_rates_idx)
++				idx = mlink->mcast_rates_idx;
++			else if (beacon && mlink->beacon_rates_idx)
++				idx = mlink->beacon_rates_idx;
+ 			else
+-				idx = mvif->basic_rates_idx;
++				idx = mlink->basic_rates_idx;
+ 		}
+ 
+ 		val = FIELD_PREP(MT_TXD6_TX_RATE, idx) | MT_TXD6_FIXED_BW;
+@@ -983,8 +991,14 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+ 
+ 	if (vif) {
+ 		struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
++		struct mt76_vif_link *mlink = NULL;
+ 
+-		txp->fw.bss_idx = mvif->deflink.mt76.idx;
++		if (wcid->offchannel)
++			mlink = rcu_dereference(mvif->mt76.offchannel_link);
++		if (!mlink)
++			mlink = &mvif->deflink.mt76;
++
++		txp->fw.bss_idx = mlink->idx;
+ 	}
+ 
+ 	txp->fw.token = cpu_to_le16(id);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 69dd565d8319..886b6ef3462b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -249,6 +249,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	mlink->band_idx = band_idx;
+ 	mlink->wmm_idx = vif->type == NL80211_IFTYPE_AP ? 0 : 3;
+ 	mlink->wcid = &link->sta.wcid;
++	mlink->wcid->offchannel = mlink->offchannel;
+ 
+ 	ret = mt7996_mcu_add_dev_info(phy, vif, link_conf, mlink, true);
+ 	if (ret)
 -- 
 2.47.1
 
