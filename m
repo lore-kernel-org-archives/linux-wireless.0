@@ -1,49 +1,49 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4471E1DE2A4;
-	Tue, 11 Mar 2025 08:30:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66F25224251;
+	Tue, 11 Mar 2025 08:31:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741681819; cv=none; b=JHiRLNlp3XNHOEUbUqbpf/NNdyJNF4OvLqzaVOU+Zaj8iSIcy8X9FXXFSYyEju5eRjYln8Q6bo59QBcZ6qKceylsgKOsnpRERf6uLfswdYcBher9AB8o+pXe8LflbRXooL5/On6MrzaCpRz48yOjJAM/IZuQGhVGySUXe1cD3WI=
+	t=1741681880; cv=none; b=mZUYha5LUbEql+kj9kmC34CyFd/moR6OLN3gnMcxcJNOFg1q7zHjfTKnHxqu/isLQJC9WudP9lYJO7KesZ4xdN/PnxWa4MD8j8VY1y47Wldaqk0tO3ALzmh9XMbVGTIndE7WhmYElD21qpNNdKmPHwIH6H/Uug7X/Dr374Htu9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741681819; c=relaxed/simple;
-	bh=UUA0Y37FSi7aV58TqFjojhMJfCMHNIsS4hu80pn/VPw=;
+	s=arc-20240116; t=1741681880; c=relaxed/simple;
+	bh=uq4l37xY33wQzcIfykqADPximmfzxDVqSGBzJxov3Hs=;
 	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=iAac7C1c+YGxL3tddG9v2Ng+IGPaT0TTT11RFxlQS3OpIqvrilBgR5A1g/iQD5UlRdCh+53iJHAZxvlm8LY2WERD7C91685hIFwrpsX9yOEZeK2EtBur1c+mcTkoEmf/4MKVoh+a2DWTDnoBYP/jCfE0KncDda8flHYLKTj5Anw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=EoA8z5rT; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=htgGcxfL7ScNDatgKimQarhdR4yxhulU1eQHpBs1xxLB+p1CUbAfgMisHaEMPd5yPXWNI+j3LGNJpwW7sEmBH/5HXNCbC+pQ5lZWKVxoEePC50pzCGIp4mUAj0hHZav9+2LpiPzuPg56e/ExAk6+ZuSC/Wyv1O38Bv3TFPKF8wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=Gd/rDyrb; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="EoA8z5rT"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 52B8T1bnC585486, This message is accepted by code: ctloc85258
+	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="Gd/rDyrb"
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 52B8UNm94588832, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1741681741; bh=UUA0Y37FSi7aV58TqFjojhMJfCMHNIsS4hu80pn/VPw=;
+	t=1741681823; bh=uq4l37xY33wQzcIfykqADPximmfzxDVqSGBzJxov3Hs=;
 	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=EoA8z5rTuAXJASTTGSxNh9SHAEH3QXtFeCF9QqMbnysHDFNvrA8L64F0ZBuaq0fiF
-	 2bLF3n1VxAQWVt4zO1b0gtlxOT7YWPMTvjUx/XnThIEPjbVVs7Sy8TUg7CXHbLQW/S
-	 qTBg11cP+QqQZsUW8d+bhI+SrCMhwQ76hK6gUE8l3atuW2EvYbLooTFg4R80QPR3qQ
-	 u2p8NeENIaE0Et5R7Z1LRxMlYxQu7s1UVZgHkTggPUpnbgI5W74csBaKVJs/dWSD6A
-	 hQIdeGFnVupszM3O8CuxUbaJB4naolNXYZCFBpogguatfFBzvd6qARUGHoVZv37gJT
-	 04dHdIU/+QpXA==
+	b=Gd/rDyrbry8LtNamFACFIsvZLvXEXmqgZf1xFMZ++hkasL8aC5NgQYB3N2HNjByPT
+	 oXLBbxkDRvyjAL6rYZ8806Sqpg9F3+WYWZCCi2FssVikLhhwYXo14aE/oxpTBWRxT+
+	 wEb3wuXwwt1BByDzJ2aduKpcdfGCdh/FqhJrUlQ6wkzasuiycvN1q0KFwE6qq8neKk
+	 5C/hv2iMjdtcLSXdgLMk8KYlqJ6LOrZWUCBJwXBC7hSk10XJ3/SUY/x4c8DKYqI6lU
+	 r9L0Q6R+e9cqcXJY0dgx8Gf/0RGeDEG7XItGQRNF5QcGFZBONpSv2FqptfACsBoYBD
+	 UAE5TmFYlc3+g==
 Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
-	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 52B8T1bnC585486
+	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 52B8UNm94588832
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 11 Mar 2025 16:29:01 +0800
-Received: from RTEXMBS06.realtek.com.tw (172.21.6.99) by
+	Tue, 11 Mar 2025 16:30:23 +0800
+Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
  RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Tue, 11 Mar 2025 16:29:01 +0800
+ 15.1.2507.39; Tue, 11 Mar 2025 16:30:22 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXMBS06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ RTEXMBS04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 11 Mar 2025 16:29:00 +0800
+ 15.1.2507.35; Tue, 11 Mar 2025 16:30:22 +0800
 Received: from RTEXMBS04.realtek.com.tw ([fe80::4c19:b586:6e71:3622]) by
  RTEXMBS04.realtek.com.tw ([fe80::4c19:b586:6e71:3622%5]) with mapi id
- 15.01.2507.035; Tue, 11 Mar 2025 16:29:00 +0800
+ 15.01.2507.035; Tue, 11 Mar 2025 16:30:22 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Shengyu Qu <wiagn233@outlook.com>, Felix Fietkau <nbd@nbd.name>,
+To: Shengyu Qu <wiagn233@outlook.com>, "nbd@nbd.name" <nbd@nbd.name>,
         "lorenzo@kernel.org" <lorenzo@kernel.org>,
         "ryder.lee@mediatek.com"
 	<ryder.lee@mediatek.com>,
@@ -58,39 +58,44 @@ To: Shengyu Qu <wiagn233@outlook.com>, Felix Fietkau <nbd@nbd.name>,
         "angelogioacchino.delregno@collabora.com"
 	<angelogioacchino.delregno@collabora.com>,
         "miriam.rachel.korenblit@intel.com" <miriam.rachel.korenblit@intel.com>,
-        "howard-yh.hsu@mediatek.com" <howard-yh.hsu@mediatek.com>,
         "greearb@candelatech.com" <greearb@candelatech.com>,
-        "chui-hao.chiu@mediatek.com" <chui-hao.chiu@mediatek.com>,
-        "mingyen.hsieh@mediatek.com" <mingyen.hsieh@mediatek.com>,
-        "quic_adisi@quicinc.com" <quic_adisi@quicinc.com>,
-        "sujuan.chen@mediatek.com"
-	<sujuan.chen@mediatek.com>,
+        "michael-cy.lee@mediatek.com" <michael-cy.lee@mediatek.com>,
+        "nicolas.cavallari@green-communications.fr"
+	<nicolas.cavallari@green-communications.fr>,
+        "emmanuel.grumbach@intel.com"
+	<emmanuel.grumbach@intel.com>,
+        "christophe.jaillet@wanadoo.fr"
+	<christophe.jaillet@wanadoo.fr>,
+        "mingyen.hsieh@mediatek.com"
+	<mingyen.hsieh@mediatek.com>,
+        "chui-hao.chiu@mediatek.com"
+	<chui-hao.chiu@mediatek.com>,
+        "quic_adisi@quicinc.com"
+	<quic_adisi@quicinc.com>,
         "gustavoars@kernel.org" <gustavoars@kernel.org>,
-        "bo.jiao@mediatek.com" <bo.jiao@mediatek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "sujuan.chen@mediatek.com" <sujuan.chen@mediatek.com>,
+        "bo.jiao@mediatek.com"
+	<bo.jiao@mediatek.com>,
+        "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
         "linux-mediatek@lists.infradead.org"
 	<linux-mediatek@lists.infradead.org>
-Subject: RE: [PATCH v9 RESEND] wifi: mt76: mt7915: add wds support when wed is enabled
-Thread-Topic: [PATCH v9 RESEND] wifi: mt76: mt7915: add wds support when wed
- is enabled
-Thread-Index: AQHbkD+97GjFG0DhG0q+h/KT1ZUhfbNrhPNAgAAkR4CAAAIEAIAAIakAgADK8rCAAEqHgIAANknA
-Date: Tue, 11 Mar 2025 08:29:00 +0000
-Message-ID: <f25427774f1147d995d9fd86da071ef3@realtek.com>
-References: <TYCPR01MB84376C7074C566865654F05098D42@TYCPR01MB8437.jpnprd01.prod.outlook.com>
- <b6b52bfcdb614137ac63fddfdaf9cb97@realtek.com>
- <OSZPR01MB843481965BA47B030566DF2698D62@OSZPR01MB8434.jpnprd01.prod.outlook.com>
- <71ed8398-4619-4793-804d-77cad36e7402@nbd.name>
- <OSZPR01MB84345D44294ACA75A863ED6B98D62@OSZPR01MB8434.jpnprd01.prod.outlook.com>
- <349d0fbe197a40068377e889a2311cb2@realtek.com>
- <TYCPR01MB84379512D874F722A0466D0A98D12@TYCPR01MB8437.jpnprd01.prod.outlook.com>
-In-Reply-To: <TYCPR01MB84379512D874F722A0466D0A98D12@TYCPR01MB8437.jpnprd01.prod.outlook.com>
+Subject: RE: [PATCH v10] wifi: mt76: mt7915: add wds support when wed is enabled
+Thread-Topic: [PATCH v10] wifi: mt76: mt7915: add wds support when wed is
+ enabled
+Thread-Index: AQHbkkaLU9jfzMwpsUyUi0gFPwPxsrNtmuMA
+Date: Tue, 11 Mar 2025 08:30:22 +0000
+Message-ID: <f469eccfb2344a6098267a1ebd2a3eb6@realtek.com>
+References: <TYCPR01MB84376878FE505F773182062B98D12@TYCPR01MB8437.jpnprd01.prod.outlook.com>
+In-Reply-To: <TYCPR01MB84376878FE505F773182062B98D12@TYCPR01MB8437.jpnprd01.prod.outlook.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -98,20 +103,26 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-PiA+Pg0KPiA+PiAgICAJbXQ3Nl9jb25uYWNfbWN1X2RlbF93dGJsX2FsbCgmZGV2LT5tdDc2KTsN
-Cj4gPj4NCj4gPj4gLQlpZiAoKG10a193ZWRfZGV2aWNlX2FjdGl2ZSgmZGV2LT5tdDc2Lm1taW8u
-d2VkKSAmJg0KPiA+PiAtCSAgICAgaXNfbXQ3OTE1KCZkZXYtPm10NzYpKSB8fA0KPiA+PiAtCSAg
-ICAhbXRrX3dlZF9nZXRfcnhfY2FwYSgmZGV2LT5tdDc2Lm1taW8ud2VkKSkNCj4gPj4gLQkJbXQ3
-OTE1X21jdV93YV9jbWQoZGV2LCBNQ1VfV0FfUEFSQU1fQ01EKENBUEFCSUxJVFkpLCAwLCAwLCAw
-KTsNCj4gPj4gKyNpZiBJU19FTkFCTEVEKENPTkZJR19ORVRfTUVESUFURUtfU09DX1dFRCkNCj4g
-Pg0KPiA+IEluIE1UNzYsIHRoZXJlIGFyZSB0d28gc3R5bGVzOg0KPiA+ICAgICNpZiBJU19FTkFC
-TEVEKENPTkZJR19ORVRfTUVESUFURUtfU09DX1dFRCkNCj4gPiAgICAjaWZkZWYgQ09ORklHX05F
-VF9NRURJQVRFS19TT0NfV0VEDQo+ID4NCj4gPiBJIHRoaW5rIGJvdGggYXJlIGNvcnJlY3QuIEp1
-c3Qgd29uZGVyIHdoeSBub3QgbWFraW5nIHRoZW0gY29uc2lzdGVudC4NCj4gU2VlbXMgeW91IGRp
-ZG4ndCByZWNlaXZlIEZlbGl4J3MgZW1haWwsIGNoZWNrIHRoaXM6DQo+IGh0dHBzOi8vbG9yZS5r
-ZXJuZWwub3JnL2xpbnV4LXdpcmVsZXNzLzcxZWQ4Mzk4LTQ2MTktNDc5My04MDRkLTc3Y2FkMzZl
-NzQwMkBuYmQubmFtZS8NCj4gDQoNCkkgd2FzIGF3YXJlIG9mIHRoaXMuIEZlbGl4IHBvaW50ZWQg
-b3V0ICdpZiAoSVNfRU5BQkxFRChDT05GSUdfTkVUX01FRElBVEVLX1NPQ19XRUQpKScNCndpbGwg
-bGVhZCBidWlsZCBlcnJvci4gQnV0IHdoYXQgSSBtZW50aW9uZWQgaGVyZSB3ZXJlICcjaWYnIGFu
-ZA0KJyNpZmRlZicgKHByZXByb2Nlc3MgZGlyZWN0aXZlKS4NCg0KQW55d2F5LCBpZ25vcmUgdGhp
-cy4NCg0K
+Shengyu Qu <wiagn233@outlook.com> wrote:
+>=20
+> The current WED only supports 256 wcid, whereas mt7986 can support up to
+> 512 entries, so firmware provides a rule to get sta_info by DA when wcid
+> is set to 0x3ff by txd. Also, WED provides a register to overwrite txd
+> wcid, that is, wcid[9:8] can be overwritten by 0x3 and wcid[7:0] is set
+> to 0xff by host driver.
+>=20
+> However, firmware is unable to get sta_info from DA as DA !=3D RA for
+> 4addr cases, so firmware and wifi host driver both use wcid (256 - 271)
+> and (768 ~ 783) for sync up to get correct sta_info.
+>=20
+> Currently WDS+WED config is completely broken on MT7986/7981 devices if
+> without this patch.
+>=20
+> Tested-by: Sujuan Chen <sujuan.chen@mediatek.com>
+> Co-developed-by: Bo Jiao <bo.jiao@mediatek.com>
+> Signed-off-by: Bo Jiao <bo.jiao@mediatek.com>
+> Signed-off-by: Sujuan Chen <sujuan.chen@mediatek.com>
+> Signed-off-by: Shengyu Qu <wiagn233@outlook.com>
+
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+
