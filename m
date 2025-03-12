@@ -1,216 +1,106 @@
-Received: from mail-qv1-f100.google.com (mail-qv1-f100.google.com [209.85.219.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.15.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96B0F1F09AF
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2025 19:51:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E2D0FBF6;
+	Wed, 12 Mar 2025 20:16:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741809122; cv=none; b=puR+FhgiYgZ461B6PpyMsWGPUgPnCG9fm8sc9eone95nfK0/bH4SKS/EXR8k0DFqwttRlpzRtm+kyN9V/MpMPyRwoaSOdcjFmADDeKe8DX6aIcJxMpcNvrLQQP1ial0tjQG1JrLzQOiKFGgx639PMzAso0pH1JgHRr1X+WZ20hM=
+	t=1741810614; cv=none; b=kDbzfUe48FoLC5mGWeuP2Ut2OsxhRoBh6WPA8fkOoKppHP6jO29J09exENkfKXXYol54kmKFnw60HqU+NcbTtnIIoP9ji3W7bQPoJ5MD9UoCZ4reVsjKeh5RneZmLaRbYJbEZVgUEIp/N/z7GwkkE2VYd5sxH072hye/HVF3ZqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741809122; c=relaxed/simple;
-	bh=DCiRCv2YP+zAqkYxz2M9tKKS8ND4+qlaQKA6qe1QI1U=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=REJQVPeMAGrT/JHxR9AvH95t4apdfyDUE6jWVZjWGy9lypocXQFHmtpKKNXNpmWWhgE+JNhjFnTpsBp89LHnVNjVUyfoB97Otqvlg5+TxnGR0d6qhKTen4c0hTAArg+VAPaPf88RTmgbP94B8JCb67xDVQQnjSTXv3qJHbeaacM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=FtyPwsMV; arc=none smtp.client-ip=209.85.219.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1741810614; c=relaxed/simple;
+	bh=Akp4FrSGg1WIV98VBqwZ/4Q7by/C7cNcynpUz9Rjxbo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=irDS0qfgwSt6lmav9K7izraUW6qPrF2tBLrKemDhUEEvLqvcCUYXX6pDmzi7k23APicRTUnBe3Sj4c+1mttxgSZXm4+Xy7lFENDZ+snQMyUP3Vckkv6KeZdLmnbTXWBydKLboM4P3vcFjPDGty4o2v2j1hMnSFd2OXXRDHp5Suc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=fokXjfwP; arc=none smtp.client-ip=212.227.15.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="FtyPwsMV"
-Received: by mail-qv1-f100.google.com with SMTP id 6a1803df08f44-6e8fca43972so2495556d6.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Mar 2025 12:51:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1741809118; x=1742413918; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PYRtGetn5eI0U7XLCVsTKGE5sj4vx1TXbmWxNemKl/g=;
-        b=FtyPwsMVxUtJKMg0Bbkw7FsO7KhCpAuW9XDc2+HIu/BIqjXpkfoH8B/oR9IoYRi8pO
-         e7NPIA/lzNRNnezRHwFqIUZqD7bcMa9PLq2Itl2NjVT+qUSv3FFVYw7RL9vsx7nly1l8
-         U3j36hgHhn7b/hcPSmgOfaIuA/rHnn77haXtW+zOS8C195TqutXlvZqG8RWv12WxwrxX
-         TxICz/Ver9d1Ru3WWBfuxhku91huMNvA4fsCiv2uSbs919Un2VDlRayz6MKK2lbYVd39
-         TnS7qWUvq39odP8u1WymUKtZmGohwHcDt7ULU5TJIHk+HUmPSXl5gc/cadZz+SeecXpj
-         qVkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741809118; x=1742413918;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PYRtGetn5eI0U7XLCVsTKGE5sj4vx1TXbmWxNemKl/g=;
-        b=wfbDMqaiywFey2Z26WFtEIs6eb5zjAocdpHA5Pj+JUH71E/Q9CuCKLrhYRyXu4JVeQ
-         I+yw0y6BWqg0QT3UT5FZZOfsHplFK17LxCxEUULm8UtiLtUXXzyS6y9A/qh0M3Ab4Vbp
-         PaLwyn5nBUaATb1G3CPPXa69NoLkHUeBMhWELpuJBzjgtSce3sqCTsGUBlRpJOGG6nby
-         f/3Qvmmv6Vbk1f9e45G5N315D0rAW1xDDP6IZ1xqHlzIV8IapAuWHr6OA159yya5S0n6
-         +KadkXAAO+16pPywcdtX355xNXliLybWIhSh2ZYOHw5XR37tESCkHwXZ+nzg5GJTTlMH
-         sI2g==
-X-Forwarded-Encrypted: i=1; AJvYcCW7hpkZDgISG1KdoWHJoruQJbdoSiL923KxetfidhVT1FruOYrMbGa6qNVjqMvweHHZSCYWUpm+dvA6YsQCkw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyxQsG6piBeg0YpV8zTOwhs7ic+6u1Enpe6SJ2fXuVaDR85qOIr
-	24Z1NbY6fvvaXPo9QZVRl+s/EAdbc5k6vvDGXQzmiwV/SV2ytbGcSxRsj/nNZD+O6D+HNPcZ+ls
-	R3tLiD0juPXzZoLXZoGY/4LsjQNoeY7ZMoKgWpmzU2zAxTaZE
-X-Gm-Gg: ASbGncsH6G/qKlloX4B9wbE81kAfXyQ4DeP5risw3HudUzLLQIWt92vTpiF7oKxgpyC
-	E/hgYTXFZ0SmxtlfBDkA83I+kTOTYbyQ9kml551yZfQhgUFfS2jAzDMM9N44V7QYIxC1XLKqOj/
-	rhfALyElyb9+QriwS8JBtfpwru62jNMpEuqYaNbl4i5s41S4rCG45MmuiYQ+MzI3qmL5YTk3pA5
-	PcwlI5rxIT7cMF/L6RKmiNjia+myLFkDYFPq1Obsx4siaF6saDcvIgAFB0NAmwFhklwR/Cfrd10
-	UakxCzG8pPEsChFUPFsBV0U+jb4YAB4JwUU=
-X-Google-Smtp-Source: AGHT+IEpd1n+zzrnYjXjt4Wcq2+V1OtkThON8chLUhDq12vQ6C1Wi7nzCRD/w3CyyorQpZG20KFdLxUKaqOq
-X-Received: by 2002:a05:6214:212b:b0:6e8:ff23:66d6 with SMTP id 6a1803df08f44-6e9005aef8emr294464566d6.9.1741809118314;
-        Wed, 12 Mar 2025 12:51:58 -0700 (PDT)
-Received: from c7-smtp-2023.dev.purestorage.com ([2620:125:9017:12:36:3:5:0])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-6e8f70a4f7esm5309096d6.33.2025.03.12.12.51.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Mar 2025 12:51:58 -0700 (PDT)
-X-Relaying-Domain: purestorage.com
-Received: from dev-ushankar.dev.purestorage.com (dev-ushankar.dev.purestorage.com [10.7.70.36])
-	by c7-smtp-2023.dev.purestorage.com (Postfix) with ESMTP id 3EF593403C7;
-	Wed, 12 Mar 2025 13:51:57 -0600 (MDT)
-Received: by dev-ushankar.dev.purestorage.com (Postfix, from userid 1557716368)
-	id 32A87E400CB; Wed, 12 Mar 2025 13:51:57 -0600 (MDT)
-From: Uday Shankar <ushankar@purestorage.com>
-Date: Wed, 12 Mar 2025 13:51:46 -0600
-Subject: [PATCH net-next v6 1/2] net, treewide: define and use
- MAC_ADDR_STR_LEN
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="fokXjfwP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1741810606; x=1742415406; i=markus.elfring@web.de;
+	bh=Akp4FrSGg1WIV98VBqwZ/4Q7by/C7cNcynpUz9Rjxbo=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=fokXjfwPgqkxy/HL9t5yE0vj2GZ7rq1+1fHRK/fDjBn03e6W4qjCpgZH9cJ9m9K+
+	 0Ix9zJfrpKlEiV55yCzK8JP+mL/k9/OcdOzZ5lSopM4c0snj2FI2I0nz+g2nD6MgN
+	 cJB/kSTp7Bg7VVabcqrpNktLRZ9X2zNkb+gRkSVmrazrZ21G8b4hjVbZfYFNtmQfd
+	 BLSoJzfu+YRcgtc6ww31R+ExCThF99eZKWlxNxFZanyQCcxz2zgS5Kq0lKH4PFG/k
+	 IJW57k5NjeUzbVfVNbHmXeAsKha2goHY7fyz1iP/17WXl35CahcIq55pH0zIkpNbA
+	 cpZ0IA+tW8/GJXOFQw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.93.19]) by smtp.web.de (mrweb006
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1My6lX-1t0dlZ2Hi3-00wida; Wed, 12
+ Mar 2025 21:16:46 +0100
+Message-ID: <7ea83bd5-b19b-4bd8-ac2a-8fb2ad616f8b@web.de>
+Date: Wed, 12 Mar 2025 21:16:42 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250312-netconsole-v6-1-3437933e79b8@purestorage.com>
-References: <20250312-netconsole-v6-0-3437933e79b8@purestorage.com>
-In-Reply-To: <20250312-netconsole-v6-0-3437933e79b8@purestorage.com>
-To: Breno Leitao <leitao@debian.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
- =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>, 
- Simon Horman <horms@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
- Johannes Berg <johannes@sipsolutions.net>, Jonathan Corbet <corbet@lwn.net>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-wireless@vger.kernel.org, linux-doc@vger.kernel.org, 
- Uday Shankar <ushankar@purestorage.com>, 
- Michal Swiatkowski <michal.swiatkowski@linux.intel.com>, 
- Simon Horman <horms@verge.net.au>
-X-Mailer: b4 0.14.2
+User-Agent: Mozilla Thunderbird
+Subject: Re: wifi: iwlwifi: Fix uninitialized variable with __free()
+To: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>,
+ Dan Carpenter <dan.carpenter@linaro.org>, linux-wireless@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+ Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
+ Avraham Stern <avraham.stern@intel.com>,
+ Daniel Gabay <daniel.gabay@intel.com>,
+ Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+ Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+ Johannes Berg <johannes.berg@intel.com>,
+ Yedidya Benshimol <yedidya.ben.shimol@intel.com>
+References: <f7c17a7f-f173-43bf-bc39-316b8adde349@stanley.mountain>
+ <1b32cd5b-aa46-4a23-bd21-908196c4bab3@web.de>
+ <MW5PR11MB5810329D2D44A188239D3093A3D02@MW5PR11MB5810.namprd11.prod.outlook.com>
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <MW5PR11MB5810329D2D44A188239D3093A3D02@MW5PR11MB5810.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:Zg3T6KfdUN0TrgR8KKHJquhbB2IqpLXk7grLPw/Lllh3EVJCrX+
+ Lo1FfqOS9qnhAwtIgKTgShPyAptLPzxPRZf58ZIorxYbzJ6fci9EvlRAw8bYWPEZ+pdSaVD
+ iPy2k1tWIDJ/cRjHzrTJb9ITbltpOnh16rbaIuJhlW628hOq9T2c2OCevYyNwJJC3mZjmzS
+ XF6+NvGfF83+RXCq8tg2Q==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:NjZ6SfH1+LQ=;/K1/xCQTLSn0sdXG0wculEthvjB
+ kgK+UUvwFV/ALemTZMQlDhLzpfXr7Bg05Bi3Wr//h621Ptt1W/2VJYY2KnOW5Z/kV554I+9p5
+ Uykg9AiYCl+8+ilSP2FZdD6nWh9eeb2AD67Jghdoe+Qe3RZbVbVhwP2B+RlRxT/dwmAR/vB8T
+ gCpwwx+8aIZLAf0zBqHXfQBpuqcvUASbj9nNItnUzwgEWrtkmP9mIVLiU3lCwwSbrC5vT1MfS
+ 2Q+pUxPJdiNGsCxUOn6goqTxN+MgYZ0cSEPsHcMYroPsLOQ0dnE1pBqW2aAmddH44R+YZqsDe
+ Z5SSqZyZxwhKI2WMG0iUmtS54l2EMDO6GWtj4l5RZ4opBT4+8CgIlzT9Hwqh482WQYp0/EY23
+ TtnKsiKBd5cewRvu1xr4RXVuqGSqnNRUfZ98yqKSpa8AJnmd4A5pel41z4lyg7Te6jk5zNsRf
+ JHhOtqOqe8FBdgWtuyT3Pjb+8dETWuZEF0OEOpIZ7y1e+kykdQIYTmUGopod9m9qu/v5yWMLz
+ kKFqqy5fwd1O3dpPx6UzHLK567N+wtXcv+taqvRP12gzbiLJf2hiuNjy8TpSDHFAT2bfZ8T99
+ OjLklJHYi2cU8P8TkZDb507/ByuCFU6tsFLCyaHt0WUX5WjR4mbqVPta1UDmxy+I0Ea0nh+y9
+ CKErf6HPqdpHdtwDAudQxUIbg8bzPpVFW9vbsOpTFimg+cS6ktCFFmMjoQTOLEeVEFHOc3+P5
+ K3UDhiteevt2NS/9rxx9IOJyxxleovzW3iaUO78IR0Zt3npq0UpEmveuLj/DnQfRAxLqNrfla
+ KN6uxhOF/l61SJZqqfvroY/v8u9ubd+jHGRfMg6Q7ySVBz/DOxGH8ZlxDSaCf0tXJtGuO/ktd
+ WMn8S5wP91wWWEy7Yrl+MrsZKTKUHvJGHG820u7020gKauY8Gf0dFP53nkXaIny6KWBDt8tsb
+ XJsCrC90Q4uCzqiVE1g7tY+bPPRYMbxsMBGLIBxhUXZP5B6VQt/nPAo7PDpa8s4GGv1PD5Sqp
+ /ViZlTYT7BC42C261b+yxWs4h6roSruols+tLLsBWuGf8r/QrAZnTufIFwQTn+M/0vR0chH/O
+ ahIafdVvBcOmYNPl6CCeD5rp8oRYf4j58nVTJUVkpI9iKuHTeQroxjNS9e8pXktTL6kCP1MVo
+ vOotYQpYxCzs/JRaYpHJHUwvV9yuAbXFu3Ub4mphoeqLUzrq+NC0loC2hxCv4jlbU/4V55xNr
+ DUYbG7qbruHIgwQfnPBXyHWXZO41SQHshrLlkYZIzmhjBViADgZASY/L1fYp+pa+0eRGkLq/D
+ dQhus3JSS4OiuHkLMXlAixpUYRhkIvL2WiFmmFrl1OuJZrEAUr0yyo3rY9cZ/B6KU8UAJ+brB
+ AzHcB52yIaHW3wu3NTqRs9O8eqAo2QWYE2j/v1V7+oEzOLOeTktQMszjcanUqEJNY7Ej/5TAO
+ kbc+hNELVpSp3+nB8G8PaJ85R+I+mTCRRokprOFrJ+j1TkIB2
 
-There are a few places in the tree which compute the length of the
-string representation of a MAC address as 3 * ETH_ALEN - 1. Define a
-constant for this and use it where relevant. No functionality changes
-are expected.
+>> Can it be recommended to reduce the scope for the affected local variab=
+le instead?
+>> https://elixir.bootlin.com/linux/v6.14-rc6/source/include/linux/cleanup=
+.h#L129-L133
+>
+> As said in reply to Jeff's review -
+> This is recommended if you have multiple __kfree variables (and the orde=
+r of freeing matters)
+> Or if there is a guard() later in the function.
+How does such a view fit to the documentation of this programming interfac=
+e?
 
-Signed-off-by: Uday Shankar <ushankar@purestorage.com>
-Reviewed-by: Michal Swiatkowski <michal.swiatkowski@linux.intel.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Breno Leitao <leitao@debian.org>
-Reviewed-by: Simon Horman <horms@verge.net.au>
----
- drivers/net/netconsole.c           | 2 +-
- drivers/nvmem/brcm_nvram.c         | 2 +-
- drivers/nvmem/layouts/u-boot-env.c | 2 +-
- include/linux/if_ether.h           | 3 +++
- lib/net_utils.c                    | 4 +---
- net/mac80211/debugfs_sta.c         | 7 ++++---
- 6 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/netconsole.c b/drivers/net/netconsole.c
-index 098ea9eb02373d8bb6c8b9fd6e75a89cc4743dbc..43757b5c021698977040ad1cb0f355d59cd8ae3f 100644
---- a/drivers/net/netconsole.c
-+++ b/drivers/net/netconsole.c
-@@ -739,7 +739,7 @@ static ssize_t remote_mac_store(struct config_item *item, const char *buf,
- 
- 	if (!mac_pton(buf, remote_mac))
- 		goto out_unlock;
--	if (buf[3 * ETH_ALEN - 1] && buf[3 * ETH_ALEN - 1] != '\n')
-+	if (buf[MAC_ADDR_STR_LEN] && buf[MAC_ADDR_STR_LEN] != '\n')
- 		goto out_unlock;
- 	memcpy(nt->np.remote_mac, remote_mac, ETH_ALEN);
- 
-diff --git a/drivers/nvmem/brcm_nvram.c b/drivers/nvmem/brcm_nvram.c
-index b810df727b446b1762a1851750f743e0de6e8788..b4cf245fb2467d281111001bb7ed8db5993a09b2 100644
---- a/drivers/nvmem/brcm_nvram.c
-+++ b/drivers/nvmem/brcm_nvram.c
-@@ -100,7 +100,7 @@ static int brcm_nvram_read_post_process_macaddr(void *context, const char *id, i
- {
- 	u8 mac[ETH_ALEN];
- 
--	if (bytes != 3 * ETH_ALEN - 1)
-+	if (bytes != MAC_ADDR_STR_LEN)
- 		return -EINVAL;
- 
- 	if (!mac_pton(buf, mac))
-diff --git a/drivers/nvmem/layouts/u-boot-env.c b/drivers/nvmem/layouts/u-boot-env.c
-index 731e6f4f12b2bf28e4547d128954a095545ad461..436426d4e8f910b51b92f88acddfbb40d374587a 100644
---- a/drivers/nvmem/layouts/u-boot-env.c
-+++ b/drivers/nvmem/layouts/u-boot-env.c
-@@ -37,7 +37,7 @@ static int u_boot_env_read_post_process_ethaddr(void *context, const char *id, i
- {
- 	u8 mac[ETH_ALEN];
- 
--	if (bytes != 3 * ETH_ALEN - 1)
-+	if (bytes != MAC_ADDR_STR_LEN)
- 		return -EINVAL;
- 
- 	if (!mac_pton(buf, mac))
-diff --git a/include/linux/if_ether.h b/include/linux/if_ether.h
-index 8a9792a6427ad9cf58b50c79cbfe185615800dcb..61b7335aa037c7232a0caa45572043057c02dde3 100644
---- a/include/linux/if_ether.h
-+++ b/include/linux/if_ether.h
-@@ -19,6 +19,9 @@
- #include <linux/skbuff.h>
- #include <uapi/linux/if_ether.h>
- 
-+/* XX:XX:XX:XX:XX:XX */
-+#define MAC_ADDR_STR_LEN (3 * ETH_ALEN - 1)
-+
- static inline struct ethhdr *eth_hdr(const struct sk_buff *skb)
- {
- 	return (struct ethhdr *)skb_mac_header(skb);
-diff --git a/lib/net_utils.c b/lib/net_utils.c
-index 42bb0473fb22f977409f7a6792bb1340f4e911c3..215cda672fee1b5a029c2b61529c6813c0edab11 100644
---- a/lib/net_utils.c
-+++ b/lib/net_utils.c
-@@ -7,11 +7,9 @@
- 
- bool mac_pton(const char *s, u8 *mac)
- {
--	size_t maxlen = 3 * ETH_ALEN - 1;
- 	int i;
- 
--	/* XX:XX:XX:XX:XX:XX */
--	if (strnlen(s, maxlen) < maxlen)
-+	if (strnlen(s, MAC_ADDR_STR_LEN) < MAC_ADDR_STR_LEN)
- 		return false;
- 
- 	/* Don't dirty result unless string is valid MAC. */
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index a67a9d3160086ac492d77092a0c8a74d2384b28c..a8948f4d983e5edee45d90ad267582657ed38e38 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -457,11 +457,12 @@ static ssize_t link_sta_addr_read(struct file *file, char __user *userbuf,
- 				  size_t count, loff_t *ppos)
- {
- 	struct link_sta_info *link_sta = file->private_data;
--	u8 mac[3 * ETH_ALEN + 1];
-+	u8 mac[MAC_ADDR_STR_LEN + 2];
- 
- 	snprintf(mac, sizeof(mac), "%pM\n", link_sta->pub->addr);
- 
--	return simple_read_from_buffer(userbuf, count, ppos, mac, 3 * ETH_ALEN);
-+	return simple_read_from_buffer(userbuf, count, ppos, mac,
-+				       MAC_ADDR_STR_LEN + 1);
- }
- 
- LINK_STA_OPS(addr);
-@@ -1240,7 +1241,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct dentry *stations_dir = sta->sdata->debugfs.subdir_stations;
--	u8 mac[3*ETH_ALEN];
-+	u8 mac[MAC_ADDR_STR_LEN + 1];
- 
- 	if (!stations_dir)
- 		return;
-
--- 
-2.34.1
-
+Regards,
+Markus
