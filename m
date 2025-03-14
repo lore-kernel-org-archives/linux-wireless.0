@@ -1,58 +1,53 @@
-Received: from e3i103.smtp2go.com (e3i103.smtp2go.com [158.120.84.103])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67FF1FDE35
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Mar 2025 11:25:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.84.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A09192D6B;
+	Fri, 14 Mar 2025 12:06:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741951553; cv=none; b=aZHzBmtOgZ2d9KMj7VAn6KTs/OOPWVMEyFtnzOvZJ9q+xCrbc1Yfe35pyfEcROHf/at7+NU4+O/k+hg8XfQVgQeQYS2fHxyvukzUHySvpIFQrQ5Af61gHlEXzkTkPclf7v9yEyX42Mt1HBYVgs8v16reffiKUtw6psMXrwgf2Nk=
+	t=1741954004; cv=none; b=DvHjrDha+RZoW684U0EldqYCX8HIN9jgPdIAKHS7FvCDMQc6lLV4Hs7egyu3NvT6UOwAh5YYhaURjI8z+mvOYn8S3fPO3Xo+xDp3WYkMTy5QwzRcIa7wq8QlV3RmP2onqDM+alfCmGwfyxXqDg8U0U/uVWA52xv8qXruqbBKcG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741951553; c=relaxed/simple;
-	bh=+GCDnhCVENB9ccgHWdz5sHs7o66RfWThuEhyb96qY28=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LBuqeeLubJAFq+Rh/MUrTxvgn7fUyNRzKa0JTXMYALTuhlz//ucku07hyPv695w15yr92ObZcAwHba7n2hIwaEPgm/p10/ae2zxdKbkIDVy/GL0AkNP8pFxHtz7/CuwHx/LkYRCyA/ZzZi8ynVdfJUKgHkbwE4PUDSLPkh1cbjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=AOGRSY3B; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=WrUOydwH; arc=none smtp.client-ip=158.120.84.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
+	s=arc-20240116; t=1741954004; c=relaxed/simple;
+	bh=8pNOnJ2LC70pKfJZznXtgqsVw3dIIVR2oklK86YS4/o=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BDtBMv4/0Lf4GohNn8Mf2WugTea89Ei/u6RxxZRw8jCUL813yyx5wH3sCBsadH0eQB4Z25MUETtTr6zZPLVjDiQAN9QF8G/5k/RmA6KdFqtoN14K90pWFQO+RnOzekRPq2l512ojPvoznKzEfOIhMmHAZUNIVoPo3QP0eOXITYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mqJ37J7F; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="AOGRSY3B";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="WrUOydwH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smtpservice.net;
- i=@smtpservice.net; q=dns/txt; s=a1-4; t=1741950642; h=feedback-id :
- x-smtpcorp-track : date : message-id : to : subject : from : reply-to
- : sender : list-unsubscribe : list-unsubscribe-post;
- bh=k83jL6abdzplA61er+1290FaFsq0kTkbedeZU7FpSSU=;
- b=AOGRSY3BUn1ynkDEtnkQTXsBuYk9lQdWSA1x7hSnPzV/tQEB2OfKGxZK1GdUtDcXcSJcB
- 60AZhnmJnAvq5COPjeEK+wLsmVV6OlokHJJwqU/8jnS7TAHOM9N6hdiXT8gAti16YwXQzrP
- 1WXqTKlNyJVQyREAYyqVxradJSCZRIioWSxUluvaWP9tsQJPK1VAH76BQXlFo5BYQ10Dmyt
- T+BZE2cTFUpZHuGrJ9FVcJ3hY1HOGTth28y8iXvyMnc3mgE5RGEIzrHp8Q27buppvIUGlse
- fFmVNXqp7KHQkRSuTjomer5n7nKA8H5pq8Hkt0p6eNwQ4mLk7senpLx4pXjQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1741950642; h=from : subject
- : to : message-id : date;
- bh=k83jL6abdzplA61er+1290FaFsq0kTkbedeZU7FpSSU=;
- b=WrUOydwHdjqGY7esG2sdL8SnBwi/q9N/APBGdTacYSjBJSW/2wz2sCpPW3GLhu/IVEH/A
- GtmuXfWgoIcGfAsJjNbl7kqdBug/R4kCnXzPxIxupiI98DFb4acw7ShITv+a6h/h5OMC1FV
- 9okcMPa1ML/V0jf9hs1VPHft41nMZ4u712KcPtkZHvRNlufKSpcHpSSrQLasnkpMHwWa5iH
- J5spItXKqHC3rBJdqdwOWuFemGW4zGbtMrCsYD8NN3z+WCAq0ECu8UTeXovWwajDWthyWv1
- GMrX8KcMFaRVEiERxt3VWyKHlaTYMjQGF96mZsrUiKQDYuBfq6DS63rBJthg==
-Received: from [10.12.239.196] (helo=localhost)
-	by smtpcorp.com with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97.1-S2G)
-	(envelope-from <repk@triplefau.lt>)
-	id 1tt2vx-4o5NDgroSBC-sFj8;
-	Fri, 14 Mar 2025 11:10:33 +0000
-From: Remi Pommarel <repk@triplefau.lt>
-To: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH 1/2] wifi: mac80211: Update skb's NULL key in ieee80211_tx_h_select_key()
-Date: Fri, 14 Mar 2025 12:04:24 +0100
-Message-Id: <95269f93724a94ee0b22f8107fe5b5e8f2fbea76.1741950009.git.repk@triplefau.lt>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <cover.1741950009.git.repk@triplefau.lt>
-References: <cover.1741950009.git.repk@triplefau.lt>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mqJ37J7F"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52E9YDkr019596;
+	Fri, 14 Mar 2025 12:06:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=Bh21o9dLy7lEDe68zirb2d
+	JGXUgB9M6JRV3a9ZiHRpQ=; b=mqJ37J7FFAoxjprTR+G2mcoRA0gD2U5mKoxy4c
+	dA4YIywenHa9qQKGqGVXZCcjdxmU2f7OZHJj+nrSis8q++VdUokC0yi8pnQ4+1Ze
+	8WDWJsidCfwfts9anqPlBT3L0OcQwhUt/eG0oMvOp8XpLqN3XKZrC7RTrJEmaRUb
+	zBzlNhiydZ3XsE3NieBPaGQLmX0jKHMmVhsbPuxcSFWRLkfCNe9PWgxf/+y0eKfx
+	dhHtVGeOnen6Bou2zM+qi0RVBlCGjumXNHd51i3UMvDmQ20ysytmYdme0fhwOspl
+	XJGqZ93LvFH7EY/Q1xvPOn/WHCyW6KQj74p7+m/ZKTNknY1Q==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45au2p1752-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 14 Mar 2025 12:06:33 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52EC6W4T027291
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 14 Mar 2025 12:06:32 GMT
+Received: from zhonhan-gv.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Fri, 14 Mar 2025 05:06:30 -0700
+From: Zhongqiu Han <quic_zhonhan@quicinc.com>
+To: <johannes@sipsolutions.net>, <miriam.rachel.korenblit@intel.com>
+CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_zhonhan@quicinc.com>,
+        <syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com>
+Subject: [PATCH v2] wifi: mac80211: Prevent disconnect reports when no AP is associated
+Date: Fri, 14 Mar 2025 20:06:14 +0800
+Message-ID: <20250314120614.4032434-1-quic_zhonhan@quicinc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,97 +55,92 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 510616m:510616apGKSTK:510616slWdbAx55O
-X-smtpcorp-track: -fTu9t52FSAS.4DvCyr1jahd8.6frMrA3JjZR
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: _yH3PE4g3TpHY-sTnofQESHunOcXBlqB
+X-Authority-Analysis: v=2.4 cv=Q4XS452a c=1 sm=1 tr=0 ts=67d41bc9 cx=c_pps a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=VwQbUJbxAAAA:8 a=1XWaLZrsAAAA:8 a=COk6AnOGAAAA:8 a=hSkVLCK3AAAA:8
+ a=IS6kxbfz1l1t9IyL_bAA:9 a=TjNXssC_j7lpFel5tvFf:22 a=cQPPKAXgyycSBL8etih5:22
+X-Proofpoint-ORIG-GUID: _yH3PE4g3TpHY-sTnofQESHunOcXBlqB
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-03-14_05,2025-03-13_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 mlxscore=0 clxscore=1015 phishscore=0 malwarescore=0
+ spamscore=0 impostorscore=0 bulkscore=0 suspectscore=0 priorityscore=1501
+ classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2503140095
 
-The ieee80211 skb control block key (set when skb was queued) could have
-been removed before ieee80211_tx_dequeue() call. ieee80211_tx_dequeue()
-already called ieee80211_tx_h_select_key() to get the current key, but
-the latter do not update the key in skb control block in case it is
-NULL. Because some drivers actually use this key in their TX callbacks
-(e.g. ath1{1,2}k_mac_op_tx()) this could lead to the use after free
-below:
+syzbot reports that cfg80211_tx_mlme_mgmt is using uninit-value:
 
-  BUG: KASAN: slab-use-after-free in ath11k_mac_op_tx+0x590/0x61c
-  Read of size 4 at addr ffffff803083c248 by task kworker/u16:4/1440
+=====================================================
+BUG: KMSAN: uninit-value in cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
+cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
+ieee80211_report_disconnect net/mac80211/mlme.c:4238 [inline]
+ieee80211_sta_connection_lost+0xfa/0x150 net/mac80211/mlme.c:7811
+ieee80211_sta_work+0x1dea/0x4ef0
+ieee80211_iface_work+0x1900/0x1970 net/mac80211/iface.c:1684
+cfg80211_wiphy_work+0x396/0x860 net/wireless/core.c:435
+process_one_work kernel/workqueue.c:3236 [inline]
+process_scheduled_works+0xc1a/0x1e80 kernel/workqueue.c:3317
+worker_thread+0xea7/0x14f0 kernel/workqueue.c:3398
+kthread+0x6b9/0xef0 kernel/kthread.c:464
+ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:148
+ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
 
-  CPU: 3 UID: 0 PID: 1440 Comm: kworker/u16:4 Not tainted 6.13.0-ge128f627f404 #2
-  Hardware name: HW (DT)
-  Workqueue: bat_events batadv_send_outstanding_bcast_packet
-  Call trace:
-   show_stack+0x14/0x1c (C)
-   dump_stack_lvl+0x58/0x74
-   print_report+0x164/0x4c0
-   kasan_report+0xac/0xe8
-   __asan_report_load4_noabort+0x1c/0x24
-   ath11k_mac_op_tx+0x590/0x61c
-   ieee80211_handle_wake_tx_queue+0x12c/0x1c8
-   ieee80211_queue_skb+0xdcc/0x1b4c
-   ieee80211_tx+0x1ec/0x2bc
-   ieee80211_xmit+0x224/0x324
-   __ieee80211_subif_start_xmit+0x85c/0xcf8
-   ieee80211_subif_start_xmit+0xc0/0xec4
-   dev_hard_start_xmit+0xf4/0x28c
-   __dev_queue_xmit+0x6ac/0x318c
-   batadv_send_skb_packet+0x38c/0x4b0
-   batadv_send_outstanding_bcast_packet+0x110/0x328
-   process_one_work+0x578/0xc10
-   worker_thread+0x4bc/0xc7c
-   kthread+0x2f8/0x380
-   ret_from_fork+0x10/0x20
+Local variable frame_buf created at:
+ieee80211_sta_connection_lost+0x43/0x150 net/mac80211/mlme.c:7806
+ieee80211_sta_work+0x1dea/0x4ef0
+=====================================================
 
-  Allocated by task 1906:
-   kasan_save_stack+0x28/0x4c
-   kasan_save_track+0x1c/0x40
-   kasan_save_alloc_info+0x3c/0x4c
-   __kasan_kmalloc+0xac/0xb0
-   __kmalloc_noprof+0x1b4/0x380
-   ieee80211_key_alloc+0x3c/0xb64
-   ieee80211_add_key+0x1b4/0x71c
-   nl80211_new_key+0x2b4/0x5d8
-   genl_family_rcv_msg_doit+0x198/0x240
-  <...>
+The reason is that the local variable frame_buf on the stack cannot be
+initialized by default. However one more question is that avoiding the
+uninit-value bug by explicitly initializing it is not enough. Since commit
+687a7c8a7227 ("wifi: mac80211: change disassoc sequence a bit"), if there
+is no AP station, frame_buf has no chance to be assigned a valid value.
+The function ieee80211_report_disconnect should not continue executing
+with the frame_buf parameter that is merely initialized to zero.
 
-  Freed by task 1494:
-   kasan_save_stack+0x28/0x4c
-   kasan_save_track+0x1c/0x40
-   kasan_save_free_info+0x48/0x94
-   __kasan_slab_free+0x48/0x60
-   kfree+0xc8/0x31c
-   kfree_sensitive+0x70/0x80
-   ieee80211_key_free_common+0x10c/0x174
-   ieee80211_free_keys+0x188/0x46c
-   ieee80211_stop_mesh+0x70/0x2cc
-   ieee80211_leave_mesh+0x1c/0x60
-   cfg80211_leave_mesh+0xe0/0x280
-   cfg80211_leave+0x1e0/0x244
-  <...>
-
-Update SKB control block key even when key is NULL to avoid that.
-
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+Reported-by: syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com
+Closes: https://lore.kernel.org/all/67bf36d3.050a0220.38b081.01ff.GAE@google.com/
+Fixes: 687a7c8a7227 ("wifi: mac80211: change disassoc sequence a bit")
+Signed-off-by: Zhongqiu Han <quic_zhonhan@quicinc.com>
 ---
- net/mac80211/tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+v1 -> v2:
+- Rebased on top of current next.
+- Reorder the tags.
+- Link to v1: https://lore.kernel.org/all/20250227090932.1871272-1-quic_zhonhan@quicinc.com/
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index a24636bda679..79c217c2f801 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -668,6 +668,12 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	} else if (ieee80211_is_data_present(hdr->frame_control) && tx->sta &&
- 		   test_sta_flag(tx->sta, WLAN_STA_USES_ENCRYPTION)) {
- 		return TX_DROP;
-+	} else {
-+		/* Clear SKB CB key reference, ieee80211_tx_h_select_key()
-+		 * could have been called to update key info after its removal
-+		 * (e.g. by ieee80211_tx_dequeue()).
-+		 */
-+		info->control.hw_key = NULL;
- 	}
+ net/mac80211/mlme.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c010bb3d24e3..08fb3fb740fd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4433,6 +4433,10 @@ static void ieee80211_report_disconnect(struct ieee80211_sub_if_data *sdata,
+ 		.u.mlme.data = tx ? DEAUTH_TX_EVENT : DEAUTH_RX_EVENT,
+ 		.u.mlme.reason = reason,
+ 	};
++	struct sta_info *ap_sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
++
++	if (WARN_ON(!ap_sta))
++		return;
  
- 	return TX_CONTINUE;
+ 	if (tx)
+ 		cfg80211_tx_mlme_mgmt(sdata->dev, buf, len, reconnect);
+@@ -8090,7 +8094,7 @@ static void ieee80211_sta_timer(struct timer_list *t)
+ void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 				   u8 reason, bool tx)
+ {
+-	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN] = {0};
+ 
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+ 			       tx, frame_buf);
 -- 
-2.40.0
+2.25.1
 
