@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEB72505C9;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 000F0250BF3;
 	Wed, 19 Mar 2025 07:42:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742370178; cv=none; b=S5Kv0/gWfXoRcUXoEdefNXcvYHp0bt4cJrd13n+zX+DAWaNn4Zs0oVZ608vqaFZty2kQPKVxNUkbj7i6D+m/Z2mvomgQ7px1p3jfcS1eBET10KF0XkZqwohRZSb5e2i9Xx4SUWEi4NlWUPNDU8w1e+HSpKib698F4kkaoD0Pa5o=
+	t=1742370179; cv=none; b=LN6UtUYsGTg6fQxSIlUlXKpjn0tjXzZDvb8UnThgpH5vwI4GM73njQVL5kXT+4e5Gtd3bjDfhN5JS15iAaAYzFKLKdAqCbcGhivVnVEw/SNAGYKR5FCvb2RehPl+IyBcqYLyCN3jGYxRKl5lWvfh3ImerPOTqjoQ9j1ptPZc7I8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742370178; c=relaxed/simple;
-	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
+	s=arc-20240116; t=1742370179; c=relaxed/simple;
+	bh=uPUDwmK0g4Vh1dFePnVTJtquk72HlpJiUb5fITlcanQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RAk0k3BApY4EfLZeBoTAmpXx8NxmsMk3kgW1fNUO28FXcz8d98BIbLAgJlTMe6W5FfcEfKUE7yKzuJ8IVTfv+vSSoLIePek0b7gcON/eHqex8mhzEBd9ezu6easNs2uzaPPCnRkexd889hkQzX0rBy8gx/nuSm9BbFkPB67ho7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iiKoPFKD; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=jDMTPF5Gk5r7ZR+m3Uas5oqe8ZwPxwtxxo1vYV2EcD3fTcPF1AbU9GfINkiSZKuZxKi1kkv7vSQtHS1avn7tn1Jrac+nwXmlzR6b+frtA7SGCvZQO3OKiDtXg2n9+LrJ9TdJczMTaIxwLV8zAJXe5DfSpvcSNaC+uPAoaXrobt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uxyomQA8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iiKoPFKD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3D52CC4CEF3;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uxyomQA8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 80D30C113CF;
 	Wed, 19 Mar 2025 07:42:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1742370178;
-	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
+	bh=uPUDwmK0g4Vh1dFePnVTJtquk72HlpJiUb5fITlcanQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=iiKoPFKDTc33xyKDhIHbKi5oNeIAReF9v27f2A/TwDGMlqH55f0okfelLEKFi7Ryr
-	 ALAk1Ojri4s0xRIXxikE0jXhdh0r3vhuV6FUm/3L54FA7CXkj50YCaYp/1wQkbjqmS
-	 xT4A+HSqiBsRyFlwnbF2GhJ/D94no0z9n7ptwYdmjS0K6g0MnYqXOMcgWtKlyNpmMC
-	 57/wCXho8RgNkZfA4WFzJfDnL0K8jR90UE4umDeBLKBpeSUP38E5J+0bfMOo60YaCF
-	 i1FBATmQOHwqazh8fxnnuLFzGghq3pLqH4V2ArXAW/D9azzzPN7g3I7OXbRXaIres5
-	 Utmmpvj5OWmBA==
+	b=uxyomQA8RUYnswlcxPhpjTy0IoBmAw7IN2db3zCQj7loOiIDPUBnGC4+Ebj7aMmk1
+	 mPs4d/7vZ30FG+/NH9MA1UIxfFixC+4E8Tl58WFxCYDe3zI47G/QiWFG64YxP2EPBO
+	 VTWAHZ3zZKfjZKobesGsY8Ah7jP14PTWMD9FwHTiNQ4pCejWuzidHRTkF9hBq1+iq5
+	 LVyLb3dwMfk1EK/13PQmp9zau9fVRXQVnZMQ5x6k7QZWM5ghdibDmJzulXx3KJlBrp
+	 QR9LEFNRVUKpAJS5PubI5fw5NFZ1gy7N6s7l4sPSp1NxkSqAoenQI33d+Pm00lnCzJ
+	 765GCI1Dm4qJg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D625C36000;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7086FC28B28;
 	Wed, 19 Mar 2025 07:42:58 +0000 (UTC)
 From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Wed, 19 Mar 2025 08:42:47 +0100
-Subject: [PATCH v4 2/5] dt-bindings: net: Add generic wireless controller
+Date: Wed, 19 Mar 2025 08:42:49 +0100
+Subject: [PATCH v4 4/5] dt-bindings: wireless: silabs,wfx: Use
+ wireless-controller.yaml
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250319-dt-bindings-network-class-v4-2-2329336802b4@ixit.cz>
+Message-Id: <20250319-dt-bindings-network-class-v4-4-2329336802b4@ixit.cz>
 References: <20250319-dt-bindings-network-class-v4-0-2329336802b4@ixit.cz>
 In-Reply-To: <20250319-dt-bindings-network-class-v4-0-2329336802b4@ixit.cz>
 To: Andrew Lunn <andrew+netdev@lunn.ch>, 
@@ -60,66 +61,61 @@ Cc: netdev@vger.kernel.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, Janne Grunau <j@jannau.net>, 
  David Heidelberg <david@ixit.cz>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1188; i=david@ixit.cz;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1294; i=david@ixit.cz;
  h=from:subject:message-id;
- bh=s4h8B9gNJQ6JIaRS+FZDFjTYjzD5y6gNzE0ffwMuDco=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBn2nV/6rsk3oZ7Zyx3BHMSxD/3T7AS4K6Ut8/Ix
- lXZHWCc56KJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCZ9p1fwAKCRBgAj/E00kg
- crwXEADFNSgiKo48SYtQuekFHAo+4fG9ATvPU7eD5a5aQHSz43A2DGLbx1N0t0m5x+UamLuzAYR
- IMl7W1JI+To73ZgOCDkbdHrt9gOlO7OtyQtcIUENMFEba252GuCIeTbneN3qBnxdB33x5AufHx1
- S70mveR8HrembIKmCEtHpf8+GSNkZ+bD3NzxB945vapzCjoF8uKY0EsUEovQ62pRee+D1k8tQn8
- shug/+iZDVDBrCT7vopf6ENjZPzY+tqqCS+AxHq68frOCCEpro+2vZJEgV47dQ8Glve69kXQ/aD
- DGZ+zh610NGjdnMaJYlAub3CB1AkvwpIAO9ovR55JIZm3wNaZwSMMfLXexOsGZ1C40L2o6DVqXR
- ZNNCGhTGL7wt41wBzlCfSDyQAaWiJY30mpOb9ky6mR91exDXT1jHGLlRkOtPSsEiP+iENDCCgwd
- 4FAgcm/1INX6D4ny0yaF0ird6L3ius/ZRotszDiViVYiKOWztVRx3xSBUUBzH6FCfZOtQI6p3+D
- fIfCbd7Le45LQMXKKIh4MWOut9jogpciD+QexzNn+4OtJ+rIhVgCUlRFf2aONo8SS0HzQ5Fj5J6
- usYDTtjvhRDLtmqpDueELxfxaW3TKoYXB5Zn187clI6x3cW8dK7Lg+001d76FLMVG2sMHHtf7qc
- /BGK5UaVHz9dP1Q==
+ bh=l57H1RfHi2nyRkEMHSpfv1DPteDzmkI0cH0ZxcD39cU=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBn2nV/GJXqP46+RluuNNyMAQKN75PZKl4HCTx7x
+ wSys6q/NTaJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCZ9p1fwAKCRBgAj/E00kg
+ clWMD/0fWsWzN0SOl0+waxtXKViVHMwA9Gx4s7s80akUelEhYGg3J6k9IjJRD5dZuA7ob/mPhCw
+ 5awtfV37JzaaGzG/2/NpO2ce0NFK8EzZ08UATgh3DIocukcOaGA9ma8KI8ZYCK41K2QMh2n3eEa
+ Ft+0IsXVu+DbVqLHZjq10lsTqjB8o4hL6TI+M3vSbPtr5WkajIwE/6YR06eI9Z5Ie4e46kGLJda
+ GVEgTeW1fCtYj9QJRbtFRJlMUhQZChWZFP1lan2tDTIqvSdd1Sv5ApIXaHlh2JnF3/Fvg013D+c
+ 9WYHyT82B4PmMl4U3ZEW64+KemjRhf1MjIBPc/vj2JYEzagLETQ3rm5LMOaP5ZjlX27eSzaA6Dz
+ Yg2ZIjONDWzp159N6AEYlXQL4oZLH34k9bm5k7UwumWwFDXQlDgcBvHwgWEeEunb0Zu6Z7x88oJ
+ yaurc3PGvCwLcXRuVcc7bbmDzubWN1zY4vGIlDDFzZrCucQjdeYYI8QV9QErFpRNQZovLuA0L++
+ IVhy88Cqwpy8mjlNlkl3PTYW0jmpdRUASqTCQv/BspwsPnNIHrZOAygUdYMUHAJBOTY5bY1/ksU
+ KoSxQrF+bEfwJY6w2hRkg3HBLwQzPGmi1qOWEsXz8mNvSiteozBapvOWUOxd/tROsj+1ZnJbtjO
+ gD5+G9Met9QwmQw==
 X-Developer-Key: i=david@ixit.cz; a=openpgp;
  fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
 X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
 X-Original-From: David Heidelberg <david@ixit.cz>
 Reply-To: david@ixit.cz
 
-From: David Heidelberg <david@ixit.cz>
+From: Janne Grunau <j@jannau.net>
 
-Wireless controllers share the common properties.
+Instead listing local-mac-address and mac-address properties, reference
+wireless-controller.yaml schema. The schema brings in constraints for the
+property checked during `make dtbs_check`.
 
+Signed-off-by: Janne Grunau <j@jannau.net>
 Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Signed-off-by: David Heidelberg <david@ixit.cz>
 ---
- .../bindings/net/wireless/wireless-controller.yaml | 23 ++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
-new file mode 100644
-index 0000000000000000000000000000000000000000..7379f6c1aa05c15a5bc7b34df6502cc174af9a90
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
-@@ -0,0 +1,23 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/net/wireless/wireless-controller.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Wireless Controller Common Properties
-+
-+maintainers:
-+  - Lorenzo Bianconi <lorenzo@kernel.org>
-+
-+properties:
-+  $nodename:
-+    pattern: "^wifi(@.*)?$"
-+
-+allOf:
-+  - $ref: ieee80211.yaml#
-+  - $ref: /schemas/net/network-class.yaml#
-+
-+additionalProperties: true
-+
-+...
-+
+diff --git a/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml b/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
+index 84e5659e50ef3125b5063fbebcaf1d2b2bdb7398..6c0888ae4c4e172edf2a5f6249cb8aed5ed11681 100644
+--- a/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/silabs,wfx.yaml
+@@ -71,15 +71,12 @@ properties:
+       "Platform Data Set" in Silabs jargon). Default depends of "compatible"
+       string. For "silabs,wf200", the default is 'wf200.pds'.
+ 
+-  local-mac-address: true
+-
+-  mac-address: true
+-
+ required:
+   - compatible
+   - reg
+ 
+ allOf:
++  - $ref: /schemas/net/wireless/wireless-controller.yaml#
+   - $ref: /schemas/spi/spi-peripheral-props.yaml#
+ 
+ unevaluatedProperties: false
 
 -- 
 2.49.0
