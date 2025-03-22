@@ -1,137 +1,101 @@
-Received: from mail-yb1-f179.google.com (mail-yb1-f179.google.com [209.85.219.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115AB20C019;
-	Sat, 22 Mar 2025 11:52:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7671F1E9907;
+	Sat, 22 Mar 2025 13:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742644331; cv=none; b=cpemEtaVvmEVUIGAP9hci4lbjYeaHIiPe4eC8n4npIUe0REepC42z3EtkHRzCyacyPnX21rFOsUzvYrE9Ac6LxwpLhUqc7n1FGX8cimrMvx7utTUmNMn8lOx6xE7PdNCi5MENiRdSmI1Lq1mOT2o9vAtt/BWgzW96uyrqAyMP2s=
+	t=1742650821; cv=none; b=EJSC2bulkyIhOYmBbhcCcWSc7Dy90+3CpKYDdnSk6c9W5ZkRjxaRaesSXs+OpqaBDZI86ojetgAtFxt3TZ2I0nB14eTPeKWv2Iw1V0eFYmdvTVAnwqFqJNvz+ukGW4O1eIt6m54EqZ3BZe97710hknHpe+ieDz/NkeyRhSeQ7N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742644331; c=relaxed/simple;
-	bh=JrrN3txU/9ksUlwhCYnysfKDPc0BcxepXJy/n0PP12E=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tUt/d2ie9ZAMTAc2HB7DYBxU+FtliCrd/xf5O6St7dywUoRS6L2p+6YE1MDT94i6gSddA3orwyrfZ0hLw4OsNRJGphmQavTzG/M9SC1qXGXWYU2p+W4siU0cXuYf+ng2WF6c/o1F4r74ae/Up2woZgcnbjXG+HleiVcUhVaayvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I9pFs0gY; arc=none smtp.client-ip=209.85.219.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742650821; c=relaxed/simple;
+	bh=xjUf1ryZi1oB5Nn5ayqZmUpZSv1nmZtfvq35vnb/yRU=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=Qjh9VnDVph6ImcCt5XadKVW9ylxiOxHqne1a1oKs9xyN6Sh/GGgzS3xRJ4Z5wXqFMVjOBVop6oWMynJLopyzK3j2S7btzg1C31xMfDCYZERaHfzUlGby+CXEyJKAmHZTqjLVSbC99cJhBhhz+8X5bjUXO4FsSFgBkSJdi+GfOYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=AmAu4Y5s; arc=none smtp.client-ip=212.227.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I9pFs0gY"
-Received: by mail-yb1-f179.google.com with SMTP id 3f1490d57ef6-e53c9035003so2352204276.2;
-        Sat, 22 Mar 2025 04:52:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742644329; x=1743249129; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=R/38SpXX+t/RyNGR7UIeutSrg3vd9sf/spj62Z5/lVQ=;
-        b=I9pFs0gYEh2lT+6KaPE37KnTkR/aEQ9enjG3VjbFlJWsR3o+UCn70RaoXtvtk7USH2
-         +5F7FK4y42+t6gh021D+Ss22LN2cPRNZ7CWU3+7gxqP0fIlmZGXMlr9oIirr5fXmgP9I
-         k3/kxHrcTKamHrsvp8UU4M3EfmtR5oyTkVUt7UKAZ1M77MUoqvDc2gclyEo49bB35mmy
-         Fy45lh8oS6Bjz0uxIEFHjpktDt8K4ivyZalzhHxuQ/LE5B/bQVaui3yqripfkNQCYtAF
-         CQTvI68ZhrLGTOmEd7XPO1Mf00/uIT5DAAKx9a8+8fHUY5yto5y10R3joRxFBYRe9fPw
-         2xSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742644329; x=1743249129;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=R/38SpXX+t/RyNGR7UIeutSrg3vd9sf/spj62Z5/lVQ=;
-        b=ZNhznluGLKd6i17k+F9Qrl4EaG6erIxCKZqXkBwAlQMw8Qo4j8Ppr5aN34+UXdkiou
-         YbNRsqKwZIAhAQ1ErlotJNkd4bzyrl9ylojDgR+xDEm+zB1jV1fmMcp1t6rZXd0xDb+g
-         IDJ6haVkV8c2kP3MgjR11/CtFV9e0jZd/4ttsPXuKBF+xFvXBhn811sSEAYaNesf+yEw
-         FBhwrfAwRqkd0gbz4OBQqLE1Qc8AC9Fs00y+8w6g2GXMdv3MNdSizJhv6gSndljg8fAM
-         X9n2pPFw2Df8pcsPfzPbG+cOLOC0b9Q26EM5tjEI9s0+K7tgnNVBId6VYZW8Lk7zhja/
-         1j5w==
-X-Forwarded-Encrypted: i=1; AJvYcCVI/6yRbee5oDUx5bjmwad4DDWAM2xnP7c7H3h8Fd3ADn3KQecQEpze7NNWQlaUgarqIcAOz8nOWwmWP0I5Fkc=@vger.kernel.org, AJvYcCWlNO0YPytp2Wes9wbgUVMvMLy5LB1vSfrI1uVnTaYvHJRgtVcK8Fwd4ogYGqaYz8S/evxprkDG9oW9FCg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJwUbhZEuG5LDumtooodaR8gNYJBO89JNVEk1WbzOsuX4hZhWW
-	cBI35T7UUPH3so/luXdhab8Rnw/ZpyVfknEu/2O0NgtImersP2KgUd76T33kqGSp7tQ5dqIqjLo
-	dmKrEDHPP2yVn/mGvCzhGIhhD5vM=
-X-Gm-Gg: ASbGncsRFXt0ZLl+t0yoTTStvFgbRGDsqHay5WPJXpLpUqBjvk2iBBsp/iCkc6yFmAm
-	f0XDrDamu5pF48FetcD+8ipFaWL0Y1gfJt3oJ3qX6yM86KvD7NwxU6s8ApbAiPbGbEw41blNYnE
-	JxJ/jTeG99aHwLhf7Ac0enDmA/
-X-Google-Smtp-Source: AGHT+IHEIH+TD7S8LIB0pgaC3Heq4ilCGl8dSsQ4Y2jB1WCnC9MH4oZaTqBRO+rXtE+U3iicvoBJ0yr1yUCPg/w5PwU=
-X-Received: by 2002:a05:6902:2845:b0:e60:5d76:f79d with SMTP id
- 3f1490d57ef6-e66a4fd7596mr8057025276.43.1742644328776; Sat, 22 Mar 2025
- 04:52:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="AmAu4Y5s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1742650807; x=1743255607; i=markus.elfring@web.de;
+	bh=xjUf1ryZi1oB5Nn5ayqZmUpZSv1nmZtfvq35vnb/yRU=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=AmAu4Y5siP8bgaxCR/tjJpZDXc4vBtRdtx2dN0LBAxfsBeIOXhj7N1F+R7BdAmA0
+	 8Os3zQURBeGuVmRhotQf81yEbRVonsvgzZmfgjiIasFbjPXaxDwkBx5/khVSmG+MI
+	 x6GXMu3Qfrczs+zLtMCQavjR1FlCGaJkQsdJgsUXNlHvH6v6g8HJ1W5zBvdF46ywo
+	 4ZvXCLOTgPJEHZPgmtByHHiMq+MLz6/MwfwSFCBzWZgvCIoCtrwt0Pj1G8ukqAB5L
+	 8wJ2vDaEQ112v+mRKIaqpt+ZqURlHAfFWGqty+1HnC18PQzUMqzK/kPOdhyogucJK
+	 BaPYzqjYLA6PXNyOJA==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.70.73]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MwR4R-1t4Hvm3Edp-016Jbe; Sat, 22
+ Mar 2025 14:40:07 +0100
+Message-ID: <52071c76-dd06-4b11-bb79-a5e0c28b94ca@web.de>
+Date: Sat, 22 Mar 2025 14:40:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250320201914.48159-1-qasdev00@gmail.com>
-In-Reply-To: <20250320201914.48159-1-qasdev00@gmail.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Sat, 22 Mar 2025 12:51:57 +0100
-X-Gm-Features: AQ5f1JoRh53ceEml7E4eB4zyrreqx0RIlQoRBpJCDeq9YDF93pFOkWwS8Y7fB0k
-Message-ID: <CAOiHx==UCeMQpywQJCLPQqipEW0tK9youRxdR5+_T1LuGp_EHA@mail.gmail.com>
-Subject: Re: [PATCH] wifi: mt76: mt7996: prevent uninit return in mt7996_mac_sta_add_links
-To: Qasim Ijaz <qasdev00@gmail.com>
-Cc: nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, 
-	shayne.chen@mediatek.com, sean.wang@mediatek.com, matthias.bgg@gmail.com, 
-	angelogioacchino.delregno@collabora.com, chui-hao.chiu@mediatek.com, 
-	Bo.Jiao@mediatek.com, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-mediatek@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+To: Qasim Ijaz <qasdev00@gmail.com>, linux-wireless@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Angelo Gioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Bo Jiao <bo.jiao@mediatek.com>, Dan Carpenter <dan.carpenter@linaro.org>,
+ Felix Fietkau <nbd@nbd.name>, Johannes Berg <johannes@sipsolutions.net>,
+ Lorenzo Bianconi <lorenzo@kernel.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ Peter Chiu <chui-hao.chiu@mediatek.com>, Ryder Lee <ryder.lee@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+References: <20250322105052.19136-1-qasdev00@gmail.com>
+Subject: Re: [PATCH] wifi: mt76: mt7996: avoid NULL pointer dereference in
+ mt7996_set_monitor()
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250322105052.19136-1-qasdev00@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:hzCFADGYDQPr010FsI8NS36pmqMY5yW3QkMd+OSetiqm5SCom4J
+ 7AjbzuRM69zCOx9flAZw0f6Q2kfc9mfXIfyPHQ9dZKyMtyex+p5/HYFXnkSPf5+n2iE2rra
+ egN+bJ+bR6yR5s0wg5v/3Lrdi8+A3Yh5+XbtrgbGVlQ49JLjVsnHnME90Mp40SdN2C/3SDa
+ /B5nCfICHGfKstaODc0yg==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:n8ATnK4I5Oo=;Kxt+BdHKzWc+Hw88z3c4SFWzJd3
+ 8Z98fF/4yja44CleXzzt0MBLe5L9ZsvAgg7WznESaEm82dFuC6mLRf8n4h9wXk6XmzzEcgZEl
+ dgPnTsgn1eIGnk0MIZqfP2IEYs8BklNiVxIy/zRyu4JsGkjujf1V6z0vQkOf4EoaHI36M7ahV
+ 7zjIaf0Rcg6QS508Zk06o8xnga6OstVcrrN89cY3f4uddAomk8yWo/1OJyq1Kxcvaea2GxPCO
+ aGzBeTfnqQXETpVj2iGkiS6vA37soRG8zSZhjVRU62n7r0RfgLSd1zc/KUHNNtrNG3B31fZOv
+ NzKFO/3AunErQo8qD2Ll+URYFwuuwdMZFr2LLgGswAFNKPoKOxEyrKp4nmCnGH3BpMayZRq8j
+ Yj+8fBQmlXWW90yBun8M0XkKCAcXobjfhPl6X2d+87yS+XAH2RwFsPnzCtRPHtVqZPW3eKpkT
+ DaCYyxQ5LLUAD2yS6jeki97TaWPG68Su/R45hNUJx/6DH6yqv1GnwChBc9EGlyYqSdzf0J6zq
+ jjRstdAUhY6QIQ0iOmOBCGI3rn2mYawx7i6NhUhqZJC3KBxoHgKL0vcaqqAhKQoUm3r+hdkrt
+ lTJKLuITpLaDKQWsOxKAN9nbhh6P5cav1Kaap4JGbCfr9uuej0hZ6y3PP8WGRA380Y0kyKhZ1
+ 4u6d1ZPnXYasfvwCPPiInGZ4bdxbTP1vzA/iy4sO2of44wQ8zk1NC4A3aoai2RT8OfKl8YCoR
+ hqVxPQQ6Koij0nmTklNdgP4nayDjuff2xpQ7B8oTWEV7ghRJoL9904KiXMUuiDARg+/nN0H67
+ s3ZrJktIQXThuUSjTflH9ClguGqlI23CwNj9LsqC55CLULowbDqplaoNCEy6nnMYcFicpVjWJ
+ fDFivJno7jO9NsepDyaMuyF6s/nyeL1IQCjqNubMdXMjaSC7aQIaFtSiz4/+vJLx/smoQ3Dxv
+ MRRPAHCR8URV1D31iBHtedxjIH24y4jkpFvM9j+vPWPD3hnxx2WLVIeDGXtQXlQ2OhoutP+Jt
+ G7RImvr3kDPhXGnh7CODBOasOlatCUFf1gt06w76enNXhEiJj66mkoN8KSN3wZHizwEz64yry
+ 88SbxFStB1HKHlIZlVbTXflfaiyakSRp8b9WJqQR2b1+IXDFxdhkoGCAomFlp3XP0zlJPd8zX
+ L9E1ebeYHUoaRnKdmdJ/GDu9ND+qDLmbliMTBrYOM3gwUJk9h+BzoJep+NxvQUSJNJkdUMVxS
+ ZJFCZvYanSbpNMb1wgbGlF0t/s96eS8badeQ5voeJ6k+8Pl0kfI6SboiTs4McugH2O5GtRJ3I
+ HJHG987uao+qmMjXMXBGwnJhAtdGp2lnvQV9Hvnnz09/I4cCF5GmFQewrPfao9qMVzs5rPref
+ WLdRAD7fpSBZ5gV4zpl6IGdYYdxa8HZlhHGr6TCYVuFSOQLWGL0NsnUjpr1S8VDsu/cQX9LAU
+ kLUo7SBH/5eJtXfCYpm94TK4/X/K23ySAeiq52M08xVuSrQq3
 
-Hi,
+> The function mt7996_set_monitor() dereferences phy before
+> the NULL sanity check.
+>
+> Fix this to avoid NULL pointer dereference by moving the
+> dereference after the check.
 
-On Thu, Mar 20, 2025 at 9:19=E2=80=AFPM Qasim Ijaz <qasdev00@gmail.com> wro=
-te:
->
-> If link_conf_dereference_protected() or mt7996_vif_link()
-> or link_sta_dereference_protected() fail the code jumps to
-> the error_unlink label and returns ret which is uninitialised.
->
-> Fix this by setting err before jumping to error_unlink.
->
-> Fixes: c7e4fc362443 ("wifi: mt76: mt7996: Update mt7996_mcu_add_sta to ML=
-O support")
-> Fixes: dd82a9e02c05 ("wifi: mt76: mt7996: Rely on mt7996_sta_link in sta_=
-add/sta_remove callbacks")
-> Signed-off-by: Qasim Ijaz <qasdev00@gmail.com>
-> ---
->  drivers/net/wireless/mediatek/mt76/mt7996/main.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/n=
-et/wireless/mediatek/mt76/mt7996/main.c
-> index 91c64e3a0860..78f7f1fc867e 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-> @@ -998,16 +998,22 @@ mt7996_mac_sta_add_links(struct mt7996_dev *dev, st=
-ruct ieee80211_vif *vif,
->                         continue;
->
->                 link_conf =3D link_conf_dereference_protected(vif, link_i=
-d);
-> -               if (!link_conf)
-> +               if (!link_conf) {
-> +                       err =3D -EINVAL;
->                         goto error_unlink;
-> +               }
->
->                 link =3D mt7996_vif_link(dev, vif, link_id);
-> -               if (!link)
-> +               if (!link) {
-> +                       err =3D -EINVAL;
->                         goto error_unlink;
-> +               }
->
->                 link_sta =3D link_sta_dereference_protected(sta, link_id)=
-;
-> -               if (!link_sta)
-> +               if (!link_sta) {
-> +                       err =3D -EINVAL
+Were any known source code analysis tools involved for this software impro=
+vement?
 
-You are missing a semicolon at the end of the line.
-
-To also do some bike shedding, you could initialize err (with 0 or
--EINVAL), and then change the err return to return err ? : -EINVAL;.
-But your way has an explicit error code assigned to each failure, even
-if it is always the same. So I won't claim my suggestion is better.
-
-Best regards,
-Jonas
+Regards,
+Markus
