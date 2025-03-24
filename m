@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF09264617;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F7026462B;
 	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742838102; cv=none; b=eI2YUOpfAokuZ+Vg2O0RkknKnaXi35pqAnHfVP/d0eCul4AvUV9NwWMTPN1GQbKxxfRewVzm82KoIkyrjQCCpadsAW1X92dUwOp2hF9LnjR90aK5vuQOEw3CQPguVpKlTmgx2fDc2q57Z7/WcXGMw5owr0SyPnf7AbWeqLSjZKs=
+	t=1742838103; cv=none; b=j7b87UMzzA9ikHO4kSl6s1p7k1OC+K5UDCGB08cTUwYOIsr7CSV2EhBpS2aM/FKmd/Yp6CQWVRzkTrGJCu71hAzCe2O5D24TRRA2ZXMnJj5uiqfOzqzh8xxal0lljtu6lrC+1s7pUx07zsvuc3vB6Tt7/rQoMnCceAoPcx9dpxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742838102; c=relaxed/simple;
-	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=u2P701ezt0xcNFd2tSmAkabfEp7A/MzEnq0x1jo36juuNjEVtRPLbxbVL6XqhOwMp6b+dJgQG9JarKcvUDladu4HT4gQpfhsw06uhqgRk7JO88NcCLJC8jLLzhwIGOXyOGZ5u3jFXmoqAXdizGClYBrAaS9MBWJ/60ItTI+bVuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ig2n0jQp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742838103; c=relaxed/simple;
+	bh=sdcuRNAQFYtob6yEPETsohJyFlIPNbv+Zn2NcH7jrWI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=W+arckCWzn42MWxDuHCr6N4ol7IqLGgy2WEeJILehQBb/XsbzJRsVc12sE7ij9C3sKZhQfUwLMlMLS9s2vymwVcjCdmrexjV6YnaIBk/vP6JpoOl9lBg3fR9DVsZBd0NqrsQmxoEERnH/pSJU+o3B7vE8w0FISGP2k5CMR/WsvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ggXUZl2D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ig2n0jQp"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 85334C4CEEF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ggXUZl2D"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 59F0DC4CEDD;
 	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1742838102;
-	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=ig2n0jQp/tRrUP/isobTD5FA47J2zoG/kTryfUGI1GGxLH64kBHF8vlGQedfZVK8w
-	 y+rtw0NPTMF08NCUn8yoth5YfDYXQMM1H3QeQuo50mdDQVH+C2jXZpOhFe0yB4EOtk
-	 3MeKDsa5gkFo0iN2wmG0Nmn6hG1xw0oAC6zEr0f14yXDBnsxpmopxVIJRQ1A+Ze8Yg
-	 sQ6HCc/r8Ha9Ciius+Vjje+6nTdu23qgsxadiSUBRpAckHKHvVM6S77LouYukB62s/
-	 Ydr4APVyW2G2f2AzbMzFqwLaDuyngV7jYoJSac/7LgLcVh0u1bEyKbiU77ruuge/rO
-	 n/7yCrCfGoTlw==
+	bh=sdcuRNAQFYtob6yEPETsohJyFlIPNbv+Zn2NcH7jrWI=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=ggXUZl2Dd5l7WjVO+CYEAbKgabvZGg99YA5B/EVisoMp2IRaUmrU9NsnSCxseMTja
+	 MHpKvbLiZQzsyVMLCtfa7Cdtm3RT4t4tXWSdWiH+LnwAsDD6Qj3kD8SE2MeFHeiqI5
+	 ZanSVghZAvvxz8FKy/fcxzoeSIwA7V0ut54LTHiUQzP04L4sB9juoEn2JG6ay5tUPe
+	 kbd9JqYK1M3HYW55W6nK9JEw8fiuF5TpOVSnwBu+QUUZBxIwKn8OQUBbuKKptGjSIk
+	 /Zg7yJkNCjHr+CVRFvUCqYN8J8rtz+K/dvpANp6p7zh1yDvHO0Ck7DKqllXeaeF5n4
+	 Nbe8z7IyFfXlg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B721C36008;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F2EC36002;
 	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
 From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Mon, 24 Mar 2025 18:41:39 +0100
-Subject: [PATCH v5 2/5] dt-bindings: net: Add generic wireless controller
+Subject: [PATCH v5 0/5] dt-bindings: net: Add network-class.yaml schema
+Date: Mon, 24 Mar 2025 18:41:37 +0100
+Message-Id: <20250324-dt-bindings-network-class-v5-0-f5c3fe00e8f0@ixit.cz>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,9 +40,12 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250324-dt-bindings-network-class-v5-2-f5c3fe00e8f0@ixit.cz>
-References: <20250324-dt-bindings-network-class-v5-0-f5c3fe00e8f0@ixit.cz>
-In-Reply-To: <20250324-dt-bindings-network-class-v5-0-f5c3fe00e8f0@ixit.cz>
+X-B4-Tracking: v=1; b=H4sIAFKZ4WcC/43O20oEMQwG4FdZem2WNJlDx6t9D/GiM4m7VelAW
+ 8fDMu9uRxEFYdmrEPjz/TmbrCloNre7s0m6hBzmWJf2Zmemk49HhSB1N4TESMggBcYQJcRjhqj
+ ldU5PMD37nMFx16tI1w9Cpt6PPiuMycfptAmICFIbJi1JFYqzlqq2JU8hlzm9fz2x2DrurulbL
+ CA0LSly3xKiHB59jP5lX2PmvrILXU3RRg1D5+r3Lfb8j+IfqkW27hLFGyVOsBF5GDt7CG+h7Ke
+ Pb6f56wyXnKY6xDQwdw5pbH6ddV0/AcDuXAC4AQAA
+X-Change-ID: 20230203-dt-bindings-network-class-8367edd679d2
 To: Andrew Lunn <andrew+netdev@lunn.ch>, 
  "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
  Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
@@ -60,68 +63,91 @@ Cc: netdev@vger.kernel.org, devicetree@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, Janne Grunau <j@jannau.net>, 
  David Heidelberg <david@ixit.cz>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1188; i=david@ixit.cz;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2987; i=david@ixit.cz;
  h=from:subject:message-id;
- bh=s4h8B9gNJQ6JIaRS+FZDFjTYjzD5y6gNzE0ffwMuDco=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBn4ZlUkO2OTp2AzhwK0TqhMqWIaIvFxzYIv7hU4
- sC1q5W8JXGJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCZ+GZVAAKCRBgAj/E00kg
- ctX+EACIls3D2cw/sYf6yNpFF7jMddNcznl3sRLq0U1Gq9Qpqn/AgYTzBJXrYWOyGxwhoO3hegV
- XZIj25cuIt6LQglWdRSdQ+sF0s1ta/419YsW2ACTqCWRfh8YZvXVLeiCGB3JcsgDW9usnOSR1Rq
- AGAYg0uegeuRC9Sx2XL+ydP3Y8BhmVdRTvy3Axxl0E4WjS++hCsAnukU0Ju3RJo9Q4Qc5iQAu2I
- hKvmzxRxF22/do9WKRea5LFe8/5P+nc23dvqF253VsOELmU/6v93iE7dYDluB2oyQnxvxWeNWLA
- s8He4wM7PDJOeysx19z6LJ5WqFfu1XVq66U1KHOsxoJed7Lm2humQSmQdVXccwjoHfy/vpZR0Zg
- qLCqTJPrsOrfTnzeXzpCp9HCJjQnZQpbJkOdLVuE0cjaSpS6dejVpWDdGZS6GueJAy3wV61jvBQ
- VYMX3QHRMJCVVN/z3N1NxMLjFzlhzu/+iX9jTlctE6gvB1TUD/0ILv+ainKo6XrHQahwh9hQzoB
- lQa+apHVJhkaaILysbh3KHnsqjvojDCOqT4UTyJJRJ3JEYXrFlZ+IO9Yieyi45/ZPjnCKALZUUe
- QSU12CiBMB+QJdBXtETwNFowKfPLsuRti24UbsIjbhFPKd7ljtNqgpdcDATIJJUTGfk6EwwIxye
- EJtNFGT07HwaRFg==
+ bh=sdcuRNAQFYtob6yEPETsohJyFlIPNbv+Zn2NcH7jrWI=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBn4ZlTrhhrbvdN7q/q0xl8VBJwCdheUpabZJum5
+ tkfNRJDy32JAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCZ+GZUwAKCRBgAj/E00kg
+ cjJoD/445obenDkJ2ww6j/V4OnGgHkP5M0egpahzT0SriANaT7QkIObfDbx9udE25Un6znndbgt
+ 8vUbYA91FAokbS4DkynY4cXKxi46j7HOYnAicew45FZGRZaLajzGiIXVwvuQXn/F7hJtLDmUBUK
+ XrOlCDQrtMRKfH06dxoZITN9SWhp3aBm6Huq+9nBnw+xIkQUblfcWFdnRWkcyn/6tuuYZMvBnwJ
+ K66LZW3tL8nHZiEzrIMX3CD63GUo2kGfzqK3cmB7j9Dp3WGC0jh8iCgjUY2bsZije1q8K1m40OQ
+ LSmgTZJctX903izdObj6fvhuOl0nqvVBv+X9IZbL7EA9ykSdACJE4S4NoLnt6knBmcDJOCYwO/o
+ JaHIQh7VP9OuBX2raJcNMy3XcM3N+EdP6wH7omOzTeFMPiR299/EFLUnSl49NTdho+792cDHc9f
+ 46IwQ0P3TDkfxNAtFAR2rXkzwwdWNASfz5JuvrpnUvY1NI5PpUwjQ30sG088EOPKdBUMlrOEIKL
+ ee20LJGG2aOL0vD+dJnzrqXQv2uCr7P3Edm/ea+ZPXOJ89mOF0gGw5cuGXH3AYAUIFTpLd1rXQW
+ 0D4esR1/YpfKoxq/0S2FUFdpqCk+MhTF/FQy+rcfD7PtVhecHx9VZZBqZKP+KYAJCfbXCS4AVwp
+ haOaR4i1hClUEsA==
 X-Developer-Key: i=david@ixit.cz; a=openpgp;
  fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
 X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
 X-Original-From: David Heidelberg <david@ixit.cz>
 Reply-To: david@ixit.cz
 
-From: David Heidelberg <david@ixit.cz>
+The Devicetree Specification, Release v0.3 specifies in section 4.3.1
+a "Network Class Binding". This covers MAC address and maximal frame
+size properties. "local-mac-address" and "mac-address" with a fixed
+"address-size" of 48 bits are already in the ethernet-controller.yaml
+schema so move those over.
 
-Wireless controllers share the common properties.
+Keep "address-size" fixed to 48 bits as it's unclear if network protocols
+using 64-bit mac addresses like ZigBee, 6LoWPAN and others are relevant for
+this binding. This allows mac address array size validation for ethernet
+and wireless lan devices.
 
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+"max-frame-size" in the Devicetree Specification is written to cover the
+whole layer 2 ethernet frame but actual use for this property is the
+payload size. Keep the description from ethernet-controller.yaml which
+specifies the property as MTU.
+
+Signed-off-by: Janne Grunau <j@jannau.net>
 Signed-off-by: David Heidelberg <david@ixit.cz>
 ---
- .../bindings/net/wireless/wireless-controller.yaml | 23 ++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+Changes in v5:
+- Incorrect DCO chain, missing SoB. (Krzysztof)
+- Improved address-bits description. (Krzysztof)
+- Link to v4: https://lore.kernel.org/r/20250319-dt-bindings-network-class-v4-0-2329336802b4@ixit.cz
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
-new file mode 100644
-index 0000000000000000000000000000000000000000..7379f6c1aa05c15a5bc7b34df6502cc174af9a90
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
-@@ -0,0 +1,23 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/net/wireless/wireless-controller.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Wireless Controller Common Properties
-+
-+maintainers:
-+  - Lorenzo Bianconi <lorenzo@kernel.org>
-+
-+properties:
-+  $nodename:
-+    pattern: "^wifi(@.*)?$"
-+
-+allOf:
-+  - $ref: ieee80211.yaml#
-+  - $ref: /schemas/net/network-class.yaml#
-+
-+additionalProperties: true
-+
-+...
-+
+Changes in v4:
+- Changed the mailing list address (Rob)
+- Copyied the whole description for the max-frame-size, including the
+  MTU x max-frame-size contradiction. (Rob)
+- Link to v3: https://lore.kernel.org/r/20250318-dt-bindings-network-class-v3-0-4d8d04ddfb61@ixit.cz
 
+Changes in v3:
+- Incorporated wireless-controller.yaml suggestion (Andrew)
+- Link to v2: https://lore.kernel.org/r/20230203-dt-bindings-network-class-v2-0-499686795073@jannau.net
+
+Changes in v2:
+- Added "max-frame-size" with the description from ethernet-controller.yaml
+- Restrict "address-size" to 48-bits
+- Fix the mac-address array size to 6 bytes
+- Drop duplicate default value from "max-frame-size" description
+- Link to v1: https://lore.kernel.org/r/20230203-dt-bindings-network-class-v1-0-452e0375200d@jannau.net
+
+---
+David Heidelberg (2):
+      dt-bindings: net: Add generic wireless controller
+      dt-bindings: wireless: qcom,wcnss: Use wireless-controller.yaml
+
+Janne Grunau (3):
+      dt-bindings: net: Add network-class schema for mac-address properties
+      dt-bindings: wireless: bcm4329-fmac: Use wireless-controller.yaml schema
+      dt-bindings: wireless: silabs,wfx: Use wireless-controller.yaml
+
+ .../bindings/net/ethernet-controller.yaml          | 25 +-----------
+ .../devicetree/bindings/net/network-class.yaml     | 46 ++++++++++++++++++++++
+ .../bindings/net/wireless/brcm,bcm4329-fmac.yaml   |  2 +-
+ .../bindings/net/wireless/silabs,wfx.yaml          |  5 +--
+ .../bindings/net/wireless/wireless-controller.yaml | 23 +++++++++++
+ .../devicetree/bindings/soc/qcom/qcom,wcnss.yaml   |  5 ++-
+ 6 files changed, 76 insertions(+), 30 deletions(-)
+---
+base-commit: 882a18c2c14fc79adb30fe57a9758283aa20efaa
+change-id: 20230203-dt-bindings-network-class-8367edd679d2
+
+Best regards,
 -- 
-2.49.0
+David Heidelberg <david@ixit.cz>
 
 
