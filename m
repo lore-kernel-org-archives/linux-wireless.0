@@ -1,153 +1,184 @@
-Received: from e3i165.smtp2go.com (e3i165.smtp2go.com [158.120.84.165])
+Received: from EUR03-VI1-obe.outbound.protection.outlook.com (mail-vi1eur03on2069.outbound.protection.outlook.com [40.107.103.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A98D5264609
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2025 16:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.84.165
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742834071; cv=none; b=tebOhMkBUE0tbp/NC39Nln9nMQRpqJKlOjc7LvZudLpW8yy+JJC75NjQ0Bw0btWaYjHPkUIDyXnR4hMxzRi1FBAqTR1FQjnXGm+QO7zB2AWC7CQJWc6bO1lAjeldXCPqEM+/6REEw42n3L5Cei8Iy0HiwZCMfHA8QlsPpGHtEY0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742834071; c=relaxed/simple;
-	bh=rzhCWchD87I7ztxWtfLe2qG+z3B3I2xgab4DuMfQauE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=muP7D6yXXOFrRKqyjANa2XtDrbisp+794dapxIOnTq+rX7P105SqzAHli/tgoH8alwf2Hfi4F3MNqtFXQrndzeoA8X8kX3x29HysvL+BbPzBEKKANxAyQJMd6s98jfWNzpyhqy5MksiUdSEn95KtQUGj0lp8hX/Jgxdr/9+aj14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=urPNGqkZ; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=JmdGFrB/; arc=none smtp.client-ip=158.120.84.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E44625D1E1;
+	Mon, 24 Mar 2025 16:47:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.103.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742834860; cv=fail; b=IhJy7NDdKZMe8H/Oh8UKDr+iiYTkvPpAZlpTZhoS/bxafu39lxkXUJ52CYaVnyGfIj13b0h5ntXYrilhgM74yAhLMqiF0EdTbDgVg4+6iCbMYErRYw8FazgZBK7xxNhqSSJMBpJGyztiX7m6W5+vpW3mtga6+N/t3JZG6JJNbTA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742834860; c=relaxed/simple;
+	bh=ET3XbMlX6Kr7DJdf/cNXHtN90Xpp34d0avV1ClNGllg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=C3M0aqoXg85roDCQ6d/wr1QC1pglReyr3sJruuzaC+VMui550nw2Hysi79Jd/AZ4yUkp/6odcgldiWL2rI+ZISBdAUoqtc2c027wkTARnBlXw5GD3GCl6JonMb7v/SbCu4TBf1BehQHdPM71bxyLNdfPWmZAKuRfMr2W4/4tEOM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Zt3+UOOH; arc=fail smtp.client-ip=40.107.103.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="urPNGqkZ";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="JmdGFrB/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smtpservice.net;
- i=@smtpservice.net; q=dns/txt; s=a1-4; t=1742834064; h=feedback-id :
- x-smtpcorp-track : date : message-id : to : subject : from : reply-to
- : sender : list-unsubscribe : list-unsubscribe-post;
- bh=1NTS6jCiyypS+X7Y3GlJTmuu6rQHp2cIDev00qbGtlg=;
- b=urPNGqkZg8C4YreF8rNtUX57XSrrMCCnxGdxobZBzRTz7JFeQYVlopABKvGju/kgzHqY6
- NrvgpWOIZCUQR9tYMpJOEJkxLB6WFwe7+qdBuoX3lyE8867vrkMFoi5BrafT/JGWE5nxAia
- fV6e7tRfYdsZbCEQilH9N1AZeLTy+LXlZR/59ULApcXfNwnHzoKnreKp7gpWMPONypJOA/3
- uwq34/4t8bOMEWG8BqcE2221b1BB/x1nQrI8arSrfCjD8wijJ2G17JkM2P808PDIY4XbDvK
- HgAxnAWnfYli31mTIg8t+Z5N3Gxr8e6pIj0lZ+z29+UOHTgs++PTn2NQ2aJA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1742834064; h=from : subject
- : to : message-id : date;
- bh=1NTS6jCiyypS+X7Y3GlJTmuu6rQHp2cIDev00qbGtlg=;
- b=JmdGFrB/9W4a8RtfOU7s9mzPBE/gfo98gIvEvDjy6ZruJ9crhqFlvpEMdA8V6v0Y96XDN
- 7QxeydoSX8DigO1q9BtWfVMPRDdmN0MMkwtNDxQIiaHDtnotCPg63rhkBZfU3kvhl9Wbxn6
- A/v/5eL+9vQ65WVT4mJeF2OB6ZRTP83h4ZElWFsIuyGmX987rsNm9NCwcyPcml1xdrmXuBq
- XY6n01FmUQBxhEoOb047xupD268Bx91ymfnCQztaAvSj9Sf56w3b4t3QlO4GMakBAHbNjAz
- y2pW/k6ZwAHwwQ6x0v13tj8fylw+RD1iUYgz2E6t4vGVR8wqu/Yfd4BpEfmQ==
-Received: from [10.12.239.196] (helo=localhost)
-	by smtpcorp.com with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.97.1-S2G)
-	(envelope-from <repk@triplefau.lt>)
-	id 1twkkk-4o5NDgrs07b-lUJC;
-	Mon, 24 Mar 2025 16:34:18 +0000
-From: Remi Pommarel <repk@triplefau.lt>
-To: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH wireless v2 1/2] wifi: mac80211: Update skb's control block key in ieee80211_tx_dequeue()
-Date: Mon, 24 Mar 2025 17:28:20 +0100
-Message-Id: <06aa507b853ca385ceded81c18b0a6dd0f081bc8.1742833382.git.repk@triplefau.lt>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <cover.1742833382.git.repk@triplefau.lt>
-References: <cover.1742833382.git.repk@triplefau.lt>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Zt3+UOOH"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YlPF0rq/DmSdnPO7rjnj5St+dkpekV22MIvmKETiYUbPuKBEoOCyhE/UY3gXvjVkuKkZV5p1XMEOzEyDv4Jln8Zn4AobaOozykgnTZZAb4Ef29wjwP+WDmZYntmKonr/7LY1k8CwgRSw5Dpb22C5AQa6NbGbFkd+Fy9XvwEPCebFCx7anitWhMRowtTT75pyD5nErF8XtuFA6YWrzS31cB0A5vHRlXnNgBGhGog3U61yxDPLLb+d5FYcsUuUXr2gOOjRrbvgwM7XypA4FC4D2zhdT3EB5/qGYYmN65AuMUUC8GKXsGfHNnO7BfTfxvqhkYwdG9Ns0FI98a6ukbtpQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ET3XbMlX6Kr7DJdf/cNXHtN90Xpp34d0avV1ClNGllg=;
+ b=X6/+qMwBYR348LOWrfi//nvaIV7bcXeH9WkcVsWMoJBARfqIv3OGkclxytBQFybgUwSUs3fsBkqszXI6ZwKIANa9MxRaGoicBpM0yMFx+IRfUYDLsuprjDb61S+oCdK63pQ2qxmM2ILR/2QMtpH804UvUrOAcVfCEhLBNAn1uRULDm12wBdJPwBDtdN1+wE1LxH84PlKGsbFL0NdIpSxx6QjyFOYKxxvpyeRCvlTvwe25LqUU7juzrEUwiNtFFFJAlJ+IJwnKnUckzU5lBlypbhUkLYLCI5js/ej5mfv8RVBksBYwSHJmaeezaLxKZyodXghxrQF7V1gsF2YhHEdfQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ET3XbMlX6Kr7DJdf/cNXHtN90Xpp34d0avV1ClNGllg=;
+ b=Zt3+UOOHicCZNhu6THD4xWvElGjSyObZG5uUyK3kwfvrZ8nxq+trdiXCZYFjBXv66WA/heG5SQ2JYritP78hO3GC8cYu5nHYG2Outr5tornV5FdSYXwAyMtPP3FPaNusbypkEaNClq0fwUnG0LOVlE8rd5r+O3aFuICz1Mk//hOYg1cw/KnxHPlyjwJcFZ8JK8sk0kO4jobGay1113CA0IPHOJWW1lx5/0hE4UhC5rKCWK0F39Xs+Av/4zscMiKeM7AawRqF6tZaD/KXP7ETQJ/25Uvu/kkk9ILNQkAIFiepIw8EmdLFD8/pI/wploVBLdJHr0oNh4wsDOjrN8sWZQ==
+Received: from PAWPR04MB9910.eurprd04.prod.outlook.com (2603:10a6:102:380::7)
+ by PR3PR04MB7482.eurprd04.prod.outlook.com (2603:10a6:102:8f::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.42; Mon, 24 Mar
+ 2025 16:47:34 +0000
+Received: from PAWPR04MB9910.eurprd04.prod.outlook.com
+ ([fe80::24b9:b9fd:bcc0:4ee6]) by PAWPR04MB9910.eurprd04.prod.outlook.com
+ ([fe80::24b9:b9fd:bcc0:4ee6%7]) with mapi id 15.20.8534.040; Mon, 24 Mar 2025
+ 16:47:34 +0000
+From: Jeff Chen <jeff.chen_1@nxp.com>
+To: Francesco Dolcini <francesco@dolcini.it>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"briannorris@chromium.org" <briannorris@chromium.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>, Pete Hsieh
+	<tsung-hsien.hsieh@nxp.com>, "s.hauer@pengutronix.de"
+	<s.hauer@pengutronix.de>
+Subject: RE: [EXT] Re: [PATCH v4 2/2] wifi: mwifiex: Fix RF calibration data
+ download from file
+Thread-Topic: [EXT] Re: [PATCH v4 2/2] wifi: mwifiex: Fix RF calibration data
+ download from file
+Thread-Index: AQHbl8POAsvtZwMDWU+9/b7JncVaoLN6qSCAgAffiIA=
+Date: Mon, 24 Mar 2025 16:47:34 +0000
+Message-ID:
+ <PAWPR04MB9910B875495307CD3FC0BD1D9CA42@PAWPR04MB9910.eurprd04.prod.outlook.com>
+References: <20250220061143.1417420-2-jeff.chen_1@nxp.com>
+ <20250318050739.2239376-3-jeff.chen_1@nxp.com>
+ <20250319163113.GB46894@francesco-nb>
+In-Reply-To: <20250319163113.GB46894@francesco-nb>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PAWPR04MB9910:EE_|PR3PR04MB7482:EE_
+x-ms-office365-filtering-correlation-id: df7de8ef-c337-4b3d-d9c4-08dd6af393bd
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?W8aQxov9df6t4aiYbsMAjrWgM0rfb88FL/mJGD4D/n1faYYWyPU9HY1iCFvW?=
+ =?us-ascii?Q?dGLVkBIBU9iwxVJQR+4m/Fa7CZQeVMo4JZWQCB+Howv7cETQLDXSxGhnJzOM?=
+ =?us-ascii?Q?YzGW9O0NIjAzu/Y7jWyfa3aOwQ6+ey78YiM5iMC5YHTDoLI2tSPyVxBy76Zg?=
+ =?us-ascii?Q?nhwznPybnn2eaCg0SasQShdIKTzIORM6ucC/kDlDiYmOHyyocKIQldu3xfym?=
+ =?us-ascii?Q?etE8vjzGUwRTjoe/1ZhA2Wp/jVTZ1oH2+LFbd0k4zQV7lxSyAxNQbvIc8G2a?=
+ =?us-ascii?Q?CY+fHUIwVKOmkKypUDgAl0mi4LICrdYcQkdzYUFNbHd714UT+I5DKJyHNnhf?=
+ =?us-ascii?Q?cqT2BUAfAHu03ounonUh1Qh5arg5JNh7rJNI6SFWGjyWLUwj/9S2TlS2Q/SN?=
+ =?us-ascii?Q?sgtHstHz3rhZ84WUfA5SNnLJ53TIGu87na6U2+PXrQCgqkZUql3CUW+TJbmz?=
+ =?us-ascii?Q?gEuvJdeS1kwGGbZMwLmttWcrmHFP2nl4JT/aNMP4C6s+5selgOCdlVXdAG7v?=
+ =?us-ascii?Q?WkzstkeEvs9OCVSfzxS2uJoX94Ifd+BYLeI6knYDD8BPiLh101ioDPZfhmz6?=
+ =?us-ascii?Q?ueZa4FwP/I+4b/vYjcw7yYJuP7txIHSUDOIyBPJmpdpUVtrRnSYmY2hO0y4/?=
+ =?us-ascii?Q?M+IBZMr+/Xm32zq0EbwRK+WiZhily9lkSOftSFquk/EUxwiChO1PX8scluHC?=
+ =?us-ascii?Q?idJl/qslQh/D5fAE1Rj9bdAhfxUkbEZ3CFEqxZWP2Pt09JoUlnfnjm3rurcO?=
+ =?us-ascii?Q?EYc5ggaabwQDFXIhFOzyP44PstOJROWsNvGWe/f0+qqW5OYaRJGZTrW2GCj3?=
+ =?us-ascii?Q?WRkTmUmksMA4m+WhcPt9q6dZpcN9l/rE69wVMZ5VFKJoee5e48zl/OsyZb7i?=
+ =?us-ascii?Q?pWqwZ/z8V8KeulVTjvQK8J75gazFsm03sA6HRwY5MmziPPtN97XIA4GkOorZ?=
+ =?us-ascii?Q?NwTUFAzbFulGYslaBMCNWQQgyi7wjDUb+7bTJqQIpOotDrBi3+UT0NBxw/bj?=
+ =?us-ascii?Q?8rSSr7bgfKjcrwPQ6j6uCFhsTRbmbNZVwEv+7JEV3YvkzomyduJO0imdrucf?=
+ =?us-ascii?Q?qr0HkGVeRTYLFPjh5yXgIy1FVmfTvJh4NNVic3z8L5wCM9wfznBkpCLEyVci?=
+ =?us-ascii?Q?u47EtYU42ZObdrpq/S3t9ddIWoCpAOfZiVnq6J0U4Ak4cWvTQT3hvRLg1A4u?=
+ =?us-ascii?Q?mo8qlqPqItXBXNmIBnKW6pB1CspJsDSC10M7T3Tst5Nu+X3Os7hCiWj9VfIk?=
+ =?us-ascii?Q?ebxkD2WZQnSrvPuO8hv0zpIz1BMSWZYzZWFUFSKqzB2yOzvrBgrRhgiDMFjN?=
+ =?us-ascii?Q?b/K89cnQw9NqLaFWLGwwGsP5Qio7tRuiLzoqUxqGrNmtwcgHT1O8rQQBWnvh?=
+ =?us-ascii?Q?dqkSkmT4jzDxEsyA/MggYA6xWDshchliFLK6r8m+wB8r56+uzlxv9NHVkJ7m?=
+ =?us-ascii?Q?O3d1slouudyS4xO3if0+oeJCeUBlkNvP?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAWPR04MB9910.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?wurErTjU4IisiaVyM5RVKexTdbaSMeQFUK2z7g2N6qFq68WuSXGhe16xw6XD?=
+ =?us-ascii?Q?Dlwfhs/Txe6TbTM1I1sbs3kLsKVr79bOzzU4BAZ8a9q8RXXyCSlxJ9T82wai?=
+ =?us-ascii?Q?8Yhvk3eibWhG3pbnI0eccSUNGUM/O6af0ch1kQ8Ul/2zWyXMlgSWG55Evh+s?=
+ =?us-ascii?Q?95POSYvvr5vaac9GOdqgQ5NyuI9GKjQ71QhSbVCLAhOJYtKfjwVQfKec7wqh?=
+ =?us-ascii?Q?v5rkL7dZgWHI4RG4n8xkPl4t54A8aW2yJklBshOMhqTrsJGPyyNwTZCa+FBA?=
+ =?us-ascii?Q?OLEYzC1tUYdk4R9SR6hfaKtUeaH3L77/W0y2Cs/HyDhfmFl9QiEhKGe8BdeR?=
+ =?us-ascii?Q?ydiphHB6Od34pNpX6NZNsKrhwgMSwuGbdpfvQ5d7Pl/fZxYcU+O132fnejh6?=
+ =?us-ascii?Q?njVt4Kiqppq7YOks4ZdKM9pqj2jmibyA9r/O8957C2GTJAR+KiQRWDga9+/r?=
+ =?us-ascii?Q?nZnSJrcIa5bXrEn2Hhz8CFqNeJJDB+bfiS/SoxkO+iMSsRbboWbs6mQzp/XC?=
+ =?us-ascii?Q?hGwERpVLBqTIlO+THZZqm3YKHBrntydUrMuF9ad30DMdfnrNhTkMyBrIEyUs?=
+ =?us-ascii?Q?z/ys3PSnhx8bjwk84cbbtc3zJlltBJwlBAeit6/QP3AxZ1GxqE9eC0fKnx7a?=
+ =?us-ascii?Q?0TcI+bEKDv/nO3ujhgVcO/b58kRCWmUvU0zxByAyCJbG5fQS19n1KZiO9Ops?=
+ =?us-ascii?Q?SZojulNKMP5URFcsvd86jno//ZC10fT1p3+s68/hCaNoszIe7g4KfUtTNFfa?=
+ =?us-ascii?Q?/jF4lfkeynwG5kXolk3coiGG21UqHGDXR9A2jxjIdRBji/4VxZ+Ze5zIZ3vW?=
+ =?us-ascii?Q?6XEZ2jLj8IOOYM9C+qS19l2lul9gPyfLFHDvbkOHKjjYeHxPcfqgvc+tySgf?=
+ =?us-ascii?Q?apzISyktyHH5fkwUqTQ9EcfgrDi5HN2SpwKqLp6HGEHssLL9tNO5/ipk/kzx?=
+ =?us-ascii?Q?dERHXPQr58hEuea8oCr+FYFfixhftrMDX+Y5YsfzDQ0Orxuap1MKsC8DlZYP?=
+ =?us-ascii?Q?2FUFI3cMnUVq2e7HTdCpCMUn2moJJh+PCmQI5I46GCUpkwyVi9K/beUu2pqY?=
+ =?us-ascii?Q?2iw8ZzzjGM3zkYunyMUUgCr6EQMhp0A/0/QWEX3O6dyB3LFqgSHlGpw3ssLQ?=
+ =?us-ascii?Q?Z5OA0kil5m7NziJlOXIRKfePFcDMwLkUZzZYtKiB9hmx2npi4GeLlJF0xH76?=
+ =?us-ascii?Q?G+nNesup6Obh+hqc7ihLIo2c8BL2TicuDAXZQpTAbHJSD4QzfJtgz5StSPG0?=
+ =?us-ascii?Q?OtPhwr4k2x4xC4+FbcJ2025j7ZTZv7TSNGdxdmKvXOeATJ3cv3W+9WyTyQwU?=
+ =?us-ascii?Q?cH2JIIGtonMpJolgC5AbZWK8ECphIP1LzG3jOx+1Q6NO0orhBntq6lAGRoRp?=
+ =?us-ascii?Q?Rncl3JMhD/eoa/x/TdDM9OUSd6HAlh9K6797WrJOqndEunZtXtKhyVA5Pra1?=
+ =?us-ascii?Q?wxxMkvNDmS3r0AYVEiFF0lzBqpzyXHvdmkur7rrgdCxpxdsUvzYHi+MOuo9D?=
+ =?us-ascii?Q?mCz+sLeFy/90L0ielsfyMCKzf7infUdqJ1YGTHlEmkUPHDA513+bc2IoOqoq?=
+ =?us-ascii?Q?PRbenUeyq/yy9qOcoTR9SZvs1WwR0sockr0lKtZP?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 510616m:510616apGKSTK:510616s6QhpvA6O8
-X-smtpcorp-track: OvQ5fbPVu4PM.D5hr158FtnhK.cBrepwdM64H
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PAWPR04MB9910.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: df7de8ef-c337-4b3d-d9c4-08dd6af393bd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Mar 2025 16:47:34.4684
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 0vKjihul8eBq801IZclaBIsbGrvD/gnaLEWI97cyeTkqb/7QXHGpWkHkzm/7CbV2fV5XosnzneejT1U4nM7vOg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR04MB7482
 
-The ieee80211 skb control block key (set when skb was queued) could have
-been removed before ieee80211_tx_dequeue() call. ieee80211_tx_dequeue()
-already called ieee80211_tx_h_select_key() to get the current key, but
-the latter do not update the key in skb control block in case it is
-NULL. Because some drivers actually use this key in their TX callbacks
-(e.g. ath1{1,2}k_mac_op_tx()) this could lead to the use after free
-below:
+> Hello Jeff,
+>=20
+> On Tue, Mar 18, 2025 at 01:07:39PM +0800, Jeff Chen wrote:
+> > While this patch restores the ability to download RF calibration data
+> > from a file, it may inadvertently break the feature to download
+> > calibration data from the device tree.
+>=20
+> I do not think this is acceptable. Fixing something by adding another bug=
+ is not
+> ok. You should fix the calibration data from file, without breaking the d=
+evice
+> tree calibration functionality.
+>=20
+> Francesco
 
-  BUG: KASAN: slab-use-after-free in ath11k_mac_op_tx+0x590/0x61c
-  Read of size 4 at addr ffffff803083c248 by task kworker/u16:4/1440
+Hello Francesco, =20
 
-  CPU: 3 UID: 0 PID: 1440 Comm: kworker/u16:4 Not tainted 6.13.0-ge128f627f404 #2
-  Hardware name: HW (DT)
-  Workqueue: bat_events batadv_send_outstanding_bcast_packet
-  Call trace:
-   show_stack+0x14/0x1c (C)
-   dump_stack_lvl+0x58/0x74
-   print_report+0x164/0x4c0
-   kasan_report+0xac/0xe8
-   __asan_report_load4_noabort+0x1c/0x24
-   ath11k_mac_op_tx+0x590/0x61c
-   ieee80211_handle_wake_tx_queue+0x12c/0x1c8
-   ieee80211_queue_skb+0xdcc/0x1b4c
-   ieee80211_tx+0x1ec/0x2bc
-   ieee80211_xmit+0x224/0x324
-   __ieee80211_subif_start_xmit+0x85c/0xcf8
-   ieee80211_subif_start_xmit+0xc0/0xec4
-   dev_hard_start_xmit+0xf4/0x28c
-   __dev_queue_xmit+0x6ac/0x318c
-   batadv_send_skb_packet+0x38c/0x4b0
-   batadv_send_outstanding_bcast_packet+0x110/0x328
-   process_one_work+0x578/0xc10
-   worker_thread+0x4bc/0xc7c
-   kthread+0x2f8/0x380
-   ret_from_fork+0x10/0x20
 
-  Allocated by task 1906:
-   kasan_save_stack+0x28/0x4c
-   kasan_save_track+0x1c/0x40
-   kasan_save_alloc_info+0x3c/0x4c
-   __kasan_kmalloc+0xac/0xb0
-   __kmalloc_noprof+0x1b4/0x380
-   ieee80211_key_alloc+0x3c/0xb64
-   ieee80211_add_key+0x1b4/0x71c
-   nl80211_new_key+0x2b4/0x5d8
-   genl_family_rcv_msg_doit+0x198/0x240
-  <...>
+There seems to be a misunderstanding. The issue with breaking the device tr=
+ee
+calibration functionality was actually introduced in version 3 of the patch=
+. Version 4
+resolves this problem by ensuring that both file-based and device tree-base=
+d
+calibration work as intended. =20
 
-  Freed by task 1494:
-   kasan_save_stack+0x28/0x4c
-   kasan_save_track+0x1c/0x40
-   kasan_save_free_info+0x48/0x94
-   __kasan_slab_free+0x48/0x60
-   kfree+0xc8/0x31c
-   kfree_sensitive+0x70/0x80
-   ieee80211_key_free_common+0x10c/0x174
-   ieee80211_free_keys+0x188/0x46c
-   ieee80211_stop_mesh+0x70/0x2cc
-   ieee80211_leave_mesh+0x1c/0x60
-   cfg80211_leave_mesh+0xe0/0x280
-   cfg80211_leave+0x1e0/0x244
-  <...>
+The current patch restores the ability to download RF calibration data from=
+ a file=20
+without affecting the device tree functionality. I'll clarify this in the c=
+ommit message
+to avoid further confusion. =20
 
-Reset SKB control block key before calling ieee80211_tx_h_select_key()
-to avoid that.
-
-Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
----
- net/mac80211/tx.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index a24636bda679..0c6214f12ea3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3893,6 +3893,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	 * The key can be removed while the packet was queued, so need to call
- 	 * this here to get the current key.
- 	 */
-+	info->control.hw_key = NULL;
- 	r = ieee80211_tx_h_select_key(&tx);
- 	if (r != TX_CONTINUE) {
- 		ieee80211_free_txskb(&local->hw, skb);
--- 
-2.40.0
-
+Best regards, =20
+Jeff
