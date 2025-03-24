@@ -1,56 +1,57 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D43019D8A3
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2025 06:25:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BE5619CC34
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2025 06:25:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742797561; cv=none; b=Oy10DXyrV86jNESvbVPda5aZ9r/J3nG88bNpZYLMzGQ1RvM8gaZG5W/hzNzzbhNEVdHjz+vyAwbML9wwk+aE4f97Gh4IyLj0R/qjFxBt1jsA5BHDtxvlTlEhuVQOkAeqKsqI0fR4zCwSki0EtmG2IhAS2oHZGvw8tw0OdglSLL4=
+	t=1742797561; cv=none; b=tCyXMRLg8bcgjBdYvJ4zYaL8p6zqO8RzjKUxN6Pgeis3My+zsKukEBVfnMi++wMgSXiEPWF/iJqJy/ufmcw/a8JHRsPBra2JbsocvnOvBCEjGZQx2MA7w+uWFmkef2weE3RHJds3cWwxLlGwkl9Sp9NAniD1dMnBWUxrLhr3WAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1742797561; c=relaxed/simple;
-	bh=ALKZFtOlMgidkOo/s3Ga2pszxoR3X1fD/UDolZyXruo=;
+	bh=hrA4aMDWLcPyooaH2t7qw/TXYVkC6xddv9PKOhYIjBw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eIsI65p01TGu1QFJgwJDVau5khiKEVyif7DarZ43NIv6FSM4wjLWyLJtia6NV3OWt59+EQPEGJnlLDsU/RDbhgpyRI/sy4jsQq/pLnEUiR7vxYBOXHOxGg1Rmvv2cN/M3M7DYVercw74upPOYJ3zxmgGERkS8WMwizScDXl1MHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=b3537Ss4; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=bQyfR67GyNTBMyIxNhNA1+PqWe3pG0crfjP7hNCYtPc/aJqQh3+aS0rW8PkHQEVKTDsfMbVFeGgoctCtDFzxyPvxuVw1/M2wkt9P19/4rnLgtI618kWMqwJeTKoWIRekJ20qwuA44Q0NOS83L3TWcbIlFn8PUk9Lmfpbr+bUYf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mMiZdyDk; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="b3537Ss4"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mMiZdyDk"
 Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52O6FXxv014969;
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52O6FXxw014969;
 	Mon, 24 Mar 2025 06:25:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	j3GeGSZ/037YJbSgzSx2EW8gPZ3ujagwiTz4xIADG2M=; b=b3537Ss4LmY255i+
-	oCmUAz4cyYbYc0U8WU/HLK1o1GfpSjWc2aya2X73GoaG0yUia1qTQspTo/608hKL
-	UPlxCs4B8+HmG5pwO/e8XNnhPT0drVmUZrmcmIhL9uZHDvkn8jIrhvA0M/Evx1Dd
-	xY2oXvsfAm4+4JZq4kP+ZKfBKVM8PmFUndsQLHYnB35Cng0XD3/wH1R7rQw8KfVp
-	d8EHE5tOl4UCU+ck1B3+iWfvko5rV/9qznlMFIEuLJ963n5RskaPMOWGA5uCK4hk
-	IHy5MQEjo+XSexTRaAoG9jTfTyz0g63DGCQwfQJkm6rTaaMB7k/aNEqK/Y4/XRtV
-	E9hxQg==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45hm79kcbm-1
+	aRis+e7KYp3xpWhUEKw3orOBV4ApTtDrgxCQZnKymPU=; b=mMiZdyDkN+l5py5v
+	Xl59A4vmRFjNxjp1nyR4qPr7fQ7kFJcT9jG+aR6Q/1LWlRQcWzx69vHcZTWj4YWs
+	4SC5O5Xz5ByVAp5m6/oLcS0TNrEm1AkbBGg4NC4EAlYB5zIcQqO2NsrsYFlbOq5W
+	oUOhuNn5liEaFxvi5uEHxyiGJ+XyvAaNvwCidrMFlbbOSR+y9j9Af/2G7J1pXHqR
+	mIpV0ndO/yn4fSYN5lTxZ7D3S2t1UQiaoxj3M+EWFLfC4Li+JahncEH+qfTcb6FS
+	zegJ+ylkrg5UfqoQJlUSRBpLDeRHEWvxQbtKZpRrxgMp5T67BLYyPFw2aAYTMNWP
+	PPHg9Q==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45hm79kcbf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Mon, 24 Mar 2025 06:25:55 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52O6Phbo012950
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52O6Pc2m014961
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 24 Mar 2025 06:25:43 GMT
+	Mon, 24 Mar 2025 06:25:38 GMT
 Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 23 Mar 2025 23:25:41 -0700
+ 15.2.1544.9; Sun, 23 Mar 2025 23:25:36 -0700
 From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 To: <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Karthikeyan Periyasamy
-	<quic_periyasa@quicinc.com>,
+CC: <linux-wireless@vger.kernel.org>, P Praneesh <quic_ppranees@quicinc.com>,
+        Nicolas Escande <nico.escande@gmail.com>,
         Vasanthakumar Thiagarajan
-	<vasanthakumar.thiagarajan@oss.qualcomm.com>
-Subject: [PATCH v11 04/10] wifi: ath12k: Replace band define G with GHZ where appropriate
-Date: Mon, 24 Mar 2025 11:55:12 +0530
-Message-ID: <20250324062518.2752822-5-quic_periyasa@quicinc.com>
+	<vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        Karthikeyan Periyasamy
+	<quic_periyasa@quicinc.com>
+Subject: [PATCH v11 02/10] wifi: ath12k: Add extra TLV tag parsing support in monitor Rx path
+Date: Mon, 24 Mar 2025 11:55:10 +0530
+Message-ID: <20250324062518.2752822-3-quic_periyasa@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250324062518.2752822-1-quic_periyasa@quicinc.com>
 References: <20250324062518.2752822-1-quic_periyasa@quicinc.com>
@@ -66,10 +67,10 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: ogoXR_vvuaY9CWUfOEZQwPclgRNiIuE6
-X-Proofpoint-ORIG-GUID: ogoXR_vvuaY9CWUfOEZQwPclgRNiIuE6
-X-Authority-Analysis: v=2.4 cv=IKYCChvG c=1 sm=1 tr=0 ts=67e0faf3 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8 a=ZOpDDC7MHkUEBUKdMr4A:9
- a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: jC0YjPsJ755amBhmb9otvzHx8Wul-kO3
+X-Proofpoint-ORIG-GUID: jC0YjPsJ755amBhmb9otvzHx8Wul-kO3
+X-Authority-Analysis: v=2.4 cv=IKYCChvG c=1 sm=1 tr=0 ts=67e0faf3 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=tlquAYahj6r-_7anQfgA:9
+ a=RVmHIydaz68A:10 a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-24_03,2025-03-21_01,2024-11-22_01
@@ -80,449 +81,329 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscor
  reason=mlx scancount=1 engine=8.19.0-2502280000
  definitions=main-2503240046
 
-Currently, band define and enum are with the word 'G'. Replace it with
-more appropriate 'GHZ' for clarity and correctness.
+From: P Praneesh <quic_ppranees@quicinc.com>
 
-No functional changes. Only compile tested.
+Currently, the monitor Rx parser handler is inherited from the ath11k.
+However, the ath12k 802.11be hardware does not report the Rx TLV header
+in the MSDU data. Instead, the hardware reports those TLVs under the
+following TLV tags:
 
+1. Buffer address
+2. MPDU start
+3. MPDU end
+4. MSDU end
+
+Therefore, add support for parsing the above TLVs in the Rx monitor path
+and use this information for MSDU buffer and status updates.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Tested-by: Nicolas Escande <nico.escande@gmail.com>
 Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
 Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h    |  8 ++--
- drivers/net/wireless/ath/ath12k/debugfs.c |  4 +-
- drivers/net/wireless/ath/ath12k/dp_rx.c   |  4 +-
- drivers/net/wireless/ath/ath12k/mac.c     | 52 +++++++++++------------
- drivers/net/wireless/ath/ath12k/wmi.c     | 36 ++++++++--------
- drivers/net/wireless/ath/ath12k/wmi.h     | 16 +++----
- 6 files changed, 60 insertions(+), 60 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp.h     |   2 +
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 157 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/dp_mon.h |   4 +-
+ drivers/net/wireless/ath/ath12k/dp_rx.c  |   2 +
+ drivers/net/wireless/ath/ath12k/hal_rx.h |  12 +-
+ 5 files changed, 170 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index bed996919f04..081a5292a6e8 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -533,11 +533,11 @@ struct ath12k_sta {
- 	enum ieee80211_sta_state state;
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index 75435a931548..427a87b63dec 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -106,6 +106,8 @@ struct dp_mon_mpdu {
+ 	struct list_head list;
+ 	struct sk_buff *head;
+ 	struct sk_buff *tail;
++	u32 err_bitmap;
++	u8 decap_format;
  };
  
--#define ATH12K_MIN_5G_FREQ 4150
--#define ATH12K_MIN_6G_FREQ 5925
--#define ATH12K_MAX_6G_FREQ 7115
-+#define ATH12K_MIN_5GHZ_FREQ 4150
-+#define ATH12K_MIN_6GHZ_FREQ 5925
-+#define ATH12K_MAX_6GHZ_FREQ 7115
- #define ATH12K_NUM_CHANS 101
--#define ATH12K_MAX_5G_CHAN 173
-+#define ATH12K_MAX_5GHZ_CHAN 173
+ #define DP_MON_MAX_STATUS_BUF 32
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+index b1350e60e213..f4d481fe5b2f 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+@@ -1647,7 +1647,7 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k *ar,
+ 				u32_get_bits(info[0], HAL_RX_MPDU_START_INFO0_PPDU_ID);
+ 		}
  
- enum ath12k_hw_state {
- 	ATH12K_HW_STATE_OFF,
-diff --git a/drivers/net/wireless/ath/ath12k/debugfs.c b/drivers/net/wireless/ath/ath12k/debugfs.c
-index 44322db70c85..e8a2d0eefa43 100644
---- a/drivers/net/wireless/ath/ath12k/debugfs.c
-+++ b/drivers/net/wireless/ath/ath12k/debugfs.c
-@@ -88,8 +88,8 @@ static int ath12k_get_tpc_ctl_mode_idx(struct wmi_tpc_stats_arg *tpc_stats,
- 	u32 chan_freq = le32_to_cpu(tpc_stats->tpc_config.chan_freq);
- 	u8 band;
+-		break;
++		return HAL_RX_MON_STATUS_MPDU_START;
+ 	}
+ 	case HAL_RX_MSDU_START:
+ 		/* TODO: add msdu start parsing logic */
+@@ -2090,6 +2090,144 @@ static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
+ 	return -EINVAL;
+ }
  
--	band = ((chan_freq > ATH12K_MIN_6G_FREQ) ? NL80211_BAND_6GHZ :
--		((chan_freq > ATH12K_MIN_5G_FREQ) ? NL80211_BAND_5GHZ :
-+	band = ((chan_freq > ATH12K_MIN_6GHZ_FREQ) ? NL80211_BAND_6GHZ :
-+		((chan_freq > ATH12K_MIN_5GHZ_FREQ) ? NL80211_BAND_5GHZ :
- 		NL80211_BAND_2GHZ));
++static int ath12k_dp_pkt_set_pktlen(struct sk_buff *skb, u32 len)
++{
++	if (skb->len > len) {
++		skb_trim(skb, len);
++	} else {
++		if (skb_tailroom(skb) < len - skb->len) {
++			if ((pskb_expand_head(skb, 0,
++					      len - skb->len - skb_tailroom(skb),
++					      GFP_ATOMIC))) {
++				return -ENOMEM;
++			}
++		}
++		skb_put(skb, (len - skb->len));
++	}
++
++	return 0;
++}
++
++static void ath12k_dp_mon_parse_rx_msdu_end_err(u32 info, u32 *errmap)
++{
++	if (info & RX_MSDU_END_INFO13_FCS_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_FCS;
++
++	if (info & RX_MSDU_END_INFO13_DECRYPT_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_DECRYPT;
++
++	if (info & RX_MSDU_END_INFO13_TKIP_MIC_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_TKIP_MIC;
++
++	if (info & RX_MSDU_END_INFO13_A_MSDU_ERROR)
++		*errmap |= HAL_RX_MPDU_ERR_AMSDU_ERR;
++
++	if (info & RX_MSDU_END_INFO13_OVERFLOW_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_OVERFLOW;
++
++	if (info & RX_MSDU_END_INFO13_MSDU_LEN_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_MSDU_LEN;
++
++	if (info & RX_MSDU_END_INFO13_MPDU_LEN_ERR)
++		*errmap |= HAL_RX_MPDU_ERR_MPDU_LEN;
++}
++
++static int
++ath12k_dp_mon_parse_status_msdu_end(struct ath12k_mon_data *pmon,
++				    const struct hal_rx_msdu_end *msdu_end)
++{
++	struct dp_mon_mpdu *mon_mpdu = pmon->mon_mpdu;
++
++	ath12k_dp_mon_parse_rx_msdu_end_err(__le32_to_cpu(msdu_end->info2),
++					    &mon_mpdu->err_bitmap);
++
++	mon_mpdu->decap_format = le32_get_bits(msdu_end->info1,
++					       RX_MSDU_END_INFO11_DECAP_FORMAT);
++
++	return 0;
++}
++
++static int
++ath12k_dp_mon_parse_status_buf(struct ath12k *ar,
++			       struct ath12k_mon_data *pmon,
++			       const struct dp_mon_packet_info *packet_info)
++{
++	struct ath12k_base *ab = ar->ab;
++	struct dp_rxdma_mon_ring *buf_ring = &ab->dp.rxdma_mon_buf_ring;
++	struct sk_buff *msdu;
++	int buf_id;
++	u32 offset;
++
++	buf_id = u32_get_bits(packet_info->cookie, DP_RXDMA_BUF_COOKIE_BUF_ID);
++
++	spin_lock_bh(&buf_ring->idr_lock);
++	msdu = idr_remove(&buf_ring->bufs_idr, buf_id);
++	spin_unlock_bh(&buf_ring->idr_lock);
++
++	if (unlikely(!msdu)) {
++		ath12k_warn(ab, "mon dest desc with inval buf_id %d\n", buf_id);
++		return 0;
++	}
++
++	dma_unmap_single(ab->dev, ATH12K_SKB_RXCB(msdu)->paddr,
++			 msdu->len + skb_tailroom(msdu),
++			 DMA_FROM_DEVICE);
++
++	offset = packet_info->dma_length + ATH12K_MON_RX_DOT11_OFFSET;
++	if (ath12k_dp_pkt_set_pktlen(msdu, offset)) {
++		dev_kfree_skb_any(msdu);
++		goto dest_replenish;
++	}
++
++	if (!pmon->mon_mpdu->head)
++		pmon->mon_mpdu->head = msdu;
++	else
++		pmon->mon_mpdu->tail->next = msdu;
++
++	pmon->mon_mpdu->tail = msdu;
++
++dest_replenish:
++	ath12k_dp_mon_buf_replenish(ab, buf_ring, 1);
++
++	return 0;
++}
++
++static int
++ath12k_dp_mon_parse_rx_dest_tlv(struct ath12k *ar,
++				struct ath12k_mon_data *pmon,
++				enum hal_rx_mon_status hal_status,
++				const void *tlv_data)
++{
++	switch (hal_status) {
++	case HAL_RX_MON_STATUS_MPDU_START:
++		if (WARN_ON_ONCE(pmon->mon_mpdu))
++			break;
++
++		pmon->mon_mpdu = kzalloc(sizeof(*pmon->mon_mpdu), GFP_ATOMIC);
++		if (!pmon->mon_mpdu)
++			return -ENOMEM;
++		break;
++	case HAL_RX_MON_STATUS_BUF_ADDR:
++		return ath12k_dp_mon_parse_status_buf(ar, pmon, tlv_data);
++	case HAL_RX_MON_STATUS_MPDU_END:
++		/* If no MSDU then free empty MPDU */
++		if (pmon->mon_mpdu->tail) {
++			pmon->mon_mpdu->tail->next = NULL;
++			list_add_tail(&pmon->mon_mpdu->list, &pmon->dp_rx_mon_mpdu_list);
++		} else {
++			kfree(pmon->mon_mpdu);
++		}
++		pmon->mon_mpdu = NULL;
++		break;
++	case HAL_RX_MON_STATUS_MSDU_END:
++		return ath12k_dp_mon_parse_status_msdu_end(pmon, tlv_data);
++	default:
++		break;
++	}
++
++	return 0;
++}
++
+ static enum hal_rx_mon_status
+ ath12k_dp_mon_parse_rx_dest(struct ath12k *ar, struct ath12k_mon_data *pmon,
+ 			    struct sk_buff *skb)
+@@ -2116,14 +2254,20 @@ ath12k_dp_mon_parse_rx_dest(struct ath12k *ar, struct ath12k_mon_data *pmon,
+ 			tlv_len = le64_get_bits(tlv->tl, HAL_TLV_64_HDR_LEN);
  
- 	if (band == NL80211_BAND_5GHZ || band == NL80211_BAND_6GHZ) {
+ 		hal_status = ath12k_dp_mon_rx_parse_status_tlv(ar, pmon, tlv);
++
++		if (ar->monitor_started &&
++		    ath12k_dp_mon_parse_rx_dest_tlv(ar, pmon, hal_status, tlv->value))
++			return HAL_RX_MON_STATUS_PPDU_DONE;
++
+ 		ptr += sizeof(*tlv) + tlv_len;
+ 		ptr = PTR_ALIGN(ptr, HAL_TLV_64_ALIGN);
+ 
+-		if ((ptr - skb->data) >= DP_RX_BUFFER_SIZE)
++		if ((ptr - skb->data) > skb->len)
+ 			break;
+ 
+ 	} while ((hal_status == HAL_RX_MON_STATUS_PPDU_NOT_DONE) ||
+ 		 (hal_status == HAL_RX_MON_STATUS_BUF_ADDR) ||
++		 (hal_status == HAL_RX_MON_STATUS_MPDU_START) ||
+ 		 (hal_status == HAL_RX_MON_STATUS_MPDU_END) ||
+ 		 (hal_status == HAL_RX_MON_STATUS_MSDU_END));
+ 
+@@ -2144,9 +2288,11 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
+ 	struct dp_mon_mpdu *tmp;
+ 	struct dp_mon_mpdu *mon_mpdu = pmon->mon_mpdu;
+ 	struct sk_buff *head_msdu, *tail_msdu;
+-	enum hal_rx_mon_status hal_status = HAL_RX_MON_STATUS_BUF_DONE;
++	enum hal_rx_mon_status hal_status;
+ 
+-	ath12k_dp_mon_parse_rx_dest(ar, pmon, skb);
++	hal_status = ath12k_dp_mon_parse_rx_dest(ar, pmon, skb);
++	if (hal_status != HAL_RX_MON_STATUS_PPDU_DONE)
++		return hal_status;
+ 
+ 	list_for_each_entry_safe(mon_mpdu, tmp, &pmon->dp_rx_mon_mpdu_list, list) {
+ 		list_del(&mon_mpdu->list);
+@@ -2160,6 +2306,7 @@ ath12k_dp_mon_rx_parse_mon_status(struct ath12k *ar,
+ 
+ 		kfree(mon_mpdu);
+ 	}
++
+ 	return hal_status;
+ }
+ 
+@@ -3348,7 +3495,7 @@ int ath12k_dp_mon_srng_process(struct ath12k *ar, int *budget,
+ 		ath12k_dp_mon_rx_memset_ppdu_info(ppdu_info);
+ 
+ 	while ((skb = __skb_dequeue(&skb_list))) {
+-		hal_status = ath12k_dp_mon_parse_rx_dest(ar, pmon, skb);
++		hal_status = ath12k_dp_mon_rx_parse_mon_status(ar, pmon, skb, napi);
+ 		if (hal_status != HAL_RX_MON_STATUS_PPDU_DONE) {
+ 			ppdu_info->ppdu_continuation = true;
+ 			dev_kfree_skb_any(skb);
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.h b/drivers/net/wireless/ath/ath12k/dp_mon.h
+index e4368eb42aca..b039f6b9277c 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.h
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef ATH12K_DP_MON_H
+@@ -9,6 +9,8 @@
+ 
+ #include "core.h"
+ 
++#define ATH12K_MON_RX_DOT11_OFFSET	5
++
+ enum dp_monitor_mode {
+ 	ATH12K_DP_TX_MONITOR_MODE,
+ 	ATH12K_DP_RX_MONITOR_MODE
 diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index 46460361986f..66603e9c154b 100644
+index ff6a709b5042..46460361986f 100644
 --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
 +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -2433,8 +2433,8 @@ void ath12k_dp_rx_h_ppdu(struct ath12k *ar, struct hal_rx_desc *rx_desc,
- 	channel_num = meta_data;
- 	center_freq = meta_data >> 16;
+@@ -4480,6 +4480,8 @@ int ath12k_dp_rx_pdev_mon_attach(struct ath12k *ar)
  
--	if (center_freq >= ATH12K_MIN_6G_FREQ &&
--	    center_freq <= ATH12K_MAX_6G_FREQ) {
-+	if (center_freq >= ATH12K_MIN_6GHZ_FREQ &&
-+	    center_freq <= ATH12K_MAX_6GHZ_FREQ) {
- 		rx_status->band = NL80211_BAND_6GHZ;
- 		rx_status->freq = center_freq;
- 	} else if (channel_num >= 1 && channel_num <= 14) {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 9fda97667d4e..d7f4f4b31ff4 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -874,12 +874,12 @@ static bool ath12k_mac_band_match(enum nl80211_band band1, enum WMI_HOST_WLAN_BA
- {
- 	switch (band1) {
- 	case NL80211_BAND_2GHZ:
--		if (band2 & WMI_HOST_WLAN_2G_CAP)
-+		if (band2 & WMI_HOST_WLAN_2GHZ_CAP)
- 			return true;
- 		break;
- 	case NL80211_BAND_5GHZ:
- 	case NL80211_BAND_6GHZ:
--		if (band2 & WMI_HOST_WLAN_5G_CAP)
-+		if (band2 & WMI_HOST_WLAN_5GHZ_CAP)
- 			return true;
- 		break;
- 	default:
-@@ -980,7 +980,7 @@ static int ath12k_mac_txpower_recalc(struct ath12k *ar)
- 	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "txpower to set in hw %d\n",
- 		   txpower / 2);
+ 	pmon->mon_last_linkdesc_paddr = 0;
+ 	pmon->mon_last_buf_cookie = DP_RX_DESC_COOKIE_MAX + 1;
++	INIT_LIST_HEAD(&pmon->dp_rx_mon_mpdu_list);
++	pmon->mon_mpdu = NULL;
+ 	spin_lock_init(&pmon->mon_lock);
  
--	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) &&
-+	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_2GHZ_CAP) &&
- 	    ar->txpower_limit_2g != txpower) {
- 		param = WMI_PDEV_PARAM_TXPOWER_LIMIT2G;
- 		ret = ath12k_wmi_pdev_set_param(ar, param,
-@@ -990,7 +990,7 @@ static int ath12k_mac_txpower_recalc(struct ath12k *ar)
- 		ar->txpower_limit_2g = txpower;
- 	}
- 
--	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) &&
-+	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_5GHZ_CAP) &&
- 	    ar->txpower_limit_5g != txpower) {
- 		param = WMI_PDEV_PARAM_TXPOWER_LIMIT5G;
- 		ret = ath12k_wmi_pdev_set_param(ar, param,
-@@ -1272,12 +1272,12 @@ static int ath12k_mac_monitor_vdev_create(struct ath12k *ar)
- 	arg.pdev_id = pdev->pdev_id;
- 	arg.if_stats_id = ATH12K_INVAL_VDEV_STATS_ID;
- 
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		arg.chains[NL80211_BAND_2GHZ].tx = ar->num_tx_chains;
- 		arg.chains[NL80211_BAND_2GHZ].rx = ar->num_rx_chains;
- 	}
- 
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5GHZ_CAP) {
- 		arg.chains[NL80211_BAND_5GHZ].tx = ar->num_tx_chains;
- 		arg.chains[NL80211_BAND_5GHZ].rx = ar->num_rx_chains;
- 	}
-@@ -3988,7 +3988,7 @@ static void ath12k_mac_bss_info_changed(struct ath12k *ar,
- 		else
- 			rateidx = ffs(info->basic_rates) - 1;
- 
--		if (ar->pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP)
-+		if (ar->pdev->cap.supported_bands & WMI_HOST_WLAN_5GHZ_CAP)
- 			rateidx += ATH12K_MAC_FIRST_OFDM_RATE_IDX;
- 
- 		bitrate = ath12k_legacy_rates[rateidx].bitrate;
-@@ -4162,9 +4162,9 @@ ath12k_mac_select_scan_device(struct ieee80211_hw *hw,
- 	 * split the hw request and perform multiple scans
- 	 */
- 
--	if (center_freq < ATH12K_MIN_5G_FREQ)
-+	if (center_freq < ATH12K_MIN_5GHZ_FREQ)
- 		band = NL80211_BAND_2GHZ;
--	else if (center_freq < ATH12K_MIN_6G_FREQ)
-+	else if (center_freq < ATH12K_MIN_6GHZ_FREQ)
- 		band = NL80211_BAND_5GHZ;
- 	else
- 		band = NL80211_BAND_6GHZ;
-@@ -6614,7 +6614,7 @@ static void ath12k_mac_setup_ht_vht_cap(struct ath12k *ar,
- 	rate_cap_tx_chainmask = ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift;
- 	rate_cap_rx_chainmask = ar->cfg_rx_chainmask >> cap->rx_chain_mask_shift;
- 
--	if (cap->supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (cap->supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
- 		ht_cap = cap->band[NL80211_BAND_2GHZ].ht_cap_info;
- 		if (ht_cap_info)
-@@ -6623,7 +6623,7 @@ static void ath12k_mac_setup_ht_vht_cap(struct ath12k *ar,
- 						    rate_cap_rx_chainmask);
- 	}
- 
--	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP &&
-+	if (cap->supported_bands & WMI_HOST_WLAN_5GHZ_CAP &&
- 	    (ar->ab->hw_params->single_pdev_only ||
- 	     !ar->supports_6ghz)) {
- 		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
-@@ -7032,7 +7032,7 @@ static void ath12k_mac_setup_sband_iftype_data(struct ath12k *ar,
- 	enum nl80211_band band;
- 	int count;
- 
--	if (cap->supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (cap->supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		band = NL80211_BAND_2GHZ;
- 		count = ath12k_mac_copy_sband_iftype_data(ar, cap,
- 							  ar->mac.iftype[band],
-@@ -7042,7 +7042,7 @@ static void ath12k_mac_setup_sband_iftype_data(struct ath12k *ar,
- 						 count);
- 	}
- 
--	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+	if (cap->supported_bands & WMI_HOST_WLAN_5GHZ_CAP) {
- 		band = NL80211_BAND_5GHZ;
- 		count = ath12k_mac_copy_sband_iftype_data(ar, cap,
- 							  ar->mac.iftype[band],
-@@ -7052,7 +7052,7 @@ static void ath12k_mac_setup_sband_iftype_data(struct ath12k *ar,
- 						 count);
- 	}
- 
--	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP &&
-+	if (cap->supported_bands & WMI_HOST_WLAN_5GHZ_CAP &&
- 	    ar->supports_6ghz) {
- 		band = NL80211_BAND_6GHZ;
- 		count = ath12k_mac_copy_sband_iftype_data(ar, cap,
-@@ -8043,15 +8043,15 @@ static int ath12k_mac_setup_vdev_create_arg(struct ath12k_link_vif *arvif,
- 			return ret;
- 	}
- 
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		arg->chains[NL80211_BAND_2GHZ].tx = ar->num_tx_chains;
- 		arg->chains[NL80211_BAND_2GHZ].rx = ar->num_rx_chains;
- 	}
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5GHZ_CAP) {
- 		arg->chains[NL80211_BAND_5GHZ].tx = ar->num_tx_chains;
- 		arg->chains[NL80211_BAND_5GHZ].rx = ar->num_rx_chains;
- 	}
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP &&
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5GHZ_CAP &&
- 	    ar->supports_6ghz) {
- 		arg->chains[NL80211_BAND_6GHZ].tx = ar->num_tx_chains;
- 		arg->chains[NL80211_BAND_6GHZ].rx = ar->num_rx_chains;
-@@ -8080,7 +8080,7 @@ ath12k_mac_prepare_he_mode(struct ath12k_pdev *pdev, u32 viftype)
- 	u32 *hecap_phy_ptr = NULL;
- 	u32 hemode;
- 
--	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP)
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2GHZ_CAP)
- 		cap_band = &pdev_cap->band[NL80211_BAND_2GHZ];
- 	else
- 		cap_band = &pdev_cap->band[NL80211_BAND_5GHZ];
-@@ -10753,10 +10753,10 @@ static u32 ath12k_get_phy_id(struct ath12k *ar, u32 band)
- 	struct ath12k_pdev *pdev = ar->pdev;
- 	struct ath12k_pdev_cap *pdev_cap = &pdev->cap;
- 
--	if (band == WMI_HOST_WLAN_2G_CAP)
-+	if (band == WMI_HOST_WLAN_2GHZ_CAP)
- 		return pdev_cap->band[NL80211_BAND_2GHZ].phy_id;
- 
--	if (band == WMI_HOST_WLAN_5G_CAP)
-+	if (band == WMI_HOST_WLAN_5GHZ_CAP)
- 		return pdev_cap->band[NL80211_BAND_5GHZ].phy_id;
- 
- 	ath12k_warn(ar->ab, "unsupported phy cap:%d\n", band);
-@@ -10781,7 +10781,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 
- 	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
- 
--	if (supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		channels = kmemdup(ath12k_2ghz_channels,
- 				   sizeof(ath12k_2ghz_channels),
- 				   GFP_KERNEL);
-@@ -10797,7 +10797,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 		bands[NL80211_BAND_2GHZ] = band;
- 
- 		if (ar->ab->hw_params->single_pdev_only) {
--			phy_id = ath12k_get_phy_id(ar, WMI_HOST_WLAN_2G_CAP);
-+			phy_id = ath12k_get_phy_id(ar, WMI_HOST_WLAN_2GHZ_CAP);
- 			reg_cap = &ar->ab->hal_reg_cap[phy_id];
- 		}
- 		ath12k_mac_update_ch_list(ar, band,
-@@ -10805,8 +10805,8 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 					  reg_cap->high_2ghz_chan);
- 	}
- 
--	if (supported_bands & WMI_HOST_WLAN_5G_CAP) {
--		if (reg_cap->high_5ghz_chan >= ATH12K_MIN_6G_FREQ) {
-+	if (supported_bands & WMI_HOST_WLAN_5GHZ_CAP) {
-+		if (reg_cap->high_5ghz_chan >= ATH12K_MIN_6GHZ_FREQ) {
- 			channels = kmemdup(ath12k_6ghz_channels,
- 					   sizeof(ath12k_6ghz_channels), GFP_KERNEL);
- 			if (!channels) {
-@@ -10828,7 +10828,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 			ah->use_6ghz_regd = true;
- 		}
- 
--		if (reg_cap->low_5ghz_chan < ATH12K_MIN_6G_FREQ) {
-+		if (reg_cap->low_5ghz_chan < ATH12K_MIN_6GHZ_FREQ) {
- 			channels = kmemdup(ath12k_5ghz_channels,
- 					   sizeof(ath12k_5ghz_channels),
- 					   GFP_KERNEL);
-@@ -10847,7 +10847,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
- 			bands[NL80211_BAND_5GHZ] = band;
- 
- 			if (ar->ab->hw_params->single_pdev_only) {
--				phy_id = ath12k_get_phy_id(ar, WMI_HOST_WLAN_5G_CAP);
-+				phy_id = ath12k_get_phy_id(ar, WMI_HOST_WLAN_5GHZ_CAP);
- 				reg_cap = &ar->ab->hal_reg_cap[phy_id];
- 			}
- 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 04dd307ebfc4..c8248675354c 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -521,10 +521,10 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 	 * band to band for a single radio, need to see how this should be
- 	 * handled.
- 	 */
--	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_2G_CAP) {
-+	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_2GHZ_CAP) {
- 		pdev_cap->tx_chain_mask = le32_to_cpu(mac_caps->tx_chain_mask_2g);
- 		pdev_cap->rx_chain_mask = le32_to_cpu(mac_caps->rx_chain_mask_2g);
--	} else if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_5G_CAP) {
-+	} else if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_5GHZ_CAP) {
- 		pdev_cap->vht_cap = le32_to_cpu(mac_caps->vht_cap_info_5g);
- 		pdev_cap->vht_mcs = le32_to_cpu(mac_caps->vht_supp_mcs_5g);
- 		pdev_cap->he_mcs = le32_to_cpu(mac_caps->he_supp_mcs_5g);
-@@ -547,7 +547,7 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 	pdev_cap->rx_chain_mask_shift =
- 			find_first_bit((unsigned long *)&pdev_cap->rx_chain_mask, 32);
- 
--	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_2G_CAP) {
-+	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_2GHZ_CAP) {
- 		cap_band = &pdev_cap->band[NL80211_BAND_2GHZ];
- 		cap_band->phy_id = le32_to_cpu(mac_caps->phy_id);
- 		cap_band->max_bw_supported = le32_to_cpu(mac_caps->max_bw_supported_2g);
-@@ -567,7 +567,7 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 				le32_to_cpu(mac_caps->he_ppet2g.ppet16_ppet8_ru3_ru0[i]);
- 	}
- 
--	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_5G_CAP) {
-+	if (le32_to_cpu(mac_caps->supported_bands) & WMI_HOST_WLAN_5GHZ_CAP) {
- 		cap_band = &pdev_cap->band[NL80211_BAND_5GHZ];
- 		cap_band->phy_id = le32_to_cpu(mac_caps->phy_id);
- 		cap_band->max_bw_supported =
-@@ -3665,15 +3665,15 @@ ath12k_fill_band_to_mac_param(struct ath12k_base  *soc,
- 		arg[i].pdev_id = pdev->pdev_id;
- 
- 		switch (pdev->cap.supported_bands) {
--		case WMI_HOST_WLAN_2G_5G_CAP:
-+		case WMI_HOST_WLAN_2GHZ_5GHZ_CAP:
- 			arg[i].start_freq = hal_reg_cap->low_2ghz_chan;
- 			arg[i].end_freq = hal_reg_cap->high_5ghz_chan;
- 			break;
--		case WMI_HOST_WLAN_2G_CAP:
-+		case WMI_HOST_WLAN_2GHZ_CAP:
- 			arg[i].start_freq = hal_reg_cap->low_2ghz_chan;
- 			arg[i].end_freq = hal_reg_cap->high_2ghz_chan;
- 			break;
--		case WMI_HOST_WLAN_5G_CAP:
-+		case WMI_HOST_WLAN_5GHZ_CAP:
- 			arg[i].start_freq = hal_reg_cap->low_5ghz_chan;
- 			arg[i].end_freq = hal_reg_cap->high_5ghz_chan;
- 			break;
-@@ -4718,7 +4718,7 @@ ath12k_wmi_tlv_mac_phy_caps_ext_parse(struct ath12k_base *ab,
- 		bands = pdev->cap.supported_bands;
- 	}
- 
--	if (bands & WMI_HOST_WLAN_2G_CAP) {
-+	if (bands & WMI_HOST_WLAN_2GHZ_CAP) {
- 		ath12k_wmi_eht_caps_parse(pdev, NL80211_BAND_2GHZ,
- 					  caps->eht_cap_mac_info_2ghz,
- 					  caps->eht_cap_phy_info_2ghz,
-@@ -4727,7 +4727,7 @@ ath12k_wmi_tlv_mac_phy_caps_ext_parse(struct ath12k_base *ab,
- 					  caps->eht_cap_info_internal);
- 	}
- 
--	if (bands & WMI_HOST_WLAN_5G_CAP) {
-+	if (bands & WMI_HOST_WLAN_5GHZ_CAP) {
- 		ath12k_wmi_eht_caps_parse(pdev, NL80211_BAND_5GHZ,
- 					  caps->eht_cap_mac_info_5ghz,
- 					  caps->eht_cap_phy_info_5ghz,
-@@ -4941,7 +4941,7 @@ static u8 ath12k_wmi_ignore_num_extra_rules(struct ath12k_wmi_reg_rule_ext_param
- 	for (count = 0; count < num_reg_rules; count++) {
- 		start_freq = le32_get_bits(rule[count].freq_info, REG_RULE_START_FREQ);
- 
--		if (start_freq >= ATH12K_MIN_6G_FREQ)
-+		if (start_freq >= ATH12K_MIN_6GHZ_FREQ)
- 			num_invalid_5ghz_rules++;
- 	}
- 
-@@ -5011,9 +5011,9 @@ static int ath12k_pull_reg_chan_list_ext_update_ev(struct ath12k_base *ab,
- 	for (i = 0; i < WMI_REG_CURRENT_MAX_AP_TYPE; i++) {
- 		num_6g_reg_rules_ap[i] = reg_info->num_6g_reg_rules_ap[i];
- 
--		if (num_6g_reg_rules_ap[i] > MAX_6G_REG_RULES) {
-+		if (num_6g_reg_rules_ap[i] > MAX_6GHZ_REG_RULES) {
- 			ath12k_warn(ab, "Num 6G reg rules for AP mode(%d) exceeds max limit (num_6g_reg_rules_ap: %d, max_rules: %d)\n",
--				    i, num_6g_reg_rules_ap[i], MAX_6G_REG_RULES);
-+				    i, num_6g_reg_rules_ap[i], MAX_6GHZ_REG_RULES);
- 			kfree(tb);
- 			return -EINVAL;
- 		}
-@@ -5034,9 +5034,9 @@ static int ath12k_pull_reg_chan_list_ext_update_ev(struct ath12k_base *ab,
- 				reg_info->num_6g_reg_rules_cl[WMI_REG_VLP_AP][i];
- 		total_reg_rules += num_6g_reg_rules_cl[WMI_REG_VLP_AP][i];
- 
--		if (num_6g_reg_rules_cl[WMI_REG_INDOOR_AP][i] > MAX_6G_REG_RULES ||
--		    num_6g_reg_rules_cl[WMI_REG_STD_POWER_AP][i] > MAX_6G_REG_RULES ||
--		    num_6g_reg_rules_cl[WMI_REG_VLP_AP][i] >  MAX_6G_REG_RULES) {
-+		if (num_6g_reg_rules_cl[WMI_REG_INDOOR_AP][i] > MAX_6GHZ_REG_RULES ||
-+		    num_6g_reg_rules_cl[WMI_REG_STD_POWER_AP][i] > MAX_6GHZ_REG_RULES ||
-+		    num_6g_reg_rules_cl[WMI_REG_VLP_AP][i] >  MAX_6GHZ_REG_RULES) {
- 			ath12k_warn(ab, "Num 6g client reg rules exceeds max limit, for client(type: %d)\n",
- 				    i);
- 			kfree(tb);
-@@ -6336,13 +6336,13 @@ static void ath12k_mgmt_rx_event(struct ath12k_base *ab, struct sk_buff *skb)
- 	if (rx_ev.status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
- 
--	if (rx_ev.chan_freq >= ATH12K_MIN_6G_FREQ &&
--	    rx_ev.chan_freq <= ATH12K_MAX_6G_FREQ) {
-+	if (rx_ev.chan_freq >= ATH12K_MIN_6GHZ_FREQ &&
-+	    rx_ev.chan_freq <= ATH12K_MAX_6GHZ_FREQ) {
- 		status->band = NL80211_BAND_6GHZ;
- 		status->freq = rx_ev.chan_freq;
- 	} else if (rx_ev.channel >= 1 && rx_ev.channel <= 14) {
- 		status->band = NL80211_BAND_2GHZ;
--	} else if (rx_ev.channel >= 36 && rx_ev.channel <= ATH12K_MAX_5G_CHAN) {
-+	} else if (rx_ev.channel >= 36 && rx_ev.channel <= ATH12K_MAX_5GHZ_CHAN) {
- 		status->band = NL80211_BAND_5GHZ;
- 	} else {
- 		/* Shouldn't happen unless list of advertised channels to
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index 1ba33e30ddd2..be4ac91dd34f 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -216,9 +216,9 @@ enum wmi_host_hw_mode_priority {
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+index 6bdcd0867d86..6f10e4222ba6 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
+@@ -108,11 +108,12 @@ enum hal_rx_mon_status {
+ 	HAL_RX_MON_STATUS_PPDU_DONE,
+ 	HAL_RX_MON_STATUS_BUF_DONE,
+ 	HAL_RX_MON_STATUS_BUF_ADDR,
++	HAL_RX_MON_STATUS_MPDU_START,
+ 	HAL_RX_MON_STATUS_MPDU_END,
+ 	HAL_RX_MON_STATUS_MSDU_END,
  };
  
- enum WMI_HOST_WLAN_BAND {
--	WMI_HOST_WLAN_2G_CAP	= 1,
--	WMI_HOST_WLAN_5G_CAP	= 2,
--	WMI_HOST_WLAN_2G_5G_CAP	= 3,
-+	WMI_HOST_WLAN_2GHZ_CAP		= 1,
-+	WMI_HOST_WLAN_5GHZ_CAP		= 2,
-+	WMI_HOST_WLAN_2GHZ_5GHZ_CAP	= 3,
- };
+-#define HAL_RX_MAX_MPDU		256
++#define HAL_RX_MAX_MPDU				1024
+ #define HAL_RX_NUM_WORDS_PER_PPDU_BITMAP	(HAL_RX_MAX_MPDU >> 5)
  
- enum wmi_cmd_group {
-@@ -2690,8 +2690,8 @@ enum wmi_channel_width {
-  * 2 - index for 160 MHz, first 3 bytes valid
-  * 3 - index for 320 MHz, first 3 bytes valid
-  */
--#define WMI_MAX_EHT_SUPP_MCS_2G_SIZE  2
--#define WMI_MAX_EHT_SUPP_MCS_5G_SIZE  4
-+#define WMI_MAX_EHT_SUPP_MCS_2GHZ_SIZE  2
-+#define WMI_MAX_EHT_SUPP_MCS_5GHZ_SIZE  4
- 
- #define WMI_EHTCAP_TXRX_MCS_NSS_IDX_80    0
- #define WMI_EHTCAP_TXRX_MCS_NSS_IDX_160   1
-@@ -2730,8 +2730,8 @@ struct ath12k_wmi_caps_ext_params {
- 	struct ath12k_wmi_ppe_threshold_params eht_ppet_2ghz;
- 	struct ath12k_wmi_ppe_threshold_params eht_ppet_5ghz;
- 	__le32 eht_cap_info_internal;
--	__le32 eht_supp_mcs_ext_2ghz[WMI_MAX_EHT_SUPP_MCS_2G_SIZE];
--	__le32 eht_supp_mcs_ext_5ghz[WMI_MAX_EHT_SUPP_MCS_5G_SIZE];
-+	__le32 eht_supp_mcs_ext_2ghz[WMI_MAX_EHT_SUPP_MCS_2GHZ_SIZE];
-+	__le32 eht_supp_mcs_ext_5ghz[WMI_MAX_EHT_SUPP_MCS_5GHZ_SIZE];
- 	__le32 eml_capability;
- 	__le32 mld_capability;
+ struct hal_rx_user_status {
+@@ -506,6 +507,15 @@ struct hal_rx_mpdu_start {
+ 	__le32 rsvd2[16];
  } __packed;
-@@ -4108,7 +4108,7 @@ struct ath12k_wmi_eht_rate_set_params {
  
- #define MAX_REG_RULES 10
- #define REG_ALPHA2_LEN 2
--#define MAX_6G_REG_RULES 5
-+#define MAX_6GHZ_REG_RULES 5
- 
- enum wmi_start_event_param {
- 	WMI_VDEV_START_RESP_EVENT = 0,
++struct hal_rx_msdu_end {
++	__le32 info0;
++	__le32 rsvd0[18];
++	__le32 info1;
++	__le32 rsvd1[10];
++	__le32 info2;
++	__le32 rsvd2;
++} __packed;
++
+ #define HAL_RX_PPDU_END_DURATION	GENMASK(23, 0)
+ struct hal_rx_ppdu_end_duration {
+ 	__le32 rsvd0[9];
 -- 
 2.34.1
 
