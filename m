@@ -1,115 +1,127 @@
-Received: from mail-io1-f47.google.com (mail-io1-f47.google.com [209.85.166.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E2826158D;
-	Mon, 24 Mar 2025 17:00:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF09264617;
+	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742835629; cv=none; b=KK8395dQdRXPTWU6kijUCr0EKdQnkkYAtSwtcamt+sJfSE0CeRTrxTHvu+qYhkBwliZ2eozJSx58/jc7SY6NfMSZoI8cDiR7qNe3NYNOjucZz0PWFp+SAopzUMWU0NOt2peURaHRxNgfbahP3x/aDZJC8Gx9Ivc0sEh3kF8qb80=
+	t=1742838102; cv=none; b=eI2YUOpfAokuZ+Vg2O0RkknKnaXi35pqAnHfVP/d0eCul4AvUV9NwWMTPN1GQbKxxfRewVzm82KoIkyrjQCCpadsAW1X92dUwOp2hF9LnjR90aK5vuQOEw3CQPguVpKlTmgx2fDc2q57Z7/WcXGMw5owr0SyPnf7AbWeqLSjZKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742835629; c=relaxed/simple;
-	bh=QZ+ADSPlR4WN2OpqtNqLf9bC//Y4z9l5vR66G7an/rM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=bTLPSueC6EriTXAmWZFHugE+D6azMdNTx9gf7Nt2E4TEJdlb5gJ07KNQEhns9hf3FFiuIL4r1ePSP15Zg9LHzns7BzgW2p4tO/SB9k25XNMsECVrt1a8m7jD6PLVQ/sjMwhFEhY7k+mKF5fwTXtHk9v8PtfqIRStPPvJVQgiIk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PesrHXDy; arc=none smtp.client-ip=209.85.166.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1742838102; c=relaxed/simple;
+	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=u2P701ezt0xcNFd2tSmAkabfEp7A/MzEnq0x1jo36juuNjEVtRPLbxbVL6XqhOwMp6b+dJgQG9JarKcvUDladu4HT4gQpfhsw06uhqgRk7JO88NcCLJC8jLLzhwIGOXyOGZ5u3jFXmoqAXdizGClYBrAaS9MBWJ/60ItTI+bVuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ig2n0jQp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PesrHXDy"
-Received: by mail-io1-f47.google.com with SMTP id ca18e2360f4ac-85e15dc801aso398341139f.2;
-        Mon, 24 Mar 2025 10:00:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1742835627; x=1743440427; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XiK+XbItIIUrna1hCKyECwMMmXpIkkNG/K+3Wgt4kIY=;
-        b=PesrHXDyc2egOW3Yng5HB3nWuusGNns8nwmnrO1/I+aeD2jBUgJjM92xtalZNq2is2
-         bRNoUIc6FFmtzSZ/QaA/wCc7Y7OZTwimXWTOZYL6Y6+kjrFLJ+Lnf8GF0wu4ZDFpgJvo
-         MhdZxeEjHWJYhdF9ifCEVaGyjzImcne+TMYfdPWy4P4ra/ElCerxRvA9T5AAAajSJCms
-         dzUXDXPz+N6tl5VLyWBc8fxPbQ0dJsRmYh614DgRgnfN7tMOysfvmrQn2aacpeahK3O/
-         zQ0lY9/rMLhS92XzTDhVUc3M6ngxMNMTs1sfoy8Y4oHkri3I7BUk2GI9jWmad/BLmv4l
-         fvWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742835627; x=1743440427;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XiK+XbItIIUrna1hCKyECwMMmXpIkkNG/K+3Wgt4kIY=;
-        b=qTPoduoHGYxjCZKPno7uVckoCuL+07fJn7VCJ5Gf3Emvq+I/ZGGbgUQ+4E+4QLp1zq
-         SaYTp1opnO9zH+BEqrSd3BUj7pBy79gIeYPWA/m+VLyj+ue1wZNsxXXN27kxNxCpeaPw
-         QWJHMtASt73iXFuWExRYDwuB9MAQj8ExiE4Xn59lFbqJ6nNhuedjWxbds+nVwQzmdjgB
-         XZLhUjgFqh0SPTJWVzB+cy2snnrN4/YKyJYftSqTlX6Sx0TqvSj3E5J63DBHPYYX1qye
-         2cZgKESVH75uugncY1rq75jZ96O6qoFgYLDUg1LUjYVCCs6PbaOxrdHeXYtao0xKOXHc
-         Ot2Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUTWNtpaynrCPPNZNQsQVNLdbcg/jGzDyVR2YnxqMI/jFn+QqVXIHO6GFxeNzF0rwnW9+tMFYU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEHCqUej0nVyPAsCVdezl1QLMMYh2UtMICZ+sYyBglEBmRpIHD
-	HQZpBiz8zaN4Jj9Hyu1+wvbP5eNonZul9XOuhUYxPVSS0cYAmMl6rEkB6zpo40wtIZ9e79kcKRD
-	hKvCg266jFKvGdfxBGsXDs3aMuks=
-X-Gm-Gg: ASbGncvi2Px1UpyA7GThXKGjS6cOYSIKczdtQOyDhB9f+4D/o2FoghtjoH65raO6xcg
-	fNt/4JtW8/94KSSXPbFaFqFMfnlPPv1Cxx7qFC4qAj6bxfbd9KtctQjEpTyAEgqi77sQ/rgJVA4
-	aBOKPRXnWoMyMSGZYPAHi9Sahdow==
-X-Google-Smtp-Source: AGHT+IHMCuHkLI+ZDUJnWpVX+8/mF1/t8QEJVpvny4ENE1co6tCTIr4wVdurMNYnEssqNhr49BHxYweG0qiMZKPx//w=
-X-Received: by 2002:a05:6e02:3207:b0:3d4:712e:29eb with SMTP id
- e9e14a558f8ab-3d5960ccfacmr148634145ab.5.1742835626661; Mon, 24 Mar 2025
- 10:00:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ig2n0jQp"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 85334C4CEEF;
+	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742838102;
+	bh=8PFrtxpnJpLFkdaeNeF+Kojf2rI5Gt9WPBc0gGLSfzc=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=ig2n0jQp/tRrUP/isobTD5FA47J2zoG/kTryfUGI1GGxLH64kBHF8vlGQedfZVK8w
+	 y+rtw0NPTMF08NCUn8yoth5YfDYXQMM1H3QeQuo50mdDQVH+C2jXZpOhFe0yB4EOtk
+	 3MeKDsa5gkFo0iN2wmG0Nmn6hG1xw0oAC6zEr0f14yXDBnsxpmopxVIJRQ1A+Ze8Yg
+	 sQ6HCc/r8Ha9Ciius+Vjje+6nTdu23qgsxadiSUBRpAckHKHvVM6S77LouYukB62s/
+	 Ydr4APVyW2G2f2AzbMzFqwLaDuyngV7jYoJSac/7LgLcVh0u1bEyKbiU77ruuge/rO
+	 n/7yCrCfGoTlw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B721C36008;
+	Mon, 24 Mar 2025 17:41:42 +0000 (UTC)
+From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
+Date: Mon, 24 Mar 2025 18:41:39 +0100
+Subject: [PATCH v5 2/5] dt-bindings: net: Add generic wireless controller
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250313134942.52ff54a140ec.If390bbdc46904cf451256ba989d7a056c457af6e@changeid>
- <CAL+tcoB3zku2EtLT2yJ9qPCSuN2=x-T-avqcZ-LJ2Q-mU5xLVg@mail.gmail.com> <db7a40f500c0b595bc2ee0f9524bacbc592dc72d.camel@sipsolutions.net>
-In-Reply-To: <db7a40f500c0b595bc2ee0f9524bacbc592dc72d.camel@sipsolutions.net>
-From: Jason Xing <kerneljasonxing@gmail.com>
-Date: Tue, 25 Mar 2025 00:59:48 +0800
-X-Gm-Features: AQ5f1Jq5vlEVgzazVwvL-JDorvj_Ino1GgoGhgWzAbm9431-nmRADWw-ma4jpww
-Message-ID: <CAL+tcoBHbK=xDEp7RHqUHxSZqNOcd7kxAEdPC7aZq8RaWtDa0Q@mail.gmail.com>
-Subject: Re: [RFC PATCH] wifi: free SKBTX_WIFI_STATUS skb tx_flags flag
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250324-dt-bindings-network-class-v5-2-f5c3fe00e8f0@ixit.cz>
+References: <20250324-dt-bindings-network-class-v5-0-f5c3fe00e8f0@ixit.cz>
+In-Reply-To: <20250324-dt-bindings-network-class-v5-0-f5c3fe00e8f0@ixit.cz>
+To: Andrew Lunn <andrew+netdev@lunn.ch>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Mailing List <devicetree-spec-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, 
+ Johannes Berg <johannes@sipsolutions.net>, 
+ Lorenzo Bianconi <lorenzo@kernel.org>, van Spriel <arend@broadcom.com>, 
+ =?utf-8?q?J=C3=A9r=C3=B4me_Pouiller?= <jerome.pouiller@silabs.com>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, Andy Gross <agross@kernel.org>, 
+ Mailing List <devicetree-spec@vger.kernel.org>
+Cc: netdev@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, Janne Grunau <j@jannau.net>, 
+ David Heidelberg <david@ixit.cz>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1188; i=david@ixit.cz;
+ h=from:subject:message-id;
+ bh=s4h8B9gNJQ6JIaRS+FZDFjTYjzD5y6gNzE0ffwMuDco=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBn4ZlUkO2OTp2AzhwK0TqhMqWIaIvFxzYIv7hU4
+ sC1q5W8JXGJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCZ+GZVAAKCRBgAj/E00kg
+ ctX+EACIls3D2cw/sYf6yNpFF7jMddNcznl3sRLq0U1Gq9Qpqn/AgYTzBJXrYWOyGxwhoO3hegV
+ XZIj25cuIt6LQglWdRSdQ+sF0s1ta/419YsW2ACTqCWRfh8YZvXVLeiCGB3JcsgDW9usnOSR1Rq
+ AGAYg0uegeuRC9Sx2XL+ydP3Y8BhmVdRTvy3Axxl0E4WjS++hCsAnukU0Ju3RJo9Q4Qc5iQAu2I
+ hKvmzxRxF22/do9WKRea5LFe8/5P+nc23dvqF253VsOELmU/6v93iE7dYDluB2oyQnxvxWeNWLA
+ s8He4wM7PDJOeysx19z6LJ5WqFfu1XVq66U1KHOsxoJed7Lm2humQSmQdVXccwjoHfy/vpZR0Zg
+ qLCqTJPrsOrfTnzeXzpCp9HCJjQnZQpbJkOdLVuE0cjaSpS6dejVpWDdGZS6GueJAy3wV61jvBQ
+ VYMX3QHRMJCVVN/z3N1NxMLjFzlhzu/+iX9jTlctE6gvB1TUD/0ILv+ainKo6XrHQahwh9hQzoB
+ lQa+apHVJhkaaILysbh3KHnsqjvojDCOqT4UTyJJRJ3JEYXrFlZ+IO9Yieyi45/ZPjnCKALZUUe
+ QSU12CiBMB+QJdBXtETwNFowKfPLsuRti24UbsIjbhFPKd7ljtNqgpdcDATIJJUTGfk6EwwIxye
+ EJtNFGT07HwaRFg==
+X-Developer-Key: i=david@ixit.cz; a=openpgp;
+ fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
+X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
+X-Original-From: David Heidelberg <david@ixit.cz>
+Reply-To: david@ixit.cz
 
-On Tue, Mar 25, 2025 at 12:56=E2=80=AFAM Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Tue, 2025-03-25 at 00:53 +0800, Jason Xing wrote:
-> >
-> > Thanks for working on this. After net-next is open, I will use this
-> > bit to finish the bpf timestamping in the rx path :)
->
-> :)
->
-> > > --- a/include/linux/skbuff.h
-> > > +++ b/include/linux/skbuff.h
-> > > @@ -481,9 +481,6 @@ enum {
-> > >         /* reserved */
-> > >         SKBTX_RESERVED =3D 1 << 3,
-> >
-> > It might conflict with the bluetooth commit [1], I presume.
-> >
-> > [1]: https://web.git.kernel.org/pub/scm/linux/kernel/git/bluetooth/blue=
-tooth-next.git/commit/?id=3Dc6c3dc495a6ce5b9dfed4df08c3220207e7103bd
->
-> True, just context though, we can deal with that.
->
-> > >
-> > > -       /* generate wifi status information (where possible) */
-> > > -       SKBTX_WIFI_STATUS =3D 1 << 4,
-> > > -
-> >
-> > Better use SKBTX_RESERVED. No strong preference here since I'm going to=
- use it.
->
-> I can't have two called SKBTX_RESERVED, but I'm not sure it's worth
-> renaming it rather than removing? No strong opinion though. The context
-> conflict will happen either way ;)
+From: David Heidelberg <david@ixit.cz>
 
-Sure, we can ignore it. As I mentioned, this released bit will be used soon=
- :)
+Wireless controllers share the common properties.
 
->
-> johannes
->
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: David Heidelberg <david@ixit.cz>
+---
+ .../bindings/net/wireless/wireless-controller.yaml | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..7379f6c1aa05c15a5bc7b34df6502cc174af9a90
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/wireless-controller.yaml
+@@ -0,0 +1,23 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/net/wireless/wireless-controller.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Wireless Controller Common Properties
++
++maintainers:
++  - Lorenzo Bianconi <lorenzo@kernel.org>
++
++properties:
++  $nodename:
++    pattern: "^wifi(@.*)?$"
++
++allOf:
++  - $ref: ieee80211.yaml#
++  - $ref: /schemas/net/network-class.yaml#
++
++additionalProperties: true
++
++...
++
+
+-- 
+2.49.0
+
+
