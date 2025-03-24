@@ -1,111 +1,326 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C061D1B4F0E;
-	Mon, 24 Mar 2025 06:25:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B310F18E050
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Mar 2025 06:25:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742797502; cv=none; b=W57Xo+veWI8ReWslqAnCpVsphY3lrk1kKL7lvbNOphjQvWmwLPGuXqZ13dpKZUDncvXr04EFswWeAbg2FPec4XlmAGMIo3vTt/vyg2jjY0qtwxvLdarsgHaxrmENasqCgYO8jSpj3KtqU61kprt8RDKBSxbfONXNfywDqk6IxTA=
+	t=1742797553; cv=none; b=cUFCBv69xt8yAjZstyuv3SJz3wtdIx+5s13r6XMiPb4Y0YpNjXr3whNUmDvZNrdWL+16m2Pz1lODQtKrBX8QP60UNIjEqI8exRkBYB0Ns+0yrQ6/QStQZChMqfqZRCXVTh6qeTx7GZwXMSMco/289EiRDe2wmMZaX93nCJYRkeI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742797502; c=relaxed/simple;
-	bh=9XXXo3EWZtEobiajEK/dAZklZgfyP4VnNuDdDAvYcz4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=P9HSaVhwrXHbtBQ2LKQDTHv6MVOBEbgoieT473XjnUAZiGBIC1uLkDalUYY+gAZwFaHYtpDcdMKOOz0CBYbD9ERaAUgsH5OrAVtOIyTt3pxK7zxeiL8aC253uxLNLkqC7nXayeUplNm7kOIJMavTcn1OJIbAzsEoej0Mh/sMIHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1VApnjZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742797553; c=relaxed/simple;
+	bh=+SspT7MfoTq6mMBH/NZDGe32WteUmM2S1q+RRjOFVq0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=etztrLtCVnhXN92mNyA89t2fO6Fn9H3EXI26Y27hsWHktT+at+xVZbleOdZx7LWk5Mx7YkSTzia5ITfuUTpD6FkhmUxsCGbnT8eHiYXtQ3XB9Fxwu/OC/4CA7+YLZWewFWJlb+fpm5xKyrMbMwVs6g8j6mYigfuvaxZpdk9Ax3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Zpyzt0Us; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1VApnjZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 33183C4CEEA;
-	Mon, 24 Mar 2025 06:25:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742797502;
-	bh=9XXXo3EWZtEobiajEK/dAZklZgfyP4VnNuDdDAvYcz4=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=o1VApnjZqBgmj6Mn6l0B+/7J8UV/5HCarFDwFRGPWpNB2lMe4LWw8HdZ/up7oF1Ii
-	 xFwYrE97kSNtVwi1a1t51GoX7q/xejRw4/j9yTmUNMhbQlkSXyxYwygNv4bgsiM4Hs
-	 hq6efF+UQ40WBYdj1OgBGtUMn77ee5ozDYGN6h8JWDx7I7pViVf37tbZ/sRWrilJ/h
-	 MpDDhh7Tyi5dWbQtWzXWhmtSOqLbt5Gc9ta1G0ELHIDlBhRSucmcXmbdFFOnuMpnwr
-	 bpRolNp7kGQcVvPULcoZrvgZC1HKuYtIKtohUdsgASlV5fE8Bd5dHMuBDmwJ+SX4RK
-	 qjgunBCTF/mHw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A65FC36008;
-	Mon, 24 Mar 2025 06:25:02 +0000 (UTC)
-From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
-Date: Mon, 24 Mar 2025 10:24:59 +0400
-Subject: [PATCH] wifi: ath11k: support fetching mac address from nvmem
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Zpyzt0Us"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52O6FcEY022745;
+	Mon, 24 Mar 2025 06:25:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	JI0Vq8gEeUHyRtr0ZS6JwAs6VQ7NhaXP7SKopoMP1qA=; b=Zpyzt0UsQuDZW4aY
+	dEDWUxCiYuzcRscQNbU4vL45ALsXoMW/Gbs2Znaix5Lo9eqZkknnnb3XhGxU4xxp
+	uKeUeflPOHwHrd+u1Z4tHhW/nVCBooJ7TGEkH4AEQWmYPnjrNB3eLpgHdjmhbhib
+	jgkV028Kw3NF2QhdBXF/6XskcnobXVwM1JT3zpfmAaobTUH6DFOk27+1UuFyRWxG
+	WEzkVfZ0eYGXrB9aE2V3Ehq4u7X2BZyyPgeOvrrpJ7U9oVK6n8nQbS7HnniMThQt
+	SqpqULMYMfGlIUUzdgJkR6UPizEdkUp4B0sKTmiblxzp5xrnqwLURW142xZOoH2d
+	ZUpHmw==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45hn9wb9a2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 24 Mar 2025 06:25:46 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52O6PjYT012989
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 24 Mar 2025 06:25:45 GMT
+Received: from hu-periyasa-blr.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Sun, 23 Mar 2025 23:25:43 -0700
+From: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, P Praneesh <quic_ppranees@quicinc.com>,
+        Nicolas Escande <nico.escande@gmail.com>,
+        Vasanthakumar Thiagarajan
+	<vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        Karthikeyan Periyasamy
+	<quic_periyasa@quicinc.com>
+Subject: [PATCH v11 05/10] wifi: ath12k: change the status update in the monitor Rx
+Date: Mon, 24 Mar 2025 11:55:13 +0530
+Message-ID: <20250324062518.2752822-6-quic_periyasa@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250324062518.2752822-1-quic_periyasa@quicinc.com>
+References: <20250324062518.2752822-1-quic_periyasa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250324-ath11k-nvmem-v1-1-d82bdf72820e@outlook.com>
-X-B4-Tracking: v=1; b=H4sIALv64GcC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1MDYyMT3cSSDEPDbN28stzUXF3LJJM0U5M0ExNDCwsloJaCotS0zAqwcdG
- xtbUAm2N0AF4AAAA=
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, 
- linux-kernel@vger.kernel.org, 
- George Moussalem <george.moussalem@outlook.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1742797500; l=1623;
- i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
- bh=KFf/U6jpX3DLdf5cfXG9vG8Hbqcu1hFbIGhlckUUI7s=;
- b=PoKhNSfsaNEQZQFXjHirGqsZeV20EcazdhX8I5TzQPa2R5lvPNK6z6IzkvT152fkvWA0wqYRc
- pYhUAbz+GmRA9jGIGq7rRxXYScv+jjqoQr0WP0xU9nY4HQw+aRbHwa9
-X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
- pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
-X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
- with auth_id=364
-X-Original-From: George Moussalem <george.moussalem@outlook.com>
-Reply-To: george.moussalem@outlook.com
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 9H6WEsRRcq5Sf0IRJ1l68pZJff5ytofo
+X-Proofpoint-ORIG-GUID: 9H6WEsRRcq5Sf0IRJ1l68pZJff5ytofo
+X-Authority-Analysis: v=2.4 cv=CPoqXQrD c=1 sm=1 tr=0 ts=67e0faea cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=OXVonWYZqI_Wyll4:21 a=GEpy-HfZoHoA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8
+ a=cWZrgpKIRVDAhusWx5YA:9 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-03-24_03,2025-03-21_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=875
+ spamscore=0 priorityscore=1501 suspectscore=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 malwarescore=0 adultscore=0 phishscore=0
+ impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2503240045
 
-From: George Moussalem <george.moussalem@outlook.com>
+From: P Praneesh <quic_ppranees@quicinc.com>
 
-Many embedded devices with ath11k wifi chips store their mac address in
-nvmem partitions. Currently, the ath11k driver supports getting the
-mac address from the 'mac-address', 'local-mac-address', and 'address'
-device tree properties only. As such, add support for obtaining the mac
-address from nvmem if defined in a 'mac-address' cell by replacing the
-call to device_get_mac_address by of_get_mac_address which does exactly
-the same as the former but tries to get it from nvmem if it is not set
-by above mentioned DT properties,
+Currently, in the monitor Rx path, status is filled from the RX TLV header
+present in the MSDU data. This logic is inherited from ath11k. However, in
+the ath12k 802.11be hardware, the Rx TLV header is not present in the MSDU
+data. This information is reported under various TLV tags. Therefore, avoid
+the existing status filling by accumulating the needed information in the
+PPDU information structure and fill the status.
 
-Tested-on: IPQ5018, QCN6122, and QCN9074
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
-Signed-off-by: George Moussalem <george.moussalem@outlook.com>
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Tested-by: Nicolas Escande <nico.escande@gmail.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/core.h   |  16 ++-
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 138 ++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/hal_rx.h |   5 +-
+ 3 files changed, 151 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 97816916abac..49af6b9fc867 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -9,6 +9,7 @@
- #include <linux/etherdevice.h>
- #include <linux/bitfield.h>
- #include <linux/inetdevice.h>
-+#include <linux/of_net.h>
- #include <net/if_inet6.h>
- #include <net/ipv6.h>
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 081a5292a6e8..3f92565ea4e2 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -533,9 +533,19 @@ struct ath12k_sta {
+ 	enum ieee80211_sta_state state;
+ };
  
-@@ -10379,7 +10380,7 @@ int ath11k_mac_register(struct ath11k_base *ab)
- 	if (ret)
- 		return ret;
+-#define ATH12K_MIN_5GHZ_FREQ 4150
+-#define ATH12K_MIN_6GHZ_FREQ 5925
+-#define ATH12K_MAX_6GHZ_FREQ 7115
++#define ATH12K_HALF_20MHZ_BW	10
++#define ATH12K_2GHZ_MIN_CENTER	2412
++#define ATH12K_2GHZ_MAX_CENTER	2484
++#define ATH12K_5GHZ_MIN_CENTER	4900
++#define ATH12K_5GHZ_MAX_CENTER	5920
++#define ATH12K_6GHZ_MIN_CENTER	5935
++#define ATH12K_6GHZ_MAX_CENTER	7115
++#define ATH12K_MIN_2GHZ_FREQ	(ATH12K_2GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW - 1)
++#define ATH12K_MAX_2GHZ_FREQ	(ATH12K_2GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW + 1)
++#define ATH12K_MIN_5GHZ_FREQ	(ATH12K_5GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MAX_5GHZ_FREQ	(ATH12K_5GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MIN_6GHZ_FREQ	(ATH12K_6GHZ_MIN_CENTER - ATH12K_HALF_20MHZ_BW)
++#define ATH12K_MAX_6GHZ_FREQ	(ATH12K_6GHZ_MAX_CENTER + ATH12K_HALF_20MHZ_BW)
+ #define ATH12K_NUM_CHANS 101
+ #define ATH12K_MAX_5GHZ_CHAN 173
  
--	device_get_mac_address(ab->dev, mac_addr);
-+	of_get_mac_address(ab->dev->of_node, mac_addr);
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+index c613f8408c84..bb227c7e2748 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+@@ -1700,18 +1700,128 @@ static void ath12k_dp_mon_rx_msdus_set_payload(struct ath12k *ar,
+ 	skb_pull(head_msdu, rx_pkt_offset + l2_hdr_offset);
+ }
  
- 	for (i = 0; i < ab->num_radios; i++) {
- 		pdev = &ab->pdevs[i];
-
----
-base-commit: 9388ec571cb1adba59d1cded2300eeb11827679c
-change-id: 20250324-ath11k-nvmem-9b4f54f44188
-
-Best regards,
++static void
++ath12k_dp_mon_fill_rx_stats_info(struct ath12k *ar,
++				 struct hal_rx_mon_ppdu_info *ppdu_info,
++				 struct ieee80211_rx_status *rx_status)
++{
++	u32 center_freq = ppdu_info->freq;
++
++	rx_status->freq = center_freq;
++	rx_status->bw = ath12k_mac_bw_to_mac80211_bw(ppdu_info->bw);
++	rx_status->nss = ppdu_info->nss;
++	rx_status->rate_idx = 0;
++	rx_status->encoding = RX_ENC_LEGACY;
++	rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
++
++	if (center_freq >= ATH12K_MIN_6GHZ_FREQ &&
++	    center_freq <= ATH12K_MAX_6GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_6GHZ;
++	} else if (center_freq >= ATH12K_MIN_2GHZ_FREQ &&
++		   center_freq <= ATH12K_MAX_2GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_2GHZ;
++	} else if (center_freq >= ATH12K_MIN_5GHZ_FREQ &&
++		   center_freq <= ATH12K_MAX_5GHZ_FREQ) {
++		rx_status->band = NL80211_BAND_5GHZ;
++	} else {
++		rx_status->band = NUM_NL80211_BANDS;
++	}
++}
++
++static void
++ath12k_dp_mon_fill_rx_rate(struct ath12k *ar,
++			   struct hal_rx_mon_ppdu_info *ppdu_info,
++			   struct ieee80211_rx_status *rx_status)
++{
++	struct ieee80211_supported_band *sband;
++	enum rx_msdu_start_pkt_type pkt_type;
++	u8 rate_mcs, nss, sgi;
++	bool is_cck;
++
++	pkt_type = ppdu_info->preamble_type;
++	rate_mcs = ppdu_info->rate;
++	nss = ppdu_info->nss;
++	sgi = ppdu_info->gi;
++
++	switch (pkt_type) {
++	case RX_MSDU_START_PKT_TYPE_11A:
++	case RX_MSDU_START_PKT_TYPE_11B:
++		is_cck = (pkt_type == RX_MSDU_START_PKT_TYPE_11B);
++		if (rx_status->band < NUM_NL80211_BANDS) {
++			sband = &ar->mac.sbands[rx_status->band];
++			rx_status->rate_idx = ath12k_mac_hw_rate_to_idx(sband, rate_mcs,
++									is_cck);
++		}
++		break;
++	case RX_MSDU_START_PKT_TYPE_11N:
++		rx_status->encoding = RX_ENC_HT;
++		if (rate_mcs > ATH12K_HT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in HT mode %d\n",
++				     rate_mcs);
++			break;
++		}
++		rx_status->rate_idx = rate_mcs + (8 * (nss - 1));
++		if (sgi)
++			rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
++		break;
++	case RX_MSDU_START_PKT_TYPE_11AC:
++		rx_status->encoding = RX_ENC_VHT;
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_VHT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in VHT mode %d\n",
++				     rate_mcs);
++			break;
++		}
++		if (sgi)
++			rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
++		break;
++	case RX_MSDU_START_PKT_TYPE_11AX:
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_HE_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in HE mode %d\n",
++				    rate_mcs);
++			break;
++		}
++		rx_status->encoding = RX_ENC_HE;
++		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
++		break;
++	case RX_MSDU_START_PKT_TYPE_11BE:
++		rx_status->rate_idx = rate_mcs;
++		if (rate_mcs > ATH12K_EHT_MCS_MAX) {
++			ath12k_warn(ar->ab,
++				    "Received with invalid mcs in EHT mode %d\n",
++				    rate_mcs);
++			break;
++		}
++		rx_status->encoding = RX_ENC_EHT;
++		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
++		break;
++	default:
++		ath12k_dbg(ar->ab, ATH12K_DBG_DATA,
++			   "monitor receives invalid preamble type %d",
++			    pkt_type);
++		break;
++	}
++}
++
+ static struct sk_buff *
+ ath12k_dp_mon_rx_merg_msdus(struct ath12k *ar,
+ 			    struct dp_mon_mpdu *mon_mpdu,
++			    struct hal_rx_mon_ppdu_info *ppdu_info,
+ 			    struct ieee80211_rx_status *rxs)
+ {
+ 	struct ath12k_base *ab = ar->ab;
+ 	struct sk_buff *msdu, *mpdu_buf, *prev_buf, *head_frag_list;
+ 	struct sk_buff *head_msdu, *tail_msdu;
+-	struct hal_rx_desc *rx_desc, *tail_rx_desc;
++	struct hal_rx_desc *rx_desc;
+ 	u8 *hdr_desc, *dest, decap_format = mon_mpdu->decap_format;
+ 	struct ieee80211_hdr_3addr *wh;
++	struct ieee80211_channel *channel;
+ 	u32 frag_list_sum_len = 0;
++	u8 channel_num = ppdu_info->chan_num;
+ 
+ 	mpdu_buf = NULL;
+ 	head_msdu = mon_mpdu->head;
+@@ -1720,9 +1830,29 @@ ath12k_dp_mon_rx_merg_msdus(struct ath12k *ar,
+ 	if (!head_msdu)
+ 		goto err_merge_fail;
+ 
+-	tail_rx_desc = (struct hal_rx_desc *)tail_msdu->data;
++	ath12k_dp_mon_fill_rx_stats_info(ar, ppdu_info, rxs);
++
++	if (unlikely(rxs->band == NUM_NL80211_BANDS ||
++		     !ath12k_ar_to_hw(ar)->wiphy->bands[rxs->band])) {
++		ath12k_dbg(ar->ab, ATH12K_DBG_DATA,
++			   "sband is NULL for status band %d channel_num %d center_freq %d pdev_id %d\n",
++			   rxs->band, channel_num, ppdu_info->freq, ar->pdev_idx);
++
++		spin_lock_bh(&ar->data_lock);
++		channel = ar->rx_channel;
++		if (channel) {
++			rxs->band = channel->band;
++			channel_num =
++				ieee80211_frequency_to_channel(channel->center_freq);
++		}
++		spin_unlock_bh(&ar->data_lock);
++	}
++
++	if (rxs->band < NUM_NL80211_BANDS)
++		rxs->freq = ieee80211_channel_to_frequency(channel_num,
++							   rxs->band);
+ 
+-	ath12k_dp_rx_h_ppdu(ar, tail_rx_desc, rxs);
++	ath12k_dp_mon_fill_rx_rate(ar, ppdu_info, rxs);
+ 
+ 	if (decap_format == DP_RX_DECAP_TYPE_RAW) {
+ 		ath12k_dp_mon_rx_msdus_set_payload(ar, head_msdu, tail_msdu);
+@@ -2040,7 +2170,7 @@ static int ath12k_dp_mon_rx_deliver(struct ath12k *ar,
+ 	struct ieee80211_rx_status *rxs = &dp->rx_status;
+ 	u8 decap = DP_RX_DECAP_TYPE_RAW;
+ 
+-	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar, mon_mpdu, rxs);
++	mon_skb = ath12k_dp_mon_rx_merg_msdus(ar, mon_mpdu, ppduinfo, rxs);
+ 	if (!mon_skb)
+ 		goto mon_deliver_fail;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+index 6f10e4222ba6..c753eb2a03ad 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
+@@ -509,7 +509,10 @@ struct hal_rx_mpdu_start {
+ 
+ struct hal_rx_msdu_end {
+ 	__le32 info0;
+-	__le32 rsvd0[18];
++	__le32 rsvd0[9];
++	__le16 info00;
++	__le16 info01;
++	__le32 rsvd00[8];
+ 	__le32 info1;
+ 	__le32 rsvd1[10];
+ 	__le32 info2;
 -- 
-George Moussalem <george.moussalem@outlook.com>
-
+2.34.1
 
