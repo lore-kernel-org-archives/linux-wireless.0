@@ -1,91 +1,112 @@
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA071799F;
-	Wed, 26 Mar 2025 12:18:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862131E4AE
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2025 12:18:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742991504; cv=none; b=UOUh3WRI3Ioue8H7zfGDwlGURGxOW+dSF4SiercWyNKuy4GXrH9MRCZR8ghSd9uKdqzoyC7zfHUXZuuN9B0oP34TQkiKRLEIH4Hzb3+2AsKx+nzaS46LYMgOKs+cZPbybhLhpGipMm9qTpvG7wyc6sj4rXuo6onXeYqSGaK6ZSo=
+	t=1742991521; cv=none; b=RiBZ7jJAXH7RKpaOr7tnIOBAIPwqQPz9YdaEZLE/eFuzBX5ldL/t3cJp9/ViIq20oFYbE8M4AMqvKOnDiikoMgba2lSAQW+7QecZ7NUDy6Ii+C1GgsdGw7EFWVdJtDw/GpmX1wkPIu1WDvm5z6gV0Vkb1GV9FeFXbIJYnfw+dlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742991504; c=relaxed/simple;
-	bh=zG4vbF65PHAnfVOZGy+ENwZEFfSF2q/SBVWSGtFFQr0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XLQ+aspiMN75A5yKpB2Z0zRRmWEpYWHbKJ1vfwlYVJcI1n9X6l1Mm1k8OX1WquftXyEdwGOtc9Nh5OWjuy8PV6HqDcYqFmhNzs56ny7nildL2G1YTI0+tSKQO4fQI5EXubZRcBn8uBFjcel+6CcHaBFzgLf/y5x1OIG1fPTQCW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=i2y/+akQ; arc=none smtp.client-ip=217.194.8.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="i2y/+akQ"
-Received: from gaggiata.pivistrello.it (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
-	by mail11.truemail.it (Postfix) with ESMTPA id EEF991FE13;
-	Wed, 26 Mar 2025 13:18:10 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1742991491;
-	bh=4Au+P3GwIfQbeWhiTsUSF5cUj7XIGx6NiyDPRZQtBnQ=;
-	h=Received:From:To:Subject;
-	b=i2y/+akQ2AIj7mmV3o+tdVK77ECT0/K7VrwHQp32aAfGt8VsNW7wRVllxeQPj33tl
-	 psTJJojwxHrX4lVssNStoWSly3XC5MQDHRpxn4nPpGC8hrh9AZC+fbMmZ4+9ZgB10W
-	 0J81KgwstuVu/bRhH7VJHzd6VWaYqfdqT39jvjj0v2KijfPMwIFWdmC7AB1xKjDm+8
-	 Lqw44nYDK8sinTo3RiUM18GEJIxVRngcarfnhkjI+LApiyEY5j3birDArMIOPAB+3F
-	 3Y4ZcbIhJxwQTy+jCvm5CnwP48Fro2zv7Rk+j4o18T3MIS5ScIAjPa88I2k3ETHBHh
-	 CEl3kn8rSH9MA==
-Received: by gaggiata.pivistrello.it (Postfix, from userid 1000)
-	id A2B1D7F95B; Wed, 26 Mar 2025 13:18:10 +0100 (CET)
-Date: Wed, 26 Mar 2025 13:18:10 +0100
-From: Francesco Dolcini <francesco@dolcini.it>
-To: Jeff Chen <jeff.chen_1@nxp.com>,
-	"briannorris@chromium.org" <briannorris@chromium.org>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Pete Hsieh <tsung-hsien.hsieh@nxp.com>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>
-Subject: Re: [EXT] Re: [PATCH v4 1/2] wifi: mwifiex: Fix premature release of
- RF calibration data.
-Message-ID: <Z-PwgtSRNoCd2L3z@gaggiata.pivistrello.it>
-References: <20250220061143.1417420-2-jeff.chen_1@nxp.com>
- <20250318050739.2239376-2-jeff.chen_1@nxp.com>
- <20250319162842.GA46894@francesco-nb>
- <PAWPR04MB9910FE139C88507DE5904ABD9CA72@PAWPR04MB9910.eurprd04.prod.outlook.com>
+	s=arc-20240116; t=1742991521; c=relaxed/simple;
+	bh=SRfsHjiqZw1vKNWVfX/k2li0P5baWsoBJ1z9BXS+rLM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ANiETgZBAP5fZ5SJAGxS91t/Bfvm0HZdS7ur3QYb6erdrO1WJcHOlJKA+JH+CbW3RG09D2M5dMBm0L8PYrD0/4CBjTTu9PuRyz9y40eluOHdqhNZrpO04Kbkf97kCqzu4L5eHxoOqRV97PguUIO0TpYuTX5Ylr999DiLgdrJchQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1txPiN-0005sk-HI; Wed, 26 Mar 2025 13:18:35 +0100
+Received: from dude02.red.stw.pengutronix.de ([2a0a:edc0:0:1101:1d::28])
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1txPiM-001kIq-2P;
+	Wed, 26 Mar 2025 13:18:35 +0100
+Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
+	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
+	(envelope-from <s.hauer@pengutronix.de>)
+	id 1txPiN-000aOn-0D;
+	Wed, 26 Mar 2025 13:18:35 +0100
+From: Sascha Hauer <s.hauer@pengutronix.de>
+Date: Wed, 26 Mar 2025 13:18:31 +0100
+Subject: [PATCH do not merge 1/4] wifi: mwifiex: release firmware at remove
+ time
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <PAWPR04MB9910FE139C88507DE5904ABD9CA72@PAWPR04MB9910.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250326-mwifiex-iw61x-v1-1-ff875ed35efc@pengutronix.de>
+References: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+In-Reply-To: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+To: Brian Norris <briannorris@chromium.org>, 
+ Francesco Dolcini <francesco@dolcini.it>, 
+ Ulf Hansson <ulf.hansson@linaro.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1742991515; l=1734;
+ i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
+ bh=SRfsHjiqZw1vKNWVfX/k2li0P5baWsoBJ1z9BXS+rLM=;
+ b=igzuuK8C2Jbwo3ZU4TbFs2xWE6/FtJL2qrvF3QRJho6HzovUW4MDGyBY9dr6iJ7kyjnhoxTHr
+ hSPRCxYrr/DC2DsmEhPx3pjDdpwmgei77Vn9cSI78KsGoNngr0T88Aj
+X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
+ pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: s.hauer@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-On Tue, Mar 25, 2025 at 04:43:33PM +0000, Jeff Chen wrote:
-> From: Francesco Dolcini <francesco@dolcini.it>
-> > On Tue, Mar 18, 2025 at 01:07:38PM +0800, Jeff Chen wrote:
-> > > This patch resolves an issue where RF calibration data was being
-> > > released before the download process. Without this fix, the external
-> > > calibration data file would not be downloaded at all.
-> > >
-> > > Fixes: d39fbc88956e ("mwifiex: remove cfg_data construction")
-> > > Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
-> > 
-> > The code looks ok to me, however I do not understand the commit you
-> > selected as fixes tag.
-> > 
-> > From what I understand releasing the data before using it was done since the
-> > initial commit 388ec385d5ce ("mwifiex: add calibration data download
-> > feature"). What am I missing?
-> 
-> Thank you for reviewing the patch. You are correct-the Fixes tag I included was incorrect.
-> After re-examining the issue, I found that the premature release of RF calibration data 
-> cannot be reproduced, which invalidates the problem statement for this patch.  
-> 
-> I have decided to withdraw the patch. I appreciate your feedback and attention to detail, 
-> which helped identify this oversight.  
+With VDLL support the device will request parts of the firmware during
+runtime, so instead of releasing the firmware immediately after initial
+firmware upload, release it during device deregistration.
 
-To me the code change is correct, and it is also merged in wireless-next. No
-reason to drop it because of my comment on the fixes tag.
+FIXME: I am not sure if we run into trouble with the firmware framework
+when we don't release the firmware. We might have to copy it over to
+some private buffer instead of just keeping it around.
 
-Brian: are you ok with that?
+FIXME: we might want to limit the release firmware at remove time to the
+devices that actually need it.
 
-Francesco
+Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 855019fe54858..0b394ea261316 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -695,10 +695,6 @@ static int _mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 		release_firmware(adapter->cal_data);
+ 		adapter->cal_data = NULL;
+ 	}
+-	if (adapter->firmware) {
+-		release_firmware(adapter->firmware);
+-		adapter->firmware = NULL;
+-	}
+ 	if (init_failed) {
+ 		if (adapter->irq_wakeup >= 0)
+ 			device_init_wakeup(adapter->dev, false);
+@@ -1836,6 +1832,11 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter)
+ 		    "info: unregister device\n");
+ 	if (adapter->if_ops.unregister_dev)
+ 		adapter->if_ops.unregister_dev(adapter);
++	if (adapter->firmware) {
++		release_firmware(adapter->firmware);
++		adapter->firmware = NULL;
++	}
++
+ 	/* Free adapter structure */
+ 	mwifiex_dbg(adapter, INFO,
+ 		    "info: free adapter\n");
+
+-- 
+2.39.5
 
