@@ -1,112 +1,115 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1213A1E1DFF
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2025 12:19:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A351D86334
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Mar 2025 12:19:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742991543; cv=none; b=UqPX/XCg1UqGLONua9mzN6XnSoTQ+hIcLC6QHeSLn3bp8NBctlPyeyvtjgE4EKrBWjfO+2zQ33JqZrWrqXKL+FNlH91XkJE8ckNPlyjP4l/3ljPDLgM+3jhsWZn0bIhmPewc87ouYmCjfQ6P7E72xx+dZ63SRuNdVtwgdJ3R6e4=
+	t=1742991566; cv=none; b=l9iQJeTjMi945d2drycWV+pRLWnBXdG6TfvcUj066pLr3vqtCN6adenJqaUv746qOMCuwiK0Q6bh7nF2akmH7HUQomg1C4AVZqOxu60jB6uzRiF+YwbnWisDlxDtvut0aPS1CJAd+C9kRVcHve5BfM3jg/2iRkGCCxq+6URedSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742991543; c=relaxed/simple;
-	bh=XC+qboCsiOOjLMsuFgsRa+8+JW7ckO4azwS4iUwWNS8=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=LSgudMZ+nrOSvJH7jRFttwALwgqgOYL/s6L6rTFfawFwQI2r4qh7UyjaBhTYNYjo2vugusv4pBmNJ+fSJYqsLLNjbsA5aAtMoBuGqRb8Pg6iIMCz8Xxlpd4/VXb/FnhJIxbwPlsmLFl9N309rGiKxQU2rNFVDMmLwjiE6xWkZ0g=
+	s=arc-20240116; t=1742991566; c=relaxed/simple;
+	bh=+pQHJQTJjkDnNVcI28fWpk4lJeGXB+K4md8iwOZfAtA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SuFryLCBfedt63q9B5pZvcVKnpd2TbN8V7pp/GmTw1JGb0ZYGjJQTRdSh+6r4ryOPxUCdmcac2KZRn53uoF0R77+y7yO7sB1Vuu8/YFvfuV8Ug/ApY6DSuL92rXwyLEmtG1fkRsOvLYvy49Hl/S5pG6VYrif/AFjuSe7DNFoovk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
 	(Exim 4.92)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1txPiN-0005sh-HM; Wed, 26 Mar 2025 13:18:35 +0100
-Received: from dude02.red.stw.pengutronix.de ([2a0a:edc0:0:1101:1d::28])
+	(envelope-from <sha@pengutronix.de>)
+	id 1txPj8-0005yV-DY; Wed, 26 Mar 2025 13:19:22 +0100
+Received: from pty.whiteo.stw.pengutronix.de ([2a0a:edc0:2:b01:1d::c5])
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1txPiM-001kIr-2N;
-	Wed, 26 Mar 2025 13:18:35 +0100
-Received: from localhost ([::1] helo=dude02.red.stw.pengutronix.de)
-	by dude02.red.stw.pengutronix.de with esmtp (Exim 4.96)
-	(envelope-from <s.hauer@pengutronix.de>)
-	id 1txPiN-000aOn-0C;
-	Wed, 26 Mar 2025 13:18:35 +0100
+	(envelope-from <sha@pengutronix.de>)
+	id 1txPj7-001kJC-2D;
+	Wed, 26 Mar 2025 13:19:22 +0100
+Received: from sha by pty.whiteo.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <sha@pengutronix.de>)
+	id 1txPj7-0006h7-3C;
+	Wed, 26 Mar 2025 13:19:22 +0100
+Date: Wed, 26 Mar 2025 13:19:21 +0100
 From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH do not merge 0/4] wifi: mwifiex: add iw61x support
-Date: Wed, 26 Mar 2025 13:18:30 +0100
-Message-Id: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+To: Francesco Dolcini <francesco@dolcini.it>
+Cc: Jeff Chen <jeff.chen_1@nxp.com>, tsung-hsien.hsieh@nxp.com,
+	Brian Norris <briannorris@chromium.org>,
+	linux-wireless@vger.kernel.org, kernel@pengutronix.de,
+	David Lin <yu-hao.lin@nxp.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stefan Roese <sr@denx.de>
+Subject: Re: Future of mwifiex driver
+Message-ID: <Z-PwyV3Zo5n0cWY0@pengutronix.de>
+References: <Z8WM9jn1QFscWZBQ@pengutronix.de>
+ <20250306101715.GA19853@francesco-nb>
+ <Z8rGDTjkwKAVaREL@pengutronix.de>
+ <20250319103240.GA21390@francesco-nb>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAJbw42cC/x2MwQqAIBAFfyX2nGCKRf1KdKhcaw9paKQQ/nvWa
- ZiB9x4I6AkDDNUDHm8K5GyRpq5g3We7ISNdHAQXikvRsiOSIUyMYtsktvSq44uRvJMKyub0aCj
- 9fyNo9yXrrg8H+g1hyvkFda0LRXMAAAA=
-To: Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, 
- Ulf Hansson <ulf.hansson@linaro.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-mmc@vger.kernel.org, Sascha Hauer <s.hauer@pengutronix.de>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1742991515; l=1915;
- i=s.hauer@pengutronix.de; s=20230412; h=from:subject:message-id;
- bh=XC+qboCsiOOjLMsuFgsRa+8+JW7ckO4azwS4iUwWNS8=;
- b=Pv6fTiWkqhq7BhJ8zpUKkrzmH1XGDqzV5/57BO539EM4DVkMssQAcI6vgtidNdMqxtCR5dUOQ
- kTWySoIPPBLDdYYCQbladHXHxUSAaIvo9keP7u7bx3YoYsWc58P7Ous
-X-Developer-Key: i=s.hauer@pengutronix.de; a=ed25519;
- pk=4kuc9ocmECiBJKWxYgqyhtZOHj5AWi7+d0n/UjhkwTg=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250319103240.GA21390@francesco-nb>
+X-Sent-From: Pengutronix Hildesheim
+X-URL: http://www.pengutronix.de/
+X-Accept-Language: de,en
+X-Accept-Content-Type: text/plain
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: s.hauer@pengutronix.de
+X-SA-Exim-Mail-From: sha@pengutronix.de
 X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
-This series adds iw61x support to the mwifiex driver. It works for me,
-but is not yet ready to be merged. Some people showed interest in it, so
-I am sending it here.
+On Wed, Mar 19, 2025 at 11:32:40AM +0100, Francesco Dolcini wrote:
+> On Fri, Mar 07, 2025 at 11:10:21AM +0100, Sascha Hauer wrote:
+> > On Thu, Mar 06, 2025 at 11:17:15AM +0100, Francesco Dolcini wrote:
+> > > + Jeff Chen <jeff.chen_1@nxp.com>, tsung-hsien.hsieh@nxp.com
+> > > + Stefan Roese <sr@denx.de>
+> > > 
+> > > On Mon, Mar 03, 2025 at 12:05:26PM +0100, Sascha Hauer wrote:
+> > > > I am worried about the future of the mwifiex driver. NXP has an ongoing
+> > > > effort of forking the driver to support their new chips, but the forked
+> > > > driver lacks support for the old chips supported by the current mwifiex
+> > > > driver.
+> > > > 
+> > > > Overall this leaves us and our customers using the mwifiex driver in a
+> > > > very bad situation.  Johannes made clear that he is not going to merge a
+> > > > driver that is 70% identical to the existing driver and on the other
+> > > > hand the existing driver doesn't get forward due to its odd-fixes state
+> > > > and the potential rise of a new driver which would render work on the
+> > > > existing driver useless.
+> > > 
+> > > While I agree on the challenging situation, I would not call it "very
+> > > bad" ... as you know there are multiple people with stake on this driver
+> > > (I added SR in Cc here, that I just discovered has some interested on
+> > > this).
+> > > 
+> > > In the short term I think that improving mwifiex driver is going to be
+> > > beneficial for everybody, currently this is not going as smooth as we'd
+> > > like, as you wrote and as already commented by Brian.
+> > > 
+> > > And the next step would be to figure out how to enable newer Wi-Fi chip
+> > > solution from NXP in mainline, we all have our ideas and we are not
+> > > moving forward. NXP keeps pushing for a solution that was already
+> > > rejected multiple times and so far it was not successful on explaining
+> > > why this is the correct way forward. Here I would agree that the
+> > > situation is "very bad" at the moment.
+> > 
+> > I have a patch adding iw61x support to the mwifiex driver. Maybe if I
+> > send that for inclusion we can get NXP  to explain to us what's actually
+> > missing in this patch to properly support it.
+> 
+> I would have HW available to test it, and not just review the code,
+> looking forward to it.
 
-All testing and review feedback appreciated.
-
-During startup I get these messages:
-
-[   12.078010] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0xff
-[   12.078018] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0xff
-[   12.078024] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0x23e
-[   12.078029] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0x25c
-
-Not sure what these are about, I can't see these handled in the
-downstream mwifiex driver as well. Could also be there is some parsing
-error. Nevertheless the driver seems to work.
-
-The series applies to v6.14, but should apply to my mwifiex cleanup
-series as well.
+Great! I just sent the series out, you are on Cc.
 
 Sascha
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
----
-Sascha Hauer (4):
-      wifi: mwifiex: release firmware at remove time
-      wifi: mwifiex: handle VDLL
-      wifi: mwifiex: wait longer for SDIO card status
-      wifi: mwifiex: add iw61x support
-
- drivers/net/wireless/marvell/mwifiex/cmdevt.c    | 86 ++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/fw.h        | 16 +++++
- drivers/net/wireless/marvell/mwifiex/main.c      |  9 +--
- drivers/net/wireless/marvell/mwifiex/main.h      |  4 ++
- drivers/net/wireless/marvell/mwifiex/sdio.c      | 81 +++++++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/sdio.h      |  3 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c |  4 ++
- drivers/net/wireless/marvell/mwifiex/uap_event.c |  4 ++
- include/linux/mmc/sdio_ids.h                     |  3 +
- 9 files changed, 205 insertions(+), 5 deletions(-)
----
-base-commit: 1e26c5e28ca5821a824e90dd359556f5e9e7b89f
-change-id: 20250326-mwifiex-iw61x-b9570bf30735
-
-Best regards,
 -- 
-Sascha Hauer <s.hauer@pengutronix.de>
-
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
