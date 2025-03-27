@@ -1,176 +1,118 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F035A1BD9D0
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Mar 2025 05:14:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BE946BF;
+	Thu, 27 Mar 2025 09:33:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743052497; cv=none; b=eIVMxXC9Wm9Lsc9og/EwCuyJr+G+4Vq1aMFE+4LU7I5Sk0vadvFiTmKBWw+v8sUdGjrvGde3O4u2uugCv7gqAX091fYkw73YCmAcBeAEn/Uyve+jQayVvxDEmVm0jOKhENeijDD2UpQEmpFc/VqLVyNZxs/aVgRSfdVXtDEMPLA=
+	t=1743068005; cv=none; b=r0XBesJt1S5PX2XptubXv/FrJLcL61VNmI+tKzw6afxjUjVUjCAMpMx+rn3Llsi10mJ3Nih9ME8pcsH9nY4LRynRbcN14W6VWR08Mf9e1TzMEIausWMz3o4R0+hLEZu4xvDpyi1G3qHTIZaBZmXx3qeaQ1YKvYNIA3D1Jm9qhaI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743052497; c=relaxed/simple;
-	bh=IXVtdYCfxvBxUHmJNf3pAiT/OfL8z59euIDoIDjjg/o=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Qk2Nwk7/WDOWERFZnh6TSniy0CunDNBgg5ypXsgbvJHa68Uua6qUkaxHG9TacM9eSQO5dAI0+0p2M80ktpjMJeFRKN5+SVG7p5wJVi6X1NWFYieaEhsNf0W2pLAu2d+gvKbZV3gpwlyob4Md0Yop1vHfmwz9u7+tKE8aaZUYUzg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=lVxGobz2; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1743068005; c=relaxed/simple;
+	bh=YNClJrH/6e1Dbh2WpS6rrVYn/ndunKC5gv1xJfe069U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JN1FNZK64cU5VD+nz/LFnGzXSHXE5LDTf2x4BkS5YTe2ZE/rXDJyp8+3oT3ZFEJK1WRAOLBPcH64UNe0HZ1XMpLwbhG3IC4qx1pvsmnAiXfmKWXFehmmc79to2hYHQMaHHBBdyZw/k3bgwGuD867YMAKxy1Fr+wdwr4E82pA6K4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=UplFAUBB; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="lVxGobz2"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52R56SWc029695;
-	Thu, 27 Mar 2025 05:14:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	7Rwu+KoLXssv9dY+W0d9GBiCyxWoroY++DvnAbRIVX8=; b=lVxGobz2WBDL4ITh
-	U/2HaB73dNNhXSGAIkxAJm+j7KldB6vXfUDO8MK0M6DP2Cjs0OsXHDfqTgIaEwco
-	TtH4q0gn/KcFe1gkQjJMmytxzHZlvtvCnRFlQKVN4XaewYQ/un2WyJGfS3gHy9mt
-	HNpFYjJAbePxhukxDNCBNL8zJUh5VWZjtOfp/4FpsRL4bEG1cpQAHDEgA1zWCKSe
-	IP18rZilrfknihAE7plKm7P78PyrzWCjEERk0UyNfqXjg7iPCCxiPlqm8n47y+Zb
-	x+8R6C/kGHmkIFTW3tphH7n/QMAIXqiDAb2OYFZn70SWjMAZz6/Oadr7qeOJviQA
-	WUV+bA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45ktene5ws-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 27 Mar 2025 05:14:21 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52R5EKh0024338
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 27 Mar 2025 05:14:20 GMT
-Received: from hu-ramess-blr.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 26 Mar 2025 22:13:56 -0700
-From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
-To: <johannes@sipsolutions.net>, <ath12k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Rameshkumar Sundaram
-	<quic_ramess@quicinc.com>
-Subject: [PATCH wireless-next v5 3/4] wifi: ieee80211: Add helpers to fetch EMLSR delay and timeout values
-Date: Thu, 27 Mar 2025 10:43:19 +0530
-Message-ID: <20250327051320.3253783-4-quic_ramess@quicinc.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250327051320.3253783-1-quic_ramess@quicinc.com>
-References: <20250327051320.3253783-1-quic_ramess@quicinc.com>
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="UplFAUBB"
+Received: from gaggiata.pivistrello.it (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
+	by mail11.truemail.it (Postfix) with ESMTPA id 59BF41FAC7;
+	Thu, 27 Mar 2025 10:33:18 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1743067998;
+	bh=78GL+QiKQ+5E/NSdfh6mkzgQppQMhSIUOSmEkzEVLQ8=;
+	h=Received:From:To:Subject;
+	b=UplFAUBBAPfNrEvetkl/PyOlSxnXjzZFTFe7zuyx9KmaKYN3joFaCEkxSTb4/oXkk
+	 6RpSbFxaRKYctavYUh5c4C7JEO1Z41/xfuMDFHvLFKG4L25jmtHcWHod3dsa0jnCQR
+	 Ci4ogRLz00JVzVBggVFS8SoquZUv1kDrc+qtU4EZHtfUfWsdk+yWulZ3lh6S6PCKes
+	 jAbITEiXHe8Wjt9mTvSZa5d+y5MbX2w0rKdvBSYs7Aeh9WGhYSEy9NUPK+9wwXcWOT
+	 d81EmE7DBsuVRY3ndM9n8dz1YuHctEivTd845XSfw8YYA8s7eQhm+R3JUvmoAoOu1E
+	 Ig+LONXHoidoA==
+Received: by gaggiata.pivistrello.it (Postfix, from userid 1000)
+	id 045E37F9D6; Thu, 27 Mar 2025 10:33:17 +0100 (CET)
+Date: Thu, 27 Mar 2025 10:33:17 +0100
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Sascha Hauer <s.hauer@pengutronix.de>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Brian Norris <briannorris@chromium.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: Re: [PATCH do not merge 4/4] wifi: mwifiex: add iw61x support
+Message-ID: <Z-UbXduYmx2i0kxz@gaggiata.pivistrello.it>
+References: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+ <20250326-mwifiex-iw61x-v1-4-ff875ed35efc@pengutronix.de>
+ <Z-Pxx983jcb0GTtg@gaggiata.pivistrello.it>
+ <Z-QHG0fyM8wRy2FH@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=TuvmhCXh c=1 sm=1 tr=0 ts=67e4dead cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=6a0EW4FuJA1U0GZqRFsA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: _XpSmx1cJFs-Is23op0fhjppvnGIxfvp
-X-Proofpoint-ORIG-GUID: _XpSmx1cJFs-Is23op0fhjppvnGIxfvp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-03-26_09,2025-03-26_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- malwarescore=0 bulkscore=0 priorityscore=1501 impostorscore=0
- suspectscore=0 adultscore=0 phishscore=0 clxscore=1015 lowpriorityscore=0
- mlxscore=0 spamscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2503270031
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z-QHG0fyM8wRy2FH@pengutronix.de>
 
-Add helpers to get EMLSR transition delay, padding delay and transition
-timeout values from EML capabilities field of Multi-link Element.
+On Wed, Mar 26, 2025 at 02:54:35PM +0100, Sascha Hauer wrote:
+> On Wed, Mar 26, 2025 at 01:23:35PM +0100, Francesco Dolcini wrote:
+> > On Wed, Mar 26, 2025 at 01:18:34PM +0100, Sascha Hauer wrote:
+> > > This adds iw61x aka SD9177 support to the mwifiex driver. It is named
+> > > SD9177 in the downstream driver, I deliberately chose the NXP name in
+> > > the driver.
+> > > 
+> > > Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+> > > ---
+> > >  drivers/net/wireless/marvell/mwifiex/sdio.c | 79 +++++++++++++++++++++++++++++
+> > >  drivers/net/wireless/marvell/mwifiex/sdio.h |  3 ++
+> > >  include/linux/mmc/sdio_ids.h                |  3 ++
+> > >  3 files changed, 85 insertions(+)
+> > > 
+> > > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > > index cbcb5674b8036..7b4045a40df57 100644
+> > > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > 
+> > ...
+> > 
+> > > @@ -3212,3 +3289,5 @@ MODULE_FIRMWARE(SD8978_SDIOUART_FW_NAME);
+> > >  MODULE_FIRMWARE(SD8987_DEFAULT_FW_NAME);
+> > >  MODULE_FIRMWARE(SD8997_DEFAULT_FW_NAME);
+> > >  MODULE_FIRMWARE(SD8997_SDIOUART_FW_NAME);
+> > > +MODULE_FIRMWARE(IW612_DEFAULT_FW_NAME);
+> > > +MODULE_FIRMWARE(IW612_SDIOUART_FW_NAME);
+> > > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+> > > index 65d142286c46e..97759456314b0 100644
+> > > --- a/drivers/net/wireless/marvell/mwifiex/sdio.h
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+> > > @@ -29,6 +29,9 @@
+> > >  #define SD8987_DEFAULT_FW_NAME "mrvl/sd8987_uapsta.bin"
+> > >  #define SD8997_DEFAULT_FW_NAME "mrvl/sdsd8997_combo_v4.bin"
+> > >  #define SD8997_SDIOUART_FW_NAME "mrvl/sdiouart8997_combo_v4.bin"
+> > > +#define IW612_DEFAULT_FW_NAME "nxp/sdsd_nw61x.bin"
+> > > +#define IW612_SDIOUART_FW_NAME "nxp/sd_w61x.bin"
+> > 
+> > Is there a way to have BT over SDIO with iw61x? I was sure only sd-uart was
+> > possible.
+> 
+> The communication to the Bluetooth module indeed is UART only.
+> 
+> I think nxp/sdsd_nw61x.bin contains firmwares for both the WiFi and
+> Bluetooth chip. When using this you can use the Bluetooth UART directly
+> without uploading a separate Bluetooth firmware.
+> 
+> nxp/sd_w61x.bin only contains the WiFi firmware, so you have to
+> upload a separate Bluetooth firmware over the UART interface.
 
-Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
----
- include/linux/ieee80211.h | 74 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+If that the case what you did here is not correct.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 508d466de1cc..0720a9dc1dc8 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -5615,6 +5615,80 @@ static inline bool ieee80211_tid_to_link_map_size_ok(const u8 *data, size_t len)
- 	return len >= fixed + elem_len;
- }
- 
-+/**
-+ * ieee80211_emlsr_pad_delay_in_us - Fetch the EMLSR Padding delay
-+ *	in microseconds
-+ * @eml_cap: EML capabilities field value from common info field of
-+ *	the Multi-link element
-+ * Return: the EMLSR Padding delay (in microseconds) encoded in the
-+ *	EML Capabilities field
-+ */
-+
-+static inline u32 ieee80211_emlsr_pad_delay_in_us(u16 eml_cap)
-+{
-+	/* IEEE Std 802.11be-2024 Table 9-417i—Encoding of the EMLSR
-+	 * Padding Delay subfield.
-+	 */
-+	u32 pad_delay = u16_get_bits(eml_cap,
-+				     IEEE80211_EML_CAP_EMLSR_PADDING_DELAY);
-+
-+	if (!pad_delay ||
-+	    pad_delay > IEEE80211_EML_CAP_EMLSR_PADDING_DELAY_256US)
-+		return 0;
-+
-+	return 32 * (1 << (pad_delay - 1));
-+}
-+
-+/**
-+ * ieee80211_emlsr_trans_delay_in_us - Fetch the EMLSR Transition
-+ *	delay in microseconds
-+ * @eml_cap: EML capabilities field value from common info field of
-+ *	the Multi-link element
-+ * Return: the EMLSR Transition delay (in microseconds) encoded in the
-+ *	EML Capabilities field
-+ */
-+
-+static inline u32 ieee80211_emlsr_trans_delay_in_us(u16 eml_cap)
-+{
-+	/* IEEE Std 802.11be-2024 Table 9-417j—Encoding of the EMLSR
-+	 * Transition Delay subfield.
-+	 */
-+	u32 trans_delay =
-+		u16_get_bits(eml_cap,
-+			     IEEE80211_EML_CAP_EMLSR_TRANSITION_DELAY);
-+
-+	/* invalid values also just use 0 */
-+	if (!trans_delay ||
-+	    trans_delay > IEEE80211_EML_CAP_EMLSR_TRANSITION_DELAY_256US)
-+		return 0;
-+
-+	return 16 * (1 << (trans_delay - 1));
-+}
-+
-+/**
-+ * ieee80211_eml_trans_timeout_in_us - Fetch the EMLSR Transition
-+ *	timeout value in microseconds
-+ * @eml_cap: EML capabilities field value from common info field of
-+ *	the Multi-link element
-+ * Return: the EMLSR Transition timeout (in microseconds) encoded in
-+ *	the EML Capabilities field
-+ */
-+
-+static inline u32 ieee80211_eml_trans_timeout_in_us(u16 eml_cap)
-+{
-+	/* IEEE Std 802.11be-2024 Table 9-417m—Encoding of the
-+	 * Transition Timeout subfield.
-+	 */
-+	u8 timeout = u16_get_bits(eml_cap,
-+				  IEEE80211_EML_CAP_TRANSITION_TIMEOUT);
-+
-+	/* invalid values also just use 0 */
-+	if (!timeout || timeout > IEEE80211_EML_CAP_TRANSITION_TIMEOUT_128TU)
-+		return 0;
-+
-+	return 128 * (1 << (timeout - 1));
-+}
-+
- #define for_each_mle_subelement(_elem, _data, _len)			\
- 	if (ieee80211_mle_size_ok(_data, _len))				\
- 		for_each_element(_elem,					\
--- 
-2.34.1
+The 2 firmware files here are used file depending on the BT host interface used
+on the Wi-Fi/BT chip, and this is read from some strapping register. See commit
+255ca28a659d ("mwifiex: Select firmware based on strapping").
+
+BTW, this name sdsd_nw61x.bin is confusing, I would have expected this to be
+something like sduart_nw61x.bin.
+
+Francesco
 
