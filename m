@@ -1,50 +1,50 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D49A4174A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8F0192B89;
 	Fri, 28 Mar 2025 05:33:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743139982; cv=none; b=S/ofMqOUoWFjwbCf7uUhVul8gshH75JBQ9LiumX0uelZXIt+147Ckm46Nowqu0C6bruZQ/irCYusHyM09rcf0CXZv2Tm/D5TjOaNFhwFsyNVAmMrmN+scNUIprmYrfGD1CwO3rpHcO5AsVbNqswYoIgv7/wyYI0oxH9u3KAHCAo=
+	t=1743139982; cv=none; b=UN+vCNPZkmolpFaIALuSmZ5IuX+Ap27pS07vhHbQsIANw4ZDoDj7UQK832P25Zt4ax0YSd0YJy7KoCGEMAh1YkBE4AnNcr4uae2miSmw43ZxV1txcN+HOiCm8nUXkaQ6Xu+cDG5jKJoO1HqariQGJGk3BsyUfvgNaM05t0byjeY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1743139982; c=relaxed/simple;
-	bh=PQP3v65mBuTwhVRw/CkMBp8moieKo9VnWG9AO+w/SqY=;
+	bh=5kf6InNhSrQ8AsjK7dUZkY5s00h8ePulVYOcAEgrS2c=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=h5lDi/ehSjAvA1nUBHZ8F7EnFaWzngKn6lxfJJw9cGEeojOyXRCGlPD6TlBLAlur+H5QDoro/NhAzT6LkYNz13LhNB0MhaBuYoZf24jUpavuVhWAS84cbBOG//bn2fvogrmjZ4Sy4ry34xfUdhEKP9powGA252imHMOMAm4SuL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Zto0yqBt; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:CC; b=WbhGbNTj4dgG8Qr6IK1TGYoWTHy63qlTTwIblO65l7GuA7ZrJ/3yz63gu2BcM5EKswstjJmsOpE9qnXjxKQCP4ZisZ/17b5iSkqq2reGSkIz+o1dKbY5a6TC56YOi9OeidtV4Co7QkEMqx/MTBG2oOJBrQbJ+rekal9Ew54moPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PnEnHYaN; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Zto0yqBt"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52S4faGk003117;
-	Fri, 28 Mar 2025 05:32:36 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PnEnHYaN"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 52S4xEX1022995;
+	Fri, 28 Mar 2025 05:32:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	gKMzme0GlQVQ6rHYnJYimnT59uzw+e+CVQ7SKnqHCU8=; b=Zto0yqBtpWOknvSr
-	MoJCbZ5wQ5vbK+uhMTgafBptG6SQhNYoJUcRQQmc1ypSg8okBFcmxmrpmABnbsOL
-	SQ7i1kZa6oMlIQX7mvX8T+jEFEkLxZDJEg8KDu4Y/G147pcQri9pBIUq/t/+lt/V
-	rBHqfSTtpMOAvx4kZ4QkfaJJ2Rs3r1tncV0sV2hKpbWNR5z8H/cNjMlY2oRjUS5j
-	oAImkCKyRyqOh3c8KMLsbpVQrQ7/H6H/U1vYLYLh/8Y8vZ/dPZAfFB2lL9K3i6f6
-	hVuEoPWv7aO7o+jFpK3Qqq79/7qbzO95DM+ttobA4YOF+wBy/68hofRe/YfYYDc7
-	tG7ydA==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45m0xe0f5v-1
+	KRtjDo6Azgqa/CfPuzGAYdL/9WlT06dCHi1DCxpEXP0=; b=PnEnHYaNfsJkID/O
+	YAzAdA1EDpyEm21SumRgrR4gx6771pHAiDcVfHQZBZHafkx5JlpAon1psx2nsGH+
+	gU0RsgBKUyrrhQKkbtCyTP69H+t6gUviwLhks89A+V2xNv1JHAcIq45b3hzDIrGP
+	ncL1AeOphZQSGH9mkko/BA5ONYXFXD27zAsMGP2xyMMV8gZc6R8ihGvRTcnFtWDs
+	C6MHn1NUte8+1/HZLtLP+zMNHzigSc0kkwuoYJE0u3cQ5MEi9ljAzqNVMELVWwbE
+	r/PrSOszs5kFZZyj0/Ts8bIElbe7+TpUovpY9sDmExsOuHBnoEW75CLb7agdYhHs
+	I00lsA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45mb9my0su-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 28 Mar 2025 05:32:36 +0000 (GMT)
+	Fri, 28 Mar 2025 05:32:43 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52S5WZ2x016356
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 52S5WgLH030858
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 28 Mar 2025 05:32:35 GMT
+	Fri, 28 Mar 2025 05:32:42 GMT
 Received: from [127.0.1.1] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 27 Mar
- 2025 22:32:33 -0700
+ 2025 22:32:40 -0700
 From: Baochen Qiang <quic_bqiang@quicinc.com>
-Date: Fri, 28 Mar 2025 13:32:25 +0800
-Subject: [PATCH ath-next v3 2/6] wifi: ath11k: introduce
- ath11k_core_continue_suspend_resume()
+Date: Fri, 28 Mar 2025 13:32:28 +0800
+Subject: [PATCH ath-next v3 5/6] wifi: ath11k: choose default PM policy for
+ hibernation
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,7 +53,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20250328-ath11k-bring-hibernation-back-v3-2-23405ae23431@quicinc.com>
+Message-ID: <20250328-ath11k-bring-hibernation-back-v3-5-23405ae23431@quicinc.com>
 References: <20250328-ath11k-bring-hibernation-back-v3-0-23405ae23431@quicinc.com>
 In-Reply-To: <20250328-ath11k-bring-hibernation-back-v3-0-23405ae23431@quicinc.com>
 To: Johannes Berg <johannes@sipsolutions.net>,
@@ -61,143 +61,194 @@ To: Johannes Berg <johannes@sipsolutions.net>,
 	<jjohnson@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <ath11k@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>,
-        Baochen Qiang <quic_bqiang@quicinc.com>,
-        Muhammad Usama Anjum <usama.anjum@collabora.com>,
-        Takashi Iwai
-	<tiwai@suse.de>
+        Baochen Qiang <quic_bqiang@quicinc.com>, Takashi Iwai <tiwai@suse.de>
 X-Mailer: b4 0.14.2
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 0zq1mtFZD_9lnLff6mUvTF9oJHzt8BHv
-X-Proofpoint-GUID: 0zq1mtFZD_9lnLff6mUvTF9oJHzt8BHv
-X-Authority-Analysis: v=2.4 cv=Q43S452a c=1 sm=1 tr=0 ts=67e63474 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=QX4gbG5DAAAA:8 a=COk6AnOGAAAA:8 a=XLp1zxdMKvP_wVYWocMA:9
- a=QEXdDO2ut3YA:10 a=AbAUZ8qAyYyZVLSsDulk:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Authority-Analysis: v=2.4 cv=cs+bk04i c=1 sm=1 tr=0 ts=67e6347b cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=6EVBoUctZwMGb3abvEYA:9 a=QEXdDO2ut3YA:10
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: xhpS7-89lx4bmjSdoWs6Oye9UEKwHvN-
+X-Proofpoint-ORIG-GUID: xhpS7-89lx4bmjSdoWs6Oye9UEKwHvN-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-28_02,2025-03-27_02,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 impostorscore=0
- lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0 adultscore=0
- mlxlogscore=670 malwarescore=0 mlxscore=0 priorityscore=1501 clxscore=1011
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 spamscore=0
+ bulkscore=0 mlxlogscore=999 malwarescore=0 lowpriorityscore=0
+ clxscore=1011 adultscore=0 priorityscore=1501 phishscore=0 suspectscore=0
+ mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
  definitions=main-2503280036
 
-Currently ath11k_core_suspend() and ath11k_core_resume() have the same
-check before going on. In upcoming patches the check is needed by some
-newly added functions as well.
+Now WoWLAN mode is chosen for those machines listed in the quirk table.
+This works for suspend (S3) but breaks for hibernation (S4), because
+WoWLAN mode requires WLAN power to be sustained, which is not the case
+during hibernation. For hibernation, the default mode should be used.
 
-To avoid duplicate code, introduce a new helper
-ath11k_core_continue_suspend_resume() which does such check internally.
-Callers can decide whether to go on based on its return value.
+Register a PM notifier with which kernel can notify us of the actual PM
+operation: if system is going to suspend, the original PM policy is
+honored; while if it is hibernation, overwrite it with default policy.
+
+To summarize: for suspend (S3), WoWLAN mode is chosen for machines listed
+in the quirk table, non-WoWLAN mode for others; for hibernation (S4),
+non-WoWLAN mode is chosen for all.
 
 Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
 
-Tested-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
 Tested-by: Takashi Iwai <tiwai@suse.de>
 Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/core.c | 53 +++++++++++++++++-----------------
- 1 file changed, 27 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c | 52 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath11k/core.h |  5 ++++
+ drivers/net/wireless/ath/ath11k/pci.c  |  1 +
+ 3 files changed, 54 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index f3a29f5d2381b53be895a2687bc7ccc81ec1afbf..39922383f28ce0aa3e23281da050a8cffd3397ea 100644
+index e1c0eca773fc0243aa4d159dd8671f6a4084b29a..cde009c3bdaf1e7a4f64a10df61029ef83408cd0 100644
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -953,13 +953,6 @@ static const struct dmi_system_id ath11k_pm_quirk_table[] = {
- 	{}
- };
+@@ -1136,7 +1136,7 @@ int ath11k_core_suspend(struct ath11k_base *ab)
+ 	if (ret <= 0)
+ 		return ret;
  
--static inline struct ath11k_pdev *ath11k_core_get_single_pdev(struct ath11k_base *ab)
--{
--	WARN_ON(!ab->hw_params.single_pdev_only);
--
--	return &ab->pdevs[0];
--}
--
- void ath11k_fw_stats_pdevs_free(struct list_head *head)
- {
- 	struct ath11k_fw_stats_pdev *i, *tmp;
-@@ -1018,23 +1011,37 @@ bool ath11k_core_coldboot_cal_support(struct ath11k_base *ab)
- 		return ab->hw_params.coldboot_cal_mm;
- }
+-	if (ab->pm_policy == ATH11K_PM_WOW)
++	if (ab->actual_pm_policy == ATH11K_PM_WOW)
+ 		return ath11k_core_suspend_wow(ab);
  
--int ath11k_core_suspend(struct ath11k_base *ab)
-+/* Check if we need to continue with suspend/resume operation.
-+ * Return:
-+ *	a negative value: error happens and don't continue.
-+ *	0:  no error but don't continue.
-+ *	positive value: no error and do continue.
-+ */
-+static int ath11k_core_continue_suspend_resume(struct ath11k_base *ab)
- {
--	int ret;
--	struct ath11k_pdev *pdev;
- 	struct ath11k *ar;
+ 	return ath11k_core_suspend_default(ab);
+@@ -1151,7 +1151,7 @@ int ath11k_core_suspend_late(struct ath11k_base *ab)
+ 	if (ret <= 0)
+ 		return ret;
  
- 	if (!ab->hw_params.supports_suspend)
- 		return -EOPNOTSUPP;
- 
- 	/* so far single_pdev_only chips have supports_suspend as true
--	 * and only the first pdev is valid.
-+	 * so pass 0 as a dummy pdev_id here.
- 	 */
--	pdev = ath11k_core_get_single_pdev(ab);
--	ar = pdev->ar;
-+	ar = ab->pdevs[0].ar;
- 	if (!ar || ar->state != ATH11K_STATE_OFF)
+-	if (ab->pm_policy == ATH11K_PM_WOW)
++	if (ab->actual_pm_policy == ATH11K_PM_WOW)
  		return 0;
  
-+	return 1;
+ 	ath11k_hif_irq_disable(ab);
+@@ -1171,7 +1171,7 @@ int ath11k_core_resume_early(struct ath11k_base *ab)
+ 	if (ret <= 0)
+ 		return ret;
+ 
+-	if (ab->pm_policy == ATH11K_PM_WOW)
++	if (ab->actual_pm_policy == ATH11K_PM_WOW)
+ 		return 0;
+ 
+ 	reinit_completion(&ab->restart_completed);
+@@ -1240,7 +1240,7 @@ int ath11k_core_resume(struct ath11k_base *ab)
+ 	if (ret <= 0)
+ 		return ret;
+ 
+-	if (ab->pm_policy == ATH11K_PM_WOW)
++	if (ab->actual_pm_policy == ATH11K_PM_WOW)
+ 		return ath11k_core_resume_wow(ab);
+ 
+ 	return ath11k_core_resume_default(ab);
+@@ -2500,6 +2500,43 @@ int ath11k_core_pre_init(struct ath11k_base *ab)
+ }
+ EXPORT_SYMBOL(ath11k_core_pre_init);
+ 
++static int ath11k_core_pm_notify(struct notifier_block *nb,
++				 unsigned long action, void *nouse)
++{
++	struct ath11k_base *ab = container_of(nb, struct ath11k_base,
++					      pm_nb);
++
++	switch (action) {
++	case PM_SUSPEND_PREPARE:
++		ab->actual_pm_policy = ab->pm_policy;
++		break;
++	case PM_HIBERNATION_PREPARE:
++		ab->actual_pm_policy = ATH11K_PM_DEFAULT;
++		break;
++	default:
++		break;
++	}
++
++	return NOTIFY_OK;
 +}
 +
-+int ath11k_core_suspend(struct ath11k_base *ab)
++static int ath11k_core_pm_notifier_register(struct ath11k_base *ab)
++{
++	ab->pm_nb.notifier_call = ath11k_core_pm_notify;
++	return register_pm_notifier(&ab->pm_nb);
++}
++
++void ath11k_core_pm_notifier_unregister(struct ath11k_base *ab)
 +{
 +	int ret;
 +
-+	ret = ath11k_core_continue_suspend_resume(ab);
-+	if (ret <= 0)
-+		return ret;
++	ret = unregister_pm_notifier(&ab->pm_nb);
++	if (ret)
++		/* just warn here, there is nothing can be done in fail case */
++		ath11k_warn(ab, "failed to unregister PM notifier %d\n", ret);
++}
++EXPORT_SYMBOL(ath11k_core_pm_notifier_unregister);
 +
- 	ret = ath11k_dp_rx_pktlog_stop(ab, true);
+ int ath11k_core_init(struct ath11k_base *ab)
+ {
+ 	const struct dmi_system_id *dmi_id;
+@@ -2513,6 +2550,12 @@ int ath11k_core_init(struct ath11k_base *ab)
+ 
+ 	ath11k_dbg(ab, ATH11K_DBG_BOOT, "pm policy %u\n", ab->pm_policy);
+ 
++	ret = ath11k_core_pm_notifier_register(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to register PM notifier: %d\n", ret);
++		return ret;
++	}
++
+ 	ret = ath11k_core_soc_create(ab);
  	if (ret) {
- 		ath11k_warn(ab, "failed to stop dp rx (and timer) pktlog during suspend: %d\n",
-@@ -1042,7 +1049,10 @@ int ath11k_core_suspend(struct ath11k_base *ab)
- 		return ret;
+ 		ath11k_err(ab, "failed to create soc core: %d\n", ret);
+@@ -2535,6 +2578,7 @@ void ath11k_core_deinit(struct ath11k_base *ab)
+ 	ath11k_hif_power_down(ab, false);
+ 	ath11k_mac_destroy(ab);
+ 	ath11k_core_soc_destroy(ab);
++	ath11k_core_pm_notifier_unregister(ab);
+ }
+ EXPORT_SYMBOL(ath11k_core_deinit);
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 7a9354e0eadb58730028217960e5bbfe0056c2fb..339d4fca1ed5fbddd8f386589529f0febba98ecb 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -16,6 +16,7 @@
+ #include <linux/rhashtable.h>
+ #include <linux/average.h>
+ #include <linux/firmware.h>
++#include <linux/suspend.h>
+ 
+ #include "qmi.h"
+ #include "htc.h"
+@@ -1066,6 +1067,8 @@ struct ath11k_base {
+ #endif
+ 
+ 	enum ath11k_pm_policy pm_policy;
++	enum ath11k_pm_policy actual_pm_policy;
++	struct notifier_block pm_nb;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[] __aligned(sizeof(void *));
+@@ -1333,4 +1336,6 @@ static inline const char *ath11k_bus_str(enum ath11k_bus bus)
+ 	return "unknown";
+ }
+ 
++void ath11k_core_pm_notifier_unregister(struct ath11k_base *ab);
++
+ #endif /* _CORE_H_ */
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index 37f5ed7f74f2f6adb3a6b5e176ed8c0105d235c2..630df6b1d82dff357c8259475cc9b03e4580a1b9 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -1164,6 +1164,7 @@ static void ath11k_pci_remove(struct pci_dev *pdev)
+ 		ath11k_pci_power_down(ab, false);
+ 		ath11k_debugfs_soc_destroy(ab);
+ 		ath11k_qmi_deinit_service(ab);
++		ath11k_core_pm_notifier_unregister(ab);
+ 		goto qmi_fail;
  	}
  
--	ret = ath11k_mac_wait_tx_complete(ar);
-+	/* So far only single_pdev_only devices can reach here,
-+	 * so it is valid to handle the first, and the only, pdev.
-+	 */
-+	ret = ath11k_mac_wait_tx_complete(ab->pdevs[0].ar);
- 	if (ret) {
- 		ath11k_warn(ab, "failed to wait tx complete: %d\n", ret);
- 		return ret;
-@@ -1080,19 +1090,10 @@ EXPORT_SYMBOL(ath11k_core_suspend);
- int ath11k_core_resume(struct ath11k_base *ab)
- {
- 	int ret;
--	struct ath11k_pdev *pdev;
--	struct ath11k *ar;
- 
--	if (!ab->hw_params.supports_suspend)
--		return -EOPNOTSUPP;
--
--	/* so far signle_pdev_only chips have supports_suspend as true
--	 * and only the first pdev is valid.
--	 */
--	pdev = ath11k_core_get_single_pdev(ab);
--	ar = pdev->ar;
--	if (!ar || ar->state != ATH11K_STATE_OFF)
--		return 0;
-+	ret = ath11k_core_continue_suspend_resume(ab);
-+	if (ret <= 0)
-+		return ret;
- 
- 	ret = ath11k_hif_resume(ab);
- 	if (ret) {
 
 -- 
 2.34.1
