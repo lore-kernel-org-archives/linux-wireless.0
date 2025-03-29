@@ -1,57 +1,61 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D90431DD9D1
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2025 15:47:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 849941DDC2D
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2025 15:47:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743263270; cv=none; b=k2s+BeL8sbhXFIr+vGiauMTw0fYJgkNDiNMXokcE2g9Hy9pQan15CU7IMnlNdCQ1bhi4QGP00w9hPoYapHtABIriaAbg0rvy8gfe15Gyly+rhsaR5oBUSyH1wbeDon5PcBjtUNOtHKQhsCE1FhU5NF8u3dd3wBWloajFn0I8Dgs=
+	t=1743263271; cv=none; b=hbhAxTSglh8ip8NfBDuUs1M1y+bgSt7JbHGmriScnovX+5dK3e+0BjdkrtIXyUwoRy3tynoyjiX8rTMeLPoO5kypo6AaHN9TPLxOs4+wRbh1dig7eJm2+ljo6+y0v5GQ0lARAivy6O9jE2Tcj7Ph/2jwtT4cdOp3RTP9lbbtwIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743263270; c=relaxed/simple;
-	bh=q7PkLwfRP2P6xXHruFOISUsGcmylSUIQcLYDCnOnW9U=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rXvi0x+G/ed/iUu3J7kR9rpUe5uHGE9vwHkhzkjkDsJms1p6vmw8g9+iDeQZlncE2TWX9Ho9RyJtbfljABXlzS1OdsLOoRd8s8l3aiJUFWdWwhrIo/2ZdbT8OdpGIqS/Q7onP+vjA1XideaKXYjMoDJXaxkMbE/TcFJg5YKMQug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=MDAuvGst; arc=none smtp.client-ip=210.61.82.184
+	s=arc-20240116; t=1743263271; c=relaxed/simple;
+	bh=Q4VE8t9ItThyTfL+1ygTkvtqunsr4b/clJWK7KAeL4E=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=IiPfcBlq3bIO8mzH/rpHntNVFRtdqGTb41TTpltBpOP78nObVwCd5DUgQwQa6rV5gkYMuW7Vf650UjL145CqwS9u+K/D0JdhTGMu0XMk0FmUH+AZSXs8zjRl1yMtuTpsjw2mZcmD0ru+/ujMuawip/Xg+Mavq20DSsgzXcZKowk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Ar6kEr2p; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MDAuvGst"
-X-UUID: 24382d900cb511f08eb9c36241bbb6fb-20250329
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Ar6kEr2p"
+X-UUID: 253322680cb511f08eb9c36241bbb6fb-20250329
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=AKOfDWOa6YPYRz1gzTUCF1QBJ75c/q7qL+CFu7q0BYc=;
-	b=MDAuvGstBXhl6ygPpMWQs+kCUCzPT7cItYQGNwAN4NopGXQrfCnPGS3XX/LeSltaqSEz+oyN+5nlZ5DrJRzUWBKj2vklcDos78W5DFEknQCkPyszE0gepoBIv+NLDl4efEGcrpKCjzMFb2anr2xbEWHwiP0sW0c/ZpPG7enbLfQ=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=/XYDXQmYMM1V6OMW8HHQUaP1GeieP5ZalW9lwYFoSIs=;
+	b=Ar6kEr2pdWlaK4BKbUo8mOriCaobB9bID/oCAjpSalBU5Goivsvy9pv/btbhYhchg9Hb5IHfhPnQtdi1y3pjqaARtg2flACpxc7G2JrQrleYQvE5bdQ45FdvPFnn5U2IeuEauZ3U4k3xgRCbyN7om6wcI5d4RhtGasV0A76wpbo=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:3ae61b91-f92a-4ad9-8083-f6fa216aaadd,IP:0,UR
+X-CID-O-INFO: VERSION:1.2.1,REQID:797ce2f5-2886-4a07-9070-b5a6deae9389,IP:0,UR
 	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
 	elease,TS:0
-X-CID-META: VersionHash:0ef645f,CLOUDID:7cecfa8c-f5b8-47d5-8cf3-b68fe7530c9a,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:0ef645f,CLOUDID:dcf9b64a-a527-43d8-8af6-bc8b32d9f5e9,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
+	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
+	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-UUID: 24382d900cb511f08eb9c36241bbb6fb-20250329
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 253322680cb511f08eb9c36241bbb6fb-20250329
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1024974653; Sat, 29 Mar 2025 23:47:38 +0800
+	with ESMTP id 144544797; Sat, 29 Mar 2025 23:47:40 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Sat, 29 Mar 2025 23:47:37 +0800
+ 15.2.1258.39; Sat, 29 Mar 2025 23:47:38 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Sat, 29 Mar 2025 23:47:37 +0800
+ 15.2.1258.39 via Frontend Transport; Sat, 29 Mar 2025 23:47:38 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76-next v2 00/10] Add MT7990 support
-Date: Sat, 29 Mar 2025 23:47:20 +0800
-Message-ID: <20250329154731.2113551-1-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Peter Chiu
+	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76-next v2 10/10] wifi: mt76: mt7996: add PCI device id for mt7990
+Date: Sat, 29 Mar 2025 23:47:30 +0800
+Message-ID: <20250329154731.2113551-11-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250329154731.2113551-1-shayne.chen@mediatek.com>
+References: <20250329154731.2113551-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -62,51 +66,55 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-This series introduces support for the MT7990 PCI Wi-Fi device, a Wi-Fi 7
-chipset that supports Dual-Band Dual Concurrent (DBDC) on both 2.4 GHz and
-5 GHz bands.
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-This series is based on:
-https://patchwork.kernel.org/project/linux-wireless/patch/20250320015909.3948612-1-StanleyYP.Wang@mediatek.com/
+Add PCI device IDs to enable support for mt7990 chipsets.
 
-v2:
- - remove accidentally added tag in 03/10
- - fix variable used uninitialized in 06/10
- - add target tree name
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/pci.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Peter Chiu (4):
-  wifi: mt76: mt7996: rework WA mcu command for mt7990
-  wifi: mt76: mt7996: rework DMA configuration for mt7990
-  wifi: mt76: mt7996: adjust HW capabilities for mt7990
-  wifi: mt76: mt7996: add PCI device id for mt7990
-
-Shayne Chen (2):
-  wifi: mt76: mt7996: add macros for pci decive id
-  wifi: mt76: connac: rework TX descriptor and TX free for mt7990
-
-StanleyYP Wang (4):
-  wifi: mt76: connac: add support to load firmware for mt7990
-  wifi: mt76: mt7996: rework register mapping for mt7990
-  wifi: mt76: mt7996: add eeprom support for mt7990
-  wifi: mt76: mt7996: rework background radar check for mt7990
-
- .../net/wireless/mediatek/mt76/mt76_connac.h  |   7 +-
- .../wireless/mediatek/mt76/mt76_connac3_mac.h |   1 +
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  |   3 +-
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |   2 +
- .../wireless/mediatek/mt76/mt7996/coredump.c  |   4 +-
- .../net/wireless/mediatek/mt76/mt7996/dma.c   | 192 ++++++++++++------
- .../wireless/mediatek/mt76/mt7996/eeprom.c    |  41 +++-
- .../net/wireless/mediatek/mt76/mt7996/init.c  |  18 +-
- .../net/wireless/mediatek/mt76/mt7996/mac.c   |  42 +++-
- .../net/wireless/mediatek/mt76/mt7996/mcu.c   |  77 +++++--
- .../net/wireless/mediatek/mt76/mt7996/mcu.h   |   6 +
- .../net/wireless/mediatek/mt76/mt7996/mmio.c  | 192 ++++++++++++++++--
- .../wireless/mediatek/mt76/mt7996/mt7996.h    |  50 +++--
- .../net/wireless/mediatek/mt76/mt7996/pci.c   |  21 +-
- .../net/wireless/mediatek/mt76/mt7996/regs.h  |  51 +++--
- 15 files changed, 549 insertions(+), 158 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+index 05248339a17b..19e99bc1c6c4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+@@ -18,12 +18,14 @@ static u32 hif_idx;
+ static const struct pci_device_id mt7996_pci_device_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7996_DEVICE_ID) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7992_DEVICE_ID) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7990_DEVICE_ID) },
+ 	{ },
+ };
+ 
+ static const struct pci_device_id mt7996_hif_device_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7996_DEVICE_ID_2) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7992_DEVICE_ID_2) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, MT7990_DEVICE_ID_2) },
+ 	{ },
+ };
+ 
+@@ -64,7 +66,8 @@ static struct mt7996_hif *mt7996_pci_init_hif2(struct pci_dev *pdev)
+ 	hif_idx++;
+ 
+ 	if (!pci_get_device(PCI_VENDOR_ID_MEDIATEK, MT7996_DEVICE_ID_2, NULL) &&
+-	    !pci_get_device(PCI_VENDOR_ID_MEDIATEK, MT7992_DEVICE_ID_2, NULL))
++	    !pci_get_device(PCI_VENDOR_ID_MEDIATEK, MT7992_DEVICE_ID_2, NULL) &&
++	    !pci_get_device(PCI_VENDOR_ID_MEDIATEK, MT7990_DEVICE_ID_2, NULL))
+ 		return NULL;
+ 
+ 	writel(hif_idx | MT_PCIE_RECOG_ID_SEM,
+@@ -122,7 +125,8 @@ static int mt7996_pci_probe(struct pci_dev *pdev,
+ 	mt76_pci_disable_aspm(pdev);
+ 
+ 	if (id->device == MT7996_DEVICE_ID_2 ||
+-	    id->device == MT7992_DEVICE_ID_2)
++	    id->device == MT7992_DEVICE_ID_2 ||
++	    id->device == MT7990_DEVICE_ID_2)
+ 		return mt7996_pci_hif2_probe(pdev);
+ 
+ 	dev = mt7996_mmio_probe(&pdev->dev, pcim_iomap_table(pdev)[0],
 -- 
 2.39.2
 
