@@ -1,186 +1,252 @@
-Received: from EUR03-AM7-obe.outbound.protection.outlook.com (mail-am7eur03on2130.outbound.protection.outlook.com [40.107.105.130])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF71D3597B
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2025 09:49:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.105.130
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743241791; cv=fail; b=t2GxGWWBtMYpMqSzlCNwY3rKmOLtnB5v213cU37Hzy7k8ihk+uJSY37JBxzGCy8rGVDSwaR6qkVQGfObsCIr6Zd/PGb6Jqm0vOFOtIJPDSgSNxzLBsBVhYJfjY2+JOBZN0M3ZgG83hJEOwuyCkPBK6t7lG8sOjvlTUPf3kLUsDA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743241791; c=relaxed/simple;
-	bh=itcQzlf0Ar+62136dJBakyq0ClINmrU3ldai+TAWEcw=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=saJad0wUjskWLlkhLLZa59qm9N/jKDJstTTuDdcSRIGutnpvPBDuyYVJCYpSCTxWHIJo8D4w/CW0lf1XM1HqsB80JdHZFGLyEOM0+IdV1wLcTOY2IsRsO+tBjZStdTSTJbPPA/NruKr5RylAYknV4zSM2HqDCSd23btQ9ZWMugs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=dirac.com; spf=pass smtp.mailfrom=dirac.com; dkim=pass (2048-bit key) header.d=dirac.com header.i=@dirac.com header.b=WOVVY2QM; arc=fail smtp.client-ip=40.107.105.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=dirac.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dirac.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F4B91EA73
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Mar 2025 15:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1743263265; cv=none; b=uP01IBBTCdj+V64mxm/R+HfA1KbyQ6VI0y21uIdZtPiV9msm/O6ckAAs0GcLF3XyHpNvFsp9JLPRmTs1Hl+Tn34CBoBHgzrevGp+BRt9h47mSkGlFyiNbXAn8Uo39mrRmgrbXoQywdtglwT9qDyXEcKWpR460KucQ6RdeKyAucY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1743263265; c=relaxed/simple;
+	bh=4Xaru6n/sam0Al6g78Xl9g/R8j2XmHndbKV50MUIQkk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JVMXZfVYvm0eBGGBZU9EswTQAyiec9RLxfGsGF/hUEq++htrn8r33wmO6sQPiKAS+yae0DuiU7CeGzmxA2on3AAeq4rhyPeeWi/U1z0Z9l5zxh9EH8g+jaZtrWx7L62hXj29OCmXGrPF7MzVE8KM8RAMHGRg40sEPlf+m+3xI98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=o06lyWW3; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dirac.com header.i=@dirac.com header.b="WOVVY2QM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BBifdY4M2JUeandCHmF+BtExyr4cyzTipC34lTjS78CGkEUMGDhjWZI3XMkDTl/9fwPfHmW22PLyf456QDYwkodk9k8TPRO/Eh8J1t6cLgMgXonMTWS2cw3bLDb6/cQ/u/tMRpwy3BXFZWlK2lGPH+SdA+37lOdIzZkc/9yjYKA3HUz/ji6xktgDWtvuTlMTQRpqlOifJEFkL/As9GSh20KHcLYcwqcK8d6d/qyJPydpvX0JoKAn7D3/j9jRNrlvOEXGLXQ1gdywmXCKs7kYeMEP4cyXCf2ljfpZVI3lEIPYhRxECfHkzfP2HGn8FR8acv+4pnIw3gTIFWRlebBSPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=itcQzlf0Ar+62136dJBakyq0ClINmrU3ldai+TAWEcw=;
- b=iMT9mMi290RR4buMA5S2uV0gGAxXiyYNVLXOg6BGzr38upSgCiBRE4jI9cxCsBZNlwi7EbMKFqE6kfum/k5tkM2cPU3DXyFytKIEkv45pBebIPFXDDuRLXhc9dxyatFcvSomT4L2MfdZypXmOzEW2ZPIALk92HttO9jjPFRvZlH+BQlHM0ibA3+rVh3LovnbGHbr2m6dGBYIhQZZr0sMIgiPcFowiGEmrFdkUu2P9vmqb4WJBkUWVFydNZFKotVgnDIJrYI/NXpHuRDIjiOFQZv0YydUVBtB/k8xdAkcOe6gvu28sfLa1XtOVQr+AqD78yqFzKZ6chcGN7Vdrx6gtQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=dirac.com; dmarc=pass action=none header.from=dirac.com;
- dkim=pass header.d=dirac.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dirac.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=itcQzlf0Ar+62136dJBakyq0ClINmrU3ldai+TAWEcw=;
- b=WOVVY2QM9C7MzbY06OWK8CEvJMKvqAyvuGLyIMT6j+f9vau42MD0OZ4tFEn3/ato+RgcBoqPLq+3ESL9m/FwhYke4qjxLAnTxS15yOeAY6qr+N66ZKBPTI3UNIHNTVFYGZgzp06OVPJcIuKvqng4YBIdH+5C8L11mNl+T5aEleMQqtKcu9mUq29+5RCLC55A+lDcgjSmkFgX0mZKKCT9FGD0NhnVsTH8nvsPu/XKC/3OMjT39nTQ735scfvGqWkImAPUE5lPVZnMKs7rhrYWD8jKZYd+pX8v01IyAIPXD1ct94uf1J5UNcFclfeh/uNVIlqoVupJ/KYsMQsfiCykXw==
-Received: from AS8SPRMB0006.eurprd02.prod.outlook.com (2603:10a6:20b:440::21)
- by DU0PR02MB8167.eurprd02.prod.outlook.com (2603:10a6:10:31f::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.42; Sat, 29 Mar
- 2025 09:49:46 +0000
-Received: from AS8SPRMB0006.eurprd02.prod.outlook.com
- ([fe80::7141:fd99:7825:f67e]) by AS8SPRMB0006.eurprd02.prod.outlook.com
- ([fe80::7141:fd99:7825:f67e%5]) with mapi id 15.20.8534.043; Sat, 29 Mar 2025
- 09:49:46 +0000
-From: Robert Bielik <Robert.Bielik@dirac.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Beacon frame missing TSF timestamp (local looped back)
-Thread-Topic: Beacon frame missing TSF timestamp (local looped back)
-Thread-Index: Adugjpi4DzyOix0wT5ePV5sdaX5sGQ==
-Date: Sat, 29 Mar 2025 09:49:46 +0000
-Message-ID:
- <AS8SPRMB000636F570809E9698B9CF2DFAA32@AS8SPRMB0006.eurprd02.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=dirac.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: AS8SPRMB0006:EE_|DU0PR02MB8167:EE_
-x-ms-office365-filtering-correlation-id: 4b99fc73-16c6-4e96-5581-08dd6ea709e1
-x-ms-exchange-atpmessageproperties: SA
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?UTRNTWVJckg4aThuR1hZSUdzbnFFQXpHNm1udnltaGdjMXNWNGJ4cG45Qm5T?=
- =?utf-8?B?cUt5VFE2MVlpdEx2eWtkY1FhQnJ6ZHdYVTdrdzE4YWtheVhpSFc2YWdTZXBX?=
- =?utf-8?B?WGlDYU5zaktvNHFhSXU1TjRFaXVKWURaVWErQVNxOXZCM3BXVUhSQUJjTCtt?=
- =?utf-8?B?RmlWbUdqbFBCL0E4ZjdwTWgvVFVUTzVHeU9NK0ZuL0hMUno3RWNmbDlTVGc1?=
- =?utf-8?B?MERUaXdjYkx4SmhjdUZTUlI3dG5OOGFzb0g5RTVEckFxTzdxa2hSdDRFdTdm?=
- =?utf-8?B?dm92QUVMRlppbG1WNWFQdlJ2UzhmaWU5VUpyYkN5cU5UUDJibytUZVFMbWc1?=
- =?utf-8?B?a2g2cHYyS2w4NFdTb2ZJczk1NDdHK2FDS2YyV0wwb1A0SU4rbTFtbUJhb2ho?=
- =?utf-8?B?QlZxMDBsMWp3dHh3NWp5VEd0U0xZaUtlUDFSeFdwdnZBdmVsVjZ5UVE4L1Vs?=
- =?utf-8?B?QjYrc09jYVIxemlnRXRQQlN5YTRUQUxrL3V6cG5zV0tZTnAraGRYdjB3Z0da?=
- =?utf-8?B?NVRWeStONFM4Qm9mZkVkZTBVR3pmNGp4ZlhjMk11Zms4c29vYWc3SkV5R1dv?=
- =?utf-8?B?b0lCQVhNdm1nR0JhY3pLV1BVUE45ODJ1dFZsRU9kRU43Y2x2M09yRVJsZVBK?=
- =?utf-8?B?elJZNVdlUVVPbUgvWlBpd1N4b0c4MWJlSWxSL3hUbnJycXVJQjgyblRKNmFp?=
- =?utf-8?B?clR1cGVLZVpacHlVUEUvVUxocXhNWEQ0Z2J2N0hiSHRhOFN3aHFzODhNSFRF?=
- =?utf-8?B?ajVtckJLKzJwbjJ3Q0UvWXUvUG9kVWJHNE9aY0VKeVNtcG9YaWM2cXdXcGxG?=
- =?utf-8?B?RDhyR28zMnZUanpLUGx4djRVcG15VDJ3cG1MZVJsd3Zmd0xXUVNqWnBVdmJK?=
- =?utf-8?B?SHdLVDBhcVo3SU1GMFRaYWZybnNLN3A5cDljVjNaQ3Qwdy9YeU9TTmtnd25x?=
- =?utf-8?B?NUtBUmhrcGJKVmhwTVFadm55aEJZUzhkR0xCejloWjJhaHFsa0tXSDB3TW9P?=
- =?utf-8?B?UzFkMWNmOEJmbHVKL256V0gzbVdzcENxYkZKUXhSVkJTWTVvNUJKdFllMTNZ?=
- =?utf-8?B?cnFCdDUxN0JwN3czV0Y5QnlCcEdQcHNuRFFSL3VpZkV0VzcybE1kREdnRU9q?=
- =?utf-8?B?aGJCemdoZUhDSEZQZFFGbU5kaTVPNFBFamlmYkpNUjFoZk1LUmNLWkxicExR?=
- =?utf-8?B?WWhORW84STVpTndxeHJ4aXcxazVQOTVTTGNoazIwNFJwcHRsa2hhM1Q1bEkz?=
- =?utf-8?B?Rm85U1RlS2VRQk4xdHBlUi9xaG9ueHdIOVRoSEhqM1FydTcyQkJlQ1lvSS9Y?=
- =?utf-8?B?Z0dMZTFDdURaZDI3MTFvOXlOYUh2V3dWWEs2eDJ6N3d2WHJ4K2hmblNLOGEz?=
- =?utf-8?B?S250Wll2TEVFNXFrSGJhZUF3T0wwWGdDcmptOEJiand1R21wZXZ0SjJMR1VE?=
- =?utf-8?B?Q2U4Ti95cDd0TDI5ODRpZmU2VWg0MFJPSnB5STdHOENXbHVKMjlLam1OVnpC?=
- =?utf-8?B?UUJjWkViaHplc1NQWWRreDd2SGpUNnZZK3BJTzRab1VNYWlVcnpZR2ZzNzVo?=
- =?utf-8?B?MVNmaDJ1amxLM3QxaWpOb3Fnby9pcWdIMlVWRDladjFHOHpKR2FOOUc4WmJh?=
- =?utf-8?B?UWhXZVpWVzM5VlF0YmR1b3dpYjZqTEF2VHhLTWJ3czZBbW1VczEwZ0tRS1Ny?=
- =?utf-8?B?WVhybCtxTW1od0ZYQUNEeXlWS0dhYVlxS09jM1AvQnc3cFJvZEdZRUpiVkg2?=
- =?utf-8?B?L1JIc0xFMjJKR0UyNEJBVmgwSDc2TGs3anluWW02aU0velNpbk54T1JjY2hN?=
- =?utf-8?B?NWNyOTFJbzhLRlhUaG01MzhmMDJkSFhldmo1emRNNU5wbml0RERuU2RGQitL?=
- =?utf-8?B?VUdlR0c5QWFVMDJBaTl3amFxUDVyU2QyMWd1dFczSDJSTGpiZGJjY21MaEhp?=
- =?utf-8?Q?0WxcyeW2MVFEyN+1rpio5pXWFPZ9Fbdj?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8SPRMB0006.eurprd02.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?ZXhqKzlVZ0tZU0h1bDZpOHpNeDVZNjhzdkE0cDZSenljL0l5UzVWaGtRZW5S?=
- =?utf-8?B?TXdybjl3Tldqdm4rdE9nTGgyZzE4Y3pWQ3p3UmlqcDFXZDRSMldyT1ZtT0Js?=
- =?utf-8?B?dmpUbWJxVWJjY0s1NXJlNDFTMlpLRzZkMkxQV1NNZERhTWJUMkFiWHQ3Sm1n?=
- =?utf-8?B?Wk5Za21ISXQ1dENERitMZzROSUVJTkhsZ0tZTy9DR1pGOUtWRzBhZ0VCU2RL?=
- =?utf-8?B?QTVhMVJpVE9CdUt1bldIR2g5RzZoQTdwZTAySkk5aU1qZ2drREZDWjR1aExN?=
- =?utf-8?B?Z0FTSzVudzUxdURpR0F1aGF4T2xETWs4SURJTjBkZGx2WDJEVzhqdmtZcU1W?=
- =?utf-8?B?M0pLKzUrSWk5VW5BQlk1emJ2OWJCS2l3UE45SmxaL1BUVWxMZ1dxNG9FcUV5?=
- =?utf-8?B?b0JaaVRaWjNkL0l5a0JKL2FROXJTZVBKQUhpRzE5ZXdtNjh0ZkozNjRZT3Js?=
- =?utf-8?B?SWs2dS9uZWNQSlVsM0kzajZVWXRUbFdqS0QvQVhzQ0t1T3dOSkRJdy9wdTZi?=
- =?utf-8?B?RExGcS91NFdEcm1MRkdHYm00K3JRZW16Q2FvMnY5cmZmaS8rTXZSNEJXUVho?=
- =?utf-8?B?SjRLUFdNKzhiZTB1TnRFYXlINGNWN0NhU0ExRGM3RlFaTVIyc1dDYWNoR2l3?=
- =?utf-8?B?cmdGamtvRHNRQVV3U3RNTTVudnRjVGlQTE5iYkdSZW9Rc29JNjAralcrVWZR?=
- =?utf-8?B?NDljeEVLYk1WbWtpcHNBU01PUlJPU2lLcU5ZNTdHS3BlcHJraktSKzZ5NTY3?=
- =?utf-8?B?WTZiUGJhOFZFY2F1cU1uekFZTnozWWdaSUU4a0ZST1A4dURHWjFWNUUvN2NK?=
- =?utf-8?B?Wjk4cDVsMmJyZ2tRdk82NVNjVjlBRjlVN0NiMjFhYmpScm1BVlo3SDNxbWI5?=
- =?utf-8?B?L1ViWjhqcXVoa0xTS2p3U3kzUjU3SjJNUGxqZWIwekRIUHlHV1Njc3pId2Zy?=
- =?utf-8?B?WHd1L0lzQW9zdVhSUWxodGhreDF3QlVYUzBJNUtOSThOLy84Wmw2aVBLN3lI?=
- =?utf-8?B?WUlDUWlRMEcraW5GenBtMnh6Z3pmMzRkOENDWlFuUzMwL0xlanpCa2J4MmVr?=
- =?utf-8?B?dUtYdDdiK2pFODIrd012NXNxS2pGQmh1NzNkZ2tyMEZ4MTBHVXJDR2NsTkdl?=
- =?utf-8?B?Mnk0UzNETDkwZmRJbEFZVmgzMGl4MTI2bmhic3hsNTh3NHA3RFBCWEcwaHBs?=
- =?utf-8?B?NjRYVDhUV3ZzVXJucXExNDRabkJmdG5obkpmTGFEQTQ3emkwUk83U3phbHhT?=
- =?utf-8?B?T2ZjRmQxUUl0Mm5RU2RMKzM5dFhIUEhmSlJIc1V0M0Q1VFVndUkxbDZEdzZK?=
- =?utf-8?B?ZUxpNmZSUlpqd0xxNnM0WkJBeGtLQVBqQnJTY1RsMDl4OTZKSVJtMEZSVmFr?=
- =?utf-8?B?THFqMjdPSWFweXJXMzRuanNQbmYreEo0bXJlRE9YTk81aG56ZWdQbUYySXMz?=
- =?utf-8?B?VmZTYVZXU1VwTElCVC8wSGVHOHF6UEdiNUY5L0lNMStxYjJYdzEzTWFsbE1s?=
- =?utf-8?B?YjRIbDg1ZVF0NjJKL2hPMzh1S3JzNVozODdiSDA0eEJNTXlXY3M1cHM1WVE4?=
- =?utf-8?B?endQMVl3L2hBK2RWRlhNaXEya1c4WlV4RDdFY1lBQklsRlpERmZ3YStVc05s?=
- =?utf-8?B?cm9yMEZBU2RZSTdIbjBVb2ZFY0pjNzhTb2k1UEFhaTN5NmtFVDRMdktYZWNy?=
- =?utf-8?B?Zk5uRDBRTjljNXAvZko1Y1k0SytjbkFRcVY4YnFzdzNJa3Y5YjRFV2MvK3dI?=
- =?utf-8?B?enRnU1FTKzhlTTZNOG9sak5qc2dkcnZNK0FxT0E4aW5MOGFXenJXbW44NmJY?=
- =?utf-8?B?bWlsQ3dwUzFGVjBITGpBMVh6d0RVeUFsdGtONHhMT2RHemJVS0UvTklQYWRh?=
- =?utf-8?B?OU1Sa29yb1dHRHNMQytXS2d3MzZMU05UdmpmbkcwZFdCMEFOL3dHSUtUeUpo?=
- =?utf-8?B?bzMvSGhlN2l2N1N2dmVvSXQwN3Vnc3NRV0dMbS9tZENaem1hSzhEVXhhYWRp?=
- =?utf-8?B?RE1rbVBHS0FWVFJCSUwxM0FsS2tMell2MUxQQkRhWUZEaTY1ZFU0ZmpZZEhY?=
- =?utf-8?B?RTU1MHZCRkVrOS9yaC9hRjdpVmowVVFZNkV1MERuVko4Yk81bEQ4dm1walpV?=
- =?utf-8?Q?XWk4RWK03y+STAwjWZU5SQw48?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="o06lyWW3"
+X-UUID: 2446a44c0cb511f0aae1fd9735fae912-20250329
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=futY6c2uLQgzM+VulOPiiPRtQi0w6EpsM/OE547Rw+U=;
+	b=o06lyWW3a7j/+ckVrtx3KSG61RNi9WgLfxoh1MCfa38QXWdqor2MwzBsPWr18vwovdijSi5plspe/uFWrLtOBngvCM64jpfV2OLrXSvlxBrEqN4jgNOvTQyNqire6gaz2LchtU5vHwCwVb4LZ9FaAZNzSH/kBz2cqI3qcDSOfe8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.2.1,REQID:3e19abd7-5c1d-4d84-87fc-0d14e998ba75,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:0ef645f,CLOUDID:942973a5-c619-47e3-a41b-90eedbf5b947,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
+	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
+	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 2446a44c0cb511f0aae1fd9735fae912-20250329
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+	(envelope-from <shayne.chen@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1047237561; Sat, 29 Mar 2025 23:47:38 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Sat, 29 Mar 2025 23:47:37 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Sat, 29 Mar 2025 23:47:37 +0800
+From: Shayne Chen <shayne.chen@mediatek.com>
+To: Felix Fietkau <nbd@nbd.name>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
+	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
+	<evelyn.tsai@mediatek.com>, linux-mediatek
+	<linux-mediatek@lists.infradead.org>, StanleyYP Wang
+	<StanleyYP.Wang@mediatek.com>, Peter Chiu <chui-hao.chiu@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76-next v2 02/10] wifi: mt76: connac: add support to load firmware for mt7990
+Date: Sat, 29 Mar 2025 23:47:22 +0800
+Message-ID: <20250329154731.2113551-3-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250329154731.2113551-1-shayne.chen@mediatek.com>
+References: <20250329154731.2113551-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: dirac.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8SPRMB0006.eurprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b99fc73-16c6-4e96-5581-08dd6ea709e1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Mar 2025 09:49:46.0403
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 266f25c5-75d4-4d97-8f44-8d816a1f6a35
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: lz3fXDOWubUOdCY1zUv6z0xKFAuu6lFIa+XiYs4g9JwU91cXjW1EWvH6csy2Wc42EaVwZaiDLLcF88qlbL/8Jw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR02MB8167
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-SGkgYWxsLA0KDQpJJ20gZGV2ZWxvcGluZyBhIG11bHRpIGNsaWVudCBzYW1wbGUgc3luY2VkIGxv
-dyBsYXRlbmN5IGF1ZGlvIHN0cmVhbWluZyBzb2x1dGlvbiwgYW5kIG9uIHRoZSBzZXJ2ZXIgc2lk
-ZSBJJ20gdXNpbmcgYSBSUGk1IHdpdGggNi42LjUxIGtlcm5lbCBhbmQgYSBRdWFsY29tbSBBdGhl
-cm9zIEFSOTI3MSBiYXNlZCBVU0IgV0xBTiBjYXJkICh1c2luZyB0aGUgYXRoOWtfaHRjIGRyaXZl
-ciB3aXRoIDEuNC4wIGZpcm13YXJlKSwgYW5kIG9uIHRoZSBjbGllbnQgc2lkZSBFc3ByZXNzaWYg
-RVNQMzItUzNzLiBUaGUgV0xBTiBjYXJkIGlzIHNldHVwIGFzIGFuIEFQLCBzZW5kaW5nIG91dCBi
-ZWFjb24gZnJhbWVzLg0KDQpPbiB0aGUgY2xpZW50IHNpZGUgSSBjYW4gcmVsaWFibHkgcmVjZWl2
-ZSB0aGUgYmVhY29uIGZyYW1lcyBhbmQgZGVkdWNlIGEgRVNQMzIgdnMgVFNGIGNsb2NrIGRyaWZ0
-Lg0KDQpPbiB0aGUgc2VydmVyIHNpZGUgaG93ZXZlciwgdXNpbmcgcmF3IHNvY2tldHMgKGFuZCBh
-IG1vbml0b3IgdHlwZSBpbnRlcmZhY2UsIG9uIHRoZSBBUjkyNzEgY2FyZCksIEkgY2FuIHJlY2Vp
-dmUgdGhlIGJlYWNvbiBmcmFtZSwgYnV0IHRoZSB0aW1lc3RhbXAgdmFsdWUgaXMgYWx3YXlzIHpl
-cm8sIHN1Z2dlc3RpbmcgdGhhdCB0aGUgZnJhbWUgaXMgbG9vcGVkIGJhY2sgcHJpb3IgdG8gdGhl
-IGRyaXZlciBhY3R1YWxseSBkb2luZyB0aGUgVFNGIHRpbWVzdGFtcC4gVGhpcyBpcyBhbHNvIGNv
-bmZpcm1lZCBieSB1c2luZyB0c2hhcmsgKHN1ZG8gdHNoYXJrIC1pIHdsYW4xbSAtZiAidHlwZSAw
-IHN1YnR5cGUgMHg4MCIgLXgpOg0KDQowMDAwICAwMCAwMCAwZCAwMCAwNCA4MCAwMiAwMCA0OCAw
-MCAwMCAwMCAwMSA4MCAwMCAwMCAgIC4uLi4uLi4uSC4uLi4uLi4NCjAwMTAgIDAwIGZmIGZmIGZm
-IGZmIGZmIGZmIDMwIDE0IDRhIDAwIDI3IDRiIDMwIDE0IDRhICAgLi4uLi4uLjAuSi4nSzAuSg0K
-MDAyMCAgMDAgMjcgNGIgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgNjQgMDAgMDEgICAu
-J0suLi4uLi4uLi4uZC4uDQoNClF1ZXN0aW9uOiBJcyBpdCBwb3NzaWJsZSB0byBtb2RpZnkgdGhl
-IGxpbnV4IGRyaXZlciAob3IgZmlybXdhcmUpIHRvIGdldCB0aGUgdGltZXN0YW1wZWQgZnJhbWU/
-IE9yIGFueSBvdGhlciB3YXkgdG8gZ2V0IHRoZSBUU0Y/IEknbSBvcGVuIHRvIGFsbCBzdWdnZXN0
-aW9ucyA6RA0KDQpUSUENCi9Sb2JlcnQNCg0KVGhlIGluZm9ybWF0aW9uIGluIHRoaXMgZW1haWwg
-KGluY2x1ZGluZyBhbnkgYXR0YWNobWVudHMpIG1heSBjb250YWluIGNvbmZpZGVudGlhbCBhbmQv
-b3IgcHJvcHJpZXRhcnkgbWF0ZXJpYWwuIEFueSByZXZpZXcsIHJldHJhbnNtaXNzaW9uIG9yIHVz
-ZSBvZiB0aGlzIGluZm9ybWF0aW9uIGJ5IHBlcnNvbnMgb3IgZW50aXRpZXMgb3RoZXIgdGhhbiB0
-aGUgaW50ZW5kZWQsIGF1dGhvcml6ZWQgcmVjaXBpZW50IGlzIHByb2hpYml0ZWQuIElmIHlvdSBy
-ZWNlaXZlZCB0aGlzIGVtYWlsIGluIGVycm9yLCBwbGVhc2Ugbm90aWZ5IHRoZSBzZW5kZXIgYW5k
-IGRlbGV0ZSB0aGUgbWF0ZXJpYWwuIEZvciBpbmZvcm1hdGlvbiByZWdhcmRpbmcgaG93IERpcmFj
-IGhhbmRsZXMgcGVyc29uYWwgZGF0YSwgcGxlYXNlIHZpc2l0IGh0dHBzOi8vd3d3LmRpcmFjLmNv
-bS9wcml2YWN5LXBvbGljeS4NCg==
+From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+
+Add firmware download support. Note that mt7990 does not have WA and DSP
+firmwares. This is a preliminary patch to support mt7990 chipset.
+
+Co-developed-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |  7 +++++-
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  |  3 +--
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 23 ++++++++++++-------
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    | 12 ++++++++++
+ .../net/wireless/mediatek/mt76/mt7996/pci.c   |  2 ++
+ 5 files changed, 36 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+index 455979476d11..192dcc374a64 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+@@ -232,9 +232,14 @@ static inline bool is_mt7992(struct mt76_dev *dev)
+ 	return mt76_chip(dev) == 0x7992;
+ }
+ 
++static inline bool is_mt7990(struct mt76_dev *dev)
++{
++	return mt76_chip(dev) == 0x7993;
++}
++
+ static inline bool is_mt799x(struct mt76_dev *dev)
+ {
+-	return is_mt7996(dev) || is_mt7992(dev);
++	return is_mt7996(dev) || is_mt7992(dev) || is_mt7990(dev);
+ }
+ 
+ static inline bool is_mt7622(struct mt76_dev *dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index bafcf5a279e2..185ba57d416d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -67,8 +67,7 @@ int mt76_connac_mcu_init_download(struct mt76_dev *dev, u32 addr, u32 len,
+ 	if ((!is_connac_v1(dev) && addr == MCU_PATCH_ADDRESS) ||
+ 	    (is_mt7921(dev) && addr == 0x900000) ||
+ 	    (is_mt7925(dev) && (addr == 0x900000 || addr == 0xe0002800)) ||
+-	    (is_mt7996(dev) && addr == 0x900000) ||
+-	    (is_mt7992(dev) && addr == 0x900000))
++	    (is_mt799x(dev) && addr == 0x900000))
+ 		cmd = MCU_CMD(PATCH_START_REQ);
+ 	else
+ 		cmd = MCU_CMD(TARGET_ADDRESS_LEN_REQ);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 81cc50ae55b0..1d12ccbacbcf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -22,6 +22,9 @@
+ 			_fw = MT7992_##name;			\
+ 		}						\
+ 		break;						\
++	case MT7990_DEVICE_ID:					\
++		_fw = MT7990_##name;				\
++		break;						\
+ 	case MT7996_DEVICE_ID:						\
+ 	default:						\
+ 		switch ((_dev)->var.type) {			\
+@@ -265,7 +268,7 @@ mt7996_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 
+ 	txd_len = cmd & __MCU_CMD_FIELD_UNI ? sizeof(*uni_txd) : sizeof(*mcu_txd);
+ 	txd = (__le32 *)skb_push(skb, txd_len);
+-	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state))
++	if (test_bit(MT76_STATE_MCU_RUNNING, &dev->mphy.state) && mt7996_has_wa(dev))
+ 		qid = MT_MCUQ_WA;
+ 	else
+ 		qid = MT_MCUQ_WM;
+@@ -3011,6 +3014,9 @@ static int mt7996_load_ram(struct mt7996_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (!mt7996_has_wa(dev))
++		return 0;
++
+ 	ret = __mt7996_load_ram(dev, "DSP", fw_name(dev, FIRMWARE_DSP),
+ 				MT7996_RAM_TYPE_DSP);
+ 	if (ret)
+@@ -3021,10 +3027,9 @@ static int mt7996_load_ram(struct mt7996_dev *dev)
+ }
+ 
+ static int
+-mt7996_firmware_state(struct mt7996_dev *dev, bool wa)
++mt7996_firmware_state(struct mt7996_dev *dev, u8 fw_state)
+ {
+-	u32 state = FIELD_PREP(MT_TOP_MISC_FW_STATE,
+-			       wa ? FW_STATE_RDY : FW_STATE_FW_DOWNLOAD);
++	u32 state = FIELD_PREP(MT_TOP_MISC_FW_STATE, fw_state);
+ 
+ 	if (!mt76_poll_msec(dev, MT_TOP_MISC, MT_TOP_MISC_FW_STATE,
+ 			    state, 1000)) {
+@@ -3056,13 +3061,14 @@ mt7996_mcu_restart(struct mt76_dev *dev)
+ 
+ static int mt7996_load_firmware(struct mt7996_dev *dev)
+ {
++	u8 fw_state;
+ 	int ret;
+ 
+ 	/* make sure fw is download state */
+-	if (mt7996_firmware_state(dev, false)) {
++	if (mt7996_firmware_state(dev, FW_STATE_FW_DOWNLOAD)) {
+ 		/* restart firmware once */
+ 		mt7996_mcu_restart(&dev->mt76);
+-		ret = mt7996_firmware_state(dev, false);
++		ret = mt7996_firmware_state(dev, FW_STATE_FW_DOWNLOAD);
+ 		if (ret) {
+ 			dev_err(dev->mt76.dev,
+ 				"Firmware is not ready for download\n");
+@@ -3078,7 +3084,8 @@ static int mt7996_load_firmware(struct mt7996_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = mt7996_firmware_state(dev, true);
++	fw_state = mt7996_has_wa(dev) ? FW_STATE_RDY : FW_STATE_NORMAL_TRX;
++	ret = mt7996_firmware_state(dev, fw_state);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -3248,7 +3255,7 @@ int mt7996_mcu_init(struct mt7996_dev *dev)
+ void mt7996_mcu_exit(struct mt7996_dev *dev)
+ {
+ 	mt7996_mcu_restart(&dev->mt76);
+-	if (mt7996_firmware_state(dev, false)) {
++	if (mt7996_firmware_state(dev, FW_STATE_FW_DOWNLOAD)) {
+ 		dev_err(dev->mt76.dev, "Failed to exit mcu\n");
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index bc22c3e12d94..c03747ed6c70 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -34,6 +34,8 @@
+ #define MT7996_DEVICE_ID_2		0x7991
+ #define MT7992_DEVICE_ID		0x7992
+ #define MT7992_DEVICE_ID_2		0x799a
++#define MT7990_DEVICE_ID		0x7993
++#define MT7990_DEVICE_ID_2		0x799b
+ 
+ #define MT7996_FIRMWARE_WA		"mediatek/mt7996/mt7996_wa.bin"
+ #define MT7996_FIRMWARE_WM		"mediatek/mt7996/mt7996_wm.bin"
+@@ -55,6 +57,11 @@
+ #define MT7992_FIRMWARE_DSP_23		"mediatek/mt7996/mt7992_dsp_23.bin"
+ #define MT7992_ROM_PATCH_23		"mediatek/mt7996/mt7992_rom_patch_23.bin"
+ 
++#define MT7990_FIRMWARE_WA		""
++#define MT7990_FIRMWARE_WM		"mediatek/mt7996/mt7990_wm.bin"
++#define MT7990_FIRMWARE_DSP		""
++#define MT7990_ROM_PATCH		"mediatek/mt7996/mt7990_rom_patch.bin"
++
+ #define MT7996_EEPROM_DEFAULT		"mediatek/mt7996/mt7996_eeprom.bin"
+ #define MT7996_EEPROM_DEFAULT_INT	"mediatek/mt7996/mt7996_eeprom_2i5i6i.bin"
+ #define MT7996_EEPROM_DEFAULT_233	"mediatek/mt7996/mt7996_eeprom_233.bin"
+@@ -709,6 +716,11 @@ static inline u16 mt7996_rx_chainmask(struct mt7996_phy *phy)
+ 	return tx_chainmask | (BIT(fls(tx_chainmask)) * phy->has_aux_rx);
+ }
+ 
++static inline bool mt7996_has_wa(struct mt7996_dev *dev)
++{
++	return !is_mt7990(&dev->mt76);
++}
++
+ void mt7996_mac_init(struct mt7996_dev *dev);
+ u32 mt7996_mac_wtbl_lmac_addr(struct mt7996_dev *dev, u16 wcid, u8 dw);
+ bool mt7996_mac_wtbl_update(struct mt7996_dev *dev, int idx, u32 mask);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+index a4338367aaa1..05248339a17b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/pci.c
+@@ -257,3 +257,5 @@ MODULE_FIRMWARE(MT7992_FIRMWARE_WA);
+ MODULE_FIRMWARE(MT7992_FIRMWARE_WM);
+ MODULE_FIRMWARE(MT7992_FIRMWARE_DSP);
+ MODULE_FIRMWARE(MT7992_ROM_PATCH);
++MODULE_FIRMWARE(MT7990_FIRMWARE_WM);
++MODULE_FIRMWARE(MT7990_ROM_PATCH);
+-- 
+2.39.2
+
