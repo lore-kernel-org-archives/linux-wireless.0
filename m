@@ -1,299 +1,323 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C31D1917E7;
-	Wed,  2 Apr 2025 02:46:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F822E630
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Apr 2025 02:48:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743562016; cv=none; b=gcHXNQJlx5luoChWp2TRB++WfEmy5z5XdHwGID9fmqX2WHTGsBGretzU4ZwjZ2bcZEIIns8qUkxrHrURLbmhwCkJ8slzKUTzCsOf+XM6hBE2IGYY4dvZN6xwhJ64JZSX25X0wp67dsYDV9Jl4sLASHjK6E7NaPlXImBMOABipBU=
+	t=1743562137; cv=none; b=lYRzqGZMetEFnlhtOI+JUGjo1b//gbo7ZSMOPfX2V7/H+HmF1Ns7s3TQpqLWR8kuxA3YMZ63WW54THB6yfh7ayYqhBO7Vthd5yvzWxspjRT2gkmxA0TD9VsE5k3mL2ILiF7G9/83QrcY5vawqcADlo8DMmdj5VQY5nhFARoMxS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743562016; c=relaxed/simple;
-	bh=+ugNn2bJ3tlnanInrnZOV/L+7TPZqIFNQqYv3c6SuYw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=ty890IvdQP4XwYLD1CJ2aHI4uCkSsHH3pFrPQt+E7r9wPIC9/+SF/dZXXPPF7SV3vLmVHzmiiloi/8t8xz2hubz8pTZswNcL6Ktq6RTapJijo42g/XEyy7g6N6UsUSKyteggZSwg7OshK/ap6iCgEfAB7ZWdnY3uKLPbfLBe28U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Yf5YfyMY; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1743562137; c=relaxed/simple;
+	bh=NQ7cpRjb+sZX+0g+F0WldQFnfYQYWL+9W5TJ0cIvIUo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=HN19d0F0jqex/BsUi5DFZnt55rRYIbU4uIguBY9CwN+Diy8PKfzD3Pw22Q1Kftn9jrNqtRBn+iLBK7XbgRXQuBiupzKI26ea4E0YqVJlmp8sCYi8iGwPWu+wruKiwvLVmaGVPXPkJqVQYiIfLeoCPhA7UM82DolHhgDk67vFuk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=REkYUgL1; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Yf5YfyMY"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5320TpAZ032704;
-	Wed, 2 Apr 2025 02:46:27 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="REkYUgL1"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 531FdXtY008471;
+	Wed, 2 Apr 2025 02:48:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	7x4JF92XYbOrvePwr2UHKT4dmD+4F6yYEQ7U1Qs0vjc=; b=Yf5YfyMY1Hg92S8g
-	CENawjwSviNEqg3n7ssBqnL3P8ch18vayaR1Px94cki0v3ALUyPFa9dRNheB2yPJ
-	WvaADQyIo5CvA2fG7pB+9Sq++A0inuDlyMp9+rkDlSOdAh1NrOQsgKdlLnt2gcaX
-	nIiejXZRhygDDBjJw3Oyo5sr7T3BmErl5Fm+KH05blI4GrVs+jMV3/pIVe7RTucc
-	R33xZ1HmnjhZ8Ob5an+gpoyzQa9KsHW4+DlJ5Ysr9mIQEQO7maDRyo42E/nKrczu
-	ucdX6Rob3ntFAGUKmbcKaccKcrSwiZOFEICubl1oYCVpnAMGW/cpxrShLom+MFmy
-	N3EMzw==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45p67qj61e-1
+	GrMhgc1KovsN5I4sfTdMTKczDTQ5qElsQ/Wq271LWbY=; b=REkYUgL1lEQ8VKS7
+	qYDaiERHBtFcq7zJAxYMqNbOjs07W27RW2ZSRyHZa+fnV9Aa3UANrwIq1YoD4Tt/
+	ZHxeQsc2zLPyegZaBeb+1KyL4OwMruuGanlTqivQ2RXEEaKFF02/vNCaNUeaRhW3
+	i9+4G6fAAMh8LopXWo3LTzqEGsITZMebsMphEcUX3xzLeRPEircKbyn0DLtZq6OW
+	SkJClUuRgIWbdgzqXImHQG5QmQO8VYYaNmCri1iIdYuZFCkDlqyUikeMg+HLR9B6
+	37IhNIzlDIVC0LO9X+xTHO2gZHZ0Sd/DGxZc2t8Iuj3cLYgpZBMVe1AcakNjCmWj
+	8I1sYQ==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45r1xnmbnb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 02 Apr 2025 02:46:27 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5322kQax012719
+	Wed, 02 Apr 2025 02:48:50 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5322mnTW017425
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 2 Apr 2025 02:46:26 GMT
-Received: from [127.0.1.1] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+	Wed, 2 Apr 2025 02:48:49 GMT
+Received: from [10.133.33.114] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 1 Apr 2025
- 19:46:24 -0700
-From: Baochen Qiang <quic_bqiang@quicinc.com>
-Date: Wed, 2 Apr 2025 10:45:46 +0800
-Subject: [PATCH ath-next 7/9] wifi: ath12k: alloc REO queue per station
+ 19:48:48 -0700
+Message-ID: <dc0abf98-862b-47f5-ae71-749c68cffc73@quicinc.com>
+Date: Wed, 2 Apr 2025 10:48:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20250402-ath12k-wcn7850-mlo-support-v1-7-bad47cf00704@quicinc.com>
-References: <20250402-ath12k-wcn7850-mlo-support-v1-0-bad47cf00704@quicinc.com>
-In-Reply-To: <20250402-ath12k-wcn7850-mlo-support-v1-0-bad47cf00704@quicinc.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
+User-Agent: Mozilla Thunderbird
+Subject: Re: ath12k: No 6GHz Wireless found
+To: Walt Holman <waltholman09@gmail.com>,
         Jeff Johnson
-	<jjohnson@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        Baochen Qiang <quic_bqiang@quicinc.com>
-X-Mailer: b4 0.14.2
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+	<jeff.johnson@oss.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+        "ath12k@lists.infradead.org"
+	<ath12k@lists.infradead.org>
+References: <CAMb39_ngQs8=FUML5QXMh2RmEZBZ2NwUHefhGoTkGtHat+KWJA@mail.gmail.com>
+ <f45323db-ce4d-4374-9c93-0be4d0645fcd@oss.qualcomm.com>
+ <CAMb39_ki7F1XgezyVfb9Tkm9D-FZE0XK3RcSYtFmFf0jP8-M_Q@mail.gmail.com>
+Content-Language: en-US
+From: Kang Yang <quic_kangyang@quicinc.com>
+In-Reply-To: <CAMb39_ki7F1XgezyVfb9Tkm9D-FZE0XK3RcSYtFmFf0jP8-M_Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=fMI53Yae c=1 sm=1 tr=0 ts=67eca503 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=lhfdp0ZiA_BiyW879yIA:9 a=QEXdDO2ut3YA:10
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: zhlSQDqwrlcUBEiUK8Sxe5myud_rOVn0
-X-Proofpoint-GUID: zhlSQDqwrlcUBEiUK8Sxe5myud_rOVn0
+X-Proofpoint-GUID: u8c_0ZNd0jDT7EAGsGj3ZuvdekBP_RQB
+X-Proofpoint-ORIG-GUID: u8c_0ZNd0jDT7EAGsGj3ZuvdekBP_RQB
+X-Authority-Analysis: v=2.4 cv=Qv1e3Uyd c=1 sm=1 tr=0 ts=67eca592 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=bC-a23v3AAAA:8 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8
+ a=VwQbUJbxAAAA:8 a=djrh-veR_mV6KkF8jiQA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=-FEs8UIgK8oA:10 a=FO4_E8m0qiDe52t0p3_H:22 a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-02_01,2025-04-01_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxscore=0
- priorityscore=1501 phishscore=0 spamscore=0 impostorscore=0 clxscore=1015
- mlxlogscore=999 bulkscore=0 malwarescore=0 suspectscore=0
- lowpriorityscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ mlxscore=0 impostorscore=0 adultscore=0 priorityscore=1501 bulkscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 lowpriorityscore=0
+ clxscore=1011 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
  definitions=main-2504020017
 
-In MLO case, all link peers share the same REO queue, so the queue
-should be allocated only once, currently this is done by checking
-primary_link flag in ath12k_dp_rx_peer_tid_setup(). However, the
-check not only avoids duplicate allocation, but also bypasses sending
-queue configuration to firmware for non-primary links. In an upcoming
-patch, changes will be added to make this check no-ops for WCN7850,
-as WCN7850 firmware needs to be explicitly notified each link peer's
-queue configuration. That said, the duplicate allocation would arise
-again after that change, hence it needs to be resolved before hand.
 
-Since all link peers share the same queue, it should be allocated per
-MLD peer, not per link peer. So change to do allocation once and save
-it in MLD peer, link peers can simply get queue configuration from
-there.
 
-Also relocate ath12k_reoq_buf structure to core.h to avoid circular
-dependency.
+On 4/2/2025 5:21 AM, Walt Holman wrote:
+> On Tue, Apr 1, 2025 at 1:53 PM Jeff Johnson
+> <jeff.johnson@oss.qualcomm.com> wrote:
+>>
+>> On 3/30/2025 7:28 AM, Walt Holman wrote:
+>>> Hello,
+>>>
+>>> I have a wcn7850 hw2.0 based m.2 wireless card in my laptop and am
+>>> unable to see or connect to 6Ghz networks. I have an ASUS BE30000 wifi
+>>> router setup with a separate 6ghz only network, which my phone and
+>>> other laptops can connect to. I'm unable to even see this network on
+>>> this particular laptop. Months ago (maybe September), I could see it
+>>> occasionally, but now it never shows up. I'm using firmware from
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+>>> and track the kernels pretty closely. I'm currently running 6.14.0
+>>> built from source. Any suggestions? Some HW info is below:
+>>>
+>>> 63:00.0 Network controller: Qualcomm Technologies, Inc WCN785x Wi-Fi
+>>> 7(802.11be) 320MHz 2x2 [FastConnect 7800
+>>> ] (rev 01)
+>>>         Subsystem: Quectel Wireless Solutions Co., Ltd. Device 8000
+>>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort+
+>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>         Latency: 0, Cache Line Size: 64 bytes
+>>>         Interrupt: pin ? routed to IRQ 111
+>>>         IOMMU group: 19
+>>>         Region 0: Memory at dd800000 (64-bit, non-prefetchable) [size=2M]
+>>>         Capabilities: [40] Power Management version 3
+>>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+>>> PME(D0+,D1-,D2-,D3hot+,D3cold+)
+>>>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>>>         Capabilities: [50] MSI: Enable+ Count=16/32 Maskable+ 64bit-
+>>>                 Address: fee00000  Data: 0000
+>>>                 Masking: ffff8000  Pending: 00000000
+>>>         Capabilities: [70] Express (v2) Endpoint, IntMsgNum 0
+>>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
+>>> unlimited, L1 unlimited
+>>>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+>>> SlotPowerLimit 75W TEE-IO-
+>>>                 DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
+>>>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>>>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>>>                 DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+>>> AuxPwr+ TransPend-
+>>>                 LnkCap: Port #0, Speed 8GT/s, Width x2, ASPM L0s L1,
+>>> Exit Latency L0s <1us, L1 <64us
+>>>                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+>>>                 LnkCtl: ASPM L1 Enabled; RCB 64 bytes, LnkDisable- CommClk+
+>>>                         ExtSynch+ ClockPM- AutWidDis- BWInt- AutBWInt-
+>>>                 LnkSta: Speed 8GT/s, Width x1 (downgraded)
+>>>                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>>>                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
+>>> NROPrPrP- LTR+
+>>>                          10BitTagComp- 10BitTagReq- OBFF Not Supported,
+>>> ExtFmt- EETLPPrefix-
+>>>                          EmergencyPowerReduction Not Supported,
+>>> EmergencyPowerReductionInit-
+>>>                          FRS- TPHComp+ ExtTPHComp-
+>>>                          AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+>>>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+>>>                          AtomicOpsCtl: ReqEn-
+>>>                          IDOReq- IDOCompl- LTR+ EmergencyPowerReductionReq-
+>>>                          10BitTagReq- OBFF Disabled, EETLPPrefixBlk-
+>>>                 LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink-
+>>> Retimer- 2Retimers- DRS-
+>>>                 LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+>>>                          Transmit Margin: Normal Operating Range,
+>>> EnterModifiedCompliance- ComplianceSOS-
+>>>                          Compliance Preset/De-emphasis: -6dB
+>>> de-emphasis, 0dB preshoot
+>>>                 LnkSta2: Current De-emphasis Level: -3.5dB,
+>>> EqualizationComplete+ EqualizationPhase1+
+>>>                          EqualizationPhase2+ EqualizationPhase3+
+>>> LinkEqualizationRequest-
+>>>                          Retimer- 2Retimers- CrosslinkRes: unsupported
+>>>         Capabilities: [100 v2] Advanced Error Reporting
+>>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>>> UnxCmplt- RxOF- MalfTLP-
+>>>                         ECRC- UnsupReq- ACSViol- UncorrIntErr-
+>>> BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
+>>>                         PoisonTLPBlocked- DMWrReqBlocked- IDECheck-
+>>> MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
+>>>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>>> UnxCmplt- RxOF- MalfTLP-
+>>>                         ECRC- UnsupReq- ACSViol- UncorrIntErr+
+>>> BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
+>>>                         PoisonTLPBlocked- DMWrReqBlocked- IDECheck-
+>>> MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
+>>>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
+>>> UnxCmplt- RxOF+ MalfTLP+
+>>>                         ECRC- UnsupReq- ACSViol- UncorrIntErr+
+>>> BlockedTLP- AtomicOpBlocked- TLPBlockedErr-
+>>>                         PoisonTLPBlocked- DMWrReqBlocked- IDECheck-
+>>> MisIDETLP- PCRC_CHECK- TLPXlatBlocked-
+>>>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>>> AdvNonFatalErr- CorrIntErr- HeaderOF-
+>>>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>>> AdvNonFatalErr+ CorrIntErr+ HeaderOF+
+>>>                 AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn-
+>>> ECRCChkCap+ ECRCChkEn-
+>>>                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+>>>                 HeaderLog: 00000000 00000000 00000000 00000000
+>>>         Capabilities: [148 v1] Secondary PCI Express
+>>>                 LnkCtl3: LnkEquIntrruptEn- PerformEqu-
+>>>                 LaneErrStat: 0
+>>>         Capabilities: [158 v1] Transaction Processing Hints
+>>>                 No steering table available
+>>>         Capabilities: [1e4 v1] Latency Tolerance Reporting
+>>>                 Max snoop latency: 1048576ns
+>>>                 Max no snoop latency: 1048576ns
+>>>         Capabilities: [1ec v1] L1 PM Substates
+>>>                 L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+
+>>> ASPM_L1.1+ L1_PM_Substates+
+>>>                           PortCommonModeRestoreTime=70us PortTPowerOnTime=0us
+>>>                 L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
+>>>                            T_CommonMode=0us LTR1.2_Threshold=166912ns
+>>>                 L1SubCtl2: T_PwrOn=90us
+>>>         Kernel driver in use: ath12k_pci
+>>>         Kernel modules: ath12k
+>>>
+>>> root@walt-ROG-zephyrus:~# iw reg get
+>>> global
+>>> country US: DFS-FCC
+>>>          (902 - 904 @ 2), (N/A, 30), (N/A)
+>>>          (904 - 920 @ 16), (N/A, 30), (N/A)
+>>>          (920 - 928 @ 8), (N/A, 30), (N/A)
+>>>          (2400 - 2472 @ 40), (N/A, 30), (N/A)
+>>>          (5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>>>          (5250 - 5350 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
+>>>          (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+>>>          (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+>>>          (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+>>>          (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+>>>          (57240 - 71000 @ 2160), (N/A, 40), (N/A)
+>>>
+>>> phy#0 (self-managed)
+>>> country na: DFS-UNSET
+>>>          (2402 - 2472 @ 40), (N/A, 20), (N/A)
+>>>          (2457 - 2482 @ 20), (N/A, 20), (N/A), PASSIVE-SCAN
+>>>          (5170 - 5330 @ 160), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+>>>          (5490 - 5730 @ 160), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+>>>          (5735 - 5895 @ 160), (N/A, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+>>>          (5945 - 7125 @ 320), (N/A, 30), (N/A), AUTO-BW, PASSIVE-SCAN
+>>>
+>>
+>> I added the ath12k list to make sure this has the proper attention.
+>> Since you are building from source, can you please test with the following patch:
+>> https://msgid.link/20250401020840.357-1-quic_kangyang@quicinc.com
+>>
+>> This is in my pending queue.
+>>
+>> /jeff
+>>
+> 
+> Hi Jeff,
+> 
+> No dice on the 6Ghz networks. It fixed up the registration info, but I
+> still don't see any 6Ghz networks. Even from an 'iw wlp99s0 scan'
+> 
+> global
+> country US: DFS-FCC
+>         (902 - 904 @ 2), (N/A, 30), (N/A)
+>         (904 - 920 @ 16), (N/A, 30), (N/A)
+>         (920 - 928 @ 8), (N/A, 30), (N/A)
+>         (2400 - 2472 @ 40), (N/A, 30), (N/A)
+>         (5150 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>         (5250 - 5350 @ 80), (N/A, 24), (0 ms), DFS, AUTO-BW
+>         (5470 - 5730 @ 160), (N/A, 24), (0 ms), DFS
+>         (5730 - 5850 @ 80), (N/A, 30), (N/A), AUTO-BW
+>         (5850 - 5895 @ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN
+>         (5925 - 7125 @ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN
+>         (57240 - 71000 @ 2160), (N/A, 40), (N/A)
+> 
+> phy#0 (self-managed)
+> country US: DFS-FCC
+>         (2402 - 2472 @ 40), (6, 30), (N/A)
+>         (5170 - 5250 @ 80), (6, 24), (N/A), AUTO-BW
+>         (5250 - 5330 @ 80), (6, 24), (0 ms), DFS, AUTO-BW
+>         (5490 - 5730 @ 160), (6, 24), (0 ms), DFS, AUTO-BW
+>         (5735 - 5855 @ 80), (6, 30), (N/A), AUTO-BW
+>         (5855 - 5925 @ 40), (6, 30), (N/A), NO-OUTDOOR, AUTO-BW
+>         (5925 - 7125 @ 320), (N/A, 30), (N/A), NO-OUTDOOR, AUTO-BW
+> 
+> 
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00284-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00209-QCAHKSWPL_SILICONZ-1
+Test on 6.14.0-rc5-wt-ath+, with the firmware you used.
+I can get 6 GHz AP and connect to it.
 
-Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/core.h  |  8 +++
- drivers/net/wireless/ath/ath12k/dp_rx.c | 95 ++++++++++++++++++++-------------
- drivers/net/wireless/ath/ath12k/dp_rx.h |  6 ---
- 3 files changed, 65 insertions(+), 44 deletions(-)
+ath12k_pci 0000:03:00.0: fw_version 0x100301e1 fw_build_timestamp 
+2023-12-06 04:05 fw_build_id
+QC_IMAGE_VERSION_STRING=WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index c448c72e9f05f8d87db51bb0b97ab3e5414d2920..cec9620c543e834e60f0dbe11a880e6d58d59cd6 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -525,6 +525,12 @@ struct ath12k_link_sta {
- 	u8 link_idx;
- };
- 
-+struct ath12k_reoq_buf {
-+	void *vaddr;
-+	dma_addr_t paddr_aligned;
-+	u32 size;
-+};
-+
- struct ath12k_sta {
- 	struct ath12k_vif *ahvif;
- 	enum hal_pn_type pn_type;
-@@ -537,6 +543,8 @@ struct ath12k_sta {
- 	u8 num_peer;
- 
- 	enum ieee80211_sta_state state;
-+
-+	struct ath12k_reoq_buf reoq_bufs[IEEE80211_NUM_TIDS + 1];
- };
- 
- #define ATH12K_HALF_20MHZ_BW	10
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index 12313aa87e0747f3ea3dbaad50bb80b3a544d45f..6bad4e4440f74d5f9a143ef6ef79a8df5c3cdfab 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -934,17 +934,66 @@ static int ath12k_peer_rx_tid_reo_update(struct ath12k *ar,
- 	return 0;
- }
- 
-+static int ath12k_dp_rx_assign_reoq(struct ath12k_base *ab,
-+				    struct ath12k_sta *ahsta,
-+				    struct ath12k_dp_rx_tid *rx_tid,
-+				    u16 ssn, enum hal_pn_type pn_type)
-+{
-+	u32 ba_win_sz = rx_tid->ba_win_sz;
-+	struct ath12k_reoq_buf *buf;
-+	void *vaddr, *vaddr_aligned;
-+	dma_addr_t paddr_aligned;
-+	u8 tid = rx_tid->tid;
-+	u32 hw_desc_sz;
-+	int ret;
-+
-+	buf = &ahsta->reoq_bufs[tid];
-+	if (!buf->vaddr) {
-+		/* TODO: Optimize the memory allocation for qos tid based on
-+		 * the actual BA window size in REO tid update path.
-+		 */
-+		if (tid == HAL_DESC_REO_NON_QOS_TID)
-+			hw_desc_sz = ath12k_hal_reo_qdesc_size(ba_win_sz, tid);
-+		else
-+			hw_desc_sz = ath12k_hal_reo_qdesc_size(DP_BA_WIN_SZ_MAX, tid);
-+
-+		vaddr = kzalloc(hw_desc_sz + HAL_LINK_DESC_ALIGN - 1, GFP_ATOMIC);
-+		if (!vaddr)
-+			return -ENOMEM;
-+
-+		vaddr_aligned = PTR_ALIGN(vaddr, HAL_LINK_DESC_ALIGN);
-+
-+		ath12k_hal_reo_qdesc_setup(vaddr_aligned, tid, ba_win_sz,
-+					   ssn, pn_type);
-+
-+		paddr_aligned = dma_map_single(ab->dev, vaddr_aligned, hw_desc_sz,
-+					       DMA_BIDIRECTIONAL);
-+		ret = dma_mapping_error(ab->dev, paddr_aligned);
-+		if (ret) {
-+			kfree(vaddr);
-+			return ret;
-+		}
-+
-+		buf->vaddr = vaddr;
-+		buf->paddr_aligned = paddr_aligned;
-+		buf->size = hw_desc_sz;
-+	}
-+
-+	rx_tid->qbuf = *buf;
-+	rx_tid->active = true;
-+
-+	return 0;
-+}
-+
- int ath12k_dp_rx_peer_tid_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_id,
- 				u8 tid, u32 ba_win_sz, u16 ssn,
- 				enum hal_pn_type pn_type)
- {
- 	struct ath12k_base *ab = ar->ab;
- 	struct ath12k_dp *dp = &ab->dp;
--	struct hal_rx_reo_queue *addr_aligned;
- 	struct ath12k_peer *peer;
-+	struct ath12k_sta *ahsta;
- 	struct ath12k_dp_rx_tid *rx_tid;
--	u32 hw_desc_sz;
--	void *vaddr;
- 	dma_addr_t paddr_aligned;
- 	int ret;
- 
-@@ -977,9 +1026,9 @@ int ath12k_dp_rx_peer_tid_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_
- 	}
- 
- 	rx_tid = &peer->rx_tid[tid];
-+	paddr_aligned = rx_tid->qbuf.paddr_aligned;
- 	/* Update the tid queue if it is already setup */
- 	if (rx_tid->active) {
--		paddr_aligned = rx_tid->qbuf.paddr_aligned;
- 		ret = ath12k_peer_rx_tid_reo_update(ar, peer, rx_tid,
- 						    ba_win_sz, ssn, true);
- 		spin_unlock_bh(&ab->base_lock);
-@@ -1007,39 +1056,14 @@ int ath12k_dp_rx_peer_tid_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_
- 
- 	rx_tid->ba_win_sz = ba_win_sz;
- 
--	/* TODO: Optimize the memory allocation for qos tid based on
--	 * the actual BA window size in REO tid update path.
--	 */
--	if (tid == HAL_DESC_REO_NON_QOS_TID)
--		hw_desc_sz = ath12k_hal_reo_qdesc_size(ba_win_sz, tid);
--	else
--		hw_desc_sz = ath12k_hal_reo_qdesc_size(DP_BA_WIN_SZ_MAX, tid);
--
--	vaddr = kzalloc(hw_desc_sz + HAL_LINK_DESC_ALIGN - 1, GFP_ATOMIC);
--	if (!vaddr) {
--		spin_unlock_bh(&ab->base_lock);
--		return -ENOMEM;
--	}
--
--	addr_aligned = PTR_ALIGN(vaddr, HAL_LINK_DESC_ALIGN);
--
--	ath12k_hal_reo_qdesc_setup(addr_aligned, tid, ba_win_sz,
--				   ssn, pn_type);
--
--	paddr_aligned = dma_map_single(ab->dev, addr_aligned, hw_desc_sz,
--				       DMA_BIDIRECTIONAL);
--
--	ret = dma_mapping_error(ab->dev, paddr_aligned);
-+	ahsta = ath12k_sta_to_ahsta(peer->sta);
-+	ret = ath12k_dp_rx_assign_reoq(ab, ahsta, rx_tid, ssn, pn_type);
- 	if (ret) {
- 		spin_unlock_bh(&ab->base_lock);
--		goto err_mem_free;
-+		ath12k_warn(ab, "failed to assign reoq buf for rx tid %u\n", tid);
-+		return ret;
- 	}
- 
--	rx_tid->qbuf.vaddr = vaddr;
--	rx_tid->qbuf.paddr_aligned = paddr_aligned;
--	rx_tid->qbuf.size = hw_desc_sz;
--	rx_tid->active = true;
--
- 	if (ab->hw_params->reoq_lut_support) {
- 		/* Update the REO queue LUT at the corresponding peer id
- 		 * and tid with qaddr.
-@@ -1059,11 +1083,6 @@ int ath12k_dp_rx_peer_tid_setup(struct ath12k *ar, const u8 *peer_mac, int vdev_
- 							     ba_win_sz);
- 	}
- 
--	return ret;
--
--err_mem_free:
--	kfree(vaddr);
--
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
-index 1376360d71d0903113735ef1cf5836e45cdbd274..d8e9c55c321f02a75a775f99fc54123daeda8279 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.h
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
-@@ -12,12 +12,6 @@
- 
- #define DP_MAX_NWIFI_HDR_LEN	30
- 
--struct ath12k_reoq_buf {
--	void *vaddr;
--	dma_addr_t paddr_aligned;
--	u32 size;
--};
--
- struct ath12k_dp_rx_tid {
- 	u8 tid;
- 	u32 ba_win_sz;
+yk@yk-Mayan:~$ sudo iw wls1 scan | tee iw_scan.log:
+BSS 62:03:7f:12:64:64(on wls1) -- associated
+         TSF: 606308271476 usec (7d, 00:25:08)
+         freq: 6275
+         beacon interval: 100 TUs
+         capability: ESS Privacy SpectrumMgmt ShortSlotTime (0x0511)
+         signal: -17.00 dBm
+         last seen: 52 ms ago
+         Information elements from Probe Response frame:
+         SSID: MLO-KANG-6G
+and other 6 GHz APs:
+	SSID: 6G-gxia
+	SSID: NETGEAR97-6G
+	……
 
--- 
-2.25.1
+
+kernel log:
+[88158.033218] wls1: Inserted STA 62:03:7f:12:64:64
+[88158.033232] wls1: authenticate with 62:03:7f:12:64:64 (local 
+address=00:03:7f:37:12:54)
+[88158.033242] wls1: send auth to 62:03:7f:12:64:64 (try 1/3)
+[88158.041895] wls1: authenticated
+[88158.041914] wls1: moving STA 62:03:7f:12:64:64 to state 2
+[88158.044291] wls1: determined local STA to be EHT, BW limited to 320 MHz
+[88158.045719] wls1: associate with 62:03:7f:12:64:64 (try 1/3)
+[88158.067045] wls1: RX AssocResp from 62:03:7f:12:64:64 (capab=0x511 
+status=0 aid=4)
+[88158.089090] wls1: associated
+
+I can even connect to it by Ubuntu GUI.
+
+Can you update to 6.14.0-rc5-wt-ath+ and have a retry? Also please make 
+sure that your wpa_supplicant/iw support 6 GHz(or directly update to the 
+latest version).
+
+If you still cannot find 6 GHz AP, you can set debug_mask to 0xffffffff 
+to get ath12k logs. Then give it to us.
+
+
+> -Walt
+> 
 
