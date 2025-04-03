@@ -1,96 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BAE724EA88;
-	Thu,  3 Apr 2025 14:07:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E89802E3386
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Apr 2025 14:13:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743689276; cv=none; b=qFCQnpuMNhWaTzGBTOtxpDGhU2PP+WK5FHlrQhGwJ/bZgf6rMhMDwZEJ3+ia61gLapI12Uj/lmlRL2sfXMl2GbneuONDYS7pV9w2rX4HbBFpGVj2f9VVCY/vt5IdtOZRJnXeq4n/JK/33pOnC7FErdIK1mKJGAsB2L7RRAZEZ6s=
+	t=1743689595; cv=none; b=F9cmtL7b/NGmR7ocFoH4zHcCFNzyDUlnRB3Sk+L6DzLnwf0y0QyOBB2fzX28DozUrvEfYIEqqz0EsI+xtILfXj99IpNl58ihX9osjOxb4D+fYYN4T0uAMeNMpBoQTvdlDqe/gUiV6JsieHLwac9Iljjf4HaLd8i1in71Hjd7JNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743689276; c=relaxed/simple;
-	bh=39VMYhU+74mMPI9DI3V/VxZjDFcE/1tMwt7m4qa+2nU=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=RLR6ToEwsW844Alx5zmQo6S85LPpp4bnAx8LCTZ70evTzIZ2PpFBRDXePaWYh9xQ9LMz4t0fDs01u/w8XdQNXf/Kn2F5mTcj+e07jqFYuj9HK4aaGU95MUgyxux/2NP6YVduxqT4Nu6YubUOOfT3EK5cuuO7uyZPkHHc66syZas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lZh2tGRX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1743689595; c=relaxed/simple;
+	bh=b6Xe4damUlX0SdnPSvLEJGnYenLSS3mEfJwPjwjZLJY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OGDGmr5Y0kvOwA8AJDXc2/283zzTrSFTuhAi89HLQefm5w0lsnDeiGs16XGXICCGL/VPMrqw+SSkDIXsDIfvNjlhQYGsFVocmdp9t4XLcy9NG9l+Miwu0DvqCT68j1869IiONcP1HBse0SFSSrInrglL4o369L2uhWdtTl9G9qU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net; spf=pass smtp.mailfrom=posteo.net; dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b=QIEMyArq; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lZh2tGRX"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 78660C4CEE3;
-	Thu,  3 Apr 2025 14:07:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743689275;
-	bh=39VMYhU+74mMPI9DI3V/VxZjDFcE/1tMwt7m4qa+2nU=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=lZh2tGRXFrMH7vxDqCnyXt8z75iA2JMWeOKYtV+SV8WFAR5Jeof8bCbDWLXAs97OQ
-	 xdFz4nV4UUufzWKLJ7ZS54+e05h51S2x5EbLuSGYixNAddc0053ZQnykPCwk+Pp6vW
-	 pbfxyqwaDs7OoAdjp7maTuqO3CZEXJgDyoPMadyIy/mhKs0psXkgfaq85VjwF2y+iC
-	 5y4I/uqjl9DBC5mUQW8iGgc4owmlDHX02xtIWxwM8Y0w+vmvOor7MrzAWsAEf7/gZY
-	 7GcaIvxmErcA+hS4aRngkTm49MMG0lIyIOWlbbtX7j+27HWA14AGZlkDxT/E/9RCd7
-	 JKIbTHiPleHGA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 648BDC3600C;
-	Thu,  3 Apr 2025 14:07:55 +0000 (UTC)
-From: =?utf-8?q?J=2E_Neusch=C3=A4fer_via_B4_Relay?= <devnull+j.ne.posteo.net@kernel.org>
-Subject: [PATCH 0/2] Onboard USB device support for RTL8188 2.4GHz USB WiFi
- module
-Date: Thu, 03 Apr 2025 16:07:47 +0200
-Message-Id: <20250403-rtl-onboard-v1-0-10ca9a6a4ee0@posteo.net>
+	dkim=pass (2048-bit key) header.d=posteo.net header.i=@posteo.net header.b="QIEMyArq"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 2742E240029
+	for <linux-wireless@vger.kernel.org>; Thu,  3 Apr 2025 16:13:05 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.net; s=2017;
+	t=1743689585; bh=b6Xe4damUlX0SdnPSvLEJGnYenLSS3mEfJwPjwjZLJY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:From;
+	b=QIEMyArq7JrD9UoR4zf5FJNOhHJyVbioxdT2xp0StJqxHIjfJ4bX86nHr0Htoz0sw
+	 /4kHIHxhLrdBst/TAy9txa7jcb7AZsQ9yWczRFwMbIZsIzLCYZHbjN4bBAUyJsrL/H
+	 6lnCBcM78TRsgh2xqcsIKVuf8Fw717LE0/4iaDRZ1L+phCdQ61bMHpFc8VsVcBAJ/Z
+	 oGqely1103Y/se2fB3YRnkHx3MocfWT1V1iJAMzGZQKQMi1crnZp/un/FQL+NH4XA3
+	 YFiOsw0vQms09JjZjpBidqwQp3p8oCt6z9T37qyY0gO+zL8/zLJXaujfJoYhOROXg4
+	 Ibp1MZ/sEexHg==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4ZT3bz2Wp7z6tyW;
+	Thu,  3 Apr 2025 16:13:03 +0200 (CEST)
+Date: Thu,  3 Apr 2025 14:13:02 +0000
+From: =?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+To: j.ne@posteo.net
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	=?utf-8?Q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
+	Matthias Kaehlcke <mka@chromium.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Jes Sorensen <Jes.Sorensen@gmail.com>,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 1/2] dt-bindings: net: wireless: Add Realtek RTL8188 USB
+ WiFi
+Message-ID: <Z-6XbotPbah2flxK@probook>
+References: <20250403-rtl-onboard-v1-0-10ca9a6a4ee0@posteo.net>
+ <20250403-rtl-onboard-v1-1-10ca9a6a4ee0@posteo.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIADOW7mcC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1MDEwNj3aKSHN38vKT8xKIU3TRjC2NTkzSDJEOTJCWgjoKi1LTMCrBp0bG
- 1tQB8OGQZXQAAAA==
-X-Change-ID: 20250403-rtl-onboard-f38354f0b14b
-To: Johannes Berg <johannes@sipsolutions.net>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>, 
- Matthias Kaehlcke <mka@chromium.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
- Jes Sorensen <Jes.Sorensen@gmail.com>, linux-wireless@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-usb@vger.kernel.org, 
- =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1743689273; l=886;
- i=j.ne@posteo.net; s=20240329; h=from:subject:message-id;
- bh=39VMYhU+74mMPI9DI3V/VxZjDFcE/1tMwt7m4qa+2nU=;
- b=GBtBg4J3jFJRTewN2BJhs+xjZvDIbF3WaNoVycTobq+8M+1FCplFQjhzYoe7LKvp7cOnCZZQn
- J1i+FWjzMRFAP9zWIkQuT5OMKg/oKA3Iw3DhlMNPK2EfO2MHeNGPhRr
-X-Developer-Key: i=j.ne@posteo.net; a=ed25519;
- pk=NIe0bK42wNaX/C4bi6ezm7NJK0IQE+8MKBm7igFMIS4=
-X-Endpoint-Received: by B4 Relay for j.ne@posteo.net/20240329 with
- auth_id=156
-X-Original-From: =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
-Reply-To: j.ne@posteo.net
+In-Reply-To: <20250403-rtl-onboard-v1-1-10ca9a6a4ee0@posteo.net>
 
-This patchset adds rtl8188 (usbbda,179) to the onboard_usb_dev driver.
-It is found in a set-top box called "Fernsehfee 3.0".
+On Thu, Apr 03, 2025 at 04:07:48PM +0200, J. Neuschäfer via B4 Relay wrote:
+> From: "J. Neuschäfer" <j.ne@posteo.net>
+> 
+> This is an on-board USB device that requires a 3.3V supply.
+> 
+> Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+> ---
+[...]
+> +maintainers:
+> +  - J. Neuschäfer <j.neuschaefer@gmx.net>
 
-As a side note, this device is currently marked untested in the RTL8XXXU
-driver. In my experience it works (tested with a WPA2 home network).
-
-Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
----
-J. Neuschäfer (2):
-      dt-bindings: net: wireless: Add Realtek RTL8188 USB WiFi
-      usb: misc: onboard_dev: Add Realtek RTL8188 WiFi (0bda:0179)
-
- .../bindings/net/wireless/realtek,rtl8188.yaml     | 51 ++++++++++++++++++++++
- drivers/usb/misc/onboard_usb_dev.c                 |  1 +
- drivers/usb/misc/onboard_usb_dev.h                 |  8 ++++
- 3 files changed, 60 insertions(+)
----
-base-commit: 38fec10eb60d687e30c8c6b5420d86e8149f7557
-change-id: 20250403-rtl-onboard-f38354f0b14b
-
-Best regards,
--- 
-J. Neuschäfer <j.ne@posteo.net>
-
-
+Sorry, typoed that. I wanted to use my current email address instead of
+this old one. Will fix in v2.
