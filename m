@@ -1,35 +1,34 @@
 Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D18417A303
-	for <linux-wireless@vger.kernel.org>; Sat,  5 Apr 2025 18:48:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE64160783
+	for <linux-wireless@vger.kernel.org>; Sat,  5 Apr 2025 18:48:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743878901; cv=none; b=tmGNrPoJbWEgMumEl1aeVJHi82sge7kdk0zVTWbnzENktF6pbWLalcUGsAte0BnOnIRN9M1eY34Hcw+NJLH8TvcAEkv3qqZFXPHjS8qgJRXgH9W9LiGAc1FBoJz/bHZJCXKo3JDo52ahsh6DBb7b1pBXsjy0V+Sl78SVkwHYS+g=
+	t=1743878901; cv=none; b=bm/Se5LofJs4T9FvWzfb3h+FbByqda3Hg2PbISHxSUEfCpPHhjc/8qHsQ/JMyVDGV31FtOqUBbMGqSn8+jRppOlhP67L9iZ/dfixZR6mAJ/ZAKg+83FsK1F/EcOjkcJYCWzn3O+r1jSM3RlIHDlT4Ij6lZjaFwqV+S5zo3LX224=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1743878901; c=relaxed/simple;
-	bh=r7Z9lOOkSxpN+ucW+Gp2u+rGkC79BlG1EH70EKPgKrE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=n8n39Ib1RO4wzLatH+3mz30TPjOsOUYrZ0mtP/xz56xdN7u/k0p8zRqC0Qp0uJMrqBlzRYyyKi9qzcG72QustOyG5OwmJM08F6roKlE36CTBq9ElBtUtPq3mYCKgHmh3H0OUO1D0NNpHPDmLLLS6rxHX5EUKRrXdoWB7B8QUz+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=IY4eatyj; arc=none smtp.client-ip=212.77.101.9
+	bh=v8RViTZRbtApVOT/DclwTjZo3K79mr9ZP1w+bZTFNUA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tCdEatEsuUfMVeaeOmO0uXUHnS7K6TfRH1I7ChnPzQIAzvfrpFAmf8YaEr6QjBCxVjsI8DnGPpMSRY2qCLeg8IrvjD51JcpNHlAP2f9rwdwdsLVmdR7Z0JVTtIFAlpu2hILmN0SjiUMtBtnrZUPY/0Y4p097lF8Juwq5Es5hM7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=NzCsiTaE; arc=none smtp.client-ip=212.77.101.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="IY4eatyj"
-Received: (wp-smtpd smtp.wp.pl 36002 invoked from network); 5 Apr 2025 20:48:16 +0200
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="NzCsiTaE"
+Received: (wp-smtpd smtp.wp.pl 33500 invoked from network); 5 Apr 2025 20:48:09 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1743878896; bh=8900mW7m6CxNPXhte/uesbW94QRwJGoXjpY9qylqeaI=;
+          t=1743878889; bh=UzPzJxOPJXobyWkeuPHE+ERxY9/VLsR5mTkNuASlJuc=;
           h=From:To:Cc:Subject;
-          b=IY4eatyjNNyH/kBUrEcFC7/EebYKxVmHw34qA0CtJq6a3YAQ9723UNrXqBgrB9zui
-           DHxv26QOxMo+KYgyRkk+CUUKfsPY3fTnbftf7FKc9WQdmM6odg/eUXmD5k+5F8ejVS
-           U1ZdflSAB7gWBIGrPXz2OaqoPwyZJkSVvnNgnpDoUrvnJ/Yc4hHtrh0ARdGgzMhzBl
-           7KPo38/c8AFnUHDDCbxb5TZEGcu2T5EeMFC1lTCByDsC4L6KJkl4pBLWvvms9lpRBK
-           a6ZiRNl7pC+KUokLAVRIxs6ipdapVWEBXtKicylbgIra8GEPM7ZW7RGlc/2XWANSqE
-           bgh04St8JZCMA==
+          b=NzCsiTaEn6rfkDcBthkIRg61HNUW/GtiA/rcNCwEI7RU/kYNTKKklHXXB6ITTz3uI
+           8zvBr2ufZqxASgR2zrLQJvj0IwBvEV4zAAZyBwES2R1MUh9XCvdGWmYoKD4sxPmbi7
+           uBLbD29mi4fXKTn3JRsd5d93KlBEYKCJzJQJJi10sIK9pt2gRiqqQfzo8SLLF2RTdh
+           4SIy39NOfPvZ4ofqgiN0NeQYPdh8JzyAEMhhqrH0yfLc6n3DkhPLShF6NkKcdEdEkj
+           177WolXxKXg85KAmcus2g6eC7sZXbCZxAI5FqHRaUEfLx1pI41YL/Wo035+mm3PD0T
+           SffTYNLgNt2Pw==
 Received: from 83.5.244.88.ipv4.supernova.orange.pl (HELO laptop-olek.home) (olek2@wp.pl@[83.5.244.88])
           (envelope-sender <olek2@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <johannes@sipsolutions.net>; 5 Apr 2025 20:48:16 +0200
+          for <johannes@sipsolutions.net>; 5 Apr 2025 20:48:09 +0200
 From: Aleksander Jan Bajkowski <olek2@wp.pl>
 To: johannes@sipsolutions.net,
 	ilan.peer@intel.com,
@@ -39,12 +38,10 @@ To: johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Aleksander Jan Bajkowski <olek2@wp.pl>
-Subject: [PATCH iw,v2 2/3] iw: fix HE operation on Big Endian platforms
-Date: Sat,  5 Apr 2025 20:48:06 +0200
-Message-Id: <20250405184807.701728-3-olek2@wp.pl>
+Subject: [PATCH iw,v2 0/3] iw: fix HE and EHT information on Big Endian platformas
+Date: Sat,  5 Apr 2025 20:48:04 +0200
+Message-Id: <20250405184807.701728-1-olek2@wp.pl>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250405184807.701728-1-olek2@wp.pl>
-References: <20250405184807.701728-1-olek2@wp.pl>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,41 +50,25 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-WP-DKIM-Status: good (id: wp.pl)                                                      
-X-WP-MailID: 1fb8fe2d7877ab1a9e4aa322aa28f15f
+X-WP-MailID: 087077b0e0718edef62d86f0599e903f
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000001 [wbKh]                               
+X-WP-SPAM: NO 0000000 [gbMU]                               
 
 IE fields are encoded in Little Endian and are not correctly
 printed on Big Endian platforms.
 
-Fixes: 422419e06d55 ("scan: Add printing of HE Operation Element")
-Signed-off-by: Aleksander Jan Bajkowski <olek2@wp.pl>
----
- util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+v2:
+ - added EHT capabilities patch
+ - minor code formatting changes
 
-diff --git a/util.c b/util.c
-index 6502788..1870393 100644
---- a/util.c
-+++ b/util.c
-@@ -1755,7 +1755,7 @@ void print_he_operation(const uint8_t *ie, int len)
- {
- 	uint8_t oper_parameters[3] = {ie[0], ie[1], ie[2] };
- 	uint8_t bss_color = ie[3];
--	uint16_t nss_mcs_set = *(uint16_t*)(&ie[4]);
-+	uint16_t nss_mcs_set = le16toh(*(uint16_t *)(&ie[4]));
- 	uint8_t vht_oper_present = oper_parameters[1] & 0x40;
- 	uint8_t co_hosted_bss_present = oper_parameters[1] & 0x80;
- 	uint8_t uhb_operation_info_present = oper_parameters[2] & 0x02;
-@@ -1768,7 +1768,7 @@ void print_he_operation(const uint8_t *ie, int len)
- 		printf("\t\t\tTWT Required\n");
- 
- 	printf("\t\t\tTXOP Duration RTS Threshold: %hu\n",
--	       (*(uint16_t*)(oper_parameters)) >> 4 & 0x03ff);
-+	       le16toh((*(uint16_t *)(oper_parameters))) >> 4 & 0x03ff);
- 	if (oper_parameters[1] & 0x40)
- 		printf("\t\t\tVHT Operation Information Present\n");
- 
+Aleksander Jan Bajkowski (3):
+  iw: fix HE capabilities on Big Endian platforms
+  iw: fix HE operation on Big Endian platforms
+  iw: fix EHT capabilities on Big Endian platforms
+
+ util.c | 50 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 23 deletions(-)
+
 -- 
 2.39.5
 
