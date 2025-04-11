@@ -1,194 +1,86 @@
-Received: from e2i655.smtp2go.com (e2i655.smtp2go.com [103.2.142.143])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9699F278E68
-	for <linux-wireless@vger.kernel.org>; Fri, 11 Apr 2025 10:15:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.2.142.143
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F502278E4C
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Apr 2025 10:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744366536; cv=none; b=q9M6AV5FHvqxnXsU+9YG/uQepplmGpL5vf7Asnn+V9rO5PNbDTZ9Kcexih5F631m1oWw2UzatgYbGAC3sOIwyhbvc5j1W4UwVaI5bQK1pu348aNK8IFxvouVBvtS/0emIZK9fOMJFi5Ia7+GimZXqGuDuXmhJPrEKrFpvB5bcGw=
+	t=1744367392; cv=none; b=fASrClvZnaFzZ/PsZVbrnjDv0AlKXFj0dY6C5t2s4Egc15zQ1P7kXsF8z8PHcx6ypswLTbOzDs9Io8FXQJsWEHY+WUPpzPclh/0W+0Mwcq8jZBYJLuTJQlPr30kVSNoMAkLUkljB1JGYwi7ISufxhHwzNhkt3hUBZf80m7TtNlY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744366536; c=relaxed/simple;
-	bh=PWNSQc6TOmToyxJPxRmIfaUxC8jmVIYtwGAloEpfCXo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JPTyKyiHhZQaoI9dou/JSBwEuXXMurhAh5dOtJVWhFxXwup6OZY3PGV1DQwNczdLR8Gg1oGZ7mUH+C1qmIufqDJ9zPacGXSeKM7BUUNNoXH/CIus2rXidPrmRBembB9XJRH7Oj9jwT9lptl4AssB0eLVWzeykTVxz0pjjLPmOIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=fail (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=h/R4gUEd reason="unknown key version"; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=G1DrCE+M; arc=none smtp.client-ip=103.2.142.143
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="unknown key version" (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="h/R4gUEd";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="G1DrCE+M"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=smtpservice.net; s=maxzs0.a1-4.dyn; x=1744367433; h=Feedback-ID:
-	X-Smtpcorp-Track:Message-ID:Subject:To:From:Date:Reply-To:Sender:
-	List-Unsubscribe:List-Unsubscribe-Post;
-	bh=FT6H7ZVT7qjT0tHeNL6ZfiwPZh7QsXu9tJmoUMdPOTM=; b=h/R4gUEdMQ2+epYwTejYW/KtKm
-	FCxf6cL5udLnq/ivJcSEzBPTASrayuTy2+OEY3SUgA0Yo75rDTSDxZri3Qrs/YZ8cuhStc3QzH1oA
-	zBRpjFTHDJaEjFZOVGoqEsp1ZTzzzLyI57kM5SE1281R1s+KrLWzd27mgn4JGlhFhDgInf9NDJZAo
-	Vc+yP+quKPdjL14kPg9Iqv2AVxOxYd0kh7xaLvjhQVw1WLNUsITG2VO0lz+yTkHYBqMea0BrfiSy4
-	tD1bzsLoK3imA3FvJbUcvagnKdm5v1dxNsT1zGhwTcrFWjAofILEWI/TmsVsuHGW+iyEYtl4lZpwH
-	uJ6jwaIQ==;
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1744366533; h=from : subject
- : to : message-id : date;
- bh=FT6H7ZVT7qjT0tHeNL6ZfiwPZh7QsXu9tJmoUMdPOTM=;
- b=G1DrCE+MSC2NRGeuEXAOcvnLqgUsYHyGnHK7CvuyPqn+r/Kwa6K6Q/17mqIPhSd9g/JpS
- 7P85QQbaF/ZJ49I1Y3wP7HqKBzC4wSVunweYbaesxQNTbcdMCPAREw8SWjDao4WLqo+XKLf
- A8gXvHK6GrhAal46yUO8tZrL2vBmWup4VZVQRL28Ug3EmzvsRgc72I73sbuX+Z8dqCWRaRn
- kQfaE+QDHVUgyLQ7Rdcn+mgtsaTAL3EDU2oU05NMXh6JF5bTMQAtKIi0Dtjbckli2vhmq3I
- cQI85AiSx+aDL3VZwGoz2yt8qiV8pRDssrDRN+TJJmFY016UrN8V2d23d74Q==
-Received: from [10.139.162.187] (helo=SmtpCorp) by smtpcorp.com with esmtpsa
- (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
- (Exim 4.94.2-S2G) (envelope-from <repk@triplefau.lt>)
- id 1u3BNh-qt4DyW-Nr; Fri, 11 Apr 2025 10:13:05 +0000
-Received: from [10.12.239.196] (helo=localhost) by smtpcorp.com with esmtpsa
- (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
- (Exim 4.97.1-S2G) (envelope-from <repk@triplefau.lt>)
- id 1u3BNh-4o5NDgrpqqr-lFwP; Fri, 11 Apr 2025 10:13:05 +0000
-Date: Fri, 11 Apr 2025 12:06:35 +0200
-From: Remi Pommarel <repk@triplefau.lt>
-To: Bert Karwatzki <spasswolf@web.de>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- johannes@sipsolutions.net
-Subject: Re: [PATCH wireless v2 1/2] wifi: mac80211: Update skb's control
- block key in ieee80211_tx_dequeue()
-Message-ID: <Z_jpq26P99qzPP1c@pilgrim>
-References: <06aa507b853ca385ceded81c18b0a6dd0f081bc8.1742833382.git.repk@triplefau.lt>
- <20250410215527.3001-1-spasswolf@web.de>
+	s=arc-20240116; t=1744367392; c=relaxed/simple;
+	bh=H14QcamuIK2+7caX1w/sNT4RUjaqzC9ImLX+b6wyggk=;
+	h=Message-ID:From:Date:Subject:To:Cc; b=a3/0WisQf+LS1eweGjhsTVzSe6pC7U2ofTa/LX/cfVsIfBjYFC6nX83Mey+QullfdVS0uqquut6UFnv6eqxVhG5Foje157BH0/BzSyVjXc4dJufg5knHdmYbPDhiCk1XfM2ILvKBuG/l7qVZYdSYCal7lchURAzmh4HQ8K2l8Jw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=176.9.242.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 8E57F3005E16;
+	Fri, 11 Apr 2025 12:21:08 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with ESMTPSA id 59B9B6010C9C;
+	Fri, 11 Apr 2025 12:21:16 +0200 (CEST)
+X-Mailbox-Line: From d3ba1006a1b72ceb58c593fa62b9bd7c73e2e4ed Mon Sep 17 00:00:00 2001
+Message-ID: <d3ba1006a1b72ceb58c593fa62b9bd7c73e2e4ed.1744366815.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 11 Apr 2025 12:21:05 +0200
+Subject: [PATCH] wifi: iwlwifi: mld: Restart firmware on
+ iwl_mld_no_wowlan_resume() error
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Benjamin Berg <benjamin.berg@intel.com>, Yedidya Benshimol <yedidya.ben.shimol@intel.com>, Arnd Bergmann <arnd@arndb.de>, Avraham Stern <avraham.stern@intel.com>, Daniel Gabay <daniel.gabay@intel.com>, Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>, Shaul Triebitz <shaul.triebitz@intel.com>
+Cc: linux-wireless@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250410215527.3001-1-spasswolf@web.de>
-X-Smtpcorp-Track: xTYCxRJLbNMz.HbZxGv1vVrQD.BuTyaAF6buh
-Feedback-ID: 510616m:510616apGKSTK:510616sBGiWowcYh
-X-Report-Abuse: Please forward a copy of this message, including all headers,
- to <abuse-report@smtp2go.com>
 
-Hi Bert,
+Commit 44605365f935 ("iwlwifi: mld: fix building with CONFIG_PM_SLEEP
+disabled") sought to fix build breakage, but inadvertently introduced
+a new issue:
 
-On Thu, Apr 10, 2025 at 11:55:26PM +0200, Bert Karwatzki wrote:
-> This commit breaks the mediatek mt7921 wireless driver. In linux-next-20250410
-> my mt7921e Wi-Fi controller is no longer able to connect to a network.
-> I bisected this to commit a104042e2bf6 ("wifi: mac80211: Update skb's control
-> block key in ieee80211_tx_dequeue()").
-> 
-> Hardware:
-> 04:00.0 Network controller: MEDIATEK Corp. MT7921K (RZ608) Wi-Fi 6E 80MHz
-> 
-> This debugging patch reveals that the change causes key to be NULL in
-> mt7921_tx_prepare_skb().
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-> index 881812ba03ff..3b8552a1055c 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
-> @@ -13,6 +13,7 @@ int mt7921e_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
->         struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
->         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx_info->skb);
->         struct ieee80211_key_conf *key = info->control.hw_key;
-> +       dev_info(mdev->dev, "%s: key = %px\n", __func__, key);
->         struct mt76_connac_hw_txp *txp;
->         struct mt76_txwi_cache *t;
->         int id, pid;
-> 
-> 
-> So why is info->control.hw_key not updated by ieee80211_tx_h_select_key()?
-> 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 34f229a6eab0..2510e3533d13 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -631,8 +631,10 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
->  		case WLAN_CIPHER_SUITE_WEP40:
->  		case WLAN_CIPHER_SUITE_WEP104:
->  		case WLAN_CIPHER_SUITE_TKIP:
-> -			if (!ieee80211_is_data_present(hdr->frame_control))
-> +			if (!ieee80211_is_data_present(hdr->frame_control)) {
-> +				printk(KERN_INFO "%s %d: setting tx->key = NULL\n", __func__, __LINE__);
->  				tx->key = NULL;
-> +			}
->  			break;
->  		case WLAN_CIPHER_SUITE_CCMP:
->  		case WLAN_CIPHER_SUITE_CCMP_256:
-> @@ -641,19 +643,23 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
->  			if (!ieee80211_is_data_present(hdr->frame_control) &&
->  			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
->  					       tx->skb) &&
-> -			    !ieee80211_is_group_privacy_action(tx->skb))
-> +			    !ieee80211_is_group_privacy_action(tx->skb)) {
-> +				printk(KERN_INFO "%s %d: setting tx->key = NULL\n", __func__, __LINE__);
->  				tx->key = NULL;
-> -			else
-> +			} else {
->  				skip_hw = (tx->key->conf.flags &
->  					   IEEE80211_KEY_FLAG_SW_MGMT_TX) &&
->  					ieee80211_is_mgmt(hdr->frame_control);
-> +			}
->  			break;
->  		case WLAN_CIPHER_SUITE_AES_CMAC:
->  		case WLAN_CIPHER_SUITE_BIP_CMAC_256:
->  		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
->  		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-> -			if (!ieee80211_is_mgmt(hdr->frame_control))
-> +			if (!ieee80211_is_mgmt(hdr->frame_control)) {
-> +				printk(KERN_INFO "%s %d: setting tx->key = NULL\n", __func__, __LINE__);
->  				tx->key = NULL;
-> +			}
->  			break;
->  		}
-> 
-> @@ -662,9 +668,13 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
->  			     tx->skb->protocol != tx->sdata->control_port_protocol)
->  			return TX_DROP;
-> 
-> +		printk(KERN_INFO "%s: skip_hw=%d tx->key=%px\n",
-> +				__func__, skip_hw, tx->key);
->  		if (!skip_hw && tx->key &&
-> -		    tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
-> +		    tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
->  			info->control.hw_key = &tx->key->conf;
-> +			printk(KERN_INFO "%s: info->control.hw_key = %px\n", __func__, info->control.hw_key);
-> +		}
->  	} else if (ieee80211_is_data_present(hdr->frame_control) && tx->sta &&
->  		   test_sta_flag(tx->sta, WLAN_STA_USES_ENCRYPTION)) {
->  		return TX_DROP;
-> @@ -3894,6 +3904,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
->  	 * The key can be removed while the packet was queued, so need to call
->  	 * this here to get the current key.
->  	 */
-> +	printk(KERN_INFO "%s: info->control.hw_key = %px, setting to NULL\n",
-> +			__func__, info->control.hw_key);
->  	info->control.hw_key = NULL;
->  	r = ieee80211_tx_h_select_key(&tx);
->  	if (r != TX_CONTINUE) {
-> 
-> This patch reveals that tx->key is set to NULL (in the @@ -641,19 +643,23 @@ chunk)
-> and so the updating of info->contro.hw_key is skipped:
-> 
-> [   17.411298] [   T1232] ieee80211_tx_h_select_key 647: setting tx->key = NULL
+iwl_mld_mac80211_start() no longer calls iwl_mld_start_fw() after having
+called iwl_mld_stop_fw() in the error path of iwl_mld_no_wowlan_resume().
 
-That means that we are trying to send non management frames using
-AES_CMAC, or BIP_* cipher, aren't those ciphers used only for group
-management frames ?
+Fix it.
 
-> [   17.411300] [   T1232] ieee80211_tx_h_select_key: skip_hw=0 tx->key=0000000000000000
-> [   17.411307] [   T1232] mt7921e 0000:04:00.0: mt7921e_tx_prepare_skb: key = 0000000000000000
-> 
-> If I revert commit a104042e2bf6 while keeping the debug patches it shows that
-> the for mt7921e the key is never updated in ieee80211_tx_h_select_key(), mt7921e
-> relies on the key your patch is setting to NULL.
-> 
-> Is this a problem with your patch or with the mt7921e driver that just got
-> revealed by your patch?
+Fixes: 44605365f935 ("iwlwifi: mld: fix building with CONFIG_PM_SLEEP disabled")
+Reported-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Closes: https://lore.kernel.org/r/MW5PR11MB58106D6BC6403845C330C7AAA3A22@MW5PR11MB5810.namprd11.prod.outlook.com/
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Acked-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Not sure yet, do you happen to know which kind of frame mt7921e is
-trying to be sent using this NULL key ?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index 0b5bc5abb82d..99e13cfd1e5f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -475,8 +475,8 @@ static
+ int iwl_mld_mac80211_start(struct ieee80211_hw *hw)
+ {
+ 	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
+-	int ret;
+ 	bool in_d3 = false;
++	int ret = 0;
+ 
+ 	lockdep_assert_wiphy(mld->wiphy);
+ 
+@@ -501,7 +501,7 @@ int iwl_mld_mac80211_start(struct ieee80211_hw *hw)
+ 		iwl_mld_restart_cleanup(mld);
+ 	}
+ 
+-	if (!in_d3) {
++	if (!in_d3 || ret) {
+ 		ret = iwl_mld_start_fw(mld);
+ 		if (ret)
+ 			goto error;
 -- 
-Remi
+2.43.0
+
