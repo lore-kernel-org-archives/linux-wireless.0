@@ -1,165 +1,93 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from forward203b.mail.yandex.net (forward203b.mail.yandex.net [178.154.239.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3567525DCFB;
-	Mon, 14 Apr 2025 08:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8194315DBB3
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 08:41:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744619181; cv=none; b=dsldTaPqG5agNd0gJxtpRkFrXaGsxmJr4aY3YiJZ/6mMHb2mraThgRS9o65s7VfgyecSLhH8WKNwSmtTUWqNgQkd7GURbi1dm4TCshZimPACeokTzDCOMzkq1Jebg3KSjhOty9bzpYwm4hIiomHMbLmU/tg2no/KzW02IO4ARwg=
+	t=1744620113; cv=none; b=QrwFVXmLY56aTqmc0XL4p2g2jLG20oDcL44nM4Zr4ZYYnT570ZpOZhvV1TLMpbECB9bXsY3g7D00kbQaCpOXzjEHA5pI+nB0qPdRci81m9dMPc3XMtawOsqh8tkFIsMCIofa/a8HX/Ed8o0bhuPhE5IoxdtSh8dP09HU87XQOCM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744619181; c=relaxed/simple;
-	bh=/TFJeNWHlIev8JdIPEMQCqz5lniv40TS/OEo5OuIoAw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CVmNzi3Lmfciuuufut6+jzXhzl4uBDR6FFb3ZUIoV/Y0UKWZwrBKjSMk+xbFWEsGQTrQrhlFZ40Kpp35S302d7dC/DbEGGtEOF9FvuONowH7HHk6FvJd4v49zcvWwLmer82S4YZzALg+73S5wEdtO7NIzkJ1tEDNA9XAqNdyeSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=JqYUFeJA; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=+U5jL9J6; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1744620113; c=relaxed/simple;
+	bh=SbypxFFQrsvtr0LTqtO6BioaFRQQoENE/7g3iEJPaz0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JE+JmzBWWRR0Du5MxGmSV9e3el49Xz/gl80KQ7CTEOfSgaQ2pcnYzatfwzGysCyYAI2DZk++uAi7jnMU6gZhLPAahBu2P0xYAiMGusgw9Fq7uoreXr0R4nwmMZ3pXUs/VmHEKdEfrXM4k/yPqAQ/OrWOUUAbcUke3raNkPQwkeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=Rod1DXIg; arc=none smtp.client-ip=178.154.239.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="JqYUFeJA";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="+U5jL9J6"
-From: =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1744619176;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FxGJCgnthnolGvygq4Smo2+2DVKb7rbKZI1gRHd2xwg=;
-	b=JqYUFeJAl3PyH5dSVnQ/H8z3D1uJwePe0ize1trotlTospmX2eXiCx4Ilosj+UxoLLf0Zh
-	cRVHe3TgfM9pePuU1Zlnj0WoPoLaidifRxOA1rQ3ckC2DO416rEAGQnCuljG4THWBhqZZf
-	OfBqig6cCOWF22j3c2YFFQ6oRoWoEwdt3G7lOcREUxEh4h7aVyo33O7qGd7fbpz+75tV/k
-	apr8rml6F4ItKUkca6CQ75yx+fibmD1G509S/EpLLnLlV01ct7vh9cIFJ9tF31/I5O45Yh
-	LlO/DfwmrlUvYEfsQtUp49duhy/oZYZvfR2eCMvbpS1Xoq8J7moszmoI0ze1hg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1744619176;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FxGJCgnthnolGvygq4Smo2+2DVKb7rbKZI1gRHd2xwg=;
-	b=+U5jL9J6WYWJWilPHgU6o/y11xklVr/l/srP1szNwt/tNwT2zcaulMks1dBzSNRdU3yRym
-	4lwHVpUcudep7gAQ==
-Date: Mon, 14 Apr 2025 10:26:07 +0200
-Subject: [PATCH net-next 6/7] ice: Don't use %pK through printk or
- tracepoints
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="Rod1DXIg"
+Received: from forward101b.mail.yandex.net (forward101b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d101])
+	by forward203b.mail.yandex.net (Yandex) with ESMTPS id 409F563DA6
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 11:34:14 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-55.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-55.sas.yp-c.yandex.net [IPv6:2a02:6b8:c23:2db2:0:640:9334:0])
+	by forward101b.mail.yandex.net (Yandex) with ESMTPS id D9FFB60F04;
+	Mon, 14 Apr 2025 11:34:05 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-55.sas.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 4YB5bOjLc4Y0-F2IB6xZx;
+	Mon, 14 Apr 2025 11:34:05 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1744619645; bh=KFFYN8y6ggqJWZtTKjrzHfyLxc01ET1wdJWSkdxMulI=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=Rod1DXIgO5Cqu833CGJ3t8uUIA/h7ByN2YO7Dxl+TSDpsbu4OrQIBhrkSidN6b/el
+	 TkWK3HEEAk2WWcT9M99VUTiBqS0iU8A4zNH7tSgNHxP1ZogMD97rtLZqNXo7lPWWLU
+	 M95f6K6jkqRGQW8MTwtn15UpiBMAfSyK/UXa9l9U=
+Authentication-Results: mail-nwsmtp-smtp-production-main-55.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] wifi: brcmfmac: avoid calling platform_driver_unregister() more than once
+Date: Mon, 14 Apr 2025 11:34:03 +0300
+Message-ID: <20250414083403.561646-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20250414-restricted-pointers-net-v1-6-12af0ce46cdd@linutronix.de>
-References: <20250414-restricted-pointers-net-v1-0-12af0ce46cdd@linutronix.de>
-In-Reply-To: <20250414-restricted-pointers-net-v1-0-12af0ce46cdd@linutronix.de>
-To: Jeff Johnson <jjohnson@kernel.org>, 
- Loic Poulain <loic.poulain@linaro.org>, 
- Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, 
- Tony Nguyen <anthony.l.nguyen@intel.com>, 
- Przemek Kitszel <przemyslaw.kitszel@intel.com>, 
- Andrew Lunn <andrew+netdev@lunn.ch>, 
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
- Saeed Mahameed <saeedm@nvidia.com>, Leon Romanovsky <leon@kernel.org>, 
- Tariq Toukan <tariqt@nvidia.com>
-Cc: ath10k@lists.infradead.org, linux-kernel@vger.kernel.org, 
- ath11k@lists.infradead.org, ath12k@lists.infradead.org, 
- wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org, 
- intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, 
- linux-rdma@vger.kernel.org, 
- =?utf-8?q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1744619172; l=3464;
- i=thomas.weissschuh@linutronix.de; s=20240209; h=from:subject:message-id;
- bh=/TFJeNWHlIev8JdIPEMQCqz5lniv40TS/OEo5OuIoAw=;
- b=bM9iAT+Re45X9Z0x/2a50zVokaO2aeQLV82PsVDGvysJhNvlOX+8yBfMzpvMHELEP51+5nNk1
- c2GR++ydH0CAroKWjqJejeA91merGkf3w3hxl67SAQbeirmq0en0f8M
-X-Developer-Key: i=thomas.weissschuh@linutronix.de; a=ed25519;
- pk=pfvxvpFUDJV2h2nY0FidLUml22uGLSjByFbM6aqQQws=
 
-In the past %pK was preferable to %p as it would not leak raw pointer
-values into the kernel log.
-Since commit ad67b74d2469 ("printk: hash addresses printed with %p")
-the regular %p has been improved to avoid this issue.
-Furthermore, restricted pointers ("%pK") were never meant to be used
-through printk(). They can still unintentionally leak raw pointers or
-acquire sleeping looks in atomic contexts.
+Since 'platform_driver_probe()' may call to 'platform_driver_unregister()'
+itself (and denote such a case with -ENODEV), this case should be catched
+to avoid calling 'platform_driver_unregister()' for a driver which is not
+actually registered. Compile tested only.
 
-Switch to the regular pointer formatting which is safer and
-easier to reason about.
-There are still a few users of %pK left, but these use it through seq_file,
-for which its usage is safe.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Signed-off-by: Thomas Weißschuh <thomas.weissschuh@linutronix.de>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/net/ethernet/intel/ice/ice_main.c  |  2 +-
- drivers/net/ethernet/intel/ice/ice_trace.h | 10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/ice/ice_main.c b/drivers/net/ethernet/intel/ice/ice_main.c
-index d390157b59fe1873ddab78323cdc0bbaea6ad0c5..d27e8816a48fef5014148cae27e52c1801eaaada 100644
---- a/drivers/net/ethernet/intel/ice/ice_main.c
-+++ b/drivers/net/ethernet/intel/ice/ice_main.c
-@@ -9118,7 +9118,7 @@ static int ice_create_q_channels(struct ice_vsi *vsi)
- 		list_add_tail(&ch->list, &vsi->ch_list);
- 		vsi->tc_map_vsi[i] = ch->ch_vsi;
- 		dev_dbg(ice_pf_to_dev(pf),
--			"successfully created channel: VSI %pK\n", ch->ch_vsi);
-+			"successfully created channel: VSI %p\n", ch->ch_vsi);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index cfcf01eb0daa..d60ed50e8bde 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -602,11 +602,11 @@ static struct platform_driver brcmf_pd = {
+ 
+ static int __init brcmfmac_module_init(void)
+ {
+-	int err;
++	int err, probe;
+ 
+ 	/* Get the platform data (if available) for our devices */
+-	err = platform_driver_probe(&brcmf_pd, brcmf_common_pd_probe);
+-	if (err == -ENODEV)
++	probe = platform_driver_probe(&brcmf_pd, brcmf_common_pd_probe);
++	if (probe == -ENODEV)
+ 		brcmf_dbg(INFO, "No platform data available.\n");
+ 
+ 	/* Initialize global module paramaters */
+@@ -615,7 +615,7 @@ static int __init brcmfmac_module_init(void)
+ 	/* Continue the initialization by registering the different busses */
+ 	err = brcmf_core_init();
+ 	if (err) {
+-		if (brcmfmac_pdata)
++		if (probe != -ENODEV)
+ 			platform_driver_unregister(&brcmf_pd);
  	}
- 	return 0;
  
-diff --git a/drivers/net/ethernet/intel/ice/ice_trace.h b/drivers/net/ethernet/intel/ice/ice_trace.h
-index 07aab6e130cd553fa1fcaa2feac9d14f0433239a..4f35ef8d6b299b4acd6c85992c2c93b164a88372 100644
---- a/drivers/net/ethernet/intel/ice/ice_trace.h
-+++ b/drivers/net/ethernet/intel/ice/ice_trace.h
-@@ -130,7 +130,7 @@ DECLARE_EVENT_CLASS(ice_tx_template,
- 				   __entry->buf = buf;
- 				   __assign_str(devname);),
- 
--		    TP_printk("netdev: %s ring: %pK desc: %pK buf %pK", __get_str(devname),
-+		    TP_printk("netdev: %s ring: %p desc: %p buf %p", __get_str(devname),
- 			      __entry->ring, __entry->desc, __entry->buf)
- );
- 
-@@ -158,7 +158,7 @@ DECLARE_EVENT_CLASS(ice_rx_template,
- 				   __entry->desc = desc;
- 				   __assign_str(devname);),
- 
--		    TP_printk("netdev: %s ring: %pK desc: %pK", __get_str(devname),
-+		    TP_printk("netdev: %s ring: %p desc: %p", __get_str(devname),
- 			      __entry->ring, __entry->desc)
- );
- DEFINE_EVENT(ice_rx_template, ice_clean_rx_irq,
-@@ -182,7 +182,7 @@ DECLARE_EVENT_CLASS(ice_rx_indicate_template,
- 				   __entry->skb = skb;
- 				   __assign_str(devname);),
- 
--		    TP_printk("netdev: %s ring: %pK desc: %pK skb %pK", __get_str(devname),
-+		    TP_printk("netdev: %s ring: %p desc: %p skb %p", __get_str(devname),
- 			      __entry->ring, __entry->desc, __entry->skb)
- );
- 
-@@ -205,7 +205,7 @@ DECLARE_EVENT_CLASS(ice_xmit_template,
- 				   __entry->skb = skb;
- 				   __assign_str(devname);),
- 
--		    TP_printk("netdev: %s skb: %pK ring: %pK", __get_str(devname),
-+		    TP_printk("netdev: %s skb: %p ring: %p", __get_str(devname),
- 			      __entry->skb, __entry->ring)
- );
- 
-@@ -228,7 +228,7 @@ DECLARE_EVENT_CLASS(ice_tx_tstamp_template,
- 		    TP_fast_assign(__entry->skb = skb;
- 				   __entry->idx = idx;),
- 
--		    TP_printk("skb %pK idx %d",
-+		    TP_printk("skb %p idx %d",
- 			      __entry->skb, __entry->idx)
- );
- #define DEFINE_TX_TSTAMP_OP_EVENT(name) \
-
 -- 
 2.49.0
 
