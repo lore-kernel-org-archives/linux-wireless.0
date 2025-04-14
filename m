@@ -1,121 +1,166 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9EBE2580EE
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 08:47:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827F625E822
+	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 09:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744620449; cv=none; b=f0uUXGAdZSrrIBpvHkN1CNxoNeKvt/YepN/Q/dEMM7O1ch22MzmkYXI1wD3sjbkKxm9Tk6HXYWEeqQ2MSz6o6oulhvudADOpl2T5kyvZ4p5llV3yq1iQW2ACAIdqtM7LJ9spjCKU+OAFwQGjy0chxQecx48vwQmFZm3MjI1KlP0=
+	t=1744622550; cv=none; b=UEAf1Q6pHWIEGcNBrYbfFQCglhbLiOrWyZ6iTfzW/cut3FUrWma8DhHrImMdePsXAKxHfxoco4BHEkmQ736MgL2vG7bp/BwPJEwGbJeRWkRsXRLX2gsTBSbe3oMB0qWo5TtH2emCO94dIvRgLk0IV2C3cUxnGq33quT6w3nU5NE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744620449; c=relaxed/simple;
-	bh=4sgW7KzE5H5V2TeIgpcbKStUYHAAHnIaMnL0eP2VeHQ=;
+	s=arc-20240116; t=1744622550; c=relaxed/simple;
+	bh=CT/YENH049lc/i4S8uPToUWuRtetJFIzO7sFqNFctRE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F5dcV5TNRA4Lc62fKE1GdGQxFLKjW95q9ybgDYR/YLfGtj8sMbET3vZj21gWIjsEdnhza0NjdgNydZXN/lD69thJBU8Zq29a/3UnHi7la2RGAfDmDuY2SbqqmNg5l8YbQTgwWLLFrpTq0IdTcxtF4CAzlXdaOOPM4N+QzzmNmW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=NI9ZkgYR; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=ap3L5KUuv1+1wYGX6N95Y388kNkEWKSpfI4jmiJL7zswhicZ98aF+s4fHPIC8vGiKyRWgjsSX30t8AzUC79hthRXFTNC+5RNOdzzr0geTOBMMrxgSyODJeFbXp2+XSpLWCzX3kWdS4Bxk/o78hiYLgWTDdE5Hz9DvkuYZ2egfp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=PAVmTvfb; arc=none smtp.client-ip=209.85.167.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="NI9ZkgYR"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53DNJnK8001781
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 08:47:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ZELbaDv0U84tC+LLC7Z/j4gjcJscb5SfXUMMBbX6orE=; b=NI9ZkgYR1ZTqTGzr
-	KAOhZqd45aaMNjOy6p4IH8aWj/94xCBfCitjHevabkKqxbySJTmNKes3J5MNLWYp
-	scAPuP0lFL2mrtwhA1PRVju8EtPZNmGC/OC9NVN9+K1OrAFFFfC6ZBd2CexvVn3N
-	3tFztWtEJQ+ho/n40K6U6JLcTKs0XL+DeMjRmg75yVVeX2liIhmXACfrThs0XPxK
-	HfXtXLdtHqNSzFnksBY/y+v6zxVNo7XA31R2OHXPUW431I5ZuUoX5Zkt0uwsvNPk
-	yI1P0to6n2nm0UOqxc7Gsnv4iqcQ7eoNKRjMPOlT9nmGsT5vRmEB85QBW2/Y9Wgl
-	2wZ6OA==
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yfs13xqd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 08:47:26 +0000 (GMT)
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-739764217ecso3327136b3a.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 01:47:26 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PAVmTvfb"
+Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-3feaedb4d2cso2401263b6e.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Apr 2025 02:22:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1744622547; x=1745227347; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=FZYQSYGdR0512/dBOk/+VrpM7DLNp+23vtrCwIaDtks=;
+        b=PAVmTvfbdfWCniOh8O8+LLR/jtwout66OfiifD8QMdwuel/uITYzimbgmuYIDKOc8d
+         JaB+2nMOk5meY/Zd9oYkZrhGw1Gy9YNYasTG2LWHphyHEvk16goM5744VczewFjYyQV0
+         I47fvmcvr7OhGXRZxnYSqVk8SO9vHNWbOSniU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744620445; x=1745225245;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZELbaDv0U84tC+LLC7Z/j4gjcJscb5SfXUMMBbX6orE=;
-        b=PXrYjZPMKl4UTBSJcSASt1ZERBvTGnq8oLFIov4SGE61Ixa4ssMQhHH+LJIyGN67qU
-         ziDp+Uc8egvlTw0qBbAv3PXflr+hJbHEpRCDCv4I2s8q9wOkebp5Or2LsqwnWXJhgRdy
-         etuhEKiTdbqrLH8qFhkiAxV8pC4l4XNI0HWGYJG/Mzh04lACum0yLqCQJwgDreqMwSpj
-         r61NFCzZ4IkklLHVTWPGkZA3cnyIWkfXiSz5E/4ETA1bNA3dn6cgt3Ma61gcLK7lGUqT
-         mtB61wMTwXv9LUJqWJex/PX9y9n2kcwOfqZ3EhkZC9m+RvrT0+vm7oqMH2I6ocPjbmue
-         Y9GA==
-X-Forwarded-Encrypted: i=1; AJvYcCVZ4rzOymFw1chh0trmbos84I9V/BJQrC6Pmj9bbf+NhpeovLDYqcRYYbc2gqoeFyOSdVR3jquUqUu16mph7w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzoJIWKusccixHhgikfXr2oBMSQh1/dy3h20jjNBKcgjU1yplKw
-	5T2ZPyQ4PZ/m4Z5jbGZBgzt/ZlprZBu2kw+JpZQMPRG3QYV9vgjE2vXgxNRsp6VzyQn8wMo7zmo
-	hS1FrxKWAwf9Q5hAOFRgVCtIgAeQFRb6EO9gnCU5qBuj2UynCxUFQ67TxLRwbfJPuDg==
-X-Gm-Gg: ASbGnctgLN88irfpfoxTNn5bKfXbdk/vMqNnx1FQre/nNAvNYSgjyGnpWSEVxRRyhuI
-	Ih1V1gf6eoqhL3xsY1dw3uR2XeUUu6wlhwXNDmIsPdoRdqEW9ow5GiYOkaOAyn2k4H40O6KN67q
-	rSR0f2EreOoUZo96PG/syToIf1hMrwm0gzUCQ/F9/2dK/SsfcRMkuPpQsrfU/UwQmXJS+WTQPbi
-	5rW9S6fR0pcejw+BVPz5N9bvBsY4tWnF6d8Hw9uc7Cvw7ewAe7xV3twFCHJ45wrg8YOk7R6BGt7
-	4GW0DHWfr/d0OpDVUUXhwmCarzB2UWM20H1JiIbd8nPfs+8p9pQi/g==
-X-Received: by 2002:a05:6a00:3cc2:b0:730:9637:b2ff with SMTP id d2e1a72fcca58-73bd0cda1ecmr14619314b3a.7.1744620444993;
-        Mon, 14 Apr 2025 01:47:24 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEJWLlQ30HfEaPv1YPRJFLijVISI9iFiCOfu82TsEXEVpSgZrX0hTvU7P/GWv75CQw+8aNuGg==
-X-Received: by 2002:a05:6a00:3cc2:b0:730:9637:b2ff with SMTP id d2e1a72fcca58-73bd0cda1ecmr14619279b3a.7.1744620444335;
-        Mon, 14 Apr 2025 01:47:24 -0700 (PDT)
-Received: from [10.152.204.0] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73bd22f10f4sm6113090b3a.113.2025.04.14.01.47.22
+        d=1e100.net; s=20230601; t=1744622547; x=1745227347;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FZYQSYGdR0512/dBOk/+VrpM7DLNp+23vtrCwIaDtks=;
+        b=Kv0XHXpUznwZTqLl3hNwdy4zYyDk6Fz92jepyjnBHOEasJvJc1hDnHUuckphSnnx5j
+         QAPVAk2REKHzNgNth5Trh2c9Cx41ev0b6RScfR6/wP5gBvViKbWil2WaaaXyWnJiKtx8
+         FnhitEuVX0TWJNOPJytSu0PgOYfIHb/fgBoJyc1IvKBuAHawSC9xDWsn20XTeD1zLHTK
+         4N+8R48nlvAgD1in7nrbDa465chftc1dVikmckjVP9YfD6cyeIR2DQSjrtW4T7hU5LTU
+         9ZYoISKBdbABzH2BlIrpDl8zDSXFENl+m0gYo5udBnOOAamD4sObd4HZf/MoqxRyQv4r
+         ToDw==
+X-Gm-Message-State: AOJu0YzP6lcR3GVI0WEA4uCLFL2TQnNg/VG7b1KJxhBLcsDmLWzwHHia
+	6sVVOXVrCF4yhCr1/1H0B6WqluqUHQBfuHzwBbxlSFUIcjJoefIpSXs4lvFw2A==
+X-Gm-Gg: ASbGncu+CzW1zImsUEMxUr6adT8YR3oXvNZsOICTIzUGaaVKRUBdVWQ4jUDX9rKgIlE
+	N70J0XCV92+Fau9tPHkxaRs6ENkv7L4LfGI/GYxnGsG2KYgzUGCg0yb7PsLsr6JhV0LRkgIzsXQ
+	mQ75mEbX6BE/rw/uCMcMPIC2s2Cywo+v4W/7henHXNzvhz6GedWXR4rMLCJNVJiuMjCk3l8tVhi
+	nLlPKyB9mtJenuIzqy5Vc43uX0gwWSyzUsGR38pOb7aGUkrwjEDLcFdmyuaMttDkcPnU8U171kt
+	PREc0nT7GKkEiYDltb0Hl8iA8QJa27ioUrcHktsqAILmsf6QT1ap/8TkxVO7TifGxb8=
+X-Google-Smtp-Source: AGHT+IHMPGnr/AdAt7EyHWCE+ffxwrVPeYCLplVvTrY0KgmPGnMZH/mTkah55Cp9IUWwsF6F+Wh6ug==
+X-Received: by 2002:a05:6808:3095:b0:3f8:3eeb:11a3 with SMTP id 5614622812f47-4008505c41fmr8010437b6e.11.1744622547068;
+        Mon, 14 Apr 2025 02:22:27 -0700 (PDT)
+Received: from [10.176.68.80] ([192.19.176.227])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-400762d5603sm1862462b6e.26.2025.04.14.02.22.23
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 14 Apr 2025 01:47:24 -0700 (PDT)
-Message-ID: <c7558e1e-7030-347a-96c3-4682f32558f9@oss.qualcomm.com>
-Date: Mon, 14 Apr 2025 14:17:21 +0530
+        Mon, 14 Apr 2025 02:22:25 -0700 (PDT)
+Message-ID: <d59805fc-578b-4421-90e3-40e322be0652@broadcom.com>
+Date: Mon, 14 Apr 2025 11:22:21 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH ath-next v2 2/2] wifi: ath12k: Use scan link ID 15 for all
- scan operations
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: brcmfmac: avoid calling
+ platform_driver_unregister() more than once
+To: Dmitry Antipov <dmantipov@yandex.ru>
+Cc: linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org
+References: <20250414083403.561646-1-dmantipov@yandex.ru>
 Content-Language: en-US
-To: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-References: <20250411-fix_scan_vdev_handling-v2-0-b6740896c144@oss.qualcomm.com>
- <20250411-fix_scan_vdev_handling-v2-2-b6740896c144@oss.qualcomm.com>
-From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-In-Reply-To: <20250411-fix_scan_vdev_handling-v2-2-b6740896c144@oss.qualcomm.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Autocrypt: addr=arend.vanspriel@broadcom.com; keydata=
+ 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
+In-Reply-To: <20250414083403.561646-1-dmantipov@yandex.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=P9I6hjAu c=1 sm=1 tr=0 ts=67fccb9e cx=c_pps a=m5Vt/hrsBiPMCU0y4gIsQw==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=EUspDBNiAAAA:8 a=I5J-iTEKvd7tQp2LRP8A:9 a=QEXdDO2ut3YA:10
- a=IoOABgeZipijB_acs4fv:22
-X-Proofpoint-GUID: 1EUOq-TWCDFr26VsMoPLJ-2HBiRV_Hnf
-X-Proofpoint-ORIG-GUID: 1EUOq-TWCDFr26VsMoPLJ-2HBiRV_Hnf
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-14_02,2025-04-10_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- clxscore=1015 bulkscore=0 impostorscore=0 phishscore=0 suspectscore=0
- mlxscore=0 spamscore=0 malwarescore=0 adultscore=0 priorityscore=1501
- mlxlogscore=746 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504140063
 
-
-
-On 4/11/2025 8:46 AM, Aditya Kumar Singh wrote:
-> According to the code documentation in ath12k_mac_op_hw_scan(), "if no
-> links of an ML VIF are already active on the radio corresponding to the
-> given scan frequency, the scan link (link ID 15) should be used". This rule
-> should apply to non-ML interfaces as well to maintain uniformity across the
-> driver. However, currently, link 0 is selected as the scan link during
-> non-ML operations.
+On 4/14/2025 10:34 AM, Dmitry Antipov wrote:
+> Since 'platform_driver_probe()' may call to 'platform_driver_unregister()'
+> itself (and denote such a case with -ENODEV), this case should be catched
+> to avoid calling 'platform_driver_unregister()' for a driver which is not
+> actually registered. Compile tested only.
 > 
-> Update the code to use scan link ID 15 in all cases.
-> 
-> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+This is unnecessary. Will try and clarify below...
+
+> Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+> ---
+>   drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> index cfcf01eb0daa..d60ed50e8bde 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> @@ -602,11 +602,11 @@ static struct platform_driver brcmf_pd = {
+>   
+>   static int __init brcmfmac_module_init(void)
+>   {
+> -	int err;
+> +	int err, probe;
+>   
+>   	/* Get the platform data (if available) for our devices */
+> -	err = platform_driver_probe(&brcmf_pd, brcmf_common_pd_probe);
+> -	if (err == -ENODEV)
+> +	probe = platform_driver_probe(&brcmf_pd, brcmf_common_pd_probe);
+> +	if (probe == -ENODEV)
+>   		brcmf_dbg(INFO, "No platform data available.\n");
+>   
+>   	/* Initialize global module paramaters */
+> @@ -615,7 +615,7 @@ static int __init brcmfmac_module_init(void)
+>   	/* Continue the initialization by registering the different busses */
+>   	err = brcmf_core_init();
+>   	if (err) {
+> -		if (brcmfmac_pdata)
+> +		if (probe != -ENODEV)
+
+When the platform_driver_probe() fails it means that brcmfmac_pdata will 
+be NULL so it provides the same info as the returned error. So the net 
+result is the same and no platform_driver_unregister() will be called.
+
+Regards,
+Arend
