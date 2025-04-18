@@ -1,256 +1,266 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FABF268C7C;
-	Fri, 18 Apr 2025 02:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4B84101E6
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2025 03:18:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744945173; cv=none; b=pA1Z3eRMUtTmUMUEyHXdwKCSXKyU7uyWIEdhso8T1kYRRIxJ6SP3NgYrRMWgHUpIuxyzUOX7dkkexT40IVY1H0PSmCGFEQ3DJlyL7zZLXudC9zacjJSbsF+eJi9jC0o/ncEOZRdXh1VcBk04EgOHEnO1r+5BNMNCCvj4+BT1so4=
+	t=1744946286; cv=none; b=K9Fod2a8oI+KTehgRAuvnO6cB9jkN9eyGqmnmld2RpLMXXhQZeR78uLTCwQycpafrkl8Pk6mlphhTlpFhlrezFgeGbRQ5AheLilI5U9qI17Nf0whORlKpUTMpRKgQjB07hrniYQRouIkIWCNaA+M4HFG+CmyNaV3TYz9fsI/VIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744945173; c=relaxed/simple;
-	bh=xDlA933+86jwD8GfbBfiPUe9S9xmELU33QWtBSQJQiI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=EN+GbyCiog3jOzx7meIcjlz0yk5H1qBi6Qp/+otaIyhLnH7sc/yx044Zzn7XyOEtu1w7A4JMRmB/XOd88FUK2n6H4piFnkxg7a6IXRrJPy2L4Thkh+CMuxfWSPcwhpunf0pzrx0d+JG3/PSGz1bJqW0B3feqZnDJqJ0wUJJgd9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Trut2AnU; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1744946286; c=relaxed/simple;
+	bh=yXg4f4lZgHe9tVnL0y/LiHP4iAb+wnawcjpZjo38g2c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IxhmkTTU0c7zsh6y7oPnW8fW5OmNqBcWyNMJMwMOxT8ySIsqQXfbKq9Cdn3VahnH5MIttWGgvL6eJA3gV/t4MkTBUKSxb1DB60B5ifi14lWJ85T+X9Xsinn1sMmOHC8ayfQst+GngQA3hneXi5Ddc3ljJVEW1i22BYFbHqCzrLY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=csZoymuc; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Trut2AnU"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53HClNEm015930;
-	Fri, 18 Apr 2025 02:56:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="csZoymuc"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53I1lLSE015328
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2025 03:18:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ogKk7Ch4n5KRdey7TSKOBxUhF8fwc5Le2tMxYatMVrc=; b=Trut2AnUgVUx+l8l
-	/IJbyOuFIXOAaT7gzOKYHjrmb+L6fbGkiXsv51UCR0X2i/OappfYkoYYvNqTczgY
-	5s3ZC/o9OkJQ+7dftrpvbCym7y56qRNW1So3MVX5DZ+iNrtUK4Ajl8OOpPijAkJi
-	UE4LGFweo/Arcs7uHtSn3RAilXJ7aLQNaFm6gP12aKRtaQkUp94BduI8xwpdEva8
-	EWo+qhtiwpq5bY21oxVGWwx6bx4eWwaYhor+8WfZ4atNaYNpQDp+gTbwhfyIwhL3
-	kloneoW2lKOWNEBR0piiVZnS45TgvgmheERM29iDppvHDuxZOKf+3fVjT+SSgkuz
-	bVQArQ==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45ydhqh1jg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Apr 2025 02:56:16 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53I2uFTJ021569
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Apr 2025 02:56:15 GMT
-Received: from [127.0.1.1] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 17 Apr
- 2025 19:56:13 -0700
-From: Baochen Qiang <quic_bqiang@quicinc.com>
-Date: Fri, 18 Apr 2025 10:55:44 +0800
-Subject: [PATCH ath-next 11/15] wifi: ath12k: add parse of transmit power
- envelope element
+	sjNtsLjl1MhP4VJ4DgWpdYaRCGJ6qNprYXb4Lhoqtl0=; b=csZoymucQRtxdO7W
+	wocwxbUiKv0Y877RAeEPght3UU18nywM9azD6bVR93JEEhyT97VgUxoEeoe3UU6H
+	yuKDG8MjumSvmZu46mHxjr8C13bKxtJwJQ1B7Q9tUPwPdaxaTMgNoSoAbS5wb9Ry
+	fbV+Rm9ccz/cQ/9AMBaPe+MCocptMu4rlp75u+pHMWcbMHzRh6KnbJHfbW3ICbdu
+	Rs7cpJvova1sj/GeClJYCvZhXxIAdzGwyqdYEtkAU4Vf2RU755RiA3N1L1KU93MO
+	CEZB4Ske+sboL15gA1GWu6pVrlPXKgOjXuw9oV7xEuUBdF5Oih0j0SNJYBhsDF/w
+	ozOwnA==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45ygd6ry23-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 18 Apr 2025 03:18:03 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-af423fb4f0eso887243a12.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Apr 2025 20:18:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744946283; x=1745551083;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=sjNtsLjl1MhP4VJ4DgWpdYaRCGJ6qNprYXb4Lhoqtl0=;
+        b=fzTz/gGT4cEAKh9ZvAN+xT56DS3YUxA/1O3uwKla4Pt4tBl76YNolxyqCt8Ew7z+1g
+         rVyz5016dg+y6Z/A+z4/kq4BNoHY7gtkBs9HZm3aTD8oDU0bXm2H1kOslEWF/95F9xxN
+         wFw5NdiGqkg/UB0Yn6JiepGJvEHEa8K/EadDjeyjRwZ8R8DAyIE8VCDA1pEcjuiK9JHX
+         QpNI6W6LpO2rwDdYmU49/agttkdyKEutWWm6qtD6dj4pxg/skid2PNkoZz0z36iw9hz4
+         ugoknm5LX6nD79OIMVkKYXHakkT+0jQqdR3l9Q4ivXTT4+Ds7CQNvvTGvTa2uftSflKf
+         ZzGw==
+X-Gm-Message-State: AOJu0YyXxbhp0kMu+nf3UVY6K9qQJmMJiodBuH3PATps6AHvZQ5PqIbQ
+	m5hilOwFFM8iJ2mZlSfjQ6Dvpofjkua7GgiAoYj6gB4Bt8aQgc8yyC/5/QbZQcryA2kTLdcVl1w
+	jNuSJ5ZJyI9+5uk2tDaRenNUF7f8RjtlYZUKUxmvx386njppXFW1aGpsLMWF8VwXrHw==
+X-Gm-Gg: ASbGncsX16gPw7ObowQsJUaqy+YddOkcM7bps0/+MBY3QcjL5VghhnSwTvAEntvLrpF
+	8l4A5G1QZFyKRZmd664j3dhNwFKdANQ65hbxm63mLglMteNxO/AG2c3zZ/9o1YKigZoROGj8cfX
+	E2erijOFPXFL3yFMwD3F9f52NW3U5ZY4ZBdRZo2RvYj/AKdN7Q0GczwnUo/bxd3C8OHkjCargrU
+	6cK12d1PNpGcjsduv52RDzEW0MlFSgiuyp5B5IBYoz23DJxYkVENVGs9pRbw7LjbXJ5OEEoFk21
+	4JtbdBkiwL1A7BiC6vSYp+0rw7xdlPWZDFqOUPgXIK0AyWZaqScfFyiM3B0Iy97lv4vssV0tuJq
+	W/j6t
+X-Received: by 2002:a17:902:f706:b0:224:1c41:a4cd with SMTP id d9443c01a7336-22c5356dfbbmr17162915ad.3.1744946282934;
+        Thu, 17 Apr 2025 20:18:02 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH3PYD+Pg4UGB6Ij/R2YPtoD3eHZJXj0rk7RfPp1Oe6quZyohjPzMA5w0TZdD794X1F60+Wrw==
+X-Received: by 2002:a17:902:f706:b0:224:1c41:a4cd with SMTP id d9443c01a7336-22c5356dfbbmr17162555ad.3.1744946282334;
+        Thu, 17 Apr 2025 20:18:02 -0700 (PDT)
+Received: from [192.168.1.111] (c-73-202-227-126.hsd1.ca.comcast.net. [73.202.227.126])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73dbfaacf3dsm677237b3a.134.2025.04.17.20.18.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Apr 2025 20:18:02 -0700 (PDT)
+Message-ID: <83e417e5-31d8-4fe5-9774-fd97fb51f663@oss.qualcomm.com>
+Date: Thu, 17 Apr 2025 20:18:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next v5] wifi: ath12k: read country code from SMBIOS
+ for WCN7850
+To: Kang Yang <kang.yang@oss.qualcomm.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, Wen Gong <quic_wgong@quicinc.com>
+References: <20250417024227.1712-1-kang.yang@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20250417024227.1712-1-kang.yang@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-ID: <20250418-ath12k-6g-lp-vlp-v1-11-c869c86cad60@quicinc.com>
-References: <20250418-ath12k-6g-lp-vlp-v1-0-c869c86cad60@quicinc.com>
-In-Reply-To: <20250418-ath12k-6g-lp-vlp-v1-0-c869c86cad60@quicinc.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Jeff Johnson
-	<jjohnson@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        Baochen Qiang <quic_bqiang@quicinc.com>
-X-Mailer: b4 0.14.2
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: T_w57GWg5TQfDpAFtD5gLAzYx6Y53No0
-X-Authority-Analysis: v=2.4 cv=C7DpyRP+ c=1 sm=1 tr=0 ts=6801bf50 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=COk6AnOGAAAA:8 a=BOI7iK2FISCZ2k_OSdsA:9 a=QEXdDO2ut3YA:10
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: T_w57GWg5TQfDpAFtD5gLAzYx6Y53No0
+X-Proofpoint-ORIG-GUID: yrJ93Mz2L7hSzRsVDl5LrxlDcOelSOI9
+X-Proofpoint-GUID: yrJ93Mz2L7hSzRsVDl5LrxlDcOelSOI9
+X-Authority-Analysis: v=2.4 cv=ANaQCy7k c=1 sm=1 tr=0 ts=6801c46b cx=c_pps a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=e70TP3dOR9hTogukJ0528Q==:17 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=0wfVUD6UvdP1dahPgv4A:9
+ a=QEXdDO2ut3YA:10 a=x9snwWr2DeNwDh03kgHS:22 a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-18_01,2025-04-17_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=999
- priorityscore=1501 suspectscore=0 clxscore=1015 spamscore=0 bulkscore=0
- impostorscore=0 phishscore=0 lowpriorityscore=0 malwarescore=0 mlxscore=0
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504180020
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ mlxlogscore=999 suspectscore=0 clxscore=1015 lowpriorityscore=0
+ phishscore=0 impostorscore=0 spamscore=0 priorityscore=1501 malwarescore=0
+ bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+ definitions=main-2504180022
 
-The Transmit Power Envelope element conveys the local maximum transmit
-power for various transmission bandwidths, this element is present in
-various frames, e.g. beacon and probe response etc, transmitted by AP.
-A station shall determine a local maximum transmit power from it.
+On 4/16/2025 7:42 PM, Kang Yang wrote:
+> From: Wen Gong <quic_wgong@quicinc.com>
+> 
+> Read the country code from SMBIOS and send it to the firmware. The
+> firmware will then indicate the regulatory domain information for
+> the country code, which ath12k will use.
+> 
+> dmesg:
+> [ 1242.637253] ath12k_pci 0000:02:00.0: worldwide regdomain setting from SMBIOS
+> [ 1242.637259] ath12k_pci 0000:02:00.0: bdf variant name not found.
+> [ 1242.637261] ath12k_pci 0000:02:00.0: SMBIOS bdf variant name not set.
+> [ 1242.927543] ath12k_pci 0000:02:00.0: set current country pdev id 0 alpha2 00
+> 
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0-02582-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1
+> 
+> Signed-off-by: Wen Gong <quic_wgong@quicinc.com>
+> Signed-off-by: Kang Yang <kang.yang@oss.qualcomm.com>
+> ---
+> 
+> Note: This patch is an old patch in public review written by
+> Wen Gong. Just resend it for him.
+> Link: https://lore.kernel.org/linux-wireless/20230913105156.17618-1-quic_wgong@quicinc.com/
+> 
+> v5:
+>     1. fix "From" header.
+>     2. rebase on tag: ath/main(ath-202504141512).
+>     3. change quic email to oss email.
+> v4:
+>     1. fix assignment error for case ATH12K_SMBIOS_CC_ISO.
+>     2. rebase on tag: ath/main(ath-202503251458).
+> v3:
+>     1. rebase on tag: ath-202503172347.
+>     2. add branch tag.
+>     3. add descripition for Wen Gong.
+> v2:
+>     1. rebase on tag: ath/main(ath-202502181756).
+>     2. rewrite commit message.
+> 
+> ---
+>  drivers/net/wireless/ath/ath12k/core.c | 26 +++++++++++++++++++++++--
+>  drivers/net/wireless/ath/ath12k/core.h | 27 +++++++++++++++++++++++++-
+>  drivers/net/wireless/ath/ath12k/mac.c  | 11 +++++++++++
+>  3 files changed, 61 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+> index 9b23329f1bf2..b5ade9c7530d 100644
+> --- a/drivers/net/wireless/ath/ath12k/core.c
+> +++ b/drivers/net/wireless/ath/ath12k/core.c
+> @@ -697,7 +697,7 @@ static void ath12k_core_stop(struct ath12k_base *ab)
+>  	/* De-Init of components as needed */
+>  }
+>  
+> -static void ath12k_core_check_bdfext(const struct dmi_header *hdr, void *data)
+> +static void ath12k_core_check_cc_code_bdfext(const struct dmi_header *hdr, void *data)
+>  {
+>  	struct ath12k_base *ab = data;
+>  	const char *magic = ATH12K_SMBIOS_BDF_EXT_MAGIC;
+> @@ -719,6 +719,28 @@ static void ath12k_core_check_bdfext(const struct dmi_header *hdr, void *data)
+>  		return;
+>  	}
+>  
+> +	spin_lock_bh(&ab->base_lock);
+> +
+> +	switch (smbios->country_code_flag) {
+> +	case ATH12K_SMBIOS_CC_ISO:
+> +		ab->new_alpha2[0] = u16_get_bits(smbios->cc_code >> 8, 0xff);
+> +		ab->new_alpha2[1] = u16_get_bits(smbios->cc_code, 0xff);
+> +		ath12k_dbg(ab, ATH12K_DBG_BOOT, "boot smbios cc_code %c%c\n",
+> +			   ab->new_alpha2[0], ab->new_alpha2[1]);
+> +		break;
+> +	case ATH12K_SMBIOS_CC_WW:
+> +		ab->new_alpha2[0] = '0';
+> +		ab->new_alpha2[1] = '0';
+> +		ath12k_dbg(ab, ATH12K_DBG_BOOT, "boot smbios worldwide regdomain\n");
+> +		break;
+> +	default:
+> +		ath12k_dbg(ab, ATH12K_DBG_BOOT, "boot ignore smbios country code setting %d\n",
+> +			   smbios->country_code_flag);
+> +		break;
+> +	}
+> +
+> +	spin_unlock_bh(&ab->base_lock);
+> +
+>  	if (!smbios->bdf_enabled) {
+>  		ath12k_dbg(ab, ATH12K_DBG_BOOT, "bdf variant name not found.\n");
+>  		return;
+> @@ -758,7 +780,7 @@ static void ath12k_core_check_bdfext(const struct dmi_header *hdr, void *data)
+>  int ath12k_core_check_smbios(struct ath12k_base *ab)
+>  {
+>  	ab->qmi.target.bdf_ext[0] = '\0';
+> -	dmi_walk(ath12k_core_check_bdfext, ab);
+> +	dmi_walk(ath12k_core_check_cc_code_bdfext, ab);
+>  
+>  	if (ab->qmi.target.bdf_ext[0] == '\0')
+>  		return -ENODATA;
+> diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+> index 44e02ebb1071..3f9fcd4d6f20 100644
+> --- a/drivers/net/wireless/ath/ath12k/core.h
+> +++ b/drivers/net/wireless/ath/ath12k/core.h
+> @@ -175,9 +175,34 @@ struct ath12k_ext_irq_grp {
+>  	struct net_device *napi_ndev;
+>  };
+>  
+> +enum ath12k_smbios_cc_type {
+> +	/* disable country code setting from SMBIOS */
+> +	ATH12K_SMBIOS_CC_DISABLE = 0,
+> +
+> +	/* set country code by ANSI country name, based on ISO3166-1 alpha2 */
+> +	ATH12K_SMBIOS_CC_ISO = 1,
+> +
+> +	/* worldwide regdomain */
+> +	ATH12K_SMBIOS_CC_WW = 2,
+> +};
+> +
+>  struct ath12k_smbios_bdf {
+>  	struct dmi_header hdr;
+> -	u32 padding;
+> +	u8 features_disabled;
+> +
+> +	/* enum ath12k_smbios_cc_type */
+> +	u8 country_code_flag;
+> +
+> +	/* To set specific country, you need to set country code
+> +	 * flag=ATH12K_SMBIOS_CC_ISO first, then if country is United
+> +	 * States, then country code value = 0x5553 ("US",'U' = 0x55, 'S'=
+> +	 * 0x53). To set country to INDONESIA, then country code value =
+> +	 * 0x4944 ("IN", 'I'=0x49, 'D'=0x44). If country code flag =
+> +	 * ATH12K_SMBIOS_CC_WW, then you can use worldwide regulatory
+> +	 * setting.
+> +	 */
+> +	u16 cc_code;
+> +
+>  	u8 bdf_enabled;
+>  	u8 bdf_ext[];
+>  } __packed;
+> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+> index 7af12733a1ff..aee3080a934c 100644
+> --- a/drivers/net/wireless/ath/ath12k/mac.c
+> +++ b/drivers/net/wireless/ath/ath12k/mac.c
+> @@ -11550,6 +11550,17 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+>  			goto err_unregister_hw;
+>  		}
+>  
+> +		if (ar->ab->hw_params->current_cc_support && ab->new_alpha2[0]) {
+> +			struct wmi_set_current_country_arg current_cc = {};
+> +
+> +			memcpy(&current_cc.alpha2, ab->new_alpha2, 2);
+> +			memcpy(&ar->alpha2, ab->new_alpha2, 2);
+> +			ret = ath12k_wmi_send_set_current_country_cmd(ar, &current_cc);
+> +			if (ret)
+> +				ath12k_warn(ar->ab,
+> +					    "failed set cc code for mac register: %d\n", ret);
 
-So parse and save them for later use.
+FYI I split this line in pending to fix the ath12k-check:
+drivers/net/wireless/ath/ath12k/mac.c:11648: line length of 94 exceeds 90 columns
 
-Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git/commit/?h=pending&id=2d2ccff4c0efa4cb55d0a21c75c6e7162788f9db
 
-Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
----
- drivers/net/wireless/ath/ath12k/core.h |  2 +
- drivers/net/wireless/ath/ath12k/mac.c  | 71 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/mac.h  | 40 +++++++++++++++++++
- 3 files changed, 113 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index ef65e8b35b8cdac395ef456d0d9aa0c338b7da03..9f64fa00b131357c5c1b75f4eacae912f563416d 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -317,6 +317,8 @@ struct ath12k_link_vif {
- 
- 	/* only used in station mode */
- 	bool is_sta_assoc_link;
-+
-+	struct ath12k_reg_tpc_power_info reg_tpc_info;
- };
- 
- struct ath12k_vif {
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 4d59572ff207dd084b32bff51fa973e525f2aa70..c2f3aa3ce60a32b288590bd81cdcdabe6fab547e 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -9742,6 +9742,72 @@ static int ath12k_start_vdev_delay(struct ath12k *ar,
- 	return 0;
- }
- 
-+static void ath12k_mac_parse_tx_pwr_env(struct ath12k *ar,
-+					struct ath12k_link_vif *arvif)
-+{
-+	struct ieee80211_bss_conf *bss_conf = ath12k_mac_get_link_bss_conf(arvif);
-+	struct ath12k_reg_tpc_power_info *tpc_info = &arvif->reg_tpc_info;
-+	struct ieee80211_parsed_tpe_eirp *local_non_psd, *reg_non_psd;
-+	struct ieee80211_parsed_tpe_psd *local_psd, *reg_psd;
-+	struct ieee80211_parsed_tpe *tpe = &bss_conf->tpe;
-+	enum wmi_reg_6g_client_type client_type;
-+	struct ath12k_reg_info *reg_info;
-+	struct ath12k_base *ab = ar->ab;
-+	bool psd_valid, non_psd_valid;
-+	int i;
-+
-+	reg_info = ab->reg_info[ar->pdev_idx];
-+	client_type = reg_info->client_type;
-+
-+	local_psd = &tpe->psd_local[client_type];
-+	reg_psd = &tpe->psd_reg_client[client_type];
-+	local_non_psd = &tpe->max_local[client_type];
-+	reg_non_psd = &tpe->max_reg_client[client_type];
-+
-+	psd_valid = local_psd->valid | reg_psd->valid;
-+	non_psd_valid = local_non_psd->valid | reg_non_psd->valid;
-+
-+	if (!psd_valid && !non_psd_valid) {
-+		ath12k_warn(ab,
-+			    "no transmit power envelope match client power type %d\n",
-+			    client_type);
-+		return;
-+	};
-+
-+	if (psd_valid) {
-+		tpc_info->is_psd_power = true;
-+
-+		tpc_info->num_pwr_levels = max(local_psd->count,
-+					       reg_psd->count);
-+		if (tpc_info->num_pwr_levels > ATH12K_NUM_PWR_LEVELS)
-+			tpc_info->num_pwr_levels = ATH12K_NUM_PWR_LEVELS;
-+
-+		for (i = 0; i < tpc_info->num_pwr_levels; i++) {
-+			tpc_info->tpe[i] = min(local_psd->power[i],
-+					       reg_psd->power[i]) / 2;
-+			ath12k_dbg(ab, ATH12K_DBG_MAC,
-+				   "TPE PSD power[%d] : %d\n",
-+				   i, tpc_info->tpe[i]);
-+		}
-+	} else {
-+		tpc_info->is_psd_power = false;
-+		tpc_info->eirp_power = 0;
-+
-+		tpc_info->num_pwr_levels = max(local_non_psd->count,
-+					       reg_non_psd->count);
-+		if (tpc_info->num_pwr_levels > ATH12K_NUM_PWR_LEVELS)
-+			tpc_info->num_pwr_levels = ATH12K_NUM_PWR_LEVELS;
-+
-+		for (i = 0; i < tpc_info->num_pwr_levels; i++) {
-+			tpc_info->tpe[i] = min(local_non_psd->power[i],
-+					       reg_non_psd->power[i]) / 2;
-+			ath12k_dbg(ab, ATH12K_DBG_MAC,
-+				   "non PSD power[%d] : %d\n",
-+				   i, tpc_info->tpe[i]);
-+		}
-+	}
-+}
-+
- static int
- ath12k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
-@@ -9780,6 +9846,11 @@ ath12k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
- 		   "mac chanctx assign ptr %p vdev_id %i\n",
- 		   ctx, arvif->vdev_id);
- 
-+	if (ath12k_wmi_supports_6ghz_cc_ext(ar) &&
-+	    ctx->def.chan->band == NL80211_BAND_6GHZ &&
-+	    ahvif->vdev_type == WMI_VDEV_TYPE_STA)
-+		ath12k_mac_parse_tx_pwr_env(ar, arvif);
-+
- 	arvif->punct_bitmap = ctx->def.punctured;
- 
- 	/* for some targets bss peer must be created before vdev_start */
-diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
-index da37332352fe66c350bbe8d2285ba3f76bfc9d81..d167b969406b071e95d5d2812288657f22d9092e 100644
---- a/drivers/net/wireless/ath/ath12k/mac.h
-+++ b/drivers/net/wireless/ath/ath12k/mac.h
-@@ -67,6 +67,46 @@ struct ath12k_mac_get_any_chanctx_conf_arg {
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- };
- 
-+/**
-+ * struct ath12k_chan_power_info - TPE containing power info per channel chunk
-+ * @chan_cfreq: channel center freq (MHz)
-+ * e.g.
-+ * channel 37/20 MHz,  it is 6135
-+ * channel 37/40 MHz,  it is 6125
-+ * channel 37/80 MHz,  it is 6145
-+ * channel 37/160 MHz, it is 6185
-+ * @tx_power: transmit power (dBm)
-+ */
-+struct ath12k_chan_power_info {
-+	u16 chan_cfreq;
-+	s8 tx_power;
-+};
-+
-+/* ath12k only deals with 320 MHz, so 16 subchannels */
-+#define ATH12K_NUM_PWR_LEVELS  16
-+
-+/**
-+ * struct ath12k_reg_tpc_power_info - regulatory TPC power info
-+ * @is_psd_power: is PSD power or not
-+ * @eirp_power: Maximum EIRP power (dBm), valid only if power is PSD
-+ * @ap_power_type: type of power (SP/LPI/VLP)
-+ * @num_pwr_levels: number of power levels
-+ * @reg_max: Array of maximum TX power (dBm) per PSD value
-+ * @ap_constraint_power: AP constraint power (dBm)
-+ * @tpe: TPE values processed from TPE IE
-+ * @chan_power_info: power info to send to firmware
-+ */
-+struct ath12k_reg_tpc_power_info {
-+	bool is_psd_power;
-+	u8 eirp_power;
-+	enum wmi_reg_6g_ap_type ap_power_type;
-+	u8 num_pwr_levels;
-+	u8 reg_max[ATH12K_NUM_PWR_LEVELS];
-+	u8 ap_constraint_power;
-+	s8 tpe[ATH12K_NUM_PWR_LEVELS];
-+	struct ath12k_chan_power_info chan_power_info[ATH12K_NUM_PWR_LEVELS];
-+};
-+
- extern const struct htt_rx_ring_tlv_filter ath12k_mac_mon_status_filter_default;
- 
- #define ATH12K_SCAN_11D_INTERVAL		600000
-
--- 
-2.34.1
+> +		}
+> +
+>  		ath12k_fw_stats_init(ar);
+>  		ath12k_debugfs_register(ar);
+>  	}
+> 
+> base-commit: b80c52642c1159c2596776b39b06eb1c2e36baff
 
