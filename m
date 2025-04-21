@@ -1,75 +1,76 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0402512B63
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8F12561CB
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745202938; cv=none; b=b8ii5uuADvtAXVjDHt0qxX5p7WjIlijjkQ396tPfsIHgCO9eteGxY1f/1cmt3NxoC5ISOMpllymn+1LNztXKizOI9rymzF2b+m2sutpMRB9adVBofkfs5ZSZWd0ooZSQQLQhucLmoQdcUb9hIrNCuHuiGlmdRXoPFzyNevlfHJU=
+	t=1745202939; cv=none; b=KHArOcGc+7UiE+DPUa3z7JUQmxb66WOsPVwf3KFeRxOwTCygRMBj5uNgaIMM3hqyAqq4fe4fRSAaGrJJOf/0BZsKzgbMs1UqQ1x0iQltkTbQSVk4phAKevwxJNPBpxuHCadUR6xRWZ/Svj4ZYucGinzZLYXyxe4F4Pl4PVzAaHE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745202938; c=relaxed/simple;
-	bh=Q9ALV2ZhoUIZFk5Rp3rX89i8dOXK0MprLVK8phD9gas=;
+	s=arc-20240116; t=1745202939; c=relaxed/simple;
+	bh=K5xaLtmpNUnpc1IAEQ0v+p1vPoWB68c+yZdkvhzeBnQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hAV9S9xIURBGm+harslvkBzIryAN99gtWDsFIlBAn1gQ+gWyHjjh6Rd6yNBKpp9yGDGQSLM9iAweDMFZOa+tvyEwkOy943aAQIPLoWy8Tc1XoYvoe17fVUpL97iGUwVVPYSX6QMpsA1u90OKFUts7l+Z1WWIPSK9kEBLZkyRuQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=goMqR1ro; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=ld54NUfwpXOiEqxYMyqZyYFkz6iyuw1CUrjMNLrfo1f7tClP5mJIHCIFyyne59jQ5/CRhzwQvgSmorjrGLVcfp8iatTjiGrg8TLXdYeEC+I0LZBHH8htOlBCe3SzeTlKUK0Xxi7VfWUZynotcDMCmuzUYX8FRswOffZMQuNrIc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AlFm21Lb; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="goMqR1ro"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53KNUEIE021028
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:35 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AlFm21Lb"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53KNSC8c005295
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=8hZqULHZjm1
-	SplECvDuI++vRjWXBgF16wtK/q2Pk1SE=; b=goMqR1roX2JDaxZ3tGaSNEkTY6M
-	hgf0FoxHoxqIbRVSaFg0z1Hks2oe8MQE/949VbolabSnvaZAjaE3g7bL5/TWh+UP
-	BcohIUyCr+dDHksqwZh43tRWU+PW5WA4m0wjGj39/BsqvMIeAQGLuh2QXb9uLoAz
-	l35WfOAx7+VXp2mXaV9/56TUJ6OSLu09mO2zoiEQ/XgSKKLwdEj4/icC7wlnCTWr
-	pZS+JlQmGlA0eALVqF7Zu0ZlIywbeRggwJUz/BMHRWs4JH2YmwucQbgrPFCo0mGj
-	f6IHHfQTLuChXVvgwzC4XjCrl12X5jSyaFhMSpl191GsV26RTUVLwQYdzZQ==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 464426jqvn-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=wVtxNw5DxWb
+	z/CXXulYnPYRQliO3LecSwULeLmAboJg=; b=AlFm21LbYJj3EenBOE+jcFd6oeq
+	Cym2uuPu0hlepFFi6cbt1jUnq5iiupnBMrDWRh6f1m1V/HhGwtNNohtMaFSEtrGz
+	ILPMsVI/iAgVN0d1qxGEzGUA2eWEI3mAV2rquBWelT3xtWTaCWAJNHztKLk9avlX
+	yjbzjTZDigCYvlWGyr+6JnZY0j55GnV2sRsh67GRyhok/F6mcJa7K0Fcqg+JUtBq
+	E6456oFXDZfesFVZ4oZPnlEGIdw4zpFD13lDz5qi8+5dv6Id9aGiRmFn2gqCYo1U
+	1MPCIU4YMbt8pR0CV2zTKdMZRyTBX3sarL2zty297iifTvuJQ9lS6nVmrzw==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4641hhjx67-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:34 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2242ade807fso61348195ad.2
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2025 19:35:34 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Apr 2025 02:35:35 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2264e5b2b7cso30438325ad.2
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Apr 2025 19:35:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745202933; x=1745807733;
+        d=1e100.net; s=20230601; t=1745202924; x=1745807724;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=8hZqULHZjm1SplECvDuI++vRjWXBgF16wtK/q2Pk1SE=;
-        b=bt6nNuT4zGJ7Z+zByRL8Hj+UkFrxWTc9ShphN4PX6I4/czv5fgQTqtl38WatgCXbKB
-         yCvlz7CyYf07VUEgUZ5obab0k+mxL3a7+f82V/Q1SGElrmDxWF7vEYT0wN9NC4xuBGlC
-         AmAgevKz6px6y3pIF7/YJRsE9SjqoU35VV98qJa5QzNxh04eT+pW05G+t8mUfi/8h44G
-         eXBDeWCMCOBk2oo9h41lZWWbj5NmkuCM1zo1iXUkkUMlPH0FXrthbaX6QHkEpvNLpRs7
-         pCOE1cfC+/fN4qpQZG2tZCqjf6vOMEOjHN7ywLuRC2aWdtal7KRNKY58aJde2+bTUWg0
-         /skQ==
-X-Gm-Message-State: AOJu0YyQAYRl7aYYRiSQVWtVeQw/ci9/W6ELslQMTFCPG6e9+959wl37
-	g7FdO41B1sl1NWYNs+/SgTtE4pi5vWHjjdbvNHJuBBIwd0G/wvu8iFeflzfMkCOm5nLboPM1ycj
-	vVYCbTjco3vDqc7Bfa3c+1WkrULavlTK3z1+1FkSwbLU9LgBhVmpXR3QQCR44OSV5Tw==
-X-Gm-Gg: ASbGncvVgcNe4ZJlZee5FAAJaKPQxgR8k4PeoIYbA4zRYKGEe+x/YRuwU5gFlYV+2do
-	IACDiCPFcA3x7x17hXKAF7vpIJ2wuf5uc5z/e5PpZqQJmcs906jilf4lASMgb1UYnRPxLPHAjMU
-	dNtBYVBX+wBFhpguSFocgBRqxIbIJR5yyeZpacHnqcRyZcHcc312Zw55Xl0+vBUI3jFoYL8f3y0
-	rhGRfswjC/5Cb6UQbkWETi38xDPZVQRWSAxm+JRG9pAq1Sz0B3a6Ce+NHbaiFHUwRi5wHJ1eJEr
-	rdQLeVzl7ejQYAyIhHPJ76ndKlKRAw3oKIQm1ZP7yc/i2CVvKFQOtwuuq1jIuyp3yrHtoBZYZVG
-	CG88jzvoeXVA=
-X-Received: by 2002:a17:902:f54c:b0:224:1074:63a2 with SMTP id d9443c01a7336-22c5361c436mr159845315ad.43.1745202933544;
-        Sun, 20 Apr 2025 19:35:33 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEsWmmltyrsFvtZ+zV7ulHOBb3JA17xX4Ll7gxpRrPdYgMCim5NBNOpMKFVjPILnn7BK5pVfw==
-X-Received: by 2002:a17:902:f54c:b0:224:1074:63a2 with SMTP id d9443c01a7336-22c5361c436mr159845115ad.43.1745202933184;
-        Sun, 20 Apr 2025 19:35:33 -0700 (PDT)
+        bh=wVtxNw5DxWbz/CXXulYnPYRQliO3LecSwULeLmAboJg=;
+        b=aq6SZvtKjVblUePdIJHVvpapfqrURyhxvq4dwGto3Q3kw6hYgz6RO2WGrQsI14NC/Q
+         OMk1+B+qT+8XiAO1Fv1+HLtcCLFvmnaZDS9Yw51uoI9QLKhJ0o+uZTc4Iyg6M1MRZPki
+         n8PrWUXdf+uHtUPqeScLsQgcm7RCRT3bLzeMBukdGrMpUlkWS/+qQhW18WtciCaUzFmW
+         Xyel5x8GgYIxpwOyEh3QZVLtCFLLfUkkm4X1fiBYRQqLP+Jkq4E43NsTlfOx8HyySmAN
+         8qZSH2BBrLqbecRynLAIEN2VR0U9CrA5xUNcvL/oXJEE2wHL78SxERoIN3n01zte+OCz
+         +knw==
+X-Gm-Message-State: AOJu0YyIzVBz4SMr8/SYXDONqBBu6BgJ+r5au/I1lQrBXWdutpGAUdGD
+	FfBSY5LVs9YPWv6+71qyRzG1LQJenqDjd55+V7T2QuLDM1KYyFeth2TTUdyOZGdRejPq+YMBsKC
+	6qaee3JVy12CiSF6qs76zvwkfNwB2K5ZLvojfCouoVTLhvsNL/oOuRBE7vJ/5nzhnUK9w2HhUYf
+	mp
+X-Gm-Gg: ASbGncvEEJW7HPfvMb3M1zRlWnmYM20L9Ny5VQVNw4Lbd02SF6UinJ6nhjRQb379D3T
+	nqT02pV9jF8gd6QG08c5QAlMvQEoy7gzTWyDvWTtPsHFNkEzzhNm15rIblMJAgnDesHSenIzxym
+	i09ttWPvsb7pqkdyn1fUKXiP0eTaALv1evis4YpEqD3Hrlgn/LaRTesJVgwJyN7BaDhxYejUkt9
+	4t/voh10f/gCoC4Viwvfy52NXFWBCeGbmsGUoJrAQ+6YXnhzsjwaqxKaHxHSWXTX5Lbb7o3w6zj
+	GU+Xe/WsQ5sgfrfx1x7NZUPzhuMT5WCQumlw5GqCEZ04xHs6LA/lcsmZt7thNYn4cpIFPxSCVvy
+	Z0b/5pQvjaH8=
+X-Received: by 2002:a17:903:fad:b0:211:e812:3948 with SMTP id d9443c01a7336-22c530b58acmr153912335ad.0.1745202924321;
+        Sun, 20 Apr 2025 19:35:24 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGFqGK/inIa5ejxkMdbcFeJZ8pLIYi7teaTtugkmA1mPFJuqCIhvkKKJQaD5g3jdWNigIP40w==
+X-Received: by 2002:a17:903:fad:b0:211:e812:3948 with SMTP id d9443c01a7336-22c530b58acmr153912115ad.0.1745202923904;
+        Sun, 20 Apr 2025 19:35:23 -0700 (PDT)
 Received: from kangyang.ap.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50eb4287sm54631685ad.130.2025.04.20.19.35.31
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c50eb4287sm54631685ad.130.2025.04.20.19.35.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Apr 2025 19:35:32 -0700 (PDT)
+        Sun, 20 Apr 2025 19:35:23 -0700 (PDT)
 From: Kang Yang <kang.yang@oss.qualcomm.com>
 To: ath12k@lists.infradead.org, kang.yang@oss.qualcomm.com
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH ath-next 09/13] wifi: ath12k: use ath12k_buffer_addr in ath12k_dp_rx_link_desc_return()
-Date: Mon, 21 Apr 2025 10:34:40 +0800
-Message-Id: <20250421023444.1778-10-kang.yang@oss.qualcomm.com>
+Subject: [PATCH ath-next 03/13] wifi: ath12k: add srng config template for mon status ring
+Date: Mon, 21 Apr 2025 10:34:34 +0800
+Message-Id: <20250421023444.1778-4-kang.yang@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1.windows.1
 In-Reply-To: <20250421023444.1778-1-kang.yang@oss.qualcomm.com>
 References: <20250421023444.1778-1-kang.yang@oss.qualcomm.com>
@@ -80,172 +81,66 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: M4WwdERxSLSF_L1_20MsPIPmADan63EV
-X-Proofpoint-GUID: M4WwdERxSLSF_L1_20MsPIPmADan63EV
-X-Authority-Analysis: v=2.4 cv=IP8CChvG c=1 sm=1 tr=0 ts=6805aef6 cx=c_pps a=cmESyDAEBpBGqyK7t0alAg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17 a=XR8D0OoHHMoA:10 a=EUspDBNiAAAA:8 a=vwqPoxeLtJ6jty5K6VgA:9 a=1OuFwYUASf3TG4hYMiVC:22
+X-Authority-Analysis: v=2.4 cv=Fe43xI+6 c=1 sm=1 tr=0 ts=6805aef7 cx=c_pps a=JL+w9abYAAE89/QcEU+0QA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17 a=XR8D0OoHHMoA:10 a=EUspDBNiAAAA:8 a=bJUolzXMejWutlsJL5MA:9 a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-GUID: A36eqjiRo_3JK0BcsQoe1NvdyMzreyf1
+X-Proofpoint-ORIG-GUID: A36eqjiRo_3JK0BcsQoe1NvdyMzreyf1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-21_01,2025-04-17_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
- mlxscore=0 malwarescore=0 clxscore=1015 priorityscore=1501 bulkscore=0
- suspectscore=0 lowpriorityscore=0 phishscore=0 adultscore=0
- impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ priorityscore=1501 impostorscore=0 lowpriorityscore=0 suspectscore=0
+ spamscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2502280000
  definitions=main-2504210018
 
-Currently, ath12k_dp_rx_link_desc_return() takes struct
-hal_reo_dest_ring as its second input. This struct is converted to
-struct hal_wbm_release_ring and passed into
-ath12k_hal_rx_msdu_link_desc_set(), where it is converted again.
+Currently, the hw_srng_config_template does not have a template for mon
+status ring.
 
-This double conversion is both strange and inefficient.
-
-In ath12k_hal_rx_msdu_link_desc_set(), only buf_addr_info is actually
-used. To simplify the code and improve readability, directly passes
-buf_addr_info when calling ath12k_dp_rx_link_desc_return().
+But srng config template is necessary during ring initialization. So add
+a template for mon status ring.
 
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Kang Yang <kang.yang@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 26 ++++++++++++------------
- drivers/net/wireless/ath/ath12k/hal_rx.c | 16 +++++++--------
- drivers/net/wireless/ath/ath12k/hal_rx.h |  4 ++--
- 3 files changed, 23 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath12k/hal.c | 9 ++++++++-
+ drivers/net/wireless/ath/ath12k/hal.h | 1 +
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index 6bbae10f7389..382d364fb3ff 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -843,15 +843,10 @@ void ath12k_dp_rx_peer_tid_delete(struct ath12k *ar,
- 	rx_tid->active = false;
- }
+diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
+index 12d0f991a47f..ed268089f9b6 100644
+--- a/drivers/net/wireless/ath/ath12k/hal.c
++++ b/drivers/net/wireless/ath/ath12k/hal.c
+@@ -154,7 +154,14 @@ static const struct hal_srng_config hw_srng_config_template[] = {
+ 		.ring_dir = HAL_SRNG_DIR_SRC,
+ 		.max_size = HAL_RXDMA_RING_MAX_SIZE_BE,
+ 	},
+-	[HAL_RXDMA_MONITOR_STATUS] = { 0, },
++	[HAL_RXDMA_MONITOR_STATUS] = {
++		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_SW2RXDMA1_STATBUF,
++		.max_rings = 1,
++		.entry_size = sizeof(struct hal_wbm_buffer_ring) >> 2,
++		.mac_type = ATH12K_HAL_SRNG_PMAC,
++		.ring_dir = HAL_SRNG_DIR_SRC,
++		.max_size = HAL_RXDMA_RING_MAX_SIZE_BE,
++	},
+ 	[HAL_RXDMA_MONITOR_DESC] = { 0, },
+ 	[HAL_RXDMA_DIR_BUF] = {
+ 		.start_ring_id = HAL_SRNG_RING_ID_RXDMA_DIR_BUF,
+diff --git a/drivers/net/wireless/ath/ath12k/hal.h b/drivers/net/wireless/ath/ath12k/hal.h
+index 4adef9240409..f627cd01f60c 100644
+--- a/drivers/net/wireless/ath/ath12k/hal.h
++++ b/drivers/net/wireless/ath/ath12k/hal.h
+@@ -498,6 +498,7 @@ enum hal_srng_ring_id {
  
--/* TODO: it's strange (and ugly) that struct hal_reo_dest_ring is converted
-- * to struct hal_wbm_release_ring, I couldn't figure out the logic behind
-- * that.
-- */
- static int ath12k_dp_rx_link_desc_return(struct ath12k_base *ab,
--					 struct hal_reo_dest_ring *ring,
-+					 struct ath12k_buffer_addr *buf_addr_info,
- 					 enum hal_wbm_rel_bm_act action)
- {
--	struct hal_wbm_release_ring *link_desc = (struct hal_wbm_release_ring *)ring;
- 	struct hal_wbm_release_ring *desc;
- 	struct ath12k_dp *dp = &ab->dp;
- 	struct hal_srng *srng;
-@@ -869,7 +864,7 @@ static int ath12k_dp_rx_link_desc_return(struct ath12k_base *ab,
- 		goto exit;
- 	}
+ 	HAL_SRNG_RING_ID_WMAC1_SW2RXMON_BUF0 = HAL_SRNG_RING_ID_PMAC1_ID_START,
  
--	ath12k_hal_rx_msdu_link_desc_set(ab, desc, link_desc, action);
-+	ath12k_hal_rx_msdu_link_desc_set(ab, desc, buf_addr_info, action);
- 
- exit:
- 	ath12k_hal_srng_access_end(ab, srng);
-@@ -882,14 +877,17 @@ static int ath12k_dp_rx_link_desc_return(struct ath12k_base *ab,
- static void ath12k_dp_rx_frags_cleanup(struct ath12k_dp_rx_tid *rx_tid,
- 				       bool rel_link_desc)
- {
-+	struct ath12k_buffer_addr *buf_addr_info;
- 	struct ath12k_base *ab = rx_tid->ab;
- 
- 	lockdep_assert_held(&ab->base_lock);
- 
- 	if (rx_tid->dst_ring_desc) {
--		if (rel_link_desc)
--			ath12k_dp_rx_link_desc_return(ab, rx_tid->dst_ring_desc,
-+		if (rel_link_desc) {
-+			buf_addr_info = &rx_tid->dst_ring_desc->buf_addr_info;
-+			ath12k_dp_rx_link_desc_return(ab, buf_addr_info,
- 						      HAL_WBM_REL_BM_ACT_PUT_IN_IDLE);
-+		}
- 		kfree(rx_tid->dst_ring_desc);
- 		rx_tid->dst_ring_desc = NULL;
- 	}
-@@ -3507,7 +3505,7 @@ static int ath12k_dp_rx_frag_h_mpdu(struct ath12k *ar,
- 			goto out_unlock;
- 		}
- 	} else {
--		ath12k_dp_rx_link_desc_return(ab, ring_desc,
-+		ath12k_dp_rx_link_desc_return(ab, &ring_desc->buf_addr_info,
- 					      HAL_WBM_REL_BM_ACT_PUT_IN_IDLE);
- 	}
- 
-@@ -3620,7 +3618,7 @@ ath12k_dp_process_rx_err_buf(struct ath12k *ar, struct hal_reo_dest_ring *desc,
- 
- 	if (ath12k_dp_rx_frag_h_mpdu(ar, msdu, desc)) {
- 		dev_kfree_skb_any(msdu);
--		ath12k_dp_rx_link_desc_return(ar->ab, desc,
-+		ath12k_dp_rx_link_desc_return(ar->ab, &desc->buf_addr_info,
- 					      HAL_WBM_REL_BM_ACT_PUT_IN_IDLE);
- 	}
- exit:
-@@ -3699,7 +3697,8 @@ int ath12k_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *napi,
- 		    rbm != partner_ab->hw_params->hal_params->rx_buf_rbm) {
- 			ab->soc_stats.invalid_rbm++;
- 			ath12k_warn(ab, "invalid return buffer manager %d\n", rbm);
--			ath12k_dp_rx_link_desc_return(partner_ab, reo_desc,
-+			ath12k_dp_rx_link_desc_return(partner_ab,
-+						      &reo_desc->buf_addr_info,
- 						      HAL_WBM_REL_BM_ACT_REL_MSDU);
- 			continue;
- 		}
-@@ -3717,7 +3716,8 @@ int ath12k_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *napi,
- 			drop = true;
- 
- 			/* Return the link desc back to wbm idle list */
--			ath12k_dp_rx_link_desc_return(partner_ab, reo_desc,
-+			ath12k_dp_rx_link_desc_return(partner_ab,
-+						      &reo_desc->buf_addr_info,
- 						      HAL_WBM_REL_BM_ACT_PUT_IN_IDLE);
- 		}
- 
-diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.c b/drivers/net/wireless/ath/ath12k/hal_rx.c
-index 98eeccc68fcd..837284992cd9 100644
---- a/drivers/net/wireless/ath/ath12k/hal_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/hal_rx.c
-@@ -447,16 +447,16 @@ void ath12k_hal_rx_reo_ent_paddr_get(struct ath12k_base *ab,
- }
- 
- void ath12k_hal_rx_msdu_link_desc_set(struct ath12k_base *ab,
--				      struct hal_wbm_release_ring *dst_desc,
--				      struct hal_wbm_release_ring *src_desc,
-+				      struct hal_wbm_release_ring *desc,
-+				      struct ath12k_buffer_addr *buf_addr_info,
- 				      enum hal_wbm_rel_bm_act action)
- {
--	dst_desc->buf_addr_info = src_desc->buf_addr_info;
--	dst_desc->info0 |= le32_encode_bits(HAL_WBM_REL_SRC_MODULE_SW,
--					    HAL_WBM_RELEASE_INFO0_REL_SRC_MODULE) |
--			   le32_encode_bits(action, HAL_WBM_RELEASE_INFO0_BM_ACTION) |
--			   le32_encode_bits(HAL_WBM_REL_DESC_TYPE_MSDU_LINK,
--					    HAL_WBM_RELEASE_INFO0_DESC_TYPE);
-+	desc->buf_addr_info = *buf_addr_info;
-+	desc->info0 |= le32_encode_bits(HAL_WBM_REL_SRC_MODULE_SW,
-+					HAL_WBM_RELEASE_INFO0_REL_SRC_MODULE) |
-+		    le32_encode_bits(action, HAL_WBM_RELEASE_INFO0_BM_ACTION) |
-+		    le32_encode_bits(HAL_WBM_REL_DESC_TYPE_MSDU_LINK,
-+				     HAL_WBM_RELEASE_INFO0_DESC_TYPE);
- }
- 
- void ath12k_hal_reo_status_queue_stats(struct ath12k_base *ab, struct hal_tlv_64_hdr *tlv,
-diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
-index c753eb2a03ad..ef8bda3c0fc2 100644
---- a/drivers/net/wireless/ath/ath12k/hal_rx.h
-+++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
-@@ -1141,8 +1141,8 @@ void ath12k_hal_rx_msdu_link_info_get(struct hal_rx_msdu_link *link, u32 *num_ms
- 				      u32 *msdu_cookies,
- 				      enum hal_rx_buf_return_buf_manager *rbm);
- void ath12k_hal_rx_msdu_link_desc_set(struct ath12k_base *ab,
--				      struct hal_wbm_release_ring *dst_desc,
--				      struct hal_wbm_release_ring *src_desc,
-+				      struct hal_wbm_release_ring *desc,
-+				      struct ath12k_buffer_addr *buf_addr_info,
- 				      enum hal_wbm_rel_bm_act action);
- void ath12k_hal_rx_buf_addr_info_set(struct ath12k_buffer_addr *binfo,
- 				     dma_addr_t paddr, u32 cookie, u8 manager);
++	HAL_SRNG_RING_ID_WMAC1_SW2RXDMA1_STATBUF,
+ 	HAL_SRNG_RING_ID_WMAC1_RXDMA2SW0,
+ 	HAL_SRNG_RING_ID_WMAC1_RXDMA2SW1,
+ 	HAL_SRNG_RING_ID_WMAC1_RXMON2SW0 = HAL_SRNG_RING_ID_WMAC1_RXDMA2SW1,
 -- 
 2.34.1
 
