@@ -1,185 +1,97 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB0A202960;
-	Tue, 22 Apr 2025 12:22:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CEA627CCD3
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2025 12:41:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745324550; cv=none; b=dkkZRkqhwFo0fIPEvM0vJfp+PzO7UnXh0tfC8Xw2wnj2DHXDpPv25cKiNJoWsqItoopq9iUqpTmQ5QGiC/hqAXu3lfurFynjNvmLNQt73n8Hwif4zS9Tw7l2NvzhuCvTZLPXMLjga/bCxakmEHXNub0YJsNFdnkWoRAaEpaK17E=
+	t=1745325692; cv=none; b=pGloQhWeQImTyPq9K/q/zHPdVe33xEKqao+lXcjwbf+n9uPpG5CAdI4AA6BHT/I0EdqFn/elY+vEr26KAMQ29uUjYjx7yuGS14MSAZW0oPOhjRc/qx0z+TbQXmDWKksBVJHKGlTeuux74daJDtUxfCd2yWsuLWzacjQq21dmrKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745324550; c=relaxed/simple;
-	bh=70Z7M8gAwv96dWVPcFakq4o174ktL1rBuZUJ3c9nwxA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eLuvJ4kpsG6IGHou8vODruWhONvXfyNo3D/HuyVhYICn6SeO2mTz+gcdRYKQGvWWUPzzzxlFqehPcdviz964SSPhdi2/9roFWeVtz1CASkHvTwB28y4kqeoB1y9sHyWJEHpDjIiWU+KZGxEMjIJ63guMe09AwJCo5a+8nlM0VQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ck4Bh+cf; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ck4Bh+cf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1745324548; x=1776860548;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=70Z7M8gAwv96dWVPcFakq4o174ktL1rBuZUJ3c9nwxA=;
-  b=Ck4Bh+cf37g6G+Hw93o4S2ZbVKHO+NBSFCh/uhlX/uDMmlsTvV8Luv1z
-   eBxPFL93NHUjA1I2HQg5vhfWgM1t0LrESIfQ6lmRavh2fJbwVnSeCD+eQ
-   wspC6ZzxuSidyfEHVuiVUSOQt26xrHD8IPXrhvLHPt409oQ+aGPg9vtWR
-   uZaT/8u2h2a/f+byMvAcYf0mEFCoou+svy7VQYNXgKBxVdSVb/BbhBF6j
-   eMivzxgFoXjnbDIUCISETNG1QW8PqKIgj6BU49BD4R3TEANxoHr5Ziio2
-   9kPOxudfXPYKQsGYknNy9W3jfsSLBT3RhUXTjNeO0lkHsh8kEFCCyVa/Y
-   A==;
-X-CSE-ConnectionGUID: x6m3GbFpRjuseujOa6cISA==
-X-CSE-MsgGUID: CQeDelzfQLi4ua1mlU6SPA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11410"; a="58247426"
-X-IronPort-AV: E=Sophos;i="6.15,231,1739865600"; 
-   d="scan'208";a="58247426"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Apr 2025 05:22:28 -0700
-X-CSE-ConnectionGUID: k3jKTv9tSDe00YUNTeRVQg==
-X-CSE-MsgGUID: ubwMRoJITN6a4c+A1vZu2Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,231,1739865600"; 
-   d="scan'208";a="132948364"
-Received: from lkp-server01.sh.intel.com (HELO 050dd05385d1) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 22 Apr 2025 05:22:26 -0700
-Received: from kbuild by 050dd05385d1 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1u7Cdq-0000xH-3C;
-	Tue, 22 Apr 2025 12:22:23 +0000
-Date: Tue, 22 Apr 2025 20:22:18 +0800
-From: kernel test robot <lkp@intel.com>
-To: Wentao Liang <vulab@iscas.ac.cn>, miriam.rachel.korenblit@intel.com,
-	kvalo@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com, golan.ben.ami@intel.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>
-Subject: Re: [PATCH v2 RESEND] wifi: iwlwifi: mvm: Add error logging for
- iwl_finish_nic_init()
-Message-ID: <202504222012.DGGkXYWx-lkp@intel.com>
-References: <20250422023234.1992-1-vulab@iscas.ac.cn>
+	s=arc-20240116; t=1745325692; c=relaxed/simple;
+	bh=9HDhsbv01RswNfMx4a32oUc3pEzflO6SLP0klnbym7o=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=pFgqsqSvEJv6tnI7XEtYZU7W87qBYWSD3Wu+2eh9oKxsKSYGIS7CwA417xUSdKVNyeQmmZ8zuucaCEx7oe8EPdrQgHpMhapGWPXwj3nYE4Qk5lL3TMvRbToa/UqLtZaLvovGkrVk/yRjIxS/x5FnWEbMOfdmV7nbfOhBUIQv6TM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-3d443811ed2so80839815ab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2025 05:41:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745325690; x=1745930490;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Be+SpEOEdwqWDakuD2zS8KThXc2AfpnLOHspB4bIBlE=;
+        b=ZxTtxhEkQR5WXaVqTUsPc9rlUraZ1Ctlqb59c0pUx3dUsQ4/2rURIOh1Q4Yk6ywVwp
+         uUqmRpSWD0NNciX5w6ST/pBgM4f9bNfCAYpgENY2pvtB8qMEW+HjTr6X5+JREMyuyAbV
+         6N6uIQ1/+0QuP65b2BzwVnv7d2fMwdkeeQHFzczdN56lpGasp1Imn0RNeJ+B6KSjfIgP
+         9ivN0ejJnrcqwohLkEk7OPKC+KV/6VrJFhirZaffdCA0ByWiZFiM3ZZAOg6ldUxyiUnc
+         wUzjCQ9j0/3vclfk4HKGC+r0kgAWohXiqhZ1RXgETzMGs9sQpQ9RI2wZN5WSoWGqWy4A
+         QZ+Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWLyNs44qxDLkTq8Q0OU499rQnfNp5r0ARra2h8EWu07YEXfnL1QCC69EBTLfnQZRRlAOqRlQS1+LI4WiWtOQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKDcjZtn4wae3SKIn/WBHQWbHuWoxolUCftcoYdwT33mh+YF6h
+	kZ3bj9fwbw5YRB81nGlUdMjjWDHXlgOlU3WKvOxMocd3rhs3GOASf37sJQQo/oyV/fJ8hpBKOoO
+	taDiyJ/nOVnbcKaI/RwFkw0TTGmbkM5iTJy8zYVf8eQbzjmqpxkoAGts=
+X-Google-Smtp-Source: AGHT+IH5wsaN/1EWPEUutBW6CD/hHPC4n4GPvZUdGxyv2J8/5bEz9Jqmsh5CU6mVoqkUzefVAO/hH6j5JCgEMKWm5Svpv03yO4x6
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250422023234.1992-1-vulab@iscas.ac.cn>
+X-Received: by 2002:a05:6e02:18c6:b0:3d5:8923:faa5 with SMTP id
+ e9e14a558f8ab-3d88edc18eamr134648485ab.10.1745325690031; Tue, 22 Apr 2025
+ 05:41:30 -0700 (PDT)
+Date: Tue, 22 Apr 2025 05:41:30 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68078e7a.050a0220.8500a.0018.GAE@google.com>
+Subject: [syzbot] Monthly wireless report (Apr 2025)
+From: syzbot <syzbot+list69c01228851d15c2b2d9@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Wentao,
+Hello wireless maintainers/developers,
 
-kernel test robot noticed the following build errors:
+This is a 31-day syzbot report for the wireless subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/wireless
 
-[auto build test ERROR on wireless-next/main]
-[also build test ERROR on wireless/main linus/master v6.15-rc3 next-20250417]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+During the period, 5 new issues were detected and 0 were fixed.
+In total, 56 issues are still open and 157 have already been fixed.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Wentao-Liang/wifi-iwlwifi-mvm-Add-error-logging-for-iwl_finish_nic_init/20250422-104110
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20250422023234.1992-1-vulab%40iscas.ac.cn
-patch subject: [PATCH v2 RESEND] wifi: iwlwifi: mvm: Add error logging for iwl_finish_nic_init()
-config: arm-randconfig-001-20250422 (https://download.01.org/0day-ci/archive/20250422/202504222012.DGGkXYWx-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 8.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250422/202504222012.DGGkXYWx-lkp@intel.com/reproduce)
+Some of the still happening issues:
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202504222012.DGGkXYWx-lkp@intel.com/
+Ref  Crashes Repro Title
+<1>  116744  Yes   WARNING in __ieee80211_beacon_get
+                   https://syzkaller.appspot.com/bug?extid=18c783c5cf6a781e3e2c
+<2>  9766    Yes   WARNING in rate_control_rate_init (3)
+                   https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
+<3>  6569    Yes   WARNING in __cfg80211_ibss_joined (2)
+                   https://syzkaller.appspot.com/bug?extid=7f064ba1704c2466e36d
+<4>  6319    Yes   WARNING in __rate_control_send_low (3)
+                   https://syzkaller.appspot.com/bug?extid=34463a129786910405dd
+<5>  1206    Yes   WARNING in ieee80211_start_next_roc
+                   https://syzkaller.appspot.com/bug?extid=c3a167b5615df4ccd7fb
+<6>  1014    Yes   INFO: task hung in rfkill_global_led_trigger_worker (3)
+                   https://syzkaller.appspot.com/bug?extid=50499e163bfa302dfe7b
+<7>  562     Yes   INFO: task hung in crda_timeout_work (8)
+                   https://syzkaller.appspot.com/bug?extid=d41f74db64598e0b5016
+<8>  455     Yes   INFO: task hung in reg_check_chans_work (7)
+                   https://syzkaller.appspot.com/bug?extid=a2de4763f84f61499210
+<9>  349     No    WARNING in ieee80211_request_ibss_scan
+                   https://syzkaller.appspot.com/bug?extid=1634c5399e29d8b66789
+<10> 344     Yes   INFO: task hung in reg_process_self_managed_hints
+                   https://syzkaller.appspot.com/bug?extid=1f16507d9ec05f64210a
 
-All errors (new ones prefixed by >>):
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-   In file included from <command-line>:
-   drivers/net/wireless/intel/iwlwifi/pcie/drv.c: In function '_iwl_pci_resume':
->> include/linux/compiler_types.h:557:38: error: call to '__compiletime_assert_671' declared with attribute error: BUILD_BUG_ON failed: "NIC initialization failed after power-off (error %d)."[sizeof("NIC initialization failed after power-off (error %d).") - 2] != '\n'
-     _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-                                         ^
-   include/linux/compiler_types.h:538:4: note: in definition of macro '__compiletime_assert'
-       prefix ## suffix();    \
-       ^~~~~~
-   include/linux/compiler_types.h:557:2: note: in expansion of macro '_compiletime_assert'
-     _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-     ^~~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
-    #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-                                        ^~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:50:2: note: in expansion of macro 'BUILD_BUG_ON_MSG'
-     BUILD_BUG_ON_MSG(condition, "BUILD_BUG_ON failed: " #condition)
-     ^~~~~~~~~~~~~~~~
-   drivers/net/wireless/intel/iwlwifi/iwl-debug.h:40:30: note: in expansion of macro 'BUILD_BUG_ON'
-    #define CHECK_FOR_NEWLINE(f) BUILD_BUG_ON(f[sizeof(f) - 2] != '\n')
-                                 ^~~~~~~~~~~~
-   drivers/net/wireless/intel/iwlwifi/iwl-debug.h:45:3: note: in expansion of macro 'CHECK_FOR_NEWLINE'
-      CHECK_FOR_NEWLINE(f);     \
-      ^~~~~~~~~~~~~~~~~
-   drivers/net/wireless/intel/iwlwifi/iwl-debug.h:49:2: note: in expansion of macro '__IWL_ERR_DEV'
-     __IWL_ERR_DEV(d, IWL_ERR_MODE_REGULAR, f, ## a)
-     ^~~~~~~~~~~~~
-   drivers/net/wireless/intel/iwlwifi/iwl-debug.h:51:2: note: in expansion of macro 'IWL_ERR_DEV'
-     IWL_ERR_DEV((m)->dev, f, ## a)
-     ^~~~~~~~~~~
-   drivers/net/wireless/intel/iwlwifi/pcie/drv.c:1777:4: note: in expansion of macro 'IWL_ERR'
-       IWL_ERR(trans,
-       ^~~~~~~
---
-   In file included from <command-line>:
-   pcie/drv.c: In function '_iwl_pci_resume':
->> include/linux/compiler_types.h:557:38: error: call to '__compiletime_assert_671' declared with attribute error: BUILD_BUG_ON failed: "NIC initialization failed after power-off (error %d)."[sizeof("NIC initialization failed after power-off (error %d).") - 2] != '\n'
-     _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-                                         ^
-   include/linux/compiler_types.h:538:4: note: in definition of macro '__compiletime_assert'
-       prefix ## suffix();    \
-       ^~~~~~
-   include/linux/compiler_types.h:557:2: note: in expansion of macro '_compiletime_assert'
-     _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-     ^~~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:39:37: note: in expansion of macro 'compiletime_assert'
-    #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-                                        ^~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:50:2: note: in expansion of macro 'BUILD_BUG_ON_MSG'
-     BUILD_BUG_ON_MSG(condition, "BUILD_BUG_ON failed: " #condition)
-     ^~~~~~~~~~~~~~~~
-   ././iwl-debug.h:40:30: note: in expansion of macro 'BUILD_BUG_ON'
-    #define CHECK_FOR_NEWLINE(f) BUILD_BUG_ON(f[sizeof(f) - 2] != '\n')
-                                 ^~~~~~~~~~~~
-   ././iwl-debug.h:45:3: note: in expansion of macro 'CHECK_FOR_NEWLINE'
-      CHECK_FOR_NEWLINE(f);     \
-      ^~~~~~~~~~~~~~~~~
-   ././iwl-debug.h:49:2: note: in expansion of macro '__IWL_ERR_DEV'
-     __IWL_ERR_DEV(d, IWL_ERR_MODE_REGULAR, f, ## a)
-     ^~~~~~~~~~~~~
-   ././iwl-debug.h:51:2: note: in expansion of macro 'IWL_ERR_DEV'
-     IWL_ERR_DEV((m)->dev, f, ## a)
-     ^~~~~~~~~~~
-   pcie/drv.c:1777:4: note: in expansion of macro 'IWL_ERR'
-       IWL_ERR(trans,
-       ^~~~~~~
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
 
-vim +557 include/linux/compiler_types.h
-
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  543  
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  544  #define _compiletime_assert(condition, msg, prefix, suffix) \
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  545  	__compiletime_assert(condition, msg, prefix, suffix)
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  546  
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  547  /**
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  548   * compiletime_assert - break build and emit msg if condition is false
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  549   * @condition: a compile-time constant condition to check
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  550   * @msg:       a message to emit if condition is false
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  551   *
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  552   * In tradition of POSIX assert, this macro will break the build if the
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  553   * supplied condition is *false*, emitting the supplied error message if the
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  554   * compiler has support to do so.
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  555   */
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  556  #define compiletime_assert(condition, msg) \
-eb5c2d4b45e3d2d Will Deacon 2020-07-21 @557  	_compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-eb5c2d4b45e3d2d Will Deacon 2020-07-21  558  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+You may send multiple commands in a single email message.
