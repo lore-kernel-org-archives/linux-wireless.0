@@ -1,67 +1,52 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DCA225FA0B;
-	Tue, 22 Apr 2025 12:44:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB3C27CCE1
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Apr 2025 13:13:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745325872; cv=none; b=Dr32mhujuVKZs0vmTapiW3xB6xyMTmuZ/jNsai7sh2mxJbWsPC4qw6kYNIlpdn+GC8JkzsyF+FPUGiun361ZhgwUoTS31ewElvZMQXHE6PfMR9uSKmFGtzFIbiKS8tCSQ4nU3zSkk0SYq2kPCOiTq8ee8/LKYUs0x7LlKKV2vCw=
+	t=1745327610; cv=none; b=HGmJpVI3sjuGwd2AEyX8AZR+NwzeFjxPJv9FoSujTVq907Tzj5LcvwRBNT6DtCK3tzToS/1MMwwqi1YO6aB983BY24qNlwjm77c9zLIA9rGBatjnkHXCt7Q1r44zKDMRABRdzPk3HQqZxDbt3/pQjeBnZYgEIeHqbzdS5MKXvRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745325872; c=relaxed/simple;
-	bh=fwjn2eAipGj8txUYSDvtnaSj4kpK0g4kALgLoZJzw2E=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=u18lCbz1zOLux6y0dNYboQjKc6coLXR+D7NjPn62bBCDdiUnLuMBrMr3phkMr4pUo27fRzA0E/oPX/yR6lJ3fsyH+Bs8807qR7uw76aRHRJPOhdmF1R46ucM45xMPyneQEkoAEO0m1VMus44LF45XHAS+SUnRTxI8EHmhqORGmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b=b5WtlO1o; arc=none smtp.client-ip=45.145.95.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
+	s=arc-20240116; t=1745327610; c=relaxed/simple;
+	bh=KmWKZnSX3nII8RfgILQPFdNGnmRlvEzjZetTK1UY9aM=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=S8t2uNRnIuGT2gRtoa84apLmQIPc0kINIABb9gmrZYXFWrExhsWUhM4XYZ7goH0PBHm4+eBHzOizheTyGVl/5v2b04Uyo43u+SH8dWZdYAk7a0/nZ5ANf7pd/6pOVsbEKwuLiMQWJaPXTE4omdXFzBly6D2wdqWO54zrCHMI1Ls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CmXOG98+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="b5WtlO1o"
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-	t=1745325338; bh=fwjn2eAipGj8txUYSDvtnaSj4kpK0g4kALgLoZJzw2E=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=b5WtlO1oBw5UJXJaw02uReybBdy2NpssNOTcIVlk2S6IlIxrjbJ1KkNnhNkubM1PN
-	 RuiVU35hdXr+V1ZbtonPAY0NE5zCH/y9PtCu12kBbuMBC0wDD5T9zknXQK8x+4WVKf
-	 OdE6AXTM6SO9bDYeQcn3fLfZ+YEi8RuWp6rbw21ZLOVFVQEibMPwwOIWngveRlq42v
-	 +UudPgMZmh8G7ar+HkG0dHXuBN8C65IZLvuJ27BZHeCwlrtrdb9XUnCGo6YCyWWyu1
-	 f6hp7fpXyy3KVw4pkgVLSKH1HUJ4ivU2LqZ2VpUOxv5W3fRLFyat7Ib4qYBiPJlpvy
-	 h6+FqjY4xDpIA==
-To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
-Cc: open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2] wifi: ath9k: ahb: do ioremap resource in one step
-In-Reply-To: <20250421040044.44887-1-rosenp@gmail.com>
-References: <20250421040044.44887-1-rosenp@gmail.com>
-Date: Tue, 22 Apr 2025 14:35:38 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87ldrsjrvp.fsf@toke.dk>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CmXOG98+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C7A6C4CEE9;
+	Tue, 22 Apr 2025 13:13:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745327610;
+	bh=KmWKZnSX3nII8RfgILQPFdNGnmRlvEzjZetTK1UY9aM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=CmXOG98+5KPwrKa1rPQrg0oLhbirhhUrLukIo5+g0Bmg4LStcoPCAOwbaAw6z8wv/
+	 SPnX/pkT/Ys30DvkE6Ws0+JlDpjTs7Ur+9rSmjrvu0sGjfEdFDITh5apt8lbmiGW5I
+	 oquDdAnaytqAGBF1hdNzouIFBxjq3+OVpwyEWCt04PSA5yrS9IkQ3D58TwejSUpxcN
+	 QadELiJDC5tOWOJ3AmOvKgVQvcPqWLS/pugRaYuAxmUgomf0rziJ7W3t6VwDR3tTP6
+	 PtgBOJfT4jOXEiUGbhEREAP0F2yOn8veuCavkmiXLHXMhfgq8DUW1XvzkZwWt7IHQu
+	 R9fIlks/etoQQ==
+Date: Tue, 22 Apr 2025 06:13:29 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Dmitry Kandybka <d.kandybka@gmail.com>
+Cc: linux-wireless@vger.kernel.org, lvc-project@linuxtesting.org
+Subject: Re: [PATCH] wifi: mt7601u: fix possible index-out-of-bound in
+ mt76_init_sband_2g()
+Message-ID: <20250422061329.65e179ff@kernel.org>
+In-Reply-To: <20250422110728.1274143-1-d.kandybka@gmail.com>
+References: <20250422110728.1274143-1-d.kandybka@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Rosen Penev <rosenp@gmail.com> writes:
+On Tue, 22 Apr 2025 14:07:26 +0300 Dmitry Kandybka wrote:
+> In 'mt76_init_sband_2g', add return with '-EINVAL' in case of register
+> channel start bound exceeds size of 'mt76_channels_2ghz' array.
+> Compile tested only.
 
-> Simplifies probe slightly and adds extra error codes.
->
-> Switching from devm_ioremap to the platform variant ends up calling
-> devm_request_mem_region, which reserves the memory region for the
-> various wmacs. Per board, there is only one wmac and after some fairly
-> thorough analysis, there are no overlapping memory regions between wmacs
-> and other devices on the ahb.
->
-> Tested on a TP-Link Archer C7v2.
->
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->  v2: remove wrong devm irq conversion.
->  drivers/net/wireless/ath/ath9k/ahb.c | 13 +++----------
->  1 file changed, 3 insertions(+), 10 deletions(-)
-
-Is there any benefit from this other than code simplification? Because,
-TBH, I'm not sure saving 7 lines of code is worth the risk of changing
-something we know works already...
-
--Toke
+nack, please try to find real issue instead of wasting people's time
