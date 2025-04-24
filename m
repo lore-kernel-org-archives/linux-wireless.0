@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6EAE27B50F
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2025 12:39:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55C027B4F1
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Apr 2025 12:39:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745498345; cv=none; b=kReH8hJL4U97QxW1OoXchQxijP6WEJu7oM49aRyCjFUQtmODxhCbE+VyCSGjVim8snIxuRm6mbiAsutvivWCrJcE88XjKzsHikPJOVshR53d0IuR/AxdevO67WmFDF7lkJll1tqB/LACL1v6lG1oZ2ef1VOI15CXfIGEStK5+8U=
+	t=1745498348; cv=none; b=D66yFFB4TnEJXBu9u03ASgVfnGgUU/5taSbkZ2W8oZMFGC34yqbXvRYxhRD3RC6NH2uR3kZrgNaXGvzagy1PWb1wE26O77ch+pjR+ExWxHgfPtCcUsA9YO7DnnIE9xyeRsFVGV17xcXFlySyIBJ2K12PN6SYkiD+iCo5aybFtBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745498345; c=relaxed/simple;
-	bh=P8ZyrSFC5VaHD7aMrfocJ2J6MpWYpIimGitEkE6E/N4=;
+	s=arc-20240116; t=1745498348; c=relaxed/simple;
+	bh=0QHQr0qt7DIQqhpsui2TxuCQFKPSM0Nl7PJ7GzLIpFk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AqBPtF1naNu+QZHJKlLnJncGe+AZOka6NvEvoSCEb9x5xTKLi611HTIwhvkiYzxLUQKc2+bhe17en+Vh6nrnPsf4gXUj3XxMpHbe/0JBJ+ce/udmTwQBhFLWZI15RCR1Qr1HScE3qQPI0rcZ/JdAr6FEoMF5lCQFMl9aCsItuX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mFBaWjOJ; arc=none smtp.client-ip=192.198.163.14
+	 MIME-Version; b=XFilvMuvh2/qVQdfgXawmOJPqn+84hChXRMGxlg1Pn0Qe5EqYU/2zUMwpCd375iZOAuinAu6K6Jp+UOOWc6WcSUwRMrDnTcnWalxBelUkcIlSnAL3FeY25PgVcTKyoOKMUqiYAUyK7PkjeVFSD/RCQvqQcoAr4ZuAHGvkJQpdrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U2vWnTh3; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mFBaWjOJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U2vWnTh3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1745498344; x=1777034344;
+  t=1745498347; x=1777034347;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=P8ZyrSFC5VaHD7aMrfocJ2J6MpWYpIimGitEkE6E/N4=;
-  b=mFBaWjOJ8jtxJP1pBQkq3gfdXhveCRmcxDX2GYbggjfw0zinXWAv63NQ
-   ocs5+a5NME/ZBrIxdhESpn/b8X+N2vFHgdzu5EpFAqp8DoWMFOoYK5SnR
-   QEbfEYfpdZ09Bov76O/Ssyw/GjKUNl8K0lB+KlJwVTSzeWXTlSKVeLEef
-   XHR0/5hXG5CV4EH/DptzDCquQYsPZnLighBfFFuQBBUPW7Tk77HqlvOUF
-   JpU66L1zJj62psKVfvaSEIhD+pdzyKi2QcWWygkKNaQl0lKMi87M7IjOO
-   BjptfiPMvrOegaHpja0UMIkAIQx1whq/s7JOHDi5v6wV56aGuODcqqj6M
-   g==;
-X-CSE-ConnectionGUID: eGpW1x1KRpGN7Q2VoJrL/A==
-X-CSE-MsgGUID: OVHe7FLEQ9qnPci07X+M5A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11413"; a="47302435"
+  bh=0QHQr0qt7DIQqhpsui2TxuCQFKPSM0Nl7PJ7GzLIpFk=;
+  b=U2vWnTh3QtsyAl3iHxplo4UtYS80U8KlD3MIBienhaYCiaTS+0NTMvc5
+   i8TwRqzdgTQYgXu6v2ZcOJ3IUzZwvDb7aUHlaFFmKwhrsb96Ro5XXNAXB
+   lsiIeXq4v+Wy+pKngHQauzH6zg8kw+OME+1t+69yJwDzUrp0jEZuoEOz3
+   cfbc7Y4IKQiN3aXdK81TmZLXC69cNxfyyw4i4vPxgXEoh1lgOjn5n93aa
+   etqXBLBb/2ALp7Y4yCk1fo8saI6MDg2MrvfJ6OrsT+PCuOF/r6bTvB5h3
+   8TLWeFFEdzIlkgOHVVMBjFP5CaYMa86ZLan4hqKHMJNDsfZJbxiEFpPCf
+   A==;
+X-CSE-ConnectionGUID: GZYknH6fSVSzQ8r9oPcL/w==
+X-CSE-MsgGUID: JDzZaxu4TbKUfX3ZKF9Yfg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11413"; a="47302446"
 X-IronPort-AV: E=Sophos;i="6.15,236,1739865600"; 
-   d="scan'208";a="47302435"
+   d="scan'208";a="47302446"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2025 05:39:03 -0700
-X-CSE-ConnectionGUID: PVkUoo28TwGZis197IUcuQ==
-X-CSE-MsgGUID: YwkKF6ByQTiUPeHI350Kjg==
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2025 05:39:06 -0700
+X-CSE-ConnectionGUID: 1gnGHeOxQ6eJ3OYieW2Eag==
+X-CSE-MsgGUID: WNg/ee6kS1CxaSIP+BRMkg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.15,236,1739865600"; 
-   d="scan'208";a="133137449"
+   d="scan'208";a="133137463"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2025 05:39:01 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Apr 2025 05:39:05 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 10/14] wifi: iwlwifi: mld: simplify iwl_mld_rx_fill_status()
-Date: Thu, 24 Apr 2025 15:38:27 +0300
-Message-Id: <20250424153620.77010d6a6694.I2fd06b073460717d324245482110cb0381218526@changeid>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH wireless-next 12/14] wifi: iwlwifi: add definitions for iwl_mac_power_cmd version 2
+Date: Thu, 24 Apr 2025 15:38:29 +0300
+Message-Id: <20250424153620.991ff01b8d16.Id0aa4061d7926753b03a13bf94ec1ac9e1d18745@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250424123831.3524359-1-miriam.rachel.korenblit@intel.com>
 References: <20250424123831.3524359-1-miriam.rachel.korenblit@intel.com>
@@ -62,125 +62,62 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+This version has a new flag bit that indicates whether or not SMPS is
+allowed for the MAC.
+This only adds the API, the actual support will be done in other
+patches.
 
-Move some code that's only done when having received data out
-of iwl_mld_rx_fill_status() and remove the two arguments that
-are related to that. This simplifies the function for the no-
-data case.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/rx.c | 69 ++++++++++-----------
- 1 file changed, 32 insertions(+), 37 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/power.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-index ef366b7a20d1..3e69f2a4fa81 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-@@ -1160,8 +1160,6 @@ static void iwl_mld_add_rtap_sniffer_config(struct iwl_mld *mld,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index 29a1a7448cbe..1238c23ac48b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2024 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
+  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+@@ -89,6 +89,7 @@ struct iwl_ltr_config_cmd {
+  * @POWER_FLAGS_LPRX_ENA_MSK: Low Power RX enable.
+  * @POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
+  *		detection enablement
++ * @POWER_FLAGS_ENABLE_SMPS_MSK: SMPS is allowed for this vif
+ */
+ enum iwl_power_flags {
+ 	POWER_FLAGS_POWER_SAVE_ENA_MSK		= BIT(0),
+@@ -99,6 +100,7 @@ enum iwl_power_flags {
+ 	POWER_FLAGS_ADVANCE_PM_ENA_MSK		= BIT(9),
+ 	POWER_FLAGS_LPRX_ENA_MSK		= BIT(11),
+ 	POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK	= BIT(12),
++	POWER_FLAGS_ENABLE_SMPS_MSK		= BIT(14),
+ };
  
- static void iwl_mld_rx_fill_status(struct iwl_mld *mld, struct sk_buff *skb,
- 				   struct iwl_mld_rx_phy_data *phy_data,
--				   struct iwl_rx_mpdu_desc *mpdu_desc,
--				   struct ieee80211_hdr *hdr,
- 				   int queue)
- {
- 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
-@@ -1170,44 +1168,12 @@ static void iwl_mld_rx_fill_status(struct iwl_mld *mld, struct sk_buff *skb,
- 	u8 stbc = u32_get_bits(rate_n_flags, RATE_MCS_STBC_MSK);
- 	bool is_sgi = rate_n_flags & RATE_MCS_SGI_MSK;
+ #define IWL_POWER_VEC_SIZE 5
+@@ -216,7 +218,6 @@ struct iwl_mac_power_cmd {
+ 	/* CONTEXT_DESC_API_T_VER_1 */
+ 	__le32 id_and_color;
  
--	if (WARN_ON_ONCE(phy_data->with_data && (!mpdu_desc || !hdr)))
--		return;
--
--	/* Keep packets with CRC errors (and with overrun) for monitor mode
--	 * (otherwise the firmware discards them) but mark them as bad.
--	 */
--	if (phy_data->with_data &&
--	    (!(mpdu_desc->status & cpu_to_le32(IWL_RX_MPDU_STATUS_CRC_OK)) ||
--	     !(mpdu_desc->status & cpu_to_le32(IWL_RX_MPDU_STATUS_OVERRUN_OK)))) {
--		IWL_DEBUG_RX(mld, "Bad CRC or FIFO: 0x%08X.\n",
--			     le32_to_cpu(mpdu_desc->status));
--		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
--	}
--
- 	phy_data->info_type = IWL_RX_PHY_INFO_TYPE_NONE;
+-	/* CLIENT_PM_POWER_TABLE_S_VER_1 */
+ 	__le16 flags;
+ 	__le16 keep_alive_seconds;
+ 	__le32 rx_data_timeout;
+@@ -237,7 +238,7 @@ struct iwl_mac_power_cmd {
+ 	u8 heavy_rx_thld_percentage;
+ 	u8 limited_ps_threshold;
+ 	u8 reserved;
+-} __packed;
++} __packed; /* CLIENT_PM_POWER_TABLE_S_VER_1, VER_2 */
  
--	if (phy_data->with_data &&
--	    likely(!(phy_data->phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD))) {
--		rx_status->mactime =
--			le64_to_cpu(mpdu_desc->v3.tsf_on_air_rise);
--
--		/* TSF as indicated by the firmware is at INA time */
--		rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
--	} else {
-+	if (phy_data->phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD)
- 		phy_data->info_type =
- 			le32_get_bits(phy_data->data1,
- 				      IWL_RX_PHY_DATA1_INFO_TYPE_MASK);
--	}
--
--	/* management stuff on default queue */
--	if (!queue && phy_data->with_data &&
--	    unlikely(ieee80211_is_beacon(hdr->frame_control) ||
--		     ieee80211_is_probe_resp(hdr->frame_control))) {
--		rx_status->boottime_ns = ktime_get_boottime_ns();
--
--		if (mld->scan.pass_all_sched_res == SCHED_SCAN_PASS_ALL_STATE_ENABLED)
--			mld->scan.pass_all_sched_res = SCHED_SCAN_PASS_ALL_STATE_FOUND;
--	}
- 
- 	/* set the preamble flag if appropriate */
- 	if (format == RATE_MCS_CCK_MSK &&
-@@ -1812,7 +1778,36 @@ void iwl_mld_rx_mpdu(struct iwl_mld *mld, struct napi_struct *napi,
- 	if (!queue && (phy_data.phy_info & IWL_RX_MPDU_PHY_AMPDU))
- 		iwl_mld_rx_update_ampdu_ref(mld, &phy_data, rx_status);
- 
--	iwl_mld_rx_fill_status(mld, skb, &phy_data, mpdu_desc, hdr, queue);
-+	/* Keep packets with CRC errors (and with overrun) for monitor mode
-+	 * (otherwise the firmware discards them) but mark them as bad.
-+	 */
-+	if (!(mpdu_desc->status & cpu_to_le32(IWL_RX_MPDU_STATUS_CRC_OK)) ||
-+	    !(mpdu_desc->status & cpu_to_le32(IWL_RX_MPDU_STATUS_OVERRUN_OK))) {
-+		IWL_DEBUG_RX(mld, "Bad CRC or FIFO: 0x%08X.\n",
-+			     le32_to_cpu(mpdu_desc->status));
-+		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+	}
-+
-+	if (likely(!(phy_data.phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD))) {
-+		rx_status->mactime =
-+			le64_to_cpu(mpdu_desc->v3.tsf_on_air_rise);
-+
-+		/* TSF as indicated by the firmware is at INA time */
-+		rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
-+	}
-+
-+	/* management stuff on default queue */
-+	if (!queue && unlikely(ieee80211_is_beacon(hdr->frame_control) ||
-+			       ieee80211_is_probe_resp(hdr->frame_control))) {
-+		rx_status->boottime_ns = ktime_get_boottime_ns();
-+
-+		if (mld->scan.pass_all_sched_res ==
-+				SCHED_SCAN_PASS_ALL_STATE_ENABLED)
-+			mld->scan.pass_all_sched_res =
-+				SCHED_SCAN_PASS_ALL_STATE_FOUND;
-+	}
-+
-+	iwl_mld_rx_fill_status(mld, skb, &phy_data, queue);
- 
- 	if (iwl_mld_rx_crypto(mld, sta, hdr, rx_status, mpdu_desc, queue,
- 			      le32_to_cpu(pkt->len_n_flags), &crypto_len))
-@@ -2024,7 +2019,7 @@ void iwl_mld_rx_monitor_no_data(struct iwl_mld *mld, struct napi_struct *napi,
- 	rx_status->freq = ieee80211_channel_to_frequency(channel,
- 							 rx_status->band);
- 
--	iwl_mld_rx_fill_status(mld, skb, &phy_data, NULL, NULL, queue);
-+	iwl_mld_rx_fill_status(mld, skb, &phy_data, queue);
- 
- 	/* No more radiotap info should be added after this point.
- 	 * Mark it as mac header for upper layers to know where
+ /*
+  * struct iwl_uapsd_misbehaving_ap_notif - FW sends this notification when
 -- 
 2.34.1
 
