@@ -1,36 +1,33 @@
-Received: from forward202d.mail.yandex.net (forward202d.mail.yandex.net [178.154.239.219])
+Received: from forward102d.mail.yandex.net (forward102d.mail.yandex.net [178.154.239.213])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C9D31624E5;
-	Thu, 24 Apr 2025 18:41:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D52C7290BC0;
+	Thu, 24 Apr 2025 18:52:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.213
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745520106; cv=none; b=ceK/ruuPsQWv5/L2PPxG6UDh9o7mkCpTjH9lw/DdAC6MF7VfByQmDdXofzJXWU8HxyR8M/5P5r76mao4rHGlv+4AkCcEKrTxd7YlSAMnGONVt/TS7JyEyt6Mkh5+msu0X8FC1pM1TKrzTsp3+UWwZWcab9f91cYFiyEb1OMogGk=
+	t=1745520781; cv=none; b=f43VPU0lXBRD7g5Xh2e92j4rNJQwnN0yJyyV5rrakFBLI75ZFZRQriCMulQ+YFdRHriS9w8Yhkz5BatdWzCrlwQldx27/2Z+Bpqp1EcG9b+iFQL4bEeIYHhnpi+qclLoVqwZu6Qs7Zpjju99EJbGZ+vSPnVCJB8Lp4vVhH6BHdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745520106; c=relaxed/simple;
-	bh=UY7mwzK6h3h/JHCIa8gPjepYiPqxs1+ZGL7ML4m7Lc0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=I+eE2LlGME2Fbiy2qN5yFcF9Ai9nwnKakJKaJktI5vTsGBbvDfO1dY+MvFcg7jidenhyUXtBrUPf1CxMVK9VJEehQpPCUU6XKiJkj/3zYCtBcu/4tDI4nrJ7d2B7s9TrFL5Mhu774qTQjD1WNHb0wRZ206rB34IbxwnOQi7NjmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=GcZBwvFW; arc=none smtp.client-ip=178.154.239.219
+	s=arc-20240116; t=1745520781; c=relaxed/simple;
+	bh=OygmFMPByzJxZQZ/STA64KpZbimdRAppuLQsI9S0AGM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=izdCf0/eDERdiZPv/A5YrFEIo+CAfeKnNvQb4x85nK643ZpSTPkry6HHy3GZ4AC0hiYyKo8pVLGVcsNF+8wMD8ANpPzzpSZq6kggBPjwpgc7kVwAzcwfzb4wIqVKHeoy6LM89n8F3V/l+8xWYO+YRhaaja6rM02+Q/57q1we2aU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru; spf=pass smtp.mailfrom=rosa.ru; dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b=NQaIx+3H; arc=none smtp.client-ip=178.154.239.213
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosa.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rosa.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="GcZBwvFW"
-Received: from forward100d.mail.yandex.net (forward100d.mail.yandex.net [IPv6:2a02:6b8:c41:1300:1:45:d181:d100])
-	by forward202d.mail.yandex.net (Yandex) with ESMTPS id 2DC43689D4;
-	Thu, 24 Apr 2025 21:33:56 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-77.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-77.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:3bcd:0:640:dc38:0])
-	by forward100d.mail.yandex.net (Yandex) with ESMTPS id 075F160027;
-	Thu, 24 Apr 2025 21:33:48 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-77.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id kXVCAB2LZmI0-s6An8AkH;
-	Thu, 24 Apr 2025 21:33:47 +0300
+	dkim=pass (1024-bit key) header.d=rosa.ru header.i=@rosa.ru header.b="NQaIx+3H"
+Received: from mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:bca8:0:640:45be:0])
+	by forward102d.mail.yandex.net (Yandex) with ESMTPS id E49B860983;
+	Thu, 24 Apr 2025 21:52:48 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id kqV2ll1LoCg0-foSXLjIP;
+	Thu, 24 Apr 2025 21:52:48 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rosa.ru; s=mail;
-	t=1745519627; bh=9699AcloeCDb7D22U3eJAvZmA6C/RcO8yloHAzmxeEk=;
+	t=1745520768; bh=eUvSEcjM3P32iq/WojbrYA0IxejTJGbUaeImRlzSclk=;
 	h=Message-Id:Date:Cc:Subject:To:From;
-	b=GcZBwvFWGhzYWKa9NQMASVuJBRpvlkYld+BsaOPqKfl13YUPViF8gaZJ3zpsyBMdb
-	 KDLpkzrEiV8s0HNRIWdiY2w+lhHpUbJAc7sp9iNHRXI22CYeEJVLFWUXVfyurU0ZIJ
-	 fjQCzYrIsxvJq1gI0U0TKhe8rIpXDy1K/E54Xurc=
-Authentication-Results: mail-nwsmtp-smtp-production-main-77.klg.yp-c.yandex.net; dkim=pass header.i=@rosa.ru
+	b=NQaIx+3H/okY2atnyMu/dUv32bXBU42WHY0TqPoEtI0QKqKM7F3Odw+FQWp5HAGP6
+	 ZBAvJn6f8+pj2lYidSh1sQvnQfLx+lIlahix+d3S1hqxecKxU2QdhvbrLawUMkm1uH
+	 iP7xJkGEjh2ox33wGR52SZk9Q6JftyrFHnOSesUA=
+Authentication-Results: mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net; dkim=pass header.i=@rosa.ru
 From: Alexei Safin <a.safin@rosa.ru>
 To: Stanislaw Gruszka <stf_xl@wp.pl>
 Cc: Alexei Safin <a.safin@rosa.ru>,
@@ -41,10 +38,11 @@ Cc: Alexei Safin <a.safin@rosa.ru>,
 	Paolo Abeni <pabeni@redhat.com>,
 	linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlegacy: 4965: fix possible out-of-bounds access in il4965_tx_cmd_build_rate()
-Date: Thu, 24 Apr 2025 21:33:38 +0300
-Message-Id: <20250424183338.3277-1-a.safin@rosa.ru>
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v2] iwlegacy: 4965: fix possible out-of-bounds access in il4965_tx_cmd_build_rate()
+Date: Thu, 24 Apr 2025 21:52:44 +0300
+Message-Id: <20250424185244.3562-1-a.safin@rosa.ru>
 X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -69,6 +67,7 @@ Found by Linux Verification Center (linuxtesting.org) with SVACE.
 Fixes: 7ac9a364c172 ("iwlegacy: move under intel directory")
 Signed-off-by: Alexei Safin <a.safin@rosa.ru>
 ---
+v2: change reciepent
  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
