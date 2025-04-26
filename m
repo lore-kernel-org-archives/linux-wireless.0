@@ -1,97 +1,255 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+Received: from mail-il1-f174.google.com (mail-il1-f174.google.com [209.85.166.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFE01EA7DD
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2025 20:27:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 986901DFF0;
+	Sat, 26 Apr 2025 23:55:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745699243; cv=none; b=kWb8li50eJAXoz0KX6odu7Z1rTytpjBMVTp7pirgwvQ+O3XmnULC8nfDxw5NvT0284KuSWBhMsfzXJdvB49k31zfIoUaJW0Yp0lp5RywbNi7WJFA1YGdAxwZKpvObqCLdLYSKssiVw928B1RCL2bs71DalECm54Du2ty0soPOB0=
+	t=1745711745; cv=none; b=L4tX695O28ZgNhnUIRjarVh4mAalAesGjixfygFSyXlF3zDYENpS/AgN2gqu5bWv+N+4iD4wXUgXHwEwgbiw5z75YeiWsYmgx4XzorUTUQ5zUvs4Fin4DF2q8oCUL4PzCWzYfTvPIztiCE9JZMQyh9AoutYU0VQjPeed5rBGC54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745699243; c=relaxed/simple;
-	bh=47viKrJ06wefziWd0nR3v1borq4SwPMPeWa28MhV0k4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tNh/4lvfyeHDaFf/hXlYxGJHGitdw7TXRwjRQMrvXk9gHu0lXqF2dxQrLxQVGLDeUg0dTg6YYeRM1V50y6FU6wOW0vUHV5/khzSHeM9OEcetRpxV1AwLQs9nKZslotCK8M+3QIHzx84L9GtE43ZbotOiIiqK6NOqGrQgxYZHJHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k2Vugnic; arc=none smtp.client-ip=209.85.218.44
+	s=arc-20240116; t=1745711745; c=relaxed/simple;
+	bh=CN04mp5Hzz4TxfJzA9UkhfxZazobzkg4L4sWjiSrggo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jvCh2XtAS9HodZQ1g3i4q5QxJQYTlLVXGkqF7RY5E+Cn0oUu8k0wnEFWACVMFSRrIxfaTk9gON7H1XlnGxxZsJSmViPiSUpoZQs00eRD7kL9YmMOJ3JWZ98L2gcP9S+LsCzKc+AqrKAkvbv3sVB1LuLZF08zzVAeQb3Wd54oEMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BgcNZKOo; arc=none smtp.client-ip=209.85.166.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k2Vugnic"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-ac2ab99e16eso734880566b.0
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Apr 2025 13:27:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BgcNZKOo"
+Received: by mail-il1-f174.google.com with SMTP id e9e14a558f8ab-3d57143ee39so31423495ab.1;
+        Sat, 26 Apr 2025 16:55:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745699239; x=1746304039; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=PoC+KF50VJ4AzNjYTDphbT/eoTPimlkMf/gxxvjVKxA=;
-        b=k2VugnicqLFqslrDyd6mP/5nPgQsa62f3T+v1DDQZDKw9uLC6mS2yGzgTeGf7fq/Hb
-         ZnUIqc2OGzB19mqRUS3OvEedl8vFkXC8lziA5c5D7vRHbtlSM+p8eF72Jm3y2VhJ7Xvw
-         pOf18+PvEcoRMTb9w9MMKM0EyF7syOngoaVCtAjeZv0G3CVwCiYWSOfO6KSyecM0CBaU
-         dPQlHwjeMGrF4F1AHZdJVUVqD/mD43UGHDINv84Bj9u7gVqdbGyazhy4nRgJspv6tKY1
-         j7+XWSzoRDQfVvPO7FCJFNbnEq23508GO2RZRC5HJm6lh/MmEi5fkPpD30wFGgKeK4bj
-         3A6w==
+        d=gmail.com; s=20230601; t=1745711742; x=1746316542; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XaztB6z6BSPvlaDYmOQ1mMHeos6bY4JMrsEa59E6gxk=;
+        b=BgcNZKOoTCvXvQjv40kSjy6DG0Heab42mIwlPdr1r6GsDZADRUURLAMBHuZ4PX5m8Z
+         wwS8EGL8cadfiocl8s93g+hMkV/f3fndichKIS8xxolPXPUmLc1bCM70BzwiEOCeScpp
+         LXX0OGegvVbihCQyo08pL4pdnVTN7Hx3+T7OipSDkroDYb0OrCu15f1sVfYu/JtgYeC5
+         lpAKmn/QQ+JJWochsotpEUTdGEc0/dm0jI1G9KS7TzYWPnP65p6+9S0p828E1rGvKs/j
+         wB/1O4cjew/kdxApFHhxEZloIhdPkYnj4wxP8Lmi2CHnfM92vK5SFmLMlcTHXHwqPPRB
+         dVrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745699239; x=1746304039;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PoC+KF50VJ4AzNjYTDphbT/eoTPimlkMf/gxxvjVKxA=;
-        b=HZ07RBmb/rDNb9tNiUOnei9Fq4n0ZO4OKOft7sPiEBZoetYdrKwDGRuPmwjn1VdBeH
-         MdvoBTDtmovkWJV2VTqelI/nOnBlOFYaGhmhoc7Nx2GJdrtF+A7+2j/s3rpQ5RxRToEH
-         t6LFnt4hG+K1xpsKPK8XPVtFEUWNEYRFZbqBGHBBr3ljLMLwUU/ZRz+r6eowUz4vupsc
-         0d2Rk2PZg9+hkLpWNUqHiUyZlbKzI70uuc9xKep882CWRJYNK7qdtUZzY1nSD5ohq0aq
-         bf15yrHCJo/8Axati/G0MdNYOAPoLs3sSls6kvywtJ+hkO5m/Nv+nha4GvQmT6Xwe8We
-         zdsA==
-X-Gm-Message-State: AOJu0Ywm9xsq8kopw/u2hCRcgN4VsDllxdgc2vIwdJsztaDeUUiXAz5L
-	08pZ+zt9oUlLkOfRYQgDQqlsyRKsjA6O8NejCqVpFcgNMVZblSBOCnHJ8Q==
-X-Gm-Gg: ASbGnctwf4uXvf36hOVwlNHdqZbccIoEJqaEQPtLLy2z4ClH//Cty//fzVfbb5ElGFs
-	E0D0J3exgsmh4b2FdvKOFn/CGIkpOnhzhBJvQcAeTdITNXhViOsuaFrPma9o1NBqAKIJHzwIKGX
-	xOK3V4oRRU1nJlHXT+CJPA+w2LNcusICkU82f6LcZiwWh9Q2owYBJawKRBNEIDzhBl0X/tKbFd1
-	3BMXBu9I082TPBXI4LoWTDE8C3Bkgm49keo9Dftn8HAOywVvscFvHy9aWdXE6ji3i0cXv3fqOjr
-	8/HyZwlT1wIusM1iB9BvWFDM1v+HM0/z7gysK6UOPkWmyXwuP+r+WttkFvZEA/jUCAxG29NuGQ6
-	OzhyO
-X-Google-Smtp-Source: AGHT+IEeo0+9AOc0Iu6COpWRV3BiQ3+6SMEmgdjccppvcU4pWa/X+D1nATNZCjZ3RYLUYNYtPs3veQ==
-X-Received: by 2002:a17:907:9812:b0:acb:5070:dd19 with SMTP id a640c23a62f3a-ace7140871emr557015566b.61.1745699239257;
-        Sat, 26 Apr 2025 13:27:19 -0700 (PDT)
-Received: from hp.lan (109241135220.swidnica.vectranet.pl. [109.241.135.220])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace6e587093sm336388466b.80.2025.04.26.13.27.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 26 Apr 2025 13:27:18 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: [PATCH iw v2] iw: print HE mcs correctly when mcs_len
-Date: Sat, 26 Apr 2025 22:26:48 +0200
-Message-ID: <20250426202702.913342-1-janusz.dziedzic@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20230601; t=1745711742; x=1746316542;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XaztB6z6BSPvlaDYmOQ1mMHeos6bY4JMrsEa59E6gxk=;
+        b=MquVTAAjQNTdKiGXVSrCK2wYGwmys7OuTDvUqhv65t8xQnppxkzvTkmmRUK3vhq/b6
+         tQLAKQfFKVGWHThdV+PxfSOxB0UOPEIZyQGqFzooogf5YHrzHTf+dw8RDGyFgQqkNlsU
+         fbS8G6IPJZ4tewj53yffwTl2ORJV0SFdDoi/73iTYvDfip0cypfCMNYBue5cykzJStG5
+         U9SMCEgY9IC4fWKe8DcXgCE3qTmu5ieqjpErrTEUoujS0TZkOTxXPYW+O0sCvF3dER43
+         eiMxFfwXb/Ir5hOk2Ht06TCcVvgb/MnXzALpscT8qxPHqdNVi+S3TpYt1QpMds0+6KSC
+         b72g==
+X-Forwarded-Encrypted: i=1; AJvYcCUzUcsDFSlkPjGXIF8Vwn3nap9E1MPdW0yzw6dA41k/CxfzWqEJUvS3qKM7Z2OWvnJvxTaxdRs=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8lo9IvPMHV4YXIEoAx8d56+2SNio6QNHpQevcaGh6/R0ISk/P
+	OFNvai2TCm1BiXbQOdDJOwOtD8rAKrJbu7CBxUpE4iw3GNvrty4ntfK4wuU0WjA/q6IDcT/6yen
+	+aZEQ/ulaEiD7qiHlWNDFD6X25F8=
+X-Gm-Gg: ASbGncsDIfLyu0QcHEu8xQhef29nIawMVRgI1rehDF2+gveQbPLKalhRdddoFu1tsMk
+	5mI7fKbzeEejn4Dl1yAwLAFT1PxShTVPbC0PImx0Mvj/HUD+AafHCaGclt2TMe61JVELZVtL6/9
+	DPZI47hZFWxJo5pXGC0Ygu9Kjxw7p2ni0=
+X-Google-Smtp-Source: AGHT+IHB77RAetVr2KVVYI4l5ew77jStknccW/0eNisDbiA6s+azELSQpGS+qRcnMdXwZH59qeVJcTsH9bSJSAGeptg=
+X-Received: by 2002:a05:6e02:178d:b0:3d8:20f0:4006 with SMTP id
+ e9e14a558f8ab-3d942d1dde3mr45773585ab.4.1745711742604; Sat, 26 Apr 2025
+ 16:55:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250313134942.52ff54a140ec.If390bbdc46904cf451256ba989d7a056c457af6e@changeid>
+In-Reply-To: <20250313134942.52ff54a140ec.If390bbdc46904cf451256ba989d7a056c457af6e@changeid>
+From: Jason Xing <kerneljasonxing@gmail.com>
+Date: Sun, 27 Apr 2025 07:55:06 +0800
+X-Gm-Features: ATxdqUENz_2vM1tjB6p41stTqxzx6V15A7OUEGWXUtyvYhhmMBXSxGW3p43wmeE
+Message-ID: <CAL+tcoBSj_ddXkee9q9Yr_GUTEAVHprBC-JNEAJZiJZP-+324g@mail.gmail.com>
+Subject: Re: [RFC PATCH] wifi: free SKBTX_WIFI_STATUS skb tx_flags flag
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Print HE mcs correctly when lower layer
-report correct/real mcs length.
+Hi Johannes,
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
----
- util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, Mar 13, 2025 at 9:01=E2=80=AFPM Johannes Berg <johannes@sipsolution=
+s.net> wrote:
+>
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Someone mentioned today at netdevconf that we've run out of
+> tx_flags in the skb_shinfo(). Gain one bit back by removing
+> the wifi bit. We should be able to do that because the only
+> userspace application for it (hostapd) doesn't change the
+> setting on the socket, it just uses different sockets, and
+> normally doesn't even use this any more, sending the frames
+> over nl80211 instead.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/util.c b/util.c
-index c6d5974..e0bb513 100644
---- a/util.c
-+++ b/util.c
-@@ -1399,7 +1399,7 @@ static void __print_he_capa(const __u16 *mac_cap,
- 			continue;
- 
- 		/* Supports more, but overflow? Abort. */
--		if ((i * 2 + 2) * sizeof(le16toh(mcs_set[0])) >= mcs_len)
-+		if ((i * 2 + 2) * sizeof(le16toh(mcs_set[0])) > mcs_len)
- 			return;
- 
- 		for (j = 0; j < 2; j++) {
--- 
-2.43.0
+Do you have plans to repost it recently in net-next? I'm going to
+implement the rx path for BFP timestamping based on this patch :)
 
+Thanks,
+Jason
+
+> ---
+>  drivers/net/wireless/ath/wil6210/txrx.h     | 3 ++-
+>  drivers/net/wireless/marvell/mwifiex/main.c | 3 ++-
+>  include/linux/skbuff.h                      | 3 ---
+>  include/net/sock.h                          | 2 --
+>  net/mac80211/mesh.c                         | 3 ++-
+>  net/mac80211/tx.c                           | 9 ++++-----
+>  6 files changed, 10 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wil6210/txrx.h b/drivers/net/wirele=
+ss/ath/wil6210/txrx.h
+> index 689f68d89a44..33ccd0b248d4 100644
+> --- a/drivers/net/wireless/ath/wil6210/txrx.h
+> +++ b/drivers/net/wireless/ath/wil6210/txrx.h
+> @@ -7,6 +7,7 @@
+>  #ifndef WIL6210_TXRX_H
+>  #define WIL6210_TXRX_H
+>
+> +#include <net/sock.h>
+>  #include "wil6210.h"
+>  #include "txrx_edma.h"
+>
+> @@ -617,7 +618,7 @@ static inline bool wil_need_txstat(struct sk_buff *sk=
+b)
+>         const u8 *da =3D wil_skb_get_da(skb);
+>
+>         return is_unicast_ether_addr(da) && skb->sk &&
+> -              (skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS);
+> +              sock_flag(skb->sk, SOCK_WIFI_STATUS);
+>  }
+>
+>  static inline void wil_consume_skb(struct sk_buff *skb, bool acked)
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wi=
+reless/marvell/mwifiex/main.c
+> index 45eecb5f643b..058687793a10 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -6,6 +6,7 @@
+>   */
+>
+>  #include <linux/suspend.h>
+> +#include <net/sock.h>
+>
+>  #include "main.h"
+>  #include "wmm.h"
+> @@ -943,7 +944,7 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct n=
+et_device *dev)
+>         multicast =3D is_multicast_ether_addr(skb->data);
+>
+>         if (unlikely(!multicast && skb->sk &&
+> -                    skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS &&
+> +                    sock_flag(skb->sk, SOCK_WIFI_STATUS) &&
+>                      priv->adapter->fw_api_ver =3D=3D MWIFIEX_FW_V15))
+>                 skb =3D mwifiex_clone_skb_for_tx_status(priv,
+>                                                       skb,
+> diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+> index 14517e95a46c..a8638c8a53b4 100644
+> --- a/include/linux/skbuff.h
+> +++ b/include/linux/skbuff.h
+> @@ -481,9 +481,6 @@ enum {
+>         /* reserved */
+>         SKBTX_RESERVED =3D 1 << 3,
+>
+> -       /* generate wifi status information (where possible) */
+> -       SKBTX_WIFI_STATUS =3D 1 << 4,
+> -
+>         /* determine hardware time stamp based on time or cycles */
+>         SKBTX_HW_TSTAMP_NETDEV =3D 1 << 5,
+>
+> diff --git a/include/net/sock.h b/include/net/sock.h
+> index 8daf1b3b12c6..2668c3ed45ef 100644
+> --- a/include/net/sock.h
+> +++ b/include/net/sock.h
+> @@ -2700,8 +2700,6 @@ static inline void _sock_tx_timestamp(struct sock *=
+sk,
+>                                 *tskey =3D atomic_inc_return(&sk->sk_tske=
+y) - 1;
+>                 }
+>         }
+> -       if (unlikely(sock_flag(sk, SOCK_WIFI_STATUS)))
+> -               *tx_flags |=3D SKBTX_WIFI_STATUS;
+>  }
+>
+>  static inline void sock_tx_timestamp(struct sock *sk,
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index 974081324aa4..e77e623c8b77 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -8,6 +8,7 @@
+>
+>  #include <linux/slab.h>
+>  #include <linux/unaligned.h>
+> +#include <net/sock.h>
+>  #include "ieee80211_i.h"
+>  #include "mesh.h"
+>  #include "wme.h"
+> @@ -776,7 +777,7 @@ bool ieee80211_mesh_xmit_fast(struct ieee80211_sub_if=
+_data *sdata,
+>         if (ethertype < ETH_P_802_3_MIN)
+>                 return false;
+>
+> -       if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
+> +       if (skb->sk && sock_flag(skb->sk, SOCK_WIFI_STATUS))
+>                 return false;
+>
+>         if (skb->ip_summed =3D=3D CHECKSUM_PARTIAL) {
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 20179db88c4a..b75f72fbefd9 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -26,6 +26,7 @@
+>  #include <net/codel_impl.h>
+>  #include <linux/unaligned.h>
+>  #include <net/fq_impl.h>
+> +#include <net/sock.h>
+>  #include <net/gso.h>
+>
+>  #include "ieee80211_i.h"
+> @@ -2876,8 +2877,7 @@ static struct sk_buff *ieee80211_build_hdr(struct i=
+eee80211_sub_if_data *sdata,
+>         }
+>
+>         if (unlikely(!multicast &&
+> -                    ((skb->sk &&
+> -                      skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS) ||
+> +                    ((skb->sk && sock_flag(skb->sk, SOCK_WIFI_STATUS)) |=
+|
+>                       ctrl_flags & IEEE80211_TX_CTL_REQ_TX_STATUS)))
+>                 info_id =3D ieee80211_store_ack_skb(local, skb, &info_fla=
+gs,
+>                                                   cookie);
+> @@ -3774,7 +3774,7 @@ static bool ieee80211_xmit_fast(struct ieee80211_su=
+b_if_data *sdata,
+>                 return false;
+>
+>         /* don't handle TX status request here either */
+> -       if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
+> +       if (skb->sk && sock_flag(skb->sk, SOCK_WIFI_STATUS))
+>                 return false;
+>
+>         if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+> @@ -4664,8 +4664,7 @@ static void ieee80211_8023_xmit(struct ieee80211_su=
+b_if_data *sdata,
+>                         memcpy(IEEE80211_SKB_CB(seg), info, sizeof(*info)=
+);
+>         }
+>
+> -       if (unlikely(skb->sk &&
+> -                    skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)) {
+> +       if (unlikely(skb->sk && sock_flag(skb->sk, SOCK_WIFI_STATUS))) {
+>                 info->status_data =3D ieee80211_store_ack_skb(local, skb,
+>                                                             &info->flags,=
+ NULL);
+>                 if (info->status_data)
+> --
+> 2.48.1
+>
+>
