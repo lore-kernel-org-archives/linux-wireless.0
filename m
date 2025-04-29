@@ -1,224 +1,157 @@
-Received: from vps.xff.cz (vps.xff.cz [195.181.215.36])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88BD29C327;
-	Tue, 29 Apr 2025 02:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.181.215.36
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1939C148;
+	Tue, 29 Apr 2025 02:39:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745893273; cv=none; b=EYfw3fb6ve3ccQUWzQsmLLtL3V2TIqG16xo6vwxLGKVc6HTqEdrpLqPSerwmeIEumYqFnDS41XiowdkLsMzyAz9l0oAaVg2Q/7+q8CDtRTRAEnBoKj11odqqj5fedqsplxynro92y7fj931xnGmsaE3dlQMjZf0rpPgAjXeLrPk=
+	t=1745894367; cv=none; b=koTEzxLMIHCHkzoPuxIOMSpEHkdo8KiU1EX7I+kPbE8FlJf+L78NRvtu8x8dOhHg/smkr0j8NcdlttinONFuejf7uw7k2uhQNNCujPxP5GVbR02XztYj4a9pp8g0dVLgW9iTOaTbXBCXYWh0woq7TkyVmjAT0mMV8uh1Lt14CkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745893273; c=relaxed/simple;
-	bh=qKgN89vLfEMIK4xuMj7s0TAnx8FLxgnwgji9G/4c0+E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Dxs4btJt8GhoAFNapNOyXWGIUK6fENBWyl8MhLWYDB0I+frgCsVSxl4rMgQiVU4Uguu7BYdxDGVly92B6MxHF4eaZxhVMajC3y1he2MeC4mqdmi0uHkZkDzfT0hzmxHJ1SJAmpDEVH5sfFRQ5sPF5ScSTVh+Fq/qqCKbRrzqkp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=xff.cz; spf=pass smtp.mailfrom=xff.cz; dkim=pass (1024-bit key) header.d=xff.cz header.i=@xff.cz header.b=iOEES0j4; arc=none smtp.client-ip=195.181.215.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=xff.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xff.cz
+	s=arc-20240116; t=1745894367; c=relaxed/simple;
+	bh=CrwT/ljPsJFDXtcbdCiabcYKmXMKrWVP8Z31dUUNNA8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=tb6JmDfnvjSKdq6YAurUPW6kAr49cN9xZ2OwcdFagshDbPMZg7I8usW4v21SvrMVKEKU8AO8PXgr6DitNsAmBQVgpI47Y3PP5HwySfB72lpVu0QUUtELByn5ycX7he2n/pfhmkN+3nmFeoyXKKIdtASvftHFD3XMNkMYIe0GStw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=IR4ajaxR; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=xff.cz header.i=@xff.cz header.b="iOEES0j4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=xff.cz; s=mail;
-	t=1745893266; bh=qKgN89vLfEMIK4xuMj7s0TAnx8FLxgnwgji9G/4c0+E=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=iOEES0j4q622GuNEzs/hMz5ANDw4QyCVQJ05nujM8QzvtNEcIqZZiM6Koap91Xhd2
-	 iGB/1HoW511f5T9IfRd5S6SLnoCJncljaZi20JpmiltcdSjcZXWdR6E0QkIsbHuYiG
-	 9llyah2F8+NmLqlqQgmww8KbeBtc5khi3gWl68K0=
-From: =?UTF-8?q?Ond=C5=99ej=20Jirman?= <megi@xff.cz>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Ondrej Jirman <megi@xff.cz>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] wifi: rtw89: Convert rtw89_core_set_supported_band to use devm_*
-Date: Tue, 29 Apr 2025 04:20:32 +0200
-Message-ID: <20250429022046.1656056-2-megi@xff.cz>
-In-Reply-To: <20250429022046.1656056-1-megi@xff.cz>
-References: <20250429022046.1656056-1-megi@xff.cz>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="IR4ajaxR"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53SNqEg5025873;
+	Tue, 29 Apr 2025 02:39:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	NKktZXjUVHJTf01+SeFofdJnC/BYWnl8koKOQ2R+rp0=; b=IR4ajaxRVA6arZQq
+	Xyn9Yc1IamGIubk8l+gDMRwVv0fzEyE3FFWhSI/atsW7o3zHbM1uHsodP6mq5+H0
+	XwqGa/cEkaimj/yAAfIc7I77FSpSMkzAqghLCpatshwCJuo9j2PVnuWGvrUyRe/r
+	oGV5k+vkrogZldvsV5qJW7hzt7Ae3njUZQJRVfsk+ixlc7UBBppLlI4i1MevJBSO
+	0vtRdap3I6bGcBSF/RnEuI20hTLZbZRZm7GoPZGTagGcqyFS10oUQ1DH2WxK/EYx
+	vc7wGqVN0/FnK2YHN8hStdfjfqMGsdy/gNw3KZncel4I6YuGC13Xke5euyD0bVhY
+	kvefFw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 468qq5j4tq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 29 Apr 2025 02:39:17 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 53T2dG5P007055
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 29 Apr 2025 02:39:17 GMT
+Received: from [10.231.195.67] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 28 Apr
+ 2025 19:39:14 -0700
+Message-ID: <f574983e-bd12-4d8b-b294-87c5e554f784@quicinc.com>
+Date: Tue, 29 Apr 2025 10:39:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5] wifi: ath11k: Fix memory reuse logic
+To: Muhammad Usama Anjum <usama.anjum@collabora.com>,
+        <jeff.johnson@oss.qualcomm.com>, Jeff Johnson <jjohnson@kernel.org>
+CC: <kernel@collabora.com>, <linux-wireless@vger.kernel.org>,
+        <ath11k@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+References: <20250428080242.466901-1-usama.anjum@collabora.com>
+Content-Language: en-US
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+In-Reply-To: <20250428080242.466901-1-usama.anjum@collabora.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: jep2DKH73GU4AkaTDt10RXB5OvepQmwV
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI5MDAxOCBTYWx0ZWRfX6XHN9NauGqYO ER9JmSwSW4mDiLyflRcUjdBr7pAgY+55VbAMv2QXcOGf6wY72O+nWzdVEATLcxGgNPCU5CnGwHk W0ACY3bm4n/gJkTzAJT7vs7SgJEWUcwjsOADy77swkrpb5SdNSyxfjfhXYj/har6+hzC/jBvIfC
+ fimFqae+f9Lbq3hNip18GO6nf+iPWDLhI9mGdOvShOkfcLY42PPZ0hAZ5bMYeNNX74mfrwZwodk Ev0D5ZhxxfpF1T+Xw13XEzsh0gaaU6vBpYVwo0zLRISz/1dbsIxVq4Ja209VKU2vyQm4kputsiC JiwlxO6FOicKbPgKEmG+lVDjfHNoA6h4Hx/vpw53VpQKwEroj6czezc286Eq9VkNEx7HYQHYXuU
+ Zd01KuzXATHapr7KrdhevpzD1g+jcAW1N9ksdtkFyQsYgB0e5kY3PdIS9qDQbpfhWOtoNWbH
+X-Authority-Analysis: v=2.4 cv=QP1oRhLL c=1 sm=1 tr=0 ts=68103bd5 cx=c_pps a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17 a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=QX4gbG5DAAAA:8 a=COk6AnOGAAAA:8 a=7xKvOyCpBhAOSqRoKRkA:9
+ a=QEXdDO2ut3YA:10 a=AbAUZ8qAyYyZVLSsDulk:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: jep2DKH73GU4AkaTDt10RXB5OvepQmwV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-04-29_01,2025-04-24_02,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
+ clxscore=1015 mlxlogscore=999 lowpriorityscore=0 adultscore=0 mlxscore=0
+ bulkscore=0 phishscore=0 impostorscore=0 priorityscore=1501 malwarescore=0
+ classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2504290018
 
-From: Ondrej Jirman <megi@xff.cz>
 
-The code can be simplified by using device managed memory
-allocations. Simplify it.
 
-Signed-off-by: Ondrej Jirman <megi@xff.cz>
----
- drivers/net/wireless/realtek/rtw89/core.c | 99 +++++++++--------------
- 1 file changed, 36 insertions(+), 63 deletions(-)
+On 4/28/2025 4:02 PM, Muhammad Usama Anjum wrote:
+> Firmware requests 2 segments at first. The first segment is of 6799360
+> whose allocation fails due to dma remapping not available. The success
+> is returned to firmware. Then firmware asks for 22 smaller segments
+> instead of 2 big ones. Those get allocated successfully. At suspend/
+> hibernation time, these segments aren't freed as they will be reused
+> by firmware after resuming.
+> 
+> After resuming, the firmware asks for the 2 segments again with the
+> first segment of 6799360 size. Since chunk->vaddr is not NULL, the
+> type and size are compared with the previous type and size to know if
+> it can be reused or not. Unfortunately, it is detected that it cannot
+> be reused and this first smaller segment is freed. Then we continue to
+> allocate 6799360 size memory which fails and ath11k_qmi_free_target_mem_chunk()
+> is called which frees the second smaller segment as well. Later success
+> is returned to firmware which asks for 22 smaller segments again. But
+> as we had freed 2 segments already, we'll allocate the first 2 new
+> smaller segments again and reuse the remaining 20. Hence 20 small
+> segments are being reused instead of 22.
+> 
+> Add skip logic when vaddr is set, but size/type don't match. Use the
+> same skip and success logic as used when dma_alloc_coherent() fails.
+> By skipping, the possibility of resume failure due to kernel failing to
+> allocate memory for QMI can be avoided.
+> 
+> 	kernel: ath11k_pci 0000:03:00.0: failed to allocate dma memory for qmi (524288 B type 1)
+> 	ath11k_pci 0000:03:00.0: failed to allocate qmi target memory: -22
+> 
+> Tested-on: WCN6855 WLAN.HSP.1.1-03926.13-QCAHSPSWPL_V2_SILICONZ_CE-2.52297.6
+> 
+> Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
+> ---
+> Changes since v1:
+> - Update description
+> 
+> Changes since v2:
+> - Update description and title of patch
+> 
+> Changes since v3:
+> - Update description and title of patch
+> 
+> Changes since v4:
+> - Update title of the patch
+> ---
+>  drivers/net/wireless/ath/ath11k/qmi.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+> index 47b9d4126d3a9..2782f4723e413 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+> @@ -1993,6 +1993,15 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
+>  			    chunk->prev_size == chunk->size)
+>  				continue;
+>  
+> +			if (ab->qmi.mem_seg_count <= ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT) {
+> +				ath11k_dbg(ab, ATH11K_DBG_QMI,
+> +					   "size/type mismatch (current %d %u) (prev %d %u), try later with small size\n",
+> +					    chunk->size, chunk->type,
+> +					    chunk->prev_size, chunk->prev_type);
+> +				ab->qmi.target_mem_delayed = true;
+> +				return 0;
+> +			}
+> +
+>  			/* cannot reuse the existing chunk */
+>  			dma_free_coherent(ab->dev, chunk->prev_size,
+>  					  chunk->vaddr, chunk->paddr);
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index cc9b014457ac..b164bc767e82 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -4361,17 +4361,18 @@ static void rtw89_init_eht_cap(struct rtw89_dev *rtwdev,
- 
- #define RTW89_SBAND_IFTYPES_NR 2
- 
--static void rtw89_init_he_eht_cap(struct rtw89_dev *rtwdev,
--				  enum nl80211_band band,
--				  struct ieee80211_supported_band *sband)
-+static int rtw89_init_he_eht_cap(struct rtw89_dev *rtwdev,
-+				 enum nl80211_band band,
-+				 struct ieee80211_supported_band *sband)
- {
- 	struct ieee80211_sband_iftype_data *iftype_data;
- 	enum nl80211_iftype iftype;
- 	int idx = 0;
- 
--	iftype_data = kcalloc(RTW89_SBAND_IFTYPES_NR, sizeof(*iftype_data), GFP_KERNEL);
-+	iftype_data = devm_kcalloc(rtwdev->dev, RTW89_SBAND_IFTYPES_NR,
-+				   sizeof(*iftype_data), GFP_KERNEL);
- 	if (!iftype_data)
--		return;
-+		return -ENOMEM;
- 
- 	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
- 		switch (iftype) {
-@@ -4396,77 +4397,52 @@ static void rtw89_init_he_eht_cap(struct rtw89_dev *rtwdev,
- 	}
- 
- 	_ieee80211_set_sband_iftype_data(sband, iftype_data, idx);
-+	return 0;
- }
- 
- static int rtw89_core_set_supported_band(struct rtw89_dev *rtwdev)
- {
- 	struct ieee80211_hw *hw = rtwdev->hw;
--	struct ieee80211_supported_band *sband_2ghz = NULL, *sband_5ghz = NULL;
--	struct ieee80211_supported_band *sband_6ghz = NULL;
-+	struct ieee80211_supported_band *sband;
- 	u32 size = sizeof(struct ieee80211_supported_band);
- 	u8 support_bands = rtwdev->chip->support_bands;
-+	struct device *dev = rtwdev->dev;
-+	int ret;
- 
- 	if (support_bands & BIT(NL80211_BAND_2GHZ)) {
--		sband_2ghz = kmemdup(&rtw89_sband_2ghz, size, GFP_KERNEL);
--		if (!sband_2ghz)
--			goto err;
--		rtw89_init_ht_cap(rtwdev, &sband_2ghz->ht_cap);
--		rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_2GHZ, sband_2ghz);
--		hw->wiphy->bands[NL80211_BAND_2GHZ] = sband_2ghz;
-+		sband = devm_kmemdup(dev, &rtw89_sband_2ghz, size, GFP_KERNEL);
-+		if (!sband)
-+			return -ENOMEM;
-+		rtw89_init_ht_cap(rtwdev, &sband->ht_cap);
-+		ret = rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_2GHZ, sband);
-+		if (ret)
-+			return ret;
-+		hw->wiphy->bands[NL80211_BAND_2GHZ] = sband;
- 	}
- 
- 	if (support_bands & BIT(NL80211_BAND_5GHZ)) {
--		sband_5ghz = kmemdup(&rtw89_sband_5ghz, size, GFP_KERNEL);
--		if (!sband_5ghz)
--			goto err;
--		rtw89_init_ht_cap(rtwdev, &sband_5ghz->ht_cap);
--		rtw89_init_vht_cap(rtwdev, &sband_5ghz->vht_cap);
--		rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_5GHZ, sband_5ghz);
--		hw->wiphy->bands[NL80211_BAND_5GHZ] = sband_5ghz;
-+		sband = devm_kmemdup(dev, &rtw89_sband_5ghz, size, GFP_KERNEL);
-+		if (!sband)
-+			return -ENOMEM;
-+		rtw89_init_ht_cap(rtwdev, &sband->ht_cap);
-+		rtw89_init_vht_cap(rtwdev, &sband->vht_cap);
-+		ret = rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_5GHZ, sband);
-+		if (ret)
-+			return ret;
-+		hw->wiphy->bands[NL80211_BAND_5GHZ] = sband;
- 	}
- 
- 	if (support_bands & BIT(NL80211_BAND_6GHZ)) {
--		sband_6ghz = kmemdup(&rtw89_sband_6ghz, size, GFP_KERNEL);
--		if (!sband_6ghz)
--			goto err;
--		rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_6GHZ, sband_6ghz);
--		hw->wiphy->bands[NL80211_BAND_6GHZ] = sband_6ghz;
-+		sband = devm_kmemdup(dev, &rtw89_sband_6ghz, size, GFP_KERNEL);
-+		if (!sband)
-+			return -ENOMEM;
-+		ret = rtw89_init_he_eht_cap(rtwdev, NL80211_BAND_6GHZ, sband);
-+		if (ret)
-+			return ret;
-+		hw->wiphy->bands[NL80211_BAND_6GHZ] = sband;
- 	}
- 
- 	return 0;
--
--err:
--	hw->wiphy->bands[NL80211_BAND_2GHZ] = NULL;
--	hw->wiphy->bands[NL80211_BAND_5GHZ] = NULL;
--	hw->wiphy->bands[NL80211_BAND_6GHZ] = NULL;
--	if (sband_2ghz)
--		kfree((__force void *)sband_2ghz->iftype_data);
--	if (sband_5ghz)
--		kfree((__force void *)sband_5ghz->iftype_data);
--	if (sband_6ghz)
--		kfree((__force void *)sband_6ghz->iftype_data);
--	kfree(sband_2ghz);
--	kfree(sband_5ghz);
--	kfree(sband_6ghz);
--	return -ENOMEM;
--}
--
--static void rtw89_core_clr_supported_band(struct rtw89_dev *rtwdev)
--{
--	struct ieee80211_hw *hw = rtwdev->hw;
--
--	if (hw->wiphy->bands[NL80211_BAND_2GHZ])
--		kfree((__force void *)hw->wiphy->bands[NL80211_BAND_2GHZ]->iftype_data);
--	if (hw->wiphy->bands[NL80211_BAND_5GHZ])
--		kfree((__force void *)hw->wiphy->bands[NL80211_BAND_5GHZ]->iftype_data);
--	if (hw->wiphy->bands[NL80211_BAND_6GHZ])
--		kfree((__force void *)hw->wiphy->bands[NL80211_BAND_6GHZ]->iftype_data);
--	kfree(hw->wiphy->bands[NL80211_BAND_2GHZ]);
--	kfree(hw->wiphy->bands[NL80211_BAND_5GHZ]);
--	kfree(hw->wiphy->bands[NL80211_BAND_6GHZ]);
--	hw->wiphy->bands[NL80211_BAND_2GHZ] = NULL;
--	hw->wiphy->bands[NL80211_BAND_5GHZ] = NULL;
--	hw->wiphy->bands[NL80211_BAND_6GHZ] = NULL;
- }
- 
- static void rtw89_core_ppdu_sts_init(struct rtw89_dev *rtwdev)
-@@ -5337,7 +5313,7 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
- 	ret = rtw89_regd_setup(rtwdev);
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to set up regd\n");
--		goto err_free_supported_band;
-+		return ret;
- 	}
- 
- 	hw->wiphy->sar_capa = &rtw89_sar_capa;
-@@ -5345,7 +5321,7 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
- 	ret = ieee80211_register_hw(hw);
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to register hw\n");
--		goto err_free_supported_band;
-+		return ret;
- 	}
- 
- 	ret = rtw89_regd_init_hint(rtwdev);
-@@ -5360,8 +5336,6 @@ static int rtw89_core_register_hw(struct rtw89_dev *rtwdev)
- 
- err_unregister_hw:
- 	ieee80211_unregister_hw(hw);
--err_free_supported_band:
--	rtw89_core_clr_supported_band(rtwdev);
- 
- 	return ret;
- }
-@@ -5372,7 +5346,6 @@ static void rtw89_core_unregister_hw(struct rtw89_dev *rtwdev)
- 
- 	rtw89_rfkill_polling_deinit(rtwdev);
- 	ieee80211_unregister_hw(hw);
--	rtw89_core_clr_supported_band(rtwdev);
- }
- 
- int rtw89_core_register(struct rtw89_dev *rtwdev)
--- 
-2.49.0
+Reviewed-by: Baochen Qiang <quic_bqiang@quicinc.com>
+
 
