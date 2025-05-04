@@ -1,108 +1,109 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 235C91A8F60
-	for <linux-wireless@vger.kernel.org>; Sun,  4 May 2025 10:27:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E791F948
+	for <linux-wireless@vger.kernel.org>; Sun,  4 May 2025 12:36:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746354436; cv=none; b=JgLnSiAxuinnoP999jRW6Nhj6/CASbRVq3dYTHjogyrfnbWe+RwnyiMh3UTIlRrAS9X24+34z+APZsEl9gcUIXxfKWGbn+RJ3B2JySCYVK26pVMtaiTcF1QbbD98zjrP0Pyioz821kE/UaJCQYWwOmHJx+EDI2ncxE2QjTguMwE=
+	t=1746362215; cv=none; b=rmsmoFgvj42NBxixAoPo1jz8TItwAb/rVJDQANT5IXJHXYKoOhQsNXR6L2XtC0/VBdSS7mJnNhGjh3z2Daz+fDudxtDH9f1aioDh3t9VNP3AnoVeS9PTY5DKgUh+UNXeBhEVmq8D52NE5kujBB7dK2g+b4N9lMjDCyTm9OPNbxg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746354436; c=relaxed/simple;
-	bh=SMYNlK6luVQFDEwpYBnPenY5dqnX/EbdkPIan0npiUA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xt0s6BnKj3UkNfS7ZzCYe2T2NIIYf/CO92Mbv/4n/F4cI4Aw2erQ3+RDjaHpRicAlXKqnzI9TICPMWFU2t25XlSMQqFrIqOo1mMllS+g+cAdLilH5eAg5WSzKStJ9NDvIPkLlnz7xT8bEfTvP0vkjGmpQwEUyIC3SWiNzKpBMEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=T4UOPUi9; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1746362215; c=relaxed/simple;
+	bh=CM08xeHPPzPAtEx6J7jBMfY5mggSPnim894fiEb9CM0=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
+	 References:In-Reply-To; b=TVhxVHCk/7IMeiZSwbI75kLyVQxmERZfE6L6MZw+nidx6azXLP/Lf9kLOZwQBHKZ/VHy/ausWz1fSozxZ1A5e6fBenqNZVHM/zeBi3sdf41sx7zYZwFLEuvot4AiKl7sZnYIEt2dRKJzeAgrSpyQW+9GQlRC3vT0wBt8qQishX4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OIA6N3ID; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="T4UOPUi9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1746354435; x=1777890435;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=SMYNlK6luVQFDEwpYBnPenY5dqnX/EbdkPIan0npiUA=;
-  b=T4UOPUi95hOGXY3xvr52NtJ1liItPB3LhSjC26aohk7NFB9IzlG/VhRf
-   m7QdXtXobTwTluKajl+c5Pc8f9y3lwZZ5zSvaN/ssrtQKefT/VQwBHDt5
-   qpXqw0PjGVNSFcfx9Kz4AoOaapj7k4XyOhywxWqkqg79PraJe+62DbzTI
-   dis8lNdJN0E7Wqapq9y2V2SuuH6HU4OfBcvxiRhCosZmjYsjX2Bvro6Sl
-   dZM07sWs6d8jW2ypahudZGA7smKQU9sBnsHNIx35ZkXedY6qJ2vzORuyz
-   eLq4qVOj+/HVCbujXNjtUx3fUWBna97KrJAZy1huQihqmqS8hPURicLfr
-   w==;
-X-CSE-ConnectionGUID: EBqcQm14QNSoC2swOwfNLA==
-X-CSE-MsgGUID: ivaWThu7R6ah2eYNF4sdTA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11422"; a="65511521"
-X-IronPort-AV: E=Sophos;i="6.15,261,1739865600"; 
-   d="scan'208";a="65511521"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2025 03:27:14 -0700
-X-CSE-ConnectionGUID: ydja9nuuSfSPV/XG+KRjnw==
-X-CSE-MsgGUID: 3wX7afKLSZS2X0Kwz3e/rg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,261,1739865600"; 
-   d="scan'208";a="139778922"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 May 2025 03:27:13 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: miriam.rachel.korenblit@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 15/15] wifi: iwlwifi: dvm: pair transport op-mode enter/leave
-Date: Sun,  4 May 2025 13:26:30 +0300
-Message-Id: <20250504132447.714c3517548b.I49557e7ba8c03be2b558cc9fb5efa2a9fbab890e@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250504102630.757937-1-miriam.rachel.korenblit@intel.com>
-References: <20250504102630.757937-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OIA6N3ID"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-43d0c18e84eso14159215e9.3
+        for <linux-wireless@vger.kernel.org>; Sun, 04 May 2025 05:36:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1746362211; x=1746967011; darn=vger.kernel.org;
+        h=in-reply-to:references:cc:to:from:subject:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=CM08xeHPPzPAtEx6J7jBMfY5mggSPnim894fiEb9CM0=;
+        b=OIA6N3IDWQzaiE0p0v1l3CBSFTgin8lv4vs5etRVyKkE28GKfsTrSddAY8FI2GX8r3
+         ElQpfFuFDsfguEHzl8kW1t67kDjfZ9S3qNUK2V8EMPCpXGX0DWNHtGatKw6G6zvy8hBX
+         lqNbUu4WEtzFSZGBUFv0drn3A0xsMSRWDKPFHTLjrfCtmYCbNXSfCaENkcPaWfRVGwaB
+         ea4a+PH1DEMg63Csg+fuvOlZeS7RqZABKeS5AgbR+ZqtU4C6R722lN2VeaAs7RbZfIQy
+         Q3ZomwEgHXsm26h8L1sIoQ4+GS0INZRkzKXkMFY4vKiURS4WWJMQn5jeOPMilfe0Q07r
+         eLPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746362211; x=1746967011;
+        h=in-reply-to:references:cc:to:from:subject:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=CM08xeHPPzPAtEx6J7jBMfY5mggSPnim894fiEb9CM0=;
+        b=Rd0jpoDZGMJfqIrWOkilPLddCaCqhQvC+Tqf50acFL1AriFOug0y74goj5evfC+up1
+         k9kMGsi2N1eJ+6a7Tec0CHs1ipxdWUwBxMakmThw+NC/8BwibRWWIJTSkim9JeZnfjeD
+         2DIwZDI+FV7OCGS/7SQruWSjl0izWpHnbDn1mQVHbCtLOW6zVAyZMbHMATod3j58mu2T
+         K4XqyotZASJVe28JQQfhxhZQKV5W9MYNH4eo6UZfhE7dG8X40KoLe7KGeoG/9m8LJZkw
+         z03QpzpXsbGfDoe5bmtAGNkd2Sljq30z33GDYe6u8+V81CrmVn1bD8zIs9G7dF4FWu3e
+         YI5Q==
+X-Gm-Message-State: AOJu0YweUselSEzcDbRmQnrsK2AH2Ii4vBW5750+z22mVMYLyMisAbS7
+	PvW2xyJ8EexJ3nfYnZlRVkm6UfIyM9OEtZHKAlbv/yL3UKUWZ64Q
+X-Gm-Gg: ASbGncs4cnUg+Sx/UMZm4QdYfgEBtx6XHlcF/nYLdE/IVS6NvFHTfuu9BD+HMb6ztdp
+	zwX6rOB4zYV2dBZW39ekeiCc32vZlkfWL7Ir/Pi5ws5HB3dEfKLPC3jkpYmObTXP9TazwM9tAgb
+	4hipYY4VSDHi2shJTO0kO0apLiDq96VYGZ8jzPPh2mPG3+9VYCI3az3JTGcmXPekSDLhurbyRur
+	PbTUTIVZwmrCYwvvYSpE32EE0aCJvRu2eK0yfXkyu0sHY9mXc7nNtMthX4FqR78U3V4Sn+a0x+V
+	FgMCZtRGlb5MFXb/gaweySd67IbCfeP5DashnqgZJiMcq9KMcuYntwqPkOc=
+X-Google-Smtp-Source: AGHT+IEApNLeMqXPTD74HBZS5fOAX/1hg+752BPbILvPZGU6lVPtLCQ59W/vyrEscsgOIHE1jBlxFw==
+X-Received: by 2002:a05:600c:828c:b0:43d:160:cd97 with SMTP id 5b1f17b1804b1-441c4923807mr26739845e9.25.1746362210525;
+        Sun, 04 May 2025 05:36:50 -0700 (PDT)
+Received: from localhost (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-441c0dfc537sm55192625e9.16.2025.05.04.05.36.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 04 May 2025 05:36:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sun, 04 May 2025 14:36:48 +0200
+Message-Id: <D9NDQJB4VMWA.V4IPOZOIR46W@gmail.com>
+Subject: Re: [PATCH] Revert "ath11k: clear the keys properly via
+ DISABLE_KEY"
+From: "Nicolas Escande" <nico.escande@gmail.com>
+To: "Vasanthakumar Thiagarajan" <quic_vthiagar@quicinc.com>,
+ <ath11k@lists.infradead.org>, "Sven Eckelmann" <se@simonwunderlich.de>
+Cc: <linux-wireless@vger.kernel.org>, "Steffen Moser"
+ <lists@steffen-moser.de>
+X-Mailer: aerc 0.20.1-0-g2ecb8770224a
+References: <20250117191455.3395145-1-nico.escande@gmail.com>
+ <20e0a239-3d23-473b-5bc8-41bc25a64088@quicinc.com>
+In-Reply-To: <20e0a239-3d23-473b-5bc8-41bc25a64088@quicinc.com>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat Jan 18, 2025 at 11:29 AM CET, Vasanthakumar Thiagarajan wrote:
+> Hi Nicolas,
+>
+> On 1/18/2025 12:44 AM, Nicolas Escande wrote:
+>> This reverts commit 436a4e88659842a7cf634d7cc088c8f2cc94ebf5.
+>>=20
+>> This as been reported by multiple people [0] that with this commit,
+>> broadcast packets were not being delivered after GTK exchange.
+>> Qualcomm seems to have a similar patch [1] confirming the issue.
+>>=20
+>
+> This will re-open https://www.spinics.net/lists/hostap/msg08921.html
+> reported by Sven. The recommended ath firmware ABI during GTK re-keying
+> is SET_KEY instead of current DEL_KEY followed by SET_KEY. We are looking
+> at other options like some marking by mac80211 for the driver to be able
+> to identify if the received DEL_KEY is for re-keying. Also I'm curious
+> if roaming between secure and non-secure mode is a critical use case.
+> If not, we can probably go ahead with this revert as temporary WAR,
+> @Sven?
+>
+> Vasanth
 
-If there's a failure and the op-mode didn't actually fully
-initialize, it should leave the transport again. Fix that.
+Hello,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/main.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Any news on this ?
+I would hate for this to sink into oblivion once again given how hard this
+affects end users when it does hit.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index 1d811b60162b..38e66e694d52 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1380,14 +1380,14 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 
- 	err = iwl_trans_start_hw(priv->trans);
- 	if (err)
--		goto out_free_hw;
-+		goto out_leave_trans;
- 
- 	/* Read the EEPROM */
- 	err = iwl_read_eeprom(priv->trans, &priv->eeprom_blob,
- 			      &priv->eeprom_blob_size);
- 	if (err) {
- 		IWL_ERR(priv, "Unable to init EEPROM\n");
--		goto out_free_hw;
-+		goto out_leave_trans;
- 	}
- 
- 	/* Reset chip to save power until we load uCode during "up". */
-@@ -1503,6 +1503,8 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	kfree(priv->eeprom_blob);
- out_free_eeprom:
- 	kfree(priv->nvm_data);
-+out_leave_trans:
-+	iwl_trans_op_mode_leave(priv->trans);
- out_free_hw:
- 	ieee80211_free_hw(priv->hw);
- out:
--- 
-2.34.1
-
+Thanks,
