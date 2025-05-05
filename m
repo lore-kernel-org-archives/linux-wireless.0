@@ -1,211 +1,133 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB2A2AF1B
-	for <linux-wireless@vger.kernel.org>; Mon,  5 May 2025 07:58:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746431930; cv=none; b=lAsNSESLxXY2dYgvqPXZB7s0MdRQix4D+nzNCArNIQZw6PIbI60G11nFc7uazYlf1CvIYY2UJX/p4C3/tANKQLBqixcE+gVl12Y8SLBBmm92a/ubZYu33GsMChI+vww8yzyRAe6UBTb9rPkqSyhqDONzx0o2ZAtbzLNC/WHZVJ4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746431930; c=relaxed/simple;
-	bh=dOe8l+Llvy210iHKBBmHla0wpWpZJofKNqFi9rET1Os=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cr1Kqi/Jt78pb7inaNSMBEVY4vCxwv0F1Hrcy9mEVP4El8n2mWavlVm4HEnFRNnIdfEmG4iJf3imQ5J5licNsqtqfl71uBUXZRzYgoNUEPyhShQ4rAGnQDikOZVLZlSggzHKMZSPADU7DcNSpnqR/JoS35vnYEf5PdO/V2yNjBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=JHqn89a0; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17EE71E1A3D;
+	Mon,  5 May 2025 08:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1746432712; cv=pass; b=YLtwGgi1beyYxMN2NMBFwlkOjF1VCu/onkXd0dPLjlSDyuF5ybbN1VLRb4XLaiXNx3rPGRHNvgiUTjw7kIUaoqZgEq2TIpUmO143M2xBynDDQSH73oArEauPSDRH5Bo0hBuXs2JymKjLx1+Bupvn1rt7MmfCx/Xna8UcnXJWh6w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1746432712; c=relaxed/simple;
+	bh=OA85yZFxy3856og2lsEujte549QDWZUjZcGDxJwszGc=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Q9AqmSjLkiUS2jIGDFESp82OdZmSrvbkayis3Fy95rPr//rYxdKYWnREEAXvs1UM/k1Jot1/8sb09Qpu6vEguEN0iKt4Q0LpY9H7avYu6iXu5MCWd2iloNzy3TuL8j1WdCTTQdRd36no/ewO28X92kiBXiy2HaFUF/XGmG06QaU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=usama.anjum@collabora.com header.b=AVhsher3; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="JHqn89a0"
-X-UUID: bf4da150298611f0813e4fe1310efc19-20250505
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=taZZEqUj2wClc8QQrihONsE9LMiAtc55UAgYQjmLUfs=;
-	b=JHqn89a03z7qNTyAnZbItai1HOEe23rgKPaqivSWMcRP/u9WOnyYPB9IIhqAZbLV6xaQPQcy3eHjovFg2YzKuJgBs7P1GqDkfPMKF24osudysldTI3GjpCzk7pTvRFAQJ4Klky2YnVKVfPLBglWyT3730MC5rJf3afarsW4OkBw=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:6df0c221-f1cd-4a5a-a743-29a65a4e58ef,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:0ef645f,CLOUDID:56f42e70-e08c-41ab-89e8-3ba0a33da853,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: bf4da150298611f0813e4fe1310efc19-20250505
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
-	(envelope-from <allan.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1065570085; Mon, 05 May 2025 15:58:36 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Mon, 5 May 2025 15:58:34 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Mon, 5 May 2025 15:58:34 +0800
-From: Allan Wang <allan.wang@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <deren.wu@mediatek.com>, <mingyen.hsieh@mediatek.com>,
-	<Sean.Wang@mediatek.com>, <Soul.Huang@mediatek.com>, <Leon.Yen@mediatek.com>,
-	<Michael.Lo@mediatek.com>, <Eric-SY.Chang@mediatek.com>,
-	<km.lin@mediatek.com>, <robin.chiu@mediatek.com>, <ch.yeh@mediatek.com>,
-	<posh.sun@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
-	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, Allan Wang <allan.wang@mediatek.com>
-Subject: [PATCH] wifi: mt76: mt7925: add rfkill_poll for hardware rfkill
-Date: Mon, 5 May 2025 15:37:34 +0800
-Message-ID: <20250505073734.3923790-1-allan.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=usama.anjum@collabora.com header.b="AVhsher3"
+ARC-Seal: i=1; a=rsa-sha256; t=1746432690; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=MLF8NapsauWx/jWEFAUDVSKKaVgiJMS7O27bOiTP34z4/kY/1Y/DTrq0We8cxR6mByfUhB019/sQQNObNPej3kXiy8E+cNM+WvqdBdwBn4UnODiwOMU76aE8ZqFiOMOpTCrp8eqaKJzN1TD0glPySlcfhxo0uu1dH2CEk2jhvhA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1746432690; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=b+Gg3Mt50xwSUU5m3t61oAB6vI5/1zWYCb/caGSKW4c=; 
+	b=mljTnn9fGJrwzH0ffp16E0t2V1qrHGHQhQRg93D9j0dFGPTZy9NQojSFmtHL3rqvcphSWBgY3PtgIZ+WM4pwX4DYUGzo3aA4EXbxNMF19lym/K4opFOvbJgLBS+p5UuGIowb28guCM7oPgprAJk7g5utjbPEGO1Pq1gYfaTCCj8=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=usama.anjum@collabora.com;
+	dmarc=pass header.from=<usama.anjum@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1746432690;
+	s=zohomail; d=collabora.com; i=usama.anjum@collabora.com;
+	h=Message-ID:Date:Date:MIME-Version:Cc:Cc:Subject:Subject:To:To:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=b+Gg3Mt50xwSUU5m3t61oAB6vI5/1zWYCb/caGSKW4c=;
+	b=AVhsher3yyW72VmiAxLe2e1aGyFzNopPF5zAdnZWGSXnM6b/E6VyqX0optYsSjH7
+	fv5Qc1bVsbV+y9hLMldqxKb7bnpDR5aaBtf6Pl37ZZ193CSysG2mmYH30z/WDfOYK3i
+	8lmp5sDEAAvgLFamLoVcMJ+cghVnxEIAzxwsJBY0=
+Received: by mx.zohomail.com with SMTPS id 1746432688103381.6383686732846;
+	Mon, 5 May 2025 01:11:28 -0700 (PDT)
+Message-ID: <d2ce1fd8-cd84-4744-9847-2ac393bf99eb@collabora.com>
+Date: Mon, 5 May 2025 13:11:23 +0500
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Cc: usama.anjum@collabora.com, kernel@collabora.com,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ linux-kernel@vger.kernel.org, quic_bqiang@quicinc.com
+Subject: Re: [PATCH v5] wifi: ath11k: Fix memory reuse logic
+To: jeff.johnson@oss.qualcomm.com, Jeff Johnson <jjohnson@kernel.org>
+References: <20250428080242.466901-1-usama.anjum@collabora.com>
+Content-Language: en-US
+From: Muhammad Usama Anjum <usama.anjum@collabora.com>
+In-Reply-To: <20250428080242.466901-1-usama.anjum@collabora.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 
-Add mac80211 rfkill_poll ops to monitor hardware rfkill state
-and state change will be updated.
+Reminder to pick this patch.
 
-Signed-off-by: Allan Wang <allan.wang@mediatek.com>
----
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  1 +
- .../net/wireless/mediatek/mt76/mt7925/main.c  | 16 ++++++++
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 39 +++++++++++++++++++
- .../wireless/mediatek/mt76/mt7925/mt7925.h    |  1 +
- .../net/wireless/mediatek/mt76/mt7925/pci.c   |  4 ++
- 5 files changed, 61 insertions(+)
+On 4/28/25 1:02 PM, Muhammad Usama Anjum wrote:
+> Firmware requests 2 segments at first. The first segment is of 6799360
+> whose allocation fails due to dma remapping not available. The success
+> is returned to firmware. Then firmware asks for 22 smaller segments
+> instead of 2 big ones. Those get allocated successfully. At suspend/
+> hibernation time, these segments aren't freed as they will be reused
+> by firmware after resuming.
+> 
+> After resuming, the firmware asks for the 2 segments again with the
+> first segment of 6799360 size. Since chunk->vaddr is not NULL, the
+> type and size are compared with the previous type and size to know if
+> it can be reused or not. Unfortunately, it is detected that it cannot
+> be reused and this first smaller segment is freed. Then we continue to
+> allocate 6799360 size memory which fails and ath11k_qmi_free_target_mem_chunk()
+> is called which frees the second smaller segment as well. Later success
+> is returned to firmware which asks for 22 smaller segments again. But
+> as we had freed 2 segments already, we'll allocate the first 2 new
+> smaller segments again and reuse the remaining 20. Hence 20 small
+> segments are being reused instead of 22.
+> 
+> Add skip logic when vaddr is set, but size/type don't match. Use the
+> same skip and success logic as used when dma_alloc_coherent() fails.
+> By skipping, the possibility of resume failure due to kernel failing to
+> allocate memory for QMI can be avoided.
+> 
+> 	kernel: ath11k_pci 0000:03:00.0: failed to allocate dma memory for qmi (524288 B type 1)
+> 	ath11k_pci 0000:03:00.0: failed to allocate qmi target memory: -22
+> 
+> Tested-on: WCN6855 WLAN.HSP.1.1-03926.13-QCAHSPSWPL_V2_SILICONZ_CE-2.52297.6
+> 
+> Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
+> ---
+> Changes since v1:
+> - Update description
+> 
+> Changes since v2:
+> - Update description and title of patch
+> 
+> Changes since v3:
+> - Update description and title of patch
+> 
+> Changes since v4:
+> - Update title of the patch
+> ---
+>  drivers/net/wireless/ath/ath11k/qmi.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+> index 47b9d4126d3a9..2782f4723e413 100644
+> --- a/drivers/net/wireless/ath/ath11k/qmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/qmi.c
+> @@ -1993,6 +1993,15 @@ static int ath11k_qmi_alloc_target_mem_chunk(struct ath11k_base *ab)
+>  			    chunk->prev_size == chunk->size)
+>  				continue;
+>  
+> +			if (ab->qmi.mem_seg_count <= ATH11K_QMI_FW_MEM_REQ_SEGMENT_CNT) {
+> +				ath11k_dbg(ab, ATH11K_DBG_QMI,
+> +					   "size/type mismatch (current %d %u) (prev %d %u), try later with small size\n",
+> +					    chunk->size, chunk->type,
+> +					    chunk->prev_size, chunk->prev_type);
+> +				ab->qmi.target_mem_delayed = true;
+> +				return 0;
+> +			}
+> +
+>  			/* cannot reuse the existing chunk */
+>  			dma_free_coherent(ab->dev, chunk->prev_size,
+>  					  chunk->vaddr, chunk->paddr);
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-index 478cd1886736..e195d69f61f6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
-@@ -1298,6 +1298,7 @@ enum {
- 	MCU_UNI_CMD_PER_STA_INFO = 0x6d,
- 	MCU_UNI_CMD_ALL_STA_INFO = 0x6e,
- 	MCU_UNI_CMD_ASSERT_DUMP = 0x6f,
-+	MCU_UNI_CMD_RADIO_STATUS = 0x80,
- 	MCU_UNI_CMD_SDO = 0x88,
- };
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index 83f93f9e002c..65bf9aef2b5e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -334,6 +334,9 @@ int __mt7925_start(struct mt792x_phy *phy)
- 	ieee80211_queue_delayed_work(mphy->hw, &mphy->mac_work,
- 				     MT792x_WATCHDOG_TIME);
- 
-+	if (phy->chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN)
-+		wiphy_rfkill_start_polling(mphy->hw->wiphy);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(__mt7925_start);
-@@ -2205,6 +2208,18 @@ static void mt7925_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	mutex_unlock(&dev->mt76.mutex);
- }
- 
-+static void mt7925_rfkill_poll(struct ieee80211_hw *hw)
-+{
-+	struct mt792x_phy *phy = mt792x_hw_phy(hw);
-+	int ret = 0;
-+
-+	mt792x_mutex_acquire(phy->dev);
-+	ret = mt7925_mcu_wf_rf_pin_ctrl(phy);
-+	mt792x_mutex_release(phy->dev);
-+
-+	wiphy_rfkill_set_hw_state(hw->wiphy, ret ? false : true);
-+}
-+
- const struct ieee80211_ops mt7925_ops = {
- 	.tx = mt792x_tx,
- 	.start = mt7925_start,
-@@ -2265,6 +2280,7 @@ const struct ieee80211_ops mt7925_ops = {
- 	.link_info_changed = mt7925_link_info_changed,
- 	.change_vif_links = mt7925_change_vif_links,
- 	.change_sta_links = mt7925_change_sta_links,
-+	.rfkill_poll = mt7925_rfkill_poll,
- };
- EXPORT_SYMBOL_GPL(mt7925_ops);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 286f602623c0..31fa092d2c8c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -3633,6 +3633,45 @@ int mt7925_mcu_set_rate_txpower(struct mt76_phy *phy)
- 	return 0;
- }
- 
-+int mt7925_mcu_wf_rf_pin_ctrl(struct mt792x_phy *phy)
-+{
-+#define UNI_CMD_RADIO_STATUS_GET	0
-+	struct mt792x_dev *dev = phy->dev;
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	struct {
-+		__le16 tag;
-+		__le16 len;
-+		u8 rsv[4];
-+	} __packed req = {
-+		.tag = UNI_CMD_RADIO_STATUS_GET,
-+		.len = cpu_to_le16(sizeof(req)),
-+	};
-+
-+	struct mt7925_radio_status_event {
-+		__le16 tag;
-+		__le16 len;
-+
-+		u8 data;
-+		u8 rsv[3];
-+	} __packed * status;
-+
-+	ret = mt76_mcu_send_and_get_msg(&dev->mt76,
-+					MCU_UNI_CMD(RADIO_STATUS),
-+					&req, sizeof(req), true, &skb);
-+	if (ret)
-+		return ret;
-+
-+	skb_pull(skb, sizeof(struct tlv));
-+	status = (struct mt7925_radio_status_event *)skb->data;
-+	ret = (int)status->data;
-+
-+	dev_kfree_skb(skb);
-+
-+	return ret;
-+}
-+
- int mt7925_mcu_set_rxfilter(struct mt792x_dev *dev, u32 fif,
- 			    u8 bit_op, u32 bit_map)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-index 4e50f2597ccd..283a40badd28 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
-@@ -365,5 +365,6 @@ int mt7925_mcu_wtbl_update_hdr_trans(struct mt792x_dev *dev,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_sta *sta,
- 				     int link_id);
-+int mt7925_mcu_wf_rf_pin_ctrl(struct mt792x_phy *phy);
- 
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index c7b5dc1dbb34..b997cd8bf8d0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -31,6 +31,10 @@ static void mt7925e_unregister_device(struct mt792x_dev *dev)
- {
- 	int i;
- 	struct mt76_connac_pm *pm = &dev->pm;
-+	struct ieee80211_hw *hw = mt76_hw(dev);
-+
-+	if (dev->phy.chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN)
-+		wiphy_rfkill_stop_polling(hw->wiphy);
- 
- 	cancel_work_sync(&dev->init_work);
- 	mt76_unregister_device(&dev->mt76);
 -- 
-2.45.2
-
+Regards,
+Usama
