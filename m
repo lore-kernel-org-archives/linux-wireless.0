@@ -1,45 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA493579F2;
-	Mon,  5 May 2025 22:44:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D52FA2BE10A;
+	Mon,  5 May 2025 22:47:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485072; cv=none; b=sYKfgGH6nSlvhLPWqJZTKaXP0eaCktLqavQRbWFmQfr2zKarlGlq9xrZyVcfF2FsYS3FpkrZvFlxf+zbBCpZCd+Ed4uKmxQn7GaHBiNKL8aY2+7ULUvCRvqbwzu/E2BrJlPrpX+B27GwuU4zLDpg0k9Qp5sQiljc/GaelDuKIEg=
+	t=1746485243; cv=none; b=TwbdCju+HfZq+jlM2U+qb72tdsajtP/QJhn/K94ZByFRmn9qs7dsgPdPdE+48VbRki0zbJHDr6Mu0BqZL8syJd6GK+UeacG9OaLP2nGrT7dxw1Jay1lP0CyeowgtNGOy2XNgmS/8pbV9U5hIKQvDs6TtmOeB8kJYzg6CndDwHeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485072; c=relaxed/simple;
-	bh=s8nuyD/LC8gZe7btAmMt72atSEIBM7IMwQfwJ8vRoFI=;
+	s=arc-20240116; t=1746485243; c=relaxed/simple;
+	bh=ob0vvT2R1TZYXplndaOjW3twfOQy1RYATc7niEKvVFY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PXMVhX+3KamqORcChegLG3xREIckVOqfAygQkEVdKd/h4yzmGSH2YNLvYT4hoq3/mRYlDLdYlkYkNIvE6m+xokUIaYOUip0wk2TRibsej39tX/3YmiNI/VpaYOPeZa/fN0LWoHc/puJ+qxs0951Rx4Ffqg9ME3MMW0su/xs5gQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V26JGwWC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=V3MBXSQKpnUg57acYuI0PXWZ67eBKYj2Zxi4RAjyLPQjjn9s17EQhXii1ucuCvSttcMLFfHiGCXcYn8PtmHDc17v6WkJIJcaHcBj4yklp4itUNH4YYheKQQHGTU984AXQm0nSnX+o63ZlUSQfjmC4uKJl0aZngmYuhbf+fpoKFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nc5oHZjr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V26JGwWC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72F43C4CEE4;
-	Mon,  5 May 2025 22:44:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nc5oHZjr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9BE6C4CEEE;
+	Mon,  5 May 2025 22:47:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485071;
-	bh=s8nuyD/LC8gZe7btAmMt72atSEIBM7IMwQfwJ8vRoFI=;
+	s=k20201202; t=1746485242;
+	bh=ob0vvT2R1TZYXplndaOjW3twfOQy1RYATc7niEKvVFY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=V26JGwWC2eMqkZw4v97LZw2SYrZ+P4sazUJ3Pzkr6Jsiel3NXwiteu0sR+BIz7Kpc
-	 xxwgcxPArzFIq/X2fwhSzEvEbd9i188CGciwGXPuYk3U3L2OHsQaurCHIwBfpgNv/4
-	 ebFjJ504wvWcEjx5Dej3z+NpgUYm2Mw6oOB+P2IoxnTm/w5OQavB/jH/dPt+mFFICX
-	 CTTLhtx3Fci+F78NaYO57PCTURoEEJmjlsD0QKvaz9ZNV/XWiOJ+O+crmsoZwlXZCc
-	 Y6fEiJffNpkPTd9Vhofwvulg3Z2F7w2W9R5P00c3F12W1YX6Qx21JWC5+fQUJrWNEg
-	 AAZkbVqqPeeOQ==
+	b=nc5oHZjr6V5lg/J9TipRDP8ftjZNB17madeqkKEh4wi4sBg2mqyXjuhb94Ro/Nnwi
+	 gsQwiBxm4xGzwtI8Ns2cPiW2LwogGaJ6m/nBsggtG/MKGWtXwAsfsFwJ78D5Zhree8
+	 0MvA1Fyn9MIRGP7pdH7oMCZtMaSin6vdDElOSm3uiYYWy/qWmDqGDmacx1++COLz+z
+	 u2+3032UJMGqh00FNkvyxR8lzkmnbXfpOkKLSTSU07zdFFlFYukemSOkDmsMizX836
+	 z8Gj4FbgBj9c70C1MAIhlB8apfKCyDEgzWjtRDp3dkRGj6Brh6GopKnUC/CG8r2WZk
+	 yvzE3vO+0gp5Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Vinith Kumar R <quic_vinithku@quicinc.com>,
+	Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
+	Jeff Johnson <quic_jjohnson@quicinc.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	pagadala.yesu.anjaneyulu@intel.com,
-	daniel.gabay@intel.com,
-	somashekhar.puttagangaiah@intel.com,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 151/486] wifi: iwlwifi: fix the ECKV UEFI variable name
-Date: Mon,  5 May 2025 18:33:47 -0400
-Message-Id: <20250505223922.2682012-151-sashal@kernel.org>
+	jjohnson@kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.12 231/486] wifi: ath12k: Report proper tx completion status to mac80211
+Date: Mon,  5 May 2025 18:35:07 -0400
+Message-Id: <20250505223922.2682012-231-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -54,69 +54,54 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Vinith Kumar R <quic_vinithku@quicinc.com>
 
-[ Upstream commit 3ea2970b0578011ab8402ad0cff39712255f63df ]
+[ Upstream commit d2d9c9b8de725e1006d3aa3d18678a732f5d3584 ]
 
-This UEFI variable name was badly named. Fix its name and also use the
-right GUID to find it: we need to use the BT_WIFI (a.k.a. Common) GUID.
+Currently Tx completion for few exception packets are received from
+firmware and the tx status updated to mac80211. The tx status values of
+HAL_WBM_REL_HTT_TX_COMP_STATUS_DROP and HAL_WBM_REL_HTT_TX_COMP_STATUS_TTL
+are considered as tx failure and reported as tx failure to mac80211.
+But these failure status is due to internal firmware tx drop and these
+packets were not tried to transmit in the air.
+In case of mesh this invalid tx status report might trigger mpath broken
+issue due to increase in mpath fail average.
+So do not report these tx status as tx failure instead free the skb
+by calling ieee80211_free_txskb(), and that will be accounted as dropped
+frame.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20250308231426.78c998d0fa71.I2bc9d72c1dc2c4d7028f0265634a940c2fadbbb5@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Vinith Kumar R <quic_vinithku@quicinc.com>
+Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+Link: https://patch.msgid.link/20241122173432.2064858-1-quic_tamizhr@quicinc.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 8 +++++---
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h | 4 ++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp_tx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index 834f7c9bb9e92..86d6286a15378 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright(c) 2021-2024 Intel Corporation
-+ * Copyright(c) 2021-2025 Intel Corporation
-  */
+diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
+index 44406e0b4a342..ad21fbfbcbe22 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
+@@ -557,13 +557,13 @@ ath12k_dp_tx_process_htt_tx_complete(struct ath12k_base *ab,
  
- #include "iwl-drv.h"
-@@ -673,8 +673,10 @@ int iwl_uefi_get_eckv(struct iwl_fw_runtime *fwrt, u32 *extl_clk)
- 	struct uefi_cnv_var_eckv *data;
- 	int ret = 0;
- 
--	data = iwl_uefi_get_verified_variable(fwrt->trans, IWL_UEFI_ECKV_NAME,
--					      "ECKV", sizeof(*data), NULL);
-+	data = iwl_uefi_get_verified_variable_guid(fwrt->trans,
-+						   &IWL_EFI_WIFI_BT_GUID,
-+						   IWL_UEFI_ECKV_NAME,
-+						   "ECKV", sizeof(*data), NULL);
- 	if (IS_ERR(data))
- 		return -EINVAL;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-index e525d449e656e..c931f5cedb0b9 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright(c) 2021-2024 Intel Corporation
-+ * Copyright(c) 2021-2025 Intel Corporation
-  */
- #ifndef __iwl_fw_uefi__
- #define __iwl_fw_uefi__
-@@ -19,7 +19,7 @@
- #define IWL_UEFI_WTAS_NAME		L"UefiCnvWlanWTAS"
- #define IWL_UEFI_SPLC_NAME		L"UefiCnvWlanSPLC"
- #define IWL_UEFI_WRDD_NAME		L"UefiCnvWlanWRDD"
--#define IWL_UEFI_ECKV_NAME		L"UefiCnvWlanECKV"
-+#define IWL_UEFI_ECKV_NAME		L"UefiCnvCommonECKV"
- #define IWL_UEFI_DSM_NAME		L"UefiCnvWlanGeneralCfg"
- #define IWL_UEFI_WBEM_NAME		L"UefiCnvWlanWBEM"
- #define IWL_UEFI_PUNCTURING_NAME	L"UefiCnvWlanPuncturing"
+ 	switch (wbm_status) {
+ 	case HAL_WBM_REL_HTT_TX_COMP_STATUS_OK:
+-	case HAL_WBM_REL_HTT_TX_COMP_STATUS_DROP:
+-	case HAL_WBM_REL_HTT_TX_COMP_STATUS_TTL:
+ 		ts.acked = (wbm_status == HAL_WBM_REL_HTT_TX_COMP_STATUS_OK);
+ 		ts.ack_rssi = le32_get_bits(status_desc->info2,
+ 					    HTT_TX_WBM_COMP_INFO2_ACK_RSSI);
+ 		ath12k_dp_tx_htt_tx_complete_buf(ab, msdu, tx_ring, &ts);
+ 		break;
++	case HAL_WBM_REL_HTT_TX_COMP_STATUS_DROP:
++	case HAL_WBM_REL_HTT_TX_COMP_STATUS_TTL:
+ 	case HAL_WBM_REL_HTT_TX_COMP_STATUS_REINJ:
+ 	case HAL_WBM_REL_HTT_TX_COMP_STATUS_INSPECT:
+ 		ath12k_dp_tx_free_txbuf(ab, msdu, mac_id, tx_ring);
 -- 
 2.39.5
 
