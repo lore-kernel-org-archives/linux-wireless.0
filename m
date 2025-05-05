@@ -1,43 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 498803881C5;
-	Mon,  5 May 2025 23:12:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 582E72F22F4;
+	Mon,  5 May 2025 23:13:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486740; cv=none; b=TzFaom/n2z1o1vKqegU8xwDttLG0QPIM/yeXqJvQQ9I3v+kZdNEJ5GnhERJXkaEO63WcCOwhMFtNis4wpYNrGTcOyXYoyzDKxKgv6yOkVq8Q9/wGr0tJpeqXLPKxLeQsJq5pQsjEKWvSD2qjD/mL1wksqaucD3NqXFwEu98WH5Q=
+	t=1746486789; cv=none; b=TaVhIRY/A/zOY5o6KVo0xUimJnLMr6Dc7UBwzKdgPdjzLXmHJcTTgDlKumRBi3b3VaR5DHQ+w8+caJjDwt1fyvGP0C1qK/NiOSYf8+yJas0jUXhlijEsYP2OWvblnuT0VBxD7H9OldMUqb3PKTiyRYkYNqE94xUBy8dx2Q6jlUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486740; c=relaxed/simple;
-	bh=Ez/jSodbLkn4e8mEWZfdyFweRuhKDIMFaYvLfFdFQvo=;
+	s=arc-20240116; t=1746486789; c=relaxed/simple;
+	bh=ocjvVPhWDElaf8QHohsB4i7pbYBr4N/aMCzPWQVhEsU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ul/LhzNq1NqopkkRr4HP0LPzMQau05bpAGEyCOoj7df7tZjxLWKA7LUF9W5AuEz8XrNQPmjjc1pGYNqmMBRqo5pkXVV+9654FYlrezFlolAyvAep80wXdzbT+nQ+ba+XEJ3kxmZj9qvr2ATA+pSDxYiJHdPOTkhNCQtWNZei6Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EGZXE2H9; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=l2oNHR0zyjPJ+yg4OopILTJ4vu5MGpRBKgC3IFFWLFYNbDKqdTcHRdIP3gACOF5jw7eY3ikITP7VGtNlaWOtbPBnqRPhhuRhcJYk9W8hVJBiOoOXU/AdqqNh0jzXwS1HoTEo+fB5loaf0Osh0R/V8IUmrQ2q8HWjMO83WCg0XOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iJ1LqGjp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EGZXE2H9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F4CCC4CEEE;
-	Mon,  5 May 2025 23:12:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iJ1LqGjp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76F30C4CEEE;
+	Mon,  5 May 2025 23:13:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486739;
-	bh=Ez/jSodbLkn4e8mEWZfdyFweRuhKDIMFaYvLfFdFQvo=;
+	s=k20201202; t=1746486788;
+	bh=ocjvVPhWDElaf8QHohsB4i7pbYBr4N/aMCzPWQVhEsU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EGZXE2H9T2UETQacJNWWMi7rour6oj6VJ7GvNeVK3YvYaaEwWwoht+eeD3xShWdPX
-	 jThaJyGXduagEup3yRx0T7zNPpW/6RTxH7jmk4J88Yf2kab2jnFMMN793KQmv2ggzT
-	 /NfUhLq5Jf3wZDZ/pDNhnBrA4DTU8ECspWxOEKrxkFubQBIabBB92L86ix6Z+5knpp
-	 HaZ1D1GWXC8mFIgQnQ9TRjpiRph2cgSe/6dD+lCq8dJ59eUMsVFoS5ONKNqyGrN90U
-	 w4ivyjlnrizrLdPKMmT95L9UI9wWWYghssrm9PqeLRUe+Uy4b15CQkvAYjdlZMRYYQ
-	 54gauL3yNaFoA==
+	b=iJ1LqGjpIGZ9uHfxk19jcfAZONPphHnxlHD+fKeCUhZyfAXUDtsAm5m74N7VCLKyL
+	 SocgX5KCmbSViHaEQZLJFh0WZXm2TYT98rKsFOYe/b8KTEKmUhkKOLizDY7MgPD5xD
+	 9J3PSdU9u49/VAgY2XgwpFKxYI2QBau5Lp56V2f+N+NruHfFE/Po4Emga1FyPpor8P
+	 ylkHXuuvXd1mjg9S8rEOtdIgrxgIepTBH29ABna0mRpZiN4PjDEsRT68On+opL8uas
+	 HX7r2m/xMHQL+VEWx8rDoNCoACYORY6J3UL3HyhORIQzFeoJ/CmKJBBCKzzbgy0Wkj
+	 fnpZdaGVg3sZA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 178/212] wifi: mac80211: remove misplaced drv_mgd_complete_tx() call
-Date: Mon,  5 May 2025 19:05:50 -0400
-Message-Id: <20250505230624.2692522-178-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 205/212] wifi: rtw88: Don't use static local variable in rtw8822b_set_tx_power_index_by_rate
+Date: Mon,  5 May 2025 19:06:17 -0400
+Message-Id: <20250505230624.2692522-205-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505230624.2692522-1-sashal@kernel.org>
 References: <20250505230624.2692522-1-sashal@kernel.org>
@@ -52,38 +50,74 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.136
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 
-[ Upstream commit f4995cdc4d02d0abc8e9fcccad5c71ce676c1e3f ]
+[ Upstream commit 00451eb3bec763f708e7e58326468c1e575e5a66 ]
 
-In the original commit 15fae3410f1d ("mac80211: notify driver on
-mgd TX completion") I evidently made a mistake and placed the
-call in the "associated" if, rather than the "assoc_data". Later
-I noticed the missing call and placed it in commit c042600c17d8
-("wifi: mac80211: adding missing drv_mgd_complete_tx() call"),
-but didn't remove the wrong one. Remove it now.
+Some users want to plug two identical USB devices at the same time.
+This static variable could theoretically cause them to use incorrect
+TX power values.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20250205110958.6ed954179bbf.Id8ef8835b7e6da3bf913c76f77d201017dc8a3c9@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Move the variable to the caller and pass a pointer to it to
+rtw8822b_set_tx_power_index_by_rate().
+
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/8a60f581-0ab5-4d98-a97d-dd83b605008f@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8f0e6d7fe7167..b300972c31500 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7312,7 +7312,6 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_report_disconnect(sdata, frame_buf,
- 					    sizeof(frame_buf), true,
- 					    req->reason_code, false);
--		drv_mgd_complete_tx(sdata->local, sdata, &info);
- 		return 0;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 690e35c98f6e5..0b071a116c58e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -957,11 +957,11 @@ static void rtw8822b_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
+ }
+ 
+ static void
+-rtw8822b_set_tx_power_index_by_rate(struct rtw_dev *rtwdev, u8 path, u8 rs)
++rtw8822b_set_tx_power_index_by_rate(struct rtw_dev *rtwdev, u8 path,
++				    u8 rs, u32 *phy_pwr_idx)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 	static const u32 offset_txagc[2] = {0x1d00, 0x1d80};
+-	static u32 phy_pwr_idx;
+ 	u8 rate, rate_idx, pwr_index, shift;
+ 	int j;
+ 
+@@ -969,12 +969,12 @@ rtw8822b_set_tx_power_index_by_rate(struct rtw_dev *rtwdev, u8 path, u8 rs)
+ 		rate = rtw_rate_section[rs][j];
+ 		pwr_index = hal->tx_pwr_tbl[path][rate];
+ 		shift = rate & 0x3;
+-		phy_pwr_idx |= ((u32)pwr_index << (shift * 8));
++		*phy_pwr_idx |= ((u32)pwr_index << (shift * 8));
+ 		if (shift == 0x3) {
+ 			rate_idx = rate & 0xfc;
+ 			rtw_write32(rtwdev, offset_txagc[path] + rate_idx,
+-				    phy_pwr_idx);
+-			phy_pwr_idx = 0;
++				    *phy_pwr_idx);
++			*phy_pwr_idx = 0;
+ 		}
  	}
+ }
+@@ -982,11 +982,13 @@ rtw8822b_set_tx_power_index_by_rate(struct rtw_dev *rtwdev, u8 path, u8 rs)
+ static void rtw8822b_set_tx_power_index(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	u32 phy_pwr_idx = 0;
+ 	int rs, path;
+ 
+ 	for (path = 0; path < hal->rf_path_num; path++) {
+ 		for (rs = 0; rs < RTW_RATE_SECTION_MAX; rs++)
+-			rtw8822b_set_tx_power_index_by_rate(rtwdev, path, rs);
++			rtw8822b_set_tx_power_index_by_rate(rtwdev, path, rs,
++							    &phy_pwr_idx);
+ 	}
+ }
  
 -- 
 2.39.5
