@@ -1,43 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F4D52D47A2;
-	Mon,  5 May 2025 22:53:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 679102D3FAA;
+	Mon,  5 May 2025 22:53:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485619; cv=none; b=cKoJ0oO4ZvMEoBGjcrzlwxn85/7BTLueRjWVgVKnGKP4tvC/drenQf3tFnd17EVV1GP/7tL/TYc0H/J7JQvcUqKUM692q6fL12PF7D0S+CahVIX6nCNeRpoXgGTBSGlB6zUZrwCUKM+gNezva3noEJw/QnX6DIiuApjZu4wXNtY=
+	t=1746485613; cv=none; b=FzdcHsTwgRY0yDH8DvrQcgi6rbG2Ps5NsY39IPrhrYlh83/mB0q6Dt9uhK/ZuGFCALcc8LlzssfOt1Ar1w+R88qn79Kr3Q0pck63AEhKgqfDMq9Kon7Gp8xL1Xcwrq9+BOm0Z8x3o7jxUux13CMQgRbWzu9sAO2cdjDX8GkZ0As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485619; c=relaxed/simple;
-	bh=ssn/ZHnwsREDe+ZIr3IpyRX2mXuA6gGJb1ktxetpc3Q=;
+	s=arc-20240116; t=1746485613; c=relaxed/simple;
+	bh=eBpYEcCvWDyfihYZrWMBxe7dijLhnanSGNvrEJ4065w=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hrHSsYNCZp/raT2Qdr7SVek60BuLuq3xduV50efcjP5m/tFoCKBg+yg/F3scn4GYC1dMaYNcNQR+08kZhxRNvfcqm3KJPcUoMVXl3f/D29lG8IXY75ptaASAhtT+Q4nJm0zlzCyI68D326EGMVFUUlMN0G5XGP0A9W59nbRecrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u8FqtH4F; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=nn155mzZ94AEVi8slGqNv5s/Gl4hllZ4ytpeTiPRmC2lDI3Owi5xk6qJeUd/OCD3OtDTPvrfOYAKoheDRYbC/TXTFMSLH+J+hUj5kCss/bMKpw2VyHCXcozthQw4MKOqTwn0awZNLbTPs2GnOkv+2hsH+4VJaED7apSJZM5Wegg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GtzwL8zK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u8FqtH4F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292D0C4CEEE;
-	Mon,  5 May 2025 22:53:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GtzwL8zK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39623C4CEE4;
+	Mon,  5 May 2025 22:53:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485619;
-	bh=ssn/ZHnwsREDe+ZIr3IpyRX2mXuA6gGJb1ktxetpc3Q=;
+	s=k20201202; t=1746485612;
+	bh=eBpYEcCvWDyfihYZrWMBxe7dijLhnanSGNvrEJ4065w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=u8FqtH4FZirpnLEbfy3TK6ghz0gHuaZktTkoR9iXeDae5HaOBVkt2kiWsZhH9HR4I
-	 yTy+tPoRcMifokMXy4sIxwrDyzQ4H6pZo3ENxmROGii27YtfjzYjPorjiVgmMnULJB
-	 hbcbrjW9Tjx6c6hWnywharb9bUd7wjmrRsuxeSZFaA0I+JT8j3mxknCX8iJXwtYmNh
-	 EyuRgSa6EDBPK4iC2rVZY150v7k2Zs7zqS6nrZ+T7kEiVpqv6PJHa+/gsN9RwTECM/
-	 LCvs3iAe5jfhc1vKONOA180sX/zfFNE3R7Jt2v0vQL9gYocRr2CNK3D9RgnTvVxlEq
-	 oBhaINNH94aVw==
+	b=GtzwL8zK+THBdRAN2N4gvki91gv2kFhkYWSFF3Dv+XVkZOq4hAUJKZ81erI3/Kng3
+	 CcIiSuKIR6HHCt50kXU9RRXLfq9XmT/8sw7E6KZdZeIllWEBeQHJ5niXTCFNvL36TR
+	 T5W9awNJgf3IuQOGlMKOG/OS+C3cKKT8k5aKIOeyGm01q2vmW4+nlDUsDx0kIPodSr
+	 v38es9OD8FePxgWei6hzhaRYkR3gdA6ePV9MiAF2LdurcLNOWTB9VgTdMOPl8EkgfZ
+	 QUrAtqKUm0sSN/oQsAHAQnE/zZCt76kLiDwmmQ8hvYWfMEP2D39S46eHtIXnDx/ziC
+	 uQ6J71VPZNVhA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: P Praneesh <quic_ppranees@quicinc.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	Karthikeyan Periyasamy <quic_periyasa@quicinc.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 390/486] wifi: mac80211: don't unconditionally call drv_mgd_complete_tx()
-Date: Mon,  5 May 2025 18:37:46 -0400
-Message-Id: <20250505223922.2682012-390-sashal@kernel.org>
+	jjohnson@kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.12 386/486] wifi: ath12k: fix the ampdu id fetch in the HAL_RX_MPDU_START TLV
+Date: Mon,  5 May 2025 18:37:42 -0400
+Message-Id: <20250505223922.2682012-386-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -52,37 +54,104 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: P Praneesh <quic_ppranees@quicinc.com>
 
-[ Upstream commit 1798271b3604b902d45033ec569f2bf77e94ecc2 ]
+[ Upstream commit dff4f278ee1ef12d822b7ed2a1048d27037209bb ]
 
-We might not have called drv_mgd_prepare_tx(), so only call
-drv_mgd_complete_tx() under the same conditions.
+Currently, ampdu id is update with peer id mask which is incorrect.
+Therefore, update the ampdu id with PPDU id mask value. Also move
+the ampdu_id field inside the user stats since it is a user id based
+statistics.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20250205110958.e091fc39a351.Ie6a3cdca070612a0aa4b3c6914ab9ed602d1f456@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Signed-off-by: Karthikeyan Periyasamy <quic_periyasa@quicinc.com>
+Link: https://patch.msgid.link/20250206013854.174765-7-quic_periyasa@quicinc.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/dp_mon.c | 16 ++++++++++------
+ drivers/net/wireless/ath/ath12k/hal_rx.h |  3 ++-
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f000026ab714a..ba0af3018cf58 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3589,7 +3589,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	if (tx)
- 		ieee80211_flush_queues(local, sdata, false);
+diff --git a/drivers/net/wireless/ath/ath12k/dp_mon.c b/drivers/net/wireless/ath/ath12k/dp_mon.c
+index 4c98b9de1e584..6a88745369447 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/dp_mon.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
  
--	drv_mgd_complete_tx(sdata->local, sdata, &info);
-+	if (tx || frame_buf)
-+		drv_mgd_complete_tx(sdata->local, sdata, &info);
+ #include "dp_mon.h"
+@@ -666,6 +666,11 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
+ 		if (userid < HAL_MAX_UL_MU_USERS) {
+ 			struct hal_rx_user_status *rxuser_stats =
+ 				&ppdu_info->userstats[userid];
++
++			if (ppdu_info->num_mpdu_fcs_ok > 1 ||
++			    ppdu_info->num_mpdu_fcs_err > 1)
++				ppdu_info->userstats[userid].ampdu_present = true;
++
+ 			ppdu_info->num_users += 1;
  
- 	/* clear AP addr only after building the needed mgmt frames */
- 	eth_zero_addr(sdata->deflink.u.mgd.bssid);
+ 			ath12k_dp_mon_rx_handle_ofdma_info(tlv_data, rxuser_stats);
+@@ -783,8 +788,8 @@ ath12k_dp_mon_rx_parse_status_tlv(struct ath12k_base *ab,
+ 		if (userid < HAL_MAX_UL_MU_USERS) {
+ 			info[0] = __le32_to_cpu(mpdu_start->info0);
+ 			ppdu_info->userid = userid;
+-			ppdu_info->ampdu_id[userid] =
+-				u32_get_bits(info[0], HAL_RX_MPDU_START_INFO1_PEERID);
++			ppdu_info->userstats[userid].ampdu_id =
++				u32_get_bits(info[0], HAL_RX_MPDU_START_INFO0_PPDU_ID);
+ 		}
+ 
+ 		mon_mpdu = kzalloc(sizeof(*mon_mpdu), GFP_ATOMIC);
+@@ -1020,15 +1025,14 @@ static void ath12k_dp_mon_update_radiotap(struct ath12k *ar,
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	u8 *ptr = NULL;
+-	u16 ampdu_id = ppduinfo->ampdu_id[ppduinfo->userid];
+ 
+ 	rxs->flag |= RX_FLAG_MACTIME_START;
+ 	rxs->signal = ppduinfo->rssi_comb + ATH12K_DEFAULT_NOISE_FLOOR;
+ 	rxs->nss = ppduinfo->nss + 1;
+ 
+-	if (ampdu_id) {
++	if (ppduinfo->userstats[ppduinfo->userid].ampdu_present) {
+ 		rxs->flag |= RX_FLAG_AMPDU_DETAILS;
+-		rxs->ampdu_reference = ampdu_id;
++		rxs->ampdu_reference = ppduinfo->userstats[ppduinfo->userid].ampdu_id;
+ 	}
+ 
+ 	if (ppduinfo->he_mu_flags) {
+diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.h b/drivers/net/wireless/ath/ath12k/hal_rx.h
+index 095216eabc01d..8c37cbc01b1c5 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath12k/hal_rx.h
+@@ -143,6 +143,8 @@ struct hal_rx_user_status {
+ 	u32 mpdu_fcs_ok_bitmap[HAL_RX_NUM_WORDS_PER_PPDU_BITMAP];
+ 	u32 mpdu_ok_byte_count;
+ 	u32 mpdu_err_byte_count;
++	bool ampdu_present;
++	u16 ampdu_id;
+ };
+ 
+ #define HAL_MAX_UL_MU_USERS	37
+@@ -226,7 +228,6 @@ struct hal_rx_mon_ppdu_info {
+ 	u8 addr4[ETH_ALEN];
+ 	struct hal_rx_user_status userstats[HAL_MAX_UL_MU_USERS];
+ 	u8 userid;
+-	u16 ampdu_id[HAL_MAX_UL_MU_USERS];
+ 	bool first_msdu_in_mpdu;
+ 	bool is_ampdu;
+ 	u8 medium_prot_type;
 -- 
 2.39.5
 
