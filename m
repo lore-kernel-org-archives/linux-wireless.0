@@ -1,45 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ADAC2D3FBB;
-	Mon,  5 May 2025 22:53:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F4D52D47A2;
+	Mon,  5 May 2025 22:53:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485617; cv=none; b=c/m6hFrNPl440e0ldxN3t53WsWptN2+fvyKqk4WkYE2b0QoPADTI5mm5sN7Q4N4d1to1MfCjRtpWJYua+x/yIYgR20PRl48opS2qUuHY0+qTkbLiPMIqCfVF/U5omtRpyhinK5kVcGvCC0+u15l+ze1EenN74xdSBBTyB3PcLYg=
+	t=1746485619; cv=none; b=cKoJ0oO4ZvMEoBGjcrzlwxn85/7BTLueRjWVgVKnGKP4tvC/drenQf3tFnd17EVV1GP/7tL/TYc0H/J7JQvcUqKUM692q6fL12PF7D0S+CahVIX6nCNeRpoXgGTBSGlB6zUZrwCUKM+gNezva3noEJw/QnX6DIiuApjZu4wXNtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485617; c=relaxed/simple;
-	bh=sqCRRX5se34m6d3XsYR9wyca+/LOv0PL2t1VKF+e8lc=;
+	s=arc-20240116; t=1746485619; c=relaxed/simple;
+	bh=ssn/ZHnwsREDe+ZIr3IpyRX2mXuA6gGJb1ktxetpc3Q=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=s8XsdEATAREOMXA27NIMP6I98pFhNAaen+bnQRnru6cUbFyZlRsME/tUrwJlbGq/vuFBNWGoOltfJry95Cw+lCITRI1iUaIwp4gZfZ2sEsScqjkOjDyLYRDvs/Vsb8AwB6bdIap+gCbFzQ2Pa6K7Tl2qz/KCkgavTxxHEKmPqy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YE8/7yPM; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=hrHSsYNCZp/raT2Qdr7SVek60BuLuq3xduV50efcjP5m/tFoCKBg+yg/F3scn4GYC1dMaYNcNQR+08kZhxRNvfcqm3KJPcUoMVXl3f/D29lG8IXY75ptaASAhtT+Q4nJm0zlzCyI68D326EGMVFUUlMN0G5XGP0A9W59nbRecrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u8FqtH4F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YE8/7yPM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F81EC4CEED;
-	Mon,  5 May 2025 22:53:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u8FqtH4F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292D0C4CEEE;
+	Mon,  5 May 2025 22:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485616;
-	bh=sqCRRX5se34m6d3XsYR9wyca+/LOv0PL2t1VKF+e8lc=;
+	s=k20201202; t=1746485619;
+	bh=ssn/ZHnwsREDe+ZIr3IpyRX2mXuA6gGJb1ktxetpc3Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YE8/7yPMByzoWkz7Rr+BvbcboPreaguHYqF9E7mCyO60dQjCyPiGlHAwPxDZ6ctc5
-	 frno309cxiXF15w9+sWg4l2QKtDVs6aCZQCxaa4UuJ1za5G4Oyw70hu0f0/JHu6EfK
-	 OFVonUAtEH0lrQfWXBD73Xoe1yRvnYRi1l6x9IfS3A3tKPUazDku+049QsGl6H4mB5
-	 7HNlAbzuTgkGpMG9A897t/ZZe/usnfRrI2TMVNkTRaqmlsqXAUX1XDcjdlrgfWVxmK
-	 GakfIiIWK/Nx1ErhAUvRB0jNQ+M0ekZlD0raVnTVK1N9xrR3Cakbk2Ka9oXtcJMW2t
-	 y9xFaaWC9b/KA==
+	b=u8FqtH4FZirpnLEbfy3TK6ghz0gHuaZktTkoR9iXeDae5HaOBVkt2kiWsZhH9HR4I
+	 yTy+tPoRcMifokMXy4sIxwrDyzQ4H6pZo3ENxmROGii27YtfjzYjPorjiVgmMnULJB
+	 hbcbrjW9Tjx6c6hWnywharb9bUd7wjmrRsuxeSZFaA0I+JT8j3mxknCX8iJXwtYmNh
+	 EyuRgSa6EDBPK4iC2rVZY150v7k2Zs7zqS6nrZ+T7kEiVpqv6PJHa+/gsN9RwTECM/
+	 LCvs3iAe5jfhc1vKONOA180sX/zfFNE3R7Jt2v0vQL9gYocRr2CNK3D9RgnTvVxlEq
+	 oBhaINNH94aVw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	eilon.rinat@intel.com,
-	emmanuel.grumbach@intel.com,
-	daniel.gabay@intel.com,
-	yedidya.ben.shimol@intel.com,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 388/486] wifi: iwlwifi: use correct IMR dump variable
-Date: Mon,  5 May 2025 18:37:44 -0400
-Message-Id: <20250505223922.2682012-388-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 390/486] wifi: mac80211: don't unconditionally call drv_mgd_complete_tx()
+Date: Mon,  5 May 2025 18:37:46 -0400
+Message-Id: <20250505223922.2682012-390-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -56,41 +54,35 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 21e4d29ac0def546d57bacebe4a51cbed1209b03 ]
+[ Upstream commit 1798271b3604b902d45033ec569f2bf77e94ecc2 ]
 
-We shouldn't dump the reg_data here which dumps the last
-entry again, it should use the imr_reg_data.
+We might not have called drv_mgd_prepare_tx(), so only call
+drv_mgd_complete_tx() under the same conditions.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20250205145347.3313b18667d1.Iaa9ab66b1d397912a573525e060d39ea01b29d19@changeid
+Link: https://patch.msgid.link/20250205110958.e091fc39a351.Ie6a3cdca070612a0aa4b3c6914ab9ed602d1f456@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 6594216f873c4..cd284767ff4ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2005-2014, 2018-2024 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2025 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2015-2017 Intel Deutschland GmbH
-  */
-@@ -2691,7 +2691,7 @@ static u32 iwl_dump_ini_trigger(struct iwl_fw_runtime *fwrt,
- 	}
- 	/* collect DRAM_IMR region in the last */
- 	if (imr_reg_data.reg_tlv)
--		size += iwl_dump_ini_mem(fwrt, list, &reg_data,
-+		size += iwl_dump_ini_mem(fwrt, list, &imr_reg_data,
- 					 &iwl_dump_ini_region_ops[IWL_FW_INI_REGION_DRAM_IMR]);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f000026ab714a..ba0af3018cf58 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3589,7 +3589,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (tx)
+ 		ieee80211_flush_queues(local, sdata, false);
  
- 	if (size) {
+-	drv_mgd_complete_tx(sdata->local, sdata, &info);
++	if (tx || frame_buf)
++		drv_mgd_complete_tx(sdata->local, sdata, &info);
+ 
+ 	/* clear AP addr only after building the needed mgmt frames */
+ 	eth_zero_addr(sdata->deflink.u.mgd.bssid);
 -- 
 2.39.5
 
