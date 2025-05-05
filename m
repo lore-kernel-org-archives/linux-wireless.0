@@ -1,45 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83F22D7AE0;
-	Mon,  5 May 2025 22:55:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C67278778;
+	Mon,  5 May 2025 22:55:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485725; cv=none; b=hDNxpNW74S+mjfqfyLz6q9CbPiILcVxhd8hu80XZYXdFQ2DQDKFy15oT5D0Mp5hQfdCqLezYxUbD66b2SQhcSRVv7F5bRs+5A6CyemnTradzMN2yc3Jn1ZFfj5Wx7OYL4nSAKqWsd7JbUoXkJSkQmv8UDcwTJZvk79U7DQulPk8=
+	t=1746485757; cv=none; b=NMi5K5AIW4wgPlljreQkI6pM139qGhm3C7cfYKxmLMkdBoRYrb3wfao2i2kOwFjBkI7uB6+ulNZM60yORdng3uoH3Re6fJVHcXb3zoiFiC2itvkedT+gi/mcvTNKKHvhD+HrqqF6gqpEvUMpCp5L2yUeFxAsMCX6lGu320mS/M4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485725; c=relaxed/simple;
-	bh=AacAX110S5z2tG92wMAN89b1mrxBDeQr+V5y2E7kQ7w=;
+	s=arc-20240116; t=1746485757; c=relaxed/simple;
+	bh=qnNfg/EOcVr34/PFSz2MpR8GC/v6Xd+rl7Jb6jMV9AI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Fn2iFII++XEsg+R4a9RHaa4jMKVHp4Y/Z9o22U2O6JkuWvmau0lrCnpw2nltegCypqJolq2bLLnvSGpQSJ5hiTumXa5fhjNtgUkKD7dLuYOGwjjd4Quibz8q/ZaUbCiLpFeFnNabx7CT8N+D6c9aLXmhqeskxcTUno/CCouMbNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GkMVA4g3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Jwm5nIZjO1ekLHEv7MluaHENHTVHP8Dd7fEfgBgxMdn0GyMoXPnNGn1kk9f7gWntDWnfugcJJNvrpFhNTb7aYsjNZ1S574xt9tqXssgOgNXYOfn9yIxzO7Xf31V6QQaeaqplmLrWY27t7+Ml7fBJ1r90KWYzgjEf7eCB/vjm+DI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BdGFkL2R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GkMVA4g3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23A2BC4CEF1;
-	Mon,  5 May 2025 22:55:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BdGFkL2R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFFE5C4CEEE;
+	Mon,  5 May 2025 22:55:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485724;
-	bh=AacAX110S5z2tG92wMAN89b1mrxBDeQr+V5y2E7kQ7w=;
+	s=k20201202; t=1746485756;
+	bh=qnNfg/EOcVr34/PFSz2MpR8GC/v6Xd+rl7Jb6jMV9AI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GkMVA4g31jvFTM7h3iqHWumElU3hWDwYODlMfHww3esDOoG8yYLHlMhzbL/xjvIyl
-	 8W2lh/12eG8f1u6lz+e9mKYUjvUymZv8ZMXAd8NYuEC3s0W+p90Sn81B2IRwLVIlgJ
-	 tc+35pdILDYtaNu5UMLcN1ZY67fM47BHvK20OEPiIkq1GwAIdwpjIiV66PFqgUJcdh
-	 TUGLu7WTMEP4fsxbs/OI8tvYLQFVlh/2xsL8liqUGuMppvhS4BWuaFrA+JPE8MBVpK
-	 dSYD2tnHym8vxq0V8yLi1DLHIbju5rogl179/fV50ohH4DMJpfEnPZLcNQQXwzsA3/
-	 viXSOhgX7XBBw==
+	b=BdGFkL2RNl4hLkPacZ7sOUwmjCk8FN4p/WrKuKURjBKq5YbLp0QBzqolxYk5WiEUl
+	 yT20PrKl8IB7woh1yKptY37nbNMT5JG0TXlPmznhgusyW7ELHIg4xobWZduVFCT7nQ
+	 M2TdNLJE5lEm7K4jxhg/6n+hJL+R0SKLnB7S1H4evTeF9hdvcAhwl+WZXQ6EPv3d7S
+	 qYxxzsqA/CIVNOJGfkB+CCooBKk2l8V/9ayDjxWB9Cv76naFNedMc9+fLjq1Y/IEOj
+	 u8nlE2TZ44PiE4YTNqxMDANVSRcBadxk4Xnu6/2SAOXvtwdeOrzsjDkbBT6aTxI2Iz
+	 P1OH7asVNPEbg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Avula Sri Charan <quic_asrichar@quicinc.com>,
-	Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
-	Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
+Cc: Nicolas Escande <nico.escande@gmail.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
 	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
 	jjohnson@kernel.org,
 	linux-wireless@vger.kernel.org,
 	ath12k@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.12 445/486] wifi: ath12k: Avoid napi_sync() before napi_enable()
-Date: Mon,  5 May 2025 18:38:41 -0400
-Message-Id: <20250505223922.2682012-445-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 467/486] wifi: ath12k: fix ath12k_hal_tx_cmd_ext_desc_setup() info1 override
+Date: Mon,  5 May 2025 18:39:03 -0400
+Message-Id: <20250505223922.2682012-467-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -54,76 +53,39 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Avula Sri Charan <quic_asrichar@quicinc.com>
+From: Nicolas Escande <nico.escande@gmail.com>
 
-[ Upstream commit 268c73d470a5790a492a2fc2ded084b909d144f3 ]
+[ Upstream commit df11edfba49e5fb69f4c9e7cb76082b89c417f78 ]
 
-In case of MHI error a reset work will be queued which will try
-napi_disable() after napi_synchronize().
+Since inception there is an obvious typo laying around in
+ath12k_hal_tx_cmd_ext_desc_setup(). Instead of initializing + adding
+flags to tcl_ext_cmd->info1, we initialize + override. This will be needed
+in the future to make broadcast frames work with ethernet encapsulation.
 
-As the napi will be only enabled after qmi_firmware_ready event,
-trying napi_synchronize() before napi_enable() will result in
-indefinite sleep in case of a firmware crash in QMI init sequence.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
 
-To avoid this, introduce napi_enabled flag to check if napi is enabled
-or not before calling napi_synchronize().
-
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Avula Sri Charan <quic_asrichar@quicinc.com>
-Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
-Reviewed-by: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
-Link: https://patch.msgid.link/20250124090058.3194299-1-quic_tamizhr@quicinc.com
+Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Link: https://patch.msgid.link/20250127071306.1454699-1-nico.escande@gmail.com
 Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  1 +
- drivers/net/wireless/ath/ath12k/pci.c  | 13 ++++++++++---
- 2 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp_tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 7f2e9a9b40977..3faf3430effb9 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -148,6 +148,7 @@ struct ath12k_ext_irq_grp {
- 	u32 num_irq;
- 	u32 grp_id;
- 	u64 timestamp;
-+	bool napi_enabled;
- 	struct napi_struct napi;
- 	struct net_device *napi_ndev;
- };
-diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
-index 2ff866e1d7d5b..45d537066345a 100644
---- a/drivers/net/wireless/ath/ath12k/pci.c
-+++ b/drivers/net/wireless/ath/ath12k/pci.c
-@@ -481,8 +481,11 @@ static void __ath12k_pci_ext_irq_disable(struct ath12k_base *ab)
+diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
+index ad21fbfbcbe22..201ffdb8c44ae 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
+@@ -117,7 +117,7 @@ static void ath12k_hal_tx_cmd_ext_desc_setup(struct ath12k_base *ab,
+ 			       le32_encode_bits(ti->data_len,
+ 						HAL_TX_MSDU_EXT_INFO1_BUF_LEN);
  
- 		ath12k_pci_ext_grp_disable(irq_grp);
- 
--		napi_synchronize(&irq_grp->napi);
--		napi_disable(&irq_grp->napi);
-+		if (irq_grp->napi_enabled) {
-+			napi_synchronize(&irq_grp->napi);
-+			napi_disable(&irq_grp->napi);
-+			irq_grp->napi_enabled = false;
-+		}
- 	}
- }
- 
-@@ -1112,7 +1115,11 @@ void ath12k_pci_ext_irq_enable(struct ath12k_base *ab)
- 	for (i = 0; i < ATH12K_EXT_IRQ_GRP_NUM_MAX; i++) {
- 		struct ath12k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
- 
--		napi_enable(&irq_grp->napi);
-+		if (!irq_grp->napi_enabled) {
-+			napi_enable(&irq_grp->napi);
-+			irq_grp->napi_enabled = true;
-+		}
-+
- 		ath12k_pci_ext_grp_enable(irq_grp);
- 	}
- 
+-	tcl_ext_cmd->info1 = le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
++	tcl_ext_cmd->info1 |= le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
+ 				le32_encode_bits(ti->encap_type,
+ 						 HAL_TX_MSDU_EXT_INFO1_ENCAP_TYPE) |
+ 				le32_encode_bits(ti->encrypt_type,
 -- 
 2.39.5
 
