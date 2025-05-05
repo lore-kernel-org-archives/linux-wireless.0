@@ -1,41 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 911072D610E;
-	Mon,  5 May 2025 22:49:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 731542D7AFB;
+	Mon,  5 May 2025 22:56:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485358; cv=none; b=Dmz+LOdzOg9TV0hLc2sXqwGsE2iPwTkGp2+tKOLNpmp6j35tKT24X7SNGYW4kfuw0DPtKNPvEPzlfg67Y93Acg2+5laRTaWNifTpwP1bSUoP+qcyi4l0l6QeF8T7+OsTvpwoi5uyYEwSKiGPTdbUU7r6KCHXz+4xVNuByyGm51A=
+	t=1746485762; cv=none; b=s8CNNjczsQP5gQnpq/9vDqUgvBLhb+olOCpWlfmYcoMMk1TjeZ8Ll/tGN5bJ9OE+xJf0fjcNGJKIHIBhjEs01J60Wfbe2L1ospoCgj/8he6kl9rnzUHvf+ereany/1J8Z5yF38/+sK9528lD5rUXKgH3K867lvwbwEKP2yv/80k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485358; c=relaxed/simple;
-	bh=+YKHeEpph9JFLV06wHXX7h9Zol/NxFPDjFQQ9eP+mGc=;
+	s=arc-20240116; t=1746485762; c=relaxed/simple;
+	bh=qH60v/UBuRVGvBvmQR7xuc+vbvwcpz4hRQkRfR3oOfI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZsRu3rOOr5U6/M6wuhVaWaSj76nSBKLqb4UEadUayN6Rpxx2U+FgqCu62klOrRGL4wLzeyY2evj0oIl9CK9skJ9f6Tz1qMLVcxIrgDLSiytSh1DlJSlbs6BHRXH/atYbwzub7Zpym+Zt7WO7rdsvlcXZe9BRGhNUQg1dOkYjyvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TMDu5EWT; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=DIxxg2wX1asrZhifHBk5wLMHVXDg7lgGi/kFav62mmUlFJu1K8CNocWT2cscAzPGlM6pYr8y1sd9mTBfxc/G+8gy+4FOBMNJrRKQdZI/Y2RQtxG3kvHdEOKEbzPB37F6lZmRk5G4x7qQxrUAuCAH3qiHJaVYB9vpUbeo0EdXpYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UeiaXbwl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TMDu5EWT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBB44C4CEF1;
-	Mon,  5 May 2025 22:49:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UeiaXbwl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E73EC4CEEE;
+	Mon,  5 May 2025 22:56:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485357;
-	bh=+YKHeEpph9JFLV06wHXX7h9Zol/NxFPDjFQQ9eP+mGc=;
+	s=k20201202; t=1746485762;
+	bh=qH60v/UBuRVGvBvmQR7xuc+vbvwcpz4hRQkRfR3oOfI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TMDu5EWTgY/bHFG12KC44BWzqilikV4JhRxc71GQoVVJTCRvX7+Ci6X0c7X/a5r2F
-	 2JgddeIfdxF8gZAHw7lyEaK7JnsYXLJw9rsBJcZtpleVHFnuLf4fbXsO0nXeKeaQ/k
-	 WF8v+h3xHpyj0JuaCZFpwpv76KgdjYTStx4uDOQ8zg0xymOovrT/yOdS26sdAFrj2+
-	 QN9HRC2BZ0YqGSB5om3NIWj3mX3wH8r87jgjQjZ/p6dZwJKHyRZOaubdV0WK1VrnoB
-	 qCfOrtZ8xLLtnk7bkrSkIBQYBpf2SaEru/dm5zJsb4uG+u7LVZBJZNSjur5vqRP6mV
-	 /gIQspkXznLKQ==
+	b=UeiaXbwlnBTmRADGCWbbpiPKJOiRpioQIh1VNQh06GShrgR8WOM9OWz4jwf1/0+sm
+	 DcZ7tOo/lpjJwWxH1BnZHZo5Q8+khFo4G11zbiaEl1dae3IDxBnaXwL+PYf+tgnoFg
+	 ToEHZvdjDPHlm0e5wmsHkup8dliyaNLA1ABrZivBxFpbAG3010+uINK6QPlR0SKE1S
+	 tFXoBNur+CNTrZcKRHVTp5dXnwSF0wDkYqCTzNiO6Uo9AlcqZJHR0U47hpn9Llti4e
+	 MeniYnp0f/pocjs72XucNxHgP28I7puNONOdU4jlRhunvJEuOvM1bOmcmOENHcIS8T
+	 9SeMPQwseTH+Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Aaradhana Sahu <quic_aarasahu@quicinc.com>,
+	Aditya Kumar Singh <quic_adisi@quicinc.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 285/486] wifi: rtw88: Fix rtw_init_ht_cap() for RTL8814AU
-Date: Mon,  5 May 2025 18:36:01 -0400
-Message-Id: <20250505223922.2682012-285-sashal@kernel.org>
+	jjohnson@kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.12 471/486] wifi: ath12k: Fetch regdb.bin file from board-2.bin
+Date: Mon,  5 May 2025 18:39:07 -0400
+Message-Id: <20250505223922.2682012-471-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -50,57 +53,75 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+From: Aaradhana Sahu <quic_aarasahu@quicinc.com>
 
-[ Upstream commit c7eea1ba05ca5b0dbf77a27cf2e1e6e2fb3c0043 ]
+[ Upstream commit 24f587572acf7509127dbdfcbf1b681ef84eeba0 ]
 
-Set the RX mask and the highest RX rate according to the number of
-spatial streams the chip can receive. For RTL8814AU that is 3.
+Currently, ath12k_core_fetch_regdb() finds regdb.bin file through
+board id's but in board-2.bin file regdb.bin file is present with
+default board id because of which regdb.bin is not fetched.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/4e786f50-ed1c-4387-8b28-e6ff00e35e81@gmail.com
+Add support to fetch regdb.bin file from board-2.bin through
+default board id.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Aaradhana Sahu <quic_aarasahu@quicinc.com>
+Reviewed-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+Link: https://patch.msgid.link/20250116032835.118397-1-quic_aarasahu@quicinc.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath12k/core.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 2c81e4cae039e..a808af2f085ec 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1543,6 +1543,7 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	int i;
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 51252e8bc1ae9..8bb8ee98188bf 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -161,7 +161,7 @@ EXPORT_SYMBOL(ath12k_core_resume);
  
- 	ht_cap->ht_supported = true;
- 	ht_cap->cap = 0;
-@@ -1562,17 +1563,11 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
- 	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_cap->ampdu_density = chip->ampdu_density;
- 	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
--	if (efuse->hw_cap.nss > 1) {
--		ht_cap->mcs.rx_mask[0] = 0xFF;
--		ht_cap->mcs.rx_mask[1] = 0xFF;
--		ht_cap->mcs.rx_mask[4] = 0x01;
--		ht_cap->mcs.rx_highest = cpu_to_le16(300);
--	} else {
--		ht_cap->mcs.rx_mask[0] = 0xFF;
--		ht_cap->mcs.rx_mask[1] = 0x00;
--		ht_cap->mcs.rx_mask[4] = 0x01;
--		ht_cap->mcs.rx_highest = cpu_to_le16(150);
--	}
-+
-+	for (i = 0; i < efuse->hw_cap.nss; i++)
-+		ht_cap->mcs.rx_mask[i] = 0xFF;
-+	ht_cap->mcs.rx_mask[4] = 0x01;
-+	ht_cap->mcs.rx_highest = cpu_to_le16(150 * efuse->hw_cap.nss);
+ static int __ath12k_core_create_board_name(struct ath12k_base *ab, char *name,
+ 					   size_t name_len, bool with_variant,
+-					   bool bus_type_mode)
++					   bool bus_type_mode, bool with_default)
+ {
+ 	/* strlen(',variant=') + strlen(ab->qmi.target.bdf_ext) */
+ 	char variant[9 + ATH12K_QMI_BDF_EXT_STR_LENGTH] = { 0 };
+@@ -192,7 +192,9 @@ static int __ath12k_core_create_board_name(struct ath12k_base *ab, char *name,
+ 			  "bus=%s,qmi-chip-id=%d,qmi-board-id=%d%s",
+ 			  ath12k_bus_str(ab->hif.bus),
+ 			  ab->qmi.target.chip_id,
+-			  ab->qmi.target.board_id, variant);
++			  with_default ?
++			  ATH12K_BOARD_ID_DEFAULT : ab->qmi.target.board_id,
++			  variant);
+ 		break;
+ 	}
+ 
+@@ -204,19 +206,19 @@ static int __ath12k_core_create_board_name(struct ath12k_base *ab, char *name,
+ static int ath12k_core_create_board_name(struct ath12k_base *ab, char *name,
+ 					 size_t name_len)
+ {
+-	return __ath12k_core_create_board_name(ab, name, name_len, true, false);
++	return __ath12k_core_create_board_name(ab, name, name_len, true, false, false);
  }
  
- static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
+ static int ath12k_core_create_fallback_board_name(struct ath12k_base *ab, char *name,
+ 						  size_t name_len)
+ {
+-	return __ath12k_core_create_board_name(ab, name, name_len, false, false);
++	return __ath12k_core_create_board_name(ab, name, name_len, false, false, true);
+ }
+ 
+ static int ath12k_core_create_bus_type_board_name(struct ath12k_base *ab, char *name,
+ 						  size_t name_len)
+ {
+-	return __ath12k_core_create_board_name(ab, name, name_len, false, true);
++	return __ath12k_core_create_board_name(ab, name, name_len, false, true, true);
+ }
+ 
+ const struct firmware *ath12k_core_firmware_request(struct ath12k_base *ab,
 -- 
 2.39.5
 
