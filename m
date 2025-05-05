@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00388278769;
-	Mon,  5 May 2025 22:55:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E80EE36AADA;
+	Mon,  5 May 2025 22:56:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485754; cv=none; b=ake2TGQRbERuY1Jelk6Y0EjhDDh8m4afTzJo13R6DN2vTD8rmaim6lMSF9zJXVfC+wo98TJFfuAfyODAZ5IuYSxCs89+hutn5Ms1WkAhl0lcVm9j7zLtiEpeR85qEyhU5FQ4UG3FfZqcOej6pmdP2kkaJAEpFnT1RwBoyTSE2+w=
+	t=1746485778; cv=none; b=RkpaMrkZKEzES53nYiU+ikskafZCYxdMjfMN7dir6z0/UjCOVmvGE1HnU7DD4tKnLL9bwURH5tIiXloamLzgji/uK+DFd+BH0K8M2JeE0o9GCJxoAKjKa5eTWFT2/CXCEoD2VEANHGyUvtwREQEB8sW/Fr2QnO+UIM74Gw0a0Fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485754; c=relaxed/simple;
-	bh=62Bhk/VVD4D0spqYKktOS5Xr1IEPMTNipmkICGhPAWA=;
+	s=arc-20240116; t=1746485778; c=relaxed/simple;
+	bh=q/+mYq37A2zsEi1sgl1dNJHL57ifGxjCo65jUBiAv88=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a7o9H7qI+/YklAg2B5q1Yl0/VuigMKje5a2DKI5EgC5WSoBRTOBry/xBroV2ftuUX3DLrIRzHnCYgvJWRu4sFW/am91xVT7JDbHchnB6qtg7JRP2kkuF4yF103SEmW/PUs9pof4m1rL+pE9s2b15NKuwXv1v2+7wj9zDMykC3fs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AyBCWyhE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=p9ia4LyGGZIfa8suFpf1ZrLqm63bCbhGiVYkBtgCAOnF8QTmcB+a4wH+pQht+hzufF8FN6mSsvNbDAO95UO16ntz1DNnAHze0jaPX5SUiI1HrzAue5gBumtS9gMXkEosZ1q97OVuXs2BnbIX9v73xVMeRdVRYm7mP0elW6WqeF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PGdYWSs0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AyBCWyhE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43389C4CEEF;
-	Mon,  5 May 2025 22:55:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PGdYWSs0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9416CC4CEEE;
+	Mon,  5 May 2025 22:56:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485752;
-	bh=62Bhk/VVD4D0spqYKktOS5Xr1IEPMTNipmkICGhPAWA=;
+	s=k20201202; t=1746485777;
+	bh=q/+mYq37A2zsEi1sgl1dNJHL57ifGxjCo65jUBiAv88=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=AyBCWyhE2H8JAUPVOjSpyL3dlP3QN6QM3nBte0Ttsy52tGwE53yv09Q+rTHDHo3+/
-	 X4rDWGxyi+BBTUWYcN5yk0A/GE8jkWM+FDyuSjUd0dgBi7wlEjHqxluZ+uiLPOHuHI
-	 A/VYMw1vNNToCNr0OxFGl+MTvzPRDaxdYqbSoJ8MSqmm8qtqRbwkfnn7f21+r5DX/g
-	 LUG5L61xuVB/CXW1a5sAAOh3bfA2XaHuh74XQkrgDnam/BKd7ikXNMAN2dl1ZsnBBg
-	 3ZT0CJmw/c1U2Ip3/7R4qtlpvvsZgGUKJY7+KV1HWMyKzRi9KNPdzMc68lEwJpPkv5
-	 Klj3LZUceq+xQ==
+	b=PGdYWSs0aj9+zVi+d8hgmXU5d3556lgbLqVl/SiW/E84h5ZVmY4usGkJox1YuyIo6
+	 DllGYt/qQw3EJCbI0K7cMqLJFl4WmWYy0L88YUKhRvlwYTX8oAdpi0H26XKrJTBZLb
+	 No53pJmTJmzGTq/3ey4bQ3rjxu4o8eJXlWde/N/ewsqRB56aAQMNhBdeR1pTmj5+SG
+	 0Ogtj0fxrBbR0E6yQz5mlBgSbV7xzPtRec+GXs8qBuQ3eyN/zsyijll4TPSZMwCGE0
+	 ipOuH+TR+JmN8VEpMLySJlRtV3rINFwblCgB4n4S1H4gYPB6fCZtVo+ArQzPIEBWUN
+	 Fwb5cIttr4uMw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Ching-Te Ku <ku920601@realtek.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 464/486] wifi: rtw89: add wiphy_lock() to work that isn't held wiphy_lock() yet
-Date: Mon,  5 May 2025 18:39:00 -0400
-Message-Id: <20250505223922.2682012-464-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 479/486] wifi: rtw89: coex: Separated Wi-Fi connecting event from Wi-Fi scan event
+Date: Mon,  5 May 2025 18:39:15 -0400
+Message-Id: <20250505223922.2682012-479-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -49,69 +50,56 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Ching-Te Ku <ku920601@realtek.com>
 
-[ Upstream commit ebfc9199df05d37b67f4d1b7ee997193f3d2e7c8 ]
+[ Upstream commit 4a57346652154bb339c48b41166df9154cff33f5 ]
 
-To ensure where are protected by driver mutex can also be protected by
-wiphy_lock(), so afterward we can remove driver mutex safely.
+Wi-Fi connecting process don't need to assign to firmware slot control,
+if assign firmware slot control for Wi-Fi connecting event, firmware will
+not toggle slots because driver don't tell the slot schedule to firmware.
+Wi-Fi connecting event end should also cancel the 4way handshake status.
 
+Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/20250122060310.31976-2-pkshih@realtek.com
+Link: https://patch.msgid.link/20250110015416.10704-3-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw89/regd.c | 2 ++
- drivers/net/wireless/realtek/rtw89/ser.c  | 4 ++++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/realtek/rtw89/coex.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
-index bb064a086970b..e8df68818da01 100644
---- a/drivers/net/wireless/realtek/rtw89/regd.c
-+++ b/drivers/net/wireless/realtek/rtw89/regd.c
-@@ -695,6 +695,7 @@ void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct rtw89_dev *rtwdev = hw->priv;
+diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
+index 5f878f086f7cf..6cdbf02f405ae 100644
+--- a/drivers/net/wireless/realtek/rtw89/coex.c
++++ b/drivers/net/wireless/realtek/rtw89/coex.c
+@@ -5356,7 +5356,8 @@ static void _action_wl_scan(struct rtw89_dev *rtwdev)
+ 	struct rtw89_btc_wl_info *wl = &btc->cx.wl;
+ 	struct rtw89_btc_wl_dbcc_info *wl_dinfo = &wl->dbcc_info;
  
-+	wiphy_lock(wiphy);
- 	mutex_lock(&rtwdev->mutex);
- 	rtw89_leave_ps_mode(rtwdev);
+-	if (RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD, &rtwdev->fw)) {
++	if (btc->cx.state_map != BTC_WLINKING &&
++	    RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD, &rtwdev->fw)) {
+ 		_action_wl_25g_mcc(rtwdev);
+ 		rtw89_debug(rtwdev, RTW89_DBG_BTC, "[BTC], Scan offload!\n");
+ 	} else if (rtwdev->dbcc_en) {
+@@ -7178,6 +7179,8 @@ void rtw89_btc_ntfy_scan_finish(struct rtw89_dev *rtwdev, u8 phy_idx)
+ 		_fw_set_drv_info(rtwdev, CXDRVINFO_DBCC);
+ 	}
  
-@@ -712,6 +713,7 @@ void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request
- 
- exit:
- 	mutex_unlock(&rtwdev->mutex);
-+	wiphy_unlock(wiphy);
++	btc->dm.tdma_instant_excute = 1;
++
+ 	_run_coex(rtwdev, BTC_RSN_NTFY_SCAN_FINISH);
  }
  
- /* Maximum Transmit Power field (@raw) can be EIRP or PSD.
-diff --git a/drivers/net/wireless/realtek/rtw89/ser.c b/drivers/net/wireless/realtek/rtw89/ser.c
-index 7b203bb7f151a..02c2ac12f197a 100644
---- a/drivers/net/wireless/realtek/rtw89/ser.c
-+++ b/drivers/net/wireless/realtek/rtw89/ser.c
-@@ -156,9 +156,11 @@ static void ser_state_run(struct rtw89_ser *ser, u8 evt)
- 	rtw89_debug(rtwdev, RTW89_DBG_SER, "ser: %s receive %s\n",
- 		    ser_st_name(ser), ser_ev_name(ser, evt));
+@@ -7630,7 +7633,8 @@ void rtw89_btc_ntfy_role_info(struct rtw89_dev *rtwdev,
+ 	else
+ 		wl->status.map.connecting = 0;
  
-+	wiphy_lock(rtwdev->hw->wiphy);
- 	mutex_lock(&rtwdev->mutex);
- 	rtw89_leave_lps(rtwdev);
- 	mutex_unlock(&rtwdev->mutex);
-+	wiphy_unlock(rtwdev->hw->wiphy);
+-	if (state == BTC_ROLE_MSTS_STA_DIS_CONN)
++	if (state == BTC_ROLE_MSTS_STA_DIS_CONN ||
++	    state == BTC_ROLE_MSTS_STA_CONN_END)
+ 		wl->status.map._4way = false;
  
- 	ser->st_tbl[ser->state].st_func(ser, evt);
- }
-@@ -707,9 +709,11 @@ static void ser_l2_reset_st_hdl(struct rtw89_ser *ser, u8 evt)
- 
- 	switch (evt) {
- 	case SER_EV_STATE_IN:
-+		wiphy_lock(rtwdev->hw->wiphy);
- 		mutex_lock(&rtwdev->mutex);
- 		ser_l2_reset_st_pre_hdl(ser);
- 		mutex_unlock(&rtwdev->mutex);
-+		wiphy_unlock(rtwdev->hw->wiphy);
- 
- 		ieee80211_restart_hw(rtwdev->hw);
- 		ser_set_alarm(ser, SER_RECFG_TIMEOUT, SER_EV_L2_RECFG_TIMEOUT);
+ 	_run_coex(rtwdev, BTC_RSN_NTFY_ROLE_INFO);
 -- 
 2.39.5
 
