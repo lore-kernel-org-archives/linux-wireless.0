@@ -1,47 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF36D3745BA;
-	Mon,  5 May 2025 23:06:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 436EC2EEBCC;
+	Mon,  5 May 2025 23:10:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486368; cv=none; b=RxcfTj/Zy392IwD+2UVNNq3/5yUwUfH6cVPCCrZgupfdMX4ji/Z5aTWVqutaWEkne5WjVAqlhLoZNiX8B3LbaQhd9wrjuERMtvHI9805Ndr1EofzFRxU2kQ1myPLwe4+7t1H8I+jIEmL5jOV0w2BIV3sofQjc9k00hZQtcmkyJg=
+	t=1746486652; cv=none; b=YF+7i9Oy8HxOoKJhdKmDaipjrRWp8ZoePLp7zTaSqT92tw4zyYXjm/SEmCvdB7rFkQwujVDmPPl0VMiMCsF5KW8C0bRovj966JuFat+HD5s10wXhJ6gl/+3fct07bh8NZA3obIG2owcDgbTsixgxPJO0m7u6rJX1gWYEAlzFm1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486368; c=relaxed/simple;
-	bh=1KuU1cq5++A1+lXLHU5Be7SugZDxVeCdiTW24JTYsk0=;
+	s=arc-20240116; t=1746486652; c=relaxed/simple;
+	bh=lDkW0xEZ9elFVTKpmQgbN4fZNCsqxVXNzoUBSQ6F45Y=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IAIKOU2h0lrQHqyzYM72Rwt83hPNziLLWEO6ceWP05OYi5sN5IPEm3XcawtXseax779KQiMw3rG7kVpzMzYuuxw6pTD7m/Fqsgn6Pc0sIoLwxyjDrVuV9dXaZQI6KEEbFBecnOqmnXHjYmYYdALANXpaA77yu3nsCdbLvluycH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u8Xsg/JF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=jdWhsLwyjtPR0nZ8JvLTMLi9v1WN2GtQr74pxWd0jJi0aEEvq0iqMy+4aFNXUjya2GvgEwfMG47F7yXpH/cR4PvQOMwBOsqvsj6bqpmrf9ZQdrLrbB2YhCqq1hdR9cYoomn0veBZkPkLwG3qCWjkek7AbVabFhnY2QqHmyPYnRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iWhXOJPR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u8Xsg/JF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A337CC4CEED;
-	Mon,  5 May 2025 23:06:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iWhXOJPR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47B8AC4CEE4;
+	Mon,  5 May 2025 23:10:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486367;
-	bh=1KuU1cq5++A1+lXLHU5Be7SugZDxVeCdiTW24JTYsk0=;
+	s=k20201202; t=1746486651;
+	bh=lDkW0xEZ9elFVTKpmQgbN4fZNCsqxVXNzoUBSQ6F45Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=u8Xsg/JFdMIXbCId0ovt0fK5hngFM3y94siw5Jj43q9GTDsUgVV3aAWHUlySDthim
-	 6KqvsO0V+yTuDDOJC1Yx3hv813JM0tRn/fVfTECpf3MnHT0kDiCm3QjxS41UMOitIw
-	 FovB8o3p09UTKt21ux27cYXbI0uMmrzP9c6EkD2BvWrl/5MiuDYdKSjbr9rqIotFQL
-	 7w6zS//+CCzT/mSHH65leURC47n9xhUG/LH3O8k9Nqd54F0hgn3daqQtjemh1MbbZ+
-	 oy/EjdqoW/T8G6uUyVoan3KW7kc/WAE8E5SeJtZwFYLTemrFc3oYK66hHh8n+oqptD
-	 iVQBcjjt32iBQ==
+	b=iWhXOJPRutq6Rm8ckT0jePYi4NIngsBRSTsR/Sr9dxFlH7BrvvEva7/IgFOiuoxGk
+	 iKAVcup9BIOGOwa8w1sGRtpXfrn/0jqj5FVwnhHYInu3yN7MSigoRwABxWJ7spsXVX
+	 hLgLpbZHJLayfMQVkC61Vz53vZQ+cWgVyIf3wUjBSA3pFGOe9qk//hL4iyaFpQYLDJ
+	 /q2g2Y6/OsEBJEj9WlVXtTjABtVNiyWCjAkfSyfxOFyP5KoNyzgd4zokrmeiOHGpzn
+	 AWxeY+sRDWu40VL0xgkCuMsaAQsbxx6T4DYg5qLzBICsN27GTNJpNqnuzC8Xq9hzmP
+	 XAazJ9AbEbmqQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Nicolas Escande <nico.escande@gmail.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jjohnson@kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.6 286/294] wifi: ath12k: fix ath12k_hal_tx_cmd_ext_desc_setup() info1 override
-Date: Mon,  5 May 2025 18:56:26 -0400
-Message-Id: <20250505225634.2688578-286-sashal@kernel.org>
+	linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 136/212] wifi: rtw88: Fix rtw_init_vht_cap() for RTL8814AU
+Date: Mon,  5 May 2025 19:05:08 -0400
+Message-Id: <20250505230624.2692522-136-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
-References: <20250505225634.2688578-1-sashal@kernel.org>
+In-Reply-To: <20250505230624.2692522-1-sashal@kernel.org>
+References: <20250505230624.2692522-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,42 +47,69 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.89
+X-stable-base: Linux 6.1.136
 Content-Transfer-Encoding: 8bit
 
-From: Nicolas Escande <nico.escande@gmail.com>
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 
-[ Upstream commit df11edfba49e5fb69f4c9e7cb76082b89c417f78 ]
+[ Upstream commit 6be7544d19fcfcb729495e793bc6181f85bb8949 ]
 
-Since inception there is an obvious typo laying around in
-ath12k_hal_tx_cmd_ext_desc_setup(). Instead of initializing + adding
-flags to tcl_ext_cmd->info1, we initialize + override. This will be needed
-in the future to make broadcast frames work with ethernet encapsulation.
+Set the MCS maps and the highest rates according to the number of
+spatial streams the chip has. For RTL8814AU that is 3.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Link: https://patch.msgid.link/20250127071306.1454699-1-nico.escande@gmail.com
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/e86aa009-b5bf-4b3a-8112-ea5e3cd49465@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/dp_tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
-index 25a9d4c4fae76..474e0d4d406ea 100644
---- a/drivers/net/wireless/ath/ath12k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
-@@ -118,7 +118,7 @@ static void ath12k_hal_tx_cmd_ext_desc_setup(struct ath12k_base *ab, void *cmd,
- 			       le32_encode_bits(ti->data_len,
- 						HAL_TX_MSDU_EXT_INFO1_BUF_LEN);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 7c390c2c608d8..8a47cfb358b16 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1552,8 +1552,9 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
+ 			     struct ieee80211_sta_vht_cap *vht_cap)
+ {
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+-	u16 mcs_map;
++	u16 mcs_map = 0;
+ 	__le16 highest;
++	int i;
  
--	tcl_ext_cmd->info1 = le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
-+	tcl_ext_cmd->info1 |= le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
- 				le32_encode_bits(ti->encap_type,
- 						 HAL_TX_MSDU_EXT_INFO1_ENCAP_TYPE) |
- 				le32_encode_bits(ti->encrypt_type,
+ 	if (efuse->hw_cap.ptcl != EFUSE_HW_CAP_IGNORE &&
+ 	    efuse->hw_cap.ptcl != EFUSE_HW_CAP_PTCL_VHT)
+@@ -1576,21 +1577,15 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
+ 	if (rtw_chip_has_rx_ldpc(rtwdev))
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
+ 
+-	mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 4 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
+-		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 14;
+-	if (efuse->hw_cap.nss > 1) {
+-		highest = cpu_to_le16(780);
+-		mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << 2;
+-	} else {
+-		highest = cpu_to_le16(390);
+-		mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << 2;
++	for (i = 0; i < 8; i++) {
++		if (i < efuse->hw_cap.nss)
++			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2);
++		else
++			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
+ 	}
+ 
++	highest = cpu_to_le16(390 * efuse->hw_cap.nss);
++
+ 	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
+ 	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+ 	vht_cap->vht_mcs.rx_highest = highest;
 -- 
 2.39.5
 
