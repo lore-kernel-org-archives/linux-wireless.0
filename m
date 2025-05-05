@@ -1,44 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C67278778;
-	Mon,  5 May 2025 22:55:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BC5278758;
+	Mon,  5 May 2025 22:55:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485757; cv=none; b=NMi5K5AIW4wgPlljreQkI6pM139qGhm3C7cfYKxmLMkdBoRYrb3wfao2i2kOwFjBkI7uB6+ulNZM60yORdng3uoH3Re6fJVHcXb3zoiFiC2itvkedT+gi/mcvTNKKHvhD+HrqqF6gqpEvUMpCp5L2yUeFxAsMCX6lGu320mS/M4=
+	t=1746485750; cv=none; b=TDgkymKySVcyhFIgD/KXUWenbQoN6d4GaWIV9NRFX1V3ATcWcPOYkJxKZKJdlUj6hW1Ws+QgleflhJ0H9rBC417S3mbxtCp1QHwWqzbaIBLr6xmx6lxtmfgnSIeoHxOBkL3NuWIfXnKRJeRJqMt5vxh92Pgr5cWmkYAvmGszcVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485757; c=relaxed/simple;
-	bh=qnNfg/EOcVr34/PFSz2MpR8GC/v6Xd+rl7Jb6jMV9AI=;
+	s=arc-20240116; t=1746485750; c=relaxed/simple;
+	bh=oICzpjc+PidZ180DElfETsb3v6xdVVeNPNtBIvsbBgg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Jwm5nIZjO1ekLHEv7MluaHENHTVHP8Dd7fEfgBgxMdn0GyMoXPnNGn1kk9f7gWntDWnfugcJJNvrpFhNTb7aYsjNZ1S574xt9tqXssgOgNXYOfn9yIxzO7Xf31V6QQaeaqplmLrWY27t7+Ml7fBJ1r90KWYzgjEf7eCB/vjm+DI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BdGFkL2R; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=NzztMhfylBt/g/UGGJ53hIcIVnbs2SngfU4ZbpfKUbszrzAxF0PH3GOJ/RE+0tcnpVVbzIEIM2z8Ri8ViTCAGDpAx6ZNHbH5OkdUyHXSgY2FkWKX2eZWMpZkN72ADefphlquAk6YSptwdiOOTCgRQDXaH2EuuGyY/OC41mq8oLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c1WbDt5V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BdGFkL2R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFFE5C4CEEE;
-	Mon,  5 May 2025 22:55:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c1WbDt5V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9C21C4CEF3;
+	Mon,  5 May 2025 22:55:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485756;
-	bh=qnNfg/EOcVr34/PFSz2MpR8GC/v6Xd+rl7Jb6jMV9AI=;
+	s=k20201202; t=1746485750;
+	bh=oICzpjc+PidZ180DElfETsb3v6xdVVeNPNtBIvsbBgg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BdGFkL2RNl4hLkPacZ7sOUwmjCk8FN4p/WrKuKURjBKq5YbLp0QBzqolxYk5WiEUl
-	 yT20PrKl8IB7woh1yKptY37nbNMT5JG0TXlPmznhgusyW7ELHIg4xobWZduVFCT7nQ
-	 M2TdNLJE5lEm7K4jxhg/6n+hJL+R0SKLnB7S1H4evTeF9hdvcAhwl+WZXQ6EPv3d7S
-	 qYxxzsqA/CIVNOJGfkB+CCooBKk2l8V/9ayDjxWB9Cv76naFNedMc9+fLjq1Y/IEOj
-	 u8nlE2TZ44PiE4YTNqxMDANVSRcBadxk4Xnu6/2SAOXvtwdeOrzsjDkbBT6aTxI2Iz
-	 P1OH7asVNPEbg==
+	b=c1WbDt5V+u3psTUzj1NJuCAURkHQf2ban4xiRvGzUmxUGqRX/VeHnf2Q+NY9FqoPF
+	 5lc0YbM5iasDBFSB79Fl/tiFZvMCyA0rMIrEiJutw2tMTvB2Z7Zf5+uSGre1Btf2EP
+	 7hUmcEU8xLav/cqgEid7zgvqpEkuwAxGpnknqv+xAWdJD9C+HlBGcuxPMFoEH1GJt8
+	 BFMiXXUdNt1ZJYIs4KITiFNAUH0N96OD/nVXI5RAaikW7Ty6eNkiXY3ZzxgmbJJxbL
+	 0+QF5ax8elOzC5Vh3MXDciDXtqcp+wZuheH2/bydify2Fm+sYs13pF+vOKJPWTP9gG
+	 jG456t1gMwb5Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Nicolas Escande <nico.escande@gmail.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+Cc: Soeren Moch <smoch@web.de>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jjohnson@kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.12 467/486] wifi: ath12k: fix ath12k_hal_tx_cmd_ext_desc_setup() info1 override
-Date: Mon,  5 May 2025 18:39:03 -0400
-Message-Id: <20250505223922.2682012-467-sashal@kernel.org>
+	Jes.Sorensen@gmail.com,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.12 462/486] wifi: rtl8xxxu: retry firmware download on error
+Date: Mon,  5 May 2025 18:38:58 -0400
+Message-Id: <20250505223922.2682012-462-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -53,39 +51,65 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Nicolas Escande <nico.escande@gmail.com>
+From: Soeren Moch <smoch@web.de>
 
-[ Upstream commit df11edfba49e5fb69f4c9e7cb76082b89c417f78 ]
+[ Upstream commit 3d3e28feca7ac8c6cf2a390dbbe1f97e3feb7f36 ]
 
-Since inception there is an obvious typo laying around in
-ath12k_hal_tx_cmd_ext_desc_setup(). Instead of initializing + adding
-flags to tcl_ext_cmd->info1, we initialize + override. This will be needed
-in the future to make broadcast frames work with ethernet encapsulation.
+Occasionally there is an EPROTO error during firmware download.
+This error is converted to EAGAIN in the download function.
+But nobody tries again and so device probe fails.
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
+Implement download retry to fix this.
 
-Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Link: https://patch.msgid.link/20250127071306.1454699-1-nico.escande@gmail.com
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+This error was observed (and fix tested) on a tbs2910 board [1]
+with an embedded RTL8188EU (0bda:8179) device behind a USB hub.
+
+[1] arch/arm/boot/dts/nxp/imx/imx6q-tbs2910.dts
+
+Signed-off-by: Soeren Moch <smoch@web.de>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20250127194828.599379-1-smoch@web.de
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath12k/dp_tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/core.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_tx.c b/drivers/net/wireless/ath/ath12k/dp_tx.c
-index ad21fbfbcbe22..201ffdb8c44ae 100644
---- a/drivers/net/wireless/ath/ath12k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_tx.c
-@@ -117,7 +117,7 @@ static void ath12k_hal_tx_cmd_ext_desc_setup(struct ath12k_base *ab,
- 			       le32_encode_bits(ti->data_len,
- 						HAL_TX_MSDU_EXT_INFO1_BUF_LEN);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+index 4ce0c05c51291..569856ca677f6 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+@@ -860,9 +860,10 @@ rtl8xxxu_writeN(struct rtl8xxxu_priv *priv, u16 addr, u8 *buf, u16 len)
+ 	return len;
  
--	tcl_ext_cmd->info1 = le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
-+	tcl_ext_cmd->info1 |= le32_encode_bits(1, HAL_TX_MSDU_EXT_INFO1_EXTN_OVERRIDE) |
- 				le32_encode_bits(ti->encap_type,
- 						 HAL_TX_MSDU_EXT_INFO1_ENCAP_TYPE) |
- 				le32_encode_bits(ti->encrypt_type,
+ write_error:
+-	dev_info(&udev->dev,
+-		 "%s: Failed to write block at addr: %04x size: %04x\n",
+-		 __func__, addr, blocksize);
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_WRITE)
++		dev_info(&udev->dev,
++			 "%s: Failed to write block at addr: %04x size: %04x\n",
++			 __func__, addr, blocksize);
+ 	return -EAGAIN;
+ }
+ 
+@@ -4064,8 +4065,14 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	 */
+ 	rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, fops->trxff_boundary);
+ 
+-	ret = rtl8xxxu_download_firmware(priv);
+-	dev_dbg(dev, "%s: download_firmware %i\n", __func__, ret);
++	for (int retry = 5; retry >= 0 ; retry--) {
++		ret = rtl8xxxu_download_firmware(priv);
++		dev_dbg(dev, "%s: download_firmware %i\n", __func__, ret);
++		if (ret != -EAGAIN)
++			break;
++		if (retry)
++			dev_dbg(dev, "%s: retry firmware download\n", __func__);
++	}
+ 	if (ret)
+ 		goto exit;
+ 	ret = rtl8xxxu_start_firmware(priv);
 -- 
 2.39.5
 
