@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDF6C3B17CA;
-	Mon,  5 May 2025 23:20:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DACF3B63D6;
+	Mon,  5 May 2025 23:21:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746487240; cv=none; b=ttjWcL11CuQMW++IhR3geibiTK5kTkbwChyZIFJniIuKshMDSNkqknnnGtmjnreiKOTIlIZyLQQLlf13OAulTgk8jb8Aw0csxyiKmYD4mKYiaMzsG5sgF0Rp0nh3wiO+eMDahHMhtWafVfqoXAsYVbaBnGa77ieQ9IcILIrsOa4=
+	t=1746487283; cv=none; b=XVEOAnvX9AkjkSH0vtFTlBzbHYere1DJ+beJYI6hYtKXUpK434YoX+Xd6ic/hHbOUQH2TMHLHtD4feQtjm3QMCnqEIbXxlcuo+q9wtu5Vg6wPlmvydRAfXLPAkTt8aO6yC8/+MoUnMs6g1l5YqCrKQrZhJ3Z+0PAK5HgIK283oE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746487240; c=relaxed/simple;
-	bh=8/2AyThXosF/blNITHY7k3P1F1YQ8ACUqwtAjIg64Bo=;
+	s=arc-20240116; t=1746487283; c=relaxed/simple;
+	bh=v5TafSLJfjjrrWFmbdop66+wDPkUkPJh1rdsCCLnHN0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EtvKYOnoea/ue1BC9HMtkoaQuPc5sT70WQcyPARdpL8z8jWtX42bhdNIxu0yjfX/fhp7LbkrF9+uoX1qFbPr4Xosm82D67wRrvDT5WFwH9atjih+rxvTH+MtSyX34O2FZKaLRJP6D07xMzv4TrdYOH3dWgCqufmNvMmG3mYoIck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qwk71nnY; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=jUNQBKfgqnMkHK5znbPSVG1MHLOpxwSKm8Il1zFAv841N4irZzEpftxTdNkHsR6zrLUh9mV/41mz+nuTtVjqpK57eU8Iey/6XRgUUTZg2CdULAWcmXnS8rWMGc2DldfB1n/hYSygu1Qn06g5kAxQ2AGWxQj/3rrDn2PPirOmwHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X811aSzH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qwk71nnY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91BDAC4CEF1;
-	Mon,  5 May 2025 23:20:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X811aSzH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EE12C4CEEF;
+	Mon,  5 May 2025 23:21:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746487238;
-	bh=8/2AyThXosF/blNITHY7k3P1F1YQ8ACUqwtAjIg64Bo=;
+	s=k20201202; t=1746487281;
+	bh=v5TafSLJfjjrrWFmbdop66+wDPkUkPJh1rdsCCLnHN0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qwk71nnYLln18kiKD50rjceDJv/Uz8G+WQE+Cals8+NhYw9vE8v4s5mj2rzk3MHPH
-	 DMhliNbqtJT8BgxarkT6T639uNonVNTzF8ut04519/Li980FimZzCWSV3OogNtD6yC
-	 PjvcTfD8RXfkD4eUhScToFjciNP0m8mglBDtjkVC+rUzV7WR9iAiJo2N8zXSwOW7zq
-	 hxBoSccASAsYRVm9YPuTUewX1wo+9pLAPtwlMR1Xpf8iyd8GBfP9UIO9rEJun7Ri5y
-	 TOR2LMm/iuLtuDSmvIYxrLDgJIv9MiwsmqzxEuOUa7czlWEJaVCjOk8k0IYv/IAGfJ
-	 QMe9syFA5dVEg==
+	b=X811aSzHmrEKWLAsJqYI4OR3C+i3qjhrHjiYK1qVx6dD+defvfpY/CuZ+yqs53l5O
+	 bqlhlV/ONkfNhodu5+5FPjU3gbb283lsn18BMQAc26cP0kjH4VHc94oGTzoRlfJAID
+	 URzy9476iJQV2+pHU8ZbxN6zRZal2H3TejqpnzcvvaVwk0DqiCoJh2ssyYtge1RScm
+	 4Q/XNHXv12kozvG9akxR1a7DhefHt58DLJgL7EmI7cqW69kYAjErbFBgxEDBFXQDsV
+	 YzczevxxkjW5OeD6UAqSGAXoAJRRAeEx9V1BJV6QLyTG3pD/fK/4vLY6jlJ/Omi5CQ
+	 bYP/JhmcuzlBg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -33,9 +33,9 @@ Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 073/114] wifi: rtw88: Fix rtw_init_ht_cap() for RTL8814AU
-Date: Mon,  5 May 2025 19:17:36 -0400
-Message-Id: <20250505231817.2697367-73-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 097/114] wifi: rtw88: Fix download_firmware_validate() for RTL8814AU
+Date: Mon,  5 May 2025 19:18:00 -0400
+Message-Id: <20250505231817.2697367-97-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505231817.2697367-1-sashal@kernel.org>
 References: <20250505231817.2697367-1-sashal@kernel.org>
@@ -52,55 +52,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 
-[ Upstream commit c7eea1ba05ca5b0dbf77a27cf2e1e6e2fb3c0043 ]
+[ Upstream commit 9e8243025cc06abc975c876dffda052073207ab3 ]
 
-Set the RX mask and the highest RX rate according to the number of
-spatial streams the chip can receive. For RTL8814AU that is 3.
+After the firmware is uploaded, download_firmware_validate() checks some
+bits in REG_MCUFW_CTRL to see if everything went okay. The
+RTL8814AU power on sequence sets bits 13 and 12 to 2, which this
+function does not expect, so it thinks the firmware upload failed.
+
+Make download_firmware_validate() ignore bits 13 and 12.
 
 Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/4e786f50-ed1c-4387-8b28-e6ff00e35e81@gmail.com
+Link: https://patch.msgid.link/049d2887-22fc-47b7-9e59-62627cb525f8@gmail.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtw88/reg.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index ea70b55150388..ab302e2ce9a2e 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1141,6 +1141,7 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
- 			    struct ieee80211_sta_ht_cap *ht_cap)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	int i;
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 9088bfb2a3157..27de6eeb4ad68 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -107,6 +107,7 @@
+ #define BIT_SHIFT_ROM_PGE	16
+ #define BIT_FW_INIT_RDY		BIT(15)
+ #define BIT_FW_DW_RDY		BIT(14)
++#define BIT_CPU_CLK_SEL		(BIT(12) | BIT(13))
+ #define BIT_RPWM_TOGGLE		BIT(7)
+ #define BIT_RAM_DL_SEL		BIT(7)	/* legacy only */
+ #define BIT_DMEM_CHKSUM_OK	BIT(6)
+@@ -124,7 +125,7 @@
+ 				 BIT_CHECK_SUM_OK)
+ #define FW_READY_LEGACY		(BIT_MCUFWDL_RDY | BIT_FWDL_CHK_RPT |	       \
+ 				 BIT_WINTINI_RDY | BIT_RAM_DL_SEL)
+-#define FW_READY_MASK		0xffff
++#define FW_READY_MASK		(0xffff & ~BIT_CPU_CLK_SEL)
  
- 	ht_cap->ht_supported = true;
- 	ht_cap->cap = 0;
-@@ -1158,17 +1159,11 @@ static void rtw_init_ht_cap(struct rtw_dev *rtwdev,
- 	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_16;
- 	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
--	if (efuse->hw_cap.nss > 1) {
--		ht_cap->mcs.rx_mask[0] = 0xFF;
--		ht_cap->mcs.rx_mask[1] = 0xFF;
--		ht_cap->mcs.rx_mask[4] = 0x01;
--		ht_cap->mcs.rx_highest = cpu_to_le16(300);
--	} else {
--		ht_cap->mcs.rx_mask[0] = 0xFF;
--		ht_cap->mcs.rx_mask[1] = 0x00;
--		ht_cap->mcs.rx_mask[4] = 0x01;
--		ht_cap->mcs.rx_highest = cpu_to_le16(150);
--	}
-+
-+	for (i = 0; i < efuse->hw_cap.nss; i++)
-+		ht_cap->mcs.rx_mask[i] = 0xFF;
-+	ht_cap->mcs.rx_mask[4] = 0x01;
-+	ht_cap->mcs.rx_highest = cpu_to_le16(150 * efuse->hw_cap.nss);
- }
- 
- static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
+ #define REG_MCU_TST_CFG		0x84
+ #define VAL_FW_TRIGGER		0x1
 -- 
 2.39.5
 
