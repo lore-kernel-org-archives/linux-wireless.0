@@ -1,41 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA2FF28851A;
-	Mon,  5 May 2025 23:05:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 616A4239E68;
+	Mon,  5 May 2025 23:05:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486304; cv=none; b=ng6ZRZCDvt+hn042nMDRFeVRMjGtOtYzrmPbn7TfMfkX+IPZzby6Xy166vndpd+gRKQxiU/dLlJ/Ia3dJjIwhrrwIffprJWRlIF0YEw06QkszwWUjoWVMeSAh4YKI7RzIv/kZYcw1TvWFX4RQvoCHSjYJzJVJhb5g5gLyKnpbhU=
+	t=1746486345; cv=none; b=QsaiEamtvcnZFPexBDLQ4kx+41j+4pH+kbBfqbpKua4ZTA5l+cesQ3SCONTFwAhBujChaLkMgR2PnmbwEsQHGugTx825V4eS7DuxFSKRZahVT1RSHAPVsNhRCKifzrfohXiYcrFCrL25yn06WBld2Ui6XEQoNCU7Nw6lYf5DIS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486304; c=relaxed/simple;
-	bh=B9tOZS/ox7jmTR6yugzjfNVVHlOv4OVJ2ggf44z3mFE=;
+	s=arc-20240116; t=1746486345; c=relaxed/simple;
+	bh=7x9USL62akud+5BXxXhoSiZ30gmw84+XTMFzR2A8kT0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Fk4MVE2DD7gziSKcDNt6SzOqBZQlYWpPSjgMLPVgB4rcsUI+NarNojjCbgNTQX801llmTYeud6o2yn+0Vlj15cNkkYqp/umGMe6zn3cIYGEELBm3iU+x3OnIgMg7lgVb/7OyC5y1xKM+Y+lvTWLYtOavZbPzLv5bL6dkdmTVt2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YANSsYWx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=UhHi0i8U47CotcUFgc8i80CvwuGF9o5Blw3BFet5+FIxJrdlJZaZEvpx2rZjOHQwmuGV0O3Y58eq5yww3zbGJiSWQXOVvnZl2MIwwou/pcC9/5vMR1+xxyRGcafRPfiHf7zwlM9atg4RQqU9g9Wz28yLJWLpLTEXsnMj9Sxf7I4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fW3/o+5j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YANSsYWx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D47CC4CEE4;
-	Mon,  5 May 2025 23:05:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fW3/o+5j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2438CC4CEE4;
+	Mon,  5 May 2025 23:05:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486303;
-	bh=B9tOZS/ox7jmTR6yugzjfNVVHlOv4OVJ2ggf44z3mFE=;
+	s=k20201202; t=1746486345;
+	bh=7x9USL62akud+5BXxXhoSiZ30gmw84+XTMFzR2A8kT0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YANSsYWxAtrkYCsvR4+qahilZ1X81abErWDSwG98+mXL1BjqMEf4Kw9uOf0bYxhK6
-	 W2YMk4stKf/I13z8uq6TjwBiKCqYH9UvyuCKvUnooldPziof+9+vcw6T4I0utS1QnQ
-	 bC7WKcx2lUFvukLAvtrMlNxZbw8rc9ipttMDVRjaaCNoFg1EKosWKLLsTQk6FKJB0/
-	 k7W/YhalMOXtmIid+BlzAT2Fq1mJCnvpUJV6x0THTXJZEtSU8v/tZNAtsVxSR/XBCp
-	 Y2FpAvX22VHAWrHENc/zN5XMVoy2vBDD1/Nn1W0entvQDznzOTHProJ8XJoZ/mF9EE
-	 9V8HXITYiVDOQ==
+	b=fW3/o+5jDbN72++MEi70kpcCfnIAt/BG8ty3fc3OFW1L+qrIt9RCK+7m2rfUO874o
+	 r3HVLIe/Vq33l1Nr8sFRtl6+Jx+h2kyQwHdhNuqgVZBYhEqzMNbo9/DVEkOFdkF2xp
+	 PmkzkCb1Fvlu9mDKY0C+4H5OkHi93t4zyTJaqLAr0j6qupdX6bFbBBeF5+lIhZTCre
+	 8KNBEAfPZxYt4y+i+P9vA0bCeKQDlRDoSfBQ9LjnvBPMzIS2NwYxNom5q3yC/LJWce
+	 ZFRA2HgtV1sGBg9x8K9ucWe3bAalZbc2C+yeTRjG2Xi7I9YyQ/9GufhrUfyTlF7QEZ
+	 fSjxPQxRL01PQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Avula Sri Charan <quic_asrichar@quicinc.com>,
+	Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>,
+	Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 248/294] wifi: rtw88: Fix download_firmware_validate() for RTL8814AU
-Date: Mon,  5 May 2025 18:55:48 -0400
-Message-Id: <20250505225634.2688578-248-sashal@kernel.org>
+	jjohnson@kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.6 271/294] wifi: ath12k: Avoid napi_sync() before napi_enable()
+Date: Mon,  5 May 2025 18:56:11 -0400
+Message-Id: <20250505225634.2688578-271-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
 References: <20250505225634.2688578-1-sashal@kernel.org>
@@ -50,47 +54,76 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.89
 Content-Transfer-Encoding: 8bit
 
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+From: Avula Sri Charan <quic_asrichar@quicinc.com>
 
-[ Upstream commit 9e8243025cc06abc975c876dffda052073207ab3 ]
+[ Upstream commit 268c73d470a5790a492a2fc2ded084b909d144f3 ]
 
-After the firmware is uploaded, download_firmware_validate() checks some
-bits in REG_MCUFW_CTRL to see if everything went okay. The
-RTL8814AU power on sequence sets bits 13 and 12 to 2, which this
-function does not expect, so it thinks the firmware upload failed.
+In case of MHI error a reset work will be queued which will try
+napi_disable() after napi_synchronize().
 
-Make download_firmware_validate() ignore bits 13 and 12.
+As the napi will be only enabled after qmi_firmware_ready event,
+trying napi_synchronize() before napi_enable() will result in
+indefinite sleep in case of a firmware crash in QMI init sequence.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/049d2887-22fc-47b7-9e59-62627cb525f8@gmail.com
+To avoid this, introduce napi_enabled flag to check if napi is enabled
+or not before calling napi_synchronize().
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Avula Sri Charan <quic_asrichar@quicinc.com>
+Signed-off-by: Tamizh Chelvam Raja <quic_tamizhr@quicinc.com>
+Reviewed-by: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+Link: https://patch.msgid.link/20250124090058.3194299-1-quic_tamizhr@quicinc.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/reg.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/core.h |  1 +
+ drivers/net/wireless/ath/ath12k/pci.c  | 13 ++++++++++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 7c6c11d50ff30..0e76bc07bddef 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -108,6 +108,7 @@
- #define BIT_SHIFT_ROM_PGE	16
- #define BIT_FW_INIT_RDY		BIT(15)
- #define BIT_FW_DW_RDY		BIT(14)
-+#define BIT_CPU_CLK_SEL		(BIT(12) | BIT(13))
- #define BIT_RPWM_TOGGLE		BIT(7)
- #define BIT_RAM_DL_SEL		BIT(7)	/* legacy only */
- #define BIT_DMEM_CHKSUM_OK	BIT(6)
-@@ -125,7 +126,7 @@
- 				 BIT_CHECK_SUM_OK)
- #define FW_READY_LEGACY		(BIT_MCUFWDL_RDY | BIT_FWDL_CHK_RPT |	       \
- 				 BIT_WINTINI_RDY | BIT_RAM_DL_SEL)
--#define FW_READY_MASK		0xffff
-+#define FW_READY_MASK		(0xffff & ~BIT_CPU_CLK_SEL)
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 33f4706af880d..18dfd7aab610c 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -125,6 +125,7 @@ struct ath12k_ext_irq_grp {
+ 	u32 num_irq;
+ 	u32 grp_id;
+ 	u64 timestamp;
++	bool napi_enabled;
+ 	struct napi_struct napi;
+ 	struct net_device napi_ndev;
+ };
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 041a9602f0e15..5fd80f90ecafe 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -442,8 +442,11 @@ static void __ath12k_pci_ext_irq_disable(struct ath12k_base *ab)
  
- #define REG_MCU_TST_CFG		0x84
- #define VAL_FW_TRIGGER		0x1
+ 		ath12k_pci_ext_grp_disable(irq_grp);
+ 
+-		napi_synchronize(&irq_grp->napi);
+-		napi_disable(&irq_grp->napi);
++		if (irq_grp->napi_enabled) {
++			napi_synchronize(&irq_grp->napi);
++			napi_disable(&irq_grp->napi);
++			irq_grp->napi_enabled = false;
++		}
+ 	}
+ }
+ 
+@@ -976,7 +979,11 @@ void ath12k_pci_ext_irq_enable(struct ath12k_base *ab)
+ 	for (i = 0; i < ATH12K_EXT_IRQ_GRP_NUM_MAX; i++) {
+ 		struct ath12k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 
+-		napi_enable(&irq_grp->napi);
++		if (!irq_grp->napi_enabled) {
++			napi_enable(&irq_grp->napi);
++			irq_grp->napi_enabled = true;
++		}
++
+ 		ath12k_pci_ext_grp_enable(irq_grp);
+ 	}
+ }
 -- 
 2.39.5
 
