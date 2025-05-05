@@ -1,41 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2044837A8A4;
-	Mon,  5 May 2025 23:02:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553F7220F3E;
+	Mon,  5 May 2025 23:04:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486150; cv=none; b=i2RcQ7obL/F6zx8D4CRc91n5igwyP3cmct1XuniTkOq/i/6RYPcGOeuXq8xHHAU9Z8A/YJiTJ/6itTU9MhL/x5u3Wgf/0xodcS6em+qPErYPupXGVycutZ6W2NXDf1H7ahjE4B5A0tTk7eBQ5FxMnKl98lEZCz2dlYcCb3NY308=
+	t=1746486282; cv=none; b=YTdfsHuDWGAW4qVOdUksSCSHzMuTaeKbeaUiD5juAXE6Lq1XT/CXkywVnxCLXZHv3TLB0SyBTP3bQZrKxx6rfJAu2E1PBDVpuJQAkk8BkXvXvJIFW6QkmVS1kRzNdvGNlH60WTWKTWBwHC5TUSEaRtBkAM/APun/XmXt/3E0iK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486150; c=relaxed/simple;
-	bh=aHGGD3OQduVo8PO6ZGX50jXlZ63vX+g0i24Rx/tS0Hs=;
+	s=arc-20240116; t=1746486282; c=relaxed/simple;
+	bh=dUhZDr7JpjGKYrdAPTRe8rGmpcgXB1dXpGUNDT0HF8M=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CMYT/iAoUbv8fe6iwzPsdDQtSOgn31qTj1QzPRKaZK+IFPtotTXVQDCawywyEEL8fJtIzmfqCMgi3o76okVG45gAQ06MKnPUUIOu1kSyf8YuBnnSAHxBJB/jev2/EIZT05LTAAVHxE4QiGizoTO/PS3apfXaLXe5GIRAxpK305w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Co2rjaQf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=JeMBgJwkiIe2hwIGuorVg6GgDkGAJRM0uvURG6bG6vkmx4jm34mzNEZjzh03W3f/TT96GVoDOa8oYz9r8dX2AGjGMlXKN0kxkMp+eef3cO8PDrVrqN0zHmzOlYGEzqYM05lmEhqPKHwFX5wGxGYnvzgp5DcqN+r2D8rFgwvUQ1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qxcQJDkB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Co2rjaQf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51F9C4CEEE;
-	Mon,  5 May 2025 23:02:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qxcQJDkB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB6C0C4CEEE;
+	Mon,  5 May 2025 23:04:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486148;
-	bh=aHGGD3OQduVo8PO6ZGX50jXlZ63vX+g0i24Rx/tS0Hs=;
+	s=k20201202; t=1746486280;
+	bh=dUhZDr7JpjGKYrdAPTRe8rGmpcgXB1dXpGUNDT0HF8M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Co2rjaQfagvaohxyx2om+FO2y2twCgj5unVmYzzB+kLhxLCf3u/zevBzLkMQpcLDI
-	 MFj6HXZgPbc6FC/xfZOebAv/acjsR0swTYmfIzUareeFIIUJS8M8nKPSnKKDfcc58d
-	 c+Vc8PCwJCu44BVahDU1NyO5aLnXHrrs77suyc2q6/wj5fQdj1nIxWoCO7qRQGsmII
-	 Nan3yU5DOoGMNcqDFX+TTGLONngshlc0LxM8qW7DlsttZnDR8rKdHd5LF2bbQ5Fz5B
-	 uEs3EB6UBKmyD5bAJuhQmPr6Iiv3/yMNjgsfKEcGjxrs7UhYXEnVKe7RvKWB7mdUDe
-	 laRUaXlbuhwMQ==
+	b=qxcQJDkBwOYGrOu4sM5RfV19UBA3nMwsj5t40S9zklEHKXSFUKVjB8LvJik+YAIYT
+	 AlB5tK+D5VuYSiQ6YjMOlsFtEnyPb+opHlKW2N5mLVlFDbxlhH75HZBhmTiPqXEe14
+	 nWiTkjDbLL8Ssc1FcHgPt/6P643o5gehYxPiYDDCElg9HXDAj7abjOr9n2YWyNgeqh
+	 9vJFqogQthHPfVYoiPibqqYYFlWRR0ECNHddsBvi6ZLf+gAlQaorEiFuW4ArTwki27
+	 dzmdH/WGM0OnP6FNsKJwfoF0ojTsvoDmB1iqlLZ3OyCg2DcwpIYhrmdTH5jo1e4i+t
+	 rM44IihCZM4XQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 177/294] wifi: rtw88: Fix rtw_init_vht_cap() for RTL8814AU
-Date: Mon,  5 May 2025 18:54:37 -0400
-Message-Id: <20250505225634.2688578-177-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 237/294] wifi: mac80211: don't unconditionally call drv_mgd_complete_tx()
+Date: Mon,  5 May 2025 18:55:37 -0400
+Message-Id: <20250505225634.2688578-237-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
 References: <20250505225634.2688578-1-sashal@kernel.org>
@@ -50,66 +52,37 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.89
 Content-Transfer-Encoding: 8bit
 
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 6be7544d19fcfcb729495e793bc6181f85bb8949 ]
+[ Upstream commit 1798271b3604b902d45033ec569f2bf77e94ecc2 ]
 
-Set the MCS maps and the highest rates according to the number of
-spatial streams the chip has. For RTL8814AU that is 3.
+We might not have called drv_mgd_prepare_tx(), so only call
+drv_mgd_complete_tx() under the same conditions.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/e86aa009-b5bf-4b3a-8112-ea5e3cd49465@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20250205110958.e091fc39a351.Ie6a3cdca070612a0aa4b3c6914ab9ed602d1f456@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/main.c | 23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+ net/mac80211/mlme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index b90ea6c88b15d..557526e0eb7f3 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1580,8 +1580,9 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
- 			     struct ieee80211_sta_vht_cap *vht_cap)
- {
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
--	u16 mcs_map;
-+	u16 mcs_map = 0;
- 	__le16 highest;
-+	int i;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 42e2c84ed2484..37163d84104fa 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2959,7 +2959,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	if (tx)
+ 		ieee80211_flush_queues(local, sdata, false);
  
- 	if (efuse->hw_cap.ptcl != EFUSE_HW_CAP_IGNORE &&
- 	    efuse->hw_cap.ptcl != EFUSE_HW_CAP_PTCL_VHT)
-@@ -1604,21 +1605,15 @@ static void rtw_init_vht_cap(struct rtw_dev *rtwdev,
- 	if (rtw_chip_has_rx_ldpc(rtwdev))
- 		vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
+-	drv_mgd_complete_tx(sdata->local, sdata, &info);
++	if (tx || frame_buf)
++		drv_mgd_complete_tx(sdata->local, sdata, &info);
  
--	mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 4 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 6 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 8 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 10 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 12 |
--		  IEEE80211_VHT_MCS_NOT_SUPPORTED << 14;
--	if (efuse->hw_cap.nss > 1) {
--		highest = cpu_to_le16(780);
--		mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << 2;
--	} else {
--		highest = cpu_to_le16(390);
--		mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << 2;
-+	for (i = 0; i < 8; i++) {
-+		if (i < efuse->hw_cap.nss)
-+			mcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2);
-+		else
-+			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
- 	}
- 
-+	highest = cpu_to_le16(390 * efuse->hw_cap.nss);
-+
- 	vht_cap->vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap->vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap->vht_mcs.rx_highest = highest;
+ 	/* clear AP addr only after building the needed mgmt frames */
+ 	eth_zero_addr(sdata->deflink.u.mgd.bssid);
 -- 
 2.39.5
 
