@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BAB4B1E73;
-	Wed,  7 May 2025 02:19:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A3863A9;
+	Wed,  7 May 2025 02:31:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746584389; cv=none; b=PzK1Kqgg85lzORjTWGQJFzOTfm2Bs9eFpRlV3e7JHHpr2C9AAUWNBkxrDO154UeFcZdUa2kXxZTPLfAHyysKsEK9oAeVD0ENonRDMaympVwPdwam7VZuEeCmlL1XSHIUHRgCOAY+0PMOcckR+1WzgiXGaDvl/Q1MeGyiH+EgTSw=
+	t=1746585088; cv=none; b=W/grJAH8MDDGf5UvXL6EGzu5/PLvrdcPdLu8buAXLhB4Un5jQ0HL8uCJpSHBIsFrELHnX5/4emxnGjZYLggVuiWMSKvq6CMJKX809xuzIlWRiQ7gswYkVSg3anXcDmy2nPTyeAw4m7tQwkKGJvPNQnG4hRcj/JP+yzrFv9FhQ4w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746584389; c=relaxed/simple;
-	bh=OfEw1/EsPzPwNsoFsNlfk4AeH5+dQG7GDR220KfqNNE=;
+	s=arc-20240116; t=1746585088; c=relaxed/simple;
+	bh=DyTEPxWntaFNxHGgzuHtcAtkriRPOMAT85xAE+UHzbQ=;
 	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=dcen+lY83E6oKCS0zOr3hYzvlaLd5NUp2654smdhZceORjuw/fxXs+rmjqLwvpToWwNY9/miEXIBcAmF9wWquRLUq0+kqb0u9YriqWqOMya+VI7kWGvnJk9MO4l8b6B5WP2DjPjdq3GCZAdZMK43xetqf8OmwTTquIoV7vDkTNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vx4SKUgY; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=WKPhfwU24WnyyFsNislUOJkHOP2V/21sSKRR9paLA2iDYlJbRHLOntXX3o5RpslhDi7+949EL7aqa5Ygap+psZAt8dMLh4z9BSTOOc3znEedHoO4Uf6abDW13nGMa73nshW/zD48uK5cgNo9tSz1arz8gpUPBioJXLNL8ktVpKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCCKdfD+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vx4SKUgY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72431C4CEED;
-	Wed,  7 May 2025 02:19:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCCKdfD+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A63F7C4CEE4;
+	Wed,  7 May 2025 02:31:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746584388;
-	bh=OfEw1/EsPzPwNsoFsNlfk4AeH5+dQG7GDR220KfqNNE=;
+	s=k20201202; t=1746585087;
+	bh=DyTEPxWntaFNxHGgzuHtcAtkriRPOMAT85xAE+UHzbQ=;
 	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=Vx4SKUgY/qcr5yJPDOyHiRACQ51NtGe3SkGhRY6KMmBKX/O8tM/aoeshjwSsVQw6F
-	 05WOD7YDpGhZsKHzBWnHczBj29nJnPUTmcucu5cnla98n2kfQP572guRkLVciQpqJC
-	 VyyC9Qrl9SYwUc1dHEm7DUW6cpOrydo1i8dHqoXigmy4MI80NTmmOLyIfnpW3Q4z1S
-	 mIjVLWsKvvSR2+uzoLFwKV+BdMRu0G1cW1UQP9ru95V4BzKYaj43LpCws0J/yqNAbV
-	 JS/PyvbO8DY2kGpsDGYDjJKNIg2ZE76tVLRkNmgNmdl6z6G6IjOyeIS9hN45rLQY5Z
-	 69v7Om0cJ40hw==
+	b=LCCKdfD+dWnLWYAL4oC9IxGEDnfHI+kO2uowBvr7y7jqknkZiZ3YUEdhF6sFXdiyd
+	 y7vSBYj/lSAhDd/BUf5vXWeLijoMHu0BuK04eDJNtypKPA7qcDf01VHqYRsozsNiAQ
+	 uA6cGER4FB2+ukxY97Egat3mzbmP+i1fTZsmacNf9aoKVpkJldEnhcYiQqs0+tC+fR
+	 fyXmKsc99NCf56GBLYjuW/dgURD9mcM1V0FcB//dABk+/n5WYCBQeIoTyVbLAJ0s1L
+	 wgUx1XJWNnJMdbsJtxIGpKIeKx7grVIBrluUhfxYGTCqNUtQP82qs7ETepUyh3slmd
+	 m0/Emu/7V8LmQ==
 Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id ADBCF380664B;
-	Wed,  7 May 2025 02:20:28 +0000 (UTC)
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EAD67380664B;
+	Wed,  7 May 2025 02:32:07 +0000 (UTC)
 Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -37,39 +37,35 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [GIT PULL] wireless-2025-05-06
+Subject: Re: [GIT PULL] wireless-next-2025-05-06
 From: patchwork-bot+netdevbpf@kernel.org
 Message-Id: 
- <174658442750.1712382.814345020148233594.git-patchwork-notify@kernel.org>
-Date: Wed, 07 May 2025 02:20:27 +0000
-References: <20250506203506.158818-3-johannes@sipsolutions.net>
-In-Reply-To: <20250506203506.158818-3-johannes@sipsolutions.net>
+ <174658512675.1714803.1604876921547589955.git-patchwork-notify@kernel.org>
+Date: Wed, 07 May 2025 02:32:06 +0000
+References: <20250506174656.119970-3-johannes@sipsolutions.net>
+In-Reply-To: <20250506174656.119970-3-johannes@sipsolutions.net>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 
 Hello:
 
-This pull request was applied to netdev/net.git (main)
+This pull request was applied to netdev/net-next.git (main)
 by Jakub Kicinski <kuba@kernel.org>:
 
-On Tue,  6 May 2025 22:33:39 +0200 you wrote:
+On Tue,  6 May 2025 19:45:31 +0200 you wrote:
 > Hi,
 > 
-> Couple more fixes, that's probably all for 6.15, I don't
-> really see anything more coming. Never say never though,
-> I guess.
+> Here's another set of patches for -next, but I know there's
+> more coming, especially from iwlwifi.
 > 
-> The whole device ID management in iwlwifi is in a bit of
-> a rework right now for -next, so there will be conflicts.
-> I'm trying to get as much of that resolved in my tree,
-> but with this new commit we'll have to see where it'll
-> need to be resolved.
+> There are some conflicts here in iwlwifi, please just take
+> the wireless-next version for them.
 > 
 > [...]
 
 Here is the summary with links:
-  - [GIT,PULL] wireless-2025-05-06
-    https://git.kernel.org/netdev/net/c/9540984da649
+  - [GIT,PULL] wireless-next-2025-05-06
+    https://git.kernel.org/netdev/net-next/c/9daaf1978600
 
 You are awesome, thank you!
 -- 
