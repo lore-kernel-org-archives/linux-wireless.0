@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4538B22425B
-	for <linux-wireless@vger.kernel.org>; Thu,  8 May 2025 12:13:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDCC9228CBC
+	for <linux-wireless@vger.kernel.org>; Thu,  8 May 2025 12:13:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746706418; cv=none; b=SBRHnCqcciptmqaoNOMQ+NqqAGXNJHnCJ0ENCaXm/SZCFhOYfRNTrMUJP7H3HCvgkp5eJGtZYMXxPsA4Rc5VFYd1x8iCKij2hy+DX8O9khcAJ1HEGlLrvibqCWBuCSZdxsnTcaPWQn8F+cOm6szJvL7AX0q+mFznE3OJEVY2WZM=
+	t=1746706420; cv=none; b=ars849XLPSSbxwmd9OR73UCtfu8W7YAuMeqvvpLyilFmFBdBh/lWmGnaZmXq7NwQZ73kuBDMWTMZdSd5xSOVW46g9pfb4R5FJytueAtCdcgq0BI/2i+uawa7TyOYQVjbmATP3pW+ACY3BUSwmk/W95mCmWNrgS+GmJjLI4yD14E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746706418; c=relaxed/simple;
-	bh=OoFEskxI6MujMxRGQbtYWMseDmQDQUXo5ATdNkH6S2E=;
+	s=arc-20240116; t=1746706420; c=relaxed/simple;
+	bh=+XxxCIU//6JhU/Xd6Df24dBP57JNUESbzFl1gSibs4s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=vAMAJPE4qUDANpyXmZrrv/ThZIBsg/schrOlHfQVvWMfJWsjPyPfvijQ2fXC8pis1cyUt+uBMsWmHNfEvqmfGAzyY9RTHJpwIPB/kxu7KpaFE3peVc4EGMffTztzY17PgKTE6WUNIR7PKgGoWSmg7mt02E8bmGv16DECm+syDYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hAr6Xoxk; arc=none smtp.client-ip=198.175.65.11
+	 MIME-Version; b=DvON2TD/Q8HX/exTFhBNYr2kOQ1ILMxtbDy4PC4XpgCDtvbVvAL77xU6MkBLVMQ4+7oaQhfNB5JScopOKBZkhDl8MMDfM0VwjS5vsoLsnM2s8hW1dV675z+uXplj2pWYSoGbrKjF5OdW+uIEOtjtk/7MtmyqiDGXne52NWULk/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I8UYb909; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hAr6Xoxk"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I8UYb909"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1746706416; x=1778242416;
+  t=1746706419; x=1778242419;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=OoFEskxI6MujMxRGQbtYWMseDmQDQUXo5ATdNkH6S2E=;
-  b=hAr6Xoxkk10lxDpWDtc1bySWnJM3POavv0QSDM6WjTz5TVWjZ3Lhwnep
-   vrDEZ3uGypWCtAm+yMeocvf1Kx5KArWCBbMq9JF1HsZi45RjNoNJOb3jk
-   j4ZQURZVmgX2vHVJkpRYyslugIovhbT7DHjIySskD5BC71Bxna1sylmJL
-   hkn2+4VmFdaP/GLPudksUZxBwQ+E3/fJSE4324E9+lJOJpQJNENUyu9rf
-   YXFKJ3/8ooMiH2h82v7Fr0/rqIrf55jYdGKNn5TZQvCa30oPP0Lr3Vr9Y
-   swM+bmjcAkqG0vzaRUE29utGcQpyYvrY8bBDAw3OQo8eSaLLJuZcro87y
-   A==;
-X-CSE-ConnectionGUID: 0SANM3T6SEap1p/WahLQyg==
-X-CSE-MsgGUID: VsfeG8l2TgKfZuQ7yyBzRw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11426"; a="58688048"
+  bh=+XxxCIU//6JhU/Xd6Df24dBP57JNUESbzFl1gSibs4s=;
+  b=I8UYb909pjE5TPWMLaehS18XS1e1woOuUwWXYy42dENvoZHE3RllCLRP
+   IaONP1cFaArWxrgtRu0oyIZvJFYZUmTXX3GEUqFTBF0l5MuXayIrOjZ9A
+   KuWyZtUz0eWTNe1gCcapFUOOm2UCPC2cnCp2c80mGyqfGbjziLuvI5uyO
+   8eUO/J0yZAQmyBKm9kt6SHwVp4HcpTX0W0eJC70ocJ+P/Lpf7liYZ/vV9
+   8p1/Z0/+PBZx6wTUJYY9uwD/FKhVJ97/ffTqFuwGLmyonHP/yQNXSzLhh
+   jRWEaq07EP4jG87Cm6cbdNmdiKbNADCEfIF9pHQ50Klj6GLb0tMltPUa9
+   w==;
+X-CSE-ConnectionGUID: fxnX6RDUTdWcOXCy2QuKLg==
+X-CSE-MsgGUID: GYNNZF4gQNupOvVyxreT3A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11426"; a="58688051"
 X-IronPort-AV: E=Sophos;i="6.15,272,1739865600"; 
-   d="scan'208";a="58688048"
+   d="scan'208";a="58688051"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2025 05:13:36 -0700
-X-CSE-ConnectionGUID: q5JZ3JqgTCCfcrZ0JW7dJw==
-X-CSE-MsgGUID: Nrw40ctESHCbTWFb1X6PcQ==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2025 05:13:39 -0700
+X-CSE-ConnectionGUID: xTWVxm/pSS2vpV2zU9f31A==
+X-CSE-MsgGUID: cB26HjrlRLKrUHQ6cQRtzQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.15,272,1739865600"; 
-   d="scan'208";a="167347865"
+   d="scan'208";a="167347878"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2025 05:13:35 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 May 2025 05:13:37 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 10/15] wifi: iwlwifi: cfg: remove rf_id field
-Date: Thu,  8 May 2025 15:13:01 +0300
-Message-Id: <20250508121306.1277801-11-miriam.rachel.korenblit@intel.com>
+Subject: [PATCH iwlwifi-next 12/15] wifi: iwlwifi: cfg: remove eeprom_size from new devices
+Date: Thu,  8 May 2025 15:13:03 +0300
+Message-Id: <20250508121306.1277801-13-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250508121306.1277801-1-miriam.rachel.korenblit@intel.com>
 References: <20250508121306.1277801-1-miriam.rachel.korenblit@intel.com>
@@ -63,218 +63,80 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This field is always set for >= 9000 series, but then we
-already check that, so it's not needed. Remove it.
+Since 22000 series, the data is read by the firmware and the
+driver doesn't need to know, remove the useless setting.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Message-Id: <20250508151045.622518e090e7.I48f1f0cd2a715d6941a47f372f3edbb6b727498d@changeid>
+Message-Id: <20250508151045.420ce8b4d79e.I1deccbaebe2cb3d89fdd7e8e27d1777bf480bb6a@changeid>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 4 ----
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c   | 4 ----
- drivers/net/wireless/intel/iwlwifi/cfg/ax210.c  | 4 ----
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c     | 2 --
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c     | 2 --
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c     | 1 -
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 4 +---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 3 +--
- 8 files changed, 2 insertions(+), 22 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 1 -
+ drivers/net/wireless/intel/iwlwifi/cfg/ax210.c | 1 -
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c    | 1 -
+ drivers/net/wireless/intel/iwlwifi/cfg/dr.c    | 1 -
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c    | 1 -
+ 5 files changed, 5 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index db11252ca73c..f95cf1c0ae03 100644
+index 09286509fe3e..3ac9a8ec8915 100644
 --- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
 +++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -114,7 +114,6 @@ static const struct iwl_base_params iwl_22000_base_params = {
+@@ -50,7 +50,6 @@
+ 	IWL_CC_A_FW_PRE "-" __stringify(api) ".ucode"
  
- const struct iwl_mac_cfg iwl_qu_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_22000,
- 	.base_params = &iwl_22000_base_params,
-@@ -125,7 +124,6 @@ const struct iwl_mac_cfg iwl_qu_mac_cfg = {
- 
- const struct iwl_mac_cfg iwl_qu_medium_latency_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_22000,
- 	.base_params = &iwl_22000_base_params,
-@@ -136,7 +134,6 @@ const struct iwl_mac_cfg iwl_qu_medium_latency_mac_cfg = {
- 
- const struct iwl_mac_cfg iwl_qu_long_latency_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_22000,
- 	.base_params = &iwl_22000_base_params,
-@@ -176,7 +173,6 @@ const struct iwl_mac_cfg iwl_ax200_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_22000,
- 	.base_params = &iwl_22000_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.bisr_workaround = 1,
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 0c3429dfca2a..7abe5f87ab34 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -120,14 +120,12 @@ const struct iwl_mac_cfg iwl9000_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_9000,
- 	.base_params = &iwl9000_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- };
- 
- const struct iwl_mac_cfg iwl9560_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_9000,
- 	.base_params = &iwl9000_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.integrated = true,
- 	.xtal_latency = 650,
- };
-@@ -136,7 +134,6 @@ const struct iwl_mac_cfg iwl9560_long_latency_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_9000,
- 	.base_params = &iwl9000_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.integrated = true,
- 	.xtal_latency = 2820,
- };
-@@ -145,7 +142,6 @@ const struct iwl_mac_cfg iwl9560_shared_clk_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_9000,
- 	.base_params = &iwl9000_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.integrated = true,
- 	.xtal_latency = 670,
- 	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
+ static const struct iwl_family_base_params iwl_22000_base = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+ 	.num_of_queues = 512,
+ 	.max_tfd_queue_size = 256,
+ 	.shadow_ram_support = true,
 diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
-index d78f8ecaf133..067252ef9c94 100644
+index 8c26cc90d0f0..e52dea6b468a 100644
 --- a/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
 +++ b/drivers/net/wireless/intel/iwlwifi/cfg/ax210.c
-@@ -118,7 +118,6 @@ static const struct iwl_base_params iwl_ax210_base_params = {
+@@ -48,7 +48,6 @@
+ 	IWL_MA_B_HR_B_FW_PRE "-" __stringify(api) ".ucode"
  
- const struct iwl_mac_cfg iwl_so_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_AX210,
- 	.base_params = &iwl_ax210_base_params,
-@@ -131,7 +130,6 @@ const struct iwl_mac_cfg iwl_so_mac_cfg = {
- 
- const struct iwl_mac_cfg iwl_so_long_latency_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_AX210,
- 	.base_params = &iwl_ax210_base_params,
-@@ -144,7 +142,6 @@ const struct iwl_mac_cfg iwl_so_long_latency_mac_cfg = {
- 
- const struct iwl_mac_cfg iwl_so_long_latency_imr_mac_cfg = {
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.device_family = IWL_DEVICE_FAMILY_AX210,
- 	.base_params = &iwl_ax210_base_params,
-@@ -170,7 +167,6 @@ const struct iwl_mac_cfg iwl_ma_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_AX210,
- 	.base_params = &iwl_ax210_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.integrated = true,
- 	.umac_prph_offset = 0x300000
+ static const struct iwl_family_base_params iwl_ax210_base = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+ 	.num_of_queues = 512,
+ 	.max_tfd_queue_size = 65536,
+ 	.shadow_ram_support = true,
 diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index 61ba92cac37c..a8fe9244a818 100644
+index dd4952b11a33..8567c5ed92d7 100644
 --- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
 +++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -127,7 +127,6 @@ const struct iwl_mac_cfg iwl_bz_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_BZ,
- 	.base_params = &iwl_bz_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.integrated = true,
- 	.umac_prph_offset = 0x300000,
-@@ -140,7 +139,6 @@ const struct iwl_mac_cfg iwl_gl_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_BZ,
- 	.base_params = &iwl_bz_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.umac_prph_offset = 0x300000,
- 	.xtal_latency = 12000,
+@@ -44,7 +44,6 @@ const char iwl_ax201_name[] = "Intel(R) Wi-Fi 6 AX201 160MHz";
+ #endif
+ 
+ static const struct iwl_family_base_params iwl_bz_base = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+ 	.num_of_queues = 512,
+ 	.max_tfd_queue_size = 65536,
+ 	.shadow_ram_support = true,
 diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-index 9b1ae8de7529..a258f49b8325 100644
+index 011b299045c4..0a0a9b49d8ff 100644
 --- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
 +++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-@@ -123,7 +123,6 @@ const struct iwl_mac_cfg iwl_dr_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_DR,
- 	.base_params = &iwl_dr_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.integrated = true,
- 	.umac_prph_offset = 0x300000,
-@@ -142,7 +141,6 @@ const struct iwl_mac_cfg iwl_br_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_DR,
- 	.base_params = &iwl_dr_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.umac_prph_offset = 0x300000,
- 	.xtal_latency = 12000,
+@@ -37,7 +37,6 @@
+ 	IWL_BR_A_PE_A_FW_PRE "-" __stringify(api) ".ucode"
+ 
+ static const struct iwl_family_base_params iwl_dr_base = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+ 	.num_of_queues = 512,
+ 	.max_tfd_queue_size = 65536,
+ 	.shadow_ram_support = true,
 diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index d06e15a5a9d7..4786a7714f6e 100644
+index e5f780f4e73d..928b1514d33f 100644
 --- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
 +++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -127,7 +127,6 @@ const struct iwl_mac_cfg iwl_sc_mac_cfg = {
- 	.device_family = IWL_DEVICE_FAMILY_SC,
- 	.base_params = &iwl_sc_base_params,
- 	.mq_rx_supported = true,
--	.rf_id = true,
- 	.gen2 = true,
- 	.integrated = true,
- 	.umac_prph_offset = 0x300000,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 85afdff0cc98..dfbca1ac34a4 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -258,7 +258,6 @@ enum iwl_mac_cfg_ltr_delay {
-  * @umac_prph_offset: offset to add to UMAC periphery address
-  * @xtal_latency: power up latency to get the xtal stabilized
-  * @extra_phy_cfg_flags: extra configuration flags to pass to the PHY
-- * @rf_id: need to read rf_id to determine the firmware image
-  * @gen2: 22000 and on transport operation
-  * @mq_rx_supported: multi-queue rx support
-  * @integrated: discrete or integrated
-@@ -273,8 +272,7 @@ struct iwl_mac_cfg {
- 	u32 umac_prph_offset;
- 	u32 xtal_latency;
- 	u32 extra_phy_cfg_flags;
--	u32 rf_id:1,
--	    gen2:1,
-+	u32 gen2:1,
- 	    mq_rx_supported:1,
- 	    integrated:1,
- 	    low_latency_xtal:1,
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index b3eb6ceb4648..45a62733b28a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1812,8 +1812,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 * extract the RF_ID.
- 	 * This is relevant only for family 9000 and up.
- 	 */
--	if (iwl_trans->mac_cfg->rf_id &&
--	    iwl_trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_9000 &&
-+	if (iwl_trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_9000 &&
- 	    !CSR_HW_RFID_TYPE(info.hw_rf_id) && map_crf_id(iwl_trans, &info)) {
- 		ret = -EINVAL;
- 		goto out_free_trans;
+@@ -44,7 +44,6 @@
+ 	IWL_SC_A_HR_B_FW_PRE "-" __stringify(api) ".ucode"
+ 
+ static const struct iwl_family_base_params iwl_sc_base = {
+-	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
+ 	.num_of_queues = 512,
+ 	.max_tfd_queue_size = 65536,
+ 	.shadow_ram_support = true,
 -- 
 2.34.1
 
