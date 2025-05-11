@@ -1,50 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B0D116DC28
-	for <linux-wireless@vger.kernel.org>; Sun, 11 May 2025 03:52:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2AE16F288
+	for <linux-wireless@vger.kernel.org>; Sun, 11 May 2025 03:52:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746935569; cv=none; b=c69sZ1ODsUHbvOqkNSdg/K6PPwICxwW5HnURhN9QMqwPwzb/33RcqVMIsm50ZYXVr5g9bO7H6J62d0pHUAzWkxukFENbYDOeY1UAAFK9EkeiNLb7qoqOg2TIzK7WLk5I0RHG8iOnFMzLMxRP4o/Sy7TYSx/SG0Uol8O7L5i6OB8=
+	t=1746935569; cv=none; b=j3ILKN6+SO5RngGUyYJnfBR8ZBo+MdFyrWHLHrAkg2rRFafi7Wx/T4JQ5ahSG2Rwe4WIl2nR+UK5xUUJ9Xex2H7gD3A+pRcot/zOZL7GIjNAUZ91N2aOd6+QabUmbVEe1DifruoOsgrzOYyQGqbc46mRxzcK73+sTMLzIPGNdSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1746935569; c=relaxed/simple;
-	bh=6Gicu7XXOfpQj2iPi7AiM2DoRzy3Fc3gWKoj/pgDd3o=;
+	bh=Yw4z3/riwLR6+k74P4GWOVJhiBd68CrSvKPUs8zQ3Js=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DzzIlp5jTOFDoc3GOpqTab0yUbwgVI7iNRAS3PGdQyHjf/J8NH2zygH+CUGddZYXJhTJv9+bzzOU0PWMMGbYLUp6qYE+XIrdCc77/kFO8q1tSpR7lVbceKGo/XAdz926zQJ/naA9Z8RxzoYsLI+mBDxXNNYvxoi6BzKFJQfUNfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=qOeC6onk; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=KOVC1dcHQPaS2P5LY+NtbJFSX5atb4/3vKJymiems4OjiW2elANn7vowKh9CKEqa6R37ZUnYiuFxmvQ3Oaj5DwgyRN08dD1NWYbsxOief+FLWb3wN9duKHjahGxCFqPpDvQZO//Yh210QGl8PoPjqoSCwbj7A6Av/6pZlw+Aqg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b=pKfUL1U3; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="qOeC6onk"
-X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 54B3qbeM73302876, This message is accepted by code: ctloc85258
+	dkim=temperror (0-bit key) header.d=realtek.com header.i=@realtek.com header.b="pKfUL1U3"
+X-SpamFilter-By: ArmorX SpamTrap 5.78 with qID 54B3qilQ73302899, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=realtek.com; s=dkim;
-	t=1746935557; bh=6Gicu7XXOfpQj2iPi7AiM2DoRzy3Fc3gWKoj/pgDd3o=;
+	t=1746935564; bh=Yw4z3/riwLR6+k74P4GWOVJhiBd68CrSvKPUs8zQ3Js=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=qOeC6onkkOV17aI2Sp6QYauUKoXl5aceaThsX74sJnbfYklVYXnACTVU47BBwI0RA
-	 nUg/sC10aUsYgVnnN65TGhxMv/k/4YNqqmwExyBti6zAuLH21uZoeV+oR5ZnpPeg6/
-	 uHsrcV1wSSaKupg5N1lNM+elhqM3uuq9VPE2yykbNznx184nbKhCt5FWbKFpnMkDq7
-	 TUJHT/X5Fd7Cud9X/4acAT06f2zGtD2zyKoggir6emZBnYRBGg+QVgVMP+hzu9zBxg
-	 Kx2/+rEQiKm5Zg4Z/TWKXByJEb4xNH/Ty9Y3bPfV5jY6fJKvPo4Q3eXeLkyyDsCVaK
-	 Zkfp1xRGfqvWA==
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 54B3qbeM73302876
+	b=pKfUL1U3Qygvh20gWazKxQTftDFBGApLYlsMmS68XooXul1SASoaKdjEza1Ah7AHD
+	 hn10hkybg+VkVbdhR0DmmT43ewuXvLG5Tpp5ydbIoZx9wieUI5hHGrjhtd1QaEOlST
+	 UWWW1O9CUCNAHkUXQZZh7SltPMOR9JwqrClunh6r5N7R3PfneKvVlx6QwdNCsedkEb
+	 m6sy5VW6JLYNuPrX3qeuTRSjCydYCukUrMy/EbWlU1vHnQZnS8RhARBTedPW2L7hVu
+	 7qB2GCsYGQmzoN0ywOWpBExZSyT9o1i3FXPoNSAi18cLBLYA193/hyeUJg7ICfY+TC
+	 aTaX7Bj4WZMvQ==
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/3.06/5.92) with ESMTPS id 54B3qilQ73302899
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Sun, 11 May 2025 11:52:37 +0800
+	for <linux-wireless@vger.kernel.org>; Sun, 11 May 2025 11:52:44 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Sun, 11 May 2025 11:52:38 +0800
+ 15.1.2507.39; Sun, 11 May 2025 11:52:45 +0800
 Received: from [127.0.1.1] (10.22.224.86) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Sun, 11 May
- 2025 11:52:37 +0800
+ 2025 11:52:44 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 1/6] wifi: rtw89: mcc: pass whom to stop at when pausing chanctx
-Date: Sun, 11 May 2025 11:52:12 +0800
-Message-ID: <20250511035217.10410-2-pkshih@realtek.com>
+Subject: [PATCH rtw-next 4/6] wifi: rtw89: mcc: introduce calculation of anchor pattern
+Date: Sun, 11 May 2025 11:52:15 +0800
+Message-ID: <20250511035217.10410-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250511035217.10410-1-pkshih@realtek.com>
 References: <20250511035217.10410-1-pkshih@realtek.com>
@@ -61,191 +61,144 @@ X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-When stopping MCC, FW can stop at a given MCC role following H2C command.
-When pausing chanctx during MCC, in general, the caller expects to process
-things with its chanctx. So, pass the caller as target and let FW stop MCC
-at it.
+In the cases that two MCC roles' TBTTs are too close or too far, original
+MCC pattern calculation logic will lead to a result that both roles might
+not cover its TBTT with sufficient time. Introduce a new calculation logic
+called anchor pattern for these corner cases. It allows to choose one role
+as anchor to put its TBTT in the middle of its duration directly. For now,
+a P2P role has a higher priority to be chosen as an anchor. Then, if able,
+another role might need to depend on courtesy mechanism to take time from
+anchor.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/chan.c | 35 +++++++++++++++++------
- drivers/net/wireless/realtek/rtw89/chan.h |  7 ++++-
- drivers/net/wireless/realtek/rtw89/core.c |  6 +++-
- drivers/net/wireless/realtek/rtw89/fw.c   |  6 +++-
- 4 files changed, 43 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtw89/chan.c | 105 ++++++++++++++++++++++
+ 1 file changed, 105 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
-index 871befa63889..ff476bde39ab 100644
+index e09541ceb504..67acdcc1f535 100644
 --- a/drivers/net/wireless/realtek/rtw89/chan.c
 +++ b/drivers/net/wireless/realtek/rtw89/chan.c
-@@ -2107,6 +2107,12 @@ static int rtw89_mcc_start(struct rtw89_dev *rtwdev)
+@@ -1185,6 +1185,107 @@ static int __rtw89_mcc_calc_pattern_strict(struct rtw89_dev *rtwdev,
+ 	return 0;
  }
  
- struct rtw89_mcc_stop_sel {
-+	struct {
-+		const struct rtw89_vif_link *target;
-+	} hint;
++static void __rtw89_mcc_fill_ptrn_anchor_ref(struct rtw89_dev *rtwdev,
++					     struct rtw89_mcc_pattern *ptrn,
++					     bool small_bcn_ofst)
++{
++	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
++	struct rtw89_mcc_role *ref = &mcc->role_ref;
++	struct rtw89_mcc_role *aux = &mcc->role_aux;
++	struct rtw89_mcc_config *config = &mcc->config;
++	u16 bcn_ofst = config->beacon_offset;
++	u16 ref_tob;
++	u16 ref_toa;
 +
-+	/* selection content */
-+	bool filled;
- 	u8 mac_id;
- 	u8 slot_idx;
- };
-@@ -2116,6 +2122,7 @@ static void rtw89_mcc_stop_sel_fill(struct rtw89_mcc_stop_sel *sel,
- {
- 	sel->mac_id = mcc_role->rtwvif_link->mac_id;
- 	sel->slot_idx = mcc_role->slot_idx;
-+	sel->filled = true;
- }
- 
- static int rtw89_mcc_stop_sel_iterator(struct rtw89_dev *rtwdev,
-@@ -2125,23 +2132,35 @@ static int rtw89_mcc_stop_sel_iterator(struct rtw89_dev *rtwdev,
- {
- 	struct rtw89_mcc_stop_sel *sel = data;
- 
-+	if (mcc_role->rtwvif_link == sel->hint.target) {
-+		rtw89_mcc_stop_sel_fill(sel, mcc_role);
-+		return 1; /* break iteration */
++	if (ref->limit.enable) {
++		ref_tob = ref->limit.max_tob;
++		ref_toa = ref->limit.max_toa;
++	} else {
++		ref_tob = ref->duration / 2;
++		ref_toa = ref->duration / 2;
 +	}
 +
-+	if (sel->filled)
-+		return 0;
++	if (small_bcn_ofst) {
++		ptrn->toa_ref = ref_toa;
++		ptrn->tob_ref = ref->duration - ptrn->toa_ref;
++	} else {
++		ptrn->tob_ref = ref_tob;
++		ptrn->toa_ref = ref->duration - ptrn->tob_ref;
++	}
 +
- 	if (!mcc_role->rtwvif_link->chanctx_assigned)
- 		return 0;
- 
- 	rtw89_mcc_stop_sel_fill(sel, mcc_role);
--	return 1; /* break iteration */
++	ptrn->tob_aux = bcn_ofst - ptrn->toa_ref;
++	ptrn->toa_aux = aux->duration - ptrn->tob_aux;
++}
++
++static void __rtw89_mcc_fill_ptrn_anchor_aux(struct rtw89_dev *rtwdev,
++					     struct rtw89_mcc_pattern *ptrn,
++					     bool small_bcn_ofst)
++{
++	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
++	struct rtw89_mcc_role *ref = &mcc->role_ref;
++	struct rtw89_mcc_role *aux = &mcc->role_aux;
++	struct rtw89_mcc_config *config = &mcc->config;
++	u16 bcn_ofst = config->beacon_offset;
++	u16 aux_tob;
++	u16 aux_toa;
++
++	if (aux->limit.enable) {
++		aux_tob = aux->limit.max_tob;
++		aux_toa = aux->limit.max_toa;
++	} else {
++		aux_tob = aux->duration / 2;
++		aux_toa = aux->duration / 2;
++	}
++
++	if (small_bcn_ofst) {
++		ptrn->tob_aux = aux_tob;
++		ptrn->toa_aux = aux->duration - ptrn->tob_aux;
++	} else {
++		ptrn->toa_aux = aux_toa;
++		ptrn->tob_aux = aux->duration - ptrn->toa_aux;
++	}
++
++	ptrn->toa_ref = bcn_ofst - ptrn->tob_aux;
++	ptrn->tob_ref = ref->duration - ptrn->toa_ref;
++}
++
++static int __rtw89_mcc_calc_pattern_anchor(struct rtw89_dev *rtwdev,
++					   struct rtw89_mcc_pattern *ptrn,
++					   bool hdl_bt)
++{
++	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
++	struct rtw89_mcc_role *ref = &mcc->role_ref;
++	struct rtw89_mcc_role *aux = &mcc->role_aux;
++	struct rtw89_mcc_config *config = &mcc->config;
++	u16 mcc_intvl = config->mcc_interval;
++	u16 bcn_ofst = config->beacon_offset;
++	bool small_bcn_ofst;
++
++	if (bcn_ofst < RTW89_MCC_MIN_RX_BCN_TIME)
++		small_bcn_ofst = true;
++	else if (mcc_intvl - bcn_ofst < RTW89_MCC_MIN_RX_BCN_TIME)
++		small_bcn_ofst = false;
++	else
++		return -EPERM;
++
++	*ptrn = (typeof(*ptrn)){
++		.plan = hdl_bt ? RTW89_MCC_PLAN_TAIL_BT : RTW89_MCC_PLAN_NO_BT,
++	};
++
++	rtw89_debug(rtwdev, RTW89_DBG_CHAN,
++		    "MCC calc ptrn_ac: plan %d, bcn_ofst %d\n",
++		    ptrn->plan, bcn_ofst);
++
++	if (ref->is_go || ref->is_gc)
++		__rtw89_mcc_fill_ptrn_anchor_ref(rtwdev, ptrn, small_bcn_ofst);
++	else if (aux->is_go || aux->is_gc)
++		__rtw89_mcc_fill_ptrn_anchor_aux(rtwdev, ptrn, small_bcn_ofst);
++	else
++		__rtw89_mcc_fill_ptrn_anchor_ref(rtwdev, ptrn, small_bcn_ofst);
++
 +	return 0;
- }
- 
--static void rtw89_mcc_stop(struct rtw89_dev *rtwdev)
-+static void rtw89_mcc_stop(struct rtw89_dev *rtwdev,
-+			   const struct rtw89_chanctx_pause_parm *pause)
++}
++
+ static int rtw89_mcc_calc_pattern(struct rtw89_dev *rtwdev, bool hdl_bt)
  {
  	struct rtw89_mcc_info *mcc = &rtwdev->mcc;
- 	struct rtw89_mcc_role *ref = &mcc->role_ref;
--	struct rtw89_mcc_stop_sel sel;
-+	struct rtw89_mcc_stop_sel sel = {
-+		.hint.target = pause ? pause->trigger : NULL,
-+	};
- 	int ret;
+@@ -1238,6 +1339,10 @@ static int rtw89_mcc_calc_pattern(struct rtw89_dev *rtwdev, bool hdl_bt)
+ 			goto done;
+ 	}
  
- 	/* by default, stop at ref */
--	rtw89_mcc_stop_sel_fill(&sel, ref);
- 	rtw89_iterate_mcc_roles(rtwdev, rtw89_mcc_stop_sel_iterator, &sel);
-+	if (!sel.filled)
-+		rtw89_mcc_stop_sel_fill(&sel, ref);
- 
- 	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "MCC stop at <macid %d>\n", sel.mac_id);
- 
-@@ -2492,7 +2511,7 @@ void rtw89_chanctx_track(struct rtw89_dev *rtwdev)
- }
- 
- void rtw89_chanctx_pause(struct rtw89_dev *rtwdev,
--			 enum rtw89_chanctx_pause_reasons rsn)
-+			 const struct rtw89_chanctx_pause_parm *pause_parm)
- {
- 	struct rtw89_hal *hal = &rtwdev->hal;
- 	enum rtw89_entity_mode mode;
-@@ -2502,12 +2521,12 @@ void rtw89_chanctx_pause(struct rtw89_dev *rtwdev,
- 	if (hal->entity_pause)
- 		return;
- 
--	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "chanctx pause (rsn: %d)\n", rsn);
-+	rtw89_debug(rtwdev, RTW89_DBG_CHAN, "chanctx pause (rsn: %d)\n", pause_parm->rsn);
- 
- 	mode = rtw89_get_entity_mode(rtwdev);
- 	switch (mode) {
- 	case RTW89_ENTITY_MODE_MCC:
--		rtw89_mcc_stop(rtwdev);
-+		rtw89_mcc_stop(rtwdev, pause_parm);
- 		break;
- 	default:
- 		break;
-@@ -2732,7 +2751,7 @@ void rtw89_chanctx_ops_unassign_vif(struct rtw89_dev *rtwdev,
- 		cur = rtw89_get_entity_mode(rtwdev);
- 		switch (cur) {
- 		case RTW89_ENTITY_MODE_MCC:
--			rtw89_mcc_stop(rtwdev);
-+			rtw89_mcc_stop(rtwdev, NULL);
- 			break;
- 		default:
- 			break;
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.h b/drivers/net/wireless/realtek/rtw89/chan.h
-index b42e044d7927..2a25563593af 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.h
-+++ b/drivers/net/wireless/realtek/rtw89/chan.h
-@@ -46,6 +46,11 @@ enum rtw89_chanctx_pause_reasons {
- 	RTW89_CHANCTX_PAUSE_REASON_ROC,
- };
- 
-+struct rtw89_chanctx_pause_parm {
-+	const struct rtw89_vif_link *trigger;
-+	enum rtw89_chanctx_pause_reasons rsn;
-+};
++	ret = __rtw89_mcc_calc_pattern_anchor(rtwdev, &ptrn, hdl_bt);
++	if (!ret)
++		goto done;
 +
- struct rtw89_chanctx_cb_parm {
- 	int (*cb)(struct rtw89_dev *rtwdev, void *data);
- 	void *data;
-@@ -113,7 +118,7 @@ void rtw89_queue_chanctx_change(struct rtw89_dev *rtwdev,
- 				enum rtw89_chanctx_changes change);
- void rtw89_chanctx_track(struct rtw89_dev *rtwdev);
- void rtw89_chanctx_pause(struct rtw89_dev *rtwdev,
--			 enum rtw89_chanctx_pause_reasons rsn);
-+			 const struct rtw89_chanctx_pause_parm *parm);
- void rtw89_chanctx_proceed(struct rtw89_dev *rtwdev,
- 			   const struct rtw89_chanctx_cb_parm *cb_parm);
+ 	__rtw89_mcc_calc_pattern_loose(rtwdev, &ptrn, hdl_bt);
  
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 0b6fb30cbf52..3b2a2c6b9a44 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -3389,6 +3389,9 @@ static int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev,
- void rtw89_roc_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
- {
- 	const struct rtw89_mac_gen_def *mac = rtwdev->chip->mac_def;
-+	struct rtw89_chanctx_pause_parm pause_parm = {
-+		.rsn = RTW89_CHANCTX_PAUSE_REASON_ROC,
-+	};
- 	struct ieee80211_hw *hw = rtwdev->hw;
- 	struct rtw89_roc *roc = &rtwvif->roc;
- 	struct rtw89_vif_link *rtwvif_link;
-@@ -3410,7 +3413,8 @@ void rtw89_roc_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
- 
- 	roc->link_id = rtwvif_link->link_id;
- 
--	rtw89_chanctx_pause(rtwdev, RTW89_CHANCTX_PAUSE_REASON_ROC);
-+	pause_parm.trigger = rtwvif_link;
-+	rtw89_chanctx_pause(rtwdev, &pause_parm);
- 
- 	ret = rtw89_core_send_nullfunc(rtwdev, rtwvif_link, true, true);
- 	if (ret)
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 76350351dfb2..1abf69818fc6 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -7446,6 +7446,10 @@ int rtw89_hw_scan_start(struct rtw89_dev *rtwdev,
- 	const struct rtw89_chan *chan = rtw89_chan_get(rtwdev,
- 						       rtwvif_link->chanctx_idx);
- 	struct rtw89_vif *rtwvif = rtwvif_link->rtwvif;
-+	struct rtw89_chanctx_pause_parm pause_parm = {
-+		.rsn = RTW89_CHANCTX_PAUSE_REASON_HW_SCAN,
-+		.trigger = rtwvif_link,
-+	};
- 	u32 rx_fltr = rtwdev->hal.rx_fltr;
- 	u8 mac_addr[ETH_ALEN];
- 	u32 reg;
-@@ -7484,7 +7488,7 @@ int rtw89_hw_scan_start(struct rtw89_dev *rtwdev,
- 	reg = rtw89_mac_reg_by_idx(rtwdev, mac->rx_fltr, rtwvif_link->mac_idx);
- 	rtw89_write32_mask(rtwdev, reg, B_AX_RX_FLTR_CFG_MASK, rx_fltr);
- 
--	rtw89_chanctx_pause(rtwdev, RTW89_CHANCTX_PAUSE_REASON_HW_SCAN);
-+	rtw89_chanctx_pause(rtwdev, &pause_parm);
- 
- 	if (mode == RTW89_ENTITY_MODE_MCC)
- 		rtw89_hw_scan_update_beacon_noa(rtwdev, req);
+ done:
 -- 
 2.25.1
 
