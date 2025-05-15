@@ -1,108 +1,126 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D643A1C5D53
-	for <linux-wireless@vger.kernel.org>; Thu, 15 May 2025 03:39:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2515C1B3927
+	for <linux-wireless@vger.kernel.org>; Thu, 15 May 2025 03:40:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747280385; cv=none; b=o7OzSm7/cGEet+wfO1uQzwVQEUTMkPudoijO6+AXQRbYS3sbO/4vROcoEONHiREtaOfEbkuPm+56DlFPcHP48ueHVG0nUHwpLyCQ3vxpVzV1EJm11kDxGBOrnAeGKi1FlkaetgFYWRxVTM+WBU5QRQI3SIw28cK+gkQ7YjBaPyw=
+	t=1747280446; cv=none; b=ryVz8zYmqpD4FXm2Kw7xWka5aIo+q4svq1DUb0k4HiwKmeIXheo0UJAAHeioraX7ki90WsNI7F/X41B66tDyiCye0Lg1QlB6lhRKCcGGmd7mRNI18nPKFwOtwCN49xwILaPYheTlAAIkbKepH5Kq1N9m92V/EjfTjiDXBLDLpEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747280385; c=relaxed/simple;
-	bh=8rNPCz1CYSaoWiu0XANCt9X+eVaZ8f7dMUDW1M6i+k4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=L0RpcQJmUQMFLBhQ7shAklTwqsVeqb1XnRxNcsnEbpOV0mLAri5o3OCQQwHZK9bwj1IMkDBPcTcNTRUyv+mAuEB9g/3A1/GppzvVbQqf8DZP6cy/VLoXCXSxA9ei4A6x/B0/8jrFnksrrhC8SfOG4p/6kN85IY9oG9m5ZeYBvWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=ROzWTW4R; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1747280446; c=relaxed/simple;
+	bh=W1HuRom9HIhItJQVqQIn+cl4zAjZnBp2Ev2hG6E7yyY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=DQfeLslcNN6CPjNaP+mH5VOJR2zyKCs0rno7+D+IkYMZYfgUjFGjuHwiLudsKhF1ud3bi/NhXSTBlDK8HApVNpO0wYEW+A6DYF56xLTaQGCKXTUGKlORH+05OFzleCcE+HTtLbEARcQoOtVmPPZ2indcOxGBn9cpR4L5ujADXzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nzX44wIs; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ROzWTW4R"
-X-UUID: 38e0bbba313e11f0813e4fe1310efc19-20250515
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Ck8E0kmNPsQLnL9s9n5lfaUDgq87CH2pQ5H2DVdTpco=;
-	b=ROzWTW4RzrTP8Ip5r6VhAd7RE/27ib5WqaXo+C6xDOBcFaBFWjvg2TRsxJo6R8vvDCOGtbQ0UPpn0HHR3QQpsqFIOfL4Vq8V+Khi3g+RbRdzUT3iFfYf5Cr3Ej0HzD7ite7cdfqlpHtZq9MIWhKVP/GYaPb7GuwsjTp4j2ycxhs=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:54cb0e6c-36ed-4f8e-a272-120d9ee42974,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:0ef645f,CLOUDID:c90d01c0-eade-4d5b-9f81-31d7b5452436,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 38e0bbba313e11f0813e4fe1310efc19-20250515
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
-	(envelope-from <shayne.chen@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 831273323; Thu, 15 May 2025 11:39:36 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Thu, 15 May 2025 11:32:15 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Thu, 15 May 2025 11:32:15 +0800
-From: Shayne Chen <shayne.chen@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>
-CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
-	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
-	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Howard Hsu
-	<howard-yh.hsu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76-next 1/9] wifi: mt76: remove capability of partial bandwidth UL MU-MIMO
-Date: Thu, 15 May 2025 11:29:44 +0800
-Message-ID: <20250515032952.1653494-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nzX44wIs"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54EKpmrh025457;
+	Thu, 15 May 2025 03:40:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	83ze0VGVC3zLVuFj5TDfWLwjeHeLhdTqint7yXZyavg=; b=nzX44wIspTP4o+I7
+	gxvdPu1vUkGjpbFZV17z0kPgvT0LwLBf+W3r6uywvAontC6JJvPuL7KGk6VSVwrJ
+	qQwb9W3UMlDuh1cXS6U0YnQkOg0ii0yMbzZcYW1XuallJmSTvN1zVlawW9Gq+uS3
+	9fOZpkXO1YRPrHer+R/rtqbsT1gUsXeiSjhcL6DS/Cz66G/jy6/wmJQJjtTx1Qk0
+	Wz6w+caiGnijP51mYn11gu0Y/tlrS5EM7N61NCc2ukme86HqlcZiKVMkLwW0WgUm
+	t4WGP9MS3b0CVnwrFQvirVjNOIAul11fJ9SnxD6e5EbHbIFd6ezXzSpS+P7xb4SH
+	nHgsZg==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46mbew4qkr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 15 May 2025 03:40:33 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54F3eW9O014402
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 15 May 2025 03:40:32 GMT
+Received: from [10.50.45.88] (10.80.80.8) by nasanex01c.na.qualcomm.com
+ (10.45.79.139) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 14 May
+ 2025 20:40:31 -0700
+Message-ID: <e3c01438-0975-4213-8066-f1df32a585ee@quicinc.com>
+Date: Thu, 15 May 2025 09:10:28 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next v7 05/10] wifi: cfg80211: allocate memory
+ for link_station info structure
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+References: <20250514164857.227540-1-quic_sarishar@quicinc.com>
+ <20250514164857.227540-6-quic_sarishar@quicinc.com>
+ <25b89deed3bb6871109fa94c3c967a27a35e3d90.camel@sipsolutions.net>
+Content-Language: en-US
+From: Sarika Sharma <quic_sarishar@quicinc.com>
+In-Reply-To: <25b89deed3bb6871109fa94c3c967a27a35e3d90.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: PfcrZF304skpdWNFH2pDOBnt8h61JID_
+X-Proofpoint-ORIG-GUID: PfcrZF304skpdWNFH2pDOBnt8h61JID_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTE1MDAzMyBTYWx0ZWRfX49bzL6jsi46q
+ Hi0jWNcuV7JfvP6eZk0fCbP456WHh6Gc3fCbeQhT7YqgCWzDc2wP0u4/9LXf3YpPCENFxC9ysaD
+ j5OwCieFifTx5yE5XcX+YqErndoHu2mR9MOfz1c6qkydZK/EF9xUCEX9zbfmhhv7r+MNTlufUEw
+ E5CFpE6NgowrhiVL+2TV7D1AX41nHj2mMJVj1YAYuxKWUMAPYpzna74QdtL+rxgVvgtaME1P4Tv
+ WcusMOuepS63uo0oS7qLmpGF0B2xpXINkXrjaFFKbOOxjVxkvIEyzPLQ2HYi7lTZBGR0PP5+jGK
+ Ee4sUS/gitfAsRVcY2inw/NLimxRcEVlrnAwEhyiV8faXWGlqlwY2h+0zAbcOMUS+td58Rxss2m
+ iAi7emnJD7nCYRKJ69sQ39DmrJLwweS1q0HmGT7Bsiqt0rJ/qBauakFC//n920MB+4RxREPv
+X-Authority-Analysis: v=2.4 cv=LOFmQIW9 c=1 sm=1 tr=0 ts=68256231 cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=stkexhm8AAAA:8
+ a=EeR8soJtryZRNb31oUQA:9 a=QEXdDO2ut3YA:10 a=pIW3pCRaVxJDc-hWtpF8:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-15_01,2025-05-14_03,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 spamscore=0 adultscore=0 priorityscore=1501 suspectscore=0
+ mlxscore=0 malwarescore=0 mlxlogscore=986 impostorscore=0 bulkscore=0
+ clxscore=1015 phishscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505070000
+ definitions=main-2505150033
 
-From: Howard Hsu <howard-yh.hsu@mediatek.com>
+On 5/15/2025 1:23 AM, Johannes Berg wrote:
+> On Wed, 2025-05-14 at 22:18 +0530, Sarika Sharma wrote:
+>> Currently, station_info structure is passed to fill station statistics
+>> from mac80211/drivers. After NL message send to user space for requested
+>> station statistics, memory for station statistics is freed in cfg80211.
+>> Therefore, memory allocation/free for link station statistics should
+>> also happen in cfg80211 only.
+>>
+>> Hence, allocate the memory for link_station structure for all
+>> possible links and free in cfg80211_sinfo_release_content().
+> 
+> I'll probably take a look myself tomorrow in the interest of getting all
+> things lined up for 6.16 quickly, but chances are you'll be at work a
+> couple of hours before me (and I'm not really all that awake now), so
+> pointer to this bug report from the bot:
+> 
+> http://wifibot.sipsolutions.net/results/962902/14088291/build_allmodconfig_warn/summary
+> 
+> Says some locking issue.
+> 
 
-The firmware only supports full bandwidth UL MU-MIMO, so remove the
-partial bandwidth capability from HE PHY CAP.
+Oops! my bad, got it now.
+let me fix it and send new version.
 
-Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 3 +--
- drivers/net/wireless/mediatek/mt76/mt7996/init.c | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> Also, is there any specific reason to want to allocate each link
+> individually? Why not allocate them all together in one bigger
+> allocation? Doesn't matter much though I guess.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 57d5be94624b..be9527dd0269 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -925,8 +925,7 @@ mt7915_set_stream_he_txbf_caps(struct mt7915_phy *phy,
- 
- 	c = IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US;
- 	if (!is_mt7915(&dev->mt76))
--		c |= IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
--		     IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO;
-+		c |= IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO;
- 	elem->phy_cap_info[2] |= c;
- 
- 	c = IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE |
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-index ff835a6f77ce..b77fa94df8c7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -1116,8 +1116,7 @@ mt7996_set_stream_he_txbf_caps(struct mt7996_phy *phy,
- 	elem->phy_cap_info[7] &= ~IEEE80211_HE_PHY_CAP7_MAX_NC_MASK;
- 
- 	c = IEEE80211_HE_PHY_CAP2_NDP_4x_LTF_AND_3_2US |
--	    IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO |
--	    IEEE80211_HE_PHY_CAP2_UL_MU_PARTIAL_MU_MIMO;
-+	    IEEE80211_HE_PHY_CAP2_UL_MU_FULL_MU_MIMO;
- 	elem->phy_cap_info[2] |= c;
- 
- 	c = IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE;
--- 
-2.39.2
+No, it doesn't matter much.
+Sure, will allocate them all together.
+
+> 
+> johannes
 
