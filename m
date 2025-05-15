@@ -1,43 +1,43 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F1A1A2396
-	for <linux-wireless@vger.kernel.org>; Thu, 15 May 2025 03:32:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2CE826ACC
+	for <linux-wireless@vger.kernel.org>; Thu, 15 May 2025 03:39:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747279976; cv=none; b=BXpzlqXi9HZptYpTqyhlTRtuVGCIJUIuG3pUYxjo/C9eErtgS2CqtlhrI0yrJJ4dQaXWjlHSGsG5RkOCcutKYpoFsTMJE6Y75g8Sn+UOpQA8hqGjza2gtijHmEMp2oDEl62cNN4FUCvssaA3tAcIfAqDeGNYWBs3qjm2NGMK+2o=
+	t=1747280384; cv=none; b=EtpBWuvEfm5yxeDROPhC9xzKFXTaCa9tt//2kNSIfiacF/qpa7t+5k96SQFlOE4LbdWowuYH7gJsI5UOFij0DayREk2zd5l1IuPD/WuAFWp+2dQphiM4p4V5mX6lf757xqqtLFhElOXyWjj/rh5IcT3fkYIN+bZF5pnhKq7CA1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747279976; c=relaxed/simple;
-	bh=eMaSbxRHT7sRaat2c8aKInbGnCca/U8s6xfNZ79xXss=;
+	s=arc-20240116; t=1747280384; c=relaxed/simple;
+	bh=pEFTXP6InYRygXeqlAt39QVjLkRTxEZvU9Ehoj7t63Q=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VoK+ckW7cn/PKuOPkyNIGDYlmibbGs5NYR8G1rNGSU2U5UUbiEcS2BWRx0HVCj2Gt3roH/5W+T0OsHoE8Jo38naDI7R1HgCZZqWyQMgM4keDi27EkBsHT4f49rVuHDVNrOJ2eP1ReFv7NyStk8R+dZ3cs2+GlvalGjRmpq2PpNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=gm2d30Kw; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=sCndmu3W4foFjUsA4zh6Fkqg66N3vmFsP81r3TvPAacrqcRpv9LTL3xXQz52MdaEneqi+ZhaBsHCWilqxJB78F1l6iMdbiwPCViOWfj2OgXkA9N2+SMcHZQfA+NfOmfK87EmEz/hsTzIoWZ5rcwja9mNboNXMY9W/n6fHQcuyJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=oQ6Uh/+J; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="gm2d30Kw"
-X-UUID: 41c6cc66313d11f0813e4fe1310efc19-20250515
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oQ6Uh/+J"
+X-UUID: 38e4e712313e11f0813e4fe1310efc19-20250515
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ahqVB/novhOH9WPxx6JgqGkGBvhwvp7jmdh5ETAPdCM=;
-	b=gm2d30KwAwyxNDFnbbT3LsbxAKVs8BYDNLOVa0t8frc5sSdUZSBg2jG+9vxcNxSneRttMv66KC7arbETAE3QXFvw3XbIZyRqGUgZnY2Hg6dHLUJMaCN3UdZoJDW5cb6FcXVnuj0ZuhrestRMwfXO7XYZxyGFV12bsFas+1mBM7Y=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=7E0yGV9fq1bLHyrmBJkJI+P3GpWKwf3pIXly3srXsq4=;
+	b=oQ6Uh/+Jk1QqxjmWM62Cnh38ztMijfFQyBtRc9f/bH/3pBTvCvVAQjcloc8KvOL5JMWOm2kTMinoRxuHgmqFIp7tjtKZVpUsZECX5VchoF3w/gDzSaczDxIjDELbA1yVlv+KP8fEZep1fVH6/fLIaEtiiB0DDBzd60HR11haq14=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:2726ee72-ea8c-4a6e-aa4a-15075c4ec49c,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:0ef645f,CLOUDID:feef053e-da74-431d-a7be-5e6761de3b64,B
+X-CID-O-INFO: VERSION:1.2.1,REQID:d964e6eb-d7a7-4682-9dab-050b4707ac94,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:0ef645f,CLOUDID:cb0d01c0-eade-4d5b-9f81-31d7b5452436,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
 	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
 	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 41c6cc66313d11f0813e4fe1310efc19-20250515
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
+X-UUID: 38e4e712313e11f0813e4fe1310efc19-20250515
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 922981204; Thu, 15 May 2025 11:32:41 +0800
+	with ESMTP id 983383167; Thu, 15 May 2025 11:39:36 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1258.39; Thu, 15 May 2025 11:32:39 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -48,11 +48,11 @@ To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, Shayne Chen <shayne.chen@mediatek.com>,
-	Peter Chiu <chui-hao.chiu@mediatek.com>
-Subject: [PATCH mt76-next 7/9] wifi: mt76: mt7996: fix RX buffer size of MCU event
-Date: Thu, 15 May 2025 11:29:50 +0800
-Message-ID: <20250515032952.1653494-7-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Peter Chiu
+	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76-next 5/9] wifi: mt76: mt7996: fix invalid NSS setting when TX path differs from NSS
+Date: Thu, 15 May 2025 11:29:48 +0800
+Message-ID: <20250515032952.1653494-5-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250515032952.1653494-1-shayne.chen@mediatek.com>
 References: <20250515032952.1653494-1-shayne.chen@mediatek.com>
@@ -66,62 +66,60 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-Some management frames are first processed by the firmware and then
-passed to the driver through the MCU event rings. In CONNAC3, event rings
-do not support scatter-gather and have a size limitation of 2048 bytes.
-If a packet sized between 1728 and 2048 bytes arrives from an event ring,
-the ring will hang because the driver attempts to use scatter-gather to
-process it.
+From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-To fix this, include the size of struct skb_shared_info in the MCU RX
-buffer size to prevent scatter-gather from being used for event skb in
-mt76_dma_rx_fill_buf().
+The maximum TX path and NSS may differ on a band. For example, one variant
+of the MT7992 has 5 TX paths and 4 NSS on the 5 GHz band. To address this,
+add orig_antenna_mask to record the maximum NSS and prevent setting an
+invalid NSS in mt7996_set_antenna().
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Co-developed-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Fixes: 69d54ce7491d ("wifi: mt76: mt7996: switch to single multi-radio wiphy")
 Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/dma.c    | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h | 3 +++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   | 3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-index fe8cc1d3f738..c8bef0b2a144 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/dma.c
-@@ -531,7 +531,7 @@ int mt7996_dma_init(struct mt7996_dev *dev)
- 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU],
- 			       MT_RXQ_ID(MT_RXQ_MCU),
- 			       MT7996_RX_MCU_RING_SIZE,
--			       MT_RX_BUF_SIZE,
-+			       MT7996_RX_MCU_BUF_SIZE,
- 			       MT_RXQ_RING_BASE(MT_RXQ_MCU));
- 	if (ret)
- 		return ret;
-@@ -540,7 +540,7 @@ int mt7996_dma_init(struct mt7996_dev *dev)
- 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU_WA],
- 			       MT_RXQ_ID(MT_RXQ_MCU_WA),
- 			       MT7996_RX_MCU_RING_SIZE_WA,
--			       MT_RX_BUF_SIZE,
-+			       MT7996_RX_MCU_BUF_SIZE,
- 			       MT_RXQ_RING_BASE(MT_RXQ_MCU_WA));
- 	if (ret)
- 		return ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
+index 7bfd19ed9594..87c6192b6384 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c
+@@ -310,6 +310,7 @@ int mt7996_eeprom_parse_hw_cap(struct mt7996_dev *dev, struct mt7996_phy *phy)
+ 		phy->has_aux_rx = true;
+ 
+ 	mphy->antenna_mask = BIT(nss) - 1;
++	phy->orig_antenna_mask = mphy->antenna_mask;
+ 	mphy->chainmask = (BIT(path) - 1) << dev->chainshift[band_idx];
+ 	phy->orig_chainmask = mphy->chainmask;
+ 	dev->chainmask |= mphy->chainmask;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 91c64e3a0860..85c5d76c0c2c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -1518,7 +1518,8 @@ mt7996_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ 		u8 shift = dev->chainshift[band_idx];
+ 
+ 		phy->mt76->chainmask = tx_ant & phy->orig_chainmask;
+-		phy->mt76->antenna_mask = phy->mt76->chainmask >> shift;
++		phy->mt76->antenna_mask = (phy->mt76->chainmask >> shift) &
++					  phy->orig_antenna_mask;
+ 
+ 		mt76_set_stream_caps(phy->mt76, true);
+ 		mt7996_set_stream_vht_txbf_caps(phy);
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index c75189a02316..1ad6bc046f7c 100644
+index 7c334e319547..c75189a02316 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -29,6 +29,9 @@
- #define MT7996_RX_RING_SIZE		1536
- #define MT7996_RX_MCU_RING_SIZE		512
- #define MT7996_RX_MCU_RING_SIZE_WA	1024
-+/* scatter-gather of mcu event is not supported in connac3 */
-+#define MT7996_RX_MCU_BUF_SIZE		(2048 + \
-+					 SKB_DATA_ALIGN(sizeof(struct skb_shared_info)))
+@@ -312,6 +312,7 @@ struct mt7996_phy {
+ 	struct mt76_channel_state state_ts;
  
- #define MT7996_DEVICE_ID		0x7990
- #define MT7996_DEVICE_ID_2		0x7991
+ 	u16 orig_chainmask;
++	u16 orig_antenna_mask;
+ 
+ 	bool has_aux_rx;
+ 	bool counter_reset;
 -- 
 2.39.2
 
