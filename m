@@ -1,50 +1,49 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EA0A2F43;
-	Sun, 18 May 2025 18:23:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 171181C5F30;
+	Sun, 18 May 2025 18:23:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747592594; cv=none; b=BJwSomGVRaNxKxH4RXr04we9Y7jCqcPow3CnvcSboJFTVRcrJNNZLLHXAouG/l0xV27WqaKj2EAm8u7iI4DBWqaXahIKHxdO+Aay0s+ouXb537cXIX+Vnw7KTdws0PwsJrJu4iXe5h02fZSa2hccGQU5v42eAf2Jna2oiph5hRs=
+	t=1747592595; cv=none; b=u8QLJ8RsKV5Vj4hk850jnQAtM7FemaQUhPX/ZWltpabHM0yBSFWAighoVPeGV+qf2WrTXN6r1vkjQbskAEFjlX3VkcK4zm6GMltf0Fyp4V1Wa2n0czY3rPPQ8tWHkj/P2nk5jcoxo7lFYEYBRbIskcWibO3v3F4zhSaVLw2b9ZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747592594; c=relaxed/simple;
-	bh=1as0HLR/0Fxxv/GCKtQEV7Pvofd9roAIEzxAPzygrgI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=TveURZjMFVm5GaYTZEkupN2dd3fmuMx2fqsjOf//B0a2iPjmb3dTE4dFfnyV8p8o95WRfj3v5bv6BFsz3DVRMHtgOqeheibBCDadJTtXNWU43K2xVEAn8e+OHYhsM5wV6zhCA/T85ONw9y5ed1OSyPtoA5MG+NbNUUNT06d7VF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=YbzA4eNs; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1747592595; c=relaxed/simple;
+	bh=vnv3h3r4DUXAEziZUFMQmZ6H6ja4oEPbWeEXShPftoE=;
+	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=ontwdWnpNXDpDZoG5YP3XyBO9isV8vnU3947hTObFUtvKEqS3lkdTcBgBuiPhhTbUAVaLzRvDRC1w03qizgAV2hPPk5D2qvJU4LqpGES1EN8wSaqTCgidYTblnPZFpow1o6oXDaPIHu9k3kz4TF5zhUozhH2NbndBRwxs89jj9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cTQ/0icM; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="YbzA4eNs"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54IH9uix026671;
-	Sun, 18 May 2025 18:23:03 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cTQ/0icM"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54IDrIIu002565;
+	Sun, 18 May 2025 18:22:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	GqeUiYTeqFmaZ0dMTksqDFraKydvUwwGRWWpIbnQRU4=; b=YbzA4eNsWTSbpsR4
-	MWx4+6cECoyl2RervNdMizS4nT9o0zNo+ofhrKk50tyPCNNiURi+MZnjESV64/O2
-	BV/ZPLPfcn+loDyfSAlJ+xWTxyfaiIISicS4WIq6Z2VN0T+1Rfl0VpRoqQq/51+X
-	thVs8Q3cip9yIWhGXYP0ELjJ7aS8/Ldfn8OU4JITGvq93Gpzl76WSAo3vnWgcM9v
-	Mf2s8OgLVlHhfnCWnOvLMBhJRy1mUtlYm1FrEUYnurug9GFfVDl5A9My6zk8XZHF
-	A4xygo2caSbHnXhE87B70hMaHy60eN8upgA8nx7d1i/NHeKih9chdmfEilEo3MOF
-	qeiKsA==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46pjm4j9h4-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=dF/ctAMDYfMCENy4Tz8VtJ
+	vwxn2XwmycroxJEEXN6IY=; b=cTQ/0icM87rmV9yi/7/YdC6o3xtxnLBcpp58SM
+	xi3goohGDXz2YZ1nTSNCcShNyH7VZP6puhssvinIMG8Ae7u4a2WwPlEZ1Oi6Y1gP
+	rDaQolPM7vR0gmwDwnoX1CHIWLhqq3iyW0Ew84CsaO2UccPlZfVU0tbSpAd79w3p
+	NYO+ghf3j0ge/T9VXcHQ6RalzqpUCVauNGfA8lIQngvnStBMNt5Gqvbq5yWPvr5/
+	zLhfJQzFqFzyAMBMx+Rj7B82CXxNnmvOgfanBHvajcqGCVXADJ9SbrhyDGpDwMGP
+	NrtYa9PhZWJ6Pj/6rBhnxwBC19TlXtSkMsJa19c1kUCYQ5jQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46pjmet9r3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 18 May 2025 18:23:02 +0000 (GMT)
+	Sun, 18 May 2025 18:22:56 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54IIN1xi005383
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54IIMtxY017555
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 18 May 2025 18:23:01 GMT
+	Sun, 18 May 2025 18:22:55 GMT
 Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 18 May 2025 11:22:58 -0700
+ 15.2.1544.9; Sun, 18 May 2025 11:22:52 -0700
 From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
-Date: Sun, 18 May 2025 23:52:29 +0530
-Subject: [PATCH ath-next v2 2/5] wifi: ath12k: Add ath12k_hw_params for
- IPQ5424
+Subject: [PATCH ath-next v2 0/5] wifi: ath12k: Enable IPQ5424 AHB WiFi
+ device
+Date: Sun, 18 May 2025 23:52:27 +0530
+Message-ID: <20250518-ath12k-ipq5424-v2-0-ef81b833dc97@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,167 +52,89 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20250518-ath12k-ipq5424-v2-2-ef81b833dc97@quicinc.com>
-References: <20250518-ath12k-ipq5424-v2-0-ef81b833dc97@quicinc.com>
-In-Reply-To: <20250518-ath12k-ipq5424-v2-0-ef81b833dc97@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIAGMlKmgC/x2M0QpAQBAAf0X7bIt1i/yKPOgsNnW4k67k310ep
+ 2bmgSBeJUCXPeDl1qC7S0B5BnYd3SKoU2KggrjgssXxWkvaUI+TDRlsZluLZVMxNZCiw8us8R/
+ 2kFx0Ei8Y3vcD+CWH4moAAAA=
+X-Change-ID: 20250518-ath12k-ipq5424-7fc6ec543527
 To: Johannes Berg <johannes@sipsolutions.net>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzk+dt@kernel.org>,
         Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <ath12k@lists.infradead.org>,
-        "Saravanakumar
- Duraisamy" <quic_saradura@quicinc.com>,
-        Raj Kumar Bhagat
-	<quic_rajkbhag@quicinc.com>
+        "Raj Kumar
+ Bhagat" <quic_rajkbhag@quicinc.com>,
+        Saravanakumar Duraisamy
+	<quic_saradura@quicinc.com>,
+        Sowmiya Sree Elavalagan
+	<quic_ssreeela@quicinc.com>
 X-Mailer: b4 0.14.2
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: pNzUPMjbSuds1JJIQpfaxyWp4ykPDJBB
-X-Authority-Analysis: v=2.4 cv=C4bpyRP+ c=1 sm=1 tr=0 ts=682a2586 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=RoDFLDmK c=1 sm=1 tr=0 ts=682a2580 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8
- a=vBmMNsOPyRzkxF6eNBIA:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: pNzUPMjbSuds1JJIQpfaxyWp4ykPDJBB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTE4MDE3OSBTYWx0ZWRfX6guSw3aYqEmX
- ulYISIh7idTqXWL1NA1jHDCJlOpYSDah4siRfeVFKbaNXP5ZO/JVvWjP8CkM3Ma7WoXygNdaEom
- jF+7uu2KWsrH0J8MhZoNBgHBU2B8FvYbpjEW5DxB5AIbLXC8iblebaLv4ufiygcLnAWcUghZRgT
- vF87fYx9eTqZh4i/Sq4WV0r145XJVFQQyzxX03AYT74iaNEuuMfzaXtplmcsr4XAn8E77l50YCc
- C8SiWeiVEx6ivGKKt7aNmILnO4Sy7EeCI09vXcsVATnkjeSoBneaRwq+xEx8a47wSanbQ8BbHCY
- C8H1S0vZVhYLC2qkDgN7G0vsIzpRlDlDTX5ro05YAizlFn8IBYePGWaN0zvKMg2mDN7rsp0HZPi
- nhl4ECuPqxKzX45uZmj0zd9wi4aXr+ccpLUPogm1JIccfV36PDfkM3T1z38KN+RzU4eFF9p2
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=VwQbUJbxAAAA:8
+ a=COk6AnOGAAAA:8 a=_D_0yxj2KpVeXhJRIwAA:9 a=QEXdDO2ut3YA:10
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: XTcwk9AP0K8VJz8bpljJzZKaWeMkLEVy
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTE4MDE3OSBTYWx0ZWRfX6D8+axKQ2b5e
+ iDCI3RZQ3IxZtXkiC7dvfC2IIPj1AqV0B/I2i//go6mXQWKH9ss5JK/SqveNDJU49BCYdCrz8mt
+ iIAD1I/vN+9ZBRbqra4OYz8F27wxxBvwugfA4DRl1eoopJTJQPzYEn0j1ebC3D3vUHSRjhSbgxJ
+ NgRijitmgCgoZTusNcvfGoYAajRclHTgpFMaLwpfPbGBI9FtB1x6s82rt2urNVwv1ky8NvuU1C0
+ m77NDTdHRD11wLyyHOinLJNaMi4isSvSCIIc0LPjouiYeq/EaBnnKt9TtzKHzAjyb/JACBWJoLH
+ NEB/FddGylgLdHQl49pzn31yt7bnXQ+H8ubsI/WECw/YUkbewfNlTcNcTbJUIo3s9MTD9d6sH4R
+ qhsRp8esWtind4EeqWMxhCUWSDreKLxEQFfUSjQDT9sQt1rcgdqoqFv84jWh1o4uogj0FiPm
+X-Proofpoint-GUID: XTcwk9AP0K8VJz8bpljJzZKaWeMkLEVy
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-05-18_09,2025-05-16_03,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 suspectscore=0 impostorscore=0 adultscore=0
- mlxlogscore=983 spamscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0
- bulkscore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ suspectscore=0 impostorscore=0 malwarescore=0 adultscore=0 lowpriorityscore=0
+ clxscore=1015 bulkscore=0 priorityscore=1501 mlxscore=0 mlxlogscore=794
+ phishscore=0 spamscore=0 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505070000
  definitions=main-2505180179
 
-From: Saravanakumar Duraisamy <quic_saradura@quicinc.com>
+Add support for the new ath12k AHB device IPQ5424, as currently, Ath12k
+AHB only supports IPQ5332 WiFi devices.
 
-Add ath12k_hw_params for the new ath12k AHB-based WiFi device IPQ5424.
-The WiFi device IPQ5424 is similar to IPQ5332. Most of the hardware
-parameters like hw_ops, wmi_init, hal_ops, etc., are the same between
-IPQ5424 and IPQ5332, hence use these same parameters for IPQ5424.
-Some parameters are specific to IPQ5424; initially set these to
-0 or NULL, and populate them in subsequent patches.
+The IPQ5424 is an IEEE 802.11be 2 GHz WiFi device, supporting 4x4
+configurations. To enable the IPQ5424 device:
+- Add the necessary hardware parameters for IPQ5424.
+- Modify the boot-up sequence for ath12k AHB to accommodate the
+  requirements of the IPQ5424 device.
 
-Tested-on: IPQ5424 hw1.0 AHB WLAN.WBE.1.5-01053-QCAHKSWPL_SILICONZ-1
-Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.3.1-00130-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Saravanakumar Duraisamy <quic_saradura@quicinc.com>
-Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  1 +
- drivers/net/wireless/ath/ath12k/hw.c   | 78 ++++++++++++++++++++++++++++++++++
- 2 files changed, 79 insertions(+)
+Changes in v2:
+- DT binding: Removed the redundant example for IPQ5424, as it is similar
+  to IPQ5332.
+- Added driver probe data structure to eliminate the redundant switch-case
+  logic in the ath12k_ahb_probe() function.
+- Validation completed, hence changed from RFC to PATCH.
+- Link to v1: https://lore.kernel.org/all/20250130051838.1924079-1-quic_rajkbhag@quicinc.com/
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 3aafbac46e81af9ed2da34201522fb9e73650205..b45f40f92f615dbfb2dd5f95f308865d42ea5bdc 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -150,6 +150,7 @@ enum ath12k_hw_rev {
- 	ATH12K_HW_QCN9274_HW20,
- 	ATH12K_HW_WCN7850_HW20,
- 	ATH12K_HW_IPQ5332_HW10,
-+	ATH12K_HW_IPQ5424_HW10,
- };
- 
- enum ath12k_firmware_mode {
-diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
-index 7e2cf0fb2085ab014fc14a5c81074802674b154e..866de53f37bb5af94e16c796a0052fda39eb4ea8 100644
---- a/drivers/net/wireless/ath/ath12k/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/hw.c
-@@ -1590,6 +1590,84 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
- 		.ce_remap = &ath12k_ce_remap_ipq5332,
- 		.bdf_addr_offset = 0xC00000,
- 
-+		.dp_primary_link_only = true,
-+	},
-+	{
-+		.name = "ipq5424 hw1.0",
-+		.hw_rev = ATH12K_HW_IPQ5424_HW10,
-+		.fw = {
-+			.dir = "IPQ5424/hw1.0",
-+			.board_size = 256 * 1024,
-+			.cal_offset = 128 * 1024,
-+			.m3_loader = ath12k_m3_fw_loader_remoteproc,
-+		},
-+		.max_radios = 1,
-+		.single_pdev_only = false,
-+		.qmi_service_ins_id = ATH12K_QMI_WLFW_SERVICE_INS_ID_V01_IPQ5332,
-+		.internal_sleep_clock = false,
-+
-+		.hw_ops = &qcn9274_ops,
-+		.regs = NULL,
-+		.ring_mask = &ath12k_hw_ring_mask_ipq5332,
-+
-+		.host_ce_config = ath12k_host_ce_config_ipq5332,
-+		.ce_count = 12,
-+		.target_ce_config = ath12k_target_ce_config_wlan_ipq5332,
-+		.target_ce_count = 12,
-+		.svc_to_ce_map = ath12k_target_service_to_ce_map_wlan_ipq5332,
-+		.svc_to_ce_map_len = 18,
-+
-+		.hal_params = &ath12k_hw_hal_params_ipq5332,
-+
-+		.rxdma1_enable = false,
-+		.num_rxdma_per_pdev = 1,
-+		.num_rxdma_dst_ring = 0,
-+		.rx_mac_buf_ring = false,
-+		.vdev_start_delay = false,
-+
-+		.interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+					BIT(NL80211_IFTYPE_AP) |
-+					BIT(NL80211_IFTYPE_MESH_POINT),
-+		.supports_monitor = false,
-+
-+		.idle_ps = false,
-+		.download_calib = true,
-+		.supports_suspend = false,
-+		.tcl_ring_retry = true,
-+		.reoq_lut_support = false,
-+		.supports_shadow_regs = false,
-+
-+		.num_tcl_banks = 48,
-+		.max_tx_ring = 4,
-+
-+		.wmi_init = &ath12k_wmi_init_qcn9274,
-+
-+		.hal_ops = &hal_qcn9274_ops,
-+
-+		.qmi_cnss_feature_bitmap = BIT(CNSS_QDSS_CFG_MISS_V01),
-+
-+		.rfkill_pin = 0,
-+		.rfkill_cfg = 0,
-+		.rfkill_on_level = 0,
-+
-+		.rddm_size = 0,
-+
-+		.def_num_link = 0,
-+		.max_mlo_peer = 256,
-+
-+		.otp_board_id_register = 0,
-+
-+		.supports_sta_ps = false,
-+
-+		.acpi_guid = NULL,
-+		.supports_dynamic_smps_6ghz = false,
-+		.iova_mask = 0,
-+		.supports_aspm = false,
-+
-+		.ce_ie_addr = NULL,
-+		.ce_remap = NULL,
-+		.bdf_addr_offset = 0x940000,
-+
- 		.dp_primary_link_only = true,
- 	},
- };
+---
+Raj Kumar Bhagat (1):
+      dt-bindings: net: wireless: add ath12k wifi device IPQ5424
 
--- 
-2.34.1
+Saravanakumar Duraisamy (3):
+      wifi: ath12k: Add ath12k_hw_params for IPQ5424
+      wifi: ath12k: add ath12k_hw_regs for IPQ5424
+      wifi: ath12k: Add CE remap hardware parameters for IPQ5424
+
+Sowmiya Sree Elavalagan (1):
+      wifi: ath12k: Enable IPQ5424 WiFi device support
+
+ .../bindings/net/wireless/qcom,ipq5332-wifi.yaml   |   1 +
+ drivers/net/wireless/ath/ath12k/ahb.c              | 116 +++++++------
+ drivers/net/wireless/ath/ath12k/ahb.h              |  17 +-
+ drivers/net/wireless/ath/ath12k/ce.h               |  13 +-
+ drivers/net/wireless/ath/ath12k/core.h             |   1 +
+ drivers/net/wireless/ath/ath12k/hal.h              |   3 +
+ drivers/net/wireless/ath/ath12k/hw.c               | 180 ++++++++++++++++++++-
+ 7 files changed, 278 insertions(+), 53 deletions(-)
+---
+base-commit: 172e1570e1d31260f11f43e828d98aff020726a8
+change-id: 20250518-ath12k-ipq5424-7fc6ec543527
 
