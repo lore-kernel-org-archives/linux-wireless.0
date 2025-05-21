@@ -1,57 +1,55 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 697B71A23AA
-	for <linux-wireless@vger.kernel.org>; Wed, 21 May 2025 22:45:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3B9F239570
+	for <linux-wireless@vger.kernel.org>; Wed, 21 May 2025 22:45:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867560; cv=none; b=XceXZ7CY2+FEzM9RuC10/cGW+vmyB2cX8QWJ3ckav7jiY5NYBQe1XW2asWcHaAEmOwdUh2iRT6imeiQLYue78g4UAcBErvihTGqlYL0m+10CQMNHmQZurUQkLPeFS0WAwlA+HBgcdp+Z71PhXs/ttQD6dF/8mlPaeGqxlTUoEcM=
+	t=1747867560; cv=none; b=GmlOnDZdpnT/77kfeg7qPbZIn+pp+Rv41/WYnHylPZroDHwpWp5rzjObHMVoVIVB8f5dpHJSWNb5ucf0EdCqAqynnnDnAHne0d3j8kMBBH6ZVQr4AnIsYhkIrbmy6o7JffEBF094XVxGwQTjyWSEPi6VY94Md6L1NnuF0J5lJXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747867560; c=relaxed/simple;
-	bh=mXjCwVOeMuqCjiNDATjkwHPrwNjm6Uv3d5yO5+bqbfk=;
+	bh=Xdsuttpv57eTzMnRm7g3A0+frkCx/SnGj1xOjVOXHng=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SeDDAI+0lqXCMqhleIhxgpdPq9QuWaPI9jj0JOqYiwOIVtAsNqQv7KQ+AMvXDQTsIe0LfA2l23stlXB7sLNpKHTM9JhPsLkafU7mvBaiwTxaJR5tEi4zGQZhsrKSn/awYszamnM81hQS3r9bBgS4oe8AeFV2/lDXYPXNHCGv0+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DwzHO5rL; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=DCZ4pyonUsAaIuBQUBu/1NYBINM2V/yqfV+6ngHC6I8x7PP5e0WLPB1zEyJgRG752GtXxlhP3WdI6a+eW/8O0I64lNeSLtCeGZQ2ljn0mAfcuMtjB3rZq3UejFTR8v3I78Chfhv8/eSjfW7gSO+sswpSCXiFykPgseD3Hhz6W/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=n5c8p9dB; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DwzHO5rL"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="n5c8p9dB"
 Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54LJflLg012749;
-	Wed, 21 May 2025 22:45:53 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54LIhKMc027654;
+	Wed, 21 May 2025 22:45:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tiHJ0bp145D1K0TKBussv+a5p9S+5sP37NuNrmk03fg=; b=DwzHO5rLl1Vp87qm
-	lpxifM2nR9pLT0mgMqz/HRb/yTHCnS9oGDXzc24mnve2I/O9X/YT8q8qN+wjBlLB
-	4W7snIItVpffzrSmAJupTNtzj8qbmIYeti1zUlDdVoesUaICbdiDvSeCWPUtfeaz
-	tNKDOmBUTvCb+1qxxciQZhuRobmmkuRgcg8VkgCFP+OyG5o1OrUESYu3QeZ62Hle
-	ODt78jw+qe8cE9e2TxGEZhy++loik0tbF8D9P3cX5L+CdB+i4TyWnFxwvNgJciIx
-	RptE1lyB75UdrnAqETq0km4svwyidUuum/x0hqd6TvlDod3b7FD4tjbE7EP5iQ5V
-	Dw2tXA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwf9carr-1
+	igBIHxXxEIGErFGPWQKC8rBeF0DUPvb+tsDy6dmbEUQ=; b=n5c8p9dBo/+917ae
+	iUuuRoUPhgwmxRjEorR4N5thttRSLen0XwHulOSFzfVHZvX/ZX7Xb8qa67RpJUAw
+	jx3TGu38TFybZ9zCbXxa3PoR7FqIyl7TyaU+RpGmjLnDTRjq5ODiDDkcGM8aLJ6C
+	pgH1JDyjAtZODpP3W+kKpoMlU/N8QCB8wVOob4E3+nH0XDeYWh0cSY4dAnFcFYsC
+	dgkUoVt65T3wJptGX80bBT1muPG/3O+IiWrYoP6NVayscmgOnCqKVpuSjYrEn/02
+	HlxMp7yg/I4LhlQquL2SfmAXdKThQLrOF/XiFsCW2VZETvSbXsLI0NXYRbRFUxC4
+	e9SLmw==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwf9cars-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 May 2025 22:45:53 +0000 (GMT)
+	Wed, 21 May 2025 22:45:54 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54LMjqtS008810
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54LMjrc1023294
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 May 2025 22:45:52 GMT
+	Wed, 21 May 2025 22:45:53 GMT
 Received: from ath12k-linux2.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 21 May 2025 15:45:52 -0700
+ 15.2.1544.9; Wed, 21 May 2025 15:45:53 -0700
 From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Pradeep Kumar Chitrapu
 	<quic_pradeepc@quicinc.com>,
-        Muna Sinada <quic_msinada@quicinc.com>,
-        "Jeff
- Johnson" <quic_jjohnson@quicinc.com>
-Subject: [PATCH ath-next V14 2/9] wifi: ath12k: push EHT MU-MIMO params to hardware
-Date: Wed, 21 May 2025 15:45:32 -0700
-Message-ID: <20250521224539.355985-3-quic_pradeepc@quicinc.com>
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+Subject: [PATCH ath-next V14 5/9] wifi: ath12k: fix TX and RX MCS rate configurations in HE mode
+Date: Wed, 21 May 2025 15:45:35 -0700
+Message-ID: <20250521224539.355985-6-quic_pradeepc@quicinc.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250521224539.355985-1-quic_pradeepc@quicinc.com>
 References: <20250521224539.355985-1-quic_pradeepc@quicinc.com>
@@ -67,19 +65,19 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: _eaDrXLa14UhDtRJT-hk8Y6z1fwFI6QB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIxMDIyNSBTYWx0ZWRfX7QgTyyXEHZM8
- OnUvphQD/4J77Z8iHm4hJQIe6duMI5HbpiWELH5aRxqU7pFuvCjmltcmWPjwls9DzTkJnDGHMjo
- FuBarQpMaZO8eQsx97aM8WpE0dpJHROE1ZRZ3SV8VEoTHHG712fvPw+oUWaZo6WccaEbxH9x9+W
- n76tkFOOopbjRgOBmCokHCrfZmCMKcT4FLUFoiIDn0Fv8b/WKaut3Z+1hrEwcOuXCJv4X1QIOcx
- 6NCnxNr8y1O1cwqXg3pBhHB+BpcLiEat6TlD9bH/5oUZHFce4W1jkZYs2J5VJnzLDeQxq8xBhP0
- Qal3bpuUPyWAMKZKH/uAEXwEZ5ZMghUioGuc78EBMJhSXa2VsT3lhmJtc/CaHDqNKFrp01I/KAh
- 7UcIN/PKb8qOKrHE8/8cpuHgoBgB24X84Qo5rORKfnW4s7FbS0xkcs2ZV2TI0AIGz4eEZAOY
-X-Authority-Analysis: v=2.4 cv=GawXnRXL c=1 sm=1 tr=0 ts=682e57a1 cx=c_pps
+X-Proofpoint-ORIG-GUID: lrtwH7rWiPRFD03fbbD0IavLBLpNgTW-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIxMDIyNSBTYWx0ZWRfX0HS2wunF/V5Q
+ jQqxwakF2Imrc/4a4WgPSFOFxUyO27D7Yw6gnIBRodgtwOFgflHDfeJMrELW79jrSDvXvRC0nnc
+ lTonRisd7/CZWExy3sM2diYhHrZ5YT1dPhFtq33ItpY8BaOhwiLxc3wn0tlWRX8B/cd+xyEHTZY
+ A4nCDSw77SEdaZfmqAB81LMzQWIuTucnxkms4pM1CIIYZrgAPcBk4XN8tWVQ6JQKCpMpelTF6Hj
+ /XLCY2ByRqjtwd/zSjtcCfLOyKdT+uQtAJU1XZvedwqQW5MFk2GeD7O72PfhAP1V0YcbHdiTxde
+ roRpAlQg48k0Ug5EMIUPb9TYEP15vwtPDTw03C3u7eOhs6znDqvMYNAtXwbxfGeHRwjsbMgpWLG
+ +weN3zziLWlwb66N0xo5nfdJRHrOVDNcSx8/Z/xvCmHBTuVr44Q7It0iW+CGbHNqXrg4h4CH
+X-Authority-Analysis: v=2.4 cv=GawXnRXL c=1 sm=1 tr=0 ts=682e57a2 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=uoU_VXRAPQDrZd00miQA:9
+ a=GEpy-HfZoHoA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=mu3tZSmwaZwQUXtd2tAA:9
  a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: _eaDrXLa14UhDtRJT-hk8Y6z1fwFI6QB
+X-Proofpoint-GUID: lrtwH7rWiPRFD03fbbD0IavLBLpNgTW-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-05-21_07,2025-05-20_03,2025-03-28_01
@@ -90,138 +88,50 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
  engine=8.19.0-2505160000 definitions=main-2505210225
 
-Currently, only the EHT IE in management frames is updated with
-respect to MU-MIMO configurations, but this change is not
-reflected in the hardware. Add support to propagate MU-MIMO
-configurations to the hardware as well for AP mode. Similar
-support for STA mode will be added in future.
+Currently, the TX and RX MCS rate configurations per peer are
+reversed when sent to the firmware. As a result, RX MCS rates
+are configured for TX, and vice versa. This commit rectifies
+the configuration to match what the firmware expects.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Co-developed-by: Muna Sinada <quic_msinada@quicinc.com>
-Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
 Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/mac.c | 58 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wmi.h | 21 ++++++++++
- 2 files changed, 79 insertions(+)
+ drivers/net/wireless/ath/ath12k/wmi.c | 4 ++--
+ drivers/net/wireless/ath/ath12k/wmi.h | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 1b64d418b433..18bf6ad13b5f 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -3261,6 +3261,58 @@ static int ath12k_mac_vif_recalc_sta_he_txbf(struct ath12k *ar,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index 72e7730c7694..efdccc4c2b47 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -2328,8 +2328,8 @@ int ath12k_wmi_send_peer_assoc_cmd(struct ath12k *ar,
+ 		he_mcs->tlv_header = ath12k_wmi_tlv_cmd_hdr(WMI_TAG_HE_RATE_SET,
+ 							    sizeof(*he_mcs));
  
-+static int ath12k_mac_set_eht_txbf_conf(struct ath12k_link_vif *arvif)
-+{
-+	struct ath12k_vif *ahvif = arvif->ahvif;
-+	struct ath12k *ar = arvif->ar;
-+	u32 param = WMI_VDEV_PARAM_SET_EHT_MU_MODE;
-+	u32 value = 0;
-+	int ret;
-+	struct ieee80211_bss_conf *link_conf;
-+
-+	link_conf = ath12k_mac_get_link_bss_conf(arvif);
-+	if (!link_conf) {
-+		ath12k_warn(ar->ab, "unable to access bss link conf in eht txbf conf\n");
-+		return -ENOENT;
-+	}
-+
-+	if (!link_conf->eht_support)
-+		return 0;
-+
-+	if (link_conf->eht_su_beamformer) {
-+		value |= u32_encode_bits(EHT_SU_BFER_ENABLE, EHT_MODE_SU_TX_BFER);
-+		if (link_conf->eht_mu_beamformer &&
-+		    ahvif->vdev_type == WMI_VDEV_TYPE_AP)
-+			value |= u32_encode_bits(EHT_MU_BFER_ENABLE,
-+						 EHT_MODE_MU_TX_BFER) |
-+				 u32_encode_bits(EHT_DL_MUOFDMA_ENABLE,
-+						 EHT_MODE_DL_OFDMA_MUMIMO) |
-+				 u32_encode_bits(EHT_UL_MUOFDMA_ENABLE,
-+						 EHT_MODE_UL_OFDMA_MUMIMO);
-+	}
-+
-+	if (ahvif->vif->type != NL80211_IFTYPE_MESH_POINT) {
-+		value |= u32_encode_bits(EHT_DL_MUOFDMA_ENABLE, EHT_MODE_DL_OFDMA) |
-+			 u32_encode_bits(EHT_UL_MUOFDMA_ENABLE, EHT_MODE_UL_OFDMA);
-+
-+		if (link_conf->eht_80mhz_full_bw_ul_mumimo)
-+			value |= u32_encode_bits(EHT_UL_MUMIMO_ENABLE, EHT_MODE_MUMIMO);
-+
-+		if (link_conf->eht_su_beamformee)
-+			value |= u32_encode_bits(EHT_SU_BFEE_ENABLE,
-+						 EHT_MODE_SU_TX_BFEE);
-+	}
-+
-+	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, param, value);
-+	if (ret) {
-+		ath12k_warn(ar->ab, "failed to set vdev %d EHT MU mode: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static u32 ath12k_mac_ieee80211_sta_bw_to_wmi(struct ath12k *ar,
- 					      struct ieee80211_link_sta *link_sta)
- {
-@@ -3994,6 +4046,12 @@ static void ath12k_mac_bss_info_changed(struct ath12k *ar,
- 				ath12k_warn(ar->ab,
- 					    "failed to set HE TXBF config for vdev: %d\n",
- 					    arvif->vdev_id);
-+
-+			ret = ath12k_mac_set_eht_txbf_conf(arvif);
-+			if (ret)
-+				ath12k_warn(ar->ab,
-+					    "failed to set EHT TXBF config for vdev: %d\n",
-+					    arvif->vdev_id);
- 		}
- 		ath12k_control_beaconing(arvif, info);
+-		he_mcs->rx_mcs_set = cpu_to_le32(arg->peer_he_rx_mcs_set[i]);
+-		he_mcs->tx_mcs_set = cpu_to_le32(arg->peer_he_tx_mcs_set[i]);
++		he_mcs->rx_mcs_set = cpu_to_le32(arg->peer_he_tx_mcs_set[i]);
++		he_mcs->tx_mcs_set = cpu_to_le32(arg->peer_he_rx_mcs_set[i]);
+ 		ptr += sizeof(*he_mcs);
+ 	}
  
 diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index 6554253688b3..6ce467e63385 100644
+index 6ce467e63385..a9c68c5d0542 100644
 --- a/drivers/net/wireless/ath/ath12k/wmi.h
 +++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -1176,6 +1176,7 @@ enum wmi_tlv_vdev_param {
- 	WMI_VDEV_PARAM_BSS_COLOR,
- 	WMI_VDEV_PARAM_SET_HEMU_MODE,
- 	WMI_VDEV_PARAM_HEOPS_0_31 = 0x8003,
-+	WMI_VDEV_PARAM_SET_EHT_MU_MODE = 0x8005,
- };
+@@ -4141,7 +4141,9 @@ struct ath12k_wmi_vht_rate_set_params {
  
- enum wmi_tlv_peer_flags {
-@@ -3134,6 +3135,26 @@ struct ath12k_wmi_rx_reorder_queue_remove_arg {
- #define HE_MU_BFER_ENABLE	1
- #define HE_SU_BFER_ENABLE	1
+ struct ath12k_wmi_he_rate_set_params {
+ 	__le32 tlv_header;
++	/* MCS at which the peer can receive */
+ 	__le32 rx_mcs_set;
++	/* MCS at which the peer can transmit */
+ 	__le32 tx_mcs_set;
+ } __packed;
  
-+#define EHT_MODE_SU_TX_BFEE		BIT(0)
-+#define EHT_MODE_SU_TX_BFER		BIT(1)
-+#define EHT_MODE_MU_TX_BFEE		BIT(2)
-+#define EHT_MODE_MU_TX_BFER		BIT(3)
-+#define EHT_MODE_DL_OFDMA		BIT(4)
-+#define EHT_MODE_UL_OFDMA		BIT(5)
-+#define EHT_MODE_MUMIMO			BIT(6)
-+#define EHT_MODE_DL_OFDMA_TXBF		BIT(7)
-+#define EHT_MODE_DL_OFDMA_MUMIMO	BIT(8)
-+#define EHT_MODE_UL_OFDMA_MUMIMO	BIT(9)
-+
-+#define EHT_DL_MUOFDMA_ENABLE    1
-+#define EHT_UL_MUOFDMA_ENABLE    1
-+#define EHT_DL_MUMIMO_ENABLE     1
-+#define EHT_UL_MUMIMO_ENABLE     1
-+#define EHT_MU_BFEE_ENABLE       1
-+#define EHT_SU_BFEE_ENABLE       1
-+#define EHT_MU_BFER_ENABLE       1
-+#define EHT_SU_BFER_ENABLE       1
-+
- #define HE_VHT_SOUNDING_MODE_ENABLE		1
- #define HE_SU_MU_SOUNDING_MODE_ENABLE		1
- #define HE_TRIG_NONTRIG_SOUNDING_MODE_ENABLE	1
 -- 
 2.43.0
 
