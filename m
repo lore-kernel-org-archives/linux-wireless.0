@@ -1,57 +1,55 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE9223A9AA
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A17F1B0F20
 	for <linux-wireless@vger.kernel.org>; Wed, 21 May 2025 22:45:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747867561; cv=none; b=qWgm5H8L0Zhrc5crkCw7SBoGEQ8yf+aC0TSWOzfiTwcAddeStpjorEa3XaBl0GOhHPRaECOhMSNqu88tQ5CzCGmumBQ3QLC6mod6Tb0Y0PdeUJm3YoGKcI+F0oE3g5kCHaU9LRKKnmMZQS72kE7dO+lEBfwMIuCX/VwV066B1p8=
+	t=1747867562; cv=none; b=bEGfSmKJAIERqJyK0yJndcYM+a7cpfrIkMLoGUTFvAkrcwqnlh3F9AqLbcb8fKznhfaQKFVRUdpVGSjFaplFVSp20RuXvPC2NLb0eKZrz5qS/4geTMxY/BeWuVN+i3ouoQzfYz8Vq6sTqLE5d6b650cCVf8hpY+VZ3ZTNWxVvdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747867561; c=relaxed/simple;
-	bh=61S52HJJJauXcXkg3NpFqkwtGSPNO+bmTpNYu1v9AKM=;
+	s=arc-20240116; t=1747867562; c=relaxed/simple;
+	bh=hBxlXRYYCPbv8+evEatym1UfdpOfENFUVDWgibN+XTg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gi5WIxM8SYlljyfdAVTdIK6JQ5jJHPGGfdxPkwbtEaPElRA55vurxkaaJ0RktTtDYYJEn7KLZFieBHAv5/nEcrDjL4NGvgT3wiAoGcbsd+TIF6w5J2RSmAwhAP008N5swveLHDzJ0M9TrtQj2HHndc8JPD4oGWbcEqKQqHSq8ck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=lMYw009C; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=U32JKi6TAoRF/9e1cv0vPGUM6BaRhoFXM0b36j5PBpvKQmRXKDF/UNScd5EJnrFOPlgjPD7GOc+TdHqsFGk/7pNucA1++GU00SZ0q/223zg5dCsYLmfLrRu3G22WZS2hWuNKuUPFJEFFLEJ8UQWKtFB0oWsQcx+Oj1mWPbBrDU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=bzVTzUcl; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="lMYw009C"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="bzVTzUcl"
 Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54LJgEPE029249;
-	Wed, 21 May 2025 22:45:56 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54LJiK6V032422;
+	Wed, 21 May 2025 22:45:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ph+yJaIkwYsZzzEsymzTjupgmHjdwFMJhbEzuPrYvfY=; b=lMYw009CSvZqDxkz
-	+HCEzcZhy6QO8G2ut93TJxHdCbVLlRaMNReXGlGqx2KRNracyLRkAQsC16i+QcpJ
-	aHBvIE2c0/TEtBiyv3HzBf3/89R0POT080sz81P6go3m8w9bcIE+Q2DqjdhVNqu3
-	AlV8qb6pj/QUVvDbJQxO1M9eCXSO6g2BBDjgRCktOu+x2TlxhdBZ/tJP+h0AUk+j
-	YsH1LhcLOZYCFTJyB6IFmHWvtGk5Ef6i6D/tXyCL7nQiDP/R1v2PcdlLlI5e5/PO
-	FhKB2+RCmSyJUtyaAHHi/mVen5yqFX2K3/vL3BtprRAJINhFxQrLs6xLIQabELzj
-	KCstuQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwfb4b3x-1
+	cpcIGD4iPSOaZzDkHZpoGs5Kor0sF3EnocHYcBOazgM=; b=bzVTzUclt3RkLn9A
+	YI8+MC64RjF5llUqmQ0G53D8sAQZ+95fc92X/ZrZvnyr7X0FBI+gU05yKzNuv4M5
+	XcIWK7Y8gjr55i9w18cWHGW2Q/JGC8pJlx0A/SEAMIMXeeEmgJqdKowT2wMjzIIH
+	wb7JmE9d6z6ZKcgQYx9KICXaaEFQ9uxyRyjlJMMEJ3zb7MjxZPCCGtCI31Aqczpk
+	B3X+1UgRT+OJzV6vIF0kdn/sjU69iZNHoPAUDYqInWCs2lPLMUO5mckhOG3fH8s6
+	jmhgpwlpUYx18jawRUpklvujXfFiDV4daXLeUKzL5b08f5OcSRvd7+iOytudYgr0
+	U9VYkw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwfb4b3w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Wed, 21 May 2025 22:45:55 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54LMjtX2022238
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54LMjsC2027097
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 May 2025 22:45:55 GMT
+	Wed, 21 May 2025 22:45:54 GMT
 Received: from ath12k-linux2.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 21 May 2025 15:45:54 -0700
+ 15.2.1544.9; Wed, 21 May 2025 15:45:53 -0700
 From: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Pradeep Kumar Chitrapu
 	<quic_pradeepc@quicinc.com>,
-        P Praneesh <quic_ppranees@quicinc.com>,
-        "Jeff
- Johnson" <quic_jjohnson@quicinc.com>
-Subject: [PATCH ath-next V14 8/9] wifi: ath12k: add support for 160 MHz bandwidth
-Date: Wed, 21 May 2025 15:45:38 -0700
-Message-ID: <20250521224539.355985-9-quic_pradeepc@quicinc.com>
+        Muna Sinada <quic_msinada@quicinc.com>
+Subject: [PATCH ath-next V14 6/9] wifi: ath12k: add support for setting fixed HE rate/GI/LTF
+Date: Wed, 21 May 2025 15:45:36 -0700
+Message-ID: <20250521224539.355985-7-quic_pradeepc@quicinc.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250521224539.355985-1-quic_pradeepc@quicinc.com>
 References: <20250521224539.355985-1-quic_pradeepc@quicinc.com>
@@ -67,18 +65,18 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: T9MbsOp4F8M93FD6ZEyfm1BTh5tEiCIl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIxMDIyNiBTYWx0ZWRfX0EeEFBAyVxZV
- WX6jh2dkCn4P+eViI8Gvz/6S+yZ+Avx9/8To2mbulh5j1kDm92bEDu7iQtI17ILPnOgbUXWAjjt
- Z2LvemtbMzJe0lY0EjJNWWunihdlsXPAdOnZFjV0rOtakq8Xx4y8K45/1cGY9dQOApxDFC9HiLZ
- +FK9apopZ2DyP6haLf5HQI+6DC3wwgbEQlE+89g69hXEM8UePlFlsf0fpfIVgiWG73gfzHkrRPM
- 8ByVGmKpFSXIBmvY+EZZOPuPsQHt/91pIisXw5Joxdbl6Qf2anjuC0X4LPrTgTxgXWhljS4JdXo
- djhNt09IBnNuagxN9aMx/frUhqQPNL54kp/cXbpgcLQX0XQg8SOvwyxJs+CALQUyymluDLHyH9w
- UQUznCXFrps86AX/Fpnhrl9hqR5NO0/6oR340zsS7mvryRucOqzT7vc3WPMJEhW68VMCAl5Z
-X-Proofpoint-GUID: T9MbsOp4F8M93FD6ZEyfm1BTh5tEiCIl
-X-Authority-Analysis: v=2.4 cv=dLCmmPZb c=1 sm=1 tr=0 ts=682e57a4 cx=c_pps
+X-Proofpoint-ORIG-GUID: 7uuxK_kl_b0JzKZoWIyq_ZYKeKL3it15
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIxMDIyNiBTYWx0ZWRfX7sjoM15po0tB
+ FcR1nwzr8TocaDYnIXgl13rA+kjwsizlMt/N5cu8dCWo9YQKqFNy42Z2VEYmoDRw7dBnYnsMIL/
+ wwv4hQYQslnxilRJaX/MVQ50/xxhSry8NrKA2QXvIg3btmiW4gQfrn3+k1Rm3o/gAGv2Yz4R8lw
+ YBPHVdQkgGJXYgsiB/b+copbnU621GYiYrCW6yUQHHIiwzjMljzzsk+9Koc6yeVByyPj86P80y7
+ 2C8L1vuRAy8gCMSScMB9CyQ6+tLCKa1W2bhA0Oxz/+RGEXbujS4NDXCWz+EqIaYS5HXuD32pODy
+ O2wMURrbgE5PJIjjvpAdtqZL65QVaoVK1LWU6Co0NtHytEjuaZmr1hbb4hVDAtQio2Bw/K8yCM+
+ ikcJ1sGkE78mu/U7gQjG6g0Z71Q/w13jBOz+RIocPFi2FyEjy5KDFmUBzY+jDCIRLi06R8sP
+X-Proofpoint-GUID: 7uuxK_kl_b0JzKZoWIyq_ZYKeKL3it15
+X-Authority-Analysis: v=2.4 cv=dLCmmPZb c=1 sm=1 tr=0 ts=682e57a3 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=dOJm2eNAaUnF9U8lSB4A:9
+ a=GEpy-HfZoHoA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=KygRlO7-s-l5tpycOzUA:9
  a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
@@ -90,295 +88,1082 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505160000
  definitions=main-2505210226
 
-Add support to configure maximum NSS in 160 MHz bandwidth.
-Firmware advertises support for handling NSS ratio information
-as a part of service ready ext event using nss_ratio_enabled
-flag. Save this information in ath12k_pdev_cap to calculate
-NSS ratio.
-
-Additionally, reorder the code by moving
-ath12k_peer_assoc_h_phymode() before ath12k_peer_assoc_h_vht()
-to ensure that arg->peer_phymode correctly reflects the bandwidth
-in the max NSS calculation.
+Add support to set fixed HE rate/GI/LTF values using nl80211.
+Reuse parts of the existing code path already used for HT/VHT
+to implement the new helpers symmetrically, similar to how
+HT/VHT is handled.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.0.1-00029-QCAHKSWPL_SILICONZ-1
 
-Co-developed-by: P Praneesh <quic_ppranees@quicinc.com>
-Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+Co-developed-by: Muna Sinada <quic_msinada@quicinc.com>
+Signed-off-by: Muna Sinada <quic_msinada@quicinc.com>
 Signed-off-by: Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>
-Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h |  2 +
- drivers/net/wireless/ath/ath12k/mac.c  | 89 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath12k/mac.h  |  2 +
- drivers/net/wireless/ath/ath12k/wmi.c  |  7 +-
- drivers/net/wireless/ath/ath12k/wmi.h  | 28 ++++++++
- 5 files changed, 115 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 650 +++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath12k/wmi.h |  27 ++
+ 2 files changed, 625 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 941db6e49d6e..31add5f8a8ff 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -871,6 +871,8 @@ struct ath12k_pdev_cap {
- 	struct ath12k_band_cap band[NUM_NL80211_BANDS];
- 	u32 eml_cap;
- 	u32 mld_cap;
-+	bool nss_ratio_enabled;
-+	u8 nss_ratio_info;
- };
- 
- struct mlo_timestamp {
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 2048e4984d72..036ba5b3d682 100644
+index fa083a48b819..f3c178f4d9f1 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -2185,6 +2185,34 @@ ath12k_peer_assoc_h_vht_limit(u16 tx_mcs_set,
- 	return tx_mcs_set;
+@@ -521,6 +521,18 @@ ath12k_mac_max_vht_nss(const u16 *vht_mcs_mask)
+ 	return 1;
  }
  
-+static u8 ath12k_get_nss_160mhz(struct ath12k *ar,
-+				u8 max_nss)
++static u32
++ath12k_mac_max_he_nss(const u16 he_mcs_mask[NL80211_HE_NSS_MAX])
 +{
-+	u8 nss_ratio_info = ar->pdev->cap.nss_ratio_info;
-+	u8 max_sup_nss = 0;
++	int nss;
 +
-+	switch (nss_ratio_info) {
-+	case WMI_NSS_RATIO_1BY2_NSS:
-+		max_sup_nss = max_nss >> 1;
-+		break;
-+	case WMI_NSS_RATIO_3BY4_NSS:
-+		ath12k_warn(ar->ab, "WMI_NSS_RATIO_3BY4_NSS not supported\n");
-+		break;
-+	case WMI_NSS_RATIO_1_NSS:
-+		max_sup_nss = max_nss;
-+		break;
-+	case WMI_NSS_RATIO_2_NSS:
-+		ath12k_warn(ar->ab, "WMI_NSS_RATIO_2_NSS not supported\n");
-+		break;
-+	default:
-+		ath12k_warn(ar->ab, "invalid nss ratio received from fw: %d\n",
-+			    nss_ratio_info);
-+		break;
-+	}
++	for (nss = NL80211_HE_NSS_MAX - 1; nss >= 0; nss--)
++		if (he_mcs_mask[nss])
++			return nss + 1;
 +
-+	return max_sup_nss;
++	return 1;
 +}
 +
- static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
- 				    struct ath12k_link_vif *arvif,
- 				    struct ath12k_link_sta *arsta,
-@@ -2202,6 +2230,7 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ static u8 ath12k_parse_mpdudensity(u8 mpdudensity)
+ {
+ /*  From IEEE Std 802.11-2020 defined values for "Minimum MPDU Start Spacing":
+@@ -2053,9 +2065,15 @@ static void ath12k_peer_assoc_h_ht(struct ath12k *ar,
+ 		arg->peer_rate_caps |= WMI_HOST_RC_CW40_FLAG;
+ 	}
+ 
+-	if (arvif->bitrate_mask.control[band].gi != NL80211_TXRATE_FORCE_LGI) {
+-		if (ht_cap->cap & (IEEE80211_HT_CAP_SGI_20 |
+-		    IEEE80211_HT_CAP_SGI_40))
++	/* As firmware handles these two flags (IEEE80211_HT_CAP_SGI_20
++	 * and IEEE80211_HT_CAP_SGI_40) for enabling SGI, reset both
++	 * flags if guard interval is to force Long GI
++	 */
++	if (arvif->bitrate_mask.control[band].gi == NL80211_TXRATE_FORCE_LGI) {
++		arg->peer_ht_caps &= ~(IEEE80211_HT_CAP_SGI_20 | IEEE80211_HT_CAP_SGI_40);
++	} else {
++		/* Enable SGI flag if either SGI_20 or SGI_40 is supported */
++		if (ht_cap->cap & (IEEE80211_HT_CAP_SGI_20 | IEEE80211_HT_CAP_SGI_40))
+ 			arg->peer_rate_caps |= WMI_HOST_RC_SGI_FLAG;
+ 	}
+ 
+@@ -2178,11 +2196,12 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 	struct ieee80211_link_sta *link_sta;
+ 	struct cfg80211_chan_def def;
+ 	enum nl80211_band band;
+-	const u16 *vht_mcs_mask;
++	u16 *vht_mcs_mask;
+ 	u16 tx_mcs_map;
+ 	u8 ampdu_factor;
  	u8 max_nss, vht_mcs;
- 	int i, vht_nss, nss_idx;
- 	bool user_rate_valid = true;
-+	u32 rx_nss, tx_nss, nss_160;
+-	int i;
++	int i, vht_nss, nss_idx;
++	bool user_rate_valid = true;
  
  	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
  
-@@ -2306,10 +2335,24 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
- 	/* TODO:  Check */
- 	arg->tx_max_mcs_nss = 0xFF;
+@@ -2235,6 +2254,25 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 	if (link_sta->bandwidth == IEEE80211_STA_RX_BW_160)
+ 		arg->bw_160 = true;
  
--	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
--		   arsta->addr, arg->peer_max_mpdu, arg->peer_flags);
-+	if (arg->peer_phymode == MODE_11AC_VHT160) {
-+		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
-+		rx_nss = min(arg->peer_nss, tx_nss);
-+		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
++	vht_nss =  ath12k_mac_max_vht_nss(vht_mcs_mask);
 +
-+		if (!rx_nss) {
-+			ath12k_warn(ar->ab, "invalid max_nss\n");
-+			return;
++	if (vht_nss > link_sta->rx_nss) {
++		user_rate_valid = false;
++		for (nss_idx = link_sta->rx_nss - 1; nss_idx >= 0; nss_idx--) {
++			if (vht_mcs_mask[nss_idx]) {
++				user_rate_valid = true;
++				break;
++			}
 +		}
-+
-+		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
-+		arg->peer_bw_rxnss_override |= nss_160;
 +	}
- 
--	/* TODO: rxnss_override */
-+	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
-+		   "mac vht peer %pM max_mpdu %d flags 0x%x nss_override 0x%x\n",
-+		   arsta->addr, arg->peer_max_mpdu, arg->peer_flags,
-+		   arg->peer_bw_rxnss_override);
++
++	if (!user_rate_valid) {
++		ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++			   "Setting vht range MCS value to peer supported nss:%d for peer %pM\n",
++			   link_sta->rx_nss, arsta->addr);
++		vht_mcs_mask[link_sta->rx_nss - 1] = vht_mcs_mask[vht_nss - 1];
++	}
++
+ 	/* Calculate peer NSS capability from VHT capabilities if STA
+ 	 * supports VHT.
+ 	 */
+@@ -2274,6 +2312,72 @@ static void ath12k_peer_assoc_h_vht(struct ath12k *ar,
+ 	/* TODO: rxnss_override */
  }
  
- static int ath12k_mac_get_max_he_mcs_map(u16 mcs_map, int nss)
-@@ -2402,6 +2445,7 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
- 	u16 he_tx_mcs = 0, v = 0;
- 	int he_nss, nss_idx;
- 	bool user_rate_valid = true;
-+	u32 rx_nss, tx_nss, nss_160;
- 
- 	if (WARN_ON(ath12k_mac_vif_link_chan(vif, link_id, &def)))
- 		return;
-@@ -2599,9 +2643,25 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
- 	max_nss = min(max_nss, ar->num_tx_chains);
- 	arg->peer_nss = min(link_sta->rx_nss, max_nss);
- 
-+	if (arg->peer_phymode == MODE_11AX_HE160) {
-+		tx_nss = ath12k_get_nss_160mhz(ar, max_nss);
-+		rx_nss = min(arg->peer_nss, tx_nss);
-+		arg->peer_bw_rxnss_override = ATH12K_BW_NSS_MAP_ENABLE;
++static int ath12k_mac_get_max_he_mcs_map(u16 mcs_map, int nss)
++{
++	switch ((mcs_map >> (2 * nss)) & 0x3) {
++	case IEEE80211_HE_MCS_SUPPORT_0_7: return BIT(8) - 1;
++	case IEEE80211_HE_MCS_SUPPORT_0_9: return BIT(10) - 1;
++	case IEEE80211_HE_MCS_SUPPORT_0_11: return BIT(12) - 1;
++	}
++	return 0;
++}
 +
-+		if (!rx_nss) {
-+			ath12k_warn(ar->ab, "invalid max_nss\n");
-+			return;
++static u16 ath12k_peer_assoc_h_he_limit(u16 tx_mcs_set,
++					const u16 *he_mcs_limit)
++{
++	int idx_limit;
++	int nss;
++	u16 mcs_map;
++	u16 mcs;
++
++	for (nss = 0; nss < NL80211_HE_NSS_MAX; nss++) {
++		mcs_map = ath12k_mac_get_max_he_mcs_map(tx_mcs_set, nss) &
++			he_mcs_limit[nss];
++
++		if (mcs_map)
++			idx_limit = fls(mcs_map) - 1;
++		else
++			idx_limit = -1;
++
++		switch (idx_limit) {
++		case 0 ... 7:
++			mcs = IEEE80211_HE_MCS_SUPPORT_0_7;
++			break;
++		case 8:
++		case 9:
++			mcs = IEEE80211_HE_MCS_SUPPORT_0_9;
++			break;
++		case 10:
++		case 11:
++			mcs = IEEE80211_HE_MCS_SUPPORT_0_11;
++			break;
++		default:
++			WARN_ON(1);
++			fallthrough;
++		case -1:
++			mcs = IEEE80211_HE_MCS_NOT_SUPPORTED;
++			break;
 +		}
 +
-+		nss_160 = u32_encode_bits(rx_nss - 1, ATH12K_PEER_RX_NSS_160MHZ);
-+		arg->peer_bw_rxnss_override |= nss_160;
++		tx_mcs_set &= ~(0x3 << (nss * 2));
++		tx_mcs_set |= mcs << (nss * 2);
 +	}
 +
- 	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
--		   "mac he peer %pM nss %d mcs cnt %d\n",
--		   arsta->addr, arg->peer_nss, arg->peer_he_mcs_count);
-+		   "mac he peer %pM nss %d mcs cnt %d nss_override 0x%x\n",
-+		   arsta->addr, arg->peer_nss,
-+		   arg->peer_he_mcs_count,
-+		   arg->peer_bw_rxnss_override);
++	return tx_mcs_set;
++}
++
++static bool
++ath12k_peer_assoc_h_he_masked(const u16 he_mcs_mask[NL80211_HE_NSS_MAX])
++{
++	int nss;
++
++	for (nss = 0; nss < NL80211_HE_NSS_MAX; nss++)
++		if (he_mcs_mask[nss])
++			return false;
++
++	return true;
++}
++
+ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 				   struct ath12k_link_vif *arvif,
+ 				   struct ath12k_link_sta *arsta,
+@@ -2284,18 +2388,28 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 	const struct ieee80211_sta_he_cap *he_cap;
+ 	struct ieee80211_bss_conf *link_conf;
+ 	struct ieee80211_link_sta *link_sta;
++	struct cfg80211_chan_def def;
+ 	int i;
+ 	u8 ampdu_factor, max_nss;
+ 	u8 rx_mcs_80 = IEEE80211_HE_MCS_NOT_SUPPORTED;
+ 	u8 rx_mcs_160 = IEEE80211_HE_MCS_NOT_SUPPORTED;
+ 	u16 mcs_160_map, mcs_80_map;
++	u8 link_id = arvif->link_id;
+ 	bool support_160;
+-	u16 v;
++	enum nl80211_band band;
++	u16 *he_mcs_mask;
++	u8 he_mcs;
++	u16 he_tx_mcs = 0, v = 0;
++	int he_nss, nss_idx;
++	bool user_rate_valid = true;
++
++	if (WARN_ON(ath12k_mac_vif_link_chan(vif, link_id, &def)))
++		return;
+ 
+ 	link_conf = ath12k_mac_get_link_bss_conf(arvif);
+ 	if (!link_conf) {
+ 		ath12k_warn(ar->ab, "unable to access bss link conf in peer assoc he for vif %pM link %u",
+-			    vif->addr, arvif->link_id);
++			    vif->addr, link_id);
+ 		return;
+ 	}
+ 
+@@ -2310,6 +2424,12 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 	if (!he_cap->has_he)
+ 		return;
+ 
++	band = def.chan->band;
++	he_mcs_mask = arvif->bitrate_mask.control[band].he_mcs;
++
++	if (ath12k_peer_assoc_h_he_masked(he_mcs_mask))
++		return;
++
+ 	arg->he_flag = true;
+ 
+ 	support_160 = !!(he_cap->he_cap_elem.phy_cap_info[0] &
+@@ -2415,25 +2535,47 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 	if (he_cap->he_cap_elem.mac_cap_info[0] & IEEE80211_HE_MAC_CAP0_TWT_REQ)
+ 		arg->twt_requester = true;
+ 
++	he_nss = ath12k_mac_max_he_nss(he_mcs_mask);
++
++	if (he_nss > link_sta->rx_nss) {
++		user_rate_valid = false;
++		for (nss_idx = link_sta->rx_nss - 1; nss_idx >= 0; nss_idx--) {
++			if (he_mcs_mask[nss_idx]) {
++				user_rate_valid = true;
++				break;
++			}
++		}
++	}
++
++	if (!user_rate_valid) {
++		ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++			   "Setting he range MCS value to peer supported nss:%d for peer %pM\n",
++			   link_sta->rx_nss, arsta->addr);
++		he_mcs_mask[link_sta->rx_nss - 1] = he_mcs_mask[he_nss - 1];
++	}
++
+ 	switch (link_sta->bandwidth) {
+ 	case IEEE80211_STA_RX_BW_160:
+ 		if (he_cap->he_cap_elem.phy_cap_info[0] &
+ 		    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G) {
+-			v = le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_80p80);
++			v = ath12k_peer_assoc_h_he_limit(v, he_mcs_mask);
+ 			arg->peer_he_rx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_80_80] = v;
+ 
+ 			v = le16_to_cpu(he_cap->he_mcs_nss_supp.tx_mcs_80p80);
+ 			arg->peer_he_tx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_80_80] = v;
+ 
+ 			arg->peer_he_mcs_count++;
++			he_tx_mcs = v;
+ 		}
+ 		v = le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_160);
+ 		arg->peer_he_rx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_160] = v;
+ 
+-		v = le16_to_cpu(he_cap->he_mcs_nss_supp.tx_mcs_160);
++		v = ath12k_peer_assoc_h_he_limit(v, he_mcs_mask);
+ 		arg->peer_he_tx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_160] = v;
+ 
+ 		arg->peer_he_mcs_count++;
++		if (!he_tx_mcs)
++			he_tx_mcs = v;
+ 		fallthrough;
+ 
+ 	default:
+@@ -2441,11 +2583,36 @@ static void ath12k_peer_assoc_h_he(struct ath12k *ar,
+ 		arg->peer_he_rx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_80] = v;
+ 
+ 		v = le16_to_cpu(he_cap->he_mcs_nss_supp.tx_mcs_80);
++		v = ath12k_peer_assoc_h_he_limit(v, he_mcs_mask);
+ 		arg->peer_he_tx_mcs_set[WMI_HECAP_TXRX_MCS_NSS_IDX_80] = v;
+ 
+ 		arg->peer_he_mcs_count++;
++		if (!he_tx_mcs)
++			he_tx_mcs = v;
+ 		break;
+ 	}
++
++	/* Calculate peer NSS capability from HE capabilities if STA
++	 * supports HE.
++	 */
++	for (i = 0, max_nss = 0, he_mcs = 0; i < NL80211_HE_NSS_MAX; i++) {
++		he_mcs = he_tx_mcs >> (2 * i) & 3;
++
++		/* In case of fixed rates, MCS Range in he_tx_mcs might have
++		 * unsupported range, with he_mcs_mask set, so check either of them
++		 * to find nss.
++		 */
++		if (he_mcs != IEEE80211_HE_MCS_NOT_SUPPORTED ||
++		    he_mcs_mask[i])
++			max_nss = i + 1;
++	}
++
++	max_nss = min(max_nss, ar->num_tx_chains);
++	arg->peer_nss = min(link_sta->rx_nss, max_nss);
++
++	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++		   "mac he peer %pM nss %d mcs cnt %d\n",
++		   arsta->addr, arg->peer_nss, arg->peer_he_mcs_count);
  }
  
  static void ath12k_peer_assoc_h_he_6ghz(struct ath12k *ar,
-@@ -2842,10 +2902,13 @@ static enum wmi_phy_mode ath12k_mac_get_phymode_vht(struct ath12k *ar,
- 						    struct ieee80211_link_sta *link_sta)
- {
- 	if (link_sta->bandwidth == IEEE80211_STA_RX_BW_160) {
--		if (link_sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ)
-+		if (link_sta->vht_cap.cap & (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ |
-+		    IEEE80211_VHT_CAP_EXT_NSS_BW_MASK))
- 			return MODE_11AC_VHT160;
+@@ -2781,6 +2948,7 @@ static void ath12k_peer_assoc_h_phymode(struct ath12k *ar,
+ 	enum nl80211_band band;
+ 	const u8 *ht_mcs_mask;
+ 	const u16 *vht_mcs_mask;
++	const u16 *he_mcs_mask;
+ 	enum wmi_phy_mode phymode = MODE_UNKNOWN;
  
--		/* not sure if this is a valid case? */
-+		/* Allow STA to connect even if it does not explicitly advertise 160 MHz
-+		 * support
-+		 */
- 		return MODE_11AC_VHT160;
+ 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+@@ -2794,6 +2962,7 @@ static void ath12k_peer_assoc_h_phymode(struct ath12k *ar,
+ 	band = def.chan->band;
+ 	ht_mcs_mask = arvif->bitrate_mask.control[band].ht_mcs;
+ 	vht_mcs_mask = arvif->bitrate_mask.control[band].vht_mcs;
++	he_mcs_mask = arvif->bitrate_mask.control[band].he_mcs;
+ 
+ 	link_sta = ath12k_mac_get_link_sta(arsta);
+ 	if (!link_sta) {
+@@ -2809,7 +2978,8 @@ static void ath12k_peer_assoc_h_phymode(struct ath12k *ar,
+ 				phymode = MODE_11BE_EHT40_2G;
+ 			else
+ 				phymode = MODE_11BE_EHT20_2G;
+-		} else if (link_sta->he_cap.has_he) {
++		} else if (link_sta->he_cap.has_he &&
++			   !ath12k_peer_assoc_h_he_masked(he_mcs_mask)) {
+ 			if (link_sta->bandwidth == IEEE80211_STA_RX_BW_80)
+ 				phymode = MODE_11AX_HE80_2G;
+ 			else if (link_sta->bandwidth == IEEE80211_STA_RX_BW_40)
+@@ -2839,7 +3009,8 @@ static void ath12k_peer_assoc_h_phymode(struct ath12k *ar,
+ 		/* Check EHT first */
+ 		if (link_sta->eht_cap.has_eht) {
+ 			phymode = ath12k_mac_get_phymode_eht(ar, link_sta);
+-		} else if (link_sta->he_cap.has_he) {
++		} else if (link_sta->he_cap.has_he &&
++			   !ath12k_peer_assoc_h_he_masked(he_mcs_mask)) {
+ 			phymode = ath12k_mac_get_phymode_he(ar, link_sta);
+ 		} else if (link_sta->vht_cap.vht_supported &&
+ 		    !ath12k_peer_assoc_h_vht_masked(vht_mcs_mask)) {
+@@ -3623,10 +3794,13 @@ static void ath12k_mac_init_arvif(struct ath12k_vif *ahvif,
+ 
+ 	for (i = 0; i < ARRAY_SIZE(arvif->bitrate_mask.control); i++) {
+ 		arvif->bitrate_mask.control[i].legacy = 0xffffffff;
++		arvif->bitrate_mask.control[i].gi = NL80211_TXRATE_DEFAULT_GI;
+ 		memset(arvif->bitrate_mask.control[i].ht_mcs, 0xff,
+ 		       sizeof(arvif->bitrate_mask.control[i].ht_mcs));
+ 		memset(arvif->bitrate_mask.control[i].vht_mcs, 0xff,
+ 		       sizeof(arvif->bitrate_mask.control[i].vht_mcs));
++		memset(arvif->bitrate_mask.control[i].he_mcs, 0xff,
++		       sizeof(arvif->bitrate_mask.control[i].he_mcs));
  	}
  
-@@ -7032,10 +7095,8 @@ ath12k_create_vht_cap(struct ath12k *ar, u32 rate_cap_tx_chainmask,
+ 	/* Handle MLO related assignments */
+@@ -5293,6 +5467,20 @@ ath12k_mac_bitrate_mask_num_vht_rates(struct ath12k *ar,
+ 	return num_rates;
+ }
  
- 	ath12k_set_vht_txbf_cap(ar, &vht_cap.cap);
- 
--	/* TODO: Enable back VHT160 mode once association issues are fixed */
--	/* Disabling VHT160 and VHT80+80 modes */
--	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
--	vht_cap.cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
-+	/* 80P80 is not supported */
-+	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
- 
- 	rxmcs_map = 0;
- 	txmcs_map = 0;
-@@ -12308,7 +12369,8 @@ ath12k_mac_setup_radio_iface_comb(struct ath12k *ar,
- 		comb[0].radar_detect_widths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
- 						BIT(NL80211_CHAN_WIDTH_20) |
- 						BIT(NL80211_CHAN_WIDTH_40) |
--						BIT(NL80211_CHAN_WIDTH_80);
-+						BIT(NL80211_CHAN_WIDTH_80) |
-+						BIT(NL80211_CHAN_WIDTH_160);
- 	}
- 
- 	return 0;
-@@ -12685,6 +12747,9 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 	ieee80211_hw_set(hw, REPORTS_LOW_ACK);
- 	ieee80211_hw_set(hw, NO_VIRTUAL_MONITOR);
- 
-+	if (cap->nss_ratio_enabled)
-+		ieee80211_hw_set(hw, SUPPORTS_VHT_EXT_NSS_BW);
++static int
++ath12k_mac_bitrate_mask_num_he_rates(struct ath12k *ar,
++				     enum nl80211_band band,
++				     const struct cfg80211_bitrate_mask *mask)
++{
++	int num_rates = 0;
++	int i;
 +
- 	if ((ht_cap & WMI_HT_CAP_ENABLED) || is_6ghz) {
- 		ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 		ieee80211_hw_set(hw, TX_AMPDU_SETUP_IN_HW);
-diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
-index 6432efc5fb29..33835172e446 100644
---- a/drivers/net/wireless/ath/ath12k/mac.h
-+++ b/drivers/net/wireless/ath/ath12k/mac.h
-@@ -41,6 +41,8 @@ struct ath12k_generic_iter {
- #define IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11	BIT(24)
++	for (i = 0; i < ARRAY_SIZE(mask->control[band].he_mcs); i++)
++		num_rates += hweight16(mask->control[band].he_mcs[i]);
++
++	return num_rates;
++}
++
+ static int
+ ath12k_mac_set_peer_vht_fixed_rate(struct ath12k_link_vif *arvif,
+ 				   struct ath12k_link_sta *arsta,
+@@ -5339,6 +5527,60 @@ ath12k_mac_set_peer_vht_fixed_rate(struct ath12k_link_vif *arvif,
+ 	return ret;
+ }
  
- #define ATH12K_CHAN_WIDTH_NUM			14
-+#define ATH12K_BW_NSS_MAP_ENABLE		BIT(31)
-+#define ATH12K_PEER_RX_NSS_160MHZ		GENMASK(2, 0)
++static int
++ath12k_mac_set_peer_he_fixed_rate(struct ath12k_link_vif *arvif,
++				  struct ath12k_link_sta *arsta,
++				  const struct cfg80211_bitrate_mask *mask,
++				  enum nl80211_band band)
++{
++	struct ath12k *ar = arvif->ar;
++	u8 he_rate, nss;
++	u32 rate_code;
++	int ret, i;
++	struct ath12k_sta *ahsta = arsta->ahsta;
++	struct ieee80211_sta *sta;
++
++	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
++
++	sta = ath12k_ahsta_to_sta(ahsta);
++	nss = 0;
++
++	for (i = 0; i < ARRAY_SIZE(mask->control[band].he_mcs); i++) {
++		if (hweight16(mask->control[band].he_mcs[i]) == 1) {
++			nss = i + 1;
++			he_rate = ffs(mask->control[band].he_mcs[i]) - 1;
++		}
++	}
++
++	if (!nss) {
++		ath12k_warn(ar->ab, "No single HE Fixed rate found to set for %pM",
++			    arsta->addr);
++		return -EINVAL;
++	}
++
++	/* Avoid updating invalid nss as fixed rate*/
++	if (nss > sta->deflink.rx_nss)
++		return -EINVAL;
++
++	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++		   "Setting Fixed HE Rate for peer %pM. Device will not switch to any other selected rates",
++		   arsta->addr);
++
++	rate_code = ATH12K_HW_RATE_CODE(he_rate, nss - 1,
++					WMI_RATE_PREAMBLE_HE);
++
++	ret = ath12k_wmi_set_peer_param(ar, arsta->addr,
++					arvif->vdev_id,
++					WMI_PEER_PARAM_FIXED_RATE,
++					rate_code);
++	if (ret)
++		ath12k_warn(ar->ab,
++			    "failed to update STA %pM Fixed Rate %d: %d\n",
++			    arsta->addr, rate_code, ret);
++
++	return ret;
++}
++
+ static int ath12k_mac_station_assoc(struct ath12k *ar,
+ 				    struct ath12k_link_vif *arvif,
+ 				    struct ath12k_link_sta *arsta,
+@@ -5351,7 +5593,7 @@ static int ath12k_mac_station_assoc(struct ath12k *ar,
+ 	struct cfg80211_chan_def def;
+ 	enum nl80211_band band;
+ 	struct cfg80211_bitrate_mask *mask;
+-	u8 num_vht_rates;
++	u8 num_vht_rates, num_he_rates;
+ 	u8 link_id = arvif->link_id;
  
- #define ATH12K_TX_POWER_MAX_VAL	70
- #define ATH12K_TX_POWER_MIN_VAL	0
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 5c5cff33fb74..a25b11015bc1 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -532,6 +532,10 @@ ath12k_pull_mac_phy_cap_svc_ready_ext(struct ath12k_wmi_pdev *wmi_handle,
- 		pdev_cap->he_mcs = le32_to_cpu(mac_caps->he_supp_mcs_5g);
- 		pdev_cap->tx_chain_mask = le32_to_cpu(mac_caps->tx_chain_mask_5g);
- 		pdev_cap->rx_chain_mask = le32_to_cpu(mac_caps->rx_chain_mask_5g);
-+		pdev_cap->nss_ratio_enabled =
-+			WMI_NSS_RATIO_EN_DIS_GET(mac_caps->nss_ratio);
-+		pdev_cap->nss_ratio_info =
-+			WMI_NSS_RATIO_INFO_GET(mac_caps->nss_ratio);
- 	} else {
- 		return -EINVAL;
+ 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+@@ -5391,9 +5633,10 @@ static int ath12k_mac_station_assoc(struct ath12k *ar,
  	}
-@@ -1054,7 +1058,8 @@ static void ath12k_wmi_put_wmi_channel(struct ath12k_wmi_channel_params *chan,
  
- 		chan->band_center_freq2 = cpu_to_le32(center_freq1);
+ 	num_vht_rates = ath12k_mac_bitrate_mask_num_vht_rates(ar, band, mask);
++	num_he_rates = ath12k_mac_bitrate_mask_num_he_rates(ar, band, mask);
  
--	} else if (arg->mode == MODE_11BE_EHT160) {
-+	} else if (arg->mode == MODE_11BE_EHT160 ||
-+		   arg->mode == MODE_11AX_HE160) {
- 		if (arg->freq > center_freq1)
- 			chan->band_center_freq1 = cpu_to_le32(center_freq1 + 40);
- 		else
+-	/* If single VHT rate is configured (by set_bitrate_mask()),
+-	 * peer_assoc will disable VHT. This is now enabled by a peer specific
++	/* If single VHT/HE rate is configured (by set_bitrate_mask()),
++	 * peer_assoc will disable VHT/HE. This is now enabled by a peer specific
+ 	 * fixed param.
+ 	 * Note that all other rates and NSS will be disabled for this peer.
+ 	 */
+@@ -5409,8 +5652,9 @@ static int ath12k_mac_station_assoc(struct ath12k *ar,
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	if (link_sta->vht_cap.vht_supported && num_vht_rates == 1) {
+-		ret = ath12k_mac_set_peer_vht_fixed_rate(arvif, arsta, mask,
+-							 band);
++		ret = ath12k_mac_set_peer_vht_fixed_rate(arvif, arsta, mask, band);
++	} else if (link_sta->he_cap.has_he && num_he_rates == 1) {
++		ret = ath12k_mac_set_peer_he_fixed_rate(arvif, arsta, mask, band);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -5474,8 +5718,9 @@ static void ath12k_sta_rc_update_wk(struct wiphy *wiphy, struct wiphy_work *wk)
+ 	enum nl80211_band band;
+ 	const u8 *ht_mcs_mask;
+ 	const u16 *vht_mcs_mask;
+-	u32 changed, bw, nss, smps, bw_prev;
+-	int err, num_vht_rates;
++	const u16 *he_mcs_mask;
++	u32 changed, bw, nss, mac_nss, smps, bw_prev;
++	int err, num_vht_rates, num_he_rates;
+ 	const struct cfg80211_bitrate_mask *mask;
+ 	enum wmi_phy_mode peer_phymode;
+ 	struct ath12k_link_sta *arsta;
+@@ -5495,6 +5740,7 @@ static void ath12k_sta_rc_update_wk(struct wiphy *wiphy, struct wiphy_work *wk)
+ 	band = def.chan->band;
+ 	ht_mcs_mask = arvif->bitrate_mask.control[band].ht_mcs;
+ 	vht_mcs_mask = arvif->bitrate_mask.control[band].vht_mcs;
++	he_mcs_mask = arvif->bitrate_mask.control[band].he_mcs;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
+@@ -5509,8 +5755,10 @@ static void ath12k_sta_rc_update_wk(struct wiphy *wiphy, struct wiphy_work *wk)
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	nss = max_t(u32, 1, nss);
+-	nss = min(nss, max(ath12k_mac_max_ht_nss(ht_mcs_mask),
+-			   ath12k_mac_max_vht_nss(vht_mcs_mask)));
++	mac_nss = max3(ath12k_mac_max_ht_nss(ht_mcs_mask),
++		       ath12k_mac_max_vht_nss(vht_mcs_mask),
++		       ath12k_mac_max_he_nss(he_mcs_mask));
++	nss = min(nss, mac_nss);
+ 
+ 	struct ath12k_wmi_peer_assoc_arg *peer_arg __free(kfree) =
+ 					kzalloc(sizeof(*peer_arg), GFP_KERNEL);
+@@ -5593,6 +5841,8 @@ static void ath12k_sta_rc_update_wk(struct wiphy *wiphy, struct wiphy_work *wk)
+ 		mask = &arvif->bitrate_mask;
+ 		num_vht_rates = ath12k_mac_bitrate_mask_num_vht_rates(ar, band,
+ 								      mask);
++		num_he_rates = ath12k_mac_bitrate_mask_num_he_rates(ar, band,
++								    mask);
+ 
+ 		/* Peer_assoc_prepare will reject vht rates in
+ 		 * bitrate_mask if its not available in range format and
+@@ -5615,11 +5865,24 @@ static void ath12k_sta_rc_update_wk(struct wiphy *wiphy, struct wiphy_work *wk)
+ 		if (link_sta->vht_cap.vht_supported && num_vht_rates == 1) {
+ 			ath12k_mac_set_peer_vht_fixed_rate(arvif, arsta, mask,
+ 							   band);
++		} else if (link_sta->he_cap.has_he && num_he_rates == 1) {
++			ath12k_mac_set_peer_he_fixed_rate(arvif, arsta, mask, band);
+ 		} else {
+-			/* If the peer is non-VHT or no fixed VHT rate
++			/* If the peer is non-VHT/HE or no fixed VHT/HE rate
+ 			 * is provided in the new bitrate mask we set the
+-			 * other rates using peer_assoc command.
++			 * other rates using peer_assoc command. Also clear
++			 * the peer fixed rate settings as it has higher proprity
++			 * than peer assoc
+ 			 */
++			err = ath12k_wmi_set_peer_param(ar, arsta->addr,
++							arvif->vdev_id,
++							WMI_PEER_PARAM_FIXED_RATE,
++							WMI_FIXED_RATE_NONE);
++			if (err)
++				ath12k_warn(ar->ab,
++					    "failed to disable peer fixed rate for STA %pM ret %d\n",
++					    arsta->addr, err);
++
+ 			ath12k_peer_assoc_prepare(ar, arvif, arsta,
+ 						  peer_arg, true);
+ 
+@@ -10690,19 +10953,40 @@ ath12k_mac_has_single_legacy_rate(struct ath12k *ar,
+ 	if (ath12k_mac_bitrate_mask_num_vht_rates(ar, band, mask))
+ 		return false;
+ 
++	if (ath12k_mac_bitrate_mask_num_he_rates(ar, band, mask))
++		return false;
++
+ 	return num_rates == 1;
+ }
+ 
++static __le16
++ath12k_mac_get_tx_mcs_map(const struct ieee80211_sta_he_cap *he_cap)
++{
++	if (he_cap->he_cap_elem.phy_cap_info[0] &
++	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G)
++		return he_cap->he_mcs_nss_supp.tx_mcs_80p80;
++
++	if (he_cap->he_cap_elem.phy_cap_info[0] &
++	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G)
++		return he_cap->he_mcs_nss_supp.tx_mcs_160;
++
++	return he_cap->he_mcs_nss_supp.tx_mcs_80;
++}
++
+ static bool
+ ath12k_mac_bitrate_mask_get_single_nss(struct ath12k *ar,
++				       struct ieee80211_vif *vif,
+ 				       enum nl80211_band band,
+ 				       const struct cfg80211_bitrate_mask *mask,
+ 				       int *nss)
+ {
+ 	struct ieee80211_supported_band *sband = &ar->mac.sbands[band];
+ 	u16 vht_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
++	const struct ieee80211_sta_he_cap *he_cap;
++	u16 he_mcs_map = 0;
+ 	u8 ht_nss_mask = 0;
+ 	u8 vht_nss_mask = 0;
++	u8 he_nss_mask = 0;
+ 	int i;
+ 
+ 	/* No need to consider legacy here. Basic rates are always present
+@@ -10729,7 +11013,24 @@ ath12k_mac_bitrate_mask_get_single_nss(struct ath12k *ar,
+ 			return false;
+ 	}
+ 
+-	if (ht_nss_mask != vht_nss_mask)
++	he_cap = ieee80211_get_he_iftype_cap_vif(sband, vif);
++	if (!he_cap)
++		return false;
++
++	he_mcs_map = le16_to_cpu(ath12k_mac_get_tx_mcs_map(he_cap));
++
++	for (i = 0; i < ARRAY_SIZE(mask->control[band].he_mcs); i++) {
++		if (mask->control[band].he_mcs[i] == 0)
++			continue;
++
++		if (mask->control[band].he_mcs[i] ==
++		    ath12k_mac_get_max_he_mcs_map(he_mcs_map, i))
++			he_nss_mask |= BIT(i);
++		else
++			return false;
++	}
++
++	if (ht_nss_mask != vht_nss_mask || ht_nss_mask != he_nss_mask)
+ 		return false;
+ 
+ 	if (ht_nss_mask == 0)
+@@ -10776,54 +11077,182 @@ ath12k_mac_get_single_legacy_rate(struct ath12k *ar,
+ 	return 0;
+ }
+ 
+-static int ath12k_mac_set_fixed_rate_params(struct ath12k_link_vif *arvif,
+-					    u32 rate, u8 nss, u8 sgi, u8 ldpc)
++static int
++ath12k_mac_set_fixed_rate_gi_ltf(struct ath12k_link_vif *arvif, u8 he_gi, u8 he_ltf)
+ {
+ 	struct ath12k *ar = arvif->ar;
+-	u32 vdev_param;
+ 	int ret;
+ 
+ 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+ 
+-	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "mac set fixed rate params vdev %i rate 0x%02x nss %u sgi %u\n",
+-		   arvif->vdev_id, rate, nss, sgi);
++	/* 0.8 = 0, 1.6 = 2 and 3.2 = 3. */
++	if (he_gi && he_gi != 0xFF)
++		he_gi += 1;
+ 
+-	vdev_param = WMI_VDEV_PARAM_FIXED_RATE;
+ 	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+-					    vdev_param, rate);
++					    WMI_VDEV_PARAM_SGI, he_gi);
+ 	if (ret) {
+-		ath12k_warn(ar->ab, "failed to set fixed rate param 0x%02x: %d\n",
+-			    rate, ret);
++		ath12k_warn(ar->ab, "failed to set HE GI:%d, error:%d\n",
++			    he_gi, ret);
+ 		return ret;
+ 	}
++	/* start from 1 */
++	if (he_ltf != 0xFF)
++		he_ltf += 1;
+ 
+-	vdev_param = WMI_VDEV_PARAM_NSS;
+ 	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+-					    vdev_param, nss);
++					    WMI_VDEV_PARAM_HE_LTF, he_ltf);
+ 	if (ret) {
+-		ath12k_warn(ar->ab, "failed to set nss param %d: %d\n",
+-			    nss, ret);
++		ath12k_warn(ar->ab, "failed to set HE LTF:%d, error:%d\n",
++			    he_ltf, ret);
++		return ret;
++	}
++	return 0;
++}
++
++static int
++ath12k_mac_set_auto_rate_gi_ltf(struct ath12k_link_vif *arvif, u16 he_gi, u8 he_ltf)
++{
++	struct ath12k *ar = arvif->ar;
++	int ret;
++	u32 he_ar_gi_ltf;
++
++	if (he_gi != 0xFF) {
++		switch (he_gi) {
++		case NL80211_RATE_INFO_HE_GI_0_8:
++			he_gi = WMI_AUTORATE_800NS_GI;
++			break;
++		case NL80211_RATE_INFO_HE_GI_1_6:
++			he_gi = WMI_AUTORATE_1600NS_GI;
++			break;
++		case NL80211_RATE_INFO_HE_GI_3_2:
++			he_gi = WMI_AUTORATE_3200NS_GI;
++			break;
++		default:
++			ath12k_warn(ar->ab, "Invalid GI\n");
++			return -EINVAL;
++		}
++	}
++
++	if (he_ltf != 0xFF) {
++		switch (he_ltf) {
++		case NL80211_RATE_INFO_HE_1XLTF:
++			he_ltf = WMI_HE_AUTORATE_LTF_1X;
++			break;
++		case NL80211_RATE_INFO_HE_2XLTF:
++			he_ltf = WMI_HE_AUTORATE_LTF_2X;
++			break;
++		case NL80211_RATE_INFO_HE_4XLTF:
++			he_ltf = WMI_HE_AUTORATE_LTF_4X;
++			break;
++		default:
++			ath12k_warn(ar->ab, "Invalid LTF\n");
++			return -EINVAL;
++		}
++	}
++
++	he_ar_gi_ltf = he_gi | he_ltf;
++
++	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++					    WMI_VDEV_PARAM_AUTORATE_MISC_CFG,
++					    he_ar_gi_ltf);
++	if (ret) {
++		ath12k_warn(ar->ab,
++			    "failed to set HE autorate GI:%u, LTF:%u params, error:%d\n",
++			    he_gi, he_ltf, ret);
+ 		return ret;
+ 	}
+ 
+-	vdev_param = WMI_VDEV_PARAM_SGI;
++	return 0;
++}
++
++static u32 ath12k_mac_nlgi_to_wmigi(enum nl80211_txrate_gi gi)
++{
++	switch (gi) {
++	case NL80211_TXRATE_DEFAULT_GI:
++		return WMI_GI_400_NS;
++	case NL80211_TXRATE_FORCE_LGI:
++		return WMI_GI_800_NS;
++	default:
++		return WMI_GI_400_NS;
++	}
++}
++
++static int ath12k_mac_set_rate_params(struct ath12k_link_vif *arvif,
++				      u32 rate, u8 nss, u8 sgi, u8 ldpc,
++				      u8 he_gi, u8 he_ltf, bool he_fixed_rate)
++{
++	struct ieee80211_bss_conf *link_conf;
++	struct ath12k *ar = arvif->ar;
++	u32 vdev_param;
++	u32 param_value;
++	int ret;
++	bool he_support;
++
++	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
++
++	link_conf = ath12k_mac_get_link_bss_conf(arvif);
++	if (!link_conf)
++		return -EINVAL;
++
++	he_support = link_conf->he_support;
++
++	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++		   "mac set rate params vdev %i rate 0x%02x nss 0x%02x sgi 0x%02x ldpc 0x%02x\n",
++		   arvif->vdev_id, rate, nss, sgi, ldpc);
++
++	ath12k_dbg(ar->ab, ATH12K_DBG_MAC,
++		   "he_gi 0x%02x he_ltf 0x%02x he_fixed_rate %d\n", he_gi,
++		   he_ltf, he_fixed_rate);
++
++	if (!he_support) {
++		vdev_param = WMI_VDEV_PARAM_FIXED_RATE;
++		ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++						    vdev_param, rate);
++		if (ret) {
++			ath12k_warn(ar->ab, "failed to set fixed rate param 0x%02x: %d\n",
++				    rate, ret);
++			return ret;
++		}
++	}
++
++	vdev_param = WMI_VDEV_PARAM_NSS;
++
+ 	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+-					    vdev_param, sgi);
++					    vdev_param, nss);
+ 	if (ret) {
+-		ath12k_warn(ar->ab, "failed to set sgi param %d: %d\n",
+-			    sgi, ret);
++		ath12k_warn(ar->ab, "failed to set nss param %d: %d\n",
++			    nss, ret);
+ 		return ret;
+ 	}
+ 
+-	vdev_param = WMI_VDEV_PARAM_LDPC;
+ 	ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+-					    vdev_param, ldpc);
++					    WMI_VDEV_PARAM_LDPC, ldpc);
+ 	if (ret) {
+ 		ath12k_warn(ar->ab, "failed to set ldpc param %d: %d\n",
+ 			    ldpc, ret);
+ 		return ret;
+ 	}
+ 
++	if (he_support) {
++		if (he_fixed_rate)
++			ret = ath12k_mac_set_fixed_rate_gi_ltf(arvif, he_gi, he_ltf);
++		else
++			ret = ath12k_mac_set_auto_rate_gi_ltf(arvif, he_gi, he_ltf);
++		if (ret)
++			return ret;
++	} else {
++		vdev_param = WMI_VDEV_PARAM_SGI;
++		param_value = ath12k_mac_nlgi_to_wmigi(sgi);
++		ret = ath12k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++						    vdev_param, param_value);
++		if (ret) {
++			ath12k_warn(ar->ab, "failed to set sgi param %d: %d\n",
++				    sgi, ret);
++			return ret;
++		}
++	}
++
+ 	return 0;
+ }
+ 
+@@ -10852,6 +11281,31 @@ ath12k_mac_vht_mcs_range_present(struct ath12k *ar,
+ 	return true;
+ }
+ 
++static bool
++ath12k_mac_he_mcs_range_present(struct ath12k *ar,
++				enum nl80211_band band,
++				const struct cfg80211_bitrate_mask *mask)
++{
++	int i;
++	u16 he_mcs;
++
++	for (i = 0; i < NL80211_HE_NSS_MAX; i++) {
++		he_mcs = mask->control[band].he_mcs[i];
++
++		switch (he_mcs) {
++		case 0:
++		case BIT(8) - 1:
++		case BIT(10) - 1:
++		case BIT(12) - 1:
++			break;
++		default:
++			return false;
++		}
++	}
++
++	return true;
++}
++
+ static void ath12k_mac_set_bitrate_mask_iter(void *data,
+ 					     struct ieee80211_sta *sta)
+ {
+@@ -10860,7 +11314,10 @@ static void ath12k_mac_set_bitrate_mask_iter(void *data,
+ 	struct ath12k_link_sta *arsta;
+ 	struct ath12k *ar = arvif->ar;
+ 
+-	arsta = rcu_dereference(ahsta->link[arvif->link_id]);
++	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
++
++	arsta = wiphy_dereference(ath12k_ar_to_hw(ar)->wiphy,
++				  ahsta->link[arvif->link_id]);
+ 	if (!arsta || arsta->arvif != arvif)
+ 		return;
+ 
+@@ -10898,6 +11355,61 @@ static void ath12k_mac_disable_peer_fixed_rate(void *data,
+ 			    arsta->addr, ret);
+ }
+ 
++static bool
++ath12k_mac_validate_fixed_rate_settings(struct ath12k *ar, enum nl80211_band band,
++					const struct cfg80211_bitrate_mask *mask,
++					unsigned int link_id)
++{
++	bool he_fixed_rate = false, vht_fixed_rate = false;
++	const u16 *vht_mcs_mask, *he_mcs_mask;
++	struct ieee80211_link_sta *link_sta;
++	struct ath12k_peer *peer, *tmp;
++	u8 vht_nss, he_nss;
++	int ret = true;
++
++	vht_mcs_mask = mask->control[band].vht_mcs;
++	he_mcs_mask = mask->control[band].he_mcs;
++
++	if (ath12k_mac_bitrate_mask_num_vht_rates(ar, band, mask) == 1)
++		vht_fixed_rate = true;
++
++	if (ath12k_mac_bitrate_mask_num_he_rates(ar, band, mask) == 1)
++		he_fixed_rate = true;
++
++	if (!vht_fixed_rate && !he_fixed_rate)
++		return true;
++
++	vht_nss = ath12k_mac_max_vht_nss(vht_mcs_mask);
++	he_nss =  ath12k_mac_max_he_nss(he_mcs_mask);
++
++	rcu_read_lock();
++	spin_lock_bh(&ar->ab->base_lock);
++	list_for_each_entry_safe(peer, tmp, &ar->ab->peers, list) {
++		if (peer->sta) {
++			link_sta = rcu_dereference(peer->sta->link[link_id]);
++			if (!link_sta) {
++				ret = false;
++				goto exit;
++			}
++
++			if (vht_fixed_rate && (!link_sta->vht_cap.vht_supported ||
++					       link_sta->rx_nss < vht_nss)) {
++				ret = false;
++				goto exit;
++			}
++			if (he_fixed_rate && (!link_sta->he_cap.has_he ||
++					      link_sta->rx_nss < he_nss)) {
++				ret = false;
++				goto exit;
++			}
++		}
++	}
++exit:
++	spin_unlock_bh(&ar->ab->base_lock);
++	rcu_read_unlock();
++	return ret;
++}
++
+ static int
+ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+@@ -10910,13 +11422,17 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	enum nl80211_band band;
+ 	const u8 *ht_mcs_mask;
+ 	const u16 *vht_mcs_mask;
++	const u16 *he_mcs_mask;
++	u8 he_ltf = 0;
++	u8 he_gi = 0;
+ 	u32 rate;
+-	u8 nss;
++	u8 nss, mac_nss;
+ 	u8 sgi;
+ 	u8 ldpc;
+ 	int single_nss;
+ 	int ret;
+ 	int num_rates;
++	bool he_fixed_rate = false;
+ 
+ 	lockdep_assert_wiphy(hw->wiphy);
+ 
+@@ -10931,14 +11447,18 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 	band = def.chan->band;
+ 	ht_mcs_mask = mask->control[band].ht_mcs;
+ 	vht_mcs_mask = mask->control[band].vht_mcs;
++	he_mcs_mask = mask->control[band].he_mcs;
+ 	ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
+ 
+ 	sgi = mask->control[band].gi;
+-	if (sgi == NL80211_TXRATE_FORCE_LGI) {
++	if (sgi == NL80211_TXRATE_FORCE_SGI) {
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+ 
++	he_gi = mask->control[band].he_gi;
++	he_ltf = mask->control[band].he_ltf;
++
+ 	/* mac80211 doesn't support sending a fixed HT/VHT MCS alone, rather it
+ 	 * requires passing at least one of used basic rates along with them.
+ 	 * Fixed rate setting across different preambles(legacy, HT, VHT) is
+@@ -10955,18 +11475,31 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 				    arvif->vdev_id, ret);
+ 			goto out;
+ 		}
++
+ 		ieee80211_iterate_stations_mtx(hw,
+ 					       ath12k_mac_disable_peer_fixed_rate,
+ 					       arvif);
+-	} else if (ath12k_mac_bitrate_mask_get_single_nss(ar, band, mask,
++	} else if (ath12k_mac_bitrate_mask_get_single_nss(ar, vif, band, mask,
+ 							  &single_nss)) {
+ 		rate = WMI_FIXED_RATE_NONE;
+ 		nss = single_nss;
++		arvif->bitrate_mask = *mask;
++
++		ieee80211_iterate_stations_atomic(hw,
++						  ath12k_mac_set_bitrate_mask_iter,
++						  arvif);
+ 	} else {
+ 		rate = WMI_FIXED_RATE_NONE;
+-		nss = min_t(u32, ar->num_tx_chains,
+-			    max(ath12k_mac_max_ht_nss(ht_mcs_mask),
+-				ath12k_mac_max_vht_nss(vht_mcs_mask)));
++
++		if (!ath12k_mac_validate_fixed_rate_settings(ar, band,
++							     mask, arvif->link_id))
++			ath12k_warn(ar->ab,
++				    "failed to update fixed rate settings due to mcs/nss incompatibility\n");
++
++		mac_nss = max3(ath12k_mac_max_ht_nss(ht_mcs_mask),
++			       ath12k_mac_max_vht_nss(vht_mcs_mask),
++			       ath12k_mac_max_he_nss(he_mcs_mask));
++		nss = min_t(u32, ar->num_tx_chains, mac_nss);
+ 
+ 		/* If multiple rates across different preambles are given
+ 		 * we can reconfigure this info with all peers using PEER_ASSOC
+@@ -10998,9 +11531,21 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 			 */
+ 			ath12k_warn(ar->ab,
+ 				    "Setting more than one MCS Value in bitrate mask not supported\n");
+-			return -EINVAL;
++			ret = -EINVAL;
++			goto out;
+ 		}
+ 
++		num_rates = ath12k_mac_bitrate_mask_num_he_rates(ar, band, mask);
++		if (num_rates == 1)
++			he_fixed_rate = true;
++
++		if (!ath12k_mac_he_mcs_range_present(ar, band, mask) &&
++		    num_rates > 1) {
++			ath12k_warn(ar->ab,
++				    "Setting more than one HE MCS Value in bitrate mask not supported\n");
++			ret = -EINVAL;
++			goto out;
++		}
+ 		ieee80211_iterate_stations_mtx(hw,
+ 					       ath12k_mac_disable_peer_fixed_rate,
+ 					       arvif);
+@@ -11011,9 +11556,10 @@ ath12k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
+ 					       arvif);
+ 	}
+ 
+-	ret = ath12k_mac_set_fixed_rate_params(arvif, rate, nss, sgi, ldpc);
++	ret = ath12k_mac_set_rate_params(arvif, rate, nss, sgi, ldpc, he_gi,
++					 he_ltf, he_fixed_rate);
+ 	if (ret) {
+-		ath12k_warn(ar->ab, "failed to set fixed rate params on vdev %i: %d\n",
++		ath12k_warn(ar->ab, "failed to set rate params on vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+ 	}
+ 
 diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index e59a58a446b5..4ff65aff2113 100644
+index a9c68c5d0542..3347c53a3033 100644
 --- a/drivers/net/wireless/ath/ath12k/wmi.h
 +++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -2327,6 +2327,21 @@ enum wmi_direct_buffer_module {
- 	WMI_DIRECT_BUF_MAX
+@@ -222,6 +222,22 @@ enum WMI_HOST_WLAN_BAND {
+ 	WMI_HOST_WLAN_2GHZ_5GHZ_CAP	= 3,
  };
  
-+/**
-+ * enum wmi_nss_ratio - NSS ratio received from FW during service ready ext event
-+ * @WMI_NSS_RATIO_1BY2_NSS: Max nss of 160MHz is equals to half of the max nss of 80MHz
-+ * @WMI_NSS_RATIO_3BY4_NSS: Max nss of 160MHz is equals to 3/4 of the max nss of 80MHz
-+ * @WMI_NSS_RATIO_1_NSS: Max nss of 160MHz is equals to the max nss of 80MHz
-+ * @WMI_NSS_RATIO_2_NSS: Max nss of 160MHz is equals to two times the max nss of 80MHz
++/* Parameters used for WMI_VDEV_PARAM_AUTORATE_MISC_CFG command.
++ * Used only for HE auto rate mode.
 + */
++enum {
++	/* HE LTF related configuration */
++	WMI_HE_AUTORATE_LTF_1X = BIT(0),
++	WMI_HE_AUTORATE_LTF_2X = BIT(1),
++	WMI_HE_AUTORATE_LTF_4X = BIT(2),
 +
-+enum wmi_nss_ratio {
-+	WMI_NSS_RATIO_1BY2_NSS,
-+	WMI_NSS_RATIO_3BY4_NSS,
-+	WMI_NSS_RATIO_1_NSS,
-+	WMI_NSS_RATIO_2_NSS
++	/* HE GI related configuration */
++	WMI_AUTORATE_400NS_GI = BIT(8),
++	WMI_AUTORATE_800NS_GI = BIT(9),
++	WMI_AUTORATE_1600NS_GI = BIT(10),
++	WMI_AUTORATE_3200NS_GI = BIT(11),
 +};
 +
- struct ath12k_wmi_pdev_band_arg {
- 	u32 pdev_id;
- 	u32 start_freq;
-@@ -2644,6 +2659,12 @@ struct ath12k_wmi_hw_mode_cap_params {
+ enum wmi_cmd_group {
+ 	/* 0 to 2 are reserved */
+ 	WMI_GRP_START = 0x3,
+@@ -1169,7 +1185,9 @@ enum wmi_tlv_vdev_param {
+ 	WMI_VDEV_PARAM_HE_RANGE_EXT,
+ 	WMI_VDEV_PARAM_ENABLE_BCAST_PROBE_RESPONSE,
+ 	WMI_VDEV_PARAM_FILS_MAX_CHANNEL_GUARD_TIME,
++	WMI_VDEV_PARAM_HE_LTF = 0x74,
+ 	WMI_VDEV_PARAM_BA_MODE = 0x7e,
++	WMI_VDEV_PARAM_AUTORATE_MISC_CFG = 0x80,
+ 	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
+ 	WMI_VDEV_PARAM_6GHZ_PARAMS = 0x99,
+ 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
+@@ -3617,6 +3635,15 @@ struct wmi_force_fw_hang_cmd {
+ 	__le32 delay_time_ms;
  } __packed;
  
- #define WMI_MAX_HECAP_PHY_SIZE                 (3)
-+#define WMI_NSS_RATIO_EN_DIS_BITPOS    BIT(0)
-+#define WMI_NSS_RATIO_EN_DIS_GET(_val) \
-+	le32_get_bits(_val, WMI_NSS_RATIO_EN_DIS_BITPOS)
-+#define WMI_NSS_RATIO_INFO_BITPOS              GENMASK(4, 1)
-+#define WMI_NSS_RATIO_INFO_GET(_val) \
-+	le32_get_bits(_val, WMI_NSS_RATIO_INFO_BITPOS)
- 
- /* pdev_id is present in lower 16 bits of pdev_and_hw_link_ids in
-  * ath12k_wmi_mac_phy_caps_params & ath12k_wmi_caps_ext_params.
-@@ -2685,6 +2706,13 @@ struct ath12k_wmi_mac_phy_caps_params {
- 	__le32 he_cap_info_2g_ext;
- 	__le32 he_cap_info_5g_ext;
- 	__le32 he_cap_info_internal;
-+	__le32 wireless_modes;
-+	__le32 low_2ghz_chan_freq;
-+	__le32 high_2ghz_chan_freq;
-+	__le32 low_5ghz_chan_freq;
-+	__le32 high_5ghz_chan_freq;
-+	__le32 nss_ratio;
++/* Param values to be sent for WMI_VDEV_PARAM_SGI param_id
++ * which are used in 11n, 11ac systems
++ * @WMI_GI_800_NS - Always uses 0.8us (Long GI)
++ * @WMI_GI_400_NS - Firmware switches between 0.4us (Short GI)
++ *			and 0.8us (Long GI) based on packet error rate.
++ */
++#define WMI_GI_800_NS 0
++#define WMI_GI_400_NS 1
 +
- } __packed;
- 
- struct ath12k_wmi_hal_reg_caps_ext_params {
+ struct wmi_vdev_set_param_cmd {
+ 	__le32 tlv_header;
+ 	__le32 vdev_id;
 -- 
 2.43.0
 
