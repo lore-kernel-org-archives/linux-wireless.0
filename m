@@ -1,62 +1,62 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29B3F22F778;
-	Fri, 23 May 2025 06:32:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A5D22F778;
+	Fri, 23 May 2025 06:32:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747981939; cv=none; b=ejP8OdYoj/RKzgzWt1LPPw0gB6Y0WfTWALDq6PyPRCiDLiRY8iiOHjNQ2tZRJuOfnUKNEpDec0lJmTSipXQUfktpChTvIn2XdzFkEkHLXHiZ88vzZ1KL0gpG3PdT2w0YDc1LOm11LnBSv2oF97/xwDRAJSnYFoVJhq0ukXbz+xQ=
+	t=1747981945; cv=none; b=f3eyaeTYSI+7gSb3LMRFvqb5QWHfuNYyYD/Oru6LYjGNGTQp5P1lfj2w6x3WSIpuUI6Nat9eUU1D3oNx+ilzNIGiXyjvFDjcrYKo00TrSWsrilu05yPxsPeGdjUC1UpfF3A4wh4Y5kwsRuKoCQ5TWw0VlkIJHNidlwkvSSiVH24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747981939; c=relaxed/simple;
-	bh=cdjfEk0TxVg9oDhf1oyxHAvAaDRa1kSzXZ9FYjisPRg=;
+	s=arc-20240116; t=1747981945; c=relaxed/simple;
+	bh=LAVh7geJL1PD75mFZMVsyKCNDPWBKX7Jf3cyBhahb+w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WHAdNldW9fImx9JXTrLOE2evAWd8tZ1oTYPLrrrl7WiXf7ROS7vltS6ZYP0+x/cnoB0CjsROHuX6K0U4UCLcZuxEDEXOb7RYkbigeZ5t+m00e2tPub4nJttiAD+mAIS+L7zMiu5coUhTrOjPFxMeyqpfXWy7W1D2zTziv2/6oKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GMFVoQV2; arc=none smtp.client-ip=209.85.210.170
+	 MIME-Version; b=ovkcCxQmMQG4kFAn1JMV27OKNYznXO6cQnDqnfmmvujRBYedAKr/+0yEh5ccp+C1sfA8wPcBfAMF6O/BxKccD7uyisd9T3NoTw4xwnS2uadfcbYTIxYWZGuxUbuZMMRv/vS9g8Nn/b8vf6nONel84PSFM8zaohETakMMUiTwfTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i/jLTllH; arc=none smtp.client-ip=209.85.160.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GMFVoQV2"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-7426c44e014so8472997b3a.3;
-        Thu, 22 May 2025 23:32:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i/jLTllH"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-47692b9d059so121584361cf.3;
+        Thu, 22 May 2025 23:32:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747981937; x=1748586737; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1747981942; x=1748586742; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yGHFb7gUP10OAfy6owXqCDHPUOcpBBdWnzOXMHQ1MBU=;
-        b=GMFVoQV2Z47Pf7uH2EhQbnk2QUQuYBsAU4l56IfjA4H4dsPMIdtNSCVc/cBSecrVlZ
-         oohLQZq9/5kBCMkbpmGHtM2LS+gzHR6pmCBpBRK4JP7PLdpPpMCizaXHy6EmIago/q+X
-         jeq/nLOzGkMOHYGzWELNjWDHPTHBwKLoT8ub5VJLt2hOl7D+5ZxIdfWJdZeZMqTtWv96
-         D3jvveRYA6h0fYU5N2Nfq0CEkZYAoG4PQgzR7gV6zr1EuDEMoXXhkmvqkT1cXLOULu8v
-         ceyBLkWHlEuR48XX4JM5rigrnWtSAkBrM+5DH8xylrilQlyGCQwtyg8yII3C+6mTlwW+
-         86Qw==
+        bh=6nQsjeWRBpWxFf7RQtRpXio5qVfPNye6yh/BzrdVEeY=;
+        b=i/jLTllHhm2e9wZwBOV5OWG1nLq3YvD+ftqDBujYePxUc+mXlBAVfdC4d3+t1Sn7k4
+         pqZdOrQF5ZjG3bUGBCVxhVK/z+sPfPQEmUBVrRkjl0f1ajL3oFdefp1PNADc7AH6W3j2
+         TqV0sfhntgMf86uXJO13zNDpN10HHGglnQUpx/y4lyFIa0MxgYuUyt7xcQIdMHtt5K2A
+         2K6gizyDEZvyEYFp+YvaidWW9e+4LWkswAP8cCdHq0FLPJESDAOdXk5hwY1P/ojQC4qE
+         yJT/Oz0xYlvx19tm2DMGImebicTW4/384j9ni7Bs9u0Adpg0ls5sIi3epBoi8UcA4WnZ
+         ioJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747981937; x=1748586737;
+        d=1e100.net; s=20230601; t=1747981942; x=1748586742;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=yGHFb7gUP10OAfy6owXqCDHPUOcpBBdWnzOXMHQ1MBU=;
-        b=ewwpSFBohSDjUhjAFFBVmy1MQKCJj1AKqiSfHDaVtR1o2Ct1pyN24bF0U+7mksRrVm
-         rgG/Ze/pOXRbiHPDDucGkvWeWvglKkT7aktyCoJhfii0UxONVOCC8nifpYnCzU4+thO4
-         0zOwJbVVqtCFGoqwkH42uEYpvVJWxM35AN3BZPOarnXjKLIfjPmFlr5UGMEi4A7FnJ/O
-         6kB8VaZLgu2y4m7XWl+MpcPEopx3lIAw2jG2HRoasBx2oVSLdcKfGFSVGm/n51DvzTgn
-         hJeXhLUl+8OOV4move6q7X1f0okt9MwEUo1jpq+W7tpndblZ7HCPTxbU9dhJ/5XAe175
-         vPFA==
-X-Forwarded-Encrypted: i=1; AJvYcCULSj46GnGxXLUjDtOJ2SQBv925of0Ezur1Ej14REx7ZoARzEOBYJsG0A09vLMedWMT89AcOSubrJ8gJA==@vger.kernel.org, AJvYcCXrNDUodo849Ydcc7JwPECSOvHUNwJUeq0XemjDNJULBdfnD4ggnYgbFncZQPwnfNAXs9DlWGRcADX7@vger.kernel.org, AJvYcCXwhBA2OJR4ktButsrcapPI64mlAanX3ctfeCoBBPgIiiLNPDzLO44wgWo6g4R7PycE/1/uPIpEvOqlwk9P@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWDM9isXDV1K5MqBJPvU3wdX5Q90LJ6Ux06Vlz4pT6DEM9/KYe
-	i7wRnC1+ExJglCTHVDYUjtWIB+CYjtKtOzQ9HzgYObtJEIO6leq2rxm3uodJ2Q==
-X-Gm-Gg: ASbGncsXWEQlmQFeVoiBMjVStgBZz16s60mIqQf0yG0TtcOG++9Db5iBTEHNv5INik8
-	8sc7cFf4fB5yirPDz6VHOu3PhfX/wrPnXGVgP4xJcrZVwh7lYjl6pwgiGPmXrEWr4v1IWYeyGLs
-	zPY0t5ZrugrVT8y3tM9aiy1bifMcOpMtckr6TLOZTxUDaCe9t9x3rDZ+5w8FMAC0/vmkmtj5rW8
-	zkQJXbv8d662R3EhxSL0IyaRIQZ4ZSbMHY7Qw0fAocoeueiNu805NBUKbdn6abrANyAQoxT3FsC
-	G5y52yLDWcK0dutYKiHR/xxuYbU=
-X-Google-Smtp-Source: AGHT+IG5Sx9XBjRPeqB1iftumrW6VmMG9AF6ESWyPnS+9QbMUtTRF1HDO1GfXmslGPT+1Yfz3gokXg==
-X-Received: by 2002:a05:6a00:2da5:b0:740:41e4:e761 with SMTP id d2e1a72fcca58-742a98c144emr36376544b3a.22.1747981937151;
-        Thu, 22 May 2025 23:32:17 -0700 (PDT)
+        bh=6nQsjeWRBpWxFf7RQtRpXio5qVfPNye6yh/BzrdVEeY=;
+        b=e7vBfPHH4PDzoZYJohAZwVmcIIb0ZHLDjjRop2lrsRMh6L+n/wRkVUExsP6yr4F86d
+         LFP76h94gefQCYL8XlL52y8GT8DJ6utrXECc3fRTBCX3jEalB4YvfP0G9IgFjyrJae9r
+         6p5G7zQSdxoLr3O+dda0FJYoFe0CflSazXWFR5iqz7ptEResdSLh3L03oOw1pn50RuBm
+         MmBRYN2CKJhBEfG9+r9xX+ovziFl9ghoCNM6EVBVS8IN/FxQjJPrVTZJ4aC4CeTtUcSH
+         XCq20Qy1w46yp5JWTuYZZUZssY4wA/NTmojhQAcpODFe7vVYGScd/gsyxRo74AjSl8Qo
+         335g==
+X-Forwarded-Encrypted: i=1; AJvYcCVytr3BB21e945E4SwplvdQ4Td7HnQRAmYxSJXh22lIxpPTjqrLxTeTlB8FT97r7U2g77sXdNvS37ny@vger.kernel.org, AJvYcCWXe9S4FHNrKbq/tz+OUO7TKPwFAm1kvY9to0KMJ1lz2dZJicXK/XxpzEDHqXYuGq+Wj4OLQFwaFnX1UEgC@vger.kernel.org, AJvYcCWp3H3KzJrH5Kn9ByrcPlsJ5/1i1uvZ++Xrds5Ee7e2DZqgCgeh/05TQIvdxnw0512CzuUYLNodlhU0wA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyyoP1xLe2ZoBfsf+mSZs5gEayGu7E5Xw3ia9whkFdkQroTawX8
+	rDJrZxWdr+1jpWWL9VGl3NFh5UAqQb5/ffRPRgix2cWtHedVEb3gy8crYh1tIg==
+X-Gm-Gg: ASbGncv9LC5hmOJggJALLLtUJENeubndGb7KqQd9jWy/VLudtQiLNdl5cMKgSl7nbsy
+	uyECKvOKMRJdK0qAbIi2PfRlZjYnm1y+3p3Z3JZ63SGxEtNsIzgfe0ZfwzlqnOPHQmuJMdpKLeV
+	IqfIBsgQzWRMkp3fbAh/GEg4t12FIA2wdqdYN32o+bX5spQlagxfD4eFctuJABuLl1K6xM6j6rX
+	d8Gl6Onu7Eqn+YW2rLpiJpHeLXK7//BtdO1ZGHuI/Qt8PjNTrExkNp/GkF54vFj58f/sfJl34Ea
+	KIOeChmZA+d4f26AVb7JCDNdbtE=
+X-Google-Smtp-Source: AGHT+IEvbmka0GSHTPog5KIT03MKqtOZEgept/g5Yrg4Hm2wxexnZXf0TDfAsEvItRkiKqIlh4Q3/w==
+X-Received: by 2002:a05:6a00:9168:b0:736:3d7c:236c with SMTP id d2e1a72fcca58-742acce71d9mr36634915b3a.14.1747981931112;
+        Thu, 22 May 2025 23:32:11 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8200:dab8::a86])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742a97398f8sm12177783b3a.78.2025.05.22.23.32.15
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742a97398f8sm12177783b3a.78.2025.05.22.23.32.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 May 2025 23:32:16 -0700 (PDT)
+        Thu, 22 May 2025 23:32:10 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
@@ -69,9 +69,9 @@ Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list),
 	linux-mips@vger.kernel.org (open list:MIPS)
-Subject: [PATCHv3 5/5] mips: dts: qca: add wmac support
-Date: Thu, 22 May 2025 23:32:07 -0700
-Message-ID: <20250523063207.10040-6-rosenp@gmail.com>
+Subject: [PATCHv3 1/5] wifi: ath9k: ahb: reorder declarations
+Date: Thu, 22 May 2025 23:32:03 -0700
+Message-ID: <20250523063207.10040-2-rosenp@gmail.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250523063207.10040-1-rosenp@gmail.com>
 References: <20250523063207.10040-1-rosenp@gmail.com>
@@ -83,133 +83,41 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Now that OF ahb support was added to the ath9k driver, we can use it to
-enable and use the SoC wireless found in these chipsets.
+Easier to look at. Follows netdev style.
+
+Also remove ret assignment. Because of all of these devm conversions,
+ret = 0 is a path that never gets hit. The first time it does it when
+request_irq fails, but that ends up reassigning it.
 
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- arch/mips/boot/dts/qca/ar9132.dtsi                       | 9 +++++++++
- arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts         | 4 ++++
- arch/mips/boot/dts/qca/ar9331.dtsi                       | 9 +++++++++
- arch/mips/boot/dts/qca/ar9331_dpt_module.dts             | 4 ++++
- arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts           | 4 ++++
- arch/mips/boot/dts/qca/ar9331_omega.dts                  | 4 ++++
- .../mips/boot/dts/qca/ar9331_openembed_som9331_board.dts | 4 ++++
- arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts              | 4 ++++
- 8 files changed, 42 insertions(+)
+ drivers/net/wireless/ath/ath9k/ahb.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/arch/mips/boot/dts/qca/ar9132.dtsi b/arch/mips/boot/dts/qca/ar9132.dtsi
-index aa148d51ab68..47bddd36cd94 100644
---- a/arch/mips/boot/dts/qca/ar9132.dtsi
-+++ b/arch/mips/boot/dts/qca/ar9132.dtsi
-@@ -155,6 +155,15 @@ spi: spi@1f000000 {
- 			#address-cells = <1>;
- 			#size-cells = <0>;
- 		};
-+
-+		wifi: wifi@180c0000 {
-+			compatible = "qcom,ar9130-wifi";
-+			reg = <0x180c0000 0x230000>;
-+
-+			interrupts = <2>;
-+
-+			status = "disabled";
-+		};
- 	};
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 49b7ab26c477..d2a97e74f451 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -71,14 +71,14 @@ static const struct ath_bus_ops ath_ahb_bus_ops  = {
  
- 	usb_phy: usb-phy {
-diff --git a/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts b/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-index f894fe17816b..a7901bb040ce 100644
---- a/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-+++ b/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-@@ -108,3 +108,7 @@ partition@2 {
- 		};
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331.dtsi b/arch/mips/boot/dts/qca/ar9331.dtsi
-index 768ac0f869b1..9a2590f490bb 100644
---- a/arch/mips/boot/dts/qca/ar9331.dtsi
-+++ b/arch/mips/boot/dts/qca/ar9331.dtsi
-@@ -285,6 +285,15 @@ spi: spi@1f000000 {
+ static int ath_ahb_probe(struct platform_device *pdev)
+ {
+-	void __iomem *mem;
+-	struct ath_softc *sc;
+-	struct ieee80211_hw *hw;
+ 	const struct platform_device_id *id = platform_get_device_id(pdev);
+-	int irq;
+-	int ret = 0;
++	struct ieee80211_hw *hw;
++	struct ath_softc *sc;
+ 	struct ath_hw *ah;
++	void __iomem *mem;
+ 	char hw_name[64];
++	int irq;
++	int ret;
  
- 			status = "disabled";
- 		};
-+
-+		wifi: wifi@18100000 {
-+			compatible = "qcom,ar9330-wifi";
-+			reg = <0x18100000 0x20000>;
-+
-+			interrupts = <2>;
-+
-+			status = "disabled";
-+		};
- 	};
- 
- 	usb_phy: usb-phy {
-diff --git a/arch/mips/boot/dts/qca/ar9331_dpt_module.dts b/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-index c857cd22f7db..08e728b8ced8 100644
---- a/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-@@ -97,3 +97,7 @@ &phy_port0 {
- &phy_port4 {
- 	status = "okay";
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts b/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-index 7affa58d4fa6..37a74aabe4b4 100644
---- a/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-@@ -98,3 +98,7 @@ spiflash: w25q128@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_omega.dts b/arch/mips/boot/dts/qca/ar9331_omega.dts
-index 8904aa917a6e..1450419024cb 100644
---- a/arch/mips/boot/dts/qca/ar9331_omega.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_omega.dts
-@@ -74,3 +74,7 @@ spiflash: w25q128@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts b/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-index dc65ebd60bbc..5786a827c000 100644
---- a/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-@@ -106,3 +106,7 @@ &phy_port2 {
- &phy_port4 {
- 	status = "okay";
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts b/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-index 10b9759228b7..a7108c803eb3 100644
---- a/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-@@ -114,3 +114,7 @@ spiflash: s25sl032p@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
+ 	if (!dev_get_platdata(&pdev->dev)) {
+ 		dev_err(&pdev->dev, "no platform data specified\n");
 -- 
 2.49.0
 
