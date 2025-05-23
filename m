@@ -1,114 +1,121 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598211A76BB;
-	Fri, 23 May 2025 06:32:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07E932DCBE6;
+	Fri, 23 May 2025 06:43:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747981945; cv=none; b=DsVLurPp4oRP6rvIhk2WdI3eEwtVqkP5WROvG8Hx4vyP5U5AcX8HwEsxm+7YbiyuuAdEjqevVb6Z+0zg+hlyNlqWcF9Ximobb71fLu9biwdE1tLME0Td/fehvaTitgIES5bz4rMrwEGpeWMJUnfZZeDobGwjXZxb+k2TJGMRC90=
+	t=1747982583; cv=none; b=oeSmR/V5velupbg9BCSbAKWXV9T2J6g0DKThL9+2Z3sCNpSPWYMOwX1XbJc8G01c7C6mNcv3vVdusK0+PkhSzkilKtS+bf3EFHFrRNzW5UoY8YJNNt+RZF136wI6TOju68ckWXOMFZbZ0ZH9eJ3uHClKMlKSQOiEydathpUiPj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747981945; c=relaxed/simple;
-	bh=GHzj+vhP0IH7AazDd4aDDdmVsDEWratUTV7OerNI/8A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EXOIK6fI0vjSysf73ekfzDeFo9FUl2hIUWK9g/X/gAgsB2NLEoLbD7jgQPVkj/Jy/6qZakYTBeiI35Vd8p6uZxjJ/lHClmwbHuaCNGZiqa/Gm3ly6xdzHiMCStK+igkdWMM37ftN9YqWdLqiuAvywM61dqbiIhEIzjcbH3U+XjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fl4DkD2t; arc=none smtp.client-ip=209.85.167.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747982583; c=relaxed/simple;
+	bh=NzjiJxC8jVl17UOebTa1jr+peldNBbgfvVc5tPO1QtU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t+luJARO46ZLqLHEekrX/W7v6RtknehW7S/OXOLyj7ie0HPoCv8JxiaOi8oiGSP4bALFCVG+sIpTqu/A3s6NfN92zCCc5fpoFkiLNXGOgIVZjWl9USGR7fN3g4O06s2BT/qnW7U90O3XZeozfxK882CQJdO8UF1W9e7ugZfaUO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h3Ubjd/M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fl4DkD2t"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3fea67e64caso6416674b6e.2;
-        Thu, 22 May 2025 23:32:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747981943; x=1748586743; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SQ+RqlSFyQLSDHWP9kEu2/DGiQBnqF1j/beqMyydt5w=;
-        b=fl4DkD2tcpNyJBWoj9N32s337eLA/4QJedSieKirVWbZfwkBlc0qJkRWWAVS0hHmrt
-         a57SK+5gShCHuqr1QqMRNJL4N0VXyFNM6SezaVcmaJkszhFEXuR3l/qkgI+wfeUpcgqv
-         wNtfOGhqyhQp9vgJbRz0ZsuiNjQT3NEm4s5z4teKql7AqfpwiaLwEeWQULHnEf7XPS3e
-         QzBl+6Nhg41S9zisJpsJO30xOzq+LNQX7Z3w+MSlj3FitCaxJUcc5UU3JidX1g6RDQx7
-         OHAN4t19sNRxKFhRM7jGO4puQjxxzYuoXYNpsPymGHKZxdOUQwl1X3fsiB/Yg31pZ9/a
-         e1ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747981943; x=1748586743;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=SQ+RqlSFyQLSDHWP9kEu2/DGiQBnqF1j/beqMyydt5w=;
-        b=X0BzLF+AIfwEAHkrC9mEFhkhXG/CSUM5ttkWQVguVvuzuGA4V+/tFybTvxNenCIGYR
-         BzjgNHEBVKPMdkPUb3beYDzh97awvL6SCeeNEH4InLOIqNQg1gplVjOjtj1FfbA9yCnx
-         JuWPwIOtXR3g/RbDwhhHuBJIZkhu8KCu/FwgdW9UusLIWd8ZC2Eh4mwkVQgo4DtczThM
-         0/ABOB69R+wCCdJlUN5/SPjjRJsWiuczhk6GdbOl+x18cWvqk7bXs4Kq4Z9mj8QxFdEO
-         plr/HKo77Jup77lWrLgTz8te2X6oF8EDcx3MY7N5lbzhZ3qtSqG919tHyxHDQUS88HfE
-         uRog==
-X-Forwarded-Encrypted: i=1; AJvYcCUYKKUc9UdpKHhdEhzdeA/55wgFQ6j8V3ellxAUlxasmlaGu7lz7Kgi4OiO/ueMyyb8usJ6+VMr5K8+ewI0@vger.kernel.org, AJvYcCVe/xibO1moPl0qpJ3MlvHYF294GtmSKQOw0taaelD4T2o8D7NZy+wb4isGtaC2uQUqeOSujYCFVjLjqQ==@vger.kernel.org, AJvYcCXmXyMyEFs6RA2mDm2dDSyCbsVjica0zcVSTtlPzf8C8jUOma/iNsm+VxxO0tLp5TogNHyKACuXU/O/@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHjy/dYHsXj2Q9A5oAgAe6Vs0FoRVId3ubHo/YXmZ/gQJjfY5Z
-	ewCZdbZXPurxbxvSinz91WWbES68LOES6Ky5NIgpy53IdI3xU1IaHphDkqG4bQ==
-X-Gm-Gg: ASbGncugR1nvGvN1/BenTjrdKZHgQF5rZRpOMpAtKWysOMjZefjo4GNIahGnPXmUEbs
-	jayF7bXwD/Y4Z1yMsMDl7UWQ9Yg2nTQIGV2VOahk1Xr3lvoOs1QSFSB5leFnztU4f8nkJ/I3BnX
-	gOQU9fKMS+hXrdhhAsFLjO+ejW879D4jX560z5qyX422iRkqx6agb36HtP2bgysO0IcrWIohy68
-	9qayD11KHJjA9vNcPbA1JMOpHfVYiDxeqF7XbWy9SDudWexyUlQQwBAlMd1yg6Un7VsD9K7jpbY
-	RJPGlYENK8oKDyydoRd+mgPG7lo=
-X-Google-Smtp-Source: AGHT+IGhnyWT9GvTWolu4b2fI6AfbQOl7Zyn8oBKkKaRYw2hxxcF6ho7p3hKkHjd6ugynOQBEUrCWA==
-X-Received: by 2002:a05:6a00:b90:b0:740:9d7c:8f5c with SMTP id d2e1a72fcca58-745ed8f662cmr3137860b3a.18.1747981932622;
-        Thu, 22 May 2025 23:32:12 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8200:dab8::a86])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-742a97398f8sm12177783b3a.78.2025.05.22.23.32.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 May 2025 23:32:12 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	nbd@ndb.name,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-kernel@vger.kernel.org (open list),
-	linux-mips@vger.kernel.org (open list:MIPS)
-Subject: [PATCHv3 2/5] wifi: ath9k: ahb: reorder includes
-Date: Thu, 22 May 2025 23:32:04 -0700
-Message-ID: <20250523063207.10040-3-rosenp@gmail.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250523063207.10040-1-rosenp@gmail.com>
-References: <20250523063207.10040-1-rosenp@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h3Ubjd/M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C775BC4CEE9;
+	Fri, 23 May 2025 06:42:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747982582;
+	bh=NzjiJxC8jVl17UOebTa1jr+peldNBbgfvVc5tPO1QtU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=h3Ubjd/MRn7yHtvjFmlSK+OcMe/SbkySxxcO0EfHrWkp5FK2usQtYPHGNIYEIf9Pq
+	 n9YO/krxi1L3b9CIWjpPmdyKgNXjlges1ykryzeadMUGbMOal19aEF0vTCuMxPVFOW
+	 XjnRr97k9sjQFpGAkGPB3bohUYqzM/kP2D4wa7gDip5bEedv99C7xRQog1jS8AIliy
+	 OIWFQvBCUmAfNYkiU7DjJLPKPZdyZSpp6WI+HJ11OriIwHztv/XzdWWZQb+EfRXI45
+	 /99jE2+tRUlPEw8nnoXJZL83apDBr5Z/2rQTVoFT/QHUya9Q64MEn1f/PELRZDmDoc
+	 R/5TS0hKIjhNQ==
+Message-ID: <574cd2c2-8201-4182-b372-da518a9b1972@kernel.org>
+Date: Fri, 23 May 2025 08:42:57 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv3 3/5] dt-bindings: net: wireless: ath9k: add WIFI
+ bindings
+To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+ nbd@ndb.name, Johannes Berg <johannes@sipsolutions.net>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+ "open list:MIPS" <linux-mips@vger.kernel.org>
+References: <20250523063207.10040-1-rosenp@gmail.com>
+ <20250523063207.10040-4-rosenp@gmail.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20250523063207.10040-4-rosenp@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Alphabetic includes are easier to look at and to make further changes to
-them.
+On 23/05/2025 08:32, Rosen Penev wrote:
+>    reg:
+>      maxItems: 1
+> @@ -88,3 +94,15 @@ examples:
+>          nvmem-cell-names = "mac-address", "calibration";
+>        };
+>      };
+> +  - |
+> +    ahb {
+> +      compatible = "simple-bus";
+> +      ranges;
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/net/wireless/ath/ath9k/ahb.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Not much improved... Code is now actually wrong. Remember to notice
+where the comments appear. We are using here mailing list style of
+communication.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index d2a97e74f451..1ffec827ed87 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -16,10 +16,11 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/mod_devicetable.h>
-+#include <linux/module.h>
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
--#include <linux/module.h>
--#include <linux/mod_devicetable.h>
-+
- #include "ath9k.h"
- 
- static const struct platform_device_id ath9k_platform_id_table[] = {
--- 
-2.49.0
+In any case: 1 patchset per 24h.
 
+
+
+Best regards,
+Krzysztof
