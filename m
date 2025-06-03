@@ -1,55 +1,58 @@
 Received: from smtp11.infineon.com (smtp11.infineon.com [217.10.52.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5311423C8D6
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Jun 2025 16:12:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCFA323E338
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Jun 2025 16:12:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748967159; cv=none; b=ORDGYWn2YSCW281To7zyI9JEFSyRi5rZiPj8efQG8IodPkunWXXIoOuYetlpq/FHNKxL4V3rL1hGlSb++3footMX04cQzDem9kA56tTSgBAxcnWe2pDrgWPU/NjwZI0i23JtRuRCPb/xzUv+Yqj8db5O41ocUxmhMafiYbYdomE=
+	t=1748967161; cv=none; b=NdBlXRYh9MxP/5LEGEv+7FHqZb9mY924KnNdEgammo2wU9pnPIh0YO7ftSxNuNzYTCEjKz/c76H6DbYIFAdmF3x9VPujU+Nf6FFot7d+8qRxNm2k+mq9cpZZVtCJOynllu0TGav0b5Zlj2Ybc5F7OLJ6e4UFmYeSil7Ae4r+PRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748967159; c=relaxed/simple;
-	bh=3PiEDIYHtCQ+1wMROHydqx0LPGdXprXodMC6eeRYosc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hyr47XO9p0WaPth0kVAabGPdanyaHXK9C6aPW489oeKhBPHjtSpLHQIn/+iUtgpjOZWRsaBvGY1IX2ZMWjhnqd91Xof8UqmYWHITYIhJtB52ztYc9tCHxjJf9gdYAY6JKytOxHdYdKn7QjS/6L47Za0qGtoq2PUbM1BubpS8jxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=FRGsZm8N; arc=none smtp.client-ip=217.10.52.105
+	s=arc-20240116; t=1748967161; c=relaxed/simple;
+	bh=QpxyJW3KI6dSN48T8NAe3BtLqrT4OD7XzH5S94D9Nec=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qhRRbo6hdOgDIqsJKSXurdiGQa/zb0Q7INI+s+nasIwrux+cjuA+tcqb4Z82dUBNPqsu9YJICoHJhoE7fxj+6oFfMu+4lK5h4Yh5uIwihYy6+HJJdibH422+YPAaghtEWj/Q/ArxEqRjpMPcKGrq3HfdFpNNpM4Kb31Pr3FsaJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=IJgeIeNE; arc=none smtp.client-ip=217.10.52.105
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="FRGsZm8N"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="IJgeIeNE"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1748967158; x=1780503158;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=3PiEDIYHtCQ+1wMROHydqx0LPGdXprXodMC6eeRYosc=;
-  b=FRGsZm8NvxpB+f+wsRW8VTK3NDD4CwmEVN6QUI3DAdOdL4WoLYj5bNwF
-   oEhR982eme0GPhKN+Rfcq7hqHlELUUhxWdNIj/6apqdD88ZO0qwPxvNeA
-   xJxhGM98RJ9RV1aG+gGpT9/gOdNZimvV0X1QF9MuEAo7UTZhqekRDDdKI
-   4=;
-X-CSE-ConnectionGUID: PPYX4LKRQ4yXcUVFbo6WYQ==
-X-CSE-MsgGUID: estYr/e6Rsyx45F695w9aA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="97700322"
+  t=1748967160; x=1780503160;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=QpxyJW3KI6dSN48T8NAe3BtLqrT4OD7XzH5S94D9Nec=;
+  b=IJgeIeNE1oSikmJHzZYO0+L1Os17gzIeQrR+bpKui1KSpBq0tahDVf53
+   e9ejPwG9z4loPE9Upkqe/JpR8buHbC8s8MBQ5+gXp7ZFx81nR+F9UPTLt
+   jSrJCivunqdZTy9lDd4eh9oExDMZn46SKffSR9OQheXvGlsSM3LqUzSpI
+   A=;
+X-CSE-ConnectionGUID: QVlIz5A/SI+aAWu9I+8XvQ==
+X-CSE-MsgGUID: Q65vbM3GRvWZaAWi1a1YAQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="97700338"
 X-IronPort-AV: E=Sophos;i="6.16,206,1744063200"; 
-   d="scan'208";a="97700322"
-Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
-  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 18:11:23 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE805.infineon.com
- (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Tue, 3 Jun
- 2025 18:11:22 +0200
+   d="scan'208";a="97700338"
+Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
+  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 18:11:31 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE819.infineon.com
+ (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Tue, 3 Jun 2025
+ 18:11:30 +0200
 Received: from ISCN5CG14747PP.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Tue, 3 Jun 2025 18:11:20 +0200
+ 15.2.1544.4; Tue, 3 Jun 2025 18:11:28 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: Johannes Berg <johannes@sipsolutions.net>, Arend van Spriel
 	<arend.vanspriel@broadcom.com>, Ajay Singh <ajay.kathat@microchip.com>,
 	Claudiu Beznea <claudiu.beznea@tuxon.dev>
 CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>,
 	<wlan-kernel-dev-list@infineon.com>, <gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 0/5] wifi: cfg80211: Add support to indicate changed AP BSS parameters to drivers
-Date: Tue, 3 Jun 2025 21:40:52 +0530
-Message-ID: <20250603161057.19101-1-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 3/5] wifi: wil6210: reject SET_BSS if any changed AP BSS param is not supported
+Date: Tue, 3 Jun 2025 21:40:55 +0530
+Message-ID: <20250603161057.19101-4-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250603161057.19101-1-gokulkumar.sivakumar@infineon.com>
+References: <20250603161057.19101-1-gokulkumar.sivakumar@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,84 +64,42 @@ Content-Type: text/plain
 X-ClientProxiedBy: MUCSE817.infineon.com (172.23.29.43) To
  MUCSE827.infineon.com (172.23.29.20)
 
-In cfg80211, added provision for the drivers which registers the callback 
-.change_bss() cfg80211_ops, to find which set of AP BSS params are changed
-by the userpsace in the SET_BSS operation. With this the drivers can decide
-to reject the operation if any of the changed AP BSS param is not supported
-for explicit configuration. This helps ensuring that the driver does not
-partially handle the AP BSS params and avoid misleading the userspace that
-the SET_BSS operation is fully successful.
+The userspace can change more than one AP BSS Parameter in the SET_BSS
+operation. Incase if any BSS param other than the currently supported
+"ap_isolate" is passed by userspace, reject the entire SET_BSS operation
+instead of misleading the userspace that the operation is fully successful.
 
-Also introduced the "changed" bitmask check in all the drivers that are
-currently registering to .change_bss() cfg80211_ops. This would make the
-condition for handling SET_BSS operation equally stirct across all drivers.
+Also add an individual check for the CFG80211_BSS_PARAM_CHANGED_AP_ISOLATE
+flag, before handling "ap_isolate" value from the userspace. This addresses
+case where driver unnecessarily checks the value of ap_isolate, even if the
+userspace did not pass this param in the SET_BSS request.
 
-CHANGE LOG:
-v3:
- - In drivers, added individual check for the CFG80211_BSS_PARAM_CHANGED_*
-   flag before handling the corresponding AP BSS param from the userspace.
-   This avoids the case where driver unnecessarily checks the value of
-   all the supported AP BSS params, even if the userspace did not pass some
-   of those params in the SET_BSS request. This addresses a review comment.
-   Link: https://lore.kernel.org/linux-wireless/5095079184a282ae552c50c8c121a632d51b0419.camel@sipsolutions.net/
+Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-v2:
- - Rephrased the subject line for this v2 patchset cover letter to include
-   new changes introduced for addressing review comments. Kindly refer the
-   below mentioned v1 section for the reference to the previously submitted
-   patch Link.
-
- - cfg80211: in a new patch in v2, introduced the "changed" bitmask for
-   AP BSS parameters as suggested in Johannes's review comment in v1 patch.
-   Link: https://lore.kernel.org/linux-wireless/29fa5ea7f4cc177bed823ec3489d610e1d69a08f.camel@sipsolutions.net/
-
- - brcmfmac & wil6210: added "changed" bitmask check for the supported
-   "ap_isolate" param and reject the entire SET_BSS operation if the
-   userspace passes any other unsupported AP BSS parameter.
-
- - brcmfmac: added changes to get the current "ap_isolate" param value from
-   firmware before attempting to set the new value from userspace. If the
-   new value is already set, skip this operation.
-
- - wilc1000: in a new patch in v2, added "changed" bitmask check for the
-   SET_BSS operation, and return -EOPNOTSUPP instead of 0, if the userspace
-   attempts to change any AP BSS param. This helps to avoid misleading the
-   userspace that the operation is fully successful.
-
- - mac80211: in a new patch in v2, added "changed" bitmask check for the
-   supported AP BSS params, and return -EOPNOTSUPP if any unsupported
-   param is set by the userspace.
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 5473c01cbe66..41df409f5fad 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -2416,7 +2416,15 @@ static int wil_cfg80211_change_bss(struct wiphy *wiphy,
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
+ 	struct wil6210_vif *vif = ndev_to_vif(dev);
  
- - Link: https://lore.kernel.org/linux-wireless/20250603103252.18039-2-gokulkumar.sivakumar@infineon.com/
-
-v1:
- - brcmfmac: support AP isolation to restrict reachability between stations
-
- - Link: https://lore.kernel.org/linux-wireless/20250423175125.7233-1-gokulkumar.sivakumar@infineon.com/
-
-
-Gokul Sivakumar (4):
-  wifi: cfg80211: Add support to indicate changed AP BSS parameters to
-    driver
-  wifi: wil6210: reject SET_BSS if any changed AP BSS param is not
-    supported
-  wifi: wilc1000: reject SET_BSS if any changed AP BSS param is not
-    supported
-  wifi: mac80211: reject SET_BSS if any changed AP BSS param is not
-    supported
-
-Wright Feng (1):
-  wifi: brcmfmac: support AP isolation to restrict reachability between
-    stations
-
- drivers/net/wireless/ath/wil6210/cfg80211.c   | 10 +++-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 47 ++++++++++++++++
- .../wireless/microchip/wilc1000/cfg80211.c    |  6 +++
- include/net/cfg80211.h                        | 30 +++++++++++
- net/mac80211/cfg.c                            | 54 +++++++++++++------
- net/wireless/nl80211.c                        | 28 ++++++++--
- 6 files changed, 154 insertions(+), 21 deletions(-)
-
+-	if (params->ap_isolate >= 0) {
++	/* Reject the operation if any of the AP BSS params that got changed are not
++	 * supported by the driver for explicit configuration.
++	 */
++	if (params->changed &
++	    ~(CFG80211_BSS_PARAM_CHANGED_AP_ISOLATE))
++		return -EOPNOTSUPP;
++
++	if (params->changed &
++	    CFG80211_BSS_PARAM_CHANGED_AP_ISOLATE) {
+ 		wil_dbg_misc(wil, "change_bss: ap_isolate MID %d, %d => %d\n",
+ 			     vif->mid, vif->ap_isolate, params->ap_isolate);
+ 		vif->ap_isolate = params->ap_isolate;
 -- 
 2.47.0
 
