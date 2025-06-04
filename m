@@ -1,101 +1,105 @@
-Received: from mail-out.aladdin-rd.ru (mail-out.aladdin-rd.ru [91.199.251.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 946CB2153EA;
-	Wed,  4 Jun 2025 10:29:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.199.251.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4665319F480
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Jun 2025 10:58:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749032972; cv=none; b=fFtAimAwJZ+KPVdiYBcGYL2w0j75Vo6P64dqEamDizcyCU5KitaOBL8imyOrb8lvsNXp2TAs2fRWtylraDfjnOVYvFbKdJYLXkk1HIFbRWPKZ9DXhnrlDlhm5yZBH33QH7L9LvqraziqpNHuU/GhuNlwFJE3DyuWmWNLyHMAb2I=
+	t=1749034699; cv=none; b=kqj6vlprEUkOgSnTTEryj2THikPMM/xI6JxaDNt43AZLC0sDn64NwY7Wt9U416tEaSoBYPQGroUTT+MaaEgFr2oVxeE/yWn47wXp7Z+v/TTPfrhSRmDFa+mAl5NFleLFLMZVjlWwRf4X5fYMMArAFrg6LPnJt0OwNeXV9KC1y/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749032972; c=relaxed/simple;
-	bh=K0KH87Eqmp0gY8TpGdW3mtysyP6xVb0gwpGfKjIWs7k=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uTB15avj9JSlSlfq03npLfdxr6x4nl+yf7ex5Ye3cIvcaWEedkjrkMF5ulkRASgBmAReXqqtutoN8gvqLyx/UgORKpWjBJgZl7S7UvNIwDTnZmgvwz+DUiMxh72wYdnV85DovfuK4sHGOZ0udLc32vsEMMXDR/1Vd65m7ZqKWDw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru; spf=pass smtp.mailfrom=aladdin.ru; dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b=vz6lJEDI; arc=none smtp.client-ip=91.199.251.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aladdin.ru
+	s=arc-20240116; t=1749034699; c=relaxed/simple;
+	bh=gY0mJOctRn86jRtTUezyzhNzvmP6GbNfy7Ile3+JwQE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mgqfCRrLYRSm1D0+rZurbSKS/rXW0iPsBI5eSg9hiFoc3VBd/LyYCVm/1jPvCLXAfFI5S2q7GtAU+4zVu3fq7tEB8WwgUEQMmY2x+sapOgpee9t0w3hXDJIB7dLGFc9nEN1PYP0Q8MWzi+DuVcd7CWhRIdMvl5ayz0BzTnzt/WA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=iGxlsu1x; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b="vz6lJEDI"
-DKIM-Signature: v=1; a=rsa-sha256; d=aladdin.ru; s=mail; c=simple/simple;
-	t=1749032043; h=from:subject:to:date:message-id;
-	bh=K0KH87Eqmp0gY8TpGdW3mtysyP6xVb0gwpGfKjIWs7k=;
-	b=vz6lJEDITQM61yQXqmdMenRaQvSX3SrS+iGH9t/NNNPxlBXwjYd92l0sEhHP/aMOFEFQtN2MPJE
-	VLiWbh124z2HFn3U7vyy/sGQjUwyQTtPTAw/Kt7Ijy+fJ5UY0SVwWb5Z7tOAY6TJh1QsuKKYv86P8
-	D6o7IppyT4xGGLakYNPHkBKguUJqA7euPRGwT13UnK3yAosdwYfPm4+vW+M630sGu9jkrO8Ipoxqq
-	GcvIuPzRh+IQfRcT0i065Q4C4P8iHDTY2c9dK0jVVh9tWn8T2Jpez8aC4LiCzYeCARGKjgZ+89GdQ
-	ENAN0VwovpvOQmPOVuO+IOW7DrYfxoPMDUNw==
-From: Daniil Dulov <d.dulov@aladdin.ru>
-To: Johannes Berg <johannes.berg@intel.com>
-CC: Daniil Dulov <d.dulov@aladdin.ru>, Kees Cook <kees@kernel.org>, "Emmanuel
- Grumbach" <emmanuel.grumbach@intel.com>, Miri Korenblit
-	<miriam.rachel.korenblit@intel.com>, "John W. Linville"
-	<linville@tuxdriver.com>, Daniel Drake <dsd@gentoo.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lvc-project@linuxtesting.org>
-Subject: [PATCH] wifi: zd1211rw: Fix potential data race in zd_mac_tx_to_dev()
-Date: Wed, 4 Jun 2025 13:13:56 +0300
-Message-ID: <20250604101356.6292-1-d.dulov@aladdin.ru>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="iGxlsu1x"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5547Akia010398;
+	Wed, 4 Jun 2025 10:58:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=yyIgCqg3yOxjD8Kzbl4OoNq0RycawEE3A7NAaE9LKGU=; b=iG
+	xlsu1x7D4oJbT7leSHW6Edt1ClANKoo65+IgLMDEiXZI/F1cGheK5+NpfDAtKN3C
+	Q5QVsuBYm3yPKXe7lauOF0fLdXcM8YBRtRCa6Lwkvmlcck/5Q3/brsVpmzamsKvr
+	EkWW+JgPIlSBI65jzx4IUxWeJR3rhcjAnKpKniCWslvihzSG6XBLaN4giY4eqJik
+	g2CaHI/rzospMmwBgNLPxn5BrKKqPaCFJ3xJFdLXBPa+QAHr70bmUNC5k59LPz4D
+	42RPrIFrRSWP6bGc8wpfnGjLA9W/HXVD+kkAhsZ/IsDAWpXAcDQMuUiKaFLgzgXm
+	4BV6ErWe8PktEnmQ4pcQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 471g8yns5b-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 04 Jun 2025 10:58:13 +0000 (GMT)
+Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 554AwCq6002699
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 4 Jun 2025 10:58:12 GMT
+Received: from hu-kkavita-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Wed, 4 Jun 2025 03:58:11 -0700
+From: Kavita Kavita <quic_kkavita@quicinc.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <quic_kkavita@quicinc.com>
+Subject: [PATCH wireless-next 0/2] wifi: cfg80211: Add support for link reconfiguration offload to driver
+Date: Wed, 4 Jun 2025 16:27:55 +0530
+Message-ID: <20250604105757.2542-1-quic_kkavita@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: EXCH-2016-03.aladdin.ru (192.168.1.103) To
- EXCH-2016-01.aladdin.ru (192.168.1.101)
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01c.na.qualcomm.com (10.47.97.35)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA0MDA4MyBTYWx0ZWRfX/EqEQZAhJ0/D
+ 6BRePyHn3Wz8OZFhaKtsVeRlkiUVCZVEG3FAmzNKXBr9krKdEq5bTGMys84/MsKRrnAa0/6uvNl
+ dLpjNYJJ5G58xKhHGh/MDJfBo/gzeltBevbt2K15OZgU7mTOUPr2RnnEacl7oYZwauujperbxGY
+ WH3Y6/+KZkPhED4bHUD2FBhKIwMIOkV/QqZon5pFje16/khbd8xowIiQ310QHdo2rzx447XygkA
+ JVS51kWIq5BmcwvioDWIKIcBp6FynP9UnJaYKKGLIPwB6Sk41ucoYeLj2yikIhBpGNtWH9TlYhV
+ mt4FJBevvsyu41Vpxp3FwCE6XJIfT5WeG+0XoMHCwkfzlM1CbGHJof7jG0hdK634X1CMav10Xu+
+ suVVwqsvtogbuRvJ75EUyPu0YiJ3uqlO/kXxkGz5MGCP9fUortyrkFQxNV5Lc+rDfnEO9XXt
+X-Proofpoint-ORIG-GUID: ch5cRyvh9enPrZvR59nMN7bqVx5zOhrM
+X-Proofpoint-GUID: ch5cRyvh9enPrZvR59nMN7bqVx5zOhrM
+X-Authority-Analysis: v=2.4 cv=T/uMT+KQ c=1 sm=1 tr=0 ts=684026c5 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=6IFa9wvqVegA:10 a=WPqYBIgJSKlNBoNPAVMA:9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-04_03,2025-06-03_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ mlxlogscore=846 suspectscore=0 impostorscore=0 mlxscore=0 bulkscore=0
+ lowpriorityscore=0 clxscore=1011 spamscore=0 malwarescore=0 phishscore=0
+ adultscore=0 priorityscore=1501 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2506040083
 
-There is a potential data race in zd_mac_tx_to_dev(). For example, it is
-possible for filter_ack() to clear the ack_wait_queue right after
-zd_mac_tx_to_dev() checks that queue has more than 50 elements, but before
-it dequeues any skb. This results in skb_dequeue() returns NULL and the
-pointer is dereferenced in zd_mac_tx_status().
+This patch series adding below changes:
+- Add detailed documentation for how the link reconfiguration results
+  are indicated from the driver for user initiated link
+  reconfiguration requests.
+- Extend link reconfiguration result event path to support AP-initiated
+  link reconfiguration results for the SME-in-driver cases.
 
-In order to avoid potential data races and leading dereference of a NULL
-pointer, acquire the queue lock before any work with the queue is done and
-replace all skb_* calls with their lockless version.
+Kavita Kavita (2):
+  wifi: cfg80211: Improve the documentation for
+    NL80211_CMD_ASSOC_MLO_RECONF
+  wifi: cfg80211: Add support for link reconfiguration negotiation
+    offload to driver
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+ include/net/cfg80211.h       |  6 ++++++
+ include/uapi/linux/nl80211.h | 10 +++++++++-
+ net/wireless/mlme.c          | 10 ++++++++--
+ net/wireless/trace.h         | 10 ++++++----
+ 4 files changed, 29 insertions(+), 7 deletions(-)
 
-Fixes: 459c51ad6e1f ("zd1211rw: port to mac80211")
-Signed-off-by: Daniil Dulov <d.dulov@aladdin.ru>
----
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-index 9653dbaac3c0..e7e0d1b7b9ab 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-@@ -568,6 +568,7 @@ void zd_mac_tx_to_dev(struct sk_buff *skb, int error)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hw *hw = info->rate_driver_data[0];
- 	struct zd_mac *mac = zd_hw_mac(hw);
-+	unsigned long flags;
- 
- 	ieee80211_tx_info_clear_status(info);
- 
-@@ -581,13 +582,17 @@ void zd_mac_tx_to_dev(struct sk_buff *skb, int error)
- 	} else {
- 		struct sk_buff_head *q = &mac->ack_wait_queue;
- 
--		skb_queue_tail(q, skb);
-+		spin_lock_irqsave(&q->lock, flags);
-+
-+		__skb_queue_tail(q, skb);
- 		while (skb_queue_len(q) > ZD_MAC_MAX_ACK_WAITERS) {
--			zd_mac_tx_status(hw, skb_dequeue(q),
-+			zd_mac_tx_status(hw, __skb_dequeue(q),
- 					 mac->ack_pending ? mac->ack_signal : 0,
- 					 NULL);
- 			mac->ack_pending = 0;
- 		}
-+
-+		spin_unlock_irqrestore(&q->lock, flags);
- 	}
- }
- 
+base-commit: 1b98f357dadd6ea613a435fbaef1a5dd7b35fd21
 -- 
-2.34.1
+2.17.1
 
