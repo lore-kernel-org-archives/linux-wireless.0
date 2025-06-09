@@ -1,62 +1,62 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-io1-f48.google.com (mail-io1-f48.google.com [209.85.166.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8ECF24728F;
-	Mon,  9 Jun 2025 03:09:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7525246771;
+	Mon,  9 Jun 2025 03:09:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749438544; cv=none; b=DSo1dTqVT4Ya++Ry4pgMhR2UrpH7oXbOZ5rx/hCYjJ2ZMt8HOwygwk/KavTuuca6oDRsljVWwIHnJD3w2IYXZKlXQKVcf4j4AzHV9VFIgvnrYBFN335qfYuMPOctDmgyMehNErb7SCertlAmjAsEj8aeWaXNVGySK/jdB6z6/fk=
+	t=1749438550; cv=none; b=noRMwxsDqCl7kOc0VsPpGuXsC3SDCal3KEZFTgqDfM2xnyP5oKR45tGn4nGh83U5mGDWHvdyTuQAmpsAm6jb0utyUzhm/j7w2Jz2brhBHVNYY6kRz4j5Fwz/LIY2oqBsmk3ya+jFUDVJfVd4cfHxg8WgEMsvdZzB6fFgq+evy98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749438544; c=relaxed/simple;
-	bh=BOVfDJPoCfFFtY+XodlIWmpn3idqQljzMhAS6uW6lpk=;
+	s=arc-20240116; t=1749438550; c=relaxed/simple;
+	bh=FQpBJ6ylyv5OBC6bDhYSClT6QoIzNk32h9Chka8u0NY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FenRRaw276/DLxaT90BvSky28J0lE1UpElMqsDONo0iuJcYoeT2m1bYMLg/DxFo4GorO9rssNhVm9rqdi92JNkUCFrhSVInuBbPklvKonJGVnjKAqkDqZqvekf9ZbH6EbXkcnMdFzD6ScKsyR20zO0MaAfLSQvUC1Tg3bfgnqQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZcZ+Rhfw; arc=none smtp.client-ip=209.85.214.179
+	 MIME-Version; b=rJ9VeSqoQi+11ZBQ4bACw8wa0k3Wq9sincuQcIHu9kfaqJqAVp87VpXY50ORIHSQQ/j3FLDXLvQnCignAayXhWnrsBh5wsYcNmkx0AEWMLVzHz6fqJ/cHDndY9OoJ+vaszwk0siJ0NjAoT7QZrEVnCmblxfzyhlYCoMT3HeDbHU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nq0tVucS; arc=none smtp.client-ip=209.85.166.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZcZ+Rhfw"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-23508d30142so51124825ad.0;
-        Sun, 08 Jun 2025 20:09:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nq0tVucS"
+Received: by mail-io1-f48.google.com with SMTP id ca18e2360f4ac-86cf3dd8c97so325446939f.2;
+        Sun, 08 Jun 2025 20:09:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749438542; x=1750043342; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1749438548; x=1750043348; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GzSU8nsATIo9zu1PVccgBXCtIIymE8GQqXt996enmbg=;
-        b=ZcZ+RhfwyxLogDF6dakibOKm8uraa9b1W9j7PqerxV1iga8okZwIBlp4+WV6/nJ/Iw
-         CUvm7EIzwUzPvc7AZK6N0Brx+sb9Hbn82/gNO5Faxoc9uVu/Y6xebDmf7TQNpon3TcqQ
-         mXsf7dxH7ZAJIXJcCstyuGZc2AjdbW5eczM56znmKx5WoRRHP4+32evZHFHPo6sNK1gs
-         4RZWXvYDToXALeICBJqEtguHfizW6gC7smMQLrudX4uEqFku/dCPCL+p2stMTMsHTlyx
-         zzujT0XGuYon3+XJ80Efjrda12b2YTeGhHRrb9Tn9+J8EYMx8tFeReLkX0AQALveuUa/
-         QAlQ==
+        bh=r672ECiRe9oiRfMRln147aOj4DFHIta8gOUnsDT+yFo=;
+        b=nq0tVucSgbvmcJLMHLSS+FFSkshvE3Kby1y6QN1BrEgx4iJ/20geCCdLSSW2Rt7M5a
+         nmq9NHE+U/Y0m+FuVmTRFPu8v6mKakaMMrDc9nUG1YuUK35jJtqjbjbdbdYxZ2y8KZXD
+         eYYzJOTyLY75NV9ROtyNY3cdXS5STWopvzGpNWEdK/9LMCq3FR58zTgJ6HMz2W2Da3/2
+         SUu+Zgpw16TBPWaUWfZzRwG6q4gPOmPGMLZnr5FGD0w7+kl6j5d5EpmbMDFSaQ1wneE4
+         roCvvTCR9d7N7uFrJ0ABf/+rrq24DA0eiKTuU6EkhNnCQcy0aFLMrWLQoDy6aZUPJjXx
+         C9rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749438542; x=1750043342;
+        d=1e100.net; s=20230601; t=1749438548; x=1750043348;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=GzSU8nsATIo9zu1PVccgBXCtIIymE8GQqXt996enmbg=;
-        b=DuLEYU/wUkFtc/oQZjylWmT6z2pOr1sWrxkB31xnOQqOsXK+Y2v+Ijf8kdraPBdEpr
-         8U7FsA0ncoi4vxljr7SzN//ZVM+gKLXtgJSJr+09iXN8wPCFWno7sgMsLt+uyZ6zv2ya
-         EV9cJyq8B8ltuvOFYBQfFjKoS5wufBZQ1VRqTPSOBqcf3oHHImyMIot+cDgvsOxJLjPd
-         5qFcBh5EBGLurT2bf3t4+aWW8Im+7Y0swajvxGA2IDgIGgji7PwsjKEagmN/WRcGGQmi
-         xy4/qeWeP2t0804RskN7b5W/IBxUd60qSLYxe4XjmCVC6HR4sUEDifHFDBn5WnyJrAQN
-         B9vw==
-X-Forwarded-Encrypted: i=1; AJvYcCWyG7aeAf4UqH4TrYClLM4x1R4IE8nROlVfU+T7iisctTNF9K9w98lsJEp1b+MqXOqCqr/kjbE4fjR8a7GG@vger.kernel.org, AJvYcCX2OA6ehrCawO27P6/0Q2mJ1I7G/EPVoP/HS/jfkekFZkayib5fd2csPqceEvVZc8/W+AIHEmjRYi5q@vger.kernel.org, AJvYcCXg1urTUM4IpPuISQL/Vz5b6PslQM+ZfBbQp4ASnNc2NCTzvwTU5idDbZcuyIuKWh8FGwOY0Dqk7OSe9w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyPiUratYwuDJo4bKqGJz2hMsiY/C8Djkaa+10iS5J76MIw3S3O
-	dPgIatlk8d6D0dcfaz+p1335nLoQesmdrM6uKirIP3mY6BvP6t8fCoZ6iNoTcg==
-X-Gm-Gg: ASbGnctISmT0e4BkWZK4se7GGV+eWPjPQgaJSS81nmYtCxsvCDEKa6AK9d88Ijt3GqJ
-	epjxcX65R9QWfVOA7lZPfQh8WvzPQ6PwqLVagmaqU/lnoVdPXD0YZFjymLdC6574Mf73JRp9ONX
-	630VNihAUJYd+MbCSyDGUqgKeIWbajZeUoAndWOn/F8Tsbs8+JQ1vnqNPDtJE/yBbCPseHDGkqX
-	NTyfO1VAMoBd4wbfW6jQOw0EfGzowgDaZGn6au4YdjM41KtOS3zPwMAyv115Ms0HDQ5KMpAH0O/
-	ILngP4v4djJmaj4ol0PwnRTw0hmp17fhZ4TOHiNodMssJNr0
-X-Google-Smtp-Source: AGHT+IGHL5aLMq8WMEThtj+mFhhQMR1hxx1t6f+c9SokKwf0WduO1eynoUgZEr31jrm5I3oukdtciA==
-X-Received: by 2002:a17:903:22c7:b0:234:bfcb:5c1d with SMTP id d9443c01a7336-23601d71207mr171637415ad.40.1749438541938;
-        Sun, 08 Jun 2025 20:09:01 -0700 (PDT)
+        bh=r672ECiRe9oiRfMRln147aOj4DFHIta8gOUnsDT+yFo=;
+        b=vMRip0uOD2xBXJJiPbs+f8M+nzwQ+uZb507pqjJlctvrqi6SODzodpdmFc+ineHLhB
+         2gQWRg8fkk/8AuthMmnvv9sptpGRStS+bnDcv1QM0PVbqcMPYJKqXjPbZ4F9MQqDqHpr
+         jiPLuJx0g+O5z3zETK6wBhlQUylyI1bMb6/3F7iJtU3txF0XbqjpA8n+l4YrjnGJYH3g
+         eMzGIxLbIbcxZyPB8rneh/0HB84Ct9Cv5G0drNpROG04ZR7DVABcCOBebQUhs4jbaex+
+         CdQ0pCtl+sm5JuNzOkvFxrRDhICMqiZogH+jQ3rl1ysZ4TcoXdYOw031khaS5/iSYeYW
+         jNGw==
+X-Forwarded-Encrypted: i=1; AJvYcCUyzPkDdxD1H+F/kFM1I0bcE1v0Rh3z0tX352XXi4z9weNl2LYOM4Ck9uXOyqUo5bluB3NzIE2SkhYLBg==@vger.kernel.org, AJvYcCVuGS1oKIBQsVMWxLiB4rJeIkOSdfjrvWLrKbEJWve1JOKG5Hhs+rmruZOfE2m2A9f7LStKRWoOi+6n@vger.kernel.org, AJvYcCWHVX+KmFLOsG9ftwv4TfUNd3pdcoT1pZmXWk8YEG0Cw+77Qvc1JyiHgLTBL+nFjXHCeNs2DFXPBEdLCXxo@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzr1+xEiw2NMrweI4SFpBtrz25uNpPFvAn/Zxz89w27e59zngtD
+	S/ciK4D9m8o2Ytd9gq0BIuy7IoJG1YmsCa+5yBXQWtaCTquLSvoXp7AwpbB62w==
+X-Gm-Gg: ASbGncufwjDl1EFLZWdxc8OTWeVfpj9YwWJ/oLQxOLTif/N0t8OdQTL8AKYFdBtm054
+	qj8F1pTbSoSqfAqHmSjCjX2nvsBnPY0YDcTEmOxw99xPel+siMaQrv6P/tBHy/SaUKj4ulYjgca
+	GZ/9ctJBHcv+kgZ2qjJ9crKQUfl17vwQR8Iuvh12rPqCbrmL9P612PeI4iKV1Z2eUb++egVIUsB
+	r3OpTngmKafckhCAtJjZgtGM8q0D7vJFXC4g+XW3rShMPW5rSkdf2MI5DD42Dx1j07brLLL2UbM
+	SjtdWjnwX8kC2fcoFsr5zbZc+QUlbSI533PMJA==
+X-Google-Smtp-Source: AGHT+IGppOpwIwJJ6iDgNpOoZaqHwwshNfv9R9mKSyT/m5dpK1/AmrJ2oleb8/shEfNMGZkJWj7URw==
+X-Received: by 2002:a17:902:dac7:b0:234:b422:7120 with SMTP id d9443c01a7336-23601cf6b7emr167277145ad.9.1749438536018;
+        Sun, 08 Jun 2025 20:08:56 -0700 (PDT)
 Received: from ryzen.lan ([2601:644:8200:dab8::a86])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-236032fccd6sm45310125ad.134.2025.06.08.20.09.00
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-236032fccd6sm45310125ad.134.2025.06.08.20.08.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Jun 2025 20:09:01 -0700 (PDT)
+        Sun, 08 Jun 2025 20:08:55 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
@@ -69,9 +69,9 @@ Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
 	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
 	linux-kernel@vger.kernel.org (open list),
 	linux-mips@vger.kernel.org (open list:MIPS)
-Subject: [PATCHv5 5/5] mips: dts: qca: add wmac support
-Date: Sun,  8 Jun 2025 20:08:51 -0700
-Message-ID: <20250609030851.17739-6-rosenp@gmail.com>
+Subject: [PATCHv5 1/5] wifi: ath9k: ahb: reorder declarations
+Date: Sun,  8 Jun 2025 20:08:47 -0700
+Message-ID: <20250609030851.17739-2-rosenp@gmail.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250609030851.17739-1-rosenp@gmail.com>
 References: <20250609030851.17739-1-rosenp@gmail.com>
@@ -83,134 +83,42 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Now that OF ahb support was added to the ath9k driver, we can use it to
-enable and use the SoC wireless found in these chipsets.
+Easier to look at. Follows netdev style.
+
+Also remove ret assignment. Because of all of these devm conversions,
+ret = 0 is a path that never gets hit. The first time it does it when
+request_irq fails, but that ends up reassigning it.
 
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- arch/mips/boot/dts/qca/ar9132.dtsi                       | 9 +++++++++
- arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts         | 4 ++++
- arch/mips/boot/dts/qca/ar9331.dtsi                       | 9 +++++++++
- arch/mips/boot/dts/qca/ar9331_dpt_module.dts             | 4 ++++
- arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts           | 4 ++++
- arch/mips/boot/dts/qca/ar9331_omega.dts                  | 4 ++++
- .../mips/boot/dts/qca/ar9331_openembed_som9331_board.dts | 4 ++++
- arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts              | 4 ++++
- 8 files changed, 42 insertions(+)
+ drivers/net/wireless/ath/ath9k/ahb.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/arch/mips/boot/dts/qca/ar9132.dtsi b/arch/mips/boot/dts/qca/ar9132.dtsi
-index aa148d51ab68..682072371bd3 100644
---- a/arch/mips/boot/dts/qca/ar9132.dtsi
-+++ b/arch/mips/boot/dts/qca/ar9132.dtsi
-@@ -155,6 +155,15 @@ spi: spi@1f000000 {
- 			#address-cells = <1>;
- 			#size-cells = <0>;
- 		};
-+
-+		wifi: wifi@180c0000 {
-+			compatible = "qca,ar9130-wifi";
-+			reg = <0x180c0000 0x230000>;
-+
-+			interrupts = <2>;
-+
-+			status = "disabled";
-+		};
- 	};
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index 49b7ab26c477..d2a97e74f451 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -71,14 +71,14 @@ static const struct ath_bus_ops ath_ahb_bus_ops  = {
  
- 	usb_phy: usb-phy {
-diff --git a/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts b/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-index f894fe17816b..a7901bb040ce 100644
---- a/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-+++ b/arch/mips/boot/dts/qca/ar9132_tl_wr1043nd_v1.dts
-@@ -108,3 +108,7 @@ partition@2 {
- 		};
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331.dtsi b/arch/mips/boot/dts/qca/ar9331.dtsi
-index 768ac0f869b1..6eb84a26a20f 100644
---- a/arch/mips/boot/dts/qca/ar9331.dtsi
-+++ b/arch/mips/boot/dts/qca/ar9331.dtsi
-@@ -285,6 +285,15 @@ spi: spi@1f000000 {
+ static int ath_ahb_probe(struct platform_device *pdev)
+ {
+-	void __iomem *mem;
+-	struct ath_softc *sc;
+-	struct ieee80211_hw *hw;
+ 	const struct platform_device_id *id = platform_get_device_id(pdev);
+-	int irq;
+-	int ret = 0;
++	struct ieee80211_hw *hw;
++	struct ath_softc *sc;
+ 	struct ath_hw *ah;
++	void __iomem *mem;
+ 	char hw_name[64];
++	int irq;
++	int ret;
  
- 			status = "disabled";
- 		};
-+
-+		wifi: wifi@18100000 {
-+			compatible = "qca,ar9330-wifi";
-+			reg = <0x18100000 0x20000>;
-+
-+			interrupts = <2>;
-+
-+			status = "disabled";
-+		};
- 	};
- 
- 	usb_phy: usb-phy {
-diff --git a/arch/mips/boot/dts/qca/ar9331_dpt_module.dts b/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-index c857cd22f7db..08e728b8ced8 100644
---- a/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_dpt_module.dts
-@@ -97,3 +97,7 @@ &phy_port0 {
- &phy_port4 {
- 	status = "okay";
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts b/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-index 7affa58d4fa6..37a74aabe4b4 100644
---- a/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_dragino_ms14.dts
-@@ -98,3 +98,7 @@ spiflash: w25q128@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_omega.dts b/arch/mips/boot/dts/qca/ar9331_omega.dts
-index 8904aa917a6e..1450419024cb 100644
---- a/arch/mips/boot/dts/qca/ar9331_omega.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_omega.dts
-@@ -74,3 +74,7 @@ spiflash: w25q128@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts b/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-index dc65ebd60bbc..5786a827c000 100644
---- a/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_openembed_som9331_board.dts
-@@ -106,3 +106,7 @@ &phy_port2 {
- &phy_port4 {
- 	status = "okay";
- };
-+
-+&wifi {
-+	status = "okay";
-+};
-diff --git a/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts b/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-index 10b9759228b7..a7108c803eb3 100644
---- a/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-+++ b/arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts
-@@ -114,3 +114,7 @@ spiflash: s25sl032p@0 {
- 		reg = <0>;
- 	};
- };
-+
-+&wifi {
-+	status = "okay";
-+};
+ 	if (!dev_get_platdata(&pdev->dev)) {
+ 		dev_err(&pdev->dev, "no platform data specified\n");
 -- 
 2.49.0
 
