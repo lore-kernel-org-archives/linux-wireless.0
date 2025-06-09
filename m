@@ -1,140 +1,122 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 056C724887D;
-	Mon,  9 Jun 2025 03:09:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1277927FD49;
+	Mon,  9 Jun 2025 03:19:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749438552; cv=none; b=fuLToGAdz1OKjdwSebZfCe+gM8nFqeJCol32H49FIOsZaXBkkQT0eEmnjrS5Nl0BJZoECXl4lTSWInQlf7qCqDrajaJFYd5V4Z3ReD8tsDaNbILIwhVteWLszCDRqnjjUcJJ/tyIEdKDOi9xacrFuskTTOo3TkBsDt14f/R4FGg=
+	t=1749439154; cv=none; b=s4qgG8sOuRXO/xOZk/wVZwyJ/TFrhzal/F3Rng4uQhXByXSJ/yz00aNPUguBE+Ci5lHG4gAnbcF5SGEk4Jf0dTpZw1H6EB2L/q7rWUjm5BsX9+ynASdUhdNBvPSP86Aw/XudbN6NJlma11MLKHx3+Q0idNj9wQ+6eedxKEDy0YM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749438552; c=relaxed/simple;
-	bh=EjUUqJu78gnZ+kZus0mVe3cmsSfxzWDnvCU5fOgyvDM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dbl4rDCD3DIPauC52eOVl5pbRjHNoJIcec5m2MHE3Uz2/HAF97+b0bAaFPdKBSFnyUvoVrWj0PIta1oogh77U+lEoUROEo8xMtfcdhm47JDc3+Iyj2PjHIRunnPkZpON/tgDWBxiw7hWf9uwXQ/luPUF/e5l+KF+imt8szY+uZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DGC25u68; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1749439154; c=relaxed/simple;
+	bh=ZAsRHojzJMNFzoua3WF1+EIxkEZsc5RalZrhUXdjU10=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=qLDL7VPl5yCg6c5DQ41zX7Q/FAJnGTIlaSds+drAonmL4xS84K8eMmMMKManPxKdamcnE+e/U7kpvd8WLW3ylf5E+OzA1AAQsgFXdgK7FSpJT23fPDB03G9pLmAiuSk/z/2X8QD+2reA2wZeLxD8JCF3rAXyW0F4Y9dpW646scc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KbOTC8LR; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DGC25u68"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3116db72bd7so4363304a91.2;
-        Sun, 08 Jun 2025 20:09:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749438550; x=1750043350; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o3bCHhvCIyIyl0fJCNdcz93NucCjpdi2oytkopjbSYk=;
-        b=DGC25u68IcdIm6vMdWnIPTI8yCzSAIm1qqdMaRMHIFyqXdvxr9Hxnn/53tgqjee4ro
-         tunA9c5j1oR1pvfmKBnivTJ29JC7d7HZ5xS3aeD9/D0pb/9UBJWr0c1uS67cWVSYfYUz
-         3l0tMrc8dn0LDIB7nb8LHZW6Aa3Miqs1QH6lYu5QkyzgECOlUVjte5y/2HIpyHNGj2jU
-         ggWIl4WBEve4wdYnsEKgOKRVrmqdaSJBk9Erb1Co4phwJbhU9OWq1efqJU0XfMb+omZW
-         NvHlKIdcq7EqhrTCEldFAFFYLx980nomdSSgVEQgutsAoIJ/ROoGYi9THMaEZyj/XQoS
-         LkgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749438550; x=1750043350;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=o3bCHhvCIyIyl0fJCNdcz93NucCjpdi2oytkopjbSYk=;
-        b=pQAH5Eb+3khDCbPj2kYWF8cVtbsn7snF6KVWASOEY0c4gAPfrjsxaKJs5om2TWvgW3
-         gXgaH05HMuvKNO7bzpHoOlcni+ntis7SS9JeUFYWmyu+RymJyNOeoi52u/gHV7b40EDv
-         EieA5woHSkH+9w61dVjNetCW+O7TB9mqlmlOy5omGQHWL8ID639zHPcGyeQMICPXc69W
-         0/uzYFbFhw9WpzD4Rqu9sM+zVUqFE2EymoeqvZ52nzJ30p8O3lC4+R8B0/0rlsAwuS/N
-         U6NE0XQGhsbKyyagGLsnNrtjex6xYLpwAMygikOAMxWLPbag9c4CxEFUOmkvgjUw83xL
-         9eig==
-X-Forwarded-Encrypted: i=1; AJvYcCWeHFNDkHVgBbAATIFz/an93LKaG9e2xanmQpy9W88aQI8oDN9OXhHOqEV3wTzZD2FpzMmkYTOslxyG7V6p@vger.kernel.org, AJvYcCWhRHOlgiYX2Syg9m1Uxq4A0lbcHb0yHovUAn6ppi13Bsotx1WdsHpVVB7NGxkd+ekZFSL6Z0l/DCpXMQ==@vger.kernel.org, AJvYcCXpxA9Sb7FZCH9cW3oT6P0lPNFIfZT5+bWx3DG36ycjJYRUvxiLsGR2A9F8AntrjV9Ht3e/3NApfyc0@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEU2fq6XVg1bRxbQLkYi/llM91OSpPkMbQcJtiW0kWi5stps3T
-	LasY4urHAgaLoMr4SD84EG6ebqxeHX8N5UUe3qJmACZTLff3wlo3t26UWUahMQ==
-X-Gm-Gg: ASbGncva0Tw80WUUbAbPxC4UneTa2IFetHITAls1wy9hi6wYN5P+PBfzD9A/1RaylPV
-	hd+WMz2tFyah3Co4Mt3QWFj61UfNRvYHqsXVwTMP0oGyMsFDK9BvcXVccqZkLR+JcIkEOkGPQWb
-	lZbIJGyLqLpa8dMA7oYI6w1C6qrjIjCUp+wkmLSKwyQs2r+XGmajDekr2fksoZioB194WiRvDfR
-	i3DILIOEkQabhT8uLAqBJZ987FD3HyY3Avl3PKCwuhRBw0j06c39AI9EGUnTK86MuLNVruwrR+K
-	lkieY1qeo6V8XfqnBke7ef9hmVvxzejaNXD/PBFNG0ufg/Ur
-X-Google-Smtp-Source: AGHT+IGDdt6lvdKRoI8nANALMulWUxlZRz3RbGDARFAjSoFf8I30K0QWIhCZQ3b0WJxeTa6N4UvLIg==
-X-Received: by 2002:a17:903:1247:b0:22e:3c2:d477 with SMTP id d9443c01a7336-23601d25c36mr181650275ad.25.1749438538959;
-        Sun, 08 Jun 2025 20:08:58 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8200:dab8::a86])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-236032fccd6sm45310125ad.134.2025.06.08.20.08.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Jun 2025 20:08:58 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	nbd@nbd.name,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-kernel@vger.kernel.org (open list),
-	linux-mips@vger.kernel.org (open list:MIPS)
-Subject: [PATCHv5 3/5] dt-bindings: net: wireless: ath9k: add WIFI bindings
-Date: Sun,  8 Jun 2025 20:08:49 -0700
-Message-ID: <20250609030851.17739-4-rosenp@gmail.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250609030851.17739-1-rosenp@gmail.com>
-References: <20250609030851.17739-1-rosenp@gmail.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KbOTC8LR"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5590KufS021751;
+	Mon, 9 Jun 2025 03:19:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=neOOCqGuLWm+KVMj7rLo1y
+	mhr1KTJeRa+0cIY4vP5BM=; b=KbOTC8LR1in63GNV1PE6PuMJm8DnJQxajy3Wfs
+	85021XjRjYn6BuMk0S2gPXFLxvfe0SQY/2GDbfONadjpPA2XQBXNclV1+TdXawRx
+	PzfKk0Cb4bqOJrBGZHLQll0PGHm4idWF3fvJoZWeyJlazowcN8TEKQcFAZPiTqgr
+	ME19MOlwJn8aL5H7i8YS++MQJIxyjYqyHqCAl4R1NTvoEXyb/gYKdFwFw8BM4xia
+	1sK8DP8cADpJ4Od/LCblLauBCUdiu1HXS1VaGj+71+vRey0lJMrYJElVMjBhYpJY
+	Dyp+vZNtRgaXNCDn54x+u/XrTVeF1nQatjPCfv0vCcKI1Zng==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 474ce9msm8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 09 Jun 2025 03:19:04 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5593J3ef001703
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 9 Jun 2025 03:19:03 GMT
+Received: from hu-rajkbhag-blr.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Sun, 8 Jun 2025 20:19:02 -0700
+From: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+Date: Mon, 9 Jun 2025 08:48:50 +0530
+Subject: [PATCH ath-next] wifi: ath12k: Enable REO queue lookup table
+ feature on QCN9274 hw2.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20250609-qcn9274-reoq-v1-1-a92c91abc9b9@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIAJlSRmgC/x3MTQqAIBBA4avErBsw6ce6SrSQccrZWGlEIN09a
+ fkt3suQOAonmKoMkW9JsoeCpq6AvA0bo7hi0Ep3qlcGTwqjHlqMvJ9orCXqjGPqHZTkiLzK8+9
+ msJfHwM8Fy/t+qcuY5GgAAAA=
+X-Change-ID: 20250608-qcn9274-reoq-8aacc58dec6d
+To: Jeff Johnson <jjohnson@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath12k@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
+X-Mailer: b4 0.14.2
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: ZFVp4cVxJoe8kjoAmgQnCOcc9zRRrPjw
+X-Authority-Analysis: v=2.4 cv=drjbC0g4 c=1 sm=1 tr=0 ts=684652a8 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=COk6AnOGAAAA:8
+ a=R5ACGwntwPhpxkBjR5gA:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: ZFVp4cVxJoe8kjoAmgQnCOcc9zRRrPjw
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA5MDAyNSBTYWx0ZWRfX7R08xUlgmpFY
+ R2PHskYKGsnbNcZEThYW053RnpAMD//PFRT/8ZZVBRgC25cJFmpDatuRZS27ZFBFroTNLgiAvoE
+ aUrluURN2D/hYPyiLaKsk3p7tblHPuHiLJAQkAslKDnRKPDz33ktRxrxnopRcBT0+tKLVsdH8Gb
+ pDS0c4K7EUl0JeOwNJ7DIuLmrE2zHdBzFfem5eex7dhHv3+WW47o8UfIy7aXuXpD/aINU4K6zOJ
+ DIQsOFDVXBQg6QUTKfgaQtvbqVMljrg1MpsHLB7VMycOAKoD4UxVrzk/C16w/1Z6+rcyQRgGD78
+ 08TYb9mEigbHS/bYI768kf/Yb7zw0/NcLYyhoQx7kQ3gz9ZR5cikL/dApW2wJa3VbgEUXXdxv5e
+ 7Ql7PWkZ0qq39EEXd/Rg7jb9qtQQDcO+QM1pyDf0MUAJZUUey0tvcLO4qWen+n5i6c55ZnUH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-09_01,2025-06-05_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0 clxscore=1015
+ priorityscore=1501 suspectscore=0 bulkscore=0 mlxlogscore=926 adultscore=0
+ phishscore=0 mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506090025
 
-These are for the wireless chips that come built in with various
-Atheros/QCA SoCs. dts wise, the difference between pcie and the wmac is
+The commit 89ac53e96217 ("wifi: ath12k: Enable REO queue lookup table
+feature on QCN9274") originally intended to enable the reoq_lut_support
+hardware parameter flag for both QCN9274 hw1.0 and hw2.0. However,
+it enabled it only for QCN9274 hw1.0.
 
-AHB > PCIE > WIFI
-AHB > WIFI
+Hence, enable REO queue lookup table feature on QCN9274 hw2.0.
 
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Raj Kumar Bhagat <quic_rajkbhag@quicinc.com>
 ---
- .../bindings/net/wireless/qca,ath9k.yaml       | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml
-index 0e5412cff2bc..d16ca8e0a25d 100644
---- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.yaml
-@@ -12,7 +12,7 @@ maintainers:
- description: |
-   This node provides properties for configuring the ath9k wireless device.
-   The node is expected to be specified as a child node of the PCI controller
--  to which the wireless chip is connected.
-+  or AHB bus to which the wireless chip is connected.
+diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
+index 8254dc10b53bbfb54a44c7ff2f705c72461d1031..ec77ad498b33a20bc92e30e52257be70cc406d36 100644
+--- a/drivers/net/wireless/ath/ath12k/hw.c
++++ b/drivers/net/wireless/ath/ath12k/hw.c
+@@ -1478,7 +1478,7 @@ static const struct ath12k_hw_params ath12k_hw_params[] = {
+ 		.download_calib = true,
+ 		.supports_suspend = false,
+ 		.tcl_ring_retry = true,
+-		.reoq_lut_support = false,
++		.reoq_lut_support = true,
+ 		.supports_shadow_regs = false,
  
- allOf:
-   - $ref: ieee80211.yaml#
-@@ -35,6 +35,12 @@ properties:
-       - pci168c,0034  # AR9462
-       - pci168c,0036  # AR9565
-       - pci168c,0037  # AR1111 and AR9485
-+      - qca,ar9130-wifi
-+      - qca,ar9330-wifi
-+      - qca,ar9340-wifi
-+      - qca,qca9530-wifi
-+      - qca,qca9550-wifi
-+      - qca,qca9560-wifi
- 
-   reg:
-     maxItems: 1
-@@ -88,3 +94,13 @@ examples:
-         nvmem-cell-names = "mac-address", "calibration";
-       };
-     };
-+  - |
-+    ahb {
-+      #address-cells = <1>;
-+      #size-cells = <1>;
-+      wifi@180c0000 {
-+        compatible = "qca,ar9130-wifi";
-+        reg = <0x180c0000 0x230000>;
-+        interrupts = <2>;
-+      };
-+    };
--- 
-2.49.0
+ 		.num_tcl_banks = 48,
+
+---
+base-commit: 9f92c4a01c5268f57fa19dd7cbcb1f59b0e66da6
+change-id: 20250608-qcn9274-reoq-8aacc58dec6d
 
