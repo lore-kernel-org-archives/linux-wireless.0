@@ -1,53 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A83B21991CD
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2025 09:04:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8EC41DDC0F
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2025 09:06:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750064654; cv=none; b=SykR+Mu5qFufdH4Fd5fRnXN7W56p95dKe2WBqtEOASwGbFHFg1zpYpQL8PipCviTj3ykE6vqrrHHSKB2xBvIZBCimWi+Y5pflPHccyr2GacEf1avFFUaIbxvBhMdanHMNOnQL5FiZi0qXLeD3YPidRqK4FW6HbBjWt/RcYAMddo=
+	t=1750064814; cv=none; b=Ey14EOgMtJKxKZ5zqA3SRHq3hjvZYUYKvLKBkjeZM/bDZrI1nx3beSohiOiwO6trCo6jy9EQtaJPqjaaqNLdd4HNd7xbk/MYfLabvZ+M+WSXl1sYjRYi0oC3r+LXioRnJERKzc5pIz+XXzy5TYV0qo2DZX3Cz3bNdab6iNeuGh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750064654; c=relaxed/simple;
-	bh=5dpcNOKtqLjEHA6+F+UvqkI7M367+CwlUV7FbQNzlcA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QKwPLr94IGvxUtkSH8gZAIitoHuqbmGn6LHfSqchIC1MCHhWZ+ANH4r4iseZUrtNFZZj+aISBar5bppJVWEOmfHLjOg6Kjxu+wfONZ8ajj1me6U4wNk747v1osFa1tLL6yJXt9PujBgEdOz4XTFXsd9bC2wo8JjfUgW2Z9kdBMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=wKHPouJP; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1750064814; c=relaxed/simple;
+	bh=DGzhHSuHoAZl/SIfJ9976aOYYo1U9vQ9Pweknc6p23U=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=B7RB8bcNSjfyV6TlVFBthgZg7NsLhzFnHEFyOLmGg8eeMT9TLbxLjzmndt4GUX+LT/ZAji9R+zQI90UgZS/Qk+XcVUBGsH4MwzOPTorhchsxJEZJ/+hM6F5Y0/+cFI0R3a8xIosTNUrGYg12DwWkGnkZ3/Zd9TeA5D/KB9KsE3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=sLU6rPKd; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="wKHPouJP"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 55G94AG30175699, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="sLU6rPKd"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 55G96omfE178550, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1750064650; bh=EZRzeLJ78fZ2Is2g2FL3QhnXCgD1XkXlItzWzADhquc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=wKHPouJP2aHb3EYEWWssDX5L2yAj+KB+VrrXAK7KnZeo9IN6ZpRXaSkyakcfyVqqK
-	 SrpzvEysOJfknzRYQAOYlN0VndXJ9ihAhv8RkmTdekg9FuK9sZaQz/4An7UFjuTAUh
-	 I0jWo0FKY6rd3tBV6E8zxS4vXxvYa4nbgg/hxSP+r8fr8pwaKUh840WWYk4Ex0Vi/K
-	 lPekN71CptA/llMM2Q1MBJ2wXxtMrFREJ4MTE4in37P8m/SG1UqZzmI0yhaPlJl1+l
-	 8AThg2XcrxCacUHkYgDqjZOlnsphrhQh8O8rbvlh9VAku0C0csgiyde+vYsIOhbIGM
-	 48Y5uJsBMz4hw==
-Received: from mail.realtek.com (rtexh36505.realtek.com.tw[172.21.6.25])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 55G94AG30175699
+	t=1750064810; bh=WXnMAdXBRuPrSB/PSHTgubEJPdSwEM0HsspMZ6+covU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=sLU6rPKdWBhwBiUk9BP4227vyaXKZU1vVcKd/omSIsiB72rzpNkSWdhgsGpkIfj9E
+	 HtHbWuprdfvIFWpSeMlqRW8wsxOZF61G20lWJn1W4X462gFhmmYbPgf1WGMhZsQmXg
+	 YfRYVRxhRB4Q/v870NfFMXfSYN31fuU/SlfBs8c38evxiPaw9VSd5z0hCTSX5GTUjl
+	 hKGYB5J8juzxhJk1QfJmFpB/A0aZk/a6mUMCNoD9GfW9LQer+/Glez/4AYKnRH+cbh
+	 wrkp0DNrKcPelPqGMemnOaP5fAbeRDjkHd9d6al+/oiPgYKkivxFMvc1Cq3XAQQwQp
+	 77VIqW1e/MV2A==
+Received: from mail.realtek.com (rtexh36506.realtek.com.tw[172.21.6.27])
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 55G96omfE178550
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2025 17:04:10 +0800
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Jun 2025 17:06:50 +0800
 Received: from RTEXMBS04.realtek.com.tw (172.21.6.97) by
- RTEXH36505.realtek.com.tw (172.21.6.25) with Microsoft SMTP Server
+ RTEXH36506.realtek.com.tw (172.21.6.27) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Mon, 16 Jun 2025 17:03:45 +0800
+ 15.1.2507.39; Mon, 16 Jun 2025 17:03:18 +0800
 Received: from [127.0.1.1] (172.21.69.94) by RTEXMBS04.realtek.com.tw
  (172.21.6.97) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Mon, 16 Jun
- 2025 17:03:45 +0800
+ 2025 17:03:16 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>
-Subject: [PATCH rtw-next 09/11] wifi: rtw89: coex: Update Bluetooth slot length when Wi-Fi is scanning
-Date: Mon, 16 Jun 2025 17:02:50 +0800
-Message-ID: <20250616090252.51098-10-pkshih@realtek.com>
+Subject: [PATCH rtw-next 00/11] wifi: rtw89: coex: update to support latest firmware of RTL8922AE
+Date: Mon, 16 Jun 2025 17:02:41 +0800
+Message-ID: <20250616090252.51098-1-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250616090252.51098-1-pkshih@realtek.com>
-References: <20250616090252.51098-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,31 +56,36 @@ Content-Type: text/plain
 X-ClientProxiedBy: RTEXMBS02.realtek.com.tw (172.21.6.95) To
  RTEXMBS04.realtek.com.tw (172.21.6.97)
 
-From: Ching-Te Ku <ku920601@realtek.com>
+Update BT-coexistence accordingly for the latest firmware, which supports
+new events format, new messages from BT firmware and so on. Also, fine
+tune parameters to improve user experience reported in field.
 
-If Wi-Fi isn't connected to AP, the firmware scan will not switch to
-operation channel. Bluetooth may not have enough time to TX data. This
-patch extend the slot to let Bluetooth can TX more to avoid audio lag.
+Ching-Te Ku (11):
+  wifi: rtw89: coex: Add v1 Bluetooth AFH handshake for WiFi 7
+  wifi: rtw89: coex: Enable outsource info H2C command
+  wifi: rtw89: coex: Query Bluetooth TX power when firmware support
+  wifi: rtw89: coex: RTL8922A add Wi-Fi firmware support for v0.35.71.0
+  wifi: rtw89: coex: Get Bluetooth desired version by WiFi firmware
+    version
+  wifi: rtw89: coex: Update scoreboard to avoid Bluetooth re-link fail
+  wifi: rtw89: coex: Assign priority table before entering power save
+  wifi: rtw89: coex: Not to set slot duration to zero to avoid firmware
+    issue
+  wifi: rtw89: coex: Update Bluetooth slot length when Wi-Fi is scanning
+  wifi: rtw89: coex: RTL8852B coexistence Wi-Fi firmware support for
+    v0.29.122.0
+  wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to 9.0.0
 
-Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/coex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/coex.c     | 297 ++++++++++++++++--
+ drivers/net/wireless/realtek/rtw89/core.h     |  13 +-
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |   1 -
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |   1 -
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |   1 -
+ .../net/wireless/realtek/rtw89/rtw8852bt.c    |   1 -
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |   1 -
+ drivers/net/wireless/realtek/rtw89/rtw8922a.c |   1 -
+ 8 files changed, 282 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 60760512e93d..f6b482b20dc7 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -4160,7 +4160,7 @@ void rtw89_btc_set_policy_v1(struct rtw89_dev *rtwdev, u16 policy_type)
- 				_slot_set(btc, CXST_E2G, 5, cxtbl[2], SLOT_MIX);
- 			else
- 				_slot_set(btc, CXST_E2G, 5, tbl_w1, SLOT_MIX);
--			_slot_set_le(btc, CXST_EBT, s_def[CXST_EBT].dur,
-+			_slot_set_le(btc, CXST_EBT, cpu_to_le16(40),
- 				     s_def[CXST_EBT].cxtbl, s_def[CXST_EBT].cxtype);
- 			break;
- 		case BTC_CXP_OFFE_WL: /* for 4-way */
 -- 
 2.25.1
 
