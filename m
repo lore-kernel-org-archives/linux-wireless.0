@@ -1,101 +1,185 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com [209.85.166.200])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63C423B601;
-	Tue, 17 Jun 2025 08:46:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9C728ECE3
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2025 08:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750150007; cv=none; b=q6EHs57lGeyDUc689RuEeNWiL5Bya7QqertaK08dsoG3jNAQEbWSfAualBy4ib0vszsCIuiC6GL//UXwdL03RW4+RMvRNmim8RtSUCELFyFEXwvmuYvZKauWeVa32wGvlJhNbwNlO8OMg+fQuOm+NCN00Mv2Hc9Y/4iFm8TcMqU=
+	t=1750150172; cv=none; b=Kn/kzzpx3MYJ98DTAD9PNQa7KJcRbqMvg1G8oslaMhBJkJTaisClEcgtV0LaoFez+9Lu4o2AhCjBcQ6RYSn6FPYXWXb7EjCff/HuVLBuEFUNGo5xcaDcbbs/5x/KQlVCfis9LtXqOvLISkkWP3cRk1z6bYuubDDzoOt+abWNoJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750150007; c=relaxed/simple;
-	bh=UOC+kxOE3OLiMAYZQ8H+yk57DcCQ6dMktSpb1jyC+6A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S486Z+4+w7BLS2XE2ngMf0BoyaieGjiI5Vxv6MafLkf8CUGMBK+kwPt1kGy0PCCg5FoVvSiwhn5SfhQcQ7AuxjWU8RIMhY/DeW8nkPJteFMa7PYvZSb457T5QlxvoIFJlLdzKfAIu3r5LYrM8MnyjL+iTsI1gKj4K6vsHAcgAso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RXmPsthd; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RXmPsthd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57CBBC4CEE3;
-	Tue, 17 Jun 2025 08:46:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750150007;
-	bh=UOC+kxOE3OLiMAYZQ8H+yk57DcCQ6dMktSpb1jyC+6A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RXmPsthdJOuimlL4S/oQli4WOuXI41v/dyqIfStlaJikD3cjHFQNJ9QJpwfoD76gl
-	 TItbD3NTfoq4+GgKg1wTFekzpYALQb+GNBiXwThN32ghyR3zGQBwPDD4YePHNNpOqL
-	 fdi+tx0QysjjARUkFKCoD2amPfQ7ldaGbHJJM3tOeZjvwKs06QrpPtqWV/RAPZyYgr
-	 wtseBup9QqemwmilqI9W63RIEk5GpxWAr9lcWv8uteeT/Y4kv+4tJsvHTOFmHsxVaC
-	 g8M7YKSPof+JYC2CgL7kAdOyGdS5aRzZivIn9HZ2IgbjKE0dRGE8aWXFKNSfIEX8hA
-	 gm8qc8Kn1FwBA==
-Received: from johan by xi.lan with local (Exim 4.97.1)
-	(envelope-from <johan@kernel.org>)
-	id 1uRRxt-000000003p7-16ok;
-	Tue, 17 Jun 2025 10:46:45 +0200
-Date: Tue, 17 Jun 2025 10:46:45 +0200
-From: Johan Hovold <johan@kernel.org>
-To: Praneesh P <praneesh.p@oss.qualcomm.com>
-Cc: Baochen Qiang <quic_bqiang@quicinc.com>,
-	P Praneesh <quic_ppranees@quicinc.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Miaoqing Pan <quic_miaoqing@quicinc.com>,
-	Remi Pommarel <repk@triplefau.lt>, linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] wifi: ath12k: fix dest ring-buffer corruption
-Message-ID: <aFErdeZlT-Hm63pu@hovoldconsulting.com>
-References: <20250604144509.28374-1-johan+linaro@kernel.org>
- <20250604144509.28374-2-johan+linaro@kernel.org>
- <6f3eb9fa-617e-4434-8fc4-33dd92c4bdd2@quicinc.com>
- <aEFqsghEuJc3xxlU@hovoldconsulting.com>
- <ed06d62a-4b98-443a-a2ed-c92058bb521a@quicinc.com>
- <63c2c889-0a09-4b25-a1d2-2aaa92d75d9f@oss.qualcomm.com>
+	s=arc-20240116; t=1750150172; c=relaxed/simple;
+	bh=Zb0FAtKn57hylXZbbwWlQKoYiVchTs5O181iCBXBun0=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=jjWdmeTJqPhZ5ldK6ldmrMtUqoZsaAHCkgFJQ0yo9tCD7GmYCHAU0vPm91k9sHipbqV2BIsGbdfRYBzZpEMjQtstwz5VjEM8YnF6DWVvVDmxFo7TNMZQpkjMvhTkJNwMbRYRq8CIPED4Dz6kG8izgavkEjtLhb19MIhDfzmcxfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-3ddd5311fd3so55521515ab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2025 01:49:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750150170; x=1750754970;
+        h=cc:to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=W442XvOuTnKTzRsQQgphpGuH6koS5hmx6kx/lqAmOV8=;
+        b=QaSD5cuFIKhWV/XwCwBN5N2HCM8M7X7+JphnUmje3pB4Hrtw/i00G2+WiWTZ/pNjL7
+         Xdkgg9vGc8BpGfzoZwk3fD8uFmqO/gs7KjRPfFrO09NHUNO6wV3sdBm6C/c50IeXztbN
+         AQXB3V+GlGRuR2Kwd5KW/4ZWSXC06uaZcnPpnSa0W+focZt8wlSd+pNBr2tOq79QbKpx
+         3G9X/T6e85OPl3WMUJTVj/2pHdJm9KTMnY2C0wU06MuXXOtGlcNJ90f01KuLdIWNlRp1
+         Xd+T5Vi5dwABFEYCk0GQxYFPVWSklOG2Dao5QUzNf89fivDg2fu+BNlx1erGe0xlk6an
+         16qQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUI8Vjays3jaFSLXIXOt+yaruQF/93FpEOJ2UGn0g6sktynktRnk6herTHsjsSSyLsO1A66/l9pV4klIk7lJA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZyQr4f8p9Fa/WNVNz34Apj9Xjk3Vejj5w3nJ7hKVzYXuuTUn5
+	CAESCNbtNPJtgWIdgSf5pszyQfGK375vBaq0i1jNeTyGuPSTUkHtTJPRwuVflg+72S7VHcKBkkv
+	LZP8h5AqMgzQ8JLswcFQaHkbMGowV9ZPdEzBeWJLo2fhMy8zFIAXryJawE9s=
+X-Google-Smtp-Source: AGHT+IEzKI+txCrXA6lKqDfZ9z1us8hH5g/0mVUkQ4PVtq5tLZf7AWHKRssTtwpn5Jdu4SEuRtUFoJOHQfuJuYcqtxkoaWzmg/zW
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <63c2c889-0a09-4b25-a1d2-2aaa92d75d9f@oss.qualcomm.com>
+X-Received: by 2002:a05:6e02:168e:b0:3dd:ca82:6fc3 with SMTP id
+ e9e14a558f8ab-3de07c3f008mr157867185ab.3.1750150169948; Tue, 17 Jun 2025
+ 01:49:29 -0700 (PDT)
+Date: Tue, 17 Jun 2025 01:49:29 -0700
+In-Reply-To: <20250617104902.146e10919be1.I85f352ca4a2dce6f556e5ff45ceaa5f3769cb5ce@changeid>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68512c19.a70a0220.395abc.020e.GAE@google.com>
+Subject: Re: [PATCH wireless] wifi: mac80211: don't WARN for late
+ channel/color switch
+From: syzbot <syzbot+468656785707b0e995df@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net
+Cc: johannes.berg@intel.com, johannes@sipsolutions.net, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, Jun 16, 2025 at 02:59:24PM +0530, Praneesh P wrote:
-> On 6/5/2025 4:19 PM, Baochen Qiang wrote:
-> > On 6/5/2025 6:00 PM, Johan Hovold wrote:
-> >> On Thu, Jun 05, 2025 at 04:41:32PM +0800, Baochen Qiang wrote:
-> >>> On 6/4/2025 10:45 PM, Johan Hovold wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> There's really no value in the WARN stack trace etc., the reason
+> for this happening isn't directly related to the calling function
+> anyway. Also, syzbot has been observing it constantly, and there's
+> no way we can resolve it there - those systems are just slow.
+>
+> Instead print an error message (once) and add a comment about what
+> really causes this message.
+>
+> Reported-by: syzbot+468656785707b0e995df@syzkaller.appspotmail.com
+> Reported-by: syzbot+18c783c5cf6a781e3e2c@syzkaller.appspotmail.com
+> Reported-by: syzbot+d5924d5cffddfccab68e@syzkaller.appspotmail.com
+> Reported-by: syzbot+7d73d99525d1ff7752ef@syzkaller.appspotmail.com
+> Reported-by: syzbot+8e6e002c74d1927edaf5@syzkaller.appspotmail.com
+> Reported-by: syzbot+97254a3b10c541879a65@syzkaller.appspotmail.com
+> Reported-by: syzbot+dfd1fd46a1960ad9c6ec@syzkaller.appspotmail.com
+> Reported-by: syzbot+85e0b8d12d9ca877d806@syzkaller.appspotmail.com
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> #syz test
 
-> >>>> Add the missing memory barrier to make sure that destination ring
-> >>>> descriptors are read after the head pointers to avoid using stale data
-> >>>> on weakly ordered architectures like aarch64.
-> >>>>
-> >>>> The barrier is added to the ath12k_hal_srng_access_begin() helper for
-> >>>> symmetry with follow-on fixes for source ring buffer corruption which
-> >>>> will add barriers to ath12k_hal_srng_access_end().
-> >>>>
-> >>>> Note that this may fix the empty descriptor issue recently worked around
-> >>>> by commit 51ad34a47e9f ("wifi: ath12k: Add drop descriptor handling for
-> >>>> monitor ring").
+This crash does not have a reproducer. I cannot test it.
 
-> >>> why? I would expect drunk cookies are valid in case of HAL_MON_DEST_INFO0_EMPTY_DESC,
-> >>> rather than anything caused by reordering.
-
-> >> Based on a quick look it seemed like this could possibly fall in the
-> >> same category as some of the other workarounds I've spotted while
-> >> looking into these ordering issues (e.g. f9fff67d2d7c ("wifi: ath11k:
-> >> Fix SKB corruption in REO destination ring")).
-> >>
-> >> If you say this one is clearly unrelated, I'll drop the comment.
-
-> > Praneesh, could you comment here since you made that change?
-
-> Empty/Drop descriptor is intentionally issued by the hardware during 
-> backpressure scenario
-> and is unrelated to the issue discussed in this patch series.
-
-Thanks for confirming. I've dropped this comment in v3:
-
-	https://lore.kernel.org/lkml/20250617084402.14475-1-johan+linaro@kernel.org/
-
-Johan
+> ---
+>  net/mac80211/debug.h |  5 ++++-
+>  net/mac80211/tx.c    | 29 +++++++++++++++++++++--------
+>  2 files changed, 25 insertions(+), 9 deletions(-)
+>
+> diff --git a/net/mac80211/debug.h b/net/mac80211/debug.h
+> index 5b81998cb0c9..ef7c1a68d88d 100644
+> --- a/net/mac80211/debug.h
+> +++ b/net/mac80211/debug.h
+> @@ -1,10 +1,11 @@
+>  /* SPDX-License-Identifier: GPL-2.0 */
+>  /*
+>   * Portions
+> - * Copyright (C) 2022 - 2024 Intel Corporation
+> + * Copyright (C) 2022 - 2025 Intel Corporation
+>   */
+>  #ifndef __MAC80211_DEBUG_H
+>  #define __MAC80211_DEBUG_H
+> +#include <linux/once_lite.h>
+>  #include <net/cfg80211.h>
+>  
+>  #ifdef CONFIG_MAC80211_OCB_DEBUG
+> @@ -152,6 +153,8 @@ do {									\
+>  		else							\
+>  			_sdata_err((link)->sdata, fmt, ##__VA_ARGS__);	\
+>  	} while (0)
+> +#define link_err_once(link, fmt, ...)					\
+> +	DO_ONCE_LITE(link_err, link, fmt, ##__VA_ARGS__)
+>  #define link_id_info(sdata, link_id, fmt, ...)				\
+>  	do {								\
+>  		if (ieee80211_vif_is_mld(&sdata->vif))			\
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index d8d4f3d7d7f2..d58b80813bdd 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -5,7 +5,7 @@
+>   * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+>   * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+>   * Copyright 2013-2014  Intel Mobile Communications GmbH
+> - * Copyright (C) 2018-2024 Intel Corporation
+> + * Copyright (C) 2018-2025 Intel Corporation
+>   *
+>   * Transmit and frame generation functions.
+>   */
+> @@ -5016,12 +5016,25 @@ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
+>  	}
+>  }
+>  
+> -static u8 __ieee80211_beacon_update_cntdwn(struct beacon_data *beacon)
+> +static u8 __ieee80211_beacon_update_cntdwn(struct ieee80211_link_data *link,
+> +					   struct beacon_data *beacon)
+>  {
+> -	beacon->cntdwn_current_counter--;
+> +	if (beacon->cntdwn_current_counter == 1) {
+> +		/*
+> +		 * Channel switch handling is done by a worker thread while
+> +		 * beacons get pulled from hardware timers. It's therefore
+> +		 * possible that software threads are slow enough to not be
+> +		 * able to complete CSA handling in a single beacon interval,
+> +		 * in which case we get here. There isn't much to do about
+> +		 * it, other than letting the user know that the AP isn't
+> +		 * behaving correctly.
+> +		 */
+> +		link_err_once(link,
+> +			      "beacon TX faster than countdown (channel/color switch) completion\n");
+> +		return 0;
+> +	}
+>  
+> -	/* the counter should never reach 0 */
+> -	WARN_ON_ONCE(!beacon->cntdwn_current_counter);
+> +	beacon->cntdwn_current_counter--;
+>  
+>  	return beacon->cntdwn_current_counter;
+>  }
+> @@ -5052,7 +5065,7 @@ u8 ieee80211_beacon_update_cntdwn(struct ieee80211_vif *vif, unsigned int link_i
+>  	if (!beacon)
+>  		goto unlock;
+>  
+> -	count = __ieee80211_beacon_update_cntdwn(beacon);
+> +	count = __ieee80211_beacon_update_cntdwn(link, beacon);
+>  
+>  unlock:
+>  	rcu_read_unlock();
+> @@ -5450,7 +5463,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+>  
+>  		if (beacon->cntdwn_counter_offsets[0]) {
+>  			if (!is_template)
+> -				__ieee80211_beacon_update_cntdwn(beacon);
+> +				__ieee80211_beacon_update_cntdwn(link, beacon);
+>  
+>  			ieee80211_set_beacon_cntdwn(sdata, beacon, link);
+>  		}
+> @@ -5482,7 +5495,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
+>  				 * for now we leave it consistent with overall
+>  				 * mac80211's behavior.
+>  				 */
+> -				__ieee80211_beacon_update_cntdwn(beacon);
+> +				__ieee80211_beacon_update_cntdwn(link, beacon);
+>  
+>  			ieee80211_set_beacon_cntdwn(sdata, beacon, link);
+>  		}
+> -- 
+> 2.49.0
+>
