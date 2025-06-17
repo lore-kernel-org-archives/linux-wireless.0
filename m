@@ -1,75 +1,51 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0AAF2949F4
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2025 08:07:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89DB528FFE5;
+	Tue, 17 Jun 2025 08:44:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750147646; cv=none; b=nqU7GsumtwxoWn1jJQcWWy3ZwNAbMJNVLvIubmSFwUDe4vGHGqAIbc6A3pKViFunFWCswyZqyavFGuYH86Sp2uvdi5DcGJjI8yeWzeNs44xu/KeKe0OUaEfjPHhJ8yo7/Tp03vOTglfZi336ouSErGEvrMvWz9m0Ry2ITA3XHH0=
+	t=1750149890; cv=none; b=Z4IBZD0ueJeaco9ph7Wfdbr9yUy1ZWLJTeP61eiQeJ+kpzx2gJrLC1da2zPsPA52HZ+H4UJp7NkXmAn/HoqGF9tacYOpvrGEkJyYuZMRdABkUJ+bVwEXrNAlkm29UJj7JyMdvpiavAZVmGQ6PkaLB88pb7U1kPoV9lL6O5HYR9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750147646; c=relaxed/simple;
-	bh=tKRyA8yA9t41xc38ctw0kuKDSgOHujb2VNKXDYiQPvM=;
+	s=arc-20240116; t=1750149890; c=relaxed/simple;
+	bh=SvXAxL/4I1X7cvYUjcC80e7Q09OqTbdWtCdJhyx3ICY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jADfLYfEzEtLv8JOS1mVimC7Tvp7GiVJd26d4OU8C5H2IW7tDKeYsAGBExeZ/GSoRYD3aeqmV6hXnuv5YUyR3NWWXH18QNvisppqrUMUUDL/MG86jhAWKkzXp7gSdQuOKWz1UzVK2aFBVOdM9CYmktBnxtZbHBMu2Rsx2UHmDwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=rjFaE+/G; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	 MIME-Version; b=YvK5CPwJ71K46anFTi3rb7sDUpgnmg/8mtoFat/UqheYUM1Ksw+7TVHCOcNVmNUkuxFvrWLlhJ09xsCjP9XX+DxV+2H8R5cmKiBVYV9ZQD1EXOI0xC+70T2R+hkll8TtNc9tW64C8t5s+symknefBheN2SnL60xgF7sasjucMDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dA0zexcY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="rjFaE+/G"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b0b2d0b2843so4087186a12.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jun 2025 01:07:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1750147644; x=1750752444; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CH9dkbwULtT45Jr2BipiuLPsD1wQyP6pP7YULQg1NWo=;
-        b=rjFaE+/Gz1c4HLpEy1V9KyTCf1ulblqrdCcBVc+uuM8nRUZ6lEqjmiz4sSIAfLWv6a
-         MCOA/KokfCvx+ftexxF3YhoZYWc3cl/fFI/vXZ+bLD48H4RTZlGVxcmS2F1GSsIOEfwX
-         /VFARCAXsBl56mnOAqujKxJIDUeFwHfx2CHLSdcp3eZWK6DlVZ+u0AnJCWynJeUKoeYr
-         E1UPEL6NkUhnG5fuBQOUuMFeMbhOkDt4zcrgcekITF9XE8N5yr3InupmLyCba3V6aXYP
-         dvkrXQT78ay56bJa3povGEWoymgJt+h2ozywmx3eUCnAsNVd3QcnvSYuAbSEn6BxVLdM
-         vM6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750147644; x=1750752444;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=CH9dkbwULtT45Jr2BipiuLPsD1wQyP6pP7YULQg1NWo=;
-        b=C3C2xY10UB823QzjZAGRR81517gprkEnPrUOO2kmn7SAfWZ25CIoSiuAQaqOvIWE+P
-         pZnj+oW/R+NjxtJuwx8/7OnOLnuZKi94GJPDm3CJh1TvMh7YkOqOLgOItXaSuzJdCYjz
-         yjsc4CXLKSmdy43TIZjif6P/v0PvvJRyMlXOjFACg7sW+JWfUyAPuLmmnLpTDAaiGksM
-         k6j2vAW3sCGBNBi/R0hKaYYw1CntnzXuo3JfCQnu7sCgr5Sznh30cJH1lnEsP7lz2MM4
-         T8BwKGei6q1luddZDhwz0SwF+Me9bIUHb1U3AKNV5CIzzErzJiro+aiX25L+WhAX3Ptd
-         0YJQ==
-X-Gm-Message-State: AOJu0YxJU3zcGanKzFIetnRMzLZso2gUP8e+TH7cs4alV1qLXh5fT9E6
-	Y3v9vozbSgXTSa42FJIEzF2mKBo53J6RfLC5ev5ltOr400ncLWuBI/qeGw7xUBSxvuU0Eqrynwd
-	mJsrlF8g=
-X-Gm-Gg: ASbGncsJ0o3iL53tIVQFx01/ETLiiE+2QUQ8AmHUzeHjjnB/svoz//Hy11niCZ8W0RV
-	yZ7e2FzKxbNRUF4EGNoky2BR88Q+EGXV1bgbzeTlrpZ3glcezlarxcDsMlA9v1KGkJwNMXXKIvA
-	k81HnIRpAb6QnYcpS+rsl73bl8YHCexmBvpufgGUdKfzPV8ZFduqQikZFNXiFYGHKliYEL2MroF
-	rGcskbseEZmBhwEDs4H65c1RlcKpuPMIYCQsC7WwiEo3h/Z8oQ3+g94NFgfCgAN70Wi3qRY/tTM
-	sZDYlO1flfW/lse/ChfwPdbC2hOFCppMpQjZEazbZBdosYxS6hlIilY5CduGv7H1jQ16R1Zrp6q
-	ZalSxgFXFNQhOC+AcjgSl4dFPg9/WT1omibWH1b1eg6X1XQ==
-X-Google-Smtp-Source: AGHT+IG7tB7zTy5hA2getHiYSnIuMADnl84OvLUfKvMOPV/OL6SdC9Bu/obhPRkwRmdjRFGk5LuiBg==
-X-Received: by 2002:a17:90b:540e:b0:311:ed2:b758 with SMTP id 98e67ed59e1d1-313f1c7d714mr16246995a91.3.1750147643891;
-        Tue, 17 Jun 2025 01:07:23 -0700 (PDT)
-Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31413d2c8fbsm3579365a91.10.2025.06.17.01.07.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Jun 2025 01:07:23 -0700 (PDT)
-From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	arien.judge@morsemicro.com,
-	Lachlan Hodges <lachlan.hodges@morsemicro.com>,
-	Sophronia Koilpillai <sophronia.koilpillai@morsemicro.com>
-Subject: [PATCH wireless-next 4/4] wifi: mac80211: add support for S1G aggregation
-Date: Tue, 17 Jun 2025 18:06:10 +1000
-Message-ID: <20250617080610.756048-5-lachlan.hodges@morsemicro.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250617080610.756048-1-lachlan.hodges@morsemicro.com>
-References: <20250617080610.756048-1-lachlan.hodges@morsemicro.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dA0zexcY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ECCDC4CEF0;
+	Tue, 17 Jun 2025 08:44:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750149890;
+	bh=SvXAxL/4I1X7cvYUjcC80e7Q09OqTbdWtCdJhyx3ICY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=dA0zexcYVRjaBlixv11jjYTmBY8aLGf3clA5ljYPzD+L3DcSBUaP7lQz2Ca/MhVix
+	 2+G/ZxLKUORNOMolJYDGVKGnT4e1hJu3FC/uU7w2YLWZHA7wtH+MQZwYOeqdpj6G7m
+	 4duIoBHbcJf4QCzl8eotBjZoqwuzWYleB0FjaLrgqgcDqI83v5AgGuBgXeFPfVekjy
+	 teUc3s3VuurpvINNr9XvLrhnncH2TRbIHahqSXqpiVnks0dfXB4sKK5OFJo3A1DLn2
+	 lCoR/CaVan3pgKyHJxLZuqJs2KkFg88MDRzR44bPocGt651Nl0pC7yo5WuqjPRkxF1
+	 t+rfCizdHCpJg==
+Received: from johan by xi.lan with local (Exim 4.97.1)
+	(envelope-from <johan+linaro@kernel.org>)
+	id 1uRRw0-000000003mn-0BRJ;
+	Tue, 17 Jun 2025 10:44:48 +0200
+From: Johan Hovold <johan+linaro@kernel.org>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: Miaoqing Pan <quic_miaoqing@quicinc.com>,
+	Remi Pommarel <repk@triplefau.lt>,
+	Baochen Qiang <quic_bqiang@quicinc.com>,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Johan Hovold <johan+linaro@kernel.org>,
+	stable@vger.kernel.org
+Subject: [PATCH v3 1/4] wifi: ath12k: fix dest ring-buffer corruption
+Date: Tue, 17 Jun 2025 10:43:59 +0200
+Message-ID: <20250617084402.14475-2-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250617084402.14475-1-johan+linaro@kernel.org>
+References: <20250617084402.14475-1-johan+linaro@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -78,68 +54,70 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Allow an S1G station to use aggregation.
+Add the missing memory barrier to make sure that destination ring
+descriptors are read after the head pointers to avoid using stale data
+on weakly ordered architectures like aarch64.
 
-Signed-off-by: Sophronia Koilpillai <sophronia.koilpillai@morsemicro.com>
-Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+The barrier is added to the ath12k_hal_srng_access_begin() helper for
+symmetry with follow-on fixes for source ring buffer corruption which
+will add barriers to ath12k_hal_srng_access_end().
+
+Tested-on: WCN7850 hw2.0 WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
+Cc: stable@vger.kernel.org	# 6.3
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- net/mac80211/agg-rx.c | 6 ++++--
- net/mac80211/agg-tx.c | 3 ++-
- net/mac80211/tx.c     | 3 ++-
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath12k/ce.c  |  3 ---
+ drivers/net/wireless/ath/ath12k/hal.c | 17 ++++++++++++++---
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index ee534797c033..e38f46ffebfa 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -299,7 +299,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+diff --git a/drivers/net/wireless/ath/ath12k/ce.c b/drivers/net/wireless/ath/ath12k/ce.c
+index 3f3439262cf4..f7c15b547504 100644
+--- a/drivers/net/wireless/ath/ath12k/ce.c
++++ b/drivers/net/wireless/ath/ath12k/ce.c
+@@ -433,9 +433,6 @@ static int ath12k_ce_completed_recv_next(struct ath12k_ce_pipe *pipe,
+ 		goto err;
+ 	}
  
- 	if (!sta->sta.valid_links &&
- 	    !sta->sta.deflink.ht_cap.ht_supported &&
--	    !sta->sta.deflink.he_cap.has_he) {
-+	    !sta->sta.deflink.he_cap.has_he &&
-+	    !sta->sta.deflink.s1g_cap.s1g) {
- 		ht_dbg(sta->sdata,
- 		       "STA %pM erroneously requests BA session on tid %d w/o HT\n",
- 		       sta->sta.addr, tid);
-@@ -327,7 +328,8 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	/* XXX: check own ht delayed BA capability?? */
- 	if (((ba_policy != 1) &&
- 	     (sta->sta.valid_links ||
--	      !(sta->sta.deflink.ht_cap.cap & IEEE80211_HT_CAP_DELAY_BA))) ||
-+	      !(sta->sta.deflink.ht_cap.cap & IEEE80211_HT_CAP_DELAY_BA) ||
-+	      !(sta->sta.deflink.s1g_cap.cap[3] & S1G_CAP3_HT_DELAYED_BA))) ||
- 	    (buf_size > max_buf_size)) {
- 		status = WLAN_STATUS_INVALID_QOS_PARAM;
- 		ht_dbg_ratelimited(sta->sdata,
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index dbd9ad5f3992..d981b0fc57bf 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -616,7 +616,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	    !pubsta->deflink.ht_cap.ht_supported &&
- 	    !pubsta->deflink.vht_cap.vht_supported &&
- 	    !pubsta->deflink.he_cap.has_he &&
--	    !pubsta->deflink.eht_cap.has_eht)
-+	    !pubsta->deflink.eht_cap.has_eht &&
-+	    !pubsta->deflink.s1g_cap.s1g)
- 		return -EINVAL;
+-	/* Make sure descriptor is read after the head pointer. */
+-	dma_rmb();
+-
+ 	*nbytes = ath12k_hal_ce_dst_status_get_length(desc);
  
- 	if (WARN_ON_ONCE(!local->ops->ampdu_action))
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d8d4f3d7d7f2..691ea2d32e82 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1173,7 +1173,8 @@ void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
- 		return;
+ 	*skb = pipe->dest_ring->skb[sw_index];
+diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
+index a301898e5849..f8bd3837b9dc 100644
+--- a/drivers/net/wireless/ath/ath12k/hal.c
++++ b/drivers/net/wireless/ath/ath12k/hal.c
+@@ -2143,13 +2143,24 @@ void *ath12k_hal_srng_src_get_next_reaped(struct ath12k_base *ab,
  
- 	if (!sta ||
--	    (!sta->sta.valid_links && !sta->sta.deflink.ht_cap.ht_supported) ||
-+	    (!sta->sta.valid_links && !sta->sta.deflink.ht_cap.ht_supported &&
-+	     !sta->sta.deflink.s1g_cap.s1g) ||
- 	    !sta->sta.wme || skb_get_queue_mapping(skb) == IEEE80211_AC_VO ||
- 	    skb->protocol == sdata->control_port_protocol)
- 		return;
+ void ath12k_hal_srng_access_begin(struct ath12k_base *ab, struct hal_srng *srng)
+ {
++	u32 hp;
++
+ 	lockdep_assert_held(&srng->lock);
+ 
+-	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
++	if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
+ 		srng->u.src_ring.cached_tp =
+ 			*(volatile u32 *)srng->u.src_ring.tp_addr;
+-	else
+-		srng->u.dst_ring.cached_hp = READ_ONCE(*srng->u.dst_ring.hp_addr);
++	} else {
++		hp = READ_ONCE(*srng->u.dst_ring.hp_addr);
++
++		if (hp != srng->u.dst_ring.cached_hp) {
++			srng->u.dst_ring.cached_hp = hp;
++			/* Make sure descriptor is read after the head
++			 * pointer.
++			 */
++			dma_rmb();
++		}
++	}
+ }
+ 
+ /* Update cached ring head/tail pointers to HW. ath12k_hal_srng_access_begin()
 -- 
-2.43.0
+2.49.0
 
