@@ -1,173 +1,138 @@
-Received: from smtpbg154.qq.com (smtpbg154.qq.com [15.184.224.54])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142FB433B1;
-	Fri, 20 Jun 2025 03:20:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=15.184.224.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AD7EA923;
+	Fri, 20 Jun 2025 05:32:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750389661; cv=none; b=QFthMVmxLe0zfEACAlm5Vn8eSxPlW3bidoftp6gE/6gzDtAP8MvfTxpMs2PJtrmKBzO8XoLUb9bj15kUIo3c1yLQ0aBBfeAbb4s4pJKoYzsdF/obVNNisfsFuTibgg2iGzAzHkPtM/7NSu8qeLeQlJHdZeaukFpVjhBAFNs5FFY=
+	t=1750397539; cv=none; b=LWyeJ9kX9myncehr72kYfXgLoya8EGcM7/6MlZyvtdadlIvz28EypPw2yinwydz8XmFH+cpAgxYndeqns65xHzCC3raD0kT523za0j0tkrStDxUMzvg5pSduCMhiaoZkDEgIGEXyJuGQL+TE+6GWUAVNn+yLWXxIgJXAEO+CL18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750389661; c=relaxed/simple;
-	bh=hv8/QDw7pTZTw/Fw7H+r0p4y2KXq8fQUxP/gm1PJpEE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MUXeF9O47JuRcJExaK0qI2Hj0hoBfSfT/abUqQJeYVO+1zFGxb1CUXSnk7NiMO73/HSizDU1Khi4wib2TAOqXol7CoT+eU7HUgHfw9nNU+2v6mXNAjsBmZHrjNTJ0CgOHx0kN3+f8XzH0dA7P5sf+L6zrQD9lk6KAojL6Nrps/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=CGw+zoWO; arc=none smtp.client-ip=15.184.224.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1750397539; c=relaxed/simple;
+	bh=aHsm9Y14E81PwbGn4pj70nBL2Sh53QJVuexcsgMJYFk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jiptoUsWtwKZRSmakzRsijXZ3Sd+YTF4nY/8lEi3tPJlBiNJbtQzUc/hXTjsRf/9/OrWIbMAoLvrNFKGRbgESQcclTQMUS4AJ4QaMHQan0bnDJ2OAFWsbYoq61iJF49hyW4Gds2fzWQIkms4clPlt79ySnRSC6naLVXEYGC9slo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=srlKz2C6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="CGw+zoWO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1750389601;
-	bh=QneHD96w8Ndl9vl9DqoNfTMZSsKRbHbYDBKvCqX8VZs=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=CGw+zoWOrZSODPeJ8c26ciyuz4PVJ/RTo2UYyFbVMEgwp9TPtTIb2DX25LDmK6d+N
-	 iIOieLgM35lyyDq1cFyJ/QAh0V7Clr8/lOMdMfFGM9C359q6h9xnj9exBTAo1mc6xY
-	 NWRbRnksSF6uKTSJTYOTO+6l2LQYV2G4wkTU85XA=
-X-QQ-mid: zesmtpip2t1750389596t81357189
-X-QQ-Originating-IP: /ewM7Z9sq8LHm7YLngXRO+7G1aFgwPHWLDjF85ihRlA=
-Received: from avenger-e500 ( [localhost])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Fri, 20 Jun 2025 11:19:54 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 16747492576848269704
-EX-QQ-RecipientCnt: 10
-From: WangYuli <wangyuli@uniontech.com>
-To: gregkh@linuxfoundation.org,
-	sashal@kernel.org,
-	stable@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Edward Adam Davis <eadavis@qq.com>,
-	syzbot+aaf0488c83d1d5f4f029@syzkaller.appspotmail.com,
-	Johannes Berg <johannes.berg@intel.com>,
-	WangYuli <wangyuli@uniontech.com>
-Subject: [PATCH 6.1/6.6] wifi: cfg80211: init wiphy_work before allocating rfkill fails
-Date: Fri, 20 Jun 2025 11:19:49 +0800
-Message-ID: <A203ED8C00632F28+20250620031949.227937-1-wangyuli@uniontech.com>
-X-Mailer: git-send-email 2.50.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="srlKz2C6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D6C8C4CEED;
+	Fri, 20 Jun 2025 05:32:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750397538;
+	bh=aHsm9Y14E81PwbGn4pj70nBL2Sh53QJVuexcsgMJYFk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=srlKz2C6xjGOLesp+Z6s0Jw0QgaIX9tSq5RQarlr+GD5a6ul/NobFJ+4ve0gS/usv
+	 xdQ6SoF/hodYsDfS2AtgDcIgfdPIZqvFAeahlQNK8uofJovOvtuqle/A5s4Beg591J
+	 tNlj0Y15aicmWdf5Hkl8QefYsu904Y9zTQTwmB2e0Lji5y+vubLL/itPRoGPWaaK6I
+	 zJEcesF+SgtasBYU2EJIGWgV9la6ELgqZxUGzH53wAf2QO+/6nVS2ICpMVugicZI+D
+	 018m7pz0kQOTAPOII6FiHJoa9qLQtVL2XiOnJo4s34COH2HtaswSJkzikyL/QIO895
+	 DbS6f4y4EWJGQ==
+Message-ID: <ef0db40a-14d1-4670-82ca-f724a0eeee0d@kernel.org>
+Date: Fri, 20 Jun 2025 07:32:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpip:uniontech.com:qybglogicsvrgz:qybglogicsvrgz8a-1
-X-QQ-XMAILINFO: Naz1YHCzw2jI/9JS+yjrnGlH+vTYLorxDLI1EtxBUHqa9y13fyy0Kw2h
-	S05UoyG58TpRFfnsElz5fYUaxsNuYBGNretqajpbIoL/46Wz3+2GIjJOsByzFKzkGD3fC+Q
-	Lf+12ElBpgU/TnMVr0SgYLHGO43nsJZCkPoyEpqkgicG/Azq+JfZSYckepxWU4Fhj3wgtiw
-	6t5O7lvVExljmE5gabiMNWGfao6fUViEChXBea4MHjLK5U6HiJVS4FxarfL8VpUutWV2rh6
-	q2CEP6Eo8D6QGF8h3kx4Yj7MG2+Ebox+3Acpx9iU8w6+QSldCI233GXo4EyymUCGY2WzD9n
-	Dr1ds4XgKZrjEgXYRlEkmdgdOoZHQBZaN4mspiwD/g4L7a7TRwoWsdGZKduUa3k0JPfv9c4
-	2iKPgdOJPDFNuQgYWRySayzTIMf/AEQCJR2AMVeqWz7Jp2PWW2Youzj0OnS9mlU8EVqdFzF
-	rf3nE8sIC0jnTaCxkgl2hwvYRMfRCXsTcm5iZcB4ssf7pOWyqTjzuVittCT7oqD8gfeRVmM
-	+94KcRIakjPMGq+qnDqF9uD4ketYfk0IOwyUwoSl7191hpYOEgL6iaScEAe5l+EAY6KsqCx
-	+nXic8EWagCtjex80IE3SACa7QKqymcwVxpfpxsWKIprjA/pjvB5T1dEayymZKCdXvZB1LG
-	gzcn60FRpYBwsM5jo17j3zSFG0S18DPE0fBLuDZxY8FhqIY/nQKVkPIYOHZJiLMrAox0wxX
-	eiuLAwIS4fDSZQZQPG4ZADUZA1JGfSf73EHroxht23Z99+0d862ugfY3J/QsHkFYPg2ovzo
-	nsvX1sFXc3d9jCRp9onmMu5SImZ/trn6gQmorD4Gb3KfAnFnyz0P3FX3MYGwNZYG7QRIuZL
-	5BoCq6dIF37wgXcTB82y2vIi92KjkeZEuD8Y8RDvs+3bKcx1qwcL11GEtJ00aYF6tjWjGLh
-	ie1gjZMKa+owNIj2tXz4LCaGDdOyHswGAOGiVW0UOcyxIcXZvcg3a/3gMvCU6Wh1jP1elmI
-	krlUfxcA==
-X-QQ-XMRINFO: OD9hHCdaPRBwq3WW+NvGbIU=
-X-QQ-RECHKSPAM: 0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv5 0/5] wifi: ath9k: add ahb OF support
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+ Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+ nbd@nbd.name, Johannes Berg <johannes@sipsolutions.net>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+ "open list:MIPS" <linux-mips@vger.kernel.org>
+References: <20250609030851.17739-1-rosenp@gmail.com>
+ <37561ac8-ac0f-4744-9495-c7589544d4bb@oss.qualcomm.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
+ cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
+ JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
+ gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
+ J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
+ NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
+ BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
+ vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
+ Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
+ TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
+ S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
+ QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
+ +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
+ ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
+ 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
+ hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
+ tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
+ 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
+ naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
+ hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
+ whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
+ Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
+ MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
+ OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
+ GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
+ 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
+ YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
+ 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
+ BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
+ JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
+ 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
+ YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
+ qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
+ RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
+ Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
+ H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
+ dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
+ AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
+ jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
+ zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
+ XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
+In-Reply-To: <37561ac8-ac0f-4744-9495-c7589544d4bb@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Edward Adam Davis <eadavis@qq.com>
+On 20/06/2025 02:33, Jeff Johnson wrote:
+> On 6/8/2025 8:08 PM, Rosen Penev wrote:
+>> First two commits are small cleanups to make the changes of the third
+>> simpler. The fourth actually adds dts definitions to use ahb.
+>>
+>> v2: Add documentation, use kernel_ulong_t, and of_device_get_match_data
+>> v3: Use qcom prefix and wifi suffix as in other ath drivers.
+>> v4: fix up dts example in Documentation
+>> v5: move back to using qca prefix. It makes no sense to diverge between
+>> all the other drivers for MIPS based qualcomm devices. qcom as a prefix
+>> is used for Quallcomm's ARM(64) stuff.
+>>
+>> Rosen Penev (5):
+>>   wifi: ath9k: ahb: reorder declarations
+>>   wifi: ath9k: ahb: reorder includes
+>>   wifi: ath9k: ahb: replace id_table with of
+>>   dt-bindings: net: wireless: ath9k: add OF bindings
+>>   mips: dts: qca: add wmac support
+>>
+>>  .../bindings/net/wireless/qca,ath9k.yaml      | 23 ++++++-
+>>  arch/mips/boot/dts/qca/ar9132.dtsi            |  9 +++
+>>  .../boot/dts/qca/ar9132_tl_wr1043nd_v1.dts    |  4 ++
+>>  arch/mips/boot/dts/qca/ar9331.dtsi            |  9 +++
+>>  arch/mips/boot/dts/qca/ar9331_dpt_module.dts  |  4 ++
+>>  .../mips/boot/dts/qca/ar9331_dragino_ms14.dts |  4 ++
+>>  arch/mips/boot/dts/qca/ar9331_omega.dts       |  4 ++
+>>  .../qca/ar9331_openembed_som9331_board.dts    |  4 ++
+>>  arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts   |  4 ++
+>>  drivers/net/wireless/ath/ath9k/ahb.c          | 60 +++++++------------
+>>  10 files changed, 84 insertions(+), 41 deletions(-)
+>>
+> 
+> DT team, should I take this series through my tree?
+> Toke, Ack?
+No, of course not. The same as you asked some time ago: DTS never, NEVER
+goes via driver subsystem tree.
 
-[ Upstream commit fc88dee89d7b63eeb17699393eb659aadf9d9b7c ]
-
-syzbort reported a uninitialize wiphy_work_lock in cfg80211_dev_free. [1]
-
-After rfkill allocation fails, the wiphy release process will be performed,
-which will cause cfg80211_dev_free to access the uninitialized wiphy_work
-related data.
-
-Move the initialization of wiphy_work to before rfkill initialization to
-avoid this issue.
-
-[1]
-INFO: trying to register non-static key.
-The code is fine but needs lockdep annotation, or maybe
-you didn't initialize this object before use?
-turning off the locking correctness validator.
-CPU: 0 UID: 0 PID: 5935 Comm: syz-executor550 Not tainted 6.14.0-rc6-syzkaller-00103-g4003c9e78778 #0
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:94 [inline]
- dump_stack_lvl+0x116/0x1f0 lib/dump_stack.c:120
- assign_lock_key kernel/locking/lockdep.c:983 [inline]
- register_lock_class+0xc39/0x1240 kernel/locking/lockdep.c:1297
- __lock_acquire+0x135/0x3c40 kernel/locking/lockdep.c:5103
- lock_acquire.part.0+0x11b/0x380 kernel/locking/lockdep.c:5851
- __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
- _raw_spin_lock_irqsave+0x3a/0x60 kernel/locking/spinlock.c:162
- cfg80211_dev_free+0x30/0x3d0 net/wireless/core.c:1196
- device_release+0xa1/0x240 drivers/base/core.c:2568
- kobject_cleanup lib/kobject.c:689 [inline]
- kobject_release lib/kobject.c:720 [inline]
- kref_put include/linux/kref.h:65 [inline]
- kobject_put+0x1e4/0x5a0 lib/kobject.c:737
- put_device+0x1f/0x30 drivers/base/core.c:3774
- wiphy_free net/wireless/core.c:1224 [inline]
- wiphy_new_nm+0x1c1f/0x2160 net/wireless/core.c:562
- ieee80211_alloc_hw_nm+0x1b7a/0x2260 net/mac80211/main.c:835
- mac80211_hwsim_new_radio+0x1d6/0x54e0 drivers/net/wireless/virtual/mac80211_hwsim.c:5185
- hwsim_new_radio_nl+0xb42/0x12b0 drivers/net/wireless/virtual/mac80211_hwsim.c:6242
- genl_family_rcv_msg_doit+0x202/0x2f0 net/netlink/genetlink.c:1115
- genl_family_rcv_msg net/netlink/genetlink.c:1195 [inline]
- genl_rcv_msg+0x565/0x800 net/netlink/genetlink.c:1210
- netlink_rcv_skb+0x16b/0x440 net/netlink/af_netlink.c:2533
- genl_rcv+0x28/0x40 net/netlink/genetlink.c:1219
- netlink_unicast_kernel net/netlink/af_netlink.c:1312 [inline]
- netlink_unicast+0x53c/0x7f0 net/netlink/af_netlink.c:1338
- netlink_sendmsg+0x8b8/0xd70 net/netlink/af_netlink.c:1882
- sock_sendmsg_nosec net/socket.c:718 [inline]
- __sock_sendmsg net/socket.c:733 [inline]
- ____sys_sendmsg+0xaaf/0xc90 net/socket.c:2573
- ___sys_sendmsg+0x135/0x1e0 net/socket.c:2627
- __sys_sendmsg+0x16e/0x220 net/socket.c:2659
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
-
-Fixes: 72d520476a2f ("wifi: cfg80211: cancel wiphy_work before freeing wiphy")
-Reported-by: syzbot+aaf0488c83d1d5f4f029@syzkaller.appspotmail.com
-Close: https://syzkaller.appspot.com/bug?extid=aaf0488c83d1d5f4f029
-Tested-by: syzbot+aaf0488c83d1d5f4f029@syzkaller.appspotmail.com
-Signed-off-by: Edward Adam Davis <eadavis@qq.com>
-Link: https://patch.msgid.link/tencent_258DD9121DDDB9DD9A1939CFAA0D8625B107@qq.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: WangYuli <wangyuli@uniontech.com>
----
- net/wireless/core.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 1ce8fff2a28a..586e50678ed8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -553,6 +553,9 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	INIT_WORK(&rdev->mgmt_registrations_update_wk,
- 		  cfg80211_mgmt_registrations_update_wk);
- 	spin_lock_init(&rdev->mgmt_registrations_lock);
-+	INIT_WORK(&rdev->wiphy_work, cfg80211_wiphy_work);
-+	INIT_LIST_HEAD(&rdev->wiphy_work_list);
-+	spin_lock_init(&rdev->wiphy_work_lock);
- 
- #ifdef CONFIG_CFG80211_DEFAULT_PS
- 	rdev->wiphy.flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
-@@ -570,9 +573,6 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 		return NULL;
- 	}
- 
--	INIT_WORK(&rdev->wiphy_work, cfg80211_wiphy_work);
--	INIT_LIST_HEAD(&rdev->wiphy_work_list);
--	spin_lock_init(&rdev->wiphy_work_lock);
- 	INIT_WORK(&rdev->rfkill_block, cfg80211_rfkill_block_work);
- 	INIT_WORK(&rdev->conn_work, cfg80211_conn_work);
- 	INIT_WORK(&rdev->event_work, cfg80211_event_work);
--- 
-2.50.0
-
+Best regards,
+Krzysztof
