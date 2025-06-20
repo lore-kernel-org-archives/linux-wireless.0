@@ -1,153 +1,378 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1580E30E84D
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2025 00:33:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 900DF433B1;
+	Fri, 20 Jun 2025 03:20:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750379594; cv=none; b=PJBHzi56AqjoEGgK7417qarhWkeFfJHTQyH79j2Rxyiv9hQ0TTbF1n5MXZxb4WMHvngwCm07P30MohShDUAfD/ozzzpTFrVwR4mtCBo3zvCkJYklYzlr3RRfqV9/KLLmwJHrV3hS/mj7s8rr6FZJZWS+Qvt9mpFfAPXVd23sIfI=
+	t=1750389645; cv=none; b=CIztmdrKKBNIFBy1huyjNvFZwONwOoAH5dK4GZ1AYe1MHdP0i5HWw3x+qCx/LN/CzhFLRDbRPhH6TzAWQnmAIzjk/U0PIqnQlJPmfEsGsubIYIsb0SqSx9FlSwRDTK2A8FQJwHzeaaUdXBLvypE8vMQTdtR5NqQcjml2TRnwWnQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750379594; c=relaxed/simple;
-	bh=dEjH+FSN3ipBFal1GleYoxDYC0kKtc29ALoxhYDANVU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ROD+pKUH+a3w59Jig5HVj+gZ0dsSeZ/HK4+k9hbtIfgQqilY8TXpiVMCG3jAXkhWKJs++daOLxA3sUN1K45XOglFVxLNgYaWeadU+SnGl4YbQewcnOG1g/QVCppoGotdR1CJXL/Em4LqOpn1vyFuMTRurqROFdshK/BGrve8iVg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DJCimJmD; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1750389645; c=relaxed/simple;
+	bh=i8rXo9oTmd+znrnGkpfCGoydf0YNzqjCk4FPDQRkQ5Q=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OLF/5xI1XknkO/9HnOIsR8rZJ3fylQOA0htstAyH1g9MOfpQxKi4aN9LR+G8XtmswD5q0uCrU+9Dq2J1r5cltww7JIDO0TUeRi6A3SkIhUrPzbymZ0YIf/XSiZIhNrlXHABFo3NLhjuTKf0agpHW7iHE7NheWBEICkoWfoe93Rw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=GLDJx3/Z; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DJCimJmD"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55JCLFbi007075
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2025 00:33:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ksoABJXXvx1N7hucQ6NraV5GRYy+LrljohBAACfBYU8=; b=DJCimJmDniSrnAi/
-	lA/7GdTkSTITFfbx7hE+c7yk2g602L6WarirUSqXbmomuzG85xCqRWCm+DqHZvdP
-	9sASt+NHpnbS2QAvojqcT7ZWsHG6qS9Ll2Kw3jDSQ1DFddyHWq1irh7NfGXmsIm3
-	bo9ZThfwlcLMHlxVGSEF7aQPQyI2skZCgriJk5QZVjRQylrPeE1zixBHplcbbnJu
-	2kkHR/gYDYG66WMZBcW2Qnq/m93eZrzpQeBXhuSg/lyH/px2bSHO16IWh0VD1Vi+
-	eop16Qi9ZMAncCgq8h0J2r3C3VOo25V7qFUPdU/HDvL7wtwVm7zBldTx4h2sPM0q
-	IalWCA==
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47c0rvmqsf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jun 2025 00:33:11 +0000 (GMT)
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-748865aa38fso1805203b3a.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jun 2025 17:33:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750379590; x=1750984390;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ksoABJXXvx1N7hucQ6NraV5GRYy+LrljohBAACfBYU8=;
-        b=TfWWB15G9FHzGN5MPv8+VEsEh4401e25yL/YPrSATCdr//j0N7Td5I5lvTx8bBivv0
-         bckcPU/cFUdXqNA/xmUvvkWlxoB8chkB8sBjbqYqn8qVzum6s6+rA378UZNIN9PjV6BI
-         eF1Njsl1VLDLH0vxuNJ7GePJxWnBC2kMQKP62oR2mUqbBnwxS1+m3nbGoJJ7BLpwV0RK
-         yooqX8nj+AqOxKG1qJtc/ftjS87SCP8WBJDw4sMz1hTuxTrDDYy5V+HLSpQfwjA8hlXw
-         XJiS+24V6ig0quBDHRdviYOZwf7ryfp+DGEup3C0iBEw9oXtalhjHz/OsIMeCIxja/ep
-         ENyg==
-X-Forwarded-Encrypted: i=1; AJvYcCXfhx0BMqXmqnOCi4bbCvQwvTamedboSVOPsS3eGhaKoiMNgWk6c/EgYMsJO5JNZeNA2MoM7RdxKFeft6rQ5w==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzol3aoTuKhAAYOBV+Bdn1Hx0VzeVYQu5C81Yz5j1mKGRvzJnsX
-	aKXxBSi3XVrltyYTdRUCcx0jNJJfEETI1dG4HhzWCS8Rt+U/6K3HEMePLKoXGkJ46SMCjrQrzNw
-	qDztObLgiveAOaPT8i6oreZRmGfrvLzTxw3CMlfE3fh8UEOVWXZsKiIYVT/ioZvG1zajCLw==
-X-Gm-Gg: ASbGncsIWtzOMfXWZeoncc3K6TG4lXRsKjFlJMRZ6WXVZG/G2tRwTED4vze+fXPlYlU
-	aXPgirydGcz5ItccioA7ZfeKNuATIYV8J6mKoYyoH4NisVWxwS28E07rYGyL5nhRAhciVtqwmFr
-	lgNXjnSdtGanz03w5+VhKot4VIwQMdup48nb1RbgIsBCxwiFtnSBmZW5/BirfX/XFa/f4XoyQrd
-	iSy2LB2ulzoEixTruQsW/n/AysH3cr6Zq7WFxXM8rCwNKQPy9ErbH003FpGaJaXDDDopt9sBtOB
-	IVLqRWLXfs0qGdcJYvO1zALkTXg9fJi+hJIUzlhcSUvs5574byMMr0Sht2yiFPmCIz6PEslL0PU
-	kZRRZjQwwNtQsIEo=
-X-Received: by 2002:a05:6a20:244e:b0:21f:77e2:13a0 with SMTP id adf61e73a8af0-22026e13231mr1171724637.5.1750379590469;
-        Thu, 19 Jun 2025 17:33:10 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEoDIsNEyUlki7ZjrTI9GVJS+GocIYC/rwWPCWnAG3PSWetKeeD6OC1n37shGoNB4dnpm//FA==
-X-Received: by 2002:a05:6a20:244e:b0:21f:77e2:13a0 with SMTP id adf61e73a8af0-22026e13231mr1171695637.5.1750379590051;
-        Thu, 19 Jun 2025 17:33:10 -0700 (PDT)
-Received: from [192.168.1.111] (c-73-202-227-126.hsd1.ca.comcast.net. [73.202.227.126])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7490a69bb81sm708272b3a.156.2025.06.19.17.33.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Jun 2025 17:33:09 -0700 (PDT)
-Message-ID: <37561ac8-ac0f-4744-9495-c7589544d4bb@oss.qualcomm.com>
-Date: Thu, 19 Jun 2025 17:33:08 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="GLDJx3/Z"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55JEtNFB022295;
+	Fri, 20 Jun 2025 03:20:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=Sm1w9saYDvAue76l7Riw5u
+	3/q50lAkpeH1iSpAdMW5o=; b=GLDJx3/ZLn8lcFzazmY/FtTTuPURXTHxEWJdnq
+	o16UAM+7yK/icaTiDP9ByoDRE8Ycn2Dg12Y+ADVrP6PJltG9lGpEYTOIO7tyJ04J
+	kGUX9UQx8SJzJlH688tPguwchIRV7xCV3hWRpX5dGcBPcGKxzCR1AyfjH0wmmHVg
+	8wDcm6ka6AdXqaHGXzHSS1fyb7KIFcMtHJi7EmXukMb+RAxD8ZcVXSZ1bhUHSwih
+	ywCLZUkinV0NLNMWqw5DnilSMUXhHSoDnHAQ4PL1KeOkjfBjmoi3fTKGdE1JOwUs
+	sbiEVKc/Q6BXS3Cre9Fe74cYd7tELhrmoM59snubLauYT0RA==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4791enstqm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Jun 2025 03:20:30 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 55K3KToe027165
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Jun 2025 03:20:29 GMT
+Received: from zhonhan-gv.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 19 Jun 2025 20:20:27 -0700
+From: Zhongqiu Han <quic_zhonhan@quicinc.com>
+To: <johannes@sipsolutions.net>, <miriam.rachel.korenblit@intel.com>
+CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_zhonhan@quicinc.com>,
+        <syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com>
+Subject: [PATCH v3] wifi: mac80211: Prevent disconnect reports when no AP is associated
+Date: Fri, 20 Jun 2025 11:20:11 +0800
+Message-ID: <20250620032011.1102373-1-quic_zhonhan@quicinc.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv5 0/5] wifi: ath9k: add ahb OF support
-To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>, nbd@nbd.name,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>
-References: <20250609030851.17739-1-rosenp@gmail.com>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20250609030851.17739-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDAwMiBTYWx0ZWRfX+v3qRFeMEDnI
- nuUgwveWxsVrPpNdvkUhu8sZmKFykK84zojfbUM25Tm1Bb/IQHT5UQVBeCRuZSaYz9N6mJnEf+E
- 96UCpGtRm1UwU21QfkqYONdCp973OdMhAUrQlsW0cTgJC/+CjWIuKiZQCR5Kdk59XeLoghjy4EF
- u+qsp65BIbqXibeestMuH8DX6opYnf3pvGu8F8uoLDLfttmI1pfCb/RQtxRtQQrSFHNQ/EDdobi
- Z+8XwDpe0FJ8cfPKkMxZGJrwDK9os5oA385/59orzMfYOqQNQWFuyHZU1aRDsfv1dgODWurT3TX
- qa+JkIuTPd3nf7yfm2gjeJw6rLSbfuAlnY1gPVRnvEYZ0/VGzJsKpMSYNxF9sRp6NL6tLqdBKvP
- XuBGd3gAi5r3QO4eTEg1ilIIzoju+ZeMZLypAbQkbV11XHV3Gk5l0wXpC+Pfw7mbDnN2n4lE
-X-Proofpoint-GUID: ByKFrhfIxCWFnuSSwTszkuKpGAA8kNtu
-X-Authority-Analysis: v=2.4 cv=btJMBFai c=1 sm=1 tr=0 ts=6854ac47 cx=c_pps
- a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=e70TP3dOR9hTogukJ0528Q==:17
- a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=aMoWnUFRsw3tUzfFL3sA:9
- a=QEXdDO2ut3YA:10 a=2VI0MkxyNR6bbpdq8BZq:22
-X-Proofpoint-ORIG-GUID: ByKFrhfIxCWFnuSSwTszkuKpGAA8kNtu
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: IMnE3Nd3QSER419gqJ2ryYduQPWHW2Zp
+X-Authority-Analysis: v=2.4 cv=D6RHKuRj c=1 sm=1 tr=0 ts=6854d37e cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=1XWaLZrsAAAA:8
+ a=COk6AnOGAAAA:8 a=hSkVLCK3AAAA:8 a=UgoVPfYcFPS3iaGcGjQA:9
+ a=TjNXssC_j7lpFel5tvFf:22 a=cQPPKAXgyycSBL8etih5:22
+X-Proofpoint-GUID: IMnE3Nd3QSER419gqJ2ryYduQPWHW2Zp
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDAyNCBTYWx0ZWRfX4NcqNFXS0wtQ
+ OGDJBpS7M9vUJ2pnGcZBbfL1xkfNywTm++V9BARANXEKgPB0g6HsuRK4NIL2xnZIO9Mqgn1LiD7
+ kHtv6SAyKb/kf6/sta/T8u2HloIgtDJs3jZta2tKBKv0Q2UGEui0fC0satrMF2pTFnk8ZJZkeco
+ MApyphYKOuLYz/rIV5VEieu2CZktaEOTrW73XlOIQquvOidmHGUftYvV4hhyqSyirug8W+0vNn4
+ NIkzL2ny3fxhJTtbN1GP1JrZ6jMJuumB8lMiLPRkORtnnOohHZG9E2hNuUA7sPcPFjo7SwOCx22
+ BNiA/6y+Gti9CnR+AFsB83NKhW8dkU9FFRUqZRx0xonBKcW1QkTVvyeER4rwbT64SvXcFWNRBxZ
+ bCqe8DTDBoCF8oWDvSOFvoLduG2pEbrQn/DkmiYu/sP9uvJS9zgXzSqATOE6xCau+Unpq0KM
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-19_08,2025-06-18_03,2025-03-28_01
+ definitions=2025-06-20_01,2025-06-18_03,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 phishscore=0 adultscore=0 lowpriorityscore=0 mlxscore=0
- suspectscore=0 clxscore=1015 malwarescore=0 spamscore=0 mlxlogscore=762
- bulkscore=0 priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
+ priorityscore=1501 malwarescore=0 impostorscore=0 phishscore=0 adultscore=0
+ suspectscore=0 mlxlogscore=999 clxscore=1011 mlxscore=0 lowpriorityscore=0
+ spamscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2506200002
+ definitions=main-2506200024
 
-On 6/8/2025 8:08 PM, Rosen Penev wrote:
-> First two commits are small cleanups to make the changes of the third
-> simpler. The fourth actually adds dts definitions to use ahb.
-> 
-> v2: Add documentation, use kernel_ulong_t, and of_device_get_match_data
-> v3: Use qcom prefix and wifi suffix as in other ath drivers.
-> v4: fix up dts example in Documentation
-> v5: move back to using qca prefix. It makes no sense to diverge between
-> all the other drivers for MIPS based qualcomm devices. qcom as a prefix
-> is used for Quallcomm's ARM(64) stuff.
-> 
-> Rosen Penev (5):
->   wifi: ath9k: ahb: reorder declarations
->   wifi: ath9k: ahb: reorder includes
->   wifi: ath9k: ahb: replace id_table with of
->   dt-bindings: net: wireless: ath9k: add OF bindings
->   mips: dts: qca: add wmac support
-> 
->  .../bindings/net/wireless/qca,ath9k.yaml      | 23 ++++++-
->  arch/mips/boot/dts/qca/ar9132.dtsi            |  9 +++
->  .../boot/dts/qca/ar9132_tl_wr1043nd_v1.dts    |  4 ++
->  arch/mips/boot/dts/qca/ar9331.dtsi            |  9 +++
->  arch/mips/boot/dts/qca/ar9331_dpt_module.dts  |  4 ++
->  .../mips/boot/dts/qca/ar9331_dragino_ms14.dts |  4 ++
->  arch/mips/boot/dts/qca/ar9331_omega.dts       |  4 ++
->  .../qca/ar9331_openembed_som9331_board.dts    |  4 ++
->  arch/mips/boot/dts/qca/ar9331_tl_mr3020.dts   |  4 ++
->  drivers/net/wireless/ath/ath9k/ahb.c          | 60 +++++++------------
->  10 files changed, 84 insertions(+), 41 deletions(-)
-> 
+syzbot reports that cfg80211_tx_mlme_mgmt is using uninit-value:
 
-DT team, should I take this series through my tree?
-Toke, Ack?
+=====================================================
+BUG: KMSAN: uninit-value in cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
+cfg80211_tx_mlme_mgmt+0x155/0x300 net/wireless/mlme.c:226
+ieee80211_report_disconnect net/mac80211/mlme.c:4238 [inline]
+ieee80211_sta_connection_lost+0xfa/0x150 net/mac80211/mlme.c:7811
+ieee80211_sta_work+0x1dea/0x4ef0
+ieee80211_iface_work+0x1900/0x1970 net/mac80211/iface.c:1684
+cfg80211_wiphy_work+0x396/0x860 net/wireless/core.c:435
+process_one_work kernel/workqueue.c:3236 [inline]
+process_scheduled_works+0xc1a/0x1e80 kernel/workqueue.c:3317
+worker_thread+0xea7/0x14f0 kernel/workqueue.c:3398
+kthread+0x6b9/0xef0 kernel/kthread.c:464
+ret_from_fork+0x6d/0x90 arch/x86/kernel/process.c:148
+ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
 
-/jeff
+Local variable frame_buf created at:
+ieee80211_sta_connection_lost+0x43/0x150 net/mac80211/mlme.c:7806
+ieee80211_sta_work+0x1dea/0x4ef0
+=====================================================
+
+If ieee80211_report_disconnect() relies on the frame_buf initialized by
+ieee80211_set_disassoc(), it must ensure that ieee80211_set_disassoc() has
+called ieee80211_send_deauth_disassoc() to initialize it and has not
+returned early. Since commit 687a7c8a7227 ("wifi: mac80211: change
+disassoc sequence a bit"), ieee80211_set_disassoc() may return immediately
+when no AP station is present, leaving frame_buf uninitialized.
+
+To fix this issue, check the return value of ieee80211_set_disassoc()
+before calling ieee80211_report_disconnect() if the latter relies on the
+frame_buf initialized by the former.
+
+Reported-by: syzbot+5a7b40bcb34dea5ca959@syzkaller.appspotmail.com
+Closes: https://lore.kernel.org/all/67bf36d3.050a0220.38b081.01ff.GAE@google.com/
+Fixes: 687a7c8a7227 ("wifi: mac80211: change disassoc sequence a bit")
+Signed-off-by: Zhongqiu Han <quic_zhonhan@quicinc.com>
+---
+v2 -> v3:
+- Rebased on top of current next.
+- Update the v2 code implementation:
+  - Remove zero-initialization of frame_buf
+  - Remove WARN_ON and early return in ieee80211_report_disconnect()
+  - Change the return type of ieee80211_set_disassoc(). If
+    ieee80211_report_disconnect() uses the frame_buf initialized by
+    ieee80211_set_disassoc(), its invocation is now conditional based
+    on the return value of ieee80211_set_disassoc(). 
+- Update commit message to reflect the modified code logic.
+- Link to v2: https://lore.kernel.org/all/20250314120614.4032434-1-quic_zhonhan@quicinc.com/
+
+v1 -> v2:
+- Rebased on top of current next.
+- Reorder the tags.
+- Link to v1: https://lore.kernel.org/all/20250227090932.1871272-1-quic_zhonhan@quicinc.com/
+
+ net/mac80211/mlme.c | 109 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 67 insertions(+), 42 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2d46d4af60d7..51750db61a54 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3917,7 +3917,12 @@ static void ieee80211_ml_reconf_reset(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
+-static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
++/*
++ * Note that if ieee80211_report_disconnect() relies on the *frame_buf
++ * initialized by this function, then it must only be called if this function
++ * returns true; otherwise, it may use an uninitialized buffer.
++ */
++static bool ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 				   u16 stype, u16 reason, bool tx,
+ 				   u8 *frame_buf)
+ {
+@@ -3935,13 +3940,13 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+ 	if (WARN_ON(!ap_sta))
+-		return;
++		return false;
+ 
+ 	if (WARN_ON_ONCE(tx && !frame_buf))
+-		return;
++		return false;
+ 
+ 	if (WARN_ON(!ifmgd->associated))
+-		return;
++		return false;
+ 
+ 	ieee80211_stop_poll(sdata);
+ 
+@@ -4168,6 +4173,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	memset(ifmgd->userspace_selectors, 0,
+ 	       sizeof(ifmgd->userspace_selectors));
++
++	return true;
+ }
+ 
+ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+@@ -4448,6 +4455,7 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++	bool report_disconnect;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
+@@ -4477,20 +4485,22 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 		}
+ 	}
+ 
+-	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-			       ifmgd->driver_disconnect ?
+-					WLAN_REASON_DEAUTH_LEAVING :
+-					WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-			       true, frame_buf);
++	report_disconnect = ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++						   ifmgd->driver_disconnect ?
++						   WLAN_REASON_DEAUTH_LEAVING :
++						   WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++						   true, frame_buf);
+ 	/* the other links will be destroyed */
+ 	sdata->vif.bss_conf.csa_active = false;
+ 	sdata->deflink.u.mgd.csa.waiting_bcn = false;
+ 	sdata->deflink.u.mgd.csa.blocked_tx = false;
+ 	ieee80211_vif_unblock_queues_csa(sdata);
+ 
+-	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
+-				    WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-				    ifmgd->reconnect);
++	if (report_disconnect)
++		ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf),
++					    true, WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++					    ifmgd->reconnect);
++
+ 	ifmgd->reconnect = false;
+ }
+ 
+@@ -7477,9 +7487,12 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 	changed |= ieee80211_recalc_twt_req(sdata, sband, link, link_sta, elems);
+ 
+ 	if (ieee80211_config_bw(link, elems, true, &changed, "beacon")) {
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       WLAN_REASON_DEAUTH_LEAVING,
+-				       true, deauth_buf);
++		if (!ieee80211_set_disassoc(sdata,
++					    IEEE80211_STYPE_DEAUTH,
++					    WLAN_REASON_DEAUTH_LEAVING,
++					    true, deauth_buf))
++			goto free;
++
+ 		ieee80211_report_disconnect(sdata, deauth_buf,
+ 					    sizeof(deauth_buf), true,
+ 					    WLAN_REASON_DEAUTH_LEAVING,
+@@ -8090,8 +8103,9 @@ void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ {
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 
+-	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+-			       tx, frame_buf);
++	if (!ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
++				    tx, frame_buf))
++		return;
+ 
+ 	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
+ 				    reason, false);
+@@ -8967,7 +8981,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_bss *bss;
+ 	u16 auth_alg;
+ 	int err;
+-	bool cont_auth, wmm_used;
++	bool cont_auth, wmm_used, report_disconnect;
+ 
+ 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+ 
+@@ -9089,14 +9103,16 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata,
+ 			   "disconnect from AP %pM for new auth to %pM\n",
+ 			   sdata->vif.cfg.ap_addr, auth_data->ap_addr);
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       WLAN_REASON_UNSPECIFIED,
+-				       false, frame_buf);
++		report_disconnect = ieee80211_set_disassoc(sdata,
++							   IEEE80211_STYPE_DEAUTH,
++							   WLAN_REASON_UNSPECIFIED,
++							   false, frame_buf);
+ 
+-		ieee80211_report_disconnect(sdata, frame_buf,
+-					    sizeof(frame_buf), true,
+-					    WLAN_REASON_UNSPECIFIED,
+-					    false);
++		if (report_disconnect)
++			ieee80211_report_disconnect(sdata, frame_buf,
++						    sizeof(frame_buf), true,
++						    WLAN_REASON_UNSPECIFIED,
++						    false);
+ 	}
+ 
+ 	/* needed for transmitting the auth frame(s) properly */
+@@ -9345,6 +9361,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_bss *cbss;
+ 	bool override, uapsd_supported;
+ 	bool match_auth;
++	bool report_disconnect;
+ 	int i, err;
+ 	size_t size = sizeof(*assoc_data) + req->ie_len;
+ 
+@@ -9392,14 +9409,16 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 		sdata_info(sdata,
+ 			   "disconnect from AP %pM for new assoc to %pM\n",
+ 			   sdata->vif.cfg.ap_addr, assoc_data->ap_addr);
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       WLAN_REASON_UNSPECIFIED,
+-				       false, frame_buf);
++		report_disconnect = ieee80211_set_disassoc(sdata,
++							   IEEE80211_STYPE_DEAUTH,
++							   WLAN_REASON_UNSPECIFIED,
++							   false, frame_buf);
+ 
+-		ieee80211_report_disconnect(sdata, frame_buf,
+-					    sizeof(frame_buf), true,
+-					    WLAN_REASON_UNSPECIFIED,
+-					    false);
++		if (report_disconnect)
++			ieee80211_report_disconnect(sdata, frame_buf,
++						    sizeof(frame_buf), true,
++						    WLAN_REASON_UNSPECIFIED,
++						    false);
+ 	}
+ 
+ 	memset(sdata->u.mgd.userspace_selectors, 0,
+@@ -9720,6 +9739,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
+ 	bool tx = !req->local_state_change;
++	bool report_disconnect;
+ 	struct ieee80211_prep_tx_info info = {
+ 		.subtype = IEEE80211_STYPE_DEAUTH,
+ 	};
+@@ -9773,11 +9793,14 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 			   req->bssid, req->reason_code,
+ 			   ieee80211_get_reason_code_string(req->reason_code));
+ 
+-		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+-				       req->reason_code, tx, frame_buf);
+-		ieee80211_report_disconnect(sdata, frame_buf,
+-					    sizeof(frame_buf), true,
+-					    req->reason_code, false);
++		report_disconnect = ieee80211_set_disassoc(sdata,
++							   IEEE80211_STYPE_DEAUTH,
++							   req->reason_code, tx, frame_buf);
++
++		if (report_disconnect)
++			ieee80211_report_disconnect(sdata, frame_buf,
++						    sizeof(frame_buf), true,
++						    req->reason_code, false);
+ 		return 0;
+ 	}
+ 
+@@ -9788,6 +9811,7 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_disassoc_request *req)
+ {
+ 	u8 frame_buf[IEEE80211_DEAUTH_FRAME_LEN];
++	bool report_disconnect;
+ 
+ 	if (!sdata->u.mgd.associated ||
+ 	    memcmp(sdata->vif.cfg.ap_addr, req->ap_addr, ETH_ALEN))
+@@ -9798,12 +9822,13 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		   req->ap_addr, req->reason_code,
+ 		   ieee80211_get_reason_code_string(req->reason_code));
+ 
+-	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
+-			       req->reason_code, !req->local_state_change,
+-			       frame_buf);
++	report_disconnect = ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
++						   req->reason_code, !req->local_state_change,
++						   frame_buf);
+ 
+-	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
+-				    req->reason_code, false);
++	if (report_disconnect)
++		ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
++					    req->reason_code, false);
+ 
+ 	return 0;
+ }
+-- 
+2.43.0
+
