@@ -1,53 +1,70 @@
-Received: from magratgarlick.emantor.de (magratgarlick.emantor.de [78.46.208.201])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E87431E570D;
-	Sat, 21 Jun 2025 11:35:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.46.208.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40880E56A
+	for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2025 12:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750505709; cv=none; b=QwdZCiCB6UNDkwsCahuSWWWdaG/fPrtj/hKb7Wtz544BIAo40rbSeDt0toS07UHT3yQkKbvO7+FYyFxCsY/neUBXtKeDOv/UXweHKuLWq33wrLhD5gebnylonJs4gpsZkLc3X5reebvv7vItGpdI87J8Z6e+oVp5LMJE4nPYWo0=
+	t=1750509144; cv=none; b=Iodww4G3zWzpa6Fu/+9D7O1IyM64Xuf4/7kMgWLHX+Yc8oIb7WpCNZtptjqT9OTJCZFirO3Mpyj1FvtnjCCG15eAxp3u3K+KZtHsCQDA7LFjYj0KPnCm5Kdqu1zXAuCYGL+n6tKYYaYGNO/4ygbaxYSgghqdDJ1TK18q9nMwsVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750505709; c=relaxed/simple;
-	bh=wtQdv7kksrOQPuEY+BaKisntblqSf0kwZEDIPm6kl9c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J0PnuAnsozFI83Km/11zzkvxfAqLel/oufBAlBorucWOFevb5omVUdTHOvXs7xqx88gmOIaXJpzhGzD+OppxxYnIYg7uvLNp25NW8IdlIwPYtpa4FF7DcI9XknKHtBttaoolDdBXKxkX6mzt0C1Eh4vpEdrAble4ddP3VCTrN70=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=czerwinskis.de; spf=pass smtp.mailfrom=czerwinskis.de; dkim=pass (1024-bit key) header.d=czerwinskis.de header.i=@czerwinskis.de header.b=rvkqfDKf; dkim=pass (1024-bit key) header.d=czerwinskis.de header.i=@czerwinskis.de header.b=fhawEpOI; arc=none smtp.client-ip=78.46.208.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=czerwinskis.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=czerwinskis.de
+	s=arc-20240116; t=1750509144; c=relaxed/simple;
+	bh=80rvRyMtgxIDm1o2KBIfbxoi482dHJfEbzNkZ38/WgU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qVgexxP6Ya2Ui1M5as7tZLjKdU1yaWYGctSlvXvn19LoshqJEHBAaDYy/8sHSySYflvjIYiNMbwzitcOaJDg23lWxYGVncP0U1vxK+QN4EUa4bNdMPJrcLUD/fseWUmTEDZuJjykny7mqQSqemtP3aoe/6lzStdr1ttLdSKiEus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=msA0HuKs; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=czerwinskis.de header.i=@czerwinskis.de header.b="rvkqfDKf";
-	dkim=pass (1024-bit key) header.d=czerwinskis.de header.i=@czerwinskis.de header.b="fhawEpOI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=czerwinskis.de;
-	s=mail; t=1750505357;
-	bh=wtQdv7kksrOQPuEY+BaKisntblqSf0kwZEDIPm6kl9c=;
-	h=From:To:Cc:Subject:Date:From;
-	b=rvkqfDKfFZxb3xOuEPo7zG5S0eEdwePwawZVcwrIrfMwhUfU/nbQY9yFKG2meg9Br
-	 u+ANVyxxuUn+xWH8/Ht5ZmRK165P+vmS5G6k+rNscMuI4X+JnB9Cy5vk+uWV72TK5l
-	 Z5AdztY8EMQgXwiFpX0eOp3lSllRgbTauz27ITiE=
-Received: by magratgarlick.emantor.de (Postfix, from userid 114)
-	id 4321096628; Sat, 21 Jun 2025 13:29:17 +0200 (CEST)
-X-Spam-Level: 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=czerwinskis.de;
-	s=mail; t=1750505356;
-	bh=wtQdv7kksrOQPuEY+BaKisntblqSf0kwZEDIPm6kl9c=;
-	h=From:To:Cc:Subject:Date:From;
-	b=fhawEpOI5rnHuiuSwfsdeMaxCMtU+QRnR5OnxKsfcF9JicQOix1YlhDP8GKQN+dUO
-	 Y9rKgAHYvFa04gxplfhmrRN9LSIWorGlafhYYOLOjIQZORbaz6ELhtQn/bUZxoHdut
-	 tbpVKScbXl9mF+yaE7AEe20eMhxuhqfM2o9RvkiQ=
-Received: from localhost (unknown [IPv6:2a0e:c5c1:0:100:cc93:f0a3:c76:aa90])
-	by magratgarlick.emantor.de (Postfix) with ESMTPSA id 07E3B96628;
-	Sat, 21 Jun 2025 13:29:16 +0200 (CEST)
-From: Rouven Czerwinski <rouven@czerwinskis.de>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: kernel@pengutronix.de,
-	Rouven Czerwinski <rouven@czerwinskis.de>,
-	linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] brcmfmac: remove unreachable poll mode for sdio
-Date: Sat, 21 Jun 2025 13:29:10 +0200
-Message-ID: <20250621112912.180436-1-rouven@czerwinskis.de>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="msA0HuKs"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-748ece799bdso1835973b3a.1
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jun 2025 05:32:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1750509141; x=1751113941; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=O66BaKh+JhZeAwTmXM5ZiLhHZkx1nWgCUQPsfYeWl0U=;
+        b=msA0HuKsBfBXkDEWnJy/A+HrJPiRyfrC1TCWURuOWOsxmvn3y/lAmpDudNZh+lJRCj
+         rvLgyzonnc/nBol1UPKCxodGmQZ9FzPrOHxSNTKFTHvdqby7lBbSI24mn9BvjvaFcrGH
+         DU1jZ0XMq7Ih4ZAb6XT9h/Auqbop7Br+8BUusMgs6rHjaHwoRKwH3SFF2OtZTflEhVW8
+         Rz13DkRt9MLlrcJ3uuq18Sm8ww1IAdlXFDkwEUs7nuW+u5LYWBhrNtsS22ToMlXDLThS
+         7S7o0I05Fq/r7rD8WqJvlIq7KoUzquQMvphky1pLt/5eb/EqkT2OqwvD7RQjj7cdedCt
+         5PxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750509141; x=1751113941;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=O66BaKh+JhZeAwTmXM5ZiLhHZkx1nWgCUQPsfYeWl0U=;
+        b=EFqmfeU0/BwzBKuuplzKw+tVffYZud1/5yIU2zcaM3ulmueeS6BsnaanTTEq4FpZoz
+         HlIQ/lOafO26MWm0gB0j4/3S7EeCiUvTEVMcueDeXi0EmPXsqEslWKpEdEQjGocBnvVf
+         ELFl+8/nlJZV03mM7DQkHgFiVNUjgtMoKgmk1vXaEUKlgawWN98URUkvwBJA7D/aJsAk
+         35Wswh7Mv8RhA8iFNl63mS8tXJQnDkGceO3fbnq8C31tBj7ymjiF1yTbXRTHltsgSIFF
+         MtYa7G5Q1N9sq+cOhf236JP+CNJMvRsT//SyGFc/J/3qFCiN9XtZCqrfzMXSfOV35sWj
+         16GQ==
+X-Gm-Message-State: AOJu0YyxUYdnbySyVIL8nIE7sWAPie1k8rKuUhmCLNpc9C7g/mvlbGmQ
+	KorX0L7oLXQCUT3Xe6FA+aovdIPKoFQHxqWc/CpY7x2eunrnMyfwsCLUS3JeIuw57UWcjDmACl1
+	aONeO1Ew=
+X-Gm-Gg: ASbGncsSp7d11a/PJs/A/Y3TmODtchhmBl4fraO+hcOF8Y8RwQlff7Zu8W7Qkp1lkD0
+	smzg/5Hku+tmDIXenQnywCMR1s31Cs27Fxr7YMs4KVzZ0PYggWcHjRApXpTEdc05vGwo3T27A+l
+	PrwB43MSfT5lC7aTjVWpaykKAjG9v19RY0T5bXxSYT3FzT6VI2vohz1GMH806UDH/jnohwBzhfg
+	tlvOuM350W+0cqfZa0Fi1lUI21Ppepc6CuMB5iU7JZ3aIMbZVtQPdDBffkdlHEyRaZZZ+liOjME
+	L/QIGIC86EJ/7ybGz9MnKwlxQ5tF2VTetQnTEGNRXU7zZltVzkZS3LtpS9HZ6ov6KShu+urdogh
+	/032N
+X-Google-Smtp-Source: AGHT+IEr8iuweIIB1F7Z2BC02r8RodQZarzq1HFERjX4Jf6HIXHNHvWwZb9Hb1ngYHnnCndudKUWMQ==
+X-Received: by 2002:a05:6a00:4f8e:b0:730:9946:5973 with SMTP id d2e1a72fcca58-7490d663722mr7364723b3a.5.1750509141547;
+        Sat, 21 Jun 2025 05:32:21 -0700 (PDT)
+Received: from mma-H9MHD44.lan ([60.227.214.125])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7490a6494b3sm4091388b3a.125.2025.06.21.05.32.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Jun 2025 05:32:21 -0700 (PDT)
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	arien.judge@morsemicro.com,
+	Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless] wifi: mac80211: fix beacon interval calculation overflow
+Date: Sat, 21 Jun 2025 22:32:09 +1000
+Message-ID: <20250621123209.511796-1-lachlan.hodges@morsemicro.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,111 +73,30 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The sdio interface implements an unreachable poll mode. Remove it since
-the code can't be reached, if the poll mode needs to be implemented it
-can simply be resurrected using the usual git means.
+As we are converting from TU to usecs, a beacon interval of
+100*1024 usecs will lead to integer wrapping. To fix change
+to use a u32.
 
-Signed-off-by: Rouven Czerwinski <rouven@czerwinskis.de>
+Fixes: 057d5f4ba1e4 ("mac80211: sync dtim_count to TSF")
+
+Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- .../broadcom/brcm80211/brcmfmac/sdio.c        | 48 +------------------
- 1 file changed, 2 insertions(+), 46 deletions(-)
+ net/mac80211/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index cf26ab15ee0c..26e09a7acb02 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -404,7 +404,6 @@ struct brcmf_sdio_hdrinfo {
- struct brcmf_sdio_count {
- 	uint intrcount;		/* Count of device interrupt callbacks */
- 	uint lastintrs;		/* Count as of last watchdog timer */
--	uint pollcnt;		/* Count of active polls */
- 	uint regfails;		/* Count of R_REG failures */
- 	uint tx_sderrs;		/* Count of tx attempts with sd errors */
- 	uint fcqueued;		/* Tx packets that got queued */
-@@ -476,11 +475,8 @@ struct brcmf_sdio {
- 	u8 sdpcm_ver;	/* Bus protocol reported by dongle */
- 
- 	bool intr;		/* Use interrupts */
--	bool poll;		/* Use polling */
- 	atomic_t ipend;		/* Device interrupt is pending */
- 	uint spurious;		/* Count of spurious interrupts */
--	uint pollrate;		/* Ticks between device polls */
--	uint polltick;		/* Tick counter */
- 
- #ifdef DEBUG
- 	uint console_interval;
-@@ -3178,7 +3174,7 @@ static int brcmf_debugfs_sdio_count_read(struct seq_file *seq, void *data)
- 
- 	seq_printf(seq,
- 		   "intrcount:    %u\nlastintrs:    %u\n"
--		   "pollcnt:      %u\nregfails:     %u\n"
-+		   "pollcnt:       0\nregfails:     %u\n"
- 		   "tx_sderrs:    %u\nfcqueued:     %u\n"
- 		   "rxrtx:        %u\nrx_toolong:   %u\n"
- 		   "rxc_errors:   %u\nrx_hdrfail:   %u\n"
-@@ -3192,7 +3188,7 @@ static int brcmf_debugfs_sdio_count_read(struct seq_file *seq, void *data)
- 		   "tx_ctlpkts:   %lu\nrx_ctlerrs:   %lu\n"
- 		   "rx_ctlpkts:   %lu\nrx_readahead: %lu\n",
- 		   sdcnt->intrcount, sdcnt->lastintrs,
--		   sdcnt->pollcnt, sdcnt->regfails,
-+		   sdcnt->regfails,
- 		   sdcnt->tx_sderrs, sdcnt->fcqueued,
- 		   sdcnt->rxrtx, sdcnt->rx_toolong,
- 		   sdcnt->rxc_errors, sdcnt->rx_hdrfail,
-@@ -3669,43 +3665,6 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 27d414efa3fd..a125995ed252 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3884,7 +3884,7 @@ void ieee80211_recalc_dtim(struct ieee80211_local *local,
  {
- 	brcmf_dbg(TIMER, "Enter\n");
- 
--	/* Poll period: check device if appropriate. */
--	if (!bus->sr_enabled &&
--	    bus->poll && (++bus->polltick >= bus->pollrate)) {
--		u32 intstatus = 0;
--
--		/* Reset poll tick */
--		bus->polltick = 0;
--
--		/* Check device if no interrupts */
--		if (!bus->intr ||
--		    (bus->sdcnt.intrcount == bus->sdcnt.lastintrs)) {
--
--			if (!bus->dpc_triggered) {
--				u8 devpend;
--
--				sdio_claim_host(bus->sdiodev->func1);
--				devpend = brcmf_sdiod_func0_rb(bus->sdiodev,
--						  SDIO_CCCR_INTx, NULL);
--				sdio_release_host(bus->sdiodev->func1);
--				intstatus = devpend & (INTR_STATUS_FUNC1 |
--						       INTR_STATUS_FUNC2);
--			}
--
--			/* If there is something, make like the ISR and
--				 schedule the DPC */
--			if (intstatus) {
--				bus->sdcnt.pollcnt++;
--				atomic_set(&bus->ipend, 1);
--
--				bus->dpc_triggered = true;
--				queue_work(bus->brcmf_wq, &bus->datawork);
--			}
--		}
--
--		/* Update interrupt tracking */
--		bus->sdcnt.lastintrs = bus->sdcnt.intrcount;
--	}
- #ifdef DEBUG
- 	/* Poll for console output periodically */
- 	if (bus->sdiodev->state == BRCMF_SDIOD_DATA && BRCMF_FWCON_ON() &&
-@@ -4080,9 +4039,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 
- 	/* Set the poll and/or interrupt flags */
- 	bus->intr = true;
--	bus->poll = false;
--	if (bus->poll)
--		bus->pollrate = 1;
- 
- 	return 0;
- 
+ 	u64 tsf = drv_get_tsf(local, sdata);
+ 	u64 dtim_count = 0;
+-	u16 beacon_int = sdata->vif.bss_conf.beacon_int * 1024;
++	u32 beacon_int = sdata->vif.bss_conf.beacon_int * 1024;
+ 	u8 dtim_period = sdata->vif.bss_conf.dtim_period;
+ 	struct ps_data *ps;
+ 	u8 bcns_from_dtim;
 -- 
-2.49.0
+2.43.0
 
