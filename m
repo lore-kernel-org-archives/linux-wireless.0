@@ -1,83 +1,105 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-out.aladdin-rd.ru (mail-out.aladdin-rd.ru [91.199.251.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8509B2F1FED
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 12:01:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DC362F1FDA;
+	Thu, 26 Jun 2025 12:02:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.199.251.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750939275; cv=none; b=ZdRB/XV9CzU7xuRyOhbbTnEEMVhF1TBT/mfQ6qaRtWuIknVIhhrxz5pzyXGscPmNvUkZyW7qy3PmDVLyE3i5hyj3pS4cwwjueta5/yNCFjXqS9yp0Y/wVsuFnEz1CgJ37lPgsfKIeop+nqRorQKdvN7C+KrwkI+5o0B2m51XvrU=
+	t=1750939359; cv=none; b=gi/YdfhSvjW0xvc1Sr5Ip6WPMzBSrFESPI01O5/e8kPcwx2vfGmhr66EeF8Sm9NwInsSaKCVmEFwg07UmbpsEOizKWqDbx+7KIqgR7/nZRWTuLIeJ+pr1F3MFyhqRIYHTQlxGph9vfHVXBFIaYOPFI2HFcP6p6wShNVB9phP2WY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750939275; c=relaxed/simple;
-	bh=l+ByRGcDMrSLn/AaJSbuwnl1jrC5KPjWiIEvpFvdWP8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ngeqDB6rwD4ROWbU5dHUihsVnMACG+tr0Uv2HnYMril99COGGW6ZHybpmqi5CgSiTD6ezKTXa7+x8xak/Vtdmqj/GsFVNRsZNprAr8ljeQjUi0j7UFRKiXpmDsV0kY9D59OXUlEebFc61Lgl5xvFUFtvbWw5cWq3erOHb64NqN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=BfJkALtX; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1750939359; c=relaxed/simple;
+	bh=wmnasIyPxehdxLNIHSKhKpOToo640MSxNeoWG1PR6tw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BN/S/TsmHzo5ZbP2qa/cjcfnPrwarE+v9heLS8e7ge9+R6MdN0BQl4M4WgUeCP0lp6e27E/G6loFvtD7pBpT0uIvBo+VbmvYFkoIRykaV8Rlz67/xEA5Xr7E5adui1QN+9FmoGMcrfKXlt8isC/Z9vSE7yRdD4P0VHh6UgwArXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru; spf=pass smtp.mailfrom=aladdin.ru; dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b=ns8VGIYS; arc=none smtp.client-ip=91.199.251.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aladdin.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="BfJkALtX"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+YqgEhIgkRHqoMsFILxGv20lxrJ8lnBozS/U80sj2J0=;
-	t=1750939273; x=1752148873; b=BfJkALtXa53WhYflB+/TW+NBnkFsY8aT/au1m3ywCT0wmM+
-	glJ3Pu9lmBK8tNvXKDFHiwO4DaKpwtDcCZtedBlFsdejSGmYqlEvjtUrjSoXRmP/mD1q2d7YlJhMt
-	D9yD/yzom/zwBMPvwdLFKV5U10gwBgffSzjHRshb0W4H95/d9FzHguwXLvJIaFdRjw2qKboXKmOYY
-	GPENJIHJfNj9Pad3XzCHX458Z11PsmPPwHPogQMCxvFRieVneG0nQJsH9uSi0Rd+KZ8LLnv8l/BHn
-	mzQIGeSULSyTbOjo+dLXm8enNlrxa6pS8otAyQt2Bwq5XAkTp+0xS0m9mf9oYJZw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1uUlHr-0000000BVCx-26m7;
-	Thu, 26 Jun 2025 14:01:03 +0200
-Message-ID: <1450bfa2265e8609699a70a493209091873040cc.camel@sipsolutions.net>
-Subject: Re: [PATCH] iw: add support to parse 6 GHz channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Suraj P Kizhakkethil <quic_surapk@quicinc.com>
-Cc: linux-wireless@vger.kernel.org, Pradeep Kumar Chitrapu
-	 <quic_pradeepc@quicinc.com>
-Date: Thu, 26 Jun 2025 14:01:02 +0200
-In-Reply-To: <344daf44-525b-40c9-a570-fe659717d656@quicinc.com> (sfid-20250626_082958_208216_65C41DE0)
-References: <20250620073240.2770468-1-quic_surapk@quicinc.com>
-	 <220639a5bbf43c125ef114c6ca8e71d050125cd6.camel@sipsolutions.net>
-	 <344daf44-525b-40c9-a570-fe659717d656@quicinc.com>
-	 (sfid-20250626_082958_208216_65C41DE0)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
+	dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b="ns8VGIYS"
+DKIM-Signature: v=1; a=rsa-sha256; d=aladdin.ru; s=mail; c=simple/simple;
+	t=1750938406; h=from:subject:to:date:message-id;
+	bh=wmnasIyPxehdxLNIHSKhKpOToo640MSxNeoWG1PR6tw=;
+	b=ns8VGIYSWsUJBF63yP/4S3anVqeG0fexbzzX+6E8g46NiJZt8RvDT3j/FtEgYcgOCr7/sd0bzWs
+	jVJPqkUNXjYDn1RBVbExm4W/WBXAmv+WiyOeR3oTHMo+Z5Fej4Kw/VapqiKz5wgkvqCeXZ8vNbjix
+	hZG+qvOroXIzA/JZDTK/JImJzybJ754PoiMHwFEWaqSQUy2OHgOeS/TdhibCc7hZ7TNjR+7CMtYst
+	bUVE4j5M4ditUMZE4xVX6DuXuOdmiAL6WSKoLbId5oqzqj3xSJLUh4KiFdKefhVTavUOXh9bVeHVv
+	3N3Bts80i6FgX4V+jR+BQ7ylZQHxuPffr7dQ==
+From: Daniil Dulov <d.dulov@aladdin.ru>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Daniil Dulov <d.dulov@aladdin.ru>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <lvc-project@linuxtesting.org>
+Subject: [PATCH v2] wifi: zd1211rw: Fix potential NULL pointer dereference in zd_mac_tx_to_dev()
+Date: Thu, 26 Jun 2025 14:46:19 +0300
+Message-ID: <20250626114619.172631-1-d.dulov@aladdin.ru>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EXCH-2016-03.aladdin.ru (192.168.1.103) To
+ EXCH-2016-01.aladdin.ru (192.168.1.101)
 
-On Thu, 2025-06-26 at 11:59 +0530, Suraj P Kizhakkethil wrote:
-> Adding support for the 'set channel' command provides users with the=20
-> flexibility to use channel numbers instead of frequencies.
+There is a potential NULL pointer dereference in zd_mac_tx_to_dev(). For
+example, the following is possible:
 
-Sure, but who are "users" here? Most people we'd normally describe as
-"users" will never touch iw. The users here are mostly us, who work on
-wifi in the first place? There are some corner cases like sniffer
-though.
+    	T0			    		T1
+zd_mac_tx_to_dev()
+  /* len == skb_queue_len(q) */ 	   				  
+  while (len > ZD_MAC_MAX_ACK_WAITERS) {
 
-The thing that might've made some sense here perhaps is the automatic
-center frequency setting that you get if you just set the channel and
-bandwidth, but I think that also works with center frequency, so my
-example should be also possible instead as
+					  filter_ack()
+					    spin_lock_irqsave(&q->lock, flags);
+					    /* position == skb_queue_len(q) */
+					    for (i=1; i<position; i++)
+				    	      skb = __skb_dequeue(q)
 
-  iw dev wlan0 set freq 6195 80MHz
+					    if (mac->type == NL80211_IFTYPE_AP)
+					      skb = __skb_dequeue(q);
+					    spin_unlock_irqrestore(&q->lock, flags);
 
+    skb_dequeue() -> NULL
 
-> If you think this change is not acceptable or needs modification, please=
-=20
-> let me know. I=E2=80=99ll either drop it or make the necessary adjustment=
-s.
+Since there is a small gap between checking skb queue length and skb being
+unconditionally dequeued in zd_mac_tx_to_dev(), skb_dequeue() can return NULL.
+Then the pointer is passed to zd_mac_tx_status() where it is dereferenced.
+				   				
+In order to avoid potential NULL pointer dereference due to situations like
+above, check if skb is not NULL before passing it to zd_mac_tx_status().
 
-I just think it's really quite awkward to do in the code and unnecessary
-as well. _Maybe_ if we were to do something like "6ghz:5" for the
-channel number? But I'm not a huge fan either.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-johannes
+Fixes: 459c51ad6e1f ("zd1211rw: port to mac80211")
+Signed-off-by: Daniil Dulov <d.dulov@aladdin.ru>
+---
+v2: Replace locking changes with a check for NULL since it has more determined
+behavior compared to changing locking logic and might be less harmful in terms
+of old code.
+
+Link to v1: https://lore.kernel.org/linux-wireless/20250604101356.6292-1-d.dulov@aladdin.ru/T/#u
+
+ drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
+index 9653dbaac3c0..21205568374e 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
+@@ -583,7 +583,11 @@ void zd_mac_tx_to_dev(struct sk_buff *skb, int error)
+ 
+ 		skb_queue_tail(q, skb);
+ 		while (skb_queue_len(q) > ZD_MAC_MAX_ACK_WAITERS) {
+-			zd_mac_tx_status(hw, skb_dequeue(q),
++			skb = skb_dequeue(q);
++			if (!skb)
++				break;
++
++			zd_mac_tx_status(hw, skb,
+ 					 mac->ack_pending ? mac->ack_signal : 0,
+ 					 NULL);
+ 			mac->ack_pending = 0;
+-- 
+2.34.1
+
