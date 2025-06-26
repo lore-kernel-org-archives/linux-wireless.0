@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29CB81DC998
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C5A126C05
 	for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 08:00:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750924831; cv=none; b=G9XE8/gOUehUq25JCWIbquPvkCv8072uni3Rkc3E5X4x0D4BZADrmXDNQuowZaf6fGYiK9PfH1kGKDz51uZ2G6ngS4m2+qYmdvX+KFYmCeeA5Rjdh4w0P1CaW0NirOdi+1xxeStTaAyZMxmS0Z02CjoYwyNPvbzzHpoIlcUmPfI=
+	t=1750924831; cv=none; b=r2DQOv4Q3JgbGzMIVkVPotaLpoEqezPzD8uLYKRuv9s1yba4lmktYf7F61YMx+TxV1wL9s2VvdZ+szHpQlxbxei3OrQ56ZFq49o24WhR9HIQ4zs8fK48ToKLbzXnX4NCDCKqXodN0cyls25bJrERf7HivslMQg2Ie7t9imhuaMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1750924831; c=relaxed/simple;
-	bh=GhNn1CxE/TVqSMWQ96wk0/Urn0iPGND4WEgwx6J4S4w=;
+	bh=eZYiZwV+ULC6PNy6CYgpJ0lzYwCKUKRBLvdUw1p9h0Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Ty/GclgWSznKczi367ojmjnfbuaXmYQwYfuYOBysaFQpdI6tv1kWUOXPcftha5wFudCmttfY5eqOtA4qjC0Y0b0Qv8dNwXIjSega+NcyAQEzWcZ819rE2xjY/jD7SEptJIMC1r9/jLk9K2tl0ISVcx2NJ2DA+mNXJd1Vfpson00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mYLFJCVc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=b/CvDeekdh81KN9lDs+2Ogmzl70xyhr/cf4w1MpBeGSpHRijMvVWPdcAdSXV0AvqaFe0vlBQI6tgiDq+qxpu/rEYDKpWxlhRmrv4KHQDnJULs/bM42NG7fBo10zUeSv7CaIU4lnOPfUVzuw/KnUuyRvzfphNOMOTojV7KWksY+k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VWYD1uo1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mYLFJCVc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADCE8C4CEEE;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VWYD1uo1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1E0C4CEEB;
 	Thu, 26 Jun 2025 08:00:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1750924830;
-	bh=GhNn1CxE/TVqSMWQ96wk0/Urn0iPGND4WEgwx6J4S4w=;
+	bh=eZYiZwV+ULC6PNy6CYgpJ0lzYwCKUKRBLvdUw1p9h0Y=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=mYLFJCVchWOSmgVSAr9NtEFg+s+ePhmxu4VrGi9DzxsepqOTJTlndaaHtV+zHnUhS
-	 1H9NkpYBzKvD2eACTvMeX15SxFUE3cBbn2IecL68ezZb7TOELLjgKXjzvGiOh6o1V8
-	 +Q5rGXrpQ3tvlOVeBveF7mGtcoKmLH2E+qejVXN5apf+U/AHtiXZcR8DUGjVggW1Xk
-	 Vm+R3EgqtJ79fAUKpAIufoe5qz+47P3tlrF3jlW7YzrgDZXVim4s1a3kPSBNGdHM8T
-	 5QCzjQQElnxhzcI2T/dEE45g6VgV9KcMvqW9wWC8q32DCuOgYZzZe9ing2uTwfokDx
-	 vodK79cQR5STw==
+	b=VWYD1uo16zSKqcClNf7AiKtynFxMrECb4IOd4Hr1nJQw1JcExJPzQ9NmsOYJExE1X
+	 1teLKZwTSZC3+jnmAJlO5XsCII+EE+HbOSfgmMdXMLjyarJj7tVlr93kwefYDs8p0c
+	 m4iKYYkWJT120CAnM+19L2heSVhzPPvZPtSU/F86SqUXEH9a5IUyFYS/IMs6F4zsTM
+	 /o1Ekwiuzc0hYCBN5TPdkVhyXNQ2y97t/PcG65z0/o6d3FMxjIpkurlNILtTfxN5r7
+	 h2NCbEy4dZ46CtubismrcR5fSLe5KygQ90vSiS3F8+6Je5GbvDmX2yjH78ifryakZJ
+	 1AOHcMO/6wlAA==
 Received: from wens.tw (localhost [127.0.0.1])
-	by wens.tw (Postfix) with ESMTP id 0E7D55FE35;
-	Thu, 26 Jun 2025 16:00:28 +0800 (CST)
+	by wens.tw (Postfix) with ESMTP id 043595F752;
+	Thu, 26 Jun 2025 16:00:27 +0800 (CST)
 From: Chen-Yu Tsai <wens@kernel.org>
-To: Ping-Ke Shih <pkshih@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-In-Reply-To: <20250618054904.9107-1-pkshih@gmail.com>
-References: <20250618054904.9107-1-pkshih@gmail.com>
-Subject: Re: [PATCH] wireless-regdb: Update regulatory info for Egypt (EG)
- for 2024
-Message-Id: <175092482805.2040065.11132581971624501350.b4-ty@kernel.org>
-Date: Thu, 26 Jun 2025 16:00:28 +0800
+To: linux-wireless@vger.kernel.org, Emily <linux@emily.moe>
+Cc: wireless-regdb@lists.infradead.org
+In-Reply-To: <20250529144854.31931-1-linux@emily.moe>
+References: <20250529135706.31269-1-linux@emily.moe>
+ <20250529144854.31931-1-linux@emily.moe>
+Subject: Re: [PATCH v2] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz
+ band for GB
+Message-Id: <175092482797.2040065.7311768674091795449.b4-ty@kernel.org>
+Date: Thu, 26 Jun 2025 16:00:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -45,23 +46,31 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Mailer: b4 0.14.2
 
-On Wed, 18 Jun 2025 13:49:04 +0800, Ping-Ke Shih wrote:
-> National Telecommunications Regulatory Authority (NTRA) released Radio
-> Spectrum Guidelines for Short-range Devices (SRD) on November 2024.
+On Thu, 29 May 2025 15:47:56 +0100, Emily wrote:
+> Similarly to the changes in 6c7cbccaee121772a23fa0efdfefcdd8a2369985
+> (“wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band in
+> ETSI/CEPT”), the Ofcom regulations for the 5925–6425 MHz band [1]
+> have no explicit limits on bandwidth:
 > 
-> As Table 4 Mandatary requirements for Wideband Data Transmission Systems:
-> Including Wireless LAN (Wi-Fi and Multiple GIGABIT wireless systems for
-> Indoor applications only)
+> > Maximum mean EIRP of 250mW for Low Power indoor and 25mW for Very
+> > Low Power indoor and mobile outdoor.
+> >
+> > Maximum mean EIRP density of 12.6mW/MHz in any 1 MHz band.
+> >
+> > Techniques to access spectrum and mitigate interference that provide
+> > at least equivalent performance to the techniques described in
+> > designated standards specified in the Notices of publication (See
+> > Section 6) for the 5150 – 5250 MHz band must be used.
 > 
 > [...]
 
 Applied to master in wens/wireless-regdb.git, thanks!
 
-[1/1] wireless-regdb: Update regulatory info for Egypt (EG) for 2024
-      https://git.kernel.org/wens/wireless-regdb/c/a8b5cda00800
+[1/1] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band for GB
+      https://git.kernel.org/wens/wireless-regdb/c/2e8214e2cac3
 
 Best regards,
 -- 
