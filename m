@@ -1,78 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C5A126C05
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 08:00:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BA323B613
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 08:12:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750924831; cv=none; b=r2DQOv4Q3JgbGzMIVkVPotaLpoEqezPzD8uLYKRuv9s1yba4lmktYf7F61YMx+TxV1wL9s2VvdZ+szHpQlxbxei3OrQ56ZFq49o24WhR9HIQ4zs8fK48ToKLbzXnX4NCDCKqXodN0cyls25bJrERf7HivslMQg2Ie7t9imhuaMw=
+	t=1750925573; cv=none; b=MEhT+yXb4X1hgk42t7b4ufFwgInq4u3x2tg47dL/rrKjYDUu5A6PLrlQTDpo9pV3nVMccD6H/iDmIF+eSTkBBl5JG2Zqe1FaJXUBuGKGCtzQwoSoem1dA45acDcen/zlRsGP/3CGduHFMdEiDZUqVK9dKHiIjSMUFcYT/3RWSS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750924831; c=relaxed/simple;
-	bh=eZYiZwV+ULC6PNy6CYgpJ0lzYwCKUKRBLvdUw1p9h0Y=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=b/CvDeekdh81KN9lDs+2Ogmzl70xyhr/cf4w1MpBeGSpHRijMvVWPdcAdSXV0AvqaFe0vlBQI6tgiDq+qxpu/rEYDKpWxlhRmrv4KHQDnJULs/bM42NG7fBo10zUeSv7CaIU4lnOPfUVzuw/KnUuyRvzfphNOMOTojV7KWksY+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VWYD1uo1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750925573; c=relaxed/simple;
+	bh=uuC7OKC7WbXE8NI5ndYMrEWI5VDF8oKgrFaUtqIxPNY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hpvQWAGHf4GtEt6NEffEIUQmTznRSV8q+Q8oF0eWH2ixsOjEkOSZTfZpKy4tFRZ8emP7mVHVYZQjAad95boIVDQJu3oodYt+XsqtaSKFm06IDFh1YI3ihF+NtxK2rQ1t4WRjtD2jJWNQkD89h4gquv6iK9zWJLF8NAXAWVDnf88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Drouf1u+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VWYD1uo1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1E0C4CEEB;
-	Thu, 26 Jun 2025 08:00:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Drouf1u+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EF0AC4AF0B
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 08:12:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750924830;
-	bh=eZYiZwV+ULC6PNy6CYgpJ0lzYwCKUKRBLvdUw1p9h0Y=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=VWYD1uo16zSKqcClNf7AiKtynFxMrECb4IOd4Hr1nJQw1JcExJPzQ9NmsOYJExE1X
-	 1teLKZwTSZC3+jnmAJlO5XsCII+EE+HbOSfgmMdXMLjyarJj7tVlr93kwefYDs8p0c
-	 m4iKYYkWJT120CAnM+19L2heSVhzPPvZPtSU/F86SqUXEH9a5IUyFYS/IMs6F4zsTM
-	 /o1Ekwiuzc0hYCBN5TPdkVhyXNQ2y97t/PcG65z0/o6d3FMxjIpkurlNILtTfxN5r7
-	 h2NCbEy4dZ46CtubismrcR5fSLe5KygQ90vSiS3F8+6Je5GbvDmX2yjH78ifryakZJ
-	 1AOHcMO/6wlAA==
-Received: from wens.tw (localhost [127.0.0.1])
-	by wens.tw (Postfix) with ESMTP id 043595F752;
-	Thu, 26 Jun 2025 16:00:27 +0800 (CST)
-From: Chen-Yu Tsai <wens@kernel.org>
-To: linux-wireless@vger.kernel.org, Emily <linux@emily.moe>
-Cc: wireless-regdb@lists.infradead.org
-In-Reply-To: <20250529144854.31931-1-linux@emily.moe>
-References: <20250529135706.31269-1-linux@emily.moe>
- <20250529144854.31931-1-linux@emily.moe>
-Subject: Re: [PATCH v2] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz
- band for GB
-Message-Id: <175092482797.2040065.7311768674091795449.b4-ty@kernel.org>
-Date: Thu, 26 Jun 2025 16:00:27 +0800
+	s=k20201202; t=1750925573;
+	bh=uuC7OKC7WbXE8NI5ndYMrEWI5VDF8oKgrFaUtqIxPNY=;
+	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
+	b=Drouf1u+iM4/oPmPsABgGIVN1pS1Z9g7yHzP33apWU9gZs59RZQounHtB+Od2XlJ2
+	 TGyiCXEFEhIV6MZrof2D7pJbgbBxF7/bOyw4T+51fNkMXVVrR6gcyuMJeNEvwAVA6z
+	 wo9V7kMR0AGz0QvYcjw2cs+225Rg5/2tm+eqSllxu6L9tcrGkqR7wPnNZ2MpNlGOrp
+	 iephBcZWW5DN9gunLaZAd+lhi8+DtXg+vH+CFbnfhFe2Rkk8/xyWIxLW7zJfIJ+/Re
+	 LRIs2Ci/FUetZOiJckuT4ziGjf5mu1XMsLe7LzpC4j83gBh6OuucEumBaEO/8jI8vE
+	 Ozj8+UmfL40EA==
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-32b7cf56cacso6366171fa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jun 2025 01:12:53 -0700 (PDT)
+X-Gm-Message-State: AOJu0YzfWZdNA6UbdwVIQWF3UpUCYkDcKjXNsaoq3mdz4vbCmRJza1fH
+	iqHu1W1sjN27mNUe/HPd6npld/cvYemDAwKI66f0dou9FyRRE/O42aNqmMVK8yDqWdhkIZrFSsL
+	y7tIaP2gogUPwRH+rb2++LKAfrQVkteA=
+X-Google-Smtp-Source: AGHT+IFKqCJasa3guH/8QHvFBgvK5sFT6r4++A7PfL2nfiyG1gXbdhQzxNdr72k7QKq8ebeNQ7V9wDjZhx8b9FP+peU=
+X-Received: by 2002:a2e:808f:0:b0:32a:de85:4613 with SMTP id
+ 38308e7fff4ca-32ccfa6f679mr8105611fa.23.1750925571628; Thu, 26 Jun 2025
+ 01:12:51 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Mailer: b4 0.14.2
+References: <20250602121434.3011282-1-marcoshalano@gmail.com>
+In-Reply-To: <20250602121434.3011282-1-marcoshalano@gmail.com>
+Reply-To: wens@kernel.org
+From: Chen-Yu Tsai <wens@kernel.org>
+Date: Thu, 26 Jun 2025 16:12:39 +0800
+X-Gmail-Original-Message-ID: <CAGb2v645_kB3mNb79ytFb9y2xw6zp1oFvof5NX-FF7eDPNCBFQ@mail.gmail.com>
+X-Gm-Features: Ac12FXzunCqzK9LfzGH2E5bvbX6mYXEOLaBgYjRiRPJQkjrMHhDj-O0J2VndEeg
+Message-ID: <CAGb2v645_kB3mNb79ytFb9y2xw6zp1oFvof5NX-FF7eDPNCBFQ@mail.gmail.com>
+Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Brazil (BR)
+ on 6GHz
+To: Marcos Alano <marcoshalano@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 29 May 2025 15:47:56 +0100, Emily wrote:
-> Similarly to the changes in 6c7cbccaee121772a23fa0efdfefcdd8a2369985
-> (“wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band in
-> ETSI/CEPT”), the Ofcom regulations for the 5925–6425 MHz band [1]
-> have no explicit limits on bandwidth:
-> 
-> > Maximum mean EIRP of 250mW for Low Power indoor and 25mW for Very
-> > Low Power indoor and mobile outdoor.
-> >
-> > Maximum mean EIRP density of 12.6mW/MHz in any 1 MHz band.
-> >
-> > Techniques to access spectrum and mitigate interference that provide
-> > at least equivalent performance to the techniques described in
-> > designated standards specified in the Notices of publication (See
-> > Section 6) for the 5150 – 5250 MHz band must be used.
-> 
-> [...]
+On Mon, Jun 2, 2025 at 8:15=E2=80=AFPM Marcos Alano <marcoshalano@gmail.com=
+> wrote:
+>
+> Change rules for 6GHz on Brazil removing `NO-IR` and adding
+> `AUTO-BW` so the 6GHz band can be used.
 
-Applied to master in wens/wireless-regdb.git, thanks!
+AUTO-BW is not needed since there are no adjacent bands that can be
+combined.
 
-[1/1] wireless-regdb: Permit 320 MHz bandwidth in 6 GHz band for GB
-      https://git.kernel.org/wens/wireless-regdb/c/2e8214e2cac3
-
-Best regards,
--- 
-Chen-Yu Tsai <wens@kernel.org>
-
+> Add the relevant normatives in comments.
+>
+> Signed-off-by: Marcos Alano <marcoshalano@gmail.com>
+> ---
+>  db.txt | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/db.txt b/db.txt
+> index e331d4f..3b0adbb 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -321,8 +321,8 @@ country BO: DFS-JP
+>
+>  # Source:
+>  # https://www.gov.br/anatel/pt-br/regulado/radiofrequencia/radiacao-rest=
+rita
+> -# https://informacoes.anatel.gov.br/legislacao/resolucoes/2017/936-resol=
+ucao-680
+> -# https://informacoes.anatel.gov.br/legislacao/atos-de-certificacao-de-p=
+rodutos/2017/1139-ato-14448
+> +# https://informacoes.anatel.gov.br/legislacao/resolucoes/2025/2001-reso=
+lucao-772
+> +# https://informacoes.anatel.gov.br/legislacao/atos-de-requisitos-tecnic=
+os-de-gestao-do-espectro/2024/1920-ato-915
+>  country BR: DFS-FCC
+>         (2400 - 2483.5 @ 40), (30)
+>         # The next three ranges have been reduced by 3dB, could be increa=
+sed
+> @@ -331,7 +331,7 @@ country BR: DFS-FCC
+>         (5250 - 5350 @ 80), (27), NO-OUTDOOR, DFS, AUTO-BW
+>         (5470 - 5725 @ 160), (27), DFS, AUTO-BW
+>         (5725 - 5850 @ 80), (30), AUTO-BW
+> -       (5925 - 7125 @ 320), (12), NO-OUTDOOR, NO-IR
+> +       (5925 - 7125 @ 320), (30), NO-OUTDOOR, AUTO-BW
+>         # EIRP=3D40dBm (43dBm peak)
+>         (57000 - 71000 @ 2160), (40)
+>
+> --
+> 2.49.0
+>
+>
