@@ -1,58 +1,58 @@
 Received: from e2i340.smtp2go.com (e2i340.smtp2go.com [103.2.141.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8853283FE5
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2025 21:01:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E839293B72
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Jun 2025 21:04:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.2.141.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751058116; cv=none; b=SsmPhwzUFdLIkVXgK/tACtFeBRZdG3+b9QHl9BMtIJPhVhXHkkj112WpbXBXpbNvJR/ycJkVSb++WUi6c15Mz2Py+hx26NYhxHee7gQhmtBOlIXQOfRAmWFHUhlSnB81M/AEdnr8aLgh0YrW1NyExe8T69wKwPxnKNL6AAc1r+4=
+	t=1751058259; cv=none; b=mzEinRk5XyndI3fDeZ+ruzv/NnEuhx6+Qh/MzX2NZ6puhagHgfo0yHJCN5l1qMnizbH799I9EMjspIvOMlekO6ySyBYdm2YdbtFWWrYdn1i9ks2gduWXa1hf/hDDrqIHiH1wpi+TRJlvwOSWCAbqGDHaJYaobwbRq8zzdUuAESo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751058116; c=relaxed/simple;
-	bh=EqsjFcnoV7wkCfCblGpMw/2Zo+KMh0FeYoLwiaCPx8I=;
+	s=arc-20240116; t=1751058259; c=relaxed/simple;
+	bh=PB5y9/HTjxCPGTDbN0DPdqlQpv1FQay+Az8XF+7AqUk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LAwIhttZg26yRw8ntGfV6iYVXnTpW+Va80hKqWIqFnN38otIcrFk27y4ySQ0nyNd1jIfExXim9o0DPSBB3yFAhwNXHbLLo/88dqBdpiFqRDHh+0SyvM+y/Zs7fn9nRkb167l9yKGTRnakVjMyKkkdwSyFvSOq35tw5aaVNSxtHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=fail (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=Ulv877Cy reason="unknown key version"; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=Jw1/s8Sg; arc=none smtp.client-ip=103.2.141.84
+	 MIME-Version; b=LS4SeAIsFWiMCjf3Sr1Bm4bzJPNq9CE1B3QKzAqsTuxZDS8Jnu5TlxnTBtOSBHa09Vl+vSOpNezHPu5awQL7wUTDlD/k3/wjQJdmzVJCqM/XBVQKCW1rsMudikEh7/9oO8OF72dtmid+h83nu0D+wj8Fu4v3zjWuAgtDVaJPqik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=fail (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=papPZq3m reason="unknown key version"; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=CjjT0DDN; arc=none smtp.client-ip=103.2.141.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="unknown key version" (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="Ulv877Cy";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="Jw1/s8Sg"
+	dkim=fail reason="unknown key version" (0-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="papPZq3m";
+	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="CjjT0DDN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=smtpservice.net; s=maxzs0.a1-4.dyn; x=1751059014; h=Feedback-ID:
+	d=smtpservice.net; s=maxzs0.a1-4.dyn; x=1751059157; h=Feedback-ID:
 	X-Smtpcorp-Track:Message-Id:Date:Subject:To:From:Reply-To:Sender:
 	List-Unsubscribe:List-Unsubscribe-Post;
-	bh=EPjNXSD+QUTAQdHPBF1PZFOR+NJM45qYXx5B36QYUrI=; b=Ulv877Cy6GSz/29gbVphAz7YMp
-	OdylGxob02CFcR1Q2TqKmsTdEPeVOLzMK9lQzlmLfVkD+KUquHvRbJecsZB54oQsWvvXlS6M8NdOv
-	PMggmj27Hu1yyhDmN83Sg0ON0E6a22s711cHjFQHIdeu3IhKh2cr7lg0weJIWWQ/sy++x+BqpOJlD
-	LVU1RE+3FtCw5v5FkJlpmkfpWmuM57Au6trjGI+EvAFwgM9xJqTgH7H1uIiHhyg7c3RYbbf4SOG6r
-	3WcQPhrG8ZrnN1+Z0iSY2X8yct1tNjq+Mg6Yiz6ov2CABP4vqcZoZZ+HcJuoBTioKmE6FxzxG5SSi
-	gnRlIqrQ==;
+	bh=KI3j6h+4PHiZ7IiGHZy/tubXugs/QE1IKxzd+gUImrA=; b=papPZq3mSwWTMLdumMz491hMnR
+	PPXUhsMiOgadGUpNyI8vzevxxe2RuJ7MPqN9KViDqE9ZtY1Qq7iZ9Rihccx/B1y+W8fKNDxOJqErB
+	Lo9da2j7yc+Vv74j7d666+rkJwGm4p4sMzpqSnoUIOnRydPs1EGmvx3za9sMv4NOgShXYxHMUPTik
+	aK7wgbAuzeLElGe+2+U8pzz9ENAL1ff0wBK5/PV1rESombtVN+P3FaB/jdpjtLJWk/dJIIZJBQoJo
+	fZ2gbhezmfgS+1n3yXdtAGaii5T/Ruid/mc8nqUW0XyCB/MdXTTbIZ0k0x29MyZtIK0eIRyLB7EXz
+	L2XvojEg==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1751058114; h=from : subject
+ i=@triplefau.lt; q=dns/txt; s=s510616; t=1751058257; h=from : subject
  : to : message-id : date;
- bh=EPjNXSD+QUTAQdHPBF1PZFOR+NJM45qYXx5B36QYUrI=;
- b=Jw1/s8Sgqu9K3uylDxF0nAUedN7mrtRxhwl19RN4J/DC9AlMu9ETs6nfBs63O2HZ6lE3/
- Up1USLh9uSSxEMaorGP2ikb53030yNWNxxx5wfTwaU8rUXruBygb+ZBI5OWqGpoRx/CX1PX
- ZbzoYNTNQCCdzwV8xX4GbXNa3eTG/nb7G+49Dalx0spvpaOXPeRPVv7O+zZ2J4uD1u6erzX
- Jsb/ZP3fH4tYRveiDnvxvH6mUDyHw260mq65WwyYBnGH9rCJCNAHmkGQ5D9XdqGP46BnwLY
- 4hrzz/2a9evhtw3ovTw0Ff1rXtvI0ZlJ5CmS6sS8oSbpvqh3Ge8yoyIKiiKQ==
-Received: from [10.176.58.103] (helo=SmtpCorp) by smtpcorp.com with esmtpsa
+ bh=KI3j6h+4PHiZ7IiGHZy/tubXugs/QE1IKxzd+gUImrA=;
+ b=CjjT0DDNK7jNy/pjgXXf6dYOLZBiBzBTZk5omwRve4qKB1z+3IHEPuyxLRi2CuM7TEy7Y
+ x7+Cuq4MA+dbSkh4NJ2T406MmLKXkKqRZxz8R0XGVye2ksAFavwdbrrOhzoO4VTZjdVMKaU
+ XVk7uCUhWa2iMnajC/eMbxWJLGIeVt/apzSA9FPNMRmOGM8vVMkE3WJ8F1laW6N5Fs6UXPJ
+ mrMKqRL1/WP3KrQblneu7PyO6adTDHJpnWwlW+wqLUIanQo5DVQbe8x5UBSI307r8Tznhmd
+ lnHkOPfCuWMw8U+9MYXtzMW+rROpwFZoVuz+9LlN90VGM8bkebewzt8hXLmg==
+Received: from [10.139.162.187] (helo=SmtpCorp) by smtpcorp.com with esmtpsa
  (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
  (Exim 4.94.2-S2G) (envelope-from <repk@triplefau.lt>)
- id 1uVG7V-TRk3aB-BP; Fri, 27 Jun 2025 20:56:25 +0000
+ id 1uVG7U-TRk3Us-CZ; Fri, 27 Jun 2025 20:56:24 +0000
 Received: from [10.12.239.196] (helo=localhost) by smtpcorp.com with esmtpsa
  (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
  (Exim 4.98.1-S2G) (envelope-from <repk@triplefau.lt>)
- id 1uVG7V-4o5NDgrjV9w-omjN; Fri, 27 Jun 2025 20:56:25 +0000
+ id 1uVG7U-4o5NDgrn9kc-kei5; Fri, 27 Jun 2025 20:56:24 +0000
 From: Remi Pommarel <repk@triplefau.lt>
 To: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
  Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH wireless-next 3/3] wifi: mac80211: Correctly init MLO link in
- ieee80211_8023_xmit()
-Date: Fri, 27 Jun 2025 22:46:49 +0200
-Message-Id: <8ddf1dd6362e0ad57a98505b0d195554ebc91b7c.1751057146.git.repk@triplefau.lt>
+Subject: [PATCH wireless-next 1/3] wifi: mac80211: Do not set link_id for
+ received management frame
+Date: Fri, 27 Jun 2025 22:46:47 +0200
+Message-Id: <8701dbe48fae509bc8cb6d8ce5e6f96f75ad57af.1751057146.git.repk@triplefau.lt>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <cover.1751057146.git.repk@triplefau.lt>
 References: <cover.1751057146.git.repk@triplefau.lt>
@@ -63,35 +63,46 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Smtpcorp-Track: x_rOwYRXS2DB.OeLepUlhKppq.gDiOOQ7FvHY
-Feedback-ID: 510616m:510616apGKSTK:510616s0p5iKs-_9
+X-Smtpcorp-Track: m3uqiY6PYhEy.BmczBGTcQhXJ.yTfsOgjMTXZ
+Feedback-ID: 510616m:510616apGKSTK:510616sqE7JnFGBJ
 X-Report-Abuse: Please forward a copy of this message, including all headers,
  to <abuse-report@smtp2go.com>
 
-The IEEE80211_TX_CTRL_MLO_LINK info is the only part of
-ieee80211_tx_control where a 0 value has a specific meaning. Thus this
-should always be initialized with IEEE80211_LINK_UNSPECIFIED if there is
-no MLO link information associated with the skb, even using when 802.11
-hw encap offloading.
+A non-MLD sta could want to send offchannel management frame (e.g. to
+do a offchannel scan). Because ieee80211_rx_for_interface() fills the
+link_id information with the link the sta is currently using; hostapd
+would send back management frame responses through wrong link causing
+the sta to miss them.
+
+To fix that, do not fill link_id indication for management frames,
+relying on hostapd instead to infer the proper link from the received
+frame frequency.
 
 Signed-off-by: Remi Pommarel <repk@triplefau.lt>
 ---
- net/mac80211/tx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/rx.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d58b80813bdd..f65fb96a498e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4637,6 +4637,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index e73431549ce7..deebdce6d9c7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -5112,9 +5112,14 @@ static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
+ 	 * have the link information if needed.
+ 	 */
+ 	link_sta = link_sta_info_get_bss(rx->sdata, hdr->addr2);
++
+ 	if (link_sta) {
+ 		sta = link_sta->sta;
+-		link_id = link_sta->link_id;
++		/* Do no use sta link id information on management frames to allow for
++		 * offchannel scan, roaming, etc.
++		 */
++		if (!ieee80211_is_mgmt(hdr->frame_control))
++			link_id = link_sta->link_id;
+ 	} else {
+ 		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
  
- 	info->flags |= IEEE80211_TX_CTL_HW_80211_ENCAP;
- 	info->control.vif = &sdata->vif;
-+	info->control.flags |= u32_encode_bits(IEEE80211_LINK_UNSPECIFIED,
-+					       IEEE80211_TX_CTRL_MLO_LINK);
- 
- 	if (key)
- 		info->control.hw_key = &key->conf;
 -- 
 2.40.0
 
