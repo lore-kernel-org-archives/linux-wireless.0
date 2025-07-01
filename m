@@ -1,54 +1,54 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0E5270EC3
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Jul 2025 10:59:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A0CA271A6A
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Jul 2025 10:59:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751367596; cv=none; b=CMhUWu87dQIq3vPh+9iGP3n95P5FPKhXppMSgTir1gI8PefvPxsa4OHoJvUKznS2F82y6ejw0hWhRbua+47y7k4IvS5tgVTTRjJ8gp7cvBGd4+SdiNd4UkZDUaTh+Uu72l5GG8ZcDG60ohPmMUwqkJ1s97m2zgJvOodJMLJMf4Q=
+	t=1751367597; cv=none; b=ovAMmy2LfLMdsQ1Jp7YjQ/drV6mmxj+rDjuP/xL3ccBSWf2rkKNd03+KXT7NnGEjDWrpGPQ8z5MbeUOgV2nawK2oJ53R/ggpzN1L6Xjb6R9XRQrENVgco7bbX5WvzVCXUOQtAvg7Zqg1nFxhBWVQbdyL4ddnOJdrR9JNl4s26tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751367596; c=relaxed/simple;
-	bh=JCnVMPNWRPuxFTR5t7bHxPk3RCGDoIJgs/JuvBq4r0U=;
+	s=arc-20240116; t=1751367597; c=relaxed/simple;
+	bh=Y3EyDojK+fagtI7fowjM0VXRD3JPFLpDhRKELIHpZTw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aKk+5Lagodic9XkACrasgc1jEtvSxOJ3/pJTwsHvlyyiYXmu+em8kuVIX1S1ecpHPRK6kDRpkRldjNiMmecTzAmRjph7QrfrSILj3w+v8EWwDDzz/oyEyLhZZbOrpfO/hDFv5twPn9XykAE5zV2foulVZIxNPqMU7d5Uueus3vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j6AEDccr; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=lfWofY9e8/YkiYN8kV32e3XXIyM/Dpxif08iTGI4lFtFNeXLB5cnTCVm1g4D22etgv8DHTg7n71qAxJfpbMEKNqlx27ym/unTgCCc/jNWY2mQ9L+GMT3ns0+93Sb+FU4qf4sP+93JqrOL0989I5iPcDuM8zJESTQ6JPXN1Sj0N8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=kjpv+G6W; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j6AEDccr"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5619ppP1007049;
-	Tue, 1 Jul 2025 10:59:50 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kjpv+G6W"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5619tMvJ029344;
+	Tue, 1 Jul 2025 10:59:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	PBaPrfoVHDoZhimDvHLYVvAmF2xfILiS0UdtilZz3jg=; b=j6AEDccrk4iVu+e2
-	W4Rs54YreC1c9qBXcbkRHTbTURGM22JhM4pWxDm5OXU/lsrr6vdPcZNI89zY70nr
-	1qv2RDaR3HFVVTRGGRo/e+wTYticrge9M7VE75WJL8HM7db2f77BvKGdjn4MYhSl
-	ubcUqcG0EDaQtywBZz/huDuzj60NzQCl4s2GUrDo/iftpd1Mv7475WvFOu9PTf9r
-	1hTBQ7VyI7XiBZ+IUv5ujN/QAN5T6TlsbvMkIWRdAcfstK8nIsGR2leRM57jb6vB
-	VKs+4FNEX64lCloIuqKLS+G7UdSS1ZexwqFuPbhJEUmmX1LRXJsxp8+o0277lhzf
-	GnbBuA==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47kn5jcxbd-1
+	4bCPk6nI8sSurd5oKtH4fP2vBFBMabZennQXng5THoo=; b=kjpv+G6WTNgju/QR
+	yLv87S8x8MalVNLogMMDX4eec+NLusrG3KGsxUBWFF+N7CPHtBKCt/BK1O+OzFys
+	Z+JGd4D3Mrh9ncqGBoG/zylurdSpNSNBVKIKrhjSHsr8incO0GLHCCNVX1Y7s4JC
+	uYKGFs+9xTXj3iymVd1+9EZrQuiQbAamtOUbKhmK0mCAH4oU5Jh0y2gfP6FQyYtO
+	bBq2I+E5HmPoM+wIzVwd21aQkatN5whlCBmZ9JmAkGamYws9qbobWlIvZXPZzmc1
+	XOb2c9f/LIkNeDFBvqXHcOFerrEdI1rh2MEuYVN2ncq/DIvxoNeadnZlvunYEL3Q
+	1PFflw==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47j95j0d0g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 01 Jul 2025 10:59:50 +0000 (GMT)
+	Tue, 01 Jul 2025 10:59:54 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 561AxoV5022272
+	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 561Axr40002592
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 1 Jul 2025 10:59:50 GMT
+	Tue, 1 Jul 2025 10:59:53 GMT
 Received: from hu-sarishar-blr.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 1 Jul 2025 03:59:48 -0700
+ 15.2.1748.10; Tue, 1 Jul 2025 03:59:52 -0700
 From: Sarika Sharma <quic_sarishar@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
         Sarika Sharma
 	<quic_sarishar@quicinc.com>
-Subject: [PATCH ath-next v8 3/5] wifi: ath12k: add EHT support for TX rate
-Date: Tue, 1 Jul 2025 16:29:25 +0530
-Message-ID: <20250701105927.803342-4-quic_sarishar@quicinc.com>
+Subject: [PATCH ath-next v8 5/5] wifi: ath12k: fetch tx_retry and tx_failed from htt_ppdu_stats_user_cmpltn_common_tlv
+Date: Tue, 1 Jul 2025 16:29:27 +0530
+Message-ID: <20250701105927.803342-6-quic_sarishar@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250701105927.803342-1-quic_sarishar@quicinc.com>
 References: <20250701105927.803342-1-quic_sarishar@quicinc.com>
@@ -64,61 +64,130 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=KtJN2XWN c=1 sm=1 tr=0 ts=6863bfa6 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAxMDA2NiBTYWx0ZWRfX+3gW9Okwwyjo
+ EN/gA2vqtAF+/PBiYtbWbdgx8ngxpPBIeCVp4abU4w5mdmFFhW0uGIQ2hONI7KEScM445eZNgfB
+ h2h4xJX00Cro4v+4096vp6LerU4irdppR3K80uL9a2mtsybqnExHQlDR3/vRhIg7/CU6+CQB/gj
+ /zGak5ExTCHprvCJyxESyNXwnyye760f0RjsYL6EiMPYJf9X/t6UJ1TwH522mk8Vwi7bdWUMbTs
+ Hfizyjq3NANl2r//cquzkNvCz/0gLFzR+fMv9Q/1yJ75KJriioqnKFjaCju33D/Phwejq00AN/O
+ krgK4nfmxKaNdfnLlykyMZK2SR/e22Eylci/ngRo1rWqy205lyhi/uJvvpJIiH1f7/O8tG5OUaR
+ mEaP5MA/RsABJtDoZ02IGLk7jyXxDTmAPDHfBfmP5tLYQywBr8whYJaKeCZiuHxatAWCzCIf
+X-Proofpoint-ORIG-GUID: QJtrA9Qpa0MgaqIg5IMrCyFMds0TE8r1
+X-Authority-Analysis: v=2.4 cv=EuHSrTcA c=1 sm=1 tr=0 ts=6863bfaa cx=c_pps
  a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=nwLLUvrA-SLCDLgIScsA:9
+ a=GEpy-HfZoHoA:10 a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=oAq0YBx28stV0eL2X4IA:9
  a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: Sv81AqrgTNfoA05csSO6Yum6-17ffSbU
-X-Proofpoint-GUID: Sv81AqrgTNfoA05csSO6Yum6-17ffSbU
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAxMDA2NiBTYWx0ZWRfX5nyOFzd6lFBM
- ieDjxvLYiRaS0l+gC3ifDkz92p47ZwSEaP2tlRyUWxDPoRKqIWGZ8BNLW0UXrYi/qg/skVrunnh
- tiW9uGoZHFKcyrpgzBh+Tr7+MtgNKcliXeal8Tbhy8q4Jh6nrWcEUwfgJiUBQX4aKr/lefx5TQ5
- mwSHb/+PGaclR0tV+88sPCAg0kr/FGYoe5aCuCj7Y/qdQs3LKFvD6abHMk+J9MBrfwmcysPNt8q
- 4dvseaskAt2ZbcZqkzzALb3+IIpORAFf0zodOlwTUPDgMLU+O9B0LwMcy2aCT62kmWXqEtS+K0G
- UrCwM5uQ1dhBdjo9UQpioPZTW9QUarF/19lJMhyrTxBzb7o2USyU3YSX/hPD6WGjb8p8V1S2v4q
- Ja1WH0ju5ukNnNFz0ntpg0ycx2boWP7L/q4m+9Q5A1sM3fRQzyVrEFV0ZzSu/P7CE+TbvWF6
+X-Proofpoint-GUID: QJtrA9Qpa0MgaqIg5IMrCyFMds0TE8r1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
  definitions=2025-07-01_02,2025-06-27_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 priorityscore=1501 malwarescore=0 suspectscore=0
- mlxscore=0 spamscore=0 adultscore=0 lowpriorityscore=0 phishscore=0
- clxscore=1015 mlxlogscore=837 classifier=spam authscore=0 authtc=n/a authcc=
+ clxscore=1015 mlxlogscore=999 malwarescore=0 mlxscore=0 phishscore=0
+ spamscore=0 adultscore=0 suspectscore=0 lowpriorityscore=0 priorityscore=1501
+ impostorscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
  definitions=main-2507010066
 
-Currently, TX rates are not supported for EHT. Hence, add EHT
-handling for TX rates and update the EHT-specific fields in arsta
-accordingly.
+Currently, tx_retries and tx_failed are updated only in mac80211 during
+tx_completion path for sta->deflink. This works fine for non-ML
+station but for multi-link (ML) station, these values should be updated
+for sta->link[link_id] as per tx link_id. However, in tx_completion path
+there is no way to determine the link_id for which packet is retried or
+failed.
+
+Therefore, update the tx_retries and tx_failed in arsta structure from
+htt_ppdu_stats_user_cmpltn_common_tlv during
+ath12k_update_per_peer_tx_stats() call to utilize the values from arsta.
+Also, during 'iw dev xxxx station dump' populate the tx_retries and
+tx_failed in station_info structure to ensure values are correctly
+reflected.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Sarika Sharma <quic_sarishar@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_rx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/ath/ath12k/core.h  |  2 ++
+ drivers/net/wireless/ath/ath12k/dp_rx.c | 12 +++++++++++-
+ drivers/net/wireless/ath/ath12k/mac.c   | 10 ++++++++++
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 3c10d7eb9669..c57e3313065e 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -563,6 +563,8 @@ struct ath12k_link_sta {
+ 
+ 	 /* for firmware use only */
+ 	u8 link_idx;
++	u32 tx_retry_failed;
++	u32 tx_retry_count;
+ };
+ 
+ struct ath12k_reoq_buf {
 diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index f0cfe03d74b6..0f5edc81fc5d 100644
+index 7be9f8c02c67..ed325aa6322d 100644
 --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
 +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -1535,6 +1535,16 @@ ath12k_update_per_peer_tx_stats(struct ath12k *ar,
- 		v = ath12k_he_ru_tones_to_nl80211_he_ru_alloc(tones);
- 		arsta->txrate.he_ru_alloc = v;
+@@ -1428,14 +1428,22 @@ ath12k_update_per_peer_tx_stats(struct ath12k *ar,
+ 	u16 tones, rate = 0, succ_pkts = 0;
+ 	u32 tx_duration = 0;
+ 	u8 tid = HTT_PPDU_STATS_NON_QOS_TID;
++	u16 tx_retry_failed = 0, tx_retry_count = 0;
+ 	bool is_ampdu = false, is_ofdma;
+ 
+ 	if (!(usr_stats->tlv_flags & BIT(HTT_PPDU_STATS_TAG_USR_RATE)))
+ 		return;
+ 
+-	if (usr_stats->tlv_flags & BIT(HTT_PPDU_STATS_TAG_USR_COMPLTN_COMMON))
++	if (usr_stats->tlv_flags & BIT(HTT_PPDU_STATS_TAG_USR_COMPLTN_COMMON)) {
+ 		is_ampdu =
+ 			HTT_USR_CMPLTN_IS_AMPDU(usr_stats->cmpltn_cmn.flags);
++		tx_retry_failed =
++			__le16_to_cpu(usr_stats->cmpltn_cmn.mpdu_tried) -
++			__le16_to_cpu(usr_stats->cmpltn_cmn.mpdu_success);
++		tx_retry_count =
++			HTT_USR_CMPLTN_LONG_RETRY(usr_stats->cmpltn_cmn.flags) +
++			HTT_USR_CMPLTN_SHORT_RETRY(usr_stats->cmpltn_cmn.flags);
++	}
+ 
+ 	if (usr_stats->tlv_flags &
+ 	    BIT(HTT_PPDU_STATS_TAG_USR_COMPLTN_ACK_BA_STATUS)) {
+@@ -1557,6 +1565,8 @@ ath12k_update_per_peer_tx_stats(struct ath12k *ar,
  		break;
-+	case WMI_RATE_PREAMBLE_EHT:
-+		arsta->txrate.mcs = mcs;
-+		arsta->txrate.flags = RATE_INFO_FLAGS_EHT_MCS;
-+		arsta->txrate.he_dcm = dcm;
-+		arsta->txrate.eht_gi = ath12k_mac_eht_gi_to_nl80211_eht_gi(sgi);
-+		tones = le16_to_cpu(user_rate->ru_end) -
-+			le16_to_cpu(user_rate->ru_start) + 1;
-+		v = ath12k_mac_eht_ru_tones_to_nl80211_eht_ru_alloc(tones);
-+		arsta->txrate.eht_ru_alloc = v;
-+		break;
  	}
  
++	arsta->tx_retry_failed += tx_retry_failed;
++	arsta->tx_retry_count += tx_retry_count;
  	arsta->txrate.nss = nss;
+ 	arsta->tx_duration += tx_duration;
+ 	memcpy(&arsta->last_txrate, &arsta->txrate, sizeof(struct rate_info));
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 8aa74c9171f8..5a1726a145f5 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -11684,6 +11684,11 @@ static void ath12k_mac_op_sta_statistics(struct ieee80211_hw *hw,
+ 		sinfo->signal_avg += noise_floor;
+ 
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
++
++	sinfo->tx_retries = arsta->tx_retry_count;
++	sinfo->tx_failed = arsta->tx_retry_failed;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+ }
+ 
+ static void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+@@ -11761,6 +11766,11 @@ static void ath12k_mac_op_link_sta_statistics(struct ieee80211_hw *hw,
+ 		link_sinfo->signal_avg += ATH12K_DEFAULT_NOISE_FLOOR;
+ 
+ 	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL_AVG);
++
++	link_sinfo->tx_retries = arsta->tx_retry_count;
++	link_sinfo->tx_failed = arsta->tx_retry_failed;
++	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_RETRIES);
++	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+ }
+ 
+ static int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
 -- 
 2.34.1
 
