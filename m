@@ -1,89 +1,85 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-op-o12.zoho.com (sender4-op-o12.zoho.com [136.143.188.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01E0E309DDE
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Jul 2025 14:53:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751468020; cv=none; b=VF0eUdnfqkaNyO0782lyNWNkxheYhDcZ03Ec6gR/6ZMFlhK4XJjbN95VWvgEZB1OkvBREXpQ9XmT8YWf3aK+AWK50BPBwS1KmxC2j4awmHX5sr9j8JnfaYBKjBjMm1DnM+dMC4Pl34a6wURTep0l4bqW+Pk5HTRobCLFEPyKSj4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751468020; c=relaxed/simple;
-	bh=beP7drDYJiC2bUAZWTxtY2Y/4PtwO1+nbUvqiOO5/vg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=F7aqPUc3SMpEbAIi6aW88qOCs9RUVNI677edvKUgDlt9bE1W708Ya9R/RHgE1czzMK8FWCssQ2lwoX49XPuqGEsFhwRyGqCYXOqO1aPs7CgKjIFtFztdPf9+28YVROUh2P0UWzOZph1ADrBMOOum1QzVuSl3LZNt1Im0xDV36U4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VR5QI/Hf; arc=none smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C8327FD6E;
+	Wed,  2 Jul 2025 15:26:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1751469965; cv=pass; b=lCWazgcErF6cuPSL4xZ/zULmJ1CkgE/sxIMBIy1GrogVPhUh2BB/NxptYbg5akt7/1VHAA0to5IuPZIwvEhY6kEyeW+5By6o1Ds9X/md/DRlRWDyXYmjtuz1yzLvhX7f7IKTzJCYi6qIR8IwrsWw0w12hhZf1ZD77H4VgRgEuZA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1751469965; c=relaxed/simple;
+	bh=YI5xJQzkom4sdxkvBnrOayW443RFDT8jwoEmyUtPD7w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oqMfAXh8Sdxgm5j4qs+uUMjuFow5Ch05cLUeORbsCSYAPjFMMqITLBu4Uh40cG+LULFoUp0QpwjlSmznenl3Q6tKU02cn1M3yqoMcDWLWiJxsmfvFHRE3jIqxLftKP7LLytw8YU3kUIy6jndYcJM2k6oUK5/ApSAyj7qF47rRCU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=usama.anjum@collabora.com header.b=DeNXlsfH; arc=pass smtp.client-ip=136.143.188.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VR5QI/Hf"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-ae36dc91dc7so780443066b.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jul 2025 07:53:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751468017; x=1752072817; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=DPM1T2LNHQfKhij9F/iyvK/25eoDUaIBSajpXKOmcoE=;
-        b=VR5QI/HfpDvDDgUWKgpZZDXDO7RKI5RHqhcvhjy6jQ3pWsB+Wm9XQvVYauMtbYYdQ2
-         PWHUEd/0F/pPU4OJTNDAK0/68DCMzz0f8AcPNbLaX2VvyT+u1dhN4q9rz4ru/KV6E0+n
-         ttE0JZ0mEXjW2/Dufsv/EYTVeRq4joFiGe5LfPOSf/irNmgIAUntyCKcFiUDcFNC/FcY
-         8jTcYSn5otDqn1JouKl772Q6MJ/+29JWRysqG0KkG5bbyf5/vRtt6/WY1CVvAYneDAAm
-         h4tnuwf18ggr+dkY0KhHvzv6llwMvupYukU17oBQMJICzKeHuTcFE1AsJTgjaeZy7nI7
-         fvFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751468017; x=1752072817;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DPM1T2LNHQfKhij9F/iyvK/25eoDUaIBSajpXKOmcoE=;
-        b=EERzLgbt/OCAKaPIhmRmV52n5oI51rzYs/T7raGoISokhibt0XqpVUSsZ+xhYGMeZy
-         MlYyD3vTAgF/EusEIT2/yba/+U9WMllp1A/QNabPK+zZni9GixE7FbbFsXAnnOmD1OvA
-         prnIRE+5szbAPYzNHi8gjGf7sLGeaMUrK6J9uHZaT6fm5MojcWND3ZvtgO4v2Mifa7Vz
-         OB6DwtEPQNJBRSpgWVOnYXGXOKQJqbk5/7mbBsJAr5CppOPaVt4KZ+FJWvUfTjapMKAK
-         FWDs1EF5/uojzi5YXvxOBO9msApnr6odu+aLZaJ5vbL1Fld3MxGYpc0ZJRoyv4Z9gZIc
-         Tgag==
-X-Forwarded-Encrypted: i=1; AJvYcCXxCHuHEcCe1oq299wTjPY5YYU0PSieHw/A1qltVg6bbOvJABP+u7xdIE5LWRgv2uTYrUf6hJwN3Zo+7/S6YQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXThuzamrjpN8QizR3tWNZqyu7V2MQqOpHwmeDhc7GGE8luKd7
-	F6ImBvcswsavpPoaYM9wpu793AweQy8GnjnIBJaevIWAEkPceiWvtqz4Dm9p3aZMBdVf/LWDXPf
-	HdBOjlUDG4uGmPU1ZVI3b+AUHfulNWqQ=
-X-Gm-Gg: ASbGnctER7n6WcjAqx/TBW5c8bGeNbDmpJnaEIlkerc1AM6WVdXHvnepsNyPwui9Bwy
-	p91ZGoX8spJM7cCy2BUkToDXWIqU8Jl3gAxrLvpURMA0R3/mwJtKdst/Et72AftMoUyqIx8mMWQ
-	bhU/QRGveTXx5oOsQ8BNRpo8WfZ+3DbB28P6/uUoQ1W9Ruaw0+6YZKEpNJePt8NsH5tJHCwFzcj
-	g==
-X-Google-Smtp-Source: AGHT+IFmjVcaAlwKjAztbNsqFiGATow/TiLkiXA3EwSVpmOxrMIFRhzcapgfz5nrrTRgAUyHU/AqUz9S6WnnECsyKnc=
-X-Received: by 2002:a17:907:db16:b0:ae3:cab8:d9d8 with SMTP id
- a640c23a62f3a-ae3cab8d9f0mr175432066b.41.1751468016986; Wed, 02 Jul 2025
- 07:53:36 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=usama.anjum@collabora.com header.b="DeNXlsfH"
+ARC-Seal: i=1; a=rsa-sha256; t=1751469910; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=Wh4ld+IjPq9rN2v5JrrVbNCJ9Tenxzp/ewU5rqFiunyck4YH3W/tqzh9RZebHG9/ZumIQDhyv5HaQIhnaxA7xPvOmM8lQRQnR189PqUybYczVNFT4AIlTrrAP9D74+vqrH5LwOnwJNo4cPSXgixvX36ChYUJwsrd3oC1lLPCPZg=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1751469910; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=mSSYZlzjDorHVrW9kO4wmXJF7vcClWLjaQL8PerBKvE=; 
+	b=dhdQKgAwyG58FQVyICKT4UXpZblCNhIUSpwm3Xg+BFbPESCNAEFUUOcwJGqofWtMAlsyEPky41WQsUzaTyJ0yp4dJdZgTKWKOkVwNVITcLkDVg4C2z/rpf8G7pVD1n5ZpM0kxwOwZFBDOypzGPWuZO4mdOFyVf5WBCWEYDU81uI=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=usama.anjum@collabora.com;
+	dmarc=pass header.from=<usama.anjum@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1751469910;
+	s=zohomail; d=collabora.com; i=usama.anjum@collabora.com;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=mSSYZlzjDorHVrW9kO4wmXJF7vcClWLjaQL8PerBKvE=;
+	b=DeNXlsfHaMk2Kd1KbaP+z5CgMeLB/0Y79MStxyfuES5HDSFJK/8eDKuQ6yEEGcl8
+	z/QOHyIUBVrJunQiap/b+INWBeqtAytqUaKAnv60qL1mZGjRYpXmjO3Dgla5mOfL/GB
+	SVkbt+cCJd9w+pA5ueE3JjlaEEEN3y/GCx97BCgo=
+Received: by mx.zohomail.com with SMTPS id 1751469909243485.9751973058537;
+	Wed, 2 Jul 2025 08:25:09 -0700 (PDT)
+Message-ID: <ed010318-8a10-4a8c-b8d4-721bdf631c2b@collabora.com>
+Date: Wed, 2 Jul 2025 20:25:03 +0500
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAPDiVH8gaBH6o_OY-zUWYpDbj5mhiqmofKGb71gLgHOi4vA=Vw@mail.gmail.com>
- <0ba2176e-3339-4a8b-850a-ca5643939c8b@oss.qualcomm.com> <fd3bd8b1-4108-445a-b65f-4769d73e6e63@arm.com>
- <4a13d862-1bbb-4a98-bc1d-219bf78f7c0d@amd.com> <CAPDiVH-kVCUY8DKexT9OqAZsvkZ5_CGo8d8nENYA-kD=s_x8wA@mail.gmail.com>
- <e008afed-819d-43eb-8895-2c7aaf24ec13@oss.qualcomm.com>
-In-Reply-To: <e008afed-819d-43eb-8895-2c7aaf24ec13@oss.qualcomm.com>
-From: Matt Mower <mowerm@gmail.com>
-Date: Wed, 2 Jul 2025 07:53:25 -0700
-X-Gm-Features: Ac12FXwmRNy0XV6HfwF_miAtw-Zu6Zd6a4pUwqmVNkw4VdKWa75ipABJl-DtuBk
-Message-ID: <CAPDiVH-xPDmx-KQx7YJY=7+kwJNbGY-rEu-w+cz18p=kjnKFsw@mail.gmail.com>
-Subject: Re: ath12k_pci errors and loss of connectivity in 6.12.y branch
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Cc: Vasant Hegde <vasant.hegde@amd.com>, Robin Murphy <robin.murphy@arm.com>, 
-	Jeff Johnson <jjohnson@kernel.org>, will@kernel.org, joro@8bytes.org, 
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-	1107521@bugs.debian.org, iommu@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] bus: mhi: don't deinitialize and re-initialize again
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+ Jeff Johnson <jjohnson@kernel.org>, Jeff Hugo <jeff.hugo@oss.qualcomm.com>,
+ Youssef Samir <quic_yabdulra@quicinc.com>,
+ Matthew Leung <quic_mattleun@quicinc.com>, Yan Zhen <yanzhen@vivo.com>,
+ Alexander Wilhelm <alexander.wilhelm@westermo.com>,
+ Alex Elder <elder@kernel.org>, Kunwu Chan <chentao@kylinos.cn>,
+ Siddartha Mohanadoss <smohanad@codeaurora.org>,
+ Sujeev Dias <sdias@codeaurora.org>, Julia Lawall <julia.lawall@lip6.fr>,
+ John Crispin <john@phrozen.org>, Muna Sinada <quic_msinada@quicinc.com>,
+ Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
+ Maharaja Kennadyrajan <quic_mkenna@quicinc.com>, mhi@lists.linux.dev,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ kernel@collabora.com
+References: <20250630074330.253867-1-usama.anjum@collabora.com>
+ <20250630074330.253867-3-usama.anjum@collabora.com>
+ <2025070128-chihuahua-slimness-da88@gregkh>
+Content-Language: en-US
+From: Muhammad Usama Anjum <usama.anjum@collabora.com>
+In-Reply-To: <2025070128-chihuahua-slimness-da88@gregkh>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ZohoMailClient: External
 
-> Matt, could you help enable verbose ath12k log to verify my guess?
-
-Here are kernel logs with ath12k debugging enabled:
-1. WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-   https://cmphys.com/ath12k/dmesg-6.12.35-ath12kdebug-fw0x100301e1-20250702.log
-2. WLAN.HMT.1.1.c5-00284.1-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-   https://cmphys.com/ath12k/dmesg-6.12.35-ath12kdebug-fw0x1108811c-20250702.log
-
-I captured these after setting CONFIG_ATH12K_DEBUG=y and running "echo
-0xffffffff > /sys/module/ath12k/parameters/debug_mask" during boot
-(using @reboot in crontab).
+On 7/1/25 3:25 PM, Greg Kroah-Hartman wrote:
+> On Mon, Jun 30, 2025 at 12:43:29PM +0500, Muhammad Usama Anjum wrote:
+>> Don't deinitialize and reinitialize the HAL helpers. The dma memory is
+>> deallocated and there is high possibility that we'll not be able to get
+>> the same memory allocated from dma when there is high memory pressure.
+>>
+>> Tested-on: WCN6855 WLAN.HSP.1.1-03926.13-QCAHSPSWPL_V2_SILICONZ_CE-2.52297.6
+>>
+>> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+> 
+> No cc: stable?
+I'll add it to entire series.
