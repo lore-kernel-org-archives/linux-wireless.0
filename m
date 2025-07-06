@@ -1,62 +1,62 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B822BE035;
-	Sun,  6 Jul 2025 21:41:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B9F31E8335;
+	Sun,  6 Jul 2025 21:41:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751838083; cv=none; b=RFKjdjXUDBDzu+ubi7+4+haL1B1C7hWKliZwZFceVMn8fl4ONPCxNj/kYv8prA/k/2IqylrnFfLv5Pgn0nCjw5krJ6DQltZi4NlWkqLpzytRyW9r5JJWFRi0SwBEuCPyPUUAiHyjjVpyxiUPywzXgTfAhlv5f4eNIJCCbUKfjno=
+	t=1751838083; cv=none; b=Sso4q7M1kdWHsq7S3u3Gg43Z0yNajexu9aabusXdQhpwtCvICw1Vc/VVOTV+FlVNbEwP24vIfCtPmyPLfCGsKLlIwNi5Ahs6XowPyRBf9D4bxQW+OAlcMIxpQGAh7DX1wjjLkKJbJOkh4ATBu+Nq9Pt4ct2z3Yekmm0js+zb4ck=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751838083; c=relaxed/simple;
-	bh=cKFUB3fcfogVv4nS3uoMT9JStbO37J3Ecty0niFdrcc=;
+	bh=oso3s84HHIL4dE7V1UAH+9yd50ezAj1vpkwyK51jz3M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MtegnQD3Lo+N63iqwHNdOUQOcFnx/FI/WrPOBSrSdgvlrL9l+UjgAbnsAQB/RrYlGUuNkS+mPN+SYhGIm9a9PLJPwom3o+KLKeBximbnJTPXehzeiAX7gBHtUQjrJ78oQND948y5EDt9dgzP+7xIQvCV/sJqesIZfCnqiRaKGtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BVqUjF2s; arc=none smtp.client-ip=209.85.210.176
+	 MIME-Version; b=bQXu9/stezz9MNqQDLdCZwNpRzFsgcVDwW2I3r4xAUs0IPgp7Xo6QKSYOJs9bdQxONJs42ywlKunzKl3C02P1KYKV8CteunMprqp4uXHey5ArOoZeMkH+vzPldncBrF/4fUcJUYk5Pmvhsy3xNdCBa1M869NJvYgIt/WWqnpmIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eNo9iAVx; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BVqUjF2s"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-747fba9f962so1852296b3a.0;
-        Sun, 06 Jul 2025 14:41:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eNo9iAVx"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-74b54cead6cso1488432b3a.1;
+        Sun, 06 Jul 2025 14:41:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751838079; x=1752442879; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1751838081; x=1752442881; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AWkIKGkA990tICWBb/AzCkdqkS98YDkqouTWupGfwu8=;
-        b=BVqUjF2ssjt0EcmdT5HCLtVKqhInOkVFBz/RjoqsC+4upOa9VVnBjAGI4Cc9TS7C4t
-         ZR2aHWr/ENsyuLdDO4iH9dLDC7QpWJPIKM5AyD3DIeMhYBCI390v8o61EsUcVsyTF5g7
-         wmfaF6ADVsSkEWSmvyDVn7Qoqu3Q/nY19RppHDv0p/69ayECFfTqM3+6KKMdGb/BBeWL
-         t3wOvSc3AMydRb1/TTq8QMeX0EZ4v3MrKVvo7mZPs7Q0tcDIoQWMfa/GUxWFDENntX5L
-         fzb5LpVU/iwQCnEupX5tbccjBd31nRe8Gxis0q2tOdLUok05xs2ZD1ONIqvw/XO36iYG
-         v9NQ==
+        bh=RvZgwDhd8R+31/oVgTrgK7V+PUBtSsqxq+ciLntuUVw=;
+        b=eNo9iAVx3h26F51EjW9ES7u7jGyMg0T3E+20kHdefK8iN+/ZswlboQ4IWssKcxEZrb
+         QyfuDGViAyLP2UV2EEO2aj31/tx+TkB1m0A/uMz7MFViYKfQx7n39UpcvYWOntbIqZ6G
+         mdID9Ypc2phcVW+rriSB7VcJPLkCvaqbDrU/LpS50SvdaMolhPe1M65BnLz52XCERqh7
+         PO9byeMEctY5qXRc7riTC4FsUlqVrieqm4egmME8Lhbg/dv7E+FeQ+FGkEbN6ll2ee0u
+         nlIQLpidHg5i1Pgh2VUI6R7kPbTmc69G1uVqnR7hmGbs29ZZahKO4RItWbw5VVEpB3t/
+         KrqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751838079; x=1752442879;
+        d=1e100.net; s=20230601; t=1751838081; x=1752442881;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=AWkIKGkA990tICWBb/AzCkdqkS98YDkqouTWupGfwu8=;
-        b=nkAcRtLlPjKjlzY5cpWWQammEHo2uMU5+HrquhLmW5MKIF15h0QOmTS3JovBvPIVq+
-         v9CMoHBOziKFNJUbMsqjnVCVHp9XWTO22yUnPDV3enahcxgsGDjzIQ5CZ+21CZiOvlpA
-         D1AA/b0gpwRKGok7FijMuBtRBgPNHtJBS2FcuqTuk5dWh5e8+gNnRYZMx4DKOIFGoSTo
-         yVcr32r5DLHC8rmSA0CAxzo4iUtJGs0JVBnPBmbTrT9bTpLZp++zXcZc+SHxVVDdqEYs
-         os0w2/9N5vY0gbxW/PxwZ2MDiRAGjxFI9Un19pfp6+S/DaSzoQ3STAnfuo+wY7acJvUm
-         gmag==
-X-Forwarded-Encrypted: i=1; AJvYcCUrU5339vloDppg1jitUUXabEmFO0Nl9lJKKSM6ICWmfm2cQohmAsftHUcOVzDaBXDgZOIlW/Ao7K7H3g==@vger.kernel.org, AJvYcCV1/wFnaujTzjsCWujAOfFUg01cU1bqwNsa95SnQM0NcTDzSwn7W2gh/d0EU4l2EPPPlS7V4nZw/OYe@vger.kernel.org, AJvYcCWDQ3wHedrmZvcMYkG8W2C+Z3hiunqpTmWRYgob4nInaDyyNacyoDWWnHiRSMb5ZeD7WquigWAHGDg4XbUQ@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3nqWXjsOYvtNpJHx9nTM4yJDl47KLm+U5OCKvPWT+AYS1jfjD
-	cMmMvRAzaw+WMjESsnwcd6HjYIdVFn15T4dZ6IexIXLSsZs6kNFQvmyX9utMqV4cIYA=
-X-Gm-Gg: ASbGncvws5s24urobyr1nwkgKF0BYEfEUH2iS1lHWQVqqce24Gghn1T5NbsNY8ocABD
-	R3vjPLbx/YaFOoaKOaxinaObsE7RXvgL8PGnH6ACkVKPB1N2qwxKyO6NGQwZ9JXE5rbfrlHO+MK
-	bkiiXDNeKhOtt6XkIQw+8lsDV/5al0HR/3NFG4XTncQVuhGJaMD0qjwhVm9u8epLP8T3keyBPj3
-	Fd6A6im3uJcnUq7oPqGQfl0b0YqW1PE65blq2nhXstkcshsUHSBpdWfKwCwSs6WePwTnzdD6NU7
-	GxVRmfCQCqn6QVXw1vafaa6u9yuR/gbKnbNmg6krm7RDQDcQDfriQw==
-X-Google-Smtp-Source: AGHT+IHHOmTsiBLo3z6UMMswYtFY9ObAPDGTYpD1AOLGuigpAPh9rfOATyQ8i/rlbaFuXtxZ+xyf4w==
-X-Received: by 2002:a05:6a00:240d:b0:742:ae7e:7da1 with SMTP id d2e1a72fcca58-74ce5de7884mr14558457b3a.0.1751838078711;
-        Sun, 06 Jul 2025 14:41:18 -0700 (PDT)
+        bh=RvZgwDhd8R+31/oVgTrgK7V+PUBtSsqxq+ciLntuUVw=;
+        b=HltTuGNYzLSXoIR0z9BtybciNjmzeAkDWO8fqIDXRTVLqUAtSXMOfhdX8AztEfbjZ8
+         aEvw4NIUOR2cq8bClCVwwIaArfbjjpyTGzR0A31BssIKwh2E8b3JFViXHI2+pBYAWYFo
+         iEdaItaXyubHOFP4IlleVvgZ4ugiYFUyEblzEn01oMefOP95uTOybIiGfvxvjh4KwwAo
+         9T+62sfvfUxnxIdj6/8VMeGkASSZWnfJDBbIfN0M5Y7OeKPRzW8l6A7M8E9xAVLJtRv3
+         fRGJIGRPmaImehIN7Dl0mm6+6ARAPjTth0THPmx1Aw6VX9TFprAORkTtKRyX0ve9rBYK
+         2ckw==
+X-Forwarded-Encrypted: i=1; AJvYcCUWmFK6BB1oggFUXs70tQ2FGjEHcv/8wE25o7amL86FymminxZ5fDnojWhsfeRNAJbB97SRdW5ppxrZIR+5@vger.kernel.org, AJvYcCVaQjNRMvEYNTiiiZDP+jg01y4ElaFlEygh2YpySXhVTeo2XchWsNVMUDbIxwhSFvMgmzUamZ0uQamlEQ==@vger.kernel.org, AJvYcCWqxcdZEoaUR/G4p90Mm/7P3WpjxsRgfNrsGCms5GN125YlqaZmNftKbzzC7PunnMs9sS7nPpFyj/K8@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNPFEx1NVCzxHnOFCRiIxVBSomll79+A2Y28tqNuTv2cPqJFvp
+	Bs8FgqLPVsjlOZD2QURTYTx77GbZm82dqXKjkEpYxNT/JPAeWrHI5bEd8VVmGv3dOFc=
+X-Gm-Gg: ASbGnctwO1h7pnREFWg+xMe77pNpX2TkCPR/u813bJtEThug9BtznbWuJyYejdjt6AL
+	08Pm2tnK6oVIAWRrp+b5kzxtwZFRvO/tTx2CEAsOuULoQxHSSCrZB4UXUSk5Eg32tWJJ6eOT5IQ
+	nH+7/5hw0/WrFYzm4BKU6kaXy11HQod6NeNmFXlE4WVXtgtSPPo8IZGVmZnEb1+SPVU2BjnK1sh
+	q9WkFqfyYbf8ikpk8Ab88MB2I0VxXfdl45oLGcrd3HEQml+vkKKbtWyVUoMDMRn8ltkhN3Oxmwb
+	bscdOMlOb6unNFjJXWtQoOqUXMOQ6RGu95LoxDWi1iQ=
+X-Google-Smtp-Source: AGHT+IEphJnWnMpJ5IZuXkzIdAl/4PySIfNR7SCiDO+NvDhnTpiFTe9sAWW/ka2hDv/gm3VHHolLYQ==
+X-Received: by 2002:a05:6a21:3282:b0:21e:7d1b:4401 with SMTP id adf61e73a8af0-225b9484b0bmr16419609637.22.1751838081538;
+        Sun, 06 Jul 2025 14:41:21 -0700 (PDT)
 Received: from archlinux.lan ([2601:644:8200:dab8::1f6])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74cfad75020sm4126416b3a.109.2025.07.06.14.41.17
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74cfad75020sm4126416b3a.109.2025.07.06.14.41.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Jul 2025 14:41:18 -0700 (PDT)
+        Sun, 06 Jul 2025 14:41:21 -0700 (PDT)
 From: Rosen Penev <rosenp@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
@@ -74,9 +74,9 @@ Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-mips@vger.kernel.org (open list:MIPS),
 	linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support),
 	linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC support)
-Subject: [PATCH 4/6] wifi: rt2x00: soc: move and modernize probe
-Date: Sun,  6 Jul 2025 14:41:09 -0700
-Message-ID: <20250706214111.45687-5-rosenp@gmail.com>
+Subject: [PATCH 6/6] MIPS: dts: ralink: mt7628a: add wifi binding
+Date: Sun,  6 Jul 2025 14:41:11 -0700
+Message-ID: <20250706214111.45687-7-rosenp@gmail.com>
 X-Mailer: git-send-email 2.50.0
 In-Reply-To: <20250706214111.45687-1-rosenp@gmail.com>
 References: <20250706214111.45687-1-rosenp@gmail.com>
@@ -88,221 +88,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-By moving functions from rt2x00soc to rt2800soc, the driver benefits
-with potentially smaller compiled size. It also becomes much easier to
-remove a bunch of manual memory management and use devm.
+MT7620A devices all contain a wifi device as part of the SOC. Add it
+here to get it working.
 
 Signed-off-by: Rosen Penev <rosenp@gmail.com>
 ---
- .../net/wireless/ralink/rt2x00/rt2800soc.c    |  67 +++++++++++-
- .../net/wireless/ralink/rt2x00/rt2x00soc.c    | 102 ------------------
- 2 files changed, 65 insertions(+), 104 deletions(-)
+ arch/mips/boot/dts/ralink/mt7620a.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-index db8d01f0cdc3..e2c05ead9b25 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800soc.c
-@@ -18,6 +18,7 @@
- #include <linux/init.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/of.h>
- #include <linux/platform_device.h>
- 
- #include "rt2x00.h"
-@@ -240,7 +241,69 @@ static const struct rt2x00_ops rt2800soc_ops = {
- 
- static int rt2800soc_probe(struct platform_device *pdev)
- {
--	return rt2x00soc_probe(pdev, &rt2800soc_ops);
-+	const struct rt2x00_ops *ops = of_device_get_match_data(&pdev->dev);
-+	struct rt2x00_dev *rt2x00dev;
-+	struct ieee80211_hw *hw;
-+	int retval;
+diff --git a/arch/mips/boot/dts/ralink/mt7620a.dtsi b/arch/mips/boot/dts/ralink/mt7620a.dtsi
+index d66045948a83..460164bdd430 100644
+--- a/arch/mips/boot/dts/ralink/mt7620a.dtsi
++++ b/arch/mips/boot/dts/ralink/mt7620a.dtsi
+@@ -62,4 +62,14 @@ uartlite@c00 {
+ 			reg-shift = <2>;
+ 		};
+ 	};
 +
-+	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
-+	if (!hw) {
-+		rt2x00_probe_err("Failed to allocate hardware\n");
-+		return -ENOMEM;
-+	}
++	wmac: wifi@10180000 {
++		compatible = "ralink,rt2880-wifi";
++		reg = <0x10180000 0x40000>;
 +
-+	platform_set_drvdata(pdev, hw);
++		clocks = <&sysc 16>;
 +
-+	rt2x00dev = hw->priv;
-+	rt2x00dev->dev = &pdev->dev;
-+	rt2x00dev->ops = ops;
-+	rt2x00dev->hw = hw;
-+	rt2x00dev->irq = platform_get_irq(pdev, 0);
-+	rt2x00dev->name = pdev->dev.driver->name;
-+	rt2x00dev->clk = devm_clk_get_optional(&pdev->dev, NULL);
-+
-+	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_SOC);
-+
-+	rt2x00dev->csr.base = devm_platform_ioremap_resource(pdev, 0);
-+	if (IS_ERR(rt2x00dev->csr.base)) {
-+		retval = PTR_ERR(rt2x00dev->csr.base);
-+		goto exit_free_device;
-+	}
-+
-+	rt2x00dev->eeprom = devm_kzalloc(&pdev->dev, rt2x00dev->ops->eeprom_size, GFP_KERNEL);
-+	if (!rt2x00dev->eeprom) {
-+		retval = -ENOMEM;
-+		goto exit_free_device;
-+	}
-+
-+	rt2x00dev->rf = devm_kzalloc(&pdev->dev, rt2x00dev->ops->rf_size, GFP_KERNEL);
-+	if (!rt2x00dev->rf) {
-+		retval = -ENOMEM;
-+		goto exit_free_device;
-+	}
-+
-+	retval = rt2x00lib_probe_dev(rt2x00dev);
-+	if (retval)
-+		goto exit_free_device;
-+
-+	return 0;
-+
-+exit_free_device:
-+	ieee80211_free_hw(hw);
-+
-+	return retval;
-+}
-+
-+static void rt2800soc_remove(struct platform_device *pdev)
-+{
-+	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+
-+	/*
-+	 * Free all allocated data.
-+	 */
-+	rt2x00lib_remove_dev(rt2x00dev);
-+	ieee80211_free_hw(hw);
- }
- 
- static const struct of_device_id rt2880_wmac_match[] = {
-@@ -255,7 +318,7 @@ static struct platform_driver rt2800soc_driver = {
- 		.of_match_table = rt2880_wmac_match,
- 	},
- 	.probe		= rt2800soc_probe,
--	.remove		= rt2x00soc_remove,
-+	.remove		= rt2800soc_remove,
- 	.suspend	= rt2x00soc_suspend,
- 	.resume		= rt2x00soc_resume,
++		interrupt-parent = <&cpuintc>;
++		interrupts = <6>;
++	};
  };
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-index f7f3a2340c39..9fd763f2fcde 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-@@ -20,108 +20,6 @@
- #include "rt2x00.h"
- #include "rt2x00soc.h"
- 
--static void rt2x00soc_free_reg(struct rt2x00_dev *rt2x00dev)
--{
--	kfree(rt2x00dev->rf);
--	rt2x00dev->rf = NULL;
--
--	kfree(rt2x00dev->eeprom);
--	rt2x00dev->eeprom = NULL;
--
--	iounmap(rt2x00dev->csr.base);
--}
--
--static int rt2x00soc_alloc_reg(struct rt2x00_dev *rt2x00dev)
--{
--	struct platform_device *pdev = to_platform_device(rt2x00dev->dev);
--	struct resource *res;
--
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -ENODEV;
--
--	rt2x00dev->csr.base = ioremap(res->start, resource_size(res));
--	if (!rt2x00dev->csr.base)
--		return -ENOMEM;
--
--	rt2x00dev->eeprom = kzalloc(rt2x00dev->ops->eeprom_size, GFP_KERNEL);
--	if (!rt2x00dev->eeprom)
--		goto exit;
--
--	rt2x00dev->rf = kzalloc(rt2x00dev->ops->rf_size, GFP_KERNEL);
--	if (!rt2x00dev->rf)
--		goto exit;
--
--	return 0;
--
--exit:
--	rt2x00_probe_err("Failed to allocate registers\n");
--	rt2x00soc_free_reg(rt2x00dev);
--
--	return -ENOMEM;
--}
--
--int rt2x00soc_probe(struct platform_device *pdev, const struct rt2x00_ops *ops)
--{
--	struct ieee80211_hw *hw;
--	struct rt2x00_dev *rt2x00dev;
--	int retval;
--
--	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
--	if (!hw) {
--		rt2x00_probe_err("Failed to allocate hardware\n");
--		return -ENOMEM;
--	}
--
--	platform_set_drvdata(pdev, hw);
--
--	rt2x00dev = hw->priv;
--	rt2x00dev->dev = &pdev->dev;
--	rt2x00dev->ops = ops;
--	rt2x00dev->hw = hw;
--	rt2x00dev->irq = platform_get_irq(pdev, 0);
--	rt2x00dev->name = pdev->dev.driver->name;
--
--	rt2x00dev->clk = clk_get(&pdev->dev, NULL);
--	if (IS_ERR(rt2x00dev->clk))
--		rt2x00dev->clk = NULL;
--
--	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_SOC);
--
--	retval = rt2x00soc_alloc_reg(rt2x00dev);
--	if (retval)
--		goto exit_free_device;
--
--	retval = rt2x00lib_probe_dev(rt2x00dev);
--	if (retval)
--		goto exit_free_reg;
--
--	return 0;
--
--exit_free_reg:
--	rt2x00soc_free_reg(rt2x00dev);
--
--exit_free_device:
--	ieee80211_free_hw(hw);
--
--	return retval;
--}
--EXPORT_SYMBOL_GPL(rt2x00soc_probe);
--
--void rt2x00soc_remove(struct platform_device *pdev)
--{
--	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
--	struct rt2x00_dev *rt2x00dev = hw->priv;
--
--	/*
--	 * Free all allocated data.
--	 */
--	rt2x00lib_remove_dev(rt2x00dev);
--	rt2x00soc_free_reg(rt2x00dev);
--	ieee80211_free_hw(hw);
--}
--EXPORT_SYMBOL_GPL(rt2x00soc_remove);
--
- #ifdef CONFIG_PM
- int rt2x00soc_suspend(struct platform_device *pdev, pm_message_t state)
- {
 -- 
 2.50.0
 
