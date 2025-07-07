@@ -1,484 +1,104 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA241CD1E4
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Jul 2025 15:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BD12E2644;
+	Mon,  7 Jul 2025 17:42:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751903233; cv=none; b=Q9cr42pNvtUP/ZRVSe5O6qDyt/J+7I1ejFH5/eMyichuuze3+MLotR9oveu+35urZ3weXhc6Foa0v8M0t0iYS+tp8tFSe69gi9yv8YNsSNNXrbPnaNGZXwwk5x8OvWE6qSFivrIBJ9o94ifjV697tV68KV0TkmoqgRZbhSBcvfU=
+	t=1751910131; cv=none; b=kOFiWdhLWgCE08fam31HJtXKcpWO4ydVs0lxcRv+mWvPXudrvR76bGnciiIjD0o3BfQyBh272VikDVZrwKkGT7azMAK/mBsT+D8KkAb64tcZfe6xwut8lw0FnPSUsnDYZQZTDkTFH5iiltt5zL9mLz39GuZNqLV6PqmmBtAoEGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751903233; c=relaxed/simple;
-	bh=VaXgvxjkE02l26p4pxNKRByCaKeVC3mmc/m2zV3ifuw=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=kg5AjV0/hXmb/3VxxObw4YQau6xQMhvEZ5L3gZ9StNrgRlgVHKekVBaQ8/qufSB60nuZTmGQoACly6ZQNLXDbKgk9ZPgsjAb1M2LeZzpsY61KzWNrjtsDgTJSM3815G8DVPwUzHyFSESOtGQihOnrOhoKjxHPhptJRJuZz/1uo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=k+ouPxT+; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1751910131; c=relaxed/simple;
+	bh=BcRJsM9iy/XMPZrWki3/WFSDgpuo7Zx4XQLpPLhix74=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VWK3lZtcOGna4iSGMKjcc293U6JLup7ESrBW0i4L591tVvQZ67NyuSJbWXAUvYF+sKvEPcQ++X/zd+sQrvij78fPaIxWY/4ki7aKGOH2EFBo8oy1puqk/JezTZ3h4Lqt4DkgMQm6KJYJUL9JdCRW89/gMWCdHFMj3rMjWyf+Cck=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ABDOEf3I; arc=none smtp.client-ip=209.85.219.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="k+ouPxT+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=XEGgfAPzrtjCEPBdAUboxczCfvwSPVPCH74bqEOVnQg=; b=k+ouPxT+Lw9JEay6Xc3/bOyyG0
-	z4zCILfBmgXJ5ochFGUJKx5bQv5yF4QF2btXSkeqYSPpkGSHq7FDnzMqLGvyFtrOOmdPVsDZuyRLQ
-	y1MdXseBcw3Hsvsfo29TYxpYaVGaqt66OmsXALSAvZiAGpCEmwZLTcv3EAt/EUYdwBT8=;
-Received: from p5b2062ed.dip0.t-ipconnect.de ([91.32.98.237] helo=MacBookPro.lan)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1uYo3b-0081cC-0E
-	for linux-wireless@vger.kernel.org;
-	Mon, 07 Jul 2025 17:47:03 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 1/2] wifi: mt76: add a wrapper for wcid access with validation
-Date: Mon,  7 Jul 2025 17:47:01 +0200
-Message-ID: <20250707154702.1726-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ABDOEf3I"
+Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-e812fc35985so2804107276.0;
+        Mon, 07 Jul 2025 10:42:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751910129; x=1752514929; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=42jtsUDXPCPmNytXrx59THHUxajHEyTomBc5xpmWMc0=;
+        b=ABDOEf3IUGHC/HErXGiIfHLXtMFA7tCrzNJYIrgndc0vaD4XQjvev/SQvK8XeJMNWv
+         lBxr2qIp/7Pk6Mm1n2Hu80ctuvG6NQ+j5bnGj1kWwhdRtU3GhGESwiHx4N8oiR6PuTFu
+         4wUFvqEAYm8ed3d+fpDjJ2gHvvV/3dja/nga7ZR8/gBJShIInqq1wUhJS8L1Kuawq48l
+         4SEcZBs65yoYR8TlAvuGKOkDDlfHGYhNqXGoSl3WN9hY7eFvOhT7b52G+DzgmQiCoPmN
+         aB9NG5jJ1zsFfZFflvITH+oAGX1keso5eiFo3ujLQ23NHkyn7Q/WlqFToyh5fMuUZYNh
+         1A7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751910129; x=1752514929;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=42jtsUDXPCPmNytXrx59THHUxajHEyTomBc5xpmWMc0=;
+        b=NsNX7z/f5KT1nfZYA6gr71aVFi12avEa6rvdP+0H4PdBcSoZ9/O6MYv7Q9u3ELsSf1
+         vWaRVpbQjHx9YhY7IpCHk5MNPhZyJdqoEF8xqZLzRCEE6Ek0bHEKZ8luNuukrbnypAQZ
+         ygwBcNuZO5Frn8qfujvaIY+LShg4Mm2NpTRLzdcsPCrASc9JLDbmDoBU5J3zKGgTAWOT
+         dJbsudyEFkRH5FvBNSEtuT+VMVkSbB62tjK99s7SuxJPBlyXDRYrgrTlJQ2rdpv4AaGP
+         O58rQz9ZDp9/5g9kWCEiElA0RFw8Kh51yByWQGN+Yt0MFBgGXgvxXyJDvIwvieEsfKJr
+         8+7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUSvMGpqiqkSia3JGfWIne7djbpD6eaC10YBf98rSy8F7fTQgmwN+k6HsRfhAh9NKsVd7HNsh41B4gjQw==@vger.kernel.org, AJvYcCWA2cY35jjYB0PruZQlPnPm0X4s1CyZfcEFFFHnPjCdtJq9OEykuPPKa+I+2zFV00yLqSKrzEomRiRI1FDc@vger.kernel.org, AJvYcCXYeqgnD1XFHu8WhDqFQTfSlYR68+MmRsF0E2wgJIUkH9SsKeHBUe9CAv3fTHrvTwW/+jcvirn3EQ6U@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5NTpwnL3hKqfk5CxUJLDzK7vorcsAx8kqxc8fhj65Dbfr/8vE
+	uo1Vkq5fiUmG9XwP48+RYHvgxMwsgn5sBm0GWMoC2ari/fuUqXXr53xjXjbIYGEOH4/uenmFQ9b
+	47zG3P8gigWvBBAJT5Zq2J/4eSiyXiCI=
+X-Gm-Gg: ASbGncuDO2dbvog8JVczWaffa3ATbVHlwBnTnkybDt8Yg9cpVM85hUoS060lJiUHcF8
+	c0zRzeZxuRuDWdhqTTUhsf9DzAVKRZFa2JCldcRvgDdFMNpsl4mVUTnnT4eW8mQojf4P7wtRU2X
+	/tbZYpXefI0xZHfcCnUJGsLTJsQy3hLUncZfLvgKQuuj4kJ6ZDKclRMeSA
+X-Google-Smtp-Source: AGHT+IGdu+lUB6aYqtWH4AiO6Py1SgyDO+jxiLBNa4PCqXrusbUeunWL1E2NWxsWS+1ctn1q5K5//624lv0vLW+ua3Q=
+X-Received: by 2002:a05:690c:f8e:b0:70c:c013:f2f with SMTP id
+ 00721157ae682-7179e44d3e9mr7404627b3.35.1751910128762; Mon, 07 Jul 2025
+ 10:42:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20250706214111.45687-1-rosenp@gmail.com> <8c6f18ca47bf0dd78b6675d8b94000679b6c75cd.camel@sipsolutions.net>
+In-Reply-To: <8c6f18ca47bf0dd78b6675d8b94000679b6c75cd.camel@sipsolutions.net>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Mon, 7 Jul 2025 10:41:58 -0700
+X-Gm-Features: Ac12FXwpmQW7d4a2Au2Yz5auZhjQPGBnlW83MkM8UJ0V9bkuM1yY9_y20XPBBjc
+Message-ID: <CAKxU2N9vs5o4tj-9KxCHKevWU+J9wv+ZCOeD8o602y1GY8FzNw@mail.gmail.com>
+Subject: Re: [PATCH 0/6] wifi: rt2x00: add OF bindings + cleanup
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, yangshiji66@qq.com, ansuelsmth@gmail.com, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
+	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
+	"open list:MIPS" <linux-mips@vger.kernel.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-arm-kernel@lists.infradead.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Several places use rcu_dereference to get a wcid entry without validating
-if the index exceeds the array boundary. Fix this by using a helper function,
-which handles validation.
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt76.h            | 10 ++++++++++
- drivers/net/wireless/mediatek/mt76/mt7603/dma.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7603/mac.c      | 10 ++--------
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c      |  7 ++-----
- drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02.h         |  5 +----
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c     |  4 +---
- drivers/net/wireless/mediatek/mt76/mt7915/mac.c      | 12 +++---------
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7915/mmio.c     |  5 +----
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c      |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c      |  6 +++---
- drivers/net/wireless/mediatek/mt76/mt792x_mac.c      |  5 +----
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c      | 12 +++---------
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c      | 11 ++++-------
- drivers/net/wireless/mediatek/mt76/tx.c              |  8 +++-----
- drivers/net/wireless/mediatek/mt76/util.c            |  2 +-
- 17 files changed, 41 insertions(+), 68 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index f1d1b0ebd074..3d3e38c365eb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -1228,6 +1228,16 @@ static inline int mt76_wed_dma_setup(struct mt76_dev *dev, struct mt76_queue *q,
- #define mt76_dereference(p, dev) \
- 	rcu_dereference_protected(p, lockdep_is_held(&(dev)->mutex))
- 
-+static inline struct mt76_wcid *
-+__mt76_wcid_ptr(struct mt76_dev *dev, u16 idx)
-+{
-+	if (idx >= ARRAY_SIZE(dev->wcid))
-+		return NULL;
-+	return rcu_dereference(dev->wcid[idx]);
-+}
-+
-+#define mt76_wcid_ptr(dev, idx) __mt76_wcid_ptr(&(dev)->mt76, idx)
-+
- struct mt76_dev *mt76_alloc_device(struct device *pdev, unsigned int size,
- 				   const struct ieee80211_ops *ops,
- 				   const struct mt76_driver_ops *drv_ops);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-index 863e5770df51..e26cc78fff94 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-@@ -44,7 +44,7 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
- 	if (idx >= MT7603_WTBL_STA - 1)
- 		goto free;
- 
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (!wcid)
- 		goto free;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 413973d05b43..6387f9e61060 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -487,10 +487,7 @@ mt7603_rx_get_wcid(struct mt7603_dev *dev, u8 idx, bool unicast)
- 	struct mt7603_sta *sta;
- 	struct mt76_wcid *wcid;
- 
--	if (idx >= MT7603_WTBL_SIZE)
--		return NULL;
--
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (unicast || !wcid)
- 		return wcid;
- 
-@@ -1266,12 +1263,9 @@ void mt7603_mac_add_txs(struct mt7603_dev *dev, void *data)
- 	if (pid == MT_PACKET_ID_NO_ACK)
- 		return;
- 
--	if (wcidx >= MT7603_WTBL_SIZE)
--		return;
--
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 3ca4fae7c4b0..f8d2cc94b742 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -90,10 +90,7 @@ static struct mt76_wcid *mt7615_rx_get_wcid(struct mt7615_dev *dev,
- 	struct mt7615_sta *sta;
- 	struct mt76_wcid *wcid;
- 
--	if (idx >= MT7615_WTBL_SIZE)
--		return NULL;
--
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (unicast || !wcid)
- 		return wcid;
- 
-@@ -1504,7 +1501,7 @@ static void mt7615_mac_add_txs(struct mt7615_dev *dev, void *data)
- 
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index e9ac8a7317a1..0db00efe88b0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -1172,7 +1172,7 @@ void mt76_connac2_txwi_free(struct mt76_dev *dev, struct mt76_txwi_cache *t,
- 		wcid_idx = wcid->idx;
- 	} else {
- 		wcid_idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
--		wcid = rcu_dereference(dev->wcid[wcid_idx]);
-+		wcid = __mt76_wcid_ptr(dev, wcid_idx);
- 
- 		if (wcid && wcid->sta) {
- 			sta = container_of((void *)wcid, struct ieee80211_sta,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index 2094c7d2af81..8d06ef8c7c62 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -262,10 +262,7 @@ mt76x02_rx_get_sta(struct mt76_dev *dev, u8 idx)
- {
- 	struct mt76_wcid *wcid;
- 
--	if (idx >= MT76x02_N_WCIDS)
--		return NULL;
--
--	wcid = rcu_dereference(dev->wcid[idx]);
-+	wcid = __mt76_wcid_ptr(dev, idx);
- 	if (!wcid)
- 		return NULL;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index d5db6ffd6d36..83488b2d6efb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -564,9 +564,7 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 
- 	rcu_read_lock();
- 
--	if (stat->wcid < MT76x02_N_WCIDS)
--		wcid = rcu_dereference(dev->mt76.wcid[stat->wcid]);
--
-+	wcid = mt76_wcid_ptr(dev, stat->wcid);
- 	if (wcid && wcid->sta) {
- 		void *priv;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-index e3e65848a17f..09c92e4ae129 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-@@ -56,10 +56,7 @@ static struct mt76_wcid *mt7915_rx_get_wcid(struct mt7915_dev *dev,
- 	struct mt7915_sta *sta;
- 	struct mt76_wcid *wcid;
- 
--	if (idx >= ARRAY_SIZE(dev->mt76.wcid))
--		return NULL;
--
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (unicast || !wcid)
- 		return wcid;
- 
-@@ -917,7 +914,7 @@ mt7915_mac_tx_free(struct mt7915_dev *dev, void *data, int len)
- 			u16 idx;
- 
- 			idx = FIELD_GET(MT_TX_FREE_WLAN_ID, info);
--			wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+			wcid = mt76_wcid_ptr(dev, idx);
- 			sta = wcid_to_sta(wcid);
- 			if (!sta)
- 				continue;
-@@ -1013,12 +1010,9 @@ static void mt7915_mac_add_txs(struct mt7915_dev *dev, void *data)
- 	if (pid < MT_PACKET_ID_WED)
- 		return;
- 
--	if (wcidx >= mt7915_wtbl_size(dev))
--		return;
--
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 26497b580eb6..64cf726529b5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -4010,7 +4010,7 @@ int mt7915_mcu_wed_wa_tx_stats(struct mt7915_dev *dev, u16 wlan_idx)
- 
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wlan_idx]);
-+	wcid = mt76_wcid_ptr(dev, wlan_idx);
- 	if (wcid)
- 		wcid->stats.tx_packets += le32_to_cpu(res->tx_packets);
- 	else
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-index 9c4d5cea0c42..4a82f8e4c118 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mmio.c
-@@ -587,12 +587,9 @@ static void mt7915_mmio_wed_update_rx_stats(struct mtk_wed_device *wed,
- 
- 	dev = container_of(wed, struct mt7915_dev, mt76.mmio.wed);
- 
--	if (idx >= mt7915_wtbl_size(dev))
--		return;
--
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (wcid) {
- 		wcid->stats.rx_bytes += le32_to_cpu(stats->rx_byte_cnt);
- 		wcid->stats.rx_packets += le32_to_cpu(stats->rx_pkt_cnt);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index 5dd57de59f27..f1f76506b0a5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -465,7 +465,7 @@ void mt7921_mac_add_txs(struct mt792x_dev *dev, void *data)
- 
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-@@ -516,7 +516,7 @@ static void mt7921_mac_tx_free(struct mt792x_dev *dev, void *data, int len)
- 
- 			count++;
- 			idx = FIELD_GET(MT_TX_FREE_WLAN_ID, info);
--			wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+			wcid = mt76_wcid_ptr(dev, idx);
- 			sta = wcid_to_sta(wcid);
- 			if (!sta)
- 				continue;
-@@ -816,7 +816,7 @@ void mt7921_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
- 
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
--	wcid = rcu_dereference(mdev->wcid[idx]);
-+	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
- 
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index c871d2f9688b..75823c9fd3a1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1040,7 +1040,7 @@ void mt7925_mac_add_txs(struct mt792x_dev *dev, void *data)
- 
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-@@ -1122,7 +1122,7 @@ mt7925_mac_tx_free(struct mt792x_dev *dev, void *data, int len)
- 			u16 idx;
- 
- 			idx = FIELD_GET(MT_TXFREE_INFO_WLAN_ID, info);
--			wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+			wcid = mt76_wcid_ptr(dev, idx);
- 			sta = wcid_to_sta(wcid);
- 			if (!sta)
- 				continue;
-@@ -1445,7 +1445,7 @@ void mt7925_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
- 
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
--	wcid = rcu_dereference(mdev->wcid[idx]);
-+	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
- 
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_mac.c b/drivers/net/wireless/mediatek/mt76/mt792x_mac.c
-index 05978d9c7b91..3f1d9ba49076 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_mac.c
-@@ -142,10 +142,7 @@ struct mt76_wcid *mt792x_rx_get_wcid(struct mt792x_dev *dev, u16 idx,
- 	struct mt792x_sta *sta;
- 	struct mt76_wcid *wcid;
- 
--	if (idx >= ARRAY_SIZE(dev->mt76.wcid))
--		return NULL;
--
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (unicast || !wcid)
- 		return wcid;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 0dbd4662bc84..5095304c0de1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -61,10 +61,7 @@ static struct mt76_wcid *mt7996_rx_get_wcid(struct mt7996_dev *dev,
- 	struct mt76_wcid *wcid;
- 	int i;
- 
--	if (idx >= ARRAY_SIZE(dev->mt76.wcid))
--		return NULL;
--
--	wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+	wcid = mt76_wcid_ptr(dev, idx);
- 	if (!wcid)
- 		return NULL;
- 
-@@ -1249,7 +1246,7 @@ mt7996_mac_tx_free(struct mt7996_dev *dev, void *data, int len)
- 			u16 idx;
- 
- 			idx = FIELD_GET(MT_TXFREE_INFO_WLAN_ID, info);
--			wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+			wcid = mt76_wcid_ptr(dev, idx);
- 			sta = wcid_to_sta(wcid);
- 			if (!sta)
- 				goto next;
-@@ -1471,12 +1468,9 @@ static void mt7996_mac_add_txs(struct mt7996_dev *dev, void *data)
- 	if (pid < MT_PACKET_ID_NO_SKB)
- 		return;
- 
--	if (wcidx >= mt7996_wtbl_size(dev))
--		return;
--
- 	rcu_read_lock();
- 
--	wcid = rcu_dereference(dev->mt76.wcid[wcidx]);
-+	wcid = mt76_wcid_ptr(dev, wcidx);
- 	if (!wcid)
- 		goto out;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index f0adc0b4b8b6..026622a29372 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -555,7 +555,7 @@ mt7996_mcu_rx_all_sta_info_event(struct mt7996_dev *dev, struct sk_buff *skb)
- 		switch (le16_to_cpu(res->tag)) {
- 		case UNI_ALL_STA_TXRX_RATE:
- 			wlan_idx = le16_to_cpu(res->rate[i].wlan_idx);
--			wcid = rcu_dereference(dev->mt76.wcid[wlan_idx]);
-+			wcid = mt76_wcid_ptr(dev, wlan_idx);
- 
- 			if (!wcid)
- 				break;
-@@ -565,7 +565,7 @@ mt7996_mcu_rx_all_sta_info_event(struct mt7996_dev *dev, struct sk_buff *skb)
- 			break;
- 		case UNI_ALL_STA_TXRX_ADM_STAT:
- 			wlan_idx = le16_to_cpu(res->adm_stat[i].wlan_idx);
--			wcid = rcu_dereference(dev->mt76.wcid[wlan_idx]);
-+			wcid = mt76_wcid_ptr(dev, wlan_idx);
- 
- 			if (!wcid)
- 				break;
-@@ -579,7 +579,7 @@ mt7996_mcu_rx_all_sta_info_event(struct mt7996_dev *dev, struct sk_buff *skb)
- 			break;
- 		case UNI_ALL_STA_TXRX_MSDU_COUNT:
- 			wlan_idx = le16_to_cpu(res->msdu_cnt[i].wlan_idx);
--			wcid = rcu_dereference(dev->mt76.wcid[wlan_idx]);
-+			wcid = mt76_wcid_ptr(dev, wlan_idx);
- 
- 			if (!wcid)
- 				break;
-@@ -676,10 +676,7 @@ mt7996_mcu_wed_rro_event(struct mt7996_dev *dev, struct sk_buff *skb)
- 
- 			e = (void *)skb->data;
- 			idx = le16_to_cpu(e->wlan_id);
--			if (idx >= ARRAY_SIZE(dev->mt76.wcid))
--				break;
--
--			wcid = rcu_dereference(dev->mt76.wcid[idx]);
-+			wcid = mt76_wcid_ptr(dev, idx);
- 			if (!wcid || !wcid->sta)
- 				break;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 513916469ca2..251ee3ce5e4d 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -64,7 +64,7 @@ mt76_tx_status_unlock(struct mt76_dev *dev, struct sk_buff_head *list)
- 		struct mt76_tx_cb *cb = mt76_tx_skb_cb(skb);
- 		struct mt76_wcid *wcid;
- 
--		wcid = rcu_dereference(dev->wcid[cb->wcid]);
-+		wcid = __mt76_wcid_ptr(dev, cb->wcid);
- 		if (wcid) {
- 			status.sta = wcid_to_sta(wcid);
- 			if (status.sta && (wcid->rate.flags || wcid->rate.legacy)) {
-@@ -251,9 +251,7 @@ void __mt76_tx_complete_skb(struct mt76_dev *dev, u16 wcid_idx, struct sk_buff *
- 
- 	rcu_read_lock();
- 
--	if (wcid_idx < ARRAY_SIZE(dev->wcid))
--		wcid = rcu_dereference(dev->wcid[wcid_idx]);
--
-+	wcid = __mt76_wcid_ptr(dev, wcid_idx);
- 	mt76_tx_check_non_aql(dev, wcid, skb);
- 
- #ifdef CONFIG_NL80211_TESTMODE
-@@ -538,7 +536,7 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
- 			break;
- 
- 		mtxq = (struct mt76_txq *)txq->drv_priv;
--		wcid = rcu_dereference(dev->wcid[mtxq->wcid]);
-+		wcid = __mt76_wcid_ptr(dev, mtxq->wcid);
- 		if (!wcid || test_bit(MT_WCID_FLAG_PS, &wcid->flags))
- 			continue;
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/util.c b/drivers/net/wireless/mediatek/mt76/util.c
-index 9fa60d380ede..6ac7cfdd8786 100644
---- a/drivers/net/wireless/mediatek/mt76/util.c
-+++ b/drivers/net/wireless/mediatek/mt76/util.c
-@@ -90,7 +90,7 @@ int mt76_get_min_avg_rssi(struct mt76_dev *dev, u8 phy_idx)
- 			if (!(mask & 1))
- 				continue;
- 
--			wcid = rcu_dereference(dev->wcid[j]);
-+			wcid = __mt76_wcid_ptr(dev, j);
- 			if (!wcid || wcid->phy_idx != phy_idx)
- 				continue;
- 
--- 
-2.49.0
-
+On Mon, Jul 7, 2025 at 2:01=E2=80=AFAM Johannes Berg <johannes@sipsolutions=
+.net> wrote:
+>
+> On Sun, 2025-07-06 at 14:41 -0700, Rosen Penev wrote:
+> > It doesn't even compile. Added OF bindings, documentation, and other
+> > stuff to hopefully this doesn't happen again.
+> >
+> > Rosen Penev (6):
+> >   wifi: rt2x00: fix compilation
+> >
+>
+> That was half covered by Felix already, and really shouldn't do two
+> things at the same time anyway.
+Just saw what you're talking about. That's gonna be annoying though.
+The COMPILE_TEST commit will cause compilation to fail and the bot to
+complain before Felix' patch gets merged.
+>
+> Also please add [PATCH wireless] or [PATCH wireless-next] prefix when
+> you submit patches, to make it clear where the series is targeted. In
+> this case, you probably should've split it up, but Felix already covered
+> the immediate bug.
+Will do.
+>
+> johannes
