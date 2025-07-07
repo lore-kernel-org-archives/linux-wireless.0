@@ -1,127 +1,113 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECA4528A3F8
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Jul 2025 22:36:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83C72116E7;
+	Mon,  7 Jul 2025 22:55:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751927788; cv=none; b=dZHm0iq/LBu1EgxSQqo1CusccLXhLUOQUZaLeV0zeCEBRH10siF0p4vUpZsQO7pskMFow14BUc4H74GkD0/n0kVY8drvRt3IQ8CquhXnDQiQgBzs0NAmM5e8f3eodYvGalKELnwyBru0gS0MiLrVMU4Ub7arXaJCYtFJ+nCVay8=
+	t=1751928921; cv=none; b=PWNfBZQj+J9SG5UYxxqdl4h2ugJalIqe4BCx+LJdC9FB1jGEAhXMZBWpkezNzARwAxCkkPs11R/NpDzr4odjWiffM3ROKY21hj4rofkYELrK92m1gBULZmBwewMGoxSBOzvjrW7OHHJtAOEoddSmxrVRkkSInhZsNWVQpCPYWTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751927788; c=relaxed/simple;
-	bh=oSCAQyO44W3G8Ziz26eTl1VJxcqIAIPjOBRVA+Afj+I=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=Ez2EXhLxa08MIgTjoxVAjnA/qojZKOzzI0uAt2ZJjRvH3P6eIaZ/UPdZcluCQhgxZHQ8vrwloWKy94mxarKq3BYgtb23HjAH9byI5G7kF9wUwSKmU07dYRaWSpQoo182ogKjHF+RgqQDrZlvSarx5JM7fcClwdA+tIDZ8fzue80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=GVdQw7W+; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1751928921; c=relaxed/simple;
+	bh=BfplGAGYJSY9LdA74Otq/aYHP1O1UBCgPOBZ2j23Jrs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TiQC36EdEzOKB/coUVIadN0ziF1TvK5EyEEEAbTHDi6GEnVJNFTQcvAyxFTzF6mGRcT30v/vIEr0oGUsM5zTuRkWtG52kbvy7RSaIPpssT2Z52PBgCCzIemroTfinMWiTG+mwyOMAZtROf/yWFQn9kMwA5r12ENxz2gzfMT5zVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fUo0oddH; arc=none smtp.client-ip=209.85.219.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="GVdQw7W+"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 567LYCBH028001
-	for <linux-wireless@vger.kernel.org>; Mon, 7 Jul 2025 22:36:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	YApgcEfLhCvcv/oL20l3XARkGnqSjmZOVD1/d8EkdQk=; b=GVdQw7W+vm6CBM51
-	+4+2ADPoh99kDKX7CiNs7o2L+Q8axnH+RG5NXPwdA6+NaiYybNTaKmwBG7U81Qnj
-	URbguy7SCHK9TFjsXDlTUj750fUho6lr5oc4q4ZVvJ1MT8/URcxhSYORRNW42l/s
-	FwpLPCD4GwXa7IuatT2ZKplXDrNRhz37G5JHmzt/x46/ODxM+Q+EokC1wzW4xmdY
-	kmgv/v2Ytiw76K8xD8hZ0UfkgLcMkHEZS32zBfVVS3qkem1jCdCofQPL/Gk/aA5P
-	Z6H+yAWYxGvOS3jp3J8lunGKHfsJ9a75ZSF017BBaB1YKmgSj8HUsBXj7w1Ks8yL
-	+3cnrQ==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47pu2b138x-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2025 22:36:25 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-b38ffb62492so3258176a12.0
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jul 2025 15:36:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fUo0oddH"
+Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-e8b3cc12dceso1987866276.1;
+        Mon, 07 Jul 2025 15:55:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751928918; x=1752533718; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LyTXGd3oxrcdwN+ZWfUesTZPlQxy4H1ZYTRObcRWa8Q=;
+        b=fUo0oddHCkZ5vUhnWZgCww7gTbNZ2EGpxT9yAsfFwyRry1wVtAN1BUhA36KxXY7x5U
+         cA4RP2sHTEpOCzrrd7NVAnfWFdh33fhDO6DsMrqz9J8w6IjsRd3+GvofyYMrth7xUwLp
+         vhs0wnStFZ0/H4zlCLmp9bkXxNGyk2BM4gE2Gjo9Hk8CpR2uN0lz3GDGutxaHxmQ3CGM
+         E2UpCDYIUGErYWNl/HIU9+oQJHuaCPdV1Ek0GLpMktvk7+F5LWes3eY6BWIrCj6Dm6fo
+         vxcosBcyfzPiLwqWwg+5SnQ5JbA1u2jWtDkULhOVoFs7HrmaQewfU2uB5XWUPtiunowr
+         kmkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751927784; x=1752532584;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1751928918; x=1752533718;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=YApgcEfLhCvcv/oL20l3XARkGnqSjmZOVD1/d8EkdQk=;
-        b=JSsbM705nacC1uxn1KehBS12CEPdm/10QzJGdXkQkaohUws4YJlZNX88PrgUV5ZYtM
-         M2iHGOp533iPnRSktZiZuh6fWSzmDZH2FGHGA3ITZJblm98YDcgQ1ZyZjtFMGtKml9xY
-         KHRdi7UKt+dU4xifmo+P8DHLN+V/A7s6MxvdtTqQ7zjGFIZbW54a4kKdMXYpqnkJ2dYF
-         YZ2GIc4RSUUW7HW87rD43h9uPrduYTatikRqrtjd/KFoclhmfUlJsby0rXA91lngQ+dk
-         hvcKHzmxa9B3YzSF6NFkBCqnbbZAUfuQGyDRcaAZG7O6RcHvyTjMaeQWvhyC10xgYft1
-         eyxA==
-X-Gm-Message-State: AOJu0YwiF7zz4M+Xo+585NVoLDS8ySOBrYV2VRQg+V8VSGVwacmPRjZv
-	xJVSDTaZBj+luzvX2qxxIaTmCcciPGcq26eX8zv6lP8z2EIqR/2SCQgEWeAakxq1wu0OhWWx9qc
-	8QJmz6NzeflxwsQRuLp3Dc0+ERygrAwxudtEBSydtSDr6q5NdEsSIYA3Pg7/33VF6zMpuPA==
-X-Gm-Gg: ASbGncu22JCnjxS8LfWFDHR/PhcJD9qCpCt7pzdya00SEgnqdcKFSjrYwVGjzsIqoGM
-	6FccuWt0dM+9uZpxNbAu1aiSd+W48BaFo4i7//YbFK9bv/HcXULOra50TjAxkRNaNtREE5EGk97
-	RqD0mTvS4zBHNvzjpZty3b3kv/UPzu3Cvia0pq1wfEN9WZ4yEjKuUDGEPFdSb0yyYIAlhH1GWvh
-	Jga3usjOaWKIf4Mr0p5clZqo7ye/CYrnqocjqlHXWBa6vBGy+k5ihNU9nQpWm6REZESDaFPTDk/
-	ycpshvCs+xQ9jJxPPVaPXkVisOcD2AZGTxjh7g9w4/VAXtackE9JuG+FGDI=
-X-Received: by 2002:a05:6a21:6da1:b0:21f:53e4:1930 with SMTP id adf61e73a8af0-22b439d14c5mr1232068637.22.1751927784553;
-        Mon, 07 Jul 2025 15:36:24 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFT+sWByQ2MdrJ8iMs6QfVZt5E56GE3YfUbHnEbFwa7fOfWuomg2Zr9UHmbiugrJtnr/ylgZA==
-X-Received: by 2002:a05:6a21:6da1:b0:21f:53e4:1930 with SMTP id adf61e73a8af0-22b439d14c5mr1232042637.22.1751927784105;
-        Mon, 07 Jul 2025 15:36:24 -0700 (PDT)
-Received: from [169.254.0.1] (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b38ee6358edsm9668064a12.58.2025.07.07.15.36.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Jul 2025 15:36:23 -0700 (PDT)
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-To: ath12k@lists.infradead.org, Sarika Sharma <quic_sarishar@quicinc.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20250630064431.3446333-1-quic_sarishar@quicinc.com>
-References: <20250630064431.3446333-1-quic_sarishar@quicinc.com>
-Subject: Re: [PATCH ath-next] wifi: ath12k: properly set bit for pdev mask
- for firmware PPDU_STATS request
-Message-Id: <175192778338.314276.2561875360399955703.b4-ty@oss.qualcomm.com>
-Date: Mon, 07 Jul 2025 15:36:23 -0700
+        bh=LyTXGd3oxrcdwN+ZWfUesTZPlQxy4H1ZYTRObcRWa8Q=;
+        b=U1sMkT5gNeGQPLnie6117kfF2yoOUZHmz0Jkv8WjbsCLFsEfK34vDMb5nrAUlSgTKU
+         KDxccDHIrv5yMnqmW8VRQp/feji2cRb19l2F1orMTw9fK4YL+9shOsHzTisXB6gl8tph
+         B6hwPbpZ/lODYkBSQzoAvpN3GiPeXWDGPLAELKmYxFL081ri3f6w15jGYo+O1TEuk5Qr
+         wrszhH4lWKgZRFSj1V2vD70g6KtR0v/s9nwrLUhUno3HOJFQdYQVErjHNhmiDG3sblm0
+         ivniOBQ/vgy0izOxo64fCv8cABNyH7mucDPQ/AzJUW8fCQMibMhfL9R2d3LYuVo16hsV
+         8NdQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVeGtjZmDDklAD4ZXF85M9snMUc0BD6fePCKaq/YvjJONG/ZHxD1xFeM5QbtdUS/48JOSgSOUMvRIklFA==@vger.kernel.org, AJvYcCVfGawMTShJCGSzzRwHzv6DyOfe8x2215Zpzobr7jHdH84GvVKg49d2YDUjF+rbWBlbqvBWZKEc0qhv@vger.kernel.org, AJvYcCXbJOUIcufQAdfn5dcXN1hIgd7rLCKDvfga7XZfQziQXU6o+SbuDO/iJg7Ub8qrUO7r2nzSx0MrFH02XObB@vger.kernel.org
+X-Gm-Message-State: AOJu0YyrIWMtd22q5kJmJmEtZV1uowOz56ifaEIT+j2x5N8G3LSOyfAo
+	UfDQzeqV1lTX2ixU7k6WdQ1sc7kqRa+nu1+ZQUVLW+zmOS8yymajnP2qijrS363/HAEE1UIXGH/
+	k+gy9CDf3vIBJvidNTLPGWzMRfJ7njmE=
+X-Gm-Gg: ASbGncuwZEwNC3EUui5DW50RpclzcmdNzfjT0MHcM+Z+1nOBqAOAej+8XR8bqrEUQjf
+	8sYSmbVu53SzLoY1E9X/eZSm1t7/suQJdLLkws33mJ1QszKQxHnHGyJnKbg+NAPYcML5uQ+TkhI
+	XJxDz8Rp3Kusdc8+z65aRcXwPvu8PeQ72nvd/xc/zqTRk5v9M7qbf9/mf6zXKCcSICP0w=
+X-Google-Smtp-Source: AGHT+IFUqlSeXO7TN1tNOxRHWSczuY+UdbyZo5ZiJbvWxxUDKKmr0+ZLKF63xcIULGwasrd0gN8rpXhvNOBtbXtWouQ=
+X-Received: by 2002:a05:690c:690e:b0:70e:18c0:daba with SMTP id
+ 00721157ae682-7166b7e8151mr182180917b3.25.1751928917782; Mon, 07 Jul 2025
+ 15:55:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA3MDE1NiBTYWx0ZWRfX/v0sAea72B1j
- xD5vPG0QlzmXNCE1D2IIVoa2beigGuEgO+p8RdYZvDIEz0LYe3WvkC0f+DRcgyAB+gcOYnAGJk2
- gan5OcoksbRP3hdy+nvmQXj2wkxO/Dmd+HxXfn/nvRnUaPpUkfm8cYfOsPwOFXvC5qRvgYwiqVx
- m2CLkYADLgL7Xvd8VdEcbZKXHiWVxbOhcpxMDMgQc6oek7PXIBYxTdbsTUruE5pa7NVct3en1XY
- ffCa4bxcxvpOcIqSJZH1qj1kCsAiR/3TxM0CdKULgErZugsmzClF34p3D0NXMMyJQIGCSTJTgXB
- PBGvbzCiHDFJ2a7+v7CWUlMb0FtjDWL3y4Ly3NrnJnjjQC6xUXCboYKaP8jaWwvKvYsJWc1KmTY
- x8R+BGCrXWciowYs7LzRPWWXfoIhNsjSTxsaEK2SBIXbgWlkcm0hV2Kr0suBa26+SOBqBOeu
-X-Proofpoint-ORIG-GUID: epzqhx_KN6RA-ANRrkhpINno14J53U_U
-X-Proofpoint-GUID: epzqhx_KN6RA-ANRrkhpINno14J53U_U
-X-Authority-Analysis: v=2.4 cv=erTfzppX c=1 sm=1 tr=0 ts=686c4be9 cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=baoXswmsWw0oUJaBrHEA:9
- a=QEXdDO2ut3YA:10 a=x9snwWr2DeNwDh03kgHS:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-07_06,2025-07-07_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 clxscore=1015 impostorscore=0 spamscore=0 priorityscore=1501
- mlxlogscore=984 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
- lowpriorityscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507070156
+References: <20250706214111.45687-1-rosenp@gmail.com> <8c6f18ca47bf0dd78b6675d8b94000679b6c75cd.camel@sipsolutions.net>
+ <CAKxU2N9vs5o4tj-9KxCHKevWU+J9wv+ZCOeD8o602y1GY8FzNw@mail.gmail.com> <b3a63d616c1ca337f6b9d14a9afaafe73bfbe8cc.camel@sipsolutions.net>
+In-Reply-To: <b3a63d616c1ca337f6b9d14a9afaafe73bfbe8cc.camel@sipsolutions.net>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Mon, 7 Jul 2025 15:55:06 -0700
+X-Gm-Features: Ac12FXycPvJ6904Rtx31RRwaAeo58C7gGYz-ADfCLyeTnPkiok4GspDzrArWUl4
+Message-ID: <CAKxU2N-XviPav1Bh0yidyMUr=QbMr=0jyYyHKc+h0oaM9vak=Q@mail.gmail.com>
+Subject: Re: [PATCH 0/6] wifi: rt2x00: add OF bindings + cleanup
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, yangshiji66@qq.com, ansuelsmth@gmail.com, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
+	"open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
+	"open list:MIPS" <linux-mips@vger.kernel.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-arm-kernel@lists.infradead.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, Jul 7, 2025 at 11:36=E2=80=AFAM Johannes Berg <johannes@sipsolution=
+s.net> wrote:
+>
+> On Mon, 2025-07-07 at 10:41 -0700, Rosen Penev wrote:
+> > On Mon, Jul 7, 2025 at 2:01=E2=80=AFAM Johannes Berg <johannes@sipsolut=
+ions.net> wrote:
+> > >
+> > > On Sun, 2025-07-06 at 14:41 -0700, Rosen Penev wrote:
+> > > > It doesn't even compile. Added OF bindings, documentation, and othe=
+r
+> > > > stuff to hopefully this doesn't happen again.
+> > > >
+> > > > Rosen Penev (6):
+> > > >   wifi: rt2x00: fix compilation
+> > > >
+> > >
+> > > That was half covered by Felix already, and really shouldn't do two
+> > > things at the same time anyway.
+> > Just saw what you're talking about. That's gonna be annoying though.
+> > The COMPILE_TEST commit will cause compilation to fail and the bot to
+> > complain before Felix' patch gets merged.
+> >
+>
+> Yeah well. That doesn't really mean it should be merged together though,
+> and we can pretty easily make that work by just putting the further work
+> in after net/wireless is merged back.
+Looking at it again, I'm effectively removing rt2x00soc.c . Meaning
+Felix' patch is mostly useless here.
 
-On Mon, 30 Jun 2025 12:14:31 +0530, Sarika Sharma wrote:
-> Currently, the HTT_H2T_MSG_TYPE_PPDU_STATS_CFG request uses bits
-> 8 to 15 as the bitmask for HTT_PPDU_STATS_CFG_PDEV_ID for firmware
-> PPDU_STATS. However, bit 8 is reserved for SOC stats, and the actual
-> PDEV ID should be encoded using bits 9 to 15. This leads to incorrect
-> PDEV ID encoding in the request, causing it to either ignore the
-> request or apply it to the wrong PDEV.
-> 
-> [...]
-
-Applied, thanks!
-
-[1/1] wifi: ath12k: properly set bit for pdev mask for firmware PPDU_STATS request
-      commit: acab697c32f7a38ec0e9721ac02febd295e8df74
-
-Best regards,
--- 
-Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-
+It might make more sense to submit this series at a later time.
+>
+> johannes
