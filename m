@@ -1,288 +1,132 @@
-Received: from outbound.mail.protection.outlook.com (mail-koreacentralazon11013020.outbound.protection.outlook.com [40.107.44.20])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770A81A2643;
-	Wed,  9 Jul 2025 02:24:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.20
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752027872; cv=fail; b=EJWDOS8C0LdCp5166ITuLB6GUOGKcgrWRzhewygXELImQS7j5hPI9/ZwL2cc3NhCjYijbbpDtd6QaSf5TLv+Eb1c7xtToDg2rOFuF4XfGVMbYP/VtXShoC5LPlnOac1iy90n2q9wpAQtGPYHNz4N2dwxvapr0uRdjQ1fC1ekjMM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752027872; c=relaxed/simple;
-	bh=9smOcFZvTwdY2IIoUEgyNRm6i9lAsS9zYQrFm26pSHo=;
-	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=nZ4sZlCMKxrOGJ6Ava+Xk9E+bUKPvpmJFpkIqWiiSuOLxoaIEIvPDzeZ1kU4nh6s5f7LDB+TvxUjUE02UJk4A9s+pHG2f2Ttg7xPZmHAcx7y7rKm1wsGC8sOfNlL9bMoqT3RuO9LnHHKuvsQNDhzg2zh4luJoZOjVzoqZ8QS/zs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=Cvj8LNXH; arc=fail smtp.client-ip=40.107.44.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED32D1865FA
+	for <linux-wireless@vger.kernel.org>; Wed,  9 Jul 2025 02:35:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1752028539; cv=none; b=aPYsMV8RMPmOo3259AkmUGAGzViCopSMxp1xR1EdnjEfjmFwANMlOhexDumlp4AjT9Q0vuq+bKluOdWa3WqeuPwHp2tNKIx0NcRiad9K8CPpV+aik7IqxbbtNMCZbieEWAY+TzN31/PFvwVvzerj4rkUfZGIgGr7tNF/LqYWJ/o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1752028539; c=relaxed/simple;
+	bh=9TO0Ie/tiu0fshmmifYBLUQYkYOY5QIWQq2+zPaxfDU=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DeOrzcOPW1v++UmhkCh/I1+1XAxLNwMvV/7botqQV4Q35UJnMMWgNHGgQirDhoRU3Hkvk6hruBXGe4cEc9Hyr1s3NYzPjlW0+IJzF+W0LL7fq+Mu7UU2vFI3NdGTblfoBvelSW0IkPYTL+iLbh5Uc6qf1PKwyVyLMzFOCa1WFic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HgPaaBgN; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="Cvj8LNXH"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=H3jla1C5Z4RuAeJ+hzimcjBS56c7/rqURJbQ6sJKwsLv5k0uieh00ct7R6WPJFlgetrZxUdahBJqGSwVv+47opR4WXvrh1XVhLq6Ks9Og/jGQ3cjl+ViRCSyv502Qfb7xD2o28mzxWTdNrGLq6ZfMmaG4TKQtEckNzBlJjLlGjg8pio4e2ETimhMQo0gkZf4NeX+wvzbcTV4VKb0QqkLOQgUjgFo+Q2yu4PXqgNcQg3HTMdUQ389pRjD1V1rnoISLnWShepARQ8EG4Q2O/NbxryyLhdji/cN0T/7RufMG4Ru5/kz5lMWOXcxAF79xnFYFo81L7ASs5dKWFzV+06tGg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=9XPSMdpITsu899xaXlZDUszvu0DzG7yMtt0zE7tIjGE=;
- b=wVVSzbVi0pJWN8znfwXLvNcpk+A/SDRRkMqkH5U5StzwQL9DN+QotldecdonK2k4LYV6M5VHztEH7ucX6uPESCye0Y99tLRpiCYPcaRhZts01BE8iNIvo3i+gzDxIGABdqtLRPh2nQR38FZ3DY7x6Ld3xHtFW+82wSL0PYMwfxx/B0wiCdeSTFanm74NYqI4ksVDphmrY83KQbl4QT8V4aGs1jYKFK5hEu/LRVQgpt8uHuyhnK4wC1Ynx/H0Sth5U05QCOXSferTFp3H9aPSkZpLNGyD+v5xb0nS6Ac4gy0QDW2AAXMQTiTczAx83WbWciYIo+0P/zG1rx3SRRCxzw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9XPSMdpITsu899xaXlZDUszvu0DzG7yMtt0zE7tIjGE=;
- b=Cvj8LNXHhrfV4zhNmydbNxcdasHplFLIOoqyoj8UBRqx6GCXJWyxgkZ7rzqQrUONa+NIAZAGfsH9BAwGUiVMa2WtE6IaB3x067Fj9GBjTt6KpJYh+QSha+DBcgIcIytBq7XkCjnU/WrMp3Yl0VwQ+KYNvvya5VGr1zL1Y9Dvt4imJPc77jwuxUmwh4WRxgUVIBWAAbIkmozJ+g5ST57VaygsjwC4/Rp+uxbCLP3l7ZyyAtFXzXLgMlYkvExiy2oVdyVDA78BxAeqMbwqWeqmSxSSmP9J/0BoeN5elNoIC9PPjNXH9EKKHz7Btn3DEWgXivcj/sdX0SuvjSXLg8gdog==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SI2PR06MB5140.apcprd06.prod.outlook.com (2603:1096:4:1af::9) by
- TY2PPF4597475D5.apcprd06.prod.outlook.com (2603:1096:408::78b) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8901.26; Wed, 9 Jul 2025 02:24:26 +0000
-Received: from SI2PR06MB5140.apcprd06.prod.outlook.com
- ([fe80::468a:88be:bec:666]) by SI2PR06MB5140.apcprd06.prod.outlook.com
- ([fe80::468a:88be:bec:666%4]) with mapi id 15.20.8880.024; Wed, 9 Jul 2025
- 02:24:26 +0000
-From: Qianfeng Rong <rongqianfeng@vivo.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	Qianfeng Rong <rongqianfeng@vivo.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org (open list:REALTEK WIRELESS DRIVER (rtlwifi family)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 12/12] wifi: rtlwifi: Use min()/max() to improve code
-Date: Wed,  9 Jul 2025 10:21:40 +0800
-Message-Id: <20250709022210.304030-13-rongqianfeng@vivo.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250709022210.304030-1-rongqianfeng@vivo.com>
-References: <20250709022210.304030-1-rongqianfeng@vivo.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI2PR02CA0033.apcprd02.prod.outlook.com
- (2603:1096:4:195::20) To SI2PR06MB5140.apcprd06.prod.outlook.com
- (2603:1096:4:1af::9)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HgPaaBgN"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 568JIVho025447
+	for <linux-wireless@vger.kernel.org>; Wed, 9 Jul 2025 02:35:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=hLMsEUe26f5H9JEFiKOUnL
+	PAORFVeXyz8x7J6XwjUvk=; b=HgPaaBgN1Q3w9fvb/kbMyfgbY1iCkkHoeroPED
+	UVvPc+OigvogN1u5+170fcUsfxLXNQzL9hQWG9U9DqaOwbYFc6BKFEBckhwNVgns
+	dSLTvrKPNG/rMcuhbuOi18/i21akVMvxEMfXgpdlhuwgQmzMyhgb/MQ1MjOOMHZ9
+	C1fhwmNnvzYOv26bPabt9+iZwP0HeRkAfQKkniLm9rFpnRYt+HjxjICdg5AfNCTd
+	p/kOndhWygl82cCmYas4qfjDZaJVugchWOki++9Mv3Z/9YGAmVEsRdQKkNg+HoUu
+	iMAK/nx+yVrvIqPmkqCjL5QhRyLTGn1YGdJQ9/0V0X2E8JUg==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47pu0wj7jk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Jul 2025 02:35:29 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-234906c5e29so64473945ad.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Jul 2025 19:35:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752028528; x=1752633328;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hLMsEUe26f5H9JEFiKOUnLPAORFVeXyz8x7J6XwjUvk=;
+        b=YUHFgvAbeTDTIdN6OgbZh+puEq3hEts0bzmeFksXKyD+Z7giesy9dzwh0sVdcrw1Qn
+         h/EPqxl+ynxL8M8GzunbokAwShRNYDZEowzJymaPJE6AZhSkWAll26w49spZkOid9NOy
+         TrkgMXMTyVEs+8hxS4geV8QIpHDcn1gCsVE90kTOu3NxsAI/dEiTu9dSTvg/WjMIgIHn
+         1db5PRBPb42NehKhQEHAkb9p3ZSCTs+nwRgjrhb+zjEFA8GSMLi+1cU2aXE0YtjHPki8
+         HWo7jYeYxU5wzz650lN1VDWJYbwXbs6fbGQjt1dXcgvQSwCEY9vMZOuBne9CHcYH61Pi
+         h4sQ==
+X-Gm-Message-State: AOJu0Yxu8y4xNhkyLrbhb6Kl7Rg5SiNY8ovz3Yt+LDW3vopXY5Vbf27A
+	x5oIXcOgjmPd6EO2aZ5HcWp6kaq8yY+tltBDC2pemu4cQ+E494fKvojvD0t/WzJsSwHL8B3h/T4
+	o84G1yXYOT4zxRqt2k/k+Wea4ieWAOk5D10JNRRTPc6I1bfLzRRt9rQ5BMeAnFlE1/Dtz7A==
+X-Gm-Gg: ASbGncvzOQEhFDDiiJmWVApnEiCukxCTAr7tMxE9uk6HQDZv9PfuENqrPdMSA/4d9Od
+	gdYXeXTorPQjVKxVU3XdfO4H+BOkINYWz9jw0BwUH1s2Rnv4MrSOu4raNCx13valu+Msrdk8xg2
+	k3yVmJQHk4SCI69CuSoy8KRNZ4hwFmj/VJsO8o1rIC0Q7LWmJce4/fPkUSCyQPTEZDTxGneGlrB
+	3gNUmxasMT0JSvQMzX12QSxBArgIyPd8R42Kl74o08ZoDMCxqyb+COxDRYhbWyrLwAPKK2uaRWI
+	f4gMbYhfkHVYuuyuo63ko0Om6Gb2krn150tS+zK7k5LNaBBz0xGlgQ/Sn5INo+R9pPRQ3pTueez
+	mysNaaIEHrxcNycOfKt9lT9Rwku5NvOpu4HhuSqIWjojR1+c=
+X-Received: by 2002:a17:903:3d05:b0:235:a9b:21e0 with SMTP id d9443c01a7336-23ddb0c8821mr11858385ad.0.1752028528593;
+        Tue, 08 Jul 2025 19:35:28 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGhfR0QvmpiQ/tYvfymKWBtnaEA+zKZVZAoyoIq4XGfZxPY3DboSNdAbywwp4KVgp1XVSKJvw==
+X-Received: by 2002:a17:903:3d05:b0:235:a9b:21e0 with SMTP id d9443c01a7336-23ddb0c8821mr11858105ad.0.1752028528181;
+        Tue, 08 Jul 2025 19:35:28 -0700 (PDT)
+Received: from hu-adisi-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23c8431ef2bsm133169315ad.33.2025.07.08.19.35.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Jul 2025 19:35:27 -0700 (PDT)
+From: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+Subject: [PATCH wireless-next 0/2] wifi: cfg80211/mac80211: parse and
+ update unsolicited probe response template
+Date: Wed, 09 Jul 2025 08:05:17 +0530
+Message-Id: <20250709-update_unsol_bcast_probe_resp-v1-0-d3323ce9a7b5@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SI2PR06MB5140:EE_|TY2PPF4597475D5:EE_
-X-MS-Office365-Filtering-Correlation-Id: 00367fdd-947f-42e5-b45b-08ddbe8fb978
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|376014|52116014|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?ncBAkT7NGeUyAikiNOEWyH2PDmBX140+VuZvDdDl+zDAt9QHnXs0JysFpb3Q?=
- =?us-ascii?Q?1nCAmqYSNT1yjzGBBEjBgRx8IXuHnF+E704mDxpfv3X/ocOZTY5bFoRia+6p?=
- =?us-ascii?Q?9XUeaRy73ibt2mrYstX8JEkz1IXTGxdNAHXgsVs1tFCuCKL4uov2OX0P2lWE?=
- =?us-ascii?Q?AlOnblwliRL7rvQmle2f05flem83NtG+irsvkpADa7Ph34/gr8nZQaOoW/um?=
- =?us-ascii?Q?d+wHzd/i4kVAIZG4HkHL9lxz2rcJjxJChlcDC8zYClEVknyJiHWp3kVvh2Pj?=
- =?us-ascii?Q?ypFti+CZnbpQSZ9KUJ9ohhZcmD998EPTJtG6yX6eOokU5e1da44MzzzRuUAc?=
- =?us-ascii?Q?xAjqLrciR+0MLjEK+WfbYSa3QBkSj0e1QrsxuEWWV0GEHGfB+lYLZwg4N4GO?=
- =?us-ascii?Q?86L++8XtDsaFviAzGSlShZNkosVZt+QcXzsdUaI5yfKz9VZBbJ32MgoUOYQh?=
- =?us-ascii?Q?194F+ODyJ87QooTsPtG1fzPxawADfDdOsTVVDEqZpxA3X4L9ZMuEsisrjyQm?=
- =?us-ascii?Q?uuZIYM1xxnMJ9HYKIb/x7wPPyBR5im0VIIV50UAt3pS7ZigYAMm2ko22Ca40?=
- =?us-ascii?Q?qJwmWR6cAsWNoM1QsV+ZYa+1rMyp32OAo5n0tABwkDceNIu5YJ9ScbhsbJGX?=
- =?us-ascii?Q?M2nnxkMx7lrOTxGCEncGQAzOeBajy6WwHklfqzFKIF29TUnVs0i+cvIZr+GS?=
- =?us-ascii?Q?8QYU7A1zwrG/TfYjxfHgnjM7lF4vcPIXa4zjc7S4N/SrbdeILtk/Fn8h+i6d?=
- =?us-ascii?Q?B4+wNEVy1D/3ZFvdfZXawDzBPu/2fIRnmPVaWfUgKxbm3pR2meqnRRilFgQt?=
- =?us-ascii?Q?dQq2U8rssNuOcARdpEfDTrC3/s/7sSzPvSI1YVOPqcHqIuJvQpCcOId7E7UA?=
- =?us-ascii?Q?6KHWLVGjtmY5tBkQesQMXhjEa0jLTHx20rzyIUpyvcj9523Ygf7qJtOiERqA?=
- =?us-ascii?Q?oDRtLP08rfrfJwWnBqAWDL//ODEw5CGj9ZhmAa/qqFePfiSiS5DPS4WwWyP0?=
- =?us-ascii?Q?M5lTWQdZLuJpokmaSDHCpxokWOjd5/WpyyDHFzAxGEZYHeo5ARF5MPYmp44v?=
- =?us-ascii?Q?8OVEAWvLB3oqDLK3diJX7MLsv/6NbvRgwQIuyRiNa91DXKD/ENrdE+e6lS2k?=
- =?us-ascii?Q?l/FSWlJ3TleOCFejwq3ejfPjKa0mm6ZlLmOEtoqc5QCxjd2cguwDX0HX4uW1?=
- =?us-ascii?Q?r8gCj9VxI4cXawzptj96nZjBozuMifitQawyiwBGAahy4Yl93vus+hytQVzB?=
- =?us-ascii?Q?7TdisXBurY4A5PEgeRZm9EWYglpwPHXXYjnnYSPL35AkytinwVsqNQbDN8Oy?=
- =?us-ascii?Q?Is9GpaJ1Q4ozphthN+51zyBVrbR6PE2+aWjqzlLBq7KHJfyosgtHPxz42Wtm?=
- =?us-ascii?Q?alBNwT6DLv5TQGd0A6RE3BRb/iUBS78Q+z2DRi1T7Ncjx4163K5bjoiAhhTp?=
- =?us-ascii?Q?4u7k8bqXgzV/PL4kDL8fKyiRP8nwhhbLK/CODPpSPYrwf8d2VVZU2Q=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR06MB5140.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(52116014)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?/QKqyLA5QsQejFfLETWBsp4qcJPT95W60mouHbZpjZh1lFWvN73dibsM4YK7?=
- =?us-ascii?Q?Vvmo3qygNdg/WL773cx4wRu8JkkV6TBWmXqD+vGZMpvzeDmoTjmemYJy3xad?=
- =?us-ascii?Q?x4pDNyHHh6OLaPP4ZX2TR2uCr2Ixn60ZmedKFtR46LqSM37/rD7cv71c1OX8?=
- =?us-ascii?Q?/TvJCI/7tu9vQVvMLU7MVeAN9NAeL1C+p5RxVLgeIrmvrCJSxngJBSOl6bgz?=
- =?us-ascii?Q?95dEgrrOATzyxJkhCsLPVddCpvSQdqKDbV2sp/XbF7Ft3Un75njjM5LKyvVq?=
- =?us-ascii?Q?B/sJ3L6wdmcwsgIzQ5ag+bgeEgNia1Q0mdVO1WKl3d+5inLF+/M5ifd2IudR?=
- =?us-ascii?Q?nOXyWT/yZ+riclRbEI7pMO29Y85i7VXcBAaYkYEgVRX2CAkqwjQXbk61memB?=
- =?us-ascii?Q?2ovTu+RZYxP3d7Ae+zj/5q4aZW1pDKUtrdHa8By6D66Bts79j6NXzpF+lpW2?=
- =?us-ascii?Q?+nngK9k2Ba2Zn00zH8YdV/YunAwnunLQl5SCMUmMBV1Wqsoe+1oB2CiTIjcu?=
- =?us-ascii?Q?J6FFl6RBP8GbSHFFa8pgsyazvHkT1HjZzTGWcBcy5jNJLU1vL+GLW+MPG0kz?=
- =?us-ascii?Q?aWe3R9ok06VsP1ItTlqmLQDf99KNSXJo8RdTEVJgkRvUf5gBQXbM7BfXwAwV?=
- =?us-ascii?Q?MaBrnyxalj2dxzf4+a4gol8OYgWT5ljpYE9MzrdSfMTKNcKGkcnRhHoUQN6a?=
- =?us-ascii?Q?vsmVFn+mmO1/hT0GtYEkCPh8QmFQriNqit/g1XHLflhaHlFtFK2PR+28OOHy?=
- =?us-ascii?Q?KHSTvGjpNKK77OHaav1/KMr4Gzi3Qy8atXQanKg26WlSE7i+jgA1UR/6lLjz?=
- =?us-ascii?Q?fJh0y/NCpTw6ZGfgzteToOKemTahvIuInteHCIJGWC5TExmT+PoA8yf8HxBh?=
- =?us-ascii?Q?FRZDgYA4wAp8oy948FZi2S+CXSyJf/RllVd8xbeYqtrvsPXdTKD6UPcfHAu9?=
- =?us-ascii?Q?LjOCjkHS6MFRapQ5FJqu7dy+JKrguffRjd/YvJshhGXUA95HTsNbNPpB7W3I?=
- =?us-ascii?Q?XUi3RK42y5CpDiB0wdiJoFFVD5GjwAF+Iq35Av5WKJ1SKioEKlCVmecXXQG6?=
- =?us-ascii?Q?+QdrUz5UPWQRKs65sDOdSVdXjyZnmucVrYrZqw9i6CmqJqkWvYHs3W+14Xsn?=
- =?us-ascii?Q?BKrXWtZbxK66bsM5Z/ioKX9zgsWnLt4S4K95OC4VwI+2Doka31WK8h9Uxf5p?=
- =?us-ascii?Q?sw/y4rg1F7MPkplc/tN/563p9HvQqEQVZ9Uk9ocVUuKX7fwk/iti0/goIhvJ?=
- =?us-ascii?Q?X02ySj9g+n1XwJGhpyW+lwgVgQR2d9U+em5XAMHt81dBUxEqZ7bnzGD9yQxh?=
- =?us-ascii?Q?e6GoaUXU6wey60xHz04/zq14H58Yg8Ek5NPQX0Qs0ERRHtb88XvTl5+tdOLC?=
- =?us-ascii?Q?TtrCsY7nzZbis2E0JsdZaNzFAJwLUKdnsLmsTLwYyyEFypHymIh6qiDdVevk?=
- =?us-ascii?Q?hTuLZ+blev6bGdpClXCLFDvM3UTuXzkwgz7vTZqd5WyPcv/COnh8cpk2IAq3?=
- =?us-ascii?Q?VXKhojMJ1UqopOgSx3zg0wlHsu4XlawR9Ypm5KvgPRr+5cizMR9HbsrBtYZn?=
- =?us-ascii?Q?1L6TVndx1bP1Umsau3dN7spoa4DTbnusfQyyvXsg?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 00367fdd-947f-42e5-b45b-08ddbe8fb978
-X-MS-Exchange-CrossTenant-AuthSource: SI2PR06MB5140.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2025 02:24:26.5399
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: n9Qu1BeOnTkloArW0rrraLUm/qcJrtWbrcCWdvJZrCfIepgKXZtifxqWTzAV3odtSGngCZXfPpVIfXY1MLGh2Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY2PPF4597475D5
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGXVbWgC/4XNSwrCMBCA4atI1kbyrMGV9xApSTpqoDY109aK9
+ O7G4sKF0s3AMMP3PwlCCoBkt3qSBEPAEJu88PWK+IttzkBDlXcimNCs4IL2bWU7KPsGY106b7E
+ r2xQdlAmwpd6YrSnA6UIxko02wSmMs38g95CgBkTawNiRYz5fAnYxPeb6wOenT8gshAZOGXXgK
+ 1BcMGf1PiJubr2tfbxeN3nMgUF8oYItoSKj0hunTsAqo9UfVH6hchGVb1Qr5Yz03jD+A52m6QU
+ rrCgeigEAAA==
+X-Change-ID: 20250612-update_unsol_bcast_probe_resp-c88786eb5640
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yuvarani V <quic_yuvarani@quicinc.com>,
+        Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Proofpoint-ORIG-GUID: VxBO9EU9QLn4-xmE6tyhSP3AUNo24XpJ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA5MDAyMyBTYWx0ZWRfXwXJUiTGshrt3
+ lDvoNtUoIbv2zRASPG+8jzKsKOtcLHbpbrZ0t0aZ+AADOgI18IVrgjeOas4zqj582NKoYJQzNbp
+ wDj8WEaA6ztSIpXEjAH6YHiHyQPTFZ4zyEcVkumTcGnl0OMIkr4Vt10Sl6RPAk+tNS8XQ7ue+xk
+ CJcT5LI5uSd7QnhDuwLcvj6s/kktn0sy1mi1ZRStZ5wN0PbF7xh5MCxA0xQ7+4Av4hoSvllBuwD
+ 332xIOap6NodK9oc0FVTOXWHvQJoNIw4dN1MzV/WovvuIYz3qljkJIWCluotuZ8QQwzNViESHgg
+ RXtusY65ZjZ6Dp4JCUX3ZvajyZdFP5LRX1F5+EMneAL26xLyEbONe5o+ac9vbBZaVXzps2V+KNV
+ 86b5dwFh9WgTNIyFvfJImmPkxAD/IIdnO192ZLOuS+u8IeJdtMmkNZ/hEwfvbFCrBNjm9Vi/
+X-Authority-Analysis: v=2.4 cv=Rd2QC0tv c=1 sm=1 tr=0 ts=686dd571 cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=oCrXEwr5G_U2PBqafwoA:9
+ a=QEXdDO2ut3YA:10 a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-GUID: VxBO9EU9QLn4-xmE6tyhSP3AUNo24XpJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
+ definitions=2025-07-09_01,2025-07-08_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 suspectscore=0 mlxscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 impostorscore=0 spamscore=0 phishscore=0 priorityscore=1501
+ adultscore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507090023
 
-Use min()/max() to reduce the code and improve its readability.
+Currently, during channel switch and color change events, the unsolicited
+probe response templates are not updated accordingly.
 
-Signed-off-by: Qianfeng Rong <rongqianfeng@vivo.com>
+This patch series introduces support for parsing the updated templates from
+these events and setting the appropriate BSS changed flag, enabling drivers
+to respond with the necessary actions.
+
 ---
- .../wireless/realtek/rtlwifi/rtl8192ce/hw.c   | 19 +++----------------
- .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 17 +++--------------
- .../wireless/realtek/rtlwifi/rtl8192ee/dm.c   |  5 +----
- .../wireless/realtek/rtlwifi/rtl8723ae/hw.c   | 15 +++------------
- .../wireless/realtek/rtlwifi/rtl8723be/dm.c   |  5 +----
- .../wireless/realtek/rtlwifi/rtl8821ae/dm.c   |  5 +----
- 6 files changed, 12 insertions(+), 54 deletions(-)
+Yuvarani V (2):
+      wifi: cfg80211: parse attribute to update unsolicited probe response template
+      wifi: mac80211: parse unsolicited broadcast probe response data
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 5ca6b49e73c7..dac6e271410d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -1487,22 +1487,9 @@ _rtl92ce_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 			rtlefuse->txpwrlevel_ht40_1s[rf_path][i] =
- 			    rtlefuse->
- 			    eeprom_chnlarea_txpwr_ht40_1s[rf_path][index];
--
--			if ((rtlefuse->
--			     eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
--			     rtlefuse->
--			     eprom_chnl_txpwr_ht40_2sdf[rf_path][index])
--			    > 0) {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
--				    rtlefuse->
--				    eeprom_chnlarea_txpwr_ht40_1s[rf_path]
--				    [index] -
--				    rtlefuse->
--				    eprom_chnl_txpwr_ht40_2sdf[rf_path]
--				    [index];
--			} else {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] = 0;
--			}
-+			rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
-+				max(rtlefuse->eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
-+				    rtlefuse->eprom_chnl_txpwr_ht40_2sdf[rf_path][index], 0);
- 		}
- 
- 		for (i = 0; i < 14; i++) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index ec5d558609fe..95b1098426d5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -163,20 +163,9 @@ _rtl92cu_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 			rtlefuse->txpwrlevel_ht40_1s[rf_path][i] =
- 			    rtlefuse->
- 			    eeprom_chnlarea_txpwr_ht40_1s[rf_path][index];
--			if ((rtlefuse->
--			     eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
--			     rtlefuse->
--			     eprom_chnl_txpwr_ht40_2sdf[rf_path][index])
--			    > 0) {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
--				    rtlefuse->
--				    eeprom_chnlarea_txpwr_ht40_1s[rf_path]
--				    [index] - rtlefuse->
--				    eprom_chnl_txpwr_ht40_2sdf[rf_path]
--				    [index];
--			} else {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] = 0;
--			}
-+			rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
-+				max(rtlefuse->eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
-+				    rtlefuse->eprom_chnl_txpwr_ht40_2sdf[rf_path][index], 0);
- 		}
- 		for (i = 0; i < 14; i++) {
- 			RTPRINT(rtlpriv, FINIT, INIT_TXPOWER,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-index 17486e3f322c..0108850bb9e5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-@@ -223,10 +223,7 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
- 
- 	if (mac->link_state >= MAC80211_LINKED) {
- 		if (bfirstconnect) {
--			if (dm_dig->rssi_val_min <= dig_maxofmin)
--				current_igi = dm_dig->rssi_val_min;
--			else
--				current_igi = dig_maxofmin;
-+			current_igi = min(dm_dig->rssi_val_min, dig_maxofmin);
- 
- 			dm_dig->large_fa_hit = 0;
- 		} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 21b827f519b6..26ff551f054d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1449,18 +1449,9 @@ _rtl8723e_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 				rtlefuse->eeprom_chnlarea_txpwr_ht40_1s
- 					[rf_path][index];
- 
--			if ((rtlefuse->eeprom_chnlarea_txpwr_ht40_1s
--					[rf_path][index] -
--			     rtlefuse->eprom_chnl_txpwr_ht40_2sdf
--					[rf_path][index]) > 0) {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
--				  rtlefuse->eeprom_chnlarea_txpwr_ht40_1s
--				  [rf_path][index] -
--				  rtlefuse->eprom_chnl_txpwr_ht40_2sdf
--				  [rf_path][index];
--			} else {
--				rtlefuse->txpwrlevel_ht40_2s[rf_path][i] = 0;
--			}
-+			rtlefuse->txpwrlevel_ht40_2s[rf_path][i] =
-+				max(rtlefuse->eeprom_chnlarea_txpwr_ht40_1s[rf_path][index] -
-+				    rtlefuse->eprom_chnl_txpwr_ht40_2sdf[rf_path][index], 0);
- 		}
- 
- 		for (i = 0; i < 14; i++) {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-index c53f95144812..c65d14fb914f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-@@ -468,10 +468,7 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
- 
- 	if (mac->link_state >= MAC80211_LINKED) {
- 		if (bfirstconnect) {
--			if (dm_digtable->rssi_val_min <= dig_maxofmin)
--				current_igi = dm_digtable->rssi_val_min;
--			else
--				current_igi = dig_maxofmin;
-+			current_igi = min(dm_digtable->rssi_val_min, dig_maxofmin);
- 
- 			dm_digtable->large_fa_hit = 0;
- 		} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-index 76b5395539d0..f8b159c74658 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-@@ -756,10 +756,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 		rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
- 			"DIG AfterLink\n");
- 		if (first_connect) {
--			if (dm_digtable->rssi_val_min <= dig_max_of_min)
--				current_igi = dm_digtable->rssi_val_min;
--			else
--				current_igi = dig_max_of_min;
-+			current_igi = min(dm_digtable->rssi_val_min, dig_max_of_min);
- 			rtl_dbg(rtlpriv, COMP_DIG, DBG_LOUD,
- 				"First Connect\n");
- 		} else {
--- 
-2.34.1
+ include/net/cfg80211.h |  4 ++++
+ net/mac80211/cfg.c     | 12 ++++++++++++
+ net/wireless/nl80211.c | 17 +++++++++++++++++
+ 3 files changed, 33 insertions(+)
+---
+base-commit: cc2b722132893164bcb3cee4f08ed056e126eb6c
+change-id: 20250612-update_unsol_bcast_probe_resp-c88786eb5640
 
