@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD9A838F80;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C2A12F509B;
 	Wed, 16 Jul 2025 12:56:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752670584; cv=none; b=bH4HjSRjXJrEH0KAEAo1BrJwT527LS6d/1nwe6ojbNTQPe7hRfnhq8vADg4m9HJeC+2iSlElmAUv3wNGQzPNro4J5eBhFZnmtPGhVMGszYdjvy9tbwQB+oaLtTUXsml+lonkANSM15eLPPIJAtI53xE7pU8rL4nf3aJDA7M616g=
+	t=1752670585; cv=none; b=I3G2qF6BLdcx08pCb4nFKvD89HTT1BaLPMPQ/uDet0qWAHCzqaK35kAyvk0UmS3j2bWNGWMcsweUUDRZnlcrhUWd67dpXFvbJ7fpHOPjt/m1JiDLio+q/WOtcT4QWer5mgRon7RoCatYjXLwj+5/CgNqsNO2zn7ZMWdnCUajbCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752670584; c=relaxed/simple;
-	bh=XJHu0BU6B2oAYGh4zlJhKIwWPQugh47Z5AJ6yeiT7Z4=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Zg6bZErzJe22O+nJ2h/gEZauXNezbJyWNrF4SQQBxZ46bvyeCf7W9NDxPtvyfOQ3kaKqjZzQSaocAB8RRICCJpdutw+QfxB4LBTidFq9gXjYkRChHunw/BgvRgDofkRe7hIP47o7wTzyiX8ZbXHqKmRS+cyHf8afC466eVZ4pcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T6f37LOL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752670585; c=relaxed/simple;
+	bh=U4+/0Kn/irzrlmqtgZxjxMU14G54Aznp8RGU4IoJb5I=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=DEBH1SXK4UPwxl9ONhj8bVdKSsbzQ93e8uwRI067F7fSm/F6o9exXESgNzP1iac++XUhKhP6niFSTW4PvMAgKI26DYfr9Q0xVft6FXynM2cmQKfG1k7qp+IyFCz1dpgnWIujQy+rsir7ZBV31pcq0lLgUF6mno0CNYgKiMaqt58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V2PClDU2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T6f37LOL"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A128EC4CEF4;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V2PClDU2"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C5B09C4CEF6;
 	Wed, 16 Jul 2025 12:56:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1752670584;
-	bh=XJHu0BU6B2oAYGh4zlJhKIwWPQugh47Z5AJ6yeiT7Z4=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=T6f37LOL55CAf6De29GNzmhzCyVDSGnGtukns/GoO03iBooiZmthuBpMqVQlRYK9C
-	 W46IF4PieyurJp8WQmqlUCMT2R/HP6hJfdJljwXpZ1UaRYu33EAm/kZFPgYEfpJUuW
-	 enp5lezsZOWEYssn+Ykp98f5p6itslJv5lBa8x5x0hyIV56ZXdA69YxkboqlMNFG4+
-	 VeXyb2H3+7qXz6eugC8jNqjNHjrgn9lcgl416dpT0qFLHF9mYZnCj1LKUG5k/yQJoT
-	 5VID/Ks5gM3fZ1K1sQROXTiWOPRZ4dP4ZjlA5AqshFYzpkw74x8v1X4JrHxn5wUQ3r
-	 DLMdbaHUJmXNQ==
+	bh=U4+/0Kn/irzrlmqtgZxjxMU14G54Aznp8RGU4IoJb5I=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=V2PClDU2jQbChUUrLMEO13Ovau/25TPy5Qs9+Uu24QtGnbF1CfygyYdQ8C/zkQ8zZ
+	 42Tmr5MwhKGU6IonKo5wWFIVxzpj1a0d0RS0vd1P/1XB6Pjhfc3wT7kq19PaCaYdxz
+	 GrmoyU7aXJqg7RLgX7QXVXIXTqXW89QRZr6UPZ3huq987SrV6umuyn7/4rb7OqW4sO
+	 egPGuoMp4lVUGbMCogYVxP6r5vNPg9DvCf4xrtLUrqpffSX3CQUsUutPd8aY5MpyZo
+	 LpTNGpYIQuzXCUxKdWQ9IbXm2xRIUeSPFUADypCZA5PQD2CDo6PfKH2jODRs461jog
+	 ZQS7kyA7r5UKQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E9C6C83F22;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B47C8C83F34;
 	Wed, 16 Jul 2025 12:56:24 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH 0/6] PCI/ASPM: Fix pci_enable_link_state*() APIs behavior
-Date: Wed, 16 Jul 2025 18:26:19 +0530
-Message-Id: <20250716-ath-aspm-fix-v1-0-dd3e62c1b692@oss.qualcomm.com>
+Date: Wed, 16 Jul 2025 18:26:21 +0530
+Subject: [PATCH 2/6] PCI/ASPM: Transition the device to D0 (if required)
+ inside pci_enable_link_state_locked() API
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,10 +41,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHOhd2gC/x2MQQqAMAzAviI9W7BjMvQr4qFodT04ZRURxL87P
- CaQPGCSVQz66oEsl5ruqQDVFUyR0yqoc2FwjWubQIR8RmQ7Nlz0xomC945b7ligJEeWov/dML7
- vBxDLtA5eAAAA
-X-Change-ID: 20250711-ath-aspm-fix-c17442a5a9ae
+Message-Id: <20250716-ath-aspm-fix-v1-2-dd3e62c1b692@oss.qualcomm.com>
+References: <20250716-ath-aspm-fix-v1-0-dd3e62c1b692@oss.qualcomm.com>
+In-Reply-To: <20250716-ath-aspm-fix-v1-0-dd3e62c1b692@oss.qualcomm.com>
 To: Jeff Johnson <jjohnson@kernel.org>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -57,19 +57,18 @@ Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
  ilpo.jarvinen@linux.intel.com, linux-arm-msm@vger.kernel.org, 
  linux-pci@vger.kernel.org, 
  Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Qiang Yu <qiang.yu@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2631;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4214;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=XJHu0BU6B2oAYGh4zlJhKIwWPQugh47Z5AJ6yeiT7Z4=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBod6F2iDbObtlH1SjC+CqMAksFgzOriAQ1Avz7v
- IVgkpT7eMSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaHehdgAKCRBVnxHm/pHO
- 9YnKB/wIw+Evh74fkz1+e3zKFQWHQKJJSazZGHS5g4sICCMPZ/4M93vTf+iLF4Blp3veDJhLy1B
- BGe8V3AJq+xqMdOOWmaPj/fEy7ukevvMlLZHnS5yHIrebv9ehwe60fjePHZ+kkwke2JXgh5SMn2
- aoNSydN026Nm+C+XW0IVVbZqMpsq3pFyN5MLTUVKM9zREWmmg/RAd75jPZ0oWkNiqzEj2C4XoVV
- M3swsNxSU7uFYHGzLxGFSLk3zf3Sm1Tl48owufc1zv9xTnXYeobMvQIsx4hvQSBACG7gwFxjUmc
- 4epgfpo4UEHaA5y6LDHB/oAZex/9Q6hTaG0SGH/st9KFUCxN
+ bh=Hi5J0pIF+iWnkMGXfocryMcFDAOXrwL22J4M8mGbdSU=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBod6F2CULXLp8rTJpaJVU7H5c1oqS0BGUk5g7I+
+ 9t4OEB1veSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaHehdgAKCRBVnxHm/pHO
+ 9fArB/9FulOSF4tSr+TT1URdaKWzJq1L7LhC7QODyaVsCQBKBBC1uFuFWVGCpMmJpWKVcC1QV7e
+ E3MHNYuim9To+6GoJLEp1Xa5gftbc7lcqYJ3SFfDMAM4UsRu4eaegzWr6t3IayzMolyP3mn9woe
+ UPzil9ZKDZZHbRZP/XDlj8B22yKN4Qvhldr0cpiziVqDqnb4Yjs6UzN/Oddr+66zOWQLhnmLb01
+ RTniSwmV1Cz4hql1VvETn4DVr1SI+QdHJfPEF3rWQXp34o6LpRm5LfRrKrei+ARJHZW2ZqwmFZm
+ tqJib9vtul6W0+aSZ8Nu0DRIpe2lx1NHo3FmLmdbe1oGkHuA
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -77,64 +76,112 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series fixes the behavior of the pci_enable_link_state() and
-pci_enable_link_state_locked() APIs to be in symmetry with
-pci_disable_link_state*() couterparts.
+Both of the current callers of the pci_enable_link_state_locked() API
+transition the device to D0 before calling. This aligns with the PCIe spec
+r6.0, sec 5.5.4:
 
-First 3 patches fixes and cleans up the ASPM code and the last 3 patches
-modifies the atheros drivers to use the pci{enable/disable}_link_state() APIs
-instead of modifying the LNKCTL register directly for enabling ASPM.
+"If setting either or both of the enable bits for PCI-PM L1 PM Substates,
+both ports must be configured as described in this section while in D0."
 
-NOTE: The current callers of the pci_enable_link_state_locked() APIs (vmd and
-pcie-qcom) drivers doesn't look like depending on the old behavior of the API. I
-can atleast assure that for pcie-qcom. For VMD, it would be great if VMD folks
-CCed could provide their review tags for patch 1/6.
-
-Testing
-=======
-
-I've tested this series on Lenovo Thinkpad T14s with WCN7850 chipset (so that's
-just ath12k driver). Rest of the drivers are compile tested only.
-
-Merging Strategy
-================
-
-Even though there is no build dependency between PCI core and atheros patches,
-there is a functional dependency. So I'd recommend creating an immutable branch
-with PCI patches and merging that branch into both PCI and linux-wireless trees
-and finally merging the atheros patches into linux-wireless tree.
-
-If immutable branch seems like a hassle, then PCI core patches could get merged
-for 6.17 and atheros patches can wait for 6.18.
-
-- Mani
+But it looks redundant to let the callers transition the device to D0. So
+move the logic inside the API and perform D0 transition only if the PCI-PM
+L1 Substates are getting enabled.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Manivannan Sadhasivam (6):
-      PCI/ASPM: Fix the behavior of pci_enable_link_state*() APIs
-      PCI/ASPM: Transition the device to D0 (if required) inside pci_enable_link_state_locked() API
-      PCI/ASPM: Improve the kernel-doc for pci_disable_link_state*() APIs
-      wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
-      wifi: ath11k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
-      wifi: ath10k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
+ drivers/pci/controller/dwc/pcie-qcom.c |  5 -----
+ drivers/pci/controller/vmd.c           |  5 -----
+ drivers/pci/pcie/aspm.c                | 22 ++++++++++++++++++----
+ 3 files changed, 18 insertions(+), 14 deletions(-)
 
- drivers/net/wireless/ath/ath.h         | 14 ++++++
- drivers/net/wireless/ath/ath10k/pci.c  |  7 +--
- drivers/net/wireless/ath/ath11k/pci.c  | 10 ++---
- drivers/net/wireless/ath/ath12k/pci.c  | 10 ++---
- drivers/pci/controller/dwc/pcie-qcom.c |  5 ---
- drivers/pci/controller/vmd.c           |  5 ---
- drivers/pci/pcie/aspm.c                | 78 ++++++++++++++++++++++++----------
- 7 files changed, 79 insertions(+), 50 deletions(-)
----
-base-commit: 19272b37aa4f83ca52bdf9c16d5d81bdd1354494
-change-id: 20250711-ath-aspm-fix-c17442a5a9ae
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index c789e3f856550bcfa1ce09962ba9c086d117de05..204f87607c0bc1ce31299aa5a5763b564ddeda29 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1018,11 +1018,6 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+ 
+ static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
+ {
+-	/*
+-	 * Downstream devices need to be in D0 state before enabling PCI PM
+-	 * substates.
+-	 */
+-	pci_set_power_state_locked(pdev, PCI_D0);
+ 	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
+ 
+ 	return 0;
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 8df064b62a2ff3e22dd8507a66783ca6c6a8b777..cf11036dd20cbae5d403739b226452ce17c4cb7f 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -765,11 +765,6 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
+ 	pci_info(pdev, "VMD: Default LTR value set by driver\n");
+ 
+ out_state_change:
+-	/*
+-	 * Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
+-	 * PCIe r6.0, sec 5.5.4.
+-	 */
+-	pci_set_power_state_locked(pdev, PCI_D0);
+ 	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
+ 	return 0;
+ }
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index ec63880057942cef9ffbf3f67dcd87ee3d2df17d..c56553de953c158cf9e8bf54c6b358a9a81a2691 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1474,13 +1474,20 @@ static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked)
+  * Note that if the BIOS didn't grant ASPM control to the OS, this does
+  * nothing because we can't touch the LNKCTL register.
+  *
+- * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
+- * PCIe r6.0, sec 5.5.4.
++ * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
++ * are getting enabled.
+  *
+  * Return: 0 on success, a negative errno otherwise.
+  */
+ int pci_enable_link_state(struct pci_dev *pdev, int state)
+ {
++	/*
++	 * Ensure the device is in D0 before enabling PCI-PM L1 PM Substates, per
++	 * PCIe r6.0, sec 5.5.4.
++	 */
++	if (FIELD_GET(PCIE_LINK_STATE_L1_SS_PCIPM, state))
++		pci_set_power_state(pdev, PCI_D0);
++
+ 	return __pci_enable_link_state(pdev, state, false);
+ }
+ EXPORT_SYMBOL(pci_enable_link_state);
+@@ -1494,8 +1501,8 @@ EXPORT_SYMBOL(pci_enable_link_state);
+  * Note that if the BIOS didn't grant ASPM control to the OS, this does
+  * nothing because we can't touch the LNKCTL register.
+  *
+- * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
+- * PCIe r6.0, sec 5.5.4.
++ * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
++ * are getting enabled.
+  *
+  * Context: Caller holds pci_bus_sem read lock.
+  *
+@@ -1505,6 +1512,13 @@ int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
+ {
+ 	lockdep_assert_held_read(&pci_bus_sem);
+ 
++	/*
++	 * Ensure the device is in D0 before enabling PCI-PM L1 PM Substates, per
++	 * PCIe r6.0, sec 5.5.4.
++	 */
++	if (FIELD_GET(PCIE_LINK_STATE_L1_SS_PCIPM, state))
++		pci_set_power_state(pdev, PCI_D0);
++
+ 	return __pci_enable_link_state(pdev, state, true);
+ }
+ EXPORT_SYMBOL(pci_enable_link_state_locked);
 
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.45.2
 
 
