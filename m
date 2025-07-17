@@ -1,87 +1,193 @@
-Received: from e3i105.smtp2go.com (e3i105.smtp2go.com [158.120.84.105])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 229762FE333
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 15:55:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.84.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8722FA65D;
+	Thu, 17 Jul 2025 16:00:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752767761; cv=none; b=o2ZQAQHDc8Ln1yID3kp951nPcyCYLcpZyWFPhz5Gcu9OOHnwmL1ujV5cedgKjB3YJ0bjGZf5lzzNnufj6IZZ1cxEx+CHUWUILKkEDADV5c85LhFrpEB9otgTkAblsuigUP/c/rh2AIXalZ803X9lsemdO7MWDFVpx3YiFRgCtvc=
+	t=1752768009; cv=none; b=EcF4dUyjsJ+mZLPpRqiVoO0WzGzn77r5nAB510WBD33t2ox8WARhuFHE5cSmGL8OH851tDa78cQS1JYqivaekzunoZk2nE5g7dbyowXicJhfwGGrUlztHaYRGTRwqaXWDf9eiOe925plf8nwgpqXcLwepEIfaADCbkfV9O2pVsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752767761; c=relaxed/simple;
-	bh=U47f9WVWX49XwgYkmvGT+3joZrWkuzftZnBDgHqGLyw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sKWGMHCF+UAoEqX6rt6l8UjDu9IaGdQSaAjdvV97hV4oWnsQ11TIMpc71KLsfsVWoV0WAvz1I+SmLTSBEbTYzicfQt4MqKio9hQRYK36PZ6ZOiNJG+mMXTk87Zuj31Tn5DgqtxFKyW5UZVj7UZkQgEEZInSmuoKPOfbluO1QRQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b=NPng9LZM; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=cemtNlFI; arc=none smtp.client-ip=158.120.84.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
+	s=arc-20240116; t=1752768009; c=relaxed/simple;
+	bh=ozatPYm8SkCRErUJZAqo7DV6TZZ+7eY1RkGwfl3kkqY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RY4Vk93ylDiQ/n+04GQ+53i1yX8ecCoMRnKPUBBwWE4OkUtd1ZBbPNFtv8AybJdJShtU6YzmFwSwa2mneksD+kzNlR9GHyxVlHEe1nwXUcy3FZsF/EVx005/ZXPooJOih9MKC5Ygzuzs/Y9Gp0jekgyZ1yent4B/+euycL8qNCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gBMpdII8; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smtpservice.net header.i=@smtpservice.net header.b="NPng9LZM";
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="cemtNlFI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smtpservice.net;
- i=@smtpservice.net; q=dns/txt; s=a1-4; t=1752767753; h=feedback-id :
- x-smtpcorp-track : date : message-id : to : subject : from : reply-to
- : sender : list-unsubscribe : list-unsubscribe-post;
- bh=OYtEACTZzGea53FbOPy1SO3CM3inWtkbAiQquRgeXPc=;
- b=NPng9LZMj7Ry49FungneUI525kgnJne7+dUqzYMZ7TgSWcVtjWeDC/9frPXkXdI/Nps0Q
- ZCmRozsBmUS2vET0I5TcNq5PCwmwUbbazWbiPtwjOurYlSftFrjzBvmb6ZadVXpmCAKrcnH
- 6vtJn7A7sUwRUlrvj58ea86swu8rjmAVX5HiUTcxoh3bRNzhDRKqxSnfTxzQTf99zULHaj/
- K5ME/H7NKjLMdBD6kepBDhkVAsQua+c+/TvfCHPGWGbb/cPLHWSvi4/AiaQ5kVxusHj32pz
- k1n8jYfwYlOUkEbDCo5bs4AE6rNT7EHHrOT0jMW2Q9YU0qKD//UN1fihdMyQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1752767753; h=from : subject
- : to : message-id : date;
- bh=OYtEACTZzGea53FbOPy1SO3CM3inWtkbAiQquRgeXPc=;
- b=cemtNlFIKk/b8gNlyC8ZgLHBIalBVGRRuXbLtKsVKcDuIuNduAK6UCds2jU4jb/J25QVP
- SfSgayqEOD7T73yIUMbpCTa1+g6ft39ekQwGcLoY/JBNQk6yIRpSf0RLDjRQYj20NUMhnN7
- GdcKiNsYh6yvuO2LdFmasJ4fdGj4Q73MalK+FkVsHzMbfFBBnoZGfZ1Mgc8PWweuekpyMEr
- Qt5zcwHKTun16/JhiyKpurxpw1PP4xq0TqnfR6v7QMRRaMv9Mzyb2539rEbBo/xkqGAYTkH
- dYS5ZmvTo14gihhnSbeMOOEOjRJDMs/lJnUlKxsmeZjpejZNMwwLbyapd+Kw==
-Received: from [10.12.239.196] (helo=localhost)
-	by smtpcorp.com with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.1-S2G)
-	(envelope-from <repk@triplefau.lt>)
-	id 1ucQxZ-AIkwcC8pXvG-HvHi;
-	Thu, 17 Jul 2025 15:55:49 +0000
-From: Remi Pommarel <repk@triplefau.lt>
-To: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH wireless 0/2] Fix ieee80211_tx_h_select_key() for 802.11 encaps offloading
-Date: Thu, 17 Jul 2025 17:45:27 +0200
-Message-ID: <cover.1752765971.git.repk@triplefau.lt>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gBMpdII8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1752768008; x=1784304008;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ozatPYm8SkCRErUJZAqo7DV6TZZ+7eY1RkGwfl3kkqY=;
+  b=gBMpdII8leJoqx20gWOm0EuFjd9CWG8e4hcSyECr8ZTM8StgkccOpdFR
+   GtbUpI2y909DxEb5SnvvYk0ZN80R4ZqsIe1x5joJY1LI7h87VpDNitki4
+   CjV5wRMYkVKt/hcQA9aLZaiFuVQQ5Co5pbXmBxezZkWPPecjviZQf2yil
+   pRIpXBvzBEsB20ozg34NjNC1n6Uf0s96qMmAFWqn5vNPNfVQ8fLUSM5rV
+   WmlDhWIFpZrgsvtOx3BNO+dYCe0P0D2c34KMMnpLPd2pQI12dUchpz2+N
+   rmoI012qH+d3Sv521yYRVs5JbLrAz6uIuDu3UfiVUP1lsyhBjCgSQz2l2
+   Q==;
+X-CSE-ConnectionGUID: TBqp/MerR9KJHRBpiJPuFw==
+X-CSE-MsgGUID: XilDiSxZRnSGomzjdaaLHg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11495"; a="77585774"
+X-IronPort-AV: E=Sophos;i="6.16,319,1744095600"; 
+   d="scan'208";a="77585774"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2025 09:00:07 -0700
+X-CSE-ConnectionGUID: r095Z+45RpqpTaJi1g3AEg==
+X-CSE-MsgGUID: Nm1YwRngSc+K7tDnca0fbg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,319,1744095600"; 
+   d="scan'208";a="157501256"
+Received: from lkp-server01.sh.intel.com (HELO 9ee84586c615) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 17 Jul 2025 09:00:01 -0700
+Received: from kbuild by 9ee84586c615 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1ucR1a-000Dmh-0F;
+	Thu, 17 Jul 2025 15:59:58 +0000
+Date: Thu, 17 Jul 2025 23:59:43 +0800
+From: kernel test robot <lkp@intel.com>
+To: Alexander Wilhelm <alexander.wilhelm@westermo.com>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 07/11] wifi: ath12k: fix endianness handling in QMI bdf
+ download
+Message-ID: <202507172333.LZcmFwWs-lkp@intel.com>
+References: <20250716075100.1447352-8-alexander.wilhelm@westermo.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 510616m:510616apGKSTK:510616sQtDXqd4MU
-X-smtpcorp-track: 6yQpQZZNUOwW.5Q1-VyjFVtNd.2ftShAW6Ue5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250716075100.1447352-8-alexander.wilhelm@westermo.com>
 
-The fix in [0] introduces issue with mt7921 chips (at least), due to the
-802.11 encapsulation offloading support of those chips.
-ieee80211_tx_h_select_key() treated 802.3 frames as if they were 802.11
-ones causing the skb's control block hw_key to be invalid.
+Hi Alexander,
 
-The first patch fixes the root cause of this issue and the second one
-reapplies the initial use after free fix that has been temporarly
-reverted meanwhile.
+kernel test robot noticed the following build warnings:
 
-[0] https://lore.kernel.org/linux-wireless/06aa507b853ca385ceded81c18b0a6dd0f081bc8.1742833382.git.repk@triplefau.lt/
+[auto build test WARNING on ath/ath-next]
+[also build test WARNING on linus/master v6.16-rc6 next-20250717]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Remi Pommarel (2):
-  wifi: mac80211: Check 802.11 encaps offloading in
-    ieee80211_tx_h_select_key()
-  Reapply "wifi: mac80211: Update skb's control block key in
-    ieee80211_tx_dequeue()"
+url:    https://github.com/intel-lab-lkp/linux/commits/Alexander-Wilhelm/wifi-ath12k-fix-endianness-handling-in-QMI-host-capability-request/20250716-162058
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git ath-next
+patch link:    https://lore.kernel.org/r/20250716075100.1447352-8-alexander.wilhelm%40westermo.com
+patch subject: [PATCH 07/11] wifi: ath12k: fix endianness handling in QMI bdf download
+config: alpha-randconfig-r122-20250717 (https://download.01.org/0day-ci/archive/20250717/202507172333.LZcmFwWs-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 8.5.0
+reproduce: (https://download.01.org/0day-ci/archive/20250717/202507172333.LZcmFwWs-lkp@intel.com/reproduce)
 
- net/mac80211/tx.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202507172333.LZcmFwWs-lkp@intel.com/
+
+sparse warnings: (new ones prefixed by >>)
+>> drivers/net/wireless/ath/ath12k/qmi.c:2996:37: sparse: sparse: bad assignment (+=) to restricted __le32
+
+vim +2996 drivers/net/wireless/ath/ath12k/qmi.c
+
+  2919	
+  2920	static int ath12k_qmi_load_file_target_mem(struct ath12k_base *ab,
+  2921						   const u8 *data, u32 len, u8 type)
+  2922	{
+  2923		struct qmi_wlanfw_bdf_download_req_msg_v01 *req;
+  2924		struct qmi_wlanfw_bdf_download_resp_msg_v01 resp = {};
+  2925		struct qmi_txn txn;
+  2926		const u8 *temp = data;
+  2927		int ret = 0;
+  2928		u32 remaining = len;
+  2929	
+  2930		req = kzalloc(sizeof(*req), GFP_KERNEL);
+  2931		if (!req)
+  2932			return -ENOMEM;
+  2933	
+  2934		while (remaining) {
+  2935			req->valid = 1;
+  2936			req->file_id_valid = 1;
+  2937			req->file_id = cpu_to_le32(ab->qmi.target.board_id);
+  2938			req->total_size_valid = 1;
+  2939			req->total_size = cpu_to_le32(remaining);
+  2940			req->seg_id_valid = 1;
+  2941			req->data_valid = 1;
+  2942			req->bdf_type = type;
+  2943			req->bdf_type_valid = 1;
+  2944			req->end_valid = 1;
+  2945			req->end = 0;
+  2946	
+  2947			if (remaining > QMI_WLANFW_MAX_DATA_SIZE_V01) {
+  2948				req->data_len = cpu_to_le32(QMI_WLANFW_MAX_DATA_SIZE_V01);
+  2949			} else {
+  2950				req->data_len = cpu_to_le32(remaining);
+  2951				req->end = 1;
+  2952			}
+  2953	
+  2954			if (type == ATH12K_QMI_FILE_TYPE_EEPROM) {
+  2955				req->data_valid = 0;
+  2956				req->end = 1;
+  2957				req->data_len = cpu_to_le32(ATH12K_QMI_MAX_BDF_FILE_NAME_SIZE);
+  2958			} else {
+  2959				memcpy(req->data, temp, le32_to_cpu(req->data_len));
+  2960			}
+  2961	
+  2962			ret = qmi_txn_init(&ab->qmi.handle, &txn,
+  2963					   qmi_wlanfw_bdf_download_resp_msg_v01_ei,
+  2964					   &resp);
+  2965			if (ret < 0)
+  2966				goto out;
+  2967	
+  2968			ath12k_dbg(ab, ATH12K_DBG_QMI, "qmi bdf download req fixed addr type %d\n",
+  2969				   type);
+  2970	
+  2971			ret = qmi_send_request(&ab->qmi.handle, NULL, &txn,
+  2972					       QMI_WLANFW_BDF_DOWNLOAD_REQ_V01,
+  2973					       QMI_WLANFW_BDF_DOWNLOAD_REQ_MSG_V01_MAX_LEN,
+  2974					       qmi_wlanfw_bdf_download_req_msg_v01_ei, req);
+  2975			if (ret < 0) {
+  2976				qmi_txn_cancel(&txn);
+  2977				goto out;
+  2978			}
+  2979	
+  2980			ret = qmi_txn_wait(&txn, msecs_to_jiffies(ATH12K_QMI_WLANFW_TIMEOUT_MS));
+  2981			if (ret < 0)
+  2982				goto out;
+  2983	
+  2984			if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
+  2985				ath12k_warn(ab, "qmi BDF download failed, result: %d, err: %d\n",
+  2986					    resp.resp.result, resp.resp.error);
+  2987				ret = -EINVAL;
+  2988				goto out;
+  2989			}
+  2990	
+  2991			if (type == ATH12K_QMI_FILE_TYPE_EEPROM) {
+  2992				remaining = 0;
+  2993			} else {
+  2994				remaining -= le32_to_cpu(req->data_len);
+  2995				temp += le32_to_cpu(req->data_len);
+> 2996				req->seg_id += cpu_to_le32(1);
+  2997				ath12k_dbg(ab, ATH12K_DBG_QMI,
+  2998					   "qmi bdf download request remaining %i\n",
+  2999					   remaining);
+  3000			}
+  3001		}
+  3002	
+  3003	out:
+  3004		kfree(req);
+  3005		return ret;
+  3006	}
+  3007	
 
 -- 
-2.50.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
