@@ -1,196 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBC8228935C;
-	Thu, 17 Jul 2025 11:29:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C52762EAD0B;
+	Thu, 17 Jul 2025 13:46:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752751794; cv=none; b=N+oh+aEd+bVHkuIQV7mnccJJNqeeBvtZdde4k4zkeuXotRiMFckj9MhE/ygs2hapYR4YKpoDChsAwj7m2VNcrDdefAKPtmZZua8Q7dTJrCdiP+6qY+y38owSBZW63O0fUljOXZDWi+G39zioVtIKWT7A40T/uFHHYLv1zi/8jRc=
+	t=1752759969; cv=none; b=qQkRxi2/W+dtvlOSUzjTIht0CwDfX8nJoSdsGGgjnggfEjI0cLdrKi51HhcIuT0cc21zMElrMhmOcxm9Grs7wJBc4fbkkezVKkYB0zZZD27fQjhKXs1pJI3/JnfRZZ58/SAl5prykHVgTHu21T6vpVKlo6Jko7AEVrb7f+jTg9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752751794; c=relaxed/simple;
-	bh=1IupY/CooA5f6pTF5w5s9P710FrsORD0Fd3kcUZOJkk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gcovE+t6sYcMCxFs/+RF/57ylfMQ0DPqg7lzWwk2m3XjPpGuEJzuRSg4FH40uQFekNaNhk6ifNN7krbDGl7XDkx7ww8VKfP7Ui68fX8JhXonBid3kaDOMM7c8Al1mRQBTyBoHSXdZ6HOH057UIv5K1HTHK2v2MeNbnMWbRT3pCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D8KeEUQX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752759969; c=relaxed/simple;
+	bh=xYi0/WapeRzpmbObHuOB/kY1akJu7pL4zSBarvKzMK0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=h0ca1hjUsyZodD28iC9SYmz75cSbidgFVMakesAAXEXTHk7M+h+D7Vd/1kfZDAgeIsIN9kOkw5yU3xNcl2X4gQt61NLwSuhNSozUF3L+rYalACBz0vVj2cyqdS/7PQwaxLT4xtKyXcSoaxeR8D+QEKx3hjZjO4+vgvk14cOtl00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Goog9wO2; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D8KeEUQX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81258C4CEE3;
-	Thu, 17 Jul 2025 11:29:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752751794;
-	bh=1IupY/CooA5f6pTF5w5s9P710FrsORD0Fd3kcUZOJkk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D8KeEUQXcg+1wnwbQNzAzQ/n9tnkOAg7Au4X3cFOHr7O4BvmKNAB/yHXs0QaRPvu9
-	 OXfKJmgdOGZeO8BnednyRslMU3sZhQdALSDu5F/k42bKOS2H+GlKvGro9zMHxbhbFs
-	 3FtlsoYJXdxINg3qjEGUcQUkqS6lpVGd/cSgFLbpSZGQJOC7i1MPrTdzsl67kHdCzs
-	 SZh2XGyU0SXLPyskQ+d2hNQs1C9xxmcHcSjFawNXYRFUFIrAjreR35aEbZpbXfCHYr
-	 O8KE5bgHoXe84Mvy38u4gaaeu2zWhiTD3uWSN28rke7U/AfOKhYZ8yELOR64NfuA73
-	 4oilaLZmvjm0A==
-Date: Thu, 17 Jul 2025 16:59:42 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Jeff Johnson <jjohnson@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-	Jonathan Derrick <jonathan.derrick@linux.dev>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	ath12k@lists.infradead.org, ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-	Bjorn Helgaas <helgaas@kernel.org>, ilpo.jarvinen@linux.intel.com, linux-arm-msm@vger.kernel.org, 
-	linux-pci@vger.kernel.org, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>
-Subject: Re: [PATCH 4/6] wifi: ath12k: Use pci_{enable/disable}_link_state()
- APIs to enable/disable ASPM states
-Message-ID: <o2gqqty6lakc4iw7vems2dejh6prjyl746gnq4gny4sxdxl65v@zmqse3244afv>
-References: <20250716-ath-aspm-fix-v1-0-dd3e62c1b692@oss.qualcomm.com>
- <20250716-ath-aspm-fix-v1-4-dd3e62c1b692@oss.qualcomm.com>
- <38ace6a3-d594-4438-a193-cf730a7b87d6@oss.qualcomm.com>
- <wyqtr3tz3k2zdf62kgtcepf3sedm7z7wacv27visl2xsrqspmq@wi4fgef2mn2m>
- <03806d02-1cfc-4db2-8b63-c1e51f5456e2@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Goog9wO2"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=xYi0/WapeRzpmbObHuOB/kY1akJu7pL4zSBarvKzMK0=;
+	t=1752759964; x=1753969564; b=Goog9wO2TvJ+urvScy3UGVhd8bgY771IiukNU3TldgIG5mK
+	sQoGCTEJL0sygZ3dI97z1cSNBK0bvvQSL4off6llAEwqksQgDkyM8JW7w1VJzrTIn9VParI1uyorf
+	x8zapUWHQJBPSxTgaYNAFiOPFM6qa+Tlo3JmJUkXPR2bFYyRqxx4e5fKLmWo02s4fNSVmFUOcTNxl
+	re2fINwF0EyUDUg3NhTZmubxWQsHTCBRsmVGUmfc8Yo6/4lgL+g42O9aJe3dvHw96xRmuUTDoWYGc
+	vKTSMzoNcKiBUnT/hQegifvESoNxz7tUbw2YJbv964ZTlVjhzZcCqSNxSMLbiEsw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1ucOvx-0000000Aeey-2J22;
+	Thu, 17 Jul 2025 15:46:01 +0200
+Message-ID: <fa538ba960369497f6d65c1448ab7710f76aa078.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless v2 1/2] wifi: mac80211: Update skb's control
+ block key in ieee80211_tx_dequeue()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Remi Pommarel <repk@triplefau.lt>, Bert Karwatzki <spasswolf@web.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org
+Date: Thu, 17 Jul 2025 15:46:00 +0200
+In-Reply-To: <aHj4zS_3uhDRhzDn@pilgrim>
+References: 
+	<06aa507b853ca385ceded81c18b0a6dd0f081bc8.1742833382.git.repk@triplefau.lt>
+	 <20250410215527.3001-1-spasswolf@web.de> <Z_jpq26P99qzPP1c@pilgrim>
+	 <1df3a3df19b77e3b8d1f71a3a93c61221ff46a6b.camel@web.de>
+	 <aHj4zS_3uhDRhzDn@pilgrim>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <03806d02-1cfc-4db2-8b63-c1e51f5456e2@oss.qualcomm.com>
+X-malware-bazaar: not-scanned
 
-On Thu, Jul 17, 2025 at 06:46:12PM GMT, Baochen Qiang wrote:
-> 
-> 
-> On 7/17/2025 6:31 PM, Manivannan Sadhasivam wrote:
-> > On Thu, Jul 17, 2025 at 05:24:13PM GMT, Baochen Qiang wrote:
-> > 
-> > [...]
-> > 
-> >>> @@ -16,6 +16,8 @@
-> >>>  #include "mhi.h"
-> >>>  #include "debug.h"
-> >>>  
-> >>> +#include "../ath.h"
-> >>> +
-> >>>  #define ATH12K_PCI_BAR_NUM		0
-> >>>  #define ATH12K_PCI_DMA_MASK		36
-> >>>  
-> >>> @@ -928,8 +930,7 @@ static void ath12k_pci_aspm_disable(struct ath12k_pci *ab_pci)
-> >>>  		   u16_get_bits(ab_pci->link_ctl, PCI_EXP_LNKCTL_ASPM_L1));
-> >>>  
-> >>>  	/* disable L0s and L1 */
-> >>> -	pcie_capability_clear_word(ab_pci->pdev, PCI_EXP_LNKCTL,
-> >>> -				   PCI_EXP_LNKCTL_ASPMC);
-> >>> +	pci_disable_link_state(ab_pci->pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
-> >>
-> >> Not always, but sometimes seems the 'disable' does not work:
-> >>
-> >> [  279.920507] ath12k_pci_power_up 1475: link_ctl 0x43 //before disable
-> >> [  279.920539] ath12k_pci_power_up 1482: link_ctl 0x43 //after disable
-> >>
-> >>
-> >>>  
-> >>>  	set_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags);
-> >>>  }
-> >>> @@ -958,10 +959,7 @@ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
-> >>>  {
-> >>>  	if (ab_pci->ab->hw_params->supports_aspm &&
-> >>>  	    test_and_clear_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags))
-> >>> -		pcie_capability_clear_and_set_word(ab_pci->pdev, PCI_EXP_LNKCTL,
-> >>> -						   PCI_EXP_LNKCTL_ASPMC,
-> >>> -						   ab_pci->link_ctl &
-> >>> -						   PCI_EXP_LNKCTL_ASPMC);
-> >>> +		pci_enable_link_state(ab_pci->pdev, ath_pci_aspm_state(ab_pci->link_ctl));
-> >>
-> >> always, the 'enable' is not working:
-> >>
-> >> [  280.561762] ath12k_pci_start 1180: link_ctl 0x43 //before restore
-> >> [  280.561809] ath12k_pci_start 1185: link_ctl 0x42 //after restore
-> >>
-> > 
-> > Interesting! I applied your diff and I never see this issue so far (across 10+
-> > reboots):
-> 
-> I was not testing reboot. Here is what I am doing:
-> 
-> step1: rmmod ath12k
-> step2: force LinkCtrl using setpci (make sure it is 0x43, which seems more likely to see
-> the issue)
-> 
-> 	sudo setpci -s 02:00.0 0x80.B=0x43
-> 
-> step3: insmod ath12k and check linkctrl
-> 
+Hi,
 
-So I did the same and got:
+On Thu, 2025-07-17 at 15:21 +0200, Remi Pommarel wrote:
+> I have ordered a mt7921 card so I could reproduce this and finally took
+> time to debug that.=C2=A0
 
-[ 3283.363569] ath12k_pci_power_up 1475: link_ctl 0x43
-[ 3283.363769] ath12k_pci_power_up 1480: link_ctl 0x40
-[ 3284.007661] ath12k_pci_start 1180: link_ctl 0x40
-[ 3284.007826] ath12k_pci_start 1185: link_ctl 0x42
+Oh wow, talk about dedication. Thank you!
 
-My host machine is Qcom based Thinkpad T14s and it doesn't support L0s. So
-that's why the lnkctl value once enabled becomes 0x42. This is exactly the
-reason why the drivers should not muck around LNKCTL register manually.
+> The issue comes to the fact that mt7921 uses 802.11
+> encapsulation offloading and as such we are calling
+> ieee80211_tx_h_select_key() on a 802.3 frame.
 
-> > 
-> > [    3.758239] ath12k_pci_power_up 1475: link_ctl 0x42
-> > [    3.758315] ath12k_pci_power_up 1480: link_ctl 0x40
-> > [    4.383900] ath12k_pci_start 1180: link_ctl 0x40
-> > [    4.384026] ath12k_pci_start 1185: link_ctl 0x42
-> > 
-> > Are you sure that you applied all the 6 patches in the series and not just the
-> > ath patches? Because, the first 3 PCI core patches are required to make the API
-> > work as intended.
-> 
-> pretty sure all of them:
-> 
-> $ git log --oneline
-> 07387d1bc17f (HEAD -> VALIDATE-pci-enable-link-state-behavior) wifi: ath12k: dump linkctrl reg
-> dbb3e5a7828b wifi: ath10k: Use pci_{enable/disable}_link_state() APIs to enable/disable
-> ASPM states
-> 392d7b3486b3 wifi: ath11k: Use pci_{enable/disable}_link_state() APIs to enable/disable
-> ASPM states
-> f2b0685c456d wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enable/disable
-> ASPM states
-> b1c8fad998f1 PCI/ASPM: Improve the kernel-doc for pci_disable_link_state*() APIs
-> b8f5204ba4b0 PCI/ASPM: Transition the device to D0 (if required) inside
-> pci_enable_link_state_locked() API
-> 186b1bbd4c62 PCI/ASPM: Fix the behavior of pci_enable_link_state*() APIs
-> 5a1ad8faaa16 (tag: ath-202507151704, origin/master, origin/main, origin/HEAD) Add
-> localversion-wireless-testing-ath
-> 
+Oh... Guess we could've thought about that, sorry. Though I would've
+thought ath12k will also do that. Maybe not in the config you were
+seeing the issue in?
 
-Ok!
+> This function casts the skb data as a 802.11 header regardless the skb
+> is 802.11 or not in order to decide if the info->control.hw_key needs to
+> be set. So the hw_key is likely to remain NULL in ieee80211_tx_dequeue()
+> and because mt7921 driver needs this key to be valid data frames are
+> dropped.
+>=20
+> Will send a patch so that ieee80211_tx_h_select_key() does not try to
+> get info from a ieee80211_hdr mapped on 802.3 packet data (i.e. when
+> IEEE80211_TX_CTL_HW_80211_ENCAP is set).
+>=20
 
-> 
-> > 
-> >>
-> >>>  }
-> >>>  
-> >>>  static void ath12k_pci_cancel_workqueue(struct ath12k_base *ab)
-> >>>
-> >>
-> >> In addition, frequently I can see below AER warnings:
-> >>
-> >> [  280.383143] aer_ratelimit: 30 callbacks suppressed
-> >> [  280.383151] pcieport 0000:00:1c.0: AER: Correctable error message received from
-> >> 0000:00:1c.0
-> >> [  280.383177] pcieport 0000:00:1c.0: PCIe Bus Error: severity=Correctable, type=Data Link
-> >> Layer, (Transmitter ID)
-> >> [  280.383184] pcieport 0000:00:1c.0:   device [8086:7ab8] error status/mask=00001000/00002000
-> >> [  280.383193] pcieport 0000:00:1c.0:    [12] Timeout
-> >>
-> > 
-> > I don't see any AER errors either.
-> 
-> My WLAN chip is attached via a PCIe-to-M.2 adapter, maybe some hardware issue? However I
-> never saw them until your changes applied.
-> 
+Sounds good!
 
-I don't think it should matter. I have an Intel NUC lying around with QCA6390
-attached via M.2. Let me test this change on that and report back the result.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+johannes
