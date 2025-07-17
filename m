@@ -1,119 +1,130 @@
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB211E5207
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 16:35:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B7A149C6F
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 17:14:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752770119; cv=none; b=PeOYT+NYlS32na5Bam0U71IuIvG9LAWX1xKUizycsAtaFglemFOMGfoRrx3nDPW/WMMKai+JApMvYAib8GulZTvJuDiEgz1ispCUT6D+8+Xl9xwqgRGd3SjkAPxDnlA13SbwspTCPXesZusM/MjUvmZ0Mz4w8QuaWyqgiSuVpuM=
+	t=1752772469; cv=none; b=KGdnHBfbvaXzr2FB1KgyZ8ZnykDaiSmG3dinQJnPuLbkLUXHYpnsxDVAH+YIOsykb1ULIs3Q2g/SLGVay9kUXnvLBKWoP6wGqAqV/WDYfRpvZj2ZF8X7UynpPkzqRY0ElUe42YJv3O16MG7RpDChnfVmyTlAY6lk9S/p21YfWCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752770119; c=relaxed/simple;
-	bh=0NFLL3me1XRe/ez3VDPXWm4Yf/vrm+BIForIRp/9Yo0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pRVrq4xUPzvmjhZ6V61aA+LR4JPdagNIrFEuXgIdUyV0o16/XIIL8ABk2ixVhwtwasAtyZPhDFk2B+22zUHjFBhREfwPEyTzxRLgSVXs6hvb7d8YZQ7IHBwKaKWE9HVwyf9/8rzx683j1XsehVfuK7smbS2fp922D277Wc1MlKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=FdW3Kql3; arc=none smtp.client-ip=5.252.227.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+	s=arc-20240116; t=1752772469; c=relaxed/simple;
+	bh=R2XPFw4AaWnvgOJBV5DYVm3/7vVANR9a9XeIQH3inJU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R4FBrxu0Zh+iXAUSH/MEVFwjVZsPaKztHGtblQmyk3g9xWfvShd2y8Xzd2HLvK+v4iUFkXGbMJMyDeJrY7DjZMX7dG3S34QI0k4dS8k+U3+oXFQbcY+NE0XuV840PdOglee3krOg3CMdv457gPlxoh1sc/j+4jSP/UuRglm1Y1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TboCK+3X; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="FdW3Kql3"
-From: Alexander Wetzel <Alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1752769689;
-	bh=0NFLL3me1XRe/ez3VDPXWm4Yf/vrm+BIForIRp/9Yo0=;
-	h=From:To:Cc:Subject:Date;
-	b=FdW3Kql3DqkNH7zAm/XHtyb2EFrV+MydNCb4zW8KkS/hzMwfOEa5S9LVLxAWOJ8CU
-	 3GF80BO24Lnkar9FN3VhS/LIQMj8Ab4yxDl6Ci75IWBrUsCEFnJabaXTrHKPYhMVZB
-	 QGq1Dwlz61fM6YRueSQqNEgy8h4ogvRoLAkLqhEI=
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Alexander Wetzel <Alexander@wetzel-home.de>
-Subject: [PATCH wireless] wifi: cfg80211: Add missing lock in cfg80211_check_and_end_cac()
-Date: Thu, 17 Jul 2025 18:25:45 +0200
-Message-ID: <20250717162547.94582-1-Alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.50.0
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TboCK+3X"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56HBGXdu022439
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 17:14:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	nctCoQOwVx2VreMm80S+O1eLM/uAvusb2nruLcJYSPo=; b=TboCK+3Xdsla+WRb
+	+6+fjn9MpovDRp+u5D6SDB+Db/PUPGxLlThxXf8lr1LWeaSqxurfxfp2e9enOvEq
+	nWqEQqqDi+V4eTF6U6Wru0MO+RzEJp2JOMFTfNeqmQb5BeCxlJjRnNroTfJdutI7
+	dueczVz8MhlMwQqljISJi+Ed6TYi1BxZR4eW5ZKHh5DVt+v6RchvsjCpxjJNczIk
+	BUQ9a0UMzXfIQtC+r0Zp+infObiNj/mEfEELdw9l+qVY3Wjc3HeiFonsNGHMqYUf
+	a0r6t4L6Zt2n78fNSW+a/sfWP9fqAfYRc9lY87UBANqzS0QJtivXTEvocjIGiaUX
+	R6FLAQ==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47wqsy8j33-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 17:14:27 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2369dd58602so8779855ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jul 2025 10:14:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752772466; x=1753377266;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nctCoQOwVx2VreMm80S+O1eLM/uAvusb2nruLcJYSPo=;
+        b=PSec+O1LML6n64+wG5lKaAfBB5N9a752Oj7soI7wwLcIPfcVUgj0TDZA9RXsJeRBna
+         2k76ixcZLz9dnKRc97Wi8vACbytKPbV+jE3WuEhe09mBYm0yu0QJxQRSyhdfA8zJvwGY
+         BF44xnQiyXxi08DSCeVIxLrXdCqeyRWtW+mmseJxw+6gg6VRqwod75Lvb+0oslAViWjK
+         buT9/QPPAxOXF5qVmdGUi6uzkb/j98AwcaCMknx4SEB2X/iyy4kGRfY5aiKfuqTaTxyK
+         BRGqUfLXxN5tWi/QDsVeFU5AMDdEFGjuLexrmze3jy4uN5AnhNgn7Kx0dkwlV9A1d+cz
+         HOOA==
+X-Gm-Message-State: AOJu0YyaVWBtC+5s6hwVrv96xo4hmDdNhivB6Ajai79GxkeNT4kCjGJI
+	5DkfxKEU8F09Agf8jEfXtuY50lV0MJcThL2BwNDT8HJInREk6j2AI2Sn1MFSC4YaXlXyihrKeBh
+	JnzNgsSBUTUHRboUR94F/myYztYtQ+cmx4i1R7gpYfd4HQWSuWebU9pTnG0aa603a61LI5g==
+X-Gm-Gg: ASbGncs5baieHx1P0uhD88QkftkpFIaPRlT8dA/b2XazRfIXDNjyAFauAwT9cCy9iZD
+	+gjVrFpx+JJ94g4g4rmcY4TzLd/3R1dWVf9vIufRHo8lvl1US/rBDWI6ZhZiBipJFpegOq5bAQg
+	sNdTIWPXQTXjqfEP/0r4MRm10ioS+Wbgpn4CZdvCbElwz1ERkeZZanqrsWcvlnmwpmOZGzayjOV
+	9qtJ0cwIQCILWmH+0w8ijvd0Qb8QKVE2yW7b4irH39qnVdEhjOR4QmQFamDN7cVS5nMOuWdKMRu
+	JcO9EEv0qtco/6myVgItckywFpepsAkqukgXfBKqk7/SPb4BLIC4RnNCJY88L1glnblkoyg+nQs
+	BXKNY06+1UK+P
+X-Received: by 2002:a17:902:e847:b0:234:8e78:ce8a with SMTP id d9443c01a7336-23e25771857mr105318465ad.48.1752772466399;
+        Thu, 17 Jul 2025 10:14:26 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFQxieo0G9qOuWsHwOUb+yMkawbhF1C4BakOeNyDTCgxsQsoNMgvnnSNbaBLBbPkuoQ6NXs8w==
+X-Received: by 2002:a17:902:e847:b0:234:8e78:ce8a with SMTP id d9443c01a7336-23e25771857mr105318125ad.48.1752772465938;
+        Thu, 17 Jul 2025 10:14:25 -0700 (PDT)
+Received: from [192.168.225.142] ([157.49.215.243])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23de4341833sm145166655ad.173.2025.07.17.10.14.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 17 Jul 2025 10:14:25 -0700 (PDT)
+Message-ID: <24dcbd98-cd43-b155-4c24-7d5cf54cc07b@oss.qualcomm.com>
+Date: Thu, 17 Jul 2025 22:44:22 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH ath-next 1/2] wifi: ath12k: Use __le32_to_cpu() conversion
+ while parsing wmi service bit
+Content-Language: en-US
+To: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>,
+        ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20250717064527.1829660-1-tamizh.raja@oss.qualcomm.com>
+ <20250717064527.1829660-2-tamizh.raja@oss.qualcomm.com>
+From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+In-Reply-To: <20250717064527.1829660-2-tamizh.raja@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE3MDE1MiBTYWx0ZWRfX+GcjE3kXf7mI
+ Qj/v8D7FzugDRo9XJbbr68a37w+oxliHVOBYxNVpbaFswW52p0qCA/HgE5YN6TE6WlG5pUgHy0R
+ 5DqZ92wSqJPXsBTvLSOlfZC1ky3/bk+a7xUirmuLZJarIQiPLDAWiMxHjvwR4jryNo1cnshFKWC
+ Fz1KG9n/uiQXUOtcyjMMQqBPcD2/6ClBuzyXY2ot67Rf5ifjvdXdf1r+lt2TOJ/ABM3M0Uf8Fcc
+ kgLsbR8uaUSnukj7WJOodzQZSkoFp4bUsS5wRJcuWZ0SlEpmkU5UwxXmlnav+zcX1pUtqCFDFUH
+ AbqOqZ2mLLT79Ah4Qu+evc/xCIO3j7bjP6Rc3u0YUlmz44ikD6K/vYuwXTSFTH1xdWO9qmFOKX9
+ rQIC/F+7qm/GEV23P9Sna9clMMf4zcAN/oT+W1yxa47FJEOWh7l9zuVLqjWZ75lqgEVCBj2J
+X-Proofpoint-GUID: luM3fZhWcMfex4cjTUBKHZnhWIMNcpLs
+X-Proofpoint-ORIG-GUID: luM3fZhWcMfex4cjTUBKHZnhWIMNcpLs
+X-Authority-Analysis: v=2.4 cv=McZsu4/f c=1 sm=1 tr=0 ts=68792f73 cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=yGYHVi08oRoRdJ9zovgz5A==:17
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=Fk5S617eLcW_KvA3zIoA:9
+ a=QEXdDO2ut3YA:10 a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-07-17_02,2025-07-17_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 mlxlogscore=999 impostorscore=0 mlxscore=0 phishscore=0
+ adultscore=0 lowpriorityscore=0 bulkscore=0 clxscore=1015 suspectscore=0
+ spamscore=0 priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507170152
 
-Callers of wdev_chandef() must hold the wiphy mutex.
 
-But the worker cfg80211_propagate_cac_done_wk() never takes the lock.
-Which triggers the warning below with the mesh_peer_connected_dfs
-test from hostapd and not (yet) released mac80211 code changes:
+Instead how about title something like below
+"wifi: ath12k: fix endianness handling while accessing wmi service bit"
 
-WARNING: CPU: 0 PID: 495 at net/wireless/chan.c:1552 wdev_chandef+0x60/0x165
-Modules linked in:
-CPU: 0 UID: 0 PID: 495 Comm: kworker/u4:2 Not tainted 6.14.0-rc5-wt-g03960e6f9d47 #33 13c287eeabfe1efea01c0bcc863723ab082e17cf
-Workqueue: cfg80211 cfg80211_propagate_cac_done_wk
-Stack:
- 00000000 00000001 ffffff00 6093267c
- 00000000 6002ec30 6d577c50 60037608
- 00000000 67e8d108 6063717b 00000000
-Call Trace:
- [<6002ec30>] ? _printk+0x0/0x98
- [<6003c2b3>] show_stack+0x10e/0x11a
- [<6002ec30>] ? _printk+0x0/0x98
- [<60037608>] dump_stack_lvl+0x71/0xb8
- [<6063717b>] ? wdev_chandef+0x60/0x165
- [<6003766d>] dump_stack+0x1e/0x20
- [<6005d1b7>] __warn+0x101/0x20f
- [<6005d3a8>] warn_slowpath_fmt+0xe3/0x15d
- [<600b0c5c>] ? mark_lock.part.0+0x0/0x4ec
- [<60751191>] ? __this_cpu_preempt_check+0x0/0x16
- [<600b11a2>] ? mark_held_locks+0x5a/0x6e
- [<6005d2c5>] ? warn_slowpath_fmt+0x0/0x15d
- [<60052e53>] ? unblock_signals+0x3a/0xe7
- [<60052f2d>] ? um_set_signals+0x2d/0x43
- [<60751191>] ? __this_cpu_preempt_check+0x0/0x16
- [<607508b2>] ? lock_is_held_type+0x207/0x21f
- [<6063717b>] wdev_chandef+0x60/0x165
- [<605f89b4>] regulatory_propagate_dfs_state+0x247/0x43f
- [<60052f00>] ? um_set_signals+0x0/0x43
- [<605e6bfd>] cfg80211_propagate_cac_done_wk+0x3a/0x4a
- [<6007e460>] process_scheduled_works+0x3bc/0x60e
- [<6007d0ec>] ? move_linked_works+0x4d/0x81
- [<6007d120>] ? assign_work+0x0/0xaa
- [<6007f81f>] worker_thread+0x220/0x2dc
- [<600786ef>] ? set_pf_worker+0x0/0x57
- [<60087c96>] ? to_kthread+0x0/0x43
- [<6008ab3c>] kthread+0x2d3/0x2e2
- [<6007f5ff>] ? worker_thread+0x0/0x2dc
- [<6006c05b>] ? calculate_sigpending+0x0/0x56
- [<6003b37d>] new_thread_handler+0x4a/0x64
-irq event stamp: 614611
-hardirqs last  enabled at (614621): [<00000000600bc96b>] __up_console_sem+0x82/0xaf
-hardirqs last disabled at (614630): [<00000000600bc92c>] __up_console_sem+0x43/0xaf
-softirqs last  enabled at (614268): [<00000000606c55c6>] __ieee80211_wake_queue+0x933/0x985
-softirqs last disabled at (614266): [<00000000606c52d6>] __ieee80211_wake_queue+0x643/0x985
+On 7/17/2025 12:15 PM, Tamizh Chelvam Raja wrote:
+> Currently there is no endian conversion in ath12k_wmi_tlv_services_parser()
+> so the service bit parsing will be incorrect on a big endian platform and
+> to fix this by using appropriate endian conversion.
+> 
+> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00217-QCAHKSWPL_SILICONZ-1
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+> 
+> Fixes: 342527f35338 ("wifi: ath12k: Add support to parse new WMI event for 6 GHz regulatory")
+> Signed-off-by: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>
 
-Fixes: 26ec17a1dc5e ("cfg80211: Fix radar event during another phy CAC")
-Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
----
+Other than that
 
-The issue addressed here is also in older kernels, without
-f42d22d3f7963 ("wifi: cfg80211: define and use wiphy guard ").
-Porting to kernel 6.13 or lower require us to use wiphy_lock() an
-wiphy_unlock() instead of guard().
----
- net/wireless/reg.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c1752b31734f..92e04370fa63 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -4229,6 +4229,8 @@ static void cfg80211_check_and_end_cac(struct cfg80211_registered_device *rdev)
- 	struct wireless_dev *wdev;
- 	unsigned int link_id;
- 
-+	guard(wiphy)(&rdev->wiphy);
-+
- 	/* If we finished CAC or received radar, we should end any
- 	 * CAC running on the same channels.
- 	 * the check !cfg80211_chandef_dfs_usable contain 2 options:
--- 
-2.50.0
-
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
