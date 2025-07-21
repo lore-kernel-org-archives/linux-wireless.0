@@ -1,61 +1,63 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7EA73C30
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2025 00:20:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0877E3594B
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2025 00:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753057213; cv=none; b=AWIos7caP+KtZ0Vt29+mRF53C9F6jW9Hq2YzKCTaop2ykm9iPfW6XyHB2T8IhEoVzcpYovsERm+etUObdwqbIoX8o1JIXud5taRVB+jYwUDRnHVSEJLrgvzwmG0wRkTTMqqLrIpEPB4pWxuo26je0RoxnGCYH9ZQM21kcQovhnI=
+	t=1753057218; cv=none; b=nXkmtykOe+ZA4qeGLmsUBH3RMG8QKBiumi4tBU3VrF5gl9nDwFQQS3Ck/2Qg8S5khpoE6XcbUyuNYJi1U76+xz9IvqnRGfXncG6UVswSHbUoK9hejM07nU5WcgEBRpkkg2xPiKRAcoVhSNLGqd7Nnho7wPYe2dglezGmg1+bRSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753057213; c=relaxed/simple;
-	bh=j0RhoELv43IzorvxXAMAOAvH9MncadUmyxHnz1raxkM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ivuS5wrTWfl/wn9U2eRMIVitKZGdCaxq7y6vFDaVY4/eXXzQm3ZqKRE0zuZI3T8wFOX6hGdEY/UYPtiImxbv901AzHUIV1zBJWXBbVoMF5As773VZd9Ux3A4ogch/yU/D5YS9BUV3Dv/+3d0wol/HZx3l949s8ZA6Rq/nSkWWSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LswYdb/0; arc=none smtp.client-ip=209.85.210.181
+	s=arc-20240116; t=1753057218; c=relaxed/simple;
+	bh=xLfs9GccRXj89pT3eWnn2qbPQiqkD02ATM1Q+vJYucc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=OiR+Sbsa2KLf5MRD48bvQvDpfy7dp0lFRmZeEQev0nEuXPohz3ovibedh27VMdW2U9tfchsU1zSpoT9K7nAn+LhkyrRBRusn5gyWcPqfx9iBrBlWNwH6ZeK8qB+9iBzXz8lhV7LFRzxT15kQOAfwYrvUluR0bvTxvXzWuRsmpHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OQgFwhIm; arc=none smtp.client-ip=209.85.215.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LswYdb/0"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-74b52bf417cso2411408b3a.0
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2025 17:20:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OQgFwhIm"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-b391ca6146eso3439138a12.3
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jul 2025 17:20:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753057211; x=1753662011; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vyWlu2cUWdrqQpfrqUVlBUqMrwZ+6//kKp0ufMv+PPw=;
-        b=LswYdb/0cI6omFlHEqnMKsRR35de8X9q92BxQfQ6OYYImGMP8GovFSu6h0TOseIttB
-         Lj0APy39E0PVHI+tfP6tL3HuB2ev3n8kPy7Kan0Dd6XJvnly5+9sAKBFxPzPBXaNUDxK
-         LEXZwgA8MSDPku1xrJ4PKHxo3yGwmYN4i90DX7JDXv1t4FOhHoukOZUjYRh17FuFKXmk
-         VoVSzmz5PaRga/Zrw6l1MUGW8U6G6piybz6GQGBD34/tu9mxJRoxZrPaBM0bHALVfshi
-         lygFkZa7N5f8x/N0HuKr51KkqrknAgqW9zmVj6B2N07Dt96LEDq+dn7bK26whAJXeueR
-         Wd6w==
+        d=gmail.com; s=20230601; t=1753057216; x=1753662016; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=V+QOGgYixiKgJ3Gj4wmhfqO/4utvXFNGruDxpU9/0YI=;
+        b=OQgFwhImhrilbgHXYCLfgzemlzubzMLrcmmAGC60Ry6/q7JFN/YO3iSVGgsNPzQw0P
+         xWNnpI+RA5LLvfh2GHx4Gjqt/IcgqcTkAbmtbzgPB/67D3xyIvBshY1qyKdDD7BRUiU7
+         p3Tsffpxj7Fxzj2qKeL/khasjW26emNdbq5s+Sc3XgDjChf1wYwsy9o5/IXMm2Z3oErv
+         L1XPo1dJHycqhd+DS0v/Oe+OvixJ+4JsO1CHA0wQmpm/ZLrqdDoXiownBvzKCoDf/eLN
+         EDopvArF9WbELea+xfjovRsxcVBCCpr3SUmTlcT1bPP8rb16+AGEE0x5cfKjsL8r1c6z
+         kQMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753057211; x=1753662011;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vyWlu2cUWdrqQpfrqUVlBUqMrwZ+6//kKp0ufMv+PPw=;
-        b=QnCfEGVhONurYxRZZ0xJT2kpKAfErWF8FAYIMfCtJ7o9Er5K8MjLpP+l45Fyz2CpiQ
-         RrAJ86EBRW97iHW2U9lfuIyO9cocWeLswG+owBRBRro/0wP6aDUbp5+SkdVzC+mTQlwH
-         FRujcW0iOx5+JrRApYrX9ykOKVTNPNCZ5us/dLn33Nkyk/eaXoBKVpV1iioDv34/gU+K
-         H8qzQ45tM8cU3j2IizAIxSF2SFWnhp0k9dBPGd1qM3BKaRorRjzUZSVflGdXjnwE53al
-         LjgvKKmaU5R2YK6cuubVcTXw0biTx1MTv99mYEpYuXn61BGjLKifAbE4FoBhECXAb6P0
-         WAIA==
-X-Gm-Message-State: AOJu0YxrfS0/P+yaLky5mesHEm/wPnyhrN7Pca9DKia2Rt4bNUTGQjD+
-	Up9nene+iLUV4vHcZfBdWQ/0oS88nVGiQqTFdn9Wzi6mBz+Tusu7MTSbbMsLhrCI
-X-Gm-Gg: ASbGncsiVd2hMyfiLH0K104S3t6kJWILrp7P9w5hQHL4P2WB1hLq5T8v1TLRBKgkBqb
-	r+kjSrGOGnw/Si8Ff4YXoKuopTutgn/JwN7ysCx8L/FlXP1/fnsBabHD7g6T8h/P1f/iPlQ21GC
-	Y1xa1M8HS792qKA9TcIv8Y9LW8guhyX0a/nw3Fi+PWHxlGVwpjUIndPUtmBNQUmfdr0qLpQQk0P
-	xn8tMJsCOcq06iDarD+h4atNEu+ugM0SZzRg/WoLg+kYshFw0GnQfWE/f839SEAotR+bTOUoMhA
-	mZnJafC4hKTJgA7lR1+bOCT4gLl7JRV1e7WA7kBGpXrGNX+cFPvF6X7+5+omyEveS7NQ/cMtz57
-	WdYq/OGTwLnH1JGj+IHeDV5Fct6KrswMPwm/ARVpctzi3wG4WlMSUJL8tN8xqLZXdgtrNDAoc4i
-	k=
-X-Google-Smtp-Source: AGHT+IHFXchBJ9qd6Jb8klqnkLgHwA1PkJf4PoyOOSvvi/tY8VrVqOq2ZB+uHGjzzru4hZk+poC3Jg==
-X-Received: by 2002:a05:6a00:4f86:b0:755:ad06:b6d1 with SMTP id d2e1a72fcca58-7572467447dmr23663553b3a.20.1753057210567;
-        Sun, 20 Jul 2025 17:20:10 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1753057216; x=1753662016;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=V+QOGgYixiKgJ3Gj4wmhfqO/4utvXFNGruDxpU9/0YI=;
+        b=Is7SyO1IB9sQeAyVMBDi8lay0euvV0vAbeiHkAOCcK44ugOVSL8jnW12elb/ra54YX
+         fBtMPL2C6VpCmqDhhu1/qx5MM8/WoGojrOdhj+hadJ8jYNYq9pOHPB8lTWL/LAS2DE0d
+         nvSSwANJ/NNp6pDiBDx5mcH6hE77C66IaPpNAa9ZAdyEUAgp1ML8W17FGrbaQIFQnugO
+         FHzztQ/qYbpbhHfl8u5+To5+PoK5Z2tGG+6R3JhQHVcMMklMX1V1MCdTNojRClufNobS
+         jOEzlyz3ltA7ec4JuSKMRWF7jWjYY84fpAc7QSSiMKq/+/r4smWnEtbYXX5fQV+0QDFG
+         NiBQ==
+X-Gm-Message-State: AOJu0YyXfgCDngviaVy5s4iJBDwDFEJSbFTXBQxelEfJ8zVVb4b/kkBa
+	I3zNBD7Fw5Q8Xu7DyyZpHLVVE5aiKt7VcBEJ2OtQzVLcprQEMQEivUGWMy4FWaF7
+X-Gm-Gg: ASbGncv/EbLThmVSbQTrAk463RL1Fu1MBUR3XIud1nRLRbIN0JiciehiOz8SDYEv2mf
+	Y2OjTNCd6jvV0s/0LzhyYnnrsc9KHaFJ2WMzTN5YMLvN/LEvzxukAi+8F777cevICDtg9jmh1Lv
+	mJ2a4OenFB2AULtqrTzXOeql9aIRntNokQu4UGPcDhgMpwmlj+IdtknSefjkhRk7qNMaK15gBht
+	KQzSpdVNk1PYR7/g6B/jtZl071UyVLFHEKX5KkDoEOj3dRMLF4nC7U2C00rszDe33pkqNNIiYfy
+	NPRJPaNP6UYcJ0D5bU8TUFJBkWWzI+4jvWvbSiy86+wbNKUibsDlZFVsqsWbA5JYD85zWoFCbI4
+	4q8X1oU5g8mkUPWW544Wwmq6ni2yTRy7IU9AWNqqUKK6zcL5V4oaVmkKJ6RoNeGpILOOya3TOft
+	w=
+X-Google-Smtp-Source: AGHT+IGhPdre6vRF7myCtTV+CwL3ILs6v3oauuZxBiD6JD1Fk5ssztwYZQoF2pxR3o1os26AWGiLJw==
+X-Received: by 2002:a05:6a20:6a10:b0:203:bb65:995a with SMTP id adf61e73a8af0-2390dc51b64mr23135334637.30.1753057215978;
+        Sun, 20 Jul 2025 17:20:15 -0700 (PDT)
 Received: from localhost.localdomain (syn-172-119-055-184.res.spectrum.com. [172.119.55.184])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-759cb76d53fsm4661058b3a.105.2025.07.20.17.20.09
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-759cb76d53fsm4661058b3a.105.2025.07.20.17.20.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Jul 2025 17:20:10 -0700 (PDT)
+        Sun, 20 Jul 2025 17:20:15 -0700 (PDT)
 From: tnguy3333 <tnguy3333@gmail.com>
 To: linux-wireless@vger.kernel.org,
 	nbd@nbd.name,
@@ -64,10 +66,12 @@ To: linux-wireless@vger.kernel.org,
 Cc: shayne.chen@mediatek.com,
 	sean.wang@mediatek.com,
 	tnguy3333 <tnguy3333@gmail.com>
-Subject: [RFC PATCH 0/5] mt76: add initial support for MT7902 based on MT7921 driver
-Date: Sun, 20 Jul 2025 17:19:00 -0700
-Message-Id: <20250721001905.11614-1-tnguy3333@gmail.com>
+Subject: [PATCH 2/5] add to build and add firmware paths
+Date: Sun, 20 Jul 2025 17:19:02 -0700
+Message-Id: <20250721001905.11614-3-tnguy3333@gmail.com>
 X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250721001905.11614-1-tnguy3333@gmail.com>
+References: <20250721001905.11614-1-tnguy3333@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,68 +80,107 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+add mt7902 as a kernel module and add firmware paths
 
-Linux support for the MediaTek MT7902 is still very highly desired, because it is a card found in many Acer, ASUS, and HP laptops. This patch series adds support for the card to successfully download the firmware and scan nearby networks, and has been tested on a laptop that comes with the MT7902 PCI card. However, I need more information about the card and its firmware to continue development.
+Signed-off-by: tnguy3333 <tnguy3333@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/Kconfig      |  1 +
+ drivers/net/wireless/mediatek/mt76/Makefile     |  1 +
+ drivers/net/wireless/mediatek/mt76/mt7902/pci.c | 16 +---------------
+ drivers/net/wireless/mediatek/mt76/mt792x.h     |  6 ++++++
+ 4 files changed, 9 insertions(+), 15 deletions(-)
 
-Right now, the problem is with the UNI commands timing out. I was actually able to get the card to connect to the internet briefly by changing all the UNI commands to EXT, disabling all offload tasks, and enabling fallback to software decryption of packets. However, I believe this is not the ideal solution because EXT commands are not used in the newer cards. So, I need some advice on how to implement the MCU commands correctly (dev_info_update, bss_info_update, sta_rec_update, and offload).
-
-Hopefully, with a revised version of this patch, we can work up to a fully functional Linux driver.
-
-Best regards,
-Thomas Nguyen
-
-tnguy3333 (5):
-  copy mt7921 to use as mt7902 baseline
-  add to build and add firmware paths
-  fix dma register and add firmware ready check
-  set fw download mode like mt7921
-  replace UNI add dev with EXT cmd
-
- drivers/net/wireless/mediatek/mt76/Kconfig    |    1 +
- drivers/net/wireless/mediatek/mt76/Makefile   |    1 +
- .../net/wireless/mediatek/mt76/mt76_connac.h  |    5 +
- .../wireless/mediatek/mt76/mt76_connac_mcu.c  |    3 +-
- .../wireless/mediatek/mt76/mt76_connac_mcu.h  |    2 +-
- .../net/wireless/mediatek/mt76/mt7902/Kconfig |   37 +
- .../wireless/mediatek/mt76/mt7902/Makefile    |   12 +
- .../wireless/mediatek/mt76/mt7902/debugfs.c   |  296 +++
- .../net/wireless/mediatek/mt76/mt7902/init.c  |  348 ++++
- .../net/wireless/mediatek/mt76/mt7902/mac.c   |  865 +++++++++
- .../net/wireless/mediatek/mt76/mt7902/main.c  | 1588 ++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7902/mcu.c   | 1593 +++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7902/mcu.h   |  120 ++
- .../wireless/mediatek/mt76/mt7902/mt7902.h    |  343 ++++
- .../net/wireless/mediatek/mt76/mt7902/pci.c   |  571 ++++++
- .../wireless/mediatek/mt76/mt7902/pci_mac.c   |  129 ++
- .../wireless/mediatek/mt76/mt7902/pci_mcu.c   |   63 +
- .../net/wireless/mediatek/mt76/mt7902/regs.h  |   81 +
- .../net/wireless/mediatek/mt76/mt7902/sdio.c  |  331 ++++
- .../wireless/mediatek/mt76/mt7902/sdio_mac.c  |  141 ++
- .../wireless/mediatek/mt76/mt7902/sdio_mcu.c  |  175 ++
- .../wireless/mediatek/mt76/mt7902/testmode.c  |  196 ++
- .../net/wireless/mediatek/mt76/mt7902/usb.c   |  345 ++++
- drivers/net/wireless/mediatek/mt76/mt792x.h   |    6 +
- 24 files changed, 7250 insertions(+), 2 deletions(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/Makefile
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/main.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/mcu.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/mt7902.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/pci.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/pci_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/pci_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/sdio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/sdio_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/sdio_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/testmode.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7902/usb.c
-
+diff --git a/drivers/net/wireless/mediatek/mt76/Kconfig b/drivers/net/wireless/mediatek/mt76/Kconfig
+index a86f800b8..a09ff43a8 100644
+--- a/drivers/net/wireless/mediatek/mt76/Kconfig
++++ b/drivers/net/wireless/mediatek/mt76/Kconfig
+@@ -45,3 +45,4 @@ source "drivers/net/wireless/mediatek/mt76/mt7915/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7921/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7996/Kconfig"
+ source "drivers/net/wireless/mediatek/mt76/mt7925/Kconfig"
++source "drivers/net/wireless/mediatek/mt76/mt7902/Kconfig"
+diff --git a/drivers/net/wireless/mediatek/mt76/Makefile b/drivers/net/wireless/mediatek/mt76/Makefile
+index 87512d101..b7fb4c1a1 100644
+--- a/drivers/net/wireless/mediatek/mt76/Makefile
++++ b/drivers/net/wireless/mediatek/mt76/Makefile
+@@ -45,3 +45,4 @@ obj-$(CONFIG_MT7915E) += mt7915/
+ obj-$(CONFIG_MT7921_COMMON) += mt7921/
+ obj-$(CONFIG_MT7996E) += mt7996/
+ obj-$(CONFIG_MT7925_COMMON) += mt7925/
++obj-$(CONFIG_MT7902_COMMON) += mt7902/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7902/pci.c b/drivers/net/wireless/mediatek/mt76/mt7902/pci.c
+index 84fa2a8de..ec7e34b07 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7902/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7902/pci.c
+@@ -14,18 +14,8 @@
+ #include "mcu.h"
+ 
+ static const struct pci_device_id mt7902_pci_device_table[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7961),
++	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7902),
+ 		.driver_data = (kernel_ulong_t)MT7902_FIRMWARE_WM },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7922),
+-		.driver_data = (kernel_ulong_t)MT7922_FIRMWARE_WM },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_ITTIM, 0x7922),
+-		.driver_data = (kernel_ulong_t)MT7922_FIRMWARE_WM },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x0608),
+-		.driver_data = (kernel_ulong_t)MT7902_FIRMWARE_WM },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x0616),
+-		.driver_data = (kernel_ulong_t)MT7922_FIRMWARE_WM },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_MEDIATEK, 0x7920),
+-		.driver_data = (kernel_ulong_t)MT7920_FIRMWARE_WM },
+ 	{ },
+ };
+ 
+@@ -573,12 +563,8 @@ static struct pci_driver mt7902_pci_driver = {
+ module_pci_driver(mt7902_pci_driver);
+ 
+ MODULE_DEVICE_TABLE(pci, mt7902_pci_device_table);
+-MODULE_FIRMWARE(MT7920_FIRMWARE_WM);
+-MODULE_FIRMWARE(MT7920_ROM_PATCH);
+ MODULE_FIRMWARE(MT7902_FIRMWARE_WM);
+ MODULE_FIRMWARE(MT7902_ROM_PATCH);
+-MODULE_FIRMWARE(MT7922_FIRMWARE_WM);
+-MODULE_FIRMWARE(MT7922_ROM_PATCH);
+ MODULE_AUTHOR("Sean Wang <sean.wang@mediatek.com>");
+ MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
+ MODULE_DESCRIPTION("MediaTek MT7902E (PCIe) wireless driver");
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index e0359d431..07305988f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -40,11 +40,13 @@
+ #define MT792x_MCU_INIT_RETRY_COUNT	10
+ #define MT792x_WFSYS_INIT_RETRY_COUNT	2
+ 
++#define MT7902_FIRMWARE_WM      "mediatek/WIFI_RAM_CODE_MT7902_1.bin"
+ #define MT7920_FIRMWARE_WM	"mediatek/WIFI_RAM_CODE_MT7961_1a.bin"
+ #define MT7921_FIRMWARE_WM	"mediatek/WIFI_RAM_CODE_MT7961_1.bin"
+ #define MT7922_FIRMWARE_WM	"mediatek/WIFI_RAM_CODE_MT7922_1.bin"
+ #define MT7925_FIRMWARE_WM	"mediatek/mt7925/WIFI_RAM_CODE_MT7925_1_1.bin"
+ 
++#define MT7902_ROM_PATCH	"mediatek/WIFI_MT7902_patch_mcu_1_1_hdr.bin"
+ #define MT7920_ROM_PATCH	"mediatek/WIFI_MT7961_patch_mcu_1a_2_hdr.bin"
+ #define MT7921_ROM_PATCH	"mediatek/WIFI_MT7961_patch_mcu_1_2_hdr.bin"
+ #define MT7922_ROM_PATCH	"mediatek/WIFI_MT7922_patch_mcu_1_1_hdr.bin"
+@@ -446,6 +448,8 @@ void mt792x_config_mac_addr_list(struct mt792x_dev *dev);
+ static inline char *mt792x_ram_name(struct mt792x_dev *dev)
+ {
+ 	switch (mt76_chip(&dev->mt76)) {
++	case 0x7902:
++		return MT7902_FIRMWARE_WM;
+ 	case 0x7920:
+ 		return MT7920_FIRMWARE_WM;
+ 	case 0x7922:
+@@ -460,6 +464,8 @@ static inline char *mt792x_ram_name(struct mt792x_dev *dev)
+ static inline char *mt792x_patch_name(struct mt792x_dev *dev)
+ {
+ 	switch (mt76_chip(&dev->mt76)) {
++	case 0x7902:
++		return MT7902_ROM_PATCH;
+ 	case 0x7920:
+ 		return MT7920_ROM_PATCH;
+ 	case 0x7922:
 -- 
 2.39.5
 
