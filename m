@@ -1,151 +1,120 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69AE1E835B
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2025 06:20:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9D42AD04
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jul 2025 06:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753078828; cv=none; b=soYOvMulr/Ep8VUjBfbouxNo4aQ/z7haos0Jzs0CkAsdEJ0PNI+iprFfhKiCnoxSJRusOpXTjy7IFFJc/7qOOtxvMh6bO2w6/YwFxHejBBoE/sC0bbpx7e/dsRCoNMS4nY6hEi8VXd7l426d3sWGulr+gO3SejKo4YNQ6LLES8I=
+	t=1753079401; cv=none; b=lo/VWOLVP9VJq9wmKskcHGsh9BtmCosDdCm/Slv8xHXtRwFIRSDYiKQOeJH3XaoAnu4jybFFvKw0I/UmbRNWsz/VT5IYOfBSGsnYQM5HORYalfRegb6Ed+jqNh4TaQrj+3Vc/QBsNDP/c3FHzirKh5oPz7rGvfZhQ7BPY9sPfJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753078828; c=relaxed/simple;
-	bh=yLoqXUoZj1Br42q6WT7pPMlEnxOD9BGVe1iCRJWbtJo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=I5UGzr73HuPoFNf4qvdp5dox0o7nz41bWMR0EROQIlBOPP75ss3uKbKmzXGCAvhUolETdPA/n/8JBOXgXJEfoLg6Fq/iTjLwluGrihrgwi1k9XqF9mNYnGDDDa0YvH7INuMa2TfYPo5eWURBuSl+MlyFRtHGj6J9+kyyZG8wSq8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=etucoa/c; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1753079401; c=relaxed/simple;
+	bh=SRwR9OMjhQkfEUfExDSBzoq5qxpvRQNusnayBTYx1dQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SXn3EFkjuwdfZgkwm3y9iNA+NLsBRTStTSrJZUGBYpBXzAnnTwBDKOpq8yl4jns9GKFu6gDTrpO4s8LdMmfxHuDbzl2eVzdG6FyG5skudaUlmX1weeiGbJ5FSZztA+YhcCvNvCx8Jjs9dHV1deBOTNbjunTCjBZnZUsJIGx5bHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=B2ZZvsF4; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="etucoa/c"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753078827; x=1784614827;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=yLoqXUoZj1Br42q6WT7pPMlEnxOD9BGVe1iCRJWbtJo=;
-  b=etucoa/c8IZohpjrjtFC08ClKYjlTlbhgjxuAQ0es0OluQQkSADU/DHn
-   DgAr1F41ejxwynwCznOnCOQuHx0G3FIxzM54PXgsA5BWXnQBfVIhuaDda
-   g9nd+OT+PDdafE6Sagvviq/pPbKSt+vQeOVxwIlczc5UEhs5MOLSOAXuo
-   FxuxWhIvas31v/KO64CpDpIfORiAWGyHHFZYgMJSlnzLir1oN17OteZM3
-   nKyrsHNsVvxmKMrFpCLIM1W/FfmFz/ZcnejZ3OAO2eWxyjtrUg+3gL1as
-   cj8+HmYFKhkj6HyGYzGZuhZMnrJC3CoUVVqXIyYi/wRtNMlXS8h4zczJf
-   Q==;
-X-CSE-ConnectionGUID: Bt1R+ZvVT0uqef1p9LSm2Q==
-X-CSE-MsgGUID: BV1iNWY0SJ6dD3o+DHHqdg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11498"; a="54996149"
-X-IronPort-AV: E=Sophos;i="6.16,328,1744095600"; 
-   d="scan'208";a="54996149"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2025 23:20:26 -0700
-X-CSE-ConnectionGUID: hlxW5/DGSMWHV8ZtNWAONA==
-X-CSE-MsgGUID: L0VgE5WVTcOea27uv1pgtA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,328,1744095600"; 
-   d="scan'208";a="189697833"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2025 23:20:25 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: remove ieee80211_remove_key
-Date: Mon, 21 Jul 2025 09:20:03 +0300
-Message-Id: <20250721091956.e964ceacd85c.Idecab8ef161fa58e000b3969bc936399284b79f0@changeid>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="B2ZZvsF4"
+X-UUID: 18a36b6665fc11f08b7dc59d57013e23-20250721
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=ejOCHf77d+DjOE4ApvpfLpumIkFayGw7G+IOfOQkomY=;
+	b=B2ZZvsF43eCnqOuC/a4H4P/5YClJgkNzTihDqORJU239GNta1fEDur2tv4+CXt2RsftKTG1kgMEyJ8/XXG+b8/z5MZ00O6+xIAnAHU14JX/SPsNT4erT5qvkb2aoaCy/LavGUTeOzJ6KN38lIW9zK+yZd/A3AqwYxuHhvroj+AM=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.2,REQID:f0683237-628f-4ab1-887a-f54f06a1725e,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:9eb4ff7,CLOUDID:c7d5ff0e-6968-429c-a74d-a1cce2b698bd,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 18a36b6665fc11f08b7dc59d57013e23-20250721
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+	(envelope-from <michael-cy.lee@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1232205285; Mon, 21 Jul 2025 14:29:46 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Mon, 21 Jul 2025 14:29:43 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Mon, 21 Jul 2025 14:29:43 +0800
+From: Michael-CY Lee <michael-cy.lee@mediatek.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, Felix Fietkau
+	<nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Evelyn Tsai
+	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
+	linux-mediatek <linux-mediatek@lists.infradead.org>, Michael-CY Lee
+	<michael-cy.lee@mediatek.com>
+Subject: [PATCH wireless-next v2] wifi: mac80211: determine missing link_id in ieee80211_rx_for_interface() based on frequency
+Date: Mon, 21 Jul 2025 14:29:29 +0800
+Message-ID: <20250721062929.1662700-1-michael-cy.lee@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-It is no longer used, remove it.
+For broadcast frames, every interface might have to process it and
+therefore the link_id cannot be determined in the driver.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+In mac80211, when the frame is about to be forwarded to each interface,
+we can use the member "freq" in struct ieee80211_rx_status to determine
+the "link_id" for each interface.
+
+Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
+Reviewed-by: Money Wang <money.wang@mediatek.com>
 ---
- include/net/mac80211.h | 16 +---------------
- net/mac80211/key.c     | 27 +--------------------------
- 2 files changed, 2 insertions(+), 41 deletions(-)
+v2:
+  - use frequency instead of band
+---
+ net/mac80211/rx.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a2dbaad2f6d3..a0cf976a9117 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6032,18 +6032,6 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
- void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
- 			      int tid, struct ieee80211_key_seq *seq);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b414c9e6e61b..2ac8ccb838ff 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -5106,8 +5106,29 @@ static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
+ 		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
  
--/**
-- * ieee80211_remove_key - remove the given key
-- * @keyconf: the parameter passed with the set key
-- *
-- * Context: Must be called with the wiphy mutex held.
-- *
-- * Remove the given key. If the key was uploaded to the hardware at the
-- * time this function is called, it is not deleted in the hardware but
-- * instead assumed to have been removed already.
-- */
--void ieee80211_remove_key(struct ieee80211_key_conf *keyconf);
--
- /**
-  * ieee80211_gtk_rekey_add - add a GTK key from rekeying during WoWLAN
-  * @vif: the virtual interface to add the key on
-@@ -6070,9 +6058,7 @@ void ieee80211_remove_key(struct ieee80211_key_conf *keyconf);
-  * for the new key for each TID to set up sequence counters properly.
-  *
-  * IMPORTANT: If this replaces a key that is present in the hardware,
-- * then it will attempt to remove it during this call. In many cases
-- * this isn't what you want, so call ieee80211_remove_key() first for
-- * the key that's being replaced.
-+ * then it will attempt to remove it during this call.
-  */
- struct ieee80211_key_conf *
- ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 997892da8886..9d65013ddac7 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -6,7 +6,7 @@
-  * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright 2015-2017	Intel Deutschland GmbH
-- * Copyright 2018-2020, 2022-2024  Intel Corporation
-+ * Copyright 2018-2020, 2022-2025  Intel Corporation
-  */
+ 		sta = sta_info_get_bss(rx->sdata, hdr->addr2);
+-		if (status->link_valid)
++		if (status->link_valid) {
+ 			link_id = status->link_id;
++		} else if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
++			   status->freq) {
++			struct ieee80211_link_data *link;
++			struct ieee80211_chanctx_conf *conf;
++			int i;
++
++			for_each_valid_link(&rx->sdata->wdev, i) {
++				link = rcu_dereference(rx->sdata->link[i]);
++				if (!link || !link->conf)
++					continue;
++
++				conf = rcu_dereference(link->conf->chanctx_conf);
++				if (!conf || !conf->def.chan)
++					continue;
++
++				if (status->freq == conf->def.chan->center_freq) {
++					link_id = i;
++					break;
++				}
++			}
++		}
+ 	}
  
- #include <crypto/utils.h>
-@@ -1354,31 +1354,6 @@ void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
- }
- EXPORT_SYMBOL_GPL(ieee80211_set_key_rx_seq);
- 
--void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
--{
--	struct ieee80211_key *key;
--
--	key = container_of(keyconf, struct ieee80211_key, conf);
--
--	lockdep_assert_wiphy(key->local->hw.wiphy);
--
--	/*
--	 * if key was uploaded, we assume the driver will/has remove(d)
--	 * it, so adjust bookkeeping accordingly
--	 */
--	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
--		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
--
--		if (!(key->conf.flags & (IEEE80211_KEY_FLAG_GENERATE_MMIC |
--					 IEEE80211_KEY_FLAG_PUT_MIC_SPACE |
--					 IEEE80211_KEY_FLAG_RESERVE_TAILROOM)))
--			increment_tailroom_need_count(key->sdata);
--	}
--
--	ieee80211_key_free(key, false);
--}
--EXPORT_SYMBOL_GPL(ieee80211_remove_key);
--
- struct ieee80211_key_conf *
- ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 			struct ieee80211_key_conf *keyconf,
+ 	if (!ieee80211_rx_data_set_sta(rx, sta, link_id))
 -- 
-2.34.1
+2.25.1
 
