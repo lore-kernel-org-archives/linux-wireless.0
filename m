@@ -1,138 +1,128 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D26B12EA736
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 13:02:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6185422F755
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 14:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753275742; cv=none; b=pNdjhhvxGWUQ7ESZ3O5vdYCIHLIkVqh81XmUfPk8jFWqK/+1gkGQ24Jicpija/fuSn88Sv4l3ae9ohgHA0gadnOK8/+zrOQQdSGC+91VTR81JZQTY78onsYrECpHzfNWixyyQHS5EITzdTyDu9lcNBKDkqoVGgutqnbvAHbR4z4=
+	t=1753279984; cv=none; b=myL8yBtstSXyHUQ4SZcuXxeFUpY8R18wiHIiGmnAXvAki1Nt9tPWgEJ9+pi4kSLIznQ+Y1ge6ma+0ij6jsiQNXivFGQZWZnTfFlkwgMKllMsvvwZOmIRXrdgG+KCC/mim1oKmKUUcbb2xq9Ctr0UgrDgasv03jYvoqiiXJ8xtpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753275742; c=relaxed/simple;
-	bh=Ioj9jms0xa9lQKRRktaV71dleYrls3WZPjBSCjNjzlE=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=aytWhve3KTse3TKxUo3yZOMy9/tMXF1KcRAOvSDor2PmMvYv6mQwasumx6X52kNdSXiqMigkHMoMhi6eml2i1fR7IThLahXnTvuipO+7Q/W/wLT45NZLgDOk8rbQbqTeoDvZIlGZWQF1QJWI6WPWsBaHVz3lRJug7KtqUd21Lss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ak5XwfIb; arc=none smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753279984; c=relaxed/simple;
+	bh=fNEjxVqvHUjEyYP7eF81ud6f43OvHX8nmedqPVXjWXk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PdbwqhyRgrZ5ismoe3W1SDWsK1Bv2jAKokC3vrmEnvjbjvIiXpXxxwiX+qpUT2FjymanUt8Tii5YfgdJ13O9v7lirt9kip2cksTFHyx4q6wHGKZqLsQlJTz1xkl/sL6NSFHyuxtPVPoUeuGXuUHtWBt6ig4+iOf9dskn2rHZB2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=L8jAOD5L; arc=none smtp.client-ip=209.85.221.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ak5XwfIb"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-612b34ef0c2so11598027a12.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 06:02:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="L8jAOD5L"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-3a57c8e247cso6315437f8f.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 07:13:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753275738; x=1753880538; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xl1tWn0UWyCQtSBiSA+txRqJ+SIi0LLgzNqMSAUb1Dg=;
-        b=ak5XwfIbc9XXyvZJnxeH3UmAWUyREuHqNNOL6Z9JTgweZThSACXwKmkyT4CFBu9VKF
-         OhPAWU3RVA7ZbEXRoWUDyPSQBr+DbeDPPRvNviga4CXT8jGZhSAuGkJwdCsSW7ghErUy
-         f/AvBfV6XRGlH4XkHwYTvfMbXJ1D8XMPcPOgiEvmk0dAdhGC7amiqF77QMS3iUfsF60X
-         qKQYhA6xBecN4+G9GTPzdKKw3Pgd4cJu//FewzxfWc7E4AZjSO34LU7vmCdpiVSLRC55
-         lS+1zVldEi8NJGkA4RXngUbbRI7T+SYkcCJL1zHxQ9XBTAghpwSpTqrgxnDWyHHLuRfs
-         vmFw==
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1753279981; x=1753884781; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jl80Bu6jGD0s+NTfuIcms5WgEbUpaplgB9B6tltiTec=;
+        b=L8jAOD5LNo6VW7kg3hpq3IvrzvLtMNkJicUkX5cnMcYdU911GpyBc5oTN6xuZDITtJ
+         23S3+ZPoJ9fnqs7oG80KlxywupriB5b3c9qlqk5Fsq/Ad2MJSBHKcm5M+EDHdh0prk20
+         BwdcSlCxOtMEN6jo7kvNR7yMbF9zl8xCbiVzZFkjgTGGS0S/WiWTh03o05AOlEv+aSlq
+         5yMvJrMhmDGLb41n9Ex1dJQtADMKIom09KpISXt7Q5cq9BhZRRzJgXPh57ifH045HoD/
+         zDAb0DX6PKI7xNiUif9PanlTOjmCH1sWxJfNPcao/Obyv42uklr8HmgyaKcbYiaQtNlL
+         tXRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753275738; x=1753880538;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xl1tWn0UWyCQtSBiSA+txRqJ+SIi0LLgzNqMSAUb1Dg=;
-        b=LRMZATJ1RsdJbw6HQGWx8JrIYrvVXveKCQPNk09KjtRmcMJfNC8fG46YElnGXv+jbq
-         MgHnLKNvB7BjavhHaZ3Yrniu5pzJn+Zj2oqSV/MT9/L+qirZOYZbtxQLaGT3M1ou3y+W
-         YdfoyNjdwzU0tulwtBw+/+ODKIJioFllMdlc14PHo07mVD8379Oxc6WXtSP44THOZ0Uh
-         JHc4thUzfeePt1Qau6BPenxCd4ptxR1fUsuCeawh0VlkKTgO5Qvj5NjlJL7T7eAk0YHK
-         dkJgbUOLJIJ1xmrEL0AAtkZUoJTdTQHPRYxPjnCpCmn+EnZoTkb4zlNsFg6LXNCjvVvI
-         TRzA==
-X-Forwarded-Encrypted: i=1; AJvYcCU9EXhVocj85CdBlxUIt/aJUcd1akCFi8zO5ZhPaw+bCH2UeAsVrMA276KXMMR1LqoYmWEhXE+LUHBn/m3fVA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyBl2y7VOfyDROc68KBY61tTm3jQ1uP0HLujKrwYE8D1ZZik0r8
-	tPuZBUqAszwEgjVS5JAojHFJYiI4b5eGrA+v7iMKBIlgBf6QRIUE2NBH
-X-Gm-Gg: ASbGncswm2cwaZWP79u9lnGQ2Ojv8ed18Bt8g/mm54fX92Imc+wMNEuLni0uAzBqQhf
-	GD1hTW6l4PbHcAb7xa/7LLPveCy/ltVeBxMuLt/eEWp1YoefQ/AcWeaI77bqtl9W+DohjDTb/v5
-	h8ozEovU/Ahoh+f7RLai1KpV+chDkwCoGX8CKpaoi/iiWhzMvxlYyL09lGpRfw0zy94tKiQE8OI
-	7G2lUQ15dRzk42eypC4F13YELgjkUMvcF4y/4InK8ZrAk4GwyhYCH4pqsN1TFSUUTen99A0FMF/
-	0u++ZBsfhAx39Mw5+mPFjSDOhY4OwlHR/XvvE6BVvbsq3xuzWd7BFrJ55pKmmtKT9E48N1XqWU9
-	qcjCeWvCUiSyh8le3cmNjkLPY2DwqArUWLUd/PQZpU4lsuXbXznnat63taqPOj7/cEE7QNoauQM
-	uc
-X-Google-Smtp-Source: AGHT+IH7nMr1U6ZP9hJ7wusJiz2Q8DNMlZtXyiuGtEkCyZ+V7y379iLTI7i92FgVOPCmCrlvpqwkKg==
-X-Received: by 2002:a17:907:708:b0:ace:d710:a8d1 with SMTP id a640c23a62f3a-af2f6c1bd3dmr291528566b.24.1753275737356;
-        Wed, 23 Jul 2025 06:02:17 -0700 (PDT)
-Received: from smtpclient.apple (89-66-237-154.dynamic.play.pl. [89.66.237.154])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aec6c79c279sm1043335066b.28.2025.07.23.06.02.16
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 23 Jul 2025 06:02:16 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+        d=1e100.net; s=20230601; t=1753279981; x=1753884781;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jl80Bu6jGD0s+NTfuIcms5WgEbUpaplgB9B6tltiTec=;
+        b=jUpiq2d603tjwpcvQBLVW0QQJnsIUDPWJOLXJzKCMcsnzfl+mm/3x+W8Ogg8olKD/D
+         YHxB1kIwWfTVrcBXrGQev+mvbKmfK57zARPM6odtA5+iNlAI7p47CilClMOR4cLW4TxS
+         bJKL4NkHp5fhm+9TdAw/Ra3hiV9xxkvZKVFPk8NZcgArULTgOaWXvzgCupjUFrDWDW7r
+         /tmRL7MhUCOQFVt+ildMp+VPuoaNWxhdeZDwIIWP8WEwxSzFPcKW2L0uQ7qzwTy17gB1
+         HhHgAr5Tyy3QlHzwlFyP/i8JfPOpQ9SZqbgIAWp4qvIaPzXgsigFjODWCMmxcB+9wbaD
+         w9hA==
+X-Gm-Message-State: AOJu0Yz1Ix2Rmedb/TAw5UX5zDZ8N3n0HOi5rj4h6XnP54Mi/IyLajxm
+	xKKgNpM0gHMuRNzX+nGyVgX+r7o7Aj6mqKUojZUXvgaMqjIuWiqFwqzdgY3SkUhWgjs=
+X-Gm-Gg: ASbGncvzE0Ftwm7Dvngiv01JtDdGV/dVf4HQ52C4oD3n0cqBftIBX++EEybqJkuA4j6
+	x/E0Ik/kdUAQtU5GJ/pLNhX4er4QyNFjPj8RX6x/YJz5Il8VpzdE9c86bvQbGlx4ftS/Y9WNYkQ
+	81elIR41ID71IO561zLmMiRsqo752+5pH1ky79NO218vdxj/ej25Z2w4jSjyKghUcBO34vvn7Hb
+	on0Ic2WymdIEI7x5fekb5WMr2usuSsSfrcLWJbuySdKPZOkd0/3+yGRc8/bnS0htX70Yv1pD+0N
+	1XU6DFfDGgKvCwIVUjlgK3sD6VpOwcN9J0A6OEkPS2D2VAtOEMPwRFHB/eGscum2i5ZSHQwRZfb
+	eI0Gv9U6fdXBMYMHYRx7QBQ==
+X-Google-Smtp-Source: AGHT+IG9+1w7YmO5GUnA4vkE6KJTbpONcQ8rqEmd5NJrNB57AzDfuCcgrodqrLbEMSV4zeN39Hktxw==
+X-Received: by 2002:a05:6000:310d:b0:3a5:541c:b40f with SMTP id ffacd0b85a97d-3b768ee0463mr3152841f8f.9.1753279980477;
+        Wed, 23 Jul 2025 07:13:00 -0700 (PDT)
+Received: from brgl-uxlite.home ([2a01:cb1d:dc:7e00:34cd:b1d:d4f9:be03])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3b61ca5c9edsm16688077f8f.88.2025.07.23.07.12.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Jul 2025 07:13:00 -0700 (PDT)
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+To: Michael Buesch <m@bues.ch>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Subject: [PATCH] ssb: use new GPIO line value setter callbacks for the second GPIO chip
+Date: Wed, 23 Jul 2025 16:12:57 +0200
+Message-ID: <20250723141257.51412-1-brgl@bgdev.pl>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
-Subject: Re: rtl8822cs, mainline 6.16-rc7: kernel reports ' unsupported rf
- path'
-From: Piotr Oniszczuk <piotr.oniszczuk@gmail.com>
-In-Reply-To: <5933c3ef71914cdf83687042488800d2@realtek.com>
-Date: Wed, 23 Jul 2025 15:02:04 +0200
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "martin.blumenstingl@googlemail.com" <martin.blumenstingl@googlemail.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <699C22B4-A3E3-4206-97D0-22AB3348EBF6@gmail.com>
-References: <7407FAA3-F4A4-48AA-91E5-A78DA711447D@gmail.com>
- <ec5d762f3ee64a0188953a1aecbef2cc@realtek.com>
- <AFB036A4-80C6-4880-B798-FB22C7C137FA@gmail.com>
- <b29df36b838049a088d8298220078134@realtek.com>
- <5CA196F3-90B4-479F-9A19-E9C71C8726D4@gmail.com>
- <34d9c169c92540caa294095d2172b4fc@realtek.com>
- <18989932-3578-4E45-BA8B-6C2C76FDE7FE@gmail.com>
- <ed867462c8d945b28b2e913d1cd0c3d5@realtek.com>
- <7dfa0377-538f-464b-b4e4-4c9daa1fb85a@gmail.com>
- <5933c3ef71914cdf83687042488800d2@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-X-Mailer: Apple Mail (2.3826.600.51.1.1)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 
+Because the other chip is guarded in an unlikely ifdef, I missed it when
+converting this driver. Fix it now.
 
-> Wiadomo=C5=9B=C4=87 napisana przez Ping-Ke Shih <pkshih@realtek.com> w =
-dniu 23 lip 2025, o godz. 14:23:
->=20
-> Thanks for the hints. I think it's worth to try:
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/main.c =
-b/drivers/net/wireless/realtek/rtw88/main.c
-> index fa0ed39cb199..5ea13c775796 100644
-> --- a/drivers/net/wireless/realtek/rtw88/main.c
-> +++ b/drivers/net/wireless/realtek/rtw88/main.c
-> @@ -1861,6 +1861,8 @@ static int rtw_chip_parameter_setup(struct =
-rtw_dev *rtwdev)
->        hal->chip_version =3D rtw_read32(rtwdev, REG_SYS_CFG1);
->        hal->cut_version =3D BIT_GET_CHIP_VER(hal->chip_version);
->        hal->mp_chip =3D (hal->chip_version & BIT_RTL_ID) ? 0 : 1;
-> +       printk("rtw88: %s:%d hal->chip_version=3D0x%x\n",
-> +               __func__, __LINE__, hal->chip_version);
->        if (hal->chip_version & BIT_RF_TYPE_ID) {
->                hal->rf_type =3D RF_2T2R;
->                hal->rf_path_num =3D 2;
-> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c =
-b/drivers/net/wireless/realtek/rtw88/sdio.c
-> index cc2d4fef3587..5c9e7c8cdd7e 100644
-> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
-> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-> @@ -144,6 +144,10 @@ static u32 rtw_sdio_to_io_address(struct rtw_dev =
-*rtwdev, u32 addr,
->=20
-> static bool rtw_sdio_use_direct_io(struct rtw_dev *rtwdev, u32 addr)
-> {
-> +       if (!rtw_sdio_is_bus_addr(addr) &&
-> +           !test_bit(RTW_FLAG_POWERON, rtwdev->flags))
-> +               return false;
-> +
->        return !rtw_sdio_is_sdio30_supported(rtwdev) ||
->                rtw_sdio_is_bus_addr(addr);
-> }
->=20
+Fixes: 757259db79fc ("ssb: use new GPIO line value setter callbacks")
+Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+---
+Johannes, Michael: I only noticed it now when randbuilding mips with a
+patch that removed the previous callbacks. I would really appreciate it
+if we could queue it for v6.17 as it will allow us to complete the
+treewide conversion of GPIO drivers. Any chance you could fast-track it
+into your tree?
 
-With this change all works ok.
-15 boots and all 15 were with nice wifi :-)
+Thanks,
+Bartosz
 
- dmesg from working system: https://termbin.com/09a1
+ drivers/ssb/driver_gpio.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index 14ad57954a66..e1f5f0a9c8a2 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -267,12 +267,14 @@ static int ssb_gpio_extif_get_value(struct gpio_chip *chip, unsigned int gpio)
+ 	return !!ssb_extif_gpio_in(&bus->extif, 1 << gpio);
+ }
+ 
+-static void ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned int gpio,
+-				     int value)
++static int ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned int gpio,
++				    int value)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+ 	ssb_extif_gpio_out(&bus->extif, 1 << gpio, value ? 1 << gpio : 0);
++
++	return 0;
+ }
+ 
+ static int ssb_gpio_extif_direction_input(struct gpio_chip *chip,
+@@ -420,7 +422,7 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+ 	chip->label		= "ssb_extif_gpio";
+ 	chip->owner		= THIS_MODULE;
+ 	chip->get		= ssb_gpio_extif_get_value;
+-	chip->set		= ssb_gpio_extif_set_value;
++	chip->set_rv		= ssb_gpio_extif_set_value;
+ 	chip->direction_input	= ssb_gpio_extif_direction_input;
+ 	chip->direction_output	= ssb_gpio_extif_direction_output;
+ #if IS_ENABLED(CONFIG_SSB_EMBEDDED)
+-- 
+2.48.1
 
