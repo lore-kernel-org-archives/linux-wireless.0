@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7ACA272E67
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 06:45:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78C6D272E67
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jul 2025 06:46:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753253159; cv=none; b=d6rPD5PVhZfepNzhZM8ly/tbnIS53vXI1P0TcnPnc1DduBUJEuLPdRCasI5nNWi9rI7WWkrn9u6levBwKhAUJ+0Xfk/n7Zrho2YhIxaqeDdQHAGr895aVJn/jWop0YXFCbaES3VKQTmbXzXWPvEfJ9zFVIcGyCxBzj+XfTJ9dx0=
+	t=1753253163; cv=none; b=DlK0U6ZmLgMCDWzqihGSLpEneo2H3VlNCNB7p45rWTjsLrDGoDSSZAfK2BWIdfztZ9hT5Ao0kJA99UW9etEXVF6wSDgGJUexfi/z1WklFvKoLbaKMbkz8OdO5RLf0VJMPC6qjxg1artMuODk1hJe9AYWzX353n/xeTLYcl8/8p0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753253159; c=relaxed/simple;
-	bh=tkooIDmNHT8ZUzqTja3fAmKm0/p9kGoj+n5t0EqHvGo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xl2VkII3YNrKiPy1Lz3aNsViwSDh1s0tQTwY1E5ub80dKLMrfsZknJGzhrLkkSXLZI1MXy1Gv0TPVkzuD5JWKGc1nbRmFL+zgZO5nwV6BOzTnqL7aD8yQ6UZvPLK8hpW2/GSTe5Pg5Ft4tkcDnyxsbQQWkGsPS7LzONE4V9P5FI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZrhXXWVR; arc=none smtp.client-ip=192.198.163.12
+	s=arc-20240116; t=1753253163; c=relaxed/simple;
+	bh=C45N6RlwdV4lfdn8ZN4+yCnCVy2dzOFewUUeudmWiI0=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=gbj+sdJlFYACAOFBls+kDa1393sqoWYj/Dh7l1i87NOLKSHee4xYtmLvAnu9IJhxMoXTj1BXgnDsmg6kLbcFra3pGsLqAw4R3sIEGNXumXGVXn5MIK225ajHfaYHeqn+hzW8OptcWK+SByVSY74Az8nWaWH1lskea1zSUTw10c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iuP5QNr+; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZrhXXWVR"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iuP5QNr+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753253158; x=1784789158;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=tkooIDmNHT8ZUzqTja3fAmKm0/p9kGoj+n5t0EqHvGo=;
-  b=ZrhXXWVR2u1KLtJ9EoZgsL9R6cVNAqxwn5QsrZMhGqSilA8Gi3k2GNu8
-   AoDqRD0Sl81K9gCMKTRGpl8ihOJ22Infy6j3QyYXRBtnBvguYDh85/JME
-   dvYXlAzS+cxjw5StMSoeTKUL+/qQGwq0y2GekfyQpZchlWv3LbIGH7kTK
-   EJcxi3MDuPByK4TSM7aSndXUe3T+CUd1XMy75jfSX53o7H+TMbcz6zQe3
-   hb6lPquuZaGKt8Eu0VBGhcdjCSNowBeAq/SrE5JdjQNy7/ubDihi1vwOv
-   skgJRV35HS4kUGxsT5P02lR39csAM+brBRHQSkZbEwDPpAOP6RnwhCbu5
-   w==;
-X-CSE-ConnectionGUID: EERkcyqNQMiy0w/Z+C85OQ==
-X-CSE-MsgGUID: A7V2yhc6RAqIZGRkBdLYOg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11500"; a="59340778"
+  t=1753253161; x=1784789161;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=C45N6RlwdV4lfdn8ZN4+yCnCVy2dzOFewUUeudmWiI0=;
+  b=iuP5QNr+qKrKAvK+Lo8MUYEf4wWTz+5Ba2Y71X2GzJAsPHVp7QZoA4FY
+   wnVrFwYBQCc+ZrlwXJ6m8KG5br1tJDlyjq91Jo3KwoSJfS5yAYzGUqqMK
+   88Qed8+kpq7Unue3fQKSZZrqucxCpA6Kmpgwgqo80d0tELVNfQQHCY4Wx
+   hSB35E1ZOn9UtsjRU4C+2WYqpXar+ijIoKrF4Ki12ulEsVUZqxmg0Mxx8
+   X2vxn/gSwpMkYHNzdf6B8+LmKHvwzVGKyCHg7pTYN5WK4sE8u/mCERqRW
+   XYbYqcb42qSmvbrv2pwGDAajQsSPreYJkxK2IWbMFqBiKhUdDCOa6y8VX
+   Q==;
+X-CSE-ConnectionGUID: WEZ/cUgAT+Kyc03dGvR6dg==
+X-CSE-MsgGUID: TjkXMuR0QmeBKhd8UeqYrw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11500"; a="59340793"
 X-IronPort-AV: E=Sophos;i="6.16,333,1744095600"; 
-   d="scan'208";a="59340778"
+   d="scan'208";a="59340793"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2025 23:45:53 -0700
-X-CSE-ConnectionGUID: kJfsN+IsT5mevGDBAY7ECg==
-X-CSE-MsgGUID: 2M6+qaSlQVas3is0NAvd7g==
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2025 23:45:58 -0700
+X-CSE-ConnectionGUID: ZeeH0jvuSL+KMNrFhyFOPg==
+X-CSE-MsgGUID: yL1odJ6SRg2mJVFzFsQXSw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.16,333,1744095600"; 
-   d="scan'208";a="159918113"
+   d="scan'208";a="159918117"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2025 23:45:52 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2025 23:45:54 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 12/14] wifi: iwlwifi: don't export symbols that we shouldn't
-Date: Wed, 23 Jul 2025 09:45:13 +0300
-Message-Id: <20250723094230.97b80d0d00b3.Ib8abe63c9b25ef1e4ae1bc167cb23fe34bb3682a@changeid>
+Subject: [PATCH iwlwifi-next 14/14] wifi: iwlwifi: Revert "wifi: iwlwifi: remove support of several iwl_ppag_table_cmd versions"
+Date: Wed, 23 Jul 2025 09:45:15 +0300
+Message-Id: <20250723064515.2084903-2-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250723064515.2084903-1-miriam.rachel.korenblit@intel.com>
 References: <20250723064515.2084903-1-miriam.rachel.korenblit@intel.com>
@@ -61,183 +60,112 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Functions that are not called from the opmodes shouldn't be exported.
+It turns out that version 6 is still needed.
+This change will be brought back once the FW that supports version 6 will no
+longer be supported.
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+This reverts commit 24bc49d158c7 ("wifi: iwlwifi: remove support of several
+iwl_ppag_table_cmd versions")
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-io.c    |  6 ------
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 16 ----------------
- 2 files changed, 22 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/power.h | 20 +++++++++++++++----
+ .../wireless/intel/iwlwifi/fw/regulatory.c    | 20 +++++++++++++------
+ 2 files changed, 30 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index ad857a05d3c3..5e483a55a4ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -75,7 +75,6 @@ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg)
- 	/* return as if we have a HW timeout/failure */
- 	return 0x5a5a5a5a;
- }
--IWL_EXPORT_SYMBOL(iwl_read_direct32);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index ab84aac6605d..786b3bf4b448 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -571,7 +571,8 @@ enum iwl_ppag_flags {
+ /**
+  * union iwl_ppag_table_cmd - union for all versions of PPAG command
+  * @v1: command version 1 structure.
+- * @v2: command version 5 structure.
++ * @v2: command version from 2 to 6 are same structure as v2.
++ *	but has a different format of the flags bitmap
+  * @v3: command version 7 structure.
+  * @v1.flags: values from &enum iwl_ppag_flags
+  * @v1.gain: table of antenna gain values per chain and sub-band
+@@ -592,7 +593,9 @@ union iwl_ppag_table_cmd {
+ 		__le32 flags;
+ 		s8 gain[IWL_NUM_CHAIN_LIMITS][IWL_NUM_SUB_BANDS_V2];
+ 		s8 reserved[2];
+-	} __packed v2; /* PER_PLAT_ANTENNA_GAIN_CMD_API_S_VER_5 */
++	} __packed v2; /* PER_PLAT_ANTENNA_GAIN_CMD_API_S_VER_2, VER3, VER4,
++			* VER5, VER6
++			*/
+ 	struct {
+ 		struct bios_value_u32 ppag_config_info;
+ 		s8 gain[IWL_NUM_CHAIN_LIMITS][IWL_NUM_SUB_BANDS_V2];
+@@ -600,11 +603,20 @@ union iwl_ppag_table_cmd {
+ 	} __packed v3; /* PER_PLAT_ANTENNA_GAIN_CMD_API_S_VER_7 */
+ } __packed;
  
- void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
- {
-@@ -93,7 +92,6 @@ void iwl_write_direct64(struct iwl_trans *trans, u64 reg, u64 value)
- 		iwl_trans_release_nic_access(trans);
- 	}
- }
--IWL_EXPORT_SYMBOL(iwl_write_direct64);
+-#define IWL_PPAG_CMD_V1_MASK (IWL_PPAG_ETSI_MASK | IWL_PPAG_CHINA_MASK)
+-#define IWL_PPAG_CMD_V5_MASK (IWL_PPAG_CMD_V1_MASK | \
++#define IWL_PPAG_CMD_V4_MASK (IWL_PPAG_ETSI_MASK | IWL_PPAG_CHINA_MASK)
++#define IWL_PPAG_CMD_V5_MASK (IWL_PPAG_CMD_V4_MASK | \
+ 			      IWL_PPAG_ETSI_LPI_UHB_MASK | \
+ 			      IWL_PPAG_USA_LPI_UHB_MASK)
  
- int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
- 			int timeout)
-@@ -109,7 +107,6 @@ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
++#define IWL_PPAG_CMD_V6_MASK (IWL_PPAG_CMD_V5_MASK |		\
++			      IWL_PPAG_ETSI_VLP_UHB_MASK |	\
++			      IWL_PPAG_ETSI_SP_UHB_MASK |	\
++			      IWL_PPAG_USA_VLP_UHB_MASK |	\
++			      IWL_PPAG_USA_SP_UHB_MASK |	\
++			      IWL_PPAG_CANADA_LPI_UHB_MASK |	\
++			      IWL_PPAG_CANADA_VLP_UHB_MASK |	\
++			      IWL_PPAG_CANADA_SP_UHB_MASK)
++
+ #define MCC_TO_SAR_OFFSET_TABLE_ROW_SIZE	26
+ #define MCC_TO_SAR_OFFSET_TABLE_COL_SIZE	13
  
- 	return -ETIMEDOUT;
- }
--IWL_EXPORT_SYMBOL(iwl_poll_direct_bit);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 80d8373fccfc..3d6d1a85bb51 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -344,18 +344,18 @@ int iwl_fill_ppag_table(struct iwl_fw_runtime *fwrt,
+ 		num_sub_bands = IWL_NUM_SUB_BANDS_V1;
+ 		gain = cmd->v1.gain[0];
+ 		*cmd_size = sizeof(cmd->v1);
+-		cmd->v1.flags = cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V1_MASK);
++		cmd->v1.flags = cpu_to_le32(fwrt->ppag_flags);
+ 		if (fwrt->ppag_bios_rev >= 1) {
+ 			/* in this case FW supports revision 0 */
+ 			IWL_DEBUG_RADIO(fwrt,
+ 					"PPAG table rev is %d, send truncated table\n",
+ 					fwrt->ppag_bios_rev);
+ 		}
+-	} else if (cmd_ver == 5) {
++	} else if (cmd_ver >= 2 && cmd_ver <= 6) {
+ 		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
+ 		gain = cmd->v2.gain[0];
+ 		*cmd_size = sizeof(cmd->v2);
+-		cmd->v2.flags = cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V5_MASK);
++		cmd->v2.flags = cpu_to_le32(fwrt->ppag_flags);
+ 		if (fwrt->ppag_bios_rev == 0) {
+ 			/* in this case FW supports revisions 1,2 or 3 */
+ 			IWL_DEBUG_RADIO(fwrt,
+@@ -378,9 +378,17 @@ int iwl_fill_ppag_table(struct iwl_fw_runtime *fwrt,
+ 			"PPAG MODE bits were read from bios: %d\n",
+ 			fwrt->ppag_flags);
  
- u32 iwl_read_prph_no_grab(struct iwl_trans *trans, u32 ofs)
- {
-@@ -117,14 +114,12 @@ u32 iwl_read_prph_no_grab(struct iwl_trans *trans, u32 ofs)
- 	trace_iwlwifi_dev_ioread_prph32(trans->dev, ofs, val);
- 	return val;
- }
--IWL_EXPORT_SYMBOL(iwl_read_prph_no_grab);
- 
- void iwl_write_prph_no_grab(struct iwl_trans *trans, u32 ofs, u32 val)
- {
- 	trace_iwlwifi_dev_iowrite_prph32(trans->dev, ofs, val);
- 	iwl_trans_write_prph(trans, ofs, val);
- }
--IWL_EXPORT_SYMBOL(iwl_write_prph_no_grab);
- 
- void iwl_write_prph64_no_grab(struct iwl_trans *trans, u64 ofs, u64 val)
- {
-@@ -132,7 +127,6 @@ void iwl_write_prph64_no_grab(struct iwl_trans *trans, u64 ofs, u64 val)
- 	iwl_write_prph_no_grab(trans, ofs, val & 0xffffffff);
- 	iwl_write_prph_no_grab(trans, ofs + 4, val >> 32);
- }
--IWL_EXPORT_SYMBOL(iwl_write_prph64_no_grab);
- 
- u32 iwl_read_prph(struct iwl_trans *trans, u32 ofs)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index 810923053053..3694b41d6621 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -437,31 +437,26 @@ void iwl_trans_write8(struct iwl_trans *trans, u32 ofs, u8 val)
- {
- 	iwl_trans_pcie_write8(trans, ofs, val);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_write8);
- 
- void iwl_trans_write32(struct iwl_trans *trans, u32 ofs, u32 val)
- {
- 	iwl_trans_pcie_write32(trans, ofs, val);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_write32);
- 
- u32 iwl_trans_read32(struct iwl_trans *trans, u32 ofs)
- {
- 	return iwl_trans_pcie_read32(trans, ofs);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_read32);
- 
- u32 iwl_trans_read_prph(struct iwl_trans *trans, u32 ofs)
- {
- 	return iwl_trans_pcie_read_prph(trans, ofs);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_read_prph);
- 
- void iwl_trans_write_prph(struct iwl_trans *trans, u32 ofs, u32 val)
- {
- 	return iwl_trans_pcie_write_prph(trans, ofs, val);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_write_prph);
- 
- int iwl_trans_read_mem(struct iwl_trans *trans, u32 addr,
- 		       void *buf, int dwords)
-@@ -502,7 +497,6 @@ int iwl_trans_sw_reset(struct iwl_trans *trans)
- {
- 	return iwl_trans_pcie_sw_reset(trans, true);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_sw_reset);
- 
- struct iwl_trans_dump_data *
- iwl_trans_dump_data(struct iwl_trans *trans, u32 dump_mask,
-@@ -512,7 +506,6 @@ iwl_trans_dump_data(struct iwl_trans *trans, u32 dump_mask,
- 	return iwl_trans_pcie_dump_data(trans, dump_mask,
- 					sanitize_ops, sanitize_ctx);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_dump_data);
- 
- int iwl_trans_d3_suspend(struct iwl_trans *trans, bool test, bool reset)
- {
-@@ -548,20 +541,17 @@ void iwl_trans_interrupts(struct iwl_trans *trans, bool enable)
- {
- 	iwl_trans_pci_interrupts(trans, enable);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_interrupts);
- 
- void iwl_trans_sync_nmi(struct iwl_trans *trans)
- {
- 	iwl_trans_pcie_sync_nmi(trans);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_sync_nmi);
- 
- int iwl_trans_write_imr_mem(struct iwl_trans *trans, u32 dst_addr,
- 			    u64 src_addr, u32 byte_cnt)
- {
- 	return iwl_trans_pcie_copy_imr(trans, dst_addr, src_addr, byte_cnt);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_write_imr_mem);
- 
- void iwl_trans_set_bits_mask(struct iwl_trans *trans, u32 reg,
- 			     u32 mask, u32 value)
-@@ -575,7 +565,6 @@ int iwl_trans_read_config32(struct iwl_trans *trans, u32 ofs,
- {
- 	return iwl_trans_pcie_read_config32(trans, ofs, val);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_read_config32);
- 
- bool _iwl_trans_grab_nic_access(struct iwl_trans *trans)
- {
-@@ -771,7 +760,6 @@ void iwl_trans_debugfs_cleanup(struct iwl_trans *trans)
- {
- 	iwl_trans_pcie_debugfs_cleanup(trans);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_debugfs_cleanup);
- #endif
- 
- void iwl_trans_set_q_ptrs(struct iwl_trans *trans, int queue, int ptr)
-@@ -809,7 +797,6 @@ int iwl_trans_get_rxq_dma_data(struct iwl_trans *trans, int queue,
- {
- 	return iwl_trans_pcie_rxq_dma_data(trans, queue, data);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_get_rxq_dma_data);
- 
- int iwl_trans_load_pnvm(struct iwl_trans *trans,
- 			const struct iwl_pnvm_image *pnvm_data,
-@@ -824,7 +811,6 @@ void iwl_trans_set_pnvm(struct iwl_trans *trans,
- {
- 	iwl_trans_pcie_ctx_info_v2_set_pnvm(trans, capa);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_set_pnvm);
- 
- int iwl_trans_load_reduce_power(struct iwl_trans *trans,
- 				const struct iwl_pnvm_image *payloads,
-@@ -833,11 +819,9 @@ int iwl_trans_load_reduce_power(struct iwl_trans *trans,
- 	return iwl_trans_pcie_ctx_info_v2_load_reduce_power(trans, payloads,
- 							      capa);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_load_reduce_power);
- 
- void iwl_trans_set_reduce_power(struct iwl_trans *trans,
- 				const struct iwl_ucode_capabilities *capa)
- {
- 	iwl_trans_pcie_ctx_info_v2_set_reduce_power(trans, capa);
- }
--IWL_EXPORT_SYMBOL(iwl_trans_set_reduce_power);
+-	if (cmd_ver == 1 &&
+-	    !fw_has_capa(&fwrt->fw->ucode_capa,
+-			 IWL_UCODE_TLV_CAPA_PPAG_CHINA_BIOS_SUPPORT)) {
++	if (cmd_ver == 6)
++		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_CMD_V6_MASK);
++	else if (cmd_ver == 5)
++		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_CMD_V5_MASK);
++	else if (cmd_ver < 5)
++		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_CMD_V4_MASK);
++
++	if ((cmd_ver == 1 &&
++	     !fw_has_capa(&fwrt->fw->ucode_capa,
++			  IWL_UCODE_TLV_CAPA_PPAG_CHINA_BIOS_SUPPORT)) ||
++	    (cmd_ver == 2 && fwrt->ppag_bios_rev >= 2)) {
+ 		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_ETSI_MASK);
+ 		IWL_DEBUG_RADIO(fwrt, "masking ppag China bit\n");
+ 	} else {
 -- 
 2.34.1
 
