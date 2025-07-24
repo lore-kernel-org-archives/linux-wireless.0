@@ -1,60 +1,77 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8282221736
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2025 07:08:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CC63223338;
+	Thu, 24 Jul 2025 07:16:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753340898; cv=none; b=mT4MyL9ygmwA0NsQubvhNr8TP0Veq94dU/zh5EM+8YYxW7VimNuLezajh+Z6DHKCtzNfWML4kBjXQjkmvucdo6tUXSaUGneT1vnMIISYu7jkSxFON+DIq1lWkAS19+cX2Z3SFuE1qZ4B8wPRISCfdlT7gtnqTeo+6yUvmg8ddSc=
+	t=1753341385; cv=none; b=KE8DlSdN2jte/T3oF7/DCfSldcMY36v0CnDXL39WLSUTWiaUbokNnPVBg+YcXmdb/y5OTcXGQLTRDk21PZSnY2Wn1MGowZn4PJgDjikFTa626S7+sl2LCcZHCsTTCTefQKnLFdmQMGD20W98itqxbHc3hh0shufKbP5k7ZJutOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753340898; c=relaxed/simple;
-	bh=Qp1Fcebd3VrhL0mm4doDK1qeTKH+CE4Du1/OpafSjZQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LaHwaC3GjX45Em3SJY4a3IY/jUQ0h4xA+JowxL15bCjC+UiLv8rLlJ/xF7REDBqW6MxZD5alChwfvcTNo8yQHrQFcPGfeiorwLuXbRBnXejj2R5rMembCXFk3tNUS1r0C0InCkhToj1Gi6c7bGWbjefNEo/kmb8ysb8S5XMDl8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k893Cx/3; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1753341385; c=relaxed/simple;
+	bh=0khS5Od5JNQ5OBlyDOdVMQSefAEDqH4ZMOiV+ASnZQA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I32X/yasto3QL1ePmRcQZbOfTRAWrG8GT0beIx3Ryb25igRUVzKCEcYLFchIUI/4vc7x6D3rVCnuT3uR/gmCC1Gfp2jMZlH2Gvsuc6bGEewIEhfr8NSkEp9pUBCVKwSOMGPwMX+07HU1MzSDJ7lIdQZRdS6wu+gkqq4lBKoLcJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JSJyqgZ3; arc=none smtp.client-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k893Cx/3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753340897; x=1784876897;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Qp1Fcebd3VrhL0mm4doDK1qeTKH+CE4Du1/OpafSjZQ=;
-  b=k893Cx/3pOPASEzV9ydZ4L7re1RiuoTpvOokPN1kqGCaDrW8TNvfOXx2
-   Nv8NIAC7a2HuK7z+d1NvY0bQMiPZRQa0Bb1xVf85i4jktMmNYOhOSs2OU
-   6tm2+aW5dMIltKb4WIcWv1AA1GSRtPQxVuoRro1VB8GyY4AAS+8pnIjCA
-   ssBfEjmQ8LQW2nXbfpt6aWcZ0z/jum+azq2lDbtRRCKAn8vryrkKEAnQa
-   yqofjSvHJ3IjgfCgRXUhzqgasK0YedxWN/+CFXKLCNkV6zY21O1tgAbks
-   4ru6TzhkIBP0x/2p738MVuLzM8xo7k3sQq/DBkqNrD5xX1rqrx43PN625
-   Q==;
-X-CSE-ConnectionGUID: VirsPSPHQxGKzTOeL8CYSA==
-X-CSE-MsgGUID: nMovuZnOSvqCD9oPFN6Ipg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11501"; a="55732693"
-X-IronPort-AV: E=Sophos;i="6.16,336,1744095600"; 
-   d="scan'208";a="55732693"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2025 00:08:16 -0700
-X-CSE-ConnectionGUID: zCCPNwIyTKGkitqLcOITAQ==
-X-CSE-MsgGUID: HxvYnq5OTlSDt/CilSSjKQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,336,1744095600"; 
-   d="scan'208";a="165422681"
-Received: from aotchere-mobl1.ger.corp.intel.com (HELO aotchere-mobl1.intel.com) ([10.245.249.251])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2025 00:08:14 -0700
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JSJyqgZ3"
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-b34a71d9208so561438a12.3;
+        Thu, 24 Jul 2025 00:16:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753341383; x=1753946183; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Q+pBXaBC4thHCGg8xZLGs4VB3wl45E9HVmRIrCsHy0g=;
+        b=JSJyqgZ3HSBzu7GuZtxpHDnLR0cbMM1bhj0kdJvdtcNKg9PTpXq9jczJtuI/HidbWz
+         BSKQsXVIi999uBh3BTbtwwYmm++4N2p1migzZh0NOVq7Mf9F/uQr37FCwRgJyehaR3WM
+         gYj95uZ3tH/0oCuuKGlwEo/5v9NkuPzp1r1c5Ib37DArUnNUk0htk/IoqDyKqvB6RBdM
+         Dkbj6fwg25pVjaY+hPxYBL6Hd4Fa2geqj1GGj+liq0CTfHp2zXPWD6w0QmS75+HVlkuw
+         HK+u5vtq7BP/D9qKmD5E/hAYL/9W+rkTkSLS9S5IPT1HWvwDQpvBnd6oeiTgaFQQx5s9
+         2e1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753341383; x=1753946183;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Q+pBXaBC4thHCGg8xZLGs4VB3wl45E9HVmRIrCsHy0g=;
+        b=YoCE3EWcC/OS5NXjzRa3oIPuuG5gkoZu0SnH0OmVm3ZizCOVkAMPJCIPHt0gJ6Fk7x
+         nGduSBhu+6LLfGSdgNUzV9wZnYcL3pfhgxfNCLacy3L6uitUkzf2EY1BPqHxknNs82OX
+         bRg2pH35ZH9FzisxsoYNJfhNeoNYgQUL5LvJdO5fXgM8FHgBYC5hgSs1KsRmFip0/LIJ
+         4FtEkfoyxPR4AxYhWCHb40pjrdECiVZoGjEqkl5P/svxTgWNPwNsnr8mA+px+nfGrsKB
+         lpbwackQWYyokIQgj/kW4YfBdiWaXrHlSh7Pmluj4Z2OILqzh/MLkTgkM0VthBYcQFPF
+         gWMg==
+X-Forwarded-Encrypted: i=1; AJvYcCVHoSakoejy8dLg7el23wgGARIiAy6G2qLPNVSw0xdeBdv8wqVasiyxcet8yeFnH8eTyXWbjp91@vger.kernel.org, AJvYcCXFHJDWTk0PNtQ118EQwBy5c5kM4L/uFhOnnVsG680F54x3bImbvYELhaSkJH/Koygy/uMvbK/c2ex9by7kBg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw89qJxZQz7/+16/dDntpfZyRsQ9+G1qK5spX7aSmDPE/ZHBGRj
+	tvxkfz8Z/A/O80TCR7mGTBYRwZhWZ/H9ZjBW6TCY9Tme0liq9lXorUfBUZiD/TRavYY=
+X-Gm-Gg: ASbGncuTUbMNhyKgiffFuP/nVheN+TiG8gVkMSczdSalaYOkvCK5sf9hu0DR+6GaFQW
+	JB2xnsW0LxpwNRI4n4F8zruMc0VBcul6EpSAcqyu296ZstJap1eB0QLt0z/6CPyQvb27zZ5LMK3
+	akmSk38WPeb0V9pcM5i1e/ARNj+7tQW0M4FMRCF8x0K/EWNs88EC5RrEqOFwjC5PTukNx4Ai4oF
+	j1giZXOyAJNr9x13Yjc7LsXah4BR8+DXNI5Ywjlnm8H+Y/0znX+zzff2WD3BVMuxSZiZ9mQaCrt
+	bs59huZww2VCj+cK+VTqmovr4+qan2isl5p39cK2xlTW/EQMyju59sEXdry/fOW9v5BPCCrCFrW
+	ej2GxrBvIxQnheP7fT91n7nweFLVQ+x5IzNS1+xIAdFiQvlKJ/5LC3+3f5dEDdbfxD2PcgE5pXl
+	3zIzdL
+X-Google-Smtp-Source: AGHT+IHfRSZUMalLXZzQKyYAAeuiOMRvoADeSlcMHAawhzP/6EKV+0VnEn6NwK+WzvRXXBIOyXe89w==
+X-Received: by 2002:a17:90b:35d1:b0:312:26d9:d5b4 with SMTP id 98e67ed59e1d1-31e50818b0emr9852336a91.17.1753341383147;
+        Thu, 24 Jul 2025 00:16:23 -0700 (PDT)
+Received: from p920.moonheelee.internal (d173-180-147-14.bchsia.telus.net. [173.180.147.14])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31e662f4953sm637253a91.34.2025.07.24.00.16.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 24 Jul 2025 00:16:22 -0700 (PDT)
+From: Moon Hee Lee <moonhee.lee.ca@gmail.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	quic_vganneva@quicinc.com,
-	maheshkkv@google.com,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Subject: [RFC v2 4/4] wifi: cfg80211: Add cluster joined notification API's
-Date: Thu, 24 Jul 2025 13:04:57 +0300
-Message-ID: <20250724100457.181825-5-andrei.otcheretianski@intel.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250724100457.181825-1-andrei.otcheretianski@intel.com>
-References: <20250724100457.181825-1-andrei.otcheretianski@intel.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel-mentees@lists.linux.dev,
+	netdev@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	syzbot+d6ccd49ae046542a0641@syzkaller.appspotmail.com,
+	skhan@linuxfoundation.org,
+	david.hunter.linux@gmail.com,
+	Moon Hee Lee <moonhee.lee.ca@gmail.com>
+Subject: [PATCH wireless-next] wifi: mac80211: fix use-after-free risk in sta debugfs removal
+Date: Thu, 24 Jul 2025 00:15:56 -0700
+Message-ID: <20250724071555.442634-2-moonhee.lee.ca@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -63,167 +80,82 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The drivers should notify upper layers and user space when a NAN device
-joins a cluster. This is needed, for example, to set the correct addr3
-in SDF frames. Add API to report cluster join event.
+A NULL pointer dereference may occur in ieee80211_sta_debugfs_remove()
+when debugfs_remove_recursive() is called on a dentry whose inode has
+already been freed. This can happen due to a race between STA teardown
+and debugfs cleanup.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Fix this by checking that both sta->debugfs_dir and its d_inode are
+valid before invoking debugfs_remove_recursive().
+
+This avoids the crash reported in syzbot bug:
+
+  wlan1: send auth to aa:09:b7:99:c0:d7 (try 2/3)
+  wlan1: send auth to aa:09:b7:99:c0:d7 (try 3/3)
+  wlan1: authentication with aa:09:b7:99:c0:d7 timed out
+  Oops: general protection fault, probably for non-canonical address 0xdffffc0000000029: 0000 [#1] SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x0000000000000148-0x000000000000014f]
+  CPU: 0 UID: 0 PID: 171 Comm: kworker/u4:4 Not tainted 6.16.0-rc7-syzkaller #0 PREEMPT(full)
+  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+  Workqueue: events_unbound cfg80211_wiphy_work
+  RIP: 0010:kasan_byte_accessible+0x12/0x30 mm/kasan/generic.c:199
+  Code: 0f 1f 84 00 00 00 00 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 66 0f 1f 00 48 c1 ef 03 48 b8 00 00 00 00 00 fc ff df <0f> b6 04 07 3c 08 0f   92 c0 c3 cc cc cc cc cc 66 66 66 66 66 66 2e
+  RSP: 0018:ffffc90001977400 EFLAGS: 00010202
+  RAX: dffffc0000000000 RBX: ffffffff8b713286 RCX: ca5c1933e35f3700
+  RDX: 0000000000000000 RSI: ffffffff8b713286 RDI: 0000000000000029
+  RBP: ffffffff824067f0 R08: 0000000000000001 R09: 0000000000000000
+  R10: dffffc0000000000 R11: ffffed10085cf24c R12: 0000000000000000
+  R13: 0000000000000148 R14: 0000000000000148 R15: 0000000000000001
+  FS:  0000000000000000(0000) GS:ffff88808d218000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 0000001b2f55ffff CR3: 000000005030a000 CR4: 0000000000352ef0
+  Call Trace:
+   <TASK>
+   __kasan_check_byte+0x12/0x40 mm/kasan/common.c:556
+   kasan_check_byte include/linux/kasan.h:399 [inline]
+   lock_acquire+0x8d/0x360 kernel/locking/lockdep.c:5845
+   down_write+0x96/0x1f0 kernel/locking/rwsem.c:1577
+   inode_lock include/linux/fs.h:869 [inline]
+   simple_recursive_removal+0x90/0x690 fs/libfs.c:616
+   debugfs_remove+0x5b/0x70 fs/debugfs/inode.c:805
+   ieee80211_sta_debugfs_remove+0x40/0x70 net/mac80211/debugfs_sta.c:1279
+   __sta_info_destroy_part2+0x352/0x450 net/mac80211/sta_info.c:1501
+   __sta_info_destroy net/mac80211/sta_info.c:1517 [inline]
+   sta_info_destroy_addr+0xf5/0x140 net/mac80211/sta_info.c:1529
+   ieee80211_destroy_auth_data+0x12d/0x260 net/mac80211/mlme.c:4597
+   ieee80211_sta_work+0x11cf/0x3600 net/mac80211/mlme.c:8310
+   cfg80211_wiphy_work+0x2df/0x460 net/wireless/core.c:435
+   process_one_work kernel/workqueue.c:3238 [inline]
+   process_scheduled_works+0xae1/0x17b0 kernel/workqueue.c:3321
+   worker_thread+0x8a0/0xda0 kernel/workqueue.c:3402
+   kthread+0x70e/0x8a0 kernel/kthread.c:464
+   ret_from_fork+0x3fc/0x770 arch/x86/kernel/process.c:148
+   ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+   </TASK>
+
+Reported-by: syzbot+d6ccd49ae046542a0641@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=d6ccd49ae046542a0641
+Fixes: fc4a25c5b741 ("mac80211: remove sta_info debugfs sub-struct")
+Tested-by: syzbot+d6ccd49ae046542a0641@syzkaller.appspotmail.com
+Signed-off-by: Moon Hee Lee <moonhee.lee.ca@gmail.com>
 ---
- include/net/cfg80211.h       | 14 ++++++++++++
- include/uapi/linux/nl80211.h |  9 +++++++-
- net/wireless/nl80211.c       | 43 ++++++++++++++++++++++++++++++++++++
- net/wireless/trace.h         | 18 +++++++++++++++
- 4 files changed, 83 insertions(+), 1 deletion(-)
+ net/mac80211/debugfs_sta.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 95edd5d3f205..800f4d9b166f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -10036,6 +10036,20 @@ void cfg80211_next_nan_dw_notif(struct wireless_dev *wdev,
- 				struct ieee80211_channel *chan,
- 				gfp_t gfp);
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 49061bd4151b..912b69abab52 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -1276,7 +1276,8 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
  
-+/**
-+ * cfg80211_nan_cluster_joined - Notify about NAN cluster join
-+ * @wdev: Pointer to the wireless device structure
-+ * @cluster_id: Cluster ID of the NAN cluster that was joined or started
-+ * @new_cluster: Indicates if this is a new cluster or an existing one
-+ * @gfp: Memory allocation flags
-+ *
-+ * This function is used to notify user space when a NAN cluster has been
-+ * joined, providing the cluster ID and a flag whether it is a new cluster.
-+ */
-+void cfg80211_nan_cluster_joined(struct wireless_dev *wdev,
-+				 u16 cluster_id, bool new_cluster,
-+				 gfp_t gfp);
-+
- #ifdef CONFIG_CFG80211_DEBUGFS
- /**
-  * wiphy_locked_debugfs_read - do a locked read in debugfs
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 0bb7553ce293..f1ef3d284d38 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1356,6 +1356,9 @@
-  *	Untransmitted multicast frames shall not be carried over to the next DW
-  *	and should be dropped. This notification is only sent to the netlink
-  *	socket owner (see %NL80211_ATTR_SOCKET_OWNER flag).
-+ * @NL80211_CMD_NAN_CLUSTER_JOINED: This command is used to notify
-+ *	userspace that the NAN new cluster has been joined. The cluster ID is
-+ *	indicated by %NL80211_ATTR_MAC.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1618,7 +1621,7 @@ enum nl80211_commands {
- 	NL80211_CMD_EPCS_CFG,
- 
- 	NL80211_CMD_NAN_NEXT_DW_NOTIFICATION,
--
-+	NL80211_CMD_NAN_CLUSTER_JOINED,
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2951,6 +2954,9 @@ enum nl80211_commands {
-  *	This is used with %NL80211_CMD_GET_WIPHY to indicate the NAN
-  *	capabilities supported by the driver. See &enum nl80211_nan_capabilities
-  *	for details.
-+ * @NL80211_ATTR_NAN_NEW_CLUSTER: Flag attribute indicating that a new
-+ *	NAN cluster has been created. This is used with
-+ *	%NL80211_CMD_NAN_CLUSTER_JOINED
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -3516,6 +3522,7 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_NAN_CONFIG,
- 	NL80211_ATTR_NAN_CAPABILITIES,
-+	NL80211_ATTR_NAN_NEW_CLUSTER,
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1af188f62788..aba1b4928a79 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -21479,6 +21479,49 @@ void cfg80211_next_nan_dw_notif(struct wireless_dev *wdev,
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
+ {
+-	debugfs_remove_recursive(sta->debugfs_dir);
++	if (sta->debugfs_dir && sta->debugfs_dir->d_inode)
++		debugfs_remove_recursive(sta->debugfs_dir);
+ 	sta->debugfs_dir = NULL;
  }
- EXPORT_SYMBOL(cfg80211_next_nan_dw_notif);
  
-+void cfg80211_nan_cluster_joined(struct wireless_dev *wdev,
-+				 u16 cluster_id, bool new_cluster,
-+				 gfp_t gfp)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
-+	u8 nan_cluster_addr[ETH_ALEN] = { 0x51, 0x6f, 0x9a, 0x01, 0x00, 0x00 };
-+
-+	nan_cluster_addr[5] = cluster_id & 0xff;
-+	nan_cluster_addr[4] = (cluster_id >> 8) & 0xff;
-+	trace_cfg80211_nan_cluster_joined(wdev, cluster_id, new_cluster);
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NAN_CLUSTER_JOINED);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
-+			      NL80211_ATTR_PAD) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, nan_cluster_addr) ||
-+	    (new_cluster && nla_put_flag(msg, NL80211_ATTR_NAN_NEW_CLUSTER)))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	if (!wdev->owner_nlportid)
-+		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
-+					msg, 0, NL80211_MCGRP_NAN, gfp);
-+	else
-+		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
-+				wdev->owner_nlportid);
-+	return;
-+
-+ nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_nan_cluster_joined);
-+
- /* initialisation/exit functions */
- 
- int __init nl80211_init(void)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 2ed1b090d519..ef7c0d57ea29 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -4238,6 +4238,24 @@ TRACE_EVENT(cfg80211_next_nan_dw_notif,
- 		  WDEV_PR_ARG, CHAN_PR_ARG)
- );
- 
-+TRACE_EVENT(cfg80211_nan_cluster_joined,
-+	TP_PROTO(struct wireless_dev *wdev,
-+		 u16 cluster_id, bool new_cluster),
-+	TP_ARGS(wdev, cluster_id, new_cluster),
-+	TP_STRUCT__entry(
-+		WDEV_ENTRY
-+		__field(u16, cluster_id)
-+		__field(bool, new_cluster)
-+	),
-+	TP_fast_assign(
-+		WDEV_ASSIGN;
-+		__entry->cluster_id = cluster_id;
-+		__entry->new_cluster = new_cluster;
-+	),
-+	TP_printk(WDEV_PR_FMT " cluster_id 0x%04x %s",
-+		  WDEV_PR_ARG, __entry->cluster_id,
-+		  __entry->new_cluster ? "[new]" : "")
-+);
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
 -- 
-2.49.0
+2.43.0
 
