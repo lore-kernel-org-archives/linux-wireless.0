@@ -1,189 +1,110 @@
-Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C697628688D
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Jul 2025 08:46:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975A02750E7;
+	Thu, 24 Jul 2025 08:50:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753346791; cv=none; b=HsE+Q+v133ogw2W/V9j+YRmccnD2aNb3bkd8FA6zazZKyC/4Z1JBWQlL7zuCIRuxQ09HJEV/x7sUo0mQbffOIm5N8mynQ4wC7jV/Bxd/0SpVrmg6UQE4vMrHDEnAGCGbMFy9h1iJfbykAVgjCqysOzIonM4PlopQJQ1OYxjYSZk=
+	t=1753347026; cv=none; b=Uly8p/cI7leb8BG7zll29PYxDZGanWyEvojGZWLVyf08irDLdyCOGbFIFiRiQ1t48CK/Mj4HL8l2NQYBrreeMtsf7JQwypFR4lLUHPSp+9gjGrBrgqtZiyr4D3FJppkgp8/UX1RI5SUfWNtwlwjaBTCsVjdMvskUcgtgJlV5iIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753346791; c=relaxed/simple;
-	bh=TJ+LzVvUsGF7+XtM2TRPzD8HQYYSsNUl2uz33sU9zsA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MASJmXC9fAm1OLaA7KUEqRgRvAMZ5qlhMEVo8tS4uOEXyjsNuvbMIz4EWEHNDWqUiEtRaaEMQvqtWTdm7W7jfaqTIf2epaH6Lg5aOc1/TXj4WLUzi7KBMWddBjRaDJF25rvVin3UivLj757RzMvOExOQPh6mxe7CC7hjSw5SPWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=d8aDliB5; arc=none smtp.client-ip=217.10.52.160
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
+	s=arc-20240116; t=1753347026; c=relaxed/simple;
+	bh=rMCiDWZlZhzp4vH7m5lKEGnxv3jAJDZnNG7omR5jJG8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=UrSGd4FwMX7QOJn1exyMusZE+/ShaJPDfEvcvgzRIBz7o8P6PETjOpAtmmXIsb7ItjQV+0SvaHo8/hgWlCfpGx7CODtXh+NHzMzIjY0lJ+v9fH1frpuXUk5wzHBAs1eGRDoeAsRkS+MuuiXYl0BrLx4ER/rnogdQDwYoEFghAF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=yLaA8ZM/; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=usWzCmUh; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="d8aDliB5"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1753346789; x=1784882789;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=TJ+LzVvUsGF7+XtM2TRPzD8HQYYSsNUl2uz33sU9zsA=;
-  b=d8aDliB5kDbKGSHR6VfPUBhodGy0+SOXsFILn6dJPEkEgA+E1WJgscX6
-   wc50MGO0Ku/bQHgnKmG0h/VxpK+HiwOSQ5xWxBYqMICHQN8hD1dM/+BLf
-   9Cr8SmJs0jz7tMHR0a3/8N5MA2G1M4DF50B0XhwGne3ORUAqTQC4HzmTI
-   0=;
-X-CSE-ConnectionGUID: Av4pmY9GT5KkEo6rwBYWlA==
-X-CSE-MsgGUID: /TXVqrIcQmCpPw9rY/EbIw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11501"; a="92546097"
-X-IronPort-AV: E=Sophos;i="6.16,336,1744063200"; 
-   d="scan'208";a="92546097"
-Received: from unknown (HELO MUCSE822.infineon.com) ([172.23.29.53])
-  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jul 2025 10:46:27 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE822.infineon.com
- (172.23.29.53) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Thu, 24 Jul
- 2025 10:46:26 +0200
-Received: from ISCN5CG14747PP.infineon.com (10.161.6.196) by
- MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.14; Thu, 24 Jul 2025 10:46:25 +0200
-From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>, Johannes Berg
-	<johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>,
-	<wlan-kernel-dev-list@infineon.com>, Gokul Sivakumar
-	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v2] wifi: brcmfmac: remove 43752 SDIO incorrectly labelled as Cypress chip
-Date: Thu, 24 Jul 2025 14:16:13 +0530
-Message-ID: <20250724084613.6336-1-gokulkumar.sivakumar@infineon.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yLaA8ZM/";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="usWzCmUh"
+From: John Ogness <john.ogness@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1753347022;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H+E1TDUgu9PLKNREhzAxCjOD+hjF8nfiUP9ZkQD82Fo=;
+	b=yLaA8ZM/l9Ah6R0ZMpNw4oFx63KoU/8IxvOwatJeQG7qXk/RGMzYVrVRl0tbvhmvekN1dQ
+	udjIqL6iBVo5UvxeLbUHLIS1eEP47x1uyyyHK0uV98F7a291+Vn9GU9XktnEfGOVe+/37O
+	T/jVTBjMNdyXvd+ddLr+e26Z77oYsSdx/tYQs1fH7O6jEIjZ3EEPKe6ueNuEBZPwI2oQ8y
+	vJnEQ0oG+jT8irw2TzzDUSYdtgjpx4hNqlqQ9nxNOOXftvSKzgcuatzIMtniOON+tVMGpy
+	AQnmQ2NyvYGm5WZ0ZTfyevoZ5Dy0GdNP4lRWDWh3k9eTza78GZ5KUK4tAQr49g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1753347022;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H+E1TDUgu9PLKNREhzAxCjOD+hjF8nfiUP9ZkQD82Fo=;
+	b=usWzCmUh1opW43mgXkThDgLDYbgkMk7Tx2WrVdQXeTxpB0lLEu3FZ2c02FrEL2hcl8+6vE
+	r4Ffhs7Miq5wFLAg==
+To: Pavel Machek <pavel@ucw.cz>, Johannes Berg <johannes@sipsolutions.net>
+Cc: kernel list <linux-kernel@vger.kernel.org>, tglx@linutronix.de,
+ mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+ x86@kernel.org, hpa@zytor.com, peterz@infradead.org, will@kernel.org,
+ longman@redhat.com, miriam.rachel.korenblit@intel.com,
+ linux-wireless@vger.kernel.org, pmladek@suse.com, rostedt@goodmis.org,
+ senozhatsky@chromium.org
+Subject: Re: locking problems in iwlwifi? was Re: 6.16-rcX: crashing way too
+ often on thinkpad X220
+In-Reply-To: <aIFH9I6b/tebYcEL@duo.ucw.cz>
+References: <aH/L1PCwtwe8Y1+a@duo.ucw.cz> <aID6XPLXuGo+ViTm@duo.ucw.cz>
+ <aIEC4t2EICdgomZV@duo.ucw.cz>
+ <c5c06a93845f72b40c6df82fcbc89d3163a01d8b.camel@sipsolutions.net>
+ <aIFH9I6b/tebYcEL@duo.ucw.cz>
+Date: Thu, 24 Jul 2025 10:56:22 +0206
+Message-ID: <84h5z2vupd.fsf@jogness.linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
- MUCSE827.infineon.com (172.23.29.20)
 
-Cypress(Infineon) is not the vendor for this 43752 SDIO WLAN chip, and so
-has not officially released any firmware binary for it. It is incorrect to
-maintain this WLAN chip with firmware vendor ID as "CYW". So relabel the
-chip as "WCC" as suggested by the maintainer.
+On 2025-07-23, Pavel Machek <pavel@ucw.cz> wrote:
+>> On Wed, 2025-07-23 at 17:42 +0200, Pavel Machek wrote:
+>> > [  402.125635] ------------[ cut here ]------------
+>> > [  402.125638] raw_local_irq_restore() called with IRQs enabled
+>> > [  402.125645] WARNING: CPU: 3 PID: 387 at kernel/locking/irqflag-debug.c:10 warn_bogus_irq_restore+0x25/0x30
+>> > [  402.125654] Modules linked in:
+>> > [  402.125661] CPU: 3 UID: 0 PID: 387 Comm: kworker/u16:5 Tainted: G S                  6.16.0-rc7+ #303 PREEMPT(voluntary) 
+>> > [  402.125667] Tainted: [S]=CPU_OUT_OF_SPEC
+>> > [  402.125668] Hardware name: LENOVO 4291W3B/4291W3B, BIOS 8DET73WW (1.43 ) 10/12/2016
+>> > [  402.125671] Workqueue: events_unbound cfg80211_wiphy_work
+>> > [  402.125678] RIP: 0010:warn_bogus_irq_restore+0x25/0x30
+>> > [  402.125683] Code: 90 90 90 90 90 80 3d 51 3d dc 00 00 74 05 c3 cc cc cc cc 55 48 c7 c7 c0 4f c9 85 48 89 e5 c6 05 38 3d dc 00 01 e8 9b d8 e6 fe <0f> 0b 5d c3 cc cc cc cc cc cc cc 90 90 90 90 90 90 90 90 90 90 90
+>> > [  402.125686] RSP: 0018:ffffc9000173fb30 EFLAGS: 00010282
+>> > [  402.125691] RAX: 0000000000000000 RBX: ffffffff8616b460 RCX: 0000000000000000
+>> > [  402.125694] RDX: 0000000000000003 RSI: 0000000000000027 RDI: 00000000ffffffff
+>> > [  402.125696] RBP: ffffc9000173fb30 R08: 0000000028935f32 R09: 0000000000000001
+>> > [  402.125699] R10: 0000000000000044 R11: ffff888100ba52c8 R12: 0000000000000001
+>> > [  402.125702] R13: ffffc9000173fbcb R14: ffffffff84301224 R15: 0000000000000000
+>> > [  402.125704] FS:  0000000000000000(0000) GS:ffff88829007f000(0000) knlGS:0000000000000000
+>> > [  402.125707] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> > [  402.125710] CR2: 000055967d471ee0 CR3: 0000000006046001 CR4: 00000000000606b0
+>> > [  402.125713] Call Trace:
+>> > [  402.125716]  <TASK>
+>> > [  402.125719]  console_flush_all+0x41e/0x460
+>> > [  402.125725]  ? console_flush_all+0x43/0x460
+>> > [  402.125735]  console_unlock+0x55/0x100
+>> > [  402.125741]  vprintk_emit+0x157/0x320
+>> > [  402.125748]  vprintk_default+0x18/0x20
+>> > [  402.125752]  vprintk+0x9/0x10
+>> > [  402.125756]  _printk+0x52/0x70
+>> > [  402.125766]  ieee80211_sta_rx_queued_mgmt+0x4c8/0xd30
+>> > [  402.125775]  ? __this_cpu_preempt_check+0x13/0x20
+>> > [  402.125784]  ieee80211_iface_work+0x3ad/0x500
+>> 
+>> That's not great, but I don't see how the driver or wifi subsystem is
+>> involved ... ieee80211_sta_rx_queued_mgmt() doesn't even use spinlocks
+>> let alone disable IRQs or use raw_ APIs, and it's in the middle of
+>> printk anyway.
 
-Fixes: d2587c57ffd8 ("brcmfmac: add 43752 SDIO ids and initialization")
-Fixes: f74f1ec22dc2 ("wifi: brcmfmac: add support for Cypress firmware api")
-Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
----
+printk() does perform local_irq_save()/_restore(). I rechecked all the
+sites and they are properly balanced in all paths.
 
-v2:
- * Relabelled the 43752-SDIO chip from CYW to WCC instead of dropping the
-   support for this chip as suggested by Arend.
+It looks like you may have found other issues related to corruption, so
+I will assume printk is not the culprit. But please keep us CC or ping
+us again if printk comes under suspicion again.
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 4 ++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 8 ++++----
- .../net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 1 -
- include/linux/mmc/sdio_ids.h                              | 2 +-
- 5 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 8ab7d1e34a6e..6a3f187320fc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -997,9 +997,9 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356, WCC),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4359, WCC),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43751, WCC),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43752, WCC),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_4373, CYW),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43012, CYW),
--	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752, CYW),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_89359, CYW),
- 	CYW_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_CYPRESS_43439, CYW),
- 	{ /* end: all zeroes */ }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 9074ab49e806..4239f2b21e54 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -738,8 +738,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_4364_CHIP_ID:
- 	case CY_CC_4373_CHIP_ID:
- 		return 0x160000;
--	case CY_CC_43752_CHIP_ID:
- 	case BRCM_CC_43751_CHIP_ID:
-+	case BRCM_CC_43752_CHIP_ID:
- 	case BRCM_CC_4377_CHIP_ID:
- 		return 0x170000;
- 	case BRCM_CC_4378_CHIP_ID:
-@@ -1452,7 +1452,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- 		return (reg & CC_SR_CTL0_ENABLE_MASK) != 0;
- 	case BRCM_CC_4359_CHIP_ID:
- 	case BRCM_CC_43751_CHIP_ID:
--	case CY_CC_43752_CHIP_ID:
-+	case BRCM_CC_43752_CHIP_ID:
- 	case CY_CC_43012_CHIP_ID:
- 		addr = CORE_CC_REG(pmu->base, retention_ctl);
- 		reg = chip->ops->read32(chip->ctx, addr);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 8a0bad5119a0..8cf9d7e7c3f7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -655,10 +655,10 @@ static const struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
- 	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
- 	BRCMF_FW_ENTRY(BRCM_CC_43751_CHIP_ID, 0xFFFFFFFF, 43752),
-+	BRCMF_FW_ENTRY(BRCM_CC_43752_CHIP_ID, 0xFFFFFFFF, 43752),
- 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
- 	BRCMF_FW_ENTRY(CY_CC_43012_CHIP_ID, 0xFFFFFFFF, 43012),
- 	BRCMF_FW_ENTRY(CY_CC_43439_CHIP_ID, 0xFFFFFFFF, 43439),
--	BRCMF_FW_ENTRY(CY_CC_43752_CHIP_ID, 0xFFFFFFFF, 43752)
- };
- 
- #define TXCTL_CREDITS	2
-@@ -3426,8 +3426,8 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- static bool brcmf_sdio_aos_no_decode(struct brcmf_sdio *bus)
- {
- 	if (bus->ci->chip == BRCM_CC_43751_CHIP_ID ||
--	    bus->ci->chip == CY_CC_43012_CHIP_ID ||
--	    bus->ci->chip == CY_CC_43752_CHIP_ID)
-+	    bus->ci->chip == BRCM_CC_43752_CHIP_ID ||
-+	    bus->ci->chip == CY_CC_43012_CHIP_ID)
- 		return true;
- 	else
- 		return false;
-@@ -4278,8 +4278,8 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
- 
- 		switch (sdiod->func1->device) {
- 		case SDIO_DEVICE_ID_BROADCOM_43751:
-+		case SDIO_DEVICE_ID_BROADCOM_43752:
- 		case SDIO_DEVICE_ID_BROADCOM_CYPRESS_4373:
--		case SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752:
- 			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
- 				  CY_4373_F2_WATERMARK);
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index b39c5c1ee18b..df3b67ba4db2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -60,7 +60,6 @@
- #define CY_CC_4373_CHIP_ID		0x4373
- #define CY_CC_43012_CHIP_ID		43012
- #define CY_CC_43439_CHIP_ID		43439
--#define CY_CC_43752_CHIP_ID		43752
- 
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index fe3d6d98f8da..673cbdf43453 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -77,7 +77,7 @@
- #define SDIO_DEVICE_ID_BROADCOM_43439		0xa9af
- #define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
- #define SDIO_DEVICE_ID_BROADCOM_43751		0xaae7
--#define SDIO_DEVICE_ID_BROADCOM_CYPRESS_43752	0xaae8
-+#define SDIO_DEVICE_ID_BROADCOM_43752		0xaae8
- 
- #define SDIO_VENDOR_ID_CYPRESS			0x04b4
- #define SDIO_DEVICE_ID_BROADCOM_CYPRESS_43439	0xbd3d
-
-base-commit: 3630f043302c065adb3d919992173b7dcb251b7b
--- 
-2.25.1
-
+John Ogness
