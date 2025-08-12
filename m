@@ -1,50 +1,50 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ECEB2FDC34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26FA2FD1CA
 	for <linux-wireless@vger.kernel.org>; Tue, 12 Aug 2025 17:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755018769; cv=none; b=QY2waVsJCyjuo10oMrzY9Vka2kFwTd+JjZpVdUv0v0AMWmtR6ybt0/xtrvyEBfIQOjReR2EPI4msMRMVLYqKBIxNs5l1sVr77gAYYoccZxMsZOsVfYdrJFw9pIK8oy6dbJA6FdAHT969y6nIbmYFET3bqDu1NuMnqCnQvr6HdUU=
+	t=1755018770; cv=none; b=eUTtyrr+P+RxzJEY31TaB2jTzQ7NZmEooUsOYVL+29KfKt6tMjWj3ZhwyvHdxezJxngCABKEucoST6UvY7QANZ6eXMqKhWfiBeoR7xfD/XlLOHYJitKkiNjSzYWPiPcGdGZf7lu6xRJqaAJRYUDH8SP+GOKAmLH2MMYW5XPrgdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755018769; c=relaxed/simple;
-	bh=WmfJjCoHcC132FW2ZBvKXNlWDsqiL/TDCu3mvWLbkkU=;
+	s=arc-20240116; t=1755018770; c=relaxed/simple;
+	bh=p+uYAIb+VW/G4ODyZNHYPJmNBBzrwJKkXzbpnaaUyMs=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=E6MD7UmPfJG/SK04+IUHDUXlwWkPu8jt1/8eoZMB5RQpHgY8ZHJlGPba2TiCeS6PO/F1EKUAI0xb/lM4ZlR531QGHSV08WPIFZzhenAFQ2cnj1QBwiXH3q2EwvhM9CUb7EQDW8n1lzdUGvAiKWu/o1kXS8fTBVGW94Cu5/BmNO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Vjocpch/; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:CC; b=e0FDGFzlbcQCa88IR075bW5lWfcU9Rr2tp7WmUh9ERK1CeLxuraJPVBSIJ2mhv1Sewy/tFQc26G4f+ZrhsP6zYs/LmUkLqN6z2q8aR2KnK9VAoDfvsqzYmydZZHLE6zCivQSuDGFcN3AFfLCkrkhXpaWhRJt+XPO7V4QE2qZpK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=F8fdkRDx; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Vjocpch/"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57CAvnJP021278;
-	Tue, 12 Aug 2025 17:12:39 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="F8fdkRDx"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57CCLPd4029015;
+	Tue, 12 Aug 2025 17:12:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ZpE+wlUOn4rOTV0dR15pByTbFBmtuZPAky292hk6nDE=; b=Vjocpch/e7DBnXma
-	3NlvaQDK8rzZVb/6RdI5nRrMIj62YKRv/EftscvgbzIkRTd0QhmoFMoBjVmpLP6F
-	rSatIwvA5ihowd1qsH0cTmYnDWKHcAkmBZCR9TdsjbIE0zBu0YRiHqy6No71lBi2
-	srkZqIkZP+hTEtuEn0/wwDp/I0v+Qc7OULD9/NJPyn5TUksEiQ+CIQFa9LrnIyO0
-	Ewxfqr5tbknUH8PUtPH/a6QnL8f0JTykhMLMbaiHwD4elILy8icTi8uWXb1y75uT
-	5aDNSrbdQk2lpZKZ1pB4K/VSqUOua7htqQWfDkkDw3Jty1cCGgmYRcMQ4swOH4qO
-	OgBurw==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48ffq6mtv2-1
+	D6J3sJkKlxM21DeWCF4i4/FatyXLz57A6IszoXbWmJo=; b=F8fdkRDxnkHa1sqm
+	/VcnsVjSqrdEPNZf9rB6RdbsRWrMz4PgPUicenMwcJABMQbgPLCr5MWhvV5krk0l
+	t2YFMRgMVBbBT9Ad/Itc4hBr3WlHOdIm2sM6jtrHQXF7vpQN93iFbMmGAu6sSKEa
+	2sMgREwxGDxTRGH/OBuP5tWfSkyKor3EXdYeT4ZhSHhf8DuNQPD1q/YXnzI8/HGJ
+	666D0VoQvkzxdv/qP/HmnzceuguJvlstD3WqN4FdGLdrt9UR5pyQ/hTCc6NEnPJ8
+	K5J3hd/e6ZTQOfR14Y1HmASxcm19BvcIeFB1olMrzfqE+ymsd+CacHnGsHE5z+n7
+	BFhKgA==
+Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48g5hm8vbm-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Aug 2025 17:12:39 +0000 (GMT)
+	Tue, 12 Aug 2025 17:12:44 +0000 (GMT)
 Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57CHCcOR010521
+	by NASANPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57CHChNh008060
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Aug 2025 17:12:38 GMT
+	Tue, 12 Aug 2025 17:12:43 GMT
 Received: from hu-kiranv-blr.qualcomm.com (10.80.80.8) by
  nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 12 Aug 2025 10:12:37 -0700
+ 15.2.1748.10; Tue, 12 Aug 2025 10:12:42 -0700
 From: Kiran Venkatappa <quic_kiranv@quicinc.com>
-Date: Tue, 12 Aug 2025 22:39:29 +0530
-Subject: [PATCH ath12k-ng 03/13] wifi: ath12k: Move Wi-Fi 7 WMI
- configuration to dedicated file
+Date: Tue, 12 Aug 2025 22:39:33 +0530
+Subject: [PATCH ath12k-ng 07/13] wifi: ath12k: Restructure ahb.c into
+ common and Wi-Fi 7 specific modules
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,7 +53,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20250812-ath12k-mod-v1-3-8c9b0eb9335d@quicinc.com>
+Message-ID: <20250812-ath12k-mod-v1-7-8c9b0eb9335d@quicinc.com>
 References: <20250812-ath12k-mod-v1-0-8c9b0eb9335d@quicinc.com>
 In-Reply-To: <20250812-ath12k-mod-v1-0-8c9b0eb9335d@quicinc.com>
 To: <ath12k@lists.infradead.org>
@@ -63,328 +63,417 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01c.na.qualcomm.com (10.45.79.139)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODExMDA3NSBTYWx0ZWRfX8rK1slxhs+ht
- 57lWc9e3EaMn+PaSp2ijhJyjAtNjv2PbV55/h0JG5zyEDN/+GYKT56z2ShKP9VxEEQCtXOiMKGv
- 7lmuhVk+OXSfzCc5+BHApS9iQ6SSnXFKMiCa5159IX4XW08fxOBzOQl42qaHjc219t7KehjHmkO
- v6XN8FHVvEQ4twFIlwHfSC5k/YMK2rvoAFGiR2WlQZA4dcgHQ11qWfUgY0iDHtpUermS7WG+c/j
- 5DlQJI+6m+PY+yt8sdubLW39pcB6y7xi0KF3NWL6s870vW95JjWxfYabOkirX6Tt4+yTBSmzDn2
- XPCHfhrf1fxIgxFpKTqdCGlTpEUobpMwmgEKWX6B6ehmk9PcNi2uVOXtal2zNHqwJWS2lbHig7M
- JSXoeA+U
-X-Authority-Analysis: v=2.4 cv=TLZFS0la c=1 sm=1 tr=0 ts=689b7607 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEyMDExOSBTYWx0ZWRfX37kC020k5jDE
+ I0b/9ANV/jBj+8F27BV+9ck1jfOsxFi71IVMdHjhtNFHCoWMHDgCNC4LU1Yh/mw3QxXCft6Ar3h
+ 6DyTxrYfEN9YuT1aZou64BauO8y7MScKi1KYOH5NSFPu8GEx9yMlPjBrCyNo3duPsbkncXWNQcR
+ eVRlABCIJdep6rbYic8WNBh9ibbVaOntL8vYwLEIwkPHAtQUhKWsC4dgn04lw/BZWXtnmt6m2nc
+ qiCBShVdcL5jnrwqvBoeHfwXCus+8aMD0Wy7pT3sWx0WCDQmN9E3f2eDdgqw1WlE5Dm7nNzYJ9E
+ F1fOBGWOfk7oRTMDWaYMaCF2zxdGTMfe+SjFsKBxkRKkyuwblo/RsDLoLqgDJxGuLnTXPvgo2yh
+ RSKoFICC
+X-Proofpoint-GUID: siy5AXFdhqD4VWl1t2aTXH3NOc723I1F
+X-Proofpoint-ORIG-GUID: siy5AXFdhqD4VWl1t2aTXH3NOc723I1F
+X-Authority-Analysis: v=2.4 cv=d4b1yQjE c=1 sm=1 tr=0 ts=689b760c cx=c_pps
  a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
  a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8
- a=X7Ah-KukCkl87x9OXY0A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: aU74KmLOVTr3_lufXtjeCWlzfpjagLcW
-X-Proofpoint-ORIG-GUID: aU74KmLOVTr3_lufXtjeCWlzfpjagLcW
+ a=iUYTLldr4w8bxq9Ft7IA:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-08-12_07,2025-08-11_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 malwarescore=0 spamscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 impostorscore=0 suspectscore=0
+ clxscore=1015 malwarescore=0 spamscore=0 phishscore=0 adultscore=0
+ bulkscore=0 priorityscore=1501 impostorscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508110075
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508120119
 
-Relocate Wi-Fi 7 specific WMI configuration from shared codebase to a new
-target-specific file. Isolate WMI settings per target to improve
-modularity and maintainability.
-
-This change is part of a broader effort to separate hardware-dependent
-logic into standalone modules, paving the way for cleaner support of
-multiple hardware families
+Split ahb.c into a common module (ahb.c) and a Wi-Fi 7 specific module
+(ahb_wifi7.c). Retain shared logic-such as probe and initialization
+sequences-in ahb.c to support reuse across hardware families.
+Move Wi-Fi 7 specific initialization and configuration routines to
+ahb_wifi7.c and register them via callbacks.
+This modular approach improves code organization and prepares the
+driver for scalable support of additional hardware families.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.3.1-00173-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.3.1-00130-QCAHKSWPL_SILICONZ-1
 
 Signed-off-by: Kiran Venkatappa <quic_kiranv@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/Makefile    |   1 +
- drivers/net/wireless/ath/ath12k/hw.c        |   1 +
- drivers/net/wireless/ath/ath12k/wmi.c       |  97 -------------------------
- drivers/net/wireless/ath/ath12k/wmi.h       |   4 --
- drivers/net/wireless/ath/ath12k/wmi_wifi7.c | 105 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath12k/wmi_wifi7.h |  15 ++++
- 6 files changed, 122 insertions(+), 101 deletions(-)
+ drivers/net/wireless/ath/ath12k/Makefile    |   2 +-
+ drivers/net/wireless/ath/ath12k/ahb.c       | 128 +++++++++++++++++++---------
+ drivers/net/wireless/ath/ath12k/ahb.h       |  27 +++---
+ drivers/net/wireless/ath/ath12k/ahb_wifi7.c |  63 ++++++++++++++
+ drivers/net/wireless/ath/ath12k/ahb_wifi7.h |  20 +++++
+ drivers/net/wireless/ath/ath12k/core.c      |   5 +-
+ 6 files changed, 190 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath12k/Makefile b/drivers/net/wireless/ath/ath12k/Makefile
-index e4776887c939ab0d11307e8f616f3728ed39ce71..ee075ee68bb834e3f3605b13a5fee6afff0ba763 100644
+index f1105d7adafff957b8a6ee3231e03a7f6ea47ed2..5c044e39633057651f80c3039f1340e791e419b4 100644
 --- a/drivers/net/wireless/ath/ath12k/Makefile
 +++ b/drivers/net/wireless/ath/ath12k/Makefile
-@@ -5,6 +5,7 @@ ath12k-y += core.o \
- 	    hal_tx.o \
- 	    hal_rx.o \
- 	    wmi.o \
-+	    wmi_wifi7.o \
- 	    mac.o \
- 	    reg.o \
- 	    htc.o \
-diff --git a/drivers/net/wireless/ath/ath12k/hw.c b/drivers/net/wireless/ath/ath12k/hw.c
-index dd60e27cc499648e4c6ec95d0a56ec06f4c7c6ae..df1b4439adc798dc0dfb7d8604874a4fcb77663b 100644
---- a/drivers/net/wireless/ath/ath12k/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/hw.c
-@@ -16,6 +16,7 @@
- #include "mhi.h"
- #include "dp_rx.h"
- #include "peer.h"
-+#include "wmi_wifi7.h"
+@@ -27,7 +27,7 @@ ath12k-y += core.o \
+ 	    fw.o \
+ 	    p2p.o
  
- static const guid_t wcn7850_uuid = GUID_INIT(0xf634f534, 0x6147, 0x11ec,
- 					     0x90, 0xd6, 0x02, 0x42,
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index da85c28ec35568ca5c81a49e565c19cff195bac7..9869c935aee7edb5591595f0bdbf1fbe7e54b00f 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -198,103 +198,6 @@ static __le32 ath12k_wmi_tlv_cmd_hdr(u32 cmd, u32 len)
- 	return ath12k_wmi_tlv_hdr(cmd, len - TLV_HDR_SIZE);
+-ath12k-$(CONFIG_ATH12K_AHB) += ahb.o
++ath12k-$(CONFIG_ATH12K_AHB) += ahb.o ahb_wifi7.o
+ ath12k-$(CONFIG_ATH12K_DEBUGFS) += debugfs.o debugfs_htt_stats.o debugfs_sta.o
+ ath12k-$(CONFIG_ACPI) += acpi.o
+ ath12k-$(CONFIG_ATH12K_TRACING) += trace.o
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+index f512854e82e4f32328dc49eac2472027c7369dfd..fc986e669bdea85cdf3dcc3d60c1f2cc9216d3e0 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/ahb.c
+@@ -16,18 +16,11 @@
+ #include "debug.h"
+ #include "hif.h"
+ 
+-static const struct of_device_id ath12k_ahb_of_match[] = {
+-	{ .compatible = "qcom,ipq5332-wifi",
+-	  .data = (void *)ATH12K_HW_IPQ5332_HW10,
+-	},
+-	{ }
+-};
+-
+-MODULE_DEVICE_TABLE(of, ath12k_ahb_of_match);
+-
+ #define ATH12K_IRQ_CE0_OFFSET 4
+ #define ATH12K_MAX_UPDS 1
+ #define ATH12K_UPD_IRQ_WRD_LEN  18
++
++static struct ath12k_ahb_driver *ath12k_ahb_family_drivers[ATH12K_DEVICE_FAMILY_MAX];
+ static const char ath12k_userpd_irq[][9] = {"spawn",
+ 				     "ready",
+ 				     "stop-ack"};
+@@ -988,13 +981,34 @@ static void ath12k_ahb_resource_deinit(struct ath12k_base *ab)
+ 	ab_ahb->xo_clk = NULL;
  }
  
--void ath12k_wmi_init_qcn9274(struct ath12k_base *ab,
--			     struct ath12k_wmi_resource_config_arg *config)
--{
--	config->num_vdevs = ab->num_radios * TARGET_NUM_VDEVS(ab);
--	config->num_peers = ab->num_radios *
--		ath12k_core_get_max_peers_per_radio(ab);
--	config->num_offload_peers = TARGET_NUM_OFFLD_PEERS;
--	config->num_offload_reorder_buffs = TARGET_NUM_OFFLD_REORDER_BUFFS;
--	config->num_peer_keys = TARGET_NUM_PEER_KEYS;
--	config->ast_skid_limit = TARGET_AST_SKID_LIMIT;
--	config->tx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
--	config->rx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
--	config->rx_timeout_pri[0] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[1] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[2] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[3] = TARGET_RX_TIMEOUT_HI_PRI;
--
--	if (test_bit(ATH12K_FLAG_RAW_MODE, &ab->dev_flags))
--		config->rx_decap_mode = TARGET_DECAP_MODE_RAW;
--	else
--		config->rx_decap_mode = TARGET_DECAP_MODE_NATIVE_WIFI;
--
--	config->scan_max_pending_req = TARGET_SCAN_MAX_PENDING_REQS;
--	config->bmiss_offload_max_vdev = TARGET_BMISS_OFFLOAD_MAX_VDEV;
--	config->roam_offload_max_vdev = TARGET_ROAM_OFFLOAD_MAX_VDEV;
--	config->roam_offload_max_ap_profiles = TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES;
--	config->num_mcast_groups = TARGET_NUM_MCAST_GROUPS;
--	config->num_mcast_table_elems = TARGET_NUM_MCAST_TABLE_ELEMS;
--	config->mcast2ucast_mode = TARGET_MCAST2UCAST_MODE;
--	config->tx_dbg_log_size = TARGET_TX_DBG_LOG_SIZE;
--	config->num_wds_entries = TARGET_NUM_WDS_ENTRIES;
--	config->dma_burst_size = TARGET_DMA_BURST_SIZE;
--	config->rx_skip_defrag_timeout_dup_detection_check =
--		TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
--	config->vow_config = TARGET_VOW_CONFIG;
--	config->gtk_offload_max_vdev = TARGET_GTK_OFFLOAD_MAX_VDEV;
--	config->num_msdu_desc = TARGET_NUM_MSDU_DESC;
--	config->beacon_tx_offload_max_vdev = ab->num_radios * TARGET_MAX_BCN_OFFLD;
--	config->rx_batchmode = TARGET_RX_BATCHMODE;
--	/* Indicates host supports peer map v3 and unmap v2 support */
--	config->peer_map_unmap_version = 0x32;
--	config->twt_ap_pdev_count = ab->num_radios;
--	config->twt_ap_sta_count = 1000;
--	config->ema_max_vap_cnt = ab->num_radios;
--	config->ema_max_profile_period = TARGET_EMA_MAX_PROFILE_PERIOD;
--	config->beacon_tx_offload_max_vdev += config->ema_max_vap_cnt;
--
--	if (test_bit(WMI_TLV_SERVICE_PEER_METADATA_V1A_V1B_SUPPORT, ab->wmi_ab.svc_map))
--		config->peer_metadata_ver = ATH12K_PEER_METADATA_V1B;
--}
--
--void ath12k_wmi_init_wcn7850(struct ath12k_base *ab,
--			     struct ath12k_wmi_resource_config_arg *config)
--{
--	config->num_vdevs = 4;
--	config->num_peers = 16;
--	config->num_tids = 32;
--
--	config->num_offload_peers = 3;
--	config->num_offload_reorder_buffs = 3;
--	config->num_peer_keys = TARGET_NUM_PEER_KEYS;
--	config->ast_skid_limit = TARGET_AST_SKID_LIMIT;
--	config->tx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
--	config->rx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
--	config->rx_timeout_pri[0] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[1] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[2] = TARGET_RX_TIMEOUT_LO_PRI;
--	config->rx_timeout_pri[3] = TARGET_RX_TIMEOUT_HI_PRI;
--	config->rx_decap_mode = TARGET_DECAP_MODE_NATIVE_WIFI;
--	config->scan_max_pending_req = TARGET_SCAN_MAX_PENDING_REQS;
--	config->bmiss_offload_max_vdev = TARGET_BMISS_OFFLOAD_MAX_VDEV;
--	config->roam_offload_max_vdev = TARGET_ROAM_OFFLOAD_MAX_VDEV;
--	config->roam_offload_max_ap_profiles = TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES;
--	config->num_mcast_groups = 0;
--	config->num_mcast_table_elems = 0;
--	config->mcast2ucast_mode = 0;
--	config->tx_dbg_log_size = TARGET_TX_DBG_LOG_SIZE;
--	config->num_wds_entries = 0;
--	config->dma_burst_size = 0;
--	config->rx_skip_defrag_timeout_dup_detection_check = 0;
--	config->vow_config = TARGET_VOW_CONFIG;
--	config->gtk_offload_max_vdev = 2;
--	config->num_msdu_desc = 0x400;
--	config->beacon_tx_offload_max_vdev = 2;
--	config->rx_batchmode = TARGET_RX_BATCHMODE;
--
--	config->peer_map_unmap_version = 0x1;
--	config->use_pdev_id = 1;
--	config->max_frag_entries = 0xa;
--	config->num_tdls_vdevs = 0x1;
--	config->num_tdls_conn_table_entries = 8;
--	config->beacon_tx_offload_max_vdev = 0x2;
--	config->num_multicast_filter_entries = 0x20;
--	config->num_wow_filters = 0x16;
--	config->num_keep_alive_pattern = 0;
--}
--
- #define PRIMAP(_hw_mode_) \
- 	[_hw_mode_] = _hw_mode_##_PRI
++static enum ath12k_device_family
++ath12k_ahb_get_device_family(const struct platform_device *pdev)
++{
++	enum ath12k_device_family device_family_id;
++	struct ath12k_ahb_driver *driver;
++	const struct of_device_id *of_id;
++
++	for (device_family_id = ATH12K_DEVICE_FAMILY_START;
++	     device_family_id < ATH12K_DEVICE_FAMILY_MAX; device_family_id++) {
++		driver = ath12k_ahb_family_drivers[device_family_id];
++		if (driver) {
++			of_id = of_match_device(driver->id_table, &pdev->dev);
++			if (of_id) {
++				/* Found the driver */
++				return device_family_id;
++			}
++		}
++	}
++
++	return ATH12K_DEVICE_FAMILY_MAX;
++}
++
+ static int ath12k_ahb_probe(struct platform_device *pdev)
+ {
+-	struct ath12k_base *ab;
+-	const struct ath12k_hif_ops *hif_ops;
++	enum ath12k_device_family device_id;
+ 	struct ath12k_ahb *ab_ahb;
+-	enum ath12k_hw_rev hw_rev;
+-	u32 addr, userpd_id;
++	struct ath12k_base *ab;
++	u32 addr;
+ 	int ret;
  
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index f3b0a6f57ec2b0d9f9a1b1831b04639088ded27d..833f42e6b826e59a8f54e32359b905d8752e6e42 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
-@@ -6283,10 +6283,6 @@ struct ath12k_wmi_rssi_dbm_conv_info_arg {
- 	s8 min_nf_dbm;
+ 	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
+@@ -1008,25 +1022,32 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+ 	if (!ab)
+ 		return -ENOMEM;
+ 
+-	hw_rev = (enum ath12k_hw_rev)(kernel_ulong_t)of_device_get_match_data(&pdev->dev);
+-	switch (hw_rev) {
+-	case ATH12K_HW_IPQ5332_HW10:
+-		hif_ops = &ath12k_ahb_hif_ops;
+-		userpd_id = ATH12K_IPQ5332_USERPD_ID;
+-		break;
+-	default:
+-		ret = -EOPNOTSUPP;
++	ab_ahb = ath12k_ab_to_ahb(ab);
++	ab_ahb->ab = ab;
++	ab->hif.ops = &ath12k_ahb_hif_ops;
++	ab->pdev = pdev;
++	platform_set_drvdata(pdev, ab);
++
++	device_id = ath12k_ahb_get_device_family(pdev);
++	if (device_id >= ATH12K_DEVICE_FAMILY_MAX) {
++		ath12k_err(ab, "failed to get device family: %d\n", device_id);
++		ret = -EINVAL;
+ 		goto err_core_free;
+ 	}
+ 
+-	ab->hif.ops = hif_ops;
+-	ab->pdev = pdev;
+-	ab->hw_rev = hw_rev;
+-	ab->target_mem_mode = ATH12K_QMI_MEMORY_MODE_DEFAULT;
+-	platform_set_drvdata(pdev, ab);
+-	ab_ahb = ath12k_ab_to_ahb(ab);
+-	ab_ahb->ab = ab;
+-	ab_ahb->userpd_id = userpd_id;
++	ath12k_dbg(ab, ATH12K_DBG_AHB, "AHB device family id: %d\n", device_id);
++
++	ab_ahb->device_family_ops = &ath12k_ahb_family_drivers[device_id]->ops;
++
++	/* Call device specific probe. This is the callback that can
++	 * be used to override any ops in future
++	 * probe is validated for NULL during registration.
++	 */
++	ret = ab_ahb->device_family_ops->probe(pdev);
++	if (ret) {
++		ath12k_err(ab, "failed to probe device: %d\n", ret);
++		goto err_core_free;
++	}
+ 
+ 	/* Set fixed_mem_region to true for platforms that support fixed memory
+ 	 * reservation from DT. If memory is reserved from DT for FW, ath12k driver
+@@ -1136,21 +1157,44 @@ static void ath12k_ahb_remove(struct platform_device *pdev)
+ 	ath12k_ahb_free_resources(ab);
+ }
+ 
+-static struct platform_driver ath12k_ahb_driver = {
+-	.driver         = {
+-		.name   = "ath12k_ahb",
+-		.of_match_table = ath12k_ahb_of_match,
+-	},
+-	.probe  = ath12k_ahb_probe,
+-	.remove = ath12k_ahb_remove,
+-};
+-
+-int ath12k_ahb_init(void)
++int ath12k_ahb_register_driver(const enum ath12k_device_family device_id,
++			       struct ath12k_ahb_driver *driver)
+ {
+-	return platform_driver_register(&ath12k_ahb_driver);
++	struct platform_driver *ahb_driver;
++
++	if (device_id >= ATH12K_DEVICE_FAMILY_MAX)
++		return -EINVAL;
++
++	if (!driver || !driver->ops.probe)
++		return -EINVAL;
++
++	if (ath12k_ahb_family_drivers[device_id]) {
++		pr_err("Driver already registered for id %d\n", device_id);
++		return -EALREADY;
++	}
++
++	ath12k_ahb_family_drivers[device_id] = driver;
++
++	ahb_driver = &ath12k_ahb_family_drivers[device_id]->driver;
++	ahb_driver->driver.name = driver->name;
++	ahb_driver->driver.of_match_table = driver->id_table;
++	ahb_driver->probe  = ath12k_ahb_probe;
++	ahb_driver->remove = ath12k_ahb_remove;
++
++	return platform_driver_register(ahb_driver);
+ }
+ 
+-void ath12k_ahb_exit(void)
++void ath12k_ahb_unregister_driver(const enum ath12k_device_family device_id)
+ {
+-	platform_driver_unregister(&ath12k_ahb_driver);
++	struct platform_driver *ahb_driver;
++
++	if (device_id >= ATH12K_DEVICE_FAMILY_MAX)
++		return;
++
++	if (!ath12k_ahb_family_drivers[device_id])
++		return;
++
++	ahb_driver = &ath12k_ahb_family_drivers[device_id]->driver;
++	platform_driver_unregister(ahb_driver);
++	ath12k_ahb_family_drivers[device_id] = NULL;
+ }
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.h b/drivers/net/wireless/ath/ath12k/ahb.h
+index d56244b20a6a667cf3730dc1ce38a22b0e86ffca..fce02e3af5fb406a732eb52d6854a551f6d80012 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.h
++++ b/drivers/net/wireless/ath/ath12k/ahb.h
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/remoteproc/qcom_rproc.h>
++#include <linux/platform_device.h>
+ #include "core.h"
+ 
+ #define ATH12K_AHB_RECOVERY_TIMEOUT (3 * HZ)
+@@ -43,6 +44,10 @@ enum ath12k_ahb_userpd_irq {
+ 
+ struct ath12k_base;
+ 
++struct ath12k_ahb_device_family_ops {
++	int (*probe)(struct platform_device *pdev);
++};
++
+ struct ath12k_ahb {
+ 	struct ath12k_base *ab;
+ 	struct rproc *tgt_rproc;
+@@ -59,6 +64,15 @@ struct ath12k_ahb {
+ 	u32 spawn_bit;
+ 	u32 stop_bit;
+ 	int userpd_irq_num[ATH12K_USERPD_MAX_IRQ];
++	const struct ath12k_ahb_ops *ahb_ops;
++	const struct ath12k_ahb_device_family_ops *device_family_ops;
++};
++
++struct ath12k_ahb_driver {
++	const char *name;
++	const struct of_device_id *id_table;
++	struct ath12k_ahb_device_family_ops ops;
++	struct platform_driver driver;
  };
  
--void ath12k_wmi_init_qcn9274(struct ath12k_base *ab,
--			     struct ath12k_wmi_resource_config_arg *config);
--void ath12k_wmi_init_wcn7850(struct ath12k_base *ab,
--			     struct ath12k_wmi_resource_config_arg *config);
- int ath12k_wmi_cmd_send(struct ath12k_wmi_pdev *wmi, struct sk_buff *skb,
- 			u32 cmd_id);
- struct sk_buff *ath12k_wmi_alloc_skb(struct ath12k_wmi_base *wmi_sc, u32 len);
-diff --git a/drivers/net/wireless/ath/ath12k/wmi_wifi7.c b/drivers/net/wireless/ath/ath12k/wmi_wifi7.c
+ static inline struct ath12k_ahb *ath12k_ab_to_ahb(struct ath12k_base *ab)
+@@ -66,15 +80,8 @@ static inline struct ath12k_ahb *ath12k_ab_to_ahb(struct ath12k_base *ab)
+ 	return (struct ath12k_ahb *)ab->drv_priv;
+ }
+ 
+-#ifdef CONFIG_ATH12K_AHB
+-int ath12k_ahb_init(void);
+-void ath12k_ahb_exit(void);
+-#else
+-static inline int ath12k_ahb_init(void)
+-{
+-	return 0;
+-}
++int ath12k_ahb_register_driver(const enum ath12k_device_family device_id,
++			       struct ath12k_ahb_driver *driver);
++void ath12k_ahb_unregister_driver(const enum ath12k_device_family device_id);
+ 
+-static inline void ath12k_ahb_exit(void) {};
+-#endif
+ #endif
+diff --git a/drivers/net/wireless/ath/ath12k/ahb_wifi7.c b/drivers/net/wireless/ath/ath12k/ahb_wifi7.c
 new file mode 100644
-index 0000000000000000000000000000000000000000..f27fa56210e8332ca3c309eca9184f6cbe560c91
+index 0000000000000000000000000000000000000000..7a869722b77e639781fed45835872c38a50b8cfc
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/wmi_wifi7.c
-@@ -0,0 +1,105 @@
++++ b/drivers/net/wireless/ath/ath12k/ahb_wifi7.c
+@@ -0,0 +1,63 @@
 +// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
-+ * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 + */
 +
-+#include "core.h"
-+#include "wmi_wifi7.h"
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/soc/qcom/mdt_loader.h>
++#include "ahb.h"
++#include "ahb_wifi7.h"
++#include "debug.h"
++#include "hif.h"
 +
-+void ath12k_wmi_init_qcn9274(struct ath12k_base *ab,
-+			     struct ath12k_wmi_resource_config_arg *config)
++static const struct of_device_id ath12k_wifi7_ahb_of_match[] = {
++	{ .compatible = "qcom,ipq5332-wifi",
++	  .data = (void *)ATH12K_HW_IPQ5332_HW10,
++	},
++	{ }
++};
++
++MODULE_DEVICE_TABLE(of, ath12k_wifi7_ahb_of_match);
++
++static int ath12k_wifi7_ahb_probe(struct platform_device *pdev)
 +{
-+	config->num_vdevs = ab->num_radios * TARGET_NUM_VDEVS(ab);
-+	config->num_peers = ab->num_radios *
-+		ath12k_core_get_max_peers_per_radio(ab);
-+	config->num_offload_peers = TARGET_NUM_OFFLD_PEERS;
-+	config->num_offload_reorder_buffs = TARGET_NUM_OFFLD_REORDER_BUFFS;
-+	config->num_peer_keys = TARGET_NUM_PEER_KEYS;
-+	config->ast_skid_limit = TARGET_AST_SKID_LIMIT;
-+	config->tx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
-+	config->rx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
-+	config->rx_timeout_pri[0] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[1] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[2] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[3] = TARGET_RX_TIMEOUT_HI_PRI;
++	struct ath12k_ahb *ab_ahb;
++	enum ath12k_hw_rev hw_rev;
++	struct ath12k_base *ab;
 +
-+	if (test_bit(ATH12K_FLAG_RAW_MODE, &ab->dev_flags))
-+		config->rx_decap_mode = TARGET_DECAP_MODE_RAW;
-+	else
-+		config->rx_decap_mode = TARGET_DECAP_MODE_NATIVE_WIFI;
++	ab = platform_get_drvdata(pdev);
++	ab_ahb = ath12k_ab_to_ahb(ab);
 +
-+	config->scan_max_pending_req = TARGET_SCAN_MAX_PENDING_REQS;
-+	config->bmiss_offload_max_vdev = TARGET_BMISS_OFFLOAD_MAX_VDEV;
-+	config->roam_offload_max_vdev = TARGET_ROAM_OFFLOAD_MAX_VDEV;
-+	config->roam_offload_max_ap_profiles = TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES;
-+	config->num_mcast_groups = TARGET_NUM_MCAST_GROUPS;
-+	config->num_mcast_table_elems = TARGET_NUM_MCAST_TABLE_ELEMS;
-+	config->mcast2ucast_mode = TARGET_MCAST2UCAST_MODE;
-+	config->tx_dbg_log_size = TARGET_TX_DBG_LOG_SIZE;
-+	config->num_wds_entries = TARGET_NUM_WDS_ENTRIES;
-+	config->dma_burst_size = TARGET_DMA_BURST_SIZE;
-+	config->rx_skip_defrag_timeout_dup_detection_check =
-+		TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK;
-+	config->vow_config = TARGET_VOW_CONFIG;
-+	config->gtk_offload_max_vdev = TARGET_GTK_OFFLOAD_MAX_VDEV;
-+	config->num_msdu_desc = TARGET_NUM_MSDU_DESC;
-+	config->beacon_tx_offload_max_vdev = ab->num_radios * TARGET_MAX_BCN_OFFLD;
-+	config->rx_batchmode = TARGET_RX_BATCHMODE;
-+	/* Indicates host supports peer map v3 and unmap v2 support */
-+	config->peer_map_unmap_version = 0x32;
-+	config->twt_ap_pdev_count = ab->num_radios;
-+	config->twt_ap_sta_count = 1000;
-+	config->ema_max_vap_cnt = ab->num_radios;
-+	config->ema_max_profile_period = TARGET_EMA_MAX_PROFILE_PERIOD;
-+	config->beacon_tx_offload_max_vdev += config->ema_max_vap_cnt;
++	hw_rev = (enum ath12k_hw_rev)(kernel_ulong_t)of_device_get_match_data(&pdev->dev);
++	switch (hw_rev) {
++	case ATH12K_HW_IPQ5332_HW10:
++		ab_ahb->userpd_id = ATH12K_IPQ5332_USERPD_ID;
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
 +
-+	if (test_bit(WMI_TLV_SERVICE_PEER_METADATA_V1A_V1B_SUPPORT, ab->wmi_ab.svc_map))
-+		config->peer_metadata_ver = ATH12K_PEER_METADATA_V1B;
++	ab->target_mem_mode = ATH12K_QMI_MEMORY_MODE_DEFAULT;
++	ab->hw_rev = hw_rev;
++
++	return 0;
 +}
 +
-+void ath12k_wmi_init_wcn7850(struct ath12k_base *ab,
-+			     struct ath12k_wmi_resource_config_arg *config)
++static struct ath12k_ahb_driver ath12k_wifi7_ahb_driver = {
++	.name = "ath12k_wifi7_ahb",
++	.id_table = ath12k_wifi7_ahb_of_match,
++	.ops.probe = ath12k_wifi7_ahb_probe,
++};
++
++int ath12k_wifi7_ahb_init(void)
 +{
-+	config->num_vdevs = 4;
-+	config->num_peers = 16;
-+	config->num_tids = 32;
-+
-+	config->num_offload_peers = 3;
-+	config->num_offload_reorder_buffs = 3;
-+	config->num_peer_keys = TARGET_NUM_PEER_KEYS;
-+	config->ast_skid_limit = TARGET_AST_SKID_LIMIT;
-+	config->tx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
-+	config->rx_chain_mask = (1 << ab->target_caps.num_rf_chains) - 1;
-+	config->rx_timeout_pri[0] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[1] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[2] = TARGET_RX_TIMEOUT_LO_PRI;
-+	config->rx_timeout_pri[3] = TARGET_RX_TIMEOUT_HI_PRI;
-+	config->rx_decap_mode = TARGET_DECAP_MODE_NATIVE_WIFI;
-+	config->scan_max_pending_req = TARGET_SCAN_MAX_PENDING_REQS;
-+	config->bmiss_offload_max_vdev = TARGET_BMISS_OFFLOAD_MAX_VDEV;
-+	config->roam_offload_max_vdev = TARGET_ROAM_OFFLOAD_MAX_VDEV;
-+	config->roam_offload_max_ap_profiles = TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES;
-+	config->num_mcast_groups = 0;
-+	config->num_mcast_table_elems = 0;
-+	config->mcast2ucast_mode = 0;
-+	config->tx_dbg_log_size = TARGET_TX_DBG_LOG_SIZE;
-+	config->num_wds_entries = 0;
-+	config->dma_burst_size = 0;
-+	config->rx_skip_defrag_timeout_dup_detection_check = 0;
-+	config->vow_config = TARGET_VOW_CONFIG;
-+	config->gtk_offload_max_vdev = 2;
-+	config->num_msdu_desc = 0x400;
-+	config->beacon_tx_offload_max_vdev = 2;
-+	config->rx_batchmode = TARGET_RX_BATCHMODE;
-+
-+	config->peer_map_unmap_version = 0x1;
-+	config->use_pdev_id = 1;
-+	config->max_frag_entries = 0xa;
-+	config->num_tdls_vdevs = 0x1;
-+	config->num_tdls_conn_table_entries = 8;
-+	config->beacon_tx_offload_max_vdev = 0x2;
-+	config->num_multicast_filter_entries = 0x20;
-+	config->num_wow_filters = 0x16;
-+	config->num_keep_alive_pattern = 0;
++	return ath12k_ahb_register_driver(ATH12K_DEVICE_FAMILY_WIFI7,
++					  &ath12k_wifi7_ahb_driver);
 +}
-diff --git a/drivers/net/wireless/ath/ath12k/wmi_wifi7.h b/drivers/net/wireless/ath/ath12k/wmi_wifi7.h
++
++void ath12k_wifi7_ahb_exit(void)
++{
++	ath12k_ahb_unregister_driver(ATH12K_DEVICE_FAMILY_WIFI7);
++}
+diff --git a/drivers/net/wireless/ath/ath12k/ahb_wifi7.h b/drivers/net/wireless/ath/ath12k/ahb_wifi7.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..1514e3e8d4cb65d3d95d95a1c1593a7b66abcf58
+index 0000000000000000000000000000000000000000..5974c7cad69aecc8763045a70fc291e9f1c5940d
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/wmi_wifi7.h
-@@ -0,0 +1,15 @@
++++ b/drivers/net/wireless/ath/ath12k/ahb_wifi7.h
+@@ -0,0 +1,20 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
-+ * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
 + */
++#ifndef ATH12K_AHB_WIFI7_H
++#define ATH12K_AHB_WIFI7_H
 +
-+#ifndef ATH12K_WMI_WIFI7_H
-+#define ATH12K_WMI_WIFI7_H
++#ifdef CONFIG_ATH12K_AHB
++int ath12k_wifi7_ahb_init(void);
++void ath12k_wifi7_ahb_exit(void);
++#else
++static inline int ath12k_wifi7_ahb_init(void)
++{
++	return 0;
++}
 +
-+void ath12k_wmi_init_qcn9274(struct ath12k_base *ab,
-+			     struct ath12k_wmi_resource_config_arg *config);
-+void ath12k_wmi_init_wcn7850(struct ath12k_base *ab,
-+			     struct ath12k_wmi_resource_config_arg *config);
-+
++static inline void ath12k_wifi7_ahb_exit(void) {}
 +#endif
++#endif /* ATH12K_AHB_WIFI7_H */
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index b723d7d28cdac48934d621338d6a623781c86b73..1333422724e4e873c8a36a53cf0faf4eda82c1a4 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -23,6 +23,7 @@
+ #include "pci.h"
+ #include "wow.h"
+ #include "pci_wifi7.h"
++#include "ahb_wifi7.h"
+ 
+ static int ahb_err, pci_err;
+ unsigned int ath12k_debug_mask;
+@@ -2284,7 +2285,7 @@ struct ath12k_base *ath12k_core_alloc(struct device *dev, size_t priv_size,
+ 
+ static int ath12k_init(void)
+ {
+-	ahb_err = ath12k_ahb_init();
++	ahb_err = ath12k_wifi7_ahb_init();
+ 	if (ahb_err)
+ 		pr_warn("Failed to initialize ath12k AHB device: %d\n", ahb_err);
+ 
+@@ -2302,7 +2303,7 @@ static void ath12k_exit(void)
+ 		ath12k_wifi7_pci_exit();
+ 
+ 	if (!ahb_err)
+-		ath12k_ahb_exit();
++		ath12k_wifi7_ahb_exit();
+ }
+ 
+ module_init(ath12k_init);
 
 -- 
 2.34.1
