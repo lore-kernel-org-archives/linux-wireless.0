@@ -1,143 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49DA21E0DE2;
-	Wed, 13 Aug 2025 08:20:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7109A1A9F9E
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 11:11:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755073249; cv=none; b=DE68JYpFI2OksLeqhgqSVH3Qlz4HcVCVC8tBy2+FLsVlBIufdHoY3s+AIWaOMquKi6QgWDCdtYvSpb8Ctbf1RvYEXXQNNBuZPx5fOYX22/hzSbrQY9AmF2sRiZF6V+Kz9u4VDZpq+8fBuxRPMP8m+7Uk/b279qLLlwc65obVQHY=
+	t=1755083517; cv=none; b=dEfgSWRAvHVThmETzwPs6HHroxBSZo+tG9ebT/ogbcYuYjBcO3c3nMGJGhqkRCJA4YP36CivjP26dZNpyPR6rJFJcgXPHNX2htERsJTGvfXYXOr25n06G/gho/REzkInKyuAcOT/0RseQ22iCcxB/ywqwcmBrvgmWNnSLeESEEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755073249; c=relaxed/simple;
-	bh=3+Pkagji7KiXRDhcskdDWN3ot9FimhMco02Y8P1KNKU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RUIYkC3J1z9cDYbxMXVv6xVfjyzr9NAFMUF8sMgcLGr+fYOf7005qU2ZyjmDwDQcnePUz2p3cMTY2vang0vuYEROPr5Cx5AOVCWVEGMOwao/TpP4eE0JNshvm2WJUpaChkm3Ic4DrxkRYm6sxAioGCI7DI7oHrJVY0g84VDXEUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S+VtKx5j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755083517; c=relaxed/simple;
+	bh=SvIoBrpSkUuSmTesZ3pwDufRunxKsMT4xYKbrYXFx4A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T1/dsNQcTb8YKz4Wa9zwHiFDoZNgapdJ32hbGcRLyc48AGI3gaFfxzlZTuypfq0cL+xY9IKQJGXMe1F3C04EfUXV/ZLn2blmgbVBsOe3vAHIDh+3Cn1EqT9VKsrVpyPSGceyT9WzT4sy+UMuRB6JZOTJq7nvve2st/qu3tYeAZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ANezn5P+; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S+VtKx5j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BCBCC4CEEB;
-	Wed, 13 Aug 2025 08:20:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755073249;
-	bh=3+Pkagji7KiXRDhcskdDWN3ot9FimhMco02Y8P1KNKU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=S+VtKx5jsOlVHiS3ochX2wtQCu3VLX3xwDHol0sQtnAGdoiYNT4vCxh3VdyTSSj4e
-	 wbxxwMcdxvA+WdQBw3dhRW2njksixM69Ub0HhX2Jw+ccrDKh9g6pMtjyckWtcqYX4B
-	 Z2dlAFvHFaxKMTrlyag0r/DyOcvmEisz4Eubc3/fkQTi1zDQekYjS+vgO8wL2Om+qa
-	 Go4f/yDJ9y05aEi9qaE9f0Bn5mF2Mab9+r0NCHFi51gTL+ZLFgZj3hLsA3wjamvfl/
-	 EOXwiFcaQ3VcuoMHmP26Fszxp9Ur1F/pcHixU85+Pq9drAieUqGJjvTPXJHus2tMHr
-	 /x0Wy5UmwVTjQ==
-Message-ID: <74d5ccda-89f7-4ddc-9574-ba7e8d4a2488@kernel.org>
-Date: Wed, 13 Aug 2025 10:20:44 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ANezn5P+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1755083516; x=1786619516;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=SvIoBrpSkUuSmTesZ3pwDufRunxKsMT4xYKbrYXFx4A=;
+  b=ANezn5P+GhXnpuUQRnyyJ1xubuXdYJLxDMZ7N+xJv1HhQ4oZ5at9QBBG
+   K0aJ+F7BzyfTrA4HiXXNjd1nDVUYWuzeGB+UEUbVwvkPiEOoCGRNpI7oj
+   4jbw0YKsuoBmmwI1/Sm03JGG2adfRz60BCz6+gvc46tROgp1RM1DIIviF
+   nWV1CSdPbl79vma+YpPa5T5iTpd57EVCmuexNPTeKWkJlUAHvV9fD1LTo
+   qIMWo/ljfnRuCZ5UXHGDP9gqVVX/gO8ya5PZEh4NB/0HU+F3wGD2/17+M
+   bPDidAbAfLmxe0FIBoQxoCfZE50XD6KkWLekMDPqAkiT/VvPHsksqIcpL
+   g==;
+X-CSE-ConnectionGUID: XG8fDFAwQz2VH2KSQoMDLA==
+X-CSE-MsgGUID: auYLd4drSta8BUD5xLR4RA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="74951174"
+X-IronPort-AV: E=Sophos;i="6.17,285,1747724400"; 
+   d="scan'208";a="74951174"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 04:11:54 -0700
+X-CSE-ConnectionGUID: Q8f+RWhbTNODVBvEStLvzQ==
+X-CSE-MsgGUID: cdMiJxIdQYexy7kCAmhO2A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.17,285,1747724400"; 
+   d="scan'208";a="165628920"
+Received: from aotchere-mobl1.jer.intel.com ([10.13.73.232])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 04:11:51 -0700
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	maheshkkv@google.com,
+	quic_vganneva@quicinc.com,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [RFC v3 0/4] wifi: nl80211: Extend NAN APIs to allow more flexible implementations
+Date: Wed, 13 Aug 2025 17:10:44 +0300
+Message-ID: <20250813141048.100884-1-andrei.otcheretianski@intel.com>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv2 2/3] wifi: ath9k: ahb: add led pin OF support
-To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
- Johannes Berg <johannes@sipsolutions.net>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
- "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
- <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- "open list:MIPS" <linux-mips@vger.kernel.org>
-References: <20250812192334.11651-1-rosenp@gmail.com>
- <20250812192334.11651-3-rosenp@gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <20250812192334.11651-3-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 12/08/2025 21:23, Rosen Penev wrote:
-> The old and removed platform code had support for assigning a value for
-> the LED pin for when the default is not correct. Effectively a fix for a
-> non working LED.
-> 
-> For setting an LED to active high, a negation of led-active-low is used,
-> as two drivers currently use that and no drivers use led-active-high or
-> something similar.
-> 
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index c911b178dcc2..7826b113235d 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -662,6 +662,17 @@ static int ath9k_of_init(struct ath_softc *sc)
->  	if (ret == -EPROBE_DEFER)
->  		return ret;
->  
-> +	np = of_get_child_by_name(np, "led");
-> +	if (np && of_device_is_available(np)) {
+This patch series extend exiting NAN APIs to support more
+configuration options for NAN synchronization and a user space oriented
+NAN Service Discovery implementation.
+Existing NAN APIs are very limited and not really used, resulting in
+vendors using proprietary vendor commands and a need to offload NAN
+protocol implementations to the device firmware or driver.
+In this series, additional APIs are added which allow to extend the
+configuration of the NAN Synchronization logic and support user space
+oriented NAN Service Discovery implementation.
+With this design, wireless devices/drivers are still required to
+implement NAN synchronization and cluster merging. NAN Discovery Engine,
+may be either offloaded (keep using the existing APIs) or alternatively
+implemented in user space.
+To support user space oriented NAN Discovery Engine, the device will
+notify user space with %NL80211_CMD_NAN_NEXT_DW_NOTIFICATION about the
+upcoming Discovery Window (DW). This notification should be used as a
+trigger for transmission of uncsolicited multicast SDF's (i.e.
+unsolicited publish and active subscribe). Once SDF transmission is
+requested with %NL80211_CMD_FRAME, the device shall take care of the
+actual frame transmission during the upcoming DW.
+Note, this notification may be sent before the actual DW start time.
+For devices that may require longer DW notification processing time,
+user space may provide the expected latency to the device using
+%NL80211_NAN_CONF_DW_LEAD_TIME attribute.
+Note that such approach may not be appropriate for highly power
+efficient devices or scenarios that require long discovery sessions, as
+it may require the host to wake up for each DW.
+User space can, in turn, turn off this notification using
+%NL80211_NAN_CONF_NOTIFY_DW configuration flag if it doesn't intend to
+send unsolicited multicast SDFs to prevent unneeded wake ups.
 
-You are open-coding of_get_available_child_by_name().
+%NL80211_CMD_NAN_CLUSTER_JOINED notification shall be sent once after
+new NAN cluster has been started or the device has joined an existing
+cluster. In addition each time, cluster merge procedure results in
+cluster merging, user space shall be notified. This is required, as
+cluster ID is used as address 3 in SDF frames. Untransmitted frames
+should be flushed, when this notification is generated in order to
+prevent transmission of SDFs with invalid address 3.
 
-> +		u32 led_pin;
-> +
-> +		if (!of_property_read_u32(np, "reg", &led_pin))
-> +			ah->led_pin = led_pin;
-> +
-> +		ah->config.led_active_high = !of_property_read_bool(np, "led-active-low");
-> +		of_node_put(np);
-> +	}
+This patch series goal is to provide APIs to support NAN synchronization
+and user space oriented Service Discovery. It will be further extended
+in a separate patch set to support user space implementation of NAN data
+path (NDP) and NDL schedule establishment.
 
-Leaking OF node.
+---
+Changes in v3:
+  - Added %NL80211_NAN_CONF_DW_LEAD_TIME
+  - Added capabilities to limit extra NAN attributes and vendor IEs
+  - Changed NAN configuration parameters format/types etc
+  - Improved documentation and bugfixes
 
-> +
->  	return 0;
->  }
->  
+Andrei Otcheretianski (4):
+  wifi: nl80211: Add more configuration options for NAN commands
+  wifi: nl80211: Add NAN Discovery Window (DW) notification
+  wifi: cfg80211: Add cluster joined notification APIs
+  wifi: nl80211: Add more NAN capabilities
 
+ include/net/cfg80211.h       |  91 ++++++++
+ include/uapi/linux/nl80211.h | 203 +++++++++++++++++-
+ net/wireless/nl80211.c       | 389 +++++++++++++++++++++++++++++++----
+ net/wireless/trace.h         |  35 ++++
+ 4 files changed, 681 insertions(+), 37 deletions(-)
 
-Best regards,
-Krzysztof
+-- 
+2.47.1
+
