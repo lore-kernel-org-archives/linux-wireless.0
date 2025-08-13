@@ -1,128 +1,102 @@
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33352EAB6A;
-	Wed, 13 Aug 2025 14:13:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963582ED14F
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 14:17:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755094424; cv=none; b=WVBs4YLtvMz4WN3zsYARJRWZDy5pVheAspz18qNG7xuBiSHE9drSoKPDwwAxGs6dlxO7jV8GFElKi1+iFT/IwIOnvwaol5d7a1mioimDvUIT0ZguKf1DaBJ73Rm7zki4lfgYBKYSK4P8gu7JtCMccvivroSHsxJ0UOGcQJmL5ws=
+	t=1755094644; cv=none; b=q48clO+ozAiD/LZc2M7PzjAUwwPfNXUIYcVArX4vovcgwFMQD2tWcq6NHcp6Y6oKXxXdZHb4408PdUM5A24m/dObjHxz08Ki0n7sGlHOF7zEeGYp88m5QRl4uqxu3SObA0vsSc2ewh7Dv0xHmwRFycbUDAO3U15eoDWeL8wF95c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755094424; c=relaxed/simple;
-	bh=1806fHgVHrvXvwwYH4cO0aCEnas1j5+fCDRQvdoKNsQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CjEXmX8RXBZ84OMgn/HDK031hQaDJYtEnyvxg4acS6rHPoLAGnHDoOz7I2mmn66MbEsXGgtMrTVr38Y+GqwtSzXZSXuYV0051DeKlgnGQ0pponMHe2JgJ4mdM78bSqctnmsKVurtq/ePGmVJmEMs2hw4U5bEUwc2RxmxypMWSxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nTQy73FU; arc=none smtp.client-ip=209.85.160.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755094644; c=relaxed/simple;
+	bh=gDv6k/cnVGC+5pFIfduOvzEvsIzZnvrVOea6R+TSr5g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sA71ioi0CqyiqKlUhLuvlbMrayLyeVFklAJW+X+XtcoSpaYJsjlS2v+PC9UJ3u6oEuaNkb1fhndsk4UqT1b63f+DGWEKC86AgGBxpAi7482CHi7GZc+w0aOZiPzjjwFtq9OxkJ81QGNCNQx1rYl4PhBejM+p+7gKzwNfuIjWPrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=EHlZ6nh3; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nTQy73FU"
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-4b0632ae199so14846841cf.1;
-        Wed, 13 Aug 2025 07:13:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EHlZ6nh3"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-3b790dbb112so4082349f8f.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 07:17:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755094422; x=1755699222; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WARLCY0cBcmQtgbWBsLZHA7KrPzPqDIpjlTk0tlOfnk=;
-        b=nTQy73FUxHAKoRTGiMJAgGM98lznbPIPFGkYKUJIU8TBQnAdFIdOrIP9OT11Sltily
-         S+FQM4fs9SKER4Eh5MDris/xWpmyeEPkDmD7AiLfnf6pn3zFDbSb0ebUUkLingcTCGMB
-         NclwcQ5iEqhDBToZki2s5yAdmVLIFa60VoGnrldS8ZXOouvHfVY3L+Y+w5XMZYarfXc2
-         HEK/gopoPoV/Ugu/TABjroHaaOFtZKcgbWgXEUjcnUp+bCNUjpPVnISMJf2SHrL2O3GR
-         9lDjI7cfKFlwY78pcYKP2kTLw0auhgrPOqEjIVTl8apEsTfGJuCB9jtYq0SUrRggrTmk
-         AY/w==
+        d=linaro.org; s=google; t=1755094641; x=1755699441; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=1gxZeZj9Dcst0lTsMevYg/T988h0HVKmw8rmMSy1LdM=;
+        b=EHlZ6nh3CsWx+3VQQeijLdRwIIK6Dguvs/Vsvpslqo2bWFQnr1gc/dbKBrgYIw7PPK
+         1Te+kNcVBDt8MbRlP4hyxTQNX5KJD8iwI63WXp5+xNvpJ2sOiyclQnyUAJnwe2KQ4vRe
+         h8dfR6nKbnkbTY2WF6L0zORdPb5syjdCUb9RPJhgQrLsMACDAbhHQuwOWidtER3nB0oA
+         YAzALgTWLDIn4N0o5Ud6EESfn9gQ86/1AateuipbLTlJkbIHykbQb4okwR4UEawmgdCk
+         F2Zk0asAPhTmzEWUa4bb6232SJ4+pxFTd178QDArnf3LrxUl9Dk8/1xOdb/5lCgL0G7J
+         Qgvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755094422; x=1755699222;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=WARLCY0cBcmQtgbWBsLZHA7KrPzPqDIpjlTk0tlOfnk=;
-        b=uv+CFcFo6r2XmCEwb83tGbqPczayXbWxEZo4aU+X3jNmvbVBvYYw2zBdPARgifxUqP
-         AthmeAawO5LUfK4wLJ3h3XUS2mm5AviV6LcSL+YAO/SovEjrmUuigY7D+jQF3r/x9VD3
-         +MmuimCpR26dUsr5JfCaLQ3eYjH4Vceo457uqpmL5uqMI0F/L1enxhJc90pIbEoRmHM5
-         JU0T/Z8NkGwYG+OE7iVSVbIs6NJEkNFc5xaiPhxSBdLIQ5GpuQNG9KDTEVqMbW+I30HD
-         QDe1wyF6pA7T26AIS7o8plTvRO2Gb7Vk25ohz1VmKEE6z7vrvvpRd22LBZmL1Y1YZkat
-         pe+A==
-X-Forwarded-Encrypted: i=1; AJvYcCUjwgjjzfH+yrCG42hGHTOg0KGwAl1G2fnHcveP/pU6HLWXfW1AoRuTgzI7iu7elSGJ/3Sfq4zYdcPEutU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzAKyFX7nVHNr6gm4q3H8jsbbYI/PCybp3oExgg6IEsdCnxqYyS
-	/wdB+e9DnXOvegc3dL9p4W9/+JvUKL832TGKCuhwyazVLs0ZVnuxMCzYm+Fu1UUoeAjFBstZW5N
-	2aPvih3l38gJg5P2+ICXtznZMW0Q5pf8=
-X-Gm-Gg: ASbGncvlbENXDHmOqaDy3fQp1roCq8apdDUxOxpNLc3ux64oFj3MAXxVjDpJp2b6eXG
-	bSNwbzD+1MtcSxRj7ZSxwJn+EkMdMM47vIbCCR3AppidGLdCUKTgcsnK7Uy4/PuMYnmp+IGh0+L
-	CR1LC6wzMWJHb9LbDhxmNCtZJzG4xNsL8J5ncUWY6A29KP5CXtZnBKNdqpWjaVK3pWpI92AwNAW
-	zBHcg==
-X-Google-Smtp-Source: AGHT+IH0OUqPFF2OAmBmmyQVnYWrTf+kgSA3SmC4KfOBUbYLHJEpW1sWKER2B6fu0r7fb47UrSCF0PfRfse3xIEirFQ=
-X-Received: by 2002:ac8:5981:0:b0:4ab:6d02:c061 with SMTP id
- d75a77b69052e-4b0fc6ee4d9mr18190961cf.6.1755094421607; Wed, 13 Aug 2025
- 07:13:41 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1755094641; x=1755699441;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1gxZeZj9Dcst0lTsMevYg/T988h0HVKmw8rmMSy1LdM=;
+        b=opYu6cnNNvFMRl7GH6iQhZ7XK2gM5hEzNNwv9+71a5uqFImDmQsHQBo5QEJtaU2Pk+
+         8nmHqNM8t/iprnDuXFJAYTMTcyTGrMkCfDyu93b9RT1Qn6IweN5dI9ceD51ykhfi1aMv
+         /6Lij3f+eKd8xhupKPsuLTqQ7J613d45bixWRdwCUGiOX33gLN3okuDcc2MldNv8ofIB
+         fgSiyu3xYrI4/zqPdWs4O7/xfPl5BseoQxvxTibY0Wvv5TQNq7BX0Oxyx4uqB8eN7zTa
+         fqJMn8Qd0GdQI2Yys1DIibbdqHvYETwpUd7VzKnEoLmOHHIc29+ZRLOcnFBnja2kp7LS
+         ZaUg==
+X-Forwarded-Encrypted: i=1; AJvYcCWsK6O7ftIQUkBCsvMMcU3CBYVKujnH6NQ8ptIdXRuWncGgMy53N9hRSvW2fMJuXLia4Ir5KpThGtDOaxEI8w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxbtEEiUn+lx0ZAlsz8Q+rAz4bwnlRxtBQv0P+ynX7hjzn0CK0I
+	ny/OxTBKq1ocFR6vID5NDVT8AcJbXTc5kex5V/W2axAhjHYD7U4YScTbsMmiNptvMCs=
+X-Gm-Gg: ASbGncuXqkeBd9iVE5RdomZ1BazfmBVIokUXP++JsMx/+mhvvR4g3bzbcdP5JsvqYPW
+	ZTmjGzIDFsUnOBBMyVX7902b1fQPpUn0jXlu4vA7bodLBspJj1K+6+cYDjPtCpQmpGIV99UjIxz
+	QfmtJ85P1UIJNHFc8EOKHoYw89CDyjf9gctijLWH+pzDQ55bBENltMqjxA5Rhm1HPjF5Up5Tw5b
+	5NoP9ExGIBcn5S1tHGPjdgYCXfxH3JpPzSXwSs+CqN1WfP832xUQHnNK3WyaBYCltfMjb6niYs/
+	3e2GAc2WnALLAiLMOPSTN3jXyegQX9SX8M3adDZjj0/H96eC5BUbSIQaYciyw3mlCYIp3C1KFkG
+	Z1JS9PvRuGgctUoDmSLGhWtS7p8ejeciPd6NVrgwceQkqxBTZ+YuCUg==
+X-Google-Smtp-Source: AGHT+IFFIHDxH0gsvcBbrdg0jzQCZ8KJ5WFgRavMcUV7EUAlo72yyL5x+kSMwqYLcMH3lxjUWM8oPA==
+X-Received: by 2002:a05:6000:4305:b0:3b7:7cb3:1124 with SMTP id ffacd0b85a97d-3b917d2af6dmr3043536f8f.11.1755094640701;
+        Wed, 13 Aug 2025 07:17:20 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3b79c3ac158sm48762592f8f.4.2025.08.13.07.17.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Aug 2025 07:17:20 -0700 (PDT)
+Date: Wed, 13 Aug 2025 12:25:27 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Qianfeng Rong <rongqianfeng@vivo.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Kalle Valo <kvalo@kernel.org>,
+	Aditya Kumar Singh <quic_adisi@quicinc.com>,
+	Rameshkumar Sundaram <quic_ramess@quicinc.com>,
+	Roopni Devanathan <quic_rdevanat@quicinc.com>,
+	"open list:MARVELL MWIFIEX WIRELESS DRIVER" <linux-wireless@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/5] wifi: mwifiex: use vmalloc_array() to simplify code
+Message-ID: <aJxaBzZYr4d5-XUv@stanley.mountain>
+References: <20250812133226.258318-1-rongqianfeng@vivo.com>
+ <20250812133226.258318-6-rongqianfeng@vivo.com>
+ <aJtGSxkRztAsy92h@stanley.mountain>
+ <e66eb22f-5565-4f33-b523-f93dc81a1210@vivo.com>
+ <aJtQS-Tpzw90Hqtl@stanley.mountain>
+ <c330d0f3-d3cd-4981-8bb5-3ff5761647dc@vivo.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250705134810.197494-1-miguelgarciaroman8@gmail.com> <DB5MMOAEFZZU.5TK1BDNOTFEO@bootlin.com>
-In-Reply-To: <DB5MMOAEFZZU.5TK1BDNOTFEO@bootlin.com>
-From: =?UTF-8?B?TWlndWVsIEdhcmPDrWEgUm9tw6Fu?= <miguelgarciaroman8@gmail.com>
-Date: Wed, 13 Aug 2025 16:13:29 +0200
-X-Gm-Features: Ac12FXwEIJRL4UB-B460eVYTQqv1Yu6V-YfbLfnCrluBzhLSBPK4mTm4ZR6Hnck
-Message-ID: <CABKbRo+7=_p=yt02FsCtTksA5C0_eS2LHt-FMkE1ddpuaEDJ6w@mail.gmail.com>
-Subject: Re: [PATCH] wilc1000: replace deprecated strcpy() with strscpy()
-To: =?UTF-8?Q?Alexis_Lothor=C3=A9?= <alexis.lothore@bootlin.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	ajay.kathat@microchip.com, claudiu.beznea@tuxon.dev, marex@denx.de, 
-	kvalo@kernel.org, skhan@linuxfoundation.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c330d0f3-d3cd-4981-8bb5-3ff5761647dc@vivo.com>
 
-Gentle ping.
+On Wed, Aug 13, 2025 at 02:52:51PM +0800, Qianfeng Rong wrote:
+> > 
+> > I really think we should zero this memory, so lets allocate it
+> > with kcalloc().
+> I agree with you, I will try to do this in the next version.
 
-Just checking if anything else is needed for this patch.
-Reviewed-by: Alexis Lothor=C3=A9 <alexis.lothore@bootlin.com>
-Thanks!
+Thanks.  When you resend it make sure to add a Fixes tag and CC stable.
+Forgetting to zero the memory is a sort of security issue.
 
-El lun, 7 jul 2025 a las 8:58, Alexis Lothor=C3=A9
-(<alexis.lothore@bootlin.com>) escribi=C3=B3:
->
-> Hi,
->
-> On Sat Jul 5, 2025 at 3:48 PM CEST, Miguel Garc=C3=ADa wrote:
-> > strcpy() is deprecated for NUL-terminated strings.  Replace the single
-> > instance in wilc1000 netdev setup with strscpy(), which guarantees
-> > NUL-termination and prevents overflow.
-> >
-> > ndev->name is a fixed-size buffer (IFNAMSIZ, 16 bytes).
-> >
-> > Signed-off-by: Miguel Garc=C3=ADa <miguelgarciaroman8@gmail.com>
->
-> LGTM, thanks for the update
->
-> Reviewed-by: Alexis Lothor=C3=A9 <alexis.lothore@bootlin.com>
->
-> > ---
-> >  drivers/net/wireless/microchip/wilc1000/netdev.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers=
-/net/wireless/microchip/wilc1000/netdev.c
-> > index af298021e050..8f4d11e1a2a6 100644
-> > --- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-> > +++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-> > @@ -960,7 +960,7 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *=
-wl, const char *name,
-> >
-> >       vif =3D netdev_priv(ndev);
-> >       ndev->ieee80211_ptr =3D &vif->priv.wdev;
-> > -     strcpy(ndev->name, name);
-> > +     strscpy(ndev->name, name, sizeof(ndev->name));
-> >       vif->wilc =3D wl;
-> >       vif->ndev =3D ndev;
-> >       ndev->ml_priv =3D vif;
->
->
->
->
-> --
-> Alexis Lothor=C3=A9, Bootlin
-> Embedded Linux and Kernel engineering
-> https://bootlin.com
->
+regards,
+dan carpenter
+
