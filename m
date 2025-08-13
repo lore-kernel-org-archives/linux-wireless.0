@@ -1,102 +1,369 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963582ED14F
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 14:17:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0835122B8D9
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 14:26:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755094644; cv=none; b=q48clO+ozAiD/LZc2M7PzjAUwwPfNXUIYcVArX4vovcgwFMQD2tWcq6NHcp6Y6oKXxXdZHb4408PdUM5A24m/dObjHxz08Ki0n7sGlHOF7zEeGYp88m5QRl4uqxu3SObA0vsSc2ewh7Dv0xHmwRFycbUDAO3U15eoDWeL8wF95c=
+	t=1755095222; cv=none; b=PPG7bRoZY77XCXU0/zniUN0qiljSn4SmLpDFDDMGV9Zh6uXPHen1ap0VWUeiDsvZBjihskE+8cKMR37GQYho38JwFfBXRXeDwRMHX3hnUIf9O+LJE0vjmLrW5qkdBg4UZkuDEutwnP7HxC5/48s7UFvbCU6cR7hi8N+yzn8+uKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755094644; c=relaxed/simple;
-	bh=gDv6k/cnVGC+5pFIfduOvzEvsIzZnvrVOea6R+TSr5g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sA71ioi0CqyiqKlUhLuvlbMrayLyeVFklAJW+X+XtcoSpaYJsjlS2v+PC9UJ3u6oEuaNkb1fhndsk4UqT1b63f+DGWEKC86AgGBxpAi7482CHi7GZc+w0aOZiPzjjwFtq9OxkJ81QGNCNQx1rYl4PhBejM+p+7gKzwNfuIjWPrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=EHlZ6nh3; arc=none smtp.client-ip=209.85.221.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1755095222; c=relaxed/simple;
+	bh=/iEY3R/tKlXZ/jM/JMYUfZLfxARcB+CIBfH/1aklnlg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HQUwcTsMzyAt/2yw1756YHY5h84mTpDKiXvxeb8jHnQmdWsTpnVSxCrHDzo6LJOXVAb/oD+P6rgxCP8PaZ59piQPeHj6f7rPn1kKna5NEsLZN4UWsauqx1wA3OI9zfKeZmtM64RVEGnJeY9uqwBNi1o2cZmOaUic9gn8rEessDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=KPfcBm+U; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=freebox.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EHlZ6nh3"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-3b790dbb112so4082349f8f.3
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 07:17:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="KPfcBm+U"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-3b8d0f1fb49so3916999f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Aug 2025 07:26:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1755094641; x=1755699441; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1gxZeZj9Dcst0lTsMevYg/T988h0HVKmw8rmMSy1LdM=;
-        b=EHlZ6nh3CsWx+3VQQeijLdRwIIK6Dguvs/Vsvpslqo2bWFQnr1gc/dbKBrgYIw7PPK
-         1Te+kNcVBDt8MbRlP4hyxTQNX5KJD8iwI63WXp5+xNvpJ2sOiyclQnyUAJnwe2KQ4vRe
-         h8dfR6nKbnkbTY2WF6L0zORdPb5syjdCUb9RPJhgQrLsMACDAbhHQuwOWidtER3nB0oA
-         YAzALgTWLDIn4N0o5Ud6EESfn9gQ86/1AateuipbLTlJkbIHykbQb4okwR4UEawmgdCk
-         F2Zk0asAPhTmzEWUa4bb6232SJ4+pxFTd178QDArnf3LrxUl9Dk8/1xOdb/5lCgL0G7J
-         Qgvg==
+        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1755095216; x=1755700016; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1zSLYiA6flmnAvp9VS1OwIyP1lZvOfSArros20ecrzg=;
+        b=KPfcBm+UGrg6EqP7PHPV6Wb7F5ETum0bamsNzDFl87BQRxmPuFwci3C8Ef7D35hBdr
+         75J4hetZ4vADY9bsn9LQKPArGHf7VUFMogGkPaPn1Q1IKhj/6JrWrsscJtCXljfi1D3A
+         WHsjWANLShkLEI9Gb7lFWmX5AXwkKIOhOVChoBnunvn4INwXMa3cmXn5iT3trHOeFDh0
+         WK7O71Ujtlf9IH8QMaDh8HzVw82IfEG/Y7AuV9xvUqyQKxw7gxEUddI3eVPESanIVaXn
+         z/eCuEywMPjT14prtWpxfeoNi5MbcpCGxGw1yDzvX67qJaSaT/ArZeR6MfpQ4LSdDmHQ
+         RP7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755094641; x=1755699441;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1gxZeZj9Dcst0lTsMevYg/T988h0HVKmw8rmMSy1LdM=;
-        b=opYu6cnNNvFMRl7GH6iQhZ7XK2gM5hEzNNwv9+71a5uqFImDmQsHQBo5QEJtaU2Pk+
-         8nmHqNM8t/iprnDuXFJAYTMTcyTGrMkCfDyu93b9RT1Qn6IweN5dI9ceD51ykhfi1aMv
-         /6Lij3f+eKd8xhupKPsuLTqQ7J613d45bixWRdwCUGiOX33gLN3okuDcc2MldNv8ofIB
-         fgSiyu3xYrI4/zqPdWs4O7/xfPl5BseoQxvxTibY0Wvv5TQNq7BX0Oxyx4uqB8eN7zTa
-         fqJMn8Qd0GdQI2Yys1DIibbdqHvYETwpUd7VzKnEoLmOHHIc29+ZRLOcnFBnja2kp7LS
-         ZaUg==
-X-Forwarded-Encrypted: i=1; AJvYcCWsK6O7ftIQUkBCsvMMcU3CBYVKujnH6NQ8ptIdXRuWncGgMy53N9hRSvW2fMJuXLia4Ir5KpThGtDOaxEI8w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbtEEiUn+lx0ZAlsz8Q+rAz4bwnlRxtBQv0P+ynX7hjzn0CK0I
-	ny/OxTBKq1ocFR6vID5NDVT8AcJbXTc5kex5V/W2axAhjHYD7U4YScTbsMmiNptvMCs=
-X-Gm-Gg: ASbGncuXqkeBd9iVE5RdomZ1BazfmBVIokUXP++JsMx/+mhvvR4g3bzbcdP5JsvqYPW
-	ZTmjGzIDFsUnOBBMyVX7902b1fQPpUn0jXlu4vA7bodLBspJj1K+6+cYDjPtCpQmpGIV99UjIxz
-	QfmtJ85P1UIJNHFc8EOKHoYw89CDyjf9gctijLWH+pzDQ55bBENltMqjxA5Rhm1HPjF5Up5Tw5b
-	5NoP9ExGIBcn5S1tHGPjdgYCXfxH3JpPzSXwSs+CqN1WfP832xUQHnNK3WyaBYCltfMjb6niYs/
-	3e2GAc2WnALLAiLMOPSTN3jXyegQX9SX8M3adDZjj0/H96eC5BUbSIQaYciyw3mlCYIp3C1KFkG
-	Z1JS9PvRuGgctUoDmSLGhWtS7p8ejeciPd6NVrgwceQkqxBTZ+YuCUg==
-X-Google-Smtp-Source: AGHT+IFFIHDxH0gsvcBbrdg0jzQCZ8KJ5WFgRavMcUV7EUAlo72yyL5x+kSMwqYLcMH3lxjUWM8oPA==
-X-Received: by 2002:a05:6000:4305:b0:3b7:7cb3:1124 with SMTP id ffacd0b85a97d-3b917d2af6dmr3043536f8f.11.1755094640701;
-        Wed, 13 Aug 2025 07:17:20 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3b79c3ac158sm48762592f8f.4.2025.08.13.07.17.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Aug 2025 07:17:20 -0700 (PDT)
-Date: Wed, 13 Aug 2025 12:25:27 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Qianfeng Rong <rongqianfeng@vivo.com>
-Cc: Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Kalle Valo <kvalo@kernel.org>,
-	Aditya Kumar Singh <quic_adisi@quicinc.com>,
-	Rameshkumar Sundaram <quic_ramess@quicinc.com>,
-	Roopni Devanathan <quic_rdevanat@quicinc.com>,
-	"open list:MARVELL MWIFIEX WIRELESS DRIVER" <linux-wireless@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5/5] wifi: mwifiex: use vmalloc_array() to simplify code
-Message-ID: <aJxaBzZYr4d5-XUv@stanley.mountain>
-References: <20250812133226.258318-1-rongqianfeng@vivo.com>
- <20250812133226.258318-6-rongqianfeng@vivo.com>
- <aJtGSxkRztAsy92h@stanley.mountain>
- <e66eb22f-5565-4f33-b523-f93dc81a1210@vivo.com>
- <aJtQS-Tpzw90Hqtl@stanley.mountain>
- <c330d0f3-d3cd-4981-8bb5-3ff5761647dc@vivo.com>
+        d=1e100.net; s=20230601; t=1755095216; x=1755700016;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1zSLYiA6flmnAvp9VS1OwIyP1lZvOfSArros20ecrzg=;
+        b=ZupMdFX9A56p47qI/laaDZMNKfvWzFkSliGJ9Wk94FrAaFxu/8JgwBaFqzthzgVgHB
+         AERHWhzSnO3FMBpW8jn9ZZMGQ9womzp8seEuwoojgd/poOEmEjMjWVzbRpVJzF6SKqmJ
+         xmB3ZYNxjzX/qfpyX+35qcyQrpAC8Zu2wbByHiHZ9NQvw2Z+qsRgKvHsxoyUfsEysFEN
+         NLsgi4bGGTfTQCDQ2VN37NibrFZ8ix50e14gkZ/XSekQRRk22hS9QsR7fFM/4E+c0jNy
+         kCOP6Islki3ix6KRYdhWjAGSwNJMSD8ttti0DrP/srqkNEb2OVSvvWZ6iDUei1PJ7Qfv
+         8Jxg==
+X-Gm-Message-State: AOJu0Yyb7wxwnk2W9MbDUOmzwCAf76UmzuMif9oCjsFNQFFgqnGeRVoQ
+	mZrvCItn1ZLtMlIHuwXqkDpR6ORSR4K+UuLU870BhFEvoIK0bulpb8Qm2j2TyE2tjJcsnBMYlFJ
+	IjgC6
+X-Gm-Gg: ASbGnctd99v4YY9SdL1Td+di8xPSbMDnQjd8WyrLwr4tjOpGpqdyKx9Pny88jevA1Nc
+	KqJant2fveK1F1kPm1mTW6G+vrrwVPqTLLDpFOhn/r/snN4QUDs0PL8s+DnBQz5XwOKS1GheyTC
+	QF1fXe9Rfu5t3hk+HFoTvcmWemV+tjkl1U43uO8KXG01CVQqgtzFWVCQntKompEFwaMZpITTkCi
+	RJf58wrTadnd1lmwXiwsjMjKwEMYFROyopcIj3dhX9Z5lUuLUFG4xyvbtd61j+B+QXdTTCUC2ly
+	u+2RNgMz7h1FkHbGLN915jy1eKG10nT+qTw09ip04J3BoODIyQk42iCy61CNrtupyXAfDW5JpXK
+	Csplw3iM4AKimVqtgISrNf8uRO7bASwFWBKWA1kM/NmKBNhE24TxecbRexjegocPs
+X-Google-Smtp-Source: AGHT+IF6pBNoWmXGf7vTZMQ381bW6+2j2NKIgb8N25SF99egd7XehItvSqzxpYLu0CgEzvEXOBUZPw==
+X-Received: by 2002:a05:6000:2304:b0:3b7:6d94:a032 with SMTP id ffacd0b85a97d-3b917d2d474mr2550108f8f.3.1755095216092;
+        Wed, 13 Aug 2025 07:26:56 -0700 (PDT)
+Received: from [192.168.108.121] (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45a1a5868fesm4264065e9.16.2025.08.13.07.26.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Aug 2025 07:26:55 -0700 (PDT)
+Message-ID: <db364a7e-0877-4069-9c06-26ab6ad4acd2@freebox.fr>
+Date: Wed, 13 Aug 2025 16:26:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c330d0f3-d3cd-4981-8bb5-3ff5761647dc@vivo.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next] wifi: nl80211: Add EHT fixed Tx rate
+ support
+To: Muna Sinada <muna.sinada@oss.qualcomm.com>, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Aloka Dixit <aloka.dixit@oss.qualcomm.com>
+References: <20250812213652.3763535-1-muna.sinada@oss.qualcomm.com>
+Content-Language: en-US
+From: Pablo MARTIN-GOMEZ <pmartin-gomez@freebox.fr>
+In-Reply-To: <20250812213652.3763535-1-muna.sinada@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Aug 13, 2025 at 02:52:51PM +0800, Qianfeng Rong wrote:
-> > 
-> > I really think we should zero this memory, so lets allocate it
-> > with kcalloc().
-> I agree with you, I will try to do this in the next version.
+On 12/08/2025 23:36, Muna Sinada wrote:
+> Add new attributes to support EHT MCS/NSS Tx rates and EHT GI/LTF.
+> Parse EHT fixed MCS/NSS Tx rates and EHT GI/LTF values passed by the
+> userspace, validate and add as part of cfg80211_bitrate_mask.
+>
+> MCS mask is constructed by new function, eht_build_mcs_mask(). Max NSS
+> supported for MCS rates of 7, 9, 11 and 13 is utilized to set MCS
+> bitmask for each NSS. MCS rates 14, and 15 if supported, are set only
+> for NSS = 0.
+>
+> Co-developed-by: Aloka Dixit <aloka.dixit@oss.qualcomm.com>
+> Signed-off-by: Aloka Dixit <aloka.dixit@oss.qualcomm.com>
+> Signed-off-by: Muna Sinada <muna.sinada@oss.qualcomm.com>
+> ---
+>   include/net/cfg80211.h       |   3 +
+>   include/uapi/linux/nl80211.h |  32 ++++++
+>   net/wireless/nl80211.c       | 214 ++++++++++++++++++++++++++++++++++-
+>   3 files changed, 246 insertions(+), 3 deletions(-)
+[...]
+>   
+> +static int eht_build_mcs_mask(struct genl_info *info,
+> +			      const struct ieee80211_sta_he_cap *he_cap,
+> +			      const struct ieee80211_sta_eht_cap *eht_cap,
+> +			      u16 *mcs_mask)
+> +{
+I would probably prefer if `eht_*_mcs_mask` followed `he_*_mcs_mask` 
+structures: no possible error for `eht_build_mcs_mask` and all the 
+checks in `eht_set_mcs_mask`
+> +	struct net_device *dev = info->user_ptr[1];
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> +	u8 mcs_nss_len, nss, mcs_7 = 0, mcs_9 = 0, mcs_11 = 0, mcs_13 = 0;
+> +	bool mcs_14 = false, mcs_15 = false;
+> +	unsigned int link_id = nl80211_link_id(info->attrs);
+> +
+> +	mcs_nss_len = ieee80211_eht_mcs_nss_size(&he_cap->he_cap_elem,
+> +						 &eht_cap->eht_cap_elem,
+> +						 wdev->iftype ==
+> +							NL80211_IFTYPE_STATION);
+> +
+> +	if (eht_cap->eht_cap_elem.phy_cap_info[6] &
+> +	    IEEE80211_EHT_PHY_CAP6_EHT_DUP_6GHZ_SUPP)
+> +		mcs_14 = true;
+> +
+> +	if (eht_cap->eht_cap_elem.phy_cap_info[6] &
+> +	    IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_MASK)
+> +		mcs_15 = true;
+This is not correct. `IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_MASK` is for the 
+support of EHT-MCS 15 in MRU, not the support of EHT-MCS 15 in general. 
+The support of MCS 15 is mandatory, even though a STA can opt-out using 
+it in EHT Operation IE with the `MCS-15 Disable` bit. So we either need 
+to always set `mcs_15` to `true` or change `ieee80211_sta_eht_cap` to 
+store the operation IE value (if it's provided, or something like this) 
+to be able to do a check here.
+> +
+> +	if (mcs_nss_len == 4) {
+> +		const struct ieee80211_eht_mcs_nss_supp_20mhz_only *mcs =
+> +					&eht_cap->eht_mcs_nss_supp.only_20mhz;
+> +
+> +		mcs_7 = u8_get_bits(mcs->rx_tx_mcs7_max_nss,
+> +				    IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_9 = u8_get_bits(mcs->rx_tx_mcs9_max_nss,
+> +				    IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_11 = u8_get_bits(mcs->rx_tx_mcs11_max_nss,
+> +				     IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_13 = u8_get_bits(mcs->rx_tx_mcs13_max_nss,
+> +				     IEEE80211_EHT_MCS_NSS_TX);
+> +
+> +	} else {
+> +		const struct ieee80211_eht_mcs_nss_supp_bw *mcs;
+> +		enum nl80211_chan_width width;
+> +
+> +		switch (wdev->iftype) {
+> +		case NL80211_IFTYPE_ADHOC:
+> +			width = wdev->u.ibss.chandef.width;
+> +			break;
+> +		case NL80211_IFTYPE_AP:
+> +		case NL80211_IFTYPE_P2P_GO:
+> +			if (wdev->valid_links)
+> +				width = wdev->links[link_id].ap.chandef.width;
+> +			else
+> +				width = wdev->u.ap.preset_chandef.width;
+> +			break;
+> +		case NL80211_IFTYPE_MESH_POINT:
+> +			width = wdev->u.mesh.chandef.width;
+> +			break;
+> +		case NL80211_IFTYPE_OCB:
+> +			width = wdev->u.ocb.chandef.width;
+> +			break;
+> +		default:
+> +			return -EINVAL;
+> +		}
+> +
+> +		switch (width) {
+> +		case NL80211_CHAN_WIDTH_320:
+> +			mcs = &eht_cap->eht_mcs_nss_supp.bw._320;
+> +			break;
+> +		case NL80211_CHAN_WIDTH_160:
+> +			mcs = &eht_cap->eht_mcs_nss_supp.bw._160;
+> +			break;
+> +		case NL80211_CHAN_WIDTH_80:
+> +		case NL80211_CHAN_WIDTH_40:
+> +		case NL80211_CHAN_WIDTH_20:
+> +			mcs = &eht_cap->eht_mcs_nss_supp.bw._80;
+> +			break;
+> +		default:
+> +			return -EINVAL;
+> +		}
+> +
+> +		mcs_7 = u8_get_bits(mcs->rx_tx_mcs9_max_nss,
+> +				    IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_9 = u8_get_bits(mcs->rx_tx_mcs9_max_nss,
+> +				    IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_11 = u8_get_bits(mcs->rx_tx_mcs11_max_nss,
+> +				     IEEE80211_EHT_MCS_NSS_TX);
+> +		mcs_13 = u8_get_bits(mcs->rx_tx_mcs13_max_nss,
+> +				     IEEE80211_EHT_MCS_NSS_TX);
+> +	}
+> +
+> +	for (nss = 0; nss < NL80211_EHT_NSS_MAX; nss++) {
+> +		if (nss == 0) {
+> +			if (mcs_14)
+> +				mcs_mask[nss] |= 0x4000;
+> +			if (mcs_15)
+> +				mcs_mask[nss] |= 0x8000;
+> +		}
+Better put this if block outside the loop.
+> +
+> +		if (!mcs_7)
+> +			continue;
+> +		mcs_mask[nss] |= 0x00FF;
+> +		mcs_7--;
+> +
+> +		if (!mcs_9)
+> +			continue;
+> +		mcs_mask[nss] |= 0x0300;
+> +		mcs_9--;
+> +
+> +		if (!mcs_11)
+> +			continue;
+> +		mcs_mask[nss] |= 0x0C00;
+> +		mcs_11--;
+> +
+> +		if (!mcs_13)
+> +			continue;
+> +		mcs_mask[nss] |= 0x3000;
+> +		mcs_13--;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static bool eht_set_mcs_mask(struct genl_info *info, struct wireless_dev *wdev,
+> +			     struct ieee80211_supported_band *sband,
+> +			     struct nl80211_txrate_eht *txrate,
+> +			     u16 mcs[NL80211_EHT_NSS_MAX])
+> +{
+> +	const struct ieee80211_sta_he_cap *he_cap;
+> +	const struct ieee80211_sta_eht_cap *eht_cap;
+> +	u16 tx_mcs_mask[NL80211_EHT_NSS_MAX] = { 0 };
+> +	u8 i;
+> +
+> +	he_cap = ieee80211_get_he_iftype_cap(sband, wdev->iftype);
+> +	if (!he_cap)
+> +		return false;
+> +
+> +	eht_cap = ieee80211_get_eht_iftype_cap(sband, wdev->iftype);
+> +	if (!eht_cap)
+> +		return false;
+> +
+> +	/* Checks for MCS 14 */
+> +	if (txrate->mcs[0] & 0x4000) {
+> +		if (sband->band != NL80211_BAND_6GHZ)
+> +			return false;
+> +
+> +		if (!(eht_cap->eht_cap_elem.phy_cap_info[6] &
+> +		      IEEE80211_EHT_PHY_CAP6_EHT_DUP_6GHZ_SUPP))
+> +			return false;
+> +	}
+> +
+> +	/* Checks for MCS 15 */
+> +	if ((txrate->mcs[0] & 0x8000) &&
+> +	    (!(eht_cap->eht_cap_elem.phy_cap_info[6] &
+> +	       IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_MASK)))
+> +		return false;
+> +
+> +	if (eht_build_mcs_mask(info, he_cap, eht_cap, tx_mcs_mask))
+> +		return false;
+> +
+> +	memset(mcs, 0, sizeof(u16) * NL80211_EHT_NSS_MAX);
+> +	for (i = 0; i < NL80211_EHT_NSS_MAX; i++) {
+> +		if ((tx_mcs_mask[i] & txrate->mcs[i]) == txrate->mcs[i])
+> +			mcs[i] = txrate->mcs[i];
+> +		else
+> +			return false;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+>   static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   					 struct nlattr *attrs[],
+>   					 enum nl80211_attrs attr,
+> @@ -5404,7 +5580,7 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   	struct nlattr *tb[NL80211_TXRATE_MAX + 1];
+>   	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>   	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> -	int rem, i;
+> +	int rem, i, ret;
+>   	struct nlattr *tx_rates;
+>   	struct ieee80211_supported_band *sband;
+>   	u16 vht_tx_mcs_map, he_tx_mcs_map;
+> @@ -5413,6 +5589,7 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   	/* Default to all rates enabled */
+>   	for (i = 0; i < NUM_NL80211_BANDS; i++) {
+>   		const struct ieee80211_sta_he_cap *he_cap;
+> +		const struct ieee80211_sta_eht_cap *eht_cap;
+>   
+>   		if (!default_all_enabled)
+>   			break;
+> @@ -5441,6 +5618,19 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   
+>   		mask->control[i].he_gi = 0xFF;
+>   		mask->control[i].he_ltf = 0xFF;
+> +
+> +		eht_cap = ieee80211_get_eht_iftype_cap(sband, wdev->iftype);
+> +		if (!eht_cap)
+> +			continue;
+> +
+> +		ret = eht_build_mcs_mask(info, he_cap, eht_cap,
+> +					 mask->control[i].eht_mcs);
+> +		if (ret)
+> +			return ret;
+> +
+> +		mask->control[i].eht_gi = 0xFF;
+> +		mask->control[i].eht_ltf = 0xFF;
+> +
+>   	}
+>   
+>   	/* if no rates are given set it back to the defaults */
+> @@ -5512,13 +5702,27 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   			mask->control[band].he_ltf =
+>   				nla_get_u8(tb[NL80211_TXRATE_HE_LTF]);
+>   
+> +		if (tb[NL80211_TXRATE_EHT] &&
+> +		    !eht_set_mcs_mask(info, wdev, sband,
+> +				      nla_data(tb[NL80211_TXRATE_EHT]),
+> +				      mask->control[band].eht_mcs))
+> +			return -EINVAL;
+> +
+> +		if (tb[NL80211_TXRATE_EHT_GI])
+> +			mask->control[band].eht_gi =
+> +				nla_get_u8(tb[NL80211_TXRATE_EHT_GI]);
+> +		if (tb[NL80211_TXRATE_EHT_LTF])
+> +			mask->control[band].eht_ltf =
+> +				nla_get_u8(tb[NL80211_TXRATE_EHT_LTF]);
+> +
+>   		if (mask->control[band].legacy == 0) {
+> -			/* don't allow empty legacy rates if HT, VHT or HE
+> +			/* don't allow empty legacy rates if HT, VHT, HE or EHT
+>   			 * are not even supported.
+>   			 */
+>   			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
+>   			      rdev->wiphy.bands[band]->vht_cap.vht_supported ||
+> -			      ieee80211_get_he_iftype_cap(sband, wdev->iftype)))
+> +			      ieee80211_get_he_iftype_cap(sband, wdev->iftype) ||
+> +			      ieee80211_get_eht_iftype_cap(sband, wdev->iftype)))
+>   				return -EINVAL;
+>   
+>   			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+> @@ -5533,6 +5737,10 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   				if (mask->control[band].he_mcs[i])
+>   					goto out;
+>   
+> +			for (i = 0; i < NL80211_EHT_NSS_MAX; i++)
+> +				if (mask->control[band].eht_mcs[i])
+> +					goto out;
+> +
+>   			/* legacy and mcs rates may not be both empty */
+>   			return -EINVAL;
+>   		}
 
-Thanks.  When you resend it make sure to add a Fixes tag and CC stable.
-Forgetting to zero the memory is a sort of security issue.
+Shouldn't this patch also modify `validate_beacon_tx_rate` function?
 
-regards,
-dan carpenter
+> base-commit: d9104cec3e8fe4b458b74709853231385779001f
+
+Best regards,
+
+Pablo MG
 
