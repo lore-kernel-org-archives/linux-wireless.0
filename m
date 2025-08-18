@@ -1,54 +1,54 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEE6C221DAD
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2025 10:20:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE4F1315786
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Aug 2025 10:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755512423; cv=none; b=K+C05FNyOPPyeS4xPrEm5yP75zeq6qt/NyXC+8yphFN9yZpG2mNKqdNTdLh+RVZ00i7z+ts6d97tvABoohptqYbl6bzqY/tyOFVzIYfbdf2100nQ9PQXqOMJcdNQcgzobRfhDlGW00vsbLzeHr2dSFlDFFFz21TKpdgAsPV9bkM=
+	t=1755512425; cv=none; b=NOVo8NQnO1yzsdTGGujIrJaWFEQDg6/cKiqprHFrMFmheWAkNRqqaGykPfVWO10p4VcLa+qb7v1b8BfoyHKy5la68UG67d0NJPKXdhASgC2qVNMRY6Ibkf+so5vhQOBOejrXhaejOpEOyrXX+mB4nhPNMeCYKT6/qxs/KUOaURQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755512423; c=relaxed/simple;
-	bh=eMqqOq7vUb+aFUihdmForlEWbTGDWQjjNy7nomjRrxk=;
+	s=arc-20240116; t=1755512425; c=relaxed/simple;
+	bh=DuqeXvU4ZHavEX/SZ6ltBqO1c4736WjVGUm0QJ9CwCY=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dblqgBmepk4R92W0KlXGCWEZWTa7VqTgRPQWjnONrb+5vaKbB3JWpBXjOOoNkK8koYrNp6S9pqosskZznPhXVLETk2mQYTWYeHGxQPWxTkHi6ZjP1esjkEwIH9laeeijQjyZlzP4fIpJ9ePAPBRl7ziwP/PnxWM/8vdQVrLjs3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=aYFBDi7e; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=tmav4dZ1w3LNVtx+hQpAZqDUaAmxijqGUaLXslRZ9fPgHjDTRX/9RH8F1gohFvoqzcXOJiF0254P11MdpBXoplqyjrc/9+TbKvZ9ybtGRCNSdSIDZNjlnzbtlpJnAuF62at0PmvWXK9TGUz8MjiAOfX1FHqKxGiuQnq1tx46jNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jy0g3HQx; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="aYFBDi7e"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57I7V4D4026361;
-	Mon, 18 Aug 2025 10:20:16 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jy0g3HQx"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57I8gF8e018574;
+	Mon, 18 Aug 2025 10:20:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	RYHKw3olx98r5IBkxinZI8/iXIDZ29Rqk8uV+aBXW5I=; b=aYFBDi7eaTrOp05i
-	VthPl3Rfx82+YKvpLmQnmVPN7u78OoFUZkJkSMEhm3Drcl5dCZjONBzFwvU/8nJV
-	IcZFMCfxmSmMeP3SxlwIunzfmXjOqnmbdau2iot3CBLxcPCD/1Tgtqt064t3eGR8
-	IVdSLPQqz5BxKVptqLGYv2htyQLCzvg6tJdz80AChzDeLcJPOlLMdEiv6H8nba/X
-	8G/u+h0y47AWjR8Y+4iFzmkH62rhFH0KvuIYu7KaEVpzONKGDFocGWyz68EZabNd
-	xkI7UBuIY8DjUZLT5YWyUX4QrEb19q+wpSmaXUTv5orExi2ynW/6iDz2i/3KrdW+
-	fJzyPA==
+	vJcAcQal1/cPOcBUIy233N36c0Me9yZgWBCtoAQD3Sg=; b=jy0g3HQxukqZbFsr
+	sSdFvySy0mVvV2B9P10DUjkkkTukxWHSTZGh8rq6f6gCOeF+Uc+vckdJL65SZyDo
+	B5N8cVxyv7u4u60k2gGpHpsMAGEk0uR6IFMoX9KpEGOvxRB5bUeP79syra5QmEPq
+	uMMO9M/SlV+YVDbKuUoQq2+gQ6LvyDdnSeWIEFFHAikRP2YgyHXv7CmAFsnej2OB
+	0DnXZ09z9jg1K/VDDnvwpfxrBRpsjVUB99N24f9ahx+xlFYmW2qT8rrI/IfM6DFv
+	iPIP371v67atf5duJaL2buBg/WLGAy/So2mjzPb2ZEYjafUIwFyNsEUdQjUIRKx+
+	HqnaCw==
 Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48kyunrgj8-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48jhagv9ds-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 18 Aug 2025 10:20:15 +0000 (GMT)
+	Mon, 18 Aug 2025 10:20:18 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57IAK7j9007055
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57IAKBQH007142
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 18 Aug 2025 10:20:07 GMT
+	Mon, 18 Aug 2025 10:20:11 GMT
 Received: from hu-amitajit-blr.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Mon, 18 Aug 2025 03:20:05 -0700
+ 15.2.1748.10; Mon, 18 Aug 2025 03:20:09 -0700
 From: Amith A <quic_amitajit@quicinc.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>, <quic_amitajit@quicinc.com>,
-        "Hari
- Chandrakanthan" <quic_haric@quicinc.com>
-Subject: [PATCH wireless-next 1/3] wifi: cfg80211: add support to handle incumbent signal detected event from mac80211/driver
-Date: Mon, 18 Aug 2025 15:49:45 +0530
-Message-ID: <20250818101947.2464612-2-quic_amitajit@quicinc.com>
+        "Aditya
+ Kumar Singh" <aditya.kumar.singh@oss.qualcomm.com>
+Subject: [PATCH wireless-next 3/3] wifi: mac80211_hwsim: add incumbent signal interference detection support
+Date: Mon, 18 Aug 2025 15:49:47 +0530
+Message-ID: <20250818101947.2464612-4-quic_amitajit@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250818101947.2464612-1-quic_amitajit@quicinc.com>
 References: <20250818101947.2464612-1-quic_amitajit@quicinc.com>
@@ -64,216 +64,105 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 79jIn-f84-LQO8sEUgC6Gc71D5FWvE6D
-X-Authority-Analysis: v=2.4 cv=N6UpF39B c=1 sm=1 tr=0 ts=68a2fe60 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=D9xHKuRj c=1 sm=1 tr=0 ts=68a2fe62 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=doUQZJtgAAAA:8 a=COk6AnOGAAAA:8
- a=fqCjweuz0g9awfRUYlMA:9 a=3mapU_QI-1QA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE4MDA3MSBTYWx0ZWRfXxdFLyDitYWtJ
- aFN2Pq/5RJ5tPkFKueQadJXSoQze25LG9fD63YjNaI6xaaS+ipCIRlqhXh3pboyK4KZP6qsfKoa
- djuAcfDMU/HqLKi8fTRnEfbZWGYtfBxavdfQ6gik4qCHbKaqYwR3e4G4B/VCj+kd6RTHxR4OWcM
- 1IAAbVCyoiaL2gLl+dzoa9pY3UxQGcGAYChS7VXXcV+WbWUz/gC77fVIZVkvTclmJEZ7hMDCjpZ
- E7uTr6lDd+BXoLDfrDmBNbRehXTiXwRFD/rCh88G32DAmy5bwH43yVzDDnrI1Qjir8vG+C5lvGv
- oUdg8VCynId48wJIhhrllxwF6X92G0hnfUsf3XV8+UrRGVnfAU9vxR17L3X17OPt2OCR7CJyKCw
- 8aPzrmhq
-X-Proofpoint-ORIG-GUID: 79jIn-f84-LQO8sEUgC6Gc71D5FWvE6D
+ a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
+ a=tY_mIoszEBng5VlgR_sA:9 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: iEvbApyhe20NrcdMyaxD8MTFuwlJBm1j
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE2MDAyNCBTYWx0ZWRfX+1J7GXA3/yXQ
+ 7pa5J77rX9+n8cRaQib0qv39DZCplR1zvB9xhOuE1HOpHYXPNTQW8LB7v0iFcrxBuaeo7COD4NH
+ E+wh5iu08wh3NVfb78fl2p/iFTcL2EB9IFkpMnNUJ/sWKWV59rM4rx2ISJpvlzXDjG40aXg6crU
+ f2jsl3de5mpyVJFu8tUqI7epZrQus6f04dj13hTkveBaCt/OdZ+8AxCuY5cUXmKyQ3V8sgmeSen
+ ASBBwiTwyMe4C4yQ+HeM5Psn5VzSBwwrPcEmOQH9Mu7mVGmVVRC44bzYBJQK+JBQqmwyObvor7T
+ 5iuWREMcy4E+LlAjU4oi5sie5JjV9x2JtM2VcqYfNqDrxfogCDfItcUFndpQtaDLBKOvAKvIvyU
+ lW6qfMQd
+X-Proofpoint-GUID: iEvbApyhe20NrcdMyaxD8MTFuwlJBm1j
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-08-18_04,2025-08-14_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 adultscore=0 clxscore=1015 malwarescore=0 impostorscore=0
- suspectscore=0 phishscore=0 priorityscore=1501 spamscore=0
+ clxscore=1015 malwarescore=0 phishscore=0 impostorscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 adultscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508180071
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508160024
 
-From: Hari Chandrakanthan <quic_haric@quicinc.com>
+From: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
 
-When any incumbent signal is detected by an AP/mesh interface operating
-in 6 GHz band, FCC mandates the AP/mesh to vacate the channels affected
-by it [1].
+Add a debugfs 'simulate_incumbent_signal_interference' which calls the
+function ieee80211_incumbent_signal_detected() and starts the incumbent
+signal detection.
 
-Add a new API cfg80211_incumbent_signal_detect_event() that can be used
-by mac80211 (or full mac drivers) to notify the higher layers about the
-signal interference event with the interference bitmap in which each bit
-denotes the affected 20 MHz in the operating channel.
-
-Add support for the new nl80211 event and nl80211 attribute as well to
-notify userspace on the details about the interference event. Userspace is
-expected to process it and take further action - vacate the channel, or
-reduce the bandwidth.
-
-[1] - https://apps.fcc.gov/kdb/GetAttachment.html?id=nXQiRC%2B4mfiA54Zha%2BrW4Q%3D%3D&desc=987594%20D02%20U-NII%206%20GHz%20EMC%20Measurement%20v03&tracking_number=277034
-
-Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
+Signed-off-by: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
 Signed-off-by: Amith A <quic_amitajit@quicinc.com>
 ---
- include/net/cfg80211.h       | 17 +++++++++++++++++
- include/uapi/linux/nl80211.h | 16 ++++++++++++++++
- net/wireless/mlme.c          | 12 ++++++++++++
- net/wireless/nl80211.c       | 35 +++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h       |  4 ++++
- 5 files changed, 84 insertions(+)
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 33 +++++++++++++++++++
+ drivers/net/wireless/virtual/mac80211_hwsim.h |  4 +++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 406626ff6cc8..8d51ff648c46 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -8984,6 +8984,23 @@ cfg80211_background_radar_event(struct wiphy *wiphy,
- 	__cfg80211_radar_event(wiphy, chandef, true, gfp);
- }
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
+index 3789d46d5614..a311ba6b3e4f 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -1154,6 +1154,36 @@ static int hwsim_write_simulate_radar(void *dat, u64 val)
+ DEFINE_DEBUGFS_ATTRIBUTE(hwsim_simulate_radar, NULL,
+ 			 hwsim_write_simulate_radar, "%llu\n");
  
-+/**
-+ * cfg80211_incumbent_signal_detect_event - Incumbent signal detection event
-+ * @wiphy: the wiphy
-+ * @chandef: chandef for the current channel
-+ * @signal_interference_bitmap: Incumbent signal interference bitmap.
-+ *	See %NL80211_ATTR_INCUMBENT_SIGNAL_INTERFERENCE_BITMAP description for
-+ *	the usage.
-+ * @gfp: context flags
-+ *
-+ * This function is called when any incumbent signal is detected on the
-+ * current channel in the 6 GHz band.
-+ */
-+void cfg80211_incumbent_signal_detect_event(struct wiphy *wiphy,
-+					    struct cfg80211_chan_def *chandef,
-+					    u32 signal_interference_bitmap,
-+					    gfp_t gfp);
-+
- /**
-  * cfg80211_sta_opmode_change_notify - STA's ht/vht operation mode change event
-  * @dev: network device
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d1a14f2892d9..ec1220579e3d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1344,6 +1344,12 @@
-  *	control EPCS configuration. Used to notify userland on the current state
-  *	of EPCS.
-  *
-+ * @NL80211_CMD_INCUMBENT_SIGNAL_DETECT: Once any incumbent signal is detected
-+ *	on the operating channel in 6 GHz band, userspace is notified with the
-+ *	signal interference bitmap using
-+ *	%NL80211_ATTR_INCUMBENT_SIGNAL_INTERFERENCE_BITMAP. The current channel
-+ *	definition is also sent.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1604,6 +1610,8 @@ enum nl80211_commands {
- 	NL80211_CMD_ASSOC_MLO_RECONF,
- 	NL80211_CMD_EPCS_CFG,
- 
-+	NL80211_CMD_INCUMBENT_SIGNAL_DETECT,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2928,6 +2936,12 @@ enum nl80211_commands {
-  *	required alongside this attribute. Refer to
-  *	@enum nl80211_s1g_short_beacon_attrs for the attribute definitions.
-  *
-+ * @NL80211_ATTR_INCUMBENT_SIGNAL_INTERFERENCE_BITMAP: u32 attribute specifying
-+ *	the signal interference bitmap detected on the operating bandwidth for
-+ *	%NL80211_CMD_INCUMBENT_SIGNAL_DETECT. Each bit represents a 20 MHz
-+ *	segment, lowest bit corresponds to the lowest 20 MHz segment, in the
-+ *	operating bandwidth where the interference is detected.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3490,6 +3504,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_S1G_LONG_BEACON_PERIOD,
- 	NL80211_ATTR_S1G_SHORT_BEACON,
- 
-+	NL80211_ATTR_INCUMBENT_SIGNAL_INTERFERENCE_BITMAP,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 46394eb2086f..619d51a37b81 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -1127,6 +1127,18 @@ void __cfg80211_radar_event(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(__cfg80211_radar_event);
- 
-+void cfg80211_incumbent_signal_detect_event(struct wiphy *wiphy,
-+					    struct cfg80211_chan_def *chandef,
-+					    u32 signal_interference_bitmap,
-+					    gfp_t gfp)
++static void hwsim_6ghz_chanctx_iter(struct ieee80211_hw *hw,
++				    struct ieee80211_chanctx_conf *conf,
++				    void *data)
 +{
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++	struct hwsim_get_any_chanctx_conf_arg *arg = data;
 +
-+	nl80211_incumbent_signal_notify(rdev, chandef,
-+					signal_interference_bitmap, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_incumbent_signal_detect_event);
-+
- void cfg80211_cac_event(struct net_device *netdev,
- 			const struct cfg80211_chan_def *chandef,
- 			enum nl80211_radar_event event, gfp_t gfp,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 89519aa52893..f26749c4499e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -20422,6 +20422,41 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
- }
- EXPORT_SYMBOL(cfg80211_ch_switch_notify);
- 
-+void nl80211_incumbent_signal_notify(struct cfg80211_registered_device *rdev,
-+				     struct cfg80211_chan_def *chandef,
-+				     u32 signal_interference_bitmap, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_INCUMBENT_SIGNAL_DETECT);
-+	if (!hdr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx))
-+		goto nla_put_failure;
-+
-+	if (nl80211_send_chandef(msg, chandef))
-+		goto nla_put_failure;
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_INCUMBENT_SIGNAL_INTERFERENCE_BITMAP,
-+			signal_interference_bitmap))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_MLME, gfp);
-+	return;
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
++	if (conf->def.chan && conf->def.chan->band == NL80211_BAND_6GHZ)
++		arg->chanctx_conf = conf;
 +}
 +
- void cfg80211_ch_switch_started_notify(struct net_device *dev,
- 				       struct cfg80211_chan_def *chandef,
- 				       unsigned int link_id, u8 count,
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 5e25782af1e0..4a40eda33989 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -117,6 +117,10 @@ nl80211_radar_notify(struct cfg80211_registered_device *rdev,
- 		     enum nl80211_radar_event event,
- 		     struct net_device *netdev, gfp_t gfp);
- 
-+void nl80211_incumbent_signal_notify(struct cfg80211_registered_device *rdev,
-+				     struct cfg80211_chan_def *chandef,
-+				     u32 signal_interference_bitmap, gfp_t gfp);
++static int hwsim_write_simulate_incumbent_signal(void *dat, u64 val)
++{
++	struct mac80211_hwsim_data *data = dat;
++	struct hwsim_get_any_chanctx_conf_arg arg = { .chanctx_conf = NULL };
 +
- void nl80211_send_ap_stopped(struct wireless_dev *wdev, unsigned int link_id);
++	ieee80211_iter_chan_contexts_atomic(data->hw,
++					    hwsim_6ghz_chanctx_iter,
++					    &arg);
++
++	if (!arg.chanctx_conf)
++		return -EINVAL;
++
++	ieee80211_incumbent_signal_detected(data->hw, arg.chanctx_conf, (u32)val);
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(hwsim_simulate_incumbent_signal, NULL,
++			 hwsim_write_simulate_incumbent_signal, "%llu\n");
++
+ static int hwsim_fops_group_read(void *dat, u64 *val)
+ {
+ 	struct mac80211_hwsim_data *data = dat;
+@@ -5590,6 +5620,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		debugfs_create_file("dfs_simulate_radar", 0222,
+ 				    data->debugfs,
+ 				    data, &hwsim_simulate_radar);
++	debugfs_create_file("simulate_incumbent_signal_interference", 0200,
++			    data->debugfs,
++			    data, &hwsim_simulate_incumbent_signal);
  
- void cfg80211_free_coalesce(struct cfg80211_coalesce *coalesce);
+ 	if (param->pmsr_capa) {
+ 		data->pmsr_capa = *param->pmsr_capa;
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.h b/drivers/net/wireless/virtual/mac80211_hwsim.h
+index fa157c883f7f..4dc48cf33ec4 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.h
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.h
+@@ -341,4 +341,8 @@ enum hwsim_rate_info_attributes {
+ 	HWSIM_RATE_INFO_ATTR_MAX = NUM_HWSIM_RATE_INFO_ATTRS - 1
+ };
+ 
++struct hwsim_get_any_chanctx_conf_arg {
++	struct ieee80211_chanctx_conf *chanctx_conf;
++};
++
+ #endif /* __MAC80211_HWSIM_H */
 -- 
 2.34.1
 
