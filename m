@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FB57320CC4
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2025 12:45:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A533218A8
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Aug 2025 12:45:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755780308; cv=none; b=VpGtYBpUQoN0EbAKH3K0a3yEvaxuiRG69PpdNfeSXQahJJRMk/62MXjIwpcX7b9iY/uhqZjoWazUVHjLYZDxSsEn4BKOfUcbQ1ay7HvOPlteFw08JgG5GMiJ3QfDLlcs8ihNq+KHJcpEGzgfLbx23OGXWH7shjrA6VaFcDAHJDA=
+	t=1755780308; cv=none; b=EO5F3ehQnbKIeGWXDMXXL5pJFPGUOilaAC1bB+iS8Cm0O2IscWZD2CrZIfnDB5b/xdpyDnRPq96uHfND3hK2h7KR3bEJ9oxCX+fWoehwWQ1GEOinI8hWUFNVm8Imho12vhOMFOxZ8TUST3Su4cLyp+8bQyaONpl+ei9DZVlikx4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755780308; c=relaxed/simple;
-	bh=AUlYbGMKji7DnKbX6KgtfJqYj5973BmzYYBMakC4CYk=;
+	bh=IuWMIZNwe8RGKyVihcZ3FjTk/+4UEbjQhuBJVX2lH28=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TbiI4O+WSDycKlPFD+tthYG7r190SrwgIUSvd8s8iq7qdmwLthiEVB+KcLm8vJIASHOlXKhW6WXdqPS5BlXaQ0XA+Kxfeb7+bcG7s7Y8BZ5WQdhrzCWGLViduO9nr/bMzIWPV3yI0KFiudWg/vPFXt37qaNBmp8K4giAWwswqak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Fqvpmn9K; arc=none smtp.client-ip=198.175.65.14
+	 MIME-Version; b=Xnwch3Ii8DrZNPD5RbB/aSk/oZK5uP6kNbLqt7GfpVgzYeR9VSljTj+doHkjGjK1HXkbuWVcNh0Tn0CIyR4L9WrOW8CG+jcS3jVDEl7yHDfzo/HT1sV9hGjA4cfefn9WMQFJJwI9q7MKKOBtwFtdaAQKdRhqdz/vU9Cg8HJmd/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nEAmAAtd; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Fqvpmn9K"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nEAmAAtd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1755780305; x=1787316305;
+  t=1755780307; x=1787316307;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=AUlYbGMKji7DnKbX6KgtfJqYj5973BmzYYBMakC4CYk=;
-  b=Fqvpmn9KU4BQ20WzUl4PhtFaNPG8ByQ2YReYmUrvNHXzQHg8zjsKTg7C
-   6G7evDIaJnVXiY7BU4jqoxWvwQangWxXeTzWMRv/VNtoap0hDZ9drjp12
-   FqfH1dubjVk6ktAzcd1Dv8o2UH9ot75ytGcwVSlL/qSsH39A9RlwH/vFn
-   8tDHcEzrvTLKrH6pxMIn73SsONMcbfzoyd+kLfbftMx/cPUiKjq8gldNo
-   CMUwJr7v9kCEEzhoQO8kN7QEo5pAsXCDA7bTE9cUmHzFrq1ZESXhkmFGv
-   S0gTNVTmi1OG95WmDW8k9hEolssbs3uagzH5u1CqdEf3YRKrRG0trPPyC
+  bh=IuWMIZNwe8RGKyVihcZ3FjTk/+4UEbjQhuBJVX2lH28=;
+  b=nEAmAAtdIN7ofTKYMSelGGYGRT9qLzOA23Opvzb/y1aqwq14LFsqZpbB
+   9OPg7Vk91ndTRyxiSVo79IO7VTQeWEgi9SADx4VKq7UPqDBTi8IEy8zvK
+   1fT4R3Cagtjyfr/w0inOq7TO03YJq8CZuG9mdyqIQzaO5hela2iBNnJAf
+   jVV9lEP4D9PxpFspXBsq6LjN+dGKoU3fTa0XIM2BVuqNVHqdZRYCYv4Hh
+   BMI66V6mLvb6G+6EuKt3Apjb4RCP6Uamp5365lKnsSa/PHOdhEsDoT5pj
+   Ax7WvA9Fqsu2KTbnshgzJj230wRaYvTOVQdK+RYLMS8feRf2QRsksWbX8
    g==;
-X-CSE-ConnectionGUID: 5TcPEyHEQw2wwBKFfiCvUA==
-X-CSE-MsgGUID: OFj15NXeQvKira5Yhc7xXw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11529"; a="61895735"
+X-CSE-ConnectionGUID: v+IEdVajReeQoavJcM89Vw==
+X-CSE-MsgGUID: AYnGUL0FRCqZPIaOcL0sGg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11529"; a="61895744"
 X-IronPort-AV: E=Sophos;i="6.17,306,1747724400"; 
-   d="scan'208";a="61895735"
+   d="scan'208";a="61895744"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2025 05:45:04 -0700
-X-CSE-ConnectionGUID: RojRqx8QTSGVUeFDbOTWNw==
-X-CSE-MsgGUID: JYJV+8GNQ/2006YYUsqVXQ==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2025 05:45:07 -0700
+X-CSE-ConnectionGUID: QjCv1E/DTX2lzCqFQ1Tfnw==
+X-CSE-MsgGUID: y5x9988CTFiVrkzJA/ZbUw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.17,306,1747724400"; 
-   d="scan'208";a="172622147"
+   d="scan'208";a="172622177"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2025 05:45:04 -0700
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2025 05:45:06 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 03/15] wifi: iwlwifi: mvm: cleanup cipher lookup in resume
-Date: Thu, 21 Aug 2025 15:44:21 +0300
-Message-Id: <20250821154216.937cbf5fd26e.I5d92258a9d63a39ee3acb02a72a2af9984993018@changeid>
+Subject: [PATCH iwlwifi-next 05/15] wifi: iwlwifi: mld: track BIGTK per link
+Date: Thu, 21 Aug 2025 15:44:23 +0300
+Message-Id: <20250821154216.0392769d3abb.I5d8e232d663e3ca8fc23de12dd8534cb076cabb9@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250821124433.2234183-1-miriam.rachel.korenblit@intel.com>
 References: <20250821124433.2234183-1-miriam.rachel.korenblit@intel.com>
@@ -61,269 +61,213 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-We used to lookup the ciphers of the mcast keys, but this was beacuse it
-was required for ieee80211_get_rekey_add. Now as this API no longer
-needs the cipher as an argument, we can remove the cipher lookups.
+We track the BIGTKs installed for beacon protection purposes.
+But in MLO we will have a different BIGTK per link.
+Track the BIGTK per-link and not per-vif.
 
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 165 ++------------------
- 1 file changed, 14 insertions(+), 151 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/d3.c   |  9 +++----
+ .../net/wireless/intel/iwlwifi/mld/iface.h    |  3 ---
+ drivers/net/wireless/intel/iwlwifi/mld/key.c  | 26 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mld/key.h  |  4 +++
+ drivers/net/wireless/intel/iwlwifi/mld/link.h |  2 ++
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c | 10 +++----
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   | 13 +++++++---
+ 7 files changed, 49 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index a4090db00d0b..a31bc2af5300 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1790,63 +1790,8 @@ static void iwl_mvm_set_key_rx_seq(struct ieee80211_key_conf *key,
- struct iwl_mvm_d3_gtk_iter_data {
- 	struct iwl_mvm *mvm;
- 	struct iwl_wowlan_status_data *status;
--	u32 gtk_cipher, igtk_cipher, bigtk_cipher;
--	bool unhandled_cipher, igtk_support, bigtk_support;
--	int num_keys;
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+index 0ac6ceddb44f..da621fe11d62 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+@@ -11,6 +11,7 @@
+ #include "mcc.h"
+ #include "sta.h"
+ #include "mlo.h"
++#include "key.h"
  
--static void iwl_mvm_d3_find_last_keys(struct ieee80211_hw *hw,
--				      struct ieee80211_vif *vif,
--				      struct ieee80211_sta *sta,
--				      struct ieee80211_key_conf *key,
--				      void *_data)
--{
--	struct iwl_mvm_d3_gtk_iter_data *data = _data;
--	int link_id = vif->active_links ? __ffs(vif->active_links) : -1;
+ #include "fw/api/d3.h"
+ #include "fw/api/offload.h"
+@@ -825,12 +826,8 @@ iwl_mld_add_mcast_rekey(struct ieee80211_vif *vif,
+ 	}
+ 
+ 	/* Also keep track of the new BIGTK */
+-	if ((key_config->keyidx == 6 || key_config->keyidx == 7) &&
+-	    vif->type == NL80211_IFTYPE_STATION) {
+-		struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
 -
--	if (link_id >= 0 && key->link_id >= 0 && link_id != key->link_id)
--		return;
--
--	if (data->unhandled_cipher)
--		return;
--
--	switch (key->cipher) {
--	case WLAN_CIPHER_SUITE_WEP40:
--	case WLAN_CIPHER_SUITE_WEP104:
--		/* ignore WEP completely, nothing to do */
--		return;
--	case WLAN_CIPHER_SUITE_CCMP:
--	case WLAN_CIPHER_SUITE_GCMP:
--	case WLAN_CIPHER_SUITE_GCMP_256:
--	case WLAN_CIPHER_SUITE_TKIP:
--		/* we support these */
--		data->gtk_cipher = key->cipher;
--		break;
--	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
--	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
--	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
--	case WLAN_CIPHER_SUITE_AES_CMAC:
--		/* we support these */
--		if (data->igtk_support &&
--		    (key->keyidx == 4 || key->keyidx == 5)) {
--			data->igtk_cipher = key->cipher;
--		} else if (data->bigtk_support &&
--			   (key->keyidx == 6 || key->keyidx == 7)) {
--			data->bigtk_cipher = key->cipher;
--		} else {
--			data->unhandled_cipher = true;
--			return;
--		}
--		break;
--	default:
--		/* everything else - disconnect from AP */
--		data->unhandled_cipher = true;
--		return;
+-		rcu_assign_pointer(mld_vif->bigtks[key_config->keyidx - 6], key_config);
 -	}
--
--	data->num_keys++;
--}
--
++	if (key_config->keyidx == 6 || key_config->keyidx == 7)
++		iwl_mld_track_bigtk(mld, vif, key_config, true);
+ }
+ 
  static void
- iwl_mvm_d3_set_igtk_bigtk_ipn(const struct iwl_multicast_key_data *key,
- 			      struct ieee80211_key_seq *seq, u32 cipher)
-@@ -1892,9 +1837,6 @@ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
- 	if (link_id >= 0 && key->link_id >= 0 && link_id != key->link_id)
- 		return;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.h b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+index 05dcb63701b1..38e10e279153 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+@@ -125,8 +125,6 @@ struct iwl_mld_emlsr {
+  * @ap_sta: pointer to AP sta, for easier access to it.
+  *	Relevant only for STA vifs.
+  * @authorized: indicates the AP station was set to authorized
+- * @bigtks: BIGTKs of the AP, for beacon protection.
+- *	Only valid for STA. (FIXME: needs to be per link)
+  * @num_associated_stas: number of associated STAs. Relevant only for AP mode.
+  * @ap_ibss_active: whether the AP/IBSS was started
+  * @cca_40mhz_workaround: When we are connected in 2.4 GHz and 40 MHz, and the
+@@ -158,7 +156,6 @@ struct iwl_mld_vif {
+ 		struct iwl_mld_session_protect session_protect;
+ 		struct ieee80211_sta *ap_sta;
+ 		bool authorized;
+-		struct ieee80211_key_conf __rcu *bigtks[2];
+ 		u8 num_associated_stas;
+ 		bool ap_ibss_active;
+ 		enum iwl_mld_cca_40mhz_wa_status cca_40mhz_workaround;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/key.c b/drivers/net/wireless/intel/iwlwifi/mld/key.c
+index 13462a5ad79a..a90477971c72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/key.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/key.c
+@@ -368,3 +368,29 @@ int iwl_mld_update_sta_keys(struct iwl_mld *mld,
+ 			    &data);
+ 	return data.err;
+ }
++
++void iwl_mld_track_bigtk(struct iwl_mld *mld,
++			 struct ieee80211_vif *vif,
++			 struct ieee80211_key_conf *key, bool add)
++{
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct iwl_mld_link *link;
++
++	if (vif->type != NL80211_IFTYPE_STATION)
++		return;
++
++	if (WARN_ON(key->keyidx < 6 || key->keyidx > 7))
++		return;
++
++	if (WARN_ON(key->link_id < 0))
++		return;
++
++	link = iwl_mld_link_dereference_check(mld_vif, key->link_id);
++	if (WARN_ON(!link))
++		return;
++
++	if (add)
++		rcu_assign_pointer(link->bigtks[key->keyidx - 6], key);
++	else
++		RCU_INIT_POINTER(link->bigtks[key->keyidx - 6], NULL);
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/key.h b/drivers/net/wireless/intel/iwlwifi/mld/key.h
+index a68ea48913be..63de3469270a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/key.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/key.h
+@@ -36,4 +36,8 @@ iwl_mld_cleanup_keys_iter(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	key->hw_key_idx = STA_KEY_IDX_INVALID;
+ }
  
--	if (data->unhandled_cipher)
--		return;
--
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
-@@ -1943,52 +1885,24 @@ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
++void iwl_mld_track_bigtk(struct iwl_mld *mld,
++			 struct ieee80211_vif *vif,
++			 struct ieee80211_key_conf *key, bool add);
++
+ #endif /* __iwl_mld_key_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.h b/drivers/net/wireless/intel/iwlwifi/mld/link.h
+index cad2c9426349..9e4da8e4de93 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/link.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/link.h
+@@ -36,6 +36,7 @@ struct iwl_probe_resp_data {
+  * @he_ru_2mhz_block: 26-tone RU OFDMA transmissions should be blocked.
+  * @igtk: fw can only have one IGTK at a time, whereas mac80211 can have two.
+  *	This tracks the one IGTK that currently exists in FW.
++ * @bigtks: BIGTKs of the AP. Only valid for STA mode.
+  * @bcast_sta: station used for broadcast packets. Used in AP, GO and IBSS.
+  * @mcast_sta: station used for multicast packets. Used in AP, GO and IBSS.
+  * @mon_sta: station used for TX injection in monitor interface.
+@@ -59,6 +60,7 @@ struct iwl_mld_link {
+ 		struct ieee80211_chanctx_conf __rcu *chan_ctx;
+ 		bool he_ru_2mhz_block;
+ 		struct ieee80211_key_conf *igtk;
++		struct ieee80211_key_conf __rcu *bigtks[2];
+ 	);
+ 	/* And here fields that survive a fw restart */
+ 	struct iwl_mld_int_sta bcast_sta;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index b0bd01914a91..f434012b03a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -2065,9 +2065,8 @@ static int iwl_mld_set_key_add(struct iwl_mld *mld,
+ 		return -EOPNOTSUPP;
+ 	}
  
- static bool iwl_mvm_gtk_rekey(struct iwl_wowlan_status_data *status,
- 			      struct ieee80211_vif *vif,
--			      struct iwl_mvm *mvm, u32 gtk_cipher)
-+			      struct iwl_mvm *mvm)
+-	if (vif->type == NL80211_IFTYPE_STATION &&
+-	    (keyidx == 6 || keyidx == 7))
+-		rcu_assign_pointer(mld_vif->bigtks[keyidx - 6], key);
++	if (keyidx == 6 || keyidx == 7)
++		iwl_mld_track_bigtk(mld, vif, key, true);
+ 
+ 	/* After exiting from RFKILL, hostapd configures GTK/ITGK before the
+ 	 * AP is started, but those keys can't be sent to the FW before the
+@@ -2116,9 +2115,8 @@ static void iwl_mld_set_key_remove(struct iwl_mld *mld,
+ 		sta ? iwl_mld_sta_from_mac80211(sta) : NULL;
+ 	int keyidx = key->keyidx;
+ 
+-	if (vif->type == NL80211_IFTYPE_STATION &&
+-	    (keyidx == 6 || keyidx == 7))
+-		RCU_INIT_POINTER(mld_vif->bigtks[keyidx - 6], NULL);
++	if (keyidx == 6 || keyidx == 7)
++		iwl_mld_track_bigtk(mld, vif, key, false);
+ 
+ 	if (mld_sta && key->flags & IEEE80211_KEY_FLAG_PAIRWISE &&
+ 	    (key->cipher == WLAN_CIPHER_SUITE_CCMP ||
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index b6dedd1ecd4d..53cac9d8018c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -1619,12 +1619,14 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 				u32 mpdu_status,
+ 				u32 mpdu_len)
  {
- 	int i, j;
++	struct iwl_mld_link *link;
+ 	struct wireless_dev *wdev;
+ 	struct iwl_mld_sta *mld_sta;
+ 	struct iwl_mld_vif *mld_vif;
+ 	u8 keyidx;
  	struct ieee80211_key_conf *key;
--	DEFINE_RAW_FLEX(struct ieee80211_key_conf, conf, key,
--			WOWLAN_KEY_MAX_SIZE);
- 	int link_id = vif->active_links ? __ffs(vif->active_links) : -1;
--	u8 key_data[WOWLAN_KEY_MAX_SIZE];
--
--	conf->cipher = gtk_cipher;
--
--	BUILD_BUG_ON(WLAN_KEY_LEN_CCMP != WLAN_KEY_LEN_GCMP);
--	BUILD_BUG_ON(WOWLAN_KEY_MAX_SIZE < WLAN_KEY_LEN_CCMP);
--	BUILD_BUG_ON(WOWLAN_KEY_MAX_SIZE < WLAN_KEY_LEN_GCMP_256);
--	BUILD_BUG_ON(WOWLAN_KEY_MAX_SIZE < WLAN_KEY_LEN_TKIP);
--	BUILD_BUG_ON(WOWLAN_KEY_MAX_SIZE < sizeof(status->gtk[0].key));
--
--	switch (gtk_cipher) {
--	case WLAN_CIPHER_SUITE_CCMP:
--	case WLAN_CIPHER_SUITE_GCMP:
--		conf->keylen = WLAN_KEY_LEN_CCMP;
--		break;
--	case WLAN_CIPHER_SUITE_GCMP_256:
--		conf->keylen = WLAN_KEY_LEN_GCMP_256;
--		break;
--	case WLAN_CIPHER_SUITE_TKIP:
--		conf->keylen = WLAN_KEY_LEN_TKIP;
--		break;
--	default:
--		WARN_ON(1);
--	}
+ 	const u8 *frame = (void *)hdr;
++	u8 link_id;
  
- 	for (i = 0; i < ARRAY_SIZE(status->gtk); i++) {
- 		if (!status->gtk[i].len)
- 			continue;
- 
--		conf->keyidx = status->gtk[i].id;
- 		IWL_DEBUG_WOWLAN(mvm,
--				 "Received from FW GTK cipher %d, key index %d\n",
--				 conf->cipher, conf->keyidx);
--		memcpy(conf->key, status->gtk[i].key,
--		       sizeof(status->gtk[i].key));
--		memcpy(key_data, status->gtk[i].key, sizeof(status->gtk[i].key));
--
--		key = ieee80211_gtk_rekey_add(vif, status->gtk[i].id, key_data,
--					      sizeof(key_data), link_id);
-+				 "Received from FW GTK: key index %d\n",
-+				 status->gtk[i].id);
-+
-+		key = ieee80211_gtk_rekey_add(vif, status->gtk[i].id,
-+					      status->gtk[i].key,
-+					      sizeof(status->gtk[i].key),
-+					      link_id);
- 		if (IS_ERR(key)) {
- 			/* FW may send also the old keys */
- 			if (PTR_ERR(key) == -EALREADY)
-@@ -2011,53 +1925,26 @@ static bool iwl_mvm_gtk_rekey(struct iwl_wowlan_status_data *status,
- 
- static bool
- iwl_mvm_d3_igtk_bigtk_rekey_add(struct iwl_wowlan_status_data *status,
--				struct ieee80211_vif *vif, u32 cipher,
-+				struct ieee80211_vif *vif,
- 				struct iwl_multicast_key_data *key_data)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	DEFINE_RAW_FLEX(struct ieee80211_key_conf, conf, key,
--			WOWLAN_KEY_MAX_SIZE);
- 	struct ieee80211_key_conf *key_config;
- 	struct ieee80211_key_seq seq;
- 	int link_id = vif->active_links ? __ffs(vif->active_links) : -1;
--	u8 key[WOWLAN_KEY_MAX_SIZE];
- 	s8 keyidx = key_data->id;
- 
--	conf->cipher = cipher;
--	conf->keyidx = keyidx;
--
- 	if (!key_data->len)
- 		return true;
- 
--	iwl_mvm_d3_set_igtk_bigtk_ipn(key_data, &seq, conf->cipher);
--
--	switch (cipher) {
--	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
--		conf->keylen = WLAN_KEY_LEN_BIP_GMAC_128;
--		break;
--	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
--		conf->keylen = WLAN_KEY_LEN_BIP_GMAC_256;
--		break;
--	case WLAN_CIPHER_SUITE_AES_CMAC:
--		conf->keylen = WLAN_KEY_LEN_AES_CMAC;
--		break;
--	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
--		conf->keylen = WLAN_KEY_LEN_BIP_CMAC_256;
--		break;
--	default:
--		WARN_ON(1);
--	}
--	BUILD_BUG_ON(WOWLAN_KEY_MAX_SIZE < sizeof(key_data->key));
--	memcpy(conf->key, key_data->key, conf->keylen);
--
--	memcpy(key, key_data->key, sizeof(key_data->key));
--
--	key_config = ieee80211_gtk_rekey_add(vif, keyidx, key, sizeof(key),
--					     link_id);
-+	key_config = ieee80211_gtk_rekey_add(vif, keyidx, key_data->key,
-+					     sizeof(key_data->key), link_id);
- 	if (IS_ERR(key_config)) {
- 		/* FW may send also the old keys */
- 		return PTR_ERR(key_config) == -EALREADY;
- 	}
-+
-+	iwl_mvm_d3_set_igtk_bigtk_ipn(key_data, &seq, key_config->cipher);
- 	ieee80211_set_key_rx_seq(key_config, 0, &seq);
- 
- 	if (keyidx == 4 || keyidx == 5) {
-@@ -2111,27 +1998,6 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 
- 	if (!status || !vif->bss_conf.bssid)
- 		return false;
--
--	if (iwl_mvm_lookup_wowlan_status_ver(mvm) > 6 ||
--	    iwl_fw_lookup_notif_ver(mvm->fw, PROT_OFFLOAD_GROUP,
--				    WOWLAN_INFO_NOTIFICATION,
--				    0))
--		gtkdata.igtk_support = true;
--
--	if (iwl_fw_lookup_notif_ver(mvm->fw, PROT_OFFLOAD_GROUP,
--				    WOWLAN_INFO_NOTIFICATION,
--				    0) >= 3)
--		gtkdata.bigtk_support = true;
--
--	/* find last GTK that we used initially, if any */
--	ieee80211_iter_keys(mvm->hw, vif,
--			    iwl_mvm_d3_find_last_keys, &gtkdata);
--	/* not trying to keep connections with MFP/unhandled ciphers */
--	if (gtkdata.unhandled_cipher)
--		return false;
--	if (!gtkdata.num_keys)
--		goto out;
--
- 	/*
- 	 * invalidate all other GTKs that might still exist and update
- 	 * the one that we used
-@@ -2145,17 +2011,15 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 		IWL_DEBUG_WOWLAN(mvm, "num of GTK rekeying %d\n",
- 				 status->num_of_gtk_rekeys);
- 
--		if (!iwl_mvm_gtk_rekey(status, vif, mvm, gtkdata.gtk_cipher))
-+		if (!iwl_mvm_gtk_rekey(status, vif, mvm))
- 			return false;
- 
- 		if (!iwl_mvm_d3_igtk_bigtk_rekey_add(status, vif,
--						     gtkdata.igtk_cipher,
- 						     &status->igtk))
- 			return false;
- 
- 		for (i = 0; i < ARRAY_SIZE(status->bigtk); i++) {
- 			if (!iwl_mvm_d3_igtk_bigtk_rekey_add(status, vif,
--							     gtkdata.bigtk_cipher,
- 							     &status->bigtk[i]))
- 				return false;
- 		}
-@@ -2164,7 +2028,6 @@ static bool iwl_mvm_setup_connection_keep(struct iwl_mvm *mvm,
- 					   (void *)&replay_ctr, GFP_KERNEL);
+ 	if ((mpdu_status & IWL_RX_MPDU_STATUS_SEC_MASK) ==
+ 	     IWL_RX_MPDU_STATUS_SEC_NONE)
+@@ -1657,12 +1659,17 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 		return 0;
  	}
  
--out:
- 	if (iwl_fw_lookup_notif_ver(mvm->fw, LONG_GROUP,
- 				    WOWLAN_GET_STATUSES,
- 				    IWL_FW_CMD_VER_UNKNOWN) < 10) {
++	link_id = rx_status->link_valid ? rx_status->link_id : 0;
++	link = rcu_dereference(mld_vif->link[link_id]);
++	if (WARN_ON_ONCE(!link))
++		return -1;
++
+ 	/* both keys will have the same cipher and MIC length, use
+ 	 * whichever one is available
+ 	 */
+-	key = rcu_dereference(mld_vif->bigtks[0]);
++	key = rcu_dereference(link->bigtks[0]);
+ 	if (!key) {
+-		key = rcu_dereference(mld_vif->bigtks[1]);
++		key = rcu_dereference(link->bigtks[1]);
+ 		if (!key)
+ 			goto report;
+ 	}
+@@ -1680,7 +1687,7 @@ static int iwl_mld_rx_mgmt_prot(struct ieee80211_sta *sta,
+ 		if (keyidx != 6 && keyidx != 7)
+ 			return -1;
+ 
+-		key = rcu_dereference(mld_vif->bigtks[keyidx - 6]);
++		key = rcu_dereference(link->bigtks[keyidx - 6]);
+ 		if (!key)
+ 			goto report;
+ 	}
 -- 
 2.34.1
 
