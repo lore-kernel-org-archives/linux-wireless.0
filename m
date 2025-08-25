@@ -1,45 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5931FB3;
-	Mon, 25 Aug 2025 08:17:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF787225A59;
+	Mon, 25 Aug 2025 08:20:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756109855; cv=none; b=f81ckliawl1FheoevfsoUWopI1zmfQVz7lEkS4eaKQIUK67qdYqsSiTDbEf+G4CXai8fS54YuHmZk6ZcDbzUBH4Muc6Ynx1HgawswqXYmuD9DG8nmU3YPyqjQV6u47NdjK6DjlobZzIlrSX+AGbukGZ/1Ghxy2JUKUv5Zo/5vfI=
+	t=1756110016; cv=none; b=OCUZMoF8mfQ1Czwtiq1OR1c7IqLxmPtEJmAl2vaZAr778/nGeFVGclfoFdZnQXVkzAyn+8wxPQ81uutphEca2Y/4LfC3dmRCcGwfIuTOCCzJd41eVAUoG3LI7GSBNcLTr6uP2cfxS3hJFR0i7YRZCJYaV4uUzuIDBOiyAPBYcFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756109855; c=relaxed/simple;
-	bh=hIW8XQU7RMPPW8XOZu7gtjXi/XwCLs4jNR5j1dUryRA=;
+	s=arc-20240116; t=1756110016; c=relaxed/simple;
+	bh=EbzhpPOjLi3kH55G5+vHCGUnZrR8M1xHYP6BhMDkE2w=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LN60A5qfJiGPbJzAmawI+GK3Hkg4+s27kNhkZ3wRqfQAXcqYXahhJXW54Ut+P1QFvAZVJKHLiee3sj7NwBoGaKE5aiWt+sE8gc9N5NSW+Q0lgaNWX+FD5y7say5ybyrdcXMmhqIeVSCMx/qwdlLffYKqzhhZDAk8E80p3KTeq/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=VfqVeWxe; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=RIsQJdnqDFrZ3FgABBgY+VGmzltX1BpZzzy9pPGavu04KvcBNv6Eca7RskH5cH+uhprWhB8YXagCwAmANMw9do9kEq7Of18ZXlkPFjHaoelT51+t6k8fwBKme/q0GHCj6/9XEVdUvzWKROHMI58ZIs1qARCy6itVJg1dLxK0DH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=N7RZjF+9; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="VfqVeWxe"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="N7RZjF+9"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=hIW8XQU7RMPPW8XOZu7gtjXi/XwCLs4jNR5j1dUryRA=;
-	t=1756109854; x=1757319454; b=VfqVeWxe2hOrzSUriVrsNFJ6YVz74LrorjzHUmbkT3HpC4i
-	+jnjX4jSqzeSRDWGPCVjIlrxDmgmZGCIm5+j8t3QKIFLzJWIiHCsyEwvLp4GzsaEdl19wKOlTmesX
-	+LYrmRZbXpDlqv2UVo5/+S9Bl0ptsekY7H7vYEaKtp/LHZV47bNLVbmZdtsN1pwy0V9k64ejUuwA9
-	pTK6ciDkhzrIyGxOQTFKm72fPU1ZiIo43kG0OzNr7wm4107Mm3EWlNjHdsOcRiTnExRcyzBUYxltR
-	/QHdnDZs1Ww0KRIBCSz23UMJ1H2h6Qk4cAX5ULFq5Us0wl9tpvuxSHWfJvpjCvqg==;
+	Resent-Cc:Resent-Message-ID; bh=JjdTDWtQIxrGilIZgCVBGVSdcEmwWIR6irdMFSFg1uA=;
+	t=1756110014; x=1757319614; b=N7RZjF+921Doygr3G4eYSHhs3U7/Yg+dVZSqvIHNrPnrhIj
+	OFHDkTIx2v1tD7BPSlhbaJTBq+haH+OipyArxV8pLgNuC0KzlyO4AiyJgtyzVo1nsQ1M21Axzudgg
+	kYY1rbUmIqcMINaO5yWzcvxi9vg3/A4TW+edqBUR1C9ErG5NHS8QYen3oaeCClXY2oJV83qWzL7iR
+	uA052HvoMIpJEwCoQVYLPN3/Y0PUT6vOOWPAPI30/p0K8E8nuikL/C75dkSYlS29gBZh9/MvoqODi
+	mRSZeKwtvtX4YE6kkSpUH5fPDO9F6yucifFVv9a0BNopvN8WiDPName3sUGt+1Mg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1uqRhk-00000001ZI0-2TX8;
-	Mon, 25 Aug 2025 09:33:25 +0200
-Message-ID: <da586793e06d68e51af8f691e9aac82441d3808b.camel@sipsolutions.net>
-Subject: Re: [PATCH v1] wifi: wext: propagate metadata on -E2BIG for GET
- ioctls
+	id 1uqSR0-00000001bsE-26fm;
+	Mon, 25 Aug 2025 10:20:10 +0200
+Message-ID: <4f8037dc97958e06dfb08d75fce982c1e4e36068.camel@sipsolutions.net>
+Subject: Re: [RFC] wifi: iwlwifi: mei: Remove unused flexible-array member
+ in struct iwl_sap_hdr?
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Callan Huang <luvings@qq.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Miri Korenblit
+	 <miriam.rachel.korenblit@intel.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 25 Aug 2025 09:33:22 +0200
-In-Reply-To: <tencent_FE21EA217C7FF6B3CEAB5749F98F0267EC0A@qq.com>
-References: <tencent_FE21EA217C7FF6B3CEAB5749F98F0267EC0A@qq.com>
+Date: Mon, 25 Aug 2025 10:20:09 +0200
+In-Reply-To: <fbc03dee-273a-4c75-a8bb-fbc6ae48d26d@embeddedor.com>
+References: <fbc03dee-273a-4c75-a8bb-fbc6ae48d26d@embeddedor.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
@@ -51,18 +52,38 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Thu, 2025-08-07 at 21:10 +0800, Callan Huang wrote:
-> When GET ioctls encounter insufficient buffer (-E2BIG),
-> preserve u.data.length metadata in iwreq structure for size detection
+On Mon, 2025-08-11 at 17:23 +0900, Gustavo A. R. Silva wrote:
+> Hi all,
 >=20
-> Typical usage in userspace tools like 'iwlist wlan0 scanning':
-> - Detect required buffer size via u.data.length
-> - Implement retry logic with proper allocation
+> At first sight, it seems that the flexible-array member `payload`
+> in the struct below it's not being used:
+>=20
+> drivers/net/wireless/intel/iwlwifi/mei/sap.h:
+> 298 /**
+> 299  * struct iwl_sap_hdr - prefixes any SAP message
+> 300  * @type: See &enum iwl_sap_msg.
+> 301  * @len: The length of the message (header not included).
+> 302  * @seq_num: For debug.
+> 303  * @payload: The payload of the message.
+> 304  */
+> 305 struct iwl_sap_hdr {
+> 306         __le16 type;
+> 307         __le16 len;
+> 308         __le32 seq_num;
+> 309         u8 payload[];
+> 310 };
+>=20
+> If we remove it, we'd get rid of 14 of the following type of warnings:
+>=20
+> drivers/net/wireless/intel/iwlwifi/mei/sap.h:318:28: warning: structure c=
+ontaining a flexible array member is not at the end of another structure=
+=20
+> [-Wflex-array-member-not-at-end]
+>=20
+> Is there any case where this array is actually used that I might
+> be missing?
 
-If you'd sent this patch 15 years ago I probably would've taken it, but
-honestly, at this point ... no. Just use nl80211, or large buffers in
-the userspace to start with. There's a very small buffer limit _anyway_,
-so that getting the full scan list in busy environments is actually
-impossible with wext.
+Check if it builds? But I don't see it used in our internal (and
+possibly more recent) version of this either.
 
 johannes
