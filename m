@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 935D03019D2;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C4871EFF9B;
 	Mon, 25 Aug 2025 17:44:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756143890; cv=none; b=NU3Bs7KyTX4/fNstDlBamJY2m4hUfvyanR7LtkADd7pvryKWrK5d9IvY6FtJhgmAQ1Ww6wZz3ydswyMduJ7noO/m+U+80FgDcETB2qn4jbMYSpOM9ZfVigfiwvB35fbnrVL+ZBqQSHXxHiwOJJE6GK0gh7RuEcm+UzcV+H4kzwE=
+	t=1756143890; cv=none; b=u0tdjV1IQ/PJc+akc56/YtQGW5Tfs/CScHThN21/KHvidZHAds9Z/71EwoSCk2dtNep51czMZOId0XdLRkKJBd8odwlhERcTji5j8rtEQbNkAfwTGAYU6fgsFsFFEjSE9WrDlXEAa+eqWLqbWldhFgRNPXnQukRHaNKpSdcXxN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756143890; c=relaxed/simple;
-	bh=XIKXkwSdpDFgryuO8AscrjzoCScXTyqY2YV5IZIW2eE=;
+	bh=u+j1MWZrVDMnA0nN2hd703dpVLMQhCSZUL4OYJmX1Iw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RlNZZilskGW7eS4kWv0ORV4wF2ouIEuWvXhNUIuIr/z6XuOCosvRGu7krrA8uCNGGUfMc+K/hkNUkXZ6W7hX6nqFt9hVyqCdFkCBsZUXMY/es5vIKE9J6lzxyMO0wTftEYFZfiVa+odSg+sMGUskq7XrL/AcJeum5pC5BRv7l4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qU3VIkwi; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=EWq0Tt9ffDsz5yUJxC9qZ8PppQBEo/oyHHTjjOej5S+2cbMcLS9kTg4ZvnNtKoqy2hXULZSoo+S26VcEnNs+awKSe/ueoRrQmwiwfmhpSqZltdQSQLOq7BrlgxMS9osyHJF7lVg6oC7uglT1StZ96S5WAv6o4WDMYoaEhT9TwTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JDKkY/D5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qU3VIkwi"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4151AC19421;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JDKkY/D5"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 26246C113D0;
 	Mon, 25 Aug 2025 17:44:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1756143890;
-	bh=XIKXkwSdpDFgryuO8AscrjzoCScXTyqY2YV5IZIW2eE=;
+	bh=u+j1MWZrVDMnA0nN2hd703dpVLMQhCSZUL4OYJmX1Iw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=qU3VIkwi9ipzyXAef3IHjOfSkA6fgbg36bhmnZ6ctYJqEONhyVMlhjRj1OLRCXmCl
-	 We2AO005UwaSCw0ORnwxjnbO8eC5sKEb/l/jW0cDm6fbEz63phFgsNGsAOE78nVNFS
-	 vLOGt8CWmYmxw1yqX5deRc4MORmZsVwRKk8Z8Ur33ptY2rsnhswCd2hYkhcaWXGmNA
-	 Tec/KlStxskkAA94AYXo0hgSjDeX+zBclWxT2JqqxfvfyQIXB73wlZgcDwdEnLYr8y
-	 N+0z7XVD1Nn1dqtESANyeE7fbm0TNwZUXleBhnkoktx5zpp11Hk5uV0SBTrNYx9hKs
-	 WTbBRmbqidnGQ==
+	b=JDKkY/D5iZoD0kVKUsBTL0e8MYxmuawMMJvAeqNP7YhOQN3wTellFdvhGjMRrI5l5
+	 VN9F09nL7C9t6pODn1tZS5Xc+qAHuVl+iRRnFSXIzuDPLB2CmaawMvpyinbWXQIG9g
+	 VMpCFUNfMMishrwV2EF4W4YkL5Jm8C3JJxhcUmSlHvqUo9FFR1n8f/Niqo2fMwAxgZ
+	 uAd4GNql8Jhn1Z6THTI2FCQcvtFlMWwSAX1Opawak3KxvDPCkUqdnbMZCuu7wOYFg7
+	 zbbwSGjqDuWGs+7hzMk7pCMaNNsBB1hbpTGIHGD4HvYAQk6JzUbSxH/nuNgtjRqiV7
+	 dR/o39cctmCjw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F01CA0FED;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1481FCA0FE7;
 	Mon, 25 Aug 2025 17:44:50 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Mon, 25 Aug 2025 23:14:38 +0530
-Subject: [PATCH v2 3/8] PCI/ASPM: Transition the device to D0 (if required)
- inside pci_enable_link_state_locked() API
+Date: Mon, 25 Aug 2025 23:14:36 +0530
+Subject: [PATCH v2 1/8] PCI/ASPM: Always disable ASPM when driver requests
+ it
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,8 +40,8 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250825-ath-aspm-fix-v2-3-61b2f2db7d89@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20250825-ath-aspm-fix-v2-1-61b2f2db7d89@oss.qualcomm.com>
 References: <20250825-ath-aspm-fix-v2-0-61b2f2db7d89@oss.qualcomm.com>
 In-Reply-To: <20250825-ath-aspm-fix-v2-0-61b2f2db7d89@oss.qualcomm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -60,16 +60,16 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  "Rafael J. Wysocki" <rafael@kernel.org>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4214;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4409;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=Qjbd70IC+ShOK3ZDf4DRoBiUH5NS5aHCnprLq7DQ7iM=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBorKEPLbdqO2EWRQxfmgtisJzzWpgiy2ZIIPyDr
- wXo38kcIkeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaKyhDwAKCRBVnxHm/pHO
- 9Y3zB/9zEs5uWjC3Xrp3WhZFy5crlFwe49xFUi+A+EJpbRJDiMhgTxouJpKvRY/cZvY8DxcuyWq
- Q6VKk/Q1UWHC054LHzynKwqasTaviVYQgMqMwjJ4C06i9hMSyr/L2Hywarv9Nni8mhUD372eY4O
- Ry0svyzfWZJplUYBwqnbbhvSYfeX3oN++0ibNInhZ9fFX4dLGMvQUfAj1+EoX7Zk11ND+Z44c7q
- /34v40Br95YeTKp/FOIwVK8dayq7uZiqEKwRc3AcrXGobv4humuJVCA8HaXe79RalBT9kairD6/
- KQbjIRML/SnxYy9jMFN3tTtwmRh5tpXkjm+u8YXE6E7wjWXP
+ bh=XteWgzQLE4FB1d7fUUtWPfDxXr3Zn7uGZ3PNAO/OJ1o=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBorKEOInbYm5tl5KOPLP0FAuBz7q4CEGOPyc+H8
+ JnnTv9G2EeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaKyhDgAKCRBVnxHm/pHO
+ 9ZWBB/4v7fVw7cQpZhIlei/tgmZsW671sNE/em0HNodv96mg1pNd6NIEv76mCwcqsQW9WXZzu1P
+ A1Rfn/XV4mJI7DIrfGI80bYvM8hFz5iWdD93TpVpfS9KKTf9BveX3sBJ7CBy7dCdqDqWtMBtxd9
+ RGoFOQB5Zr5yNNBnUfZ1kP4F3Q2lAvzzOaOqUiTwf1Rb66K3OJidg5WrDX2XVgAxXlbh+s3dqgx
+ rKa605QyAAvQHUpIZTxVYoqBxXpFE1Y0B5sW2TdcGODrN9aR4kT1GoBkuj5pgOyT6bZnXvj9Q09
+ iUHx/0rrCwBlMdlO4njgBUYwkx4sySg5EXZNY6rLq3wPz9UT
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -77,110 +77,101 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-Both of the current callers of the pci_enable_link_state_locked() API
-transition the device to D0 before calling. This aligns with the PCIe spec
-r6.0, sec 5.5.4:
+PCI core/ASPM service driver allows controlling ASPM state through
+pci_disable_link_state() API. It was decided earlier (see the Link
+below), to not allow ASPM changes when OS does not have control over it
+but only log a warning about the problem 'commit 2add0ec14c25 ("PCI/ASPM:
+Warn when driver asks to disable ASPM, but we can't do it")'.
 
-"If setting either or both of the enable bits for PCI-PM L1 PM Substates,
-both ports must be configured as described in this section while in D0."
+A number of drivers have added workarounds to force ASPM off with own
+writes into the Link Control Register (some even with comments
+explaining why PCI core does not disable it under some circumstances).
+According to the comments, some drivers require ASPM to be off for
+reliable operation.
 
-But it looks redundant to let the callers transition the device to D0. So
-move the logic inside the API and perform D0 transition only if the PCI-PM
-L1 Substates are getting enabled.
+Having custom ASPM handling in drivers is problematic because the state
+kept in the ASPM service driver is not updated by the changes made
+outside the link state management API.
 
+As the first step to address this issue, make pci_disable_link_state()
+to unconditionally disable ASPM so the motivation for drivers to come
+up with custom ASPM handling code is eliminated.
+
+To fully take advantage of the ASPM handling core provides, the drivers
+that need to quirk ASPM have to be altered depend on PCIEASPM and the
+custom ASPM code is removed. This is to be done separately. As PCIEASPM
+is already behind EXPERT, it should be no problem to limit disabling it
+for configurations that do not require touching ASPM.
+
+Make pci_disable_link_state() function comment to comply kerneldoc
+formatting while changing the description.
+
+Link: https://lore.kernel.org/all/CANUX_P3F5YhbZX3WGU-j1AGpbXb_T9Bis2ErhvKkFMtDvzatVQ@mail.gmail.com/
+Link: https://lore.kernel.org/all/20230511131441.45704-1-ilpo.jarvinen@linux.intel.com/
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+[mani: commit message fixup]
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c |  5 -----
- drivers/pci/controller/vmd.c           |  5 -----
- drivers/pci/pcie/aspm.c                | 22 ++++++++++++++++++----
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/pci/pcie/aspm.c | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..af705d71f72b2b7c3004cbb69cbd779c637bb22b 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1042,11 +1042,6 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
- 
- static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
- {
--	/*
--	 * Downstream devices need to be in D0 state before enabling PCI PM
--	 * substates.
--	 */
--	pci_set_power_state_locked(pdev, PCI_D0);
- 	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
- 
- 	return 0;
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index b679c7f28f51c13468b60f1e6481a26d5967d4eb..85cfd8cbc6f7ed2730f4f8e5357d9b90d8906ad3 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -768,11 +768,6 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
- 	pci_info(pdev, "VMD: Default LTR value set by driver\n");
- 
- out_state_change:
--	/*
--	 * Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
--	 * PCIe r6.0, sec 5.5.4.
--	 */
--	pci_set_power_state_locked(pdev, PCI_D0);
- 	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
- 	return 0;
- }
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index fac46113a90c7fac6c97125e6a7e385045780005..1243715bc054f859af175143a7ffaef0971f097a 100644
+index 919a05b9764791c3cc469c9ada62ba5b2c405118..be9bd272057c3472f3e31dc9568340b19d52012a 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -1480,13 +1480,20 @@ static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked)
-  * Note that if the BIOS didn't grant ASPM control to the OS, this does
-  * nothing because we can't touch the LNKCTL register.
-  *
-- * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-- * PCIe r6.0, sec 5.5.4.
-+ * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
-+ * are getting enabled.
-  *
-  * Return: 0 on success, a negative errno otherwise.
-  */
- int pci_enable_link_state(struct pci_dev *pdev, int state)
- {
-+	/*
-+	 * Ensure the device is in D0 before enabling PCI-PM L1 PM Substates, per
-+	 * PCIe r6.0, sec 5.5.4.
-+	 */
-+	if (FIELD_GET(PCIE_LINK_STATE_L1_SS_PCIPM, state))
-+		pci_set_power_state(pdev, PCI_D0);
-+
- 	return __pci_enable_link_state(pdev, state, false);
- }
- EXPORT_SYMBOL(pci_enable_link_state);
-@@ -1500,8 +1507,8 @@ EXPORT_SYMBOL(pci_enable_link_state);
-  * Note that if the BIOS didn't grant ASPM control to the OS, this does
-  * nothing because we can't touch the LNKCTL register.
-  *
-- * Note: Ensure devices are in D0 before enabling PCI-PM L1 PM Substates, per
-- * PCIe r6.0, sec 5.5.4.
-+ * Note: The device will be transitioned to D0 state if the PCI-PM L1 Substates
-+ * are getting enabled.
-  *
-  * Context: Caller holds pci_bus_sem read lock.
-  *
-@@ -1511,6 +1518,13 @@ int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
- {
- 	lockdep_assert_held_read(&pci_bus_sem);
+@@ -1381,16 +1381,23 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked
+ 		return -EINVAL;
+ 	/*
+ 	 * A driver requested that ASPM be disabled on this device, but
+-	 * if we don't have permission to manage ASPM (e.g., on ACPI
++	 * if we might not have permission to manage ASPM (e.g., on ACPI
+ 	 * systems we have to observe the FADT ACPI_FADT_NO_ASPM bit and
+-	 * the _OSC method), we can't honor that request.  Windows has
+-	 * a similar mechanism using "PciASPMOptOut", which is also
+-	 * ignored in this situation.
++	 * the _OSC method), previously we chose to not honor disable
++	 * request in that case. Windows has a similar mechanism using
++	 * "PciASPMOptOut", which is also ignored in this situation.
++	 *
++	 * Not honoring the requests to disable ASPM, however, led to
++	 * drivers forcing ASPM off on their own. As such changes of ASPM
++	 * state are not tracked by this service driver, the state kept here
++	 * became out of sync.
++	 *
++	 * Therefore, honor ASPM disable requests even when OS does not have
++	 * ASPM control. Plain disable for ASPM is assumed to be slightly
++	 * safer than fully managing it.
+ 	 */
+-	if (aspm_disabled) {
+-		pci_warn(pdev, "can't disable ASPM; OS doesn't have ASPM control\n");
+-		return -EPERM;
+-	}
++	if (aspm_disabled)
++		pci_warn(pdev, "OS doesn't have ASPM control, disabling ASPM anyway\n");
  
-+	/*
-+	 * Ensure the device is in D0 before enabling PCI-PM L1 PM Substates, per
-+	 * PCIe r6.0, sec 5.5.4.
-+	 */
-+	if (FIELD_GET(PCIE_LINK_STATE_L1_SS_PCIPM, state))
-+		pci_set_power_state(pdev, PCI_D0);
-+
- 	return __pci_enable_link_state(pdev, state, true);
- }
- EXPORT_SYMBOL(pci_enable_link_state_locked);
+ 	if (!locked)
+ 		down_read(&pci_bus_sem);
+@@ -1417,13 +1424,13 @@ int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
+ 
+ /**
+- * pci_disable_link_state - Disable device's link state, so the link will
+- * never enter specific states.  Note that if the BIOS didn't grant ASPM
+- * control to the OS, this does nothing because we can't touch the LNKCTL
+- * register. Returns 0 or a negative errno.
+- *
++ * pci_disable_link_state - Disable device's link state
+  * @pdev: PCI device
+  * @state: ASPM link state to disable
++ *
++ * Disable device's link state so the link will never enter specific states.
++ *
++ * Return: 0 or a negative errno
+  */
+ int pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
 
 -- 
 2.45.2
