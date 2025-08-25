@@ -1,45 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2DF29B77C
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2025 08:11:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F5931FB3;
+	Mon, 25 Aug 2025 08:17:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756109508; cv=none; b=Gm0//mD8QKUG15qxfDA+Hsa11IL4wOBVbxbKOfqpRGN8Br2IzJiFEvp5gAdKqKEtID01ns0V3DorR4fko9O5X4n0uv+M6hurHGfdD5p42URNgBTR0RYM0T5Ylx6gR0EV+z4IQVHrRI7DDISadWQMD7THckYbq/2eKSDnXjDvIAU=
+	t=1756109855; cv=none; b=f81ckliawl1FheoevfsoUWopI1zmfQVz7lEkS4eaKQIUK67qdYqsSiTDbEf+G4CXai8fS54YuHmZk6ZcDbzUBH4Muc6Ynx1HgawswqXYmuD9DG8nmU3YPyqjQV6u47NdjK6DjlobZzIlrSX+AGbukGZ/1Ghxy2JUKUv5Zo/5vfI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756109508; c=relaxed/simple;
-	bh=wquP6nheDNhSM556UVhaq8Yu3VMpUxjGqdghLKMSPcE=;
+	s=arc-20240116; t=1756109855; c=relaxed/simple;
+	bh=hIW8XQU7RMPPW8XOZu7gtjXi/XwCLs4jNR5j1dUryRA=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IjXTVAFPDbAlZMLVoOXcOjipD8jkrDZpnoSCyCCAhta/ujmOZ0gyPnFXsWbhlRK6Blkt/Mbq+4kqiD4fRP6RqbIvV7wBca4LmFSE//11D2PYKfzWtYa++AU6vuAqdIidOIWckkGDR9HuM5NGgMsZzeM1E+6QnGoc2khxjUDxeQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=RfJn0GTx; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=LN60A5qfJiGPbJzAmawI+GK3Hkg4+s27kNhkZ3wRqfQAXcqYXahhJXW54Ut+P1QFvAZVJKHLiee3sj7NwBoGaKE5aiWt+sE8gc9N5NSW+Q0lgaNWX+FD5y7say5ybyrdcXMmhqIeVSCMx/qwdlLffYKqzhhZDAk8E80p3KTeq/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=VfqVeWxe; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="RfJn0GTx"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="VfqVeWxe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=wquP6nheDNhSM556UVhaq8Yu3VMpUxjGqdghLKMSPcE=;
-	t=1756109506; x=1757319106; b=RfJn0GTxH/bBCpjojZ3nEbDu4xY7jFWyBORqsEi8Jc+aXLn
-	lQTGZkAFaaFvvOFKr94eo9WG718eGfHipq/9b0e4CwAOiBS5yvU7NfPKuQ1saVJzexTrTlnk9MbEH
-	MFzmxwYeodZPUa8himgFPdcXnR8JfYpU2dAct9482GmYqcsmc2Syf5VF2RoqM/mnzXOyZrk+JMRqK
-	aL9LA8LF1loAzNM2tTbsoh2ZmvI53tqAlttvI9kJASijIdOPr4xN8t0HZEpzLBYHIdqcUoXbTZYm6
-	g9uHNOZVCEqRmMvEyITdLzK3WKqMm949Wjmk/bTkUSEoCzl/bph8T+2d7v6gGiPg==;
+	Resent-Cc:Resent-Message-ID; bh=hIW8XQU7RMPPW8XOZu7gtjXi/XwCLs4jNR5j1dUryRA=;
+	t=1756109854; x=1757319454; b=VfqVeWxe2hOrzSUriVrsNFJ6YVz74LrorjzHUmbkT3HpC4i
+	+jnjX4jSqzeSRDWGPCVjIlrxDmgmZGCIm5+j8t3QKIFLzJWIiHCsyEwvLp4GzsaEdl19wKOlTmesX
+	+LYrmRZbXpDlqv2UVo5/+S9Bl0ptsekY7H7vYEaKtp/LHZV47bNLVbmZdtsN1pwy0V9k64ejUuwA9
+	pTK6ciDkhzrIyGxOQTFKm72fPU1ZiIo43kG0OzNr7wm4107Mm3EWlNjHdsOcRiTnExRcyzBUYxltR
+	/QHdnDZs1Ww0KRIBCSz23UMJ1H2h6Qk4cAX5ULFq5Us0wl9tpvuxSHWfJvpjCvqg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1uqSIp-00000001bMY-1OuB;
-	Mon, 25 Aug 2025 10:11:43 +0200
-Message-ID: <6f1207c84db7663c646f0b1211ab7894c53f397e.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next] wifi: cfg80211: Increase netlink buffer
- size to 4096 bytes in nl80211_get_station()
+	id 1uqRhk-00000001ZI0-2TX8;
+	Mon, 25 Aug 2025 09:33:25 +0200
+Message-ID: <da586793e06d68e51af8f691e9aac82441d3808b.camel@sipsolutions.net>
+Subject: Re: [PATCH v1] wifi: wext: propagate metadata on -E2BIG for GET
+ ioctls
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Sarika Sharma <quic_sarishar@quicinc.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 25 Aug 2025 10:11:42 +0200
-In-Reply-To: <20250822050204.476919-1-quic_sarishar@quicinc.com>
-References: <20250822050204.476919-1-quic_sarishar@quicinc.com>
+To: Callan Huang <luvings@qq.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 25 Aug 2025 09:33:22 +0200
+In-Reply-To: <tencent_FE21EA217C7FF6B3CEAB5749F98F0267EC0A@qq.com>
+References: <tencent_FE21EA217C7FF6B3CEAB5749F98F0267EC0A@qq.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
@@ -51,29 +51,18 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Fri, 2025-08-22 at 10:32 +0530, Sarika Sharma wrote:
-> Currently, the buffer size allocated for the get_station command in
-> nl80211_get_station is NLMSG_DEFAULT_SIZE, which, in some cases, is
-> insufficient to send complete output to user space and results in
-> "no buffer space available" error. This is especially evident in
-> setups with 3 links, where the amount of station info exceeds the
-> default allocation, leading to underflows and incomplete netlink
-> messages.
+On Thu, 2025-08-07 at 21:10 +0800, Callan Huang wrote:
+> When GET ioctls encounter insufficient buffer (-E2BIG),
+> preserve u.data.length metadata in iwreq structure for size detection
 >=20
-> To fix this, increase the buffer size to 4096 bytes. This ensures
-> that the nl80211_get_station() command can return complete station
-> information for up to 3 links without allocation failure.
->=20
-> Fixes: 82d7f841d9bd ("wifi: cfg80211: extend to embed link level statisti=
-cs in NL message")
-> Signed-off-by: Sarika Sharma <quic_sarishar@quicinc.com>
-> ---
-> While this static increase is a practical short-term solution
+> Typical usage in userspace tools like 'iwlist wlan0 scanning':
+> - Detect required buffer size via u.data.length
+> - Implement retry logic with proper allocation
 
-We haven't released this code, so we don't really need a short-term
-solution? We could even just disable it from 6.17 instead.
-
-So please let's see how big a real fix would be, or maybe we revert
-82d7f841d9bd in 6.17 and do some other fixes for 6.18?
+If you'd sent this patch 15 years ago I probably would've taken it, but
+honestly, at this point ... no. Just use nl80211, or large buffers in
+the userspace to start with. There's a very small buffer limit _anyway_,
+so that getting the full scan list in busy environments is actually
+impossible with wext.
 
 johannes
