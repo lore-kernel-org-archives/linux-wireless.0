@@ -1,95 +1,74 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDF221F5619
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Aug 2025 05:57:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C77D1FB3;
+	Mon, 25 Aug 2025 08:04:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756101456; cv=none; b=cUu4ZuoSn+bbyD2597WZ/cEEzdvta0zCGG6SUaVfdJXNdOK6XpP3HuboCRBVKlAwAuiJxKGNzmZcGtsEvBYTgbMS3V4CkIK6+CZQgHlFES/r8Kt2xbiHXcaylZoce/Osnje0yYPGG/+Mrs3hiq7iaMURjYjsgwEbBheyfvejRJc=
+	t=1756109075; cv=none; b=opn0tbl4Uxo6hbgn2zIbQFrmp3OekvnGux90z6idaknoAFFyufo6pqR+mYEERyBfK5mzaZ0zBzqUs6R052c0GmekPueujAYXUoQpQa8RmjwQZuPLZKxhm9pScWnFCyInhlC6WSP6f9MYYqF/419cKaFaKiAyIGPwSlZBcwniDPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756101456; c=relaxed/simple;
-	bh=OXDZoy11eJY1VMKdj291/lOt82THrHoXBflJybSdv/c=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=SmPp4uLi4MnboRnfR9Y2dmlxm402wQaXvJICIe8l6Zdp+wuqDWGMs5H3cVdVmI0qt73FsLgodC9i8oIDY+LoRF5wcfGUtHgRkwk5KuUMyGAP7D4mRK33LWa+k7a4fpKotnMVI3P5A+R74i1hSZSaBWOlAolc0VrzJwxA1WvCdtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=F6kTq608; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1756109075; c=relaxed/simple;
+	bh=peNwNNw8JLZDy471vYW8nsDvVgGNgANo6uUwXbjULo4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=oOvuEOek+YWga9DpZjFoOj/31ki01ygLxYJ6zELeh79WZ7STuTdKZ2ieLUSW9W8DX9HK4HujZHd+l6WZpmKWRBJSGeQayzoE1ecVQ1xxqXQ4t8cQ+U6HkL4+jnf9YDXqplGx0ut8dgME0fNjp5MT1F82/HrM/qOUxWQ23Tvy81U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Iox7DYui; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="F6kTq608"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 57P5vTdyD2233824, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1756101449; bh=OXDZoy11eJY1VMKdj291/lOt82THrHoXBflJybSdv/c=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=F6kTq608yhUpXLrF4P2aiSar2t3ELq66RBSjqG9KRZ6iBc3kJACxSO/vQNOAfvq5G
-	 PbdijSpivK3HXltR1TD1XhYo2HJD0s43hz79AbybS569Fjh9xWQr7eOe+RWwsP1ozm
-	 cAX2wVdoqaLDlU4NjU9xr0rgxSgHBw37Eax+/abuJL456930FNBqB2Nwv1yPWbeFkK
-	 0UrUzfutD5W9rZ9dF2PYEgI3HuDqJm8+MwG8xBSWoBrs/DuSnP5wGcDCWKAoB082z4
-	 FF1AWPj3A76tsGNA0uk4ZZkA6mRWafTSCkzeujr3w1f6yL7Vs3gngmM/xwFHT8BRpd
-	 glTMlsQ9HRWRQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 57P5vTdyD2233824
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 25 Aug 2025 13:57:29 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Mon, 25 Aug 2025 13:57:29 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Mon, 25 Aug 2025 13:57:28 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([fe80::c39a:c87d:b10b:d090]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::c39a:c87d:b10b:d090%10]) with mapi id
- 15.02.1544.027; Mon, 25 Aug 2025 13:57:28 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: =?utf-8?B?0JDQu9C10LrRgdC10Lkg0KHQvNC40YDQvdC+0LI=?=
-	<debugger94@gmail.com>,
-        "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: Remove TL-WN722N V2 from untested devices
-Thread-Topic: Remove TL-WN722N V2 from untested devices
-Thread-Index: AQHcE0qp+1KL1vhWdkOEst7MHC1MGrRy4ccg
-Date: Mon, 25 Aug 2025 05:57:28 +0000
-Message-ID: <6851d6d86fb84b2d8f5a787906bc58cd@realtek.com>
-References: <CAAN7eZ7QKEeQgNHEBuZKy4Gqg3oqpGi6BUdOVBOxPN7dedhVJQ@mail.gmail.com>
-In-Reply-To: <CAAN7eZ7QKEeQgNHEBuZKy4Gqg3oqpGi6BUdOVBOxPN7dedhVJQ@mail.gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Iox7DYui"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=peNwNNw8JLZDy471vYW8nsDvVgGNgANo6uUwXbjULo4=;
+	t=1756109073; x=1757318673; b=Iox7DYuiHcSOFj5pRibSvYMTDqpRjUO9BRqcR4l77l3t1Uq
+	J6H8cfm/ffPwaIZ9buc043YS29mKKFfeXdvfoBOWLGWeQtld6zbiJUTKdT1VXbQ6XGbfzo65dYlag
+	r+Z3g6vSLPKdj5YVUA56mWF2F+1sgePS91NdnfnwN9v2L3AD1eemP6KtMoCnOtT7av+t51XCzrHGr
+	uzjsGkGtSfK0x+4QtCDxh4EYqvkLHR7OAUFJ0FLkchZ5xIhA1JX42jgPeyjTbArf2iwNn04Iu5LBn
+	IZu4SMlf1YgKBk1iiS4DGKhlU8MktprDxeoVC2oDtJ3kqtB1dw5hS7CeRErdbU1Q==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1uqSBX-00000001avw-1ago;
+	Mon, 25 Aug 2025 10:04:11 +0200
+Message-ID: <3a7022fcd18fdaf98044f8a3a21b09a2f7cba914.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] wifi: mwifiex: use kcalloc to apply for chan_stats
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Markus Elfring <Markus.Elfring@web.de>, Qianfeng Rong	
+ <rongqianfeng@vivo.com>, linux-wireless@vger.kernel.org, Aditya Kumar Singh
+	 <quic_adisi@quicinc.com>, Avinash Patil <patila@marvell.com>, Bert
+ Karwatzki	 <spasswolf@web.de>, Brian Norris <briannorris@chromium.org>,
+ Cathy Luo	 <cluo@marvell.com>, Christophe Jaillet
+ <christophe.jaillet@wanadoo.fr>,  Francesco Dolcini <francesco@dolcini.it>,
+ Jason Xing <kerneljasonxing@gmail.com>, Jinjie Ruan
+ <ruanjinjie@huawei.com>,  "John W. Linville" <linville@tuxdriver.com>,
+ Kalle Valo <kvalo@kernel.org>, Rameshkumar Sundaram
+ <quic_ramess@quicinc.com>,  Roopni Devanathan <quic_rdevanat@quicinc.com>,
+ Sascha Hauer <s.hauer@pengutronix.de>, Thomas Gleixner	
+ <tglx@linutronix.de>, Xinmin Hu <huxm@marvell.com>
+Cc: stable@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Dan
+ Carpenter	 <dan.carpenter@linaro.org>
+Date: Mon, 25 Aug 2025 10:04:09 +0200
+In-Reply-To: <486183c0-0086-4168-bc90-1df92bfbc1d3@web.de>
+References: <20250814131536.231945-1-rongqianfeng@vivo.com>
+	 <486183c0-0086-4168-bc90-1df92bfbc1d3@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-malware-bazaar: not-scanned
 
-0JDQu9C10LrRgdC10Lkg0KHQvNC40YDQvdC+0LIgPGRlYnVnZ2VyOTRAZ21haWwuY29tPiB3cm90
-ZToNCj4gSSBoYXZlIGJlZW4gdXNpbmcgdGhpcyBXaS1GaSBkb25nbGUgZm9yIG1hbnkgeWVhcnMg
-bm93IGFuZCBoYXZlIGhhZCBubw0KPiBwcm9ibGVtcyB3aXRoIGl0LiBUaGUgZGV2aWNlIGlzIHF1
-aXRlIG9sZCBhbmQga25vd24sIGR1bXBpbmcgaXRzIGVmdXNlIHRvDQo+IHRoZSBsb2cgYW5kIGFz
-a2luZyB0aGUgdXNlciB0byBzZW5kIHRoZSByZXN1bHRzIHRvIEplcy5Tb3JlbnNlbkBnbWFpbC5j
-b20NCj4gb24gZXZlcnkgYm9vdCBtYWtlcyBsaXR0bGUgc2Vuc2UuIFBsZWFzZSBhcHBseToNCg0K
-SSdsbCByZXBocmFzZSBjb21taXQgbWVzc2FnZSB3aGVuIEkgbWVyZ2UgdGhpczoNCg0Kd2lmaTog
-cnRsOHh4eHU6IFJlbW92ZSBUTC1XTjcyMk4gVjIgKDB4MjM1NzogMHgwMTBjKSBmcm9tIHVudGVz
-dGVkIGRldmljZXMNCg0KVGhpcyBXaS1GaSBkb25nbGUgaGFzIGJlZW4gdXNlZCBmb3IgbWFueSB5
-ZWFycyBub3cgYW5kIGhhdmUgaGFkIG5vIHByb2JsZW1zDQp3aXRoIGl0LiBUaGUgZGV2aWNlIGlz
-IHF1aXRlIG9sZCBhbmQga25vd24sIGR1bXBpbmcgaXRzIGVmdXNlIHRvIHRoZSBsb2cgYW5kDQph
-c2tpbmcgdGhlIHVzZXIgdG8gc2VuZCB0aGUgcmVzdWx0cyB0byBKZXMuU29yZW5zZW5AZ21haWwu
-Y29tIG9uIGV2ZXJ5IGJvb3QNCm1ha2VzIGxpdHRsZSBzZW5zZS4NCg0KU2lnbmVkLW9mZi1ieTog
-0JDQu9C10LrRgdC10Lkg0KHQvNC40YDQvdC+0LIgPGRlYnVnZ2VyOTRAZ21haWwuY29tPg0KUmV2
-aWV3ZWQtYnk6IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KDQo+IA0KPiBkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMNCj4g
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0bDh4eHh1L2NvcmUuYw0KPiBpbmRleCA4
-MzFiNTAyNWM2MzQuLjExM2UwMWRmMDkwMiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvcmVhbHRlay9ydGw4eHh4dS9jb3JlLmMNCj4gQEAgLTc4MTUsNyArNzgxNSw3IEBAIHN0YXRp
-YyBpbnQgcnRsOHh4eHVfcHJvYmUoc3RydWN0IHVzYl9pbnRlcmZhY2UgKmludGVyZmFjZSwNCj4g
-ICAgICAgICAgICAgICAgICAgICAgICAgdW50ZXN0ZWQgPSAwOw0KPiAgICAgICAgICAgICAgICAg
-YnJlYWs7DQo+ICAgICAgICAgY2FzZSAweDIzNTc6DQo+IC0gICAgICAgICAgICAgICBpZiAoaWQt
-PmlkUHJvZHVjdCA9PSAweDAxMDkgfHwgaWQtPmlkUHJvZHVjdCA9PSAweDAxMzUpDQo+ICsgICAg
-ICAgICAgICAgICBpZiAoaWQtPmlkUHJvZHVjdCA9PSAweDAxMDkgfHwgaWQtPmlkUHJvZHVjdCA9
-PSAweDAxMGMNCj4gfHwgaWQtPmlkUHJvZHVjdCA9PSAweDAxMzUpDQo+ICAgICAgICAgICAgICAg
-ICAgICAgICAgIHVudGVzdGVkID0gMDsNCj4gICAgICAgICAgICAgICAgIGJyZWFrOw0KPiAgICAg
-ICAgIGNhc2UgMHgwYjA1Og0KDQo=
+On Thu, 2025-08-14 at 16:33 +0200, Markus Elfring wrote:
+> > Use kcalloc to allocate 'adapter->chan_stats' memory =E2=80=A6
+>=20
+> I find the summary phrase and change description improvable.
+
+We all find your behaviour improvable. Go away and leave the wireless
+list alone.
+
+johannes
