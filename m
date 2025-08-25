@@ -1,123 +1,93 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5145A279DCA;
-	Mon, 25 Aug 2025 04:48:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B40277C8D;
+	Mon, 25 Aug 2025 05:51:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756097302; cv=none; b=M6/uamd1Dn6keEF9AveTGZXrmrddd51nBkDG2SrClaVDmOWOSjqp1YX0izvR8XXYieeWvjZcMY7tQRDVVX43+hMoo5cECPIn8Tjl65FmEzAFE22U1ngVo3xhbO0iW/TnDs36XkecH9qiqBEc/EIMNCwDbpY94vpRiVDOWRxeuwk=
+	t=1756101103; cv=none; b=efw17pE4y3fgxO9uEyi9U3XWUKVzqloG04a0zHj+Tj44QGOU0GkDLVicdhYlHgXEfR8yLM1Nx2o6V0K6aNq8SnLoRRgcadz9pIqrlgKDJ7k0FP2BEyc+VLcVf1yxfaHWU2i5BDw8lTq/Yn8Q+kUe/lwqMSYSHarVB6f/G21TAoE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756097302; c=relaxed/simple;
-	bh=W40kY5wbvrujI3XoYcNY8F73SYmOlQZdIoEMWzKo428=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Yzvd4ly+b9aH4QRCGP35cTnSlr9KLFp8RV0N2eYpOM378kOVOKv/vWBIKs+wj0McXvM7JQoiH/s6YIqLUHtPWkHSmYDInRx6+S2aMgwHxmLJOW04hg3Q08ALfjKNF7dH7wPf9YhORuYbO7/F71yzX1uHT/cq+OtUoBM/Zeg45Ng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BIitUTgQ; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BIitUTgQ"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-770522b34d1so821994b3a.1;
-        Sun, 24 Aug 2025 21:48:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756097296; x=1756702096; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3zksa426wZGWz5xoWsOiI60ErY/o4m1oTspwldflGbw=;
-        b=BIitUTgQ078Fgfzy0Ws8TqRPth67z4pBy0+ZWzd0TkmWsCPvjl6apTCvQhDxBhWupy
-         gTd7K/l5hybgQlfWRtFvGbB8qKHXJH1Y3ZuJCfjpi5g9lo2cmWeVHfRhEBFk7L0bHv6z
-         XHuxMS7jT4ChCOrVMkfgmQeVYXLBq1qyFY1QXOrrkGZ5pyXz0VF8nNyn0uBl8ltIHNNu
-         iNzMzALNLfPZl82seJbxmqBUbUNc6SsO9JF/YwJ3DnPRlyt8WY7jwz3NaSz8g3NNvhMU
-         jsVheZg0QF404F1RAD6qUmEB2ZHx7OephPv1EwtRlT3jr9uyKuAlGXziixFWYwj22q4B
-         5uiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756097296; x=1756702096;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3zksa426wZGWz5xoWsOiI60ErY/o4m1oTspwldflGbw=;
-        b=r46TqXWiRynf0Q3h8nfM5riq7bd4byOEklVF7yaQNXKzIgqQqDWXvuyObMFUy7HNsv
-         jhiEuQ2qHnIP5Mfa7DZHWeRRQdjcF5weW4V+2RR93Wg3nq5FVVRS+AON+NNh+3gmXKjd
-         L37nnRqoCnD5p31QMIzIa1JikHS+EYyAy5AWnwxvoxF+02mldzyYVqdGBsqS3qs3WU4l
-         vQ7K9xDcXD2Kmzea2FgYyWoyAbUoI9GQ2B0eQwVRGzEklgqgk9i5759OnghxDoneLPRG
-         IQv/ix0FVrVc+EAdTJNHGMbzQhPQsZBDKK5cAT6HkiRm8nKnitgr5fhnvjfE4PQ3Ml56
-         ZgNg==
-X-Forwarded-Encrypted: i=1; AJvYcCUDLoXfo3V92Kg64tDwiGTb3z1EGrl6C3QUp8lCJi+TeU7XkIrfxFKVeppqlSaXKYfRTOeJhqiCs3RM@vger.kernel.org, AJvYcCUsBxJHn/RuWa/ue/cA4wt40+3pchsvzmyzQzru/9QlFP8BxUxF1i7RcwkuSEZUIv65Y+TOnrzV5iHMJ8xm@vger.kernel.org, AJvYcCW2BMLdzV6IPSDbARFPxzSb8GeHd03/hnWl1YlhLQJPpSdrbjo0RLDkNFSi2D32hg/v4hIm2cRjtfGmTw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwbStgtyTCf8wC559zx0F9tOx35o2oIlsXim9uZJq3ipd/bdmBR
-	SCOwb2kPuA9Gy5BWXFw+6kARtiDnhmFVI/EgphmAkGvNbRTpHGUT+HEZX1I/PA==
-X-Gm-Gg: ASbGncusYSHZJcMA6q8P3d7ZXN/L3nN5Z0FON1YO9mc6iP7nOcxzT9PsFsu7Khi5gGy
-	kYOXeUKqi1lrVIastI7zmSEUjmLnU0PleA9u53ijRcREa5K8lrSi7q4yYuA0odJaQGn+Vtn3sB/
-	3i1v2V6dKnBNy2j4xJJMVyXymaAJsw1Yn4HyMCgSmhPbY2nh0nmpmU48LZVg0/f8RCqmgrQMfCt
-	2KTe6YY58glpm6PnBdjaVwSc/dApWuyaZa4H8XIYvRDVbROP4xcRDuK4Yon0y99YZ6ceOMaoLFv
-	So58qaoALkDS2LWcwe4cENNlK1tFoOc9Uh4ZAYqMi9PS4XxqGSUKI5ojjhIdmEXKW3Rcel0UqDi
-	AYhzDCaNYBKzrspZ2BSOhn8LyskxEwAFy6T5m3DQfcVQMtoUDY5ccddjJUuJKqo8w7Q==
-X-Google-Smtp-Source: AGHT+IGMbvA1fRQJwmpM2k+yGypRyBq83t7qsLxSLdp+YurVFWf1dWesggIrkclU+8wcpw2f098ezw==
-X-Received: by 2002:a05:6a20:5493:b0:240:10d2:adf5 with SMTP id adf61e73a8af0-24340b57600mr16289611637.2.1756097296348;
-        Sun, 24 Aug 2025 21:48:16 -0700 (PDT)
-Received: from archlinux.lan ([2601:644:8200:acc7::1f6])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-770400010a1sm6170153b3a.43.2025.08.24.21.48.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Aug 2025 21:48:15 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
-	linux-kernel@vger.kernel.org (open list),
-	linux-mips@vger.kernel.org (open list:MIPS)
-Subject: [PATCHv3 2/3] wifi: ath9k: ahb: add led pin OF support
-Date: Sun, 24 Aug 2025 21:48:11 -0700
-Message-ID: <20250825044812.1575524-3-rosenp@gmail.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250825044812.1575524-1-rosenp@gmail.com>
-References: <20250825044812.1575524-1-rosenp@gmail.com>
+	s=arc-20240116; t=1756101103; c=relaxed/simple;
+	bh=qE9zFKIfhkBRu30z6t90ivQJQIX5cozzfd18irPXrA0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=iRGx+GUvxNvMVr7DSYyPMVqOqNuWDyMr3RffMwv5XevDHfkOwjM6LgdEtoPbYd+95M9fPjFFmpoJGRa7Jo9ahmImEvXcPbhQ2JGMs/VQIAcmLzWJvSF5ZGih49AvM8go4qAUV/BZ2c/DhS6uVRUjZRQK0aHDiuhusV1/4BR0qBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 8c2de9da817711f0b29709d653e92f7d-20250825
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.45,REQID:40f57b8d-2681-4a39-8c80-17f6df75ba64,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6493067,CLOUDID:1717852baaac36a722040a80a822ab7f,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|850,TC:nil,Content:0|50,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 8c2de9da817711f0b29709d653e92f7d-20250825
+Received: from node4.com.cn [(10.44.16.170)] by mailgw.kylinos.cn
+	(envelope-from <tanzheng@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 915371682; Mon, 25 Aug 2025 13:51:30 +0800
+Received: from node4.com.cn (localhost [127.0.0.1])
+	by node4.com.cn (NSMail) with SMTP id 3A1F916001A03;
+	Mon, 25 Aug 2025 13:51:29 +0800 (CST)
+X-ns-mid: postfix-68ABF9DF-9485901807
+Received: from localhost.localdomain (unknown [10.42.20.101])
+	by node4.com.cn (NSMail) with ESMTPA id BA0CD16001A01;
+	Mon, 25 Aug 2025 05:51:27 +0000 (UTC)
+From: tanzheng <tanzheng@kylinos.cn>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	tanzheng <tanzheng@kylinos.cn>
+Subject: [PATCH v1] wifi: cfg80211: simplify the code
+Date: Mon, 25 Aug 2025 13:51:23 +0800
+Message-Id: <20250825055123.960168-1-tanzheng@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-The old and removed platform code had support for assigning a value for
-the LED pin for when the default is not correct. Effectively a fix for a
-non working LED.
+Simplifying the code makes it more readable=EF=BC=9A
+1.Use dev_name instead of pdev->driver->name.
+2.There is no need to call wiphy_dev again.
 
-For setting an LED to active high, a negation of led-active-low is used,
-as two drivers currently use that and no drivers use led-active-high or
-something similar.
-
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ net/wireless/ethtool.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c911b178dcc2..269a792c3256 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -662,6 +662,17 @@ static int ath9k_of_init(struct ath_softc *sc)
- 	if (ret == -EPROBE_DEFER)
- 		return ret;
- 
-+	np = of_get_child_by_name(np, "led");
-+	if (np) {
-+		u32 led_pin;
-+
-+		if (!of_property_read_u32(np, "reg", &led_pin))
-+			ah->led_pin = led_pin;
-+
-+		ah->config.led_active_high = !of_property_read_bool(np, "led-active-low");
-+		of_node_put(np);
-+	}
-+
- 	return 0;
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index 2613d6ac0fda..0acfdc44b479 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -10,7 +10,7 @@ void cfg80211_get_drvinfo(struct net_device *dev, struc=
+t ethtool_drvinfo *info)
+ 	struct device *pdev =3D wiphy_dev(wdev->wiphy);
+=20
+ 	if (pdev->driver)
+-		strscpy(info->driver, pdev->driver->name,
++		strscpy(info->driver, dev_name(pdev),
+ 			sizeof(info->driver));
+ 	else
+ 		strscpy(info->driver, "N/A", sizeof(info->driver));
+@@ -23,7 +23,7 @@ void cfg80211_get_drvinfo(struct net_device *dev, struc=
+t ethtool_drvinfo *info)
+ 	else
+ 		strscpy(info->fw_version, "N/A", sizeof(info->fw_version));
+=20
+-	strscpy(info->bus_info, dev_name(wiphy_dev(wdev->wiphy)),
++	strscpy(info->bus_info, dev_name(pdev),
+ 		sizeof(info->bus_info));
  }
- 
--- 
-2.50.1
+ EXPORT_SYMBOL(cfg80211_get_drvinfo);
+--=20
+2.25.1
 
