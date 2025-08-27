@@ -1,96 +1,114 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C09634AAFF
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Aug 2025 10:55:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1606C2765D6;
+	Wed, 27 Aug 2025 12:06:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756292124; cv=none; b=an5Pzx49AC2QlUeseRAP4FQ1bJ8BXlf36Kmt/clBcxcjKjEpzGXcRPc9nDiyeBpEp8qa9aUvznfrtjSNBsi3oZqLnU0W0mS2paYmcSZT8x3TYw8wrapeaTqHkg4991iVDz+YHvGKa50fTHQhUFECD9+VrHGBghZeWlbs+zwjnX8=
+	t=1756296405; cv=none; b=KaLXe2x+MDzFEp3qADg6SbpQn+6ByTxKjt7Ujw9IrndjoWPcECFn+wlrKylwxrT3aEGAks5h8TZ997EPMd8W5KIsdwbhO34ccquotEEatkRuP64xDZ0gWBWoLSydIgICA4ClqTLiIcfpvGG9CxfchXFuu0XNYCQ49mFd3LiaCFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756292124; c=relaxed/simple;
-	bh=QTo1/mVPm+Zihnmk5+PtXRkwzqT27Mgwm+SpBFN9hZo=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XtfrBPM0wAgAO/r03kU4l7tL9oaReSPIT02Zd3iEglTnaSS+u4U79MJqLdk7iY+7V+TOA1b26xPrBJds6oJ4F4MOmvZnknIkWS3fQMDlTqzx8JIf2h7+o9JnmsDQGaqGbnlAanfa1gDjMFZeW6WM0i0yGSXSxJ+ezUHsY+3SqUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LDPObG5E; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1756296405; c=relaxed/simple;
+	bh=r3bwLk4B6xy2ftAAUnk1Z9Kh2yH+/XnuGMv5Z+g4s7I=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ATXEqgVTur/UdJcoObmUfJk3fsPZzpusTVTTpvkdndk+jMOHymS3yJKb7yAEpCSN3mehEGee1yPv+WFfOC7MEmG2l/ffkKLnq4MM4bsLCf/CAWQg+oMuP4KPLV1dCtW4CzP1VlZwwJ3dNQrHRTURfJlchiX8vju/ZeTLdKLara4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=D2IN175S; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LDPObG5E"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SR2ipSUrndMI+cYMrpTCqz2KHSJ+LgIZXJ6346+NbOo=;
-	t=1756292122; x=1757501722; b=LDPObG5Eyj2tWgB5OIxiSZu5SOJVdgA/e1MVV7kXOjKF/HJ
-	2sFH2lWM55fEjLdJIX46i2+W4Unp/Wzp+6UlBkLqAf3hmRoc090xDpOd2saS9ZxMZTBR88DNs3lTB
-	bVg+wlZkZg4biP5DGFogSiu1o5vnKcPcrYO1SRfXuOzcF6PS4qrT6UWdq88BAsvn3jxMSPuHCvbri
-	hXCfKkwMMSJhg0D3BSJjxFk/MTqDFgJYV/YRPewdBanG5mJPuT+whn0m+mYxyQhkc0xbUouQ2o2yj
-	MrS35VDDTFItMwcPBQ0Wp3/k99JGD5EW+OsamOKn7aZsVmPUGFe+3yg0YCL0qWww==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1urDoF-00000005QsG-47UE;
-	Wed, 27 Aug 2025 12:55:20 +0200
-Message-ID: <1fc3e3505501e5107f47507e84c69093e79c7aad.camel@sipsolutions.net>
-Subject: Re: Recent versions broke Wireless-N 1030 BGN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ingolf Gehrhardt <gehingo@freenet.de>, linux-wireless@vger.kernel.org
-Date: Wed, 27 Aug 2025 12:55:19 +0200
-In-Reply-To: <c9c43ed6bda02ead41773cadb41d9bb303db9444.camel@sipsolutions.net>
-References: <c086f53df499061f069bf4c49ab7232b8e75d9a8.camel@freenet.de>
-	 <c9c43ed6bda02ead41773cadb41d9bb303db9444.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-1.fc42) 
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="D2IN175S"
+Received: from debian (unknown [5.228.116.177])
+	by mail.ispras.ru (Postfix) with ESMTPSA id 1147C406C3E1;
+	Wed, 27 Aug 2025 12:06:41 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 1147C406C3E1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1756296401;
+	bh=x5NAugXlcutAqdPDV5Vn4Ip5GFUHeDytp7QlYPTrJ/4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=D2IN175SNc2Hkhy34u4NJPiy5TpqtlnC6fb/lCQOCf19iET5ygw19QQatvFvNi8js
+	 yFjPCDMY0sBKyH8f81HCVvnCglFfpIm/fPukzJQtCgrzTGyJyWYGOLUwKtq1Rde0Yc
+	 Apu1yayP91L90jAsTMYsljpYBJhrRVjtpieO6z2I=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+	Zong-Zhe Yang <kevin_yang@realtek.com>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Po-Hao Huang <phhuang@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH rtw v2 3/4] wifi: rtw89: fix leak in rtw89_core_send_nullfunc()
+Date: Wed, 27 Aug 2025 15:05:16 +0300
+Message-ID: <20250827120603.723548-4-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250827120603.723548-1-pchelkin@ispras.ru>
+References: <20250827120603.723548-1-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2025-08-25 at 12:03 +0200, Johannes Berg wrote:
-> On Sat, 2025-08-23 at 09:23 +0200, Ingolf Gehrhardt wrote:
-> >=20
-> > I think this might be because of:
-> >=20
-> > [   31.404357] iwlwifi 0000:05:00.0: Detected Intel(R) Centrino(R)
-> > Wireless-N 1030 BGN
-> > [   31.506140] iwlwifi 0000:05:00.0: loaded firmware version 18.168.6.1
-> > 6000g2b-6.ucode op_mode iwldvm
-> > [   32.002851] iwlwifi 0000:05:00.0: CONFIG_IWLWIFI_DEBUG enabled
-> > [   32.002925] iwlwifi 0000:05:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-> > [   32.002937] iwlwifi 0000:05:00.0: CONFIG_IWLWIFI_DEVICE_TRACING
-> > enabled
-> > [   32.002949] iwlwifi 0000:05:00.0: Detected Intel(R) Centrino(R)
-> > Wireless-N 1030 BGN, REV=3D0xB0
-> > [   32.093060] iwlwifi 0000:05:00.0: Failing on timeout while stopping
-> > DMA channel 8 [0xa5a5a5a2]
-> > [   32.111342] WARNING: CPU: 1 PID: 467 at
-> > drivers/net/wireless/intel/iwlwifi/dvm/eeprom.c:212
-> > iwl_parse_eeprom_data+0x5ba/0xe20 [iwldvm]
->=20
-> Probably, assuming you didn't see that WARN_ON before? Just making sure.
->=20
-> It's almost certainly with the config rework, and the only thing I can
-> imagine is that the EEPROM size is now wrong, but I don't see why that
-> would be the case.
->=20
-> Could you change it to print the offset, address and eeprom_size when
-> this happens? Or maybe even print them both with the older kernel too
-> when it succeeds.
->=20
-> Or maybe you can even bisect it?
->=20
-> There's a somewhat related bug
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D220477
-> but that just misses the entries which was easy to fix. That doesn't
-> seem to be the case here since the firmware is loaded.
+If there is no rtwsta_link found in rtw89_core_send_nullfunc(), allocated
+skb is leaked.  Free it on the error handling path.
 
-Actually there's a ticket [1] with precisely this issue too, so it may
-be better to handle everything there.
+Found by Linux Verification Center (linuxtesting.org).
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=3D220472
+Fixes: a8ba4acab7db ("wifi: rtw89: send nullfunc based on the given link")
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
+ drivers/net/wireless/realtek/rtw89/core.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 28bbc898b95e..e498c08151d5 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3454,14 +3454,14 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
+ 	sta = ieee80211_find_sta(vif, vif->cfg.ap_addr);
+ 	if (!sta) {
+ 		ret = -EINVAL;
+-		goto out;
++		goto out_unlock;
+ 	}
+ 	rtwsta = sta_to_rtwsta(sta);
+ 
+ 	skb = ieee80211_nullfunc_get(rtwdev->hw, vif, link_id, qos);
+ 	if (!skb) {
+ 		ret = -ENOMEM;
+-		goto out;
++		goto out_unlock;
+ 	}
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -3471,22 +3471,23 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
+ 	rtwsta_link = rtwsta->links[rtwvif_link->link_id];
+ 	if (unlikely(!rtwsta_link)) {
+ 		ret = -ENOLINK;
+-		goto out;
++		goto out_free_skb;
+ 	}
+ 
+ 	ret = rtw89_core_tx_write_link(rtwdev, rtwvif_link, rtwsta_link, skb, &qsel, true,
+ 				       wait);
+ 	if (ret) {
+ 		rtw89_warn(rtwdev, "nullfunc transmit failed: %d\n", ret);
+-		dev_kfree_skb_any(skb);
+-		goto out;
++		goto out_free_skb;
+ 	}
+ 
+ 	rcu_read_unlock();
+ 
+ 	return rtw89_core_tx_kick_off_and_wait(rtwdev, skb, qsel,
+ 					       timeout);
+-out:
++out_free_skb:
++	dev_kfree_skb_any(skb);
++out_unlock:
+ 	rcu_read_unlock();
+ 	kfree(wait);
+ 
+-- 
+2.50.1
+
