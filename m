@@ -1,31 +1,32 @@
 Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D9FA27EFEB;
-	Thu, 28 Aug 2025 21:13:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A274E2877D6;
+	Thu, 28 Aug 2025 21:13:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756415585; cv=none; b=Axya2twpsg6/K5a/k16N8XmoJsXjEBA57hC9ExqT7hjGZJxmfKm887rBuF5fEXMg1qjeWUcUmMbQsNvvNvWfc1RbqvwJJZQYj1p6V7NtOKszdT9iNmUBZLQ0Rgblla1S1q/pRNx5OfL0Uitu1YS4bNdI/U+6/yd1W70xA0FgIZw=
+	t=1756415585; cv=none; b=Nlp25zw9GPQxu0GVQIZ4mgoDyHTpVBO1CZxAY6fzYRK6QjINTzP3dTqPzTqUhTGV4kePiZYBDex8Zb/jBRyEN0JK2r7gwpF+u7VXbiCd5rD/6zhW//jkP/IrBlMMtVXJIRHEAKf17HD0L8ZJcHiAu9+bF4DWjzt7OIDHYZQLBaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756415585; c=relaxed/simple;
-	bh=PUcf8NcS3nWbY79efhChohbxyp+uiXP2iemVLTAQVJQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZN8yOJ2D1xdkKK3CmuyvZNhU648KFWnJFK0o2ZUBAYKxfSNeKWWFjmTp+a71Tr0VWuddIKQhStqV1wxGvYVowmoAhXAIcbU2LJViQBsqHWHrbGYflrCUXBRnWeE8+JgygUqi+bZCZk5N90H+Zra6Om9tGI2Fy05VzPH4E82u9tI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=rYvs4/pU; arc=none smtp.client-ip=83.149.199.84
+	bh=YRZXTvxoXTQPEnWn7auw4Pay3xEKIhw1cMd5jGw06NA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mrKMlh+TVhDbX12zy++lOB/xrhiJXmiCWdNtUczrV+cWRErFlcj1USPkBVr/Alap/K9cNVSSMVXpk9BNd6J+ySRrvXKiP74Wbu2QdsCE+dFal85AXKfRoUFQ/L9RCCcQS1B4qe89aRfTH7Vosit9EYTekytqtP8UTtdvr3diYkc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=jLNIDucL; arc=none smtp.client-ip=83.149.199.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="rYvs4/pU"
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="jLNIDucL"
 Received: from debian.intra.ispras.ru (unknown [10.10.165.5])
-	by mail.ispras.ru (Postfix) with ESMTPSA id 1A48B40A3268;
-	Thu, 28 Aug 2025 21:12:57 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 1A48B40A3268
+	by mail.ispras.ru (Postfix) with ESMTPSA id 9EA67406C3E6;
+	Thu, 28 Aug 2025 21:13:01 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 9EA67406C3E6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1756415577;
-	bh=KIKoS/QYT6bCkaD2RiPgFZxYY5a9WgBLGHB9nXt1JlY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=rYvs4/pUBJ43njTzrqvL4+r2gdw3B9qyy8LbnHWFVZ9sEWIYDxY0Ktrf5hxrgulBJ
-	 ch5ZIm+8Z/CIFSUH0FqvbIigHsAIKR0QSt5MOeV45RaGpTABG9Gq/YpxuwyGF1IqCf
-	 qnTKozTmtgrw5tboUWpQrVEugpHdByU/gkbAT/hc=
+	s=default; t=1756415581;
+	bh=NjOV+/52p6JcKU2GFjZtvMQSSL9FFi8reWwcdTySwxM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=jLNIDucLUoWopjmx6rGJmg2okljVYUb5zSf2dqQN6pNX4E+mXLkc7y1iBEH6KWnwD
+	 ONEus3Dfj5FcIb7CZX7vW1dcXz2mX1QVGiIqni9nEwBxy62xVBhqqGms9MU6kuUC/J
+	 IUudu5Bd8T3r19DqZrgiIbid8+eeBNDH1+dgs0qg=
 From: Fedor Pchelkin <pchelkin@ispras.ru>
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	Zong-Zhe Yang <kevin_yang@realtek.com>,
@@ -35,10 +36,12 @@ Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org
-Subject: [PATCH rtw v3 0/5] wifi: fixes for rtw89
-Date: Fri, 29 Aug 2025 00:11:56 +0300
-Message-ID: <20250828211245.178843-1-pchelkin@ispras.ru>
+Subject: [PATCH rtw v3 4/5] wifi: rtw89: fix leak in rtw89_core_send_nullfunc()
+Date: Fri, 29 Aug 2025 00:12:00 +0300
+Message-ID: <20250828211245.178843-5-pchelkin@ispras.ru>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250828211245.178843-1-pchelkin@ispras.ru>
+References: <20250828211245.178843-1-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,31 +50,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-v3: - further improvements for fix for use-after-free in
-      rtw89_core_tx_kick_off_and_wait(), see changelog below --- in the patch
-    - add patch 3/5 for USB case
+If there is no rtwsta_link found in rtw89_core_send_nullfunc(), allocated
+skb is leaked.  Free it on the error handling path.
 
-v2: https://lore.kernel.org/linux-wireless/20250827120603.723548-1-pchelkin@ispras.ru/
-    - rework fix for use-after-free in rtw89_core_tx_kick_off_and_wait() (Zong-Zhe)
-    - add patches 2/4 and 3/4 for another issues discovered while reworking
-    - use rtw tree instead of rtw-next
+Found by Linux Verification Center (linuxtesting.org).
 
-v1: https://lore.kernel.org/linux-wireless/20250820141441.106156-1-pchelkin@ispras.ru/ 
+Fixes: a8ba4acab7db ("wifi: rtw89: send nullfunc based on the given link")
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
 
-Fedor Pchelkin (5):
-  wifi: rtw89: fix use-after-free in rtw89_core_tx_kick_off_and_wait()
-  wifi: rtw89: fix tx_wait initialization race
-  wifi: rtw89: perform tx_wait completions for USB part
-  wifi: rtw89: fix leak in rtw89_core_send_nullfunc()
-  wifi: rtw89: avoid circular locking dependency in ser_state_run()
+v3: - use dev_kfree_skb_any() directly on error handling path without
+      extra goto complexity  (Zong-Zhe)
 
- drivers/net/wireless/realtek/rtw89/core.c | 57 ++++++++++++++++-------
- drivers/net/wireless/realtek/rtw89/core.h | 38 +++++++++++++++-
- drivers/net/wireless/realtek/rtw89/pci.c  |  5 +-
- drivers/net/wireless/realtek/rtw89/ser.c  |  5 +-
- drivers/net/wireless/realtek/rtw89/usb.c  | 36 ++++++++------
- 5 files changed, 105 insertions(+), 36 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 57f20559dfde..0076dae4572c 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -3460,6 +3460,7 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
+ 	rtwsta_link = rtwsta->links[rtwvif_link->link_id];
+ 	if (unlikely(!rtwsta_link)) {
+ 		ret = -ENOLINK;
++		dev_kfree_skb_any(skb);
+ 		goto out;
+ 	}
+ 
 -- 
 2.51.0
 
