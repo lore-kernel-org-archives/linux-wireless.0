@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2AD2E22AC
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 08:26:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6FCB2C2368
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 08:26:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756369608; cv=none; b=hdUCF79SaVkQ03VDGZ8ZYtB3/rXud/G5E05YTqCniZuUXQwBrlma0khNP/D1tJBzrBb35ANvUMoElhLOGPpGt226gGnfWuAKBCmja4IG9GpRwvGweF9gD+Smmno4BC9P8b2NxHtCXOcol68gIJJAzD0Arc9lSah5Q4v83VsbA4A=
+	t=1756369619; cv=none; b=omqIhV09WFwgzN2jG8FrNTR/mEtfKTQvfuG7dMZaP13r+tlvdw3nJ9INA0jQpkhtovgnNcdXyNL3iHWkgUDTNVheSh9+mX9l0CcAR9OuJd/gYlzHRzm3bWx+M1Ok6EG6q2SxRzdCMdQ8xiBlbcPCtaHtjV3FuSmn1itYsazU+NM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756369608; c=relaxed/simple;
-	bh=IJ3Rs60ZR0xMUpBnkDrRE2hLVtiawDiK8u7xPPP4OpI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nxd3gZfm4ghVQ62slaivw6D+W8ecGVeblsPUPKEhb14530Xl3pr2IY0jXxwKtZ5DaA1WDlLrewniQmFLq9oz2HTRb/+vWe9Z8VbcshQU/M8rjqebCEO9TINEcd21mDesr+NBbLXzoLTMPVvuBdwEgQQQeu5BjeWT11WGKeQAorU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BOPXYP3O; arc=none smtp.client-ip=192.198.163.10
+	s=arc-20240116; t=1756369619; c=relaxed/simple;
+	bh=bbrrxxjtsI4BugP1lPqwDMGcyzNAqUyDwB7LxZAi7nI=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=W2XUuSb33sSSysrvX5pOWL0OR4I6RTyvfUdB8t2P7p9jDchJaoTqJP0L2vr+ilIo5od16kLK7rEsW/8GrbuqKRwtNQ9kX9kPR8TLPKVRmECP3EZUv1hZcg45e+6p6ACBDKa527mdM84+GzrJ9/4gXMBZdwB26MpKyVHnDKmqCw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EIxHetny; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BOPXYP3O"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EIxHetny"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1756369607; x=1787905607;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=IJ3Rs60ZR0xMUpBnkDrRE2hLVtiawDiK8u7xPPP4OpI=;
-  b=BOPXYP3ODPvpwIC6wYJZmqyTKKsg0kgrPsvwzk5FzKe5dfZ9WA65XtPd
-   uCcOgmyhLmLIEq94Oi7kxt+jGd6NStfZLDiZiR/bvXhGoswAC6xjwVSF2
-   qDyiZ8xLEiB+FFBc0V3+whwh5KcuXY0KG/Npc4IU5efRzdL6fChKfrH9s
-   9JIqqSa1FGQW/34WYzJE+45AgFsLWuo6YceHscLeWP2mhonME2VYIeeXU
-   uEvzM0wKUYNWFTROl52oj3g+tjiMoKpUdyNwE2522sc+7k6DF5wk1bkze
-   TeABkYj4hu1HAosowkhAGIeQVwEDpJGfELVQl9XBpjJjTjNpskJDNeHCS
-   g==;
-X-CSE-ConnectionGUID: gl+L1i76QTixBKee7NLsPA==
-X-CSE-MsgGUID: gvgWKrUkQV2W6bf7398erw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11535"; a="70003330"
+  t=1756369618; x=1787905618;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=bbrrxxjtsI4BugP1lPqwDMGcyzNAqUyDwB7LxZAi7nI=;
+  b=EIxHetnyvHHmomPZJJ4asBbRwhYFmt5KcBKsVwqaiMOlDoW5lSfkHzki
+   gYEqUnndCj6UMke+AmI+QoxROP27IztruyIP6pwk+j87TUvDMydN8/E7+
+   rqTbpei5tsQwH1bK0Ne4f+/8WbCbP+NZ2yRykhNljYh3NHUz3fwYT4t4Z
+   8sFMNLnsMkjrKskYJtY17LIN7idxiJlH9w4g0HkQ4zwrK5cxv3GfMXv3n
+   DzO1/JG77OV8cOHQ8D+BcrRIaotJ5kB2+Cbt1mVz8KJRaZXrndzDIWjBb
+   AUOa0YRJify/oEVUtBO612NQbT30BcKE844mX3B8YuIqlv4AseyL5SifH
+   w==;
+X-CSE-ConnectionGUID: alTomhyLRG6EZEvwB8GFSA==
+X-CSE-MsgGUID: sLW6zZ6NQMiLDkz9RAWFVA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11535"; a="70003360"
 X-IronPort-AV: E=Sophos;i="6.18,217,1751266800"; 
-   d="scan'208";a="70003330"
+   d="scan'208";a="70003360"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:37 -0700
-X-CSE-ConnectionGUID: mH+QaWkOQg+iEPfY1FYYag==
-X-CSE-MsgGUID: VJZZ5tkbSjKoQMoVTy7Wag==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:44 -0700
+X-CSE-ConnectionGUID: GCzzxpr7SH6aznGRWM7X7A==
+X-CSE-MsgGUID: pz4ebaJWSJaisqGwAuvj7Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,217,1751266800"; 
-   d="scan'208";a="170224492"
+   d="scan'208";a="170224511"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:36 -0700
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:44 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 04/15] wifi: iwlwifi: trans: move dev_cmd_pool to trans specific
-Date: Thu, 28 Aug 2025 11:25:50 +0300
-Message-Id: <20250828111032.faf685de7aa2.I83e31e36d3159aa5c7e6f82a773d9981d3aac70d@changeid>
+Subject: [PATCH iwlwifi-next 10/15] wifi: iwlwifi: mld: support TLC command version 5
+Date: Thu, 28 Aug 2025 11:25:56 +0300
+Message-Id: <20250828111032.032a450cc279.Iecf6570c9fe11d8fbdc0718341ac92506b02d78c@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250828082601.537908-1-miriam.rachel.korenblit@intel.com>
 References: <20250828082601.537908-1-miriam.rachel.korenblit@intel.com>
@@ -61,299 +60,271 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-This pool has different parameters for different devices,
-move it to the generation specific transport sub-layer.
+A new version of the TLC command was added in order to support the new
+MCSs intoduced in UHR, and an indication of ELR support.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To support the new MCSs, the new version will have MCS bitmaps
+(ht_rates) of 32 bit and not 16 bit, as in the old version.
+
+Change the code to populate the new version of the command,
+and if the FW requires the old version, copy the content of the new version
+structure to the old version structure.
+
+Note that this doesn't actually set the new MCSs, this will come later.
+
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.c    | 27 ++++-----
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 24 ++------
- .../intel/iwlwifi/pcie/gen1_2/internal.h      | 23 ++++++++
- .../intel/iwlwifi/pcie/gen1_2/trans.c         | 57 ++++++++++++-------
- 4 files changed, 76 insertions(+), 55 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    | 35 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mld/tlc.c  | 75 ++++++++++++++-----
+ 2 files changed, 91 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index a19ffff2fffb..485e00d6158c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -268,9 +268,7 @@ static void iwl_trans_restart_wk(struct work_struct *wk)
- 
- struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 				  struct device *dev,
--				  const struct iwl_mac_cfg *mac_cfg,
--				  unsigned int txcmd_size,
--				  unsigned int txcmd_align)
-+				  const struct iwl_mac_cfg *mac_cfg)
- {
- 	struct iwl_trans *trans;
- #ifdef CONFIG_LOCKDEP
-@@ -292,22 +290,12 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 
- 	INIT_DELAYED_WORK(&trans->restart.wk, iwl_trans_restart_wk);
- 
--	snprintf(trans->dev_cmd_pool_name, sizeof(trans->dev_cmd_pool_name),
--		 "iwl_cmd_pool:%s", dev_name(trans->dev));
--	trans->dev_cmd_pool =
--		kmem_cache_create(trans->dev_cmd_pool_name,
--				  txcmd_size, txcmd_align,
--				  SLAB_HWCACHE_ALIGN, NULL);
--	if (!trans->dev_cmd_pool)
--		return NULL;
--
- 	return trans;
- }
- 
- void iwl_trans_free(struct iwl_trans *trans)
- {
- 	cancel_delayed_work_sync(&trans->restart.wk);
--	kmem_cache_destroy(trans->dev_cmd_pool);
- }
- 
- int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
-@@ -345,6 +333,19 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- }
- IWL_EXPORT_SYMBOL(iwl_trans_send_cmd);
- 
-+struct iwl_device_tx_cmd *iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
-+{
-+	return iwl_pcie_gen1_2_alloc_tx_cmd(trans);
-+}
-+IWL_EXPORT_SYMBOL(iwl_trans_alloc_tx_cmd);
-+
-+void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
-+			   struct iwl_device_tx_cmd *dev_cmd)
-+{
-+	iwl_pcie_gen1_2_free_tx_cmd(trans, dev_cmd);
-+}
-+IWL_EXPORT_SYMBOL(iwl_trans_free_tx_cmd);
-+
- /* Comparator for struct iwl_hcmd_names.
-  * Used in the binary search over a list of host commands.
-  *
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index b0bf88a889b4..277fd4131999 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -854,9 +854,6 @@ struct iwl_trans_info {
-  * @fail_to_parse_pnvm_image: set to true if pnvm parsing failed
-  * @reduce_power_loaded: indicates reduced power section was loaded
-  * @failed_to_load_reduce_power_image: set to true if pnvm loading failed
-- * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
-- *	The user should use iwl_trans_{alloc,free}_tx_cmd.
-- * @dev_cmd_pool_name: name for the TX command allocation pool
-  * @dbgfs_dir: iwlwifi debugfs base dir for this device
-  * @sync_cmd_lockdep_map: lockdep map for checking sync commands
-  * @dbg: additional debug data, see &struct iwl_trans_debug
-@@ -896,10 +893,6 @@ struct iwl_trans {
- 	u8 reduce_power_loaded:1;
- 	u8 failed_to_load_reduce_power_image:1;
- 
--	/* The following fields are internal only */
--	struct kmem_cache *dev_cmd_pool;
--	char dev_cmd_pool_name[50];
--
- 	struct dentry *dbgfs_dir;
- 
- #ifdef CONFIG_LOCKDEP
-@@ -948,19 +941,12 @@ iwl_trans_dump_data(struct iwl_trans *trans, u32 dump_mask,
- 		    const struct iwl_dump_sanitize_ops *sanitize_ops,
- 		    void *sanitize_ctx);
- 
--static inline struct iwl_device_tx_cmd *
--iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
--{
--	return kmem_cache_zalloc(trans->dev_cmd_pool, GFP_ATOMIC);
--}
-+struct iwl_device_tx_cmd *iwl_trans_alloc_tx_cmd(struct iwl_trans *trans);
- 
- int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
- 
--static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
--					 struct iwl_device_tx_cmd *dev_cmd)
--{
--	kmem_cache_free(trans->dev_cmd_pool, dev_cmd);
--}
-+void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
-+			   struct iwl_device_tx_cmd *dev_cmd);
- 
- int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		 struct iwl_device_tx_cmd *dev_cmd, int queue);
-@@ -1187,9 +1173,7 @@ static inline void iwl_trans_finish_sw_reset(struct iwl_trans *trans)
-  *****************************************************/
- struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 				  struct device *dev,
--				  const struct iwl_mac_cfg *mac_cfg,
--				  unsigned int txcmd_size,
--				  unsigned int txcmd_align);
-+				  const struct iwl_mac_cfg *mac_cfg);
- void iwl_trans_free(struct iwl_trans *trans);
- 
- static inline bool iwl_trans_is_hw_error_value(u32 val)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-index 54b978830043..b5ff7a6da325 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-@@ -400,6 +400,9 @@ struct iwl_pcie_txqs {
-  * @me_recheck_wk: worker to recheck WiAMT/CSME presence
-  * @invalid_tx_cmd: invalid TX command buffer
-  * @wait_command_queue: wait queue for sync commands
-+ * @dev_cmd_pool: pool for Tx cmd allocation - for internal use only.
-+ *	The user should use iwl_trans_{alloc,free}_tx_cmd.
-+ * @dev_cmd_pool_name: name for the TX command allocation pool
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+index 3222cbcbe1ab..9c464e7aba10 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+@@ -24,6 +24,8 @@
+  *					    for BPSK (MCS 0) with 2 spatial
+  *					    streams
+  * @IWL_TLC_MNG_CFG_FLAGS_EHT_EXTRA_LTF_MSK: enable support for EHT extra LTF
++ * @IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_1_5_MBPS_MSK: support ELR 1.5 Mbps
++ * @IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_3_MBPS_MSK: support ELR 3 Mbps
   */
- struct iwl_trans_pcie {
- 	struct iwl_rxq *rxq;
-@@ -506,6 +509,9 @@ struct iwl_trans_pcie {
- 	struct iwl_dma_ptr invalid_tx_cmd;
- 
- 	wait_queue_head_t wait_command_queue;
-+
-+	struct kmem_cache *dev_cmd_pool;
-+	char dev_cmd_pool_name[50];
+ enum iwl_tlc_mng_cfg_flags {
+ 	IWL_TLC_MNG_CFG_FLAGS_STBC_MSK			= BIT(0),
+@@ -32,6 +34,8 @@ enum iwl_tlc_mng_cfg_flags {
+ 	IWL_TLC_MNG_CFG_FLAGS_HE_DCM_NSS_1_MSK		= BIT(3),
+ 	IWL_TLC_MNG_CFG_FLAGS_HE_DCM_NSS_2_MSK		= BIT(4),
+ 	IWL_TLC_MNG_CFG_FLAGS_EHT_EXTRA_LTF_MSK		= BIT(6),
++	IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_1_5_MBPS_MSK	= BIT(7),
++	IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_3_MBPS_MSK	= BIT(8),
  };
  
- static inline struct iwl_trans_pcie *
-@@ -783,6 +789,23 @@ static inline u16 iwl_txq_gen1_tfd_tb_get_len(struct iwl_trans *trans,
- 	return le16_to_cpu(tb->hi_n_len) >> 4;
+ /**
+@@ -200,6 +204,37 @@ struct iwl_tlc_config_cmd_v4 {
+ 	__le16 max_tx_op;
+ } __packed; /* TLC_MNG_CONFIG_CMD_API_S_VER_4 */
+ 
++/**
++ * struct iwl_tlc_config_cmd - TLC configuration
++ * @sta_id: station id
++ * @reserved1: reserved
++ * @max_ch_width: max supported channel width from &enum iwl_tlc_mng_cfg_cw
++ * @mode: &enum iwl_tlc_mng_cfg_mode
++ * @chains: bitmask of &enum iwl_tlc_mng_cfg_chains
++ * @sgi_ch_width_supp: bitmap of SGI support per channel width
++ *		       use BIT(&enum iwl_tlc_mng_cfg_cw)
++ * @flags: bitmask of &enum iwl_tlc_mng_cfg_flags
++ * @non_ht_rates: bitmap of supported legacy rates
++ * @ht_rates: bitmap of &enum iwl_tlc_mng_ht_rates, per <nss, channel-width>
++ *	      pair (0 - 80mhz width and below, 1 - 160mhz, 2 - 320mhz).
++ * @max_mpdu_len: max MPDU length, in bytes
++ * @max_tx_op: max TXOP in uSecs for all AC (BK, BE, VO, VI),
++ *	       set zero for no limit.
++ */
++struct iwl_tlc_config_cmd {
++	u8 sta_id;
++	u8 reserved1[3];
++	u8 max_ch_width;
++	u8 mode;
++	u8 chains;
++	u8 sgi_ch_width_supp;
++	__le16 flags;
++	__le16 non_ht_rates;
++	__le32 ht_rates[IWL_TLC_NSS_MAX][IWL_TLC_MCS_PER_BW_NUM_V4];
++	__le16 max_mpdu_len;
++	__le16 max_tx_op;
++} __packed; /* TLC_MNG_CONFIG_CMD_API_S_VER_5 */
++
+ /**
+  * enum iwl_tlc_update_flags - updated fields
+  * @IWL_TLC_NOTIF_FLAG_RATE: last initial rate update
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
+index a9ca92c0455e..0e172281b0c8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
+@@ -157,9 +157,9 @@ iwl_mld_get_highest_fw_mcs(const struct ieee80211_sta_vht_cap *vht_cap,
+ static void
+ iwl_mld_fill_vht_rates(const struct ieee80211_link_sta *link_sta,
+ 		       const struct ieee80211_sta_vht_cap *vht_cap,
+-		       struct iwl_tlc_config_cmd_v4 *cmd)
++		       struct iwl_tlc_config_cmd *cmd)
+ {
+-	u16 supp;
++	u32 supp;
+ 	int i, highest_mcs;
+ 	u8 max_nss = link_sta->rx_nss;
+ 	struct ieee80211_vht_cap ieee_vht_cap = {
+@@ -182,7 +182,7 @@ iwl_mld_fill_vht_rates(const struct ieee80211_link_sta *link_sta,
+ 		if (link_sta->bandwidth == IEEE80211_STA_RX_BW_20)
+ 			supp &= ~BIT(IWL_TLC_MNG_HT_RATE_MCS9);
+ 
+-		cmd->ht_rates[i][IWL_TLC_MCS_PER_BW_80] = cpu_to_le16(supp);
++		cmd->ht_rates[i][IWL_TLC_MCS_PER_BW_80] = cpu_to_le32(supp);
+ 		/* Check if VHT extended NSS indicates that the bandwidth/NSS
+ 		 * configuration is supported - only for MCS 0 since we already
+ 		 * decoded the MCS bits anyway ourselves.
+@@ -196,7 +196,7 @@ iwl_mld_fill_vht_rates(const struct ieee80211_link_sta *link_sta,
+ 	}
  }
  
-+static inline struct iwl_device_tx_cmd *
-+iwl_pcie_gen1_2_alloc_tx_cmd(struct iwl_trans *trans)
+-static u16 iwl_mld_he_mac80211_mcs_to_fw_mcs(u16 mcs)
++static u32 iwl_mld_he_mac80211_mcs_to_fw_mcs(u16 mcs)
+ {
+ 	switch (mcs) {
+ 	case IEEE80211_HE_MCS_SUPPORT_0_7:
+@@ -216,7 +216,7 @@ static u16 iwl_mld_he_mac80211_mcs_to_fw_mcs(u16 mcs)
+ static void
+ iwl_mld_fill_he_rates(const struct ieee80211_link_sta *link_sta,
+ 		      const struct ieee80211_sta_he_cap *own_he_cap,
+-		      struct iwl_tlc_config_cmd_v4 *cmd)
++		      struct iwl_tlc_config_cmd *cmd)
+ {
+ 	const struct ieee80211_sta_he_cap *he_cap = &link_sta->he_cap;
+ 	u16 mcs_160 = le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_160);
+@@ -245,7 +245,7 @@ iwl_mld_fill_he_rates(const struct ieee80211_link_sta *link_sta,
+ 		if (_mcs_80 > _tx_mcs_80)
+ 			_mcs_80 = _tx_mcs_80;
+ 		cmd->ht_rates[i][IWL_TLC_MCS_PER_BW_80] =
+-			cpu_to_le16(iwl_mld_he_mac80211_mcs_to_fw_mcs(_mcs_80));
++			cpu_to_le32(iwl_mld_he_mac80211_mcs_to_fw_mcs(_mcs_80));
+ 
+ 		/* If one side doesn't support - mark both as not supporting */
+ 		if (_mcs_160 == IEEE80211_HE_MCS_NOT_SUPPORTED ||
+@@ -256,19 +256,19 @@ iwl_mld_fill_he_rates(const struct ieee80211_link_sta *link_sta,
+ 		if (_mcs_160 > _tx_mcs_160)
+ 			_mcs_160 = _tx_mcs_160;
+ 		cmd->ht_rates[i][IWL_TLC_MCS_PER_BW_160] =
+-			cpu_to_le16(iwl_mld_he_mac80211_mcs_to_fw_mcs(_mcs_160));
++			cpu_to_le32(iwl_mld_he_mac80211_mcs_to_fw_mcs(_mcs_160));
+ 	}
+ }
+ 
+-static void iwl_mld_set_eht_mcs(__le16 ht_rates[][3],
++static void iwl_mld_set_eht_mcs(__le32 ht_rates[][3],
+ 				enum IWL_TLC_MCS_PER_BW bw,
+-				u8 max_nss, u16 mcs_msk)
++				u8 max_nss, u32 mcs_msk)
+ {
+ 	if (max_nss >= 2)
+-		ht_rates[IWL_TLC_NSS_2][bw] |= cpu_to_le16(mcs_msk);
++		ht_rates[IWL_TLC_NSS_2][bw] |= cpu_to_le32(mcs_msk);
+ 
+ 	if (max_nss >= 1)
+-		ht_rates[IWL_TLC_NSS_1][bw] |= cpu_to_le16(mcs_msk);
++		ht_rates[IWL_TLC_NSS_1][bw] |= cpu_to_le32(mcs_msk);
+ }
+ 
+ static const
+@@ -307,7 +307,7 @@ iwl_mld_fill_eht_rates(struct ieee80211_vif *vif,
+ 		       const struct ieee80211_link_sta *link_sta,
+ 		       const struct ieee80211_sta_he_cap *own_he_cap,
+ 		       const struct ieee80211_sta_eht_cap *own_eht_cap,
+-		       struct iwl_tlc_config_cmd_v4 *cmd)
++		       struct iwl_tlc_config_cmd *cmd)
+ {
+ 	/* peer RX mcs capa */
+ 	const struct ieee80211_eht_mcs_nss_supp *eht_rx_mcs =
+@@ -405,7 +405,7 @@ iwl_mld_fill_supp_rates(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 			struct ieee80211_supported_band *sband,
+ 			const struct ieee80211_sta_he_cap *own_he_cap,
+ 			const struct ieee80211_sta_eht_cap *own_eht_cap,
+-			struct iwl_tlc_config_cmd_v4 *cmd)
++			struct iwl_tlc_config_cmd *cmd)
+ {
+ 	int i;
+ 	u16 non_ht_rates = 0;
+@@ -435,7 +435,7 @@ iwl_mld_fill_supp_rates(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 	} else if (ht_cap->ht_supported) {
+ 		cmd->mode = IWL_TLC_MNG_MODE_HT;
+ 		cmd->ht_rates[IWL_TLC_NSS_1][IWL_TLC_MCS_PER_BW_80] =
+-			cpu_to_le16(ht_cap->mcs.rx_mask[0]);
++			cpu_to_le32(ht_cap->mcs.rx_mask[0]);
+ 
+ 		/* the station support only a single receive chain */
+ 		if (link_sta->smps_mode == IEEE80211_SMPS_STATIC)
+@@ -443,10 +443,30 @@ iwl_mld_fill_supp_rates(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 				0;
+ 		else
+ 			cmd->ht_rates[IWL_TLC_NSS_2][IWL_TLC_MCS_PER_BW_80] =
+-				cpu_to_le16(ht_cap->mcs.rx_mask[1]);
++				cpu_to_le32(ht_cap->mcs.rx_mask[1]);
+ 	}
+ }
+ 
++static void iwl_mld_convert_tlc_cmd_to_v4(struct iwl_tlc_config_cmd *cmd,
++					  struct iwl_tlc_config_cmd_v4 *cmd_v4)
 +{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	/* Copy everything until ht_rates */
++	memcpy(cmd_v4, cmd, offsetof(struct iwl_tlc_config_cmd, ht_rates));
 +
-+	return kmem_cache_zalloc(trans_pcie->dev_cmd_pool, GFP_ATOMIC);
++	/* Convert ht_rates from __le32 to __le16 */
++	BUILD_BUG_ON(ARRAY_SIZE(cmd_v4->ht_rates) != ARRAY_SIZE(cmd->ht_rates));
++	BUILD_BUG_ON(ARRAY_SIZE(cmd_v4->ht_rates[0]) != ARRAY_SIZE(cmd->ht_rates[0]));
++
++	for (int nss = 0; nss < ARRAY_SIZE(cmd->ht_rates); nss++)
++		for (int bw = 0; bw < ARRAY_SIZE(cmd->ht_rates[nss]); bw++)
++			cmd_v4->ht_rates[nss][bw] =
++				cpu_to_le16(le32_to_cpu(cmd->ht_rates[nss][bw]));
++
++	/* Copy the rest */
++	cmd_v4->max_mpdu_len = cmd->max_mpdu_len;
++	cmd_v4->max_tx_op = cmd->max_tx_op;
 +}
 +
-+static inline void
-+iwl_pcie_gen1_2_free_tx_cmd(struct iwl_trans *trans,
-+			    struct iwl_device_tx_cmd *dev_cmd)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	kmem_cache_free(trans_pcie->dev_cmd_pool, dev_cmd);
-+}
-+
- void iwl_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 		      struct sk_buff_head *skbs, bool is_flush);
- void iwl_pcie_set_q_ptrs(struct iwl_trans *trans, int txq_id, int ptr);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index 0946ea223e46..7aa9683624f0 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -2023,6 +2023,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 		free_percpu(trans_pcie->txqs.tso_hdr_page);
- 	}
+ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_link_sta *link_sta,
+@@ -458,7 +478,7 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
+ 		ieee80211_get_he_iftype_cap_vif(sband, vif);
+ 	const struct ieee80211_sta_eht_cap *own_eht_cap =
+ 		ieee80211_get_eht_iftype_cap_vif(sband, vif);
+-	struct iwl_tlc_config_cmd_v4 cmd = {
++	struct iwl_tlc_config_cmd cmd = {
+ 		/* For AP mode, use 20 MHz until the STA is authorized */
+ 		.max_ch_width = mld_sta->sta_state > IEEE80211_STA_ASSOC ?
+ 			iwl_mld_fw_bw_from_sta_bw(link_sta) :
+@@ -470,6 +490,11 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
+ 		.max_mpdu_len = cpu_to_le16(link_sta->agg.max_amsdu_len),
+ 	};
+ 	int fw_sta_id = iwl_mld_fw_sta_id_from_link_sta(mld, link_sta);
++	u32 cmd_id = WIDE_ID(DATA_PATH_GROUP, TLC_MNG_CONFIG_CMD);
++	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mld->fw, cmd_id, 0);
++	struct iwl_tlc_config_cmd_v4 cmd_v4;
++	void *cmd_ptr;
++	u8 cmd_size;
+ 	int ret;
  
-+	kmem_cache_destroy(trans_pcie->dev_cmd_pool);
- 	iwl_trans_free(trans);
+ 	if (fw_sta_id < 0)
+@@ -481,14 +506,26 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
+ 				own_he_cap, own_eht_cap,
+ 				&cmd);
+ 
++	if (cmd_ver == 5) {
++		cmd_ptr = &cmd;
++		cmd_size = sizeof(cmd);
++	} else if (cmd_ver == 4) {
++		iwl_mld_convert_tlc_cmd_to_v4(&cmd, &cmd_v4);
++		cmd_ptr = &cmd_v4;
++		cmd_size = sizeof(cmd_v4);
++	} else {
++		IWL_ERR(mld, "Unsupported TLC config cmd version %d\n",
++			cmd_ver);
++		return;
++	}
++
+ 	IWL_DEBUG_RATE(mld,
+ 		       "TLC CONFIG CMD, sta_id=%d, max_ch_width=%d, mode=%d\n",
+ 		       cmd.sta_id, cmd.max_ch_width, cmd.mode);
+ 
+ 	/* Send async since this can be called within a RCU-read section */
+-	ret = iwl_mld_send_cmd_with_flags_pdu(mld, WIDE_ID(DATA_PATH_GROUP,
+-							   TLC_MNG_CONFIG_CMD),
+-					      CMD_ASYNC, &cmd);
++	ret = iwl_mld_send_cmd_with_flags_pdu(mld, cmd_id, CMD_ASYNC, cmd_ptr,
++					      cmd_size);
+ 	if (ret)
+ 		IWL_ERR(mld, "Failed to send TLC cmd (%d)\n", ret);
  }
- 
-@@ -3707,28 +3708,40 @@ void iwl_trans_pcie_sync_nmi(struct iwl_trans *trans)
- 	iwl_trans_sync_nmi_with_addr(trans, inta_addr, sw_err_bit);
- }
- 
--static int iwl_trans_pcie_set_txcmd_info(const struct iwl_mac_cfg *mac_cfg,
--					 unsigned int *txcmd_size,
--					 unsigned int *txcmd_align)
-+static int iwl_trans_pcie_alloc_txcmd_pool(struct iwl_trans *trans)
- {
--	if (!mac_cfg->gen2) {
--		*txcmd_size = sizeof(struct iwl_tx_cmd_v6);
--		*txcmd_align = sizeof(void *);
--	} else if (mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210) {
--		*txcmd_size = sizeof(struct iwl_tx_cmd_v9);
--		*txcmd_align = 64;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	unsigned int txcmd_size, txcmd_align;
-+
-+	if (!trans->mac_cfg->gen2) {
-+		txcmd_size = sizeof(struct iwl_tx_cmd_v6);
-+		txcmd_align = sizeof(void *);
-+	} else if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_AX210) {
-+		txcmd_size = sizeof(struct iwl_tx_cmd_v9);
-+		txcmd_align = 64;
- 	} else {
--		*txcmd_size = sizeof(struct iwl_tx_cmd);
--		*txcmd_align = 128;
-+		txcmd_size = sizeof(struct iwl_tx_cmd);
-+		txcmd_align = 128;
- 	}
- 
--	*txcmd_size += sizeof(struct iwl_cmd_header);
--	*txcmd_size += 36; /* biggest possible 802.11 header */
-+	txcmd_size += sizeof(struct iwl_cmd_header);
-+	txcmd_size += 36; /* biggest possible 802.11 header */
- 
- 	/* Ensure device TX cmd cannot reach/cross a page boundary in gen2 */
--	if (WARN_ON((mac_cfg->gen2 && *txcmd_size >= *txcmd_align)))
-+	if (WARN_ON((trans->mac_cfg->gen2 && txcmd_size >= txcmd_align)))
- 		return -EINVAL;
- 
-+	snprintf(trans_pcie->dev_cmd_pool_name,
-+		 sizeof(trans_pcie->dev_cmd_pool_name),
-+		 "iwl_cmd_pool:%s", dev_name(trans->dev));
-+
-+	trans_pcie->dev_cmd_pool =
-+		kmem_cache_create(trans_pcie->dev_cmd_pool_name,
-+				  txcmd_size, txcmd_align,
-+				  SLAB_HWCACHE_ALIGN, NULL);
-+	if (!trans_pcie->dev_cmd_pool)
-+		return -ENOMEM;
-+
- 	return 0;
- }
- 
-@@ -3738,18 +3751,12 @@ iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		     struct iwl_trans_info *info, u8 __iomem *hw_base)
- {
- 	struct iwl_trans_pcie *trans_pcie, **priv;
--	unsigned int txcmd_size, txcmd_align;
- 	struct iwl_trans *trans;
- 	unsigned int bc_tbl_n_entries;
- 	int ret, addr_size;
- 
--	ret = iwl_trans_pcie_set_txcmd_info(mac_cfg, &txcmd_size,
--					    &txcmd_align);
--	if (ret)
--		return ERR_PTR(ret);
--
- 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie), &pdev->dev,
--				mac_cfg, txcmd_size, txcmd_align);
-+				mac_cfg);
- 	if (!trans)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -3760,6 +3767,10 @@ iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	/* Initialize the wait queue for commands */
- 	init_waitqueue_head(&trans_pcie->wait_command_queue);
- 
-+	ret = iwl_trans_pcie_alloc_txcmd_pool(trans);
-+	if (ret)
-+		goto out_free_trans;
-+
- 	if (trans->mac_cfg->gen2) {
- 		trans_pcie->txqs.tfd.addr_size = 64;
- 		trans_pcie->txqs.tfd.max_tbs = IWL_TFH_NUM_TBS;
-@@ -3779,7 +3790,7 @@ iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	trans_pcie->txqs.tso_hdr_page = alloc_percpu(struct iwl_tso_hdr_page);
- 	if (!trans_pcie->txqs.tso_hdr_page) {
- 		ret = -ENOMEM;
--		goto out_free_trans;
-+		goto out_free_txcmd_pool;
- 	}
- 
- 	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_BZ)
-@@ -3929,6 +3940,8 @@ iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	free_netdev(trans_pcie->napi_dev);
- out_free_tso:
- 	free_percpu(trans_pcie->txqs.tso_hdr_page);
-+out_free_txcmd_pool:
-+	kmem_cache_destroy(trans_pcie->dev_cmd_pool);
- out_free_trans:
- 	iwl_trans_free(trans);
- 	return ERR_PTR(ret);
 -- 
 2.34.1
 
