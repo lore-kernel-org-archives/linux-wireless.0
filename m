@@ -1,53 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C26802DE1FE
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 08:26:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8882DECA1
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 08:27:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756369621; cv=none; b=IRMifq9qz4iYey9MRgJpgqrNIPYC8nuSD8RnynYCngwoLIMqxp+53MQqG37pKVFKTju1wx0hjeEZ+KoVHwb2Y2dxYwqYjT55bGYINcnD20BuD6mzGO3EFT9muuKDY2LOvU8wzyD+J4CmCBZMCfZfWVSJ4Ia0m3l1JR1OLZkmHQY=
+	t=1756369621; cv=none; b=QBJtpFnP9DgphkMIpyD++FjXE3PRxysQLmieD09zdoM8z1I4+GCnrVdn3WP+6+LSRcoQzKDYpGNuQcf3m28vPjO5UPgK1hmZMbi0qfW129aU7cxDobuLEUL9f6NRlU4uPPhjX/8J/xwCBUTrv5Tj62lKpnlMF5FYg8mnkDZy5gA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756369621; c=relaxed/simple;
-	bh=IxyifHUkF0Kez12oofkENNTFo1pz6uwSda2lcJcpv4k=;
-	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IAUz16HXLaR0NglQv2j9oYmT2zDjjIp1e/y4nji/rTAM4cHUJ+hpn9drU7+bWyE3xrEdb9zxomP7LzuEs0lJCunCddHFwDSsTT66Tjiuf/sbQWthhPyxVSPZQ9mq8/qBa0IalGeed7CgVqEAQWVPzQ+XXqnE0SuN794Hdi29dqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SkAgaOqk; arc=none smtp.client-ip=192.198.163.10
+	bh=DoVuJ3ArAJZbG+7U4aOMOvpEfGNBGedAdocPXhIj9QM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=mAoSM8g+3a2KIXr5Ct2jHNeh7ZN1WCu02yths3cygsKuF+eOuI5Giru04eBgX2+luLuExPwuke6g4zzNXrTNi66TxwK4J02phgJlZcln/3uSTWAOVTwre39IRq1wTA1jHwq7cPANx8mLvKOjhysFADrdSe6spW+MzqI8MkvRWOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SjLe5n32; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SkAgaOqk"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SjLe5n32"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1756369620; x=1787905620;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=IxyifHUkF0Kez12oofkENNTFo1pz6uwSda2lcJcpv4k=;
-  b=SkAgaOqkXqkaw9q3gFjOA4swinBKHMDq97fdnWk+3N2dUV7U0p0Rl9cY
-   eys/nJ1dnx8qA2CaT/4emtMycA0w8/DvNzeJ1TeAQQoUojczIEmFMnUPl
-   hgSk1mfVYA+BKxLrQry6RFOPfitMwcy6no11JOIXYnx8YZl9MmTebYiDg
-   GihFWPN/XoqjLhEc+KjdjBn+sLG3infxiYispZXmOWHyr1TPoitK5Tt/p
-   oNgcSVE3jbLNJwJvC+01kwfVg5NgqW84Ev853W6RtuvBml8rOH+J4bopS
-   GxOnwU8ubB/GyP36nyfrJvqzA+fMT9rx7NO0iaeYuZb3fwX8uygmRcfeJ
-   g==;
-X-CSE-ConnectionGUID: 4o46eY5gSCKRAYuewsiJ6Q==
-X-CSE-MsgGUID: mZAWFK96RneFOEaoTGttng==
-X-IronPort-AV: E=McAfee;i="6800,10657,11535"; a="70003356"
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=DoVuJ3ArAJZbG+7U4aOMOvpEfGNBGedAdocPXhIj9QM=;
+  b=SjLe5n32UnddtgwonFxFY95FEWgvLGYgOD+cDz4n6u5r65ko4xLQbW12
+   aoku9joNCjWPvOEzn53YImUrYuglxa9QGwmXZ5WfNlopA28A1OQr/U3cn
+   zgpfw1wjhZB9l+uI456b+XsonwrNY4kRMESmQ5WJzU65YygtyNZIQOJtg
+   xmnGXhK85Ebro6qYRJztKhh9coh9JfKfxuZ7hcf2gS1wNh4C/zLqgnhN/
+   TJ89xAVnVYLiVeeSdaMr7Su5bOeQ95L6XNc6sCl2jQCyYPGwObMxh4SwI
+   DPUBFw+8/zedYkmo5jWd8k6g4NrCxfUiPJRklRayH20LSm+XsmkacyY9G
+   A==;
+X-CSE-ConnectionGUID: LziCFIrdSW6IFci21LNmxw==
+X-CSE-MsgGUID: DQ1bNNZTRnmilfO9NhVIQA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11535"; a="70003365"
 X-IronPort-AV: E=Sophos;i="6.18,217,1751266800"; 
-   d="scan'208";a="70003356"
+   d="scan'208";a="70003365"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:43 -0700
-X-CSE-ConnectionGUID: A62kvqFOQq+X9LfxiZ1lAw==
-X-CSE-MsgGUID: QFeqgg7sRy2sa1Iji0J1mA==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:46 -0700
+X-CSE-ConnectionGUID: r1K34WTXSDyiyGaLKqi7pA==
+X-CSE-MsgGUID: chwMEYF3TPieApvfxzga+g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,217,1751266800"; 
-   d="scan'208";a="170224509"
+   d="scan'208";a="170224519"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:43 -0700
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2025 01:26:45 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: gen1_2: move gen specific code to a function
-Date: Thu, 28 Aug 2025 11:25:55 +0300
-Message-Id: <20250828111032.a584254bcf83.I69d176b94d23f0f34d28733c48964f277a0a67a1@changeid>
+Cc: Yedidya Ben Shimol <yedidya.ben.shimol@intel.com>
+Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: pcie: remember when interrupts are disabled
+Date: Thu, 28 Aug 2025 11:25:57 +0300
+Message-Id: <20250828111032.e293d6a8385b.I919375e5ad7bd7e4fee4a95ce6ce6978653d6b16@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250828082601.537908-1-miriam.rachel.korenblit@intel.com>
 References: <20250828082601.537908-1-miriam.rachel.korenblit@intel.com>
@@ -60,73 +61,39 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-The remove function will be called also for gen3 devices, so move out
-the gen1_2 code to a function that will be called only for gen1/2
-devices.
+trans_pcie::fh_mask and hw_mask indicates what are the interrupts are
+currently enabled (unmasked).
+When we disable all interrupts, those should be set to 0, so if, for
+some reason, we get an interrupt even though it was disabled, we will
+know to ignore.
 
+Reviewed-by: Yedidya Ben Shimol <yedidya.ben.shimol@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c         |  7 +------
- .../net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h |  1 +
- .../net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c    | 11 +++++++++++
- 3 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index b7add05f7a85..5cb0b519e762 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1171,16 +1171,11 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- static void iwl_pci_remove(struct pci_dev *pdev)
- {
- 	struct iwl_trans *trans = pci_get_drvdata(pdev);
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	if (!trans)
- 		return;
- 
--	cancel_delayed_work_sync(&trans_pcie->me_recheck_wk);
--
--	iwl_drv_stop(trans->drv);
--
--	iwl_trans_pcie_free(trans);
-+	iwl_pcie_gen1_2_remove(trans);
- }
- 
- #ifdef CONFIG_PM_SLEEP
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-index 4f49473decb9..b5114fb4eaa2 100644
+index b5114fb4eaa2..79893e2d2701 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
-@@ -1103,6 +1103,7 @@ int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
- 			 const struct pci_device_id *ent,
- 			 const struct iwl_mac_cfg *mac_cfg,
- 			 u8 __iomem *hw_base, u32 hw_rev);
-+void iwl_pcie_gen1_2_remove(struct iwl_trans *trans);
- 
- /* transport gen 1 exported functions */
- void iwl_trans_pcie_fw_alive(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index bd503cb8f504..234a02223c20 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -4298,6 +4298,17 @@ int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
- 	return ret;
+@@ -841,6 +841,8 @@ static inline void _iwl_disable_interrupts(struct iwl_trans *trans)
+ 			    trans_pcie->fh_init_mask);
+ 		iwl_write32(trans, CSR_MSIX_HW_INT_MASK_AD,
+ 			    trans_pcie->hw_init_mask);
++		trans_pcie->fh_mask = 0;
++		trans_pcie->hw_mask = 0;
+ 	}
+ 	IWL_DEBUG_ISR(trans, "Disabled interrupts\n");
  }
- 
-+void iwl_pcie_gen1_2_remove(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	cancel_delayed_work_sync(&trans_pcie->me_recheck_wk);
-+
-+	iwl_drv_stop(trans->drv);
-+
-+	iwl_trans_pcie_free(trans);
-+}
-+
- int iwl_pcie_gen1_2_finish_nic_init(struct iwl_trans *trans)
- {
- 	const struct iwl_mac_cfg *mac_cfg = trans->mac_cfg;
+@@ -1023,6 +1025,7 @@ static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
+ 	} else {
+ 		iwl_write32(trans, CSR_MSIX_FH_INT_MASK_AD,
+ 			    trans_pcie->fh_init_mask);
++		trans_pcie->fh_mask = 0;
+ 		iwl_enable_hw_int_msk_msix(trans,
+ 					   MSIX_HW_INT_CAUSES_REG_RF_KILL);
+ 	}
 -- 
 2.34.1
 
