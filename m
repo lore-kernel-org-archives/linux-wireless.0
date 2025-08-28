@@ -1,52 +1,52 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA7143375BC
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 17:36:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B42533EB17
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 17:36:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756402586; cv=none; b=K6W3qvmOrSFuqNe6OFHIjJS+Brc7K/tFPNhGIZ2EfbH6nTr6t2+DfB5kLoRXGSwOXDMEEj6VKkf1zoCIdeHXpXw4gWNkDO0P/LRjYtgPD0V14V0+oOBYDM5mwEWO/wc/5L6oYq7E3c2HzB06ZfdhIs4vxs0Zqfr5BJ+x57eSvKQ=
+	t=1756402588; cv=none; b=Q5ORkR8sPfzRTzEqfclF2ZLhNQzcIspJxtdJOdU3VHOnEUEPPlwN21BNWEsqbF2UKQh7gzyupPU6KRHCD7SWUZ/O3PtDeW+hVRGPuKIEMSo+hoDnykKaVseLpRNGCuWxIomeWJTcm0YZ5vkC9GUMmlT2o6YRu/HTFN8VXQKj5js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756402586; c=relaxed/simple;
-	bh=iX2yEJx5UN9+r+b9nhX6BVZ/ZTt2v07zarQ4KM4dAAI=;
+	s=arc-20240116; t=1756402588; c=relaxed/simple;
+	bh=NKu0R+DwilflKYGP9R1L2jkDeuDS31PUCFnQ88QmzHU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gll81REyGEKlObIIwWSZKsXanfzc5+dF7/YinyxbgZ3chcYesYV4xaY7DT71BxOCMIUs5w9YV3RpLgt4C+eFS6z13QNzcLP4qpu8+T6JvzQMR7s2Y1oXx/RbTNkGad6tGQGpW3CSMICiSj802je8L15OgGrhbSyzyccf+zRAheU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=KXYmO73F; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=ER0jVauyer20lZhTUZVYVuvFqyXqImkouLNd9OkvzcM6vpXVE7y7qfZRIGzYbyDEswDXtm7+UKhQzcMYViX7ID6P4cnAIXRC9xoA/bjyA4z+mqmuMzV5xdD9wz1QZBeAqocqZwTJmKeZFPVVLiDpmwYhJzbebqU1ZCmNRxHMS6Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nDMjxE/s; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="KXYmO73F"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57SE93Qb029193;
-	Thu, 28 Aug 2025 17:36:17 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nDMjxE/s"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57SEDxH2031332;
+	Thu, 28 Aug 2025 17:36:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	APT2DWCuaQQn0tlFVUn2pmA22V2oZiaDSZt7h5ZkTPw=; b=KXYmO73F/G0zXXPj
-	dFvNS83Ct4+MufOStxuKT459ocQbmQtFOFalolgKhBYZW38xUP+FgBlwPEvsGhng
-	5iHCOPoA+XdCt9ovEsS4yfJf2/jPeb4xKZNrrtrzER4fA0htg+C/AyS+ygVYgs2P
-	XX40JPR7Ihk1SDwKlcmnuI2mybx3rkDHTaqS4QYAVC+vpoL7fazFsyb4aswywAQ4
-	nr+E6Wdi+xXRoNEpY7A5I5oR2s0GRATkUihTGxHWVFaGBzHWhltHzOTWFX6RHCrw
-	qCPzg5UL7X6EaMKLly0rfDUXTGYlbQSfGuWoLlmZIcWUF7dDiNaMPGL0eKPDxfik
-	CYmEeg==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48q5w31b14-1
+	Eea2h7gGop78I4biOnk1ZeiZpbObDE8lZuwwlJ5P/PI=; b=nDMjxE/slDz6hoSM
+	OAZ6sKUbGhAZtChJQOn8uh3ngMs4Dgi13oEdSynELyNLkBT7Pn+HNd8kVZrQPnU0
+	nZJ0SRC3FoNcPllPDO4ZqFF6zSluONy8h3srtUm3V6Mj/u/HyyQbqRYazayToEuA
+	weQNI4FWe4bBY0xL9UeuDneh1Z4OqVABpi70d4tXBmlO8jc+1HmZPCKB21ATbo+/
+	astQ1Y6PmY/MXEaE5FGtiECkRjAHZKtmLRshw2aDZI7S0sCFKKMydmwwq6SyjbCd
+	+sl3QcrQz1cAhCM2nBSmDW7sKMJYnBuDRgJek7X3yq5F+Pi7VQVqm8PT78Ol9eWi
+	gokjIQ==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48q615s2u4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Aug 2025 17:36:16 +0000 (GMT)
+	Thu, 28 Aug 2025 17:36:21 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57SHaG0B015609
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57SHaKce008998
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 28 Aug 2025 17:36:16 GMT
+	Thu, 28 Aug 2025 17:36:20 GMT
 Received: from hu-rdeuri-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.24; Thu, 28 Aug 2025 10:36:14 -0700
+ 15.2.1748.24; Thu, 28 Aug 2025 10:36:19 -0700
 From: Ripan Deuri <quic_rdeuri@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH ath12k-ng 04/20] wifi: ath12k: Move HAL Rx wrapper APIs to dp_rx.h
-Date: Thu, 28 Aug 2025 23:05:37 +0530
-Message-ID: <20250828173553.3341351-5-quic_rdeuri@quicinc.com>
+Subject: [PATCH ath12k-ng 07/20] wifi: ath12k: Move rx_desc.h file to wifi7 directory
+Date: Thu, 28 Aug 2025 23:05:40 +0530
+Message-ID: <20250828173553.3341351-8-quic_rdeuri@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250828173553.3341351-1-quic_rdeuri@quicinc.com>
 References: <20250828173553.3341351-1-quic_rdeuri@quicinc.com>
@@ -62,66 +62,34 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=Z/vsHGRA c=1 sm=1 tr=0 ts=68b09390 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIzMDAzNCBTYWx0ZWRfX7UJlxIY75/Ho
+ Lhz/ojXaFNjaE6z5eyBbGZGmMq3TOhyCOCWqyAjzNBc2vbY7Fa5accOmBLYdLQeECBtA8dEuPuu
+ B4UsbXqhWvDKRTFTAFDfFPPi6KVaR/uh3N/07JHG49bvTHgu9+kgGfv3W1pMFUtSHwGLAlMnnYc
+ Osd7Z75LPTfwLlifPzVPN5VkPPqbzumh48mB302kaOzft2sfUnoftCUc41ub8sBmERlI9gXlCcp
+ ebyAo6E3s5ydsbO1gvef7ZI7Vr8hM67PHgO9QA2xL/AfQZjnLQUk0lSxLkHds+afVVOiAQYTgKY
+ hJTuAS6+ue31+N7FCgWS5ppZzUn02d70oaJ5N8dIH5UYQAeER6GxLDDjp4UJUzgqRW8+teAxuSo
+ lQv04SMz
+X-Proofpoint-GUID: o28t2Kbvkd9XCmi-JU1SnnDoEjt8ShcS
+X-Authority-Analysis: v=2.4 cv=K+AiHzWI c=1 sm=1 tr=0 ts=68b09395 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=Tu4bRPs8u5QZ4hX5J3kA:9
+ a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=CWIswwSOSLXq1aIOl4QA:9
  a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIzMDAzMyBTYWx0ZWRfX0rP9c7DpAO6c
- fKfRjstuig75ByTK/TbboZ6gVy68sc5dLRHi1Y3NZD6pKjk7gIkn4bVhO/1bivCT8JPN0kBOM7N
- oJBVirkXhUv6/My46pRpfQ8DYgyDvUap8QFamnqwHE2GGHf8g/L9mFF5o9TxDjQN+GMipQB1dLY
- YFvnWF2rDsO6sZMpcKdnWxXgMG9JXE9bxwNfRu/RFJwZCcfTd3cea4ZbgtPb6T+UY7cAFwxyrHQ
- fPIIjmByo34sJ9DROOOe2ADYdWOaysfetXhj64K/yK5EuD4Y9Lk88mM0fu762/xt1BueIDtwwQL
- 6UXQyPlpV9RJikgwkwnAVZJLQAHBFyBB608X44E5L/+ROdDuNBvsYXJ3ZjygcnZ3XAkSgf2sA/E
- Cg2Vz9N+
-X-Proofpoint-GUID: qdTqljU8HrXcY9_CXwZTDKA_DDpE8SYV
-X-Proofpoint-ORIG-GUID: qdTqljU8HrXcY9_CXwZTDKA_DDpE8SYV
+X-Proofpoint-ORIG-GUID: o28t2Kbvkd9XCmi-JU1SnnDoEjt8ShcS
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-08-28_04,2025-08-28_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 priorityscore=1501 malwarescore=0 phishscore=0 clxscore=1011
- suspectscore=0 impostorscore=0 adultscore=0 bulkscore=0
+ malwarescore=0 suspectscore=0 bulkscore=0 clxscore=1011 adultscore=0
+ impostorscore=0 priorityscore=1501 phishscore=0 spamscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508230033
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508230034
 
 From: Pavankumar Nandeshwar <quic_pnandesh@quicinc.com>
 
-Move HAL Rx APIs from dp_rx.c to dp_rx.h to facilitate the separation of
-common and hardware-specific code that are dependent on these HAL Rx ops
-in upcoming patches.
-
-Move the following wrapper APIs to dp_rx.h
-
-ath12k_dp_rx_h_enctype
-ath12k_dp_rx_h_mesh_ctl_present
-ath12k_dp_rx_h_seq_ctrl_valid
-ath12k_dp_rx_h_fc_valid
-ath12k_dp_rx_h_more_frags
-ath12k_dp_rx_h_frag_no
-ath12k_dp_rx_h_seq_no
-ath12k_dp_rx_h_msdu_done
-ath12k_dp_rx_h_l4_cksum_fail
-ath12k_dp_rx_h_ip_cksum_fail
-ath12k_dp_rx_h_is_decrypted
-ath12k_dp_rx_h_msdu_len
-ath12k_dp_rx_h_sgi
-ath12k_dp_rx_h_rate_mcs
-ath12k_dp_rx_h_rx_bw
-ath12k_dp_rx_h_freq
-ath12k_dp_rx_h_pkt_type
-ath12k_dp_rx_h_nss
-ath12k_dp_rx_h_tid
-ath12k_dp_rx_h_peer_id
-ath12k_dp_rx_h_first_msdu
-ath12k_dp_rx_h_last_msdu
-ath12k_dp_rx_desc_end_tlv_copy
-ath12k_dp_rxdesc_set_msdu_len
-ath12k_dp_rx_h_is_da_mcbc
-ath12k_dp_rxdesc_mac_addr2_valid
-ath12k_dp_rxdesc_get_mpdu_start_addr2
-ath12k_dp_rx_desc_get_dot11_hdr
-ath12k_dp_rx_desc_get_crypto_header
-ath12k_dp_rx_get_msdu_src_link
+Move wifi7 architecture specific file rx_desc.h to wifi7 directory
+and rename it to hal_rx_desc.h to match the naming convention used,
+and move the common part from it to hal.h file which is in the
+common directory.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
@@ -129,515 +97,176 @@ Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ
 Signed-off-by: Pavankumar Nandeshwar <quic_pnandesh@quicinc.com>
 Signed-off-by: Ripan Deuri <quic_rdeuri@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/dp_rx.c | 237 -----------------------
- drivers/net/wireless/ath/ath12k/dp_rx.h | 239 +++++++++++++++++++++++-
- 2 files changed, 238 insertions(+), 238 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp_rx.h       |  2 +-
+ drivers/net/wireless/ath/ath12k/hal.h         | 48 ++++++++++++++++++-
+ .../ath12k/{rx_desc.h => wifi7/hal_rx_desc.h} | 48 +------------------
+ 3 files changed, 49 insertions(+), 49 deletions(-)
+ rename drivers/net/wireless/ath/ath12k/{rx_desc.h => wifi7/hal_rx_desc.h} (97%)
 
-diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
-index 4f6b71a18dc4..acd20417b650 100644
---- a/drivers/net/wireless/ath/ath12k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
-@@ -21,243 +21,6 @@
- 
- #define ATH12K_DP_RX_FRAGMENT_TIMEOUT_MS (2 * HZ)
- 
--static enum hal_encrypt_type ath12k_dp_rx_h_enctype(struct ath12k_base *ab,
--						    struct hal_rx_desc *desc)
--{
--	if (!ab->hal_rx_ops->rx_desc_encrypt_valid(desc))
--		return HAL_ENCRYPT_TYPE_OPEN;
--
--	return ab->hal_rx_ops->rx_desc_get_encrypt_type(desc);
--}
--
--u8 ath12k_dp_rx_h_decap_type(struct ath12k_base *ab,
--			     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_decap_type(desc);
--}
--
--static u8 ath12k_dp_rx_h_mesh_ctl_present(struct ath12k_base *ab,
--					  struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mesh_ctl(desc);
--}
--
--static bool ath12k_dp_rx_h_seq_ctrl_valid(struct ath12k_base *ab,
--					  struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_seq_ctl_vld(desc);
--}
--
--static bool ath12k_dp_rx_h_fc_valid(struct ath12k_base *ab,
--				    struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_fc_valid(desc);
--}
--
--static bool ath12k_dp_rx_h_more_frags(struct ath12k_base *ab,
--				      struct sk_buff *skb)
--{
--	struct ieee80211_hdr *hdr;
--
--	hdr = (struct ieee80211_hdr *)(skb->data + ab->hal.hal_desc_sz);
--	return ieee80211_has_morefrags(hdr->frame_control);
--}
--
--static u16 ath12k_dp_rx_h_frag_no(struct ath12k_base *ab,
--				  struct sk_buff *skb)
--{
--	struct ieee80211_hdr *hdr;
--
--	hdr = (struct ieee80211_hdr *)(skb->data + ab->hal.hal_desc_sz);
--	return le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG;
--}
--
--static u16 ath12k_dp_rx_h_seq_no(struct ath12k_base *ab,
--				 struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_start_seq_no(desc);
--}
--
--static bool ath12k_dp_rx_h_msdu_done(struct ath12k_base *ab,
--				     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->dp_rx_h_msdu_done(desc);
--}
--
--static bool ath12k_dp_rx_h_l4_cksum_fail(struct ath12k_base *ab,
--					 struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->dp_rx_h_l4_cksum_fail(desc);
--}
--
--static bool ath12k_dp_rx_h_ip_cksum_fail(struct ath12k_base *ab,
--					 struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->dp_rx_h_ip_cksum_fail(desc);
--}
--
--static bool ath12k_dp_rx_h_is_decrypted(struct ath12k_base *ab,
--					struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->dp_rx_h_is_decrypted(desc);
--}
--
--u32 ath12k_dp_rx_h_mpdu_err(struct ath12k_base *ab,
--			    struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->dp_rx_h_mpdu_err(desc);
--}
--
--static u16 ath12k_dp_rx_h_msdu_len(struct ath12k_base *ab,
--				   struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_len(desc);
--}
--
--static u8 ath12k_dp_rx_h_sgi(struct ath12k_base *ab,
--			     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_sgi(desc);
--}
--
--static u8 ath12k_dp_rx_h_rate_mcs(struct ath12k_base *ab,
--				  struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_rate_mcs(desc);
--}
--
--static u8 ath12k_dp_rx_h_rx_bw(struct ath12k_base *ab,
--			       struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_rx_bw(desc);
--}
--
--static u32 ath12k_dp_rx_h_freq(struct ath12k_base *ab,
--			       struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_freq(desc);
--}
--
--static u8 ath12k_dp_rx_h_pkt_type(struct ath12k_base *ab,
--				  struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_pkt_type(desc);
--}
--
--static u8 ath12k_dp_rx_h_nss(struct ath12k_base *ab,
--			     struct hal_rx_desc *desc)
--{
--	return hweight8(ab->hal_rx_ops->rx_desc_get_msdu_nss(desc));
--}
--
--static u8 ath12k_dp_rx_h_tid(struct ath12k_base *ab,
--			     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_tid(desc);
--}
--
--static u16 ath12k_dp_rx_h_peer_id(struct ath12k_base *ab,
--				  struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_peer_id(desc);
--}
--
--u8 ath12k_dp_rx_h_l3pad(struct ath12k_base *ab,
--			struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_l3_pad_bytes(desc);
--}
--
--static bool ath12k_dp_rx_h_first_msdu(struct ath12k_base *ab,
--				      struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_first_msdu(desc);
--}
--
--static bool ath12k_dp_rx_h_last_msdu(struct ath12k_base *ab,
--				     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_last_msdu(desc);
--}
--
--static void ath12k_dp_rx_desc_end_tlv_copy(struct ath12k_base *ab,
--					   struct hal_rx_desc *fdesc,
--					   struct hal_rx_desc *ldesc)
--{
--	ab->hal_rx_ops->rx_desc_copy_end_tlv(fdesc, ldesc);
--}
--
--static void ath12k_dp_rxdesc_set_msdu_len(struct ath12k_base *ab,
--					  struct hal_rx_desc *desc,
--					  u16 len)
--{
--	ab->hal_rx_ops->rx_desc_set_msdu_len(desc, len);
--}
--
--u32 ath12k_dp_rxdesc_get_ppduid(struct ath12k_base *ab,
--				struct hal_rx_desc *rx_desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_mpdu_ppdu_id(rx_desc);
--}
--
--bool ath12k_dp_rxdesc_mpdu_valid(struct ath12k_base *ab,
--				 struct hal_rx_desc *rx_desc)
--{
--	u32 tlv_tag;
--
--	tlv_tag = ab->hal_rx_ops->rx_desc_get_mpdu_start_tag(rx_desc);
--
--	return tlv_tag == HAL_RX_MPDU_START;
--}
--
--static bool ath12k_dp_rx_h_is_da_mcbc(struct ath12k_base *ab,
--				      struct hal_rx_desc *desc)
--{
--	return (ath12k_dp_rx_h_first_msdu(ab, desc) &&
--		ab->hal_rx_ops->rx_desc_is_da_mcbc(desc));
--}
--
--static bool ath12k_dp_rxdesc_mac_addr2_valid(struct ath12k_base *ab,
--					     struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_mac_addr2_valid(desc);
--}
--
--static u8 *ath12k_dp_rxdesc_get_mpdu_start_addr2(struct ath12k_base *ab,
--						 struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_mpdu_start_addr2(desc);
--}
--
--static void ath12k_dp_rx_desc_get_dot11_hdr(struct ath12k_base *ab,
--					    struct hal_rx_desc *desc,
--					    struct ieee80211_hdr *hdr)
--{
--	ab->hal_rx_ops->rx_desc_get_dot11_hdr(desc, hdr);
--}
--
--static void ath12k_dp_rx_desc_get_crypto_header(struct ath12k_base *ab,
--						struct hal_rx_desc *desc,
--						u8 *crypto_hdr,
--						enum hal_encrypt_type enctype)
--{
--	ab->hal_rx_ops->rx_desc_get_crypto_header(desc, crypto_hdr, enctype);
--}
--
--static inline u8 ath12k_dp_rx_get_msdu_src_link(struct ath12k_base *ab,
--						struct hal_rx_desc *desc)
--{
--	return ab->hal_rx_ops->rx_desc_get_msdu_src_link_id(desc);
--}
--
--static void ath12k_dp_clean_up_skb_list(struct sk_buff_head *skb_list)
--{
--	struct sk_buff *skb;
--
--	while ((skb = __skb_dequeue(skb_list)))
--		dev_kfree_skb_any(skb);
--}
--
- static size_t ath12k_dp_list_cut_nodes(struct list_head *list,
- 				       struct list_head *head,
- 				       size_t count)
 diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.h b/drivers/net/wireless/ath/ath12k/dp_rx.h
-index e971a314bd2d..61861c63ecbf 100644
+index 1909f9070d46..caff92bffb84 100644
 --- a/drivers/net/wireless/ath/ath12k/dp_rx.h
 +++ b/drivers/net/wireless/ath/ath12k/dp_rx.h
-@@ -1,7 +1,7 @@
+@@ -7,7 +7,7 @@
+ #define ATH12K_DP_RX_H
+ 
+ #include "core.h"
+-#include "rx_desc.h"
++#include "wifi7/hal_rx_desc.h"
+ #include "debug.h"
+ 
+ #define DP_MAX_NWIFI_HDR_LEN	30
+diff --git a/drivers/net/wireless/ath/ath12k/hal.h b/drivers/net/wireless/ath/ath12k/hal.h
+index ec8a078f0739..c99878262a4a 100644
+--- a/drivers/net/wireless/ath/ath12k/hal.h
++++ b/drivers/net/wireless/ath/ath12k/hal.h
+@@ -8,7 +8,7 @@
+ #define ATH12K_HAL_H
+ 
+ #include "wifi7/hal_desc.h"
+-#include "rx_desc.h"
++#include "wifi7/hal_rx_desc.h"
+ 
+ struct ath12k_base;
+ 
+@@ -30,6 +30,11 @@ struct ath12k_base;
+ #define HAL_RX_MON_MAX_AGGR_SIZE	128
+ #define HAL_MAX_UL_MU_USERS	37
+ 
++#define MAX_USER_POS 8
++#define MAX_MU_GROUP_ID 64
++#define MAX_MU_GROUP_SHOW 16
++#define MAX_MU_GROUP_LENGTH (6 * MAX_MU_GROUP_SHOW)
++
+ #define HAL_CE_REMAP_REG_BASE	(ab->ce_remap_base_addr)
+ 
+ #define HAL_LINK_DESC_SIZE			(32 << 2)
+@@ -824,6 +829,47 @@ enum hal_srng_dir {
+ 	HAL_SRNG_DIR_DST
+ };
+ 
++enum rx_msdu_start_pkt_type {
++	RX_MSDU_START_PKT_TYPE_11A,
++	RX_MSDU_START_PKT_TYPE_11B,
++	RX_MSDU_START_PKT_TYPE_11N,
++	RX_MSDU_START_PKT_TYPE_11AC,
++	RX_MSDU_START_PKT_TYPE_11AX,
++	RX_MSDU_START_PKT_TYPE_11BA,
++	RX_MSDU_START_PKT_TYPE_11BE,
++};
++
++enum rx_msdu_start_sgi {
++	RX_MSDU_START_SGI_0_8_US,
++	RX_MSDU_START_SGI_0_4_US,
++	RX_MSDU_START_SGI_1_6_US,
++	RX_MSDU_START_SGI_3_2_US,
++};
++
++enum rx_msdu_start_recv_bw {
++	RX_MSDU_START_RECV_BW_20MHZ,
++	RX_MSDU_START_RECV_BW_40MHZ,
++	RX_MSDU_START_RECV_BW_80MHZ,
++	RX_MSDU_START_RECV_BW_160MHZ,
++};
++
++enum rx_msdu_start_reception_type {
++	RX_MSDU_START_RECEPTION_TYPE_SU,
++	RX_MSDU_START_RECEPTION_TYPE_DL_MU_MIMO,
++	RX_MSDU_START_RECEPTION_TYPE_DL_MU_OFDMA,
++	RX_MSDU_START_RECEPTION_TYPE_DL_MU_OFDMA_MIMO,
++	RX_MSDU_START_RECEPTION_TYPE_UL_MU_MIMO,
++	RX_MSDU_START_RECEPTION_TYPE_UL_MU_OFDMA,
++	RX_MSDU_START_RECEPTION_TYPE_UL_MU_OFDMA_MIMO,
++};
++
++enum rx_desc_decap_type {
++	RX_DESC_DECAP_TYPE_RAW,
++	RX_DESC_DECAP_TYPE_NATIVE_WIFI,
++	RX_DESC_DECAP_TYPE_ETHERNET2_DIX,
++	RX_DESC_DECAP_TYPE_8023,
++};
++
+ struct hal_rx_user_status {
+ 	u32 mcs:4,
+ 	nss:3,
+diff --git a/drivers/net/wireless/ath/ath12k/rx_desc.h b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx_desc.h
+similarity index 97%
+rename from drivers/net/wireless/ath/ath12k/rx_desc.h
+rename to drivers/net/wireless/ath/ath12k/wifi7/hal_rx_desc.h
+index 6c600473b402..60f165a176e0 100644
+--- a/drivers/net/wireless/ath/ath12k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx_desc.h
+@@ -1,18 +1,11 @@
  /* SPDX-License-Identifier: BSD-3-Clause-Clear */
  /*
   * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
 - * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
 + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
   */
- #ifndef ATH12K_DP_RX_H
- #define ATH12K_DP_RX_H
-@@ -103,6 +103,243 @@ static inline u32 ath12k_he_gi_to_nl80211_he_gi(u8 sgi)
- 	return ret;
- }
+ #ifndef ATH12K_RX_DESC_H
+ #define ATH12K_RX_DESC_H
  
-+static inline enum hal_encrypt_type ath12k_dp_rx_h_enctype(struct ath12k_base *ab,
-+							   struct hal_rx_desc *desc)
-+{
-+	if (!ab->hal_rx_ops->rx_desc_encrypt_valid(desc))
-+		return HAL_ENCRYPT_TYPE_OPEN;
-+
-+	return ab->hal_rx_ops->rx_desc_get_encrypt_type(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_decap_type(struct ath12k_base *ab,
-+					   struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_decap_type(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_mesh_ctl_present(struct ath12k_base *ab,
-+						 struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mesh_ctl(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_seq_ctrl_valid(struct ath12k_base *ab,
-+						 struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_seq_ctl_vld(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_fc_valid(struct ath12k_base *ab,
-+					   struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_fc_valid(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_more_frags(struct ath12k_base *ab,
-+					     struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+
-+	hdr = (struct ieee80211_hdr *)(skb->data + ab->hal.hal_desc_sz);
-+	return ieee80211_has_morefrags(hdr->frame_control);
-+}
-+
-+static inline u16 ath12k_dp_rx_h_frag_no(struct ath12k_base *ab,
-+					 struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr;
-+
-+	hdr = (struct ieee80211_hdr *)(skb->data + ab->hal.hal_desc_sz);
-+	return le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG;
-+}
-+
-+static inline u16 ath12k_dp_rx_h_seq_no(struct ath12k_base *ab,
-+					struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_start_seq_no(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_msdu_done(struct ath12k_base *ab,
-+					    struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->dp_rx_h_msdu_done(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_l4_cksum_fail(struct ath12k_base *ab,
-+						struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->dp_rx_h_l4_cksum_fail(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_ip_cksum_fail(struct ath12k_base *ab,
-+						struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->dp_rx_h_ip_cksum_fail(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_is_decrypted(struct ath12k_base *ab,
-+					       struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->dp_rx_h_is_decrypted(desc);
-+}
-+
-+static inline u32 ath12k_dp_rx_h_mpdu_err(struct ath12k_base *ab,
-+					  struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->dp_rx_h_mpdu_err(desc);
-+}
-+
-+static inline u16 ath12k_dp_rx_h_msdu_len(struct ath12k_base *ab,
-+					  struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_len(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_sgi(struct ath12k_base *ab,
-+				    struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_sgi(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_rate_mcs(struct ath12k_base *ab,
-+					 struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_rate_mcs(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_rx_bw(struct ath12k_base *ab,
-+				      struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_rx_bw(desc);
-+}
-+
-+static inline u32 ath12k_dp_rx_h_freq(struct ath12k_base *ab,
-+				      struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_freq(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_pkt_type(struct ath12k_base *ab,
-+					 struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_pkt_type(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_nss(struct ath12k_base *ab,
-+				    struct hal_rx_desc *desc)
-+{
-+	return hweight8(ab->hal_rx_ops->rx_desc_get_msdu_nss(desc));
-+}
-+
-+static inline u8 ath12k_dp_rx_h_tid(struct ath12k_base *ab,
-+				    struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_tid(desc);
-+}
-+
-+static inline u16 ath12k_dp_rx_h_peer_id(struct ath12k_base *ab,
-+					 struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_peer_id(desc);
-+}
-+
-+static inline u8 ath12k_dp_rx_h_l3pad(struct ath12k_base *ab,
-+				      struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_l3_pad_bytes(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_first_msdu(struct ath12k_base *ab,
-+					     struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_first_msdu(desc);
-+}
-+
-+static inline bool ath12k_dp_rx_h_last_msdu(struct ath12k_base *ab,
-+					    struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_last_msdu(desc);
-+}
-+
-+static inline void ath12k_dp_rx_desc_end_tlv_copy(struct ath12k_base *ab,
-+						  struct hal_rx_desc *fdesc,
-+						  struct hal_rx_desc *ldesc)
-+{
-+	ab->hal_rx_ops->rx_desc_copy_end_tlv(fdesc, ldesc);
-+}
-+
-+static inline void ath12k_dp_rxdesc_set_msdu_len(struct ath12k_base *ab,
-+						 struct hal_rx_desc *desc,
-+						 u16 len)
-+{
-+	ab->hal_rx_ops->rx_desc_set_msdu_len(desc, len);
-+}
-+
-+static inline u32 ath12k_dp_rxdesc_get_ppduid(struct ath12k_base *ab,
-+					      struct hal_rx_desc *rx_desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_mpdu_ppdu_id(rx_desc);
-+}
-+
-+static inline bool ath12k_dp_rxdesc_mpdu_valid(struct ath12k_base *ab,
-+					       struct hal_rx_desc *rx_desc)
-+{
-+	u32 tlv_tag;
-+
-+	tlv_tag = ab->hal_rx_ops->rx_desc_get_mpdu_start_tag(rx_desc);
-+
-+	return tlv_tag == HAL_RX_MPDU_START;
-+}
-+
-+static inline bool ath12k_dp_rx_h_is_da_mcbc(struct ath12k_base *ab,
-+					     struct hal_rx_desc *desc)
-+{
-+	return (ath12k_dp_rx_h_first_msdu(ab, desc) &&
-+		ab->hal_rx_ops->rx_desc_is_da_mcbc(desc));
-+}
-+
-+static inline bool ath12k_dp_rxdesc_mac_addr2_valid(struct ath12k_base *ab,
-+						    struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_mac_addr2_valid(desc);
-+}
-+
-+static inline u8 *ath12k_dp_rxdesc_get_mpdu_start_addr2(struct ath12k_base *ab,
-+							struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_mpdu_start_addr2(desc);
-+}
-+
-+static inline void ath12k_dp_rx_desc_get_dot11_hdr(struct ath12k_base *ab,
-+						   struct hal_rx_desc *desc,
-+						   struct ieee80211_hdr *hdr)
-+{
-+	ab->hal_rx_ops->rx_desc_get_dot11_hdr(desc, hdr);
-+}
-+
-+static inline void ath12k_dp_rx_desc_get_crypto_header(struct ath12k_base *ab,
-+						       struct hal_rx_desc *desc,
-+						       u8 *crypto_hdr,
-+						       enum hal_encrypt_type enctype)
-+{
-+	ab->hal_rx_ops->rx_desc_get_crypto_header(desc, crypto_hdr, enctype);
-+}
-+
-+static inline u8 ath12k_dp_rx_get_msdu_src_link(struct ath12k_base *ab,
-+						struct hal_rx_desc *desc)
-+{
-+	return ab->hal_rx_ops->rx_desc_get_msdu_src_link_id(desc);
-+}
-+
-+static inline void ath12k_dp_clean_up_skb_list(struct sk_buff_head *skb_list)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = __skb_dequeue(skb_list)))
-+		dev_kfree_skb_any(skb);
-+}
-+
- int ath12k_dp_rx_ampdu_start(struct ath12k *ar,
- 			     struct ieee80211_ampdu_params *params,
- 			     u8 link_id);
+-enum rx_desc_decap_type {
+-	RX_DESC_DECAP_TYPE_RAW,
+-	RX_DESC_DECAP_TYPE_NATIVE_WIFI,
+-	RX_DESC_DECAP_TYPE_ETHERNET2_DIX,
+-	RX_DESC_DECAP_TYPE_8023,
+-};
+-
+ enum rx_desc_decrypt_status_code {
+ 	RX_DESC_DECRYPT_STATUS_CODE_OK,
+ 	RX_DESC_DECRYPT_STATUS_CODE_UNPROTECTED_FRAME,
+@@ -631,40 +624,6 @@ struct rx_mpdu_start_qcn9274_compact {
+  *
+  */
+ 
+-enum rx_msdu_start_pkt_type {
+-	RX_MSDU_START_PKT_TYPE_11A,
+-	RX_MSDU_START_PKT_TYPE_11B,
+-	RX_MSDU_START_PKT_TYPE_11N,
+-	RX_MSDU_START_PKT_TYPE_11AC,
+-	RX_MSDU_START_PKT_TYPE_11AX,
+-	RX_MSDU_START_PKT_TYPE_11BA,
+-	RX_MSDU_START_PKT_TYPE_11BE,
+-};
+-
+-enum rx_msdu_start_sgi {
+-	RX_MSDU_START_SGI_0_8_US,
+-	RX_MSDU_START_SGI_0_4_US,
+-	RX_MSDU_START_SGI_1_6_US,
+-	RX_MSDU_START_SGI_3_2_US,
+-};
+-
+-enum rx_msdu_start_recv_bw {
+-	RX_MSDU_START_RECV_BW_20MHZ,
+-	RX_MSDU_START_RECV_BW_40MHZ,
+-	RX_MSDU_START_RECV_BW_80MHZ,
+-	RX_MSDU_START_RECV_BW_160MHZ,
+-};
+-
+-enum rx_msdu_start_reception_type {
+-	RX_MSDU_START_RECEPTION_TYPE_SU,
+-	RX_MSDU_START_RECEPTION_TYPE_DL_MU_MIMO,
+-	RX_MSDU_START_RECEPTION_TYPE_DL_MU_OFDMA,
+-	RX_MSDU_START_RECEPTION_TYPE_DL_MU_OFDMA_MIMO,
+-	RX_MSDU_START_RECEPTION_TYPE_UL_MU_MIMO,
+-	RX_MSDU_START_RECEPTION_TYPE_UL_MU_OFDMA,
+-	RX_MSDU_START_RECEPTION_TYPE_UL_MU_OFDMA_MIMO,
+-};
+-
+ #define RX_MSDU_END_64_TLV_SRC_LINK_ID		GENMASK(24, 22)
+ 
+ #define RX_MSDU_END_INFO0_RXPCU_MPDU_FITLER	GENMASK(1, 0)
+@@ -1536,9 +1495,4 @@ struct hal_rx_desc {
+ 	} u;
+ } __packed;
+ 
+-#define MAX_USER_POS 8
+-#define MAX_MU_GROUP_ID 64
+-#define MAX_MU_GROUP_SHOW 16
+-#define MAX_MU_GROUP_LENGTH (6 * MAX_MU_GROUP_SHOW)
+-
+ #endif /* ATH12K_RX_DESC_H */
 -- 
 2.34.1
 
