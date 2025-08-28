@@ -1,163 +1,192 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E89322DB3;
-	Thu, 28 Aug 2025 17:19:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6B1521B9F1
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Aug 2025 17:36:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756401546; cv=none; b=sMlOxL3BJQvzd6eqYIHLPRFjN7EZT5FPRH4c3aYB/f8qTB8H+ux+ttIV6xg988bI4xnlWtlfnXC0DG+wGye7ZZ31nWB3dKQmEGduAUYI/36n1TYG5KMMKLlvUMLF9NYbqvSGt0JuxVJtQkx1hAf5Ou+M2pc7/llYntJZH1VH9/A=
+	t=1756402578; cv=none; b=FiB/x/dKWQ4/r5ga0hvv+DtiCmfzyLRweH/JwFCIXIy7dC/f70ONx3XaPr55OHBsNfLJ4CNnccqZvhjQbr3mc/g0ZzRRsO1rzkTmWFLgJZV9vdJFowpoXsj/PQssWw+K5IGhA/iXDzVHV24IXH0fpifoEec01TrQAew4NQWCgPA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756401546; c=relaxed/simple;
-	bh=SS4pv8uyaXLZEUMjbC2GJgsLUt5PP91S4SC3iNr8JIE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iiddvf3EIHd5vF6ZfJeFTsCwNiDJOVgTZukqGoieHxzZR8QWk7KMf4WMw41M8f+4Tj03nRAyFhMZhYYrGNd+VmRiHmoUTUuZKYVeqzX865b7ZKoEcRdDmZRwzQ7ICka4bxi/mFkoX/QohAE7G6HtESs+dcXT+IO8IBZCxy7ZIKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a5r9gwhU; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756402578; c=relaxed/simple;
+	bh=9LuELti2ydHiQFz4oo4hykPSZa0pMbV0naIYPNy3gaA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BD2v44E3pMzhiU4/YSRy1UQBcKbmzONXHM9t7AiuMoB5qJe2ap4sSzoUmrm0PKUyAnRmFDe9rIeVejGR1yLnLM7TS7k0I37wCISNCULJDlixYbh2bX8gfSJaeOtJPSepmSl8EVXXwIZ2vvKAswhUrButYjGok5l8gFwfZrCleuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jMrUhu+l; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a5r9gwhU"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-244582738b5so10962595ad.3;
-        Thu, 28 Aug 2025 10:19:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756401544; x=1757006344; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=SS4pv8uyaXLZEUMjbC2GJgsLUt5PP91S4SC3iNr8JIE=;
-        b=a5r9gwhU3OZ7+sie3vFCnu5KUoHlLiq8Fda10SVQKy3KY5E0TfZT3HnHYacMzrAd9G
-         4oDSRC42Wp020yOLlxfrHgXRW8lABMsdsVfaL9PBrn045pSVevt6Ig5BnSXVkm+PxAcH
-         eXJD/mczQxUWiXWYNtcFszV/JVJ34kverJ4fwTGINbY354Jv6sLpy44bT/ZABHP3utFV
-         ZbfrCHPFGqhRrtzGvTS7rd2LPcnO7D1BinpEiSkpUSGxzuUgCspo94w2jRvkVl9+pQOe
-         eER9rvU++mTqwSMkUWBF5P5HhVHwjG37aNkK+uw9g0+uowJCMaErb30x7sQ4xl6Fjv4h
-         5lEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756401544; x=1757006344;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SS4pv8uyaXLZEUMjbC2GJgsLUt5PP91S4SC3iNr8JIE=;
-        b=n/JTgC4I3IW6814pe/YiTW/PnJ2bqEr/XY71snk70r8Rdt2OV6tpLLTlsVKx/UNnbR
-         Q/TXefjQt3KWGK0aOTzGCYF/ZgHYOTJZUjCp7h1I7cpMQq3mFi8xsLSlXPzpOz/IVcbc
-         QjDJUVS7fICjSv80S5151K1C0RETqyEHCvFx+rH9OaoVOD+Hkv42dd4h9wPC3yIeRh+E
-         w1Q2iHqAyuiQpfJGxX0XTCHw1KEC9ctQJhl4Q8m6Xt5jUlHp0icvfZ99Mz1kPrfzoLmX
-         T1SfX7uQrIgrg7xrXWs0oVYLIuThIS7EoFktx1QzcCsptU7SR+L4XtkZT/XFW3Cp5g8V
-         UpEw==
-X-Forwarded-Encrypted: i=1; AJvYcCUBa5k+mZQiDt0S0ZTIhWgv7noMtqIj+PFRcEjioo/MEbva+BvTyDRwxJvOYKL0n/YH14HSX+q7JszW@vger.kernel.org, AJvYcCUXZLgZNpZAjTMSealn1HQMnxDD8iFszliZWn0C4V2ilTveq+qvda7siVf/MwsSNH9qj6NxJWdlzB7P@vger.kernel.org, AJvYcCV9RAoS8gNgfyTjTNcn6R4rOUfsxIUbBHXigItqshuIYSeIScTop6b2KWJ6LYK6kKC6AzbMoWIuwkNqvw1u@vger.kernel.org, AJvYcCVSJdinKHvPCX1wpjlobmaRyzIcazfGoEqqPpik6yhcT7sOq5odu1Q7sLxDCuLwigXGtebViR9q9y95@vger.kernel.org, AJvYcCVp8ixI2tQY4z8ky1mYOoMNMEexHKYOk7OYirIKdHBSGMhCkeQQY1T1eJlkHP5JPg1MILXc0h100O4=@vger.kernel.org, AJvYcCVtXDMPfUlvbxNu3fP+pKjbBlNOZCKTPfyjqG0F8ItcqU+qWpY1n3pyRoSN7IDsUpiC0H/iPLTxbXmd@vger.kernel.org, AJvYcCW65DBx7BAMTLd85Ul5qOgMJG/luZ/5DVXEYs+YGhKPGldV2Oe10UDjoGI9Nb7iWQ2SL2ZAbHhKzat5bqO4Oa5k@vger.kernel.org, AJvYcCWd6W8zmw45ijKWJ5+PpuwW1Or22QLB3mDfVPvyFxpVCD6fiy+7gHkRrRdqDGEjc70WDXZeRTeswETo@vger.kernel.org, AJvYcCWnzpZufkX6uylH5sfx1xvj/DkL1cyMEi3bPh23EaTkSei0+3VE+12K5te/wzIEUN4c+QJGjPEv9AWUmg==@vger.kernel.org, AJvYcCWokkqmb28MSp6aPx3LMZCk34o5zu+5IsNCTRWYEw5lwPhbJ/f8+I9N4zSqvhQEQrDmTGCEV7pH3kH09jjJ3y8=@vger.kernel.org, AJvYcCWzIIxyZ+7WWV7IEXk0OUMjXUlS22fOYcnhAsj4P/cO9D4yP+Pw9TbVOtRjwpZMkaKNhjbBiWT7YbB1@vger.kernel.org, AJvYcCXEmmsOKb+AD5PcpVEIwafxQfvlI4JuJ7VCshwKcQOsN/WpPCDSsiEwnnHnP3FJfJ7+KEx36n6UN6RFLKY=@vger.kernel.org, AJvYcCXMwnfQ1IUK8MITtCnwYIvWs7nOy/ffePPv6VlK2RGB5IE3j1SLQjhlArHbdh16kos/8v+eEFhweOmEXndxKoE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyy6norp54vk4rnN353sWnVHYIze17dMDiKXCG0XErk3TH+pPBG
-	P/xHQyC96nQzazue4wHmmF6XTrbMRPSLYbASQngUxQMme3uPx+GhqIy5
-X-Gm-Gg: ASbGncvo+kSc+4xPfdAFl/qzPtj8VURi9+u5sHNq099Fwm8UmxDEjnBEzTozl1nqGXN
-	ws6rOqX0nM3YWqAes9vel31GRfwE/kWArV9jQzWuH1QWn5UdijT3ZtTh/oXWm82aDEIfk77k1Uw
-	75WRCKSNOC/kz6pNLaPRKPqiGxxqAE7J4Zr8SdsFpkYlHIn+4QftR/Bmw1m4dBBZT8c2fEV0nPX
-	x08UnlDOFACE4E/F3l9NpE6aZ8wdG8TP3gIRRx0g1C69KMDitetX32HALNqpyZPvd3Gg0d9iGdD
-	B4hgtHvvp2xmgqsx9EfjPEDAwoG55WZ6zG7o7YChrVLGHVCbdfU1CnmtiVB2gC4moo1V3i+1+hM
-	UKVp+dIjCmZAxW/sgDGXSmEGd2uJYHxBqRCbkhmGGYIEiPSVR8PORUQ==
-X-Google-Smtp-Source: AGHT+IFPj3GBG1tXe0w52JDhOrrrStWKIT6zs8hpAEsM8UEVZqo8QCtKE2lg8olsPKFlf0oBzRgObQ==
-X-Received: by 2002:a17:903:2391:b0:249:308:353 with SMTP id d9443c01a7336-2490308048fmr5489935ad.41.1756401543466;
-        Thu, 28 Aug 2025 10:19:03 -0700 (PDT)
-Received: from [192.168.1.111] ([59.188.211.98])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24905da2f20sm739185ad.82.2025.08.28.10.18.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Aug 2025 10:19:02 -0700 (PDT)
-Message-ID: <86ab9bd4-9a4f-4ae9-930f-5fb9ef69c963@gmail.com>
-Date: Fri, 29 Aug 2025 01:18:47 +0800
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jMrUhu+l"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57SERbBm027503;
+	Thu, 28 Aug 2025 17:36:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	MxZQL8egaO+cIlc8kUFJopTiPy8eppVHu75dQyHfOq8=; b=jMrUhu+lqM7ui8DY
+	K0xuJEYuZzJ0AvFWcVFP1YhAGKGQNBteVUBk4f2NA3KsJFQ4vIXZ5wsPjLTYy1J5
+	z+8yRisib7q/l+QYTedgPCu/lvXDE5uum9SBGh9ichO57xwIr9zLidbDYJNqy+//
+	Hz3sjGBYy52+WoUPrc4mxjc3+VV9fZDObVwRDjGgnQTa9Jblt/g0bbmVv7bLYRkE
+	o/KLlMblHekCs+ZCND6al1EOLKKVS3Lc009IoKEywmKMNeIWaWGnpiQWkTdzE6GT
+	iDqh61Xp5kTbLGtnA9ucqyYUpqRhDJDYpuI864Y2hdCkNfhCaDtBveln0RHklCUh
+	mO4BpQ==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48se17050k-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Aug 2025 17:36:11 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57SHaBS3003501
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Aug 2025 17:36:11 GMT
+Received: from hu-rdeuri-blr.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.24; Thu, 28 Aug 2025 10:36:10 -0700
+From: Ripan Deuri <quic_rdeuri@quicinc.com>
+To: <ath12k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH ath12k-ng 01/20] wifi: ath12k: Move hal_tx and hal_rx to wifi7 directory
+Date: Thu, 28 Aug 2025 23:05:34 +0530
+Message-ID: <20250828173553.3341351-2-quic_rdeuri@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250828173553.3341351-1-quic_rdeuri@quicinc.com>
+References: <20250828173553.3341351-1-quic_rdeuri@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/37] arm64: Add initial device trees for Apple M2
- Pro/Max/Ultra devices
-To: Janne Grunau <j@jannau.net>
-Cc: Sven Peter <sven@kernel.org>, Alyssa Rosenzweig <alyssa@rosenzweig.io>,
- Neal Gompa <neal@gompa.dev>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Hector Martin <marcan@marcan.st>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Viresh Kumar <viresh.kumar@linaro.org>, Thomas Gleixner
- <tglx@linutronix.de>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Linus Walleij <linus.walleij@linaro.org>,
- Mark Kettenis <kettenis@openbsd.org>, Andi Shyti <andi.shyti@kernel.org>,
- Jassi Brar <jassisinghbrar@gmail.com>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Sasha Finkelstein <fnkl.kernel@gmail.com>,
- Marcel Holtmann <marcel@holtmann.org>,
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- Johannes Berg <johannes@sipsolutions.net>, van Spriel <arend@broadcom.com>,
- Lee Jones <lee@kernel.org>, =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?=
- <ukleinek@kernel.org>, Stephen Boyd <sboyd@kernel.org>,
- Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck
- <linux@roeck-us.net>, Michael Turquette <mturquette@baylibre.com>,
- =?UTF-8?Q?Martin_Povi=C5=A1er?= <povik+lin@cutebit.org>,
- Vinod Koul <vkoul@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>,
- Mark Brown <broonie@kernel.org>, Marc Zyngier <maz@kernel.org>,
- Ulf Hansson <ulf.hansson@linaro.org>, Keith Busch <kbusch@kernel.org>,
- Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, Jaroslav Kysela <perex@perex.cz>,
- Takashi Iwai <tiwai@suse.com>, asahi@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
- iommu@lists.linux.dev, linux-gpio@vger.kernel.org,
- linux-i2c@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
- linux-pwm@vger.kernel.org, linux-watchdog@vger.kernel.org,
- linux-clk@vger.kernel.org, dmaengine@vger.kernel.org,
- linux-sound@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-nvme@lists.infradead.org
-References: <20250828-dt-apple-t6020-v1-0-507ba4c4b98e@jannau.net>
- <932e0085-c901-40f8-b0d5-67f8f0b934e6@gmail.com>
- <20250828165012.GC204299@robin.jannau.net>
-Content-Language: en-US
-From: Nick Chan <towinchenmi@gmail.com>
-In-Reply-To: <20250828165012.GC204299@robin.jannau.net>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: SD7LXPj9becZvN7F0Y6RnYLIO3AFMQx9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODI2MDEyMCBTYWx0ZWRfXzE1sdDagwJ9c
+ RfXHDNIpTnodCQ8j+hIZ5x2mrsMNk+6Xt+iefCn4AUCLO9elTEJvz4T4+EZR/97s00Baz126K+2
+ cN3M5/O6Dl2ssJ/I8rNN4qGOK5RV2gvgmUqvARIPI6EGLIRh8bl7NlZx9Vk23AmudiyNIYxT9DX
+ AwyZ21B8IhlgJho6OVIQvN65nZpclJ2orA0GAkxIfuKYTRTZi4oQbi49T6ZRwd9CpP5DFYc+db+
+ OQ9xdal98TCKEFooOAv3kjw+VrXqSTPtPnGV5Lyer8KhZIpIgnJntl6z1F7WeyQmRymnasL2jmJ
+ gd6xUOPNd8nhr+b5drxlY6oqJKsZnq4JK6x1EP6mz0LjSSaZVEQzzpgm2BMah3k6craPHsoBVEI
+ TnGph02u
+X-Proofpoint-ORIG-GUID: SD7LXPj9becZvN7F0Y6RnYLIO3AFMQx9
+X-Authority-Analysis: v=2.4 cv=CNYqXQrD c=1 sm=1 tr=0 ts=68b0938c cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=88aliKi4RoGy_8v3A6YA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-28_04,2025-08-28_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 impostorscore=0 priorityscore=1501 adultscore=0 spamscore=0
+ phishscore=0 suspectscore=0 bulkscore=0 malwarescore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508260120
 
+From: Pavankumar Nandeshwar <quic_pnandesh@quicinc.com>
 
-Janne Grunau 於 2025/8/29 凌晨12:50 寫道:
-> On Fri, Aug 29, 2025 at 12:11:40AM +0800, Nick Chan wrote:
->> Janne Grunau 於 2025/8/28 晚上10:01 寫道:
->>> This series adds device trees for Apple's M2 Pro, Max and Ultra based
->>> devices. The M2 Pro (t6020), M2 Max (t6021) and M2 Ultra (t6022) SoCs
->>> follow design of the t600x family so copy the structure of SoC *.dtsi
->>> files.
->> [...]
->>> After discussion with the devicetree maintainers we agreed to not extend
->>> lists with the generic compatibles anymore [1]. Instead either the first
->>> compatible SoC or t8103 is used as fallback compatible supported by the
->>> drivers. t8103 is used as default since most drivers and bindings were
->>> initially written for M1 based devices.
->>>
->>> The series adds those fallback compatibles to drivers where necessary,
->>> annotates the SoC lists for generic compatibles as "do not extend" and
->>> adds t6020 per-SoC compatibles.
->> The series is inconsistent about the use of generic fallback compatibles.
->>
->> "apple,aic2", "apple,s5l-fpwm", "apple,asc-mailbox-v4" is still used.
-> Those are less generic than say "apple,spi". For "apple,aic2" especially
-> it's clear which SoCs use it and the set is closed (ignoring iphone SoCs
-> which very likely will never run linux). For the interrupt controller
-> the fallout of not using the "apple,aic2" is larger since even m1n1
-> expect that. irq driver is special in so far as it requires more than
-> adding a compatible.
-> I think "apple,s5l-fpwm" and "apple,asc-mailbox-v4" are specific enough
-> and describe simple hardware so the will not cause issues unlike the
-> complex firmware based "apple,nvme-ans2".
+Move architecture-specific files hal_rx.c and hal_tx.c into the wifi7
+directory as part of a broader effort to separate common and hardware
+-specific code into distinct modules. This modularization enables reuse
+of the common driver components across multiple hardware architectures.
 
-All of these compatibles has around the same specificity as "apple,nvme-ans2" which is
-a mistake of using A11's version (ans2) to describe the M1 nvme (ans3). Though I do agree
-"apple,asc-mailbox-v4", "apple,s5l-fpwm" and "apple,aic2" should be fine compatibility-wise.
+The relocated files remain part of ath12k.ko temporarily, until the
+corresponding infra for movement to the ath12k_wifi7.ko arrives in
+upcoming patches.
 
-Although AIC2 compatible should be fine that may not hold for later versions since Linux's
-AIC driver is actually AIC + core complex FIQ stuff, so when you do add newer AICs it is
-probably better to use SoC-specific compatible there.
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
->
-> Janne
->
-Best regards,
-Nick Chan
+Signed-off-by: Pavankumar Nandeshwar <quic_pnandesh@quicinc.com>
+Signed-off-by: Ripan Deuri <quic_rdeuri@quicinc.com>
+---
+ drivers/net/wireless/ath/ath12k/Makefile           |  5 +++--
+ .../net/wireless/ath/ath12k/{ => wifi7}/hal_rx.c   | 14 +++++++-------
+ .../net/wireless/ath/ath12k/{ => wifi7}/hal_tx.c   | 10 +++++-----
+ 3 files changed, 15 insertions(+), 14 deletions(-)
+ rename drivers/net/wireless/ath/ath12k/{ => wifi7}/hal_rx.c (99%)
+ rename drivers/net/wireless/ath/ath12k/{ => wifi7}/hal_tx.c (96%)
+
+diff --git a/drivers/net/wireless/ath/ath12k/Makefile b/drivers/net/wireless/ath/ath12k/Makefile
+index 8dd77729f52f..b34cf83a24eb 100644
+--- a/drivers/net/wireless/ath/ath12k/Makefile
++++ b/drivers/net/wireless/ath/ath12k/Makefile
+@@ -2,8 +2,6 @@
+ obj-$(CONFIG_ATH12K) += ath12k.o
+ ath12k-y += core.o \
+ 	    hal.o \
+-	    hal_tx.o \
+-	    hal_rx.o \
+ 	    wmi.o \
+ 	    mac.o \
+ 	    reg.o \
+@@ -24,6 +22,9 @@ ath12k-y += core.o \
+ 
+ ath12k-$(CONFIG_ATH12K_AHB) += ahb.o
+ 
++ath12k-y += wifi7/hal_tx.o \
++	    wifi7/hal_rx.o \
++
+ obj-$(CONFIG_ATH12K) += wifi7/
+ 
+ ath12k-$(CONFIG_ATH12K_DEBUGFS) += debugfs.o debugfs_htt_stats.o debugfs_sta.o
+diff --git a/drivers/net/wireless/ath/ath12k/hal_rx.c b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
+similarity index 99%
+rename from drivers/net/wireless/ath/ath12k/hal_rx.c
+rename to drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
+index 48aa48c48606..a25b21740e08 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_rx.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
+@@ -1,15 +1,15 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  */
+ 
+-#include "debug.h"
+-#include "hal.h"
+-#include "hal_tx.h"
+-#include "hal_rx.h"
+-#include "hal_desc.h"
+-#include "hif.h"
++#include "../debug.h"
++#include "../hal.h"
++#include "../hif.h"
++#include "../hal_tx.h"
++#include "../hal_rx.h"
++#include "../hal_desc.h"
+ 
+ static void ath12k_hal_reo_set_desc_hdr(struct hal_desc_header *hdr,
+ 					u8 owner, u8 buffer_type, u32 magic)
+diff --git a/drivers/net/wireless/ath/ath12k/hal_tx.c b/drivers/net/wireless/ath/ath12k/wifi7/hal_tx.c
+similarity index 96%
+rename from drivers/net/wireless/ath/ath12k/hal_tx.c
+rename to drivers/net/wireless/ath/ath12k/wifi7/hal_tx.c
+index 869e07e406fe..f58da63a1b02 100644
+--- a/drivers/net/wireless/ath/ath12k/hal_tx.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hal_tx.c
+@@ -1,13 +1,13 @@
+ // SPDX-License-Identifier: BSD-3-Clause-Clear
+ /*
+  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  */
+ 
+-#include "hal_desc.h"
+-#include "hal.h"
+-#include "hal_tx.h"
+-#include "hif.h"
++#include "../hal_desc.h"
++#include "../hal.h"
++#include "../hal_tx.h"
++#include "../hif.h"
+ 
+ #define DSCP_TID_MAP_TBL_ENTRY_SIZE 64
+ 
+-- 
+2.34.1
+
