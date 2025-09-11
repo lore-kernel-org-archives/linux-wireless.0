@@ -1,107 +1,72 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835081E1DE9
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Sep 2025 14:59:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F114D31D757;
+	Thu, 11 Sep 2025 17:01:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757602799; cv=none; b=Ytr24NtmKIqZHGb9yFubpfW0ByX1xCfEcSx/5dlEv38JOgF5vzUgiq0haUdIY1WIJS7FyPhVSfFpC6iqTcEb5N/uEcP+j9WM2fCwOdGtv8umeS7KClVswC7G6mJvOZEJayH15L42L2PijalUoSAZdqr2r6+HQfHppTVFOwmvhDI=
+	t=1757610104; cv=none; b=ow+5p5OunhxaGK5sCP/wijcCOAWCrby3XFE2wImQys04J//mLZh3tzu78JlX66W39xieTJyC5+grrSnOv2PefHuZEgnyMjDl2k9JJGexMzjU2pcPbzAxbv9nEk8najFLDlZJ22F58m4/y1x6vMntqcX0xG4KhwslF1AXGt0KHNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757602799; c=relaxed/simple;
-	bh=GrOcQnBLWq/c9i0O3OkQRM27F/LyB+oMciRYUhpkKwY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LFT6hD3pzdDoSeHzzQQWlIaSSUNY8LwpursTpHOBIHLrRopaxy8llW7oD7L8msSt9brZDvmwB2He85PpQoGeuFIOba258sCVIKfh0A1fIgoXqMMON3Iw3WNEpCVR4EzmSg+DrJzosiUYC7sNVfJhTCX5/y1n/7nQYkVZA3oIJNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=brIU77ia; arc=none smtp.client-ip=212.77.101.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1757610104; c=relaxed/simple;
+	bh=nwoalD03XPDUyFyFgtYtWKIblQ9hGe8r6/ATfDBnpA0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=o7H8M4bYUYU62syHdpa4Wawi6QXRbPcXTi6E7esmuNevkrms81mYGL5/NweoySJWDx5OFKNLmntO6mfESIJ5LKSO5urF5V7vH65Rc2uUf1Z2F4SH/z/1w4fKlJL3kzKiudtkFUcSEVJsEI3eMD5nZt2CVMG7KHP6v3+lR6kgGYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kfrV26PX; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="brIU77ia"
-Received: (wp-smtpd smtp.wp.pl 14891 invoked from network); 11 Sep 2025 16:33:14 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1757601194; bh=TGeg6yZAFhxk6E30jsoP8yK/VdbAxegeXuN/6bbXYUk=;
-          h=From:To:Cc:Subject;
-          b=brIU77ia3dcPg0JVDYPw4Kcq62BqVfYQpqdnOCSB+Bm3z629cEHoghIbZicygCijK
-           qv9FGq+sAoEn/ZUsw7TlOUfgKGe1hz71GYhgT/20zShq40oz2wbRSQAO5ozgaBC9Sf
-           JQCmyyW7Vx5YIDYENyiHj5UwxdxDqraMgzlBUGRvyAZbD/aKpK9NZLLUO5K7405B2n
-           Kyk18QYhw1G9G5cii7ecvEU3+U7Baiq6CSe2lgi/YJhxHo3B14HkNimvIzf1R0hX55
-           h/Is8ynJ7c1bGifiimkBhfvuBOWK3vE5Xmn4iNaIfDg8b5HduIO9tJUkUgmaBojtE+
-           pr8dKdRVchXDA==
-Received: from 89-64-9-45.dynamic.play.pl (HELO localhost) (stf_xl@wp.pl@[89.64.9.45])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <chenyufeng@iie.ac.cn>; 11 Sep 2025 16:33:14 +0200
-Date: Thu, 11 Sep 2025 16:33:13 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Chen Yufeng <chenyufeng@iie.ac.cn>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kfrV26PX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=nwoalD03XPDUyFyFgtYtWKIblQ9hGe8r6/ATfDBnpA0=;
+	t=1757610103; x=1758819703; b=kfrV26PXgRMFq/XEXrfMDd+G1rNofugoIGN3/29zWTls/KY
+	ZycTsW4zMUkj29se27A0x70CW9gFgPMbatXuc+TdASiFWN0M5ngTHzgjERAMOG53tZ9yPVTJevGXI
+	mVt+O+vXkKHyebybf2MtoFuLIPMjJdRbED52aiqAWZ1qWo7KhOyOWfrCQy2EcCWH/cwf+agwWr9vD
+	2Wi8a2BKjGcAVmrQfMxgPg9V06y6OPbhggxZCdsA8oQxvj/tsfINWwnrLVTaDCqLiRGjpOnGsNAsU
+	sSl0GhF9ulpruCEs2hzGLZ2IIMK3WjIvFfCIvnmRs8GiIiN0iZOS2l02Ljr6+YIA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1uwkfz-0000000Fcoj-3pOR;
+	Thu, 11 Sep 2025 19:01:40 +0200
+Message-ID: <2da9103af3f341f05bc8c42e4425ec15231498e5.camel@sipsolutions.net>
+Subject: Re: [GIT PULL] wireless-next-2025-09-11
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] iwlegacy: Add sanity check for il->stations[] array
- index
-Message-ID: <20250911143313.GA9823@wp.pl>
-References: <20250911133950.1152-1-chenyufeng@iie.ac.cn>
+Date: Thu, 11 Sep 2025 19:01:39 +0200
+In-Reply-To: <20250911100854.20445-3-johannes@sipsolutions.net>
+References: <20250911100854.20445-3-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250911133950.1152-1-chenyufeng@iie.ac.cn>
-X-WP-MailID: b4a2a4e13c52ed79e0d31ba5731b8dc7
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [YROB]                               
+X-malware-bazaar: not-scanned
 
-On Thu, Sep 11, 2025 at 09:39:50PM +0800, Chen Yufeng wrote:
-> In the il_process_add_sta_resp function, the index sta_id in 
-> il->stations[sta_id] is not validated, which may lead to memory 
-> corruption if the sta_id index is out of bounds.
-> 
-> Fixes: 0cdc21363cc2 ("iwlegacy: merge common .c files")
-This tag is most likely not correct one. I don't think we need
-one though.
+On Thu, 2025-09-11 at 12:08 +0200, Johannes Berg wrote:
+> Please pull and let us know if there's any problem.
 
-> Signed-off-by: Chen Yufeng <chenyufeng@iie.ac.cn>
-> Reviewed-by: Stanislaw Gruszka <stf_xl@wp.pl>
-No, I haven't review the patch.
+Speaking of problems ... we've kept adding Link: tags. If you're going
+to insist we remove them then please just say so explicitly, reject this
+pull request as well if you like, and save everyone the discussion.
 
-> ---
-> Changes in v2:
-> - Add header file commands.h to get IL_STATION_COUNT
-> - move the validation of sta_id to il_process_add_sta_resp
-> 
->  drivers/net/wireless/intel/iwlegacy/common.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-> index b7bd3ec4cc50..2840d0935650 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/common.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
-> @@ -22,6 +22,7 @@
->  #include <net/mac80211.h>
->  
->  #include "common.h"
-> +#include "commands.h"
->  
->  int
->  _il_poll_bit(struct il_priv *il, u32 addr, u32 bits, u32 mask, int timeout)
-> @@ -1766,6 +1767,11 @@ il_process_add_sta_resp(struct il_priv *il, struct il_addsta_cmd *addsta,
->  		IL_ERR("Bad return from C_ADD_STA (0x%08X)\n", pkt->hdr.flags);
->  		return ret;
->  	}
-> +	
-> +	if (sta_id >= IL_STATION_COUNT) {
-> +		IL_ERR(il, "invalid sta_id %u", sta_id);
+I do truly believe Linus to be wrong on this: assuming a patch has no
+need for any identification/correlation whatsoever before it goes into
+his (or a feeder) tree (and gets a stable sha1) is akin to assuming it
+has no life before it actually ends up there, which I think is
+completely out of touch with reality. But he does ultimately get to
+reject pull requests, so...
 
-Again, compile test your patches!
+Maybe I should make the links go to patchwork, because there you have
+the CI results ... maybe that could be construed as useful information
+in the "Linus sense" (phrased that way because to me the mailing list
+posting is already useful information)?
 
-Regards
-Stanislaw
-
-> +		return -EINVAL;
-> +	}
->  
->  	D_INFO("Processing response for adding station %u\n", sta_id);
->  
-> -- 
-> 2.34.1
-> 
+johannes
