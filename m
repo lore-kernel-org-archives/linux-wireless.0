@@ -1,447 +1,172 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B34287511
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2025 09:54:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56DBC238C08
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2025 12:21:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757670891; cv=none; b=Ha/3pScG5igZ4/xhDvl35KRWylKYpxF4ywVwNz+6VJLfTuoHKlGZCyhxBo577oyIA+SQWlfTSb8mg3FVa0078TV/QsJCKc+GMwFVxAfkiDXUpQtnGOfSrqE1jbNiAV87kTyXWPVaNrctQNys37HdK/SmxB6aDYAG8zLk66yVV5E=
+	t=1757679694; cv=none; b=O/yfRr+1oX5AoCmG+5sGzYGU2pvP4Nkf3+WeVXg36PiKlDe2wpRgexECFVGJlUVQrwRp59zgZFRGvN8MiddOIw5gRj3MaOTregwdSzmMsVduWOEnp1CMWRO4iZ2EdcKzDRyFbBEgmg9uR7LzfSB9XCO1Hhar04FlrXYosu+mNWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757670891; c=relaxed/simple;
-	bh=QQvmFhxNnbF3gfPPMN9cTjWoOlKlY++UTIm83UBGZco=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i4gNHQcaAAvwJ4zGv5CnZCKdmoa5NSCGidVf0vLhVwBf9NV0ABmZb+yq5GeoJWI4u/gH2EoY2DkGw2aKwOenjwYgzp+ywy5a5Ce+izEflN5qVY/NDUcnyTbWC4IUwy5oJByNCeMQ7WFB4PaVug9aqnvOE/EtdMZlj5jIujFvZDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ei4/9g1o; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1757679694; c=relaxed/simple;
+	bh=b5WHxd4xwn9rgvCSXcEEDbW+90LANpn1Bb2s22tI1ac=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JZ04kPwidz1D2v4/LWE8kZPdNRVH71Oh6fDkKSCs7kT27HQprJhkPFLzIlNQMVK6ujaRUf729VmVIjXkdTFrMAv0LLhF69/9Wj3tADZqTqPx312iDgq6sOsBXI1/V0SxaiUdGXiM4s+LcigytSYjXEJYkMqfTCndxSjWu5QNDGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D0J9tdwh; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ei4/9g1o"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58C9sY6V1495141, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1757670874; bh=Vcf0fh3CrtlezXm9nMh4hT2brMSnAdbk1pXNoLXdgXA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=ei4/9g1oBPCcmFRFGmfuPcBpkQgD0rH8eR0Mi6cpv+dW1f7KYVxwdFXUBh90uqWh4
-	 LDidHQkhTmc7M1bxvmcp1jsd4OgrUl0sHvWTFk5+Hf+YDDppR5+pcygl7EKRo9/3hZ
-	 A5lDCQOEFhE9cxGbo/xmNt2RhxmN9LcHz+G6jr3GzXmNFGS0Ieqd9pIpYa/6S4Nzou
-	 1w03fpsoBz19cMM/Wgpf6+kb+MHk9MqWkBebHgjxmtFY/au94kIBq0e430//gWAwab
-	 s8J9QeAVrpefMoa3qqkqiZh1CLUm9jj8umcKg37mDGwnmPghesAuZlqB6WqqKpZvnP
-	 vjKoWqTFRxFKw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58C9sY6V1495141
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Sep 2025 17:54:34 +0800
-Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Fri, 12 Sep 2025 17:54:35 +0800
-Received: from localhost.localhost (172.21.69.104) by RTEXMBS03.realtek.com.tw
- (172.21.6.96) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 12 Sep
- 2025 17:54:35 +0800
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/5] iw: bitrate: support EHT rate/gi/ltf
-Date: Fri, 12 Sep 2025 17:54:22 +0800
-Message-ID: <20250912095423.27266-5-kevin_yang@realtek.com>
-X-Mailer: git-send-email 2.39.0
-In-Reply-To: <20250912095423.27266-1-kevin_yang@realtek.com>
-References: <20250912095423.27266-1-kevin_yang@realtek.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D0J9tdwh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1757679692; x=1789215692;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=b5WHxd4xwn9rgvCSXcEEDbW+90LANpn1Bb2s22tI1ac=;
+  b=D0J9tdwhhZXY/4tXtLa5GI6ZInnhrCv20rGFGnQkNNbM/O9Au4wF1hAR
+   Op4gwkbHkxX1mxoEGlLeYCyOgAGxqsm373N9f6KcbeeeKKYCkQH6ulvNV
+   eUtkZrDgsxtmrcpJJyFXJu08OE0hVELzx245TwPK33yvAxMLol33gqc0g
+   rzTjslLJ3RFGcIzgHHWkJM4QsaJBuJQbi78EUE+mqy/OFiQftzGp8OGGw
+   KFE4TNibHrh2+PjSgJi5+TV7tWcoYZowMuqE17xcb8IcQjNGAxPViykCC
+   3QA4omfMFZqRCTiZwqL9W8HCcUPAaPZjSsbX8Y6NYZfkNamncbeG7tKCd
+   A==;
+X-CSE-ConnectionGUID: tTwwF+TJRSiQkiDxQFva9A==
+X-CSE-MsgGUID: l30skVbuRv6xvUg+HhE1nA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11550"; a="70647304"
+X-IronPort-AV: E=Sophos;i="6.18,259,1751266800"; 
+   d="scan'208";a="70647304"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Sep 2025 05:21:31 -0700
+X-CSE-ConnectionGUID: GEbi4FkfSrOFGVHD0mHSpQ==
+X-CSE-MsgGUID: TN0X/Ch1QVyqm85T/0E1MA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,259,1751266800"; 
+   d="scan'208";a="174396413"
+Received: from lkp-server02.sh.intel.com (HELO eb5fdfb2a9b7) ([10.239.97.151])
+  by fmviesa009.fm.intel.com with ESMTP; 12 Sep 2025 05:21:29 -0700
+Received: from kbuild by eb5fdfb2a9b7 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1ux2mM-00010m-2S;
+	Fri, 12 Sep 2025 12:21:26 +0000
+Date: Fri, 12 Sep 2025 20:21:09 +0800
+From: kernel test robot <lkp@intel.com>
+To: Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH mt76 5/5] wifi: mt76: mt7996: Add NPU offload support to
+ MT7996 driver
+Message-ID: <202509122047.IrKGvn3P-lkp@intel.com>
+References: <20250910-mt76-npu-devel-v1-5-dbde4a37b9c0@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: RTEXH36506.realtek.com.tw (172.21.6.27) To
- RTEXMBS03.realtek.com.tw (172.21.6.96)
-X-KSE-ServerInfo: RTEXMBS03.realtek.com.tw, 9
-X-KSE-AntiSpam-Interceptor-Info: fallback
-X-KSE-Antivirus-Interceptor-Info: fallback
-X-KSE-AntiSpam-Interceptor-Info: fallback
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250910-mt76-npu-devel-v1-5-dbde4a37b9c0@kernel.org>
 
-Support eht-mcs-*/eht-gi-*/eht-ltf-* fields when iw set bitrates.
+Hi Lorenzo,
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
----
- bitrate.c | 184 +++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 176 insertions(+), 8 deletions(-)
+kernel test robot noticed the following build warnings:
 
-diff --git a/bitrate.c b/bitrate.c
-index 8c575b086eba..16f118cce4ec 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -7,7 +7,7 @@
- static int parse_rate_chunk(const char *arg, __u8 *nss, __u16 *mcs, unsigned int mode)
- {
- 	unsigned int count, i;
--	unsigned int inss, mcs_start, mcs_end, tab[12];
-+	unsigned int inss, mcs_start, mcs_end, tab[16];
- 	unsigned int max_mcs = 0, max_nss = 0;
- 
- 	*nss = 0; *mcs = 0;
-@@ -15,6 +15,9 @@ static int parse_rate_chunk(const char *arg, __u8 *nss, __u16 *mcs, unsigned int
- 	if (mode == NL80211_TXRATE_HE) {
- 		max_mcs = 11;
- 		max_nss = NL80211_HE_NSS_MAX;
-+	} else if (mode == NL80211_TXRATE_EHT) {
-+		max_mcs = 15;
-+		max_nss = NL80211_EHT_NSS_MAX;
- 	} else {
- 		max_mcs = 9;
- 		max_nss = NL80211_VHT_NSS_MAX;
-@@ -47,6 +50,12 @@ static int parse_rate_chunk(const char *arg, __u8 *nss, __u16 *mcs, unsigned int
- 				       &inss, &tab[0], &tab[1], &tab[2], &tab[3],
- 				       &tab[4], &tab[5], &tab[6], &tab[7], &tab[8],
- 				       &tab[9], &tab[10], &tab[11]);
-+		} else if (mode == NL80211_TXRATE_EHT) {
-+			count = sscanf(arg, "%u:%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u",
-+				       &inss, &tab[0], &tab[1], &tab[2], &tab[3],
-+				       &tab[4], &tab[5], &tab[6], &tab[7], &tab[8],
-+				       &tab[9], &tab[10], &tab[11], &tab[12], &tab[13],
-+				       &tab[14], &tab[15]);
- 		} else {
- 			count = sscanf(arg, "%u:%u,%u,%u,%u,%u,%u,%u,%u,%u,%u", &inss,
- 				       &tab[0], &tab[1], &tab[2], &tab[3], &tab[4],
-@@ -80,6 +89,11 @@ static int parse_he_chunk(const char *arg, __u8 *nss, __u16 *mcs)
- 	return parse_rate_chunk(arg, nss, mcs, NL80211_TXRATE_HE);
- }
- 
-+static int parse_eht_chunk(const char *arg, __u8 *nss, __u16 *mcs)
-+{
-+	return parse_rate_chunk(arg, nss, mcs, NL80211_TXRATE_EHT);
-+}
-+
- static int setup_vht(struct nl80211_txrate_vht *txrate_vht,
- 		     int argc, char **argv)
- {
-@@ -120,6 +134,26 @@ static int setup_he(struct nl80211_txrate_he *txrate_he,
- 	return 1;
- }
- 
-+static int setup_eht(struct nl80211_txrate_eht *txrate_eht,
-+		     int argc, char **argv)
-+{
-+	__u8 nss;
-+	__u16 mcs;
-+	int i;
-+
-+	memset(txrate_eht, 0, sizeof(*txrate_eht));
-+
-+	for (i = 0; i < argc; i++) {
-+		if (!parse_eht_chunk(argv[i], &nss, &mcs))
-+			return 0;
-+
-+		nss--;
-+		txrate_eht->mcs[nss] |= mcs;
-+	}
-+
-+	return 1;
-+}
-+
- #define HE_GI_STR_MAX	16
- #define HE_GI_08_STR "0.8"
- #define HE_GI_16_STR "1.6"
-@@ -139,6 +173,24 @@ static int parse_he_gi(char *he_gi)
- 	return -1;
- }
- 
-+#define EHT_GI_08_STR "0.8"
-+#define EHT_GI_16_STR "1.6"
-+#define EHT_GI_32_STR "3.2"
-+static int parse_eht_gi(char *eht_gi)
-+{
-+	if (eht_gi == NULL)
-+		return 0;
-+
-+	if (!strncmp(eht_gi, EHT_GI_08_STR, sizeof(EHT_GI_08_STR)))
-+		return NL80211_RATE_INFO_EHT_GI_0_8;
-+	if (!strncmp(eht_gi, EHT_GI_16_STR, sizeof(EHT_GI_16_STR)))
-+		return NL80211_RATE_INFO_EHT_GI_1_6;
-+	if (!strncmp(eht_gi, EHT_GI_32_STR, sizeof(EHT_GI_32_STR)))
-+		return NL80211_RATE_INFO_EHT_GI_3_2;
-+
-+	return -1;
-+}
-+
- #define VHT_ARGC_MAX	100
- 
- int set_bitrates(struct nl_msg *msg,
-@@ -156,6 +208,7 @@ int set_bitrates(struct nl_msg *msg,
- 	bool have_vht_mcs_24 = false, have_vht_mcs_5 = false;
- 	bool have_he_mcs_24 = false, have_he_mcs_5 = false;
- 	bool have_he_mcs_6 = false;
-+	bool have_eht_mcs_24 = false, have_eht_mcs_5 = false, have_eht_mcs_6 = false;
- 	uint8_t ht_mcs_24[77], ht_mcs_5[77];
- 	int n_ht_mcs_24 = 0, n_ht_mcs_5 = 0;
- 	struct nl80211_txrate_vht txrate_vht_24 = {};
-@@ -163,21 +216,32 @@ int set_bitrates(struct nl_msg *msg,
- 	struct nl80211_txrate_he txrate_he_24 = {};
- 	struct nl80211_txrate_he txrate_he_5 = {};
- 	struct nl80211_txrate_he txrate_he_6 = {};
-+	struct nl80211_txrate_eht txrate_eht_24 = {};
-+	struct nl80211_txrate_eht txrate_eht_5 = {};
-+	struct nl80211_txrate_eht txrate_eht_6 = {};
- 	uint8_t *mcs = NULL;
- 	int *n_mcs = NULL;
- 	char *vht_argv_5[VHT_ARGC_MAX] = {}; char *vht_argv_24[VHT_ARGC_MAX] = {};
- 	char *he_argv_5[VHT_ARGC_MAX] = {}; char *he_argv_24[VHT_ARGC_MAX] = {};
- 	char *he_argv_6[VHT_ARGC_MAX] = {};
--	char **vht_argv = NULL, **he_argv = NULL;
-+	char *eht_argv_24[VHT_ARGC_MAX] = {};
-+	char *eht_argv_5[VHT_ARGC_MAX] = {};
-+	char *eht_argv_6[VHT_ARGC_MAX] = {};
-+	char **vht_argv = NULL, **he_argv = NULL, **eht_argv = NULL;
- 	int vht_argc_5 = 0; int vht_argc_24 = 0;
- 	int he_argc_5 = 0; int he_argc_24 = 0;
- 	int he_argc_6 = 0;
--	int *vht_argc = NULL, *he_argc = NULL;
-+	int eht_argc_24 = 0, eht_argc_5 = 0, eht_argc_6 = 0;
-+	int *vht_argc = NULL, *he_argc = NULL, *eht_argc = NULL;
- 	int sgi_24 = 0, sgi_5 = 0, lgi_24 = 0, lgi_5 = 0;
- 	int has_he_gi_24 = 0, has_he_gi_5 = 0, has_he_ltf_24 = 0, has_he_ltf_5 = 0;
- 	int has_he_gi_6 = 0, has_he_ltf_6 = 0;
-+	int has_eht_gi_24 = 0, has_eht_gi_5 = 0, has_eht_gi_6 = 0;
-+	int has_eht_ltf_24 = 0, has_eht_ltf_5 = 0, has_eht_ltf_6 = 0;
- 	int he_gi = 0, he_ltf = 0;
- 	char *he_gi_argv = NULL;
-+	int eht_gi = 0, eht_ltf = 0;
-+	char *eht_gi_argv = NULL;
- 
- 	enum {
- 		S_NONE,
-@@ -185,9 +249,12 @@ int set_bitrates(struct nl_msg *msg,
- 		S_HT,
- 		S_VHT,
- 		S_HE,
-+		S_EHT,
- 		S_GI,
- 		S_HE_GI,
- 		S_HE_LTF,
-+		S_EHT_GI,
-+		S_EHT_LTF,
- 	} parser_state = S_NONE;
- 
- 	for (i = 0; i < argc; i++) {
-@@ -259,6 +326,27 @@ int set_bitrates(struct nl_msg *msg,
- 			he_argv = he_argv_6;
- 			he_argc = &he_argc_6;
- 			have_he_mcs_6 = true;
-+		} else if (strcmp(argv[i], "eht-mcs-2.4") == 0) {
-+			if (have_eht_mcs_24)
-+				return 1;
-+			parser_state = S_EHT;
-+			eht_argv = eht_argv_24;
-+			eht_argc = &eht_argc_24;
-+			have_eht_mcs_24 = true;
-+		} else if (strcmp(argv[i], "eht-mcs-5") == 0) {
-+			if (have_eht_mcs_5)
-+				return 1;
-+			parser_state = S_EHT;
-+			eht_argv = eht_argv_5;
-+			eht_argc = &eht_argc_5;
-+			have_eht_mcs_5 = true;
-+		} else if (strcmp(argv[i], "eht-mcs-6") == 0) {
-+			if (have_eht_mcs_6)
-+				return 1;
-+			parser_state = S_EHT;
-+			eht_argv = eht_argv_6;
-+			eht_argc = &eht_argc_6;
-+			have_eht_mcs_6 = true;
- 		} else if (strcmp(argv[i], "sgi-2.4") == 0) {
- 			sgi_24 = 1;
- 			parser_state = S_GI;
-@@ -289,6 +377,24 @@ int set_bitrates(struct nl_msg *msg,
- 		} else if (strcmp(argv[i], "he-ltf-6") == 0) {
- 			has_he_ltf_6 = 1;
- 			parser_state = S_HE_LTF;
-+		} else if (strcmp(argv[i], "eht-gi-2.4") == 0) {
-+			has_eht_gi_24 = 1;
-+			parser_state = S_EHT_GI;
-+		} else if (strcmp(argv[i], "eht-gi-5") == 0) {
-+			has_eht_gi_5 = 1;
-+			parser_state = S_EHT_GI;
-+		} else if (strcmp(argv[i], "eht-gi-6") == 0) {
-+			has_eht_gi_6 = 1;
-+			parser_state = S_EHT_GI;
-+		} else if (strcmp(argv[i], "eht-ltf-2.4") == 0) {
-+			has_eht_ltf_24 = 1;
-+			parser_state = S_EHT_LTF;
-+		} else if (strcmp(argv[i], "eht-ltf-5") == 0) {
-+			has_eht_ltf_5 = 1;
-+			parser_state = S_EHT_LTF;
-+		} else if (strcmp(argv[i], "eht-ltf-6") == 0) {
-+			has_eht_ltf_6 = 1;
-+			parser_state = S_EHT_LTF;
- 		} else switch (parser_state) {
- 		case S_LEGACY:
- 			tmpd = strtod(argv[i], &end);
-@@ -316,6 +422,11 @@ int set_bitrates(struct nl_msg *msg,
- 				return 1;
- 			he_argv[(*he_argc)++] = argv[i];
- 			break;
-+		case S_EHT:
-+			if (*eht_argc >= VHT_ARGC_MAX)
-+				return 1;
-+			eht_argv[(*eht_argc)++] = argv[i];
-+			break;
- 		case S_GI:
- 			break;
- 		case S_HE_GI:
-@@ -329,6 +440,19 @@ int set_bitrates(struct nl_msg *msg,
- 				return 1;
- 			he_ltf = he_ltf >> 1;
- 			break;
-+		case S_EHT_GI:
-+			eht_gi_argv = argv[i];
-+			break;
-+		case S_EHT_LTF:
-+			eht_ltf = strtol(argv[i], &end, 0);
-+			if (*end != '\0')
-+				return 1;
-+			if (eht_ltf < 1 || eht_ltf > 8)
-+				return 1;
-+			if (eht_ltf != 1 && eht_ltf % 2)
-+				return 1;
-+			eht_ltf >>= 1;
-+			break;
- 		default:
- 			if (attr != NL80211_ATTR_TX_RATES)
- 				goto next;
-@@ -360,6 +484,18 @@ next:
- 		if (!setup_he(&txrate_he_6, he_argc_6, he_argv_6))
- 			return -EINVAL;
- 
-+	if (have_eht_mcs_24)
-+		if (!setup_eht(&txrate_eht_24, eht_argc_24, eht_argv_24))
-+			return -EINVAL;
-+
-+	if (have_eht_mcs_5)
-+		if (!setup_eht(&txrate_eht_5, eht_argc_5, eht_argv_5))
-+			return -EINVAL;
-+
-+	if (have_eht_mcs_6)
-+		if (!setup_eht(&txrate_eht_6, eht_argc_6, eht_argv_6))
-+			return -EINVAL;
-+
- 	if (sgi_5 && lgi_5)
- 		return 1;
- 
-@@ -372,12 +508,19 @@ next:
- 			return 1;
- 	}
- 
-+	if (eht_gi_argv) {
-+		eht_gi = parse_eht_gi(eht_gi_argv);
-+		if (eht_gi < 0)
-+			return 1;
-+	}
-+
- 	nl_rates = nla_nest_start(msg, attr);
- 	if (!nl_rates)
- 		goto nla_put_failure;
- 
- 	if (have_legacy_24 || have_ht_mcs_24 || have_vht_mcs_24 || have_he_mcs_24 ||
--	    sgi_24 || lgi_24 || has_he_gi_24 || has_he_ltf_24) {
-+	    sgi_24 || lgi_24 || has_he_gi_24 || has_he_ltf_24 ||
-+	    have_eht_mcs_24 || has_eht_gi_24 || has_eht_ltf_24) {
- 		nl_band = nla_nest_start(msg, NL80211_BAND_2GHZ);
- 		if (!nl_band)
- 			goto nla_put_failure;
-@@ -390,6 +533,9 @@ next:
- 		if (have_he_mcs_24)
- 			nla_put(msg, NL80211_TXRATE_HE, sizeof(txrate_he_24),
- 				&txrate_he_24);
-+		if (have_eht_mcs_24)
-+			nla_put(msg, NL80211_TXRATE_EHT, sizeof(txrate_eht_24),
-+				&txrate_eht_24);
- 		if (sgi_24)
- 			nla_put_u8(msg, NL80211_TXRATE_GI, NL80211_TXRATE_FORCE_SGI);
- 		if (lgi_24)
-@@ -398,11 +544,16 @@ next:
- 			nla_put_u8(msg, NL80211_TXRATE_HE_GI, he_gi);
- 		if (has_he_ltf_24)
- 			nla_put_u8(msg, NL80211_TXRATE_HE_LTF, he_ltf);
-+		if (has_eht_gi_24)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_GI, eht_gi);
-+		if (has_eht_ltf_24)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_LTF, eht_ltf);
- 		nla_nest_end(msg, nl_band);
- 	}
- 
- 	if (have_legacy_5 || have_ht_mcs_5 || have_vht_mcs_5 || have_he_mcs_5 ||
--	    sgi_5 || lgi_5 || has_he_gi_5 || has_he_ltf_5) {
-+	    sgi_5 || lgi_5 || has_he_gi_5 || has_he_ltf_5 ||
-+	    have_eht_mcs_5 || has_eht_gi_5 || has_eht_ltf_5) {
- 		nl_band = nla_nest_start(msg, NL80211_BAND_5GHZ);
- 		if (!nl_band)
- 			goto nla_put_failure;
-@@ -415,6 +566,9 @@ next:
- 		if (have_he_mcs_5)
- 			nla_put(msg, NL80211_TXRATE_HE, sizeof(txrate_he_5),
- 				&txrate_he_5);
-+		if (have_eht_mcs_5)
-+			nla_put(msg, NL80211_TXRATE_EHT, sizeof(txrate_eht_5),
-+				&txrate_eht_5);
- 		if (sgi_5)
- 			nla_put_u8(msg, NL80211_TXRATE_GI, NL80211_TXRATE_FORCE_SGI);
- 		if (lgi_5)
-@@ -423,20 +577,32 @@ next:
- 			nla_put_u8(msg, NL80211_TXRATE_HE_GI, he_gi);
- 		if (has_he_ltf_5)
- 			nla_put_u8(msg, NL80211_TXRATE_HE_LTF, he_ltf);
-+		if (has_eht_gi_5)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_GI, eht_gi);
-+		if (has_eht_ltf_5)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_LTF, eht_ltf);
- 		nla_nest_end(msg, nl_band);
- 	}
- 
--	if (have_he_mcs_6 || has_he_gi_6 || has_he_ltf_6) {
-+	if (have_he_mcs_6 || has_he_gi_6 || has_he_ltf_6 ||
-+	    have_eht_mcs_6 || has_eht_gi_6 || has_eht_ltf_6) {
- 		nl_band = nla_nest_start(msg, NL80211_BAND_6GHZ);
- 		if (!nl_band)
- 			goto nla_put_failure;
- 		if (have_he_mcs_6)
- 			nla_put(msg, NL80211_TXRATE_HE, sizeof(txrate_he_6),
- 				&txrate_he_6);
-+		if (have_eht_mcs_6)
-+			nla_put(msg, NL80211_TXRATE_EHT, sizeof(txrate_eht_6),
-+				&txrate_eht_6);
- 		if (has_he_gi_6)
- 			nla_put_u8(msg, NL80211_TXRATE_HE_GI, he_gi);
- 		if (has_he_ltf_6)
- 			nla_put_u8(msg, NL80211_TXRATE_HE_LTF, he_ltf);
-+		if (has_eht_gi_6)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_GI, eht_gi);
-+		if (has_eht_ltf_6)
-+			nla_put_u8(msg, NL80211_TXRATE_EHT_LTF, eht_ltf);
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -459,14 +625,16 @@ static int handle_bitrates(struct nl80211_state *state,
- #define DESCR_HT " [ht-mcs-<2.4|5> <MCS index>*]"
- #define DESCR_VHT " [vht-mcs-<2.4|5> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*]"
- #define DESCR_HE " [he-mcs-<2.4|5|6> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*]"
--#define DESCR_GI " [sgi-2.4|lgi-2.4] [sgi-5|lgi-5] [he-gi-<2.4|5|6> <0.8|1.6|3.2>]"
--#define DESCR_LTF " [he-ltf-<2.4|5|6> <1|2|4>]"
-+#define DESCR_EHT " [eht-mcs-<2.4|5|6> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*]"
-+#define DESCR_GI " [sgi-2.4|lgi-2.4] [sgi-5|lgi-5] [he-gi-<2.4|5|6> <0.8|1.6|3.2>] [eht-gi-<2.4|5|6> <0.8|1.6|3.2>]"
-+#define DESCR_LTF " [he-ltf-<2.4|5|6> <1|2|4>] [eht-ltf-<2.4|5|6> <1|2|4|6|8>]"
- 
- #define DESCR \
- 	DESCR_LEGACY \
- 	DESCR_HT \
- 	DESCR_VHT \
- 	DESCR_HE \
-+	DESCR_EHT \
- 	DESCR_GI \
- 	DESCR_LTF \
- 	/* end of DESCR */
+[auto build test WARNING on 8620dfbed395fc72f968dfd07f1b50eba352bae6]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Lorenzo-Bianconi/wifi-mt76-Move-Q_READ-Q_WRITE-definitions-in-dma-h/20250910-230350
+base:   8620dfbed395fc72f968dfd07f1b50eba352bae6
+patch link:    https://lore.kernel.org/r/20250910-mt76-npu-devel-v1-5-dbde4a37b9c0%40kernel.org
+patch subject: [PATCH mt76 5/5] wifi: mt76: mt7996: Add NPU offload support to MT7996 driver
+config: loongarch-allyesconfig (https://download.01.org/0day-ci/archive/20250912/202509122047.IrKGvn3P-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 21857ae337e0892a5522b6e7337899caa61de2a6)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250912/202509122047.IrKGvn3P-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202509122047.IrKGvn3P-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   In file included from <built-in>:3:
+   In file included from include/linux/compiler_types.h:171:
+   include/linux/compiler-clang.h:28:9: warning: '__SANITIZE_ADDRESS__' macro redefined [-Wmacro-redefined]
+      28 | #define __SANITIZE_ADDRESS__
+         |         ^
+   <built-in>:371:9: note: previous definition is here
+     371 | #define __SANITIZE_ADDRESS__ 1
+         |         ^
+>> drivers/net/wireless/mediatek/mt76/mt7996/main.c:2261:2: warning: use of a '#elifdef' directive is a C23 extension [-Wc23-extensions]
+    2261 | #elifdef CONFIG_MT7996_NPU
+         |  ^
+   2 warnings generated.
+
+
+vim +2261 drivers/net/wireless/mediatek/mt76/mt7996/main.c
+
+  2205	
+  2206	const struct ieee80211_ops mt7996_ops = {
+  2207		.add_chanctx = mt76_add_chanctx,
+  2208		.remove_chanctx = mt76_remove_chanctx,
+  2209		.change_chanctx = mt76_change_chanctx,
+  2210		.assign_vif_chanctx = mt76_assign_vif_chanctx,
+  2211		.unassign_vif_chanctx = mt76_unassign_vif_chanctx,
+  2212		.switch_vif_chanctx = mt76_switch_vif_chanctx,
+  2213		.tx = mt7996_tx,
+  2214		.start = mt7996_start,
+  2215		.stop = mt7996_stop,
+  2216		.add_interface = mt7996_add_interface,
+  2217		.remove_interface = mt7996_remove_interface,
+  2218		.config = mt7996_config,
+  2219		.conf_tx = mt7996_conf_tx,
+  2220		.configure_filter = mt7996_configure_filter,
+  2221		.vif_cfg_changed = mt7996_vif_cfg_changed,
+  2222		.link_info_changed = mt7996_link_info_changed,
+  2223		.sta_state = mt7996_sta_state,
+  2224		.sta_pre_rcu_remove = mt76_sta_pre_rcu_remove,
+  2225		.link_sta_rc_update = mt7996_link_sta_rc_update,
+  2226		.set_key = mt7996_set_key,
+  2227		.ampdu_action = mt7996_ampdu_action,
+  2228		.set_rts_threshold = mt7996_set_rts_threshold,
+  2229		.wake_tx_queue = mt76_wake_tx_queue,
+  2230		.hw_scan = mt76_hw_scan,
+  2231		.cancel_hw_scan = mt76_cancel_hw_scan,
+  2232		.remain_on_channel = mt76_remain_on_channel,
+  2233		.cancel_remain_on_channel = mt76_cancel_remain_on_channel,
+  2234		.release_buffered_frames = mt76_release_buffered_frames,
+  2235		.get_txpower = mt7996_get_txpower,
+  2236		.channel_switch_beacon = mt7996_channel_switch_beacon,
+  2237		.get_stats = mt7996_get_stats,
+  2238		.get_et_sset_count = mt7996_get_et_sset_count,
+  2239		.get_et_stats = mt7996_get_et_stats,
+  2240		.get_et_strings = mt7996_get_et_strings,
+  2241		.get_tsf = mt7996_get_tsf,
+  2242		.set_tsf = mt7996_set_tsf,
+  2243		.offset_tsf = mt7996_offset_tsf,
+  2244		.get_survey = mt76_get_survey,
+  2245		.get_antenna = mt76_get_antenna,
+  2246		.set_antenna = mt7996_set_antenna,
+  2247		.set_bitrate_mask = mt7996_set_bitrate_mask,
+  2248		.set_coverage_class = mt7996_set_coverage_class,
+  2249		.sta_statistics = mt7996_sta_statistics,
+  2250		.sta_set_4addr = mt7996_sta_set_4addr,
+  2251		.sta_set_decap_offload = mt7996_sta_set_decap_offload,
+  2252		.add_twt_setup = mt7996_mac_add_twt_setup,
+  2253		.twt_teardown_request = mt7996_twt_teardown_request,
+  2254	#ifdef CONFIG_MAC80211_DEBUGFS
+  2255		.sta_add_debugfs = mt7996_sta_add_debugfs,
+  2256	#endif
+  2257		.set_radar_background = mt7996_set_radar_background,
+  2258		.net_fill_forward_path = mt7996_net_fill_forward_path,
+  2259	#ifdef CONFIG_NET_MEDIATEK_SOC_WED
+  2260		.net_setup_tc = mt76_wed_net_setup_tc,
+> 2261	#elifdef CONFIG_MT7996_NPU
+
 -- 
-2.39.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
