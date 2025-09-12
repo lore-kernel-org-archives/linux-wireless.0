@@ -1,50 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 511CD28507B
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2025 09:54:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F905280035
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Sep 2025 09:54:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757670887; cv=none; b=dwkuFDZVE4WIzfsW8soc/pAD77GAxXBKH8eqcUXN08/4Sho3jWlgF2ipDnp2aSItjJ9K8GnqZ9vLvK7E3lMAIlmtj4hUvHbP8o+TNaU2SrvqUoJhchPv2kVgFabkI/xR1pmHuoxv8v58Qa7GxgbpeZvFSvaSiU9HHZINeBlGdDo=
+	t=1757670887; cv=none; b=V08jn2QHOIpuCvXMv7zqWVI08giipLOI4aNamutc2kKkVg6A8BEejvxk6rXetwTRDol9wNaifFV6d09d5uktJh0mA4AUJucX84Mpcv8S+zdGmVCDgiSPdxKRgDPUdGo+ZOE/QSUdu81TtSIdUHdOlMMtuSUls+WUSZhFNhylY4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757670887; c=relaxed/simple;
-	bh=PJvbPc4TJGZNNOJ4llsZPFN3tCtw4Cphg67or+nmwIM=;
+	bh=O6w+zdm0kpcd4g0brYBy2hvGPnf1RU+6ceAO0/TZ8jA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hZp08jITGNVULhRRsXI/cGKdXlWmH09jg8nstcliQ7LYT2/28+NIkikxX4px1gEFi/Tz68rtFg6ELYMNoTc0FTkGQYf2uwuxO+jTs9muuDUf7m8etfL07D3XquAoN3UTsQ6nLCi9RcEeiYmiG9O4Q4k3sqnh1IU5goLenLoeJl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=IhyYO6VP; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=WedbZ1knTwgxcf2tsYGLvFz/QLRylLmF+Y1tSuvTGLvq2B7Pd8rOYEfyjUMbVfEnLNpZSrYbGpgavbtcavfD5IxAkI1F2U9nflok/e0hnIy8VVvkBOZzmkZDhXogOILkNbvHZ5w6xtSG6BjIGK3kT9/26s3thtB21JfPvvN19OQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=LWBP4qvX; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="IhyYO6VP"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58C9sYWo9495135, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="LWBP4qvX"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58C9sZttD495143, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1757670874; bh=mVdrt5iIIWYFNw/A6UchDI643aOzwb7x6sI9folz4ek=;
+	t=1757670875; bh=Vu4cds/Lv6MZWTrzeJlbaYvNnatRf1Hfgv9RGxBj/t0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=IhyYO6VPf6vH2cBGFGb3/mIPAHZwa0IeGOOcZvZor9X4jGEn6c2R2annaApqY8nCQ
-	 k7MLZnSZbFBQplbhk30lKhKwKKHviQD3vNDwIAC+2lpasHwNoKg/d87T1PYNiLG+mG
-	 RWDDmy3SjwTLdinePN0B/73N19Xgn+cjiy8NZ2CKkAulY7W/PIQGI+sO932MGJbCnN
-	 VNz7BV0sEIOdZ3gd2Z4EVfY0I5zfEHy9BUlHJFDzyGIG2JHv/+s5ybS8KAM7dB9Z1s
-	 GEzC5/B3lbLhDFJC84yNIha7+wQ4RwMtkhzg6XKDpVVhHfKPJBk/fVbTEDM3eqULPL
-	 ZOnZ5GXZnW/KA==
+	b=LWBP4qvXEOpLuQGhgC5U6wt85cpdBneZV3DEvqXplMHTe5cluY51MN5Y8OoV7jNXZ
+	 VZLIdgsnlF3VBVTNcnCroePZima67n3aJbAq/yhKgds9QQhGMPGSr4TaoWrhS6SkPZ
+	 0ZBBmH1g3bxLxYjoTp3D7KJCuB5j4knoDaqgIUoD3wMvW72HneDgAXqMGgBBKghAQL
+	 dVrdztJGyE/9To/5xJEnCAz0i4ddT9LxCPmr5nPbLVEJhg0xNo7BZBr8DZfbdCwPmI
+	 RlJz6xxBeoJsxJszg7Mghrai35US52J+bU7FWPxFR/lHoiCDByYeLN4jfaaNoOV3yb
+	 qoccjVy3BUmDg==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58C9sYWo9495135
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58C9sZttD495143
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Sep 2025 17:54:34 +0800
+	Fri, 12 Sep 2025 17:54:35 +0800
 Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Fri, 12 Sep 2025 17:54:34 +0800
+ 15.2.1544.27; Fri, 12 Sep 2025 17:54:35 +0800
 Received: from localhost.localhost (172.21.69.104) by RTEXMBS03.realtek.com.tw
  (172.21.6.96) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.35; Fri, 12 Sep
- 2025 17:54:34 +0800
+ 2025 17:54:35 +0800
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/5] iw: update nl80211.h
-Date: Fri, 12 Sep 2025 17:54:19 +0800
-Message-ID: <20250912095423.27266-2-kevin_yang@realtek.com>
+Subject: [PATCH 5/5] iw: bitrate: support link id
+Date: Fri, 12 Sep 2025 17:54:23 +0800
+Message-ID: <20250912095423.27266-6-kevin_yang@realtek.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20250912095423.27266-1-kevin_yang@realtek.com>
 References: <20250912095423.27266-1-kevin_yang@realtek.com>
@@ -63,136 +63,162 @@ X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
+Since nl80211 requires valid link id (NL80211_FLAG_MLO_VALID_LINK_ID),
+support link-id field for MLD. For non-MLD, just as before, no need to
+assign link-id field.
+
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 ---
- nl80211.h | 51 ++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 48 insertions(+), 3 deletions(-)
+ bitrate.c   | 29 +++++++++++++++++++++++++++--
+ interface.c | 32 +++++++++++++++++++++++++++-----
+ iw.h        |  2 +-
+ 3 files changed, 55 insertions(+), 8 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index d1a14f2892d9..aed0b4c5d5e8 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -1943,8 +1943,9 @@ enum nl80211_commands {
-  *	The driver must also specify support for this with the extended
-  *	features NL80211_EXT_FEATURE_BEACON_RATE_LEGACY,
-  *	NL80211_EXT_FEATURE_BEACON_RATE_HT,
-- *	NL80211_EXT_FEATURE_BEACON_RATE_VHT and
-- *	NL80211_EXT_FEATURE_BEACON_RATE_HE.
-+ *	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
-+ *	NL80211_EXT_FEATURE_BEACON_RATE_HE and
-+ *	NL80211_EXT_FEATURE_BEACON_RATE_EHT.
-  *
-  * @NL80211_ATTR_FRAME_MATCH: A binary attribute which typically must contain
-  *	at least one byte, currently used with @NL80211_CMD_REGISTER_FRAME.
-@@ -2283,7 +2284,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_PEER_AID: Association ID for the peer TDLS station (u16).
-  *	This is similar to @NL80211_ATTR_STA_AID but with a difference of being
-  *	allowed to be used with the first @NL80211_CMD_SET_STATION command to
-- *	update a TDLS peer STA entry.
-+ *	update a TDLS peer STA entry. For S1G interfaces, this is limited to
-+ *	1600 for the current mac80211 implementation.
-  *
-  * @NL80211_ATTR_COALESCE_RULE: Coalesce rule information.
-  *
-@@ -2928,6 +2930,12 @@ enum nl80211_commands {
-  *	required alongside this attribute. Refer to
-  *	@enum nl80211_s1g_short_beacon_attrs for the attribute definitions.
-  *
-+ * @NL80211_ATTR_BSS_PARAM: nested attribute used with %NL80211_CMD_GET_WIPHY
-+ *	which indicates which BSS parameters can be modified. The attribute can
-+ *	also be used as flag attribute by user-space in %NL80211_CMD_SET_BSS to
-+ *	indicate that it wants strict checking on the BSS parameters to be
-+ *	modified.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -3489,6 +3497,7 @@ enum nl80211_attrs {
+diff --git a/bitrate.c b/bitrate.c
+index 16f118cce4ec..78d399d227e2 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -195,7 +195,7 @@ static int parse_eht_gi(char *eht_gi)
  
- 	NL80211_ATTR_S1G_LONG_BEACON_PERIOD,
- 	NL80211_ATTR_S1G_SHORT_BEACON,
-+	NL80211_ATTR_BSS_PARAM,
+ int set_bitrates(struct nl_msg *msg,
+ 		 int argc, char **argv,
+-		 enum nl80211_attrs attr)
++		 enum nl80211_attrs attr, int *link_id)
+ {
+ 	struct nlattr *nl_rates, *nl_band;
+ 	int i, ret = 0;
+@@ -242,6 +242,7 @@ int set_bitrates(struct nl_msg *msg,
+ 	char *he_gi_argv = NULL;
+ 	int eht_gi = 0, eht_ltf = 0;
+ 	char *eht_gi_argv = NULL;
++	bool has_link_id = false;
  
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -3735,6 +3744,22 @@ enum nl80211_eht_gi {
- 	NL80211_RATE_INFO_EHT_GI_3_2,
- };
- 
-+/**
-+ * enum nl80211_eht_ltf - EHT long training field
-+ * @NL80211_RATE_INFO_EHT_1XLTF: 3.2 usec
-+ * @NL80211_RATE_INFO_EHT_2XLTF: 6.4 usec
-+ * @NL80211_RATE_INFO_EHT_4XLTF: 12.8 usec
-+ * @NL80211_RATE_INFO_EHT_6XLTF: 19.2 usec
-+ * @NL80211_RATE_INFO_EHT_8XLTF: 25.6 usec
-+ */
-+enum nl80211_eht_ltf {
-+	NL80211_RATE_INFO_EHT_1XLTF,
-+	NL80211_RATE_INFO_EHT_2XLTF,
-+	NL80211_RATE_INFO_EHT_4XLTF,
-+	NL80211_RATE_INFO_EHT_6XLTF,
-+	NL80211_RATE_INFO_EHT_8XLTF,
-+};
+ 	enum {
+ 		S_NONE,
+@@ -250,6 +251,7 @@ int set_bitrates(struct nl_msg *msg,
+ 		S_VHT,
+ 		S_HE,
+ 		S_EHT,
++		S_LINK_ID,
+ 		S_GI,
+ 		S_HE_GI,
+ 		S_HE_LTF,
+@@ -347,6 +349,11 @@ int set_bitrates(struct nl_msg *msg,
+ 			eht_argv = eht_argv_6;
+ 			eht_argc = &eht_argc_6;
+ 			have_eht_mcs_6 = true;
++		} else if (strcmp(argv[i], "link-id") == 0) {
++			if (has_link_id)
++				return 1;
++			parser_state = S_LINK_ID;
++			has_link_id = true;
+ 		} else if (strcmp(argv[i], "sgi-2.4") == 0) {
+ 			sgi_24 = 1;
+ 			parser_state = S_GI;
+@@ -427,6 +434,11 @@ int set_bitrates(struct nl_msg *msg,
+ 				return 1;
+ 			eht_argv[(*eht_argc)++] = argv[i];
+ 			break;
++		case S_LINK_ID:
++			*link_id = strtol(argv[i], &end, 0);
++			if (*end != '\0')
++				return 1;
++			break;
+ 		case S_GI:
+ 			break;
+ 		case S_HE_GI:
+@@ -618,7 +630,20 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			   int argc, char **argv,
+ 			   enum id_input id)
+ {
+-	return set_bitrates(msg, argc, argv, NL80211_ATTR_TX_RATES);
++	int link_id = -1;
++	int ret;
 +
- /**
-  * enum nl80211_eht_ru_alloc - EHT RU allocation values
-  * @NL80211_RATE_INFO_EHT_RU_ALLOC_26: 26-tone RU allocation
-@@ -5481,6 +5506,10 @@ enum nl80211_key_attributes {
-  *	see &struct nl80211_txrate_he
-  * @NL80211_TXRATE_HE_GI: configure HE GI, 0.8us, 1.6us and 3.2us.
-  * @NL80211_TXRATE_HE_LTF: configure HE LTF, 1XLTF, 2XLTF and 4XLTF.
-+ * @NL80211_TXRATE_EHT: EHT rates allowed for TX rate selection,
-+ *	see &struct nl80211_txrate_eht
-+ * @NL80211_TXRATE_EHT_GI: configure EHT GI, (u8, see &enum nl80211_eht_gi)
-+ * @NL80211_TXRATE_EHT_LTF: configure EHT LTF, (u8, see &enum nl80211_eht_ltf)
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-  */
-@@ -5493,6 +5522,9 @@ enum nl80211_tx_rate_attributes {
- 	NL80211_TXRATE_HE,
- 	NL80211_TXRATE_HE_GI,
- 	NL80211_TXRATE_HE_LTF,
-+	NL80211_TXRATE_EHT,
-+	NL80211_TXRATE_EHT_GI,
-+	NL80211_TXRATE_EHT_LTF,
- 
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
-@@ -5525,6 +5557,15 @@ enum nl80211_txrate_gi {
- 	NL80211_TXRATE_FORCE_LGI,
- };
- 
-+#define NL80211_EHT_NSS_MAX             16
-+/**
-+ * struct nl80211_txrate_eht - EHT MCS/NSS txrate bitmap
-+ * @mcs: MCS bitmap table for each NSS (array index 0 for 1 stream, etc.)
-+ */
-+struct nl80211_txrate_eht {
-+	__u16 mcs[NL80211_EHT_NSS_MAX];
-+};
++	ret = set_bitrates(msg, argc, argv, NL80211_ATTR_TX_RATES, &link_id);
++	if (ret)
++		return ret;
 +
- /**
-  * enum nl80211_band - Frequency band
-  * @NL80211_BAND_2GHZ: 2.4 GHz ISM band
-@@ -6649,6 +6690,9 @@ enum nl80211_feature_flags {
-  *	(signaling and payload protected) A-MSDUs and this shall be advertised
-  *	in the RSNXE.
-  *
-+ * @NL80211_EXT_FEATURE_BEACON_RATE_EHT: Driver supports beacon rate
-+ *	configuration (AP/mesh) with EHT rates.
-+ *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
-@@ -6724,6 +6768,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_OWE_OFFLOAD_AP,
- 	NL80211_EXT_FEATURE_DFS_CONCURRENT,
- 	NL80211_EXT_FEATURE_SPP_AMSDU_SUPPORT,
-+	NL80211_EXT_FEATURE_BEACON_RATE_EHT,
++	if (link_id >= 0)
++		NLA_PUT_U8(msg, NL80211_ATTR_MLO_LINK_ID, link_id);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
+ }
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
+ #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
+diff --git a/interface.c b/interface.c
+index 65a4006963e5..0f1e9647f0e4 100644
+--- a/interface.c
++++ b/interface.c
+@@ -796,10 +796,11 @@ static int toggle_tid_param(const char *argv0, const char *argv1,
+ 	return -ENOBUFS;
+ }
+ 
+-static int handle_tid_config(struct nl80211_state *state,
+-			     struct nl_msg *msg,
+-			     int argc, char **argv,
+-			     enum id_input id)
++static int __handle_tid_config(struct nl80211_state *state,
++			       struct nl_msg *msg,
++			       int argc, char **argv,
++			       enum id_input id,
++			       int *link_id)
+ {
+ 	struct nlattr *tids_array = NULL;
+ 	struct nlattr *tids_entry = NULL;
+@@ -989,7 +990,7 @@ static int handle_tid_config(struct nl80211_state *state,
+ 				if (txrate_type != NL80211_TX_RATE_AUTOMATIC) {
+ 					attr = NL80211_TID_CONFIG_ATTR_TX_RATE;
+ 					ret = set_bitrates(msg, argc, argv,
+-							   attr);
++							   attr, link_id);
+ 					if (ret < 2)
+ 						return 1;
+ 
+@@ -1020,6 +1021,27 @@ nla_put_failure:
+ 	return -ENOBUFS;
+ }
+ 
++static int handle_tid_config(struct nl80211_state *state,
++			     struct nl_msg *msg,
++			     int argc, char **argv,
++			     enum id_input id)
++{
++	int link_id = -1;
++	int ret;
++
++	ret = __handle_tid_config(state, msg, argc, argv, id, &link_id);
++	if (ret)
++		return ret;
++
++	if (link_id >= 0)
++		NLA_PUT_U8(msg, NL80211_ATTR_MLO_LINK_ID, link_id);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
+ COMMAND(set, tidconf, "[peer <MAC address>] tids <mask> [override] [sretry <num>] [lretry <num>] "
+ 	"[ampdu [on|off]] [amsdu [on|off]] [noack [on|off]] [rtscts [on|off]]"
+ 	"[bitrates <type [auto|fixed|limit]> [legacy-<2.4|5> <legacy rate in Mbps>*] [ht-mcs-<2.4|5> <MCS index>*]"
+diff --git a/iw.h b/iw.h
+index 145b058d86ba..5c4ab6b0b38e 100644
+--- a/iw.h
++++ b/iw.h
+@@ -302,7 +302,7 @@ void nan_bf(uint8_t idx, uint8_t *bf, uint16_t bf_len, const uint8_t *buf,
+ char *hex2bin(const char *hex, char *buf);
+ 
+ int set_bitrates(struct nl_msg *msg, int argc, char **argv,
+-		 enum nl80211_attrs attr);
++		 enum nl80211_attrs attr, int *link_id);
+ 
+ int calc_s1g_ch_center_freq(__u8 ch_index, __u8 s1g_oper_class);
+ 
 -- 
 2.39.0
 
