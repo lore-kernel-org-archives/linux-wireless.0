@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A35E82E9EB9
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2025 07:59:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD5672E9EB1
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2025 07:59:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757923161; cv=none; b=GyM1//MtsBOl1YLpUixWXdcs/nmqDviYjEgyk2HMQaRJWGC4fgVqAl/xjxO5AWuOgdSWW5YFlRJwbJ7X7MHETsViyaNEpiavEFs3pYnA/v5ymL79KSp2dhOFeYRTiSOyV/3Oh/1dglSlUGKq/WpMxMZLyQXl+ZQMEmhtZ0GCC/k=
+	t=1757923162; cv=none; b=BlRydVNT9PSCgsx0ejX7XXL0ChgVZ6kWNx7Eg64RsmdQcvuZFNywif2hcjzMoEQYrLw9IMtrviZaMcUFrO70k7Y+JcR/7ILNV8gOR3W5FP5mI7KB1H06xt5Sc2IU9Bs6KnFrcf0V9wNcI5ZyD7oVjaYNGAodW4MR87lvMa0HCtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757923161; c=relaxed/simple;
-	bh=LAXdAg4+gp9k3/XQfuwAuHy/XcerXNjcIzzwxQuRV1A=;
+	s=arc-20240116; t=1757923162; c=relaxed/simple;
+	bh=P3zRRv7p8ejrZhrj3DBEeiG7Qs6qjcMgzAH01oK1Yzg=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZvMmrm1zyjzy7Tj/PgufyLV8P0o+0eSDvhqQW5L9sO2bwmCohZ6U0+7/ojqv3xpLMoZ1adRV2EM2FIR5TP3f0+skH2Mi+Ks1ODdV+QGLjQuWcb5/0UaTQBPf4A+bDbIDDit/jDDqzJT8sY5hAgHrHHJ02LK+lzKcEn6VlGecI2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=IXuNhiLf; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=kZnLd3tF5zktEsZsNn/iLhgu+vRYj/v9KddTkdRR9ZTtTY/PaU39Lk49c+0qrGzktTC9YH+Hmi5n2h4HytsOmW3B8OuAQyFEydxYuC45EAWTQOgrzIgOqhITVORKtjH0rtWc1zmSFXvVvN9J+mO0taNCNZTl6SGJ8EgNuRT9AEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=U0h4yRl6; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="IXuNhiLf"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="U0h4yRl6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=sawvS4NBledFk0v5NafD8k4N/FJpliF/uRht5qivOQA=; b=IXuNhiLfwK1U3A71EfCKcskrJ2
-	CDM2E0P7EhVieD6PSxmJ/YypzCaGmNf8xfXNETK271bZe3Zlzphunt7NiBaLtEotjEXyx6doOcany
-	mHGKaKRGwOgPQdJBIbEMN9Cpi4EQG/N/Bjv0CKiTZAPbhhGhQfSrlsCphsl4rzqrSXHQ=;
+	bh=5Nfo2Ilu3k3chGNEYf6OUmpjN4kAAxJHfUfHHXkaqB4=; b=U0h4yRl6ZV26PPhBrpp2LMdlRa
+	vkR/MnrDHeoqmj0twKDrOgDG8nbGgamgkJcFS90K2uTgMc3XF5zvdfG+RRmFJz0GRLuU5T4lledhJ
+	uVM8vBaHpJo2/wQq/xSXADWkLcOB4lmq/dTGIZ5zmqe+2n8vq1l22UajLcFxIBPHpxDk=;
 Received: from p5b206816.dip0.t-ipconnect.de ([91.32.104.22] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1uy47D-0078GN-0r
+	id 1uy47E-0078GN-1D
 	for linux-wireless@vger.kernel.org;
-	Mon, 15 Sep 2025 09:59:11 +0200
+	Mon, 15 Sep 2025 09:59:12 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 02/15] wifi: mt76: mt7996: improve hardware restart reliability
-Date: Mon, 15 Sep 2025 09:58:57 +0200
-Message-ID: <20250915075910.47558-2-nbd@nbd.name>
+Subject: [PATCH mt76 08/15] wifi: mt76: mt7996: fix updating beacon protection with beacons enabled
+Date: Mon, 15 Sep 2025 09:59:03 +0200
+Message-ID: <20250915075910.47558-8-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250915075910.47558-1-nbd@nbd.name>
 References: <20250915075910.47558-1-nbd@nbd.name>
@@ -48,204 +48,156 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Port latest version of similar changes from mt7915:
-- use reconfig_complete to restart mac_work / queues
-- clear wcid and vif mask to avoid leak
-- fix sta poll list corruption
-- reset station links
-- reset interface links
-- clear rro list
+Disable and re-enable beacon after beacon protection key change, in order
+to fully apply the changes.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7996/mac.c   | 86 +++++++++++++++++--
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 25 ++++--
- .../wireless/mediatek/mt76/mt7996/mt7996.h    |  2 +
- 3 files changed, 100 insertions(+), 13 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mac.c   |  3 +-
+ .../net/wireless/mediatek/mt76/mt7996/main.c  | 35 ++++++++++++-------
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   |  3 +-
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |  2 +-
+ 4 files changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index f6c725f52c4a..fd57569a7da7 100644
+index fd57569a7da7..289f69cc2bdf 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -2355,11 +2355,59 @@ mt7996_mac_restart(struct mt7996_dev *dev)
- 	return ret;
- }
- 
-+static void
-+mt7996_mac_reset_sta_iter(void *data, struct ieee80211_sta *sta)
-+{
-+	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
-+	struct mt7996_dev *dev = data;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(msta->link); i++) {
-+		struct mt7996_sta_link *msta_link = NULL;
-+
-+		msta_link = rcu_replace_pointer(msta->link[i], msta_link,
-+						lockdep_is_held(&dev->mt76.mutex));
-+		if (!msta_link)
-+			continue;
-+
-+		mt7996_mac_sta_deinit_link(dev, msta_link);
-+
-+		if (msta->deflink_id == i) {
-+			msta->deflink_id = IEEE80211_LINK_UNSPECIFIED;
-+			continue;
-+		}
-+
-+		kfree_rcu(msta_link, rcu_head);
-+	}
-+}
-+
-+static void
-+mt7996_mac_reset_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct mt76_vif_link *mlink = (struct mt76_vif_link *)vif->drv_priv;
-+	struct mt76_vif_data *mvif = mlink->mvif;
-+	struct mt7996_dev *dev = data;
-+	int i;
-+
-+	rcu_read_lock();
-+	for (i = 0; i < ARRAY_SIZE(mvif->link); i++) {
-+
-+		mlink = mt76_dereference(mvif->link[i], &dev->mt76);
-+		if (!mlink || mlink == (struct mt76_vif_link *)vif->drv_priv)
-+			continue;
-+
-+		rcu_assign_pointer(mvif->link[i], NULL);
-+		kfree_rcu(mlink, rcu_head);
-+	}
-+	rcu_read_unlock();
-+}
-+
- static void
- mt7996_mac_full_reset(struct mt7996_dev *dev)
- {
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 	struct mt7996_phy *phy;
-+	LIST_HEAD(list);
- 	int i;
- 
- 	dev->recovery.hw_full_reset = true;
-@@ -2376,18 +2424,42 @@ mt7996_mac_full_reset(struct mt7996_dev *dev)
- 		if (!mt7996_mac_restart(dev))
- 			break;
- 	}
--	mutex_unlock(&dev->mt76.mutex);
- 
- 	if (i == 10)
- 		dev_err(dev->mt76.dev, "chip full reset failed\n");
- 
--	ieee80211_restart_hw(mt76_hw(dev));
--	ieee80211_wake_queues(mt76_hw(dev));
--
--	dev->recovery.hw_full_reset = false;
- 	mt7996_for_each_phy(dev, phy)
--		ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
--					     MT7996_WATCHDOG_TIME);
-+		phy->omac_mask = 0;
-+
-+	ieee80211_iterate_stations_atomic(hw, mt7996_mac_reset_sta_iter, dev);
-+	ieee80211_iterate_active_interfaces_atomic(hw,
-+						   IEEE80211_IFACE_SKIP_SDATA_NOT_IN_DRIVER,
-+						   mt7996_mac_reset_vif_iter, dev);
-+	mt76_reset_device(&dev->mt76);
-+
-+	INIT_LIST_HEAD(&dev->sta_rc_list);
-+	INIT_LIST_HEAD(&dev->twt_list);
-+
-+	spin_lock_bh(&dev->wed_rro.lock);
-+	list_splice_init(&dev->wed_rro.poll_list, &list);
-+	spin_unlock_bh(&dev->wed_rro.lock);
-+
-+	while (!list_empty(&list)) {
-+		struct mt7996_wed_rro_session_id *e;
-+
-+		e = list_first_entry(&list, struct mt7996_wed_rro_session_id,
-+				     list);
-+		list_del_init(&e->list);
-+		kfree(e);
-+	}
-+
-+	i = mt76_wcid_alloc(dev->mt76.wcid_mask, MT7996_WTBL_STA);
-+	dev->mt76.global_wcid.idx = i;
-+	dev->recovery.hw_full_reset = false;
-+
-+	mutex_unlock(&dev->mt76.mutex);
-+
-+	ieee80211_restart_hw(mt76_hw(dev));
- }
- 
- void mt7996_mac_reset_work(struct work_struct *work)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 6adb7f7bdd6f..8fbe60723071 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -986,13 +986,9 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
- 	return 0;
- }
- 
--static void
--mt7996_mac_sta_deinit_link(struct mt7996_dev *dev,
--			   struct mt7996_sta_link *msta_link)
-+void mt7996_mac_sta_deinit_link(struct mt7996_dev *dev,
-+				struct mt7996_sta_link *msta_link)
- {
--	mt7996_mac_wtbl_update(dev, msta_link->wcid.idx,
--			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
--
- 	spin_lock_bh(&dev->mt76.sta_poll_lock);
- 	if (!list_empty(&msta_link->wcid.poll_list))
- 		list_del_init(&msta_link->wcid.poll_list);
-@@ -1022,6 +1018,9 @@ mt7996_mac_sta_remove_links(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 		if (!msta_link)
+@@ -2176,7 +2176,8 @@ mt7996_update_vif_beacon(void *priv, u8 *mac, struct ieee80211_vif *vif)
+ 		if (!link || link->phy != phy)
  			continue;
  
-+		mt7996_mac_wtbl_update(dev, msta_link->wcid.idx,
-+				       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
-+
- 		mt7996_mac_sta_deinit_link(dev, msta_link);
- 		link = mt7996_vif_link(dev, vif, link_id);
- 		if (!link)
-@@ -2206,6 +2205,19 @@ mt7996_change_vif_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return 0;
+-		mt7996_mcu_add_beacon(dev->mt76.hw, vif, link_conf);
++		mt7996_mcu_add_beacon(dev->mt76.hw, vif, link_conf,
++				      link_conf->enable_beacon);
+ 	}
  }
  
-+static void
-+mt7996_reconfig_complete(struct ieee80211_hw *hw,
-+			 enum ieee80211_reconfig_type reconfig_type)
-+{
-+	struct mt7996_dev *dev = mt7996_hw_dev(hw);
-+	struct mt7996_phy *phy;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index d706b8bb244e..581314368c5b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -185,10 +185,13 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		  unsigned int link_id, struct ieee80211_key_conf *key)
+ {
+ 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	struct ieee80211_bss_conf *link_conf;
+ 	struct mt7996_sta_link *msta_link;
+ 	struct mt7996_vif_link *link;
+ 	int idx = key->keyidx;
+ 	u8 *wcid_keyidx;
++	bool is_bigtk;
++	int err;
+ 
+ 	link = mt7996_vif_link(dev, vif, link_id);
+ 	if (!link)
+@@ -213,12 +216,13 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	}
+ 	wcid_keyidx = &msta_link->wcid.hw_key_idx;
+ 
++	is_bigtk = key->keyidx == 6 || key->keyidx == 7;
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
+-		if (key->keyidx == 6 || key->keyidx == 7) {
++		if (is_bigtk) {
+ 			wcid_keyidx = &msta_link->wcid.hw_key_idx2;
+ 			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
+ 		}
+@@ -227,14 +231,11 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	}
+ 
++	link_conf = link_conf_dereference_protected(vif, link_id);
++	if (!link_conf)
++		link_conf = &vif->bss_conf;
 +
-+	ieee80211_wake_queues(hw);
-+	mt7996_for_each_phy(dev, phy)
-+		ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
-+					     MT7996_WATCHDOG_TIME);
-+}
+ 	if (cmd == SET_KEY && !sta && !link->mt76.cipher) {
+-		struct ieee80211_bss_conf *link_conf;
+-
+-		link_conf = link_conf_dereference_protected(vif,
+-							    link_id);
+-		if (!link_conf)
+-			link_conf = &vif->bss_conf;
+-
+ 		link->mt76.cipher =
+ 			mt76_connac_mcu_get_cipher(key->cipher);
+ 		mt7996_mcu_add_bss_info(link->phy, vif, link_conf,
+@@ -251,9 +252,17 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	mt76_wcid_key_setup(&dev->mt76, &msta_link->wcid, key);
+ 
+-	return mt7996_mcu_add_key(&dev->mt76, vif, key,
+-				  MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
+-				  &msta_link->wcid, cmd);
++	err = mt7996_mcu_add_key(&dev->mt76, vif, key,
++				 MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
++				 &msta_link->wcid, cmd);
 +
- const struct ieee80211_ops mt7996_ops = {
- 	.add_chanctx = mt76_add_chanctx,
- 	.remove_chanctx = mt76_remove_chanctx,
-@@ -2264,4 +2276,5 @@ const struct ieee80211_ops mt7996_ops = {
- #endif
- 	.change_vif_links = mt7996_change_vif_links,
- 	.change_sta_links = mt7996_mac_sta_change_links,
-+	.reconfig_complete = mt7996_reconfig_complete,
- };
++	/* remove and add beacon in order to enable beacon protection */
++	if (cmd == SET_KEY && is_bigtk && link_conf->enable_beacon) {
++		mt7996_mcu_add_beacon(hw, vif, link_conf, false);
++		mt7996_mcu_add_beacon(hw, vif, link_conf, true);
++	}
++
++	return err;
+ }
+ 
+ struct mt7996_key_iter_data {
+@@ -900,7 +909,7 @@ mt7996_link_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		link->mt76.beacon_rates_idx =
+ 			mt7996_get_rates_table(phy, info, true, false);
+ 
+-		mt7996_mcu_add_beacon(hw, vif, info);
++		mt7996_mcu_add_beacon(hw, vif, info, info->enable_beacon);
+ 	}
+ 
+ 	if (changed & (BSS_CHANGED_UNSOL_BCAST_PROBE_RESP |
+@@ -928,7 +937,7 @@ mt7996_channel_switch_beacon(struct ieee80211_hw *hw,
+ 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+-	mt7996_mcu_add_beacon(hw, vif, &vif->bss_conf);
++	mt7996_mcu_add_beacon(hw, vif, &vif->bss_conf, vif->bss_conf.enable_beacon);
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 5707e6b59aea..07a1e542571c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -2760,7 +2760,7 @@ mt7996_mcu_beacon_cont(struct mt7996_dev *dev,
+ }
+ 
+ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			  struct ieee80211_bss_conf *link_conf)
++			  struct ieee80211_bss_conf *link_conf, bool enabled)
+ {
+ 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+ 	struct mt7996_vif_link *link = mt7996_vif_conf_link(dev, vif, link_conf);
+@@ -2771,7 +2771,6 @@ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct tlv *tlv;
+ 	struct bss_bcn_content_tlv *bcn;
+ 	int len, extra_len = 0;
+-	bool enabled = link_conf->enable_beacon;
+ 
+ 	if (link_conf->nontransmitted)
+ 		return 0;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index be26e04b7da7..fa10aa6f517a 100644
+index fa10aa6f517a..8ec2acdb3319 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -817,6 +817,8 @@ void mt7996_mac_twt_teardown_flow(struct mt7996_dev *dev,
- 				  struct mt7996_vif_link *link,
- 				  struct mt7996_sta_link *msta_link,
- 				  u8 flowid);
-+void mt7996_mac_sta_deinit_link(struct mt7996_dev *dev,
-+				struct mt7996_sta_link *msta_link);
- void mt7996_mac_add_twt_setup(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta,
- 			      struct ieee80211_twt_setup *twt);
+@@ -682,7 +682,7 @@ int mt7996_mcu_update_bss_color(struct mt7996_dev *dev,
+ 				struct mt76_vif_link *mlink,
+ 				struct cfg80211_he_bss_color *he_bss_color);
+ int mt7996_mcu_add_beacon(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			  struct ieee80211_bss_conf *link_conf);
++			  struct ieee80211_bss_conf *link_conf, bool enabled);
+ int mt7996_mcu_beacon_inband_discov(struct mt7996_dev *dev,
+ 				    struct ieee80211_bss_conf *link_conf,
+ 				    struct mt7996_vif_link *link, u32 changed);
 -- 
 2.51.0
 
