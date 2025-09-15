@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB502E9EC6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A552E9EC0
 	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2025 07:59:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757923161; cv=none; b=tr1L5LvOE2GQfMMZ9ksC/JbblbV8/nKbc/SB2mMyAeg25IZXBrd+EQKXf9enYRRSAj7nfq4XdiLmW/CkcOvoUqGPeFm0Yf8j5sD5y/goiaNjuwlaSEjDPNPL9LDCApSZ86950dQctsjbMGs9cWqSEvHZvK4xGG1CzEidIbMyGvA=
+	t=1757923161; cv=none; b=pWL1k+ocd9O4rIQnuurLQpZHwACLm6I0j01S4jIJqCEkumhh1n1cqFAUdGhDfeklh7MqqbGggUXkPB1WNKXtMy/OLS3g9dbp3XwVCjJIVyBaxxgJcvPnvWSzmqwl/0/zy5ZqU4sUuRZrLHwscN+AmsMonxlQG9+sYrdrJ+R9ET8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757923161; c=relaxed/simple;
-	bh=Fb67vUPNRgzl/ttQWI7ip4fRSLoFTHw7p0IY/CaTG8E=;
+	bh=Wxs5rg/0n8QMdxl2yuKa9kOdtetzJvUtR8q08gFL5ZY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OUIQ1QMqEfWblX+RXZ6aFW3NFdYxSfZ83md0GJSVmA3w/XPbK/6G9X02p42B5pZZinpVD4cLQb5VSBbxNRn0aJYYir6au50itrWgp7wBmrQ7TGnixxAB2RH+siacnlmOoDkTSeenlEjdLkrhPacep2rKd1w8InUXRPAqpxXtBkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=gLyaUc3D; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=UOwlh9DHdkAvd3z3l1NOGqYgw1UxxJbX6ZdK7ykj9Fy18GVvxFMaKDjFf285JBmekr3Jho5npAVBHA0/Lbd6wiouoooPZwNiTRRc0T6oa100IdVnd5hhx5HMsv489eiUEzyURQGPLzJmfcML925neMoYJ4qMUHCfg8yJKgQTJXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=GyqHQqhi; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="gLyaUc3D"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="GyqHQqhi"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=rZ6rdNoopVMfHbq4pDPy5hMoaztIMYOJCPPNglkMIFc=; b=gLyaUc3DWUAjZCpJ/MwqIUjXMJ
-	T5LolOFjzc3zM2VJxHXi8cUAydRRanTlxnYO71B3et+Cz6kwFhDkMsJgb/sfCiPVkZPitKy1UfpYQ
-	qWV4txYZZrIscJ4bMGtCOG5JVtIv6D3Rs5cgamAJZxSZI1ggEbbXdA39BcX2uqoKM+Ik=;
+	bh=jRSNJeAkVxvQ4KKn+6d/Sbz1T7hF6HViyMbgXI37Q3M=; b=GyqHQqhiJYCwJfLQnf5g8tgMux
+	dGoTpsiDHLK/v6jG2Fzikk5Ld0lKMjZHwl+vcClneSBzPoNrCCrhG2DbvvBNb8laTD2aqd08RFq6T
+	aG+pnAebeWnb7I+TM+JOPlVceImQIgVJ1hRekuYSCKJ6pl6s5vygi9SC2SLeAUwYFpxA=;
 Received: from p5b206816.dip0.t-ipconnect.de ([91.32.104.22] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1uy47E-0078GN-0c
+	id 1uy47D-0078GN-21
 	for linux-wireless@vger.kernel.org;
-	Mon, 15 Sep 2025 09:59:12 +0200
+	Mon, 15 Sep 2025 09:59:11 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 07/15] wifi: mt76: mt7996: fix key add/remove imbalance
-Date: Mon, 15 Sep 2025 09:59:02 +0200
-Message-ID: <20250915075910.47558-7-nbd@nbd.name>
+Subject: [PATCH mt76 04/15] wifi: mt76: mt7996: fix setting beacon protection keys
+Date: Mon, 15 Sep 2025 09:58:59 +0200
+Message-ID: <20250915075910.47558-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250915075910.47558-1-nbd@nbd.name>
 References: <20250915075910.47558-1-nbd@nbd.name>
@@ -48,274 +48,253 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Ensure that a key for a link is only added and removed once.
-When bringing up a link, only upload keys for that particular link, instead
-of iterating over all of them.
+Include beacon key information in the STA_REC_UPDATE call.
+Remove mt7996_mcu_get_pn - when installing a new key, we should
+not reuse any existing PN value.
 
+Signed-off-by: Allen Ye <allen.ye@mediatek.com>
+Signed-off-by: Michael-CY Lee <michael-cy.lee@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7996/main.c  | 183 +++++++++---------
- 1 file changed, 95 insertions(+), 88 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/main.c  |   7 -
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 156 +++++-------------
+ .../net/wireless/mediatek/mt76/mt7996/mcu.h   |  14 +-
+ 3 files changed, 45 insertions(+), 132 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index a81f2133cdc9..d706b8bb244e 100644
+index 8fbe60723071..84d5e0430a94 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -182,107 +182,96 @@ mt7996_init_bitrate_mask(struct ieee80211_vif *vif, struct mt7996_vif_link *mlin
- static int
- mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
--		  struct ieee80211_key_conf *key)
-+		  unsigned int link_id, struct ieee80211_key_conf *key)
+@@ -262,13 +262,6 @@ mt7996_set_hw_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 		mt76_wcid_key_setup(&dev->mt76, &msta_link->wcid, key);
+ 
+-		if (key->keyidx == 6 || key->keyidx == 7) {
+-			err = mt7996_mcu_bcn_prot_enable(dev, link,
+-							 msta_link, key);
+-			if (err)
+-				return err;
+-		}
+-
+ 		err = mt7996_mcu_add_key(&dev->mt76, vif, key,
+ 					 MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
+ 					 &msta_link->wcid, cmd);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 29552ab16089..5c16e4b780ad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -2545,41 +2545,58 @@ mt7996_mcu_sta_key_tlv(struct mt76_wcid *wcid,
+ 		       enum set_key_cmd cmd)
  {
- 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
-+	struct mt7996_sta_link *msta_link;
-+	struct mt7996_vif_link *link;
- 	int idx = key->keyidx;
--	unsigned int link_id;
--	unsigned long links;
-+	u8 *wcid_keyidx;
+ 	struct sta_rec_sec_uni *sec;
++	struct sec_key_uni *sec_key;
+ 	struct tlv *tlv;
++	u8 cipher;
  
--	if (key->link_id >= 0)
--		links = BIT(key->link_id);
--	else if (sta && sta->valid_links)
--		links = sta->valid_links;
--	else if (vif->valid_links)
--		links = vif->valid_links;
--	else
--		links = BIT(0);
-+	link = mt7996_vif_link(dev, vif, link_id);
-+	if (!link)
+ 	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_KEY_V2, sizeof(*sec));
+ 	sec = (struct sta_rec_sec_uni *)tlv;
+-	sec->add = cmd;
++	sec->add = 0;
++	sec->n_cipher = 1;
++	sec_key = &sec->key[0];
++	sec_key->wlan_idx = cpu_to_le16(wcid->idx);
++	sec_key->key_id = key->keyidx;
+ 
+-	if (cmd == SET_KEY) {
+-		struct sec_key_uni *sec_key;
+-		u8 cipher;
++	if (cmd != SET_KEY)
 +		return 0;
  
--	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
--		struct mt7996_sta_link *msta_link;
--		struct mt7996_vif_link *link;
--		u8 *wcid_keyidx;
--		int err;
-+	if (!mt7996_vif_link_phy(link))
+-		cipher = mt76_connac_mcu_get_cipher(key->cipher);
+-		if (cipher == MCU_CIPHER_NONE)
+-			return -EOPNOTSUPP;
++	cipher = mt76_connac_mcu_get_cipher(key->cipher);
++	if (cipher == MCU_CIPHER_NONE)
++		return -EOPNOTSUPP;
+ 
+-		sec_key = &sec->key[0];
+-		sec_key->wlan_idx = cpu_to_le16(wcid->idx);
+-		sec_key->mgmt_prot = 0;
+-		sec_key->cipher_id = cipher;
+-		sec_key->cipher_len = sizeof(*sec_key);
+-		sec_key->key_id = key->keyidx;
+-		sec_key->key_len = key->keylen;
+-		sec_key->need_resp = 0;
+-		memcpy(sec_key->key, key->key, key->keylen);
++	sec_key->mgmt_prot = 0;
++	sec_key->cipher_id = cipher;
++	sec_key->cipher_len = sizeof(*sec_key);
++	sec_key->key_len = key->keylen;
++	sec_key->need_resp = 0;
++	memcpy(sec_key->key, key->key, key->keylen);
+ 
+-		if (cipher == MCU_CIPHER_TKIP) {
+-			/* Rx/Tx MIC keys are swapped */
+-			memcpy(sec_key->key + 16, key->key + 24, 8);
+-			memcpy(sec_key->key + 24, key->key + 16, 8);
+-		}
+-
+-		sec->n_cipher = 1;
+-	} else {
+-		sec->n_cipher = 0;
++	if (cipher == MCU_CIPHER_TKIP) {
++		/* Rx/Tx MIC keys are swapped */
++		memcpy(sec_key->key + 16, key->key + 24, 8);
++		memcpy(sec_key->key + 24, key->key + 16, 8);
 +		return 0;
+ 	}
  
--		link = mt7996_vif_link(dev, vif, link_id);
--		if (!link)
--			continue;
-+	if (sta) {
-+		struct mt7996_sta *msta;
- 
--		if (sta) {
--			struct mt7996_sta *msta;
-+		msta = (struct mt7996_sta *)sta->drv_priv;
-+		msta_link = mt76_dereference(msta->link[link_id],
-+					     &dev->mt76);
-+		if (!msta_link)
-+			return 0;
- 
--			msta = (struct mt7996_sta *)sta->drv_priv;
--			msta_link = mt76_dereference(msta->link[link_id],
--						     &dev->mt76);
--			if (!msta_link)
--				continue;
-+		if (!msta_link->wcid.sta)
-+			return -EOPNOTSUPP;
-+	} else {
-+		msta_link = &link->msta_link;
-+	}
-+	wcid_keyidx = &msta_link->wcid.hw_key_idx;
- 
--			if (!msta_link->wcid.sta)
--				return -EOPNOTSUPP;
--		} else {
--			msta_link = &link->msta_link;
++	if (sec_key->key_id != 6 && sec_key->key_id != 7)
++		return 0;
++
 +	switch (key->cipher) {
 +	case WLAN_CIPHER_SUITE_AES_CMAC:
-+	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
++		sec_key->cipher_id = MCU_CIPHER_BCN_PROT_CMAC_128;
++		break;
 +	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
++		sec_key->cipher_id = MCU_CIPHER_BCN_PROT_GMAC_128;
++		break;
 +	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-+		if (key->keyidx == 6 || key->keyidx == 7) {
-+			wcid_keyidx = &msta_link->wcid.hw_key_idx2;
-+			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
- 		}
--		wcid_keyidx = &msta_link->wcid.hw_key_idx;
--
--		switch (key->cipher) {
--		case WLAN_CIPHER_SUITE_AES_CMAC:
--		case WLAN_CIPHER_SUITE_BIP_CMAC_256:
--		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
--		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
--			if (key->keyidx == 6 || key->keyidx == 7) {
--				wcid_keyidx = &msta_link->wcid.hw_key_idx2;
--				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIE;
--			}
--			break;
--		default:
--			break;
--		}
--
--		if (cmd == SET_KEY && !sta && !link->mt76.cipher) {
--			struct ieee80211_bss_conf *link_conf;
--
--			link_conf = link_conf_dereference_protected(vif,
--								    link_id);
--			if (!link_conf)
--				link_conf = &vif->bss_conf;
--
--			link->mt76.cipher =
--				mt76_connac_mcu_get_cipher(key->cipher);
--			mt7996_mcu_add_bss_info(link->phy, vif, link_conf,
--						&link->mt76, msta_link, true);
--		}
--
--		if (cmd == SET_KEY)
--			*wcid_keyidx = idx;
--		else if (idx == *wcid_keyidx)
--			*wcid_keyidx = -1;
--
--		if (cmd != SET_KEY && sta)
--			continue;
--
--		mt76_wcid_key_setup(&dev->mt76, &msta_link->wcid, key);
--
--		err = mt7996_mcu_add_key(&dev->mt76, vif, key,
--					 MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
--					 &msta_link->wcid, cmd);
--		if (err)
--			return err;
++		sec_key->cipher_id = MCU_CIPHER_BCN_PROT_GMAC_256;
 +		break;
 +	default:
-+		break;
- 	}
- 
--	return 0;
-+	if (cmd == SET_KEY && !sta && !link->mt76.cipher) {
-+		struct ieee80211_bss_conf *link_conf;
-+
-+		link_conf = link_conf_dereference_protected(vif,
-+							    link_id);
-+		if (!link_conf)
-+			link_conf = &vif->bss_conf;
-+
-+		link->mt76.cipher =
-+			mt76_connac_mcu_get_cipher(key->cipher);
-+		mt7996_mcu_add_bss_info(link->phy, vif, link_conf,
-+					&link->mt76, msta_link, true);
++		return -EOPNOTSUPP;
 +	}
 +
-+	if (cmd == SET_KEY)
-+		*wcid_keyidx = idx;
-+	else if (idx == *wcid_keyidx)
-+		*wcid_keyidx = -1;
++	sec_key->bcn_mode = BP_SW_MODE;
 +
-+	if (cmd != SET_KEY && sta)
-+		return 0;
-+
-+	mt76_wcid_key_setup(&dev->mt76, &msta_link->wcid, key);
-+
-+	return mt7996_mcu_add_key(&dev->mt76, vif, key,
-+				  MCU_WMWA_UNI_CMD(STA_REC_UPDATE),
-+				  &msta_link->wcid, cmd);
+ 	return 0;
  }
  
-+struct mt7996_key_iter_data {
-+    enum set_key_cmd cmd;
-+    unsigned int link_id;
-+};
-+
- static void
- mt7996_key_iter(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		struct ieee80211_sta *sta, struct ieee80211_key_conf *key,
- 		void *data)
- {
--	enum set_key_cmd *cmd = data;
-+	struct mt7996_key_iter_data *it = data;
- 
- 	if (sta)
- 		return;
- 
--	WARN_ON(mt7996_set_hw_key(hw, *cmd, vif, NULL, key));
-+	WARN_ON(mt7996_set_hw_key(hw, it->cmd, vif, NULL, it->link_id, key));
+@@ -2603,95 +2620,6 @@ int mt7996_mcu_add_key(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 	return mt76_mcu_skb_send_msg(dev, skb, mcu_cmd, true);
  }
  
- int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
-@@ -293,9 +282,12 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
- 	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
- 	struct mt7996_sta_link *msta_link = &link->msta_link;
- 	struct mt7996_phy *phy = mphy->priv;
--	enum set_key_cmd key_cmd = SET_KEY;
- 	struct mt7996_dev *dev = phy->dev;
- 	u8 band_idx = phy->mt76->band_idx;
-+	struct mt7996_key_iter_data it = {
-+		.cmd = SET_KEY,
-+		.link_id = link_conf->link_id,
-+	};
- 	struct mt76_txq *mtxq;
- 	int mld_idx, idx, ret;
- 
-@@ -373,7 +365,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
- 				   CONN_STATE_PORT_SECURE, true);
- 	rcu_assign_pointer(dev->mt76.wcid[idx], &msta_link->wcid);
- 
--	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &key_cmd);
-+	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &it);
- 
- 	if (mvif->mt76.deflink_id == IEEE80211_LINK_UNSPECIFIED)
- 		mvif->mt76.deflink_id = link_conf->link_id;
-@@ -388,12 +380,15 @@ void mt7996_vif_link_remove(struct mt76_phy *mphy, struct ieee80211_vif *vif,
- 	struct mt7996_vif_link *link = container_of(mlink, struct mt7996_vif_link, mt76);
- 	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
- 	struct mt7996_sta_link *msta_link = &link->msta_link;
--	enum set_key_cmd key_cmd = DISABLE_KEY;
- 	struct mt7996_phy *phy = mphy->priv;
- 	struct mt7996_dev *dev = phy->dev;
-+	struct mt7996_key_iter_data it = {
-+		.cmd = SET_KEY,
-+		.link_id = link_conf->link_id,
-+	};
- 	int idx = msta_link->wcid.idx;
- 
--	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &key_cmd);
-+	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &it);
- 
- 	mt7996_mcu_add_sta(dev, link_conf, NULL, link, NULL,
- 			   CONN_STATE_DISCONNECT, false);
-@@ -594,8 +589,9 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			  struct ieee80211_key_conf *key)
- {
- 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
--	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
--	int err;
-+	unsigned int link_id;
-+	unsigned long links;
-+	int err = 0;
- 
- 	/* The hardware does not support per-STA RX GTK, fallback
- 	 * to software mode for these.
-@@ -629,11 +625,22 @@ static int mt7996_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return -EOPNOTSUPP;
- 	}
- 
--	if (!mt7996_vif_link_phy(&mvif->deflink))
--		return 0; /* defer until after link add */
+-static int mt7996_mcu_get_pn(struct mt7996_dev *dev,
+-			     struct mt7996_vif_link *link,
+-			     struct mt7996_sta_link *msta_link, u8 *pn)
+-{
+-#define TSC_TYPE_BIGTK_PN 2
+-	struct sta_rec_pn_info *pn_info;
+-	struct sk_buff *skb, *rskb;
+-	struct tlv *tlv;
+-	int ret;
 -
- 	mutex_lock(&dev->mt76.mutex);
--	err = mt7996_set_hw_key(hw, cmd, vif, sta, key);
-+
-+	if (key->link_id >= 0)
-+		links = BIT(key->link_id);
-+	else if (sta && sta->valid_links)
-+		links = sta->valid_links;
-+	else if (vif->valid_links)
-+		links = vif->valid_links;
-+	else
-+		links = BIT(0);
-+
-+	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
-+		err = mt7996_set_hw_key(hw, cmd, vif, sta, link_id, key);
-+		if (err)
-+			break;
-+	}
- 	mutex_unlock(&dev->mt76.mutex);
+-	skb = mt76_connac_mcu_alloc_sta_req(&dev->mt76, &link->mt76,
+-					    &msta_link->wcid);
+-	if (IS_ERR(skb))
+-		return PTR_ERR(skb);
+-
+-	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_PN_INFO, sizeof(*pn_info));
+-	pn_info = (struct sta_rec_pn_info *)tlv;
+-
+-	pn_info->tsc_type = TSC_TYPE_BIGTK_PN;
+-	ret = mt76_mcu_skb_send_and_get_msg(&dev->mt76, skb,
+-					    MCU_WM_UNI_CMD_QUERY(STA_REC_UPDATE),
+-					    true, &rskb);
+-	if (ret)
+-		return ret;
+-
+-	skb_pull(rskb, 4);
+-
+-	pn_info = (struct sta_rec_pn_info *)rskb->data;
+-	if (le16_to_cpu(pn_info->tag) == STA_REC_PN_INFO)
+-		memcpy(pn, pn_info->pn, 6);
+-
+-	dev_kfree_skb(rskb);
+-	return 0;
+-}
+-
+-int mt7996_mcu_bcn_prot_enable(struct mt7996_dev *dev,
+-			       struct mt7996_vif_link *link,
+-			       struct mt7996_sta_link *msta_link,
+-			       struct ieee80211_key_conf *key)
+-{
+-	struct mt7996_mcu_bcn_prot_tlv *bcn_prot;
+-	struct sk_buff *skb;
+-	struct tlv *tlv;
+-	u8 pn[6] = {};
+-	int len = sizeof(struct bss_req_hdr) +
+-		  sizeof(struct mt7996_mcu_bcn_prot_tlv);
+-	int ret;
+-
+-	skb = __mt7996_mcu_alloc_bss_req(&dev->mt76, &link->mt76, len);
+-	if (IS_ERR(skb))
+-		return PTR_ERR(skb);
+-
+-	tlv = mt76_connac_mcu_add_tlv(skb, UNI_BSS_INFO_BCN_PROT, sizeof(*bcn_prot));
+-
+-	bcn_prot = (struct mt7996_mcu_bcn_prot_tlv *)tlv;
+-
+-	ret = mt7996_mcu_get_pn(dev, link, msta_link, pn);
+-	if (ret) {
+-		dev_kfree_skb(skb);
+-		return ret;
+-	}
+-
+-	switch (key->cipher) {
+-	case WLAN_CIPHER_SUITE_AES_CMAC:
+-		bcn_prot->cipher_id = MCU_CIPHER_BCN_PROT_CMAC_128;
+-		break;
+-	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
+-		bcn_prot->cipher_id = MCU_CIPHER_BCN_PROT_GMAC_128;
+-		break;
+-	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
+-		bcn_prot->cipher_id = MCU_CIPHER_BCN_PROT_GMAC_256;
+-		break;
+-	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+-	default:
+-		dev_err(dev->mt76.dev, "Not supported Bigtk Cipher\n");
+-		dev_kfree_skb(skb);
+-		return -EOPNOTSUPP;
+-	}
+-
+-	pn[0]++;
+-	memcpy(bcn_prot->pn, pn, 6);
+-	bcn_prot->enable = BP_SW_MODE;
+-	memcpy(bcn_prot->key, key->key, WLAN_MAX_KEY_LEN);
+-	bcn_prot->key_id = key->keyidx;
+-
+-	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-				     MCU_WMWA_UNI_CMD(BSS_INFO_UPDATE), true);
+-}
+-
+ int mt7996_mcu_add_dev_info(struct mt7996_phy *phy, struct ieee80211_vif *vif,
+ 			    struct ieee80211_bss_conf *link_conf,
+ 			    struct mt76_vif_link *mlink, bool enable)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+index 7b21d6ae7e43..c841da1c60e5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+@@ -351,17 +351,6 @@ enum {
+ 	BP_HW_MODE,
+ };
  
- 	return err;
+-struct mt7996_mcu_bcn_prot_tlv {
+-	__le16 tag;
+-	__le16 len;
+-	u8 pn[6];
+-	u8 enable;
+-	u8 cipher_id;
+-	u8 key[WLAN_MAX_KEY_LEN];
+-	u8 key_id;
+-	u8 __rsv[3];
+-} __packed;
+-
+ struct bss_ra_tlv {
+ 	__le16 tag;
+ 	__le16 len;
+@@ -531,6 +520,9 @@ struct sec_key_uni {
+ 	u8 key_len;
+ 	u8 need_resp;
+ 	u8 key[32];
++	u8 pn[6];
++	u8 bcn_mode;
++	u8 _rsv;
+ } __packed;
+ 
+ struct sta_rec_sec_uni {
 -- 
 2.51.0
 
