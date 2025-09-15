@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5C4F2E9ECD
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B44892E9ECC
 	for <linux-wireless@vger.kernel.org>; Mon, 15 Sep 2025 07:59:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757923163; cv=none; b=hgwTyLDlu6Ac1jxJC0m26RiE5DF3PadN2F42H+kVGoC46+mZoO7wQDv5eQJH3YC0PXkCE9ZjHXBUNMBYKWTiTVwT5Pzo8fKGNT5S5EegLs71cHJxB0Y13aaPCfbHoWUIQyfsRGA3zfF07N4qbmJ00z6eRwhgFbfweeJDlSKAgXc=
+	t=1757923163; cv=none; b=gGfE1+2AL8BdvjEfw8BJsKl7nHx1AMz5A8kwsRIFB1Tjd7AgmE0brHamFvNqFPomuyWEsGU64cbCksyOKxdEGK4Ab05te5WnLvRXWhhtni5ZtpBhODUnQT+7DDlRbx7uzNaYwayi7skIo6rzGH0Gv+C7OC31LCRKpMbJvnJofP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757923163; c=relaxed/simple;
-	bh=xvwJi0p/h5sWvRtE9qmR4SnPAgucuqg3umiLU22Y2xg=;
+	bh=hCI279A9L1bRfFNxsebVd64MDgsOtquHQIIm7Wn3NTw=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DGqXNcSWXj9BasxUfmMy9NOU2Jjvc0cqXqwzJ+WwHDl+ncy52p8n5a9ck9qqUgdLV6W0VgwBRQqsIogtyHSHqAqDGoigTllWpwLWSkwURUOStjgbz11G44ScyrHrrqT3aawdvhkLwR+ghLnYsca/gr0nA2snNeXgdQei4Z9AbZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ZEsfnf1w; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=My/JTkofypMCENckRTuDK7wcLj5U1gZCRT8dyy5xX5mmQZMxdWc6SkV1fjxewCh4pb2tABEhFejrbYhCGAubhZceKrvFQet0snOOOUwYlSxxsqHibANXuiMaqeHG10YE90BM6ya0wR1x8nVeft8bNBF15YJ5jpwJpj8dXFKlKc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=CfS+aryo; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ZEsfnf1w"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CfS+aryo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=Iyl7WSJzE9ka8q/ZQ42qP8VNpm19JSobw9HsTGitX9s=; b=ZEsfnf1wD7viFaVGddkqvoasjW
-	rb2cKuJ9VX6PzIcPQpILZ7IZMostzgUxNxN5xyhj5pkAhHMDvGgKqtD8iU3xDz/H/8gfD0c2a5cVQ
-	2M+PkGrZG+Kw2BrWJZLfEZxgTpiR5orknOT3JYOIE/XFgZabRUBcc/sFzHGi2u8CcHg8=;
+	bh=4GObwF9ohv+2aqD7SJFd4pzmMEyN0roav8OqTM7VWsU=; b=CfS+aryo8iZ6NQg2rjhqp317NB
+	iFR2kTzqGe+kDHpmmNKKW0qvaoHEOwSIQC5HJbiNvxxyC/pEN1Qz0Yh5a9WzdskNiMXvkMUodB+v6
+	mzPDB2NQkZsxRNQDDxewuz8e4/H7+uEl6RAcY+ufRqgNggeFEJ9k0To9fMGUSJV5oH48=;
 Received: from p5b206816.dip0.t-ipconnect.de ([91.32.104.22] helo=Maecks.lan)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1uy47F-0078GN-0e
+	id 1uy47F-0078GN-1D
 	for linux-wireless@vger.kernel.org;
 	Mon, 15 Sep 2025 09:59:13 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 12/15] wifi: mt76: mt7996: set VTA in txwi
-Date: Mon, 15 Sep 2025 09:59:07 +0200
-Message-ID: <20250915075910.47558-12-nbd@nbd.name>
+Subject: [PATCH mt76 13/15] wifi: mt76: mt7996: fill User Priority in skb->priority for rx packets
+Date: Mon, 15 Sep 2025 09:59:08 +0200
+Message-ID: <20250915075910.47558-13-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250915075910.47558-1-nbd@nbd.name>
 References: <20250915075910.47558-1-nbd@nbd.name>
@@ -48,31 +48,29 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Peter Chiu <chui-hao.chiu@mediatek.com>
+From: Howard Hsu <howard-yh.hsu@mediatek.com>
 
-Enable VTA flag in txwi to enable HQD in SPL which is needed by
-the PST. Without this patch, PST cannot get the correct delay of
-TxD and lead to a large latency.
+Set UP in skb->priority to allow DSCP Learning at upper layers
 
-Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
+Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 289f69cc2bdf..2d5dab535357 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -968,7 +968,7 @@ void mt7996_mac_write_txwi(struct mt7996_dev *dev, __le32 *txwi,
- 		val |= MT_TXD5_TX_STATUS_HOST;
- 	txwi[5] = cpu_to_le32(val);
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 6ef186107782..cc7da3d5ab08 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -1235,6 +1235,8 @@ mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
+ 	mstat = *((struct mt76_rx_status *)skb->cb);
+ 	memset(status, 0, sizeof(*status));
  
--	val = MT_TXD6_DAS;
-+	val = MT_TXD6_DAS | MT_TXD6_VTA;
- 	if ((q_idx >= MT_LMAC_ALTX0 && q_idx <= MT_LMAC_BCN0) ||
- 	    skb->protocol == cpu_to_be16(ETH_P_PAE))
- 		val |= MT_TXD6_DIS_MAT;
++	skb->priority = mstat.qos_ctl & IEEE80211_QOS_CTL_TID_MASK;
++
+ 	status->flag = mstat.flag;
+ 	status->freq = mstat.freq;
+ 	status->enc_flags = mstat.enc_flags;
 -- 
 2.51.0
 
