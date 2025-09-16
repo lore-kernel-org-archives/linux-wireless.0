@@ -1,55 +1,55 @@
-Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
+Received: from smtp11.infineon.com (smtp11.infineon.com [217.10.52.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE73E2F9DAF
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2025 22:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1B9632B481
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Sep 2025 22:20:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758061201; cv=none; b=ZrUk8x1V+e0yV3ujx324wgJNvTqg83gkQ/+jeKxi3sUTYgysUNMMdKpervsBYqc3p3PykgUWGfS3cgMboFXvkUqf1wAAE88Aj+1oOHYJLod/ul5WSWGf0eYscpJpoiwmIOZPW7BynQfK0+Zk1tdPvjSbQ9Iv/FKbYF7UN2aXdRo=
+	t=1758061206; cv=none; b=XqlZMoP6O7glYLenjH82NL73OPGA8I2InGb32LhQK2EWA4vgLclfsY4x0v6npQOyCIZoLdcZebV9baeDqQ8VLhxeGMA50vYKZxXcHHPoB1jh0gJn+LjTlXmiChzukzIMv0PAIblnlfUrMs0CrlAcQUMZ4rqYBeFs7i7b5X45RHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758061201; c=relaxed/simple;
-	bh=pDw/UXo+B6azJZKjz74Lbo3wv6fcTQPvILuWNzEHwwM=;
+	s=arc-20240116; t=1758061206; c=relaxed/simple;
+	bh=ynVPpncUz3mWE7dYINBugWVYsZvjZnnX/T9BFbXd50E=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jMe+lxOVC6bh8N5STVroJI5JG6Hgc5ZySbfnc2AKYSrBAJU01D4pO+nxrTXm8hC/daNqbFwS4qK0M9uP4G2zXfQ2eUZzmjFrOy8Tm5RIH4ZWDYDXmfpF/p3R83vn0mntTrYkmVpeynPIGKChV8votcYhjgeC/Njyg5lJ6jNtk6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=jggLwJZP; arc=none smtp.client-ip=217.10.52.204
+	 MIME-Version:Content-Type; b=fM2ESLNrQLglKDjcwrLxqyoHW1GqDxT8kuEABNiNknjuPV1vNhIz9Pyz61jjlr2Fs1YPADCQm9SVFaACtU7R2bpFfXveMR7pM3zcF6qKb7u0dYvw38b/MUyjVrFAwGOctpsnsNSj/afFfRSvEkNpPQGxeVEx78sKAH6nlbvPbcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=KueGU7rN; arc=none smtp.client-ip=217.10.52.105
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="jggLwJZP"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="KueGU7rN"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1758061199; x=1789597199;
+  t=1758061203; x=1789597203;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=pDw/UXo+B6azJZKjz74Lbo3wv6fcTQPvILuWNzEHwwM=;
-  b=jggLwJZPpwvFaf9zqGr+H0mc8S+whDmF9O1c8rN7y9uVNI0UrAMHD0MZ
-   ejgqgqDVmtkE4/z97sMwWZBSfCWRbxDo43btZepMhrykDI5p6kx6VDxNB
-   oUONUSp/QZOw1RfkKvm6a0qGysHFdRpy1oM+pIb9l3i0uty21c9AMi1Wv
+  bh=ynVPpncUz3mWE7dYINBugWVYsZvjZnnX/T9BFbXd50E=;
+  b=KueGU7rN3Q92WS2dVWqurV59BLDiaSiAzQoO3JIHx817T/jMO21dFnq8
+   vimzQmmfLPYLXYYSfFSH3ea96JmlYUlmXLL47bRSFly+Fos/eHj/ljVyJ
+   W8RNB0Lym1l9WjfyR3r9VycFnvfBUGBB6HFwDQtc2zHabsRfciIm8Ugyr
    s=;
-X-CSE-ConnectionGUID: 5C59Y9ygQrK+K3ykrRN2bw==
-X-CSE-MsgGUID: kqPB3bbNTvyZWJuguDf41g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11555"; a="64783232"
+X-CSE-ConnectionGUID: RiCgCWnCTjiLGyOEa3t9MA==
+X-CSE-MsgGUID: +jlNbJbERDWp9zD6MHw+rQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11555"; a="110918133"
 X-IronPort-AV: E=Sophos;i="6.18,270,1751234400"; 
-   d="scan'208";a="64783232"
+   d="scan'208";a="110918133"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
-  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2025 00:18:48 +0200
+  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2025 00:20:01 +0200
 Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE805.infineon.com
  (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.36; Wed, 17 Sep
- 2025 00:18:47 +0200
+ 2025 00:20:00 +0200
 Received: from ISCN5CG14747PP.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.36; Wed, 17 Sep 2025 00:18:44 +0200
+ 15.2.1748.36; Wed, 17 Sep 2025 00:19:57 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, Johannes Berg
 	<johannes@sipsolutions.net>
 CC: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>,
 	<wlan-kernel-dev-list@infineon.com>
-Subject: [PATCH wireless-next 01/57] wifi: nl80211/cfg80211: introduce new iface type for WLAN Sensing operation
-Date: Wed, 17 Sep 2025 03:47:16 +0530
-Message-ID: <20250916221821.4387-2-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next 07/57] wifi: inffmac: add ftm.c/h
+Date: Wed, 17 Sep 2025 03:47:22 +0530
+Message-ID: <20250916221821.4387-8-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250916221821.4387-1-gokulkumar.sivakumar@infineon.com>
 References: <20250916221821.4387-1-gokulkumar.sivakumar@infineon.com>
@@ -61,425 +61,1021 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE806.infineon.com (172.23.29.32) To
+X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
  MUCSE827.infineon.com (172.23.29.20)
 
-WLAN sensing operation uses signal processing on the Wi-Fi signals received
-by a station device to detect physical obstructions and interpret movements
-with the help of Channel State Information (CSI), defined in IEEE 802.11bf.
-
-Introduce a new wdev (non-netdev) interface type WLAN SENSE for 802.11bf,
-similar to a NAN or P2P Discovery interface. This new wdev interface helps
-in separating WLAN Sensing operation and the normal WLAN traffic. Also this
-new interface is used for any 802.11 frame exchanges to be done as part of
-the WLAN Sensing Measurement operation. Also add new WLAN SENSE Start and
-Stop nl80211 commends to allow the userspace to control this interface.
+Driver implementation of Fine timing measurement (FTM) support, which helps
+in finding the accurate round-trip time (RTT) between another supported
+peer WLAN device using the Peer Measurement Request (PMSR) infrastructure
+currently available in nl80211/cfg80211.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- include/net/cfg80211.h       |  7 ++++
- include/uapi/linux/nl80211.h | 11 +++++++
- net/mac80211/cfg.c           |  1 +
- net/mac80211/chan.c          |  2 ++
- net/mac80211/iface.c         |  2 ++
- net/mac80211/util.c          |  1 +
- net/wireless/chan.c          |  2 ++
- net/wireless/core.c          | 26 +++++++++++++++
- net/wireless/nl80211.c       | 63 ++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 19 +++++++++++
- net/wireless/trace.h         | 10 ++++++
- net/wireless/util.c          |  1 +
- 12 files changed, 145 insertions(+)
+ drivers/net/wireless/infineon/inffmac/ftm.c | 605 ++++++++++++++++++++
+ drivers/net/wireless/infineon/inffmac/ftm.h | 382 ++++++++++++
+ 2 files changed, 987 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/ftm.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/ftm.h
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 4072a67c9cc9..d6145556fcf4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4762,6 +4762,8 @@ struct mgmt_frame_regs {
-  *	links by calling cfg80211_mlo_reconf_add_done(). When calling
-  *	cfg80211_mlo_reconf_add_done() the bss pointer must be given for each
-  *	link for which MLO reconfiguration 'add' operation was requested.
-+ * @start_wlan_sense: Start the wlan sense device.
-+ * @stop_wlan_sense: Stop the given wlan sense device.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -5133,6 +5135,11 @@ struct cfg80211_ops {
- 				   struct cfg80211_ml_reconf_req *req);
- 	int	(*set_epcs)(struct wiphy *wiphy, struct net_device *dev,
- 			    bool val);
+diff --git a/drivers/net/wireless/infineon/inffmac/ftm.c b/drivers/net/wireless/infineon/inffmac/ftm.c
+new file mode 100644
+index 000000000000..ec82e3adbb31
+--- /dev/null
++++ b/drivers/net/wireless/infineon/inffmac/ftm.c
+@@ -0,0 +1,605 @@
++// SPDX-License-Identifier: ISC
++/*
++ * Copyright (c) 2025, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
++ * All rights reserved.
++ */
 +
-+	int	(*start_wlan_sense)(struct wiphy *wiphy,
-+				    struct wireless_dev *wdev);
-+	void	(*stop_wlan_sense)(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev);
- };
- 
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index aed0b4c5d5e8..5599fb9d2f08 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1344,6 +1344,12 @@
-  *	control EPCS configuration. Used to notify userland on the current state
-  *	of EPCS.
-  *
-+ * @NL80211_CMD_START_WLAN_SENSE: Start WLAN SENSE operation, identified
-+ *	by its %NL80211_ATTR_WDEV interface. This interface must have been
-+ *	previously created with %NL80211_CMD_NEW_INTERFACE.
-+ * @NL80211_CMD_STOP_WLAN_SENSE: Stop WLAN SENSE operation, identified by
-+ *	its %NL80211_ATTR_WDEV interface.
++#include <linux/types.h>
++#include <linux/string.h>
++#include "cfg80211.h"
++#include "debug.h"
++#include "fwil.h"
++#include "pmsr.h"
++
++static s64
++intvl_to_picosecond(struct inff_proxd_intvl intvl)
++{
++	switch (intvl.tmu) {
++	case INFF_PROXD_TMU_TU:
++		return (intvl.intvl * 1024 * 1000 * 1000);
++	case INFF_PROXD_TMU_SEC:
++		return (intvl.intvl * 1000 * 1000 * 1000 * 1000);
++	case INFF_PROXD_TMU_MILLI_SEC:
++		return (intvl.intvl * 1000 * 1000 * 1000);
++	case INFF_PROXD_TMU_MICRO_SEC:
++		return (intvl.intvl * 1000 * 1000);
++	case INFF_PROXD_TMU_NANO_SEC:
++		return (intvl.intvl * 1000);
++	case INFF_PROXD_TMU_PICO_SEC:
++		return (intvl.intvl);
++	default:
++		return (-1);
++	}
++}
++
++static void
++inff_print_rtt_info(struct inff_proxd_rtt_result_v2 *rtt_result,
++		    struct inff_proxd_rtt_sample_v2 *rtt_sample)
++{
++	inff_dbg(TRACE, "FTM: RTT result (%d)\n"
++		"version           : 0x%x\n"
++		"length            : %d\n"
++		"sid               : %d\n"
++		"flags             : 0x%x\n"
++		"status            : %d\n"
++		"peer_mac          : %pM\n"
++		"state             : %d\n"
++		"burst_duration    : %d / %d\n"
++		"avg_dist          : %d\n"
++		"sd_rtt            : %d\n"
++		"num_valid_rtt     : %d\n"
++		"num_ftm           : %d\n"
++		"burst_num         : %d\n"
++		"num_rtt           : %d\n"
++		"num_meas          : %d\n",
++		rtt_result->burst_num, // show burst_num in the first line as result index
++		rtt_result->version, rtt_result->length, rtt_result->sid, rtt_result->flags,
++		rtt_result->status, rtt_result->peer, rtt_result->state,
++		rtt_result->u.burst_duration.intvl, rtt_result->u.burst_duration.tmu,
++		rtt_result->avg_dist, rtt_result->sd_rtt, rtt_result->num_valid_rtt,
++		rtt_result->num_ftm, rtt_result->burst_num, rtt_result->num_rtt,
++		rtt_result->num_meas);
++	inff_dbg(TRACE, "FTM: RTT sample\n"
++		"version           : 0x%x\n"
++		"length            : %d\n"
++		"id                : %d\n"
++		"flags             : 0x%x\n"
++		"rssi              : %d\n"
++		"rtt               : %d / %d\n"
++		"ratespec          : 0x%x\n"
++		"snr               : %d\n"
++		"bitflips          : 0x%x\n"
++		"status            : %d\n"
++		"distance          : %d\n"
++		"tof_phy_error     : %d\n"
++		"tof_tgt_phy_error : %d\n"
++		"tof_tgt_snr       : %d\n"
++		"tof_tgt_bitflips  : 0x%x\n"
++		"coreid            : %d\n"
++		"chanspec          : 0x%x\n",
++		rtt_sample->version, rtt_sample->length, rtt_sample->id, rtt_sample->flags,
++		rtt_sample->rssi, rtt_sample->rtt.intvl, rtt_sample->rtt.tmu,
++		rtt_sample->ratespec, rtt_sample->snr, rtt_sample->bitflips, rtt_sample->status,
++		rtt_sample->distance, rtt_sample->tof_phy_error, rtt_sample->tof_tgt_phy_error,
++		rtt_sample->tof_tgt_snr, rtt_sample->tof_tgt_bitflips, rtt_sample->coreid,
++		rtt_sample->chanspec);
++}
++
++/**
++ * inff_ftm_get_pmsr_result_status() - Mapping rtt_result status to pmsr_result status.
 + *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1604,6 +1610,9 @@ enum nl80211_commands {
- 	NL80211_CMD_ASSOC_MLO_RECONF,
- 	NL80211_CMD_EPCS_CFG,
- 
-+	NL80211_CMD_START_WLAN_SENSE,
-+	NL80211_CMD_STOP_WLAN_SENSE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -3592,6 +3601,7 @@ enum nl80211_attrs {
-  * @NL80211_IFTYPE_OCB: Outside Context of a BSS
-  *	This mode corresponds to the MIB variable dot11OCBActivated=true
-  * @NL80211_IFTYPE_NAN: NAN device interface type (not a netdev)
-+ * @NL80211_IFTYPE_WLAN_SENSE: WLAN Sensing device interface type (not a netdev)
-  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
-  * @NUM_NL80211_IFTYPES: number of defined interface types
-  *
-@@ -3613,6 +3623,7 @@ enum nl80211_iftype {
- 	NL80211_IFTYPE_P2P_DEVICE,
- 	NL80211_IFTYPE_OCB,
- 	NL80211_IFTYPE_NAN,
-+	NL80211_IFTYPE_WLAN_SENSE,
- 
- 	/* keep last */
- 	NUM_NL80211_IFTYPES,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b26f61f13605..9f62f30a842c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -592,6 +592,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NUM_NL80211_IFTYPES:
- 	case NL80211_IFTYPE_P2P_CLIENT:
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 57065714cf8c..5b304988e712 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -353,6 +353,7 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
- 			break;
- 		case NL80211_IFTYPE_P2P_DEVICE:
- 		case NL80211_IFTYPE_NAN:
-+		case NL80211_IFTYPE_WLAN_SENSE:
- 			continue;
- 		case NL80211_IFTYPE_MONITOR:
- 			WARN_ON_ONCE(!ieee80211_hw_check(&local->hw,
-@@ -1301,6 +1302,7 @@ ieee80211_link_chanctx_reservation_complete(struct ieee80211_link_data *link)
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 	case NUM_NL80211_IFTYPES:
- 		WARN_ON(1);
- 		break;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 07ba68f7cd81..2537c4255efc 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1320,6 +1320,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_OCB:
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		/* no special treatment */
- 		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
-@@ -1888,6 +1889,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
- 		break;
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_WDS:
- 	case NUM_NL80211_IFTYPES:
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9eb35e3b9e52..3a6c2536f338 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2064,6 +2064,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		case NL80211_IFTYPE_AP_VLAN:
- 		case NL80211_IFTYPE_MONITOR:
- 		case NL80211_IFTYPE_P2P_DEVICE:
-+		case NL80211_IFTYPE_WLAN_SENSE:
- 			/* nothing to do */
- 			break;
- 		case NL80211_IFTYPE_UNSPECIFIED:
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 193734b7f9dc..3593a48f9a15 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -769,6 +769,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		break;
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_UNSPECIFIED:
-@@ -892,6 +893,7 @@ bool cfg80211_beaconing_iface_active(struct wireless_dev *wdev)
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	/* Can NAN type be considered as beaconing interface? */
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_WDS:
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 797f9f2004a6..a8e982ae8628 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -265,6 +265,23 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- 	rdev->opencount--;
- }
- 
-+void cfg80211_stop_wlan_sense(struct cfg80211_registered_device *rdev,
-+			      struct wireless_dev *wdev)
++ * @status: rtt_result status
++ *
++ * return: pmsr_result status
++ */
++static u8
++inff_ftm_get_pmsr_result_status(s32 status)
 +{
-+	lockdep_assert_held(&rdev->wiphy.mtx);
++	u8 ret = 0;
 +
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_WLAN_SENSE))
-+		return;
-+
-+	if (!wdev_running(wdev))
-+		return;
-+
-+	rdev_stop_wlan_sense(rdev, wdev);
-+	wdev->is_running = false;
-+
-+	rdev->opencount--;
-+}
-+
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-@@ -667,6 +684,11 @@ int wiphy_verify_iface_combinations(struct wiphy *wiphy,
- 				    c->limits[j].max > 1))
- 				return -EINVAL;
- 
-+			/* Only a single WLAN Sense interface can be allowed */
-+			if (WARN_ON(types & BIT(NL80211_IFTYPE_WLAN_SENSE) &&
-+				    c->limits[j].max > 1))
-+				return -EINVAL;
-+
- 			/*
- 			 * This isn't well-defined right now. If you have an
- 			 * IBSS interface, then its beacon interval may change
-@@ -1297,6 +1319,9 @@ static void _cfg80211_unregister_wdev(struct wireless_dev *wdev,
- 	case NL80211_IFTYPE_NAN:
- 		cfg80211_stop_nan(rdev, wdev);
- 		break;
-+	case NL80211_IFTYPE_WLAN_SENSE:
-+		cfg80211_stop_wlan_sense(rdev, wdev);
++	switch (status) {
++	case INFF_PROXD_E_OK:
++		ret = NL80211_PMSR_STATUS_SUCCESS;
 +		break;
- 	default:
- 		break;
- 	}
-@@ -1400,6 +1425,7 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		break;
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		/* cannot happen, has no netdev */
- 		break;
- 	case NL80211_IFTYPE_AP_VLAN:
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b7bc7e5e81dd..70717af1fbcd 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1642,6 +1642,7 @@ static int nl80211_key_allowed(struct wireless_dev *wdev)
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 	case NL80211_IFTYPE_WDS:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 	case NUM_NL80211_IFTYPES:
- 		return -EINVAL;
- 	}
-@@ -4642,6 +4643,7 @@ static int _nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		       wdev->u.mesh.id_up_len);
- 		break;
- 	case NL80211_IFTYPE_NAN:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		/*
- 		 * P2P Device and NAN do not have a netdev, so don't go
-@@ -13687,6 +13689,7 @@ static int nl80211_register_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		break;
- 	case NL80211_IFTYPE_NAN:
- 		if (!wiphy_ext_feature_isset(wdev->wiphy,
-@@ -13748,6 +13751,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		break;
- 	case NL80211_IFTYPE_NAN:
- 		if (!wiphy_ext_feature_isset(wdev->wiphy,
-@@ -13872,6 +13876,7 @@ static int nl80211_tx_mgmt_cancel_wait(struct sk_buff *skb, struct genl_info *in
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_WLAN_SENSE:
- 		break;
- 	case NL80211_IFTYPE_NAN:
- 		if (!wiphy_ext_feature_isset(wdev->wiphy,
-@@ -15455,6 +15460,50 @@ static int nl80211_stop_nan(struct sk_buff *skb, struct genl_info *info)
- 	return 0;
- }
- 
-+static int nl80211_start_wlan_sense(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	int err;
++	case INFF_PROXD_E_TIMEOUT:
++		ret = NL80211_PMSR_STATUS_TIMEOUT;
++		break;
++	case INFF_PROXD_E_ERROR:
++		ret = NL80211_PMSR_STATUS_FAILURE;
++		break;
++	default:
++		ret = NL80211_PMSR_STATUS_REFUSED;
++		break;
++	}
 +
-+	if (wdev->iftype != NL80211_IFTYPE_WLAN_SENSE)
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->start_wlan_sense)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev_running(wdev))
-+		return -EEXIST;
-+
-+	if (rfkill_blocked(rdev->wiphy.rfkill))
-+		return -ERFKILL;
-+
-+	err = rdev_start_wlan_sense(rdev, wdev);
-+	if (err)
-+		return err;
-+
-+	wdev->is_running = true;
-+	rdev->opencount++;
-+
-+	return 0;
-+}
-+
-+static int nl80211_stop_wlan_sense(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+
-+	if (wdev->iftype != NL80211_IFTYPE_WLAN_SENSE)
-+		return -EOPNOTSUPP;
-+
-+	if (!rdev->ops->stop_wlan_sense)
-+		return -EOPNOTSUPP;
-+
-+	cfg80211_stop_wlan_sense(rdev, wdev);
-+
-+	return 0;
-+}
-+
- static int validate_nan_filter(struct nlattr *filter_attr)
- {
- 	struct nlattr *attr;
-@@ -18755,6 +18804,20 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
- 	},
-+	{
-+		.cmd = NL80211_CMD_START_WLAN_SENSE,
-+		.doit = nl80211_start_wlan_sense,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV |
-+					 NL80211_FLAG_NEED_RTNL),
-+	},
-+	{
-+		.cmd = NL80211_CMD_STOP_WLAN_SENSE,
-+		.doit = nl80211_stop_wlan_sense,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP |
-+					 NL80211_FLAG_NEED_RTNL),
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index ac6884bacf3f..eb599b9f33d1 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1060,6 +1060,25 @@ rdev_nan_change_conf(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int rdev_start_wlan_sense(struct cfg80211_registered_device *rdev,
-+					struct wireless_dev *wdev)
-+{
-+	int ret;
-+
-+	trace_rdev_start_wlan_sense(&rdev->wiphy, wdev);
-+	ret = rdev->ops->start_wlan_sense(&rdev->wiphy, wdev);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
 +	return ret;
 +}
 +
-+static inline void rdev_stop_wlan_sense(struct cfg80211_registered_device *rdev,
-+					struct wireless_dev *wdev)
++static s32
++inff_ftm_set_op(struct inff_if *ifp, enum inff_proxd_cmd cmd_id,
++		enum inff_proxd_session_id session_id)
 +{
-+	trace_rdev_stop_wlan_sense(&rdev->wiphy, wdev);
-+	rdev->ops->stop_wlan_sense(&rdev->wiphy, wdev);
-+	trace_rdev_return_void(&rdev->wiphy);
++	struct inff_proxd_iov *ftm_buf = NULL;
++	u8 len = 0;
++	s32 err = 0;
++
++	len = sizeof(struct inff_proxd_iov) + sizeof(struct inff_xtlv);
++	ftm_buf = kzalloc(len, GFP_KERNEL);
++	if (!ftm_buf)
++		return -ENOMEM;
++
++	ftm_buf->version = cpu_to_le16(INFF_PROXD_API_VERSION);
++	ftm_buf->len = cpu_to_le16(len);
++	ftm_buf->cmd = cpu_to_le16(cmd_id);
++	ftm_buf->method = cpu_to_le16(INFF_PROXD_METHOD_FTM);
++	ftm_buf->sid = cpu_to_le16(session_id);
++	ftm_buf->tlvs[0].id = cpu_to_le16(INFF_PROXD_TLV_ID_NONE);
++	ftm_buf->tlvs[0].len = 0;
++	err = inff_fil_iovar_data_set(ifp, "proxd", (char *)ftm_buf, len);
++	if (err)
++		inff_err("proxd ftm cmd %d error: %d\n", cmd_id, err);
++
++	kfree(ftm_buf);
++	return err;
 +}
 +
- static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
- 				   struct net_device *dev,
- 				   struct cfg80211_acl_data *params)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 9b6074155d59..91109c27e7a6 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2372,6 +2372,16 @@ TRACE_EVENT(rdev_del_nan_func,
- 		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->cookie)
- );
- 
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_start_wlan_sense,
-+	     TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	     TP_ARGS(wiphy, wdev)
-+);
++static s32
++inff_ftm_get_op(struct inff_if *ifp, enum inff_proxd_cmd cmd_id,
++		enum inff_proxd_session_id session_id,
++		u8 *data, u16 data_len)
++{
++	struct inff_proxd_iov *ftm_buf = (struct inff_proxd_iov *)data;
++	s32 err = 0;
 +
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_wlan_sense,
-+	     TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	     TP_ARGS(wiphy, wdev)
-+);
++	ftm_buf->version = cpu_to_le16(INFF_PROXD_API_VERSION);
++	ftm_buf->len = cpu_to_le16(sizeof(struct inff_proxd_iov));
++	ftm_buf->cmd = cpu_to_le16(cmd_id);
++	ftm_buf->method = cpu_to_le16(INFF_PROXD_METHOD_FTM);
++	ftm_buf->sid = cpu_to_le16(session_id);
++	ftm_buf->tlvs[0].id = cpu_to_le16(INFF_PROXD_TLV_ID_NONE);
++	ftm_buf->tlvs[0].len = 0;
++	err = inff_fil_iovar_data_get(ifp, "proxd", data, data_len);
++	if (err)
++		inff_err("proxd ftm cmd %d error: %d\n", cmd_id, err);
 +
- TRACE_EVENT(rdev_set_mac_acl,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
- 		 struct cfg80211_acl_data *params),
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d12d49134c88..6cffd01c4668 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1297,6 +1297,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		case NL80211_IFTYPE_P2P_DEVICE:
- 		case NL80211_IFTYPE_WDS:
- 		case NL80211_IFTYPE_NAN:
-+		case NL80211_IFTYPE_WLAN_SENSE:
- 			WARN_ON(1);
- 			break;
- 		}
++	return err;
++}
++
++static s32
++inff_ftm_set_config_op(struct inff_if *ifp,
++		       enum inff_proxd_session_id session_id,
++		       u8 *data, u16 data_len)
++{
++	struct inff_proxd_iov *ftm_buf = NULL;
++	u16 ftm_buf_len = 0;
++	s32 err = 0;
++
++	ftm_buf_len = offsetof(struct inff_proxd_iov, tlvs) + data_len;
++	ftm_buf = kzalloc(ftm_buf_len, GFP_KERNEL);
++	if (!ftm_buf)
++		return -ENOMEM;
++
++	ftm_buf->version = cpu_to_le16(INFF_PROXD_API_VERSION);
++	ftm_buf->len = cpu_to_le16(ftm_buf_len);
++	ftm_buf->cmd = cpu_to_le16(INFF_PROXD_CMD_CONFIG);
++	ftm_buf->method = cpu_to_le16(INFF_PROXD_METHOD_FTM);
++	ftm_buf->sid = cpu_to_le16(session_id);
++	memcpy(&ftm_buf->tlvs[0], data, data_len);
++	err = inff_fil_iovar_data_set(ifp, "proxd", ftm_buf, ftm_buf_len);
++	if (err)
++		inff_err("proxd ftm cmd %d error: %d\n", INFF_PROXD_CMD_CONFIG, err);
++
++	kfree(ftm_buf);
++	return err;
++}
++
++static void
++inff_ftm_update_burst_report(struct inff_ftm_info *ftm_info,
++			     struct inff_proxd_event *p_event)
++{
++	struct cfg80211_pmsr_result result = {0};
++	struct inff_xtlv *proxd_tlv = NULL;
++	struct inff_proxd_rtt_result_v2 *rtt_result = NULL;
++	struct inff_proxd_rtt_sample_v2 *rtt_sample = NULL;
++
++	proxd_tlv = (struct inff_xtlv *)((u8 *)p_event + offsetof(struct inff_proxd_iov, tlvs));
++	if (proxd_tlv->id != INFF_PROXD_TLV_ID_RTT_RESULT_V2) {
++		inff_dbg(TRACE, "FTM: wrong len/id in rtt result!\n");
++		goto fail_result;
++	}
++
++	rtt_result = (struct inff_proxd_rtt_result_v2 *)((u8 *)p_event +
++		      offsetof(struct inff_proxd_iov, tlvs) +
++		      offsetof(struct inff_xtlv, data));
++	rtt_sample = rtt_result->rtt;
++	inff_print_rtt_info(rtt_result, rtt_sample);
++
++	/* update result to upper layer
++	 * please refer the unit of cfg80211_pmsr_result from include/uapi/linux/nl80211.h
++	 */
++	result.host_time = ftm_info->host_time;
++	result.status = inff_ftm_get_pmsr_result_status(rtt_result->status);
++	if (rtt_result)
++		memcpy(result.addr, rtt_result->peer, ETH_ALEN);
++	if (rtt_result->burst_num == (1 << ftm_info->ftm_req->peers[0].ftm.num_bursts_exp)) {
++		/* final report */
++		result.final = 1;
++	} else {
++		result.final = 0;
++	}
++	result.ap_tsf_valid = 0;
++	result.type = NL80211_PMSR_TYPE_FTM;
++	result.ftm.burst_index = rtt_result->burst_num;
++	result.ftm.num_bursts_exp = ftm_info->ftm_req->peers[0].ftm.num_bursts_exp;
++	result.ftm.burst_duration = ftm_info->ftm_req->peers[0].ftm.burst_duration;
++	result.ftm.ftms_per_burst = rtt_result->num_ftm;
++	result.ftm.rssi_avg = (2 * rtt_sample->rssi); // unit: 1/2dBm
++	result.ftm.rtt_avg = intvl_to_picosecond(rtt_sample->rtt); // unit: picosecond
++	result.ftm.rtt_variance = (rtt_result->sd_rtt * rtt_result->sd_rtt);
++	result.ftm.dist_avg = ((rtt_result->avg_dist * 1000) / 256); // unit: mm
++	result.ftm.rssi_avg_valid = 1;
++	result.ftm.rtt_avg_valid = 1;
++	result.ftm.rtt_variance_valid = 1;
++	result.ftm.dist_avg_valid = 1;
++	cfg80211_pmsr_report(&ftm_info->vif->wdev, ftm_info->ftm_req, &result, GFP_KERNEL);
++
++	return;
++
++fail_result:
++	result.status = NL80211_PMSR_STATUS_FAILURE;
++	if (rtt_result)
++		memcpy(result.addr, rtt_result->peer, ETH_ALEN);
++	cfg80211_pmsr_report(&ftm_info->vif->wdev, ftm_info->ftm_req, &result, GFP_KERNEL);
++}
++
++static void
++inff_ftm_update_final_report(struct inff_ftm_info *ftm_info,
++			     struct inff_proxd_event *p_event)
++{
++	struct cfg80211_pmsr_result result = {0};
++	s32 err = 0;
++	u8 proxd_buf[512] = {0};
++	struct inff_proxd_iov *proxd_iov = NULL;
++	struct inff_xtlv *proxd_tlv = NULL;
++	struct inff_proxd_rtt_result_v2 *rtt_result = NULL;
++	struct inff_proxd_rtt_sample_v2 *rtt_sample = NULL;
++
++	/* FTM get result */
++	err = inff_ftm_get_op(ftm_info->ifp, INFF_PROXD_CMD_GET_RESULT,
++			      INFF_PROXD_SESSION_ID_DEFAULT_FTM,
++			      (u8 *)proxd_buf, sizeof(proxd_buf));
++	if (err) {
++		inff_dbg(TRACE, "FTM: get rtt result fail!\n");
++		goto fail_result;
++	}
++
++	proxd_iov = (struct inff_proxd_iov *)proxd_buf;
++	proxd_tlv = (struct inff_xtlv *)(proxd_buf + offsetof(struct inff_proxd_iov, tlvs));
++	if ((proxd_iov->len <
++		sizeof(struct inff_proxd_iov) + sizeof(struct inff_xtlv) +
++		sizeof(struct inff_proxd_rtt_result_v2) - 2) ||
++		proxd_tlv->id != INFF_PROXD_TLV_ID_RTT_RESULT_V2) {
++		inff_dbg(TRACE, "FTM: wrong len/id in rtt result!\n");
++		goto fail_result;
++	}
++	rtt_result = (struct inff_proxd_rtt_result_v2 *)(proxd_buf +
++		      offsetof(struct inff_proxd_iov, tlvs) +
++		      offsetof(struct inff_xtlv, data));
++	rtt_sample = rtt_result->rtt;
++	inff_print_rtt_info(rtt_result, rtt_sample);
++
++	/* update result to upper layer
++	 * please refer the unit of cfg80211_pmsr_result from include/uapi/linux/nl80211.h
++	 */
++	result.host_time = ftm_info->host_time;
++	result.status = inff_ftm_get_pmsr_result_status(rtt_result->status);
++	if (rtt_result)
++		memcpy(result.addr, rtt_result->peer, ETH_ALEN);
++	result.final = 1;
++	result.ap_tsf_valid = 0;
++	result.type = NL80211_PMSR_TYPE_FTM;
++	result.ftm.burst_index = -1;
++	result.ftm.num_bursts_exp = ilog2(rtt_result->burst_num);
++	result.ftm.burst_duration = ftm_info->ftm_req->peers[0].ftm.burst_duration;
++	result.ftm.ftms_per_burst = rtt_result->num_ftm;
++	result.ftm.rssi_avg = (2 * rtt_sample->rssi); // unit: 1/2dBm
++	result.ftm.rtt_avg = intvl_to_picosecond(rtt_sample->rtt); // unit: picosecond
++	result.ftm.rtt_variance = (rtt_result->sd_rtt * rtt_result->sd_rtt);
++	result.ftm.dist_avg = ((rtt_result->avg_dist * 1000) / 256); // unit: mm
++	result.ftm.rssi_avg_valid = 1;
++	result.ftm.rtt_avg_valid = 1;
++	result.ftm.rtt_variance_valid = 1;
++	result.ftm.dist_avg_valid = 1;
++	cfg80211_pmsr_report(&ftm_info->vif->wdev, ftm_info->ftm_req, &result, GFP_KERNEL);
++
++	return;
++
++fail_result:
++	result.status = NL80211_PMSR_STATUS_FAILURE;
++	if (rtt_result)
++		memcpy(result.addr, rtt_result->peer, ETH_ALEN);
++	cfg80211_pmsr_report(&ftm_info->vif->wdev, ftm_info->ftm_req, &result, GFP_KERNEL);
++}
++
++s32
++inff_notify_ftm_evt(struct inff_if *ifp,
++		    const struct inff_event_msg *e, void *data)
++{
++	struct inff_cfg80211_info *cfg = ifp->drvr->config;
++	struct inff_ftm_info *ftm_info = cfg->pmsr_info->ftm_info;
++	struct inff_proxd_event *p_event;
++	u16 event_type;
++	struct inff_xtlv *proxd_tlv = NULL;
++	struct inff_proxd_ftm_session_status *proxd_status = NULL;
++	s32 err = 0;
++
++	p_event = (struct inff_proxd_event *)data;
++	event_type = p_event->type;
++	inff_dbg(INFO, "FTM: event %s (%d), status=%d, proxd_type=%d\n",
++		 inff_fweh_event_name(e->event_code), e->event_code,
++		 e->status, event_type);
++
++	/* Currently do not handle event for softap mode */
++	if (cfg->num_softap || !(ftm_info->ftm_req) ||
++	    !inff_feat_is_enabled(ifp, INFF_FEAT_FTM)) {
++		inff_dbg(TRACE, "FTM: condition check fail!");
++		return 0;
++	}
++
++	/* check session status tlv */
++	proxd_tlv = (struct inff_xtlv *)((u8 *)p_event + offsetof(struct inff_proxd_iov, tlvs));
++	if (proxd_tlv->id == INFF_PROXD_TLV_ID_SESSION_STATUS) {
++		proxd_status = (struct inff_proxd_ftm_session_status *)proxd_tlv->data;
++		inff_dbg(TRACE, "FTM: session status tlv\n"
++			"sid               : %d\n"
++			"state             : %d\n"
++			"status            : %d\n"
++			"burst_num         : %d\n",
++			proxd_status->sid, proxd_status->state, proxd_status->status,
++			proxd_status->burst_num);
++	}
++
++	switch (event_type) {
++	case INFF_PROXD_EVENT_SESSION_CREATE:
++		/* FTM session start */
++		err = inff_ftm_set_op(ifp, INFF_PROXD_CMD_START_SESSION,
++				      INFF_PROXD_SESSION_ID_DEFAULT_FTM);
++		if (err) {
++			inff_err("FTM: start session fail!\n");
++			ftm_info->ftm_req = NULL;
++			ftm_info->host_time = 0;
++		}
++		break;
++	case INFF_PROXD_EVENT_SESSION_START:
++		/* update host_time for non partial report mode*/
++		if (!ftm_info->ftm_partial_report)
++			ftm_info->host_time = (u64)ktime_to_ns(ktime_get_boottime());
++		break;
++	case INFF_PROXD_EVENT_BURST_START:
++		/* update host_time for partial report mode*/
++		if (ftm_info->ftm_partial_report)
++			ftm_info->host_time = (u64)ktime_to_ns(ktime_get_boottime());
++		break;
++	case INFF_PROXD_EVENT_BURST_END:
++		if (ftm_info->ftm_partial_report)
++			inff_ftm_update_burst_report(ftm_info, p_event);
++		break;
++	case INFF_PROXD_EVENT_SESSION_END:
++		if (!ftm_info->ftm_partial_report)
++			inff_ftm_update_final_report(ftm_info, p_event);
++
++		/* FTM session delete */
++		err = inff_ftm_set_op(ifp, INFF_PROXD_CMD_DELETE_SESSION,
++				      INFF_PROXD_SESSION_ID_DEFAULT_FTM);
++		if (err)
++			inff_err("FTM: delete session fail!\n");
++
++		break;
++	case INFF_PROXD_EVENT_SESSION_DESTROY:
++		cfg80211_pmsr_complete(&ifp->vif->wdev, ftm_info->ftm_req, GFP_KERNEL);
++		ftm_info->ftm_req = NULL;
++		ftm_info->host_time = 0;
++		break;
++	default:
++		break;
++	}
++
++	return 0;
++}
++
++s32
++inff_ftm_set_global_config(struct inff_ftm_info *ftm_info,
++			   struct cfg80211_pmsr_request_peer *peer)
++{
++	u8 buf[512] = {0}, *bufp = NULL;
++	u16 buf_len = 0, buf_len_start = 0;
++	u32 param32 = 0;
++
++	buf_len_start = sizeof(buf);
++	buf_len = sizeof(buf);
++	bufp = &buf[0];
++
++	/* ex: proxd ftm config options +mburst-followup */
++	param32 = cpu_to_le32(INFF_PROXD_FLAG_MBURST_FOLLOWUP);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_FLAGS_MASK, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++	param32 = cpu_to_le32(peer->ftm.num_bursts_exp > 0 ?
++			      INFF_PROXD_FLAG_MBURST_FOLLOWUP : 0x00);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_FLAGS, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++
++	buf_len = buf_len_start - buf_len;
++	return inff_ftm_set_config_op(ftm_info->ifp, INFF_PROXD_SESSION_ID_GLOBAL, buf, buf_len);
++}
++
++s32
++inff_ftm_set_session_config(struct inff_ftm_info *ftm_info,
++			    struct cfg80211_pmsr_request_peer *peer,
++			    enum inff_proxd_session_id session_id)
++{
++	u8 buf[512] = {0}, *bufp = NULL;
++	u16 buf_len = 0, buf_len_start = 0;
++	u16 param16 = 0;
++	u32 param32 = 0;
++	struct inff_proxd_intvl param_intvl = {0};
++	u8 burst_no_pref = 0;
++
++	buf_len_start = sizeof(buf);
++	buf_len = sizeof(buf);
++	bufp = &buf[0];
++
++	/* ex: proxd ftm $SID config debug-mask 0xffffffde */
++	param32 = cpu_to_le32(ftm_info->ftm_debug_mask);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_DEBUG_MASK, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config burst-duration 128ms */
++	param_intvl.intvl = cpu_to_le32(0);
++	param_intvl.tmu = cpu_to_le16(INFF_PROXD_TMU_TU);
++	switch (peer->ftm.burst_duration) {
++	case 2:
++	case 3:
++		param_intvl.intvl = cpu_to_le32(250 * (peer->ftm.burst_duration - 1));
++		param_intvl.tmu = cpu_to_le16(INFF_PROXD_TMU_MICRO_SEC);
++		break;
++	case 4:
++	case 5:
++	case 6:
++	case 7:
++	case 8:
++	case 9:
++	case 10:
++	case 11:
++		param_intvl.intvl = cpu_to_le32(1 << (peer->ftm.burst_duration - 4));
++		param_intvl.tmu = cpu_to_le16(INFF_PROXD_TMU_MILLI_SEC);
++		break;
++	default:
++		burst_no_pref = 1;
++		break;
++	}
++	if (!burst_no_pref)
++		inff_pack_xtlv(INFF_PROXD_TLV_ID_BURST_DURATION, (u8 *)&param_intvl,
++			       sizeof(param_intvl), (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config options .....
++	 * must set: +initiator -rtt-detail +rx-auto-burst +pre-scan -immediate
++	 * set by user: +asap +tx-lci-req +tx-civic-req
++	 */
++	param32 = cpu_to_le32(INFF_PROXD_SESSION_FLAG_INITIATOR |
++			      INFF_PROXD_SESSION_FLAG_RTT_DETAIL |
++			      INFF_PROXD_SESSION_FLAG_RX_AUTO_BURST |
++			      INFF_PROXD_SESSION_FLAG_ASAP |
++			      INFF_PROXD_SESSION_FLAG_REQ_LCI |
++			      INFF_PROXD_SESSION_FLAG_REQ_CIV |
++			      INFF_PROXD_SESSION_FLAG_PRE_SCAN |
++			      INFF_PROXD_SESSION_FLAG_BDUR_NOPREF |
++			      INFF_PROXD_SESSION_FLAG_MBURST_NODELAY);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_SESSION_FLAGS_MASK, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++	param32 = cpu_to_le32(INFF_PROXD_SESSION_FLAG_INITIATOR |
++			      INFF_PROXD_SESSION_FLAG_RX_AUTO_BURST |
++			      (peer->ftm.asap ? INFF_PROXD_SESSION_FLAG_ASAP : 0x00) |
++			      (peer->ftm.request_lci ? INFF_PROXD_SESSION_FLAG_REQ_LCI : 0x00) |
++			      (peer->ftm.request_civicloc ?
++			      INFF_PROXD_SESSION_FLAG_REQ_CIV : 0x00) |
++			      (burst_no_pref ? INFF_PROXD_SESSION_FLAG_BDUR_NOPREF : 0x00) |
++			      INFF_PROXD_SESSION_FLAG_PRE_SCAN);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_SESSION_FLAGS, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config peer $PEER_MAC */
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_PEER_MAC, &peer->addr[0], ETH_ALEN,
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config chanspec 36/20 */
++	param32 = cpu_to_le32(chandef_to_chanspec(&ftm_info->cfg80211_info->d11inf,
++						  &peer->chandef));
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_CHANSPEC, (u8 *)&param32, sizeof(u32),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config num-burst 1 */
++	param16 = cpu_to_le16(1 << peer->ftm.num_bursts_exp);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_NUM_BURST, (u8 *)&param16, sizeof(u16),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config num-ftm 6 */
++	param16 = cpu_to_le16(peer->ftm.ftms_per_burst);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_BURST_NUM_FTM, (u8 *)&param16, sizeof(u16),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config burst-period 5000ms */
++	param_intvl.intvl = cpu_to_le32(peer->ftm.burst_period * 100);
++	param_intvl.tmu = cpu_to_le16(INFF_PROXD_TMU_MILLI_SEC);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_BURST_PERIOD, (u8 *)&param_intvl, sizeof(param_intvl),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config req-retries 3 */
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_FTM_REQ_RETRIES, (u8 *)&peer->ftm.ftmr_retries, sizeof(u8),
++		       (char **)&bufp, &buf_len);
++
++	/* ex: proxd ftm $SID config ftm-sep 3ms */
++	param_intvl.intvl = cpu_to_le32(INFF_PROXD_TLV_FTM_SEP_VAL);
++	param_intvl.tmu = cpu_to_le16(INFF_PROXD_TMU_MILLI_SEC);
++	inff_pack_xtlv(INFF_PROXD_TLV_ID_BURST_FTM_SEP, (u8 *)&param_intvl, sizeof(param_intvl),
++		       (char **)&bufp, &buf_len);
++
++	buf_len = buf_len_start - buf_len;
++	return inff_ftm_set_config_op(ftm_info->ifp, session_id, buf, buf_len);
++}
++
++s32 inff_ftm_attach(struct inff_cfg80211_info *cfg)
++{
++	struct net_device *ndev = cfg_to_ndev(cfg);
++	struct inff_if *ifp = netdev_priv(ndev);
++	struct inff_ftm_info *ftm_info;
++	s32 err = 0;
++	u8 rrm_cap[RM_ENAB_CAP_SIZE] = { 0 };
++
++	ftm_info = kzalloc(sizeof(*ftm_info), GFP_KERNEL);
++	if (!ftm_info)
++		return -ENOMEM;
++
++	ftm_info->cfg80211_info = cfg;
++	ftm_info->vif = ifp->vif;
++	ftm_info->ifp = ifp;
++	ftm_info->ftm_req = NULL;
++	ftm_info->ftm_debug_mask = 0xFFFFFFDE;
++	ftm_info->ftm_partial_report = 1;
++	ftm_info->host_time = 0;
++	cfg->pmsr_info->ftm_info = ftm_info;
++
++	/* FTM enable */
++	err = inff_ftm_set_op(ifp, INFF_PROXD_CMD_ENABLE, INFF_PROXD_SESSION_ID_GLOBAL);
++	if (err) {
++		inff_err("FTM: enable fail!\n");
++		/* disable feature */
++		ifp->drvr->feat_flags[INFF_FEAT_FTM / 8] &= ~BIT(INFF_FEAT_FTM % 8);
++		return err;
++	}
++
++	/* set rrm capabilities */
++	err = inff_fil_iovar_data_get(ifp, "rrm", rrm_cap, sizeof(rrm_cap));
++	if (err) {
++		inff_err("get rrm error: %d\n", err);
++	} else {
++		rrm_cap[4] |= IEEE80211_RM_ENAB_CAP4_FTM_RANGE_REPORT;
++		rrm_cap[4] |= IEEE80211_RM_ENAB_CAP4_CIVIC_LOCATION_MSR;
++
++		err = inff_fil_iovar_data_set(ifp, "rrm", rrm_cap, sizeof(rrm_cap));
++		if (err)
++			inff_err("set rrm error: %d\n", err);
++	}
++
++	return err;
++}
++
++void inff_ftm_detach(struct inff_cfg80211_info *cfg)
++{
++	struct inff_ftm_info *ftm_info = cfg->pmsr_info->ftm_info;
++
++	if (!ftm_info || !ftm_info->vif)
++		return;
++
++	kfree(ftm_info);
++	cfg->pmsr_info->ftm_info = NULL;
++}
+diff --git a/drivers/net/wireless/infineon/inffmac/ftm.h b/drivers/net/wireless/infineon/inffmac/ftm.h
+new file mode 100644
+index 000000000000..3d7ca9ff401a
+--- /dev/null
++++ b/drivers/net/wireless/infineon/inffmac/ftm.h
+@@ -0,0 +1,382 @@
++/* SPDX-License-Identifier: ISC */
++/*
++ * Copyright (c) 2025, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
++ * All rights reserved.
++ */
++
++#ifndef INFF_FTM_H
++#define INFF_FTM_H
++
++#include "xtlv.h"
++
++#define RM_ENAB_CAP_SIZE	5
++
++/** tlv IDs - data length 4 bytes unless overridden by type, alignment 32 bits */
++enum inff_proxd_tlv_id {
++	INFF_PROXD_TLV_ID_NONE              = 0,
++	INFF_PROXD_TLV_ID_METHOD            = 1,
++	INFF_PROXD_TLV_ID_FLAGS             = 2,
++	INFF_PROXD_TLV_ID_CHANSPEC          = 3, /* note: uint32 */
++	INFF_PROXD_TLV_ID_TX_POWER          = 4,
++	INFF_PROXD_TLV_ID_RATESPEC          = 5,
++	INFF_PROXD_TLV_ID_BURST_DURATION    = 6, /* intvl - length of burst */
++	INFF_PROXD_TLV_ID_BURST_PERIOD      = 7, /* intvl - between bursts */
++	INFF_PROXD_TLV_ID_BURST_FTM_SEP     = 8, /* intvl - between FTMs */
++	INFF_PROXD_TLV_ID_BURST_NUM_FTM     = 9, /* uint16 - per burst */
++	INFF_PROXD_TLV_ID_NUM_BURST         = 10, /* uint16 */
++	INFF_PROXD_TLV_ID_FTM_RETRIES       = 11, /* uint16 at FTM level */
++	INFF_PROXD_TLV_ID_BSS_INDEX         = 12, /* uint8 */
++	INFF_PROXD_TLV_ID_BSSID             = 13,
++	INFF_PROXD_TLV_ID_INIT_DELAY        = 14, /* intvl - optional,non-standalone only */
++	INFF_PROXD_TLV_ID_BURST_TIMEOUT     = 15, /* expect response within - intvl */
++	INFF_PROXD_TLV_ID_EVENT_MASK        = 16, /* interested events - in/out */
++	INFF_PROXD_TLV_ID_FLAGS_MASK        = 17, /* interested flags - in only */
++	INFF_PROXD_TLV_ID_PEER_MAC          = 18, /* mac address of peer */
++	INFF_PROXD_TLV_ID_FTM_REQ           = 19, /* dot11_ftm_req */
++	INFF_PROXD_TLV_ID_LCI_REQ           = 20,
++	INFF_PROXD_TLV_ID_LCI               = 21,
++	INFF_PROXD_TLV_ID_CIVIC_REQ         = 22,
++	INFF_PROXD_TLV_ID_CIVIC             = 23,
++	INFF_PROXD_TLV_ID_AVAIL24           = 24, /* ROM compatibility */
++	INFF_PROXD_TLV_ID_SESSION_FLAGS     = 25,
++	INFF_PROXD_TLV_ID_SESSION_FLAGS_MASK = 26, /* in only */
++	INFF_PROXD_TLV_ID_RX_MAX_BURST      = 27, /* uint16 - limit bursts per session */
++	INFF_PROXD_TLV_ID_RANGING_INFO      = 28, /* ranging info */
++	INFF_PROXD_TLV_ID_RANGING_FLAGS     = 29, /* uint16 */
++	INFF_PROXD_TLV_ID_RANGING_FLAGS_MASK = 30, /* uint16, in only */
++	INFF_PROXD_TLV_ID_NAN_MAP_ID        = 31,
++	INFF_PROXD_TLV_ID_DEV_ADDR          = 32,
++	INFF_PROXD_TLV_ID_AVAIL             = 33, /* wl_proxd_avail_t  */
++	INFF_PROXD_TLV_ID_TLV_ID            = 34, /* uint16 tlv-id */
++	INFF_PROXD_TLV_ID_FTM_REQ_RETRIES   = 35, /* uint16 FTM request retries */
++	INFF_PROXD_TLV_ID_TPK               = 36, /* 32byte TPK  */
++	INFF_PROXD_TLV_ID_RI_RR             = 36, /* RI_RR */
++	INFF_PROXD_TLV_ID_TUNE              = 37, /* wl_proxd_pararms_tof_tune_t */
++	INFF_PROXD_TLV_ID_CUR_ETHER_ADDR    = 38, /* Source Address used for Tx */
++
++	/* output - 512 + x */
++	INFF_PROXD_TLV_ID_STATUS            = 512,
++	INFF_PROXD_TLV_ID_COUNTERS          = 513,
++	INFF_PROXD_TLV_ID_INFO              = 514,
++	INFF_PROXD_TLV_ID_RTT_RESULT        = 515,
++	INFF_PROXD_TLV_ID_AOA_RESULT        = 516,
++	INFF_PROXD_TLV_ID_SESSION_INFO      = 517,
++	INFF_PROXD_TLV_ID_SESSION_STATUS    = 518,
++	INFF_PROXD_TLV_ID_SESSION_ID_LIST   = 519,
++	INFF_PROXD_TLV_ID_RTT_RESULT_V2     = 520,
++
++	/* debug tlvs can be added starting 1024 */
++	INFF_PROXD_TLV_ID_DEBUG_MASK        = 1024,
++	INFF_PROXD_TLV_ID_COLLECT           = 1025,	/**< output only */
++	INFF_PROXD_TLV_ID_STRBUF            = 1026,
++
++	INFF_PROXD_TLV_ID_COLLECT_HEADER    = 1025,	/* wl_proxd_collect_header_t */
++	INFF_PROXD_TLV_ID_COLLECT_INFO      = 1028,	/* wl_proxd_collect_info_t */
++	INFF_PROXD_TLV_ID_COLLECT_DATA      = 1029,	/* wl_proxd_collect_data_t */
++	INFF_PROXD_TLV_ID_COLLECT_CHAN_DATA = 1030,	/* wl_proxd_collect_data_t */
++	INFF_PROXD_TLV_ID_MF_STATS_DATA     = 1031,	/* mf_stats_buffer */
++
++	INFF_PROXD_TLV_ID_MAX
++};
++
++/** commands that can apply to proxd, method or a session */
++enum inff_proxd_cmd {
++	INFF_PROXD_CMD_NONE                 = 0,
++	INFF_PROXD_CMD_GET_VERSION          = 1,
++	INFF_PROXD_CMD_ENABLE               = 2,
++	INFF_PROXD_CMD_DISABLE              = 3,
++	INFF_PROXD_CMD_CONFIG               = 4,
++	INFF_PROXD_CMD_START_SESSION        = 5,
++	INFF_PROXD_CMD_BURST_REQUEST        = 6,
++	INFF_PROXD_CMD_STOP_SESSION         = 7,
++	INFF_PROXD_CMD_DELETE_SESSION       = 8,
++	INFF_PROXD_CMD_GET_RESULT           = 9,
++	INFF_PROXD_CMD_GET_INFO             = 10,
++	INFF_PROXD_CMD_GET_STATUS           = 11,
++	INFF_PROXD_CMD_GET_SESSIONS         = 12,
++	INFF_PROXD_CMD_GET_COUNTERS         = 13,
++	INFF_PROXD_CMD_CLEAR_COUNTERS       = 14,
++	INFF_PROXD_CMD_COLLECT              = 15, /* not supported, see 'wl proxd_collect' */
++	INFF_PROXD_CMD_TUNE                 = 16, /* not supported, see 'wl proxd_tune' */
++	INFF_PROXD_CMD_DUMP                 = 17,
++	INFF_PROXD_CMD_START_RANGING        = 18,
++	INFF_PROXD_CMD_STOP_RANGING         = 19,
++	INFF_PROXD_CMD_GET_RANGING_INFO     = 20,
++	INFF_PROXD_CMD_IS_TLV_SUPPORTED     = 21,
++
++	INFF_PROXD_CMD_MAX
++};
++
++/** proximity detection methods */
++enum inff_proxd_method {
++	INFF_PROXD_METHOD_NONE              = 0,
++	INFF_PROXD_METHOD_RSVD1             = 1, /* backward compatibility - RSSI, not supported */
++	INFF_PROXD_METHOD_TOF               = 2,
++	INFF_PROXD_METHOD_RSVD2             = 3, /* 11v only - if needed */
++	INFF_PROXD_METHOD_FTM               = 4, /* IEEE rev mc/2014 */
++	INFF_PROXD_METHOD_MAX
++};
++
++/** global and method configuration flags */
++enum inff_proxd_global_flag {
++	INFF_PROXD_FLAG_NONE                        = 0x00000000,
++	INFF_PROXD_FLAG_RX_ENABLED                  = 0x00000001, /* respond to requests, per bss */
++	INFF_PROXD_FLAG_RX_RANGE_REQ                = 0x00000002, /* 11mc range requests enabled */
++	INFF_PROXD_FLAG_TX_LCI                      = 0x00000004, /* tx lci, if known */
++	INFF_PROXD_FLAG_TX_CIVIC                    = 0x00000008, /* tx civic, if known */
++	INFF_PROXD_FLAG_RX_AUTO_BURST               = 0x00000010, /* auto respond w/o host action */
++	INFF_PROXD_FLAG_TX_AUTO_BURST               = 0x00000020, /* continue tx w/o host action */
++	INFF_PROXD_FLAG_AVAIL_PUBLISH               = 0x00000040, /* publish availability */
++	INFF_PROXD_FLAG_AVAIL_SCHEDULE              = 0x00000080, /* schedule using availability */
++	INFF_PROXD_FLAG_ASAP_CAPABLE                = 0x00000100, /* ASAP capable */
++	INFF_PROXD_FLAG_MBURST_FOLLOWUP             = 0x00000200, /* new multi-burst algorithm */
++	INFF_PROXD_FLAG_SECURE                      = 0x00000400, /* per bsscfg option */
++	INFF_PROXD_FLAG_NO_TSF_SYNC                 = 0x00000800, /* disable tsf sync */
++	INFF_PROXD_FLAG_ALL                         = 0xffffffff
++};
++
++/* session ids:
++ * id 0 is reserved
++ * ids 1..0x7fff - allocated by host/app
++ * 0x8000-0xffff - allocated by firmware, used for auto/rx
++ */
++/* typedef u16 wl_proxd_session_id_t; */
++enum inff_proxd_session_id {
++	INFF_PROXD_SESSION_ID_GLOBAL        = 0,
++	INFF_PROXD_SESSION_ID_DEFAULT_FTM   = 1
++};
++
++/** session flags */
++enum inff_proxd_session_flag {
++	INFF_PROXD_SESSION_FLAG_NONE                = 0x00000000, /* no flags */
++	INFF_PROXD_SESSION_FLAG_INITIATOR           = 0x00000001, /* local device is initiator */
++	INFF_PROXD_SESSION_FLAG_TARGET              = 0x00000002, /* local device is target */
++	INFF_PROXD_SESSION_FLAG_ONE_WAY             = 0x00000004, /* (initiated) 1-way rtt */
++	INFF_PROXD_SESSION_FLAG_AUTO_BURST          = 0x00000008, /* created w/ rx_auto_burst */
++	INFF_PROXD_SESSION_FLAG_PERSIST             = 0x00000010, /* good until cancelled */
++	INFF_PROXD_SESSION_FLAG_RTT_DETAIL          = 0x00000020, /* rtt detail in results */
++	INFF_PROXD_SESSION_FLAG_SECURE              = 0x00000040, /* sessionis secure */
++	INFF_PROXD_SESSION_FLAG_AOA                 = 0x00000080, /* AOA along w/ RTT */
++	INFF_PROXD_SESSION_FLAG_RX_AUTO_BURST       = 0x00000100, /* Same as proxd flags above */
++	INFF_PROXD_SESSION_FLAG_TX_AUTO_BURST       = 0x00000200, /* Same as proxd flags above */
++	INFF_PROXD_SESSION_FLAG_NAN_BSS             = 0x00000400, /* Use NAN BSS, if applicable */
++	INFF_PROXD_SESSION_FLAG_TS1                 = 0x00000800, /* e.g. FTM1 - ASAP-capable */
++	INFF_PROXD_SESSION_FLAG_REPORT_FAILURE      = 0x00002000, /* report failure to target */
++	INFF_PROXD_SESSION_FLAG_INITIATOR_RPT       = 0x00004000, /* report distance to target */
++	INFF_PROXD_SESSION_FLAG_NOCHANSWT           = 0x00008000,
++	INFF_PROXD_SESSION_FLAG_NETRUAL             = 0x00010000, /* netrual mode */
++	INFF_PROXD_SESSION_FLAG_SEQ_EN              = 0x00020000, /* Toast */
++	INFF_PROXD_SESSION_FLAG_NO_PARAM_OVRD       = 0x00040000, /* no param override */
++	INFF_PROXD_SESSION_FLAG_ASAP                = 0x00080000, /* ASAP session */
++	INFF_PROXD_SESSION_FLAG_REQ_LCI             = 0x00100000, /* transmit LCI req */
++	INFF_PROXD_SESSION_FLAG_REQ_CIV             = 0x00200000, /* transmit civic loc req */
++	INFF_PROXD_SESSION_FLAG_PRE_SCAN            = 0x00400000, /* enable pre-scan for asap=1 */
++	INFF_PROXD_SESSION_FLAG_AUTO_VHTACK         = 0x00800000, /* use vhtack based on ie */
++	INFF_PROXD_SESSION_FLAG_VHTACK              = 0x01000000, /* vht ack is in use */
++	INFF_PROXD_SESSION_FLAG_BDUR_NOPREF         = 0x02000000, /* burst-duration: no pref */
++	INFF_PROXD_SESSION_FLAG_NUM_FTM_NOPREF      = 0x04000000, /* num of FTM frames: no pref */
++	INFF_PROXD_SESSION_FLAG_FTM_SEP_NOPREF      = 0x08000000, /* time btw FTM frams: no pref */
++	INFF_PROXD_SESSION_FLAG_NUM_BURST_NOPREF    = 0x10000000, /* num of bursts: no pref */
++	INFF_PROXD_SESSION_FLAG_BURST_PERIOD_NOPREF = 0x20000000, /* burst period: no pref */
++	INFF_PROXD_SESSION_FLAG_MBURST_FOLLOWUP     = 0x40000000, /* new mburst algo  - reserved */
++	INFF_PROXD_SESSION_FLAG_MBURST_NODELAY      = 0x80000000, /* good until cancelled */
++	INFF_PROXD_SESSION_FLAG_ALL                 = 0xffffffff
++};
++
++/** time units - mc supports up to 0.1ns resolution */
++enum inff_proxd_tmu {
++	INFF_PROXD_TMU_TU           = 0,	/* 1024us */
++	INFF_PROXD_TMU_SEC          = 1,
++	INFF_PROXD_TMU_MILLI_SEC    = 2,
++	INFF_PROXD_TMU_MICRO_SEC    = 3,
++	INFF_PROXD_TMU_NANO_SEC     = 4,
++	INFF_PROXD_TMU_PICO_SEC     = 5
++};
++
++/** result flags */
++enum inff_proxd_result {
++	INFF_PRXOD_RESULT_FLAG_NONE     = 0x0000,
++	INFF_PROXD_RESULT_FLAG_NLOS     = 0x0001, /* LOS - if available */
++	INFF_PROXD_RESULT_FLAG_LOS      = 0x0002, /* NLOS - if available */
++	INFF_PROXD_RESULT_FLAG_FATAL    = 0x0004, /* Fatal error during burst */
++	INFF_PROXD_RESULT_FLAG_VHTACK   = 0x0008, /* VHTACK or Legacy ACK used */
++	INFF_PROXD_REQUEST_SENT         = 0x0010, /* FTM request was sent */
++	INFF_PROXD_REQUEST_ACKED        = 0x0020, /* FTM request was acked */
++	INFF_PROXD_LTFSEQ_STARTED       = 0x0040, /* LTF sequence started */
++	INFF_PROXD_RESULT_FLAG_ALL      = 0xffff
++};
++
++/** status */
++enum inff_proxd_status {
++	INFF_PROXD_E_LAST               = -1056,
++	INFF_PROXD_E_NOAVAIL            = -1056,
++	INFF_PROXD_E_EXT_SCHED          = -1055,
++	INFF_PROXD_E_NOT_INF            = -1054,
++	INFF_PROXD_E_FRAME_TYPE         = -1053,
++	INFF_PROXD_E_VERNOSUPPORT       = -1052,
++	INFF_PROXD_E_SEC_NOKEY          = -1051,
++	INFF_PROXD_E_SEC_POLICY         = -1050,
++	INFF_PROXD_E_SCAN_INPROCESS     = -1049,
++	INFF_PROXD_E_BAD_PARTIAL_TSF    = -1048,
++	INFF_PROXD_E_SCANFAIL           = -1047,
++	INFF_PROXD_E_NOTSF              = -1046,
++	INFF_PROXD_E_POLICY             = -1045,
++	INFF_PROXD_E_INCOMPLETE         = -1044,
++	INFF_PROXD_E_OVERRIDDEN         = -1043,
++	INFF_PROXD_E_ASAP_FAILED        = -1042,
++	INFF_PROXD_E_NOTSTARTED         = -1041,
++	INFF_PROXD_E_INVALIDMEAS        = -1040,
++	INFF_PROXD_E_INCAPABLE          = -1039,
++	INFF_PROXD_E_MISMATCH           = -1038,
++	INFF_PROXD_E_DUP_SESSION        = -1037,
++	INFF_PROXD_E_REMOTE_FAIL        = -1036,
++	INFF_PROXD_E_REMOTE_INCAPABLE   = -1035,
++	INFF_PROXD_E_SCHED_FAIL         = -1034,
++	INFF_PROXD_E_PROTO              = -1033,
++	INFF_PROXD_E_EXPIRED            = -1032,
++	INFF_PROXD_E_TIMEOUT            = -1031,
++	INFF_PROXD_E_NOACK              = -1030,
++	INFF_PROXD_E_DEFERRED           = -1029,
++	INFF_PROXD_E_INVALID_SID        = -1028,
++	INFF_PROXD_E_REMOTE_CANCEL      = -1027,
++	INFF_PROXD_E_CANCELED           = -1026, /* local */
++	INFF_PROXD_E_INVALID_SESSION    = -1025,
++	INFF_PROXD_E_BAD_STATE          = -1024,
++	INFF_PROXD_E_START              = -1024,
++	INFF_PROXD_E_ERROR              = -1,
++	INFF_PROXD_E_OK                 = 0
++};
++
++/* typedef u16 wl_proxd_event_type_t; */
++enum inff_proxd_event_type {
++	INFF_PROXD_EVENT_NONE                   = 0, /* not an event, reserved */
++	INFF_PROXD_EVENT_SESSION_CREATE         = 1,
++	INFF_PROXD_EVENT_SESSION_START          = 2,
++	INFF_PROXD_EVENT_FTM_REQ                = 3,
++	INFF_PROXD_EVENT_BURST_START            = 4,
++	INFF_PROXD_EVENT_BURST_END              = 5,
++	INFF_PROXD_EVENT_SESSION_END            = 6,
++	INFF_PROXD_EVENT_SESSION_RESTART        = 7,
++	INFF_PROXD_EVENT_BURST_RESCHED          = 8, /* burst rescheduled-e.g. partial TSF */
++	INFF_PROXD_EVENT_SESSION_DESTROY        = 9,
++	INFF_PROXD_EVENT_RANGE_REQ              = 10,
++	INFF_PROXD_EVENT_FTM_FRAME              = 11,
++	INFF_PROXD_EVENT_DELAY                  = 12,
++	INFF_PROXD_EVENT_VS_INITIATOR_RPT       = 13, /* (target) rx initiator-report */
++	INFF_PROXD_EVENT_RANGING                = 14,
++	INFF_PROXD_EVENT_LCI_MEAS_REP           = 15, /* LCI measurement report */
++	INFF_PROXD_EVENT_CIVIC_MEAS_REP         = 16, /* civic measurement report */
++	INFF_PROXD_EVENT_COLLECT                = 17,
++	INFF_PROXD_EVENT_START_WAIT             = 18, /* waiting to start */
++	INFF_PROXD_EVENT_MF_STATS               = 19, /* mf stats event */
++	INFF_PROXD_EVENT_MAX
++};
++
++#define INFF_PROXD_API_VERSION 0x0300 /* version 3.0 */
++#define INFF_PROXD_RTT_RESULT_VERSION_2 2
++#define INFF_PROXD_RTT_SAMPLE_VERSION_2 2
++#define INFF_PROXD_TLV_FTM_SEP_VAL 3 /* 3ms */
++
++/** proxd iovar - applies to proxd, method or session */
++struct inff_proxd_iov {
++	u16                 version;
++	u16                 len;
++	u16                 cmd;
++	u16                 method;
++	u16                 sid;
++	u8                  PAD[2];
++	struct inff_xtlv    tlvs[]; /* variable */
++};
++
++/** time interval e.g. 10ns */
++struct inff_proxd_intvl {
++	u32                 intvl;
++	u16                 tmu;
++	u8                  pad[2];
++};
++
++struct inff_proxd_rtt_sample_v2 {
++	u16                     version;
++	u16                     length;
++	u8                      id; /*  id for the sample - non-zero */
++	u8                      flags;
++	s16                     rssi;
++	struct inff_proxd_intvl rtt; /* round trip time */
++	u32                     ratespec;
++	u16                     snr;
++	u16                     bitflips;
++	s32                     status;
++	s32                     distance;
++	u32                     tof_phy_error;
++	u32                     tof_tgt_phy_error; /* target phy error bit map */
++	u16                     tof_tgt_snr;
++	u16                     tof_tgt_bitflips;
++	u8                      coreid;
++	u8                      pad[3];
++	u32                     chanspec;
++};
++
++/** rtt measurement result */
++struct inff_proxd_rtt_result_v2 {
++	u16                             version;
++	u16                             length; /* up to rtt[] */
++	u16                             sid;
++	u16                             flags;
++	s32                             status;
++	u8                              peer[ETH_ALEN];
++	s16                             state; /* current state */
++	union {
++		struct inff_proxd_intvl     retry_after; /* hint for errors */
++		struct inff_proxd_intvl     burst_duration; /* burst duration */
++	} u;
++	u32                             avg_dist; /* 1/256m units */
++	u16                             sd_rtt; /* RTT standard deviation */
++	u8                              num_valid_rtt; /* valid rtt cnt */
++	u8                              num_ftm; /* actual num of ftm cnt (Configured) */
++	u16                             burst_num; /* in a session */
++	u16                             num_rtt; /* 0 if no detail */
++	u16                             num_meas; /* number of ftm frames seen OTA */
++	u8                              pad[2];
++	struct inff_proxd_rtt_sample_v2 rtt[1]; /* variable, first element is avg_rtt */
++};
++
++/** proxd event - applies to proxd, method or session */
++struct inff_proxd_event {
++	u16                 version;
++	u16                 len;
++	u16                 type;
++	u16                 method;
++	u16                 sid;
++	u8                  pad[2];
++	struct inff_xtlv    tlvs[1]; /* variable */
++};
++
++struct inff_proxd_ftm_session_status {
++	u16                 sid;
++	s16                 state;
++	s32                 status;
++	u16                 burst_num;
++	u16                 pad;
++};
++
++struct inff_ftm_info {
++	struct inff_cfg80211_info *cfg80211_info;
++	struct inff_cfg80211_vif *vif;
++	struct inff_if *ifp;
++	struct cfg80211_pmsr_request *ftm_req;
++	u32 ftm_debug_mask;
++	u8 ftm_partial_report; /* set to 1 if each burst report is need */
++	u64 host_time;
++};
++
++s32 inff_ftm_set_global_config(struct inff_ftm_info *ftm_info,
++			       struct cfg80211_pmsr_request_peer *peer);
++s32 inff_ftm_set_session_config(struct inff_ftm_info *ftm_info,
++				struct cfg80211_pmsr_request_peer *peer,
++				enum inff_proxd_session_id session_id);
++s32 inff_notify_ftm_evt(struct inff_if *ifp,
++			const struct inff_event_msg *e, void *data);
++s32 inff_ftm_attach(struct inff_cfg80211_info *cfg);
++void inff_ftm_detach(struct inff_cfg80211_info *cfg);
++
++#endif /* INFF_FTM_H */
 -- 
 2.25.1
 
