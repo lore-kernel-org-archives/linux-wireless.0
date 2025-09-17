@@ -1,40 +1,40 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B7EC26B2AD
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B71E269D18
 	for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2025 05:56:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758088577; cv=none; b=W6jpVpPxUR2/G8iNeXUC66K5ZmNTq8ZOsVf4IQz6zY3dw4bo2QWLp/tUEIM34d69+OuAWqSe03fKLDtpO+VQYPqQIuq46qD9Q5Zg9ecuuUcNc/TqOFHwcN/TSHoU2iKRndrzXOex1AK28CesEZyGAmD78JidDY4qqL4PfCNMkks=
+	t=1758088577; cv=none; b=PR6ZGqlvBaEoUt8hFXkITwSkIlW1Szf3esuom/P6WdkzRmf4Q89PPNBhdtmL4jmRcpwCiFCgIocKfeCbKfEX56Z3T1PWxfSuzpfBxuyv6m7lCe+Lmq5tfzP5AP/r9DbzAXiaWRQhG9jn6Mbl3TkOlgFaOH273/AjNgz9ONS4XFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758088577; c=relaxed/simple;
-	bh=yJLrDnXc+u8XzXH7D0NZCJUQdG1g+VQ/VSeRRiS/r1o=;
+	bh=MHyXVcdGDe+9FjRhgPthIWAPxUwyL4DDclX0vfhFPZ0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=neab6s1lYc7PQBsNoAXezmNjdDIbio9Hzxu4XTA7O+LInvuy2Yb67kyYTtpAYJq66b7kdBbuEnHpEMJ/d4pzts/QeVr3h4gHdZj9Fewj0D1m/V9zGIiQQno18oYv6myJWAm/VL852oWD27SBiLAY/LwMcJ24KcgMvj8GPjgSKxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ctqyx/6q; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=rTYzr7KqVc/ka6k2QDER7FOftdumNexi8VRkxJw9Yga3UvTaoJdMeKx6frVs6B10jaPud/pSa4bnYabT/iJPUFsBvcgJK5xXBMhyWkEdUAyXnXoFZBPR7l03zCgYQMJXng0Bik4JyEl+KctUyR+/Z14PvQ0fImyizFj9Nowvo6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TeRqqu9F; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ctqyx/6q"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58H5u0a453954266, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TeRqqu9F"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58H5u0rA53954262, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1758088560; bh=B9XXix4xQcndwqW2euab2by7UL6eUACqv57hnBEndus=;
+	t=1758088560; bh=danLb/DNV6TCqV4r7Mr+Eck4oncgqpKjIwz+pX6ohIU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=ctqyx/6qr1TOEcPY26wlfXa+93Zgqs2HaHgPmBLOJ9TxkSgRyEhQFFL0NNPdffLFY
-	 qEqfDAg79RPeUeVfJEAvoWTHxBQl+sk0Rs+nfCS284OAi1hO9aIUAQX/nh0SNG9fFh
-	 /1VnQuf3drYdB/MczBMArSD1Yxy5PazEuahayw5sPojlaofxCfl22lRlq+OVPJ1BHb
-	 V5oq2RzzA9vEew4cF9/c6XgCY0+AzxQZ90AnpJkmouRFIGaNkBKSgX+fjdBmvyk+KH
-	 7fQcVWx+ViJCFf1rMxMIJldCI9MmuKnvfa8NBEdgKA7TqIXSghl3eKV0uwfx5dG23Z
-	 Kc0Oc7Vg38UQg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58H5u0a453954266
+	b=TeRqqu9Fb5qDTPE+F8vTD3iP5ig4BneTnQ9m3q/O9Qf1GPqUjQ320j9dS+xKGNHaK
+	 pQs7VhAKvnVCCfEeuNNQWTWzFUUvVytl9K/oKt4sFMjOtphhWu1p/8fpYHWobfLk1k
+	 mKAWH1srEt8LFhGxz8aoV7MqhGCZUr0t/Grs9qmrSoBES+dYp698xu1KomEuB4npew
+	 SacejAvIcK9M8DURHL4R+oYj69hXUA/GsNtr3lhiRP/ZNJVNilO3HwfcQPKE2LtRJ1
+	 q8tVkh00d8Fad08jGNkoCGUcDEjC0+xROx65r10jRZHBxGh59Gpz9Z0a/C1rtwSyIJ
+	 7xBX5lQCXYOug==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58H5u0rA53954262
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Wed, 17 Sep 2025 13:56:00 +0800
 Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Wed, 17 Sep 2025 13:56:01 +0800
+ 15.2.1544.27; Wed, 17 Sep 2025 13:56:00 +0800
 Received: from kevin-ThinkPad-T430s.realtek.com.tw (172.21.69.104) by
  RTEXMBS03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -42,9 +42,9 @@ Received: from kevin-ThinkPad-T430s.realtek.com.tw (172.21.69.104) by
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>, <raja.mani@oss.qualcomm.com>
-Subject: [PATCH v2 4/6] iw: bitrate: refactor description
-Date: Wed, 17 Sep 2025 13:55:41 +0800
-Message-ID: <20250917055543.27499-5-kevin_yang@realtek.com>
+Subject: [PATCH v2 2/6] iw: info: extended features print EHT beacon rate
+Date: Wed, 17 Sep 2025 13:55:39 +0800
+Message-ID: <20250917055543.27499-3-kevin_yang@realtek.com>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20250917055543.27499-1-kevin_yang@realtek.com>
 References: <20250917055543.27499-1-kevin_yang@realtek.com>
@@ -63,46 +63,25 @@ X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
-The description is too long to read, and some parameters
-have been described incorrectly, e.g. vht-mcs.
-
-Re-plan macro for description and use it.
+Deal with BEACON_RATE_EHT in ext_feat_print.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 ---
- bitrate.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+ info.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/bitrate.c b/bitrate.c
-index 87146699937b..8c575b086eba 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -456,9 +456,22 @@ static int handle_bitrates(struct nl80211_state *state,
+diff --git a/info.c b/info.c
+index 18dcd368d0f8..5ce3f78688a0 100644
+--- a/info.c
++++ b/info.c
+@@ -174,6 +174,7 @@ static void ext_feat_print(enum nl80211_ext_feature_index idx)
+ 	ext_feat_case(OWE_OFFLOAD_AP, "OWE DH element handling offload (AP)");
+ 	ext_feat_case(DFS_CONCURRENT, "DFS channel use under concurrent DFS master");
+ 	ext_feat_case(SPP_AMSDU_SUPPORT, "SPP A-MSDU support");
++	ext_feat_case(BEACON_RATE_EHT, "EHT beacon rate support (AP/mesh)");
+ 	}
  }
  
- #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
--#define DESCR DESCR_LEGACY " [ht-mcs-<2.4|5> <MCS index>*] [vht-mcs-<2.4|5>  [he-mcs-<2.4|5|6> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*] [sgi-2.4|lgi-2.4] [sgi-5|lgi-5]"
--
--COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [ht-mcs-<2.4|5> <MCS index>*] [vht-mcs-<2.4|5> [he-mcs-<2.4|5|6> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*] [sgi-2.4|lgi-2.4] [sgi-5|lgi-5] [he-gi-<2.4|5|6> <0.8|1.6|3.2>] [he-ltf-<2.4|5|6> <1|2|4>]",
-+#define DESCR_HT " [ht-mcs-<2.4|5> <MCS index>*]"
-+#define DESCR_VHT " [vht-mcs-<2.4|5> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*]"
-+#define DESCR_HE " [he-mcs-<2.4|5|6> <NSS:MCSx,MCSy... | NSS:MCSx-MCSy>*]"
-+#define DESCR_GI " [sgi-2.4|lgi-2.4] [sgi-5|lgi-5] [he-gi-<2.4|5|6> <0.8|1.6|3.2>]"
-+#define DESCR_LTF " [he-ltf-<2.4|5|6> <1|2|4>]"
-+
-+#define DESCR \
-+	DESCR_LEGACY \
-+	DESCR_HT \
-+	DESCR_VHT \
-+	DESCR_HE \
-+	DESCR_GI \
-+	DESCR_LTF \
-+	/* end of DESCR */
-+
-+COMMAND(set, bitrates, DESCR,
- 	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
- 	"Sets up the specified rate masks.\n"
- 	"Not passing any arguments would clear the existing mask (if any).");
 -- 
 2.39.0
 
