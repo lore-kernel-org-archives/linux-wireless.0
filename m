@@ -1,35 +1,36 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B6B4264A60
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2025 05:56:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B84F26D4F6
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Sep 2025 05:56:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758088576; cv=none; b=dAg3OrSafiaX9WCImaumASGw9MXeSfDX/gwQ+TmWUiVmnab+p9B9n89LfQY8nN5T8Zmn0r6QJrXKHW8Bb8IDPIWmXN4a01piNOK7lnmjvGQfPdsn/6EhjeOXwE3hI5jGpk0s9Qk8ePQdXkMd1Tlk+e5Y0EXGyq9Vz0yTJcA6k/s=
+	t=1758088576; cv=none; b=sJ6WfGCGVLYQfgsfb/3wVc5Xjnuc49M5hQXiQrclpdC3mQ0notinjwsrUQ8BBK58y7tsk/jX1MDXb5vXg+7k0JBI+JKVbs4TK0LO6PcQ97Ki68A8zXKlOKrZCwt5kXk7DahdWzs4YF8np9VfJbJ3mEj9KnK1NmddNiMx04BMljQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758088576; c=relaxed/simple;
-	bh=9bK3B6M4eAVoFitX1TSFO5LE6BKcB27URtNon7If83Y=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=paWydiv6XOeVlYlDuK9006c2dWY+NgVbAe75XBHDmgzs8wqzp5ulNM2hSH7cUXYGInvTZtET+8xQ1zStFUYZTCun27WT5keeaIH2EHgfEa5PsdmHHSg1etUsrrVbF8hNrxIpY4Zwclfi2U1f+5m1fOVlK1hw8FitYa+K9IWPdlg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=kgv2OJ+v; arc=none smtp.client-ip=211.75.126.72
+	bh=r810a3bz/hs3r42mlQyy4SUTYJ8yWNUSIJRdx3nGaAs=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=gYFRg564dGEmvN5Q7soBivdvm1AzEDWlCuRtVBKBq1Z05ezsE/+fKYut7eT3etMnQqvFI8kKhnutvGaJi4iPjQqCPF4DJvp1Sn3KpnRgHBeKwKy6TNvUpFGkk6UCRchTIEAnhM5AdcHvgtrUwbOIKCgTA2yA1QoRGUnTx10O4us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=b1cb8ebt; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="kgv2OJ+v"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58H5txZJ33954254, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="b1cb8ebt"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 58H5u0hS53954264, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1758088559; bh=PMCOhpMt/bgfjQ5kbQ3sXdHK8JskbDzjqkF74YOc4OU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=kgv2OJ+vnOgiejSeSDDNJactK1glaeXlAWMWh7vMgenkGoT8eH765LuLMgOELAcCV
-	 AnCAPtsoMrUIGNtODqEjgvCCV1khVaCBXEtzxkck21bkl8sZN+F/hEMWa918mMqkCX
-	 /YUxjUn0MyDXW4bwon/gJxUxOXf5dRoGG0GPjBRNY/sNIusYwUeTXCRjuhouK/w7EN
-	 ghs5O9h59ztE4xBCtDV4NQ96YWwWtNzV61xXc2HQmzSauo+7kGxl0LKZKXoCl0HwYR
-	 MRuwFK678mvFMaK0ZyTw9+40knHOxH69C6oQV036wO+ikM2MRmuHqJtYG+flCq9JE2
-	 IuDzFcCurVbtQ==
+	t=1758088560; bh=PqYliesyPZBQQRtbCH9exuXqIVMZ4W+twpvEPFcUtmo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type;
+	b=b1cb8ebtsAZfc3JcruxqvYLOp5xQiNyZHcdcNIvHav2CkHj8K9NSY0f4HPkY0JwmI
+	 j+dQtTIlAu+ENshrHKnW6vHG3D13XjpKHYexFjDQ8RTxlmq+XYBwdYQO/xEpEaAoGO
+	 cv6uLgOrdlCpP75Nzhccop2dF2pDdXmARCATc8+9fJaSuQ4jThq/RPDh2Hifa8+FHN
+	 L4MD45k5bX4JG++90JyAdhz8HiSYbgvzBTc7megA9jvkmMSuvzRXNsQpxl3WA6gOZL
+	 EOu87aM+de5xW+xAzJ+t74pi5OrcMumN+8Qcarv+3nLtqsLl0ch3U2VRRsoh0XSk3+
+	 6ooIJUqoTYBEQ==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58H5txZJ33954254
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 58H5u0hS53954264
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Sep 2025 13:55:59 +0800
+	Wed, 17 Sep 2025 13:56:00 +0800
 Received: from RTEXMBS03.realtek.com.tw (172.21.6.96) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -41,10 +42,12 @@ Received: from kevin-ThinkPad-T430s.realtek.com.tw (172.21.69.104) by
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>, <raja.mani@oss.qualcomm.com>
-Subject: [PATCH v2 0/6] iw: support EHT and link id for setting bitrate
-Date: Wed, 17 Sep 2025 13:55:37 +0800
-Message-ID: <20250917055543.27499-1-kevin_yang@realtek.com>
+Subject: [PATCH v2 3/6] iw: util: support parsing link id
+Date: Wed, 17 Sep 2025 13:55:40 +0800
+Message-ID: <20250917055543.27499-4-kevin_yang@realtek.com>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20250917055543.27499-1-kevin_yang@realtek.com>
+References: <20250917055543.27499-1-kevin_yang@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,31 +63,83 @@ X-KSE-AntiSpam-Interceptor-Info: fallback
 X-KSE-Antivirus-Interceptor-Info: fallback
 X-KSE-AntiSpam-Interceptor-Info: fallback
 
-Update nl80211.h for EHT txrate definitions. Support parsing link id.
-Then, extend bitrate handling for EHT rate/gi/ltf and link id.
+For NL80211_FLAG_MLO_VALID_LINK_ID cases, MLD needs to assign link id,
+but non-MLD doesn't. Add support of parsing link id where the pattern
+is as below.
 
+	[link-id <LINK ID>]
+
+If found, put NL80211_ATTR_MLO_LINK_ID and remove the assignment from
+the argv range.
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 ---
-Changes in v2:
-	- introduce parse_link_id() in util.c
-	- tweak implementation in bitrate.c by using parse_link_id()
-	- extend bitrate help text
+v2: newly added
 ---
+ iw.h   |  1 +
+ util.c | 40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-Zong-Zhe Yang (6):
-  iw: update nl80211.h
-  iw: info: extended features print EHT beacon rate
-  iw: util: support parsing link id
-  iw: bitrate: refactor description
-  iw: bitrate: support EHT rate/gi/ltf
-  iw: bitrate: support link id
-
- bitrate.c | 207 +++++++++++++++++++++++++++++++++++++++++++++++++++---
- info.c    |   1 +
- iw.h      |   1 +
- nl80211.h |  51 +++++++++++++-
- util.c    |  40 +++++++++++
- 5 files changed, 288 insertions(+), 12 deletions(-)
-
+diff --git a/iw.h b/iw.h
+index 145b058d86ba..1d87f011e7be 100644
+--- a/iw.h
++++ b/iw.h
+@@ -305,6 +305,7 @@ int set_bitrates(struct nl_msg *msg, int argc, char **argv,
+ 		 enum nl80211_attrs attr);
+ 
+ int calc_s1g_ch_center_freq(__u8 ch_index, __u8 s1g_oper_class);
++int parse_link_id(struct nl_msg *msg, int *argc, char **argv);
+ 
+ /* sections */
+ DECLARE_SECTION(ap);
+diff --git a/util.c b/util.c
+index 36c118513e3f..ad265c1dc007 100644
+--- a/util.c
++++ b/util.c
+@@ -2378,3 +2378,43 @@ void print_s1g_capability(const uint8_t *caps)
+ 	/* Last 2 bits are reserved */
+ #undef PRINT_S1G_CAP
+ }
++
++int parse_link_id(struct nl_msg *msg, int *argc, char **argv)
++{
++	unsigned int link_id;
++	char *endptr;
++	int pos = -1;
++	int i;
++
++	for (i = 0; i < *argc; i++) {
++		if (strcmp(argv[i], "link-id") == 0) {
++			if (pos >= 0)
++				goto usage;
++
++			if (i + 1 >= *argc)
++				goto usage;
++
++			link_id = strtol(argv[i + 1], &endptr, 0);
++			if (*endptr != '\0')
++				goto usage;
++
++			pos = i;
++		}
++	}
++
++	if (pos == -1)
++		return 0;
++
++	memmove(argv + pos, argv + pos + 2,
++		sizeof(*argv) * (*argc - pos - 2));
++	*argc -= 2;
++
++	NLA_PUT_U8(msg, NL80211_ATTR_MLO_LINK_ID, link_id);
++	return 0;
++
++usage:
++	return HANDLER_RET_USAGE;
++
++nla_put_failure:
++	return -ENOBUFS;
++}
 -- 
 2.39.0
 
