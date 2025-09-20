@@ -1,259 +1,86 @@
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0597C28689B;
-	Fri, 19 Sep 2025 21:09:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B78189
+	for <linux-wireless@vger.kernel.org>; Sat, 20 Sep 2025 00:58:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758316175; cv=none; b=AhZR50zZQseKSulI9AIzHb6LxWXVabOGjp3u6rH4p48ZR9CtOvuk793J614/FX4j/Kf4bsX1NZ24e/6wdeHy8IHfzxc6RmhKfeOUNU2dGYKaW6x0QxfHmQCOrIwHKwTVy3Jxq9ndW+gKKscjNNJyyAzadl/lTfPPzUnaDh8AGSE=
+	t=1758329915; cv=none; b=ZpVdTSZgNAHnuylux0rt9epLHK0l+yu84nBGwo3tpCzcxwU3U5pY936TVkvDgXlEBBOZ4wmQWXG+Sv4lc3HMMGlrTi6Dbbxqnyp0siHvyMUDQK+0H8UeJNNSlHC0XURUEudIVfmu9ZuECfZ6X45F1zhMqgq3REuCec2R3kcV23U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758316175; c=relaxed/simple;
-	bh=AgnmiRl00Q+TR5lkkj3F3V6s0smD41VHyxIWPPeLXUM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xck2Y+soO7BHGjwWevmsoktv11JAWJbySgsb5I2xNZN6qUhPW9GEYBBCKDkJtzPlMnYGJP06XNRytBGGANpKVdxsC5MOOLPM32LHlWaNfklIj5wKRm7dNTk+Jq27nWrNB0YIC7E+V+JkvJ4g76d1CGN5FB8CH0IsyneVe69HUR4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=MX/OFU3R; arc=none smtp.client-ip=83.149.199.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
+	s=arc-20240116; t=1758329915; c=relaxed/simple;
+	bh=dOqoqBQvbMgBO4q9qTvkjSGSTfIfocM3zwJcwNNZoU4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rUWMmUVGsZL1iZy7nXeQWJE992wQn7irGSU/UF4P5Gvge8rf8eSHn6WJMMCbsiM/pnWloTtY4Sxo9U3p19GfZ/t2KhzTtPd1wVTaU3wxE2TZjeFDGGVKoYczTV9/h2vUi051XgU4DXMtI6MTu6/FlundahHtzhepzsXyHjSRAO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=FNi1FCq4; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="MX/OFU3R"
-Received: from debian.intra.ispras.ru (unknown [10.10.165.9])
-	by mail.ispras.ru (Postfix) with ESMTPSA id AD0124076724;
-	Fri, 19 Sep 2025 21:09:23 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru AD0124076724
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1758316163;
-	bh=TMZ1Ae4sWnLco23Cwa29HKv1iyXkHZtKG3JzaMIlqYc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MX/OFU3RUwPikIyT6/m1bTTOACdO8oDSPQ4BagFejJ66SftTTErI0JJ3KJnTghCw4
-	 Ms+zzVzp7Yfl+BPu29pJUmUFbbWwlB77RC8pYbR6Kl7iDIOjxku4VvxFuYb16euZah
-	 qTfl7safaO2G9b5B+FcbXoG2CiwTxEF2PwgVFV90=
-From: Fedor Pchelkin <pchelkin@ispras.ru>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	Zong-Zhe Yang <kevin_yang@realtek.com>
-Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Po-Hao Huang <phhuang@realtek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	stable@vger.kernel.org
-Subject: [PATCH rtw-next v5 2/4] wifi: rtw89: avoid possible TX wait initialization race
-Date: Sat, 20 Sep 2025 00:08:48 +0300
-Message-ID: <20250919210852.823912-3-pchelkin@ispras.ru>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20250919210852.823912-1-pchelkin@ispras.ru>
-References: <20250919210852.823912-1-pchelkin@ispras.ru>
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="FNi1FCq4"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b523fb676efso2384649a12.3
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Sep 2025 17:58:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1758329912; x=1758934712; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dOqoqBQvbMgBO4q9qTvkjSGSTfIfocM3zwJcwNNZoU4=;
+        b=FNi1FCq4+mL7fJe2ZjUvk8ZfowQUgT8NvXGsH/3N9V9eSdtNqPaiP8zR2z+/g+rsSq
+         9I1k4Gyad3JyGODm+hCGwaqHrRsI5Xm5AjqHz25QcU8gwRlPZrNDlOKHHW8MwOGySFlu
+         0vuVdQVkJLsobGqbaX7ISwAOivvCpu8VrEZbiB1ImqvVjuKW8HJWwN98lT2yjCY1L6rI
+         QC/yU4WHsKWQ5O0pOFF4Yat7e2LV47UoZ1dZf2QtzS2O60ONPzmPEeKopV5oYQcOJ46S
+         YbvMEAD+vx4krqF4KqkFJZ1fZl6/JrVQrLg+9i7qr4L3bSYXmvbwZZPrq3QTPdocJ92x
+         zQAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758329912; x=1758934712;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dOqoqBQvbMgBO4q9qTvkjSGSTfIfocM3zwJcwNNZoU4=;
+        b=Qc+GAIeDP8B3kFuIXhjNxJmd8ov9IsUth5fKtiT7gBUZ57UFg+8D5jFQ3yrzBIoOL+
+         eSgqrXNXwlY2jFhf5vwk2w52dUUTZhe7DojsCLBaKTG5Fb0Lq5GHvK+wzuT0FOKWyRrz
+         Mx4GoIu00Xxl5G3hyvakyr99YNe5DsgrMIWfT87Z+1V8OxG3jWqYoA7gEfCRHA5DAmDj
+         hEufD5HijgiAhj3LGls0IimhqpkdLtRpjEhAhFVXzsuco6SIv6F/wq0EYtq1KrZqxiYk
+         h3c/Qt2dZX5UXKDk2NpkkMkZ5OhEL2UtHB8c0o3hZUbYr16YPoKAveYW9CcCwVdy4N98
+         FUAw==
+X-Gm-Message-State: AOJu0YzQM0usQxRrjLtqJViv/keoOifQOtxxZnA+vfFvuEEPtXhCIUfU
+	kp0Ah1121bIeowEIkanqS8kw0lF6dQKDmiIBQnd+vFmzzMjV45yDlxlv5Dwxcmesz18=
+X-Gm-Gg: ASbGncuxvVlMuANb2Nt2zzVF+JO28wJlRSGFKXQaKFP6qN4hKQiWlsrnA3131dkgIJj
+	N96Xsos1BQ7yczwfadXaIjYErbohFLKvbvPmT6c6h7ShbQ1ojdmJtkSTsFaiZOLTvQSAoWAWc8x
+	ws0umiP3ULuyMcs+oRKrDF4YKijcdp98FeR4LEPOze1gq3QlI59qjBvbHLxPVYTAmzCyL+EYa2j
+	IyVdpr49u2MWJyJvJgtZrew/sAz9qG3UtFc7bLfpkb3rbMFq6/rOI81svDVq0v8Rji1uTphWzrw
+	HHtXIgCR9s0X4TJ1W2ZSg3l/MZ7GGoYrUzeSWj0hcF/7o8aJ2dljLhf7sa9ur3zI05JuNXg+vz5
+	rkde0QnOerceEpDoNnqKgni5/4A5HNQCz
+X-Google-Smtp-Source: AGHT+IF8hGb7VOtneyeqaUn1qvHg90zu6fwDfc1BfmAwe44m8/vfZkBKCkKh1QZJFjMYCyZkjgJTZA==
+X-Received: by 2002:a17:902:dac2:b0:246:4077:4563 with SMTP id d9443c01a7336-269ba4eede8mr62771295ad.34.1758329912555;
+        Fri, 19 Sep 2025 17:58:32 -0700 (PDT)
+Received: from localhost ([60.227.224.187])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32ed26a4e5csm9585924a91.8.2025.09.19.17.58.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Sep 2025 17:58:32 -0700 (PDT)
+Date: Sat, 20 Sep 2025 10:58:27 +1000
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, 
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH wireless-next] wifi: cfg80211: remove
+ IEEE80211_CHAN_{1,2,4,8,16}MHZ flags
+Message-ID: <pz6rm2z54rdhst2fksjcj62gqprpagtmnkk5aggu7qzse7qsgi@r3pruqjdh77d>
+References: <20250919122325.f0abcf092b9b.I04478fde87a79c7909f1cc4249430deaf71e8bd0@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250919122325.f0abcf092b9b.I04478fde87a79c7909f1cc4249430deaf71e8bd0@changeid>
 
-The value of skb_data->wait indicates whether skb is passed on to the
-core mac80211 stack or released by the driver itself.  Make sure that by
-the time skb is added to txwd queue and becomes visible to the completing
-side, it has already allocated and initialized TX wait related data (in
-case it's needed).
+On Fri, Sep 19, 2025 at 12:23:25PM +0200, Johannes Berg wrote:
+> These were used by S1G for older chandef representation, but
+> are no longer needed. Clean them up, even if we can't drop
+> them from the userspace API entirely.
 
-This is found by code review and addresses a possible race scenario
-described below:
+Thanks for removing these, probably should have done it as part
+of my patchset.. Looks much better now.
 
-      Waiting thread                          Completing thread
-
-rtw89_core_send_nullfunc()
-  rtw89_core_tx_write_link()
-    ...
-    rtw89_pci_txwd_submit()
-      skb_data->wait = NULL
-      /* add skb to the queue */
-      skb_queue_tail(&txwd->queue, skb)
-
-  /* another thread (e.g. rtw89_ops_tx) performs TX kick off for the same queue */
-
-                                            rtw89_pci_napi_poll()
-                                            ...
-                                              rtw89_pci_release_txwd_skb()
-                                                /* get skb from the queue */
-                                                skb_unlink(skb, &txwd->queue)
-                                                rtw89_pci_tx_status()
-                                                  rtw89_core_tx_wait_complete()
-                                                  /* use incorrect skb_data->wait */
-  rtw89_core_tx_kick_off_and_wait()
-  /* assign skb_data->wait but too late */
-
-Found by Linux Verification Center (linuxtesting.org).
-
-Fixes: 1ae5ca615285 ("wifi: rtw89: add function to wait for completion of TX skbs")
-Cc: stable@vger.kernel.org
-Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
----
-
-v5: - update the changelog to reflect that the potential race scenario
-      was found by code review
-    - pass wait as an argument to rtw89_core_tx_kick_off_and_wait()
-
-v4: - use wiphy_dereference (Zong-Zhe)
-    - move wait->skb assignment place 
-
- drivers/net/wireless/realtek/rtw89/core.c | 39 +++++++++++++----------
- drivers/net/wireless/realtek/rtw89/core.h |  3 +-
- drivers/net/wireless/realtek/rtw89/pci.c  |  2 --
- 3 files changed, 24 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index ec467ae0e9e6..1f44c7fc1c5e 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1153,25 +1153,14 @@ void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel)
- }
- 
- int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
--				    int qsel, unsigned int timeout)
-+				    struct rtw89_tx_wait_info *wait, int qsel,
-+				    unsigned int timeout)
- {
--	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
--	struct rtw89_tx_wait_info *wait;
- 	unsigned long time_left;
- 	int ret = 0;
- 
- 	lockdep_assert_wiphy(rtwdev->hw->wiphy);
- 
--	wait = kzalloc(sizeof(*wait), GFP_KERNEL);
--	if (!wait) {
--		rtw89_core_tx_kick_off(rtwdev, qsel);
--		return 0;
--	}
--
--	init_completion(&wait->completion);
--	wait->skb = skb;
--	rcu_assign_pointer(skb_data->wait, wait);
--
- 	rtw89_core_tx_kick_off(rtwdev, qsel);
- 	time_left = wait_for_completion_timeout(&wait->completion,
- 						msecs_to_jiffies(timeout));
-@@ -1234,10 +1223,12 @@ int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
- static int rtw89_core_tx_write_link(struct rtw89_dev *rtwdev,
- 				    struct rtw89_vif_link *rtwvif_link,
- 				    struct rtw89_sta_link *rtwsta_link,
--				    struct sk_buff *skb, int *qsel, bool sw_mld)
-+				    struct sk_buff *skb, int *qsel, bool sw_mld,
-+				    struct rtw89_tx_wait_info *wait)
- {
- 	struct ieee80211_sta *sta = rtwsta_link_to_sta_safe(rtwsta_link);
- 	struct ieee80211_vif *vif = rtwvif_link_to_vif(rtwvif_link);
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
- 	struct rtw89_vif *rtwvif = rtwvif_link->rtwvif;
- 	struct rtw89_core_tx_request tx_req = {};
- 	int ret;
-@@ -1254,6 +1245,8 @@ static int rtw89_core_tx_write_link(struct rtw89_dev *rtwdev,
- 	rtw89_core_tx_update_desc_info(rtwdev, &tx_req);
- 	rtw89_core_tx_wake(rtwdev, &tx_req);
- 
-+	rcu_assign_pointer(skb_data->wait, wait);
-+
- 	ret = rtw89_hci_tx_write(rtwdev, &tx_req);
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to transmit skb to HCI\n");
-@@ -1290,7 +1283,8 @@ int rtw89_core_tx_write(struct rtw89_dev *rtwdev, struct ieee80211_vif *vif,
- 		}
- 	}
- 
--	return rtw89_core_tx_write_link(rtwdev, rtwvif_link, rtwsta_link, skb, qsel, false);
-+	return rtw89_core_tx_write_link(rtwdev, rtwvif_link, rtwsta_link, skb, qsel, false,
-+					NULL);
- }
- 
- static __le32 rtw89_build_txwd_body0(struct rtw89_tx_desc_info *desc_info)
-@@ -3928,6 +3922,7 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
- 	struct ieee80211_vif *vif = rtwvif_link_to_vif(rtwvif_link);
- 	int link_id = ieee80211_vif_is_mld(vif) ? rtwvif_link->link_id : -1;
- 	struct rtw89_sta_link *rtwsta_link;
-+	struct rtw89_tx_wait_info *wait;
- 	struct ieee80211_sta *sta;
- 	struct ieee80211_hdr *hdr;
- 	struct rtw89_sta *rtwsta;
-@@ -3937,6 +3932,12 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
- 	if (vif->type != NL80211_IFTYPE_STATION || !vif->cfg.assoc)
- 		return 0;
- 
-+	wait = kzalloc(sizeof(*wait), GFP_KERNEL);
-+	if (!wait)
-+		return -ENOMEM;
-+
-+	init_completion(&wait->completion);
-+
- 	rcu_read_lock();
- 	sta = ieee80211_find_sta(vif, vif->cfg.ap_addr);
- 	if (!sta) {
-@@ -3951,6 +3952,8 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
- 		goto out;
- 	}
- 
-+	wait->skb = skb;
-+
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	if (ps)
- 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-@@ -3961,7 +3964,8 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
- 		goto out;
- 	}
- 
--	ret = rtw89_core_tx_write_link(rtwdev, rtwvif_link, rtwsta_link, skb, &qsel, true);
-+	ret = rtw89_core_tx_write_link(rtwdev, rtwvif_link, rtwsta_link, skb, &qsel, true,
-+				       wait);
- 	if (ret) {
- 		rtw89_warn(rtwdev, "nullfunc transmit failed: %d\n", ret);
- 		dev_kfree_skb_any(skb);
-@@ -3970,10 +3974,11 @@ int rtw89_core_send_nullfunc(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rt
- 
- 	rcu_read_unlock();
- 
--	return rtw89_core_tx_kick_off_and_wait(rtwdev, skb, qsel,
-+	return rtw89_core_tx_kick_off_and_wait(rtwdev, skb, wait, qsel,
- 					       timeout);
- out:
- 	rcu_read_unlock();
-+	kfree(wait);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index d15fa70eb4dc..928c8c84c964 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -7476,7 +7476,8 @@ int rtw89_h2c_tx(struct rtw89_dev *rtwdev,
- 		 struct sk_buff *skb, bool fwdl);
- void rtw89_core_tx_kick_off(struct rtw89_dev *rtwdev, u8 qsel);
- int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *skb,
--				    int qsel, unsigned int timeout);
-+				    struct rtw89_tx_wait_info *wait, int qsel,
-+				    unsigned int timeout);
- void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
- 			    struct rtw89_tx_desc_info *desc_info,
- 			    void *txdesc);
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 8dd91d867ea6..0ee5f8579447 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -1494,7 +1494,6 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
- 	struct pci_dev *pdev = rtwpci->pdev;
- 	struct sk_buff *skb = tx_req->skb;
- 	struct rtw89_pci_tx_data *tx_data = RTW89_PCI_TX_SKB_CB(skb);
--	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
- 	bool en_wd_info = desc_info->en_wd_info;
- 	u32 txwd_len;
- 	u32 txwp_len;
-@@ -1510,7 +1509,6 @@ static int rtw89_pci_txwd_submit(struct rtw89_dev *rtwdev,
- 	}
- 
- 	tx_data->dma = dma;
--	rcu_assign_pointer(skb_data->wait, NULL);
- 
- 	txwp_len = sizeof(*txwp_info);
- 	txwd_len = chip->txwd_body_size;
--- 
-2.51.0
-
+lachlan
