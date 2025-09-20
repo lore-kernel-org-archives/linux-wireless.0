@@ -1,32 +1,32 @@
 Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B1421B9FD;
-	Sat, 20 Sep 2025 13:27:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD01822E3E9;
+	Sat, 20 Sep 2025 13:27:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758374847; cv=none; b=LI/uD7s84w2h1UM40zqXBrhtcGVxttaeKyeLiap+9mLOQij/jLieEDe/KzLHauq2Ekxgj7CZ0OE2BDz2kQHgON1ju3DpYSnUKo1fUsGTIhipzvcsEExvKrQaeFudjYvH+YOemXVdn1GH561uN65jJXqz67hQM0qlNrfLQ7O8QBE=
+	t=1758374847; cv=none; b=l5PFyPETZ+fdszYxOFwUdhQwn7YlS7EY1yHz9qy8jkLTYRDnvuoCnL0QdyoCVERSh5TvxyUz4cHIvUs7l4GLNsrFbE/aB0GS2GOcCbFHRYqpe1kT5jssDH82VSBzSXlvahaMeoj2Q7t0loaQuWZHdTbam5Ht3MDDN7yo/FECsqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758374847; c=relaxed/simple;
-	bh=l15qfHvbWBbEbSPebXNZBwWTH7/nQF3MOqffe6BmUVA=;
+	bh=Fu5+7KudZfuA2gGeA1DToqemNOr0nkDF6v9+i/0HzqE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iYZ8hryxS83+1tzAEKJPPL9O846+ApFTlmJ9GKmWoN7/XR9PP/79Na0+k9+j+WrGsHj7M1saFMcMEd3WltuLjCG4Bn+V4x5QAiy+zD5vE1xrRRN+kd8EzTOwjYe7ucpTFW+G5iVbaiaqpqd8amx+QK08WieXZy9uR9vhlaAEunY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=af4GPsV1; arc=none smtp.client-ip=83.149.199.84
+	 MIME-Version; b=aKjLQdwtHj7/rNCTdQhSaf7SMD5dVslHWWRihabOqXsaQE9QtCFmWJUE+6zgnxaL8F2LjzhuHFn4aypudSxOHYr7DRVpn+K2SH2xapvS0bfXg3rG9SCNevDJmBEgwbdGnb/IeqLKlvM+F6E6CDFIsP9F6GgKZLMhVPVlUydhbsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=P92NlU5t; arc=none smtp.client-ip=83.149.199.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="af4GPsV1"
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="P92NlU5t"
 Received: from debian.intra.ispras.ru (unknown [10.10.165.11])
-	by mail.ispras.ru (Postfix) with ESMTPSA id 67C3140762E3;
-	Sat, 20 Sep 2025 13:27:22 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 67C3140762E3
+	by mail.ispras.ru (Postfix) with ESMTPSA id C58E0407674B;
+	Sat, 20 Sep 2025 13:27:23 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru C58E0407674B
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1758374842;
-	bh=u9ayjBmbstI/fj4lHOYTyzGJ+UXftVdmTPLI+eJ150U=;
+	s=default; t=1758374843;
+	bh=Kaz0l7AUcbnFvp4Giv0NQuUgXXNYoArRazUEpM90nwM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=af4GPsV1YQYf8D7NBb4+EsOwhiBhNutrj9rhtrk1Ns7OXOQN4qMKvdmQdq/G46ZLy
-	 4IzaIrtw8+SMjDKwuqb4nskYRXZX8Fg5hHLKXAp3HuD4pDD7YoybvVeX2/SnyHCK9B
-	 8u8/fQNfqajKml65j8bQ40LBGzHYLohcIQlu85oo=
+	b=P92NlU5t+40TBRLyzD/5dzbcBanZeqNwbVYOnHLYKNQNvtCKcIMa+z1rujfXn8OAQ
+	 By+TGNCRnTZzl6BiT8xrQMRGs7pe8umZn45vIIKHvA6UkrRx3fJohLCb900BRfxIaE
+	 s8b808kqpTmn1RVlLsa8ECj5waEdYJqNSzR5StJE=
 From: Fedor Pchelkin <pchelkin@ispras.ru>
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
@@ -36,9 +36,9 @@ Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org
-Subject: [PATCH rtw-next 3/6] wifi: rtw89: implement C2H TX report handler
-Date: Sat, 20 Sep 2025 16:26:08 +0300
-Message-ID: <20250920132614.277719-4-pchelkin@ispras.ru>
+Subject: [PATCH rtw-next 5/6] wifi: rtw89: process TX wait skbs for USB via C2H handler
+Date: Sat, 20 Sep 2025 16:26:10 +0300
+Message-ID: <20250920132614.277719-6-pchelkin@ispras.ru>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250920132614.277719-1-pchelkin@ispras.ru>
 References: <20250920132614.277719-1-pchelkin@ispras.ru>
@@ -50,192 +50,171 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-rtw89 has several ways of handling TX status report events.  The first one
-is based on RPP feature which is used by PCIe HCI.  The other one depends
-on firmware sending a corresponding C2H message, quite similar to what
-rtw88 has.
+TX wait skbs need to be completed when they are done.  PCIe part does this
+inside rtw89_pci_tx_status() during RPP processing.  Other HCIs use a
+mechanism based on C2H firmware messages.
 
-Toggle a bit in the TX descriptor and place skb in a queue to wait for a
-message from the firmware.  Do this according to the vendor driver for
-RTL8851BU.
-
-It seems the only way to implement TX status reporting for rtw89 USB.
-This will allow handling TX wait skbs and the ones flagged with
-IEEE80211_TX_CTL_REQ_TX_STATUS correctly.
+Store a sequence number in a TX wait object so that it'll be possible to
+identify completed items inside C2H handler.  No need to add the
+corresponding skb to the &txcb->tx_ack_queue on USB part.
 
 Found by Linux Verification Center (linuxtesting.org).
 
-Suggested-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 ---
- drivers/net/wireless/realtek/rtw89/core.c | 12 +++++++++++-
- drivers/net/wireless/realtek/rtw89/core.h |  2 ++
- drivers/net/wireless/realtek/rtw89/fw.h   |  5 +++++
- drivers/net/wireless/realtek/rtw89/mac.c  | 23 +++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw89/mac.h  |  9 +++++++++
- drivers/net/wireless/realtek/rtw89/txrx.h |  2 ++
- 6 files changed, 52 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/core.c |  6 ++++--
+ drivers/net/wireless/realtek/rtw89/core.h | 18 +++++++++++++++++-
+ drivers/net/wireless/realtek/rtw89/mac.c  | 11 +++++++++++
+ drivers/net/wireless/realtek/rtw89/usb.c  |  9 ++++++++-
+ 4 files changed, 40 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 917b2adede61..d2a559ddfa2e 100644
+index 3e7bd0cedbdf..e76f04736502 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1420,11 +1420,20 @@ static __le32 rtw89_build_txwd_info2_v1(struct rtw89_tx_desc_info *desc_info)
- 	return cpu_to_le32(dword);
- }
+@@ -1161,18 +1161,19 @@ int rtw89_core_tx_kick_off_and_wait(struct rtw89_dev *rtwdev, struct sk_buff *sk
  
-+static __le32 rtw89_build_txwd_info3(struct rtw89_tx_desc_info *desc_info)
-+{
-+	bool rpt_en = desc_info->report;
-+	u32 dword = FIELD_PREP(RTW89_TXWD_INFO3_SPE_RPT, rpt_en);
-+
-+	return cpu_to_le32(dword);
-+}
-+
- static __le32 rtw89_build_txwd_info4(struct rtw89_tx_desc_info *desc_info)
- {
- 	bool rts_en = !desc_info->is_bmc;
- 	u32 dword = FIELD_PREP(RTW89_TXWD_INFO4_RTS_EN, rts_en) |
--		    FIELD_PREP(RTW89_TXWD_INFO4_HW_RTS_EN, 1);
-+		    FIELD_PREP(RTW89_TXWD_INFO4_HW_RTS_EN, 1) |
-+		    FIELD_PREP(RTW89_TXWD_INFO4_SW_DEFINE, desc_info->sn);
+ 	lockdep_assert_wiphy(rtwdev->hw->wiphy);
  
- 	return cpu_to_le32(dword);
- }
-@@ -1447,6 +1456,7 @@ void rtw89_core_fill_txdesc(struct rtw89_dev *rtwdev,
- 	txwd_info->dword0 = rtw89_build_txwd_info0(desc_info);
- 	txwd_info->dword1 = rtw89_build_txwd_info1(desc_info);
- 	txwd_info->dword2 = rtw89_build_txwd_info2(desc_info);
-+	txwd_info->dword3 = rtw89_build_txwd_info3(desc_info);
- 	txwd_info->dword4 = rtw89_build_txwd_info4(desc_info);
++	list_add_tail_rcu(&wait->list, &rtwdev->tx_waits);
+ 	rtw89_core_tx_kick_off(rtwdev, qsel);
+ 	time_left = wait_for_completion_timeout(&wait->completion,
+ 						msecs_to_jiffies(timeout));
  
- }
+ 	if (time_left == 0) {
+ 		ret = -ETIMEDOUT;
+-		list_add_tail(&wait->list, &rtwdev->tx_waits);
+ 		wiphy_delayed_work_queue(rtwdev->hw->wiphy, &rtwdev->tx_wait_work,
+ 					 RTW89_TX_WAIT_WORK_TIMEOUT);
+ 	} else {
+ 		if (!wait->tx_done)
+ 			ret = -EAGAIN;
++		list_del_rcu(&wait->list);
+ 		rtw89_tx_wait_release(wait);
+ 	}
+ 
+@@ -1237,11 +1238,12 @@ static int rtw89_core_tx_write_link(struct rtw89_dev *rtwdev,
+ 	tx_req.skb = skb;
+ 	tx_req.vif = vif;
+ 	tx_req.sta = sta;
++	tx_req.wait = wait;
+ 	tx_req.rtwvif_link = rtwvif_link;
+ 	tx_req.rtwsta_link = rtwsta_link;
+ 	tx_req.desc_info.sw_mld = sw_mld;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
++	if (wait || (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
+ 		rtw89_hci_tx_rpt_enable(rtwdev, &tx_req);
+ 
+ 	rtw89_traffic_stats_accu(rtwdev, rtwvif, skb, true, true);
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 928c8c84c964..2362724323a9 100644
+index 4e597a5df005..e7948bd0bdf6 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -1167,6 +1167,8 @@ struct rtw89_tx_desc_info {
- 	u8 ampdu_density;
- 	u8 ampdu_num;
- 	bool sec_en;
-+	bool report;
+@@ -1199,6 +1199,7 @@ struct rtw89_core_tx_request {
+ 	struct sk_buff *skb;
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
++	struct rtw89_tx_wait_info *wait;
+ 	struct rtw89_vif_link *rtwvif_link;
+ 	struct rtw89_sta_link *rtwsta_link;
+ 	struct rtw89_tx_desc_info desc_info;
+@@ -3521,6 +3522,7 @@ struct rtw89_tx_wait_info {
+ 	struct completion completion;
+ 	struct sk_buff *skb;
+ 	bool tx_done;
 +	u8 sn;
- 	u8 addr_info_nr;
- 	u8 sec_keyid;
- 	u8 sec_type;
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index ddebf7972068..f196088a8316 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -3747,6 +3747,11 @@ struct rtw89_c2h_scanofld {
- #define RTW89_GET_MAC_C2H_MCC_REQ_ACK_H2C_FUNC(c2h) \
- 	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(15, 8))
+ };
  
-+#define RTW89_GET_MAC_C2H_TX_RPT_TX_STATE(c2h) \
-+	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(7, 6))
-+#define RTW89_GET_MAC_C2H_TX_RPT_SW_DEFINE(c2h) \
-+	le32_get_bits(*((const __le32 *)(c2h) + 2), GENMASK(12, 8))
-+
- struct rtw89_mac_mcc_tsf_rpt {
- 	u32 macid_x;
- 	u32 macid_y;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index fd11b8fb3c89..01afdcd5f36c 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -5457,6 +5457,17 @@ rtw89_mac_c2h_mcc_status_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32
- 	rtw89_complete_cond(&rtwdev->mcc.wait, cond, &data);
+ struct rtw89_tx_skb_data {
+@@ -6289,7 +6291,7 @@ static inline void rtw89_tx_wait_list_clear(struct rtw89_dev *rtwdev)
+ 	list_for_each_entry_safe(wait, tmp, &rtwdev->tx_waits, list) {
+ 		if (!completion_done(&wait->completion))
+ 			continue;
+-		list_del(&wait->list);
++		list_del_rcu(&wait->list);
+ 		rtw89_tx_wait_release(wait);
+ 	}
+ }
+@@ -7392,6 +7394,20 @@ static inline struct sk_buff *rtw89_alloc_skb_for_rx(struct rtw89_dev *rtwdev,
+ 	return dev_alloc_skb(length);
  }
  
-+static void
-+rtw89_mac_c2h_tx_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
++static inline bool rtw89_core_is_tx_wait(struct rtw89_dev *rtwdev,
++					 struct rtw89_tx_skb_data *skb_data)
 +{
-+	u8 sw_define = RTW89_GET_MAC_C2H_TX_RPT_SW_DEFINE(c2h->data);
-+	u8 tx_status = RTW89_GET_MAC_C2H_TX_RPT_TX_STATE(c2h->data);
++	struct rtw89_tx_wait_info *wait;
 +
-+	rtw89_debug(rtwdev, RTW89_DBG_TXRX,
-+		    "C2H TX RPT: sn %d, tx_status %d\n",
-+		    sw_define, tx_status);
++	guard(rcu)();
++
++	wait = rcu_dereference(skb_data->wait);
++	if (!wait)
++		return false;
++
++	return true;
 +}
 +
- static void
- rtw89_mac_c2h_mrc_tsf_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
+ static inline bool rtw89_core_tx_wait_complete(struct rtw89_dev *rtwdev,
+ 					       struct rtw89_tx_skb_data *skb_data,
+ 					       bool tx_done)
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 831e53aedccc..79409eb4d028 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -5477,6 +5477,7 @@ rtw89_mac_c2h_tx_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
  {
-@@ -5691,6 +5702,12 @@ void (* const rtw89_mac_c2h_mcc_handler[])(struct rtw89_dev *rtwdev,
- 	[RTW89_MAC_C2H_FUNC_MCC_STATUS_RPT] = rtw89_mac_c2h_mcc_status_rpt,
- };
+ 	u8 sw_define = RTW89_GET_MAC_C2H_TX_RPT_SW_DEFINE(c2h->data);
+ 	u8 tx_status = RTW89_GET_MAC_C2H_TX_RPT_TX_STATE(c2h->data);
++	struct rtw89_tx_wait_info *wait;
+ 	struct sk_buff *cur, *tmp;
+ 	unsigned long flags;
+ 	u8 *n;
+@@ -5485,6 +5486,16 @@ rtw89_mac_c2h_tx_rpt(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
+ 		    "C2H TX RPT: sn %d, tx_status %d\n",
+ 		    sw_define, tx_status);
  
-+static
-+void (* const rtw89_mac_c2h_misc_handler[])(struct rtw89_dev *rtwdev,
-+					    struct sk_buff *c2h, u32 len) = {
-+	[RTW89_MAC_C2H_FUNC_TX_REPORT] = rtw89_mac_c2h_tx_rpt,
-+};
++	rcu_read_lock();
++	list_for_each_entry_rcu(wait, &rtwdev->tx_waits, list) {
++		if (wait->sn == sw_define) {
++			wait->tx_done = tx_status == RTW89_TX_DONE;
++			complete_all(&wait->completion);
++			break;
++		}
++	}
++	rcu_read_unlock();
 +
- static
- void (* const rtw89_mac_c2h_mlo_handler[])(struct rtw89_dev *rtwdev,
- 					   struct sk_buff *c2h, u32 len) = {
-@@ -5777,6 +5794,8 @@ bool rtw89_mac_c2h_chk_atomic(struct rtw89_dev *rtwdev, struct sk_buff *c2h,
- 		}
- 	case RTW89_MAC_C2H_CLASS_MCC:
- 		return true;
-+	case RTW89_MAC_C2H_CLASS_MISC:
-+		return true;
- 	case RTW89_MAC_C2H_CLASS_MLO:
- 		return true;
- 	case RTW89_MAC_C2H_CLASS_MRC:
-@@ -5812,6 +5831,10 @@ void rtw89_mac_c2h_handle(struct rtw89_dev *rtwdev, struct sk_buff *skb,
- 		if (func < NUM_OF_RTW89_MAC_C2H_FUNC_MCC)
- 			handler = rtw89_mac_c2h_mcc_handler[func];
- 		break;
-+	case RTW89_MAC_C2H_CLASS_MISC:
-+		if (func < NUM_OF_RTW89_MAC_C2H_FUNC_MISC)
-+			handler = rtw89_mac_c2h_misc_handler[func];
-+		break;
- 	case RTW89_MAC_C2H_CLASS_MLO:
- 		if (func < NUM_OF_RTW89_MAC_C2H_FUNC_MLO)
- 			handler = rtw89_mac_c2h_mlo_handler[func];
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index 25fe5e5c8a97..632b85aed032 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.h
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -432,6 +432,14 @@ enum rtw89_mac_c2h_mcc_func {
- 	NUM_OF_RTW89_MAC_C2H_FUNC_MCC,
- };
- 
-+enum rtw89_mac_c2h_misc_func {
-+	RTW89_MAC_C2H_FUNC_WPS_RPT,
-+	RTW89_MAC_C2H_FUNC_TX_REPORT,
-+	RTW89_MAC_C2H_FUNC_BF_SENS_FEEDBACK = 0x4,
+ 	spin_lock_irqsave(&rtwdev->tx_rpt_queue.lock, flags);
+ 	skb_queue_walk_safe(&rtwdev->tx_rpt_queue, cur, tmp) {
+ 		n = (u8 *)RTW89_TX_SKB_CB(cur)->hci_priv;
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
+index 98eff955fc96..342c05227191 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.c
++++ b/drivers/net/wireless/realtek/rtw89/usb.c
+@@ -191,8 +191,13 @@ static u8 rtw89_usb_get_bulkout_id(u8 ch_dma)
+ static void rtw89_usb_ops_tx_rpt_enable(struct rtw89_dev *rtwdev,
+ 					struct rtw89_core_tx_request *tx_req)
+ {
++	struct rtw89_tx_wait_info *wait = tx_req->wait;
 +
-+	NUM_OF_RTW89_MAC_C2H_FUNC_MISC,
-+};
+ 	tx_req->desc_info.report = true;
+ 	tx_req->desc_info.sn = atomic_inc_return(&rtwdev->sn) & 0xF;
 +
- enum rtw89_mac_c2h_mlo_func {
- 	RTW89_MAC_C2H_FUNC_MLO_GET_TBL			= 0x0,
- 	RTW89_MAC_C2H_FUNC_MLO_EMLSR_TRANS_DONE		= 0x1,
-@@ -470,6 +478,7 @@ enum rtw89_mac_c2h_class {
- 	RTW89_MAC_C2H_CLASS_WOW = 0x3,
- 	RTW89_MAC_C2H_CLASS_MCC = 0x4,
- 	RTW89_MAC_C2H_CLASS_FWDBG = 0x5,
-+	RTW89_MAC_C2H_CLASS_MISC = 0x9,
- 	RTW89_MAC_C2H_CLASS_MLO = 0xc,
- 	RTW89_MAC_C2H_CLASS_MRC = 0xe,
- 	RTW89_MAC_C2H_CLASS_AP = 0x18,
-diff --git a/drivers/net/wireless/realtek/rtw89/txrx.h b/drivers/net/wireless/realtek/rtw89/txrx.h
-index 984c9fdbb018..d7259e6d798e 100644
---- a/drivers/net/wireless/realtek/rtw89/txrx.h
-+++ b/drivers/net/wireless/realtek/rtw89/txrx.h
-@@ -139,8 +139,10 @@ static inline u8 rtw89_get_data_nss(struct rtw89_dev *rtwdev, u16 hw_rate)
- #define RTW89_TXWD_INFO2_SEC_CAM_IDX GENMASK(7, 0)
++	if (wait)
++		wait->sn = tx_req->desc_info.sn;
+ }
  
- /* TX WD INFO DWORD 3 */
-+#define RTW89_TXWD_INFO3_SPE_RPT BIT(10)
+ static void rtw89_usb_write_port_complete(struct urb *urb)
+@@ -313,7 +318,9 @@ static void rtw89_usb_ops_tx_kick_off(struct rtw89_dev *rtwdev, u8 txch)
+ 		txcb->txch = txch;
+ 		skb_queue_head_init(&txcb->tx_ack_queue);
  
- /* TX WD INFO DWORD 4 */
-+#define RTW89_TXWD_INFO4_SW_DEFINE GENMASK(3, 0)
- #define RTW89_TXWD_INFO4_RTS_EN BIT(27)
- #define RTW89_TXWD_INFO4_HW_RTS_EN BIT(31)
+-		skb_queue_tail(&txcb->tx_ack_queue, skb);
++		/* tx_wait skbs are completed in rtw89_mac_c2h_tx_rpt() */
++		if (!rtw89_core_is_tx_wait(rtwdev, RTW89_TX_SKB_CB(skb)))
++			skb_queue_tail(&txcb->tx_ack_queue, skb);
  
+ 		ret = rtw89_usb_write_port(rtwdev, txch, skb->data, skb->len,
+ 					   txcb);
 -- 
 2.51.0
 
