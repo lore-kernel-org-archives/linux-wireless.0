@@ -1,52 +1,52 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D04313AD26
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2025 09:56:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7496913AD26
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Sep 2025 09:56:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758621411; cv=none; b=hmiyWrFEXWdZWn27xcTKSkS60Oy/eKFSpORa6sHEWgYQLmTc3zT2gpEufUUtHF9eltQ6cxrUbEbB18VeNOxwHDRcZcEj9qdhXO7OsOl22l+BZlM53B0EOBoW3ny5mNXjn4RqA1PE+FsxOhVIIF2F2moTmQ5xMEg+mv0WZ1HrQno=
+	t=1758621414; cv=none; b=ZKshdGe/bTbmtL0bv7z2mzk9LG9GPLC4dPaR5zhVb1tZaVfkwCjESN+8CWhCz1MRtcLKO7WYtG0skTMxLQz3OsmDkGH2514YrzRCuPw73eXW6/WlwBjeRpmjmYMqZeA9OLUqcKl365yRPS4VMFAGEbHVPPziiodmzu1me6Ukp5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758621411; c=relaxed/simple;
-	bh=0EFcmeyoK3pgaLhijbprffGyTUYQlXmWoOWjWgZcLrE=;
+	s=arc-20240116; t=1758621414; c=relaxed/simple;
+	bh=JOvupwM+5J0RaSrlDIK1IKo3IJ1Qh50pARsE1Lrqyys=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dXeX9xLhPqpW9nxgKikD6YYYtA7CIJf7WWdK/7lw5RK8eRHVYEtkVDC9GGf2cEZyVzyCszOHXAG/uKDBBwtckvpJoV06rZor7Hruwpvf8XUJpMmCx/XIUCcGBl6ce0Kl7R04UHEwXxQJFN3Gm30RsfpHPXBBxwLxWrqMrlQ56A0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=K84EeSPR; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=iAe3qcYqv4nsDuSEENp9VMchIDf/kdoKtNVvwsKAGLqsCBE2IhpTR976V+SVKwPF8h+POQuSS/FUDKpudJuj6XdHYt0LUxRbrsCT+L1fNlX3T6vdknwb+lzlXQqQYKz+pF2SCMiTJvdATOzXg1in0hFkWyBecvxCZP+Yyx9uXqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=NnOibgG3; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="K84EeSPR"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58N8HAYH026349;
-	Tue, 23 Sep 2025 09:56:47 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="NnOibgG3"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58N8HILY023900;
+	Tue, 23 Sep 2025 09:56:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	WeGlzSMVNYR2uB/UaQ+LAvhC2uDkQ174w7rGJjv45lY=; b=K84EeSPRRk9rPj1P
-	ADnuEZHraBB3bNrTMTf37h4KIesbQUY4Dfd8OBjX/VCZDlASERbaYQuBYt0PQhEm
-	DtLNOc2QGS8GAyd33G9xeUVsKuryTIqLDP+KYLQgpVunImeKZyvKOu0CJWrDAG+u
-	OsuxOc0bM4jtLebmlAm0c7qV8xMk4j3hrfGPttBqCueQpgWfmEfcVo6z8aDx/LXr
-	c3N+ONz0yVnVO7J9KhB8LP142jI4ub/ueiWqh6T5v9nK+gWagYtq4Vpn6Iae03dT
-	GeNMTwf5VB3xDizObAtbtggaBVutuz4cQf4d2pwBbrWHTQAXCkDrE42iCvB/3jlW
-	gtcobQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 499hyerbra-1
+	3rBMTxrWBFONNh/3mSVGN1Xh4xJSh5cyWYTxwAaq/kY=; b=NnOibgG3QvnN3lvK
+	8iq2TvSy+VffpLmE6m64IMm4tI6STCM/eluGKeMObusH530wq3uBAhb6pgDAQ6Vn
+	zMapehzrNOBpfIYFv9dMWdmson4VH/5RBZ60t5zUp/uOL4Yg+tDf6hnTp2vS+/c1
+	0+0lhdBSNru9fycPGvbi66tuzcc8coI1IcoXG1/xkLuZmcNsWfbDYU6iGFPP8s1b
+	pqYtZVq1fq/8/pm5P6J9lNr5CQ4n1DZyUe2QxErxsNtIdUruQqe4pijx16LPpU76
+	f1vBpueejCXy4kxXrMcQ8zI9aRErP2w7AyU6M8/lZ0mWVEwyq+X5XXzBe1vjDAqy
+	G6kqkg==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49b3nybv7c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Sep 2025 09:56:46 +0000 (GMT)
+	Tue, 23 Sep 2025 09:56:50 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58N9ukIQ009894
+	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58N9unfU027165
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Sep 2025 09:56:46 GMT
+	Tue, 23 Sep 2025 09:56:49 GMT
 Received: from hu-rdeuri-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.24; Tue, 23 Sep 2025 02:56:44 -0700
+ 15.2.1748.24; Tue, 23 Sep 2025 02:56:47 -0700
 From: Ripan Deuri <quic_rdeuri@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH ath12k-ng 3/6] wifi: ath12k: Rearrange DP fields in ath12k_hw_group struct
-Date: Tue, 23 Sep 2025 15:26:25 +0530
-Message-ID: <20250923095628.2438280-4-quic_rdeuri@quicinc.com>
+Subject: [PATCH ath12k-ng 5/6] wifi: ath12k: Add framework for hardware specific DP interrupt registration
+Date: Tue, 23 Sep 2025 15:26:27 +0530
+Message-ID: <20250923095628.2438280-6-quic_rdeuri@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250923095628.2438280-1-quic_rdeuri@quicinc.com>
 References: <20250923095628.2438280-1-quic_rdeuri@quicinc.com>
@@ -62,442 +62,377 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: IrKBxeSux_c33D7kOOjyEJrVWq2PlYdL
-X-Authority-Analysis: v=2.4 cv=YMOfyQGx c=1 sm=1 tr=0 ts=68d26ede cx=c_pps
+X-Authority-Analysis: v=2.4 cv=EuPSrTcA c=1 sm=1 tr=0 ts=68d26ee2 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8 a=7sIEUb9Th27A_HrKIYsA:9
+ a=GEpy-HfZoHoA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8 a=boQPsJf0mRWV6-TzE2AA:9
  a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTIwMDAwNCBTYWx0ZWRfX36DTti8rZXZs
- N3oQySidECZx1kFITKKardq5qrx3vkhVGkv3QNRLCyghA8rfpUm4lkvknOwk7T6IsVPDZBuDwle
- 8JzpFJZrJE3a9niD61QkqoQCzAgks3XIKB9YhLko4RbROMI9M/EwcKLxiEQduWB0fha/tvEkioO
- S476RA09p6izeiyZjsMGnQDnQkI06V8ghraYE/kkyroiEsBo77OYPg+QXikqnmpMsXxsVFLJjum
- N4/YSFqqkPMeUwBs4TMW/XpJQhJHnh/YQVEq5+ZWOsSWZOoEUbQ1M59UnmrOaE57QEDl7BRXE42
- F/77cEToh4JUu+MSvdHJWct4HPkI1UnerDtMoVCzjzPLOBE8RayTyPfisitlAR3qTynndsCIwj6
- rATYk3ym
-X-Proofpoint-ORIG-GUID: IrKBxeSux_c33D7kOOjyEJrVWq2PlYdL
+X-Proofpoint-GUID: LB629wNpGyxyk7-eoipVXmjsxISEu_Tl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTIyMDA5MCBTYWx0ZWRfX1GBES44HwGoR
+ Pxyo9p1DEGav3P3RUVrD1En8Op3yxyR1MMkxp5OoLEt5hGfcy6AAEnJaqcymJA7l+tQXcaSClLO
+ pU68qeHkIP2A6u/iPCF4Y5uhJI8w3HeymOUPJEDUJAFhJMsP1HT1sJjbuxySEOqk7ztWhFScJg8
+ OkjFPkYtSXS7LafIYEz43TcMo3K92aOl9vzIhQAjNgOpGLdktK+d1zAC77mijxHho3avCG5Dfta
+ bmTWwQuNv5Ffa5npwmpffDEIRyRwqjofYYmjXfRrrB1697RCkF4UWmY5ljSKOP/YP9DIPehtSpn
+ PVMXC6JebmyEr31n1oeoSBs4Ae1CvuBqJmOQ0bcKYCfiowh1tyNrwltoB9owtiOhXUVP6gSqNr8
+ /JsAw2wQ
+X-Proofpoint-ORIG-GUID: LB629wNpGyxyk7-eoipVXmjsxISEu_Tl
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-23_02,2025-09-22_05,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 adultscore=0 priorityscore=1501 spamscore=0
- clxscore=1015 suspectscore=0 phishscore=0 malwarescore=0
+ phishscore=0 suspectscore=0 malwarescore=0 spamscore=0 adultscore=0
+ clxscore=1015 priorityscore=1501 impostorscore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509200004
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509220090
 
-Introduce the ath12k_dp_hw_group struct within ath12k_hw_group to
-encapsulate all Data Path fields, providing a baseline for future
-extensions. Add this struct to the top of ath12k_hw_group to allow
-optimal usage of cache lines for data path fields, as it is accessed
-in multiple tight loops in the per-packet path.
+Introduce an architecture-specific ops mechanism to handle interrupt
+registration for Data Path (DP). While the interrupt trigger originates
+from common DP code, the registration process differs across hardware
+architectures. This mechanism allows the common module to invoke functions
+implemented in architecture-specific modules.
 
-Add cmn_def.h to define common macros shared between DP and other
-modules.
+Add a generic dp_device_init() op to perform architecture-specific device
+initializations. Currently, this is used to set up interrupts, but it can
+be used for other initialization tasks in the future.
+
+Add PCI and AHB hif_ops to handle IRQ setup and cleanup from DP.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
 
 Signed-off-by: Ripan Deuri <quic_rdeuri@quicinc.com>
 ---
- drivers/net/wireless/ath/ath12k/cmn_defs.h    | 13 +++++
- drivers/net/wireless/ath/ath12k/core.c        |  4 ++
- drivers/net/wireless/ath/ath12k/core.h        |  9 ++-
- drivers/net/wireless/ath/ath12k/dp.c          | 24 ++++++++
- drivers/net/wireless/ath/ath12k/dp.h          | 10 ++++
- drivers/net/wireless/ath/ath12k/dp_cmn.h      | 12 ++++
- drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c | 58 +++++++++++--------
- drivers/net/wireless/ath/ath12k/wmi.h         |  5 +-
- 8 files changed, 105 insertions(+), 30 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath12k/cmn_defs.h
+ drivers/net/wireless/ath/ath12k/ahb.c      | 16 +++++++-----
+ drivers/net/wireless/ath/ath12k/core.h     |  3 +++
+ drivers/net/wireless/ath/ath12k/dp.c       |  5 ++++
+ drivers/net/wireless/ath/ath12k/dp.h       | 10 ++++++++
+ drivers/net/wireless/ath/ath12k/hif.h      | 30 +++++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/pci.c      | 20 ++++++++-------
+ drivers/net/wireless/ath/ath12k/wifi7/dp.c | 29 ++++++++++++++++++---
+ drivers/net/wireless/ath/ath12k/wifi7/dp.h |  2 --
+ 8 files changed, 94 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/cmn_defs.h b/drivers/net/wireless/ath/ath12k/cmn_defs.h
-new file mode 100644
-index 000000000000..e1f1f50341ff
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath12k/cmn_defs.h
-@@ -0,0 +1,13 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
-+/*
-+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-+ */
-+
-+#ifndef ATH12K_CMN_DEFS_H
-+#define ATH12K_CMN_DEFS_H
-+
-+#define MAX_RADIOS 2
-+#define ATH12K_MAX_DEVICES 3
-+#define ATH12K_GROUP_MAX_RADIO (ATH12K_MAX_DEVICES * MAX_RADIOS)
-+
-+#endif
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index e5b358f5e703..84ac706fed20 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1993,6 +1993,8 @@ static struct ath12k_hw_group *ath12k_core_hw_group_assign(struct ath12k_base *a
- 	ag->ab[ab->device_id] = ab;
- 	ab->ag = ag;
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+index c545bea18935..4bacdaa62f83 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/ahb.c
+@@ -524,10 +524,9 @@ static int ath12k_ahb_ext_grp_napi_poll(struct napi_struct *napi, int budget)
+ 	struct ath12k_ext_irq_grp *irq_grp = container_of(napi,
+ 						struct ath12k_ext_irq_grp,
+ 						napi);
+-	struct ath12k_base *ab = irq_grp->ab;
+ 	int work_done;
  
-+	ath12k_dp_cmn_hw_group_assign(ath12k_ab_to_dp(ab), ag);
-+
- 	ath12k_dbg(ab, ATH12K_DBG_BOOT, "wsi group-id %d num-devices %d index %d",
- 		   ag->id, ag->num_devices, wsi->index);
+-	work_done = ath12k_wifi7_dp_service_srng(ab, irq_grp, budget);
++	work_done = irq_grp->irq_handler(irq_grp->dp, irq_grp, budget);
+ 	if (work_done < budget) {
+ 		napi_complete_done(napi, work_done);
+ 		ath12k_ahb_ext_grp_enable(irq_grp);
+@@ -553,7 +552,12 @@ static irqreturn_t ath12k_ahb_ext_interrupt_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
  
-@@ -2020,6 +2022,8 @@ void ath12k_core_hw_group_unassign(struct ath12k_base *ab)
- 		return;
+-static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
++static int
++ath12k_ahb_config_ext_irq(struct ath12k_base *ab,
++			  int (*irq_handler)(struct ath12k_dp *dp,
++					     struct ath12k_ext_irq_grp *irq_grp,
++					     int budget),
++			  struct ath12k_dp *dp)
+ {
+ 	const struct ath12k_hw_ring_mask *ring_mask;
+ 	struct ath12k_ext_irq_grp *irq_grp;
+@@ -569,6 +573,8 @@ static int ath12k_ahb_config_ext_irq(struct ath12k_base *ab)
+ 
+ 		irq_grp->ab = ab;
+ 		irq_grp->grp_id = i;
++		irq_grp->irq_handler = irq_handler;
++		irq_grp->dp = dp;
+ 
+ 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+ 		if (!irq_grp->napi_ndev)
+@@ -652,9 +658,6 @@ static int ath12k_ahb_config_irq(struct ath12k_base *ab)
+ 		ab->irq_num[irq_idx] = irq;
  	}
  
-+	ath12k_dp_cmn_hw_group_unassign(ath12k_ab_to_dp(ab), ag);
-+
- 	ag->ab[device_id] = NULL;
- 	ab->ag = NULL;
- 	ab->device_id = ATH12K_INVALID_DEVICE_ID;
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index 55d421595f0e..357c3e7915fe 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -34,6 +34,7 @@
- #include "wow.h"
- #include "debugfs_htt_stats.h"
- #include "coredump.h"
-+#include "cmn_defs.h"
+-	/* Configure external interrupts */
+-	ret = ath12k_ahb_config_ext_irq(ab);
+-
+ 	return ret;
+ }
  
- #define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
- 
-@@ -64,8 +65,6 @@
- #define ATH12K_RECONFIGURE_TIMEOUT_HZ		(10 * HZ)
- #define ATH12K_RECOVER_START_TIMEOUT_HZ		(20 * HZ)
- 
--#define ATH12K_MAX_DEVICES 3
--#define ATH12K_GROUP_MAX_RADIO (ATH12K_MAX_DEVICES * MAX_RADIOS)
- #define ATH12K_INVALID_GROUP_ID  0xFF
- #define ATH12K_INVALID_DEVICE_ID 0xFF
- 
-@@ -980,6 +979,11 @@ struct ath12k_hw_link {
-  * wiphy, protected with struct ath12k_hw_group::mutex.
-  */
- struct ath12k_hw_group {
-+	/* Keep dp_hw_grp as the first member to allow efficient
-+	 * usage of cache lines for DP fields
-+	 */
-+	struct ath12k_dp_hw_group dp_hw_grp;
-+	struct ath12k_hw_link hw_links[ATH12K_GROUP_MAX_RADIO];
- 	struct list_head list;
- 	u8 id;
- 	u8 num_devices;
-@@ -1002,7 +1006,6 @@ struct ath12k_hw_group {
- 	bool mlo_capable;
- 	struct device_node *wsi_node[ATH12K_MAX_DEVICES];
- 	struct ath12k_mlo_memory mlo_mem;
--	struct ath12k_hw_link hw_links[ATH12K_GROUP_MAX_RADIO];
- 	bool hw_link_id_init_done;
+@@ -702,6 +705,7 @@ static const struct ath12k_hif_ops ath12k_ahb_hif_ops = {
+ 	.map_service_to_pipe = ath12k_ahb_map_service_to_pipe,
+ 	.power_up = ath12k_ahb_power_up,
+ 	.power_down = ath12k_ahb_power_down,
++	.ext_irq_setup = ath12k_ahb_config_ext_irq,
  };
  
+ static irqreturn_t ath12k_userpd_irq_handler(int irq, void *data)
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index 5a6f79c19aaa..0a0a600a433d 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -166,6 +166,7 @@ enum ath12k_firmware_mode {
+ #define ATH12K_MAX_TCL_RING_NUM	3
+ 
+ struct ath12k_ext_irq_grp {
++	struct ath12k_dp *dp;
+ 	struct ath12k_base *ab;
+ 	u32 irqs[ATH12K_EXT_IRQ_NUM_MAX];
+ 	u32 num_irq;
+@@ -174,6 +175,8 @@ struct ath12k_ext_irq_grp {
+ 	bool napi_enabled;
+ 	struct napi_struct napi;
+ 	struct net_device *napi_ndev;
++	int (*irq_handler)(struct ath12k_dp *dp,
++			   struct ath12k_ext_irq_grp *irq_grp, int budget);
+ };
+ 
+ enum ath12k_smbios_cc_type {
 diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
-index f8d38562fc7f..39d6bd41b4ef 100644
+index 39d6bd41b4ef..34ff5736dd25 100644
 --- a/drivers/net/wireless/ath/ath12k/dp.c
 +++ b/drivers/net/wireless/ath/ath12k/dp.c
-@@ -1685,3 +1685,27 @@ int ath12k_dp_cmn_device_init(struct ath12k_dp *dp)
+@@ -1672,6 +1672,7 @@ static int ath12k_dp_setup(struct ath12k_base *ab)
  
- 	return 0;
+ void ath12k_dp_cmn_device_deinit(struct ath12k_dp *dp)
+ {
++	dp->ops->dp_device_deinit(dp);
+ 	ath12k_dp_cleanup(dp->ab);
  }
+ 
+@@ -1679,6 +1680,10 @@ int ath12k_dp_cmn_device_init(struct ath12k_dp *dp)
+ {
+ 	int ret;
+ 
++	ret = dp->ops->dp_device_init(dp);
++	if (ret)
++		return ret;
 +
-+void ath12k_dp_cmn_hw_group_unassign(struct ath12k_dp *dp,
-+				     struct ath12k_hw_group *ag)
-+{
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
-+
-+	lockdep_assert_held(&ag->mutex);
-+
-+	dp_hw_grp->dp[dp->device_id] = NULL;
-+
-+	dp->ag = NULL;
-+	dp->device_id = ATH12K_INVALID_DEVICE_ID;
-+}
-+
-+void ath12k_dp_cmn_hw_group_assign(struct ath12k_dp *dp,
-+				   struct ath12k_hw_group *ag)
-+{
-+	struct ath12k_base *ab = dp->ab;
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
-+
-+	dp->ag = ag;
-+	dp->device_id = ab->device_id;
-+	dp_hw_grp->dp[dp->device_id] = dp;
-+}
+ 	ret = ath12k_dp_setup(dp->ab);
+ 	if (ret)
+ 		return ret;
 diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
-index 8b3973e0e676..05f48b461774 100644
+index 05f48b461774..57ce5e1e39d0 100644
 --- a/drivers/net/wireless/ath/ath12k/dp.h
 +++ b/drivers/net/wireless/ath/ath12k/dp.h
-@@ -11,6 +11,7 @@
- #include "wifi7/hal_rx.h"
- #include "hw.h"
- #include "dp_htt.h"
-+#include "dp_cmn.h"
+@@ -367,6 +367,14 @@ struct ath12k_link_stats {
+ 	u32 tx_desc_type[HAL_TCL_DESC_TYPE_MAX];
+ };
  
- #define MAX_RXDMA_PER_PDEV     2
- 
-@@ -426,6 +427,9 @@ struct ath12k_dp {
- 	struct ath12k_reo_q_addr_lut ml_reoq_lut;
- 	const struct ath12k_hw_params *hw_params;
- 	struct device *dev;
++/* DP arch ops to communicate from common module
++ * to arch specific module
++ */
++struct ath12k_dp_arch_ops {
++	int (*dp_device_init)(struct ath12k_dp *dp);
++	void (*dp_device_deinit)(struct ath12k_dp *dp);
++};
 +
-+	struct ath12k_hw_group *ag;
-+	u8 device_id;
+ struct ath12k_dp {
+ 	struct ath12k_base *ab;
+ 	u32 mon_dest_ring_stuck_cnt;
+@@ -430,6 +438,8 @@ struct ath12k_dp {
+ 
+ 	struct ath12k_hw_group *ag;
+ 	u8 device_id;
++
++	struct ath12k_dp_arch_ops *ops;
  };
  
  static inline void ath12k_dp_get_mac_addr(u32 addr_l32, u16 addr_h16, u8 *addr)
-@@ -434,6 +438,12 @@ static inline void ath12k_dp_get_mac_addr(u32 addr_l32, u16 addr_h16, u8 *addr)
- 	memcpy(addr + 4, &addr_h16, ETH_ALEN - 4);
- }
- 
-+static inline struct ath12k_dp *
-+ath12k_dp_hw_grp_to_dp(struct ath12k_dp_hw_group *dp_hw_grp, u8 device_id)
-+{
-+	return dp_hw_grp->dp[device_id];
-+}
-+
- void ath12k_dp_vdev_tx_attach(struct ath12k *ar, struct ath12k_link_vif *arvif);
- void ath12k_dp_cc_config(struct ath12k_base *ab);
- void ath12k_dp_partner_cc_init(struct ath12k_base *ab);
-diff --git a/drivers/net/wireless/ath/ath12k/dp_cmn.h b/drivers/net/wireless/ath/ath12k/dp_cmn.h
-index acc0782ad309..70c92f6d33d6 100644
---- a/drivers/net/wireless/ath/ath12k/dp_cmn.h
-+++ b/drivers/net/wireless/ath/ath12k/dp_cmn.h
-@@ -6,7 +6,19 @@
- #ifndef ATH12K_DP_CMN_H
- #define ATH12K_DP_CMN_H
- 
-+#include "cmn_defs.h"
-+
-+struct ath12k_hw_group;
-+
-+struct ath12k_dp_hw_group {
-+	struct ath12k_dp *dp[ATH12K_MAX_DEVICES];
-+};
-+
- void ath12k_dp_cmn_device_deinit(struct ath12k_dp *dp);
- int ath12k_dp_cmn_device_init(struct ath12k_dp *dp);
-+void ath12k_dp_cmn_hw_group_unassign(struct ath12k_dp *dp,
-+				     struct ath12k_hw_group *ag);
-+void ath12k_dp_cmn_hw_group_assign(struct ath12k_dp *dp,
-+				   struct ath12k_hw_group *ag);
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
-index 6353c2f1f709..04c64b904693 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
-@@ -558,7 +558,9 @@ ath12k_wifi7_dp_rx_process_received_packets(struct ath12k_base *ab,
- 					    struct sk_buff_head *msdu_list,
- 					    int ring_id)
- {
--	struct ath12k_hw_group *ag = ab->ag;
-+	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
-+	struct ath12k_hw_group *ag = dp->ag;
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
- 	struct ieee80211_rx_status rx_status = {};
- 	struct ath12k_skb_rxcb *rxcb;
- 	struct sk_buff *msdu;
-@@ -566,6 +568,7 @@ ath12k_wifi7_dp_rx_process_received_packets(struct ath12k_base *ab,
- 	struct ath12k_hw_link *hw_links = ag->hw_links;
- 	struct ath12k_base *partner_ab;
- 	struct hal_rx_desc_data rx_info;
-+	struct ath12k_dp *partner_dp;
- 	u8 hw_link_id, pdev_id;
- 	int ret;
- 
-@@ -580,10 +583,11 @@ ath12k_wifi7_dp_rx_process_received_packets(struct ath12k_base *ab,
- 	while ((msdu = __skb_dequeue(msdu_list))) {
- 		rxcb = ATH12K_SKB_RXCB(msdu);
- 		hw_link_id = rxcb->hw_link_id;
--		partner_ab = ath12k_ag_to_ab(ag,
--					     hw_links[hw_link_id].device_id);
--		pdev_id = ath12k_hw_mac_id_to_pdev_id(partner_ab->hw_params,
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp,
-+						    hw_links[hw_link_id].device_id);
-+		pdev_id = ath12k_hw_mac_id_to_pdev_id(partner_dp->hw_params,
- 						      hw_links[hw_link_id].pdev_idx);
-+		partner_ab = partner_dp->ab;
- 		ar = partner_ab->pdevs[pdev_id].ar;
- 		if (!rcu_dereference(partner_ab->pdevs_active[pdev_id])) {
- 			dev_kfree_skb_any(msdu);
-@@ -612,12 +616,13 @@ ath12k_wifi7_dp_rx_process_received_packets(struct ath12k_base *ab,
- int ath12k_wifi7_dp_rx_process(struct ath12k_base *ab, int ring_id,
- 			       struct napi_struct *napi, int budget)
- {
--	struct ath12k_hw_group *ag = ab->ag;
-+	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
-+	struct ath12k_hw_group *ag = dp->ag;
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
- 	struct list_head rx_desc_used_list[ATH12K_MAX_DEVICES];
- 	struct ath12k_hw_link *hw_links = ag->hw_links;
- 	int num_buffs_reaped[ATH12K_MAX_DEVICES] = {};
- 	struct ath12k_rx_desc_info *desc_info;
--	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
- 	struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
- 	struct hal_reo_dest_ring *desc;
- 	struct ath12k_dp *partner_dp;
-@@ -660,8 +665,8 @@ int ath12k_wifi7_dp_rx_process(struct ath12k_base *ab, int ring_id,
- 		desc_info = (struct ath12k_rx_desc_info *)((unsigned long)desc_va);
- 
- 		device_id = hw_links[hw_link_id].device_id;
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		if (unlikely(!partner_ab)) {
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		if (unlikely(!partner_dp)) {
- 			if (desc_info->skb) {
- 				dev_kfree_skb_any(desc_info->skb);
- 				desc_info->skb = NULL;
-@@ -669,6 +674,7 @@ int ath12k_wifi7_dp_rx_process(struct ath12k_base *ab, int ring_id,
- 
- 			continue;
- 		}
-+		partner_ab = partner_dp->ab;
- 
- 		/* retry manual desc retrieval */
- 		if (!desc_info) {
-@@ -755,8 +761,8 @@ int ath12k_wifi7_dp_rx_process(struct ath12k_base *ab, int ring_id,
- 		if (!num_buffs_reaped[device_id])
- 			continue;
- 
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		partner_dp = ath12k_ab_to_dp(partner_ab);
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		partner_ab = partner_dp->ab;
- 		rx_ring = &partner_dp->rx_refill_buf_ring;
- 
- 		ath12k_dp_rx_bufs_replenish(partner_ab, rx_ring,
-@@ -1290,8 +1296,9 @@ ath12k_wifi7_dp_process_rx_err_buf(struct ath12k *ar,
- int ath12k_wifi7_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *napi,
- 				   int budget)
- {
--	struct ath12k_hw_group *ag = ab->ag;
- 	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
-+	struct ath12k_hw_group *ag = dp->ag;
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
- 	struct ath12k_dp *partner_dp;
- 	struct list_head rx_desc_used_list[ATH12K_MAX_DEVICES];
- 	u32 msdu_cookies[HAL_NUM_RX_MSDUS_PER_LINK_DESC];
-@@ -1346,8 +1353,8 @@ int ath12k_wifi7_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *n
- 		hw_link_id = le32_get_bits(reo_desc->info0,
- 					   HAL_REO_DEST_RING_INFO0_SRC_LINK_ID);
- 		device_id = hw_links[hw_link_id].device_id;
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		partner_dp = ath12k_ab_to_dp(partner_ab);
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		partner_ab = partner_dp->ab;
- 
- 		pdev_id = ath12k_hw_mac_id_to_pdev_id(partner_ab->hw_params,
- 						      hw_links[hw_link_id].pdev_idx);
-@@ -1418,8 +1425,8 @@ int ath12k_wifi7_dp_rx_process_err(struct ath12k_base *ab, struct napi_struct *n
- 		if (!num_buffs_reaped[device_id])
- 			continue;
- 
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		partner_dp = ath12k_ab_to_dp(partner_ab);
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		partner_ab = partner_dp->ab;
- 		rx_ring = &partner_dp->rx_refill_buf_ring;
- 
- 		ath12k_dp_rx_bufs_replenish(partner_ab, rx_ring,
-@@ -1686,9 +1693,10 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 				       struct napi_struct *napi, int budget)
- {
- 	struct list_head rx_desc_used_list[ATH12K_MAX_DEVICES];
--	struct ath12k_hw_group *ag = ab->ag;
- 	struct ath12k *ar;
- 	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
-+	struct ath12k_hw_group *ag = dp->ag;
-+	struct ath12k_dp_hw_group *dp_hw_grp = &ag->dp_hw_grp;
- 	struct ath12k_dp *partner_dp;
- 	struct dp_rxdma_ring *rx_ring;
- 	struct hal_rx_wbm_rel_info err_info;
-@@ -1751,8 +1759,8 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 		desc_info->skb = NULL;
- 
- 		device_id = desc_info->device_id;
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		if (unlikely(!partner_ab)) {
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		if (unlikely(!partner_dp)) {
- 			dev_kfree_skb_any(msdu);
- 
- 			/* In any case continuation bit is set
-@@ -1762,10 +1770,12 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 			continue;
- 		}
- 
-+		partner_ab = partner_dp->ab;
-+
- 		list_add_tail(&desc_info->list, &rx_desc_used_list[device_id]);
- 
- 		rxcb = ATH12K_SKB_RXCB(msdu);
--		dma_unmap_single(partner_ab->dev, rxcb->paddr,
-+		dma_unmap_single(partner_dp->dev, rxcb->paddr,
- 				 msdu->len + skb_tailroom(msdu),
- 				 DMA_FROM_DEVICE);
- 
-@@ -1839,8 +1849,7 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 		if (!num_buffs_reaped[device_id])
- 			continue;
- 
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		partner_dp = ath12k_ab_to_dp(partner_ab);
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
- 		rx_ring = &partner_dp->rx_refill_buf_ring;
- 
- 		ath12k_dp_rx_bufs_replenish(ab, rx_ring,
-@@ -1854,8 +1863,8 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 		hw_link_id = rxcb->hw_link_id;
- 
- 		device_id = hw_links[hw_link_id].device_id;
--		partner_ab = ath12k_ag_to_ab(ag, device_id);
--		if (unlikely(!partner_ab)) {
-+		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
-+		if (unlikely(!partner_dp)) {
- 			ath12k_dbg(ab, ATH12K_DBG_DATA,
- 				   "Unable to process WBM error msdu due to invalid hw link id %d device id %d\n",
- 				   hw_link_id, device_id);
-@@ -1863,8 +1872,9 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_base *ab,
- 			continue;
- 		}
- 
--		pdev_id = ath12k_hw_mac_id_to_pdev_id(partner_ab->hw_params,
-+		pdev_id = ath12k_hw_mac_id_to_pdev_id(partner_dp->hw_params,
- 						      hw_links[hw_link_id].pdev_idx);
-+		partner_ab = partner_dp->ab;
- 		ar = partner_ab->pdevs[pdev_id].ar;
- 
- 		if (!ar || !rcu_dereference(ar->ab->pdevs_active[pdev_id])) {
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.h b/drivers/net/wireless/ath/ath12k/wmi.h
-index 833f42e6b826..6dcab9fceb1e 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.h
-+++ b/drivers/net/wireless/ath/ath12k/wmi.h
+diff --git a/drivers/net/wireless/ath/ath12k/hif.h b/drivers/net/wireless/ath/ath12k/hif.h
+index e8840fab6061..1f9781f6d564 100644
+--- a/drivers/net/wireless/ath/ath12k/hif.h
++++ b/drivers/net/wireless/ath/ath12k/hif.h
 @@ -1,7 +1,7 @@
  /* SPDX-License-Identifier: BSD-3-Clause-Clear */
  /*
-  * Copyright (c) 2018-2021 The Linux Foundation. All rights reserved.
-- * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
   */
  
- #ifndef ATH12K_WMI_H
-@@ -9,6 +9,7 @@
+ #ifndef ATH12K_HIF_H
+@@ -32,6 +32,12 @@ struct ath12k_hif_ops {
+ 	void (*get_ce_msi_idx)(struct ath12k_base *ab, u32 ce_id, u32 *msi_idx);
+ 	int (*panic_handler)(struct ath12k_base *ab);
+ 	void (*coredump_download)(struct ath12k_base *ab);
++	int (*ext_irq_setup)(struct ath12k_base *ab,
++			     int (*handler)(struct ath12k_dp *dp,
++					    struct ath12k_ext_irq_grp *irq_grp,
++					    int budget),
++			     struct ath12k_dp *dp);
++	void (*ext_irq_cleanup)(struct ath12k_base *ab);
+ };
  
- #include <net/mac80211.h>
- #include "htc.h"
-+#include "cmn_defs.h"
- 
- /* Naming conventions for structures:
-  *
-@@ -5123,8 +5124,6 @@ struct wmi_probe_tmpl_cmd {
- 	__le32 buf_len;
- } __packed;
- 
--#define MAX_RADIOS 2
+ static inline int ath12k_hif_map_service_to_pipe(struct ath12k_base *ab, u16 service_id,
+@@ -162,4 +168,26 @@ static inline void ath12k_hif_coredump_download(struct ath12k_base *ab)
+ 	if (ab->hif.ops->coredump_download)
+ 		ab->hif.ops->coredump_download(ab);
+ }
++
++static inline
++int ath12k_hif_ext_irq_setup(struct ath12k_base *ab,
++			     int (*irq_handler)(struct ath12k_dp *dp,
++						struct ath12k_ext_irq_grp *irq_grp,
++						int budget),
++			     struct ath12k_dp *dp)
++{
++	if (!ab->hif.ops->ext_irq_setup)
++		return -EOPNOTSUPP;
++
++	return ab->hif.ops->ext_irq_setup(ab, irq_handler, dp);
++}
++
++static inline void ath12k_hif_ext_irq_cleanup(struct ath12k_base *ab)
++{
++	if (!ab->hif.ops->ext_irq_cleanup)
++		return;
++
++	ab->hif.ops->ext_irq_cleanup(ab);
++}
++
+ #endif /* ATH12K_HIF_H */
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 672cf2899681..c7dc0c976a89 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -319,8 +319,6 @@ static void ath12k_pci_free_irq(struct ath12k_base *ab)
+ 		irq_idx = ATH12K_PCI_IRQ_CE0_OFFSET + i;
+ 		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
+ 	}
 -
- #define WMI_MLO_CMD_TIMEOUT_HZ (5 * HZ)
- #define WMI_SERVICE_READY_TIMEOUT_HZ (5 * HZ)
- #define WMI_SEND_TIMEOUT_HZ (3 * HZ)
+-	ath12k_pci_free_ext_irq(ab);
+ }
+ 
+ static void ath12k_pci_ce_irq_enable(struct ath12k_base *ab, u16 ce_id)
+@@ -478,11 +476,10 @@ static int ath12k_pci_ext_grp_napi_poll(struct napi_struct *napi, int budget)
+ 	struct ath12k_ext_irq_grp *irq_grp = container_of(napi,
+ 						struct ath12k_ext_irq_grp,
+ 						napi);
+-	struct ath12k_base *ab = irq_grp->ab;
+ 	int work_done;
+ 	int i;
+ 
+-	work_done = ath12k_wifi7_dp_service_srng(ab, irq_grp, budget);
++	work_done = irq_grp->irq_handler(irq_grp->dp, irq_grp, budget);
+ 	if (work_done < budget) {
+ 		napi_complete_done(napi, work_done);
+ 		for (i = 0; i < irq_grp->num_irq; i++)
+@@ -517,7 +514,12 @@ static irqreturn_t ath12k_pci_ext_interrupt_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int ath12k_pci_ext_irq_config(struct ath12k_base *ab)
++static
++int ath12k_pci_ext_irq_config(struct ath12k_base *ab,
++			      int (*irq_handler)(struct ath12k_dp *dp,
++						 struct ath12k_ext_irq_grp *irq_grp,
++						 int budget),
++			      struct ath12k_dp *dp)
+ {
+ 	struct ath12k_pci *ab_pci = ath12k_pci_priv(ab);
+ 	int i, j, n, ret, num_vectors = 0;
+@@ -538,6 +540,8 @@ static int ath12k_pci_ext_irq_config(struct ath12k_base *ab)
+ 
+ 		irq_grp->ab = ab;
+ 		irq_grp->grp_id = i;
++		irq_grp->irq_handler = irq_handler;
++		irq_grp->dp = dp;
+ 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+ 		if (!irq_grp->napi_ndev) {
+ 			ret = -ENOMEM;
+@@ -651,10 +655,6 @@ static int ath12k_pci_config_irq(struct ath12k_base *ab)
+ 		ath12k_pci_ce_irq_disable(ab, i);
+ 	}
+ 
+-	ret = ath12k_pci_ext_irq_config(ab);
+-	if (ret)
+-		return ret;
+-
+ 	return 0;
+ }
+ 
+@@ -1483,6 +1483,8 @@ static const struct ath12k_hif_ops ath12k_pci_hif_ops = {
+ #ifdef CONFIG_ATH12K_COREDUMP
+ 	.coredump_download = ath12k_pci_coredump_download,
+ #endif
++	.ext_irq_setup = ath12k_pci_ext_irq_config,
++	.ext_irq_cleanup = ath12k_pci_free_ext_irq,
+ };
+ 
+ static enum ath12k_device_family
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp.c b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
+index adc3480b282b..c96c8bf062f4 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
+@@ -10,13 +10,15 @@
+ #include "../dp_mon.h"
+ #include "../dp_cmn.h"
+ #include "dp_rx.h"
++#include "../hif.h"
+ #include "dp.h"
+ #include "dp_tx.h"
+ 
+-int ath12k_wifi7_dp_service_srng(struct ath12k_base *ab,
+-				 struct ath12k_ext_irq_grp *irq_grp,
+-				 int budget)
++static int ath12k_wifi7_dp_service_srng(struct ath12k_dp *dp,
++					struct ath12k_ext_irq_grp *irq_grp,
++					int budget)
+ {
++	struct ath12k_base *ab = dp->ab;
+ 	struct napi_struct *napi = &irq_grp->napi;
+ 	int grp_id = irq_grp->grp_id;
+ 	int work_done = 0;
+@@ -134,6 +136,25 @@ int ath12k_wifi7_dp_service_srng(struct ath12k_base *ab,
+ 	return tot_work_done;
+ }
+ 
++static int ath12k_wifi7_dp_op_device_init(struct ath12k_dp *dp)
++{
++	int ret;
++
++	ret = ath12k_hif_ext_irq_setup(dp->ab, ath12k_wifi7_dp_service_srng, dp);
++
++	return ret;
++}
++
++static void ath12k_wifi7_dp_op_device_deinit(struct ath12k_dp *dp)
++{
++	ath12k_hif_ext_irq_cleanup(dp->ab);
++}
++
++static struct ath12k_dp_arch_ops ath12k_wifi7_dp_arch_ops = {
++	.dp_device_init = ath12k_wifi7_dp_op_device_init,
++	.dp_device_deinit = ath12k_wifi7_dp_op_device_deinit,
++};
++
+ /* TODO: remove export once this file is built with wifi7 ko */
+ struct ath12k_dp *ath12k_wifi7_dp_device_alloc(struct ath12k_base *ab)
+ {
+@@ -144,6 +165,8 @@ struct ath12k_dp *ath12k_wifi7_dp_device_alloc(struct ath12k_base *ab)
+ 	if (!dp)
+ 		return NULL;
+ 
++	dp->ops = &ath12k_wifi7_dp_arch_ops;
++
+ 	dp->ab = ab;
+ 	dp->dev = ab->dev;
+ 	dp->hw_params = ab->hw_params;
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp.h b/drivers/net/wireless/ath/ath12k/wifi7/dp.h
+index 2300fda65786..72fdfb368c99 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp.h
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp.h
+@@ -13,8 +13,6 @@
+ struct ath12k_base;
+ struct ath12k_dp;
+ 
+-int ath12k_wifi7_dp_service_srng(struct ath12k_base *ab,
+-				 struct ath12k_ext_irq_grp *irq_grp, int budget);
+ struct ath12k_dp *ath12k_wifi7_dp_device_alloc(struct ath12k_base *ab);
+ void ath12k_wifi7_dp_device_free(struct ath12k_dp *dp);
+ 
 -- 
 2.34.1
 
