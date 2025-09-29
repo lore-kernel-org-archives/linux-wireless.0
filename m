@@ -1,51 +1,55 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00571224893
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2025 11:51:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689982EB5AF
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Sep 2025 11:51:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759146684; cv=none; b=uEcdPHXjWTR2SNI5YRrlmUtqmPtWBVV3B62cpJ0RoMxBmke3oRVyzWDarxY4y5oCeUtRtNIW9CDOnp0++uWi/xwCggn6qlc5c/z150TULu8XmJlbn3zaK+uGWNqtx9IVm66n6rjgRfU17/t2X620bQa0QdWZfSDzs/7/WDULocg=
+	t=1759146686; cv=none; b=d7hEogW2pf6J78hPftqniVj4Lc6bhk6aF0OuvoLlhWy1P16xPGLncddUWhfSLTbre8Lg+t26AAYOfuf3qA+1+a74DyHltf0QQCbr3vWMaCNIfEEYwWPYdhFXZ5A1WHd9V1s8uJo6ce+vlHUbrTBME4uNw5N7qN86K2AopeSvC8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759146684; c=relaxed/simple;
-	bh=s4naWZl6RSd4+lUwN08okwduTpHCNnFtpMCqOFsWpfc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KkovTbo/TT+p7JEXrSIB543w7O+Usamo4bx+su3wRDYf8ezO50HJ+YR75TxMybZo6koPvXKH8UyKWhfHww8Epqj9k6atjcnAdtm5Cv2vz7GmPOjw6tHOlcp2M+A+zqrDulfBbQCY1U2HJHhG0HRLvT6ijclbsmFMAvW8mS0Xkis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=E6rHFSJv; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1759146686; c=relaxed/simple;
+	bh=xPWEL5ZOfTLfHoDKiCQ07Y3eFMkOM72XFUgMox4AoDE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BTiwXk3qiFxjZ1noptOgpFEkea+cuciKSkI0fQuq/Wh+ao+XdH+91OOje7KciGMRFZcflABJbMSznfLqDxR8F/EXORE1f2zh7KWZGAN8lhTYL1yR6kdXUuB1SujMPThKENzw8xiKeW8hw0FvmWnJx5iv9d5RKgsNmmdUTnqpvb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=TDPA8c9g; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="E6rHFSJv"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58TA444k017780;
-	Mon, 29 Sep 2025 11:51:19 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="TDPA8c9g"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58T9edjQ022861;
+	Mon, 29 Sep 2025 11:51:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=eYpFuXzYWTLqJDzv7SHe3H
-	bdHd3pZubHW253JkkZ7iw=; b=E6rHFSJvqOFOm7JDZ7Avytwa9BgiPUhPEK2r7D
-	EEolyYpCalXkarN9g+8LKTfeNdGLMzLVYCxECLLNe6RNbYLcbtrIRtZ20JFUPVR+
-	U1dIByNEk/7LK08qmeJL4v/MYz9E+OuUe4a81mBIb1nLa4hakgtc0dnBWCdcMATr
-	ZIpBqF7AJjxqNy4T1bVSAyH+fUvk+VTO4UZ+wrXIubJDaUE6WWd4ge4wZiFzs/BE
-	LKrIy9zael7IjRhg11Ig4KqunqgB4LeznIzQh6c1+YB+Z5/r6ZnXf2iO6tQSPAap
-	4NpHVIJodDwehEbjt6jRl5rVdZD+8LBajslhM6ie+/zKFXEg==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49e80tn2mw-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	6QWS6JUoSVDFejXCac+dH2uQJAhfpp0HIPqRtS64n1M=; b=TDPA8c9gUl0i3OSm
+	pM8Bg1JQsSKmETtLdNrzlOLj+kAqZ8R/7KXuqbXhjHHibA4cAgLbfSwQsXKHHyk6
+	XufG8lgP7G2viT1WSTrUx3XSYoYA1xwfEFTPGIGV/PQ77TfOloxPrko0T5YvRVMQ
+	sJvvpfsV0U3O+3yHJ9A9xGAb/hX9X1uckxVuWk1g5VaK6yXmzPI1fUgUcmikplwg
+	/WbpbS3re4l0XtAg/YmfNd03k9fzkuzgUKVwHX6SovM7uqF0yIsHpInWKIQNeKDC
+	vHiV13/EtpiGBH9FNwLBoEfQRC2004YiNQm9j6IMV0ZOeyBAPbIpUqhKCLOnfu76
+	vu2mRg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49e8pdct3p-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 29 Sep 2025 11:51:19 +0000 (GMT)
+	Mon, 29 Sep 2025 11:51:22 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58TBpIl8008357
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58TBpLih005495
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 29 Sep 2025 11:51:18 GMT
+	Mon, 29 Sep 2025 11:51:21 GMT
 Received: from hu-rdeuri-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.24; Mon, 29 Sep 2025 04:51:17 -0700
+ 15.2.1748.24; Mon, 29 Sep 2025 04:51:20 -0700
 From: Ripan Deuri <quic_rdeuri@quicinc.com>
 To: <ath12k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH ath12k-ng v3 0/6] wifi: ath12k: Modularization of objects for Next Generation Driver
-Date: Mon, 29 Sep 2025 17:20:56 +0530
-Message-ID: <20250929115102.512719-1-quic_rdeuri@quicinc.com>
+Subject: [PATCH ath12k-ng v3 2/6] wifi: ath12k: Support arch-specific DP device allocation
+Date: Mon, 29 Sep 2025 17:20:58 +0530
+Message-ID: <20250929115102.512719-3-quic_rdeuri@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250929115102.512719-1-quic_rdeuri@quicinc.com>
+References: <20250929115102.512719-1-quic_rdeuri@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,98 +62,590 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTI3MDAyOSBTYWx0ZWRfX5MwEkhVj33VF
- Rw2VRorbTxdDvl6HBfIsmXAed+X4KVfTf4k1aPtaXs7WrG8VqtFEADMrvKN0zI9yHn1d/iYF3X1
- qUiTg1gVwcXG6+0f4JZ+aKTAg6fHK1HPKdS2qO637FRHRDTa+mbBNQVp0XeJIu+aFvxtmDqlK/N
- yk/dTD5rd53w8QDu665P+XvGv+y0l3A5F1gsXO4u0za2pv561ka89sxyvWOJhEKEIhI98tK6A0r
- HL/U6EKUTdrHljEnwTupdlkKx4hqmuRSQ5sLuTsufm8ixzBZBO3ReBHdcmQHrE/IjT/4iJDSSqf
- +/WL501tXa121t5xRDbQ/yIp9zXbzAP733Uvm71BQG9aN0eUOIpo8OCPYyThob6ben8/9TunSKX
- 6RAJ+VeNejtfc2EEnD2hTMTDNxsgiQ==
-X-Proofpoint-GUID: Ii21EqGZPYqeRpOCcJj68Sr5gEzkHttj
-X-Authority-Analysis: v=2.4 cv=OMkqHCaB c=1 sm=1 tr=0 ts=68da72b7 cx=c_pps
+X-Proofpoint-GUID: cSpUNAZc76UTV7JPr-z8k9rVMFF0B4RW
+X-Authority-Analysis: v=2.4 cv=MYZhep/f c=1 sm=1 tr=0 ts=68da72ba cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=yJojWOMRYYMA:10 a=ZmDZ8v0v9Rlbw9gN6qoA:9
-X-Proofpoint-ORIG-GUID: Ii21EqGZPYqeRpOCcJj68Sr5gEzkHttj
+ a=GEpy-HfZoHoA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8 a=5rtgWtJVenDuiVS00h8A:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: cSpUNAZc76UTV7JPr-z8k9rVMFF0B4RW
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTI3MDAzNiBTYWx0ZWRfX3mWAfhOiIzx2
+ d5tBduuEyjfveBwRFohk1xmeGri28Gw++tCJWRS0iFe5DvZJrivtPfPR7WWld4Z6JtAqFlzwItd
+ Fz9HhN0FwgA0zcuy61n+kLmDqVrUSAaeCJ6pcQRi3Wxc/qvIK6F7Vv9EOnJOB8aSPDMhG9n8yrV
+ vC63M2C34b4x3daVC8YS0GQD7XsymNDG/a8BFjsrdf5+J1wlMCKdNJTcnQ8zDEWtWToAvJgdMu0
+ lH1f7joswEivf1mIp7FgpUFY+yVIg3Ieoq/2t2as5nq6twdnn8iCr2VxzkIVBYul+uKMsv+O0zu
+ LwMpVAJOgQ3o06uSVhjIiuQ977i8R925qDxjRINM9hX6ZRTfOiyP4tAZv1nYlIMf5ape1xlSRpe
+ JSL3E7HjBx4THEWI36/FmaGKB6cWtA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-29_04,2025-09-29_02,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 bulkscore=0 phishscore=0 adultscore=0
- priorityscore=1501 lowpriorityscore=0 clxscore=1015 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ suspectscore=0 clxscore=1015 bulkscore=0 lowpriorityscore=0
+ priorityscore=1501 phishscore=0 malwarescore=0 spamscore=0 impostorscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2509150000
- definitions=main-2509270029
+ definitions=main-2509270036
 
-The primary purpose of the patches in this series is modularization of
-object structures along with their allocation and initialization APIs.
+Add arch_init() and arch_deinit() ops to the PCI and AHB family ops to
+support allocation and cleanup of architecture-specific fields in
+ath12k_base. Define shared ath12k_wifi7_arch_init() and
+ath12k_wifi7_arch_deinit() functions to handle DP device allocation and
+cleanup for Wi-Fi 7 across both PCI and AHB. Introduce a new header file
+wifi7/core.h to declare functions defined in wifi7/core.c.
 
-Patches in this series are made to achieve the following:
-1. Modularization of device object to have a separate DP object in order
-   to support chipsets of different hardware architectures
-2. Refactor hardware group and vif structures to optimize data
-   path operations for future extensions
-3. Add framework to support architecture specific interrupt handling and
-   ieee80211_ops registration
+Currently, DP device allocation and cleanup are handled via arch_init()
+and arch_deinit(), which can be extended to support additional
+architecture-specific initialization in the future.
 
-These changes are intended to provide a base framework for the data path,
-allowing the data path to remain flexible for future extensions in Next
-Generation driver development.
+Define common ath12k_wifi7_arch_init() and
+ath12k_wifi7_arch_deinit() functions to handle allocation and cleanup
+for Wi-Fi 7. Add a new header file wifi7/core.h to declare common Wi-Fi 7
+functions.
+
+Add ath12k_wifi7_dp_device_alloc() and ath12k_wifi7_dp_device_free() to
+handle allocation and deallocation of the DP device object for Wi-Fi 7.
+
+Add ath12k_dp_cmn_device_init() and ath12k_dp_cmn_device_deinit() to
+initialize and deinitialize common DP device fields. Introduce a new header
+file dp_cmn.h to declare these functions, which can also be used to expose
+new common DP functions that need to be invoked from non-DP code.
+
+Rename existing DP allocation and cleanup functions to ath12k_dp_setup()
+and ath12k_dp_cleanup() to better reflect their purpose in the updated
+design.
+
+Replicate device-related fields such as device and hw_params in the DP
+device object to align with the new design, which limits per packet data
+path object usage to DP specific objects.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
+
+Signed-off-by: Ripan Deuri <quic_rdeuri@quicinc.com>
 ---
-Changes in v3:
-     - Use dp arch ops to invoke arch specific service srng handler
-Changes in v2:
-     - Invoke ext irq setup/cleanup from dp device alloc/free to fix
-     suspend and resume call trace for wcn7850 in patch 5/6
----
-Harsh Kumar Bijlani (1):
-  wifi: ath12k: Refactor ath12k_vif structure
-
-Ripan Deuri (5):
-  wifi: ath12k: Convert ath12k_dp member in ath12k_base to pointer
-  wifi: ath12k: Support arch-specific DP device allocation
-  wifi: ath12k: Rearrange DP fields in ath12k_hw_group struct
-  wifi: ath12k: Add framework for hardware specific ieee80211_ops
-    registration
-  wifi: ath12k: Add framework for hardware specific DP interrupt handler
-
- drivers/net/wireless/ath/ath12k/ahb.c         |  22 +-
- drivers/net/wireless/ath/ath12k/ahb.h         |   4 +-
- drivers/net/wireless/ath/ath12k/cmn_defs.h    |  19 +
- drivers/net/wireless/ath/ath12k/core.c        |  19 +-
- drivers/net/wireless/ath/ath12k/core.h        |  39 +-
- drivers/net/wireless/ath/ath12k/debugfs.c     |   3 +-
- drivers/net/wireless/ath/ath12k/debugfs_sta.c |   3 +-
- drivers/net/wireless/ath/ath12k/dp.c          | 143 +++++---
- drivers/net/wireless/ath/ath12k/dp.h          |  32 +-
- drivers/net/wireless/ath/ath12k/dp_cmn.h      |  50 +++
- drivers/net/wireless/ath/ath12k/dp_htt.c      |  22 +-
- drivers/net/wireless/ath/ath12k/dp_mon.c      |  15 +-
- drivers/net/wireless/ath/ath12k/dp_rx.c       |  20 +-
- drivers/net/wireless/ath/ath12k/mac.c         | 339 +++++++++---------
- drivers/net/wireless/ath/ath12k/mac.h         | 131 ++++++-
- drivers/net/wireless/ath/ath12k/pci.c         |  23 +-
- drivers/net/wireless/ath/ath12k/pci.h         |   4 +-
- drivers/net/wireless/ath/ath12k/peer.c        |   8 +-
- drivers/net/wireless/ath/ath12k/testmode.c    |   3 +-
- drivers/net/wireless/ath/ath12k/wifi7/ahb.c   |   4 +
- drivers/net/wireless/ath/ath12k/wifi7/core.c  |  24 ++
- drivers/net/wireless/ath/ath12k/wifi7/core.h  |  11 +
- drivers/net/wireless/ath/ath12k/wifi7/dp.c    |  40 ++-
- drivers/net/wireless/ath/ath12k/wifi7/dp.h    |   9 +-
- drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c |  88 +++--
- drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c |  29 +-
- drivers/net/wireless/ath/ath12k/wifi7/hw.c    |  62 ++++
- drivers/net/wireless/ath/ath12k/wifi7/pci.c   |   4 +
- drivers/net/wireless/ath/ath12k/wmi.c         |   5 +-
- drivers/net/wireless/ath/ath12k/wmi.h         |   5 +-
- drivers/net/wireless/ath/ath12k/wow.c         |   5 +-
- 31 files changed, 845 insertions(+), 340 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath12k/cmn_defs.h
+ drivers/net/wireless/ath/ath12k/ahb.c        | 19 ++++++++--
+ drivers/net/wireless/ath/ath12k/ahb.h        |  4 ++-
+ drivers/net/wireless/ath/ath12k/core.c       | 13 +++----
+ drivers/net/wireless/ath/ath12k/dp.c         | 38 +++++++++++---------
+ drivers/net/wireless/ath/ath12k/dp.h         |  4 +--
+ drivers/net/wireless/ath/ath12k/dp_cmn.h     | 12 +++++++
+ drivers/net/wireless/ath/ath12k/pci.c        | 20 +++++++++--
+ drivers/net/wireless/ath/ath12k/pci.h        |  4 ++-
+ drivers/net/wireless/ath/ath12k/wifi7/ahb.c  |  4 +++
+ drivers/net/wireless/ath/ath12k/wifi7/core.c | 24 +++++++++++++
+ drivers/net/wireless/ath/ath12k/wifi7/core.h | 11 ++++++
+ drivers/net/wireless/ath/ath12k/wifi7/dp.c   | 25 +++++++++++++
+ drivers/net/wireless/ath/ath12k/wifi7/dp.h   |  7 ++++
+ drivers/net/wireless/ath/ath12k/wifi7/pci.c  |  4 +++
+ 14 files changed, 159 insertions(+), 30 deletions(-)
  create mode 100644 drivers/net/wireless/ath/ath12k/dp_cmn.h
  create mode 100644 drivers/net/wireless/ath/ath12k/wifi7/core.h
 
-
-base-commit: 972f34d54015a4a16aa9e6a081bafabb6f9bf95c
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
+index 168d588604a1..c545bea18935 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/ahb.c
+@@ -1088,14 +1088,26 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
+ 		goto err_rproc_deconfigure;
+ 	}
+ 
++	/* Invoke arch_init here so that arch-specific init operations
++	 * can utilize already initialized ab fields, such as HAL SRNGs.
++	 */
++	ret = ab_ahb->device_family_ops->arch_init(ab);
++	if (ret) {
++		ath12k_err(ab, "AHB arch_init failed %d\n", ret);
++		goto err_rproc_deconfigure;
++	}
++
+ 	ret = ath12k_core_init(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to init core: %d\n", ret);
+-		goto err_rproc_deconfigure;
++		goto err_deinit_arch;
+ 	}
+ 
+ 	return 0;
+ 
++err_deinit_arch:
++	ab_ahb->device_family_ops->arch_deinit(ab);
++
+ err_rproc_deconfigure:
+ 	ath12k_ahb_deconfigure_rproc(ab);
+ 
+@@ -1134,11 +1146,13 @@ static void ath12k_ahb_remove_prepare(struct ath12k_base *ab)
+ static void ath12k_ahb_free_resources(struct ath12k_base *ab)
+ {
+ 	struct platform_device *pdev = ab->pdev;
++	struct ath12k_ahb *ab_ahb = ath12k_ab_to_ahb(ab);
+ 
+ 	ath12k_hal_srng_deinit(ab);
+ 	ath12k_ce_free_pipes(ab);
+ 	ath12k_ahb_resource_deinit(ab);
+ 	ath12k_ahb_deconfigure_rproc(ab);
++	ab_ahb->device_family_ops->arch_deinit(ab);
+ 	ath12k_core_free(ab);
+ 	platform_set_drvdata(pdev, NULL);
+ }
+@@ -1167,7 +1181,8 @@ int ath12k_ahb_register_driver(const enum ath12k_device_family device_id,
+ 	if (device_id >= ATH12K_DEVICE_FAMILY_MAX)
+ 		return -EINVAL;
+ 
+-	if (!driver || !driver->ops.probe)
++	if (!driver || !driver->ops.probe ||
++	    !driver->ops.arch_init || !driver->ops.arch_deinit)
+ 		return -EINVAL;
+ 
+ 	if (ath12k_ahb_family_drivers[device_id]) {
+diff --git a/drivers/net/wireless/ath/ath12k/ahb.h b/drivers/net/wireless/ath/ath12k/ahb.h
+index fce02e3af5fb..8a040d03d27a 100644
+--- a/drivers/net/wireless/ath/ath12k/ahb.h
++++ b/drivers/net/wireless/ath/ath12k/ahb.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2022-2025, Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  */
+ #ifndef ATH12K_AHB_H
+ #define ATH12K_AHB_H
+@@ -46,6 +46,8 @@ struct ath12k_base;
+ 
+ struct ath12k_ahb_device_family_ops {
+ 	int (*probe)(struct platform_device *pdev);
++	int (*arch_init)(struct ath12k_base *ab);
++	void (*arch_deinit)(struct ath12k_base *ab);
+ };
+ 
+ struct ath12k_ahb {
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index 1534efe35887..e5b358f5e703 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -22,6 +22,7 @@
+ #include "hif.h"
+ #include "pci.h"
+ #include "wow.h"
++#include "dp_cmn.h"
+ 
+ unsigned int ath12k_debug_mask;
+ module_param_named(debug_mask, ath12k_debug_mask, uint, 0644);
+@@ -711,7 +712,7 @@ static void ath12k_core_stop(struct ath12k_base *ab)
+ 	ath12k_dp_rx_pdev_reo_cleanup(ab);
+ 	ath12k_hif_stop(ab);
+ 	ath12k_wmi_detach(ab);
+-	ath12k_dp_free(ab);
++	ath12k_dp_cmn_device_deinit(ath12k_ab_to_dp(ab));
+ 
+ 	/* De-Init of components as needed */
+ }
+@@ -1290,7 +1291,7 @@ int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
+ 		goto err_firmware_stop;
+ 	}
+ 
+-	ret = ath12k_dp_alloc(ab);
++	ret = ath12k_dp_cmn_device_init(ath12k_ab_to_dp(ab));
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to init DP: %d\n", ret);
+ 		goto err_firmware_stop;
+@@ -1302,7 +1303,7 @@ int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
+ 	ret = ath12k_core_start(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to start core: %d\n", ret);
+-		goto err_dp_free;
++		goto err_deinit;
+ 	}
+ 
+ 	mutex_unlock(&ab->core_lock);
+@@ -1335,8 +1336,8 @@ int ath12k_core_qmi_firmware_ready(struct ath12k_base *ab)
+ 	mutex_unlock(&ag->mutex);
+ 	goto exit;
+ 
+-err_dp_free:
+-	ath12k_dp_free(ab);
++err_deinit:
++	ath12k_dp_cmn_device_deinit(ath12k_ab_to_dp(ab));
+ 	mutex_unlock(&ab->core_lock);
+ 	mutex_unlock(&ag->mutex);
+ 
+@@ -1358,7 +1359,7 @@ static int ath12k_core_reconfigure_on_crash(struct ath12k_base *ab)
+ 	ath12k_dp_rx_pdev_reo_cleanup(ab);
+ 	mutex_unlock(&ab->core_lock);
+ 
+-	ath12k_dp_free(ab);
++	ath12k_dp_cmn_device_deinit(ath12k_ab_to_dp(ab));
+ 	ath12k_hal_srng_deinit(ab);
+ 	total_vdev = ab->num_radios * TARGET_NUM_VDEVS(ab);
+ 	ab->free_vdev_map = (1LL << total_vdev) - 1;
+diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/ath/ath12k/dp.c
+index 9a97eb868542..f8d38562fc7f 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.c
++++ b/drivers/net/wireless/ath/ath12k/dp.c
+@@ -13,6 +13,7 @@
+ #include "wifi7/dp_rx.h"
+ #include "peer.h"
+ #include "dp_mon.h"
++#include "dp_cmn.h"
+ 
+ enum ath12k_dp_desc_type {
+ 	ATH12K_DP_TX_DESC,
+@@ -1130,7 +1131,7 @@ static void ath12k_dp_reoq_lut_cleanup(struct ath12k_base *ab)
+ 	}
+ }
+ 
+-void ath12k_dp_free(struct ath12k_base *ab)
++static void ath12k_dp_cleanup(struct ath12k_base *ab)
+ {
+ 	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
+ 	int i;
+@@ -1155,8 +1156,6 @@ void ath12k_dp_free(struct ath12k_base *ab)
+ 
+ 	ath12k_dp_rx_free(ab);
+ 	/* Deinit any SOC level resource */
+-	kfree(ab->dp);
+-	ab->dp = NULL;
+ }
+ 
+ void ath12k_dp_cc_config(struct ath12k_base *ab)
+@@ -1564,7 +1563,7 @@ ath12k_dp_get_idle_link_rbm(struct ath12k_base *ab)
+ 	}
+ }
+ 
+-int ath12k_dp_alloc(struct ath12k_base *ab)
++static int ath12k_dp_setup(struct ath12k_base *ab)
+ {
+ 	struct ath12k_dp *dp;
+ 	struct hal_srng *srng = NULL;
+@@ -1573,12 +1572,7 @@ int ath12k_dp_alloc(struct ath12k_base *ab)
+ 	int ret;
+ 	int i;
+ 
+-	/* TODO: align dp later if cache alignment becomes a bottleneck */
+-	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
+-	if (!dp)
+-		return -ENOMEM;
+-
+-	ab->dp = dp;
++	dp = ath12k_ab_to_dp(ab);
+ 	dp->ab = ab;
+ 
+ 	INIT_LIST_HEAD(&dp->reo_cmd_list);
+@@ -1591,7 +1585,7 @@ int ath12k_dp_alloc(struct ath12k_base *ab)
+ 	ret = ath12k_wbm_idle_ring_setup(ab, &n_link_desc);
+ 	if (ret) {
+ 		ath12k_warn(ab, "failed to setup wbm_idle_ring: %d\n", ret);
+-		goto fail_dp_free;
++		return ret;
+ 	}
+ 
+ 	srng = &ab->hal.srng_list[dp->wbm_idle_ring.ring_id];
+@@ -1600,7 +1594,7 @@ int ath12k_dp_alloc(struct ath12k_base *ab)
+ 					HAL_WBM_IDLE_LINK, srng, n_link_desc);
+ 	if (ret) {
+ 		ath12k_warn(ab, "failed to setup link desc: %d\n", ret);
+-		goto fail_dp_free;
++		return ret;
+ 	}
+ 
+ 	ret = ath12k_dp_cc_init(ab);
+@@ -1673,9 +1667,21 @@ int ath12k_dp_alloc(struct ath12k_base *ab)
+ 	ath12k_dp_link_desc_cleanup(ab, dp->link_desc_banks,
+ 				    HAL_WBM_IDLE_LINK, &dp->wbm_idle_ring);
+ 
+-fail_dp_free:
+-	kfree(ab->dp);
+-	ab->dp = NULL;
+-
+ 	return ret;
+ }
++
++void ath12k_dp_cmn_device_deinit(struct ath12k_dp *dp)
++{
++	ath12k_dp_cleanup(dp->ab);
++}
++
++int ath12k_dp_cmn_device_init(struct ath12k_dp *dp)
++{
++	int ret;
++
++	ret = ath12k_dp_setup(dp->ab);
++	if (ret)
++		return ret;
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index 71f7c4858176..8b3973e0e676 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -424,6 +424,8 @@ struct ath12k_dp {
+ 	struct dp_rxdma_mon_ring rx_mon_status_refill_ring[MAX_RXDMA_PER_PDEV];
+ 	struct ath12k_reo_q_addr_lut reoq_lut;
+ 	struct ath12k_reo_q_addr_lut ml_reoq_lut;
++	const struct ath12k_hw_params *hw_params;
++	struct device *dev;
+ };
+ 
+ static inline void ath12k_dp_get_mac_addr(u32 addr_l32, u16 addr_h16, u8 *addr)
+@@ -433,8 +435,6 @@ static inline void ath12k_dp_get_mac_addr(u32 addr_l32, u16 addr_h16, u8 *addr)
+ }
+ 
+ void ath12k_dp_vdev_tx_attach(struct ath12k *ar, struct ath12k_link_vif *arvif);
+-void ath12k_dp_free(struct ath12k_base *ab);
+-int ath12k_dp_alloc(struct ath12k_base *ab);
+ void ath12k_dp_cc_config(struct ath12k_base *ab);
+ void ath12k_dp_partner_cc_init(struct ath12k_base *ab);
+ int ath12k_dp_pdev_alloc(struct ath12k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath12k/dp_cmn.h b/drivers/net/wireless/ath/ath12k/dp_cmn.h
+new file mode 100644
+index 000000000000..acc0782ad309
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath12k/dp_cmn.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++/*
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++
++#ifndef ATH12K_DP_CMN_H
++#define ATH12K_DP_CMN_H
++
++void ath12k_dp_cmn_device_deinit(struct ath12k_dp *dp);
++int ath12k_dp_cmn_device_init(struct ath12k_dp *dp);
++
++#endif
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index 53f564ff5afa..672cf2899681 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -1620,13 +1620,25 @@ static int ath12k_pci_probe(struct pci_dev *pdev,
+ 		goto err_free_irq;
+ 	}
+ 
++	/* Invoke arch_init here so that arch-specific init operations
++	 * can utilize already initialized ab fields, such as HAL SRNGs.
++	 */
++	ret = ab_pci->device_family_ops->arch_init(ab);
++	if (ret) {
++		ath12k_err(ab, "PCI arch_init failed %d\n", ret);
++		goto err_pci_msi_free;
++	}
++
+ 	ret = ath12k_core_init(ab);
+ 	if (ret) {
+ 		ath12k_err(ab, "failed to init core: %d\n", ret);
+-		goto err_free_irq;
++		goto err_deinit_arch;
+ 	}
+ 	return 0;
+ 
++err_deinit_arch:
++	ab_pci->device_family_ops->arch_deinit(ab);
++
+ err_free_irq:
+ 	/* __free_irq() expects the caller to have cleared the affinity hint */
+ 	ath12k_pci_set_irq_affinity_hint(ab_pci, NULL);
+@@ -1685,6 +1697,9 @@ static void ath12k_pci_remove(struct pci_dev *pdev)
+ 
+ 	ath12k_hal_srng_deinit(ab);
+ 	ath12k_ce_free_pipes(ab);
++
++	ab_pci->device_family_ops->arch_deinit(ab);
++
+ 	ath12k_core_free(ab);
+ }
+ 
+@@ -1781,7 +1796,8 @@ int ath12k_pci_register_driver(const enum ath12k_device_family device_id,
+ 	if (device_id >= ATH12K_DEVICE_FAMILY_MAX)
+ 		return -EINVAL;
+ 
+-	if (!driver || !driver->ops.probe)
++	if (!driver || !driver->ops.probe ||
++	    !driver->ops.arch_init || !driver->ops.arch_deinit)
+ 		return -EINVAL;
+ 
+ 	if (ath12k_pci_family_drivers[device_id]) {
+diff --git a/drivers/net/wireless/ath/ath12k/pci.h b/drivers/net/wireless/ath/ath12k/pci.h
+index 5af33e5deacf..2c19bb42f0f7 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.h
++++ b/drivers/net/wireless/ath/ath12k/pci.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: BSD-3-Clause-Clear */
+ /*
+  * Copyright (c) 2019-2021 The Linux Foundation. All rights reserved.
+- * Copyright (c) 2021-2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+  */
+ #ifndef ATH12K_PCI_H
+ #define ATH12K_PCI_H
+@@ -97,6 +97,8 @@ struct ath12k_pci_ops {
+ 
+ struct ath12k_pci_device_family_ops {
+ 	int (*probe)(struct pci_dev *pdev, const struct pci_device_id *pci_dev);
++	int (*arch_init)(struct ath12k_base *ab);
++	void (*arch_deinit)(struct ath12k_base *ab);
+ };
+ 
+ struct ath12k_pci_reg_base {
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
+index 803e13207bc0..a6c5f7689edd 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
+@@ -12,6 +12,8 @@
+ #include "../debug.h"
+ #include "../hif.h"
+ #include "hw.h"
++#include "dp.h"
++#include "core.h"
+ 
+ static const struct of_device_id ath12k_wifi7_ahb_of_match[] = {
+ 	{ .compatible = "qcom,ipq5332-wifi",
+@@ -57,6 +59,8 @@ static struct ath12k_ahb_driver ath12k_wifi7_ahb_driver = {
+ 	.name = "ath12k_wifi7_ahb",
+ 	.id_table = ath12k_wifi7_ahb_of_match,
+ 	.ops.probe = ath12k_wifi7_ahb_probe,
++	.ops.arch_init = ath12k_wifi7_arch_init,
++	.ops.arch_deinit = ath12k_wifi7_arch_deinit,
+ };
+ 
+ int ath12k_wifi7_ahb_init(void)
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/core.c b/drivers/net/wireless/ath/ath12k/wifi7/core.c
+index eb882e56e5ec..a02c57acf137 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/core.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/core.c
+@@ -9,9 +9,33 @@
+ #include "../pci.h"
+ #include "pci.h"
+ #include "ahb.h"
++#include "core.h"
++#include "dp.h"
++#include "../debug.h"
+ 
+ static int ahb_err, pci_err;
+ 
++int ath12k_wifi7_arch_init(struct ath12k_base *ab)
++{
++	struct ath12k_dp *dp;
++
++	dp = ath12k_wifi7_dp_device_alloc(ab);
++	if (!dp) {
++		ath12k_err(ab, "dp alloc failed");
++		return -EINVAL;
++	}
++
++	ab->dp = dp;
++
++	return 0;
++}
++
++void ath12k_wifi7_arch_deinit(struct ath12k_base *ab)
++{
++	ath12k_wifi7_dp_device_free(ab->dp);
++	ab->dp = NULL;
++}
++
+ static int ath12k_wifi7_init(void)
+ {
+ 	ahb_err = ath12k_wifi7_ahb_init();
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/core.h b/drivers/net/wireless/ath/ath12k/wifi7/core.h
+new file mode 100644
+index 000000000000..7e9689d2ddd7
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath12k/wifi7/core.h
+@@ -0,0 +1,11 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++/*
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++#ifndef ATH12K_CORE_WIFI7_H
++#define ATH12K_CORE_WIFI7_H
++
++int ath12k_wifi7_arch_init(struct ath12k_base *ab);
++void ath12k_wifi7_arch_deinit(struct ath12k_base *ab);
++
++#endif
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp.c b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
+index 4310f06163c9..adc3480b282b 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp.c
+@@ -8,6 +8,7 @@
+ #include "../dp_rx.h"
+ #include "../dp_tx.h"
+ #include "../dp_mon.h"
++#include "../dp_cmn.h"
+ #include "dp_rx.h"
+ #include "dp.h"
+ #include "dp_tx.h"
+@@ -132,3 +133,27 @@ int ath12k_wifi7_dp_service_srng(struct ath12k_base *ab,
+ done:
+ 	return tot_work_done;
+ }
++
++/* TODO: remove export once this file is built with wifi7 ko */
++struct ath12k_dp *ath12k_wifi7_dp_device_alloc(struct ath12k_base *ab)
++{
++	struct ath12k_dp *dp;
++
++	/* TODO: align dp later if cache alignment becomes a bottleneck */
++	dp = kzalloc(sizeof(*dp), GFP_KERNEL);
++	if (!dp)
++		return NULL;
++
++	dp->ab = ab;
++	dp->dev = ab->dev;
++	dp->hw_params = ab->hw_params;
++
++	return dp;
++}
++EXPORT_SYMBOL(ath12k_wifi7_dp_device_alloc);
++
++void ath12k_wifi7_dp_device_free(struct ath12k_dp *dp)
++{
++	kfree(dp);
++}
++EXPORT_SYMBOL(ath12k_wifi7_dp_device_free);
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp.h b/drivers/net/wireless/ath/ath12k/wifi7/dp.h
+index 9332b9401bbf..2300fda65786 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp.h
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp.h
+@@ -7,8 +7,15 @@
+ #ifndef ATH12K_DP_WIFI7_H
+ #define ATH12K_DP_WIFI7_H
+ 
++#include "../dp_cmn.h"
+ #include "hw.h"
+ 
++struct ath12k_base;
++struct ath12k_dp;
++
+ int ath12k_wifi7_dp_service_srng(struct ath12k_base *ab,
+ 				 struct ath12k_ext_irq_grp *irq_grp, int budget);
++struct ath12k_dp *ath12k_wifi7_dp_device_alloc(struct ath12k_base *ab);
++void ath12k_wifi7_dp_device_free(struct ath12k_dp *dp);
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/pci.c b/drivers/net/wireless/ath/ath12k/wifi7/pci.c
+index ba8c19c24ae6..f6dfdcf95025 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/pci.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/pci.c
+@@ -13,6 +13,8 @@
+ #include "../mhi.h"
+ #include "hw.h"
+ #include "../hal.h"
++#include "dp.h"
++#include "core.h"
+ 
+ #define QCN9274_DEVICE_ID		0x1109
+ #define WCN7850_DEVICE_ID		0x1107
+@@ -163,6 +165,8 @@ static struct ath12k_pci_driver ath12k_wifi7_pci_driver = {
+ 	.id_table = ath12k_wifi7_pci_id_table,
+ 	.ops.probe = ath12k_wifi7_pci_probe,
+ 	.reg_base = &ath12k_wifi7_reg_base,
++	.ops.arch_init = ath12k_wifi7_arch_init,
++	.ops.arch_deinit = ath12k_wifi7_arch_deinit,
+ };
+ 
+ int ath12k_wifi7_pci_init(void)
 -- 
 2.34.1
 
