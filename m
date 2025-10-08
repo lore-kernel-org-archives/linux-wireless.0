@@ -1,44 +1,67 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94865208CA
-	for <linux-wireless@vger.kernel.org>; Wed,  8 Oct 2025 10:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E75C35966
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Oct 2025 11:21:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759920959; cv=none; b=UR8N8LkpHRbsr9rMO9+mUh9zewLEcKCQNaySCQ+lVrZVpimO0M0wgzZlZYBhjX0YnIkCnfTMCJ2D+wZZc5m/lgF6FYa98lldoczPTxhY96ObvmPtpGrxaGJEfbD3Eu6KICuxWA4W3F/uEqdAWPvBcNSaIz6nAZlNX3z8TQxmoUI=
+	t=1759922512; cv=none; b=nii73nCHoPLUzeZT2BNmeJLNsbxiawaEuUsL8nmT6E1eONFQrgcAxFgB7dAXXTH/FOhlRVzP/spYAXhZqtNcratAwc004rs5cassgsGvkLROC49JwmZY1O+O4/NibbDBCKGAE6IlLu1G8pYs3Yn1pIbhdsFLaNBs3LYrqM+cLmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759920959; c=relaxed/simple;
-	bh=fty4qe0rTasQ+aXjki8jrPRsNk1+66Z5vcfvciKkOKA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GFK+KFjDGPwHHaUbj1ftJ7aPrgIRxKlToxhCv84SxQ+eIQyuCPWDLKx+9IkyeaFFkauO/ma73H/kJvz1lP3QGc/hn9kgIucP/ahZYGN6TGNP77xuTXnd8EVrMpYIbX+amYuc20Mo/1Pc+PxaP2SgpVfR4+pETSsWlg86AreVdts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=none smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=DjCRC4S7; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1759922512; c=relaxed/simple;
+	bh=AZgfpz/q67cZvhcrGfEfBOZxORglU0KDAGjwOqIlKqM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q2196nJekbkU1pTaMl6wwmRlVUbcGS74dyoUbrwty7uZAv4cIKKLMrpCzHIX+LiI/jCfgeC75Cvk+Rl1oQjMtpYc/CsT2Qfn/6jpv3HEgJRQEDpxxB/7O8dfSBLAvkJuJwBq50V8yiyxPDqGF1yhxioqrsT1jJrtitINDhSIV/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Zag6UPXc; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="DjCRC4S7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=I5eeA3CDXkVLGTfpHcqbLFPozBfOCQBSXzveel3DE6w=; b=DjCRC4S74JZepRIWRjroiLlKag
-	oVbKxl7mGiMl5IINtvTgM8uZVOVfMhwBiyI8Rnymwz9Foj4Rn7ISRginVFW3qoJ5iVFNNBKwjH7qL
-	iP9ddz944p/ol2JjrzEzVVus4IF6qZbsvmDenAf3oG4peTnjQDrIKV+XDbWHRzbvbs6M=;
-Received: from p4ff13580.dip0.t-ipconnect.de ([79.241.53.128] helo=Maecks.lan)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1v6RdD-001RwO-1G;
-	Wed, 08 Oct 2025 12:42:51 +0200
-From: Felix Fietkau <nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Zag6UPXc"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-78f3bfe3f69so3564804b3a.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Oct 2025 04:21:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1759922510; x=1760527310; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=CY9sBhAH5xyY7adQ+pO128vNRZQE2GY/Fvz2grNM6jw=;
+        b=Zag6UPXcexzFPcXobRaa4i+iAjyUoky/AYU2QVU/Z94frtKdegi+lGumG12QyIRCNr
+         ZW9yKszIKy2iKxlYaWyp9MnhFtBpCdd7jTiPanWxItQadIesAE9OqtSYYeyN91omg0bK
+         PQHxPeLGKfMc7bAva9JC8zIYdhZO7ZOCQe+n0k27zgXx895rgOKsl2kdYUkxN7CgmwHJ
+         0mvxw5sLazXNB3NnZIqcRBSMqx86J30n8KArgq0Dxid7j27PLCRtqSwal18oS9Mry+1T
+         dFwdcZCoeQ4T2vpAcKwSoMjfNTa30VuboG5lY09+UDPwMctaU5q7x0nlI6hVb111aEg7
+         SdAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759922510; x=1760527310;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CY9sBhAH5xyY7adQ+pO128vNRZQE2GY/Fvz2grNM6jw=;
+        b=mDCxYyS+6ACUyz7StRvpSLOBHwQF2hHxSRdzEsyz5Tk2P9w+FQA0/VaHv7yOKnKhIR
+         Vl+cgRjI/SA7Ur24a0ut/oVXJWCf1i8Bf040GBZmoYZBRHYQGpT0fEWCZ1glHrdveCP8
+         wPYlggFHaMuGXoArNskfuK+25JsT+DP0EJCD5gMtdrBp+RB4Yfda+jkEXAjoMYJynyTD
+         q/SB/xTPDy3N0B37nPo/NlswKXg836Xs8XXgYjawnV91oEf0SAq/a0pvrgsKWN2YeYzF
+         8F7ww4goQzuwVUJZhuiYNbdFKlwLGXFOGpKxFCoWtPVFfkE7na/yakryJnnFoQKPG1at
+         Y9jQ==
+X-Gm-Message-State: AOJu0YxpRaYmkqOX/HTUc5ELV/s2vO3wXrFnHHEoS0IfclHj/r3dbv66
+	lMPUDpM2Gaf8zQKHQ6cUXg4oDm1/qn8AL93QW/ejxpk0XGUohf64q7Rg1mTCK/WH
+X-Gm-Gg: ASbGncvQ0J6IElkqOR7vxdDVgB7Eoj937asUe3Cg0B0jdOC1pfa7898nXHDCyOOO3kI
+	6zYY3ZwLZwyraotoTjZT/uDJYiyZIgc3S+Cydx7Pr16iZjZPuVJTV+01+rL+GADq70/EPpDDpn9
+	owY5jxSw6pKmePjAMOIqQEu6OqtB4sK8suO00zpMvXQLe8QMgOc7ozTycwr+R5VHpg2gx9ns5Ex
+	tb2QI7rgxMfX8WCgluD4kPIssRSIQk+nV4W32Xt/t5U61tEGhsIsSh9N8BtwcZsrRAIRPKilQAO
+	TMjF3nPqEuVnnyz9PoE3jBGrMP+BdrZ+dgMn7yTwpTbdKL0I8L3SutXR1+Yn1eC81tAqOp5urpg
+	lIKn8na8fMchu2rx0vAECGW2hXjxjJnxEDOeZyL1IsC75R9wxqhpZya/4OZg=
+X-Google-Smtp-Source: AGHT+IGq9/h3SCHVJ26M/IheL3kyqejiM/guUXKuxBEkYZSVffGGqGY0aWbkPUC6zjPk0MfMOTpvKw==
+X-Received: by 2002:a05:6a00:17a7:b0:780:9932:6ae9 with SMTP id d2e1a72fcca58-793876363abmr4056737b3a.18.1759922510121;
+        Wed, 08 Oct 2025 04:21:50 -0700 (PDT)
+Received: from localhost (2403-5806-8049--d1d.ip6.aussiebb.net. [2403:5806:8049::d1d])
+        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-78b0206f619sm18501471b3a.67.2025.10.08.04.21.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 08 Oct 2025 04:21:49 -0700 (PDT)
+From: Richard Huynh <voxlympha@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: steven.liu@mediatek.com,
-	Evelyn.Tsai@mediatek.com,
-	Shayne.Chen@mediatek.com,
-	Mark-MC.Lee@mediatek.com
-Subject: [PATCH 1/2] wifi: mt76: fix license/copyright of util.h
-Date: Wed,  8 Oct 2025 12:42:49 +0200
-Message-ID: <20251008104250.46292-1-nbd@nbd.name>
+Cc: wireless-regdb@lists.infradead.org,
+	Richard Huynh <voxlympha@gmail.com>
+Subject: [PATCH v2] wireless-regdb: Update regulatory info for Australia (AU) for 2025
+Date: Wed,  8 Oct 2025 22:21:04 +1100
+Message-ID: <20251008112104.8558-1-voxlympha@gmail.com>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -48,30 +71,84 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The extra copyright line for Ivo van Doorn and GPL license was only there
-because of code that I had already removed before the initial upstream
-submission of mt76.
-Remove it and make this header file use ISC license like the rest of the
-source files.
+As of October 1 2025, a new class licence is in effect[1]
+Update the link and references in the comments to it
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Also align the 915-928mhz block with the document
+
+Additionally for the lower part of 6Ghz spectrum:
+- Allow for EHT-320 as it complies with PSD limits
+- Expand the upper range up to 6585 as permitted in new licence
+
+[1] https://www.legislation.gov.au/Details/F2025L01047
+
+Signed-off-by: Richard Huynh <voxlympha@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/util.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ db.txt | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/util.h b/drivers/net/wireless/mediatek/mt76/util.h
-index 260965dde94c..037d39a55f71 100644
---- a/drivers/net/wireless/mediatek/mt76/util.h
-+++ b/drivers/net/wireless/mediatek/mt76/util.h
-@@ -1,7 +1,6 @@
--/* SPDX-License-Identifier: GPL-2.0-only */
-+/* SPDX-License-Identifier: ISC */
- /*
-  * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
-- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-  */
+diff --git a/db.txt b/db.txt
+index 16bcb32..1d17271 100644
+--- a/db.txt
++++ b/db.txt
+@@ -145,43 +145,43 @@ country AT: DFS-ETSI
  
- #ifndef __MT76_UTIL_H
+ # Source:
+ # 'Item' in the comments below refers to each numbered rule found at:
+-# https://www.legislation.gov.au/Details/F2023C00524
++# https://www.legislation.gov.au/Details/F2025L01047 within Table 8
++# except for 5850-5875 which is found in Table 1.
+ # Both DFS-ETSI and DFS-FCC are acceptable per AS/NZS 4268 Appendix B.
+ # The EIRP for DFS bands can be increased by 3dB if TPC is implemented.
+ # In order to allow 80MHz operation between 5650-5730MHz the upper boundary
+ # of this more restrictive band has been shifted up by 5MHz from 5725MHz.
+ country AU: DFS-ETSI
+-	# Item 58
+-	(915 - 920 @ 4), (1000 mW)
+-	(920 - 928 @ 8), (1000 mW)
++	# Item 1
++	(915 - 928 @ 8), (1000 mW)
+ 
+-	# Item 59
++	# Item 3 and 7
+ 	(2400 - 2483.5 @ 40), (4000 mW)
+ 
+-	# Item 61
++	# Item 10
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW
+ 
+-	# Item 62 (200 mW allowed if TPC is used)
++	# Item 11 (200 mW allowed if TPC is used)
+ 	(5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, AUTO-BW, DFS
+ 
+-	# Item 63(a) (1000 mW with TPC)
++	# Item 12(a) (1000 mW with TPC)
+ 	(5470 - 5600 @ 80), (500 mW), DFS
+ 
+-	# Item 63(b) (1000 mW with TPC)
++	# Item 12(b) (1000 mW with TPC)
+ 	# The end is 5725 but we borrow 5 MHz from the following less restrictive band
+ 	# so we can get an 80 MHz channel.
+ 	(5650 - 5730 @ 80), (500 mW), DFS
+ 
+-	# Item 60
++	# Item 9
+ 	(5730 - 5850 @ 80), (4000 mW), AUTO-BW
+ 
+-	# Item 22
++	# Item 22 of Table 1
+ 	(5850 - 5875 @ 20), (25 mW), AUTO-BW
+ 
+-	# Item 63AA (25 mW if outdoors)
+-	(5925 - 6425 @ 160), (250 mW), NO-OUTDOOR
++	# Item 13 (25 mW if outdoors)
++	(5925 - 6585 @ 320), (250 mW), NO-OUTDOOR
+ 
+-	# Item 65
++	# Item 18
+ 	(57000 - 71000 @ 2160), (20000 mW), NO-OUTDOOR
+ 
+ country AW: DFS-ETSI
 -- 
 2.51.0
 
