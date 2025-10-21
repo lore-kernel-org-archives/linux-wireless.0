@@ -1,55 +1,55 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67B62512DE
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 13:34:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E46B7338583
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 13:34:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761053667; cv=none; b=jIT5xgn+eBiU203IwW6lhWF5hhJTXZAzhCVscdjZjrdCMTzgk3dLqZOW9qYMuQMg9jIqms7bZMmG3mezpf/JttHUyeVHeIx57fcm+79V6NUm3p0gVC0IdEQ2MVRQ6BoZJvssEw4CtQ5/EWP0RbAG42roDLOotOHZfs37qfLwz7w=
+	t=1761053669; cv=none; b=SJhoNu4iTHkwxprbbP6y//+v6jnvGm0Q/X3vpnpJ8AzMfQAxjXSq8588HcV7gEt79LbgZfH8v9cpoQch5M3lcjFm6W+b+LPBlLxTYbLl9SSN5ubf9gC/F6nRaHU130CV68OJn8BgittV/5cV4BY1ZvxaCXvE6AsGRygJSGJ5GMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761053667; c=relaxed/simple;
-	bh=6n4kxl0ybRMrHvZRNPxwVoCzhGgfyHXVn1rSnW31/0w=;
+	s=arc-20240116; t=1761053669; c=relaxed/simple;
+	bh=tMkrfG/mH6P37yUYX/7Ad2VRE9kXqLOg3/7/jXqjDLc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uBF2MKxe8993JmzcMlYrWUcC9nEuNgNyTse3d//OU/CjAnKoZWGZJiN2R9R9TBybpfkWm/zHm+7SLCG97nLWfpwgLYeaBSrUmYy0otVU4miBxTwgmcT1Y93zTGjCE8+CLsZhx4AwdUreMQ8NCrqxg8JvAwUGluvwAoQvGj0qKrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=j59Oj/3p; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=YqM3sunxyq0vFkQvNdhJODqoxsqWfq2wvxfTBdiP1QJ9AwmjA3b+pG0grfZIbDXER2f+uqlgtllyekGEtAkRq3/luhm2M22r+s/JBwCQsJmtB6H6ajC0PlmK0/4SECNSLo/mML1txbiqvYMjeDTCMEYRb2LBVpznmUxQOF2Qd6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=oExmoEPn; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="j59Oj/3p"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 59LDYK4p83088097, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="oExmoEPn"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 59LDYMyhC3088105, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1761053660; bh=H3Fuh07POmwFj5h6dtlSXUzOO3IgaVZ/VysFT4urWqg=;
+	t=1761053662; bh=pR+WrRG+7ihAMDgdHjfRl62txFkIXr+W2yPUVMUxt28=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=j59Oj/3pT75iGyi4hryATMc87MaDN0G9k4Vh0xn1VsYzOM4G6MOI8lmmvaAZ1zCTR
-	 kQRxUnmr8dMGyxVyS8G4cjeH17PDtxgaz0x/3ZJWbTZIy/42Ba775L5Dtg+DGRPgbB
-	 cXLleIh7DnYmOLsV2xlWTIad/n6EGC22+fit21tCjGnG9togDodZievICniUFVfXdn
-	 rDdVDkNliVO/oqJyTsdakDKJ7nvpATqwKQ/tLM1OSUTgxwH8I/Punb5lj5SOKOHRWA
-	 0ZAgjyapSJGLgFNnNaiVZ3iSxygDhCovm7AzOss25sl9o+5dTbqNQqD8jgDMVEDph2
-	 Y/JPC2oKaJSsw==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 59LDYK4p83088097
+	b=oExmoEPnre/ThQAWdWXxnCT6nJcID5+UaIdsOJU6cWpQ8HlJsiBYMzsUMr1v2mOAu
+	 h/bit7TnADJmXMO1VP+VsxViAkege/i1W1S7YldomMDmYGBtdwIexWDSXBDjGo0bi5
+	 dz/snMLqsNtYMlhEbDE4mZeLdPWEU2d0KgMBH7jxlwmjYGmk+eNro5yOaQhY/nm5wu
+	 w4GhK/16oSmPRl43q4TvXsMgxfcW5WCmmsj2/BzpvLmBnohApRiqvXaWXozazIQQky
+	 /mI8/cAM1f6/4REUHgRKKNeBOgctYFx4SWSjYM9cbnpS8enVfVijZ8LpRdxn8vHVVp
+	 oMkBuqnXsb9Fg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 59LDYMyhC3088105
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 21:34:20 +0800
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 21:34:22 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Tue, 21 Oct 2025 21:34:20 +0800
+ 15.2.1544.27; Tue, 21 Oct 2025 21:34:22 +0800
 Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
  RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Tue, 21 Oct 2025 21:34:20 +0800
+ 15.2.1544.27; Tue, 21 Oct 2025 21:34:22 +0800
 Received: from [127.0.1.1] (10.22.225.127) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.27 via Frontend
- Transport; Tue, 21 Oct 2025 21:34:20 +0800
+ Transport; Tue, 21 Oct 2025 21:34:22 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <timlee@realtek.com>, <emma_tsai@realtek.com>, <damon.chen@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [rtw-next 3/8] wifi: rtw89: mlo: handle needed H2C when link switching is requested by stack
-Date: Tue, 21 Oct 2025 21:33:57 +0800
-Message-ID: <20251021133402.15467-4-pkshih@realtek.com>
+Subject: [rtw-next 7/8] wifi: rtw89: restart hardware to recover firmware if power-save becomes abnormal
+Date: Tue, 21 Oct 2025 21:34:01 +0800
+Message-ID: <20251021133402.15467-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20251021133402.15467-1-pkshih@realtek.com>
 References: <20251021133402.15467-1-pkshih@realtek.com>
@@ -62,198 +62,148 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-To switch link, FW needs H2C commands to indicate which link is on or off.
-Originally, these H2C commands are considered only when the link switching
-is initiated by driver. But, in some cases, e.g. ml_reconf or TTLM, link
-switching would be initiated by stack. Hence, plan these H2C commands into
-ieee80211_ops.
+Somehow power-save related functions get failure, such as failed to
+send null packet, or no response form firmware, and then WiFi will
+become unstable. Trigger SER function actively to reset firmware/driver
+to recover from abnormal states, including
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+ - firmware failed to ACK for entering PS mode
+ - firmware failed to ACK for leaving PS mode
+ - check PS H2C command received by firmware fail
+ - failed to leave PS state
+
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.c     | 18 +-----
- drivers/net/wireless/realtek/rtw89/core.h     |  8 +++
- drivers/net/wireless/realtek/rtw89/mac80211.c | 64 ++++++++++++++++++-
- 3 files changed, 74 insertions(+), 16 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c |  1 +
+ drivers/net/wireless/realtek/rtw89/core.h |  2 ++
+ drivers/net/wireless/realtek/rtw89/mac.c  |  7 +++++--
+ drivers/net/wireless/realtek/rtw89/ps.c   | 23 +++++++++++++++++++++--
+ 4 files changed, 29 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 8b40cada4149..a3f156bf708e 100644
+index a3f156bf708e..1b5a40e9821c 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.c
 +++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -6010,7 +6010,7 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
- 	u16 usable_links = ieee80211_vif_usable_links(vif);
- 	u16 active_links = vif->active_links;
--	struct rtw89_vif_link *target, *cur;
-+	struct rtw89_vif_link *target;
- 	int ret;
+@@ -5538,6 +5538,7 @@ int rtw89_core_start(struct rtw89_dev *rtwdev)
+ 	rtw89_fw_h2c_fw_log(rtwdev, rtwdev->fw.log.enable);
+ 	rtw89_fw_h2c_init_ba_cam(rtwdev);
+ 	rtw89_tas_fw_timer_enable(rtwdev, true);
++	rtwdev->ps_hang_cnt = 0;
  
- 	lockdep_assert_wiphy(rtwdev->hw->wiphy);
-@@ -6036,11 +6036,9 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- 	ieee80211_stop_queues(rtwdev->hw);
- 	flush_work(&rtwdev->txq_work);
- 
--	cur = rtw89_get_designated_link(rtwvif);
--
--	ret = ieee80211_set_active_links(vif, active_links | BIT(link_id));
-+	ret = ieee80211_set_active_links(vif, BIT(link_id));
- 	if (ret) {
--		rtw89_err(rtwdev, "%s: failed to activate link id %u\n",
-+		rtw89_err(rtwdev, "%s: failed to work on link id %u\n",
- 			  __func__, link_id);
- 		goto wake_queue;
- 	}
-@@ -6055,16 +6053,6 @@ int rtw89_core_mlsr_switch(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif,
- 		goto wake_queue;
- 	}
- 
--	if (likely(cur))
--		rtw89_fw_h2c_mlo_link_cfg(rtwdev, cur, false);
--
--	rtw89_fw_h2c_mlo_link_cfg(rtwdev, target, true);
--
--	ret = ieee80211_set_active_links(vif, BIT(link_id));
--	if (ret)
--		rtw89_err(rtwdev, "%s: failed to inactivate links 0x%x\n",
--			  __func__, active_links);
--
- 	rtw89_chip_rfk_channel(rtwdev, target);
- 
- 	rtwvif->mlo_mode = RTW89_MLO_MODE_MLSR;
+ 	return 0;
+ }
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 928c8c84c964..7c74ed3cfaf7 100644
+index ae98d6866b30..f8b443894db9 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5933,6 +5933,7 @@ struct rtw89_mcc_info {
+@@ -42,6 +42,7 @@ extern const struct ieee80211_ops rtw89_ops;
+ #define RTW89_TRACK_WORK_PERIOD	round_jiffies_relative(HZ * 2)
+ #define RTW89_TRACK_PS_WORK_PERIOD msecs_to_jiffies(100)
+ #define RTW89_FORBID_BA_TIMER round_jiffies_relative(HZ * 4)
++#define RTW89_PS_HANG_MAX_CNT 3
+ #define CFO_TRACK_MAX_USER 64
+ #define MAX_RSSI 110
+ #define RSSI_FACTOR 1
+@@ -6082,6 +6083,7 @@ struct rtw89_dev {
+ 	struct rtw89_btc btc;
+ 	enum rtw89_ps_mode ps_mode;
+ 	bool lps_enabled;
++	u8 ps_hang_cnt;
  
- enum rtw89_mlo_mode {
- 	RTW89_MLO_MODE_MLSR = 0,
-+	RTW89_MLO_MODE_EMLSR = 1,
+ 	struct rtw89_wow_param wow;
  
- 	NUM_OF_RTW89_MLO_MODE,
- };
-@@ -6097,6 +6098,12 @@ struct rtw89_link_conf_container {
- 	struct ieee80211_bss_conf *link_conf[IEEE80211_MLD_MAX_NUM_LINKS];
- };
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index fd11b8fb3c89..d837513f4e92 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -12,6 +12,7 @@
+ #include "phy.h"
+ #include "ps.h"
+ #include "reg.h"
++#include "ser.h"
+ #include "util.h"
  
-+struct rtw89_vif_ml_trans {
-+	u16 mediate_links;
-+	u16 links_to_del;
-+	u16 links_to_add;
-+};
-+
- #define RTW89_VIF_IDLE_LINK_ID 0
+ static const u32 rtw89_mac_mem_base_addrs_ax[RTW89_MAC_MEM_NUM] = {
+@@ -1423,13 +1424,15 @@ void rtw89_mac_power_mode_change(struct rtw89_dev *rtwdev, bool enter)
+ 		if (!ret)
+ 			break;
  
- struct rtw89_vif {
-@@ -6119,6 +6126,7 @@ struct rtw89_vif {
- 	bool offchan;
+-		if (i == RPWM_TRY_CNT - 1)
++		if (i == RPWM_TRY_CNT - 1) {
+ 			rtw89_err(rtwdev, "firmware failed to ack for %s ps mode\n",
+ 				  enter ? "entering" : "leaving");
+-		else
++			rtw89_ser_notify(rtwdev, MAC_AX_ERR_ASSERTION);
++		} else {
+ 			rtw89_debug(rtwdev, RTW89_DBG_UNEXP,
+ 				    "%d time firmware failed to ack for %s ps mode\n",
+ 				    i + 1, enter ? "entering" : "leaving");
++		}
+ 	}
+ }
  
- 	enum rtw89_mlo_mode mlo_mode;
-+	struct rtw89_vif_ml_trans ml_trans;
+diff --git a/drivers/net/wireless/realtek/rtw89/ps.c b/drivers/net/wireless/realtek/rtw89/ps.c
+index cf58121eb541..3f69dd4361c3 100644
+--- a/drivers/net/wireless/realtek/rtw89/ps.c
++++ b/drivers/net/wireless/realtek/rtw89/ps.c
+@@ -11,6 +11,7 @@
+ #include "phy.h"
+ #include "ps.h"
+ #include "reg.h"
++#include "ser.h"
+ #include "util.h"
  
- 	struct list_head dlink_pool;
- 	u8 links_inst_valid_num;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index 7b04183a3a5d..a19304ff8306 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -718,6 +718,17 @@ static void rtw89_ops_vif_cfg_changed(struct ieee80211_hw *hw,
+ static int rtw89_fw_receive_lps_h2c_check(struct rtw89_dev *rtwdev, u8 macid)
+@@ -26,16 +27,27 @@ static int rtw89_fw_receive_lps_h2c_check(struct rtw89_dev *rtwdev, u8 macid)
+ 	c2h_info.id = RTW89_FWCMD_C2HREG_FUNC_PS_LEAVE_ACK;
+ 	ret = rtw89_fw_msg_reg(rtwdev, NULL, &c2h_info);
+ 	if (ret)
+-		return ret;
++		goto fw_fail;
  
- 	if (changed & BSS_CHANGED_ARP_FILTER)
- 		rtwvif->ip_addr = vif->cfg.arp_addr_list[0];
-+
-+	if (changed & BSS_CHANGED_MLD_VALID_LINKS) {
-+		struct rtw89_vif_link *cur = rtw89_get_designated_link(rtwvif);
-+
-+		rtw89_chip_rfk_channel(rtwdev, cur);
-+
-+		if (hweight16(vif->active_links) == 1)
-+			rtwvif->mlo_mode = RTW89_MLO_MODE_MLSR;
-+		else
-+			rtwvif->mlo_mode = RTW89_MLO_MODE_EMLSR;
+ 	c2hreg_macid = u32_get_bits(c2h_info.u.c2hreg[0],
+ 				    RTW89_C2HREG_PS_LEAVE_ACK_MACID);
+ 	c2hreg_ret = u32_get_bits(c2h_info.u.c2hreg[1], RTW89_C2HREG_PS_LEAVE_ACK_RET);
+ 
+-	if (macid != c2hreg_macid || c2hreg_ret)
++	if (macid != c2hreg_macid || c2hreg_ret) {
+ 		rtw89_warn(rtwdev, "rtw89: check lps h2c received by firmware fail\n");
++		ret = -EINVAL;
++		goto fw_fail;
 +	}
++	rtwdev->ps_hang_cnt = 0;
+ 
+ 	return 0;
++
++fw_fail:
++	rtwdev->ps_hang_cnt++;
++	if (rtwdev->ps_hang_cnt >= RTW89_PS_HANG_MAX_CNT)
++		rtw89_ser_notify(rtwdev, MAC_AX_ERR_ASSERTION);
++
++	return ret;
  }
  
- static void rtw89_ops_link_info_changed(struct ieee80211_hw *hw,
-@@ -1531,10 +1542,29 @@ static bool rtw89_ops_can_activate_links(struct ieee80211_hw *hw,
- 					 u16 active_links)
- {
- 	struct rtw89_dev *rtwdev = hw->priv;
-+	struct rtw89_vif *rtwvif = vif_to_rtwvif(vif);
-+	u16 current_links = vif->active_links;
-+	struct rtw89_vif_ml_trans trans = {
-+		.mediate_links = current_links | active_links,
-+		.links_to_del = current_links & ~active_links,
-+		.links_to_add = active_links & ~current_links,
-+	};
- 
- 	lockdep_assert_wiphy(hw->wiphy);
- 
--	return rtw89_can_work_on_links(rtwdev, vif, active_links);
-+	if (!rtw89_can_work_on_links(rtwdev, vif, active_links))
-+		return false;
+ static int rtw89_fw_leave_lps_check(struct rtw89_dev *rtwdev, u8 macid)
+@@ -51,9 +63,16 @@ static int rtw89_fw_leave_lps_check(struct rtw89_dev *rtwdev, u8 macid)
+ 				       mac->ps_status, chk_msk);
+ 	if (ret) {
+ 		rtw89_info(rtwdev, "rtw89: failed to leave lps state\n");
 +
-+	/*
-+	 * Leave LPS at the beginning of ieee80211_set_active_links().
-+	 * Because the entire process takes the same lock as our track
-+	 * work, LPS will not enter during ieee80211_set_active_links().
-+	 */
-+	rtw89_leave_lps(rtwdev);
++		rtwdev->ps_hang_cnt++;
++		if (rtwdev->ps_hang_cnt >= RTW89_PS_HANG_MAX_CNT)
++			rtw89_ser_notify(rtwdev, MAC_AX_ERR_ASSERTION);
 +
-+	rtwvif->ml_trans = trans;
-+
-+	return true;
- }
+ 		return -EBUSY;
+ 	}
  
- static void __rtw89_ops_clr_vif_links(struct rtw89_dev *rtwdev,
-@@ -1579,6 +1609,36 @@ static int __rtw89_ops_set_vif_links(struct rtw89_dev *rtwdev,
++	rtwdev->ps_hang_cnt = 0;
++
  	return 0;
  }
  
-+static void rtw89_vif_cfg_fw_links(struct rtw89_dev *rtwdev,
-+				   struct rtw89_vif *rtwvif,
-+				   unsigned long links, bool en)
-+{
-+	struct rtw89_vif_link *rtwvif_link;
-+	unsigned int link_id;
-+
-+	for_each_set_bit(link_id, &links, IEEE80211_MLD_MAX_NUM_LINKS) {
-+		rtwvif_link = rtwvif->links[link_id];
-+		if (unlikely(!rtwvif_link))
-+			continue;
-+
-+		rtw89_fw_h2c_mlo_link_cfg(rtwdev, rtwvif_link, en);
-+	}
-+}
-+
-+static void rtw89_vif_update_fw_links(struct rtw89_dev *rtwdev,
-+				      struct rtw89_vif *rtwvif,
-+				      u16 current_links)
-+{
-+	struct rtw89_vif_ml_trans *trans = &rtwvif->ml_trans;
-+
-+	/* Do follow-up when all updating links exist. */
-+	if (current_links != trans->mediate_links)
-+		return;
-+
-+	rtw89_vif_cfg_fw_links(rtwdev, rtwvif, trans->links_to_del, false);
-+	rtw89_vif_cfg_fw_links(rtwdev, rtwvif, trans->links_to_add, true);
-+}
-+
- static
- int rtw89_ops_change_vif_links(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
-@@ -1620,6 +1680,8 @@ int rtw89_ops_change_vif_links(struct ieee80211_hw *hw,
- 	if (rtwdev->scanning)
- 		rtw89_hw_scan_abort(rtwdev, rtwdev->scan_info.scanning_vif);
- 
-+	rtw89_vif_update_fw_links(rtwdev, rtwvif, old_links);
-+
- 	if (!old_links)
- 		__rtw89_ops_clr_vif_links(rtwdev, rtwvif,
- 					  BIT(RTW89_VIF_IDLE_LINK_ID));
 -- 
 2.25.1
 
