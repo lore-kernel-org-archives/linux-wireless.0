@@ -1,55 +1,55 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E03C3370FB
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 13:34:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59BB93370F5
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 13:34:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761053670; cv=none; b=A7imiJP7/BbuV/8bA3m3+4ApFTI/FkjCV11DwfCPULoTFzDeFQx66wpPMzlfGJAJ6lYpit7locsWDsNNDNmqy4GDzg20nkuUbjWzoE/7MsioVK4FhbF14bSWNgD9pbefeMLof7zH+W3/Xcv2NlQkCkJaTQHAEyaBhxDi8KFr5gw=
+	t=1761053671; cv=none; b=hcwe/C0WNFyVVnaKxiaAhC6hLaLs3pq66BwmiyALndb82dC1v1Lch1w4URW4tJuNV9pkBwvTs6GsUs8DKmkxq5TNVXwjzhpw1aUpuBRIxIW5gPFgK08DKcYKNCYVDdlE1f9rAmdkznV3HT0PK1URrOTBRFD2RPRryfGt9ayL7s8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761053670; c=relaxed/simple;
-	bh=JZpR4q8gg6S14ey6cbBdpW4jqT+IP6pC6fW4zxosOyU=;
+	s=arc-20240116; t=1761053671; c=relaxed/simple;
+	bh=p0ObaJhdNVmgY2H2zh82Apd2IxZcoTYWN7AUIEW2UeI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j0RsXOpj5tVNX47lZnD7S1iGmM1ryiKPp/wnWyZM4CekE7qJvpLJUSICJhDj9+ordLgT4UW4hX5FT4rrmRmYG6cFrVJMzyPr16p0s0CDU8CP9zD75jN0LGj2LXR3Bnplv30cD486JzzTL2xoiEzJrvd6k2cJPXQWEgUAOGd7QoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=oON7/tZR; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=hitShgjMUFNyxc/d7ahF4+UVrECzGmF9RLTXzc5VScD04qeYYKkIYv0qI5I7A3+KzV9s8uEpl+k9waiJhqj+wfm8cTkoFcdswmOdE2Nt/aFLJR1qEVCskppZucc3C1NKg8OO43rgSWleKtW0naQgyA1Ej+IWB2IFaMdK5GMg96k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HnJtjsBH; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="oON7/tZR"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 59LDYLuhC3088101, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HnJtjsBH"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 59LDYNOo83088107, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1761053661; bh=y4tjTwwTqvNCyy7xSSfLbopzcHbFUnI4y3dmD/vkVBU=;
+	t=1761053663; bh=KL1ZOMfg3RY99M0UoZtr6pEHLeKU/oMOBR7WGT0cr44=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=oON7/tZR3YreVh3w0743goQqFoBgoyGuN7mnyoKHnFo8KvEn+7dgiwKHFXBrHVJE6
-	 4Rp29YbKY3iiRIpfYKitc5wvBQZsR2Patde00JCrkn9zZ2bh4LqkeTfpeViOCE6OBl
-	 cOBhKd0ClGb8kf+KDLCPLRYCSaPZ8gA6QvRI/taTe8KVVGwjn0HscI+qlHMlAVL3o3
-	 KOGSjQeYBlr+aYKWQQx09OaTxRNIPsTZL2jamJCUl1bx4makEsg69mDtafNGvaoldG
-	 3JCj618DDeQ0OR2sankjeyjwuG75PNb+1EfTwmUMuc2O1H+aZWtaDeT7qmp9C6VpjD
-	 Hk6I1y+qZ9+xA==
+	b=HnJtjsBHxdAm2KbACU9RNsV0jNLIYKUvGjEDPmsMB7Y5F0Jg13pMXDTtjkjUYhEms
+	 qLeNJV9DOFMXw9X969jM+jOB1iDZYdLL4j8FOyyZWmsbXRHebr6MQXjG/lr4gRb5qu
+	 bhRnAXFK6ZkYHeHapq3YTxsLUfUVXqHXQ4UYeb+YA4s+arVAcIpicgf52zpCIk/LFe
+	 X/m/0VLqeJG91sdPi8d7dlSPIX7Ja8Q4OurjEUwF+RM8yg5ByP4aruBIPZv5PQDdQJ
+	 uQb71WNjLb++Zh4H2QxOEYj12e94c2BOoYuFfGW3xEX7/yiK5PeHV/ymP2TpRgsd6y
+	 tS4ThinyLzJ6w==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 59LDYLuhC3088101
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 59LDYNOo83088107
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 21:34:21 +0800
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Oct 2025 21:34:23 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Tue, 21 Oct 2025 21:34:21 +0800
+ 15.2.1544.27; Tue, 21 Oct 2025 21:34:23 +0800
 Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
  RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Tue, 21 Oct 2025 21:34:21 +0800
+ 15.2.1544.27; Tue, 21 Oct 2025 21:34:22 +0800
 Received: from [127.0.1.1] (10.22.225.127) by RTKEXHMBS04.realtek.com.tw
  (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.27 via Frontend
- Transport; Tue, 21 Oct 2025 21:34:21 +0800
+ Transport; Tue, 21 Oct 2025 21:34:22 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <timlee@realtek.com>, <emma_tsai@realtek.com>, <damon.chen@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [rtw-next 5/8] wifi: rtw89: regd: apply ACPI policy even if country code is programmed
-Date: Tue, 21 Oct 2025 21:33:59 +0800
-Message-ID: <20251021133402.15467-6-pkshih@realtek.com>
+Subject: [rtw-next 8/8] wifi: rtw89: improve scan time on 6 GHz band
+Date: Tue, 21 Oct 2025 21:34:02 +0800
+Message-ID: <20251021133402.15467-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20251021133402.15467-1-pkshih@realtek.com>
 References: <20251021133402.15467-1-pkshih@realtek.com>
@@ -62,87 +62,51 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Jui-Peng Tsai <emma_tsai@realtek.com>
 
-There are regulatory related policy according to BIOS/ACPI configuration,
-e.g. distro decides to disable some bands or some channels. Even if chip
-has a programmed country code, these policy should still be applied within
-regulatory notifier.
+Reduce scan time for all supported channels from 4.4s to 3.5s.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+If NL80211_SCAN_FLAG_COLOCATED_6GHZ is set in scan request, only scan PSC
+channels and the channels from the RNR element found on the 2.4/5 GHz
+channels. When firmware support parsing RNR element from received beacon
+or probe response, offload the decision about non-PSC channels to firmware.
+Driver do not need to fill non-PSC channels to scan list. If
+NL80211_SCAN_FLAG_COLOCATED_6GHZ is not set, scan all supported channels.
+
+Signed-off-by: Jui-Peng Tsai <emma_tsai@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  2 ++
- drivers/net/wireless/realtek/rtw89/regd.c | 22 +++++++++++-----------
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtw89/fw.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 7c74ed3cfaf7..ae98d6866b30 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5449,6 +5449,8 @@ struct rtw89_regd_ctrl {
- struct rtw89_regulatory_info {
- 	struct rtw89_regd_ctrl ctrl;
- 	const struct rtw89_regd *regd;
-+	bool programmed;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 9a926bb2cf00..cb431c8a65ac 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -7787,15 +7787,23 @@ int rtw89_hw_scan_prep_chan_list_be(struct rtw89_dev *rtwdev,
+ 	struct ieee80211_channel *channel;
+ 	struct list_head chan_list;
+ 	enum rtw89_chan_type type;
++	bool chan_by_rnr;
+ 	bool random_seq;
+ 	int ret;
+ 	u32 idx;
+ 
+ 	random_seq = !!(req->flags & NL80211_SCAN_FLAG_RANDOM_SN);
++	chan_by_rnr = rtwdev->chip->support_rnr &&
++		      (req->flags & NL80211_SCAN_FLAG_COLOCATED_6GHZ);
+ 	INIT_LIST_HEAD(&chan_list);
+ 
+ 	for (idx = 0; idx < req->n_channels; idx++) {
+ 		channel = req->channels[idx];
 +
- 	enum rtw89_reg_6ghz_power reg_6ghz_power;
- 	struct rtw89_reg_6ghz_tpe reg_6ghz_tpe;
- 	bool txpwr_uk_follow_etsi;
-diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
-index 58582f8d2b74..209d84909f88 100644
---- a/drivers/net/wireless/realtek/rtw89/regd.c
-+++ b/drivers/net/wireless/realtek/rtw89/regd.c
-@@ -723,6 +723,8 @@ int rtw89_regd_init_hint(struct rtw89_dev *rtwdev)
- 	chip_regd = rtw89_regd_find_reg_by_name(rtwdev, rtwdev->efuse.country_code);
- 	if (!rtw89_regd_is_ww(chip_regd)) {
- 		rtwdev->regulatory.regd = chip_regd;
-+		rtwdev->regulatory.programmed = true;
++		if (channel->band == NL80211_BAND_6GHZ &&
++		    !cfg80211_channel_is_psc(channel) && chan_by_rnr)
++			continue;
 +
- 		/* Ignore country ie if there is a country domain programmed in chip */
- 		wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_IGNORE;
- 		wiphy->regulatory_flags |= REGULATORY_STRICT_REG;
-@@ -867,11 +869,6 @@ static void rtw89_regd_notifier_apply(struct rtw89_dev *rtwdev,
- 		wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_IGNORE;
- 	else
- 		wiphy->regulatory_flags &= ~REGULATORY_COUNTRY_IE_IGNORE;
--
--	rtw89_regd_apply_policy_unii4(rtwdev, wiphy);
--	rtw89_regd_apply_policy_6ghz(rtwdev, wiphy);
--	rtw89_regd_apply_policy_tas(rtwdev);
--	rtw89_regd_apply_policy_ant_gain(rtwdev);
- }
- 
- static
-@@ -883,19 +880,22 @@ void rtw89_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request
- 	wiphy_lock(wiphy);
- 	rtw89_leave_ps_mode(rtwdev);
- 
--	if (wiphy->regd) {
--		rtw89_debug(rtwdev, RTW89_DBG_REGD,
--			    "There is a country domain programmed in chip, ignore notifications\n");
--		goto exit;
--	}
-+	if (rtwdev->regulatory.programmed)
-+		goto policy;
-+
- 	rtw89_regd_notifier_apply(rtwdev, wiphy, request);
- 	rtw89_debug_regd(rtwdev, rtwdev->regulatory.regd,
- 			 "get from initiator %d, alpha2",
- 			 request->initiator);
- 
-+policy:
-+	rtw89_regd_apply_policy_unii4(rtwdev, wiphy);
-+	rtw89_regd_apply_policy_6ghz(rtwdev, wiphy);
-+	rtw89_regd_apply_policy_tas(rtwdev);
-+	rtw89_regd_apply_policy_ant_gain(rtwdev);
-+
- 	rtw89_core_set_chip_txpwr(rtwdev);
- 
--exit:
- 	wiphy_unlock(wiphy);
- }
- 
+ 		ch_info = kzalloc(sizeof(*ch_info), GFP_KERNEL);
+ 		if (!ch_info) {
+ 			ret = -ENOMEM;
 -- 
 2.25.1
 
