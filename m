@@ -1,176 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B236BF9C1;
-	Sun, 26 Oct 2025 15:33:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16EEF2566D3
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2025 18:23:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761492814; cv=none; b=jFJA2oDK+0ALqHN1uGmhIVlPxqj0abKpJXRhdzeJWhygt6DE0tSXe69XLRz2NAwPy9f+ZG4htbgCzq2dWWFq65Liy923K6VBUAZJMris7qEZWrs+gfGzFq+seNzM3peSoZspLzQoVAjI2Q9PIstMEyaj/1wQCyQB8s0nIw5VM0A=
+	t=1761503001; cv=none; b=o9bJnrbZ5j60Hsa7nh/WnRpEk3Q2lnNegqAUmmg1v3pm5EGhlUJSbX83XYgp0znrPPrXjNvZquiD95VJcORO2Rm2iZjMB2y71qzu0ol4yIxV9P3yByIkiEjTDq+J5ARusRqFGWm4yon1QJ856eRc3r6lClcUyZyC/DCAeEzYdzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761492814; c=relaxed/simple;
-	bh=xcyneBcmqEXh1gtIGSMH8hZ6blwtbmsHjpXAgiQk4og=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WBi40C7la0e99wtQN9qJd9atfOEQZLYyChbkC5OT3+TYnTRRqvC/X5BBM3DpoDsJF7hKWbZNrvLZ+FDFnlwgQfbAeXq8lThfNd9UFXpnH5cnuX0tY7Rf+Cg28zsOx38Z+f6gdMyMnZ5uP+Qc0dGmWrp32upcUB5d6PoCq3xbUk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fMOgmYUh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761503001; c=relaxed/simple;
+	bh=uj3QUmchFpkLbVloON6X34xff/LbaNs4FH6uavJoUTU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qYGJbxcxbWutMfFocnirf5ua+4996X2gLsBCl8kaotoWJzy+zq3mvNeOQJZlsbJVfSirar7lDI/qXDiDnxTTUznm2rcPqR37iy9ESQvNOGQISyCenMpluXOSwa/Iypc1D/Bu4/mcBIrSQRP5lmhPuzWsIOtsoEPP4vu8k3a1TIQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=e3WtgWwG; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fMOgmYUh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08561C4CEE7;
-	Sun, 26 Oct 2025 15:33:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761492813;
-	bh=xcyneBcmqEXh1gtIGSMH8hZ6blwtbmsHjpXAgiQk4og=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fMOgmYUhH5CWiLpmpAcqvE2aJlNaa9a4g/kR0KAf7QFm3VqHWnqDGFH6fiFiRXAM7
-	 719RKdGnJaRpD5lYwjB9/+FGx+ADZLfA27ZyDl+Nos3NEnpOzfd+82u1znie4kyKSe
-	 ZeWvy7BGLefzertq5pdnKd+TYG5J5Um+zmnxR3uIjWn6yiEJa551R7aZZa14y0K8WO
-	 d7ZGFTNbDc10a6h73Aa5T1L5ejIPcXo3g9WBxrp6mfEbYBuGSKF70AzOnB1Vkp0OvV
-	 dj/+Pk8065yu30LhoAjkLSPUFLhaPWozHEb6dt0QS2vN8PkeW5pBlRGGfsWvGvs3J8
-	 fmkxtoOgOOKWQ==
-Date: Sun, 26 Oct 2025 21:03:07 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Stephen Boyd <sboyd@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	Andrzej Hajda <andrzej.hajda@intel.com>, Robert Foss <rfoss@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
-	Moritz Fischer <mdf@kernel.org>, Xu Yilun <yilun.xu@intel.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Guenter Roeck <linux@roeck-us.net>, 
-	Andi Shyti <andi.shyti@kernel.org>, Jonathan Cameron <jic23@kernel.org>, 
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Georgi Djakov <djakov@kernel.org>, 
-	Thomas Gleixner <tglx@linutronix.de>, Joerg Roedel <joro@8bytes.org>, 
-	Jassi Brar <jassisinghbrar@gmail.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Lee Jones <lee@kernel.org>, Miquel Raynal <miquel.raynal@bootlin.com>, 
-	Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
-	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
-	Paolo Abeni <pabeni@redhat.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Sebastian Reichel <sre@kernel.org>, 
-	Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>, Mark Brown <broonie@kernel.org>, 
-	Mathieu Poirier <mathieu.poirier@linaro.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org, dmaengine@vger.kernel.org, 
-	linux-fpga@vger.kernel.org, linux-gpio@vger.kernel.org, linux-hwmon@vger.kernel.org, 
-	linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org, linux-input@vger.kernel.org, 
-	linux-pm@vger.kernel.org, iommu@lists.linux.dev, linux-media@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-phy@lists.infradead.org, linux-pwm@vger.kernel.org, 
-	linux-remoteproc@vger.kernel.org, linux-crypto@vger.kernel.org, linux-sound@vger.kernel.org, 
-	linux-usb@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: Remove extra blank lines
-Message-ID: <hodycue2cqii22epdawn2pqx7twy5mzgrrlb53u7nj4h5w37ek@yvptyb2u6jj2>
-References: <20251023143957.2899600-1-robh@kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="e3WtgWwG"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59Q8xeHh3565674
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2025 18:23:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=07ocjkdEJGZGwyrHZf6N4TSK9zFMgHbhsQL
+	06B+flvk=; b=e3WtgWwG1uwoQhVIig+AHuWLRog7Vj3nHQSPairlQG73tmvrzzJ
+	QnXbCMxoicBz0LbA28VatHJCyjMyTYjugxXUPFEM36MwChshBHa9Qw3CrKKaAWkx
+	PrS56BHe9s46wcXM/cDuVhI0EJEdwEgBHCLCkPmgKsu/H/4XZXKJTrtnTsdUOC3k
+	mmA1jrEG1x+7t3UjrUS5CEq+y+WayoWAJ2ASBvVMy2S809bV+IjJYvHDMwvBShvl
+	kCQSCEaMjKgHPIS4UmZJjFcnVhqN/QTsrCu3s1bMUa3pV6h6oKHUjVBVtOQrt7+i
+	o7Zm1qrYaneBTjoLgMN1R1FxWaIW7Z9bT4A==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a0p4g2ddw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2025 18:23:18 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-294baa12981so578615ad.1
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Oct 2025 11:23:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761502998; x=1762107798;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=07ocjkdEJGZGwyrHZf6N4TSK9zFMgHbhsQL06B+flvk=;
+        b=k/1166huibH0iKXlicR4MTUjFGi/XSbUPapqQg7hb0p9yFO6K7c4kkZaws9QjupTVj
+         v+jWHtRzQomRVrLAogWRg1t3NQkiSg1SQPIJqWbVyq6ij48dqF39IoUXOUfLUPMgdWvz
+         e2Busf1XVtmcZugL3Br2Qx20bk2CO1k7vBB0/YhKBnIYhGKeWgjdisMioBMJywGJV79I
+         bXK0800wdWy1E4IiAyRsBLhdfBJvtIbH2v3FRmTwtQ9jXHxHAeqZL85EMQO1giYPIBTC
+         d2Eunu4UmeKK5Gil5VXkA8LsBUpmexK8rW7tcy9lUOoQwbukM/eRsniu8/bJC7R+JjCA
+         oARw==
+X-Gm-Message-State: AOJu0YzauvluvyzHan1NB8k29KT9UVX7zwteBrk2mUCuLCzMXRj2CtSG
+	4bIw8Z+fPUb01uV6Gh4MFTHf4mo5g6jOiGDcsSCoB2OZX9h8Zb8+Z0eL3ScQik2Xq0uuZ2DATYo
+	nlaWjHsjzq7Y9NjvvK66TQPmj1aDFyD7l1BnnO4V57a/EqF+HzDL9C/KOvz52zR5AooezzVKz1I
+	VQqg==
+X-Gm-Gg: ASbGncspfmiunHM2kJyqEydiztMfy36JMGXoMnabXlNu2XZ3HjRsPafM0KIM+OI6ad3
+	ohcB4rso9RyB/TqIBGYFxezQBrbGdCT+vSCO3KPVRCDQW5pAj6lEWwVN+985bWcLN17kDwynwmF
+	FyDCTUSmGtbWm7MnDgC+Mlv8Lo17LJglPHnjWoNG3WZFHKtx+1hop5y/JTpUmrxb89o7C/dYua4
+	0Ripe0NCn4xAGB/JquzGXItzw572BIUZbKRdr/JuZRGFTdwpZkqjrCpLGKudsk0LmLonR0VsP6W
+	KMpdwE9R2Exl0tAEYXVqtGITbNwdihzU2PH0NJuBGSs4Y8hUB0ym2MqweodQuzdLTzbyZsHOtD5
+	wYgO/Kfm1NWwjPPMCIT+rgOH5UpCpwqDPtgEtwPalZp2ShJxAUpBlzR/iJ3La/u3xzjYmPz0ViW
+	8jwNxgwbL5U7AE8SKuB5vQ7rwpgpc=
+X-Received: by 2002:a17:903:4b04:b0:271:9b0e:54ca with SMTP id d9443c01a7336-29489db2210mr112152555ad.13.1761502997756;
+        Sun, 26 Oct 2025 11:23:17 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGhUW87NKvc/BI4PtFg7arwb1oOCYao85sOx7mz7awGO7NbfJuOxAMvDWdGtVV/3Jzseu4CdQ==
+X-Received: by 2002:a17:903:4b04:b0:271:9b0e:54ca with SMTP id d9443c01a7336-29489db2210mr112152385ad.13.1761502997312;
+        Sun, 26 Oct 2025 11:23:17 -0700 (PDT)
+Received: from hu-ramess-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498e429d9sm55208655ad.100.2025.10.26.11.23.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Oct 2025 11:23:16 -0700 (PDT)
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Subject: [PATCH ath-next 0/2] wifi: ath12k: handle vdev create errors and ensure limit checks
+Date: Sun, 26 Oct 2025 23:52:52 +0530
+Message-Id: <20251026182254.1399650-1-rameshkumar.sundaram@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251023143957.2899600-1-robh@kernel.org>
+X-Proofpoint-GUID: ExJOkeqoPDy5eHGcolfAX4BYK0gXdXGA
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI2MDE3NiBTYWx0ZWRfX/phJX4TOeJtA
+ motjI3m7WHgnG0pCNwQe0wNadbQZiTpmEB8BbpTMS7Ok3cLT40e3rguracQZO8f5lFtZey1SgNw
+ +Knb5oIr6lZZFlr/Y9i33p8K+MjYiS3DehN5iy2zGyI7uGiUqDfwzNg+aI11WRaIWyU/LhzYCMf
+ 8Dq/BUPLjIqgPW3utihSrCgAOcimnDa53Yy51axAwIr/9xf1zYoNRyH1+loSZ6Q7GgZjTX3lQyP
+ 9X6uSAkEMmEuSqt+TAURYEbRTBLzn8/Z6dSAhSlfn43cH9n9ph/FjWfmbpYyQc3iu4AdBeKn6oX
+ rj5Ad7uaHz5TkImGi9PEqduATt+xs8IKVWo22omzR7+qnkN3Iq95ySCxNP2Bz9XC/4vQPbFsvHl
+ hCPdaBUsOx7eHxsNtOmlrSkxtQNTbg==
+X-Authority-Analysis: v=2.4 cv=L9YQguT8 c=1 sm=1 tr=0 ts=68fe6716 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=ORCT1FrbHtTs6jEYeXUA:9
+ a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-ORIG-GUID: ExJOkeqoPDy5eHGcolfAX4BYK0gXdXGA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-26_07,2025-10-22_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 clxscore=1015 phishscore=0 impostorscore=0
+ adultscore=0 priorityscore=1501 spamscore=0 bulkscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2510020000 definitions=main-2510260176
 
-On Thu, Oct 23, 2025 at 09:37:56AM -0500, Rob Herring (Arm) wrote:
-> Generally at most 1 blank line is the standard style for DT schema
-> files. Remove the few cases with more than 1 so that the yamllint check
-> for this can be enabled.
-> 
-> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
-> ---
->  Documentation/devicetree/bindings/.yamllint                  | 2 +-
->  Documentation/devicetree/bindings/arm/psci.yaml              | 1 -
->  .../bindings/clock/allwinner,sun4i-a10-gates-clk.yaml        | 1 -
->  .../devicetree/bindings/clock/renesas,cpg-mssr.yaml          | 1 -
->  .../devicetree/bindings/clock/xlnx,clocking-wizard.yaml      | 1 -
->  .../display/allwinner,sun4i-a10-display-frontend.yaml        | 1 -
->  .../devicetree/bindings/display/allwinner,sun6i-a31-drc.yaml | 1 -
->  .../bindings/display/allwinner,sun8i-a83t-dw-hdmi.yaml       | 1 -
->  .../devicetree/bindings/display/amlogic,meson-vpu.yaml       | 1 -
->  .../devicetree/bindings/display/bridge/adi,adv7511.yaml      | 1 -
->  .../devicetree/bindings/display/bridge/lvds-codec.yaml       | 1 -
->  .../devicetree/bindings/display/bridge/toshiba,tc358767.yaml | 1 -
->  .../devicetree/bindings/display/ilitek,ili9486.yaml          | 1 -
->  Documentation/devicetree/bindings/display/msm/gpu.yaml       | 1 -
->  .../devicetree/bindings/display/panel/panel-timing.yaml      | 1 -
->  .../devicetree/bindings/display/panel/tpo,tpg110.yaml        | 1 -
->  .../devicetree/bindings/display/rockchip/rockchip,dw-dp.yaml | 1 -
->  .../devicetree/bindings/display/simple-framebuffer.yaml      | 1 -
->  .../devicetree/bindings/dma/snps,dma-spear1340.yaml          | 1 -
->  Documentation/devicetree/bindings/dma/stericsson,dma40.yaml  | 1 -
->  .../devicetree/bindings/dma/stm32/st,stm32-dma.yaml          | 1 -
->  Documentation/devicetree/bindings/edac/apm,xgene-edac.yaml   | 1 -
->  .../devicetree/bindings/firmware/qemu,fw-cfg-mmio.yaml       | 1 -
->  Documentation/devicetree/bindings/fpga/fpga-region.yaml      | 5 -----
->  .../devicetree/bindings/gpio/brcm,xgs-iproc-gpio.yaml        | 1 -
->  .../devicetree/bindings/gpio/fairchild,74hc595.yaml          | 1 -
->  Documentation/devicetree/bindings/hwmon/adi,ltc2947.yaml     | 1 -
->  Documentation/devicetree/bindings/hwmon/adi,max31827.yaml    | 1 -
->  Documentation/devicetree/bindings/hwmon/national,lm90.yaml   | 1 -
->  Documentation/devicetree/bindings/hwmon/ti,tmp513.yaml       | 1 -
->  Documentation/devicetree/bindings/hwmon/ti,tps23861.yaml     | 1 -
->  Documentation/devicetree/bindings/i2c/i2c-mux-gpmux.yaml     | 1 -
->  .../devicetree/bindings/i2c/realtek,rtl9301-i2c.yaml         | 1 -
->  Documentation/devicetree/bindings/i2c/tsd,mule-i2c-mux.yaml  | 2 --
->  Documentation/devicetree/bindings/iio/adc/adi,ad7380.yaml    | 1 -
->  Documentation/devicetree/bindings/iio/adc/adi,ad7606.yaml    | 1 -
->  Documentation/devicetree/bindings/iio/adc/adi,ad7949.yaml    | 1 -
->  Documentation/devicetree/bindings/iio/adc/adi,ade9000.yaml   | 1 -
->  .../devicetree/bindings/iio/adc/cosmic,10001-adc.yaml        | 1 -
->  Documentation/devicetree/bindings/iio/adc/st,stm32-adc.yaml  | 1 -
->  .../devicetree/bindings/iio/adc/x-powers,axp209-adc.yaml     | 1 -
->  .../devicetree/bindings/iio/afe/voltage-divider.yaml         | 1 -
->  .../devicetree/bindings/iio/frequency/adi,admv4420.yaml      | 1 -
->  .../devicetree/bindings/iio/pressure/murata,zpa2326.yaml     | 1 -
->  .../devicetree/bindings/iio/proximity/semtech,sx9324.yaml    | 1 -
->  .../devicetree/bindings/iio/temperature/adi,ltc2983.yaml     | 1 -
->  Documentation/devicetree/bindings/input/ti,drv266x.yaml      | 1 -
->  .../devicetree/bindings/interconnect/qcom,rpmh.yaml          | 1 -
->  .../devicetree/bindings/interrupt-controller/arm,gic-v3.yaml | 1 -
->  .../bindings/interrupt-controller/aspeed,ast2700-intc.yaml   | 1 -
->  .../bindings/interrupt-controller/fsl,vf610-mscm-ir.yaml     | 1 -
->  .../bindings/interrupt-controller/loongson,liointc.yaml      | 1 -
->  .../bindings/interrupt-controller/mediatek,mtk-cirq.yaml     | 1 -
->  .../bindings/interrupt-controller/mscc,ocelot-icpu-intr.yaml | 1 -
->  Documentation/devicetree/bindings/iommu/arm,smmu.yaml        | 4 ----
->  Documentation/devicetree/bindings/mailbox/arm,mhu.yaml       | 1 -
->  Documentation/devicetree/bindings/mailbox/arm,mhuv2.yaml     | 1 -
->  Documentation/devicetree/bindings/mailbox/mtk,adsp-mbox.yaml | 1 -
->  Documentation/devicetree/bindings/media/amphion,vpu.yaml     | 1 -
->  Documentation/devicetree/bindings/media/i2c/adi,adv7604.yaml | 2 --
->  .../devicetree/bindings/media/i2c/techwell,tw9900.yaml       | 1 -
->  Documentation/devicetree/bindings/media/nxp,imx8-jpeg.yaml   | 1 -
->  .../devicetree/bindings/media/qcom,sc8280xp-camss.yaml       | 1 -
->  .../bindings/media/samsung,exynos4212-fimc-is.yaml           | 1 -
->  .../devicetree/bindings/media/samsung,s5pv210-jpeg.yaml      | 1 -
->  Documentation/devicetree/bindings/media/st,stm32-dma2d.yaml  | 1 -
->  .../devicetree/bindings/media/video-interface-devices.yaml   | 4 ----
->  .../memory-controllers/qcom,ebi2-peripheral-props.yaml       | 1 -
->  Documentation/devicetree/bindings/mfd/stericsson,ab8500.yaml | 1 -
->  .../devicetree/bindings/mtd/amlogic,meson-nand.yaml          | 1 -
->  .../devicetree/bindings/mtd/marvell,nand-controller.yaml     | 1 -
->  Documentation/devicetree/bindings/mux/mux-controller.yaml    | 1 -
->  .../devicetree/bindings/net/allwinner,sun8i-a83t-emac.yaml   | 2 --
->  Documentation/devicetree/bindings/net/brcm,bcmgenet.yaml     | 1 -
->  .../devicetree/bindings/net/brcm,mdio-mux-iproc.yaml         | 1 -
->  .../devicetree/bindings/net/cortina,gemini-ethernet.yaml     | 1 -
->  Documentation/devicetree/bindings/net/fsl,gianfar.yaml       | 2 --
->  .../devicetree/bindings/net/mdio-mux-multiplexer.yaml        | 1 -
->  Documentation/devicetree/bindings/net/qcom,ipa.yaml          | 1 -
->  Documentation/devicetree/bindings/net/ti,cpsw-switch.yaml    | 1 -
->  .../devicetree/bindings/net/wireless/ti,wlcore.yaml          | 1 -
->  .../devicetree/bindings/pci/altr,pcie-root-port.yaml         | 1 -
->  Documentation/devicetree/bindings/pci/loongson.yaml          | 1 -
->  Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml  | 1 -
->  .../devicetree/bindings/pci/starfive,jh7110-pcie.yaml        | 1 -
+Centralize the vdev limit check in ath12k_mac_vdev_create() to prevent
+exceeding firmware constraints and triggering asserts. Ensure stale arvif
+is unassigned when scan vdev creation fails during scan and
+remain-on-channel operations. Return accurate error codes to
+improve error handling and cleanup.
+
+Rameshkumar Sundaram (2):
+  wifi: ath12k: enforce vdev limit in ath12k_mac_vdev_create()
+  wifi: ath12k: unassign arvif on scan vdev create failure
+
+ drivers/net/wireless/ath/ath12k/mac.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org> # For PCI controller bindings
-
-- Mani
-
+base-commit: d5d9da878287cb30199defc6941b695f33f9236b
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
+
