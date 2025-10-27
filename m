@@ -1,51 +1,107 @@
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F829277009;
-	Mon, 27 Oct 2025 11:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F6D2FC026;
+	Mon, 27 Oct 2025 11:38:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761564012; cv=none; b=Y7YpNWkNawzjcA8/Y5JViIdNEJmA6C5zImHv3unk04WQxZyT6Xm7BNHejh6H28VcotlnLAt2G8KqXjcWZLWKl19McX390YnhZti0efssg8qYSA+mxhLW/Xm3yoqbkSHsqx9oUu05rgYC/XL+4RxVrh7dEI6pTxgVPFI2Cw91n7o=
+	t=1761565136; cv=none; b=h58Dl+li1NrWt6u9ZHbu39ry4WqJLbU+b5BCy+daW3lj4X8Gsga7E3Nbw8nUTY1lgBho5674GH5wvZuaPRhCAHtR+bJyLiAdF3F/l/4pV5YyqAtNMo0wBAxxwphp1wUxhel4FxKiWe5Pu3e+qgFrHTaq2Kqi7lxebxUEVZv1rCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761564012; c=relaxed/simple;
-	bh=fjm8yvFYC8cR6SwgXPJS061q92TCW0t0h8zbh/5FYA4=;
+	s=arc-20240116; t=1761565136; c=relaxed/simple;
+	bh=j468xXoR9cr3OXREFcfRw79OYR6IigAtpibsNTQMHX8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K7Ngu+XqSHTf4D9vtA0jF4AmoycOKKKix04Zb9sikirSlC18V25S61SrpWViepWHIU58m5CtJ/k9uMZhGwEIIpJpkp0VfiSMuPzX/nohRXuZ1poyzWeUnRDFbhLwRNBCYWBxmhW3eQric23faU556eT3R0GiO8PimA/JceFvf8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=i4KoaIb1; arc=none smtp.client-ip=83.149.199.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
+	 MIME-Version; b=j5dB+5MB/rK9ghNlTUCT4mjxbPrLRq60dpoNfec6HQbHlHapY2NJFrzc5acOfYf2bHtcLkKMoPDQF+7Nw2tMYzQjRjZ9z5UsYabEFVJn++AAiQuAUmM/5ocC8xlN5LTyZ0zX6yQ5GZPqyh+Yieta+YQLK6Mplq+ZHeYbGwasTy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jpz2Ovb+; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="i4KoaIb1"
-Received: from debian.intra.ispras.ru (unknown [10.10.165.19])
-	by mail.ispras.ru (Postfix) with ESMTPSA id EC9094076720;
-	Mon, 27 Oct 2025 11:19:57 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru EC9094076720
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1761563998;
-	bh=3b8+dgXV3WJv5lmeh/9J2OvWUpTiG7OLoFwtgYBjv4o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=i4KoaIb1fDzMVyDm880+cH551/IhKGdpfS+LuzVRllkeNSTsjqVvnKqU9Tztzlasi
-	 4jWfOoQyS8DQGdpxGsJTNNN5B6pCVvHTgEE6O17ydXNQSPaysRF/e6vPyla9mY1slh
-	 PKYWTBc+0of8I9G5lwPkgnOdOeaBy6oyM2a2Z3KU=
-From: Fedor Pchelkin <pchelkin@ispras.ru>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jpz2Ovb+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761565134; x=1793101134;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=j468xXoR9cr3OXREFcfRw79OYR6IigAtpibsNTQMHX8=;
+  b=jpz2Ovb+r9FT4gIByDQdqxvNBAiEUi60KcfiBE4BdGFEOz7AdAILusxn
+   XwEbSXy4+uWe3kOpFkSxdKgFBGSitsZSbzGdl94QZmHcW6G3VGT7kspN7
+   +Ord9RZfvMr3i6B+HRHH4+4wBMmpl/V48ueVYnYikMwcLejuMNxpOZN2Z
+   BukBRTODRd5uAdKenY4QUOUbZoXSvDOOploZ4mesI6H9i0xFRN9RuPB7E
+   uz66e1bZ04zyRfUmvsRtKi2Q2kYShSBY/0tHiYNoNo4le6lQcVovWwVt+
+   og/mMnCtr+lsS4PhAoFfHTOJJR5RE5YL/x+Piob1IOF7x92oa0qYMqNXo
+   w==;
+X-CSE-ConnectionGUID: OpTBoCYPRcuaB9+kAF9PEw==
+X-CSE-MsgGUID: ZSDYFZMLSQm+HXcdXPHFjw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="81065537"
+X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
+   d="scan'208";a="81065537"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:38:53 -0700
+X-CSE-ConnectionGUID: et9/0J7fTyaBSFj4o0jrAw==
+X-CSE-MsgGUID: 5HD9QNMGQS6xqkxUaE5dVA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
+   d="scan'208";a="190235487"
+Received: from klitkey1-mobl1.ger.corp.intel.com (HELO kekkonen.fi.intel.com) ([10.245.244.31])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:38:48 -0700
+Received: from punajuuri.localdomain (unknown [192.168.240.130])
+	by kekkonen.fi.intel.com (Postfix) with ESMTP id 98413121EFA;
+	Mon, 27 Oct 2025 13:38:45 +0200 (EET)
+Received: from sailus by punajuuri.localdomain with local (Exim 4.98.2)
+	(envelope-from <sakari.ailus@linux.intel.com>)
+	id 1vDLYY-00000001ddm-2H6P;
+	Mon, 27 Oct 2025 13:38:34 +0200
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo
+From: Sakari Ailus <sakari.ailus@linux.intel.com>
+To: netdev@vger.kernel.org
+Cc: Nicolas Ferre <nicolas.ferre@microchip.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Wei Fang <wei.fang@nxp.com>,
+	Shenwei Wang <shenwei.wang@nxp.com>,
+	Clark Wang <xiaoning.wang@nxp.com>,
+	=?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
+	Paul Barker <paul@pbarker.dev>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Roger Quadros <rogerq@kernel.org>,
+	Alex Elder <elder@kernel.org>,
+	Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+	Alexandre Torgue <alexandre.torgue@foss.st.com>,
+	Stephan Gerhold <stephan@gerhold.net>,
+	Loic Poulain <loic.poulain@oss.qualcomm.com>,
+	Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>,
+	Chiranjeevi Rapolu <chiranjeevi.rapolu@linux.intel.com>,
+	Liu Haijun <haijun.liu@mediatek.com>,
+	Ricardo Martinez <ricardo.martinez@linux.intel.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Michael Nemanov <michael.nemanov@ti.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	Roopni Devanathan <quic_rdevanat@quicinc.com>,
+	=?UTF-8?q?Thomas=20Wei=C3=9Fschuh?= <linux@weissschuh.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	imx@lists.linux.dev,
+	linux-renesas-soc@vger.kernel.org,
+	linux-omap@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Matvey Kovalev <matvey.kovalev@ispras.ru>,
-	lvc-project@linuxtesting.org
-Subject: [PATCH mt76 2/2] wifi: mt76: adjust BSS conf pointer handling
-Date: Mon, 27 Oct 2025 14:18:40 +0300
-Message-ID: <20251027111843.38975-2-pchelkin@ispras.ru>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251027111843.38975-1-pchelkin@ispras.ru>
-References: <20251027111843.38975-1-pchelkin@ispras.ru>
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org
+Subject: [PATCH 4/4] net: wwan: Remove redundant pm_runtime_mark_last_busy() calls
+Date: Mon, 27 Oct 2025 13:38:34 +0200
+Message-ID: <20251027113834.390681-4-sakari.ailus@linux.intel.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20251027113834.390681-1-sakari.ailus@linux.intel.com>
+References: <20251027113834.390681-1-sakari.ailus@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -54,74 +110,107 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Passing a BSS conf pointer to mt76_connac2_mac_tx_rate_val() currently has
-two inconsistencies.
+pm_runtime_put_autosuspend(), pm_runtime_put_sync_autosuspend(),
+pm_runtime_autosuspend() and pm_request_autosuspend() now include a call
+to pm_runtime_mark_last_busy(). Remove the now-reduntant explicit call to
+pm_runtime_mark_last_busy().
 
-When called from mt76_connac2_mac_write_txwi(), BSS conf is got by
-dereferencing a vif pointer.  A NULL vif isn't accounted for though the
-function itself supposes it to be NULL and tries to handle this case in
-previous checks.  This looks like a cosmetic change since the drivers
-calling the function (namely, mt7915 and mt7921) set WANT_MONITOR_VIF flag
-so judging by info->control.vif initialization inside ieee80211_tx_*()
-routines it can't actually come as NULL here.
-
-The same holds for the BSS conf pointer handling inside
-mt76_connac2_mac_tx_rate_val().  It is dereferenced before being checked
-for NULL.  The function supposes to handle the case so reorder the check
-and dereference of the pointer.  Again, this looks like a syntax issue
-only.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE static
-analysis tool.
-
-Co-developed-by: Matvey Kovalev <matvey.kovalev@ispras.ru>
-Signed-off-by: Matvey Kovalev <matvey.kovalev@ispras.ru>
-Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 ---
- .../wireless/mediatek/mt76/mt76_connac_mac.c  | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+ drivers/net/wwan/qcom_bam_dmux.c           | 2 --
+ drivers/net/wwan/t7xx/t7xx_hif_cldma.c     | 3 ---
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c | 2 --
+ drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c | 2 --
+ 4 files changed, 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-index 7af6a578562f..3304b5971be0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
-@@ -297,16 +297,18 @@ u16 mt76_connac2_mac_tx_rate_val(struct mt76_phy *mphy,
- 				 struct ieee80211_bss_conf *conf,
- 				 bool beacon, bool mcast)
- {
--	struct mt76_vif_link *mvif = mt76_vif_conf_link(mphy->dev, conf->vif, conf);
--	struct cfg80211_chan_def *chandef = mvif->ctx ?
--					    &mvif->ctx->def : &mphy->chandef;
--	u8 nss = 0, mode = 0, band = chandef->chan->band;
--	int rateidx = 0, mcast_rate;
--	int offset = 0;
-+	u8 nss = 0, mode = 0, band = NL80211_BAND_2GHZ;
-+	int rateidx = 0, offset = 0, mcast_rate;
-+	struct cfg80211_chan_def *chandef;
-+	struct mt76_vif_link *mvif;
+diff --git a/drivers/net/wwan/qcom_bam_dmux.c b/drivers/net/wwan/qcom_bam_dmux.c
+index 64dab8b57611..6a5b22589af4 100644
+--- a/drivers/net/wwan/qcom_bam_dmux.c
++++ b/drivers/net/wwan/qcom_bam_dmux.c
+@@ -162,7 +162,6 @@ static void bam_dmux_tx_done(struct bam_dmux_skb_dma *skb_dma)
+ 	struct bam_dmux *dmux = skb_dma->dmux;
+ 	unsigned long flags;
  
- 	if (!conf)
- 		goto legacy;
+-	pm_runtime_mark_last_busy(dmux->dev);
+ 	pm_runtime_put_autosuspend(dmux->dev);
  
-+	mvif = mt76_vif_conf_link(mphy->dev, conf->vif, conf);
-+	chandef = mvif->ctx ? &mvif->ctx->def : &mphy->chandef;
-+	band = chandef->chan->band;
-+
- 	if (is_mt7921(mphy->dev)) {
- 		rateidx = ffs(conf->basic_rates) - 1;
- 		goto legacy;
-@@ -584,8 +586,9 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
- 		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 		bool multicast = ieee80211_is_data(hdr->frame_control) &&
- 				 is_multicast_ether_addr(hdr->addr1);
--		u16 rate = mt76_connac2_mac_tx_rate_val(mphy, &vif->bss_conf, beacon,
--							multicast);
-+		u16 rate = mt76_connac2_mac_tx_rate_val(mphy,
-+							vif ? &vif->bss_conf : NULL,
-+							beacon, multicast);
- 		u32 val = MT_TXD6_FIXED_BW;
+ 	if (skb_dma->addr)
+@@ -397,7 +396,6 @@ static void bam_dmux_tx_wakeup_work(struct work_struct *work)
+ 	dma_async_issue_pending(dmux->tx);
  
- 		/* hardware won't add HTC for mgmt/ctrl frame */
+ out:
+-	pm_runtime_mark_last_busy(dmux->dev);
+ 	pm_runtime_put_autosuspend(dmux->dev);
+ }
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+index 97163e1e5783..689c920ca898 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_cldma.c
+@@ -250,7 +250,6 @@ static void t7xx_cldma_rx_done(struct work_struct *work)
+ 	t7xx_cldma_clear_ip_busy(&md_ctrl->hw_info);
+ 	t7xx_cldma_hw_irq_en_txrx(&md_ctrl->hw_info, queue->index, MTK_RX);
+ 	t7xx_cldma_hw_irq_en_eq(&md_ctrl->hw_info, queue->index, MTK_RX);
+-	pm_runtime_mark_last_busy(md_ctrl->dev);
+ 	pm_runtime_put_autosuspend(md_ctrl->dev);
+ }
+ 
+@@ -362,7 +361,6 @@ static void t7xx_cldma_tx_done(struct work_struct *work)
+ 	}
+ 	spin_unlock_irqrestore(&md_ctrl->cldma_lock, flags);
+ 
+-	pm_runtime_mark_last_busy(md_ctrl->dev);
+ 	pm_runtime_put_autosuspend(md_ctrl->dev);
+ }
+ 
+@@ -987,7 +985,6 @@ int t7xx_cldma_send_skb(struct cldma_ctrl *md_ctrl, int qno, struct sk_buff *skb
+ 
+ allow_sleep:
+ 	t7xx_pci_enable_sleep(md_ctrl->t7xx_dev);
+-	pm_runtime_mark_last_busy(md_ctrl->dev);
+ 	pm_runtime_put_autosuspend(md_ctrl->dev);
+ 	return ret;
+ }
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+index 2310493203d3..b76bea6ab2d7 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_rx.c
+@@ -877,7 +877,6 @@ int t7xx_dpmaif_napi_rx_poll(struct napi_struct *napi, const int budget)
+ 		t7xx_dpmaif_clr_ip_busy_sts(&rxq->dpmaif_ctrl->hw_info);
+ 		t7xx_dpmaif_dlq_unmask_rx_done(&rxq->dpmaif_ctrl->hw_info, rxq->index);
+ 		t7xx_pci_enable_sleep(rxq->dpmaif_ctrl->t7xx_dev);
+-		pm_runtime_mark_last_busy(rxq->dpmaif_ctrl->dev);
+ 		pm_runtime_put_autosuspend(rxq->dpmaif_ctrl->dev);
+ 		atomic_set(&rxq->rx_processing, 0);
+ 	} else {
+@@ -1078,7 +1077,6 @@ static void t7xx_dpmaif_bat_release_work(struct work_struct *work)
+ 	}
+ 
+ 	t7xx_pci_enable_sleep(dpmaif_ctrl->t7xx_dev);
+-	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+diff --git a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+index 8dab025a088a..236d632cf591 100644
+--- a/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
++++ b/drivers/net/wwan/t7xx/t7xx_hif_dpmaif_tx.c
+@@ -185,7 +185,6 @@ static void t7xx_dpmaif_tx_done(struct work_struct *work)
+ 	}
+ 
+ 	t7xx_pci_enable_sleep(dpmaif_ctrl->t7xx_dev);
+-	pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 	pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ }
+ 
+@@ -468,7 +467,6 @@ static int t7xx_dpmaif_tx_hw_push_thread(void *arg)
+ 		t7xx_pci_disable_sleep(dpmaif_ctrl->t7xx_dev);
+ 		t7xx_do_tx_hw_push(dpmaif_ctrl);
+ 		t7xx_pci_enable_sleep(dpmaif_ctrl->t7xx_dev);
+-		pm_runtime_mark_last_busy(dpmaif_ctrl->dev);
+ 		pm_runtime_put_autosuspend(dpmaif_ctrl->dev);
+ 	}
+ 
 -- 
-2.51.0
+2.47.3
 
