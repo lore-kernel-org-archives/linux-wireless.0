@@ -1,55 +1,55 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E28692FC03C;
-	Mon, 27 Oct 2025 11:38:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E1D92FF658;
+	Mon, 27 Oct 2025 11:50:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761565138; cv=none; b=Pyu46ippIEeF0d9KTccHqxzK/kR7j8CDSrYyRv/uoMTkY3KxVmCWF0GWPB39KfR6nJFbw/zopJi7SlkLx22v7ODEzdeuznerZ8jmvlS5ZqFn2S4y3h9cZtIxB9V+pcLneK1b1NAOf85RMH4JOYU3vWNxOG8RWOfNOtyIt1H+DdM=
+	t=1761565836; cv=none; b=Xf+PxF6Rn5NfP8G9k0GVws4xdVzLNF9sbyCi9rMpUHZ+gjgU6TfEWmHG5i00e3I146u6GnzAbarAKX/UTx7iflZ3UUTQ6FqDOy1UZTgDtkjuEOKf8I5WjGZqPGgecHrEoIHH2tcMQ0I/HSWX8d/cfQ8EGAx6ulSTQjQE/H/jXb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761565138; c=relaxed/simple;
+	s=arc-20240116; t=1761565836; c=relaxed/simple;
 	bh=1Nq4OsIRGvzLFnYkMUeCuaM3aAF/kNBZikR/j5G0pus=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Q2zsRnj8O6TTTZxaX+9fC3AXATkzgJaZa7pXjaR0m/M37udxaQD1F2HXCblzPMR+zJTH/Aj7wV5W5LgB+e6H3li8K0yWn8UnCqhszIWHhz/tTBIdIyes7SQztFfUXi8P+zN/6BqEgGrRTCmA8db1+SgYlxWlVRir81Gp4vpwZLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WnzT33mY; arc=none smtp.client-ip=198.175.65.12
+	 MIME-Version; b=KNtmWiYq79qux0/1v1nIcEsKUR2kf2tPgS0s1bZ8mjqGiiqBorcTrG7foJjPDnJsbB/IKkQlqCh+HwcK79ZnrxhFvK0teealLQ0zEA/RnjR40Bjjn/5hnqFiWRwmGq4eIAZmlOhoGWxes8cJxhFGxl2p5C8XoYItPvifHmXrgPA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hgNhj7Kp; arc=none smtp.client-ip=192.198.163.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WnzT33mY"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hgNhj7Kp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1761565134; x=1793101134;
+  t=1761565834; x=1793101834;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
   bh=1Nq4OsIRGvzLFnYkMUeCuaM3aAF/kNBZikR/j5G0pus=;
-  b=WnzT33mYNidLhYmnyx+LPXfPwj3ikFJbFfflhNpWvHHsIZkBWZGmYFd9
-   Oj/pHviZ0oCzTqqW9DwhTttJVeiP3+uClUsZvdctM6wdkgr60TmuD4qmC
-   8a4LdIn0WHXgZfbyYibFheezfMkXJ0S/pz6rZ44WfEAdsE52Q1o+A6pGY
-   /B9xAEEjzQ4sHueiAtkYp/Uyq7gxqHj9FtJV+xc1jkw5IfcecAaC/hfgB
-   asysPBHO2CIZZU/RdN+0GboFbqzD+e68nnwrqelxXGpWLIXt6Z7HoudMM
-   LhhXFdC1fS/pAbNvTzh1ivJ+1wRs9VJzLh67byjXYlo4n7udhgnA+2I0M
-   w==;
-X-CSE-ConnectionGUID: QBd841q4QOKzBsCB9rMJwQ==
-X-CSE-MsgGUID: VNaSUwtnQVqy1ZvpG2quGw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="75087418"
+  b=hgNhj7Kp0On/I8Si7a8/mmFDyvFsDouatwcnvgFPnnypC4kEi23u7/ez
+   4sCWgsnxKS97EW5BxZ6mZluhqEgMASBi1S32e/tqC2Z+nlqr/x5hfjL3s
+   nBbrgbxz7kSsnS5UbHmE+68LmOi7fGzt6ImNWTshTSqkwzjSSy9NXqkZE
+   uakrotL/e9eXOi2JdN/V76re8JOymbLRGxYvncIAol9Wz8189qS0ni3nd
+   XX/jB21pM7ECJEvdUK0aF4wfP/1xItT6U4j8/x+X6L56n/EptdDrUcYqK
+   omiXqEnlpUHydOx3qgwVrA2qyha09Ji31SPi08EL2IRyeXogcHnCMBZVr
+   Q==;
+X-CSE-ConnectionGUID: Ndj1tjCIQKGv+85zuB6qvQ==
+X-CSE-MsgGUID: jgwmFoGLSBmx+EJz5iUdZA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="63546810"
 X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
-   d="scan'208";a="75087418"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:38:53 -0700
-X-CSE-ConnectionGUID: iIW0rqlSTjKyFa6dPorjMg==
-X-CSE-MsgGUID: 5jwMr2BZQgGdAvsLID/SqQ==
+   d="scan'208";a="63546810"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:50:33 -0700
+X-CSE-ConnectionGUID: yf4hwXKdT0u1qNVHr+E5xA==
+X-CSE-MsgGUID: S5tKJIZWSy+k3nbfHateeQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,258,1754982000"; 
-   d="scan'208";a="184642346"
+   d="scan'208";a="185370930"
 Received: from klitkey1-mobl1.ger.corp.intel.com (HELO kekkonen.fi.intel.com) ([10.245.244.31])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:38:48 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2025 04:50:25 -0700
 Received: from punajuuri.localdomain (unknown [192.168.240.130])
-	by kekkonen.fi.intel.com (Postfix) with ESMTP id 92855121EC5;
-	Mon, 27 Oct 2025 13:38:45 +0200 (EET)
+	by kekkonen.fi.intel.com (Postfix) with ESMTP id E4FCC121EC5;
+	Mon, 27 Oct 2025 13:50:22 +0200 (EET)
 Received: from sailus by punajuuri.localdomain with local (Exim 4.98.2)
 	(envelope-from <sakari.ailus@linux.intel.com>)
-	id 1vDLYY-00000001dde-27gj;
-	Mon, 27 Oct 2025 13:38:34 +0200
+	id 1vDLjy-00000001dik-3coj;
+	Mon, 27 Oct 2025 13:50:22 +0200
 Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo
 From: Sakari Ailus <sakari.ailus@linux.intel.com>
 To: netdev@vger.kernel.org
@@ -96,12 +96,12 @@ Cc: Nicolas Ferre <nicolas.ferre@microchip.com>,
 	linux-stm32@st-md-mailman.stormreply.com,
 	linux-arm-kernel@lists.infradead.org,
 	linux-arm-msm@vger.kernel.org
-Subject: [PATCH 2/4] net: ipa: Remove redundant pm_runtime_mark_last_busy() calls
-Date: Mon, 27 Oct 2025 13:38:32 +0200
-Message-ID: <20251027113834.390681-2-sakari.ailus@linux.intel.com>
+Subject: [PATCH RESEND 2/4] net: ipa: Remove redundant pm_runtime_mark_last_busy() calls
+Date: Mon, 27 Oct 2025 13:50:20 +0200
+Message-ID: <20251027115022.390997-2-sakari.ailus@linux.intel.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20251027113834.390681-1-sakari.ailus@linux.intel.com>
-References: <20251027113834.390681-1-sakari.ailus@linux.intel.com>
+In-Reply-To: <20251027115022.390997-1-sakari.ailus@linux.intel.com>
+References: <20251027115022.390997-1-sakari.ailus@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
