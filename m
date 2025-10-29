@@ -1,32 +1,32 @@
 Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F84358D3A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB69C2F12CC;
 	Wed, 29 Oct 2025 19:03:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761764582; cv=none; b=R+t1Z0qQpxYqCQDrIFQb/LUbXjnOo32hyLm7YqpTekimVwjAgSrYNkCN1S20p0fZ7MZXkda9CoTh92HBBDcd9iHpC3Nyi3RnithDUHDrStRyILuNHNzdiaBwKNs6An5+jgDmfTNjgfZKVL2EJiuYlxndBiKtsJJYPgrZ30IWHBg=
+	t=1761764582; cv=none; b=qt7gbqLD+fTses/HKrU+En4mi/UR2BHO3T/qTH0JbgVwMu21hk7J+IIrrN/k4WoKnhe2J+RavqkDvUZ/X3NOVFUD9xtMy2bp2qsj0tTmgOKtpCby3OMqwan7KM0rnVBCFo3XjsiAdOVvtc8zl9P83iA8r2M6Yp4grM6t54NeFFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1761764582; c=relaxed/simple;
-	bh=++JqY2xRgABgVWB1JTlQICX2Upy1cT/z7ThhUN/t6yQ=;
+	bh=m1ThU6s/OuTsfPXh0aCqXOqnYksqYIpXdR+yR8bMpS4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TrL2eQ8Hm8VFazAR9xyfiWIuY2f9q+R+RVT6anbHjYG91259UCSfpQ93S7jKrRRXmUwjAco3302DKPFFOR0pRMVEeZT298N9g7eV5bfNAHFPdUQZk4nU3O4Ewbn8b9+ozb4rSy1USFX0rV+VnruFc49ptOYgM2MpmtbXdYEhDhw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=eVTWyWKi; arc=none smtp.client-ip=83.149.199.84
+	 MIME-Version; b=kjj6uD9Ksd/jMkiKiGGtflA7yySggHftxFDmCfkY4bYXwxjN7JxwpizU1cjUDkKpMhDjEFHP0pneWUJWiMTCXvxmV+z4RJkByrYTRFSdtiZf1GNK/7Q4mAwYT9SGOCRbU+hkC0YgTInKkOlb0xRwD8fHLsr4RdRyHRAosZ8BQTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=si0mvWm0; arc=none smtp.client-ip=83.149.199.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="eVTWyWKi"
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="si0mvWm0"
 Received: from debian.intra.ispras.ru (unknown [10.10.165.6])
-	by mail.ispras.ru (Postfix) with ESMTPSA id A54224076B5F;
-	Wed, 29 Oct 2025 19:02:57 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru A54224076B5F
+	by mail.ispras.ru (Postfix) with ESMTPSA id E970040777A3;
+	Wed, 29 Oct 2025 19:02:58 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru E970040777A3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1761764577;
-	bh=Dy/hIZdPh5Pv16L0oxcsQ5VJFKqKn0FbiTRBt6QMWVI=;
+	s=default; t=1761764579;
+	bh=8jiWoBq2G+KYWCFKuOBzxu0i0MoFGVrc86YGBUTtZb0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eVTWyWKilIV/ckhZTteHFJqhMzlU1zdn1wUFhYOIiok5Yryo64ZtiSbVRPb46f3oz
-	 Y37I6VgSUmEh9IYwnUeUME1WKQEk7XHf2tu4LM5bKmRbCxqxpjFBuCps3IDNv0ViNz
-	 2ppwpgbUUQ24UwzII7RsrKnf35UHWYZhAGsIUpjY=
+	b=si0mvWm02txeDnjF2v3nO5P9NTgZ4CjDskBXw5QAzVzq/EIfYV5ucJhoA6sOCtvMP
+	 tfVVmf+Y+WSOx7g7NzkX3QeKd2ywFeelE0EUmIqhpbNXTIGoyTRLKvD5oJOsUxQimi
+	 zfcPmJHE/ADFYT6RRJW5QRzqP8FWJxnVfJOXz4AM=
 From: Fedor Pchelkin <pchelkin@ispras.ru>
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
@@ -36,9 +36,9 @@ Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org
-Subject: [PATCH rtw-next v4 01/10] wifi: rtw89: usb: use common error path for skbs in rtw89_usb_rx_handler()
-Date: Wed, 29 Oct 2025 22:02:29 +0300
-Message-ID: <20251029190241.1023856-2-pchelkin@ispras.ru>
+Subject: [PATCH rtw-next v4 03/10] wifi: rtw89: usb: use ieee80211_free_txskb() where appropriate
+Date: Wed, 29 Oct 2025 22:02:31 +0300
+Message-ID: <20251029190241.1023856-4-pchelkin@ispras.ru>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251029190241.1023856-1-pchelkin@ispras.ru>
 References: <20251029190241.1023856-1-pchelkin@ispras.ru>
@@ -50,52 +50,57 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Allow adding rx_skb to rx_free_queue for later reuse on the common error
-handling path, otherwise free it.
+rtw89_usb_ops_tx_kick_off() may need to release skb if a failure occurs.
+It operates mainly on skbs coming from the core wireless stack and the
+ones containing firmware commands.
 
-Found by Linux Verification Center (linuxtesting.org).
+Use ieee80211_free_txskb() for the former case.
 
-Fixes: 2135c28be6a8 ("wifi: rtw89: Add usb.{c,h}")
+Suggested-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
-
-v2: - do goto 'free_or_reuse' (Ping-Ke)
-
- drivers/net/wireless/realtek/rtw89/usb.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw89/usb.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
-index afbd1fb79021..15fba22b4f5d 100644
+index 1d9760e5eae7..93dc4e91c1d4 100644
 --- a/drivers/net/wireless/realtek/rtw89/usb.c
 +++ b/drivers/net/wireless/realtek/rtw89/usb.c
-@@ -410,8 +410,7 @@ static void rtw89_usb_rx_handler(struct work_struct *work)
+@@ -278,6 +278,15 @@ static int rtw89_usb_write_port(struct rtw89_dev *rtwdev, u8 ch_dma,
+ 	return ret;
+ }
  
- 		if (skb_queue_len(&rtwusb->rx_queue) >= RTW89_USB_MAX_RXQ_LEN) {
- 			rtw89_warn(rtwdev, "rx_queue overflow\n");
--			dev_kfree_skb_any(rx_skb);
--			continue;
-+			goto free_or_reuse;
++static void rtw89_usb_tx_free_skb(struct rtw89_dev *rtwdev, u8 txch,
++				  struct sk_buff *skb)
++{
++	if (txch == RTW89_TXCH_CH12)
++		dev_kfree_skb_any(skb);
++	else
++		ieee80211_free_txskb(rtwdev->hw, skb);
++}
++
+ static void rtw89_usb_ops_tx_kick_off(struct rtw89_dev *rtwdev, u8 txch)
+ {
+ 	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
+@@ -292,7 +301,7 @@ static void rtw89_usb_ops_tx_kick_off(struct rtw89_dev *rtwdev, u8 txch)
+ 
+ 		txcb = kmalloc(sizeof(*txcb), GFP_ATOMIC);
+ 		if (!txcb) {
+-			dev_kfree_skb_any(skb);
++			rtw89_usb_tx_free_skb(rtwdev, txch, skb);
+ 			continue;
  		}
  
- 		memset(&desc_info, 0, sizeof(desc_info));
-@@ -422,7 +421,7 @@ static void rtw89_usb_rx_handler(struct work_struct *work)
- 			rtw89_debug(rtwdev, RTW89_DBG_HCI,
- 				    "failed to allocate RX skb of size %u\n",
- 				    desc_info.pkt_size);
--			continue;
-+			goto free_or_reuse;
+@@ -311,7 +320,7 @@ static void rtw89_usb_ops_tx_kick_off(struct rtw89_dev *rtwdev, u8 txch)
+ 
+ 			skb_dequeue(&txcb->tx_ack_queue);
+ 			kfree(txcb);
+-			dev_kfree_skb_any(skb);
++			rtw89_usb_tx_free_skb(rtwdev, txch, skb);
  		}
- 
- 		pkt_offset = desc_info.offset + desc_info.rxd_len;
-@@ -432,6 +431,7 @@ static void rtw89_usb_rx_handler(struct work_struct *work)
- 
- 		rtw89_core_rx(rtwdev, &desc_info, skb);
- 
-+free_or_reuse:
- 		if (skb_queue_len(&rtwusb->rx_free_queue) >= RTW89_USB_RX_SKB_NUM)
- 			dev_kfree_skb_any(rx_skb);
- 		else
+ 	}
+ }
 -- 
 2.51.0
 
