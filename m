@@ -1,207 +1,135 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE5A12E6105
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2025 08:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3294D32E68E
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Oct 2025 09:04:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761899939; cv=none; b=MCvtWNIoeinNWztWOhi1LoO0e+v1q0xLHl6R293yJ8IKer2aI0IWtxAJhqo+Ru2EZOwOlBa94MFMdZe73LSaIfqk30ZWHZx3QwxtpVrB4UvVIIyXMmo1vdenY32xO0pO4c+7agju5Gp0lysiEITzdt040wJ0skMsSfl8V77T4vw=
+	t=1761901454; cv=none; b=J/h3/IjVHfA3zGu5X5o+j9OlD+u5ZWjFQ7h7wXNdz6S03HyvASBaYgsxW9wWpVmFjF3HrFOh4FHpUWc35Uti7nmDhysZD8egrP3uAgNcdiqc7LoI2QgFnRQBwoLvu2lD67es6//Wxh1Ock+W3T6NQA6e7ED0003JBt4FJy+OKEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761899939; c=relaxed/simple;
-	bh=RYlHXGCow5GbXvVp8yzT7CehQtqv5kgYcnY4OwXJbpg=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=bkBlh6L3mMV4Qc7DSIhy1xqRtOB+9I8Q7SMWbFQMIOH4WE2sGEIjUOnb1Y2gv1X9Hb6F+HdcJowPE0xiZHV0vyeW9e7nobBbtP1WuDmxxoELct/28S1/UDabIjLqCh8Ng6WO/1zQTVZAkdOyp+2Bg5M/Tew97C5fTLMs17pjZkw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SIC5tgHU; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1761901454; c=relaxed/simple;
+	bh=r1y3x274+hf53BbyXJ9J61iFSv51A00dCTEj+3DSDR4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kyGilc81DXydRM/R1Cbno+VH/Exqy1EEKo6ZD3A6a8OvQO7805jybxBN5L+DIL8mgd2VmIuYmpLG2c9tYMUJTqQoqD1dfLHuw9H0i50XhelQ7PPEYd5hVWY2rr5GoockdpK6zQxYyFfkiJyW9mm8D14Mo64ywhNgRHknc7qUqiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=ahFQkRBV; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SIC5tgHU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1761899938; x=1793435938;
-  h=date:from:to:cc:subject:message-id;
-  bh=RYlHXGCow5GbXvVp8yzT7CehQtqv5kgYcnY4OwXJbpg=;
-  b=SIC5tgHUcF1FtpRl1tFBZRtOKivknbnyN+GGz2kpV1mIVbiuSpxRKkr/
-   CDbRlQTv6Hfw0dWn1Dnl7d9n4wUKrV6RM3Xvy62nr3K2NtsE3zyUDgYD6
-   KrRQdROePjH9arKPoYkKuD5jkYXQ2pAgw2ZfTM2boswh/JVq9pAnhkNbi
-   kOOwQpKY1zHEakOSu0WuBjIxSv03AIYfJSYIotiGbGSxjqg3uYdZEVt8w
-   Wv54DsQpNpjYOrRxkDj4yB2pvW1sBotYKz52pTr2TXP8j9wZe4Iw/gQke
-   9+AQqsxPEyACZpxQyyKUxO8Sm2EjzyADO6aGg8LYXKbK03TTekzCo6sc6
-   Q==;
-X-CSE-ConnectionGUID: ASPIAQUsTAi8FR8kFJVvuA==
-X-CSE-MsgGUID: TaLyrR2nQweDm6oYXqAE0A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11598"; a="64086667"
-X-IronPort-AV: E=Sophos;i="6.19,268,1754982000"; 
-   d="scan'208";a="64086667"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2025 01:38:57 -0700
-X-CSE-ConnectionGUID: o/b34yzJRX6iM5joRSWEGw==
-X-CSE-MsgGUID: gUJOLpvhTD6I9AcS5e/i2Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,268,1754982000"; 
-   d="scan'208";a="186058238"
-Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
-  by fmviesa006.fm.intel.com with ESMTP; 31 Oct 2025 01:38:56 -0700
-Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vEkeB-000MuU-1Y;
-	Fri, 31 Oct 2025 08:38:21 +0000
-Date: Fri, 31 Oct 2025 16:36:23 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [wireless:for-next] BUILD SUCCESS
- 70e8335485966d7d4ed85976dceab52803b151a2
-Message-ID: <202510311617.uvg2wPwB-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ahFQkRBV"
+X-UUID: 8ebe870eb63811f0ae1e63ff8927bad3-20251031
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=xtPt9S/dRICeSuTOWbXBIStFl3r42xpbJLKfvKyvRTo=;
+	b=ahFQkRBV2OnXooV9BpYWWyEDhGx609C3MinaIDO66UtTOuFMgLzKug8yRqlUJbTqdU2XiYsWJqdh8NRm6tRGqk/qaymeb8C+tc+OPxAFvX4y9JuKGbLxDcnxZYajxollzud/dr+FFX3DX3vBwoUtzygPcyoABnc58zVMUDT7k9c=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.6,REQID:4fc181b3-8307-4934-80ca-1678242c1100,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:a9d874c,CLOUDID:bb28fcdf-3890-4bb9-a90e-2a6a4ecf6c66,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
+	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OS
+	I:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 8ebe870eb63811f0ae1e63ff8927bad3-20251031
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+	(envelope-from <mingyen.hsieh@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1086206809; Fri, 31 Oct 2025 17:04:07 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26; Fri, 31 Oct 2025 17:04:06 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1748.26 via Frontend Transport; Fri, 31 Oct 2025 17:04:06 +0800
+From: Mingyen Hsieh <mingyen.hsieh@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <deren.wu@mediatek.com>, <Sean.Wang@mediatek.com>,
+	<Leon.Yen@mediatek.com>, <Michael.Lo@mediatek.com>,
+	<allan.wang@mediatek.com>, <Eric-SY.Chang@mediatek.com>,
+	<km.lin@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<Shayne.Chen@mediatek.com>, <linux-wireless@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, Ming Yen Hsieh
+	<mingyen.hsieh@mediatek.com>
+Subject: [PATCH 6/6] wifi: mt76: mt7925: disable auto regd changes after user set
+Date: Fri, 31 Oct 2025 17:03:52 +0800
+Message-ID: <20251031090352.1400079-7-mingyen.hsieh@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20251031090352.1400079-1-mingyen.hsieh@mediatek.com>
+References: <20251031090352.1400079-1-mingyen.hsieh@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
-branch HEAD: 70e8335485966d7d4ed85976dceab52803b151a2  wifi: zd1211rw: fix potential memory leak in __zd_usb_enable_rx()
+From: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
 
-elapsed time: 1455m
+Add regd_user flag to block automatic regulatory domain updates
+if set by user.
 
-configs tested: 130
-configs skipped: 5
+Signed-off-by: Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c  | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7925/regd.c | 7 ++++++-
+ drivers/net/wireless/mediatek/mt76/mt792x.h      | 1 +
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index fe1a7e386fc7..ac3049360bab 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -738,6 +738,7 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 	int ret, i, len, offset = 0;
+ 
+ 	dev->phy.clc_chan_conf = 0xff;
++	dev->regd_user = false;
+ 	if (!mt7925_regd_clc_supported(dev))
+ 		return 0;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/regd.c b/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
+index 4565e1132b36..292087e882d1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
+@@ -173,6 +173,10 @@ void mt7925_regd_notifier(struct wiphy *wiphy, struct regulatory_request *req)
+ 	struct mt76_connac_pm *pm = &dev->pm;
+ 	struct mt76_dev *mdev = &dev->mt76;
+ 
++	if (req->initiator == NL80211_REGDOM_SET_BY_USER &&
++	    !dev->regd_user)
++		dev->regd_user = true;
++
+ 	/* allow world regdom at the first boot only */
+ 	if (!memcmp(req->alpha2, "00", 2) &&
+ 	    mdev->alpha2[0] && mdev->alpha2[1])
+@@ -224,7 +228,8 @@ int mt7925_regd_change(struct mt792x_phy *phy, char *alpha2)
+ 		return 0;
+ 
+ 	if (!mt7925_regd_is_valid_alpha2(alpha2) ||
+-	    !mt7925_regd_clc_supported(dev))
++	    !mt7925_regd_clc_supported(dev) ||
++	    dev->regd_user)
+ 		return -EINVAL;
+ 
+ 	if (mdev->alpha2[0] != '0' && mdev->alpha2[1] != '0')
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index ed2606e9251a..8388638ed550 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -231,6 +231,7 @@ struct mt792x_dev {
+ 	bool hw_init_done:1;
+ 	bool fw_assert:1;
+ 	bool has_eht:1;
++	bool regd_user:1;
+ 	bool regd_in_progress:1;
+ 	bool aspm_supported:1;
+ 	bool hif_idle:1;
+-- 
+2.34.1
 
-tested configs:
-alpha                             allnoconfig    gcc-15.1.0
-alpha                            allyesconfig    gcc-15.1.0
-arc                               allnoconfig    gcc-15.1.0
-arc                          axs101_defconfig    gcc-15.1.0
-arc                   randconfig-001-20251030    gcc-11.5.0
-arc                   randconfig-002-20251030    gcc-8.5.0
-arm                               allnoconfig    clang-22
-arm                       aspeed_g4_defconfig    clang-22
-arm                       imx_v4_v5_defconfig    clang-22
-arm                           imxrt_defconfig    clang-22
-arm                         lpc32xx_defconfig    clang-17
-arm                   randconfig-001-20251030    gcc-10.5.0
-arm                   randconfig-002-20251030    clang-19
-arm                   randconfig-003-20251030    clang-22
-arm                   randconfig-004-20251030    clang-22
-arm64                             allnoconfig    gcc-15.1.0
-arm64                 randconfig-001-20251031    gcc-8.5.0
-arm64                 randconfig-002-20251031    clang-22
-arm64                 randconfig-003-20251031    gcc-10.5.0
-arm64                 randconfig-004-20251031    gcc-14.3.0
-csky                              allnoconfig    gcc-15.1.0
-csky                  randconfig-001-20251031    gcc-9.5.0
-csky                  randconfig-002-20251031    gcc-15.1.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-22
-hexagon                          allyesconfig    clang-22
-hexagon               randconfig-001-20251030    clang-22
-hexagon               randconfig-002-20251030    clang-22
-i386                              allnoconfig    gcc-14
-i386        buildonly-randconfig-001-20251031    gcc-14
-i386        buildonly-randconfig-002-20251031    gcc-14
-i386        buildonly-randconfig-003-20251031    clang-20
-i386        buildonly-randconfig-004-20251031    gcc-14
-i386        buildonly-randconfig-005-20251031    clang-20
-i386        buildonly-randconfig-006-20251031    gcc-14
-i386                  randconfig-001-20251031    gcc-14
-i386                  randconfig-002-20251031    gcc-14
-i386                  randconfig-003-20251031    gcc-14
-i386                  randconfig-004-20251031    gcc-14
-i386                  randconfig-005-20251031    gcc-14
-i386                  randconfig-006-20251031    gcc-12
-i386                  randconfig-007-20251031    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-22
-loongarch             randconfig-001-20251030    clang-22
-loongarch             randconfig-002-20251030    clang-22
-m68k                             allmodconfig    gcc-15.1.0
-m68k                              allnoconfig    gcc-15.1.0
-m68k                             allyesconfig    gcc-15.1.0
-m68k                       m5208evb_defconfig    gcc-15.1.0
-m68k                        m5407c3_defconfig    gcc-15.1.0
-m68k                           virt_defconfig    gcc-15.1.0
-microblaze                       allmodconfig    gcc-15.1.0
-microblaze                        allnoconfig    gcc-15.1.0
-microblaze                       allyesconfig    gcc-15.1.0
-mips                              allnoconfig    gcc-15.1.0
-mips                        bcm47xx_defconfig    clang-18
-mips                          eyeq5_defconfig    gcc-15.1.0
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                            allyesconfig    gcc-11.5.0
-nios2                 randconfig-001-20251030    gcc-8.5.0
-nios2                 randconfig-002-20251030    gcc-11.5.0
-openrisc                         allmodconfig    gcc-15.1.0
-openrisc                          allnoconfig    gcc-15.1.0
-openrisc                  or1klitex_defconfig    gcc-15.1.0
-parisc                            allnoconfig    gcc-15.1.0
-parisc                randconfig-001-20251030    gcc-8.5.0
-parisc                randconfig-002-20251030    gcc-8.5.0
-powerpc                           allnoconfig    gcc-15.1.0
-powerpc               randconfig-001-20251030    clang-22
-powerpc               randconfig-002-20251030    clang-22
-powerpc64             randconfig-001-20251030    gcc-8.5.0
-powerpc64             randconfig-002-20251030    gcc-8.5.0
-riscv                             allnoconfig    gcc-15.1.0
-riscv                 randconfig-001-20251030    gcc-13.4.0
-riscv                 randconfig-002-20251030    gcc-15.1.0
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-22
-s390                             allyesconfig    gcc-15.1.0
-s390                  randconfig-001-20251030    clang-17
-s390                  randconfig-002-20251030    gcc-8.5.0
-sh                               allmodconfig    gcc-15.1.0
-sh                                allnoconfig    gcc-15.1.0
-sh                               allyesconfig    gcc-15.1.0
-sh                                  defconfig    gcc-15.1.0
-sh                    randconfig-001-20251030    gcc-15.1.0
-sh                    randconfig-002-20251030    gcc-15.1.0
-sh                             shx3_defconfig    gcc-15.1.0
-sparc                            allmodconfig    gcc-15.1.0
-sparc                             allnoconfig    gcc-15.1.0
-sparc                            allyesconfig    gcc-15.1.0
-sparc                 randconfig-001-20251031    gcc-8.5.0
-sparc                 randconfig-002-20251031    gcc-8.5.0
-sparc64                          allmodconfig    clang-22
-sparc64                             defconfig    clang-20
-sparc64               randconfig-001-20251031    gcc-8.5.0
-sparc64               randconfig-002-20251031    clang-22
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-14
-um                                  defconfig    clang-22
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20251031    gcc-14
-um                    randconfig-002-20251031    clang-22
-um                           x86_64_defconfig    clang-22
-x86_64                            allnoconfig    clang-20
-x86_64      buildonly-randconfig-001-20251031    clang-20
-x86_64      buildonly-randconfig-002-20251031    gcc-14
-x86_64      buildonly-randconfig-003-20251031    clang-20
-x86_64      buildonly-randconfig-004-20251031    gcc-14
-x86_64      buildonly-randconfig-005-20251031    gcc-14
-x86_64      buildonly-randconfig-006-20251031    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                randconfig-011-20251031    gcc-14
-x86_64                randconfig-012-20251031    clang-20
-x86_64                randconfig-013-20251031    gcc-14
-x86_64                randconfig-014-20251031    gcc-14
-x86_64                randconfig-015-20251031    gcc-14
-x86_64                randconfig-016-20251031    clang-20
-x86_64                randconfig-071-20251031    gcc-14
-x86_64                randconfig-072-20251031    clang-20
-x86_64                randconfig-073-20251031    gcc-14
-x86_64                randconfig-074-20251031    clang-20
-x86_64                randconfig-075-20251031    gcc-14
-x86_64                randconfig-076-20251031    gcc-14
-xtensa                            allnoconfig    gcc-15.1.0
-xtensa                randconfig-001-20251031    gcc-13.4.0
-xtensa                randconfig-002-20251031    gcc-8.5.0
-xtensa                         virt_defconfig    gcc-15.1.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
