@@ -1,32 +1,32 @@
 Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E27C832AACC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E4232D0FD;
 	Tue,  4 Nov 2025 13:57:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762264678; cv=none; b=KgltPow+iJIoMvPhggu2Rk9Kd4TaGaoCY6Z7of5FbjWlpPodsak9IdYWCTKnxmj0MKsp11geIAnt7el2HLlBZ3xj/i6+KsO6Gy3g4ZFkX3g47iLx+qb7rU36AtwX97i31XVR5qR0vrChMdMqWgtKlERlyzPOumFKhhHkPbxYNCs=
+	t=1762264678; cv=none; b=m2fQlhQttZ7rq9tQUPIwy531Sm4mWVZJ60HL3llVMrk2v+eAcl/cxoEjbGrN94ROLbzuwIDjXEoO1X8sOf7InHzXABwyyi5wNpBnq4FfPKnOuoW3YaUL81XprIFhjAWuRJUwfLy+BdLpvVpzPAdJpKsCI7VPhkH54f5hZPy9580=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762264678; c=relaxed/simple;
-	bh=R79NvCtSSDtHptxRlhmkJ+5dSsZap3dJZL5gCIE9YLw=;
+	bh=0hOA4YqifgKa+G88+7C+k8omjopD/7Kl3SGQGRD7Zqk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=agMZc04yMgR7bt6hoVQSo3jt3zv7YV0bMrrZopk58Hvm1cZxUAYaSeuLvitJw82VIVeOKSv+YrxN9m9aQ+O5lxABNyl/rzCGqGp8jXNX7TR66R2pao/dfdsaKbWq2ZdJfYtGs8E6rT2+Uh5aHCZ3AQxIKDasxqhly24sBEsYaFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=jKJJepbo; arc=none smtp.client-ip=83.149.199.84
+	 MIME-Version; b=GtS5y8Xiq/oviFUpWkNK+OZS9ClTyGH1MyE3tWcoIEStmIyNtw5oPD3cjxwnd0Qv3UNeFv23I8exHA7GDFKufD7ecTHAPGRIDcmZrfONVQ/KTclXgVemLbyuPHoeFCpu2K/2HEQUoslE0qgoB8dqiLmSpgGfhhJA/SO7bkx9sZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=Kn55oFh1; arc=none smtp.client-ip=83.149.199.84
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="jKJJepbo"
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="Kn55oFh1"
 Received: from debian.intra.ispras.ru (unknown [10.10.165.12])
-	by mail.ispras.ru (Postfix) with ESMTPSA id C07344078507;
-	Tue,  4 Nov 2025 13:57:47 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru C07344078507
+	by mail.ispras.ru (Postfix) with ESMTPSA id C162640777BB;
+	Tue,  4 Nov 2025 13:57:45 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru C162640777BB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1762264668;
-	bh=0ls4rUggpNN6fuXMoeXlS7JCepCKeWgo2xdyNOdB+mg=;
+	s=default; t=1762264665;
+	bh=PFS1uGSA5pLC2SX/iuo8kzk0SrHeL9HoDNBsMKCUqzY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=jKJJepbo5dNFPkHs5mp1mC/P5MMeYwSu1eoLYxh/HCsnpbHdUIg5gmZSyJ+Lh9A9X
-	 U5lG4yDEul3QCY3b6yRyhULLN7gBI2R1+hGe8bjofVQg5Om1Ek6aQ+AgAENCQweSCf
-	 wCTdlaesx1Ys+i6LzTG/Qk5aIlIekxg2+NnE7YtA=
+	b=Kn55oFh1MvuYkn5QFluHs/5cVL8E2evWPKL0UQJxZQfyM0xabJkycIF6hDFQq1YPn
+	 Lzzf9Ix0tif4oaVqw/Mr8hQXctzpMh02KjU9kDeCB8mo8ZNScNBiKqF9788rjFUsAh
+	 Bbq1+LNng1/KOQuZf3wc/zJI4d7KR9gWIwVxU0rM=
 From: Fedor Pchelkin <pchelkin@ispras.ru>
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
@@ -36,9 +36,9 @@ Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lvc-project@linuxtesting.org
-Subject: [PATCH rtw-next v5 10/10] wifi: rtw89: process TX wait skbs for USB via C2H handler
-Date: Tue,  4 Nov 2025 16:57:17 +0300
-Message-ID: <20251104135720.321110-11-pchelkin@ispras.ru>
+Subject: [PATCH rtw-next v5 07/10] wifi: rtw89: usb: anchor TX URBs
+Date: Tue,  4 Nov 2025 16:57:14 +0300
+Message-ID: <20251104135720.321110-8-pchelkin@ispras.ru>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251104135720.321110-1-pchelkin@ispras.ru>
 References: <20251104135720.321110-1-pchelkin@ispras.ru>
@@ -50,147 +50,105 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-TX wait skbs need to be completed when they are done.  PCIe part does this
-inside rtw89_pci_tx_status() during RPP processing.  Other HCIs use a
-mechanism based on C2H firmware messages.
+During HCI reset all pending TX URBs should be canceled.  Use anchor to
+keep track of them and have an ability to cancel them synchronously.
 
-Store TX wait skbs inside TX report queue so that it'll be possible to
-identify completed items inside the C2H handler.  Try to do this as
-similar to PCIe path as possible.  When the corresponding TX wait skb is
-found inside TX report queue, unlink it from there and call
-rtw89_core_tx_wait_complete() to mark the completion.
-
-If the callee waiting for the completion has already timed out, the TX
-wait skb is placed into TX wait list (like PCIe part does).
-
-It's important that during HCI reset all pending TX wait frames should be
-completed inside hci.ops->reset method before calling
-rtw89_tx_wait_list_clear().
+Note however that canceling RX URBs can't be done here in
+rtw89_usb_ops_reset() as it breaks driver initialization.
 
 Found by Linux Verification Center (linuxtesting.org).
 
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 ---
+ drivers/net/wireless/realtek/rtw89/usb.c | 24 ++++++++++++++++++++----
+ drivers/net/wireless/realtek/rtw89/usb.h |  1 +
+ 2 files changed, 21 insertions(+), 4 deletions(-)
 
-v4: - minor `info = IEEE80211_SKB_CB` assignment reordering to make it look
-      more like PCIe side; Acked-by kept (Ping-Ke)
-    - add a comment on completing TX waits in ->reset (Ping-Ke) 
-
-v3: - use rcu_access_pointer() inside rtw89_core_is_tx_wait()  (Zong-Zhe)
-    - finally I've hopefully realized what you meant by doing TX wait
-      skb handling here similar to PCIe.  IMO this looks just elegant now
-      compared to my previous submissions. Thanks, Ping-Ke!
-
-v2: store TX wait skbs in tx_rpt_queue (Ping-Ke)
-
- drivers/net/wireless/realtek/rtw89/core.c |  5 ++---
- drivers/net/wireless/realtek/rtw89/core.h |  7 +++++++
- drivers/net/wireless/realtek/rtw89/mac.h  | 13 ++++++++++---
- drivers/net/wireless/realtek/rtw89/usb.c  |  2 +-
- 4 files changed, 20 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 6059e30a0590..1d30ff27bce1 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -1131,7 +1131,7 @@ rtw89_core_tx_update_desc_info(struct rtw89_dev *rtwdev,
- 	if (addr_cam->valid && desc_info->mlo)
- 		upd_wlan_hdr = true;
- 
--	if (rtw89_is_tx_rpt_skb(tx_req->skb))
-+	if (rtw89_is_tx_rpt_skb(rtwdev, tx_req->skb))
- 		rtw89_tx_rpt_init(rtwdev, tx_req);
- 
- 	is_bmc = (is_broadcast_ether_addr(hdr->addr1) ||
-@@ -1263,14 +1263,13 @@ static int rtw89_core_tx_write_link(struct rtw89_dev *rtwdev,
- 	tx_req.rtwvif_link = rtwvif_link;
- 	tx_req.rtwsta_link = rtwsta_link;
- 	tx_req.desc_info.sw_mld = sw_mld;
-+	rcu_assign_pointer(skb_data->wait, wait);
- 
- 	rtw89_traffic_stats_accu(rtwdev, rtwvif, skb, true, true);
- 	rtw89_wow_parse_akm(rtwdev, skb);
- 	rtw89_core_tx_update_desc_info(rtwdev, &tx_req);
- 	rtw89_core_tx_wake(rtwdev, &tx_req);
- 
--	rcu_assign_pointer(skb_data->wait, wait);
--
- 	ret = rtw89_hci_tx_write(rtwdev, &tx_req);
- 	if (ret) {
- 		rtw89_err(rtwdev, "failed to transmit skb to HCI\n");
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index cb71bd87b193..71eb7078a0dc 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -6328,6 +6328,7 @@ static inline int rtw89_hci_tx_write(struct rtw89_dev *rtwdev,
- static inline void rtw89_hci_reset(struct rtw89_dev *rtwdev)
- {
- 	rtwdev->hci.ops->reset(rtwdev);
-+	/* hci.ops->reset must complete all pending TX wait SKBs */
- 	rtw89_tx_wait_list_clear(rtwdev);
- }
- 
-@@ -7409,6 +7410,12 @@ static inline struct sk_buff *rtw89_alloc_skb_for_rx(struct rtw89_dev *rtwdev,
- 	return dev_alloc_skb(length);
- }
- 
-+static inline bool rtw89_core_is_tx_wait(struct rtw89_dev *rtwdev,
-+					 struct rtw89_tx_skb_data *skb_data)
-+{
-+	return rcu_access_pointer(skb_data->wait);
-+}
-+
- static inline bool rtw89_core_tx_wait_complete(struct rtw89_dev *rtwdev,
- 					       struct rtw89_tx_skb_data *skb_data,
- 					       u8 tx_status)
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index 56751dd6e99b..ce3474a7ba03 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.h
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -1645,19 +1645,26 @@ void rtw89_tx_rpt_init(struct rtw89_dev *rtwdev,
- }
- 
- static inline
--bool rtw89_is_tx_rpt_skb(struct sk_buff *skb)
-+bool rtw89_is_tx_rpt_skb(struct rtw89_dev *rtwdev, struct sk_buff *skb)
- {
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 
--	return info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	return rtw89_core_is_tx_wait(rtwdev, skb_data) ||
-+	       (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
- }
- 
- static inline
- void rtw89_tx_rpt_tx_status(struct rtw89_dev *rtwdev, struct sk_buff *skb,
- 			    u8 tx_status)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct rtw89_tx_skb_data *skb_data = RTW89_TX_SKB_CB(skb);
-+	struct ieee80211_tx_info *info;
-+
-+	if (rtw89_core_tx_wait_complete(rtwdev, skb_data, tx_status))
-+		return;
- 
-+	info = IEEE80211_SKB_CB(skb);
- 	ieee80211_tx_info_clear_status(info);
- 
- 	if (tx_status == RTW89_TX_DONE)
 diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
-index f54e00c3033e..d7d968207a39 100644
+index 59cdee54feef..b7b981bac7bf 100644
 --- a/drivers/net/wireless/realtek/rtw89/usb.c
 +++ b/drivers/net/wireless/realtek/rtw89/usb.c
-@@ -194,7 +194,7 @@ static void rtw89_usb_write_port_complete(struct urb *urb)
+@@ -221,7 +221,6 @@ static void rtw89_usb_write_port_complete(struct urb *urb)
+ 	}
  
- 		skb_pull(skb, txdesc_size);
+ 	kfree(txcb);
+-	usb_free_urb(urb);
+ }
  
--		if (rtw89_is_tx_rpt_skb(skb)) {
-+		if (rtw89_is_tx_rpt_skb(rtwdev, skb)) {
- 			if (urb->status == 0)
- 				rtw89_tx_rpt_skb_add(rtwdev, skb);
- 			else
+ static int rtw89_usb_write_port(struct rtw89_dev *rtwdev, u8 ch_dma,
+@@ -247,10 +246,17 @@ static int rtw89_usb_write_port(struct rtw89_dev *rtwdev, u8 ch_dma,
+ 	usb_fill_bulk_urb(urb, usbd, pipe, data, len,
+ 			  rtw89_usb_write_port_complete, context);
+ 	urb->transfer_flags |= URB_ZERO_PACKET;
+-	ret = usb_submit_urb(urb, GFP_ATOMIC);
++	usb_anchor_urb(urb, &rtwusb->tx_submitted);
+ 
++	ret = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (ret)
+-		usb_free_urb(urb);
++		usb_unanchor_urb(urb);
++
++	/* release our reference to this URB, USB core will eventually free it
++	 * on its own after the completion callback finishes (or URB is
++	 * immediately freed here if its submission has failed)
++	 */
++	usb_free_urb(urb);
+ 
+ 	if (ret == -ENODEV)
+ 		set_bit(RTW89_FLAG_UNPLUGGED, rtwdev->flags);
+@@ -557,6 +563,11 @@ static void rtw89_usb_cancel_rx_bufs(struct rtw89_usb *rtwusb)
+ 	}
+ }
+ 
++static void rtw89_usb_cancel_tx_bufs(struct rtw89_usb *rtwusb)
++{
++	usb_kill_anchored_urbs(&rtwusb->tx_submitted);
++}
++
+ static void rtw89_usb_free_rx_bufs(struct rtw89_usb *rtwusb)
+ {
+ 	struct rtw89_usb_rx_ctrl_block *rxcb;
+@@ -658,7 +669,9 @@ static void rtw89_usb_deinit_tx(struct rtw89_dev *rtwdev)
+ 
+ static void rtw89_usb_ops_reset(struct rtw89_dev *rtwdev)
+ {
+-	/* TODO: anything to do here? */
++	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
++
++	rtw89_usb_cancel_tx_bufs(rtwusb);
+ }
+ 
+ static int rtw89_usb_ops_start(struct rtw89_dev *rtwdev)
+@@ -895,6 +908,8 @@ static int rtw89_usb_intf_init(struct rtw89_dev *rtwdev,
+ 	struct rtw89_usb *rtwusb = rtw89_usb_priv(rtwdev);
+ 	int ret;
+ 
++	init_usb_anchor(&rtwusb->tx_submitted);
++
+ 	ret = rtw89_usb_parse(rtwdev, intf);
+ 	if (ret)
+ 		return ret;
+@@ -1021,6 +1036,7 @@ void rtw89_usb_disconnect(struct usb_interface *intf)
+ 	rtwusb = rtw89_usb_priv(rtwdev);
+ 
+ 	rtw89_usb_cancel_rx_bufs(rtwusb);
++	rtw89_usb_cancel_tx_bufs(rtwusb);
+ 
+ 	rtw89_core_unregister(rtwdev);
+ 	rtw89_core_deinit(rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.h b/drivers/net/wireless/realtek/rtw89/usb.h
+index 32cdbf5128e4..203ec8e993e9 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.h
++++ b/drivers/net/wireless/realtek/rtw89/usb.h
+@@ -60,6 +60,7 @@ struct rtw89_usb {
+ 	struct sk_buff_head rx_free_queue;
+ 	struct work_struct rx_work;
+ 	struct work_struct rx_urb_work;
++	struct usb_anchor tx_submitted;
+ 
+ 	struct sk_buff_head tx_queue[RTW89_TXCH_NUM];
+ };
 -- 
 2.51.0
 
