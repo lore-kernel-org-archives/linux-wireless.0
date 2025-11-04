@@ -1,76 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F9E31B822;
-	Tue,  4 Nov 2025 13:52:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD6332A3F5;
+	Tue,  4 Nov 2025 13:57:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762264328; cv=none; b=Jmb6bOJZu5b0eDC9qLl0k1ayfhpbL3Se3PwFp5u9oB2SLh5x+p1w64E1N5eRC/1UuNVElGAtN02PIG6jaGGvKYyrEx8kC4tU8IkYdu5OHpGCHNZBRiG7t+F3z2gNXRUYqdY3HK3jyO+Z15kxcNDIK6+N0Ql8KJF46savbVF+pXk=
+	t=1762264673; cv=none; b=QbWVhz2URSaxY6iBDw3nRlHy4nR2k8LKJP97/wiUVH6ipihcOYZ+eK79KDTCYAP0qkwaGIc9oO9JNdE4UAdPVbVp/PDJCjefIWgkTuuyQDCf28UmA7LIv6IGG78bQcc0Nve4iAiN6PHAxC3aIhCtSwP2I1IVQX04LfMdfYnl1P8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762264328; c=relaxed/simple;
-	bh=mbfY2Aj5w6JYGO9ivAENnFh7/FZ0WRwLCEozi5mq2Gk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rpmdLDOF7kfHE5yQ1Jg/HDnNtWDkWL4XMTEJjBQw+AZIQVVZLbpbvU5OdP6r4lNnJj10c5fmvwnjjx9dzuhad7Jw8d0ZLxWY2twHDgDibohbLkJXm6lUuXNFuzZ/7TZaarp4paXWCCA0Cprg+Xkp2d4z3sBZVmF+4lipMuOfWsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SnJx1Xs+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762264673; c=relaxed/simple;
+	bh=DRD4b4F/E8tPiqZNqn21ILhoCT45JOwJZDkj11i2v/g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fCwvLzzy1MM0xqSR2M+iBDssmomqnZOz6g4w64ngSLSaquFhchXJRUSjPf05rvR58Q4obiworN1Pkc1ni9tR9bNfjZWcl8MeiuKM7b+eMAHleVu+UA6QrvYxLmDMwEdA51UQbD9Vdo1O37OPmLFlfDnB8XdYfw38TcLdkb1f9Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=RQ515C7W; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SnJx1Xs+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98580C4CEF7;
-	Tue,  4 Nov 2025 13:52:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762264325;
-	bh=mbfY2Aj5w6JYGO9ivAENnFh7/FZ0WRwLCEozi5mq2Gk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SnJx1Xs+T4cCznIotMtrHqB0c2H7+yjjU3kpWBmv0NL9UVUPQ4cp1PEy2AzG5W3f4
-	 b2gQJ+MGghDrJ4xHKdmpy56Q3h2aX1/3+m4zmiVjqeJMwTfxymIXM/JFXVZNlDjohq
-	 V8Hi551mMu9ZwVzDWYs0I7OQtq1dn78WVrAHws+rCk0qpmD/Hfclrn4MioNseGYKWE
-	 fQzqkZTvvBZARsfyut7S/j+GxtWmjltBgGGuPCfatwUhpJULFLnf2p0s8SqAxX/t/o
-	 5odnpDTg6pjStjLjDZQ6Ps2ukjrmMCog1jfOK7j3WE8f9movVDq7NnjbKklc79G9qF
-	 sL/cYUlkX+rMQ==
-Date: Tue, 4 Nov 2025 08:52:04 -0500
-From: Sasha Levin <sashal@kernel.org>
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, patches@lists.linux.dev,
-	stable@vger.kernel.org, Arien Judge <arien.judge@morsemicro.com>,
-	chunkeey@googlemail.com, pkshih@realtek.com,
-	alexander.deucher@amd.com, alexandre.f.demers@gmail.com,
-	tglx@linutronix.de, namcao@linutronix.de, bhelgaas@google.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 6.17-6.12] wifi: mac80211: support parsing S1G
- TIM PVB
-Message-ID: <aQoFBCjATfTapZDj@laps>
-References: <20251025160905.3857885-1-sashal@kernel.org>
- <20251025160905.3857885-99-sashal@kernel.org>
- <72966d6ccecfcf51f741ca8243e446a0aaa9b5c1.camel@sipsolutions.net>
- <ipjmlu4muicsgnm7kbkmp5pbcvjyjobne4zo4p4cjxv45la6cy@clmzwkjamyi7>
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="RQ515C7W"
+Received: from debian.intra.ispras.ru (unknown [10.10.165.12])
+	by mail.ispras.ru (Postfix) with ESMTPSA id D1E5440777AD;
+	Tue,  4 Nov 2025 13:57:42 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru D1E5440777AD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1762264662;
+	bh=y/2+9jCkzxPS1fTCMcZwEOa6EgbWgYuncUnCq7uJKg4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=RQ515C7WSP0QJO4O/+vJxIAJ/5I6+kOzSD8UijYQcJBAaxD2IdnUb73IwmFFFbeJ6
+	 5XpZaRqe49SLayulP1lnDx+X8A850xScCaxzpClo3j9YGy4ZeicHQrPMqRHOlG7Tf5
+	 Z/3dhvfb0d7SjGPWxUmyokZ3BaFIQTj4fPxSB/Uo=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Zong-Zhe Yang <kevin_yang@realtek.com>,
+	Po-Hao Huang <phhuang@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH rtw-next v5 02/10] wifi: rtw89: usb: fix leak in rtw89_usb_write_port()
+Date: Tue,  4 Nov 2025 16:57:09 +0300
+Message-ID: <20251104135720.321110-3-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20251104135720.321110-1-pchelkin@ispras.ru>
+References: <20251104135720.321110-1-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <ipjmlu4muicsgnm7kbkmp5pbcvjyjobne4zo4p4cjxv45la6cy@clmzwkjamyi7>
+Content-Transfer-Encoding: 8bit
 
-On Sun, Oct 26, 2025 at 02:23:56PM +1100, Lachlan Hodges wrote:
->On Sat, Oct 25, 2025 at 08:36:04PM +0200, Johannes Berg wrote:
->> On Sat, 2025-10-25 at 11:55 -0400, Sasha Levin wrote:
->> >
->> > LLM Generated explanations, may be completely bogus:
->> >
->> > YES
->> >
->> > - Fixes a real functional gap for S1G (802.11ah):
->>
->> I guess, but ... there's no real driver for this, only hwsim, so there
->> isn't really all that much point.
->
->This also only includes the decoding side.. so mac80211 would be able to
->decode the S1G TIM but not encode it ? Additionally there's _many_ functional
->gaps pre 6.17 so I agree that this probably isn't a good candidate.
+When there is an attempt to write data and RTW89_FLAG_UNPLUGGED is set,
+this means device is disconnected and no urb is submitted.  Return
+appropriate error code to the caller to properly free the allocated
+resources.
 
-Dropped, thanks!
+Found by Linux Verification Center (linuxtesting.org).
 
+Fixes: 2135c28be6a8 ("wifi: rtw89: Add usb.{c,h}")
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
+ drivers/net/wireless/realtek/rtw89/usb.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
+index 450631c77840..639b84ebe942 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.c
++++ b/drivers/net/wireless/realtek/rtw89/usb.c
+@@ -236,7 +236,7 @@ static int rtw89_usb_write_port(struct rtw89_dev *rtwdev, u8 ch_dma,
+ 	int ret;
+ 
+ 	if (test_bit(RTW89_FLAG_UNPLUGGED, rtwdev->flags))
+-		return 0;
++		return -ENODEV;
+ 
+ 	urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!urb)
+@@ -285,8 +285,9 @@ static void rtw89_usb_ops_tx_kick_off(struct rtw89_dev *rtwdev, u8 txch)
+ 		ret = rtw89_usb_write_port(rtwdev, txch, skb->data, skb->len,
+ 					   txcb);
+ 		if (ret) {
+-			rtw89_err(rtwdev, "write port txch %d failed: %d\n",
+-				  txch, ret);
++			if (ret != -ENODEV)
++				rtw89_err(rtwdev, "write port txch %d failed: %d\n",
++					  txch, ret);
+ 
+ 			skb_dequeue(&txcb->tx_ack_queue);
+ 			kfree(txcb);
 -- 
-Thanks,
-Sasha
+2.51.0
+
