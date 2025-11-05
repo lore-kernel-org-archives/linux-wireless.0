@@ -1,59 +1,61 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70ED230B52A
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Nov 2025 09:31:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75881305E38
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Nov 2025 09:31:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762335102; cv=none; b=owtXOU8B0SXuyCifA5DvOs2sAtN/jp5TnXfTGLLBvB0GDczfoLiYKErjrPxqNzpOCONrXLEibLQJLmLqvxjV/zi8tTEfMeiP6+ttR5qbGCBaS202A+fv8LPJgveL5gdiWUjmaNcJAmATtcmqgHo6WCfVz/4j3o0xC4Ug8FJrC7Q=
+	t=1762335103; cv=none; b=LJ/SGpSjEMvDYGQwjQtFEc89aIZnJiWz8FwDdeB7fJNvXUVtko0CjrIY7U3llSpG4dsSG6iq7C/zz0ze5QT6fP6bQzLqgtQwCPTj1I/H+VT5E5Ij+xDeoGrsgJI9Z8h3q/q4z/IubYCJVxOTtAxawYrCm4qQ9gYsNsw2DHCbAxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762335102; c=relaxed/simple;
-	bh=vTIf5whHkFasYu0Ae4a3xQ5Q1pSS0TGz8uKzbuBUvho=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ML861Du6E49eBoTkb9DkEN03qtS38SkHaoiSLdL923yBoNkzqd+DtQEVFD1q5Q/lwCtsmtxAOyXYQIO5kYWe3mTFi1zyiQf9ZAdL3r5dKrfSCfffjtAtDkRNLZm7UitX5sx8JElKU8ijGj3rutPMgJN5X+k8SXFOV77w+wqLhRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=bxh61Up8; arc=none smtp.client-ip=60.244.123.138
+	s=arc-20240116; t=1762335103; c=relaxed/simple;
+	bh=7sC9ZO2K0z3bxi6iWBeNjqPuJToHdR5rxXsRhW1qHIo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WvUwBYkcU9axpwjbu8KMdFrjfhqI6bipg0ZoZSxuxKTfLc6IFfftT2D7ZvYDuLrqJ01OcmvE10bI4xsTZsaaczXGd/jqU2pWvpaqg5DtwM9/t3JEQU9DSVyhVVKjchzdlxJxgt8QZzP1Ek5J+gfY8rOzRG2djf/Xy4XnuTGCE5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=C/gKbVuu; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bxh61Up8"
-X-UUID: 36085b30ba2a11f08ac0a938fc7cd336-20251105
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="C/gKbVuu"
+X-UUID: 3678f03eba2a11f08ac0a938fc7cd336-20251105
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=gtCmvqFPoJKt+FZJTIvVxkquJSQWStb6nxPvbyjSYVU=;
-	b=bxh61Up8TSDLxxlZdV5J8jt8o0IgOyNb8KoeTgVxnWyckjKQX8oqzz1sVQho+VmCjqDAMti8btyQjsV/KeenUXm995EItsMd7buVSx9yPVGlraYAPjiz0T7yVQXjnKdzJ56/bNhr7zMw38Lpb1sO/t/BKzVXNL6Km1uUlkYJ7Ys=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=G3l/8w9LFF3Da+ODUDPwhdSpkt/289SBKwemiyfCLOg=;
+	b=C/gKbVuu66k7/gQA+aXrZMN/hlsfl+km33WVq/I8g9WcG4speWrJxlyFQfbTHBrBcIbSUK0/yX71aitr18HKscn2FwcijA6Llk5VJUGifxPotFkdhNZOdwByEQMmGg4GsIs9VnWqd1LP0mntr3/zBFRYfrlGhkYmw8n5MxB/QMs=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:a9564623-c12a-4994-afb0-e79476162f31,IP:0,UR
+X-CID-O-INFO: VERSION:1.3.6,REQID:21a97858-b98d-4f60-a9ce-cea96c3273aa,IP:0,UR
 	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
 	elease,TS:0
-X-CID-META: VersionHash:a9d874c,CLOUDID:92baef7c-f9d7-466d-a1f7-15b5fcad2ce6,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
-	0,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
-	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:a9d874c,CLOUDID:2a7a28e0-3890-4bb9-a90e-2a6a4ecf6c66,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
+	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OS
+	I:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 36085b30ba2a11f08ac0a938fc7cd336-20251105
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+X-UUID: 3678f03eba2a11f08ac0a938fc7cd336-20251105
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 488726669; Wed, 05 Nov 2025 17:31:30 +0800
+	with ESMTP id 1671883264; Wed, 05 Nov 2025 17:31:31 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Wed, 5 Nov 2025 17:31:29 +0800
+ 15.2.1748.26; Wed, 5 Nov 2025 17:31:30 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.26 via Frontend Transport; Wed, 5 Nov 2025 17:31:29 +0800
+ 15.2.1748.26 via Frontend Transport; Wed, 5 Nov 2025 17:31:30 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
-	<linux-mediatek@lists.infradead.org>, StanleyYP Wang
-	<StanleyYP.Wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76 01/12] wifi: mt76: mt7996: fix max nss value when getting rx chainmask
-Date: Wed, 5 Nov 2025 17:30:49 +0800
-Message-ID: <20251105093100.541408-1-shayne.chen@mediatek.com>
+	<linux-mediatek@lists.infradead.org>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76 07/12] wifi: mt76: mt7996: set link_valid field when initializing wcid
+Date: Wed, 5 Nov 2025 17:30:55 +0800
+Message-ID: <20251105093100.541408-7-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20251105093100.541408-1-shayne.chen@mediatek.com>
+References: <20251105093100.541408-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,32 +66,35 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+This ensures the upper layer uses the correct link ID during packet
+processing.
 
-Since wiphy->available_antennas_tx now accumulates the chainmask of all
-the radios of a wiphy, use phy->orig_antenna_mask to get the original
-max nss for comparison.
-
-Fixes: 69d54ce7491d ("wifi: mt76: mt7996: switch to single multi-radio wiphy")
-Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+Fixes: dd82a9e02c05 ("wifi: mt76: mt7996: Rely on mt7996_sta_link in sta_add/sta_remove callbacks")
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-index 87730d26669d..891b187566b3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -786,7 +786,7 @@ void mt7996_memcpy_fromio(struct mt7996_dev *dev, void *buf, u32 offset,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index 685be98b9f27..c26f8f49ce44 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -343,6 +343,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	INIT_LIST_HEAD(&msta_link->rc_list);
+ 	msta_link->wcid.idx = idx;
+ 	msta_link->wcid.link_id = link_conf->link_id;
++	msta_link->wcid.link_valid = ieee80211_vif_is_mld(vif);
+ 	msta_link->wcid.tx_info |= MT_WCID_TX_INFO_SET;
+ 	mt76_wcid_init(&msta_link->wcid, band_idx);
  
- static inline u16 mt7996_rx_chainmask(struct mt7996_phy *phy)
- {
--	int max_nss = hweight8(phy->mt76->hw->wiphy->available_antennas_tx);
-+	int max_nss = hweight16(phy->orig_antenna_mask);
- 	int cur_nss = hweight8(phy->mt76->antenna_mask);
- 	u16 tx_chainmask = phy->mt76->chainmask;
+@@ -984,6 +985,7 @@ mt7996_mac_sta_init_link(struct mt7996_dev *dev,
+ 	msta_link->wcid.sta = 1;
+ 	msta_link->wcid.idx = idx;
+ 	msta_link->wcid.link_id = link_id;
++	msta_link->wcid.link_valid = !!sta->valid_links;
+ 	msta_link->wcid.def_wcid = &msta->deflink.wcid;
  
+ 	ewma_avg_signal_init(&msta_link->avg_ack_signal);
 -- 
 2.51.0
 
