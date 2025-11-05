@@ -1,58 +1,58 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C76F430276A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A8423093CB
 	for <linux-wireless@vger.kernel.org>; Wed,  5 Nov 2025 09:31:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762335099; cv=none; b=NYO2WMalKlogiKW6t+jqfBsim3xSc85rhE/nYu+vesOI9AO4gE54PlZI1JL6K/h/WhGX5fmBgv6OjFmQ/BM5r3Fw3hxNx/rIdBEnLx4hDqsJLnG4fTxzWYyqlMRCdxRlJIHuomqnxt5jNX4sRKEKcF5FNnyEMhzQOn9A218zHN0=
+	t=1762335100; cv=none; b=j8L8EBYTmtguorLpMu89Xbt8E2BrUZxRmHyofXFQnin8aqlu3InMHgQHqjfqKusAivPnJyJ7a9/aX3glyshGxQbX1Jb3rOSs/dEXNWF2/jNdrZkIZz8m61LVIjZzypMAb8rCNdLMXHVco6sn15OQ+KEgWVEXk/3RcxD2mvEVm4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762335099; c=relaxed/simple;
-	bh=j231RBczGYd+jG0Hqp3O/44PP6/KKhFDz2r4m03AiUQ=;
+	s=arc-20240116; t=1762335100; c=relaxed/simple;
+	bh=RZtTdMSYxxeYH5ATbTwvFr6Zo0nP1XaF+S8Ryx32Fdo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WuE1AjkvwgA0iuyon9NDZ05PVNLK4sRGPzdIhzM3gPSnASyiTmr6MRHvkLzenQEqCDnZ4XvFxJx/1ZgOdqexngNScSojyHkbfP9DSlhQQ3FNHOlPXkPcrJQEOB+nF1ZEZvC+nNK+aS1NzsGKv7BZ09CAe3Lvk4CKeBmBS6mEiwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Z8KFrIy8; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=u7Z77RaowavB4uGBpSz6n5ZTiB18t80MBGeDC3KxtcNM735Bd3iGF9OdgshCxJnqx1IUZtyYRuUdt7v50OZSW8Bc8+eyEOthNlXUHfcy0WqzPkPorCWXsjR69CeSNnvcwdQTQbFT0oAlehngoZARm6c6j38yelRNEJyYWmjM31g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=MSbQcsvY; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Z8KFrIy8"
-X-UUID: 3660bddeba2a11f0b33aeb1e7f16c2b6-20251105
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MSbQcsvY"
+X-UUID: 36b0600aba2a11f0b33aeb1e7f16c2b6-20251105
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=nIpLSysPm7kVFkPKaLEgh58So/Wz0cCH+wJpZ7kNnmg=;
-	b=Z8KFrIy8Toj7lq24Vilkc0dDuNKHHpVDMP6yZNocK9vWpTve3g7os0wIrGJhn5HfS+OWSzonhoC0S9GITA0zSMQnk7lhCpmnW261t9mQJaVQH4Qu2/GFmTcWGgjWp28HPsLOqFlSZeCNZJ1M8Mn4+1HgLLlXdHv8IguwtBVoTLE=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=RE3oqPKs//xyZmMUoMZ+7RHBJHTXz5keYCyQmdPj6ps=;
+	b=MSbQcsvYP8ytPisR5nDE//HZBJ5jz2YI4HIYtMdB8APdO26VKVn+upob48sk9Q0HymyHi6MSzlLKl68PPCFb2xwdAmJmx2TyD3ELfHnsQxmM8HVTHJIpw5gQ5QD6jbwv2cOaLNwA0xtd8n+SlUvtNKtbfF/aYbYqBrBkU3n1yEQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:5da43c32-547a-4ad7-9eda-8397650a5e18,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:a9d874c,CLOUDID:afbaef7c-f9d7-466d-a1f7-15b5fcad2ce6,B
+X-CID-O-INFO: VERSION:1.3.6,REQID:23db9c74-f12a-49de-bc6c-73b9b44d212e,IP:0,UR
+	L:0,TC:0,Content:37,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:37
+X-CID-META: VersionHash:a9d874c,CLOUDID:270bf218-3399-4579-97ab-008f994989ea,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OS
+	4|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OS
 	I:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 3660bddeba2a11f0b33aeb1e7f16c2b6-20251105
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+X-UUID: 36b0600aba2a11f0b33aeb1e7f16c2b6-20251105
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 976961817; Wed, 05 Nov 2025 17:31:31 +0800
+	with ESMTP id 66763326; Wed, 05 Nov 2025 17:31:31 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.1748.26; Wed, 5 Nov 2025 17:31:30 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.26 via Frontend Transport; Wed, 5 Nov 2025 17:31:29 +0800
+ 15.2.1748.26 via Frontend Transport; Wed, 5 Nov 2025 17:31:30 +0800
 From: Shayne Chen <shayne.chen@mediatek.com>
 To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, linux-mediatek
 	<linux-mediatek@lists.infradead.org>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76 06/12] wifi: mt76: mt7996: fix teardown command for an MLD peer
-Date: Wed, 5 Nov 2025 17:30:54 +0800
-Message-ID: <20251105093100.541408-6-shayne.chen@mediatek.com>
+Subject: [PATCH mt76 09/12] wifi: mt76: mt7996: fix MLD group index assignment
+Date: Wed, 5 Nov 2025 17:30:57 +0800
+Message-ID: <20251105093100.541408-9-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20251105093100.541408-1-shayne.chen@mediatek.com>
 References: <20251105093100.541408-1-shayne.chen@mediatek.com>
@@ -66,38 +66,113 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-For an MLD peer, we only need to call the teardown command when removing
-the last link, and there's no need to call mt7996_mcu_add_sta() for the
-earlier links.
+Fix extender mode and MBSS issues caused by incorrect assignment of the
+MLD group and remap indices.
 
-Fixes: c1d6dd5d03eb ("wifi: mt76: mt7996: Add mt7996_mcu_teardown_mld_sta rouine")
+Fixes: ed01c310eca9 ("wifi: mt76: mt7996: Fix mt7996_mcu_bss_mld_tlv routine")
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/main.c  | 58 +++++++++++++------
+ 1 file changed, 40 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index 5e0b57657e7e..685be98b9f27 100644
+index 3958688d622b..346d650107d4 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1206,13 +1206,13 @@ mt7996_mac_sta_event(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 				mt7996_mac_twt_teardown_flow(dev, link,
- 							     msta_link, i);
+@@ -90,9 +90,11 @@ static void mt7996_stop(struct ieee80211_hw *hw, bool suspend)
+ {
+ }
  
--			if (sta->mlo && links == BIT(link_id)) /* last link */
--				mt7996_mcu_teardown_mld_sta(dev, link,
--							    msta_link);
--			else
-+			if (!sta->mlo)
- 				mt7996_mcu_add_sta(dev, link_conf, link_sta,
- 						   link, msta_link,
- 						   CONN_STATE_DISCONNECT, false);
-+			else if (sta->mlo && links == BIT(link_id)) /* last link */
-+				mt7996_mcu_teardown_mld_sta(dev, link,
-+							    msta_link);
- 			msta_link->wcid.sta_disabled = 1;
- 			msta_link->wcid.sta = 0;
- 			links = links & ~BIT(link_id);
+-static inline int get_free_idx(u32 mask, u8 start, u8 end)
++static inline int get_free_idx(u64 mask, u8 start, u8 end)
+ {
+-	return ffs(~mask & GENMASK(end, start));
++	if (~mask & GENMASK_ULL(end, start))
++		return __ffs64(~mask & GENMASK_ULL(end, start)) + 1;
++	return 0;
+ }
+ 
+ static int get_omac_idx(enum nl80211_iftype type, u64 mask)
+@@ -308,12 +310,6 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	if (idx < 0)
+ 		return -ENOSPC;
+ 
+-	if (!dev->mld_idx_mask) { /* first link in the group */
+-		mvif->mld_group_idx = get_own_mld_idx(dev->mld_idx_mask, true);
+-		mvif->mld_remap_idx = get_free_idx(dev->mld_remap_idx_mask,
+-						   0, 15);
+-	}
+-
+ 	mld_idx = get_own_mld_idx(dev->mld_idx_mask, false);
+ 	if (mld_idx < 0)
+ 		return -ENOSPC;
+@@ -331,10 +327,6 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 		return ret;
+ 
+ 	dev->mt76.vif_mask |= BIT_ULL(mlink->idx);
+-	if (!dev->mld_idx_mask) {
+-		dev->mld_idx_mask |= BIT_ULL(mvif->mld_group_idx);
+-		dev->mld_remap_idx_mask |= BIT_ULL(mvif->mld_remap_idx);
+-	}
+ 	dev->mld_idx_mask |= BIT_ULL(link->mld_idx);
+ 	phy->omac_mask |= BIT_ULL(mlink->omac_idx);
+ 
+@@ -424,11 +416,6 @@ void mt7996_vif_link_remove(struct mt76_phy *mphy, struct ieee80211_vif *vif,
+ 	dev->mt76.vif_mask &= ~BIT_ULL(mlink->idx);
+ 	dev->mld_idx_mask &= ~BIT_ULL(link->mld_idx);
+ 	phy->omac_mask &= ~BIT_ULL(mlink->omac_idx);
+-	if (!(dev->mld_idx_mask & ~BIT_ULL(mvif->mld_group_idx))) {
+-		/* last link */
+-		dev->mld_idx_mask &= ~BIT_ULL(mvif->mld_group_idx);
+-		dev->mld_remap_idx_mask &= ~BIT_ULL(mvif->mld_remap_idx);
+-	}
+ 
+ 	spin_lock_bh(&dev->mt76.sta_poll_lock);
+ 	if (!list_empty(&msta_link->wcid.poll_list))
+@@ -2225,7 +2212,42 @@ mt7996_change_vif_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			u16 old_links, u16 new_links,
+ 			struct ieee80211_bss_conf *old[IEEE80211_MLD_MAX_NUM_LINKS])
+ {
+-	return 0;
++	struct mt7996_dev *dev = mt7996_hw_dev(hw);
++	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
++	int ret = 0;
++
++	mutex_lock(&dev->mt76.mutex);
++
++	if (!old_links) {
++		int idx;
++
++		idx = get_own_mld_idx(dev->mld_idx_mask, true);
++		if (idx < 0) {
++			ret = -ENOSPC;
++			goto out;
++		}
++		mvif->mld_group_idx = idx;
++		dev->mld_idx_mask |= BIT_ULL(mvif->mld_group_idx);
++
++		idx = get_free_idx(dev->mld_remap_idx_mask, 0, 15) - 1;
++		if (idx < 0) {
++			ret = -ENOSPC;
++			goto out;
++		}
++		mvif->mld_remap_idx = idx;
++		dev->mld_remap_idx_mask |= BIT_ULL(mvif->mld_remap_idx);
++	}
++
++	if (new_links)
++		goto out;
++
++	dev->mld_idx_mask &= ~BIT_ULL(mvif->mld_group_idx);
++	dev->mld_remap_idx_mask &= ~BIT_ULL(mvif->mld_remap_idx);
++
++out:
++	mutex_unlock(&dev->mt76.mutex);
++
++	return ret;
+ }
+ 
+ static void
 -- 
 2.51.0
 
