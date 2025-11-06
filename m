@@ -1,100 +1,80 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDBA0225760
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Nov 2025 21:28:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556FE86331
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Nov 2025 00:46:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762378116; cv=none; b=d9I5S2fuY47I/OKlORPY442RVc5TIMy58iUl+PPaPxZlZ3x79QD8IS34ZKbpM4o/+QSnPRDDweBtF8BGvG0k9xbheYDHxYWTFHOxnTTt2nZMBBzxoGwONitaAFMEPATizOQxtSRtE72mB+RpYhaZKa4PHhxorz/0oXYVDtfAwBQ=
+	t=1762389970; cv=none; b=hfx4gtrBM1jWFef5hyh0Vb546QBVo8lUF874Kl2dGR/0Te970ETzknVi3P+2PDNpf8NeuuLq9IlwW4PPJDJ/NVIZIr+VZ4lSK4FcrdqDIrzGE+8YSjqVQnorrx9Yrh7B9osF6CARmFnigh5X/rtU6XbQpPMa1ALKTdIdcRx00O0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762378116; c=relaxed/simple;
-	bh=iGgQM1NUA/jBnzd1959ic7ko5gicd5Yv3iA0lVN3Yls=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OMLc0Rnppv2twctvcyiy5SjYQ6oyzLVPP1n8v3fOKAwhV4VJ5sb5Xa9CJEKp2dwYNJERqykqIA3WCfgjkG9PRS83uDN8CivkZmk25E5xQMBquy6ppQTvx/Yc7tWtVEJKfHSs7WDLfIcIRUncY4g2PcwybAweDIEmvS3DniLsVPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=K4WEAYPN; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1762389970; c=relaxed/simple;
+	bh=FWSS/quBZeKlwUvl0vjNF7hYHXs6KVkm+0JA9K/i7R0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=eD27XFtoZPN2bo77rnD04+DenUdUC115+NawPeyCqfhDEmFZGbZkHzrqEYBTAik71N7Gtl9ZONfmBh48NCSzdJcxzVzU62eMLZ22hyHZBYmG2pZwcAKek5lTzP912OdoNLEAW/Qo3Ze8iMoxi7IgeezEC15M1lAdP+R0/e98LeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=NrfBlESi; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="K4WEAYPN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=iGgQM1NUA/jBnzd1959ic7ko5gicd5Yv3iA0lVN3Yls=;
-	t=1762378114; x=1763587714; b=K4WEAYPNqSdDzKqRBc8nixIxY4g77ZHG3f3gfyt2wa6J+B9
-	yDixCZcdkk8v/bx968MFNUjObl5oJfULLW3nPlTgSP7UVXe68BnWBBf1LOvlgdBxLmQOQgUKSk1dS
-	cTiz0i5uuLkm/Mnz+HiA4GkNDeydncp+g7BIZExUMtEjnsqldhZW9CG6pI8DT097GI+jb7CnlGb8z
-	yXwdS97G9HyvRKVwM9a3UZa372QZ5zyVFoVI2gd8+fYe80qmCo+2AsXMdhweMjTy1bFMX57ydnGpI
-	PGbsUnAvB6Cjhw2w47O2uS13FrjwoqzPAsIM8jOxKun1IWEJomRIjPCB+bCseRag==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vGl3N-0000000FsAo-1Eiy;
-	Wed, 05 Nov 2025 22:28:29 +0100
-Message-ID: <f7eb31d19a013f9d1375db5db6b1423d1b2ac36f.camel@sipsolutions.net>
-Subject: Re: [RFC][v1][Design] AP Architecture for Roaming with Wi-Fi 8
- Seamless Mobility Domain (SMD)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Aditya Sathish <quic_asathish@quicinc.com>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-	hostap@lists.infradead.org
-Date: Wed, 05 Nov 2025 22:28:28 +0100
-In-Reply-To: <ca61c6dd-b1a6-4f5f-aff1-341a8c5f88c6@quicinc.com>
-References: <fbf4209c-4fd8-4047-96d7-7fa34d9ba44d@quicinc.com>
-	 <c618e0e8fdee9f7aa2628aefdf2dc04c48e6e9b7.camel@sipsolutions.net>
-	 <ca61c6dd-b1a6-4f5f-aff1-341a8c5f88c6@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="NrfBlESi"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 5A60k09912075728, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1762389960; bh=KURB2uBVCzRtyxWr0PxwxreV5e8VDXK9N/Fuqg/4SQc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	b=NrfBlESi1TKjT8SuVZ6orueA7Dk7b/pHlBQA7AuWHQGUwZgcDpz+LvaRv8YZCPPX9
+	 KrEWhfPun/CcK1DnQZllBXtvLs78QFH7BRpIMCRXZpuBaxhS/Dx5d42sQC7CAQ70gj
+	 8L5uuqFcv0dzvb+FEsVACAcYxQf/Krsd7VwAXtd2lpaOtlDRh04PbG6IctKWUquFLy
+	 CgDi7qoJ3DJmbj7PY1DipFR1rR0F7OmrfpdxEynk9FX4I6x7oDnmPamRo2jvw5x5f7
+	 bxYYxkK7WMij3VohJJ1e1eVYNsYtmaD0dSdh5NOhidFVZxV2ODTQAiA9NZmcadbY8x
+	 /lUjcdrGEM6Jw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 5A60k09912075728
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 6 Nov 2025 08:46:00 +0800
+Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.27; Thu, 6 Nov 2025 08:46:01 +0800
+Received: from [127.0.1.1] (172.21.146.58) by RTKEXHMBS04.realtek.com.tw
+ (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.27 via Frontend
+ Transport; Thu, 6 Nov 2025 08:46:01 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <dan.carpenter@linaro.org>
+Subject: [PATCH rtw-next] wifi: rtlwifi: rtl8188ee: correct allstasleep in P2P PS H2C command
+Date: Thu, 6 Nov 2025 08:49:32 +0800
+Message-ID: <1762390172-21091-1-git-send-email-pkshih@realtek.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain
 
-On Wed, 2025-11-05 at 13:26 -0800, Aditya Sathish wrote:
-> Continuing on a message excerpt I missed from Johannes' earlier response,
-> since it is in a similar vein to Benjamin's response:
->=20
-> On 10/12/2025 06:51, Johannes Berg wrote:
-> > That's not _really_ a good argument though - mac80211 will likely have
-> > to process this in process context, likely acquire wiphy mutex, etc.
-> The ST Execution sequence =E2=80=94 which includes receiving the ST Execu=
-tion
-> Request, sending context, receiving a status code from the target AP MLD,
-> and ultimately sending the ST Execution Response =E2=80=94 is largely cli=
-ent-
-> driven. It primarily involves parsing management frame content and
-> handling context data embedded in the skb as extensions by the vendor
-> driver.
->=20
-> From the target AP MLD side, we do need to access the generated group key=
-s
-> to include in the ST Execution Response to the client. However, beyond th=
-at,
-> interaction with core wiphy data structures is minimal.
+The "->allstasleep" variable is a 1 bit bitfield. It can only be 0 or 1.
+This "= -1" assignement should be "= 0" as other chips and vendor driver.
 
-Fair.
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Closes: https://lore.kernel.org/linux-wireless/5c992936-4e7b-4c0a-abfc-0ec0fb9ef9fd@suswa.mountain/T/#t
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> While it's likely that mac80211 will operate in process context, if our g=
-oal
-> is to minimize latency as much as possible, we believe it should be feasi=
-ble
-> to implement the ST Execution logic without acquiring the wiphy mutex. Th=
-is
-> could be achieved by isolating the ST Execution path and leveraging a
-> high-priority workqueue, thereby avoiding unnecessary contention and
-> improving latency. However, this is, admittedly, dependent on the toleran=
-ce
-> for complexity in the mac80211 versus the demonstrated benefit - which is
-> something we are gathering experimental data for.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index 7252bc621211..9a9f9e14f472 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -694,7 +694,7 @@ void rtl88e_set_p2p_ps_offload_cmd(struct ieee80211_hw *hw, u8 p2p_ps_state)
+ 
+ 			if (P2P_ROLE_GO == rtlpriv->mac80211.p2p) {
+ 				p2p_ps_offload->role = 1;
+-				p2p_ps_offload->allstasleep = -1;
++				p2p_ps_offload->allstasleep = 0;
+ 			} else {
+ 				p2p_ps_offload->role = 0;
+ 			}
+-- 
+2.25.1
 
-There _is_ a possibility also that nl80211 operations do not need to
-take the wiphy mutex, though of course that might be more complex.
-Probably less complex than pushing everything into the kernel though :)
-
-But yeah, I think data on it would be the best way to settle it.
-
-johannes
