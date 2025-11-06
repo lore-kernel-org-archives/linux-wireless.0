@@ -1,95 +1,131 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6150FCA52;
-	Thu,  6 Nov 2025 00:48:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E4E9217F2E;
+	Thu,  6 Nov 2025 00:56:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762390086; cv=none; b=jIWKZpx+vLf04RlRe8tQiO9q7ipXz4G9kWPvD123R+04RkRpXUJMeL3F2jWcLDsdmTjUo6z1rTD/A4RSV5wZQj9OsQIOyro9YyFAWZ+yVvtUvW6xrGvOpqrxjgZ6W0vRICs7xSDbuZ/qj52UQfrBAz4rpaNIi8sKDTXhBZoEWDs=
+	t=1762390603; cv=none; b=HGuITjYNTaVwb5warMJjpNKB+7yBDdffWzqpZovj1VX4hJIMgci5bUgA1bubVpqIX4DTWvqds8aeZvLJiixSe+nAQNInVHHJbxOh83xNk+Grs6NfcLFveYgUg5DCw3FH+c8Odxn6eJe35upHvBOzk5oiBkdj3iIi65LlKllurQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762390086; c=relaxed/simple;
-	bh=uaKL6lhEQeACMML1EXw6l59dK4hnNOMSzI0H3qUqppM=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AMC8Iv1ZO4iDRNUvVGABax6L/FZZ+SvBY+5D1XMZ0QRF0UpWpzhmrYfK6EDm1jscvdzrv9fIlXdfkZhOcHYrlm4csa0kPKQkA5OWxKcd2KUBfLHK26Y19PXrdXUcs7FvX5MHf2egO/2tc0QO7WflilCYEe/mLi7C+iu/o855K6c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ZrE8zUUy; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1762390603; c=relaxed/simple;
+	bh=VTdaiQ10La+yHV2hAr6XnpnjrSzQmsBxUAirtnL2j0I=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JmFs08FX2Tp5bPlaOcglOUR6cHzBTrMdnjPZXxFPyR7VymWA+xJ3fWuxKl7qsjTgSm+dmD7CQ1rD9Yog7kNAOgX9PQs2yPwPaRXi+MySZbGSzGdjCtmvWtJjGCdsD2NnAHywNpofOBBw9RO3abmEQhF9HbTV++FbICUFEMvpDaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au; spf=pass smtp.mailfrom=canb.auug.org.au; dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b=SYeTmXSO; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canb.auug.org.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canb.auug.org.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ZrE8zUUy"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 5A60lwM832079079, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1762390078; bh=/10ERdKAjHAnTJ9B3wlMyTnBTsS/68fs0Nb7m0Vmyo0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ZrE8zUUyemgUfAZaQ76HEEQqZYHeZQWUTvlRM0cZmWDpZ6xCN+9T8GrC7obROfvYC
-	 eLn2z+CIy/fuB7WohLCN5OJuAeLGnSit7jiHZ97wwL7Y9sWNGw2QYBIU2pPC8ds8I3
-	 UzVeu0ZjQ6PEifyjUjPkTVCDFiEW2JFul9EJEkQ4FUMRHxjFhZfA2elgDG4tY0IHuy
-	 8PLtAyHXjFoogqWH/mpTGGlqjv2Yn+cCRoGJ40H+krUMZQDFWv/sjlpJB7G+u3JF7H
-	 IwHpQkZXffUAKlMd8kptUI2TbqB/2nHDYtvfq8U3Y6jS/iRnDNLNZeM66Eim7y61LM
-	 N2Ei/H4lnVufQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.13/5.93) with ESMTPS id 5A60lwM832079079
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 6 Nov 2025 08:47:58 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Thu, 6 Nov 2025 08:47:59 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Thu, 6 Nov 2025 08:47:58 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::744:4bc9:832c:9b7e%10]) with mapi id
- 15.02.1544.027; Thu, 6 Nov 2025 08:47:58 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-CC: Harshit Mogalapalli <harshit.m.mogalapalli@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: RE: [PATCH] rtlwifi: rtl8188ee: remove an accidental '-' character
-Thread-Topic: [PATCH] rtlwifi: rtl8188ee: remove an accidental '-' character
-Thread-Index: AQHcSmbpgJ0klacK4UCTMB6Tyko8vbTgKWCwgAOD1wCAASvT4A==
-Date: Thu, 6 Nov 2025 00:47:58 +0000
-Message-ID: <6ebf3019105c4d5b9a3170ce9bcf2ed8@realtek.com>
-References: <aQSz3KnK4wFIJoe3@stanley.mountain>
- <8d6962531a9545fd8279fbc7cd04340c@realtek.com>
- <5c992936-4e7b-4c0a-abfc-0ec0fb9ef9fd@suswa.mountain>
-In-Reply-To: <5c992936-4e7b-4c0a-abfc-0ec0fb9ef9fd@suswa.mountain>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="SYeTmXSO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+	s=202503; t=1762390597;
+	bh=Vmvg9PQucrM9XxyCcYL1ru8Zcq3bHljcwVp773OjC68=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=SYeTmXSO4Jihd8mmRX6XpxoQiMhI+p60/y9ve/mTwdmT6Au/J/3v/bqr46TPio/FZ
+	 WUYXmPGM27qcGMHdLMGHnVOzLp4VdQQwcEcOtXmF6LO7/ebkPxc56tVpAn1juy2rbD
+	 bPnroJbfyDppcVAvqyqikjFUmlcZWY9PDA6R+XUbth/iL57jdZpmCMMbeoOnIYtuBF
+	 A5oIDS39GDRzxeIIU1caOg25n8BQkei3+cYGIJYUf8lXOX9AxdLv6WKhzA+XdLoI0E
+	 eDTRbUEAii78SNY1X1yyJdRv+efofmgs6TMCKsOaXj12yvOtPh19O+1NEiVZ/J9oHG
+	 ckwYRpe25ZluQ==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange secp256r1 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4d23fr4Y9zz4w9q;
+	Thu, 06 Nov 2025 11:56:36 +1100 (AEDT)
+Date: Thu, 6 Nov 2025 11:56:36 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+ Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>, Jeff Johnson
+ <jeff.johnson@oss.qualcomm.com>, Ath10k List <ath10k@lists.infradead.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux Next
+ Mailing List <linux-next@vger.kernel.org>, Maharaja Kennadyrajan
+ <maharaja.kennadyrajan@oss.qualcomm.com>, Miaoqing Pan
+ <miaoqing.pan@oss.qualcomm.com>, Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the ath-next tree with the ath tree
+Message-ID: <20251106115636.7ab861b3@canb.auug.org.au>
+In-Reply-To: <20251030113037.1932c6d2@canb.auug.org.au>
+References: <20251030113037.1932c6d2@canb.auug.org.au>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/2l67aILM2GZVGRsolWjDVnl";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 
-Dan Carpenter <dan.carpenter@linaro.org> wrote:
-> On Mon, Nov 03, 2025 at 01:17:07AM +0000, Ping-Ke Shih wrote:
-> > Dan Carpenter <dan.carpenter@linaro.org> wrote:
-> > > Sent: Friday, October 31, 2025 9:04 PM
-> > > The "->allstasleep" variable is a 1 bit bitfield.  It can only be
-> > > 0 or 1.  This "=3D -1" assignement was supposed to be "=3D 1".  This
-> > > doesn't change how the code works, it's just a cleanup.
-> >
-> > Yes, this patch doesn't change logic at all. However, it looks like exi=
-sting
-> > code is wrong, since other places in the same pattern in this driver se=
-t to 0.
-> > More, I check vendor driver which also sets this value to 0.
-> >
+--Sig_/2l67aILM2GZVGRsolWjDVnl
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+Hi all,
+
+On Thu, 30 Oct 2025 11:30:37 +1100 Stephen Rothwell <sfr@canb.auug.org.au> =
+wrote:
+>
+> Today's linux-next merge of the ath-next tree got a conflict in:
 >=20
-> Ah.  Good.  Thanks.
+>   drivers/net/wireless/ath/ath12k/mac.c
 >=20
-> Could you send that patch and give me a Reported-by tag?
+> between commit:
 >=20
+>   9222582ec524 ("Revert "wifi: ath12k: Fix missing station power save con=
+figuration"")
+>=20
+> from the ath tree and commit:
+>=20
+>   6917e268c433 ("wifi: ath12k: Defer vdev bring-up until CSA finalize to =
+avoid stale beacon")
+>=20
+> from the ath-next tree.
+>=20
+> I fixed it up (see below) and can carry the fix as necessary. This
+> is now fixed as far as linux-next is concerned, but any non trivial
+> conflicts should be mentioned to your upstream maintainer when your tree
+> is submitted for merging.  You may also want to consider cooperating
+> with the maintainer of the conflicting tree to minimise any particularly
+> complex conflicts.
+>=20
+> --=20
+> Cheers,
+> Stephen Rothwell
+>=20
+> diff --cc drivers/net/wireless/ath/ath12k/mac.c
+> index db351c922018,e79d457e3c03..000000000000
+> --- a/drivers/net/wireless/ath/ath12k/mac.c
+> +++ b/drivers/net/wireless/ath/ath12k/mac.c
+> @@@ -4209,7 -4286,7 +4267,8 @@@ static void ath12k_mac_bss_info_changed
+>   {
+>   	struct ath12k_vif *ahvif =3D arvif->ahvif;
+>   	struct ieee80211_vif *vif =3D ath12k_ahvif_to_vif(ahvif);
+>  +	struct ieee80211_vif_cfg *vif_cfg =3D &vif->cfg;
+> + 	struct ath12k_link_vif *tx_arvif;
+>   	struct cfg80211_chan_def def;
+>   	u32 param_id, param_value;
+>   	enum nl80211_band band;
 
-Sent by [1].
+This is now a conflict between the wireless-next tree and the wireless
+tree.
 
-[1] https://lore.kernel.org/linux-wireless/1762390172-21091-1-git-send-emai=
-l-pkshih@realtek.com/T/#u
+--=20
+Cheers,
+Stephen Rothwell
 
+--Sig_/2l67aILM2GZVGRsolWjDVnl
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmkL8kQACgkQAVBC80lX
+0GyvVQf+NOSIdJpJoqqqMOPrC3ImZTPukpFKJir+EkjlJ03KVa5kXIFB3E+05KI+
+vr9VI65YX+MVbxmnAjDljyiEp1RY02rn2DOJCOOR4bp4ImP0nent3QbazODcguea
+/EKTLPqMh2NX4fjwcptG2Xyf7iga8Or1WnJWHSDoCWWqlyo4YLNTpQm/OaM35Evg
+eJ2vCXWkP+1QaLa8O7w7ogGQ6O9bizTYXN7CSHwl3IBK1Tn6XcM/T7Iftlz0oiZ9
+Taj82PcPsUNbDjp58ZX9SL7WPNjvaxeE7aWOS4TisVhh3vwrkVEx2TW+DJrrnEdL
+gEDzD9FN4FJAEm7kd/HEYK/dPPQCOg==
+=d+pj
+-----END PGP SIGNATURE-----
+
+--Sig_/2l67aILM2GZVGRsolWjDVnl--
