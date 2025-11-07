@@ -1,152 +1,187 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79B83358A7
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Nov 2025 18:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7436303A05
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Nov 2025 23:18:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762540394; cv=none; b=MEK6TETatHlEhyBs8RtSlg0lFCBkJR98osy2Wp/9Q4Z5ox2rt2KlpMtkuCYzIpqEZc7pUScdlLF7w5PTmeN2q853BNGodoQcgFK9qrckwQ9FqeqQlKe1pmFpp2rFQptXqksvEdAUDmX8sX+a1BoXM0DCHVClmpwDHturs1yzqiA=
+	t=1762557520; cv=none; b=akc/vAMjMqOMrxkTC1USQF+w29+kbULts2045QkYpbIexkyiK5K7wge17OzncDxFhxI/lOH5URubuoeJwhD23vd2AY0hcGmqCcKMyLD3euPQY8YBUDiTDA1j7eStrUAouGQ7sJtfMnEJdvSbHNwzH3Q7yq3jF4zz4T/FP9EBdtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762540394; c=relaxed/simple;
-	bh=LEGAtv06Hrn9QV9+NCYV7AJGqINssJ0BskTW4tl1wKg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=raJDrgQvfKsWNVg/6AXjf1ZPMgPx3X/5lpA7gmClhIfDAIcgXOjx7SqYzhIWSSCFMMQHqGorkNglu5KVd8cH5ztCodaKnFQ1kwyhH4fsihJWADCz41Kuk/mqihB1R4rxHklY4eF08gRNzS0L3G5RxloI42ifH/wUzjRtk+RYCCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Sc7IUGvk; arc=none smtp.client-ip=209.85.216.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762557520; c=relaxed/simple;
+	bh=ybhnIFBSUF/kBbYouBF5oVS2Of7SYlTE8HxyCkGwtGU=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=jlMFMsuvTJ3587qNJFL3ffUfuI0Kd3dYG/iFm/f1NKNQXleJh+eheT4rX7a3okik47/byfpEv5Do7PH44QRNg43iqpGY6hSn5/e674dhsEsDpZk3VJZJCKaqgQRMh7fw17ekUPZXrHp77VRJBAt+sa4v21R4t78v15cigDZwKvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nkdFP5vS; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sc7IUGvk"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3409c8626easo152185a91.3
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Nov 2025 10:33:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762540390; x=1763145190; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=QYXcwqST2s0E31dZAINQA8t4CykBZFIXj3bpdmbnoi8=;
-        b=Sc7IUGvkc8ldAkDjYTt0PAILIiRW5dU4wQVKtWbDPZwxLe34Mq0W65NFpUkIWoaPBd
-         pFzIXo3AEpW2KF5IedN42UcSlfJtRnZqi+QvDvjgqi79BMKp+puekYFnJehhHqpGhQxf
-         mkhp/eJuKzdta8FkFfb+cx8F8KAQdatB93D2f9rghBFD1WOkM5z8Ud1y4d/570gonmub
-         ompIEak9D3TuB19jQ9mO4OcRNojnUquvfJyziEEi2LDLIttkBNwbok8Gn3J4y/IPshWo
-         F6/Vzxp0ehunjEuGabtv7lr4VhZvpU/seD1omU/6PT9Lfwh0+ceNTKS8VFVPvglTox0k
-         QquQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762540390; x=1763145190;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QYXcwqST2s0E31dZAINQA8t4CykBZFIXj3bpdmbnoi8=;
-        b=KEb0reepxfQ36Y4y1tin1HZ8vb093SovaN7HEPjuo/Jw8dHusay20V6Y60w6EfGhT0
-         h1vUWijUdGL/iECRDdsCr2sh2Q/Uk1zA5knF1RWGgEX9mzz4BX0T0bjDUTo0VpC8uad+
-         GTxV48Gxn1SyRJo/HyQeh8dG1p6/c23i5x6IW4NREG4Ve2qxgAOkw+Py33HO8C6usAet
-         HiG2QVrYaEmF6BcKlvZR40itqpvRX33z7S9DHIRjK1oIIpyNKRIWIm1rjxPenw7WUIXO
-         IipyTTglj6LHygSrGHeBXYKQ4M9daUx+n4+a0hgh1uKNks1B+/G8C89utcONWTYx0VTF
-         TFjA==
-X-Gm-Message-State: AOJu0Ywkko4OBqnTVitCK1Nr0WbA1gzRT6sxIeVdWH2gycjbB3v1FK8m
-	jSJfNoupP0vuncUorvVLJ5uIWqM5Oz0FXQy2VMGzxvs04JDJCp3zse2xSUuXhSpf
-X-Gm-Gg: ASbGncv6OTzHm1sqIzFo3I0Nv1ypnP4nNo0ePaBAW/QMfPThupyhmYo3UBT2WGqgy+K
-	N7BICIw4eZKlxBTVnSvOuTSf866oSySj8JfueiL3ncir8CuY/Sn5kd+ATYHGpoJ5mUklGUY75ZA
-	T/hSOejmqP9/qAU05ytuUOq38i0l3nXJjrll0JVdS/9U08xLCtsPU+JajlghEILolZl1pdXTZ3u
-	hbNF+nB+X2mOWpu8zkiF0W2T0icYrjAYPp9qoYW7WuqO0RCrS+gVDWBAvOlg+GWdOStwYSWJWli
-	GCB/RYvh97fciS00LzBxc5TvJWKA7BtKkyaWhyRsBUfjUHz6z84CGRHfJIkV3m79UGubA7d0oCi
-	jjL4YkXdIR3RUL8/p3TEGED+MKZXTMFpgHnDsdjApKvYs1gUUbYdL9LfNnKUxZD1gwXUygRO9aa
-	UwXc78CaB+pY99579nsnjFwGgh9cBCVsirL6sPYPc9Gg==
-X-Google-Smtp-Source: AGHT+IFydgreo8L69m8Lj3Wz5N9g6puBAf7AeTzOPaImHV+/mEDckn77WmWr595qhcl05UceLjJUEQ==
-X-Received: by 2002:a17:90b:164a:b0:33d:55b1:e336 with SMTP id 98e67ed59e1d1-3436cbf092emr56119a91.6.1762540390342;
-        Fri, 07 Nov 2025 10:33:10 -0800 (PST)
-Received: from [127.0.1.1] ([2406:7400:10c:53a0:ba5d:ce6a:b1bc:5685])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-341d08afb02sm3619943a91.0.2025.11.07.10.33.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 10:33:09 -0800 (PST)
-From: Ranganath V N <vnranganath.20@gmail.com>
-Date: Sat, 08 Nov 2025 00:03:00 +0530
-Subject: [PATCH v2] wifi: cfg80211: Fix uninitialized header access in
- cfg80211_classify8021d
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nkdFP5vS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762557519; x=1794093519;
+  h=date:from:to:cc:subject:message-id;
+  bh=ybhnIFBSUF/kBbYouBF5oVS2Of7SYlTE8HxyCkGwtGU=;
+  b=nkdFP5vSgrX4zrmeuZwspTBUxuPStRo6Odjjm1/f8ViBjfVTPvOcOQTO
+   OnyFflD4JVTX5wWEa4N24bikJQNXI42v+iM7Xt9RK0aNOR7yfHvRXa2rX
+   KnCRga70Lu4hS3k2N/CQ53JqOkqAKEkT0nvudsh1PtdhmzZHbn/DiHQy7
+   I0A9CF3UPe9FK77DtkHMDWZVk5YJqR4FDN+hafka/krrJzSOD8z8h4svz
+   nfJ3xEq/HK2h8RYaJV+NScRR86dIwWxkslve8lAJDUVKE6grAeKnxjCb0
+   kYDcITpqgBX6o0DP3ZuICLdk7Nok/fmWW6dw44fPRPHU5v61WLcBQlUnl
+   Q==;
+X-CSE-ConnectionGUID: hHC1tMJ9S1yXCMhwhvrAYw==
+X-CSE-MsgGUID: VrKMphgmQG2lMUU5vsdUxQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11606"; a="64593284"
+X-IronPort-AV: E=Sophos;i="6.19,288,1754982000"; 
+   d="scan'208";a="64593284"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2025 15:18:39 -0800
+X-CSE-ConnectionGUID: Ki3QWm9YR8WEfJdkpUSr/g==
+X-CSE-MsgGUID: +TMpzo3/RJ+2p97SIzLmlw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,288,1754982000"; 
+   d="scan'208";a="193330903"
+Received: from lkp-server01.sh.intel.com (HELO 6ef82f2de774) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 07 Nov 2025 15:18:37 -0800
+Received: from kbuild by 6ef82f2de774 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vHVj1-0000Sp-07;
+	Fri, 07 Nov 2025 23:18:35 +0000
+Date: Sat, 08 Nov 2025 07:18:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+ linux-wireless@vger.kernel.org
+Subject: [wireless-next:main] BUILD SUCCESS
+ 1ec9871fbb80ba7db84f868f6aa40d38bc43f0e0
+Message-ID: <202511080711.zFgqbvdw-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251108-fifth-v2-1-405da01c6684@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAFs7DmkC/zXMQQrCMBCF4auUWRvppAk1rryHdFGSSTtgG0lKU
- Erubiy6/B+Pb4dEkSnBtdkhUubEYa0hTw3YeVwnEuxqg2ylRmxRePbbLC7KamPIeW0U1O8zkuf
- X4dyH2jOnLcT3wWb8rn+h+wkZBQo1Sol91zvn6TYtIz/ONiwwlFI+EUbyAJoAAAA=
-To: Johannes Berg <johannes@sipsolutions.net>, 
- =?utf-8?q?Dave_T=C3=A4ht?= <dave.taht@bufferbloat.net>, 
- "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- skhan@linuxfoundation.org, david.hunter.linux@gmail.com, khalid@kernel.org, 
- syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com, 
- Ranganath V N <vnranganath.20@gmail.com>
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1762540387; l=2349;
- i=vnranganath.20@gmail.com; s=20250816; h=from:subject:message-id;
- bh=LEGAtv06Hrn9QV9+NCYV7AJGqINssJ0BskTW4tl1wKg=;
- b=pZfo+VA9Xy1E3Mep907lbRLADH/mPjwkdXOA2gD8ol6J183CoZIi0z9jtxZR0W+3cYRAjDP/O
- NHcOcC1cqbvBEW5x+tYt4L3Ux5FdUepnXB6MTOVSAzOAuxIUnIBA+Rl
-X-Developer-Key: i=vnranganath.20@gmail.com; a=ed25519;
- pk=7mxHFYWOcIJ5Ls8etzgLkcB0M8/hxmOh8pH6Mce5Z1A=
 
-Fix an issue detected by  syzbot with KMSAN
-BUG: KMSAN: uninit-value in cfg80211_classify8021d+0x99d/0x12b0
-net/wireless/util.c:1027
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+branch HEAD: 1ec9871fbb80ba7db84f868f6aa40d38bc43f0e0  Merge git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net
 
-The function accessed DSCP fields from IP and IPv6 headers without first
-verifying that sufficient header data was present in the skb. When a
-packet reaches this path, the header dereference could access
-uninitialized memory, as reported by KMSAN under fuzzing with syzkaller.
+elapsed time: 1706m
 
-Add explicit pskb_may_pull() checks for both IPv4 and IPv6 headers to
-ensure that the required header data is available before extracting the
-DSCP field. This prevents uninitialized memory reads while preserving
-existing behavior for valid packets
+configs tested: 109
+configs skipped: 1
 
-This fix has been tested and validated by syzbot. This patch closes the
-bug reported at the following syzkaller link.Fixes the uninitialized
-header access.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Reported-by: syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com./bug?extid=878ddc3962f792e9af59
-Tested-by: syzbot+878ddc3962f792e9af59@syzkaller.appspotmail.com
-Fixes: b156579b1404 ("wireless: Treat IPv6 diffserv the same as IPv4 for 802.11e")
-Signed-off-by: Ranganath V N <vnranganath.20@gmail.com>
----
-validate header before DSCP read in cfg80211_classify8021d().
-pskb_may_pull() checks before accessing header structures to ensure
-safe and fully initialized data access.
----
-Changes in v2:
-- Corrected the commit subject and Fixes tag.
-- Link to v1: https://lore.kernel.org/r/20251103-fifth-v1-1-4a221737ddfe@gmail.com
----
- net/wireless/util.c | 4 ++++
- 1 file changed, 4 insertions(+)
+tested configs:
+alpha                             allnoconfig    gcc-15.1.0
+arc                               allnoconfig    gcc-15.1.0
+arc                   randconfig-001-20251107    gcc-8.5.0
+arc                   randconfig-002-20251107    gcc-9.5.0
+arm                               allnoconfig    clang-22
+arm                         at91_dt_defconfig    clang-22
+arm                        clps711x_defconfig    clang-22
+arm                   randconfig-001-20251107    clang-17
+arm                   randconfig-002-20251107    gcc-13.4.0
+arm                   randconfig-003-20251107    clang-22
+arm                   randconfig-004-20251107    gcc-8.5.0
+arm64                             allnoconfig    gcc-15.1.0
+arm64                 randconfig-001-20251108    gcc-8.5.0
+arm64                 randconfig-002-20251108    clang-22
+arm64                 randconfig-003-20251108    clang-22
+arm64                 randconfig-004-20251108    clang-22
+csky                              allnoconfig    gcc-15.1.0
+csky                  randconfig-001-20251108    gcc-15.1.0
+csky                  randconfig-002-20251108    gcc-15.1.0
+hexagon                           allnoconfig    clang-22
+hexagon               randconfig-001-20251107    clang-22
+hexagon               randconfig-002-20251107    clang-22
+i386                              allnoconfig    gcc-14
+i386        buildonly-randconfig-001-20251108    gcc-14
+i386        buildonly-randconfig-002-20251108    gcc-14
+i386        buildonly-randconfig-003-20251108    gcc-14
+i386        buildonly-randconfig-004-20251108    gcc-14
+i386        buildonly-randconfig-005-20251108    clang-20
+i386        buildonly-randconfig-006-20251108    gcc-14
+loongarch                         allnoconfig    clang-22
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20251107    gcc-15.1.0
+loongarch             randconfig-002-20251107    clang-19
+m68k                              allnoconfig    gcc-15.1.0
+m68k                                defconfig    gcc-15.1.0
+m68k                        stmark2_defconfig    gcc-15.1.0
+microblaze                        allnoconfig    gcc-15.1.0
+microblaze                          defconfig    gcc-15.1.0
+mips                              allnoconfig    gcc-15.1.0
+mips                      maltaaprp_defconfig    clang-22
+mips                           mtx1_defconfig    clang-22
+mips                           xway_defconfig    clang-22
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20251107    gcc-11.5.0
+nios2                 randconfig-002-20251107    gcc-8.5.0
+openrisc                          allnoconfig    gcc-15.1.0
+parisc                            allnoconfig    gcc-15.1.0
+parisc                randconfig-001-20251107    gcc-8.5.0
+parisc                randconfig-002-20251107    gcc-12.5.0
+parisc64                         alldefconfig    gcc-15.1.0
+parisc64                            defconfig    gcc-15.1.0
+powerpc                           allnoconfig    gcc-15.1.0
+powerpc                      cm5200_defconfig    clang-22
+powerpc                 mpc834x_itx_defconfig    clang-16
+powerpc                 mpc836x_rdk_defconfig    clang-22
+powerpc                     mpc83xx_defconfig    clang-22
+powerpc                      pcm030_defconfig    clang-22
+powerpc               randconfig-001-20251107    clang-22
+powerpc               randconfig-002-20251107    clang-22
+powerpc64             randconfig-001-20251107    gcc-14.3.0
+powerpc64             randconfig-002-20251107    clang-22
+riscv                             allnoconfig    gcc-15.1.0
+riscv                 randconfig-001-20251107    clang-22
+riscv                 randconfig-002-20251107    gcc-13.4.0
+s390                             alldefconfig    gcc-15.1.0
+s390                              allnoconfig    clang-22
+s390                  randconfig-001-20251107    gcc-8.5.0
+s390                  randconfig-002-20251107    gcc-15.1.0
+sh                                allnoconfig    gcc-15.1.0
+sh                                  defconfig    gcc-15.1.0
+sh                 kfr2r09-romimage_defconfig    gcc-15.1.0
+sh                    randconfig-001-20251107    gcc-13.4.0
+sh                    randconfig-002-20251107    gcc-11.5.0
+sparc                             allnoconfig    gcc-15.1.0
+sparc                 randconfig-001-20251108    gcc-14.3.0
+sparc                 randconfig-002-20251108    gcc-8.5.0
+sparc64                             defconfig    clang-20
+sparc64               randconfig-001-20251108    clang-20
+sparc64               randconfig-002-20251108    clang-20
+um                                allnoconfig    clang-22
+um                                  defconfig    clang-22
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20251108    gcc-14
+um                    randconfig-002-20251108    clang-22
+um                           x86_64_defconfig    clang-22
+x86_64                            allnoconfig    clang-20
+x86_64      buildonly-randconfig-001-20251108    gcc-14
+x86_64      buildonly-randconfig-002-20251108    gcc-12
+x86_64      buildonly-randconfig-003-20251108    clang-20
+x86_64      buildonly-randconfig-004-20251108    gcc-14
+x86_64      buildonly-randconfig-005-20251108    gcc-14
+x86_64      buildonly-randconfig-006-20251108    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                randconfig-011-20251108    clang-20
+x86_64                randconfig-012-20251108    gcc-14
+x86_64                randconfig-013-20251108    clang-20
+x86_64                randconfig-014-20251108    clang-20
+x86_64                randconfig-015-20251108    clang-20
+x86_64                randconfig-016-20251108    gcc-14
+x86_64                randconfig-071-20251108    gcc-14
+x86_64                randconfig-072-20251108    clang-20
+x86_64                randconfig-073-20251108    clang-20
+x86_64                randconfig-074-20251108    clang-20
+x86_64                randconfig-075-20251108    gcc-12
+x86_64                randconfig-076-20251108    gcc-14
+xtensa                            allnoconfig    gcc-15.1.0
+xtensa                randconfig-001-20251108    gcc-8.5.0
+xtensa                randconfig-002-20251108    gcc-14.3.0
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 56724b33af04..23bca5e687c1 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -963,9 +963,13 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
- 
- 	switch (skb->protocol) {
- 	case htons(ETH_P_IP):
-+		if (!pskb_may_pull(skb, sizeof(struct iphdr)))
-+			return 0;
- 		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
- 		break;
- 	case htons(ETH_P_IPV6):
-+		if (!pskb_may_pull(skb, sizeof(struct ipv6hdr)))
-+			return 0;
- 		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
- 		break;
- 	case htons(ETH_P_MPLS_UC):
-
----
-base-commit: ba36dd5ee6fd4643ebbf6ee6eefcecf0b07e35c7
-change-id: 20251101-fifth-84c599edf594
-
-Best regards,
--- 
-Ranganath V N <vnranganath.20@gmail.com>
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
