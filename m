@@ -1,56 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94A4D30EF7D
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2025 13:02:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A47D0311583
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2025 13:02:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762779769; cv=none; b=i427CSIHB87PI8h0NcGAXcjZrds5q+RlyzwzvyplChdgoxVkMiN0rmRXjomUngKkGsmMlgT0f7B5CesfXN7WH4S8Kjol09UWux7ASMnPSJbaRJGuEz09H0twJ88/f4CGD5cbw78+ItF5IXa1/jR/by5Ltrg8LDUqMWYDMQVWhWI=
+	t=1762779771; cv=none; b=O/x36GIaScAxpurTeLvB95+3zRxH5mLLUE/d6/zI+po+Y+NFBS+zcL647lphtIQULBYNoQ/+pA3pPqCCDH5ASGm07U/qw5OXWQKbwOqQ1gn2yKczrFjgOuAgpWpq9slacVlJcUu2akg4Cv2kcjX7Xvjd44IIQ/M3NAK/bGXovSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762779769; c=relaxed/simple;
-	bh=swk1MVHmnZ2oWqG5/DRGwaGJq3g/TRGQLfI7J3WhOfw=;
+	s=arc-20240116; t=1762779771; c=relaxed/simple;
+	bh=3iVf5i3EBoTjJ20jskegfgwH/mkNOpYM8bo32YO9JCY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GfGRMD0KJb+gIZGyLk/NIlLw4sZlMQLmqJTTsW7WB3YmHQx7BYSnEeIweEYKayoYbjRamG5XCC2hR5pUnEW3IDr/l+JeywfnjKKoK2wlqNr/AX+fXzTEKFEcxwZYlv0Am2ZRCSeYknx9znzElaeuajlgMTvaaZuhTPIiHE+xVxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UaWuaz1+; arc=none smtp.client-ip=192.198.163.8
+	 MIME-Version; b=NV0f0K2A6RJRYWgu7HKKzYzKE/ht/0bM2uDBfR7jt9CLGOdlIK/VbCgtJlxXzlrcSovTmYf8E4Sj3ilZYOy+27E5RlqGEhnpniwEKZ3PcswgrGz21SfVkwaj5u2RwSaUiYdNlTCcL2016FaPoPB1DPP58CPYm1VQJgM98w2oEeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AOqD9RAD; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UaWuaz1+"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AOqD9RAD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762779768; x=1794315768;
+  t=1762779770; x=1794315770;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=swk1MVHmnZ2oWqG5/DRGwaGJq3g/TRGQLfI7J3WhOfw=;
-  b=UaWuaz1+G9eQCN1iJtCmG6KuheB5jr7NKcT7ATNp3pumIhNEyNpCBymf
-   CkvayyVYTiru4HwdckRhHYlP3XBHZ5/4rnTnoskltFFWRTRfBgohGW2LZ
-   Fvdke7c7IIfZd7FIp7SKJL3rnDolkfyrEJPLQzE2NxTLpQpfuFFP2f5tY
-   reeAS6cjSp4KrwDtPFF8TZSZ/OIIWO1HSKxEWM0V9kacDhup9m2QIVVQM
-   s2KcBfwZw+erwtvOoA8+zrUs9+Ca5Ab32j/hmxQHi8TTjxuvqh8j1Gscp
-   bpMB0lNDbQGZY6fXlpG+EriJO1UTkZPHicpvAlHBBdtDPcP9Ae4i1lG+8
-   A==;
-X-CSE-ConnectionGUID: W14kL6SMSRusqeu/5ti18g==
-X-CSE-MsgGUID: rieY7U/KQSmOJk2b6Z25tQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82454890"
+  bh=3iVf5i3EBoTjJ20jskegfgwH/mkNOpYM8bo32YO9JCY=;
+  b=AOqD9RADT4tVvKTFLbwcahV0rgz/Zzm17d2Le7kv1EWdG4t2BlmhiQkv
+   PrIAg6N1PBfTdF+xKvjOxXHgynclFtgJSkT8cRcgHpavbpU75RlnHpHy1
+   WwS49aeGZ43yv/mK8fPXeXdsziAWDwiesEh4mMFtRGw7BBtu5qITF+vlF
+   AVZEkmY9SF8dlThRv+CCKaDJmFPKp/0QczFyz+REXWCleEIDaPv91sy1l
+   dowdxlqs4aIf7nQAqSgzSRmGiMLlrFqcFCtiod1vOjYrMmLBA65NpL2eN
+   cRgz2p90xw8xtJTZlcdAOFrm1n8mozsAh1+11hyKZaTbuSJCWfdUmDpYq
+   Q==;
+X-CSE-ConnectionGUID: Zd0Xh8KcRSyQHXCuKO14Lw==
+X-CSE-MsgGUID: ToIWFZSXTYuQrpVlFyvELA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82454893"
 X-IronPort-AV: E=Sophos;i="6.19,293,1754982000"; 
-   d="scan'208";a="82454890"
+   d="scan'208";a="82454893"
 Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 05:02:47 -0800
-X-CSE-ConnectionGUID: PTpR31V/RUe9a+aloeWC6Q==
-X-CSE-MsgGUID: f6oh8L2RRYi7K9xvx8hObw==
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 05:02:50 -0800
+X-CSE-ConnectionGUID: ltVU7pzQSGqeuA6TSHTkoA==
+X-CSE-MsgGUID: l/m9h4aUQXqhST+x7TCPLg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,293,1754982000"; 
-   d="scan'208";a="192928550"
+   d="scan'208";a="192928564"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 05:02:45 -0800
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 05:02:48 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 10/15] wifi: iwlwifi: adjust LINK context NPCA API
-Date: Mon, 10 Nov 2025 15:02:21 +0200
-Message-Id: <20251110150012.93bd7a454eef.I3d2ce1a363b0d8c3809ec8e729b7acf94efca25b@changeid>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 12/15] wifi: iwlwifi: fw: api: add UHR data definitions
+Date: Mon, 10 Nov 2025 15:02:23 +0200
+Message-Id: <20251110150012.358b51dd8cb2.I16178416dd7019cb88a45e55f81eb28510982028@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251110130226.223364-1-miriam.rachel.korenblit@intel.com>
 References: <20251110130226.223364-1-miriam.rachel.korenblit@intel.com>
@@ -65,74 +64,106 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The link context NPCA API was changed in the firmware, adjust
-the driver accordingly.
+Add the necessary data definitions for the sniffer-related fields
+reported for the various UHR frame formats by the firmware/hardware
+to be able to later add the necessary sniffer code.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   | 29 ++++++++++++++-----
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 69 ++++++++++++++++++-
+ 1 file changed, 66 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-index 628f39917a6f..f260115abc5a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-@@ -503,23 +503,37 @@ enum iwl_link_modify_bandwidth {
- 	IWL_LINK_MODIFY_BW_320,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index 6d0523497663..beb20eadf6d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -1269,19 +1269,82 @@ struct iwl_eht_tb_sigs {
  };
  
-+/**
-+ * enum iwl_npca_flags - NPCA flags
-+ * @IWL_NPCA_FLAG_MAC_HDR_BASED: MAC header based NPCA operation
-+ *	permitted in the BSS (MOPLEN)
-+ */
-+enum iwl_npca_flags {
-+	IWL_NPCA_FLAG_MAC_HDR_BASED = BIT(0),
-+}; /* NPCA_FLAG_E */
-+
- /**
-  * struct iwl_npca_params - NPCA parameters (non-primary channel access)
-  *
-+ * @dis_subch_bmap: disabled subchannel bitmap for NPCA
-  * @switch_delay: after switch, delay TX according to destination AP
-  * @switch_back_delay: switch back to control channel before OBSS frame end
-+ * @initial_qsrc: Indicates the value that is used to initialize the
-+ *	EDCAF QSRC[AC] variables
-  * @min_dur_threshold: minimum PPDU time to switch to the non-primary
-- *	NPCA channel
-- * @flags: NPCA flags - bit 0: puncturing allowed, bit 1: new TX allowed
-+ *	NPCA channel (usec)
-+ * @flags: NPCA flags, see &enum iwl_npca_flags
-  * @reserved: reserved for alignment purposes
-  */
- struct iwl_npca_params {
-+	__le16 dis_subch_bmap;
- 	u8 switch_delay;
- 	u8 switch_back_delay;
--	__le16 min_dur_threshold;
--	__le16 flags;
--	__le16 reserved;
--} __packed; /* NPCA_PARAM_API_S_VER_1 */
-+	u8 initial_qsrc;
-+	u8 min_dur_threshold;
-+	u8 flags;
-+	u8 reserved;
-+} __packed; /* NPCA_PARAM_API_S_VER_2 */
+ struct iwl_uhr_sigs {
+-	__le32 usig_a1, usig_a1_uhr, usig_a2_uhr, b1, b2;
++	/* same as EHT above */
++	__le32 usig_a1;
++#define OFDM_RX_FRAME_UHR_BSS_COLOR2			0x0000003f
++	__le32 usig_a1_uhr;
++#define	OFDM_RX_FRAME_UHR_PPDU_TYPE			0x00000003
++#define	OFDM_RX_FRAME_UHR_COBF_CSR_DISABLE		0x00000004
++#define	OFDM_RX_FRAME_UHR_PUNC_CHANNEL			0x000000f8
++#define	OFDM_RX_FRAME_UHR_USIG2_VALIDATE_B8		0x00000100
++#define	OFDM_RX_FRAME_UHR_SIG_MCS			0x00000600
++#define	OFDM_RX_FRAME_UHR_SIG_SYM_NUM			0x0000f800
++#define	OFDM_RX_FRAME_UHR_TRIG_SPATIAL_REUSE_1		0x000f0000
++#define	OFDM_RX_FRAME_UHR_TRIG_SPATIAL_REUSE_2		0x00f00000
++#define	OFDM_RX_FRAME_UHR_TRIG_USIG2_DISREGARD		0x1f000000
++	__le32 usig_a2_uhr;
++#define OFDM_RX_FRAME_UHR_SPATIAL_REUSE			0x0000000f
++#define OFDM_RX_FRAME_UHR_GI_LTF_TYPE			0x00000030
++#define OFDM_RX_FRAME_UHR_NUM_OF_LTF_SYM		0x000001c0
++#define OFDM_RX_FRAME_UHR_CODING_EXTRA_SYM		0x00000200
++#define OFDM_RX_FRAME_UHR_PE_A_FACTOR			0x00000c00
++#define OFDM_RX_FRAME_UHR_PE_DISAMBIGUITY		0x00001000
++#define OFDM_RX_FRAME_UHR_IM_DISABLE			0x00002000
++#define OFDM_RX_FRAME_UHR_USIG_OVF_DISREGARD		0x0000c000
++#define OFDM_RX_FRAME_UHR_NUM_OF_USERS			0x00070000
++#define OFDM_RX_FRAME_UHR_NSTS				0x00f00000
++#define OFDM_RX_FRAME_UHR_BF				0x01000000
++#define OFDM_RX_FRAME_UHR_USIG_OVF_NDP_DISREGARD	0x06000000
++#define OFDM_RX_FRAME_UHR_COMM_CC1_CRC_OK		0x08000000
++#define OFDM_RX_FRAME_UHR_COMM_CC2_CRC_OK		0x10000000
++#define OFDM_RX_FRAME_UHR_NON_VALID_RU_ALLOC		0x20000000
++	__le32 b1;
++#define OFDM_RX_FRAME_UHR_MCS				0x000001f0
++#define OFDM_RX_FRAME_UHR_CODING			0x00000200
++#define OFDM_RX_FRAME_UHR_SPATIAL_CONFIG		0x00003c00
++#define OFDM_RX_FRAME_UHR_STA_RU			0x003fc000
++#define OFDM_RX_FRAME_UHR_STA_RU_PS160			0x00400000
++#define OFDM_RX_FRAME_UHR_UEQM				0x00800000
++#define OFDM_RX_FRAME_UHR_2XLDPC			0x01000000
++#define OFDM_RX_FRAME_UHR_UEQM_PATTERN			0x06000000
++#define OFDM_RX_FRAME_UHR_IS_MU_MIMO_USER_FIELD		0x08000000
++#define OFDM_RX_FRAME_UHR_USER_FIELD_CRC_OK		0x40000000
++	__le32 b2;
++#define OFDM_RX_UHR_NUM_OF_DATA_SYM			0x000007ff
++#define OFDM_RX_UHR_PE_DURATION				0x00003800
+ 	__le32 sig2;
++	/* same as EHT above: OFDM_RX_FRAME_EHT_RU_ALLOC_* */
+ 	__le32 cmn[6];
++#define OFDM_RX_FRAME_UHR_USER_FIELD_ID			0x000007ff
+ 	__le32 user_id;
+ };
  
- /**
-  * struct iwl_link_config_cmd - command structure to configure the LINK context
-@@ -630,7 +644,8 @@ struct iwl_link_config_cmd {
- 	struct iwl_npca_params npca_params; /* since _VER_7 */
- 	struct iwl_ac_qos prio_edca_params; /* since _VER_7 */
- 	__le32 reserved3[4];
--} __packed; /* LINK_CONTEXT_CONFIG_CMD_API_S_VER_1, _VER_2, _VER_3, _VER_4, _VER_5, _VER_6, _VER_7 */
-+} __packed; /* LINK_CONTEXT_CONFIG_CMD_API_S_VER_1, _VER_2, _VER_3, _VER_4,
-+	     *				    _VER_5, _VER_6, _VER_7, _VER_8 */
+ struct iwl_uhr_tb_sigs {
+-	__le32 usig_a1, usig_a2_uhr, tb_rx0, tb_rx1;
++	/* same as UHR above */
++	__le32 usig_a1, usig_a2_uhr;
++	/* same as HE above */
++	__le32 tb_rx0, tb_rx1;
+ };
  
- /* Currently FW supports link ids in the range 0-3 and can have
-  * at most two active links for each vif.
+ struct iwl_uhr_elr_sigs {
++	/* same as UHR above */
+ 	__le32 usig_a1, usig_a2_uhr;
+-	__le32 uhr_sig_elr1, uhr_sig_elr2;
++#define OFDM_RX_VECTOR_UHR_ELR_VER_ID			0x00000007
++#define OFDM_RX_VECTOR_UHR_ELR_UPLINK_FLAG		0x00000008
++#define OFDM_RX_VECTOR_UHR_ELR_MCS			0x00000010
++#define OFDM_RX_VECTOR_UHR_ELR_CODING			0x00000020
++#define OFDM_RX_VECTOR_UHR_ELR_LENGTH_IN_SYM		0x00007fc0
++#define OFDM_RX_VECTOR_UHR_ELR_CODING_EXTRA_SYM		0x00008000
++#define OFDM_RX_VECTOR_UHR_ELR_SIG1_CRC_OK		0x00010000
++#define OFDM_RX_VECTOR_UHR_ELR_STA_ID			0x0ffe0000
++#define OFDM_RX_VECTOR_UHR_ELR_DISREGARD		0x70000000
++	__le32 uhr_sig_elr1;
++#define OFDM_RX_VECTOR_UHR_ELR_MARK_BSS_COLOR		0x0000003f
++#define OFDM_RX_VECTOR_UHR_ELR_SIG_ID_INDX		0x00000e00
++#define OFDM_RX_VECTOR_UHR_ELR_STA_RU			0x000ff000
++#define OFDM_RX_VECTOR_UHR_ELR_STA_RU_PS160		0x00100000
++#define OFDM_RX_VECTOR_UHR_ELR_SIG2_CRC_OK		0x00200000
++	__le32 uhr_sig_elr2;
+ };
+ 
+ union iwl_sigs {
 -- 
 2.34.1
 
