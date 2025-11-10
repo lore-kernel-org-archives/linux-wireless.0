@@ -1,93 +1,110 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E08A1E25F9
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2025 14:03:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762783435; cv=pass; b=TbZJLcCQGK+RbdeWux+nytD/+L4Gt7512h2nL7EDXWvJaElTwUfcHAyc+XTiquBukcYcKPZlvR5iK+zVa29JprFdtvDolrSRVfG00JxGzwM1TU722yKL8rGxj0wNfeNPE4AHJrYrhUhkfqkxTySrxnwrlPtp2FVaMFaK2FPgv7w=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762783435; c=relaxed/simple;
-	bh=5looI5DLrEmh+caIS8diooUnqBa0f4vXlcLufQ5C6FI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=m6gwW4G/23PAReavgAhrSkM+lxK749iBxjRVeNjOvuJPRWC6qnADGoYdjEGUSBNEIIOfz7BOATOsjZQr8F1KrbySPY6n/m55CR+b4lB5BVJueM5YOS9o5gD8FHTIP3ly/KkLTJ6ZYYkRFaCDJSKwoyGrD7WQ+Ad8cQJdY7+5R/Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xv97.com; spf=pass smtp.mailfrom=xv97.com; dkim=pass (1024-bit key) header.d=xv97.com header.i=m@xv97.com header.b=J9nrvYe0; arc=pass smtp.client-ip=136.143.188.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xv97.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xv97.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E252307AEA;
+	Mon, 10 Nov 2025 14:26:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762784788; cv=none; b=VMyB3HG/J+NO0v7iUobZyyRwdllAmRWTZhaZMfP8+Mwrm6iT7X5lKJybsJ8t/bMAohgxunGPF3sjjXuscVNTbjAAiAiSNl/84peMJm0GU3IrvwBWLAdVv+vQwU4XmYQdXDFGlBgo+mNSzaP95kigYtbqNTkDXfrW2aMhnxb5U3g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762784788; c=relaxed/simple;
+	bh=ol4yxR65KYgqJh69E3ODmJnCY2Jhd60J7DsO/peauHU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=nIoUj7oAY3GOmQ2+IMTNwxU0bKCGguXfHTY9I+0yyoVlZKfjbByDVr9GeJ+5rA5FE97Ltytr+9fZdB9cqp1JbvuVyk9nSgQ+On7pRHhpI7P5qMolnWMtdcLfx1Phj5OlsBDWoLX5r64TRRTN7OHmtO0dtQeGdFkHdXRi4PSbsEk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FrM9LKHK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=xv97.com header.i=m@xv97.com header.b="J9nrvYe0"
-ARC-Seal: i=1; a=rsa-sha256; t=1762783432; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=NQYGP4XoSRqVaMA8IK0m4fGUhfAAdbNSFYR+b6vwPWN3pVU/DU021PVfgbuYyzVsZlMDklhKLyv3J9sTA6pdpC74Iuc6TOwtlST0mwWJom+lR1ILT+c81e+af49v5PzDAMRBj+2xyOOYVYs4sl8JCPHdwxbbqvgL4n0xcUJ/NNY=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1762783432; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=e4ZTzEnKFLEgmPhkgYxA7bkm0TA8sNGsBZTsAl+4Ips=; 
-	b=TF99Oi25ow4H55lLNz2xGcS6XLJsd5eK+RHEbJ1D5IhoMOza3j+3LVieug67ChbcPT/NbLSquDaS7cy9aS5Gv3GSRhmX31ett20D5dulO4zseo1ULqxU0zouN8UwGaJeVGWCu55Exf6wMigLOqpQhNXvMEIcNmxIsLrn5W4QQNk=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=xv97.com;
-	spf=pass  smtp.mailfrom=m@xv97.com;
-	dmarc=pass header.from=<m@xv97.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1762783432;
-	s=zmail; d=xv97.com; i=m@xv97.com;
-	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=e4ZTzEnKFLEgmPhkgYxA7bkm0TA8sNGsBZTsAl+4Ips=;
-	b=J9nrvYe0xL3G37rn0MdfhmCbg5opTj/7Bzhuo8i0PMru7tKNQCRCChOMbIHBSo00
-	fXBAACKicXQBh9aESacGjb82wSXgP5k4W4bssYOjdFHhCk4CsVihQlBaYtV2hOmQFbp
-	VDZzkFf69HxMsSzMBlp7UVxQVSSeNJR7Py6dMvhA=
-Received: by mx.zohomail.com with SMTPS id 1762783428800579.7110672049679;
-	Mon, 10 Nov 2025 06:03:48 -0800 (PST)
-Message-ID: <fce44b79-0dcd-4e49-b722-1316ecdc6a55@xv97.com>
-Date: Mon, 10 Nov 2025 22:03:44 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FrM9LKHK"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0468EC116D0;
+	Mon, 10 Nov 2025 14:26:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762784788;
+	bh=ol4yxR65KYgqJh69E3ODmJnCY2Jhd60J7DsO/peauHU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=FrM9LKHKnuBj+i3aUkAyAEYuBtc89JcY0jAvgHHOq9LI1u5IFFztidxtc/2DPryRc
+	 0X3brVrnZFjuJ9I+8HCXR7zr/7l5lwMJ1xC+LbjJiNJQFy/ZZFyJtZ3adQAA4wqf5Y
+	 ePWguUwDGJvXKIsUFtO/gploXoQ/utyqUlBQlmXta0pPQ71FYl9e3eClm+FN34u4Gw
+	 vXGWkM8QpwAceaT2oz42rdppnpLoVXYg+qOKiiviyCB2AOugaBE3zhsqx5jC4Zx+wT
+	 WuXka+PsgL1WkUrJubyXA5nhxnWikVePgUBHhZ+t3SlRM1uijtr/CrsO9WkRnmcfR6
+	 YsDlwrBIsBQIA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED67DCCFA13;
+	Mon, 10 Nov 2025 14:26:27 +0000 (UTC)
+From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
+Date: Mon, 10 Nov 2025 15:26:24 +0100
+Subject: [PATCH v2 1/3] dt-bindings: wireless: ath10k: Introduce quirk to
+ skip host cap QMI requests
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/6] wifi: mac80211: refactor CMAC packet handlers
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-References: <20251109140450.118106-1-m@xv97.com>
- <20251109140450.118106-7-m@xv97.com>
- <f67d8a5ffd57acecda1f2d3bcf53c35135415ef0.camel@sipsolutions.net>
-Content-Language: en-US
-From: Chien Wong <m@xv97.com>
-Autocrypt: addr=m@xv97.com; keydata=
- xjMEYrGw+RYJKwYBBAHaRw8BAQdAYXRqCQnACPka63iaZ2Lc9u8qPBNaxew6PdbvpuPvkIXN
- F0NoaWVuIFdvbmcgPG1AeHY5Ny5jb20+wpYEExYIAD4WIQRhWIfCT4U86RkflE5cpYo5+kEi
- rQUCYrGw+QIbAwUJEswDAAULCQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRBcpYo5+kEirQtx
- AP4uJuD0ufTDXmEotuOUiI+86qWvc3jNsUhWYW8wHN8zEgD8Dli09jo/TsTlfWIXWjIs/6Pp
- b96j9fho6xNpETu8ZgnOOARisbD5EgorBgEEAZdVAQUBAQdArBbkcgnrIZ6XnmGUAA9XYA+i
- tf8afTv75UGa2c0YkwoDAQgHwn4EGBYIACYWIQRhWIfCT4U86RkflE5cpYo5+kEirQUCYrGw
- +QIbDAUJEswDAAAKCRBcpYo5+kEircrLAQC/yXFAHzoG9bnsw+hsiVfEbYMa04UiDEFkTd9Q
- kA+I2gD/VCzYkTizWTiXsbcGhB05Q+mI5tX+ehhtpcrIAaBxnA8=
-In-Reply-To: <f67d8a5ffd57acecda1f2d3bcf53c35135415ef0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ZohoMailClient: External
+Message-Id: <20251110-skip-host-cam-qmi-req-v2-1-0daf485a987a@ixit.cz>
+References: <20251110-skip-host-cam-qmi-req-v2-0-0daf485a987a@ixit.cz>
+In-Reply-To: <20251110-skip-host-cam-qmi-req-v2-0-0daf485a987a@ixit.cz>
+To: Johannes Berg <johannes@sipsolutions.net>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
+ ath10k@lists.infradead.org, linux-kernel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, phone-devel@vger.kernel.org, 
+ David Heidelberg <david@ixit.cz>, Amit Pundir <amit.pundir@linaro.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1103; i=david@ixit.cz;
+ h=from:subject:message-id;
+ bh=eDK/4tDlTIOnXZQxvVBLLpr0TJmEnv0tcxiF4I9sY4E=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBpEfYSfLM7kuds/BZ5AbbeeHF6crfp64r5Gw046
+ zUV8PnwV9KJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCaRH2EgAKCRBgAj/E00kg
+ cjTfD/9EshPGakS5iAT+22AYaa3mUXdiTUXN8PKvCgc3+hZCwvKI4Zijj0/VN2vhn3ZJhmaU4Tq
+ 7mzRv9Z5VAP2p4+LImDkyXb5H6jGqU/0SlyqwAIA9kNqrFn03CG3sdC8pnPj0KHs+u1S+dFJdOS
+ KB4hffPdH98RYUtp7vhDwAQtiFZQt2CoSGrscADWqlAGFQ3bgfOWbha4iQD/PjACPbn1MheIVLn
+ CkMZG7Ve9nD9oDJbqFVwTlxQqwne/D7yk9skToP6XafkpGCIdyqCK0hMjpimhZb944MXGkJOKyN
+ L7XHGtDEz0LTntEwRe7pgJjMERFmJ2YOBgKPlVcqWBp1edtUlbgF6JdKZPWQ1vUGRZOaxOtU86j
+ s6DJGJZInmX273a4Lnw6LCF1TBjgwm4fvOUctg+0m0ZcRomT9tNP8w3IWafmiI+LQ7p1m7uUKlM
+ VEXMHv9XpFMTnZB7LhHHdhgZhrj0XfGNowKeczunS+sIlnArvXSuVUbTDx+hL6GjHTl75I7RQaK
+ 5oPRJZaR2zYi/z9fqfQNemJnqrdcf/gWanc11bdy79WG6OTdBwjcZpJ1sVMg5Zq7vGy3T5uOHz4
+ PdG3E8eH94Su9ICXmvy9wK5Fl5jE/QHgOUYQ7u4XXm7ZZ0OXAPt0qe79FC2DwoAtk1SJlj7ro2v
+ d6E+GbkHdDCDydw==
+X-Developer-Key: i=david@ixit.cz; a=openpgp;
+ fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
+X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
+X-Original-From: David Heidelberg <david@ixit.cz>
+Reply-To: david@ixit.cz
 
-On 11/10/25 3:43 PM, Johannes Berg wrote:
-> On Sun, 2025-11-09 at 22:04 +0800, Chien Wong wrote:
->> Merge CMAC-128 and CMAC-256 handlers since they are almost the same.
->> This removes duplication.
->> All references to the refactored functions in the tree are adapted.
->>
->> The comment 'MIC = AES-128-CMAC(IGTK, AAD ...' is out-dated since CMAC
->> is also used with BIGTK, as is the comment for CMAC-256. Simply remove
->> the comments.
->>
->> Tested-on: mac80211_hwsim
-> 
-> 
-> Oh, I see this now - but your changes affect both RX and TX so you
-> should cross-check against another implementation (such as wlantest) I'd
-> think. Also, that's a non-standard Qualcomm/ath driver thing :)
-> 
+From: Amit Pundir <amit.pundir@linaro.org>
 
-So far so good.
+Introducing this quirk to skip host capability QMI request for the firmware
+versions which do not support this feature.
 
-When testing Beacon Protection with hwsim, the STA's BIGTK rx_spec count 
-increases as expected, while icverrors remain at 0.
-I have a patched Wireshark capable of verifying MMIE MIC. The captured
-Beacon and protected broadcast Deauth frame all verifies good.
+Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Signed-off-by: David Heidelberg <david@ixit.cz>
+---
+ Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+index f2440d39b7ebc..5120b3589ab57 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+@@ -171,6 +171,12 @@ properties:
+       Quirk specifying that the firmware expects the 8bit version
+       of the host capability QMI request
+ 
++  qcom,snoc-host-cap-skip-quirk:
++    type: boolean
++    description:
++      Quirk specifying that the firmware wants to skip the host
++      capability QMI request
++
+   qcom,xo-cal-data:
+     $ref: /schemas/types.yaml#/definitions/uint32
+     description:
+
+-- 
+2.51.0
+
+
