@@ -1,168 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2D73081B4;
-	Mon, 10 Nov 2025 14:26:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762784788; cv=none; b=kQZMG1E4HmmdECYDENhsuEH4XO6HNRanxZGJMKKgI91TDboLa45+Rz/TVS1rrsCsjSdKea8y/z7rzfgT/EaWhtMATiy9DQ2cmDFhQ6vs3h/YvLu8IQZzeg5h/+tUsZyHCDHcVJdDCVwSi9tBfrY/rd/dI+q+CNNABKcrfcZYUyU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762784788; c=relaxed/simple;
-	bh=W4Xddx38U7txo280gHy7sOIWzGCYOYJpHgLuNmY+Btw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=taWmpTtoXjDU7zkCRqvnVhwZuIsu+4kh+/Ea20QbQBedamh8cbT3RI9b8M7M9EN7KdxeTQgxgNgiEguV9wba2Z2LfwElxvKR4d2SXjxdaWUx6bTHSr9lzDuShOMwWTXuDwgJ/BwVC2VdOJu/gCI79u5VWL+VoxBVn8XXS+wxJdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fte1e5En; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA288757EA
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Nov 2025 14:45:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762785955; cv=pass; b=B0MluRifF+rYEpoxmyMl+XGMS+NRJP4p7x+e6x9iivtA0CU66XOs/YsbMgPXSz146uxLPSh/9sgjooi8WI90W+hzhr5r2nN96mjYOyeIrHMY9KAIZkN4LgSZWxw7akylGHu+cUbcEQA1Kybh3j3HOeVjpsPhIiQgrZTIKmGk1ns=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762785955; c=relaxed/simple;
+	bh=6E7oDcVJ1n130wHcRU9PLYYmia/xm8jpbRpTr9SeOkE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aoPhiul7BLQSe9va32Lwxsn+/2z/qFLTrIHo6aIC25oBwLgWf0Mjdz8Bj3LKDZmpo3tGstDLxlEhjgJN7bXMPW+TQ2aCIRM9rgtpHIbtnZriHi//Mqoh3dty3Pvc7CwKvkHj761CjJjIxFQt4fX7++bYbk+WJ5+4ZENacmRPuwA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xv97.com; spf=pass smtp.mailfrom=xv97.com; dkim=pass (1024-bit key) header.d=xv97.com header.i=m@xv97.com header.b=Ns7V55A2; arc=pass smtp.client-ip=136.143.188.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xv97.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xv97.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fte1e5En"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 15472C16AAE;
-	Mon, 10 Nov 2025 14:26:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762784788;
-	bh=W4Xddx38U7txo280gHy7sOIWzGCYOYJpHgLuNmY+Btw=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=fte1e5EnfQZ+Hig1V8Hth6zhLbY2x9QqQN2UmgPo3QfD0RZCF0luwUegqsm6p/InF
-	 S1bft4Fnu4dXJZkU+JT8/CeC2ASmTiyy7757G3kRV7QxprXwG3KyMiVIAhBaE3Sp/2
-	 9EAQnHBzMs69agAdl/RRNHvcVIY0rHb3NLOyRYY3pVnChLI8cxt04xMN8Nhx4w2J6r
-	 w6e+9I/cPDShcE5Gl+owvKKXy5EPXNEEFoWPg7Ny8f/HFtzkTRfJXXMQvUQuhgODY8
-	 P1q3PkcV67uhmiltakjgagKJWjj/uE9zCJe1NotM3eXz/TnSCTBRZii4sKt+ShfQd3
-	 uf9KOpvSKrYcA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 086DFCCF9E3;
-	Mon, 10 Nov 2025 14:26:28 +0000 (UTC)
-From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Mon, 10 Nov 2025 15:26:25 +0100
-Subject: [PATCH v2 2/3] ath10k: Introduce a devicetree quirk to skip host
- cap QMI requests
+	dkim=pass (1024-bit key) header.d=xv97.com header.i=m@xv97.com header.b="Ns7V55A2"
+ARC-Seal: i=1; a=rsa-sha256; t=1762785952; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=fMunakoJqgAak8odfM3aLc+1r89cklHRRhS9Xni63R9LSeMCrhPNzy9YY6tBfpJZfVwGAlsBd1s1JEXZyK0hbdGFf6Pb8SeZvSiClfdzHzZ1i1IOYxsikw4my252m4QIGFv5G6Lr0dcEzNuYQRIRiuOA0XCZch98LOH1YXi14fE=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1762785952; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=vhRIQhjYKB44IdQMAvOaYtpXVHVlzkgpsof1aOL2AEA=; 
+	b=P3i3yOz0E+odm98RnptReXWsbqDl3aezO98aL4a3UT6KhBR3w9nJjQ5/IWwjXFe6Q39ty6XBxfXjW+r46NnIutaA9V7UStiiddynFfnTJBqCIRm5u+sXNZ5aPpaluTjKvehLZL6PQMjZYW++Wis46HhIjQRQlhs63msfO0iTn6M=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=xv97.com;
+	spf=pass  smtp.mailfrom=m@xv97.com;
+	dmarc=pass header.from=<m@xv97.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1762785952;
+	s=zmail; d=xv97.com; i=m@xv97.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=vhRIQhjYKB44IdQMAvOaYtpXVHVlzkgpsof1aOL2AEA=;
+	b=Ns7V55A2IF+054O28WYQ2ewby9lkcVgN8U9E3rwv2bvbjb9acp8swcPciDxnoRfX
+	GJd9OJMNrcnTldYKi7+XK71VjiWlkyExKLn0jMNmTO8tKJQLKrijK/i6nsS54+7XI2E
+	UA8gy0waGGOQ2RROhNnc4Z4Nvchcg2Ygu2+FVPRI=
+Received: by mx.zohomail.com with SMTPS id 1762785951356141.73707238206362;
+	Mon, 10 Nov 2025 06:45:51 -0800 (PST)
+From: Chien Wong <m@xv97.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 0/6] wifi: mac80211: refactor CMAC implementation
+Date: Mon, 10 Nov 2025 22:45:39 +0800
+Message-ID: <20251110144545.15149-1-m@xv97.com>
+X-Mailer: git-send-email 2.51.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251110-skip-host-cam-qmi-req-v2-2-0daf485a987a@ixit.cz>
-References: <20251110-skip-host-cam-qmi-req-v2-0-0daf485a987a@ixit.cz>
-In-Reply-To: <20251110-skip-host-cam-qmi-req-v2-0-0daf485a987a@ixit.cz>
-To: Johannes Berg <johannes@sipsolutions.net>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
- Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org, 
- ath10k@lists.infradead.org, linux-kernel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, phone-devel@vger.kernel.org, 
- David Heidelberg <david@ixit.cz>, Amit Pundir <amit.pundir@linaro.org>, 
- Bjorn Andersson <andersson@kernel.org>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3371; i=david@ixit.cz;
- h=from:subject:message-id;
- bh=cmCfFb27+/OOz6UjhCZlw+5Qa2NlZ1ZstLT1jWys+FM=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBpEfYSlTvetXSMCyXMTJHDwfIRcg2vCUwZXAFmd
- NUrd3jkOsSJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCaRH2EgAKCRBgAj/E00kg
- cpDmD/sEm3qBpsLiWVYLsbJmuSuoEKwoT+H9uGhkq6SYayKQI57gdTfrK9vjP4cX3H0RjVg2yzg
- pk0KHMxM5Gz8Rr6IcGF/OMP7CmtFMFl8T+JZT61mhEkQ6slaoxT4ogrxKc2QYNCaNWh4zlbODwX
- va9qGl3cB8R/XZDWInXMNWyikAtA/Z2cuh6pCcCS/M7WLQ4ptaWk8OzS77WNZM8jmspp8rtAbJF
- gAKbePqoODZAR3whBMj8/mEw130bl+YmIlE1QudFoayzHCuTojRcSay6XR/Q3cqAl6pzkGOF8DA
- w4RSVoSlt/Wffijv6qmCqq01s4MO17hrrjAfPq8/V8AVmESZXGau6ex0I4DmedPb40VQ524IJtj
- BQLHoEQxhuaB+pVetvvuoNblppSxNsABmpecind0DG2AWJ+XYnnIXeMWf7ZkTBeFcINh9jAA63E
- DzAU+t1scOnMYpXMI0kHJPSWl1LpIjp4fHv0445izxisp8X9Ht+gGoxyGZWM5HzISEN5Zx8EiRb
- XFg5+nBW5L+g1P6awZ36IMx4W82QwUORfAstXQKSFgh7C4YaPxTja2ZXNp4ywpuQDqnHKqagVay
- 6sK8nVCgDMLFNWmXhhtPbmY0ILgfZ/Rx1wwQraY4cAkHhbiM73boA6Qn0EFHnE0TbA9uk0hE9hM
- 0aQ7pICcGC7s0vQ==
-X-Developer-Key: i=david@ixit.cz; a=openpgp;
- fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
-X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
-X-Original-From: David Heidelberg <david@ixit.cz>
-Reply-To: david@ixit.cz
+Content-Transfer-Encoding: 8bit
+X-ZohoMailClient: External
 
-From: Amit Pundir <amit.pundir@linaro.org>
+This series refactors the CMAC implementation in mac80211 to:
+1. Remove unnecessary operation
+2. Add proper error handling
+3. Remove duplication
 
-There are firmware versions which do not support host capability
-QMI request. We suspect either the host cap is not implemented or
-there may be firmware specific issues, but apparently there seem
-to be a generation of firmware that has this particular behavior.
-
-For example, firmware build on Xiaomi Poco F1 (sdm845) phone:
-"QC_IMAGE_VERSION_STRING=WLAN.HL.2.0.c3-00257-QCAHLSWMTPLZ-1"
-
-If we do not skip the host cap QMI request on Poco F1, then we
-get a QMI_ERR_MALFORMED_MSG_V01 error message in the
-ath10k_qmi_host_cap_send_sync(). But this error message is not
-fatal to the firmware nor to the ath10k driver and we can still
-bring up the WiFi services successfully if we just ignore it.
-
-Hence introducing this DeviceTree quirk to skip host capability
-QMI request for the firmware versions which do not support this
-feature.
-
-Suggested-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Every patch in the patchset has been tested with mac80211_hwsim and the
+result looks good.
 ---
- drivers/net/wireless/ath/ath10k/qmi.c  | 13 ++++++++++---
- drivers/net/wireless/ath/ath10k/snoc.c |  3 +++
- drivers/net/wireless/ath/ath10k/snoc.h |  1 +
- 3 files changed, 14 insertions(+), 3 deletions(-)
+Changes in v2:
+- Remove words in commit messages stating that only compile is tested.
+- Remove Fixes line in patch 1/6.
+---
+Chien Wong (6):
+  wifi: mac80211: remove an unnecessary copy
+  wifi: mac80211: fix CMAC functions not handling errors
+  wifi: mac80211: add generic MMIE struct defines
+  wifi: mac80211: utilize the newly defined CMAC constants
+  wifi: mac80211: refactor CMAC crypt functions
+  wifi: mac80211: refactor CMAC packet handlers
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index 8275345631a0b..ba5ab942e7ef8 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -808,6 +808,7 @@ ath10k_qmi_ind_register_send_sync_msg(struct ath10k_qmi *qmi)
- static void ath10k_qmi_event_server_arrive(struct ath10k_qmi *qmi)
- {
- 	struct ath10k *ar = qmi->ar;
-+	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
- 	int ret;
- 
- 	ret = ath10k_qmi_ind_register_send_sync_msg(qmi);
-@@ -819,9 +820,15 @@ static void ath10k_qmi_event_server_arrive(struct ath10k_qmi *qmi)
- 		return;
- 	}
- 
--	ret = ath10k_qmi_host_cap_send_sync(qmi);
--	if (ret)
--		return;
-+	/*
-+	 * Skip the host capability request for the firmware versions which
-+	 * do not support this feature.
-+	 */
-+	if (!test_bit(ATH10K_SNOC_FLAG_SKIP_HOST_CAP_QUIRK, &ar_snoc->flags)) {
-+		ret = ath10k_qmi_host_cap_send_sync(qmi);
-+		if (ret)
-+			return;
-+	}
- 
- 	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
- 	if (ret)
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index b3f6424c17d36..4def51cac2ed5 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1346,6 +1346,9 @@ static void ath10k_snoc_quirks_init(struct ath10k *ar)
- 
- 	if (of_property_read_bool(dev->of_node, "qcom,snoc-host-cap-8bit-quirk"))
- 		set_bit(ATH10K_SNOC_FLAG_8BIT_HOST_CAP_QUIRK, &ar_snoc->flags);
-+
-+	if (of_property_read_bool(dev->of_node, "qcom,snoc-host-cap-skip-quirk"))
-+		set_bit(ATH10K_SNOC_FLAG_SKIP_HOST_CAP_QUIRK, &ar_snoc->flags);
- }
- 
- int ath10k_snoc_fw_indication(struct ath10k *ar, u64 type)
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
-index d4bce17076960..403f35af34c5d 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.h
-+++ b/drivers/net/wireless/ath/ath10k/snoc.h
-@@ -50,6 +50,7 @@ enum ath10k_snoc_flags {
- 	ATH10K_SNOC_FLAG_MODEM_STOPPED,
- 	ATH10K_SNOC_FLAG_RECOVERY,
- 	ATH10K_SNOC_FLAG_8BIT_HOST_CAP_QUIRK,
-+	ATH10K_SNOC_FLAG_SKIP_HOST_CAP_QUIRK,
- };
- 
- struct clk_bulk_data;
+ include/linux/ieee80211.h |  14 +++-
+ net/mac80211/aes_cmac.c   |  60 +++++++---------
+ net/mac80211/aes_cmac.h   |   6 +-
+ net/mac80211/aes_gmac.h   |   2 +-
+ net/mac80211/rx.c         |   6 +-
+ net/mac80211/tx.c         |   6 +-
+ net/mac80211/wpa.c        | 144 +++++++-------------------------------
+ net/mac80211/wpa.h        |  10 ++-
+ 8 files changed, 80 insertions(+), 168 deletions(-)
 
 -- 
-2.51.0
-
+2.51.2
 
