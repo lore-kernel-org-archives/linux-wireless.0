@@ -1,100 +1,161 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B5934EEFD;
-	Tue, 11 Nov 2025 10:38:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A81A3A8D70;
+	Tue, 11 Nov 2025 12:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762857482; cv=none; b=Cbet6jAsuPQN9R1cMsegJMcxHwYrTLcVtNC72F8nLTysh/HbVnVZ9YGjcWm66ScmCnIPLfNdz+mHbTbSaGmgEzKfw/uTbogejkJVkkX6cCWrlOuaCpygXetps2HYpypG0U+8/orhwum09VwA3c6DT8pTu3Pd6V1JX8grIDA5LOk=
+	t=1762864464; cv=none; b=Yky1toHMc2Zfvdsxd3YUsLJ5U3J9NuHiuyUxhsqMhH8QeSHgL6VcSltfT3egA3O2n6S83uJMQ/3N+kY6c0cYuASwdQVSv83DMJFOk/E1VwX0W8h/lqUt3tFzqicfyztbpeKD4vAeKhsUo1OK6yj4zBhCwT+qVvw5li4LuGR3C/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762857482; c=relaxed/simple;
-	bh=O9ExOg0yKLZyNmbPDTOwbWAHpupzhy530qR9/3ZGr+k=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=h+gD8QAl+dWQ9ZswVsFOesyTH/k3T33FMdWOYoPYupwLHUXjB4t2UHtmRVl/HxuAYh6sbeZy1+e4qkf5THtb2wp04TqUt+C5ztq0x+hLfaIpBs4AzxIGdlmCafllm3Bl1Es42KwbPnbPP6Ij1QthdHd0suBQUHydunSLYpGGWj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=bE9p2S6/; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1762864464; c=relaxed/simple;
+	bh=D4wbUhiFW8lL58BJ96tV/S4vY+chn5S9Zd4+E3M3Z0k=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=E3G4zsr50FnB4L0ktquuCFbTdMTQ5/XlotDeNl1vZsyHvUN753yjghE3Qx1pYIpp+UcZTOOihQQSNusV0lASiBP+a6ef3DCJ48N8YNo3KaO6+RJMg7cTFT5sgPVtK5yBbooMKHp6gQ9IrybKzbcf2Ws/f6LCSr2vG8CTtTQ7gzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SpN6pEHQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="bE9p2S6/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=RPfgqO/sDrhGLaAy63MtQwxM65Vqarp77g2HAO5cYOU=;
-	t=1762857480; x=1764067080; b=bE9p2S6/j2kCn+ncoVWIGBN/8fROujkTx1sjwB0khrnUEQd
-	6tuE1+XoWpvKIRasMSgeqJ8X/VmdiRgPl+NLdaHOxpIsxYI5FBZV2Tb8ql0BM+iSVRjL7+Vsqpmpq
-	wevZ6UkxZjmitGYsyldBlsAa4PCsJZ7w7D+0DeuXOMPhFeZpXjTGcwPkqHeA89J1A06pC//ydAqGm
-	KGEfODu6l3mGkpHVn6fVIIhdgHeHrUAWLARmwNf8aaaBrddOhw+T6QFuFL9H7Xavl1fbexpRTH36S
-	BM8wjwFHxS86560k5a+XQJ5HkMhj2oKhsbLNJJJiwp6tjiAQ+6t/7YQSytmXXmsg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vIll7-0000000FSlW-3UZn;
-	Tue, 11 Nov 2025 11:37:58 +0100
-Message-ID: <4eaa11d66e9b788d9824c5b8ab1f1618791b53f3.camel@sipsolutions.net>
-Subject: Re: [PATCH v6 00/22] wifi: nxpwifi: create nxpwifi to support iw61x
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Chen <jeff.chen_1@nxp.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, briannorris@chromium.org, 
-	francesco@dolcini.it, tsung-hsien.hsieh@nxp.com, s.hauer@pengutronix.de
-Date: Tue, 11 Nov 2025 11:37:57 +0100
-In-Reply-To: <20251105104744.2401992-1-jeff.chen_1@nxp.com>
-References: <20251105104744.2401992-1-jeff.chen_1@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SpN6pEHQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C163EC19422;
+	Tue, 11 Nov 2025 12:34:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762864463;
+	bh=D4wbUhiFW8lL58BJ96tV/S4vY+chn5S9Zd4+E3M3Z0k=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=SpN6pEHQvQisjuZ+MYq5O0aTZM4syGd4jvueEvbxoaPIJ+UzQamzcyeOddIZ+3t8B
+	 OS8xitaYndGrIpqUHIErnKLQM6i3iCT4GtXuGNwzR8aPFRGu0H2bUv7HzYQrAU3NvH
+	 F43KrJf8hj0K7e9ZglHuDDsL0hXmZCSUxIfsuV8xpb07+MauiWTkFcbWxBu2EyNfQf
+	 UJu1kWDMdxzsWAhVVG9WjIHMRMGFUff4VRIhLRdtoPNmdShsaiTgwM3+T2LR4Ktzdh
+	 W3O8DNk23932Pw65hLvWxghQOtLhUW+QmTZpY89Cz2GzPr+ChT++4Vcklo1JKKS4r0
+	 +VI0orQbRNMZQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7977CCFA1A;
+	Tue, 11 Nov 2025 12:34:23 +0000 (UTC)
+From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
+Date: Tue, 11 Nov 2025 13:34:22 +0100
+Subject: [PATCH 1/2] ath10k: Introduce a firmware quirk to skip host cap
+ QMI requests
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251111-xiaomi-beryllium-firmware-v1-1-836b9c51ad86@ixit.cz>
+References: <20251111-xiaomi-beryllium-firmware-v1-0-836b9c51ad86@ixit.cz>
+In-Reply-To: <20251111-xiaomi-beryllium-firmware-v1-0-836b9c51ad86@ixit.cz>
+To: Jeff Johnson <jjohnson@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Joel Selvaraj <foss@joelselvaraj.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ devicetree@vger.kernel.org, phone-devel@vger.kernel.org, 
+ David Heidelberg <david@ixit.cz>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3152; i=david@ixit.cz;
+ h=from:subject:message-id;
+ bh=5FMo9aFaXqxUB4HypgN53V7+QK1qunFr3c9JmlKcclY=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBpEy1OcjSNQgfs3SkjYQdqB3Ac1e1i9BymzVK5p
+ q4Vd41ioPWJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCaRMtTgAKCRBgAj/E00kg
+ cuyWEAC9D0030HM8wP/qOsIJRe/Pu8yq1QRUwOLD8sGwTzLPMwrqnQvJxZAZYY4KDsblKksdaqB
+ E6isr1E4Rwhw5/0C/CLclqBDTR5rESUqxnXB2wgAnRtIS6Gcf4V+Eoo5tNWo9NXoxES+dcfEfm8
+ iIHczTJEU1p+gAeI4FBS548n3rA52l99eq15iCO7gMwGZaPWsJimQm3wrtQujkBQc+WKwCb/GgX
+ +nOIXwd6X13j1/zyk8BVIud1PTTvzpWIjmpEPiQDig0/KJIfU1RecnWuMXmW3C+Y/peFjpJmnXb
+ lv1/40F5WjdPWiViIpu4ilAO2FIdjcrkJzIRReREHA/9yHb8I+p4FDwIO5qGEe7Q1eSYp6jmqAb
+ cbG6mvK8RmkwE71vUk8CHTnRTmLyJd/CWmLXHUTEfxWljiy1sW8emsS8QhVpuizCrSMeplh1aqA
+ QMvB51XPKAIaiabfWZnS5LcAeGgd0o77VBCI6R+PK9ijJOpwH8hguuOh6Dev9VT4DQh1fRu7qsr
+ vYTvxKNFVTRtICrzq5G8AtjGIy0aaBhjsNUvQBLukVtQoQKl2DEiw/lTz38Ghxo03IEc9kxLI3k
+ zhUodl6gKCl6O9hByLElR7Qjxx4cbAxFpuqxtPSIp7jXvKpb+TCpZxOEWc82FMTaT8CgWttDnwV
+ R1n70DsqzVPrzBA==
+X-Developer-Key: i=david@ixit.cz; a=openpgp;
+ fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
+X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
+X-Original-From: David Heidelberg <david@ixit.cz>
+Reply-To: david@ixit.cz
 
-Hi,
+From: David Heidelberg <david@ixit.cz>
 
-So ... I thought I was just going to pick this up now (removing the
-'inline' in patch 4 that shouldn't be there according to the bot), but
-... it doesn't build (cleanly) for me.
+There are firmware versions which do not support host capability
+QMI request. We suspect either the host cap is not implemented or
+there may be firmware specific issues, but apparently there seem
+to be a generation of firmware that has this particular behavior.
 
-First:
+For example, firmware build on Xiaomi Poco F1 (sdm845) phone:
+"QC_IMAGE_VERSION_STRING=WLAN.HL.2.0.c3-00257-QCAHLSWMTPLZ-1"
 
-  CC [M]  drivers/net/wireless/nxp/nxpwifi/util.o
-drivers/net/wireless/nxp/nxpwifi/util.c: In function =E2=80=98nxpwifi_rxpdi=
-nfo_to_radiotapinfo=E2=80=99:
-drivers/net/wireless/nxp/nxpwifi/util.c:648:12: error: variable =E2=80=98ex=
-t_rate_info=E2=80=99 set but not used [-Werror=3Dunused-but-set-variable]
-  648 |         u8 ext_rate_info =3D 0;
-      |            ^~~~~~~~~~~~~
-cc1: all warnings being treated as errors
+If we do not skip the host cap QMI request on Xiaomi Poco F1,
+then we get a QMI_ERR_MALFORMED_MSG_V01 error message in the
+ath10k_qmi_host_cap_send_sync(). But this error message is not
+fatal to the firmware nor to the ath10k driver and we can still
+bring up the WiFi services successfully if we just ignore it.
+
+Hence introducing this firmware quirk to skip host capability
+QMI request for the firmware versions which do not support this
+feature.
+
+Suggested-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Signed-off-by: David Heidelberg <david@ixit.cz>
+---
+ drivers/net/wireless/ath/ath10k/core.c |  1 +
+ drivers/net/wireless/ath/ath10k/core.h |  3 +++
+ drivers/net/wireless/ath/ath10k/qmi.c  | 13 ++++++++++---
+ 3 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7c2939cbde5f0..7602631696798 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -773,6 +773,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_SINGLE_CHAN_INFO_PER_CHANNEL] = "single-chan-info-per-channel",
+ 	[ATH10K_FW_FEATURE_PEER_FIXED_RATE] = "peer-fixed-rate",
+ 	[ATH10K_FW_FEATURE_IRAM_RECOVERY] = "iram-recovery",
++	[ATH10K_FW_FEATURE_NO_HOST_CAP_QMI_REQ] = "no-host-cap-qmi-req",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 73a9db302245d..b20541e4046f8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -838,6 +838,9 @@ enum ath10k_fw_features {
+ 	/* Firmware support IRAM recovery */
+ 	ATH10K_FW_FEATURE_IRAM_RECOVERY = 22,
+ 
++	/* Firmware does not support host capability QMI request */
++	ATH10K_FW_FEATURE_NO_HOST_CAP_QMI_REQ = 23,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index 8275345631a0b..5dc8ea39372c1 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -819,9 +819,16 @@ static void ath10k_qmi_event_server_arrive(struct ath10k_qmi *qmi)
+ 		return;
+ 	}
+ 
+-	ret = ath10k_qmi_host_cap_send_sync(qmi);
+-	if (ret)
+-		return;
++	/*
++	 * Skip the host capability request for the firmware versions which
++	 * do not support this feature.
++	 */
++	if (!test_bit(ATH10K_FW_FEATURE_NO_HOST_CAP_QMI_REQ,
++		      ar->running_fw->fw_file.fw_features)) {
++		ret = ath10k_qmi_host_cap_send_sync(qmi);
++		if (ret)
++			return;
++	}
+ 
+ 	ret = ath10k_qmi_msa_mem_info_send_sync_msg(qmi);
+ 	if (ret)
+
+-- 
+2.51.0
 
 
-Fixing that, I not only get a LOT of sparse warnings such as
-
-  CHECK   drivers/net/wireless/nxp/nxpwifi/util.c
-drivers/net/wireless/nxp/nxpwifi/util.c:654:40: warning: restricted __le32 =
-degrades to integer
-drivers/net/wireless/nxp/nxpwifi/util.c:655:38: warning: restricted __le32 =
-degrades to integer
-
-but also a bunch of sparse _errors_ such as:
-
-  CHECK   drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1043:17: error: typename in exp=
-ression
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1043:24: error: Expected ; at e=
-nd of statement
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1043:24: error: got const
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1043:17: error: undefined ident=
-ifier 'static'
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1058:32: error: undefined ident=
-ifier 'legacy_rates'
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1058:32: error: undefined ident=
-ifier 'legacy_rates'
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c:1059:40: error: undefined ident=
-ifier 'legacy_rates'
-
-
-Can you please take a look at that?
-
-johannes
