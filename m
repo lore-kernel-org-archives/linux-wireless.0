@@ -1,311 +1,160 @@
-Received: from mx07-0057a101.pphosted.com (mx07-0057a101.pphosted.com [205.220.184.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f208.google.com (mail-il1-f208.google.com [209.85.166.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F9C27B4EB;
-	Tue, 18 Nov 2025 07:51:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.184.10
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763452265; cv=fail; b=DADGWqBubxTYs1mQl+MFj5CjeSYsaDPEgKmM4cLSvcKVB7XQj4mvuYPu7qlDbOEwf51zgmmwmMxB3bD55UF0lfXV7oJiermA/kCJm67lK8o9dxj9lNlWAE9aX2OaMIZ2sCLt2BnfC2ZXlFvigZBmQ/0vC6s1DnoazBPc80FRUtI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763452265; c=relaxed/simple;
-	bh=yLUG7hkp/TJPgnIGpOQNMG5JCcr6pcAYDtRYvmyyg48=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=i3r7th/1g1GKAd+dK290tLILCmn6qLQGJeQMGDBnOZq4vQ+W5ohhINV54H3ZSemHORBTVLPbJe96bPSnoWl2tdJHc6+qIQ4ciMnBA0sVobiJINUJIis+JTGxBP0GdWHK46FPk/u8aYBpWsEiBIVMsiSnaecULfzFYcKRFM8wLwQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=westermo.com; spf=pass smtp.mailfrom=westermo.com; dkim=pass (2048-bit key) header.d=westermo.com header.i=@westermo.com header.b=d5VwVFmh; dkim=pass (1024-bit key) header.d=beijerelectronicsab.onmicrosoft.com header.i=@beijerelectronicsab.onmicrosoft.com header.b=oaXMmKmx; arc=fail smtp.client-ip=205.220.184.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=westermo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=westermo.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=westermo.com header.i=@westermo.com header.b="d5VwVFmh";
-	dkim=pass (1024-bit key) header.d=beijerelectronicsab.onmicrosoft.com header.i=@beijerelectronicsab.onmicrosoft.com header.b="oaXMmKmx"
-Received: from pps.filterd (m0214197.ppops.net [127.0.0.1])
-	by mx07-0057a101.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AI4xg4w1616082;
-	Tue, 18 Nov 2025 08:21:27 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=westermo.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=270620241; bh=DBboLab0AR8P5A6Cgs895W
-	ft4Y5VWKqyrEnS3qGrpWM=; b=d5VwVFmh6oRBsxSFWKFqkP8BOzGT77s0cxHVMM
-	PuhiNkJEArJgt00SriibpoDQDSriu2YDZsuOirVjve5DOLxS6dP7fduf13ibHrbK
-	0d6oyx8NOchxRYaWGasMmQQXgDb12DOsHG8UApfdJfbPLgoGgiwt7BefA0OBkgmW
-	9vd5ZuRvT6IbMeJuQNobjIWcErlOS8uNKq8kztQOkFhVSs8Y3BfZ4SEsVAjy7KUH
-	fV3jFsto3+5MPGjn56IoS39Fq5eaNcuuYwyJxFIFsorHp82KtsxGAfWYCX4yTuU1
-	DMyKPv+oOdRH2aXiBSo2/am4P3mS+whut291twYWm8aivwCA==
-Received: from gvxpr05cu001.outbound.protection.outlook.com (mail-swedencentralazon11023072.outbound.protection.outlook.com [52.101.83.72])
-	by mx07-0057a101.pphosted.com (PPS) with ESMTPS id 4aeercawpn-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 18 Nov 2025 08:21:27 +0100 (CET)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vTnuYprxbslTi3IB5/Kibh3OFyyPiQHjfvDI/iY5CkcIOFO/3dOZz3hI9UoqPHADAGeTDNdFeaMw9ux1OLfIeevZ0mqsFy1F13CUv8iyhMqVxwYnfyTtiJGfQbP1ZAlkxATarefsab3PNGlZLD3DCAP8cMTnHkHkNAHiYfRe/s7aSgFC1ivPKcn3mZ0KK79+5vTev0AKGkyyUmzA+PQc/wssqp4vTTH8vwfj6rXLLiHKeML6kZDgPNbhhnTFGLKQDqWDGdxoxydM5Mp32U2VcPfsfG2gPQpfdVxwqhxtlGhZQmysJ0/wRvp+OLE2+3lJQFz6sX3j0Rt6JJUbA5Pzdg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DBboLab0AR8P5A6Cgs895Wft4Y5VWKqyrEnS3qGrpWM=;
- b=mkpoMawTG896OvFItBWtzIOB7IV+gZ9et9gcGfXqiGM/jeE8lReFiqs2E0/76eCNfobXizTOwGxe0CtIWj6jsFxK54ykecHcEQ09h47feuD1vQ+uM/tEzSpIppi/Hdfi+mKQ+TzsKqQAScus91G2fxIUhRVZoULLSl73OIga8X9PebT8HJZoMyaC7f3DEimEGfIJkA+QfgxOtVDfnEXU3dbZnKks9xQOjAD5PH7iszlCR+t3wrWldwGlfhFzGdfYO0xetkpTymJwRLQUL9UtD4/48Vi0sefsGpNx97EVryuZ9ioOZqjjWBXUm4fAaNdoVdtxMAZcDDXo7MnnbfUsIQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=westermo.com; dmarc=pass action=none header.from=westermo.com;
- dkim=pass header.d=westermo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=beijerelectronicsab.onmicrosoft.com;
- s=selector1-beijerelectronicsab-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DBboLab0AR8P5A6Cgs895Wft4Y5VWKqyrEnS3qGrpWM=;
- b=oaXMmKmxz5cb915r8DzHU8/Y/w8eB/M61mA2d/HhuZmvgSPbX4bthQOdcEigK0FUFFu7woZBlVz2g1jmZ/tPW2uqGgKyABZATJV/GEG701cKd0sjjwxJ6eg+SwYUrHYiydePw2f0ZuM/Hcnu+AeuApX6/XG6gSkDQm+FdwvZscM=
-Received: from FRWP192MB2997.EURP192.PROD.OUTLOOK.COM (2603:10a6:d10:17c::10)
- by AM7PPF9D10A4C88.EURP192.PROD.OUTLOOK.COM (2603:10a6:20f:fff1::65b) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.22; Tue, 18 Nov
- 2025 07:21:25 +0000
-Received: from FRWP192MB2997.EURP192.PROD.OUTLOOK.COM
- ([fe80::8e66:c97e:57a6:c2b0]) by FRWP192MB2997.EURP192.PROD.OUTLOOK.COM
- ([fe80::8e66:c97e:57a6:c2b0%5]) with mapi id 15.20.9320.013; Tue, 18 Nov 2025
- 07:21:25 +0000
-From: Alexander Wilhelm <alexander.wilhelm@westermo.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: ath12k: fix endianness handling for SRNG ring pointer accesses
-Date: Tue, 18 Nov 2025 08:21:21 +0100
-Message-ID: <20251118072123.19355-1-alexander.wilhelm@westermo.com>
-X-Mailer: git-send-email 2.43.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: GV3PEPF000167FC.SWEP280.PROD.OUTLOOK.COM
- (2603:10a6:158:401::679) To FRWP192MB2997.EURP192.PROD.OUTLOOK.COM
- (2603:10a6:d10:17c::10)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CB730F551
+	for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2025 09:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.208
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1763457148; cv=none; b=uQGODKtdkQfAQj0URkcaibb4HYdpUkjMdOOLfrKzOLE96sXl10wsStNNo3epHMikJaNjpN9LFCRRFWZI/N2O3np4Kq67ORKHszpD3UU3EAmleGib4IseFghgyX95veTdBtJOXmzhDRLqkjp9GuADN1sPuuMKHHOPZOMiqAUf/WQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1763457148; c=relaxed/simple;
+	bh=RMHiKfDDZRF4XKtK3FvegO8GyEZ0WcrzD9nGISsyTbI=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=QgklhtOuKEb/b0MiFwGJazKPUnAtvWdp6jiJIOrhnUOra+bFKJH4497O/GUcrB857xIEZ1/Pb2a2BpEUmgOf8Z2g9/9jRqx3oD0YI/j2qMcKMhGO1IfJ58gyALF3Q8aQ4pX/4h/BA9fzdLPHZMkCy7DDZSPVkDrgLQVBvl+oMdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f208.google.com with SMTP id e9e14a558f8ab-432f8352633so99962775ab.0
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Nov 2025 01:12:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763457144; x=1764061944;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZCPCBiDseJTYHAymJetqpym/2ftXtJI5iOpKOSwwOu8=;
+        b=JbE1xeQeOQNRiJR7OTMZh3ErdYS5pRDCjg6GVKJcUnhQSmjWok/04nCdFCxR/5Tw6I
+         GiW18qt9fGO3QNfor8dlrHHeG6AgdHAExLUqMdLErAqE10Mvh2dVwQu9PvX2IYGTSBBp
+         Q3FqYAoaq0a1VTWzXyDW2w5IY4AAv9EFLVLMiNs6WBqz2u+HYNO+mVQXcej8II8w1Ge/
+         lwdFpeYjEvkmNmVZM3xbkYEJmFq53RSwtrqmO0F8emG1FjOlBRheMVEMYZ/lZ/UV5cN0
+         g/GtHv91shWrK13hsTqgkA4fHp5uoSewcKqPsiY++tlJ3FDvXL6pLZbbSPn4YJMyyldF
+         htFg==
+X-Forwarded-Encrypted: i=1; AJvYcCUo50+btJZHR9ZWhwfiuDGXRTMRwi7vXM0pxP0zY5k4B467b2yoDnKJhelqZZxgFi54Kyn4hH8x8Q92VKQ7hQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPn+yol8s+ezWLGvAb7Y7F2Q8UeOYEtUVBT30x6XUvEE5vO9c6
+	yJkw0iw/Wc/5VZ6oeMC0HvDQmLWTmFt0jw8cc9Ki5NdV96X3xKxkMHuW79SSfqXrpiTUdfQmqqS
+	SCR4k0QxBwqzG2vCCo5Kk1pyjJT13bZdEs4Pn5pMcNmcTFRdYqaiRXUtJJVg=
+X-Google-Smtp-Source: AGHT+IHbXwBOmPJLm6wPLuoglDX5/xd6oe773wnP4kFD6s8nnbvi1P7vk4tk6PUBU6UeysoSGSqlg9jn7cKoVjP7wvVISevaja92
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: FRWP192MB2997:EE_|AM7PPF9D10A4C88:EE_
-X-MS-Office365-Filtering-Correlation-Id: d91a227d-8647-4a54-7f5d-08de26731522
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?ANI4pPuZWsXgI5aP2TzliPSTne3p25993O/gaRQKNXjpRcIFu56hJxmDdTyy?=
- =?us-ascii?Q?xUJ7nopgYIE7XLZ6iEgZ5YBQ76caJbRJ/u98LLx0EjoE3rbCJMTjQpu7ZgqD?=
- =?us-ascii?Q?T1ShunfbmB9iZU721n8WPNJj/uWn5itdGX7NA4wHgFUncK5wp/BKdFQnwc0C?=
- =?us-ascii?Q?tK61SR7U0+RYfaSwGqcycbpOEOZSHqtebQL8y7pMpITzFDCo+BpqjbF3WKTt?=
- =?us-ascii?Q?Afgv/rvMOzifitiOZkgksMELf6TPbnq57QtJ/vbIj3Iwr24J3Pnwcp0v1rrw?=
- =?us-ascii?Q?tQSIqXsw8691skHGzCYmLvZD7LBFhwPh5pvEyi51Tx4zv0cifxs8Tn68Z53B?=
- =?us-ascii?Q?jtsq5kfxW3RCr1g9piXAKyzH2GtB2HQnbnK3jMPhMFMjOL7Hhc8CnWMBi9y7?=
- =?us-ascii?Q?5ispg7Rd8SOQDalUDAr9vTnG522sIOcBUnywFzGIyA2hku1sv3UREe1FFyY3?=
- =?us-ascii?Q?Y0lcFIYKLXoPDx60JPyTO0a3uUtM16bGPb7rt0XLqgwNBFefG5H3RIkPyYui?=
- =?us-ascii?Q?WodrY2+aMvv/jmTTvY9EDiZGwSxsxAzaxu5ncC9QyKr0s/x+aCym0rpeWLK3?=
- =?us-ascii?Q?aOwUFWK2nALexGncqBABPw6fY5FUqT5z0aMs8hXN96XUXM8Jzob4Myi25hGj?=
- =?us-ascii?Q?dr6QvUxnen2g5yxaC8BWNo7kJ356syAWVGS7cxusjKYBr3JCkpOYuq5XIk2D?=
- =?us-ascii?Q?4pMnnZupQzxFx+VNwfuA9Dc5zLXElUcJBCia1DQiJnjdnhZVraadUTUuh+X7?=
- =?us-ascii?Q?wslT4aPRDFJrg/eoZ31Cv8ABVvw06vh3n4sp7/NPjz8O2X0OvvrsqvM75BSA?=
- =?us-ascii?Q?xyoWx3iZyxe22S7qD9+C9pnmV0G/MOcy1bWLgNwabo/EaUwHMzHeGCCnrvnA?=
- =?us-ascii?Q?ZAQckIPmTkq2NJ01oHn2sfIT/7SkV8ROyY2zSkLKMlUyLNNGG7mMoDwa6hp2?=
- =?us-ascii?Q?QMp/lQAjkYKl87HYC2pRT40mxv6JfTp9oMncrZlRbVUP/gPRvRzETiAxTlVn?=
- =?us-ascii?Q?zwEMmY7/Kl0AFwQEJNQCx3pXLMLyELjigq1TV7VdOOUasZlNVGRMuGy5pF1F?=
- =?us-ascii?Q?Gm1a+7IHL+8uGIXufUmn2ROp//1j2b5MJyrXK1Qc0JcXONonB0El6m5WORQ7?=
- =?us-ascii?Q?OO1o/Yg2i4ah3MRPGT5glLvwPfjXhS438E29co4GxIFVSr03apDSIQF6Ec3W?=
- =?us-ascii?Q?iWBVg6HHnzzhcTvRTOgOu+ATsJFJ5B+N9sXQM73SKV+3R3ddW5DXM4BHAgpK?=
- =?us-ascii?Q?VYlTOPaiL+RIM1YJe2CpjDNJJmghqvtZzbWr/Nfu61fOkLQT9282kyc45Q0C?=
- =?us-ascii?Q?2lSnfPb5OPbi5g2eNd7KRXJDJJIsQgwA7uIULmtOPJoH2ZcNUQGkIMVTmX7S?=
- =?us-ascii?Q?TbD7nrVvgZIAfy/sBM06CGziVtyGWIS1VLG6rb33mlE9rlC1pGvAi3QwUHyN?=
- =?us-ascii?Q?6OodM1L+uyICGPjhOHWE0YhboBNQEnzb?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:FRWP192MB2997.EURP192.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?XghLI9wHAwt134XtuNHwvY9N9TjKJm83WdYBknSd2MeQApmlvG8/BJNCEKpl?=
- =?us-ascii?Q?IoZPg1+5Ta51v7zRLfB8PvbG89u+FGc50D58bybNhHKk52YXCYoDxA4HsrLo?=
- =?us-ascii?Q?En0adBwwyUBN/oB8Vorp4OaiDO2eHJ7WU9xnjxtfY5rpmVMg0EM+DCyl63TT?=
- =?us-ascii?Q?VHIe34EZsiBE17OxcTnd0f9TwBy102WAdMVy9zJZnwwB3dLxkVx1p673qBqr?=
- =?us-ascii?Q?m9Xk1KxwHodAvKtp9QxQdMHOZnKwZaa/NO3n1HXi+KJHgp3PUiX36UCAlHq2?=
- =?us-ascii?Q?9SRNxPyOZZjaXhFqVZi5iiMFiJ6icOEltF3yaymdr7xN/2p3HkLqtBvCQc52?=
- =?us-ascii?Q?E7rBYEXhcYO9aqV1E/lvawZvD9LIly1jWvwOt3/4hh1L3AlZGNUNZrPo9GFh?=
- =?us-ascii?Q?txs+fZqn7h1ZhvCyEdh4Bxxy0y8RhUWxUOmT7Fouu6ykWqgvNWNiTh8z1yYV?=
- =?us-ascii?Q?/qUVgzvPsZLGpX6Dp7b9sPif8XJ4xa1rAwt5PXGW/Fm0jVRik671vbVj0LWY?=
- =?us-ascii?Q?gxkimat3ZMjHKdJ7HNm4DJM/tTsOkNxICoX8IDQvdbFNHko+hJrp8T3cRmP1?=
- =?us-ascii?Q?7Ro/x2RP5QLKC+WHPN0Kfh4XkVN5+/014OURtYz98X2+dbBIurh2Kp6wlv1L?=
- =?us-ascii?Q?JnasqPtvWBeqoVW3VZG14YC6nu02UvY2Nbgku5ezVdw7SLkITsZ0Icd1KMae?=
- =?us-ascii?Q?05vnOmGASooR9oBVWrmt1XbTACzFdTFgdNSwP46HJs1xmmfgXVmdCa5JD8Td?=
- =?us-ascii?Q?lw7q1Wrp1pllI8CvbSXR3C1UcjArVyDrScsF503kwB9vRl7gKrkwx/vp3fHB?=
- =?us-ascii?Q?4GQBlNsL6A9BpTyEyE22MDj+DH+b2tW5Es0RU5e19jziSz/xFp4SJBNPDz7E?=
- =?us-ascii?Q?y7MWQz5VoKJbWWRFy+ATb88tr+m8cgLigMjsCLQsWLPpj+KzjSJyEeP0MrWV?=
- =?us-ascii?Q?slnSZ1pu4eIXiNyLQg3ax4/NHcZRd3Nz4YQ/a1/WMm5poIKU2+HQWkNp1N2a?=
- =?us-ascii?Q?9P+B5eSj8e8IDi+j/O+v0E7XmXbl/Gh1BEkszSggsIWQxTZnJ3QjjKVYY48Z?=
- =?us-ascii?Q?SMYuDjEPnAq/TzwVD9k4wMSD314aybpAaWMg1XhnvyFaw8T0LqZOSetEJoO/?=
- =?us-ascii?Q?VyUjcRDmFxNuw3zWOUNmaoaVU3em27PddVK7dJ2gnsQTLHOglXcuF46ZHuOc?=
- =?us-ascii?Q?0gGwpo1tjGOJhIciRxRNlgdzLlosDGjMEqqBboadzqhgnWZmHBuL5M2olQTz?=
- =?us-ascii?Q?J/kXBt2uS5sqH7OSIP3NXCAoqTjgPWtG4lW+SUNS0WfzN5Mt6yfXbFWLn/h7?=
- =?us-ascii?Q?tmdzQ1iHNZG4wx6SY9zUQb507/zQOKc8AQ3BWVCVaqSuoG5VSLxUCC8lUyrt?=
- =?us-ascii?Q?zwqAnBDgJW7AxcCBQ0fgACzndK11TRl/HoZw2hdEeOWIeJ3Uiq3BQwYPw5Hd?=
- =?us-ascii?Q?kIQHcwLOBBE5SdIWNOBGftKO/45vwLJDRb7SFm1IvcxjZa5nwc71cxlYm7hp?=
- =?us-ascii?Q?slM4H/QrLvfhDA4JleJ58HY0Ka+BAXl189/YdYMbmDiQk8vjUU67C70X+cVb?=
- =?us-ascii?Q?kx+Oc2iMQIlRs23zf6x7SLh7Y4eO0xflfVdB8Fj9?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	fcNVCq6QNUM0XOvMtaY/TUJASnoGhIb+JB9whwYRJsG5JIskU4IlUavsp1sbSJF73EXXxNQjUVyExZQfHcUwOyN7vjyuTfpmwTj8XEjZtmmHMkBamp7fZ7DpPR4RHM/tXwF80WihBNvRMlxuApHpDnyTewpq3NPooYZh3FdrkKYPosOP8aWqmzfMEfdARHIKMhYUzRBh28tiOlxsqSnR4Of26TRAIuPclCgC9DOGIzJ7oOnpW9NOoH89XQth9YYk3CpfHTjeQZxSnqNRSED85PA1jTbAtFJRwRevXae407LeF14XnVMBUUqsouuVw80Xk1rolTK5KgUi1OE/0f+oBZIHwK+SBCjDQEOvhan80UOD55Y+8WCyr3Pp4xX0xNqHRuN2IODz61F0sUutZBkU0VDKzeN+N2Bbq2jEjKLZhFb8VwRCZgHn5ykX6G5FANkB00DcZrE+zrGPYsUygAS2q5ldkgA1kQTBW66lQqmObNUA/MJxLBXVm2FTO+O5ZgdYN/MnnEoH9TXPwBv8rGO3hK3pGTXmR4LtaPEuqGaVCohgCOvW1Ln03XWzx9/ZKGBWfZ3mUsS3O9V+vOpuY3yY7Ll5LTsz4+XuhKOuOhh1VThY9ACAMd7D1kctvHt8sSAk
-X-OriginatorOrg: westermo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d91a227d-8647-4a54-7f5d-08de26731522
-X-MS-Exchange-CrossTenant-AuthSource: FRWP192MB2997.EURP192.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2025 07:21:25.1411
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4b2e9b91-de77-4ca7-8130-c80faee67059
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: aKvRt/AJe1v86ZDIdKnd5IHkZnFSl06FwU2R3e6qumgM50vTFqWlYQsrFhWU3rJpCEMt7RIZdxvI4VAZZWEfmA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PPF9D10A4C88
-X-MS-Exchange-CrossPremises-AuthSource: FRWP192MB2997.EURP192.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossPremises-AuthAs: Internal
-X-MS-Exchange-CrossPremises-AuthMechanism: 14
-X-MS-Exchange-CrossPremises-Mapi-Admin-Submission:
-X-MS-Exchange-CrossPremises-MessageSource: StoreDriver
-X-MS-Exchange-CrossPremises-BCC:
-X-MS-Exchange-CrossPremises-OriginalClientIPAddress: 104.151.95.196
-X-MS-Exchange-CrossPremises-TransportTrafficType: Email
-X-MS-Exchange-CrossPremises-Antispam-ScanContext:
-	DIR:Originating;SFV:NSPM;SKIP:0;
-X-MS-Exchange-CrossPremises-SCL: 1
-X-MS-Exchange-CrossPremises-Processed-By-Journaling: Journal Agent
-X-OrganizationHeadersPreserved: AM7PPF9D10A4C88.EURP192.PROD.OUTLOOK.COM
-X-Proofpoint-GUID: QwtjtoVLgpkxT6YsZvJMitixJpNKs4wS
-X-Proofpoint-ORIG-GUID: QwtjtoVLgpkxT6YsZvJMitixJpNKs4wS
-X-Authority-Analysis: v=2.4 cv=Qflrf8bv c=1 sm=1 tr=0 ts=691c1e77 cx=c_pps
- a=XzJWp150oNq7pZvwL9YYVg==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=6UeiqGixMTsA:10 a=8gLI3H-aZtYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=N9GNhs4bAAAA:8 a=HarDYBM2GIbeBqPcLDsA:9
- a=PZhj9NlD-CKO8hVp7yCs:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTE4MDA1NyBTYWx0ZWRfXwZhvvr1Pq4hR
- +6rrwbfTP8cQhEPAI3UsvxkF3N44r7wC+GiGEG7pf7ZfZSO+89wqcbcBJ5RcKwuzXL5stwvUmB+
- eNdGCfEb9NwyAFA+NbhxCQqrWS81h0+Jc+p7iXR8bMrgkTs9LhNHB+i4ZpfSisiUlmWZWxEiHi0
- Btq6P2c+d37m48I1LXi3EqhN73CMqLzIeHOtP8BtRcAxOx3nh5CuMfzyA6qje+DYwRME1EhXrDI
- FWD/q31/NaLdRkUyIIBqrody3AMI8Zxx1zfwgN5/DXU9z4BRDg+bh73lZ7nZJC7j1JyIya1TRzc
- K5/07klR/K0c7oUm5ddUiBhp+yvPTIvn1mX4pNRyZbrB58dvHgH4IPJXRY1I9cf/+4+8L26KOsI
- 8oSPqkhaRmHgmUpsNeRiYxzkFMxI8g==
+X-Received: by 2002:a05:6e02:b44:b0:433:79a7:8158 with SMTP id
+ e9e14a558f8ab-4348c9334c1mr166286595ab.27.1763457144310; Tue, 18 Nov 2025
+ 01:12:24 -0800 (PST)
+Date: Tue, 18 Nov 2025 01:12:24 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <691c3878.a70a0220.3124cb.00b9.GAE@google.com>
+Subject: [syzbot] [wireless?] WARNING: suspicious RCU usage in
+ ieee80211_mesh_csa_beacon (2)
+From: syzbot <syzbot+b59873f5699e941717ca@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-The SRNG head and tail ring pointers are stored in device memory as
-little-endian values. On big-endian systems, direct dereferencing of these
-pointers leads to incorrect values being read or written, causing ring
-management issues and potentially breaking data flow.
+Hello,
 
-This patch ensures all accesses to SRNG ring pointers use the appropriate
-endianness conversions. This affects both read and write paths for source
-and destination rings, as well as debug output. The changes guarantee
-correct operation on both little- and big-endian architectures.
+syzbot found the following issue on:
 
-Signed-off-by: Alexander Wilhelm <alexander.wilhelm@westermo.com>
+HEAD commit:    7a0892d2836e Merge tag 'pci-v6.18-fixes-5' of git://git.ke..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1100a212580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=929790bc044e87d7
+dashboard link: https://syzkaller.appspot.com/bug?extid=b59873f5699e941717ca
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12656884580000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15519212580000
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-7a0892d2.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/a78c5c2efd8d/vmlinux-7a0892d2.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/5a51cc5df960/bzImage-7a0892d2.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+b59873f5699e941717ca@syzkaller.appspotmail.com
+
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000002
+R13: 00007f4e229e5fa0 R14: 00007f4e229e5fa0 R15: 0000000000000003
+ </TASK>
+=============================
+WARNING: suspicious RCU usage
+syzkaller #0 Not tainted
+-----------------------------
+net/mac80211/mesh.c:1571 suspicious rcu_dereference_check() usage!
+
+other info that might help us debug this:
+
+
+rcu_scheduler_active = 2, debug_locks = 1
+2 locks held by syz.0.17/5477:
+ #0: ffffffff8f333750 (cb_lock){++++}-{4:4}, at: genl_rcv+0x19/0x40 net/netlink/genetlink.c:1218
+ #1: ffff888059ba0788 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: wiphy_lock include/net/cfg80211.h:6343 [inline]
+ #1: ffff888059ba0788 (&rdev->wiphy.mtx){+.+.}-{4:4}, at: nl80211_pre_doit+0x281/0x930 net/wireless/nl80211.c:17999
+
+stack backtrace:
+CPU: 0 UID: 0 PID: 5477 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2~bpo12+1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x189/0x250 lib/dump_stack.c:120
+ lockdep_rcu_suspicious+0x140/0x1d0 kernel/locking/lockdep.c:6876
+ ieee80211_mesh_csa_beacon+0x280/0x2c0 net/mac80211/mesh.c:1571
+ ieee80211_set_csa_beacon+0x3cc/0x9a0 net/mac80211/cfg.c:4288
+ __ieee80211_channel_switch net/mac80211/cfg.c:4406 [inline]
+ ieee80211_channel_switch+0x8ef/0xcb0 net/mac80211/cfg.c:4442
+ rdev_channel_switch+0x108/0x290 net/wireless/rdev-ops.h:1116
+ nl80211_channel_switch+0xac9/0xd70 net/wireless/nl80211.c:11475
+ genl_family_rcv_msg_doit+0x215/0x300 net/netlink/genetlink.c:1115
+ genl_family_rcv_msg net/netlink/genetlink.c:1195 [inline]
+ genl_rcv_msg+0x60e/0x790 net/netlink/genetlink.c:1210
+ netlink_rcv_skb+0x208/0x470 net/netlink/af_netlink.c:2552
+ genl_rcv+0x28/0x40 net/netlink/genetlink.c:1219
+ netlink_unicast_kernel net/netlink/af_netlink.c:1320 [inline]
+ netlink_unicast+0x82f/0x9e0 net/netlink/af_netlink.c:1346
+ netlink_sendmsg+0x805/0xb30 net/netlink/af_netlink.c:1896
+ sock_sendmsg_nosec net/socket.c:727 [inline]
+ __sock_sendmsg+0x21c/0x270 net/socket.c:742
+ ____sys_sendmsg+0x505/0x830 net/socket.c:2630
+ ___sys_sendmsg+0x21f/0x2a0 net/socket.c:2684
+ __sys_sendmsg net/socket.c:2716 [inline]
+ __do_sys_sendmsg net/socket.c:2721 [inline]
+ __se_sys_sendmsg net/socket.c:2719 [inline]
+ __x64_sys_sendmsg+0x19b/0x260 net/socket.c:2719
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xfa/0xfa0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f4e2278f6c9
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 a8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffe9e0535c8 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f4e229e5fa0 RCX: 00007f4e2278f6c9
+RDX: 0000000000000000 RSI: 0000200000004180 RDI: 0000000000000003
+RBP: 00007ffe9e053620 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000002
+R13: 00007f4e229e5fa0 R14: 00007f4e229e5fa0 R15: 0000000000000003
+ </TASK>
+
+
 ---
- drivers/net/wireless/ath/ath12k/hal.c | 35 +++++++++++++++------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
-index 6406fcf5d69f..bd4d1de9eb1a 100644
---- a/drivers/net/wireless/ath/ath12k/hal.c
-+++ b/drivers/net/wireless/ath/ath12k/hal.c
-@@ -2007,7 +2007,7 @@ int ath12k_hal_srng_dst_num_free(struct ath12k_base *ab, struct hal_srng *srng,
- 	tp = srng->u.dst_ring.tp;
- 
- 	if (sync_hw_ptr) {
--		hp = *srng->u.dst_ring.hp_addr;
-+		hp = le32_to_cpu(*srng->u.dst_ring.hp_addr);
- 		srng->u.dst_ring.cached_hp = hp;
- 	} else {
- 		hp = srng->u.dst_ring.cached_hp;
-@@ -2030,7 +2030,7 @@ int ath12k_hal_srng_src_num_free(struct ath12k_base *ab, struct hal_srng *srng,
- 	hp = srng->u.src_ring.hp;
- 
- 	if (sync_hw_ptr) {
--		tp = *srng->u.src_ring.tp_addr;
-+		tp = le32_to_cpu(*srng->u.src_ring.tp_addr);
- 		srng->u.src_ring.cached_tp = tp;
- 	} else {
- 		tp = srng->u.src_ring.cached_tp;
-@@ -2149,9 +2149,9 @@ void ath12k_hal_srng_access_begin(struct ath12k_base *ab, struct hal_srng *srng)
- 
- 	if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
- 		srng->u.src_ring.cached_tp =
--			*(volatile u32 *)srng->u.src_ring.tp_addr;
-+			le32_to_cpu(*(volatile u32 *)srng->u.src_ring.tp_addr);
- 	} else {
--		hp = READ_ONCE(*srng->u.dst_ring.hp_addr);
-+		hp = le32_to_cpu(READ_ONCE(*srng->u.dst_ring.hp_addr));
- 
- 		if (hp != srng->u.dst_ring.cached_hp) {
- 			srng->u.dst_ring.cached_hp = hp;
-@@ -2175,25 +2175,28 @@ void ath12k_hal_srng_access_end(struct ath12k_base *ab, struct hal_srng *srng)
- 		 * hence written to a shared memory location that is read by FW
- 		 */
- 		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
--			srng->u.src_ring.last_tp =
--				*(volatile u32 *)srng->u.src_ring.tp_addr;
-+			srng->u.src_ring.last_tp = le32_to_cpu(
-+				*(volatile u32 *)srng->u.src_ring.tp_addr);
- 			/* Make sure descriptor is written before updating the
- 			 * head pointer.
- 			 */
- 			dma_wmb();
--			WRITE_ONCE(*srng->u.src_ring.hp_addr, srng->u.src_ring.hp);
-+			WRITE_ONCE(*srng->u.src_ring.hp_addr,
-+				   cpu_to_le32(srng->u.src_ring.hp));
- 		} else {
--			srng->u.dst_ring.last_hp = *srng->u.dst_ring.hp_addr;
-+			srng->u.dst_ring.last_hp =
-+				le32_to_cpu(*srng->u.dst_ring.hp_addr);
- 			/* Make sure descriptor is read before updating the
- 			 * tail pointer.
- 			 */
- 			dma_mb();
--			WRITE_ONCE(*srng->u.dst_ring.tp_addr, srng->u.dst_ring.tp);
-+			WRITE_ONCE(*srng->u.dst_ring.tp_addr,
-+				   cpu_to_le32(srng->u.dst_ring.tp));
- 		}
- 	} else {
- 		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
--			srng->u.src_ring.last_tp =
--				*(volatile u32 *)srng->u.src_ring.tp_addr;
-+			srng->u.src_ring.last_tp = le32_to_cpu(
-+				*(volatile u32 *)srng->u.src_ring.tp_addr);
- 			/* Assume implementation use an MMIO write accessor
- 			 * which has the required wmb() so that the descriptor
- 			 * is written before the updating the head pointer.
-@@ -2203,7 +2206,8 @@ void ath12k_hal_srng_access_end(struct ath12k_base *ab, struct hal_srng *srng)
- 					   (unsigned long)ab->mem,
- 					   srng->u.src_ring.hp);
- 		} else {
--			srng->u.dst_ring.last_hp = *srng->u.dst_ring.hp_addr;
-+			srng->u.dst_ring.last_hp =
-+				le32_to_cpu(*srng->u.dst_ring.hp_addr);
- 			/* Make sure descriptor is read before updating the
- 			 * tail pointer.
- 			 */
-@@ -2547,7 +2551,7 @@ void ath12k_hal_srng_shadow_update_hp_tp(struct ath12k_base *ab,
- 	 * HP only when then ring isn't' empty.
- 	 */
- 	if (srng->ring_dir == HAL_SRNG_DIR_SRC &&
--	    *srng->u.src_ring.tp_addr != srng->u.src_ring.hp)
-+	    le32_to_cpu(*srng->u.src_ring.tp_addr) != srng->u.src_ring.hp)
- 		ath12k_hal_srng_access_end(ab, srng);
- }
- 
-@@ -2648,14 +2652,15 @@ void ath12k_hal_dump_srng_stats(struct ath12k_base *ab)
- 				   "src srng id %u hp %u, reap_hp %u, cur tp %u, cached tp %u last tp %u napi processed before %ums\n",
- 				   srng->ring_id, srng->u.src_ring.hp,
- 				   srng->u.src_ring.reap_hp,
--				   *srng->u.src_ring.tp_addr, srng->u.src_ring.cached_tp,
-+				   __le32_to_cpu(*srng->u.src_ring.tp_addr),
-+				   srng->u.src_ring.cached_tp,
- 				   srng->u.src_ring.last_tp,
- 				   jiffies_to_msecs(jiffies - srng->timestamp));
- 		else if (srng->ring_dir == HAL_SRNG_DIR_DST)
- 			ath12k_err(ab,
- 				   "dst srng id %u tp %u, cur hp %u, cached hp %u last hp %u napi processed before %ums\n",
- 				   srng->ring_id, srng->u.dst_ring.tp,
--				   *srng->u.dst_ring.hp_addr,
-+				   __le32_to_cpu(*srng->u.dst_ring.hp_addr),
- 				   srng->u.dst_ring.cached_hp,
- 				   srng->u.dst_ring.last_hp,
- 				   jiffies_to_msecs(jiffies - srng->timestamp));
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-base-commit: be83ff7549057d184b693a85cafc10fbd520f3d7
--- 
-2.43.0
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
