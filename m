@@ -1,42 +1,42 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 478F130CD86;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA2430CD89;
 	Thu, 20 Nov 2025 03:41:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763610105; cv=none; b=r2o6dyjV3uKQjnKbhxPsqG5+9oNSqtvQmNSo2+laKyRYQtPxEJqhw8pZ/pOvLfPULrSRd0wI4WF2LwFo7ky4Mvv3RITo9KADZD22zdz2TFNjbORM5z7pWtAMyK6yvr+f8JUkGAmJw7mVvBTFybRUEEnQgPE8iTWjCeAQ2Tj1qa4=
+	t=1763610106; cv=none; b=mMOB6zgwO39fb2t4zN2cOi1jCnmlt8xRFhSkV15Ap4QEepfjwxICBmsqd1vTFMS33WQ1sScC7FcWDEwBl5GtpKnKoVHZj8Tu1n6CzPZ8De83lMmUryKB17sz5BeNT8jJS36RyyCCYZ8QIyBcCReNjYHPpiy3wv8y4szoST/7rWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763610105; c=relaxed/simple;
-	bh=WZaahb7WFVNd4tuJrYf9E4biVshn06ntyshaQkWtya4=;
+	s=arc-20240116; t=1763610106; c=relaxed/simple;
+	bh=9k3gvC/4TJFm13xLHAY4L5eptI+IpktBfSnJrspslQ4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pUo4azcv0Km5qf9Z6K30PzVKc9SlbVgrRSfkphbtfNIh88lte4NJNuPRyJc/JQmbQ2G2sDnrHCkq8GIpJITmd11C2ZDUU6JHAEPNjrZr8VtdnCHkPQo2UVI3WklbWardUXh5eiVIAsjn9ESxHHnPvuY5hqYPOd77MjC2W31uYMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b=Idh70jWi; arc=none smtp.client-ip=212.227.17.21
+	 In-Reply-To:To:Cc; b=Y0dB997+6RiEb1vKZ7Bm0QbhIEFcUkfJyfOneFi3ZgmG22B9SvcDJjXBm9KH/RnkvQ+wPoBYudybGBuJJ3i/dWRmMYBIw/2ceYT3yeA1TMLDa1qS6MSkjNouN35O3UcQDqllbFsZjVyqCRgwrRWiaQuU2cp8n+0GDJtCdO7Lrc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b=X9pVvnxi; arc=none smtp.client-ip=212.227.17.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b="Idh70jWi"
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=w_armin@gmx.de header.b="X9pVvnxi"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1763610100; x=1764214900; i=w_armin@gmx.de;
-	bh=pFfE5rqjVgwE8wDghOzJXBN7RtoFvEZyfhpDnHJr1d0=;
+	s=s31663417; t=1763610085; x=1764214885; i=w_armin@gmx.de;
+	bh=1witJch5Wm69t8Vr/6mBWOY4SkAhtm8qmFrRdc/aq+w=;
 	h=X-UI-Sender-Class:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 cc:content-transfer-encoding:content-type:date:from:message-id:
 	 mime-version:reply-to:subject:to;
-	b=Idh70jWiiPkbKHH0XoOecfXJmknT6hNE5449G+V3LMyn4IRRcNEannq6lrlhcShJ
-	 cArZjYgMPKzJXjhgfofSOFTDw/fwNkPC2GB+5+FjsocA52JFjReCNbPvBfwtsK1VZ
-	 TXc+V8CucfA+mugTvPczrYnU8jd7zXGkmbc8l/xYj7QULX5b6ivfR4H+wzGiAx690
-	 PvOZHF4ao3vUNdGa1DADB8pBFK4bvvOVMyvWzc2eu/l6jtv9jfQ9fPjy1cao0nell
-	 h9W03I2ahNZU23viBlh3D8CF0cSJp/ZElfabqrC12Jd99CRWcmDuA8OPVZjifnmlx
-	 ElDm13OIvb8KxWl8WQ==
+	b=X9pVvnxirBKz8nOlzOnP4OsU3v7iXjlLxvIXyWrM1B8TKyZj5s1HgRHg+VuhJdxf
+	 LQKhOxg8BpS5wiKWiccUKT2bjrgmlL+XzFa24qwSJ07ZDtPzgnlisTro6NtOdN5xG
+	 8vJhyn4DX898exMMpbVA3h8+e5az1qJIFPjvWkfEWmb2PibnwH81VitCtX86bt9Ak
+	 4rgqoK12stYOp1WES3bcFZLo6QhPxoWCrUfW0gdbLU9WGP5OjvV6N5i0dB+nqsaLS
+	 WUc9Zeh76xLfKS40PQi4cyrkfsd1nM8lK6R3bFRloWEj4jKhwL/3tfHQp/vkFnPRR
+	 NrrwJeg7KbIsZ4epJQ==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
 Received: from [127.0.0.1] ([93.202.247.91]) by mail.gmx.net (mrgmx104
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1MzQgC-1w8GuJ49qq-00xsos; Thu, 20
- Nov 2025 04:41:40 +0100
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1N0X8u-1w7ARs3RMi-00yykY; Thu, 20
+ Nov 2025 04:41:25 +0100
 From: Armin Wolf <W_Armin@gmx.de>
-Date: Thu, 20 Nov 2025 04:41:17 +0100
-Subject: [PATCH RFC RESEND 7/8] ACPI: thermal: Stop creating "device" sysfs
- link
+Date: Thu, 20 Nov 2025 04:41:12 +0100
+Subject: [PATCH RFC RESEND 2/8] thermal: core: Set parent device in
+ thermal_of_cooling_device_register()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -45,7 +45,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <20251120-thermal-device-v1-7-bbdad594d57a@gmx.de>
+Message-Id: <20251120-thermal-device-v1-2-bbdad594d57a@gmx.de>
 References: <20251120-thermal-device-v1-0-bbdad594d57a@gmx.de>
 In-Reply-To: <20251120-thermal-device-v1-0-bbdad594d57a@gmx.de>
 To: "Rafael J. Wysocki" <rafael@kernel.org>, 
@@ -63,134 +63,244 @@ Cc: linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, imx@lists.linux.dev, 
  linux-renesas-soc@vger.kernel.org
 X-Mailer: b4 0.14.3
-X-Provags-ID: V03:K1:bKjOl416ZBvt0J4Z1ff2/VOM4YUuBr4pjrnuYziG/rC6UM9Bjrb
- iCAyo+RKmQkcq6atgUTHWnC+hoUqvDNqaFpc2OPzy5pIPPW4oHJPk1sK76vauvunauWsJI/
- rZWHUfcw+kkV+yp+4FePUCajckmPJ0U3pwygCJBQNPEV/qhghQjiEQylyxzO3A0H4gakZ/Q
- lbLGd8IWeIkZr7osImDhg==
+X-Provags-ID: V03:K1:1UoEphsgIh0DCvIypBaBlMhDf5nKXxN9NtIAzorZM9NWMj0e1ly
+ JN5L37/wn6iTs/R/JMaMfzdoKjKVEcjUtmQb2Cycd09YxOVvi7b0bTrR3ilr5tAqfIw5n4t
+ skj67CtahQ9TyHpW37iM1LpwujivRVFE3BT+J0XOO96wfmml3QOzFsB1zr0dO5Nl+rZ8vR/
+ fiTIYNzTYIjCnjJKT7mgg==
 X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:ZkUHQOrPw+U=;A3N6syoy2tdKzKe+2NJGnSYIA5n
- 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
- 9Mg1StAM=
+UI-OutboundReport: notjunk:1;M01:P0:TgAPfcCBj4Q=;vDaC4acoIO1HUTjjIuuCj6Sunet
+ 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
+ Z+VgQgaw=
 
-The thermal core will soon automatically create sysfs links between
-the thermal zone device and its parent device. Stop manually creating
-the "device" sysfs link between the thermal zone device and the parent
-device to avoid a name collision. The "thermal_zone" sysfs link
-however stays for backwards compatibility, as it does not suffer
-from a name collision.
+Extend thermal_of_cooling_device_register() to allow users to specify
+the parent device of the cooling device to be created.
 
 Signed-off-by: Armin Wolf <W_Armin@gmx.de>
 =2D--
- drivers/acpi/thermal.c | 17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+ drivers/gpu/drm/etnaviv/etnaviv_gpu.c | 4 ++--
+ drivers/thermal/cpufreq_cooling.c     | 2 +-
+ drivers/thermal/cpuidle_cooling.c     | 2 +-
+ drivers/thermal/devfreq_cooling.c     | 2 +-
+ drivers/thermal/tegra/soctherm.c      | 5 ++---
+ drivers/thermal/thermal_core.c        | 5 +++--
+ include/linux/thermal.h               | 9 ++++-----
+ 7 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/acpi/thermal.c b/drivers/acpi/thermal.c
-index a511f9ea0267..99ad67bbd764 100644
-=2D-- a/drivers/acpi/thermal.c
-+++ b/drivers/acpi/thermal.c
-@@ -592,27 +592,14 @@ static const struct thermal_zone_device_ops acpi_the=
-rmal_zone_ops =3D {
- static int acpi_thermal_zone_sysfs_add(struct acpi_thermal *tz)
+diff --git a/drivers/gpu/drm/etnaviv/etnaviv_gpu.c b/drivers/gpu/drm/etnav=
+iv/etnaviv_gpu.c
+index cf0d9049bcf1..f2c98e46a1c6 100644
+=2D-- a/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
++++ b/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
+@@ -1778,8 +1778,8 @@ static int etnaviv_gpu_bind(struct device *dev, stru=
+ct device *master,
+ 	int ret;
+=20
+ 	if (IS_ENABLED(CONFIG_DRM_ETNAVIV_THERMAL)) {
+-		gpu->cooling =3D thermal_of_cooling_device_register(dev->of_node,
+-				(char *)dev_name(dev), gpu, &cooling_ops);
++		gpu->cooling =3D thermal_of_cooling_device_register(dev, dev->of_node, =
+dev_name(dev),
++								  gpu, &cooling_ops);
+ 		if (IS_ERR(gpu->cooling))
+ 			return PTR_ERR(gpu->cooling);
+ 	}
+diff --git a/drivers/thermal/cpufreq_cooling.c b/drivers/thermal/cpufreq_c=
+ooling.c
+index 6b7ab1814c12..af9250c44da7 100644
+=2D-- a/drivers/thermal/cpufreq_cooling.c
++++ b/drivers/thermal/cpufreq_cooling.c
+@@ -593,7 +593,7 @@ __cpufreq_cooling_register(struct device_node *np,
+ 	if (!name)
+ 		goto remove_qos_req;
+=20
+-	cdev =3D thermal_of_cooling_device_register(np, name, cpufreq_cdev,
++	cdev =3D thermal_of_cooling_device_register(dev, np, name, cpufreq_cdev,
+ 						  cooling_ops);
+ 	kfree(name);
+=20
+diff --git a/drivers/thermal/cpuidle_cooling.c b/drivers/thermal/cpuidle_c=
+ooling.c
+index f678c1281862..520c89a36d90 100644
+=2D-- a/drivers/thermal/cpuidle_cooling.c
++++ b/drivers/thermal/cpuidle_cooling.c
+@@ -207,7 +207,7 @@ static int __cpuidle_cooling_register(struct device_no=
+de *np,
+ 		goto out_unregister;
+ 	}
+=20
+-	cdev =3D thermal_of_cooling_device_register(np, name, idle_cdev,
++	cdev =3D thermal_of_cooling_device_register(dev, np, name, idle_cdev,
+ 						  &cpuidle_cooling_ops);
+ 	if (IS_ERR(cdev)) {
+ 		ret =3D PTR_ERR(cdev);
+diff --git a/drivers/thermal/devfreq_cooling.c b/drivers/thermal/devfreq_c=
+ooling.c
+index 8fd7cf1932cd..d91695ed0f26 100644
+=2D-- a/drivers/thermal/devfreq_cooling.c
++++ b/drivers/thermal/devfreq_cooling.c
+@@ -454,7 +454,7 @@ of_devfreq_cooling_register_power(struct device_node *=
+np, struct devfreq *df,
+ 	if (!name)
+ 		goto remove_qos_req;
+=20
+-	cdev =3D thermal_of_cooling_device_register(np, name, dfc, ops);
++	cdev =3D thermal_of_cooling_device_register(dev, np, name, dfc, ops);
+ 	kfree(name);
+=20
+ 	if (IS_ERR(cdev)) {
+diff --git a/drivers/thermal/tegra/soctherm.c b/drivers/thermal/tegra/soct=
+herm.c
+index 5d26b52beaba..4f43da123be4 100644
+=2D-- a/drivers/thermal/tegra/soctherm.c
++++ b/drivers/thermal/tegra/soctherm.c
+@@ -1700,9 +1700,8 @@ static void soctherm_init_hw_throt_cdev(struct platf=
+orm_device *pdev)
+ 			stc->init =3D true;
+ 		} else {
+=20
+-			tcd =3D thermal_of_cooling_device_register(np_stcc,
+-							 (char *)name, ts,
+-							 &throt_cooling_ops);
++			tcd =3D thermal_of_cooling_device_register(dev, np_stcc, name, ts,
++								 &throt_cooling_ops);
+ 			if (IS_ERR_OR_NULL(tcd)) {
+ 				dev_err(dev,
+ 					"throttle-cfg: %s: failed to register cooling device\n",
+diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core=
+.c
+index c8b720194b44..5d752e712cc0 100644
+=2D-- a/drivers/thermal/thermal_core.c
++++ b/drivers/thermal/thermal_core.c
+@@ -1166,6 +1166,7 @@ EXPORT_SYMBOL_GPL(thermal_cooling_device_register);
+=20
+ /**
+  * thermal_of_cooling_device_register() - register an OF thermal cooling =
+device
++ * @parent:	parent device pointer.
+  * @np:		a pointer to a device tree node.
+  * @type:	the thermal cooling device type.
+  * @devdata:	device private data.
+@@ -1180,11 +1181,11 @@ EXPORT_SYMBOL_GPL(thermal_cooling_device_register)=
+;
+  * ERR_PTR. Caller must check return value with IS_ERR*() helpers.
+  */
+ struct thermal_cooling_device *
+-thermal_of_cooling_device_register(struct device_node *np,
++thermal_of_cooling_device_register(struct device *parent, struct device_n=
+ode *np,
+ 				   const char *type, void *devdata,
+ 				   const struct thermal_cooling_device_ops *ops)
  {
- 	struct device *tzdev =3D thermal_zone_device(tz->thermal_zone);
--	int ret;
-=20
--	ret =3D sysfs_create_link(&tz->device->dev.kobj,
--				&tzdev->kobj, "thermal_zone");
--	if (ret)
--		return ret;
--
--	ret =3D sysfs_create_link(&tzdev->kobj,
--				   &tz->device->dev.kobj, "device");
--	if (ret)
--		sysfs_remove_link(&tz->device->dev.kobj, "thermal_zone");
--
--	return ret;
-+	/* For backwards compatibility */
-+	return sysfs_create_link(&tz->device->dev.kobj, &tzdev->kobj, "thermal_z=
-one");
+-	return __thermal_cooling_device_register(NULL, np, type, devdata, ops);
++	return __thermal_cooling_device_register(parent, np, type, devdata, ops)=
+;
  }
+ EXPORT_SYMBOL_GPL(thermal_of_cooling_device_register);
 =20
- static void acpi_thermal_zone_sysfs_remove(struct acpi_thermal *tz)
- {
--	struct device *tzdev =3D thermal_zone_device(tz->thermal_zone);
--
- 	sysfs_remove_link(&tz->device->dev.kobj, "thermal_zone");
--	sysfs_remove_link(&tzdev->kobj, "device");
- }
-=20
- static int acpi_thermal_register_thermal_zone(struct acpi_thermal *tz,
+diff --git a/include/linux/thermal.h b/include/linux/thermal.h
+index 0b5ed6821080..fa53d12173ce 100644
+=2D-- a/include/linux/thermal.h
++++ b/include/linux/thermal.h
+@@ -253,8 +253,8 @@ void thermal_zone_device_update(struct thermal_zone_de=
+vice *,
+ struct thermal_cooling_device *thermal_cooling_device_register(const char=
+ *,
+ 		void *, const struct thermal_cooling_device_ops *);
+ struct thermal_cooling_device *
+-thermal_of_cooling_device_register(struct device_node *np, const char *, =
+void *,
+-				   const struct thermal_cooling_device_ops *);
++thermal_of_cooling_device_register(struct device *parent, struct device_n=
+ode *np, const char *type,
++				   void *devdata, const struct thermal_cooling_device_ops *);
+ struct thermal_cooling_device *
+ devm_thermal_of_cooling_device_register(struct device *dev,
+ 				struct device_node *np,
+@@ -302,9 +302,8 @@ thermal_cooling_device_register(const char *type, void=
+ *devdata,
+ 	const struct thermal_cooling_device_ops *ops)
+ { return ERR_PTR(-ENODEV); }
+ static inline struct thermal_cooling_device *
+-thermal_of_cooling_device_register(struct device_node *np,
+-	const char *type, void *devdata,
+-	const struct thermal_cooling_device_ops *ops)
++thermal_of_cooling_device_register(struct device *parent, struct device_n=
+ode *np, const char *type,
++				   void *devdata, const struct thermal_cooling_device_ops *ops)
+ { return ERR_PTR(-ENODEV); }
+ static inline struct thermal_cooling_device *
+ devm_thermal_of_cooling_device_register(struct device *dev,
 
 =2D-=20
 2.39.5
