@@ -1,57 +1,55 @@
-Received: from mail-wm1-f73.google.com (mail-wm1-f73.google.com [209.85.128.73])
+Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1DE35A127
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 15:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B77735FF69
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 15:12:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763651602; cv=none; b=ZplYFQ8zZMR0I8TF3AsFogQyvSN0DkVsxe3Tk102plT43ih0Cd4q6+2pRZ0YZowm9OgJREEXwYlKeQ2w4DkcIWm3i6eIt6DfLLtQ23u7IIe/y5GcJWywhs31Ir72KrSFwe42pgQgoxbWyZGC68HNdcguylxlVbJTbbUI2DOQ22g=
+	t=1763651606; cv=none; b=QpX08n7uwq6g72ycXeoyfy9f6V9gg26ToKKH+oa3uhv/H29v9BfkYm2LfO3bC2XxyUlM4yZsMJNZgj5eWz8MTq4OUul2P3/Ujm+HW1wTnmK0Uphg9b4ZURfUcoE11ONNwyXGaIumNZ2J5tMCodN+Ekoib5Z4NlrI2znx1oHvGAc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763651602; c=relaxed/simple;
-	bh=07zfwwibr87pzthwGbH+0Y0kGO/abbdb5ZEhTTNkhyA=;
+	s=arc-20240116; t=1763651606; c=relaxed/simple;
+	bh=r7WIw2CSAQ4tWG1OZ75salml9To1eme5D14M43qpmeA=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=mER9Zps/Ze5Z+MqLEMJe0KF6+zytgE+/JVncpQQlXQFsSBJ3dFOsaancUhaH9PBU0S25Id10cop7Z8cSZyQ5HbBIp+KfH7dpsk0TnE/L1Fy2cDzwbNo6X2FGvqkVS+okEncNgCja57/I1oBH+n+FghPXmjZYwZCtV/CmuEe8lfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--elver.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ltyF7FvA; arc=none smtp.client-ip=209.85.128.73
+	 To:Cc:Content-Type; b=KG9tN76CSXxSE4A92+Dq3RqfinhZ3XCPIRFyoLQYVUhOtFWlk7oA0+f6/2VVTP3uxKOo+em469o0j3e3gwCFkBaY8g9VUKJ4BxDcCFyqmfqNHzrQqI1ilSF8TbAJ3/zQvXmQe0n2oh0TXTVq2b7qQuPeGfhzUhK7/MGJy5rJous=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--elver.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TU1wZaLk; arc=none smtp.client-ip=209.85.128.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--elver.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ltyF7FvA"
-Received: by mail-wm1-f73.google.com with SMTP id 5b1f17b1804b1-4779b3749a8so8950705e9.1
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 07:13:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TU1wZaLk"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-4779da35d27so12433495e9.3
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 07:12:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1763651580; x=1764256380; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LTo30xRtk3dNAYk+WcMlGzrXIDi8Fd3AcvMY0oMy4/o=;
-        b=ltyF7FvAG6OgN0LcS78W84ax541CxFrE8utJs/0/ke8m5aqrP3352ZUx86FV0kzR7V
-         fw1zF84Bl+Svig7h1nusl1SdfpLU8dcT+sRfvUGgdusSVeBhup9jElD6ai63ieXyS/n6
-         OLNtDua3PdYcVbaGxA3XV/RfRMPjGWoeGj8Pyh5p3WcHL7kU0g2WigB1evg/biaKQURV
-         58WrJ+g7zffVX05xtUxITBZgThTY3tQeyFl3E+XlBQMfjPCOUw5SbPfxuduIMD2JITqn
-         5g3M5vRFEXx5FZABV6HGefW8grmNTWyoV11BAaOHracqUN4DkX2/tEwrEzMlAJocRn8b
-         JyYg==
+        d=google.com; s=20230601; t=1763651570; x=1764256370; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=nc/agqhZHpBZo5pQd3t3SIT1Qnduk/rx/3xksUJM3vo=;
+        b=TU1wZaLkkk2G1q9LQREJlVbVMI6JtqLtTgFkFu3ulLlanMpcjX3GU1YkH62Y0+IN24
+         XilWWeiLu5/isiU2ohDC5wyT/hVf1MykPj0KVcetQu3KgkJjZqTxGdWuCvbAfm5J0dFK
+         JGg/kggFiraLVc0J7CloN+MRuC8/+RpsDNzk5vHRqQJ+KWC0b4wD0StZL62XEBl2NTeX
+         jOB1kj6Was6xhvCocEUR3j1IOxvLrQqEBRweUt5h8SRKzKu7cyJAJSXcmzaKolj0u9rm
+         5C3rG47FFViXAoN0wPcgpwKclKC+P64BArs43xsL/J7rnR7JPFaAOR9bPYsMgYKhFMVY
+         I3rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763651580; x=1764256380;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=LTo30xRtk3dNAYk+WcMlGzrXIDi8Fd3AcvMY0oMy4/o=;
-        b=qg+jWtCEikT1YrnXNyDIPPHhvK9noXf7VE29xzPvWM2N9unPP3m/hWgLyBNwEtb4ph
-         mQMZYVcvGNz+kLe2FaVRCOm9ZxU83efbnfOm8U/UiV+sCeTuvzHzEDE8drwKYjT5Q3R6
-         hltXpH0Q3sriyU+S7cn32biL6keBbBktl3Qn1lpNcvU6T6uQSVCUpyceptBsu850VeY1
-         d7zyk8V3sAGovmCa7o1auWl/0gmEeLoZiTbR37ZD7GEqQijwPLFQnJddzzwvW6ouprpS
-         q/Z1nFfaH/IjawpXkzp5COwl/LtkuJpCQul6W3cbZYDVE/q+GoLme1rTAoMBvxODzjmk
-         J0PA==
-X-Forwarded-Encrypted: i=1; AJvYcCXPfyw3e4ZSARzRiE37dRJg4YSRUwS4r5FQ2l/J6akJcCGuE5uue/uEY/OS0rgNLDm61sGtUMi6HOxyEjuWoQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxUgVAlZ++R29odOUw3TNhT/AM3D/kYaNfOKXBGV54d2wsldrjd
-	MJC/zzP7WPSwmDHR2rqrirG2Omr80NtJfRBTc+5vWfuvAcV/C6X1TklcLW5oqeFOjWdoHprKZi/
-	unQ==
-X-Google-Smtp-Source: AGHT+IFrGgNPktKG3H23bhC9w6XQyJEAaYXs0SazZ2yQkYIVJL1b09kjJ5fLN+jez2xgS5LZ8SbpXS+XSg==
-X-Received: from wmqo14.prod.google.com ([2002:a05:600c:4fce:b0:46e:1e57:dbd6])
- (user=elver job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:4ec6:b0:46e:32dd:1b1a
- with SMTP id 5b1f17b1804b1-477babc1fcfmr26767175e9.7.1763651580311; Thu, 20
- Nov 2025 07:13:00 -0800 (PST)
-Date: Thu, 20 Nov 2025 16:09:43 +0100
+        d=1e100.net; s=20230601; t=1763651570; x=1764256370;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=nc/agqhZHpBZo5pQd3t3SIT1Qnduk/rx/3xksUJM3vo=;
+        b=MVMoEIVgvJ4CXlzVpg+SCpFo0H2qCsDXqupGh6tl6EZ3QPGZu+ajh0XKOADbdLIrKg
+         IFKVy2EJr8CzgXWkVmlYsQfYS2nukMFtkVDaG5Gx5P7+Fm4wPmCl1xpps/+I4JX3Xwi9
+         wPhh11ZUkpCy3bMqUS6/r6ZWafycUGLATJBCLSo0zN4Z7OjeoNW2oy8nBgaq4ypiKcpe
+         6VWiziMLKkjPmOLOI3ZQ5vgdxoTpj1GZvpXzHWnhY0Emksxl2ac0XcFVzylRRH/OfLyA
+         HVaanZmdVlcZc6QYDue9RTfds49/sD3QBM8xMDS7Ckt+8AWgphZCOXW72qxAhzW4icXG
+         AeZQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXHWUw77SXMt9Dr8qEMvtwb/7pgfNpPMemQPI/IP+InvsvF4GF2IdOSmi/TqJpYjZPr51bO0VKCxpcjbSCJEA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzMfF+8VDWvgMh5HWfySMV4S4CcWduYC+Nd7KK2CzD1Zn7wywh4
+	MsjJpzjrRr9bw6LMOc+9DP16rZyHhkM9sjJKQe5XmPQzN5NnmJdByfBAkn6KG4W91vRE6Blk7T0
+	pQw==
+X-Google-Smtp-Source: AGHT+IEEaNMCstTJqOLR6fdO3p0rd5Vx9GNO1jJ07YubqwQoWR7BvLPGZfMoQILzZHDOemuyFlxyBYdKgQ==
+X-Received: from wmd10.prod.google.com ([2002:a05:600c:604a:b0:477:9c68:bd6])
+ (user=elver job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:3590:b0:46e:761b:e7ff
+ with SMTP id 5b1f17b1804b1-477b8c92773mr32595725e9.28.1763651569512; Thu, 20
+ Nov 2025 07:12:49 -0800 (PST)
+Date: Thu, 20 Nov 2025 16:09:41 +0100
 In-Reply-To: <20251120151033.3840508-7-elver@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -61,8 +59,8 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20251120145835.3833031-2-elver@google.com> <20251120151033.3840508-7-elver@google.com>
 X-Mailer: git-send-email 2.52.0.rc1.455.g30608eb744-goog
-Message-ID: <20251120151033.3840508-19-elver@google.com>
-Subject: [PATCH v4 18/35] locking/local_lock: Include missing headers
+Message-ID: <20251120151033.3840508-17-elver@google.com>
+Subject: [PATCH v4 16/35] kref: Add context-analysis annotations
 From: Marco Elver <elver@google.com>
 To: elver@google.com, Peter Zijlstra <peterz@infradead.org>, 
 	Boqun Feng <boqun.feng@gmail.com>, Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>
@@ -88,49 +86,34 @@ Cc: "David S. Miller" <davem@davemloft.net>, Luc Van Oostenryck <luc.vanoostenry
 	linux-security-module@vger.kernel.org, linux-sparse@vger.kernel.org, 
 	linux-wireless@vger.kernel.org, llvm@lists.linux.dev, rcu@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Including <linux/local_lock.h> into an empty TU will result in the
-compiler complaining:
-
-./include/linux/local_lock.h: In function =E2=80=98class_local_lock_irqsave=
-_constructor=E2=80=99:
-./include/linux/local_lock_internal.h:95:17: error: implicit declaration of=
- function =E2=80=98local_irq_save=E2=80=99; <...>
-   95 |                 local_irq_save(flags);                          \
-      |                 ^~~~~~~~~~~~~~
-
-As well as (some architectures only, such as 'sh'):
-
-./include/linux/local_lock_internal.h: In function =E2=80=98local_lock_acqu=
-ire=E2=80=99:
-./include/linux/local_lock_internal.h:33:20: error: =E2=80=98current=E2=80=
-=99 undeclared (first use in this function)
-   33 |         l->owner =3D current;
-
-Include missing headers to allow including local_lock.h where the
-required headers are not otherwise included.
+Mark functions that conditionally acquire the passed lock.
 
 Signed-off-by: Marco Elver <elver@google.com>
 ---
- include/linux/local_lock_internal.h | 2 ++
+ include/linux/kref.h | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/local_lock_internal.h b/include/linux/local_lock=
-_internal.h
-index a4dc479157b5..9f6cb32f04b0 100644
---- a/include/linux/local_lock_internal.h
-+++ b/include/linux/local_lock_internal.h
-@@ -4,7 +4,9 @@
- #endif
-=20
- #include <linux/percpu-defs.h>
-+#include <linux/irqflags.h>
- #include <linux/lockdep.h>
-+#include <asm/current.h>
-=20
- #ifndef CONFIG_PREEMPT_RT
-=20
---=20
+diff --git a/include/linux/kref.h b/include/linux/kref.h
+index 88e82ab1367c..9bc6abe57572 100644
+--- a/include/linux/kref.h
++++ b/include/linux/kref.h
+@@ -81,6 +81,7 @@ static inline int kref_put(struct kref *kref, void (*release)(struct kref *kref)
+ static inline int kref_put_mutex(struct kref *kref,
+ 				 void (*release)(struct kref *kref),
+ 				 struct mutex *mutex)
++	__cond_acquires(true, mutex)
+ {
+ 	if (refcount_dec_and_mutex_lock(&kref->refcount, mutex)) {
+ 		release(kref);
+@@ -102,6 +103,7 @@ static inline int kref_put_mutex(struct kref *kref,
+ static inline int kref_put_lock(struct kref *kref,
+ 				void (*release)(struct kref *kref),
+ 				spinlock_t *lock)
++	__cond_acquires(true, lock)
+ {
+ 	if (refcount_dec_and_lock(&kref->refcount, lock)) {
+ 		release(kref);
+-- 
 2.52.0.rc1.455.g30608eb744-goog
 
