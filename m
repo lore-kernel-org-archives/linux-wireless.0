@@ -1,55 +1,55 @@
 Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9275135E52B
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 15:14:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C55535BDD3
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 15:13:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763651655; cv=none; b=YRFenFR1SMdY/ufWItTrXjyx+56TH7xt+MY17YHjeAT3B0jMcX66ujeXhyjUsMogTw01hDYyjKl6WfR7YbvGGpcws0zT8dIa9fdDxUo9T169jYb1n25vHhiSbUTn3E0H+91y7Lqc+uRa+UjfREIekS55WJRK8eewEIf0XrMzXPc=
+	t=1763651660; cv=none; b=YKw6a6JGudM8qoM7lhtvS4I5HKxu+DD9zQgknanElP5Tb65+qe9ZJ1U6EOorjjpFdgSF0NCdIdCjE/lmgGFCP5EYXrgp4lddNv3IpiHdLrwy6uLYA0IfipBGCPJnsx0BhH5MIK3SlvhJ583Da18YVzHfIey9dXuxWBVZ6Ej5yMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763651655; c=relaxed/simple;
-	bh=MaE5l+AqrMjS7K//1QeYAACzT6Fy5m0AjpyxcYL4QiM=;
+	s=arc-20240116; t=1763651660; c=relaxed/simple;
+	bh=oroLAEWKsCoLWto0z9ip7/65vBrTCj5wrpvh1Y5dmGQ=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=ua3U2TY1ARW3gVZMi69wzhczLJILWgnGHEnbH6i4MBV48PblLykPhW0qTZgTFNbSCe2hlJwG7u1BJPY96ZOzAD7HWCL6umaVwKxQt8SWDy2wNqvGi/m/bv1WTreWmLUrGe/ZDGFpmyvGn//h2Jc14M4/hQnvOcuHzOgum3IHufA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--elver.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BiXsn6P2; arc=none smtp.client-ip=209.85.128.74
+	 To:Cc:Content-Type; b=qXGn+tom2jb1LWnPGcIJ8zUtNquriFE+pDAaLSCPZFjr5wG4NE+jfQv/iD9nasFwM0GrA/aGQyPhUR0r6qr4FNiTguoJ8EHbcBKFJ8iB7KmIixSSNTCn5TcbxBpHRl2Q6fB3J/rxgcXe9JuzU/nQ1gF5kkNhSXCqNSxQuh0vDcA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--elver.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LyDiKVps; arc=none smtp.client-ip=209.85.128.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--elver.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BiXsn6P2"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-477a11d9f89so5147205e9.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 07:14:04 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LyDiKVps"
+Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-477939321e6so5996005e9.0
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Nov 2025 07:13:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1763651640; x=1764256440; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1763651601; x=1764256401; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HgjuR0JZV1+VngIgriWbdPjvpOAl4EFzPqRDosg857o=;
-        b=BiXsn6P2DqcBqRXSyjki2UJiyLaUbKFBqfULRkf9JEFsmZ5XifTJfLAoYDzanD5D0q
-         JHX6QT6m1YGiiL8tVYtiqA5wx3MEEH/j8gWcJFMcIAkD6pTSrfJK3jJHR4lzkn2lXxxu
-         WbF25tEJI6ydTwKhy4JG2Qzd2XLFzEdUrDxsBjkGRDTN304xtDmDkKmi0XfQvuAmf4kf
-         0c1dVQxCUNaRWZUiizQ9to1WH4EKUxeJVwHuEnrWfkh3zWAzwmr0L/LzofcFYpjEBykY
-         HR1ca8SiKeZvW3LGD31ZQx+peogWlv8A+B0DSQ20UMsOleLB0vRvcl0GjtEi5/VcSlDa
-         ejIw==
+        bh=hnrOsDiUA3Jbc7VaJ0HrkQb/VaIIv56J10QiPSfXr78=;
+        b=LyDiKVpsp/H0VCK7XmsOfsvnukaz/aDTK33nvR2l0XJLY2Ongwj2zRAQeAJWwgD3Qb
+         x+chhjFQ2L/M+nikyQpEAesK7svtMKR92admJt4fb4oSdDgf8Wj5Q2s7xn20tO+Lju/x
+         NG+sDT+tesRuNKnYjhs23Delh2k3EDig/iqjtZYpAF92nHsqCfo1NP262xrAHFZLPmyE
+         Q8sB4PdQ4GUUeYeVWjeS7Ru4TygNFLY+WRfVglFsmV27S9v+kjZBEKJEQVBEoH65wTe6
+         OU7HFShtCuG97r6EZRMzSwlO6Kz2HfRub25QGWc4v5hjRwgiEgCJ6WC9E4p00zb4b+u3
+         eInA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763651640; x=1764256440;
+        d=1e100.net; s=20230601; t=1763651601; x=1764256401;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HgjuR0JZV1+VngIgriWbdPjvpOAl4EFzPqRDosg857o=;
-        b=TzktCiP/gpZIjRB/Sawym4k6qmkq2HZF+htdE3KfqYl7Y6DIKlmY4P/fQa/sM3achV
-         MkhtQRbCGqOZ6zKCQttrsaZUBeJ9I9ShOUvV6YZlMCn6tiwj07bByKvCRMn0Xk9l2kCU
-         T7+0xIHMZaZc6CLRywPXDL2LHLKF5dLZnP91e2o5M92WNZ/HsEphSV9DRlt180vPYutt
-         NbzTHVb5MgrHNPTQuTw7bVDq5Pj9neIgn/pYqU7WIZfOxoDMknvvz3QNGxuZZUf19RqN
-         fjDFcvvxHjMay5xjtVqDYr4vHmgTsTohXCCiNLFafW+ehA6WfCHPMd39LvNHsCfyQ6Vd
-         XOlw==
-X-Forwarded-Encrypted: i=1; AJvYcCWD43IBrYnrk59hMxPmOdexM8J58MHKGrL/XD5EjDE/OiCGrEwetnWO68atLKHJsx73xa7sGyu+ZomfMB/fYg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxvVhwQzISJuVcNMbqZ9VCsTdicrOTy4ShHxKCQTFRrJwG61YZ1
-	6TUG1Gr4+qXVcTHs/13TeBAhB6Q+heaXJPddH+f/LcJIFnixGGr1qupPpmaIRVMPwr1SfdNfqoE
-	Etg==
-X-Google-Smtp-Source: AGHT+IF2aIy5uJ1uuqxRYjSIgT4bedDXfZYzgPHvJori0jZhXgoGDLMbVkn5vne6KQXGjLCKsfL+o0afdA==
-X-Received: from wmqt6.prod.google.com ([2002:a05:600c:1986:b0:477:14b1:69d7])
- (user=elver job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:5490:b0:477:7f4a:44ba
- with SMTP id 5b1f17b1804b1-477babc222emr30289485e9.4.1763651640249; Thu, 20
- Nov 2025 07:14:00 -0800 (PST)
-Date: Thu, 20 Nov 2025 16:09:58 +0100
+        bh=hnrOsDiUA3Jbc7VaJ0HrkQb/VaIIv56J10QiPSfXr78=;
+        b=dYfsL9oVsxjP7vV5qxJjij9nIUgxuLHujUQESm028xKE4YcyVkyfI3UCCxh4avf/uS
+         yreggYW40TCQWGDro8PIw2LYMmD4RtBAQDKJBdfaK0iSOlQk/7ImCnlHng1w5M7o9oUW
+         K4vS7kDkleOY90Zs6wmugcdCqrfJavELn2CeiZ0LjtHT/Ug39jxzdrT0HaZjEu4pJe/k
+         lFKbqAO7/c2ef58VN9GTL7Ej/pNUKtsy/aOBX2PFNNXqjW28RwwOop1S4+VlES2ibUJ3
+         ehx5TUVokKk/elzlq73sZ0AinSGjrKEEnuj42u9jN6kHW/CHIYm86aA6w19RP3AdSbAt
+         Pexw==
+X-Forwarded-Encrypted: i=1; AJvYcCW9JLxs8Va5TkIV74DDfJchWjBbRuyB+geCPCn9zuXFg2DLTrUtBq6eWJn5rzhh3H8NwdkyWmv93uWWEbSBMA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdjP4I9HZG6AP6ED8wr6j8WUlvNG6QnSBlQ3NZ/HLbuak6+A1i
+	4gs8rkKsA+cydZuhhbg8ZuPry9dbhQtDlonsdBR4BIN+nWVKTwnczQ1FZ+ezRxmMpVGy7M+dLo6
+	s8A==
+X-Google-Smtp-Source: AGHT+IF2KXUxbQpTUel+F1ELb5KnxDtM6152cWlA0R8b9K2pzp4QmF2ka0XeKwauvotAPfHQh37yHGXwIg==
+X-Received: from wmo9.prod.google.com ([2002:a05:600c:2309:b0:477:81d8:54c6])
+ (user=elver job=prod-delivery.src-stubby-dispatcher) by 2002:a05:600c:4704:b0:477:7d94:5d0e
+ with SMTP id 5b1f17b1804b1-477b8a9ab58mr32475085e9.27.1763651600324; Thu, 20
+ Nov 2025 07:13:20 -0800 (PST)
+Date: Thu, 20 Nov 2025 16:09:48 +0100
 In-Reply-To: <20251120151033.3840508-7-elver@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -59,8 +59,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20251120145835.3833031-2-elver@google.com> <20251120151033.3840508-7-elver@google.com>
 X-Mailer: git-send-email 2.52.0.rc1.455.g30608eb744-goog
-Message-ID: <20251120151033.3840508-34-elver@google.com>
-Subject: [PATCH v4 33/35] security/tomoyo: Enable context analysis
+Message-ID: <20251120151033.3840508-24-elver@google.com>
+Subject: [PATCH v4 23/35] compiler-context-analysis: Remove __cond_lock()
+ function-like helper
 From: Marco Elver <elver@google.com>
 To: elver@google.com, Peter Zijlstra <peterz@infradead.org>, 
 	Boqun Feng <boqun.feng@gmail.com>, Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>
@@ -87,680 +88,825 @@ Cc: "David S. Miller" <davem@davemloft.net>, Luc Van Oostenryck <luc.vanoostenry
 	linux-wireless@vger.kernel.org, llvm@lists.linux.dev, rcu@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-Enable context analysis for security/tomoyo.
+As discussed in [1], removing __cond_lock() will improve the readability
+of trylock code. Now that Sparse context tracking support has been
+removed, we can also remove __cond_lock().
 
-This demonstrates a larger conversion to use Clang's context
-analysis. The benefit is additional static checking of locking rules,
-along with better documentation.
+Change existing APIs to either drop __cond_lock() completely, or make
+use of the __cond_acquires() function attribute instead.
 
-Tomoyo makes use of several synchronization primitives, yet its clear
-design made it relatively straightforward to enable context analysis.
+In particular, spinlock and rwlock implementations required switching
+over to inline helpers rather than statement-expressions for their
+trylock_* variants.
 
-One notable finding was:
-
-  security/tomoyo/gc.c:664:20: error: reading variable 'write_buf' requires holding mutex '&tomoyo_io_buffer::io_sem'
-    664 |                 is_write = head->write_buf != NULL;
-
-For which Tetsuo writes:
-
-  "Good catch. This should be data_race(), for tomoyo_write_control()
-   might concurrently update head->write_buf from non-NULL to non-NULL
-   with head->io_sem held."
-
+Link: https://lore.kernel.org/all/20250207082832.GU7145@noisy.programming.kicks-ass.net/ [1]
+Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Marco Elver <elver@google.com>
-Cc: Kentaro Takeda <takedakn@nttdata.co.jp>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 ---
-v4:
-* Rename capability -> context analysis.
-
 v2:
 * New patch.
 ---
- security/tomoyo/Makefile  |  2 +
- security/tomoyo/common.c  | 52 ++++++++++++++++++++++++--
- security/tomoyo/common.h  | 77 ++++++++++++++++++++-------------------
- security/tomoyo/domain.c  |  1 +
- security/tomoyo/environ.c |  1 +
- security/tomoyo/file.c    |  5 +++
- security/tomoyo/gc.c      | 28 ++++++++++----
- security/tomoyo/mount.c   |  2 +
- security/tomoyo/network.c |  3 ++
- 9 files changed, 122 insertions(+), 49 deletions(-)
+ Documentation/dev-tools/context-analysis.rst  |  2 -
+ Documentation/mm/process_addrs.rst            |  6 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.c    |  4 +-
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  6 +-
+ .../intel/iwlwifi/pcie/gen1_2/internal.h      |  5 +-
+ .../intel/iwlwifi/pcie/gen1_2/trans.c         |  4 +-
+ include/linux/compiler-context-analysis.h     | 31 ----------
+ include/linux/mm.h                            | 33 ++--------
+ include/linux/rwlock.h                        | 11 +---
+ include/linux/rwlock_api_smp.h                | 14 ++++-
+ include/linux/rwlock_rt.h                     | 21 ++++---
+ include/linux/sched/signal.h                  | 14 +----
+ include/linux/spinlock.h                      | 45 +++++---------
+ include/linux/spinlock_api_smp.h              | 20 ++++++
+ include/linux/spinlock_api_up.h               | 61 ++++++++++++++++---
+ include/linux/spinlock_rt.h                   | 26 ++++----
+ kernel/signal.c                               |  4 +-
+ kernel/time/posix-timers.c                    | 13 +---
+ lib/dec_and_lock.c                            |  8 +--
+ mm/memory.c                                   |  4 +-
+ mm/pgtable-generic.c                          | 19 +++---
+ tools/include/linux/compiler_types.h          |  2 -
+ 22 files changed, 162 insertions(+), 191 deletions(-)
 
-diff --git a/security/tomoyo/Makefile b/security/tomoyo/Makefile
-index 55c67b9846a9..e3c0f853aa3b 100644
---- a/security/tomoyo/Makefile
-+++ b/security/tomoyo/Makefile
-@@ -1,4 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
-+CONTEXT_ANALYSIS := y
-+
- obj-y = audit.o common.o condition.o domain.o environ.o file.o gc.o group.o load_policy.o memory.o mount.o network.o realpath.o securityfs_if.o tomoyo.o util.o
+diff --git a/Documentation/dev-tools/context-analysis.rst b/Documentation/dev-tools/context-analysis.rst
+index 2936666651f3..e53f089d0c52 100644
+--- a/Documentation/dev-tools/context-analysis.rst
++++ b/Documentation/dev-tools/context-analysis.rst
+@@ -113,10 +113,8 @@ Keywords
+                  __releases_shared
+                  __acquire
+                  __release
+-                 __cond_lock
+                  __acquire_shared
+                  __release_shared
+-                 __cond_lock_shared
+                  __acquire_ret
+                  __acquire_shared_ret
+                  context_unsafe
+diff --git a/Documentation/mm/process_addrs.rst b/Documentation/mm/process_addrs.rst
+index be49e2a269e4..25d551a01f16 100644
+--- a/Documentation/mm/process_addrs.rst
++++ b/Documentation/mm/process_addrs.rst
+@@ -582,7 +582,7 @@ To access PTE-level page tables, a helper like :c:func:`!pte_offset_map_lock` or
+ :c:func:`!pte_offset_map` can be used depending on stability requirements.
+ These map the page table into kernel memory if required, take the RCU lock, and
+ depending on variant, may also look up or acquire the PTE lock.
+-See the comment on :c:func:`!__pte_offset_map_lock`.
++See the comment on :c:func:`!pte_offset_map_lock`.
  
- targets += builtin-policy.h
-diff --git a/security/tomoyo/common.c b/security/tomoyo/common.c
-index 0f78898bce09..86ce56c32d37 100644
---- a/security/tomoyo/common.c
-+++ b/security/tomoyo/common.c
-@@ -268,6 +268,7 @@ static void tomoyo_io_printf(struct tomoyo_io_buffer *head, const char *fmt,
-  */
- static void tomoyo_io_printf(struct tomoyo_io_buffer *head, const char *fmt,
- 			     ...)
-+	__must_hold(&head->io_sem)
+ Atomicity
+ ^^^^^^^^^
+@@ -666,7 +666,7 @@ must be released via :c:func:`!pte_unmap_unlock`.
+ .. note:: There are some variants on this, such as
+    :c:func:`!pte_offset_map_rw_nolock` when we know we hold the PTE stable but
+    for brevity we do not explore this.  See the comment for
+-   :c:func:`!__pte_offset_map_lock` for more details.
++   :c:func:`!pte_offset_map_lock` for more details.
+ 
+ When modifying data in ranges we typically only wish to allocate higher page
+ tables as necessary, using these locks to avoid races or overwriting anything,
+@@ -685,7 +685,7 @@ At the leaf page table, that is the PTE, we can't entirely rely on this pattern
+ as we have separate PMD and PTE locks and a THP collapse for instance might have
+ eliminated the PMD entry as well as the PTE from under us.
+ 
+-This is why :c:func:`!__pte_offset_map_lock` locklessly retrieves the PMD entry
++This is why :c:func:`!pte_offset_map_lock` locklessly retrieves the PMD entry
+ for the PTE, carefully checking it is as expected, before acquiring the
+ PTE-specific lock, and then *again* checking that the PMD entry is as expected.
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 5232f66c2d52..12016bb00596 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -548,11 +548,11 @@ int iwl_trans_read_config32(struct iwl_trans *trans, u32 ofs,
+ 	return iwl_trans_pcie_read_config32(trans, ofs, val);
+ }
+ 
+-bool _iwl_trans_grab_nic_access(struct iwl_trans *trans)
++bool iwl_trans_grab_nic_access(struct iwl_trans *trans)
  {
- 	va_list args;
- 	size_t len;
-@@ -416,8 +417,9 @@ static void tomoyo_print_name_union_quoted(struct tomoyo_io_buffer *head,
+ 	return iwl_trans_pcie_grab_nic_access(trans);
+ }
+-IWL_EXPORT_SYMBOL(_iwl_trans_grab_nic_access);
++IWL_EXPORT_SYMBOL(iwl_trans_grab_nic_access);
+ 
+ void __releases(nic_access)
+ iwl_trans_release_nic_access(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index a0cc5d7745e8..10b38d09cddf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1063,11 +1063,7 @@ int iwl_trans_sw_reset(struct iwl_trans *trans);
+ void iwl_trans_set_bits_mask(struct iwl_trans *trans, u32 reg,
+ 			     u32 mask, u32 value);
+ 
+-bool _iwl_trans_grab_nic_access(struct iwl_trans *trans);
+-
+-#define iwl_trans_grab_nic_access(trans)		\
+-	__cond_lock(nic_access,				\
+-		    likely(_iwl_trans_grab_nic_access(trans)))
++bool iwl_trans_grab_nic_access(struct iwl_trans *trans);
+ 
+ void __releases(nic_access)
+ iwl_trans_release_nic_access(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+index 207c56e338dd..7b7b35e442f9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+@@ -553,10 +553,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans);
+ void iwl_trans_pcie_free_pnvm_dram_regions(struct iwl_dram_regions *dram_regions,
+ 					   struct device *dev);
+ 
+-bool __iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent);
+-#define _iwl_trans_pcie_grab_nic_access(trans, silent)		\
+-	__cond_lock(nic_access_nobh,				\
+-		    likely(__iwl_trans_pcie_grab_nic_access(trans, silent)))
++bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent);
+ 
+ void iwl_trans_pcie_check_product_reset_status(struct pci_dev *pdev);
+ void iwl_trans_pcie_check_product_reset_mode(struct pci_dev *pdev);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+index 59307b5df441..a45358841243 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+@@ -2327,7 +2327,7 @@ EXPORT_SYMBOL(iwl_trans_pcie_reset);
+  * This version doesn't disable BHs but rather assumes they're
+  * already disabled.
+  */
+-bool __iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent)
++bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent)
+ {
+ 	int ret;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+@@ -2415,7 +2415,7 @@ bool iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans)
+ 	bool ret;
+ 
+ 	local_bh_disable();
+-	ret = __iwl_trans_pcie_grab_nic_access(trans, false);
++	ret = _iwl_trans_pcie_grab_nic_access(trans, false);
+ 	if (ret) {
+ 		/* keep BHs disabled until iwl_trans_pcie_release_nic_access */
+ 		return ret;
+diff --git a/include/linux/compiler-context-analysis.h b/include/linux/compiler-context-analysis.h
+index 6990cab7a4a9..03056f87a86f 100644
+--- a/include/linux/compiler-context-analysis.h
++++ b/include/linux/compiler-context-analysis.h
+@@ -329,24 +329,6 @@ static inline void _context_unsafe_alias(void **p) { }
+  */
+ #define __release(x)		__release_ctx_guard(x)
+ 
+-/**
+- * __cond_lock() - function that conditionally acquires a context guard
+- *                 exclusively
+- * @x: context guard instance pinter
+- * @c: boolean expression
+- *
+- * Return: result of @c
+- *
+- * No-op function that conditionally acquires context guard instance @x
+- * exclusively, if the boolean expression @c is true. The result of @c is the
+- * return value; for example:
+- *
+- * .. code-block:: c
+- *
+- *	#define spin_trylock(l) __cond_lock(&lock, _spin_trylock(&lock))
+- */
+-#define __cond_lock(x, c)	__try_acquire_ctx_guard(x, c)
+-
+ /**
+  * __must_hold_shared() - function attribute, caller must hold shared context guard
   *
-  * Returns nothing.
+@@ -405,19 +387,6 @@ static inline void _context_unsafe_alias(void **p) { }
   */
--static void tomoyo_print_number_union_nospace
--(struct tomoyo_io_buffer *head, const struct tomoyo_number_union *ptr)
-+static void
-+tomoyo_print_number_union_nospace(struct tomoyo_io_buffer *head, const struct tomoyo_number_union *ptr)
-+	__must_hold(&head->io_sem)
- {
- 	if (ptr->group) {
- 		tomoyo_set_string(head, "@");
-@@ -466,6 +468,7 @@ static void tomoyo_print_number_union_nospace
-  */
- static void tomoyo_print_number_union(struct tomoyo_io_buffer *head,
- 				      const struct tomoyo_number_union *ptr)
-+	__must_hold(&head->io_sem)
- {
- 	tomoyo_set_space(head);
- 	tomoyo_print_number_union_nospace(head, ptr);
-@@ -664,6 +667,7 @@ static int tomoyo_set_mode(char *name, const char *value,
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_write_profile(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	char *data = head->write_buf;
- 	unsigned int i;
-@@ -719,6 +723,7 @@ static int tomoyo_write_profile(struct tomoyo_io_buffer *head)
-  * Caller prints functionality's name.
-  */
- static void tomoyo_print_config(struct tomoyo_io_buffer *head, const u8 config)
-+	__must_hold(&head->io_sem)
- {
- 	tomoyo_io_printf(head, "={ mode=%s grant_log=%s reject_log=%s }\n",
- 			 tomoyo_mode[config & 3],
-@@ -734,6 +739,7 @@ static void tomoyo_print_config(struct tomoyo_io_buffer *head, const u8 config)
-  * Returns nothing.
-  */
- static void tomoyo_read_profile(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	u8 index;
- 	struct tomoyo_policy_namespace *ns =
-@@ -852,6 +858,7 @@ static bool tomoyo_same_manager(const struct tomoyo_acl_head *a,
-  */
- static int tomoyo_update_manager_entry(const char *manager,
- 				       const bool is_delete)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_manager e = { };
- 	struct tomoyo_acl_param param = {
-@@ -883,6 +890,8 @@ static int tomoyo_update_manager_entry(const char *manager,
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_write_manager(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	char *data = head->write_buf;
+ #define __release_shared(x)	__release_shared_ctx_guard(x)
  
-@@ -901,6 +910,7 @@ static int tomoyo_write_manager(struct tomoyo_io_buffer *head)
-  * Caller holds tomoyo_read_lock().
-  */
- static void tomoyo_read_manager(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	if (head->r.eof)
- 		return;
-@@ -927,6 +937,7 @@ static void tomoyo_read_manager(struct tomoyo_io_buffer *head)
-  * Caller holds tomoyo_read_lock().
-  */
- static bool tomoyo_manager(void)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_manager *ptr;
- 	const char *exe;
-@@ -981,6 +992,8 @@ static struct tomoyo_domain_info *tomoyo_find_domain_by_qid
-  */
- static bool tomoyo_select_domain(struct tomoyo_io_buffer *head,
- 				 const char *data)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	unsigned int pid;
- 	struct tomoyo_domain_info *domain = NULL;
-@@ -1051,6 +1064,7 @@ static bool tomoyo_same_task_acl(const struct tomoyo_acl_info *a,
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_write_task(struct tomoyo_acl_param *param)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	int error = -EINVAL;
- 
-@@ -1079,6 +1093,7 @@ static int tomoyo_write_task(struct tomoyo_acl_param *param)
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_delete_domain(char *domainname)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_domain_info *domain;
- 	struct tomoyo_path_info name;
-@@ -1118,6 +1133,7 @@ static int tomoyo_delete_domain(char *domainname)
- static int tomoyo_write_domain2(struct tomoyo_policy_namespace *ns,
- 				struct list_head *list, char *data,
- 				const bool is_delete)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_acl_param param = {
- 		.ns = ns,
-@@ -1162,6 +1178,8 @@ const char * const tomoyo_dif[TOMOYO_MAX_DOMAIN_INFO_FLAGS] = {
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_write_domain(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	char *data = head->write_buf;
- 	struct tomoyo_policy_namespace *ns;
-@@ -1223,6 +1241,7 @@ static int tomoyo_write_domain(struct tomoyo_io_buffer *head)
-  */
- static bool tomoyo_print_condition(struct tomoyo_io_buffer *head,
- 				   const struct tomoyo_condition *cond)
-+	__must_hold(&head->io_sem)
- {
- 	switch (head->r.cond_step) {
- 	case 0:
-@@ -1364,6 +1383,7 @@ static bool tomoyo_print_condition(struct tomoyo_io_buffer *head,
-  */
- static void tomoyo_set_group(struct tomoyo_io_buffer *head,
- 			     const char *category)
-+	__must_hold(&head->io_sem)
- {
- 	if (head->type == TOMOYO_EXCEPTIONPOLICY) {
- 		tomoyo_print_namespace(head);
-@@ -1383,6 +1403,7 @@ static void tomoyo_set_group(struct tomoyo_io_buffer *head,
-  */
- static bool tomoyo_print_entry(struct tomoyo_io_buffer *head,
- 			       struct tomoyo_acl_info *acl)
-+	__must_hold(&head->io_sem)
- {
- 	const u8 acl_type = acl->type;
- 	bool first = true;
-@@ -1588,6 +1609,8 @@ static bool tomoyo_print_entry(struct tomoyo_io_buffer *head,
-  */
- static bool tomoyo_read_domain2(struct tomoyo_io_buffer *head,
- 				struct list_head *list)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	list_for_each_cookie(head->r.acl, list) {
- 		struct tomoyo_acl_info *ptr =
-@@ -1608,6 +1631,8 @@ static bool tomoyo_read_domain2(struct tomoyo_io_buffer *head,
-  * Caller holds tomoyo_read_lock().
-  */
- static void tomoyo_read_domain(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	if (head->r.eof)
- 		return;
-@@ -1686,6 +1711,7 @@ static int tomoyo_write_pid(struct tomoyo_io_buffer *head)
-  * using read()/write() interface rather than sysctl() interface.
-  */
- static void tomoyo_read_pid(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	char *buf = head->write_buf;
- 	bool global_pid = false;
-@@ -1746,6 +1772,8 @@ static const char *tomoyo_group_name[TOMOYO_MAX_GROUP] = {
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_write_exception(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	const bool is_delete = head->w.is_delete;
- 	struct tomoyo_acl_param param = {
-@@ -1787,6 +1815,8 @@ static int tomoyo_write_exception(struct tomoyo_io_buffer *head)
-  * Caller holds tomoyo_read_lock().
-  */
- static bool tomoyo_read_group(struct tomoyo_io_buffer *head, const int idx)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	struct tomoyo_policy_namespace *ns =
- 		container_of(head->r.ns, typeof(*ns), namespace_list);
-@@ -1846,6 +1876,7 @@ static bool tomoyo_read_group(struct tomoyo_io_buffer *head, const int idx)
-  * Caller holds tomoyo_read_lock().
-  */
- static bool tomoyo_read_policy(struct tomoyo_io_buffer *head, const int idx)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_policy_namespace *ns =
- 		container_of(head->r.ns, typeof(*ns), namespace_list);
-@@ -1906,6 +1937,8 @@ static bool tomoyo_read_policy(struct tomoyo_io_buffer *head, const int idx)
-  * Caller holds tomoyo_read_lock().
-  */
- static void tomoyo_read_exception(struct tomoyo_io_buffer *head)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	struct tomoyo_policy_namespace *ns =
- 		container_of(head->r.ns, typeof(*ns), namespace_list);
-@@ -2097,6 +2130,7 @@ static void tomoyo_patternize_path(char *buffer, const int len, char *entry)
-  * Returns nothing.
-  */
- static void tomoyo_add_entry(struct tomoyo_domain_info *domain, char *header)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	char *buffer;
- 	char *realpath = NULL;
-@@ -2301,6 +2335,7 @@ static __poll_t tomoyo_poll_query(struct file *file, poll_table *wait)
-  * @head: Pointer to "struct tomoyo_io_buffer".
-  */
- static void tomoyo_read_query(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	struct list_head *tmp;
- 	unsigned int pos = 0;
-@@ -2362,6 +2397,7 @@ static void tomoyo_read_query(struct tomoyo_io_buffer *head)
-  * Returns 0 on success, -EINVAL otherwise.
-  */
- static int tomoyo_write_answer(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	char *data = head->write_buf;
- 	struct list_head *tmp;
-@@ -2401,6 +2437,7 @@ static int tomoyo_write_answer(struct tomoyo_io_buffer *head)
-  * Returns version information.
-  */
- static void tomoyo_read_version(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	if (!head->r.eof) {
- 		tomoyo_io_printf(head, "2.6.0");
-@@ -2449,6 +2486,7 @@ void tomoyo_update_stat(const u8 index)
-  * Returns nothing.
-  */
- static void tomoyo_read_stat(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	u8 i;
- 	unsigned int total = 0;
-@@ -2493,6 +2531,7 @@ static void tomoyo_read_stat(struct tomoyo_io_buffer *head)
-  * Returns 0.
-  */
- static int tomoyo_write_stat(struct tomoyo_io_buffer *head)
-+	__must_hold(&head->io_sem)
- {
- 	char *data = head->write_buf;
- 	u8 i;
-@@ -2717,6 +2756,8 @@ ssize_t tomoyo_read_control(struct tomoyo_io_buffer *head, char __user *buffer,
-  * Caller holds tomoyo_read_lock().
-  */
- static int tomoyo_parse_policy(struct tomoyo_io_buffer *head, char *line)
-+	__must_hold_shared(&tomoyo_ss)
-+	__must_hold(&head->io_sem)
- {
- 	/* Delete request? */
- 	head->w.is_delete = !strncmp(line, "delete ", 7);
-@@ -2969,8 +3010,11 @@ void __init tomoyo_load_builtin_policy(void)
- 				break;
- 			*end = '\0';
- 			tomoyo_normalize_line(start);
--			head.write_buf = start;
--			tomoyo_parse_policy(&head, start);
-+			/* head is stack-local and not shared. */
-+			context_unsafe(
-+				head.write_buf = start;
-+				tomoyo_parse_policy(&head, start);
-+			);
- 			start = end + 1;
- 		}
- 	}
-diff --git a/security/tomoyo/common.h b/security/tomoyo/common.h
-index 0e8e2e959aef..2ff05653743c 100644
---- a/security/tomoyo/common.h
-+++ b/security/tomoyo/common.h
-@@ -827,13 +827,13 @@ struct tomoyo_io_buffer {
- 		bool is_delete;
- 	} w;
- 	/* Buffer for reading.                  */
--	char *read_buf;
-+	char *read_buf		__guarded_by(&io_sem);
- 	/* Size of read buffer.                 */
--	size_t readbuf_size;
-+	size_t readbuf_size	__guarded_by(&io_sem);
- 	/* Buffer for writing.                  */
--	char *write_buf;
-+	char *write_buf		__guarded_by(&io_sem);
- 	/* Size of write buffer.                */
--	size_t writebuf_size;
-+	size_t writebuf_size	__guarded_by(&io_sem);
- 	/* Type of this interface.              */
- 	enum tomoyo_securityfs_interface_index type;
- 	/* Users counter protected by tomoyo_io_buffer_list_lock. */
-@@ -922,6 +922,35 @@ struct tomoyo_task {
- 	struct tomoyo_domain_info *old_domain_info;
- };
- 
-+/********** External variable definitions. **********/
-+
-+extern bool tomoyo_policy_loaded;
-+extern int tomoyo_enabled;
-+extern const char * const tomoyo_condition_keyword
-+[TOMOYO_MAX_CONDITION_KEYWORD];
-+extern const char * const tomoyo_dif[TOMOYO_MAX_DOMAIN_INFO_FLAGS];
-+extern const char * const tomoyo_mac_keywords[TOMOYO_MAX_MAC_INDEX
-+					      + TOMOYO_MAX_MAC_CATEGORY_INDEX];
-+extern const char * const tomoyo_mode[TOMOYO_CONFIG_MAX_MODE];
-+extern const char * const tomoyo_path_keyword[TOMOYO_MAX_PATH_OPERATION];
-+extern const char * const tomoyo_proto_keyword[TOMOYO_SOCK_MAX];
-+extern const char * const tomoyo_socket_keyword[TOMOYO_MAX_NETWORK_OPERATION];
-+extern const u8 tomoyo_index2category[TOMOYO_MAX_MAC_INDEX];
-+extern const u8 tomoyo_pn2mac[TOMOYO_MAX_PATH_NUMBER_OPERATION];
-+extern const u8 tomoyo_pnnn2mac[TOMOYO_MAX_MKDEV_OPERATION];
-+extern const u8 tomoyo_pp2mac[TOMOYO_MAX_PATH2_OPERATION];
-+extern struct list_head tomoyo_condition_list;
-+extern struct list_head tomoyo_domain_list;
-+extern struct list_head tomoyo_name_list[TOMOYO_MAX_HASH];
-+extern struct list_head tomoyo_namespace_list;
-+extern struct mutex tomoyo_policy_lock;
-+extern struct srcu_struct tomoyo_ss;
-+extern struct tomoyo_domain_info tomoyo_kernel_domain;
-+extern struct tomoyo_policy_namespace tomoyo_kernel_namespace;
-+extern unsigned int tomoyo_memory_quota[TOMOYO_MAX_MEMORY_STAT];
-+extern unsigned int tomoyo_memory_used[TOMOYO_MAX_MEMORY_STAT];
-+extern struct lsm_blob_sizes tomoyo_blob_sizes;
-+
- /********** Function prototypes. **********/
- 
- bool tomoyo_address_matches_group(const bool is_ipv6, const __be32 *address,
-@@ -969,10 +998,10 @@ const struct tomoyo_path_info *tomoyo_path_matches_group
- int tomoyo_check_open_permission(struct tomoyo_domain_info *domain,
- 				 const struct path *path, const int flag);
- void tomoyo_close_control(struct tomoyo_io_buffer *head);
--int tomoyo_env_perm(struct tomoyo_request_info *r, const char *env);
-+int tomoyo_env_perm(struct tomoyo_request_info *r, const char *env) __must_hold_shared(&tomoyo_ss);
- int tomoyo_execute_permission(struct tomoyo_request_info *r,
--			      const struct tomoyo_path_info *filename);
--int tomoyo_find_next_domain(struct linux_binprm *bprm);
-+			      const struct tomoyo_path_info *filename) __must_hold_shared(&tomoyo_ss);
-+int tomoyo_find_next_domain(struct linux_binprm *bprm) __must_hold_shared(&tomoyo_ss);
- int tomoyo_get_mode(const struct tomoyo_policy_namespace *ns, const u8 profile,
- 		    const u8 index);
- int tomoyo_init_request_info(struct tomoyo_request_info *r,
-@@ -1000,6 +1029,7 @@ int tomoyo_socket_listen_permission(struct socket *sock);
- int tomoyo_socket_sendmsg_permission(struct socket *sock, struct msghdr *msg,
- 				     int size);
- int tomoyo_supervisor(struct tomoyo_request_info *r, const char *fmt, ...)
-+	__must_hold_shared(&tomoyo_ss)
- 	__printf(2, 3);
- int tomoyo_update_domain(struct tomoyo_acl_info *new_entry, const int size,
- 			 struct tomoyo_acl_param *param,
-@@ -1059,7 +1089,7 @@ void tomoyo_print_ulong(char *buffer, const int buffer_len,
- 			const unsigned long value, const u8 type);
- void tomoyo_put_name_union(struct tomoyo_name_union *ptr);
- void tomoyo_put_number_union(struct tomoyo_number_union *ptr);
--void tomoyo_read_log(struct tomoyo_io_buffer *head);
-+void tomoyo_read_log(struct tomoyo_io_buffer *head) __must_hold(&head->io_sem);
- void tomoyo_update_stat(const u8 index);
- void tomoyo_warn_oom(const char *function);
- void tomoyo_write_log(struct tomoyo_request_info *r, const char *fmt, ...)
-@@ -1067,35 +1097,6 @@ void tomoyo_write_log(struct tomoyo_request_info *r, const char *fmt, ...)
- void tomoyo_write_log2(struct tomoyo_request_info *r, int len, const char *fmt,
- 		       va_list args) __printf(3, 0);
- 
--/********** External variable definitions. **********/
+-/**
+- * __cond_lock_shared() - function that conditionally acquires a context guard shared
+- * @x: context guard instance pinter
+- * @c: boolean expression
+- *
+- * Return: result of @c
+- *
+- * No-op function that conditionally acquires context guard instance @x with
+- * shared access, if the boolean expression @c is true. The result of @c is the
+- * return value.
+- */
+-#define __cond_lock_shared(x, c) __try_acquire_shared_ctx_guard(x, c)
 -
--extern bool tomoyo_policy_loaded;
--extern int tomoyo_enabled;
--extern const char * const tomoyo_condition_keyword
--[TOMOYO_MAX_CONDITION_KEYWORD];
--extern const char * const tomoyo_dif[TOMOYO_MAX_DOMAIN_INFO_FLAGS];
--extern const char * const tomoyo_mac_keywords[TOMOYO_MAX_MAC_INDEX
--					      + TOMOYO_MAX_MAC_CATEGORY_INDEX];
--extern const char * const tomoyo_mode[TOMOYO_CONFIG_MAX_MODE];
--extern const char * const tomoyo_path_keyword[TOMOYO_MAX_PATH_OPERATION];
--extern const char * const tomoyo_proto_keyword[TOMOYO_SOCK_MAX];
--extern const char * const tomoyo_socket_keyword[TOMOYO_MAX_NETWORK_OPERATION];
--extern const u8 tomoyo_index2category[TOMOYO_MAX_MAC_INDEX];
--extern const u8 tomoyo_pn2mac[TOMOYO_MAX_PATH_NUMBER_OPERATION];
--extern const u8 tomoyo_pnnn2mac[TOMOYO_MAX_MKDEV_OPERATION];
--extern const u8 tomoyo_pp2mac[TOMOYO_MAX_PATH2_OPERATION];
--extern struct list_head tomoyo_condition_list;
--extern struct list_head tomoyo_domain_list;
--extern struct list_head tomoyo_name_list[TOMOYO_MAX_HASH];
--extern struct list_head tomoyo_namespace_list;
--extern struct mutex tomoyo_policy_lock;
--extern struct srcu_struct tomoyo_ss;
--extern struct tomoyo_domain_info tomoyo_kernel_domain;
--extern struct tomoyo_policy_namespace tomoyo_kernel_namespace;
--extern unsigned int tomoyo_memory_quota[TOMOYO_MAX_MEMORY_STAT];
--extern unsigned int tomoyo_memory_used[TOMOYO_MAX_MEMORY_STAT];
--extern struct lsm_blob_sizes tomoyo_blob_sizes;
+ /**
+  * __acquire_ret() - helper to acquire context guard of return value
+  * @call: call expression
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 7c79b3369b82..d0c89022a823 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2813,15 +2813,8 @@ static inline pud_t pud_mkspecial(pud_t pud)
+ }
+ #endif	/* CONFIG_ARCH_SUPPORTS_PUD_PFNMAP */
+ 
+-extern pte_t *__get_locked_pte(struct mm_struct *mm, unsigned long addr,
+-			       spinlock_t **ptl);
+-static inline pte_t *get_locked_pte(struct mm_struct *mm, unsigned long addr,
+-				    spinlock_t **ptl)
+-{
+-	pte_t *ptep;
+-	__cond_lock(*ptl, ptep = __get_locked_pte(mm, addr, ptl));
+-	return ptep;
+-}
++extern pte_t *get_locked_pte(struct mm_struct *mm, unsigned long addr,
++			     spinlock_t **ptl);
+ 
+ #ifdef __PAGETABLE_P4D_FOLDED
+ static inline int __p4d_alloc(struct mm_struct *mm, pgd_t *pgd,
+@@ -3116,31 +3109,15 @@ static inline bool pagetable_pte_ctor(struct mm_struct *mm,
+ 	return true;
+ }
+ 
+-pte_t *___pte_offset_map(pmd_t *pmd, unsigned long addr, pmd_t *pmdvalp);
+-static inline pte_t *__pte_offset_map(pmd_t *pmd, unsigned long addr,
+-			pmd_t *pmdvalp)
+-{
+-	pte_t *pte;
++pte_t *__pte_offset_map(pmd_t *pmd, unsigned long addr, pmd_t *pmdvalp);
+ 
+-	__cond_lock(RCU, pte = ___pte_offset_map(pmd, addr, pmdvalp));
+-	return pte;
+-}
+ static inline pte_t *pte_offset_map(pmd_t *pmd, unsigned long addr)
+ {
+ 	return __pte_offset_map(pmd, addr, NULL);
+ }
+ 
+-pte_t *__pte_offset_map_lock(struct mm_struct *mm, pmd_t *pmd,
+-			unsigned long addr, spinlock_t **ptlp);
+-static inline pte_t *pte_offset_map_lock(struct mm_struct *mm, pmd_t *pmd,
+-			unsigned long addr, spinlock_t **ptlp)
+-{
+-	pte_t *pte;
 -
- /********** Inlined functions. **********/
+-	__cond_lock(RCU, __cond_lock(*ptlp,
+-			pte = __pte_offset_map_lock(mm, pmd, addr, ptlp)));
+-	return pte;
+-}
++pte_t *pte_offset_map_lock(struct mm_struct *mm, pmd_t *pmd,
++			   unsigned long addr, spinlock_t **ptlp);
+ 
+ pte_t *pte_offset_map_ro_nolock(struct mm_struct *mm, pmd_t *pmd,
+ 				unsigned long addr, spinlock_t **ptlp);
+diff --git a/include/linux/rwlock.h b/include/linux/rwlock.h
+index a2f85a0356c4..53ba394e9c51 100644
+--- a/include/linux/rwlock.h
++++ b/include/linux/rwlock.h
+@@ -50,8 +50,8 @@ do {								\
+  * regardless of whether CONFIG_SMP or CONFIG_PREEMPT are set. The various
+  * methods are defined as nops in the case they are not required.
+  */
+-#define read_trylock(lock)	__cond_lock_shared(lock, _raw_read_trylock(lock))
+-#define write_trylock(lock)	__cond_lock(lock, _raw_write_trylock(lock))
++#define read_trylock(lock)	_raw_read_trylock(lock)
++#define write_trylock(lock)	_raw_write_trylock(lock)
+ 
+ #define write_lock(lock)	_raw_write_lock(lock)
+ #define read_lock(lock)		_raw_read_lock(lock)
+@@ -113,12 +113,7 @@ do {								\
+ 	} while (0)
+ #define write_unlock_bh(lock)		_raw_write_unlock_bh(lock)
+ 
+-#define write_trylock_irqsave(lock, flags)		\
+-	__cond_lock(lock, ({				\
+-		local_irq_save(flags);			\
+-		_raw_write_trylock(lock) ?		\
+-		1 : ({ local_irq_restore(flags); 0; });	\
+-	}))
++#define write_trylock_irqsave(lock, flags) _raw_write_trylock_irqsave(lock, &(flags))
+ 
+ #ifdef arch_rwlock_is_contended
+ #define rwlock_is_contended(lock) \
+diff --git a/include/linux/rwlock_api_smp.h b/include/linux/rwlock_api_smp.h
+index 6d5cc0b7be1f..d903b17c46ca 100644
+--- a/include/linux/rwlock_api_smp.h
++++ b/include/linux/rwlock_api_smp.h
+@@ -26,8 +26,8 @@ unsigned long __lockfunc _raw_read_lock_irqsave(rwlock_t *lock)
+ 							__acquires(lock);
+ unsigned long __lockfunc _raw_write_lock_irqsave(rwlock_t *lock)
+ 							__acquires(lock);
+-int __lockfunc _raw_read_trylock(rwlock_t *lock);
+-int __lockfunc _raw_write_trylock(rwlock_t *lock);
++int __lockfunc _raw_read_trylock(rwlock_t *lock)	__cond_acquires_shared(true, lock);
++int __lockfunc _raw_write_trylock(rwlock_t *lock)	__cond_acquires(true, lock);
+ void __lockfunc _raw_read_unlock(rwlock_t *lock)	__releases_shared(lock);
+ void __lockfunc _raw_write_unlock(rwlock_t *lock)	__releases(lock);
+ void __lockfunc _raw_read_unlock_bh(rwlock_t *lock)	__releases_shared(lock);
+@@ -41,6 +41,16 @@ void __lockfunc
+ _raw_write_unlock_irqrestore(rwlock_t *lock, unsigned long flags)
+ 							__releases(lock);
+ 
++static inline bool _raw_write_trylock_irqsave(rwlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock)
++{
++	local_irq_save(*flags);
++	if (_raw_write_trylock(lock))
++		return true;
++	local_irq_restore(*flags);
++	return false;
++}
++
+ #ifdef CONFIG_INLINE_READ_LOCK
+ #define _raw_read_lock(lock) __raw_read_lock(lock)
+ #endif
+diff --git a/include/linux/rwlock_rt.h b/include/linux/rwlock_rt.h
+index 2723abbe0e7a..f5fd96e0800e 100644
+--- a/include/linux/rwlock_rt.h
++++ b/include/linux/rwlock_rt.h
+@@ -26,11 +26,11 @@ do {							\
+ } while (0)
+ 
+ extern void rt_read_lock(rwlock_t *rwlock)	__acquires_shared(rwlock);
+-extern int rt_read_trylock(rwlock_t *rwlock);
++extern int rt_read_trylock(rwlock_t *rwlock)	__cond_acquires_shared(true, rwlock);
+ extern void rt_read_unlock(rwlock_t *rwlock)	__releases_shared(rwlock);
+ extern void rt_write_lock(rwlock_t *rwlock)	__acquires(rwlock);
+ extern void rt_write_lock_nested(rwlock_t *rwlock, int subclass)	__acquires(rwlock);
+-extern int rt_write_trylock(rwlock_t *rwlock);
++extern int rt_write_trylock(rwlock_t *rwlock)	__cond_acquires(true, rwlock);
+ extern void rt_write_unlock(rwlock_t *rwlock)	__releases(rwlock);
+ 
+ static __always_inline void read_lock(rwlock_t *rwlock)
+@@ -59,7 +59,7 @@ static __always_inline void read_lock_irq(rwlock_t *rwlock)
+ 		flags = 0;				\
+ 	} while (0)
+ 
+-#define read_trylock(lock)	__cond_lock_shared(lock, rt_read_trylock(lock))
++#define read_trylock(lock)	rt_read_trylock(lock)
+ 
+ static __always_inline void read_unlock(rwlock_t *rwlock)
+ 	__releases_shared(rwlock)
+@@ -123,14 +123,15 @@ static __always_inline void write_lock_irq(rwlock_t *rwlock)
+ 		flags = 0;				\
+ 	} while (0)
+ 
+-#define write_trylock(lock)	__cond_lock(lock, rt_write_trylock(lock))
++#define write_trylock(lock)	rt_write_trylock(lock)
+ 
+-#define write_trylock_irqsave(lock, flags)		\
+-	__cond_lock(lock, ({				\
+-		typecheck(unsigned long, flags);	\
+-		flags = 0;				\
+-		rt_write_trylock(lock);			\
+-	}))
++static __always_inline bool _write_trylock_irqsave(rwlock_t *rwlock, unsigned long *flags)
++	__cond_acquires(true, rwlock)
++{
++	*flags = 0;
++	return rt_write_trylock(rwlock);
++}
++#define write_trylock_irqsave(lock, flags) _write_trylock_irqsave(lock, &(flags))
+ 
+ static __always_inline void write_unlock(rwlock_t *rwlock)
+ 	__releases(rwlock)
+diff --git a/include/linux/sched/signal.h b/include/linux/sched/signal.h
+index 7d6449982822..a63f65aa5bdd 100644
+--- a/include/linux/sched/signal.h
++++ b/include/linux/sched/signal.h
+@@ -737,18 +737,8 @@ static inline int thread_group_empty(struct task_struct *p)
+ #define delay_group_leader(p) \
+ 		(thread_group_leader(p) && !thread_group_empty(p))
+ 
+-extern struct sighand_struct *__lock_task_sighand(struct task_struct *task,
+-							unsigned long *flags);
+-
+-static inline struct sighand_struct *lock_task_sighand(struct task_struct *task,
+-						       unsigned long *flags)
+-{
+-	struct sighand_struct *ret;
+-
+-	ret = __lock_task_sighand(task, flags);
+-	(void)__cond_lock(&task->sighand->siglock, ret);
+-	return ret;
+-}
++extern struct sighand_struct *lock_task_sighand(struct task_struct *task,
++						unsigned long *flags);
+ 
+ static inline void unlock_task_sighand(struct task_struct *task,
+ 						unsigned long *flags)
+diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
+index 274d866a0be3..77b215c4124d 100644
+--- a/include/linux/spinlock.h
++++ b/include/linux/spinlock.h
+@@ -213,7 +213,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+  * various methods are defined as nops in the case they are not
+  * required.
+  */
+-#define raw_spin_trylock(lock)	__cond_lock(lock, _raw_spin_trylock(lock))
++#define raw_spin_trylock(lock)	_raw_spin_trylock(lock)
+ 
+ #define raw_spin_lock(lock)	_raw_spin_lock(lock)
+ 
+@@ -284,22 +284,11 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
+ 	} while (0)
+ #define raw_spin_unlock_bh(lock)	_raw_spin_unlock_bh(lock)
+ 
+-#define raw_spin_trylock_bh(lock) \
+-	__cond_lock(lock, _raw_spin_trylock_bh(lock))
++#define raw_spin_trylock_bh(lock)	_raw_spin_trylock_bh(lock)
+ 
+-#define raw_spin_trylock_irq(lock)			\
+-	__cond_lock(lock, ({				\
+-		local_irq_disable();			\
+-		_raw_spin_trylock(lock) ?		\
+-		1 : ({ local_irq_enable(); 0;  });	\
+-	}))
++#define raw_spin_trylock_irq(lock)	_raw_spin_trylock_irq(lock)
+ 
+-#define raw_spin_trylock_irqsave(lock, flags)		\
+-	__cond_lock(lock, ({				\
+-		local_irq_save(flags);			\
+-		_raw_spin_trylock(lock) ?		\
+-		1 : ({ local_irq_restore(flags); 0; }); \
+-	}))
++#define raw_spin_trylock_irqsave(lock, flags) _raw_spin_trylock_irqsave(lock, &(flags))
+ 
+ #ifndef CONFIG_PREEMPT_RT
+ /* Include rwlock functions for !RT */
+@@ -433,8 +422,12 @@ static __always_inline int spin_trylock_irq(spinlock_t *lock)
+ 	return raw_spin_trylock_irq(&lock->rlock);
+ }
+ 
+-#define spin_trylock_irqsave(lock, flags)			\
+-	__cond_lock(lock, raw_spin_trylock_irqsave(spinlock_check(lock), flags))
++static __always_inline bool _spin_trylock_irqsave(spinlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock) __no_context_analysis
++{
++	return raw_spin_trylock_irqsave(spinlock_check(lock), *flags);
++}
++#define spin_trylock_irqsave(lock, flags) _spin_trylock_irqsave(lock, &(flags))
  
  /**
-@@ -1104,6 +1105,7 @@ extern struct lsm_blob_sizes tomoyo_blob_sizes;
-  * Returns index number for tomoyo_read_unlock().
+  * spin_is_locked() - Check whether a spinlock is locked.
+@@ -512,23 +505,17 @@ static inline int rwlock_needbreak(rwlock_t *lock)
+  * Decrements @atomic by 1.  If the result is 0, returns true and locks
+  * @lock.  Returns false for all other cases.
   */
- static inline int tomoyo_read_lock(void)
-+	__acquires_shared(&tomoyo_ss)
- {
- 	return srcu_read_lock(&tomoyo_ss);
- }
-@@ -1116,6 +1118,7 @@ static inline int tomoyo_read_lock(void)
-  * Returns nothing.
-  */
- static inline void tomoyo_read_unlock(int idx)
-+	__releases_shared(&tomoyo_ss)
- {
- 	srcu_read_unlock(&tomoyo_ss, idx);
- }
-diff --git a/security/tomoyo/domain.c b/security/tomoyo/domain.c
-index 5f9ccab26e9a..5b7989ad85bf 100644
---- a/security/tomoyo/domain.c
-+++ b/security/tomoyo/domain.c
-@@ -611,6 +611,7 @@ struct tomoyo_domain_info *tomoyo_assign_domain(const char *domainname,
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_environ(struct tomoyo_execve *ee)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_request_info *r = &ee->r;
- 	struct linux_binprm *bprm = ee->bprm;
-diff --git a/security/tomoyo/environ.c b/security/tomoyo/environ.c
-index 7f0a471f19b2..bcb05910facc 100644
---- a/security/tomoyo/environ.c
-+++ b/security/tomoyo/environ.c
-@@ -32,6 +32,7 @@ static bool tomoyo_check_env_acl(struct tomoyo_request_info *r,
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_env_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "misc env %s\n",
- 				 r->param.environ.name->name);
-diff --git a/security/tomoyo/file.c b/security/tomoyo/file.c
-index 8f3b90b6e03d..e9b67dbb38e7 100644
---- a/security/tomoyo/file.c
-+++ b/security/tomoyo/file.c
-@@ -164,6 +164,7 @@ static bool tomoyo_get_realpath(struct tomoyo_path_info *buf, const struct path
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_path_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "file %s %s\n", tomoyo_path_keyword
- 				 [r->param.path.operation],
-@@ -178,6 +179,7 @@ static int tomoyo_audit_path_log(struct tomoyo_request_info *r)
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_path2_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "file %s %s %s\n", tomoyo_mac_keywords
- 				 [tomoyo_pp2mac[r->param.path2.operation]],
-@@ -193,6 +195,7 @@ static int tomoyo_audit_path2_log(struct tomoyo_request_info *r)
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_mkdev_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "file %s %s 0%o %u %u\n",
- 				 tomoyo_mac_keywords
-@@ -210,6 +213,7 @@ static int tomoyo_audit_mkdev_log(struct tomoyo_request_info *r)
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_path_number_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	const u8 type = r->param.path_number.operation;
- 	u8 radix;
-@@ -572,6 +576,7 @@ static int tomoyo_update_path2_acl(const u8 perm,
-  */
- static int tomoyo_path_permission(struct tomoyo_request_info *r, u8 operation,
- 				  const struct tomoyo_path_info *filename)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	int error;
+-extern int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock);
+-#define atomic_dec_and_lock(atomic, lock) \
+-		__cond_lock(lock, _atomic_dec_and_lock(atomic, lock))
++extern int atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock) __cond_acquires(true, lock);
  
-diff --git a/security/tomoyo/gc.c b/security/tomoyo/gc.c
-index 026e29ea3796..8e2008863af8 100644
---- a/security/tomoyo/gc.c
-+++ b/security/tomoyo/gc.c
-@@ -23,11 +23,10 @@ static inline void tomoyo_memory_free(void *ptr)
- 	tomoyo_memory_used[TOMOYO_MEMORY_POLICY] -= ksize(ptr);
- 	kfree(ptr);
+ extern int _atomic_dec_and_lock_irqsave(atomic_t *atomic, spinlock_t *lock,
+-					unsigned long *flags);
+-#define atomic_dec_and_lock_irqsave(atomic, lock, flags) \
+-		__cond_lock(lock, _atomic_dec_and_lock_irqsave(atomic, lock, &(flags)))
++					unsigned long *flags) __cond_acquires(true, lock);
++#define atomic_dec_and_lock_irqsave(atomic, lock, flags) _atomic_dec_and_lock_irqsave(atomic, lock, &(flags))
+ 
+-extern int _atomic_dec_and_raw_lock(atomic_t *atomic, raw_spinlock_t *lock);
+-#define atomic_dec_and_raw_lock(atomic, lock) \
+-		__cond_lock(lock, _atomic_dec_and_raw_lock(atomic, lock))
++extern int atomic_dec_and_raw_lock(atomic_t *atomic, raw_spinlock_t *lock) __cond_acquires(true, lock);
+ 
+ extern int _atomic_dec_and_raw_lock_irqsave(atomic_t *atomic, raw_spinlock_t *lock,
+-					unsigned long *flags);
+-#define atomic_dec_and_raw_lock_irqsave(atomic, lock, flags) \
+-		__cond_lock(lock, _atomic_dec_and_raw_lock_irqsave(atomic, lock, &(flags)))
++					    unsigned long *flags) __cond_acquires(true, lock);
++#define atomic_dec_and_raw_lock_irqsave(atomic, lock, flags) _atomic_dec_and_raw_lock_irqsave(atomic, lock, &(flags))
+ 
+ int __alloc_bucket_spinlocks(spinlock_t **locks, unsigned int *lock_mask,
+ 			     size_t max_size, unsigned int cpu_mult,
+diff --git a/include/linux/spinlock_api_smp.h b/include/linux/spinlock_api_smp.h
+index 7e7d7d373213..bda5e7a390cd 100644
+--- a/include/linux/spinlock_api_smp.h
++++ b/include/linux/spinlock_api_smp.h
+@@ -95,6 +95,26 @@ static inline int __raw_spin_trylock(raw_spinlock_t *lock)
+ 	return 0;
  }
+ 
++static __always_inline bool _raw_spin_trylock_irq(raw_spinlock_t *lock)
++	__cond_acquires(true, lock)
++{
++	local_irq_disable();
++	if (_raw_spin_trylock(lock))
++		return true;
++	local_irq_enable();
++	return false;
++}
++
++static __always_inline bool _raw_spin_trylock_irqsave(raw_spinlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock)
++{
++	local_irq_save(*flags);
++	if (_raw_spin_trylock(lock))
++		return true;
++	local_irq_restore(*flags);
++	return false;
++}
++
+ /*
+  * If lockdep is enabled then we use the non-preemption spin-ops
+  * even on CONFIG_PREEMPTION, because lockdep assumes that interrupts are
+diff --git a/include/linux/spinlock_api_up.h b/include/linux/spinlock_api_up.h
+index 018f5aabc1be..a9d5c7c66e03 100644
+--- a/include/linux/spinlock_api_up.h
++++ b/include/linux/spinlock_api_up.h
+@@ -24,14 +24,11 @@
+  * flags straight, to suppress compiler warnings of unused lock
+  * variables, and to add the proper checker annotations:
+  */
+-#define ___LOCK_void(lock) \
+-  do { (void)(lock); } while (0)
 -
--/* The list for "struct tomoyo_io_buffer". */
--static LIST_HEAD(tomoyo_io_buffer_list);
- /* Lock for protecting tomoyo_io_buffer_list. */
- static DEFINE_SPINLOCK(tomoyo_io_buffer_list_lock);
-+/* The list for "struct tomoyo_io_buffer". */
-+static __guarded_by(&tomoyo_io_buffer_list_lock) LIST_HEAD(tomoyo_io_buffer_list);
+ #define ___LOCK_(lock) \
+-  do { __acquire(lock); ___LOCK_void(lock); } while (0)
++  do { __acquire(lock); (void)(lock); } while (0)
  
- /**
-  * tomoyo_struct_used_by_io_buffer - Check whether the list element is used by /sys/kernel/security/tomoyo/ users or not.
-@@ -385,6 +384,7 @@ static inline void tomoyo_del_number_group(struct list_head *element)
+ #define ___LOCK_shared(lock) \
+-  do { __acquire_shared(lock); ___LOCK_void(lock); } while (0)
++  do { __acquire_shared(lock); (void)(lock); } while (0)
+ 
+ #define __LOCK(lock, ...) \
+   do { preempt_disable(); ___LOCK_##__VA_ARGS__(lock); } while (0)
+@@ -78,10 +75,56 @@
+ #define _raw_spin_lock_irqsave(lock, flags)	__LOCK_IRQSAVE(lock, flags)
+ #define _raw_read_lock_irqsave(lock, flags)	__LOCK_IRQSAVE(lock, flags, shared)
+ #define _raw_write_lock_irqsave(lock, flags)	__LOCK_IRQSAVE(lock, flags)
+-#define _raw_spin_trylock(lock)			({ __LOCK(lock, void); 1; })
+-#define _raw_read_trylock(lock)			({ __LOCK(lock, void); 1; })
+-#define _raw_write_trylock(lock)			({ __LOCK(lock, void); 1; })
+-#define _raw_spin_trylock_bh(lock)		({ __LOCK_BH(lock, void); 1; })
++
++static __always_inline int _raw_spin_trylock(raw_spinlock_t *lock)
++	__cond_acquires(true, lock)
++{
++	__LOCK(lock);
++	return 1;
++}
++
++static __always_inline int _raw_spin_trylock_bh(raw_spinlock_t *lock)
++	__cond_acquires(true, lock)
++{
++	__LOCK_BH(lock);
++	return 1;
++}
++
++static __always_inline int _raw_spin_trylock_irq(raw_spinlock_t *lock)
++	__cond_acquires(true, lock)
++{
++	__LOCK_IRQ(lock);
++	return 1;
++}
++
++static __always_inline int _raw_spin_trylock_irqsave(raw_spinlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock)
++{
++	__LOCK_IRQSAVE(lock, *(flags));
++	return 1;
++}
++
++static __always_inline int _raw_read_trylock(rwlock_t *lock)
++	__cond_acquires_shared(true, lock)
++{
++	__LOCK(lock, shared);
++	return 1;
++}
++
++static __always_inline int _raw_write_trylock(rwlock_t *lock)
++	__cond_acquires(true, lock)
++{
++	__LOCK(lock);
++	return 1;
++}
++
++static __always_inline int _raw_write_trylock_irqsave(rwlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock)
++{
++	__LOCK_IRQSAVE(lock, *(flags));
++	return 1;
++}
++
+ #define _raw_spin_unlock(lock)			__UNLOCK(lock)
+ #define _raw_read_unlock(lock)			__UNLOCK(lock, shared)
+ #define _raw_write_unlock(lock)			__UNLOCK(lock)
+diff --git a/include/linux/spinlock_rt.h b/include/linux/spinlock_rt.h
+index 817a1e331cd1..348db067c318 100644
+--- a/include/linux/spinlock_rt.h
++++ b/include/linux/spinlock_rt.h
+@@ -37,8 +37,8 @@ extern void rt_spin_lock_nested(spinlock_t *lock, int subclass)	__acquires(lock)
+ extern void rt_spin_lock_nest_lock(spinlock_t *lock, struct lockdep_map *nest_lock) __acquires(lock);
+ extern void rt_spin_unlock(spinlock_t *lock)	__releases(lock);
+ extern void rt_spin_lock_unlock(spinlock_t *lock);
+-extern int rt_spin_trylock_bh(spinlock_t *lock);
+-extern int rt_spin_trylock(spinlock_t *lock);
++extern int rt_spin_trylock_bh(spinlock_t *lock) __cond_acquires(true, lock);
++extern int rt_spin_trylock(spinlock_t *lock) __cond_acquires(true, lock);
+ 
+ static __always_inline void spin_lock(spinlock_t *lock)
+ 	__acquires(lock)
+@@ -130,21 +130,19 @@ static __always_inline void spin_unlock_irqrestore(spinlock_t *lock,
+ 	rt_spin_unlock(lock);
+ }
+ 
+-#define spin_trylock(lock)				\
+-	__cond_lock(lock, rt_spin_trylock(lock))
++#define spin_trylock(lock)	rt_spin_trylock(lock)
+ 
+-#define spin_trylock_bh(lock)				\
+-	__cond_lock(lock, rt_spin_trylock_bh(lock))
++#define spin_trylock_bh(lock)	rt_spin_trylock_bh(lock)
+ 
+-#define spin_trylock_irq(lock)				\
+-	__cond_lock(lock, rt_spin_trylock(lock))
++#define spin_trylock_irq(lock)	rt_spin_trylock(lock)
+ 
+-#define spin_trylock_irqsave(lock, flags)		\
+-	__cond_lock(lock, ({				\
+-		typecheck(unsigned long, flags);	\
+-		flags = 0;				\
+-		rt_spin_trylock(lock);			\
+-	}))
++static __always_inline bool _spin_trylock_irqsave(spinlock_t *lock, unsigned long *flags)
++	__cond_acquires(true, lock)
++{
++	*flags = 0;
++	return rt_spin_trylock(lock);
++}
++#define spin_trylock_irqsave(lock, flags) _spin_trylock_irqsave(lock, &(flags))
+ 
+ #define spin_is_contended(lock)		(((void)(lock), 0))
+ 
+diff --git a/kernel/signal.c b/kernel/signal.c
+index fe9190d84f28..9ff96a341e42 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -1355,8 +1355,8 @@ int zap_other_threads(struct task_struct *p)
+ 	return count;
+ }
+ 
+-struct sighand_struct *__lock_task_sighand(struct task_struct *tsk,
+-					   unsigned long *flags)
++struct sighand_struct *lock_task_sighand(struct task_struct *tsk,
++					 unsigned long *flags)
+ {
+ 	struct sighand_struct *sighand;
+ 
+diff --git a/kernel/time/posix-timers.c b/kernel/time/posix-timers.c
+index 56e17b625c72..afb63b2cdc98 100644
+--- a/kernel/time/posix-timers.c
++++ b/kernel/time/posix-timers.c
+@@ -66,14 +66,7 @@ static const struct k_clock clock_realtime, clock_monotonic;
+ #error "SIGEV_THREAD_ID must not share bit with other SIGEV values!"
+ #endif
+ 
+-static struct k_itimer *__lock_timer(timer_t timer_id);
+-
+-#define lock_timer(tid)							\
+-({	struct k_itimer *__timr;					\
+-	__cond_lock(&__timr->it_lock, __timr = __lock_timer(tid));	\
+-	__timr;								\
+-})
+-
++static struct k_itimer *lock_timer(timer_t timer_id);
+ static inline void unlock_timer(struct k_itimer *timr)
+ {
+ 	if (likely((timr)))
+@@ -85,7 +78,7 @@ static inline void unlock_timer(struct k_itimer *timr)
+ 
+ #define scoped_timer				(scope)
+ 
+-DEFINE_CLASS(lock_timer, struct k_itimer *, unlock_timer(_T), __lock_timer(id), timer_t id);
++DEFINE_CLASS(lock_timer, struct k_itimer *, unlock_timer(_T), lock_timer(id), timer_t id);
+ DEFINE_CLASS_IS_COND_GUARD(lock_timer);
+ 
+ static struct timer_hash_bucket *hash_bucket(struct signal_struct *sig, unsigned int nr)
+@@ -600,7 +593,7 @@ COMPAT_SYSCALL_DEFINE3(timer_create, clockid_t, which_clock,
+ }
+ #endif
+ 
+-static struct k_itimer *__lock_timer(timer_t timer_id)
++static struct k_itimer *lock_timer(timer_t timer_id)
+ {
+ 	struct k_itimer *timr;
+ 
+diff --git a/lib/dec_and_lock.c b/lib/dec_and_lock.c
+index 1dcca8f2e194..8c7c398fd770 100644
+--- a/lib/dec_and_lock.c
++++ b/lib/dec_and_lock.c
+@@ -18,7 +18,7 @@
+  * because the spin-lock and the decrement must be
+  * "atomic".
   */
- static void tomoyo_try_to_gc(const enum tomoyo_policy_id type,
- 			     struct list_head *element)
-+	__must_hold(&tomoyo_policy_lock)
+-int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock)
++int atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock)
  {
- 	/*
- 	 * __list_del_entry() guarantees that the list element became no longer
-@@ -484,6 +484,7 @@ static void tomoyo_try_to_gc(const enum tomoyo_policy_id type,
+ 	/* Subtract 1 from counter unless that drops it to 0 (ie. it was 1) */
+ 	if (atomic_add_unless(atomic, -1, 1))
+@@ -32,7 +32,7 @@ int _atomic_dec_and_lock(atomic_t *atomic, spinlock_t *lock)
+ 	return 0;
+ }
+ 
+-EXPORT_SYMBOL(_atomic_dec_and_lock);
++EXPORT_SYMBOL(atomic_dec_and_lock);
+ 
+ int _atomic_dec_and_lock_irqsave(atomic_t *atomic, spinlock_t *lock,
+ 				 unsigned long *flags)
+@@ -50,7 +50,7 @@ int _atomic_dec_and_lock_irqsave(atomic_t *atomic, spinlock_t *lock,
+ }
+ EXPORT_SYMBOL(_atomic_dec_and_lock_irqsave);
+ 
+-int _atomic_dec_and_raw_lock(atomic_t *atomic, raw_spinlock_t *lock)
++int atomic_dec_and_raw_lock(atomic_t *atomic, raw_spinlock_t *lock)
+ {
+ 	/* Subtract 1 from counter unless that drops it to 0 (ie. it was 1) */
+ 	if (atomic_add_unless(atomic, -1, 1))
+@@ -63,7 +63,7 @@ int _atomic_dec_and_raw_lock(atomic_t *atomic, raw_spinlock_t *lock)
+ 	raw_spin_unlock(lock);
+ 	return 0;
+ }
+-EXPORT_SYMBOL(_atomic_dec_and_raw_lock);
++EXPORT_SYMBOL(atomic_dec_and_raw_lock);
+ 
+ int _atomic_dec_and_raw_lock_irqsave(atomic_t *atomic, raw_spinlock_t *lock,
+ 				     unsigned long *flags)
+diff --git a/mm/memory.c b/mm/memory.c
+index b59ae7ce42eb..1741953142e6 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2215,8 +2215,8 @@ static pmd_t *walk_to_pmd(struct mm_struct *mm, unsigned long addr)
+ 	return pmd;
+ }
+ 
+-pte_t *__get_locked_pte(struct mm_struct *mm, unsigned long addr,
+-			spinlock_t **ptl)
++pte_t *get_locked_pte(struct mm_struct *mm, unsigned long addr,
++		      spinlock_t **ptl)
+ {
+ 	pmd_t *pmd = walk_to_pmd(mm, addr);
+ 
+diff --git a/mm/pgtable-generic.c b/mm/pgtable-generic.c
+index 567e2d084071..808f18d68279 100644
+--- a/mm/pgtable-generic.c
++++ b/mm/pgtable-generic.c
+@@ -278,7 +278,7 @@ static unsigned long pmdp_get_lockless_start(void) { return 0; }
+ static void pmdp_get_lockless_end(unsigned long irqflags) { }
+ #endif
+ 
+-pte_t *___pte_offset_map(pmd_t *pmd, unsigned long addr, pmd_t *pmdvalp)
++pte_t *__pte_offset_map(pmd_t *pmd, unsigned long addr, pmd_t *pmdvalp)
+ {
+ 	unsigned long irqflags;
+ 	pmd_t pmdval;
+@@ -330,13 +330,12 @@ pte_t *pte_offset_map_rw_nolock(struct mm_struct *mm, pmd_t *pmd,
+ }
+ 
+ /*
+- * pte_offset_map_lock(mm, pmd, addr, ptlp), and its internal implementation
+- * __pte_offset_map_lock() below, is usually called with the pmd pointer for
+- * addr, reached by walking down the mm's pgd, p4d, pud for addr: either while
+- * holding mmap_lock or vma lock for read or for write; or in truncate or rmap
+- * context, while holding file's i_mmap_lock or anon_vma lock for read (or for
+- * write). In a few cases, it may be used with pmd pointing to a pmd_t already
+- * copied to or constructed on the stack.
++ * pte_offset_map_lock(mm, pmd, addr, ptlp) is usually called with the pmd
++ * pointer for addr, reached by walking down the mm's pgd, p4d, pud for addr:
++ * either while holding mmap_lock or vma lock for read or for write; or in
++ * truncate or rmap context, while holding file's i_mmap_lock or anon_vma lock
++ * for read (or for write). In a few cases, it may be used with pmd pointing to
++ * a pmd_t already copied to or constructed on the stack.
+  *
+  * When successful, it returns the pte pointer for addr, with its page table
+  * kmapped if necessary (when CONFIG_HIGHPTE), and locked against concurrent
+@@ -387,8 +386,8 @@ pte_t *pte_offset_map_rw_nolock(struct mm_struct *mm, pmd_t *pmd,
+  * table, and may not use RCU at all: "outsiders" like khugepaged should avoid
+  * pte_offset_map() and co once the vma is detached from mm or mm_users is zero.
   */
- static void tomoyo_collect_member(const enum tomoyo_policy_id id,
- 				  struct list_head *member_list)
-+	__must_hold(&tomoyo_policy_lock)
+-pte_t *__pte_offset_map_lock(struct mm_struct *mm, pmd_t *pmd,
+-			     unsigned long addr, spinlock_t **ptlp)
++pte_t *pte_offset_map_lock(struct mm_struct *mm, pmd_t *pmd,
++			   unsigned long addr, spinlock_t **ptlp)
  {
- 	struct tomoyo_acl_head *member;
- 	struct tomoyo_acl_head *tmp;
-@@ -504,6 +505,7 @@ static void tomoyo_collect_member(const enum tomoyo_policy_id id,
-  * Returns nothing.
-  */
- static void tomoyo_collect_acl(struct list_head *list)
-+	__must_hold(&tomoyo_policy_lock)
- {
- 	struct tomoyo_acl_info *acl;
- 	struct tomoyo_acl_info *tmp;
-@@ -627,8 +629,11 @@ static int tomoyo_gc_thread(void *unused)
- 			if (head->users)
- 				continue;
- 			list_del(&head->list);
--			kfree(head->read_buf);
--			kfree(head->write_buf);
-+			/* Safe destruction because no users are left. */
-+			context_unsafe(
-+				kfree(head->read_buf);
-+				kfree(head->write_buf);
-+			);
- 			kfree(head);
- 		}
- 		spin_unlock(&tomoyo_io_buffer_list_lock);
-@@ -656,11 +661,18 @@ void tomoyo_notify_gc(struct tomoyo_io_buffer *head, const bool is_register)
- 		head->users = 1;
- 		list_add(&head->list, &tomoyo_io_buffer_list);
- 	} else {
--		is_write = head->write_buf != NULL;
-+		/*
-+		 * tomoyo_write_control() can concurrently update write_buf from
-+		 * a non-NULL to new non-NULL pointer with io_sem held.
-+		 */
-+		is_write = data_race(head->write_buf != NULL);
- 		if (!--head->users) {
- 			list_del(&head->list);
--			kfree(head->read_buf);
--			kfree(head->write_buf);
-+			/* Safe destruction because no users are left. */
-+			context_unsafe(
-+				kfree(head->read_buf);
-+				kfree(head->write_buf);
-+			);
- 			kfree(head);
- 		}
- 	}
-diff --git a/security/tomoyo/mount.c b/security/tomoyo/mount.c
-index 2755971f50df..322dfd188ada 100644
---- a/security/tomoyo/mount.c
-+++ b/security/tomoyo/mount.c
-@@ -28,6 +28,7 @@ static const char * const tomoyo_mounts[TOMOYO_MAX_SPECIAL_MOUNT] = {
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_mount_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "file mount %s %s %s 0x%lX\n",
- 				 r->param.mount.dev->name,
-@@ -78,6 +79,7 @@ static int tomoyo_mount_acl(struct tomoyo_request_info *r,
- 			    const char *dev_name,
- 			    const struct path *dir, const char *type,
- 			    unsigned long flags)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	struct tomoyo_obj_info obj = { };
- 	struct path path;
-diff --git a/security/tomoyo/network.c b/security/tomoyo/network.c
-index 8dc61335f65e..cfc2a019de1e 100644
---- a/security/tomoyo/network.c
-+++ b/security/tomoyo/network.c
-@@ -363,6 +363,7 @@ int tomoyo_write_unix_network(struct tomoyo_acl_param *param)
- static int tomoyo_audit_net_log(struct tomoyo_request_info *r,
- 				const char *family, const u8 protocol,
- 				const u8 operation, const char *address)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_supervisor(r, "network %s %s %s %s\n", family,
- 				 tomoyo_proto_keyword[protocol],
-@@ -377,6 +378,7 @@ static int tomoyo_audit_net_log(struct tomoyo_request_info *r,
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_inet_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	char buf[128];
- 	int len;
-@@ -402,6 +404,7 @@ static int tomoyo_audit_inet_log(struct tomoyo_request_info *r)
-  * Returns 0 on success, negative value otherwise.
-  */
- static int tomoyo_audit_unix_log(struct tomoyo_request_info *r)
-+	__must_hold_shared(&tomoyo_ss)
- {
- 	return tomoyo_audit_net_log(r, "unix", r->param.unix_network.protocol,
- 				    r->param.unix_network.operation,
+ 	spinlock_t *ptl;
+ 	pmd_t pmdval;
+diff --git a/tools/include/linux/compiler_types.h b/tools/include/linux/compiler_types.h
+index d09f9dc172a4..067a5b4e0f7b 100644
+--- a/tools/include/linux/compiler_types.h
++++ b/tools/include/linux/compiler_types.h
+@@ -20,7 +20,6 @@
+ # define __releases(x)	__attribute__((context(x,1,0)))
+ # define __acquire(x)	__context__(x,1)
+ # define __release(x)	__context__(x,-1)
+-# define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
+ #else /* __CHECKER__ */
+ /* context/locking */
+ # define __must_hold(x)
+@@ -28,7 +27,6 @@
+ # define __releases(x)
+ # define __acquire(x)	(void)0
+ # define __release(x)	(void)0
+-# define __cond_lock(x,c) (c)
+ #endif /* __CHECKER__ */
+ 
+ /* Compiler specific macros. */
 -- 
 2.52.0.rc1.455.g30608eb744-goog
 
