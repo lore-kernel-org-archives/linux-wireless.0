@@ -1,186 +1,126 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E42EC351FD1
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2025 15:17:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45CAA2F12A3
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Nov 2025 16:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763738281; cv=none; b=I6mBXywxXfxNV2o7Y8kQB2fXs7I7IjOWTxvGuc/AcfJOYchreN8YRkt3ZiIkWuF7TJ1pKxhqNSdPuztKjhOt72EVqRXJZ73QHYWMyMOAzIOKpGDdlf1IsBR7RKUxB29NRt9ZkNvehhC133BBbP0rjzhTN2eUxhHTuwdfVM6aO8o=
+	t=1763743229; cv=none; b=m6P2FVCwOZQxNhRjD5uzYxImi8sV+yNRmWFTxHeNNyeWUUNkkXVM1Cv5qt+Iolt+4Oyx7RV2BmfbQ/fWxlJljM60rfCDgBD30XiXkejmmqb7sRG3Y5g0tmEg6129/tUKnH85DQNWWe64EYtQizsaHJeVxivAPABWxoi+HhkwUzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763738281; c=relaxed/simple;
-	bh=086sNeQT3GswPhN/zyzOuuJeaoWTT7MyOcIz2SJf1Ks=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=pnESJiTvMG8IcgZds8iylVixuIC4pmtsOELQpANo1TxuLNQ8KNQs0G9SyA7IJQGJUzlf/V6h2rr50jOZ2Kd1kF6irxRPNZaZqEwOlzX6kufTX49+wVwayuq3tKgBpTPtJXOo9zVbXQ1oZVkzc38CD6CtmRNLQ6H7gCZNiouoyD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=G9ZJSl8y; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1763743229; c=relaxed/simple;
+	bh=dbBFZiWWYGF+enuyPP9ObNTqG6rmaORe/bHIzwBPfDI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VAI9BmFBiG2Y9e2ZaZu867LL1fDS2ku/qPaL70otKJBKqWS1rh4mWY5k+VG/iw1wwGGYg5cMz6lAIatxUxZ8ih0J5ZLI9eM2B+psGv4uMadejJkCjCmo7oAoU77u1TyqfbingtdP2UoG1n5UbOVfcPVyrLt5S/x+vynAeJPRqMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=RE64pywa; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="G9ZJSl8y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763738279; x=1795274279;
-  h=date:from:to:cc:subject:message-id;
-  bh=086sNeQT3GswPhN/zyzOuuJeaoWTT7MyOcIz2SJf1Ks=;
-  b=G9ZJSl8y3S1VUlzfwoIKxIN4xzyBQ4iTT6WV1zw0Wtwx72+M53YGXCE1
-   DjZBDP40FpwP0mGXxRjZqZ/JdLpufAGfMkrk8K7Gcek65/6g50HCOinRW
-   03MbgTCT9lgXN3cNvApMdvKElWQWvSDk3WXrrhjnTKUFQ95Njo1S38kDH
-   LLlMxubHyTrc6LXwZ/azJuzv5O0KzdiKDoiFJyqNJOU20xvmDyJ9ANxKS
-   BXz3j2yMtc2dHcaW4pIkIHc9+QxSaURwTdNnZCzox7S3/pxpDOULxeyP4
-   Ht4nn8HzUp+f1IEixtbMJOXHWHZsWGHw7exwX0eJDjPl0Nscb3YbGw01B
-   A==;
-X-CSE-ConnectionGUID: poKnH/8+S1aRG2g4Ns8arA==
-X-CSE-MsgGUID: MgJb9fjYSpKRcmrmtu/BXQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11620"; a="88485603"
-X-IronPort-AV: E=Sophos;i="6.20,216,1758610800"; 
-   d="scan'208";a="88485603"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2025 07:17:58 -0800
-X-CSE-ConnectionGUID: 6AT4Cr2zTkqDN3sO1yt+gg==
-X-CSE-MsgGUID: kqk71A4MQPGQU4Cm6ASE7g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.20,216,1758610800"; 
-   d="scan'208";a="196178007"
-Received: from lkp-server01.sh.intel.com (HELO adf6d29aa8d9) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 21 Nov 2025 07:17:56 -0800
-Received: from kbuild by adf6d29aa8d9 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vMStW-0006Vd-0T;
-	Fri, 21 Nov 2025 15:17:54 +0000
-Date: Fri, 21 Nov 2025 23:17:05 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [wireless-next:main] BUILD SUCCESS
- b688a9447be360d09c0982234fcd703ac7dd8c15
-Message-ID: <202511212300.fasLPKrb-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="RE64pywa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=Cct0dgHEJzWMmUcdj6m6mdHq+lo8o3ZCz4yr8Jr87N8=;
+	t=1763743227; x=1764952827; b=RE64pywahb3MlzYX1lUDKAvC0ovbBYoQwx/DQj6vqt0Dkeo
+	E4uuDEF6yviXZ/T7K9N3jxuCaNLUb5Mbhj2c8p88DrKuKzXlEZRy7yTBYTZix308UFbeP3pW8AIUw
+	fQabmRUzSC5Oyz5TZDREQCGoJKSgXQcRHsJtqQM4/C5bivCFIURcKz0hfyu9u5sjm3wgsyGTPqNxG
+	aAjnlOw3bwqxN9m+2kNilIDtJogTgt7yEtt2fF5RIPKH/qaQbouinIum8SsV7cguFqwkTDseZ4ISq
+	qSp9ne6QCSfCUG+ikHrovgL1xBdJ4y9+Ba83k4kTQgi6D9T9PA/njJsZd2M7DkbQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vMUBM-0000000DAuH-2gbw;
+	Fri, 21 Nov 2025 17:40:24 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless-next 2/2] wifi: cfg80211: stop radar detection in cfg80211_leave()
+Date: Fri, 21 Nov 2025 17:40:21 +0100
+Message-ID: <20251121174021.290120e419e3.I2a5650c9062e29c988992dd8ce0d8eb570d23267@changeid>
+X-Mailer: git-send-email 2.51.1
+In-Reply-To: <20251121174021.922ef48ce007.I970c8514252ef8a864a7fbdab9591b71031dee03@changeid>
+References: <20251121174021.922ef48ce007.I970c8514252ef8a864a7fbdab9591b71031dee03@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-branch HEAD: b688a9447be360d09c0982234fcd703ac7dd8c15  wifi: mac80211: refactor CMAC packet handlers
+From: Johannes Berg <johannes.berg@intel.com>
 
-elapsed time: 1497m
+If an interface is set down or, per the previous patch, changes
+type, radar detection for it should be cancelled. This is done
+for AP mode in mac80211 (somewhat needlessly, since cfg80211 can
+do it, but didn't until now), but wasn't handled for mesh, so if
+radar detection was started and then the interface set down or
+its type switched (the latter sometimes happning in the hwsim
+test 'mesh_peer_connected_dfs'), radar detection would be around
+with the interface unknown to the driver, later leading to some
+warnings around chanctx usage.
 
-configs tested: 109
-configs skipped: 7
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c |  1 +
+ net/wireless/core.h |  1 +
+ net/wireless/mlme.c | 19 +++++++++++++++++++
+ 3 files changed, 21 insertions(+)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7be25b9ae36e..9a420d627d3c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1380,6 +1380,7 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 
+ 	cfg80211_pmsr_wdev_down(wdev);
+ 
++	cfg80211_stop_radar_detection(wdev);
+ 	cfg80211_stop_background_radar_detection(wdev);
+ 
+ 	switch (wdev->iftype) {
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 82f343663e8f..63dcf315dba7 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -489,6 +489,7 @@ cfg80211_start_background_radar_detection(struct cfg80211_registered_device *rde
+ 					  struct wireless_dev *wdev,
+ 					  struct cfg80211_chan_def *chandef);
+ 
++void cfg80211_stop_radar_detection(struct wireless_dev *wdev);
+ void cfg80211_stop_background_radar_detection(struct wireless_dev *wdev);
+ 
+ void cfg80211_background_cac_done_wk(struct work_struct *work);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 46394eb2086f..3fc175f9f868 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1295,6 +1295,25 @@ cfg80211_start_background_radar_detection(struct cfg80211_registered_device *rde
+ 	return 0;
+ }
+ 
++void cfg80211_stop_radar_detection(struct wireless_dev *wdev)
++{
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
++	int link_id;
++
++	for_each_valid_link(wdev, link_id) {
++		struct cfg80211_chan_def chandef;
++
++		if (!wdev->links[link_id].cac_started)
++			continue;
++
++		chandef = *wdev_chandef(wdev, link_id);
++		rdev_end_cac(rdev, wdev->netdev, link_id);
++		nl80211_radar_notify(rdev, &chandef, NL80211_RADAR_CAC_ABORTED,
++				     wdev->netdev, GFP_KERNEL);
++	}
++}
++
+ void cfg80211_stop_background_radar_detection(struct wireless_dev *wdev)
+ {
+ 	struct wiphy *wiphy = wdev->wiphy;
+-- 
+2.51.1
 
-tested configs:
-alpha                             allnoconfig    gcc-15.1.0
-arc                               allnoconfig    gcc-15.1.0
-arc                            hsdk_defconfig    gcc-15.1.0
-arc                   randconfig-001-20251121    gcc-8.5.0
-arc                   randconfig-002-20251121    gcc-13.4.0
-arm                               allnoconfig    clang-22
-arm                      jornada720_defconfig    clang-22
-arm                   randconfig-001-20251121    gcc-10.5.0
-arm                   randconfig-002-20251121    gcc-11.5.0
-arm                   randconfig-003-20251121    clang-22
-arm                   randconfig-004-20251121    gcc-10.5.0
-arm64                             allnoconfig    gcc-15.1.0
-arm64                 randconfig-001-20251121    gcc-8.5.0
-arm64                 randconfig-002-20251121    clang-22
-arm64                 randconfig-003-20251121    gcc-8.5.0
-arm64                 randconfig-004-20251121    gcc-10.5.0
-csky                              allnoconfig    gcc-15.1.0
-csky                  randconfig-001-20251121    gcc-14.3.0
-csky                  randconfig-002-20251121    gcc-11.5.0
-hexagon                           allnoconfig    clang-22
-hexagon               randconfig-001-20251121    clang-22
-hexagon               randconfig-002-20251121    clang-22
-i386                              allnoconfig    gcc-14
-i386        buildonly-randconfig-001-20251121    gcc-14
-i386        buildonly-randconfig-002-20251121    gcc-14
-i386        buildonly-randconfig-003-20251121    clang-20
-i386        buildonly-randconfig-004-20251121    clang-20
-i386        buildonly-randconfig-005-20251121    clang-20
-i386        buildonly-randconfig-006-20251121    clang-20
-i386                  randconfig-001-20251121    gcc-14
-i386                  randconfig-002-20251121    clang-20
-i386                  randconfig-003-20251121    gcc-14
-i386                  randconfig-004-20251121    clang-20
-i386                  randconfig-005-20251121    clang-20
-i386                  randconfig-006-20251121    gcc-14
-i386                  randconfig-007-20251121    gcc-14
-i386                  randconfig-011-20251121    clang-20
-i386                  randconfig-012-20251121    clang-20
-i386                  randconfig-013-20251121    clang-20
-i386                  randconfig-014-20251121    clang-20
-i386                  randconfig-015-20251121    clang-20
-i386                  randconfig-016-20251121    gcc-14
-i386                  randconfig-017-20251121    gcc-14
-loongarch                         allnoconfig    clang-22
-loongarch             randconfig-001-20251121    gcc-15.1.0
-loongarch             randconfig-002-20251121    clang-22
-m68k                              allnoconfig    gcc-15.1.0
-m68k                        stmark2_defconfig    gcc-15.1.0
-microblaze                        allnoconfig    gcc-15.1.0
-mips                              allnoconfig    gcc-15.1.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                 randconfig-001-20251121    gcc-11.5.0
-nios2                 randconfig-002-20251121    gcc-8.5.0
-openrisc                          allnoconfig    gcc-15.1.0
-openrisc                            defconfig    gcc-15.1.0
-openrisc                       virt_defconfig    gcc-15.1.0
-parisc                            allnoconfig    gcc-15.1.0
-parisc                              defconfig    gcc-15.1.0
-parisc                randconfig-001-20251121    gcc-12.5.0
-parisc                randconfig-002-20251121    gcc-12.5.0
-powerpc                           allnoconfig    gcc-15.1.0
-powerpc                      arches_defconfig    gcc-15.1.0
-powerpc               randconfig-001-20251121    clang-18
-powerpc               randconfig-002-20251121    gcc-11.5.0
-powerpc64             randconfig-001-20251121    gcc-8.5.0
-powerpc64             randconfig-002-20251121    clang-20
-riscv                             allnoconfig    gcc-15.1.0
-riscv                               defconfig    clang-22
-riscv                 randconfig-001-20251121    gcc-14.3.0
-s390                              allnoconfig    clang-22
-s390                                defconfig    clang-22
-s390                  randconfig-001-20251121    gcc-13.4.0
-s390                  randconfig-002-20251121    clang-19
-sh                                allnoconfig    gcc-15.1.0
-sh                                  defconfig    gcc-15.1.0
-sh                 kfr2r09-romimage_defconfig    gcc-15.1.0
-sh                    randconfig-001-20251121    gcc-10.5.0
-sh                    randconfig-002-20251121    gcc-11.5.0
-sparc                             allnoconfig    gcc-15.1.0
-sparc                               defconfig    gcc-15.1.0
-sparc                 randconfig-001-20251121    gcc-13.4.0
-sparc                 randconfig-002-20251121    gcc-8.5.0
-sparc64                             defconfig    clang-20
-sparc64               randconfig-001-20251121    clang-22
-sparc64               randconfig-002-20251121    clang-22
-um                                allnoconfig    clang-22
-um                                  defconfig    clang-22
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20251121    clang-22
-um                    randconfig-002-20251121    gcc-14
-um                           x86_64_defconfig    clang-22
-x86_64                            allnoconfig    clang-20
-x86_64      buildonly-randconfig-001-20251121    gcc-14
-x86_64      buildonly-randconfig-002-20251121    gcc-14
-x86_64      buildonly-randconfig-003-20251121    gcc-14
-x86_64      buildonly-randconfig-004-20251121    clang-20
-x86_64      buildonly-randconfig-005-20251121    gcc-14
-x86_64      buildonly-randconfig-006-20251121    clang-20
-x86_64                              defconfig    gcc-14
-x86_64                randconfig-011-20251121    clang-20
-x86_64                randconfig-012-20251121    gcc-14
-x86_64                randconfig-013-20251121    gcc-14
-x86_64                randconfig-014-20251121    gcc-14
-x86_64                randconfig-015-20251121    gcc-14
-x86_64                randconfig-016-20251121    gcc-14
-xtensa                            allnoconfig    gcc-15.1.0
-xtensa                randconfig-001-20251121    gcc-11.5.0
-xtensa                randconfig-002-20251121    gcc-8.5.0
-xtensa                         virt_defconfig    gcc-15.1.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
