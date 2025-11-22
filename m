@@ -1,143 +1,138 @@
-Received: from mail.as201155.net (mail.as201155.net [185.84.6.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDF3D2F6927
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Nov 2025 10:20:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.84.6.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988E8217F36;
+	Sat, 22 Nov 2025 14:18:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763806808; cv=none; b=ByMQm8UHGv/xWh/1qWoAaQbcuRyEM/1OhulRF+KFnQlxfNjellSt9l2OZj+6kxdD4phFwmNiUM+0ljOByS0TTOTmbYXOcUbbXqXaYcyV8DCccSSpFqF6wToyWaHhT+lUrK3xzDA2p2eQKrT43TDIntQWzDGcKSyOmUF8AZGOeT8=
+	t=1763821103; cv=none; b=Nnw7BHEOG5piNeB0gxWNGfaD8yPgqUE/ZQEHAsxgr2S7W8o2X++hs35/fq+h55ZU5aixCi6PHNWHPJxsAZbhWjzSn0mnwV4DZGIkf8KI9KwobCskr8A6l7wu+LepI0iMgKwIwgNBtpXG+F60gVdAJ0QoNmnD3Ii2vP+LQ4bSLUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763806808; c=relaxed/simple;
-	bh=8vBfJhwurAeRk3aUxhgMH0o/j+Imq7FlWrsr+reSElc=;
+	s=arc-20240116; t=1763821103; c=relaxed/simple;
+	bh=KV9tYIxQM14TEhl6KK98HgFvA2JdX9m+AUWHHcj7A9c=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P+DGWOtMsP8lK/eaV5D5VMYJA+tCB2KOnAzKio/3+//qT3dyzPPAQHNRfHFZl8IThjw6ONp8zepFVCeOawz2eu9ZJrQpz+KMotuPqGPO5IHjYWfABfHFPHVTNpJ8EBXU4/3a5vxgCDUH+7HgGR1KrgMy6l6juvi2BUMP8vhCp8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dd-wrt.com; spf=pass smtp.mailfrom=dd-wrt.com; dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b=KQz0qpEI; arc=none smtp.client-ip=185.84.6.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dd-wrt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dd-wrt.com
+	 In-Reply-To:Content-Type; b=TF2aJy6hXH9jdvvH8jz/sXhgL4pNIo4C0nvvFtVbW+zKdbMm16/+tIM8oe8853RdHNmXWZUy7CEMam1Gm/5aOt5rtUVH4YaLra1Af4QgHskHgu+/OogHknbqZ3Q6jGdhCBe635XinWo0J5+1DwHveaf8NOdzaqZE+X7w0yHgKIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I43rExh/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b="KQz0qpEI"
-Received: from smtps.newmedia-net.de ([2a05:a1c0:0:de::167]:49518 helo=webmail.newmedia-net.de)
-	by mail.as201155.net with esmtps  (TLS1) tls TLS_RSA_WITH_AES_256_CBC_SHA
-	(Exim 4.97.1)
-	(envelope-from <s.gottschall@dd-wrt.com>)
-	id 1vMkgc-0000000038Y-1zO9;
-	Sat, 22 Nov 2025 11:17:47 +0100
-X-SASI-Hits: BODYTEXTP_SIZE_3000_LESS 0.000000, BODY_SIZE_1000_1099 0.000000,
-	BODY_SIZE_2000_LESS 0.000000, BODY_SIZE_5000_LESS 0.000000,
-	BODY_SIZE_7000_LESS 0.000000, CTE_8BIT 0.000000, DKIM_ALIGNS 0.000000,
-	DKIM_SIGNATURE 0.000000, HTML_00_01 0.050000, HTML_00_10 0.050000,
-	IN_REP_TO 0.000000, LEGITIMATE_SIGNS 0.000000,
-	MSGID_SAMEAS_FROM_HEX_844412 0.100000, MSG_THREAD 0.000000,
-	MULTIPLE_RCPTS 0.100000, MULTIPLE_REAL_RCPTS 0.000000,
-	NO_FUR_HEADER 0.000000, OUTBOUND 0.000000, OUTBOUND_SOPHOS 0.000000,
-	REFERENCES 0.000000, SENDER_NO_AUTH 0.000000, SINGLE_URI_IN_BODY 0.000000,
-	SUSP_DH_NEG 0.000000, URI_WITH_PATH_ONLY 0.000000, USER_AGENT 0.000000,
-	__ANY_URI 0.000000, __BODY_NO_MAILTO 0.000000,
-	__BOUNCE_CHALLENGE_SUBJ 0.000000, __BOUNCE_NDR_SUBJ_EXEMPT 0.000000,
-	__BULK_NEGATE 0.000000, __CP_MEDIA_BODY 0.000000, __CP_URI_IN_BODY 0.000000,
-	__CT 0.000000, __CTE 0.000000, __CT_TEXT_PLAIN 0.000000,
-	__DKIM_ALIGNS_1 0.000000, __DKIM_ALIGNS_2 0.000000, __DQ_NEG_DOMAIN 0.000000,
-	__DQ_NEG_HEUR 0.000000, __DQ_NEG_IP 0.000000, __FORWARDED_MSG 0.000000,
-	__FRAUD_PARTNERSHIP 0.000000, __FROM_DOMAIN_NOT_IN_BODY 0.000000,
-	__FROM_NAME_NOT_IN_BODY 0.000000, __FUR_RDNS_SOPHOS 0.000000,
-	__HAS_CC_HDR 0.000000, __HAS_FROM 0.000000, __HAS_MSGID 0.000000,
-	__HAS_REFERENCES 0.000000, __HEADER_ORDER_FROM 0.000000,
-	__HIGHBIT_ASCII_MIX 0.000000, __HTTPS_URI 0.000000, __IN_REP_TO 0.000000,
-	__MAIL_CHAIN 0.000000, __MIME_BOUND_CHARSET 0.000000,
-	__MIME_TEXT_ONLY 0.000000, __MIME_TEXT_P 0.000000, __MIME_TEXT_P1 0.000000,
-	__MIME_VERSION 0.000000, __MOZILLA_USER_AGENT 0.000000,
-	__MSGID_HEX_844412 0.000000, __MULTIPLE_RCPTS_CC_X2 0.000000,
-	__MULTIPLE_RCPTS_TO_X2 0.000000, __NO_HTML_TAG_RAW 0.000000,
-	__OUTBOUND_SOPHOS_FUR 0.000000, __OUTBOUND_SOPHOS_FUR_IP 0.000000,
-	__OUTBOUND_SOPHOS_FUR_RDNS 0.000000, __PHISH_SPEAR_SUBJ_TEAM 0.000000,
-	__RCVD_PASS 0.000000, __REFERENCES 0.000000, __SANE_MSGID 0.000000,
-	__SCAN_D_NEG 0.000000, __SCAN_D_NEG2 0.000000, __SCAN_D_NEG_HEUR 0.000000,
-	__SCAN_D_NEG_HEUR2 0.000000, __SINGLE_URI_TEXT 0.000000,
-	__SUBJ_ALPHA_END 0.000000, __SUBJ_ALPHA_NEGATE 0.000000,
-	__SUBJ_REPLY 0.000000, __TO_GMAIL 0.000000, __TO_MALFORMED_2 0.000000,
-	__TO_NAME 0.000000, __TO_NAME_DIFF_FROM_ACC 0.000000,
-	__TO_REAL_NAMES 0.000000, __URI_IN_BODY 0.000000, __URI_MAILTO 0.000000,
-	__URI_NOT_IMG 0.000000, __URI_NO_WWW 0.000000, __URI_NS 0.000000,
-	__URI_WITH_PATH 0.000000, __USER_AGENT 0.000000, __X_MAILSCANNER 0.000000
-X-SASI-Probability: 8%
-X-SASI-RCODE: 200
-X-SASI-Version: Antispam-Engine: 5.1.4, AntispamData: 2025.11.22.92719
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=dd-wrt.com; s=mikd;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID; bh=5pKBWMhJ2SgElDFki+fm9LRUr8FKdP9xaqNGPkk7snQ=;
-	b=KQz0qpEI2vzI43CGLg2XeQgvZYXDIII/2xKhGOWFpdu3jfIJ9czufNj8fxbe2SXKwUUkhiIxDLtFnGsCEVnL5+S23OQLeFw9CTZzvdzrBCnHCcedYjGV7QnJPi11XZPYV4nBSfp/f7ZrcH660t0QoTkNOoT3wxq9OMjCrD9DkMA=;
-Message-ID: <e7e4058e-6f95-444f-b843-d942496dcf07@dd-wrt.com>
-Date: Sat, 22 Nov 2025 11:17:40 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I43rExh/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 047D2C4CEF5;
+	Sat, 22 Nov 2025 14:18:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763821103;
+	bh=KV9tYIxQM14TEhl6KK98HgFvA2JdX9m+AUWHHcj7A9c=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=I43rExh/ImDqf7jsmxiI6Hq8Q9azPgm7OB2HyEM2A4teCnuMtVUWeCDN8bitcwPie
+	 5Cs87WMFlf9wDE4b/sdh+csAqD6d2zlJtEpKpozfgpK9sj/tG+31drxuCZKGm+cUUZ
+	 VH3TGP2HUAO1Ajg/8VjNEbK+ztsiPGuGISKovFuAAyab6hj0qOaJ/86CliZKOl840F
+	 /0l73/vid3J0wLSrIlKIbwciO+fElZj5j8jtwxVXGnviH2OgrMy6IPi1e3li73UiUz
+	 pIELoG+T46Du2/OfV7vs7DKkJV2YXcR4YOAwuVdKPyawIO0XkFJ8W29Jk9zM8KTzJ5
+	 AuwDZvK0l+9yQ==
+Message-ID: <a9e12ace-dc0e-4bac-9775-72cd7d477169@kernel.org>
+Date: Sat, 22 Nov 2025 15:18:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH] wifi: ath11k: add support for MU EDCA
-To: "Yu Zhang(Yuriy)" <yu.zhang@oss.qualcomm.com>,
- =?UTF-8?Q?Pawe=C5=82_Owoc?= <frut3k7@gmail.com>
-Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
- quic_yuzha@quicinc.com
-References: <3f355c8a-5bf2-4a74-9b35-daa8ae479736@oss.qualcomm.com>
- <CAKEyCaD4=qeQZYYOv4BTrqUJkZa+jnea1b3BL434X1iGMA-_xg@mail.gmail.com>
- <35c554a3-efdd-425c-ac34-858a927bbe15@oss.qualcomm.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-In-Reply-To: <35c554a3-efdd-425c-ac34-858a927bbe15@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Received-SPF: pass (webmail.newmedia-net.de: localhost is always allowed.) client-ip=127.0.0.1; envelope-from=s.gottschall@dd-wrt.com; helo=webmail.newmedia-net.de;
-X-SA-Exim-Connect-IP: 127.0.0.1
-X-SA-Exim-Mail-From: s.gottschall@dd-wrt.com
-X-SA-Exim-Scanned: No (on webmail.newmedia-net.de); SAEximRunCond expanded to false
-X-NMN-MailScanner-Information: Please contact the ISP for more information
-X-NMN-MailScanner-ID: 1vMkgb-000C3H-O4
-X-NMN-MailScanner: Found to be clean
-X-NMN-MailScanner-From: s.gottschall@dd-wrt.com
-X-Received:  from localhost ([127.0.0.1] helo=webmail.newmedia-net.de)
-	by webmail.newmedia-net.de with esmtp (Exim 4.72)
-	(envelope-from <s.gottschall@dd-wrt.com>)
-	id 1vMkgb-000C3H-O4; Sat, 22 Nov 2025 11:17:45 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RESEND iwlwifi-next] wifi: iwlwifi: mld: remove unused
+ variable in d3.c
+To: Ally Heev <allyheev@gmail.com>,
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20251121-aheev-remove-unused-var-old-keys-v1-1-6c2565c77ef7@gmail.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20251121-aheev-remove-unused-var-old-keys-v1-1-6c2565c77ef7@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Am 22.11.2025 um 08:55 schrieb Yu Zhang(Yuriy):
+On 21/11/2025 15:27, Ally Heev wrote:
+> remove unused variable `old_keys`
+> 
+> Signed-off-by: Ally Heev <allyheev@gmail.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mld/d3.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+> index 1d4282a21f09e0f90a52dc02c8287ecc0e0fafe1..fefb4f532a1f9fbb1a4a5cbd2ade817d5c1adb58 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
+> @@ -996,8 +996,6 @@ static void iwl_mld_mlo_rekey(struct iwl_mld *mld,
+>  			      struct iwl_mld_wowlan_status *wowlan_status,
+>  			      struct ieee80211_vif *vif)
+>  {
+> -	struct iwl_mld_old_mlo_keys *old_keys __free(kfree) = NULL;
+> -
+>  	IWL_DEBUG_WOWLAN(mld, "Num of MLO Keys: %d\n", wowlan_status->num_mlo_keys);
+>  
+>  	if (!wowlan_status->num_mlo_keys)
+> 
+> ---
+> base-commit: 4427259cc7f7571a157fbc9b5011e1ef6fe0a4a8
+> change-id: 20251111-aheev-remove-unused-var-old-keys-104ffca9bf62
+> 
+> Best regards,
+> -----BEGIN PGP SIGNATURE-----
+> 
+> iHUEABYKAB0WIQQBFRpOLrIakF7DYvaWPaLUP9d7HAUCaRLyowAKCRCWPaLUP9d7
+> HLG9AQDZmggT93tMLv32pq5myG3e83t12KWON9efOBg//lH4vgD+Ppw3KoTpdYtJ
+> 20VDaWuqUVj9KLqjx9hblfEiB7s9gQw=
+> =A6F+
+> -----END PGP SIGNATURE-----
 
->
->
-> On 11/21/2025 4:41 PM, Paweł Owoc wrote:
->> On Fri, Nov 21, 2025 at 6:00 AM Yu Zhang(Yuriy)
->> <yu.zhang@oss.qualcomm.com> wrote:
->>>
->>> hi,
->>>
->>>   From your log/calltrace, I didn’t see any errors related to MU EDCA;
->>> what I saw were related to SMPS. Did you also add changes related to 
->>> SMPS?
->>>
->>> Yuriy
->>
->> Hi Yuriy,
->>
->> Thanks for your reply. The ath11k driver is version 6.14.12.
->> Everything works if I remove the mu_edca setting without any other 
->> changes.
->>
->> The problem doesn't occur with the newer IPQ8074 firmware, version 
->> 2.12-01460,
->> which hasn't been publicly released.
->
-> So the newer IPQ8074 firmware fixed this issue, great.
->
->>
->> More details: https://github.com/openwrt/openwrt/issues/20702
->>
->> Regards,
-the point is what he mentions that these newer firmwares arent available 
-public. i provided openwrt these images for testing
-so he is asking if or when qualcomm does release newer firmwares to the 
-public repositories
+You should switch to patatt instead, not signing emails. We don't use
+that, I think at all, unlike patatt which is being actively checked by
+toolkit (b4).
 
-Sebastian
+Anyway, not a problem, just noise, so:
 
->
->
->
+
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+
+Best regards,
+Krzysztof
