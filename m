@@ -1,43 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6A832F748
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2025 14:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C1333032B
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2025 14:21:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764339665; cv=none; b=W+aPhhy/6A3smTgCCm1V6GxiiLREAgADtrt1Jjc9ULXh6JN1sVsgTAAf4L/V1TJqXIX08Us427fbBOkUHRjrk0dmQYd8wEhrRu1tVDyaXPI5PhFCxeUItm9HVCJ5aULe3Bs9UmfNnHFE9lM3nitqgq3Tg+NT/P38+OLJ/kPq0NU=
+	t=1764339668; cv=none; b=bsujl+d6l25QBNvvJDLKGg4NL8+C80uVo6kxaagH0UZyIsKlzFZKNJicwcCAOVnqDH8lhRtnBKXwNSjWXNMQiBzz5FAa1r1sU7Ztzayy2cakxgekipirR+0Vo9RFidwh+b5hoA2IdsaklCgrYqpPJyDyCX//kOFcZ4mNGJV0PJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764339665; c=relaxed/simple;
-	bh=vJwdHIyNeMiJKTJPKQYclQNelf0JAiGEK6OfWr30mA8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aBkH48cMSVGycU/7nsWNzLBOPeOsvO046tKJMqq6Ahru6JJG93+Zal7h/doThOtg2xyOBM50oJV4qlOmFi74Exg/T2r1Sbmf7TG2hxHrowxBp8Do4JqsDJBUpnid87f/Lnv1FxVi8moX5gnGr3Qp3ZiPMBdldDyU6Sj/Szcw7VU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=bk56CRpZ; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1764339668; c=relaxed/simple;
+	bh=746Zq7gVkANx6MkpL3g9CQw8S7WqSKO7/Dqbuhsh5rw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MvGQPZivsYdN6JRb84e8zdYsj082pWAs05rXPBv+kTQHjQwdH7ZvBPSqP7FThStePI5yOmfoh4JZy2VYEGbd5ku5vJraorxbSNPV9jcM6xbxsK1Oy4Ai/gwns3LpuIENfZxQeUqFMnf0z9uhlcIb4LfnkOsN7mYA8rlVfSPZzAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=V9pg/mOK; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="bk56CRpZ"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="V9pg/mOK"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=uFqNAEEemt8sX0mej90ZlzQ3BjUXZfpenqV+hoemxpU=; t=1764339663; x=1765549263; 
-	b=bk56CRpZoyFWLsdYVnlWyK04FaYCUpUyXczsiVNrA93xNfvC+bp4vpRdeleoui9g9mUWq0ogAwq
-	7OgeWiyWp/qoVwM44T/wAJR4Bd41B3ExGQzioTW3xv+ExJgRWWCC6Eguj7mGHdB7zSyS+tCOdH1sW
-	j9ej/L7IhwnLQw7EmgtOfur+axKW9nzA2Vv1JOZZpIFlMqZdAEcUAJGX5kYj3/hzMYhZ1oBb7t8F6
-	eRWDHkTdOp34thAbDzuxE83xZTEAuaGNbqidyGoU+s99T/IiTeu+x2BwNpOv6+I5bmlEeTja7J8/E
-	dg8ZW3ZNFVlWn0MYCIaaDQRnX/AdGxcDQH+g==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=HWngYy5Bs7h8JJ1xJSubC5BxccBnPALClg9pge4gx1w=;
+	t=1764339666; x=1765549266; b=V9pg/mOKQdUcBuEZC3ZmDXQEk5OFa3cLZCXlNuYuXGJ+ZOp
+	MICOfZZsOeAmbEGIjeA22sE0wwxKZr8OnXlzLcwDNV70OAE9WGtpJjHbOlbuZ4s8wAcBHwB6vB2xl
+	CKc2QUvxuEBAbC7rkOUqyX6/Zc4JWBaXDbqPlNpL0ayVkvo7RpOPXSoDrNc9yX3eDDmXJS5xZgqPP
+	SooTlCPdi9RlR6o3XwwFFwibUEINX1micW3NRZJYeNBVicWjcwKYFzy5BGoT3W5lU5rCNxgigUR4s
+	fNvNRkzYCj5kYVorrVHyJs+dl6TDKkqO27hSk/OAd4lV0ezJzFGtC9QUNXCA039Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1vOzLC-00000003926-3NiP;
-	Fri, 28 Nov 2025 15:20:55 +0100
+	id 1vOzLI-00000003926-3IxL;
+	Fri, 28 Nov 2025 15:21:01 +0100
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next 00/18] NAN synchronization for mac80211_hwsim
-Date: Fri, 28 Nov 2025 15:15:38 +0100
-Message-ID: <20251128141537.287627-20-benjamin@sipsolutions.net>
+Subject: [PATCH wireless-next 03/18] wifi: mac80211_hwsim: remove unused nan_vif struct member
+Date: Fri, 28 Nov 2025 15:15:41 +0100
+Message-ID: <20251128151537.67fdaf6e0ee3.I35d3eae582461af7ee25c63c56b13adff17cf20f@changeid>
 X-Mailer: git-send-email 2.51.1
+In-Reply-To: <20251128141537.287627-20-benjamin@sipsolutions.net>
+References: <20251128141537.287627-20-benjamin@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,65 +50,26 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-Hi,
+The struct also contains nan_device_vif and that is the member that is
+being used.
 
-These patches add support for NAN synchronization to mac80211_hwsim.
-This is useful to better model the NAN synchronization behaviour and
-also permits testing more complicated setups where a wmediumd instance
-is used (possibly between multiple VMs).
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+---
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Note that the current implementation is somewhat simplified and only
-synchronizes on 2.4 GHz (it does send beacons on 5 GHz). It'll also
-ignore beacons outside of the 2.4 GHz DW, which may lead to slow
-discovery of newly visible NAN clusters.
-
-Apart from this, synchronization should work well. There is no data path
-at this point as the corresponding mac80211 API is not yet ready.
-
-Benjamin
-
-Benjamin Berg (18):
-  wifi: mac80211_hwsim: fix typo in frequency notification
-  wifi: mac80211_hwsim: disable BHs for hwsim_radio_lock
-  wifi: mac80211_hwsim: remove unused nan_vif struct member
-  wifi: mac80211_hwsim: move NAN related variables into a struct
-  wifi: mac80211_hwsim: split NAN handling into separate file
-  wifi: mac80211_hwsim: rename and switch simulation time to boottime
-  wifi: mac80211_hwsim: move timestamp writing later in the datapath
-  wifi: mac80211_hwsim: register beacon timer by calculating TBTT
-  wifi: mac80211_hwsim: refactor NAN timer handling
-  wifi: mac80211_hwsim: switch to use TXQs
-  wifi: mac80211: add a TXQ for management frames on NAN devices
-  wifi: mac80211_hwsim: limit TX of frames to the NAN DW
-  wifi: mac80211_hwsim: select NAN TX channel based on current TSF
-  wifi: mac80211_hwsim: only RX on NAN when active on a slot
-  wifi: mac80211_hwsim: protect tsf_offset using a spinlock
-  wifi: ieee80211: add more NAN definitions
-  wifi: mac80211: export ieee80211_calculate_rx_timestamp
-  wifi: mac80211_hwsim: implement NAN synchronization
-
- drivers/net/wireless/virtual/Makefile         |    2 +
- .../net/wireless/virtual/mac80211_hwsim_i.h   |  146 +++
- ...mac80211_hwsim.c => mac80211_hwsim_main.c} |  573 +++-------
- .../net/wireless/virtual/mac80211_hwsim_nan.c | 1012 +++++++++++++++++
- .../net/wireless/virtual/mac80211_hwsim_nan.h |   89 ++
- include/linux/ieee80211-nan.h                 |   37 +
- include/linux/ieee80211.h                     |    1 +
- include/net/mac80211.h                        |   20 +
- net/mac80211/ibss.c                           |    2 +-
- net/mac80211/ieee80211_i.h                    |    4 -
- net/mac80211/iface.c                          |   28 +-
- net/mac80211/mesh_sync.c                      |    2 +-
- net/mac80211/rx.c                             |    2 +-
- net/mac80211/scan.c                           |    2 +-
- net/mac80211/tx.c                             |   16 +-
- net/mac80211/util.c                           |   51 +-
- 16 files changed, 1551 insertions(+), 436 deletions(-)
- create mode 100644 drivers/net/wireless/virtual/mac80211_hwsim_i.h
- rename drivers/net/wireless/virtual/{mac80211_hwsim.c => mac80211_hwsim_main.c} (94%)
- create mode 100644 drivers/net/wireless/virtual/mac80211_hwsim_nan.c
- create mode 100644 drivers/net/wireless/virtual/mac80211_hwsim_nan.h
-
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
+index 79cc63272134..dc0ef30f96b1 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -760,7 +760,6 @@ struct mac80211_hwsim_data {
+ 	enum nl80211_band nan_curr_dw_band;
+ 	struct hrtimer nan_timer;
+ 	bool notify_dw;
+-	struct ieee80211_vif *nan_vif;
+ };
+ 
+ static const struct rhashtable_params hwsim_rht_params = {
 -- 
 2.51.1
 
