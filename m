@@ -1,42 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C1333032B
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2025 14:21:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C9E33032C
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Nov 2025 14:21:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764339668; cv=none; b=bsujl+d6l25QBNvvJDLKGg4NL8+C80uVo6kxaagH0UZyIsKlzFZKNJicwcCAOVnqDH8lhRtnBKXwNSjWXNMQiBzz5FAa1r1sU7Ztzayy2cakxgekipirR+0Vo9RFidwh+b5hoA2IdsaklCgrYqpPJyDyCX//kOFcZ4mNGJV0PJk=
+	t=1764339668; cv=none; b=hBfKShaAequu2ueYp11s19FuYvkjStWDvPYNWrzWeO7Szg6/A2Vltu9nLk+mTgngXAVQ9EIyCOxiGyNdqfSKX0tWfwwgBQifLjiVmzmVndJrcmFgyS0tZMtX+Qy5f1bH/5R5ulLWZ7jQu9tqSfHo6Y7WB9eWZ/CVZMtDwMoyHzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1764339668; c=relaxed/simple;
-	bh=746Zq7gVkANx6MkpL3g9CQw8S7WqSKO7/Dqbuhsh5rw=;
+	bh=VgZYZg98wZfbvi2z1mzn+HZZ0M5yO24rTR9t7CifE5Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MvGQPZivsYdN6JRb84e8zdYsj082pWAs05rXPBv+kTQHjQwdH7ZvBPSqP7FThStePI5yOmfoh4JZy2VYEGbd5ku5vJraorxbSNPV9jcM6xbxsK1Oy4Ai/gwns3LpuIENfZxQeUqFMnf0z9uhlcIb4LfnkOsN7mYA8rlVfSPZzAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=V9pg/mOK; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=s0f0KaoGUzvoiRlSH+7yjIMUHMMI611moOoOsMKaRRbewGt+Vizc5qK6Uc2OwfJJurHuAGvm7UrG/vrjROVzMbkYPgazAZgUHz3wJKMJNtp/wxAkMTWem7wAPYHXvVBiar7Q4CgM7nOZW2xVpuwbK4GorpV1LxU1GM80M2tQGGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OGhchyhg; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="V9pg/mOK"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OGhchyhg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=HWngYy5Bs7h8JJ1xJSubC5BxccBnPALClg9pge4gx1w=;
-	t=1764339666; x=1765549266; b=V9pg/mOKQdUcBuEZC3ZmDXQEk5OFa3cLZCXlNuYuXGJ+ZOp
-	MICOfZZsOeAmbEGIjeA22sE0wwxKZr8OnXlzLcwDNV70OAE9WGtpJjHbOlbuZ4s8wAcBHwB6vB2xl
-	CKc2QUvxuEBAbC7rkOUqyX6/Zc4JWBaXDbqPlNpL0ayVkvo7RpOPXSoDrNc9yX3eDDmXJS5xZgqPP
-	SooTlCPdi9RlR6o3XwwFFwibUEINX1micW3NRZJYeNBVicWjcwKYFzy5BGoT3W5lU5rCNxgigUR4s
-	fNvNRkzYCj5kYVorrVHyJs+dl6TDKkqO27hSk/OAd4lV0ezJzFGtC9QUNXCA039Q==;
+	Resent-Cc:Resent-Message-ID; bh=2aOPbggWmVJswkDOCgdJKZNoh/Y7cNfTTK4PUQ978tk=;
+	t=1764339666; x=1765549266; b=OGhchyhgml9/kqwt224yEXqYQoWAfo1a+CBCFtKayOIXY54
+	GJWN+rJ+Pnlq/bXTss4nXC+JJQSX4R7ILCLbCQwEqjWzWS8A1OtXMViYiBfg0CeODmGxGLLRT4bqw
+	FFOIIzP3IKb69FKzHu/gk21h4acBQFBAb41McYnW2L0ow8nI6PPYXc5QMJoRCfTMTgZ9Tzo6IZ6XA
+	y2qAe4+E1rNGYRL+5wO6VZdNLjg4lNMEJcJ9dxxoXV0RFMAHYn22QUtyBbDWHvUfy+dgT70VUlUEq
+	MOivZMuay4reQKAE/c2SE6JKqthlGy1PTvt/Td8xo/Wy0q3DGW4YVMN8ojGOB5Gg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1vOzLI-00000003926-3IxL;
-	Fri, 28 Nov 2025 15:21:01 +0100
+	id 1vOzLE-00000003926-1d6G;
+	Fri, 28 Nov 2025 15:20:56 +0100
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next 03/18] wifi: mac80211_hwsim: remove unused nan_vif struct member
-Date: Fri, 28 Nov 2025 15:15:41 +0100
-Message-ID: <20251128151537.67fdaf6e0ee3.I35d3eae582461af7ee25c63c56b13adff17cf20f@changeid>
+Cc: Benjamin Berg <benjamin.berg@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH wireless-next 01/18] wifi: mac80211_hwsim: fix typo in frequency notification
+Date: Fri, 28 Nov 2025 15:15:39 +0100
+Message-ID: <20251128151537.e63b63d8aa44.Iacbaf7bb94ed5c14a0928a625827e4137d8bfede@changeid>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20251128141537.287627-20-benjamin@sipsolutions.net>
 References: <20251128141537.287627-20-benjamin@sipsolutions.net>
@@ -50,26 +53,32 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-The struct also contains nan_device_vif and that is the member that is
-being used.
+The NAN notification is for 5745 MHz which corresponds to channel 149
+and not 5475 which is not actually a valid channel. This could result in
+a NULL pointer dereference in cfg80211_next_nan_dw_notif.
 
+Fixes: a37a6f54439b ("wifi: mac80211_hwsim: Add simulation support for NAN device")
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 79cc63272134..dc0ef30f96b1 100644
+index 551f5eb4e747..92427f527286 100644
 --- a/drivers/net/wireless/virtual/mac80211_hwsim.c
 +++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -760,7 +760,6 @@ struct mac80211_hwsim_data {
- 	enum nl80211_band nan_curr_dw_band;
- 	struct hrtimer nan_timer;
- 	bool notify_dw;
--	struct ieee80211_vif *nan_vif;
- };
+@@ -4040,7 +4040,7 @@ mac80211_hwsim_nan_dw_start(struct hrtimer *timer)
+ 			ieee80211_vif_to_wdev(data->nan_device_vif);
  
- static const struct rhashtable_params hwsim_rht_params = {
+ 		if (data->nan_curr_dw_band == NL80211_BAND_5GHZ)
+-			ch = ieee80211_get_channel(hw->wiphy, 5475);
++			ch = ieee80211_get_channel(hw->wiphy, 5745);
+ 		else
+ 			ch = ieee80211_get_channel(hw->wiphy, 2437);
+ 
 -- 
 2.51.1
 
