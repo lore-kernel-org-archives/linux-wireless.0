@@ -1,46 +1,46 @@
 Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013041.outbound.protection.outlook.com [40.107.162.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5962F83BC;
-	Fri,  5 Dec 2025 06:58:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D121F2F5A0C;
+	Fri,  5 Dec 2025 06:57:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764917910; cv=fail; b=FySG9Pxdrm4PQci+Ek/gONReIfBCgDvz4eBMFkzrKRIQz14NuMGU5jM+QIj0QRYeoIyhP0J6FC0bxUqeBUbhGxaENoiHbn21HJXSavYbsquw7DLqRbBuBpiJQDSJKybYUP8q9uq5sSZ5WKLAAcvtOKgiQEc7OOqGwkwFJGFH0c0=
+	t=1764917881; cv=fail; b=tc1wPIICSxKJnX8AZnuOmiZ5iEU/ADijipk2tHoEBe70wRhBc6ZD7vlPnbgGos1nu2sYiot/xAA7jrf/S8aGbwWku+3+tRudHfHIeOA1yti/G9QjP5E6LrkldSCj2InLv/+9t0vMRckPVtXNHO78/QZXG85eiywde/EA8Eot9x4=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764917910; c=relaxed/simple;
-	bh=7UjSC1SoGuV+tPsL0kD/Dlczdfaw7Dh1FT6EL1Sdgg0=;
+	s=arc-20240116; t=1764917881; c=relaxed/simple;
+	bh=+KuFrIoK+JKid0GiEO4Fq6Navp1oBhyJjH+iKBLjkrQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=t0ezGL57cpMtRrE4lhW0cTRexYUKRkUIwVceUcw3GqazUE7GV370znRuLUdKjCGakmRko0gs9YUR+Q4GwSWAAF/dTt3GAyB0LCGNTC6xo7ZDruqKTLI3gzU06MUnKqENQz3DUhW4Hpo9TOrRnUCVqxsr+1A35gJYAZHb6JL0TBg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=PxMVzMIO; arc=fail smtp.client-ip=40.107.162.41
+	 Content-Type:MIME-Version; b=XvssAs8p6YfibwmmBl9d3NI5tC4rfNp2f77yYviyvj6n0qM7HqTx5StQ6V1VHV48TZWtBQahgc23EM4zkujE1piNN8XUR9B9yfYRpnfqbzvA8kU5FMC8yZUu7BuQRg0GS0n0mrIsDFw397u2XGSrknQoSPxdv2IazJZIs07igOc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Benh31o6; arc=fail smtp.client-ip=40.107.162.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="PxMVzMIO"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Benh31o6"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=PwK+ip54J6DaT0J9XqqorscVpyNe39auiME/5Jo0pdLFya4JDqePenff4EPUpC4TqYY6hSCnz00dxihTOGX1H8M4AHZrHUT2EvljWNUHWg2hiuuqhtFL5lmFUufC2TUxnXRCTjs6TAswy9bEoGfGJUDKPw/nS7AkO6q3XcviC2gxzsP4uAzD6lbrc/0Y5s+TqXKCc223PM+cMyVo5MhT+bUp1LBRlrzXDbWnX/pcBkKLBr1Yq8qnYJQf6stLbUk/kSbZUfQGkk4sTXFdsG6rv0+kQswb4C0n30/rm1pSFHVc1OtfPLKPAkmuVh2peykzGmWI3BELZJ1dpDTcnR6Bjg==
+ b=BIM/x2wa75/M6+Fq8AqEiOTek8HrAnDz0Mg8mVot42FY61I3DWKBTXeDdWCYQ94vlPrhTScuPPvPITKs74UqWj+GvcP5DIwfW9ImMIdI0wF6YPOusBnhMe3Un63Er4zYKbOK/dY8wBcnnzAvMr7Rqaunmt5nWQuUX934FLDANjSf/Yfuq2+peQ34ZwC6TpatiXXuB1H6Z2H5woqduFWWU5ygV5CcjTIj01BmLc945s6DhnyweimgVaxB0xyGd6N/yDkrxdErQeUyxmMXEBY6my1geY5Jr5cj42mRJWHa7B1i8CQlWfbpDZAN5v9gtf07RfGr+OhXRNU1FaQxG7kzIg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Eyyh8RzuiR3fuax8S5AuYR2IAy0nsZHXoHgKbSAAxOc=;
- b=EI9ASS4joFoWi8i9mdLW4NA0vhz1ar7wUZevUmLzbhqaZsLu4Bm1oH7hsmJOc5NUp0xPMosZbHV3DV2/lbcP9Dxa+KIn1DL5sp8ARZlF7YOBXKVXLbEICxhdCuRPiIZaGDw399JOXGfbgHs76if/DRgCzxMvGVCsRERtnhmwF9f9j5m/WXD9/7f5L1idg04AuTpy48ZEdcmjv6KFXNskqTA1u3+8b87HbPowC/ybWEpx2XZPsx11SqXLgURngjSLWJnDs0pxoLix613XO9gOypcm46OS1r1baLH72ckKejifA6sGSzDs4uFWqgsCr/zJOf2lPGuHSOPPZrreZGClxQ==
+ bh=DwatvWvI1AHlLVit5qiu24zp44U2wVWQ80MdufUlSxo=;
+ b=KwJj0vMcLm8iszSriz25C2eNRrvdmevgtZX13qJ+xBN2LRnMx93lzFTDbkn4FjljPJsHMFeYRkdfLYFK/qqepHobFBvhgKejSkQcllbaSCYndw4o9UuK+gGG38dOt3Rd7f5CQw1NWIdpiNpyibwUM5gIXLiiLXcHBbotZQ3Tc6wRWP4X/s6OH/MWCLnu6G8EVXqJFurbFey1pFSe7WhMLVkQZ9PlVdReTtdq+SZp/gQ8FzCwfchnkiqNS3QUFFXRIVqYwnlTFKviSV2NNW/pNS+juSIWPegkwOuBUdBUo3T+EOWXRbzyak5RuZ7l+1JWeAydzLT7wryVVR7/vlpTmw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Eyyh8RzuiR3fuax8S5AuYR2IAy0nsZHXoHgKbSAAxOc=;
- b=PxMVzMIOTL15cMG9qmVMdnOUsy+SwHZNf6Wvv4i8wFV57pZvW7y4YQ87DvYJHWmrVasSrkefIRkf/mnOjrZZxyVuh/fUMvQQrRcl1dT6HRG+Ffz3O1kKYzAPhaKhdkCJZZVfq3zd+lIJ30Fk/HXRyPxzd21CiYyaCn924+kq5HvDYB7g/+U5d/VBISNQDahvqZgFkA6vjL7wfcde5jTsg5e8FwTSnJRsdHOYG7agvMSOOT8majokq41bU3DlFsH1i4hqV3tGWxafKcqkdpErNghym+zYOFk/Mc/T/bUY8LlfhFhmoZWzyLXq3HsVvjdMJj/6IRMobg7I5hOD/pGDlg==
+ bh=DwatvWvI1AHlLVit5qiu24zp44U2wVWQ80MdufUlSxo=;
+ b=Benh31o6DCtDHiMOBMU7YOT9u1gOKhI7gRkJbCu07iNNDB9HqlZedQarLK5OeDHLwHgQM7wD1ZZJsvabRbj7zIEM5rFqJk29UqppTCEteb6BG7a+bazJPoh+7ahONayebvxOgFyUMI9I1moYaKlqv+GOks063yyRxmUxbvSCY+CSv+37jl9qQQ7Oz5QK5pJ/OK0eS4GH2P9NBtQXkPloYGCUU1NLyCQ1Op4B9Cmwlz0NHERGtWHbj1+hbk/qiH6XErAOpw4jlwn+FmTMgWlSZMOsDm2Uor2yHvR5qfFu8yKrm4qUn+5+PCY51V0rm2QMmV6pqGL2DR4ZVlJPi3+lWw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PAXPR04MB9255.eurprd04.prod.outlook.com (2603:10a6:102:2bb::13)
  by PAXPR04MB8144.eurprd04.prod.outlook.com (2603:10a6:102:1cc::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9388.9; Fri, 5 Dec
- 2025 06:58:03 +0000
+ 2025 06:57:47 +0000
 Received: from PAXPR04MB9255.eurprd04.prod.outlook.com
  ([fe80::1eb5:3ebc:9f11:f20b]) by PAXPR04MB9255.eurprd04.prod.outlook.com
  ([fe80::1eb5:3ebc:9f11:f20b%2]) with mapi id 15.20.9388.009; Fri, 5 Dec 2025
- 06:58:03 +0000
+ 06:57:47 +0000
 From: Jeff Chen <jeff.chen_1@nxp.com>
 To: linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -50,9 +50,9 @@ Cc: linux-kernel@vger.kernel.org,
 	tsung-hsien.hsieh@nxp.com,
 	s.hauer@pengutronix.de,
 	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: [PATCH v8 20/22] wifi: nxpwifi: add NXP vendor and IW61x device IDs to sdio_ids.h
-Date: Fri,  5 Dec 2025 14:55:43 +0800
-Message-Id: <20251205065545.3325032-21-jeff.chen_1@nxp.com>
+Subject: [PATCH v8 15/22] wifi: nxpwifi: add ethtool support for Wake-on-LAN
+Date: Fri,  5 Dec 2025 14:55:38 +0800
+Message-Id: <20251205065545.3325032-16-jeff.chen_1@nxp.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251205065545.3325032-1-jeff.chen_1@nxp.com>
 References: <20251205065545.3325032-1-jeff.chen_1@nxp.com>
@@ -69,196 +69,166 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: PAXPR04MB9255:EE_|PAXPR04MB8144:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3ece51a7-a39d-42ef-f4f4-08de33cba256
+X-MS-Office365-Filtering-Correlation-Id: 1c744b89-1a73-4abc-b637-08de33cb992c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|19092799006|1800799024|52116014|366016|376014|38350700014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?YokeS35dgZ0g6J+861OjrmnLShcL4RqXJFb1CtEQDve9bTAEZC5AZ32Er/Na?=
- =?us-ascii?Q?ep7fujUicndKNv78jjWP5p0RBrMIqczCI61nO897sqJEbxYPcchW5E36HDvB?=
- =?us-ascii?Q?6V6HSbVVTHckCT8ZAo7PRSv5v/6X+iKdCWq3kVY9gSJt0V/hbzcgGNqolzTZ?=
- =?us-ascii?Q?B+UQN7xdVBPZNDUU0oUIsjpUAmXP4DV6BkRQzCAK9PxStFmPJoM3JE2NGqpl?=
- =?us-ascii?Q?D1Cl/7lcwGgl+XBCEixlbDbV4Rvoi7tqD5jiWULTLwRlsIr8WPrjxpn2aJks?=
- =?us-ascii?Q?1FTd1QOJ8ZLShpL507wjPTVAOS4qOvqMsnEj4+aeSDDDfTxJqtGSZ16JdoI9?=
- =?us-ascii?Q?544myRqAJTDErUkSb39jZnremJaO1h90jWUEinviEafmInLXv64q0ab637hw?=
- =?us-ascii?Q?4yp26c/IPgPv20ZiqdZu/XG76UYk3soWiMsYpBzwo8TXfYzfShQ+XWXR0ES3?=
- =?us-ascii?Q?SDoE0gues7e4XsVOHezs5lUHIHXOmOZ6X1rEc/Gg8j+8NQbY+oCkFhxgmuaF?=
- =?us-ascii?Q?ucOUGvMHqaUxP5tqEvNnrHLF3VZrfpGcQ5bNjVvPB7g/Y3VStWwDt+7l4zA6?=
- =?us-ascii?Q?thywngndp1jzH0+vxf45WSK8vNw1t4eG9w6fA+6dyhFMGUySrZy63YvXFJy8?=
- =?us-ascii?Q?/frRNviJgrPAzdlPd2xp+B7Px3Ni4CyeJLemc2x093C6JcVv7F0VeWMXj3ZU?=
- =?us-ascii?Q?jb287DN6JftY3lLAMS+MfRU/3YmkreICSPSpreDdahQdxOXg1pOP7az286dV?=
- =?us-ascii?Q?DJJNeeeqq1jsu8puCeDRUnu4yVOZCGlHGmogR3fSFpcsx5FbPBw2E+ewtXk4?=
- =?us-ascii?Q?RGTHh0gsR9qGT4ToalFHv9PV+fnu7Rv7vexWATEakhvQZgNIbF2p6tP51A4g?=
- =?us-ascii?Q?5yOGj7eUKAIdmNDwL69DGJtrHve6wd37xJFzh85anE7KZJsMkrCelw0udQpa?=
- =?us-ascii?Q?ej5trEdgNkJF7sKDA6ArFgpnZ4XfXUNRuZxICq6Y+lcACP42Ao+8sinQl2Bu?=
- =?us-ascii?Q?ypNRfaxlSBKwHMwn81Bn0FzcrHkFNtaUblPMDLwYOETGnJvv65ZNRNt9Fz3/?=
- =?us-ascii?Q?7xirWfG62/I362QJ4Uh6iwHM+z4y088leSJAFRCwhPgzRGiCo2W+M90oFRY0?=
- =?us-ascii?Q?BJ4eINBaN4V6Cke1HbmAJtqJMDkr4pRSTGLkdl4XIdqkVe2h8nR+WLgCSI1Y?=
- =?us-ascii?Q?J71AaJFCrZPP6z4A7aMEdey5Bw1A8AEIrvr4DreYO4+RrC4hQllz2dqFSFwh?=
- =?us-ascii?Q?9CtJp9J3kh2krLVLffZWxz6UvjKMhnxN2JhYmisGnaAeLbdQ4gwwbPiADe1G?=
- =?us-ascii?Q?VlhpfPK5k/Zjyh8C6yQMsucXkWOiv9fAiT53s9x1VQGXgEdADXDKuQCop9KB?=
- =?us-ascii?Q?+TRAETeukoInP6MC/iHgWE3zTU5L+hN5OZ4GfqxFdEW+cPM6W5Co6lJBCZBp?=
- =?us-ascii?Q?u/v1WK+bLwi8w3+7jKlBLV/H+nA/tXm182Hw6lBnSroIOdRCcdxzkg=3D=3D?=
+	=?us-ascii?Q?5cSRFfBWPWTCfdCufaU8+XAQtuPPF3fPkGEohxCfO9popgNEp6pW/UGPOGhs?=
+ =?us-ascii?Q?kXp+A6EKoYma2Z2817jXEV31iz49GVPGGZCyYfemzVkH6hSFyEGzroPV7nok?=
+ =?us-ascii?Q?B1KtawtKxfq2vVLthNHwR2jIcgYbEXL5DnxNXTE8o5CZXSiljB9/aB0OM8EL?=
+ =?us-ascii?Q?+96pM1wpABuD7mQzZEsQ4xTLtXJYA3iNwavdhb9QD6tni7ebowMbvgrimxW2?=
+ =?us-ascii?Q?I1w0aZ8Qj2e2HO7Uq3d0qU2E1MgcRRGh5/htiGRI1cG+PBWNOO4hYq6oczte?=
+ =?us-ascii?Q?8L7wi8dTBQpNiTYD3kHR/eJq7Z47tYGBqHIwjT106s4p/YagEEpufFPf9Nfi?=
+ =?us-ascii?Q?JY8kiq8Kc7Jz58K00K7n0KqvXPUWlHt2pq4WX1o/+neb3rM49oATLe0F/TV9?=
+ =?us-ascii?Q?GEFP8v5WnkycK8yjEsFrj5WefahfpKOZ3s7UUFEnWmB0jOkf6+wFHe8Hf5Ma?=
+ =?us-ascii?Q?O0FPphYi8XVfjq9TH7zt7mbbdV5A6HSl7vZSUA5c7gH7fQlpx639M19dEC5e?=
+ =?us-ascii?Q?+qwvGIlBEP9/DDj0w+FT1uYa7eQT4PWJzUlNEtWLmTxbRrlw63uuStNJ1WrH?=
+ =?us-ascii?Q?gAkcKRz2MBoFt1JYn3LikfkkD1WZcly8eNjmdTZtJSV5MAlmc0TTDxPaad58?=
+ =?us-ascii?Q?mtUr9quLI1aA0ybXm0f36kLmEjlnoHL327PE7HRYf2gu3iHzZBSf8ACFTIW2?=
+ =?us-ascii?Q?FtvnbExEXtZgH1ilPt3Iml8A2LTNMh5Ho2vbJT0zAQQW75iWonZZq/RSewcS?=
+ =?us-ascii?Q?W569tu3T7V/YLeFF3AKpY32QvZDi4yQlHUq2bix7YKl2mlMoLfvF76l5xBUN?=
+ =?us-ascii?Q?imVCryeJNWSVNuE/u3a5JKHsFcm9XdvQd5Q2uxPuhbaq+6NnOqxlXstZKu8c?=
+ =?us-ascii?Q?EUWEduS0ru1SZVbzvQZLRfQ0djqbJ2yj8AKWKwjxoyPtDpjpA21BF/hpeXUF?=
+ =?us-ascii?Q?sQMfYvK45pbtlErvt1TqhHZEdFfRtI5letsSxpc+RtOT7bxPqKPNEdWO+nOS?=
+ =?us-ascii?Q?fNBIn1pIY5y2wmZQuXCO6cuIzYKVyfkLJm5nKBnd5xR3mrwtDqaf6I5rqXwq?=
+ =?us-ascii?Q?JodCBWKIKb/MR+3vMITJOBOgx9Qx0ckmxqI0PmL2tPwnBRX4VDORyNFFhZDS?=
+ =?us-ascii?Q?gRChXOKW7jCT1dKFBkhhzaix1qbJFfjwCXJtXrZINSpz2NrwWHeT2MJmXwW6?=
+ =?us-ascii?Q?J+Fima63E/LqKIV6TGzWzcprO5NCMeIXbR1eelC3syYPKnquwb9wGFn3pPFu?=
+ =?us-ascii?Q?eGIoW5GjUzGJ3bbtgIBERgOBDM98eQNIqcPVOpdm6j6jCtiGRxkffkQztblx?=
+ =?us-ascii?Q?qy2MJ8SvTHEou9lPGWLtP/zzpCHqXrHtP5NCH9VHjn6X9I7x4oiKs5urKPVL?=
+ =?us-ascii?Q?34nkmsCXgIzQJn4oXWb1pnk3IGg2X9AybdraQFaJ20sMQZUDmsrzoUsVO698?=
+ =?us-ascii?Q?Y38RnVchq7goDPXKwDqiC82xeE0LVBp702IOd+uBf9+IJa/hVypCYI7s89KL?=
+ =?us-ascii?Q?8IEh+WOfe16PnthLGYDd/LLdVTFcx3WzWyv3?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9255.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(52116014)(366016)(376014)(38350700014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?rm/lLpxZPFpXX8/TJU285ENI0CwS5o+x6R+gCoThKeJgalRkBUe152M0dPOk?=
- =?us-ascii?Q?AzIwAl631pxuWv9XnIgBfEykijgIyjbJT1LB6mfv/U8yfuIhJEd0OBBUn7/j?=
- =?us-ascii?Q?B3JYpML7cV3akMSvr+6I7KvBa6IH/CqJPMvv8myGW0941avBlwF5rHm+7bNp?=
- =?us-ascii?Q?SQ647yMWjQgvWfpo7TX2vMGPXlLrWsSzntS+ZFqfwVXqtqML+LzFXt9SwL1N?=
- =?us-ascii?Q?P5Si6KgvtYR9z2Q/XRtx4OoCRyQaieG6nDJngJ9waPKqEjbB6x46M0F5CwMI?=
- =?us-ascii?Q?Ez4cN5tfIZ9oii4XA7G1VwAjGhks9FI4TuHfCAx7szSooU3OnaVq66ZyOfw4?=
- =?us-ascii?Q?DhlYO/e6Rkars9sTDQKkGOoehRBdTLOjylr8/hA++hor1r0UOoE0vIUlWF2m?=
- =?us-ascii?Q?SC0B8r9XEC03isv5OiPuy+5sBQvEmvVKdgpmvlvvp/geuCdURNs28EMK2EmW?=
- =?us-ascii?Q?IxH2LBKoQRpZ+MBpCm+Ftvst9V/perJrVB16JUuoa4F2aFSy4eX0NLWUnjIQ?=
- =?us-ascii?Q?QTZCCiJoBjqlkPfu706hCs7wkDUcGldURb7AJgQyNRJobVIYT+GGf1b9I/+v?=
- =?us-ascii?Q?vQlmEEmPz/u8rdSYBAb3C5G0U+kLP2ICKhlJc5wrxYVuPVhka2yIsskWhQTI?=
- =?us-ascii?Q?odSNfS8AHklakvgrdLCQl9fzMrrQpMBpwNa0qXQS9oUTXjPNZgIiqvaNZgO0?=
- =?us-ascii?Q?gzT6iRlLoGl+iJ0mx7zePBGYmrOm1vAMZuThGCsQEhQSGrLwwX/Dl7ZjTBcd?=
- =?us-ascii?Q?aeKGcaSXQdWhugOs1r0BM1aqSNiLlVR/l0qBoQQAn/x7qV8D8lvE60L4kATh?=
- =?us-ascii?Q?/Ra34W5TszqUAR1+ivVvwMNu3UwGecBn2MJpymT46EKAWKNFJFhXzgGbIFSx?=
- =?us-ascii?Q?oqza2Chx/Z8yh/n7+eSSyQ2flYLsqbqKjevnq7pTN5aj0JZDxh+Waz+od2U7?=
- =?us-ascii?Q?2cYrjyLW8AfGjTjHTtRxXxJwydJPpDkS17nLiz1GJhIRY83T5oMiEDopQ/HI?=
- =?us-ascii?Q?yafluu2IZZfF+j4J6sJiPrP8x4LiDnmK0bGObf3O+8gh6Adi3+msIWp8QCKP?=
- =?us-ascii?Q?pc/cKO2IOgZbdVFC543Y/r3djbZx8dxTFtRpH1co51QUA1sExeYJ0qJ2Q89n?=
- =?us-ascii?Q?UzwIMH+zMaXQo5OHcE4rgQZUdfQQiDTwkvYP91artvMhncbiw2BT8OlWceOZ?=
- =?us-ascii?Q?MW69T3L6YuTX3QdO+mOlrb7f17ir/AuMbl4Iqbc+czfgwXbICNyDvwIRooks?=
- =?us-ascii?Q?TJIWFzLIjI4DElb83vqlY0sVw9Yk6eBN0DM/MREm8AOgykYo9g9ycwBrNgcT?=
- =?us-ascii?Q?/My0WIFwBc588bi8wnc7oa/fREEEmpjGxLb0FBXHhf+MMrpwH/o1rGkL9Nbq?=
- =?us-ascii?Q?t+HGR4oN2odsDSHG4weq5XFoOFL6i6HTvfixXubkNX1wZuu7Rq0d3KMi5iMG?=
- =?us-ascii?Q?3K3nvXMhcUEd+CHoA4NbQeUJ5ipP1V/psKuId/u2q6Dqitg/N/Wa293qmd26?=
- =?us-ascii?Q?PxkQExmFl8FJf0fmGWDDBgNprL2ESs27XoxFZN8YZ8iyz5NLhG7arNDCvGvi?=
- =?us-ascii?Q?XbY7GiHvg96/j3+aEQxCvt8lmTfSfp7KDhj5F0G+?=
+	=?us-ascii?Q?vYfQqSgtHh70PCcv2JfzwUuOVAh80wBYziXeVIdaEHStEH9KZ1qLBnHen9Rb?=
+ =?us-ascii?Q?AhHTBIM4RuvYml9JDd+a1CNk5A8EUqcOu6Kn0Lsrh9e2NvPtEIXvIfgi/0Ag?=
+ =?us-ascii?Q?bO9Oy2SeiL1i/OEjWDf3P/PW0Beem6A5ttx2TirD03P6VWs8GTxu5uuTFZla?=
+ =?us-ascii?Q?T2xN0M0eL3DybrjrMKslU5uE4HXkUiUKZJR0UrUg7NU+66Mt9BKLRbPIbtm1?=
+ =?us-ascii?Q?km4eJaUt/x0/Y74dD+knOXXVGgX2Cu8fQ/2VL5gWVfjszD7ZNVmzihFAVWeB?=
+ =?us-ascii?Q?jq5wwGj1oaqEhFvu8Sbpmtwv2EVVOtz62dV1OpPGp1VzoAPRMEf9wetg+ulC?=
+ =?us-ascii?Q?8cTt1oaNp1/9cvvb55BHoq9p0jK729xsc0G0xwuMlI+4/F2gnPQWDsRdWidu?=
+ =?us-ascii?Q?VEHt8X6AU8Kx1TUQrY7a55oUmKYItTs//VnXzd69VVvZMbIqxTBJEaego1sZ?=
+ =?us-ascii?Q?YF13oAHV4C6CbCXXKuFSlTKS7FmgiUprJSPuiIRUOxFhulrX/JTY+QklUe9p?=
+ =?us-ascii?Q?4uCbV0SgjNRFOh8qyCwN1JVx8hlNbjRr6CTFG4Qj/wsTNFwQ/KrFLsb4mZeu?=
+ =?us-ascii?Q?5AKAozI3DN2ZdiWRhTpqm/T6kxf/DHMJOIkxDU2+EQ64RpZqtN0CYncVbkd/?=
+ =?us-ascii?Q?Q5w+oJjt/x81RaVk4V/3h8IUPmUdAMwHC5kd9JDH21VSOXMhfSOw42bLYp7A?=
+ =?us-ascii?Q?EhLygUSXuriMhQE+Zt1ul6kC/N5JZHPtewsJ4DK0hg5rlk8S2q1A4QRN5oAt?=
+ =?us-ascii?Q?rm6XK/rAG/AFb7CKtNxJVKX1Ryqd5ZgU/b2fmsCfUXkWhc+7eUMJJJhPag8h?=
+ =?us-ascii?Q?aU9Gv8wKuiQHtD7cDlJ/INMXTQzBNAdnYSAsLTBwTAc5NCxuMBq6fO4aUcuY?=
+ =?us-ascii?Q?4Iqnjw9SrNJJfRzS+JoWs+AN+TphbAh85rNDH3NVmUrS23iRFXMlXmheO6Zo?=
+ =?us-ascii?Q?yQT57l/QkVhqmAfv9o5G+TejbnAHR6uAWP4yJ4zQ8o0s9QjKk45z73Ck2Oi5?=
+ =?us-ascii?Q?kyuekOyAle5IgZRkFp7+2JWwqZGF3bRyX/9PkStzev6lBr7WXFkgRcwL75MQ?=
+ =?us-ascii?Q?vZXHYPtCqx+rtiEZNrPngrfjzUWRb/DpzNskEHE/1XTmSZbXB1I9nJkII+3d?=
+ =?us-ascii?Q?fGGUQVwB2qnGzy4Jj2erTa7Sv2rijeK9JdGV2USFB68QjgDPBPmWRvs9bprp?=
+ =?us-ascii?Q?5Wv6l6ckfB+D03Wnn7r7BHWVYbgeUBqYVC3WbweOaDZCjz6lCbDyPFZ0GFHm?=
+ =?us-ascii?Q?p/L6ILDlQ0QrK6d3Z8c6G8ZI8lXByQnqn1Dk5/28GaoTlMz3itHlwXhf6sFf?=
+ =?us-ascii?Q?9awrxFZ92BrfoZceg1nBAgAgJLjHhXPKenGcZRPfCyfgMffPAAM/8ae72EE3?=
+ =?us-ascii?Q?LnARKdLlvhTm7eQBLQtpCn+4xKJmmtEV8WBzl2gWZirGj8cqYrSWp55lh2sj?=
+ =?us-ascii?Q?XeKw/a58Kf9PegKGakQsSetg0+Tk/AbT+AyWkcYaMzOUZ57cz2LslYrugw02?=
+ =?us-ascii?Q?kqUr76JBrAQmtbLcmHTWsK3KVhqfmhisHNTyzC+K/8Jy28cgFQjQNuqQBq4Y?=
+ =?us-ascii?Q?T04EjwiWOoHIsuGg4loUZfuT6OhCK4mghM0VsOa4?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ece51a7-a39d-42ef-f4f4-08de33cba256
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1c744b89-1a73-4abc-b637-08de33cb992c
 X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9255.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Dec 2025 06:58:03.1094
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Dec 2025 06:57:47.7656
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: j02ZPrBl4NsCYRf4ikNaKi/QJWcHtLo9fk/EMynD0zfR8QC0cmZFwKKLFX09bkLCBt7W2TEWIVfQZMXPKW0kZg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: YQhJcl3cLM3wpZeWlWOk1o6hunVBw79uQFscgDOchAH/lfNF+zAK8hPFgdTlrPeFrwN5mrVDNhka6gmLZS2hzA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8144
 
-Register NXP's SDIO vendor ID (0x0471) and IW61x device ID (0x0205)
-in the global SDIO ID list. This allows the nxpwifi SDIO driver to
-match and bind to supported NXP Wi-Fi chips via the SDIO bus.
+This patch adds basic ethtool support to the nxpwifi driver, specifically
+implementing Wake-on-LAN (WoL) configuration via ethtool.
+
+Supported WoL options:
+- WAKE_UCAST
+- WAKE_MCAST
+- WAKE_BCAST
+- WAKE_PHY
+
+The ethtool ops `get_wol` and `set_wol` are implemented to map ethtool
+WoL flags to the driver's internal host sleep configuration.
+
+This enables users to query and configure WoL behavior using standard
+ethtool commands.
 
 Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
 ---
- .../bindings/net/wireless/nxp,iw61x.yaml      | 85 +++++++++++++++++++
- include/linux/mmc/sdio_ids.h                  |  3 +
- 2 files changed, 88 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/nxp,iw61x.yaml
+ drivers/net/wireless/nxp/nxpwifi/ethtool.c | 58 ++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
+ create mode 100644 drivers/net/wireless/nxp/nxpwifi/ethtool.c
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/nxp,iw61x.yaml b/Documentation/devicetree/bindings/net/wireless/nxp,iw61x.yaml
+diff --git a/drivers/net/wireless/nxp/nxpwifi/ethtool.c b/drivers/net/wireless/nxp/nxpwifi/ethtool.c
 new file mode 100644
-index 000000000000..358714796868
+index 000000000000..6cefa6e6f5b3
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/nxp,iw61x.yaml
-@@ -0,0 +1,85 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/net/wireless/nxp,iw61x.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
++++ b/drivers/net/wireless/nxp/nxpwifi/ethtool.c
+@@ -0,0 +1,58 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * NXP Wireless LAN device driver: ethtool
++ *
++ * Copyright 2011-2024 NXP
++ */
 +
-+title: NXP IW61x SDIO devices
++#include "main.h"
 +
-+maintainers:
-+  - Jeff Chen <jeff.chen_1@nxp.com>
++static void nxpwifi_ethtool_get_wol(struct net_device *dev,
++				    struct ethtool_wolinfo *wol)
++{
++	struct nxpwifi_private *priv = nxpwifi_netdev_get_priv(dev);
++	u32 conditions = le32_to_cpu(priv->adapter->hs_cfg.conditions);
 +
-+description:
-+  This node provides properties for describing the NXP SDIO wireless device.
-+  The node is expected to be specified as a child node to the SDIO controller that
-+  connects the device to the system.
++	wol->supported = WAKE_UCAST | WAKE_MCAST | WAKE_BCAST | WAKE_PHY;
 +
-+properties:
-+  compatible:
-+    enum:
-+      - nxp,iw612
++	if (conditions == HS_CFG_COND_DEF)
++		return;
 +
-+  reg:
-+    maxItems: 1
++	if (conditions & HS_CFG_COND_UNICAST_DATA)
++		wol->wolopts |= WAKE_UCAST;
++	if (conditions & HS_CFG_COND_MULTICAST_DATA)
++		wol->wolopts |= WAKE_MCAST;
++	if (conditions & HS_CFG_COND_BROADCAST_DATA)
++		wol->wolopts |= WAKE_BCAST;
++	if (conditions & HS_CFG_COND_MAC_EVENT)
++		wol->wolopts |= WAKE_PHY;
++}
 +
-+  interrupts:
-+    maxItems: 1
++static int nxpwifi_ethtool_set_wol(struct net_device *dev,
++				   struct ethtool_wolinfo *wol)
++{
++	struct nxpwifi_private *priv = nxpwifi_netdev_get_priv(dev);
++	u32 conditions = 0;
 +
-+  wakeup-source: true
++	if (wol->wolopts & ~(WAKE_UCAST | WAKE_MCAST | WAKE_BCAST | WAKE_PHY))
++		return -EOPNOTSUPP;
 +
-+  nxp,caldata-txpwrlimit-2g:
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    description: Calibration data for the 2GHz band.
-+    maxItems: 566
++	if (wol->wolopts & WAKE_UCAST)
++		conditions |= HS_CFG_COND_UNICAST_DATA;
++	if (wol->wolopts & WAKE_MCAST)
++		conditions |= HS_CFG_COND_MULTICAST_DATA;
++	if (wol->wolopts & WAKE_BCAST)
++		conditions |= HS_CFG_COND_BROADCAST_DATA;
++	if (wol->wolopts & WAKE_PHY)
++		conditions |= HS_CFG_COND_MAC_EVENT;
++	if (wol->wolopts == 0)
++		conditions |= HS_CFG_COND_DEF;
++	priv->adapter->hs_cfg.conditions = cpu_to_le32(conditions);
 +
-+  nxp,caldata-txpwrlimit-5g-sub0:
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    description: Calibration data for sub-band 0 in the 5GHz band.
-+    maxItems: 502
++	return 0;
++}
 +
-+  nxp,caldata-txpwrlimit-5g-sub1:
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    description: Calibration data for sub-band 1 in the 5GHz band.
-+    maxItems: 688
-+
-+  nxp,caldata-txpwrlimit-5g-sub2:
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    description: Calibration data for sub-band 2 in the 5GHz band.
-+    maxItems: 750
-+
-+  nxp,caldata-txpwrlimit-5g-sub3:
-+    $ref: /schemas/types.yaml#/definitions/uint8-array
-+    description: Calibration data for sub-band 3 in the 5GHz band.
-+    maxItems: 502
-+
-+  nxp,wakeup-pin:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description:
-+      Provides the pin number for the wakeup pin from the device's point of
-+      view. The wakeup pin is used for the device to wake the host system
-+      from sleep. This property is only necessary if the wakeup pin is
-+      wired in a non-standard way, such that the default pin assignments
-+      are invalid.
-+
-+required:
-+  - compatible
-+  - reg
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+
-+    mmc {
-+        #address-cells = <1>;
-+        #size-cells = <0>;
-+
-+        wifi@1 {
-+            compatible = "nxp,iw612";
-+            reg = <1>;
-+            interrupt-parent = <&pio>;
-+            interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+            nxp,wakeup-pin = <3>;
-+        };
-+    };
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 673cbdf43453..39ac2b612e4a 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -116,6 +116,9 @@
- #define SDIO_VENDOR_ID_MICROCHIP_WILC		0x0296
- #define SDIO_DEVICE_ID_MICROCHIP_WILC1000	0x5347
- 
-+#define SDIO_VENDOR_ID_NXP			0x0471
-+#define SDIO_DEVICE_ID_NXP_IW61X		0x0205
-+
- #define SDIO_VENDOR_ID_REALTEK			0x024c
- #define SDIO_DEVICE_ID_REALTEK_RTW8723BS	0xb723
- #define SDIO_DEVICE_ID_REALTEK_RTW8821BS	0xb821
++const struct ethtool_ops nxpwifi_ethtool_ops = {
++	.get_wol = nxpwifi_ethtool_get_wol,
++	.set_wol = nxpwifi_ethtool_set_wol,
++};
 -- 
 2.34.1
 
