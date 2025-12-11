@@ -1,94 +1,60 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A4330FF3B
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2025 12:41:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5240430FF29
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2025 12:42:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765456912; cv=none; b=b1z+iS8/nCtubJPd+LQ2rTsNwpD3xoswK6Cd07G1QZZ+kkW8M1+wv8KOGOa3XcVPwxM7KyrNa1R5frBCpSmPExnV7ZOf3wh8TjOGHS3/PsAkM/23IOyzLnJX8fSc8p1XclOJ69iTpp1sFL/Lbz4BCh7W9ew36+BrLvGa+FuPz4g=
+	t=1765456948; cv=none; b=dVyq5kQ5MYczIvMLcrCjPrW31d2SKhXqjM8i9EO/VabBTxXPUSRE6pUjeMyZbFBlaM+ZZSxaLNtTMkkjtq5AX1dxDQyuVgcNfbJ9ylai2voTWvtD0kqLssWzk7Bo7ivvwUkaajudNRpjkYiuP4q+04tugRDXIMJDe1UnqXPA06g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765456912; c=relaxed/simple;
-	bh=M4+LKpLTFqeO4oAEnLiLXl155xTaKtgIbPFhF55NWkA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nj/s4G2yzVGNCAdU1IR6nwmbbjJNMxbZH2pcdXEe7qYETZg8Uj5lUqSDW+N0h1l0qWWtHsy7k3UJT0ZJkee4nM+9OYa8vP5Nx39tDKo61sKEz9fbsiOGYtIKFUKTU7NlE972uE1A6x2GcnOzuJCojVU5UbfDY1/p5tAjGGILQ7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=N/YkfCAX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dHW50ZfQ; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1765456948; c=relaxed/simple;
+	bh=ReU7YFp537JELze+/elGUNa+2sGwh+M0CDckI1fFyw8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HpEkGGN0BkqNhhgXAvHpi3zdQm9KpxXqlNURcq5ok+XcAtcy1Zqs2RgNpPRGZiMkna0F/hwIgSDgEZnj98qMiR1Kc9W0lu9wTRbVQDbqgrPBMyC7yowHElqqSR8gSf0SZQImE93BqXHOFGyoga9uJX7x/ITqqi1JoC23WYWhCsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kNoHsIH9; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="N/YkfCAX";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dHW50ZfQ"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BBAY0sE470650
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2025 12:41:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=92J5xs8yKnM
-	pUAnA1tkoch/nQP5MYa/YHtsxIS9ArJQ=; b=N/YkfCAX9s5FigLVCV6uRdNpLgU
-	HosXywMHmOcFSlLp9TT05Q6CYGMcasqUd4CMnYruxSj2k/UP5LWw662NIDYLwGdm
-	E+vUof5m0de6oUKkU/p9dMKMoMoshjmMfcvbXepuQL1dsGR9FtCOThXHTp+fnwfx
-	rKiiwHC5Fl0h4ItkV1D3bSUx/eDD+MRLHUiDG6RoPYE2M3aGJUss0T6/v4IgZ/zY
-	FSwv9N+zx+NDJJhgrnGfLxgtaZRdWSpVLGr4tIEtkQ2GvHn4eEiSDGZHArMhE1It
-	gM3MoC4k+ybx34wNuVZmii7KEM+KbJjGyk3BCoBlfZGFqaXqfYhejvDzPmQ==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4aynpvspdf-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2025 12:41:49 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-343daf0f38aso1149971a91.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Dec 2025 04:41:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1765456909; x=1766061709; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=92J5xs8yKnMpUAnA1tkoch/nQP5MYa/YHtsxIS9ArJQ=;
-        b=dHW50ZfQwL7J2Fv4OBuYeqjqFekh7JvpD+nZBtmC5kqeZ5NotyLz5ScfgDyJQJsk5a
-         XsGABTwMtB0yxjrN4tJAy/q4z/padU8X42rlmAnVAunS6asdvNdX5kldo02tEeYq4fRg
-         hQd5nmc9vn/A0Duhqw+Kj7RhDJXh68euu/9W08W9Cqb3efRBaRjuRZSVRvPdnwnGA235
-         7IMOAZh12tdVxSE/dKPW+ufVQTtkAppqRrYWhRZTf1xD+7O0p8Jq+yettsu6r93IEBka
-         6Taz9JppJFsDOORkTZY0TMdSVrqooXJqUI3BcnSyE9b62bqY3cfdz4pJaiqfIScrPcd8
-         722g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765456909; x=1766061709;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=92J5xs8yKnMpUAnA1tkoch/nQP5MYa/YHtsxIS9ArJQ=;
-        b=lT831cnUaiRotsRXGIwOVgj1BE2WLZALXegGfYfs8bV36jguAVcCoiiihbp6Wd0/+e
-         SR/edVfiCm9l6/kXhJRL50iDRbRfZhVplX77p1X1msTYrGGV/uIBictqowlSNzl/qNwb
-         w/x4icypwh9CvzXA8fwmKplM513xqPlcPdLi3HfTsS+JJ/bHdyswc7546ZboVWdoH1GZ
-         4QfbRtSBS+SiXxIKDmgAl3SqCDrnC21DD43HOAdaZ6LxPUQK4UkpZyIkGCGSyb5Mfkgo
-         4cqABYbVVu80Dvx85oHMlPbzVWXzuJwVzi6vGsYl/z7AlA+AirijT+FMfkNUdPoPjVuW
-         sqEw==
-X-Gm-Message-State: AOJu0YxAT/PLOaOH7XX+MlYttWo4bYFI5Lgferc88JkG4qmj2AZ5dsZh
-	HzMsq/TpVtkXuTiB1Mo4/nNV5yZ1WMtf4vHgvOyuQ1KUC42noipiKJy4ABhf9ZXCq4MKWa/Mefd
-	8E4k4Hb2BJkSvLfGBJD9o9W7ffDJCdyufRFSLproG+Rip8S45hy5chJYX+6JYMqKDTtttlAec6D
-	TMeg==
-X-Gm-Gg: AY/fxX5dtYdAIwFeE6T2+h0mLnkx1//AyJpHE60bYtWp2jO6NS5vx4JtUB94/ZYp5gZ
-	441QF019+k7Ar5JDOjFEN4l01+niWNnzq4dJAjDJdWJmqnjcSO2eRxQ3zQyQP+sYBcBkVoeKbQa
-	6rs6orwI7um9f2EoR13hGVO2vg7QJITwYlR2d4ZZsVtwy0aMbH671L/D7hRrCiUyVR9rE88yM0l
-	EK+vM0twTBNo/AEcSgBb4yryMR52Y5fuxkgnN9/9cNNVl9ysvf5/YimtqrVsjhMOwBPEGctbPRQ
-	I1IJjy9Ge9dy56Weub4lCCkFxvJbG8QCUJzryJQTA7o1IxV/wIigfUmqC5CVwnOpe1NyLvvyFM9
-	fbNXM11VEypnY2zxBEuLocS8ckvdc9kfbr+gpu00ebw==
-X-Received: by 2002:a05:6a20:5491:b0:361:2d0c:fd70 with SMTP id adf61e73a8af0-366e07d44ccmr6357801637.17.1765456908996;
-        Thu, 11 Dec 2025 04:41:48 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IH7Tt+P0vb3DEq8d8qIgH9dc8iCAgoK4J1jdgTqz/h3A9+DNvU+P4OQmxg6hSWPZhjcmpKpSQ==
-X-Received: by 2002:a05:6a20:5491:b0:361:2d0c:fd70 with SMTP id adf61e73a8af0-366e07d44ccmr6357777637.17.1765456908495;
-        Thu, 11 Dec 2025 04:41:48 -0800 (PST)
-Received: from hu-kkavita-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c0c2ae4e163sm2272297a12.20.2025.12.11.04.41.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Dec 2025 04:41:48 -0800 (PST)
-From: Kavita Kavita <kavita.kavita@oss.qualcomm.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, kavita.kavita@oss.qualcomm.com,
-        ainy.kumari@oss.qualcomm.com, sai.magam@oss.qualcomm.com,
-        quic_drohan@quicinc.com
-Subject: [PATCH wireless-next 14/14] wifi: mac80211_hwsim: Declare support for EPPKE authentication protocol
-Date: Thu, 11 Dec 2025 18:10:51 +0530
-Message-Id: <20251211124051.3094878-15-kavita.kavita@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251211124051.3094878-1-kavita.kavita@oss.qualcomm.com>
-References: <20251211124051.3094878-1-kavita.kavita@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kNoHsIH9"
+X-UUID: d2c0241ed68e11f0b2bf0b349165d6e0-20251211
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=14DMg1kOjoT2+p+GSeAQfJCaf8eSkoQFbW5DEdKFmfs=;
+	b=kNoHsIH9ayGfulCP8s1EldUcm+6QqLmcAurdAWeWDT0J8HoT1hZTkNW4d8Ssp0Oam45IBUGFJ+froL78TgU72qIlQA3J6BOetjdQGhHo3DI1s9pfmztxyP63Zbjc02cCE0Be5x5nZotmj8BHzru8320aFiFGyuCgOidJ6UeS/10=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.6,REQID:080aa799-80cf-4650-9cae-5753d4844143,IP:0,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:-5
+X-CID-META: VersionHash:a9d874c,CLOUDID:da8b15aa-6421-45b1-b8b8-e73e3dc9a90f,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
+	0,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OS
+	A:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: d2c0241ed68e11f0b2bf0b349165d6e0-20251211
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+	(envelope-from <leon.yen@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1248448559; Thu, 11 Dec 2025 20:42:15 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26; Thu, 11 Dec 2025 20:42:14 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1748.26 via Frontend Transport; Thu, 11 Dec 2025 20:42:14 +0800
+From: Leon Yen <leon.yen@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
+	<mingyen.hsieh@mediatek.com>, <michael.lo@mediatek.com>,
+	<allan.wang@mediatek.com>, <quan.zhou@mediatek.com>,
+	<sarick.jiang@mediatek.com>, <ryder.lee@mediatek.com>,
+	<shayne.chen@mediatek.com>, <leon.yen@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7925: Fix incorrect MLO mode in firmware control
+Date: Thu, 11 Dec 2025 20:38:36 +0800
+Message-ID: <20251211123836.4169436-1-leon.yen@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -96,51 +62,41 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjExMDA5OSBTYWx0ZWRfX9dLwnb2YiV03
- v5B+Xw/m2a0+Eoc3T6I9RGlbFDQRVur2f5CiNumDYPreNhlPpdDSAhHupoHHx7/D4y/uvjC3Kb9
- TXz6VsMgtE6FkaFdlwc9iACQIIB5NcI4p6mH2+xk/n9avqZanx2e4WbisxLAM/Ge9JVIMam5Gjy
- vbW1+albrbSt9weMr1RxMANTPtkrZ3jIa8Dr2fKO3EUbiSFZi6PeelyQfCQ3ku1+mBjW4VJKXDY
- nKShOI9tyeaKigVpCBFDucZnHiHurm6TwkliUbRzO54A7icZRXPXqhMSEAYVLjDCnO+VS2pHq6K
- zw1cJVCwe75tnmAFfESEnZxGpXCdQuEtYckJgH6srMHe/e5X1XbPsDgKQOnU7aEK/rX0izs2657
- ldnH5D8zb4IAtkzf7XyZMlbrbpAy/A==
-X-Proofpoint-GUID: c1_KUqH5JHN4K_RPxTGhtnmSKG4JzZo4
-X-Authority-Analysis: v=2.4 cv=C6nkCAP+ c=1 sm=1 tr=0 ts=693abc0d cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=EUspDBNiAAAA:8 a=a1T-8RYyaUdGYqk8DgAA:9 a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-ORIG-GUID: c1_KUqH5JHN4K_RPxTGhtnmSKG4JzZo4
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-12-11_01,2025-12-09_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 lowpriorityscore=0 malwarescore=0 clxscore=1015
- priorityscore=1501 impostorscore=0 phishscore=0 suspectscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2512110099
+Content-Type: text/plain
 
-Advertise support for Enhanced Privacy Protection Key Exchange (EPPKE)
-authentication protocol for testing scenarios.
+The selection of MLO mode should depend on the capabilities of the STA
+rather than those of the peer AP to avoid compatibility issues with
+certain APs, such as Xiaomi BE5000 WiFi7 router.
 
-Signed-off-by: Kavita Kavita <kavita.kavita@oss.qualcomm.com>
+Fixes: 69acd6d910b0c ("wifi: mt76: mt7925: add mt7925_change_vif_links")
+Signed-off-by: Leon Yen <leon.yen@mediatek.com>
 ---
- drivers/net/wireless/virtual/mac80211_hwsim.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 551f5eb4e747..5c36eb959514 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -5640,6 +5640,10 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	wiphy_ext_feature_set(hw->wiphy,
- 			      NL80211_EXT_FEATURE_BSS_COLOR);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index cf0fdea45cf7..279ace8ab883 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -1330,6 +1330,8 @@ int mt7925_mcu_set_mlo_roc(struct mt792x_bss_conf *mconf, u16 sel_links,
+ 			.roc[1].len = cpu_to_le16(sizeof(struct roc_acquire_tlv))
+ 	};
  
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_EPPKE);
-+	wiphy_ext_feature_set(hw->wiphy,
-+			      NL80211_EXT_FEATURE_ASSOC_FRAME_ENCRYPTION);
++	struct wiphy *wiphy = mvif->phy->mt76->hw->wiphy;
 +
- 	hw->wiphy->interface_modes = param->iftypes;
+ 	if (!mconf || hweight16(vif->valid_links) < 2 ||
+ 	    hweight16(sel_links) != 2)
+ 		return -EPERM;
+@@ -1352,7 +1354,8 @@ int mt7925_mcu_set_mlo_roc(struct mt792x_bss_conf *mconf, u16 sel_links,
+ 		is_AG_band |= links[i].chan->band == NL80211_BAND_2GHZ;
+ 	}
  
- 	/* ask mac80211 to reserve space for magic */
+-	if (vif->cfg.eml_cap & IEEE80211_EML_CAP_EMLSR_SUPP)
++	if (!(wiphy->iftype_ext_capab[0].mld_capa_and_ops &
++		IEEE80211_MLD_CAP_OP_MAX_SIMUL_LINKS))
+ 		type = is_AG_band ? MT7925_ROC_REQ_MLSR_AG :
+ 				    MT7925_ROC_REQ_MLSR_AA;
+ 	else
 -- 
-2.34.1
+2.45.2
 
