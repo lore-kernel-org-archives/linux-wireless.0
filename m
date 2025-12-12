@@ -1,51 +1,55 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8282749D2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BEC925F7BF
 	for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2025 03:14:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765509293; cv=none; b=bQexHmTbzH39zVC5+orDb1RoCR2fSaaKYH+J8OskE/xvlEpC4zUSs7oz0tNx2Cto2BxVX2XXLG0cWmUtuRxE1y6MSAqpntFCH08MM0Gr749eZb94hzV/yADikFGqkj9WXqqBxihK9EmRF5pyhdbKjspFSfaLuSr4xiGjITwzPiw=
+	t=1765509293; cv=none; b=D43AlOdS0ym5CDnmU7F/R2u4hgneWhvcCUWNzPaU1p49zvvXZ4XOl1wfFLOY7hGZRWSfAHVO8BqrJhEJ/bYGpZWnzNL1/coVhdFOiGgo8jk5hOmCcYWnYSQOUls3Jqvw/yq3DcnUZxZxFoQHTD5lCkPSve8BcD9q099QH9rK7Io=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1765509293; c=relaxed/simple;
-	bh=OC7L8jUwxLBBNH04igi4WdA2r0Um3/3vdXW9yecsg7I=;
+	bh=ZFYgiUbHjpNL4WLUrs4b8dW5cOWN4JmRvEQQBms63+0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tf04hLxwrZQtZaw8mdJBXPQdtXOagBQq8A21crW8ax5BjPoo6r2Di9uC/n/CGQmNT4ORvHHFjLSkxQ153CvkOs/i2k/GKkuTwBbvyzZNDx+LdoOQIJj0TVLfOEtnCyN8YA3yjBgKWcsy5HZ/Fq0r4KwR2TzGTU3E56vG2iC6Yrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=iXvuoepQ; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=u2p17BI0RD9u3I3nqY9YqgxggJbLuc3HRV5t/ZNkHa6GjtdKzS554APozGJWjgRVwMKE0s30c9ymoW/5AcSSSH4eXT5g5MGWr7V3Jp6clmtHue1MMLMoWdIJXHeqlE4nehGwIAFGwYK1t2zE4+c0aNV4ndUoVB6mPua3H85zlxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ptoi+035; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="iXvuoepQ"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 5BC3EnT923508890, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ptoi+035"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 5BC3EnPH23508894, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1765509289; bh=lOTNN9y2rwhL6mcu335HvHjQZF7JokX1kWX+W2/WB2M=;
+	t=1765509289; bh=5qbRA4TrIVMF1KLVn9mYImR7myN7WzuD4JpUcVeECeA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=iXvuoepQNpBb62DbhERdS39BzjTUsWgkbQtJKnAoEPWqsS9W6zTWpSkL8JCUlSOwc
-	 I286JLsuM2mPiTkerzbixI7I30NHWgWjZ0TVPTq32mOZ3dKwfCp7Wau3TuexHqstAb
-	 Li/BupDYauUggwOgc0f/+eDbAbdPa7usYVGMV2vF8czjIdZrgCCT8i28PSxsKGrN3c
-	 5vMtaK1005ttBZkPAtOoXxE21ISCwfIoIjEh4fLS5R/BVB09o3sgbXwyXeTqFGq6pv
-	 FZM09fpIIFjkwtpNRYq9spQPmEYiOmB3zHnZ6hznBe5VV2w8aZ5yzbtGzWwu9TP/PG
-	 xqbjzOt8Ea3iQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 5BC3EnT923508890
+	b=ptoi+035HcoNW6BgAhOsuOTusv4CftuD04aNoyEmvQAdRGbwHmgD0AL0ON6nrQdTj
+	 3v9RFgSHQUntMgHQNZZL+TQOJefijowONKH23U8DaziU6aPfWe1wpXGSSFfWY6/p7O
+	 wxPM+FMNWLhEaDBEVC0OPhPDne05eZdm8bD9jb7MZ2VPGo3Bp2Bm4hlThdcggi1gLk
+	 rG5t8+9c/c0b69F+X7F8UV7q+fJX3oOpN/LcBPyq2Gt11a3WxhX7yqv03Lt19E3bVs
+	 M/Hkv9eKAfr0tqDx/bAMMc+rn1AvaRjB2ZPEnOKjJVeU5Pq88Y0xRnH1m02E5ieUR1
+	 Kwvb5xt/JYTiw==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 5BC3EnPH23508894
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
 	for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2025 11:14:49 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.27; Fri, 12 Dec 2025 11:14:49 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
- (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Fri, 12 Dec 2025 11:14:49 +0800
+ 15.2.1748.10; Fri, 12 Dec 2025 11:14:42 +0800
+Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Fri, 12 Dec 2025 11:14:39 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
+ (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.27 via Frontend
+ Transport; Fri, 12 Dec 2025 11:14:38 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <gary.chang@realtek.com>, <damon.chen@realtek.com>,
         <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 12/12] wifi: rtw89: mcc: reset probe counter when receiving beacon
-Date: Fri, 12 Dec 2025 11:13:03 +0800
-Message-ID: <20251212031303.19882-13-pkshih@realtek.com>
+Subject: [PATCH rtw-next 10/12] wifi: rtw89: warn unexpected polling value of XTAL SI
+Date: Fri, 12 Dec 2025 11:13:01 +0800
+Message-ID: <20251212031303.19882-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20251212031303.19882-1-pkshih@realtek.com>
 References: <20251212031303.19882-1-pkshih@realtek.com>
@@ -58,60 +62,77 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Chih-Kang Chang <gary.chang@realtek.com>
+XTAL SI is an indirect serial interface to access registers in another
+hardware domain. When BT driver initializes UART interface, firmware might
+rarely control XTAL SI at the same time causing access racing.
 
-For BE chips, needs to transmit QoS null data periodically to ensure
-the connection with AP in GC+STA mode. However, in environments
-with interference, the Qos null data might fail to transmit
-successfully. Therefore, when receive the beacon from AP will
-reset the QoS null data failure counter to avoid unnecessary
-disconnection.
+Current is to adjust initialization flow to avoid the racing. To make
+the racing visible if it still presents, add a message to address this.
 
-Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/chan.c     | 5 ++++-
- drivers/net/wireless/realtek/rtw89/mac80211.c | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/mac.c    | 11 ++++++++++-
+ drivers/net/wireless/realtek/rtw89/mac_be.c | 11 ++++++++++-
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
-index 86f1b39a967f..8fe6a7ef738f 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.c
-+++ b/drivers/net/wireless/realtek/rtw89/chan.c
-@@ -2608,17 +2608,20 @@ bool rtw89_mcc_detect_go_bcn(struct rtw89_dev *rtwdev,
- static void rtw89_mcc_detect_connection(struct rtw89_dev *rtwdev,
- 					struct rtw89_mcc_role *role)
- {
-+	struct rtw89_vif_link *rtwvif_link = role->rtwvif_link;
- 	struct ieee80211_vif *vif;
- 	bool start_detect;
- 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index cf36be167162..066c99f3e53a 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -7023,6 +7023,11 @@ int rtw89_mac_write_xtal_si_ax(struct rtw89_dev *rtwdev, u8 offset, u8 val, u8 m
+ 		return ret;
+ 	}
  
- 	ret = rtw89_core_send_nullfunc(rtwdev, role->rtwvif_link, true, false,
- 				       RTW89_MCC_PROBE_TIMEOUT);
--	if (ret)
-+	if (ret &&
-+	    READ_ONCE(rtwvif_link->sync_bcn_tsf) == rtwvif_link->last_sync_bcn_tsf)
- 		role->probe_count++;
- 	else
- 		role->probe_count = 0;
++	if (u32_get_bits(val32, B_AX_WL_XTAL_SI_ADDR_MASK) != offset ||
++	    u32_get_bits(val32, B_AX_WL_XTAL_SI_DATA_MASK) != val)
++		rtw89_warn(rtwdev, "xtal si write: offset=%x val=%x poll=%x\n",
++			   offset, val, val32);
++
+ 	return 0;
+ }
  
-+	rtwvif_link->last_sync_bcn_tsf = READ_ONCE(rtwvif_link->sync_bcn_tsf);
- 	if (role->probe_count < RTW89_MCC_PROBE_MAX_TRIES)
- 		return;
+@@ -7046,7 +7051,11 @@ int rtw89_mac_read_xtal_si_ax(struct rtw89_dev *rtwdev, u8 offset, u8 *val)
+ 		return ret;
+ 	}
  
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index e4fc513aa158..f80c847d1741 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -127,6 +127,7 @@ static int __rtw89_ops_add_iface_link(struct rtw89_dev *rtwdev,
- 	rtwvif_link->reg_6ghz_power = RTW89_REG_6GHZ_POWER_DFLT;
- 	rtwvif_link->rand_tsf_done = false;
- 	rtwvif_link->detect_bcn_count = 0;
-+	rtwvif_link->last_sync_bcn_tsf = 0;
+-	*val = rtw89_read8(rtwdev, R_AX_WLAN_XTAL_SI_CTRL + 1);
++	if (u32_get_bits(val32, B_AX_WL_XTAL_SI_ADDR_MASK) != offset)
++		rtw89_warn(rtwdev, "xtal si read: offset=%x poll=%x\n",
++			   offset, val32);
++
++	*val = u32_get_bits(val32, B_AX_WL_XTAL_SI_DATA_MASK);
  
- 	rcu_read_lock();
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtw89/mac_be.c b/drivers/net/wireless/realtek/rtw89/mac_be.c
+index 2bc329c13443..d75c55cc34b8 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac_be.c
++++ b/drivers/net/wireless/realtek/rtw89/mac_be.c
+@@ -396,6 +396,11 @@ int rtw89_mac_write_xtal_si_be(struct rtw89_dev *rtwdev, u8 offset, u8 val, u8 m
+ 		return ret;
+ 	}
  
++	if (u32_get_bits(val32, B_BE_WL_XTAL_SI_ADDR_MASK) != offset ||
++	    u32_get_bits(val32, B_BE_WL_XTAL_SI_DATA_MASK) != val)
++		rtw89_warn(rtwdev, "xtal si write: offset=%x val=%x poll=%x\n",
++			   offset, val, val32);
++
+ 	return 0;
+ }
+ 
+@@ -420,7 +425,11 @@ int rtw89_mac_read_xtal_si_be(struct rtw89_dev *rtwdev, u8 offset, u8 *val)
+ 		return ret;
+ 	}
+ 
+-	*val = rtw89_read8(rtwdev, R_BE_WLAN_XTAL_SI_CTRL + 1);
++	if (u32_get_bits(val32, B_BE_WL_XTAL_SI_ADDR_MASK) != offset)
++		rtw89_warn(rtwdev, "xtal si read: offset=%x poll=%x\n",
++			   offset, val32);
++
++	*val = u32_get_bits(val32, B_BE_WL_XTAL_SI_DATA_MASK);
+ 
+ 	return 0;
+ }
 -- 
 2.25.1
 
