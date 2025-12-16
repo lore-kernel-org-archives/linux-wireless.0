@@ -1,89 +1,89 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE01342C8C
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BD3A34252D
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765866458; cv=none; b=sgzvAk7/ddFNGrx057nmsiKqzL8cVRz5vkT7hLHXaxhqps0ykYr8+rCkUSTBe9DTVLQv0ebyMpN7pd5CdGS+YeoccvEb+DBaDRyZZGWGYpKOZGkRHhbQ5hDTxUSAWsq5mdfoy7MtkQ2VYzmnMH/P9l+GKlSSXEAu8Jk6yzh500A=
+	t=1765866463; cv=none; b=oc6s4Tx/8Sl4aEfnXX1j6cTJQmqaJ/KgHBACRu5PhBbDWWevA/JtNxL1rtwrgu306grayAMkwOjHvk9CkEeHWhxPBucqWAeSKC1Am6ftnvC9CJ2DSlqSdSmzN4FyrgA9rtu3TPuHoGzVOQa1bKJxknR6oy+MpYMtQWdJfY2uf8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765866458; c=relaxed/simple;
-	bh=CdoJIudTC0Dh7iY/u+kcZQ88f/3rLWfIWv1PzW4cddw=;
+	s=arc-20240116; t=1765866463; c=relaxed/simple;
+	bh=CYOGDR6fpBP+3NtfluXqJRnlXhkJsHpecSY0/grSDVI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ndNRKI+/ZCULBqeA7DXxIuyBkphZAIfvg5jquBrbGoD7LMTaoirnXRpjYNFANgM8gWuJE2DQiIJlYi/xxzjk8xbO6w3wDghh+xpT9lshuJJdFNsR3gATKSUEzp66+wn/tK1K9MoeK8oTAZ00SuVpYMwUAJ7RI2CpZqm6iBvr6+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SLuMsz+V; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SgCxQrTo; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=Y9amIpMA5qveGOtyzH5LCvbhVnJijWEhkIrVvr5M092a4kTnORGA5AR2711O892ALKZGLLfvZQ54IiXOPZibQmsJFFWtO/9Vvf8MyqbIuLYTFzDmlcbq5sso6KDg2LwI1jkEnBi6oiRXbtoVRDJzBseG4ftV7BQAG4vgseQo248=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=L0WLSdAK; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NfZyjoe+; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SLuMsz+V";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SgCxQrTo"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BG4fCu72278610
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:28 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="L0WLSdAK";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NfZyjoe+"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BG25JbH1389366
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Hq14bMPk70Q
-	bIq/eh4LlIiABBZbYAe3hK75GvVxPf5c=; b=SLuMsz+VYJacA0qpV+i2kM+Tkcq
-	EqqcFIZcrEvOgj5rZ5V5+KTpm7CCckU7U9ZbHax1+siNnYjiwOqTThiH+5Wv+FYb
-	zswqd3rc6m/JKPgxVVnL5JjrwcapNndf1Z0h8cOmowdWMrvxtbgswbLIrXlKXydO
-	bODPQUF+q+LXRN8Kmcr9fHxrIyjfz60CMMgPGTgLJNql0L4nyR94aKwJUFlpx4jS
-	GXBS7A5u9pbMNdR9+ipThVPNTvrA3vQGdrrAKlUHrajkcO24KKoZSx/k5HofAqlu
-	3tqZY/Ajuwl93FCo8peZBcY1iVAk3IRFa11gIAEeYHbqNShQC+gf/oDV0sQ==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4b2peracta-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=70zogL1OyG6
+	TFjxO+LG4e+E4T5EW8vdBTgu2R6Zn4GQ=; b=L0WLSdAKtlmwlG4QhxGnuNtrpLJ
+	WhG0PP7rth7yNDhz0c+CL1wJvsJyauLUWSFKH8Q6NXKKmUEFu3LE7FkvapPvE9BX
+	KTkrcgrE7ICj4EoqtXfA6z7iPiQv+8PP5LFezvpkIZ+1/jI0CGuAf/RPv8XqW/6d
+	SNn6UD0cv6K0rC3reP/2Jzf+lN7hfaOf9hHeiKtEr4FvROzS1m+4ZzOJ4LFLomwK
+	0V/jJ79czXp/IaDFO590A66kpefqXQ25lAPkjozgVWFp+Bk1HiF8EQ7ASSjCG3ed
+	U+bQsR0NWdDsj6vtjOpY/Irh8YPH3pzOS3f7ANbLSVXarrSVRbFEKSnfGUA==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4b2nu1jkym-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:28 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2a0a8c465c1so17252465ad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2025 22:27:28 -0800 (PST)
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2025 06:27:32 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-29f8e6a5de4so38376375ad.2
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2025 22:27:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1765866448; x=1766471248; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1765866452; x=1766471252; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Hq14bMPk70QbIq/eh4LlIiABBZbYAe3hK75GvVxPf5c=;
-        b=SgCxQrToui5QvSIl6TK4ORlxAkOA8OmJasGh2eLbWu1fJRwQNOAL5psQuVMonIsiys
-         9p0a7ZH2+/oqFc2ksByNd3pH+MK7K/ZjVzjJNZsCtXvJqVlEbzUwpj/pVvrB4SjMImdW
-         z4AZOCe4rtiF4FsY4fLFCG2IsYABGPWLggPxSwGQwhZ/rxZT1QiwMKbBtBhqR+1nJoe5
-         xTu8bk9RNNUD1b0+0ihpK7H2Jre6c8MkOk4EdK/pmv9laPotl1cUO4+XBMor/YNDc+US
-         6oJX67PU2+OB9MXzFJZB9WdvB/U7AdvdrVsN0Jc84/5qLqLdty58FmLAwiTm76CRqtLM
-         BYJg==
+        bh=70zogL1OyG6TFjxO+LG4e+E4T5EW8vdBTgu2R6Zn4GQ=;
+        b=NfZyjoe+3DQ3lVl2i4bEet0xIy6vq59gIr43m8J96ca3q0tHvisDCTyqkqurloJgJM
+         B+pDw0wOpv7cI0fnFsxNtZIqA9c/1Y3FS3n35gy4VghDzzTOLd5uY5JOUbppGpgUtQj4
+         BL5Sl764YgI/YhqLxraRyiGScWda29NigaxmhSyJG8vcxcJaGPP9XQvQIjVMWZRfsByq
+         HGSxLL+2NGMM3IbmOwq6p55b8zWjdf9WrqMX8xDSJhja37obuUdEAZEdBA9Y5LhV2ObF
+         lEDhv8debKapxxIbda7eYUSj5tIwkPmfoDj3hLZCmulHYPHHItb1p3ErCKsTW6SbEsPl
+         Uu5A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765866448; x=1766471248;
+        d=1e100.net; s=20230601; t=1765866452; x=1766471252;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Hq14bMPk70QbIq/eh4LlIiABBZbYAe3hK75GvVxPf5c=;
-        b=KTz4pJhCH9IkJIemMkCObIJbAIlPijTzd0yHR00R4V5DaE482NV+tmUaUBScpdGT00
-         fJE07Cd/453tVGUp+2NhWW7psRytX63Q08B2mIT2wtSWTR2AIl61vFm67Suqthljn2Pa
-         EUJWO451J/5bBy5laIu9SvZItfwDBdSWrrNFVNiWwDucULxOneIv/weL7tBi/Qk7BC/b
-         qnFzTzIq6FclVq57T2BSIwlKc351d/PI337Jz5MFj+Tz+VQWFapGBEeEVvfRWB7RGWar
-         c9Ef9oNvmdl9vrHxjEaRpkBcj7YFt98kaHnObuzE6H8UqNklZSFifS5vnBoc91nhsTbO
-         3j1A==
-X-Gm-Message-State: AOJu0YzW9apLvfu1VQRDuVvm1/22gaYk2eklzN5Dbv2DG2bnF/GBlJRX
-	dNk8miLYrF7BkbsFrX9fhtITmOols47KbRiuQ4AxOUzUHZNRCveywPtP+asAlBxYbzIxwiEJOcw
-	xyDmWqZiLBqG5FE4E8b6egGyQTkQ9gCMeAF+MXChnr5xClZlicIZ9b4RS1iCLdvp9z+hrZQ==
-X-Gm-Gg: AY/fxX5tdj0qFaSpkH4PsH7ezds88EmBPhYeYLNIJcORri+NkD2/xt7r2wWjZpX/MHK
-	cwyQzCzR1AkC/4+ehzWpFPNreSorLKpAbLp4Lj3+cj0oiBkXdK4MdCa7LPiY6V0nI1DA3/1E8u0
-	ADPF0cZ+Q6C1mya0YDnzR2u9DCSOIs9TZyYY8Sz+D70Y6Wmf968GtWZK2XR33w/5lnO/xI/TiCI
-	hRWb2dy+ntA3j4TmEZa5NhLmYGY+FMDyuuqNXmA2dLyK+qfgMRPDgu5mFY9Ec8+8KGKdLWvLpuc
-	7DBlaMDK4Xowbi6Q5LZNiyAwdAOz/dFCPhKtzEvth8xS81YNo1e/2YS4WvIT1TFFzjQlGt1T3Wa
-	VC+kT6fDMXNyd6m2Hxa4tAcPfZrbH4BN82awjjb0ASxv3iipvO1bqCg==
-X-Received: by 2002:a17:903:2308:b0:29a:69d:acdc with SMTP id d9443c01a7336-29f24eb128dmr116524595ad.25.1765866447662;
-        Mon, 15 Dec 2025 22:27:27 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGeF6+NIgb38BUPU0Y3iOrPK8Xd1070p+PiwP1wdfWTPWXCH12lcZ7k3YYoyjWs4wbZZdk6vw==
-X-Received: by 2002:a17:903:2308:b0:29a:69d:acdc with SMTP id d9443c01a7336-29f24eb128dmr116524345ad.25.1765866447143;
-        Mon, 15 Dec 2025 22:27:27 -0800 (PST)
+        bh=70zogL1OyG6TFjxO+LG4e+E4T5EW8vdBTgu2R6Zn4GQ=;
+        b=N5iSDEy5sr4eG2+mVWJ3/JmGHPGTOwoeBP5w7oCtseQ7MVebFF74wKPA4OOQq8+qol
+         PkDAE09GLPI+pq5rVxReHY8uPkNK52FSIRQGVAZbFnGPxWNptlfMMB8WQb1qr116a6VW
+         G2w40pMZ5FBUxNsqJq1pdHfEVKcGsByybmN0heSsjB3uc6pr+RB4zkG9HCWeho5G9u9f
+         lDQ6/uF+4P5Av/waNB2ftaymRpmO4mtTYmnr3nLSdAeNfLJVmi+fPvfs5YosU1wHwg6V
+         3usXU18xs4JXdMYct1VEkw4HitjYkBe4iDxwNRQUjklLf8x6NQkLTuvzOrp+Bdd2biOd
+         8jNA==
+X-Gm-Message-State: AOJu0YxQySbi1jyZcibo4Vlx7F0rG+45tTedsGe/vH7lJKvi+y97A/Z7
+	9o/ERecb8lmIVhB5lonyZLmSaX438UJta+xxyXvxT1hmA0N3xeaav1GQG5Jhfv6+MBxNvTNL9+5
+	zDhFOP0asWxV9jz6J8je2IaIcSAgFgWkzXciTwaLI8/t8hl+DdjV/k78MraQuTJEqVAjvsg==
+X-Gm-Gg: AY/fxX5zuakMhWNq/EQeAhGBCHk8kkC0PIdVQFurCSFxvFNtA1MGUPhwn642zcjx+gP
+	GWleDi1dRLWneypN2IaJHpk1tzvYklE8s83+TseCQPtGjgyzgu4Ra3H1K/ujiTZwnmcUr6PDe1t
+	0kxnWb/AJ4JHKljptxqiDltxuAnK2OMPiQ0+BKwVvyUTvq1Ti0CjOGGSDFukyMOwDAvg+8uEDxT
+	BFFjsw8s6S+9K49CarMHLxTElCnjTTfs2fa+zDLRwObN1MP1N2rETlf2DRN8va2fQQJ3wHGuHcI
+	3mQdEZif8aFAnVc8XywPgcVYQ87m7lQOZFNQWT1wD5+rMTGN0k21bIg2gqImenhu5bBt3cSfx8Y
+	i9pZtkDbAxGFUkV9lqpeOJF5/8rskDUny72oSBVg/KZ08cCaeaHf5Hg==
+X-Received: by 2002:a17:903:2ca:b0:2a0:d596:a88d with SMTP id d9443c01a7336-2a0d596ab66mr75323755ad.26.1765866451602;
+        Mon, 15 Dec 2025 22:27:31 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEvHXUCm63SqcD0v0tRrNhOnLbCHnc5elIqNxpBs+lB6yxdQy8XiPzxbQHHSV0ejUOoMRDulQ==
+X-Received: by 2002:a17:903:2ca:b0:2a0:d596:a88d with SMTP id d9443c01a7336-2a0d596ab66mr75323565ad.26.1765866451098;
+        Mon, 15 Dec 2025 22:27:31 -0800 (PST)
 Received: from hu-kathirve-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29f4d27f833sm106478015ad.45.2025.12.15.22.27.25
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29f4d27f833sm106478015ad.45.2025.12.15.22.27.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Dec 2025 22:27:26 -0800 (PST)
+        Mon, 15 Dec 2025 22:27:30 -0800 (PST)
 From: Karthikeyan Kathirvel <karthikeyan.kathirvel@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
         Karthikeyan Kathirvel <karthikeyan.kathirvel@oss.qualcomm.com>
-Subject: [PATCH RFC wireless-next 06/13] wifi: nl80211: retrieve UHR related elements in AP mode
-Date: Tue, 16 Dec 2025 11:56:49 +0530
-Message-Id: <20251216062656.1738022-7-karthikeyan.kathirvel@oss.qualcomm.com>
+Subject: [PATCH RFC wireless-next 08/13] wifi: mac80211: Support parsing UHR elements
+Date: Tue, 16 Dec 2025 11:56:51 +0530
+Message-Id: <20251216062656.1738022-9-karthikeyan.kathirvel@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251216062656.1738022-1-karthikeyan.kathirvel@oss.qualcomm.com>
 References: <20251216062656.1738022-1-karthikeyan.kathirvel@oss.qualcomm.com>
@@ -94,81 +94,142 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: DQsQHHkeY40J_bMHJF33wM7Il4q5hqUB
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjE2MDA1MSBTYWx0ZWRfX/TbVomym8ey+
- IXRs9XoTf83yN6mSBleLWjw5wvujSqg8Wqwo8+BxyXWJYvfLQSbiYDqiDLNKYLzvsaxUXvOr3Rn
- AvHQl0M2p+7ckkbdFm2n96tLr2mOof3i5jjty1YGIvaHvVHAn9iy+fP63c0B3T2SIhTV/Pfmf3W
- 2o+r6r8w+uGoDF75PSab0AgjU56RK13bOwQqwtGMrsaZzqxoSbs50fjt7i7hONkunONSSJEmeng
- /m4u/TXGvBNMH35doXZqVpsPERo3ykO6YEsGrt22aMbMiIRZZeZ/7shFvBA8IKGUes9Cli4zxl8
- jsOA0uXX2aNlpivl1/W7t7uWDRUTjFU0bxmZsqHDNsd4eH8dZT4wq+btoX37oZzjUUqqFJK1i0J
- hlSLQoVQ7/26ijrCYEuTODx9cIjHWg==
-X-Proofpoint-GUID: DQsQHHkeY40J_bMHJF33wM7Il4q5hqUB
-X-Authority-Analysis: v=2.4 cv=PYHyRyhd c=1 sm=1 tr=0 ts=6940fbd0 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+X-Proofpoint-ORIG-GUID: _iEhXozfjIVxkHcfHMj9T7_KRPxCfZoY
+X-Proofpoint-GUID: _iEhXozfjIVxkHcfHMj9T7_KRPxCfZoY
+X-Authority-Analysis: v=2.4 cv=AOuEbwt4 c=1 sm=1 tr=0 ts=6940fbd4 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
  a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=EUspDBNiAAAA:8 a=_UTdrhmLPrCkqZ53gewA:9 a=uG9DUKGECoFWVXl0Dc02:22
+ a=EUspDBNiAAAA:8 a=h5j4BVn6lG1j3psvHjkA:9 a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjE2MDA1MSBTYWx0ZWRfX8VqLe3BH8JIi
+ zlmvjy4hOU0U7y/rNm+WPcIBkB8MfarWSw0KzusEcA874vueBlE17O4V6Kv8MkaWf/gznUEb5nJ
+ 9N/JXoTL00JYb87ZTiAHcoaAuRGIIT3NNhmzAk4Ul4cUODWlb3cmPvgfEPCETa7CGcN3eZDyI7z
+ B3NbcwVk5WMrKsLe8LCJrl6laYkkV6RLPm+RLaj0BnSOvMpHwOr67/JLNJWPXQ1zZhkUoFeyhti
+ 9MAbYL4WkC9RKegbHmUY/FYz1MuHZVyL3LEcWUpAmxjU0OjEqVReLvcjK2cQQ5b7xcRaNZ5LzG8
+ 9/kpj8SILIA22zlliEOp6esNhjLIBY21mWNhGEFIZ6Nn1lfoifwJ/UuYlAkhlDsikaases2lybM
+ flThLbqE/LQ5RZVhkOQh4CSg5SIbGw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-12-16_01,2025-12-15_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 phishscore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 clxscore=1015 malwarescore=0 priorityscore=1501
- bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
- adjust=0 reason=mlx scancount=1 engine=8.22.0-2510240001
+ spamscore=0 suspectscore=0 bulkscore=0 phishscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 impostorscore=0 lowpriorityscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510240001
  definitions=main-2512160051
 
-As per spec, ieee80211bn D1.0 Section 37.29 Beacon Optimization,
-add support to retrieve UHR operation elements passed by the
-userspace in the beacon template and store the pointers
-in struct cfg80211_ap_settings to be used by the drivers.
+Parse the new UHR elements in the element parsing utilities.
+
+As per spec ieee80211bn D1.0 Section 37.29 Beacon Optimization
+"A UHR AP shall not include the parameters associated with
+operating modes currently enabled at the AP defined by UHR
+in the UHR Operation element or any other element carried in the
+Beacon frame, except when specified otherwise"
+
+For beacon frames UHR operation size check done only for UHR operation
+parameters not for operation information.
 
 Signed-off-by: Karthikeyan Kathirvel <karthikeyan.kathirvel@oss.qualcomm.com>
 ---
- include/net/cfg80211.h |  2 ++
- net/wireless/nl80211.c | 10 ++++++++++
- 2 files changed, 12 insertions(+)
+ net/mac80211/ieee80211_i.h |  5 +++++
+ net/mac80211/mlme.c        |  2 ++
+ net/mac80211/parse.c       | 13 +++++++++++++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7593f1a1875b..e3b66da4c243 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1522,6 +1522,7 @@ struct cfg80211_s1g_short_beacon {
-  * @he_cap: HE capabilities (or %NULL if HE isn't enabled)
-  * @eht_cap: EHT capabilities (or %NULL if EHT isn't enabled)
-  * @eht_oper: EHT operation IE (or %NULL if EHT isn't enabled)
-+ * @uhr_oper: UHR operation IE (or %NULL if UHR isn't enabled)
-  * @ht_required: stations must support HT
-  * @vht_required: stations must support VHT
-  * @twt_responder: Enable Target Wait Time
-@@ -1561,6 +1562,7 @@ struct cfg80211_ap_settings {
- 	const struct ieee80211_he_operation *he_oper;
- 	const struct ieee80211_eht_cap_elem *eht_cap;
- 	const struct ieee80211_eht_operation *eht_oper;
-+	const struct ieee80211_uhr_operation *uhr_oper;
- 	bool ht_required, vht_required, he_required, sae_h2e_required;
- 	bool twt_responder;
- 	u32 flags;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a54618eae8e5..7fc0f675a383 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6443,6 +6443,16 @@ static int nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
- 						cap->datalen - 1))
- 			return -EINVAL;
- 	}
-+	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_UHR_OPERATION, ies, ies_len);
-+	if (cap) {
-+		if (!cap->datalen)
-+			return -EINVAL;
-+		params->uhr_oper = (void *)(cap->data + 1);
-+		if (!ieee80211_uhr_oper_size_ok((const u8 *)params->uhr_oper,
-+						cap->datalen - 1, true))
-+			return -EINVAL;
-+	}
-+
- 	return 0;
- }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9d9313eee59f..04f1df209cec 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1826,6 +1826,8 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_multi_link_elem *ml_epcs;
+ 	const struct ieee80211_bandwidth_indication *bandwidth_indication;
+ 	const struct ieee80211_ttlm_elem *ttlm[IEEE80211_TTLM_MAX_CNT];
++	const struct ieee80211_uhr_cap_elem *uhr_cap;
++	const struct ieee80211_uhr_operation *uhr_operation;
  
+ 	/* not the order in the psd values is per element, not per chandef */
+ 	struct ieee80211_parsed_tpe tpe;
+@@ -1866,6 +1868,7 @@ struct ieee802_11_elems {
+ 	struct ieee80211_mle_per_sta_profile *prof;
+ 	size_t sta_prof_len;
+ 
++	u8 uhr_cap_len;
+ 	/* whether/which parse error occurred while retrieving these elements */
+ 	u8 parse_error;
+ };
+@@ -2423,6 +2426,7 @@ static inline void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata,
+  * @mode: connection mode for parsing
+  * @start: pointer to the elements
+  * @len: length of the elements
++ * @is_beacon: %true if the elements came from beacon frame
+  * @type: type of the frame the elements came from
+  *	(action, probe response, beacon, etc.)
+  * @filter: bitmap of element IDs to filter out while calculating
+@@ -2442,6 +2446,7 @@ struct ieee80211_elems_parse_params {
+ 	enum ieee80211_conn_mode mode;
+ 	const u8 *start;
+ 	size_t len;
++	bool is_beacon;
+ 	u8 type;
+ 	u64 filter;
+ 	u32 crc;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e56ad4b9330f..73649d57d0c3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -7400,6 +7400,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 	    !WARN_ON(ieee80211_vif_is_mld(&sdata->vif)) &&
+ 	    ieee80211_rx_our_beacon(bssid, ifmgd->assoc_data->link[0].bss)) {
+ 		parse_params.bss = ifmgd->assoc_data->link[0].bss;
++		parse_params.is_beacon = true;
+ 		elems = ieee802_11_parse_elems_full(&parse_params);
+ 		if (!elems)
+ 			return;
+@@ -7470,6 +7471,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
+ 	parse_params.bss = bss_conf->bss;
+ 	parse_params.filter = care_about_ies;
+ 	parse_params.crc = ncrc;
++	parse_params.is_beacon = true;
+ 	elems = ieee802_11_parse_elems_full(&parse_params);
+ 	if (!elems)
+ 		return;
+diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
+index bfc4ecb7a048..ed8411aa8b32 100644
+--- a/net/mac80211/parse.c
++++ b/net/mac80211/parse.c
+@@ -189,6 +189,17 @@ ieee80211_parse_extension_element(u32 *crc,
+ 			elems->ttlm_num++;
+ 		}
+ 		break;
++	case WLAN_EID_EXT_UHR_CAPABILITY:
++		if (ieee80211_uhr_capa_size_ok(data, len)) {
++			elems->uhr_cap = data;
++			elems->uhr_cap_len = len;
++		}
++		break;
++	case WLAN_EID_EXT_UHR_OPERATION:
++		if (ieee80211_uhr_oper_size_ok(data, len, params->is_beacon))
++			elems->uhr_operation = data;
++		calc_crc = true;
++		break;
+ 	}
+ 
+ 	if (crc && calc_crc)
+@@ -963,6 +974,7 @@ ieee80211_prep_mle_link_parse(struct ieee80211_elems_parse *elems_parse,
+ 
+ 	sub->mode = params->mode;
+ 	sub->type = params->type;
++	sub->is_beacon = params->is_beacon;
+ 	sub->from_ap = params->from_ap;
+ 	sub->link_id = -1;
+ 
+@@ -1062,6 +1074,7 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
+ 		sub.mode = params->mode;
+ 		sub.len = nontx_len;
+ 		sub.type = params->type;
++		sub.is_beacon = params->is_beacon;
+ 		sub.link_id = params->link_id;
+ 
+ 		/* consume the space used for non-transmitted profile */
 -- 
 2.34.1
 
