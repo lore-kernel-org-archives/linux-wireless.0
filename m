@@ -1,715 +1,342 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1631D34E767;
-	Wed, 17 Dec 2025 17:17:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22F441C84DC
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2025 18:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765991823; cv=none; b=CJUjnqkhQO7KP/wSzjPOiR9XjTeQC1UTnCi5m1VCVkAM+j8ZXjuOWExT7FxRaH8A9F+sFu7QpI2+ej5nQsfI1ThqB5mPXW3Q5Z0KpbjkNLTTJwqwzsbNT7LuU1a99IqKspQi9waKJlCSD6b/C84b50Ptnm8+DMrdymPe/KAsVGY=
+	t=1765994729; cv=none; b=IS8/I7NijXxvpnrwNLT95VKt+bnZtUgfpfTWrRYp3EV7mimTEsjRet7X8m6nVKixcIz82Xqj7vo0WMI7D0aIdRmBrj3Ohm+06n9aM3XgwFdkduu+MoMftUbk8PFYf+Fndq/nI4y01c15I5GTT/5/QNU8Niv40DZA9sp0PD+UE70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765991823; c=relaxed/simple;
-	bh=D9mjfpiYZhHFYL/jxvLs//6LcVyOqBcxPmmPuXGrSWY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=a60xgIm3DQ39F84mXH28szA5amCmdyLtQfum7s+IFp14KV4XypzkkzqTVBs2HNpihjCuGXroBMPjDBPHGOYKCkb9Xb3xceEy3hWlqj3CDYtrFe6STUbGoWKL1jgja7g7OMd8b6PZSycYafeNLn8CygEaimY3YF5uPCuoLwsUpbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AjK+fk88; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765994729; c=relaxed/simple;
+	bh=ve1HPG9Bq+IyB9yVbbU5KPub7vVKWwj9j8t6Y1qJ1B4=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=XRMF+X4v7GTtL+iTc3YWRs9qpjLB02rmJ8npiic8aPgW0lNor1oHd/pqkqgTBvIrh0QzQZg+Ogw6gJqYQq0576HXVfzynb9lb3ZaBTvsySXkP8thhNsqXDs+hsw0AsqdhIU8w1Qt3FNspx8+UQFI6VEoD22L38/TubrmItI//Rw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cZBU4HUI; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AjK+fk88"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7CA98C4CEFB;
-	Wed, 17 Dec 2025 17:17:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765991821;
-	bh=D9mjfpiYZhHFYL/jxvLs//6LcVyOqBcxPmmPuXGrSWY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=AjK+fk88KZCB4UdsRj8XqH3SGoIAOPnOEV0WjiBlrYCuy5AKiM+mNs67cBIJxDTbz
-	 9pUAPER1VIdVlksRmWGqk4mXub0QRY/v2d178q3BEMHHR1a/p8F41ipNUaaz9USLlj
-	 1HhkVy8B94SSlLHVUlfxtNqBqd2hxGjqwXnjR6fhR0xXlpn9UDnmgKhK4R3jiUNUr4
-	 uVWIbmrqQ0hIgyR16BIIEechbzEYB+LrHRJeE7T32iCeYo5mYQj/pKCHEu0U3AF1I9
-	 3bYzq9Lr6t2ysZAikkjzi7WGttSpW6lPENOoHMpWTrWBXDT6KRdBP7xPTwco9yOSj4
-	 FB9XCisDBXmOg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A1DD65C7C;
-	Wed, 17 Dec 2025 17:17:01 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 17 Dec 2025 22:46:51 +0530
-Subject: [PATCH 1/2] net: qrtr: Drop the MHI auto_queue feature for IPCR DL
- channels
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cZBU4HUI"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-47775fb6cb4so42724175e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2025 10:05:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1765994725; x=1766599525; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=b7Y9r+eCzEycQEAphE7b2tW5RfD8ATfVg+SxYtep590=;
+        b=cZBU4HUIing4xgDebc+HPJ9atUpYE3DjzoxTnTkXv9EEJJcAuhRieYD69tTn0xNHQV
+         jyta8VKLYMbjvTwFjlfcss5+q8s6pzBryVULqBR7LXQMRxs02rTgdi68K2AZp9rObh1x
+         iPovEuhq1qd78rFVb+bKXkg8T69LGU91rERZVUz4DNnRcBHgiOr3Gi5XbaUdo5oTs1Qo
+         LKaASdHiuhnkiSqONodovot45sZDSzdUJIpvyU7nAHiUIvQGXFAHUallzY3qwAySeoOd
+         OkGHbSI3roEChswqrQZf9ow0fgUyiPthhyp9aKbPAyBkhrGvqub64yeg0WK8wS17txG7
+         PB/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765994725; x=1766599525;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=b7Y9r+eCzEycQEAphE7b2tW5RfD8ATfVg+SxYtep590=;
+        b=cVgpxyWExoBQ2Q1ZBKGd4c32aZ/3aFHoh9MjEx/BaQ0Pu8denU7CD1e+FVVU2eJcVn
+         q7ZVXDlcoRs8wCam6zxWJM5kcWG/QRcLI6HIfngK5LB0fQqKuhYLcChz29FqjGwtjMU6
+         W8MDHj3NfwtmavaPnc/ZztKYHS2D/6eXd/eT3rqyz4J3bsN1pWLXnDRrJxJ5c4vYV6uB
+         X2HiH28IPM/oZrUTcegEIjJ7EOH8GhiLX+mU0R7QjaaAUelj9KgBYah0JOQEz9jmrPOf
+         w1TzgfDYFyr/qspR8+q2dVLAYF3ttF7kiDwwQxyn124Gp6mgRtP84BeeHx5M8XMK78TY
+         qzsQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVAQfxPtRWjBswkupPnTGurn/BBLgzitik9chXPrI7k8kiHIvlJOSwJJoNAR1hrEmVzjqdaWr+p2s8rgnu14Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yym+rZzVqO/pxxYT9yNH6iA8sZeXfmZsCQbj7yd6TY6wwT9QE11
+	AVQZPIZYG9LGAo6srJ8lAiGvPopRY6UotOSwoCYvpxGy8fOs9/HiVyYM
+X-Gm-Gg: AY/fxX42hCOqNrmhijKI/n5K1tmtPDqghKvGuxZTw42n+5mf8ALDgq2KYXQdf3a3fZz
+	aOczmjqMSTUDbHRXf3fFx+Uv7M4ZhtC7piM3vVcEY4gmDoKOcxWZMfa4lXV2TnjHR9gNzRG+paj
+	CaVKJv/pbYqKnP29oLK/pFt83LGoFD+MX/JJspg/1jfSUmAOcprElpuzVuFgqIxS4ZvQ8fWqjpA
+	BrPjKrBT6O6KWmz8Ea1edV2Si7sbhw9BaK2ewQDhFb9b6UMLujq1oE2EO+ucspCOeEOvZx5vuyU
+	B11x884LYxAJRn3CSStzNRjpO7pJcG6HyGW51GvseM8TyS21/WU+rXk3ar55UJgEARay2yxlqum
+	+KPpCteJFJ5bbeCSo9d72Q5p0cbB12aWY9Xs4gtwhxXUo61lDBcDoBJx387e6R34MybUEY1xMQE
+	/WC6gkt9iShAIdCqTWAqQx
+X-Google-Smtp-Source: AGHT+IHLNIhwq/1HIZQsWXm+M1iVUte/mg++zlLRylGScOVkm3Qn5StjEM36y+cNexCmcEBCKQaVCg==
+X-Received: by 2002:a05:600c:4f90:b0:477:b0b8:4dd0 with SMTP id 5b1f17b1804b1-47a8f905680mr199242605e9.17.1765994724902;
+        Wed, 17 Dec 2025 10:05:24 -0800 (PST)
+Received: from [192.168.1.50] ([79.119.240.187])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47be2720ca7sm4967045e9.2.2025.12.17.10.05.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Dec 2025 10:05:24 -0800 (PST)
+Message-ID: <b9a20503-b599-4667-96ab-e7d4f058fc19@gmail.com>
+Date: Wed, 17 Dec 2025 20:05:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH rtw-next 04/12] wifi: rtw89: mac: reset power state before
+ switching to power on
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Gary Chang <gary.chang@realtek.com>, Damon Chen <damon.chen@realtek.com>,
+ Zong-Zhe Yang <kevin_yang@realtek.com>
+References: <20251212031303.19882-1-pkshih@realtek.com>
+ <20251212031303.19882-5-pkshih@realtek.com>
+ <efc58c87-d391-4970-b9af-abdef9861342@gmail.com>
+ <05f1a2bbc0d344ea8c37481f9e1d26d4@realtek.com>
+ <13ea776b-8ae7-468c-baed-ae0b5adb2a5f@gmail.com>
+ <816a7eda797445ccbd5b6d8d6a5ea0b8@realtek.com>
+ <6ed5e59b4aa4498687030244404dc3f6@realtek.com>
+Content-Language: en-US
+In-Reply-To: <6ed5e59b4aa4498687030244404dc3f6@realtek.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251217-qrtr-fix-v1-1-f6142a3ec9d8@oss.qualcomm.com>
-References: <20251217-qrtr-fix-v1-0-f6142a3ec9d8@oss.qualcomm.com>
-In-Reply-To: <20251217-qrtr-fix-v1-0-f6142a3ec9d8@oss.qualcomm.com>
-To: Jeff Hugo <jeff.hugo@oss.qualcomm.com>, 
- Carl Vanderlip <carl.vanderlip@oss.qualcomm.com>, 
- Oded Gabbay <ogabbay@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- Jeff Johnson <jjohnson@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Loic Poulain <loic.poulain@oss.qualcomm.com>, 
- Maxim Kochetkov <fido_max@inbox.ru>
-Cc: linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- linux-kernel@vger.kernel.org, mhi@lists.linux.dev, 
- linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- ath12k@lists.infradead.org, netdev@vger.kernel.org, 
- Bjorn Andersson <andersson@kernel.org>, Johan Hovold <johan@kernel.org>, 
- Chris Lew <quic_clew@quicinc.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- stable@vger.kernel.org
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=20147;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=dQru8emq7l4R6ZFlI2xgYlVfmbAOsm/CMdY/HLWVQI0=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBpQuWLP/zozMrAaXXoQ35wf1LfhQ2+NqmUWzr+U
- MXSE1CQ7bKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaULliwAKCRBVnxHm/pHO
- 9aFOB/9m311UhCvvsWGsh4mqGvw0rrwy2m7dES2rvKZ4m6GUyrJSxxSiw5yqdiR5FqnXszRuAwi
- kWCkuv/yOhQJtU8Yc9LDrdHmHTlYIiNlgXuXlJNcHP9fToyFiYOqfOGfoYrJ+2rFcNMr9CYe3ll
- rWelCHbkz0xPVdK7HmJ1owqek3OnnrElt97DmndpX0gBcNpr3P2wJv9OnJit5BbU6H3KLjIYpjd
- ytqtH9VS6w1tL1xUu+o6r1rTO+Nsufa48n9RrZo9L1yQqJG5SdLdVvI+XU2/F7so5RcUEgwuqj9
- BhPS5TM1KiT8t4793LP8sgOzbkLJmff3790Qssj76FokhDed
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On 16/12/2025 11:06, Ping-Ke Shih wrote:
+> Hi Bitterblue,
+> 
+> Ping-Ke Shih wrote:
+>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>>> On 15/12/2025 04:05, Ping-Ke Shih wrote:
+>>>> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote;
+>>>>> On 12/12/2025 05:12, Ping-Ke Shih wrote:
+>>>>>> To run power on function properly, reset power states (off/on/PS) to
+>>>>>> initial state. Otherwise, it might be unusable due to fail to power on.
+>>>>>>
+>>>>>> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+>>>>>> ---
+>>>>>>  drivers/net/wireless/realtek/rtw89/mac.c    |  89 ++++++++++++--
+>>>>>>  drivers/net/wireless/realtek/rtw89/mac.h    |   1 +
+>>>>>>  drivers/net/wireless/realtek/rtw89/mac_be.c | 130 ++++++++++++++++++++
+>>>>>>  drivers/net/wireless/realtek/rtw89/reg.h    |  27 ++++
+>>>>>>  4 files changed, 240 insertions(+), 7 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+>>>>>> index d78fbe73e365..ba4344a640f5 100644
+>>>>>> --- a/drivers/net/wireless/realtek/rtw89/mac.c
+>>>>>> +++ b/drivers/net/wireless/realtek/rtw89/mac.c
+>>>>>> @@ -1478,13 +1478,11 @@ static void rtw89_mac_power_switch_boot_mode(struct rtw89_dev *rtwdev)
+>>>>>>
+>>>>>>  static int rtw89_mac_power_switch(struct rtw89_dev *rtwdev, bool on)
+>>>>>>  {
+>>>>>> -#define PWR_ACT 1
+>>>>>>       const struct rtw89_mac_gen_def *mac = rtwdev->chip->mac_def;
+>>>>>>       const struct rtw89_chip_info *chip = rtwdev->chip;
+>>>>>>       const struct rtw89_pwr_cfg * const *cfg_seq;
+>>>>>>       int (*cfg_func)(struct rtw89_dev *rtwdev);
+>>>>>>       int ret;
+>>>>>> -     u8 val;
+>>>>>>
+>>>>>>       rtw89_mac_power_switch_boot_mode(rtwdev);
+>>>>>>
+>>>>>> @@ -1499,10 +1497,10 @@ static int rtw89_mac_power_switch(struct rtw89_dev *rtwdev, bool on)
+>>>>>>       if (test_bit(RTW89_FLAG_FW_RDY, rtwdev->flags))
+>>>>>>               __rtw89_leave_ps_mode(rtwdev);
+>>>>>>
+>>>>>> -     val = rtw89_read32_mask(rtwdev, R_AX_IC_PWR_STATE, B_AX_WLMAC_PWR_STE_MASK);
+>>>>>> -     if (on && val == PWR_ACT) {
+>>>>>> -             rtw89_err(rtwdev, "MAC has already powered on\n");
+>>>>>> -             return -EBUSY;
+>>>>>> +     if (on) {
+>>>>>> +             ret = mac->reset_pwr_state(rtwdev);
+>>>>>> +             if (ret)
+>>>>>> +                     return ret;
+>>>>>>       }
+>>>>>>
+>>>>>>       ret = cfg_func ? cfg_func(rtwdev) : rtw89_mac_pwr_seq(rtwdev, cfg_seq);
+>>>>>> @@ -1529,7 +1527,6 @@ static int rtw89_mac_power_switch(struct rtw89_dev *rtwdev, bool on)
+>>>>>>       }
+>>>>>>
+>>>>>>       return 0;
+>>>>>> -#undef PWR_ACT
+>>>>>>  }
+>>>>>>
+>>>>>>  int rtw89_mac_pwr_on(struct rtw89_dev *rtwdev)
+>>>>>> @@ -3931,6 +3928,83 @@ static int rtw89_mac_feat_init(struct rtw89_dev *rtwdev)
+>>>>>>       return 0;
+>>>>>>  }
+>>>>>>
+>>>>>> +static int rtw89_mac_reset_pwr_state_ax(struct rtw89_dev *rtwdev)
+>>>>>> +{
+>>>>>> +     enum rtw89_core_chip_id chip_id = rtwdev->chip->chip_id;
+>>>>>> +     u32 val32;
+>>>>>> +     int ret;
+>>>>>> +
+>>>>>> +     val32 = rtw89_read32(rtwdev, R_AX_SYSON_FSM_MON);
+>>>>>> +     val32 &= WLAN_FSM_MASK;
+>>>>>> +     val32 |= WLAN_FSM_SET;
+>>>>>> +     rtw89_write32(rtwdev, R_AX_SYSON_FSM_MON, val32);
+>>>>>> +
+>>>>>> +     ret = read_poll_timeout(rtw89_read32_mask, val32, val32 == WLAN_FSM_IDLE,
+>>>>>> +                             1000, 2000000, false,
+>>>>>> +                             rtwdev, R_AX_SYSON_FSM_MON, WLAN_FSM_STATE_MASK);
+>>>>>> +     if (ret) {
+>>>>>> +             rtw89_err(rtwdev, "[ERR]Polling WLAN PMC timeout= %X\n", val32);
+>>>>>> +             return ret;
+>>>>>> +     }
+>>>>>
+>>>>> I get this error message with every AX chip the first time
+>>>>> rtw89_mac_pwr_on() is called:
+>>>>>
+>>>>> [  +0.007286] rtw89_8852bu 2-4:1.0: loaded firmware rtw89/rtw8852b_fw-1.bin
+>>>>> [  +2.001260] rtw89_8852bu 2-4:1.0: [ERR]Polling WLAN PMC timeout= 100
+>>>>>
+>>>>> They still work, because the second attempt in rtw89_mac_pwr_on()
+>>>>> succeeds.
+>>>>>
+>>>>> Before this patch, the message was "MAC has already powered on".
+>>>>> The new message says it's an error, so it will confuse people.
+>>>>
+>>>> I borrow a 8852AU and a 8852CU that both don't have error messages.
+>>>> The "first time" you meant is just to plug the USB adapter?
+>>>> If so, I have not idea about the difference between yours and mine.
+>>>>
+>>>
+>>> Yes, the error only appears right after the adapter is plugged in.
+>>> I put a message at the top of rtw89_mac_power_switch():
+>>>
+>>> [  +0.721188] usb 1-4: new high-speed USB device number 8 using xhci_hcd
+>>> [  +0.126425] usb 1-4: New USB device found, idVendor=0bda, idProduct=8832, bcdDevice= 0.00
+>>> [  +0.000014] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+>>> [  +0.000005] usb 1-4: Product: 802.11ac WLAN Adapter
+>>> [  +0.000004] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000003] usb 1-4: SerialNumber: 00e04c000001
+>>> [  +0.007757] rtw89_8852au 1-4:1.0: loaded firmware rtw89/rtw8852a_fw.bin
+>>> [  +0.000338] rtw89_mac_power_switch enter, on 1
+>>> [  +2.005000] rtw89_8852au 1-4:1.0: [ERR]Polling WLAN PMC timeout= 100
+>>> [  +0.000010] rtw89_mac_power_switch enter, on 0
+>>> [  +0.007867] rtw89_mac_power_switch enter, on 1
+>>> [  +0.020254] rtw89_8852au 1-4:1.0: Firmware version 0.13.36.2 (52acc807), cmd version 0, type 1
+>>> [  +0.000010] rtw89_8852au 1-4:1.0: Firmware version 0.13.36.2 (52acc807), cmd version 0, type 3
+>>> [  +0.963868] rtw89_8852au 1-4:1.0: chip rfe_type is 1
+>>> [  +0.103131] rtw89_mac_power_switch enter, on 0
+>>> [  +0.011027] rtw89_8852au 1-4:1.0: rfkill hardware state changed to enable
+>>> [  +0.051507] rtw89_8852au 1-4:1.0 wlp3s0f3u4: renamed from wlan0
+>>> [  +0.020062] rtw89_mac_power_switch enter, on 1
+>>>
+>>>>>
+>>>>> Is it possible this code related to R_AX_SYSON_FSM_MON is not
+>>>>> applicable to USB? My adapters still work if I delete it.
+>>>>
+>>>> I'm checking internal experts. Quickly checking vendor driver, I don't see
+>>>> it avoids calling this because of USB devices.
+>>>>
+>>>> If you delete code related to R_AX_SYSON_FSM_MON, will it show below messages
+>>>> under the case 'val32 == MAC_AX_MAC_ON'?
+>>>>
+>>>>    "[ERR]Polling MAC state timeout= %X\n"
+>>>>
+>>>
+>>> No, I never see that error. I checked the value of R_AX_IC_PWR_STATE.
+>>> My RTL8832BU with the Windows driver onboard:
+>>>
+>>> [  +4.566707] usb 1-4: new high-speed USB device number 20 using xhci_hcd
+>>> [  +0.125152] usb 1-4: New USB device found, idVendor=0bda, idProduct=1a2b, bcdDevice= 0.00
+>>> [  +0.000008] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+>>> [  +0.000002] usb 1-4: Product: DISK
+>>> [  +0.000002] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000544] usb-storage 1-4:1.0: USB Mass Storage device detected
+>>> [  +0.000160] usb-storage 1-4:1.0: device ignored
+>>> [  +0.629850] usb 1-4: USB disconnect, device number 20
+>>> [  +0.723342] usb 1-4: new high-speed USB device number 21 using xhci_hcd
+>>> [  +0.125493] usb 1-4: New USB device found, idVendor=0bda, idProduct=b832, bcdDevice= 0.00
+>>> [  +0.000013] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+>>> [  +0.000005] usb 1-4: Product: 802.11ac WLAN Adapter
+>>> [  +0.000004] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000004] usb 1-4: SerialNumber: 00e04c000001
+>>> [  +0.007910] rtw89_8852bu 1-4:1.0: loaded firmware rtw89/rtw8852b_fw-1.bin
+>>> [  +0.005682] rtw89_mac_reset_pwr_state_ax R_AX_IC_PWR_STATE=0x2200104
+>>> [  +2.000406] rtw89_8852bu 1-4:1.0: [ERR]Polling WLAN PMC timeout= 100
+>>> [  +0.017635] rtw89_mac_reset_pwr_state_ax R_AX_IC_PWR_STATE=0x2200004
+>>> [  +0.043991] rtw89_8852bu 1-4:1.0: Firmware version 0.29.128.0 (418a672d), cmd version 0, type 5
+>>> [  +0.000009] rtw89_8852bu 1-4:1.0: Firmware version 0.29.128.0 (418a672d), cmd version 0, type 3
+>>> [  +1.462646] rtw89_8852bu 1-4:1.0: chip rfe_type is 1
+>>> [  +0.135147] rtw89_8852bu 1-4:1.0: rfkill hardware state changed to enable
+>>> [  +0.045006] rtw89_8852bu 1-4:1.0 wlp3s0f3u4: renamed from wlan0
+>>> [  +0.016726] rtw89_mac_reset_pwr_state_ax R_AX_IC_PWR_STATE=0x2200004
+>>>
+>>> And another RTL8832BU without a Windows driver onboard:
+>>>
+>>> [Dec15 19:46] usb 1-4: new high-speed USB device number 22 using xhci_hcd
+>>> [  +0.125532] usb 1-4: New USB device found, idVendor=0bda, idProduct=b832, bcdDevice= 0.00
+>>> [  +0.000010] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+>>> [  +0.000003] usb 1-4: Product: 802.11ax WLAN Adapter
+>>> [  +0.000003] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000002] usb 1-4: SerialNumber: 00e04c000001
+>>> [  +0.007667] rtw89_8852bu 1-4:1.0: loaded firmware rtw89/rtw8852b_fw-1.bin
+>>> [  +0.002684] rtw89_mac_reset_pwr_state_ax R_AX_IC_PWR_STATE=0x2200004
+>>> [  +0.045258] rtw89_8852bu 1-4:1.0: Firmware version 0.29.128.0 (418a672d), cmd version 0, type 5
+>>> [  +0.000015] rtw89_8852bu 1-4:1.0: Firmware version 0.29.128.0 (418a672d), cmd version 0, type 3
+>>> [  +1.462130] rtw89_8852bu 1-4:1.0: chip rfe_type is 1
+>>> [  +0.133511] rtw89_8852bu 1-4:1.0: rfkill hardware state changed to enable
+>>> [  +0.043307] rtw89_8852bu 1-4:1.0 wlp3s0f3u4: renamed from wlan0
+>>> [  +0.017936] rtw89_mac_reset_pwr_state_ax R_AX_IC_PWR_STATE=0x2200004
+>>>
+>>> Maybe your borrowed adapters don't have the Windows drivers onboard either?
+>>
+>> Yes, the adapters I borrowed are just pure WiFi adapters, no Windows drivers onboard.
+>>
+>> I will share these information to internal experts to see how I can handle
+>> this kind of adapters.
+>>
+>>>
+>>>>>
+>>>>> (I don't get the error with RTL8912AU.)
+>>>>>
+>>>>
+>>>> I'm adding this patch for WiFi 7 chips mainly, and this seems to be expected.
+>>>>
+>>>
+>>> My RTL8912AU does have the Windows driver onboard, but no error:
+>>>
+>>> [  +5.365639] usb 1-4: new high-speed USB device number 25 using xhci_hcd
+>>> [  +0.124722] usb 1-4: New USB device found, idVendor=0bda, idProduct=1a2b, bcdDevice= 0.00
+>>> [  +0.000007] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+>>> [  +0.000002] usb 1-4: Product: DISK
+>>> [  +0.000002] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000540] usb-storage 1-4:1.0: USB Mass Storage device detected
+>>> [  +0.000143] usb-storage 1-4:1.0: device ignored
+>>> [  +0.629713] usb 1-4: USB disconnect, device number 25
+>>> [  +0.420492] usb 1-4: new high-speed USB device number 26 using xhci_hcd
+>>> [  +0.125490] usb 1-4: New USB device found, idVendor=0bda, idProduct=8912, bcdDevice= 0.00
+>>> [  +0.000009] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+>>> [  +0.000002] usb 1-4: Product: 802.11be WLAN Adapter
+>>> [  +0.000002] usb 1-4: Manufacturer: Realtek
+>>> [  +0.000002] usb 1-4: SerialNumber: 00e04c000001
+>>> [  +0.008039] rtw89_8922au 1-4:1.0: loaded firmware rtw89/rtw8922a_fw-4.bin
+>>> [  +0.005192] rtw89_mac_reset_pwr_state_be R_AX_IC_PWR_STATE=0x2200104
+>>> [  +0.055131] rtw89_8922au 1-4:1.0: Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 1
+>>> [  +0.000009] rtw89_8922au 1-4:1.0: Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 3
+>>> [  +1.419275] rtw89_8922au 1-4:1.0: chip rfe_type is 1
+>>> [  +0.042634] rtw89_8922au 1-4:1.0: Firmware version 0.1.0.0 (7b393818), cmd version 0, type 64
+>>> [  +0.000012] rtw89_8922au 1-4:1.0: Firmware element BB version: 00 49 00 00
+>>> [  +0.000014] rtw89_8922au 1-4:1.0: Firmware element radio A version: 00 33 00 00
+>>> [  +0.000015] rtw89_8922au 1-4:1.0: Firmware element NCTL version: 00 0f 00 00
+>>> [  +0.000118] rtw89_8922au 1-4:1.0: Firmware element TXPWR version: 00 40 00 00
+>>> [  +0.000005] rtw89_8922au 1-4:1.0: Firmware element PWR_TRK version: 00 33 00 00
+>>> [  +0.000010] rtw89_8922au 1-4:1.0: Firmware element REGD version: 00 48 00 06
+>>> [  +0.024441] rtw89_8922au 1-4:1.0: rfkill hardware state changed to enable
+>>> [  +0.042643] rtw89_8922au 1-4:1.0 wlp3s0f3u4: renamed from wlan0
+>>> [  +0.012737] rtw89_mac_reset_pwr_state_be R_AX_IC_PWR_STATE=0x2200004
+> 
+> Could you apply below to my original patchset to see if it can silence warning?
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+> index 7ffb039e7d1b..1f9f21040adc 100644
+> --- a/drivers/net/wireless/realtek/rtw89/mac.c
+> +++ b/drivers/net/wireless/realtek/rtw89/mac.c
+> @@ -3950,6 +3950,16 @@ static int rtw89_mac_reset_pwr_state_ax(struct rtw89_dev *rtwdev)
+>                                 1000, 2000000, false,
+>                                 rtwdev, R_AX_SYSON_FSM_MON, WLAN_FSM_STATE_MASK);
+>         if (ret) {
+> +               /*
+> +                * A USB adapter might play as USB mass storage with driver and
+> +                * then switch to WiFi adapter, causing it stays on power-on
+> +                * state when doing WiFi USB probe. Return EAGAIN to caller to
+> +                * power-off and power-on again to reset the state.
+> +                */
+> +               if (rtwdev->hci.type == RTW89_HCI_TYPE_USB &&
+> +                   !test_bit(RTW89_FLAG_PROBE_DONE, rtwdev->flags))
+> +                       return -EAGAIN;
+> +
+>                 rtw89_err(rtwdev, "[ERR]Polling WLAN PMC timeout= %X\n", val32);
+>                 return ret;
+>         }
+> 
 
-MHI stack offers the 'auto_queue' feature, which allows the MHI stack to
-auto queue the buffers for the RX path (DL channel). Though this feature
-simplifies the client driver design, it introduces race between the client
-drivers and the MHI stack. For instance, with auto_queue, the 'dl_callback'
-for the DL channel may get called before the client driver is fully probed.
-This means, by the time the dl_callback gets called, the client driver's
-structures might not be initialized, leading to NULL ptr dereference.
-
-Currently, the drivers have to workaround this issue by initializing the
-internal structures before calling mhi_prepare_for_transfer_autoqueue().
-But even so, there is a chance that the client driver's internal code path
-may call the MHI queue APIs before mhi_prepare_for_transfer_autoqueue() is
-called, leading to similar NULL ptr dereference. This issue has been
-reported on the Qcom X1E80100 CRD machines affecting boot.
-
-So to properly fix all these races, drop the MHI 'auto_queue' feature
-altogether and let the client driver (QRTR) manage the RX buffers manually.
-In the QRTR driver, queue the RX buffers based on the ring length during
-probe and recycle the buffers in 'dl_callback' once they are consumed. This
-also warrants removing the setting of 'auto_queue' flag from controller
-drivers.
-
-Currently, this 'auto_queue' feature is only enabled for IPCR DL channel.
-So only the QRTR client driver requires the modification.
-
-Cc: stable@vger.kernel.org
-Fixes: 227fee5fc99e ("bus: mhi: core: Add an API for auto queueing buffers for DL channel")
-Fixes: 68a838b84eff ("net: qrtr: start MHI channel after endpoit creation")
-Reported-by: Johan Hovold <johan@kernel.org>
-Closes: https://lore.kernel.org/linux-arm-msm/ZyTtVdkCCES0lkl4@hovoldconsulting.com
-Suggested-by: Chris Lew <quic_clew@quicinc.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/accel/qaic/mhi_controller.c   | 44 -----------------------
- drivers/bus/mhi/host/pci_generic.c    | 20 ++---------
- drivers/net/wireless/ath/ath11k/mhi.c |  4 ---
- drivers/net/wireless/ath/ath12k/mhi.c |  4 ---
- net/qrtr/mhi.c                        | 67 +++++++++++++++++++++++++++++------
- 5 files changed, 58 insertions(+), 81 deletions(-)
-
-diff --git a/drivers/accel/qaic/mhi_controller.c b/drivers/accel/qaic/mhi_controller.c
-index 13a14c6c6168..4d787f77ce41 100644
---- a/drivers/accel/qaic/mhi_controller.c
-+++ b/drivers/accel/qaic/mhi_controller.c
-@@ -39,7 +39,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -55,7 +54,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -71,7 +69,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -87,7 +84,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -103,7 +99,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -119,7 +114,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -135,7 +129,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -151,7 +144,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -167,7 +159,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -183,7 +174,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -199,7 +189,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -215,7 +204,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -231,7 +219,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -247,7 +234,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -263,7 +249,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -279,7 +264,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -295,7 +279,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -311,7 +294,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -327,7 +309,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -343,7 +324,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -359,7 +339,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -375,7 +354,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -391,7 +369,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -407,7 +384,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -423,7 +399,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -439,7 +414,6 @@ static const struct mhi_channel_config aic100_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 		.wake_capable = false,
- 	},
- };
-@@ -458,7 +432,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -474,7 +447,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -490,7 +462,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -506,7 +477,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -522,7 +492,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -538,7 +507,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -554,7 +522,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -570,7 +537,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -586,7 +552,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -602,7 +567,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -618,7 +582,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -634,7 +597,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -650,7 +612,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -666,7 +627,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -682,7 +642,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -698,7 +657,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -714,7 +672,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 		.wake_capable = false,
- 	},
- 	{
-@@ -730,7 +687,6 @@ static const struct mhi_channel_config aic200_channels[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 		.wake_capable = false,
- 	},
- };
-diff --git a/drivers/bus/mhi/host/pci_generic.c b/drivers/bus/mhi/host/pci_generic.c
-index e3bc737313a2..0884a384b77f 100644
---- a/drivers/bus/mhi/host/pci_generic.c
-+++ b/drivers/bus/mhi/host/pci_generic.c
-@@ -94,22 +94,6 @@ struct mhi_pci_dev_info {
- 		.doorbell_mode_switch = false,		\
- 	}
- 
--#define MHI_CHANNEL_CONFIG_DL_AUTOQUEUE(ch_num, ch_name, el_count, ev_ring) \
--	{						\
--		.num = ch_num,				\
--		.name = ch_name,			\
--		.num_elements = el_count,		\
--		.event_ring = ev_ring,			\
--		.dir = DMA_FROM_DEVICE,			\
--		.ee_mask = BIT(MHI_EE_AMSS),		\
--		.pollcfg = 0,				\
--		.doorbell = MHI_DB_BRST_DISABLE,	\
--		.lpm_notify = false,			\
--		.offload_channel = false,		\
--		.doorbell_mode_switch = false,		\
--		.auto_queue = true,			\
--	}
--
- #define MHI_EVENT_CONFIG_CTRL(ev_ring, el_count) \
- 	{					\
- 		.num_elements = el_count,	\
-@@ -329,7 +313,7 @@ static const struct mhi_channel_config modem_qcom_v1_mhi_channels[] = {
- 	MHI_CHANNEL_CONFIG_UL(14, "QMI", 4, 0),
- 	MHI_CHANNEL_CONFIG_DL(15, "QMI", 4, 0),
- 	MHI_CHANNEL_CONFIG_UL(20, "IPCR", 8, 0),
--	MHI_CHANNEL_CONFIG_DL_AUTOQUEUE(21, "IPCR", 8, 0),
-+	MHI_CHANNEL_CONFIG_DL(21, "IPCR", 8, 0),
- 	MHI_CHANNEL_CONFIG_UL_FP(34, "FIREHOSE", 32, 0),
- 	MHI_CHANNEL_CONFIG_DL_FP(35, "FIREHOSE", 32, 0),
- 	MHI_CHANNEL_CONFIG_UL(46, "IP_SW0", 64, 2),
-@@ -762,7 +746,7 @@ static const struct mhi_channel_config mhi_telit_fn980_hw_v1_channels[] = {
- 	MHI_CHANNEL_CONFIG_UL(14, "QMI", 32, 0),
- 	MHI_CHANNEL_CONFIG_DL(15, "QMI", 32, 0),
- 	MHI_CHANNEL_CONFIG_UL(20, "IPCR", 16, 0),
--	MHI_CHANNEL_CONFIG_DL_AUTOQUEUE(21, "IPCR", 16, 0),
-+	MHI_CHANNEL_CONFIG_DL(21, "IPCR", 16, 0),
- 	MHI_CHANNEL_CONFIG_HW_UL(100, "IP_HW0", 128, 1),
- 	MHI_CHANNEL_CONFIG_HW_DL(101, "IP_HW0", 128, 2),
- };
-diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
-index acd76e9392d3..d2c44f7f9b62 100644
---- a/drivers/net/wireless/ath/ath11k/mhi.c
-+++ b/drivers/net/wireless/ath/ath11k/mhi.c
-@@ -34,7 +34,6 @@ static const struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 	},
- 	{
- 		.num = 21,
-@@ -48,7 +47,6 @@ static const struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 	},
- };
- 
-@@ -99,7 +97,6 @@ static const struct mhi_channel_config ath11k_mhi_channels_qcn9074[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 	},
- 	{
- 		.num = 21,
-@@ -113,7 +110,6 @@ static const struct mhi_channel_config ath11k_mhi_channels_qcn9074[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath12k/mhi.c b/drivers/net/wireless/ath/ath12k/mhi.c
-index 08f44baf182a..2dbdb95ae7be 100644
---- a/drivers/net/wireless/ath/ath12k/mhi.c
-+++ b/drivers/net/wireless/ath/ath12k/mhi.c
-@@ -31,7 +31,6 @@ static const struct mhi_channel_config ath12k_mhi_channels_qcn9274[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 	},
- 	{
- 		.num = 21,
-@@ -45,7 +44,6 @@ static const struct mhi_channel_config ath12k_mhi_channels_qcn9274[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 	},
- };
- 
-@@ -96,7 +94,6 @@ static const struct mhi_channel_config ath12k_mhi_channels_wcn7850[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = false,
- 	},
- 	{
- 		.num = 21,
-@@ -110,7 +107,6 @@ static const struct mhi_channel_config ath12k_mhi_channels_wcn7850[] = {
- 		.lpm_notify = false,
- 		.offload_channel = false,
- 		.doorbell_mode_switch = false,
--		.auto_queue = true,
- 	},
- };
- 
-diff --git a/net/qrtr/mhi.c b/net/qrtr/mhi.c
-index 69f53625a049..0b4d181ea747 100644
---- a/net/qrtr/mhi.c
-+++ b/net/qrtr/mhi.c
-@@ -24,13 +24,25 @@ static void qcom_mhi_qrtr_dl_callback(struct mhi_device *mhi_dev,
- 	struct qrtr_mhi_dev *qdev = dev_get_drvdata(&mhi_dev->dev);
- 	int rc;
- 
--	if (!qdev || mhi_res->transaction_status)
-+	if (!qdev || (mhi_res->transaction_status && mhi_res->transaction_status != -ENOTCONN))
- 		return;
- 
-+	/* Channel got reset. So just free the buffer */
-+	if (mhi_res->transaction_status == -ENOTCONN) {
-+		devm_kfree(&mhi_dev->dev, mhi_res->buf_addr);
-+		return;
-+	}
-+
- 	rc = qrtr_endpoint_post(&qdev->ep, mhi_res->buf_addr,
- 				mhi_res->bytes_xferd);
- 	if (rc == -EINVAL)
- 		dev_err(qdev->dev, "invalid ipcrouter packet\n");
-+
-+	/* Done with the buffer, now recycle it for future use */
-+	rc = mhi_queue_buf(mhi_dev, DMA_FROM_DEVICE, mhi_res->buf_addr,
-+			   mhi_dev->mhi_cntrl->buffer_len, MHI_EOT);
-+	if (rc)
-+		dev_err(&mhi_dev->dev, "Failed to recycle the buffer: %d\n", rc);
- }
- 
- /* From QRTR to MHI */
-@@ -72,6 +84,27 @@ static int qcom_mhi_qrtr_send(struct qrtr_endpoint *ep, struct sk_buff *skb)
- 	return rc;
- }
- 
-+static int qcom_mhi_qrtr_queue_dl_buffers(struct mhi_device *mhi_dev)
-+{
-+	void *buf;
-+	int ret;
-+
-+	while (!mhi_queue_is_full(mhi_dev, DMA_FROM_DEVICE)) {
-+		buf = devm_kmalloc(&mhi_dev->dev, mhi_dev->mhi_cntrl->buffer_len, GFP_KERNEL);
-+		if (!buf)
-+			return -ENOMEM;
-+
-+		ret = mhi_queue_buf(mhi_dev, DMA_FROM_DEVICE, buf, mhi_dev->mhi_cntrl->buffer_len,
-+				    MHI_EOT);
-+		if (ret) {
-+			dev_err(&mhi_dev->dev, "Failed to queue buffer: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int qcom_mhi_qrtr_probe(struct mhi_device *mhi_dev,
- 			       const struct mhi_device_id *id)
- {
-@@ -87,20 +120,30 @@ static int qcom_mhi_qrtr_probe(struct mhi_device *mhi_dev,
- 	qdev->ep.xmit = qcom_mhi_qrtr_send;
- 
- 	dev_set_drvdata(&mhi_dev->dev, qdev);
--	rc = qrtr_endpoint_register(&qdev->ep, QRTR_EP_NID_AUTO);
--	if (rc)
--		return rc;
- 
- 	/* start channels */
--	rc = mhi_prepare_for_transfer_autoqueue(mhi_dev);
--	if (rc) {
--		qrtr_endpoint_unregister(&qdev->ep);
-+	rc = mhi_prepare_for_transfer(mhi_dev);
-+	if (rc)
- 		return rc;
--	}
-+
-+	rc = qrtr_endpoint_register(&qdev->ep, QRTR_EP_NID_AUTO);
-+	if (rc)
-+		goto err_unprepare;
-+
-+	rc = qcom_mhi_qrtr_queue_dl_buffers(mhi_dev);
-+	if (rc)
-+		goto err_unregister;
- 
- 	dev_dbg(qdev->dev, "Qualcomm MHI QRTR driver probed\n");
- 
- 	return 0;
-+
-+err_unregister:
-+	qrtr_endpoint_unregister(&qdev->ep);
-+err_unprepare:
-+	mhi_unprepare_from_transfer(mhi_dev);
-+
-+	return rc;
- }
- 
- static void qcom_mhi_qrtr_remove(struct mhi_device *mhi_dev)
-@@ -151,11 +194,13 @@ static int __maybe_unused qcom_mhi_qrtr_pm_resume_early(struct device *dev)
- 	if (state == MHI_STATE_M3)
- 		return 0;
- 
--	rc = mhi_prepare_for_transfer_autoqueue(mhi_dev);
--	if (rc)
-+	rc = mhi_prepare_for_transfer(mhi_dev);
-+	if (rc) {
- 		dev_err(dev, "failed to prepare for autoqueue transfer %d\n", rc);
-+		return rc;
-+	}
- 
--	return rc;
-+	return qcom_mhi_qrtr_queue_dl_buffers(mhi_dev);
- }
- 
- static const struct dev_pm_ops qcom_mhi_qrtr_pm_ops = {
-
--- 
-2.48.1
-
-
+Yes, that silences the warning.
