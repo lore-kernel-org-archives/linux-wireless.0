@@ -1,118 +1,145 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E98D329C6E
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2025 06:32:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3571017B425
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2025 07:05:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766039567; cv=none; b=iCRefqPkBdG1CfhzL410MO9bF+Hr8sAkEQbxprAhvjrMGfEaMaJRKv/gxzoExRLwy4At1NMFHrR7nKqhnzkMvg7+pkWh8ti090FNuHEqjq7FqPtTRfJsGqRy7K3mLCSFxaT2V7w1J/ZZaemWXboP0IM/DKx5hjwyiQPwGlMMBXU=
+	t=1766041545; cv=none; b=Ept/YGHQeiYX9s6JIWUhW6HcdHFL8i26dDanCPVer8utll9LTLcC6TftbD7WjfTsPi02HQvk7tPj/JXw6vCCQoWQrvu3kw/zXVyuRMWK0a49P/z0jWf4eM/LZ4UepGXOANMX0YbJALGeChnctWE9Lus4ldh6q1c92vsp0qLv0Hs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766039567; c=relaxed/simple;
-	bh=5ouBFMJ8hobGrYLxJWKNjq28OiTR7bvcIHZj6Zjfvp0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uErgrqtlauqaHhbXv2saspLMXA3HYg3KQ0pBh7ebFZIwYxjiDA3NCItKk1BgZFvbqgFT74o4Xf4rAmQZjC+eC2MKkBrH+Lv4yT9Mk94VwmAyJues3C9cofwSUeKHCqqNFzKhlCi5cb4lWkyyjbfB4ua80/0vaLYPhqqsNwFXoCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dccOvibG; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1766041545; c=relaxed/simple;
+	bh=WkaZwMv2JvPKYzx1x5YJKcKMa/ycX1CuZmm0Ujjv7D0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aPvPBB5Z2EqJZsv0REZQlzOYQ4bL0TKPcFm3l1pNLQjF4YQheKPGouoTraFHwbJzLdiVklmJwX7oX31dszeJLAC7qdobZC/Z3QQnnmrIQIZjHuS6Yfy6+i5p1IdiLgnGTrgMDYDwGJi1zXD9Pore1bl2viFiHFPcrxoYhwpz38w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=b+x9aYVE; arc=none smtp.client-ip=185.125.188.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dccOvibG"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 5BI6WaiH63338903, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1766039556; bh=vxnxHEZwLCnuIsf+o4mzDPG/8aBJrSzaOkcQ5CJm4CA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=dccOvibGxHWd6vFPCJ9/VZL1r5DD7PbbxnaIXMGRKzV6egddxDoSRNHNET52lgHYP
-	 Jff4t+yk71Kr6QVhyLAe8ueg9rPnKa0ycxsxLIiAZlexs2jSng7Rs6zjfmGM8628rk
-	 63R9gwrFcdTf9gLL7LzSmpW93sQnql4G8V9Tdut6G6yXNKFRYuk5pH0O/lXa2/Oj9n
-	 eiKluXGomRWCVQ/cQK10AhKx4hQiDuXWGt2uboN8NSsESigKtBa7K5nwR/wxKtvojC
-	 9hEAZ6UM8rX6Vipbs2FCOv6NviWoNTMQKbdHpfe3kgB/vj7KsEMbFBhcvui8ZwRBZS
-	 +L2A6fz5R2dpQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 5BI6WaiH63338903
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2025 14:32:36 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Thu, 18 Dec 2025 14:32:36 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Thu, 18 Dec 2025 14:32:36 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Thu, 18 Dec 2025 14:32:36 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <gary.chang@realtek.com>, <damon.chen@realtek.com>,
-        <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next v2 11/12] wifi: rtw89: setting TBTT AGG number when mac port initialization
-Date: Thu, 18 Dec 2025 14:31:16 +0800
-Message-ID: <20251218063117.26278-12-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20251218063117.26278-1-pkshih@realtek.com>
-References: <20251218063117.26278-1-pkshih@realtek.com>
+	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="b+x9aYVE"
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com [209.85.218.70])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 822993F82B
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2025 07:05:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20251003; t=1766041540;
+	bh=c7S7hlyro8bVLPaUshenPuh/zyDvp4ao0uVsdHOsDEM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=b+x9aYVE8DWnw9M4Xk3LXKWB4AxNPbR4yPGAV5qT9mRLujSAn3+jZ4wVLWVm25SyV
+	 zVwQCKSOEBwj5Qa44loAOzLUdwYO69ROndaTk50ieXfnAlMTGGi5kklGjblg69VhrU
+	 92rjjPVpcmdXo0LAHqm4uDDpgajFtDY/LM0yu4yK/LDO2EXB4x5OOwk4vq5kwLx61M
+	 nSI+n/xifQ4oQGbvsNuG/1UmplXwed+yBouWNE87quDiLrgHCh0+xTV6Ajz9WSR8W2
+	 SEM2qQS4aL/KNFsDQPjDKRK1t1fcqDtI4iPp4/k8Jpf6/Xp8RJ+UzfM5PWEA8YJRxt
+	 AlgIN0KxUT9pWD56uLS3ilrpOhV60X+u/jYn4izPuZrbc+vPG3OugLCpjLDc6MsVzK
+	 vAQTMQHGDFrr+cHgGTnS/qiII5oraUeo893N0WkK4LSxXy2zBTsIwmYtjd4FIoMP9Y
+	 5HfRPMPsRA4o1YSOAbUZR+khRsYDX+RDfLdv8Ivnkfn+byryVy8FgUksoPKdK2sKGm
+	 mu/1HMeKWQq7NICNhlDwB2UxaxaSqj+rA/LLsfxmtMpu98plJYhm2prV2Ev9plUZZr
+	 hj97mY56zJ2YwWnbk0rkNeXKEZ9mpRdA4IHcAoQ5zcGmkj5be4WutqGOTXV15+rIgR
+	 RkCz+PVb+A6VsLDeLMAIN4eM=
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-b771bfe9802so20875166b.1
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2025 23:05:40 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1766041540; x=1766646340;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=c7S7hlyro8bVLPaUshenPuh/zyDvp4ao0uVsdHOsDEM=;
+        b=P+gREcDamlZh6MkYZMFAvEftGg6Uj8zRKH9sCNFLldi+PYY6ET+CB+JamZCG+jFK1Z
+         TxcXtkN7Tj1uEKnTJiYu/Yi37h0PD4ZrXcyBr04ditXWp9kdaYgPuD2nBK2Y13Pk1vau
+         5eXn9s3ztqPW4YOABbB3G4oTUIGK5ILR33avN1d6fbDp4YWdrLwrhhRDnl4W8F0wnWr6
+         qzfAo78Uvh5DK+So8Clc6LC6FLAdAIisqA0UJcwBuAbo3Nv1+iECUKf0D3nkj0MDRu2N
+         jydFTZX/tk/pzsPZqkyiUuxy3dU9rnCyXA6xxFdS6vvulM/BDmbgBMoS/OS44Ecta/7i
+         g7Ww==
+X-Forwarded-Encrypted: i=1; AJvYcCWdJVWm2A3nu20Nw/5ZTPu2L9mc5X9QlJ3skBvV2kSUi/Rptla3rL7jxFz/spLRYT0pDdzFsl7+zwj/oaB+aA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGbBe8hAaQSFb2jBQvDMlT34WaZ/xtJUg1UCQK6EpHVw1BXv8i
+	6D/xsyB73d/6o/eg+LklfIPaR7Voa033+0ymApG+SH3q0sCWPTNWun14ewLGTQOai5xDXp6OnNw
+	aX4DclVdTIj1PLJ/SgXZ/1TT/IT2gjbO7XRcYxUiOuyxSY7JB4RV1bRfuUHGzSXaC0fTuAdYcL1
+	TlPKT83FO7/3Ovj/av+91jOgg/RL6pq5u3KE6eJ0e8K0AxDLruENIMjARXSCw=
+X-Gm-Gg: AY/fxX4j1/doJOWB5289BTuavF5/Nz3c+cWVW2rKXGfGraOkAr/ejrbS4yQHsPCcLkW
+	FcFmpr4K0LHge6Fb35v2cnZfh1GGT/+3vcYeSPOUHrc+qGz4kD8zFbUDC3CZsJGyvQtoCjSbXxR
+	EHqkXiZcnFdhCeyeMwxZY5BsO90X72vEpP3t9/c9yR/mYXGm/6QYV8C5+pNSOLJqmB2xhX3hVvW
+	95e2/Pu9YayUw==
+X-Received: by 2002:a17:907:9282:b0:b7c:e5d6:2462 with SMTP id a640c23a62f3a-b7d236c1aa1mr2440553166b.28.1766041539962;
+        Wed, 17 Dec 2025 23:05:39 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHYGGDlGR8ADZeTuf+I2EP8DPreDJKDZDO7LRoTEnfNBskKW5KUZhOxrJXIujTLMPLzLh8TI5+4XZpPWPsKGLg=
+X-Received: by 2002:a17:907:9282:b0:b7c:e5d6:2462 with SMTP id
+ a640c23a62f3a-b7d236c1aa1mr2440549866b.28.1766041539543; Wed, 17 Dec 2025
+ 23:05:39 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+References: <20251215122231.3180648-1-leon.yen@mediatek.com>
+In-Reply-To: <20251215122231.3180648-1-leon.yen@mediatek.com>
+From: AceLan Kao <acelan.kao@canonical.com>
+Date: Thu, 18 Dec 2025 15:05:27 +0800
+X-Gm-Features: AQt7F2rFCwU_nFN8zxCPmULe9M1cSOrOTgxx5yt49VcbBl8x2h-eJIE_P-DiYM4
+Message-ID: <CAFv23QnPqdw8v4_k2_sbxhb7p7ZR7fuDJ0CRij=9aX6EC3-4Mg@mail.gmail.com>
+Subject: Re: [PATCH v2] wifi: mt76: mt792x: Fix a potential deadlock in
+ high-load situations
+To: Leon Yen <leon.yen@mediatek.com>
+Cc: nbd@nbd.name, lorenzo@kernel.org, linux-wireless@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org, deren.wu@mediatek.com, 
+	sean.wang@mediatek.com, mingyen.hsieh@mediatek.com, michael.lo@mediatek.com, 
+	allan.wang@mediatek.com, quan.zhou@mediatek.com, sarick.jiang@mediatek.com, 
+	ryder.lee@mediatek.com, shayne.chen@mediatek.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Chih-Kang Chang <gary.chang@realtek.com>
+Leon Yen <leon.yen@mediatek.com> =E6=96=BC 2025=E5=B9=B412=E6=9C=8815=E6=97=
+=A5=E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=888:24=E5=AF=AB=E9=81=93=EF=BC=9A
+>
+> A deadlock may occur between two works, ps_work and mac_work, if their wo=
+rk
+> functions run simultaneously as they attempt to cancel each other by
+> calling cancel_delayed_work_sync().
+>
+> mt792x_mac_work() ->   ...  -> cancel_delayed_work_sync(&pm->ps_work);
+> mt792x_pm_power_save_work() -> cancel_delayed_work_sync(&mphy->mac_work);
+>
+> In high-load situations, they are queued but may not have chance to be
+> executed until the CPUs are released. Once the CPUs are available, there
+> is a high possibility that the ps_work function and mac_work function wil=
+l
+> be executed simultaneously, resulting in a possible deadlock.
+>
+> This patch replaces cancel_delayed_work_sync() with cancel_delayed_work()
+> in ps_work to eliminate the deadlock and make the code easier to maintain=
+.
+>
+> Signed-off-by: Leon Yen <leon.yen@mediatek.com>
+Tested-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
 
-When initializing mac port, needs to set TBTT AGG number to trigger TBTT
-related interrupts. Otherwise, after sending join info H2C command with
-disconnection mode, firmware will clear TBTT AGG number. Without the
-setting from mac port initialization after that, this port will not be
-able to transmit beacons.
+Without the patch, the system may hang during stress tests.
+And now I can't reproduce the hang issue with this patch.
+Thanks.
 
-Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/mac.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index 8987077bf756..b7cb7a33f3d4 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -4446,6 +4446,7 @@ static void rtw89_mac_bcn_drop(struct rtw89_dev *rtwdev,
- #define BCN_HOLD_DEF 200
- #define BCN_MASK_DEF 0
- #define TBTT_ERLY_DEF 5
-+#define TBTT_AGG_DEF 1
- #define BCN_SET_UNIT 32
- #define BCN_ERLY_SET_DLY (10 * 2)
- 
-@@ -4749,6 +4750,16 @@ static void rtw89_mac_port_cfg_tbtt_early(struct rtw89_dev *rtwdev,
- 				B_AX_TBTTERLY_MASK, TBTT_ERLY_DEF);
- }
- 
-+static void rtw89_mac_port_cfg_tbtt_agg(struct rtw89_dev *rtwdev,
-+					struct rtw89_vif_link *rtwvif_link)
-+{
-+	const struct rtw89_mac_gen_def *mac = rtwdev->chip->mac_def;
-+	const struct rtw89_port_reg *p = mac->port_base;
-+
-+	rtw89_write16_port_mask(rtwdev, rtwvif_link, p->tbtt_agg,
-+				B_AX_TBTT_AGG_NUM_MASK, TBTT_AGG_DEF);
-+}
-+
- static void rtw89_mac_port_cfg_bss_color(struct rtw89_dev *rtwdev,
- 					 struct rtw89_vif_link *rtwvif_link)
- {
-@@ -5009,6 +5020,7 @@ int rtw89_mac_port_update(struct rtw89_dev *rtwdev, struct rtw89_vif_link *rtwvi
- 	rtw89_mac_port_cfg_bcn_hold_time(rtwdev, rtwvif_link);
- 	rtw89_mac_port_cfg_bcn_mask_area(rtwdev, rtwvif_link);
- 	rtw89_mac_port_cfg_tbtt_early(rtwdev, rtwvif_link);
-+	rtw89_mac_port_cfg_tbtt_agg(rtwdev, rtwvif_link);
- 	rtw89_mac_port_cfg_bss_color(rtwdev, rtwvif_link);
- 	rtw89_mac_port_cfg_mbssid(rtwdev, rtwvif_link);
- 	rtw89_mac_port_cfg_func_en(rtwdev, rtwvif_link, true);
--- 
-2.25.1
-
+> ---
+> v2: Modify the solution to make it simpler and easier to maintain
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt792x_mac.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_mac.c b/drivers/ne=
+t/wireless/mediatek/mt76/mt792x_mac.c
+> index 71dec93094eb..888e5a505673 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt792x_mac.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt792x_mac.c
+> @@ -375,7 +375,7 @@ void mt792x_pm_power_save_work(struct work_struct *wo=
+rk)
+>         }
+>
+>         if (!mt792x_mcu_fw_pmctrl(dev)) {
+> -               cancel_delayed_work_sync(&mphy->mac_work);
+> +               cancel_delayed_work(&mphy->mac_work);
+>                 return;
+>         }
+>  out:
+> --
+> 2.45.2
+>
+>
