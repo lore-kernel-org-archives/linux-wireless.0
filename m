@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87BDB1D9A5F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D7C1E5B9E;
 	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766190157; cv=none; b=WINM5FvYcjDU3vEnSCNsUPzftaTtoaI8lnU5zhbHcaitmTxjrZyhzouPUYe+gkmJZCXwnqfiG2wlK7QCN0vP0gXHzuNhf5wFDkGRDIqQ2eRFp42TGnobxIPs9zv3fthaoYWpiKMTEangn2JH8F84Sb+Xi9QtNQNQyxb23Xyo8mo=
+	t=1766190157; cv=none; b=IeXdvzNHLVYgF+pjK8szh13w6gFnFkwQ1HNLIITe4NVsNs6Ks9kDTuV3IMImqQHBZtW3sK28gRG6iKz8vllRMnfz19MrqYvOsiDLlWBMT0ma6nP2SHAUUb74DV1ZqlqK30z+vuO75Lo1Mx45T4W+XNkLwgeHyL46ZqbPbSkKOg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766190157; c=relaxed/simple;
-	bh=rlWIfYfoikdm2g+ig1MLpFeBTAhiwN72iY5iv6kr7aY=;
+	bh=y8uwgejRLp1483O4zbHXfsEQl2sOPvQtaBL89zBQ1kE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ded1lIV8TFsstZ/M4sIGkEhBJ6tO2L+SWMkT3Q5EcLsP7tsMQWWk9wMNhRrFMpSmToxXeHzaxbqJE1mQ+DXNp/TcwwssHDmh3GECZN5/G4bBflL8TpRj+7JKOs8NZALZ1uyf4MJgov6fABi9cZc4xcnM+Gpj+k3WGIxSooqUBrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e+JEHBqw; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=drMtLZbH0GZ+3WX3O2PH4xFKAWKl7qfNjIinu0v4Wp3y1JnaGafFsG+7Ndc8Bs+5+VDVRuc31SVJU4etjbtqkn9g0qKhTnt4fj8RlW0SvKsViaaJtyFYmhQwgUsfWN7pv/2Kv343UZtSvslvgpgKQ5ghHC80t/lWjVOmU2gRM4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mnXWV5mR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e+JEHBqw"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2AB26C4AF0F;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mnXWV5mR"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 592A3C2BCF4;
 	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1766190157;
-	bh=rlWIfYfoikdm2g+ig1MLpFeBTAhiwN72iY5iv6kr7aY=;
+	bh=y8uwgejRLp1483O4zbHXfsEQl2sOPvQtaBL89zBQ1kE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=e+JEHBqw+6wq5N/ZpR3D1POXI/9/I4ODlmM/3Sy/pwXBHMlu6wIBMrdfJcRL4dP7b
-	 7q3dBmSBVp+13Qkdg5+nd5AyVRgPRrjfWjBgahDC8kjUlGfflrmb7PM8AVOCiI86ue
-	 nCtZSJXh/WY/LTfyHb7Q4IKH1TY9SEPnCcWRGTCdcyF0JrhpqZe4bZxTD0uQGODEAP
-	 EZ/Y/qr9jlUbLmH5+hXP4gkNwQmMZmqr+eolMjcGeDpJXrD91z4+PQN3KnJaGK7VJa
-	 pwmLgR3AYjGtPMAmtHSMWQCk4jcGAjzZaItQrbH08fiOqGvMOpEc2+WoBpUODa+pfZ
-	 Ji7sgg3TXwKvw==
+	b=mnXWV5mRKRRUfDdw9x2ga5stBtxvwMTOuDfi/jmKjJdRi8IljK575suHkEKY1OuXN
+	 h0y1f21+ieFohGoFZrSVZB48CoN0BYOaHQQnn5S2elXX7p8GV52sbmR5g7R9b5NOqS
+	 ikwne+5/5E6LMO6S8Jq6yabsLTdz9QiGaT47crvJokSpfTOtJpBTkgkVZiv7RBWahl
+	 JjtJXNKt0wcz1LFU1Tc2Rnq+H0hSF2BX7oETJfHG+gYhfkB7PoSuKmEm9h7BFxmRuK
+	 mrnhYktOXUSiOsLl3BUZNN8zIgykWNKUkf6KNjARVKZ8QlVKILgQkif9n1IYmsCeMz
+	 ymylJ00jHrrAQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1C7E668AE;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 515B0E668A7;
 	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 From: =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne_via_B4_Relay?= <devnull+jerome.debretagne.gmail.com@kernel.org>
-Date: Sat, 20 Dec 2025 01:22:01 +0100
-Subject: [PATCH v5 4/7] firmware: qcom: scm: allow QSEECOM on Surface Pro
- 11
+Date: Sat, 20 Dec 2025 01:22:04 +0100
+Subject: [PATCH v5 7/7] wifi: ath12k: Add support for disabling rfkill via
+ devicetree
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20251220-surface-sp11-for-next-v5-4-16065bef8ef3@gmail.com>
+Message-Id: <20251220-surface-sp11-for-next-v5-7-16065bef8ef3@gmail.com>
 References: <20251220-surface-sp11-for-next-v5-0-16065bef8ef3@gmail.com>
 In-Reply-To: <20251220-surface-sp11-for-next-v5-0-16065bef8ef3@gmail.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -58,14 +58,13 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
  platform-driver-x86@vger.kernel.org, ath12k@lists.infradead.org, 
  Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
  Dale Whinham <daleyo@gmail.com>, 
- =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+ =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1766190155; l=997;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1766190155; l=1262;
  i=jerome.debretagne@gmail.com; s=20251217; h=from:subject:message-id;
- bh=CNbXWtuQ7AggDKzwaLKJE5TiiiPe100NQahuSnOowsU=;
- b=ekWgYqaKP7EjU9lwdtb3rgAIV8UQxvoJ2yREJfvy1Co58tmpBXF5fW0VgGbUebmHht3Fe0osN
- bunbE/BezRVD2bxia+JaDQty15ro+fSWlBPwikL5erL6UusNpJutg1L
+ bh=o+2ygO1zvLsftpDj/dtrdmFTDVzHA+1Wm5SG6mbwRZw=;
+ b=puDEyDrH298j7z4liMYX0YwZHegBdP1BrcSrveoBtN/lv9OuK3kUHcpM/2uU2GVvU40DhCqw6
+ 1GNpYHPLvfhAJCNhfYU+0CILuvsG9oupHPmzIdL8kdaKQqgxheKFzbq
 X-Developer-Key: i=jerome.debretagne@gmail.com; a=ed25519;
  pk=DcPD9n3oDMsPkt+12tU96swmGb5H86cxt+yiEVcUEGk=
 X-Endpoint-Received: by B4 Relay for jerome.debretagne@gmail.com/20251217
@@ -75,27 +74,36 @@ Reply-To: jerome.debretagne@gmail.com
 
 From: Dale Whinham <daleyo@gmail.com>
 
-Enables access to EFI variables on this machine.
+Some devices (e.g. Microsoft Surface Pro 11) indicate that the rfkill
+feature should be disabled by means of an ACPI bitflag.
+
+If ACPI is not being used (i.e. booting using a devicetree) then this
+property will not be read and therefore rfkill may be enabled and
+the ath12k will be hard-blocked with no way to disable it.
+
+Add a devicetree property that allows to disable the rfkill feature.
 
 Signed-off-by: Dale Whinham <daleyo@gmail.com>
+Tested-by: Jérôme de Bretagne <jerome.debretagne@gmail.com>
 Signed-off-by: Jérôme de Bretagne <jerome.debretagne@gmail.com>
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 ---
- drivers/firmware/qcom/qcom_scm.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath12k/core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
-index 1a6f85e463e06a12814614cea20719c90a371b69..3dabb04094f91811a430e84998d3c6c759b5c747 100644
---- a/drivers/firmware/qcom/qcom_scm.c
-+++ b/drivers/firmware/qcom/qcom_scm.c
-@@ -2007,6 +2007,7 @@ static const struct of_device_id qcom_scm_qseecom_allowlist[] __maybe_unused = {
- 	{ .compatible = "lenovo,yoga-slim7x" },
- 	{ .compatible = "microsoft,arcata", },
- 	{ .compatible = "microsoft,blackrock" },
-+	{ .compatible = "microsoft,denali", },
- 	{ .compatible = "microsoft,romulus13", },
- 	{ .compatible = "microsoft,romulus15", },
- 	{ .compatible = "qcom,hamoa-iot-evk" },
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index cc352eef1939937ce902bee2fbd9737ca3ab5993..e10073bb975cfd2e9ee418edcc49d0d51cf93de1 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -77,6 +77,9 @@ static int ath12k_core_rfkill_config(struct ath12k_base *ab)
+ 	if (ath12k_acpi_get_disable_rfkill(ab))
+ 		return 0;
+ 
++	if (of_property_read_bool(ab->dev->of_node, "disable-rfkill"))
++		return 0;
++
+ 	for (i = 0; i < ab->num_radios; i++) {
+ 		ar = ab->pdevs[i].ar;
+ 
 
 -- 
 2.47.3
