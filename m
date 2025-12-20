@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712721BD9D0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 878DC1D798E;
 	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766190157; cv=none; b=JEU6ZbG00oTQGOKrfwFID03cMPCd/Lpc66V+fZri0isqOeivbdsRdZvhE5xJ9PnVoFLpOTCwnfi+s4VACebR4c/xLIadjvYwuwv0ZmO59GGfoIYRBof1wSvmVS8dTBhS1R/cpndIOkxn3gO3NPDryxAvqKv5CIXAYghYckEoDEc=
+	t=1766190157; cv=none; b=UlwWQk+htEW2wa2yVozvh+dkdbi39IwL+ltu+U1DvUZUEzJFx12oYDCxaTXDDtNUYhajmTcGciEfpW5DF2R8guvC5gQtWk8pYc0d5hDegi99Kswn7+0ZW1zYq2/5gMdZX4LNc8ek7YZawRuwlC1fHOst9MFoRplOY1THUGd4wD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766190157; c=relaxed/simple;
-	bh=3gL46iKOHV7A9GULm4RsQF6Ghf1ihX4Z2cVWKSJEzAg=;
+	bh=T/d6LTvfqaL3MG852gJg4nPx0ZgexNqll6MZ+I8JFhc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pT2ynH4CYA+Jl12Gp2A+PgfMnsHBqZEgAFyIDyjBx6T0f2+7Lp9lg0W6LoXukO0IwZXYrRhJ5VGOcLG1EHByW1g8Mz9WxkylxLCjuL8GLM+PgDm9fRUjje+M8eT4Spj33u/NBB9/Gm4WkO9KreAgIh9rk5kPFA+Xwv2jFYis9Rs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BpLXOGja; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=n2SlE1c/1O84PSKRoQ3u+qFn7ntNrII2HsprfhmEwj9EYAoZSd3lAkuBVRvYG1s9P3FpDXHrokGBy9tVGTH7RndzJIUuzT++zVIy4fXaUr1z3KugIzxVvcOLXc8eZSPak9Ei2JtBKVpb3ki7GNk0p8WqoDC/SPDxdnNRLSzZOU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WDJjGDqX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpLXOGja"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 10D35C116C6;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WDJjGDqX"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3537CC2BCB6;
 	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1766190157;
-	bh=3gL46iKOHV7A9GULm4RsQF6Ghf1ihX4Z2cVWKSJEzAg=;
+	bh=T/d6LTvfqaL3MG852gJg4nPx0ZgexNqll6MZ+I8JFhc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=BpLXOGjaF44VnGOvcfCiiM+paSgHyQFDmaxrbdiVQlZYcVrMzR9C908oGSEMm3v5o
-	 0c2F8cMfAQCgoMN0LPkEbmcTdaNJukRbFnzZjgIOSw53yOaSYsA/t8142SV0EwwrCu
-	 Cj5beMrAJye6yBncMNsl5HOFWdXGptm2IfsD/9DdniN2VAMbZojzrk93iXgYnLjaKX
-	 06bEhB5WKbSDgn11Eg8kllVlsxyc4AXhV74mSTIpJZaI+oRaoVKiPknVF5racBT+G1
-	 WHlYfoQOMGEw3wXUsghoRKz3m+2c0+fBYm3Y8yO5Y2XFDX1NzMsVjLy/amh3ObupUo
-	 LKXqBLl5fvdJw==
+	b=WDJjGDqXI3JMD4bEdqtsU2CcRYn3YSurfa2k3BHsawkR7Y6r3RuCkQ8P7wJSaDGPs
+	 NurD+OrEReqRuVsA3QqP520yZYK0PgfPJijfVGdouYhZfzIdpqCg+Huldmc8DHjAtF
+	 AjD8/2Fa0EWEXVRBXx7B79+i0vxaQetFw8N81JxNG7/pvo2gHGbQHZ6ucuaedE0B5D
+	 kVHTra28tPFDFGEIl4K2x+iqdYztMsuG8I7TVzvW7n+LY5VFlWVsXejC7PXNY8p/Tu
+	 8lEIk9cfW2S12knS//7W/4qSit92bptZnMl+HdiP+Ft8tkM0Uu2nB0uxLbAUnOOd/Y
+	 OXK1LJ9uxRDsA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1749E668AA;
-	Sat, 20 Dec 2025 00:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC1CE668AA;
+	Sat, 20 Dec 2025 00:22:37 +0000 (UTC)
 From: =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne_via_B4_Relay?= <devnull+jerome.debretagne.gmail.com@kernel.org>
-Date: Sat, 20 Dec 2025 01:21:59 +0100
-Subject: [PATCH v5 2/7] dt-bindings: wireless: ieee80211: Add
- disable-rfkill property
+Date: Sat, 20 Dec 2025 01:22:02 +0100
+Subject: [PATCH v5 5/7] platform/surface: aggregator_registry: Add Surface
+ Pro 11 (QCOM)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20251220-surface-sp11-for-next-v5-2-16065bef8ef3@gmail.com>
+Message-Id: <20251220-surface-sp11-for-next-v5-5-16065bef8ef3@gmail.com>
 References: <20251220-surface-sp11-for-next-v5-0-16065bef8ef3@gmail.com>
 In-Reply-To: <20251220-surface-sp11-for-next-v5-0-16065bef8ef3@gmail.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -58,13 +58,14 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
  platform-driver-x86@vger.kernel.org, ath12k@lists.infradead.org, 
  Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
  Dale Whinham <daleyo@gmail.com>, 
- =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>
+ =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1766190155; l=1434;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1766190155; l=2027;
  i=jerome.debretagne@gmail.com; s=20251217; h=from:subject:message-id;
- bh=UsivquG+u5XDfL84mTTPzxSnboH8akBZuwYgTwNKJ2E=;
- b=cBW+jT4ifdDwOyelBETbQYtlzG12/o3A9UFELZzrjKCYjeemAre13mAG6Pj1Y/xsqzZYiIdsf
- 3Ps6S09CFvQA27d1Lgu75ZY4EPm/EFnvu3E5h6dz90t2mvLjZMntpE/
+ bh=T3FVcCFZemvYy2B2tfWs5X5U9WEV1cgBV3QQZBYuEGE=;
+ b=31z8E+Ak554bQ/lIRZ1B7od2kLob9cUWsO9cD1flJK42r0IlkOyf2x6MaM6tAaB2kDYtFm1qz
+ RuK1ZhfbEB7BxjrpKkfPc9rG3dd/BPZqlnMYHZe1m+ibrUPeobi87lu
 X-Developer-Key: i=jerome.debretagne@gmail.com; a=ed25519;
  pk=DcPD9n3oDMsPkt+12tU96swmGb5H86cxt+yiEVcUEGk=
 X-Endpoint-Received: by B4 Relay for jerome.debretagne@gmail.com/20251217
@@ -72,41 +73,54 @@ X-Endpoint-Received: by B4 Relay for jerome.debretagne@gmail.com/20251217
 X-Original-From: =?utf-8?q?J=C3=A9r=C3=B4me_de_Bretagne?= <jerome.debretagne@gmail.com>
 Reply-To: jerome.debretagne@gmail.com
 
-From: Jérôme de Bretagne <jerome.debretagne@gmail.com>
+From: Dale Whinham <daleyo@gmail.com>
 
-For some devices, Wi-Fi is entirely hard blocked by default making
-the Wi-Fi radio unusable, except if rfkill is disabled as expected
-on those models.
+This enables support for the Qualcomm-based Surface Pro 11.
 
-Commit c6a7c0b09d5f ("wifi: ath12k: Add Support for enabling or
-disabling specific features based on ACPI bitflag") added a way to
-support features set via ACPI, including the DISABLE_RFKILL bit.
-
-Add a disable-rfkill property to expose the DISABLE_RFKILL bit
-equivalent for devices described by a Devicetree instead of ACPI.
-
+Signed-off-by: Dale Whinham <daleyo@gmail.com>
 Signed-off-by: Jérôme de Bretagne <jerome.debretagne@gmail.com>
+Reviewed-by: Maximilian Luz <luzmaximilian@gmail.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 ---
- Documentation/devicetree/bindings/net/wireless/ieee80211.yaml | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/platform/surface/surface_aggregator_registry.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml b/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
-index d89f7a3f88a71d45d6f4ab2ae909eae09cbcaf9a..c10a4675640be947cd0b5eaec2c7ff367fd93945 100644
---- a/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.yaml
-@@ -29,6 +29,12 @@ properties:
-       different 5 GHz subbands. Using them incorrectly could not work or
-       decrease performance noticeably
+diff --git a/drivers/platform/surface/surface_aggregator_registry.c b/drivers/platform/surface/surface_aggregator_registry.c
+index 78ac3a8fbb736384f7e50f1888a71297a892a7c3..0599d5adf02e61583cf3e1fc11000070f51f7be3 100644
+--- a/drivers/platform/surface/surface_aggregator_registry.c
++++ b/drivers/platform/surface/surface_aggregator_registry.c
+@@ -406,6 +406,22 @@ static const struct software_node *ssam_node_group_sp9_5g[] = {
+ 	NULL,
+ };
  
-+  disable-rfkill:
-+    type: boolean
-+    description:
-+      Disable rfkill for some devices on which Wi-Fi would be entirely hard
-+      blocked by default otherwise
++/* Devices for Surface Pro 11 (ARM/QCOM) */
++static const struct software_node *ssam_node_group_sp11[] = {
++	&ssam_node_root,
++	&ssam_node_hub_kip,
++	&ssam_node_bat_ac,
++	&ssam_node_bat_main,
++	&ssam_node_tmp_sensors,
++	&ssam_node_hid_kip_keyboard,
++	&ssam_node_hid_kip_penstash,
++	&ssam_node_hid_kip_touchpad,
++	&ssam_node_hid_kip_fwupd,
++	&ssam_node_hid_sam_sensors,
++	&ssam_node_kip_tablet_switch,
++	NULL,
++};
 +
- additionalProperties: true
+ /* -- SSAM platform/meta-hub driver. ---------------------------------------- */
  
- examples:
+ static const struct acpi_device_id ssam_platform_hub_acpi_match[] = {
+@@ -482,6 +498,8 @@ MODULE_DEVICE_TABLE(acpi, ssam_platform_hub_acpi_match);
+ static const struct of_device_id ssam_platform_hub_of_match[] __maybe_unused = {
+ 	/* Surface Pro 9 5G (ARM/QCOM) */
+ 	{ .compatible = "microsoft,arcata", (void *)ssam_node_group_sp9_5g },
++	/* Surface Pro 11 (ARM/QCOM) */
++	{ .compatible = "microsoft,denali", (void *)ssam_node_group_sp11 },
+ 	/* Surface Laptop 7 */
+ 	{ .compatible = "microsoft,romulus13", (void *)ssam_node_group_sl7 },
+ 	{ .compatible = "microsoft,romulus15", (void *)ssam_node_group_sl7 },
 
 -- 
 2.47.3
