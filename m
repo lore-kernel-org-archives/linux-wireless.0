@@ -1,131 +1,91 @@
-Received: from mail.lysator.liu.se (mail.lysator.liu.se [130.236.254.3])
+Received: from dilbert.mork.no (dilbert.mork.no [65.108.154.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A3521CC79
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2025 16:04:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=130.236.254.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CFB620FAAB;
+	Sun, 28 Dec 2025 16:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.108.154.246
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766937866; cv=none; b=chsFSNoM3988urXLV0szMwKTltIcHdZpsGasnNdyY7s1HxIqNLB5Pv3ais7aFXxZNBxU7iRPkVZPXIQLBXsuHEJuOsEP87YS5Me0shECQaAX/MxPliwhOmfchFF/IuXVB5Kvg2bWQNnX0YsXGBKM6hRkVZqXdGQCB7Kv2No3pP4=
+	t=1766938341; cv=none; b=bzr8LPlznNa+ZT51UjdrtCrC6+hG03eK5y+aEpH9NHo7dxUVPWvwHrZ1N2xLqUCGCgAycRUysEsdOEekjN8moM2//dqGAymXbOZcKcYGf/K6w+UjO+3aDlgRODn91I982bw76SWYLmSm3P8qtgXixMTlLMG7gZ34WWZrx5Oq2DA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766937866; c=relaxed/simple;
-	bh=WdKXvbrW7989w8Ls4d6QL4BI3AXUZfJgkIGw0BGWBYw=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=W89I4g6vihGbstK47ypfwJqT4AxXPd6ZKP6rZLrot7WopwA6w/n8ei47AHZrWYV2PUNZGFlw1kS5olGEDsFbh5oKSaXwKj/bRGsHlpzO5pP2yK9YqyBAhTdXc2FUeowmlThRa2z2FgrhhTJHzQZZY52cGZydQEwza2sQbsYMjMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se; spf=pass smtp.mailfrom=lysator.liu.se; arc=none smtp.client-ip=130.236.254.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lysator.liu.se
-Received: from mail.lysator.liu.se (localhost [127.0.0.1])
-	by mail.lysator.liu.se (Postfix) with ESMTP id B4701B97E
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2025 16:54:28 +0100 (CET)
-Received: by mail.lysator.liu.se (Postfix, from userid 1004)
-	id A82A4B97D; Sun, 28 Dec 2025 16:54:28 +0100 (CET)
-X-Spam-Level: 
-X-Spam-Score: -1.0
-Received: from sara (h-62-63-215-216.A163.priv.bahnhof.se [62.63.215.216])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by mail.lysator.liu.se (Postfix) with ESMTPSA id 3D09ABAD2
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2025 16:54:26 +0100 (CET)
-Date: Sun, 28 Dec 2025 16:54:25 +0100 (CET)
-From: =?UTF-8?Q?Peter_=C3=85strand?= <astrand@lysator.liu.se>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH] wifi: wlcore: allocated packets tracking mechanism may
- get broken
-Message-ID: <476e02ce-4592-b08a-fcc9-c1b151500bb9@lysator.liu.se>
+	s=arc-20240116; t=1766938341; c=relaxed/simple;
+	bh=uQvlVeJZ34pERZt79+zBpNmBXv/xfToAcBhszokWimY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Vbk8L6AF+/7In9Oi8NMXZjQLAfGmjFwUp8IgTNVVQXK408QP28tkOSbKraidTTI49Hy6zOx6s1UBuIsLNvmHVbj2KTtAy6OvJTnSpzLwWc2yHY0QPkJVdmUdL1hA94RzEIe2gHGYas9DS9+1fktk05ANxXoHBfIjpS8sG2gkFlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mork.no; spf=pass smtp.mailfrom=miraculix.mork.no; dkim=pass (1024-bit key) header.d=mork.no header.i=@mork.no header.b=gCF3cvYL; arc=none smtp.client-ip=65.108.154.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mork.no
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=miraculix.mork.no
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mork.no header.i=@mork.no header.b="gCF3cvYL"
+Authentication-Results: dilbert.mork.no;
+	dkim=pass (1024-bit key; secure) header.d=mork.no header.i=@mork.no header.a=rsa-sha256 header.s=b header.b=gCF3cvYL;
+	dkim-atps=neutral
+Received: from canardo.dyn.mork.no ([IPv6:2a01:799:10e2:d900:0:0:0:1])
+	(authenticated bits=0)
+	by dilbert.mork.no (8.18.1/8.18.1) with ESMTPSA id 5BSGBMPV1236900
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=OK);
+	Sun, 28 Dec 2025 16:11:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mork.no; s=b;
+	t=1766938282; bh=zklBFMW/AlGQ/7gdXMtLcdA06o9WVsBmCI5Z77APoaM=;
+	h=From:To:Cc:Subject:Date:Message-ID:From;
+	b=gCF3cvYLlZfaTpwgc6ugGCBR9PBLxCofl1X3NDOpJ77E+Sa9rX9cnkjpAxI00T+a2
+	 YYs3/ztt+rsIZI69L5ijJU9BQswfjLkImc2ZrvkLNwnkrrDFlqnRjuA1Lc+IfTZIjf
+	 O6nwyX/eir4iIoHXVCN4NKr9dML62/UwQ8fsj5u4=
+Received: from miraculix.mork.no ([IPv6:2a01:799:10e2:d90a:6f50:7559:681d:630c])
+	(authenticated bits=0)
+	by canardo.dyn.mork.no (8.18.1/8.18.1) with ESMTPSA id 5BSGBMRh2208669
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=OK);
+	Sun, 28 Dec 2025 17:11:22 +0100
+Received: (nullmailer pid 1424925 invoked by uid 1000);
+	Sun, 28 Dec 2025 16:11:22 -0000
+From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Chukun Pan <amadeus@jmu.edu.cn>, Lorenzo Bianconi <lorenzo@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+Subject: [PATCH] mt7996: trust eeprom data from nvmem for now
+Date: Sun, 28 Dec 2025 17:11:06 +0100
+Message-ID: <20251228161106.1424861-1-bjorn@mork.no>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-1130933901-1766936024=:180263"
-Content-ID: <a0fda3d8-1e2a-70ae-2121-87da0d9bd1b4@lysator.liu.se>
-X-Virus-Scanned: ClamAV using ClamSMTP
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 1.4.3 at canardo.mork.no
+X-Virus-Status: Clean
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+The iFEM/eFEM classification does not currently support some of the ADIE
+combinations in use by vendors. Trust nvmem provided data instead of
+falling back to wrong defaults.
 
---8323329-1130933901-1766936024=:180263
-Content-Type: text/plain; CHARSET=UTF-8
-Content-Transfer-Encoding: 8BIT
-Content-ID: <a6f5863d-825f-1735-a874-344abc7ea85c@lysator.liu.se>
-
-
-According to 
-https://git.ti.com/cgit/wilink8-wlan/build-utilites/commit/?h=r8.9&id=a2ee50aa5190ed3b334373d6cd09b1bff56ffcf7 
-the patch below should be used with firmware 8.9.1.0.2 . Does it make 
-sense to include this in upstream kernel? I cannot really say if it 
-improves stability or not: I don't have the possibility to run WFA test 
-5.2.27, and I am still seing issues with firmware 8.9.1.0.2 and 6.6 kernel 
-(with all 80211 fixes). Testing of this patch with older wl18xx firmware 
-is ongoing. 
-
-
-From ac0695f9bf6810ae91cd0e441199102f0c16e507 Mon Sep 17 00:00:00 2001
-From: Itzhak <shlomii@ti.com>
-Date: Thu, 28 Dec 2023 08:47:58 +0200
-Subject: [PATCH 25/27] allocated packets tracking mechanism may get broken
-
- It is observed that at some scenarios, the best effort queue
- that should always show positive or 0 count, may show negative. This cause
- the best effort queue to look full to the network stack and thus causing the
- network stack to push less packets than to other QoS queues. It would cause
- specific WFA tests like 5.2.27 to fail.
-
-Signed-off-by: Itzhak <shlomii@ti.com>
+Signed-off-by: Bjørn Mork <bjorn@mork.no>
 ---
- drivers/net/wireless/ti/wlcore/tx.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ mt7996/eeprom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index b6e19c2d66b0..02727bb9bc50 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -27,6 +27,19 @@
-  */
- #include "../wl12xx/reg.h"
+diff --git a/mt7996/eeprom.c b/mt7996/eeprom.c
+index 8f60772913b4..3e7670a60fea 100644
+--- a/mt7996/eeprom.c
++++ b/mt7996/eeprom.c
+@@ -172,7 +172,7 @@ static int mt7996_eeprom_load(struct mt7996_dev *dev)
  
-+/* mapping tid to AC queue
-+ */
-+static const int ieee802_tid_to_ac[8] = {
-+	CONF_TX_AC_BE,
-+	CONF_TX_AC_BK,
-+	CONF_TX_AC_BK,
-+	CONF_TX_AC_BE,
-+	CONF_TX_AC_VI,
-+	CONF_TX_AC_VI,
-+	CONF_TX_AC_VO,
-+	CONF_TX_AC_VO
-+};
-+
- static int wl1271_set_default_wep_key(struct wl1271 *wl,
- 				      struct wl12xx_vif *wlvif, u8 id)
- {
-@@ -287,6 +300,18 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	/* queue */
- 	ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 	desc->tid = skb->priority;
-+	
-+	/* check that tid is aligned with ac, if not, align with ac */
-+	if ( (desc->tid >= 0) && (desc->tid <= 7) && (ieee802_tid_to_ac[desc->tid] != ac) )
-+	{
-+		/* decrement the wrong allocated ac and increment according to tid */
-+		wl->tx_allocated_pkts[ac]--;
-+		wl->tx_allocated_pkts[ieee802_tid_to_ac[desc->tid]]++;
-+		
-+		wl1271_debug(DEBUG_TX,
-+			     "tx_fill_hdr: tid: %d. ac: %d",
-+			     desc->tid, ac);
-+	}
+ 	if (ret && !mt7996_check_eeprom(dev)) {
+ 		dev->flash_mode = true;
+-		goto out;
++		return 0;
+ 	}
  
- 	if (is_dummy) {
- 		/*
+ 	if (!dev->flash_mode) {
 -- 
-2.25.0.windows.1
+2.47.3
 
-
-
-
-Br,
-Peter Åstrand
---8323329-1130933901-1766936024=:180263--
