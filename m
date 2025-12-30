@@ -1,634 +1,545 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic307-1.consmr.mail.bf2.yahoo.com (sonic307-1.consmr.mail.bf2.yahoo.com [74.6.134.40])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4597F304BC6
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2025 08:25:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7964D3054D8
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2025 08:32:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.134.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767083146; cv=none; b=NcUTR175XR1QbsWUMCBIgghuW9UlpPseZclW45T0VMGUfRLNTRW/Dcbg0Q+vaRqnst22XoDQXNKVmdmfUBLCy33QyimDJh7U0DGIUafvW2EGf+Juf8jVwcvhhzJUSWjzd1zEsJAdJXZ7g+XDrMrLr4VIY9XQsQffPA+bmr+sR5M=
+	t=1767083578; cv=none; b=ZNrqbDAu7OD0MrbPDoJMEuH0+JYByolc9wVw/iAU4aBrwgq9CFXZolNOl5jDL05LnToVu1WfgkWlP8Mv7th0nl+kfZ72KLb+5cm+FHy5eT5ZwvB1ESkdhw2NoiqLznZOWopug9cqvSJtLhP9uCjv6Vp6nfnLoF+aLjyR2OPtyBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767083146; c=relaxed/simple;
-	bh=k+hUMH54v5VebFDNSAR/791fxo+0OBK+2ENsKw3DPcI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=m+M8kW15DIkda/N66F2FIG6D+F2p/3mAJFxeyDQzuQ0bQDO52JKsTKH8eC8W7xmSUocFPeFWTgXVlc+TEsteo+IPA8wdFFZRuSAUSYaI3f8dDTbPqTN3oxOQtvNoiEJ70Jp6Bnyu+7A/Sik49tu9VSEppAJxvx8AvjUBVh3vwf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bPTDtIs/; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cbLTYAf3; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1767083578; c=relaxed/simple;
+	bh=UZoziehOBYBIDO87WpuLbqvjd8/LmHpfO4VLi6ecOiA=;
+	h=Date:From:To:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=PNIxvTfmRnqIkr4NXt8Xw9Ajn0+GpPeCyCKbGgvHg04jrXV12wMplaA5TbJrREzUY+Yd3ECQw6B6sNU0sP0dyF64/STnpoKYaVpwWYmm19L4HHGL8aCe/IMwnu5veDdb+9mxrEKVXe4suLbKSFp4tfkqdTwhV5b0TJyRnS8xXGo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=aol.com; spf=pass smtp.mailfrom=aol.com; dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b=KBimFISA; arc=none smtp.client-ip=74.6.134.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=aol.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aol.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bPTDtIs/";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cbLTYAf3"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BU3hi1G2546976
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2025 08:25:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=a+ef1cvJDfw
-	+aIfjk0PCBncm4cc0cR/WtSOgB/y98fo=; b=bPTDtIs/i+NNa5S6tP6ql67wXG4
-	S1Pk6rusNGpfIYb+NR3u4g9b7qsEki35cpbkK9dRMtTTaMDCFftJ2+3Lv76unZmZ
-	afQ24dPEeovKzr3q3+qOo3AbZLGjZqFt9vz0r1d58xbI/TvzJukfMG/b+GGOaAHl
-	ESn/ExJRY8NI6NrXBhBjeERDT+r8YvrMEbtB5yGUnzF1gAx00LSjEZdbRYQ1FVRv
-	NHizvnN7ulDUD6t6kbzi6pky3VEmWeIU8L2r7yLA+B8189liA8hAy48vF8PIoX/v
-	psZmRgYVdaaVgAuS7msF5DzjaOd7bsTnsJgY0LE7GxD6zEwggd4+kBmTiog==
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bc7398k6y-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2025 08:25:43 +0000 (GMT)
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-bce224720d8so18607341a12.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2025 00:25:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1767083143; x=1767687943; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=a+ef1cvJDfw+aIfjk0PCBncm4cc0cR/WtSOgB/y98fo=;
-        b=cbLTYAf326CtRWirwiJdHBpgbMLUL2Lv82ytmI+BRwsJxDETExiTloeLx3nyLGKowe
-         l9vJrXWf56C2voqXTLJFuHO/A7vc5SUSHGmM3qJdymFm128ylxB6+o6PxOiagp/w+SD3
-         zXWgt98Dzf1MFUn6SsyvFsZ7Jxw8DfwoAEEMyjkMuv0MfesA/+3/XUrxC811pbLERmhY
-         1gJXi7EeLw679DHuXWAB4N1pPjbWBiidE0BqK/98+q87yLiS44ZobPv4Iyk6aJWnbjw4
-         sIssLxjNWtRvylukc9XxV/pdcCpF5hV1YTzPp7ENM88LzQ3m/tVgPJ+w684PbmNPRfDG
-         c9MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767083143; x=1767687943;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=a+ef1cvJDfw+aIfjk0PCBncm4cc0cR/WtSOgB/y98fo=;
-        b=icjamUufHl22OniFprTfdG9ukq77lestAyVQg7zEYdQhRsGevD5dYLOI9r4G9V5aaO
-         tUiB+A03emkuR1qsdFC87cYF3ynmwIcOzXnRVnJM/4DRpV0Jdiv9BkrIWMWoINaRf5ix
-         g/Zek0mQCuXO8lGDPMrBNDMyH37EaM6o8cMypMRTLWQPUPxj98eIV3Rt+8rnAGSCazkt
-         83PGYHGgMKfuJF9QnLimMISm7J77hZTYBsylPnS5Dgs5zUSc0r9FRNLE/iEn08vj7j4Q
-         nxBAgUzaHvbL0jpC2P+7Q2IDrw5ROvloiTmxC/cJoX75Pm1Z+3FhTeCAC8IojBbUgZqs
-         NpZQ==
-X-Gm-Message-State: AOJu0Yzgs8umL9kvsEE/N+ZZ7TXwz5SVeCoF4aSt5DquXnzSLQw2kDiA
-	t210urHlEFjwF9+F4hdW9d6PVZZXJoMsOO/Ti2cq/+V2YgOAYElY2E9S8NYG68RHmYKcXqrRN+y
-	dT5ubiQ0fuHWO70oQgrsGuSjm9tYhr6osAVfDlXzTauGYZVuhVw930td3c2aqkZsB6pzGBg==
-X-Gm-Gg: AY/fxX4zYRkNISoNXODAAuz2pAyJvwmNQQXd1L1hLjp/alzRm7pAWMj03ATExF559/B
-	Jfm6KTrIb4s0qwuYED02zlhv6NvYpOsBdmcj6x1fKqwnXoAEVX6qz9mhpkZbHHa/mytOLNrNjwG
-	V+7IvWBj9zohY37sV8oew60Idde/f5g+BwZ9VJf/yU0xW8Q8zSKuLMpl1ufG/FNHXWe47EGcbA8
-	0IisMAXEFh4bdPxxhMpS3L+C0KAi6yG/eEoXWS6L0MN7cCdlU7ETt+p1J6bCH0VdgXgZZ2pqmSf
-	0uW9S7Y607ze82D3rjgLLiJ5mon16IMY5LlWThXrXS1QNUnvz8NmgXqT4aN597nTURxLjjq8uw7
-	SYwE5C/4I3ZT/7W2w5ki7xtyueAc4YQEZhMk=
-X-Received: by 2002:a05:7301:d89:b0:2ac:2263:dcc0 with SMTP id 5a478bee46e88-2b05ec19181mr34507243eec.19.1767083142561;
-        Tue, 30 Dec 2025 00:25:42 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGqW4B1UNtYl5z7/J0hzN1DFSOOlV81mWJv1hQNAqroMEhlZQzAkIbjPT0SJwsQvWujLmKeRw==
-X-Received: by 2002:a05:7301:d89:b0:2ac:2263:dcc0 with SMTP id 5a478bee46e88-2b05ec19181mr34507214eec.19.1767083141912;
-        Tue, 30 Dec 2025 00:25:41 -0800 (PST)
-Received: from hu-zhangq-sha.qualcomm.com ([114.94.8.21])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b05fcfc1b7sm73275620eec.0.2025.12.30.00.25.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Dec 2025 00:25:41 -0800 (PST)
-From: Qian Zhang <qian.zhang@oss.qualcomm.com>
-To: ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
-        Yu Zhang <yu.zhang@oss.qualcomm.com>,
-        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-        Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-        Qian Zhang <qian.zhang@oss.qualcomm.com>
-Subject: [PATCH ath-next v5 6/6] wifi: ath11k: Register handler for CFR capture event
-Date: Tue, 30 Dec 2025 13:55:20 +0530
-Message-Id: <20251230082520.3401007-7-qian.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251230082520.3401007-1-qian.zhang@oss.qualcomm.com>
-References: <20251230082520.3401007-1-qian.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="KBimFISA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1767083575; bh=UZoziehOBYBIDO87WpuLbqvjd8/LmHpfO4VLi6ecOiA=; h=Date:From:To:In-Reply-To:References:Subject:From:Subject:Reply-To; b=KBimFISA8Bkq/p6xGTexQYzlBNNqU5K58zhM5dZ5z8TpLGnEz72O78xWZojg11a7JnKzRD/Fky19OhDXUiIBXZsq8+QwKD4WTHergStCKZgjH3Mx5DmHJO1PkwhrSw7qT0YEX4sMb/e3jMuFax3YPcwWMLEbikNxZXov53oO6sbW8GTW41tFeXgQUgsM54s8WM4+hZn+Igf4fMTziziBkP1jTnckZsZq6gwXUKpT8DySHfJFNcb/6sl+eyhjUR/Jc6M8hGxm+7SAMTD0LH1Jz7DVMGwN3/+dl6Vmj/z3BMT0rvyv5nIwZHDZb/0pu7f6sDJi6/EGcBnM1NxlMsklbg==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1767083575; bh=UkaBNZtkw8NfyA6Cw7ua7Ug3Pd5KLG1Cj8BjFF7lytj=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=Z+LqkOA3bhkX9W03GXdDbSYUFXjfYSJOe+A2N+cATsOiAoUWef8TTpjir38q8E2rbb1iFjWgizYcSGlCe7fe6qWT2YbwFJToWCV4xZuyfKq3CADaG+TEP3YUkf7u53TyUPgl+sEQZ+KABzfYy5PDNK5jO5TajkgsTsFSdEpMfu93yvB4Oq2eA1SqHWs6i0hLJ71yTTffTJvXJsQPr9wC316iasuq6aOtaxnBT7Kmvj7e4S6kW141Swf/3UEJVNcHjzzXnKeFvHwTwyTkX7rmIZoSPoSw+e71iJp7L2qape+rw8Oa7JDMaP1Ye5oAFmySDasJNZRzb+LsCdnZIbQxtQ==
+X-YMail-OSG: Ws5q_p8VM1k8LGBLumsuVXpjBBIBL2qlyOd27w_jYOgNyE6h.ONT7JI28ERE8Sh
+ bQgwy25KEWjTeOY_u0IhCSyeNM1486JaSw.DVVai3XAtHdEmdvvGNHR8VKxZoI3HrGDtpBbvAU5g
+ 3JdhO4FI9joPT2OC_Fmsfhwy7FIKCwbGb_EXFwhDygAtQTJNLF_DLh0.o_heV1IoD1vObthhnVWT
+ k0fJf3bD6c9bJc2Yft_jIkiQLXh7KaQ1PL2T07HeIdgufoX1DqjLoS.O5KFbb3sEHqQmhWvpOypA
+ ffNA5IB9j8FAw9ZIeLLJ8wmfa6PSmVPZzAGuOkAUBGm35UvtIM4_F6DH6uNwtwvqQImJ.ew9zWFw
+ gVCTllZGL3drE9can5lORduv97GkRtENfkdmcB3xnSnXWckV6HV6Tg4ePralOUgKx4FeWQZac9.R
+ vGXvTnDGabBbaZZF1Ve75rX2._uMlHTU7L9Cfbf0Jj7RH81oQx7SK5T39vayr1aZswP3DexJ_JpZ
+ 8pCKThRPWETQkqzJUYvt3YmDXj0wXH0tbBWifi40GwKXzisgu_GH0FU3XbnRIAnxINWB1RmZMmRg
+ uSlqCr0FoeezPaJzdsHQ.X.BLaDylebjMDOBQ5vqKHWg9wSgyw6kdBB7Es_0Fer0UKdORgrZp13j
+ zdX6rQUnM1NWz1DcdkY.2A.ZkG4_3VoN33RXubK4_NgQrxTK1HKfYR9D5jkkDSpAiy7Jf7VZtjnu
+ p91aOWitt1t6W22JwpteYHK9kpdYXIXgZqsBr5B_PBPN8E1LDcDmMtWzDuc.to93cy6e8xVdgE75
+ YXOpcmS0Msl5csSjqL5m4ymY6ox4wd0uqdDboJhXleWxfQYIYhy7FvKT1t4_fBP7k0NtGmbSzjoS
+ KUzgVMgg5rJgKymLKO0yEz3MFuhtMiRBd4nsUvDCKfIoL1oZy8K48fru4IyIlwthORbAg9osCr88
+ yaJstn3.Z6pg_CWta8GUilQbLHlAiriwyB1VWjSZKdtRRMfqEBFlJAwfdSWY.72t5qZ3Yq0dXRJ9
+ PW78ROVDosGcO.qCVxs7Txm.fCYDI5q2rlEVNWTsCKOSYDG2SSQTVeiqbQ3QvwucZmOs__dCXg0g
+ tAdkhhc.r8hxEUNG26Cx0v0OLdZBrhVreznTnEQvCSjTN_eVszbF2Cz.NJV.jcmthlt4tNikbJdX
+ CeJoVFofaLgif5kZ.2S5X1HNIZc38dgFwWjaepdv8cq0TgoXRpO1Sc_ER_BnO_75DSw032NmgHlP
+ BfN86ZJ_7kmqILIAXUomOar3o9r7np_ImHXbIWaFGaAokCcN4n.0027sB8pobgd6ud_QdQ8Jsxgi
+ aqVHC_r2ItNJIFBY531R9ZOPoNr_IVBs2Abep68hYvh48ow.XWdQl4z4GffC4TRoJMNCLs7I.Es4
+ oYxytGpb9ShKlmeI.Ld1dzIJ.bnrZNuhmsTNK0DR2YGVHRQtImkzbcgjDcc_0cF9xi2zuNgwcbM2
+ oiMG3OfkA7ObTBaYTn6NOeztkwghUrFz7djnaDWPyvQkx7ug0g1eFo4kHN.Q3dMovzKCpvmXW5PH
+ fVyZ16zAgEmyoNwHBBrXosiwur3MSyc7ygUS7SiJUjR1sB7ngKloSzZWrslBkd1.W9HhE1iGPHJ.
+ X2mDnmOrpw9ssqollVAr.4jquONwgmk2J.I0jR3BbOv3a8CUJoR3W6xkrofanNiq_1wYnoL0Xabh
+ i0xZLP.XGduIZBw8vfsC2dGnDPnbk5w3x5qsvMfCN8X3o3socj6b3hKhcSAySk_Alm80ShG1ZT8R
+ O9cw3.rE5.oHZ10But9MPoNBqp6qonXyn4FqV64ZUSt2RRrE_iqGR4OZb9mxcHXfMD_eniULQxKK
+ 9kXkR.sYqsKCA.Z5KsZ2BK_XZn0SP2E_.HHqsDzGrPuUf1ulx6hOx0R8QawBxdfrJ8NugwniKX8P
+ oJyGgZdvnTVkNjJKqfnegJ2fn9a8ZupqEfX.oa_nL0gM9jV2RSYWkd4Qgf8EkNW21RQ5QUFpneI3
+ jusG.4xN2TsK4fHyoucvL5dbN1yDdhRVo0XAfQHbHMGG1aM.82GvSbF8sWeihFMrsfBmH85G6st3
+ QrtLltxZaa0zjs39TFcMgBS19wKGtgyhYKhAcm2TmziODA50EUdpPJK9B84Fus1PlqbVBNSFzUqM
+ Qzsq22bp46ZpgZvRa5Pi80h09HZYD0RNlyxMN.WlgXrxOlRn3GcQxZ7VBIcAxHv26Cf4oqKnOSNS
+ Sv6wQztp1v9ecx4TYlqos2YCLMef4OSm5ZaTADu3tgw--
+X-Sonic-MF: <russomch@aol.com>
+X-Sonic-ID: a065007e-60f1-42f0-a06a-04eeb4172ad0
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic307.consmr.mail.bf2.yahoo.com with HTTP; Tue, 30 Dec 2025 08:32:55 +0000
+Date: Tue, 30 Dec 2025 07:22:03 +0000 (UTC)
+From: Chris <russomch@aol.com>
+To: "intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>, 
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	Ping-Ke Shih <pkshih@realtek.com>
+Message-ID: <1479901080.2777015.1767079323435@mail.yahoo.com>
+In-Reply-To: <32dc6dcfa8a34ded8b8d8669e91e8b47@realtek.com>
+References: <AB8446D8-708B-4971-8852-87353112E60F.ref@aol.com> <AB8446D8-708B-4971-8852-87353112E60F@aol.com> <3dcf5e11aa284daa9d3733141ccdc17f@realtek.com> <2033055489.1974567.1766503717295@mail.yahoo.com> <dae24a713d354c27ac3814c02822099d@realtek.com> <1619250700.2388478.1766812873221@mail.yahoo.com> <32dc6dcfa8a34ded8b8d8669e91e8b47@realtek.com>
+Subject: Re: [BUG] Intel B580 (e20b) HDMI Flicker & Realtek RTL8922AE 6GHz
+ missing - Mint 22.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: IX0SoXwPgj0L3dtmtTfylIo8q41In3EV
-X-Authority-Analysis: v=2.4 cv=HrV72kTS c=1 sm=1 tr=0 ts=69538c87 cx=c_pps
- a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=Uz3yg00KUFJ2y2WijEJ4bw==:17
- a=wP3pNCr1ah4A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=n3wQ3jxUt39sdYGcamUA:9
- a=_Vgx9l1VpLgwpw_dHYaR:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjMwMDA3NSBTYWx0ZWRfX3PGHTqR6AzuT
- YQ0RoUZBuILRkBjSwKG8WN8RciGIF+WlzIjmoS0+nGKIAKZehLfArStFN441jv+W89mwJgKa19d
- 1mdoKNqzPzjt61zuiE4bIkswLn8nMvyEoCx+ITAxyO2BdRdcj7BQBe7jBjbw1aUtN8uyKx2Me7y
- ZuyR1tmWfty7IHU+QX2VbeK+hBbzMYAfEg/T8DaL5LTxA5i7gK6vHVxDudFHb0s+/GNxoivkcC+
- oZ+1f8j+H/BwvqTI8+QWYMoonIAp1Hn6ZvAAPpL1P2PQIRqAion5GrwmmfNlPVSJb62OA955k6c
- uyzieCc9XFViehD1aXTCrYXhuAwUSHI56x7y7tsmHJAstObZBXAS2wuL7qndku70mnan3w9YXlj
- 0FEkAVHg1c4V6M2J2S3swbUgmdMsnhzBdwFTiiI0S1ZP3rQWkaSh01p5akuUF1voZJfvT0IRxRz
- hFgyMBzXgEOlVKBCNDg==
-X-Proofpoint-ORIG-GUID: IX0SoXwPgj0L3dtmtTfylIo8q41In3EV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-12-29_07,2025-12-30_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 phishscore=0 adultscore=0 suspectscore=0 clxscore=1015
- lowpriorityscore=0 malwarescore=0 priorityscore=1501 bulkscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2512300075
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: WebService/1.1.24866 AolMailNorrin
 
-From: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+On Sunday, December 28, 2025 at 07:54:35 PM EST, Ping-Ke Shih <pkshih@realt=
+ek.com> wrote:=20
 
-Firmware sends CFR meta data through the WMI event
-WMI_PEER_CFR_CAPTURE_EVENT. Parse the meta data coming from the firmware
-and invoke correlate_and_relay function to correlate the CFR meta data
-with the CFR payload coming from the other WMI event
-WMI_PDEV_DMA_RING_BUF_RELEASE_EVENT.
 
-Release the buffer to user space once correlate and relay return
-success.
 
-Tested-on: IPQ8074 hw2.0 PCI IPQ8074 WLAN.HK.2.5.0.1-00991-QCAHKSWPL_SILICONZ-1
-Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
 
-Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
-Co-developed-by: Yu Zhang (Yuriy) <yu.zhang@oss.qualcomm.com>
-Signed-off-by: Yu Zhang (Yuriy) <yu.zhang@oss.qualcomm.com>
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Signed-off-by: Qian Zhang <qian.zhang@oss.qualcomm.com>
----
- drivers/net/wireless/ath/ath11k/cfr.c | 160 ++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/cfr.h |  70 ++++++++++-
- drivers/net/wireless/ath/ath11k/mac.c |   2 +
- drivers/net/wireless/ath/ath11k/wmi.c |  90 +++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h |  44 +++++++
- 5 files changed, 364 insertions(+), 2 deletions(-)
+Hi Chris,
 
-diff --git a/drivers/net/wireless/ath/ath11k/cfr.c b/drivers/net/wireless/ath/ath11k/cfr.c
-index ee7626bd4b1a..6568edd5d600 100644
---- a/drivers/net/wireless/ath/ath11k/cfr.c
-+++ b/drivers/net/wireless/ath/ath11k/cfr.c
-@@ -252,6 +252,160 @@ static int ath11k_cfr_process_data(struct ath11k *ar,
- 	return status;
- }
- 
-+static void ath11k_cfr_fill_hdr_info(struct ath11k *ar,
-+				     struct ath11k_csi_cfr_header *header,
-+				     struct ath11k_cfr_peer_tx_param *params)
-+{
-+	struct ath11k_cfr *cfr;
-+
-+	cfr = &ar->cfr;
-+	header->cfr_metadata_version = ATH11K_CFR_META_VERSION_4;
-+	header->cfr_data_version = ATH11K_CFR_DATA_VERSION_1;
-+	header->cfr_metadata_len = sizeof(struct cfr_metadata);
-+	header->chip_type = ar->ab->hw_rev;
-+	header->meta_data.status = FIELD_GET(WMI_CFR_PEER_CAPTURE_STATUS,
-+					     params->status);
-+	header->meta_data.capture_bw = params->bandwidth;
-+
-+	/*
-+	 * FW reports phymode will always be HE mode.
-+	 * Replace it with cached phy mode during peer assoc
-+	 */
-+	header->meta_data.phy_mode = cfr->phymode;
-+
-+	header->meta_data.prim20_chan = params->primary_20mhz_chan;
-+	header->meta_data.center_freq1 = params->band_center_freq1;
-+	header->meta_data.center_freq2 = params->band_center_freq2;
-+
-+	/*
-+	 * CFR capture is triggered by the ACK of a QoS Null frame:
-+	 * - 20 MHz: Legacy ACK
-+	 * - 40/80/160 MHz: DUP Legacy ACK
-+	 */
-+	header->meta_data.capture_mode = params->bandwidth ?
-+		ATH11K_CFR_CAPTURE_DUP_LEGACY_ACK : ATH11K_CFR_CAPTURE_LEGACY_ACK;
-+	header->meta_data.capture_type = params->capture_method;
-+	header->meta_data.num_rx_chain = ar->num_rx_chains;
-+	header->meta_data.sts_count = params->spatial_streams;
-+	header->meta_data.timestamp = params->timestamp_us;
-+	ether_addr_copy(header->meta_data.peer_addr, params->peer_mac_addr);
-+	memcpy(header->meta_data.chain_rssi, params->chain_rssi,
-+	       sizeof(params->chain_rssi));
-+	memcpy(header->meta_data.chain_phase, params->chain_phase,
-+	       sizeof(params->chain_phase));
-+	memcpy(header->meta_data.agc_gain, params->agc_gain,
-+	       sizeof(params->agc_gain));
-+}
-+
-+int ath11k_process_cfr_capture_event(struct ath11k_base *ab,
-+				     struct ath11k_cfr_peer_tx_param *params)
-+{
-+	struct ath11k_look_up_table *lut = NULL;
-+	u32 end_magic = ATH11K_CFR_END_MAGIC;
-+	struct ath11k_csi_cfr_header *header;
-+	struct ath11k_dbring_element *buff;
-+	struct ath11k_cfr *cfr;
-+	dma_addr_t buf_addr;
-+	struct ath11k *ar;
-+	u8 tx_status;
-+	int status;
-+	int i;
-+
-+	rcu_read_lock();
-+	ar = ath11k_mac_get_ar_by_vdev_id(ab, params->vdev_id);
-+	if (!ar) {
-+		rcu_read_unlock();
-+		ath11k_warn(ab, "Failed to get ar for vdev id %d\n",
-+			    params->vdev_id);
-+		return -ENOENT;
-+	}
-+
-+	cfr = &ar->cfr;
-+	rcu_read_unlock();
-+
-+	if (WMI_CFR_CAPTURE_STATUS_PEER_PS & params->status) {
-+		ath11k_warn(ab, "CFR capture failed as peer %pM is in powersave",
-+			    params->peer_mac_addr);
-+		return -EINVAL;
-+	}
-+
-+	if (!(WMI_CFR_PEER_CAPTURE_STATUS & params->status)) {
-+		ath11k_warn(ab, "CFR capture failed for the peer : %pM",
-+			    params->peer_mac_addr);
-+		cfr->tx_peer_status_cfr_fail++;
-+		return -EINVAL;
-+	}
-+
-+	tx_status = FIELD_GET(WMI_CFR_FRAME_TX_STATUS, params->status);
-+	if (tx_status != WMI_FRAME_TX_STATUS_OK) {
-+		ath11k_warn(ab, "WMI tx status %d for the peer %pM",
-+			    tx_status, params->peer_mac_addr);
-+		cfr->tx_evt_status_cfr_fail++;
-+		return -EINVAL;
-+	}
-+
-+	buf_addr = (((u64)FIELD_GET(WMI_CFR_CORRELATION_INFO2_BUF_ADDR_HIGH,
-+				    params->correlation_info_2)) << 32) |
-+		   params->correlation_info_1;
-+
-+	spin_lock_bh(&cfr->lut_lock);
-+
-+	if (!cfr->lut) {
-+		spin_unlock_bh(&cfr->lut_lock);
-+		return -EINVAL;
-+	}
-+
-+	for (i = 0; i < cfr->lut_num; i++) {
-+		struct ath11k_look_up_table *temp = &cfr->lut[i];
-+
-+		if (temp->dbr_address == buf_addr) {
-+			lut = &cfr->lut[i];
-+			break;
-+		}
-+	}
-+
-+	if (!lut) {
-+		spin_unlock_bh(&cfr->lut_lock);
-+		ath11k_warn(ab, "lut failure to process tx event\n");
-+		cfr->tx_dbr_lookup_fail++;
-+		return -EINVAL;
-+	}
-+
-+	lut->tx_ppdu_id = FIELD_GET(WMI_CFR_CORRELATION_INFO2_PPDU_ID,
-+				    params->correlation_info_2);
-+	lut->txrx_tstamp = jiffies;
-+
-+	header = &lut->header;
-+	header->start_magic_num = ATH11K_CFR_START_MAGIC;
-+	header->vendorid = VENDOR_QCA;
-+	header->platform_type = PLATFORM_TYPE_ARM;
-+
-+	ath11k_cfr_fill_hdr_info(ar, header, params);
-+
-+	status = ath11k_cfr_correlate_and_relay(ar, lut,
-+						ATH11K_CORRELATE_TX_EVENT);
-+	if (status == ATH11K_CORRELATE_STATUS_RELEASE) {
-+		ath11k_dbg(ab, ATH11K_DBG_CFR,
-+			   "Releasing CFR data to user space");
-+		ath11k_cfr_rfs_write(ar, &lut->header,
-+				     sizeof(struct ath11k_csi_cfr_header),
-+				     lut->data, lut->data_len,
-+				     &end_magic, sizeof(u32));
-+		buff = lut->buff;
-+		ath11k_cfr_release_lut_entry(lut);
-+
-+		ath11k_dbring_bufs_replenish(ar, &cfr->rx_ring, buff,
-+					     WMI_DIRECT_BUF_CFR);
-+	} else if (status == ATH11K_CORRELATE_STATUS_HOLD) {
-+		ath11k_dbg(ab, ATH11K_DBG_CFR,
-+			   "dbr event is not yet received holding buf\n");
-+	}
-+
-+	spin_unlock_bh(&cfr->lut_lock);
-+
-+	return 0;
-+}
-+
- /* Helper function to check whether the given peer mac address
-  * is in unassociated peer pool or not.
-  */
-@@ -711,6 +865,12 @@ void ath11k_cfr_lut_update_paddr(struct ath11k *ar, dma_addr_t paddr,
- 		cfr->lut[buf_id].dbr_address = paddr;
- }
- 
-+void ath11k_cfr_update_phymode(struct ath11k *ar, enum wmi_phy_mode phymode)
-+{
-+	struct ath11k_cfr *cfr = &ar->cfr;
-+	cfr->phymode = phymode;
-+}
-+
- static void ath11k_cfr_ring_free(struct ath11k *ar)
- {
- 	struct ath11k_cfr *cfr = &ar->cfr;
-diff --git a/drivers/net/wireless/ath/ath11k/cfr.h b/drivers/net/wireless/ath/ath11k/cfr.h
-index c8e5086674d2..94fcb706f2ef 100644
---- a/drivers/net/wireless/ath/ath11k/cfr.h
-+++ b/drivers/net/wireless/ath/ath11k/cfr.h
-@@ -27,8 +27,37 @@ enum ath11k_cfr_correlate_event_type {
- struct ath11k_sta;
- struct ath11k_per_peer_cfr_capture;
- 
-+#define ATH11K_CFR_START_MAGIC 0xDEADBEAF
- #define ATH11K_CFR_END_MAGIC 0xBEAFDEAD
- 
-+#define VENDOR_QCA 0x8cfdf0
-+#define PLATFORM_TYPE_ARM 2
-+
-+enum ath11k_cfr_meta_version {
-+	ATH11K_CFR_META_VERSION_NONE,
-+	ATH11K_CFR_META_VERSION_1,
-+	ATH11K_CFR_META_VERSION_2,
-+	ATH11K_CFR_META_VERSION_3,
-+	ATH11K_CFR_META_VERSION_4,
-+	ATH11K_CFR_META_VERSION_MAX = 0xFF,
-+};
-+
-+enum ath11k_cfr_data_version {
-+	ATH11K_CFR_DATA_VERSION_NONE,
-+	ATH11K_CFR_DATA_VERSION_1,
-+	ATH11K_CFR_DATA_VERSION_MAX = 0xFF,
-+};
-+
-+enum ath11k_cfr_capture_ack_mode {
-+	ATH11K_CFR_CAPTURE_LEGACY_ACK,
-+	ATH11K_CFR_CAPTURE_DUP_LEGACY_ACK,
-+	ATH11K_CFR_CAPTURE_HT_ACK,
-+	ATH11K_CFR_CAPTURE_VHT_ACK,
-+
-+	/*Always keep this at last*/
-+	ATH11K_CFR_CAPTURE_INVALID_ACK
-+};
-+
- enum ath11k_cfr_correlate_status {
- 	ATH11K_CORRELATE_STATUS_RELEASE,
- 	ATH11K_CORRELATE_STATUS_HOLD,
-@@ -41,6 +70,28 @@ enum ath11k_cfr_preamble_type {
- 	ATH11K_CFR_PREAMBLE_TYPE_VHT,
- };
- 
-+struct ath11k_cfr_peer_tx_param {
-+	u32 capture_method;
-+	u32 vdev_id;
-+	u8 peer_mac_addr[ETH_ALEN];
-+	u32 primary_20mhz_chan;
-+	u32 bandwidth;
-+	u32 phy_mode;
-+	u32 band_center_freq1;
-+	u32 band_center_freq2;
-+	u32 spatial_streams;
-+	u32 correlation_info_1;
-+	u32 correlation_info_2;
-+	u32 status;
-+	u32 timestamp_us;
-+	u32 counter;
-+	u32 chain_rssi[WMI_MAX_CHAINS];
-+	u16 chain_phase[WMI_MAX_CHAINS];
-+	u32 cfo_measurement;
-+	u8 agc_gain[HOST_MAX_CHAINS];
-+	u32 rx_start_ts;
-+};
-+
- struct cfr_metadata {
- 	u8 peer_addr[ETH_ALEN];
- 	u8 status;
-@@ -70,7 +121,7 @@ struct ath11k_csi_cfr_header {
- 	u8 cfr_data_version;
- 	u8 chip_type;
- 	u8 platform_type;
--	u32 reserved;
-+	u32 cfr_metadata_len;
- 	struct cfr_metadata meta_data;
- } __packed;
- 
-@@ -144,6 +195,7 @@ struct ath11k_cfr {
- 	u64 clear_txrx_event;
- 	u64 cfr_dma_aborts;
- 	bool enabled;
-+	enum wmi_phy_mode phymode;
- 	struct cfr_unassoc_pool_entry unassoc_pool[ATH11K_MAX_CFR_ENABLED_CLIENTS];
- };
- 
-@@ -181,8 +233,15 @@ int ath11k_cfr_send_peer_cfr_capture_cmd(struct ath11k *ar,
- 					 const u8 *peer_mac);
- struct ath11k_dbring *ath11k_cfr_get_dbring(struct ath11k *ar);
- void ath11k_cfr_release_lut_entry(struct ath11k_look_up_table *lut);
--
-+int ath11k_process_cfr_capture_event(struct ath11k_base *ab,
-+				     struct ath11k_cfr_peer_tx_param *params);
-+void ath11k_cfr_update_phymode(struct ath11k *ar, enum wmi_phy_mode phymode);
- #else
-+static inline void ath11k_cfr_update_phymode(struct ath11k *ar,
-+					     enum wmi_phy_mode phymode)
-+{
-+}
-+
- static inline int ath11k_cfr_init(struct ath11k_base *ab)
- {
- 	return 0;
-@@ -238,5 +297,12 @@ struct ath11k_dbring *ath11k_cfr_get_dbring(struct ath11k *ar)
- {
- 	return NULL;
- }
-+
-+static inline
-+int ath11k_process_cfr_capture_event(struct ath11k_base *ab,
-+				     struct ath11k_cfr_peer_tx_param *params)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_ATH11K_CFR */
- #endif /* ATH11K_CFR_H */
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index aeea58f3fac0..1b5a39113872 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -2911,6 +2911,8 @@ static void ath11k_peer_assoc_h_phymode(struct ath11k *ar,
- 
- 	arg->peer_phymode = phymode;
- 	WARN_ON(phymode == MODE_UNKNOWN);
-+
-+	ath11k_cfr_update_phymode(ar, phymode);
- }
- 
- static void ath11k_peer_assoc_prepare(struct ath11k *ar,
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index b40a31414a47..451cc4c719ae 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8805,6 +8805,93 @@ static void ath11k_wmi_p2p_noa_event(struct ath11k_base *ab,
- 	kfree(tb);
- }
- 
-+static void ath11k_wmi_tlv_cfr_capture_event_fixed_param(const void *ptr,
-+							 void *data)
-+{
-+	struct ath11k_cfr_peer_tx_param *tx_params = data;
-+	const struct ath11k_wmi_cfr_peer_tx_event_param *params = ptr;
-+
-+	tx_params->capture_method = params->capture_method;
-+	tx_params->vdev_id = params->vdev_id;
-+	ether_addr_copy(tx_params->peer_mac_addr, params->mac_addr.addr);
-+	tx_params->primary_20mhz_chan = params->chan_mhz;
-+	tx_params->bandwidth = params->bandwidth;
-+	tx_params->phy_mode = params->phy_mode;
-+	tx_params->band_center_freq1 = params->band_center_freq1;
-+	tx_params->band_center_freq2 = params->band_center_freq2;
-+	tx_params->spatial_streams = params->sts_count;
-+	tx_params->correlation_info_1 = params->correlation_info_1;
-+	tx_params->correlation_info_2 = params->correlation_info_2;
-+	tx_params->status = params->status;
-+	tx_params->timestamp_us = params->timestamp_us;
-+	tx_params->counter = params->counter;
-+	tx_params->rx_start_ts = params->rx_start_ts;
-+
-+	memcpy(tx_params->chain_rssi, params->chain_rssi,
-+	       sizeof(tx_params->chain_rssi));
-+
-+	if (WMI_CFR_CFO_MEASUREMENT_VALID & params->cfo_measurement)
-+		tx_params->cfo_measurement = FIELD_GET(WMI_CFR_CFO_MEASUREMENT_RAW_DATA,
-+						       params->cfo_measurement);
-+}
-+
-+static void ath11k_wmi_tlv_cfr_capture_phase_fixed_param(const void *ptr,
-+							 void *data)
-+{
-+	struct ath11k_cfr_peer_tx_param *tx_params = data;
-+	const struct ath11k_wmi_cfr_peer_tx_event_phase_param *params = ptr;
-+	int i;
-+
-+	for (i = 0; i < WMI_MAX_CHAINS; i++) {
-+		tx_params->chain_phase[i] = params->chain_phase[i];
-+		tx_params->agc_gain[i] = params->agc_gain[i];
-+	}
-+}
-+
-+static int ath11k_wmi_tlv_cfr_capture_evt_parse(struct ath11k_base *ab,
-+						u16 tag, u16 len,
-+						const void *ptr, void *data)
-+{
-+	switch (tag) {
-+	case WMI_TAG_PEER_CFR_CAPTURE_EVENT:
-+		ath11k_wmi_tlv_cfr_capture_event_fixed_param(ptr, data);
-+		break;
-+	case WMI_TAG_CFR_CAPTURE_PHASE_PARAM:
-+		ath11k_wmi_tlv_cfr_capture_phase_fixed_param(ptr, data);
-+		break;
-+	default:
-+		ath11k_warn(ab, "Invalid tag received tag %d len %d\n",
-+			    tag, len);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static void ath11k_wmi_parse_cfr_capture_event(struct ath11k_base *ab,
-+					       struct sk_buff *skb)
-+{
-+	struct ath11k_cfr_peer_tx_param params = {};
-+	int ret;
-+
-+	ath11k_dbg_dump(ab, ATH11K_DBG_CFR_DUMP, "cfr_dump:", "",
-+			skb->data, skb->len);
-+
-+	ret = ath11k_wmi_tlv_iter(ab, skb->data, skb->len,
-+				  ath11k_wmi_tlv_cfr_capture_evt_parse,
-+				  &params);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to parse cfr capture event tlv %d\n",
-+			    ret);
-+		return;
-+	}
-+
-+	ret = ath11k_process_cfr_capture_event(ab, &params);
-+	if (ret)
-+		ath11k_dbg(ab, ATH11K_DBG_CFR,
-+			   "failed to process cfr capture ret = %d\n", ret);
-+}
-+
- static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
-@@ -8935,6 +9022,9 @@ static void ath11k_wmi_tlv_op_rx(struct ath11k_base *ab, struct sk_buff *skb)
- 	case WMI_P2P_NOA_EVENTID:
- 		ath11k_wmi_p2p_noa_event(ab, skb);
- 		break;
-+	case WMI_PEER_CFR_CAPTURE_EVENTID:
-+		ath11k_wmi_parse_cfr_capture_event(ab, skb);
-+		break;
- 	default:
- 		ath11k_dbg(ab, ATH11K_DBG_WMI, "unsupported event id 0x%x\n", id);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index afc78fa4389b..baed501b640b 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -1889,6 +1889,8 @@ enum wmi_tlv_tag {
- 	WMI_TAG_NDP_EVENT,
- 	WMI_TAG_PDEV_PEER_PKTLOG_FILTER_CMD = 0x301,
- 	WMI_TAG_PDEV_PEER_PKTLOG_FILTER_INFO,
-+	WMI_TAG_PEER_CFR_CAPTURE_EVENT = 0x317,
-+	WMI_TAG_CFR_CAPTURE_PHASE_PARAM = 0x33b,
- 	WMI_TAG_FILS_DISCOVERY_TMPL_CMD = 0x344,
- 	WMI_TAG_PDEV_SRG_BSS_COLOR_BITMAP_CMD = 0x37b,
- 	WMI_TAG_PDEV_SRG_PARTIAL_BSSID_BITMAP_CMD,
-@@ -4237,6 +4239,48 @@ enum ath11k_wmi_cfr_capture_method {
- 	WMI_CFR_CAPTURE_METHOD_MAX,
- };
- 
-+#define WMI_CFR_FRAME_TX_STATUS GENMASK(1, 0)
-+#define WMI_CFR_CAPTURE_STATUS_PEER_PS BIT(30)
-+#define WMI_CFR_PEER_CAPTURE_STATUS BIT(31)
-+
-+#define WMI_CFR_CORRELATION_INFO2_BUF_ADDR_HIGH GENMASK(3, 0)
-+#define WMI_CFR_CORRELATION_INFO2_PPDU_ID GENMASK(31, 16)
-+
-+#define WMI_CFR_CFO_MEASUREMENT_VALID BIT(0)
-+#define WMI_CFR_CFO_MEASUREMENT_RAW_DATA GENMASK(14, 1)
-+
-+struct ath11k_wmi_cfr_peer_tx_event_param {
-+	u32 capture_method;
-+	u32 vdev_id;
-+	struct wmi_mac_addr mac_addr;
-+	u32 chan_mhz;
-+	u32 bandwidth;
-+	u32 phy_mode;
-+	u32 band_center_freq1;
-+	u32 band_center_freq2;
-+	u32 sts_count;
-+	u32 correlation_info_1;
-+	u32 correlation_info_2;
-+	u32 status;
-+	u32 timestamp_us;
-+	u32 counter;
-+	u32 chain_rssi[WMI_MAX_CHAINS];
-+	u32 cfo_measurement;
-+	u32 rx_start_ts;
-+} __packed;
-+
-+struct ath11k_wmi_cfr_peer_tx_event_phase_param {
-+	u32 chain_phase[WMI_MAX_CHAINS];
-+	u8 agc_gain[WMI_MAX_CHAINS];
-+} __packed;
-+
-+enum ath11k_wmi_frame_tx_status {
-+	WMI_FRAME_TX_STATUS_OK,
-+	WMI_FRAME_TX_STATUS_XRETRY,
-+	WMI_FRAME_TX_STATUS_DROP,
-+	WMI_FRAME_TX_STATUS_FILTERED,
-+};
-+
- struct wmi_peer_cfr_capture_conf_arg {
- 	enum ath11k_wmi_cfr_capture_bw bw;
- 	enum ath11k_wmi_cfr_capture_method method;
--- 
-2.34.1
+Chris <russomch@aol.com> wrote:
+> On Tuesday, December 23, 2025 at 09:12:32 PM EST, Ping-Ke Shih <pkshih@re=
+altek.com> wrote:
+>=20
+>=20
+>=20
+>=20
+> Chris <russomch@aol.com> wrote:
+> > On Tuesday, December 23, 2025 at 02:48:01 AM EST, Ping-Ke Shih <pkshih@=
+realtek.com> wrote:
+> >
+> >
+> >
+> >
+> > Chris Russomanno <russomch@aol.com> wrote:
+> >
+> > > Hello,
+> > >
+> > > I am reporting two issues encountered on brand-new hardware using Lin=
+ux Mint 22.3 with Kernel
+> > 6.14.0-generic.
+> > >
+> > > Hardware Environment:
+> > > - GPU: Intel Arc B580 (Battlemage), PCI ID: [8086:e20b]
+> > > - WiFi: Realtek RTL8922AE (rtw89), Firmware: rtw8922a_fw-3.bin
+> > > - Display: Samsung 4K Monitor connected via HDMI (No DisplayPort avai=
+lable)
+> > >
+> > > Issue 1: Intel Xe HDMI Flickering
+> > > The Samsung monitor experiences intermittent black-screen flickering =
+(1-2 seconds) at both 4K and 1080p
+> > > resolutions. This behavior is not present on Windows 11.
+> > > Troubleshooting attempted:
+> > > - Added kernel parameters: quiet splash i915.enable_psr=3D0 xe.force_=
+probe=3De20b i915.enable_dc=3D0
+> > > intel_iommu=3Digfx_off intel_idle.max_cstate=3D2
+> > > - Forced "TearFree" and "TripleBuffer" in xorg.conf.
+> > > - Frequency remains at 60Hz.
+> > >
+> > > Issue 2: Realtek RTL8922AE 6GHz/WiFi 7 Missing
+> > > The card functions on 5GHz (1200 Mb/s) but does not scan or see 6GHz =
+frequencies.
+> > > Troubleshooting attempted:
+> > > - Set regdom to US (iw reg set US).
+> > > - Driver options: rtw89_pci disable_aspm=3Dy, rtw89_core disable_6g=
+=3DN.
+> > > - 'iw list' does not return any 6GHz/6105 MHz frequencies.
+> >
+> >
+> > Please share output of 'iw list' before/after setting US.
+> >
+> > In my side (expected) frequencies of band 4 are:
+> >
+> > [Before]
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Frequencies:
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5955.0 MHz [1] (disabled)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5975.0 MHz [5] (disabled)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5995.0 MHz [9] (disabled)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 6015.0 MHz [13] (disabled)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 6035.0 MHz [17] (disabled)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 6055.0 MHz [21] (disabled)
+> >
+> > [After]
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 Frequencies:
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5955.0 MHz [1] (12.0 dBm) (no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5975.0 MHz [5] (12.0 dBm) (no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 5995.0 MHz [9] (12.0 dBm) (no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 6015.0 MHz [13] (12.0 dBm) (no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 * 6035.0 MHz [17] (12.0 dBm) (no IR)
+> >
+> >
+> >
+> > ________________________
+> >
+> >
+> >
+> >
+> > Hello Ping-Ke,
+> >
+> > Here is the output from my RTL8922AE on Linux Mint 22.3 (Kernel 6.x):
+> >
+> > [Before iw reg set US]
+> >
+> > Frequencies:
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5955.0 MHz [1] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5975.0 MHz [5] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5995.0 MHz [9] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6015.0 MHz [13] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6035.0 MHz [17] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6055.0 MHz [21] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6075.0 MHz [25] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6095.0 MHz [29] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6115.0 MHz [33] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6135.0 MHz [37] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6155.0 MHz [41] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6175.0 MHz [45] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6195.0 MHz [49] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6215.0 MHz [53] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6235.0 MHz [57] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6255.0 MHz [61] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6275.0 MHz [65] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6295.0 MHz [69] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6315.0 MHz [73] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6335.0 MHz [77] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6355.0 MHz [81] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6375.0 MHz [85] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6395.0 MHz [89] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6415.0 MHz [93] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6435.0 MHz [97] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6455.0 MHz [101] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6475.0 MHz [105] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6495.0 MHz [109] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6515.0 MHz [113] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6535.0 MHz [117] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6555.0 MHz [121] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6575.0 MHz [125] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6595.0 MHz [129] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6615.0 MHz [133] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6635.0 MHz [137] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6655.0 MHz [141] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6675.0 MHz [145] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6695.0 MHz [149] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6715.0 MHz [153] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6735.0 MHz [157] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6755.0 MHz [161] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6775.0 MHz [165] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6795.0 MHz [169] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6815.0 MHz [173] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6835.0 MHz [177] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6855.0 MHz [181] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6875.0 MHz [185] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6895.0 MHz [189] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6915.0 MHz [193] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6935.0 MHz [197] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6955.0 MHz [201] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6975.0 MHz [205] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6995.0 MHz [209] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7015.0 MHz [213] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7035.0 MHz [217] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7055.0 MHz [221] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7075.0 MHz [225] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7095.0 MHz [229] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7115.0 MHz [233] (12.0 dBm) (=
+no IR)
+> >
+> >
+> > [After iw reg set US]
+> >
+> > Frequencies:
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5955.0 MHz [1] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5975.0 MHz [5] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 5995.0 MHz [9] (12.0 dBm) (no=
+ IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6015.0 MHz [13] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6035.0 MHz [17] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6055.0 MHz [21] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6075.0 MHz [25] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6095.0 MHz [29] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6115.0 MHz [33] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6135.0 MHz [37] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6155.0 MHz [41] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6175.0 MHz [45] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6195.0 MHz [49] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6215.0 MHz [53] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6235.0 MHz [57] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6255.0 MHz [61] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6275.0 MHz [65] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6295.0 MHz [69] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6315.0 MHz [73] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6335.0 MHz [77] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6355.0 MHz [81] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6375.0 MHz [85] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6395.0 MHz [89] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6415.0 MHz [93] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6435.0 MHz [97] (12.0 dBm) (n=
+o IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6455.0 MHz [101] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6475.0 MHz [105] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6495.0 MHz [109] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6515.0 MHz [113] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6535.0 MHz [117] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6555.0 MHz [121] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6575.0 MHz [125] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6595.0 MHz [129] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6615.0 MHz [133] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6635.0 MHz [137] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6655.0 MHz [141] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6675.0 MHz [145] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6695.0 MHz [149] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6715.0 MHz [153] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6735.0 MHz [157] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6755.0 MHz [161] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6775.0 MHz [165] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6795.0 MHz [169] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6815.0 MHz [173] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6835.0 MHz [177] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6855.0 MHz [181] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6875.0 MHz [185] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6895.0 MHz [189] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6915.0 MHz [193] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6935.0 MHz [197] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6955.0 MHz [201] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6975.0 MHz [205] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 6995.0 MHz [209] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7015.0 MHz [213] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7035.0 MHz [217] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7055.0 MHz [221] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7075.0 MHz [225] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7095.0 MHz [229] (12.0 dBm) (=
+no IR)
+> >=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 * 7115.0 MHz [233] (12.0 dBm) (=
+no IR)
+> >
+> >
+> > I have tested the iw list command before and after setting the region t=
+o US.
+> >
+> > The Result: The frequencies in Band 4 remain identical. Both "Before" a=
+nd "After" already show (no IR)
+> for
+> > all 6GHz frequencies. There was no change from (disabled) to (no IR), a=
+s they were already set to (no
+> IR).
+> >
+> > Even with the status at (no IR), the card is unable to see or connect t=
+o my 6GHz SSID, which is confirmed
+> > working on other devices and even with Windows 11. It appears the card =
+remains in a passive-only state
+> > regardless of the regulatory setting.
+>=20
+> At 6GHz channels, it should be passive scan.
+>=20
+> With "no IR", I suppose it can find AP operating on 6GHz channels, so let=
+'s
+> clarify scan first. Setup a trace-cmd before doing scan at another termin=
+al.
+>=20
+>=C2=A0 sudo trace-cmd record=C2=A0 -e mac80211 -e cfg80211
+>=20
+> Then, do scan by
+>=20
+>=C2=A0 sudo iw wlan1 scan | grep "\(SSID\|freq\):"
+>=20
+> Stop trace-cmd by ctrl-C, and check report by
+>=20
+>=C2=A0 trace-cmd report
+>=20
+> If you can see something like below, AP on 6GHz channels is found:
+>=20
+>=C2=A0 (trace-cmd report)
+>=C2=A0 cfg80211_return_bss:=C2=A0 aa:bb:cc:dd:ee:ff, band: 3, freq: 6135.0=
+00
+>=20
+>=C2=A0 (iw scan result)
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 freq: 6135.0
+>=C2=A0 =C2=A0 =C2=A0 =C2=A0 SSID: abc_6G
+>=20
+>=20
+> Ping-Ke
+>=20
+>=20
+> __________
+>=20
+>=20
+> Hello Ping-Ke,
+>=20
+> I have completed the trace-cmd recording and analyzed the full report.
+>=20
+> A search of the entire report shows zero entries for band: 3 and zero ent=
+ries for any frequencies in the
+> 6xxx.000 range.
+>=20
+> The trace successfully captured scanning on Band 1 (5GHz), with many entr=
+ies for freq: 5500.000 and 5530.000.
+>=20
+> The manual iw scan also returned no results for 6GHz.
+
+Can you change the operating channel of AP on PSC channels?
+and try more times to see it can be successful.
+
+>=20
+> So we know the card appears to be successfully scanning 2.4GHz and 5GHz, =
+but is completely silent on 6GHz.
+> Even though iw list shows the channels as (no IR), the driver/firmware do=
+es not seem to be initiating a
+> passive scan on those frequencies.
+>=20
+> I have the trace.dat file ready if you would like me to provide it.
+
+No need since you have checked the result.=20
+
+
+To align testing kernel and firmware, I used Ubuntu prebuilt kernel 6.18.1 =
+[1]
+with firmware 0.35.71.0, which can successfully find AP on 6GHz channels.
+
+Please try this combination to see we can see the same scan results.
+
+[1] https://kernel.ubuntu.com/mainline/v6.18.1/
+
+
+Ping-Ke
+
+
+
+__________
+
+
+Hi Ping-Ke,
+
+I am reporting a successful resolution for the RTW8922A (WiFi 7) on Linux M=
+int 22.3 (Kernel 6.18.1).
+
+After manually updating to firmware v0.35.80.3, the device is now fully ope=
+rational.
+
+6GHz connectivity: Fully stable.
+
+Performance: Achieving link speeds of ~1900 Mb/s via WPA3 (although Mint 22=
+.3 only shows it as WPA2)
+
+Logs: dmesg is now clean with no RF calibration timeouts or command failure=
+s.
+
+Thank you for your work on the driver.=C2=A0 Happy New Year to you and your=
+s.
+
+Best regards,
+
+Chris
+
+
+
+
+
+
+
+
 
