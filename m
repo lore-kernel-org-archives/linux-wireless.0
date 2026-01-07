@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4992341ACA
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:23:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93791342503
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:23:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767795840; cv=none; b=Gg2t21qtW+10OJcE70mvCP/iS5rK9NZQ6hH53T8d+7iXlWuzujQm/IfHunS/BMMGxmwfU7/Z4xlWV+Y6zVbdrrFm+auSvHDWKbZGn2TEuChGxUi2p5zMwpft1UnLpU5fzT0ejnUcrCHoKuUFulXkRElMfEldG0JyiJn74ADocqk=
+	t=1767795840; cv=none; b=NG4vw04gUfyj5bF14RQA1fyU9i1DEtuNcJCYtnhJ5jTu7bNtYz1qQ87zg7Tf65sxSGnyQYJ6gu3NucBWcVJisZkK4zZIEt2IzZ0z5uFXTbNZRc2x8gWInvBPQtBvDX8O/AbhZFKlgjemEGDlwAxPS9rti1SErPMxU9Su66gR/Ik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1767795840; c=relaxed/simple;
-	bh=4YW9+spz8ebbpiwz/Ju1ZKhPuPGZwxP4ePmWoy9eY5c=;
+	bh=lfKGerhs8fIAeRvDkv5zJUcnIyBFUWvzpcofZgc+nXA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PBEPLZ4xjyKAobUl5uh8L3jCbjSsRkRRjCO9/mbjTn9flUFkMgI+J0+coj0NJn8w/CncQs0UgQrHv8n6vxMD1hw9/0CM7lUB2Wsga7dNDKcNxxFoFa28h1GcFzhqESLnCiIj2aElQU7+b+CowlEPnw3xgGbJCKyZHoSL6pH5zlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=fSaLcMYI; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=ZoV6vmzklJA5JE+27vHsO+s/h/ocy/xy1NOiChuPnOvfwsln+cvxJT3I6NqVeilw+5D8ymMFIyXilmwlGQ7F2ZM8T1UrAutVFHXlKSQRS9O33n3vi/QHUzho5HAxA3CSSvnJ6lzh7u39ucG0MLrdGUGmLXInnNqDKzK7BkGdYbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=nJBulcqf; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fSaLcMYI"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="nJBulcqf"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=X6Az7g7N7SpGDXP/uZdAFVZ1bMaRtq3NWLrJUKTzyeA=;
-	t=1767795837; x=1769005437; b=fSaLcMYIDZyljjmARzqIYlUQcQutf8mIF0XiAKUjGPcL64L
-	5Xaj/8snxy2JQAPUyHl+22xzKlHsTAZOrhDKdHHtXAEJ7meFgopB34cI3wYKxtxv8XhsHqm8eXxLw
-	Q9XcrkvHXTYim34A4RDrqwpofzlpRefFqKgbqnP5AEur8oqdcq05A/5ovJbY3JuedcDS3z30NVnBk
-	1q+AHCSHQ3340+m8kyGrd1GorRDf0nasZ+Ar1E9b88iGXg6oNoYuKkk8SyDbk0h93NgIJuah6HNQA
-	P7gNM895sbOWNSwaGaQyl1K9aHusHMg6nLxeIXbCHRkcY8e2izmuW1i/xpdh85Vg==;
+	Resent-Cc:Resent-Message-ID; bh=X/10h9wdqajjP/bdfW3T8Pdyrx6/rXjpQoYKFw13bi8=;
+	t=1767795838; x=1769005438; b=nJBulcqfO5KG+eHaNW2SqAFmSz8mb3gtmq38BhQmKP+HtmW
+	MSxGrd1N2Y5PUZkFc6aHff4gvc3GMI8UOFjw+50OvnhRqbpFW/VACyJiBfiwZkevAz+GVrefpN76q
+	wnXl3dYyeMYtbfAS1Nm7mWgnLiKCUuiWou5zPdGMZGcu1L7CRGOTf6HkI8+XWfEqt8AWYjmvF6rIo
+	3iLifYvLfv4/X1w53TDpQDmwy2btzdSNzQGpIFnMvmRvo5NoAweaUJywxYSc8SRd4u3kvlpeTG98H
+	NSQb/Q9msSmFu1MjBsSEvUO6EQddaIWJ8Em/Mm5Uen1vCgYICLmJFUjP6xDjRmcQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vdUS3-00000005agF-2TYw;
-	Wed, 07 Jan 2026 15:23:55 +0100
+	id 1vdUS4-00000005agF-2FgU;
+	Wed, 07 Jan 2026 15:23:56 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [RFC wireless-next 25/46] wifi: mac80211: don't consider the sband when processing capabilities
-Date: Wed,  7 Jan 2026 15:22:24 +0100
-Message-ID: <20260107152325.e9e54883718c.If994d6346f00219437e22043e7bf2395b827b34a@changeid>
+Subject: [RFC wireless-next 26/46] wifi: mac80211: run NAN DE code only when appropriate
+Date: Wed,  7 Jan 2026 15:22:25 +0100
+Message-ID: <20260107152325.7edc48c03667.Iee24bef3bae2e1d502216192e760c1e699d271c9@changeid>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260107142324.45386-48-johannes@sipsolutions.net>
 References: <20260107142324.45386-48-johannes@sipsolutions.net>
@@ -50,324 +50,269 @@ Content-Transfer-Encoding: 8bit
 
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-In NAN, we have one set of (HT, VHT, HE) capabilities for all bands,
-which means that we will need to process those capabilities without a
-given sband.
+NAN DE (Discovery Engine) may be handled in the device or in user space.
+When handled in user space, all the NAN func management code should not
+run. Moreover, devices with user space DE should not provide the
+add/del_nan_func callbaks. For such devices, ieee80211_reconfig_nan will
+always fail.
 
-To prepare for that, remove the sband argument from
-ieee80211_ht_cap_ie_to_sta_ht_cap and ieee80211_he_cap_ie_to_sta_he_cap
-and pass our own capabilities instead.
+Make it clear what parts of ieee80211_if_nan are relevant to DE
+management, and touch those only when DE is offloaded.
 
-For ieee80211_vht_cap_ie_to_sta_vht_cap, make the sband argument
-optional, since it is also used to check if there is at least one channel
-that supports 80 MHz.
-(Note that this check doesn't make much sense, but this can be handled in
- a different patch.)
+Add a check that makes sure that a driver doesn't register with
+add_del/nan_func callbacks if DE is in user space.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c         |  3 ++-
- net/mac80211/he.c          | 37 ++++++++++++++++++++++++-------------
- net/mac80211/ht.c          |  6 +++---
- net/mac80211/ibss.c        |  4 +++-
- net/mac80211/ieee80211_i.h |  9 ++++++++-
- net/mac80211/mesh_plink.c  |  3 ++-
- net/mac80211/mlme.c        |  3 ++-
- net/mac80211/vht.c         | 33 ++++++++++++++++++---------------
- 8 files changed, 62 insertions(+), 36 deletions(-)
+ net/mac80211/cfg.c         | 52 ++++++++++++++++++++++++--------------
+ net/mac80211/ieee80211_i.h | 13 ++++++----
+ net/mac80211/iface.c       | 25 +++++++++++-------
+ net/mac80211/main.c        |  4 ++-
+ net/mac80211/util.c        | 10 +++++---
+ 5 files changed, 67 insertions(+), 37 deletions(-)
 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 771f8433b3b9..90b94964102a 100644
+index 90b94964102a..d23a9ffa2b2c 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -2133,12 +2133,13 @@ static int sta_link_apply_parameters(struct ieee80211_local *local,
- 		return -EINVAL;
+@@ -510,12 +510,15 @@ static int ieee80211_add_nan_func(struct wiphy *wiphy,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
  
- 	if (params->ht_capa)
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, &sband->ht_cap,
- 						  params->ht_capa, link_sta);
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return -EOPNOTSUPP;
  
- 	/* VHT can override some HT caps such as the A-MSDU max length */
- 	if (params->vht_capa)
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    &sband->vht_cap,
- 						    params->vht_capa, NULL,
- 						    link_sta);
+-	ret = idr_alloc(&sdata->u.nan.function_inst_ids,
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
++
++	ret = idr_alloc(&sdata->u.nan.de.function_inst_ids,
+ 			nan_func, 1, sdata->local->hw.max_nan_de_entries + 1,
+ 			GFP_ATOMIC);
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
  
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index f7b05e59374c..93e0342cff4f 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -108,14 +108,13 @@ static void ieee80211_he_mcs_intersection(__le16 *he_own_rx, __le16 *he_peer_rx,
- }
+ 	if (ret < 0)
+ 		return ret;
+@@ -526,10 +529,10 @@ static int ieee80211_add_nan_func(struct wiphy *wiphy,
  
- void
--ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
--				  struct ieee80211_supported_band *sband,
--				  const u8 *he_cap_ie, u8 he_cap_len,
--				  const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
--				  struct link_sta_info *link_sta)
-+_ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
-+				   const struct ieee80211_sta_he_cap *own_he_cap_ptr,
-+				   const u8 *he_cap_ie, u8 he_cap_len,
-+				   const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
-+				   struct link_sta_info *link_sta)
- {
- 	struct ieee80211_sta_he_cap *he_cap = &link_sta->pub->he_cap;
--	const struct ieee80211_sta_he_cap *own_he_cap_ptr;
- 	struct ieee80211_sta_he_cap own_he_cap;
- 	struct ieee80211_he_cap_elem *he_cap_ie_elem = (void *)he_cap_ie;
- 	u8 he_ppe_size;
-@@ -125,12 +124,7 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 	ret = drv_add_nan_func(sdata->local, sdata, nan_func);
+ 	if (ret) {
+-		spin_lock_bh(&sdata->u.nan.func_lock);
+-		idr_remove(&sdata->u.nan.function_inst_ids,
++		spin_lock_bh(&sdata->u.nan.de.func_lock);
++		idr_remove(&sdata->u.nan.de.function_inst_ids,
+ 			   nan_func->instance_id);
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 	}
  
- 	memset(he_cap, 0, sizeof(*he_cap));
+ 	return ret;
+@@ -542,9 +545,9 @@ ieee80211_find_nan_func_by_cookie(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_nan_func *func;
+ 	int id;
  
--	if (!he_cap_ie)
--		return;
--
--	own_he_cap_ptr =
--		ieee80211_get_he_iftype_cap_vif(sband, &sdata->vif);
--	if (!own_he_cap_ptr)
-+	if (!he_cap_ie || !own_he_cap_ptr || !own_he_cap_ptr->has_he)
+-	lockdep_assert_held(&sdata->u.nan.func_lock);
++	lockdep_assert_held(&sdata->u.nan.de.func_lock);
+ 
+-	idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, id) {
++	idr_for_each_entry(&sdata->u.nan.de.function_inst_ids, func, id) {
+ 		if (func->cookie == cookie)
+ 			return func;
+ 	}
+@@ -563,13 +566,16 @@ static void ieee80211_del_nan_func(struct wiphy *wiphy,
+ 	    !ieee80211_sdata_running(sdata))
  		return;
  
- 	own_he_cap = *own_he_cap_ptr;
-@@ -164,7 +158,7 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 	link_sta->cur_max_bandwidth = ieee80211_sta_cap_rx_bw(link_sta);
- 	link_sta->pub->bandwidth = ieee80211_sta_cur_vht_bw(link_sta);
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
  
--	if (sband->band == NL80211_BAND_6GHZ && he_6ghz_capa)
-+	if (he_6ghz_capa)
- 		ieee80211_update_from_he_6ghz_capa(he_6ghz_capa, link_sta);
+ 	func = ieee80211_find_nan_func_by_cookie(sdata, cookie);
+ 	if (func)
+ 		instance_id = func->instance_id;
  
- 	ieee80211_he_mcs_intersection(&own_he_cap.he_mcs_nss_supp.rx_mcs_80,
-@@ -207,6 +201,23 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	if (instance_id)
+ 		drv_del_nan_func(sdata->local, sdata, instance_id);
+@@ -4832,18 +4838,22 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ 	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
+ 		return;
+ 
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(sdata->local->hw.wiphy->nan_capa.flags &
++		    WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
+ 
+-	func = idr_find(&sdata->u.nan.function_inst_ids, inst_id);
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
++
++	func = idr_find(&sdata->u.nan.de.function_inst_ids, inst_id);
+ 	if (WARN_ON(!func)) {
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		return;
  	}
+ 
+ 	cookie = func->cookie;
+-	idr_remove(&sdata->u.nan.function_inst_ids, inst_id);
++	idr_remove(&sdata->u.nan.de.function_inst_ids, inst_id);
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	cfg80211_free_nan_func(func);
+ 
+@@ -4862,16 +4872,20 @@ void ieee80211_nan_func_match(struct ieee80211_vif *vif,
+ 	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
+ 		return;
+ 
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(sdata->local->hw.wiphy->nan_capa.flags &
++		    WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
+ 
+-	func = idr_find(&sdata->u.nan.function_inst_ids,  match->inst_id);
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
++
++	func = idr_find(&sdata->u.nan.de.function_inst_ids,  match->inst_id);
+ 	if (WARN_ON(!func)) {
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		return;
+ 	}
+ 	match->cookie = func->cookie;
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	cfg80211_nan_match(ieee80211_vif_to_wdev(vif), match, gfp);
  }
- 
-+void
-+ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
-+				  struct ieee80211_supported_band *sband,
-+				  const u8 *he_cap_ie, u8 he_cap_len,
-+				  const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
-+				  struct link_sta_info *link_sta)
-+{
-+	const struct ieee80211_sta_he_cap *own_he_cap =
-+		ieee80211_get_he_iftype_cap_vif(sband, &sdata->vif);
-+
-+	_ieee80211_he_cap_ie_to_sta_he_cap(sdata, own_he_cap, he_cap_ie,
-+					   he_cap_len,
-+					   (sband->band == NL80211_BAND_6GHZ) ?
-+						he_6ghz_capa : NULL,
-+					   link_sta);
-+}
-+
- void
- ieee80211_he_op_ie_to_bss_conf(struct ieee80211_vif *vif,
- 			const struct ieee80211_he_operation *he_op_ie)
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 1c82a28b03de..6da2b05be9ee 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -136,7 +136,7 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 
- 
- bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
--				       struct ieee80211_supported_band *sband,
-+				       const struct ieee80211_sta_ht_cap *own_cap_ptr,
- 				       const struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct link_sta_info *link_sta)
- {
-@@ -151,12 +151,12 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
- 
- 	memset(&ht_cap, 0, sizeof(ht_cap));
- 
--	if (!ht_cap_ie || !sband->ht_cap.ht_supported)
-+	if (!ht_cap_ie || !own_cap_ptr->ht_supported)
- 		goto apply;
- 
- 	ht_cap.ht_supported = true;
- 
--	own_cap = sband->ht_cap;
-+	own_cap = *own_cap_ptr;
- 
- 	/*
- 	 * If user has specified capability over-rides, take care
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 3ce7412b4fcd..23ea3e39bdf8 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1022,7 +1022,8 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_chandef_ht_oper(elems->ht_operation, &chandef);
- 
- 		memcpy(&htcap_ie, elems->ht_cap_elem, sizeof(htcap_ie));
--		rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
-+		rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(sdata,
-+								   &sband->ht_cap,
- 								   &htcap_ie,
- 								   &sta->deflink);
- 
-@@ -1041,6 +1042,7 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
- 						   &chandef);
- 			memcpy(&cap_ie, elems->vht_cap_elem, sizeof(cap_ie));
- 			ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+							    &sband->vht_cap,
- 							    &cap_ie, NULL,
- 							    &sta->deflink);
- 			if (memcmp(&cap, &sta->sta.deflink.vht_cap, sizeof(cap)))
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1e60597f032c..897550a07273 100644
+index 897550a07273..71fc775483e2 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2179,7 +2179,7 @@ void ieee80211_aggr_check(struct ieee80211_sub_if_data *sdata,
- void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_sta_ht_cap *ht_cap);
- bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
--				       struct ieee80211_supported_band *sband,
-+				       const struct ieee80211_sta_ht_cap *own_cap,
- 				       const struct ieee80211_ht_cap *ht_cap_ie,
- 				       struct link_sta_info *link_sta);
- void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
-@@ -2262,6 +2262,7 @@ void ieee80211_ht_handle_chanwidth_notif(struct ieee80211_local *local,
- void
- ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_supported_band *sband,
-+				    const struct ieee80211_sta_vht_cap *own_vht_cap,
- 				    const struct ieee80211_vht_cap *vht_cap_ie,
- 				    const struct ieee80211_vht_cap *vht_cap_ie2,
- 				    struct link_sta_info *link_sta);
-@@ -2302,6 +2303,12 @@ ieee80211_sta_rx_bw_to_chan_width(struct link_sta_info *sta);
- 
- /* HE */
- void
-+_ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
-+				   const struct ieee80211_sta_he_cap *own_he_cap,
-+				   const u8 *he_cap_ie, u8 he_cap_len,
-+				   const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
-+				   struct link_sta_info *link_sta);
-+void
- ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
- 				  struct ieee80211_supported_band *sband,
- 				  const u8 *he_cap_ie, u8 he_cap_len,
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 04c931cd2063..1c4db6b86713 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -450,12 +450,13 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 		changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
- 	sta->sta.deflink.supp_rates[sband->band] = rates;
- 
--	if (ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
-+	if (ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, &sband->ht_cap,
- 					      elems->ht_cap_elem,
- 					      &sta->deflink))
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 
- 	ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+					    &sband->vht_cap,
- 					    elems->vht_cap_elem, NULL,
- 					    &sta->deflink);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ddff090e7dce..588f89e7631d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -5425,7 +5425,7 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 
- 	/* Set up internal HT/VHT capabilities */
- 	if (elems->ht_cap_elem && link->u.mgd.conn.mode >= IEEE80211_CONN_MODE_HT)
--		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
-+		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, &sband->ht_cap,
- 						  elems->ht_cap_elem,
- 						  link_sta);
- 
-@@ -5461,6 +5461,7 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 		}
- 
- 		ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband,
-+						    &sband->vht_cap,
- 						    elems->vht_cap_elem,
- 						    bss_vht_cap, link_sta);
- 		rcu_read_unlock();
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index b099d79e8fbb..d4fcb1c07313 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -4,7 +4,7 @@
+@@ -986,16 +986,19 @@ struct ieee80211_if_mntr {
   *
-  * Portions of this file
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2024 Intel Corporation
-+ * Copyright (C) 2018 - 2025 Intel Corporation
+  * @conf: current NAN configuration
+  * @started: true iff NAN is started
+- * @func_lock: lock for @func_inst_ids
+- * @function_inst_ids: a bitmap of available instance_id's
++ * @de: Discovery Engine state (only valid if !WIPHY_NAN_FLAGS_USERSPACE_DE)
++ * @de.func_lock: lock for @de.function_inst_ids
++ * @de.function_inst_ids: a bitmap of available instance_id's
   */
+ struct ieee80211_if_nan {
+ 	struct cfg80211_nan_conf conf;
+ 	bool started;
  
- #include <linux/ieee80211.h>
-@@ -115,6 +115,7 @@ void ieee80211_apply_vhtcap_overrides(struct ieee80211_sub_if_data *sdata,
- void
- ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 				    struct ieee80211_supported_band *sband,
-+				    const struct ieee80211_sta_vht_cap *own_vht_cap,
- 				    const struct ieee80211_vht_cap *vht_cap_ie,
- 				    const struct ieee80211_vht_cap *vht_cap_ie2,
- 				    struct link_sta_info *link_sta)
-@@ -122,7 +123,6 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_sta_vht_cap *vht_cap = &link_sta->pub->vht_cap;
- 	struct ieee80211_sta_vht_cap own_cap;
- 	u32 cap_info, i;
--	bool have_80mhz;
- 	u32 mpdu_len;
+-	/* protects function_inst_ids */
+-	spinlock_t func_lock;
+-	struct idr function_inst_ids;
++	struct {
++		/* protects function_inst_ids */
++		spinlock_t func_lock;
++		struct idr function_inst_ids;
++	} de;
+ };
  
- 	memset(vht_cap, 0, sizeof(*vht_cap));
-@@ -130,23 +130,26 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (!link_sta->pub->ht_cap.ht_supported)
- 		return;
+ struct ieee80211_link_data_managed {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index d5ba067a4b51..ddce54d1c9e8 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -618,15 +618,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		break;
+ 	case NL80211_IFTYPE_NAN:
+ 		/* clean all the functions */
+-		spin_lock_bh(&sdata->u.nan.func_lock);
++		if (!(local->hw.wiphy->nan_capa.flags &
++		      WIPHY_NAN_FLAGS_USERSPACE_DE)) {
++			spin_lock_bh(&sdata->u.nan.de.func_lock);
  
--	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
-+	if (!vht_cap_ie || !own_vht_cap->vht_supported)
- 		return;
- 
--	/* Allow VHT if at least one channel on the sband supports 80 MHz */
--	have_80mhz = false;
--	for (i = 0; i < sband->n_channels; i++) {
--		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
--						IEEE80211_CHAN_NO_80MHZ))
--			continue;
-+	if (sband) {
-+		/* Allow VHT if at least one channel on the sband supports 80 MHz */
-+		bool have_80mhz = false;
- 
--		have_80mhz = true;
--		break;
-+		for (i = 0; i < sband->n_channels; i++) {
-+			if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
-+							IEEE80211_CHAN_NO_80MHZ))
-+				continue;
+-		idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, i) {
+-			idr_remove(&sdata->u.nan.function_inst_ids, i);
+-			cfg80211_free_nan_func(func);
++			idr_for_each_entry(&sdata->u.nan.de.function_inst_ids,
++					   func, i) {
++				idr_remove(&sdata->u.nan.de.function_inst_ids, i);
++				cfg80211_free_nan_func(func);
++			}
++			idr_destroy(&sdata->u.nan.de.function_inst_ids);
 +
-+			have_80mhz = true;
-+			break;
-+		}
-+
-+		if (!have_80mhz)
-+			return;
- 	}
- 
--	if (!have_80mhz)
--		return;
++			spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		}
+-		idr_destroy(&sdata->u.nan.function_inst_ids);
 -
- 	/*
- 	 * A VHT STA must support 40 MHz, but if we verify that here
- 	 * then we break a few things - some APs (e.g. Netgear R6300v2
-@@ -156,7 +159,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
+ 		break;
+ 	default:
+ 		wiphy_work_cancel(sdata->local->hw.wiphy, &sdata->work);
+@@ -1921,8 +1925,11 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 				      MONITOR_FLAG_OTHER_BSS;
+ 		break;
+ 	case NL80211_IFTYPE_NAN:
+-		idr_init(&sdata->u.nan.function_inst_ids);
+-		spin_lock_init(&sdata->u.nan.func_lock);
++		if (!(sdata->local->hw.wiphy->nan_capa.flags &
++		      WIPHY_NAN_FLAGS_USERSPACE_DE)) {
++			idr_init(&sdata->u.nan.de.function_inst_ids);
++			spin_lock_init(&sdata->u.nan.de.func_lock);
++		}
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
+ 		break;
+ 	case NL80211_IFTYPE_AP_VLAN:
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b05e313c7f17..0f05f6b2ff2f 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1143,7 +1143,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
  
- 	vht_cap->vht_supported = true;
+ 	if (WARN_ON(local->hw.wiphy->interface_modes &
+ 			BIT(NL80211_IFTYPE_NAN) &&
+-		    (!local->ops->start_nan || !local->ops->stop_nan)))
++		    ((!local->ops->start_nan || !local->ops->stop_nan) ||
++		     (local->hw.wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE &&
++		     (local->ops->add_nan_func || local->ops->del_nan_func)))))
+ 		return -EINVAL;
  
--	own_cap = sband->vht_cap;
-+	own_cap = *own_vht_cap;
- 	/*
- 	 * If user has specified capability overrides, take care
- 	 * of that if the station we're setting up is the AP that
+ 	if (hw->wiphy->flags & WIPHY_FLAG_SUPPORTS_MLO) {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 79ef74744357..3b609fb36907 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1742,6 +1742,10 @@ static int ieee80211_reconfig_nan(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(res))
+ 		return res;
+ 
++	if (sdata->local->hw.wiphy->nan_capa.flags &
++	    WIPHY_NAN_FLAGS_USERSPACE_DE)
++		return 0;
++
+ 	funcs = kcalloc(sdata->local->hw.max_nan_de_entries + 1,
+ 			sizeof(*funcs),
+ 			GFP_KERNEL);
+@@ -1752,12 +1756,12 @@ static int ieee80211_reconfig_nan(struct ieee80211_sub_if_data *sdata)
+ 	 * This is a little bit ugly. We need to call a potentially sleeping
+ 	 * callback for each NAN function, so we can't hold the spinlock.
+ 	 */
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
+ 
+-	idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, id)
++	idr_for_each_entry(&sdata->u.nan.de.function_inst_ids, func, id)
+ 		funcs[i++] = func;
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	for (i = 0; funcs[i]; i++) {
+ 		res = drv_add_nan_func(sdata->local, sdata, funcs[i]);
 -- 
 2.52.0
 
