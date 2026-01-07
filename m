@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35DD4342512
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:23:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6FE534251F
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:24:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767795840; cv=none; b=ULYu4MYThuAaFHYv3IOoSQ/2FLc7UpqVoMyflpu5qnHaTV69v2+IvA31YgP2tu7akYLYQO3UfKPrvEqjjyp9FYzfNgdGP/n4js4M+mPqc1g78zLfbGFt0053gtvbtghOhoH5b1wqSgGMNsKF1DLg+mpBtFarQ82rt3ji1RrG0XE=
+	t=1767795842; cv=none; b=Q1d2YpOlNdltQh7uXDlB8Qcl1bQ7LP6fMy5jKNewLj4bE+3F+ObgnABCPRpEsl9waBfed80Tsj4R3REi4QJO/jtGxClbILTawTALhl7fxBHBWXYGFmhxV/QAE+JJ/lHXx4WegaLZi2bP6tWNgChgKticEgQ2YUXsi038F37dCXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767795840; c=relaxed/simple;
-	bh=vdrjvHvRY2d9KR+mwpnjZrgAd6n81TeOjbFBUyjpzkg=;
+	s=arc-20240116; t=1767795842; c=relaxed/simple;
+	bh=bK4i8p2KMAZ0wsIKYZtFAaDqsWYnmq0D71Mqpk05xNc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ANJWY50HPKPe7ir/9ThoCohC8DhUGWbQFFz6xBcBuKsVr5kjn3uj0yaXdm9ZqhjGYm2J4FtfV23cQ16ENL6Zkq9T1pu2al91umOweDUmQJrIQG5q45itCjt1qnRhOeAd9RD/Gfs7L4OL1qFDVTpiyKBtxdSjnNhZNFrI0iFm6sM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=j/tFUX2c; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=KWWphhyAe0qzerT78PnxmqWkSMzm3A+BHgPLGla62JCNqhNebnpRS5dIWEl+LT570fHs9plV830JgM8oBDvAhJveXQomv9bP5NCswG3iYYxkfEWEst/P2olIchWXJISCCtVH2zqHB5W7J7LhJasN464Sr9ZHfkgwF4vGMf728NE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=pbp898LQ; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="j/tFUX2c"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="pbp898LQ"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=sovmN6TaQUXWMSNV/q4a08swJNj6hH4orUCJ6auhNFE=;
-	t=1767795839; x=1769005439; b=j/tFUX2cerRRjXGLZN/kodIGtArXPBhCUpaFKg6MYdaSoBH
-	c6JC3e9HeVXjiPyCUStVVsSgdEfrOjBnW5bcwHFAtX8nlOL7GbwSxFtQpT0HnRg3lAxxjFEfQHJV7
-	SWGpnl7YJwgIIiMkpTCgcbzMy6j54FdFglR9Jp+3xf+t4WZt24qGSMXr7Pe4Uuwf87QYn5D21vhWq
-	q3QUaM5cmTo6PydY7A5KeHmMnnn9cAMxZkPVc1LgIyjMV/smCJq3vG9i2Ldo8//yWfxaoqsiTV58g
-	8rVDAa+Ak9cIugXiKT8ZmdjQcSgmcr7j6bLkEkJzzJLVP2c7+kMj0AghynQZ1i6A==;
+	Resent-Cc:Resent-Message-ID; bh=snR92oS7SBgOMjE+4JZKrdNdzRMODcJil0N9MZ08/BM=;
+	t=1767795840; x=1769005440; b=pbp898LQWmZg73yco4jMH3jWdpiGfYanWPS5Ml9/fKxGybq
+	Mql0byXbCJiWsEzrXz5j4u0XnFJfSSLRXNuydaVndJPXVCMDVReTAIbgpuRRed3YCTAr36SFJcWFY
+	LEUbYtSCG5Hn71GhbG6ZTKIMM60Xk2gW1e8gCtZNKFWCz6Rad009x+++SF0S9t3E8PBdRc72I+ohW
+	845+7a9SRergItc3SwgrE9LACzlFM+O9QTVkC9sp0usKvhYbvsjpWzybCi7aU0Uc+uvLyf8jGSIOG
+	jv/eujWxndcVtvUaKRgljV7HlXXVSoLjbQhGK7sezPjzTQAaJN2hpwRYDqTuu5cw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vdUS5-00000005agF-1LMl;
-	Wed, 07 Jan 2026 15:23:57 +0100
+	id 1vdUS6-00000005agF-3301;
+	Wed, 07 Jan 2026 15:23:59 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [RFC wireless-next 27/46] wifi: mac80211: cleanup error path of ieee80211_do_open
-Date: Wed,  7 Jan 2026 15:22:26 +0100
-Message-ID: <20260107152325.eecba2db0791.Idac5c38d5ad7ce97782a8c05ae72bb0c689c4fa9@changeid>
+Subject: [RFC wireless-next 29/46] wifi: mac80211: support open and close for NAN_DATA interfaces
+Date: Wed,  7 Jan 2026 15:22:28 +0100
+Message-ID: <20260107152325.5b2b3fc230f4.Ia6724dac6a0e17cb69989dd714d14f4df1c69bef@changeid>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260107142324.45386-48-johannes@sipsolutions.net>
 References: <20260107142324.45386-48-johannes@sipsolutions.net>
@@ -50,72 +50,144 @@ Content-Transfer-Encoding: 8bit
 
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-If we failed on drv_start, we currently cleanup AP_VLAN reference to
-bss.
-But this is not needed, since AP_VLAN must be tied to a pre-existing AP
-interface, so open_count cannot be 0, so we will never call drv_start
-for AP_VLAN interfaces.
-
-Remove these cleanup and return immediately instead.
+Support opening and closing a NAN_DATA interface.
+Track the NAN (NMI) interface, for convenience.
+Allow opening an NAN_DATA interface only if the NAN interface is running
+(NAN has started).
+When closing the NAN interface, make sure all NAN_DATA interfaces are
+closed first, and warn if this is not the case.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/iface.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ net/mac80211/ieee80211_i.h | 11 +++++++++++
+ net/mac80211/iface.c       | 33 ++++++++++++++++++++++++++++++---
+ 2 files changed, 41 insertions(+), 3 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9815b56771c1..1786554f79cb 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1001,6 +1001,16 @@ struct ieee80211_if_nan {
+ 	} de;
+ };
+ 
++/**
++ * struct ieee80211_if_nan_data - NAN data path state
++ *
++ * @nmi: pointer to the NAN management interface sdata. Used for data path,
++ *	hence RCU.
++ */
++struct ieee80211_if_nan_data {
++	struct ieee80211_sub_if_data __rcu *nmi;
++};
++
+ struct ieee80211_link_data_managed {
+ 	u8 bssid[ETH_ALEN] __aligned(2);
+ 
+@@ -1199,6 +1209,7 @@ struct ieee80211_sub_if_data {
+ 		struct ieee80211_if_ocb ocb;
+ 		struct ieee80211_if_mntr mntr;
+ 		struct ieee80211_if_nan nan;
++		struct ieee80211_if_nan_data nan_data;
+ 	} u;
+ 
+ 	struct ieee80211_link_data deflink;
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ddce54d1c9e8..65466daebdba 100644
+index 3fb09ca49276..f0b973952b6c 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -1365,8 +1365,6 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		break;
- 		}
- 	case NL80211_IFTYPE_AP:
--		sdata->bss = &sdata->u.ap;
--		break;
- 	case NL80211_IFTYPE_MESH_POINT:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_MONITOR:
-@@ -1392,8 +1390,13 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		local->reconfig_failure = false;
+@@ -359,6 +359,17 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 			     nsdata->vif.type == NL80211_IFTYPE_OCB))
+ 				return -EBUSY;
  
- 		res = drv_start(local);
--		if (res)
--			goto err_del_bss;
-+		if (res) {
 +			/*
-+			 * no need to worry about AP_VLAN cleanup since in that
-+			 * case we can't have open_count == 0
++			 * A NAN DATA interface is correlated to the NAN
++			 * (management) one
 +			 */
-+			return res;
-+		}
- 		ieee80211_led_radio(local, true);
- 		ieee80211_mod_tpt_led_trig(local,
- 					   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
-@@ -1464,6 +1467,9 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		netif_carrier_on(dev);
- 		list_add_tail_rcu(&sdata->u.mntr.list, &local->mon_list);
++			if (iftype == NL80211_IFTYPE_NAN_DATA &&
++			    nsdata->vif.type == NL80211_IFTYPE_NAN) {
++				if (!nsdata->u.nan.started)
++					return -EINVAL;
++				rcu_assign_pointer(sdata->u.nan_data.nmi, nsdata);
++			}
++
+ 			/*
+ 			 * Allow only a single IBSS interface to be up at any
+ 			 * time. This is restricted because beacon distribution
+@@ -471,6 +482,7 @@ static int ieee80211_open(struct net_device *dev)
+ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_down)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *iter;
+ 	unsigned long flags;
+ 	struct sk_buff_head freeq;
+ 	struct sk_buff *skb, *tmp;
+@@ -617,6 +629,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		}
  		break;
-+	case NL80211_IFTYPE_AP:
-+		sdata->bss = &sdata->u.ap;
+ 	case NL80211_IFTYPE_NAN:
++		/* Check if any open NAN_DATA interfaces */
++		list_for_each_entry(iter, &local->interfaces, list) {
++			WARN_ON(iter->vif.type == NL80211_IFTYPE_NAN_DATA &&
++				ieee80211_sdata_running(iter));
++		}
++
+ 		/* clean all the functions */
+ 		if (!(local->hw.wiphy->nan_capa.flags &
+ 		      WIPHY_NAN_FLAGS_USERSPACE_DE)) {
+@@ -632,6 +650,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 			spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		}
+ 		break;
++	case NL80211_IFTYPE_NAN_DATA:
++		RCU_INIT_POINTER(sdata->u.nan_data.nmi, NULL);
 +		fallthrough;
  	default:
- 		if (coming_up) {
- 			ieee80211_del_virtual_monitor(local);
-@@ -1552,10 +1558,10 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		wiphy_work_cancel(sdata->local->hw.wiphy, &sdata->work);
+ 		/*
+@@ -1376,9 +1397,12 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_NAN:
+-	case NL80211_IFTYPE_NAN_DATA:
+ 		/* no special treatment */
+ 		break;
++	case NL80211_IFTYPE_NAN_DATA:
++		if (WARN_ON(!rcu_access_pointer(sdata->u.nan_data.nmi)))
++			return -ENOLINK;
++		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -1396,8 +1420,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		res = drv_start(local);
+ 		if (res) {
+ 			/*
+-			 * no need to worry about AP_VLAN cleanup since in that
+-			 * case we can't have open_count == 0
++			 * no need to worry about AP_VLAN/NAN_DATA cleanup since
++			 * in that case we can't have open_count == 0
+ 			 */
+ 			return res;
+ 		}
+@@ -1516,6 +1540,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_MESH_POINT:
+ 		case NL80211_IFTYPE_OCB:
++		case NL80211_IFTYPE_NAN_DATA:
+ 			netif_carrier_off(dev);
+ 			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+@@ -1562,6 +1587,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
   err_stop:
  	if (!local->open_count)
  		drv_stop(local, false);
-- err_del_bss:
--	sdata->bss = NULL;
++	if (sdata->vif.type == NL80211_IFTYPE_NAN_DATA)
++		RCU_INIT_POINTER(sdata->u.nan_data.nmi, NULL);
  	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
  		list_del(&sdata->u.vlan.list);
-+	/* Might not be initialized yet, but it is harmless */
-+	sdata->bss = NULL;
- 	return res;
- }
- 
+ 	/* Might not be initialized yet, but it is harmless */
 -- 
 2.52.0
 
