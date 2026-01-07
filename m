@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D5BA339708
-	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A4333D6C6
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Jan 2026 14:23:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767795829; cv=none; b=k5O0WrjBZs+CGgJ2B5P1nYW4WEuaQhY6z6M/B3AI9WbVgtfCRkMXVYD+ab2Cdm8uSwp4EhbpeACEe/7TdhmKaaN0jOP1tCn1hRq0RaX/uJw2vWEQfXu8ZFi7pLUNMsb6kT/pPUwXcFC1k3BsH9wwzc8MYV7E/eelD+zmrXA7n38=
+	t=1767795831; cv=none; b=ncNiNtb/gFdJzL4rZMEEtF6cmWULKpbsTnXLVd+BV5+R10WFIDZgG1/s1QrpN/FvnpxqxILym0dGpDJ7srbjCoVjpFVp1CyT0el/92xfCYBN8hLrmVACvGO45YLpsfYhDafDafinQsJUaLbky7mjbh1AicJU0F0bAwXSCoBuR9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767795829; c=relaxed/simple;
-	bh=8z3hOpzruyeJ0zDgaOexnMX/TEnS3tZTNbl1qpyGlGU=;
+	s=arc-20240116; t=1767795831; c=relaxed/simple;
+	bh=LIJbHFuWhBiAcmUET9MhvV3nkaP0hpm7zfw1isvxv1I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WljskD/h1qgEMZNd942u7Dq2nYyjE/RVjdmByrLICBOPIWN7VOR/KhMrZO082r1iLztiRgu9t8nCCjZJeu3kTUrW3V36bFSjwwR/SOE5myrml4fSto9UQL8D1ELjyx85XEoJ0Lbqdsv/js/DNrMadF0nJiGVmZHoiq5JsrRmJh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=FeB8c2N6; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=e/fjshh6EWAsvoMMQUVOJBi+OpKMWWabIRmpVxcV+Q/oX55ISwpwrT/dyO0a/n9q/DTThHTY42pNzaw4WxgjqbCeclOWgkyezomiw3pSsuFiRq3UDaWLdni0dwB4AXz98N5BEvwRkpVydttPtDyPTo5VkEAbHhpBsuM6m8FxzoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=iiN1+dCC; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="FeB8c2N6"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="iiN1+dCC"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=4bvrrWS8Hx1wEgfaVoa+fCIloxxwdqeI9v7WXwfD25o=;
-	t=1767795827; x=1769005427; b=FeB8c2N6LDmhqqxhvnnoU/H9Z47NKEAB6M5njzGhamJMCQW
-	+5Lhj+NVRfwlRZcPecRML6GhTLNVJdRL8C4aLYfsmarDfaqRVvhdWMLINJ1Njl8RIA2904H9I/mjZ
-	Rz1RjmbBt4A6yBzEcKYETRL069Ycc2IBkzJjBUj+p0FlPcZf9cEUIzZ3iaWhHGL+wHSRDc2oJwpz6
-	n0mhbWXTTq2yfSBWPb++JRLHOH8MudSK+XWxnbh4HHwBG7l0oJERUv7QKDc0lwbsbPg6VIUtPxrHL
-	XvKPWxn3cBHNRTCdLznlva21PidDag4euk3OXaCIPSq85L9jADtyoLa/wDfsepbw==;
+	Resent-Cc:Resent-Message-ID; bh=OMQJAiMFlV/b/VQiAHCHQsElvzga/VQR9OXuUFyFmkU=;
+	t=1767795830; x=1769005430; b=iiN1+dCCjy3HkamtCJB33n9gLp/BAZxphSiq7msbEqp3sa2
+	J4uqxBryep7SJFVObROdeVtRDclkPiXnl5tBvH/VuSAqQIXXhb3gMkyrolNJZ75lIeYAkfBRiDD+w
+	H1tkHVkUIFgsLhR8HLeeOmVFcpQDSWR7l2UGXeEXA+aJDwRlZZ1Rof2LLaB9mQf/1D/bO/9FNX1EI
+	ugjL56fjOCxLXvHxUmmTcskE79Y8HhNfkiKqV0B0USkWHt2pQrs72BL9F/t8avCg6NcWBjJCqVzR4
+	2l93w0JzRVxMfhRC9HWwB6EW76dfpPTG64lO/tQMX0P5d7dVm/MWwsAyFs5SkhPw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vdURs-00000005agF-3lmK;
-	Wed, 07 Jan 2026 15:23:45 +0100
+	id 1vdURv-00000005agF-14K9;
+	Wed, 07 Jan 2026 15:23:47 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [RFC wireless-next 14/46] wifi: mac80211_hwsim: select NAN TX channel based on current TSF
-Date: Wed,  7 Jan 2026 15:22:13 +0100
-Message-ID: <20260107152325.2084f2c9c153.I5ec4076a8a9445233dc414c6ecaa39f32f1e9595@changeid>
+Subject: [RFC wireless-next 16/46] wifi: mac80211_hwsim: protect tsf_offset using a spinlock
+Date: Wed,  7 Jan 2026 15:22:15 +0100
+Message-ID: <20260107152325.789b81f89c0b.I0da5477220b896e2177bd521f7d9a8f2595631e6@changeid>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260107142324.45386-48-johannes@sipsolutions.net>
 References: <20260107142324.45386-48-johannes@sipsolutions.net>
@@ -50,72 +50,120 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-Move the TX channel selection into the NAN specific file and select the
-channel based on the current slot.
+To implement NAN synchronization in hwsim, the TSF needs to be adjusted
+regularly from the RX path. Add a spinlock so that this can be done in a
+safe manner.
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- .../net/wireless/virtual/mac80211_hwsim_main.c |  6 +-----
- .../net/wireless/virtual/mac80211_hwsim_nan.c  | 18 ++++++++++++++++++
- .../net/wireless/virtual/mac80211_hwsim_nan.h  |  3 +++
- 3 files changed, 22 insertions(+), 5 deletions(-)
+ .../net/wireless/virtual/mac80211_hwsim_i.h   |  1 +
+ .../wireless/virtual/mac80211_hwsim_main.c    | 34 ++++++++++++++-----
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_i.h b/drivers/net/wireless/virtual/mac80211_hwsim_i.h
+index 0cc87205554e..ee566aff4785 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_i.h
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_i.h
+@@ -101,6 +101,7 @@ struct mac80211_hwsim_data {
+ 	u32 wmediumd;
+ 
+ 	/* difference between this hw's clock and the real clock, in usecs */
++	spinlock_t tsf_offset_lock;
+ 	s64 tsf_offset;
+ 
+ 	/* Stats */
 diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 57e22f18bbd1..cfe72dfd5918 100644
+index 5c74b5e5a2b5..09b4c2eec6c3 100644
 --- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
 +++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -1918,11 +1918,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	}
- 
- 	if (vif && vif->type == NL80211_IFTYPE_NAN && !data->tmp_chan) {
--		/* For NAN Device simulation purposes, assume that NAN is always
--		 * on channel 6 or channel 149, unless a ROC is in progress (for
--		 * USD use cases).
--		 */
--		channel = data->nan.channel;
-+		channel = mac80211_hwsim_nan_get_tx_channel(hw);
- 
- 		if (WARN_ON(!channel)) {
- 			ieee80211_free_txskb(hw, skb);
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-index 029499bf965f..ce8bb73f9dd6 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.c
-@@ -310,3 +310,21 @@ bool mac80211_hwsim_nan_txq_transmitting(struct ieee80211_hw *hw,
- 
- 	return true;
+@@ -1119,13 +1119,17 @@ static inline u64 mac80211_hwsim_get_sim_tsf(void)
+ ktime_t mac80211_hwsim_tsf_to_boottime(struct mac80211_hwsim_data *data,
+ 				       u64 tsf)
+ {
+-	return us_to_ktime(tsf - data->tsf_offset);
++	scoped_guard(spinlock_bh, &data->tsf_offset_lock) {
++		return us_to_ktime(tsf - data->tsf_offset);
++	}
  }
-+
-+struct ieee80211_channel *
-+mac80211_hwsim_nan_get_tx_channel(struct ieee80211_hw *hw)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	u64 tsf = mac80211_hwsim_get_tsf(data->hw, data->nan.device_vif);
-+	u8 slot = hwsim_nan_slot_from_tsf(tsf);
-+
-+	if (slot == SLOT_24GHZ_DW)
-+		return ieee80211_get_channel(hw->wiphy, 2437);
-+
-+	if (slot == SLOT_5GHZ_DW &&
-+	    data->nan.bands & BIT(NL80211_BAND_5GHZ))
-+		return ieee80211_get_channel(hw->wiphy, 5745);
-+
-+	/* drop frame and warn, NAN_CHAN_SWITCH_TIME_US should avoid races */
-+	return NULL;
-+}
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_nan.h b/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
-index 6a0780797273..796cc17d194e 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_nan.h
-@@ -39,4 +39,7 @@ int mac80211_hwsim_nan_change_config(struct ieee80211_hw *hw,
- bool mac80211_hwsim_nan_txq_transmitting(struct ieee80211_hw *hw,
- 					 struct ieee80211_txq *txq);
  
-+struct ieee80211_channel *
-+mac80211_hwsim_nan_get_tx_channel(struct ieee80211_hw *hw);
+ u64 mac80211_hwsim_boottime_to_tsf(struct mac80211_hwsim_data *data,
+ 				   ktime_t ts)
+ {
+-	return ktime_to_us(ts + data->tsf_offset);
++	scoped_guard(spinlock_bh, &data->tsf_offset_lock) {
++		return ktime_to_us(ts) + data->tsf_offset;
++	}
+ }
+ 
+ u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
+@@ -1134,14 +1138,18 @@ u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
+ 	struct mac80211_hwsim_data *data = hw->priv;
+ 	u64 sim_time = mac80211_hwsim_get_sim_tsf();
+ 
+-	return sim_time + data->tsf_offset;
++	scoped_guard(spinlock_bh, &data->tsf_offset_lock) {
++		return sim_time + data->tsf_offset;
++	}
+ }
+ 
+ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
+ {
+ 	u64 sim_time = mac80211_hwsim_get_sim_tsf();
+ 
+-	return cpu_to_le64(sim_time + data->tsf_offset);
++	scoped_guard(spinlock_bh, &data->tsf_offset_lock) {
++		return cpu_to_le64(sim_time + data->tsf_offset);
++	}
+ }
+ 
+ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
+@@ -1156,11 +1164,13 @@ static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
+ 	if (conf && !conf->enable_beacon)
+ 		return;
+ 
+-	/* adjust after beaconing with new timestamp at old TBTT */
+-	if (tsf > now)
+-		data->tsf_offset += delta;
+-	else
+-		data->tsf_offset -= delta;
++	scoped_guard(spinlock_bh, &data->tsf_offset_lock) {
++		/* adjust after beaconing with new timestamp at old TBTT */
++		if (tsf > now)
++			data->tsf_offset += delta;
++		else
++			data->tsf_offset -= delta;
++	}
+ }
+ 
+ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+@@ -1440,6 +1450,8 @@ static void mac80211_hwsim_write_tsf(struct mac80211_hwsim_data *data,
+ 	/* TODO: get MCS */
+ 	int bitrate = 100;
+ 
++	spin_lock_bh(&data->tsf_offset_lock);
 +
- #endif /* __MAC80211_HWSIM_NAN_H */
+ 	txrate = ieee80211_get_tx_rate(data->hw, info);
+ 	if (txrate)
+ 		bitrate = txrate->bitrate;
+@@ -1465,6 +1477,8 @@ static void mac80211_hwsim_write_tsf(struct mac80211_hwsim_data *data,
+ 							  10 * 8 * 10 /
+ 							  bitrate);
+ 	}
++
++	spin_unlock_bh(&data->tsf_offset_lock);
+ }
+ 
+ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+@@ -5324,6 +5338,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	hw->wiphy->mbssid_max_interfaces = 8;
+ 	hw->wiphy->ema_max_profile_periodicity = 3;
+ 
++	spin_lock_init(&data->tsf_offset_lock);
++
+ 	data->rx_rssi = DEFAULT_RX_RSSI;
+ 
+ 	INIT_DELAYED_WORK(&data->roc_start, hw_roc_start);
 -- 
 2.52.0
 
