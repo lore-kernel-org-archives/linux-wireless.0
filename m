@@ -1,47 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFE14A4D72;
-	Thu,  8 Jan 2026 12:06:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E80F5472DAE
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Jan 2026 12:19:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767873980; cv=none; b=nk4tAGv6DoTasg/pketUz4tDAMWQpGh9UbzwnCdnvJVBccRLp+PnxkAsCpga9lTMMjWhyeOkYsm9SIf6Na3UP6utQ/qjQAYnOcuaKbJcORD/vUuQyPSYGnIO7IDHY1uqplSvniS8ijN2G88jRXu3X8z7utAHkAMNMeAQ2SFUFvc=
+	t=1767874790; cv=none; b=AhtLVYaumSQGXExpDCTIy4u1T4VZxc9n6bWMVb9HJr2kp8PZWdlHKcNQ/XDCnybRk+yXg8xsXgawCa0aO8FFVtWeXWAgWSp4r2exTZ3/flHBhnYHfmGvCO0HcAPPrlZ9VUwH4/VHAIs17A4HF+AKmMUgGJz4BjwU8KsL5gdkCVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767873980; c=relaxed/simple;
-	bh=Wr73RokSiv/yECX5WjG/LPaS+/F2DTG8cG8IcbGay5A=;
+	s=arc-20240116; t=1767874790; c=relaxed/simple;
+	bh=CR7GvJdY4Kb4dV4IZVP5W2vKAlZoexS3s4SmtK5KBFU=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=e8+098UazTous4w4s02vCFVShP2qZlwjFkIFHRVcVOvUh9/xIaIkMRYNK5G6z2sT5eO2cb1q0LdOaRtlKrhwKu8NQ8nOuOw0Q8l0MjzCCgsTLXxBOWoQYOVyLvE1HAiiSSJgHmJxpz3m+3QWieIuHHvwDc0ez8HamsP/aPdXGBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Y7UFxxMc; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=ePXAP97nnIqOvzkKChkueP38JkDksozmTgwG9SUV0LzhHBs/h3Eh0ah7NcXItvBd4/Pr6TZ6yw8KkU+yQ4+9AQVZOsG86fEba1CwCn/T/ZYTLviqsosXyw8jyAuSzhz3Zvbm+SS5GMVcIeIxKfIastNGLGOhkkoJhS2GKzkMRWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ZY41mdGX; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Y7UFxxMc"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ZY41mdGX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Wr73RokSiv/yECX5WjG/LPaS+/F2DTG8cG8IcbGay5A=;
-	t=1767873977; x=1769083577; b=Y7UFxxMcR6PYwG+8tr3mf9iq7deKKA8a4H5E3OSw7SYVZG/
-	Azlt3JtUBeH7UIoXrl+GWRRKhzZf8B3wo6PN1LLMK7QBjOFogLx3hNuvmeDdBpsIjdoHxiKWbQH/j
-	7SHBOGFmzTIl46UKmURiZypZ9GFlx4R1qC2h0VUrOR23LtJr9Wn4h8cb9jGLotyU1b/5k7J0r2Go1
-	9N3Tzed4Tr6qSd/0g71Jn0brrug9fMTNUjEGkU3vYVg1iR1xN5JJkyX3mrv6HX4LP8BkKJ6cwatTy
-	vI4UaVkP8eng3RUGHdYWV3mTH/fXnhXgu7KQAhcjHRN76OKtE4j+oN88d79SVb4w==;
+	Resent-Cc:Resent-Message-ID; bh=nV/8cRkJZ5IZu2TQ3ZwaiTQ1xEXCUC6DpjzzN6f4JCw=;
+	t=1767874788; x=1769084388; b=ZY41mdGXks5zmxS1CpT6XvsPObSBPwwTL2OZm/263aRxMGo
+	0tTlYee6MAtxrY428Fx7DrA9WDWjAAkIyeq3TST1dxJ/tD5F9Ef5IXPawlKFPZ/nEHFOD812vnJe8
+	ePcOG+gLAbhDtVwzBqHxCLwQJtHTFOf+d9gS/YmgrXZHavV1sd2zT8EpYnmrxPUu9HP4KFVx9/ozO
+	j9H9XNEdQD4yLw9xQbN6ZNh8ojxNw4BJJGNw144kA4CzylWVUWDiLlt6wA6Ioe8E5h8m8+wmo+m33
+	83+PXOsOnfwT2x2f8CR5y7l1vUBvh5n6gcjy62/dQuc3u/HhD0WzNoYDVtGAqwFw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vdomH-00000006U8p-1BSs;
-	Thu, 08 Jan 2026 13:06:09 +0100
-Message-ID: <2411c0044b97dbab4183c03c18fb3f487f6b8f9f.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: cfg80211: Fix use-after-free in
- cfg80211_shutdown_all_interfaces
+	id 1vdozP-00000006UYt-1eFC;
+	Thu, 08 Jan 2026 13:19:43 +0100
+Message-ID: <67b8cc599e923433eec6c8baff72583c47a53cfd.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 1/2] wifi: mac80211: set band information
+ for NULL packets only for non-MLO stations
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniil Dulov <d.dulov@aladdin.ru>
-Cc: "John W. Linville" <linville@tuxdriver.com>, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	lvc-project@linuxtesting.org, stable@vger.kernel.org
-Date: Thu, 08 Jan 2026 13:06:08 +0100
-In-Reply-To: <20251223170452.75358-1-d.dulov@aladdin.ru>
-References: <20251223170452.75358-1-d.dulov@aladdin.ru>
+To: Suraj P Kizhakkethil <suraj.kizhakkethil@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 08 Jan 2026 13:19:42 +0100
+In-Reply-To: <20251127140555.472327-2-suraj.kizhakkethil@oss.qualcomm.com>
+References: <20251127140555.472327-1-suraj.kizhakkethil@oss.qualcomm.com>
+	 <20251127140555.472327-2-suraj.kizhakkethil@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
@@ -53,13 +52,55 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
+On Thu, 2025-11-27 at 19:35 +0530, Suraj P Kizhakkethil wrote:
+> Currently, when sending a NULL packet to probe a station, the band
+> information is derived from the chanctx_conf in the mac80211 vif's
+> bss_conf. However, for MLO, chanctx_conf is not assigned to the vif's
+> bss_conf; instead it is assigned on a per-link basis. As a result,
+> for MLO, sending a NULL packet to probe will trigger a warning.
+>=20
+> WARNING: net/mac80211/cfg.c:4593 at ieee80211_probe_client+0x1a8/0x1e0 [m=
+ac80211], CPU#2: hostapd/241
+> Call trace:
+>  ieee80211_probe_client+0x1a8/0x1e0 [mac80211] (P)
+>  nl80211_probe_client+0xac/0x170 [cfg80211]
+>  genl_family_rcv_msg_doit+0xc8/0x134
+>  genl_rcv_msg+0x200/0x280
+>  netlink_rcv_skb+0x38/0xfc
+>  genl_rcv+0x34/0x48
+>  netlink_unicast+0x228/0x334
+>  netlink_sendmsg+0x158/0x364
+>  ____sys_sendmsg+0x1f4/0x21c
+>  ___sys_sendmsg+0x98/0xc0
+>  __sys_sendmsg+0x74/0xd0
+>  __arm64_sys_sendmsg+0x20/0x28
+>  invoke_syscall.constprop.0+0x4c/0xd0
+>  do_el0_svc+0x3c/0xd0
+>  el0_svc+0x28/0xb8
+>  el0t_64_sync_handler+0x98/0xdc
+>  el0t_64_sync+0x154/0x158
+> ---[ end trace 0000000000000000 ]---
+>=20
+> For NULL packets sent to probe stations, set the band information only
+> for non-MLD case, since MLD transmissions does not rely on band. For
+> MLD connections, set the link ID as unspecified to allow the driver
+> to select the appropriate link. The case specific to non-MLO stations
+> connected to an MLD AP will be addressed in a follow up patch.
 
-Hi,
+Technically "AP MLD" ;)
 
-Not sure why you CC John these days.
+But I was more wondering about the use of "MLD connections", which seems
+odd to me (vs. "MLO connections")? Connections between MLDs? MLD is an
+entity, MLO is the mode of operation?
 
-Please fix the subject to be more specific. I also think the cancel
-should be during unregister, because drivers would not otherwise expect
-callbacks any more.
+> +	if (ieee80211_vif_is_mld(&sdata->vif))
+> +		info->control.flags |=3D IEEE80211_TX_CTRL_MLO_LINK_UNSPEC;
+
+I don't see why it should be set conditionally, it should be ignored
+anyway by non-MLO drivers? Or maybe if you'd want it zero for t hose
+then do that explicitly?
+
+I'm really commenting here because it gets messy in the next patch, see
+also there.
 
 johannes
