@@ -1,114 +1,109 @@
-Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D29B4DF3D6
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Jan 2026 13:41:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0837640FD89;
+	Thu,  8 Jan 2026 14:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767879676; cv=none; b=Lr7b1p+XXnDd1NmgVBp6bd6QOlveY9JeoMPT9MWgsR958zjYsj2vDchlSR1CY1tRDLFhb+BLQNiUj1LnX93sndP/sX5Ngt0jNEMUtc17NFNOWSDod2H74ZXkUgRmFS2bnJNy+JtGU4JU9ga2jcmcATtSJRy8PmbzAmSSZEGOe3o=
+	t=1767880908; cv=none; b=Vng8Lb+8bqtkLRHiyxEC/BVw0zXUAcOwNYuYAK4/0qgaHBMhGpmBceRd/6ew04kHRNA6TPfrjFpp4xOkkVGGYXiTLV898XYZGlZLicSnGOyAKxBb+tcucWrghheELc97kC+MHCS3IiTzEuqWxrawXHiMEmjbaaS9UNNoHkZH3MI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767879676; c=relaxed/simple;
-	bh=Y/redTSJJiFiCIi0nEgY3wpVQ796lO42ejJF82iJWUY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mzagXoB4mkKED5pF59JmIJOawlly4qU4XkzYdR9ZUpih5EvtVigOMqF+npPvC8deJV9mM6VEZt+i5WZTQUCpSrm6iHLKtNJr0PRW8/KNSS/sdRPURtCSrGyBy/le/EKimM0kEcoh1tEzSdrBN/kHxn03KqySW4YON93OIpucOF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mPRy/BrT; arc=none smtp.client-ip=74.125.82.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1767880908; c=relaxed/simple;
+	bh=/a6tor3t3BHXPf6cV1FkvZgBVzI83Fmb2fWyG8E85nc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nzdM75hZ006gjkAnS76/zlfNO3wTpycige3UKFW4rMSBXheVQVmZrplPCuarKA0u1vwH91E0oKcLyiuY1go7DCErrmfhnxqRjwozh5m5tXKAum+vzNL20Gf6lmdINUfZd1c4GAGeNrr5OWefogr1jE4Y+t60HEs1s6WfmvaOUi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=dFB5skw8; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mPRy/BrT"
-Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-11dd2370722so581662c88.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2026 05:41:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1767879672; x=1768484472; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xVx1Iceo8H7a1MGTgjly/2JCA8xXNTM+xi7dMPJELl0=;
-        b=mPRy/BrTHA4R/O3GrEYstmYPWODMeq8S9ZBXGu654VfGwYINTaX215HEQdRgw7foSr
-         eKYYQhk9vkgN0DraAHkN/GakreJ4n5tFQ7gRmI707x5QVFFt1/gzguOFEwij6LBPCpSP
-         yAQfIv8qttbdBcnUDDtvxZWL1jVY0Qt9fqV0iI9eospKJdNg/S2Gkw3FaZDAJSs0jVpb
-         Xe5XY5ovrnu84Hfaq724/Haa1mTjsZaL2QwDXXtHJRgiswAgKKdJtG6e1pkW15Y526km
-         jBGNGProj4vZCKGab2vWUrthzFi6HBBNd9zEFpNp0ZfuP00g9mJtdOnztvDXUSDXL3Cz
-         4ICA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767879672; x=1768484472;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=xVx1Iceo8H7a1MGTgjly/2JCA8xXNTM+xi7dMPJELl0=;
-        b=pAa9DPtR994sPKLaM1lwx8osEkaacnqnnOJowsF96VGANsBOvu/b2IfvwZUq/XrXzj
-         exxVn8jUCOT4KGvvelsSDv28knkcIAzrt7U8yir7HVme8wBtS1ruSHUN9LTeXPpS9X2a
-         XDnR9vK3+E6+112xxeizQSRZV10ZaGXK8kzndpNvzt+c52yTMN58s/h9J8pzi67hzi+d
-         d/gHm0YpMn5NqHUNuvGhlYVIO6ZYQRxVYMCC4UsydP7NXv4xfVzS+befM0mit+ZdQ8Cl
-         LT2GSPutil66bFbnOS7aP+ZTe1L0/KU4DMuTf6STbhuvcTXOybarE0YNYFVQG07LCY1Q
-         VhqQ==
-X-Gm-Message-State: AOJu0YwBsf+CdhcG1DRgi++f8aMFXIH3BFO9PBxWq3aRxur9mCGriGOH
-	Ibs466lHgUu0mpsNTxeV1QNsuFG1vNA+94FMEjlSsVp/VmAsi+T0nRzufxubsxA2SCnOiVtvNTu
-	DpPP30GBJuVBBKP5SnIT1g7xsY+p8QOY=
-X-Gm-Gg: AY/fxX46QveRDBBu6ndXT2HpEkdgOudx0FRvrwGuGHKYkXRgq50k+9aze77RjKm19o1
-	bgutZh2f1bMSDXXFX4cZpwXaKogU7IyeZfM0kDPGpD7Rmilh9V0t3wWLaRKzTOOttZ7YZm45b3b
-	YVAsv4h0VgAXtq4QpATgO+YZvOWlXYfVup8i1SBV0s/LbJ+9mmPwp9YOeWJ+dxq/+F+92BAkG+k
-	7GLygu7P9Hk0y8glxsFRUYxaKOJTGEgSqWcYKdIlasu/VdqoAxjjEjhBsJcAp7m8aHyiR8=
-X-Google-Smtp-Source: AGHT+IED4kahw/QTcOzvyLqi8VxXqpDij6yBcyCz96pxa/5L/h6mgwzj8m7N1Ix8DmHT16XLMDX9eiIrewOayG7LiZs=
-X-Received: by 2002:a05:7022:107:b0:11d:f682:e475 with SMTP id
- a92af1059eb24-121f8b5fdefmr5831812c88.40.1767879672498; Thu, 08 Jan 2026
- 05:41:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="dFB5skw8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=CHsYpmrl3ptgn/SH1+1dZo3E9tUPIlXIh6WzL+1xlrU=; t=1767880907; x=1769090507; 
+	b=dFB5skw8p+/z8w6j6pkGCnsYOXuVlI8+anoooXH/nJSHa8Zhu8CGHKEjAUVWQpmmgG55qfCqyBn
+	Eji3C3Y71mShBlo7zHfiSbMi1FcaZ+Y4kSxH3RQU+RYIjXeSYSUMhCGzLZwlFPezI1LB0azR/VkXP
+	xh56ZZWgHCm6xHao1kh//DBBnTGkp5YPlmHuoGAu9WU0PUBjHPMbjRYvpaNgGhbW+sLFzbHzdPE5+
+	38YGjcXcK3+w3mqqj8HyDx48H59XHCi/pqhznP4Yu0NHE15TvBgPKw1lG+7Z/l1jeO3I6iK6e8B4a
+	pwOFXgBmiq2tVJnXpfzNECYALUpWNPt6s+XA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vdqa8-00000006XK8-3ShP;
+	Thu, 08 Jan 2026 15:01:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [GIT PULL] wireless-2026-01-08
+Date: Thu,  8 Jan 2026 15:01:23 +0100
+Message-ID: <20260108140141.139687-3-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260107031203.170628-1-islituo@gmail.com> <87eco14u4p.fsf@toke.dk>
-In-Reply-To: <87eco14u4p.fsf@toke.dk>
-From: Tuo Li <islituo@gmail.com>
-Date: Thu, 8 Jan 2026 21:41:02 +0800
-X-Gm-Features: AQt7F2pqOthA3klwGzptaR_WtK8tBiNPP3U3wvNQ9jLQbjxTnCf10grChNQvqo8
-Message-ID: <CADm8Te=peTkMfSFqfHdj6AW-O88Jz3mtqQDn6rYwAn59zE5ZWQ@mail.gmail.com>
-Subject: Re: [PATCH] wifi: ath9k: add a defensive NULL check to prevent
- null-pointer dereference in ath9k_beacon_remove_slot()
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 7, 2026 at 6:03=E2=80=AFPM Toke H=C3=B8iland-J=C3=B8rgensen <to=
-ke@toke.dk> wrote:
->
-> Tuo Li <islituo@gmail.com> writes:
->
-> > In this function, bf is guarded by an if statement, indicating that it =
-may
-> > be NULL:
-> >
-> >   if (bf && bf->bf_mpdu) {...}
-> >
-> > If bf is NULL, calling list_add_tail() may result in a null-pointer
-> > dereference:
-> >
-> >   list_add_tail(&bf->list, &sc->beacon.bbuf);
-> >
-> > Therefore, add a defensive NULL check before invoking list_add_tail() t=
-o
-> > prevent this issue.
-> >
-> > Signed-off-by: Tuo Li <islituo@gmail.com>
->
-> Are you fixing an actual bug here? Otherwise, this is not worth the
-> churn...
->
-> -Toke
+Hi,
 
-Thanks for pointing this out.
+After the holidays and all we don't seem to have that
+much yet, but I've collected what we have for now.
 
-This issue was reported by a static analysis tool. After reviewing the
-code, I noticed that bf is guarded by an if statement, which indicates
-that it may be NULL, so I added a defensive check before the other
-dereference.
+Please pull and let us know if there's any problem.
 
-However, I have not been able to identify a concrete execution path in
-which bf would actually be NULL at that point. I'm fine with dropping
-this change if it is considered unnecessary.
+Thanks,
+johannes
 
-Best regards,
-Tuo
+
+
+The following changes since commit dbf8fe85a16a33d6b6bd01f2bc606fc017771465:
+
+  Merge tag 'net-6.19-rc4' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2025-12-30 08:45:58 -0800)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2026-01-08
+
+for you to fetch changes up to a203dbeeca15a9b924f0d51f510921f4bae96801:
+
+  wifi: mac80211: collect station statistics earlier when disconnect (2026-01-08 13:33:11 +0100)
+
+----------------------------------------------------------------
+Couple of fixes:
+ - mac80211:
+   - long-standing injection bug due to chanctx rework
+   - more recent interface iteration issue
+   - collect statistics before removing stations
+ - hwsim:
+   - fix NAN frequency typo (potential NULL ptr deref)
+   - fix locking of radio lock (needs softirqs disabled)
+ - wext:
+   - ancient issue with compat and events copying some
+     uninitialized stack data to userspace
+
+----------------------------------------------------------------
+Baochen Qiang (1):
+      wifi: mac80211: collect station statistics earlier when disconnect
+
+Benjamin Berg (2):
+      wifi: mac80211_hwsim: fix typo in frequency notification
+      wifi: mac80211_hwsim: disable BHs for hwsim_radio_lock
+
+Eric Dumazet (1):
+      wifi: avoid kernel-infoleak from struct iw_point
+
+Johannes Berg (1):
+      wifi: mac80211: restore non-chanctx injection behaviour
+
+Miri Korenblit (1):
+      wifi: mac80211: don't iterate not running interfaces
+
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 6 +++---
+ net/mac80211/chan.c                           | 3 +++
+ net/mac80211/sta_info.c                       | 7 ++++---
+ net/mac80211/tx.c                             | 2 ++
+ net/wireless/wext-core.c                      | 4 ++++
+ net/wireless/wext-priv.c                      | 4 ++++
+ 6 files changed, 20 insertions(+), 6 deletions(-)
