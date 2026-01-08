@@ -1,106 +1,76 @@
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com [74.125.224.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622654DC551
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Jan 2026 12:26:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC94466FFE
+	for <linux-wireless@vger.kernel.org>; Thu,  8 Jan 2026 12:27:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767875165; cv=none; b=rsl14tvfGsZOICqZNlIwXmHyOsRo0ICIFQpmk35/Lx0wk/4l05h/tQjN5Kdrujyq9v6RPL+5yRutouQLKZ1w33zVqK74YE4uWGIlsbbCYm1K/OitYcwM58DZi/il2L7nCnUbhtipFqijAFIlVjPJHuInsdXNvPTjzoQmIgiWEuU=
+	t=1767875270; cv=none; b=Cv/ctfhgHFNFxNDovQhk+yCOzucIoDU7J81v9XdjBDZMpcy7F5FKazXE0kz5rjVPMal7nbByirYetILDekv/D/SOj1CLD8Z2pyKXeR864JwKj728F+EwVOsxIMdGNuXBmHSxfPYP5ZoXn+J2/fXWFct/vZgmYq0gzV0eL1IB5J0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767875165; c=relaxed/simple;
-	bh=C/PxTgSERqJ6ILqTgSVsU+Sj2XkQpUudhpR6A9+mc9k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RQTppofHbjVQ59pJersIPniC5ay0vRiiK2JCEaEqBM3FID+gofKCwPbBDKVtBiARM4B3ef9BnpJft1f8GYMfhB/hR6No/TALu5d3je8lcn9Oc1wE6ryVr4t1T40jWjoKu/2pzcoOtAG5sYvhLV4oZFI475IlLzoyASGxLJfJVmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WAHJgCsb; arc=none smtp.client-ip=74.125.224.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1767875270; c=relaxed/simple;
+	bh=el2gp2OuRfSnHFtALxd57PXZ97hFzRj/OfwLR6vEdE8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Ex4Y7LBOypGNR2lNfpLwLcrUlSxYpfq5v0Y7OckYCeQp37/g543KFo4SJTe78Hxiop9jbdd3cB0i8poSbDTX7lXWIy5qV+0qtYejPGC+KA/7kkK2/rppkTj56ydp4afMUcQ6qCzPhMKBIWoKxZruvcxG4nqGi960pVFph67GmU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=AOvVEgF0; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WAHJgCsb"
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-64661975669so3344034d50.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2026 04:26:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1767875163; x=1768479963; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XQbP6K4LtPm/3Bomj038VWToPwF1ZlmXIxpj9oFDKbg=;
-        b=WAHJgCsb05DN3q1CdpQz8DYDn3sRhH/hTCvrrYAKm/6sLDKBDNBI9G261T7ujH5CeB
-         5Bvnk9Q8WRC+Gl4v2/c6BRxOWxviaHNT0GVmUw26G1uszDXOWoZGjM8QCtBQL1//WPTm
-         fEv2XnzzDj8VhFekJiHO22xNmgx003o/XZbKWhdVX6SU2XEELInl6GxP8vv/tXxzPQrC
-         YvE4legYXB5EwDUwVS250WYSgLCsSCmWXXp0beSzyKaqYEwCJYjB7QLGk/LaNjGB3X0e
-         Ws3hCh0jtlo7CCnbpJ1bVnDGahzYj9oST7lcErARQIQA4DXsNbOjRc5YUo4jL0KI4Ayu
-         SuxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767875163; x=1768479963;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=XQbP6K4LtPm/3Bomj038VWToPwF1ZlmXIxpj9oFDKbg=;
-        b=aPXuPkxaJxw/8Tdv6b4dDs42v2y962TN8BYBwSLjvZhjpRo6CbijsFwwiMePlxvB9R
-         SMIJkqDbI8pH4F5RhrKRGvKIj8EMrUHskgjYWVGV02j9L9j1sfQxl8CqgSFBJiBZ8aEp
-         xGqXVfV6HNuipG6+kos13UBarwUx8wuYH8p1cMaOIGRl33JvP9vOqAMFBH0E1Yq+Wu1o
-         HiHDsyRiQ6NqmyPk97boIT8IcBxkj9hQXajhI5fKBbJzSdowCh6ek4ahfeFtJ6QYF4DA
-         wW5KEM3DnSi07tkd/BBrg1wABlQJ7LFK35qEZGEsZsfpXAZtwP+IHs9kRNpT95NyhNvx
-         QIMQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUslsGrm8Riungl22QSJy/Boxq/pLUtjcmAXtKmqiMLsKWTIDpoJ/DKf1COxuGFZpM/G5hcydbzj9VCGMkWSw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLk31Pr8yqtAM3hehxN/ziuCaLSIxyuemAwQEPcN4VqN3TMESP
-	GSaDEWQmbu3tQUWd9Q16RAJp7RSPCMOjnQ9CtehT4amcSLsFOCXgyjoVDsuH1a+0skSSH53gARK
-	/YxBrtUzYPq8VAqYnDVSWy0hfl2Z3rq8=
-X-Gm-Gg: AY/fxX53+66wQBOe2sbL2wYY92pebqGyXxYYj9G+zp2DzAJnw9bpF7RIpgh2Juc6EQ8
-	TYHN1VlGZFZv5wrNIVO12IUC4q2i9VAIGEUhZW1CuycKSDHjDV04MBail3kvj6xOM80Z/HW1lu/
-	gqeOrj7ZRH/p4zoGYh/x2WbF1BfriFLcLiY4+UQSGwB6uEwlkfJ8AmNwAsKlbKB9PtmEuqs0M/G
-	U1DjjCTKrSWO9VfZicgiIcYUc7tb43vPXvjT9YqOnsALjB1ja/rxUwf4LhjTYfX6i4FlA==
-X-Google-Smtp-Source: AGHT+IE2yzRR9td4dYr8beCMOnr5E8Sv8b+0e37MZp8Y0hPbwVCOnvmprBO2NLzwb4jJvdl1Q3MsdWRhtLD5I5wdK+g=
-X-Received: by 2002:a05:690e:1183:b0:63e:1df9:c895 with SMTP id
- 956f58d0204a3-64716c50a58mr5519645d50.66.1767875162887; Thu, 08 Jan 2026
- 04:26:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="AOvVEgF0"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=e4TXHoKS05eAyb/cfW8Lr2YmTCKZ1G/kgbcIfjfbj/U=;
+	t=1767875269; x=1769084869; b=AOvVEgF0GOXDozqk6eSCiVY+owAx2kB2ODvJWaiZDqVs7rc
+	Ck1Ne/1TveadoaRWf5OfbmYINmqSRkSHcHgw1uk1cqKRc94GFHeU2xXJxVBHQV/qA2KPnXteH8HKz
+	vHaqA1ashTWEI5ircu6JtIsPHpyY4XIY2fnCiPSAAdbsAwOf8U1i7aGamhRs+55Q7/kXsfGLdXCqb
+	nGylWkP/lGX+TfwPPTUwXYz4QhShNKf+I5DmLFypust5zS+R2VCal4RKTAd/udtehcvgwgRf2VNzV
+	bTroQEVkLACKc1NqFUPkLy7QJDDcuczyzjVLYoVWaPYksMOUo1ZVSajm2kHrM5wg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vdp7B-00000006UoP-2IL8;
+	Thu, 08 Jan 2026 13:27:45 +0100
+Message-ID: <9eb13765529bac88337ab2fd1a13769fa4519f52.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v2 1/3] wifi: cfg80211: Add support for
+ S1G Response Indication Configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ria Thomas <ria.thomas@morsemicro.com>
+Cc: linux-wireless@vger.kernel.org, lachlan.hodges@morsemicro.com, 
+	arien.judge@morsemicro.com, pradeep.reddy@morsemicro.com,
+ simon@morsemicro.com
+Date: Thu, 08 Jan 2026 13:27:44 +0100
+In-Reply-To: <20251209062424.3926297-2-ria.thomas@morsemicro.com> (sfid-20251209_072520_787538_A301A7A4)
+References: <20251209062424.3926297-1-ria.thomas@morsemicro.com>
+	 <20251209062424.3926297-2-ria.thomas@morsemicro.com>
+	 (sfid-20251209_072520_787538_A301A7A4)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260108101927.857582-1-edumazet@google.com> <851802c967b92b5ea2ce93e8577107acd43d2034.camel@sipsolutions.net>
- <CANn89iLxDc9viP0Pmj3uC01s46eUR2xu4XAUEo=he-M84aCf9A@mail.gmail.com>
-In-Reply-To: <CANn89iLxDc9viP0Pmj3uC01s46eUR2xu4XAUEo=he-M84aCf9A@mail.gmail.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Thu, 8 Jan 2026 13:25:51 +0100
-X-Gm-Features: AQt7F2pvm4NEm6VrnYq0Y5B6J_pXuAY_73yxlKUTPRwclpCUkgoqjALp_DmIhpM
-Message-ID: <CAOiHx=mWrizoJAOU=40NWk6A1+b99WCM1EkxVwLfiJ8Sv4pDKg@mail.gmail.com>
-Subject: Re: [PATCH net] wifi: avoid kernel-infoleak from struct iw_point
-To: Eric Dumazet <edumazet@google.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, "David S . Miller" <davem@davemloft.net>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, linux-wireless@vger.kernel.org, 
-	netdev@vger.kernel.org, eric.dumazet@gmail.com, 
-	syzbot+bfc7323743ca6dbcc3d3@syzkaller.appspotmail.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-malware-bazaar: not-scanned
 
-Hi,
+On Tue, 2025-12-09 at 11:54 +0530, Ria Thomas wrote:
+> In S1G, a STA distributes a Response Indication (RI) to protect the
+> frame expected at SIFS after the eliciting frame. Introduce a
+> userspace configurable selector for the expected response frame
+> type (i.e., Block Ack, NDP, or no response) after transmitting
+> certain S1G frames.
 
-On Thu, Jan 8, 2026 at 12:28=E2=80=AFPM Eric Dumazet <edumazet@google.com> =
-wrote:
->
-> On Thu, Jan 8, 2026 at 11:29=E2=80=AFAM Johannes Berg <johannes@sipsoluti=
-ons.net> wrote:
-> >
-> > On Thu, 2026-01-08 at 10:19 +0000, Eric Dumazet wrote:
-> > > struct iw_point has a 32bit hole on 64bit arches.
-> > >
-> > > struct iw_point {
-> > >   void __user   *pointer;       /* Pointer to the data  (in user spac=
-e) */
-> > >   __u16         length;         /* number of fields or size in bytes =
-*/
-> > >   __u16         flags;          /* Optional params */
-> > > };
-> > >
-> > > Make sure to zero the structure to avoid dislosing 32bits of kernel d=
-ata
 
-In case you do a V2: dislosing -> disclosing (I assume)
+> +	int	(*set_s1g_ri)(struct wiphy *wiphy, struct net_device *dev,
+> +			      u8 val);
 
-> > > to user space.
+I'm generally not very happy with state that simply "exists" at the
+interface level. The documentation doesn't indicate anything, but the
+implementation in mac80211 just treats it as such.
 
-Best regards,
-Jonas
+Does it really _need_ to be that way for any reason, rather than being a
+setting that is, say, part of the association and/or AP setup?
+
+johannes
