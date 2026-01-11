@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E88A34CFDD
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:04:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E93F34CFAB
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:04:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768151052; cv=none; b=t/KFgzOq9gDwtrsrVYXjeLaBHm5Ii6lVVai1flIozYtgqNiUtis7uEVwe5S5u6RQcncRrK/jVZaRQ2RK9BbDuhPbv6vAI0f0+3clnfMIro4f+zwDWGCA0VuhvklpxPrUcSVvdEWJDMBtEi3gO/bS/H45hLQDhOJmsm1GYtaQKK0=
+	t=1768151052; cv=none; b=jNw4IrYISoHqcV5A6uXrjHbhehefn9L9yT93SkhnDyBHQYaTy+olXNAI1ptDAw9LyX+hsvOz6YV7iYjay7n155GLVyIMLBa+C/Lsig2Ps7Ig0I38sAJU+jrWcPhlgUGZ7RxveghqryS7rfPw6jq+zZtKC8Jt+/r04EHBng+WoL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768151052; c=relaxed/simple;
-	bh=KTnJVo2NM0lZ1opbMmLovTKnbRRA3C8Eud8jHXAmkJ4=;
+	bh=1OOt4VqRpbJ0g84oB9m3jkkYpJ/Hm/RttYrHKFPc0To=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BisRJo5n9z6eHvq043lXHypB5fvalBVMlIhsW2VDLstEOVoRzQGt6T0nBOZ0c7xt9svf/h3RXxxXeANgsRlsb6ozj0bhGR1fxqL8NMcprYTYpfN8Za0Gi2RdgKebWOT/J+cM9ySU/neJalsHIj71ha1/Ked8zZVgKGIJ8c3qoog=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=m4g9hCn5; arc=none smtp.client-ip=192.198.163.18
+	 MIME-Version; b=TWdqvfoXuHOGzir5rp8Du37U+GOm/krZGO2/a2YgVwaRksdDQ02/6E0+22YFjwkgIWZDUSgIwV56Wz/ehRgiCV/QpWGlTLwbR0f2Zkym0DXnk3dnXpzslI1KACp/mmKaihERC2Y+ZCR71G5Abn/g9PruWQkxw5JWb1ZBReUM24o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e+vMi4/1; arc=none smtp.client-ip=192.198.163.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m4g9hCn5"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e+vMi4/1"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768151045; x=1799687045;
+  t=1768151044; x=1799687044;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=KTnJVo2NM0lZ1opbMmLovTKnbRRA3C8Eud8jHXAmkJ4=;
-  b=m4g9hCn5r6zfBnR3cz+4ylGeobUAeHLEY4Tv/9qkHg43r+Sxj/0M/udT
-   HOmnTioCVayHQUeE9FnvyM88yg4q1VIR3o503aJgtZAmAyMyUdsHbhh5k
-   oCuyjkvZSUdYp1z6MqXfFGX4/derfL9ge9sxSJHMeLbIqF4ZmpuAhxAJq
-   JA+AegbMCLGNzGReiOSgrP//JQvAe4iB49cMzxOiPgzbMquSIEA71sDSD
-   Io6+XKdLscnPF7uRix1uaR31S+WXFfW5veTGR2UFYTNuyIGON6abYve4j
-   zoullqZolFR6QXD1BVMnYsz/JjPyTeep4OAVRfD+cski3gi5ByUiQM1vE
-   w==;
-X-CSE-ConnectionGUID: x5KUtOk4QJO/5wCeML+jWA==
-X-CSE-MsgGUID: ZgomSat8QoGeL1Cy3d2PSQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="68650781"
+  bh=1OOt4VqRpbJ0g84oB9m3jkkYpJ/Hm/RttYrHKFPc0To=;
+  b=e+vMi4/1t3xnGWbD9BsFPlogAdKXncNMQ2ICX8rsyPB9nrCv0Vfo0wiG
+   Y0imPjxkoUuRV4ZpFMPqf0IZfCs5UtQA6rCZCng58avyAC0XZlpROW3BU
+   m0vTouFOccd63IF1olNA/qGrPndUHZuVcQ6kfAidWAA05ql6rO0iKAucZ
+   lVkhqsteo/wjcQatptMwkxkiHVj5/losWmeRCS8BBSftIjBvOvbOSlE/6
+   z5hxN9SmFvq3KgCwscD42xRud29g6k+j0eC5C8kDaBQqIl0526Fc4HYk2
+   3FagFWVCf+GrSHERykatmFiDBq8DsTTR4LCMf4CCGm4R2GIvn9GYfWaMh
+   Q==;
+X-CSE-ConnectionGUID: mEOIsZuWTM+miUazAv9jhw==
+X-CSE-MsgGUID: NBPZodf1Qj+AvhmxyuI6+w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="68650779"
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="68650781"
+   d="scan'208";a="68650779"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:04:05 -0800
-X-CSE-ConnectionGUID: TL3iPgtERyO3iAihn4Fp9Q==
-X-CSE-MsgGUID: HFSSaGucRS6VgSR3hpesTg==
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:04:04 -0800
+X-CSE-ConnectionGUID: VN/Zf6UsSGqKNRR58wZ+qQ==
+X-CSE-MsgGUID: qyCDrBrIRiK7Es0iiOvzQA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="208433295"
+   d="scan'208";a="208433289"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:04:04 -0800
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:04:03 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Avraham Stern <avraham.stern@intel.com>,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 3/4] wifi: nl80211/cfg80211: add negotiated burst period to FTM result
-Date: Sun, 11 Jan 2026 19:03:50 +0200
-Message-Id: <20260111190221.e0778f86edef.I3c98c1933eb639963bc3ffdef81a8788b59f2188@changeid>
+Subject: [PATCH wireless-next 2/4] wifi: nl80211/cfg80211: clarify periodic FTM parameters for non-EDCA based ranging
+Date: Sun, 11 Jan 2026 19:03:49 +0200
+Message-Id: <20260111190221.b89cb3f68e1a.I7a9d8c6d1c66c77f1b43120a841101c96c3f19ad@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260111170351.2093318-1-miriam.rachel.korenblit@intel.com>
 References: <20260111170351.2093318-1-miriam.rachel.korenblit@intel.com>
@@ -64,73 +64,90 @@ Content-Transfer-Encoding: 8bit
 
 From: Avraham Stern <avraham.stern@intel.com>
 
-The FTM result includes some of the periodic measurement negotiated
-parameters (like the burst duration and number of bursts), but it
-doesn't include the burst period. Add it to the FTM result
-notification.
+Periodic FTM request attributes are defined based on the periodic
+parameters used in EDCA-based ranging negotiation. However, non-EDCA
+based ranging (trigger-based/non-trigger-based) does not include
+periodic parameters in the negotiation protocol, even though upper
+layers may still request periodic measurements.
+
+Clarify the semantics of periodic ranging attributes when used with
+non-EDCA based ranging.
 
 Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/pmsr.c          | 1 +
- 3 files changed, 6 insertions(+)
+ include/net/cfg80211.h       |  4 +++-
+ include/uapi/linux/nl80211.h |  7 +++++--
+ net/wireless/pmsr.c          | 11 ++++++-----
+ 3 files changed, 14 insertions(+), 8 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 614ffc4969f0..f6ac7af030dc 100644
+index 9c80ee0c0357..614ffc4969f0 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -4190,6 +4190,7 @@ struct cfg80211_ftm_responder_stats {
-  * @num_bursts_exp: actual number of bursts exponent negotiated
-  * @burst_duration: actual burst duration negotiated
-  * @ftms_per_burst: actual FTMs per burst negotiated
-+ * @burst_period: actual burst period negotiated in units of 100ms
-  * @lci_len: length of LCI information (if present)
-  * @civicloc_len: length of civic location information (if present)
-  * @lci: LCI data (may be %NULL)
-@@ -4231,6 +4232,7 @@ struct cfg80211_pmsr_ftm_result {
- 	u8 num_bursts_exp;
- 	u8 burst_duration;
- 	u8 ftms_per_burst;
-+	u16 burst_period;
- 	s32 rssi_avg;
- 	s32 rssi_spread;
- 	struct rate_info tx_rate, rx_rate;
+@@ -4293,7 +4293,9 @@ struct cfg80211_pmsr_result {
+  * @burst_period: burst period to use
+  * @asap: indicates to use ASAP mode
+  * @num_bursts_exp: number of bursts exponent
+- * @burst_duration: burst duration
++ * @burst_duration: burst duration. If @trigger_based or @non_trigger_based is
++ *	set, this is the burst duration in milliseconds, and zero means the
++ *	device should pick an appropriate value based on @ftms_per_burst.
+  * @ftms_per_burst: number of FTMs per burst
+  * @ftmr_retries: number of retries for FTM request
+  * @request_lci: request LCI information
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7b5463168324..44e3468cc985 100644
+index 34dc047a172f..7b5463168324 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -7968,6 +7968,8 @@ enum nl80211_peer_measurement_ftm_failure_reasons {
-  *	9.4.2.22.1) starting with the Measurement Token, with Measurement
-  *	Type 11.
-  * @NL80211_PMSR_FTM_RESP_ATTR_PAD: ignore, for u64/s64 padding only
-+ * @NL80211_PMSR_FTM_RESP_ATTR_BURST_PERIOD: actual burst period used by
-+ *	the responder (similar to request, u16)
-  *
-  * @NUM_NL80211_PMSR_FTM_RESP_ATTR: internal
-  * @NL80211_PMSR_FTM_RESP_ATTR_MAX: highest attribute number
-@@ -7996,6 +7998,7 @@ enum nl80211_peer_measurement_ftm_resp {
- 	NL80211_PMSR_FTM_RESP_ATTR_LCI,
- 	NL80211_PMSR_FTM_RESP_ATTR_CIVICLOC,
- 	NL80211_PMSR_FTM_RESP_ATTR_PAD,
-+	NL80211_PMSR_FTM_RESP_ATTR_BURST_PERIOD,
- 
- 	/* keep last */
- 	NUM_NL80211_PMSR_FTM_RESP_ATTR,
+@@ -7827,12 +7827,15 @@ enum nl80211_peer_measurement_ftm_capa {
+  *	&enum nl80211_preamble), optional for DMG (u32)
+  * @NL80211_PMSR_FTM_REQ_ATTR_NUM_BURSTS_EXP: number of bursts exponent as in
+  *	802.11-2016 9.4.2.168 "Fine Timing Measurement Parameters element"
+- *	(u8, 0-15, optional with default 15 i.e. "no preference")
++ *	(u8, 0-15, optional with default 15 i.e. "no preference". No limit for
++ *	 non-EDCA ranging)
+  * @NL80211_PMSR_FTM_REQ_ATTR_BURST_PERIOD: interval between bursts in units
+  *	of 100ms (u16, optional with default 0)
+  * @NL80211_PMSR_FTM_REQ_ATTR_BURST_DURATION: burst duration, as in 802.11-2016
+  *	Table 9-257 "Burst Duration field encoding" (u8, 0-15, optional with
+- *	default 15 i.e. "no preference")
++ *	default 15 i.e. "no preference"). For non-EDCA ranging, this is the
++ *	burst duration in milliseconds (optional with default 0, i.e. let the
++ *	device decide).
+  * @NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST: number of successful FTM frames
+  *	requested per burst
+  *	(u8, 0-31, optional with default 0 i.e. "no preference")
 diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
-index 795683a81303..d5077d320098 100644
+index a117f5093ca2..795683a81303 100644
 --- a/net/wireless/pmsr.c
 +++ b/net/wireless/pmsr.c
-@@ -454,6 +454,7 @@ static int nl80211_pmsr_send_ftm_res(struct sk_buff *msg,
- 	PUT(u8, NUM_BURSTS_EXP, num_bursts_exp);
- 	PUT(u8, BURST_DURATION, burst_duration);
- 	PUT(u8, FTMS_PER_BURST, ftms_per_burst);
-+	PUT(u16, BURST_PERIOD, burst_period);
- 	PUTOPT(s32, RSSI_AVG, rssi_avg);
- 	PUTOPT(s32, RSSI_SPREAD, rssi_spread);
- 	if (res->ftm.tx_rate_valid &&
+@@ -85,11 +85,6 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 	}
+ 
+-	out->ftm.burst_duration = 15;
+-	if (tb[NL80211_PMSR_FTM_REQ_ATTR_BURST_DURATION])
+-		out->ftm.burst_duration =
+-			nla_get_u8(tb[NL80211_PMSR_FTM_REQ_ATTR_BURST_DURATION]);
+-
+ 	out->ftm.ftms_per_burst = 0;
+ 	if (tb[NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST])
+ 		out->ftm.ftms_per_burst =
+@@ -164,6 +159,12 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 	}
+ 
++	if (tb[NL80211_PMSR_FTM_REQ_ATTR_BURST_DURATION])
++		out->ftm.burst_duration =
++			nla_get_u8(tb[NL80211_PMSR_FTM_REQ_ATTR_BURST_DURATION]);
++	else if (!out->ftm.non_trigger_based && !out->ftm.trigger_based)
++		out->ftm.burst_duration = 15;
++
+ 	out->ftm.lmr_feedback =
+ 		!!tb[NL80211_PMSR_FTM_REQ_ATTR_LMR_FEEDBACK];
+ 	if (!out->ftm.trigger_based && !out->ftm.non_trigger_based &&
 -- 
 2.34.1
 
