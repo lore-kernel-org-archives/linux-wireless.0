@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D8A34CFB4
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:39:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19F7349B17
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:39:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768153188; cv=none; b=BE8WyiDfXA4vg3fqAJoMelHkC6EDGPbI527GtP4yu/YW4rd1r7FtXkqTZhFNHCHWeHxd3P9owUhD8Ta1BCoWyeatUaJTn2NjPRzZcLh6ZZnWOJ2zjyaoJSxeS4jo048itorqVggBvVTKG6fkELYeGfD9jm63cQi96Oht3xNLBDU=
+	t=1768153188; cv=none; b=JXo4neGj90Y8A86H+qZ/KmX/aU/R/alhEhiRGRV/i5Bo8/0uYLEDoR9Of6+gpnEOtjBXzoOD/UJN7SeC/LACg8ejR4IIbrqcgZM8+AVMvSPdoUgx7nriWuNKpo3JzanCpHhGu7E8TfQPAkzdF0po6ojN8WEa/q+x6WRO0ggvXd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768153188; c=relaxed/simple;
-	bh=IuZZch0rVqMYE4m6fENsrLaEbROvQGxYMy/KoSEKJN8=;
+	bh=ov650yVa98HKgE+WLZcso6PfgZfgjYDNYjqOVP0/sdk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rBXhfaGe040ge+n8VH1wC580BdOgRD4i9EBG8qNnqICRwIGf5dpo+9U9akNx+a9tKq1RR+Ovslu//o68ZqDVc8irGNnSuJyG8uWY9jUThQWe9vv/FNrEsxUP3ONj6qae0tTaWZIxffgy2sJI2R5FOK4zuLhBVIMxG8MtHMuotQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RgfDdjda; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version; b=J+oG6cncSTA9TonMWtThNvmXmBDCKS4c4CUkjixS7J6REgTBNeJJO7bJlGoeNWg4Mj0qi4FSr+Pu82Qu35AkJnUmaC2MEL8Cjf6O2fEeu7JFYqsvJ1HXONjnCPbuDYDtQjY0FHOVukEwRThCAfLRAxZyb+d8TxTfaF5eGNIZXxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jPqfnE5s; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RgfDdjda"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jPqfnE5s"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768153186; x=1799689186;
+  t=1768153187; x=1799689187;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=IuZZch0rVqMYE4m6fENsrLaEbROvQGxYMy/KoSEKJN8=;
-  b=RgfDdjdaMgw7ZZYOYhCo3t0rvKqn/YYEdU4Aiayqqbry/4oUQQP2pxS4
-   /9PxDUnn3UxZV4ib+y3jaBdRMq01hTC5YKa6CYHF8v63EFFCLCZtUdEnO
-   y8anrk1bmyewZVeweF/BkWip3xPObe8p/EVsG+Qvtndz4T/gPG+ztkU6P
-   7vS7dfNfrx52G21NdZvCw1DiC7s6X/fS9t27niyUZ9ZOXmwgTVtFKqBRd
-   kS1rHD4AD8PqN4NWuTUio+KBVKfKPqMet31mdWzRfVI7gNUY/EjOwj8T/
-   gOrxhd9lTPmC46IpkVVmVtm2jIc74XgN4jyNwse//xeaqA7FF4+YGqins
-   A==;
-X-CSE-ConnectionGUID: CVp6Cw1mRVeXLv9JBojocA==
-X-CSE-MsgGUID: 6h4rSXWPT3OVCn5nPUaflw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="69521090"
+  bh=ov650yVa98HKgE+WLZcso6PfgZfgjYDNYjqOVP0/sdk=;
+  b=jPqfnE5sOQq5pEwCwI4WAve5Zt+7dcvQfiVVCoYVNw/tmOI6SU1wESNS
+   h30XIkaDUaoNEoEWyTO6m+p9xVbTDCYYKw5HU6ecqJ4HxuGs+nKN6BYsD
+   Yw8/CdEE5w/IIZwDlk8CPihDa7SEj/r5uBgf0f6S4NgduoQVvrDeWC0LH
+   cAZCqAdEEciuKooZ9cy3BNyq9c/m1iUvtwJCbJGhDw2KIfHbt/ZGontcS
+   dCZiLV0oh0KHTbdz5oi76tbVmEMQcpi/c1H1ueEnygGUQGSfsnDYCGX/8
+   umFcQN4I1z0l8uejH2ZSqHIY2+Tokid2WDVj7XE9TJPMwtX1L+5hyZL1C
+   w==;
+X-CSE-ConnectionGUID: 79RdxpfuQWS5rT3xZNcYJw==
+X-CSE-MsgGUID: JgxbxzCtRASj0w4BzhgiAA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="69521092"
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="69521090"
+   d="scan'208";a="69521092"
 Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:44 -0800
-X-CSE-ConnectionGUID: UQTjnYvNS32jxfilFpeasQ==
-X-CSE-MsgGUID: 33kC628pSYutyUWGfXobMg==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:47 -0800
+X-CSE-ConnectionGUID: 0/vRQbBoQiygPTipP/4byw==
+X-CSE-MsgGUID: +FwpTU0LTC+ZoyuCd2mdbQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="208393796"
+   d="scan'208";a="208393802"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:43 -0800
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:46 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 07/15] wifi: iwlwifi: move iwl_get_lari_config_bitmap to the op_mode
-Date: Sun, 11 Jan 2026 19:39:18 +0200
-Message-Id: <20260111193638.099e733b1ece.Icac5b8eb5d8260e35df89622443d68a6beacedbb@changeid>
+Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: acpi: cache the DSM functions
+Date: Sun, 11 Jan 2026 19:39:20 +0200
+Message-Id: <20260111193638.732ff6856796.Iff844bfbb0fea3c3d9654a53254a5b14dbaec8c1@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260111173926.2216629-1-miriam.rachel.korenblit@intel.com>
 References: <20260111173926.2216629-1-miriam.rachel.korenblit@intel.com>
@@ -63,193 +63,195 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is used solely there.
-The implementation can differe between different op_modes that support
-different firmware versions
+Instead of reading the DSM functions on demand, just read them all
+when the first DSM function is called and cache the values for all
+the other DSM functions. This simplifies the flow.
+Since the same will be done for UEFI in the next patch, remove the
+ifdef CONFIG_ACPI around the relevant variables.
+
+Once UEFI's cache will be implemented, we'll be able to change
+iwl_bios_get_dsm to access the cache directly.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/regulatory.c    | 49 ------------------
- .../wireless/intel/iwlwifi/fw/regulatory.h    |  2 -
- .../wireless/intel/iwlwifi/mld/regulatory.c   | 18 ++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 50 ++++++++++++++++++-
- 4 files changed, 66 insertions(+), 53 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 112 ++++++++++++------
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  11 +-
+ 2 files changed, 84 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-index 7e7af2b81181..00f1c20a5a37 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
-@@ -488,55 +488,6 @@ bool iwl_add_mcc_to_tas_block_list(u16 *list, u8 *size, u16 mcc)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+index 52edc19d8cdd..4d37ca984c41 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -156,61 +156,101 @@ static int iwl_acpi_get_dsm_integer(struct device *dev, int rev, int func,
  }
- IWL_EXPORT_SYMBOL(iwl_add_mcc_to_tas_block_list);
  
--__le32 iwl_get_lari_config_bitmap(struct iwl_fw_runtime *fwrt)
--{
--	int ret;
--	u32 val;
--	__le32 config_bitmap = 0;
--
--	switch (CSR_HW_RFID_TYPE(fwrt->trans->info.hw_rf_id)) {
--	case IWL_CFG_RF_TYPE_HR1:
--	case IWL_CFG_RF_TYPE_HR2:
--	case IWL_CFG_RF_TYPE_JF1:
--	case IWL_CFG_RF_TYPE_JF2:
--		ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_ENABLE_INDONESIA_5G2,
--				       &val);
--
--		if (!ret && val == DSM_VALUE_INDONESIA_ENABLE)
--			config_bitmap |=
--			    cpu_to_le32(LARI_CONFIG_ENABLE_5G2_IN_INDONESIA_MSK);
--		break;
--	default:
--		break;
--	}
--
--	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_DISABLE_SRD, &val);
--	if (!ret) {
--		if (val == DSM_VALUE_SRD_PASSIVE)
--			config_bitmap |=
--				cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_PASSIVE_MSK);
--		else if (val == DSM_VALUE_SRD_DISABLE)
--			config_bitmap |=
--				cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_DISABLED_MSK);
--	}
--
--	if (fw_has_capa(&fwrt->fw->ucode_capa,
--			IWL_UCODE_TLV_CAPA_CHINA_22_REG_SUPPORT)) {
--		ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG,
--				       &val);
--		/*
--		 * China 2022 enable if the BIOS object does not exist or
--		 * if it is enabled in BIOS.
--		 */
--		if (ret < 0 || val & DSM_MASK_CHINA_22_REG)
--			config_bitmap |=
--				cpu_to_le32(LARI_CONFIG_ENABLE_CHINA_22_REG_SUPPORT_MSK);
--	}
--
--	return config_bitmap;
--}
--IWL_EXPORT_SYMBOL(iwl_get_lari_config_bitmap);
--
- int iwl_bios_get_dsm(struct iwl_fw_runtime *fwrt, enum iwl_dsm_funcs func,
- 		     u32 *value)
+ /*
+- * This function receives a DSM function number, calculates its expected size
+- * according to Intel BIOS spec, and fills in the value in a 32-bit field.
++ * This function loads all the DSM functions, it checks the size and populates
++ * the cache with the values in a 32-bit field.
+  * In case the expected size is smaller than 32-bit, padding will be added.
+  */
+-int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
+-		     enum iwl_dsm_funcs func, u32 *value)
++static int iwl_acpi_load_dsm_values(struct iwl_fw_runtime *fwrt)
  {
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-index 859cb303f813..26c1d3fad4df 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-@@ -218,8 +218,6 @@ int iwl_bios_get_mcc(struct iwl_fw_runtime *fwrt, char *mcc);
- int iwl_bios_get_eckv(struct iwl_fw_runtime *fwrt, u32 *ext_clk);
- int iwl_bios_get_wbem(struct iwl_fw_runtime *fwrt, u32 *value);
+-	size_t expected_size;
+-	u64 tmp;
++	u64 query_func_val;
+ 	int ret;
  
--__le32 iwl_get_lari_config_bitmap(struct iwl_fw_runtime *fwrt);
--
- int iwl_bios_get_dsm(struct iwl_fw_runtime *fwrt, enum iwl_dsm_funcs func,
- 		     u32 *value);
+ 	BUILD_BUG_ON(ARRAY_SIZE(acpi_dsm_size) != DSM_FUNC_NUM_FUNCS);
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-index 40571125b3ab..92e6c0535501 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-@@ -206,11 +206,27 @@ int iwl_mld_init_ppag(struct iwl_mld *mld)
- 	return iwl_mld_ppag_send_cmd(mld);
- }
+-	if (WARN_ON(func >= ARRAY_SIZE(acpi_dsm_size) || !func))
+-		return -EINVAL;
++	ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV,
++				       DSM_FUNC_QUERY,
++				       &iwl_guid, &query_func_val,
++				       acpi_dsm_size[DSM_FUNC_QUERY]);
  
-+static __le32 iwl_mld_get_lari_config_bitmap(struct iwl_fw_runtime *fwrt)
-+{
-+	int ret;
-+	u32 val;
-+
-+	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_DISABLE_SRD, &val);
-+	if (!ret) {
-+		if (val == DSM_VALUE_SRD_PASSIVE)
-+			return cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_PASSIVE_MSK);
-+		else if (val == DSM_VALUE_SRD_DISABLE)
-+			return cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_DISABLED_MSK);
+-	expected_size = acpi_dsm_size[func];
++	if (ret) {
++		IWL_DEBUG_RADIO(fwrt, "ACPI QUERY FUNC not valid: %d\n", ret);
++		return ret;
 +	}
+ 
+-	/* Currently all ACPI DSMs are either 8-bit or 32-bit */
+-	if (expected_size != sizeof(u8) && expected_size != sizeof(u32))
+-		return -EOPNOTSUPP;
++	IWL_DEBUG_RADIO(fwrt, "ACPI DSM validity bitmap 0x%x\n",
++			(u32)query_func_val);
+ 
+-	if (!fwrt->acpi_dsm_funcs_valid) {
+-		ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV,
+-					       DSM_FUNC_QUERY,
+-					       &iwl_guid, &tmp,
+-					       acpi_dsm_size[DSM_FUNC_QUERY]);
+-		if (ret) {
+-			/* always indicate BIT(0) to avoid re-reading */
+-			fwrt->acpi_dsm_funcs_valid = BIT(0);
+-			return ret;
++	/* DSM_FUNC_QUERY is 0, start from 1 */
++	for (int func = 1; func < ARRAY_SIZE(fwrt->dsm_values); func++) {
++		size_t expected_size = acpi_dsm_size[func];
++		u64 tmp;
 +
++		if (!(query_func_val & BIT(func))) {
++			IWL_DEBUG_RADIO(fwrt,
++					"ACPI DSM %d not indicated as valid\n",
++					func);
++			continue;
+ 		}
+ 
+-		IWL_DEBUG_RADIO(fwrt, "ACPI DSM validity bitmap 0x%x\n",
+-				(u32)tmp);
+-		/* always indicate BIT(0) to avoid re-reading */
+-		fwrt->acpi_dsm_funcs_valid = tmp | BIT(0);
++		/* This is an invalid function (5 for example) */
++		if (!expected_size)
++			continue;
++
++		/* Currently all ACPI DSMs are either 8-bit or 32-bit */
++		if (expected_size != sizeof(u8) && expected_size != sizeof(u32))
++			continue;
++
++		ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV, func,
++					       &iwl_guid, &tmp, expected_size);
++		if (ret)
++			continue;
++
++		if ((expected_size == sizeof(u8) && tmp != (u8)tmp) ||
++		    (expected_size == sizeof(u32) && tmp != (u32)tmp))
++			IWL_DEBUG_RADIO(fwrt,
++					"DSM value overflows the expected size, truncating\n");
++		fwrt->dsm_values[func] = (u32)tmp;
++		fwrt->dsm_funcs_valid |= BIT(func);
+ 	}
+ 
+-	if (!(fwrt->acpi_dsm_funcs_valid & BIT(func))) {
 +	return 0;
 +}
 +
- void iwl_mld_configure_lari(struct iwl_mld *mld)
- {
- 	struct iwl_fw_runtime *fwrt = &mld->fwrt;
- 	struct iwl_lari_config_change_cmd cmd = {
--		.config_bitmap = iwl_get_lari_config_bitmap(fwrt),
-+		.config_bitmap = iwl_mld_get_lari_config_bitmap(fwrt),
- 	};
- 	bool has_raw_dsm_capa = fw_has_capa(&fwrt->fw->ucode_capa,
- 					    IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index d04f5d408ec3..018f3396e955 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1165,6 +1165,54 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
- 		IWL_DEBUG_RADIO(mvm, "failed to send TAS_CONFIG (%d)\n", ret);
- }
- 
-+static __le32 iwl_mvm_get_lari_config_bitmap(struct iwl_fw_runtime *fwrt)
++/*
++ * This function receives a DSM function number, calculates its expected size
++ * according to Intel BIOS spec, and fills in the value in a 32-bit field.
++ * In case the expected size is smaller than 32-bit, padding will be added.
++ */
++int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
++		     enum iwl_dsm_funcs func, u32 *value)
 +{
-+	int ret;
-+	u32 val;
-+	__le32 config_bitmap = 0;
++	if (!fwrt->dsm_funcs_valid) {
++		int ret = iwl_acpi_load_dsm_values(fwrt);
 +
-+	switch (CSR_HW_RFID_TYPE(fwrt->trans->info.hw_rf_id)) {
-+	case IWL_CFG_RF_TYPE_HR1:
-+	case IWL_CFG_RF_TYPE_HR2:
-+	case IWL_CFG_RF_TYPE_JF1:
-+	case IWL_CFG_RF_TYPE_JF2:
-+		ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_ENABLE_INDONESIA_5G2,
-+				       &val);
-+
-+		if (!ret && val == DSM_VALUE_INDONESIA_ENABLE)
-+			config_bitmap |=
-+			    cpu_to_le32(LARI_CONFIG_ENABLE_5G2_IN_INDONESIA_MSK);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_DISABLE_SRD, &val);
-+	if (!ret) {
-+		if (val == DSM_VALUE_SRD_PASSIVE)
-+			config_bitmap |=
-+				cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_PASSIVE_MSK);
-+		else if (val == DSM_VALUE_SRD_DISABLE)
-+			config_bitmap |=
-+				cpu_to_le32(LARI_CONFIG_CHANGE_ETSI_TO_DISABLED_MSK);
-+	}
-+
-+	if (fw_has_capa(&fwrt->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_CHINA_22_REG_SUPPORT)) {
-+		ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG,
-+				       &val);
 +		/*
-+		 * China 2022 enable if the BIOS object does not exist or
-+		 * if it is enabled in BIOS.
++		 * Always set the valid bit for DSM_FUNC_QUERY so that even if
++		 * DSM_FUNC_QUERY returns 0 (no DSM function is valid), we will
++		 * still consider the cache as valid.
 +		 */
-+		if (ret < 0 || val & DSM_MASK_CHINA_22_REG)
-+			config_bitmap |=
-+				cpu_to_le32(LARI_CONFIG_ENABLE_CHINA_22_REG_SUPPORT_MSK);
++		fwrt->dsm_funcs_valid |= BIT(DSM_FUNC_QUERY);
++
++		if (ret)
++			return ret;
 +	}
 +
-+	return config_bitmap;
-+}
++	BUILD_BUG_ON(ARRAY_SIZE(fwrt->dsm_values) != DSM_FUNC_NUM_FUNCS);
++	BUILD_BUG_ON(DSM_FUNC_NUM_FUNCS > BITS_PER_TYPE(fwrt->dsm_funcs_valid));
 +
- static size_t iwl_mvm_get_lari_config_cmd_size(u8 cmd_ver)
- {
- 	size_t cmd_size;
-@@ -1201,7 +1249,7 @@ static int iwl_mvm_fill_lari_config(struct iwl_fw_runtime *fwrt,
- 	memset(cmd, 0, sizeof(*cmd));
- 	*cmd_size = iwl_mvm_get_lari_config_cmd_size(cmd_ver);
++	if (WARN_ON(func >= ARRAY_SIZE(fwrt->dsm_values) || !func))
++		return -EINVAL;
++
++	if (!(fwrt->dsm_funcs_valid & BIT(func))) {
+ 		IWL_DEBUG_RADIO(fwrt, "ACPI DSM %d not indicated as valid\n",
+ 				func);
+ 		return -ENODATA;
+ 	}
  
--	cmd->config_bitmap = iwl_get_lari_config_bitmap(fwrt);
-+	cmd->config_bitmap = iwl_mvm_get_lari_config_bitmap(fwrt);
+-	ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV, func,
+-				       &iwl_guid, &tmp, expected_size);
+-	if (ret)
+-		return ret;
+-
+-	if ((expected_size == sizeof(u8) && tmp != (u8)tmp) ||
+-	    (expected_size == sizeof(u32) && tmp != (u32)tmp))
+-		IWL_DEBUG_RADIO(fwrt,
+-				"DSM value overflows the expected size, truncating\n");
+-	*value = (u32)tmp;
++	*value = fwrt->dsm_values[func];
  
- 	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_11AX_ENABLEMENT, &value);
- 	if (!ret) {
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 57570ff15622..b9e5f8ea8f94 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -116,10 +116,14 @@ struct iwl_txf_iter_data {
+  * @phy_filters: specific phy filters as read from WPFC BIOS table
+  * @ppag_bios_rev: PPAG BIOS revision
+  * @ppag_bios_source: see &enum bios_source
+- * @acpi_dsm_funcs_valid: bitmap indicating which DSM values are valid,
++ * @dsm_funcs_valid: bitmap indicating which DSM values are valid,
+  *	zero (default initialization) means it hasn't been read yet,
+  *	and BIT(0) is set when it has since function 0 also has this
+- *	bitmap and is always supported
++ *	bitmap and is always supported.
++ *	If the bit is set for a specific function, then the corresponding
++ *	entry in &dsm_values is valid.
++ * @dsm_values: cache of the DSM values. The validity of each entry is
++ *	determined by &dsm_funcs_valid.
+  * @geo_enabled: WGDS table is present
+  * @geo_num_profiles: number of geo profiles
+  * @geo_rev: geo profiles table revision
+@@ -213,7 +217,8 @@ struct iwl_fw_runtime {
+ 	struct iwl_phy_specific_cfg phy_filters;
+ 
+ #ifdef CONFIG_ACPI
+-	u32 acpi_dsm_funcs_valid;
++	u32 dsm_funcs_valid;
++	u32 dsm_values[DSM_FUNC_NUM_FUNCS];
+ #endif
+ };
+ 
 -- 
 2.34.1
 
