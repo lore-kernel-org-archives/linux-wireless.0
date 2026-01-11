@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19F7349B17
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:39:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B0A34D3AD
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2026 17:39:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768153188; cv=none; b=JXo4neGj90Y8A86H+qZ/KmX/aU/R/alhEhiRGRV/i5Bo8/0uYLEDoR9Of6+gpnEOtjBXzoOD/UJN7SeC/LACg8ejR4IIbrqcgZM8+AVMvSPdoUgx7nriWuNKpo3JzanCpHhGu7E8TfQPAkzdF0po6ojN8WEa/q+x6WRO0ggvXd8=
+	t=1768153190; cv=none; b=bTfwbUvLrCxhIZE2yCuQhQ0Ew0FoIaLtcF4ZEenP5y2eMM2ftbICcm0V+1KXjIkR3YkvvVx8ytNB3HbROuygYMAHlqg1MV//PJ5sajMZgBXTn68VNywYrn4Q+NYcaFwMxp35FWRi+Z/cDV/OUY0zVpqLWoDdp9bE+Xok3eH3fhY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768153188; c=relaxed/simple;
-	bh=ov650yVa98HKgE+WLZcso6PfgZfgjYDNYjqOVP0/sdk=;
+	s=arc-20240116; t=1768153190; c=relaxed/simple;
+	bh=GzUqG2antwo7yg1mnJyZ2HZllUAJG/2ltB9XipypnPw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=J+oG6cncSTA9TonMWtThNvmXmBDCKS4c4CUkjixS7J6REgTBNeJJO7bJlGoeNWg4Mj0qi4FSr+Pu82Qu35AkJnUmaC2MEL8Cjf6O2fEeu7JFYqsvJ1HXONjnCPbuDYDtQjY0FHOVukEwRThCAfLRAxZyb+d8TxTfaF5eGNIZXxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jPqfnE5s; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version; b=jFV5e6usmR2PRfwI/pscI6EUUBBX97tbz4P49rTr8DuPTV/FizJsSe8Z601Gk7zTEq+p5WTKXXS3kidjKvzjqcY+bGus6IBP1Lw0saxYdbL/8sKeHQxueJCRZ7nvKCeABg8M66Ud2JkXG9ShOVNkIGHJyJwg0BMn2kT5AB5WsPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TKiFza++; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jPqfnE5s"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TKiFza++"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1768153187; x=1799689187;
+  t=1768153189; x=1799689189;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ov650yVa98HKgE+WLZcso6PfgZfgjYDNYjqOVP0/sdk=;
-  b=jPqfnE5sOQq5pEwCwI4WAve5Zt+7dcvQfiVVCoYVNw/tmOI6SU1wESNS
-   h30XIkaDUaoNEoEWyTO6m+p9xVbTDCYYKw5HU6ecqJ4HxuGs+nKN6BYsD
-   Yw8/CdEE5w/IIZwDlk8CPihDa7SEj/r5uBgf0f6S4NgduoQVvrDeWC0LH
-   cAZCqAdEEciuKooZ9cy3BNyq9c/m1iUvtwJCbJGhDw2KIfHbt/ZGontcS
-   dCZiLV0oh0KHTbdz5oi76tbVmEMQcpi/c1H1ueEnygGUQGSfsnDYCGX/8
-   umFcQN4I1z0l8uejH2ZSqHIY2+Tokid2WDVj7XE9TJPMwtX1L+5hyZL1C
-   w==;
-X-CSE-ConnectionGUID: 79RdxpfuQWS5rT3xZNcYJw==
-X-CSE-MsgGUID: JgxbxzCtRASj0w4BzhgiAA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="69521092"
+  bh=GzUqG2antwo7yg1mnJyZ2HZllUAJG/2ltB9XipypnPw=;
+  b=TKiFza++jrsY5aBpbbi/AgC8uyvgoxMgwsHqdjetmnke1TJHGzKvkMKB
+   mLK94+YVUOGHg0KgvwiIT1IfR38XBsMclmuT6GW6ZUBqKokpPWANsNb1H
+   ChO7sbl1Kp+5Byv8ALXTFWbG3FG5QTTnd0avbOGiaSVca8q5o+VGtFpop
+   sPB8r5LdNyQ/P2N15HIa6NK93uQB1kDK8tT1Ap0LZ6r0uFMdnrpYkV2dn
+   YqO8aILlWTVTJCybE0ZheMi6Nsx4jhAcjcAJOw1gotf99s6dT/Ffr6RJl
+   0/JUV7Q77fs2I8xoLBBW57ZeWoeQcLnFyelzjR4S0qp6DvQv8JRnA02U0
+   A==;
+X-CSE-ConnectionGUID: TicArAfXSJ24BfA6Un32kQ==
+X-CSE-MsgGUID: WT3J3SBcTAi2RxJJ8X6M1Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11668"; a="69521094"
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="69521092"
+   d="scan'208";a="69521094"
 Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:47 -0800
-X-CSE-ConnectionGUID: 0/vRQbBoQiygPTipP/4byw==
-X-CSE-MsgGUID: +FwpTU0LTC+ZoyuCd2mdbQ==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:49 -0800
+X-CSE-ConnectionGUID: 2qnBCxWyTJiVV0T3UDeY/A==
+X-CSE-MsgGUID: GKSg7x0tQxWdklr2V33Abg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,219,1763452800"; 
-   d="scan'208";a="208393802"
+   d="scan'208";a="208393809"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:46 -0800
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2026 09:39:48 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: acpi: cache the DSM functions
-Date: Sun, 11 Jan 2026 19:39:20 +0200
-Message-Id: <20260111193638.732ff6856796.Iff844bfbb0fea3c3d9654a53254a5b14dbaec8c1@changeid>
+Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: split bios_value_u32 to separate the header
+Date: Sun, 11 Jan 2026 19:39:22 +0200
+Message-Id: <20260111193638.2f191a5f33fe.I7797134967b980bbda9ba29daa360e50a2196d7d@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260111173926.2216629-1-miriam.rachel.korenblit@intel.com>
 References: <20260111173926.2216629-1-miriam.rachel.korenblit@intel.com>
@@ -63,195 +63,141 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Instead of reading the DSM functions on demand, just read them all
-when the first DSM function is called and cache the values for all
-the other DSM functions. This simplifies the flow.
-Since the same will be done for UEFI in the next patch, remove the
-ifdef CONFIG_ACPI around the relevant variables.
-
-Once UEFI's cache will be implemented, we'll be able to change
-iwl_bios_get_dsm to access the cache directly.
+This header will be reused in other firmware API structures
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 112 ++++++++++++------
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  11 +-
- 2 files changed, 84 insertions(+), 39 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/nvm-reg.h  | 16 ++++++++++++----
+ .../net/wireless/intel/iwlwifi/fw/regulatory.c   |  6 ++++--
+ drivers/net/wireless/intel/iwlwifi/mld/debugfs.c |  6 +++---
+ .../net/wireless/intel/iwlwifi/mld/regulatory.c  |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c      |  5 +++--
+ 5 files changed, 26 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index 52edc19d8cdd..4d37ca984c41 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -156,61 +156,101 @@ static int iwl_acpi_get_dsm_integer(struct device *dev, int rev, int func,
- }
- 
- /*
-- * This function receives a DSM function number, calculates its expected size
-- * according to Intel BIOS spec, and fills in the value in a 32-bit field.
-+ * This function loads all the DSM functions, it checks the size and populates
-+ * the cache with the values in a 32-bit field.
-  * In case the expected size is smaller than 32-bit, padding will be added.
-  */
--int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
--		     enum iwl_dsm_funcs func, u32 *value)
-+static int iwl_acpi_load_dsm_values(struct iwl_fw_runtime *fwrt)
- {
--	size_t expected_size;
--	u64 tmp;
-+	u64 query_func_val;
- 	int ret;
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(acpi_dsm_size) != DSM_FUNC_NUM_FUNCS);
- 
--	if (WARN_ON(func >= ARRAY_SIZE(acpi_dsm_size) || !func))
--		return -EINVAL;
-+	ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV,
-+				       DSM_FUNC_QUERY,
-+				       &iwl_guid, &query_func_val,
-+				       acpi_dsm_size[DSM_FUNC_QUERY]);
- 
--	expected_size = acpi_dsm_size[func];
-+	if (ret) {
-+		IWL_DEBUG_RADIO(fwrt, "ACPI QUERY FUNC not valid: %d\n", ret);
-+		return ret;
-+	}
- 
--	/* Currently all ACPI DSMs are either 8-bit or 32-bit */
--	if (expected_size != sizeof(u8) && expected_size != sizeof(u32))
--		return -EOPNOTSUPP;
-+	IWL_DEBUG_RADIO(fwrt, "ACPI DSM validity bitmap 0x%x\n",
-+			(u32)query_func_val);
- 
--	if (!fwrt->acpi_dsm_funcs_valid) {
--		ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV,
--					       DSM_FUNC_QUERY,
--					       &iwl_guid, &tmp,
--					       acpi_dsm_size[DSM_FUNC_QUERY]);
--		if (ret) {
--			/* always indicate BIT(0) to avoid re-reading */
--			fwrt->acpi_dsm_funcs_valid = BIT(0);
--			return ret;
-+	/* DSM_FUNC_QUERY is 0, start from 1 */
-+	for (int func = 1; func < ARRAY_SIZE(fwrt->dsm_values); func++) {
-+		size_t expected_size = acpi_dsm_size[func];
-+		u64 tmp;
-+
-+		if (!(query_func_val & BIT(func))) {
-+			IWL_DEBUG_RADIO(fwrt,
-+					"ACPI DSM %d not indicated as valid\n",
-+					func);
-+			continue;
- 		}
- 
--		IWL_DEBUG_RADIO(fwrt, "ACPI DSM validity bitmap 0x%x\n",
--				(u32)tmp);
--		/* always indicate BIT(0) to avoid re-reading */
--		fwrt->acpi_dsm_funcs_valid = tmp | BIT(0);
-+		/* This is an invalid function (5 for example) */
-+		if (!expected_size)
-+			continue;
-+
-+		/* Currently all ACPI DSMs are either 8-bit or 32-bit */
-+		if (expected_size != sizeof(u8) && expected_size != sizeof(u32))
-+			continue;
-+
-+		ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV, func,
-+					       &iwl_guid, &tmp, expected_size);
-+		if (ret)
-+			continue;
-+
-+		if ((expected_size == sizeof(u8) && tmp != (u8)tmp) ||
-+		    (expected_size == sizeof(u32) && tmp != (u32)tmp))
-+			IWL_DEBUG_RADIO(fwrt,
-+					"DSM value overflows the expected size, truncating\n");
-+		fwrt->dsm_values[func] = (u32)tmp;
-+		fwrt->dsm_funcs_valid |= BIT(func);
- 	}
- 
--	if (!(fwrt->acpi_dsm_funcs_valid & BIT(func))) {
-+	return 0;
-+}
-+
-+/*
-+ * This function receives a DSM function number, calculates its expected size
-+ * according to Intel BIOS spec, and fills in the value in a 32-bit field.
-+ * In case the expected size is smaller than 32-bit, padding will be added.
-+ */
-+int iwl_acpi_get_dsm(struct iwl_fw_runtime *fwrt,
-+		     enum iwl_dsm_funcs func, u32 *value)
-+{
-+	if (!fwrt->dsm_funcs_valid) {
-+		int ret = iwl_acpi_load_dsm_values(fwrt);
-+
-+		/*
-+		 * Always set the valid bit for DSM_FUNC_QUERY so that even if
-+		 * DSM_FUNC_QUERY returns 0 (no DSM function is valid), we will
-+		 * still consider the cache as valid.
-+		 */
-+		fwrt->dsm_funcs_valid |= BIT(DSM_FUNC_QUERY);
-+
-+		if (ret)
-+			return ret;
-+	}
-+
-+	BUILD_BUG_ON(ARRAY_SIZE(fwrt->dsm_values) != DSM_FUNC_NUM_FUNCS);
-+	BUILD_BUG_ON(DSM_FUNC_NUM_FUNCS > BITS_PER_TYPE(fwrt->dsm_funcs_valid));
-+
-+	if (WARN_ON(func >= ARRAY_SIZE(fwrt->dsm_values) || !func))
-+		return -EINVAL;
-+
-+	if (!(fwrt->dsm_funcs_valid & BIT(func))) {
- 		IWL_DEBUG_RADIO(fwrt, "ACPI DSM %d not indicated as valid\n",
- 				func);
- 		return -ENODATA;
- 	}
- 
--	ret = iwl_acpi_get_dsm_integer(fwrt->dev, ACPI_DSM_REV, func,
--				       &iwl_guid, &tmp, expected_size);
--	if (ret)
--		return ret;
--
--	if ((expected_size == sizeof(u8) && tmp != (u8)tmp) ||
--	    (expected_size == sizeof(u32) && tmp != (u32)tmp))
--		IWL_DEBUG_RADIO(fwrt,
--				"DSM value overflows the expected size, truncating\n");
--	*value = (u32)tmp;
-+	*value = fwrt->dsm_values[func];
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 57570ff15622..b9e5f8ea8f94 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -116,10 +116,14 @@ struct iwl_txf_iter_data {
-  * @phy_filters: specific phy filters as read from WPFC BIOS table
-  * @ppag_bios_rev: PPAG BIOS revision
-  * @ppag_bios_source: see &enum bios_source
-- * @acpi_dsm_funcs_valid: bitmap indicating which DSM values are valid,
-+ * @dsm_funcs_valid: bitmap indicating which DSM values are valid,
-  *	zero (default initialization) means it hasn't been read yet,
-  *	and BIT(0) is set when it has since function 0 also has this
-- *	bitmap and is always supported
-+ *	bitmap and is always supported.
-+ *	If the bit is set for a specific function, then the corresponding
-+ *	entry in &dsm_values is valid.
-+ * @dsm_values: cache of the DSM values. The validity of each entry is
-+ *	determined by &dsm_funcs_valid.
-  * @geo_enabled: WGDS table is present
-  * @geo_num_profiles: number of geo profiles
-  * @geo_rev: geo profiles table revision
-@@ -213,7 +217,8 @@ struct iwl_fw_runtime {
- 	struct iwl_phy_specific_cfg phy_filters;
- 
- #ifdef CONFIG_ACPI
--	u32 acpi_dsm_funcs_valid;
-+	u32 dsm_funcs_valid;
-+	u32 dsm_values[DSM_FUNC_NUM_FUNCS];
- #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 4644fc1aa1ec..48f407baed39 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -503,18 +503,26 @@ enum bios_source {
  };
  
+ /**
+- * struct bios_value_u32 - BIOS configuration.
++ * struct iwl_bios_config_hdr - BIOS configuration header
+  * @table_source: see &enum bios_source
+  * @table_revision: table revision.
+  * @reserved: reserved
+- * @value: value in bios.
+  */
+-struct bios_value_u32 {
++struct iwl_bios_config_hdr {
+ 	u8 table_source;
+ 	u8 table_revision;
+ 	u8 reserved[2];
++} __packed; /* BIOS_CONFIG_HDR_API_S_VER_1 */
++
++/**
++ * struct bios_value_u32 - BIOS configuration.
++ * @hdr: bios config header
++ * @value: value in bios.
++ */
++struct bios_value_u32 {
++	struct iwl_bios_config_hdr hdr;
+ 	__le32 value;
+-} __packed; /* BIOS_TABLE_SOURCE_U32_S_VER_1 */
++} __packed; /* BIOS_CONFIG_DATA_U32_API_S_VER_1 */
+ 
+ /**
+  * struct iwl_tas_config_cmd - configures the TAS.
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 00f1c20a5a37..958e71a3c958 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -376,8 +376,10 @@ int iwl_fill_ppag_table(struct iwl_fw_runtime *fwrt,
+ 		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
+ 		gain = cmd->v7.gain[0];
+ 		*cmd_size = sizeof(cmd->v7);
+-		cmd->v7.ppag_config_info.table_source = fwrt->ppag_bios_source;
+-		cmd->v7.ppag_config_info.table_revision = fwrt->ppag_bios_rev;
++		cmd->v7.ppag_config_info.hdr.table_source =
++			fwrt->ppag_bios_source;
++		cmd->v7.ppag_config_info.hdr.table_revision =
++			fwrt->ppag_bios_rev;
+ 		cmd->v7.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags);
+ 	} else {
+ 		IWL_DEBUG_RADIO(fwrt, "Unsupported PPAG command version\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+index b9c9cd3f44e4..5c2a2033b3fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+@@ -244,7 +244,7 @@ static size_t iwl_mld_dump_tas_resp(struct iwl_dhc_tas_status_resp *resp,
+ 	}
+ 
+ 	pos += scnprintf(buf + pos, count - pos, "TAS Report\n");
+-	switch (resp->tas_config_info.table_source) {
++	switch (resp->tas_config_info.hdr.table_source) {
+ 	case BIOS_SOURCE_NONE:
+ 		pos += scnprintf(buf + pos, count - pos,
+ 				 "BIOS SOURCE NONE ");
+@@ -260,13 +260,13 @@ static size_t iwl_mld_dump_tas_resp(struct iwl_dhc_tas_status_resp *resp,
+ 	default:
+ 		pos += scnprintf(buf + pos, count - pos,
+ 				 "BIOS SOURCE UNKNOWN (%d) ",
+-				 resp->tas_config_info.table_source);
++				 resp->tas_config_info.hdr.table_source);
+ 		break;
+ 	}
+ 
+ 	pos += scnprintf(buf + pos, count - pos,
+ 			 "revision is: %d data is: 0x%08x\n",
+-			 resp->tas_config_info.table_revision,
++			 resp->tas_config_info.hdr.table_revision,
+ 			 resp->tas_config_info.value);
+ 	pos += scnprintf(buf + pos, count - pos, "Current MCC: 0x%x\n",
+ 			 le16_to_cpu(resp->curr_mcc));
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+index 92e6c0535501..7d11036f9e04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+@@ -165,8 +165,8 @@ static int iwl_mld_ppag_send_cmd(struct iwl_mld *mld)
+ {
+ 	struct iwl_fw_runtime *fwrt = &mld->fwrt;
+ 	union iwl_ppag_table_cmd cmd = {
+-		.v7.ppag_config_info.table_source = fwrt->ppag_bios_source,
+-		.v7.ppag_config_info.table_revision = fwrt->ppag_bios_rev,
++		.v7.ppag_config_info.hdr.table_source = fwrt->ppag_bios_source,
++		.v7.ppag_config_info.hdr.table_revision = fwrt->ppag_bios_rev,
+ 		.v7.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags),
+ 	};
+ 	int ret;
+@@ -389,8 +389,8 @@ void iwl_mld_init_tas(struct iwl_mld *mld)
+ 	for (u8 i = 0; i < data.block_list_size; i++)
+ 		cmd.block_list_array[i] =
+ 			cpu_to_le16(data.block_list_array[i]);
+-	cmd.tas_config_info.table_source = data.table_source;
+-	cmd.tas_config_info.table_revision = data.table_revision;
++	cmd.tas_config_info.hdr.table_source = data.table_source;
++	cmd.tas_config_info.hdr.table_revision = data.table_revision;
+ 	cmd.tas_config_info.value = cpu_to_le32(data.tas_selection);
+ 
+ 	ret = iwl_mld_send_cmd_pdu(mld, cmd_id, &cmd);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 018f3396e955..a34ca8073ca8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1135,8 +1135,9 @@ static void iwl_mvm_tas_init(struct iwl_mvm *mvm)
+ 		for (u16 i = 0; i < data.block_list_size; i++)
+ 			cmd_v5.block_list_array[i] =
+ 				cpu_to_le16(data.block_list_array[i]);
+-		cmd_v5.tas_config_info.table_source = data.table_source;
+-		cmd_v5.tas_config_info.table_revision = data.table_revision;
++		cmd_v5.tas_config_info.hdr.table_source = data.table_source;
++		cmd_v5.tas_config_info.hdr.table_revision =
++			data.table_revision;
+ 		cmd_v5.tas_config_info.value = cpu_to_le32(data.tas_selection);
+ 	} else if (fw_ver == 4) {
+ 		cmd_size = sizeof(cmd_v2_v4.common) + sizeof(cmd_v2_v4.v4);
 -- 
 2.34.1
 
