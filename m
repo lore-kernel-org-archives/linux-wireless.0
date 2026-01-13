@@ -1,70 +1,80 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mail.lysator.liu.se (mail.lysator.liu.se [130.236.254.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B72F277016
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 11:27:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45FC82BE05E
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 14:42:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=130.236.254.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768303651; cv=none; b=kbl5dyyk3f2iqMuhl9H3Uy7y1L79N8IRwDjbApGVSszDiUe58X81okDijTHk44ESQtjPHT0QBSjMalATmaAaxX0+sc8j3M2GXfWlS4CcLkJQI124cHi2LUgknIZ82VAw+vvqDYtle6CfeT5xmHB0m5WZ8ph0t1aJA681sqabsWk=
+	t=1768315327; cv=none; b=I1JNbYHJW3+pYbogpiBBYWlcchvRpKvwGKzzju+MC/dU89SNlMc0O9q0NzLTlak9XznrYYZNIeaRXo1Bnq1NvNqfFg1Ahru2l4MQpoKGpY3AynLvX57IasW8jPuFQ3v5fa3v0mzq+WxCH41dKxqk6jqvMm80l1b0MQk1CF1vLRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768303651; c=relaxed/simple;
-	bh=+p+7ARasYppKXO/qZrvJpUFL6EeKzqUzwXXycmPCl98=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HX2j9YX5n6Aa/6PTwz0q3lBkj0KHzm+QbuCAkPePCk4hpnb3lFhIFT1gOWodvIoBfRm3klvO7v193f4igKeDKdXutY8f18jCQIbSOkDSH3n6ZCF47lP+KnxZVsLAJ1UxLJbYkJcjPGPj8WA9iJX9plZ9b6V4Bbs70bKatb0U2Nk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KuMYNYWQ; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KuMYNYWQ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+p+7ARasYppKXO/qZrvJpUFL6EeKzqUzwXXycmPCl98=;
-	t=1768303649; x=1769513249; b=KuMYNYWQtCE0KlEJusLwfNn+a0uKHCeX31zuuz8Gab28b3/
-	jKCU44DZHAVCRBDSNd2RJQ7NCjaCiFqNpepaL0cCO/lTbD3kJ0sD4OK5nCurviMMQaV6g+4Xgp3IQ
-	CAso5r+IwJEKWbtoiyasE3xWl3xKX4milyHvUNLq4JmSLVcFDrrh4FRo3q0xaWAhZPuERpLF+g30H
-	N8XYNrjCQeGJC1ccDQ2N2IaVJbjVcNcrNBfRMPBjfJE8W1JfhWqdC9Ek1uAOrF9b85E5y72OcTy1h
-	h7V22QwPt/mYEuX17zsao4JWUUVJT8PQZWm16MsgW8MFj5+wksEg7JG8X000EYsA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vfcYX-0000000Ajqs-0omC;
-	Tue, 13 Jan 2026 12:27:25 +0100
-Message-ID: <745cc8e42be1751c7f7f18d39d85b8e81fb0d951.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next v3 4/9] wifi: nl80211: Add new NL
- attributes to support (Re)Association frame encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sai Pratyusha Magam <sai.magam@oss.qualcomm.com>, Kavita Kavita
-	 <kavita.kavita@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ainy.kumari@oss.qualcomm.com, 
-	quic_drohan@quicinc.com
-Date: Tue, 13 Jan 2026 12:27:24 +0100
-In-Reply-To: <f2292ae64dc0da7e68e025a13327270d4a65cd87.camel@sipsolutions.net>
-References: <20260106152503.223216-1-kavita.kavita@oss.qualcomm.com>
-		 <20260106152503.223216-5-kavita.kavita@oss.qualcomm.com>
-		 <16099966d1cbdccc5160c6aa7a2615dcfd0060d6.camel@sipsolutions.net>
-		 <036322aa-0c90-4735-88cf-76fa831a9ec3@oss.qualcomm.com>
-		 (sfid-20260113_050745_660998_F8C7BDF5) <f2292ae64dc0da7e68e025a13327270d4a65cd87.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	s=arc-20240116; t=1768315327; c=relaxed/simple;
+	bh=Hg8kC0A8qvRbIdYhngkTGjK0IPrcKxQ9GXulwk4BCgE=;
+	h=Date:From:To:cc:Subject:Message-ID:MIME-Version:Content-Type; b=Wq5vYhnxeQNHDVlXDZYRUnQQjLncZdH+i44tcQCbIO8Ecj8QvkNgixi8WBEd6B4NqlZwC53+JMUyXAFTtdsxKBA2ObiXMsnQDy//4k+7ZGm41yCy16yX5gvY9VtVTFV46sn5zQddOIoziM1GKcZnWCGbTNDu5bzmUFn8C+Ae+gU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se; spf=pass smtp.mailfrom=lysator.liu.se; arc=none smtp.client-ip=130.236.254.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lysator.liu.se
+Received: from mail.lysator.liu.se (localhost [127.0.0.1])
+	by mail.lysator.liu.se (Postfix) with ESMTP id A16D15341
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 15:42:02 +0100 (CET)
+Received: by mail.lysator.liu.se (Postfix, from userid 1004)
+	id 93657542A; Tue, 13 Jan 2026 15:42:02 +0100 (CET)
+X-Spam-Level: 
+X-Spam-Score: -1.0
+Received: from sara (h-62-63-215-216.A163.priv.bahnhof.se [62.63.215.216])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by mail.lysator.liu.se (Postfix) with ESMTPSA id D6BA8533F;
+	Tue, 13 Jan 2026 15:42:00 +0100 (CET)
+Date: Tue, 13 Jan 2026 15:42:00 +0100 (CET)
+From: =?UTF-8?Q?Peter_=C3=85strand?= <astrand@lysator.liu.se>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: Print Toffset as signed value
+Message-ID: <e703cbeb-99ec-b50a-a337-ea3f366a58bb@lysator.liu.se>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: multipart/mixed; BOUNDARY="8323329-1941676392-1768315135=:16459"
+Content-ID: <8dd37621-5db0-5944-b324-2f4d10e557b3@lysator.liu.se>
+X-Virus-Scanned: ClamAV using ClamSMTP
 
-Sorry,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> To some extent it _feels_ to me that you're arguing they do have value
-> to the driver and I just don't see it, but then can you please explain?
-> Or maybe you're just arguing "we may need flags in the future", but then
+--8323329-1941676392-1768315135=:16459
+Content-Type: text/plain; CHARSET=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-ID: <1c42f353-ac4b-0e1b-8277-5f24e6b5f873@lysator.liu.se>
 
-That should've said "we may need _other_ flags in the future"
 
-> why add the two unused ones now?
->=20
-> johannes
+Signed-off-by: Peter Åstrand <astrand@lysator.liu.se>
+---
+ station.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/station.c b/station.c
+index a07ead6..5adf6bf 100644
+--- a/station.c
++++ b/station.c
+@@ -376,8 +376,8 @@ static void print_nested_sta_handler(struct nlattr *link_sinfo[NL80211_STA_INFO_
+ 		printf("%sbeacon signal avg:\t%d dBm", indent,
+ 		       (int8_t)nla_get_u8(link_sinfo[NL80211_STA_INFO_BEACON_SIGNAL_AVG]));
+ 	if (link_sinfo[NL80211_STA_INFO_T_OFFSET])
+-		printf("%sToffset:\t%llu us", indent,
+-		       (unsigned long long)nla_get_u64(link_sinfo[NL80211_STA_INFO_T_OFFSET]));
++		printf("%sToffset:\t%lld us", indent,
++		       (long long)nla_get_s64(link_sinfo[NL80211_STA_INFO_T_OFFSET]));
+ 
+ 	if (link_sinfo[NL80211_STA_INFO_TX_BITRATE]) {
+ 		char buf[100];
+-- 
+2.30.2
+
+
+Br,
+Peter Åstrand
+--8323329-1941676392-1768315135=:16459--
