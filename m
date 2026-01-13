@@ -1,85 +1,93 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mail.lysator.liu.se (mail.lysator.liu.se [130.236.254.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDD812BE639
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 14:42:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3C225A2DE
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 14:44:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=130.236.254.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768315334; cv=none; b=Gaa6wQYQw3zhtbMX7k7TjRbfzeGZIR1EoK+bXNj18tq+nYobnvuXZ7hC+9sKE2C/YY2l6LA7K3uvjK6gOcuz52y3bG376qWvkxCW1gAvQA5M5COTIarQGoH838qdf3YaGSyXzWcFNTNn3cF2/Ve3+qg0SaJvLewsr//d6Nbo7aQ=
+	t=1768315486; cv=none; b=S1R5r8b94druRCEh8+7nb6fKp1SM/ODjsWp5vuIttyL8adlKjbIYJG8pdCHpkz3f9iLdjs2f1DHVyR6mG4QVQRey9ehMVHIsVkSOuHX57SvY89HfBrrZ/vkWLODQm1TG4O1cOmdPoRMvQAVj5P2VXhAS3WsikT25Qzlo6clqetY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768315334; c=relaxed/simple;
-	bh=HTHiFXvh7AdPW+CJnXFMgzG5n3Q1HacuPldT5dXH03A=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=SR+VrBp4MXCLg3UJs3HLA/K9YHwGgn8WTBL8OxVoFbXZSZ/b5aQA6TJdX4r9LMi6o/N6xHdpdr9/nNav2C7BBqQbdpTecSA2bCIx5g1ZGGXl3SG7Y6eTu8sFGC/p3z9Jl8ogUtpR3FuzJFaSnLYy6+F7yxWPcPVRjQ+3J9q7Rzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PVsr1dya; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PVsr1dya"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+/2k2H1JWRhRNRkjqgYzZfJqLcnAMyfXDc/h7HSFIW0=;
-	t=1768315332; x=1769524932; b=PVsr1dyat+75DcpHXG1O8sJv7ZznTHSj55DUioTj/8Ilri0
-	dlOf5cf/8sYMT/CZJgNhcmZQyn7nkjalD7trUAMxllxflPD40XIewAjvxEtkyJsAaDpXU2OurrczX
-	/+4td3sVq801nbRX+zkuzj194gf0+8Oqi1pn7Ji08P99EoDX0TqpTSi+4/HoyKRbzuKr5NT4WNzbF
-	zmeZ584FUzXLdkg2INpjDv7ueuTW6+F4silyUO7DlFpAUGM2yTOKTMcAy7bFNt98SNmLTaaIoImVd
-	2yn3V0qQBgkCVL3KeJh20+EjeR1YOR426hKkdmyPfPwo9o2aS8lwS8499D1/zGEA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vffb0-0000000AoOq-1v4q;
-	Tue, 13 Jan 2026 15:42:10 +0100
-Message-ID: <b2dcb04fc0a26eb46ef146fcbfc92a0823b320d1.camel@sipsolutions.net>
+	s=arc-20240116; t=1768315486; c=relaxed/simple;
+	bh=uASyRrMcFZoAQwmEdsKgDYi7SwkJ0tsCtFR++f6M16Y=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=p8sJ+L7hD6XYJT0Hz/gX+0z8EUS6cSLIkZBwkFEoyYRCmzjkWn4oDDEvt8kWVI9VkMXUebBkiJA8GUSOlVQ43SZunY9YqqMIiMvILVuSKrWNh7633X07fEZiVGC6mdd09Va+mMU9klgTbIPeQmtHdrFM3qrhKfkoUoA4BewRt/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se; spf=pass smtp.mailfrom=lysator.liu.se; arc=none smtp.client-ip=130.236.254.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lysator.liu.se
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lysator.liu.se
+Received: from mail.lysator.liu.se (localhost [127.0.0.1])
+	by mail.lysator.liu.se (Postfix) with ESMTP id 8478D5419
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2026 15:38:45 +0100 (CET)
+Received: by mail.lysator.liu.se (Postfix, from userid 1004)
+	id 77D0952C0; Tue, 13 Jan 2026 15:38:45 +0100 (CET)
+X-Spam-Level: 
+X-Spam-Score: -1.0
+Received: from sara (h-62-63-215-216.A163.priv.bahnhof.se [62.63.215.216])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by mail.lysator.liu.se (Postfix) with ESMTPSA id 6720052BE;
+	Tue, 13 Jan 2026 15:38:42 +0100 (CET)
+Date: Tue, 13 Jan 2026 15:38:42 +0100 (CET)
+From: =?UTF-8?Q?Peter_=C3=85strand?= <astrand@lysator.liu.se>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org
 Subject: Re: [RFC PATCH] wifi: wlcore: allocated packets tracking mechanism
  may get broken
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter =?ISO-8859-1?Q?=C5strand?= <astrand@lysator.liu.se>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Jan 2026 15:42:09 +0100
-In-Reply-To: <3bc7166c-7076-0d98-a45c-c993049621ca@lysator.liu.se> (sfid-20260113_153847_078773_40BD5239)
-References: <476e02ce-4592-b08a-fcc9-c1b151500bb9@lysator.liu.se>
-	  (sfid-20251228_170449_364924_53B203D7) <838a14637a5c134761ae75b600008396333ae95a.camel@sipsolutions.net>
-	 <3bc7166c-7076-0d98-a45c-c993049621ca@lysator.liu.se>
-	 (sfid-20260113_153847_078773_40BD5239)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+In-Reply-To: <838a14637a5c134761ae75b600008396333ae95a.camel@sipsolutions.net>
+Message-ID: <3bc7166c-7076-0d98-a45c-c993049621ca@lysator.liu.se>
+References: <476e02ce-4592-b08a-fcc9-c1b151500bb9@lysator.liu.se>  (sfid-20251228_170449_364924_53B203D7) <838a14637a5c134761ae75b600008396333ae95a.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: multipart/mixed; boundary="8323329-1427281282-1768315122=:16459"
+X-Virus-Scanned: ClamAV using ClamSMTP
 
-On Tue, 2026-01-13 at 15:38 +0100, Peter =C3=85strand wrote:
-> > >=20
-> > >  It is observed that at some scenarios, the best effort queue
-> > >  that should always show positive or 0 count, may show negative. This=
- cause
-> > >  the best effort queue to look full to the network stack and thus cau=
-sing the
-> > >  network stack to push less packets than to other QoS queues. It woul=
-d cause
-> > >  specific WFA tests like 5.2.27 to fail.
-> >=20
-> > [snip]
-> >=20
-> > It seems to me that we probably wouldn't _intentionally_ transmit frame=
-s
-> > with a mismatched AC/TID mapping, so is the patch just being lazy to
-> > overwrite it rather than figure out why it happened?
->=20
-> Yes, agree. I guess the question is if such mismatch can be prevented by=
-=20
-> the kernel? Since wl18xx firmware is closed.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Oh, it's transmit, so it's coming from higher layers of the kernel.
-Which is why I'm saying this, working around firmware in the driver
-would seems like the only choice, but working around mac80211 in the
-driver seems odd, unless perhaps we can show that's something that it
-does intentionally for other drivers.
+--8323329-1427281282-1768315122=:16459
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-johannes
+
+On Thu, 8 Jan 2026, Johannes Berg wrote:
+
+> On Sun, 2025-12-28 at 16:54 +0100, Peter Åstrand wrote:
+> > According to 
+> > https://git.ti.com/cgit/wilink8-wlan/build-utilites/commit/?h=r8.9&id=a2ee50aa5190ed3b334373d6cd09b1bff56ffcf7 
+> > the patch below should be used with firmware 8.9.1.0.2 . Does it make 
+> > sense to include this in upstream kernel? I cannot really say if it 
+> > improves stability or not: I don't have the possibility to run WFA test 
+> > 5.2.27, and I am still seing issues with firmware 8.9.1.0.2 and 6.6 kernel 
+> > (with all 80211 fixes). Testing of this patch with older wl18xx firmware 
+> > is ongoing. 
+> > 
+> > 
+> > From ac0695f9bf6810ae91cd0e441199102f0c16e507 Mon Sep 17 00:00:00 2001
+> > From: Itzhak <shlomii@ti.com>
+> > Date: Thu, 28 Dec 2023 08:47:58 +0200
+> > Subject: [PATCH 25/27] allocated packets tracking mechanism may get broken
+> > 
+> >  It is observed that at some scenarios, the best effort queue
+> >  that should always show positive or 0 count, may show negative. This cause
+> >  the best effort queue to look full to the network stack and thus causing the
+> >  network stack to push less packets than to other QoS queues. It would cause
+> >  specific WFA tests like 5.2.27 to fail.
+> 
+> [snip]
+> 
+> It seems to me that we probably wouldn't _intentionally_ transmit frames
+> with a mismatched AC/TID mapping, so is the patch just being lazy to
+> overwrite it rather than figure out why it happened?
+
+Yes, agree. I guess the question is if such mismatch can be prevented by 
+the kernel? Since wl18xx firmware is closed.
+
+Perhaps that wl1271_debug should be changed to wl1271_warning at least? 
+
+Br,
+Peter
+--8323329-1427281282-1768315122=:16459--
