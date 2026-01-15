@@ -1,268 +1,203 @@
-Received: from mail98.out.titan.email (mail98.out.titan.email [54.147.227.70])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA427221F0C
-	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 23:11:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.147.227.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D46432FA00
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 23:12:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768518666; cv=none; b=SmBYVRzaDNex9RtrORFkPthW32hf+7+Fd/mC448j2o8TR9r2HYjrM4p6og34F/S9GlQZYeu1H0f6lTiGRqgp+OJQJhe3bAL5nuLfyiOEfU96Gh1oDAPCVS9OeJxhXctFwid/TiH2KEet1vkNeyoPiHBkISfJIBXN5lrQrcqCB0k=
+	t=1768518745; cv=none; b=ZFH58OMsEAPmiN1eTRwcqa9PGXEyJh7QeAK857VQNP50+pRlAwcVw3lDdZYxqiWHo2iuW/SioeGsGl+gYJrrzVA+KZo53+8WWjM6Bk4U881Auf/4mE8FJlHd4+jSW5ygIzoV01PYgLgPbNmCkmg6ChOXEhYq+JcVshMhnSXArdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768518666; c=relaxed/simple;
-	bh=fBv2f12feifY8wF1hPxoNaVMJPUARJsaM+/TfG5oBOs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NoQ/+Dn1BJdV3j40Y5ZQrHSLsMpsYaMWHCQNUaqKc89PYuRVMsLT2uieMQYwYOSTXIMdw0dQQVow7hAjq2xB1fts0rfK65t1FKF7y3yialMR20UzSyeNDXa4gn1kTzk+qMul9hYi9b+fqiVPHLJe/si1LzCE0emIY9rP87DwanM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (1024-bit key) header.d=t32smtp-sign002.email header.i=@t32smtp-sign002.email header.b=Ie1n+7Me; arc=none smtp.client-ip=54.147.227.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1768518745; c=relaxed/simple;
+	bh=+vYCoxBlHCmIb9+N8+clsz4ZqJCKn++evp7F1k1dWwk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lUVCr86zQhu4BsE9Et+FXZbvddZyUH37ruFcBnsgbf+R0ANqTj/movHsn4lum84CLRnYvi1qhd6L5oWhsC4ZBs+ZofXuj8kZ20sa/qwcAVOaj2FHPo8qtmRLCEXkaDQonK8B+oQBIU98x13Uh4OwM4Zh20XHf7mkOoRn+zS/pHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TbrH8Ljd; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HPOsb2ep; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=t32smtp-sign002.email header.i=@t32smtp-sign002.email header.b="Ie1n+7Me"
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-out.flockmail.com (Postfix) with ESMTP id 4dsdql3Jk4z9rwC;
-	Thu, 15 Jan 2026 23:05:23 +0000 (UTC)
-DKIM-Signature: a=rsa-sha256; bh=p77J1AaXk9D4bj2Ip6l6ApJZep9hAAMxDc041t0rslU=;
-	c=relaxed/relaxed; d=t32smtp-sign002.email;
-	h=from:to:cc:subject:date:references:message-id:in-reply-to:mime-version:from:to:cc:subject:date:message-id:in-reply-to:references:reply-to;
-	q=dns/txt; s=titan1; t=1768518323; v=1;
-	b=Ie1n+7MeY37eqqxEUi9fOrM9HeGshQ5M+xmWz+RvZHJZ+GhLT5IpMFPti1yIsK9YASv0ytUc
-	p6vCogaTWqymJU2nr4pnMBD6k/6NzlgfImiAMypHPqA1FxhqbEaZT/Jb57saL+GJBzxoAtNP/9s
-	yuP4YkzWzs3FCyFOlX9v95Ec=
-Received: from fedora (unknown [94.156.148.216])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp-out.flockmail.com (Postfix) with ESMTPSA id 4dsdqk1gnDz9rvf;
-	Thu, 15 Jan 2026 23:05:22 +0000 (UTC)
-Feedback-ID: :lucid_duck@justthetip.ca:justthetip.ca:flockmailId
-From: Lucid Duck <lucid_duck@justthetip.ca>
-To: nbd@nbd.name,
-	lorenzo.bianconi83@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	lucid_duck@justthetip.ca
-Subject: [PATCH 1/3] wifi: mt76: update timer APIs for kernel 6.18
-Date: Thu, 15 Jan 2026 15:02:50 -0800
-Message-ID: <20260115230252.43391-2-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260115230252.43391-1-lucid_duck@justthetip.ca>
-References: <20260115230252.43391-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TbrH8Ljd";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HPOsb2ep"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60FMfkLw3074970
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 23:12:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	cvaa1/tuwQc8fuxNHVmVUCj7wH35/l4L0WpGJwMFaIs=; b=TbrH8LjdaYzw0BDP
+	zBbrhF2vk9OHDMhRmgjMH97zr937MTa1+gKzwgIdPHILykOje2irunIABizwcvtp
+	5kZiV4+YfjaUrewFjX5y/SVy6IyiTIKzmZaa09i1LKptaQLVTO15Rk1K2vTP3Cd+
+	YzCwAdXM6rW1gwSKEmch7TmfiA6Q3pGY4enuAJlm3gj58Y0qjSdy2OIl2x6XCnmY
+	SkGSTi+72sVkBW5fvWbRVjAlWijccbPjq21BMPx5EQyvYJj7JnMW0DYdjVuzDur3
+	/Em8/WEmwDq9Lj2x/GdIUOZ4PB2tZugDAdxRpaGZQhCvKzN7RPYsktkjyXul4gzs
+	TFx9EQ==
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4bq98jr247-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 23:12:23 +0000 (GMT)
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-2adc3990fecso1026700eec.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 15:12:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1768518742; x=1769123542; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=cvaa1/tuwQc8fuxNHVmVUCj7wH35/l4L0WpGJwMFaIs=;
+        b=HPOsb2epS1NzQWw/DQym7HtHS+OY2bFR6SZZYp8/uXNFObtM4kiIqwWQG5UFyikJ+U
+         x/h3x+GpUf+fUtEaZm8s34B1IK4Y3t2zglTkkl4KqFRqkWPBf8/dY9U61BWR2t5AlCET
+         V1MM4SbtknVfFAt0J8j8xLzn8FcSqfkmryO4MkdLiKIQhuVL6yOoT950sK/3ujLOcJ7J
+         th1epjyrAK67cXzeA3xoyqxv/HuxgiZzu1kTsmeV0dAO9l8pxdBYv5FzDUdgu7fzUBNj
+         VxsqqIefu1LIEEicv3V0Zv3eJMs+LoAJrMZSppYmicW54ov7l77jEHtxkWTJ5sAlYbkh
+         fWJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768518742; x=1769123542;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cvaa1/tuwQc8fuxNHVmVUCj7wH35/l4L0WpGJwMFaIs=;
+        b=lIKz9pL6hUICJeHE9sbiLaKpGOsZchy3uZmzzNWd6IAejTu8MxkjgtCZ/fCNvj1dL1
+         EIjzN6PCdhYI02OFXvRMALdWPH0oB8NcLLk1inO5A8HmGbKxw1/zduTiv/gb8AejS/Zf
+         J1VBRtk8d9CiSAcoYS0b4S2NVFQFUViV1ZOxW2l1NJ0fD8z44FV7t0gP6OKK2Oazgbuk
+         lIfWMwgw03AgWCXbaJvrV15axdsoYNJc0RqYkRRLdWbT+Q5GwJQw14tOUEtgsyct4dSO
+         TKJ9jRHHHldNOgUBcq3nnT/TMVOy/CegJxQu5s/8TGKOZJYcHz93P6UD/Wm0g26LJicx
+         359w==
+X-Forwarded-Encrypted: i=1; AJvYcCU1MGBRgU0V2gUxjvAlG+nY0BHBj1DcD9qQWZTL6QfSw0v3iwje0ZMu0BX0/FDFjscNqj6BClQ/VslPBifsWA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdQCCihopiCEpmRlazU8vmiINre7vTopQ6k6KnC5DBhAw0wJgO
+	4Nk6ifN0WFn8/3YyY0jjXhUTpte1T775yCFdAeEuEQJW1rjpx+tq6L8cJWBTvCKfyjwEjpmR7Ds
+	ZkiOTo7i/4/iPAzk+wZ8iCI7C0AMDCwLPMXwPqjF3hAE7gzCamL7oR6dkmPCzI14H/NTFXg==
+X-Gm-Gg: AY/fxX7HU6Kxs7HlzaPyuaod7M28Okj0xiEdJ5V7txIhJO0810GtwO6HPzerihq8zSm
+	zjN6QXokA2xsKt4MEp3vujqtA6Dw2NxdBRNvtQvnIH9LdYfKheEZosTqiN66SOpLhxC8tj3ywnD
+	BbDqH8Vs2kCo2xmQWtyUeX6+U0V0av9oogx0XKQNB22Q6Bnj4QSt+nQC9/AP4vmDzhJKBMf1DJj
+	dH0OWgDLK2rrocV/KAO2sVkPh/dsbOLmTtqclVZOTMb4Tv0XBSlIEZ0eCdlMx4NyuCHb3iHduwX
+	QdIAmnduoLwB600Kbm4MQBvLz4TaZIwRG93HK2lqiWdo4r0qMX1eZJUZHl2fkkOA0RlGdIdeM4l
+	TgLdtNvDMplCMjrqvikfcNpg4xfFEl+CpxU1r+D8QYlRnq6RxUw425EJp4hQRr+GEKqP1JgRcBI
+	ON
+X-Received: by 2002:a05:7022:6708:b0:11b:9386:a38f with SMTP id a92af1059eb24-1233d10f432mr4751889c88.22.1768518742030;
+        Thu, 15 Jan 2026 15:12:22 -0800 (PST)
+X-Received: by 2002:a05:7022:6708:b0:11b:9386:a38f with SMTP id a92af1059eb24-1233d10f432mr4751870c88.22.1768518741492;
+        Thu, 15 Jan 2026 15:12:21 -0800 (PST)
+Received: from [192.168.1.3] (c-24-130-122-79.hsd1.ca.comcast.net. [24.130.122.79])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b351e38bsm691860eec.14.2026.01.15.15.12.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Jan 2026 15:12:21 -0800 (PST)
+Message-ID: <6db7a42e-7f12-499b-b36e-687ec93b2e62@oss.qualcomm.com>
+Date: Thu, 15 Jan 2026 15:12:19 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-F-Verdict: SPFVALID
-X-Titan-Src-Out: 1768518323317111536.13754.5063913116587785920@prod-use1-smtp-out1003.
-X-CMAE-Score: 0
-X-CMAE-Analysis: v=2.4 cv=TPG/S0la c=1 sm=1 tr=0 ts=696972b3
-	a=rfUqlbiNABtMf1sfwYNRFA==:117 a=rfUqlbiNABtMf1sfwYNRFA==:17
-	a=CEWIc4RMnpUA:10 a=ThxqNdz_AAAA:8 a=pGLkceISAAAA:8
-	a=lsSCHvNKD0E-IetmaV0A:9 a=X5WbqfxFh8zCdCUNm0Nt:22
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 04/14] wifi: ath10k: snoc: support powering on the
+ device via pwrseq
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+        Matthias Kaehlcke <mka@chromium.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-pm@vger.kernel.org, Krzysztof Kozlowski <krzk@kernel.org>,
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+References: <20260106-wcn3990-pwrctl-v2-0-0386204328be@oss.qualcomm.com>
+ <20260106-wcn3990-pwrctl-v2-4-0386204328be@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260106-wcn3990-pwrctl-v2-4-0386204328be@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=asW/yCZV c=1 sm=1 tr=0 ts=69697457 cx=c_pps
+ a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=Tg7Z00WN3eLgNEO9NLUKUQ==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=eymIdBAbIQs2YkQ4F90A:9 a=QEXdDO2ut3YA:10
+ a=6Ab_bkdmUrQuMsNx7PHu:22
+X-Proofpoint-ORIG-GUID: FrVXr1QnEokfHjFzuUXqnbWh87DBH3Ao
+X-Proofpoint-GUID: FrVXr1QnEokfHjFzuUXqnbWh87DBH3Ao
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTE1MDE4MyBTYWx0ZWRfX81UIjzZionEL
+ iPX7egNp1aRYgxtum4QbsnEKUiHj4l0zkk3AjNl92KBomGm9L7vjcJ4eFiW2wZcvo/E/jcZyCai
+ bFkmQHzPsGJf8Ho5AcvWqo4bSwrD65oLVorMWnekn/hsUYkhHy44oM+X4yhe6qgvJj5TXCg3AKe
+ IRmZjX8yCtkWoVpkq5E8+IAcpf8APgIFywkd/gZ2jokBSb+KT1yvN0MfXQUb+H2uM7CnYL+7T7A
+ qmaapkRnC6Sg19SAtdnC0pkcBKFqV10wr/B03Rl3p5U3bEz+IxmcH3ia0h+zFIOtKqfPIxb4aoY
+ zVrQUOL79bwR45WFAEP2jhyGj6z2HjAMfAcyKvL2OAnvIY0rXFAppczkqpEXWn7yH3Xdx16rBPM
+ 96wLmDv4+mbAkwgO2cHpPo5YOkXnCWbygrlhIcrSFLIrIGr+tntsxjIr1ScuERFXxtjWRd6bBDi
+ ZYJE/57fhPMm0JsBxvw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2026-01-15_07,2026-01-15_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 impostorscore=0 bulkscore=0 suspectscore=0 clxscore=1015
+ adultscore=0 malwarescore=0 priorityscore=1501 spamscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2512120000 definitions=main-2601150183
 
-Kernel 6.18 introduced several timer API changes:
-- hrtimer_init() replaced with hrtimer_setup()
-- del_timer_sync() renamed to timer_delete_sync()
-- from_timer() macro removed, use container_of() directly
-- asm/unaligned.h moved to linux/unaligned.h
+On 1/5/2026 5:01 PM, Dmitry Baryshkov wrote:
+> @@ -1023,9 +1024,15 @@ static int ath10k_hw_power_on(struct ath10k *ar)
+>  
+>  	ath10k_dbg(ar, ATH10K_DBG_SNOC, "soc power on\n");
+>  
+> +	if (ar_snoc->pwrseq) {
+> +		ret = pwrseq_power_on(ar_snoc->pwrseq);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+>  	ret = regulator_bulk_enable(ar_snoc->num_vregs, ar_snoc->vregs);
+>  	if (ret)
+> -		return ret;
+> +		goto pwrseq_off;
+>  
+>  	ret = clk_bulk_prepare_enable(ar_snoc->num_clks, ar_snoc->clks);
+>  	if (ret)
+> @@ -1035,18 +1042,28 @@ static int ath10k_hw_power_on(struct ath10k *ar)
+>  
+>  vreg_off:
+>  	regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->vregs);
+> +pwrseq_off:
+> +	pwrseq_power_off(ar_snoc->pwrseq);
 
-Update all mt76 timer usage to the new APIs for kernel 6.18+
-compatibility.
+in this function you conditionally call pwrseq_power_on()
+but on error you unconditionally call pwrseq_power_off()
 
-Signed-off-by: Lucid Duck <lucid_duck@justthetip.ca>
----
- mt76.h             | 1 +
- mt7615/main.c      | 6 +++---
- mt7615/pci_mac.c   | 4 ++--
- mt7615/usb.c       | 2 +-
- mt76x0/eeprom.c    | 2 +-
- mt76x02_eeprom.c   | 2 +-
- mt76x02_usb_core.c | 4 ++--
- mt76x2/eeprom.c    | 2 +-
- mt7925/main.c      | 4 ++--
- mt792x_core.c      | 6 +++---
- 10 files changed, 17 insertions(+), 16 deletions(-)
+in the below function you conditionally call pwrseq_power_off()
 
-diff --git a/mt76.h b/mt76.h
-index 646cc8e..4f48167 100644
---- a/mt76.h
-+++ b/mt76.h
-@@ -19,6 +19,7 @@
- #include "airoha_offload.h"
- #endif
- #include <linux/soc/mediatek/mtk_wed.h>
-+#include <linux/version.h>
- #include <net/netlink.h>
- #include <net/mac80211.h>
- #if LINUX_VERSION_CODE < KERNEL_VERSION(6,6,0)
-diff --git a/mt7615/main.c b/mt7615/main.c
-index a18aa0d..2ac2ba8 100644
---- a/mt7615/main.c
-+++ b/mt7615/main.c
-@@ -97,7 +97,7 @@ static void mt7615_stop(struct ieee80211_hw *hw, bool suspend)
- 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
- 
- 	cancel_delayed_work_sync(&phy->mt76->mac_work);
--	del_timer_sync(&phy->roc_timer);
-+	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
- 
- 	cancel_delayed_work_sync(&dev->pm.ps_work);
-@@ -1046,7 +1046,7 @@ void mt7615_roc_work(struct work_struct *work)
- 
- void mt7615_roc_timer(struct timer_list *timer)
- {
--	struct mt7615_phy *phy = from_timer(phy, timer, roc_timer);
-+	struct mt7615_phy *phy = container_of(timer, struct mt7615_phy, roc_timer);
- 
- 	ieee80211_queue_work(phy->mt76->hw, &phy->roc_work);
- }
-@@ -1197,7 +1197,7 @@ static int mt7615_cancel_remain_on_channel(struct ieee80211_hw *hw,
- 	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
- 		return 0;
- 
--	del_timer_sync(&phy->roc_timer);
-+	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
- 
- 	mt7615_mutex_acquire(phy->dev);
-diff --git a/mt7615/pci_mac.c b/mt7615/pci_mac.c
-index d83d8ec..53cb1ee 100644
---- a/mt7615/pci_mac.c
-+++ b/mt7615/pci_mac.c
-@@ -220,12 +220,12 @@ void mt7615_mac_reset_work(struct work_struct *work)
- 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
- 	wake_up(&dev->mt76.mcu.wait);
- 	cancel_delayed_work_sync(&dev->mphy.mac_work);
--	del_timer_sync(&dev->phy.roc_timer);
-+	timer_delete_sync(&dev->phy.roc_timer);
- 	cancel_work_sync(&dev->phy.roc_work);
- 	if (phy2) {
- 		set_bit(MT76_RESET, &phy2->mt76->state);
- 		cancel_delayed_work_sync(&phy2->mt76->mac_work);
--		del_timer_sync(&phy2->roc_timer);
-+		timer_delete_sync(&phy2->roc_timer);
- 		cancel_work_sync(&phy2->roc_work);
- 	}
- 
-diff --git a/mt7615/usb.c b/mt7615/usb.c
-index 7736ae3..d91feff 100644
---- a/mt7615/usb.c
-+++ b/mt7615/usb.c
-@@ -85,7 +85,7 @@ static void mt7663u_stop(struct ieee80211_hw *hw, bool suspend)
- 	struct mt7615_dev *dev = hw->priv;
- 
- 	clear_bit(MT76_STATE_RUNNING, &dev->mphy.state);
--	del_timer_sync(&phy->roc_timer);
-+	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
- 	cancel_delayed_work_sync(&phy->scan_work);
- 	cancel_delayed_work_sync(&phy->mt76->mac_work);
-diff --git a/mt76x0/eeprom.c b/mt76x0/eeprom.c
-index f6720a4..d4506b8 100644
---- a/mt76x0/eeprom.c
-+++ b/mt76x0/eeprom.c
-@@ -10,7 +10,7 @@
- #include <linux/mtd/mtd.h>
- #include <linux/mtd/partitions.h>
- #include <linux/etherdevice.h>
--#include <asm/unaligned.h>
-+#include <linux/unaligned.h>
- #include "mt76x0.h"
- #include "eeprom.h"
- #include "../mt76x02_phy.h"
-diff --git a/mt76x02_eeprom.c b/mt76x02_eeprom.c
-index 2a15bd2..d16be0c 100644
---- a/mt76x02_eeprom.c
-+++ b/mt76x02_eeprom.c
-@@ -4,7 +4,7 @@
-  * Copyright (C) 2018 Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-  */
- 
--#include <asm/unaligned.h>
-+#include <linux/unaligned.h>
- 
- #include "mt76x02_eeprom.h"
- 
-diff --git a/mt76x02_usb_core.c b/mt76x02_usb_core.c
-index c94c2f6..4ca311d 100644
---- a/mt76x02_usb_core.c
-+++ b/mt76x02_usb_core.c
-@@ -264,8 +264,8 @@ void mt76x02u_init_beacon_config(struct mt76x02_dev *dev)
- 	};
- 	dev->beacon_ops = &beacon_ops;
- 
--	hrtimer_init(&dev->pre_tbtt_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
--	dev->pre_tbtt_timer.function = mt76x02u_pre_tbtt_interrupt;
-+	hrtimer_setup(&dev->pre_tbtt_timer, mt76x02u_pre_tbtt_interrupt,
-+		      CLOCK_MONOTONIC, HRTIMER_MODE_REL);
- 	INIT_WORK(&dev->pre_tbtt_work, mt76x02u_pre_tbtt_work);
- 
- 	mt76x02_init_beacon_config(dev);
-diff --git a/mt76x2/eeprom.c b/mt76x2/eeprom.c
-index e1e317a..782813a 100644
---- a/mt76x2/eeprom.c
-+++ b/mt76x2/eeprom.c
-@@ -5,7 +5,7 @@
- 
- #include <linux/module.h>
- #include <linux/of.h>
--#include <asm/unaligned.h>
-+#include <linux/unaligned.h>
- #include "mt76x2.h"
- #include "eeprom.h"
- 
-diff --git a/mt7925/main.c b/mt7925/main.c
-index 307850a..2d358a9 100644
---- a/mt7925/main.c
-+++ b/mt7925/main.c
-@@ -457,7 +457,7 @@ void mt7925_roc_abort_sync(struct mt792x_dev *dev)
- {
- 	struct mt792x_phy *phy = &dev->phy;
- 
--	del_timer_sync(&phy->roc_timer);
-+	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
- 	if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
- 		ieee80211_iterate_interfaces(mt76_hw(dev),
-@@ -489,7 +489,7 @@ static int mt7925_abort_roc(struct mt792x_phy *phy,
- {
- 	int err = 0;
- 
--	del_timer_sync(&phy->roc_timer);
-+	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
- 
- 	mt792x_mutex_acquire(phy->dev);
-diff --git a/mt792x_core.c b/mt792x_core.c
-index cc488ee..530e489 100644
---- a/mt792x_core.c
-+++ b/mt792x_core.c
-@@ -305,7 +305,7 @@ EXPORT_SYMBOL_GPL(mt792x_tx_worker);
- 
- void mt792x_roc_timer(struct timer_list *timer)
- {
--	struct mt792x_phy *phy = from_timer(phy, timer, roc_timer);
-+	struct mt792x_phy *phy = container_of(timer, struct mt792x_phy, roc_timer);
- 
- 	ieee80211_queue_work(phy->mt76->hw, &phy->roc_work);
- }
-@@ -313,7 +313,7 @@ EXPORT_SYMBOL_GPL(mt792x_roc_timer);
- 
- void mt792x_csa_timer(struct timer_list *timer)
- {
--	struct mt792x_vif *mvif = from_timer(mvif, timer, csa_timer);
-+	struct mt792x_vif *mvif = container_of(timer, struct mt792x_vif, csa_timer);
- 
- 	ieee80211_queue_work(mvif->phy->mt76->hw, &mvif->csa_work);
- }
-@@ -362,7 +362,7 @@ void mt792x_unassign_vif_chanctx(struct ieee80211_hw *hw,
- 	mutex_unlock(&dev->mt76.mutex);
- 
- 	if (vif->bss_conf.csa_active) {
--		del_timer_sync(&mvif->csa_timer);
-+		timer_delete_sync(&mvif->csa_timer);
- 		cancel_work_sync(&mvif->csa_work);
- 	}
- }
--- 
-2.52.0
+so there is inconsistency.
 
+note that both pwrseq_power_on() and pwrseq_power_off() handle a NULL
+pwrseq_desc so is there any reason to not just call both both functions
+unconditionally everywhere?
+
+> +
+>  	return ret;
+>  }
+>  
+>  static int ath10k_hw_power_off(struct ath10k *ar)
+>  {
+>  	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+> +	int ret_seq = 0;
+> +	int ret_vreg;
+>  
+>  	ath10k_dbg(ar, ATH10K_DBG_SNOC, "soc power off\n");
+>  
+>  	clk_bulk_disable_unprepare(ar_snoc->num_clks, ar_snoc->clks);
+>  
+> -	return regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->vregs);
+> +	ret_vreg = regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->vregs);
+> +
+> +	if (ar_snoc->pwrseq)
+> +		ret_seq = pwrseq_power_off(ar_snoc->pwrseq);
+> +
+> +	return ret_vreg ? : ret_seq;
+>  }
+>  
+>  static void ath10k_snoc_wlan_disable(struct ath10k *ar)
