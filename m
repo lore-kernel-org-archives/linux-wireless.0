@@ -1,63 +1,63 @@
-Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
+Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21A01321F48
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2026 01:05:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A512318ED3
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2026 01:05:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768525553; cv=none; b=eGxMT0aPrxcyKbEclWRn2yRup+bK8sRYD955aGCXu4PK3IixuRfSxPTrht4st+/jcdHx8IBlhMg/4NB9zkHJDyj+izS84vwXmslIX8fmKx85JF4XT5MMiCk4U6euhPZI778Bv2qTo5TkSJNLprr1bImCZT0CPj0pK6ioDyHznJk=
+	t=1768525554; cv=none; b=NDT1gp53Bp8atZwX3vc/eLSmQtGdzhuINfbku+JA9TUj3CYAndLHjcowrkYWSSr23SIfvqJt58m4gk3AlflULIFIJ4Krec1/l6IRuRiE35z15yPawiNE+lX4so2A/y1BOQMsn2b6UNgx49uWAMm+KGQHoC7R7JWJX2zryrLb5Po=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768525553; c=relaxed/simple;
-	bh=75lhl3OVFrElnB+W1iwlHJCQNfPL/id3yEAWpSq3TRw=;
+	s=arc-20240116; t=1768525554; c=relaxed/simple;
+	bh=HaKBfzs+vbqcZU4vZwpXtkvIH+Urmp8bT+Ano+LNPMs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=r0Fvor1aZn7172b+C4+OcoCDDJz+PYyONmKtSAomN87yPcSARBV/hsFecuZ0lGTjjzUtJjo6v7uvMJW9SrV94bgRil+c389HgPMi1p6OcWXaIFvD4ii+XC67kCu+FRxJvGnkSUGdtbG5BU4Xo4Zu0vFaD56j2JytuB4aVUXrP6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K+q6Zo8E; arc=none smtp.client-ip=74.125.82.44
+	 MIME-Version; b=S60wyXilgCaacASUVeJGIWVtNK4UNk2tbe4CxBfVJJ+y4Nhs9GXsvJS9cAw/eANEdfFhC1/cX2iUNaQEa9nPm2hWMxioVK7Y7DH4kl+KfQQrEo/zzGAnpW4k6jUk4QZjD7DPn+YvdA0HT8nXruhhuxxoep+9nD+GIohSOW7MBI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=apD8G5Go; arc=none smtp.client-ip=74.125.82.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K+q6Zo8E"
-Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-121bf277922so2035109c88.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 17:05:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="apD8G5Go"
+Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-2b04fcfc0daso1838851eec.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 17:05:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768525547; x=1769130347; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1768525550; x=1769130350; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IUlCSJ4sVDZpvZSnTCZZWPWUvx5qo1tAq80JkqdgelI=;
-        b=K+q6Zo8EQt0Ieb5xVV5x0wq12M796dIYSTnoFy4saNahufvUK0C6g9PGhbzixMqd0U
-         A8J1qwyVykF3/n3mRyYgN07P0Y4v2AKRvFKyxWTO+t0vTNf2qRjmsQXEyC5GZP70fimL
-         y0GoOa26NAqn8OqZsyoRexrtHjJhvF5/UGWm/2Jd1U153nKNEJPw7Wii+eB/AcaA0Itp
-         Ohd2i8a9Q+UkaiefZzT7Clb+JRi5mHh8oaKp9LxDSFu8J1MvZ6FbFMRyvjNvdFiPtT3z
-         7UlGeERjGdPmDQi9Iw8IERpz+yQbQI7M5wJtTRF2ToUNRpkPlJedQKz75eNUTd6vAg3W
-         rQ3A==
+        bh=uzEynkgBJi1NWbI0Fd8DGgsgD9GPNNMBHOPHCo9YUDo=;
+        b=apD8G5GowbiIhoVY8FDpNQoUbI0ZPVfE2UbF1MYEG3l17kC78fXDjjLv1VqugTRb3Z
+         hJYjEGoCdtFtxYPF85aUQ1dQ5nmH6Tx8hSVWMatl7TtjsS32JGTw6ZAPtveKsrfvV5Wp
+         TX76ft2MsuaFrsS5fL29aiyQZXSNlgSWW2/+xnGra3jHsD6xJMS1Z0zHhVWSDvE98tnJ
+         F31OsMRbIAFEvu4p3akqxWyP+/1Wabqgf+giCn2G2JewW40q6FVH5AmDTjQhtqZgzmJx
+         tE0eQl06zfc/bagqjTlGcyVTRgzj3aRMZkSIi3S7kYsEBjxm++9AXqRrveXuO9HZevez
+         XCPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768525547; x=1769130347;
+        d=1e100.net; s=20230601; t=1768525550; x=1769130350;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IUlCSJ4sVDZpvZSnTCZZWPWUvx5qo1tAq80JkqdgelI=;
-        b=OhyvL4HVNEMURt1h9eQB8YsM5DoLreHofrL5SxkVyVtKVjxOZIWGto1xMrIGIgIu0T
-         zWDEDrVYaRzf5EWFqjJJnu7XW86SIsAA80s/O1p33FajPhaulknZiMwfmK6kS723Zguk
-         BV90p048FYayvNdUTEijfmdIcVLewUQPu2tmhMXoUbOFZY8iMlGjxNDfRAPtYtySK4GR
-         XIcs3ZMZMs6OMbOzv7AoqDM0gXfGV9FY4InPYRSjl+6cUvAmzzL3HLNy0LgJlEWkdDrv
-         9DzKDGihFemPIjTuKjg2oqD0grv9q6RaJeZn9S6ktGlq4nlcj4bly+hplW5pnwK2/h6V
-         XIhw==
-X-Forwarded-Encrypted: i=1; AJvYcCUuccc2ivziNjEfzSdDOqFCPe6VkNxaOD6cupeZu9n6beyDgNJd/fgbOZMGFx2zBMe9ahfCbLb6BVGbIKf6jQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyoc525P+ERFTF9UKFGgfQEflXzWvafTg1/OFHCopUstZPGOomW
-	8nelCN16SEPxU0ObhzatKBtMfe2aKCzzK88Gj5zWhLfuMPfiRDnkhtp0xsgbPgwo
-X-Gm-Gg: AY/fxX7BsO6ZC3gU3QAcUpNi1pMTd6JNCHVndlhiUPbqfdNNR/DpanC4mlUVzfbIIM2
-	UYvU602UC4PeTKnkuSbUB3gnE3eKotkuebq+Fs0x6iFDit7DfflaogkZfWTh4viMZCB1m5YKk6F
-	45pR6Xw4zXJu2A10G2bVQzore6Rm5sjvXSyG7YyEwxA64m5ALonqA8Lloa6J5THTTTdF/rNSIU/
-	axrsytVuIfFVJjCrNsxF0L6Q/E6KIl76IG23PCftPxzPuPhIA3qsDWyjOkK/kPV8pq1e3EpiBp0
-	rAW8IU3YCM8B46TdFnFVY70wMB8BJLh2WHHIMshUvtDKVn4q2zbXfGUXnCAQkDbcfPEJF/UlP4S
-	n/3sLMlGYZ+tIlKwHHx75TSKg/CsdovGWTN1IiTxfphPL7Zpajg9BreVyI4phLevJ8ejSyH9VSZ
-	1zWdvHePOSRBohiL60qjjJeK3lzuoau+LONZJwWKw9s9HY4gxSKRU1MAJVhQ0UwA==
-X-Received: by 2002:a05:7022:2491:b0:11b:38b6:a95a with SMTP id a92af1059eb24-1244b31e681mr1231822c88.11.1768525547022;
-        Thu, 15 Jan 2026 17:05:47 -0800 (PST)
+        bh=uzEynkgBJi1NWbI0Fd8DGgsgD9GPNNMBHOPHCo9YUDo=;
+        b=oTackqrfwWz8YvCtD5BBf3Syp43tNvnIBlc0ko87IN95HpxIyEmVtylb1ozzM2Xyxb
+         i/3f2LTdmygCupQnTUHG05OWp715HH57AeNrx57nJtK5MU95qQKdD0ihemBOhV76cx86
+         3m4LE+erDd8TRTrEW+SUwKFGHAxUVlvX1iOBqcTou6/IGu397Ohvd3Rp2xZb7Qnqv6N/
+         1kxJ9RCS7feRRcRftzAen6PE8s3DcypUw875GCjGjhoHxe9HqJKFQoifwS7ZQrvaQfd2
+         QPMS2+gJTSfeBv1/t3WYqQ66YGxzcINOQtH6w4Vt1t93B/i17i/kCPDDYeRridLTNYWL
+         dnbw==
+X-Forwarded-Encrypted: i=1; AJvYcCVcxJVKie8vp7njQpnX314MTwYadS9wb+LB60HZvui63luQIQoOWUP643TtCFc9C7qqMDMeubFIH/BqDjJP1g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLIevgJnSDmkmOcPW8gwuW3TECgU1a3LfhRcZ8bZ3DNn4jFbRE
+	5sBroZmeJXq1qk8jnil9JkYGoCwbwZyB4yG7bi+rn+csBcXO9iM3yuZS
+X-Gm-Gg: AY/fxX5m5+kLBAirdztvtddWGumFKmDJUVbiU38/WSVfTIz+g+heqvE6MMCs6CjQwbh
+	EFQW03axWAHIRmUBLVvzn62u8YQoyWrKhZo6KZggdG3OWrpTjd1/fqbzMIbLeqFjaFzIh0/Tx/0
+	lbQxvW+1oifLK31LorD1EpAJH7SRQOqR0xw2yNJyALXaRliLoNoD9EIlJsqZMj71b+7ZQKfAZM1
+	6Q84npp1PK/jp2Z1VsA6PfxjYobUCBoFdy+0u2fnnGfowFzuYVwOxxEss4nWhAK+jCguGoHp5+s
+	QCSptS0AiTShfuzkWVclFAHnE3djQC2naXguH8kzn72gPDSmbOqW+uS1va7mbp3x22MYiW+iuTV
+	jT6PGJTUMM46au7IRKj0rmYArf6McGjTMy1WLGpEBdagFtD29wtOyUGLqshNtnmNeZTSAaAO5br
+	Qp6n2N6yD4CV936iEbEn78BCBxoXk5u1cfiaJORbGnTc3HqiUs+49pg/Z/ghvF6w==
+X-Received: by 2002:a05:7301:678f:b0:2b0:4fe2:6a2e with SMTP id 5a478bee46e88-2b6b3f05fd8mr1663499eec.9.1768525549846;
+        Thu, 15 Jan 2026 17:05:49 -0800 (PST)
 Received: from zcache.home.zacbowling.com ([2001:5a8:60d:bc9:f1d2:502c:a6ff:5556])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b367cbc9sm1019884eec.32.2026.01.15.17.05.45
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b367cbc9sm1019884eec.32.2026.01.15.17.05.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Jan 2026 17:05:46 -0800 (PST)
+        Thu, 15 Jan 2026 17:05:49 -0800 (PST)
 Sender: Zac Bowling <zbowling@gmail.com>
 From: Zac <zac@zacbowling.com>
 To: sean.wang@kernel.org
@@ -71,11 +71,10 @@ Cc: deren.wu@mediatek.com,
 	linux@frame.work,
 	ryder.lee@mediatek.com,
 	sean.wang@mediatek.com,
-	Zac Bowling <zbowling@gmail.com>,
-	Zac Bowling <zac@zacbowling.com>
-Subject: [PATCH v4 16/21] wifi: mt76: mt7925: add mutex protection in resume path
-Date: Thu, 15 Jan 2026 17:05:14 -0800
-Message-ID: <20260116010519.37001-17-zac@zacbowling.com>
+	Zac <zac@zacbowling.com>
+Subject: [PATCH v4 18/21] wifi: mt76: mt7921: fix missing mutex protection in multiple paths
+Date: Thu, 15 Jan 2026 17:05:16 -0800
+Message-ID: <20260116010519.37001-19-zac@zacbowling.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260116010519.37001-1-zac@zacbowling.com>
 References: <CAGp9LzpuyXRDa=TxqY+Xd5ZhDVvNayWbpMGDD1T0g7apkn7P0A@mail.gmail.com>
@@ -88,43 +87,82 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Zac Bowling <zbowling@gmail.com>
+Add mt792x_mutex_acquire/release around ieee80211_iterate_*() calls in
+MT7921 driver to prevent race conditions:
 
-Add mutex protection around mt7925_mcu_set_deep_sleep() and
-mt7925_mcu_regd_update() calls in the resume path to prevent
-potential race conditions during resume operations.
+- mt7921_roc_abort_sync(): protect ROC abort iteration
+- mt7921_set_runtime_pm(): protect runtime PM iteration
+- mt7921_regd_set_6ghz_power_type(): protect 6GHz power type iteration
+- mt7921_mac_reset_work(): protect vif reconnect iteration after reset
 
-These MCU operations require serialization, and the resume
-path was the only call site missing mutex protection. Without
-this, concurrent access during resume could corrupt firmware
-state or cause race conditions with other MCU commands.
+These paths were missing the mutex protection that is required when
+calling ieee80211_iterate_* functions with ITER_RESUME_ALL flag.
 
-Found by static analysis (sparse/coccinelle) pattern matching
-for unprotected MCU function calls.
-
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
 Signed-off-by: Zac Bowling <zac@zacbowling.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c  | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c | 9 ++++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index e9d62c6aee..3a9e32a175 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -584,10 +584,12 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
- 	}
- 
- 	/* restore previous ds setting */
-+	mt792x_mutex_acquire(dev);
- 	if (!pm->ds_enable)
- 		mt7925_mcu_set_deep_sleep(dev, false);
- 
- 	mt7925_mcu_regd_update(dev, mdev->alpha2, dev->country_ie_env);
-+	mt792x_mutex_release(dev);
- failed:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 03b4960db7..f5c882e45b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -693,9 +693,11 @@ void mt7921_mac_reset_work(struct work_struct *work)
+ 	clear_bit(MT76_RESET, &dev->mphy.state);
  	pm->suspended = false;
+ 	ieee80211_wake_queues(hw);
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7921_vif_connect_iter, NULL);
++	mt792x_mutex_release(dev);
+ 	mt76_connac_power_save_sched(&dev->mt76.phy, pm);
+ }
  
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 5fae9a6e27..8fc3770d1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -373,10 +373,13 @@ void mt7921_roc_abort_sync(struct mt792x_dev *dev)
+ 
+ 	timer_delete_sync(&phy->roc_timer);
+ 	cancel_work_sync(&phy->roc_work);
+-	if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
++	if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state)) {
++		mt792x_mutex_acquire(dev);
+ 		ieee80211_iterate_interfaces(mt76_hw(dev),
+ 					     IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					     mt7921_roc_iter, (void *)phy);
++		mt792x_mutex_release(dev);
++	}
+ }
+ EXPORT_SYMBOL_GPL(mt7921_roc_abort_sync);
+ 
+@@ -619,9 +622,11 @@ void mt7921_set_runtime_pm(struct mt792x_dev *dev)
+ 	bool monitor = !!(hw->conf.flags & IEEE80211_CONF_MONITOR);
+ 
+ 	pm->enable = pm->enable_user && !monitor;
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7921_pm_interface_iter, dev);
++	mt792x_mutex_release(dev);
+ 	pm->ds_enable = pm->ds_enable_user && !monitor;
+ 	mt76_connac_mcu_set_deep_sleep(&dev->mt76, pm->ds_enable);
+ }
+@@ -765,9 +770,11 @@ mt7921_regd_set_6ghz_power_type(struct ieee80211_vif *vif, bool is_add)
+ 	struct mt792x_dev *dev = phy->dev;
+ 	u32 valid_vif_num = 0;
+ 
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(mt76_hw(dev),
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7921_calc_vif_num, &valid_vif_num);
++	mt792x_mutex_release(dev);
+ 
+ 	if (valid_vif_num > 1) {
+ 		phy->power_type = MT_AP_DEFAULT;
 -- 
 2.52.0
 
