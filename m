@@ -1,63 +1,63 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A79314D14
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2026 01:05:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF25F3148B6
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2026 01:05:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768525529; cv=none; b=FuR/NnUIzCn/5uhl6BznTZ4dJFOsLRndnh5Q0LxaVm3ErzTN8LZDDkiXVvl7v+NiwOvsUpvfYsdepEHPlW9oKaQNtOR8+ggwe7x/mjSrj6pZ8ndaVIvqkxbzXgGJsD3RNfdqIUNH14Yoe8wsaO5IvpF85VwMJONSvOFPiQIDcsc=
+	t=1768525535; cv=none; b=kssQ+FW9EtLm+AySydW/yjzqmQCJk5dBfhG2bVTV4ITjr3Fgr2VS8jawilrkzVdtR9DtKOXzFTDoiaezYbcwxRqw/5KJ+SH6MLP7+eyx5vyhz30Tn2f4u7JbGxVTV/CTH2k5wIcKv7+9I4tykD/rye1zEDVtJUuOXVw3wWFartQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768525529; c=relaxed/simple;
-	bh=RODJo0dX5b/DRTFhY2cSaN8LgFh3iNNX0MJ6nJMpBFc=;
+	s=arc-20240116; t=1768525535; c=relaxed/simple;
+	bh=bTIw3jO9OrGp1Jt+Zshd1N+f6Fcp97wlvVOjLk0G0yM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qeHFuzCP6NEcRt3TCu/DrfuDIAWgP8Ip1GlOLur+y+q7OEi4cUMkzXd36S8lShb3iLtxLXwmYxVeZTIC1HU3IWOEtvpXQSlo3e4MN2IXKiEYZX4sFGXTgG8kbvZG9h/+GvV4oggU7VYcQfBbo/8vENMmiPGlQNkPJr0BQXUsx1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NXicS9PO; arc=none smtp.client-ip=74.125.82.169
+	 MIME-Version; b=siwDwUxrfmGTjDBy9UgwEXoUx27eS9bDLokgY10LS0A5ug9PXJc0G7xUQXjn3BIqzgSIUzBaOVyU8z/OAi09YEWhMxSnxJbfAglSYlcNZ7NJqHSomciWA1eOs72kLLDcnoWC5rFIR26cCSr0miV5SpXTSc3DZRkBBaVg1fUDngo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Mk5HIebQ; arc=none smtp.client-ip=74.125.82.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NXicS9PO"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2b19939070fso3506756eec.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 17:05:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Mk5HIebQ"
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2b1981ca515so1731830eec.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2026 17:05:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768525527; x=1769130327; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1768525531; x=1769130331; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3AlYUZTasc+1BNyrEOuxrME8CBfLRDkLtwgOBsYdMoM=;
-        b=NXicS9POL4+PpSDerqVhuMTiywoBCZ/6mVfMRB2410dymDLNBVSyiAAEGRdQ51HmJS
-         sPLlMp20wt1hseJWJiMCUjCbKpywp4ZN7buFXlq5d0RiTO1z4coBY6JYly02KwKPR5po
-         pph3WjAK5Ise3jmCy3Pd/h7lwrQpAYd7aNFlykHLM6SLKG/OUqvFpqLKsdepZTwqzAxM
-         yUTVKQZI6uUvMb+57VRXKxSdPA3HN2tjDP8i2heb2hYV06pDjf2dPAtQUqxfLXUP0I5R
-         IWzSm0LiyDAazFe458DibD++jnO7pWazexuA67Dstdx/rrrm9BP/+qsQGUs77v4iHItI
-         udPw==
+        bh=FyvHxTD9jYvJ1aFDphS8iH5fAIcPW7RDWbIxYHLNdZg=;
+        b=Mk5HIebQ1Sbc/KZAZV+5cA+izf6L6MG6b7DzbrZP/2v3ymefRE6KMHz4m6nWCZ7FbA
+         7HMo7u+3RUQjEc4SW6IVKvBEkRnWoAV8ETIzoaTMJXasWAUogcEo8Y57XyVomwk3PipB
+         QmAzL3IcpzyhVJQE0pvXE8z1ENeUAf65aQ1Kx/+SZ1b/LSn+5VD0m8CiYItOU/xI0kmG
+         t/Dn3uNim6wRBwZHKjpEYsqkuTw1YgN7SxN+XQn7Pu0Q3ZGJeLVtCdluHjgEhoiWK+RN
+         T+On2SzOp3tSB+Hy5svYHmava1AS8ebdSIxEwv49+GcCEI+U9bFUtGcee+bNKkw8k7DQ
+         bKkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768525527; x=1769130327;
+        d=1e100.net; s=20230601; t=1768525531; x=1769130331;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3AlYUZTasc+1BNyrEOuxrME8CBfLRDkLtwgOBsYdMoM=;
-        b=kw8eD9RPLv7gvW1lMEhmrmZ8LWjLNef//K2KRDj57sTNaOycDRYzysSBqv7WVQB6hw
-         MSqyB6ZJiz+Xb/pscXXu57/C3tDJOu7LSlNZbT0y8HwEwnVYWf2FfBg8XR3DqcSv1DoP
-         +0slgDGXl0Y6MySUNHNSl6jo2VKCy7kNFOIHfJxVZVJ2jRIuQAjOve0KzYhNTv8u/cSb
-         rvONG867zULielUNool83yFh7qqFGSccUWjjmztVpbofSq4F+GjWpHPXhtS34a3LZCx8
-         QyOdVegfiPL5+N7X5FADHZqbfeI+ZlzLvuVpPKEdbsBpwSwA9k8HY08L2X2DVa3tph2j
-         FSIg==
-X-Forwarded-Encrypted: i=1; AJvYcCUoFEe2FVZO6wSRzEl9HIUCi1GmLXMfBTd30bxG5RhG1m04GMqcE3vaAIZMi7I74voWjFrWtKp1itNpS7RD/g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+rzXszud7qdFNynqp9CJm27HNTlzIuKN1MiWkvD1M+sbfv2FX
-	tNO8u+e+OLsIH83pmaefR61ufYzFPQsOX+YFU7xHzzaRH3+gSIdoNNAX
-X-Gm-Gg: AY/fxX7tyZpAMBqG4zNKWaYrqjkjNOvVDP4iHzDY5oO0myxxYRc0sfsc7S37qye5Rpm
-	qwVZnbMwzwuhUDzpqMq+SagBatbikL7bM+siipjGjMXdXVg/bh8dhOETS8IsOX63SPugQ1mbdGd
-	k0vSJE8WQTbfSWw2A0gv9hmuTa625cmuKFgZUN7s8un26Ffez6zwhUaocAKNASEwLtMRafRo/4c
-	iaOQFnuW8lSazuNe2KTS6r/OUzhNKIkIsdcS4oRSyUpRe6u6CqLhwH6N+E/JE3kgGwYf7MXfbqQ
-	K5y5DRVSJkc8Yl2iwzowhi7Yq9kYaJIG4WzQ0NqCnIEedOyHp3JQGCu5nPo4tVzefjQo+P8vT/e
-	HyHWa1OXndoCBtl8ecuFmSDCxrdbfSnEVLNLfA1lOmmkFqfe31crTWeGR9PzkkW5EQjo/wVuE8k
-	085dVCoBZH/imhEivBhYrAgJF46TSGx9baQc/uhkBt59ea0hi7S1bu4rXo1aamZg==
-X-Received: by 2002:a05:7301:650c:b0:2ae:51ae:5cfd with SMTP id 5a478bee46e88-2b6b4104264mr1496968eec.22.1768525526187;
-        Thu, 15 Jan 2026 17:05:26 -0800 (PST)
+        bh=FyvHxTD9jYvJ1aFDphS8iH5fAIcPW7RDWbIxYHLNdZg=;
+        b=KGT++I1+8nc5meESPV1vgl5aBxlB+NgMJSK9X30YBFMFk/gNR8KRAQ49yf/coW9xxx
+         CaPejWPO6aUF0IfQFadYuqtiEARt/yPpwxDPtzhKBU9n5YCvsVUopqmAryVJdevfE6b8
+         GV2AADxbqsZpOdJjeetygdQxjWlUQlTtACrCnw76uMHrtA3Baw5OTkKbgdw/HTjGz3gq
+         9gsA+Kbzj+oGjStlrgYnXGkXLAbYvFrUcoxQSr6j4El302a2hi+Y4wzDwy3763vovJOv
+         HwBRIxC5ommW6NA3+rtPX3yrBPBXsXOqK3nY06Mkfm3ydYa8lgeYWDtAQ5GWmYwDDGPd
+         zOTA==
+X-Forwarded-Encrypted: i=1; AJvYcCWvJOzN2T09hr6VW3WZefT66JaeHaldSxh4RWvefPiL+WhBtzGkrP5LnTwplIUPoBW6cqRtZ+Dwj3YWaSFIbw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxlEftgHNjqYQk4Q92bJB+aRdspi2w/mwLE6ZLFPBkZtaWAwm7l
+	wiqjxywvOuYim/aKlQ8UHqRYeRDWmkAly8jsuRHfvXJg+0nAxNUU0NJ1LX8KsPrT
+X-Gm-Gg: AY/fxX6IqRu98Mb1i2RT6KYxPsdjQXOVjKOQEGj48ogKEX5HqNzO28u5dac60ysxqI7
+	pbIny46T/QbbGi8/jmI85MYcb5lom0tpzhJ9G0YYVniqXRzQuoVubYc6dS47jmaI+PqMS8VipgJ
+	+07H7h0CnZ6vI9JSllGRwpfTrUpyh1B/BQ/rRMfvdtbe9lV74uTU6zsa5UWoznspcvJractFdGA
+	WNUgIDwRP1yosds/M+0cSPMyrgz48nTAcsk1/oe1XymFshQ9WwzoPE/dEL+B/+XT8mNMlTpFLXW
+	211u6nK3QdK2QShZmhKPlsT2WvKudbk3I8PK2Zwksz9cL5s1ynawCfDZlQu/kwSOv4EMvTThcM1
+	6YlGX4rmEOzCDS4Rky2ihD9m7pKNKYpDFQ4p6L9KcdjHjPYpkD+9FB8lFxONo+DJxVVVWs7bTS/
+	Ht+LKd6ttLbG9meH2ifib+vZJGoNHFcoZwJ8i9dxI6JLogem7cR6gbNle3/oo5WQ==
+X-Received: by 2002:a05:7301:3f07:b0:2ae:60f7:7f42 with SMTP id 5a478bee46e88-2b6b3f05f0fmr774432eec.11.1768525529188;
+        Thu, 15 Jan 2026 17:05:29 -0800 (PST)
 Received: from zcache.home.zacbowling.com ([2001:5a8:60d:bc9:f1d2:502c:a6ff:5556])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b367cbc9sm1019884eec.32.2026.01.15.17.05.24
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b367cbc9sm1019884eec.32.2026.01.15.17.05.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Jan 2026 17:05:25 -0800 (PST)
+        Thu, 15 Jan 2026 17:05:28 -0800 (PST)
 Sender: Zac Bowling <zbowling@gmail.com>
 From: Zac <zac@zacbowling.com>
 To: sean.wang@kernel.org
@@ -73,9 +73,9 @@ Cc: deren.wu@mediatek.com,
 	sean.wang@mediatek.com,
 	Zac Bowling <zbowling@gmail.com>,
 	Zac Bowling <zac@zacbowling.com>
-Subject: [PATCH v4 02/21] wifi: mt76: mt7925: fix missing mutex protection in reset and ROC abort
-Date: Thu, 15 Jan 2026 17:05:00 -0800
-Message-ID: <20260116010519.37001-3-zac@zacbowling.com>
+Subject: [PATCH v4 04/21] wifi: mt76: mt7925: add NULL checks in MCU STA TLV functions
+Date: Thu, 15 Jan 2026 17:05:02 -0800
+Message-ID: <20260116010519.37001-5-zac@zacbowling.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260116010519.37001-1-zac@zacbowling.com>
 References: <CAGp9LzpuyXRDa=TxqY+Xd5ZhDVvNayWbpMGDD1T0g7apkn7P0A@mail.gmail.com>
@@ -90,86 +90,54 @@ Content-Transfer-Encoding: 8bit
 
 From: Zac Bowling <zbowling@gmail.com>
 
-During firmware recovery and ROC (Remain On Channel) abort operations,
-the driver iterates over active interfaces and calls MCU functions that
-require the device mutex to be held, but the mutex was not acquired.
+Add NULL pointer checks for link_conf and mconf in:
+- mt7925_mcu_sta_phy_tlv(): builds PHY capability TLV for station record
+- mt7925_mcu_sta_rate_ctrl_tlv(): builds rate control TLV for station record
 
-This causes system-wide deadlocks where the system becomes completely
-unresponsive. From logs on affected systems:
+Both functions call mt792x_vif_to_bss_conf() and mt792x_vif_to_link()
+which can return NULL during MLO link state transitions when the link
+configuration in mac80211 is not yet synchronized with the driver's
+link tracking.
 
-  INFO: task kworker/u128:0:48737 blocked for more than 122 seconds.
-  Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
-  Call Trace:
-   __schedule+0x426/0x12c0
-   schedule+0x27/0xf0
-   schedule_preempt_disabled+0x15/0x30
-   __mutex_lock.constprop.0+0x3d0/0x6d0
-   mt7925_mac_reset_work+0x85/0x170 [mt7925_common]
+Without these checks, the driver will crash with a NULL pointer
+dereference when accessing link_conf->chanreq.oper or link_conf->basic_rates.
 
-The deadlock manifests approximately every 5 minutes when the adapter
-tries to hop to a better BSSID, triggering firmware reset. Network
-commands (ip, ifconfig, etc.) hang indefinitely, processes get stuck
-in uninterruptible sleep (D state), and reboot hangs as well.
+Found through static analysis (clang-tidy pattern matching for unchecked
+return values from functions known to return NULL).
 
-Add mutex protection around interface iteration in:
-- mt7925_mac_reset_work(): Called during firmware recovery after MCU
-  timeouts to reconnect all interfaces
-- mt7925_roc_abort_sync() in suspend path: Called during suspend to
-  clean up Remain On Channel operations
-
-This matches the pattern used in mt7615 and other MediaTek drivers where
-interface iteration callbacks invoke MCU functions with mutex held:
-
-  // mt7615/main.c - roc_work has mutex protection
-  mt7615_mutex_acquire(phy->dev);
-  ieee80211_iterate_active_interfaces(...);
-  mt7615_mutex_release(phy->dev);
-
-Note: Sean Wang from MediaTek has submitted an alternative fix for the
-ROC path using cancel_delayed_work() instead of cancel_delayed_work_sync().
-Both approaches address the deadlock; this one adds explicit mutex
-protection which may be superseded by the upstream fix.
-
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Link: https://community.frame.work/t/kernel-panic-from-wifi-mediatek-mt7925-nullptr-dereference/79301
 Reported-by: Zac Bowling <zac@zacbowling.com>
-Tested-by: Zac Bowling <zac@zacbowling.com>
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
 Signed-off-by: Zac Bowling <zac@zacbowling.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 2 ++
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 2 ++
- 2 files changed, 4 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 184efe8afa..06420ac6ed 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1331,9 +1331,11 @@ void mt7925_mac_reset_work(struct work_struct *work)
- 	dev->hw_full_reset = false;
- 	pm->suspended = false;
- 	ieee80211_wake_queues(hw);
-+	mt792x_mutex_acquire(dev);
- 	ieee80211_iterate_active_interfaces(hw,
- 					    IEEE80211_IFACE_ITER_RESUME_ALL,
- 					    mt7925_vif_connect_iter, NULL);
-+	mt792x_mutex_release(dev);
- 	mt76_connac_power_save_sched(&dev->mt76.phy, pm);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index cf0fdea45c..d61a7fbda7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -1773,6 +1773,10 @@ mt7925_mcu_sta_phy_tlv(struct sk_buff *skb,
  
- 	mt7925_regd_change(&dev->phy, "00");
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index c4161754c0..e9d62c6aee 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -455,7 +455,9 @@ static int mt7925_pci_suspend(struct device *device)
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
+ 	link_conf = mt792x_vif_to_bss_conf(vif, link_sta->link_id);
+ 	mconf = mt792x_vif_to_link(mvif, link_sta->link_id);
++
++	if (!link_conf || !mconf)
++		return;
++
+ 	chandef = mconf->mt76.ctx ? &mconf->mt76.ctx->def :
+ 				    &link_conf->chanreq.oper;
  
-+	mt792x_mutex_acquire(dev);
- 	mt7925_roc_abort_sync(dev);
-+	mt792x_mutex_release(dev);
+@@ -1851,6 +1855,10 @@ mt7925_mcu_sta_rate_ctrl_tlv(struct sk_buff *skb,
  
- 	err = mt792x_mcu_drv_pmctrl(dev);
- 	if (err < 0)
+ 	link_conf = mt792x_vif_to_bss_conf(vif, link_sta->link_id);
+ 	mconf = mt792x_vif_to_link(mvif, link_sta->link_id);
++
++	if (!link_conf || !mconf)
++		return;
++
+ 	chandef = mconf->mt76.ctx ? &mconf->mt76.ctx->def :
+ 				    &link_conf->chanreq.oper;
+ 	band = chandef->chan->band;
 -- 
 2.52.0
 
