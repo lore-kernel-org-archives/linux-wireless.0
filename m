@@ -1,112 +1,110 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FAC82FDC52
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 11:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62C79312835
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 11:33:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768820789; cv=none; b=B8AIj4g9rz3/EYQSNFu3rhUYvGqKo6t9ZCAFy326P6AlfDxBmNune01dPikF8dF1rsyFbqYh+y1EDGzqmWt4jHsJw39Cfg+Es06DLxMRUIHD0c88Prt27M3EYDtwjeZJrEGT3kF2TLGZ1p6ZVqFUV/bQ6IvR5jtRV1wP67k1EQA=
+	t=1768822402; cv=none; b=mqF2sRTwc4AAs1C+lZzZYWQBZ2XAlDKqVnmnuOwjAhHOB1sZccZOgY2p63T/ohlEe9aSEuL4ZaxQC7Tj5V0+krh3pWQFaHBqvGyqUXp/RdW1mk436eQkFwqK+UXfPQ6JiQt/wScQg2B73zH/arkZ9n5BqLL1LqdtMBviGvb4YtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768820789; c=relaxed/simple;
-	bh=fOlQGPrBFEHwIN3E1fGGZt9NqhG5Ej+OGlJro0xWSrY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cRPp6yRuf5iwrPRrotd078kJtFSxDF9ePxAsk6KDDPAXmZEGMpskeuODFBkIArbQj7PFPCEvuTXSIcJy8iwCRxMsTFIERoPJMwTW/hQCFQ961equskhyXGbq4wcFk8OiSbQE9kq+90RaPVf5wYKMKLiH9rt31yFZElN2iH1h8Dk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=R+zH1m9S; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1768822402; c=relaxed/simple;
+	bh=cDjyrzQ56DNaRE9lAeVPM5w/qTBydYWAO5nNwoznZn4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uy/ThyL7o2g+mf+RlTW1stmk7NwCnjYXX/YIV4jeQ94RBLxg0xGbpebuMmCLBKcCeyHNvktSy9O8cl0YB+asdDFSiDx5bpibHpWdi7Vp4KZEgeHNTpWR8kbOFqa3LFuDhGhIl4rY6CQGhrtQ3oltxhudE/+Ps3Tq31xiZqO/nLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QuVXEnM0; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="R+zH1m9S"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=h6yWXAkElAZKSCNVALJur3hefTptdn5YP9bY0AvNYzQ=;
-	t=1768820787; x=1770030387; b=R+zH1m9S5/F0f0Tdbyk8ZEcemK6Y8/ejBPe0LymLJELcoP5
-	iAFGHYk94roJG3NdvQqFHlUYV+DiL3/98cTtP09BZu2vUNTn6TI65Fk/YWs85Ci7uIZWS59qyIAMA
-	0nFUkbYuOOqCuKGKQUE/GmhMNn8QHG+QlCTjzZUHnndq8QqdGREtrmDRe2Af9x0/ZGB+aVhdTzCu2
-	xKlUoi4O7zE4uaoMnQhopyaZbBtnfuTF9z/HDIt9QVgmxszEpLJxrzEIK3zNgOjomH5QbYVefIsmf
-	x7EtHCmoIGFhFHUBxVBbbsH6sY3/Y5cwedfRxUSCuBxo84+ryre5DY5m1hUPOjSw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vhn5V-0000000FtrX-0mHB;
-	Mon, 19 Jan 2026 12:06:25 +0100
-Message-ID: <9c79c606f1e1a2ae0dfa3c97aa4af7c83684901e.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: wlcore: avoid oops when reading tsf from debugfs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter =?ISO-8859-1?Q?=C5strand?= <astrand@lysator.liu.se>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 19 Jan 2026 12:06:24 +0100
-In-Reply-To: <9945364c-ec4c-e2c9-a9cc-884e64b629d3@lysator.liu.se> (sfid-20260119_115908_210575_070FC903)
-References: <ac98f15b-4f6e-95c4-534d-583419068ce0@lysator.liu.se>
-	  (sfid-20260116_163710_192579_DC8B9783) <b408ac23d51bec80048c35055199176bd0377879.camel@sipsolutions.net>
-	 <9945364c-ec4c-e2c9-a9cc-884e64b629d3@lysator.liu.se>
-	 (sfid-20260119_115908_210575_070FC903)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QuVXEnM0"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-b86f81d8051so694614066b.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 03:33:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1768822400; x=1769427200; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jwBK6AZaPzGdovVFSWV9sDTCdheN7IXtWZT7jcQOxKQ=;
+        b=QuVXEnM0FfpDuRMhSiJujTNDLVTeI+pP7nNhtWM61BFE0rnzf7/Tld6y8Y0Le8zlbi
+         aF/4DrQu7qKBMmTAhN/+pDIkKuFrKn0YsCh4GPv5knR+00nBsEz1PYMvM89DcTmI+oln
+         xwH4mG+M+fBo73mk8VMhTApYjDA0HttyEHAbR2KX4sOPRZuqQGUBO+HGIe1oS6OD77lC
+         AjBsTqc3hGHAD3NRU77t1gP6itNOc2x352dlnLYQOUM3cuDgbQM7a7S3bXB/wpxVFJHe
+         AiPvT6jhK0miMKW3Gzsv+6qXyPcnigtEp2W4CDOMSn4Y/mIe4mHK1XIbuAlg02/cnu+a
+         5j3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768822400; x=1769427200;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jwBK6AZaPzGdovVFSWV9sDTCdheN7IXtWZT7jcQOxKQ=;
+        b=ijRLF5nZ6elK2BcE07u/avPDNy2sM4Vm01lYAeSJkP09FqyWfz55JIrp43t3zroDMe
+         QVeL8y/hnuw0+GGo9Dqiu60bWRBr8qUqZ0aOeC9Hj+FHuPap8rT0tqQ/MnLRVjjX9yQI
+         XdjR9gDOT/SDEZWUrVQpX/rX1Za950USG31N5aRo3sww//eqKRVaqbEUdjz2lZIUIauD
+         fUnGXIlkDSAlmf1NdHuCHvyXNx5pmibn3452JQNIm0WMun2mIebPk8F/ZlmQkBB4l9ts
+         lHTMfK8q6Wt2HciRN/BtUU46qPgatl07Tw5SESyA4xTAENYe235o8nJ6FssY1eFwUjQM
+         2jxw==
+X-Forwarded-Encrypted: i=1; AJvYcCVm4A1ZNWyonT6bEAdTLvp8MzTWDwJ7EcjXpAvDizQbko6vsAAdaZGAyB3ANpT812K9l4+JbRby0KkWmu62QQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5HLVSCpQjqAYew9MK9YCPEIfbNg2rtI1C9l+cBjU/SExZfK9I
+	/3b6IhTv1jvX63IKX922hnN7+7ykQh9k6nLUfBXn1++SFWGI+JP8czw=
+X-Gm-Gg: AY/fxX5wyWNf4g9lOqpDJWxN2Mz4x7NtgHxcfKWsNGBy37o5u1ikNVkHyQK6tf4kLsI
+	4yJcQuicd1pSLKnY04E5BTazje9hD8wDJ4EyaYof/jORRQwhMcglx0ZmXPUWfgNMfGzeG/YMxkT
+	PjjqGwnJDTEITGs4dvB5Pg+NHhfKbIzFglwINxIlV51ErNxJQVzymodNvXLxqQL8k44sP/UgT2s
+	0Xbu9q6uEy8RtC0fYACoYs8cSAMzYmvUF2uZ50dKc0uM6+DNVarnuj4GogoNO92/TIyyqc2htrN
+	iKAPqX/VI73EbFLp4Xm+p3WEUSBZ6Lmico9G3S6W2ihwuCm+C0IkRwEw5wU5C5kYuV/3PekjaxS
+	AJIGm+7FR2z9jjMjPLdUNP/HaAY1hZzAPqeN3s9BJN6MtSVN6h8/uk7s9sajGgNEJUCm+53ZML8
+	iKUhl4JqDhO7/5kBtQIwo7o3JFKToBGfP7ljqtLA==
+X-Received: by 2002:a17:907:2da7:b0:b79:eba9:83b4 with SMTP id a640c23a62f3a-b87938586efmr1148569066b.6.1768822399465;
+        Mon, 19 Jan 2026 03:33:19 -0800 (PST)
+Received: from cachyos-x8664 (public-gprs367335.centertel.pl. [37.47.66.40])
+        by smtp.googlemail.com with ESMTPSA id a640c23a62f3a-b8795168e6asm1141447466b.22.2026.01.19.03.33.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Jan 2026 03:33:18 -0800 (PST)
+From: testuser7 <frut3k7@gmail.com>
+To: 
+Cc: Gautham Kumar Senthilkumaran <gauthamk@qti.qualcomm.com>,
+	=?UTF-8?q?Pawe=C5=82=20Owoc?= <frut3k7@gmail.com>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	"Yu Zhang(Yuriy)" <quic_yuzha@quicinc.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: ath11k: Fix the WMM param type
+Date: Mon, 19 Jan 2026 12:33:01 +0100
+Message-ID: <20260119113305.30440-1-frut3k7@gmail.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2026-01-19 at 11:59 +0100, Peter =C3=85strand wrote:
+From: Gautham Kumar Senthilkumaran <gauthamk@qti.qualcomm.com>
 
-> Thanks. Yes, I was a bit unsure of this solution. It is easy to trigger=
-=20
-> with "cat" though:
->=20
-> /sys/kernel/debug/ieee80211/phy0/netdev:wlan0# cat tsf
-> [  182.282540] BUG: scheduling while atomic: cat/269/0x00000002
-> [  182.288304] Modules linked in: cts wlcore_sdio wl18xx wlcore mac80211 =
-cfg80211
-> [  182.295785] CPU: 0 PID: 269 Comm: cat Tainted: G        W          6.6=
-.52-g0cdede7dcaea #1
-> [  182.304695] Hardware name: Freescale i.MX6 Ultralite (Device Tree)
-> [  182.310902]  unwind_backtrace from show_stack+0x10/0x14
-> [  182.316188]  show_stack from dump_stack_lvl+0x40/0x4c
-> [  182.321293]  dump_stack_lvl from __schedule_bug+0x54/0x68
-> [  182.326758]  __schedule_bug from __schedule+0x5ac/0x728
-> [  182.332030]  __schedule from schedule+0x5c/0xb8
-> [  182.336593]  schedule from schedule_hrtimeout_range_clock+0x10c/0x184
-> [  182.343074]  schedule_hrtimeout_range_clock from schedule_hrtimeout_ra=
-nge+0x1c/0x24
-> [  182.350780]  schedule_hrtimeout_range from usleep_range_state+0x5c/0x8=
-8
-> [  182.357438]  usleep_range_state from sdhci_start_signal_voltage_switch=
-+0xc4/0x2c0
-> [  182.364971]  sdhci_start_signal_voltage_switch from sdhci_runtime_resu=
-me_host+0x7c/0x268
-> [  182.373106]  sdhci_runtime_resume_host from sdhci_esdhc_runtime_resume=
-+0x168/0x1a0
-> [  182.380727]  sdhci_esdhc_runtime_resume from __rpm_callback+0x3c/0x168
-> [  182.387315]  __rpm_callback from rpm_callback+0x28/0x54
-> [  182.392590]  rpm_callback from rpm_resume+0x438/0x5ec
-> [  182.397690]  rpm_resume from __pm_runtime_resume+0x34/0x6c
-> [  182.403226]  __pm_runtime_resume from __mmc_claim_host+0x1a8/0x1f4
-> [  182.409460]  __mmc_claim_host from wl12xx_sdio_raw_write+0x4c/0x15c [w=
-lcore_sdio]
-> [  182.417019]  wl12xx_sdio_raw_write [wlcore_sdio] from wlcore_runtime_r=
-esume+0xc8/0x218 [wlcore]
-> [  182.426200]  wlcore_runtime_resume [wlcore] from __rpm_callback+0x3c/0=
-x168
-> [  182.433441]  __rpm_callback from rpm_callback+0x28/0x54
-> [  182.438729]  rpm_callback from rpm_resume+0x438/0x5ec
-> [  182.443835]  rpm_resume from __pm_runtime_resume+0x34/0x6c
-> [  182.449375]  __pm_runtime_resume from wl1271_op_get_tsf+0x70/0x140 [wl=
-core]
-> [  182.456685]  wl1271_op_get_tsf [wlcore] from ieee80211_if_fmt_tsf+0x1c=
-/0x44 [mac80211]
+Since FW does not support the 11ax EDCA parameter in WMI TLV command.
+FW was crashing as host was sending this parameter, now changed the
+WMM parameter type as default zero before sending to FW.
 
-Looking at this, I think you have a much more general problem in this
-driver - __pm_runtime_resume() will always do wlcore_runtime_resume()
-under spinlock, and basically everything does that, so I don't see how
-this is ever safe in the driver?
+Fixes: b78c02f7c710 ("wifi: ath11k: add support for MU EDCA")
+Signed-off-by: Gautham Kumar Senthilkumaran <gauthamk@qti.qualcomm.com>
+Signed-off-by: Paweł Owoc <frut3k7@gmail.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-It may be that normally somehow it doesn't get into sdhci's rpm_resume?
-But at best that's very fragile?
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 451cc4c719ae..2779ebb5e88b 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -2700,7 +2700,7 @@ int ath11k_wmi_send_wmm_update_cmd_tlv(struct ath11k *ar, u32 vdev_id,
+ 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+ 
+ 	cmd->vdev_id = vdev_id;
+-	cmd->wmm_param_type = wmm_param_type;
++	cmd->wmm_param_type = WMI_WMM_PARAM_TYPE_LEGACY;
+ 
+ 	for (ac = 0; ac < WME_NUM_AC; ac++) {
+ 		switch (ac) {
+-- 
+2.52.0
 
-johannes
