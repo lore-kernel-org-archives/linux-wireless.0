@@ -1,102 +1,165 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E932F236437
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 15:02:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB1438B997
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 15:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768834942; cv=none; b=YGqz3u4UoOThV+OvDQAtT79fc5pbyQFTHIqnW6tCcraBun320KvShrt2/YRpvGvSlytzRpAq7T1XAu2sLrsNI2EBbFSkIpzTLOY8dkHMAZCyFgSe1rpQvgnv5lM/MIcOjjVP7mZGPOrW+bKDvxDxSc3FJk/x0mepewtm+wG3dv0=
+	t=1768838209; cv=none; b=gBzb/hEPAD067SDMTKwbF330HdfLRGooSwQASM2DlZNu0YmeSs2XVp0rEE0+4DSGOg5MfnKtfByvtTlBjwRiYZN/OMk1gQtHa563hMIcCloQwmM0ntKrQfEhL23vP/vg81ZSV9MJ8qeXhQnNNGwG+kmFEueFwcW0QcDCmZaGW4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768834942; c=relaxed/simple;
-	bh=wrAT/lEhlnWwL8fYoCsLcee6O3Keh9ygy4iM5CbPKa8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pNgUGNQJefvdW6rjQivk1scJdRU6Z5p26CE9hnHywfBXDipPxb+4RfARBsaeqE7awCut7FlQJN4HIIwK87+2NaqXm9qV9IDGqziTeIG1UsFLQiZ/NAzF/RA5KrIeOALW9gZPKqjVcbe6yfAWvKinOlZdqjjgYgW1vLCHQxoE2a8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QF2tbxDF; arc=none smtp.client-ip=209.85.210.178
+	s=arc-20240116; t=1768838209; c=relaxed/simple;
+	bh=kmb0xz+cxH7bZ9ZsML6ZYz/AL5TRMq96zD1xbbV7jno=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=kDBVpO8WDB+PKSdLl/BUj52NpTz2FjJRjHMmDKumql2iKRQ9gEQsiE8zaOYvlcRQIokELYqTHO+MrZ4ntDiBHAQR/4BcKIt+20+cphpKxCK44vGCtqx/UdtDSgjdRRNKBfhUs8R7CpYhj9/JnFjA/TcJLW2emnEikDMMDqYCNFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LbqoHLya; arc=none smtp.client-ip=209.85.128.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QF2tbxDF"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-81f3c14027cso2439607b3a.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 07:02:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LbqoHLya"
+Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-793fdbb8d3aso4811017b3.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 07:56:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768834940; x=1769439740; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=TjWkkL0QqpjKgpegJJRn2GYbkZbwHPk+VOJTJw6SS9A=;
-        b=QF2tbxDFhL+DcKFCas1naeqA+/kgSneP15wac+0yms5994jL15Kt0sCGnGfZbPCRJa
-         h5fLO9+vzbZt5EIgoC2WcurG+7FGfcwGz8SoUiXtmMsngAkgKWJVpk0ZDCfDTnX3dsVf
-         o4cgrZcIQqPHpPh+TN474oOzCI04GZXNjwZPPje81xuW6tdlucrba3qd3VqcKWkJQ+86
-         GFGF1y7Zhtbkqf01RCFX7ldY1BBj8Iaia7IpAgq9M12qSbRhQJ8917KLsbujkm3MIAOT
-         NVx5RiyUpVRWjA+TWtSDw8CEdJJuV9zIR9TAGyb/nVad7o7ctA8IifUEyiAThV/Ict0V
-         qibw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768834940; x=1769439740;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1768838207; x=1769443007; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TjWkkL0QqpjKgpegJJRn2GYbkZbwHPk+VOJTJw6SS9A=;
-        b=irrqpCBt/B42NjSHetYdR7DFb6foKGxuguQ3iGxCXWHHS2wZZdjOIv9uPhweL1P++a
-         OxtK4FzzhBYUSdqlbJDLWNUYuSWhH12+i6kSiSeLIdiTY/xG3eTMKcUpRVHAwVWfBJXS
-         lUvV0vpADjQRKgbQVXXsfTIkPyqVyhFSpd7VU6/hv2WP7T8gGxIa1jzjkTErQ7tCdYZb
-         /+Wgezixkdk8WDwdOdDYpN2MAGTduwAqnzkE8FnNEkKGu34xJ41imxXRHuUaXTyb5WhM
-         HJ/fG4HgT7DtFdQTpvINfm3nBf/tMLmol60ywXn8vGClgyA1P5eTHELVyg3M+ygB35xn
-         On5Q==
-X-Gm-Message-State: AOJu0Yw/Nvt/TFfhWPfx4xZvunu34hbrUnYU8e3bttY2dyDIBrQVNyTS
-	4zYcD7Evlh7hvZdLcPLSSAJIV6j9HSuwC18BBsVtQO/p+FsQ8d9H555y
-X-Gm-Gg: AY/fxX4ueEBGu5Mqvtv6BPhDhv5bCYWrG9JBf7M9r4nWOb9d+oZxo1wbx5E6qdyQYbl
-	77GIWTWf3xnRxEBU2a9jaGrIYw3fWvUKYvt+evg6i3TN5VKt8DeKWOZ2H9+8kIqkktFFTcNJSvt
-	Rsy8wEQtrEKDg69mHt7BgsFAUEsjVP1NxVq+q2xSMdNn6Qoo0wPIAiNmFknDDGRUelQkdZxdG7b
-	0RSqpQJYSCN08agBHdGSQ2CHYBNJloqKCUiClQ9HqtUIR9RqW7HjIqhigQbkIarN7kEhzyQ9fB5
-	+qrDxXsvQ0ne6Eryl3witMUVHOAJFtaHG+mO426A/q3HOf+0Ntg0IWe2vEgT/fpkQ1MAZZ8mxz0
-	1WFuDrDYZmyTTN5NKVQfVKJRCBxuZStc8EEIPR9H3rj3IfNQvCn8mFY9vJB4Nhdkd14i8nMwCOd
-	yr+4gcQc81WZ9o+q/2i//Eh/nLZqtAt/Fo/L0QVw==
-X-Received: by 2002:a05:6a00:6b83:20b0:81f:b6bf:e6dd with SMTP id d2e1a72fcca58-81fb6bfebb1mr5103454b3a.13.1768834939956;
-        Mon, 19 Jan 2026 07:02:19 -0800 (PST)
-Received: from name2965-Precision-7820-Tower.. ([121.185.186.233])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81fa129199dsm9503402b3a.51.2026.01.19.07.02.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jan 2026 07:02:19 -0800 (PST)
-From: Jeongjun Park <aha310510@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	syzbot+81cd9dc1596563141d19@syzkaller.appspotmail.com,
-	linux-kernel@vger.kernel.org,
-	Jeongjun Park <aha310510@gmail.com>
-Subject: [PATCH] wifi: mac80211: fix NULL pointer dereference in ieee80211_mesh_build_beacon()
-Date: Tue, 20 Jan 2026 00:00:31 +0900
-Message-Id: <20260119150031.201832-1-aha310510@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        bh=ZFi+VJ96Lx+RhMsznMcBzo/7WtrXEjJe+WbuE10vlzM=;
+        b=LbqoHLyasc57o6KtT0/H5E5//Xn4Hf5OSWzVk78CGBmY7QZX18ezlDb8QSYAXlEYGc
+         fvC0yi7L8xhqiEa7ONU7ansM9mCaMndc9hN/v9jHRKkkuoWEE7mtoGZCJ4anx63c38mE
+         UhgQji0nUPg5PDtfcTCAmu4dQ1Gp66O6ALHos6yBky71deqmxasfwSgkNFsGQ0tB5StV
+         5mg3jUrD7Do8t6fZ4U7XRvKdE2i6bR2497SwBY6ZAs+qCBZbWnKEqHi6Ll/fM/mrYc2A
+         mjZ0A/GbKPn43GgntLfy+T9kBFm148ewxXKr4SNQWro1eAIfGK7ep8Z9Vuj9m82oKhOV
+         OJPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768838207; x=1769443007;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=ZFi+VJ96Lx+RhMsznMcBzo/7WtrXEjJe+WbuE10vlzM=;
+        b=IRAGEgRGRkkBRj9Ecms70JL0w9G4BAYGkpybsO8IxFP7NhKzOkFeFzHjy5VtYyYF9V
+         RWX7JUd1Q7V7UMu22cBYy9y7CCZlCL8knt7UqBVD5ovqsYGAKN/WRBwWLIaTApC+x60b
+         lYnJ5D7D28YH/RwgObR8TcrT5+TtV8p95e+NGgqc0W7l7WMCyMYQE1HlRIFGHfbxQ5Bo
+         yoaC0BqFxlYdnu+Lq4rlYbBI5wLLfvq4nwd9ZensC9MtF5fId4sk/+b2ouleQ/nGYyis
+         JG6jOqVMH22t2mS5cr0+3mltwm3UELMvbEtnUPjzfJYmreFs2tBUabLZzdyYlfrbsXqn
+         pAWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXYVyk30zTNJ4l6yvSF2D2DWE2GCoCPro6dO2TRhfH5BUyicFCIWrCkpd+ECoGqdwKB+nHHAtq706Qv/sp2Hg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+jQRL5uV44TqK8uvxbUFg8AFx8mBqJyVgaoRON68LAkxO5kCa
+	eqrKsd1Bosm/ql7JCEuNxm9NrhOxQ3kCWzmmvTc6MAZCMGDNDAw9hK2V/Bow9j0/+fYD6pma0FM
+	LDsDZ1BUi9v/st9Jo/4D2s3aZmBj+ez0=
+X-Gm-Gg: AZuq6aLXVys1yMF2lGtpKWpHcM9n4UT+urxGhQzxJ76wfv+YjpiDS1n4XT5V3Sw1lEI
+	OF6ozQ3wedZoV/mm5AD03hp5eb33DIriXGkwZilfl93nVVWFtisxuvx3ZT6BIrenCH0tC6UKVov
+	3T6/zo8gZapcRh3lbDxpfQh0gYpaZQTdicsUZX3tyg/AwAMudtyz3t/lQqg2iOKxUpUsstyLAj2
+	90nrM1ppyqTEGimkXThbnjr1J7xGkpx3ntD89Rb9gqr/dNE6os3x98minXzjH7yilgORw==
+X-Received: by 2002:a05:690c:6d8b:b0:78c:32fc:d3c8 with SMTP id
+ 00721157ae682-793c54063b1mr84654397b3.61.1768838207073; Mon, 19 Jan 2026
+ 07:56:47 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260119140238.3360658-1-miaoqing.pan@oss.qualcomm.com> <20260119140238.3360658-2-miaoqing.pan@oss.qualcomm.com>
+In-Reply-To: <20260119140238.3360658-2-miaoqing.pan@oss.qualcomm.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Mon, 19 Jan 2026 16:56:35 +0100
+X-Gm-Features: AZwV_QjDpm8QDQgjkrGwqj8CMMa00N7wkcI94H42Z5svJe8pdQ2INMjNC6m63_4
+Message-ID: <CAOiHx=nBLtSFNhuRZrHn5z8bCrA5nyuS9G8B0nh-WTiFU_HUMw@mail.gmail.com>
+Subject: Re: [PATCH v3 ath-current 1/2] wifi: ath11k: add usecase firmware
+ handling based on device compatible
+To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+Cc: jjohnson@kernel.org, johannes@sipsolutions.net, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, ath11k@lists.infradead.org, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	devicetree@vger.kernel.org, krzk@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-NULL pointer dereference bug occurs because ieee80211_mesh_build_beacon()
-does not check the return value of ieee80211_get_sband().
+Hi,
 
-Therefore, we need to add a return value check to prevent this.
+On Mon, Jan 19, 2026 at 3:04=E2=80=AFPM Miaoqing Pan
+<miaoqing.pan@oss.qualcomm.com> wrote:
+>
+> For M.2 WLAN chips, there is no suitable DTS node to specify the
+> firmware-name property. In addition, assigning firmware for the
+> M.2 PCIe interface causes chips that do not use usecase specific
+> firmware to fail. Therefore, abandoning the approach of specifying
+> firmware in DTS. As an alternative, propose a static lookup table
+> mapping device compatible to firmware names. Currently, only WCN6855
+> HW2.1 requires this.
+>
+> However, support for the firmware-name property is retained to keep
+> the ABI backwards compatible.
+>
+> For details on usecase specific firmware, see:
+> https://lore.kernel.org/all/20250522013444.1301330-3-miaoqing.pan@oss.qua=
+lcomm.com/.
+>
+> Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ=
+_IOE-1
+>
+> Fixes: edbbc647c4f3 ("wifi: ath11k: support usercase-specific firmware ov=
+errides")
+> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath11k/core.c | 36 ++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath11k/core.h |  4 +++
+>  2 files changed, 40 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireles=
+s/ath/ath11k/core.c
+> index de84906d1b27..1cf7f4e601c3 100644
+> --- a/drivers/net/wireless/ath/ath11k/core.c
+> +++ b/drivers/net/wireless/ath/ath11k/core.c
+> @@ -1044,6 +1044,42 @@ static const struct dmi_system_id ath11k_pm_quirk_=
+table[] =3D {
+>         {}
+>  };
+>
+> +static const struct __ath11k_core_usecase_firmware_table {
+> +       u32 hw_rev;
+> +       const char *compatible;
+> +       const char *firmware_name;
+> +} ath11k_core_usecase_firmware_table[] =3D {
+> +       { ATH11K_HW_WCN6855_HW21, "qcom,lemans-evk", "nfa765"},
+> +       { ATH11K_HW_WCN6855_HW21, "qcom,monaco-evk", "nfa765"},
+> +       { ATH11K_HW_WCN6855_HW21, "qcom,hamoa-iot-evk", "nfa765"},
+> +       { /* Sentinel */ }
+> +};
+> +
+> +const char *ath11k_core_get_usecase_firmware(struct ath11k_base *ab)
+> +{
+> +       struct device_node *root __free(device_node) =3D of_find_node_by_=
+path("/");
+> +       const struct __ath11k_core_usecase_firmware_table *entry =3D NULL=
+;
+> +       int i, count =3D of_property_count_strings(root, "compatible");
+> +       const char *compatible =3D NULL;
+> +
+> +       for (i =3D 0; i < count; i++) {
+> +               if (of_property_read_string_index(root, "compatible", i,
+> +                                                 &compatible) < 0)
+> +                       continue;
+> +
+> +               entry =3D ath11k_core_usecase_firmware_table;
+> +               while (entry->compatible) {
+> +                       if (ab->hw_rev =3D=3D entry->hw_rev &&
+> +                           !strcmp(entry->compatible, compatible))
 
-Reported-by: syzbot+81cd9dc1596563141d19@syzkaller.appspotmail.com
-Closes: https://lore.kernel.org/all/696e34bf.a70a0220.34546f.04ad.GAE@google.com/
-Fixes: 147ceae20534 ("wifi: mac80211: simplify adding supported rates")
-Signed-off-by: Jeongjun Park <aha310510@gmail.com>
----
- net/mac80211/mesh.c | 2 ++
- 1 file changed, 2 insertions(+)
+You should be able to replace most of this code by using
+of_machine_is_compatible(entry->compatible) instead.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 68901f1def0d..eb3a346226bd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -964,6 +964,8 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	sdata = container_of(ifmsh, struct ieee80211_sub_if_data, u.mesh);
- 
- 	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
- 
- 	ie_len_he_cap = ieee80211_ie_len_he_cap(sdata);
- 	ie_len_eht_cap = ieee80211_ie_len_eht_cap(sdata);
---
+> +                               return entry->firmware_name;
+> +                       entry++;
+> +               }
+> +       }
+> +
+> +       return NULL;
+> +}
+> +EXPORT_SYMBOL(ath11k_core_get_usecase_firmware);
+> +
+>  void ath11k_fw_stats_pdevs_free(struct list_head *head)
+>  {
+
+Best regards,
+Jonas
