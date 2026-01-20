@@ -1,101 +1,136 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3E633F384
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 10:08:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768903691; cv=none; b=A2hGDuyspSbmOXEX8YOcGyZG5yWiKH9JCVZuBBJvESq1Np9qqH25A+LUoNKl+iSgMdzinN3SuI3rGwn59O6dWhEjFDJtZZZ6O0gmMqGorPXyMI++shqnN6bqmK/koUW6hdW0J3GvIwEanHUO9RkQV1VLsM4Vh5y537I1hh2bGbw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768903691; c=relaxed/simple;
-	bh=tpHNQfw3RId2zcyVn54cQMBjPjFMccMqF2d1zPEkt8w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UfoIuE6QXk3/tL4AeKobp/4Jofr5GoXlqh7NjkUAIbHL4UOvseIMI1IgJeItYJzdPHVniEAejB7B6y+C5bQ/9j0o6ZqxM60dr/0Veb9AZPSCOcnnPwTo7M+SS/1fjRbhugdxJvGgHuxZXKX5S9o8tK2iT6OHZr6uX1fVdA/TOn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=ecJ8AZ0C; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C723D39C627
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 10:26:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768904778; cv=pass; b=KvNbPQpkewg6UsqBEzAjXvf5VTX8PA3MLv5UxBVlVmsW2L8fzzyVV1vmVP9aGQymfc9s9JtLQGJYpq5WCc2ulm2Vym3xlT830gTk0se/RDsU+Z/MuADVEjuT+gl/NOShnny5b3+FxqHYU6R7gnseCNbpQr0KCnxxghfiYcYaLoY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768904778; c=relaxed/simple;
+	bh=2voIFGn6SR1MogbmE3kR3Vdr38x74Nd/URKdq4hbHvk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ail2teDB1t1PExP5kCOnR2MbpjruaW+AKIQBev2bA2a7NIoUNjp7MJJGcBDRSaU/DzmmRlbAxIisYi+smYnVpkDeOLpSlMVMe/lr7B7Xr84yguL2CVBiB8rsY3DRYgVn9h2tAKnKdWK7CQI7gPIS5AY155ZJGZpAPZCa7Kt7QXE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=SLTsLSsB; arc=pass smtp.client-ip=209.85.167.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="ecJ8AZ0C"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-34f634dbfd6so3981120a91.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 02:08:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SLTsLSsB"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-59b7bb3b913so6049289e87.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 02:26:16 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1768904775; cv=none;
+        d=google.com; s=arc-20240605;
+        b=j9p4ZWtcUk4u8sCWjUXD3wjAxlufI5oPFA3K99sth/49qrQtsTN8aWYMCt84yolfvf
+         XaVRXDDg62ilaE+H6YUMxKFYu2tqKNQY9HIyRS+LUkB6xESCT0nINmidSSc9dfbvGtO3
+         7qKco9PyUz86YULxOeGuAfKuN6YajVcT2utLBETaI7XtE+iXjL5Cvjm+KeTA6RdHR19v
+         yihrVPraxHTl0fWGE7E0uKbztV7qdR8rVeTa3yrUtPeZdnNXlTIkEybC+1ACN36bFoyT
+         eBrOfetFym4BDxBdJXi6Dv52vcHZNV/OKwMb+p3KoZ3OfgtRKltYT49NMJF4gwYrE+Uq
+         Ya1A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=7dc4uOSwQ2vBzThtTBXaWxDon+kZapkB4rooEPiZwsE=;
+        fh=vusxz18HG9ypf4BioMslmopMbGr25xwfEsVGSIYd1+8=;
+        b=kTGRHFJjGhHbkNPiSPK7nHydFH2QKC4A+1ouhhcb4CDuntSF/rLeh0Xd/+tjOYv6rt
+         Dao0THHcGchrzHwxX143PzBqRPsTlh0RwdkTs6Js5iGXQvsmS3bG7mOFz8rrTx+CJOF3
+         /VdfQN+CHAmKpk98k5sF+RLpeGNqMfW2Sl8lkND4StBCGzKzzXa4eld3CCegDfwhyTMR
+         SySZqbVrMZ/FBuiSVOCxTqpq18fxgPvoC6grwEj0pxQCd/XPz4SUaGdKycD4Yid/MUt8
+         NI/AKXwjpkjZfENocdFcfLF41zBhpnfk1dnRf7x0Q775UF6ebBHchOtq7aYTUOFr10oo
+         LBmQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1768903688; x=1769508488; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+o2/1LEokKRrDMV8iJu441JuTohScvr4ZNAhL0SPcv0=;
-        b=ecJ8AZ0Cf6uVhZZ25ix1fCgLy/sKjYmiukIUByWMQXGfIu873XUfKLEMaS6oI0W9da
-         /gAElzxWme2XAoPkDxEJDgHIctlZp1BLdP3TjVLsPYOBkSLAnX7Sgb1NFbIksRN9akvV
-         lMqm2AHiZIb7vr6+DEX7yH3uNj+S1kSJ3yOqwbajErYChG56GJ65Q6DV20JWLgwUgojo
-         3eQgzD7BkDSInG9z9JKAamp6pzhhX+eKH8aSl15myM3cp+pAC1kXV7eZAcy1wyHYibYD
-         coYI+2Lef+kRV4BgnLjH4n2+TZfHeX2/EdFQKa9SPhLHiurco2LYkDnyCjYHPGrupbSS
-         fYAQ==
+        d=linaro.org; s=google; t=1768904775; x=1769509575; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7dc4uOSwQ2vBzThtTBXaWxDon+kZapkB4rooEPiZwsE=;
+        b=SLTsLSsBmNdCC6K0hs7UxMOpWLLNe9OnzkqQV35PejWHCxehhZfZXrGQaaFNpWCCY+
+         l0L8EXAZFZAjj7irvRlZeBB/rnX8X66H6vhKX2vCnu7Y/t09c3YTPRIatosRiBJlZ/AJ
+         2N+RGPgPuByZlhxAYLoWMY7TliBGbTvCGYrKkXlN9tB6aNdrF13XETDOIA98huKqMGd6
+         XVuoo2J7A+peDjrap3bp4j2UOXkmPnHtmDh5y9L5fSwcNaoJ+UAnbNYDQXrUuP4q0MvZ
+         kCaXu3EF9rUqaS/igwsnpbbbZ/wvfFeb6LEY6M98PkPAhOjkjXfc26v0qwSOmkVEgwE6
+         QzXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768903688; x=1769508488;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+o2/1LEokKRrDMV8iJu441JuTohScvr4ZNAhL0SPcv0=;
-        b=H/z98OS6ayrA+lAHyLU4Oq7zA5vAqQtL/qISJUREodFp4pnEIpCeZkywVNv7N36XFj
-         aoM9BZeIXRbRMYN1ZSoY+PDjXHWjgxbTeIUGJFGC9Vy1AqQ3RTxOA0WeRml6lvnbC2Ug
-         4VYMxHN6SWom169rVjInH9ezVNIkkUmyn2Mit21SAC1/uZ64jIdWC/qhqeFoDn0x3BYG
-         sOubxcsNuNNPErabvu7aIR8NvSQMrxU0hL4pFJcXkwtGdUkA4O2f99wY10QmvkPxMiw9
-         tctNWrxG+7NjFS5rWSTcMHaUbo4nPJWTC/Z7NSxLaxtxY3mKvWybbN4oLiCqD97xjKpZ
-         ErjA==
-X-Gm-Message-State: AOJu0YxSqda/3ZiL1C0/YheAOvWo6yzu9qc58Ehl07vqK4gX33xnXq/i
-	1BMCk11bY9KYadxETg32rJ24OsW147CIdmWTpS19dYp2aYuUGk97+ozIT22UD96tPJI=
-X-Gm-Gg: AZuq6aLE7umNnTpE8XXZ7lZxPqsk3wM4XhZvkSAVgwdSZHXl754aLz9F3k99HE2JGx8
-	A2HjTMzox5z7p+viKkxXnukLgQKZN/EfQKDOI7SgopAL8NyqX3t2cOcFeAnTTfEDU2WjmNoJxUS
-	1Uu/yGWBVc31A/WrJ0EdhINJOa3RtWQh9yLBibuNP/89pYyJi4oX29IdEEccSgO4pmR7dzSR/Va
-	z+3Ba8B/02r82/0qAFEdpRYMD/rHUYCJUmE4bjusjC1kZJq0fZVye3acsTNHxATNyYwWWyD3z1j
-	2AekB08uj0P45koayuKV3YMcItuI3S8DzG6kfeHE8uv+fvy/0a/OJZOuqvLc4qZzWpFPNE5QaMi
-	QoAYEwCqxWQwURREaUVwB7vu9rFp8nDUjUi7I5QG+tc5lT4Gr+9MLiAPv1tmHXlnnYJtiflaciO
-	woSRmTJFQAnyrcvX0ZT0YgWRaIbHQbJeHFMKPBpOjKivOYPhXKyUoG
-X-Received: by 2002:a17:90b:4b10:b0:34c:f8e6:5ec1 with SMTP id 98e67ed59e1d1-352c40de54amr1411344a91.35.1768903688367;
-        Tue, 20 Jan 2026 02:08:08 -0800 (PST)
-Received: from localhost ([60.227.235.230])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-81fa10be07fsm11685033b3a.20.2026.01.20.02.08.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jan 2026 02:08:07 -0800 (PST)
-Date: Tue, 20 Jan 2026 21:08:04 +1100
-From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, arien.judge@morsemicro.com
-Subject: Re: [PATCH wireless-next] wifi: cfg80211: don't apply HT flags to
- S1G channels
-Message-ID: <bgywcdzsxxgnldbijv2mu6oawojxcsuxasthjh63w5izm7w5ob@gw4bt33dlkc5>
-References: <20260113030934.18726-1-lachlan.hodges@morsemicro.com>
- <csqd3cp5twlhfsrkrppe25q2xby6wb37fhtxfrzgffjzoww2hw@xcixpwzlxzmi>
- <14bc5d3362b071c7c7a6a64724d5b354c173a501.camel@sipsolutions.net>
- <tyreg7kb5ownpgrbcwo72rk5tevk6jpzbthtlqr5z5zykvhaji@wpybm6oversy>
- <4dd2558fc13dd974bf551653b3db9c70feed73fe.camel@sipsolutions.net>
+        d=1e100.net; s=20230601; t=1768904775; x=1769509575;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=7dc4uOSwQ2vBzThtTBXaWxDon+kZapkB4rooEPiZwsE=;
+        b=JX5Uqtp8Csbbbui14vF7QYzkJsxKkVVvpEapr9X1id1qXbdeWdjmIyBl5VJXNCqKID
+         j6iBhGp/NbN7cbUqcHEhQA0MXGFExGt3hNlKDyZ14IGGKxaXZV7LlGZ6jb5DTfbIur0x
+         IH7JQ1K8Zu0DRgiD0zIn6vZkVxSiyVApFyK9HVfWr+Rk8HWWAUIFNCyOgHF5UGdGZHfO
+         rBB2bIJ449v5/mjAdSRMylfS62NamEWJ81pbb4c/PCep/Tr19uz7H6TGRnQZPhaPFuia
+         hJZiBO2Ax1V159WtE1n2v7Oq3t7N+nF50f+mW7e5HHAnGcjBzfLRJQoBzeTcIfd/ajz4
+         ZtQA==
+X-Forwarded-Encrypted: i=1; AJvYcCX3u3pPXOlcsbX3umiDhXO0zXELxydV1BvZrkAQZcMZ1XkxSUnQEMPZ0mbxJaY6swsbGnvhRSabnM6MIvPm8A==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxx/j8HN/R7O++vS37JrD0R3ya7U3MKnoGCJg5Me2iV9KxA7PMa
+	KN5SqixCAJX+wvYuDKjkGgfm+7i7IpZYzMU3knN+Zs+110pIRrFfT/PPyER9K0oU8TPBBygLOq5
+	EBugfvJ+GPDfrwTlcP0F+A1FlEw6rQrXKi2X6bhl8TmcfaZgF95IWt4Q=
+X-Gm-Gg: AZuq6aJKiG3S95E9FWM+E78EoEBYqw63T8mQm8YJ3K6X0ez6I4hEeaqNRuVF+bjGTnu
+	TbyxuFRhfLwwBQg3PQRmtkguVod60kQ8GRkbrQ+N5J+ekUR5zmCI8qGwVI1OZ1bnpuxFzFhhhcH
+	796l9nwt/FqXpnSZ0kguSrvyxB4ApPRANAh5kG8Mp1jgklMuW2mCOgiUWPm9S7+/32n74yUjgtl
+	GK+IsqamGsYptNrugmAnpHsSD3JyaLMs2nPNVxxkZy1UqZPLO5/al6V05GgYgli6K2USps=
+X-Received: by 2002:a05:6512:68e:b0:59b:9a12:8902 with SMTP id
+ 2adb3069b0e04-59ba719c7f9mr6571686e87.23.1768904774640; Tue, 20 Jan 2026
+ 02:26:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4dd2558fc13dd974bf551653b3db9c70feed73fe.camel@sipsolutions.net>
+References: <cover.1768232321.git.u.kleine-koenig@baylibre.com>
+ <397f45c2818f6632151f92b70e547262f373c3b6.1768232321.git.u.kleine-koenig@baylibre.com>
+ <CAPDyKFrman8YodyPNy6fSOYahoFKBuJRN6+Esz7ojmYqessEYw@mail.gmail.com> <v5jqdtpdj3zpuyo5owlujvifphjjxyygfrgqnmql664ck6vpc4@yvihqvp4lgka>
+In-Reply-To: <v5jqdtpdj3zpuyo5owlujvifphjjxyygfrgqnmql664ck6vpc4@yvihqvp4lgka>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 20 Jan 2026 11:25:38 +0100
+X-Gm-Features: AZwV_Qioo1xVJnMg6rdq9cvpXXwdbJnFq0ihxCbSVN1OxJlswmdZiRgfxeUuarE
+Message-ID: <CAPDyKFpzB82-pHwr+RtdiXcHPDDXyVh2xD+BVM635hP3bSJ8AQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] sdio: Provide a bustype shutdown function
+To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@baylibre.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> > channel=165
-> > 
-> > vht_oper_centr_freq_seg0_idx=171
-> 
-> > This is the result of selecting mode AX, channel 165 with a width of 80MHz.
-> 
-> Well, I guess that could be done in some countries, U-NII-4 goes up to
-> channel 177 inclusive? But not for Australia which only has up to 173
-> (according to Wikipedia, maybe it's changing, I didn't check better
-> sources now.)
+On Mon, 19 Jan 2026 at 19:25, Uwe Kleine-K=C3=B6nig
+<u.kleine-koenig@baylibre.com> wrote:
+>
+> Hello Ulf,
+>
+> On Mon, Jan 19, 2026 at 04:00:48PM +0100, Ulf Hansson wrote:
+> > On Mon, 12 Jan 2026 at 16:47, Uwe Kleine-K=C3=B6nig
+> > <u.kleine-koenig@baylibre.com> wrote:
+> > > @@ -272,6 +290,13 @@ int __sdio_register_driver(struct sdio_driver *d=
+rv, struct module *owner)
+> > >         drv->drv.bus =3D &sdio_bus_type;
+> > >         drv->drv.owner =3D owner;
+> > >
+> > > +       /*
+> > > +        * This driver needs updating. Note that driver_register() wa=
+rns about
+> > > +        * this, so we're not adding another warning here.
+> > > +        */
+> > > +       if (!drv->shutdown && drv->drv.shutdown)
+> > > +               drv->shutdown =3D sdio_legacy_shutdown;
+> > > +
+> >
+> > Is this added only to keep the series bisectable or are there other
+> > (except those you fix in the series) sdio func drivers that make use
+> > of the shutdown callback?
+>
+> It's kept because I don't know if there are any other sdio driver in
+> flight and these would break silently when they are applied between this
+> series and the removal of the callbacks from struct device_driver.
+>
+> > In any case, when are you planning to remove this?
+>
+> So my plan is to remove this in a series where the last patch is the
+> modification to struct driver.
 
-Yea should've clarified that earlier.. kind of an important detail ^.^
+Okay, thanks for clarifying!
 
-> I don't think hwsim will get too many wifi8 changes, but yeah there are
-> a lot of things brewing now. Seems you (mostly?) got just ahead of it
-> though, so it shouldn't be much of an issue, I'd think.
-
-Yea I think we picked a good time to get the major stuff in, now I suppose
-it's just a driver .. and the fun challenge of getting S1G into hostapd ._.
-
-lachlan
+Kind regards
+Uffe
