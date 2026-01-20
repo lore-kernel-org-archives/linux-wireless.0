@@ -1,63 +1,63 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ED9A36D518
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 06:29:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23CCF3806C4
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2026 06:29:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768890544; cv=none; b=Z/n+XkGzgfSwyy8nxSZJaiMqI5mgPRJoPl3r9AZ6URYPbLC1hxp7BlUT6Q1ocS5flsTZgGUn9GeppS9VAvet6SfmtUpF8jabZNG5UDdX+DLAnwevT3TJqCeEZ3thch0a2AapTmr8Yt5z3Zl0wRNMk30eU75D+vpw0l+bZI8d6a8=
+	t=1768890549; cv=none; b=iw4TI2L1S1j1oPUBQxZfRjl4CWnfAi0BQ1l3HQ+d6iR1HWK13kcRhxyDeziWaT6F3wZR2nmnT7kl/0SubWJA4bE455Y5O5OnWUD+NRN2Cuu6dpHoXAE67WDQKiKpU59OTrbaGVkFIoFcbgGoUUY45LlAmciGEFfoyufd3ES6d+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768890544; c=relaxed/simple;
-	bh=opbV4IdcTAjTugROH0USOiae0jYpBQAjBUnIclDTNyE=;
+	s=arc-20240116; t=1768890549; c=relaxed/simple;
+	bh=IkGS2pbb9DGLGXEWPJhYUmq0EJShmdW9s055oJTD1fM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RSPyoX4XDqICvVDDOVZWkbNb1bp2VADwgy5ngu6Ueiqz82i77778YoQc70mz47FGzlI8n0lr6BGTdL3X4Rb82KKGOn8t9R2dLtjnE7SOyE0Y8DHD5CDSnbVoPU7PNaGROuezF78px2PF1NDijJLC2sh1rmRGpSmZVgpPxfbLT8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PQQWr79p; arc=none smtp.client-ip=74.125.82.169
+	 MIME-Version; b=pL8AbD3WN2d+kp3hcorl9zrKU3sM2vdD7AqS0usTQ7prlZ2aTdBPGeT05DfDv4r/2wffO8ApyiM2cPdTnU29SafMsUW68xjsL2qC0ya5W+W5Xb3NtZkZ5bNYxPx7V+XC9kAYe+8GZF0xHm27Wx5aAO5lhODG8hIihaRR1eGOaeE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ef7RKXMl; arc=none smtp.client-ip=74.125.82.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zacbowling.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PQQWr79p"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2b6b0500e06so5157009eec.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 22:29:03 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ef7RKXMl"
+Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-2ae38f81be1so5614216eec.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2026 22:29:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1768890542; x=1769495342; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1768890545; x=1769495345; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=oLLa5fZdpzWHQDj1zzbC4zgrpjcPTG+wEA6kFtMuqxE=;
-        b=PQQWr79pBmxcy1Qz6W84HEYSMmMT0+IUwcyFKyjmqUdbsCer+DedcO5Je/CPUlyuGV
-         9PwWpL++JYXHFsevjlYWMC7QK5xjwlXdnIhOiLqk0yie4bC/BthBnBVe3kR3DvW54FTP
-         aDyGgL2sJgo/mdcJ9/uuGTJA0ruccCQyWyDDQK8sGlXoPKYdzL9Egk2by2PlOEMLnpwd
-         dnsQUOqW5RS2J0Mo3rwa9DhdbBTMDROmyUFgtRKxcf0BzLrFjtoC4e3HUy+cDLpBV09c
-         BtdpCDe0ekzCdWlsMpDVv6dBdMLeP9bxmoPX6YPxepgPk9pVch5JOiiYPUdiywR4JSC7
-         OlNQ==
+        bh=gq8BwtBE3udkhb8xxJaDge5ayHDcllBWREYlF8lWPK8=;
+        b=Ef7RKXMlRU6Wl/SKant8GmP849OnO+ckbTBrRC/vbhy+QBuGwkcVg2KqHc1OlGIvKb
+         43KGyqAxELOBcjPrlPHLoZwBjI1t8wDXj1zTHVf8w0CcngZ2sVTKCe5OheDXFZ4O0d/G
+         Dj2nMdtQLIzStvO1cGLqxmZCGBfMWl2tcOop/OHmDj4DhvqnWsVXQt6eeP0nSkHu9Hwu
+         3kuJVbLdqCyKG9sdPeu0NrIxn4XO37qXIqZr/v/yx3CTw5+V0QxCMpUQb4ecLC14b4WE
+         B+Ev7W4quQ/TC8dLEprOi/No1f7icosDUtaFP3gR4j9EDpsjFUybAer8i8dD+5H9nd2l
+         Bobw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768890542; x=1769495342;
+        d=1e100.net; s=20230601; t=1768890545; x=1769495345;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:sender:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oLLa5fZdpzWHQDj1zzbC4zgrpjcPTG+wEA6kFtMuqxE=;
-        b=OIqLmA+Jt7dIHiPdiMf05iJmz1SCnlfNWuZ8SNJaIFVFPIAiW7RMt0XlE9FLuDo/YB
-         7BuJByMkzC7haqL9AvHiSGIzBqadF0oaOfjuW2YCqKgeML0RHd6zddlfCGxvCJW3LswQ
-         2lKRSGn8wBsE4dscvjBP2KquhR150kpxDSA4od4q/ibHOwq19GPDE3IwePh5FYZVNklg
-         kbRSjQEQ6Sj2Ivm5FdoDTv5qI15wt5CDKchP17tzSPcIxlCl8St51saG7uCqxaNVzW7j
-         LSUG7pD6OC3dfLUkdOEo4yq4uIVqi/Qer8ZiuWdU54J4jE8AGFPIav3Q7bJB5EW4VUPX
-         lQOw==
-X-Forwarded-Encrypted: i=1; AJvYcCUDsLsQaQcqBhFdGUHxzbMZFAeHLm5hoOOsFFrGo8hQWBd4KIQZHeys1hA5Y/uBl3G2arviAGFDdpmOgNXscg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzRssUBNbzMQ8HRcZKVLtJAR68uNMXNtpXRetdw44QYJsodfJmY
-	VmvbgGByGQO/Phgtw3e0iHAzjm9QDJbvDCvZHI30pLwl4sGHHEUhsgL5
-X-Gm-Gg: AZuq6aIHr6XzJUNJb3XeHTcu0XPQe52lAR6iSwDLWL5Qv625hP+cO2fOpdSIwnq/T7/
-	JDsgaaDn16FyZuo7hPC7jCjWYau36av6kv2cUR2yrGstrJsMvvLjnbWYlXZn612teeN9Qu0vmft
-	oKih3on3U97Ku+3sKoc/Iu3NQj3sq6gutrIW+Up1Xd7y0Kj5/Nt5SHA4DDfe8DB9/RCOuUgLtVR
-	z6rPia7wgjEe9y+nlTWwZnQIpC/6EFZ0Uv/fvbbG38X7xgIcufshxGJ8gsYgLA1hN57npTJpxqG
-	8mE38+J7wReJdjk2W1KEMHuA6087uZ56tdThhoFwHAghr3azVl+vs22dXIA59lf6y+amu/S59oa
-	v4wPStKJk9eF25215WKg7vtKaY+KnGy1syF4aW4OJ2mLXOwQP92Lo7QhXzUh8xQuH/wUw4d1EA1
-	9Oqvk6yVYc+NS+t0C7tEcEWPdkOftI1uGUMa2TWDavcPKzib2j15FtARlfhNSk
-X-Received: by 2002:a05:7301:5f85:b0:2ae:5af4:7d65 with SMTP id 5a478bee46e88-2b6b410b608mr10898547eec.31.1768890542196;
-        Mon, 19 Jan 2026 22:29:02 -0800 (PST)
+        bh=gq8BwtBE3udkhb8xxJaDge5ayHDcllBWREYlF8lWPK8=;
+        b=atZp7GV5KMvK2y/KSEPKHX8OfUsYYiyAYbpGFZpxib/oalPVy+Qvoc3dAxTyrme/cW
+         hGK6HJXDJCLlFjNXKf2+fyYw9gdgIG8oZ1zReFS//KNF4MqEYDQzWzJc2UnaYscLk8mS
+         g+uLP02+LD0LyfS65dow7ws09kjKumgyykpakt3MWULObYS1m8U4wAeyzTgLEf3I8Awu
+         pApS/9DtFEl8UOQpyMVmMn6gj2ukaxjqSAeMIesfY3YG8oQvkVp15quxFvmF6TKTf0XW
+         6aCugRJjIF8zLUk9g+Jl+m5Rm/D8Tm2/qM1ZaUWNpfj01zBBBQD5E/oOTYqPM05ZWElk
+         VnCg==
+X-Forwarded-Encrypted: i=1; AJvYcCX7gH4SOxJfVR0x2YCTIm7F3ffd6hn4sg8jetZLTaSFGjx4vNd0fwJhYNLieOQqGMmXa0q4RCqhhyY1cPNqqA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBpXaRkrFcILQ8rmROjrPuNp/i09B9xpmEKW73Gpmr6wbYqEdk
+	xzGV+UHX+B99T8mt6Ye3Np5BxkF5u7R1iECfWkMSH+CmoC/ZdtTIRuo9
+X-Gm-Gg: AZuq6aL0aK+LExU6tCk2Y4u5+81TXK4UvLO8EASrST5+PtFDey0nbZgcUK7GeraU1Mq
+	WBmlzBMl+j2rtqUohNKE2myDb37Um74hfZiYjUfDiA4JcHmZlRgrh80yuruuT3byasQOeyryD5H
+	ejS9/y3rqUttp5vsfbTnUaK98rMNlzQHi3c93nrYJ2MVWABmgozyrE64VSNq5WyMCzoWbQgbxGl
+	CQucDx1WHJ3O7uhC/tiDilwvFliOzaKqplDm4sV2cMzf5VcN6eEAmVpN9Zso/YfpCn6H6tKyIuu
+	oa+aCxsTQ0BkM1NUcz9KZjdefpTp4M+E8WCAB3q/C7bAXikFvP5QbQ43H73bIOaAP1TJzsW5Q9S
+	jTOWad5HRcKSMBG8JgD5rGrOnveGA80zgF75gRctyV0jcWlKZ1rOCi078A0Ek4ggTEBY/HUBejo
+	AMo807yXlIVXudyrkVFasHza9T+Gi+9Cj3uGLeJ8q3OiM/ejdjVO/2/djHnkXR
+X-Received: by 2002:a05:7301:290a:b0:2ae:60fd:6f18 with SMTP id 5a478bee46e88-2b6b4e8a496mr11903860eec.22.1768890544990;
+        Mon, 19 Jan 2026 22:29:04 -0800 (PST)
 Received: from zcache.home.zacbowling.com ([2001:5a8:60d:bc9:f31e:1cb:296a:cc2a])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b3502c91sm15706784eec.9.2026.01.19.22.29.01
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2b6b3502c91sm15706784eec.9.2026.01.19.22.29.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jan 2026 22:29:01 -0800 (PST)
+        Mon, 19 Jan 2026 22:29:04 -0800 (PST)
 Sender: Zac Bowling <zbowling@gmail.com>
 From: Zac <zac@zacbowling.com>
 To: sean.wang@kernel.org
@@ -74,9 +74,9 @@ Cc: deren.wu@mediatek.com,
 	linux@frame.work,
 	zbowling@gmail.com,
 	Zac Bowling <zac@zacbowling.com>
-Subject: [PATCH 04/11] wifi: mt76: mt7921: fix deadlock in sta removal and suspend ROC abort
-Date: Mon, 19 Jan 2026 22:28:47 -0800
-Message-ID: <20260120062854.126501-5-zac@zacbowling.com>
+Subject: [PATCH 06/11] wifi: mt76: mt7925: add mutex protection in critical paths
+Date: Mon, 19 Jan 2026 22:28:49 -0800
+Message-ID: <20260120062854.126501-7-zac@zacbowling.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260120062854.126501-1-zac@zacbowling.com>
 References: <CAGp9LzpuyXRDa=TxqY+Xd5ZhDVvNayWbpMGDD1T0g7apkn7P0A@mail.gmail.com>
@@ -87,127 +87,133 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 From: Zac Bowling <zac@zacbowling.com>
 
-Fix deadlock scenarios in mt7921 ROC (Remain On Channel) abort paths:
+Add proper mutex protection for mt7925 driver operations that access
+hardware state without proper synchronization. This fixes race conditions
+that can cause system instability during power management and recovery.
 
-1. Suspend path deadlock (pci.c, sdio.c):
-   - Previous fix (b74d48c46f) added mutex around mt7921_roc_abort_sync
-   - But roc_work acquires mutex, so cancel_work_sync can deadlock
-   - Fix: Remove mutex wrappers since mt7921_roc_abort_sync doesn't
-     actually need them (it only calls timer_delete_sync, cancel_work_sync,
-     and ieee80211_iterate_interfaces which handles its own locking)
+Fixes added:
 
-2. sta_remove path deadlock:
-   - mt7921_mac_sta_remove is called from mt76_sta_remove which holds mutex
-   - Calling mt7921_roc_abort_sync → cancel_work_sync can deadlock if
-     roc_work is waiting for the mutex
-   - Fix: Add mt7921_roc_abort_async (matching mt7925 pattern) that sets
-     abort flag and schedules work instead of blocking
-   - Add abort flag checking in mt7921_roc_work to handle async abort
+1. mac.c: mt7925_mac_reset_work()
+   - Wrap ieee80211_iterate_active_interfaces() with mt792x_mutex
+   - The vif_connect_iter callback accesses hardware state
 
-The fix mirrors the mt7925 implementation which already handles these
-scenarios correctly.
+2. mac.c: mt7925_mac_sta_assoc()
+   - Wrap vif_connect_iter call with mutex protection
+   - Called during station association which races with PM
 
-Fixes: b74d48c46f ("wifi: mt76: mt7921: fix mutex handling in multiple paths")
+3. main.c: mt7925_set_runtime_pm()
+   - Add mutex protection around mt76_connac_pm_wake/sleep
+   - Runtime PM can race with other operations
+
+4. main.c: mt7925_set_mlo_pm()
+   - Add mutex protection around MLO PM configuration
+   - Prevents races during MLO link setup/teardown
+
+5. pci.c: mt7925_pci_resume()
+   - Add mutex protection around ieee80211_iterate_active_interfaces
+   - The vif iteration accesses hardware state that needs synchronization
+
+These protections ensure consistent hardware state access during power
+management transitions and recovery operations.
+
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 device")
 Signed-off-by: Zac Bowling <zac@zacbowling.com>
 ---
- .../net/wireless/mediatek/mt76/mt7921/main.c  | 29 +++++++++++++++----
- .../net/wireless/mediatek/mt76/mt7921/pci.c   |  2 --
- .../net/wireless/mediatek/mt76/mt7921/sdio.c  |  2 --
- 3 files changed, 23 insertions(+), 10 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/mac.c  | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c | 6 ++++--
+ drivers/net/wireless/mediatek/mt76/mt7925/pci.c  | 4 ++++
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-index 9315dbdf8880..07d1d0d497f1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-@@ -367,17 +367,24 @@ static void mt7921_roc_iter(void *priv, u8 *mac,
- 	mt7921_mcu_abort_roc(phy, mvif, phy->roc_token_id);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+index 184efe8afa10..06420ac6ed55 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+@@ -1331,9 +1331,11 @@ void mt7925_mac_reset_work(struct work_struct *work)
+ 	dev->hw_full_reset = false;
+ 	pm->suspended = false;
+ 	ieee80211_wake_queues(hw);
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7925_vif_connect_iter, NULL);
++	mt792x_mutex_release(dev);
+ 	mt76_connac_power_save_sched(&dev->mt76.phy, pm);
+ 
+ 	mt7925_regd_change(&dev->phy, "00");
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 15d1b1b8d9f8..80ca5181150b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -755,9 +755,11 @@ void mt7925_set_runtime_pm(struct mt792x_dev *dev)
+ 	bool monitor = !!(hw->conf.flags & IEEE80211_CONF_MONITOR);
+ 
+ 	pm->enable = pm->enable_user && !monitor;
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7925_pm_interface_iter, dev);
++	mt792x_mutex_release(dev);
+ 	pm->ds_enable = pm->ds_enable_user && !monitor;
+ 	mt7925_mcu_set_deep_sleep(dev, pm->ds_enable);
  }
- 
-+/* Async ROC abort - safe to call while holding mutex.
-+ * Sets abort flag and schedules roc_work for cleanup.
-+ */
-+static void mt7921_roc_abort_async(struct mt792x_dev *dev)
-+{
-+	struct mt792x_phy *phy = &dev->phy;
-+
-+	set_bit(MT76_STATE_ROC_ABORT, &phy->mt76->state);
-+	timer_delete(&phy->roc_timer);
-+	ieee80211_queue_work(phy->mt76->hw, &phy->roc_work);
-+}
-+
- void mt7921_roc_abort_sync(struct mt792x_dev *dev)
- {
- 	struct mt792x_phy *phy = &dev->phy;
- 
- 	timer_delete_sync(&phy->roc_timer);
- 	cancel_work_sync(&phy->roc_work);
--	/* Note: caller must hold mutex if ieee80211_iterate_interfaces is
--	 * needed for ROC cleanup. Some call sites (like mt7921_mac_sta_remove)
--	 * already hold the mutex via mt76_sta_remove(). For suspend paths,
--	 * the mutex should be acquired before calling this function.
--	 */
- 	if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
- 		ieee80211_iterate_interfaces(mt76_hw(dev),
- 					     IEEE80211_IFACE_ITER_RESUME_ALL,
-@@ -392,6 +399,15 @@ void mt7921_roc_work(struct work_struct *work)
- 	phy = (struct mt792x_phy *)container_of(work, struct mt792x_phy,
- 						roc_work);
- 
-+	/* Check abort flag before acquiring mutex to prevent deadlock.
-+	 * Only send expired callback if ROC was actually active.
-+	 */
-+	if (test_and_clear_bit(MT76_STATE_ROC_ABORT, &phy->mt76->state)) {
-+		if (test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
-+			ieee80211_remain_on_channel_expired(phy->mt76->hw);
-+		return;
-+	}
-+
- 	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
+@@ -1331,14 +1333,12 @@ mt7925_mlo_pm_iter(void *priv, u8 *mac, struct ieee80211_vif *vif)
+ 	if (mvif->mlo_pm_state != MT792x_MLO_CHANGED_PS)
  		return;
  
-@@ -887,7 +903,8 @@ void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 	struct mt792x_dev *dev = container_of(mdev, struct mt792x_dev, mt76);
- 	struct mt792x_sta *msta = (struct mt792x_sta *)sta->drv_priv;
+-	mt792x_mutex_acquire(dev);
+ 	for_each_set_bit(i, &valid, IEEE80211_MLD_MAX_NUM_LINKS) {
+ 		bss_conf = mt792x_vif_to_bss_conf(vif, i);
+ 		if (!bss_conf)
+ 			continue;
+ 		mt7925_mcu_uni_bss_ps(dev, bss_conf);
+ 	}
+-	mt792x_mutex_release(dev);
+ }
  
--	mt7921_roc_abort_sync(dev);
-+	/* Async abort - caller already holds mutex */
-+	mt7921_roc_abort_async(dev);
- 	mt76_connac_free_pending_tx_skbs(&dev->pm, &msta->deflink.wcid);
- 	mt76_connac_pm_wake(&dev->mphy, &dev->pm);
+ void mt7925_mlo_pm_work(struct work_struct *work)
+@@ -1347,9 +1347,11 @@ void mt7925_mlo_pm_work(struct work_struct *work)
+ 					      mlo_pm_work.work);
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 9f76b334b93d..ec9686183251 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -426,9 +426,7 @@ static int mt7921_pci_suspend(struct device *device)
++	mt792x_mutex_acquire(dev);
+ 	ieee80211_iterate_active_interfaces(hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7925_mlo_pm_iter, dev);
++	mt792x_mutex_release(dev);
+ }
+ 
+ void mt7925_scan_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index c4161754c01d..3a9e32a1759d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -455,7 +455,9 @@ static int mt7925_pci_suspend(struct device *device)
  	cancel_delayed_work_sync(&pm->ps_work);
  	cancel_work_sync(&pm->wake_work);
  
--	mt792x_mutex_acquire(dev);
- 	mt7921_roc_abort_sync(dev);
--	mt792x_mutex_release(dev);
++	mt792x_mutex_acquire(dev);
+ 	mt7925_roc_abort_sync(dev);
++	mt792x_mutex_release(dev);
  
  	err = mt792x_mcu_drv_pmctrl(dev);
  	if (err < 0)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-index 92ea2811816f..3421e53dc948 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/sdio.c
-@@ -219,9 +219,7 @@ static int mt7921s_suspend(struct device *__dev)
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
+@@ -582,10 +584,12 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
+ 	}
  
--	mt792x_mutex_acquire(dev);
- 	mt7921_roc_abort_sync(dev);
--	mt792x_mutex_release(dev);
+ 	/* restore previous ds setting */
++	mt792x_mutex_acquire(dev);
+ 	if (!pm->ds_enable)
+ 		mt7925_mcu_set_deep_sleep(dev, false);
  
- 	err = mt792x_mcu_drv_pmctrl(dev);
- 	if (err < 0)
+ 	mt7925_mcu_regd_update(dev, mdev->alpha2, dev->country_ie_env);
++	mt792x_mutex_release(dev);
+ failed:
+ 	pm->suspended = false;
+ 
 -- 
 2.52.0
 
