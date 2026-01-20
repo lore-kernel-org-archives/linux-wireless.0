@@ -1,47 +1,48 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EE83ACF0E;
-	Tue, 20 Jan 2026 07:54:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF8EA3A63F1;
+	Tue, 20 Jan 2026 08:12:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768895700; cv=none; b=f00Z3aX+/3RTgx8T+heC92jUcuMc6cHZj3Rx6B4KxbKUp2z5lwsllbhchBmeFjFWAkbAKf2iJoghJBjn9SF/i3UbAgTkkyii/6DGFtlBZksLpn0fPb2xyb0cS0tmZVqm9aR/KqKizS1yCLsI0/qwkDWSQZDhMv6O1Sk2YbrWJKU=
+	t=1768896757; cv=none; b=CpoYWnrYMtTYFemWgFAfUm8Hsu/stNrOzxpcxFEXtMQsoK7RGN7nA3GNcoIj7nlbqAgAfGUlIi6cFdWjkj9N6i5lzBchg065teBTrgCWT4G8tUk2VfTUjKttbcDWx7beEv2PMOs4dQPB67Wh4ll+tKU0peeG+NBCNzM3vBAO3io=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768895700; c=relaxed/simple;
-	bh=XP3cJ02IZQ5T9U/pP+pd4SKtTbvd4q1XkL1MDVvVAFQ=;
+	s=arc-20240116; t=1768896757; c=relaxed/simple;
+	bh=PT6mZhuCrSYblI3h5qXU55P6G9Ktq/aLX/t/ucL6RPU=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ii6IOxbfJAJ2lBosH4PvxxoELzbsvnxErCzr5lZoNxO/um5UMUUwfz2WtVv7FGNk4bS3WTc4hl5lAhd+iGrnxeQfcMX9hd8ccIIVEf0zSgJCgSgvIi75wDoNNXDNUX3SSAqyjnjMXin/wxmxCM6zQSBz2ZdBEe3FtQuQyAJDVuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=CfjYE4D5; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=QnlqZPPZ4b1sN2SuPskoJ++fZH6ckbj217xd45XpLGQiEMufomxUJN83A1wHZvsbc4/7FV5mNSd+43Lt9jXc0GvTqvSO/n60e+3g39IiwsGB8ptAZrwt+4p0FMglTLN958fUyxbki4wgBPJUvwGNpFypj9+In6ENc9iHUQI/6UY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ZD7WRlCk; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="CfjYE4D5"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ZD7WRlCk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=XP3cJ02IZQ5T9U/pP+pd4SKtTbvd4q1XkL1MDVvVAFQ=;
-	t=1768895698; x=1770105298; b=CfjYE4D5vdYsk+HpMXAkYhyF2sj7zgkg16xjUR2MXVPlBpD
-	MvdHtXl8NnyZH1EQVEqywWDx6gcLBplqsG5JEWX548oKlWx3zgtagDc7z4SP4GP60cfiOGb9MQWtJ
-	N4UdFAR7fROw4N3gnrVSxBPnmECgX1MBhmKJsnonUhPMVH9DjWGolWArA9bZx1wW7J19jFV6Kegvf
-	6iCeH81qh9zcvuZhH6RMWuzmYnUP728QJ3EUDNEePLONDZ0qzJ3p4gi1DgdCrfdlltpRP/iMM19Pt
-	h6bp/slJdJiEQxidJlX6RJ5ZfMLRQkA12TCl2hb91R0FaiuNKtPaN7jabf7SFWkw==;
+	Resent-Cc:Resent-Message-ID; bh=PT6mZhuCrSYblI3h5qXU55P6G9Ktq/aLX/t/ucL6RPU=;
+	t=1768896755; x=1770106355; b=ZD7WRlCk196HlnQo75/aomHiQC5Qi5ulGLIHR1oOcB2UEs5
+	CegOixUeXChb2A3tbnRfO3hyGDlxrUTkRiIOVZEcJDT1At+8S9gCmHVXW+1qQAPtjV4HpwKSSSAjG
+	6sqM+lzWUhFKIc7+atOsLhwzmpqOkpyO9+JmwSVmkpSAirSW/ihbEdZKlvDV5cU1AXuU7DxOxLtYb
+	AWEu6Fsg2UVAvSMj07IeMbzl0i3oX4OF84lHDA6n1WVCV0H3Dp6tGew4YUZH1yChscfaYqJwZlCVf
+	M3qu+GDWLDRH4vpO5JAX1w0D0PQBADPgcyeKuHBooNNHmtXZzoH89cFCsN169RZQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vi6Zj-0000000GhDX-1ijY;
-	Tue, 20 Jan 2026 08:54:55 +0100
-Message-ID: <eece33b4580bb35d28be8ffba7957bde509f59cf.camel@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Fix and improve debugfs TSF access protection
+	id 1vi6qm-0000000Ghct-26ZE;
+	Tue, 20 Jan 2026 09:12:32 +0100
+Message-ID: <35581fc687d151b2b4fabccb6952d567cac65240.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: mac80211: fix NULL pointer dereference in
+ ieee80211_mesh_build_beacon()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arnav Kapoor <kapoorarnav43@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+15f88dfa580000@syzkaller.appspotmail.com, Arnav Rawat
-	 <arnavrawat2000@gmail.com>
-Date: Tue, 20 Jan 2026 08:54:54 +0100
-In-Reply-To: <20260119194057.53339-1-kapoorarnav43@gmail.com> (sfid-20260119_204306_054164_7A51E36C)
-References: <20260119194057.53339-1-kapoorarnav43@gmail.com>
-	 (sfid-20260119_204306_054164_7A51E36C)
+To: Jeongjun Park <aha310510@gmail.com>
+Cc: linux-wireless@vger.kernel.org, 
+	syzbot+81cd9dc1596563141d19@syzkaller.appspotmail.com, 
+	linux-kernel@vger.kernel.org
+Date: Tue, 20 Jan 2026 09:12:31 +0100
+In-Reply-To: <20260119150031.201832-1-aha310510@gmail.com> (sfid-20260119_160223_485174_E37F681D)
+References: <20260119150031.201832-1-aha310510@gmail.com>
+	 (sfid-20260119_160223_485174_E37F681D)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
@@ -53,11 +54,13 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Tue, 2026-01-20 at 01:10 +0530, Arnav Kapoor wrote:
-> This patch comprehensively addresses reviewer feedback on the debugfs TSF
-> access protection:
+On Tue, 2026-01-20 at 00:00 +0900, Jeongjun Park wrote:
+> NULL pointer dereference bug occurs because ieee80211_mesh_build_beacon()
+> does not check the return value of ieee80211_get_sband().
+>=20
+> Therefore, we need to add a return value check to prevent this.
 
-Please go away until you understood how that contributing to the kernel
-isn't dumping reviewer feedback into an LLM.
+No we don't, please try to understand the code, and why it can even get
+here when the mesh interface isn't operating.
 
 johannes
