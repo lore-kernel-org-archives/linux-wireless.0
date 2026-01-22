@@ -1,103 +1,75 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 193F14ADD93
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2026 16:05:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B403D5F47;
+	Thu, 22 Jan 2026 16:10:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769097952; cv=none; b=gfTATTjfKy9enW2K675SdaJaWzq4PJsEKPMF8PJ2MiE6dqxIh878C0Zrm//U69xRC4gikZaYzDirPfBgRNFpnFts93INX1DJs/w70m60Qc/dzViEU5cKIqDGV8qLZsuGaI3qPyLksUrDihlT0F5AXylcMj2wnQjIwEgbGBQ2YHQ=
+	t=1769098220; cv=none; b=aGxlTiy4QIqCiFt402UTDRYFXzUltcKwCt6aKwrj0mjQ0CxkGsLsuvVo4JhBgJYws9Q8bl1sxC8G3triHJMvJHl+Hh4+CI/RhD8WA7ka3rFo6qBB41S1hKKEJgkVo623k3XMImMuENbLmZ4GwxDt1fEiiNOofYzPop3Wa1UZlSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769097952; c=relaxed/simple;
-	bh=LHfsYBfEAd8yYfXjEf9bj1zRRn+nQXx2ps8x8eYEdAI=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=l1tPb7hqs8ddu/4r8cyvtCsNOYns/VcFQhvR6JoX6zFvbicXfxPcid4FV/ao4UVilXHTaaul8bvCf+PeZQBLuFnOxYo+eS5vBtZUj2rychBr+8sjVHFkLkf2fMTydlt5b+uo9d1B8KCtEbQYy4wumYfkSoAZRsMqukO1pgj+c2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=E9VDHUQj; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1769098220; c=relaxed/simple;
+	bh=wmN9D1mii93RGtYzMIyn+tXEJM+VpmTs5wnmyGizcfI=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=C1G+4UAb1bHqexyv06vnxA2UVIRyhAXZT0EX+LnYD9LPvJXIDV504TVeqCY6a6U3Q18WnuTe5Tk2ksMRlvaDATAq8ApSBEf18H8T6mr2OJh1jSpP6S6vcLeCOrl/1qM1u+d7m9xOYsS1ITg87TRpwfj2buQ1YOS9nviHr9vFrJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ONNqPVKe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="E9VDHUQj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=TB9y+SKqOgtu219pAzfRMS/i4csBNPv5d/gYp8Joj5c=;
-	t=1769097949; x=1770307549; b=E9VDHUQjYDZfqEm2FmZwTx02sQy5IbjyrQPEIDHWEQp8GyF
-	huv9wfzojpRFX/WHRMi5NuhM8OqsHxq9ihhmQRBPGYs7/54mTa6/NEA5FLliTTyKAAmbQL3Y0boql
-	jKzu1mg2TCz3ZU70AA3rAPK5UFfXEzO0rXr3SEdNQYT/DnWWKEvWmGSaHdqAiDJMwBGVf2hJ65uXe
-	8ulFLTSE/cJmyHCSDIzskeB2dYJIIFQsDNmK0/sYEiWeF3ItdvevS6YsLz1WDiSVr1Hjgd8yTxijO
-	5b+I0ngzAh0Fp2vYDDzzQuJFhiSOVlceoNiJRgFoUMiaLuQIIubH009bvA1W66DA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vixBl-00000000vbd-3RSR;
-	Thu, 22 Jan 2026 17:05:41 +0100
-Message-ID: <829488acfdbf7ecfe6418bfb2c5669dae18392ed.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211: do not set 320MHz EHT capabilities on
- non 6GHz band
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nicolas Escande <nico.escande@gmail.com>, linux-wireless@vger.kernel.org
-Date: Thu, 22 Jan 2026 17:05:41 +0100
-In-Reply-To: <20260122145620.861355-1-nico.escande@gmail.com> (sfid-20260122_163621_176267_8452BF0E)
-References: <20260122145620.861355-1-nico.escande@gmail.com>
-	 (sfid-20260122_163621_176267_8452BF0E)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ONNqPVKe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F26CC4AF0F;
+	Thu, 22 Jan 2026 16:10:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769098219;
+	bh=wmN9D1mii93RGtYzMIyn+tXEJM+VpmTs5wnmyGizcfI=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=ONNqPVKewRFdPGPjCpt5p0Sls6sorYSmWPmDsTjtx++vHPC/skp3+L5CYpMyyUK89
+	 ebF1Q6C79HJKN6PdkNL9e6RJcTJaDpIfG6XahwOb4ROVHjFWoUpf17ex5Cs9pnAr9m
+	 oiI9/Y19ty8ZZcg4Wifqno339mso572sYAcYnYTNYYYaqHfERAOFia5k1ikPqcxo+F
+	 Lsb18fLGWJLzweslvw8PcW+s+JnQJdw0CkqJx3fizih0A19nmHBhGlpXVsAwSk5lEI
+	 pf+1ttd78B4LTogO1j+qsiCvC7ljKeRQWUKF830LKbMH0BoV91b9WnoteRA4q8Wefg
+	 GN3+PZRvRQDIQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id C8E4D3808200;
+	Thu, 22 Jan 2026 16:10:16 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Subject: Re: [GIT PULL] wireless-2026-11-22
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <176909821561.1785789.7612526392222191065.git-patchwork-notify@kernel.org>
+Date: Thu, 22 Jan 2026 16:10:15 +0000
+References: <20260122110248.15450-3-johannes@sipsolutions.net>
+In-Reply-To: <20260122110248.15450-3-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 
-On Thu, 2026-01-22 at 15:56 +0100, Nicolas Escande wrote:
-> The spec (at least 802.11-be draft7) at section 9.4.2.323.3 says we shoul=
-d
-> not set the 320MHz related fields when not operating on a 6GHz band. It's
-> quite explicit for most of them. For example:
->=20
-> Bit 0 "Support For 320 MHz In 6 GHz" says "Reserved if the EHT
->       Capabilities element is indicating capabilities for the 2.4 GHz or
->       5 GHz bands."
->=20
-> Bit 22-24 "Number Of Sounding Dimensions (=3D 320 MHz)" says "Reserved if
->           the SU Beamformer subfield is 0 or the Support For 320 MHz In
->           6 GHz subfield in EHT Capabilities Information field does not
->           indicate support for a bandwidth of 320 MHz."
->=20
-> Bit 54 "Support Of EHT-MCS 15 In MRU" says about bit 3 "If 320 MHz is not
->         supported, then B3 is set to 0."
->=20
-> For bit 13-15 "Beamformee SS (=3D 320 MHz)" it's not explicit, but it mak=
-es
-> little sense to special case the handling of this one.
+Hello:
 
-Sure, but ...
+This pull request was applied to netdev/net.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-> Fixes: 6239da18d2f9 ("wifi: mac80211: adjust EHT capa when lowering bandw=
-idth")
-> Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
-> ---
->  net/mac80211/util.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 0c46009a3d63..996983f6815b 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -4426,7 +4426,8 @@ int ieee80211_put_eht_cap(struct sk_buff *skb,
->  			~IEEE80211_EHT_PHY_CAP6_MCS15_SUPP_160MHZ;
->  	}
-> =20
-> -	if (conn->bw_limit < IEEE80211_CONN_BW_LIMIT_320) {
-> +	if (conn->bw_limit < IEEE80211_CONN_BW_LIMIT_320 ||
-> +	    sband->band !=3D NL80211_BAND_6GHZ) {
->  		fixed.phy_cap_info[0] &=3D
->  			~IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ;
->  		fixed.phy_cap_info[1] &=3D
+On Thu, 22 Jan 2026 12:00:15 +0100 you wrote:
+> Hi,
+> 
+> Some more updates from wireless. The only interesting thing here is
+> that there's a merge conflict with net-next, see here:
+> https://lore.kernel.org/all/98386125-c0bb-495e-b2ba-2765aaed19d8@oss.qualcomm.com/
+> 
+> Please pull and let us know if there's any problem.
+> 
+> [...]
 
-How does this make any sense? The driver should just not advertise the
-bit on its 2.4 and 5 GHz sbands?
+Here is the summary with links:
+  - [GIT,PULL] wireless-2026-11-22
+    https://git.kernel.org/netdev/net/c/9146fe282990
 
-johannes
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
