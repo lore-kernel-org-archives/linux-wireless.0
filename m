@@ -1,57 +1,65 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9CE2EB859
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 01:41:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1560239E6C;
+	Fri, 23 Jan 2026 02:16:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769132513; cv=none; b=WehkODZwNvxCqrQX7Ot9LbFpcUJf/gCOmDqUSIGRE0sXNvCDK3BKHX9JmItL3mhI2JUt7zu84vX8BAi8TbZqNBiaQto7e1A2NbMjtY482HJSCkr8TdW6FRwRY/qIgv64sRf0+U6P/jvqPBpVLiWfd+p7oFeNzOXQYE+GtZIkPTo=
+	t=1769134625; cv=none; b=j3QWILK5lxy7weKh+E4Obv15rrnFe7qGI3yYp34pWGdHWOYzSn8fd/0vqEIo9+wkFe9r4MrK80VjthRQXtoZ8IsJ9/9bG0hSf/FPC9CyrxzI9Tldcg4Re/yd9dRovN5lwMmV1eTgHUKyBYy9kqg0tGz7wy9BBadNZ5Vh2fQTmHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769132513; c=relaxed/simple;
-	bh=EB0BpTPe06fqA1BVhMHoRstkP5m19oN7ohLdCKyJVMc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pNvP+DVQ6IcQjpOvBtfD2gsWF4bVkVddM4qToE3JuEEtoXNhSa6uWF56Q1n500CgiXcG7mjyjOrus3pp8qOtC9Nxwz+rVNDRNtopsD+W4LjT/goSull5j+gSs2wJKgq44r8YnpTexGhm4Alrm14AKDDb2xvXL6+zU1NtXD8FEyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=rv/+KY2I; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1769134625; c=relaxed/simple;
+	bh=2uZpTtigxeYTwBjFbwArSDoAD1upgR1ftX4suZZm6xQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JBb2t87eXfgGfsrSRmPfLSrmlys6AOw+g7s40QhjJiBRPrS7qtDKpMmMDrcBODaQLt/WLb0//Te8hkCNfoQBBLuwIv4kw0jyS41QxJM+90yfZOeUBrZCfonG6lT8gQaWP/v1AobpZR+3MrKHnC5C8HXC4a32/Lud6YmHRvC+ivM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=YbV4vvNM; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="rv/+KY2I"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 60N1fNIJ12206898, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1769132483; bh=lulS1dVX1sDYeP9U2fM7MrX+XDjNWw0mYxlH45jW+M4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=rv/+KY2IZb4SyJ1lw/9Vx/1pf9DbG0kTOATYeQe/RyiTKsPQjRExoB4d9RwGMuzgf
-	 f/ssZSGQg64Owe3ClZntDUXf8Ibijdf2+5CSGv0/cOxaIbr2tdEZmuynyfquaPXZ9x
-	 RDJABnaNTi9gJkvogwuKJL5tV8qkpoeYFRIoCsqLIbCkekcbROHBhCoS2xqkjjOMAE
-	 K+0tkxNdtGkTLGrR0TLr8OmCQYEbz64XmJ8ebl0UlYKICOggm+Z95K0+6bU0G9wrqS
-	 k65rL6zxaIhRkNV5vxSxWingcx/RUMJiibxsCmZc63dEUdC84h1wwwjA6xlENOc+4k
-	 Zeb90/m3DSXjQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 60N1fNIJ12206898
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 09:41:23 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="YbV4vvNM"
+X-UUID: 8c3f3504f80111f0b7fc4fdb8733b2bc-20260123
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=C0t+LcdG876vC2ugTD3kASxQolrH9EJTJ3FmJJu056c=;
+	b=YbV4vvNMtWqFjWTRoxlj8mVJ19PM79OqTmHglhWY9g3rxzhsbPdEkx53rBwmfdpQ2e0gUY4t9ecfRtyl9tiRjVkVRRK0ZUbJBc9V9u1N8idHTvBOz2tyxwcCdQt/lpCRD6jPywE9WtLIDkPs0AiiJJ0CooBXsdlzHRNKNkCh/ww=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:fe742e96-089a-478d-8a62-de1a8faf85af,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:4d2d745a-a957-4259-bcca-d3af718d7034,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
+	0,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA
+	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 8c3f3504f80111f0b7fc4fdb8733b2bc-20260123
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
+	(envelope-from <quan.zhou@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 876895632; Fri, 23 Jan 2026 10:16:38 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Fri, 23 Jan 2026 09:41:23 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Fri, 23 Jan 2026 09:41:22 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
- (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Fri, 23 Jan 2026 09:41:22 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 09/11] wifi: rtw89: get designated link to replace link instance 0
-Date: Fri, 23 Jan 2026 09:39:55 +0800
-Message-ID: <20260123013957.16418-10-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260123013957.16418-1-pkshih@realtek.com>
-References: <20260123013957.16418-1-pkshih@realtek.com>
+ 15.2.2562.29; Fri, 23 Jan 2026 10:16:37 +0800
+Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 23 Jan 2026 10:16:36 +0800
+From: Quan Zhou <quan.zhou@mediatek.com>
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>
+CC: Sean Wang <sean.wang@mediatek.com>, Deren Wu <Deren.Wu@mediatek.com>,
+	Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+	Leon Yen <Leon.Yen@mediatek.com>, Ming Yen Hsieh
+	<mingyen.hsieh@mediatek.com>, Allan Wang <allan.wang@mediatek.com>, Sarick
+ Jiang <sarick.jiang@mediatek.com>, Posh Sun <posh.sun@mediatek.com>, Shengxi
+ Xu <shengxi.xu@mediatek.com>, Eric-SY Chang <Eric-SY.Chang@mediatek.com>,
+	Michael Lo <Michael.Lo@mediatek.com>, CH Yeh <ch.yeh@mediatek.com>, Robin
+ Chiu <robin.chiu@mediatek.com>, linux-wireless
+	<linux-wireless@vger.kernel.org>, linux-mediatek
+	<linux-mediatek@lists.infradead.org>, Quan Zhou <quan.zhou@mediatek.com>,
+	<stable@vger.kernel.org>
+Subject: [patch] wifi: mt76: mt7921: fix ROC abort flow interruption in mt7921_roc_work
+Date: Fri, 23 Jan 2026 10:16:25 +0800
+Message-ID: <2568ece8b557e5dda79391414c834ef3233049b6.1769133724.git.quan.zhou@mediatek.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,88 +68,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
+X-MTK: N
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+The mt7921_set_roc API may be executed concurrently with mt7921_roc_work,
+specifically between the following code paths:
 
-Clean up some places where still to get link instance 0 directly.
-Since now MLSR switch is supported, it's not guaranteed to always
-run on link instance 0. So, prefer to get designated link in most
-cases.
+- The check and clear of MT76_STATE_ROC in mt7921_roc_work:
+    if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
+        return;
 
-For now, the only exception is MCC (multi-channel concurrency) case.
-How to fill content of its H2C command depends on how to choose link
-instance, so cannot simply change it as above. Will handle MCC case
-separately afterwards.
+- The execution of ieee80211_iterate_active_interfaces.
 
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+This race condition can interrupt the ROC abort flow, resulting in
+the ROC process failing to abort as expected.
+
+To address this defect, the modification of MT76_STATE_ROC is now
+protected by mt792x_mutex_acquire(phy->dev). This ensures that
+changes to the ROC state are properly synchronized, preventing
+race conditions and ensuring the ROC abort flow is not interrupted.
+
+Fixes: 034ae28b56f1 ("wifi: mt76: mt7921: introduce remain_on_channel support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Quan Zhou <quan.zhou@mediatek.com>
+Reviewed-by: Sean Wang <sean.wang@mediatek.com>
 ---
- drivers/net/wireless/realtek/rtw89/chan.c     | 8 ++++----
- drivers/net/wireless/realtek/rtw89/fw.c       | 7 ++-----
- drivers/net/wireless/realtek/rtw89/mac80211.c | 4 ++--
- 3 files changed, 8 insertions(+), 11 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7921/main.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
-index c0af61992226..9b2f6f0a00fd 100644
---- a/drivers/net/wireless/realtek/rtw89/chan.c
-+++ b/drivers/net/wireless/realtek/rtw89/chan.c
-@@ -372,8 +372,8 @@ static void rtw89_normalize_link_chanctx(struct rtw89_dev *rtwdev,
- 	if (unlikely(!rtwvif_link->chanctx_assigned))
- 		return;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 5fae9a6e273c..021335805acb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -387,10 +387,11 @@ void mt7921_roc_work(struct work_struct *work)
+ 	phy = (struct mt792x_phy *)container_of(work, struct mt792x_phy,
+ 						roc_work);
  
--	cur = rtw89_vif_get_link_inst(rtwvif, 0);
--	if (!cur || !cur->chanctx_assigned)
-+	cur = rtw89_get_designated_link(rtwvif);
-+	if (unlikely(!cur) || !cur->chanctx_assigned)
- 		return;
- 
- 	if (cur == rtwvif_link)
-@@ -522,8 +522,8 @@ static void rtw89_entity_recalc_mgnt_roles(struct rtw89_dev *rtwdev)
- 	}
- 
- 	/* To be consistent with legacy behavior, expect the first active role
--	 * which uses RTW89_CHANCTX_0 to put at position 0, and make its first
--	 * link instance take RTW89_CHANCTX_0. (normalizing)
-+	 * which uses RTW89_CHANCTX_0 to put at position 0 and its designated
-+	 * link take RTW89_CHANCTX_0. (normalizing)
- 	 */
- 	list_for_each_entry(role, &mgnt->active_list, mgnt_entry) {
- 		for (i = 0; i < role->links_inst_valid_num; i++) {
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 9e88fd6d735a..f84726f04669 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -9027,12 +9027,9 @@ static void rtw89_hw_scan_set_extra_op_info(struct rtw89_dev *rtwdev,
- 		if (tmp == scan_rtwvif)
- 			continue;
- 
--		tmp_link = rtw89_vif_get_link_inst(tmp, 0);
--		if (unlikely(!tmp_link)) {
--			rtw89_debug(rtwdev, RTW89_DBG_HW_SCAN,
--				    "hw scan: no HW-0 link for extra op\n");
-+		tmp_link = rtw89_get_designated_link(tmp);
-+		if (unlikely(!tmp_link))
- 			continue;
--		}
- 
- 		tmp_chan = rtw89_chan_get(rtwdev, tmp_link->chanctx_idx);
- 		*ext = (struct rtw89_hw_scan_extra_op){
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index ba71709a9bc9..315bb0d0759f 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -1438,9 +1438,9 @@ static void rtw89_ops_channel_switch_beacon(struct ieee80211_hw *hw,
- 
- 	BUILD_BUG_ON(RTW89_MLD_NON_STA_LINK_NUM != 1);
- 
--	rtwvif_link = rtw89_vif_get_link_inst(rtwvif, 0);
-+	rtwvif_link = rtw89_get_designated_link(rtwvif);
- 	if (unlikely(!rtwvif_link)) {
--		rtw89_err(rtwdev, "chsw bcn: find no link on HW-0\n");
-+		rtw89_err(rtwdev, "chsw bcn: find no designated link\n");
- 		return;
- 	}
- 
+-	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
+-		return;
+-
+ 	mt792x_mutex_acquire(phy->dev);
++	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state)) {
++		mt792x_mutex_release(phy->dev);
++		return;
++	}
+ 	ieee80211_iterate_active_interfaces(phy->mt76->hw,
+ 					    IEEE80211_IFACE_ITER_RESUME_ALL,
+ 					    mt7921_roc_iter, phy);
 -- 
-2.25.1
+2.45.2
 
