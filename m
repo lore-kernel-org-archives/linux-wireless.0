@@ -1,50 +1,53 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6719932FA34
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 01:40:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B216298991
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 01:41:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769132455; cv=none; b=jHOeBWOR6+JbcELPer9FbhfhWQwA3gRtcKpz5aDd17Ah9uEBZWvA7cynGe8S4/m81hIm+YLuFU5RxXWEkf6FxvzC22Jzj5CUF7jzb1y/QyXyPn9Y0yrK7hmU/34ui1i6p34thxVGZ8rTWy9ZrGlzMtKGGkmQyWJELAIlcoJ2YBg=
+	t=1769132464; cv=none; b=Kfk24W8DLLVIkRNrIHxCX34LlB+4YpTvE6QDqPlWUFKSRFdUb1mjuIAX3yOCwWYv2J49U4jT70e33VQkCNbDsmLQmm/aGobtc/iMMTF84H8Q4DWOPlUWguQNuWuKU3f57FBhBLkmjsUtFnpYiP7mFCsPOXxbT/vpMe36UyDV2Zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769132455; c=relaxed/simple;
-	bh=QtSH6rKk4lZXS3PszAeqmPY9T3Fy5dWs5t5Pa0mmPc4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Q+Ai7vwNjqmcK8yWxyNAlneNk//gYMscct+k8L9Xv8erqZFEaANCoa63Ag1Or1YY6K3nOkAxBBakRTyJNP25zWLdqLL1t4qocTV+aR0vTLdKXSanS/NqV8PMarK+W+pInOhHRE57/61Bo9PD7tkg6Fn9cwX4nO7gEzFTlaFqnCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=K67Eoll/; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1769132464; c=relaxed/simple;
+	bh=wDbb/PR3dh26tGuwUGJqtDBPVto/QoiHSOnl5/VD+pk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WQbUAGWYuiXdsp3vdpT0Sm5WipbXw6a0PxNqKzbM1LocpX2dQyP0nQKUB8B7ni0GUVD4YGj4iMPBPPW0w5z60D+w4s7f2d3fxhzEruQK6zu8ech/t5fqP0bKlRQnoyGpF/gn2UC3zO+/6ND8Kr3SX0dI/642Him/mNMzSNuePvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Sg44hvoH; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="K67Eoll/"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 60N1eYndD2206382, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Sg44hvoH"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 60N1evuZ72206793, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1769132434; bh=/rB1pPDIQMW5E8CZsZK3eDz2Z8csH+2NFCz5JZEek1Y=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	b=K67Eoll/vgp1FSu9H5/V5PigMhKFHtGgyNkIXrPt8KC7OwJQWi6nyfCX/ujzYEfuR
-	 BNGs8Wni8iiRXCcLpGc3dewr2IMT8TaUqTBGKjbjW3yNGZ3r7miHg0fg5sDe7TklWk
-	 bfAEHT+HL0MoDAqwGn3eUfKHuVfvlcF5f4wWAt68JDtFampzYRF5D2pOE6N7uhIKUI
-	 kB4B9J8r8aSxYLSf+AU0rqc6spSkfYYMlu1pICHTAmnrQh5TcVREHPRLGO3kj4+zq1
-	 hBYWQfIQqsreKSsYeHWaKXJ0PVbRn8RV3Ivfd/qAk04H07t3XBui2IrEeNuEsBb1AU
-	 ljOryFoLTCgsA==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 60N1eYndD2206382
+	t=1769132457; bh=gqBOSgppTQPLwclGsNpRLNWxklHcrAcTCQO8l/XPM6A=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type;
+	b=Sg44hvoHp8GUh4Gtw9gVgGQ0e0aqYlWPddMQDcbC70RV94T1TmPYWK9BlxNgbazV5
+	 IUhy2Vq0oId9H0J0nkkmiBwFr25+zzge/SyjWEgEqvjrmyG46cBoFL7HM96jK3vklH
+	 6e5q05vBvvUwYRAV1lw8q5GfXwsi/nnxSHzV0+AXV5GZgk42B006dfC8dq+cQN0Dtf
+	 p93E99jAdOuKnIA48xIeRjTG8F2Mhk8FO/hcdAmbKUDakwt4JSUuAU2Q+/likA58c9
+	 3E3cELrqMqob/nPXVMUvWExXJbW1FDmak+5Lb7Rp3paxPn9uVw+5TQz0kzEkZ8DlJx
+	 GMd090lBdQYww==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 60N1evuZ72206793
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 09:40:34 +0800
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 09:40:57 +0800
 Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Fri, 23 Jan 2026 09:40:34 +0800
+ 15.2.1748.10; Fri, 23 Jan 2026 09:40:55 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Fri, 23 Jan 2026 09:40:34 +0800
+ Transport; Fri, 23 Jan 2026 09:40:55 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 00/11] wifi: rtw89: update RFK command/report and REGD R73-R54
-Date: Fri, 23 Jan 2026 09:39:46 +0800
-Message-ID: <20260123013957.16418-1-pkshih@realtek.com>
+Subject: [PATCH rtw-next 04/11] wifi: rtw89: rfk: add to print debug log of CIM3K
+Date: Fri, 23 Jan 2026 09:39:50 +0800
+Message-ID: <20260123013957.16418-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260123013957.16418-1-pkshih@realtek.com>
+References: <20260123013957.16418-1-pkshih@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -54,42 +57,111 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-The first 6 patches are related to RFK (RF calibration) in firmware,
-including H2C command to trigger certain RFK and print the report.
+Add calibration report of CIM3K, which does calibration in firmware and
+send a C2H event as debug purpose.
 
-The last one is to update the latest REGD along internal update.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw89/fw.h  | 27 ++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.c | 13 ++++++++++++
+ drivers/net/wireless/realtek/rtw89/phy.h |  1 +
+ 3 files changed, 41 insertions(+)
 
-Others are random patches to this driver.
-
-Ping-Ke Shih (8):
-  wifi: rtw89: rfk: add firmware command to do TX IQK
-  wifi: rtw89: rfk: add to print debug log of TX IQK
-  wifi: rtw89: rfk: add firmware command to do CIM3K
-  wifi: rtw89: rfk: add to print debug log of CIM3K
-  wifi: rtw89: rfk: update RFK report format of IQK, DACK and TXGAPK
-  wifi: rtw89: fw: correct content of DACK H2C command
-  wifi: rtw89: phy: add PHY C2H event dummy handler for func 1-7 and
-    2-10
-  wifi: rtw89: pci: validate release report content before using for
-    RTL8922DE
-
-Zong-Zhe Yang (3):
-  wifi: rtw89: 8922a: configure FW version for SIM_SER_L0L1_BY_HALT_H2C
-  wifi: rtw89: get designated link to replace link instance 0
-  wifi: rtw89: regd: update regulatory map to R73-R54
-
- drivers/net/wireless/realtek/rtw89/chan.c     |   8 +-
- drivers/net/wireless/realtek/rtw89/fw.c       | 109 ++++++++++++++++--
- drivers/net/wireless/realtek/rtw89/fw.h       | 102 ++++++++++++++--
- drivers/net/wireless/realtek/rtw89/mac80211.c |   4 +-
- drivers/net/wireless/realtek/rtw89/pci.c      |   6 +-
- drivers/net/wireless/realtek/rtw89/phy.c      |  96 +++++++++++++--
- drivers/net/wireless/realtek/rtw89/phy.h      |  15 ++-
- drivers/net/wireless/realtek/rtw89/regd.c     |  20 ++--
- 8 files changed, 317 insertions(+), 43 deletions(-)
-
-
-base-commit: 8da7e88682d58a7c2e2c2101e49d3c9c9ac481b0
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
+index 2f04138148b7..4fa982cbac49 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.h
++++ b/drivers/net/wireless/realtek/rtw89/fw.h
+@@ -5102,6 +5102,33 @@ struct rtw89_c2h_rf_txiqk_rpt_log {
+ 	__le32 tx_xym[2][6][14];
+ } __packed;
+ 
++struct rtw89_c2h_rf_cim3k_rpt_log {
++	u8 cim3k_band[2];
++	u8 cim3k_ch[2];
++	u8 cim3k_bw[2];
++	u8 su_path_ok[2];
++	u8 ru_path_ok[2];
++	u8 txagc_cim3k[2];
++	u8 ther_cim3k[2];
++	u8 cim3k_gs[2];
++	__le16 cim3k_pwsf[2];
++	bool cim3k_nctldone[2];
++	u8 rsvd[2];
++	__le32 cim3k_rxiqc[2];
++	__le32 cim3k_su_coef[2][3];
++	__le16 dc_i[2];
++	__le16 dc_q[2];
++	u8 corr_val[2];
++	u8 corr_idx[2];
++	u8 rxbb_ov[2];
++	u8 cim3k_txiqc[2];
++	u8 kidx[2];
++	u8 fw_cim3k_ver;
++	bool su_cim3k_en[2];
++	bool ru_cim3k_en[2];
++	u8 rsvd1;
++} __packed;
++
+ struct rtw89_c2h_rfk_report {
+ 	struct rtw89_c2h_hdr hdr;
+ 	u8 state; /* enum rtw89_rfk_report_state */
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.c b/drivers/net/wireless/realtek/rtw89/phy.c
+index 5f6854b7550d..11f45e30d76d 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.c
++++ b/drivers/net/wireless/realtek/rtw89/phy.c
+@@ -3457,6 +3457,7 @@ static void rtw89_phy_c2h_rfk_rpt_log(struct rtw89_dev *rtwdev,
+ 	struct rtw89_c2h_rf_txgapk_rpt_log *txgapk;
+ 	struct rtw89_c2h_rf_rxdck_rpt_log *rxdck;
+ 	struct rtw89_c2h_rf_txiqk_rpt_log *txiqk;
++	struct rtw89_c2h_rf_cim3k_rpt_log *cim3k;
+ 	struct rtw89_c2h_rf_dack_rpt_log *dack;
+ 	struct rtw89_c2h_rf_tssi_rpt_log *tssi;
+ 	struct rtw89_c2h_rf_dpk_rpt_log *dpk;
+@@ -3712,6 +3713,10 @@ static void rtw89_phy_c2h_rfk_rpt_log(struct rtw89_dev *rtwdev,
+ 		if (len != sizeof(*txiqk))
+ 			goto out;
+ 		return;
++	case RTW89_PHY_C2H_RFK_LOG_FUNC_CIM3K:
++		if (len != sizeof(*cim3k))
++			goto out;
++		return;
+ 	default:
+ 		break;
+ 	}
+@@ -3854,6 +3859,13 @@ rtw89_phy_c2h_rfk_log_txiqk(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 l
+ 			      RTW89_PHY_C2H_RFK_LOG_FUNC_TXIQK, "TXIQK");
+ }
+ 
++static void
++rtw89_phy_c2h_rfk_log_cim3k(struct rtw89_dev *rtwdev, struct sk_buff *c2h, u32 len)
++{
++	rtw89_phy_c2h_rfk_log(rtwdev, c2h, len,
++			      RTW89_PHY_C2H_RFK_LOG_FUNC_CIM3K, "CIM3K");
++}
++
+ static
+ void (* const rtw89_phy_c2h_rfk_log_handler[])(struct rtw89_dev *rtwdev,
+ 					       struct sk_buff *c2h, u32 len) = {
+@@ -3865,6 +3877,7 @@ void (* const rtw89_phy_c2h_rfk_log_handler[])(struct rtw89_dev *rtwdev,
+ 	[RTW89_PHY_C2H_RFK_LOG_FUNC_TXGAPK] = rtw89_phy_c2h_rfk_log_txgapk,
+ 	[RTW89_PHY_C2H_RFK_LOG_FUNC_TAS_PWR] = rtw89_phy_c2h_rfk_log_tas_pwr,
+ 	[RTW89_PHY_C2H_RFK_LOG_FUNC_TXIQK] = rtw89_phy_c2h_rfk_log_txiqk,
++	[RTW89_PHY_C2H_RFK_LOG_FUNC_CIM3K] = rtw89_phy_c2h_rfk_log_cim3k,
+ };
+ 
+ static
+diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
+index 5e04bdcef4e9..a587f83b8d67 100644
+--- a/drivers/net/wireless/realtek/rtw89/phy.h
++++ b/drivers/net/wireless/realtek/rtw89/phy.h
+@@ -151,6 +151,7 @@ enum rtw89_phy_c2h_rfk_log_func {
+ 	RTW89_PHY_C2H_RFK_LOG_FUNC_TXGAPK = 5,
+ 	RTW89_PHY_C2H_RFK_LOG_FUNC_TAS_PWR = 9,
+ 	RTW89_PHY_C2H_RFK_LOG_FUNC_TXIQK = 0xc,
++	RTW89_PHY_C2H_RFK_LOG_FUNC_CIM3K = 0xe,
+ 
+ 	RTW89_PHY_C2H_RFK_LOG_FUNC_NUM,
+ };
 -- 
 2.25.1
 
