@@ -1,50 +1,54 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD0862F0C5B
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 01:41:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F9CE2EB859
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 01:41:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769132512; cv=none; b=kafebsCJgAYt2XmTSwp1tTUtsyezmb4yl6aq0m3pRLYLzAnlcA+AcmZqvoPC/jA9uNNAFMU+6r8HjPwVPZm7UgF+NSZ5wUcqpyZna6zByXscPjR/1rATiPA8C0c8cO3j5wO7i+13UMO+AAwl4JXSiOlXToI875DXQUUNOtwzlHg=
+	t=1769132513; cv=none; b=WehkODZwNvxCqrQX7Ot9LbFpcUJf/gCOmDqUSIGRE0sXNvCDK3BKHX9JmItL3mhI2JUt7zu84vX8BAi8TbZqNBiaQto7e1A2NbMjtY482HJSCkr8TdW6FRwRY/qIgv64sRf0+U6P/jvqPBpVLiWfd+p7oFeNzOXQYE+GtZIkPTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769132512; c=relaxed/simple;
-	bh=tLLfPaQ5mG9u/AWSKARryFR+sTpZpi51jwKPL/ZkxVs=;
+	s=arc-20240116; t=1769132513; c=relaxed/simple;
+	bh=EB0BpTPe06fqA1BVhMHoRstkP5m19oN7ohLdCKyJVMc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g9om7G093Ir4Go3QDbhNzyytv873KCCfuYF0zjp15sTMcSfHqhMLM33UkTfuQ5M0gjrIXS5Ru19Np2NaXHTSSycRy5X4EvZ/x0ApCgwOrkVJxb8cDk0pV6WvPu3i2hgyU8RQESvKb6D3SHx2znW0o1snkeTRBor4Y6KSeabN1xI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=N6KcEEgq; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=pNvP+DVQ6IcQjpOvBtfD2gsWF4bVkVddM4qToE3JuEEtoXNhSa6uWF56Q1n500CgiXcG7mjyjOrus3pp8qOtC9Nxwz+rVNDRNtopsD+W4LjT/goSull5j+gSs2wJKgq44r8YnpTexGhm4Alrm14AKDDb2xvXL6+zU1NtXD8FEyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=rv/+KY2I; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="N6KcEEgq"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 60N1fXjP52207706, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="rv/+KY2I"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 60N1fNIJ12206898, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1769132493; bh=MuYlOyC7ujVk+aO5fPW68AxARqNamTwVynNoCBl7WVQ=;
+	t=1769132483; bh=lulS1dVX1sDYeP9U2fM7MrX+XDjNWw0mYxlH45jW+M4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=N6KcEEgqgTvIsXhgZuJxPlOezv0mo8qI5uXP5+K2vDcUo7Ur7D13Zz+ANn6ymM18W
-	 BQ49+DwPuOeZ5RdTb6G55aoO6IddD9FF2nJbcn14m1wTtPvLaSGaRtM3SDXEqXE3yI
-	 jtLsL75NC7hKv/sK7UKLe5g8xM1Tw3KISzMlXvyDhK7XZMPxMwGMmoPzwrzULZNy1d
-	 z1T60MHDQu9nE6DC4ZIaBN4p/W4Fp5dGQs8cAGr2a734tttu099EdMn2OdGsL+J1Ox
-	 KK9SyqoraeuH0u70VkPCsp2M5rLqvA3f1kvOWrhGgJqG1nzjDR/H8lOx2+Rnd1foSn
-	 zZYMswd0XGbzg==
+	b=rv/+KY2IZb4SyJ1lw/9Vx/1pf9DbG0kTOATYeQe/RyiTKsPQjRExoB4d9RwGMuzgf
+	 f/ssZSGQg64Owe3ClZntDUXf8Ibijdf2+5CSGv0/cOxaIbr2tdEZmuynyfquaPXZ9x
+	 RDJABnaNTi9gJkvogwuKJL5tV8qkpoeYFRIoCsqLIbCkekcbROHBhCoS2xqkjjOMAE
+	 K+0tkxNdtGkTLGrR0TLr8OmCQYEbz64XmJ8ebl0UlYKICOggm+Z95K0+6bU0G9wrqS
+	 k65rL6zxaIhRkNV5vxSxWingcx/RUMJiibxsCmZc63dEUdC84h1wwwjA6xlENOc+4k
+	 Zeb90/m3DSXjQ==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 60N1fXjP52207706
+	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 60N1fNIJ12206898
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 09:41:33 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 09:41:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Fri, 23 Jan 2026 09:41:33 +0800
+ 15.2.1748.10; Fri, 23 Jan 2026 09:41:23 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Fri, 23 Jan 2026 09:41:22 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Fri, 23 Jan 2026 09:41:33 +0800
+ Transport; Fri, 23 Jan 2026 09:41:22 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 11/11] wifi: rtw89: regd: update regulatory map to R73-R54
-Date: Fri, 23 Jan 2026 09:39:57 +0800
-Message-ID: <20260123013957.16418-12-pkshih@realtek.com>
+Subject: [PATCH rtw-next 09/11] wifi: rtw89: get designated link to replace link instance 0
+Date: Fri, 23 Jan 2026 09:39:55 +0800
+Message-ID: <20260123013957.16418-10-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260123013957.16418-1-pkshih@realtek.com>
 References: <20260123013957.16418-1-pkshih@realtek.com>
@@ -59,101 +63,85 @@ Content-Type: text/plain
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Sync Realtek Channel Plan R73 and Realtek Regulatory R54.
-Configure 6 GHz field of Realtek regd for the following countries.
-PY NA BD ID VN TN GL GP YT EH
+Clean up some places where still to get link instance 0 directly.
+Since now MLSR switch is supported, it's not guaranteed to always
+run on link instance 0. So, prefer to get designated link in most
+cases.
+
+For now, the only exception is MCC (multi-channel concurrency) case.
+How to fill content of its H2C command depends on how to choose link
+instance, so cannot simply change it as above. Will handle MCC case
+separately afterwards.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/regd.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtw89/chan.c     | 8 ++++----
+ drivers/net/wireless/realtek/rtw89/fw.c       | 7 ++-----
+ drivers/net/wireless/realtek/rtw89/mac80211.c | 4 ++--
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/regd.c b/drivers/net/wireless/realtek/rtw89/regd.c
-index c3425ed44732..28466cb35ea2 100644
---- a/drivers/net/wireless/realtek/rtw89/regd.c
-+++ b/drivers/net/wireless/realtek/rtw89/regd.c
-@@ -38,7 +38,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("MX", RTW89_MEXICO, RTW89_MEXICO, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("NI", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
- 	COUNTRY_REGD("PA", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
--	COUNTRY_REGD("PY", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
-+	COUNTRY_REGD("PY", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("PE", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("US", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x1),
- 	COUNTRY_REGD("UY", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
-@@ -95,7 +95,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("MK", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("MA", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("MZ", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
--	COUNTRY_REGD("NA", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("NA", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("NG", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("OM", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("QA", RTW89_QATAR, RTW89_QATAR, RTW89_QATAR, 0x0),
-@@ -111,12 +111,12 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("AE", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("YE", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("ZW", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
--	COUNTRY_REGD("BD", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("BD", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("KH", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("CN", RTW89_CN, RTW89_CN, RTW89_CN, 0x0),
- 	COUNTRY_REGD("HK", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("IN", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
--	COUNTRY_REGD("ID", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("ID", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("KR", RTW89_KCC, RTW89_KCC, RTW89_KCC, 0x1),
- 	COUNTRY_REGD("MY", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("PK", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
-@@ -125,7 +125,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("LK", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("TW", RTW89_FCC, RTW89_FCC, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("TH", RTW89_THAILAND, RTW89_THAILAND, RTW89_THAILAND, 0x0),
--	COUNTRY_REGD("VN", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("VN", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("AU", RTW89_ACMA, RTW89_ACMA, RTW89_ACMA, 0x0),
- 	COUNTRY_REGD("NZ", RTW89_ACMA, RTW89_ACMA, RTW89_ACMA, 0x0),
- 	COUNTRY_REGD("PG", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
-@@ -134,7 +134,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("JM", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("AN", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("TT", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
--	COUNTRY_REGD("TN", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("TN", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("AF", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("DZ", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("AS", RTW89_FCC, RTW89_FCC, RTW89_NA, 0x0),
-@@ -187,9 +187,9 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("GM", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("GE", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("GI", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
--	COUNTRY_REGD("GL", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("GL", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("GD", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
--	COUNTRY_REGD("GP", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("GP", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("GU", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("GG", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("GN", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
-@@ -214,7 +214,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("MQ", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("MR", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("MU", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
--	COUNTRY_REGD("YT", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("YT", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("FM", RTW89_FCC, RTW89_FCC, RTW89_FCC, 0x0),
- 	COUNTRY_REGD("MD", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("MN", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
-@@ -260,7 +260,7 @@ static const struct rtw89_regd rtw89_regd_map[] = {
- 	COUNTRY_REGD("UZ", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("VU", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("WF", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
--	COUNTRY_REGD("EH", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
-+	COUNTRY_REGD("EH", RTW89_ETSI, RTW89_ETSI, RTW89_ETSI, 0x0),
- 	COUNTRY_REGD("ZM", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("CU", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
- 	COUNTRY_REGD("IR", RTW89_ETSI, RTW89_ETSI, RTW89_NA, 0x0),
+diff --git a/drivers/net/wireless/realtek/rtw89/chan.c b/drivers/net/wireless/realtek/rtw89/chan.c
+index c0af61992226..9b2f6f0a00fd 100644
+--- a/drivers/net/wireless/realtek/rtw89/chan.c
++++ b/drivers/net/wireless/realtek/rtw89/chan.c
+@@ -372,8 +372,8 @@ static void rtw89_normalize_link_chanctx(struct rtw89_dev *rtwdev,
+ 	if (unlikely(!rtwvif_link->chanctx_assigned))
+ 		return;
+ 
+-	cur = rtw89_vif_get_link_inst(rtwvif, 0);
+-	if (!cur || !cur->chanctx_assigned)
++	cur = rtw89_get_designated_link(rtwvif);
++	if (unlikely(!cur) || !cur->chanctx_assigned)
+ 		return;
+ 
+ 	if (cur == rtwvif_link)
+@@ -522,8 +522,8 @@ static void rtw89_entity_recalc_mgnt_roles(struct rtw89_dev *rtwdev)
+ 	}
+ 
+ 	/* To be consistent with legacy behavior, expect the first active role
+-	 * which uses RTW89_CHANCTX_0 to put at position 0, and make its first
+-	 * link instance take RTW89_CHANCTX_0. (normalizing)
++	 * which uses RTW89_CHANCTX_0 to put at position 0 and its designated
++	 * link take RTW89_CHANCTX_0. (normalizing)
+ 	 */
+ 	list_for_each_entry(role, &mgnt->active_list, mgnt_entry) {
+ 		for (i = 0; i < role->links_inst_valid_num; i++) {
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 9e88fd6d735a..f84726f04669 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -9027,12 +9027,9 @@ static void rtw89_hw_scan_set_extra_op_info(struct rtw89_dev *rtwdev,
+ 		if (tmp == scan_rtwvif)
+ 			continue;
+ 
+-		tmp_link = rtw89_vif_get_link_inst(tmp, 0);
+-		if (unlikely(!tmp_link)) {
+-			rtw89_debug(rtwdev, RTW89_DBG_HW_SCAN,
+-				    "hw scan: no HW-0 link for extra op\n");
++		tmp_link = rtw89_get_designated_link(tmp);
++		if (unlikely(!tmp_link))
+ 			continue;
+-		}
+ 
+ 		tmp_chan = rtw89_chan_get(rtwdev, tmp_link->chanctx_idx);
+ 		*ext = (struct rtw89_hw_scan_extra_op){
+diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
+index ba71709a9bc9..315bb0d0759f 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
+@@ -1438,9 +1438,9 @@ static void rtw89_ops_channel_switch_beacon(struct ieee80211_hw *hw,
+ 
+ 	BUILD_BUG_ON(RTW89_MLD_NON_STA_LINK_NUM != 1);
+ 
+-	rtwvif_link = rtw89_vif_get_link_inst(rtwvif, 0);
++	rtwvif_link = rtw89_get_designated_link(rtwvif);
+ 	if (unlikely(!rtwvif_link)) {
+-		rtw89_err(rtwdev, "chsw bcn: find no link on HW-0\n");
++		rtw89_err(rtwdev, "chsw bcn: find no designated link\n");
+ 		return;
+ 	}
+ 
 -- 
 2.25.1
 
