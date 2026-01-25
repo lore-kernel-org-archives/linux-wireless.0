@@ -1,126 +1,104 @@
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A0CB1448E0
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2026 03:26:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.178
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769225200; cv=pass; b=j2S2o6eTsY+4QctzyonqMuHlgsy/AW79WCkqUCZLDgzMBLQPEynHz6XZxjPTn5YQVnSaYNiFgUy5ORjry66XFes1AjCtJuQ7Hta9dFpRGQRCiqkZt2rMz1iqx89BLEXVrUP5Vn5SNEla6E8xJDCz/eTA06uTAPlrL+XCo/ptFFY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769225200; c=relaxed/simple;
-	bh=Zkh7kK+NQRaP4o12y9NBQhpGuICJgBOVB977wuucGeU=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=dAn+hM2ftGWk9US1jDZ4GeXVs2sfytIvuFVWEKJaoVMVSgffsyC4dZsxd4w0sGBo5ZYn0Kku+dP0TnNyOdHBgy2XFG6pOg0k2ohun5ZQc31Onq3o3Te1nEJb38LCFeb70XyNmUlFxMd7xy7XdsQzme7yeH00S4sKO3oal+vOIHI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pwno.io; spf=pass smtp.mailfrom=pwno.io; dkim=pass (2048-bit key) header.d=pwno-io.20230601.gappssmtp.com header.i=@pwno-io.20230601.gappssmtp.com header.b=pgN5e0DV; arc=pass smtp.client-ip=74.125.82.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pwno.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pwno.io
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 551E41DDA18
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2026 10:52:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1769338324; cv=none; b=FsX5x2Ex2PhM3YeEajKjNutgOAKFGBshBThUYc5+EkYF5LIZo55BZJ8Iip//CypEoqDHxOamB6uRZvySz/GUPEZ1gVbcoXoOumNhunKPuBgQ9XEfauZ5zyIpa8yNtnmz80z01JoFVgF8gnvlU8OPv+g3WFd58ZJ5M/IyPcKljMU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1769338324; c=relaxed/simple;
+	bh=oEMK/NQ1fqobKbWExDVcllQalgHRTxpeSvTj6dSXi0E=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=hv8e+u6AJSYmNzsQd9xGp9D8Xz0lXO913nYBMNiXB/XFPHqray0M6+87QDNUKjfU5U1kfSd6HmZFK5hZbBQMkJcyOpcDoBISnTAvFYJDu+1SjU8cJPMQZl9Nn0x8q4Tut5CAPo0meQVp4nNI8jjo7y/xAn4RdabXqpbl6Hvuylo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M916Q+2W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pwno-io.20230601.gappssmtp.com header.i=@pwno-io.20230601.gappssmtp.com header.b="pgN5e0DV"
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2b71557299dso4077909eec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2026 19:26:39 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769225198; cv=none;
-        d=google.com; s=arc-20240605;
-        b=eXEV+H5e85fvfPy2VDvr0jleN4P3IVhV2GLPCm9dVAFLCkfL0UgbpDy0YZQEMmEzCC
-         zFrp/putTYoyEoJWYf5wPO7qNj9mKvSfIX0QoQ9MRFCyKLzW/bk7kiIqaI9n9GFiDTkQ
-         kw/ETnMZEC4kBYQL51avZxfS4E/SNYAv056J9B+qP+vs58EKTTrcs7/oqpgNg7mlyS6A
-         t0/BjUJ9CLfaADkheV2abN6M0eGrE1whT9FXA004KIlUa/c0yG6LEM1FFAo9JUR1oe8u
-         R5UycOEZFwczjIxE8fqSSIXucpSS0+KB/HagYzQnpazeOkr1RodHhLwuYhZKj3VjHxts
-         keew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=Zkh7kK+NQRaP4o12y9NBQhpGuICJgBOVB977wuucGeU=;
-        fh=nbc55yupjusL3bboQ8QwxWZBFYkLcOpmKKSombhMNYk=;
-        b=TafXazkwVaBuP82EqkqqUell2ROZhO9vIlusWHPBF0Fjr+RCYIjbhpAUN9aIL7Oipt
-         nkKD36vsuzmk3speG14kLtvfHRarSQ650XaVJtp3uWwpAM2gDxILz3Anlk05Rm2U3MmI
-         HlkttgqYnnObdWBhbUPnK1qO/y3zNldzclZDpQTi5y7N4+TtvUl1AuEvv6Tvdp4rtYq5
-         fUisQNQVf2ew+N9o4QVHUg3ivaqhdSYqQy1fRQyCP0wHasmKGJLO2dU9grYgyDj4oiq7
-         nqiIVuy2yCiJ2sa5KUiexWxGWzmrTGf+5JIOF1rd0RrIYQ/0Gq0kbbaqe/R+rRdbTBiN
-         aPMw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pwno-io.20230601.gappssmtp.com; s=20230601; t=1769225198; x=1769829998; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Zkh7kK+NQRaP4o12y9NBQhpGuICJgBOVB977wuucGeU=;
-        b=pgN5e0DVRMIJwHLhL3M8sGyKi4BWnlcj7qt+MFBWRemzSfTKAL/VVE8iAIQW0qK0ug
-         DTUGSZizvF6gRpkooaa6dPulPGchjMRxUjAA1c5zGNrEIX3Wt7X1u918qC1qsd/1/0Gq
-         ln7o1IcGAiFTcvZgbut9C69HM1xvEEiKdIPoMlj807juBgXtGXCqDuHl+CI7FI5MLAmw
-         7h0yOyXef4nfcFyLWE/zD8WIH5BH+jDw5OUGbZQWg9Qw4KKBBHLp3U8XOYkeJ737QTAV
-         r+Ot9jyU1eg2/bNrqrk0nO/2mXoi9ces3DK5oFKy89+mGz8CjO9Dwb59vImCzdb48V88
-         tk3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769225198; x=1769829998;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Zkh7kK+NQRaP4o12y9NBQhpGuICJgBOVB977wuucGeU=;
-        b=DP42+vQKX2EiS54Ba/U5FvohVIfRuP0yUEQT6AnvPds/clCOhZlktQIBneiTGoD/oh
-         ySmuYcDI/odKLSVE7tBPnYMD6km9ItwoFYZ20OzVDOhXW1DHvKQR4iYkZlKjv+GtbA5g
-         /9xzV42Nj8jspXFePv/PGPBNmX1Hr1m6ZY3Vvh0yGJV+t736ZUsbo+QU9Ru7Qzd0UAF5
-         Wss81/vY91dGi3Khk+zax/Hpp8J78IOnGJqDNmQY2saAcx4IGgSq0MLUupqzxlcWBHCY
-         hczyp7g3YfkU85aI/sCYQaRw9JXp9UhV+f5t7UEgwvbBmG7GjRz8BWbaRDb1AGZBKfW9
-         oHew==
-X-Gm-Message-State: AOJu0YyDNliZMgE5kWcRU+R3WQlQE2sAIVeQeHjXXgc5YqjJuCUrBKjG
-	E/yql8LY6zJ6TIzXYVUck8xabkxnCGFmlp1Kn0yNVLppdtvKysdUORRyFAgCf5AACv7AZzBMTCU
-	TnLiTZLeVtUm4uoZeQfWRBQKjjMx1HKdCyV1L7b0jJXRZ/xN9rhSyT080
-X-Gm-Gg: AZuq6aJhm6uN9jKJ0iWjFjYdvFLbw5y5/3Od20hWJC8tsk7zucKmt3zOOKGTU/kAjkO
-	3yGflp+3+fAXwSZieK4XDg8VdlabJzb2szwHhu+CmZNyJlbydObOvV762RdqtjM673n7syfLU5L
-	sfsPPLXca6Ng0RAGPHngE5NVb57QY+0bHF1rjeW5t7VceE1PmgxTJdxInrqO03AnlM5NcfQyEjC
-	S1re/wgqqo+jZ+SoIVT88xHVhlj0XSEiqXtGxXx98/69fScNbKktqTAyDp22Xqfke6077tWyoIm
-	jbrBx7U0Tv71WqdrWHkt3yPZ0HDiZSclXA42
-X-Received: by 2002:a05:7300:a49a:b0:2b0:4c5f:c05c with SMTP id
- 5a478bee46e88-2b7399b0eeamr2382930eec.4.1769225198088; Fri, 23 Jan 2026
- 19:26:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M916Q+2W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C7EBC4CEF1;
+	Sun, 25 Jan 2026 10:52:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1769338323;
+	bh=oEMK/NQ1fqobKbWExDVcllQalgHRTxpeSvTj6dSXi0E=;
+	h=From:Subject:Date:To:Cc:From;
+	b=M916Q+2Wdfv5t0xYMwVvadX/WaHQkxh1wHamU8Fzeelqn7k860bFHT7TcAYEPW4xm
+	 hufJ3lQbMOkT7SWwJnTUsTXbg/SoeNXRy5VtF+rxqH3qwlu2e70heg/fIS9Swfhdv3
+	 Gwqh7bJtlpTDMDp9ESczJ/t1fzGIp3AJS3e8SWPlN5gVg8FoEkQtMcKxDiP8C8Rd1I
+	 2q3nf3z9n8noOwsDiw/5vVm3EGzvVz+y1V0aPT8eiBFlY2Lv2w21YsIpx/xPgHgGc7
+	 5UV8gY6XvE9Efn6hbpDbzOll12c5SP9wMYt4GxyiHBEq1SAT4YCvWLK3gNdIs3Jj6S
+	 6IA3BEBDdE31A==
+From: Lorenzo Bianconi <lorenzo@kernel.org>
+Subject: [PATCH wireless-next v2 0/2] wifi: mac80211: Introduce eMLSR/eMLMR
+ parsing support in AP mode.
+Date: Sun, 25 Jan 2026 11:51:29 +0100
+Message-Id: <20260125-mac80211-emlsr-v2-0-466329d61c88@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Ruikai Peng <ruikai@pwno.io>
-Date: Fri, 23 Jan 2026 22:26:26 -0500
-X-Gm-Features: AZwV_QgMRXZuPxmJ-q3wWkeJtLcTj0FFu-XuVq4vwe3Jg9kChnmcJ4t4rmOUHPw
-Message-ID: <CAFD3drMqc9YWvTCSHLyP89AOpBZsHdZ+pak6zVftYoZcUyF7gw@mail.gmail.com>
-Subject: [BUG] mac80211: TTLM advertised T2L parsing reads 1 byte past element
- end with DEF_LINK_MAP
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/13Myw6CMBCF4Vchs7amHblUV76HYQFlCo1QzNQ0G
+ tJ3t5K4cfmf5HwbBGJHAS7FBkzRBbf6HHgowEydH0m4ITegxFoqVGLpjJaolKBlDiyqpimlRmu
+ 1MZBPDybrXjt4a3NPLjxXfu9+VN/1R+E/FZWQwkoqT31fD+equ96JPc3HlUdoU0oflHglnq0AA
+ AA=
+X-Change-ID: 20260121-mac80211-emlsr-5774082ff8cc
+To: Johannes Berg <johannes@sipsolutions.net>, 
+ Ryder Lee <ryder.lee@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>, 
+ Shayne Chen <shayne.chen@mediatek.com>, 
+ Lorenzo Bianconi <lorenzo@kernel.org>, 
+ Christian Marangi <ansuelsmth@gmail.com>, 
+ linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
+ MeiChia Chiu <MeiChia.Chiu@mediatek.com>
+X-Mailer: b4 0.14.2
 
-Hi,
+Introduce support in AP mode for parsing of the Operating Mode Notification
+frame sent by the client to enable/disable MLO eMLSR or eMLMR if supported
+by both the AP and the client.
+Add drv_set_eml_op_mode mac80211 callback in order to configure underlay
+driver with eMLSR info (control and bitmap).
+Implement drv_set_eml_op_mode callback for MT7996 driver.
 
-I believe there is a remotely-triggerable out-of-bounds read in
-mac80211 TTLM parsing.
+---
+Changes in v2:
+- Improve sanity check against device EML capabilities
+- Squash patch 1/2 and 2/2
+- Validate link_bitmap with vif->active_links
+- Introduce ieee80211_eml_params struct as containe for EML info to pass
+  to the underlay driver.
+- Pass padding_delay and transition_delay to the underlay driver.
+- Implement drv_set_eml_op_mode callback for MT7996 driver.
+- Link to v1: https://lore.kernel.org/r/20260122-mac80211-emlsr-v1-0-f0e43bb6d95a@kernel.org
 
-ieee80211_parse_adv_t2l() unconditionally reads the first byte of
-ttlm->optional:
-link_map_presence = *pos; ieee80211_tid_to_link_map_size_ok() permits
-DEF_LINK_MAP with no optional bytes
-(minimum element length == sizeof(struct ieee80211_ttlm_elem)). So a
-minimal TTLM element with DEF_LINK_MAP passes validation but causes
-the parser to read 1 byte past the element boundary.
+---
+Lorenzo Bianconi (1):
+      wifi: mac80211: Add eMLSR/eMLMR action frame parsing support
 
-Input
-- Extension IE: EID=0xFF, LEN=0x02, EXT_ID=0x6D (TTLM)
-- CONTROL=0x06 (DIR=BOTH + DEF_LINK_MAP)
-- Byte sequence: ff 02 6d 06
+MeiChia Chiu (1):
+      wifi: mt76: mt7996: Add eMLSR support
 
-Reachability
-- Assoc response path: ieee80211_assoc_success() -> ieee80211_parse_adv_t2l()
-- Beacon path: ieee80211_process_adv_ttlm() -> ieee80211_parse_adv_t2l()
+ .../net/wireless/mediatek/mt76/mt76_connac_mcu.h   |   9 ++
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c   |  16 +++
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c    |  54 +++++++++
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |   5 +
+ include/linux/ieee80211-eht.h                      |  28 +++++
+ include/linux/ieee80211.h                          |   6 +
+ include/net/mac80211.h                             |  23 ++++
+ net/mac80211/driver-ops.h                          |  22 ++++
+ net/mac80211/eht.c                                 | 135 +++++++++++++++++++++
+ net/mac80211/ieee80211_i.h                         |   2 +
+ net/mac80211/iface.c                               |  10 +-
+ net/mac80211/rx.c                                  |   8 ++
+ net/mac80211/trace.h                               |  32 +++++
+ 13 files changed, 349 insertions(+), 1 deletion(-)
+---
+base-commit: 1e1dd9eeaab3908746d1dce5db6b0c29e0d28d6d
+change-id: 20260121-mac80211-emlsr-5774082ff8cc
 
-This would result in a OOB read of 1 byte (element-level; may still be
-inside the skb buffer). Value is unused when DEF_LINK_MAP is set, so
-exploitability appears low.
+Best regards,
+-- 
+Lorenzo Bianconi <lorenzo@kernel.org>
 
-Repro:
-MLO association using hwsim + hostapd/wpa_supplicant; Advertise the
-minimal TTLM IE in beacon + assocresp; I used GDB confirms
-ttlm->optional == end-of-element, then parser reads *pos.
-(Additional writeup: https://bugs.pwno.io/private/95a10f11e34e89d5)
-
-I recommend defer reading *pos until after DEF_LINK_MAP check, or
-require at least 1 optional byte in validation when DEF_LINK_MAP is
-set.
-
-I can provide a small patch if you'd like.
-- Ruikai Peng
