@@ -1,142 +1,91 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B4C9252904;
-	Mon, 26 Jan 2026 18:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429D526B755
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2026 19:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769453720; cv=none; b=a5kMJcFafY8QjK8WAMhGzxtQCzBkX3bLRimVxo0ov1021PCQPiF1PjQZyp2Ab77gMa+ZnptbDPxtdiVq0tNCuysOEJjqd1ltrIVPtf0+hY/Y/EMtUR+GVFGywj/6E6POhbUt5gFM0lA5MnaKi4K3soVZ6BEMx5zoLctu7Sw9uBo=
+	t=1769454238; cv=none; b=rJEI77CQ7eEfpMOosXp3wX8SMOlAAQhXvRz/IlChUcg3z0aS3ANjOxG0aECbS4M6CUP217DVznPppwkwxtQ7pRmHLcmZwelA1zD6cYLbFXaaAAHVHQU6GFLgU+Bx9epah+A4Wl6w9ew0V4aVlGIY2OyuoaOWmoHNPZr8ocWjp2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769453720; c=relaxed/simple;
-	bh=jMVk9CS2JBRNsS5GC6/yI2ZxOvdhUQdY4kP4Vs3jjqU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U1LdWPmSE5EV/wwkSS6C/sNX1XhD/h0erzyArhHo19CvXQl7xZCsNgooFFxCFnkPxGxw/v1mFZ4qxiHCViTDS73pUrt1R4jjDEsbGmWEbCNe9mIM/wWj6ZBOHhFsLkUeIKOMBUffctIWlzGFVH0aOB7tMnsHcxBELg7cChxkvgo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4b+R0ix5; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1769454238; c=relaxed/simple;
+	bh=ocSfGwCzmKEofvcqqj1LbB4+bRzelQlLPMY9yJqjuhY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sxPlkfzQhkvA/LNFkWJAxi/l0me3tc/9eofXZn52SyuoVK8m7J2HmAX7pNiJAHmccUjNx/dlPdzTWROUv6KCIqOe3Zgi59C8SztrqT36UhnBGydueos5+eNCpqijSjG5rpy3TjdlbyL66JaUzLb9w8PpJye1CZMWxyCpPx4ILG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=G4jMWHkr; arc=none smtp.client-ip=212.77.101.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4b+R0ix5"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4f0Hm56kBhzlgyGr;
-	Mon, 26 Jan 2026 18:55:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1769453709; x=1772045710; bh=lrmRnMiS7e8oDqS8sJHadbKN
-	aRE4y8/9HerN9jURAnw=; b=4b+R0ix5+Os0UdymHVdPefR75pAjuePHzZSBDv1T
-	PhKFA4FAC8OQc9TuXgMxSrv6ALYLM26zsK043txlRzxnGUh1OQAsqSN0foShyawt
-	pgoA82i8a3e56Az+c5yQ/FRzJRlVVV9ONPOmo5QZvE0Q0R6BZlDabDdSvqRaIrWq
-	5qv/o/SAv+5/3fRLam45SzREjjV6pc62GFn6nBiQJg3JMywlrNKvmQ7VlMyrTxAH
-	T23+3S/pU978iX4yw8ahY2EFo/8Xq0lczgH+hEk7oD3ExiVmcFff0tai2SlH7PR7
-	9U/uiA5vPsPPUdDSnrYljSKcp1+NnDZMaTuY+V/YB+pCTQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id vhOvcRL97NLm; Mon, 26 Jan 2026 18:55:09 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4f0Hlj4MJNzlh1T6;
-	Mon, 26 Jan 2026 18:54:57 +0000 (UTC)
-Message-ID: <8c1bbab4-4615-4518-b773-a006d1402b8b@acm.org>
-Date: Mon, 26 Jan 2026 10:54:56 -0800
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="G4jMWHkr"
+Received: (wp-smtpd smtp.wp.pl 31748 invoked from network); 26 Jan 2026 20:03:52 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1769454233; bh=69YQQXyzuTdrQ4ARHO724FsLS4A2M7o6h/attti+jU0=;
+          h=From:To:Cc:Subject;
+          b=G4jMWHkr2sYvRH76xm2pV9y0C4ZIIGiBSCpqzOWZXuXQrA4CEzZ0xOdtobijbnCZB
+           ptBARVQeCkBp/jPq1pvzjm7GHY+FNtEfKg8uYQT/ZW5+irJbX8eddq79NEaUmrfoSQ
+           LUXOL1lCojHx4T0ZX6KvdYVhZEKvZx1xzwIDF8S0pUcT6DTka9itfcxcn+KyElNP53
+           Lu7lE7Crs3O3lYGH/7nN9at+3hp/ieZ4xZthBXlsyLR93XB8sAX84RlCb+Jg/ufSOr
+           cDvJcgNOM7wSraRIva2Ou7prjZisAzVwiutYfo1VNNjVTItWHQVTamoujV4Yvt4Zd0
+           EX8+btsudNw9g==
+Received: from 89-64-9-58.dynamic.play.pl (HELO localhost) (stf_xl@wp.pl@[89.64.9.58])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <n7l8m4@u.northwestern.edu>; 26 Jan 2026 20:03:52 +0100
+Date: Mon, 26 Jan 2026 20:03:52 +0100
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Ziyi Guo <n7l8m4@u.northwestern.edu>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: iwlegacy: add missing mutex protection in
+ il4965_store_tx_power()
+Message-ID: <20260126190352.GB6968@wp.pl>
+References: <20260125194039.1196488-1-n7l8m4@u.northwestern.edu>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 15/36] srcu: Support Clang's context analysis
-To: Marco Elver <elver@google.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Boqun Feng <boqun.feng@gmail.com>,
- Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
- "David S. Miller" <davem@davemloft.net>,
- Luc Van Oostenryck <luc.vanoostenryck@gmail.com>,
- Chris Li <sparse@chrisli.org>, "Paul E. McKenney" <paulmck@kernel.org>,
- Alexander Potapenko <glider@google.com>, Arnd Bergmann <arnd@arndb.de>,
- Christoph Hellwig <hch@lst.de>, Dmitry Vyukov <dvyukov@google.com>,
- Eric Dumazet <edumazet@google.com>, Frederic Weisbecker
- <frederic@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Herbert Xu <herbert@gondor.apana.org.au>, Ian Rogers <irogers@google.com>,
- Jann Horn <jannh@google.com>, Joel Fernandes <joelagnelf@nvidia.com>,
- Johannes Berg <johannes.berg@intel.com>, Jonathan Corbet <corbet@lwn.net>,
- Josh Triplett <josh@joshtriplett.org>, Justin Stitt
- <justinstitt@google.com>, Kees Cook <kees@kernel.org>,
- Kentaro Takeda <takedakn@nttdata.co.jp>,
- Lukas Bulwahn <lukas.bulwahn@gmail.com>, Mark Rutland
- <mark.rutland@arm.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Miguel Ojeda <ojeda@kernel.org>, Nathan Chancellor <nathan@kernel.org>,
- Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
- Nick Desaulniers <nick.desaulniers+lkml@gmail.com>,
- Steven Rostedt <rostedt@goodmis.org>,
- Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
- Thomas Gleixner <tglx@linutronix.de>, Thomas Graf <tgraf@suug.ch>,
- Uladzislau Rezki <urezki@gmail.com>, Waiman Long <longman@redhat.com>,
- kasan-dev@googlegroups.com, linux-crypto@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kbuild@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org,
- linux-security-module@vger.kernel.org, linux-sparse@vger.kernel.org,
- linux-wireless@vger.kernel.org, llvm@lists.linux.dev, rcu@vger.kernel.org
-References: <20251219154418.3592607-1-elver@google.com>
- <20251219154418.3592607-16-elver@google.com>
- <dd65bb7b-0dac-437a-a370-38efeb4737ba@acm.org>
- <aXez9fSxdfu5-Boo@elver.google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <aXez9fSxdfu5-Boo@elver.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260125194039.1196488-1-n7l8m4@u.northwestern.edu>
+X-WP-MailID: b85706ce12ebc2c740674542934f4a1b
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000001 [UWIR]                               
 
-On 1/26/26 10:35 AM, Marco Elver wrote:
-> That being said, I don't think it's wrong to write e.g.:
+On Sun, Jan 25, 2026 at 07:40:39PM +0000, Ziyi Guo wrote:
+> il4965_store_tx_power() calls il_set_tx_power() without holding il->mutex.
+> However, il_set_tx_power() has lockdep_assert_held(&il->mutex) indicating
+> that callers must hold this lock.
 > 
-> 	spin_lock(&updater_lock);
-> 	__acquire_shared(ssp);
-> 	...
-> 	// writes happen through rcu_assign_pointer()
-> 	// reads can happen through srcu_dereference_check()
-> 	...
-> 	__release_shared(ssp);
-> 	spin_unlock(&updater_lock);
+> All other callers of il_set_tx_power() properly acquire the mutex:
+> - il_bg_scan_completed() acquires mutex at common.c:1683
+> - il_mac_config() acquires mutex at common.c:5006
+> - il3945_commit_rxon() and il4965_commit_rxon() are called via work
+>   queues that hold the mutex (like il4965_bg_alive_start)
 > 
-> , given holding the updater lock implies reader access.
+> Add mutex_lock()/mutex_unlock() around the il_set_tx_power() call in
+> the sysfs store function to fix the missing lock protection.
 > 
-> And given the analysis is opt-in (CONTEXT_ANALYSIS := y), I think
-> it's a manageable problem.
+> Signed-off-by: Ziyi Guo <n7l8m4@u.northwestern.edu>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-I'd like to make context-analysis mandatory for the entire kernel tree.
-
-> If you have a different idea how we can solve this, please let us know.
+> ---
+>  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> One final note, usage of srcu_dereference_check() is rare enough:
+> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> index 3588dec75ebd..57fa866efd9f 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+> @@ -4606,7 +4606,9 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
+>  	if (ret)
+>  		IL_INFO("%s is not in decimal form.\n", buf);
+>  	else {
+> +		mutex_lock(&il->mutex);
+>  		ret = il_set_tx_power(il, val, false);
+> +		mutex_unlock(&il->mutex);
+>  		if (ret)
+>  			IL_ERR("failed setting tx power (0x%08x).\n", ret);
+>  		else
+> -- 
+> 2.34.1
 > 
-> 	arch/x86/kvm/hyperv.c:	irq_rt = srcu_dereference_check(kvm->irq_routing, &kvm->irq_srcu,
-> 	arch/x86/kvm/x86.c:	kvm_free_msr_filter(srcu_dereference_check(kvm->arch.msr_filter, &kvm->srcu, 1));
-> 	arch/x86/kvm/x86.c:	kfree(srcu_dereference_check(kvm->arch.pmu_event_filter, &kvm->srcu, 1));
-> 	drivers/gpio/gpiolib.c:	label = srcu_dereference_check(desc->label, &desc->gdev->desc_srcu,
-> 	drivers/hv/mshv_irq.c:	girq_tbl = srcu_dereference_check(partition->pt_girq_tbl,
-> 	drivers/hwtracing/stm/core.c:	link = srcu_dereference_check(src->link, &stm_source_srcu, 1);
-> 	drivers/infiniband/hw/hfi1/user_sdma.c:	pq = srcu_dereference_check(fd->pq, &fd->pq_srcu,
-> 	fs/quota/dquot.c:			struct dquot *dquot = srcu_dereference_check(
-> 	fs/quota/dquot.c:				struct dquot *dquot = srcu_dereference_check(
-> 	fs/quota/dquot.c:		put[cnt] = srcu_dereference_check(dquots[cnt], &dquot_srcu,
-> 	fs/quota/dquot.c:		transfer_from[cnt] = srcu_dereference_check(dquots[cnt],
-> 	include/linux/kvm_host.h:	return srcu_dereference_check(kvm->memslots[as_id], &kvm->srcu,
-> 	virt/kvm/irqchip.c:	irq_rt = srcu_dereference_check(kvm->irq_routing, &kvm->irq_srcu,
-> 
-> , that I think it's easy enough to annotate these places with the above
-> suggestions in case you're trying out global enablement.
-
-Has it ever been considered to add support in the clang compiler for a
-variant of __must_hold() that expresses that one of two capabilities
-must be held by the caller? I think that would remove the need to
-annotate SRCU update-side code with __acquire_shared(ssp) and
-__release_shared(ssp).
-
-Thanks,
-
-Bart.
