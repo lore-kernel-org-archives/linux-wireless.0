@@ -1,43 +1,43 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429D526B755
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2026 19:03:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36FC720DD51
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2026 19:05:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769454238; cv=none; b=rJEI77CQ7eEfpMOosXp3wX8SMOlAAQhXvRz/IlChUcg3z0aS3ANjOxG0aECbS4M6CUP217DVznPppwkwxtQ7pRmHLcmZwelA1zD6cYLbFXaaAAHVHQU6GFLgU+Bx9epah+A4Wl6w9ew0V4aVlGIY2OyuoaOWmoHNPZr8ocWjp2E=
+	t=1769454310; cv=none; b=CWVqC4Wlg0ATYbHedew/WIq93rwaBe6T9gQn2kDkr/wC/nztnNJ5mk/9yo61UYWcfq5+9Ywviq64WJW9YEWMXPdWwrZ9yejtddWhqLtFrQsArobDj6BKVvw9gneL38EW0zz26v/P+mXS5GeU+1T8Jc+ZPeQk+BSWSIJX8iDV4bQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769454238; c=relaxed/simple;
-	bh=ocSfGwCzmKEofvcqqj1LbB4+bRzelQlLPMY9yJqjuhY=;
+	s=arc-20240116; t=1769454310; c=relaxed/simple;
+	bh=ISwfiZV+569oavEMCy+PKDe/jP1ltI/Gghhxnp1Sbzw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sxPlkfzQhkvA/LNFkWJAxi/l0me3tc/9eofXZn52SyuoVK8m7J2HmAX7pNiJAHmccUjNx/dlPdzTWROUv6KCIqOe3Zgi59C8SztrqT36UhnBGydueos5+eNCpqijSjG5rpy3TjdlbyL66JaUzLb9w8PpJye1CZMWxyCpPx4ILG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=G4jMWHkr; arc=none smtp.client-ip=212.77.101.10
+	 Content-Type:Content-Disposition:In-Reply-To; b=b1miXmuWbPaZanITOOSNbVm+qnzkPvlhVWxuGXRvUapWnimhvvTQQ075PF0BOgm04D9MToP35h8GM9/Af5gSqSsBwtmILV7P1VooaJdD2wI2aQjMaqwMfvHRQVTjWVWsSnBX199CPMxDuAupkZu1uTBKRVBaYaUcG78POm8ix7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=SfIAqbMK; arc=none smtp.client-ip=212.77.101.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="G4jMWHkr"
-Received: (wp-smtpd smtp.wp.pl 31748 invoked from network); 26 Jan 2026 20:03:52 +0100
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="SfIAqbMK"
+Received: (wp-smtpd smtp.wp.pl 30448 invoked from network); 26 Jan 2026 19:58:25 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1769454233; bh=69YQQXyzuTdrQ4ARHO724FsLS4A2M7o6h/attti+jU0=;
+          t=1769453905; bh=kNsj8Fgky6FtKSyLbdUOoMJtwa05zl8L1fX74F6ambw=;
           h=From:To:Cc:Subject;
-          b=G4jMWHkr2sYvRH76xm2pV9y0C4ZIIGiBSCpqzOWZXuXQrA4CEzZ0xOdtobijbnCZB
-           ptBARVQeCkBp/jPq1pvzjm7GHY+FNtEfKg8uYQT/ZW5+irJbX8eddq79NEaUmrfoSQ
-           LUXOL1lCojHx4T0ZX6KvdYVhZEKvZx1xzwIDF8S0pUcT6DTka9itfcxcn+KyElNP53
-           Lu7lE7Crs3O3lYGH/7nN9at+3hp/ieZ4xZthBXlsyLR93XB8sAX84RlCb+Jg/ufSOr
-           cDvJcgNOM7wSraRIva2Ou7prjZisAzVwiutYfo1VNNjVTItWHQVTamoujV4Yvt4Zd0
-           EX8+btsudNw9g==
+          b=SfIAqbMKjY31PYRV7HC/yDVtdEeib5nk58hvBwIHuuEhaXseK1le+bViz2rll00Qa
+           s3MdXUyGhxo01R/5aiKaioEA9F89i5CMAoDSvEC22Yx3pc3YKmId1FBKeU+Pd0iOZq
+           5m7LYpeMNleZjkBGF//OXuqnUbna15Ojt2REikhaiVW65hWc1SkcxDW+j+TfcrP0zM
+           DSMqDalqs/i1hPGqb4OZHnpRIrN8c3tMXJBnV4UEjDqCKgIAEiFlDKAu670GNebIe8
+           7QKRS1/8c7Vb7DIDsaEFYrWVQrGiHvbFoJgHbQ52rR5i7meiZ3Mg+3PsKs39y3Ytcp
+           rtVD0ReBLOJOQ==
 Received: from 89-64-9-58.dynamic.play.pl (HELO localhost) (stf_xl@wp.pl@[89.64.9.58])
           (envelope-sender <stf_xl@wp.pl>)
           by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <n7l8m4@u.northwestern.edu>; 26 Jan 2026 20:03:52 +0100
-Date: Mon, 26 Jan 2026 20:03:52 +0100
+          for <n7l8m4@u.northwestern.edu>; 26 Jan 2026 19:58:25 +0100
+Date: Mon, 26 Jan 2026 19:58:25 +0100
 From: Stanislaw Gruszka <stf_xl@wp.pl>
 To: Ziyi Guo <n7l8m4@u.northwestern.edu>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] wifi: iwlegacy: add missing mutex protection in
- il4965_store_tx_power()
-Message-ID: <20260126190352.GB6968@wp.pl>
-References: <20260125194039.1196488-1-n7l8m4@u.northwestern.edu>
+ il3945_store_measurement()
+Message-ID: <20260126185825.GA6968@wp.pl>
+References: <20260125193005.1090429-1-n7l8m4@u.northwestern.edu>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,46 +46,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260125194039.1196488-1-n7l8m4@u.northwestern.edu>
-X-WP-MailID: b85706ce12ebc2c740674542934f4a1b
+In-Reply-To: <20260125193005.1090429-1-n7l8m4@u.northwestern.edu>
+X-WP-MailID: f4a42d53676d6f6374878adfd62a66bc
 X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000001 [UWIR]                               
+X-WP-SPAM: NO 0000001 [AZIx]                               
 
-On Sun, Jan 25, 2026 at 07:40:39PM +0000, Ziyi Guo wrote:
-> il4965_store_tx_power() calls il_set_tx_power() without holding il->mutex.
-> However, il_set_tx_power() has lockdep_assert_held(&il->mutex) indicating
-> that callers must hold this lock.
+On Sun, Jan 25, 2026 at 07:30:05PM +0000, Ziyi Guo wrote:
+> il3945_store_measurement() calls il3945_get_measurement() which internally
+> calls il_send_cmd_sync() without holding il->mutex. However,
+> il_send_cmd_sync() has lockdep_assert_held(&il->mutex) indicating that
+> callers must hold this lock.
 > 
-> All other callers of il_set_tx_power() properly acquire the mutex:
-> - il_bg_scan_completed() acquires mutex at common.c:1683
-> - il_mac_config() acquires mutex at common.c:5006
-> - il3945_commit_rxon() and il4965_commit_rxon() are called via work
->   queues that hold the mutex (like il4965_bg_alive_start)
+> Other sysfs store functions in the same file properly acquire the mutex:
+> - il3945_store_flags() acquires mutex at 3945-mac.c:3110
+> - il3945_store_filter_flags() acquires mutex at 3945-mac.c:3144
 > 
-> Add mutex_lock()/mutex_unlock() around the il_set_tx_power() call in
-> the sysfs store function to fix the missing lock protection.
+> Add mutex_lock()/mutex_unlock() around the il3945_get_measurement() call
+> in the sysfs store function to fix the missing lock protection.
 > 
 > Signed-off-by: Ziyi Guo <n7l8m4@u.northwestern.edu>
 Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
 > ---
->  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 ++
+>  drivers/net/wireless/intel/iwlegacy/3945-mac.c | 2 ++
 >  1 file changed, 2 insertions(+)
 > 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> index 3588dec75ebd..57fa866efd9f 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> @@ -4606,7 +4606,9 @@ il4965_store_tx_power(struct device *d, struct device_attribute *attr,
->  	if (ret)
->  		IL_INFO("%s is not in decimal form.\n", buf);
->  	else {
-> +		mutex_lock(&il->mutex);
->  		ret = il_set_tx_power(il, val, false);
-> +		mutex_unlock(&il->mutex);
->  		if (ret)
->  			IL_ERR("failed setting tx power (0x%08x).\n", ret);
->  		else
+> diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> index 104748fcdc33..54991f31c52c 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+> @@ -3224,7 +3224,9 @@ il3945_store_measurement(struct device *d, struct device_attribute *attr,
+>  
+>  	D_INFO("Invoking measurement of type %d on " "channel %d (for '%s')\n",
+>  	       type, params.channel, buf);
+> +	mutex_lock(&il->mutex);
+>  	il3945_get_measurement(il, &params, type);
+> +	mutex_unlock(&il->mutex);
+>  
+>  	return count;
+>  }
 > -- 
 > 2.34.1
 > 
