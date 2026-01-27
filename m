@@ -1,250 +1,287 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A9D81F2B8D
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2026 04:40:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51057328610;
+	Tue, 27 Jan 2026 05:05:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.17
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769488859; cv=pass; b=A4DXmbK6k6KmnhAk9pp5XA09ifRtfS1xxxbzF2p0XM6wCOPPxt8U1QkYJC9uKh/9mZRl/QrSuvYU80sEaY87LS6UWh+ZQJJFTDiR9NfKx5WqmtMzOEQCxFGKkw5l8NVG5FoSEblCRF/4y9CJgTtpuMLMnQFHH4uUhvIL3/UhP+Q=
+	t=1769490338; cv=fail; b=GL3EgfJvATX79yd8cqrSJXIFp+B/BJFL1zNrnnOrw3aFHLcvUAOHj+QKnrC6/5F+JSA3EX8UwFHf9GK0KqtVwl/YPIiQZ7Wyju8MWIrydmNumkBxaCVFJrLCTrAxlRwHThQfYcA6mvFI90rHKAeuOPwJxZqVPwdsUSq/0GAmksA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769488859; c=relaxed/simple;
-	bh=5nykKSlGz4WFS70K3yzH0AZTwFxjNnb5V6ZBk7/NwZI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=n5RqS2otF2vs/Cfc+egrc72OJiLM7jLQMLkbJgbG9pIile3ARFKRFW/OsReQcBUQZjdT+1tkFEqdKM99i6fMY213wqucGQ/411OB4YMexMY7DrceQlxJ2gtl7R7yHpSwXPjtezVbBzLMqCNp2y7uOkQbWljmAtu35N2aX6lDXXg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Rf7ympNl; arc=pass smtp.client-ip=209.85.214.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1769490338; c=relaxed/simple;
+	bh=TmE6G1qUDhbU/AvpcTpqq/kSU4B8Q09t+J44ILtf2Dg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=YH3meVz3z2uziMqEchTMRl8mv60MjbOn86CS+X121+IVFCMDCVC4GJBPNRPVmtRfn6NpKqH5P8NNvu6E8Gjfreg3AH+iCZOrFK3eHVViqupyI9YqxlWYYqBm4+b+7GdrfY876os7cv6tTHPon1C+Y/zuJC2Pq1rktVXn3FlHpf8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gDvKB4xZ; arc=fail smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rf7ympNl"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2a0a95200e8so35164955ad.0
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2026 20:40:58 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1769488858; cv=none;
-        d=google.com; s=arc-20240605;
-        b=hK6pI7snJmc2trYZ0s7qsdMg1BsjkSWm6NzA4ZH0cDN/5h2WDlnEh3RbxcWk2Sc0j9
-         P/XqzgVN6XDUVRlZEydnPO+cU8alW6E2srGcKX4Gm9bzzk9J6MH0Fe1Ly4Y4cEEEzLuB
-         xbuaz1sYhIiYDrNyR450mLxPcbLWojtQF9NNf5lDl73pGKojmlI5WJWfAUW0pJcbha2Y
-         qnvVMeLcUN8sAwHEGXoV3vC3exyWZzT33rev0q1wN6C+9JZEt3XDICxqOWrWs0tHrV8s
-         TD/EYIvOynq7h6DIt24KrzrF/52acuYW+UJFdGJmMdMkrmG8b2qqiXZLPm/Yk8ntdkFB
-         tlQw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=CgoRQ9aAInuWwuJvNm7KWE30aQAj3Sbe+L9WQLU0jmo=;
-        fh=5UOXCR5PGF8Ud5B+1BhBsLDWkbVfHXxs2YDA7HclhAk=;
-        b=Ca1wbEVl31Ox8IULzOeBOa9KqoOC+ryLsLY2qliIiMGHLjJV3FGqHi1YJWiPdly0Hf
-         Ehk8HwEY/hS8wofq8pxYfiOzLW2T6Pi66WVSbcMW+uYJsFguZQRAzcdchtu2X+7REFhR
-         QzypVsWIY0XtK6VdTF9eWG5mwzKnBgfcjgtacEcfES6mPLQ0ZBMgk6Fw4YiEyTIzPCiy
-         sH56CXO2lDw2dcTWNc5c/xRYilTwljq2YWgIca4iY3Itjg2vteQFhYwfNImstJZOxiII
-         76gHVtYaWqCIk6RtsVVD7yIKuha3JP0AxF9mTN0IYJ+qqlbCYuFOv0dXnzJLeIzXSolJ
-         npPg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1769488858; x=1770093658; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CgoRQ9aAInuWwuJvNm7KWE30aQAj3Sbe+L9WQLU0jmo=;
-        b=Rf7ympNladzr+5iH4sFKbsa4nqHZ8/4qs9N+A5mmS+1mTRZwHloYjY/QZ91rUPXiO8
-         SlBmi5P+mgj8+gbsZOA/xpIk4MWIFDeUL9bJBdINm3x0NzQFyd+W3N4EgkKfFbiWV+uz
-         u5Enuwkb1NE9s3Cxs2y3NtmDfqG/UY+u6HF0iCyIm0iKxWSOOFhKZ7Cl3nHcUV9NGgSC
-         yGHlMAozeQJn7y54uw4TyuTutwZAA+UWyo7Mnqu1G9LQex2wYE74cL+u8xCQ/kjYqmQV
-         8UuSd6oyuB7TPv1bEyMbPLgklHHLOLXL65V0ik8mSPKKsYIAPx2ky4r4nFlbxitLgebd
-         yNwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1769488858; x=1770093658;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=CgoRQ9aAInuWwuJvNm7KWE30aQAj3Sbe+L9WQLU0jmo=;
-        b=tCVo3CCVZy8V0QCMP94xhefj0GFOSFfntAspL41tN+K0PxgG24Na1j+fMGsRLXjzNX
-         CntF2XdyLsT7PQP9sKdD03brgkqECAP40z8hTn7j9A836rBCg0ir8RKTuWpJO40LvoXO
-         JEIj3yK8nMrtkeyNeEfqBxLblBR46/WbURKFsqSM0NcU+fE9guMIrSug5aJiA3IJslti
-         8YkcgrUId+FQ3jZp35eqUF/0mME92Rg3tC7odwTlp2WlXzo/9c0yQ1DkDCtmKVjYNpc4
-         pHCoHlN8kAeMSBNJtYczlDkFc/ISx5VT/G5U8xekUi4N3QTdx+5mY09tWpgVW818/KeC
-         er1w==
-X-Forwarded-Encrypted: i=1; AJvYcCVAXnXyQ1/DcTKpCTIk1HSVrDp+tVXbidiZaNq5DEK4dhxJuE1JVkrsqqvXN2gMSTelKx/tba3oVzCxbDPyVQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YznMr928Qvn4XwIMMgGf78dPaJUhz0ag8xjMqdLOL9p7ClNNuGM
-	Vkx6bwxhc5oqqWJsLzjD+PToIkagf81X/fK/4FuB7M2PF+kPpkMh5DBjxLoxnHW1OcKZgPysQBp
-	MOvMVy3CoSsvyZlU981TSCol5dc8/G0Y=
-X-Gm-Gg: AZuq6aIhiqUwtIIDUqWWqs91Myw50luc5dljZc/n+7mOrwaZpVNYLaFHA8bzSIhBV9D
-	PgOAJPWINEPxISJW255A6VLztp98TnpBNF1iaD6cbCN8aGrSyd4zxY4e0f7wRjfIqZazX133eUg
-	UE56YQDUmvrztzA01NJy/mpMFLfWh2B5NAsy90CWKokV9j/WzeBI2Lm0pI7NzgmJhVVbWQI2ylH
-	MxqMBuKSp3dlHOPbwO2ByyPVGnS7SFNfHv2PYTDmcrKZ/ojvtEVyRjxQcv6HWk0cqVVfseWyl3h
-	epdOREidX+2cJtvyPyO4wdo6gonj
-X-Received: by 2002:a17:902:d4c8:b0:2a7:d5c0:c659 with SMTP id
- d9443c01a7336-2a870d40ab5mr5777875ad.5.1769488857625; Mon, 26 Jan 2026
- 20:40:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gDvKB4xZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1769490337; x=1801026337;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:mime-version;
+  bh=TmE6G1qUDhbU/AvpcTpqq/kSU4B8Q09t+J44ILtf2Dg=;
+  b=gDvKB4xZmyk2D1V+RQvsbS1gSBEr0TWuk2Utvhw20EBSdhJmHljUDgWP
+   Zrz82DSS0gKrFaVmM2Bwi5sCkYsH4pUW0GV8VxxEE46VH1NxEpB8QnDxl
+   dpNKqPBXqamg/IrtXVHaz1abqbS6Ewo2T/97xYPDW3b6+OQqeufX4w+XU
+   FdaalDwvRF+9IXEAJ6BUuZhI7zUDikQfyqZSU+SThEM0HJswq1iDDijdZ
+   qIQu7GtUyTI1+nyuFER+JmOTvKBF3VD5uH6fJ4PrbJoUgEZyHPDbwGiJR
+   /DH+rurzQ2PSBdDk4wQ3toV/WXZ795q2WffF8aRZkRefihFPK3C33y+tq
+   g==;
+X-CSE-ConnectionGUID: Hk5E4fSMRtm0zCL837pk2g==
+X-CSE-MsgGUID: gJ+bpsUrQSK59jS9L74zaA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11683"; a="70647791"
+X-IronPort-AV: E=Sophos;i="6.21,256,1763452800"; 
+   d="scan'208,223";a="70647791"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2026 21:05:36 -0800
+X-CSE-ConnectionGUID: BFYtpMGFT6iaiwcstCSsfg==
+X-CSE-MsgGUID: RJffxuBmRD6Ma+ut3rCH3w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.21,256,1763452800"; 
+   d="scan'208,223";a="208233499"
+Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
+  by fmviesa010.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jan 2026 21:05:36 -0800
+Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
+ fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Mon, 26 Jan 2026 21:05:35 -0800
+Received: from fmsedg903.ED.cps.intel.com (10.1.192.145) by
+ FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35 via Frontend Transport; Mon, 26 Jan 2026 21:05:35 -0800
+Received: from BN1PR04CU002.outbound.protection.outlook.com (52.101.56.24) by
+ edgegateway.intel.com (192.55.55.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.35; Mon, 26 Jan 2026 21:05:34 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jewAhdgXZfw735kQm7qdnzF9J0jiLVzrIWCfnjLqGV+sfYKKTGTb+LBH//9VI2MXav2rIsdbrfJylribbUHAyizCLPg+pZGM7qKJPKzmi0vU7vyWyydJDKZqdNFtEPLcD9tbEt9aYvnA2GH/SAZvvl1ZRmvK4gKY5FaLTlmMHZQncntTqhNJtjoDS7Xni04aO4LZuh5NswjWBXo9fi7JQ3AsLQwdUKo6+Qgw3KbWcrHlIM2h17CDrIMZo/2e/ElulM9QzkL2Zgeeklo2V5II6tXoor1UccE50oQD2HwZrY45w4YWrECZdnaaxaBIaxhbDAfVEJcZiieQjrqOMx17hQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Jhi77jCVCrj3RL2gAS5cMCdkXYScF4r9pDrljnDmi3g=;
+ b=cpdBSryPsYNFU9Uq+hyLxcGklxLPuQ22oIzu/Rw1ZXirukNHk1Qc3HDSjKl3eSWNmwf/xFxkuCk9/SuIBwv0nfAtwfC8ZFzAakEHHt14HY1ePHd7z7lDfLHGrMROeW5wlxqjVQ3+3Tavgr4IxRbhEs6JGe0pq3rr9hnMoltCh92+CBFPnQNL7byvEP+wrGzm+0bluadxoCiavLvtHuz4UfV6YFdMfP64CJNKCFHpHc1t/ZDH4Mu0kg3MIgtFBVSD3KBigL2nd1/0lQP2D07MJ7yH/wF/Xnr7fLGvwO+le58rv6WK7WS9gQFozzKh+DkXG6KG+SNnavGGK9ePXUV92g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from DM3PPF63A6024A9.namprd11.prod.outlook.com
+ (2603:10b6:f:fc00::f27) by IA1PR11MB8099.namprd11.prod.outlook.com
+ (2603:10b6:208:448::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9542.16; Tue, 27 Jan
+ 2026 05:05:32 +0000
+Received: from DM3PPF63A6024A9.namprd11.prod.outlook.com
+ ([fe80::14c9:399c:8e7c:d8e5]) by DM3PPF63A6024A9.namprd11.prod.outlook.com
+ ([fe80::14c9:399c:8e7c:d8e5%3]) with mapi id 15.20.9564.006; Tue, 27 Jan 2026
+ 05:05:31 +0000
+From: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
+To: Chris Bainbridge <chris.bainbridge@gmail.com>
+CC: "kvalo@kernel.org" <kvalo@kernel.org>, "Berg, Johannes"
+	<johannes.berg@intel.com>, "benjamin@sipsolutions.net"
+	<benjamin@sipsolutions.net>, "gustavoars@kernel.org" <gustavoars@kernel.org>,
+	"linux-intel-wifi@intel.com" <linux-intel-wifi@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] Revert "wifi: iwlwifi: trans: remove STATUS_SUSPENDED"
+Thread-Topic: [PATCH] Revert "wifi: iwlwifi: trans: remove STATUS_SUSPENDED"
+Thread-Index: AQHcjlMSDsDNaO3QzkSRZaUB0ZOqB7VkClEAgAAYLQCAAFS+8IAAi5yAgAB00nA=
+Date: Tue, 27 Jan 2026 05:05:31 +0000
+Message-ID: <DM3PPF63A6024A9FCE1CF29C0492A406E7AA390A@DM3PPF63A6024A9.namprd11.prod.outlook.com>
+References: <20260125233335.6875-1-chris.bainbridge@gmail.com>
+ <DM3PPF63A6024A93B1437A144E82CC38B7AA393A@DM3PPF63A6024A9.namprd11.prod.outlook.com>
+ <aXcovK8uhsiaHumT@debian.local>
+ <DM3PPF63A6024A907097A88AEB32669C1E5A393A@DM3PPF63A6024A9.namprd11.prod.outlook.com>
+ <CAP-bSRZ60CSEtR-_9OL6k_Lzg=w8MtD2i79KpwF+nYYzgak=-Q@mail.gmail.com>
+In-Reply-To: <CAP-bSRZ60CSEtR-_9OL6k_Lzg=w8MtD2i79KpwF+nYYzgak=-Q@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: yes
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM3PPF63A6024A9:EE_|IA1PR11MB8099:EE_
+x-ms-office365-filtering-correlation-id: 3aa46f17-dd23-4c31-90ad-08de5d61b243
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700021|4053099003;
+x-microsoft-antispam-message-info: =?utf-8?B?K3d3dndpb3c1bWFPNjByV1R4dlYxbnZiOHVEZ2g2RWZpN29Zc2VlQ3k5VHpu?=
+ =?utf-8?B?TWppU2o3ME5OTlQyeEtMSkt3ZlRpSnpkQW1BVWFQZ0VEOERIVG1LOWtoYXJH?=
+ =?utf-8?B?TitXNkVNT3J1c3VRbC9DWG9MczcreWFNMTJNMnJaN1dMTFhDb2ExaUs4cFd1?=
+ =?utf-8?B?MnArZUlXNHU4czVxekZVanpxcTB6OHJib25PekVGejhRTGNsdWR6Q2FaQXlJ?=
+ =?utf-8?B?aDZNdWlGRDNlK2FHbUZJVFdjYWZ3S0Z0NkxZblNrVVFMUEU2Q3VKNytBSnZu?=
+ =?utf-8?B?S2Q5Q1U4UWNDSkpPaG5SRlU3Y3d4aEx4MlZpNlk4TnVyOGVxSlJwb1lJYk4y?=
+ =?utf-8?B?cTJBMjZKS0t3UmFWcWtUb2FzWndZS2lMV3BVNjJjZ3FIWUorZFpsSkh6eXRw?=
+ =?utf-8?B?TEswdmtOZnIra3ZnWkxVRzYwbEJkQjR6S2d0NHNjTU1SYjV5NlFXSFBmNDJq?=
+ =?utf-8?B?WGRTbGRqeGdUWUNKSGJQVWY1a1JEZzl6YXBYdktnbVExNkowNHRHNTRLZ3dO?=
+ =?utf-8?B?bmprc2FCeWw4L3VCMDZEenJHczF2MXNPeWc2djhHL0JTNUdIWUl3dkNIdnRv?=
+ =?utf-8?B?KzJldkptWStER2tSWVRhRWJkdEZIVVIrY2JISUJTNEJKeU42aGFmcUVFZC9z?=
+ =?utf-8?B?VmZWZnA3T1BDTlNaaDFhZUtFQlhPOFhualNsaGdndWVCQXFFMG8wdUZIaEFB?=
+ =?utf-8?B?TlZRRFJ0UUFmWWppajFkM2NyQWFZWkh4ZXBseDdObXlQTEo2amhQelZDMVho?=
+ =?utf-8?B?R2RhTjl3TXZJdFRzVWZ1WEs1bVNOVXlXVGg4SElVV0FMVUtkV1c2aVYvYXRx?=
+ =?utf-8?B?ZXh1NHpBSFNIdmVJYnFtVHB1eUlKa1lYVlBNdTd6M29Ma0g1LzRLTTJtbVh5?=
+ =?utf-8?B?bWR0TkJiTUFBWFp1czJHRmp4Y0kyOC9mNGNmSFpLeVZoSkRoWjFhRVRHOVkr?=
+ =?utf-8?B?TGVPaUFyRFl5YXZxc3l0V05qSjhoMDhZVmhodXUyT1MwWXd0a1Y5T2trcUNQ?=
+ =?utf-8?B?ZjI1cDdtQytSM1owM014Z044aFpyTkFraE8zQnR5RkszVGlWZ2kyZ25uTHNj?=
+ =?utf-8?B?V0pkaVF4MUgzVWVTaHlNck9tRFRDUTBMS2F6V3dackhzczZRMG5yaXB3YVpH?=
+ =?utf-8?B?R29OTUIxQ01ZbzhseHZDeis5Q0c4RnVSWi96YURibXRNK2lwYXp1Z2Njd0Yy?=
+ =?utf-8?B?TmVkdml6ZFpmK0dYTHhZS2VIZjF1VXg3b0p2UkZjWVZBZjAyMGlBSTdFZlBM?=
+ =?utf-8?B?c1g0UkNYdXBtUU0vNm9rYVluYVcwSVNjWnRLRzRyNTVLVGxpemZvOTFMdU9M?=
+ =?utf-8?B?clB3T1hObnlWUVdhYnMvSHJSc1FpbUlxQ0FtaGRydGgrTU5McW9tQVVMWGlW?=
+ =?utf-8?B?eEpTZmZoYlBDTkVTbnlialBoazJuVzFKcWVtNFpQQjhrNENMemt1eURDb1hH?=
+ =?utf-8?B?ZUZreTVpOUZqMGRkdlk1T1B2dkxRU3l6V1VuYjQ5UGwzMUFxYVBSZTcxZVJr?=
+ =?utf-8?B?K0tuTVhPRWVKS3A0UWRiQ2RBTVRTTXBWTlc1UHp6dGNQdWxwLzh2ckJXQ2Vt?=
+ =?utf-8?B?OHpYbXoyREVGcG5IcXR1TUM2SHQzWnczYk9IZlNRQ01GQzVTR1h6NGZFWUNF?=
+ =?utf-8?B?YndnNGZrZkZGNFhkVU5hUmxkd1I0NDFzakhZQkU3R0QzL3hPQUNOQjlYMTBl?=
+ =?utf-8?B?b1B2UUR4WG94MWxxeGRsNndOTlFZdkdsZ3NBSk1WcGNsVGh2NnM3NnFPNDNM?=
+ =?utf-8?B?d2ZIZU1ZMDBFbStIb1B6QmhTeU5oekRGVW0yK2ZzNm1uUlhlbER5aEc5YTdF?=
+ =?utf-8?B?QnVxRDFFNm53ZEx3WFJ3bmZtNitXZ2RkNmFHbklsbkxwdUcyN2xuamE0YXdw?=
+ =?utf-8?B?SWlDS1hpTEhOTUdVdWl6YmMyc0hJNllwdFZZcnA4TW80MnBkalhDYThPSUdo?=
+ =?utf-8?B?endTckpOaEg1MnZ3T0RnK052a1p3QlhudnplWFNvWUdobFd2aVpWMGxnaEVI?=
+ =?utf-8?B?ZFEvYzgrS2V4Rmh1MGNsQjQ3Ym5FKzYwSU1ldUsrcnZJeHVYd0E1WHNWQ0tQ?=
+ =?utf-8?B?TmFoa2htWDlrbUVvWWFMMC9GbExsUmZha3VnQ2ZLZ0J4aVk1Snl3a1RINHdX?=
+ =?utf-8?B?NFU0T25kTFpsREhZLzc3S3R4TXA2b3d5SWhPZGNlZjdkQng4WE1nS1VkVWgw?=
+ =?utf-8?Q?vJ4n94lrj3cRirxPB/PoIPQ=3D?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM3PPF63A6024A9.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700021)(4053099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?MVVSaVlCOGtsajN2UDRaSWwzdzBrZEljc2ttMlRjZllUQUtHS1R5MzBheWJx?=
+ =?utf-8?B?dHBzaC9pVmJrekNqSXdUYXRmK3N5VlYzSEV0eHVYYm4xZ3QvcnA1RWN0NnBr?=
+ =?utf-8?B?b0MyV0lYcWZLd1I2Z0w0VWxDeExNN3ZiNFpraEhYQU1OenVOd2RGbWRIQksz?=
+ =?utf-8?B?SXhvakJ6WVVKL0ViUDJlYzRKRklFSFc0UVo4MXUxZzIwak5XZ0F1Zml2SnIw?=
+ =?utf-8?B?d0g0WURnUUxiU1MvU2dsdXlLRGg5S0lHTzd2TTZwdFg0TG53RHovSVlWS0U3?=
+ =?utf-8?B?My9kREdEUm5FYUJ6cVM0R0MvaW4yV0o0ai9kYzBqeUJVL1RNRzFzWTFjMXo3?=
+ =?utf-8?B?bWg1NTVoTEhURGxsVitiaG55NmI0TFZsVDFmaE1pTFVxNG1Mc3JqRlBHNStC?=
+ =?utf-8?B?MzhSZFRRVVh3VWdySE1GeDRORVdLNG9UT1BJS1NwRlBmTUJpM0o4VURaMXJv?=
+ =?utf-8?B?RlhyeDMwSlQ5dGlQeEVNc3AzLy9ZMmJQK0Z1M3lYK1RHRVB6a1NnYnFidmQ5?=
+ =?utf-8?B?Wk03OGRlK0dZZndka29XNXF3bkhnNTRTZ1hsWCtqKzdpaU9wenRmbXJlV1Ix?=
+ =?utf-8?B?UW9kRjNLN3kvSkpCNTRmM21oanY0VDlrK1g4YldVTUtZditVVjUwSHJlbUND?=
+ =?utf-8?B?ZEdvT1Q2d3lmV0pidFBnTWk1VDhvMjNNazZYUy9oZnZvb0RVVm9sVHRiWmJ0?=
+ =?utf-8?B?U25zZ254eGwyVk5tU096a0Z4SUk4MkJtV1JDRmhpWDFDcnQ0L29oL2hFMFNh?=
+ =?utf-8?B?Q29Sc0JOREdTTGZ0WnVMUTBmUGJUWXpKdWRnemJhVnpwejhVSU04dkFxMnJR?=
+ =?utf-8?B?WnltcDNTNjR3THNKanZBVVRtZjhJOXF3NEU2Y1ZBaDFFREhJTzhmOUlQaWFW?=
+ =?utf-8?B?eE8yUi90NFp1ZUZpbEZ1cVUyUFlkcUV6QVZreXY5NG1HUm1iZndINWRPZmdY?=
+ =?utf-8?B?TSthY0ljMWhuMkRzRy9MUXgrRFo4cHNlekI2bnM1ckFVWXdTbXlxRmgrUzF0?=
+ =?utf-8?B?N3JlaVZYY0dyWXAxY0RpcnJPUG5VNTdIbCtySWl4bjZWNmljK0dkOWJDQTZT?=
+ =?utf-8?B?Z3NLUHJwVDQzYmVHYWNIeHd4U1FzdGRvampCY3EzQ2FPa29BRlFJT2lsVWJW?=
+ =?utf-8?B?ejRHV0puUi9WWldpbjNSV3dEeHRoZXpxNEl5ckhuVjBWT0gyM3l0djgvY2I4?=
+ =?utf-8?B?Tk9IMGl4NHRna2MxUmhOL0dyV2ZTR1Nja3lPVGtuY0J6SnpKVHliSHM0bkF5?=
+ =?utf-8?B?MDhoMjc2VlVONThFMVFtTzZST3N3eTNhcUlxZVFUQ1hyTzRkZWpRMVRGdGxC?=
+ =?utf-8?B?SkY3ZXRoOElYUy92S2JDZUFkTXhvb1k3NlJHeVNwUEpvTThwU0N6KzBtWTZi?=
+ =?utf-8?B?aUpmUXRkQzhScVBxYWdGeDV0OFFKZ29jY1RPajhmdUJXZWV0TndFL3ZsTzJU?=
+ =?utf-8?B?UU5SYStlYkw3MzdMV3VlbTlEZFVyR0tQTEl3RHdKcGVNZElKZUYrcmw3enYv?=
+ =?utf-8?B?cDdjVmxndWVTMlM4alZIRUV1S01LWFBXUmxnbVZmLzRyUDc0b1p6cDRwUWta?=
+ =?utf-8?B?UFp5dUwwbGpGMzR5WHVlMWtWcTlEaXpxL2NVMTd3Z0hjamJQdEFpSGhpUmRv?=
+ =?utf-8?B?SFZiblg2UEdpckpMdmMwNVIybGYrZmdsODZhdHB6ZmNGbDVMN3R0Ym9OZUhY?=
+ =?utf-8?B?eE1xWC9ZZE9tbEI3anlFdTF5T0lXMzFrZ2lHZ3lQZk03cnpyQWFsa3JpUVJD?=
+ =?utf-8?B?K3RxamduTUhQYzdRNGpseEM3em1yZ013ZmNlaHdZVjNlRlgydnF1cHp5c3Zk?=
+ =?utf-8?B?Y3NZdzV6czZTNC90Y0pDT2s4dEZqUzQxYVZhbjZidGNuZUlhZFFQbW1kVnBS?=
+ =?utf-8?B?NG0yN250RS9RN2xwTVhGZTJZTThlZ3pRUHVMUkw4QVRRZlB3d1Rwd3JCVXc5?=
+ =?utf-8?B?Mzc2SFZpRXI5MmY0cjNVWVFwMWw5dmNIZm4rcGVIODJnNEw1T0tFQ1FneVda?=
+ =?utf-8?B?SWh2UnBvSDBKK0dpZkpEViswODZRemhRR09IMUlMUHpGZHM0eWNkTFFoeXN2?=
+ =?utf-8?B?TERTemlLWE5RUTN2QlZvVWxwS3lMdVBNYW1SSnorNC96M0pwQ0Y1RWJ4YkNI?=
+ =?utf-8?B?RlhtYkNjUlZQQnpMUzZSUnllcGRyaVhkWkd3UU1ndklMNkE0SVlTNXpwYTUz?=
+ =?utf-8?B?T0JmVXExbjNxOW9UZ2VSYnN1R2RDdTE1OC9CSW1odnJ5azRHdEZiZ0NWT1E5?=
+ =?utf-8?B?NVpGem9Id3RhNUhFUnQ0TkRnekZySGUyVlc4anUzS2F6RFp4RE4xU1VBOFhK?=
+ =?utf-8?B?aXpNUE9WNDdNblpobW81Tm82WXA3TTdkcnd2M1Y2Mkx2RmViTFJ1Z2dPQWlU?=
+ =?utf-8?Q?tGFYR/+fT6X4wUZs=3D?=
+Content-Type: multipart/mixed;
+	boundary="_002_DM3PPF63A6024A9FCE1CF29C0492A406E7AA390ADM3PPF63A6024A9_"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260126095244.113301-1-bjsaikiran@gmail.com> <20260126095244.113301-3-bjsaikiran@gmail.com>
- <9ca7ceac-2799-4993-844c-8427508c7d9b@oss.qualcomm.com> <CAAFDt1sxWMb1xPaWGWGE1XVFxRKwjOuQPZ__fNTH2+ujXJ6d5A@mail.gmail.com>
-In-Reply-To: <CAAFDt1sxWMb1xPaWGWGE1XVFxRKwjOuQPZ__fNTH2+ujXJ6d5A@mail.gmail.com>
-From: Saikiran B <bjsaikiran@gmail.com>
-Date: Tue, 27 Jan 2026 10:10:46 +0530
-X-Gm-Features: AZwV_QjSyKJDNXc0V-uk_r8aWV8rDwL4hUja8DncYHLWVRioWU3KnzYePaaemT4
-Message-ID: <CAAFDt1s8HPQWJpSiDDk8PmUAKqkQHELcJj_F0faZ1C9RfiYu6g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] wifi: ath12k: Fix firmware stats leak when pdev
- list is empty
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	kvalo@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM3PPF63A6024A9.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3aa46f17-dd23-4c31-90ad-08de5d61b243
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jan 2026 05:05:31.7092
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3c+cmwLeMPnMWg6m/PcPRIzPWFxtTiojYYD/vL9X6rdXd7M7m4dPLRfiyH+TPIJRO2bTW5eQxwMob7+0Y7Na4fafQ/g0ymQOcC5kpE4Or6fJath8/N/dczSEI7hf4wE0
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB8099
+X-OriginatorOrg: intel.com
 
-I have analyzed the logs and code flow in depth to provide more
-definitive answers for your questions.
+--_002_DM3PPF63A6024A9FCE1CF29C0492A406E7AA390ADM3PPF63A6024A9_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-The log entries showing the failure are:
-[  563.574076] ath12k_pci 0004:01:00.0: failed to pull fw stats: -71
-[  564.575896] ath12k_pci 0004:01:00.0: time out while waiting for get fw s=
-tats
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQ2hyaXMgQmFpbmJyaWRn
+ZSA8Y2hyaXMuYmFpbmJyaWRnZUBnbWFpbC5jb20+DQo+IFNlbnQ6IFR1ZXNkYXksIEphbnVhcnkg
+MjcsIDIwMjYgMTI6MDUgQU0NCj4gVG86IEtvcmVuYmxpdCwgTWlyaWFtIFJhY2hlbCA8bWlyaWFt
+LnJhY2hlbC5rb3JlbmJsaXRAaW50ZWwuY29tPg0KPiBDYzoga3ZhbG9Aa2VybmVsLm9yZzsgQmVy
+ZywgSm9oYW5uZXMgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPjsNCj4gYmVuamFtaW5Ac2lwc29s
+dXRpb25zLm5ldDsgZ3VzdGF2b2Fyc0BrZXJuZWwub3JnOyBsaW51eC1pbnRlbC13aWZpQGludGVs
+LmNvbTsNCj4gbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBuZXRkZXZAdmdlci5rZXJu
+ZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgc3RhYmxlQHZnZXIua2Vy
+bmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBSZXZlcnQgIndpZmk6IGl3bHdpZmk6IHRy
+YW5zOiByZW1vdmUgU1RBVFVTX1NVU1BFTkRFRCINCj4gDQo+IE9uIE1vbiwgMjYgSmFuIDIwMjYg
+YXQgMTM6NDUsIEtvcmVuYmxpdCwgTWlyaWFtIFJhY2hlbA0KPiA8bWlyaWFtLnJhY2hlbC5rb3Jl
+bmJsaXRAaW50ZWwuY29tPiB3cm90ZToNCj4gPg0KPiA+DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBDaHJpcyBCYWluYnJpZGdlIDxjaHJpcy5iYWlu
+YnJpZGdlQGdtYWlsLmNvbT4NCj4gPiA+IFNlbnQ6IE1vbmRheSwgSmFudWFyeSAyNiwgMjAyNiAx
+MDo0MiBBTQ0KPiA+ID4gVG86IEtvcmVuYmxpdCwgTWlyaWFtIFJhY2hlbCA8bWlyaWFtLnJhY2hl
+bC5rb3JlbmJsaXRAaW50ZWwuY29tPg0KPiA+ID4gQ2M6IGt2YWxvQGtlcm5lbC5vcmc7IEJlcmcs
+IEpvaGFubmVzIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT47DQo+ID4gPiBiZW5qYW1pbkBzaXBz
+b2x1dGlvbnMubmV0OyBndXN0YXZvYXJzQGtlcm5lbC5vcmc7DQo+ID4gPiBsaW51eC1pbnRlbC13
+aWZpQGludGVsLmNvbTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOw0KPiA+ID4gbmV0
+ZGV2QHZnZXIua2VybmVsLm9yZzsgbGludXgtIGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4g
+PiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIXSBSZXZl
+cnQgIndpZmk6IGl3bHdpZmk6IHRyYW5zOiByZW1vdmUNCj4gU1RBVFVTX1NVU1BFTkRFRCINCj4g
+PiA+DQo+ID4gPiBPbiBNb24sIEphbiAyNiwgMjAyNiBhdCAwNzoxNTo1NEFNICswMDAwLCBLb3Jl
+bmJsaXQsIE1pcmlhbSBSYWNoZWwgd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+IEhpIENocmlzLCBj
+b3VsZCB5b3UgcGxlYXNlIHByb3ZpZGUgdGhlIGZ1bGwgbG9nPw0KPiA+ID4gPg0KPiA+ID4gPiBN
+aXJpDQo+ID4gPg0KPiA+ID4gU3VyZSwgZm9yIDYuMTguMCBzZWUgaHR0cHM6Ly9sb3JlLmtlcm5l
+bC5vcmcvbGludXgtDQo+ID4gPiB3aXJlbGVzcy9hVERvRGlENTVxbFVaMHBuQGRlYmlhbi5sb2Nh
+bC8NCj4gPiA+DQo+ID4gPg0KPiA+IFRoYW5rcyENCj4gPg0KPiA+IGNvdWxkIHlvdSBwbGVhc2Ug
+dGVzdCBpZiB0aGUgYXR0YWNoZWQgcGF0Y2ggZWxpbWluYXRlcyB0aGUgcGFuaWM/DQo+IA0KPiBZ
+ZXMsIHRoYXQgc2VlbXMgdG8gd29yayBmaW5lLg0KPiANCj4gUmVwb3J0ZWQtYW5kLXRlc3RlZC1i
+eTogQ2hyaXMgQmFpbmJyaWRnZSA8Y2hyaXMuYmFpbmJyaWRnZUBnbWFpbC5jb20+DQoNCkp1c3Qg
+bWFraW5nIHN1cmU6IGhhdmUgeW91IGJlZW4gYWJsZSB0byByZXByb2R1Y2UgdGhlIGFzc2VydCAo
+QURWQU5DRURfU1lTQVNTRVJUIGluIHRoZSBsb2cpLCBhbmQgdGhlbiB0aGUgcGFuaWMgZGlkbid0
+IGhhcHBlbj8NCg0KSWYgeWVzLCBwbGVhc2UgdGVzdCB0aGUgYXR0YWNoZWQgcGF0Y2gsIHdoaWNo
+IGlzIHN1cHBvc2VkIHRvIGZpeCB0aGUgYXNzZXJ0IGl0c2VsZi4gV2l0aCB0aGlzLCB5b3UgYXJl
+IG5vdCBldmVuIHN1cHBvc2VkIHRvIHNlZSBhbiBhc3NlcnQuDQoNCk1pcmkNCg==
 
-1. Why are other stats populated?
-The "failed to pull fw stats: -71" error is not the initial failure
-but a symptom that appears after repeated operations. The leak happens
-during *successful* calls prior to this error.
+--_002_DM3PPF63A6024A9FCE1CF29C0492A406E7AA390ADM3PPF63A6024A9_
+Content-Type: application/octet-stream;
+	name="0001-wifi-iwlwifi-mvm-pause-TCM-on-fast-resume.patch"
+Content-Description: 0001-wifi-iwlwifi-mvm-pause-TCM-on-fast-resume.patch
+Content-Disposition: attachment;
+	filename="0001-wifi-iwlwifi-mvm-pause-TCM-on-fast-resume.patch"; size=1440;
+	creation-date="Tue, 27 Jan 2026 05:02:33 GMT";
+	modification-date="Tue, 27 Jan 2026 05:05:30 GMT"
+Content-Transfer-Encoding: base64
 
-Code flow proving the leak:
-- ath12k_mac_get_fw_stats() sends WMI_REQUEST_PDEV_STAT.
-- Firmware responds. ath12k_update_stats_event() parses the response.
-- ath12k_wmi_fw_stats_process() is called, which splices 'vdevs' and
-'beacon' stats into ar->fw_stats.vdevs/bcn.
-- ath12k_mac_get_fw_stats() returns 0 (Success).
-- In ath12k_mac_op_get_txpower(), the check `if (!pdev)` fails if the
-pdev-specific list is empty (but vdev list is NOT empty).
-- The function exits via `err_fallback` WITHOUT calling ath12k_fw_stats_res=
-et().
-- Result: The 'vdev' and 'beacon' stats that were spliced into
-ar->fw_stats remain there, leaking memory and accumulating with every
-call.
+RnJvbSA3NGZmMTY3MGVlOTRlNjliYzc4YThlNTUzY2ZlMjc5OTU4MTFmNjQ1IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBNaXJpIEtvcmVuYmxpdCA8bWlyaWFtLnJhY2hlbC5rb3JlbmJs
+aXRAaW50ZWwuY29tPgpEYXRlOiBUdWUsIDI3IEphbiAyMDI2IDA2OjU4OjU2ICswMjAwClN1Ympl
+Y3Q6IFtQQVRDSF0gd2lmaTogaXdsd2lmaTogbXZtOiBwYXVzZSBUQ00gb24gZmFzdCByZXN1bWUK
+T3JnYW5pemF0aW9uOiBJbnRlbCBJc3JhZWwgKDc0KSBMaW1pdGVkCgpOb3QgcGF1c2luZyBpdCBt
+ZWFucyB0aGF0IHdlIGNhbiBoYXZlIHdvcmsgcXVldWVkIGludG8gYSBub24tZnJlZXphYmxlCndv
+cmtxdWV1ZSwgd2hpY2gsIGluIHJlc3VtZSwgYXJlIHJlLWFjdGl2YXRlZCBiZWZvcmUgdGhlIGRy
+aXZlcidzCnJlc3VtZS4KVGhlIFRDTSB3b3JrIG1pZ2h0IHNlbmQgY29tbWFuZCB0byB0aGUgRlcg
+YmVmb3JlIHdlIHJlc3VtZWQgdGhlIGRldmljZSwKbGVhZGluZyB0byBhbiBhc3NlcnQuCgpTaWdu
+ZWQtb2ZmLWJ5OiBNaXJpIEtvcmVuYmxpdCA8bWlyaWFtLnJhY2hlbC5rb3JlbmJsaXRAaW50ZWwu
+Y29tPgpDaGFuZ2UtSWQ6IEk0NGRmOWNmOTE4M2I1MTQzZGY4MDc4MTMxZTBkODdjMGZkN2UxNzYz
+Ci0tLQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vZDMuYyB8IDQgKysr
+KwogMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL2QzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9pbnRlbC9pd2x3aWZpL212bS9kMy5jCmluZGV4IGY1YTQxZjI3NWQ5OS4uMTEwNjkwZGE2M2Vl
+IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9kMy5j
+CisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL2QzLmMKQEAgLTMy
+MTQsNiArMzIxNCw4IEBAIHZvaWQgaXdsX212bV9mYXN0X3N1c3BlbmQoc3RydWN0IGl3bF9tdm0g
+Km12bSkKIAogCUlXTF9ERUJVR19XT1dMQU4obXZtLCAiU3RhcnRpbmcgZmFzdCBzdXNwZW5kIGZs
+b3dcbiIpOwogCisJaXdsX212bV9wYXVzZV90Y20obXZtLCB0cnVlKTsKKwogCW12bS0+ZmFzdF9y
+ZXN1bWUgPSB0cnVlOwogCXNldF9iaXQoSVdMX01WTV9TVEFUVVNfSU5fRDMsICZtdm0tPnN0YXR1
+cyk7CiAKQEAgLTMyNzAsNiArMzI3Miw4IEBAIGludCBpd2xfbXZtX2Zhc3RfcmVzdW1lKHN0cnVj
+dCBpd2xfbXZtICptdm0pCiAJCW12bS0+dHJhbnMtPnN0YXRlID0gSVdMX1RSQU5TX05PX0ZXOwog
+CX0KIAorCWl3bF9tdm1fcmVzdW1lX3RjbShtdm0pOworCiBvdXQ6CiAJY2xlYXJfYml0KElXTF9N
+Vk1fU1RBVFVTX0lOX0QzLCAmbXZtLT5zdGF0dXMpOwogCW12bS0+ZmFzdF9yZXN1bWUgPSBmYWxz
+ZTsKLS0gCjIuMzQuMQoK
 
-2. Exact place where -71 is printed:
-The error "failed to pull fw stats: -71" is printed in
-[ath12k_update_stats_event()](drivers/net/wireless/ath/ath12k/wmi.c).
-It corresponds to "ret =3D ath12k_wmi_pull_fw_stats()" returning -EPROTO.
-This propagates from
-[ath12k_wmi_tlv_fw_stats_data_parse()](drivers/net/wireless/ath/ath12k/wmi.=
-c),
-when buffer validation checks (like `len < sizeof(*src)`) fail.
-
-Conclusion:
-The fix in my patch (resetting stats when `!pdev`) is critical because
-it ensures that the accumulated 'vdev' and 'beacon' stats are freed
-even when the 'pdev' list ends up empty.
-
-Let me know if you need anything else.
-
-Thanks & Regards,
-Saikiran
-
-On Tue, Jan 27, 2026 at 9:47=E2=80=AFAM Saikiran B <bjsaikiran@gmail.com> w=
-rote:
->
-> Hi Baochen,
->
-> Regarding your questions:
->
-> "Are other stats populated?"
->
-> Yes. When ath12k_mac_get_fw_stats() returns success (0), it means the
-> firmware response was received and valid WMI events were processed.
-> The firmware response to WMI_REQUEST_PDEV_STAT typically includes
-> multiple stats TLVs (vdev stats, beacon stats, etc.). Even if the
-> "pdev stats" list ends up empty (e.g., due to specific filtering or
-> availability), the firmware should have populated other lists (like
-> vdevs or beacons) in the ar->fw_stats structure. If we don't reset,
-> these valid entries leak and accumulate.
->
-> "Where exactly is -71 (EPROTO) printed?"
->
-> The log "failed to pull fw stats: -71" is printed in
-> ath12k_update_stats_event() (wmi.c line 8500 in my tree). This error
-> code (-EPROTO) propagates from ath12k_wmi_tlv_fw_stats_data_parse(),
-> where it is returned when buffer validation checks fail (e.g., if (len
-> < sizeof(*src))). This failure suggests that the accumulated state or
-> memory corruption from the leak eventually causes the parser to fail
-> on subsequent events.
->
-> So, fixing the leak is necessary for correctness regardless of the
-> specific side-effect error code.
->
-> Thanks & Regards,
-> Saikiran
->
-> On Tue, Jan 27, 2026 at 8:57=E2=80=AFAM Baochen Qiang
-> <baochen.qiang@oss.qualcomm.com> wrote:
-> >
-> >
-> >
-> > On 1/26/2026 5:52 PM, Saikiran wrote:
-> > > The commits bd6ec8111e65 and 2977567b244f changed firmware stats hand=
-ling
-> > > to be caller-driven, requiring explicit ath12k_fw_stats_reset() calls
-> > > after using ath12k_mac_get_fw_stats().
-> > >
-> > > In ath12k_mac_op_get_txpower(), when ath12k_mac_get_fw_stats() succee=
-ds
-> > > but the pdev stats list is empty, the function exits without calling
-> > > ath12k_fw_stats_reset(). Even though the pdev list is empty, the firm=
-ware
-> > > may have populated other stats lists (vdevs, beacons, etc.) in the
-> >
-> > 'may' is not enough, we need to be 100% sure whether other stats are po=
-pulated. This is
-> > critical for us to find the root cause.
-> >
-> > > ar->fw_stats structure.
-> > >
-> > > Without resetting the stats buffer, this data accumulates across mult=
-iple
-> > > calls, eventually causing the stats buffer to overflow and leading to
-> > > firmware communication failures (error -71/EPROTO) during subsequent
-> > > operations.
-> > >
-> > > The issue manifests during 5GHz scanning which triggers multiple TX p=
-ower
-> > > queries. Symptoms include:
-> > > - "failed to pull fw stats: -71" errors in dmesg
-> >
-> > still, can you please check the logs to see at which exact place is thi=
-s printed?
-> >
-> > > - 5GHz networks not detected despite hardware support
-> > > - 2.4GHz networks work normally
-> > >
-> > > Fix by calling ath12k_fw_stats_reset() when the pdev list is empty,
-> > > ensuring the stats buffer is properly cleaned up even when only parti=
-al
-> > > stats data is received from firmware.
-> > >
-> > > Fixes: bd6ec8111e65 ("wifi: ath12k: Make firmware stats reset caller-=
-driven")
-> > > Link: https://bugs.launchpad.net/ubuntu-concept/+bug/2138308
-> > > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302 (Lenovo Yoga Slim =
-7x)
-> > > Signed-off-by: Saikiran <bjsaikiran@gmail.com>
-> > > ---
-> > >  drivers/net/wireless/ath/ath12k/mac.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > >
-> > > diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wire=
-less/ath/ath12k/mac.c
-> > > index e0e49f782bf8..6e35c3ee9864 100644
-> > > --- a/drivers/net/wireless/ath/ath12k/mac.c
-> > > +++ b/drivers/net/wireless/ath/ath12k/mac.c
-> > > @@ -5169,6 +5169,7 @@ static int ath12k_mac_op_get_txpower(struct iee=
-e80211_hw *hw,
-> > >                                       struct ath12k_fw_stats_pdev, li=
-st);
-> > >       if (!pdev) {
-> > >               spin_unlock_bh(&ar->data_lock);
-> > > +             ath12k_fw_stats_reset(ar);
-> > >               goto err_fallback;
-> > >       }
-> > >
-> >
+--_002_DM3PPF63A6024A9FCE1CF29C0492A406E7AA390ADM3PPF63A6024A9_--
