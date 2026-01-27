@@ -1,38 +1,38 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9113030BF79;
-	Tue, 27 Jan 2026 11:06:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4873299943;
+	Tue, 27 Jan 2026 11:10:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769511976; cv=none; b=ZvDdHRmXw/47qqgfyJJozH7McsvUvCBQexYqISDJySJiuv0Q/va0KQTmegrB51sg1JIi3r6Xm5Khm37FQa9dx54NMOovQI5NMIMe5RFKNQOPNQwVgMFelamJNPy6eJcv77u4Jm321qi94rbmRTaAbyW17+mD+8g7cXaZxl8HE0E=
+	t=1769512223; cv=none; b=pchXjWG6pDa3D7VLaiCe3s321zENKBigAB0N9750A95/5n3vBfPSn5QFVKu/MxeXrpeb2Qg/JUgonQ/C/25EKkMyPHCDiE3124VgGl9yTinkOqE/ASCrvX/CG0MM0KrAd2LlwYXrn6xxi6tuH/S/3GBks6cPA4nmx9L4yXGRruc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769511976; c=relaxed/simple;
-	bh=sIvRkYqAQuz66YvmDwCt3k+esCCc3AMRfzjWwpi0deU=;
+	s=arc-20240116; t=1769512223; c=relaxed/simple;
+	bh=wol5gNYbfrHKVH1JG3Tfb4H7wpRy/Qbx1IlarW3yCZI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UI+QgFA70SIcHFk293EIlaTkO1h0L7Mm/OjKoHwP5ICspMZl0o1DOKeGA0Kf6LlvfaTIxYDnvig/2yAgv1C9Kk+jSuVnQzK/b1TOA3P9X9MxJxKnbCjzHk9VzzQig+QbJZ8lguVV6fXPqHXUlg/NViZ+CzM44Kw+PuNIXpoM62s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=PleGCWe3; arc=none smtp.client-ip=46.4.11.11
+	 In-Reply-To:Content-Type; b=Se72CAxvj/bEcGRvkHad5tTUyfNTJf9U9h1HrPHbIIxFpivN/Gyr2CAkZcvoPUku0l2nPumCV5p1nui1ewrKbYIBMeVTNoeelsE7im/ir3PPNvwjJDSZQsH2D+XrMMrGTOu2TVADAI5chEEWgye2X+qAIy/VICIZXW+ZiAclWcY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=LjwHAYh6; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="PleGCWe3"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LjwHAYh6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
 	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
 	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
 	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
 	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=Na1vcvFToKAlP+gcDTXu43Yb7D0Mcd0xqiMaFIxU/qI=; b=PleGCWe3qI/8WoePBKkbGLb+tz
-	SbvHCRLSH3TQaEXlW/J1Kd7OC1FaIR9Wxwe5x2tZq0B/V9Y2PwIJEioIPXJisyZ+peEabpsUcvOOx
-	Zd/1GnOv3CMgk1qkIUjoZs6G1Cq32K8qjVBZGslxD4FwRxkKMtw547xYO8aDMNCn3zec=;
+	bh=hpgKNlN63EpyDBnmUAwrfehDwJrER44GOkudbVi3BWM=; b=LjwHAYh624hHfVuZ5G8+LKCeqt
+	KWuZ+oFLLazfRT4jIiWFAR/auE08mfA0I5iIAZVie/iePuiim4JvAMKx8BTZfTPDkL0ly41jFceyG
+	IGcn7hDZCrJqa7WTBLuaqlwD/+ad+xpSu/jWNtTCHfc7ZEQfDIqGAOVnyqTKYgk27zoc=;
 Received: from p54a43f8f.dip0.t-ipconnect.de ([84.164.63.143] helo=nf.local)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1vkgtc-00BXsD-0B;
-	Tue, 27 Jan 2026 12:06:08 +0100
-Message-ID: <8d1b7d91-5191-4292-b49b-3d96dc76232e@nbd.name>
-Date: Tue, 27 Jan 2026 12:06:07 +0100
+	id 1vkgmB-00BWdF-1C;
+	Tue, 27 Jan 2026 11:58:27 +0100
+Message-ID: <c9b81e89-cd29-44f2-b4e8-0179b2049c21@nbd.name>
+Date: Tue, 27 Jan 2026 11:58:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,8 +40,8 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/13] wifi: mt76: mt7925: fix ROC deadlocks and race
- conditions
+Subject: Re: [PATCH v6 00/13] wifi: mt76: stability fixes for deadlocks, NULL
+ derefs, and race conditions
 To: Zac <zac@zacbowling.com>, sean.wang@kernel.org
 Cc: deren.wu@mediatek.com, kvalo@kernel.org, linux-kernel@vger.kernel.org,
  linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
@@ -49,7 +49,6 @@ Cc: deren.wu@mediatek.com, kvalo@kernel.org, linux-kernel@vger.kernel.org,
  sean.wang@mediatek.com, zbowling@gmail.com
 References: <CAGp9LzrcvW18xKFL-oF3wxRmb73G6PN59Y2NSA2E5idva1wtKg@mail.gmail.com>
  <20260120201043.38225-1-zac@zacbowling.com>
- <20260120201043.38225-13-zac@zacbowling.com>
 Content-Language: en-US
 From: Felix Fietkau <nbd@nbd.name>
 Autocrypt: addr=nbd@nbd.name; keydata=
@@ -75,67 +74,23 @@ Autocrypt: addr=nbd@nbd.name; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
  cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260120201043.38225-13-zac@zacbowling.com>
+In-Reply-To: <20260120201043.38225-1-zac@zacbowling.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 20.01.26 21:10, Zac wrote:
 > From: Zac Bowling <zac@zacbowling.com>
 > 
-> Fix multiple interrelated issues in the remain-on-channel (ROC) handling
-> that cause deadlocks, race conditions, and resource leaks.
+> TLDR: This series addresses stability issues in both the MT7921 and MT7925
+> WiFi drivers that cause kernel panics, deadlocks, and system hangs
+> on various systems using these drivers.
 > 
-> Problems fixed:
-> 
-> 1. Deadlock in sta removal ROC abort path:
->     When a station is removed while a ROC operation is in progress, the
->     driver would call mt7925_roc_abort_sync() which waits for ROC completion.
->     However, the ROC work itself needs to acquire mt792x_mutex which is
->     already held during station removal, causing a deadlock.
-> 
->     Fix: Use async ROC abort (mt76_connac_mcu_abort_roc) when called from
->     paths that already hold the mutex, and add MT76_STATE_ROC_ABORT flag
->     to coordinate between the abort and the ROC timer.
-> 
-> 2. ROC timer race during suspend:
->     The ROC timer could fire after the device started suspending but before
->     the ROC was properly aborted, causing undefined behavior.
-> 
->     Fix: Delete ROC timer synchronously before suspend and check device
->     state before processing ROC timeout.
-> 
-> 3. ROC rate limiting for MLO auth failures:
->     Rapid ROC requests during MLO authentication can overwhelm the firmware,
->     causing authentication timeouts. The MT7925 firmware has limited ROC
->     handling capacity.
-> 
->     Fix: Add rate limiting infrastructure with configurable minimum interval
->     between ROC requests. Track last ROC completion time and defer new
->     requests if they arrive too quickly.
-> 
-> 4. WCID leak in ROC cleanup:
->     When ROC operations are aborted, the associated WCID resources were
->     not being properly released, causing resource exhaustion over time.
-> 
->     Fix: Ensure WCID cleanup happens in all ROC termination paths.
-> 
-> 5. Async ROC abort race condition:
->     The async ROC abort could race with normal ROC completion, causing
->     double-free or use-after-free of ROC resources.
-> 
->     Fix: Use MT76_STATE_ROC_ABORT flag and proper synchronization to
->     prevent races between async abort and normal completion paths.
-> 
-> These fixes work together to provide robust ROC handling that doesn't
-> deadlock, properly releases resources, and handles edge cases during
-> suspend and MLO operations.
-> 
-> Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 device")
-> Signed-off-by: Zac Bowling <zac@zacbowling.com>
+> This v6 series is rebased on Sean Wang's upstream deadlock fix already sent
+> which is now included as patch 01/13. The remaining 12 patches are my stability
+> fixes.
 
-The rate limiting code seems a bit suspicious to me.
-What does "limited ROC handling capacity" mean? Outstanding ROC 
-requests? Does it need time to settle after a completed ROC?
-This needs to be clarified and likely replaced with a more targeted fix.
+When you send v7, please include the "v7" in the subject for all 
+patches, instead of just the cover letter. Working through your patches 
+in patchwork is getting quite confusing...
 
 - Felix
