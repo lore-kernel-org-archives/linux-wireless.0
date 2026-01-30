@@ -1,114 +1,144 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 84CC041C62;
-	Fri, 30 Jan 2026 14:58:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.76.78.106
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A922DEA7A
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2026 15:15:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769785140; cv=none; b=lAzFZ/n9vrU5bxWoLCaYMFq1Uq7QXwb9wxai2OjqgXpXfA5x8fECJzxMFqvT+JSw6ku3TWR0i7QADddWt9bLa5P+in69j1m2Qh6fQtIrDzy1moNRjjuLx/MFju7A48ZN/nDudSdgpovUTuqfDrUl1mUZ+WUFMGD1OHCELjdZStk=
+	t=1769786140; cv=none; b=Hrv/bN4Kks0DS/Q2JwTGw15U6n4AmSRnrmqKyVX9fZ8RNaFEy8zV1LGxkam4H71c7ccZb2SLlI9CAi/YVr6p4DCGYGhx6dCl83w41MeAhgoTzDEa2D2qyUoC5ob4KTLIsZH4SkPR9IZtKGch4Qvz6QGBPa0mdjjseo/hEL3nkVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769785140; c=relaxed/simple;
-	bh=QtzEdA9ntSNO7ppt6lzTmGwmBNOVWqhYXfkYsqeaHB4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=d1rO51UTy8SZN8u3RTK+7w+WR3ppowgyE3Gbc5GjlSahfP0WawldLt/JnGu3i3/o7ArKNfCBMxemP3C3BlHfNd1+DdxcLgY1OumC50llSpwhjVhQfcGa/Sa6dVP3XCphTAZZf2L3+jFAcJDYjTgf5VAi+gcBHWU3mCTXQ8X0EZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.76.78.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [106.117.99.170])
-	by mtasvr (Coremail) with SMTP id _____wBnPM78xnxp8L1gAA--.5479S3;
-	Fri, 30 Jan 2026 22:58:05 +0800 (CST)
-Received: from ubuntu.localdomain (unknown [106.117.99.170])
-	by mail-app1 (Coremail) with SMTP id yy_KCgDH0dv5xnxpnhTxBQ--.54572S2;
-	Fri, 30 Jan 2026 22:58:03 +0800 (CST)
-From: Duoming Zhou <duoming@zju.edu.cn>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	nbd@nbd.name,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	shayne.chen@mediatek.com,
-	sean.wang@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	kuba@kernel.org,
-	alexander.deucher@amd.com,
-	pkshih@realtek.com,
-	akpm@linux-foundation.org,
-	StanleyYP.Wang@mediatek.com,
-	howard-yh.hsu@mediatek.com,
-	rosenp@gmail.com,
-	Duoming Zhou <duoming@zju.edu.cn>
-Subject: [PATCH] wifi: mt76: mt7915: fix use-after-free bugs in mt7915_mac_dump_work()
-Date: Fri, 30 Jan 2026 22:57:59 +0800
-Message-Id: <20260130145759.84272-1-duoming@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1769786140; c=relaxed/simple;
+	bh=xq8N5rkWJosi1QCZTkRqp4ARpm4m9Vn7+on7SBNNI9E=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=Y4azzyS0Pnq8Ya1eZwWDNjX2otNcEVnKeToTMCjbhNKC5kFDd7QRjY3xwrxv4H4UNm263br9Faaig+p54gxWRT+x+559U77sQPUe4OjsBYkFm91AV//a5Osu2yJ4EAN28/RNwxAFeIVx0i5Ux1P4+UX4ocBZL/VeDQMqEhtMW9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XEnPMAAh; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=OtUaZ61w; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XEnPMAAh";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="OtUaZ61w"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60UC56I21485285
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2026 15:15:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	AvR+veMNXUN9kD5s1VOKjCZx6VF0YVbXKpl5oiQlJqU=; b=XEnPMAAhFkGB9oau
+	aRnjV3x10vn2TpqZ7rJHykFaWXzSDf+1h6QZfeFSbVhZiVwbdAnr95f2NGlX9rpm
+	8rUVMU+vFqYKyOK35fCBIwgu+dm+NWyoxuNEFbHfca14i9bXMS04Mabef8dD89sk
+	4qYJ3f5d8Bf65KIIgUf5lAh5/HqBpxGr8Me0cDVBUfPIj3UhgyRUsFb98ZkdoXap
+	sXr2Lk+T/APvmbFGIofq3JNMLFW7siUJnr+9gc0Y+zgENee2UsfRrVtsSLXaS3Ci
+	TlZv7NJwUG5HWyrYIV+c4CnzYHdsRsPf/tyQknP4Se+BL3i0zcI8eD+4SwLKp/8m
+	hEdMJg==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c0nsf9u6d-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2026 15:15:37 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-2b7c12b62f8so1053284eec.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2026 07:15:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1769786137; x=1770390937; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AvR+veMNXUN9kD5s1VOKjCZx6VF0YVbXKpl5oiQlJqU=;
+        b=OtUaZ61wkQT7wT8UHAnFQ7MgHixC3VPzZMUpRkYqE7qpfG7HMCXWPA808VquAg9F1x
+         CZ/QPxBrTTU+xKoO3Oa5ravPpozFnEzpGWy+ySh8AEOi5y31iMn07x7pGObqYI8U3LiA
+         cdxFaNrfGSIK9jb7+E0tknUDRzCW2njSnYYFskE6A87B8+dF+lP3xr7saKp1ttDFUkZY
+         /hDM4Oo433Xl1aVjxA54opD0VU28nyDDGWRSrY79SEof+dFUKO8SoReHgsR55g8s7Udt
+         IcRe46kbBPdK++FFt9I8S5RtyYoO+cRdSccqPONQrVZ1zCMFTyJRprVxir/bFr2YjjQ1
+         J1pQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1769786137; x=1770390937;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=AvR+veMNXUN9kD5s1VOKjCZx6VF0YVbXKpl5oiQlJqU=;
+        b=tzGoM9XX1HIOcS4WDAI6oDXq5T8fWBRor1cy6biHr2+6lGBsYnz3adyJNnLACmzqD3
+         S4uLMZ2RMLmYWq/bAnPR2LNzKciNXSVAByF2twVDsqaY9Fb2i3f5WTMjVy6EVRbo3dmH
+         1ZQoQI2Zd4M6UiHDuwgIL70taMUXrf3Qqd89rEXxYkXXuXESWcW7mHkCRYKLJFhC1kZa
+         cybYuiRH/HswD+kAvWXJ8zLWyjbkwXXC0yYk+q0VraXMWauk+S82dYEJ8il+MVZt4PkZ
+         G+Ejc6uvYArpaUOl8mJZnuTO6dvLVlPVHvQtAgGi+Rh1QqtswT3PvoN6ZH0BZhtgDc0Z
+         0n3Q==
+X-Gm-Message-State: AOJu0YyfqPGoKdWdW4K2ttxMdLRyKJQlcd0NcVTJ9f8noZuAwcudSS8U
+	vrKcdyGaRIHM3+hwwyZ07eFoOshnP+cRPL7+YZ9MK9/pq/OHTKOmdluN3nDDmp8/t9H0wia8XUf
+	DQWEzYgoRGamah3vB3MjRuMC3iQHSJSI8VvRMRitMezxC4lVA1wjjtb/aIYaEDPcpME4rJw==
+X-Gm-Gg: AZuq6aLdcPEOUGniTmw7e9mM5rKUEJRrtPGmzO6b7o1+IDkC+8uIATSC7D5pU6I8sgf
+	d2dQxzZJObKALWl1chAe51NAV/Br6cTA12lh4v+5sbq4XCrImaKrDmCFjMMtXNCF1ActF1CKLI5
+	prmiSddyQCmM75lCj8p6OfuVmDls5+nynW7Qk3tsxLyU/lkgQjLaHfyviwru+MS3OfKhmCuGdx/
+	RmZQTcnPlvLSWWlT6JJbmtn4nkeVNiWQ19raWQeFSiW4RSgrCZka8dUb/Bin7cRuARfHSUMu7Pk
+	awKZSDTpY7Wf6Eg5hTL9iOsdEqSnoVVEMaCLQiCtmNWzOWPn6E/8GuwSxD5QMlVOb/OgLNu81To
+	O9ezwPEzzdslTRRJjz4jyk6Sh+yEg076hX7oTCsTZiwaJQEWwvoQxRbvQVTv3+n/m
+X-Received: by 2002:a05:7022:1285:b0:11f:19f9:c5f9 with SMTP id a92af1059eb24-125c19cd9fcmr1148391c88.12.1769786137205;
+        Fri, 30 Jan 2026 07:15:37 -0800 (PST)
+X-Received: by 2002:a05:7022:1285:b0:11f:19f9:c5f9 with SMTP id a92af1059eb24-125c19cd9fcmr1148376c88.12.1769786136559;
+        Fri, 30 Jan 2026 07:15:36 -0800 (PST)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-124a9d7f95asm10252849c88.7.2026.01.30.07.15.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Jan 2026 07:15:36 -0800 (PST)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: Jeff Johnson <jjohnson@kernel.org>, Ziyi Guo <n7l8m4@u.northwestern.edu>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+In-Reply-To: <20260123175611.767731-1-n7l8m4@u.northwestern.edu>
+References: <20260123175611.767731-1-n7l8m4@u.northwestern.edu>
+Subject: Re: [PATCH v2] wifi: ath10k: fix lock protection in
+ ath10k_wmi_event_peer_sta_ps_state_chg()
+Message-Id: <176978613592.3951544.9728416314683408699.b4-ty@oss.qualcomm.com>
+Date: Fri, 30 Jan 2026 07:15:35 -0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:yy_KCgDH0dv5xnxpnhTxBQ--.54572S2
-X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwYHAWl7uAYDcwBHsY
-X-CM-DELIVERINFO: =?B?cYGOmAXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
-	CR11YjdbuMySUouUtrOXK8iwzYcuYFk7aHTFsYiRbb0uC/oQbxyu3xRrnSKM/xJF44wcM8
-	Hq9+lQsvkMLsMeqhmXkB8lQQRIwc0TJdq+owcnJ2UFiSBZHsqxAN1s176MXBxg==
-X-Coremail-Antispam: 1Uk129KBj93XoW7Zr1xKr15CFykKFyxXFy8tFc_yoW8WFWkpa
-	yFga4UurWUWFsrt3yDJFWxJa15W3Zag34jkryrW34Yq395GFySyws8ZFy29Fy0yF4qkFyY
-	vr45tr98uFyYvFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9Eb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
-	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
-	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0Y48IcxkI7V
-	AKI48G6xCjnVAKz4kxM4IIrI8v6xkF7I0E8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxC2
-	0s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI
-	0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE
-	14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20x
-	vaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8
-	JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8YFAJUUUUU==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-ORIG-GUID: nCuzhuG0X6E4G4IS3i1YJ_4W52Kp2ky-
+X-Authority-Analysis: v=2.4 cv=EvjfbCcA c=1 sm=1 tr=0 ts=697ccb19 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=vUbySO9Y5rIA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=EUspDBNiAAAA:8 a=ng9WqdB7omV95QdvlpsA:9
+ a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
+X-Proofpoint-GUID: nCuzhuG0X6E4G4IS3i1YJ_4W52Kp2ky-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTMwMDEyNSBTYWx0ZWRfX/orCgRKNoR0s
+ TUE2vwg0FsQhjRLF6vTEey1OEWuCNmANwCJ9uzdLKAq/MiyvYs5IZ/AeTyq2fTln1kSIn6fYoWR
+ KDTbRf+8CFyJH67rq33awDudrPT3ukRnxT5mownnvllWbHwm7KjTtOBnGlQ3caMir9eXBiMUVjA
+ rf8+us39gBkPaK54mb9KoeTIE68CwPR5Rlxh2lwivcmHl/s+Veb3Cwbu2O+yoOsvGmLuUJTAH5M
+ C6Duv5zUC+uW9pBOv5rEtUgA3SPhreoVIfRVPym58RfXXk9B4lA8eeuqlTQd+t28s+Fxfn6tWBY
+ qIFgQdoW5uBUwE158iKxXFXXFWu6FH6/XrV+yoMAlepDfssbACJ4eb5W9TcrgTakoGUc8ragvNQ
+ O/byAWxy99gnNNKOLOtcT0GfNs91v+eOgW7C/6WfptmxcVklwPAGqrjhVPcokhud8F6jcPUSyt9
+ hwZF/OsREgxJTGcnbtQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-01-30_02,2026-01-29_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 spamscore=0 priorityscore=1501 bulkscore=0 suspectscore=0
+ adultscore=0 malwarescore=0 impostorscore=0 lowpriorityscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2601300125
 
-When the mt7915 pci chip is detaching, the mt7915_crash_data is
-released in mt7915_coredump_unregister(). However, the work item
-dump_work may still be running or pending, leading to UAF bugs
-when the already freed crash_data is dereferenced again in
-mt7915_mac_dump_work().
 
-The race condition can occur as follows:
+On Fri, 23 Jan 2026 17:56:11 +0000, Ziyi Guo wrote:
+> ath10k_wmi_event_peer_sta_ps_state_chg() uses lockdep_assert_held() to
+> assert that ar->data_lock should be held by the caller, but neither
+> ath10k_wmi_10_2_op_rx() nor ath10k_wmi_10_4_op_rx() acquire this lock
+> before calling this function.
+> 
+> The field arsta->peer_ps_state is documented as protected by
+> ar->data_lock in core.h, and other accessors (ath10k_peer_ps_state_disable,
+> ath10k_dbg_sta_read_peer_ps_state) properly acquire this lock.
+> 
+> [...]
 
-CPU 0 (removal path)               | CPU 1 (workqueue)
-mt7915_pci_remove()                | mt7915_sys_recovery_set()
- mt7915_unregister_device()        |  mt7915_reset()
-  mt7915_coredump_unregister()     |   queue_work()
-   vfree(dev->coredump.crash_data) | mt7915_mac_dump_work()
-                                   |  crash_data-> // UAF
+Applied, thanks!
 
-Fix this by ensuring dump_work is properly canceled before
-the crash_data is deallocated. Add cancel_work_sync() in
-mt7915_unregister_device() to synchronize with any pending
-or executing dump work.
+[1/1] wifi: ath10k: fix lock protection in ath10k_wmi_event_peer_sta_ps_state_chg()
+      commit: 820ba7dd6859ef8b1eaf6014897e7aa4756fc65d
 
-Fixes: 4dbcb9125cc3 ("wifi: mt76: mt7915: enable coredump support")
-Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-index 22443cbc74a..250c2d2479b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -1294,6 +1294,7 @@ int mt7915_register_device(struct mt7915_dev *dev)
- 
- void mt7915_unregister_device(struct mt7915_dev *dev)
- {
-+	cancel_work_sync(&dev->dump_work);
- 	mt7915_unregister_ext_phy(dev);
- 	mt7915_coredump_unregister(dev);
- 	mt7915_unregister_thermal(&dev->phy);
+Best regards,
 -- 
-2.34.1
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
