@@ -1,133 +1,100 @@
-Received: from dvalin.narfation.org (dvalin.narfation.org [213.160.73.56])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E3AA3314C8
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 08:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.160.73.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F246034F263
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 08:27:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770020114; cv=none; b=i2yKgmwF5UQmYTTd85w7yl6Zv/zwUr/tshBzKyyrKiainW5sLlLxK0wbA2NMoHEn+1uOkl9AFBTrnWpHouJ/86H5tSdpbGpaPHuknaK8+kXWtOHcdTrYY8ZXFiMhvt80rMF9s8Cw42t21b1jbp1S/VAk34/gxpZw0I9HGTRL4U8=
+	t=1770020836; cv=none; b=i75LEMn7JYGXoWAri/EsGFH6pkbMrf2E3yBzNmG9RkXqrCZY+otRSyHrlc3x/yyuwwZV3bDqVAC5MBSPHYZnlo4Is9oj6zVoMibFK+um0jjivkalXqrjNRhtiFWQT9z/u32j56KWha6mZyLHhk097kjMetZC6/WtufcjkErB+l0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770020114; c=relaxed/simple;
-	bh=A6m3e73KQCRQkUY9ofsphG8zIIOyf309XA6E3Bic1CU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mrH9iyCVxi0dK33dFaZi60FCuIaEubJQ7Xonae7K1VhKI2QUNs7tKBnrZsSejLzr/+T7fhew3zmrjJA6hQ+IHMOh+2yxk1/+dN7hD8KBg7SzJNPI824xSgUsABkBr07/B+I4hxSRM76Mb1Y/UArzsX9XYSkoRtldChUspP79cIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org; spf=pass smtp.mailfrom=narfation.org; dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b=UqSLyhXl; arc=none smtp.client-ip=213.160.73.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=narfation.org
+	s=arc-20240116; t=1770020836; c=relaxed/simple;
+	bh=vsZAmM8tJJ1IJUNcPSt/R6di46IrRLZvQWgTNviYPbU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=glG6ABu1tMRnKpAyJu4+VMVhwvMW+GHdDovPFJgV4zki1ggKXsdOkzfQvdZsc1yWtuA6pJNfqrH8owj0xoO1hD775BEnbeE8ai3CdbjsuSafNzVsv56kyIKYRg7vkaUDvpAORqMSaHxSN10YZ81f2iACnqabNLkjs0l19huSCKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ttuVNxI+; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="UqSLyhXl"
-Received: by dvalin.narfation.org (Postfix) id AAEFA21014;
-	Mon, 02 Feb 2026 08:15:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
-	s=20121; t=1770020102;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=15pmCLyxEi0pLxzUNoUfwSKNMFIzmZCN92bXefFF3r4=;
-	b=UqSLyhXlC7rpew+IjjX3v2CCNIB6aOjPuWZE8HdQK+daRtseY2ptazOGsddGJqVH6fSWCo
-	pPYh1Kb2NWZXBiAOiBr2HrUsuNwonsM+z4WeO+LlwpvcBUAEkQ3aXaUAK4qnMSyy6cLKch
-	PeEV3nkMx5qHJErRhP4EyZjavTCKB7M=
-From: Sven Eckelmann <sven@narfation.org>
-To: Ryder Lee <ryder.lee@mediatek.com>, Rob Herring <robh@kernel.org>
-Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
- linux-mediatek@lists.infradead.org, Allen Ye <allen.ye@mediatek.com>,
- Saravana Kannan <saravanak@kernel.org>
-Subject:
- Re: [PATCH v2] wifi: mt76: fix backoff fields and max_power calculation
-Date: Mon, 02 Feb 2026 09:14:54 +0100
-Message-ID: <7906220.EvYhyI6sBW@ripper>
-In-Reply-To:
- <54627282cfb8e5a89fe753da66552c0a084f6387.1769557863.git.ryder.lee@mediatek.com>
-References:
- <54627282cfb8e5a89fe753da66552c0a084f6387.1769557863.git.ryder.lee@mediatek.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ttuVNxI+"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=mLS4JFnGk86za0ejaTRaOAH6elcT+Hux15avYj4723g=;
+	t=1770020834; x=1771230434; b=ttuVNxI+QRAh9VxeeKkmMnT5oXdoxC1eGT0g8BGFkikLXxH
+	BkPNK6I7F86UoHcKqAxeTuQ7/OIxg0Hd0wpr6bRCHp4qVkTOCULkQLGAybNXqCRLYSS4Xjq7Uz8HH
+	wu9/70NE3Gob+sXG2SGGwSww6MMmg0pCH4/oIkTL43QxVYZXFDEQHYVhIx3McKqGtsqoo8dazu1nr
+	w/YWyf5+JN+HNFvd44IqmICrSLe1bRQEctqO6cl4PzKIkkix9wxPJHv1imHBKjsOLn+62E45nil5I
+	BKLEqGJ/6LBB32bYwgRnmnf6lD+gxJZkN4nmcwODnFGN9brbOiUwrhSrYlxHjY6g==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vmpGy-0000000BMPD-3UgS;
+	Mon, 02 Feb 2026 09:27:05 +0100
+Message-ID: <b0eac13e1778566fbd52bac2f29d8ab5810badb6.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v8 3/3] wifi: mac80211: add initial UHR
+ support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pablo MARTIN-GOMEZ <pmartin-gomez@freebox.fr>, 
+	linux-wireless@vger.kernel.org
+Date: Mon, 02 Feb 2026 09:27:04 +0100
+In-Reply-To: <009232c6-2a67-4df4-9309-71c9d5788c73@freebox.fr> (sfid-20260130_192945_783004_468158C1)
+References: <20260130154259.265130-5-johannes@sipsolutions.net>
+	 <20260130164259.7185980484eb.Ieec940b58dbf8115dab7e1e24cb5513f52c8cb2f@changeid>
+	 <009232c6-2a67-4df4-9309-71c9d5788c73@freebox.fr>
+	 (sfid-20260130_192945_783004_468158C1)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.2 (3.58.2-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart3929001.kQq0lBPeGt";
- micalg="pgp-sha512"; protocol="application/pgp-signature"
+X-malware-bazaar: not-scanned
 
---nextPart3929001.kQq0lBPeGt
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"; protected-headers="v1"
-From: Sven Eckelmann <sven@narfation.org>
-To: Ryder Lee <ryder.lee@mediatek.com>, Rob Herring <robh@kernel.org>
-Date: Mon, 02 Feb 2026 09:14:54 +0100
-Message-ID: <7906220.EvYhyI6sBW@ripper>
-MIME-Version: 1.0
+On Fri, 2026-01-30 at 19:29 +0100, Pablo MARTIN-GOMEZ wrote:
+>=20
+> > +void
+> > +ieee80211_uhr_cap_ie_to_sta_uhr_cap(struct ieee80211_sub_if_data *sdat=
+a,
+> > +				    struct ieee80211_supported_band *sband,
+> > +				    const struct ieee80211_uhr_cap *uhr_cap,
+> > +				    u8 uhr_cap_len,
+> > +				    struct link_sta_info *link_sta)
+> > +{
+> > +	struct ieee80211_sta_uhr_cap *sta_uhr_cap =3D &link_sta->pub->uhr_cap=
+;
+> > +	bool from_ap;
+> > +
+> > +	memset(sta_uhr_cap, 0, sizeof(*sta_uhr_cap));
+> > +
+> > +	if (!ieee80211_get_uhr_iftype_cap_vif(sband, &sdata->vif))
+> > +		return;
+> > +
+> > +	sta_uhr_cap->has_uhr =3D true;
+> > +
+> > +	sta_uhr_cap->mac =3D uhr_cap->mac;
+> > +	from_ap =3D sdata->vif.type =3D=3D NL80211_IFTYPE_STATION;
 
-On Wednesday, 28 January 2026 00:55:57 CET Ryder Lee wrote:
-> +               case MT76_SKU_BACKOFF:
-> +                       backoff_chain_idx += 1;
-> +                       fallthrough;
-> +               case MT76_SKU_BACKOFF_BF_OFFSET:
-> +                       delta = mt76_tx_power_path_delta(n_chains);
-> +                       backoff_n_chains = mt76_backoff_n_chains(dev, backoff_chain_idx);
-> +                       backoff_delta = mt76_tx_power_path_delta(backoff_n_chains);
-> +                       break;
-> +               default:
+> My knowledge of mac80211 is quite limited so I might be very well wrong=
+=20
+> but it feels that either this is wrong and it should be `sdata->vif.type=
+=20
+> =3D=3D NL80211_IFTYPE_AP`
 
-Please double check whether the "case"s for MT76_SKU_BACKOFF_BF_OFFSET and 
-MT76_SKU_BACKOFF should actually be swapped. I think I've originally 
-introduced this mistake when trying to demonstrate different ways to write the
-switch block.
+If we _are_ the AP then we won't parse data coming _from_ the AP, so
+it's correct.
 
+> or this is correct but it won't work with mesh=20
+> point for example and that=C2=A0 `sdata->vif.type !=3D NL80211_IFTYPE_AP`=
+ would=20
+> be better.
 
-> +               /* For connac2 devices,
-> +                * - paths-ru = RU26, RU52, RU106, BW20, BW40, BW80, BW160
-> +                * - paths-ru-bf = RU26, RU52, RU106, BW20, BW40, BW80, BW160
-> +                * Only the first three entries use 1T1ss and do not need index
-> +                * adjustment; the remaining four require index offset.
-> +                */
+Also no, according to the spec, I even quoted it the other day. But I
+guess if someone wants UHR on mesh they have a bunch of work anyway, so
+it doesn't even matter.
 
-
-Hm, I doubt that anyone can understand this (same for the commit message).
-You basically just showed a list of two equal "array"s.
-
-Actually important here is that, RU26, RU52, RU106, ... stand here for 10
-different values:
-
-1T1ss, 2T1ss, 3T1ss, 4T1ss, 2T2ss, 3T2ss, 4T2ss, 3T3ss, 4T3ss, 4T4ss
-
-For paths-ru-bf, also 10 values are stored in the DT for each of these
-(RU26, ..., BW160) - but only the non-1T1ss are relevant for this
-calculation for BW20, ..., BW160.
-
-These 1T1ss beamforming values for BW20, ..., BW160 were (if I understand it 
-correctly) removed for connac3. 
-
-If you introduce some change in the DT interpretation, then you must also 
-inform the DT maintainers (Rob Herring <robh@kernel.org>, 
-Saravana Kannan <saravanak@kernel.org>, devicetree@vger.kernel.org) while 
-updatingDocumentation/devicetree/bindings/net/wireless/mediatek%2Cmt76.yaml. 
-The latter is currently still expecting 1 ("rates multiplier") + 10 values
-(limits). And DTs with only 1 + 9 values per rate would therefore fail to be
-validated.
-
-At the moment, your connac3 code is basically conflicting with the devicetree
-documentation. I will leave it to the experts to figure out if the devicetree
-should have two different interpretations for the same property or whether
-the property should be the same and the code must handle the differences
-before sending these values to the HW.
-
-Regards,
-	Sven
---nextPart3929001.kQq0lBPeGt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQS81G/PswftH/OW8cVND3cr0xT1ywUCaYBc/gAKCRBND3cr0xT1
-y+JGAP9yD0LmmMIApgiKeRxfcsdReDLdpC+y3ZypWbDdwGGNTQEA3kYIKROXU2j5
-Z4tImDd7EhOVEzJnuElNQlQHr1nbuQQ=
-=wNka
------END PGP SIGNATURE-----
-
---nextPart3929001.kQq0lBPeGt--
-
-
-
+johannes
+>=20
