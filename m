@@ -1,30 +1,30 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F01322C026C
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 07:54:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B8A12C1584
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 07:54:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770018865; cv=none; b=J3mxMHn1mhu4phKq38WFpqxB0u+TGZ05HH/N785qvQjTCEaG2X4awyGAJH4qrkNpsBahVZzb/2bR+/rInvKXdy8aHwM/+nN8s2fLlexqzELvfzopUNboTohpum5lgE/I2k+pwPV+yjadLiLW1af+VRS+EJeQC6x90dwOfw+cYm0=
+	t=1770018866; cv=none; b=XRw6mz3D5kARbK6Jep1MzbiXzF86rjvI/9ESUmI+02BadxCffBFIJtfU5ntYJYVfeGSvZxsUTCQhwkchuKU7IZVJQLpVsbAZK+UDwzSXm9/s1EaSdMI7LqpXK16gm4xekrs3I46T/JkC1ifosBc/jKYxbf36JkRSQijVRQxU44k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770018865; c=relaxed/simple;
-	bh=lvq+TBuVmukN6IeEoi1+DWmoC7Cf1vF4iimXpXijKVk=;
+	s=arc-20240116; t=1770018866; c=relaxed/simple;
+	bh=osG3glxXFR4CCsYUp8EJnc3rkNM1YMnsnsV6IkAKC8w=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oU7gt5lm0T7fCbe1R3ISWh7fMyY1wpp+Fp7o/7b9Y4LasPe6IIiYdWurFgzTROWG9MAAguKNT/4IfIsKLuS+tfdgKz4Gkqx7aCQkdUbwmGyKMTAAq0fzuC6gn139DL8GYHm8iZQngSjeOlFaOtey1xoPKu6bcJ1g4cs1zZal0LY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=BNLZDBcr; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=WcXUYHq4haFMjycwqO+Ina4ZnG0lmhU1SeCm1L9jx59G4uTPtU6o1jnMkmWO/HT+CENT2BeJK0JVojTQuMJ6wvCYFBLIH5cnVotSRpRM1IjH8S48PVuolmoknLvNxJQpNLNUsukD+wP86xUwjNZ/r6TItZohsBxytSo2YusvUC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QEN763EI; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BNLZDBcr"
-X-UUID: 5f69af1a000c11f185319dbc3099e8fb-20260202
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QEN763EI"
+X-UUID: 5f94a666000c11f185319dbc3099e8fb-20260202
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=DXB0+0Sg2pfC35kylvAjuCz4Drna/EyW34HThP0io6I=;
-	b=BNLZDBcrcOv2QAVf1XKenDATHks1bECrN674avnEyDXfpu11zfEu6PMJr8/lUxt49c1aiHdWX7Km0FYERq19NUPE52ItvRIXEtnlTjJprS5yf/xhS7ZSvopr2mS+fTze0peCGj0jhLAdVfvXJJ6XcG1nReng5HzMzlc5ZOfA/UI=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=ocAdPwmDzHKxnVSldZBqLpITOD8v7ybbeSfd2Tme2zo=;
+	b=QEN763EI10xF2Hv9Es6KY0HOQHozESbHp1FK/HN1GaDOyn/36YYv3ZVFYTZ4k4Ov8tkTrQyMMYEMsHRm333y0TB/9L8E+0BNQO0Fx1a4oipZVItaG6C0OdN+lSZKAcD0cytYddYuNGcjOhz8ZqQdqiCblcG/wlu9ZGqCWetLrJQ=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:0ff4afc6-9001-439e-9602-1af7947b6a44,IP:0,U
+X-CID-O-INFO: VERSION:1.3.11,REQID:8efac648-669c-4854-b3ad-91ecab3a58cf,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:bd56d35a-a957-4259-bcca-d3af718d7034,B
+X-CID-META: VersionHash:89c9d04,CLOUDID:9b7a35e9-ef90-4382-9c6f-55f2a0689a6b,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
 	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
 	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,13 +32,13 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5f69af1a000c11f185319dbc3099e8fb-20260202
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+X-UUID: 5f94a666000c11f185319dbc3099e8fb-20260202
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 488432133; Mon, 02 Feb 2026 15:54:16 +0800
+	with ESMTP id 1831512724; Mon, 02 Feb 2026 15:54:16 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.2562.29; Mon, 2 Feb 2026 15:54:15 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -49,11 +49,11 @@ To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
-	linux-mediatek <linux-mediatek@lists.infradead.org>, Shayne Chen
-	<shayne.chen@mediatek.com>
-Subject: [PATCH 2/5] wifi: mt76: mt7996: fix wrong DMAD length when using MAC TXP
-Date: Mon, 2 Feb 2026 15:53:07 +0800
-Message-ID: <20260202075311.365673-2-shayne.chen@mediatek.com>
+	linux-mediatek <linux-mediatek@lists.infradead.org>, StanleyYP Wang
+	<StanleyYP.Wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH 4/5] wifi: mt76: avoid to set ACK for MCU command if wait_resp is not set
+Date: Mon, 2 Feb 2026 15:53:09 +0800
+Message-ID: <20260202075311.365673-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20260202075311.365673-1-shayne.chen@mediatek.com>
 References: <20260202075311.365673-1-shayne.chen@mediatek.com>
@@ -67,41 +67,65 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-The struct mt76_connac_fw_txp is used for HIF TXP. Change to use the
-struct mt76_connac_hw_txp to fix the wrong DMAD length for MAC TXP.
+From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 
-Fixes: cb6ebbdffef2 ("wifi: mt76: mt7996: support writing MAC TXD for AddBA Request")
+When wait_resp is not set but the ACK option is enabled in the MCU TXD,
+the ACK event is enqueued to the MCU event queue without being dequeued
+by the original MCU command request.
+
+Any orphaned ACK events will only be removed from the queue when another
+MCU command requests a response. Due to sequence index mismatches, these
+events are discarded one by one until a matching sequence index is found.
+
+However, if several MCU commands that do not require a response continue
+to fill up the event queue, there is a risk that when an MCU command with
+wait_resp enabled is issued, it may dequeue the wrong event skb,
+especially if the queue contains events with all possible sequence
+indices.
+
+Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mcu.c        |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 11 +++++------
+ 2 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-index 77a036ac043c..3b09eff216c3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-@@ -1099,10 +1099,10 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 	 * req
- 	 */
- 	if (le32_to_cpu(ptr[7]) & MT_TXD7_MAC_TXD) {
--		u32 val;
-+		u32 val, mac_txp_size = sizeof(struct mt76_connac_hw_txp);
+diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
+index 535c3d8a9cc0..cbfb3bbec503 100644
+--- a/drivers/net/wireless/mediatek/mt76/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mcu.c
+@@ -98,7 +98,7 @@ int mt76_mcu_skb_send_and_get_msg(struct mt76_dev *dev, struct sk_buff *skb,
+ 	/* orig skb might be needed for retry, mcu_skb_send_msg consumes it */
+ 	if (orig_skb)
+ 		skb_get(orig_skb);
+-	ret = dev->mcu_ops->mcu_skb_send_msg(dev, skb, cmd, &seq);
++	ret = dev->mcu_ops->mcu_skb_send_msg(dev, skb, cmd, wait_resp ? &seq : NULL);
+ 	if (ret < 0)
+ 		goto out;
  
- 		ptr = (__le32 *)(txwi + MT_TXD_SIZE);
--		memset((void *)ptr, 0, sizeof(struct mt76_connac_fw_txp));
-+		memset((void *)ptr, 0, mac_txp_size);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 285cd83e7117..68d698033e43 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -322,13 +322,12 @@ mt7996_mcu_send_message(struct mt76_dev *mdev, struct sk_buff *skb,
+ 		uni_txd->pkt_type = MCU_PKT_ID;
+ 		uni_txd->seq = seq;
  
- 		val = FIELD_PREP(MT_TXP0_TOKEN_ID0, id) |
- 		      MT_TXP0_TOKEN_ID0_VALID_MASK;
-@@ -1121,6 +1121,8 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
- 				  tx_info->buf[1].addr >> 32);
- #endif
- 		ptr[3] = cpu_to_le32(val);
-+
-+		tx_info->buf[0].len = MT_TXD_SIZE + mac_txp_size;
- 	} else {
- 		struct mt76_connac_txp_common *txp;
+-		if (cmd & __MCU_CMD_FIELD_QUERY)
+-			uni_txd->option = MCU_CMD_UNI_QUERY_ACK;
+-		else
+-			uni_txd->option = MCU_CMD_UNI_EXT_ACK;
++		uni_txd->option = MCU_CMD_UNI;
++		if (!(cmd & __MCU_CMD_FIELD_QUERY))
++			uni_txd->option |= MCU_CMD_SET;
  
+-		if (mcu_cmd == MCU_UNI_CMD_SDO)
+-			uni_txd->option &= ~MCU_CMD_ACK;
++		if (wait_seq)
++			uni_txd->option |= MCU_CMD_ACK;
+ 
+ 		if ((cmd & __MCU_CMD_FIELD_WA) && (cmd & __MCU_CMD_FIELD_WM))
+ 			uni_txd->s2d_index = MCU_S2D_H2CN;
 -- 
 2.51.0
 
