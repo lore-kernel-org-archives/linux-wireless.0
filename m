@@ -1,112 +1,133 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from dvalin.narfation.org (dvalin.narfation.org [213.160.73.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A4A1A5B84
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 07:54:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E3AA3314C8
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2026 08:15:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.160.73.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770018867; cv=none; b=jkx0iTzIth3ewXO8z/pnmDOdVlhGzYSzFllUDfU+1t0x6p2K88YsdKkvnrbGmoWB1f9egjZafxzIWqijFxsCP3MDsvfhVsFPSM9IMpWL57GNdrncfPZZEYPOt2VJaN4BTi7uGH1ZkafU1k3skE0QmkjDwU4yUIvf3gZDtkI1s0Y=
+	t=1770020114; cv=none; b=i2yKgmwF5UQmYTTd85w7yl6Zv/zwUr/tshBzKyyrKiainW5sLlLxK0wbA2NMoHEn+1uOkl9AFBTrnWpHouJ/86H5tSdpbGpaPHuknaK8+kXWtOHcdTrYY8ZXFiMhvt80rMF9s8Cw42t21b1jbp1S/VAk34/gxpZw0I9HGTRL4U8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770018867; c=relaxed/simple;
-	bh=oCEfSx0ZWjZOrxV1CR62OWKX9V6QpXPjpjdCgxZT20s=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E6SqnMzAszW/hwpSUW+CU5V1jJ7hlooWZw4GEwnW6W/MpxZFW+91/NWAkTo/GcPHHMIdGgFFf/aJP85HgY7Ki5SR0/w4ihhbYMef4G7WkARQp6i6MBdByL8WvoI3bomIFQxiHYGrexiEMXSQcKhHXJPcfhef0QYtIx9OQ6bIz/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=LpI7rQl/; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1770020114; c=relaxed/simple;
+	bh=A6m3e73KQCRQkUY9ofsphG8zIIOyf309XA6E3Bic1CU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mrH9iyCVxi0dK33dFaZi60FCuIaEubJQ7Xonae7K1VhKI2QUNs7tKBnrZsSejLzr/+T7fhew3zmrjJA6hQ+IHMOh+2yxk1/+dN7hD8KBg7SzJNPI824xSgUsABkBr07/B+I4hxSRM76Mb1Y/UArzsX9XYSkoRtldChUspP79cIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org; spf=pass smtp.mailfrom=narfation.org; dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b=UqSLyhXl; arc=none smtp.client-ip=213.160.73.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=narfation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=narfation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LpI7rQl/"
-X-UUID: 5f5a4840000c11f185319dbc3099e8fb-20260202
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=+A/kXPghT8/xpD+WmpVETO2t8RV7Pvi8GI+FTignuII=;
-	b=LpI7rQl/Fjj0+KyVDbcm0xygPYH5eDT9bMOfWJ9DFn9RyqgzFL+zFVWCqIJXCFc+i+ltjlBlAJZa3HGXHsYEi0qfegwGznfW1E3v4eHuyMIQROIgkU7qRghVIz8JhgXA5rjTaN1ayLo2Ad445WD6fWwF3Rfc8kCWy55wy+YxQn0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:975676e2-16de-4e53-9692-d7960078cac0,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:89c9d04,CLOUDID:d4d839f0-16bd-4243-b4ca-b08ca08ab1d8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5f5a4840000c11f185319dbc3099e8fb-20260202
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
-	(envelope-from <shayne.chen@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 750908551; Mon, 02 Feb 2026 15:54:16 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 2 Feb 2026 15:54:15 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 2 Feb 2026 15:54:15 +0800
-From: Shayne Chen <shayne.chen@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>
-CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
-	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
-	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
-	linux-mediatek <linux-mediatek@lists.infradead.org>, StanleyYP Wang
-	<StanleyYP.Wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH 3/5] wifi: mt76: mt7996: fix struct mt7996_mcu_uni_event
-Date: Mon, 2 Feb 2026 15:53:08 +0800
-Message-ID: <20260202075311.365673-3-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20260202075311.365673-1-shayne.chen@mediatek.com>
-References: <20260202075311.365673-1-shayne.chen@mediatek.com>
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="UqSLyhXl"
+Received: by dvalin.narfation.org (Postfix) id AAEFA21014;
+	Mon, 02 Feb 2026 08:15:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+	s=20121; t=1770020102;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=15pmCLyxEi0pLxzUNoUfwSKNMFIzmZCN92bXefFF3r4=;
+	b=UqSLyhXlC7rpew+IjjX3v2CCNIB6aOjPuWZE8HdQK+daRtseY2ptazOGsddGJqVH6fSWCo
+	pPYh1Kb2NWZXBiAOiBr2HrUsuNwonsM+z4WeO+LlwpvcBUAEkQ3aXaUAK4qnMSyy6cLKch
+	PeEV3nkMx5qHJErRhP4EyZjavTCKB7M=
+From: Sven Eckelmann <sven@narfation.org>
+To: Ryder Lee <ryder.lee@mediatek.com>, Rob Herring <robh@kernel.org>
+Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, Allen Ye <allen.ye@mediatek.com>,
+ Saravana Kannan <saravanak@kernel.org>
+Subject:
+ Re: [PATCH v2] wifi: mt76: fix backoff fields and max_power calculation
+Date: Mon, 02 Feb 2026 09:14:54 +0100
+Message-ID: <7906220.EvYhyI6sBW@ripper>
+In-Reply-To:
+ <54627282cfb8e5a89fe753da66552c0a084f6387.1769557863.git.ryder.lee@mediatek.com>
+References:
+ <54627282cfb8e5a89fe753da66552c0a084f6387.1769557863.git.ryder.lee@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: multipart/signed; boundary="nextPart3929001.kQq0lBPeGt";
+ micalg="pgp-sha512"; protocol="application/pgp-signature"
 
-From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+--nextPart3929001.kQq0lBPeGt
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"; protected-headers="v1"
+From: Sven Eckelmann <sven@narfation.org>
+To: Ryder Lee <ryder.lee@mediatek.com>, Rob Herring <robh@kernel.org>
+Date: Mon, 02 Feb 2026 09:14:54 +0100
+Message-ID: <7906220.EvYhyI6sBW@ripper>
+MIME-Version: 1.0
 
-The cid field is defined as a two-byte value in the firmware.
+On Wednesday, 28 January 2026 00:55:57 CET Ryder Lee wrote:
+> +               case MT76_SKU_BACKOFF:
+> +                       backoff_chain_idx += 1;
+> +                       fallthrough;
+> +               case MT76_SKU_BACKOFF_BF_OFFSET:
+> +                       delta = mt76_tx_power_path_delta(n_chains);
+> +                       backoff_n_chains = mt76_backoff_n_chains(dev, backoff_chain_idx);
+> +                       backoff_delta = mt76_tx_power_path_delta(backoff_n_chains);
+> +                       break;
+> +               default:
 
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Please double check whether the "case"s for MT76_SKU_BACKOFF_BF_OFFSET and 
+MT76_SKU_BACKOFF should actually be swapped. I think I've originally 
+introduced this mistake when trying to demonstrate different ways to write the
+switch block.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 8e1c8e1d6a99..285cd83e7117 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -242,7 +242,7 @@ mt7996_mcu_parse_response(struct mt76_dev *mdev, int cmd,
- 		event = (struct mt7996_mcu_uni_event *)skb->data;
- 		ret = le32_to_cpu(event->status);
- 		/* skip invalid event */
--		if (mcu_cmd != event->cid)
-+		if (mcu_cmd != le16_to_cpu(event->cid))
- 			ret = -EAGAIN;
- 	} else {
- 		skb_pull(skb, sizeof(struct mt7996_mcu_rxd));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-index d9fb49f7b01b..d70540982983 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-@@ -25,8 +25,8 @@ struct mt7996_mcu_rxd {
- };
- 
- struct mt7996_mcu_uni_event {
--	u8 cid;
--	u8 __rsv[3];
-+	__le16 cid;
-+	u8 __rsv[2];
- 	__le32 status; /* 0: success, others: fail */
- } __packed;
- 
--- 
-2.51.0
+
+> +               /* For connac2 devices,
+> +                * - paths-ru = RU26, RU52, RU106, BW20, BW40, BW80, BW160
+> +                * - paths-ru-bf = RU26, RU52, RU106, BW20, BW40, BW80, BW160
+> +                * Only the first three entries use 1T1ss and do not need index
+> +                * adjustment; the remaining four require index offset.
+> +                */
+
+
+Hm, I doubt that anyone can understand this (same for the commit message).
+You basically just showed a list of two equal "array"s.
+
+Actually important here is that, RU26, RU52, RU106, ... stand here for 10
+different values:
+
+1T1ss, 2T1ss, 3T1ss, 4T1ss, 2T2ss, 3T2ss, 4T2ss, 3T3ss, 4T3ss, 4T4ss
+
+For paths-ru-bf, also 10 values are stored in the DT for each of these
+(RU26, ..., BW160) - but only the non-1T1ss are relevant for this
+calculation for BW20, ..., BW160.
+
+These 1T1ss beamforming values for BW20, ..., BW160 were (if I understand it 
+correctly) removed for connac3. 
+
+If you introduce some change in the DT interpretation, then you must also 
+inform the DT maintainers (Rob Herring <robh@kernel.org>, 
+Saravana Kannan <saravanak@kernel.org>, devicetree@vger.kernel.org) while 
+updatingDocumentation/devicetree/bindings/net/wireless/mediatek%2Cmt76.yaml. 
+The latter is currently still expecting 1 ("rates multiplier") + 10 values
+(limits). And DTs with only 1 + 9 values per rate would therefore fail to be
+validated.
+
+At the moment, your connac3 code is basically conflicting with the devicetree
+documentation. I will leave it to the experts to figure out if the devicetree
+should have two different interpretations for the same property or whether
+the property should be the same and the code must handle the differences
+before sending these values to the HW.
+
+Regards,
+	Sven
+--nextPart3929001.kQq0lBPeGt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQS81G/PswftH/OW8cVND3cr0xT1ywUCaYBc/gAKCRBND3cr0xT1
+y+JGAP9yD0LmmMIApgiKeRxfcsdReDLdpC+y3ZypWbDdwGGNTQEA3kYIKROXU2j5
+Z4tImDd7EhOVEzJnuElNQlQHr1nbuQQ=
+=wNka
+-----END PGP SIGNATURE-----
+
+--nextPart3929001.kQq0lBPeGt--
+
+
 
