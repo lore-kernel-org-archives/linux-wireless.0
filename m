@@ -1,30 +1,30 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0434D238C07
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Feb 2026 15:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BBF43BFE31
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Feb 2026 15:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770134160; cv=none; b=R+8pFaYBBvXqFs0NnH6naE1rI2IRJtf8T+a51izipMQ6+Ahvjtrjh0c9uEjvfiTWq1c0sLGkk2t3K8drSF4haanUys69l+4Zo58mHxC4P4OiN1hV+mVE+hTHEIaLS8l46SCh0KqZU/wO7T9sFcy2k7AMo9fI1XSPwsTtDHVEaoI=
+	t=1770134161; cv=none; b=SOeXnNv/LWqmo7xH3Pl5f+tRCeuccmSWw5abZzvYwxxhNfs6TYXyxZzWiJSA8exmXkBCn79VyeOLJNtAo/GkmGqS+PjHmgm3SxI0RK2CcOwgxB1B8X3hkSmatSSfeyVpWWmWd0VRQ8JIvrwqhhgd6Obm1PUz8CIJKIuubV/1gYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770134160; c=relaxed/simple;
-	bh=ujD7ZFY70Z0VzPttN379T/yCHgUfBPR8q4uGkW/cvuM=;
+	s=arc-20240116; t=1770134161; c=relaxed/simple;
+	bh=oCEfSx0ZWjZOrxV1CR62OWKX9V6QpXPjpjdCgxZT20s=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ga6owQ1I2u+iownvcezbTUYDyldepCgjykUI0yXL9hSha3RB76l+LQhiGvi0I2p4PE1alQCNkiS9ET3blNgpN4rwGq/TvOe7kogv6GibYCDaNWStkzOGZo737ucG1rnjdODTV7Kh4YHYgXvfAnwX7yi9JcmNdGASQL4S7LGmCHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=BWs674Yd; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=F+UhiQl0L6/zVnBMR9k/Y0viA6dKL2hFnVbIJSZo/mR5g2ijucBWK+T/Qq4vbeUnu3ckXXgNiZG/BIiWDULhdhxHno7S8ZsC+SJR4kQRA9wKIh/YhlFJcOyrUZ9Mrih1czfcHcWU4uRzDjjylhXuoeF0En1bHzGqN4bK/fycYoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=uRag1jrW; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BWs674Yd"
-X-UUID: ce6d92f2011811f1b7fc4fdb8733b2bc-20260203
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="uRag1jrW"
+X-UUID: ce4c74b4011811f185319dbc3099e8fb-20260203
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=PRY8mAbFNGM0afVcuy6wNyGauxb2U3kibDu+fFKkTfE=;
-	b=BWs674YdNmk5aRPX72RzDFq4mgCU26CZO5PbfVElVmYGNR7j4f22obNqPviL40+P3h3bhVhq2d+Y74Azs37yaaohQOu3AeZmAv/APpotARRky51dAPwT3aB+eLgS2yS0qqJinPrQDoAABU1ze/ot1U7GhFYJCLT+YpBDa4KAy4A=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=+A/kXPghT8/xpD+WmpVETO2t8RV7Pvi8GI+FTignuII=;
+	b=uRag1jrWh6/DzD+mlSLffZHG+yKi3bhbJaA4UXC9zxQ0yGwT9paNf+eCoHOtQxQgZ4OgJiIuAFf5NQQtoqoJlbb5Tmyj7CW4DIgnDJNJbaKionV+8rWqIDpCXbiM7m5E3AvJjuf9jvayDklluKpiylqGoSY5TrwFThOCqg9+dq4=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:0ba9a062-fccc-4672-a906-0e9054f2bde3,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:eb7a44e9-ef90-4382-9c6f-55f2a0689a6b,B
+X-CID-O-INFO: VERSION:1.3.11,REQID:0826ce13-ac0c-47f2-94dd-78e29ebc4c06,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:89c9d04,CLOUDID:ec57e25a-a957-4259-bcca-d3af718d7034,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
 	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
 	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,13 +32,13 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: ce6d92f2011811f1b7fc4fdb8733b2bc-20260203
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
+X-UUID: ce4c74b4011811f185319dbc3099e8fb-20260203
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 669973243; Tue, 03 Feb 2026 23:55:47 +0800
+	with ESMTP id 1091232303; Tue, 03 Feb 2026 23:55:47 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.2562.29; Tue, 3 Feb 2026 23:55:46 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -51,9 +51,9 @@ CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
 	linux-mediatek <linux-mediatek@lists.infradead.org>, StanleyYP Wang
 	<StanleyYP.Wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76 v2 4/4] wifi: mt76: mt7996: fix queue pause after scan due to wrong channel switch reason
-Date: Tue, 3 Feb 2026 23:55:32 +0800
-Message-ID: <20260203155532.1098290-4-shayne.chen@mediatek.com>
+Subject: [PATCH mt76 v2 2/4] wifi: mt76: mt7996: fix struct mt7996_mcu_uni_event
+Date: Tue, 3 Feb 2026 23:55:30 +0800
+Message-ID: <20260203155532.1098290-2-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20260203155532.1098290-1-shayne.chen@mediatek.com>
 References: <20260203155532.1098290-1-shayne.chen@mediatek.com>
@@ -69,42 +69,44 @@ X-MTK: N
 
 From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 
-Previously, we used the IEEE80211_CONF_IDLE flag to avoid setting the
-parking channel with the CH_SWITCH_NORMAL reason, which could trigger TX
-emission before bootup CAC.
+The cid field is defined as a two-byte value in the firmware.
 
-However, we found that this flag can be set after triggering scanning on a
-connected station interface, and the reason CH_SWITCH_SCAN_BYPASS_DPD will
-be used when switching back to the operating channel, which makes the
-firmware failed to resume paused AC queues.
-
-Seems that we should avoid relying on this flag after switching to single
-multi-radio architecture. Instead, use the existence of chanctx as the
-condition.
-
+Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
 Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
-v2:
-  - change to use the existence of chanctx as the condition
----
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index 68d698033e43..9ccf9f97c984 100644
+index 8e1c8e1d6a99..285cd83e7117 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -3924,8 +3924,7 @@ int mt7996_mcu_set_chan_info(struct mt7996_phy *phy, u16 tag)
+@@ -242,7 +242,7 @@ mt7996_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 		event = (struct mt7996_mcu_uni_event *)skb->data;
+ 		ret = le32_to_cpu(event->status);
+ 		/* skip invalid event */
+-		if (mcu_cmd != event->cid)
++		if (mcu_cmd != le16_to_cpu(event->cid))
+ 			ret = -EAGAIN;
+ 	} else {
+ 		skb_pull(skb, sizeof(struct mt7996_mcu_rxd));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+index d9fb49f7b01b..d70540982983 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
+@@ -25,8 +25,8 @@ struct mt7996_mcu_rxd {
+ };
  
- 	if (phy->mt76->hw->conf.flags & IEEE80211_CONF_MONITOR)
- 		req.switch_reason = CH_SWITCH_NORMAL;
--	else if (phy->mt76->offchannel ||
--		 phy->mt76->hw->conf.flags & IEEE80211_CONF_IDLE)
-+	else if (phy->mt76->offchannel || !phy->mt76->chanctx)
- 		req.switch_reason = CH_SWITCH_SCAN_BYPASS_DPD;
- 	else if (!cfg80211_reg_can_beacon(phy->mt76->hw->wiphy, chandef,
- 					  NL80211_IFTYPE_AP))
+ struct mt7996_mcu_uni_event {
+-	u8 cid;
+-	u8 __rsv[3];
++	__le16 cid;
++	u8 __rsv[2];
+ 	__le32 status; /* 0: success, others: fail */
+ } __packed;
+ 
 -- 
 2.51.0
 
