@@ -1,277 +1,251 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B053026B756
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Feb 2026 18:57:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50AED7082D
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Feb 2026 02:50:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770145058; cv=none; b=FfMzw1ro6+V/nGIe39kGWgOUuUEqsu5vow2fajjTCACFWa5bNy/dIie579604UIXccjYOuN8C8CSPZurcPTIOa5EMgPI6yWMizJ+/a06icg/QY7ZUppV5aURNox1jpWZnDkLIxNbyIeKRpgriE4V1yxZSuiHgr2TA2T6qExVhJ0=
+	t=1770173438; cv=none; b=Oo94GaXRi8JrH9XIeIW0k0+nwaCLS+Lm+Vni2YjqD/1rJYWOWm4CuJXBqaPcWhQeBfaXJZol++A3OHm3hOpOglD9+t70PuoMclUEYVxhu2LNh6M9RXUxaTqXz2HkvBh9Ef596ggs4ZscvewgnbWlUnMkl7azfWzCF4Pt54+zUO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770145058; c=relaxed/simple;
-	bh=+V+g3D9Luz3B3dTeS18x16bC4svBIdk2YYruVrwhESc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EZEKmOp9SbVWh6CrLzFizG4gDKZAJQ0q4CuFcMdpXNxU5vOykwgSZiDGXL0wDqAy7jBl6AUNcMNvxKeUFNh4xnSqjWzNppt+hThoFENBDxOWXgbf82Djxd5hc0CP7YOibiKClVdps4iPwN8aaq+mf6xczgGfQupQJIsjQF+DM2A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ev+J0Sqn; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770173438; c=relaxed/simple;
+	bh=ZsOZ2u89tCcc5P7DxHNH69kBNbhbNtyViwH8i9PPuFE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TFp5TkydXGwsqaZ7V7Z/mh1Nykm5O1oVIQeZGuEzrXG8u7q81a8r2bWTulYb0MnWzO8HY8hs6iHgK2z8B3jIK3AkWLMe/olqgByUTjH/f/Qek6eN23TB6BXJk/C45dPrxBzpb3JvmrxgIRqCavYtxLQLmgdwaUbNhA2yGYI3bK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hGAytLqU; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=NQB9t99s; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ev+J0Sqn"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-482f454be5bso1335605e9.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2026 10:57:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hGAytLqU";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="NQB9t99s"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 613Ilg8g2962734
+	for <linux-wireless@vger.kernel.org>; Wed, 4 Feb 2026 02:50:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tr+t5bMF3u7DM/Ka94SAerU8RPbxh/i/CHucN58wf04=; b=hGAytLqU79jfEJ0h
+	KV3Ioqy+Zoui38t0DXUK04gRk+fUJoH+a0wnedq78tjKF+cpg28Owz3W/1c0w8f9
+	4DOP2UlPZ5GqFgOJTdumJRGDVp+TrKftCmGDTId/8JVjepspSMqxdGxfrEGQqzvv
+	34Q52M/meDtbn0nLZamiv0y2QeFMez/MgdHiV4nXi820hOvSS28NXXMtqgVFE7VE
+	pCuYE+1qFnhcKgIeSCzFnVShN6YvT8pIaZrs57Qe1DUuzcQW4cfdxOvBMM4fD+us
+	iz7ZQy/I0YZGVeLcuL2M6HKKmK+c4BnaMLT8fk/LshP4hmQ5SioEJobId9irM372
+	Z5n90g==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c3ne7sn7g-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2026 02:50:36 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-29f1f69eec6so70263085ad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2026 18:50:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770145055; x=1770749855; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1Jg0o4TdMJmXtV1vN+Qv1MoVD9q9l2k1x/duYF/0zTg=;
-        b=Ev+J0Sqn+HndSlr0bAlET3apblbLmYPFriuOZqvN7seU/b/g2Y4D04rLsfHh+zS3R9
-         wT1DOhyx9VMtyaYryFuXUmdT+zT4A04ZNdn4kQ7RvdXfni3rSVFQoVBv5FFLzPr9onZy
-         ADzxPqdzGk2Pps8KMCXzhgm25BjBDxLDT+edRfnAS9zl1q6Jy9HK2LtMQfPd4bDlVb2U
-         8iIeRFGugXCynmAEFpp6nGetIE+hV0z8zmAe2uoLyGNIUEBTfCMZxuKlh/RQll0j3Hpq
-         HbpcpYqFORg9bjGyRAexCRUCdV8pjgePmVNaJKALctu8WPaayBCEu+4wqxEn/3u8O0Jf
-         V5pQ==
+        d=oss.qualcomm.com; s=google; t=1770173435; x=1770778235; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tr+t5bMF3u7DM/Ka94SAerU8RPbxh/i/CHucN58wf04=;
+        b=NQB9t99sSwSyWLh5qkcm9ckwZLBmPsqukFC4vq1g4BSEja4zMGk7XWgwgAutpA+SRB
+         H21FU1k3Id9u3edQUQnnvYB+nuvC/I2n5ThbilLwDI1utne6T/PdOHOmvFqi35w1O+M7
+         I9fLQOUQSx7maVIitO8yf9CHWnP31It+0qI4omMk7LA6vs72l0f64C3ISKGNIdzfMpdg
+         Sv2wX573McfAEIA3DR301Rjoi1KhbLYcFF4FYnlElhjsV+l7WAZ/ebSULS7H4RMjpjtN
+         oo9t4pSJM9OXvMmubd32kUPkPvEo57W5SDxosxGzTCHs9+ls2C3w6gCmz4wY2+00EKZ6
+         Mb9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770145055; x=1770749855;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=1Jg0o4TdMJmXtV1vN+Qv1MoVD9q9l2k1x/duYF/0zTg=;
-        b=tdVIRwERel4FrvTXP/s1fXDOfau9KyeZ/r39TGoNN+vlrZwD07pOMAOXTLSNNoYJRX
-         xFOe+zsA1Hb3xGfc7xzMXSALbrsEOeQIirMYol4K5pvwsDhDMGLiHrQ4ZcpmoQ1aeVFw
-         TKoiYJN3lH1IoBadGLEvv5JC0GefqvAOUQUjIBwXKQrrz+OOK6/MX3FGys8qZtdpkq21
-         Q3vqM6zco/fy5oAT8LsEGckxJCN1zwMgYYswNaVGpVKWgI3bOo8kEaF/3nD6F42u39yk
-         AjnVkoZPtlfWXoqMBHFuCKC+W650svzqNoe4eBkW4/K7xD19tnS+llfNZPs8/mLyTymj
-         nBGw==
-X-Gm-Message-State: AOJu0YzpoIGoGDpQ1x66v69DKeGa2bGk7v6qBER0OMu1LUsTipVnAFK9
-	jH4rBQwqmWU2j6M3GBUMuiE8I2U3QMKjuW+Rnh0hFDxI0FENGPC4XJwZDGYW2g==
-X-Gm-Gg: AZuq6aJ0skZYSmr+xdnB17kawzvqyNiKfYoCoWSFkNh9GbCBO4oU/yYo8tpedDpZqrZ
-	DgZx2zCp6Z15S4/H5Gam+u9VrRsen7bi5QirP0BIWUGd30EesQ3nYQB29NfnvK90ILT8nXUY3vV
-	cz6EnrEJkBf2/dky1BUnZZYsDqgwlpo+RSJMBiPdFkbZIkQ8cU8JtNoEjaHH19DI2fAq1hqbSOx
-	8vOvGXOw9kyQTtt9u2jqyDFfrEFVUQxB8XUOu95kSS4mZbU7zHaVaZh4jUXUEhQTfic2rUzc/5s
-	gRMNFm8/Q2u8ppekInvKz3FbREO2R+Jwj+oHwXcQP+H/dsEnUCVdiDDPFOlEzKM1/VfI1Os+ryJ
-	nNpSe5yiP3VSYVP2iqfSzWCyrZLDo1FNDSnY2Xr0XHfVl4qmTDoMVbW+iilzAm2VzvXZb14CFKz
-	iGTv0KzIpKtBqf6IzSzeKgl8dTa/1eMLHfqXk+biMdJuFgPfAn
-X-Received: by 2002:a05:600c:154e:b0:475:d9de:952e with SMTP id 5b1f17b1804b1-4830eb1cc31mr5962775e9.1.1770145054904;
-        Tue, 03 Feb 2026 10:57:34 -0800 (PST)
-Received: from hp.. (109241135248.swidnica.vectranet.pl. [109.241.135.248])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4830eac4d11sm7773425e9.3.2026.02.03.10.57.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Feb 2026 10:57:34 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: [PATCH wireless-next 4/4] wifi: mac80211_hwsim: background CAC support
-Date: Tue,  3 Feb 2026 19:53:49 +0100
-Message-ID: <20260203185717.103810-5-janusz.dziedzic@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260203185717.103810-1-janusz.dziedzic@gmail.com>
-References: <20260203185717.103810-1-janusz.dziedzic@gmail.com>
+        d=1e100.net; s=20230601; t=1770173435; x=1770778235;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tr+t5bMF3u7DM/Ka94SAerU8RPbxh/i/CHucN58wf04=;
+        b=GsFgraU1EtwY7P3LOifqa3C87I6RZOLQ01IDZXQ7B2IPr+ArXGRtEIvAEC7z6xsE09
+         84MtlXSOyHczxjk0FGO+bayF5sejZAn4TG/Kp5GCEvl5BPoo9oa3l9XO4n9N9DPWCotQ
+         IUuMbazYpQzSlVj4pv8AOt4AyVqO8hlox4VMfck4Rr0awueWOFxui/dqkZ3aPgHJSFER
+         HcvlF831AiUXHSECJatd0no46MOz7NutM7hec91k/+Yuhq09ecNAA6hutL07pLpqgbhM
+         Ep7EJF4ji65AdsM2q+ggx4reb8IWeei/IVHkx5I3XqrjEEBOAKHqnxk9ri6UFIf6iHJy
+         PfiQ==
+X-Gm-Message-State: AOJu0Yyr1LWny6z7uZ2/xoCVlBj/+E/oprhqiDHmxgbP/CCql8vuRbgA
+	Hme8T7Utb3+VqWnBz+iXJ50f44PstrN8WwalFcqEVuQhO4IQZgEmdTbmxm1g4X7pTal8mTV5z6T
+	hd1/bOuPYGk9VVHoTDyBNZ3ltuOtfyIECbVxqUyvf8e+Ff6BPWLT1WhA/9nRzbZbG8DrM6EjMfn
+	uPog==
+X-Gm-Gg: AZuq6aJ8/3SIOYvAIDRAadroVpMMdve1gK9vUDVCtyYjPRLM8FTrOep7Lq2KnFTm4B3
+	WkV2VeaMdJwOpAKfNDzioFr5nDQapeer+Oia8utnrX15JNFax8KlBaU9WCgzJfWzyTeuhPZ82ID
+	oDuRtVgnKeHdFYQSAz9fGCs0IpCvJ7t8e3YVdNGwn7hY20RLZmpHr96eNPdCdrzh/Iy1yLgqwdq
+	wZnp2M1v1fFnQ9HN7B2e0Rus2oflRbvfJ5CzHf1j6TVw6h14kRf4pKsGrS84cE23WrVrRdvqyoN
+	LpW/cojoc7i3Yn9X67C5HkcqRdM5Qc9slbgRrPW1Rq43Cozrypnm1iVAQwO7RTTOS/INmF2N7tG
+	4SvQQeIXzv3WNTftJwkm0Tteo2FIK4Ijy2CbxoEAbBKscsirArjSDEVgwsJ6BO/rE9Rede+mJgP
+	OthXXm7Q==
+X-Received: by 2002:a17:902:ebc4:b0:2a0:be7b:1c50 with SMTP id d9443c01a7336-2a933bb19eamr16540755ad.14.1770173435417;
+        Tue, 03 Feb 2026 18:50:35 -0800 (PST)
+X-Received: by 2002:a17:902:ebc4:b0:2a0:be7b:1c50 with SMTP id d9443c01a7336-2a933bb19eamr16540555ad.14.1770173434727;
+        Tue, 03 Feb 2026 18:50:34 -0800 (PST)
+Received: from [10.133.33.43] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a9338510c9sm7989535ad.12.2026.02.03.18.50.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 03 Feb 2026 18:50:34 -0800 (PST)
+Message-ID: <ca73a571-5ea1-4149-b9d6-8ad0875454eb@oss.qualcomm.com>
+Date: Wed, 4 Feb 2026 10:50:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: Potential firmware selection issue with QCNFA765 on ThinkPad P14s
+ Gen 5
+To: Mohamed Sallam <sallamx99@gmail.com>, ath11k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <CALOnm7APGpVWcx45O78fa4hOCUGDc0-ywGoqicr51YtpxNueLg@mail.gmail.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <CALOnm7APGpVWcx45O78fa4hOCUGDc0-ywGoqicr51YtpxNueLg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: BgjN72yAE9OaOSrJRbogcUtBveO4J8A-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjA0MDAxOCBTYWx0ZWRfXyt+oLBXIaCbA
+ 8MJFBHW7n3VlBS+1w41QcFq0vWTiRo5RvT9LEHF/9WY3zHlqypbA15A9V9ajvXyDmin4N6afv7o
+ uqm758Fo5H/vNfdXnhz/rGYrcuMJWJ7fkT1OYapNUDCla0DRltXWWcvva3NzStFQNl/gqDFBcET
+ z3LLmACADpmKrGQ5LKXyajrto8Jo9rPmQeqJoLMtxn2jqTBYMNphECdMJ+QwBmccvVh0bu7ID0b
+ z0v9b/o2/KVG5hyeNPAKt6TiU2AJ54x/AtoJFwyhH0V652JXDdXHMWldIHPaSNmFnqjhpnhIaxF
+ 0fK6DDmQnVjGmRvxTvhiUve5wLePLy3UStt6p2H1T/H9WObIRjwTWedKwo7omyeni5q4jTt4K5m
+ X0k32UjbuoiJ0MA0k+OAsV40Y0Wj406O7aMGoExHLT8FFYF+2R//3VP9l7f/U1SieP8C1CpH/So
+ JZoMy7mmAthwmJUQ2MQ==
+X-Authority-Analysis: v=2.4 cv=TZmbdBQh c=1 sm=1 tr=0 ts=6982b3fc cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=YCX_753iAahT_6zR1PwA:9 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22 a=zY0JdQc1-4EAyPf5TuXT:22
+X-Proofpoint-GUID: BgjN72yAE9OaOSrJRbogcUtBveO4J8A-
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-03_07,2026-02-03_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 suspectscore=0 lowpriorityscore=0
+ bulkscore=0 phishscore=0 clxscore=1015 spamscore=0 adultscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2601150000
+ definitions=main-2602040018
 
-Report background CAC support and add allow
-to cancel background CAC and simulate radar.
 
-echo cancel > /sys/kernel/debug/ieee80211/phy2/hwsim/dfs_background_cac
-echo radar > /sys/kernel/debug/ieee80211/phy2/hwsim/dfs_background_cac
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
----
- drivers/net/wireless/virtual/mac80211_hwsim.c | 77 +++++++++++++++++++
- drivers/net/wireless/virtual/mac80211_hwsim.h |  2 +
- 2 files changed, 79 insertions(+)
+On 2/4/2026 2:54 AM, Mohamed Sallam wrote:
+> Hi ath11k maintainers,
+> 
+> I'm not very experienced with Linux - I'm an end user who noticed something
+> strange with my WiFi and wanted to share my findings in case it helps others.
+> 
+> Full disclosure: I used AI tools to help me investigate this issue and
+> understand the driver behavior. If I'm misunderstanding something fundamental,
+> please let me know.
+> 
+> WHAT I OBSERVED
+> ===============
+> I have a Lenovo ThinkPad P14s Gen 5 AMD with a Qualcomm QCNFA765 WiFi card
+> (PCI ID 17cb:1103, subsystem 17aa:9309). I'm running Arch Linux with kernel
+> 6.12.68-1-lts and firmware package linux-firmware-atheros 20260110-1.
+> 
+> I noticed that channels 149-165 in the 5 GHz band are marked with (no IR),
+> preventing me from using them. This happens consistently on my system.
+> 
+> WHAT I FOUND
+> ============
+> While trying to understand why this happens, I discovered that the
+> linux-firmware package contains two different firmware files:
+> - Generic: ath11k/WCN6855/hw2.0/amss.bin
+> - Card-specific: ath11k/WCN6855/hw2.0/nfa765/amss.bin
+> 
+> When I manually create a symlink to use the nfa765 variant instead of the
+> default, the (no IR) restrictions disappear and all channels work normally.
+> This suggests the driver might not be selecting the optimal firmware for
+> this specific card variant.
+> 
+> The AI analysis suggested that:
+> - The driver looks for firmware at ath11k/<chip>/<hw_rev>/<filename>
+> - There's a "firmware-name" property that can override this, but it seems
+> to only work on ARM platforms with device trees, not x86 laptops
+> - The PCI subsystem ID (17aa:9309) might be available to the driver but
+> isn't being used to pick different firmware files
+> 
+> I don't know if this is accurate - it's just what the AI told me based on
+> looking at the driver code. The key point is that the firmware swap fixes
+> the issue for me.
+> 
+> REPRODUCTION STEPS
+> ==================
+> On my system, with the default setup:
+> 1. Check channel flags: iw phy | grep -E "5745|5765|5785|5805|5825"
+> 2. Channels 149-165 show (no IR)
+> 
+> After applying the workaround (symlink nfa765 firmware):
+> 1. Same check shows channels without (no IR) restrictions
+> 2. WiFi works on all channels
+> 
+> TECHNICAL DETAILS
+> =================
+> Hardware: Lenovo ThinkPad P14s Gen 5 AMD (21ME001MUS)
+> WiFi: Qualcomm QCNFA765 (WCN6855 hw2.1)
+> PCI: 17cb:1103, subsystem 17aa:9309 (Lenovo)
+> Kernel: 6.12.68-1-lts
+> Firmware: linux-firmware-atheros 20260110-1
+> Firmware ver: WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
+> 
+> Logs from my system:
+> $ dmesg | grep ath11k
+> [    2.845632] ath11k_pci 0000:02:00.0: chip_id 0x0 chip_family 0x0
+> board_id 0xff
+> [    2.845778] ath11k_pci 0000:02:00.0: fw_version 0x1019B0E1
+> fw_build_timestamp 2024-12-19
+> [    2.845789] ath11k_pci 0000:02:00.0: fw_build_id
+> WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
+> [    2.845806] ath11k_pci 0000:02:00.0: qmi failed to load bdf
+> [    2.845809] ath11k_pci 0000:02:00.0: qmi failed to load cal data,
+> fallback to 0xff
+> 
+> $ lspci -vnns 02:00.0
+> 02:00.0 0280: 17cb:1103 (rev 01)
+>     Subsystem: 17aa:9309
+>     Kernel driver in use: ath11k_pci
+> 
+> With default firmware:
+> $ iw phy | grep -E "5745|5765|5785|5805|5825"
+> * 5745.0 MHz [149] (14.0 dBm) (no IR)
+> * 5765.0 MHz [153] (14.0 dBm) (no IR)
+> * 5785.0 MHz [157] (14.0 dBm) (no IR)
+> * 5805.0 MHz [161] (14.0 dBm) (no IR)
+> * 5825.0 MHz [165] (14.0 dBm) (no IR)
+> 
+> With nfa765 firmware symlinked:
+> * 5745.0 MHz [149] (23.0 dBm)
+> * 5765.0 MHz [153] (23.0 dBm)
+> * 5785.0 MHz [157] (23.0 dBm)
+> * 5805.0 MHz [161] (23.0 dBm)
+> * 5825.0 MHz [165] (23.0 dBm)
+> 
+> MY WORKAROUND
+> =============
+> I'm currently using this workaround:
+>   sudo ln -sf ../hw2.0/nfa765/amss.bin.zst \
+>       /lib/firmware/ath11k/WCN6855/hw2.1/amss.bin.zst
+> 
+> This fixes the issue for me, but I understand it's a hack, not a proper
+> solution.
+> 
+> QUESTIONS
+> =========
+> 1. Is the driver supposed to automatically select card-specific firmware
+>    based on PCI subsystem ID, or is this working as designed?
+> 2. If it's supposed to work this way, could there be a bug in the firmware
+>    path selection logic?
+> 3. Is there a better workaround than manually symlinking firmware files?
+> 
+> Thank you for your time and for maintaining this driver. I appreciate
+> any guidance you can provide, even if it's just to tell me this is
+> expected behavior and I'm misunderstanding something.
+> 
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
-index 4d9f5f87e814..8b5618c2111f 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
-@@ -715,6 +715,7 @@ struct mac80211_hwsim_data {
- 	} ps;
- 	bool ps_poll_pending;
- 	struct dentry *debugfs;
-+	struct cfg80211_chan_def radar_background_chandef;
- 
- 	atomic_t pending_cookie;
- 	struct sk_buff_head pending;	/* packets pending */
-@@ -936,6 +937,7 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_PMSR_RESULT] = NLA_POLICY_NESTED(hwsim_pmsr_peers_result_policy),
- 	[HWSIM_ATTR_MULTI_RADIO] = { .type = NLA_FLAG },
- 	[HWSIM_ATTR_SUPPORT_NAN_DEVICE] = { .type = NLA_FLAG },
-+	[HWSIM_ATTR_SUPPORT_BACKGROUND_RADAR] = { .type = NLA_FLAG },
- };
- 
- #if IS_REACHABLE(CONFIG_VIRTIO)
-@@ -1164,6 +1166,41 @@ static int hwsim_write_simulate_radar(void *dat, u64 val)
- DEFINE_DEBUGFS_ATTRIBUTE(hwsim_simulate_radar, NULL,
- 			 hwsim_write_simulate_radar, "%llu\n");
- 
-+static ssize_t hwsim_background_cac_write(struct file *file,
-+					  const char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct mac80211_hwsim_data *data = file->private_data;
-+	char buf[8] = {};
-+
-+	if (count >= sizeof(buf))
-+		return -EINVAL;
-+
-+	if (copy_from_user(buf, user_buf, count))
-+		return -EFAULT;
-+
-+	/* Check if background radar channel is configured */
-+	if (!data->radar_background_chandef.chan)
-+		return -ENOENT;
-+
-+	if (sysfs_streq(buf, "radar"))
-+		cfg80211_background_radar_event(data->hw->wiphy,
-+						&data->radar_background_chandef,
-+						GFP_KERNEL);
-+	else if (sysfs_streq(buf, "cancel"))
-+		cfg80211_background_cac_abort(data->hw->wiphy);
-+	else
-+		return -EINVAL;
-+
-+	return count;
-+}
-+
-+static const struct file_operations hwsim_background_cac_ops = {
-+	.write = hwsim_background_cac_write,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- static int hwsim_fops_group_read(void *dat, u64 *val)
- {
- 	struct mac80211_hwsim_data *data = dat;
-@@ -4154,6 +4191,24 @@ static int mac80211_hwsim_change_nan_config(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static int mac80211_hwsim_set_radar_background(struct ieee80211_hw *hw,
-+					       struct cfg80211_chan_def *chan)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (!wiphy_ext_feature_isset(hw->wiphy,
-+				     NL80211_EXT_FEATURE_RADAR_BACKGROUND))
-+		return -EOPNOTSUPP;
-+
-+	if (chan)
-+		data->radar_background_chandef = *chan;
-+	else
-+		memset(&data->radar_background_chandef, 0,
-+		       sizeof(data->radar_background_chandef));
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_MAC80211_DEBUGFS
- #define HWSIM_DEBUGFS_OPS					\
- 	.link_add_debugfs = mac80211_hwsim_link_add_debugfs,
-@@ -4189,6 +4244,7 @@ static int mac80211_hwsim_change_nan_config(struct ieee80211_hw *hw,
- 	.start_nan = mac80211_hwsim_start_nan,                  \
- 	.stop_nan = mac80211_hwsim_stop_nan,                    \
- 	.nan_change_conf = mac80211_hwsim_change_nan_config,    \
-+	.set_radar_background = mac80211_hwsim_set_radar_background, \
- 	HWSIM_DEBUGFS_OPS
- 
- #define HWSIM_NON_MLO_OPS					\
-@@ -4255,6 +4311,7 @@ struct hwsim_new_radio_params {
- 	bool mlo;
- 	const struct cfg80211_pmsr_capabilities *pmsr_capa;
- 	bool nan_device;
-+	bool background_radar;
- };
- 
- static void hwsim_mcast_config_msg(struct sk_buff *mcast_skb,
-@@ -4340,6 +4397,12 @@ static int append_radio_msg(struct sk_buff *skb, int id,
- 		if (ret < 0)
- 			return ret;
- 	}
-+
-+	if (param->background_radar) {
-+		ret = nla_put_flag(skb, HWSIM_ATTR_SUPPORT_BACKGROUND_RADAR);
-+		if (ret < 0)
-+			return ret;
-+	}
- 	return 0;
- }
- 
-@@ -5794,6 +5857,9 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 
- 	wiphy_ext_feature_set(hw->wiphy,
- 			      NL80211_EXT_FEATURE_DFS_CONCURRENT);
-+	if (param->background_radar)
-+		wiphy_ext_feature_set(hw->wiphy,
-+				      NL80211_EXT_FEATURE_RADAR_BACKGROUND);
- 
- 	if (param->no_vif)
- 		ieee80211_hw_set(hw, NO_AUTO_VIF);
-@@ -5832,6 +5898,10 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 		debugfs_create_file("dfs_simulate_radar", 0222,
- 				    data->debugfs,
- 				    data, &hwsim_simulate_radar);
-+	if (param->background_radar)
-+		debugfs_create_file("dfs_background_cac", 0200,
-+				    data->debugfs,
-+				    data, &hwsim_background_cac_ops);
- 
- 	if (param->pmsr_capa) {
- 		data->pmsr_capa = *param->pmsr_capa;
-@@ -5950,6 +6020,9 @@ static int mac80211_hwsim_get_radio(struct sk_buff *skb,
- 	param.channels = data->channels;
- 	param.hwname = wiphy_name(data->hw->wiphy);
- 	param.pmsr_capa = &data->pmsr_capa;
-+	param.background_radar =
-+		wiphy_ext_feature_isset(data->hw->wiphy,
-+					NL80211_EXT_FEATURE_RADAR_BACKGROUND);
- 
- 	res = append_radio_msg(skb, data->idx, &param);
- 	if (res < 0)
-@@ -6387,6 +6460,9 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	if (info->attrs[HWSIM_ATTR_MULTI_RADIO])
- 		param.multi_radio = true;
- 
-+	if (info->attrs[HWSIM_ATTR_SUPPORT_BACKGROUND_RADAR])
-+		param.background_radar = true;
-+
- 	if (info->attrs[HWSIM_ATTR_REG_HINT_ALPHA2])
- 		param.reg_alpha2 =
- 			nla_data(info->attrs[HWSIM_ATTR_REG_HINT_ALPHA2]);
-@@ -7165,6 +7241,7 @@ static int __init init_mac80211_hwsim(void)
- 		param.p2p_device = support_p2p_device;
- 		param.mlo = mlo;
- 		param.multi_radio = multi_radio;
-+		param.background_radar = true;
- 		param.use_chanctx = channels > 1 || mlo || multi_radio;
- 		param.iftypes = HWSIM_IFTYPE_SUPPORT_MASK;
- 		if (param.p2p_device)
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.h b/drivers/net/wireless/virtual/mac80211_hwsim.h
-index c2d06cf852a5..a022cd5c0f1c 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim.h
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim.h
-@@ -161,6 +161,7 @@ enum hwsim_commands {
-  *	Adds one radio for each band. Number of supported channels will be set for
-  *	each radio instead of for the wiphy.
-  * @HWSIM_ATTR_SUPPORT_NAN_DEVICE: support NAN Device virtual interface (flag)
-+ * @HWSIM_ATTR_SUPPORT_BACKGROUND_RADAR: background radar/CAC support (flag)
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- enum hwsim_attrs {
-@@ -195,6 +196,7 @@ enum hwsim_attrs {
- 	HWSIM_ATTR_PMSR_RESULT,
- 	HWSIM_ATTR_MULTI_RADIO,
- 	HWSIM_ATTR_SUPPORT_NAN_DEVICE,
-+	HWSIM_ATTR_SUPPORT_BACKGROUND_RADAR,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
--- 
-2.43.0
+Thanks for reporting. This seems like a known issue and I have notified the dev team to
+look into this. Likely we need to upload a new firmware to fix this, but I am not totally
+sure now.
+
+> Best regards,
+> Mohamed Sallam
+> 
 
