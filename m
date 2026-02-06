@@ -1,44 +1,43 @@
 Received: from devnull.danielhodges.dev (vps-2f6e086e.vps.ovh.us [135.148.138.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C24D307AE4;
-	Fri,  6 Feb 2026 19:44:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5617326ED59;
+	Fri,  6 Feb 2026 19:54:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=135.148.138.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770407055; cv=none; b=LqHS6mjt8642+m6f6D6xMaQSCoRdd3Gj/JDIR6NtYQVPkfpjJUqgeunw+SEj7EonpI/Wkjo8TdA7IH9qMvAknv03+oWY+wPoS1rDN4gz5JMyC2l2TmwnbFXcgxnoOnE80xpJfH+tz5Co6/NlsbgL2twYDaoPTjWlCmrpcmm3ewo=
+	t=1770407660; cv=none; b=DKd4VtgPVwTGoPKDPZtbDMQgsfDuFCmOztsQcZApXrLZURkrultQ5CCDK+5So0ZJuecj8+suZwNFdp2ZdgVhGYB/CaO7nx6Z80bBOtkoBf7MXVH8g5CaCSB0TDSQgBg4DsHmQ/z1mXy52KZkM2yExk3MEdTq3on77Q3qEWHhYwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770407055; c=relaxed/simple;
-	bh=LhwWG2r7Ww6fOg2VoYJfocmn1GCzXhPwMp6I9Tbywvc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eC+73NykHuOdgb4HogoQjpLzNkyyleZb6n7BMuugZIbFoXa3UNYhozJ1kvf+n+1qdcWYP4ei+1ePE8CnQ5KHkuVRpSq7FyE83ksntOSK7k4wCkn5wF2A1nOyXLzNJ+FORhYvzr4N6EyvXYZpC06mCMiaStuFt14xgMmU3RWIq60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=danielhodges.dev; spf=pass smtp.mailfrom=danielhodges.dev; dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=iZTWL1gD; dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=5whLnhAU; arc=none smtp.client-ip=135.148.138.8
+	s=arc-20240116; t=1770407660; c=relaxed/simple;
+	bh=PRr7Hpe7c4EDtdbIbjvob9tWf81iUT4gU6SBmjVnN80=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ktxonJ9nZF/KMwujlFweXcSDrB4iPCfNq5v9xOjPMMvYwiSuifX4QjXY7ZXXROZf41p5ywzNfK7T+t5KsMyfOVIBAjPCLeBE4MtwI8Rkm7h0sHTR1xuyd/VHxjdy2WIeEHJUqpSY1HiRzwJh2YMekkW5om6QlprCytHUuw9LRHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=danielhodges.dev; spf=pass smtp.mailfrom=danielhodges.dev; dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=BBWTQ8Ek; dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b=RLlJy1Hn; arc=none smtp.client-ip=135.148.138.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=danielhodges.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=danielhodges.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="iZTWL1gD";
-	dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="5whLnhAU"
+	dkim=pass (2048-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="BBWTQ8Ek";
+	dkim=permerror (0-bit key) header.d=danielhodges.dev header.i=@danielhodges.dev header.b="RLlJy1Hn"
 DKIM-Signature: v=1; a=rsa-sha256; s=202510r; d=danielhodges.dev; c=relaxed/relaxed;
-	h=Message-ID:Date:Subject:To:From; t=1770407041; bh=32LE/KoR10luMKllipYKpEK
-	C+tmhCHdKbkkvguW08kk=; b=iZTWL1gDUEHtjy7edQuj+6PAzOA8qa+0H1kWp7HblwWKotHBTn
-	XaypDq/DN1zNNlABuXvQODj7gxm6dG2nU2DwdI+8Cd4AFJRgWFlxS2DePozRHiI6I9I1UJbE1+t
-	YO2D6uLMlOrO6zGK9CGB/T95kfqaTdQ9xkPmoZ+RkfsdjZMtyxy6LMVN69HfiLUTu7/VaRhMdsK
-	tW2G3vT4/oDMLubAKz2D8YtvYUtWwQRs2QZ8ae/KT7oypeTOH2OB1p+HdQqIoeKhlf8bqYdv/6R
-	LTPQlUHRC4NRbYj6SXGE1JoMtLjYyRjpv35GJb+IHNAw9RYh8HfNmCA8RhVnteoGuDA==;
+	h=Message-ID:Date:Subject:To:From; t=1770407636; bh=R2zmt2rU1GHwt3meo6uTtvY
+	arMax11ycYnpUX5GS8VU=; b=BBWTQ8EkYClsNFkzh2z4h1Mj4HhZWxUEXtkpoLH/qdlcF+/ND5
+	id3ZFTNRsmAP1w+Pt0QLDuJaF6t5b8F96457EnB8IJtIF5n3PfZ6us1xg/x0LFMhzKEDWfEdJgE
+	fsjwqolZjZyFElJNK8G/FPxhuxPrWwdnICdXife4odg3F4AZTENZ1d9ElJMZ+30e1Cs55u1s4cH
+	KXOmk8du9tLLBc2O9G6sQ/Kbp98mUSu/CsNs890/1gJftSoHnpRO+5QExn3anMtEX+UP4gkNA+B
+	d70aOS8KQC36HcCDYOYQ9WtWY4QYjaQsbNkLc8/arDUDq1yDP8+ZPe7rwJXez4gM5fw==;
 DKIM-Signature: v=1; a=ed25519-sha256; s=202510e; d=danielhodges.dev; c=relaxed/relaxed;
-	h=Message-ID:Date:Subject:To:From; t=1770407041; bh=32LE/KoR10luMKllipYKpEK
-	C+tmhCHdKbkkvguW08kk=; b=5whLnhAUVpt792npxDS1sUSZko6ZNlJakzlASIBoSx2znWJ3LR
-	ydIQMlU5P626KPxvCSZWvp7LLgtETH843fBw==;
+	h=Message-ID:Date:Subject:To:From; t=1770407636; bh=R2zmt2rU1GHwt3meo6uTtvY
+	arMax11ycYnpUX5GS8VU=; b=RLlJy1HnmnEXN63jU5pwEaKa6xUHEW33O/i4yACgDuiAtrzY5e
+	9KDq8Sc0JZqy4NpgJFrlUriCGXFpv0PuOCDg==;
 From: Daniel Hodges <git@danielhodges.dev>
-To: Brian Norris <briannorris@chromium.org>,
-	linux-wireless@vger.kernel.org
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@kernel.org>,
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
+	Daniel Drake <dsd@laptop.org>,
+	Dan Williams <dcbw@redhat.com>,
 	Daniel Hodges <git@danielhodges.dev>
-Subject: [PATCH] wifi: mwifiex: fix use-after-free in mwifiex_adapter_cleanup()
-Date: Fri,  6 Feb 2026 14:44:01 -0500
-Message-ID: <20260206194401.2346-1-git@danielhodges.dev>
+Subject: [PATCH] wifi: libertas: fix use-after-free in lbs_free_adapter()
+Date: Fri,  6 Feb 2026 14:53:56 -0500
+Message-ID: <20260206195356.15647-1-git@danielhodges.dev>
 X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -48,40 +47,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The mwifiex_adapter_cleanup() function uses timer_delete()
-(non-synchronous) for the wakeup_timer before the adapter structure is
-freed. This is incorrect because timer_delete() does not wait for any
-running timer callback to complete.
+The lbs_free_adapter() function uses timer_delete() (non-synchronous)
+for both command_timer and tx_lockup_timer before the structure is
+freed. This is incorrect because timer_delete() does not wait for
+any running timer callback to complete.
 
-If the wakeup_timer callback (wakeup_timer_fn) is executing when
-mwifiex_adapter_cleanup() is called, the callback will continue to
-access adapter fields (adapter->hw_status, adapter->if_ops.card_reset,
-etc.) which may be freed by mwifiex_free_adapter() called later in the
-mwifiex_remove_card() path.
+If a timer callback is executing when lbs_free_adapter() is called,
+the callback will access freed memory since lbs_cfg_free() frees the
+containing structure immediately after lbs_free_adapter() returns.
 
-Use timer_delete_sync() instead to ensure any running timer callback has
-completed before returning.
+Both timer callbacks (lbs_cmd_timeout_handler and lbs_tx_lockup_handler)
+access priv->driver_lock, priv->cur_cmd, priv->dev, and other fields,
+which would all be use-after-free violations.
 
-Fixes: 4636187da60b ("mwifiex: add wakeup timer based recovery mechanism")
+Use timer_delete_sync() instead to ensure any running timer callback
+has completed before returning.
+
+This bug was introduced in commit 8f641d93c38a ("libertas: detect TX
+lockups and reset hardware") where del_timer() was used instead of
+del_timer_sync() in the cleanup path. The command_timer has had the
+same issue since the driver was first written.
+
+Fixes: 8f641d93c38a ("libertas: detect TX lockups and reset hardware")
+Fixes: 954ee164f4f4 ("[PATCH] libertas: reorganize and simplify init sequence")
 Cc: stable@vger.kernel.org
 Signed-off-by: Daniel Hodges <git@danielhodges.dev>
 ---
- drivers/net/wireless/marvell/mwifiex/init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/libertas/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 4820010a86f6..5902e2c821f2 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -391,7 +391,7 @@ static void mwifiex_invalidate_lists(struct mwifiex_adapter *adapter)
- static void
- mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
+index d44e02c6fe38..dd97f1b61f4d 100644
+--- a/drivers/net/wireless/marvell/libertas/main.c
++++ b/drivers/net/wireless/marvell/libertas/main.c
+@@ -799,8 +799,8 @@ static void lbs_free_adapter(struct lbs_private *priv)
  {
--	timer_delete(&adapter->wakeup_timer);
-+	timer_delete_sync(&adapter->wakeup_timer);
- 	cancel_delayed_work_sync(&adapter->devdump_work);
- 	mwifiex_cancel_all_pending_cmd(adapter);
- 	wake_up_interruptible(&adapter->cmd_wait_q.wait);
+ 	lbs_free_cmd_buffer(priv);
+ 	kfifo_free(&priv->event_fifo);
+-	timer_delete(&priv->command_timer);
+-	timer_delete(&priv->tx_lockup_timer);
++	timer_delete_sync(&priv->command_timer);
++	timer_delete_sync(&priv->tx_lockup_timer);
+ }
+ 
+ static const struct net_device_ops lbs_netdev_ops = {
 -- 
 2.52.0
 
