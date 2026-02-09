@@ -1,33 +1,33 @@
-Received: from forward100d.mail.yandex.net (forward100d.mail.yandex.net [178.154.239.211])
+Received: from forward101d.mail.yandex.net (forward101d.mail.yandex.net [178.154.239.212])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 428DC1F30A4;
-	Mon,  9 Feb 2026 03:03:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF6B122836C;
+	Mon,  9 Feb 2026 03:03:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.212
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770606186; cv=none; b=mcyvo/TKamsbAVDgmBbVq9hxGw+uoU+5C++d7NgylsJDiyM7iSZujXKxiPfLDkVPGjZDUrJrYJPiiCBh4AGCT6SrnQPARugcQYoebo215qLRj0P+2L56KwPHgrJWaka+Yc3N00MdYhPh7I+sQPHM2QhNZC0b0o4x6udSrJ9vudw=
+	t=1770606186; cv=none; b=FtkHqLNRerYQkjhga6sV5Elv7FiFcQWHSX9i02pAQ9Jrn+ccWStu+CC63zcYLwJD7ZcXaP7WnZsS6XL423FSo1qBaFUPaRt31q7EEhm8iZyWqcUG5SYSj1xBZOHD7s2na3gvpT4BK8Dm89Cu2HZYPrSs41nUmqkT94gAz4Xa1Qg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770606186; c=relaxed/simple;
-	bh=XV2WYtg7J8m9mPREpomkceBNFkGNsrTbN7bAzToa4Ho=;
+	bh=yiIjT8QBpch/u0ui/vy8LKtqe7lHi4xzIoxFhBemH7s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u4YKYNHquIAt6RkQYV1Jz1rEaoOxx57Ug1U+SixfrB3D/safIQJYi9P/2WjQCQKH6ny+yOS+5gLgGTlPRHpogzCvXQbz5v/6Ukkc/uGua/qR8Hm5DaVPyha3IWIyrSVsH3TNeE3KegDFN7GnEYVwrpPXa5GD/+y8W2x8VwtwQG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=LqtkhmxF; arc=none smtp.client-ip=178.154.239.211
+	 MIME-Version; b=o9m9xmbYxc9XSiVKbYTIXtY+qWpRC6CXHdjsUNsNDUEJq9cQUiSy6QI/YF8NROONed99ulz4+PtlGfsr0SEPUp+fJdgnpqlumQEEbkFNsS5XwmKj91YMYyQ+gHjHU7t1xcsWbl5TPxBWUgIYIt0w6yMZgArcO+TzfPPfLSaafk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=bZCmoPnr; arc=none smtp.client-ip=178.154.239.212
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="LqtkhmxF"
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="bZCmoPnr"
 Received: from mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:190d:0:640:bab5:0])
-	by forward100d.mail.yandex.net (Yandex) with ESMTPS id E2C82C005B;
-	Mon, 09 Feb 2026 06:02:56 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id s2H8uoNGO0U0-duZv1Cca;
-	Mon, 09 Feb 2026 06:02:56 +0300
+	by forward101d.mail.yandex.net (Yandex) with ESMTPS id 407DBC007A;
+	Mon, 09 Feb 2026 06:02:58 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id s2H8uoNGO0U0-mHKt1Oao;
+	Mon, 09 Feb 2026 06:02:57 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1770606176; bh=+RQwyoKmfRyBBXSU6RgQl8En3RjfT4P9NFlE8zO5JL0=;
+	t=1770606177; bh=vhPBz7+tj7yd+44S6wLmgT5a0ZZddDSRoKD28qCw7Ps=;
 	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
-	b=LqtkhmxFJf95LWbUkQIgbDTbPu1pziIZ8zwzLm/2yLF+cG1MNEOoqlMRlsp6AJEKS
-	 NoGkb1JqZgdcHk5f8UNPqZTicLbfuW74g1uPH4gPvwkwlCNdJuE7GPLcPsBkB6upmL
-	 IfU53r7FbweOKWTVh59uiC6Qwrl8W06x0yaK8KZ4=
+	b=bZCmoPnr/0ZZ5DNdGx5ZUaLOr2AHCQ8Wl5WAAJoXcz6YDM74fJQH9g/4kaVcapoBC
+	 7+j3Oal/+vsOwJ6dJVgzFH5SFUgBljoFaWafkqkH+NRCRNVaxypZ5hTdlznaZj+YLu
+	 YImDJgkIsWmyzzOGj1stgHvY2Psgd0hNQwaqpvsY=
 Authentication-Results: mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
 From: m.limarencko@yandex.ru
 To: jjohnson@kernel.org
@@ -35,9 +35,9 @@ Cc: linux-wireless@vger.kernel.org,
 	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Mikhail Limarenko <m.limarencko@yandex.ru>
-Subject: [PATCH ath-next 1/4] wifi: ath12k: validate survey index when frequency is not found
-Date: Mon,  9 Feb 2026 06:02:40 +0300
-Message-ID: <20260209030243.1530075-2-m.limarencko@yandex.ru>
+Subject: [PATCH ath-next 3/4] wifi: ath12k: sanitize invalid MCS metadata in rx path
+Date: Mon,  9 Feb 2026 06:02:42 +0300
+Message-ID: <20260209030243.1530075-4-m.limarencko@yandex.ru>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260209030243.1530075-1-m.limarencko@yandex.ru>
 References: <20260209030243.1530075-1-m.limarencko@yandex.ru>
@@ -51,72 +51,104 @@ Content-Transfer-Encoding: 8bit
 
 From: Mikhail Limarenko <m.limarencko@yandex.ru>
 
-freq_to_idx() currently returns a monotonic index even when the
+Malformed or unsupported rate metadata from firmware can carry
 
-frequency was never matched.
+invalid MCS values into mac80211 status handling.
 
-In chan info paths this can lead to out-of-bounds survey indexing
+This was observed with HE MCS=12 and coincided with
 
-for unexpected frequency events.
+ieee80211_rx_list warnings.
 
-Return -EINVAL on no match and make callers reject negative
+When MCS is out of range, fall back to legacy metadata and use
 
-indexes.
+ratelimited diagnostics.
 
 Tested-on: QCNFA765 (WCN785x), kernel 6.18.5+deb13-amd64
 Signed-off-by: Mikhail Limarenko <m.limarencko@yandex.ru>
 ---
- drivers/net/wireless/ath/ath12k/wmi.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath12k/dp_rx.c | 39 +++++++++++++++----------
+ 1 file changed, 23 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index e647b84..422e3f8 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -6520,7 +6520,7 @@ static int freq_to_idx(struct ath12k *ar, int freq)
- 		if (!sband)
- 			continue;
- 
--		for (ch = 0; ch < sband->n_channels; ch++, idx++) {
-+		for (ch = 0; ch < sband->n_channels; ch++) {
- 			if (sband->channels[ch].center_freq <
- 			    KHZ_TO_MHZ(ar->freq_range.start_freq) ||
- 			    sband->channels[ch].center_freq >
-@@ -6528,12 +6528,13 @@ static int freq_to_idx(struct ath12k *ar, int freq)
- 				continue;
- 
- 			if (sband->channels[ch].center_freq == freq)
--				goto exit;
-+				return idx;
-+
-+			idx++;
+diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+index 99d29ed..f0c56a9 100644
+--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+@@ -2534,9 +2534,11 @@ static void ath12k_dp_rx_h_rate(struct ath12k *ar, struct ath12k_dp_rx_info *rx_
+ 	case RX_MSDU_START_PKT_TYPE_11N:
+ 		rx_status->encoding = RX_ENC_HT;
+ 		if (rate_mcs > ATH12K_HT_MCS_MAX) {
+-			ath12k_warn(ar->ab,
+-				    "Received with invalid mcs in HT mode %d\n",
+-				     rate_mcs);
++			dev_warn_ratelimited(ar->ab->dev,
++					     "ath12k: invalid HT mcs %u, forcing legacy rate metadata\n",
++					     rate_mcs);
++			rx_status->encoding = RX_ENC_LEGACY;
++			rx_status->rate_idx = 0;
+ 			break;
  		}
- 	}
+ 		rx_status->rate_idx = rate_mcs + (8 * (nss - 1));
+@@ -2546,42 +2548,47 @@ static void ath12k_dp_rx_h_rate(struct ath12k *ar, struct ath12k_dp_rx_info *rx_
+ 		break;
+ 	case RX_MSDU_START_PKT_TYPE_11AC:
+ 		rx_status->encoding = RX_ENC_VHT;
+-		rx_status->rate_idx = rate_mcs;
+ 		if (rate_mcs > ATH12K_VHT_MCS_MAX) {
+-			ath12k_warn(ar->ab,
+-				    "Received with invalid mcs in VHT mode %d\n",
+-				     rate_mcs);
++			dev_warn_ratelimited(ar->ab->dev,
++					     "ath12k: invalid VHT mcs %u, forcing legacy rate metadata\n",
++					     rate_mcs);
++			rx_status->encoding = RX_ENC_LEGACY;
++			rx_status->rate_idx = 0;
+ 			break;
+ 		}
++		rx_status->rate_idx = rate_mcs;
+ 		rx_status->nss = nss;
+ 		if (sgi)
+ 			rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;
+ 		rx_status->bw = ath12k_mac_bw_to_mac80211_bw(bw);
+ 		break;
+ 	case RX_MSDU_START_PKT_TYPE_11AX:
+-		rx_status->rate_idx = rate_mcs;
+ 		if (rate_mcs > ATH12K_HE_MCS_MAX) {
+-			ath12k_warn(ar->ab,
+-				    "Received with invalid mcs in HE mode %d\n",
+-				    rate_mcs);
++			dev_warn_ratelimited(ar->ab->dev,
++					     "ath12k: invalid HE mcs %u, forcing legacy rate metadata\n",
++					     rate_mcs);
++			rx_status->encoding = RX_ENC_LEGACY;
++			rx_status->rate_idx = 0;
+ 			break;
+ 		}
+ 		rx_status->encoding = RX_ENC_HE;
++		rx_status->rate_idx = rate_mcs;
+ 		rx_status->nss = nss;
+ 		rx_status->he_gi = ath12k_he_gi_to_nl80211_he_gi(sgi);
+ 		rx_status->bw = ath12k_mac_bw_to_mac80211_bw(bw);
+ 		break;
+ 	case RX_MSDU_START_PKT_TYPE_11BE:
+-		rx_status->rate_idx = rate_mcs;
+-
+ 		if (rate_mcs > ATH12K_EHT_MCS_MAX) {
+-			ath12k_warn(ar->ab,
+-				    "Received with invalid mcs in EHT mode %d\n",
+-				    rate_mcs);
++			dev_warn_ratelimited(ar->ab->dev,
++					     "ath12k: invalid EHT mcs %u, forcing legacy rate metadata\n",
++					     rate_mcs);
++			rx_status->encoding = RX_ENC_LEGACY;
++			rx_status->rate_idx = 0;
+ 			break;
+ 		}
  
--exit:
--	return idx;
-+	return -EINVAL;
- }
- 
- static int ath12k_pull_chan_info_ev(struct ath12k_base *ab, struct sk_buff *skb,
-@@ -7475,7 +7476,7 @@ static void ath12k_chan_info_event(struct ath12k_base *ab, struct sk_buff *skb)
- 	}
- 
- 	idx = freq_to_idx(ar, le32_to_cpu(ch_info_ev.freq));
--	if (idx >= ARRAY_SIZE(ar->survey)) {
-+	if (idx < 0 || idx >= ARRAY_SIZE(ar->survey)) {
- 		ath12k_warn(ab, "chan info: invalid frequency %d (idx %d out of bounds)\n",
- 			    ch_info_ev.freq, idx);
- 		goto exit;
-@@ -7550,7 +7551,7 @@ ath12k_pdev_bss_chan_info_event(struct ath12k_base *ab, struct sk_buff *skb)
- 
- 	spin_lock_bh(&ar->data_lock);
- 	idx = freq_to_idx(ar, le32_to_cpu(bss_ch_info_ev.freq));
--	if (idx >= ARRAY_SIZE(ar->survey)) {
-+	if (idx < 0 || idx >= ARRAY_SIZE(ar->survey)) {
- 		ath12k_warn(ab, "bss chan info: invalid frequency %d (idx %d out of bounds)\n",
- 			    bss_ch_info_ev.freq, idx);
- 		goto exit;
+ 		rx_status->encoding = RX_ENC_EHT;
++		rx_status->rate_idx = rate_mcs;
+ 		rx_status->nss = nss;
+ 		rx_status->eht.gi = ath12k_mac_eht_gi_to_nl80211_eht_gi(sgi);
+ 		rx_status->bw = ath12k_mac_bw_to_mac80211_bw(bw);
 -- 
 2.47.3
 
