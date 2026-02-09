@@ -1,51 +1,28 @@
-Received: from omta34.uswest2.a.cloudfilter.net (omta34.uswest2.a.cloudfilter.net [35.89.44.33])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17104309F1F
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Feb 2026 22:24:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.89.44.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94915317715
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Feb 2026 22:32:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770675897; cv=none; b=OFcL9l8cl+yBBcF8HqJl0A/fds34MlGX3ds4uaaq/U+BWFBFR7g2gZpGTq5h+TsVgpEho75zOY7yg8aLD6R3Q2URtXFBNUzcEcuRdIyW0ATYMEiHtkIatwRW0SLT756IH1vER+IpmgC3fpTD6BT7ZJrxgQmOCa4wvTQjIf9VD24=
+	t=1770676329; cv=none; b=l3k84qo3B+4l2KR0D/qeO5N3MudTXA8jtUAsz7ogz8cSgDVG2Taj5u0TCuBl0mzsOlvXfyE/CpsMXt+dGADA7HsvZ0pxaKwX+zCD0iri4aSI3AIe/fjxLgOrsJa+9QMGBQIyzS9H8vnTy7wthFVW4qlSdX+CjUwo7Dfnf+92Ixo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770675897; c=relaxed/simple;
-	bh=E/wDNYT8yd4LvpoBYJ5ZjInPsfE0jSS1jaxSdU49C18=;
+	s=arc-20240116; t=1770676329; c=relaxed/simple;
+	bh=8/6GWJ78cCEmR87Xzu9Nvk8Da94Osc7wG9m79klcitU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aPXlek3RnFWE/pEztePIOyPdMO3/At+jryXGei8NZtml5sR6k5DXZ0xMMRnCsnrZjx7aJd+sAJE0wbYnkUVgsMCwdqNrWxY+He3+vZbADk4hYmYXvRn4dDJzFHDflHnOza+cdlExNmHZhER/UUHmAXCKtnZEupbHgmrq9ZoAhho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=nl/9NeqK; arc=none smtp.client-ip=35.89.44.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="nl/9NeqK"
-Received: from eig-obgw-5004b.ext.cloudfilter.net ([10.0.29.208])
-	by cmsmtp with ESMTPS
-	id pUcFvOencKjfopZf5vQb5Q; Mon, 09 Feb 2026 22:23:20 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id pZf5vOWh1qfpWpZf5vSFGt; Mon, 09 Feb 2026 22:23:19 +0000
-X-Authority-Analysis: v=2.4 cv=A55sP7WG c=1 sm=1 tr=0 ts=698a5e57
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=Mt98uAL8hC94oX8DrwaRjw==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=7T7KSl7uo7wA:10
- a=IdIfsTrEsfU7E6sfyFMA:9 a=QEXdDO2ut3YA:10 a=2aFnImwKRvkU0tJ3nQRT:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=SHn36UqCLpdD2vGFlZTVJyUtylTSL6ZnEIe6tsgs8Og=; b=nl/9NeqKjijtQ/ICGi1t4Ju80B
-	4pEyYHFHFdDnjoUit+2i+Ge71Bljcf9oNy2lXAJuEk/EkM70KnEXzHiexmp7rNcxlXMTpJe9EQ93a
-	KDHEYVyvCEPxazb5a6lG6G8+HFP8dFWmvqCXPXWog6YfDg8FOOM5inMEuylQ173RqrekdWpH3uoP0
-	gYrlS01dKMAropBI+V3qHjIlbKQx1lUEgJruDZiuxaFuyk4+s4gAjOKR/LWU4IlSBXL7tN7vWigMw
-	PA233sVfnhtvDvGy4SdFwUW4Al+8LKUEO34ikdlu4U9Iij9KdknGDagJWkYFa9TowyNbZxHMB/H1B
-	+DZcjU2w==;
-Received: from [177.238.18.130] (port=51670 helo=[192.168.0.100])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.99.1)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1vpZf4-00000003cd5-2I7f;
-	Mon, 09 Feb 2026 16:23:18 -0600
-Message-ID: <cc8b81d0-8bfb-4b69-8c48-9224c3bf6b97@embeddedor.com>
-Date: Mon, 9 Feb 2026 16:22:44 +0900
+	 In-Reply-To:Content-Type; b=socp+fwYD5Cn48kMCMrsrpOSWy5evPsK6AUgWUcS8Pt2hXRnsY/VkaTqTvsA6vZHhHht7ejeJ7b+d8rHbHaZENE2x/w+qWvjQRSMkM2SZin4AcCzgI0i9m7fomZDhUwRPuhekRsynSN8r3+DG9u7oTXyXRYDdvJngPBlrKIfhDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [192.168.0.192] (ip5f5af736.dynamic.kabel-deutschland.de [95.90.247.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id CEE864C4430B0E;
+	Mon, 09 Feb 2026 23:31:28 +0100 (CET)
+Message-ID: <2c722676-98c6-4162-96cb-9bea06672153@molgen.mpg.de>
+Date: Mon, 9 Feb 2026 23:31:27 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,101 +30,71 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2][next] iwlegacy: Avoid multiple
- -Wflex-array-member-not-at-end warnings
-To: Kees Cook <kees@kernel.org>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- Stanislaw Gruszka <stf_xl@wp.pl>, Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-hardening@vger.kernel.org
-References: <aYlkt2WP2oQ1TgeH@kspp> <202602091212.743C6B9B7C@keescook>
- <4bf43164-b130-4643-9f4f-761f49bd0dc9@embeddedor.com>
- <202602091416.A7FD08F6C@keescook>
+Subject: Re: New warning `ath10k_pci 0000:3a:00.0: not found station for peer
+ stats`
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+ Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <57671b89-ec9f-4e6c-992c-45eb8e75929c@molgen.mpg.de>
+ <6a83fd12-edd8-4559-b7ba-75b074fa889f@molgen.mpg.de>
+ <5c152304-853d-4142-8553-55cd8907f271@oss.qualcomm.com>
 Content-Language: en-US
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <202602091416.A7FD08F6C@keescook>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <5c152304-853d-4142-8553-55cd8907f271@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 177.238.18.130
-X-Source-L: No
-X-Exim-ID: 1vpZf4-00000003cd5-2I7f
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.0.100]) [177.238.18.130]:51670
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfBLMwrY/c9kDnT0ipLf5RvMhRDAM+5iFAVPbS5dK3C1Hq8O4X/SDkUbOnmkWbk8y1sCdv+SeaNLCxSe5U5sV9GVCyUIDWm0MeYq2+Xm3NHHYqaso5Vpf
- mWH4vFs3VqIVvLLs6UQjKNyUrHz6MA8uoKRQ9qnDTaLHTxp04nOTUR/kaQK60e8tpUYsNdqPDJxwOkynGHdNCxiywA1Q8eI1lhscG1qxzwEfjP0cRuMTBjlV
+Content-Transfer-Encoding: 8bit
+
+Dear Baochen,
 
 
+Am 09.02.26 um 03:44 schrieb Baochen Qiang:
 
-On 2/10/26 07:20, Kees Cook wrote:
-> On Mon, Feb 09, 2026 at 03:23:59PM +0900, Gustavo A. R. Silva wrote:
->> Ah yes, I can do this. The only thing is that I'd have to change every
->> place where members in struct il4965_tx_resp are used, e.g.
+> On 2/7/2026 1:55 PM, Paul Menzel wrote:
+
+>> Am 19.01.26 um 17:41 schrieb Paul Menzel:
 >>
->> s/frame_count/hdr.frame_count
+>>> Since January 10th, I have started seeing the warning below in
+>>> my Linux logs, that reach back to September 24th, 2025:
+>>>
+>>>       [   37.108902] ath10k_pci 0000:3a:00.0: not found station for peer stats
+>>>       [   37.108906] ath10k_pci 0000:3a:00.0: failed to parse stats info tlv: -22
+>>>
+>>> It started appearing with 6.19.0-rc4-00282-gb6151c4e60e5, the
+>>> version running before is 6.19.0-rc4-00003-g3609fa95fb0f, but I
+>>> do not see anything related in the commit list:>>>
+>>>       git log --oneline 3609fa95fb0f...b6151c4e60e5
+>>>
+>>> The warning log from `drivers/net/wireless/ath/ath10k/wmi-tlv.c` has also been there
+>>> since 2021.
+>>> 
+>>> Do you have an idea? Please find the output of `dmesg` attached.
+>> 
+>> Looking through the commit list from above again, commit
+>> a203dbeeca15 (wifi: mac80211: collect station statistics earlier
+>> when disconnect) probably introduced the new behavior.
 > 
-> Hm? No, that's what transparent struct members avoid: there is no
-> sub-struct name, the members of the struct are transparently visible in
-> the surrounding struct:
+> is this error seen when disconnecting from AP?
 
-Ah yes, that's why it's defined like
+I attached the logs in my first message. But yes, it looks like this:
 
-+struct il4965_tx_resp {
-+	struct il4965_tx_resp_hdr;
+     Feb 07 06:32:52 abreu kernel: wlp58s0: deauthenticating from 
+74:1a:e0:e7:b4:c8 by local choice (Reason: 3=DEAUTH_LEAVING)
+     Feb 07 06:32:52 abreu kernel: ath10k_pci 0000:3a:00.0: not found 
+station for peer stats
+     Feb 07 06:32:52 abreu kernel: ath10k_pci 0000:3a:00.0: failed to 
+parse stats info tlv: -22
+     Feb 07 06:32:52 abreu wpa_supplicant[846]: wlp58s0: 
+CTRL-EVENT-DISCONNECTED bssid=74:1a:e0:e7:b4:c8 reason=3 locally_generated=1
+     Feb 07 06:32:52 abreu wpa_supplicant[846]: BSSID 74:1a:e0:e7:b4:c8 
+ignore list count incremented to 2, ignoring for 10 seconds
 
-  	/*
-  	 * For non-agg:  frame status TX_STATUS_*
-@@ -2664,7 +2668,8 @@ struct il3945_beacon_notif {
-  } __packed;
+> did you try with that commit reverted?
+Yes, I tried it now with Linux 6.19 and reverting the commit. The 
+warnings are gone now.
 
-and not like
+Are you able to reproduce the issue? What devices are you testing with?
 
-+struct il4965_tx_resp {
-+	struct il4965_tx_resp_hdr hdr;
 
-  	/*
-  	 * For non-agg:  frame status TX_STATUS_*
-@@ -2664,7 +2668,8 @@ struct il3945_beacon_notif {
-  } __packed;
+Kind regards,
 
-> 
-> struct inside {
-> 	int a;
-> 	int b;
-> };
-> 
-> struct foo {
-> 	struct inside;
-> 	int c;
-> } *p;
-> 
-> "p->a" is valid.
-
-Yes, gotcha!
-
-> 
->> Another thing to take into account (fortunately, not in this case) is
->> when the FAM needs to be annotated with __counted_by(). If we use a
->> separate struct for the header portion of the flexible structure, GCC
->> currently cannot _see_ the _counter_ if it's included in a non-anonymous
->> structure. However, this will be possible in the near future, correct?
-> 
-> Right, that's still in progress. I don't expect it soon, though. :(
-> 
-
-Okay.
-
--Gustavo
-
+Paul
