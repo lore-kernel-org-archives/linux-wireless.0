@@ -1,32 +1,33 @@
-Received: from forward100b.mail.yandex.net (forward100b.mail.yandex.net [178.154.239.147])
+Received: from forward103d.mail.yandex.net (forward103d.mail.yandex.net [178.154.239.214])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 627751D555;
-	Mon,  9 Feb 2026 03:03:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 217BB1D6193;
+	Mon,  9 Feb 2026 03:03:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.214
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770606186; cv=none; b=XN6G3fYZfNY7KEUepc4RyLXrYMUN/1T/EJr06gy3CaPK4ct1dPoHk5fNqUeY9O07y/wGK9LcWBEwFC5Q7GhOBPA4bO7Mn4ePPvMppEMBf0CqGxW2iWELofU5qDZxLKXTeE0HSSypPCsUh3jlKrlW6zmDHbb65an0ZOKpN7i4G9Y=
+	t=1770606186; cv=none; b=EBfpD/ak3PIr0jCd82d6xhdLH6TFW8zrYUTysOnDb9BF3SGGt4zU3AIX8llClK4EME2mMaHGNbe0uyxlszLdULYeYCaONiE4zSMf9F1XwIG3xcTrHZfQW5I0KTYq4KUqWGoFyEe7gPvJLI1yqkxSBWgruzIzGMaVQeOJ350VwNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770606186; c=relaxed/simple;
-	bh=9QY5bvH6UOKEfyvZ08P3kTTHaDROZegWUHxl42L35rg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hAO8yoe0WqvcFfVOyl5XQd+WqHOw5lLstMmezlJqgjJKVa38ykqVCB+cLGoC6PASUeg5Xv+8LLnh40idlOk6Emv7hOuqGgNVk4wcoeIPFZrVmqr8HuERoUM/VXMzQEAlSphLXPjx091OJAl0VNgx8iTHwwfcizAhvYVGi4y42o8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=K7LrDtnG; arc=none smtp.client-ip=178.154.239.147
+	bh=rcvmteF2gb00/oqKLKmzLGtIPzHXzW289FycTseOWss=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OVdJNlbjGs3d9CMhN4V3UUPilC9ZCmmSMn+aNQxgrORF464n5g8DdzrS+ipmS9AP8IijQiURg4+jFFsglhyqDPPdTZWQB/TwGQVWbK2r4+vQH1uElSIDC4ChCPTUbJDuhJ3t1jrrcCF96HM4jvT6WjsedyceK6Ofti3tbAnYpMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=qZ67900V; arc=none smtp.client-ip=178.154.239.214
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="K7LrDtnG"
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="qZ67900V"
 Received: from mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:190d:0:640:bab5:0])
-	by forward100b.mail.yandex.net (Yandex) with ESMTPS id 4B884806BC;
-	Mon, 09 Feb 2026 06:02:56 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id s2H8uoNGO0U0-ERonRnP4;
-	Mon, 09 Feb 2026 06:02:55 +0300
+	by forward103d.mail.yandex.net (Yandex) with ESMTPS id 83227C008A;
+	Mon, 09 Feb 2026 06:02:57 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id s2H8uoNGO0U0-saJhHZHk;
+	Mon, 09 Feb 2026 06:02:57 +0300
 X-Yandex-Fwd: 1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1770606175; bh=QNjMDvA4GT5+5r95oykDTLOoWhHZCwrCD9d6iDvQ+PY=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=K7LrDtnGkN0aJhXpHF14YuuLznNSEbxd8M/wE8oWiVZCDbIhFySXUbfzQ33KSc+q5
-	 ho2dOdgZTqeXCsDqYm44A35s655MdStwvwec0VB68OS6VXG014FjFMeolMVp7N4bqy
-	 4qIPd3kbtIplTsVixnPMd9MKmDqKOWUAyaYfq4Ek=
+	t=1770606177; bh=58gkicXTfl/yMiEWBrqSzSMvFG/0h6/5ysLXoi5qXWA=;
+	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=qZ67900VQUsFfavFUU6Pf9RAn0BWh9ElivON3SIo8mPp4RYgwA7FO0D2/czMwSeLF
+	 cX5AbzPSS29BluZQxd9JLgw6sX+wOHPRSsmkE0FWFY0nGDmwKZddl/NTuGp+RVFS8r
+	 N6r6S+I1NYJMyCeGNm/tX0xBi3YYc1Gd7BDbDszY=
 Authentication-Results: mail-nwsmtp-smtp-production-main-92.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
 From: m.limarencko@yandex.ru
 To: jjohnson@kernel.org
@@ -34,10 +35,12 @@ Cc: linux-wireless@vger.kernel.org,
 	ath12k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Mikhail Limarenko <m.limarencko@yandex.ru>
-Subject: [PATCH ath-next 0/4] wifi: ath12k: harden stats/rate handling for WCN785x stability
-Date: Mon,  9 Feb 2026 06:02:39 +0300
-Message-ID: <20260209030243.1530075-1-m.limarencko@yandex.ru>
+Subject: [PATCH ath-next 2/4] wifi: ath12k: avoid long fw_stats waits on vdev stats hot path
+Date: Mon,  9 Feb 2026 06:02:41 +0300
+Message-ID: <20260209030243.1530075-3-m.limarencko@yandex.ru>
 X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260209030243.1530075-1-m.limarencko@yandex.ru>
+References: <20260209030243.1530075-1-m.limarencko@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,53 +51,73 @@ Content-Transfer-Encoding: 8bit
 
 From: Mikhail Limarenko <m.limarencko@yandex.ru>
 
-Hi Jeff, all,
+Station info requests can trigger frequent VDEV stat pulls from
 
-On QCNFA765/WCN785x (PCI, kernel 6.18.5) we observed three recurring
-issues:
+user space (iw/NM polling).
 
-- chan info events with frequency not present in local survey range,
-  producing invalid idx warnings;
-- frequent VDEV_STAT polling can block for 3 seconds on fw_stats_done
-  timeouts and cause visible hitches;
-- occasional invalid MCS metadata (for example HE MCS=12) propagates
-  into mac80211 status handling and correlates with ieee80211_rx_list
-  warnings.
+On affected firmware, waiting 3 seconds for fw_stats_done causes
 
-This series addresses those cases by:
-1. returning -EINVAL from freq_to_idx() when no channel matches, and
-   rejecting negative indexes in callers;
-2. reducing the wait on VDEV_STAT fw_stats completion and skipping
-   unnecessary waits for stats types that do not require it;
-3. sanitizing invalid MCS metadata in both dp_rx and dp_mon paths by
-   falling back to legacy metadata with ratelimited diagnostics.
+repeated stalls and visible hitches.
 
-Tested on:
-- hardware: QCNFA765 (WCN785x)
-- kernel: 6.18.5+deb13-amd64
-- AP mode: 5 GHz (802.11ac)
+Use a short timeout for VDEV_STAT requests and skip unnecessary
 
-Observed after applying this series:
-- station dump polling no longer shows multi-second stalls in test runs;
-- no fresh ieee80211_rx_list WARN was observed in the same windows.
+waits for stats types that do not need completion
 
-If patch 1/4 is already present in ath-next or stable trees, please drop
-it and keep the remaining fixes.
+synchronization.
 
-Thanks,
-Mikhail Limarenko
+Tested-on: QCNFA765 (WCN785x), kernel 6.18.5+deb13-amd64
+Signed-off-by: Mikhail Limarenko <m.limarencko@yandex.ru>
+---
+ drivers/net/wireless/ath/ath12k/mac.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
-Mikhail Limarenko (4):
-  wifi: ath12k: validate survey index when frequency is not found
-  wifi: ath12k: avoid long fw_stats waits on vdev stats hot path
-  wifi: ath12k: sanitize invalid MCS metadata in rx path
-  wifi: ath12k: sanitize invalid MCS metadata in monitor rx path
-
- drivers/net/wireless/ath/ath12k/dp_mon.c | 38 ++++++++++++++---------
- drivers/net/wireless/ath/ath12k/dp_rx.c  | 39 ++++++++++++++----------
- drivers/net/wireless/ath/ath12k/mac.c    | 22 +++++++++++--
- drivers/net/wireless/ath/ath12k/wmi.c    | 13 ++++----
- 4 files changed, 73 insertions(+), 39 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 095b49a..1b550e9 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -4829,6 +4829,7 @@ int ath12k_mac_get_fw_stats(struct ath12k *ar,
+ {
+ 	struct ath12k_base *ab = ar->ab;
+ 	struct ath12k_hw *ah = ath12k_ar_to_ah(ar);
++	unsigned long done_timeout = 3 * HZ;
+ 	unsigned long time_left;
+ 	int ret;
+ 
+@@ -4859,15 +4860,32 @@ int ath12k_mac_get_fw_stats(struct ath12k *ar,
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	/* VDEV stats are queried frequently from station info paths (e.g. iw/NM).
++	 * On buggy firmware this path can timeout repeatedly and block callers for
++	 * multiple seconds; keep the hot path responsive while preserving behavior
++	 * for other stats types.
++	 */
++	if (param->stats_id & WMI_REQUEST_VDEV_STAT)
++		done_timeout = msecs_to_jiffies(200);
++
++	/* Non-vdev/bcn stats are handled in a single event. */
++	if (!(param->stats_id & (WMI_REQUEST_VDEV_STAT | WMI_REQUEST_BCN_STAT)))
++		return 0;
++
+ 	/* Firmware sends WMI_UPDATE_STATS_EVENTID back-to-back
+ 	 * when stats data buffer limit is reached. fw_stats_complete
+ 	 * is completed once host receives first event from firmware, but
+ 	 * still there could be more events following. Below is to wait
+ 	 * until firmware completes sending all the events.
+ 	 */
+-	time_left = wait_for_completion_timeout(&ar->fw_stats_done, 3 * HZ);
++	time_left = wait_for_completion_timeout(&ar->fw_stats_done, done_timeout);
+ 	if (!time_left) {
+-		ath12k_warn(ab, "time out while waiting for fw stats done\n");
++		if (param->stats_id & WMI_REQUEST_VDEV_STAT)
++			ath12k_dbg(ab, ATH12K_DBG_WMI,
++				   "time out while waiting for fw stats done (stats_id 0x%x)\n",
++				   param->stats_id);
++		else
++			ath12k_warn(ab, "time out while waiting for fw stats done\n");
+ 		return -ETIMEDOUT;
+ 	}
+ 
 -- 
 2.47.3
+
