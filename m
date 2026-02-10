@@ -1,77 +1,83 @@
-Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
+Received: from mail-dy1-f195.google.com (mail-dy1-f195.google.com [74.125.82.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1061F2D839F
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8612D0C94
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:12:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770689539; cv=none; b=Z2gOM+/yeqdWaGIWsfJg4/sLVveDZXehI07A53sO2CCQ9P7tKK0EeCvLu60rsPV1b6xSCyl/vnvdb+x6UpGdDMo0iuTF4+/LwXWrXHXYQTMZJuc8/T/5Pbw9Y5LJt8YjKZohHDnB1xeIe4w73PNyusKydndddgGHsVRXqtZCSZs=
+	t=1770689578; cv=none; b=R9hCMZ85pnNRbR5jQpWA4pzf0VIYkmXF0noG0K/ngAzzPDPsM7fvC4Zj9Cvf1WDMbcZy0Q/G3VUTIzBa4uQFZxD/Y+o9Es2CX+4HHlVwsLjjme9vFEbmC8rCyyu3lZOr7MVXn8gPJqSkJmBvXKSr4eHpHeT1Z2VGrJdcEpNC6VE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770689539; c=relaxed/simple;
-	bh=6bX8/xMGRWsvR+wM2XFaVaxjGc8kmMMKCV9NjfDvkC8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OBr17IjI4Ex/Vba91QZODFHJIF+ArnB9eVZGqPhoaJmIps+QIV067aYG4U9fugBf7u2Zw2Rm+Ku+cgBQtKUJUm0JUsZD6LPZjQ30lQogW3Zh6qq5nr1evnf9kSeBda22qrN3tsYC2QK8cboIYE6ToRUaZaNea+jXzaSpAqFzKnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QlW4B5Z4; arc=none smtp.client-ip=209.85.219.48
+	s=arc-20240116; t=1770689578; c=relaxed/simple;
+	bh=/CNu3or6IvmW6a+NEI6b/c1pNPuTW2PtNIWZgOO9Mfo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O0SeomvMb5lvedkhG/N0mzWfP0HSx7sX2dn1AKRwAXaM4arSelLla1lpSfi8ZlnJ5MRXQ9acRGOdyKPMUbUtY5FSUCHfqyU0iyjjvEpyhiPTWc1TZp4bOHakGJCAn2zZYJoNnt40w97YqDNDznJmEuyv2zloLV9qeAekGRWl2O0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kD3EAKkN; arc=none smtp.client-ip=74.125.82.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QlW4B5Z4"
-Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-896f6d4b6c1so27001656d6.2
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2026 18:12:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kD3EAKkN"
+Received: by mail-dy1-f195.google.com with SMTP id 5a478bee46e88-2ba68df3687so3043767eec.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2026 18:12:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770689537; x=1771294337; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3TmkS/sB9P0u36IZlhTWRyNkfWxpJICu9oh/U8A60Y0=;
-        b=QlW4B5Z48ZDDiZqi6apNAFBypdSxUJaNi1vZO+rssD+301Iq5kCRbCdl7z5MjHDy/h
-         Xb33VHMIo0wLeFFnuJtUFyRFVyV//aVeU6xRPnmeBxKocCreE/7jNdpYbOG4de0w3jli
-         zFSM7JYJ8IE2WTFMlDH2shEQhoURCDU/yCxw6AcXEySrndLPzh3P2tXVkIfdZHJYzHWv
-         LTGkR0zdi2tHDnPqJxYP7mbnvvJsUBRYBDDn4EPzX7m0yv6ujmNS7zsWP6GqhuPI2xfn
-         IwBZn8SET4aZYhgAnxBtepK52hNSBkknZC397BMzD2qaOGD2NB0p1FfGvJtbmcru7HOk
-         YE+A==
+        d=gmail.com; s=20230601; t=1770689576; x=1771294376; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=JS7YM6T2z4NTuWOeAxUIARMzj225fodPnkXEYUrFD10=;
+        b=kD3EAKkNFHRxlmaZd7MT3V5uNxPdPBu0Yr/+LInwcpKVM10xZ8YCIxt/A+7cF88hvO
+         EDX4X2sBHTxQ93F9xXwPj7lM5dae8qY+ixk2ZUNhC5MVewsIB4UCzecOym9nvbeNtzcc
+         8XR/M81kLBOfQ9kl4PwYjQ3lVPZgFZDkD52e6nt51QD/k+0+EfWb7n2U1iUdr5v7awC4
+         fruc9SWnqgJSojNoKJiv6HuL9kmUFSasQHvpHkdfOVTAQT+qV2KD8HKJIxLysMO91D7W
+         64PVBRe0tBrniqKl9Ey1Q2Q/SGqaVeM5mT02ZXpfU8tDifi2vVedfvSjQk4nJqza/vs4
+         nI/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770689537; x=1771294337;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=3TmkS/sB9P0u36IZlhTWRyNkfWxpJICu9oh/U8A60Y0=;
-        b=D38X3btZfvmpeKKAm81BHM1+F+U9AuUXoCWipE6zrChvuIeEMYuG61TAzWy9QLT76H
-         cG5HmkSzipwuKtMmmoZ8+7pGkFepk5Y97DkUS29Ec/Lo/f3/6DX8tfVnbynvtoIFU2DB
-         eo1kGwAOV0lYX1FIxpm+yg0Zsw2AgJAriSoxzcGgkUoNeBQhslUU0jgWu2ebPd8fTwmS
-         EgRP10xNKDSdvLvtzGOX2k6KEHLD3SwKK0IhRWVJeh81jTw/BUNEU/98i/nUYs9h1Q8b
-         SYThgIEJTYhnpyUVmH4wexm3NVxJI6H+v47DmDBhfyDr4VBergquNFh++yhaTm2/Hfed
-         wjMw==
-X-Forwarded-Encrypted: i=1; AJvYcCV75RuEHuV8mQDTsqOK+0teNOUWznYfdvLIKZ+HInCVAi83c1/QWkzyhlfM7G7DDh45eextrCHory14kNHobg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywd6cHk1rq0ysggnqbkfc35QgRXTgRvO2LdJkA0/DjI7Qf6rVuc
-	NtI809H/8xDbggES8V4vs9r91Zg1/7EecxqxuZl04jeLvft6L7ruowKo
-X-Gm-Gg: AZuq6aL+HfklFn2ap42JcWrjy4/1cfSLla+pmpLsDkXLnpUcqx2dP/mBUfqtui7kJJI
-	AU7Y3l7pOyQzQHhl0yD6GOTQ40MpSd15xDx8TplVcBvvdaKxQv6AKqOM60JYOriaRttW4zCeLBs
-	Uz76G7RGIhX7zNVhecZXhKyw+LkXArnBqGtMvBqubj00roqniRKS3ub3KyPWuxR9US+hyeJkhJr
-	k5gsAQRGLlL0s+tmCrYJaeCO8LVJnIGJL0ambswu+lGsouHUARWRawEpPdSMLU13aeLWYcPaHfP
-	K3uAs21zEAYsqznunaLjM1503Ms5nsebLc8b82ErxOgpmwIiwmO6BUCALcAN2YVD6Cmjbkc4/M5
-	IpGOsTAG+dTcWZX6CEK48yv0eQfhNldTaFKwKsp4DAo8hMpYhbI6QxGLS4mYFXvMNpxDfrw4A/u
-	xmsCVERdklzxnoRi4I95CAO03ZKO8jJpbQoZVHdleT3lfNbUjlmg+4OPm2FjHyDcAHmFSeJWZxQ
-	KBxxz8XM+78PGQ=
-X-Received: by 2002:a05:6214:2604:b0:896:ff71:fc74 with SMTP id 6a1803df08f44-8970e515dfemr9778796d6.36.1770689536988;
-        Mon, 09 Feb 2026 18:12:16 -0800 (PST)
-Received: from localhost (bras-base-toroon21-grc-75-184-144-58-243.dsl.bell.ca. [184.144.58.243])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8953c077a8asm91300896d6.52.2026.02.09.18.12.16
+        d=1e100.net; s=20230601; t=1770689576; x=1771294376;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=JS7YM6T2z4NTuWOeAxUIARMzj225fodPnkXEYUrFD10=;
+        b=CEBUz2yeDW2cco3bh1umacFnlPsdL9LWRRRdhQnbDBXNMq2CiWIArSCKw0h08iKRS6
+         nWNxBZxN5FBZNQW6sVEt60GG8BoFEnB6m6xpHGM+h+kvv2BFdXUhr+011kcmr0etMctb
+         oADkDiC3bstAm9S/yw0cqLMHRiOZIPGdeHgAYE/U7WrMkN/IG6Be3CtbUIqEHO0uubhv
+         +rIU179vPNgGDsBngx8xv9l7SRM2Uos2XOmSL88cfjr6AN6zor9K2AheIg0Dv/di6nEW
+         ESXZXSRsc3gLh62B6VNPj8EkwoWWCNuRlDLRusKeg1AolPMtlxe+Zyrm+S7JDsKM/uqB
+         cpUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWvM1bBcYtoIOHQzhvlhDF/1HBGTT/tW/33Tz9RQMG1CgOIs0tPT6AWBDY5nPUo+69lSGhXI6XEBYGF/wCTmg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRpJ/0vwtlDYFvEMXx+2lnzs62V3MBnLF5GlwFuVLdhV2yGFrR
+	dLBjDmZzWgUlf3OKlqUNJSQDjmVNxOv1V+CFtdOeEJUTVt2ejGVeDswi
+X-Gm-Gg: AZuq6aKM6aZzDR92o4b9XVp3bVY+B3qmUY8xKeThvFXKYD1P+MTgARG7pV+CGAWM09q
+	R+tSkSIYRV8Yk+Est9i3Am1T1NHRUnX7TL6/+5Mgt3CIS6HCW7hMNcCho9ye/IdyfsgQTQ1m+tP
+	qTpPxtXThptKYVBlCP0i1BvjnUjy/MM9lXVrnNTu0QuO1HN7BvWUzCXOf24UCceLC1oSyQQ+J3J
+	WqKkGweeNJTAM/zqflRsRJqCMAw/ATCECRgSz9DPR/fuIaI1XxtUCYVLsuS8Im8/SggDORV8I8n
+	ABSsAaMU7fAFJpOPJJ2YC2HOAsjPtw7N8lEMjYvftxZs30Q82g97J/M2uwQBD+4anfLc+ZA332M
+	Ra61ZsCk/pZvGVOJtLbRdsWt/KI4dPQugANg/DrcrA/HOdccj2i/5gaduRQLnClUiLr65dOqhGj
+	A50x8u0meFxixjzWEIZKNmjsnRkNJep+jOItQqXrOrThi5UsBuSOhYWnpdqJFodI/uikAinA+0n
+	KD8Xa/J7DW0d3+2EFmxfVJwexHaHGAdf3ULxky/YfvG1Z/mdkQv66FTqSd4RzbxItZxzfFrze0I
+	HS83ib+c6e+NOIVQug==
+X-Received: by 2002:a05:7300:e80a:b0:2ae:5d3b:e1ba with SMTP id 5a478bee46e88-2b856836f6fmr5038313eec.23.1770689576354;
+        Mon, 09 Feb 2026 18:12:56 -0800 (PST)
+Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ba81eab184sm1472747eec.1.2026.02.09.18.12.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Feb 2026 18:12:16 -0800 (PST)
-From: Richard Acayan <mailingradian@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org
-Cc: Richard Acayan <mailingradian@gmail.com>
-Subject: [RFC PATCH 2/2] wifi: ath10k: only wait for response to SET_KEY
-Date: Mon,  9 Feb 2026 21:12:49 -0500
-Message-ID: <20260210021249.12132-3-mailingradian@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260210021249.12132-1-mailingradian@gmail.com>
-References: <20260210021249.12132-1-mailingradian@gmail.com>
+        Mon, 09 Feb 2026 18:12:56 -0800 (PST)
+From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+To: netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	stable@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
+	Alice Michael <alice.michael@intel.com>
+Subject: [PATCH v2] net: intel: fix PCI device ID conflict between i40e and ipw2200
+Date: Mon,  9 Feb 2026 18:12:34 -0800
+Message-ID: <20260210021235.16315-1-enelsonmoore@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,39 +86,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When sending DELETE_KEY, the driver times out waiting for a response
-that doesn't come. Only wait for a response when sending SET_KEY.
+The ID 8086:104f is matched by both i40e and ipw2200. The same device
+ID should not be in more than one driver, because in that case, which
+driver is used is unpredictable. Fix this by taking advantage of the
+fact that i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
+devices use PCI_CLASS_NETWORK_OTHER to differentiate the devices.
 
-Sample dmesg:
-
-	[  117.285854] wlan0: deauthenticating from XX:XX:XX:XX:XX:XX by local choice (Reason: 3=DEAUTH_LEAVING)
-	[  120.302934] ath10k_snoc 18800000.wifi: failed to install key for vdev 0 peer XX:XX:XX:XX:XX:XX: -110
-	[  120.302996] wlan0: failed to remove key (0, XX:XX:XX:XX:XX:XX) from hardware (-110)
-
-Signed-off-by: Richard Acayan <mailingradian@gmail.com>
+Fixes: 2e45d3f4677a ("i40e: Add support for X710 B/P & SFP+ cards")
+Cc: stable@vger.kernel.org
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Changes from v1:
+Rebase on latest mainline instead of net-next
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index da6f7957a0ae..73aa93043f8a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -324,9 +324,11 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 	if (ret)
- 		return ret;
- 
--	time_left = wait_for_completion_timeout(&ar->install_key_done, 3 * HZ);
--	if (time_left == 0)
--		return -ETIMEDOUT;
-+	if (cmd != DISABLE_KEY) {
-+		time_left = wait_for_completion_timeout(&ar->install_key_done, 3 * HZ);
-+		if (time_left == 0)
-+			return -ETIMEDOUT;
-+	}
- 
- 	return 0;
- }
+ drivers/net/ethernet/intel/i40e/i40e_main.c  | 8 +++++++-
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++++++-
+ 2 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
+index d3bc3207054f..02de186dcc8f 100644
+--- a/drivers/net/ethernet/intel/i40e/i40e_main.c
++++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
+@@ -75,7 +75,13 @@ static const struct pci_device_id i40e_pci_tbl[] = {
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_BASE_T4), 0},
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_BASE_T_BC), 0},
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_SFP), 0},
+-	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_B), 0},
++	/*
++	 * This ID conflicts with ipw2200, but the devices can be differentiated
++	 * because i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
++	 * devices use PCI_CLASS_NETWORK_OTHER.
++	 */
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_10G_B),
++		PCI_CLASS_NETWORK_ETHERNET << 8, 0xffff00, 0},
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_KX_X722), 0},
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_QSFP_X722), 0},
+ 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_SFP_X722), 0},
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 09035a77e775..b0e769da9415 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -11387,7 +11387,13 @@ static const struct pci_device_id card_ids[] = {
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2754, 0, 0, 0},
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2761, 0, 0, 0},
+ 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2762, 0, 0, 0},
+-	{PCI_VDEVICE(INTEL, 0x104f), 0},
++	/*
++	 * This ID conflicts with i40e, but the devices can be differentiated
++	 * because i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
++	 * devices use PCI_CLASS_NETWORK_OTHER.
++	 */
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x104f),
++		PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0},
+ 	{PCI_VDEVICE(INTEL, 0x4220), 0},	/* BG */
+ 	{PCI_VDEVICE(INTEL, 0x4221), 0},	/* BG */
+ 	{PCI_VDEVICE(INTEL, 0x4223), 0},	/* ABG */
 -- 
-2.53.0
+2.43.0
 
