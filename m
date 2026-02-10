@@ -1,60 +1,44 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mailgate02.uberspace.is (mailgate02.uberspace.is [185.26.156.114])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 289F63246E3;
-	Tue, 10 Feb 2026 18:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF919330305
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 20:19:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.26.156.114
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770747868; cv=none; b=YrYqLPsOUftj6JSuTo7EFKLSBb9QESZujjERjCpeteEePzIdW6+pdurrE3+9SnE3jEhItlKPIU98ws0b2a2LhGzxu4WE63IOwqGeu0LfZTG0VHWCmJwLFmg7WZ8ppDmu/JIzCuwfyqWo5eaiD5hGs4+eKT3viOOWTABBvlpd9PE=
+	t=1770754781; cv=none; b=HGC0VkqbUU3vGiCxd20w2kFXdAKshwpODFWYu/+nNU9qXEGp3i68c3sRBcEjuhaMbR6uMgSWpcqatLhrClclLsU0Nc80+f5O/MJSXCCUXf7Lo684XrO4mj2GzBeEPDIt0aMMhgohjqZDdOrZ64baOzLqjUPYIzbDJNKcj3Tb/4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770747868; c=relaxed/simple;
-	bh=8lL+FgvgXZWClnLoSJpYz0enNpvBSDnxFiP8KQ8ENgw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j1pFoY1GVJU6bVPvJH0vXIexMSvkX8W66AzYv9yU3n9lh5jh9Fa41MmP1Wd26+bHreADONkvPG+VKvptDMSuwtkb0/eQchCwoDlwoNLJzE0Nb6Zce7HVahI1rhCOTnWuk1yaM7gaaQbBsG+rDlw0tNi0gIk8+KLRFY1gtLvK4js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=pUINwEDg; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1770754781; c=relaxed/simple;
+	bh=+iJygy5Rsph3wgdm2ihgiOtTPWuxGIOIgL9IIraZFsc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EkpBAtj7QZGmE1mIrTckHNqek5dYakV7pIjtcFZOh1ql+WR7PaVXXysAIDedUOLm5M+hoNFr4macY+Nyr4vIhdas/tM2ucRQta2zU+DeCU7fL58te21VogCK64kRGrTaG51uhC9TqaEp+iTC0H+antCg02wOIQhkzSxDRZwkS/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=david-bauer.net; spf=pass smtp.mailfrom=david-bauer.net; dkim=pass (4096-bit key) header.d=david-bauer.net header.i=@david-bauer.net header.b=RC9Kht1z; arc=none smtp.client-ip=185.26.156.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=david-bauer.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=david-bauer.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pUINwEDg"
-X-UUID: 9a670d4206ab11f185319dbc3099e8fb-20260211
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=1Wg/Oi6VHdbF/mO8kslgQtkzQWmy64Pp0f5I510coWc=;
-	b=pUINwEDgHjyyf/lvSt2YxL3zsaM/KrEpnAh5fSPPdgz2KM0+Nq3Frxk46lxZ9uOB/blCIGebsZOS9bcfAGH+7erZ74IVZDVb21MHKiA9BuDfGFDZUg2SyqRd8aoUEZEKyigAtfbHYbpdbP49spH8xrt35FcAskXmwaddMOQaKQE=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:ec11187d-a25e-425f-a1c1-2496edbed069,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:7e4f265b-a957-4259-bcca-d3af718d7034,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 9a670d4206ab11f185319dbc3099e8fb-20260211
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
-	(envelope-from <ryder.lee@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1951395340; Wed, 11 Feb 2026 02:09:12 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 11 Feb 2026 02:09:11 +0800
-Received: from mussdccf250.eus.mediatek.inc (10.73.250.250) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Wed, 11 Feb 2026 02:09:10 +0800
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>, Rob Herring <robh@kernel.org>
-CC: <devicetree@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Allen
- Ye <allen.ye@mediatek.com>
-Subject: [PATCH v3 2/2] dt-bindings: net: wireless: mt76: clarify backoff limit format
-Date: Tue, 10 Feb 2026 10:08:56 -0800
-Message-ID: <69521aebefef405bad5117d4d5d5fef4a5dfb7e8.1770746444.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1770746444.git.ryder.lee@mediatek.com>
-References: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1770746444.git.ryder.lee@mediatek.com>
+	dkim=pass (4096-bit key) header.d=david-bauer.net header.i=@david-bauer.net header.b="RC9Kht1z"
+Received: from perseus.uberspace.de (perseus.uberspace.de [95.143.172.134])
+	by mailgate02.uberspace.is (Postfix) with ESMTPS id F1D52180325
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 21:19:29 +0100 (CET)
+Received: (qmail 28944 invoked by uid 988); 10 Feb 2026 20:19:29 -0000
+Authentication-Results: perseus.uberspace.de;
+	auth=pass (plain)
+Received: from unknown (HELO unkown) (::1)
+	by perseus.uberspace.de (Haraka/3.1.1) with ESMTPSA; Tue, 10 Feb 2026 21:19:29 +0100
+From: David Bauer <mail@david-bauer.net>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH mt76] wifi: mt76: mt7915: sync station power save state
+Date: Tue, 10 Feb 2026 21:19:14 +0100
+Message-ID: <20260210201917.993424-1-mail@david-bauer.net>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -62,61 +46,118 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+X-Rspamd-Bar: /
+X-Rspamd-Report: SUSPICIOUS_RECIPS(1.5) BAYES_HAM(-3) MID_CONTAINS_FROM(1) MIME_GOOD(-0.1) R_MISSING_CHARSET(0.5)
+X-Rspamd-Score: -0.1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=david-bauer.net; s=uberspace;
+	h=from:to:cc:subject:date;
+	bh=+iJygy5Rsph3wgdm2ihgiOtTPWuxGIOIgL9IIraZFsc=;
+	b=RC9Kht1zeY9OVpr4Eb3kudMKBbZdFnACKFC2IFZQRPkWWoE4rI1ToCk3lYpUisMmwqQh3rd0Ji
+	R4+bbYFtW1zElJ31SHgumImP/uN5otpyaRyHh4irmmGKEL4DASpUCzYqERaquhicCNHJ7OH+IvSg
+	853X61J+oHhxwPXXJ3UwjW5sLHBfYEhCDGmygbvnVyUrv/Pehn04oC1UvSTcRapuegwq/hE9xf7S
+	uxkdIyjz1LJZRHoH/S1MxSkHsdXoTvxkiLrMsiu7vzeV6Xx1NTiErp1R+h0UKmsxZm15FNmhGoO+
+	Ig8VA09VAwykr3ASxXgrD4BHm54dj/laleQAFGjnkHc/pmZWjmmel4MpmPMhKYgoYVxfbDSY1yyH
+	X/csZYmHmaaZUiUiXTRiEGH8mnNmwjtXRlGXqjZof6xYqavPMgauEISq7GtMYLgMtiGqcAjeqKTI
+	PEQCjURKpQbQvM5qLHafJUXTlRRGQi4gDrTZrkmF8tSKSUUER6YCGGnDN2f7RoDhlQWmyOTKcHHB
+	PsMMR231EdKW0hmcYwJOQX3XEafrSmTT4CYb/kfU2ziWcQq8jAosEVCWvfR4PMOTTC9wIlgxgupp
+	YaKCzDPLe8QM4BP8n205UFwxsjEbDAuUZ4ct6ZpxAhGcL0Hg8zd+vJB3uV0guY8yBJVMaVhRyEy4
+	E=
 
-Clarify the format of path backoff limit properties in mt76 binding.
-Add explicit documentation for connac2 (mt7915, mt7981, mt7986) and
-connac3 (mt7990, mt7992, mt7996...) devices, including the difference
-in beamforming and non-beamforming entries.
+Host receives a power save state change event everytime a station enters
+or leaves PS mode. Use this unsolicited event to stop filling up TX
+queues in firmware, as the hardware will buffer frames for stations in
+power safe indefinitely.
 
-Also reformat the description to make is more precise.
+Limit packets to be enqueued for sleeping STAs in order to manage the
+packet backlog in the host-system while still being able to indicate
+pending traffic to said STAs.
 
-Signed-off-by: Allen Ye <allen.ye@mediatek.com>
-Co-developed-by: Allen Ye <allen.ye@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: David Bauer <mail@david-bauer.net>
 ---
- .../bindings/net/wireless/mediatek,mt76.yaml  | 20 +++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ .../net/wireless/mediatek/mt76/mt7915/main.c  |  1 +
+ .../net/wireless/mediatek/mt76/mt7915/mcu.c   | 28 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7915/mcu.h   |  9 ++++++
+ 3 files changed, 38 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-index ae6b97cdc..4156e1c97 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-@@ -252,6 +252,16 @@ properties:
-                       followed by 10 power limit values. The order of the
-                       channel resource unit settings is RU26, RU52, RU106,
-                       RU242/SU20, RU484/SU40, RU996/SU80 and RU2x996/SU160.
-+                      - For connac2
-+                        - Beamforming entries for BW20~BW160 and OFDM do not
-+                          include 1T1ss.
-+                        - When 1T1ss is not used, it should be filled with 0.
-+                      - For connac3
-+                        - Beamforming entries for BW20~BW160 and RU include
-+                          1T1ss, but OFDM does not include 1T1ss.
-+                        - 1T1ss is taken into account, so no need to fill with 0.
-+                      Non-beamforming and RU entries for both connac2 and
-+                      connac3 include 1T1ss.
-                     minItems: 1
-                     maxItems: 7
-                     items:
-@@ -270,6 +280,16 @@ properties:
-                       followed by 10 power limit values. The order of the
-                       channel resource unit settings is RU26, RU52, RU106,
-                       RU242/SU20, RU484/SU40, RU996/SU80 and RU2x996/SU160.
-+                      - For connac2
-+                        - Beamforming entries for BW20~BW160 and OFDM do not
-+                          include 1T1ss.
-+                        - When 1T1ss is not used, it should be filled with 0.
-+                      - For connac3
-+                        - Beamforming entries for BW20~BW160 and RU include
-+                          1T1ss, but OFDM does not include 1T1ss.
-+                        - 1T1ss is taken into account, so no need to fill with 0.
-+                      Non-beamforming and RU entries for both connac2 and
-+                      connac3 include 1T1ss.
-                     minItems: 1
-                     maxItems: 7
-                     items:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+index 90d5e79fbf74d..71b94db64ef6d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
+@@ -1783,6 +1783,7 @@ const struct ieee80211_ops mt7915_ops = {
+ 	.sw_scan_complete = mt76_sw_scan_complete,
+ 	.release_buffered_frames = mt76_release_buffered_frames,
+ 	.get_txpower = mt76_get_txpower,
++	.set_tim = mt76_set_tim,
+ 	.set_sar_specs = mt7915_set_sar_specs,
+ 	.channel_switch_beacon = mt7915_channel_switch_beacon,
+ 	.get_stats = mt7915_get_stats,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+index 00bff4d3aab80..8b4a5973b240c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
+@@ -402,6 +402,31 @@ mt7915_mcu_rx_bcc_notify(struct mt7915_dev *dev, struct sk_buff *skb)
+ 			mt7915_mcu_cca_finish, mphy->hw);
+ }
+ 
++static void mt7915_mcu_rx_ps_sync(struct mt7915_dev *dev, struct sk_buff *skb)
++{
++	struct mt7915_mcu_ps_notify *p;
++	struct ieee80211_sta *sta;
++	struct mt76_wcid *wcid;
++	u16 wcid_idx;
++
++	p = (struct mt7915_mcu_ps_notify *)skb->data;
++	wcid_idx = p->wtbl_lower | (p->wtbl_higher) << 8;
++
++	rcu_read_lock();
++	wcid = mt76_wcid_ptr(dev, wcid_idx);
++	if (!wcid)
++		goto out;
++
++	sta = wcid_to_sta(wcid);
++	if (!sta)
++		goto out;
++
++	ieee80211_sta_ps_transition_ni(sta, !!p->ps_bit);
++
++out:
++	rcu_read_unlock();
++}
++
+ static void
+ mt7915_mcu_rx_ext_event(struct mt7915_dev *dev, struct sk_buff *skb)
+ {
+@@ -424,6 +449,9 @@ mt7915_mcu_rx_ext_event(struct mt7915_dev *dev, struct sk_buff *skb)
+ 	case MCU_EXT_EVENT_BCC_NOTIFY:
+ 		mt7915_mcu_rx_bcc_notify(dev, skb);
+ 		break;
++	case MCU_EXT_EVENT_PS_SYNC:
++		mt7915_mcu_rx_ps_sync(dev, skb);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+index 3af11a075a2f4..836fe46393256 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.h
+@@ -54,6 +54,15 @@ struct mt7915_mcu_bcc_notify {
+ 	u8 rsv;
+ } __packed;
+ 
++struct mt7915_mcu_ps_notify {
++	struct mt76_connac2_mcu_rxd_hdr rxd;
++
++	u8 wtbl_lower;
++	u8 ps_bit;
++	u8 wtbl_higher;
++	u8 rsv;
++} __packed;
++
+ struct mt7915_mcu_rdd_report {
+ 	struct mt76_connac2_mcu_rxd_hdr rxd;
+ 
 -- 
-2.45.2
+2.51.0
 
