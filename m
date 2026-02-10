@@ -1,83 +1,89 @@
-Received: from mail-dy1-f195.google.com (mail-dy1-f195.google.com [74.125.82.195])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8612D0C94
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:12:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.195
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D15132DC339
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:44:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770689578; cv=none; b=R9hCMZ85pnNRbR5jQpWA4pzf0VIYkmXF0noG0K/ngAzzPDPsM7fvC4Zj9Cvf1WDMbcZy0Q/G3VUTIzBa4uQFZxD/Y+o9Es2CX+4HHlVwsLjjme9vFEbmC8rCyyu3lZOr7MVXn8gPJqSkJmBvXKSr4eHpHeT1Z2VGrJdcEpNC6VE=
+	t=1770691487; cv=none; b=cuiAWxBji26aXZXXUKM+VXfr1t3U7Uiq2qsmt7li2NSj/cukohCCsFVxwLa6DvyA0WGsjtcdhxy5rGubZePgjLem36OFcfqAyx6hhHiJwWaeaD7NIQfxT7kRwzGnk2qFiJYggVOzRUy0xN/t+pjwSjg7lpuY1on0m6WwAYPGsJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770689578; c=relaxed/simple;
-	bh=/CNu3or6IvmW6a+NEI6b/c1pNPuTW2PtNIWZgOO9Mfo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O0SeomvMb5lvedkhG/N0mzWfP0HSx7sX2dn1AKRwAXaM4arSelLla1lpSfi8ZlnJ5MRXQ9acRGOdyKPMUbUtY5FSUCHfqyU0iyjjvEpyhiPTWc1TZp4bOHakGJCAn2zZYJoNnt40w97YqDNDznJmEuyv2zloLV9qeAekGRWl2O0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kD3EAKkN; arc=none smtp.client-ip=74.125.82.195
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1770691487; c=relaxed/simple;
+	bh=q+/NbD63JY/ZK7/EmHVPqsMjWB4mZV8/ipy+dWbKNeo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kwZItS4xntKeB0JJEL+IqMLcmhmLg64yUnIiUF6990eNvjpza9OwqW2unsjI7xKYxE55M5ud0t7yPxMznch+ozuxLuAzo8feLws4l7N244S6uDu2PznuKoM1lmVeTqgIMkzYw6VeWLPs4N+gi90ZEyUTQpd9pqFwxhcD79POUgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=WPy/z6/8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GWovgopy; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kD3EAKkN"
-Received: by mail-dy1-f195.google.com with SMTP id 5a478bee46e88-2ba68df3687so3043767eec.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2026 18:12:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="WPy/z6/8";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GWovgopy"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 619I5bMk3700007
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:44:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=6oX3bVTmNxU+vLhGk2hyLQm1uGh8KjppfX+
+	Vzhlvkr8=; b=WPy/z6/817WxLGyKeWO79Ibk//CcAN1vPQFFGx1tV0TwxYb6xfg
+	Uc3naF7ITXqDANq6NhO66kxi7cCtLmc8QiCM31+aiZ0YYwpuP1xcxPmdbC8IkE24
+	bmnsSTFu/uP8a66Q4CCUHIFPqSnSlevkwpdiJmwppsCMbg4BvTd0xtP0Fmw8Xd5t
+	h3kqEfSoB/ayc4QPIc1dxY5BziZTp4IdFbpxFLv7CiWRXfo1FpzBMlPe4iwtER4H
+	vRL+FmlIfzrq7EfiNKyU2VcyeyGvdECWlMe0QMuLsXn8C4ZXg7LgWibe0urOi3Yn
+	5R52rlnxwHKT1oizHohom5INe66aSGrvvcQ==
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4c7e4mawux-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2026 02:44:45 +0000 (GMT)
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-2ba66faa692so1521258eec.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2026 18:44:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1770689576; x=1771294376; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1770691484; x=1771296284; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=JS7YM6T2z4NTuWOeAxUIARMzj225fodPnkXEYUrFD10=;
-        b=kD3EAKkNFHRxlmaZd7MT3V5uNxPdPBu0Yr/+LInwcpKVM10xZ8YCIxt/A+7cF88hvO
-         EDX4X2sBHTxQ93F9xXwPj7lM5dae8qY+ixk2ZUNhC5MVewsIB4UCzecOym9nvbeNtzcc
-         8XR/M81kLBOfQ9kl4PwYjQ3lVPZgFZDkD52e6nt51QD/k+0+EfWb7n2U1iUdr5v7awC4
-         fruc9SWnqgJSojNoKJiv6HuL9kmUFSasQHvpHkdfOVTAQT+qV2KD8HKJIxLysMO91D7W
-         64PVBRe0tBrniqKl9Ey1Q2Q/SGqaVeM5mT02ZXpfU8tDifi2vVedfvSjQk4nJqza/vs4
-         nI/w==
+        bh=6oX3bVTmNxU+vLhGk2hyLQm1uGh8KjppfX+Vzhlvkr8=;
+        b=GWovgopyyS+xWK96MfefTpXFnPhT6LXTZhprNcyS6hO2SEYjdaPfb54ep8mZfO6IL1
+         J4XvUBxd3m7kkV9ForpM8n4v/6yhGeNekU0V/0hb/vUJtzqDgN4+3GXz+/9dH4e/nD+D
+         L+LXI4ABy57JQqLhP0fYBVpNH0MJzdP1IkyL1/6LE9S0D4oAld8YUpngQHioO8EpYA8T
+         Q5rJTNGdoCE/6WekmoON+jnelt7qCd8C3vGbf33pOY+rY9fC2UH78g0Ce4I2D0gvzobx
+         /HKgJ/sYg8QCJ00282bIXai+zEApJd59wwkF1f7CKaM8jzvlehwccbkAUVSWbJ7c/pSt
+         XwIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770689576; x=1771294376;
+        d=1e100.net; s=20230601; t=1770691484; x=1771296284;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JS7YM6T2z4NTuWOeAxUIARMzj225fodPnkXEYUrFD10=;
-        b=CEBUz2yeDW2cco3bh1umacFnlPsdL9LWRRRdhQnbDBXNMq2CiWIArSCKw0h08iKRS6
-         nWNxBZxN5FBZNQW6sVEt60GG8BoFEnB6m6xpHGM+h+kvv2BFdXUhr+011kcmr0etMctb
-         oADkDiC3bstAm9S/yw0cqLMHRiOZIPGdeHgAYE/U7WrMkN/IG6Be3CtbUIqEHO0uubhv
-         +rIU179vPNgGDsBngx8xv9l7SRM2Uos2XOmSL88cfjr6AN6zor9K2AheIg0Dv/di6nEW
-         ESXZXSRsc3gLh62B6VNPj8EkwoWWCNuRlDLRusKeg1AolPMtlxe+Zyrm+S7JDsKM/uqB
-         cpUQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWvM1bBcYtoIOHQzhvlhDF/1HBGTT/tW/33Tz9RQMG1CgOIs0tPT6AWBDY5nPUo+69lSGhXI6XEBYGF/wCTmg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxRpJ/0vwtlDYFvEMXx+2lnzs62V3MBnLF5GlwFuVLdhV2yGFrR
-	dLBjDmZzWgUlf3OKlqUNJSQDjmVNxOv1V+CFtdOeEJUTVt2ejGVeDswi
-X-Gm-Gg: AZuq6aKM6aZzDR92o4b9XVp3bVY+B3qmUY8xKeThvFXKYD1P+MTgARG7pV+CGAWM09q
-	R+tSkSIYRV8Yk+Est9i3Am1T1NHRUnX7TL6/+5Mgt3CIS6HCW7hMNcCho9ye/IdyfsgQTQ1m+tP
-	qTpPxtXThptKYVBlCP0i1BvjnUjy/MM9lXVrnNTu0QuO1HN7BvWUzCXOf24UCceLC1oSyQQ+J3J
-	WqKkGweeNJTAM/zqflRsRJqCMAw/ATCECRgSz9DPR/fuIaI1XxtUCYVLsuS8Im8/SggDORV8I8n
-	ABSsAaMU7fAFJpOPJJ2YC2HOAsjPtw7N8lEMjYvftxZs30Q82g97J/M2uwQBD+4anfLc+ZA332M
-	Ra61ZsCk/pZvGVOJtLbRdsWt/KI4dPQugANg/DrcrA/HOdccj2i/5gaduRQLnClUiLr65dOqhGj
-	A50x8u0meFxixjzWEIZKNmjsnRkNJep+jOItQqXrOrThi5UsBuSOhYWnpdqJFodI/uikAinA+0n
-	KD8Xa/J7DW0d3+2EFmxfVJwexHaHGAdf3ULxky/YfvG1Z/mdkQv66FTqSd4RzbxItZxzfFrze0I
-	HS83ib+c6e+NOIVQug==
-X-Received: by 2002:a05:7300:e80a:b0:2ae:5d3b:e1ba with SMTP id 5a478bee46e88-2b856836f6fmr5038313eec.23.1770689576354;
-        Mon, 09 Feb 2026 18:12:56 -0800 (PST)
-Received: from ethan-latitude5420.. (host-127-24.cafrjco.fresno.ca.us.clients.pavlovmedia.net. [68.180.127.24])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ba81eab184sm1472747eec.1.2026.02.09.18.12.55
+        bh=6oX3bVTmNxU+vLhGk2hyLQm1uGh8KjppfX+Vzhlvkr8=;
+        b=lFElT6CbdsHFXEo/dttrZQRw3Csx8wq8Tpzcu7Z99TLRHr8WGCuwUhV1l3LbvrkLMz
+         eFtaS90UadPgmVZ4mAk5dYQ0BbgzCDw518UIro3HbYXfU+g1ELk+3AHSv4yk9K5LzNI8
+         vl4pmAZwd9hBnsGium4gJUeRqU8vWFUHDjR5Lecx3e/mL7lM3DPbXhsBjRg/9X2tl43U
+         Kgj9uh+cRHMX3GB6y+Ri8dfuItd9ryc5OFyoTvxQI755rjLpnuAu0Y1dmmwoMMRAdqH7
+         jiVYE5+ogJnKI/OIfq7samlpvkydXdnet85J4hBRlFPBdZc745RN0/fPhVtGzbFX5GTD
+         NPeQ==
+X-Gm-Message-State: AOJu0Yyg98qPtuDt41Ba4OnnEW6RUpROtXwH7/2vB6zx6NKO4da9Duwt
+	2/7fyrfLkdafLNeHTutyEbJ17l/SuMdKWdm7sN2TReX1gfS78eEgFADAxxuqxtnMbSnODJkRrAR
+	98O1Sb/ujTYA6j+dbgdOYWQSZ0MSmGTcGTsMRalVy/91F97qgHuihtkcw83uGFt8A6zXkpIxTiH
+	Q6XQ==
+X-Gm-Gg: AZuq6aJFodR/NLhYCCB6iWaDwk2DotBIKJQgtmFpfMeL2UtY+Gu58xosdVlzq6nzO/n
+	HeVjnrEkQrqtHjoeuxSDhhyaq8ZTSQT5PLRvLXSQ+mBNdSLhenEi3GlI7cyl2vcFaCYbud6bIm3
+	VtAjsG+qmdJCTKM+Mvgx9kmfv6WEcWbT/c72ltjr00MgQezqosiEhUa1Pib3j7eJfJ7QEL6Wwml
+	9ZY15VozIi/Vbhutw5LrxylgSWjn/COmSXbU2mYFgPsOYyqj21b1/XsGnl9M/FT1UnDs8JJOlRy
+	WnE1P70ip1L8+HyF6/weFwdbn/+53nwfovRVk335j+h4zY/t56qTT9BpjjIxbMHbaLmMmjJobof
+	BgVQ2YgoMQbGr0Je8aG7hP/B4BhHvfqmH59oehbYGSoUxc+yXqfq2x1JYQMXtKYfBM3rzcbXnPr
+	12
+X-Received: by 2002:a05:7300:f602:b0:2b6:af85:dd2d with SMTP id 5a478bee46e88-2b856833be8mr5762293eec.32.1770691484146;
+        Mon, 09 Feb 2026 18:44:44 -0800 (PST)
+X-Received: by 2002:a05:7300:f602:b0:2b6:af85:dd2d with SMTP id 5a478bee46e88-2b856833be8mr5762285eec.32.1770691483568;
+        Mon, 09 Feb 2026 18:44:43 -0800 (PST)
+Received: from hu-yintang-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2ba734ed83csm3143196eec.23.2026.02.09.18.44.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Feb 2026 18:12:56 -0800 (PST)
-From: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-To: netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
-	stable@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
-	Alice Michael <alice.michael@intel.com>
-Subject: [PATCH v2] net: intel: fix PCI device ID conflict between i40e and ipw2200
-Date: Mon,  9 Feb 2026 18:12:34 -0800
-Message-ID: <20260210021235.16315-1-enelsonmoore@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        Mon, 09 Feb 2026 18:44:43 -0800 (PST)
+From: Yingying Tang <yingying.tang@oss.qualcomm.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, yintang@qti.qualcomm.com,
+        yingying.tang@oss.qualcomm.com
+Subject: [PATCH ath-current] wifi: ath12k: fix incorrect channel survey index
+Date: Tue, 10 Feb 2026 10:44:40 +0800
+Message-Id: <20260210024440.3422264-1-yingying.tang@oss.qualcomm.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -85,63 +91,68 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: O-hgW5e1Jfh3cx4nggPfbU-rtUWh2B6Z
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjEwMDAyMSBTYWx0ZWRfX8RhFdmXOawCb
+ nhBK2ZAP2Vi64eU3xOdpQ93QMHuDbKbhOYHBbeYie1GFJsHamnroQHvTcMIaBFFAx6YvfdP9HDs
+ oUhOYGd+cuSzHriL2afqs1Ulw8riL9OKilFQV5KS964FuF7+zkYJs+EilbqTpuv075wuNyGRcfN
+ DogFstQDCf58DKkAezTMKfEX9MkS0OCP2tRZvTq2SnjzJT5i2W06mMWp1Pys7L7jja8pbNSt3VN
+ u2IDkS3UBX6QZIZCUTyPQ0uJoTEwsiHtIJzyFx9ayK4gk1RZwGVLoJwitPN/AGgSA/2GWLhL0vo
+ dP3atq5SxFqK589B8yQYZB7dGgNTR6duAeJ9hzMyr6G4C7PEcFn30zzpDNaz+G7h+dA7S/hiqnq
+ 2WtsNIDsCA54+Gf/oIttKmoXnXEtXblwI5MgZzbkmYQU5rCnVfheXbnP2FteHTd9vX6ReSbSN6w
+ xDvXiKhLNYbfvHYzbWw==
+X-Proofpoint-ORIG-GUID: O-hgW5e1Jfh3cx4nggPfbU-rtUWh2B6Z
+X-Authority-Analysis: v=2.4 cv=WecBqkhX c=1 sm=1 tr=0 ts=698a9b9d cx=c_pps
+ a=Uww141gWH0fZj/3QKPojxA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=EUspDBNiAAAA:8
+ a=qZVxHVLM7CW3LY0gG6MA:9 a=PxkB5W3o20Ba91AHUih5:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-02-09_01,2026-02-09_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 malwarescore=0 bulkscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 adultscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602100021
 
-The ID 8086:104f is matched by both i40e and ipw2200. The same device
-ID should not be in more than one driver, because in that case, which
-driver is used is unpredictable. Fix this by taking advantage of the
-fact that i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
-devices use PCI_CLASS_NETWORK_OTHER to differentiate the devices.
+A wrong channel survey index was introduced in
+ath12k_mac_op_get_survey by [1], which can cause ACS to fail.
 
-Fixes: 2e45d3f4677a ("i40e: Add support for X710 B/P & SFP+ cards")
-Cc: stable@vger.kernel.org
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+The index is decremented before being used, resulting in an
+incorrect value when accessing the channel survey data.
+
+Fix the index handling to ensure the correct survey entry is
+used and avoid ACS failures.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
+
+Fixes: 4f242b1d6996 ("wifi: ath12k: support get_survey mac op for single wiphy") # [1]
+Signed-off-by: Yingying Tang <yingying.tang@oss.qualcomm.com>
+
 ---
-Changes from v1:
-Rebase on latest mainline instead of net-next
+ drivers/net/wireless/ath/ath12k/mac.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/ethernet/intel/i40e/i40e_main.c  | 8 +++++++-
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 8 +++++++-
- 2 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/i40e/i40e_main.c b/drivers/net/ethernet/intel/i40e/i40e_main.c
-index d3bc3207054f..02de186dcc8f 100644
---- a/drivers/net/ethernet/intel/i40e/i40e_main.c
-+++ b/drivers/net/ethernet/intel/i40e/i40e_main.c
-@@ -75,7 +75,13 @@ static const struct pci_device_id i40e_pci_tbl[] = {
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_BASE_T4), 0},
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_BASE_T_BC), 0},
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_SFP), 0},
--	{PCI_VDEVICE(INTEL, I40E_DEV_ID_10G_B), 0},
-+	/*
-+	 * This ID conflicts with ipw2200, but the devices can be differentiated
-+	 * because i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
-+	 * devices use PCI_CLASS_NETWORK_OTHER.
-+	 */
-+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, I40E_DEV_ID_10G_B),
-+		PCI_CLASS_NETWORK_ETHERNET << 8, 0xffff00, 0},
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_KX_X722), 0},
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_QSFP_X722), 0},
- 	{PCI_VDEVICE(INTEL, I40E_DEV_ID_SFP_X722), 0},
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index 09035a77e775..b0e769da9415 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -11387,7 +11387,13 @@ static const struct pci_device_id card_ids[] = {
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2754, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2761, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, 0x1043, 0x8086, 0x2762, 0, 0, 0},
--	{PCI_VDEVICE(INTEL, 0x104f), 0},
-+	/*
-+	 * This ID conflicts with i40e, but the devices can be differentiated
-+	 * because i40e devices use PCI_CLASS_NETWORK_ETHERNET and ipw2200
-+	 * devices use PCI_CLASS_NETWORK_OTHER.
-+	 */
-+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x104f),
-+		PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0},
- 	{PCI_VDEVICE(INTEL, 0x4220), 0},	/* BG */
- 	{PCI_VDEVICE(INTEL, 0x4221), 0},	/* BG */
- 	{PCI_VDEVICE(INTEL, 0x4223), 0},	/* ABG */
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index e0e49f782bf8..86ce7d87b5a5 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -13086,6 +13086,7 @@ static int ath12k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 	struct ath12k *ar;
+ 	struct ieee80211_supported_band *sband;
+ 	struct survey_info *ar_survey;
++	int orig_idx = idx;
+ 
+ 	lockdep_assert_wiphy(hw->wiphy);
+ 
+@@ -13120,7 +13121,7 @@ static int ath12k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
+ 		return -ENOENT;
+ 	}
+ 
+-	ar_survey = &ar->survey[idx];
++	ar_survey = &ar->survey[orig_idx];
+ 
+ 	ath12k_mac_update_bss_chan_survey(ar, &sband->channels[idx]);
+ 
 -- 
-2.43.0
-
+base-commit: 1cac38910ecb881b09f61f57545a771bbe57ba68
