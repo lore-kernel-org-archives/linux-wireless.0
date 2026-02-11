@@ -1,97 +1,126 @@
-Received: from mail-out.aladdin-rd.ru (mail-out.aladdin-rd.ru [91.199.251.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7635327BF3;
-	Wed, 11 Feb 2026 08:36:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.199.251.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D322C34FF77;
+	Wed, 11 Feb 2026 08:41:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770798984; cv=none; b=VgsEEr11JqcF0bNAsg3S5bGxBSrmxBWDg+jJuI94EDVK5W2TFeMkrQRg1H/x+Fm/SBpTL1hlkW4XlmVFc1pjG6/e5paN5Aq6jp24bVFgwuKa9XwiJR974Fqp1XezVE4qTz89oipSeU46/UWGDrsk8PDIIdhrPaHIkiCWdMqdjik=
+	t=1770799286; cv=none; b=c+CyWc52+0O/uPZSKG+eJj52O71g0WdCchoxv+fGvr/8pFaQW23nIsZo/rcQHjhBhbbJAgppvHi4R6fF5AT0LlzwizvfSc0BStPySAHo4Ji5n38HR4x75tzh3TyImrUcAjKLWFKEDkj7qtGmaMOotiKcpx95V1HE60IK0uhz5FA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770798984; c=relaxed/simple;
-	bh=BVz1bM74OvQl89TLWkaJ4OQ0Wr8i89XZCPW6Ug3O/nE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XPx1iJa+3ELwAUVftUvC4bY3porn/+1rKmWf6Pw3TVQOtlkJ4Xn9gieEbwdT/81XXuwEM+DDkJJHXYRHOOWymVPz+NiIH2+p1pLpAGjoFRBG9rS1vz9apVRfpJGo3cTGyTa0Klr4AfJp36UXpGB4P6CJ8tftf47H1wLsj4k3gCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru; spf=pass smtp.mailfrom=aladdin.ru; dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b=w7P8aM9+; arc=none smtp.client-ip=91.199.251.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aladdin.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aladdin.ru
+	s=arc-20240116; t=1770799286; c=relaxed/simple;
+	bh=DRzA998Qsq5tPtDZ44U1tpSU7bM5HLjT8p7cteAB5Iw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FuYXsf5V+agNd5va+lgwU91MlTTVFQpien2yHrq6KjcI/ZzxOmsuxJdemGNExD/jVpz5pqFA3YgYPODGJTbpFiLw/IjrI2d1rgJCeSwBRaoD+6erl1uYUMiAmhoK9irBDnY6aahi80TWYR6/aVsgeEhdrPvtp9D/AzAFRbWPTXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=THqNMvOK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=aladdin.ru header.i=@aladdin.ru header.b="w7P8aM9+"
-DKIM-Signature: v=1; a=rsa-sha256; d=aladdin.ru; s=mail; c=simple/simple;
-	t=1770798043; h=from:subject:to:date:message-id;
-	bh=BVz1bM74OvQl89TLWkaJ4OQ0Wr8i89XZCPW6Ug3O/nE=;
-	b=w7P8aM9+0IiwZZzVZ6jYrzR3vLpRtjxbizRF/7L2rUfq7+mZ4/uc7PWLzWxIACEUjDBTJ/MUIFR
-	+6n4lM97qbvTsrssbCTcEZvu/zQ1t235XBtsc9QGVcAFe3qtVaQuPd9z0wi/XvK+otxo24quqbqY5
-	2Rkc9IkzRAy/UKyfiwvOnvRE2hDZvIvtJgjViBdo1JanYMBYzjMdBnTkDd7L5MIdCK+tjSlvPgsjE
-	ZJ03iFLazlwoz5J5vyV795+Vj1md1xLeSQG5Wnm+QEyl5tHDH4Qzj0pbl/GXR6pOs/qiaSpvfEgh7
-	5JYNTGpKxXs7Qp9fwa/FjZKH1jDtJmAtKiYA==
-From: Daniil Dulov <d.dulov@aladdin.ru>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Daniil Dulov <d.dulov@aladdin.ru>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <lvc-project@linuxtesting.org>,
-	<stable@vger.kernel.org>
-Subject: [PATCH v2] wifi: cfg80211: cancel rfkill_block work in wiphy_unregister()
-Date: Wed, 11 Feb 2026 11:20:24 +0300
-Message-ID: <20260211082024.1967588-1-d.dulov@aladdin.ru>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="THqNMvOK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB127C4CEF7;
+	Wed, 11 Feb 2026 08:41:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770799286;
+	bh=DRzA998Qsq5tPtDZ44U1tpSU7bM5HLjT8p7cteAB5Iw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=THqNMvOKyb50X4AywMYwoGSKRVY2mGWMW6hmzVlcLxNR9bHweT/BTdGpTuo1tUDf7
+	 ZZArEHoK3CteyH/klGKh+XXub1lYrOM1C9QEIN838bFHxS8ffaEqWuFgForJC1ilfO
+	 jgnJv8lzAmGbKZDR2+SpS05jiQACbBl40mbthN/kuLcQI66OP3cS+3kP8Wh+GHOD3r
+	 Ij1eO/Y19HhIzoAu+1jAZcxKkCxCOo5ZN3ZZk4CZfa3PL9TwjFm5uDMQSkd59/OoDd
+	 ooL2i1tKYbreJu13kNzYFiOoXAjfx12HenAgk/ijy1WmiWnwgYzaoS1L8QksiB3Szn
+	 5O48BoU2t7fmQ==
+Message-ID: <23561f00-9f3f-4d4d-81ae-aab9958bd797@kernel.org>
+Date: Wed, 11 Feb 2026 09:41:22 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/2] dt-bindings: net: wireless: mt76: clarify backoff
+ limit format
+To: Ryder Lee <Ryder.Lee@mediatek.com>
+Cc: "robh@kernel.org" <robh@kernel.org>, "nbd@nbd.name" <nbd@nbd.name>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ =?UTF-8?B?QWxsZW4gWWUgKOiRieiKt+WLsyk=?= <Allen.Ye@mediatek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1770746444.git.ryder.lee@mediatek.com>
+ <69521aebefef405bad5117d4d5d5fef4a5dfb7e8.1770746444.git.ryder.lee@mediatek.com>
+ <20260211-miniature-chital-of-plenty-1a71df@quoll>
+ <bd4da0a8522db2991ec0844233efe068323c2578.camel@mediatek.com>
+ <b00c8c18-930b-4cb9-975d-b15118bfc854@kernel.org>
+ <0dceffe2e1344830c12bc1f6516d13c7bb488b99.camel@mediatek.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <0dceffe2e1344830c12bc1f6516d13c7bb488b99.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EXCH-2016-04.aladdin.ru (192.168.1.104) To
- EXCH-2016-01.aladdin.ru (192.168.1.101)
 
-There is a use-after-free error in cfg80211_shutdown_all_interfaces found
-by syzkaller:
+On 11/02/2026 09:33, Ryder Lee wrote:
+>>>> Why this cannot be a schema?
+>>>>
+>>>>
+>>> Well, actually, it's already a schema. This is just an expanded
+>>
+>> Where exactly?
+>>
+> 
+> How 1T1ss is used across different generations is what my example above
+> was talking about.
 
-BUG: KASAN: use-after-free in cfg80211_shutdown_all_interfaces+0x213/0x220
-Read of size 8 at addr ffff888112a78d98 by task kworker/0:5/5326
-CPU: 0 UID: 0 PID: 5326 Comm: kworker/0:5 Not tainted 6.19.0-rc2 #2 PREEMPT(voluntary)
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
-Workqueue: events cfg80211_rfkill_block_work
-Call Trace:
- <TASK>
- dump_stack_lvl+0x116/0x1f0
- print_report+0xcd/0x630
- kasan_report+0xe0/0x110
- cfg80211_shutdown_all_interfaces+0x213/0x220
- cfg80211_rfkill_block_work+0x1e/0x30
- process_one_work+0x9cf/0x1b70
- worker_thread+0x6c8/0xf10
- kthread+0x3c5/0x780
- ret_from_fork+0x56d/0x700
- ret_from_fork_asm+0x1a/0x30
- </TASK>
+Where exactly it is already a schema? Please point me line encoding this.
 
-The problem arises due to the rfkill_block work is not cancelled when wiphy
-is being unregistered. In order to fix the issue cancel the corresponding
-work in wiphy_unregister().
+> 
+>> But if it is, then this patch is redundant. Don't repeat constraints
+>> in
+>> free form text.
+>>
+> 
+> Alright then, let’s drop this change. Felix, please ignore this one.
 
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
 
-Fixes: 1f87f7d3a3b4 ("cfg80211: add rfkill support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daniil Dulov <d.dulov@aladdin.ru>
----
-v2: move cancel_work_sync() from cfg80211_dev_free() to wiphy_unregister()
-as suggested by Johannes Berg <johannes@sipsolutions.net>
- net/wireless/core.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9a420d627d3c..8628e0eefadc 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1214,6 +1214,7 @@ void wiphy_unregister(struct wiphy *wiphy)
- 	/* this has nothing to do now but make sure it's gone */
- 	cancel_work_sync(&rdev->wiphy_work);
- 
-+	cancel_work_sync(&rdev->rfkill_block);
- 	cancel_work_sync(&rdev->conn_work);
- 	flush_work(&rdev->event_work);
- 	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
--- 
-2.34.1
-
+Best regards,
+Krzysztof
