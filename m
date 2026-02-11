@@ -1,139 +1,129 @@
-Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1600C3328E0
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2026 09:01:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770800501; cv=pass; b=Yu/NtqtVXxxuYGRJUNoLyI+fv3JN9rtusmo2QNJR2EUcJDw1iV8yxsgagFG3bEGtUam4XgEFcLnLTB7maQeVqwhjkUqbX5cIJtkzkQRycxPxQ9ecQxgc0Nj0sIUXSolBwzlNe47CGgy2b77gBrHizLdx1y0zucgsH/VST0mEsfU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770800501; c=relaxed/simple;
-	bh=IlqKUyiN0U3VYCZSh5wBhgPjVtteYN5T3q7z1E8Zpjg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GjZpJCAyneaICjPd9DTxi85ULHFmLvuGE4wANVXkoRMPFq6WMJn52KL4Si3VTqQz9+kKLOnoplWU9ARB8EzilhFk0rHMuiDL96yYv8LezlsNuQnuIzdmGtKzcah/YzLPfItHPox7R/fkJTwGpMmgPI48FF33XSxTDTogOW6DVIg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=LFvReyfy; arc=pass smtp.client-ip=209.85.167.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B587719C556;
+	Wed, 11 Feb 2026 09:08:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1770800887; cv=none; b=ViOHlibV7Pg+z8jfNv4QDUncKO25h6EUsmT16pILfu+xjHmmuw+Hc0v3wVZa90qd9IgrnhzOsNT0gItzKMSeoqdd1Gc0KYUfWz3HWDSDyrhCCBaQhXX3TQBHmOx1fMaA7o8EGYYDLHFZXskaD7KaIhJUuZleTl32+c0wJaux5gQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1770800887; c=relaxed/simple;
+	bh=v24dbacUgECpeHs+FLWKo4rsvi2i6wsLpU0FJH5JnJY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BelnwUah9msNOnhkH6Ljw9wmT+RGQbRVq5/YMWVKCC64zXzhC0EZCoXbqVYIN99aXVY0Mw2YaJclj+X6NZMW1XYY9WP9ishxxmYS1vtnY4UyoQN5KYX1M9PL+nmESQFtj/L75f7fAjf6EC2Z9SQGgz0t6UiRBu6ZQBShiA0hoYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cYqfkefj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="LFvReyfy"
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-59deec3d8dcso7070289e87.3
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2026 01:01:39 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1770800498; cv=none;
-        d=google.com; s=arc-20240605;
-        b=HRmK8IXSEkP0RQ4yM35w69j0IHbewJeZlFpFTO/ikAXakQ3vQGDjJye4CB5GNDp19U
-         rgd9/4d8ormC20e9SZmeRpjV9fir5qG1hN2GSSsKKYk+6Degbc4DJNdDlws5xeW8tQLp
-         XjIzp3VRZq4vibeZASwp0ftcyHPYHAa0S1FMX6mAYmKCJMq/TzzcpgVQNtWjXJvPwJOC
-         cSnZi5wJlPW7nojlgfihsOpD3DioWY107acL67TYTPndwOPekDXIqiprzbh2gSQC+IQk
-         E3A+x0B/bGu9EqL+i+VTMBTwf/HDlOzmCe/QbW+nQCvkD6iJSA3DXuU06DdbSy6oDk1L
-         F2Jg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=IlqKUyiN0U3VYCZSh5wBhgPjVtteYN5T3q7z1E8Zpjg=;
-        fh=4WTAINr8onBck2obNwadgezla35XKZe0nzvKk1038MM=;
-        b=H5F0vR/jXlNEAspKoUHYFhrSfKMOhxgBy74p+TS/2wKfReIMIX8wtrNJbnCb+M72Y2
-         HAkyqfwOCCfSn81edJ2FKBYspVgI5eveAx6vZf+i0ePFU9CxbOQn4To/KI0zPjpGrBpd
-         bNPRjX6EPc/ht7NPRFj8eMQNFKZSvBkZJk2OhYW+9XlOTTlewOPdDbYDgcmBs+gYVcHP
-         OKxnYwkSOsN14oxP98tSCYXotF405n9uvgXb80Q3o16CDqz8wvqgmS24oQFpPgLRGWRu
-         rTnzQuoSwjgaPia48KuCE8NN4nxRkQwyOYipJV1MJYuvm9iA/5n/JTGeugFV80u1cwVI
-         NGZQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1770800498; x=1771405298; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IlqKUyiN0U3VYCZSh5wBhgPjVtteYN5T3q7z1E8Zpjg=;
-        b=LFvReyfybb5gXmVd44pWqdRVhjd+HEfNL0yVWph4vnQwsTzsud37yJgjRPy0Ub8600
-         0qvANCIQhLp19N3zhImUixJGLzONCSgi1rEf0YrG5oaxlE5cxUS93JZdjE47r0vtIhh6
-         Dj2mXFHy97aK4U8a+TS4j3gXzx4usOtERmHy8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770800498; x=1771405298;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=IlqKUyiN0U3VYCZSh5wBhgPjVtteYN5T3q7z1E8Zpjg=;
-        b=HcoiGZm0tlkk0Lrz8FLi9UCN+tGQ34uDclD0M+azPHoatYrTKKKO5QKWgAI8DLY2Cq
-         9eqoPk83vQl1zA3CbBF1qoiRTYReYq5OYLlUPhOym+fK5RB9yUiDnQdw8pirsK9fFPob
-         o8fsCZPg1eXwiJ8n51a780ADInGslt+w3ccQqc7mDoXOjXD0MLrYITJhm1m5mYqrmkr1
-         A08AFXJJpEm2lCLq+G9R0GrEbTsskyFoUwhmXfiT+nCbOZ204yRFi6IzAZq9+l9PjftV
-         fB7bl1YpHy4ir35eJrZiFDxZ65WC8DeBrBfp4wxHw0fZFFltUvSvSzZBPRZ58STGeKbK
-         MlHw==
-X-Forwarded-Encrypted: i=1; AJvYcCVawDnp0AnIgADCfbqzR6zpPTECast4ObPtLBFDoBNaJK9CSu+peyn/gaXcO3yotjWIaPNp09JNuKbeh1Uf7A==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEwReJU9Lh1soruSLkTX0XpDGo5oRJaps2i6ocxhwdc/G7S/6q
-	MzXyPwtpaulXAGsqKffj2hv/MMImwIX/YXVRZTOFBMumSlWu7Hx1tPAfJEIV73itFn76uplzMjv
-	UU4Qv1uvikEWGtNy0NmImmi+gvyWWfmojB7q1xNcV
-X-Gm-Gg: AZuq6aLPovARMvgiDjF5Aq3sN6bWpCAg3vJHwEZ6vDvi6L5MTZVZRcpyxqvHpzqFcJ5
-	dkpIKN6eHTJRSml+3I8yThjkTE/NFWQ0G8R52PoBKMzh90tw7pfsqjzZ0mFz/jyKBzMFx4WYmtt
-	eA4WTgbW1I0J31/IGfNK4I6+ETFZjKJ0SNExtMsYICHiQbuy0Baoh0dGuCGOYgv2oBC/rrRgWtc
-	krpXC5kt0bvNLBGBPWQIxasWVz3QUsSJmwgiQoeR/v4zGtFfOdBVfFugSrLz5TuILj9FTTrosd9
-	IM8pKRnkGoeoaT+oiq/mwTfxfzaxk3UqdEsp
-X-Received: by 2002:a05:6512:12ca:b0:59e:1954:1d3f with SMTP id
- 2adb3069b0e04-59e5c3f0c07mr635102e87.44.1770800498017; Wed, 11 Feb 2026
- 01:01:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cYqfkefj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73241C19423;
+	Wed, 11 Feb 2026 09:08:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1770800887;
+	bh=v24dbacUgECpeHs+FLWKo4rsvi2i6wsLpU0FJH5JnJY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cYqfkefjh+z/X3GE6dcxyhhnuVL5lxlX3BvYctO2Qu/yPJhE44BZrMYJNvUR06CIh
+	 mhhPRnfaIsU5SynxbHg5QZkqvpVN3FIKddFkkWvWywgwrjZbLGH4V+GovVYzdP+wsO
+	 sPMrPVov5w+kJv+roV+bKh1l+05XA3cYA+8J+rEKDjfitLk4fK9qM1lou0Gr4K0kA9
+	 c8ltyJwdaVlDFt2aSnejDpYmJBJl1X7DuDvRKYFtBjtGCKAtpypo544YwTwS+lNcgD
+	 S5HPzqH8bcMET7tMjwaAEJLbX+GEAp9ro6zdUO4DhmR2iC4/uk4HXjBJg0bQZUngAM
+	 ycEvgB9d2gHfw==
+Message-ID: <388e874d-d9ff-43f2-b010-ca7ac29aa065@kernel.org>
+Date: Wed, 11 Feb 2026 10:08:02 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1770746444.git.ryder.lee@mediatek.com>
- <69521aebefef405bad5117d4d5d5fef4a5dfb7e8.1770746444.git.ryder.lee@mediatek.com>
- <20260211-miniature-chital-of-plenty-1a71df@quoll> <bd4da0a8522db2991ec0844233efe068323c2578.camel@mediatek.com>
- <b00c8c18-930b-4cb9-975d-b15118bfc854@kernel.org> <0dceffe2e1344830c12bc1f6516d13c7bb488b99.camel@mediatek.com>
- <23561f00-9f3f-4d4d-81ae-aab9958bd797@kernel.org>
-In-Reply-To: <23561f00-9f3f-4d4d-81ae-aab9958bd797@kernel.org>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Wed, 11 Feb 2026 17:01:26 +0800
-X-Gm-Features: AZwV_QglW35gBJXxqkqDaU4LG31ARe_Nwoft0XmJRDrq9pj3jspIahr0OV8U4wA
-Message-ID: <CAGXv+5EY=8Xta4OdnS9Skjx3Ls3ZnW7oNS38cK1Ch=wL6JJJ0g@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v3 2/2] dt-bindings: net: wireless: mt76: clarify backoff
  limit format
-To: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "nbd@nbd.name" <nbd@nbd.name>, 
-	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>, 
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, =?UTF-8?B?QWxsZW4gWWUgKOiRieiKt+WLsyk=?= <Allen.Ye@mediatek.com>, 
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+To: Ryder Lee <Ryder.Lee@mediatek.com>
+Cc: "robh@kernel.org" <robh@kernel.org>, "nbd@nbd.name" <nbd@nbd.name>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ =?UTF-8?B?QWxsZW4gWWUgKOiRieiKt+WLsyk=?= <Allen.Ye@mediatek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1770746444.git.ryder.lee@mediatek.com>
+ <69521aebefef405bad5117d4d5d5fef4a5dfb7e8.1770746444.git.ryder.lee@mediatek.com>
+ <20260211-miniature-chital-of-plenty-1a71df@quoll>
+ <bd4da0a8522db2991ec0844233efe068323c2578.camel@mediatek.com>
+ <b00c8c18-930b-4cb9-975d-b15118bfc854@kernel.org>
+ <0dceffe2e1344830c12bc1f6516d13c7bb488b99.camel@mediatek.com>
+ <23561f00-9f3f-4d4d-81ae-aab9958bd797@kernel.org>
+ <0572bd6e56ca872e285729ccd4c2201517b66e18.camel@mediatek.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <0572bd6e56ca872e285729ccd4c2201517b66e18.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 11, 2026 at 4:41=E2=80=AFPM Krzysztof Kozlowski <krzk@kernel.or=
-g> wrote:
->
-> On 11/02/2026 09:33, Ryder Lee wrote:
-> >>>> Why this cannot be a schema?
-> >>>>
-> >>>>
-> >>> Well, actually, it's already a schema. This is just an expanded
-> >>
-> >> Where exactly?
-> >>
-> >
-> > How 1T1ss is used across different generations is what my example above
-> > was talking about.
->
-> Where exactly it is already a schema? Please point me line encoding this.
+On 11/02/2026 09:59, Ryder Lee wrote:
+> On Wed, 2026-02-11 at 09:41 +0100, Krzysztof Kozlowski wrote:
+>> On 11/02/2026 09:33, Ryder Lee wrote:
+>>>>>> Why this cannot be a schema?
+>>>>>>
+>>>>>>
+>>>>> Well, actually, it's already a schema. This is just an expanded
+>>>>
+>>>> Where exactly?
+>>>>
+>>>
+>>> How 1T1ss is used across different generations is what my example
+>>> above
+>>> was talking about.
+>>
+>> Where exactly it is already a schema? Please point me line encoding
+>> this.
+>>
+>>
+> line 243 paths-ru
+> line 261 paths-ru-bf
 
-I think what Krzysztof is asking is why can't you have different compatible
-strings for each generation (connac, connac2, connac3), and then have
-conditionals in this document to describe in proper DT schema, not text,
-the length requirements of each property for each generation.
+I do not see there anything like you wrote here. You just list all of
+them, no device constraints.
 
-
-ChenYu
-
-> >
-> >> But if it is, then this patch is redundant. Don't repeat constraints
-> >> in
-> >> free form text.
-> >>
-> >
-> > Alright then, let=E2=80=99s drop this change. Felix, please ignore this=
- one.
->
->
->
-> Best regards,
-> Krzysztof
->
+Best regards,
+Krzysztof
