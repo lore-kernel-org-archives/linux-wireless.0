@@ -1,124 +1,301 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA417158535
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2026 08:43:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B35D52D6E78
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2026 09:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770885837; cv=none; b=VCCmN+AvkUaPtQHoaUjgnBpYuZD/JuQ9BcPSRBga5rIrFKHaluK+wCea4/agh1UaUABAFL1hV6V0soCCqW9MreeNhOsHhPyyCi8JrfQ1UZ0Rjb+zQ4k3tJgRvC01TBRGfuARxgonSOeNxHWVQ/hhnqb26D/qh5c2yHHQ9bOFFyw=
+	t=1770887133; cv=none; b=OZnNSaNe8Xgr6TdfOWJ6Qy//zDwgpW9ToZNPZcLXrQBFw9DtD73AyKOQdnc6xmcCzi96d1nG0AsnxM9sz2aM3Euug5cRjGEx7P+2iTPT/rjX+OmjEmPzBxKsSorylAPJFY2HnFfZOCJzQSD2Nr7ZLRh2ihVmFLvVTCIX5trc62g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770885837; c=relaxed/simple;
-	bh=GHHfbkEaw3cpzD12CYxJxXshtnvvQtZSelUu/i0WLqE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hlmH/U5VB7OiNuz7cox+6ZqLjG6SHkGfoxEvN8pqZs0CCDDq5r0nan/Na4X/ABc0azkVEyLJs0IiwckkxaVjwldKzH9RVYXBOAKOtQVxMjgWDjU1KS5TS+Vy6FrOKVJIG8hj8TgOecrGOXUwyLWAPuRe2mEzmFDCx604LJj0X7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=CmgeArnm; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
+	s=arc-20240116; t=1770887133; c=relaxed/simple;
+	bh=7xrdYUpMGk/7fw0yMd/pq4IQdLwFS+QBRRzl6xvK+kg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pfMB09lKqrdOyovOY4Hvn1ka9RDjTFq0CU7MUfBglZ4Sqd9MtPEPNpAtbWg5jCpmlwUyUpBE0JMWu6DUyLMCnntAHX9IIHcC94OK5YgF/6h6uOoeieOgJ6/XwajGWPYgPWSiBsEcs7piNt+mM5kxSbKmEN2W22cqi4CP+x7R/T8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=B0iipJlQ; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="CmgeArnm"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2aaecf9c325so12350375ad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2026 00:43:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1770885835; x=1771490635; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=eWNiHEZw2DN3xmzh67cRdIkymYQbZfNrvc/HikNc8dk=;
-        b=CmgeArnmOGgu0jU4BLUMs1zMXiQsk6kucVozcFKoo6AI2J+FLEJvoXCiNn8mLjyvPA
-         L3c6inoODmRnWBuvsE04512DlLpTysUQgZRvc4g7qArAtV5vjOewXmbt9GdYBKo9qOOK
-         OUzrWaMqOGsVpcW05uZSmEetJxzzqznZZ/rxnkhRhcm076fN7mAYuNDJ1k7lqdJUtt8E
-         3ym9Kx3F2wzCfmML7v6OSLs/h/nMNTFYKm+rAlI7nNOgQJwbRD7mNe5mdNdXR3303q+t
-         mlFAvxa+1uX9mEBW0iBJJNtGJVsomKEEudxNWYIdcrVJVmYtMiRcmB9ZwgMwO+q3ICjq
-         7tXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1770885835; x=1771490635;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eWNiHEZw2DN3xmzh67cRdIkymYQbZfNrvc/HikNc8dk=;
-        b=KJCkzK1qik0YgIUbieXxcCd1Ba1czQNSbEEGz+6/529e79jZwM3Vi8Of1VWi6whb+B
-         IHIkUap4fvsfENwozz4fW99TXpI3O3oB43mqkT9p/IMk7Mk6w6c95TrJXmHKfI0ewjtX
-         Ee1Ud5I+BPI9/oJQsFL5oDvMzF6MXQgu6zlvdjYadkuZdnjl9ZRiZ8X15BDmpDPnaG6O
-         dZ66VQiGHThAW8EcKvFYxqWCvQojDtLdWv0IJRAyat0DUJ0VRhbw9uNSpv8US/Iym0N0
-         NBAczDBPvNInfffjh70Uu+yP1P2ghFTLlOcdRtiSnh9QIddAcEtqFyrdBaihDAHp9/OW
-         tleg==
-X-Gm-Message-State: AOJu0YxchLwAT2BRmF9t3tTRyKQaDznb87vehl1diyrU0nr6ef6cbLk3
-	ZHoB9VW/a1Vk34hFmJgmZ8mi1r86w4oI2S7VTh+hsXHXzl6KaU31jgWD1yDcL+xkixT3IK8evcg
-	WZs0=
-X-Gm-Gg: AZuq6aKEBrvtrYY2hxLnemMvS1w8FInOjoj8tN7UDTshRDN7Igzdix2dNjofPVq0b+J
-	WVwYANTqPoopuBGu/xrk6L1MqXGn8m8m6obb4svO1GPN9KdivhL3b6QcEbNtOfBKtXbWGAw5lyH
-	VxBHtUyL8hq89HlhUEST+PTjT6oUyG5FqgbupdlaSDfPc3CJFStiKagLiB+vQgihYYg3SidLnGY
-	5Gru6h8KxBuZqk7cpbPPhQO6vxuAbhDnA7z74gLXj3cROiyg9CqvpPBu/1oLBaihmEtfrHBLXgS
-	jnWnxcfijdbHFqfllFEQELlf1oANohM1hZygJoc707n6W+ddX2JxuxEabc3UoOZ0YX7GLqHDt45
-	KNf846CHaGZFXNheM9jPVJnnzV9OH6bR5b/PiHF7GZ3XCP7yjaj3APu5+ugyBskiV5Iu8kj9eus
-	Z0Hz+KmuMHcqkS+/Lj2Wd2wZhw
-X-Received: by 2002:a17:903:22d1:b0:2aa:e3d1:1430 with SMTP id d9443c01a7336-2ab3abf9da7mr16393945ad.23.1770885835168;
-        Thu, 12 Feb 2026 00:43:55 -0800 (PST)
-Received: from localhost ([14.143.244.11])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ab2996503dsm44362215ad.44.2026.02.12.00.43.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Feb 2026 00:43:54 -0800 (PST)
-Date: Thu, 12 Feb 2026 14:13:51 +0530
-From: Ria Thomas <ria.thomas@morsemicro.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, lachlan.hodges@morsemicro.com,
-	arien.judge@morsemicro.com, pradeep.reddy@morsemicro.com,
-	simon@morsemicro.com
-Subject: Re: [PATCH wireless-next v2 1/3] wifi: cfg80211: Add support for S1G
- Response Indication Configuration
-Message-ID: <20260212084351.aqswgnvnuepun6em@1207>
-References: <20251209062424.3926297-1-ria.thomas@morsemicro.com>
- <20251209062424.3926297-2-ria.thomas@morsemicro.com>
- <9eb13765529bac88337ab2fd1a13769fa4519f52.camel@sipsolutions.net>
- <20260109040041.tnk7e6uewo24u3tr@1207>
- <048c2715d08822d7f79b082cbe332f982d8ced61.camel@sipsolutions.net>
- <20260206061139.6fdwaazvk4swpreo@1207>
- <ec999f04a965006dea6bd8e7380996b6fca980b4.camel@sipsolutions.net>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="B0iipJlQ"
+X-UUID: f80f575007f111f185319dbc3099e8fb-20260212
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=KjTmETYJMhUFu0ND6fypPajx5WjMpMrsjrQAH65vI54=;
+	b=B0iipJlQgWUM93xXm8EsRad1i385QlFkxKFG3+QDbJa6ocVuhErmPnjG22mRjfAw8n+p+fpsuu5wW7GyC3D7vi7fOxheDALpL/jvf1xm0NfNtoI1yH9FvBW+H0DUPmD5Cyqrlei5Lhm6gncx/kVJOST4uTX+BAu51CKK87uO4Kw=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:3e926c45-eeb1-45b7-b5bc-5f25a95e591d,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:89c9d04,CLOUDID:489b9ae9-ef90-4382-9c6f-55f2a0689a6b,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
+	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
+	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: f80f575007f111f185319dbc3099e8fb-20260212
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+	(envelope-from <shayne.chen@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1760368200; Thu, 12 Feb 2026 17:05:25 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 12 Feb 2026 17:05:24 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 12 Feb 2026 17:05:24 +0800
+From: Shayne Chen <shayne.chen@mediatek.com>
+To: Felix Fietkau <nbd@nbd.name>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
+	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
+	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
+	linux-mediatek <linux-mediatek@lists.infradead.org>, StanleyYP Wang
+	<StanleyYP.Wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76 3/3] wifi: mt76: mt7996: apply calibration-free data from OTP
+Date: Thu, 12 Feb 2026 17:03:10 +0800
+Message-ID: <20260212090310.3335392-3-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260212090310.3335392-1-shayne.chen@mediatek.com>
+References: <20260212090310.3335392-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ec999f04a965006dea6bd8e7380996b6fca980b4.camel@sipsolutions.net>
+Content-Type: text/plain
+X-MTK: N
 
-Hi Johannes,
+From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
 
-Thanks for the feedback.
+Before sending the current EEPROM data to the firmware, read the
+calibration-free data (FT data) from the efuse and merge it with
+the existing EEPROM data.
 
-> And for the certification test, presumably the choice for testbed STA
-> (for certain frames at least, I guess not intended to break the rules
-> for cases where there's no/less choice) is not meant to be left to the
-> implementation, but rather meant to be set, presumably to check that the
-> receiver reacts correctly.
+Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 171 ++++++++++++++++--
+ .../wireless/mediatek/mt76/mt7996/mt7996.h    |   5 +
+ 2 files changed, 157 insertions(+), 19 deletions(-)
 
-Yes, for certification testing this configuration is intended to verify
-that the receiver of the PPDU correctly interprets and acts upon the
-Response Indication value set by the transmitter.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 98db3bcf76f0..4cac1f7dd597 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -3948,7 +3948,152 @@ int mt7996_mcu_set_chan_info(struct mt7996_phy *phy, u16 tag)
+ 				 &req, sizeof(req), true);
+ }
+ 
+-static int mt7996_mcu_set_eeprom_flash(struct mt7996_dev *dev)
++static int
++mt7996_mcu_get_cal_free_data(struct mt7996_dev *dev)
++{
++#define MT_EE_7977BN_OFFSET	(0x1200 - 0x500)
++	struct cal_free_data {
++		u16 adie_offs;
++		u16 eep_offs;
++	};
++	static const struct cal_free_data cal_7975[] = {
++		{ 0x5cd, 0x451 }, { 0x5cf, 0x453 }, { 0x5d1, 0x455 },
++		{ 0x5d3, 0x457 }, { 0x6c0, 0x44c }, { 0x6c1, 0x44d },
++		{ 0x6c2, 0x44e }, { 0x6c3, 0x44f }, { 0x7a1, 0xba1 },
++		{ 0x7a6, 0xba6 }, { 0x7a8, 0xba8 }, { 0x7aa, 0xbaa },
++	};
++	static const struct cal_free_data cal_7976[] = {
++		{  0x4c, 0x44c }, {  0x4d, 0x44d }, {  0x4e, 0x44e },
++		{  0x4f, 0x44f }, {  0x50, 0x450 }, {  0x51, 0x451 },
++		{  0x53, 0x453 }, {  0x55, 0x455 }, {  0x57, 0x457 },
++		{  0x59, 0x459 }, {  0x70, 0x470 }, {  0x71, 0x471 },
++		{ 0x790, 0xb90 }, { 0x791, 0xb91 }, { 0x794, 0xb94 },
++		{ 0x795, 0xb95 }, { 0x7a6, 0xba6 }, { 0x7a8, 0xba8 },
++		{ 0x7aa, 0xbaa },
++	};
++	static const struct cal_free_data cal_7977[] = {
++		{ 0x4c, 0x124c }, { 0x4d, 0x124d }, { 0x4e, 0x124e },
++		{ 0x4f, 0x124f }, { 0x50, 0x1250 }, { 0x51, 0x1251 },
++		{ 0x53, 0x1253 }, { 0x55, 0x1255 }, { 0x57, 0x1257 },
++		{ 0x59, 0x1259 }, { 0x69, 0x1269 }, { 0x6a, 0x126a },
++		{ 0x7a, 0x127a }, { 0x7b, 0x127b }, { 0x7c, 0x127c },
++		{ 0x7d, 0x127d }, { 0x7e, 0x127e },
++	};
++	static const struct cal_free_data cal_7978[] = {
++		{  0x91, 0xb91 }, {  0x95, 0xb95 }, { 0x100, 0x480 },
++		{ 0x102, 0x482 }, { 0x104, 0x484 }, { 0x106, 0x486 },
++		{ 0x107, 0x487 }, { 0x108, 0x488 }, { 0x109, 0x489 },
++		{ 0x10a, 0x48a }, { 0x10b, 0x48b }, { 0x10c, 0x48c },
++		{ 0x10e, 0x48e }, { 0x110, 0x490 },
++	};
++	static const struct cal_free_data cal_7979[] = {
++		{ 0x4c, 0x124c }, { 0x4d, 0x124d }, { 0x4e, 0x124e },
++		{ 0x4f, 0x124f }, { 0x50, 0x1250 }, { 0x51, 0x1251 },
++		{ 0x53, 0x1253 }, { 0x55, 0x1255 }, { 0x57, 0x1257 },
++		{ 0x59, 0x1259 }, { 0x69, 0x1269 }, { 0x6a, 0x126a },
++		{ 0x7a, 0x127a }, { 0x7b, 0x127b }, { 0x7c, 0x127c },
++		{ 0x7e, 0x127e }, { 0x80, 0x1280 },
++	};
++	const struct cal_free_data *cal_arr[__MT_MAX_BAND];
++	u16 cal_arr_len[__MT_MAX_BAND] = {};
++	u8 *eeprom = (u8 *)dev->mt76.eeprom.data;
++	int band, i, ret;
++
++#define CAL_ARR(_band, _adie) do {				\
++		cal_arr[_band] = cal_##_adie;			\
++		cal_arr_len[_band] = ARRAY_SIZE(cal_##_adie);	\
++	} while (0)
++
++	switch (mt76_chip(&dev->mt76)) {
++	case MT7996_DEVICE_ID:
++		/* adie 0 */
++		if (dev->var.fem == MT7996_FEM_INT &&
++		    dev->var.type != MT7996_VAR_TYPE_233)
++			CAL_ARR(0, 7975);
++		else
++			CAL_ARR(0, 7976);
++
++		/* adie 1 */
++		if (dev->var.type == MT7996_VAR_TYPE_444)
++			CAL_ARR(1, 7977);
++
++		/* adie 2 */
++		CAL_ARR(2, 7977);
++		break;
++	case MT7992_DEVICE_ID:
++		/* adie 0 */
++		if (dev->var.type == MT7992_VAR_TYPE_44 &&
++		    dev->var.fem != MT7996_FEM_EXT)
++			CAL_ARR(0, 7975);
++		else if (dev->var.type == MT7992_VAR_TYPE_24)
++			CAL_ARR(0, 7978);
++		else
++			CAL_ARR(0, 7976);
++
++		/* adie 1 */
++		if (dev->var.type == MT7992_VAR_TYPE_44 &&
++		    dev->var.fem != MT7996_FEM_INT)
++			CAL_ARR(1, 7977);
++		else if (dev->var.type != MT7992_VAR_TYPE_23)
++			CAL_ARR(1, 7979);
++		break;
++	case MT7990_DEVICE_ID:
++		/* adie 0 */
++		CAL_ARR(0, 7976);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	for (band = 0; band < __MT_MAX_BAND; band++) {
++		const struct cal_free_data *cal;
++		u16 prev_block_idx = -1;
++		u16 adie_base;
++
++		if (!cal_arr_len[band])
++			continue;
++
++		if (band == MT_BAND0)
++			adie_base = MT7996_EFUSE_BASE_OFFS_ADIE0;
++		else if (band == MT_BAND1 && is_mt7992(&dev->mt76))
++			adie_base = MT7992_EFUSE_BASE_OFFS_ADIE1;
++		else if (band == MT_BAND1)
++			adie_base = MT7996_EFUSE_BASE_OFFS_ADIE1;
++		else
++			adie_base = MT7996_EFUSE_BASE_OFFS_ADIE2;
++
++		cal = cal_arr[band];
++		for (i = 0; i < cal_arr_len[band]; i++) {
++			u16 adie_offset = cal[i].adie_offs + adie_base;
++			u16 eep_offset = cal[i].eep_offs;
++			u16 block_idx = adie_offset / MT7996_EEPROM_BLOCK_SIZE;
++			u16 offset = adie_offset % MT7996_EEPROM_BLOCK_SIZE;
++			u8 buf[MT7996_EEPROM_BLOCK_SIZE];
++
++			if (is_mt7996(&dev->mt76) && band == MT_BAND1 &&
++			    dev->var.type == MT7996_VAR_TYPE_444)
++				eep_offset -= MT_EE_7977BN_OFFSET;
++
++			if (prev_block_idx != block_idx) {
++				ret = mt7996_mcu_get_eeprom(dev, adie_offset, buf,
++							    MT7996_EEPROM_BLOCK_SIZE,
++							    EEPROM_MODE_EFUSE);
++				if (ret) {
++					if (ret != -EINVAL)
++						return ret;
++					prev_block_idx = -1;
++					continue;
++				}
++			}
++			eeprom[eep_offset] = buf[offset];
++			prev_block_idx = block_idx;
++		}
++	}
++
++	return 0;
++}
++
++int mt7996_mcu_set_eeprom(struct mt7996_dev *dev)
+ {
+ #define MAX_PAGE_IDX_MASK	GENMASK(7, 5)
+ #define PAGE_IDX_MASK		GENMASK(4, 2)
+@@ -3960,11 +4105,15 @@ static int mt7996_mcu_set_eeprom_flash(struct mt7996_dev *dev)
+ 	u16 eeprom_size = MT7996_EEPROM_SIZE;
+ 	u8 total = DIV_ROUND_UP(eeprom_size, PER_PAGE_SIZE);
+ 	u8 *eep = (u8 *)dev->mt76.eeprom.data;
+-	int eep_len, i;
++	int ret, eep_len, i;
++
++	ret = mt7996_mcu_get_cal_free_data(dev);
++	if (ret)
++		return ret;
+ 
+ 	for (i = 0; i < total; i++, eep += eep_len) {
+ 		struct sk_buff *skb;
+-		int ret, msg_len;
++		int msg_len;
+ 
+ 		if (i == total - 1 && !!(eeprom_size % PER_PAGE_SIZE))
+ 			eep_len = eeprom_size % PER_PAGE_SIZE;
+@@ -3993,22 +4142,6 @@ static int mt7996_mcu_set_eeprom_flash(struct mt7996_dev *dev)
+ 	return 0;
+ }
+ 
+-int mt7996_mcu_set_eeprom(struct mt7996_dev *dev)
+-{
+-	struct mt7996_mcu_eeprom_update req = {
+-		.tag = cpu_to_le16(UNI_EFUSE_BUFFER_MODE),
+-		.len = cpu_to_le16(sizeof(req) - 4),
+-		.buffer_mode = EE_MODE_EFUSE,
+-		.format = EE_FORMAT_WHOLE
+-	};
+-
+-	if (dev->eeprom_mode != EEPROM_MODE_EFUSE)
+-		return mt7996_mcu_set_eeprom_flash(dev);
+-
+-	return mt76_mcu_send_msg(&dev->mt76, MCU_WM_UNI_CMD(EFUSE_CTRL),
+-				 &req, sizeof(req), true);
+-}
+-
+ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_len,
+ 			  enum mt7996_eeprom_mode mode)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+index d36fb5396141..5f574ebe81cc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -184,6 +184,11 @@ enum mt7996_eeprom_mode {
+ 	EEPROM_MODE_EXT,
+ };
+ 
++#define MT7996_EFUSE_BASE_OFFS_ADIE0	0x400
++#define MT7996_EFUSE_BASE_OFFS_ADIE1	0x1e00
++#define MT7996_EFUSE_BASE_OFFS_ADIE2	0x1200
++#define MT7992_EFUSE_BASE_OFFS_ADIE1	0x1200
++
+ enum mt7996_txq_id {
+ 	MT7996_TXQ_FWDL = 16,
+ 	MT7996_TXQ_MCU_WM,
+-- 
+2.51.0
 
-> Now that I've described it this way, I think the biggest question I have
-> is actually how, if at all, we need this in a non-testing scenario?
-
-This configuration is not expected to be used in any non-testing cases.
-
-> But we still need to decide where it should live, although in
-> that case I'd be more willing to accept an interface setting despite
-> the lifetime issues.)
-> 
-
-We think it makes the most sense to treat Response Indication as an
-interface-level setting  as it avoids introducing peer-specific state
-that is neither negotiated nor maintained by the protocol.
-
-That said as the response indication is only a test configuration there
-is expected to be some changes to the upcoming patches. I would preferably
-submit the response indication configuration as a single patch and NDP
-ADDBA/DELBA negotiations as a different patch. This would open up two different
-new mail chains for two patches which is different from the current one.
-
-Looking forward to hear your thoughts on this.
-
-Ria
