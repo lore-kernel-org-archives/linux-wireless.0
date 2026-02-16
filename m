@@ -1,53 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53CCC29AB00
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2026 21:55:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB8A29617D
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2026 21:55:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771278906; cv=none; b=slV7+Si/Hg4AM+x6kZPKTEWN7i8KylrSQ8oydXjfv2CkXxAwxKnMNnygLtMJL6WPQ8J+3BKBCLngNZdBWbdJZGWEI3F4FUTtEIiVOHfDpadVzwGS2kIeDYgtj0kpwRZQmJw1OakV+pVey8SEJGcGsGQmdXfEJn3czLyAXaEjvrg=
+	t=1771278907; cv=none; b=CF81J2dTrfSl7zUhlHMCbdxvwgSNhhUsO6TbmDAl5tKDhO5UUjzVsh4kcboBOACQZgQ3OT6lbfXB8jl27jbn1k0swBPuG0KF5WxbXS97xfz4wWIFqfBYW4PUndHu+HNpaY8CvPwEXFOrgUUCZjnd8kPJNl1F2VVi7LbqF6W09XM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771278906; c=relaxed/simple;
-	bh=EWvgaCPiEPKplOtuz1kH3a/fZh+uL6Do+/pYBacdkjM=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=EflXwcEMWMzj3GatXvQWtT75tE1lWAUF6o3n4wD/xydPpT3tAIuxdomLBSbA02mNsz3b1a0fiLyNJVQzZp0wFytv8nZfq/RB8BFIEI1k6W4848a93TjoEhplV9J5FM/OBHBzHxJrcPkbccdPlS9FaXoR+Y8++eUQlRhomgIGEv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=N/8VTihV; arc=none smtp.client-ip=198.175.65.15
+	s=arc-20240116; t=1771278907; c=relaxed/simple;
+	bh=MSqJU/jyrrhYRMizF03ZktGj7D2AEGYJpXJYtMgrc4o=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Bme1lX+J+xZl6zuqLSrXKlt1P3ZVOBQcEGat29/8+jMIsM30HlOr6oX7gRKvf0esWlCFzs5AqV2LJml0M6Ggz040wh48Tb6XL1R+Ve4TkUsiVQTqrNIksYP0Ayvp5mwm4rpBzhZPyC5TtTM4vlgHCzwFInLVKB0tIEVKCJQpcM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YF6GOx6/; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="N/8VTihV"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YF6GOx6/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771278904; x=1802814904;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=EWvgaCPiEPKplOtuz1kH3a/fZh+uL6Do+/pYBacdkjM=;
-  b=N/8VTihVdgX+tcjGyB/5+0VCB1LeHL1otY0zZlHGxVYTYsrO0ffe3ww0
-   ZbOPuhoDq0vIjxYUPbBKwWH0g/nr2XgOIgeTXgYjiB9KIr38k2w9QG4Ma
-   KAB8zrTkoUSZtlBXNQ+HUU5hB/3R8fiFF2Ce4h/TPXiF+RnB7+dP+QeJy
-   W99woFkpdkEAw8Zf96ttgZ16RV4x+4osXhDzaG+PswnIihUjUcBKRsHVY
-   Lwc+LpYedKEo3OvbyXi+Jj/LZ6rQM6s8W23ZdaC7EyUWBewE9MGnXU/wO
-   mRRZfLFax1DH4LlHM6fnnYX3D8nJYSOY755AjG2JsbIhYWCO0wR8pDoOX
-   g==;
-X-CSE-ConnectionGUID: lJ5T2PgNSA6jQAONNsEDFg==
-X-CSE-MsgGUID: AS8e9C6CSmep3tWSgIH4UA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11703"; a="75980281"
+  t=1771278907; x=1802814907;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=MSqJU/jyrrhYRMizF03ZktGj7D2AEGYJpXJYtMgrc4o=;
+  b=YF6GOx6/yeOkRJwbZQCFgdRLR1IexbpkCMsMCtA/6nNKnCU7a5aGi6/1
+   hUQTYvMaPjxGKIDC4CviO+8vR0j/OJlSIzaLLniHMmo/K6V6chNmmwdaJ
+   k411Xom323KSJWQEvsq12j9TBCTi+9kEvkeNbLytoS7wGGdur4mluAJGN
+   ioSvZ/yusXtw4KuF/0B+anDTTCstw+chWSCk7V4RxGUvxllNwAw7L4JxJ
+   Eid3eLCSYxxrYs/A/4s9Tw6RDrVpTcKNDaHDiaO2eMyyRLJ6qEkaMH/e8
+   9DLa0ISGqbJPXe1U+P3Ne3DEchrtX4YPiVr8ZwLrateSP524DVCPUehGV
+   A==;
+X-CSE-ConnectionGUID: t6b8laTbS1O7cJhXDzJdFA==
+X-CSE-MsgGUID: kSHI9QGfRCeLghpMWEz74A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11703"; a="75980283"
 X-IronPort-AV: E=Sophos;i="6.21,295,1763452800"; 
-   d="scan'208";a="75980281"
+   d="scan'208";a="75980283"
 Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2026 13:55:03 -0800
-X-CSE-ConnectionGUID: 6EcusXAiQ7+nFTIrAiTXAQ==
-X-CSE-MsgGUID: O3xpudu6S0ytheGkgzqKXw==
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2026 13:55:06 -0800
+X-CSE-ConnectionGUID: aqdrr6+ISW2ZSpDRpxKcoA==
+X-CSE-MsgGUID: bEkI4UNzRquTrHJbNVBI4A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,295,1763452800"; 
-   d="scan'208";a="213547227"
+   d="scan'208";a="213547299"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2026 13:55:02 -0800
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Feb 2026 13:55:05 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 00/15] wifi: cfg80211/nl80211: Add NAN Data Path support
-Date: Mon, 16 Feb 2026 23:54:37 +0200
-Message-Id: <20260216215452.1538316-1-miriam.rachel.korenblit@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 02/15] wifi: cfg80211: remove unneeded call to cfg80211_leave
+Date: Mon, 16 Feb 2026 23:54:39 +0200
+Message-Id: <20260216234830.c43709c9d3af.I3179a28f237ea3b8ec368af720fbf77455a7763f@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260216215452.1538316-1-miriam.rachel.korenblit@intel.com>
+References: <20260216215452.1538316-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,79 +61,30 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-This series adds support for Neighbor Awareness Networking (NAN) Data
-Path in cfg80211/nl80211. This includes support for:
-- Local and peer NAN schedule configuration
-- A new netdev interface type for NAN data communication
-- NAN management and data stations
-- TX/RX support
+In cfg80211_destroy_ifaces, we first close all netdev wdevs, which will
+trigger a NETDEV_GOING_DOWN event that will call cfg80211_leave,
+and for non-netdev wdevs, we call cfg80211_remove_virtual_intf which
+calles cfg80211_unregister_wdev, which handles the "leaving" for those
+interfaces (i.e. stop_nan and stop_p2p_device)
 
-Patches 1-4: refactoring and preparaion
-Patches 5-7: NAN channels and local schedule support
-Patch 8: NAN_DATA interface type support
-Patches 9-10: NAN stations and local phy capabilities
-Patch 11: Peer NAN schedule
-Patches 12-13: TX/RX for NAN DATA
-Patch 14: local ULW change notification
-Patch 15: NAN channel evacuation notification
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+---
+ net/wireless/core.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Daniel Gabay (1):
-  wifi: cfg80211: allow ToDS=0/FromDS=0 data frames on NAN data
-    interfaces
-
-Miri Korenblit (14):
-  wifi: nl80211: refactor nl80211_parse_chandef
-  wifi: cfg80211: remove unneeded call to cfg80211_leave
-  wifi: nl80211/cfg80211: support stations of non-netdev interfaces
-  wifi: cfg80211: refactor wiphy_suspend
-  wifi: nl80211: don't allow DFS channels for NAN
-  wifi: cfg80211: Add an API to configure local NAN schedule
-  wifi: cfg80211: make sure NAN chandefs are valid
-  wifi: cfg80211: add support for NAN data interface
-  wifi: cfg80211: separately store HT, VHT and HE capabilities for NAN
-  wifi: nl80211: add support for NAN stations
-  wifi: nl80211: define an API for configuring the NAN peer's schedule
-  wifi: nl80211: allow reporting spurious NAN Data frames
-  wifi: nl80211: add NL80211_CMD_NAN_ULW_UPDATE notification
-  wifi: nl80211: Add a notification to notify NAN channel evacuation
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c    |    9 +-
- drivers/net/wireless/ath/ath6kl/main.c        |    4 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c   |   20 +-
- drivers/net/wireless/ath/wil6210/main.c       |    3 +-
- drivers/net/wireless/ath/wil6210/wmi.c        |    5 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    |   23 +-
- drivers/net/wireless/marvell/libertas/cfg.c   |    2 +-
- .../net/wireless/marvell/mwifiex/cfg80211.c   |   24 +-
- .../net/wireless/marvell/mwifiex/uap_event.c  |    7 +-
- .../wireless/microchip/wilc1000/cfg80211.c    |   26 +-
- .../net/wireless/quantenna/qtnfmac/cfg80211.c |   26 +-
- .../net/wireless/quantenna/qtnfmac/event.c    |    6 +-
- drivers/net/wireless/virtual/virt_wifi.c      |   12 +-
- .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c |   24 +-
- include/net/cfg80211.h                        |  289 ++++-
- include/uapi/linux/nl80211.h                  |  233 +++-
- net/mac80211/cfg.c                            |   22 +-
- net/mac80211/chan.c                           |    2 +
- net/mac80211/iface.c                          |    3 +
- net/mac80211/rx.c                             |    2 +
- net/mac80211/sta_info.c                       |    4 +-
- net/mac80211/util.c                           |    1 +
- net/wireless/chan.c                           |    4 +-
- net/wireless/core.c                           |  129 ++-
- net/wireless/core.h                           |   10 +
- net/wireless/mlme.c                           |    4 +-
- net/wireless/nl80211.c                        | 1015 +++++++++++++++--
- net/wireless/nl80211.h                        |    5 +-
- net/wireless/pmsr.c                           |    5 +-
- net/wireless/rdev-ops.h                       |   62 +-
- net/wireless/reg.c                            |   27 +-
- net/wireless/sysfs.c                          |   36 +-
- net/wireless/trace.h                          |  209 +++-
- net/wireless/util.c                           |   28 +-
- net/wireless/wext-compat.c                    |    6 +-
- 35 files changed, 1976 insertions(+), 311 deletions(-)
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 9af85d655027..328d3036d21f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -349,7 +349,6 @@ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev)
+ 
+ 			guard(wiphy)(&rdev->wiphy);
+ 
+-			cfg80211_leave(rdev, wdev, -1);
+ 			cfg80211_remove_virtual_intf(rdev, wdev);
+ 		}
+ 	}
 -- 
 2.34.1
 
