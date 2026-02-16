@@ -1,77 +1,106 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
+Received: from maynard.decadent.org.uk (maynard.decadent.org.uk [65.21.191.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AEB92E3387
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2026 18:44:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A71902D59FA
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2026 19:58:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.191.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771267492; cv=none; b=m5T/cjjP4qgsQ1ylkwwN2ZXtnIGVQ3ACAw4yViN8igoPiqjGemp67Lmk/DVZV3497CrXGGHbAb9NfU9TKhRgaXz1ZItWdZcShv44hoR2p8PabNUjGxjPqbjSjklLudnIoxD2baBcv97kRwCm/wCemAMQ86CaAV+9i1c8HFggk3k=
+	t=1771271940; cv=none; b=LBr0Mw2ZFBcCkCTIh2SGtMHYG1p6goZTeroE27H6RRIZ3EsJUqs1e8w6s660ErSrgm/Fw49GJy62nYcw+10n0RukKhAIiOOffbfGtI18rQgP3K3AoJfYy/pcKX8gLQtSwol6MQnjSLtK08h7/MvEp4ydYbPp0ofCXR+/ni0FmwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771267492; c=relaxed/simple;
-	bh=SqcFM0QZIXR5mNz9Q/hTHf9CMfMyffBH5iM9TEo2OZk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=keQTiUAJe4ssUReiKjkzLo6siJwafajPPLmPeZI2gTrIXBwFFovu7wbUOZxkAHpDFwfbjyT7H0w4Pm2edGEV5MkLZ7EnZulDsUk0tKBGi6sYaA14ZClpwZ5E7n9q9DSfBiwlzVaIjnJSrLSIgr4V+S4wC2k4LYv1xRL4JcdAW9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=TiYK+085; arc=none smtp.client-ip=212.77.101.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="TiYK+085"
-Received: (wp-smtpd smtp.wp.pl 45040 invoked from network); 16 Feb 2026 19:38:08 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1771267088; bh=s/zeP5079+6V8e1bUW5YeqfAw436nt3wg6E8nJ8iSCM=;
-          h=From:To:Cc:Subject;
-          b=TiYK+085dE3CLobuMc/0P0hMH0T18xB248N0qqsUJD2f90OQyp8r8ZrdSVdtnrpP1
-           iQLX6c1ddXaSMyrPPRWWaIlJlhbmyMyz3j1KFsGiVAdjQ1HRPpdmd4dA6gAHPkjwJn
-           PkAw5zJXS6ISgyIsEetmY4woRh/YpAjhBVctX9sjym7xMVJAR1PQzqp63e9GWFd05L
-           6AqWOez7E0QjpK1h0aG0O0SyEQDfKeXWpgRDdFniB/wCpyM+oaV2+RRONHw/gjlA7a
-           gpmmuQJoJfow7YQfjIt5xKxaTTj3dg6iTBUNTLu1tY4J/dt9EZ1QL2Xina/9Pupzdl
-           aP5aQ3EmOD8qg==
-Received: from 89-64-3-178.dynamic.play.pl (HELO localhost) (stf_xl@wp.pl@[89.64.3.178])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <kees@kernel.org>; 16 Feb 2026 19:38:08 +0100
-Date: Mon, 16 Feb 2026 19:38:08 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Kees Cook <kees@kernel.org>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2][next] iwlegacy: Avoid multiple
- -Wflex-array-member-not-at-end warnings
-Message-ID: <20260216183808.GA10063@wp.pl>
-References: <aYlkt2WP2oQ1TgeH@kspp>
- <202602091212.743C6B9B7C@keescook>
+	s=arc-20240116; t=1771271940; c=relaxed/simple;
+	bh=Lb77ePkw6aJosjAzHOI2ci2yeizqy8TDeuUttWkDq+w=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=nqa1iX/HIx3kq8fOzoEhaHNoIXuInIW02psrsZ3pxYjVF1EtE5mBr9vRhxAJxuAMl/kEdl/H2+kko04r5F6uGGolr1n8j0lMTsRqsw+bemk43btqGWaw4vFtQ+na4NuSGzRhzh8NTlUC06hOIFpdyRnexmsh0FXrImsA0/uwDbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=decadent.org.uk; arc=none smtp.client-ip=65.21.191.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=decadent.org.uk
+Received: from [2a02:578:851f:1502:391e:c5f5:10e2:b9a3] (helo=deadeye)
+	by maynard with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1vs4k5-001HC7-2d;
+	Mon, 16 Feb 2026 19:58:48 +0000
+Received: from ben by deadeye with local (Exim 4.99.1)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1vs4k3-00000003Q0C-20nf;
+	Mon, 16 Feb 2026 20:58:47 +0100
+Date: Mon, 16 Feb 2026 20:58:47 +0100
+From: Ben Hutchings <benh@debian.org>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Subject: wireless-regdb: Fix regulatory.bin signing with new M2Crypto
+Message-ID: <aZN29_ghakDPwhFG@decadent.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="uNzBFFrzIRlQrca1"
+Content-Disposition: inline
+X-SA-Exim-Connect-IP: 2a02:578:851f:1502:391e:c5f5:10e2:b9a3
+X-SA-Exim-Mail-From: ben@decadent.org.uk
+X-SA-Exim-Scanned: No (on maynard); SAEximRunCond expanded to false
+
+
+--uNzBFFrzIRlQrca1
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202602091212.743C6B9B7C@keescook>
-X-WP-MailID: 6b2f477e8aaab6c42e78d28ed9add274
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000001 [4XKh]                               
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Feb 09, 2026 at 12:46:23PM -0800, Kees Cook wrote:
-> @@ -2664,7 +2668,8 @@ struct il3945_beacon_notif {
->  } __packed;
->  
->  struct il4965_beacon_notif {
-> -	struct il4965_tx_resp beacon_notify_hdr;
-> +	struct il4965_tx_resp_hdr beacon_notify_hdr;
-> +	__le32 status;
->  	__le32 low_tsf;
->  	__le32 high_tsf;
->  	__le32 ibss_mgr_status;
-> 
-> 
-> What do folks think?
+In M2Crypto version 0.45.1, the default hash algorithm for
+M2Crypto.RSA.sign() changed from SHA-1 to SHA-256.  Since the
+signature on regulatory.bin uses a SHA-1 hash, db2bin.py generates
+invalid signatures for regulatory.bin if a recent version of M2Crypto
+is installed.
 
-Both options, with __struct_group(), and this one, are ok for me.
+I reported this incompatible change as
+<https://todo.sr.ht/~mcepl/m2crypto/389>.
 
-Regards
-Stanislaw
+There is an obvious workaround, which is to add an explicit
+algo=3D'sha1' parameter.  This works with old and new versions of
+M2Crypto.
 
+Signed-off-by: Ben Hutchings <benh@debian.org>
+---
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -131,13 +131,13 @@ if len(sys.argv) > 3:
+     key =3D RSA.load_key(sys.argv[3])
+     hash =3D hashlib.sha1()
+     hash.update(output.getvalue())
+-    sig =3D key.sign(hash.digest())
++    sig =3D key.sign(hash.digest(), algo=3D'sha1')
+     # write it to file
+     siglen.set(len(sig))
+     # sign again
+     hash =3D hashlib.sha1()
+     hash.update(output.getvalue())
+-    sig =3D key.sign(hash.digest())
++    sig =3D key.sign(hash.digest(), algo=3D'sha1')
+=20
+     output.write(sig)
+ else:
+
+--uNzBFFrzIRlQrca1
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAmmTdvIACgkQ57/I7JWG
+EQkZyA/9FkM2E1/bNCioIRzrNJn2krbNJADmYPYVC/VOVMUgaksQr9YTBmx8amMf
+fsZlIP3vLH5OTNylhy4DowK4jgsoJrH8lexnE6qfjJ6PjfKKhmZpXn0tnb1JAcD2
+owEDoFy5zaLhbsF+1zNXaxAgh288ZDo8OQbcpAr/KelPltvu0WcwVlT5QmM8PNT0
+iFBb8OVbsZxVnQdMG6yax6q0OnzyrNDeZJvXnWJQwv0WfLHahO4Yhv29d1IfVZJ/
+prWOQFjFZSi9k7exOYK5So35jlw0xKAsTE5Je4j6DD6kWNLfsXXDD5eelMWSF0T9
+e7cFE3+oenS6YrMoxCTrbwSkIUaDBspGH8DE6jpQ5YgpsUgX2t2xuBpwBrMK1GKa
+NokpapAHa91Lj8t4ZyqeXagVQlbIeSNgZNOC6NCvP3hJnPm/9fh6C1WD6WlUa7Ag
+XtVh23sQUpbFxpD57R1vSRGoGN35OseW4c5L2i9dB9O9Gn90bCmGNWhx02G9C/QI
+JE4lHrRidAAY+NVHn21wCymr+ucCyW/Q9WRTrAd+GzVgusGCJQfeyfg0vbDSHJQ1
+Urq+yLBa82FAiElmf/aMPKru6lUfYrW2BT/rn3LfeTjQQZk+iFfGb3torxiPOGMY
+HWimOkEmqUcKvIBsqPv8X5mUFrJeNwI0dMFBSFQqFH1gsqqXA9c=
+=+UIr
+-----END PGP SIGNATURE-----
+
+--uNzBFFrzIRlQrca1--
