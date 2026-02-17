@@ -1,96 +1,108 @@
-Received: from e3i345.smtp2go.com (e3i345.smtp2go.com [158.120.85.89])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71DB3563F1
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 15:12:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.85.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DC721FF1C7
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 15:30:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771341155; cv=none; b=UekhpJSPQNmbMkEu00qNEC1aDi5C4vonRjNlkcYREyy3RkPJ6uJxp4hIfKaGcKur8DAPp7Q3sb3+3UPyAdzxST67wrr/eZxUyGCV6gvCYOGD+YeARFG0goeQ+mJHJg48wieVOMjLcfP8AWeWiemv5ZmZb8NSb+Giaxz7GwKVMHY=
+	t=1771342255; cv=none; b=Q63ZyJ4pqWnEAvJdubKybWqK27xA5zANjMR8212hTm8/YJnocvUNc/RSFzu1mowQnwrHIIO+jjwqeinjweB6njduDBFdE8O3HX68ZWShamFbVi6HJuUMIrr0m44KavVDFjLqugtJ3wglpL9ffvkDua7QYgIgJs5gGziwcXH7YZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771341155; c=relaxed/simple;
-	bh=OhWAz+jabBRNv8FmcjzBJ7aMKGs2tDl/ObdVALZP948=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SadJTQ/i9gcEWMJa7VoiH1mv27osbqNKtRgG/3DzOcPSDw5Hl6d4Kzit4q1rVzXOoE9EdyxBNgMhcBoi9SqWnb29OG7RSW+70x37x7oRh/Ccik+dRJu/dfsvzQD3IsDlj66lqpPINHT6rhXxhpXuRKMCajHAM0EeYsA2FrS+dtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=L+qHGYGe; arc=none smtp.client-ip=158.120.85.89
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
+	s=arc-20240116; t=1771342255; c=relaxed/simple;
+	bh=NNxjhUuhmlZpVgXQcbI8Zt0KEzp2ft2miqfJGMIQyIY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=J35akFtDX9EvB0Ecmy+2Q7GmmGzFMk9j9X9e1iuJrWdRR3MMlye3DzO7LFCBKkvvs7qhM8Oe04EiQrXp0wao/hap6Df0Axi0tY7SDqrLH+oRP4KJh5UlULLeTvKxqqH8p2b8g6OD0GlghT757nUSL/LDCWIH+IGlgegp74pEphE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr; spf=pass smtp.mailfrom=freebox.fr; dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b=qKBLWRV5; arc=none smtp.client-ip=209.85.218.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=freebox.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=freebox.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="L+qHGYGe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1771340240; h=from : subject
- : to : message-id : date;
- bh=p0B+jzyEc/evu9YXwaZWRaOjDAOATYrIcofUHcDd/bs=;
- b=L+qHGYGeIlyRavFO0ocSlrJ9psE+RF5vTAc5f3w4a1t0m9kjeJrX/bjZU31gvtyG9obte
- allis6NYFz7b48gaK+VkCHfXXI1NvFSJW2awLqqJ9Xv22JQybQTlk1K0i7iYghwlmkPN15A
- A1dWF2lv0LHF8UFgwAGeRugCmEQdLVnOtDeDYPIYuWctwXrWufQnpg9VtqPeGdf9etSV4yJ
- 8ypqKV7Ou8GKzMkkwWizkDsoxjwnwKFs1Rsnz9wlxrpGH7YWWG4Wf+4oDrEsqkKbSWbPq0X
- zU8paS3IorsPmPx6YItdVNyj+z0lXtmdboOXsWSmSBqma0z2CO4PGb43gCEA==
-Received: from [10.12.239.196] (helo=localhost)
-	by smtpcorp.com with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.99.1-S2G)
-	(envelope-from <repk@triplefau.lt>)
-	id 1vsMVt-FnQW0hPqt1q-nivV;
-	Tue, 17 Feb 2026 14:57:21 +0000
-Date: Tue, 17 Feb 2026 15:38:49 +0100
-From: Remi Pommarel <repk@triplefau.lt>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless] wifi: mac80211: Fix ADDBA update when HW
- supports reordering
-Message-ID: <aZR9eQlhy55iD6IN@pilgrim>
-References: <5806bab7e46506d3c300ab4eb66989d42936aeb0.1771323902.git.repk@triplefau.lt>
- <f1243e86eea72999581d33c6f97ff9015ce71542.camel@sipsolutions.net>
- <aZRnlPA_uY9uWuKr@pilgrim>
- <d142f76473a03c76c780390f0352ffbb03566e48.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=freebox-fr.20230601.gappssmtp.com header.i=@freebox-fr.20230601.gappssmtp.com header.b="qKBLWRV5"
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b8845cb580bso775533366b.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 07:30:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=freebox-fr.20230601.gappssmtp.com; s=20230601; t=1771342252; x=1771947052; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=es07r57iIFqqs418cgRl1V776G7PeKmmAzr8+Su+tgY=;
+        b=qKBLWRV56gdCeOdzx+nUjHOBTa4vEUFJBk/TB1udOo1FZxUe02oyGYXIqvJambd/cb
+         7eSxWQy1PRHrBAn80HEmPeUDtMVQPYkklCCup/xuBuE08WavcW58QGDf+IsKkMZIYFZf
+         FDeFuSifiCYNndGX0px+LEHWqWSRyVcHUm2ASRyQtocp0BQyIYTbDRQn+Ot/Kh/rQ4ju
+         TfygLyo5/RS1dnMK4P+DtVZJs+2b3II/Eoz7ltdgRdQUDa2UKoXlI22Yq2kAyChKatT9
+         VQKbffy7Cd2sNdRbNmJ7DKalgQaB7mSFZBLwDsUG/5HLyCWWfI0TIEtQlOcMOIVmrT1X
+         KmvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771342252; x=1771947052;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=es07r57iIFqqs418cgRl1V776G7PeKmmAzr8+Su+tgY=;
+        b=Bkeqqg35xlsKWT3R5w6KemjvIhyUPdUKGH++cG8r1ZY1Qob0i2NHWHZFSzP15dNZlb
+         HR6iYqovwxaS8LBf9MABYsRzcwrqAuABWFeAKqm9aK+SlYUQAxLCB5nrEkSXH8bjIhUr
+         3q1ubDWh6UoZFV9m9IOtZwVLQ8GOznAInM8dPAb2KloCJkl5+8AXUDfNSF3Fm8mTpTcj
+         IrtAEQBEy3+pd9vxUz07UBsmAvQkDzceILAm+Jpv8IAY+OFJ7sfUe6JFG+muN0JNoaZH
+         zNOUNx5tyhO2enIuzajatdgsF1umVn1Lu1BhjWZxomm0s3LsE0wq+lZByL/Lk+xFlOxe
+         n8+Q==
+X-Gm-Message-State: AOJu0YxuUxEAP001QGTWaak1WVs1w9WBtyhVWw1FUIgz+eNNJOJeXl3L
+	Yc0ZxyVdj+cEsTAOHIIQGadj6giMkDjLp+ECz+PNnnBzRMYDS9Ndv4rinwV6B95bwyM=
+X-Gm-Gg: AZuq6aIEkL+voc4lXTgXtUthLuqOF4JQbzSReHlL4iCbyi9dldhV9qp5wuD2CerX5Kp
+	9j4Jszao8UBJ8VNmHCG0Htw8PCM6IpwmwbUsmRBAQkXtGwyROaLpBQN9i1rAvPweeUZXfhpwSwa
+	devm50d3ryd4eapC6ezBMr0Ft4aVmw7t+mauf0FuhuW00TuWbO5PchJyAJqYUrH9e5DLB6vOuCO
+	SFOrWLvoeYUS1bOv/64Htr9MfP289aJ0XMs6qdEWeKjXdPX8VlRpvxOj1siNrPty7amktIF3sJd
+	7CocYka4K/jMGPHZD6CVjVuP20E376Y/8dyIyb2yi79qZZwAmIBQI92nWfKrqZzrJmCCnpupQ4K
+	sofLtSsNpneLUui1FbS4yMSyiszUrZs2wFxAz9eFJUpYkoUhcvg97DAY62dk/8kdRaqHBahdtvl
+	HWES2AqEk96r0HN6KAvyuQ4RYqjITgsfYicO7WjvQ3BZuslEwC9npenA==
+X-Received: by 2002:a17:907:c23:b0:b87:3beb:194a with SMTP id a640c23a62f3a-b8fc3cb90cfmr647801766b.44.1771342251546;
+        Tue, 17 Feb 2026 07:30:51 -0800 (PST)
+Received: from [192.168.108.101] (freebox.vlq16.iliad.fr. [213.36.7.13])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b8fc766531asm358778266b.50.2026.02.17.07.30.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Feb 2026 07:30:51 -0800 (PST)
+Message-ID: <5d380297-29a1-4095-b78d-bc76bfeed131@freebox.fr>
+Date: Tue, 17 Feb 2026 16:30:50 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless] wifi: mac80211: Fix ADDBA update when HW
+ supports reordering
+To: Johannes Berg <johannes@sipsolutions.net>,
+ Remi Pommarel <repk@triplefau.lt>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <5806bab7e46506d3c300ab4eb66989d42936aeb0.1771323902.git.repk@triplefau.lt>
+ <f1243e86eea72999581d33c6f97ff9015ce71542.camel@sipsolutions.net>
+ <aZRnlPA_uY9uWuKr@pilgrim>
+ <d142f76473a03c76c780390f0352ffbb03566e48.camel@sipsolutions.net>
+Content-Language: en-US
+From: Pablo MARTIN-GOMEZ <pmartin-gomez@freebox.fr>
 In-Reply-To: <d142f76473a03c76c780390f0352ffbb03566e48.camel@sipsolutions.net>
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 510616m:510616apGKSTK:510616sbru8S-D2W
-X-smtpcorp-track: uThcMqhl0AFt.VMhAYc_szFiq.2wdgswDCx1k
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Feb 17, 2026 at 02:59:34PM +0100, Johannes Berg wrote:
+Hello,
+
+On 17/02/2026 14:59, Johannes Berg wrote:
 > On Tue, 2026-02-17 at 14:05 +0100, Remi Pommarel wrote:
-> > On Tue, Feb 17, 2026 at 12:30:08PM +0100, Johannes Berg wrote:
-> > > On Tue, 2026-02-17 at 11:36 +0100, Remi Pommarel wrote:
-> > > > Commit f89e07d4cf26 ("mac80211: agg-rx: refuse ADDBA Request with timeout
-> > > > update") added a check to fail when ADDBA update would change the
-> > > > timeout param.
-> > > > 
-> > > > This param is kept in tid_ampdu_rx context which is only allocated on HW
-> > > > that do not set SUPPORTS_REORDERING_BUFFER. Because the timeout check
-> > > > was done regardless of this param, ADDBA update always failed on those
-> > > > HW.
-> > > 
-> > > Seems like a legit problem, but
-> > > 
-> > > > Fix this by only checking tid_ampdu_rx->timeout only when
-> > > > SUPPORTS_REORDERING_BUFFER is not set.
-> > > 
-> > > that doesn't seem right? Especially the way you implemented it, it won't
-> > > even respond at all when it's an update and SUPPORTS_REORDERING_BUFFER
-> > > is set.
-> > 
-> > I could be wrong but I think the patch format here make it difficult to
-> > read. If it's an update and SUPPORTS_REORDERING_BUFFER is set, the
-> > following "if" in the code (not fully visible in the diff here) will end
-> > calling drv_ampdu_action().
-> 
-> Yes, but it will be IEEE80211_AMPDU_RX_START which isn't really intended
-> by the state machine/API between mac80211/driver. So that doesn't seem
-> right.
-> 
-
-That does make sense. However, if I understand correctly, it means that
-even if we end up storing the timeout for drivers that support
-reordering, a new IEEE80211_AMPDU_RX_UPDATE should still be introduced,
-right?
-
--- 
-Remi
+>> On Tue, Feb 17, 2026 at 12:30:08PM +0100, Johannes Berg wrote:
+[...]
+>> we want the driver to decide if it wants to support timeout update ?
+> Not really, there's no driver that _can_ to support it now, and it seems
+> unlikely any driver would _want_ to support it.
+>
+> And if so it should probably not be IEEE80211_AMPDU_RX_START but rather
+> some new IEEE80211_AMPDU_RX_UPDATE thing. But I don't think any driver
+> would implement it, I don't see why anyone would want to, this flow is
+> in the spec but never really used.
+I've checked, and both mt76 and ath11k/ath12k drivers supports a BA 
+update (but none of them supports the timeout though) through 
+`IEEE80211_AMPDU_RX_START`. mt76 stop the session before starting one 
+new (function `mt76_rx_aggr_start`) and ath11k/ath12k checks if a 
+session is active to either modify it or create a new one (function 
+`ath12k_dp_rx_peer_tid_setup`).
+>
+> johannes
+>
+Pablo MG
