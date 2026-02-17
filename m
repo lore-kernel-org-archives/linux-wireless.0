@@ -1,266 +1,156 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com [209.85.161.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 114772E6CCD
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 10:05:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2898B32ED3C
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 11:01:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771322743; cv=none; b=Zf+oEdhT8dyaJawTp2/V6oOfeHpq7SWJozMEyWFP9tM3KyOG254O9QYBcpYZ4IRF8iV8K6QpWViHCM8BtoSs26Me70LXz4CZeIiujO3Lzsp0dboRLR33HMHBGgds1WhR6AI9EtX9FMQsSKDvNa9Qxk/Ntp0Ogq7UYdjwQH4gKLA=
+	t=1771326101; cv=none; b=Lm8SIMHpBUPfm8W9ZOjiZsLizu+POtdjyzApbhQefMbce+2W3tQtgYZV3IFuch42DIPG3hrh1DYa6zs77B6GrnS8sv8FyKUxGSUnLaRBjHMEnzQcdCHoeZmzG7Ntkt1/7+FZqdGqZ9FLIw+Vpk43QJywUWtEuwO6qTz/b8Cx3hE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771322743; c=relaxed/simple;
-	bh=gkRSfsM0whc7lKJ5JqMcE1q46JWCEz/MWOkJW6XJTwM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Hse6R2Mp0PzN2zwC2bbDwSMu3qbxT066sji41WDdZZyd2kt6YLMir6S8QFIPy3uFf7gkRtjq7/1wsPPGjrJuhv8WzDrdUaW1p7+Ko1IpG3C/evSXFmD0z986KiQXEK5F8rH1uFLPf3tay/EuMVVu0z7bTjXTXJa3FKuFkW1Cycg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ov5Cgs4+; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ov5Cgs4+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=IxTlxrlVqxNJfOH2NwUf+neTFHlV4g3ByZDBv0JUBx0=;
-	t=1771322742; x=1772532342; b=ov5Cgs4+fIBAy4T0mmdkgLb/HwzncV+Rd+Nij+qzb1BNAoO
-	Y8wP2fpGD4C29xNOhxbz7D2cMQawMGs3u+rUGjNoOm9x5N2+bluvdLTaSveJzlaAT+srBikCWwqS7
-	gmvnIhC8ej1qRCGQOAD4Ihsr9n2DvbJZECQjgWLmbK9Qs7rVvniXMEv7ddd2ggo6pJSizHUhqquY4
-	dPZu3vxxdiYjhP0iXmtEq8faYQZarpYh/BNH39/JSP05sxjRyRzAnMY58pLA3s0H7xBAormvlJdfT
-	knSFhb5sm7b7FHTH/JOzj+qifc+RKC74CH3sSNhvSGdPPqmlCyNc1bdd/ho0DBOg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1vsHxP-0000000BKWE-2mTs;
-	Tue, 17 Feb 2026 11:05:29 +0100
-Message-ID: <0f4b34f0b529fd93fc608d8bbac0e98516b7a3d2.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next v8 2/3] wifi: cfg80211: add initial UHR
- support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Harshitha Prem <harshitha.prem@oss.qualcomm.com>, 
-	linux-wireless@vger.kernel.org
-Cc: Karthikeyan Kathirvel <karthikeyan.kathirvel@oss.qualcomm.com>, 
-	vasanthakumar.thiagarajan@oss.qualcomm.com, Lorenzo Bianconi
- <lorenzo@kernel.org>, 	ath12k@lists.infradead.org, Jeff Johnson
- <jeff.johnson@oss.qualcomm.com>,  Ping-Ke Shih <pkshih@realtek.com>
-Date: Tue, 17 Feb 2026 11:05:25 +0100
-In-Reply-To: <156d6d48-d135-4acf-a5d7-c9ae80523864@oss.qualcomm.com>
-References: <20260130154259.265130-5-johannes@sipsolutions.net>
-	 <20260130164259.54cc12fbb307.I26126bebd83c7ab17e99827489f946ceabb3521f@changeid>
-	 <f96125eeda23451c19067359eb9d10b4047bcdd3.camel@sipsolutions.net>
-	 <5d54feea-d0cd-4bd7-b0d2-02e42f0fe5e1@oss.qualcomm.com>
-	 <be9ab3c7f05b0f56f19aee0ffc7c2f96138b9a05.camel@sipsolutions.net>
-	 <156d6d48-d135-4acf-a5d7-c9ae80523864@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	s=arc-20240116; t=1771326101; c=relaxed/simple;
+	bh=f9Sn65bMDeQFADkZz2X3ALt7rkOgQHXefFnV6ZTP2iU=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=rwomy34UXPKISVEvanewO2DfpV+7dNG6XpSCvXNVTzcdHc+kAih4f1ZyCfHWS7w8g5jGbv/RJLdiWBbzz48eM0kG6KPVdvlW8M/efyTO+bxwWVdeAtNi+CYfO/27eWvleFGoKfzgDJFbxMMdJAGzP+Kfyue4TlVVXbwVjKmBdi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-676de68a609so16349404eaf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 03:01:37 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771326097; x=1771930897;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=49KmW+xMN4yjOJq5KWsrgNTbzky5ua/zIOKn1y7eBTg=;
+        b=G4/XfQHeu8x8/uxu7Z24cqaWGNXWJIqVa9a+pJCXlhC2F8teKNKElGyn//FK2GbKxz
+         g0TiAESOARN5rEwF3p07D0qaDX28Zpu4yPJv8WDSJbrme3LNsr4fEJFdCC+d6KipLNEt
+         pXUznyK65EI1w6lixYVY5HsjsTdNjocxdYM0XUTF3gA0U5EETC6hGagFZolRs9oxRVDy
+         cgEUe+bkGzCRPy2rtKsM+KuN8oXBHGhkdrV6QjZVy7iPfvTpcc01QXHpa6FA5NRibnvW
+         QZyjxA7lR5dqNHlIGMuIicKnrqKc1YT89za11s1hFU9IzqlwF24/FhHu5CkbGRvaxT18
+         y7ow==
+X-Forwarded-Encrypted: i=1; AJvYcCUr59ZQI4cwfn0wO2ca+uZ7YWqW1F3zIo7bKbtrxChGngyYh16ooOEFoxTrLZ4CXAPc2IoRxvXkcK4i2cR0lA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzdueG3a7eEA9t+nfp1N8t4Z4sE5SOeGA85gT1egXGLnrc9YMYC
+	L6hSkyqaUga4yYoFUwc1OtNu268MgeAiDNwpKpjCHj4Lvvs2OzZwAVJjOjgcIZa8YUovjFgyQmB
+	GMuQR97M7pj6DtmeUicaGSa7g8y5mbbI92V2I+7K+W26b35gvg2PRzwWXk8s=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+X-Received: by 2002:a05:6820:180e:b0:663:a6e:49a1 with SMTP id
+ 006d021491bc7-67766ad5dfcmr5634892eaf.14.1771326097053; Tue, 17 Feb 2026
+ 03:01:37 -0800 (PST)
+Date: Tue, 17 Feb 2026 03:01:37 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <69944a91.a70a0220.2c38d7.00fc.GAE@google.com>
+Subject: [syzbot] [wireless?] KMSAN: uninit-value in ieee80211_radiotap_iterator_next
+From: syzbot <syzbot+b09c1af8764c0097bb19@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Hello,
 
-> This approach looks well suited to handling overlapping update scenarios.
->=20
-> To make sure I understand it correctly, I=E2=80=99d like to walk through =
-a
-> concise example where a UHR critical update and a CSA overlap on link 0
-> of a 3=E2=80=91link AP MLD.
+syzbot found the following issue on:
 
-Well, so honestly, you should probably treat what I write as equivalent
-to a paper napkin sketch during a night of drinking ;-)
+HEAD commit:    ca4ee40bf13d Partly revert "drm/hyperv: Remove reference t..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=175d1b3a580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=4b4f2aab682301f1
+dashboard link: https://syzkaller.appspot.com/bug?extid=b09c1af8764c0097bb19
+compiler:       Debian clang version 21.1.8 (++20251221033036+2078da43e25a-1~exp1~20251221153213.50), Debian LLD 21.1.8
+userspace arch: i386
 
-I surely didn't think it totally through. I was just trying to
-illustrate that I feel like we need to have some kind of new design for
-all these overlapping updates (CSA, BSS color change, EHT and UHR
-critical updates?) than the piecemeal design we have now.
+Unfortunately, I don't have any reproducer for this issue yet.
 
-And, importantly, that perhaps I think that this means we need to have
-"post-update UHR operation" more than the individual UHR operation
-updates broken out - which after all is where we started from.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/5f321eee08a1/disk-ca4ee40b.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/e93195c44eb5/vmlinux-ca4ee40b.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/c3f7091036e0/bzImage-ca4ee40b.xz
 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+b09c1af8764c0097bb19@syzkaller.appspotmail.com
 
-> t1: A UHR critical update is triggered. hostapd sends
-> NL80211_CMD_START_MLD_BSS_UPDATE with an advanced notification (5
-> TBTTs), post=E2=80=91interval (5 TBTTs), and the beacon template with UHR
-> parameters update element for link 0. Timers start in mac80211, and
-> hostapd receives cookie X.
+=====================================================
+BUG: KMSAN: uninit-value in ieee80211_radiotap_iterator_next+0x11f8/0x1620 net/wireless/radiotap.c:317
+ ieee80211_radiotap_iterator_next+0x11f8/0x1620 net/wireless/radiotap.c:317
+ ieee80211_parse_tx_radiotap+0x4bb/0x2160 net/mac80211/tx.c:2122
+ ieee80211_monitor_start_xmit+0x125e/0x1750 net/mac80211/tx.c:2451
+ __netdev_start_xmit include/linux/netdevice.h:5275 [inline]
+ netdev_start_xmit include/linux/netdevice.h:5284 [inline]
+ xmit_one net/core/dev.c:3864 [inline]
+ dev_hard_start_xmit+0x24e/0xad0 net/core/dev.c:3880
+ __dev_queue_xmit+0x35e0/0x5a50 net/core/dev.c:4829
+ dev_queue_xmit include/linux/netdevice.h:3384 [inline]
+ packet_xmit+0x8f/0x710 net/packet/af_packet.c:275
+ packet_snd net/packet/af_packet.c:3077 [inline]
+ packet_sendmsg+0x91d9/0xa320 net/packet/af_packet.c:3109
+ sock_sendmsg_nosec net/socket.c:727 [inline]
+ __sock_sendmsg net/socket.c:742 [inline]
+ __sys_sendto+0xa77/0xb90 net/socket.c:2206
+ __do_sys_sendto net/socket.c:2213 [inline]
+ __se_sys_sendto net/socket.c:2209 [inline]
+ __ia32_sys_sendto+0x12f/0x200 net/socket.c:2209
+ ia32_sys_call+0x372f/0x4360 arch/x86/include/generated/asm/syscalls_32.h:370
+ do_syscall_32_irqs_on arch/x86/entry/syscall_32.c:83 [inline]
+ __do_fast_syscall_32+0x17f/0x3f0 arch/x86/entry/syscall_32.c:307
+ do_fast_syscall_32+0x37/0x80 arch/x86/entry/syscall_32.c:332
+ do_SYSENTER_32+0x1f/0x30 arch/x86/entry/syscall_32.c:370
+ entry_SYSENTER_compat_after_hwframe+0x84/0x8e
 
-Don't know if timers would be really in mac80211 - I guess if the driver
-pulls each individual beacon then mac80211 could handle the countdown,
-but otherwise this might just be given to firmware.
+Uninit was stored to memory at:
+ ieee80211_radiotap_iterator_next+0x14c8/0x1620 net/wireless/radiotap.c:251
+ ieee80211_parse_tx_radiotap+0x4bb/0x2160 net/mac80211/tx.c:2122
+ ieee80211_monitor_start_xmit+0x125e/0x1750 net/mac80211/tx.c:2451
+ __netdev_start_xmit include/linux/netdevice.h:5275 [inline]
+ netdev_start_xmit include/linux/netdevice.h:5284 [inline]
+ xmit_one net/core/dev.c:3864 [inline]
+ dev_hard_start_xmit+0x24e/0xad0 net/core/dev.c:3880
+ __dev_queue_xmit+0x35e0/0x5a50 net/core/dev.c:4829
+ dev_queue_xmit include/linux/netdevice.h:3384 [inline]
+ packet_xmit+0x8f/0x710 net/packet/af_packet.c:275
+ packet_snd net/packet/af_packet.c:3077 [inline]
+ packet_sendmsg+0x91d9/0xa320 net/packet/af_packet.c:3109
+ sock_sendmsg_nosec net/socket.c:727 [inline]
+ __sock_sendmsg net/socket.c:742 [inline]
+ __sys_sendto+0xa77/0xb90 net/socket.c:2206
+ __do_sys_sendto net/socket.c:2213 [inline]
+ __se_sys_sendto net/socket.c:2209 [inline]
+ __ia32_sys_sendto+0x12f/0x200 net/socket.c:2209
+ ia32_sys_call+0x372f/0x4360 arch/x86/include/generated/asm/syscalls_32.h:370
+ do_syscall_32_irqs_on arch/x86/entry/syscall_32.c:83 [inline]
+ __do_fast_syscall_32+0x17f/0x3f0 arch/x86/entry/syscall_32.c:307
+ do_fast_syscall_32+0x37/0x80 arch/x86/entry/syscall_32.c:332
+ do_SYSENTER_32+0x1f/0x30 arch/x86/entry/syscall_32.c:370
+ entry_SYSENTER_compat_after_hwframe+0x84/0x8e
 
-Also I guess the counter would have offset(s) from the start, i.e. the
-beacon template would be in this operation already. Or maybe even beacon
-updates for multiple links? Don't know if that really matters much
-either way.
+Local variable iterator created at:
+ ieee80211_parse_tx_radiotap+0xc4/0x2160 net/mac80211/tx.c:2093
+ ieee80211_monitor_start_xmit+0x125e/0x1750 net/mac80211/tx.c:2451
 
-> t2: hostapd sends NL80211_CMD_UPDATE_AP with cookie X and offset where
-> the counter is updated for link 1 (and then link 2).
->=20
-> the countdown values would be handled in mac80211 with the offset
-> mentioned similar to ieee80211_set_beacon_cntdwn().
-
-Sort of, yeah. I imagined that the CMD_UPDATE_AP would come with a list
-of "cookie X: { offset X_1, offset X_2 }, cookie Y: { offset Y_1 }" or
-something like that.
-
-> t3: Before the UHR advanced interval completes, a CSA is triggered (due
-> to radar or user=E2=80=91initiated). Another NL80211_CMD_START_MLD_BSS_UP=
-DATE is
-> issued with CSA countdown 5, including CSA and after beacon templates.
-> The after template carries cookie X and the offset. Since UHR CU is
-> already in progress, hostapd could also include an updated parameters
-> update element.=C2=A0
-
-Would have to, I think? I think in your example it's unlikely the _after
-CSA_ template still has cookie X / offset(s) X_n, since you only had 10
-beacon intervals overall for the UHR critical update and CSA might be
-longer, but we could also imagine the UHR critical update was advertised
-for a longer time.
-
-> Also, an updated UHR operation element which can be
-> modified in after beacon template if CSA finishes after the UHR CU
-> advance interval. (why to provide the UHR operation element separately
-> is because the advance notification can be before or after the CSA
-> finalize).
-> hostapd then receives cookie Y for the CSA.
-
-This could get trickier than I imagined - you now have three periods of
-time:
-
- - now
- - after CSA but before UHR update
- - after UHR update
-
-and actually all three might need different UHR operation, since the CSA
-can change the bandwidth and therefore e.g. DBE/NPCA. The intermediate
-period ("after CSA but before UHR update") can be captured by the CSA
-operation (given a template/UHR operation for after) easily.
-
-But I was imagining we capture all this in the operations already, so I
-guess to do that we would need a "NL80211_CMD_MODIFY_MLD_BSS_UPDATE"
-command that takes the cookie and updates the post-operation values, so
-that the changes due to the CSA could be taken into account in the
-previously started UHR update.
-
-FWIW, I was also kind of imagining that we'd design this combined update
-command in a way that it replaces the CSA and color change commands,
-handles the proposed link removal thing from Lorenzo, and then we don't
-need to handle overlapping operations of all kinds, just of this new
-kind that can do many different things. Not a huge difference though
-since CSA/CCA would map to a subset of the new "thing".
-
-
-> t4: hostapd issues NL80211_CMD_UPDATE_AP for link 1 with cookie X (UHR
-> offset) and cookie Y (CSA offset), followed by link 2.
-
-Not sure really about this. You also need new beacon templates for the
-two periods I mentioned above ("after CSA but before UHR update" and
-"after UHR update").
+CPU: 1 UID: 0 PID: 12634 Comm: syz.4.1919 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 02/12/2026
+=====================================================
 
 
-I think in my head the beacon templates for post-operations for all
-links would've been handle by NL80211_CMD_START_MLD_BSS_UPDATE and, as I
-discovered above, NL80211_CMD_MODIFY_MLD_BSS_UPDATE, rather than by
-NL80211_CMD_UPDATE_AP.
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-I was, however, imagining that updates to the *current* template could
-still happen via NL80211_CMD_UPDATE_AP, so - let's build a side branch
-here first, e.g.:
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-      - we start UHR update to happen in 10 beacon intervals
-        - this comes with a post-update template and post-update UHR operat=
-ion
-      - something else happens, e.g. HT mixed mode needs updating
-        in this case, NL80211_CMD_UPDATE_AP could happen with the cookie(s)
-        and offset(s) for the _current_ beacon
-     =20
-      Although I think perhaps this ends up being racy, and in fact hostapd
-      would need to use a hypothetical NL80211_CMD_MODIFY_MLD_BSS_UPDATE ag=
-ain
-      to update the link's beacon for HT mixed mode for all of the ongoing =
-BSS
-      updates and their post beacon(s)?
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-Anyway, back to your scenario:
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-> t5: When the UHR advanced notification interval expires, the CSA after
-> beacon template is updated to reflect the new operation element by
-> mac80211 or getting it from hostapd.
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-Yeah so that's also an option, if we think it'd work / not be too racy?
-As I wrote, I was thinking CSA becomes another MLD BSS update and then
-the post-CSA template is already given there.
-
-> t6: Once the CSA completes, the driver updates the after beacon template
-> along with updated counter for UHR parameter update element. (since it
-> will be in the post notification interval)
->=20
->=20
-> t7: When the UHR post=E2=80=91interval completes, the UHR parameter updat=
-e
-> element is removed. Since offsets are known, the driver can remove it
-> from the latest beacon template.
-
-I wasn't really imagining the driver would remove it I guess, but rather
-a post-update template would be provided already.
-
-Ah! I think you were maybe thinking "this is the offset where to
-insert/remove the UHR Parameter Update element", and I was thinking
-"this is the offset of the counter" so that we could also put it into
-the RNR etc.?
-
-> Please let me know if this sequence aligns with the intended behavior,
-> or if I=E2=80=99m missing any edge cases.
->=20
-> Also, CSA during NPCA parameter update seems very tricky as the channel
-> information advertised in NPCA may not be relevant when there is a CSA,
-> perhaps stop the NPCA CU (still spec has not mentioned any details on
-> the abort scenario though)
-
-Right, it's a bit tricky all over for concurrency scenarios. I hear that
-two UHR critical updates concurrently are not going to be allowed
-though.
-
-> Even, in case of link removal during UHR CU update, we need to stop the
-> UHR CU.
-
-Well if the link is removed then it probably isn't relevant to update it
-any more anyway?
-
-> Furthermore, the UHR capabilities carries the advance notification
-> interval, post notification  (i guess yet to be added in element as I
-> see it in "37-8=E2=80=94Enhanced Critical Updates Mechanism") and update
-> indication in TIM interval, these intervals can be sent in the START_AP.
-> I assume, these intervals cannot be modified dynamically as these are
-> exchanged in assoc response (Will reconfirm again).
-
-Yeah, I agree, I would tend to think these are fixed.
-
-> For beacon offloaded drivers, NL80211_CMD_START_MLD_BSS_UPDATE can be as
-> a trigger. May be we can add the updated UHR operation element in case
-> of UHR. So, that firmware/driver handle the timers as well as
-> constructing the elements since "the encoding of fields in Mode specific
-> parameters for any feature say DPS/NPCA/DBE etc.. is same as the
-> corresponding field in operation parameters field for that feature" (but
-> i see bit variations for NPCA between both)
-
-The bit variants are going to get fixed, it's just not entirely clear
-yet which way around.
-
-
-> I guess, this means the proposal of having a separate netlink attribute
-> for the UHR operation with _full_ data like is much useful.
-
-OK. We can always also just parse it out anyway, just that element
-(contents) isn't really too difficult to get at.
-
-> Still, we are thinking through on all the other cases of wifi-7/CCA etc..
-
-Of course.
-
-Thanks,
-johannes
+If you want to undo deduplication, reply with:
+#syz undup
