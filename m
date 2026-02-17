@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 410471C8634
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 11:56:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB53324B31
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 11:56:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771329392; cv=none; b=ZhD+EOC4HFgQlYq7E70nmLotKOyd+y+BMR6Jg3rTF7nY2z1mrG4QwPM5i7qGdW4npqwkXRmWIka9pmSlb3WNlUKx2g2rfQA3jKxHbiyjXQpnR3QkhVbkTIh8bx+pe1Un8Ktq2mrG68oiBuD6154r8fnlcqlnQwboOlYikrAop28=
+	t=1771329396; cv=none; b=XQIYJPtJWi9OWe1d9kXGZPKCV1UK8KAhsgmZHcRFhxrEP6NbhE876fJ8AZ7cbFQDN/v4rCD2ITNr7XehMoUNDsWeD24zAddd3wSL3QyR0+4RE13zkLENxGmy6e8FFJMy5hvDsRCh/jh9cuk9HgpNmabW0U+WJhf9W15bYLcHsLU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771329392; c=relaxed/simple;
-	bh=MSqJU/jyrrhYRMizF03ZktGj7D2AEGYJpXJYtMgrc4o=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iiIaNA2LBWzG4pyspx/L3edS66ef0u0f957eJUUXdcoYWGXDNz/w90WSnB3NKMjjYV/nqkvGcdpH1+Sd6vHnltBKwPbabazoIIQP7g3zalSVhK28IjoXWlo2yHSryNQycZMVn9qwlNnnrP6DOYYyGrWM3JFjFQd6KYBQXvQ3+jA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EzuUcd9s; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1771329396; c=relaxed/simple;
+	bh=HCcEgZbUZAYJdLBiqZun542rW5HaZpbwzc1IEPxjSLk=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=R2YiSfjFZIsuufoVpCN/irkHgyfDCjutE4b4l9aZCNpFs4dbDHa0YCG6h/P9L2daaaY8QI/rOROT/xMxc/xBWRW2vzvdic7xxPKMPypRG3oG+w0NABHzJBwd9GeFAelLDO26EFtNreQ19MSua//zwh+ZJeHvLSqIlY3OK8sE0PY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Pwf6bIyD; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EzuUcd9s"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Pwf6bIyD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1771329392; x=1802865392;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=MSqJU/jyrrhYRMizF03ZktGj7D2AEGYJpXJYtMgrc4o=;
-  b=EzuUcd9sqCdExY1y34c2h/a23bTs8ko3+B/VRtBdAhfyMtfeAIma//l0
-   0edCuaTiEDRs9DS9aD7D1pwlJZ1XFKlADcEWTb/rtYdqQPkq6WK7VZTu1
-   Xn+IyTYpxbegs5kBbWdMJzljEO5f7ZPlDc9CuTO6coSY9IhXlEvveUmXj
-   4JXeHNLZcr7z239BiB/1OJ24k9th3qngTe9Wyv72lkRSpVEjfXoYtT2Rs
-   I4bOlJTaIeoVDnt94oizQwmxMCBJq/yM3zXg/SbyU/z4MZQz4czm62B7y
-   E5KCJHcvAsXzWz97BF2coLKk2I0+mQguKWhBPWnpODbSfwB7Y8rGb7VEq
-   w==;
-X-CSE-ConnectionGUID: Vw5hszTYSM6A5ay2qswFsg==
-X-CSE-MsgGUID: TkXmX1jRRdaUZpEDc2R3iA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11703"; a="83495862"
+  t=1771329395; x=1802865395;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=HCcEgZbUZAYJdLBiqZun542rW5HaZpbwzc1IEPxjSLk=;
+  b=Pwf6bIyDQnlQvjMPYKR5tlQOSt4Wm4iEAtgu8sWWHCkQm3kWN/N/TkSe
+   smlhuvGDA5q8bQzPx8GORA1dJNT/cSQStWrokrM1k7V7dOs7acRbafHzt
+   VLExTl/YQsTivT/+hM//iao0wGFBz5OIQ5wheEKJqmF2XKZhraeEVcYUL
+   OCENlFQ2YX3wKvaIAjuZdkQBze4SMqwoZ0WIGhj/H/NlrGi0d/9duWZFB
+   S64jnkxSIpaLVCMnl7vMNPTkLXSNUtdWztFKAbundep+pesamKsIojJgI
+   UjJe3L/AC60sMD1Tm82rDIqT2cPGoHrTr0r1xZg+hvwCOENz43mJca9N9
+   Q==;
+X-CSE-ConnectionGUID: W9wffeXnQi6FaKj9I9pcQQ==
+X-CSE-MsgGUID: lpgx4wTJTwOVVXNf5KU1Sg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11703"; a="83495866"
 X-IronPort-AV: E=Sophos;i="6.21,296,1763452800"; 
-   d="scan'208";a="83495862"
+   d="scan'208";a="83495866"
 Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2026 03:56:32 -0800
-X-CSE-ConnectionGUID: 6y4wnae4Tp2AWAfSgAsO0w==
-X-CSE-MsgGUID: 6Xo4vSOzRaywuqJFDXe2sw==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2026 03:56:34 -0800
+X-CSE-ConnectionGUID: gnNW29m+SiqTcq3qEdFpDw==
+X-CSE-MsgGUID: w+qYxl3sTSS0AAPEH3JUdA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.21,296,1763452800"; 
-   d="scan'208";a="251547113"
+   d="scan'208";a="251547121"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2026 03:56:30 -0800
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2026 03:56:33 -0800
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 wireless-next 02/15] wifi: cfg80211: remove unneeded call to cfg80211_leave
-Date: Tue, 17 Feb 2026 13:56:05 +0200
-Message-Id: <20260217134342.c43709c9d3af.I3179a28f237ea3b8ec368af720fbf77455a7763f@changeid>
+Subject: [PATCH v3 wireless-next 04/15] wifi: cfg80211: refactor wiphy_suspend
+Date: Tue, 17 Feb 2026 13:56:07 +0200
+Message-Id: <20260217115618.2066972-2-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260217115618.2066972-1-miriam.rachel.korenblit@intel.com>
 References: <20260217115618.2066972-1-miriam.rachel.korenblit@intel.com>
@@ -61,30 +60,83 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-In cfg80211_destroy_ifaces, we first close all netdev wdevs, which will
-trigger a NETDEV_GOING_DOWN event that will call cfg80211_leave,
-and for non-netdev wdevs, we call cfg80211_remove_virtual_intf which
-calles cfg80211_unregister_wdev, which handles the "leaving" for those
-interfaces (i.e. stop_nan and stop_p2p_device)
+The sequence of operations that needs to be done in wiphy_suspend is
+identical for the case where there is no wowlan configured, and for the
+case that it is but the driver refused to do wowlan (by returning 1 from
+rdev_suspend).
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+The current code duplicates this set of operations for each one of the
+cases.
+
+In particular, next patch will change the locking of cfg80211_leave_all to
+not hold the wiphy lock, which will be easier to do if it is not called
+twice.
+
+Change the code to handle first the case that wowlan is configured, and
+then handle both cases (driver refused to do wowlan and no wowlan
+configured) in one place.
+
+Note that this changes the behaviour to set suspended=true also when
+we were not registered yet, but that makes sense anyway, as wiphy works
+can be queued also before registration.
+
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260108102921.00336669ac32.Id76f272662e1315cd93a628808cc2d1625036b00@changeid
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/wireless/core.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/wireless/sysfs.c | 33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9af85d655027..328d3036d21f 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -349,7 +349,6 @@ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev)
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 2e0ea69b9604..3385a27468f7 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -99,26 +99,31 @@ static int wiphy_suspend(struct device *dev)
+ 	rdev->suspend_at = ktime_get_boottime_seconds();
  
- 			guard(wiphy)(&rdev->wiphy);
- 
--			cfg80211_leave(rdev, wdev, -1);
- 			cfg80211_remove_virtual_intf(rdev, wdev);
- 		}
+ 	rtnl_lock();
++	if (!rdev->wiphy.registered)
++		goto out_unlock_rtnl;
++
+ 	wiphy_lock(&rdev->wiphy);
+-	if (rdev->wiphy.registered) {
+-		if (!rdev->wiphy.wowlan_config) {
+-			cfg80211_leave_all(rdev);
+-			cfg80211_process_rdev_events(rdev);
+-		}
++	if (rdev->wiphy.wowlan_config) {
+ 		cfg80211_process_wiphy_works(rdev, NULL);
+ 		if (rdev->ops->suspend)
+ 			ret = rdev_suspend(rdev, rdev->wiphy.wowlan_config);
+-		if (ret == 1) {
+-			/* Driver refuse to configure wowlan */
+-			cfg80211_leave_all(rdev);
+-			cfg80211_process_rdev_events(rdev);
+-			cfg80211_process_wiphy_works(rdev, NULL);
+-			ret = rdev_suspend(rdev, NULL);
+-		}
+-		if (ret == 0)
+-			rdev->suspended = true;
++		if (ret <= 0)
++			goto out_unlock_wiphy;
  	}
++
++	/* Driver refused to configure wowlan (ret = 1) or no wowlan */
++
++	cfg80211_leave_all(rdev);
++	cfg80211_process_rdev_events(rdev);
++	cfg80211_process_wiphy_works(rdev, NULL);
++	if (rdev->ops->suspend)
++		ret = rdev_suspend(rdev, NULL);
++
++out_unlock_wiphy:
+ 	wiphy_unlock(&rdev->wiphy);
++out_unlock_rtnl:
++	if (ret == 0)
++		rdev->suspended = true;
+ 	rtnl_unlock();
+ 
+ 	return ret;
 -- 
 2.34.1
 
