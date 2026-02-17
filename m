@@ -1,45 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FB9E3346A1
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 11:31:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AC1F32E15B
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 11:32:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771327882; cv=none; b=CFUXYux8wxb+e7EbiL/NU4RynRGz6CafWTkM+ihranRNLxCnh3juw5GOBueR90Nw1Fk5UYF0+e77d9KFHqiYLvpPYkwKr8sbAR3flTgiqjrJqCEMW6cQQ1U87CMUlnN8FUR0Tbp122ds+LCZNNeQUlPLoCgjiWk3wGc0g+JTw74=
+	t=1771327980; cv=none; b=XhuU/YL/y6w/5632bAuUYb1h6+ePFJddx7n13YjSiGFSk3l98FjAwwQztWa31mBnGL9ZFwb01mqTf/cxebuYvrcfUAGq79GZI/gbBzBWlkqel2+QhoVl1XrxEMBfZbudrw1BRoS3lZui1NFTFemvmIa2D6Bfx9k3iYCSiz7nTww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771327882; c=relaxed/simple;
-	bh=eqyYGEsWUqywfJhYXJPb03WLDek1CdMurkAbpKzyrKU=;
+	s=arc-20240116; t=1771327980; c=relaxed/simple;
+	bh=UUHrozg0eDafxKNf4gdWBaihk/aCwaAWll8SEGw8ki4=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=r682suS2W9ojiAoEeKtuCUYCpkwwMWVl1OhBJEXdqWSaXxoJrzaPeQkqCqdwOqX4SY3vDyJgzPXoNawCTLo9W2rNcAYtDnFkzMe3hQC27hTh0GxJiJ0t/nS2QrsXaavTDuR8K064brnFueVwqj0qwy0GejoUJ3YYBYJb8CL1+VM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=uK7jGDoK; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=tm4K58S6t0eqgaSrK2vyrdlu9LiLbpPRVb/uIwYfX/Pm0MAW+kH7pTM8028PtJHLJ2gVkWhfaUQKdnpN7WLcfsmu/MRBRwEWmjKq25PivwqTT0FD0AoQq3thJKGP8Oh/KW5iv1CAb+pN6tnwqJkTJNKzgIL3l/MVdEwLfUF1OQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=o5hmxreX; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="uK7jGDoK"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="o5hmxreX"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
 	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=N4VPE5nUK6DOmgPgGG6eBTWBqI/gglANFSShp++TjpA=;
-	t=1771327881; x=1772537481; b=uK7jGDoKqIWKhEZWsY0CqSIw3UTBixh/Aqya942TBYfylBs
-	wZqbDSpQzoywW9xTIXj3ABwviev6aE/1KB6jdnd6ZqyUQFx0nhCtvRdFpmtZxRF7cHhHNTYx0+ubC
-	TSsW4otw+2h0u63oDkDkVKPNRa3PfHH3MV7Xm4WT4zBdRpY2O8yWQw7AJMs2rk36Zb1Xn5jUYndh+
-	8SIg6BpTZbwt0c1bBDtJzPZhYCdErrQCIdGyRjqiMz8wTo3OhGQhDGzRMMfX3jSlple6QO8R8QP3n
-	HZt3EIx5Bsa1uH5WcKJ1R4alKZH7oWeMUEx+Dn22JrWLsUlSIn+dzDyXv0zTSc3w==;
+	Resent-Cc:Resent-Message-ID; bh=UUHrozg0eDafxKNf4gdWBaihk/aCwaAWll8SEGw8ki4=;
+	t=1771327979; x=1772537579; b=o5hmxreXBPkRW37+gYsU6e/lwFR9F+rbOpnJ8ZlTP1WX5kd
+	DEPzVKVPnG4/2VaVMwO+lX0sju78vKaw8sVdCeI8ur1EeSO2a8V0SqRrpD1yvBX8fPuciHgFCeTWu
+	33X4gt01Hq5/WtqF8OK8uYZ+jvaKomjWWuRsOEcREySjToixeO6Km7X+VSAt9wmU+TwKLnHMWGCNs
+	f1Lhc0OmmB+KEftmyU/nDVBT3pkwRCFyz/PUNs4yQIIykwsyWdEaaY+d1I/h6y/IOBhmvUXvCJFQJ
+	nc66LsDkJ05pnSJl18x/ZhsAbas55kABUvVh8rU8aSR2UuFDybXzSb1Ji2SLiKjA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vsJIU-0000000BMYL-3hsW;
-	Tue, 17 Feb 2026 12:31:19 +0100
-Message-ID: <4b8a609add613f5409d7bb2ee524bb4c9288e61f.camel@sipsolutions.net>
+	id 1vsJK4-0000000BMcV-3TjK;
+	Tue, 17 Feb 2026 12:32:56 +0100
+Message-ID: <bfb907e97b80eba00725af8873e8e1c3dc577f73.camel@sipsolutions.net>
 Subject: Re: [PATCH iwlwifi-next 00/15] wifi: cfg80211/nl80211: Add NAN Data
  Path support
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
 	linux-wireless@vger.kernel.org
-Date: Tue, 17 Feb 2026 12:31:18 +0100
-In-Reply-To: <20260216215452.1538316-1-miriam.rachel.korenblit@intel.com>
+Date: Tue, 17 Feb 2026 12:32:56 +0100
+In-Reply-To: <4b8a609add613f5409d7bb2ee524bb4c9288e61f.camel@sipsolutions.net>
 References: <20260216215452.1538316-1-miriam.rachel.korenblit@intel.com>
+	 <4b8a609add613f5409d7bb2ee524bb4c9288e61f.camel@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -51,29 +52,12 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Mon, 2026-02-16 at 23:54 +0200, Miri Korenblit wrote:
+On Tue, 2026-02-17 at 12:31 +0100, Johannes Berg wrote:
 >=20
-> Daniel Gabay (1):
->   wifi: cfg80211: allow ToDS=3D0/FromDS=3D0 data frames on NAN data
->     interfaces
->=20
-> Miri Korenblit (14):
->   wifi: nl80211: refactor nl80211_parse_chandef
->   wifi: cfg80211: remove unneeded call to cfg80211_leave
->   wifi: nl80211/cfg80211: support stations of non-netdev interfaces
->   wifi: cfg80211: refactor wiphy_suspend
->   wifi: nl80211: don't allow DFS channels for NAN
->   wifi: cfg80211: Add an API to configure local NAN schedule
->   wifi: cfg80211: make sure NAN chandefs are valid
->   wifi: cfg80211: add support for NAN data interface
->   wifi: cfg80211: separately store HT, VHT and HE capabilities for NAN
->   wifi: nl80211: add support for NAN stations
->   wifi: nl80211: define an API for configuring the NAN peer's schedule
->   wifi: nl80211: allow reporting spurious NAN Data frames
->   wifi: nl80211: add NL80211_CMD_NAN_ULW_UPDATE notification
->   wifi: nl80211: Add a notification to notify NAN channel evacuation
+> Wrong tree tag, since it's all cfg80211, and also it didn't apply on
+> iwlwifi-next at all.
 
-Wrong tree tag, since it's all cfg80211, and also it didn't apply on
-iwlwifi-next at all.
+Oh and also, this was already v3, but you lost the version tag, and
+there's no description of the changes between the versions.
 
 johannes
