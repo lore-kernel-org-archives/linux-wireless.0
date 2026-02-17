@@ -1,229 +1,144 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CAA225776;
-	Tue, 17 Feb 2026 00:25:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9386B199FB0
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 02:31:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771287948; cv=none; b=Y3Ou8lO9vgW5nc6jNy61fjgm8qFcKpij6t9T7Ml+U9CHY/R1e6XWiyHDEDmqrLxvpYU+7de2u+6LLX2Gf8LC97ExC1Zxu8g0IOO4/XFHmLxSD2/a/9tP3VuSmfiZ6MKlfP+7hy1L/Q2XliSPzj8k/Y0ZCVb+fI8K7s4gdYXf7WY=
+	t=1771295464; cv=none; b=mZA1cb4XYtrJ2JdB/o9k+eUHbYZBvH40risgXMvWTstT6+tT7FFf/ZqbNHbEaRVhuqb5ak9IPXu29twrF6u52H6rC3QAG6B7rABxQT5r5GItrHxMSh4PFU8EXWQyYCgXFsKIcQgeNOhhlm+jIf0Q3GmLe2VmPgTnb2pcy4+vEeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771287948; c=relaxed/simple;
-	bh=rkO9TeYJjXaoRqDn1C2E/hz2Ji5SnWXXcrx0UOtXIHc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=j56MiLMY/AHu1E3CfZtTHj00IesZhZRcWZobE4dw5czgp5L0vIEATIWRaTJxRCD7rsSdZ2jux6//JX+W2+2ETN3Z2rk0+WO59e0ZnEkmQLsCkd1R6eUJQOFYwOIeVeAaQUmixhQ57//pjjaczIgYWhiZa9YcW9VmGlSVmypyMu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gq/qYayK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771295464; c=relaxed/simple;
+	bh=kObS168gQBNE3xpbI2vaprxcEmPUWL2LSLVxVbKppr8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VlGUaOhQmnxX9u4R+IY1SDKP7k8yxzymrCrSKcLaZpmdiU8z1f8f5I/tcp7uS+Tm+YZIns6gML1qFirkKtVVW5EA4/ZOPWhYCZIYAFyu6lwXFUliWnRWoNw927mH3+SVZyCwMSf4/Q2fYAzfiF1t6kzgMIFA2YB4sii2iiTWBbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eI3A592H; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gq/qYayK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91E8FC116C6;
-	Tue, 17 Feb 2026 00:25:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771287947;
-	bh=rkO9TeYJjXaoRqDn1C2E/hz2Ji5SnWXXcrx0UOtXIHc=;
-	h=Date:From:To:Cc:Subject:From;
-	b=gq/qYayKKSmXbrgnRUpAGxnKzybGJ01w77qP+V53ZzqJKicEc0HULJOHwBmDU/Huo
-	 QKGnTGwFSND1mSIcIK8/I0KjVThykDdcddlSqxd1oOZjxKNc7NzgFmFVSBbQyWiWpq
-	 SWUlGbiy3COwfUSRzgvKttnrkyfha/LBuO/CMnYMJ9q2AE9j9L2/9jOwG3PA43UUxu
-	 wxJDGPlvKtoSIQCwE/Z5MCdlo74wwtKJj6AsAnGRhUS2kao6BlVZge+5rII9o+iSYY
-	 JHtFvaHfoNmK+sYYDFzARAarNcxak61+OtElPSrxvDbb1Kas84+yXRaI9bS8adnrCQ
-	 6UwgKKjccXNMw==
-Date: Mon, 16 Feb 2026 18:25:14 +0900
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To: Stanislaw Gruszka <stf_xl@wp.pl>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-hardening@vger.kernel.org, Kees Cook <kees@kernel.org>
-Subject: [PATCH v4][next] wifi: iwlegacy: Avoid multiple
- -Wflex-array-member-not-at-end warnings
-Message-ID: <aZLienEatf9KC6Rx@kspp>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eI3A592H"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-797d36fdb96so13828877b3.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2026 18:31:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771295461; x=1771900261; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1fworB1P/Jzlnt8opUorAnuBCM+SRM92++aaBkD5qF0=;
+        b=eI3A592Hj1vFCSBKcwrw0jB9xsAgW4ZDNQX34ugMeChWPUm0eZW6gZKZsc7P8CuKHT
+         QoFK9W4j2XPEHrb7AR0IaKfx07yOWm+UBN/ysFcKz9rv33DX3+OnBkQcY0I2QXG3s5El
+         GIpIzuR5TceiRq7T+PukVDnoWDwyLIAZKPgX3iEGYGU/aWvRaL2Sn3l0r1sVmzJcNhcI
+         yg/c3jdQ5AugKbdklxX9ely/JaAlPQRynoHgUJy/pw4sVuUSzRjJ3JjDoRue7MVsQGC9
+         MBXvxBNvq3euG7wdsBfeIGU/L2f09J0fxsH8sL4po0XTuE2lr1wxbM7yuWXinh0ZsWXJ
+         P7Ow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771295461; x=1771900261;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1fworB1P/Jzlnt8opUorAnuBCM+SRM92++aaBkD5qF0=;
+        b=jc4e/hWKryf2HfovIZeovN8v/aNer7RqUpDcmIBlkA/49FJi9MjfsiR8JEaOnUo6T2
+         59jdOm2yxTbySapbZ2nNAflYkSQc5bVq/aVPlRSb3OdVkPyhyIdDClrPLtJInZ+bn3Am
+         8bIM64WYXWb08VUCwPBnL0TFYq63hU7d5F3XzBVyrKl55kJ54Ofm1M7KW0gutoxFaT0J
+         YGPM5eozKOt1WnDh+HPeivKBxFYffRhHdR0h6iHd4v+0QyPWU6niJbey8MQnilYKxXB4
+         my07hY/VlD1AevLNJPP9iqxizzeO3Fn+tffmDffBrE0xmgLgS2tx8eVCcT+z/ZbY5eEm
+         rQ4w==
+X-Gm-Message-State: AOJu0YyhePjFsngj4YuZ6CTSFu4AldpCGXBoGmDEWJm6somHktmvrjYB
+	PlrX/uGxeP3YjMulyp8/uNHL+ip/3ak8k5ht3l6Bg1o0QzFUcPVAotKx
+X-Gm-Gg: AZuq6aLkBhX3/W79T40XmNiOdc3hJqSbkdTAHSQoQ5Thpd9i2GhxgDtQSvWZp9PvD7m
+	DkRTWDhX8vlZoOx6jrLnwSRiZf22bJoQzfRv/GZKhSpDrjjvlZo68c+64dL6BVZv+rrtzwl+kmn
+	s5cwxTs36oJGNQEHvzuV/TFaAa21DyYWbsShbMbcCvbtY8wpn0wuQY5ro6lrN+4ZLWRh9aO8u6/
+	TVsmqYKiiwboBle7PG1ocDBitf8jtz6WAgQD0ga8yTuD5eZaF/oBhgCAdpax4kESxrO7h+QU+ZL
+	iua6ekTImRd4dm+86axXD3No7wIlCMLipozLnFH+Wi9+UxtaEX+KeCuTS5JDzo53tTDK8bcPs+D
+	MWQ8a670B9lY87fPTvZRgVhBbfCwjNs5DjFW7+od5v7uuvTvlnth4Q5ZiVnVUlVSqQaWvRmj/ij
+	bae06NYElq3ylLv7FxxMquXeYg9rX/ZsQ6ok6FSguhkwvp5Cwr05OeHb9p8liLLjIeu2ybwaUXi
+	euw5j0tuhY0HfqZe/4Rgqy59Gyk8efzUEBREaOvGoQ=
+X-Received: by 2002:a05:690c:67c8:b0:794:c04d:bcfc with SMTP id 00721157ae682-797aa851693mr89684017b3.13.1771295461531;
+        Mon, 16 Feb 2026 18:31:01 -0800 (PST)
+Received: from tux ([2601:7c0:c37c:4c00:e3a8:26f7:7e08:88e1])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7966c254daasm106806247b3.44.2026.02.16.18.31.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Feb 2026 18:31:01 -0800 (PST)
+From: Ethan Tidmore <ethantidmore06@gmail.com>
+To: arend.vanspriel@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	johannes.berg@intel.com,
+	Ethan Tidmore <ethantidmore06@gmail.com>
+Subject: [PATCH] brcmfmac: Fix error pointer dereference
+Date: Mon, 16 Feb 2026 20:30:43 -0600
+Message-ID: <20260217023043.73631-1-ethantidmore06@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
--Wflex-array-member-not-at-end was introduced in GCC-14, and we are
-getting ready to enable it, globally.
+The function brcmf_chip_add_core() can return an error pointer and is
+not checked. Add checks for error pointer.
 
-Move the conflicting declarations (which in a couple of cases happen
-to be in a union, so the entire unions are moved) to the end of the
-corresponding structures, struct il_frame, and struct il3945_frame.
+Detected by Smatch:
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1010 brcmf_chip_recognition() error:
+'core' dereferencing possible ERR_PTR()
 
-Notice that `struct il_tx_beacon_cmd`, `struct il4965_tx_resp`, and
-`struct il3945_tx_beacon_cmd` are flexible structures, this is
-structures that contain a flexible-array member.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1013 brcmf_chip_recognition() error:
+'core' dereferencing possible ERR_PTR()
 
-The case for struct il4965_beacon_notif is different. Since this
-structure is defined by hardware, we create the new `struct
-il4965_tx_resp_hdr` type. We then use this newly created type to
-replace the object type causing trouble in struct il4965_beacon_notif,
-namely `struct il4965_tx_resp`.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1016 brcmf_chip_recognition() error:
+'core' dereferencing possible ERR_PTR()
 
-Also, once -fms-extensions is enabled, we can use transparent struct
-members in struct il4965_tx_resp.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1019 brcmf_chip_recognition() error:
+'core' dereferencing possible ERR_PTR()
 
-Notice that the newly created type does not contain the flex-array
-member `agg_status`, which is the object causing the -Wfamnae warnings.
-This object is currently in a union along with `__le32 status`, so
-anything using struct il4965_beacon_notif needs to have its own view
-of `status`. To preserve the memory layout, we therefore add member
-`__le32 beacon_tx_status` to struct il4965_beacon_notif.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1022 brcmf_chip_recognition() error:
+'core' dereferencing possible ERR_PTR()
 
-After these changes, the size of struct il4965_beacon_notif along
-with its member's offsets remain the same, hence the memory layout
-doesn't change:
-
-Before changes:
-struct il4965_beacon_notif {
-	struct il4965_tx_resp      beacon_notify_hdr;    /*     0    24 */
-	__le32                     low_tsf;              /*    24     4 */
-	__le32                     high_tsf;             /*    28     4 */
-	__le32                     ibss_mgr_status;      /*    32     4 */
-
-	/* size: 36, cachelines: 1, members: 4 */
-	/* last cacheline: 36 bytes */
-};
-
-After changes:
-struct il4965_beacon_notif {
-	struct il4965_tx_resp_hdr  beacon_notify_hdr;    /*     0    20 */
-	__le32                     beacon_tx_status;     /*    20     4 */
-	__le32                     low_tsf;              /*    24     4 */
-	__le32                     high_tsf;             /*    28     4 */
-	__le32                     ibss_mgr_status;      /*    32     4 */
-
-	/* size: 36, cachelines: 1, members: 5 */
-	/* last cacheline: 36 bytes */
-};
-
-Lastly, adjust the rest of the code, accordingly.
-
-With these changes fix the following warnings:
-
-11 drivers/net/wireless/intel/iwlegacy/common.h:526:11: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-11 drivers/net/wireless/intel/iwlegacy/commands.h:2667:31: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-4 drivers/net/wireless/intel/iwlegacy/3945.h:131:11: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Fixes: cb7cf7be9eba7 ("brcmfmac: make chip related functions host interface independent")
+Signed-off-by: Ethan Tidmore <ethantidmore06@gmail.com>
 ---
-Changes in v4:
- - (Aggh...) Fix a couple of typos in changelog text:
-   		s/stryct/struct
-   		s/il4965_beacon_notif/il4965_tx_resp.
+ .../wireless/broadcom/brcm80211/brcmfmac/chip.c   | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Changes in v3:
- - Create new separate struct il4965_tx_resp_hdr, and use
-   transparent struct members instead of __struct_group(). (Kees)
- - Update subject line - Add 'wifi:' prefix. (Stanislaw)
- - Link: https://lore.kernel.org/linux-hardening/aZLgfO6z1Gt8aiyc@kspp/
-
-Changes in v2:
- - Use the struct_group() helper, and update the conflicting type
-   (struct il4965_tx_resp -> struct il4965_tx_resp_hdr) in
-   struct il4965_beacon_notif.
- - Link: https://lore.kernel.org/linux-hardening/aYlkt2WP2oQ1TgeH@kspp/
-
-v1:
- - Link: https://lore.kernel.org/linux-hardening/aR2CtqZI3atH0HmE@kspp/
-
- drivers/net/wireless/intel/iwlegacy/3945.h     | 4 +++-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 +-
- drivers/net/wireless/intel/iwlegacy/commands.h | 9 +++++++--
- drivers/net/wireless/intel/iwlegacy/common.h   | 4 +++-
- 4 files changed, 14 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945.h b/drivers/net/wireless/intel/iwlegacy/3945.h
-index fb1e33c89d0e..ed63b31fee9a 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945.h
-+++ b/drivers/net/wireless/intel/iwlegacy/3945.h
-@@ -123,13 +123,15 @@ enum il3945_antenna {
- #define IEEE80211_FRAME_LEN             (IEEE80211_DATA_LEN + IEEE80211_HLEN)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 4239f2b21e54..dcd8a296de10 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -1007,18 +1007,33 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
  
- struct il3945_frame {
-+	struct list_head list;
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_CHIPCOMMON,
+ 					   SI_ENUM_BASE_DEFAULT, 0);
++		if (IS_ERR(core))
++			return PTR_ERR(core);
 +
-+	/* Must be last as it ends in a flexible-array member. */
- 	union {
- 		struct ieee80211_hdr frame;
- 		struct il3945_tx_beacon_cmd beacon;
- 		u8 raw[IEEE80211_FRAME_LEN];
- 		u8 cmd[360];
- 	} u;
--	struct list_head list;
- };
- 
- #define SUP_RATE_11A_MAX_NUM_CHANNELS  8
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 57fa866efd9f..f5a99a2ee95a 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4076,7 +4076,7 @@ il4965_hdl_beacon(struct il_priv *il, struct il_rx_buf *rxb)
- 	u8 rate = il4965_hw_get_rate(beacon->beacon_notify_hdr.rate_n_flags);
- 
- 	D_RX("beacon status %x retries %d iss %d tsf:0x%.8x%.8x rate %d\n",
--	     le32_to_cpu(beacon->beacon_notify_hdr.u.status) & TX_STATUS_MSK,
-+	     le32_to_cpu(beacon->beacon_tx_status) & TX_STATUS_MSK,
- 	     beacon->beacon_notify_hdr.failure_frame,
- 	     le32_to_cpu(beacon->ibss_mgr_status),
- 	     le32_to_cpu(beacon->high_tsf), le32_to_cpu(beacon->low_tsf), rate);
-diff --git a/drivers/net/wireless/intel/iwlegacy/commands.h b/drivers/net/wireless/intel/iwlegacy/commands.h
-index b61b8f377702..7aba84ac88a1 100644
---- a/drivers/net/wireless/intel/iwlegacy/commands.h
-+++ b/drivers/net/wireless/intel/iwlegacy/commands.h
-@@ -1690,7 +1690,7 @@ struct agg_tx_status {
- 	__le16 sequence;
- } __packed;
- 
--struct il4965_tx_resp {
-+struct il4965_tx_resp_hdr {
- 	u8 frame_count;		/* 1 no aggregation, >1 aggregation */
- 	u8 bt_kill_count;	/* # blocked by bluetooth (unused for agg) */
- 	u8 failure_rts;		/* # failures due to unsuccessful RTS */
-@@ -1707,6 +1707,10 @@ struct il4965_tx_resp {
- 	__le16 reserved;
- 	__le32 pa_power1;	/* RF power amplifier measurement (not used) */
- 	__le32 pa_power2;
-+} __packed;
+ 		brcmf_chip_sb_corerev(ci, core);
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_SDIO_DEV,
+ 					   BCM4329_CORE_BUS_BASE, 0);
++		if (IS_ERR(core))
++			return PTR_ERR(core);
 +
-+struct il4965_tx_resp {
-+	struct il4965_tx_resp_hdr;
- 
- 	/*
- 	 * For non-agg:  frame status TX_STATUS_*
-@@ -2664,7 +2668,8 @@ struct il3945_beacon_notif {
- } __packed;
- 
- struct il4965_beacon_notif {
--	struct il4965_tx_resp beacon_notify_hdr;
-+	struct il4965_tx_resp_hdr beacon_notify_hdr;
-+	__le32 beacon_tx_status;
- 	__le32 low_tsf;
- 	__le32 high_tsf;
- 	__le32 ibss_mgr_status;
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 4c9836ab11dd..21f1c7702add 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -518,13 +518,15 @@ struct il_channel_info {
- #define IEEE80211_FRAME_LEN             (IEEE80211_DATA_LEN + IEEE80211_HLEN)
- 
- struct il_frame {
-+	struct list_head list;
+ 		brcmf_chip_sb_corerev(ci, core);
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_INTERNAL_MEM,
+ 					   BCM4329_CORE_SOCRAM_BASE, 0);
++		if (IS_ERR(core))
++			return PTR_ERR(core);
 +
-+	/* Must be last as it ends in a flexible-array member. */
- 	union {
- 		struct ieee80211_hdr frame;
- 		struct il_tx_beacon_cmd beacon;
- 		u8 raw[IEEE80211_FRAME_LEN];
- 		u8 cmd[360];
- 	} u;
--	struct list_head list;
- };
+ 		brcmf_chip_sb_corerev(ci, core);
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_ARM_CM3,
+ 					   BCM4329_CORE_ARM_BASE, 0);
++		if (IS_ERR(core))
++			return PTR_ERR(core);
++
+ 		brcmf_chip_sb_corerev(ci, core);
  
- enum {
+ 		core = brcmf_chip_add_core(ci, BCMA_CORE_80211, 0x18001000, 0);
++		if (IS_ERR(core))
++			return PTR_ERR(core);
++
+ 		brcmf_chip_sb_corerev(ci, core);
+ 	} else if (socitype == SOCI_AI) {
+ 		ci->iscoreup = brcmf_chip_ai_iscoreup;
 -- 
-2.43.0
+2.53.0
 
