@@ -1,165 +1,111 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E031A9FA0
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 06:25:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F6AD28E571
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 13:15:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771395932; cv=none; b=iiMvrh7rDjMgHbKuv8lXdGjN2cLVaKy7HANOunYJq+FufWGp8GWUlhPwuDNKMoMS5QWN5L0MsuRpb+fTxRqOkaFBxRDU+6k+oINpYQBn+5OFUNv2FXkBUjBxd5B0/KUGKLvcEljR8t1Fuf8SuEoY5TJD743ySWvGu4R4CI7maIc=
+	t=1771420529; cv=none; b=LHDjg0FNnya+Boku7z5cTU1YztZMyQE4J6a5BMfB+t5IHujo43VucxzJ7lypPjYZLm5cCCQvCa7YqyCAC1tczwfjf2HMaLx8rXblq2QNr8fLyZRW0v8U6YRbgdcNr+phD+iZM8uM7F7XP9AchfM1y24N9+Yg6t5Aj9DGKPAMcGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771395932; c=relaxed/simple;
-	bh=o1r7HhfL5QuxBT2I/XUy8HayBiB75f2v0Ma9PvVEhxA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=E0diFbZS3+hb5k/VYj5GMnozgWJv+NYyiVa0AjmIPQjn/Y1yOl5U5IcQ7Kd6MJsdv+QAMc3VQB5mRqFBLY0vyZqkNHyTAZ+vWL962/qGB2WXTqh9FN2K7NO6K8FY3IYiEMfy8xaW2y4CXx4Y1HJYONsTx6keGWzxRIGsVNrumYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YxMnrUGq; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GGUQGd/f; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1771420529; c=relaxed/simple;
+	bh=qgqQM3BicoLp//iJlSD25LJvavgVBcGFV4txdNSMKCI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uhiqCOD6aFw+IlbRqe8S/nSXc2NdAxScCkEIkSnVQ1LhY10iR4C0xAQdjS2mua/mVxAHQCnPfrlUwOoW93YEYxDigQ8Ed8UfwUT9x71blTfe385/2nBDgGvaK+QtsPxdSxcczCWbZIHhONLIEHFHcwEpjZkOfoHP+bFeS9AoPM8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BOEIDHfy; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YxMnrUGq";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GGUQGd/f"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61I0teqA1167965
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 06:25:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	zL1ugYee53gWJrOhFqX77A6DTFFCybS1nvXYn0esiQA=; b=YxMnrUGqzcF+qyPj
-	5i+qCK0HuSJHsdn85Cwg1sfv1v2NvGFdHGb55WcCvAdtNI3x3bSc2nOHZlbTtbPT
-	VRK1BC3OEENdmJC6ylAeqdNzDKF1AUQ3y33+EPB1gSGf22/52oHczYQkHbHKBJpp
-	kh4zdm7BBXlbLdG9++8OWv5vZy8Le5ARZATvbghvRWkdOX/wwtz0QxTJdiokjw33
-	casZTJRSBVQTdXy/yxIUKNZq3RACQ+cFfrYQUqXHWWLjtXt/rydg37Xq2qyB8C6z
-	W2g0Rx/I7qKEdk3Ye+niTrk2C2+/0rokv3BXj1l7GWDCr7tImt2K9p5l7AFdaZWD
-	TjKVqg==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cd3ah8k77-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 06:25:30 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2a7d7b87977so58570565ad.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2026 22:25:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BOEIDHfy"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-436333dcc42so543935f8f.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 05:15:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1771395929; x=1772000729; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zL1ugYee53gWJrOhFqX77A6DTFFCybS1nvXYn0esiQA=;
-        b=GGUQGd/fd0KPSJ9Yr/SzorW4zrj4q18ZHMWLBTve9oiXabVemrUuPmQsn058mbFplU
-         JxuuOYSauPBUNVu16Ys1LYoFPawvdklsA0kFSdbkOlTsHEd9gzUmHC069tFA/btw7vpv
-         6Jt2QBWA2Zg5+kYmhDQmf0C64ay8LvS7Ukd8ZFlDIxPVVxy/D1j1dhQVGu/GqCGGwH64
-         PH72s1mCN+ImRLMYu/zOZjK1Dwuj+t+S4g9fVlMohQtbtj0o1IeaMQCrILAK3ni2ZzA3
-         1Z0bVU1Tp/4E1UjNEOPZC9SYQWn02AZV9q+5Cim5FXPVLilplFg+WaQqCpFCfpfMAcqz
-         YsFg==
+        d=gmail.com; s=20230601; t=1771420527; x=1772025327; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bTS3P2DdO9rrBOyQJCIkcrjqmQuomaNDxfVohLWWfaM=;
+        b=BOEIDHfyJAnAb+MmVxlF7oKteh+9yF8AAjiUS1L/zSJBVnmSk1IiyJ0VpslIDNDhIU
+         /pVVl1/CGkRulDOYA0NU9ijlWhoHDsYXPGEmA3QKKd5dYdBtn1itD8aa34PERtHWIgxL
+         cYIgNl5IWS619S5Yu8GK2xH7p4twJW4Q74i/jhNBZSbGCIryeX9RY+kMSPGW5IqajR/c
+         oPesqM00beaWkNfyTF+PsfYm6ggWvlesaQ0nyVnwWeLco8nHvs74nMR05kTAICWluVRK
+         EyatqpJDwEziafERzM6Z3KmYzCqQF9pGttqzvz1p8P4fDh0sVYq63Js6+hfNa9YCk3s2
+         xImA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771395929; x=1772000729;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=zL1ugYee53gWJrOhFqX77A6DTFFCybS1nvXYn0esiQA=;
-        b=ja9KkLGEEDgqfE0tW5Wj4tlNl5opZDtFytfk8i43S3gRE1+850L6Dtodr8FccLQK8l
-         AedN8wLLH9gYZwJHT+A98QR1XPUiDw5mqfxm8Q4iLqS1kx/ODkWH9SJ0+BmIlri7/HMY
-         4CuFaJxJG3hmrGP+mp7QEckN8PI7cokTXK7WmSqpFsnFuEWBSlfSWB3AQ+TIe5YxUpPY
-         7r9ni/FbFLJDsAZ8ipBHnIOBXlKTACt3QrEYXABQcHwWgHFnT9u3WTxdD2Tb8vabdYrI
-         x9GUlEg5OkJ7th48rZpnswpomlQppqXfpI573oWlkquNViyP+M5ZliJ6GQPzmXliqmS8
-         PxKQ==
-X-Gm-Message-State: AOJu0Yy3BhypgXDcPu3h86RsiOORwoeD5kT5VFLpqmazG5BuMX0H8+p4
-	r9Sq55JIy89bKD0rYhRmHXEwK1QDP/iguXc4MYUCfzmdbTBH//Pgtdn0JGrQnItFsW6E0jhGbb2
-	Olh3WyccyE5KQYPBvQoXI5U0S9gg5to5Dkw751dszm55IaGS8XxuWR9t6CVaLWo12gHB/4w==
-X-Gm-Gg: AZuq6aI9fJrLSRM4/Xl3eRoD7pc5WMxITjB0y9RFSeLtrZo1StCKXxh8wmL9EcfGz45
-	97nfwPvnnAiPzPELt0aUnPjZNkq4il6R1bw6hoxJDrP1H7yQolui7SrxQmN43O3JZvQzA1Qmhli
-	nwUkJ3fwgQi+nFKbu0gh1XBzSGlfKJCkYpJvf+KQnDr4oEpKzYlhA3TOHmHIHVM87lItQe+vv0s
-	8nnTcS7av+KPTV2WjOTgh/wFnfJbLjyPjxKdtsmoYM8lndnYnJ572pEtFYAhc+ggSADtslOVTRI
-	HPr4GBW8xoh6KEEVQcpb/DCoBcw8xePIVtbj1xAWsgYq7C9cPQN3NU0FCa6f2Z6Ft56zGc+USIx
-	EZNejoolebZhczzR0SK/Xc2QNwUTWORcy6Y5UvEQce4Xo8Dg=
-X-Received: by 2002:a17:902:f687:b0:2a7:3dbe:353d with SMTP id d9443c01a7336-2ad50fc5f93mr8749425ad.53.1771395929383;
-        Tue, 17 Feb 2026 22:25:29 -0800 (PST)
-X-Received: by 2002:a17:902:f687:b0:2a7:3dbe:353d with SMTP id d9443c01a7336-2ad50fc5f93mr8749175ad.53.1771395928901;
-        Tue, 17 Feb 2026 22:25:28 -0800 (PST)
-Received: from [10.152.200.28] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad1a61cf8asm175683525ad.0.2026.02.17.22.25.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Feb 2026 22:25:28 -0800 (PST)
-Message-ID: <31ca6599-6816-4d73-a766-9daac2383ef9@oss.qualcomm.com>
-Date: Wed, 18 Feb 2026 11:54:33 +0530
+        d=1e100.net; s=20230601; t=1771420527; x=1772025327;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bTS3P2DdO9rrBOyQJCIkcrjqmQuomaNDxfVohLWWfaM=;
+        b=w21CP3oYtTzJuR2iZauswdBwKiHROrl/hxqcZoHT3soFnsMYSAZM6sOuHmKDXgY+bq
+         wKZSKlCYF8FqA0leq2YJ2en1I9+hA3CdBwcCHD7XBYaM5tuEua7rTdYuanmKXxeHXbE3
+         25wt9LfjjZUrh6Q558vQyoVbfZIqpXqpzmELlFyJipYTXGLqrNUnQ8J5Ik8ZEL8S0c7b
+         OKHQoNv8Av1nAHVXTSnc7/q0YmV0sSohhFtZpofeq8JG7psXDwDuzraiB3ccy/uFo1T3
+         g8k5G55tolyk0Ft8y0nu/w2GLCPq2eIsz7WmJCPy5gRuF2IoY1eOW6IzQwtw86CxQtKI
+         f0aQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW0mtiv2LI6aBCOO/CbriJcTtaG6ggWkosAoAQihBAOLftnG57C+lwZmaokStdMrovN9tguEjZKSJr07sqHbA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyojR7N3CKcPn3LuT7J4b2bnFV1lwz4s0Cx23KNExAPgd+jzuly
+	urvcIfdDk/FRHSROIEaWBbgky3YU7AyN9Iq6QgPnEtcFq6FLNbZZ3K8s
+X-Gm-Gg: AZuq6aLn8v7KIDRl35J98n3PkB5TFV8NqB52GASRQBPALdKzn8XoWaThe0J0u6OgFi4
+	lHNIFPGINh8H/iNU1DoZFxZG5eya5xyyWBcFZp2/Y7G5eA38/Pe8U/LYsgWH5/61aR5ZuRYJnFL
+	BQclxdOgQ86Wl4MS2GOI/pjmZ01fMwPxgFPZ1bdhEq5aDjcL7ZXfasjULQnyZelxXB59lkWHOT1
+	+DnbxN6u9RoqaY/g/GI1fEOo1ju5xHeFfHTVdwZYiD77dhtFkswDglbclGUYsacs0ahDRSsnaM5
+	RW5oohtIByb2hoJEp+V+3pMVUZIK6HNLpNdK5WQAA8CwprUbtEXx4U+9+/FKZzVn/nmrbdXSZKT
+	VpeKTtgr8RGKieWrL/EN3ehKQcXxASaKkhSHWO1vosd/zzPj0XOYwUz+O8nGJC3pkrAAE4z1N6h
+	2gnN5sFUnUejsgBowrinOlGHcRwGF1kJh9AwvupVtigkAXUXTE0pkhhojbtNIC2EWrTmIfUCHb+
+	WOZlidtZfx/bn2EIIlIp86SmiCo9EU=
+X-Received: by 2002:a05:600c:6912:b0:477:aed0:f402 with SMTP id 5b1f17b1804b1-48371067b29mr185755875e9.8.1771420526501;
+        Wed, 18 Feb 2026 05:15:26 -0800 (PST)
+Received: from thomas-precision3591.paris.inria.fr (wifi-pro-82-204.paris.inria.fr. [128.93.82.204])
+        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-43796acffcesm38768246f8f.37.2026.02.18.05.15.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Feb 2026 05:15:26 -0800 (PST)
+From: Thomas Fourier <fourier.thomas@gmail.com>
+To: 
+Cc: Thomas Fourier <fourier.thomas@gmail.com>,
+	stable@vger.kernel.org,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Simon Horman <horms@kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH net] wifi: brcmsmac: Fix dma_free_coherent() size
+Date: Wed, 18 Feb 2026 14:07:37 +0100
+Message-ID: <20260218130741.46566-3-fourier.thomas@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next v3] wifi: mac80211: Fix AAD/Nonce
- computation for management frames with MLO
-To: Chien Wong <m@xv97.com>, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, quic_drohan@quicinc.com
-References: <DGCW7TTCQC89.2G77C3IBE4SRC@xv97.com>
-Content-Language: en-US
-From: Sai Pratyusha Magam <sai.magam@oss.qualcomm.com>
-In-Reply-To: <DGCW7TTCQC89.2G77C3IBE4SRC@xv97.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=Zo3g6t7G c=1 sm=1 tr=0 ts=69955b5a cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22
- a=1_aVZONaAAAA:8 a=DYlwmoq1SwP4PbYDfowA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22 a=AoRcCS2iqqjlCIbQeai0:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjE4MDA1NCBTYWx0ZWRfX3FzoVV3Xa+8o
- zQSgKnPJjoSW0kGE/g8bsWBXrRUZ4jVXsDTpR6pgPJKuHfmuELZjxG3zybI2/2MyMf50rxAw+fU
- Tcf6S4ogiInyQ/lMjY2TPSh52IhtYz1eTQFoSbJwEdGDbq3jXIpQrmcvgksOXU85fJ37n7JYinR
- T8c+C/PGSP/KOatS43mESDqNSVjmU3Bf5C9hpnRVDlGziT8mwpnxTySOCAd9p2lydR+nMEgpuuJ
- 4DtVuA2iutyjF4J6aTYP3SRDuaN2Zb2Bb7OHiiV8V65hyXPhTpmhGfkAnW14tdWzIMnzL+hoXzB
- jtgzQNygjA+jJCYJt4Ge1AwAp/P7rvvNvKhFJoG0mi/HVpHC40RqBFZ1kbQK5XjrQuVd9j0hmQs
- ipYTW/SwMC2SZ0aE1H8CekaltblgpBiF74bvjFULjS0ftd4nYn0daBeWx5JeVOWsVWDhf7F3r34
- /tXJa1czhr/sX8HS93Q==
-X-Proofpoint-ORIG-GUID: N71bS2APHiT6CKtZBlG7m-kzP3QSZwA2
-X-Proofpoint-GUID: N71bS2APHiT6CKtZBlG7m-kzP3QSZwA2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-17_04,2026-02-16_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 suspectscore=0 phishscore=0 clxscore=1015
- adultscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2601150000 definitions=main-2602180054
 
+dma_alloc_consistent() may change the size to align it. The new size is
+saved in alloced.
 
+Change the free size to match the allocation size.
 
-On 2/12/2026 3:28 PM, Chien Wong wrote:
-Hi Chien,
+Fixes: 5b435de0d786 ("net: wireless: add brcm80211 drivers")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Hey,
-> While adding MLO decryption feature to Wireshark, I noticed this issue that
-> mac80211_hwsim handles MLO management frames encryption incorrectly.
-> It seems that wlantest can also verify the correctness of the encryption?
-That's right, wlantest can decrypt protected management and data frames
-
-./wlantest -r eht_mld_sae_two_links.hwsim0.pcapng -T <file containing TK 
-without spaces> -n decrypted_sniffer.pcapng
-
-> However, I couldn't get it to work—wlantest keeps reporting 'No PTK known
-> to decrypt the frame', 
-I gave a try to pass over-the-air capture of one run without this patch 
-and another run with this patch. Without the patch, wlantest would fail 
-to decrypt the protected deauthentication frame. Yes it throws an error 
-- No PTK known to decrypt the frame. This is actually a decryption failure.
-
-In the second run with the patch, decryption was successful.
-
-but at least I verified using Wireshark that the
-> encryption of unicast data frames and management frames in MLO is correct
-> with the patch.
-> 
-Thanks for the info. As far as I know, Wireshark had an issue in 
-decryption of data frames with MLO - I suppose that is because it needs 
-to use the MLD addresses for AAD computation. Good to know that the next 
-released version of wireshark will have this fixed.
-
-> BTW, the changes to Wireshark are already in the upstream repository. If you
-> want to use it for verification, you need to compile it yourself because
-> the currently released version does not yet include these changes.
-> 
-> Tested on base commit 05f7e89ab9731565d8a62e3b5d1ec206485eeb0(v6.19)
-> Tested case eht_mld_sae_two_link from hostapd
-> 
-> Tested-by: Chien Wong <m@xv97.com>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
+index c739bf7463b3..13d0d6b68238 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
+@@ -483,7 +483,7 @@ static void *dma_ringalloc(struct dma_info *di, u32 boundary, uint size,
+ 	if (((desc_strtaddr + size - 1) & boundary) != (desc_strtaddr
+ 							& boundary)) {
+ 		*alignbits = dma_align_sizetobits(size);
+-		dma_free_coherent(di->dmadev, size, va, *descpa);
++		dma_free_coherent(di->dmadev, *alloced, va, *descpa);
+ 		va = dma_alloc_consistent(di, size, *alignbits,
+ 			alloced, descpa);
+ 	}
+-- 
+2.43.0
 
