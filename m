@@ -1,128 +1,138 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from omta038.useast.a.cloudfilter.net (omta038.useast.a.cloudfilter.net [44.202.169.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783521448D5;
-	Thu, 19 Feb 2026 00:30:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2DC1F419A
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2026 00:39:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771461053; cv=none; b=SOKOK8XsX7S+tnww42moCeacmVY9vbWuoIJCrvC0Qe47i/SjGXYbYapG2zUjDKy6niBmVy6DbtnNO4rYXpBAVygMZe/ecbWwbvteeiJygZjEGtYn3WQWPEvAbWBxm9SS3/cTh+oMVPLcugOlmMIJ2QjkQrhFeaVKx9TvNHCar+c=
+	t=1771461579; cv=none; b=glP9KDChQcIWiYu/yRl+Zjcmxy5MMYFc8TpWPRASDq0CYKaxzz+HWbxCqePi1+fLY5TIL4czPp+uustFY9DoYRgxxTTKS085ZDv85nf+9405AbHYyecZZu+Dg367XLyO0N2Bdy6sG7OWzRBFn4ht4EBOZnmlVYdHy0JHhRSTZVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771461053; c=relaxed/simple;
-	bh=K63sE+heA6dIPkSHQF8iWzG6C+zCfl+e50if7LFWoLk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hwTmGB/PFR38s2Oa2T+rrLe9bEdB15/uAQWWLvUlF4lkfzPjaXZDGxSxwqSUCqa0LlEUjqYjggM9a4VwHw00/Op2iuF7Oxupjor8ItsV5exnmBmjiQZvR0YVIMsB1KA2uHFf2yzHwDdNIeu/dMr2agQVRod2mO85xTKvMH7rQ8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=MAetSQS9; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1771461579; c=relaxed/simple;
+	bh=z6syF4LidYTHWoLqxLqQLWmNiefVyfFzZH9TK+S8Qhk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ob0kwwfgLYkmZ9Jv1s7M4X5OqJVjG/PZisEiQSvE5FBdJRVy4ULMRgffY8ElJtA5qfeofFVwRbMsWn+wvg49qEmewoDHcpz77QswKOxmzTVQDIJ6KDiWAKcrp+NCa63xZTPyrozpWFnLyShZ+p8tJjw1xPbshJ2WDAj4dwnzGec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=TFvzcemT; arc=none smtp.client-ip=44.202.169.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="MAetSQS9"
-X-UUID: 374391ba0d2a11f1b7fc4fdb8733b2bc-20260219
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=rAzH74nBcBGKigZp9kU3P2C14pIvF/kRN1BygaisLuw=;
-	b=MAetSQS9W9gb/rtoBbqZ8DSRywBg7MFtUYllKDfiJ7l56ojanu3q54RRliHf0uEDCrbXMVQsFYn3maG7fXyDeIy0mRk3LaMRp4Ow6ZjU43MLpyDId34HWOpp8ucoMM+OfDVCxuNskPypxIAMjoFbXaishGAdWHAVDthwUVWgaTA=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.11,REQID:5cc62dc7-8699-4d20-a823-bf0309910dd2,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:89c9d04,CLOUDID:a5c1645b-a957-4259-bcca-d3af718d7034,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 374391ba0d2a11f1b7fc4fdb8733b2bc-20260219
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
-	(envelope-from <ryder.lee@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 128733101; Thu, 19 Feb 2026 08:30:39 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 19 Feb 2026 08:30:37 +0800
-Received: from mussdccf250.eus.mediatek.inc (10.73.250.250) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Thu, 19 Feb 2026 08:30:36 +0800
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>, Rob Herring <robh@kernel.org>
-CC: <devicetree@vger.kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Allen
- Ye <allen.ye@mediatek.com>
-Subject: [PATCH v8 3/3] dt-bindings: net: wireless: mt76: clarify backoff limit usage
-Date: Wed, 18 Feb 2026 16:30:29 -0800
-Message-ID: <87acf1a8ab5642298c67915b3afc41e624b312a7.1771205424.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1771205424.git.ryder.lee@mediatek.com>
-References: <8fa8ec500b3d4de7b1966c6887f1dfbe5c46a54c.1771205424.git.ryder.lee@mediatek.com>
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="TFvzcemT"
+Received: from eig-obgw-5004b.ext.cloudfilter.net ([10.0.29.208])
+	by cmsmtp with ESMTPS
+	id soudv8Y87Skcfss4qvHxs6; Thu, 19 Feb 2026 00:39:32 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id ss4pvFpadqfpWss4pvhlH7; Thu, 19 Feb 2026 00:39:31 +0000
+X-Authority-Analysis: v=2.4 cv=A55sP7WG c=1 sm=1 tr=0 ts=69965bc4
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=k5Y5iPg+dmTXVWgYE/XtfQ==:17
+ a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=7T7KSl7uo7wA:10 a=VwQbUJbxAAAA:8
+ a=9YR8UghG2Mux9z_Xfx4A:9 a=QEXdDO2ut3YA:10 a=2aFnImwKRvkU0tJ3nQRT:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=+/cI9yYaTzTcqdQ58iWogswfNeVO0Pn3cSXKnRlVUwg=; b=TFvzcemTtvfbWw5mv7eH4IFz4W
+	/gVUCTw9e07wPvK/Q+SoU5UMs0ZlpWO/rCEEPaXcbjBiNViNdd6S0/SAOQMNPfq3iqC7tUQC07wW0
+	Zf1HERNpDc4C9NyNtbpUFxkU9bypsTUphtjFlhTIAkLYjOSi8RnzDO48DiTZmfNDVYBtvDETrz+JM
+	g1qb3NVVpMgApSCaaJI8KnkCLWvWI22RgecPTwSnuOqtwO5clQt/Zhhygyd3JTwRl6Gm7liyqA5J/
+	Ae6H17Vj4Fc8HgUoh934JB6KT0K//0LOZWXjUPNa7m+soVVf66Ki5p2w5TJS98DcB7pkcKajE/jRt
+	ueo11Deg==;
+Received: from [177.238.16.13] (port=37088 helo=[192.168.0.21])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.99.1)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1vss4o-00000003gCK-41Zb;
+	Wed, 18 Feb 2026 18:39:31 -0600
+Message-ID: <6305fbc7-8210-4f4d-b719-30ba038611af@embeddedor.com>
+Date: Wed, 18 Feb 2026 18:38:41 +0900
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
-Message-ID: <20260219003029.1gyhe801_uxLEDKCO5fCK6JT9mHokqvcrPCJ02C6OP0@z>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2][next] wifi: ath6kl: wmi: Avoid
+ -Wflex-array-member-not-at-end warning
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ Kalle Valo <quic_kvalo@quicinc.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-hardening@vger.kernel.org
+References: <aZP4RI-uN2001cBh@kspp>
+ <d2a02b4c-5f69-4f5e-bc0e-428b64e99d36@oss.qualcomm.com>
+Content-Language: en-US
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <d2a02b4c-5f69-4f5e-bc0e-428b64e99d36@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 177.238.16.13
+X-Source-L: No
+X-Exim-ID: 1vss4o-00000003gCK-41Zb
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.0.21]) [177.238.16.13]:37088
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfFyGbEr6S8eeDlMVCMumI1KTmm8S+8gMC2dK2Z9li+lomd9XWHgqenvINFn10BUee1eUaNvM24jOXQ6i1moPWaAcQfLb0T2LPXAVnS1MMJCjwd69xVd+
+ 03drLjjeL3LAXu93YNoxCyXZ4250uBBWmdBnzTvSrwAiL9USAt3EmMfwPlziZqeaPtG+vWxSElhwcjJoPZ+O4q3J59fvO0Bpjvp5MAAM2L7a5XinM5tFdFdD
 
-Clarify the usage of path backoff limit properties in mt76 binding.
-Add explicit documentation for old generation (mt7915, mt7916, mt7981,
-mt7986) and new generation (mt7990, mt7992, mt7996) devices, including
-the difference in beamforming and non-beamforming entries.
 
-Rephrase the paths-ru/paths-ru-bf description to make them more precise.
+>> @@ -1652,7 +1656,7 @@ struct roam_ctrl_cmd {
+>>   	union {
+>>   		u8 bssid[ETH_ALEN]; /* WMI_FORCE_ROAM */
+>>   		u8 roam_mode; /* WMI_SET_ROAM_MODE */
+>> -		struct bss_bias_info bss; /* WMI_SET_HOST_BIAS */
+>> +		struct bss_bias_info_hdr bss; /* WMI_SET_HOST_BIAS */
+>>   		struct low_rssi_scan_params params; /* WMI_SET_LRSSI_SCAN_PARAMS
+>>   						     */
+>>   	} __packed info;
+> 
+> That bss member appears to be completely unused
+> (bssid, roam_mode, and params are used)
+> 
+> So IMO the better solution is to remove bss from the union.
+> And I think struct bss_bias and struct bss_bias_info can also be removed.
 
-Co-developed-by: Allen Ye <allen.ye@mediatek.com>
-Signed-off-by: Allen Ye <allen.ye@mediatek.com>
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
-v4:
-- revise commit message
-- use PCI id as the compatible string to replace "connac2/3"
+Even if they're not used, are you sure they aren't there simply	
+to define the memory layout of struct roam_ctrl_cmd?
 
-v5: fix missing starting space in comment(comments)
-v6: separate commits with their own separate rationale
-v7: add missing dts mailing list and maintainers
----
- .../bindings/net/wireless/mediatek,mt76.yaml     | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+As Kees commented[1], struct roam_ctrl_cmd appears to be a
+hardware interface... See below:
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-index 72cc30251..20b868f7d 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-@@ -257,6 +257,14 @@ properties:
-                       followed by 10 power limit values. The order of the
-                       channel resource unit settings is RU26, RU52, RU106,
-                       RU242/SU20, RU484/SU40, RU996/SU80 and RU2x996/SU160.
-+                      - For mt7981/mt7986/mt7915/mt7916
-+                        - Beamforming entries for BW20~BW160 and OFDM do not
-+                          include 1T1ss.
-+                        - When 1T1ss is not used, it should be filled with 0.
-+                      - For mt7996/mt7992/mt7990
-+                        - Beamforming entries for BW20~BW160 and RU include
-+                          1T1ss, but OFDM does not include 1T1ss.
-+                        - 1T1ss is taken into account, so no need to fill with 0.
-                     minItems: 1
-                     maxItems: 7
-                     items:
-@@ -275,6 +283,14 @@ properties:
-                       followed by 10 power limit values. The order of the
-                       channel resource unit settings is RU26, RU52, RU106,
-                       RU242/SU20, RU484/SU40, RU996/SU80 and RU2x996/SU160.
-+                      - For mt7981/mt7986/mt7915/mt7916
-+                        - Beamforming entries for BW20~BW160 and OFDM do not
-+                          include 1T1ss.
-+                        - When 1T1ss is not used, it should be filled with 0.
-+                      - For mt7996/mt7992/mt7990
-+                        - Beamforming entries for BW20~BW160 and RU include
-+                          1T1ss, but OFDM does not include 1T1ss.
-+                        - 1T1ss is taken into account, so no need to fill with 0.
-                     minItems: 1
-                     maxItems: 7
-                     items:
--- 
-2.45.2
+drivers/net/wireless/ath/ath6kl/wmi.c:
+  755 /*
+  756  * Mechanism to modify the roaming behavior in the firmware. The lower rssi
+  757  * at which the station has to roam can be passed with
+  758  * WMI_SET_LRSSI_SCAN_PARAMS. Subtract 96 from RSSI to get the signal level
+  759  * in dBm.
+  760  */
+  761 int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi)
+  762 {
+  763         struct sk_buff *skb;
+  764         struct roam_ctrl_cmd *cmd;
+  765
+  766         skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
+  767         if (!skb)
+  768                 return -ENOMEM;
+  769
+  770         cmd = (struct roam_ctrl_cmd *) skb->data;
+...
+}
+
+Thanks
+-Gustavo
+
+[1] https://lore.kernel.org/linux-hardening/202601151627.99DFE54@keescook/
 
