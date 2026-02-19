@@ -1,138 +1,331 @@
-Received: from omta038.useast.a.cloudfilter.net (omta038.useast.a.cloudfilter.net [44.202.169.37])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B2DC1F419A
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2026 00:39:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153461E1DEC
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2026 00:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771461579; cv=none; b=glP9KDChQcIWiYu/yRl+Zjcmxy5MMYFc8TpWPRASDq0CYKaxzz+HWbxCqePi1+fLY5TIL4czPp+uustFY9DoYRgxxTTKS085ZDv85nf+9405AbHYyecZZu+Dg367XLyO0N2Bdy6sG7OWzRBFn4ht4EBOZnmlVYdHy0JHhRSTZVg=
+	t=1771461613; cv=none; b=mEUZ5Otqtoajc7GgKSZX05Zh1Z5DXCrHGrC02Ilmh5hHaUhVUDqQhNFJuzgSSNvBpCQkfu6nKj/cNeKwJNOa20fkdH1tlBV40v9tly+vLmc6p8zkeqYkkUJ+0XKkUFvt15BUyThWddo1kIYUM6dJnunJTIjYEc2FHEZ2Ceqpg1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771461579; c=relaxed/simple;
-	bh=z6syF4LidYTHWoLqxLqQLWmNiefVyfFzZH9TK+S8Qhk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ob0kwwfgLYkmZ9Jv1s7M4X5OqJVjG/PZisEiQSvE5FBdJRVy4ULMRgffY8ElJtA5qfeofFVwRbMsWn+wvg49qEmewoDHcpz77QswKOxmzTVQDIJ6KDiWAKcrp+NCa63xZTPyrozpWFnLyShZ+p8tJjw1xPbshJ2WDAj4dwnzGec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=TFvzcemT; arc=none smtp.client-ip=44.202.169.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="TFvzcemT"
-Received: from eig-obgw-5004b.ext.cloudfilter.net ([10.0.29.208])
-	by cmsmtp with ESMTPS
-	id soudv8Y87Skcfss4qvHxs6; Thu, 19 Feb 2026 00:39:32 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id ss4pvFpadqfpWss4pvhlH7; Thu, 19 Feb 2026 00:39:31 +0000
-X-Authority-Analysis: v=2.4 cv=A55sP7WG c=1 sm=1 tr=0 ts=69965bc4
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=k5Y5iPg+dmTXVWgYE/XtfQ==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=7T7KSl7uo7wA:10 a=VwQbUJbxAAAA:8
- a=9YR8UghG2Mux9z_Xfx4A:9 a=QEXdDO2ut3YA:10 a=2aFnImwKRvkU0tJ3nQRT:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=+/cI9yYaTzTcqdQ58iWogswfNeVO0Pn3cSXKnRlVUwg=; b=TFvzcemTtvfbWw5mv7eH4IFz4W
-	/gVUCTw9e07wPvK/Q+SoU5UMs0ZlpWO/rCEEPaXcbjBiNViNdd6S0/SAOQMNPfq3iqC7tUQC07wW0
-	Zf1HERNpDc4C9NyNtbpUFxkU9bypsTUphtjFlhTIAkLYjOSi8RnzDO48DiTZmfNDVYBtvDETrz+JM
-	g1qb3NVVpMgApSCaaJI8KnkCLWvWI22RgecPTwSnuOqtwO5clQt/Zhhygyd3JTwRl6Gm7liyqA5J/
-	Ae6H17Vj4Fc8HgUoh934JB6KT0K//0LOZWXjUPNa7m+soVVf66Ki5p2w5TJS98DcB7pkcKajE/jRt
-	ueo11Deg==;
-Received: from [177.238.16.13] (port=37088 helo=[192.168.0.21])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.99.1)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1vss4o-00000003gCK-41Zb;
-	Wed, 18 Feb 2026 18:39:31 -0600
-Message-ID: <6305fbc7-8210-4f4d-b719-30ba038611af@embeddedor.com>
-Date: Wed, 18 Feb 2026 18:38:41 +0900
+	s=arc-20240116; t=1771461613; c=relaxed/simple;
+	bh=J43cW3ijboyZTthb5E5upeCo/Bol3GYo2/URq0bCw4k=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ItfGG6TCrWhGcenooMHujbUwx0Q0LkXTb62gz4Vm49DWLiNlPbXzAckyFf4CysnO/SD2AjWM5XbQDip+2LSzPvkRgEJa5YZaR6Z6ILKvouzkLaw7PW56PKLAZ3u6fyDq75bMRHt+89GA7ccvCyJF+K+dyUT55sBXvL96XTZjvC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-413d8b8e98aso172693fac.3
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2026 16:40:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771461611; x=1772066411;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LH4S+1XsJPMJRsAGgPmW1IMg5PL/3wiKYj9tUAQ4GC4=;
+        b=eh7LpfeocGWQ3jcisStTJPMJs7DrspvpqkQ3ff/g1ahfW+5Au+f/xtZ/7TRUJ3XeLH
+         6S5qaBxVGtDVMchz7h7Qct7Dz1vQcsnw0gV43oWo0QtbYSDtaMQiZJi8LnKwdq94owpQ
+         rl276HUA3177yTdeSE2O+9tNlL98wXcJYYcJPGl901nvjbGFG+gCwVXo2y6AVVHH57JT
+         Tw/vGBfHHHNQrmquCJkqFPqypxTSUFUgZGFkG9LbQ+h1MWBcSL18sZYTIqmkOEfRk1z+
+         fKLRvbEvu0VRj0EqFuDqrl1PQskuWJWhbtt0IkRm2cnzJzVADOZL7SuJcUQKXI/f5kWG
+         nwaQ==
+X-Gm-Message-State: AOJu0YwThqyNF8H46+E0psJX0DkY70wjcaHwQ8D5djr7iI05I1qqeAZh
+	ioLCdWpy2q5ey1mTOOiU+Fzsu4cDGckZvBvtwzBrY2kQ3jLxwFV7Fiff
+X-Gm-Gg: AZuq6aIjpXWrL3mRkLwxGucAN7jReL3+IU2omZrLxe34NKX0NzmuSXMtQAO58T/EEsX
+	WqFZn2rH9elZ5Z9CYqSwjMA/3TgKh50SdkK4GdP2x4+eClTa9rQhTBeLI7vAW590iYafAcQD3n0
+	RWDPUUPEwamwtWXqUZWiMLEmXhheU7hGihSeWR12q9w72vzpCGfsUv9yiR5+hRxu1tREW9N/++h
+	OjiTyHu4UuqYXVwfRwkK3QRxdo0+Ce18h8FpsrIFYwwKfreoFH4ZLUVWo6ANXTas8H9uJPpIKOP
+	7fPR1i3crBoiddMoYGL/1RMZBNkwHS7cCviWTugYl5UJ57FQWXv1q6bL4xdkPKBJwKPE2P2SQRo
+	3QazdqeQfXkbtL8nDLrbe0ABrFhsTrz3Ty8PViH1snYugv/resdpf+w7zkEHtUTm+LxkNXSXEbI
+	IZiD2JZ0xZb5IKZIOoW5Vb44ucVlwFJGbhmsXWdV4XMojhYLg=
+X-Received: by 2002:a05:6870:2e95:b0:40a:5795:153c with SMTP id 586e51a60fabf-40ef3ece78cmr12010225fac.34.1771461610736;
+        Wed, 18 Feb 2026 16:40:10 -0800 (PST)
+Received: from sean-HP-EliteBook-830-G6.lan ([207.191.35.252])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-40eaee45d12sm23477659fac.1.2026.02.18.16.40.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Feb 2026 16:40:10 -0800 (PST)
+From: sean.wang@kernel.org
+To: nbd@nbd.name,
+	lorenzo.bianconi@redhat.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Sean Wang <sean.wang@mediatek.com>
+Subject: [PATCH 01/11] wifi: mt76: connac: use is_connac2() to replace is_mt7921() checks
+Date: Wed, 18 Feb 2026 18:39:57 -0600
+Message-ID: <20260219004007.19733-1-sean.wang@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2][next] wifi: ath6kl: wmi: Avoid
- -Wflex-array-member-not-at-end warning
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
- "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- Kalle Valo <quic_kvalo@quicinc.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-hardening@vger.kernel.org
-References: <aZP4RI-uN2001cBh@kspp>
- <d2a02b4c-5f69-4f5e-bc0e-428b64e99d36@oss.qualcomm.com>
-Content-Language: en-US
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <d2a02b4c-5f69-4f5e-bc0e-428b64e99d36@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 177.238.16.13
-X-Source-L: No
-X-Exim-ID: 1vss4o-00000003gCK-41Zb
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.0.21]) [177.238.16.13]:37088
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfFyGbEr6S8eeDlMVCMumI1KTmm8S+8gMC2dK2Z9li+lomd9XWHgqenvINFn10BUee1eUaNvM24jOXQ6i1moPWaAcQfLb0T2LPXAVnS1MMJCjwd69xVd+
- 03drLjjeL3LAXu93YNoxCyXZ4250uBBWmdBnzTvSrwAiL9USAt3EmMfwPlziZqeaPtG+vWxSElhwcjJoPZ+O4q3J59fvO0Bpjvp5MAAM2L7a5XinM5tFdFdD
+Content-Transfer-Encoding: 8bit
 
+From: Sean Wang <sean.wang@mediatek.com>
 
->> @@ -1652,7 +1656,7 @@ struct roam_ctrl_cmd {
->>   	union {
->>   		u8 bssid[ETH_ALEN]; /* WMI_FORCE_ROAM */
->>   		u8 roam_mode; /* WMI_SET_ROAM_MODE */
->> -		struct bss_bias_info bss; /* WMI_SET_HOST_BIAS */
->> +		struct bss_bias_info_hdr bss; /* WMI_SET_HOST_BIAS */
->>   		struct low_rssi_scan_params params; /* WMI_SET_LRSSI_SCAN_PARAMS
->>   						     */
->>   	} __packed info;
-> 
-> That bss member appears to be completely unused
-> (bssid, roam_mode, and params are used)
-> 
-> So IMO the better solution is to remove bss from the union.
-> And I think struct bss_bias and struct bss_bias_info can also be removed.
+Unify all per-chip conditionals under the new is_connac2() helper. This
+avoids confusion caused by the previous is_mt7921() check, which
+implicitly covered multiple connac2 chipsets and no longer reflected its
+actual scope. This is a clean-up only change with no functional impact.
 
-Even if they're not used, are you sure they aren't there simply	
-to define the memory layout of struct roam_ctrl_cmd?
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+---
+ .../net/wireless/mediatek/mt76/mt76_connac.h  |  2 +-
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  | 16 ++++++------
+ .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 26 +++++++++----------
+ .../wireless/mediatek/mt76/mt76_connac_mcu.h  |  2 +-
+ .../net/wireless/mediatek/mt76/mt792x_core.c  |  2 +-
+ .../net/wireless/mediatek/mt76/mt792x_dma.c   |  2 +-
+ 6 files changed, 25 insertions(+), 25 deletions(-)
 
-As Kees commented[1], struct roam_ctrl_cmd appears to be a
-hardware interface... See below:
-
-drivers/net/wireless/ath/ath6kl/wmi.c:
-  755 /*
-  756  * Mechanism to modify the roaming behavior in the firmware. The lower rssi
-  757  * at which the station has to roam can be passed with
-  758  * WMI_SET_LRSSI_SCAN_PARAMS. Subtract 96 from RSSI to get the signal level
-  759  * in dBm.
-  760  */
-  761 int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi)
-  762 {
-  763         struct sk_buff *skb;
-  764         struct roam_ctrl_cmd *cmd;
-  765
-  766         skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-  767         if (!skb)
-  768                 return -ENOMEM;
-  769
-  770         cmd = (struct roam_ctrl_cmd *) skb->data;
-...
-}
-
-Thanks
--Gustavo
-
-[1] https://lore.kernel.org/linux-hardening/202601151627.99DFE54@keescook/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac.h b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+index 813d61bffc2c..02bea67d37c3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac.h
+@@ -187,7 +187,7 @@ static inline bool is_mt7922(struct mt76_dev *dev)
+ 	return mt76_chip(dev) == 0x7922;
+ }
+ 
+-static inline bool is_mt7921(struct mt76_dev *dev)
++static inline bool is_connac2(struct mt76_dev *dev)
+ {
+ 	return mt76_chip(dev) == 0x7961 || is_mt7922(dev) || is_mt7920(dev);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index 4ef44514d48d..e76f6e28b7f0 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -173,7 +173,7 @@ void mt76_connac_write_hw_txp(struct mt76_dev *dev,
+ 
+ 	txp->msdu_id[0] = cpu_to_le16(id | MT_MSDU_ID_VALID);
+ 
+-	if (is_mt7663(dev) || is_mt7921(dev) || is_mt7925(dev))
++	if (is_mt7663(dev) || is_connac2(dev) || is_mt7925(dev))
+ 		last_mask = MT_TXD_LEN_LAST;
+ 	else
+ 		last_mask = MT_TXD_LEN_AMSDU_LAST |
+@@ -217,7 +217,7 @@ mt76_connac_txp_skb_unmap_hw(struct mt76_dev *dev,
+ 	u32 last_mask;
+ 	int i;
+ 
+-	if (is_mt7663(dev) || is_mt7921(dev) || is_mt7925(dev))
++	if (is_mt7663(dev) || is_connac2(dev) || is_mt7925(dev))
+ 		last_mask = MT_TXD_LEN_LAST;
+ 	else
+ 		last_mask = MT_TXD_LEN_MSDU_LAST;
+@@ -309,7 +309,7 @@ u16 mt76_connac2_mac_tx_rate_val(struct mt76_phy *mphy,
+ 	chandef = mvif->ctx ? &mvif->ctx->def : &mphy->chandef;
+ 	band = chandef->chan->band;
+ 
+-	if (is_mt7921(mphy->dev)) {
++	if (is_connac2(mphy->dev)) {
+ 		rateidx = ffs(conf->basic_rates) - 1;
+ 		goto legacy;
+ 	}
+@@ -547,7 +547,7 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 	val = MT_TXD1_LONG_FORMAT |
+ 	      FIELD_PREP(MT_TXD1_WLAN_IDX, wcid->idx) |
+ 	      FIELD_PREP(MT_TXD1_OWN_MAC, omac_idx);
+-	if (!is_mt7921(dev))
++	if (!is_connac2(dev))
+ 		val |= MT_TXD1_VTA;
+ 	if (phy_idx || band_idx)
+ 		val |= MT_TXD1_TGID;
+@@ -556,7 +556,7 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 	txwi[2] = 0;
+ 
+ 	val = FIELD_PREP(MT_TXD3_REM_TX_COUNT, 15);
+-	if (!is_mt7921(dev))
++	if (!is_connac2(dev))
+ 		val |= MT_TXD3_SW_POWER_MGMT;
+ 	if (key)
+ 		val |= MT_TXD3_PROTECT_FRAME;
+@@ -598,7 +598,7 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 		txwi[6] |= cpu_to_le32(val);
+ 		txwi[3] |= cpu_to_le32(MT_TXD3_BA_DISABLE);
+ 
+-		if (!is_mt7921(dev)) {
++		if (!is_connac2(dev)) {
+ 			u8 spe_idx = mt76_connac_spe_idx(mphy->antenna_mask);
+ 
+ 			if (!spe_idx)
+@@ -830,7 +830,7 @@ mt76_connac2_mac_decode_he_mu_radiotap(struct mt76_dev *dev, struct sk_buff *skb
+ 	};
+ 	struct ieee80211_radiotap_he_mu *he_mu;
+ 
+-	if (is_mt7921(dev)) {
++	if (is_connac2(dev)) {
+ 		mu_known.flags1 |= HE_BITS(MU_FLAGS1_SIG_B_COMP_KNOWN);
+ 		mu_known.flags2 |= HE_BITS(MU_FLAGS2_PUNC_FROM_SIG_A_BW_KNOWN);
+ 	}
+@@ -1046,7 +1046,7 @@ int mt76_connac2_mac_fill_rx_rate(struct mt76_dev *dev,
+ 		stbc = FIELD_GET(MT_PRXV_HT_STBC, v0);
+ 		gi = FIELD_GET(MT_PRXV_HT_SGI, v0);
+ 		*mode = FIELD_GET(MT_PRXV_TX_MODE, v0);
+-		if (is_mt7921(dev))
++		if (is_connac2(dev))
+ 			dcm = !!(idx & MT_PRXV_TX_DCM);
+ 		else
+ 			dcm = FIELD_GET(MT_PRXV_DCM, v0);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 3f583e2a1dc1..d7fbf3454bb8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -65,7 +65,7 @@ int mt76_connac_mcu_init_download(struct mt76_dev *dev, u32 addr, u32 len,
+ 	int cmd;
+ 
+ 	if ((!is_connac_v1(dev) && addr == MCU_PATCH_ADDRESS) ||
+-	    (is_mt7921(dev) && addr == 0x900000) ||
++	    (is_connac2(dev) && addr == 0x900000) ||
+ 	    (is_mt7925(dev) && (addr == 0x900000 || addr == 0xe0002800)) ||
+ 	    (is_mt799x(dev) && addr == 0x900000))
+ 		cmd = MCU_CMD(PATCH_START_REQ);
+@@ -402,7 +402,7 @@ void mt76_connac_mcu_sta_basic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
+-		if (vif->p2p && !is_mt7921(dev))
++		if (vif->p2p && !is_connac2(dev))
+ 			conn_type = CONNECTION_P2P_GC;
+ 		else
+ 			conn_type = CONNECTION_INFRA_STA;
+@@ -410,7 +410,7 @@ void mt76_connac_mcu_sta_basic_tlv(struct mt76_dev *dev, struct sk_buff *skb,
+ 		basic->aid = cpu_to_le16(link_sta->sta->aid);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		if (vif->p2p && !is_mt7921(dev))
++		if (vif->p2p && !is_connac2(dev))
+ 			conn_type = CONNECTION_P2P_GO;
+ 		else
+ 			conn_type = CONNECTION_INFRA_AP;
+@@ -874,7 +874,7 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
+ 		struct sta_rec_vht *vht;
+ 		int len;
+ 
+-		len = is_mt7921(dev) ? sizeof(*vht) : sizeof(*vht) - 4;
++		len = is_connac2(dev) ? sizeof(*vht) : sizeof(*vht) - 4;
+ 		tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_VHT, len);
+ 		vht = (struct sta_rec_vht *)tlv;
+ 		vht->vht_cap = cpu_to_le32(sta->deflink.vht_cap.cap);
+@@ -885,7 +885,7 @@ void mt76_connac_mcu_sta_tlv(struct mt76_phy *mphy, struct sk_buff *skb,
+ 	/* starec uapsd */
+ 	mt76_connac_mcu_sta_uapsd(skb, vif, sta);
+ 
+-	if (!is_mt7921(dev))
++	if (!is_connac2(dev))
+ 		return;
+ 
+ 	if (sta->deflink.ht_cap.ht_supported || sta->deflink.he_cap.has_he)
+@@ -1778,7 +1778,7 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 	req->ssid_type_ext = n_ssids ? BIT(0) : 0;
+ 	req->ssids_num = n_ssids;
+ 
+-	duration = is_mt7921(phy->dev) ? 0 : MT76_CONNAC_SCAN_CHANNEL_TIME;
++	duration = is_connac2(phy->dev) ? 0 : MT76_CONNAC_SCAN_CHANNEL_TIME;
+ 	/* increase channel time for passive scan */
+ 	if (!sreq->n_ssids)
+ 		duration *= 2;
+@@ -1821,7 +1821,7 @@ int mt76_connac_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
+ 		req->ies_len = cpu_to_le16(sreq->ie_len);
+ 	}
+ 
+-	if (is_mt7921(phy->dev))
++	if (is_connac2(phy->dev))
+ 		req->scan_func |= SCAN_FUNC_SPLIT_SCAN;
+ 
+ 	memcpy(req->bssid, sreq->bssid, ETH_ALEN);
+@@ -1897,7 +1897,7 @@ int mt76_connac_mcu_sched_scan_req(struct mt76_phy *phy,
+ 		get_random_mask_addr(addr, sreq->mac_addr,
+ 				     sreq->mac_addr_mask);
+ 	}
+-	if (is_mt7921(phy->dev)) {
++	if (is_connac2(phy->dev)) {
+ 		req->mt7921.bss_idx = mvif->idx;
+ 		req->mt7921.delay = cpu_to_le32(sreq->delay);
+ 	}
+@@ -2037,7 +2037,7 @@ mt76_connac_mcu_build_sku(struct mt76_dev *dev, s8 *sku,
+ 			  struct mt76_power_limits *limits,
+ 			  enum nl80211_band band)
+ {
+-	int max_power = is_mt7921(dev) ? 127 : 63;
++	int max_power = is_connac2(dev) ? 127 : 63;
+ 	int i, offset = sizeof(limits->cck);
+ 
+ 	memset(sku, max_power, MT_SKU_POWER_LIMIT);
+@@ -2065,7 +2065,7 @@ mt76_connac_mcu_build_sku(struct mt76_dev *dev, s8 *sku,
+ 		offset += 12;
+ 	}
+ 
+-	if (!is_mt7921(dev))
++	if (!is_connac2(dev))
+ 		return;
+ 
+ 	/* he */
+@@ -2121,7 +2121,7 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 				  enum nl80211_band band)
+ {
+ 	struct mt76_dev *dev = phy->dev;
+-	int sku_len, batch_len = is_mt7921(dev) ? 8 : 16;
++	int sku_len, batch_len = is_connac2(dev) ? 8 : 16;
+ 	static const u8 chan_list_2ghz[] = {
+ 		1, 2,  3,  4,  5,  6,  7,
+ 		8, 9, 10, 11, 12, 13, 14
+@@ -2162,7 +2162,7 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 	if (!limits)
+ 		return -ENOMEM;
+ 
+-	sku_len = is_mt7921(dev) ? sizeof(sku_tlbv) : sizeof(sku_tlbv) - 92;
++	sku_len = is_connac2(dev) ? sizeof(sku_tlbv) : sizeof(sku_tlbv) - 92;
+ 	tx_power = 2 * phy->hw->conf.power_level;
+ 	if (!tx_power)
+ 		tx_power = 127;
+@@ -3080,7 +3080,7 @@ static u32 mt76_connac2_get_data_mode(struct mt76_dev *dev, u32 info)
+ {
+ 	u32 mode = DL_MODE_NEED_RSP;
+ 
+-	if ((!is_mt7921(dev) && !is_mt7925(dev)) || info == PATCH_SEC_NOT_SUPPORT)
++	if ((!is_connac2(dev) && !is_mt7925(dev)) || info == PATCH_SEC_NOT_SUPPORT)
+ 		return mode;
+ 
+ 	switch (FIELD_GET(PATCH_SEC_ENC_TYPE_MASK, info)) {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+index f44977f9093d..1ef25385f3c6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h
+@@ -1866,7 +1866,7 @@ mt76_connac_mcu_gen_dl_mode(struct mt76_dev *dev, u8 feature_set, bool is_wa)
+ 
+ 	ret |= feature_set & FW_FEATURE_SET_ENCRYPT ?
+ 	       DL_MODE_ENCRYPT | DL_MODE_RESET_SEC_IV : 0;
+-	if (is_mt7921(dev) || is_mt7925(dev))
++	if (is_connac2(dev) || is_mt7925(dev))
+ 		ret |= feature_set & FW_FEATURE_ENCRY_MODE ?
+ 		       DL_CONFIG_ENCRY_MODE_SEL : 0;
+ 	ret |= FIELD_PREP(DL_MODE_KEY_IDX,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index f318a53e4deb..2142fcc4ae27 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -151,7 +151,7 @@ void mt792x_stop(struct ieee80211_hw *hw, bool suspend)
+ 	cancel_work_sync(&dev->reset_work);
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
+ 
+-	if (is_mt7921(&dev->mt76)) {
++	if (is_connac2(&dev->mt76)) {
+ 		mt792x_mutex_acquire(dev);
+ 		mt76_connac_mcu_set_mac_enable(&dev->mt76, 0, false, false);
+ 		mt792x_mutex_release(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
+index 1ddec7788b66..34f07bd3097d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
+@@ -356,7 +356,7 @@ EXPORT_SYMBOL_GPL(mt792x_poll_rx);
+ 
+ int mt792x_wfsys_reset(struct mt792x_dev *dev)
+ {
+-	u32 addr = is_mt7921(&dev->mt76) ? 0x18000140 : 0x7c000140;
++	u32 addr = is_connac2(&dev->mt76) ? 0x18000140 : 0x7c000140;
+ 
+ 	mt76_clear(dev, addr, WFSYS_SW_RST_B);
+ 	msleep(50);
+-- 
+2.43.0
 
