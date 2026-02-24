@@ -1,137 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1541FC7FB;
-	Tue, 24 Feb 2026 19:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B12FD330646
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2026 20:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771962409; cv=none; b=dVicBHSMl8lF1CbUl1+gu1bA+q8syMYgkwK+OVtpZzNMYgY2+x6RrOTq+BW8bmzmfu4f8ct4qbM4nisGJH5cbO2gao4TQ8HE2Gihm8Equv7BEnfSb1x2CfH5GW4Pkhq40IL7GcPgQGcRztCXlGRxxQ7YBc1cp8ygdiENrYD1YK8=
+	t=1771966038; cv=none; b=Vd8KVamzUYSWeMRqG7Dmx0qFGaaPjUqfkj0oEpcwGFAefLSnFZDNLIA1Qt0DxBzrLA2Y5ZI/3ZSSdorB54wKrTlE6y9a3JfNwMRLmf9Mn/VC6WDD/0ggYelj/FKo8eq3dN9WRnDtvqIFKFkc1OuQBxintokhMKUT6Pp/TP9Ci3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771962409; c=relaxed/simple;
-	bh=WdbkqgfLfo6zRN4JKq8jQL0DmFzINHD01rn1Bl7BB9o=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=jDa56T5cTueL1yCsQujsM4fIQ5frjVJDsoryySqtvEokjPbltZcijTtftsnuQDXEJu3ulj0kYpakj1quERYoqX800V89XZV24sBvf1jYoePKBhqrS5EXO62ilBgIDXCzDYD46rGKg4nxaEd4SBWx+1YYb4Z8b3BdTDH8Z4iM7Ic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kZIcStBI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1771966038; c=relaxed/simple;
+	bh=zRBP75nJECOs8RCo93T991YkqzNLZf5hz/+5e8Oazoc=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=sdpBu1hisdFNqnMJjR5ghn+d36jO4/pVar1eiCWYqXIy35efen6Q6tPvBoCMQSkI6t4bXkB+IyUsoXMkAUdkKd9lR8KWKOe91HDJtkZUKFO3F3X0MkkZu9StyBFVHUjfMMjTXKnVSp0oYItpHuZfyySqIrHvOP6c6tdTmpoe+0E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=lVfAKoJR; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kZIcStBI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF238C116D0;
-	Tue, 24 Feb 2026 19:46:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771962408;
-	bh=WdbkqgfLfo6zRN4JKq8jQL0DmFzINHD01rn1Bl7BB9o=;
-	h=Date:From:To:Cc:Subject:From;
-	b=kZIcStBINWtJVDs0JwFH2ISDMsaLByMFWhG/h1Eu30Eb/eaWPXF/jbDD98KuPPPVZ
-	 +zuPCEeAUnKkFL0kariqlvrF1CV4KCR2cbGdKrY0ICMi2XVfl9BMo3JPgkYM2y52X9
-	 MaxmfXopWNRmKjzn1ira3dUbk6TGtwcbOOnSe/20xBng/2+RngxF1bRO68rgbaiLFS
-	 6+ueiGFuWRN1LKInoMrLIV1QZLmIEEuYXjOAj4R95M7powViXnssf7ruFrdLqNCRBN
-	 BMIPVAk05FoeV6Bj3uwPmiWWkVHEgIBrPMRo1Jya/ax22246ukX86TCPoFxNTq0IEu
-	 BkTV1PtBUQ/Wg==
-Date: Tue, 24 Feb 2026 13:46:17 +0900
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v3][next] wifi: ath6kl: wmi: Avoid
- -Wflex-array-member-not-at-end warning
-Message-ID: <aZ0tGZnmtGckKJzY@kspp>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="lVfAKoJR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=SK2m0+BCqZK3Z0MefFDAaeio2GM2wmtU79nlwdyGEuo=;
+	t=1771966037; x=1773175637; b=lVfAKoJRzidvvV40Nzbk6xV63X7I1WGN5m/H11pkCL5/atf
+	FdSYZwN4kNB64V6u84Nxm8WL32dPJXMtxblYxlej7DAxRTb3wQrXoq7++f+YVjduBTzxqjjqPMbvq
+	k6Sum3SBTW56J6fBe2fa6UQfiJb6KV1gfBAoH9r42Wx51IHCamLKazPbB2L9Oimq/uYYDJGxRrY6Z
+	xxITU2R/H4DWtYbrUviVwdkXDJheuQTV+eWcW7l9SoKEjeRXTeD1uCtnf2cS5A8+TQGo/eRTsr2pd
+	RNnq9Hmw/1s54ROELS9DziiUDUCQjD4XlB6AwH1vvYWqohvuylRHNaPH0c+JTwpg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vuzJJ-00000000fr0-2SY0;
+	Tue, 24 Feb 2026 21:47:13 +0100
+Message-ID: <0877db64cce68a9c206796da7261065d5785fca6.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v4 1/2] wifi: UHR: define DPS/DBE/P-EDCA
+ elements and fix size parsing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Karthikeyan Kathirvel <karthikeyan.kathirvel@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+Date: Tue, 24 Feb 2026 21:47:12 +0100
+In-Reply-To: <20260217054731.3667600-2-karthikeyan.kathirvel@oss.qualcomm.com>
+References: 
+	<20260217054731.3667600-1-karthikeyan.kathirvel@oss.qualcomm.com>
+	 <20260217054731.3667600-2-karthikeyan.kathirvel@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-malware-bazaar: not-scanned
 
--Wflex-array-member-not-at-end was introduced in GCC-14, and we are
-getting ready to enable it, globally.
+On Tue, 2026-02-17 at 11:17 +0530, Karthikeyan Kathirvel wrote:
+>=20
+> +/**
+> + * struct ieee80211_uhr_dps_info - DPS operation information
+> + *
+> + * This structure is the "DPS Operation Parameter field" of "UHR
+> + * Operation Element" fields as described in P802.11bn_D1.3
+> + * subclause 9.4.1.87. See Figure 9-207u.
+> + *
+> + * Refer to IEEE80211_UHR_DPS*
+> + * @dps_params:
 
-Remove unused structures bss_bias_info and bss_bias, and member
-bss in struct roam_ctrl_cmd.
+I think it being in a DPS specific struct, we can drop the dps_ prefix
+here?
 
-After these changes, the size of struct roam_ctrl_cmd, along
-with its member's offsets remain the same, hence the memory layout
-doesn't change:
+> +/**
+> + * struct ieee80211_uhr_dbe_info - DBE operation information
+> + *
+> + * This structure is the "DBE Operation Parameters field" of
+> + * "UHR Operation Element" fields as described in P802.11bn_D1.3
+> + * subclause 9.4.2.353. See Figure 9-aa6.
+> + *
+> + * Refer to IEEE80211_UHR_DBE_OPER*
+> + * @dbe_params:
 
-Before changes:
-struct roam_ctrl_cmd {
-	union {
-		u8                 bssid[6];             /*     0     6 */
-		u8                 roam_mode;            /*     0     1 */
-		struct bss_bias_info bss;                /*     0     1 */
-		struct low_rssi_scan_params params;      /*     0     8 */
-	} info;                                          /*     0     8 */
-	u8                         roam_ctrl;            /*     8     1 */
+same here
 
-	/* size: 9, cachelines: 1, members: 2 */
-	/* last cacheline: 9 bytes */
-} __attribute__((__packed__));
+> +/**
+> + * struct ieee80211_uhr_p_edca_info - P-EDCA operation information
+> + *
+> + * This structure is the "P-EDCA Operation Parameters field" of
+> + * "UHR Operation Element" fields as described in P802.11bn_D1.3
+> + * subclause 9.4.2.353. See Figure 9-aa5.
+> + *
+> + * Refer to IEEE80211_UHR_P_EDCA*
+> + * @p_edca_ec: The P-EDCA ECWmin, P-EDCA and ECWmax
+> + *	fields indicate the CWmin and CWmax
+> + *	value that are used by a P-EDCA STA during P-EDCA contention.
+> + * @p_edca_params: The AIFSN field indicate the AIFSN value that are
 
-After changes:
-struct roam_ctrl_cmd {
-	union {
-		u8                 bssid[6];             /*     0     6 */
-		u8                 roam_mode;            /*     0     1 */
-		struct low_rssi_scan_params params;      /*     0     8 */
-	} info;                                          /*     0     8 */
-	u8                         roam_ctrl;            /*     8     1 */
+and here
 
-	/* size: 9, cachelines: 1, members: 2 */
-	/* last cacheline: 9 bytes */
-} __attribute__((__packed__));
-
-With these changes fix the following warning:
-
-drivers/net/wireless/ath/ath6kl/wmi.h:1658:20: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
-Changes in v3:
- - Remove unused structures. (Jeff)
-
-Changes in v2:
- - Create new separate struct bss_bias_info_hdr, and use
-   transparent struct members (in struct bss_bias_info)
-   instead of rearranging members in struct roam_ctrl_cmd.
- - Update subject line - Add 'wifi:' prefix.
- - Link: https://lore.kernel.org/linux-hardening/aZP4RI-uN2001cBh@kspp/
-
-v1:
- - Link: https://lore.kernel.org/linux-hardening/aR153k4ExCD-QTMq@kspp/
-
- drivers/net/wireless/ath/ath6kl/wmi.h | 11 -----------
- 1 file changed, 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 3080d82e25cc..8fbece3fdad9 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1630,16 +1630,6 @@ enum wmi_roam_mode {
- 	WMI_LOCK_BSS_MODE = 3, /* Lock to the current BSS */
- };
- 
--struct bss_bias {
--	u8 bssid[ETH_ALEN];
--	s8 bias;
--} __packed;
--
--struct bss_bias_info {
--	u8 num_bss;
--	struct bss_bias bss_bias[];
--} __packed;
--
- struct low_rssi_scan_params {
- 	__le16 lrssi_scan_period;
- 	a_sle16 lrssi_scan_threshold;
-@@ -1652,7 +1642,6 @@ struct roam_ctrl_cmd {
- 	union {
- 		u8 bssid[ETH_ALEN]; /* WMI_FORCE_ROAM */
- 		u8 roam_mode; /* WMI_SET_ROAM_MODE */
--		struct bss_bias_info bss; /* WMI_SET_HOST_BIAS */
- 		struct low_rssi_scan_params params; /* WMI_SET_LRSSI_SCAN_PARAMS
- 						     */
- 	} __packed info;
--- 
-2.43.0
-
+johannes
