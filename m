@@ -1,151 +1,112 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310113D9028
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2026 17:08:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EF03AE6F6
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2026 17:08:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772039312; cv=none; b=lCbE6dSObwkswXbi7eMf3OfIV7l+FQ2KosjXd17SoyeP33upxAT12WD37oOR3ZUFQLt0KwC9b83EjjrvId/LSyX+9m+Ny0OASouB2rz51MBdyUF9zy8GQsaoKv1fFy6u8Nu2dyv1Q46LzUz4W7Cnf/kN2VwDML7G3E7qc6hF6VI=
+	t=1772039321; cv=none; b=sCbp2SE8rWjxXr0yCHVyseB7odBN2alQCChABT5rB8upQEaP6gDiQ1ioniVlAjWlTQNFyUMvT26kui0dV86NRH0nwBhgCrprhbt9csIdNtBb+VIeW25cLIr0bnzKd0ScQc56YnocRwY3AB4G8zjrpdyfcZ/OCSRaTqZ20g3IFxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772039312; c=relaxed/simple;
-	bh=LYCAQ8fCYTXn/BSkVmUs6thsT01rP7Hivy6uzBuSojE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=X9dPOddXj/GfXG5o8HoApkYDCUXQwIXzostCQjSlBgHaQw1LBFoEad4Ynux3pwpqszmfrD/unapXvxeUychcQg+dtThA1nGB9SCXEMUr10ibbFw5dbdH/WzN3llUrHU1U79pla0qlPqe8hTrCXoPadSPtaKWzy52FbBSTw6YqpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Yjr4AUnt; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ic9KjhqC; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1772039321; c=relaxed/simple;
+	bh=nVqLCiAZim3d8SUs3mpcg32WpZQalaPjSXIu93/Cpho=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=BA/HhE7XarMfZA0Q/YOJaSAsVzLdcxCr3TVFg2BooVlqnhVeoa8uQZEub67Mffyatj4TQuDZOsqoUfK8ozvA4NCkcw3Kw14ZvQPZQkJk23g9/A0sptKWpkUH07t76vP73k9Xihx99kLQy1D96X2JyQQaAgviv4kMSS5kaw1bK6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KyAnDE8y; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Yjr4AUnt";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ic9KjhqC"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61P9RuWJ3056472
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2026 17:08:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	j7HOJfjFPMkVquotJuVPSJWPzpnCEvIOb9pPizeHlH4=; b=Yjr4AUntdJE0c5x1
-	6fS323ILEA7fC8WwLPpONZ+AIq/QNvcA0by4+O0vwRFWL0408XH/d3sAjWXnbcxU
-	X6Agt9uv15sgKgjvrMxS41Sw/N9zuEgZG3eS3Da8urpTU6cKTDXzt5o57T6IpLa3
-	d6HK8zqyZWwsFNh09q2aWiszFc9NkpIeAAkyNxcn5gfmEE15YHIzUedl0tnB8LYn
-	HU0Tv1bVlnqTOw/w1/lNxOsPZTEzLxYvoFVga1l+Hz92X9WdpayjBXmVWBHLSlh4
-	X0M5L0DPd4+jtNi5mcKQSnNqJdewhtP1vGTUZH+2lK/8yw3Ug4w+TAbrP4Fx++eP
-	2fKohQ==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4chx39hhf5-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2026 17:08:30 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2aaf0dbd073so82098655ad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2026 09:08:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772039310; x=1772644110; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=j7HOJfjFPMkVquotJuVPSJWPzpnCEvIOb9pPizeHlH4=;
-        b=ic9KjhqC+2xfxdIUZX0Xau+qZEsaWsPp9pkJksbdCYbu/VmBJgcL0ip1JebjQU4qes
-         LDZftKFhBxTgOFfXYRvERSK2ISeiZSUyPIDtFVEpmKY1/uoXOQM2/S+QGBHNvdgF6+Z/
-         EIMdRDv8T6HrVxGl3Qrs6q2rFVZn9eGyB4SkQsxWDxtKIZ7SO4Yq+uRjdbkRHrPr8FrR
-         oGDJJb4MBo+lqdi3K4aGy2UxN1NB7U0Gm62TPcqi3eTlLGEkFXeIDrzwUlYlQ/8bdQKc
-         mPUnBA3KsVarfwL8TBjUkehzy+FTJbj2KRw/oKRyrIbfuTsDfZObqJHG9GF/bKHna8f/
-         oOiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772039310; x=1772644110;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=j7HOJfjFPMkVquotJuVPSJWPzpnCEvIOb9pPizeHlH4=;
-        b=VTFgH9abeZEURgXH/WEDdhkUVoP13b8BrynzHCrf1+7bqSmtARzz73Rjv5ozMcxz/d
-         4eiAluP/O+vPYm5ydYIvOCePjw4Zci3cXRDELy1H9iS8VyXBDKgPzGielgcHfv4b/o9a
-         9EfkR209/SG3PMzSnZ7yRPK4JaT6NZmcjHNHLWwJEfK7wl9kaWfeB3YOItoTPVuuhOpR
-         FsGe1PM0N4tHju9nYsFSi0HEh0EtKpFLl89L3cc2h85W50/N/+Hxc01nApMtgvQ5mxXI
-         nImTvszesey5llUvALKBaO7CbzDNG1NgovuB31V63KtJON2KJGAIRzmvjapY33Nt50ie
-         pNQA==
-X-Forwarded-Encrypted: i=1; AJvYcCUjYvgJz2i1/1nqfJJzpcK7aakJTUWE+KlPgQKKa4gZrtnC6f6r6JwsGOK5mqEoXfhjwrvZsV+PXNq+dD6I8g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxniqfVQzuq8F+ZwRtTP6yig4sDNOGHiUZmZ53sJ0TWX6NaD56m
-	YWUeEsUbwKmsWB6xG2Kkb/dUM2xDyvh/qnErvjPKAjml5zYoMFth2nf4PYDLlQ5yW/g6RV/3tf6
-	I3ZKPcQN0ImB0vMcOtO69DwYBjcUR90GlnPWXcaNelIfwzNFAFHtsAEl6O1WP/dLTKVW/HA==
-X-Gm-Gg: ATEYQzzBG8Wg4XpUmvN0obWzwqcYuT0UZVP7xIRzqjbVrixrM8eraGLFaXgH7i0nMK3
-	Uhv7DQXznyalTTnipjkF35iuyD/FTAX0kunXStRbwLdsdQEQdugkKTbDvKo+L8YGTa7OZMa8PFs
-	Ab15utCIU+oaKLubZQD96vBW6b01aEVaSMnf3goKIQzFUyvXuBlAmgEVCytDAR/8X01dFCktYri
-	ZcH4tIisP2EiEPcs0yPPCbRivisYoDuZh+jgHF1MMp1YEYygYXWAjTHOvmMZCFS8WQ9gThRFpqR
-	RGbmp69WUxWINDycBvN+mjt2JvCZVC1EGyzHQrm2q2QOc0+RxutV1tuUAgpW086VN9F2EnzJBtQ
-	3nObaQSpaTP0A6OjkHQkmu/piaL9IBFrGNgSrxF/q46yyIT+cz5tYoN/dHn6gOaGXjiZmYpq38w
-	==
-X-Received: by 2002:a17:902:e787:b0:29e:9407:a8cb with SMTP id d9443c01a7336-2ad74548a87mr158181025ad.40.1772039309785;
-        Wed, 25 Feb 2026 09:08:29 -0800 (PST)
-X-Received: by 2002:a17:902:e787:b0:29e:9407:a8cb with SMTP id d9443c01a7336-2ad74548a87mr158180705ad.40.1772039309316;
-        Wed, 25 Feb 2026 09:08:29 -0800 (PST)
-Received: from [192.168.225.142] ([157.49.193.171])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ad750591e2sm139143225ad.91.2026.02.25.09.08.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 25 Feb 2026 09:08:28 -0800 (PST)
-Message-ID: <80a9bcaf-4045-4600-ab9f-b6a5f6f6394b@oss.qualcomm.com>
-Date: Wed, 25 Feb 2026 22:38:23 +0530
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KyAnDE8y"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=zosPDEsCL4IDJynYyVoAQpFRfpUtCyzrVIjgHj1I490=;
+	t=1772039319; x=1773248919; b=KyAnDE8yWcvzqpO0gRph2Bk5lchGAu7ZdbtVwMPD/efjnrh
+	g2DtiNHZqRrHlenC4SSQrsyF3lBP6u+W06MjLv/Xz7d39aGjET5aVhCRxn0N17rJTfaaAWW6nriWI
+	X/OdoCtyT0qgHkprk2grNsbOSSNQMN8NQBgFKM97OOB5Nuzf0uoDeq9S+OJy0VpsuvVAxQ3SazQhJ
+	ClumdIrDyTuV3Zn3v6MPX4gP1csM47OUc/QuBtV36mxBIsA9qODwY22XnXHfvxZNY8e0f1qXbpnhA
+	HHtf5Y6jKG4Iqci1CBcTu+c9f+8IIhKoQWhFZR8ZhJ5MhEH9dPbIh5u1j5CfRQCQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vvINJ-00000001XqU-1T5G
+	for linux-wireless@vger.kernel.org;
+	Wed, 25 Feb 2026 18:08:37 +0100
+Message-ID: <4957d35e090d54f098d27f937da70770bc001397.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: move action code from per-type frame structs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 25 Feb 2026 18:08:36 +0100
+In-Reply-To: <20260225175252.03c5c338a7b2.I9a24328e3ffcaae179466a935f1c3345029f9961@changeid>
+References: 
+	<20260225175252.03c5c338a7b2.I9a24328e3ffcaae179466a935f1c3345029f9961@changeid>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] wifi: ath11k: fix memory leaks in beacon template
- setup
-To: Zilin Guan <zilin@seu.edu.cn>, jeff.johnson@oss.qualcomm.com
-Cc: ath11k@lists.infradead.org, baochen.qiang@oss.qualcomm.com,
-        jianhao.xu@seu.edu.cn, jjohnson@kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-References: <20260130084451.110768-1-zilin@seu.edu.cn>
-Content-Language: en-US
-From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-In-Reply-To: <20260130084451.110768-1-zilin@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI1MDE2NCBTYWx0ZWRfXyZU8c36DB0OL
- WLcMY4+ROKPkfzshkLpMQM26qmzgLJ+8r1SCwmpqnmPMSRcsNYVTcnsHWF25eMCTAnJgWwfH5+H
- qAwpcggeFY1G5cC/zEveiamZlffngNg9Ym6RaYDFnoffbz6Nbn1VDPZj1XgU9h7169Tdsrfrk3R
- 3DmU+5ZfOJm2A4CU4AXcsZKhn8+8ll3vNHhrtybL+prTUqSy7VwdO0x0kB+rxbHtOdIO9m8/0b6
- ELg/mBgW8B2FvD32ZZtY1XdCnrelbbQAeOANJyZlCKZaqslo5pqPnh7YtomhJRksej3sCyZlomP
- e2zFI5Y9KN42SzW7R6xXh4spi1YGz+ZWMN9BBT97ZtAIERXbtSDdhSnhsjOY2/6xkbRuYZ1yyQa
- iQy+QSyCXn69NL74r6HT64lmtC6ZDYVugqmPAekpnQ//ainf6TmQQ7L4EMZGT1WIj4K+TV8AwS3
- EUeamHvKTnq/jSRFMKQ==
-X-Authority-Analysis: v=2.4 cv=FvoIPmrq c=1 sm=1 tr=0 ts=699f2c8e cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=hSb1S3R1191yeZY/11SCyA==:17
- a=IkcTkHD0fZMA:10 a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=aTVLLDfeenT47zaNiYsA:9 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: Ry5PTyshkGdcTiXHILygZx2sakjHwSBx
-X-Proofpoint-ORIG-GUID: Ry5PTyshkGdcTiXHILygZx2sakjHwSBx
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-25_02,2026-02-25_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 spamscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0
- impostorscore=0 priorityscore=1501 clxscore=1015 adultscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602250164
+X-malware-bazaar: not-scanned
 
 
+And a couple of other notes:
 
-On 1/30/2026 2:14 PM, Zilin Guan wrote:
-> The functions ath11k_mac_setup_bcn_tmpl_ema() and
-> ath11k_mac_setup_bcn_tmpl_mbssid() allocate memory for beacon templates
-> but fail to free it when parameter setup returns an error.
-> 
-> Since beacon templates must be released during normal execution, they
-> must also be released in the error handling paths to prevent memory
-> leaks.
-> 
-> Fix this by using unified exit paths with proper cleanup in the respective
-> error paths.
-> 
-> Compile tested only. Issue found using a prototype static analysis tool
-> and code review.
-> 
-> Fixes: 3a415daa3e8b ("wifi: ath11k: add P2P IE in beacon template")
-> Fixes: 335a92765d30 ("wifi: ath11k: MBSSID beacon support")
-> Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-> Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
+>  				struct{
+> -					u8 action_code;
+> +					u8 no_fixed_fields[0];
+>  					u8 variable[];
+>  				} __packed chan_switch;
 
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+This thing in a couple of places isn't ideal, but I think it doesn't
+outweigh the benefits of this structural approach.
+
+> @@ -2665,16 +2645,15 @@ static inline bool ieee80211_is_timing_measuremen=
+t(struct sk_buff *skb)
+>  {
+>  	struct ieee80211_mgmt *mgmt =3D (void *)skb->data;
+> =20
+> -	if (skb->len < IEEE80211_MIN_ACTION_SIZE)
+> +	if (skb->len < IEEE80211_MIN_ACTION_SIZE(wnm_timing_msr))
+>  		return false;
+> =20
+>  	if (!ieee80211_is_action(mgmt->frame_control))
+>  		return false;
+> =20
+>  	if (mgmt->u.action.category =3D=3D WLAN_CATEGORY_WNM_UNPROTECTED &&
+> -	    mgmt->u.action.u.wnm_timing_msr.action_code =3D=3D
+> -		WLAN_UNPROTECTED_WNM_ACTION_TIMING_MEASUREMENT_RESPONSE &&
+> -	    skb->len >=3D offsetofend(typeof(*mgmt), u.action.u.wnm_timing_msr)=
+)
+> +	    mgmt->u.action.action_code =3D=3D
+> +			WLAN_UNPROTECTED_WNM_ACTION_TIMING_MEASUREMENT_RESPONSE)
+>  		return true;
+
+This is, unfortunately, a bugfix, as is:
+
+> @@ -2689,15 +2668,13 @@ static inline bool ieee80211_is_ftm(struct sk_buf=
+f *skb)
+>  {
+>  	struct ieee80211_mgmt *mgmt =3D (void *)skb->data;
+> =20
+> +	if (skb->len < IEEE80211_MIN_ACTION_SIZE(ftm))
+> +		return false;
+> +
+>  	if (!ieee80211_is_public_action((void *)mgmt, skb->len))
+>  		return false;
+> =20
+> -	if (mgmt->u.action.u.ftm.action_code =3D=3D
+> -		WLAN_PUB_ACTION_FTM_RESPONSE &&
+> -	    skb->len >=3D offsetofend(typeof(*mgmt), u.action.u.ftm))
+> -		return true;
+>=20
+
+because the original MIN_ACTION_SIZE didn't include the action_code
+field, and thus these were accessing without checking that it exists.
+
+I don't think it's a huge problem that we need to fix separately though
+given tailroom and skb shared data etc. will always be there.
+
+johannes
