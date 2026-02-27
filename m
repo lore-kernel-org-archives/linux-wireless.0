@@ -1,90 +1,78 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29CA03451AB
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2026 04:11:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E224345750
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2026 04:11:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772165505; cv=none; b=kc+y0RG9Bu55sFd+P+S9Nv1Ytm3BHGNYQtAqeVC+tZ8GETzwIABgYMAwNFoHWZk4M9NzfBZ/QutJ9N+sO/38NdU4SvxTO/U3a4nkWodtkpcIaKek3V7eoxKzgWoV7IUqhXZl5dEtOiLMIqFcAHWsPmIc8impmT2W9w7pbLx0Lh4=
+	t=1772165507; cv=none; b=vFZDGWwm/xSqEHduPuIW5T6UVmLlE7TmmTvW1oqISjCKq+OVSgxr5EeuYCwOmpAiGEatN48Hhdvjglg4Iv/d99YmuiEC2nA//a982Mh4hhHsq4j2fgBMqyJ7piZB4rUh5m5gstEfIoVuNY7ZcC+nH0BUC/pVpGqWMf9d6Zzv3Hc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772165505; c=relaxed/simple;
-	bh=X3luo2GRPmUA6X9TQjlE0eONgBbdRg21p8gfPwF6ank=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Rx958K7/L/VOZgEBSEDZdbchjT3TXSg/CPU8W5CFiQvu6vniGniKzmmyn4Ep7Ty0U1LRu73xynMqt6mLOxCp4a+R7ucE8mvWlnI2rWbIycYkp5bYWO3JASFHapPvmwaW51Nmtlt9F/qcdP5glbLdHFJwfVWRbWsZY5/pY/SCzwg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=EQhoSO/d; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bJsxeMzL; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1772165507; c=relaxed/simple;
+	bh=c11IXnwxZ5RyIrOBBd15Hk6g/iseO2KVv2j6YYLopzE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YUMSUoaTo3veWVRZBLe/rEUXnMMzXoN7VWfivK6FgVgY9hfpQHcUQGCmnnvsiQNEAZCGsIn1LlP02Pw54tX8mfTA2zhtmI+csCfsvIyEdTLBgXyyKipOeDEtVZlZCX+6AP/dwr2m+fGP1MS2faqE2RRjWBonAIlcsQAU3gQ14gQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b=vwpPG05P; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="EQhoSO/d";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bJsxeMzL"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61R2K1ol2403203
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2026 04:11:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=amuOUMcKObHl4pIGcl7k3LNmJEs92Q3SErV
-	Eh7dTn+Q=; b=EQhoSO/d9VrDywNaDsjJGZpC52dC/5CYheZLAiM0CGcTgrafOYE
-	wsg+7nh5cF73YF45FW9B0XKgh9NIrn6Cwx7+iF5mA9obkpY1JFO7Fu1sD4zoY0jP
-	YZbXLAixO4uRsSIHEwJBwFi+5d0sYkB+5IT18IQxeTwVnl+orspM3w2Q49GlPP6R
-	LPf70E4PXTwEWmEv+ZcaiPGHu9Iwftbm1dK9pl8g6RsprJEIHMHWOO8TTMeM07yN
-	ohZUgL9ELZrqxYSTUZhEsVX+TaKDnC6UdfVIB1IncPmqkQLJa3xX6Ti6clCY7v+s
-	yipac/JIaXuztowgKerMHaXFjHC/VSX271w==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4cjw2397um-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Feb 2026 04:11:43 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-824a2df507eso5087321b3a.2
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2026 20:11:42 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20230601.gappssmtp.com header.i=@morsemicro-com.20230601.gappssmtp.com header.b="vwpPG05P"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2a871daa98fso12467635ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2026 20:11:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1772165502; x=1772770302; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=amuOUMcKObHl4pIGcl7k3LNmJEs92Q3SErVEh7dTn+Q=;
-        b=bJsxeMzL8aZ2q+biQF2fxOV/fwhVuxrvx0VS3ls+sVZ7xUnr2nE3DBEOXsPMGW3WE5
-         f9d0GT/fVCvQNCYzJyzxOWLSg90zRRtPqCaltTcpeJ3cMvApLTaAnQYbItr/YoneRY+z
-         JciM2kO1xlO2bqOQaeerLB7MYEvEequBQN6+iVgQPiyUXo2Irij8SHQodYXmTt2UiNF2
-         moGyPShDGx644T1xcmHyctc8Ez4Bzdd5CHlhfD039Crgv1l4G0CCUNueyIkvGi39Q/Qb
-         mr7oaw8J9biBRIAmqtexOzpwFNVxy+EsX1BFCBvmBBfcr4ITS5ke1aMl7Y5hGX5eN6/L
-         VVvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772165502; x=1772770302;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=morsemicro-com.20230601.gappssmtp.com; s=20230601; t=1772165505; x=1772770305; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=amuOUMcKObHl4pIGcl7k3LNmJEs92Q3SErVEh7dTn+Q=;
-        b=FH5oSgj7lPRaqxLqTN75/TMQZi4+9IpaBYw3rr3Bsgl+FZfKI5L7aUY13ot88fpN4E
-         HGVBJfkyK+mEG4GdxB7fqC7jolb1WwkURvQLeUB40xnZvv1I+yuG64mKMRyjME7W/fOU
-         WqTWPsNLeGvJFm34tAQQlcavmMf1BGuxvH5Eg0qFYy7Fbm/4aT+H8vUR0K9j9MJ8DdXf
-         pwdaC3Vio22WfOfdGJUzGKmEMn3NHL6tWBonsfqYviKNY7PsyT4WHlo2GYtXrAMg5XEa
-         b5WGmq4/zecYDDy71cGykWopQLwikDY8qQb8l5Xm+terDEh3y5ClSWMPe+2M0cZScoXu
-         zPjQ==
-X-Gm-Message-State: AOJu0YwIA+sJe64JuCmfOO8VldDtJr9J8hz7+p8IKIIVrtqP+F2WBUEf
-	9CuE9LGWQHOxZt42ACGj4eiVVVx/OjDRgWkyOSznq5DkHGBOrBEsxA5l4HQYa6YBnWgOPAXrGPp
-	7Tj46HJ2+9SFaparQ6n3mt4paskKU1ElVOUNqOSchR/BrT/+8mAoWerpTNHFZdExdSnoThYfWQw
-	vFIA==
-X-Gm-Gg: ATEYQzxJ+EmqNpJwFLlmb7sNg54bvkNK9aXN3CmM9cancoDH8PIZsp1EIjVBxp7+bN4
-	deXPgeCyfLEhnd8WiXd1/M22I5tn2f3hR2IqPXIcOWVsEOjIBhJaxIiLVeAsgoqZNHjcfKvq3UD
-	unA/tSP2a/ddMwcXOrAYySSiSY+nnyNCB7m/LDxN27bvN7ln/7+F9/3jKip1TU1Fxnx6X9Mj2vF
-	ZjhF8nHl7EcHbo7Ax97m36KBa0N0BdQrTKEZc0E5gKfe838vr1U/JjpKZaOtP5YtxG6qRRN3wri
-	Vgh5uDlzFHEUr73t75fOIgPQC6cezh0hgu7CgyGB/y26uVhcin/6zWhuMxegPuIRG2a9MzIJ3ZG
-	Mx9PhK8ok7VQKLBZTYoqEYmjkXtNtFi5MA8Y34PDZDBwrVyO7+Hy2wnF2/KTs/1kINnxrbawbDn
-	BJ5QKc95sAWiSWAt/Z16ud8nPuMzDmQGrr+K1LgU1Z+WL/ZkLT
-X-Received: by 2002:a05:6a00:4296:b0:81f:3a83:9756 with SMTP id d2e1a72fcca58-8274d9d9937mr1281317b3a.30.1772165501880;
-        Thu, 26 Feb 2026 20:11:41 -0800 (PST)
-X-Received: by 2002:a05:6a00:4296:b0:81f:3a83:9756 with SMTP id d2e1a72fcca58-8274d9d9937mr1281301b3a.30.1772165501400;
-        Thu, 26 Feb 2026 20:11:41 -0800 (PST)
-Received: from hu-rdevanat-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82739db3ab8sm3666811b3a.27.2026.02.26.20.11.39
+        bh=CxqowGzg2CaK2KHQ3yg4HgobTjZp7H6lsiRmrF05V2E=;
+        b=vwpPG05P0upqUe01e0G/ZAGrLDINji7K/ZdZtOL7hRZ+zUH2rmbEDeR+dVp6eQMago
+         HzkIS7Wkz9epB1tbD7OqeznMQHM6co6GyNl+UFw+FyG/aMj5RisBm2f4ecu2qLZHHoBR
+         2mVsqkDwfLxUCpzLciVGZWKejZhHNLIZil9X8j+NUk/jRuHhGdlcdJfbJFZzET/V7Geh
+         XUUdf1VRwoVvPiWex3/Nya9Aaer7mIE965jDfjVibzUBBWbCst2k9qM86QYWsZHWJ4Qc
+         bHO3VRMonp4Fgql/lB8NMaREY5ZGFmsWYmy6ANM4/KZGK4fRoqtEvUexe/o1LyTQc8H7
+         l5JA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772165505; x=1772770305;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=CxqowGzg2CaK2KHQ3yg4HgobTjZp7H6lsiRmrF05V2E=;
+        b=UzKqNa5gryKkjd1A7aWK9Bn04LFsFF0rVi7gj7/LpsCjPJSPzmEA9qfU0sEzPfxfVn
+         GKnEDsjLGMLFFAAEDvlFW7+SF3uhKBJtmXB4SiMxtpmPNVr3Mfeax/uBYTCOWQ3ag4Xq
+         YsGKQsGxhf7fvpOGtxehNza2On9xo2UuO+ZhPbzFjY+udAI+jrlW6aSaiZmBjLHAKsAM
+         VRAEx7/Wf5KlGW7TXmlHT9b/8vR7WbASWdbCaKLkYYL9giz6QyXznqsqvM3PBU/yXPtn
+         0Z20gPeHMisoZA8eNjJkUr3I5Mchi8swrthjhKwW8uhpq2iCjpIEwZmNSs3UdzZRWiIq
+         7DKQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWcJUd0/8qKjzfPAT6VJA9HxQSt6sRj6CxGH9UboTajJZ4gYzn3HDhDI/U0bvm1VX91LW5JG3nyFbCdhJP9tQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyz4kUsB4Brc2C7mDWO0JFVo32YBfCJ6eAcJFpj5XhO/mSJ9VaZ
+	OcWRsy4f45Bn9k9o3ovG13aAnqCI/gPMy/wAaGCzaLAjcqK+ELXYXHZT3lYQMJBjXLQ=
+X-Gm-Gg: ATEYQzz5EpSq9B5OrIKsdgfQlU+fivG5OEXLAfv+UE5IsF4ncWRv+e5Ohy20NrcpW8f
+	onhJ6E74eT3ssmEpSYY/SL2jV7JW8tW4D6qjIl699/gC696VfQjmqtMtdovbQquwQBg51ppKLub
+	rGNBHOd4PLEKAKc96jzeQOMo2+cVILFYFwuJhnRpaCpE5E2KK/zzSu8zeeIgeJXhfHBLBhTaDHm
+	vQf2Mf3QT+LSwnRl2MaQ4IblBHX9tZ9VDBVtSRtjOBQR2m+qwvfyeWhpeTBlCISjPuu6VIKneIO
+	IC1FvGgFyTDHP+DSpD5321ylCntPDN29uNPWP4vwFa1FCbOVvYKbY1T9eInfoes3C5JnmXT6nbO
+	OiTNzfJEDZhnRRTPDJfdIIr2hWOGa7BjL4jK6781NvNhC7KVtnwmP++xTFyESkVtUaoEtA0wrbT
+	pIwKl6oVIr+mR2haqHtcijpCbqnaaLfSHHbnke5HtctP7L3JTNV0tq++A2YncKV6M7UUNnwsgu0
+	cW0mp9bRWM/6Le8JitIAWpuVObiel8=
+X-Received: by 2002:a17:902:ccc4:b0:2ad:bdc5:ba9f with SMTP id d9443c01a7336-2ae2e4d93f2mr14601015ad.55.1772165505486;
+        Thu, 26 Feb 2026 20:11:45 -0800 (PST)
+Received: from mma-H9MHD44.lan (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2adfb6ba5eesm41682865ad.68.2026.02.26.20.11.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Feb 2026 20:11:40 -0800 (PST)
-From: Roopni Devanathan <roopni.devanathan@oss.qualcomm.com>
-To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Ramya Gnanasekar <ramya.gnanasekar@oss.qualcomm.com>,
-        Roopni Devanathan <roopni.devanathan@oss.qualcomm.com>
-Subject: [PATCH ath-next] wifi: ath12k: Set up MLO after SSR
-Date: Fri, 27 Feb 2026 09:41:27 +0530
-Message-Id: <20260227041127.3265879-1-roopni.devanathan@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+        Thu, 26 Feb 2026 20:11:45 -0800 (PST)
+From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+To: johannes@sipsolutions.net,
+	Lachlan Hodges <lachlan.hodges@morsemicro.com>,
+	Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Arien Judge <arien.judge@morsemicro.com>
+Cc: ayman.grais@morsemicro.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 01/35] wifi: mm81x: add bus.h
+Date: Fri, 27 Feb 2026 15:10:11 +1100
+Message-ID: <20260227041108.66508-2-lachlan.hodges@morsemicro.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260227041108.66508-1-lachlan.hodges@morsemicro.com>
+References: <20260227041108.66508-1-lachlan.hodges@morsemicro.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,86 +80,112 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: h7XuEZ1EW8pkZCcispIHaUKEMfIS-kLu
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjI3MDAyOSBTYWx0ZWRfX1iv6Jtue2uFr
- zf09+cy2w8CPm7Ebo1odCBP1Gde5moUfme2vrDZRsPolYuMItoncUJmLkBjAKDVjkRvfCMAWvp/
- tLG6GdqMKrw1yyMz0ujOc+7gTNB4dvJ4FupcGtF6+bwLPsr8u97my0VEQpKt0q+0aySTSgMqSGB
- V+nHV+khOD8CK0FNfZlrGPD5geb98hjMjLRjm3ZM3QxvPAURLvGYRbo2nNBXWGK90sWKu6e7HE8
- gRR0d2GWAQhA+TDRdf2nA/IFjkTuHbiblrQbYzrAi3IjsRnRhPlJ9ON0esc7+w6lQksHCmZ5e2a
- Ti6GZuBGPZ47pVFfsKv5OwnYrAG2ztzuRjTQ1Q4iUpFGZ4+sXw0iDysgKrs0EodOKqtth1FSkcp
- M8uIC7uxdShhpVi+9/y4LaN72k8DqjY/6C1t6Q6gGZ0uQCbWVza2LhbvUfdSkQDVCUTtbLy4hDD
- haEP7c22JERbgyJurnA==
-X-Authority-Analysis: v=2.4 cv=cJHtc1eN c=1 sm=1 tr=0 ts=69a1197f cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=HzLeVaNsDn8A:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
- a=p7LCZwjNATuEJ2GLxp4A:9 a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-ORIG-GUID: h7XuEZ1EW8pkZCcispIHaUKEMfIS-kLu
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-02-26_04,2026-02-26_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 impostorscore=0 lowpriorityscore=0 phishscore=0 adultscore=0
- spamscore=0 clxscore=1015 priorityscore=1501 suspectscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2602130000 definitions=main-2602270029
 
-From: Ramya Gnanasekar <ramya.gnanasekar@oss.qualcomm.com>
+(Patches split per file for review, see cover letter for more
+information)
 
-During recovery of an MLO setup from a core reset,
-ATH12K_GROUP_FLAG_REGISTERED is set because ath12k_mac_unregister is not
-called during core reset. So, when an MLO setup is recovering from a core
-reset, ath12k_core_mlo_setup() is skipped. Hence, the firmware will not
-have information about partner links. This makes MLO association fail
-after recovery.
-
-To resolve this, call ath12k_core_mlo_setup() during recovery, to set up
-MLO. Also, if MLO setup fails during recovery, call
-ath12k_mac_unregister() and ath12k_mac_destroy() to unregister mac and
-then tear down the mac structures.
-
-Also, initiate MLO teardown in the hardware group stop sequence to align
-with the hardware group start sequence.
-
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01181-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Ramya Gnanasekar <ramya.gnanasekar@oss.qualcomm.com>
-Signed-off-by: Roopni Devanathan <roopni.devanathan@oss.qualcomm.com>
+Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- drivers/net/wireless/ath/ath12k/core.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/morsemicro/mm81x/bus.h | 90 +++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
+ create mode 100644 drivers/net/wireless/morsemicro/mm81x/bus.h
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-index 9dca1a0af73e..218c0a0c9699 100644
---- a/drivers/net/wireless/ath/ath12k/core.c
-+++ b/drivers/net/wireless/ath/ath12k/core.c
-@@ -1017,6 +1017,8 @@ static void ath12k_core_hw_group_stop(struct ath12k_hw_group *ag)
- 
- 	ath12k_mac_unregister(ag);
- 
-+	ath12k_mac_mlo_teardown(ag);
+diff --git a/drivers/net/wireless/morsemicro/mm81x/bus.h b/drivers/net/wireless/morsemicro/mm81x/bus.h
+new file mode 100644
+index 000000000000..3c0b8bb1d8c3
+--- /dev/null
++++ b/drivers/net/wireless/morsemicro/mm81x/bus.h
+@@ -0,0 +1,90 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright (c) 2017-2026 Morse Micro
++ */
 +
- 	for (i = ag->num_devices - 1; i >= 0; i--) {
- 		ab = ag->ab[i];
- 		if (!ab)
-@@ -1134,8 +1136,14 @@ static int ath12k_core_hw_group_start(struct ath12k_hw_group *ag)
- 
- 	lockdep_assert_held(&ag->mutex);
- 
--	if (test_bit(ATH12K_GROUP_FLAG_REGISTERED, &ag->flags))
-+	if (test_bit(ATH12K_GROUP_FLAG_REGISTERED, &ag->flags)) {
-+		ret = ath12k_core_mlo_setup(ag);
-+		if (WARN_ON(ret)) {
-+			ath12k_mac_unregister(ag);
-+			goto err_mac_destroy;
-+		}
- 		goto core_pdev_create;
-+	}
- 
- 	ret = ath12k_mac_allocate(ag);
- 	if (WARN_ON(ret))
-
-base-commit: 20ad0d58517073b3b683ff786c65dd3142321707
++#ifndef _MM81X_BUS_H_
++#define _MM81X_BUS_H_
++
++#include <linux/skbuff.h>
++#include "core.h"
++
++enum mm81x_bus_type {
++	MM81X_BUS_TYPE_USB,
++	MM81X_BUS_TYPE_SDIO,
++};
++
++struct mm81x_bus_ops {
++	int (*dm_read)(struct mm81x *mm, u32 addr, u8 *data, int len);
++	int (*dm_write)(struct mm81x *mm, u32 addr, const u8 *data, int len);
++	int (*reg32_read)(struct mm81x *mm, u32 addr, u32 *data);
++	int (*reg32_write)(struct mm81x *mm, u32 addr, u32 data);
++	void (*set_bus_enable)(struct mm81x *mm, bool enable);
++	void (*config_burst_mode)(struct mm81x *mm, bool enable_burst);
++	void (*claim)(struct mm81x *mm);
++	void (*set_irq)(struct mm81x *mm, bool enable);
++	void (*release)(struct mm81x *mm);
++	unsigned int bulk_alignment;
++};
++
++/*
++ * Default TX alignment for buses which don't care. mac80211 will give us
++ * SKBs aligned to the 2 byte boundary, so 2 is effectively a noop.
++ */
++#define MM81X_BUS_DEFAULT_BULK_ALIGNMENT (2)
++
++/* mm81x_dm_read - len must be rounded up to the nearest 4-byte boundary */
++static inline int mm81x_dm_read(struct mm81x *mm, u32 addr, u8 *data, int len)
++{
++	return mm->bus_ops->dm_read(mm, addr, data, len);
++}
++
++static inline int mm81x_dm_write(struct mm81x *mm, u32 addr, const u8 *data,
++				 int len)
++{
++	return mm->bus_ops->dm_write(mm, addr, data, len);
++}
++
++static inline int mm81x_reg32_read(struct mm81x *mm, u32 addr, u32 *data)
++{
++	return mm->bus_ops->reg32_read(mm, addr, data);
++}
++
++static inline int mm81x_reg32_write(struct mm81x *mm, u32 addr, u32 data)
++{
++	return mm->bus_ops->reg32_write(mm, addr, data);
++}
++
++static inline void mm81x_set_bus_enable(struct mm81x *mm, bool enable)
++{
++	mm->bus_ops->set_bus_enable(mm, enable);
++}
++
++static inline void mm81x_bus_config_burst_mode(struct mm81x *mm,
++					       bool enable_burst)
++{
++	if (mm->bus_ops->config_burst_mode)
++		mm->bus_ops->config_burst_mode(mm, enable_burst);
++}
++
++static inline void mm81x_claim_bus(struct mm81x *mm)
++{
++	mm->bus_ops->claim(mm);
++}
++
++static inline void mm81x_bus_set_irq(struct mm81x *mm, bool enable)
++{
++	mm->bus_ops->set_irq(mm, enable);
++}
++
++static inline void mm81x_release_bus(struct mm81x *mm)
++{
++	mm->bus_ops->release(mm);
++}
++
++static inline unsigned int mm81x_bus_get_alignment(struct mm81x *mm)
++{
++	return mm->bus_ops->bulk_alignment;
++}
++
++#endif /* !_MM81X_BUS_H_ */
 -- 
 2.43.0
 
