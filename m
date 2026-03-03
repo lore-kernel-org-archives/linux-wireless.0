@@ -1,52 +1,59 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0F09373BF2
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Mar 2026 02:48:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83FBA2F851;
+	Tue,  3 Mar 2026 02:55:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772506118; cv=none; b=Fe2STLY2x6pMpF/QfhHXzNoO3p2n2dI/Z6Wx0CGl/P0P3p2S3lSCdift2tSUx6hDHwMSTErvWubwm5tLUXcuVNBDkyaCSj4mNQ/BbNyZ/88jM3ugpc9gc2Tmb2Qc2s0jmZKm1EpcgGMYQrdKBoJRG3umXhAA+6u0TAzl5LOp/kk=
+	t=1772506501; cv=none; b=HR3MTjeGvpw3lBV3+lcEO8vOqVOd2R1cAWfZ2lBVl7Dfdbm7HaetPt/EQY+Ux0YnFWX0L4+GcrD5+D2pykDhId9hKmvDHpFcH75LzGOvYI6CBelJxrB+98xzC61XB/W/1T1i3U6ogjo9c8cbMdKduAAzrwQjTl1MIIQWfnWo0As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772506118; c=relaxed/simple;
-	bh=ivhrM0TjI7rYCiHcPKWVB3x5NidPcnJL83jfUthc58E=;
+	s=arc-20240116; t=1772506501; c=relaxed/simple;
+	bh=U/WCRbNCR91eq+/hmEk12ZnmjiIab7lQb2TsmDyyqCQ=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=NjEFhDUtmYImideL93itQXwn4WzLj85cQOvjYPE5+6vLxOnugWtUTPbBVWwl8W4UxUg5TzrooYPv7WFiekNjkl9b1oSdiQPNWDeiy9QRL4RVEFtDOCbKq1D3iHX6zE1guodxdaUfmltnA+4nad66/2juL1tXbiPMsGrX8M3GvXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Svb4G5k+; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=KFlVrRvCMllWZR8iZt26G8HWSuEa86Tt+pdT1kAvtHAfhd07OPx4OWFAX6bXpOlKj/7dU9rqF1ULKGlxYgLsRJeCWnOgLYYAXuMyNMOK5KKP+Ew/448l5qWYqGre50A9EuWieShKQHhXwkZ9esowNqWw4usWHAdJEzJuVdZrYd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=fcbEq2KA; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Svb4G5k+"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6232mYOv9258480, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="fcbEq2KA"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6232sIT71280696, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1772506114; bh=5Ja37MwLKOppugIgfg6+gQpqKVbV2nxjPliJIO50jl0=;
+	t=1772506458; bh=kwOJpi4e3u308ce5BmRhUysObzDIJVxvPcmujZKUZWY=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=Svb4G5k+EKiE+Yefc4mPL4u5Z6gCfjcisW4rSnQA4imoh1ynpLniMyR7RHVZo784V
-	 5Wn5q1NlODEGgsYaPlr36gL09qTRn+ZerRuVmivJfu4d+VkFoXM2c/eVVGIhtMYTHR
-	 rzVoNbD5rs9+UGh/ZYRLlx+DsfKuVtW1/pL7UcZH8UThFuVO00a93gMEF34k5r+0wq
-	 jSlyQf9xPCgsjOEDwKxuvBo2hgzsG1S+i+AWz9SNE0GwVCT+7ncYrReQ99SAtGmGAQ
-	 9MKck7VTq/ySfPUJHe4x9agsOyyERGo4IXZW3XAtuw2ijSPLwn9RAx/A6Lg3VAG6V4
-	 Z/m9xkksyzvfQ==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 6232mYOv9258480
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 3 Mar 2026 10:48:34 +0800
+	b=fcbEq2KA9KU+4mO4GEn7nLFCOYfIrTol04OgDaIfWVV8rR6qC6+2jgKs8oUnI3WIC
+	 zSwYcXbYla5DQX0hL3Eb/3277IwfWyiiudv7/v2n7nBfSW11SA+S9Ail5h8XxvlQId
+	 8vmXhrrkmX4u9bOt9gsLrxGBetc4DRK/7jnrwqqgGDreNddnk1dqF/ql+QVwsvNAg0
+	 neFiVgQG6Q9MWsDrI2RG96zivy59OM6XlU5SDAMi9k5CI3ho17ngHXdJ0Dvod65viv
+	 fMiiLsMdHSxVbeHlWLoXQmR1R5/qxWYk/VOpSA0ZNF37nvvOMV/X8OqFZWhNDOmKsj
+	 GNFKVgg7seozQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 6232sIT71280696
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 3 Mar 2026 10:54:18 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 3 Mar 2026 10:48:33 +0800
+ 15.2.1748.10; Tue, 3 Mar 2026 10:54:18 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
  (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Tue, 3 Mar 2026 10:48:33 +0800
+ Transport; Tue, 3 Mar 2026 10:54:13 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-CC: <damon.chen@realtek.com>, <kevin_yang@realtek.com>
-Subject: Re: [PATCH rtw-next 01/12] wifi: rtw89: fw: add fw_def struct to put firmware name and format version
-In-Reply-To: <20260213061552.29997-2-pkshih@realtek.com>
-References: <20260213061552.29997-1-pkshih@realtek.com> <20260213061552.29997-2-pkshih@realtek.com>
-Message-ID: <c2054a59-4c42-48d7-b5bd-89fba4ecef2f@RTKEXHMBS05.realtek.com.tw>
-Date: Tue, 3 Mar 2026 10:48:33 +0800
+To: Fedor Pchelkin <pchelkin@ispras.ru>, Ping-Ke Shih <pkshih@realtek.com>
+CC: Fedor Pchelkin <pchelkin@ispras.ru>, Jian-Hong Pan <jhp@endlessos.org>,
+        Kalle Valo <kvalo@kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Bitterblue
+ Smith <rtl8821cerfe2@gmail.com>,
+        Dmitry Antipov <dmantipov@yandex.ru>, <lvc-project@linuxtesting.org>,
+        <stable@vger.kernel.org>
+Subject: Re: [PATCH rtw-next] wifi: rtw88: check for PCI upstream bridge existence
+In-Reply-To: <20260220094730.49791-1-pchelkin@ispras.ru>
+References: <20260220094730.49791-1-pchelkin@ispras.ru>
+Message-ID: <f661e467-b745-4c78-9b6b-d7092188cf7b@RTKEXHMBS05.realtek.com.tw>
+Date: Tue, 3 Mar 2026 10:54:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,28 +62,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Fedor Pchelkin <pchelkin@ispras.ru> wrote:
 
-> The RTL8922DE has a RTL8922DE-VS variant which uses different firmware
-> name and format version, and the rule to select firmware type will be
-> needed to extend. Prepare for coming patches.
+> pci_upstream_bridge() returns NULL if the device is on a root bus.  If
+> 8821CE is installed in the system with such a PCI topology, the probing
+> routine will crash.  This has probably been unnoticed as 8821CE is mostly
+> supplied in laptops where there is a PCI-to-PCI bridge located upstream
+> from the device.  However the card might be installed on a system with
+> different configuration.
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Check if the bridge does exist for the specific workaround to be applied.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with Svace static
+> analysis tool.
+> 
+> Fixes: 24f5e38a13b5 ("rtw88: Disable PCIe ASPM while doing NAPI poll on 8821CE")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-12 patch(es) applied to rtw-next branch of rtw.git, thanks.
+1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-abaa59fb24ca wifi: rtw89: fw: add fw_def struct to put firmware name and format version
-fdb626b79477 wifi: rtw89: fw: recognize firmware type B by AID
-888226bd560a wifi: rtw89: add general way to generate module firmware string
-1d67f1f8e9a0 wifi: rtw89: 8852b: update supported firmware format to 2
-5cfda90c6384 wifi: rtw89: 8852a: move DIG tables to rtw8852a.c
-b60796c07a79 wifi: rtw89: 8852a: update supported firmware format to 1
-6b4fe140874b wifi: rtw89: 8851b: update supported firmware format to 1
-79b3702bbc02 wifi: rtw89: add H2C command to protect TX/RX for unused PHY
-dcd2326db843 wifi: rtw89: rfk: add hardware version to rtw89_fw_h2c_rf_pre_ntfy_mcc for new WiFi 7 firmware
-a72de4d4599e wifi: rtw89: debug: add SER SW counters to count simulation
-0cae26a78b14 wifi: rtw89: ser: Wi-Fi 7 reset HALT C2H after reading it
-3d90c421341b wifi: rtw89: ser: post-recover DMAC state to prevent LPS
+eb101d2abdcc wifi: rtw88: check for PCI upstream bridge existence
 
 ---
 https://github.com/pkshih/rtw.git
