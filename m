@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C92A23B531A
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Mar 2026 14:34:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECB6D4301D4
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Mar 2026 14:34:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772548483; cv=none; b=vD9VoPXN1COs2mspllZvP5hoSrP+dzfMR0qTCtLKX5/+7lbGSQlVdMuFagU94H/2T62D/PdQr52fmCcR1svB7kFq9aCkCtC6TEa4j49j6YudXXWyIa7mUkW8MWk6W2IjxGeKq7Dp3ce1uBhY4G1trTCrqBvdPQ3iN/V21rV3HqI=
+	t=1772548484; cv=none; b=Zh1k8Nie/dlZ0gPLlE9a7NIPfARV8B6olSiCsJ0sKnclUseaLcD3OsA88VXyKkkTOg85kEpu7lbV56bGpkkZaN1t1t7XaQogtiARisFATRcZIFxgHM2569jE4vYyLHuJOyPnycM53kl/eK3KTahFavAM84pwi+rDUpj3SlXAFwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772548483; c=relaxed/simple;
-	bh=/iaxn98j3vu8qEieoR6W/wRp7ks6whfqWEqHyNnJ/RI=;
+	s=arc-20240116; t=1772548484; c=relaxed/simple;
+	bh=DJ5f2erKiOxy/li/GYuvI3WaFcPwbPU61zJNk1ONVlg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MAsU0TUMKLkj2hUPpMz18OpcZexcgRjqF90GTqdGihs62smB7UurnGPCsrIthKg31tNQHMsB3vN84jZlJLTv0EI0VN+9QLYmnJVpiB1CSWsnemx6PYHBOg1d0Q2k5O0i/40WFbXRwvkhrOx2PRiB4ShMkY+UQS/xz5pf/YncAU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PME7TtaE; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=TF2E7I5juQtyImPJIHs2mBKwodgRv0aYyhKJtqlQ8QcwRHj4ckT32FT4T6ZGaCHGkVzkHi+FfCsioRQfhxHacuiBlNihLzAjk6b7CGgDPdfGNy6LqXVCfY1LjhVffF03zzBRsUvuS9LPukOeYCUmgfVLKRqquV3wQfLJfoLDNew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=dAIDusg0; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PME7TtaE"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="dAIDusg0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=n+TX202aG7KHbwKh4b1YLnSjFjW5NB2GWwtKoBqdMk4=;
-	t=1772548481; x=1773758081; b=PME7TtaEDykGxUelHEYpbVud9YpCy18adgk1BXlgBZ92Sqn
-	MbLbV6KSsRh2MIiZnIh9cyVYb/EbDcVkDnKZ67CskzvKtsaL0xqhXAhoU9HqNu93In1YdbtcRuEA8
-	9Gy12AyG3uSwmr34iesGA3GuGjN7co10GIFlquwcBsRpOv/Fd/1GG98Csp8NYEwMKu5jpmF1ZUgrD
-	ycM84ZDsvXXDgYX/LbtYUqrV0QfV+b8GLIjtBF3MqkaXetkjjQPOJIntAvVtiyt4/Kc456+rWZ/M2
-	FuzJV3qtZA9af1FTCE+//WHK6iz+lTnp2FetwTkjo8MetsguBhdxOH9R3A0Zu9fg==;
+	Resent-Cc:Resent-Message-ID; bh=T82aOlXVkHUhWyrvNADuxMa1eI1vdwjZkbI+/j/hW24=;
+	t=1772548483; x=1773758083; b=dAIDusg0qgpes8F+NA2pJt7RnaRWpsbCpb7wfF1goe5zDPu
+	VDgpbDsTUCdoABC3gbSx/Lbd8uIHk6YJ0s218Q6hFN8K4mljoo0npjWOutgDu3+Tn+0q2J92bB08j
+	jCHGsMVgr5Uv4JUbAMLmeNVZ90Jj6W+6E6W9TwsyFLAjB8ynQVTmAni7Kw3NF89Z7/LXu5PygNTzZ
+	XfjlRzO4MQVQ/Wr1v0dQVlXfV+9bD5uoPsE9CljSPyEWyVOA4tYq5fIlXsLNxaV27L7+J+MWKKOnK
+	uN0CuLiq8DuvIJ0lfK9mVTizrMVTHS5oZCvSeqNWEqGh8Ebh1M7ELHFWfzfZgWuA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vxQpa-00000007A1T-2uTd;
-	Tue, 03 Mar 2026 15:34:38 +0100
+	id 1vxQpc-00000007A1T-2FYw;
+	Tue, 03 Mar 2026 15:34:40 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC wireless-next 2/8] wifi: cfg80211: add helper for parsing NPCA to chandef
-Date: Tue,  3 Mar 2026 15:26:57 +0100
-Message-ID: <20260303153435.61ae6faef7f0.I95d396ac671da438f340b1afb735ebfe33164894@changeid>
+Subject: [RFC wireless-next 4/8] wifi: mac80211: remove NPCA during chandef downgrade
+Date: Tue,  3 Mar 2026 15:26:59 +0100
+Message-ID: <20260303153435.1a9133d41872.Ic39badb6782ef2242942424538f57e4a83391a06@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260303143434.273141-10-johannes@sipsolutions.net>
 References: <20260303143434.273141-10-johannes@sipsolutions.net>
@@ -50,97 +50,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add a cfg80211_chandef_add_npca() helper function that takes an
-existing chandef without NPCA and sets the NPCA information from
-the format used in UHR operation and UHR Parameters Update.
+We can't use NPCA any more if the chandef was downgraded,
+for obvious reasons. Clear NPCA during any downgrade.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 13 ++++++++++++
- net/wireless/chan.c    | 46 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 59 insertions(+)
+ net/mac80211/util.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 828d5cc84028..d09ec65514fc 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1150,6 +1150,19 @@ int cfg80211_chandef_primary(const struct cfg80211_chan_def *chandef,
- 			     enum nl80211_chan_width primary_chan_width,
- 			     u16 *punctured);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b2e6c8b98381..373d0f853dbc 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3752,6 +3752,10 @@ void ieee80211_chandef_downgrade(struct cfg80211_chan_def *c,
+ 		c->width = new_primary_width;
+ 	}
  
-+/**
-+ * cfg80211_chandef_add_npca - parse and add NPCA information to chandef
-+ * @wiphy: the wiphy this will be used for, for channel pointer lookup
-+ * @chandef: the chandef to modify, must be a valid chandef without NPCA
-+ * @npca: the NPCA information, can be %NULL
-+ *
-+ * Returns: 0 if the NPCA information was added and the resulting
-+ *	chandef is valid, a negative error code on errors
-+ */
-+int cfg80211_chandef_add_npca(struct wiphy *wiphy,
-+			      struct cfg80211_chan_def *chandef,
-+			      const struct ieee80211_uhr_npca_info *npca);
++	/* whatever we do, downgrading removes NPCA */
++	c->npca_chan = NULL;
++	c->npca_punctured = 0;
 +
- /**
-  * nl80211_send_chandef - sends the channel definition.
-  * @msg: the msg to send channel definition
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 7f6f4cfc3272..9d8c8ebf9644 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -546,6 +546,52 @@ int cfg80211_chandef_primary(const struct cfg80211_chan_def *c,
- }
- EXPORT_SYMBOL(cfg80211_chandef_primary);
- 
-+int cfg80211_chandef_add_npca(struct wiphy *wiphy,
-+			      struct cfg80211_chan_def *chandef,
-+			      const struct ieee80211_uhr_npca_info *npca)
-+{
-+	struct cfg80211_chan_def new_chandef = *chandef;
-+	u32 width, npca_freq;
-+	u8 offs;
-+
-+	if (chandef->npca_chan || chandef->npca_punctured)
-+		return -EINVAL;
-+
-+	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-+		return -EINVAL;
-+
-+	if (!npca)
-+		return 0;
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_160:
-+	case NL80211_CHAN_WIDTH_320:
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	offs = le32_get_bits(npca->params,
-+			     IEEE80211_UHR_NPCA_PARAMS_PRIMARY_CHAN_OFFS);
-+
-+	width = cfg80211_chandef_get_width(chandef);
-+	npca_freq = chandef->center_freq1 - width / 2 + 10 + 20 * offs;
-+	new_chandef.npca_chan = ieee80211_get_channel(wiphy, npca_freq);
-+	if (!new_chandef.npca_chan)
-+		return -EINVAL;
-+
-+	if (npca->params & cpu_to_le32(IEEE80211_UHR_NPCA_PARAMS_DIS_SUBCH_BMAP_PRES))
-+		new_chandef.npca_punctured = le16_to_cpu(npca->dis_subch_bmap[0]);
-+
-+	if (!cfg80211_chandef_valid(&new_chandef))
-+		return -EINVAL;
-+
-+	*chandef = new_chandef;
-+	return 0;
-+}
-+EXPORT_SYMBOL(cfg80211_chandef_add_npca);
-+
- static const struct cfg80211_chan_def *
- check_chandef_primary_compat(const struct cfg80211_chan_def *c1,
- 			     const struct cfg80211_chan_def *c2,
+ 	/*
+ 	 * With an 80 MHz channel, we might have the puncturing in the primary
+ 	 * 40 Mhz channel, but that's not valid when downgraded to 40 MHz width.
 -- 
 2.53.0
 
