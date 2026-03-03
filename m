@@ -1,27 +1,52 @@
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.17.10])
+Received: from ewsoutbound.kpnmail.nl (ewsoutbound.kpnmail.nl [195.121.94.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 394CC370D6C
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Mar 2026 16:44:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DD03BD622
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Mar 2026 16:59:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.121.94.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772556268; cv=none; b=DB+8cJPEWYRLqSaKk9YtpsVQbuACEM7sHM7hOm1wrJd260aioJCebyIFWdgUDgURAtMHJT1+IZUlZZmSzGMhRA3ZhBIVE5lr/ONlQ929HDLb8b0BNVtFtSKigiMcbhgxvd2Ti4gDNdC0hhIXbo6sXpizdq+nm9OY6UAcd4iO+kI=
+	t=1772557168; cv=none; b=GWaKahnH+9b9vaCNg7FLZSbtzJoH8ojRt7P4w7Fr3vA8UF10HE4jVUDWV4jMgXwIOFlOMbmVxGxt3jXv1YEk+rwlI0dszOwF6wxxunHSYvzJJb4GkSjFFy8siDwtQg7uDDO8nAJeFWfQ7PXp1ZM2L90sCmYhj/L+bTK2jrCOkt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772556268; c=relaxed/simple;
-	bh=zicAUpEW8baw4ChtUGe9CI+tPJqmVpO6djDZ1HH8leY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=suSIFKpqHmSsOgbrXUyxdz0ZxeHVMZVhYa7yQpRmZeMf0MlILq6BPFJMSnEGXISsPrbenmvfD7HY0cpNfHZOxi4t4ZjLdtXE+c4Tsy4sR+x/jmf5cOtFMIWCH61/nZZBSCllNj22mhzWdp0frdRV2hLmEbVbBuP20ZdOw3LuSZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr; spf=pass smtp.mailfrom=green-communications.fr; arc=none smtp.client-ip=212.227.17.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=green-communications.fr
-Received: from client.hidden.invalid by mrelayeu.kundenserver.de (mreue108
- [213.165.67.119]) with ESMTPSA (Nemesis) id 1N0o7f-1vj76s2A7B-00zmjb; Tue, 03
- Mar 2026 17:19:39 +0100
-From: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+	s=arc-20240116; t=1772557168; c=relaxed/simple;
+	bh=vJq+WbDR8OrsJV5qyfCb43XT9E2w9Xr0/w+Ah23ZH4o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aQpVJIkUCgU4j2rpVr2zKVwAnv9RAnU/uQXGhvwDFK02NGMRbi1UPpBogrFwgtaBbwZw4GAXpGJ4HnZExrSYd98aPbsBWKTMt3pdc+ihxVeUoswrIwPLjuZu6bAbhQEGNx89LoYArHlD51/smtf5PC62ZmVNIJGhpqF5ST3l1ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xs4all.nl; spf=pass smtp.mailfrom=xs4all.nl; dkim=pass (2048-bit key) header.d=xs4all.nl header.i=@xs4all.nl header.b=nwPKoyHI; arc=none smtp.client-ip=195.121.94.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xs4all.nl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xs4all.nl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=xs4all.nl header.i=@xs4all.nl header.b="nwPKoyHI"
+X-KPN-MessageId: 51bc0c39-1722-11f1-969b-005056abbe64
+Received: from smtp.kpnmail.nl (unknown [10.31.155.40])
+	by ewsoutbound.so.kpn.org (Halon) with ESMTPS
+	id 51bc0c39-1722-11f1-969b-005056abbe64;
+	Tue, 03 Mar 2026 17:59:19 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=xs4all.nl; s=xs4all01;
+	h=mime-version:message-id:date:subject:to:from;
+	bh=pq8fyeoRZOgQL3KQm3S8JZ0D+k426q1CN95l7TG/gKU=;
+	b=nwPKoyHIRUjpbXDteJ7cePphGKM6hyDQTWrhrX59uqxOVCl7gdtuTCE5dQR8ELk4Cr8i8TMdQOWxw
+	 cOl0t31CVcoYpc+mn2TAZ+2P4iOie6IICMorOyr1BxNsKfRfmRtzHYRfcebyTuDSO/u3pquxt2PBd6
+	 bwp3j7zN6bxNJ/GbPUep5IXGqgvaW32T3mdBPXWi0DccoNGkrp70ssh5b6g6fGXsx9jozSr8aZpHrQ
+	 Fv1b7fikFZh6K2NbatMlVALSDUJcHvs70YM3Iy9XFA77NpfESeZ4rGTMaNhKfb4QDeD2HWp9+eYyqy
+	 775mVOs8Cv7BiZo1j53zR13lGjVfVTA==
+X-KPN-MID: 33|iB3+2Alen2yo2BvGDXaoS0csobFlWVulyAcRTKJgXZibVSlhhH3Iv5yIigrxWQD
+ p2+0Wm3t6Fo3xbU/C2tU1abWuGhhlbxTzPKDqHwd6S4o=
+X-KPN-VerifiedSender: Yes
+X-CMASSUN: 33|aFAbJlvvW1Wf+JTBf2ux0S6Q2QYZUfCmdAPFSR0hgxK0waU7z4EDOny8mXT0rzY
+ pal45Sa5qwtkTj80eGMR+/A==
+Received: from daedalus.home (unknown [178.230.196.166])
+	by smtp.xs4all.nl (Halon) with ESMTPSA
+	id 4f08e9f5-1722-11f1-b8e2-005056ab7584;
+	Tue, 03 Mar 2026 17:59:19 +0100 (CET)
+From: Jori Koolstra <jkoolstra@xs4all.nl>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless v2] wifi: mac80211: use jiffies_delta_to_msecs() for sta_info inactive times
-Date: Tue,  3 Mar 2026 17:06:39 +0100
-Message-ID: <20260303161701.31808-1-nicolas.cavallari@green-communications.fr>
+Cc: Jori Koolstra <jkoolstra@xs4all.nl>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org (open list:MAC80211),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] mac80211_hwsim: change hwsim_class to a const struct
+Date: Tue,  3 Mar 2026 17:59:37 +0100
+Message-ID: <20260303165938.3773998-1-jkoolstra@xs4all.nl>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -30,81 +55,69 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:5tWoa7ThpOKN8sHK63Mct8oNXwach6y51yyxP8INNG5kxLt+dHJ
- Nz6WMMtu/3M/StMDRAhbHh+eYWIugN7HDJpJR4LO8dqCo1FiSuerOwgOhK7gSlZSVIdWJJZ
- LunorFXf/fAYXnMisWlTuRcVYjMVtKj4Ks809n8Wf1KaUiA614u6LPx2KmmPFj7bJAvqyqC
- hPO07enmXM18iwAG5uKQQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:/6Wx3ketHWU=;8RIbB4kImqy1fAeM2fD4hEmkyUj
- 7g13YIa58VPXfkrMZz6QLgO8Zdjic7Qxy+c5gEdU/et/ecfi1892lcIPEflK8ephiNieehKwg
- jQ+gs5t6tpfvTUj8PaRWWJMdKg1mtQnJiY/dpDsc+c0uK10egTCItAkvlQkKmSjW3O/rH+Agw
- Op3VHzs2DidgCgas0hUXtBsWZxo3tD5tH0ClVzAXviPxCLjuCfOen1l77U6196a6rQydrFi7L
- EaIvlK7aXDTeQgMrsJi2wpRD/3lxBFcx/b+8/7W01+FNevYTJyqmb5IjuvhTkBS7hGCJ1BxCb
- Q7coJ8LgHB01+5gAUuMr9/AFz3sKkYFfyUb+a6sIzZ2FTVCdajPDN1Ve18HIc+TaSUEMK4glx
- 6b0o1LTSh1sH0pMclZLBJ/kPTzQJbSS5o8lcmbyJ5WEqwWQMMKcyvDOvePrXlGD91ISjMGAb1
- ciV1SlZyycJ+RbhpIXq4go8sRWxJvJOc+Xu31pOhOa6aqKiQCJD9Hc0YecCcxX1/UmK48S7K8
- L4PuyOsKZLNb2GF2JUrWzODGCiZqy7jI0G3QqTeuzMWz4sclWxlcvhGZnmGChlt7+9ldskCa2
- TXK59eYIrfPeTIIOcsPP5GZ0PdDIOEJsdm7LKpyc5qv1ICyytdb1jmjcezlDwCT2JMQrwvNeU
- MrFFqTNlxcJjj+65xR0VFJZBP8mRBSw8jgEjtqfrBe/S458RuRy+RZZNkbF7xk/VdjjuAjn+e
- 59jSTPVD0BefXLzx1hK48rokJOnCJM1y+iQmUbA8qWALCg4A+C1P2ACYxzQzfuNaM8gVgVfN3
- 36WcengaMl/ucXK9rIm+b23TeoWXFe/9KGxLIqDmqyObQd2e/gPMRs12OeS8rTnillf2NAuX3
- BPkL9Rpi/1Dyk8l+YPNlhDgsxGMCFZKNfNgMbYkXg4SeUVNrtCU4ZwKCctF8J/nCs1QwZbbKO
- 6CtyduzcjjlvNhU9Ddy9hhNqJZBfta4bD/AkZ5h6p5kfSkUD0egyQsoSR4TJ9RHVcrx5SHDnY
- 2KVtUtB552DfFg+p1DkIBcMoG/yuPbXg8UnFBm/1z3DnT38ldsmeOZMo/ETIVbeKYjns0Yk9w
- dpNRHNLfBqrDoBeiIWUSTHn6t/RPAziP+T8OtKfS5XYUqzuzAjF81/Cb5GR+HWIOD6Va5lNhH
- rVxF9nVI+RQKZrYn5XCFW0zNW0F2ewhIHYZ2BfX0gB3Xj2qe6jjViTzWGTlCU4Ag0nYIu4DHQ
- jEz+Wg3rhDtJOak41jbvzkfQPJf6bNyms3zkgiSQjh9txWszhTyPhbO7cyUCuvbhdFL/T3e6i
- ZvZ3yopZUooj4HxI+6LpHSCHYVHAp4Vls8xkYLc7VwImjEqZKf4R6qCG8puG5y/CONvvFMskU
- eViOWis/L01DH588ZytAmYnSnfmyhw2wpDJL7G6xdovjnFOVLTrU8qv02LSfRIMik4wRbCnBR
- UUExEgGFi8FOByCPYnMT9ormcbaNqy/KgJmQNcC4RZkIzj5QRO4lWogZgduADu5Vxs6mGG8Ch
- z9GKvJ1Azmt5WXJsg9d0okCJxqhvictR07dqQAgKwr7st3wE4f7ftn3W0BPap6+2H969j09Dy
- Y+6kqPiTknNw9YQFOhf8Cj36JXP8LMhySEojdAbKiUVfWWgH+3YFMD+TyUGA5hf2Utuho+m1F
- NWchh8+/9gZQDgc5OABHsOmWSts10zCyQKJdE2clb6zMZHwf1U8E3MFNvXZwqjuJ0=
 
-Inactive times of around 0xffffffff milliseconds have been observed on
-an ath9k device on ARM.  This is likely due to a memory ordering race in
-the jiffies_to_msecs(jiffies - last_active()) calculation causing an
-overflow when the observed jiffies is below ieee80211_sta_last_active().
+The class_create() call has been deprecated in favor of class_register()
+as the driver core now allows for a struct class to be in read-only
+memory. Change hwsim_class to be a const struct class and drop the
+class_create() call.
 
-Use jiffies_delta_to_msecs() instead to avoid this problem.
+Link: https://lore.kernel.org/all/2023040244-duffel-pushpin-f738@gregkh/
 
-Fixes: 7bbdd2d98797 ("mac80211: implement station stats retrieval")
-Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Jori Koolstra <jkoolstra@xs4all.nl>
 ---
- net/mac80211/sta_info.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/virtual/mac80211_hwsim.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-v2: reformat patch, change commit message to obey unwritten rule
-
-also, the wireless tree does not compile on ARCH=um as of d973b1039ccd
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6dc22f1593be..dd51a578fbc5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2782,7 +2782,9 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim.c b/drivers/net/wireless/virtual/mac80211_hwsim.c
+index e89173f91637..506f865075b1 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+@@ -337,7 +337,9 @@ static inline void hwsim_net_set_wmediumd(struct net *net, u32 portid)
+ 	hwsim_net->wmediumd = portid;
+ }
+ 
+-static struct class *hwsim_class;
++static const struct class hwsim_class = {
++	.name	= "mac80211_hwsim"
++};
+ 
+ static struct net_device *hwsim_mon; /* global monitor netdev */
+ 
+@@ -5424,7 +5426,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 	data = hw->priv;
+ 	data->hw = hw;
+ 
+-	data->dev = device_create(hwsim_class, NULL, 0, hw, "hwsim%d", idx);
++	data->dev = device_create(&hwsim_class, NULL, 0, hw, "hwsim%d", idx);
+ 	if (IS_ERR(data->dev)) {
+ 		printk(KERN_DEBUG
+ 		       "mac80211_hwsim: device_create failed (%ld)\n",
+@@ -5978,7 +5980,7 @@ static void mac80211_hwsim_free(void)
+ 		spin_lock_bh(&hwsim_radio_lock);
  	}
+ 	spin_unlock_bh(&hwsim_radio_lock);
+-	class_destroy(hwsim_class);
++	class_unregister(&hwsim_class);
+ }
  
- 	link_sinfo->inactive_time =
--		jiffies_to_msecs(jiffies - ieee80211_sta_last_active(sta, link_id));
-+		jiffies_delta_to_msecs(jiffies -
-+				       ieee80211_sta_last_active(sta,
-+								 link_id));
+ static const struct net_device_ops hwsim_netdev_ops = {
+@@ -7083,11 +7085,9 @@ static int __init init_mac80211_hwsim(void)
+ 	if (err)
+ 		goto out_exit_netlink;
  
- 	if (!(link_sinfo->filled & (BIT_ULL(NL80211_STA_INFO_TX_BYTES64) |
- 				    BIT_ULL(NL80211_STA_INFO_TX_BYTES)))) {
-@@ -3015,7 +3017,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	sinfo->connected_time = ktime_get_seconds() - sta->last_connected;
- 	sinfo->assoc_at = sta->assoc_at;
- 	sinfo->inactive_time =
--		jiffies_to_msecs(jiffies - ieee80211_sta_last_active(sta, -1));
-+		jiffies_delta_to_msecs(jiffies -
-+				       ieee80211_sta_last_active(sta, -1));
+-	hwsim_class = class_create("mac80211_hwsim");
+-	if (IS_ERR(hwsim_class)) {
+-		err = PTR_ERR(hwsim_class);
++	err = class_register(&hwsim_class);
++	if (err)
+ 		goto out_exit_virtio;
+-	}
  
- 	if (!(sinfo->filled & (BIT_ULL(NL80211_STA_INFO_TX_BYTES64) |
- 			       BIT_ULL(NL80211_STA_INFO_TX_BYTES)))) {
+ 	hwsim_init_s1g_channels(hwsim_channels_s1g);
+ 
 
-base-commit: d973b1039ccde6b241b438d53297edce4de45b5c
+base-commit: d466c332e106fe666d1e2f5a24d08e308bebbfa1
 -- 
 2.53.0
 
