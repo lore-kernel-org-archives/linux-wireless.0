@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7063337E2F8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82FF7384231;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772708857; cv=none; b=Es51Oh2KrfjIraiNsFCVJJbek5QWuUL7otWU8sTQJDrpwy0xJrXt6sAhpNYzpdOI4iuhwo2gi7B8w9f1dgowq4d6ihYK7EsKbY0a1pkcqLWJ4/69BsauP/e9i9NBGWz4BlJSpg7cWMz6WUoCeKcORKMugKBJG7M4aP3mFbms0Pk=
+	t=1772708857; cv=none; b=uGlRHEhTqy0GJKbPGVy5rhiIKZ2dfYf7aM7cseFyCMdbEwm+t8ehStPg5lcTc9lX4Lum1kFPFQdMH97cQrGlzyvjvvpGavBo/RDTi68nwxfyfWTPcgpzNJ9MlmH6FjmST3BBrboXCK1MMGwfscFrHkWFwFK7XPyD2rGyw7SLvCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772708857; c=relaxed/simple;
-	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
+	bh=42Ws8GlzTjjM4nukmpyywyMHmPwKfyyiFsTL7Pg3heo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=l6x+Vcnh/+S3Vj4ThVXUyDMqIQULTv6ZyDyNnJyIhsDaEoduDpu8ELyJmEQdQnstdLfepAIGsLl1WF6+X4mKTWVlmYrbJj+r5t4mIYNDZf0VyKjkWy5rfqlnQ/NPYUxnhICt+GxrUo1dEHKzycvjpN2y8j0jHnqjstQgI/ePHLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ti6jcZMg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=cb+DEKsgq15sZyVH4K+48F0th6V2beHogjDjWk6ZnETSDoAQ0HW26KrE4mHy7R3Mt2Tk9tJegao7Ca5vS/2Yu/gkLq8kk+0Bpi3RrsDbLVpX5RJSmQihV2moSGy35sBJVqvxCUEefXmjp+TX2NskOUPanftMM9UsiSqkd0kbUS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FOaIFzGQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ti6jcZMg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18EA5C2BCB2;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FOaIFzGQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EF90C2BCB3;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772708857;
-	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
+	bh=42Ws8GlzTjjM4nukmpyywyMHmPwKfyyiFsTL7Pg3heo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ti6jcZMg9hkzFNNuRJZ8J6p+Wm6FJte19bySeGHUcqN32ZseL0DVoC3ezybWDPCk3
-	 AKhklBKc76YrcTQyj5xsbxy9PMiBq4WwyfShK8QYKuWBMkg312U3hR14U2pvz8euSX
-	 kxUi2xQcQR+Dy6YoKSd714v8Xq+O00ptptd9i8/FWUlbiTQvLxJZzJKhHGYqZhJTDF
-	 lwdCTRijWIScDb4CIKRSvi0YAHqFIPxf8+jiBJlVQpE9tx0IPK5vccwym1Kj6upeyd
-	 xTpB2Uq7cJEQDp7RHQJfwJdOR6LFBLBTEHXDh80PXT66yBJE97QZUL212kfNIZZY/h
-	 uz41RyHJAwWKQ==
+	b=FOaIFzGQ7/rMeZLOz2PwYSqi5x+nYQfOEwxzNrhGsSWKoyOUYY9C1E29M8BpDXxWO
+	 9Z6hHVM6hdiBEyoTA1L4iHZkwIhajTVp88cdSQxu2onefS/CwERF2VvWP0JUKaVE4N
+	 WURp0cJCbrcvMKkcPz9TAqoLHOI02IDJYhFXuti4F90nM7hI5mexWsQC0ZuVX8SIBY
+	 iG0mRUTQxbbEW7xZn5ZNLafBe6VcemAO1oC4elXrhyFzmLNtgf8I+X1VRFNANUGZGi
+	 gzYciOQ6OV93o3JbIhXWPSrNKg9hNMM3WjA5jig596rPcsFW8rL37r4ohDGbYVtIO6
+	 1c/FFnx74hSOw==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vy6YI-000000004ct-2YsO;
+	id 1vy6YI-000000004cv-2bgS;
 	Thu, 05 Mar 2026 12:07:34 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -52,9 +52,9 @@ Cc: Brian Norris <briannorris@chromium.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH 04/13] wifi: mwifiex: drop redundant device reference
-Date: Thu,  5 Mar 2026 12:07:04 +0100
-Message-ID: <20260305110713.17725-5-johan@kernel.org>
+Subject: [PATCH 05/13] wifi: mt76: drop redundant device reference
+Date: Thu,  5 Mar 2026 12:07:05 +0100
+Message-ID: <20260305110713.17725-6-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260305110713.17725-1-johan@kernel.org>
 References: <20260305110713.17725-1-johan@kernel.org>
@@ -77,31 +77,37 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/usb.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 947ecb0a7b40..f4b94a1054f6 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -520,8 +520,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+index d91feffadda9..bab7b91f14be 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+@@ -151,7 +151,6 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ 		return -ENOMEM;
  
--	usb_get_dev(udev);
--
- 	return 0;
+ 	dev = container_of(mdev, struct mt7615_dev, mt76);
+-	udev = usb_get_dev(udev);
+ 	usb_reset_device(udev);
+ 
+ 	usb_set_intfdata(usb_intf, dev);
+@@ -193,7 +192,6 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ error:
+ 	mt76u_queues_deinit(&dev->mt76);
+ 	usb_set_intfdata(usb_intf, NULL);
+-	usb_put_dev(interface_to_usbdev(usb_intf));
+ 
+ 	mt76_free_device(&dev->mt76);
+ 
+@@ -211,7 +209,6 @@ static void mt7663u_disconnect(struct usb_interface *usb_intf)
+ 	mt7663u_cleanup(dev);
+ 
+ 	usb_set_intfdata(usb_intf, NULL);
+-	usb_put_dev(interface_to_usbdev(usb_intf));
+ 
+ 	mt76_free_device(&dev->mt76);
  }
- 
-@@ -666,8 +664,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	mwifiex_dbg(adapter, FATAL,
- 		    "%s: removing card\n", __func__);
- 	mwifiex_remove_card(adapter);
--
--	usb_put_dev(interface_to_usbdev(intf));
- }
- 
- static void mwifiex_usb_coredump(struct device *dev)
 -- 
 2.52.0
 
