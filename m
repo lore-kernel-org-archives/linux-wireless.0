@@ -1,131 +1,123 @@
-Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC98313540
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 16:52:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF9A39C653;
+	Thu,  5 Mar 2026 17:21:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772729578; cv=none; b=jbdznZOQjy4KB8dcYCFBgOGJrScz5C2/IebsB2ftXfkZWe+OgfBV0Y0Zu7V8mTytS6Y2lL15nZ2S/x0IdIdMxc6TVF/QMnDLOJAIzW974QWEth+hlCYwmYWQmYnDPGD0KT9cBJB5cKmPmhCgK/Bik1C2JozwwarkOgmwsvFjCLs=
+	t=1772731262; cv=none; b=pg7tGP/jAPGdqA60qU/gUoDeFPEzO0Cn6npK6UaUm2Hl92SHH/iddML6v2LNZsLbGj1pW5I5noEFG6d1TWoOMm6KyYYD0voXgP7lPZo6zl7K1F4CG0GW99/suJhRziG/JzFEKnmWMoqTsSm+tEQDoS2x+nGE0Z6jrtalYixx5II=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772729578; c=relaxed/simple;
-	bh=lPd3xRfvHNfLIITtOH+GVXIOfyrNlvjQZbC9rkyCTAw=;
+	s=arc-20240116; t=1772731262; c=relaxed/simple;
+	bh=SlCJF42e7tc+fr9+74RoFgPnfv67E1R18ylV0LD2aSY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sXzy7Ma7PStPl3eg6/mbXSsVmaeRBDoJeuc1ujjN1vHnicmAmP+CaKwPlQ8kMmxERILtxhbRXzXE0GzLC4FRlDgFsedTkqcpjBTyFJyLPzXI0bTPGh9rM4CU/IwtWf7sQ0AqL6Mc8uV73HuXnIupes27uEk05d6ZLCSkoM9Lrvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=yjfLtIO8; arc=none smtp.client-ip=212.77.101.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	 Content-Type:Content-Disposition:In-Reply-To; b=TTgJcc7IhcIUoSnOGGPXzTs2/kpFOWo/8yD1MsWlMaJWNREBmNPrBw9PTIbnHEWpKw0hVi5K4V2kS3E7CqvVW0bQbudCYVYldh8ijLNDBD+GCnPajgXOme8WyLJ2orczjLwG/Qpt1bKzK0FtdKOFm+7p+c6BFIL4Nu2wR8QcbAk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rr725aB8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="yjfLtIO8"
-Received: (wp-smtpd smtp.wp.pl 3648 invoked from network); 5 Mar 2026 17:52:52 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1772729572; bh=nceW5alBsceTqsHbyHEzTPEtOGIiCOQeWI18n7irs4s=;
-          h=From:To:Cc:Subject;
-          b=yjfLtIO82yWWGrGfJJKkOyGgY6YMAghLBA0DPoVtoRr0txyusYsRE2erOvh6epnV9
-           SfdGLtnq5Z10wg4I0P1ww0xWOeXk/OLwE3ABPO8jW9YudoEgRVQmRnScs2O8a4z0Ld
-           L0x9eaU7bGwPww/KP4U1vsKJnwgmnZGpoSx1tnlTNNZUUPdoOSFYyTayxfm9D67sju
-           O7QSSbYUzAVxrCLWIJ9SK8Krfj518PCqho/5PYkwSU6K3Ke17jA12Jp5z4fNR/RUwA
-           E7yczLQnmUJK6rj+jOX1MX8m3bmNaOv0UkDKP6T6Xo54eOM3s2eE22B0eXk+tmc3FH
-           Nm41AGQXONXcQ==
-Received: from 77-236-11-252.static.play.pl (HELO localhost) (stf_xl@wp.pl@[77.236.11.252])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <johan@kernel.org>; 5 Mar 2026 17:52:52 +0100
-Date: Thu, 5 Mar 2026 17:52:52 +0100
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Johan Hovold <johan@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	Jes Sorensen <Jes.Sorensen@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 10/13] wifi: rt2x00: drop redundant device reference
-Message-ID: <20260305165252.GA77369@wp.pl>
-References: <20260305110713.17725-1-johan@kernel.org>
- <20260305110713.17725-11-johan@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rr725aB8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 176DAC116C6;
+	Thu,  5 Mar 2026 17:21:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772731262;
+	bh=SlCJF42e7tc+fr9+74RoFgPnfv67E1R18ylV0LD2aSY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Rr725aB8B6pGxQHaf0clr6NL5mOigAD9FwXCJN3/2DRtD7wy0v1MECrQt2zdwEeLT
+	 fxhKOORzdxHMP/Lo/Qr3UMd3na3k17JoyPeHQe1bUrOUguY5K7qgUi3rr5NSx2rHQV
+	 w9kKgtkdWnD/ENij9PdM1lap1do3C4tnifIVq1uiEgqc6pDcE5DMhFYWi4e8Hqb0Cx
+	 Bw8MueOlm/L0IxyYHbZ34ZJbqB1wBJ+iNwxlbACNri+apFh2HgWcAoNcVHZgPtWYKF
+	 jHAhadEysYf0d82q8DZS6aLOV9JYnJ9oWzIPMj82Y7/uwhCcDk49hnvGfVkPYmpqEK
+	 QjdC5gg0Wk5rA==
+Date: Thu, 5 Mar 2026 18:20:59 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Marco Crivellari <marco.crivellari@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Michal Hocko <mhocko@suse.com>, Kalle Valo <kvalo@codeaurora.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/2] ath6kl: add WQ_PERCPU to alloc_workqueue users
+Message-ID: <aam7e3bAFBVOUnFX@localhost.localdomain>
+References: <20251113161248.387964-1-marco.crivellari@suse.com>
+ <20251113161248.387964-2-marco.crivellari@suse.com>
+ <CAAofZF5oAd18VV6ipoJDjiWvCeRxUh5KtdEZvPQ_DS71X_Vkzw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260305110713.17725-11-johan@kernel.org>
-X-WP-MailID: 7399742c24ade6edd38c91daa616f014
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [0TOR]                               
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAAofZF5oAd18VV6ipoJDjiWvCeRxUh5KtdEZvPQ_DS71X_Vkzw@mail.gmail.com>
 
-On Thu, Mar 05, 2026 at 12:07:10PM +0100, Johan Hovold wrote:
-> Driver core holds a reference to the USB interface and its parent USB
-> device while the interface is bound to a driver and there is no need to
-> take additional references unless the structures are needed after
-> disconnect.
+Le Thu, Mar 05, 2026 at 05:44:04PM +0100, Marco Crivellari a écrit :
+> On Thu, Nov 13, 2025 at 5:12 PM Marco Crivellari
+> <marco.crivellari@suse.com> wrote:
+> >
+> > Currently if a user enqueues a work item using schedule_delayed_work() the
+> > used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
+> > WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
+> > schedule_work() that is using system_wq and queue_work(), that makes use
+> > again of WORK_CPU_UNBOUND.
+> >
+> > This lack of consistency cannot be addressed without refactoring the API.
+> > For more details see the Link tag below.
+> >
+> > alloc_workqueue() treats all queues as per-CPU by default, while unbound
+> > workqueues must opt-in via WQ_UNBOUND.
+> >
+> > This default is suboptimal: most workloads benefit from unbound queues,
+> > allowing the scheduler to place worker threads where they’re needed and
+> > reducing noise when CPUs are isolated.
+> >
+> > This continues the effort to refactor workqueue APIs, which began with
+> > the introduction of new workqueues and a new alloc_workqueue flag in:
+> >
+> > commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
+> > commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
+> >
+> > This change adds a new WQ_PERCPU flag to explicitly request
+> > alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
+> >
+> > With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
+> > any alloc_workqueue() caller that doesn’t explicitly specify WQ_UNBOUND
+> > must now use WQ_PERCPU.
+> >
+> > Once migration is complete, WQ_UNBOUND can be removed and unbound will
+> > become the implicit default.
+> >
+> > Suggested-by: Tejun Heo <tj@kernel.org>
+> > Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+> > Link: https://lore.kernel.org/all/20250221112003.1dSuoGyc@linutronix.de/
+> > ---
+> >  drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+> > index 38bb501fc553..bfb21725d779 100644
+> > --- a/drivers/net/wireless/ath/ath6kl/usb.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/usb.c
+> > @@ -637,7 +637,7 @@ static struct ath6kl_usb *ath6kl_usb_create(struct usb_interface *interface)
+> >         ar_usb = kzalloc(sizeof(struct ath6kl_usb), GFP_KERNEL);
+> >         if (ar_usb == NULL)
+> >                 return NULL;
+> > -       ar_usb->wq = alloc_workqueue("ath6kl_wq", 0, 0);
+> > +       ar_usb->wq = alloc_workqueue("ath6kl_wq", WQ_PERCPU, 0);
+> >         if (!ar_usb->wq) {
+> >                 kfree(ar_usb);
+> >                 return NULL;
 > 
-> Drop the redundant device reference to reduce cargo culting, make it
-> easier to spot drivers where an extra reference is needed, and reduce
-> the risk of memory leaks when drivers fail to release it.
+> [ Cc-ing Andrew Morton ]
 > 
-> Signed-off-by: Johan Hovold <johan@kernel.org>
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+> Hello Andrew,
+> 
+> This file is orphaned. Can you help me in order to have this patch merged?
+> 
+> Thank you!
+>
 
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 12 +-----------
->  1 file changed, 1 insertion(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> index 54599cad78f9..83d00b6baf64 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-> @@ -802,14 +802,12 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
->  	struct rt2x00_dev *rt2x00dev;
->  	int retval;
->  
-> -	usb_dev = usb_get_dev(usb_dev);
->  	usb_reset_device(usb_dev);
->  
->  	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
->  	if (!hw) {
->  		rt2x00_probe_err("Failed to allocate hardware\n");
-> -		retval = -ENOMEM;
-> -		goto exit_put_device;
-> +		return -ENOMEM;
->  	}
->  
->  	usb_set_intfdata(usb_intf, hw);
-> @@ -851,10 +849,6 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
->  
->  exit_free_device:
->  	ieee80211_free_hw(hw);
-> -
-> -exit_put_device:
-> -	usb_put_dev(usb_dev);
-> -
->  	usb_set_intfdata(usb_intf, NULL);
->  
->  	return retval;
-> @@ -873,11 +867,7 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf)
->  	rt2x00usb_free_reg(rt2x00dev);
->  	ieee80211_free_hw(hw);
->  
-> -	/*
-> -	 * Free the USB device data.
-> -	 */
->  	usb_set_intfdata(usb_intf, NULL);
-> -	usb_put_dev(interface_to_usbdev(usb_intf));
->  }
->  EXPORT_SYMBOL_GPL(rt2x00usb_disconnect);
->  
-> -- 
-> 2.52.0
-> 
+Reviewed-by: Frederic Weisbecker <frederic@kernel.org>
+
+-- 
+Frederic Weisbecker
+SUSE Labs
