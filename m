@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B64385536;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD2D0386444;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772708857; cv=none; b=IcnFcTuB6kzEtarbQgs+cd9OWui0yuXpytCmUlIkemFO1LkcfuqZEfHkPkPjJ8vxQVgNkdTX3LX4uyLrvzc6wVF98cdGk/OwnUR2TxFMzqDamAsEvwsPRnqLjRGEe6HZEsx6jOPE+54LeDEPL/xJyZPgKz2h9pYf6E6C97n9d3A=
+	t=1772708857; cv=none; b=MoIigFWOFQcGi/8+n/2TZ6xTuqzqgRhePRC21Y1FFMoHRrjVGM4tI3vLg4mmrWTw7SNfk8Q3k+FBXbZYe82x5CPVpwg1iM2Q/egbay7miO5dVWMaghmhHso7q5WNgK2+eGKjMAwTfihGYFVfuERDHDmBjnSTDyMi2Vbv0+6Mrmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772708857; c=relaxed/simple;
-	bh=xCEaqUoallq2NdTzWqQElwbwYb5T0f2rYJwsXpRUAaA=;
+	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Pzie1489vKaXU24VwkLS8rXLfjzx+10sCZOEYfNRZaSOU9Xjtd2ifEZLpVAKawAhhCXPoK3u1s1ykCRIQayd8PE8jELn9LihEyhZHC34XWhohVxZRiGBKVvzBnQQOMyj+8HdTlTmAUnQOVSgfPLwi4EEhvTpMmrZPASnPUU7CrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F8JYtG/3; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=PZWtQtGes1YWTUUItyyJcKaIL+et4tD1n1H3eg8d2+F2PTbo4A08+x6levqbZ57odTGYc1kPPvY3Km3/LBF1tjlbeb3roG9eHUWCklm2Y1f63GvsS7aVdLD/s8/LU2dohUJORtzFoOYRZtioA6QnDWY53tx8c6jcsNJp6weqUWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DZLrVprl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F8JYtG/3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 579F5C2BCFC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DZLrVprl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6226EC2BD00;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772708857;
-	bh=xCEaqUoallq2NdTzWqQElwbwYb5T0f2rYJwsXpRUAaA=;
+	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=F8JYtG/3YpWHw0jDUl4/6GqoMiuvpz3yVJSaw4Lald1bL1wQ0s2KWUIcSN39tiw2D
-	 /RReIH224fkVgrwRmHc0e81/z6+hHcuRV36ieOfdavAcivtN2id2ZjjgXRH+yuVqvy
-	 FK/n1kmswq0XBIXAbnRY/WNWNSuUj4f2DRvSf9Gkmq4Li6xOvmyvTqHeoW+moySs+F
-	 kxVW31VkKgLoEiJFciRciYFpYXX4YhtSLO/DAII8zS84LIG5u3cqlybu9z5Gplyacx
-	 /Ddt44FBGToBahGfvuaRSonFNCmRPiFlJpUjEDLf52plGCzN9ppBoJyBj3yiqlDW5/
-	 9LSAB6MIdq1oQ==
+	b=DZLrVprl0ZN0JnsloLZPlxLlJByyPEynB4ZJHwB3519k2ekK6HmIDvEb10lXslPhP
+	 0Rt2sza2Wm0/a0PI6spla5sM5WyykDzFhTcDM2GXpybPVmFHgQFKBq78VSvETlMpaf
+	 dQeX8DTgkZFLpWU9nrp4+qzPBFbRXQWQoH4rHHd7qY7StQN7FTaYEJlx+pTbY6jPu6
+	 mNmdtJuux72xgcaR5+78aJnjbY0zGgBi2txeauv3EWxWEENgl7V/bXBtv5zP4Rezjf
+	 Z/784iQym3iWJhCvP/31038X+A0nz6/A6r6oUkIF66kLI7UINcgEe4JP5gm9Szfh8G
+	 KwLxzQZcQAkCw==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vy6YI-000000004cz-2hFL;
+	id 1vy6YI-000000004d7-2skY;
 	Thu, 05 Mar 2026 12:07:34 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -52,9 +52,9 @@ Cc: Brian Norris <briannorris@chromium.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH 07/13] wifi: mt76x2u: drop redundant device reference
-Date: Thu,  5 Mar 2026 12:07:07 +0100
-Message-ID: <20260305110713.17725-8-johan@kernel.org>
+Subject: [PATCH 11/13] wifi: rtl818x: drop redundant device reference
+Date: Thu,  5 Mar 2026 12:07:11 +0100
+Message-ID: <20260305110713.17725-12-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260305110713.17725-1-johan@kernel.org>
 References: <20260305110713.17725-1-johan@kernel.org>
@@ -77,44 +77,38 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/usb.c | 4 ----
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 4 ----
  1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-index 01cb3b2830f3..8af360bca643 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
-@@ -57,7 +57,6 @@ static int mt76x2u_probe(struct usb_interface *intf,
- 
- 	dev = container_of(mdev, struct mt76x02_dev, mt76);
- 
--	udev = usb_get_dev(udev);
- 	usb_reset_device(udev);
- 
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+index f7e0f6573180..1d21c468a236 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+@@ -1475,8 +1475,6 @@ static int rtl8187_probe(struct usb_interface *intf,
  	usb_set_intfdata(intf, dev);
-@@ -84,14 +83,12 @@ static int mt76x2u_probe(struct usb_interface *intf,
- 	mt76u_queues_deinit(&dev->mt76);
- 	mt76_free_device(&dev->mt76);
+ 	priv->udev = udev;
+ 
+-	usb_get_dev(udev);
+-
+ 	skb_queue_head_init(&priv->rx_queue);
+ 
+ 	BUILD_BUG_ON(sizeof(priv->channels) != sizeof(rtl818x_channels));
+@@ -1663,7 +1661,6 @@ static int rtl8187_probe(struct usb_interface *intf,
+  err_free_dmabuf:
+ 	kfree(priv->io_dmabuf);
  	usb_set_intfdata(intf, NULL);
 -	usb_put_dev(udev);
- 
+  err_free_dev:
+ 	ieee80211_free_hw(dev);
  	return err;
+@@ -1685,7 +1682,6 @@ static void rtl8187_disconnect(struct usb_interface *intf)
+ 
+ 	priv = dev->priv;
+ 	usb_reset_device(priv->udev);
+-	usb_put_dev(interface_to_usbdev(intf));
+ 	kfree(priv->io_dmabuf);
+ 	ieee80211_free_hw(dev);
  }
- 
- static void mt76x2u_disconnect(struct usb_interface *intf)
- {
--	struct usb_device *udev = interface_to_usbdev(intf);
- 	struct mt76x02_dev *dev = usb_get_intfdata(intf);
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 
-@@ -100,7 +97,6 @@ static void mt76x2u_disconnect(struct usb_interface *intf)
- 	mt76x2u_cleanup(dev);
- 	mt76_free_device(&dev->mt76);
- 	usb_set_intfdata(intf, NULL);
--	usb_put_dev(udev);
- }
- 
- static int __maybe_unused mt76x2u_suspend(struct usb_interface *intf,
 -- 
 2.52.0
 
