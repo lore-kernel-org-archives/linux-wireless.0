@@ -1,88 +1,121 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2070A3E123B
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 17:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772731394; cv=none; b=rZD/KFjqFZlrI4HPbuWelUKR8nf+HefcoyAEw/sSjVKVbB0VlvLdK53pf0AtFR6OZrGzcSPhrEIeJIYY7WZrNjwI+QInhDlNWqKZmevSUaa0VyRKNWuayVb1d2j2QEqkzF0C2BZ+rpiOPCFqmHmWdxQejDBAJHeqXH5ka/wHPMU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772731394; c=relaxed/simple;
-	bh=M0q11xF7CXO0zwYacOuAhBWP4t2LzK+M8gQ0gf14PPI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jR45FDfaaX5F1VXzy287W4+g1Zcnwp5+SVWsPFlyKdLA6wrgzp6GR4CV7FUp1ZW+EM46+VGD/S2OUCqdsCXPcIH+EbMs44w+7tFyD66hTTdxpf5c1cFmIgnTy0onE2yMMQDUEgwrrmwWkW50F+xiZVC8J8UfQXxHe+8n22sKjUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=ar6we1TO; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A2128F935
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 18:28:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772735327; cv=pass; b=NDkJeVFaMLZvGoeqlolK4hFCOEl+zkyslKwX0OP/SQKYX7kThuYURiBm3SDUjzQUUkI00BZrdUjDKEK8XDyOXqINLl2Wdgdv8rhixdnOMmY4rwIrN7lNUaiqqESG/4NWhzr+GdI3/F4aLgQ31oTu7GO2bbKSN0991PZeEeOCIrY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772735327; c=relaxed/simple;
+	bh=UKa7OBuXlhiYppViPcYm6FxX5GPA+bRGTzYFcrhx1po=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=FwdvPUPA2Bl6YWrkMMQo2cyOzs4p9J0FBDbcs0+HisO/sPUjGHDQYBEegqV1XmsbduWO6CKE1t5MVEQ00r4ITuJiCmMgRYFc38+2ujy3ATB5zu3Cvt4AyTTqa1Jz11+A4m/0PnYxg7IJZtKlqw5RQNOw8xzIY+9tSX1Ixv3bTH0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lpdj3gRb; arc=pass smtp.client-ip=209.85.219.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ar6we1TO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=PUx1aVpAe1izQ34xuUAmiUZwn/8D4nl21eIuKvA+qCY=; b=ar6we1TO8+163a4KvVDFAtTNfy
-	DviBkoCvyJ7wdj4NZKvHanXm/dYX1zbwDC2FsS6YMQPzcba+NnxfyfLWHZrF7cvcJEM75kAG3owYY
-	lrQZ/3/3AkUMj8TuW3XvaRFZbiwo77NSNfoaR4MVYWTTlWJyph82AJumgHSuhp5SXsgc=;
-Received: from p200300cadf1c8200000000000000085c.dip0.t-ipconnect.de ([2003:ca:df1c:8200::85c] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1vyCC2-00E9Om-2O;
-	Thu, 05 Mar 2026 18:08:58 +0100
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless] mac80211: fix crash in ieee80211_chan_bw_change for AP_VLAN stations
-Date: Thu,  5 Mar 2026 17:08:12 +0000
-Message-ID: <20260305170812.2904208-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lpdj3gRb"
+Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-899e85736e2so54200076d6.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2026 10:28:45 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772735325; cv=none;
+        d=google.com; s=arc-20240605;
+        b=TlNUYMt6cjegyBvTc0RP3vIDTOWOREGYu+zm59lFPwyHkEhkGfV5O0JlwYphfjYWQ6
+         cvDVzSJoav1mgV2xO98R1Iva6KLjj877Bch0MK7w+jjG4dKDT3YOGSgLAMHd2GOP0Jh/
+         Ea5LIzo60wnEkL6ssop5NLhVTy6zVpoNOcE1jQ8T2X0hHBgLWQY2CsWgFroEtj0Zw0Fq
+         BUAcwf+O6NuZvkJjl42tfSTJCSf+4zjmg7zDeHV58OToOI9AEl286+pV36EP6LTWo7ym
+         Nn9Daqx8duEsNjkNowP1CburC3XeocnKu8aQqjH0TrgvyEW+dxRF7uUtBSZbf9Pp174w
+         O8KA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=UKa7OBuXlhiYppViPcYm6FxX5GPA+bRGTzYFcrhx1po=;
+        fh=//PYnKy/9Jo8hZhsxALj/rZhLjj2uDQgdX8D5IYfQhM=;
+        b=kstCXCC2f123+cUO45dkiIwxlu8lQiSrvJOv/cDelLPRuhtx2GZuHk5mrSPAZ2eALP
+         pALumyrbaHlxvvkA1Y1RSFRukwmsGUC2pEUFIEMxiRaQuiwrBXdjnXxNN2qllBWPlTPm
+         UT7eYdvnbHRO6c6o2pwwuggTQggq78451dd6zumGrsleqEKT7BZA9v1vcRtTxT4fI3HF
+         JkRMjz2vcHa4lIA3BSnNOXRHige3nKK3RirPndTqkEyJIhLldgC1VpTFPOr8r4m32H1v
+         SObDIQdymlmrNyORbrWsk1ICIXH6KRXUBgQI2rL+Va9pS7wNGaB0MkLkEvLEkK0xhIgw
+         W2JA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772735325; x=1773340125; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=UKa7OBuXlhiYppViPcYm6FxX5GPA+bRGTzYFcrhx1po=;
+        b=lpdj3gRbLmGv0ONL7MIuwKl3rKgwoo1c3U/MHt11B/cWXR64gA7EGBJhFAlcfQ7mfe
+         vhXZ9eYVoyuz2qmD1uqlpg6ByzfTsBgKinKOtCrKo025bnJHRTl81ne8WhNd1iYsWATR
+         VlD/R7Cmfam/gmQjEPBu/w89eAF7ngHGIPsNrs78sj+Uu3CpFGKwaOcjTLFjXKlO4YPQ
+         4ej6S+lSmvuP5nM8tL7xwY/jiQdqGGO3uDwdCeq0ay2Itu0JczL85AvSZR+W3885HLiC
+         GibS8rULxG0S/31z96DprlxQia0h7ma83OhTAoL5ouIss1VdrN5p5krAKPWmYp7T9LX2
+         R/Xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772735325; x=1773340125;
+        h=to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UKa7OBuXlhiYppViPcYm6FxX5GPA+bRGTzYFcrhx1po=;
+        b=ki/2KVN+73F6DPFIZAoigvyXmXIm3x3qX7fYdpgqGDoJqeWi/ntoWOwMWMQwF+VYEQ
+         sgMYZdWGT99HgmC1ZC7hwjuxvA153t6l4t+n+T0z0MUmiyvilC764h5BMP9C232BmcNV
+         IQil7zk/QevHGV1xTvnmRZZQhIsdITNDBfYQFsj7Tl5McxMMfATzygKbd/IRQ8N3XEZ3
+         wkAoe0/P+c6bpzsBMrLpEVpryGORMh1C1sOoozVJacJjcSkj9r57FEq7XkDD/rear/+m
+         oNZu5np1DQ89uXeAjQbfcKy4GeQrNQugR2W5pRU1R9Qfl37nAce5TbibFvzrkKbeg3qG
+         BXFg==
+X-Gm-Message-State: AOJu0YzDlHcipeqcNXTY/rlg4iB+LZqpAF9b+pwYBiq3zIgOjWPg8HsX
+	Es6lEbBKAZJgrRZjl8zpK5nW6egKNS6OyQt6BqqKMBOdAB8BWFIBxcGLvdg5XtnzJLlKUMo4CTr
+	MuMzRUHcDGw3PoFP/iYqk3oJFikFiQMtpjME=
+X-Gm-Gg: ATEYQzyIg738MAmsknk5oQLB/QNUO5WJAvbXDFAIhsrkJCR29CpaQXlLOAGODORg+U1
+	q+M0qkMF+N0eRFJ4uVEA7OlLVS95UvHvg3mpGTPd5fLhRz4S1lNi0LZeKa31kqFbfXG1KCDRwK+
+	NewLQBKpSQ46UiMD2nE1Ks9pfEWfxS/TzJoD9Iy0VZ3LeydxnlHDLI8pnjkr/Ef5sAnsNifsyp6
+	LnPAezIIsmg94xwk0F7cJR0oi22y0+QrqFagCHcqPLiSPF7oFXVXPBKKaoAOBEb64v+8gELwTuk
+	guBvtbTx/yb+gVWEyw==
+X-Received: by 2002:a05:6214:27e8:b0:894:61c9:9793 with SMTP id
+ 6a1803df08f44-89a2459cfd3mr47521786d6.5.1772735324778; Thu, 05 Mar 2026
+ 10:28:44 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Nick <morrownr@gmail.com>
+Date: Thu, 5 Mar 2026 12:28:18 -0600
+X-Gm-Features: AaiRm53YdoeApTjb7fRQO8VIER6oJvT9SZByNtKWHk9PwbYpEuJm5SxjTEv_7f8
+Message-ID: <CAFktD2eaVpRAJRkaGOj4y-m0woK-sNeCM+h_7A=9GELSce6TcQ@mail.gmail.com>
+Subject: [BUG] wifi: mt76: mt7925u: probe with driver mt7925u failed with
+ error -110
+To: linux-wireless <linux-wireless@vger.kernel.org>, Felix Fietkau <nbd@nbd.name>, 
+	Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Deren Wu <deren.wu@mediatek.com>, Leon Yen <leon.yen@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
 
-ieee80211_chan_bw_change() iterates all stations and accesses
-link->reserved.oper via sta->sdata->link[link_id]. For stations on
-AP_VLAN interfaces (e.g. 4addr WDS clients), sta->sdata points to
-the VLAN sdata, whose link never participates in chanctx reservations.
-This leaves link->reserved.oper zero-initialized with chan == NULL,
-causing a NULL pointer dereference in __ieee80211_sta_cap_rx_bw()
-when accessing chandef->chan->band during CSA.
+Reference: https://github.com/morrownr/USB-WiFi/issues/688#issuecomment-3999038526
 
-Resolve the VLAN sdata to its parent AP sdata using get_bss_sdata()
-before accessing link data.
+The above thread is rather lengthy as we have been working on this
+issue since Dec. 25.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/chan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Testing with a Netgear A9000 USB WiFi adapter (mt7925u driver). Kernel
+7.0 rc2 and a x86_64 system. Additional testing with older kernels was
+also performed with the same results.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 4447cf03c41b..f382b144ebac 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -561,13 +561,15 @@ static void ieee80211_chan_bw_change(struct ieee80211_local *local,
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &local->sta_list,
- 				list) {
--		struct ieee80211_sub_if_data *sdata = sta->sdata;
-+		struct ieee80211_sub_if_data *sdata;
- 		enum ieee80211_sta_rx_bandwidth new_sta_bw;
- 		unsigned int link_id;
- 
- 		if (!ieee80211_sdata_running(sta->sdata))
- 			continue;
- 
-+		sdata = get_bss_sdata(sta->sdata);
-+
- 		for (link_id = 0; link_id < ARRAY_SIZE(sta->sdata->link); link_id++) {
- 			struct ieee80211_link_data *link =
- 				rcu_dereference(sdata->link[link_id]);
--- 
-2.51.0
+Problem description:
 
+Cold boot shows the adapter coming up and operating normally.
+
+Removing the adapter from the USB port and replacing it shows the
+adapter coming up and operating normally.
+
+A warm reboot does not provide a WiFi interface and shows the
+following in the system log:
+
+mt7925u 2-3.2:1.0: probe with driver mt7925u failed with error -110
+
+Using the commands rmmod and modeprobe do not provide a WiFi interface.
+
+Thoughts: The problem likely is not the module teardown. The problem
+seems to be that the firmware (or the mt7925u driver) leaves the
+adapter in a strange state such that a power cycle of the adapter
+hardware is needed before the mt7925u driver can properly initialize
+it a second time.
+
+Also: Testing with an adapter that uses the mt7921u driver does not
+show this problem.
