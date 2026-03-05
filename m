@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16EFA366076;
-	Thu,  5 Mar 2026 08:05:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204E8331220;
+	Thu,  5 Mar 2026 08:06:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772697938; cv=none; b=XWFRlJTnIL0ucbebM6e21qf2qb80pY7VvACrZxkcTlRSqxPy4Ar0Fqv5H7eYvQIExOq7KMmjRF7Ge25FF68zK6YdYONQ4s5jDHaMKCEpvVwRTKduOx6HbM94CeEa3q7k6Lxx4K63gJYSGUU/C3XFMeHSKyZBUnxfs2tEPpOcprY=
+	t=1772697993; cv=none; b=kF+L3YsnDz3q21cskkv5uHuNn49U1f///8Uq7wD8MjeO47iUI8B6hKlcDTsYT9NeV3A/RUR6rs4Pc0ot7HcOGt/SYO56dMAEuF0PdX1/AVIdcYQuXK0PFIf+zK4RiHVV0Aapg4FBdeQrLeKrCNAQjJ88pfYtYevVfKUbtoS13SY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772697938; c=relaxed/simple;
-	bh=Fha6NDzVdtw4aSWx+iGX0QxEwkWvK34N5hI3c2DVAQE=;
+	s=arc-20240116; t=1772697993; c=relaxed/simple;
+	bh=U+JoX97JzOm2+Fg0hFQca/wViVUZpy1As6GCiZp+B1c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=U6GfocPvZot4E37yJcJjPcFh+BE38zPO1qMah4UK4bk6ldimhX0opXwFKbDJQFN42NcmBXBzPC5mfT0DnDsAr5IGKX2rTlwGNEGtIEnfeZScQFV1Ef3Oxzy4JXux8HBtMcmTbS32qd6hmeqmH4LOj28uHnNOaYXmv40dQjhxF18=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K88EOzF/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bhPLrHHmzBpBR68uZo8ceN8U1SU5TTI2z0+KBwo5YhXQk9sxfmLsttVeV6PYF1ZLvy6qhwIsD5nmhGrYN9QRxCdu71+qCN3QVRI8TWG4+kI59kRjip6yECBO4PQyWrQoavCrauw3VGNm+Snk+HcumTjbcpAnn/L0HBGjRqLrt5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=or160yBH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K88EOzF/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EEA7C116C6;
-	Thu,  5 Mar 2026 08:05:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="or160yBH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 388B4C116C6;
+	Thu,  5 Mar 2026 08:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772697937;
-	bh=Fha6NDzVdtw4aSWx+iGX0QxEwkWvK34N5hI3c2DVAQE=;
+	s=k20201202; t=1772697992;
+	bh=U+JoX97JzOm2+Fg0hFQca/wViVUZpy1As6GCiZp+B1c=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=K88EOzF/NFdypnS33aUxiBNbPycQZTCWvxfAST7u+iuyc+rRG86rVpr8jGlMcb485
-	 5U/ZXEjQSxXVQSrpHWojaPNB+Ldjy3yGpsvSZLT7TvB5copaEijr/6NgAxaWRHazOe
-	 Vm/gPwmNjHNw5ymfhrlD7UeIt11YYwcTijdfgWYsxAksIALwiyHwHl0S5RH2mOEUgH
-	 gsRy6JlgdzQ+94bFg8o4EcTLzWWvHqYL26p9tChTQo8J/SuXBw1U01zTH0XVIW18R/
-	 /0jU9GSWUXduRRVdhRnJuhGongZvmiMcZyAtzyPR9hjMfOSCmOSPbhT2OlL0ksHUdz
-	 jOUSHnuP3EpHQ==
-Date: Thu, 5 Mar 2026 09:05:35 +0100
+	b=or160yBHU4HqVpvzdzagPLm+NztpXeguGtYcLcvisnMSbpRmknrMEYYf24A/9X421
+	 RbWDUuf69hrJxMZFSw+MfU53EIjdlRtSLE4vZY4dqLPSsCrEaVw+a1gkFT4wKPcUMt
+	 l2PlQNIncRnsClroOgeYSh95mh/y1RGnUDkGmpf1k/sGU8ejJa2v1JNsqycLTf1O+H
+	 xbr+V0oM2P9/xui3/1Buo8I/8jMr8/Sw8bdC+pbqw9svfJDbXc8sUuNpdfsQH8w+U7
+	 fP3RaRRVuPoBM7R42p54YgS0ARhESWJ0rFJn5vVSonyJtZv35UZGSPPEE6FpyA2BK+
+	 9YsX5Ddk55XDw==
+Date: Thu, 5 Mar 2026 09:06:30 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Kerigan Creighton <kerigancreighton@gmail.com>
 Cc: linux-wireless@vger.kernel.org, loic.poulain@oss.qualcomm.com, 
 	wcn36xx@lists.infradead.org, andersson@kernel.org, mathieu.poirier@linaro.org, 
 	linux-remoteproc@vger.kernel.org, linux-arm-msm@vger.kernel.org, robh@kernel.org, 
 	krzk+dt@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] dt-bindings: remoteproc: qcom,wcnss-pil: add
- WCN3610 compatible
-Message-ID: <20260305-inventive-apricot-badger-7c60ee@quoll>
+	linux-kernel@vger.kernel.org, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Subject: Re: [PATCH v2 2/3] remoteproc: qcom_wcnss_iris: add support for
+ WCN3610
+Message-ID: <20260305-crouching-sceptical-spoonbill-fe75fb@quoll>
 References: <20260305003253.1022386-1-kerigancreighton@gmail.com>
- <20260305003253.1022386-2-kerigancreighton@gmail.com>
+ <20260305003253.1022386-3-kerigancreighton@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,15 +47,37 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260305003253.1022386-2-kerigancreighton@gmail.com>
+In-Reply-To: <20260305003253.1022386-3-kerigancreighton@gmail.com>
 
-On Wed, Mar 04, 2026 at 06:32:51PM -0600, Kerigan Creighton wrote:
-> Document the qcom,wcn3610 compatible string for use with
-> the qcom_wcnss_iris remoteproc driver.
+On Wed, Mar 04, 2026 at 06:32:52PM -0600, Kerigan Creighton wrote:
+> Add a qcom,wcn3610 compatible string.
+> The WCN3610 shares the same register configuration as the
+> WCN3620, so its configuration is being reused.
+> 
+> Signed-off-by: Kerigan Creighton <kerigancreighton@gmail.com>
+> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+> ---
+> Changes in v2:
+>  - Move remoteproc compatible string addition to the middle of 
+>    the patch set.
+>  - Add Reviewed-by Dmitry (thanks!)
+> ---
+>  drivers/remoteproc/qcom_wcnss_iris.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/remoteproc/qcom_wcnss_iris.c b/drivers/remoteproc/qcom_wcnss_iris.c
+> index 2b89b4db6c..e58b59355f 100644
+> --- a/drivers/remoteproc/qcom_wcnss_iris.c
+> +++ b/drivers/remoteproc/qcom_wcnss_iris.c
+> @@ -95,6 +95,7 @@ void qcom_iris_disable(struct qcom_iris *iris)
+>  }
+>  
+>  static const struct of_device_id iris_of_match[] = {
+> +	{ .compatible = "qcom,wcn3610", .data = &wcn3620_data },
 
-No, do not document for drivers. Please explain here the hardware.
-
-Also, one patchset per 24h.
+So compatible with wcn3620? Why are you adding it in such case? Drop the
+change and express compatibility or explain lack of it in the bindings
+patch.
 
 Best regards,
 Krzysztof
