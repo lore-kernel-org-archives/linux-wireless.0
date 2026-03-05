@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618E5374745;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7063337E2F8;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772708857; cv=none; b=e53H5dr1crP4yVmnAvBN5pxtEUy/3vNM69nqwbzM+F/dJC74jrvMTRX17L/cH/Jb4l/4Q0IaN64+eqBH681VzH9gr8nmEvZaHxyqWn6jEwpcNiYzP2nyGmfwd1e+zKLaki/HlOG4kb7o3Ew4rjU0tcq3td4kr6ChjD30VqUjaZM=
+	t=1772708857; cv=none; b=Es51Oh2KrfjIraiNsFCVJJbek5QWuUL7otWU8sTQJDrpwy0xJrXt6sAhpNYzpdOI4iuhwo2gi7B8w9f1dgowq4d6ihYK7EsKbY0a1pkcqLWJ4/69BsauP/e9i9NBGWz4BlJSpg7cWMz6WUoCeKcORKMugKBJG7M4aP3mFbms0Pk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772708857; c=relaxed/simple;
-	bh=kaq0JBNHyQqQlidhi1/aPYh1/H5njyrGvo0l9Tfow5M=;
+	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=R8h6pgMc7rdbIRIneE9eHKdn5v1flPY9d+F4zWRerG2bY7fQV9XXCsCj08XReYX6PLG1cYAYrMJhbc3nmK2VRly0OTn12xe4OCg50DH7V6RIZawXRJ2cPvzYyKpqRtt1BK58rAGB1OH1zVctiBENfpPg0I8n4UhbWU5JfNse5Yw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQTkkoFh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=l6x+Vcnh/+S3Vj4ThVXUyDMqIQULTv6ZyDyNnJyIhsDaEoduDpu8ELyJmEQdQnstdLfepAIGsLl1WF6+X4mKTWVlmYrbJj+r5t4mIYNDZf0VyKjkWy5rfqlnQ/NPYUxnhICt+GxrUo1dEHKzycvjpN2y8j0jHnqjstQgI/ePHLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ti6jcZMg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQTkkoFh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1646BC2BC9E;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ti6jcZMg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18EA5C2BCB2;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772708857;
-	bh=kaq0JBNHyQqQlidhi1/aPYh1/H5njyrGvo0l9Tfow5M=;
+	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aQTkkoFhssKdRx0pGljGKTXpqz/w+cu8eDMUVGqWd6jcRCVdhHMLf+ALdT44Fjx2G
-	 QIZW5GYHa1moZg5+A3hvPlHFFcQV2RCUrtUGdWr4kDTzfJYgoAJn6DJkTn/Bf4ZPPj
-	 r01LS5Qe7lrSjuMC7eCUvHCugmToz9zyCTa9M/3pbVvLzh+EF8S53dRRkCWRQeQ+YQ
-	 yqGYGasYaGoyqNFmktO8xf1WSSdFoD7eErayW+EKo1Dfdx27xmqXq5tTsEh+OW2KfA
-	 2qO3u3c75dV4nd7mO30ltdRNrpc9D0P5cv69tJgUBQxnbGTtjKKGwtoEpvmiF9nBdL
-	 ioBbh2ofNJI5A==
+	b=Ti6jcZMg9hkzFNNuRJZ8J6p+Wm6FJte19bySeGHUcqN32ZseL0DVoC3ezybWDPCk3
+	 AKhklBKc76YrcTQyj5xsbxy9PMiBq4WwyfShK8QYKuWBMkg312U3hR14U2pvz8euSX
+	 kxUi2xQcQR+Dy6YoKSd714v8Xq+O00ptptd9i8/FWUlbiTQvLxJZzJKhHGYqZhJTDF
+	 lwdCTRijWIScDb4CIKRSvi0YAHqFIPxf8+jiBJlVQpE9tx0IPK5vccwym1Kj6upeyd
+	 xTpB2Uq7cJEQDp7RHQJfwJdOR6LFBLBTEHXDh80PXT66yBJE97QZUL212kfNIZZY/h
+	 uz41RyHJAwWKQ==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vy6YI-000000004cp-2TFX;
+	id 1vy6YI-000000004ct-2YsO;
 	Thu, 05 Mar 2026 12:07:34 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -52,9 +52,9 @@ Cc: Brian Norris <briannorris@chromium.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH 02/13] wifi: libertas: drop redundant device reference
-Date: Thu,  5 Mar 2026 12:07:02 +0100
-Message-ID: <20260305110713.17725-3-johan@kernel.org>
+Subject: [PATCH 04/13] wifi: mwifiex: drop redundant device reference
+Date: Thu,  5 Mar 2026 12:07:04 +0100
+Message-ID: <20260305110713.17725-5-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260305110713.17725-1-johan@kernel.org>
 References: <20260305110713.17725-1-johan@kernel.org>
@@ -77,37 +77,31 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/if_usb.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
-index 8a6bf1365cfa..05fcf9cc28fa 100644
---- a/drivers/net/wireless/marvell/libertas/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas/if_usb.c
-@@ -276,7 +276,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 
- 	cardp->boot2_version = udev->descriptor.bcdDevice;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 947ecb0a7b40..f4b94a1054f6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -520,8 +520,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 		return ret;
+ 	}
  
 -	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
- 
- 	r = lbs_get_firmware_async(priv, &udev->dev, cardp->model,
-@@ -287,7 +286,6 @@ static int if_usb_probe(struct usb_interface *intf,
+-
  	return 0;
+ }
  
- err_get_fw:
--	usb_put_dev(udev);
- 	lbs_remove_card(priv);
- err_add_card:
- 	if_usb_reset_device(cardp);
-@@ -321,7 +319,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 	kfree(cardp);
- 
- 	usb_set_intfdata(intf, NULL);
+@@ -666,8 +664,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	mwifiex_dbg(adapter, FATAL,
+ 		    "%s: removing card\n", __func__);
+ 	mwifiex_remove_card(adapter);
+-
 -	usb_put_dev(interface_to_usbdev(intf));
  }
  
- /**
+ static void mwifiex_usb_coredump(struct device *dev)
 -- 
 2.52.0
 
