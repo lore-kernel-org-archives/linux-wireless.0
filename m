@@ -1,208 +1,172 @@
-Received: from sender1-o6.mgovcloud.in (sender1-o6.mgovcloud.in [169.148.143.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7B1D3BED30
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 16:37:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=169.148.143.6
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772728682; cv=none; b=R8cQWY6u/++KyEeL5ZpvAAUYUV9ADfHpzgzZ5WUlH8JFYp6cG9vTGBoMnrcXbw50qBrOMY1GLrrNWFN+hgsn2wnVTOnfDBuTbHCoG7KmRsfth5IIyx7WWbzHD8k+GviJ+bppioX7iByB5JDU5BerX2gkI9FiMJOg/exvbNgDLxg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772728682; c=relaxed/simple;
-	bh=757I8NcnjXUYK6bCdVOVHKd+Oa7vo2SEk4I3zjnWIKY=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=OkG/O0Jw6T24knRLzfgm01lueM434zr3Y+YBZ76SlMPdli2WYXooCGxIag4nZEGEkxOQ7rUvW6ce41kDPmo5JiEPK/swTBG0Mm7yBDOLvnXQuBKaUSVzPUCUfJ4TcNfgM+BIVC2ArPz8tFbbIVFqi35HPCiUZoC5+1PhsWnch8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in; spf=pass smtp.mailfrom=nic.gov.in; dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b=gjQl4lTk; arc=none smtp.client-ip=169.148.143.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nic.gov.in
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A5713D7D64
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 16:44:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772729064; cv=pass; b=IQ0ZJwc1HM49oPTEJxvNjx4kGOXIH1JGjNCntfJXGmyz6VxEd+cXz5TF8SkTf74Qux4+YhBW6WoSBCTXHVlX6YKAnvGeF4CZ2KeSsUbJxLroyYaAWTjcf4yIMxJ6V0Msp6Vq6sZMA/B8YARDaOeScj9hnRXU6fqsZ8wnHHrj21s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772729064; c=relaxed/simple;
+	bh=jw7rPzJaw0jpp4omD8ibMqUnPeX0yTiYUFSzoP3G6wE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RtzuAOyILy3N30LcGqsidtcPihqqWLRP4I5bWjqVGk+qqnkUrAl5QW7+EatByau1kVK5R+mb3/7SUZyOlrvyFGGiDkBoGQVa5q7xO18fSOtq6y+PxpYo1oH49oo2cZgk/v+37ccX6tCasSj92VQRJpDiy0CyVi9qekCX7aiIJCI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=JPep7WIg; arc=pass smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b="gjQl4lTk"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772686282;
-	s=zmail; d=nic.gov.in; i=gaurav.kansal@nic.gov.in;
-	h=Date:Date:From:From:To:To:Cc:Cc:Message-ID:In-Reply-To:References:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=Irsv3o8UJ/ocw0TNQ/YmhEoJoegODW1TK2IHoRPY0Zg=;
-	b=gjQl4lTkdbrlYrPvC/2cQgUz/ngKDRIes6Rahe0O4Xv77e3zKCekrZ5o9THr+vCf
-	CLH2DoINX9pWbaw8mYg4ad0tEoT1GaVHwkTtOcfxbJOLt+fSR63uO6GYjcB4YgL672k
-	g8fot9rgbrHmt1AoDHjhCRN4Nby8ns4iJwZn9jok=
-Received: from mail.mniccloud.in by mx.mniccloud.in
-	with SMTP id 1772686281604138.5197316429062; Thu, 5 Mar 2026 10:21:21 +0530 (IST)
-Date: Thu, 05 Mar 2026 10:21:21 +0530
-From: Gaurav Kansal <gaurav.kansal@nic.gov.in>
-To: "wens" <wens@kernel.org>
-Cc: "Degrader Snehil" <degradersnehil@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb" <wireless-regdb@lists.infradead.org>
-Message-ID: <19cbc560b77.26d9e41153869.4098135238965712348@nic.gov.in>
-In-Reply-To: <CAGb2v6406826bWiKEQ0jf0TSPL9xtNx+i=_YCRJNnUjUftF0_w@mail.gmail.com>
-References: <CADqxL9qYq_+8dPgXj5i_HjkpTOZwiAawsa90tNbA4Q87ZhCrSA@mail.gmail.com>
- <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com> <19cbc39a90e.1cd9982953056.6486968654066866605@nic.gov.in> <CAGb2v6406826bWiKEQ0jf0TSPL9xtNx+i=_YCRJNnUjUftF0_w@mail.gmail.com>
-Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz
- (5925-6425 MHz)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="JPep7WIg"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5a12fbbd9d2so1046711e87.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2026 08:44:16 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772729055; cv=none;
+        d=google.com; s=arc-20240605;
+        b=cRFiqG0DJPzDbPj4jykiDpQf6hkobjxGjpOTxiafYqiSf4OoKjNT6WLYeGSuQ27LQG
+         yInwT+Uc4GnfSLVwT7NohEpq10vdje1CQnzNROpUtIMchLJpqSU/416oSkuLSMF46Qv/
+         eyN0UVzsWDtQQWUduWBH8ChRJNj3q3G8DAiijYOR3SQo0k1jOJ1IpqgApUhrfpKx6tSS
+         LAKKN/WkassASYb65ApGhVXrqKY9uCPxJ8pYGFwNGPPFd89czJSQZNebzWsox07QU7WY
+         OmoRM9zxBH+lC5xqFc1VBpURpI1RfbD5wyLeO96XuHOvFBdB1V147t/tYO2WRU1/rAvy
+         BMRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=gday6PXWiSStbW+wQY+pFXsEeMQFha+jnlkFCWPbeVs=;
+        fh=dpFG1Ku7RhT8OS5p5C/ceHKsNUYs2kuh0WAKBMCtWmE=;
+        b=bwXA9MnZuP4VbGTNV4fH0ALKc1idtK3uvqmPo+ULydMUKh0adIkJtr5N3ySCbidTS7
+         Bx6XUC0PWr48CAWMX+RRP/Zl3idTEin5mWwJkZdpm9TDA1QqId1jEHD9tiMIf+6/X+4z
+         k3lkrE4ZUZA5Xb8fGwbRmD5Zl4Wv24D+B913wBF8cL1K22+O8COaoJdrkMTAUWF7QL1V
+         W45WB9daogZuhNdpcROcwnSukW3uac7LyZvOAc3Rz8APsCjJLgq2nHrXmGxBegPdbBlw
+         mu4T4LX5O3DV+Wwge8gudHUemdiiWnGHOGxQ7yNKFO0HtqQomZveizSMGwrFvJHWrhFv
+         zE0w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1772729055; x=1773333855; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gday6PXWiSStbW+wQY+pFXsEeMQFha+jnlkFCWPbeVs=;
+        b=JPep7WIgKTkQwmUSCMu5kGvocu+fy5x9MjHGYYnM/t8qP4Ml5RX5e6GzG5jRKAtd1y
+         07q8kCn7+4fQNMNgjjVJLSt7OJEyK6eaccWmBpxJPH/5TtdvRCPfWuJQUDxzj+R1Yzq4
+         ibkQEnxjHQTpTPA14YwhKyDnw3geAV1oFJEMt7OF8hG5y54UYpjvwgl1KNCLOjq/4UBZ
+         S213QdYqPGr6jYJ9teIW/qtLTivtOZNHCEbLARdPMYuhUfQrPKq/6edVP3HyMGg97o1S
+         l0Fl8dSmyROU7EKjLxlTmXsArQP3G5Qss/FoiRyeds0lmIIuOROJtGI3Vw/ziqRx3slC
+         obGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772729055; x=1773333855;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=gday6PXWiSStbW+wQY+pFXsEeMQFha+jnlkFCWPbeVs=;
+        b=o12RfDAUTlSbBA9idOpd2930LQ4yZO99z1RKqp2M1sxZ0lqfr3wvYjju/UoBuKadrf
+         cQ9gJQngE4boB8m0kpk+V0eqCxx0o0S5j/NvmVwwWAvDTwuZN1chyRuYOAmVh5FO55sE
+         X/9UquYDnbGst3VykBPJGWe0Gmsh8ph19O0OhiWTb3NB+bVxsX5BYRdnlA+eYb2+1tQd
+         Xc/boCg6cJiOEjNCHra14Fn3V1y/D/VtIVGRnrGopJ43/a+u9Qth+s+vmzQOJQr80hIb
+         QyFFfVF7oRsXvitB/EDQlh1hRFCBP4s0Q0Ivo39GXXoKQKXj+9+LG6RsY8TDfIPYmMq/
+         tHPA==
+X-Forwarded-Encrypted: i=1; AJvYcCU5vqyrtLMSWXai7kRzWKDkfOIjYfEdRqZA4H9wL22RdLRMo9AfBRdJ5mnatH2VgdTGGME+2iHMjFUZSLVkGg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyY4Ntn1KPl66uSV9Ve993rOmu9eRNkDZmHGfdvxlR65udvUBiT
+	5ie6dwlGoqsbi/jpAhDW1k+1Wcurh4zTPPEVdsPnx1smV0YDxC61gdlW2aFY+jD8cLeONmb/9Ml
+	xCtPpro/IcYvTfX7pbVr3FW6IjWMmFaK1fpL+voFfZw==
+X-Gm-Gg: ATEYQzxg2RivUwcmbVELBgw8AZQ2axcQVsgHjdm5PoysVUpyxADN8phm5IyY/L2KUh+
+	HP4qhQrO/BHUaqErcYM5hCwAI5BwycQUuPeHQvFWDymIUjj4M+xt3B4YcOZdO/fpZQdhyplyS02
+	CHj16xWfW49dSrZHmShP9ijvTGRL+0WTI7X18Sv1i5OToEUpLWex0/yqvS1/7X44pP2e6+grMDy
+	/0Zd6oPtilUIJB3svBoPunZ6CJuEynRa8VSZzjEShNIucW48GJncP+AVJBm1QPtXU5xoyzTINkC
+	qWDbdxu4uiPf3Ft+5RUCZmGwPDs5TmDMfU93Okj8
+X-Received: by 2002:a05:6512:3190:b0:5a1:1e11:7532 with SMTP id
+ 2adb3069b0e04-5a13817ce39mr36737e87.24.1772729054737; Thu, 05 Mar 2026
+ 08:44:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20251113161248.387964-1-marco.crivellari@suse.com> <20251113161248.387964-2-marco.crivellari@suse.com>
+In-Reply-To: <20251113161248.387964-2-marco.crivellari@suse.com>
+From: Marco Crivellari <marco.crivellari@suse.com>
+Date: Thu, 5 Mar 2026 17:44:04 +0100
+X-Gm-Features: AaiRm50xPuCgI1yMT1byYRLrmHf9DeZAqxLzJ83txdRYD9IP_EJBG3o5O-PG5GE
+Message-ID: <CAAofZF5oAd18VV6ipoJDjiWvCeRxUh5KtdEZvPQ_DS71X_Vkzw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ath6kl: add WQ_PERCPU to alloc_workqueue users
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
+	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Michal Hocko <mhocko@suse.com>, Kalle Valo <kvalo@codeaurora.org>, 
+	Andrew Morton <akpm@linux-foundation.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Importance: Medium
-User-Agent: MGov Mail
-X-Mailer: MGov Mail
 
-Hi ChenYu,
-
-Oh my miss.
-
-
-Reagards,
-Gaurav Kansal
-
-
-From: Chen-Yu Tsai <wens@kernel.org>
-To: "Gaurav Kansal"<gaurav.kansal@nic.gov.in>
-Cc: "Degrader Snehil"<degradersnehil@gmail.com>, "linux-wireless"<linux-wir=
-eless@vger.kernel.org>, "wireless-regdb"<wireless-regdb@lists.infradead.org=
+On Thu, Nov 13, 2025 at 5:12=E2=80=AFPM Marco Crivellari
+<marco.crivellari@suse.com> wrote:
 >
-Date: Thu, 05 Mar 2026 10:01:05 +0530
-Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz (5=
-925-6425 MHz)
+> Currently if a user enqueues a work item using schedule_delayed_work() th=
+e
+> used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
+> WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
+> schedule_work() that is using system_wq and queue_work(), that makes use
+> again of WORK_CPU_UNBOUND.
+>
+> This lack of consistency cannot be addressed without refactoring the API.
+> For more details see the Link tag below.
+>
+> alloc_workqueue() treats all queues as per-CPU by default, while unbound
+> workqueues must opt-in via WQ_UNBOUND.
+>
+> This default is suboptimal: most workloads benefit from unbound queues,
+> allowing the scheduler to place worker threads where they=E2=80=99re need=
+ed and
+> reducing noise when CPUs are isolated.
+>
+> This continues the effort to refactor workqueue APIs, which began with
+> the introduction of new workqueues and a new alloc_workqueue flag in:
+>
+> commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
+> commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
+>
+> This change adds a new WQ_PERCPU flag to explicitly request
+> alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
+>
+> With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
+> any alloc_workqueue() caller that doesn=E2=80=99t explicitly specify WQ_U=
+NBOUND
+> must now use WQ_PERCPU.
+>
+> Once migration is complete, WQ_UNBOUND can be removed and unbound will
+> become the implicit default.
+>
+> Suggested-by: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+> Link: https://lore.kernel.org/all/20250221112003.1dSuoGyc@linutronix.de/
+> ---
+>  drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless=
+/ath/ath6kl/usb.c
+> index 38bb501fc553..bfb21725d779 100644
+> --- a/drivers/net/wireless/ath/ath6kl/usb.c
+> +++ b/drivers/net/wireless/ath/ath6kl/usb.c
+> @@ -637,7 +637,7 @@ static struct ath6kl_usb *ath6kl_usb_create(struct us=
+b_interface *interface)
+>         ar_usb =3D kzalloc(sizeof(struct ath6kl_usb), GFP_KERNEL);
+>         if (ar_usb =3D=3D NULL)
+>                 return NULL;
+> -       ar_usb->wq =3D alloc_workqueue("ath6kl_wq", 0, 0);
+> +       ar_usb->wq =3D alloc_workqueue("ath6kl_wq", WQ_PERCPU, 0);
+>         if (!ar_usb->wq) {
+>                 kfree(ar_usb);
+>                 return NULL;
 
- > Hi,=20
- > =20
- > On Thu, Mar 5, 2026 at 1:28=E2=80=AFPM Gaurav Kansal <gaurav.kansal@nic.=
-gov.in> wrote:=20
- > >=20
- > > Hi ChenYu,=20
- > >=20
- > > Didn't the information is already merged as per my last patch submissi=
-on?=20
- > =20
- > It looks like I requested some changes, and you agreed to send an update=
-,=20
- > but I never got it.=20
- > =20
- > ChenYu=20
- > =20
- > > Regards,=20
- > > Gaurav Kansal=20
- > >=20
- > >=20
- > >=20
- > >=20
- > > From: Chen-Yu Tsai <wens@kernel.org>=20
- > > To: "Degrader Snehil"<degradersnehil@gmail.com>=20
- > > Cc: <linux-wireless@vger.kernel.org>, "wireless-regdb"<wireless-regdb@=
-lists.infradead.org>=20
- > > Date: Thu, 05 Mar 2026 09:08:56 +0530=20
- > > Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 G=
-Hz (5925-6425 MHz)=20
- > >=20
- > >  > Hi,=20
- > >  >=20
- > >  > On Thu, Mar 5, 2026 at 3:16=E2=80=AFAM Degrader Snehil <degradersne=
-hil@gmail.com> wrote:=20
- > >  > >=20
- > >  > > Hi,=20
- > >  > >=20
- > >  > > I would like to request an update to the IN (India) regulatory do=
-main in wireless-regdb to add the newly permitted lower 6 GHz band (5925=E2=
-=80=936425 MHz).=20
- > >  >=20
- > >  > Thank you for the information. Would you like to provide a patch?=
-=20
- > >  > If not, I can write up a patch and tag you as the reporter.=20
- > >  >=20
- > >  > > The Government of India has officially opened this band for licen=
-ce-exempt use via Gazette Notification G.S.R. 47(E), dated January 20, 2026=
-, published January 21, 2026, issued by the Ministry of Communications unde=
-r the Indian Telegraph Act, 1885 and the Indian Wireless Telegraphy Act, 19=
-33.=20
- > >  > >=20
- > >  > > Gazette details:=20
- > >  > >   Title   : Use of Low Power and Very Low Power Wireless Access S=
-ystem=20
- > >  > >             including Radio Local Area Network in Lower 6 GHz Ban=
-d=20
- > >  > >             (Exemption from Licensing Requirement) Rules, 2026=20
- > >  > >   File No : 24-04/2025-UBB=20
- > >  > >   Gazette : No. 47, CG-DL-E-21012026-269488=20
- > >  > >   Signed  : Devendra Kumar Rai, Joint Secretary, Ministry of Comm=
-unications=20
- > >  > >   URL : https://www.dot.gov.in/static/uploads/2026/02/88f0ac8c74e=
-b6f6907934d17d0015ab5.pdf=20
- > >  > > The Gazette defines two device classes for 5925=E2=80=936425 MHz:=
-=20
- > >  > >=20
- > >  > >   1. Low power indoor=20
- > >  > >      - Max EIRP         : 30 dBm=20
- > >  > >      - Max PSD          : 11 dBm/MHz=20
- > >  > >      - Max bandwidth    : 320 MHz=20
- > >  > >      - Restriction      : Indoor use only (Rule 5)=20
- > >  > >=20
- > >  > >   2. Very low power outdoor=20
- > >  > >      - Max EIRP         : 14 dBm=20
- > >  > >      - Max PSD          : 1 dBm/MHz=20
- > >  > >      - Max bandwidth    : 320 MHz=20
- > >  > >      - Restriction      : None=20
- > >  > >=20
- > >  > > Additional operational restrictions per Rule 5 of the Gazette:=20
- > >  > >   - Band is prohibited on oil platforms=20
- > >  > >   - Indoor use prohibited on land vehicles, boats and aircraft be=
-low 10,000 ft=20
- > >  > >   - Communication with and control of drones/UAS is prohibited=20
- > >  > >   - Contention-based protocol is mandatory for all devices (Rule =
-4)=20
- > >  > >=20
- > >  > > Out-of-band emission limit: -27 dBm/MHz outside 5925=E2=80=936425=
- MHz (Rule 6)=20
- > >  > >=20
- > >  > > Proposed addition to the existing country IN entry in db.txt:=20
- > >  > >=20
- > >  > >   country IN:=20
- > >  > >           (2402 - 2482 @ 40), (30)=20
- > >  > >           (5150 - 5250 @ 80), (30)=20
- > >  > >           (5250 - 5350 @ 80), (24), DFS=20
- > >  > >           (5470 - 5725 @ 160), (24), DFS=20
- > >  > >           (5725 - 5875 @ 80), (30)=20
- > >  > >           (5925 - 6425 @ 320), (30), NO-OUTDOOR   # low power ind=
-oor=20
- > >  > >           (5925 - 6425 @ 320), (14)               # very low powe=
-r outdoor=20
- > >  > >=20
- > >  > > Note: Since both device classes share the same frequency range bu=
-t have different EIRP limits and indoor/outdoor restrictions, I have repres=
-ented them as two separate lines. Please advise if a different encoding is =
-more appropriate.=20
- > >  >=20
- > >  > Unfortunately we currently only support one rule per band. I'm incl=
-ined=20
- > >  > to add the VLP one so outdoor usage is allowed.=20
- > >  >=20
- > >  > > I have attached the official Gazette notification PDF as supporti=
-ng evidence.=20
- > >  > >=20
- > >  > > Intel has also submitted a related update (Intel=C2=AE Wireless W=
-i-Fi Drivers 24.20.2) for this band for India. I am not certain whether tha=
-t patch covers wireless-regdb (db.txt) or only their iwlwifi driver interna=
-ls, so I am submitting this request for wireless-regdb independently to ens=
-ure the authoritative database is updated.=20
- > >  >=20
- > >  > AFAIK Intel manages regulatory requirements in their firmware, so i=
-t is=20
- > >  > unrelated to the database we maintain.=20
- > >  >=20
- > >  > > Intel's Regulatory Domain Info was found in Release notes of thei=
-r  Intel=C2=AE Wireless Wi-Fi Drivers 24.20.2 available at page 2 of https:=
-//downloadmirror.intel.com/914148/ReleaseNotes_WiFi_24.20.2.pdf.=20
- > >  > > Please let me know if any further information is needed.=20
- > >  >=20
- > >  > The information you provided is very detailed. Thanks!=20
- > >  >=20
- > >  >=20
- > >  > ChenYu=20
- > >  >=20
- > >  >=20
- > >=20
- > >=20
- >=20
+[ Cc-ing Andrew Morton ]
 
+Hello Andrew,
+
+This file is orphaned. Can you help me in order to have this patch merged?
+
+Thank you!
+
+--=20
+
+Marco Crivellari
+
+L3 Support Engineer
