@@ -1,190 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AED26F46E
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 04:31:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16EFA366076;
+	Thu,  5 Mar 2026 08:05:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772685080; cv=none; b=a6cuKWxFbX6dGrdq3S7UgMCY3UZjlEmDlFGysiGT1UeJ9hieepUqaOkkoQV2NlsOZOPMPSD9+hTC8bpMNDo6lbSgdyPwuCSIRtcpgJZeeWeq5Nmhg0Os31D9Fm1NAY5kEYd51OYUy3WKRIxTH91ED2Mx0prjH0d+UM3bh1prlFo=
+	t=1772697938; cv=none; b=XWFRlJTnIL0ucbebM6e21qf2qb80pY7VvACrZxkcTlRSqxPy4Ar0Fqv5H7eYvQIExOq7KMmjRF7Ge25FF68zK6YdYONQ4s5jDHaMKCEpvVwRTKduOx6HbM94CeEa3q7k6Lxx4K63gJYSGUU/C3XFMeHSKyZBUnxfs2tEPpOcprY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772685080; c=relaxed/simple;
-	bh=yNEpdJcmJufkTDu6X7Pw8XWppI3dgWWr9K0+Wv0zTRk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=u1TBN31BE4mHscOeAPdebXgzBgB4oRrWkQHRhHfuu1mAoHG669h3y9PNzfcEDpWsODX2aJJ6uDixfY27Wb3rrz9WsoYj1ikZPSuXqjIqa+ZY2Sjo7iNTcQKndnvzZ1ZU0CJuYPg1z8w8SPFEcE3W27OGeaBhy2JKewIIA01fxLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lh0nR9b7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772697938; c=relaxed/simple;
+	bh=Fha6NDzVdtw4aSWx+iGX0QxEwkWvK34N5hI3c2DVAQE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U6GfocPvZot4E37yJcJjPcFh+BE38zPO1qMah4UK4bk6ldimhX0opXwFKbDJQFN42NcmBXBzPC5mfT0DnDsAr5IGKX2rTlwGNEGtIEnfeZScQFV1Ef3Oxzy4JXux8HBtMcmTbS32qd6hmeqmH4LOj28uHnNOaYXmv40dQjhxF18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K88EOzF/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lh0nR9b7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4078C19422
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 04:31:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K88EOzF/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EEA7C116C6;
+	Thu,  5 Mar 2026 08:05:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772685079;
-	bh=yNEpdJcmJufkTDu6X7Pw8XWppI3dgWWr9K0+Wv0zTRk=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
-	b=lh0nR9b7wgEjdaiYR7sIjF3I6GPGAgV+nq6Ee8HJfy0hqPAn+E3kdQnDRIxm6OlU7
-	 BPV4aPQY0Zz8MjrEGH7n2akUQY0sNO1nbHqC1rxQc2/3Zuqf6ZNwSsmSXS6QPTF9g7
-	 dmi4In2wrpvPdbBb9AD+8U5+apb1pWp88fvzi4CoUrAWgMsi/h9mR3r7+S63u4lUAS
-	 /pNF2PTeADCo4PMlQ3Zw0AoptKaPRO18CNiFrY0kPwDgFxUz8Oj+ye52IJOizas9SB
-	 hgJAHmUb+g2zHRmoNaH6CxF731L4jhy23WbwktTqiwA8oxGV+/ocMVOeNHBr/c4Liu
-	 Wcmt92GS6CnrQ==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-3870778358aso92695331fa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2026 20:31:19 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVa83ByxOuv+ELA8jSK6vYvR8lpJT3Ac/V3Lo9lQfVWxxyg1EIXKI7YrAOPnrdCFA2HmFLHOoO9ClfZ1GsffQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz6GrQHFs5bmRjSAlBt7pJw03eyUlinw+NHH1pPRiUFFsVUF55i
-	fJWDSq3wSic/4EqNS0l/lxeIPrx3gVX0p+mfBFZRQIOEGjCDwk6qEka10ffE3+Q3apILdJnjKuF
-	k9wa1kXpiruPeE/fSyKPVfzgWLYdYpo8=
-X-Received: by 2002:a2e:6e09:0:b0:385:c21f:37f4 with SMTP id
- 38308e7fff4ca-38a2c589ae6mr22495211fa.16.1772685078135; Wed, 04 Mar 2026
- 20:31:18 -0800 (PST)
+	s=k20201202; t=1772697937;
+	bh=Fha6NDzVdtw4aSWx+iGX0QxEwkWvK34N5hI3c2DVAQE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K88EOzF/NFdypnS33aUxiBNbPycQZTCWvxfAST7u+iuyc+rRG86rVpr8jGlMcb485
+	 5U/ZXEjQSxXVQSrpHWojaPNB+Ldjy3yGpsvSZLT7TvB5copaEijr/6NgAxaWRHazOe
+	 Vm/gPwmNjHNw5ymfhrlD7UeIt11YYwcTijdfgWYsxAksIALwiyHwHl0S5RH2mOEUgH
+	 gsRy6JlgdzQ+94bFg8o4EcTLzWWvHqYL26p9tChTQo8J/SuXBw1U01zTH0XVIW18R/
+	 /0jU9GSWUXduRRVdhRnJuhGongZvmiMcZyAtzyPR9hjMfOSCmOSPbhT2OlL0ksHUdz
+	 jOUSHnuP3EpHQ==
+Date: Thu, 5 Mar 2026 09:05:35 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Kerigan Creighton <kerigancreighton@gmail.com>
+Cc: linux-wireless@vger.kernel.org, loic.poulain@oss.qualcomm.com, 
+	wcn36xx@lists.infradead.org, andersson@kernel.org, mathieu.poirier@linaro.org, 
+	linux-remoteproc@vger.kernel.org, linux-arm-msm@vger.kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] dt-bindings: remoteproc: qcom,wcnss-pil: add
+ WCN3610 compatible
+Message-ID: <20260305-inventive-apricot-badger-7c60ee@quoll>
+References: <20260305003253.1022386-1-kerigancreighton@gmail.com>
+ <20260305003253.1022386-2-kerigancreighton@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CADqxL9qYq_+8dPgXj5i_HjkpTOZwiAawsa90tNbA4Q87ZhCrSA@mail.gmail.com>
- <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com> <19cbc39a90e.1cd9982953056.6486968654066866605@nic.gov.in>
-In-Reply-To: <19cbc39a90e.1cd9982953056.6486968654066866605@nic.gov.in>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Thu, 5 Mar 2026 13:31:05 +0900
-X-Gmail-Original-Message-ID: <CAGb2v6406826bWiKEQ0jf0TSPL9xtNx+i=_YCRJNnUjUftF0_w@mail.gmail.com>
-X-Gm-Features: AaiRm50lnl5hk4qTMp7ARUwZ_DzyD4Qnd_nNciZJbW4lAGV4zvXGd5mJPPzYMio
-Message-ID: <CAGb2v6406826bWiKEQ0jf0TSPL9xtNx+i=_YCRJNnUjUftF0_w@mail.gmail.com>
-Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz
- (5925-6425 MHz)
-To: Gaurav Kansal <gaurav.kansal@nic.gov.in>
-Cc: Degrader Snehil <degradersnehil@gmail.com>, 
-	linux-wireless <linux-wireless@vger.kernel.org>, 
-	wireless-regdb <wireless-regdb@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260305003253.1022386-2-kerigancreighton@gmail.com>
 
-Hi,
+On Wed, Mar 04, 2026 at 06:32:51PM -0600, Kerigan Creighton wrote:
+> Document the qcom,wcn3610 compatible string for use with
+> the qcom_wcnss_iris remoteproc driver.
 
-On Thu, Mar 5, 2026 at 1:28=E2=80=AFPM Gaurav Kansal <gaurav.kansal@nic.gov=
-.in> wrote:
->
-> Hi ChenYu,
->
-> Didn't the information is already merged as per my last patch submission?
+No, do not document for drivers. Please explain here the hardware.
 
-It looks like I requested some changes, and you agreed to send an update,
-but I never got it.
+Also, one patchset per 24h.
 
-ChenYu
+Best regards,
+Krzysztof
 
-> Regards,
-> Gaurav Kansal
->
->
->
->
-> From: Chen-Yu Tsai <wens@kernel.org>
-> To: "Degrader Snehil"<degradersnehil@gmail.com>
-> Cc: <linux-wireless@vger.kernel.org>, "wireless-regdb"<wireless-regdb@lis=
-ts.infradead.org>
-> Date: Thu, 05 Mar 2026 09:08:56 +0530
-> Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz =
-(5925-6425 MHz)
->
->  > Hi,
->  >
->  > On Thu, Mar 5, 2026 at 3:16=E2=80=AFAM Degrader Snehil <degradersnehil=
-@gmail.com> wrote:
->  > >
->  > > Hi,
->  > >
->  > > I would like to request an update to the IN (India) regulatory domai=
-n in wireless-regdb to add the newly permitted lower 6 GHz band (5925=E2=80=
-=936425 MHz).
->  >
->  > Thank you for the information. Would you like to provide a patch?
->  > If not, I can write up a patch and tag you as the reporter.
->  >
->  > > The Government of India has officially opened this band for licence-=
-exempt use via Gazette Notification G.S.R. 47(E), dated January 20, 2026, p=
-ublished January 21, 2026, issued by the Ministry of Communications under t=
-he Indian Telegraph Act, 1885 and the Indian Wireless Telegraphy Act, 1933.
->  > >
->  > > Gazette details:
->  > >   Title   : Use of Low Power and Very Low Power Wireless Access Syst=
-em
->  > >             including Radio Local Area Network in Lower 6 GHz Band
->  > >             (Exemption from Licensing Requirement) Rules, 2026
->  > >   File No : 24-04/2025-UBB
->  > >   Gazette : No. 47, CG-DL-E-21012026-269488
->  > >   Signed  : Devendra Kumar Rai, Joint Secretary, Ministry of Communi=
-cations
->  > >   URL : https://www.dot.gov.in/static/uploads/2026/02/88f0ac8c74eb6f=
-6907934d17d0015ab5.pdf
->  > > The Gazette defines two device classes for 5925=E2=80=936425 MHz:
->  > >
->  > >   1. Low power indoor
->  > >      - Max EIRP         : 30 dBm
->  > >      - Max PSD          : 11 dBm/MHz
->  > >      - Max bandwidth    : 320 MHz
->  > >      - Restriction      : Indoor use only (Rule 5)
->  > >
->  > >   2. Very low power outdoor
->  > >      - Max EIRP         : 14 dBm
->  > >      - Max PSD          : 1 dBm/MHz
->  > >      - Max bandwidth    : 320 MHz
->  > >      - Restriction      : None
->  > >
->  > > Additional operational restrictions per Rule 5 of the Gazette:
->  > >   - Band is prohibited on oil platforms
->  > >   - Indoor use prohibited on land vehicles, boats and aircraft below=
- 10,000 ft
->  > >   - Communication with and control of drones/UAS is prohibited
->  > >   - Contention-based protocol is mandatory for all devices (Rule 4)
->  > >
->  > > Out-of-band emission limit: -27 dBm/MHz outside 5925=E2=80=936425 MH=
-z (Rule 6)
->  > >
->  > > Proposed addition to the existing country IN entry in db.txt:
->  > >
->  > >   country IN:
->  > >           (2402 - 2482 @ 40), (30)
->  > >           (5150 - 5250 @ 80), (30)
->  > >           (5250 - 5350 @ 80), (24), DFS
->  > >           (5470 - 5725 @ 160), (24), DFS
->  > >           (5725 - 5875 @ 80), (30)
->  > >           (5925 - 6425 @ 320), (30), NO-OUTDOOR   # low power indoor
->  > >           (5925 - 6425 @ 320), (14)               # very low power o=
-utdoor
->  > >
->  > > Note: Since both device classes share the same frequency range but h=
-ave different EIRP limits and indoor/outdoor restrictions, I have represent=
-ed them as two separate lines. Please advise if a different encoding is mor=
-e appropriate.
->  >
->  > Unfortunately we currently only support one rule per band. I'm incline=
-d
->  > to add the VLP one so outdoor usage is allowed.
->  >
->  > > I have attached the official Gazette notification PDF as supporting =
-evidence.
->  > >
->  > > Intel has also submitted a related update (Intel=C2=AE Wireless Wi-F=
-i Drivers 24.20.2) for this band for India. I am not certain whether that p=
-atch covers wireless-regdb (db.txt) or only their iwlwifi driver internals,=
- so I am submitting this request for wireless-regdb independently to ensure=
- the authoritative database is updated.
->  >
->  > AFAIK Intel manages regulatory requirements in their firmware, so it i=
-s
->  > unrelated to the database we maintain.
->  >
->  > > Intel's Regulatory Domain Info was found in Release notes of their  =
-Intel=C2=AE Wireless Wi-Fi Drivers 24.20.2 available at page 2 of https://d=
-ownloadmirror.intel.com/914148/ReleaseNotes_WiFi_24.20.2.pdf.
->  > > Please let me know if any further information is needed.
->  >
->  > The information you provided is very detailed. Thanks!
->  >
->  >
->  > ChenYu
->  >
->  >
->
->
