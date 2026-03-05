@@ -1,33 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58110315D3E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58196345CC9;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772708857; cv=none; b=qrsQI0lgYqZtMIkgkxQzi2vtZBpVsvHIvciLzSOQ4tXUuvVnR0Xks/Lvpw4PI8l8NJm4cfAsaK3607ZPU7EkIW/9iRd2SpW8bFx4hFhYZmWyslxVST4j8hkCWxSTwQ26r0GpnckUn6OZLJ8ip0hH1K0c73Sr879UMSIY6ackF/0=
+	t=1772708857; cv=none; b=M/NLWVGYxuBW/kLaxkb4/IZkBhRFtZoQKniLMefpNdp4t4Tf4MqbNaZPfpDFpRxUc+GtNdBWPnb0T23ZbBiICEuSdZuxPN5lMaOv8m3iIoGZy9DYHb7vbpE9kn+Zykqt8p77RDC7PbbtPRZaICYxcPbsivoGu0TTO6YTR3leJas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772708857; c=relaxed/simple;
-	bh=I5RTqGWF/smyis5LMKbxrhcgEnu87Neuhp9zkbzeYso=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cPmIpQ3HCR4i2XXnYSbobrBvGDrzVx9yW1mlP93FtIKfgjtrbAV4VTPIclElPMNy6elXpNoTAHikt+37DtGTF5FaJfTH7PavSX9+XUMJX9LAvcFBoHZjGJkIZpkPRg70eCqxOaLaQmgDkN/VGUUeXnQKkwYCmCfuyOk0FAC671Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0izhF7N; arc=none smtp.client-ip=10.30.226.201
+	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=c2GvBTO58WNK7BVtoPTu+wjUJNyxIeBNdiU+NJ/HyWf9pnUPzy4JugQ6OaQOQnwVda8sa7DXBoDy8pq6zoTn5ASJXGqGwgqUo7614rkj1/Xto7oA0giXbQRy4GuFTQ1snrHiUCO5VDlCMcky+Fei3Mj/to1vPwpfH9fw3b7yp6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z/MpcMgw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0izhF7N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06B2DC2BCAF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z/MpcMgw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0314BC116C6;
 	Thu,  5 Mar 2026 11:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772708857;
-	bh=I5RTqGWF/smyis5LMKbxrhcgEnu87Neuhp9zkbzeYso=;
-	h=From:To:Cc:Subject:Date:From;
-	b=m0izhF7NZIUTHemtibMTa/cTfPgcBtL4GDtsE9+iy1DrEcfyt1ENp41nxXCBo6knY
-	 NK2HHympxmTODd2M1Ey1FtVATSDjVnkD40irn/uwDcjgKTm73niSY/Sh8r3XYz9J/m
-	 qpmWDkVYS8pPskm8yleukOmMcSKhqDpP0bZAgYAcIY8LH6kCDLJGElqM/26G/Fwd7U
-	 qcDZUdH+zg9U4oqaiOdzsrEC6Ca+sUkPeOnRoT1aO2yUXhIoyn+/NwZUFlZZnxstDT
-	 jWGODikHErVsSEqA9q6tO3mubh51Qd00wi/8lbpEQavSmJjFgc8p4CbF6Yhghlr2C2
-	 yohFTCLebN/Mw==
+	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Z/MpcMgwq2QvImIVCdhoVkAy+wcdlniZFR2QNnxI2PJ9URJMGIHBtQhMs3DKGEQ+3
+	 Yuy/iUn3aGbS0FtdkFj9usIm+GFRCQHsQCirtgUleKOC2yZW1ywPFKTn/vQh1UGLSI
+	 9ZozXQQk3SNuKeGnVb4DrahNKKh29I0vMTbWp1Fi7307+uNUm3ikwbfwxGH/1Lzlzr
+	 elwUM4jNssrIBUOauGmshwgQFLT0rwSMTSALblJ06SZoD9UzZIBsAO37HnKA19SzXU
+	 MabR+4YLwy3wA0rrcgmap+q8u4r2D6VaM0/8lylKDR78YLiY0bX50z36Vch0cwfmHv
+	 mL1zAwBmuBTJg==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vy6YI-000000004cl-2KZE;
+	id 1vy6YI-000000004cn-2QT7;
 	Thu, 05 Mar 2026 12:07:34 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -51,10 +52,12 @@ Cc: Brian Norris <briannorris@chromium.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH 00/13] wifi: drop redundant USB device references
-Date: Thu,  5 Mar 2026 12:07:00 +0100
-Message-ID: <20260305110713.17725-1-johan@kernel.org>
+Subject: [PATCH 01/13] wifi: at76c50x: drop redundant device reference
+Date: Thu,  5 Mar 2026 12:07:01 +0100
+Message-ID: <20260305110713.17725-2-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260305110713.17725-1-johan@kernel.org>
+References: <20260305110713.17725-1-johan@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,51 +71,54 @@ device while the interface is bound to a driver and there is no need to
 take additional references unless the structures are needed after
 disconnect.
 
-Drop redundant device references to reduce cargo culting, make it easier
-to spot drivers where an extra reference is needed, and reduce the risk
-of memory leaks when drivers fail to release them.
+Drop the redundant device reference to reduce cargo culting, make it
+easier to spot drivers where an extra reference is needed, and reduce
+the risk of memory leaks when drivers fail to release it.
 
-Note that I sent an ath9k patch separately here:
+Signed-off-by: Johan Hovold <johan@kernel.org>
+---
+ drivers/net/wireless/atmel/at76c50x-usb.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-	https://lore.kernel.org/all/20260305105803.17011-1-johan@kernel.org/
-
-but I guess these can all be picked up by Johannes.
-
-Johan
-
-
-Johan Hovold (13):
-  wifi: at76c50x: drop redundant device reference
-  wifi: libertas: drop redundant device reference
-  wifi: libertas_tf: drop redundant device reference
-  wifi: mwifiex: drop redundant device reference
-  wifi: mt76: drop redundant device reference
-  wifi: mt76x0u: drop redundant device reference
-  wifi: mt76x2u: drop redundant device reference
-  wifi: mt76: mt792xu: drop redundant device reference
-  wifi: mt7601u: drop redundant device reference
-  wifi: rt2x00: drop redundant device reference
-  wifi: rtl818x: drop redundant device reference
-  wifi: rtl8xxxu: drop redundant device reference
-  wifi: rtlwifi: usb: drop redundant device reference
-
- drivers/net/wireless/atmel/at76c50x-usb.c          | 12 ++++--------
- drivers/net/wireless/marvell/libertas/if_usb.c     |  3 ---
- drivers/net/wireless/marvell/libertas_tf/if_usb.c  |  2 --
- drivers/net/wireless/marvell/mwifiex/usb.c         |  4 ----
- drivers/net/wireless/mediatek/mt76/mt7615/usb.c    |  3 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c    |  3 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/usb.c    |  4 ----
- drivers/net/wireless/mediatek/mt76/mt7921/usb.c    |  2 --
- drivers/net/wireless/mediatek/mt76/mt7925/usb.c    |  2 --
- drivers/net/wireless/mediatek/mt76/mt792x_usb.c    |  1 -
- drivers/net/wireless/mediatek/mt7601u/usb.c        |  3 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c     | 12 +-----------
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c |  4 ----
- drivers/net/wireless/realtek/rtl8xxxu/core.c       | 11 +++--------
- drivers/net/wireless/realtek/rtlwifi/usb.c         |  4 ----
- 15 files changed, 8 insertions(+), 62 deletions(-)
-
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 6445332801a4..44b04ea3cc8b 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -2440,13 +2440,11 @@ static int at76_probe(struct usb_interface *interface,
+ 	struct mib_fw_version *fwv;
+ 	int board_type = (int)id->driver_info;
+ 
+-	udev = usb_get_dev(interface_to_usbdev(interface));
++	udev = interface_to_usbdev(interface);
+ 
+ 	fwv = kmalloc_obj(*fwv);
+-	if (!fwv) {
+-		ret = -ENOMEM;
+-		goto exit;
+-	}
++	if (!fwv)
++		return -ENOMEM;
+ 
+ 	/* Load firmware into kernel memory */
+ 	fwe = at76_load_firmware(udev, board_type);
+@@ -2534,8 +2532,7 @@ static int at76_probe(struct usb_interface *interface,
+ 
+ exit:
+ 	kfree(fwv);
+-	if (ret < 0)
+-		usb_put_dev(udev);
++
+ 	return ret;
+ }
+ 
+@@ -2552,7 +2549,6 @@ static void at76_disconnect(struct usb_interface *interface)
+ 
+ 	wiphy_info(priv->hw->wiphy, "disconnecting\n");
+ 	at76_delete_device(priv);
+-	usb_put_dev(interface_to_usbdev(interface));
+ 	dev_info(&interface->dev, "disconnected\n");
+ }
+ 
 -- 
 2.52.0
 
