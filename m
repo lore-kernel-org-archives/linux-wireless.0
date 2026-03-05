@@ -1,277 +1,170 @@
-Received: from omta36.uswest2.a.cloudfilter.net (omta36.uswest2.a.cloudfilter.net [35.89.44.35])
+Received: from sender1-o42.mgovcloud.in (sender1-o42.mgovcloud.in [169.148.143.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F663612E8
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Mar 2026 22:04:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.89.44.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEA29221F1F
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Mar 2026 00:07:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=169.148.143.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772748280; cv=none; b=F+F+pXNsqDtt4X/sfhVViSkGyABWVJD7co2r04XlsxGENhJS9n1Hggx39kxLVFY8I6iWN2B1EpBw1n2XqKmk3MoFLo5l1YsTz9iIYi3+zk+WaL3WwYyOK5S0xnZuHFSgontAx9QGVGzxEn+T0Q1feFgD9TWdTs5hvsJC/+B1gAY=
+	t=1772755657; cv=none; b=XbhuN7e7HY4iMWqX0VgLC1gSaLPKZSTavU2kFQt+hXuRFNDX4SURv0KOpUmKHr6+r4oeVJUCscaQC4IR4kG0D/TUtt28sAGhEJEFsRA6gAdXUszaYaTqoKyN9psidPSxx6buazHFh5QIGIRi15llIYzzxdNLdQU4swyNwp5pICw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772748280; c=relaxed/simple;
-	bh=JrInGjWfOAbn+j0gWU0hP+d+DL2wpu36d28HiREU7z0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Q5ysNigRUTlNydUnJr8h0jms+TQLsigpf9nO+hG3TfLHpxFP5TP4kvWAWX8KAHffo1BFvcROyzE25GCJcXI+HAmyfwp2sGgTU6QJCFfyM2Gsx0RNUFwrKlvhAyS5ypsM9aqZat4De+O/ilnQBMj2n8gUYukpou3wEXKdSsV4uTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=sony.com; spf=fail smtp.mailfrom=sony.com; arc=none smtp.client-ip=35.89.44.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=sony.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=sony.com
-Received: from eig-obgw-5005b.ext.cloudfilter.net ([10.0.29.189])
-	by cmsmtp with ESMTPS
-	id yAMsvgRzVVCBNyGo8v6OWW; Thu, 05 Mar 2026 22:04:37 +0000
-Received: from host2044.hostmonster.com ([67.20.76.238])
-	by cmsmtp with ESMTPS
-	id yGo0vwoGsjAxuyGo0vYvCK; Thu, 05 Mar 2026 22:04:28 +0000
-X-Authority-Analysis: v=2.4 cv=EoDSrTcA c=1 sm=1 tr=0 ts=69a9fdf4
- a=O1AQXT3IpLm5MaED65xONQ==:117 a=uc9KWs4yn0V/JYYSH7YHpg==:17
- a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=z6gsHLkEAAAA:8 a=4b9QysbXAAAA:8
- a=stkexhm8AAAA:8 a=EUspDBNiAAAA:8 a=cH6R9-kdAAAA:8 a=P9KAhAPrZ2691IDrLaYA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=RVmHIydaz68A:10
- a=kpqFwAh5LKmhuRUZV80P:22 a=pIW3pCRaVxJDc-hWtpF8:22 a=iekntanDnrheIxGr1pkv:22
-Received: from [66.118.46.62] (port=40748 helo=timdesk..)
-	by host2044.hostmonster.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <tim.bird@sony.com>)
-	id 1vyGnz-00000003eKc-2yWy;
-	Thu, 05 Mar 2026 15:04:27 -0700
-From: Tim Bird <tim.bird@sony.com>
-To: johannes@sipsolutions.net,
-	andy@warmcat.com,
-	lrodriquez@atheros.com,
-	beni.lev@intel.com
-Cc: tim.bird@sony.com,
-	linux-wireless@vger.kernel.org,
-	linux-spdx@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: radiotap: Add SPDX ids to files in the wireless subsystem
-Date: Thu,  5 Mar 2026 15:04:21 -0700
-Message-ID: <20260305220422.24161-1-tim.bird@sony.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1772755657; c=relaxed/simple;
+	bh=2GtZQG3/V4b2MFfRGcmpRuUxPXMfZ/UMxx9MN1CqJio=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=PFrJLIfrhetPk/cQlF5pPMV869ns9ExvmS1QLN/iYQY6I5x/YzyQ/0O272C+dSczgRTZnm2ltidWO6eDmy07pRdpAuMWPekYNpsWVJn+yvDiWxhMSwPh/XZfgKTdp5KeixCg6GeIaW59AK8NFTJeZZbWoQZ7FnCI8yWSxh31dQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in; spf=pass smtp.mailfrom=nic.gov.in; dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b=I7BP6m/Y; arc=none smtp.client-ip=169.148.143.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nic.gov.in
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b="I7BP6m/Y"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772684423;
+	s=zmail; d=nic.gov.in; i=gaurav.kansal@nic.gov.in;
+	h=Date:Date:From:From:To:To:Cc:Cc:Message-ID:In-Reply-To:References:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=271up09E33xh6e9w6ywwlZ5NW0fqvwtVXEOhmFisBvU=;
+	b=I7BP6m/YNpRa3D8fe4dewr8C/p3GUQ8pLfKjAJrpAlbeIKdiqV/zElPUTESVnRZn
+	VGzzvC/1SLtURVEppD3qjYLYfJ6tGwa5jJ4YUz/ls0vtISFvM9ZnDUvPBkDavITzVbE
+	pweKN1Mv7CTqu2SW9L94L3SyU9XzYMWPMOSkANZ0=
+Received: from mail.mniccloud.in by mx.mniccloud.in
+	with SMTP id 1772684421910189.91557632018907; Thu, 5 Mar 2026 09:50:21 +0530 (IST)
+Date: Thu, 05 Mar 2026 09:50:21 +0530
+From: Gaurav Kansal <gaurav.kansal@nic.gov.in>
+To: "wens" <wens@kernel.org>
+Cc: "Degrader Snehil" <degradersnehil@gmail.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"wireless-regdb" <wireless-regdb@lists.infradead.org>
+Message-ID: <19cbc39a90e.1cd9982953056.6486968654066866605@nic.gov.in>
+In-Reply-To: <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com>
+References: <CADqxL9qYq_+8dPgXj5i_HjkpTOZwiAawsa90tNbA4Q87ZhCrSA@mail.gmail.com> <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com>
+Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz
+ (5925-6425 MHz)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - host2044.hostmonster.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - sony.com
-X-BWhitelist: no
-X-Source-IP: 66.118.46.62
-X-Source-L: No
-X-Exim-ID: 1vyGnz-00000003eKc-2yWy
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: (timdesk..) [66.118.46.62]:40748
-X-Source-Auth: tim@bird.org
-X-Email-Count: 3
-X-Org: HG=bhshared_hm;ORG=bluehost;
-X-Source-Cap: YmlyZG9yZztiaXJkb3JnO2hvc3QyMDQ0Lmhvc3Rtb25zdGVyLmNvbQ==
-X-Local-Domain: no
-X-CMAE-Envelope: MS4xfJUUAZVX8IpE8on2zf29KIbXNC0HgOM9qiDmlmsHbF2kHkBpvrl6S64X0VECKPkHOzvIFeqAG6M5DP4RB6Vh4kwFdWJCYFHMuvPirQx63Eeau66KDlu2
- A98a9fNiOA6kddyCejF1KK3EFdUXwYJ7ePpN+D4jnh6+Kh0Bp67QttoLE6/0JXOz73Z1fNRK6KVh6R69wORcPSb16TuSFD0L9ms=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Importance: Medium
+User-Agent: MGov Mail
+X-Mailer: MGov Mail
 
-Add SPDX-License-Identifier lines to some files where
-they are missing in the net/wireless directory.
-Remove licensing text from individual files headers (where
-present) to canonicalize the library references.
+Hi ChenYu,
 
-Use (mostly) either GPL-2.0 or ISC, depending on the
-license wording (or not) in the files.
+Didn't the information is already merged as per my last patch submission?
 
-radiotap.c does not mention which BSD variant it intends for the
-license.  My selection of 'OR BSD-2-Clause' for radiotap.c was
-based on research into this code's history and its licensing
-elsewhere.  In OpenBSD, radiotap code (which likely either
-derived from this code, or this code was derived from) has the
-BSD-2-Clause license.  Very similar code in the radiotap library
-user space tool, by the same authors Andy Green and Johannes
-Berg, has an ISC license. Also the ISC license is used by
-Johannes for other contributions in the Linux wireless system.
-Since the radiotap.c license text here mentions BSD, but not a
-specific version, I chose the closest BSD variant to ISC, which
-is BSD-2-Clause.
+Regards,
+Gaurav Kansal
 
-Signed-off-by: Tim Bird <tim.bird@sony.com>
----
-Note that the ISC license says it must be retained, but we
-count the file in LICENSES/deprecated/ISC as retention of
-'this permission notice', for Linux source.
----
- net/wireless/of.c        | 13 +------------
- net/wireless/radiotap.c  | 10 +---------
- net/wireless/reg.c       | 13 +------------
- net/wireless/reg.h       | 13 +------------
- net/wireless/trace.c     |  1 +
- net/wireless/wext-core.c |  3 +--
- net/wireless/wext-priv.c |  3 +--
- net/wireless/wext-proc.c |  3 +--
- 8 files changed, 8 insertions(+), 51 deletions(-)
 
-diff --git a/net/wireless/of.c b/net/wireless/of.c
-index 60a864465331..99acbea3beee 100644
---- a/net/wireless/of.c
-+++ b/net/wireless/of.c
-@@ -1,17 +1,6 @@
-+// SPDX-License-Identifier: ISC
- /*
-  * Copyright (C) 2017 Rafał Miłecki <rafal@milecki.pl>
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
- #include <linux/of.h>
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index c85eaa583a46..df29048a0449 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -1,17 +1,9 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-2-Clause
- /*
-  * Radiotap parser
-  *
-  * Copyright 2007		Andy Green <andy@warmcat.com>
-  * Copyright 2009		Johannes Berg <johannes@sipsolutions.net>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- * Alternatively, this software may be distributed under the terms of BSD
-- * license.
-- *
-- * See COPYING for more details.
-  */
- 
- #include <linux/kernel.h>
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1c5c38d18feb..20bba7e491c5 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: ISC
- /*
-  * Copyright 2002-2005, Instant802 Networks, Inc.
-  * Copyright 2005-2006, Devicescape Software, Inc.
-@@ -6,18 +7,6 @@
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright      2017  Intel Deutschland GmbH
-  * Copyright (C) 2018 - 2026 Intel Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
- 
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index e1b211c4f75c..fc31c5f9a61a 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -1,3 +1,4 @@
-+/* SPDX-License-Identifier: ISC */
- #ifndef __NET_WIRELESS_REG_H
- #define __NET_WIRELESS_REG_H
- 
-@@ -6,18 +7,6 @@
- /*
-  * Copyright 2008-2011	Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-  * Copyright (C) 2019, 2023 Intel Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
- enum ieee80211_regd_source {
-diff --git a/net/wireless/trace.c b/net/wireless/trace.c
-index 95f997fad755..7cb93acf1a8f 100644
---- a/net/wireless/trace.c
-+++ b/net/wireless/trace.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0
- #include <linux/module.h>
- 
- #ifndef __CHECKER__
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 7b8e94214b07..c19dece2bc6e 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -1,3 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * This file implement the Wireless Extensions core API.
-  *
-@@ -5,8 +6,6 @@
-  * Copyright (c) 1997-2007 Jean Tourrilhes, All Rights Reserved.
-  * Copyright	2009 Johannes Berg <johannes@sipsolutions.net>
-  * Copyright (C) 2024 Intel Corporation
-- *
-- * (As all part of the Linux kernel, this file is GPL)
-  */
- #include <linux/kernel.h>
- #include <linux/netdevice.h>
-diff --git a/net/wireless/wext-priv.c b/net/wireless/wext-priv.c
-index 37d1147019c2..ce9022843dfd 100644
---- a/net/wireless/wext-priv.c
-+++ b/net/wireless/wext-priv.c
-@@ -1,11 +1,10 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * This file implement the Wireless Extensions priv API.
-  *
-  * Authors :	Jean Tourrilhes - HPL - <jt@hpl.hp.com>
-  * Copyright (c) 1997-2007 Jean Tourrilhes, All Rights Reserved.
-  * Copyright	2009 Johannes Berg <johannes@sipsolutions.net>
-- *
-- * (As all part of the Linux kernel, this file is GPL)
-  */
- #include <linux/slab.h>
- #include <linux/wireless.h>
-diff --git a/net/wireless/wext-proc.c b/net/wireless/wext-proc.c
-index cadcf8613af2..be6b2b695bf9 100644
---- a/net/wireless/wext-proc.c
-+++ b/net/wireless/wext-proc.c
-@@ -1,10 +1,9 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-  * This file implement the Wireless Extensions proc API.
-  *
-  * Authors :	Jean Tourrilhes - HPL - <jt@hpl.hp.com>
-  * Copyright (c) 1997-2007 Jean Tourrilhes, All Rights Reserved.
-- *
-- * (As all part of the Linux kernel, this file is GPL)
-  */
- 
- /*
--- 
-2.43.0
+
+
+From: Chen-Yu Tsai <wens@kernel.org>
+To: "Degrader Snehil"<degradersnehil@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>, "wireless-regdb"<wireless-regdb@lists=
+.infradead.org>
+Date: Thu, 05 Mar 2026 09:08:56 +0530
+Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz (5=
+925-6425 MHz)
+
+ > Hi,=20
+ > =20
+ > On Thu, Mar 5, 2026 at 3:16=E2=80=AFAM Degrader Snehil <degradersnehil@g=
+mail.com> wrote:=20
+ > >=20
+ > > Hi,=20
+ > >=20
+ > > I would like to request an update to the IN (India) regulatory domain =
+in wireless-regdb to add the newly permitted lower 6 GHz band (5925=E2=80=
+=936425 MHz).=20
+ > =20
+ > Thank you for the information. Would you like to provide a patch?=20
+ > If not, I can write up a patch and tag you as the reporter.=20
+ > =20
+ > > The Government of India has officially opened this band for licence-ex=
+empt use via Gazette Notification G.S.R. 47(E), dated January 20, 2026, pub=
+lished January 21, 2026, issued by the Ministry of Communications under the=
+ Indian Telegraph Act, 1885 and the Indian Wireless Telegraphy Act, 1933.=
+=20
+ > >=20
+ > > Gazette details:=20
+ > >   Title   : Use of Low Power and Very Low Power Wireless Access System=
+=20
+ > >             including Radio Local Area Network in Lower 6 GHz Band=20
+ > >             (Exemption from Licensing Requirement) Rules, 2026=20
+ > >   File No : 24-04/2025-UBB=20
+ > >   Gazette : No. 47, CG-DL-E-21012026-269488=20
+ > >   Signed  : Devendra Kumar Rai, Joint Secretary, Ministry of Communica=
+tions=20
+ > >   URL : https://www.dot.gov.in/static/uploads/2026/02/88f0ac8c74eb6f69=
+07934d17d0015ab5.pdf=20
+ > > The Gazette defines two device classes for 5925=E2=80=936425 MHz:=20
+ > >=20
+ > >   1. Low power indoor=20
+ > >      - Max EIRP         : 30 dBm=20
+ > >      - Max PSD          : 11 dBm/MHz=20
+ > >      - Max bandwidth    : 320 MHz=20
+ > >      - Restriction      : Indoor use only (Rule 5)=20
+ > >=20
+ > >   2. Very low power outdoor=20
+ > >      - Max EIRP         : 14 dBm=20
+ > >      - Max PSD          : 1 dBm/MHz=20
+ > >      - Max bandwidth    : 320 MHz=20
+ > >      - Restriction      : None=20
+ > >=20
+ > > Additional operational restrictions per Rule 5 of the Gazette:=20
+ > >   - Band is prohibited on oil platforms=20
+ > >   - Indoor use prohibited on land vehicles, boats and aircraft below 1=
+0,000 ft=20
+ > >   - Communication with and control of drones/UAS is prohibited=20
+ > >   - Contention-based protocol is mandatory for all devices (Rule 4)=20
+ > >=20
+ > > Out-of-band emission limit: -27 dBm/MHz outside 5925=E2=80=936425 MHz =
+(Rule 6)=20
+ > >=20
+ > > Proposed addition to the existing country IN entry in db.txt:=20
+ > >=20
+ > >   country IN:=20
+ > >           (2402 - 2482 @ 40), (30)=20
+ > >           (5150 - 5250 @ 80), (30)=20
+ > >           (5250 - 5350 @ 80), (24), DFS=20
+ > >           (5470 - 5725 @ 160), (24), DFS=20
+ > >           (5725 - 5875 @ 80), (30)=20
+ > >           (5925 - 6425 @ 320), (30), NO-OUTDOOR   # low power indoor=
+=20
+ > >           (5925 - 6425 @ 320), (14)               # very low power out=
+door=20
+ > >=20
+ > > Note: Since both device classes share the same frequency range but hav=
+e different EIRP limits and indoor/outdoor restrictions, I have represented=
+ them as two separate lines. Please advise if a different encoding is more =
+appropriate.=20
+ > =20
+ > Unfortunately we currently only support one rule per band. I'm inclined=
+=20
+ > to add the VLP one so outdoor usage is allowed.=20
+ > =20
+ > > I have attached the official Gazette notification PDF as supporting ev=
+idence.=20
+ > >=20
+ > > Intel has also submitted a related update (Intel=C2=AE Wireless Wi-Fi =
+Drivers 24.20.2) for this band for India. I am not certain whether that pat=
+ch covers wireless-regdb (db.txt) or only their iwlwifi driver internals, s=
+o I am submitting this request for wireless-regdb independently to ensure t=
+he authoritative database is updated.=20
+ > =20
+ > AFAIK Intel manages regulatory requirements in their firmware, so it is=
+=20
+ > unrelated to the database we maintain.=20
+ > =20
+ > > Intel's Regulatory Domain Info was found in Release notes of their  In=
+tel=C2=AE Wireless Wi-Fi Drivers 24.20.2 available at page 2 of https://dow=
+nloadmirror.intel.com/914148/ReleaseNotes_WiFi_24.20.2.pdf.=20
+ > > Please let me know if any further information is needed.=20
+ > =20
+ > The information you provided is very detailed. Thanks!=20
+ > =20
+ > =20
+ > ChenYu=20
+ > =20
+ >=20
 
