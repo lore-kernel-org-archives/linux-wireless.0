@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69DE32ABCA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4BC329E57;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787135; cv=none; b=V5wKRWiRWQMdR6LRhhP7N4uiRwasrniHGlgPqdyyxz/Y+mtFqtPUUo0gfzoCdjeZEy2SKeah1GD9wgog/fDYBH+/zIcVBcaLzLtsUoV+8jDrxnpi8uuGZ1yTC6O9YZqOC6tZ0akMVrQBL/qLXbVnzfJI6MDyUi3CTNujY8eS/so=
+	t=1772787135; cv=none; b=KMWP3CY7p/oUTNcXBLc8GnusXM2nND7lSYQpbpHhZov1z8OuOi8F4QcjGFtjF+ry5eDd+TPin+zXXb3wv3KEmS8nFyNK3rIi59iwMreAHs91tNE8NzL1WODU+boeDsN+juoImrDgp+4zUshhOWMgo7pZyBYJfPnTjGSnVdAw53A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787135; c=relaxed/simple;
-	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
+	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YSyAls4UhM+nQgyjsQZFutPTPK50UsmVfycpknj7lGA+hxR8EWGcXQlDHXxEODK46kS1UvmWuj2XMux/h4U0Q+PeGZMU6mnJ7PXs0XBvK8PLTo3VOcYtxJd0GgDyT23UzjnyRuwnNJ56wkAKra9JbOiWzOhIJby9HklZFkd73tM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cBbq+bqg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Al6gtFa6TLWdzSAIkhkclqK19T21mtDcZSi2AoZWX5IH7hdOvK8HyUNIs9YYzaxSHPLacTE/bn9MGKYsNQoEOeGVLIo2tnhvTV/o3VDxIp+V0y7MjZCPPpqPR2ZAlaHnLpGZmuETxAtoD/X6sDrKvwbbTLCv28evz2TBs9SSE4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HTZBBKZt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cBbq+bqg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88D94C2BC9E;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HTZBBKZt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75B7CC4AF0B;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
+	bh=+n2gwwI5ICbPV5XOVnFHvtm0RnUfCoQpce3aU1BVfTM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=cBbq+bqgGOzJohI3myC/rfmWyVTrUMYfGt24Auc7rMLkPX5htugIF32oay0ULQKj3
-	 M/7ztsuslvGQU2BRKlQbEpLeJb/0+4DjefPdOaaawI9lYQ/hM9smL801tOHLeo0X6i
-	 5UYECwfxN8dB2bD73fqskcY3G0RZFj7rPNsncA5g4Zm66sE9WW7kH91urn5X8ESQpP
-	 pDZHjlNhAA/cKob7SHkgA00ihWO38siJEvu3LpgVaaMy4LCsO6vT1U4z5Qoe1C8ata
-	 kMI3IWvmffe7R3sxlQktltQxG2ER5ly37if+2BWgVjApsnSYSbcVvtJkMl6IFmfuCl
-	 0wGveMa0liShw==
+	b=HTZBBKZtuSCAj2lJF5fx0z3B+G2qxYh7V/TS0bw6J9UfmOlMedNp+p5WqFoWwMdbc
+	 JWtz1eS7zYpFaIOWdcPEcGIrulFjnnH0uPHrCfizZzxENov9uR7j/5aZLM4zWtsrmt
+	 4axX6JrODte7fw1LT8QpcXf4+CVfU7ppf+sVBdrwrPILdqIgncHoDV/02GAJfZf9qv
+	 GaB8SxL1RarkA8hD1F16VzvRnmuTmiQdErUuqy22WowYBiVC0IdVvJPNXtK78l0fxH
+	 JQhENdv4J2sR90Jj8hs1mXs9CNWfWiRcanfx/3MPv/rJk7j1OBZSSeB7PCT+cbJyNE
+	 lkIhLYUspGxFQ==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003AV-3dQg;
+	id 1vyQuq-000000003Ab-3lpS;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 06/18] wifi: at76c50x: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:32 +0100
-Message-ID: <20260306085144.12064-7-johan@kernel.org>
+Subject: [PATCH v2 09/18] wifi: mwifiex: drop redundant device reference
+Date: Fri,  6 Mar 2026 09:51:35 +0100
+Message-ID: <20260306085144.12064-10-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -80,48 +80,31 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/atmel/at76c50x-usb.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 6445332801a4..44b04ea3cc8b 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -2440,13 +2440,11 @@ static int at76_probe(struct usb_interface *interface,
- 	struct mib_fw_version *fwv;
- 	int board_type = (int)id->driver_info;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 947ecb0a7b40..f4b94a1054f6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -520,8 +520,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 		return ret;
+ 	}
  
--	udev = usb_get_dev(interface_to_usbdev(interface));
-+	udev = interface_to_usbdev(interface);
- 
- 	fwv = kmalloc_obj(*fwv);
--	if (!fwv) {
--		ret = -ENOMEM;
--		goto exit;
--	}
-+	if (!fwv)
-+		return -ENOMEM;
- 
- 	/* Load firmware into kernel memory */
- 	fwe = at76_load_firmware(udev, board_type);
-@@ -2534,8 +2532,7 @@ static int at76_probe(struct usb_interface *interface,
- 
- exit:
- 	kfree(fwv);
--	if (ret < 0)
--		usb_put_dev(udev);
-+
- 	return ret;
+-	usb_get_dev(udev);
+-
+ 	return 0;
  }
  
-@@ -2552,7 +2549,6 @@ static void at76_disconnect(struct usb_interface *interface)
- 
- 	wiphy_info(priv->hw->wiphy, "disconnecting\n");
- 	at76_delete_device(priv);
--	usb_put_dev(interface_to_usbdev(interface));
- 	dev_info(&interface->dev, "disconnected\n");
+@@ -666,8 +664,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	mwifiex_dbg(adapter, FATAL,
+ 		    "%s: removing card\n", __func__);
+ 	mwifiex_remove_card(adapter);
+-
+-	usb_put_dev(interface_to_usbdev(intf));
  }
  
+ static void mwifiex_usb_coredump(struct device *dev)
 -- 
 2.52.0
 
