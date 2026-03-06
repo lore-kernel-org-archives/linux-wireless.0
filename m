@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DFF633ADAC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447DB37269E;
 	Fri,  6 Mar 2026 08:52:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787136; cv=none; b=jKbz/PAxnTJsxKIZpxFMRVU0ADVKHS6zl1JvV1V++EALK4rcOokaD3Jvq1fcJCPb9lofJi133GcLQvD4r3Amr2K8h8W5Rz1rJJdRPzyWQJRFO/OjaQ8sfSUxZk/D9RIa9DUmIyB+idlsVHykLHkc5WBm+/b09auAncuHL9CZR4E=
+	t=1772787136; cv=none; b=T/VTNF+6a29s42FOOEPKIFw1SWz1ShQ2hm2/aWsPmjqFu8abH9oLTGSaIfrPJz2dwkxRKN8vED8o0i9P5rREnGOhtlgJsZA40Wxx/h5A0wM4N8lk8R7RY6b0+UzwtaFezVhWHN1pxJ4ef9HGLeQPB28esu6OOFAlj8r09DC4Ik0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787136; c=relaxed/simple;
-	bh=TeJWcibhwqPsG9lU0UCk3JLuhDg4KJLJiyLETuN7pPs=;
+	bh=Wg9PdiYnvFewTYn81qDhfXqKVkfZq7jAfwyGUQeiiBI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eU23/Wv6Pi2TbnwCBec6lyzdjsb5m1jHjKCnp3jlWHa0MC0uSOmbI3L1k9SjBrCXo3a+uLChfcNaobBbCTRzGFqYJWtiD38P7n0YnykcuMOhVa3Cng5SoHvniV2bPf7GTLOZbHkHkWdO6hDbZtPfXXDLBOW6vrR7Fa4S93g+RUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=klZj7x9d; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=EfLdnZ4h/qCqdu3ZAtjC+zXhjw8ZMOaasrseWAUm/ddMlUKU1lilTU3cWg7dxfF4IKrhIWsjBJ70MI+V9uEbAuoBBYawJipa/5Ey5if7et0xRhF8ssV3EOaPr3Afax969CB7rUaenyH2kB+RnA6bI3W/yhEABeK2BhGBDECYaHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VHP7JZ4W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="klZj7x9d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97E1FC2BCB6;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VHP7JZ4W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A58BEC2BCF4;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=TeJWcibhwqPsG9lU0UCk3JLuhDg4KJLJiyLETuN7pPs=;
+	bh=Wg9PdiYnvFewTYn81qDhfXqKVkfZq7jAfwyGUQeiiBI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=klZj7x9delzZfbAIvM8n1rR+sod6Iaoj5YkgZK2CNfCFUCtq1Zx8I3SN4K3sY0I39
-	 kQxgExDdKIFIiI0d7ZXBuEvxKzh0JHShYU+taf4t7jPcAyegRd2KY7qSoRG1g9cAUV
-	 qYGV/eKj1mCq7K3nDrmzEQ8HzfADcA1UZalh8RoMGiZ4dGyAapkeeim5z3LWDp0TLO
-	 1LOJLFZEWJ8MrmNep7guDWX4chcbzNM9sCyaiNfyLeUEm0eEjGZMi+Sz/5qy3zF09j
-	 q09a2vzciBsh5Gv3J2y7wYiQpVNQqmnP2CcgxvnENbBLO1JKfPe9eQhkBKRhtTiyFk
-	 fbvfyHC9uqxmg==
+	b=VHP7JZ4WHODayaL/lRc5G+Ol3AvbHNSE6IBp15uYa9mkQcm+puMjYGNqJijHif5v8
+	 fRR5k/P9qGnooaPzCszQq9yOsiGB2t8u9wdpC5DAoDvvv5Ihshz1xeILsqe7JB9otu
+	 2lCtIY/1OQFAnjFDezG7//xwOyVsStMwvwi+mRvwPEXSYmuwHz4G43kHyZaMGxOLSy
+	 e0cfNcexUBi5uLH5w2x3Ek3/hnrkxz6zXjFb/tDV5z5J8a9aSMxdXWfuPw8SQH32nk
+	 MVYOzQ50axncaW4ByKPwPUtRMFmJ3ZrD9vfBMvHjaZ4UD/B0WnWV32+amuioAzLR2n
+	 v4/6NvdJcE5hQ==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003Al-41Q9;
+	id 1vyQuq-000000003AZ-3j22;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 14/18] wifi: mt7601u: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:40 +0100
-Message-ID: <20260306085144.12064-15-johan@kernel.org>
+Subject: [PATCH v2 08/18] wifi: libertas_tf: drop redundant device reference
+Date: Fri,  6 Mar 2026 09:51:34 +0100
+Message-ID: <20260306085144.12064-9-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -80,37 +80,29 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/usb.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index c41ae251cb95..9306870cbc91 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -274,7 +274,6 @@ static int mt7601u_probe(struct usb_interface *usb_intf,
- 	if (!dev)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index f49151c18b79..07b38f2b8f58 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -223,7 +223,6 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	if (!priv)
+ 		goto dealloc;
  
--	usb_dev = usb_get_dev(usb_dev);
- 	usb_reset_device(usb_dev);
+-	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
  
- 	usb_set_intfdata(usb_intf, dev);
-@@ -319,7 +318,6 @@ static int mt7601u_probe(struct usb_interface *usb_intf,
- 	mt7601u_cleanup(dev);
- err:
- 	usb_set_intfdata(usb_intf, NULL);
--	usb_put_dev(interface_to_usbdev(usb_intf));
+ 	return 0;
+@@ -258,7 +257,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 	kfree(cardp);
  
- 	destroy_workqueue(dev->stat_wq);
- 	ieee80211_free_hw(dev->hw);
-@@ -334,7 +332,6 @@ static void mt7601u_disconnect(struct usb_interface *usb_intf)
- 	mt7601u_cleanup(dev);
+ 	usb_set_intfdata(intf, NULL);
+-	usb_put_dev(interface_to_usbdev(intf));
  
- 	usb_set_intfdata(usb_intf, NULL);
--	usb_put_dev(interface_to_usbdev(usb_intf));
- 
- 	destroy_workqueue(dev->stat_wq);
- 	ieee80211_free_hw(dev->hw);
+ 	lbtf_deb_leave(LBTF_DEB_MAIN);
+ }
 -- 
 2.52.0
 
