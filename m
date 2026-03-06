@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC37B221540;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C69DE32ABCA;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787135; cv=none; b=hyGqwSOFeAio0faeoiYKRho462OSsygrOtebPxi8uHcf620kbSWF5HLEewh3Umwfcj7+GFpvo6gxrJaWhC9MC2SNs+hQzb0uKBKDTbDrNYi/uTCmuwir13fG5wBGNseLslkfh6/cZJ1KwiyHrL62WZIhrxAlqXvtkkA1OtwUFz0=
+	t=1772787135; cv=none; b=V5wKRWiRWQMdR6LRhhP7N4uiRwasrniHGlgPqdyyxz/Y+mtFqtPUUo0gfzoCdjeZEy2SKeah1GD9wgog/fDYBH+/zIcVBcaLzLtsUoV+8jDrxnpi8uuGZ1yTC6O9YZqOC6tZ0akMVrQBL/qLXbVnzfJI6MDyUi3CTNujY8eS/so=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787135; c=relaxed/simple;
-	bh=CldXdF4K1Mffbg5Hf+ZzFSSzMyz/wwpC433QQhvr9WY=;
+	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kBSRaF/RKMmlRq641KAhUHHIOSK3H44hwcvqcD1hWATuZoi8DXJNQDwNU6+tY1A5PvpJGFiGO7bl713UeSsun5C2BgUWmJL6DWVjibE1qvPbRSM07til77fZDcs67f4Dkb1+GvxyNItKwiqeLDE7Pkig6jzX3cOjKAG3HZwR/Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l3HfQI9X; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=YSyAls4UhM+nQgyjsQZFutPTPK50UsmVfycpknj7lGA+hxR8EWGcXQlDHXxEODK46kS1UvmWuj2XMux/h4U0Q+PeGZMU6mnJ7PXs0XBvK8PLTo3VOcYtxJd0GgDyT23UzjnyRuwnNJ56wkAKra9JbOiWzOhIJby9HklZFkd73tM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cBbq+bqg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l3HfQI9X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72BF9C19422;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cBbq+bqg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88D94C2BC9E;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=CldXdF4K1Mffbg5Hf+ZzFSSzMyz/wwpC433QQhvr9WY=;
+	bh=JAu4aGrnPPyf8CrNrqLPSHkFG5LAr0AmkxM6UI5mqdE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=l3HfQI9XxCSFGw0VakBBYXmokEmmYt1/tlAQo6BgUVIer8N+lRwolY3OaUyj1SWaJ
-	 HwzjTy/vLa9Ed0giVwm2v90wLgjqEEDKLhTSm5bFh7Po3pU4FQ+e++GagItyxlV4k6
-	 SgMXplOVAn4cdFI4Cf7dEIosB3jC1dB5h13hMRah+5/Qx39Yz5lQgKFKmx2YAvBima
-	 ICpPzBE0NaM9K6fEuydKpNliNgikNE+1QvDLxAMvYp8yFXPXdQ+5DfEKY+41m0wivM
-	 wgMVQjvdVOcIMBFYLMcKU7CMxuoWbl+0zbWRUEQPqpSm2xZc/MTibJF+VAzrvzl30Y
-	 Rs77w1Zhsm0Yw==
+	b=cBbq+bqgGOzJohI3myC/rfmWyVTrUMYfGt24Auc7rMLkPX5htugIF32oay0ULQKj3
+	 M/7ztsuslvGQU2BRKlQbEpLeJb/0+4DjefPdOaaawI9lYQ/hM9smL801tOHLeo0X6i
+	 5UYECwfxN8dB2bD73fqskcY3G0RZFj7rPNsncA5g4Zm66sE9WW7kH91urn5X8ESQpP
+	 pDZHjlNhAA/cKob7SHkgA00ihWO38siJEvu3LpgVaaMy4LCsO6vT1U4z5Qoe1C8ata
+	 kMI3IWvmffe7R3sxlQktltQxG2ER5ly37if+2BWgVjApsnSYSbcVvtJkMl6IFmfuCl
+	 0wGveMa0liShw==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003AP-3VK8;
+	id 1vyQuq-000000003AV-3dQg;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 03/18] wifi: ath9k: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:29 +0100
-Message-ID: <20260306085144.12064-4-johan@kernel.org>
+Subject: [PATCH v2 06/18] wifi: at76c50x: drop redundant device reference
+Date: Fri,  6 Mar 2026 09:51:32 +0100
+Message-ID: <20260306085144.12064-7-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -80,38 +80,48 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/atmel/at76c50x-usb.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 8533b88974b2..821909b81ea9 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1382,8 +1382,6 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 		goto err_alloc;
- 	}
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index 6445332801a4..44b04ea3cc8b 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -2440,13 +2440,11 @@ static int at76_probe(struct usb_interface *interface,
+ 	struct mib_fw_version *fwv;
+ 	int board_type = (int)id->driver_info;
  
--	usb_get_dev(udev);
--
- 	hif_dev->udev = udev;
- 	hif_dev->interface = interface;
- 	hif_dev->usb_device_id = id;
-@@ -1403,7 +1401,6 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- err_fw_req:
- 	usb_set_intfdata(interface, NULL);
- 	kfree(hif_dev);
--	usb_put_dev(udev);
- err_alloc:
+-	udev = usb_get_dev(interface_to_usbdev(interface));
++	udev = interface_to_usbdev(interface);
+ 
+ 	fwv = kmalloc_obj(*fwv);
+-	if (!fwv) {
+-		ret = -ENOMEM;
+-		goto exit;
+-	}
++	if (!fwv)
++		return -ENOMEM;
+ 
+ 	/* Load firmware into kernel memory */
+ 	fwe = at76_load_firmware(udev, board_type);
+@@ -2534,8 +2532,7 @@ static int at76_probe(struct usb_interface *interface,
+ 
+ exit:
+ 	kfree(fwv);
+-	if (ret < 0)
+-		usb_put_dev(udev);
++
  	return ret;
  }
-@@ -1451,7 +1448,6 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
  
- 	kfree(hif_dev);
- 	dev_info(&udev->dev, "ath9k_htc: USB layer deinitialized\n");
--	usb_put_dev(udev);
+@@ -2552,7 +2549,6 @@ static void at76_disconnect(struct usb_interface *interface)
+ 
+ 	wiphy_info(priv->hw->wiphy, "disconnecting\n");
+ 	at76_delete_device(priv);
+-	usb_put_dev(interface_to_usbdev(interface));
+ 	dev_info(&interface->dev, "disconnected\n");
  }
  
- #ifdef CONFIG_PM
 -- 
 2.52.0
 
