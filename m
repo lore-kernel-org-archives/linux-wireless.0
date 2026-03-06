@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E85E3331A7B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7472331A43;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787136; cv=none; b=VdLA7Zjt3kIvAhXsvTEAIQnM+3gzey9gFHMGxZ63Nd7RO6CBsu2lkCrbKUvYumFwPB2AXKm/iO2pS/04CshCxKd+3HUOZWuEDey+GwM+ogg/RkI5k+YIdr40DAiDVfcc2MmE20ReKobWo4Sqj+1RRnXC0usXFDC+W7OBQ7+AOyU=
+	t=1772787136; cv=none; b=tG7yVTcDx+ryR07BMfSVlBjLdAHpgy15Aiu19irxnlDl8FS39EHgLTw43O6IHXyEvQ4tQ8Y3zxv5zI2bkcWgzOzxwgBPY+LZZhgXfOYWlCJFoHXTDuhLO47wenpTKrs7BGpyToEKh/WIvV7EJ1A5pPM+k4tZGWL4pZH8E+E2miY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787136; c=relaxed/simple;
-	bh=0v5Gv1OSiBL9CUheGKWW1u2VaL5UzKQuFEiUKbDcGSo=;
+	bh=Ke1gkgIAYNvXJE3uYWjze9f3v5h9YO7tPFOsLk607jg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Iu7SJ9F5s5TqJOE93Jin3hDiFJz+/JfLNNO7ABE8tMlp7w4Zdp1pTet4r2d0vJR1DrSUogQdd00mcctWN6j1csNCE2AfBSCvDnkpLFPgM4eh2atdejZSjoC6/EHsmf/WPUSoQcy+zxQg8d7Faro+UbgReuoB32wOsGMQ4uXzO1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b23fHuz8; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Lr2S2Fl1ueHsl+McKjRU0TQeTbdXPTwZskrhJDxp2ojG6c3c6BVyXQfPbP4InHPtPp2OipwKyqkESIMvAXIpfVhM30oZTETkdKhFmd39WlA74BWKo45jpo43wT5TWLRyTI4fqplxY7Vofzuo34jZ2g+2EJvy55ftpU6r5KhMrmc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RkTQdAht; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b23fHuz8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91352C2BCAF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RkTQdAht"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E031C4AF09;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=0v5Gv1OSiBL9CUheGKWW1u2VaL5UzKQuFEiUKbDcGSo=;
+	bh=Ke1gkgIAYNvXJE3uYWjze9f3v5h9YO7tPFOsLk607jg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=b23fHuz8rrHVyIuJwvRkrLPMyxr5r7rqL7HeSGX+K3Z4LxJZYwPCbus0qFNjXvNry
-	 kXm1mUmc1MEN5jqZ2yi31+67b7T3bRNzF4uQIPOD3iknccilxukCf597Tk3ri9m34n
-	 ynhz3xkoMQ1edC5/afzZuthxYsvCBtUKOanRCeeI+MVmHi6ZYhYmww8tVeAi48dEBg
-	 8tfOcHWghrcHv4CUu19Osj24G1muf1kAUAR0RCAE4OGM1VA0LCPLx4VxHGFtumVAdM
-	 w1zMVBU65xZHhDlcaWfQ/+D4yVA4DXHWTkqKxVHUByRy6FFPijaNyXAu1iYeVBk2Bl
-	 VR7vHvm3rI2KA==
+	b=RkTQdAhtU9OR9wvXzGhf4ByQYCL81x9oU+6JIn2zapFSOpWh3n500gV1EOvKfElR6
+	 4YL6PJn2Wc5gU2T9gLfblYVDs4+/HxQ47n/CboaYY0S7FMhjUi81erdWyrcbk+jvyd
+	 kkg/0ejujbFNPj6TJVGkeP1Oa11mjtxFTJRDX2fE9fdiOP/iDDsDCoeTA3e52/NzGo
+	 oFRf3SlOQW4uBnsdMOZK+YHUOk6Ia5MSxzI8sNTbH567UxMTfGGsXMa2hhoKO++dzs
+	 nhNttX8+IvfLj082op/P53vR/pPknfF9cuPa7FfVYf06bGbYBVgKnJYYBw9/syBPL+
+	 R+m+pVzH8l5xg==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003Af-3ruV;
+	id 1vyQuq-000000003AT-3aeF;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 11/18] wifi: mt76x0u: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:37 +0100
-Message-ID: <20260306085144.12064-12-johan@kernel.org>
+Subject: [PATCH v2 05/18] wifi: ath10k: rename disconnect callback
+Date: Fri,  6 Mar 2026 09:51:31 +0100
+Message-ID: <20260306085144.12064-6-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -69,48 +69,37 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Driver core holds a reference to the USB interface and its parent USB
-device while the interface is bound to a driver and there is no need to
-take additional references unless the structures are needed after
-disconnect.
-
-Drop the redundant device reference to reduce cargo culting, make it
-easier to spot drivers where an extra reference is needed, and reduce
-the risk of memory leaks when drivers fail to release it.
+Rename the disconnect callback so that it reflects the callback name for
+consistency with the rest of the kernel (e.g. makes it easier to grep
+for).
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index 90e5666c0857..2acce121fb14 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -245,7 +245,6 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- 	if (id->driver_info)
- 		dev->no_2ghz = true;
- 
--	usb_dev = usb_get_dev(usb_dev);
- 	usb_reset_device(usb_dev);
- 
- 	usb_set_intfdata(usb_intf, dev);
-@@ -284,7 +283,6 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- 
- err:
- 	usb_set_intfdata(usb_intf, NULL);
--	usb_put_dev(interface_to_usbdev(usb_intf));
- 	mt76u_queues_deinit(&dev->mt76);
- 	mt76_free_device(&dev->mt76);
- 
-@@ -303,7 +301,6 @@ static void mt76x0_disconnect(struct usb_interface *usb_intf)
- 	mt76x0u_cleanup(dev);
- 
- 	usb_set_intfdata(usb_intf, NULL);
--	usb_put_dev(interface_to_usbdev(usb_intf));
- 
- 	mt76_free_device(&dev->mt76);
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+index ad1cf0681b19..987d57a01ddf 100644
+--- a/drivers/net/wireless/ath/ath10k/usb.c
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -1057,7 +1057,7 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+ 	return ret;
  }
+ 
+-static void ath10k_usb_remove(struct usb_interface *interface)
++static void ath10k_usb_disconnect(struct usb_interface *interface)
+ {
+ 	struct ath10k_usb *ar_usb;
+ 
+@@ -1113,7 +1113,7 @@ static struct usb_driver ath10k_usb_driver = {
+ 	.probe = ath10k_usb_probe,
+ 	.suspend = ath10k_usb_pm_suspend,
+ 	.resume = ath10k_usb_pm_resume,
+-	.disconnect = ath10k_usb_remove,
++	.disconnect = ath10k_usb_disconnect,
+ 	.id_table = ath10k_usb_ids,
+ 	.supports_autosuspend = true,
+ 	.disable_hub_initiated_lpm = 1,
 -- 
 2.52.0
 
