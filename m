@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 623B137997C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 978F337B413;
 	Fri,  6 Mar 2026 08:52:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787136; cv=none; b=CYTp19KuD+iSBgAKO30qWT18D18K/O82IJAruSIo2Gq6zVn//3zdV09tBfBB/f2H9NR7Bxa9aZS73thGdt1zaL1m0prGkzbRyH8QPKRDgjsW/tluhasmTlg0czAD4FHqMEcA49YsrNGbo8HZ9+JRJvU9sooSQ6ym8e8ZyEFDONw=
+	t=1772787136; cv=none; b=EgrHDdBe5SwQjuEtvqd7CXQ6ptN/hT8x4L/Mn51BB0qLxJ1JzsC/0L9IHkYGM9pYQeS9MpA5CNmhskTJgEU7ewyQcpCgS7uCwv4qDebZMA59SARK12OSukqo2yP+v1TWloDxE1+J68haTznFLg1KuUghIfbDSBtxU5/yh7IhL98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787136; c=relaxed/simple;
-	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
+	bh=FN0VJHU1PjM85EHuCcDhs9wmITRbjTHJ5B2iAepNjnA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nTpqEZtPCsq0ozteO22sa2D9t9E2XDOcxJsqaVPu1JZ/7sDGMiong7PruISx/3CjXZKPilARZYbhppeysGL7CxZ2uu3NdK58PrAkk00zFsAsnnwfKpYuHZToQtMZHEwW3vN2Q71G5QnJvPfufPTFdAGnSYLMGPfipjb+u1ReAcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=przSOu5P; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=A1+4Wgol2fNrlHD/5Y+xfoR2RUMwX56ObbtVC+atWaZ8JLQGtBHpDjN0b7umyYPszlnrP/FUNgPR08ch55TS6DakqKGNb+Dae0N4skqtAjSM05vTFFbWvC+J85BhS1x3IKVxXbqBs8ds+um906Puez7ESUUkYnmPrxOAHQ8FOaw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qlMFBmYt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="przSOu5P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C21BCC4AF4D;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qlMFBmYt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FEFDC2BC9E;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772787135;
-	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
+	s=k20201202; t=1772787136;
+	bh=FN0VJHU1PjM85EHuCcDhs9wmITRbjTHJ5B2iAepNjnA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=przSOu5PuvIYdQz0nQdNK9TMVRhYHr+Dvb5ogOLy+sx1xd8eJaREzt3IX+4pyhWRs
-	 kPSAu2IBi7T+W4TBFr5geNKnz5J6X3UmrM4jAnE3XuBzBv0BMyphJsgaWr5qnxtJSL
-	 LcfeVNgfx/67KPtdCSS6VIN7n/YUnClAn6U4C7gxkP+mcb3aaqe0qjFwM/HfTovZql
-	 tca8nIPE6V+qh7Y5mDX1RHtMs99E4jTYFymDM4/SYaYFxd6kX3R+uRMfYNNUZj2jIU
-	 AO4SBXrqRIGRFH4t51RzpzcIs5bZZjEKYtVPgANgvEDgFEXQaw5uVq4zpp8w6zLjOH
-	 ymw/XawocPHxg==
+	b=qlMFBmYtZUCIHK48xkIvLAAS8mRvw1pXCfwsq8eWwybG2xRBft35+0wDz+0d9A1U4
+	 bFTRzeHAtdmXivQvqaLXGSx1Wx2yonpD5KDb1ps+lnxi2pB41B68X1mkl1KNzQNOhC
+	 bzgYqSQNTatS9KyP1lxwW8BtDHerWcHRZe0Vq++t/XqkR5nzvQ1YuBwHKCxV6Kj9im
+	 WkIh0dW0mp6K4rRnYEHfXRrNGNS8Z1SmZBPsiEw/7gh2waUSd/id+8HN2JitWRRYt5
+	 F57sPNCsjGdKyvydX2VNI/+9G3Gh8Z8tHUjW61xPSg7Jrdduu2Id9XvmGgAwZibYQV
+	 ziJACLB/YGXyw==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003Ap-48xZ;
+	id 1vyQuq-000000003AR-3Y1A;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 16/18] wifi: rtl818x: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:42 +0100
-Message-ID: <20260306085144.12064-17-johan@kernel.org>
+Subject: [PATCH v2 04/18] wifi: ath10k: drop redundant device reference
+Date: Fri,  6 Mar 2026 09:51:30 +0100
+Message-ID: <20260306085144.12064-5-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -80,38 +80,38 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 4 ----
+ drivers/net/wireless/ath/ath10k/usb.c | 4 ----
  1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index f7e0f6573180..1d21c468a236 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -1475,8 +1475,6 @@ static int rtl8187_probe(struct usb_interface *intf,
- 	usb_set_intfdata(intf, dev);
- 	priv->udev = udev;
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+index 6661fff326e0..ad1cf0681b19 100644
+--- a/drivers/net/wireless/ath/ath10k/usb.c
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -1016,7 +1016,6 @@ static int ath10k_usb_probe(struct usb_interface *interface,
  
--	usb_get_dev(udev);
+ 	netif_napi_add(ar->napi_dev, &ar->napi, ath10k_usb_napi_poll);
+ 
+-	usb_get_dev(dev);
+ 	vendor_id = le16_to_cpu(dev->descriptor.idVendor);
+ 	product_id = le16_to_cpu(dev->descriptor.idProduct);
+ 
+@@ -1055,8 +1054,6 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+ err:
+ 	ath10k_core_destroy(ar);
+ 
+-	usb_put_dev(dev);
 -
- 	skb_queue_head_init(&priv->rx_queue);
- 
- 	BUILD_BUG_ON(sizeof(priv->channels) != sizeof(rtl818x_channels));
-@@ -1663,7 +1661,6 @@ static int rtl8187_probe(struct usb_interface *intf,
-  err_free_dmabuf:
- 	kfree(priv->io_dmabuf);
- 	usb_set_intfdata(intf, NULL);
--	usb_put_dev(udev);
-  err_free_dev:
- 	ieee80211_free_hw(dev);
- 	return err;
-@@ -1685,7 +1682,6 @@ static void rtl8187_disconnect(struct usb_interface *intf)
- 
- 	priv = dev->priv;
- 	usb_reset_device(priv->udev);
--	usb_put_dev(interface_to_usbdev(intf));
- 	kfree(priv->io_dmabuf);
- 	ieee80211_free_hw(dev);
+ 	return ret;
  }
+ 
+@@ -1071,7 +1068,6 @@ static void ath10k_usb_remove(struct usb_interface *interface)
+ 	ath10k_core_unregister(ar_usb->ar);
+ 	netif_napi_del(&ar_usb->ar->napi);
+ 	ath10k_usb_destroy(ar_usb->ar);
+-	usb_put_dev(interface_to_usbdev(interface));
+ 	ath10k_core_destroy(ar_usb->ar);
+ }
+ 
 -- 
 2.52.0
 
