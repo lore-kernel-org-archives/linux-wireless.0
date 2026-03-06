@@ -1,34 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC42223D7FF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC2FBEEBA;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787135; cv=none; b=Y8L/tyGpMWwBQ0DzEW9jO33pYGSHMmqgZhVZyxKog48HDV3OuNkYeIieodUjPEAYnO81OD0Y/PXbUWZKGSkdxyQSbQ+s2bmgwS/W5j037O8HZZnegE1+jRbCca5hQht45EBmQQpiDG+pu9VgfbmXkzPe/ugIbDu7LgoXo11gNws=
+	t=1772787135; cv=none; b=rXb1DQbk6W2LYmTVbP3Vbz5II3214qufEwDkruTmTVcoqKzvTA6/KMbdjiwjNriY8P9SZkSvOiQGwy82aPwRdBMeMJXDoJkuR5Jv2SaZxpJqLK06/S6KUCQ2KHa+AY6UzpBDEGiYf5MX9g0oaEUrOobgkeUfAIWD+UAe9QMqlbA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787135; c=relaxed/simple;
-	bh=kaq0JBNHyQqQlidhi1/aPYh1/H5njyrGvo0l9Tfow5M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZgOkb5JcHKBy94Wf76ogFQUOZosq+W5wgVkHmF4AiaSV7L+1nxtSe8Y9/wYs8pw+sZK3HI0MD5KzCDDyJ4q/jMazb8rNM1jBbupa/Fs96lmiVpG8i9pt9J1YitGyfS+KvB7d2wGg9phME0BUWK1OIf8klIZ17iwu/sW9VCvvrBY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ezpeRrkt; arc=none smtp.client-ip=10.30.226.201
+	bh=BC9phG/uboNPNh++ClnGxy6uWEWlwbWxQo4UxGMm2EY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tElSrgjgBIzUFi2/Rx7jVHu8e/DjGqaR4sA/RUOBHw5JEls32atN5m5FPSfWTLgEA4LynCSnz3oY+9HCTr1xuJUImbLJJlaP5E7qMKJnbpiaCkvrXU1kHI+6KDGSfEUs6Zqf0PZg4kJvVGDRLpUXC4dUBAvCQbncO+Nblb2gWNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SEpDIqvv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ezpeRrkt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7055CC4CEF7;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SEpDIqvv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7950BC19425;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=kaq0JBNHyQqQlidhi1/aPYh1/H5njyrGvo0l9Tfow5M=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ezpeRrktOFKOzNVq65yGXnie5Ezdwl7U//BjLWxRPul4V5XZ2Wxd3quESPYHJR5xP
-	 309PaUP2Yt6zPfEYXna3tH+VKzCrmYAYpTSX0QYCAy00W6w0dCBt/VBf/Tk5RBsZT2
-	 SiMnMDkzBwkmB2cTH++4tUx/ainTE28zXAei2CNWf9RIyXS0mSvID8reru+33lCRnJ
-	 JZASEcaOEQiL6g2ZBDDYnCIUxp73XeA73j9HTYcW3GMFjZzZahCLV1oBsMI7K+nhF9
-	 dJCuF+ZbNn8V02mrERYpSHCxk0zaF5xS6Fq2bW99vKVOZwlJz3F5b+DcSMZVeWHOw6
-	 m7YzmLzmCfqXg==
+	bh=BC9phG/uboNPNh++ClnGxy6uWEWlwbWxQo4UxGMm2EY=;
+	h=From:To:Cc:Subject:Date:From;
+	b=SEpDIqvvLiMR0dN4BEG/ouA8ijTft3I0xY8V7JdWUkG2dhmRaImUsEP85u1Oz2Vv4
+	 hw0Y938FmeJwem4wrq8hjbNDIS4JYsFTXgmgvEfFxSUMQTAlJJFm95PEbgJehmI7dq
+	 QUFXauzPwW9EEIPr5cZ4Kky+iwmCysLFY1RoMwIEuGKT6LIhntfrGOm8pERW9siwHl
+	 3xV3KFok7O6tWSai4GZ/CRLYbqTm8hCBplGE94Qp+VzxYxml1csNjeSPJczx9j6SO/
+	 dl+qcA+SW3ixrGiqjINMh27vbkCmEsB2Ri0oOGq2gfnaeKKwGfpBuz+XvglwUyAtfd
+	 bZpSVkAtlGHCQ==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003AX-3g6H;
+	id 1vyQuq-000000003AJ-3KlN;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,12 +54,10 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 07/18] wifi: libertas: drop redundant device reference
-Date: Fri,  6 Mar 2026 09:51:33 +0100
-Message-ID: <20260306085144.12064-8-johan@kernel.org>
+Subject: [PATCH v2 00/18] wifi: drop redundant USB device references
+Date: Fri,  6 Mar 2026 09:51:26 +0100
+Message-ID: <20260306085144.12064-1-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
-References: <20260306085144.12064-1-johan@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,43 +71,72 @@ device while the interface is bound to a driver and there is no need to
 take additional references unless the structures are needed after
 disconnect.
 
-Drop the redundant device reference to reduce cargo culting, make it
-easier to spot drivers where an extra reference is needed, and reduce
-the risk of memory leaks when drivers fail to release it.
+Drop redundant device references to reduce cargo culting, make it easier
+to spot drivers where an extra reference is needed, and reduce the risk
+of memory leaks when drivers fail to release them.
 
-Signed-off-by: Johan Hovold <johan@kernel.org>
----
- drivers/net/wireless/marvell/libertas/if_usb.c | 3 ---
- 1 file changed, 3 deletions(-)
+Note that I sent an ath9k patch separately here:
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
-index 8a6bf1365cfa..05fcf9cc28fa 100644
---- a/drivers/net/wireless/marvell/libertas/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas/if_usb.c
-@@ -276,7 +276,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 
- 	cardp->boot2_version = udev->descriptor.bcdDevice;
- 
--	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
- 
- 	r = lbs_get_firmware_async(priv, &udev->dev, cardp->model,
-@@ -287,7 +286,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 	return 0;
- 
- err_get_fw:
--	usb_put_dev(udev);
- 	lbs_remove_card(priv);
- err_add_card:
- 	if_usb_reset_device(cardp);
-@@ -321,7 +319,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 	kfree(cardp);
- 
- 	usb_set_intfdata(intf, NULL);
--	usb_put_dev(interface_to_usbdev(intf));
- }
- 
- /**
+	https://lore.kernel.org/all/20260305105803.17011-1-johan@kernel.org/
+
+but I included it here in v2 for completeness.
+
+Also note that Greg had already sent a fix for rtw88 which has been
+picked up by Ping-Ke, but who asked me to send a replacement. If an
+incremental patch is preferred I can instead send a follow up for that
+one later.
+
+Johan
+
+
+Changes in v2:
+ - include ath9k, previously submitted separately
+ - include ath6kl and ath10k
+ - rename the ath6kl and ath10k disconnect callbacks
+ - fix a reference leak in rtw88 previously reported (and fixed
+   differently) by Greg
+
+
+Johan Hovold (18):
+  wifi: ath6kl: drop redundant device reference
+  wifi: ath6kl: rename disconnect callback
+  wifi: ath9k: drop redundant device reference
+  wifi: ath10k: drop redundant device reference
+  wifi: ath10k: rename disconnect callback
+  wifi: at76c50x: drop redundant device reference
+  wifi: libertas: drop redundant device reference
+  wifi: libertas_tf: drop redundant device reference
+  wifi: mwifiex: drop redundant device reference
+  wifi: mt76: drop redundant device reference
+  wifi: mt76x0u: drop redundant device reference
+  wifi: mt76x2u: drop redundant device reference
+  wifi: mt76: mt792xu: drop redundant device reference
+  wifi: mt7601u: drop redundant device reference
+  wifi: rt2x00: drop redundant device reference
+  wifi: rtl818x: drop redundant device reference
+  wifi: rtl8xxxu: drop redundant device reference
+  wifi: rtw88: fix device leak on probe failure
+
+ drivers/net/wireless/ath/ath10k/usb.c            |  8 ++------
+ drivers/net/wireless/ath/ath6kl/usb.c            | 16 ++++------------
+ drivers/net/wireless/ath/ath9k/hif_usb.c         |  4 ----
+ drivers/net/wireless/atmel/at76c50x-usb.c        | 12 ++++--------
+ drivers/net/wireless/marvell/libertas/if_usb.c   |  3 ---
+ .../net/wireless/marvell/libertas_tf/if_usb.c    |  2 --
+ drivers/net/wireless/marvell/mwifiex/usb.c       |  4 ----
+ drivers/net/wireless/mediatek/mt76/mt7615/usb.c  |  3 ---
+ drivers/net/wireless/mediatek/mt76/mt76x0/usb.c  |  3 ---
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb.c  |  4 ----
+ drivers/net/wireless/mediatek/mt76/mt7921/usb.c  |  2 --
+ drivers/net/wireless/mediatek/mt76/mt7925/usb.c  |  2 --
+ drivers/net/wireless/mediatek/mt76/mt792x_usb.c  |  1 -
+ drivers/net/wireless/mediatek/mt7601u/usb.c      |  3 ---
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c   | 12 +-----------
+ .../net/wireless/realtek/rtl818x/rtl8187/dev.c   |  4 ----
+ drivers/net/wireless/realtek/rtl8xxxu/core.c     | 11 +++--------
+ drivers/net/wireless/realtek/rtw88/usb.c         |  3 +--
+ 18 files changed, 15 insertions(+), 82 deletions(-)
+
 -- 
 2.52.0
 
