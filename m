@@ -1,37 +1,34 @@
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3CC307494;
-	Fri,  6 Mar 2026 09:46:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45EE534A3C9;
+	Fri,  6 Mar 2026 09:50:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772790383; cv=none; b=F5blyFWkOnCzG1oVpZzKZQk1rO8IXN1FfsV9epi6ij4Xls6EB6R+IQ/rbc2JVaSo3ZZdOJ6vczWjIEepbwCGda2nlCJcQhD9fy9Fvq8j1zrZV4bZiQsTxYeotwkZqzmydSgUS4XhsW8qivLlMqlxrwAxrJQH50OKyR8Bo+GkLrc=
+	t=1772790609; cv=none; b=DzE8aBK6san+CDBkDYeD/ounMalc+IT0zTXCcdCZs4Soxz+TXfRJWWuYk3+BulJKrdvvm62FelGND41qReCZzEVFndVrxgwMbshRxSsVIxEXqiXdicG+LR6/XfSkrHECg93A3v3h2jMdLzNLPUGDcsl3gS12uL3usBQbiWG7v+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772790383; c=relaxed/simple;
-	bh=p4/KWPmnqK2oC00dyUCTUQx38BPyb7n3SFjV7bzSle0=;
+	s=arc-20240116; t=1772790609; c=relaxed/simple;
+	bh=2+XQx6K9fjkYiGPIvDseXYf8N4vu8hFRNw4vtK+LEsg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WMHO/Ka/q2d16JTfxqT23UhKo4U3Se5G3Hy5VPuJYu69/t0bwBvTSvh+gAMeWFKz4XZv4DJCEMw6CnAgF07imi5PDbRoZI3Th2EWdqouZZqaWESRwM1O83gahs4PSENW4wZ33TH2/Nq/F9dpcKScjr939gYAUl6RW5iwKoIk6Eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=qU56ni2x; arc=none smtp.client-ip=217.194.8.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y9KlLxCbf5VVa/D+z4AZO6KrUwMUgQrGmzbtxakaBdOR1Z2weB9S1f7MYqGHFENANrPFclgER0L1nLnus5IU6hbhpbAlFtyACCUttdBSBkeZd5VsfERgKlxl2nH8lLipvXZhcF1Li7arHcCtN5mWkPsJt5wC+zaeYVqvsUZiByM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=paHDKUPx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="qU56ni2x"
-Received: from francesco-nb (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
-	by mail11.truemail.it (Postfix) with ESMTPA id E0F9622BA9;
-	Fri,  6 Mar 2026 10:46:10 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1772790371;
-	bh=fwHWaMTHGf2q55gryl1wYfenCSX2JOT+w45XCO6z0CE=; h=From:To:Subject;
-	b=qU56ni2x27E3IMY/7kQHPt05dHq4vt9mkKv2vSu/KVAseYSdxOr8Y+GoWF8Hr0YJL
-	 5U9GrXdQinJc1BNRBqY3XxKZCf6nmtbnXyc0N4LLXEZPzeknX9UqMJN/42Vs5Aowi9
-	 DOtzmnUr1sOVdrUMkCbzlekT88xDo+LPwqh9YcDJKtgLt9hg4NCV4t9295S6bLWyP0
-	 7f4b+dYio1wSGd6C4AUjKE5Pcrmp3LV8Pomt/cstyPpimNxZncbqJuObTi0puXP+po
-	 Oon+SgeNqp4tAtLLhDc6B9MkmaiHod0GpUgS504V42YdN+RXwptaZZo0cS9Ymb/Nzi
-	 5vrg02lDx1DAg==
-Date: Fri, 6 Mar 2026 10:46:07 +0100
-From: Francesco Dolcini <francesco@dolcini.it>
-To: Johan Hovold <johan@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Brian Norris <briannorris@chromium.org>,
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="paHDKUPx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 383B1C4CEF7;
+	Fri,  6 Mar 2026 09:50:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1772790608;
+	bh=2+XQx6K9fjkYiGPIvDseXYf8N4vu8hFRNw4vtK+LEsg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=paHDKUPxxb/BUe7EOpv31quLmjVO9eZjooPBZVnOsqnHCew0LGxq/6eLxD48poDTn
+	 r1U7jNbjRnPWCHYBcANwBonNLMEZIpzfsP8e7ZkEP5DdoBsNMVu9yyZKT6Ew7L9E37
+	 e4mEZW9df4zXzYNwpsDZaOxjk2Z/iK6aO6gtaGsY=
+Date: Fri, 6 Mar 2026 10:49:54 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Johan Hovold <johan@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brian Norris <briannorris@chromium.org>,
 	Francesco Dolcini <francesco@dolcini.it>,
 	Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
 	Ryder Lee <ryder.lee@mediatek.com>,
@@ -40,17 +37,19 @@ Cc: linux-wireless@vger.kernel.org, Brian Norris <briannorris@chromium.org>,
 	Jakub Kicinski <kuba@kernel.org>, Stanislaw Gruszka <stf_xl@wp.pl>,
 	Hin-Tak Leung <hintak.leung@gmail.com>,
 	Jes Sorensen <Jes.Sorensen@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
 	Nicolas Ferre <nicolas.ferre@microchip.com>,
 	Alexandre Belloni <alexandre.belloni@bootlin.com>,
 	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/13] wifi: mwifiex: drop redundant device reference
-Message-ID: <20260306094607.GA34779@francesco-nb>
+	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 00/13] wifi: drop redundant USB device references
+Message-ID: <2026030625-wrongness-preorder-4e1e@gregkh>
 References: <20260305110713.17725-1-johan@kernel.org>
- <20260305110713.17725-5-johan@kernel.org>
+ <0c75afbbe7bb419cab648f94191fe47f@realtek.com>
+ <aaqL0RdwEjWWjECk@hovoldconsulting.com>
+ <81935da1c67a493c8313d906244dd577@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,19 +58,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260305110713.17725-5-johan@kernel.org>
+In-Reply-To: <81935da1c67a493c8313d906244dd577@realtek.com>
 
-On Thu, Mar 05, 2026 at 12:07:04PM +0100, Johan Hovold wrote:
-> Driver core holds a reference to the USB interface and its parent USB
-> device while the interface is bound to a driver and there is no need to
-> take additional references unless the structures are needed after
-> disconnect.
+On Fri, Mar 06, 2026 at 09:04:22AM +0000, Ping-Ke Shih wrote:
+> Johan Hovold <johan@kernel.org> wrote:
+> > On Fri, Mar 06, 2026 at 01:40:31AM +0000, Ping-Ke Shih wrote:
+> > > // +Cc Greg
+> > >
+> > > Hi Johan,
+> > >
+> > > Johan Hovold <johan@kernel.org> wrote:
+> > >
+> > > [...]
+> > >
+> > > >  drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c |  4 ----
+> > > >  drivers/net/wireless/realtek/rtl8xxxu/core.c       | 11 +++--------
+> > > >  drivers/net/wireless/realtek/rtlwifi/usb.c         |  4 ----
+> > >
+> > > Acked to changes of these Realtek WiFi drivers. But I'd like to know why
+> > > rtw88/rtw89 aren't included in this patchset?
+> > 
+> > I used a more specific grep pattern to catch driver releasing references
+> > in disconnect() and therefore missed a few that dropped the reference in
+> > helper functions (or used non-standard names for their disconnect
+> > function such as ath10k, I see now).
+> > 
+> > > Greg sent a patch [1] to
+> > > correct error path of USB probe for rtw88. In the discussion, he also
+> > > mentioned the simplest way is to drop usb_get_dev()/usb_put_dev() like
+> > > this patchset does. Will you share patches for rtw88/rtw89? I so, I'd
+> > > drop Greg's patch and apply yours.
+> > >
+> > > [1] https://lore.kernel.org/linux-wireless/2026022333-periscope-unusual-f0a0@gregkh/
+> > 
+> > Sure, I can include rtw88 (and ath10k and ath6kl) in a v2.
 > 
-> Drop the redundant device reference to reduce cargo culting, make it
-> easier to spot drivers where an extra reference is needed, and reduce
-> the risk of memory leaks when drivers fail to release it.
+> Can you please also include rtw89? (I saw you have sent v2 though)
 > 
-> Signed-off-by: Johan Hovold <johan@kernel.org>
+> > 
+> > Do you really prefer replacing Greg's fix or shall I send an incremental
+> > patch on top?
+> 
+> No. I'd drop Gerg's fix from my tree.
 
-Acked-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+I have no objection for my changes being dropped, thanks for making
+these changes.
 
+greg k-h
