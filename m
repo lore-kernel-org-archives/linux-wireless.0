@@ -1,52 +1,48 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9C5330F816;
-	Fri,  6 Mar 2026 08:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405353793B1;
+	Fri,  6 Mar 2026 08:38:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772785265; cv=none; b=MctpYth+FEMJ1PvltV/nWFLDHcAH3hQcDpWNFAJ+8V0lmJG0iogpYX4N1YRIy81xN2Pqk9OvF2zRKd2eIwH0F3diH++nZYSzlN1BoT1MppGVeNLREnGpdSgDzA+tVup0xROLyRhNCnOIxCoOKckofL5aaJHGQvEn6urJu/Cn1Og=
+	t=1772786338; cv=none; b=P6SZMCHsJpN6DIXDU6q5IP9en+hVQAQ88eHOtmhAQsBwp8zngx2Wyrnu/a6eIZu9vF3uRYhh/unDDIjsTXjwhXLcRzXNJngyQ17dWm37Gn+UFHbx+hnXMyG6pVBhx5UcJ3x8AjJWmLp7JJsi9lyrNGdVw+E5t6j8oU9NFifb6cI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772785265; c=relaxed/simple;
-	bh=0qM+3WQFyUmhLvLUhbsQ+RqQ/O15DzfcFnsVHQoKCFU=;
+	s=arc-20240116; t=1772786338; c=relaxed/simple;
+	bh=7NFLjIKW3fJXKMGDcC7K37k5SC2w9YE31AyGa3DgpVU=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BBVaOiae2Z5/KFpHEHFCdqK3ygjpK4NhZlc5s+AfGDwON2haJn33PrNPdylJDvLjBI2iWe6Ck7PWFJvpDp2+ex+pnjcOHMNBmkHgRD36eaErglsMI+nvechvskoGgDS0dXb1McPtBSMAx0F6CebfeD5FHLSP8GlMDq6YdxX7Png=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=tcL5tUsG; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=EWU83xUR7wrD5Dggne/lQAS3D3zcyhX0jKLf6UZv0Lxr5N8qMQ9H2wjn1pHuDA4g4gdqww+YRVbIIW9u/2XOCy4Pfew3oFuzfGlB2aafdaCnpyholfefMnp4YPGuJYIYBwfucY3MeyaYyfUBZphVcVxbw2A0sa966TpGT1YsUsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=jfw/I+Fa; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tcL5tUsG"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="jfw/I+Fa"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=0qM+3WQFyUmhLvLUhbsQ+RqQ/O15DzfcFnsVHQoKCFU=;
-	t=1772785263; x=1773994863; b=tcL5tUsGUdLO2roEm4clWpE+YhzPAEigbUSEsHAFT96paE4
-	dcYdBWzxft42fsFAfvaTQtJQLuS7ID3wWPk+/V6Uv8uDTqny+Jsw7Bzetojw+lwB1P1bRMy6IngGH
-	ogAo8gCAy+gBMkbEjsbtUy1g+KsDh1gnHwGUBNQLU88xxxIl1sbbejdb36MT9bfbbL+tXrF0/vlPC
-	thb1MqztG74VKLVXUjshZ/j6QgWqJvRh7SOwU/tFJMJp3FbKBa7NTyLOm92qw3fa913znW8Q/L5Vs
-	SgVWEvGB6X2TTQxeA3vA7VHb+siSBlew6JR8Wcrew4KA9hAjIvSyICH7bQ6II6aA==;
+	Resent-Cc:Resent-Message-ID; bh=YjLuKClxB0Etf2WFSuuiqn2UEtDwEO6r+GBdofBN+QM=;
+	t=1772786337; x=1773995937; b=jfw/I+Fa+5v0sav7hA4dy1A7oU0pFro0s/oqB3sI3E21Hqn
+	4LzHLQzsxt+KriqdG8K1mlihTo+tbc1Uz+9XvnPq7ntvGvCDB8b5F4OsiiAb+g3WOi3oHUvBXY1q/
+	ox4OdkyADBs2ptuHFcBEi2E9FE1TfQg4HT86IKgnHEFY9cZi+fVD2c7JA1hsUSllCM05sufWCgCns
+	TFvaKxFSDSosFjc6sJywUo5Z38T2EKg4oMVDBA9F0S01NYDkMkEf4DuQ/q5CuAjlPJOj5nXDXZ0uG
+	jua0tL4PD+xtD7tVhDkVNOSWBm1cAnEmErHySB3xGhMhyJ8fS34XmTo79Ro0bDwQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1vyQQZ-00000009yel-3dnS;
-	Fri, 06 Mar 2026 09:20:56 +0100
-Message-ID: <b71d0932b10b5c446681cef588cfcf6f869f3fca.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 23/35] wifi: mm81x: add sdio.c
+	id 1vyQhy-00000009zBl-2idx;
+	Fri, 06 Mar 2026 09:38:54 +0100
+Message-ID: <2e7f8bc64e13743deb4bf90eac2a50920af9f862.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 02/35] wifi: mm81x: add command.c
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>, Krzysztof Kozlowski
-	 <krzk@kernel.org>
-Cc: Dan Callaghan <dan.callaghan@morsemicro.com>, Arien Judge
-	 <arien.judge@morsemicro.com>, ayman.grais@morsemicro.com, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Ulf Hansson
-	 <ulf.hansson@linaro.org>
-Date: Fri, 06 Mar 2026 09:20:53 +0100
-In-Reply-To: <sze5g6binniqbqzwvn4nx5qbytsxu3f2rne7wqtdsmlgzqcq6c@4rwtkq7nyptu> (sfid-20260302_073104_005505_754782C2)
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>, Dan Callaghan
+	 <dan.callaghan@morsemicro.com>, Arien Judge <arien.judge@morsemicro.com>
+Cc: ayman.grais@morsemicro.com, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Fri, 06 Mar 2026 09:38:53 +0100
+In-Reply-To: <20260227041108.66508-3-lachlan.hodges@morsemicro.com> (sfid-20260227_051156_408438_F971C92F)
 References: <20260227041108.66508-1-lachlan.hodges@morsemicro.com>
-	 <20260227041108.66508-24-lachlan.hodges@morsemicro.com>
-	 <20260227-spotted-rugged-moth-3fdcbe@quoll>
-	 <sze5g6binniqbqzwvn4nx5qbytsxu3f2rne7wqtdsmlgzqcq6c@4rwtkq7nyptu>
-	 (sfid-20260302_073104_005505_754782C2)
+	 <20260227041108.66508-3-lachlan.hodges@morsemicro.com>
+	 (sfid-20260227_051156_408438_F971C92F)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -58,27 +54,112 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Mon, 2026-03-02 at 17:30 +1100, Lachlan Hodges wrote:
-> >=20
-> Ultimately the structure of our commits is up to Johannes since we are
-> going through the wireless tree, but since we have patches that
-> touch different subsytems that also needs to be considered. Open to
-> suggestions :).
+Hi,
 
-I think what I would like you to do once all the reviews settle down is
-send a pull request which contains just a single commit with all the Co-
-developed-by: etc. (similar to ath12k). Of course separate from commits
-that touch things outside the driver itself (I think that's the SDIO IDs
-and DT bindings), so we'd have a couple of patches:
+Hm. So I _was_ going to say this just _looked_ bad, but now I think it's
+actually wrong:
 
- - SDIO IDs (now patch 33)
- - DT bindings (patches 31 and 32)
- - one big commit adding the driver (all the rest)
+On Fri, 2026-02-27 at 15:10 +1100, Lachlan Hodges wrote:
+> +int mm81x_cmd_sta_state(struct mm81x *mm, struct mm81x_vif *mm_vif, u16 =
+aid,
+> +			struct ieee80211_sta *sta,
+> +			enum ieee80211_sta_state state)
+> +{
+> +	struct host_cmd_req_set_sta_state req;
+> +	struct host_cmd_resp_set_sta_state resp;
+> +
+> +	memset(&req, 0, sizeof(req));
 
-Mostly just so I'm not making up a set of fake commit from all the
-patches on the list.
+This is fine of course.
 
-I'll take a quick look now, but I'm still holding out hope someone else
-might too, and either way even for 7.1 we have a couple of weeks.
+> +	mm81x_cmd_init(mm, &req.hdr, HOST_CMD_ID_SET_STA_STATE, mm_vif->id,
+> +		       sizeof(req));
+> +
+> +	memcpy(req.sta_addr, sta->addr, sizeof(req.sta_addr));
+> +	req.aid =3D cpu_to_le16(aid);
+> +	req.state =3D cpu_to_le16(state);
+> +	req.uapsd_queues =3D sta->uapsd_queues;
+
+(you write other fields here otherwise it'd be useless)
+
+
+But then there are cases like this:
+
+> +int mm81x_cmd_add_if(struct mm81x *mm, u16 *vif_id, const u8 *addr,
+> +		     enum nl80211_iftype type)
+> +{
+> +	int ret;
+> +	struct host_cmd_req_add_interface req;
+> +	struct host_cmd_resp_add_interface resp;
+> +
+> +	mm81x_cmd_init(mm, &req.hdr, HOST_CMD_ID_ADD_INTERFACE, 0, sizeof(req))=
+;
+> +
+> +	switch (type) {
+> +	case NL80211_IFTYPE_STATION:
+> +		req.interface_type =3D cpu_to_le32(HOST_CMD_INTERFACE_TYPE_STA);
+> +		break;
+> +	case NL80211_IFTYPE_AP:
+> +		req.interface_type =3D cpu_to_le32(HOST_CMD_INTERFACE_TYPE_AP);
+> +		break;
+> +	default:
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	memcpy(req.addr.octet, addr, sizeof(req.addr.octet));
+> +
+> +	ret =3D mm81x_cmd_tx(mm, (struct host_cmd_resp *)&resp,
+> +			   (struct host_cmd_req *)&req, sizeof(resp), 0);
+
+
+Where you're sending uninitialised data to the firmware, regardless of
+what the actual command does, mm81x_cmd_init() doesn't initialise the
+'pad' field in the header, and there might be per-command fields too?
+
+
+It'd also be far more obvious that it's not sending uninitialised data
+if it was simply each command built as a C99 initialiser:
+
+#define INIT_HDR(_var, _cmd, _vif_id)                           \
+        {                                                       \
+                .message_id =3D cpu_to_le16(_cmd),                \
+                .vif_id =3D cpu_to_le16(_vif_id),                 \
+                .len =3D sizeof(_var) - sizeof(_var).hdr,         \
+        }
+
+...
+
+int mm81x_cmd_sta_state(struct mm81x *mm, struct mm81x_vif *mm_vif, u16 aid=
+,
+                        struct ieee80211_sta *sta,
+                        enum ieee80211_sta_state state)
+{
+        struct host_cmd_req_set_sta_state req =3D {
+                .hdr =3D INIT_HDR(req, HOST_CMD_ID_SET_STA_STATE, mm_vif->i=
+d),
+                .aid =3D cpu_to_le16(aid),
+                .state =3D cpu_to_le16(state),
+                .uapsd_queues =3D sta->uapsd_queues,
+        };
+        struct host_cmd_resp_set_sta_state resp;
+
+        memcpy(req.sta_addr, sta->addr, sizeof(req.sta_addr));
+
+        return mm81x_cmd_tx(mm, (struct host_cmd_resp *)&resp,
+                            (struct host_cmd_req *)&req, sizeof(resp), 0);
+}
+
+
+etc.
+
+That assumes .hdr is always the header, but that didn't seem
+unreasonable. It also doesn't work for a few cases that dynamically
+allocate (filter), but that could just use kzalloc() instead.
+
+
+It also seems (and that's really nitpicking now) that the response
+argument to mm81x_cmd_tx() is actually optional, so a few (more) places
+like this one could use NULL there (e.g. also key removal, beacon timer,
+frag threshold)
 
 johannes
