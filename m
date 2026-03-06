@@ -1,170 +1,131 @@
-Received: from sender1-o42.mgovcloud.in (sender1-o42.mgovcloud.in [169.148.143.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f172.google.com (mail-oi1-f172.google.com [209.85.167.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEA29221F1F
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Mar 2026 00:07:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=169.148.143.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D5B2DF717
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Mar 2026 00:43:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772755657; cv=none; b=XbhuN7e7HY4iMWqX0VgLC1gSaLPKZSTavU2kFQt+hXuRFNDX4SURv0KOpUmKHr6+r4oeVJUCscaQC4IR4kG0D/TUtt28sAGhEJEFsRA6gAdXUszaYaTqoKyN9psidPSxx6buazHFh5QIGIRi15llIYzzxdNLdQU4swyNwp5pICw=
+	t=1772757838; cv=none; b=PmUtIk1GK82kyHLwmE/+brqMUFTH6LAXJ9EATOMinXW/ivZIVXi4wBAP5DNlS5T/kWeyTQiq2L3N4UIENMPOvIcJu1SNaG3cJJGc7SnsY0QEAklA7cXl9yr93ZDet355hDWWdAQylu6h5lBwdzqwYE46xoycfDt7gabGEIIA7r8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772755657; c=relaxed/simple;
-	bh=2GtZQG3/V4b2MFfRGcmpRuUxPXMfZ/UMxx9MN1CqJio=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=PFrJLIfrhetPk/cQlF5pPMV869ns9ExvmS1QLN/iYQY6I5x/YzyQ/0O272C+dSczgRTZnm2ltidWO6eDmy07pRdpAuMWPekYNpsWVJn+yvDiWxhMSwPh/XZfgKTdp5KeixCg6GeIaW59AK8NFTJeZZbWoQZ7FnCI8yWSxh31dQo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in; spf=pass smtp.mailfrom=nic.gov.in; dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b=I7BP6m/Y; arc=none smtp.client-ip=169.148.143.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nic.gov.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nic.gov.in
+	s=arc-20240116; t=1772757838; c=relaxed/simple;
+	bh=SwKQHqFPugEY5LBsRfzbny5oSAeUyqfWxPylHIWs5QQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tORMFqlZdDWNx09k+OEju75UdtscDspO1GyukmlglqtgmwsfhXHQ/H5+qwwyofi2WQr8cBO1NHv3vjMw6/9/ne4JaS3uAklox3GCcvZ1v5On8TT8iRycpHhISTEfR6o5EUBMxQkA9xFp5TLCOvXVZ+74RLe3ouVwY4ot2kxHhvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LCIl/OnO; arc=none smtp.client-ip=209.85.167.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nic.gov.in header.i=gaurav.kansal@nic.gov.in header.b="I7BP6m/Y"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1772684423;
-	s=zmail; d=nic.gov.in; i=gaurav.kansal@nic.gov.in;
-	h=Date:Date:From:From:To:To:Cc:Cc:Message-ID:In-Reply-To:References:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=271up09E33xh6e9w6ywwlZ5NW0fqvwtVXEOhmFisBvU=;
-	b=I7BP6m/YNpRa3D8fe4dewr8C/p3GUQ8pLfKjAJrpAlbeIKdiqV/zElPUTESVnRZn
-	VGzzvC/1SLtURVEppD3qjYLYfJ6tGwa5jJ4YUz/ls0vtISFvM9ZnDUvPBkDavITzVbE
-	pweKN1Mv7CTqu2SW9L94L3SyU9XzYMWPMOSkANZ0=
-Received: from mail.mniccloud.in by mx.mniccloud.in
-	with SMTP id 1772684421910189.91557632018907; Thu, 5 Mar 2026 09:50:21 +0530 (IST)
-Date: Thu, 05 Mar 2026 09:50:21 +0530
-From: Gaurav Kansal <gaurav.kansal@nic.gov.in>
-To: "wens" <wens@kernel.org>
-Cc: "Degrader Snehil" <degradersnehil@gmail.com>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb" <wireless-regdb@lists.infradead.org>
-Message-ID: <19cbc39a90e.1cd9982953056.6486968654066866605@nic.gov.in>
-In-Reply-To: <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com>
-References: <CADqxL9qYq_+8dPgXj5i_HjkpTOZwiAawsa90tNbA4Q87ZhCrSA@mail.gmail.com> <CAGb2v6617V-jLnLrBYEZfSiv-2c8QsN2HMCmQbaXdm9NVwGGEA@mail.gmail.com>
-Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz
- (5925-6425 MHz)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LCIl/OnO"
+Received: by mail-oi1-f172.google.com with SMTP id 5614622812f47-45f10d7eb81so3363670b6e.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2026 16:43:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772757835; x=1773362635; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=5AiypmAgBLdMR9CuIx3DJ9/2CMWwdsmjB28iBee1fMM=;
+        b=LCIl/OnOy9RfQ10XhstZa5HsHrYgab5cv0xfEj/fDZeK3CUE48bZCzHkBtYXcQqZCb
+         IJwtYhijdoqpLeVEjuMyQGziuR/C9jLrxYHBWfRSR/AFX1a0OLBG72rfMBS6SHE0ubEG
+         12PqrIdDBBe1z7CPa9as4c/5BuctiMaWbFGFvRRxdqFc+BAA+bDAvw8FdGJCs2ZNGio4
+         B+QGzpyGw9oJOvVGT0M/Tir4fpPlJPxVO1DNJUArw71Lm/bOhIIXFOFqKIwL/yXHBY0d
+         d8qebC5glmdhtf93nvj02Fc/hD+BCgbZIjPhx+QQdKqhU9l4cvpt7s3VJAcsotcflZUG
+         5/PA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772757835; x=1773362635;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5AiypmAgBLdMR9CuIx3DJ9/2CMWwdsmjB28iBee1fMM=;
+        b=HUt5ULfRkX6Kh4x3VZ7MflCP3vQ0JV7/WIxVA7pe/ODt0odvmoVqkuPNLNj+2N1Pva
+         zoSGAQPVK/tAjVwa4PegBtGGEW8uxfunYIfJxvpEM1x+Awzpo7NxkEkOnQ/lfEg8iorA
+         lLuzD4Z097IiG9stMYrJYetXFYBWFjf4MYZK3N8YW+3bad/yLoexD69CFc44z+ZoNNIu
+         sngqTkdCws0a1lcD9WG1aOOiwobyK1Ubjk/sZ+pTZp33CMiOU9MII7x0brz14DGsjjle
+         G+k5pQKubwKdbQRP+mGdD4wfy0o+l8OSIYtHIMOOPtWJuEvsdUgB991z5rLF44pzML6X
+         aYTw==
+X-Gm-Message-State: AOJu0YxHT6WnCo+2f4UFzS4ZeXErJWDZXtUqz8lYaqQP0xzGgGGpNtEK
+	6PlWC1HBoQEXeQSjvOhG4rpLXnIpUkZbq406qn4MS8jn/MX63y9n3nEGR/pfbi/co1o=
+X-Gm-Gg: ATEYQzx2OMj+oB3jEr2WX7qELh9uE2fLbtSI5IPtR5R6g7FSilWrRncvYThErZZTCIg
+	oRnF8kyyLt+KCnpUIdMv3cHbTCQgnojVZZvUr5uX8QlogA0KDJ4RfAAj/B58VMOS94oAmOvywV4
+	E1fLibqyn7jqz3bvRvE08HgGPE/DjEOsTgZZgckE9+vVkrno4WFkrw6B+x05H2Zw8athv+RWIHV
+	u5Rz3qfbulZw2T9A9KtZS5JtbioNj35BvUhEGio5F9H+DBebjcg6bTD8ZZTcS1FxslLFliiAO3v
+	HifuFTNlG0wmN27WNBOevcI8zqNiTOTYC+oEpAFDV3oMlMmNcToh5GsHTxNLBDz3B8jJTqwe2ES
+	65x1Gl2okwPWnT8DNydWElXvZzZaUsChI8HeUeIqNywAF235qUr6Weimtup7cAL8t7aMkdKBKID
+	xviIjE1EiajGMJKXU0BgaC6vHbE74lICFXmbJQa8nqlY38EJbPOCk4qoRqcaWA7+VrG8kXI880K
+	Z2RJayNgwzFbnrPhml8MitlquAUF6SaJcMYSag74A==
+X-Received: by 2002:a05:6808:c3d5:b0:45f:13fe:4a2d with SMTP id 5614622812f47-466dc9f4738mr204774b6e.4.1772757835483;
+        Thu, 05 Mar 2026 16:43:55 -0800 (PST)
+Received: from framework.misc.iastate.edu ([2610:130:110:25d:2aa4:4aff:fed7:9b19])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-416e65b1c82sm69335fac.5.2026.03.05.16.43.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Mar 2026 16:43:55 -0800 (PST)
+From: Kerigan Creighton <kerigancreighton@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: loic.poulain@oss.qualcomm.com,
+	wcn36xx@lists.infradead.org,
+	andersson@kernel.org,
+	mathieu.poirier@linaro.org,
+	linux-remoteproc@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Kerigan Creighton <kerigancreighton@gmail.com>
+Subject: [PATCH v3 0/3] Add support for Qualcomm WCN3610
+Date: Thu,  5 Mar 2026 18:43:41 -0600
+Message-ID: <20260306004344.10968-1-kerigancreighton@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Importance: Medium
-User-Agent: MGov Mail
-X-Mailer: MGov Mail
+Content-Transfer-Encoding: 8bit
 
-Hi ChenYu,
+The WCN3610 is a 2.4GHz-only WLAN/BT combo chip used in some 
+cheaper Android and Windows phones such as the Lumia 550, and 
+IoT devices like the Anki Vector robot. It shares a lot in 
+common with the WCN3620.
 
-Didn't the information is already merged as per my last patch submission?
+This series adds support for the WCN3610 across the necessary 
+subsystems:
 
-Regards,
-Gaurav Kansal
+   * Document the new compatible string (patch 1).
+   * Add compatible string in qcom_wcnss_iris (patch 2).
+   * Add rf_id and CFGs for the WCN3610 in wcn36xx, disable
+     powersave for this specific chip, ensure it is 2.4GHz-only
+     (patch 3).
 
+Tested on an Anki Vector 1.0 and 2.0 robot. Support for other 
+WCN36xx chips has not been affected.
 
+Changes in v2:
+ - Move the Documentation patch to the beginning of the patch set.
+ - Move remoteproc compatible string addition to the middle of 
+   the patch set.
+ - Add Reviewed-by Dmitry (thanks!) to remoteproc compatible patch.
+ - Move wcn36xx driver changes to the end of the patch set.
 
+Changes in v3:
+ - Describe the hardware rather than the driver in the 
+   dt-bindings patch [Krzysztof].
+ - Describe why we need a new compatible in the remoteproc 
+   patch [Krzysztof].
+ - Describe where the CFG values came from in the wcn36xx 
+   driver patch [Konrad].
 
-From: Chen-Yu Tsai <wens@kernel.org>
-To: "Degrader Snehil"<degradersnehil@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>, "wireless-regdb"<wireless-regdb@lists=
-.infradead.org>
-Date: Thu, 05 Mar 2026 09:08:56 +0530
-Subject: Re: wireless-regdb: Update IN regulatory domain for lower 6 GHz (5=
-925-6425 MHz)
+Kerigan Creighton (3):
+  dt-bindings: remoteproc: qcom,wcnss-pil: Add wcn3610 compatible
+  remoteproc: qcom_wcnss_iris: Add support for WCN3610
+  wifi: wcn36xx: Add support for WCN3610
 
- > Hi,=20
- > =20
- > On Thu, Mar 5, 2026 at 3:16=E2=80=AFAM Degrader Snehil <degradersnehil@g=
-mail.com> wrote:=20
- > >=20
- > > Hi,=20
- > >=20
- > > I would like to request an update to the IN (India) regulatory domain =
-in wireless-regdb to add the newly permitted lower 6 GHz band (5925=E2=80=
-=936425 MHz).=20
- > =20
- > Thank you for the information. Would you like to provide a patch?=20
- > If not, I can write up a patch and tag you as the reporter.=20
- > =20
- > > The Government of India has officially opened this band for licence-ex=
-empt use via Gazette Notification G.S.R. 47(E), dated January 20, 2026, pub=
-lished January 21, 2026, issued by the Ministry of Communications under the=
- Indian Telegraph Act, 1885 and the Indian Wireless Telegraphy Act, 1933.=
-=20
- > >=20
- > > Gazette details:=20
- > >   Title   : Use of Low Power and Very Low Power Wireless Access System=
-=20
- > >             including Radio Local Area Network in Lower 6 GHz Band=20
- > >             (Exemption from Licensing Requirement) Rules, 2026=20
- > >   File No : 24-04/2025-UBB=20
- > >   Gazette : No. 47, CG-DL-E-21012026-269488=20
- > >   Signed  : Devendra Kumar Rai, Joint Secretary, Ministry of Communica=
-tions=20
- > >   URL : https://www.dot.gov.in/static/uploads/2026/02/88f0ac8c74eb6f69=
-07934d17d0015ab5.pdf=20
- > > The Gazette defines two device classes for 5925=E2=80=936425 MHz:=20
- > >=20
- > >   1. Low power indoor=20
- > >      - Max EIRP         : 30 dBm=20
- > >      - Max PSD          : 11 dBm/MHz=20
- > >      - Max bandwidth    : 320 MHz=20
- > >      - Restriction      : Indoor use only (Rule 5)=20
- > >=20
- > >   2. Very low power outdoor=20
- > >      - Max EIRP         : 14 dBm=20
- > >      - Max PSD          : 1 dBm/MHz=20
- > >      - Max bandwidth    : 320 MHz=20
- > >      - Restriction      : None=20
- > >=20
- > > Additional operational restrictions per Rule 5 of the Gazette:=20
- > >   - Band is prohibited on oil platforms=20
- > >   - Indoor use prohibited on land vehicles, boats and aircraft below 1=
-0,000 ft=20
- > >   - Communication with and control of drones/UAS is prohibited=20
- > >   - Contention-based protocol is mandatory for all devices (Rule 4)=20
- > >=20
- > > Out-of-band emission limit: -27 dBm/MHz outside 5925=E2=80=936425 MHz =
-(Rule 6)=20
- > >=20
- > > Proposed addition to the existing country IN entry in db.txt:=20
- > >=20
- > >   country IN:=20
- > >           (2402 - 2482 @ 40), (30)=20
- > >           (5150 - 5250 @ 80), (30)=20
- > >           (5250 - 5350 @ 80), (24), DFS=20
- > >           (5470 - 5725 @ 160), (24), DFS=20
- > >           (5725 - 5875 @ 80), (30)=20
- > >           (5925 - 6425 @ 320), (30), NO-OUTDOOR   # low power indoor=
-=20
- > >           (5925 - 6425 @ 320), (14)               # very low power out=
-door=20
- > >=20
- > > Note: Since both device classes share the same frequency range but hav=
-e different EIRP limits and indoor/outdoor restrictions, I have represented=
- them as two separate lines. Please advise if a different encoding is more =
-appropriate.=20
- > =20
- > Unfortunately we currently only support one rule per band. I'm inclined=
-=20
- > to add the VLP one so outdoor usage is allowed.=20
- > =20
- > > I have attached the official Gazette notification PDF as supporting ev=
-idence.=20
- > >=20
- > > Intel has also submitted a related update (Intel=C2=AE Wireless Wi-Fi =
-Drivers 24.20.2) for this band for India. I am not certain whether that pat=
-ch covers wireless-regdb (db.txt) or only their iwlwifi driver internals, s=
-o I am submitting this request for wireless-regdb independently to ensure t=
-he authoritative database is updated.=20
- > =20
- > AFAIK Intel manages regulatory requirements in their firmware, so it is=
-=20
- > unrelated to the database we maintain.=20
- > =20
- > > Intel's Regulatory Domain Info was found in Release notes of their  In=
-tel=C2=AE Wireless Wi-Fi Drivers 24.20.2 available at page 2 of https://dow=
-nloadmirror.intel.com/914148/ReleaseNotes_WiFi_24.20.2.pdf.=20
- > > Please let me know if any further information is needed.=20
- > =20
- > The information you provided is very detailed. Thanks!=20
- > =20
- > =20
- > ChenYu=20
- > =20
- >=20
+ .../bindings/remoteproc/qcom,wcnss-pil.yaml   |  1 +
+ drivers/net/wireless/ath/wcn36xx/main.c       |  4 +-
+ drivers/net/wireless/ath/wcn36xx/smd.c        | 61 ++++++++++++++++++-
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h    |  1 +
+ drivers/remoteproc/qcom_wcnss_iris.c          |  1 +
+ 5 files changed, 66 insertions(+), 2 deletions(-)
+
+-- 
+2.53.0
 
