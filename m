@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C7333689D;
-	Fri,  6 Mar 2026 07:25:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407F933689D;
+	Fri,  6 Mar 2026 07:26:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772781955; cv=none; b=urv+nhm3VCwa9aW4ZMErMVn4s+t4cNbHThth3wuvN5YK8IbsrDHJqUaByKlM7s2n4BqwJUsY4TbhjmPwYR2CZhzKfIZkihbjccy+VI8i0018ymBP6ar8kaXcUqdEXnIuF+Oci49ipo50rX+X0p4YAfjdvsnjCrTK7HGCPi/0bbM=
+	t=1772781978; cv=none; b=ab/mE+unWqR1gw3N+itnOCJt0lFKMpkNlaU/A7TM/Eh6OvcvjQOeMPfljSUX+18/3wi7SuL5pFhi74dsdMwoeptUxYmp2KtiyIKSKHc2SGI+e2YEXzTamHPlsJoqYSQvlCNz7yNrbzLYsMuDqT8SIdhGtpUop2VcsW+FAy45apU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772781955; c=relaxed/simple;
-	bh=j9YONRo/sWUOCDk/7Xp4UEVvoJfedxAb+55rCW1hApE=;
+	s=arc-20240116; t=1772781978; c=relaxed/simple;
+	bh=0OsDcbApXz/KlVsR7bz4w4dCqLP8CleCOTsm7mf5LbM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Fd+GqnTdyOHpZ1R4Zz+FxbOQpP99eNUB2p7Jop1MS2Z3WNkQHk7L5neywWm2ShYNWYFQeqgdTokGGILk90FyagTJTalxhBdQYKQJDlqMxlUhnBJ1sMSM2DJTGzThot+vzeGim949GbIHnzzfAgNu6+/NfCoPRtENHfqsSkJ8kjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h4ICmiWC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=KQnun+49udhaWXUMH+x0N8C1+N51+y09gCLWWhsakb2lGbB2cMdtRIGllG91igjqsWudrIWsEH3M9DUo1gaMKPscbgCKv4qIq+ke5czYQL2pRonQ0wOfvORx4VxSiRQZwXOYCpfMRSDpU/OTYhD+vffcGhZfd3NvyhrySqeiKoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p/smk4DA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h4ICmiWC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F74AC4CEF7;
-	Fri,  6 Mar 2026 07:25:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p/smk4DA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18AC4C4CEF7;
+	Fri,  6 Mar 2026 07:26:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772781955;
-	bh=j9YONRo/sWUOCDk/7Xp4UEVvoJfedxAb+55rCW1hApE=;
+	s=k20201202; t=1772781977;
+	bh=0OsDcbApXz/KlVsR7bz4w4dCqLP8CleCOTsm7mf5LbM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=h4ICmiWC6kixVcCKFKUuxul0DzKR+jlXxTyMcwCkQc6dYTpzGiA5Z3YePn5KhLoun
-	 nPLBNUGJmHXHcY6WV+ENsPK2PoANUoH7HoduS4KTYgyVl3L8an3R0JmNpe9QQYox1o
-	 rWo89mvBque9IDvrMt6q+0Er3qgEaWYktuTIw94fbY41WVI1IKQr+hNnvfqLY7IX5F
-	 wLoeixmrxGQlVqp97nnbA5Fouq5VkNg+f5/esIsyUMbZiH/w24KGyuiGT4NvDXSh0N
-	 0izlb+i/0tAnofWD42RdvzoBqH1gWwVQWBU1QtWYduJyA2MAkah15p6XAgZEojjXUq
-	 nxqx1rDvf8nQw==
-Message-ID: <4f94c20c-d06f-48e5-95fb-5380c84a1b99@kernel.org>
-Date: Fri, 6 Mar 2026 08:25:50 +0100
+	b=p/smk4DARJ9uQJkglZLcbTUuI+edX9Oj+jqykOBxrME4Azk2/PLPKt4UdBOoN0rqF
+	 07KtGJgkRG+PJVUNaZDN65Qq3xSVdoMBKHb23cB9h1DfpJR0IQQf3/LlxpJzXLXAD/
+	 7vKOgVe+feYh+e38lEMu7C8cteCD2co0+mglw+aOt4Nb00r7esnVBH5UU/7Cd8Yi7g
+	 QMX9/QVE8RzURg+4JJqLfVS+WGp1G2tN4aUzKWymLoNmlq+nMC6FYznrIUsT6wvCdp
+	 BR2osarrVRkec0KVQA/AyD9tpdle/VJnpYvlnSxFzsXy380tvUoNzZ2cYkqaFcfkoD
+	 QM2dbZ9h02iAQ==
+Message-ID: <88af5318-110f-426d-825f-ca7467a63533@kernel.org>
+Date: Fri, 6 Mar 2026 08:26:13 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,18 +35,17 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/3] remoteproc: qcom_wcnss_iris: Add support for
- WCN3610
+Subject: Re: [PATCH v3 1/3] dt-bindings: remoteproc: qcom,wcnss-pil: Add
+ wcn3610 compatible
 To: Kerigan Creighton <kerigancreighton@gmail.com>,
  linux-wireless@vger.kernel.org
 Cc: loic.poulain@oss.qualcomm.com, wcn36xx@lists.infradead.org,
  andersson@kernel.org, mathieu.poirier@linaro.org,
  linux-remoteproc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20260306004344.10968-1-kerigancreighton@gmail.com>
- <20260306004344.10968-3-kerigancreighton@gmail.com>
+ <20260306004344.10968-2-kerigancreighton@gmail.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -92,28 +91,25 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20260306004344.10968-3-kerigancreighton@gmail.com>
+In-Reply-To: <20260306004344.10968-2-kerigancreighton@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 06/03/2026 01:43, Kerigan Creighton wrote:
-> WCN3610 has the same regulator requirements as
-> WCN3620, so in qcom_wcnss_iris, we can use wcn3620_data.
+> The Qualcomm WCN3610 is a 2.4GHz-only WLAN/BT combo chip.
+> It's similar to the WCN3620, though more basic. Add a
+> wcn3610 compatible for use in device trees.
 > 
-> A separate compatible is needed for WCN3610 because the
-> wcn36xx driver uses it for chip-specific configuration.
-> Specifically, it sets BTC (Bluetooth Coexistence) CFGs,
-> disables ENABLE_DYNAMIC_RA_START_RATE, and disables
-> STA_POWERSAVE for this specific chip for stable
-> functionality.
-
-This goes to the binding description where you describe the hardware,
-how I asked.
+> It needs its own compatible because of chip-specific
+> configuration done in wcn36xx.
 
 Please wrap commit message according to Linux coding style / submission
 process (neither too early nor over the limit):
 https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
 
+With the changes from patch 2:
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
