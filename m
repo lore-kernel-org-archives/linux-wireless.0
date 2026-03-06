@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6245E379ED7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 623B137997C;
 	Fri,  6 Mar 2026 08:52:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787136; cv=none; b=VdaUTRmQ+lLUzVU7+TmTG0JX/1v601BbhviKrbVsnjKW3/4zsxLBFBFaBK8WQfZ3WvJj9aG40FTE9AAcg6VYT99e8iDhySfMep1wV0auK3PCNe+WaBD3ycUjpijWqHMxlSwXhL3PfrsQ0DQDghbsYig+2LfUU1N0r9LaoUO8Q50=
+	t=1772787136; cv=none; b=CYTp19KuD+iSBgAKO30qWT18D18K/O82IJAruSIo2Gq6zVn//3zdV09tBfBB/f2H9NR7Bxa9aZS73thGdt1zaL1m0prGkzbRyH8QPKRDgjsW/tluhasmTlg0czAD4FHqMEcA49YsrNGbo8HZ9+JRJvU9sooSQ6ym8e8ZyEFDONw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787136; c=relaxed/simple;
-	bh=j7gUhRofsdD3lZ7m1JTxHiv5hjhqUXzgfkH4RMIENgM=;
+	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MG2wFHpYPYxOBinL1AougBJZ1zD6+LRgFgGP6L1HqgBjRRKqtfaG56ED6z+ESk2fGsu8pvI8UyxvMBiH+hYIk6dOTZF3OftM7VUVrEDHEcs43yDOE7KKV8hG63S++5NIgFSQYKTNxkraAdOb5GMTwtgiShZM8aPNJcWfqMkz32k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TkUyQMXw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=nTpqEZtPCsq0ozteO22sa2D9t9E2XDOcxJsqaVPu1JZ/7sDGMiong7PruISx/3CjXZKPilARZYbhppeysGL7CxZ2uu3NdK58PrAkk00zFsAsnnwfKpYuHZToQtMZHEwW3vN2Q71G5QnJvPfufPTFdAGnSYLMGPfipjb+u1ReAcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=przSOu5P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkUyQMXw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8F15C2BCFC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="przSOu5P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C21BCC4AF4D;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=j7gUhRofsdD3lZ7m1JTxHiv5hjhqUXzgfkH4RMIENgM=;
+	bh=WlcQfuVYUTxHWCyVOtszC/tk9vnPA9GDI5j4ICmNw7g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=TkUyQMXw1BJFV6KsNwejWWLgx4bEIHvkYpDlIGpJKn+vAlX30qx7Wy/val7jPRkam
-	 AqQIRQc886O+KJgZ02LM7ZAuRl8uemn9326u+rRLNGl/MVkFJ6kpv8SWDWHNp+XbfH
-	 Wj9PyKrY3E2l9nJhIPW6LQPhQpQLdeVqF3SDrXs+JAxP/XGpuKsU6+VsfDbYYt8zVZ
-	 3ZedjE66C3w/x6svNiAKm/GENTgzjBXSSmt2j5uSeyEiUAKQrSLCMRMt0cepMl+Zja
-	 PrTMIT4YK4c4LD6rzM4nubEhADBNEWhu4VRUmDy7YP506Rosr/x/gCIKedqe9jcQuI
-	 XEMDzuuIG3gXQ==
+	b=przSOu5PuvIYdQz0nQdNK9TMVRhYHr+Dvb5ogOLy+sx1xd8eJaREzt3IX+4pyhWRs
+	 kPSAu2IBi7T+W4TBFr5geNKnz5J6X3UmrM4jAnE3XuBzBv0BMyphJsgaWr5qnxtJSL
+	 LcfeVNgfx/67KPtdCSS6VIN7n/YUnClAn6U4C7gxkP+mcb3aaqe0qjFwM/HfTovZql
+	 tca8nIPE6V+qh7Y5mDX1RHtMs99E4jTYFymDM4/SYaYFxd6kX3R+uRMfYNNUZj2jIU
+	 AO4SBXrqRIGRFH4t51RzpzcIs5bZZjEKYtVPgANgvEDgFEXQaw5uVq4zpp8w6zLjOH
+	 ymw/XawocPHxg==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQur-000000003At-03JJ;
-	Fri, 06 Mar 2026 09:52:13 +0100
+	id 1vyQuq-000000003Ap-48xZ;
+	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
 Cc: Jeff Johnson <jjohnson@kernel.org>,
@@ -54,12 +54,10 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan@kernel.org>,
-	stable@vger.kernel.org,
-	Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH v2 18/18] wifi: rtw88: fix device leak on probe failure
-Date: Fri,  6 Mar 2026 09:51:44 +0100
-Message-ID: <20260306085144.12064-19-johan@kernel.org>
+	Johan Hovold <johan@kernel.org>
+Subject: [PATCH v2 16/18] wifi: rtl818x: drop redundant device reference
+Date: Fri,  6 Mar 2026 09:51:42 +0100
+Message-ID: <20260306085144.12064-17-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -76,44 +74,43 @@ device while the interface is bound to a driver and there is no need to
 take additional references unless the structures are needed after
 disconnect.
 
-This driver takes a reference to the USB device during probe but does
-not to release it on all probe errors (e.g. when descriptor parsing
-fails).
+Drop the redundant device reference to reduce cargo culting, make it
+easier to spot drivers where an extra reference is needed, and reduce
+the risk of memory leaks when drivers fail to release it.
 
-Drop the redundant device reference to fix the leak, reduce cargo
-culting, make it easier to spot drivers where an extra reference is
-needed, and reduce the risk of further memory leaks.
-
-Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-Reported-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Link: https://lore.kernel.org/netdev/2026022319-turbofan-darkened-206d@gregkh/
-Cc: stable@vger.kernel.org	# 6.2
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/usb.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 433b06c8d8a6..718940ebba31 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -1041,7 +1041,7 @@ static int rtw_usb_intf_init(struct rtw_dev *rtwdev,
- 			     struct usb_interface *intf)
- {
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
--	struct usb_device *udev = usb_get_dev(interface_to_usbdev(intf));
-+	struct usb_device *udev = interface_to_usbdev(intf);
- 	int ret;
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+index f7e0f6573180..1d21c468a236 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+@@ -1475,8 +1475,6 @@ static int rtl8187_probe(struct usb_interface *intf,
+ 	usb_set_intfdata(intf, dev);
+ 	priv->udev = udev;
  
- 	rtwusb->udev = udev;
-@@ -1067,7 +1067,6 @@ static void rtw_usb_intf_deinit(struct rtw_dev *rtwdev,
- {
- 	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
+-	usb_get_dev(udev);
+-
+ 	skb_queue_head_init(&priv->rx_queue);
  
--	usb_put_dev(rtwusb->udev);
- 	kfree(rtwusb->usb_data);
+ 	BUILD_BUG_ON(sizeof(priv->channels) != sizeof(rtl818x_channels));
+@@ -1663,7 +1661,6 @@ static int rtl8187_probe(struct usb_interface *intf,
+  err_free_dmabuf:
+ 	kfree(priv->io_dmabuf);
  	usb_set_intfdata(intf, NULL);
+-	usb_put_dev(udev);
+  err_free_dev:
+ 	ieee80211_free_hw(dev);
+ 	return err;
+@@ -1685,7 +1682,6 @@ static void rtl8187_disconnect(struct usb_interface *intf)
+ 
+ 	priv = dev->priv;
+ 	usb_reset_device(priv->udev);
+-	usb_put_dev(interface_to_usbdev(intf));
+ 	kfree(priv->io_dmabuf);
+ 	ieee80211_free_hw(dev);
  }
 -- 
 2.52.0
