@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7472331A43;
-	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A53333A02B;
+	Fri,  6 Mar 2026 08:52:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772787136; cv=none; b=tG7yVTcDx+ryR07BMfSVlBjLdAHpgy15Aiu19irxnlDl8FS39EHgLTw43O6IHXyEvQ4tQ8Y3zxv5zI2bkcWgzOzxwgBPY+LZZhgXfOYWlCJFoHXTDuhLO47wenpTKrs7BGpyToEKh/WIvV7EJ1A5pPM+k4tZGWL4pZH8E+E2miY=
+	t=1772787136; cv=none; b=eR7YwDKFb5tZARYgAZU5DZCc3GtaYyOAVGNQkI4qXT9Fz8k3ZQVitBYnK20wnyd3a80Vv1sU5p0cvWupc6iR8zQnZ7skE0FbZCC8Z2Irm/3Uyu6ivIOlJeNNDHJBcDmoxYi7woXdz7UefJ708l6wfVqAuGbbb/bpzm4MHj5oX54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1772787136; c=relaxed/simple;
-	bh=Ke1gkgIAYNvXJE3uYWjze9f3v5h9YO7tPFOsLk607jg=;
+	bh=BJvbZkWynHLgBgJjsx12cqTdSqkHD6VpiScwFoXBO2w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Lr2S2Fl1ueHsl+McKjRU0TQeTbdXPTwZskrhJDxp2ojG6c3c6BVyXQfPbP4InHPtPp2OipwKyqkESIMvAXIpfVhM30oZTETkdKhFmd39WlA74BWKo45jpo43wT5TWLRyTI4fqplxY7Vofzuo34jZ2g+2EJvy55ftpU6r5KhMrmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RkTQdAht; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=R2KV1iEHNKWRh9HhV+TfiaZDJ9JacgiBQKW0ubVp/EvJF5FJ6oyE5ij7445hVn5QpVUYMyhhLvQ0+J6Vls3bIw2ITcZaZmX5erGAn5+OgA7YcekukbwiacwfMnvl+BP9hS7o9NniCH/N2KAuKL5HxZ65RY9bfObdRm3aT12g99o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N8Jz2X30; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RkTQdAht"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E031C4AF09;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N8Jz2X30"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 950EAC2BCB7;
 	Fri,  6 Mar 2026 08:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1772787135;
-	bh=Ke1gkgIAYNvXJE3uYWjze9f3v5h9YO7tPFOsLk607jg=;
+	bh=BJvbZkWynHLgBgJjsx12cqTdSqkHD6VpiScwFoXBO2w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RkTQdAhtU9OR9wvXzGhf4ByQYCL81x9oU+6JIn2zapFSOpWh3n500gV1EOvKfElR6
-	 4YL6PJn2Wc5gU2T9gLfblYVDs4+/HxQ47n/CboaYY0S7FMhjUi81erdWyrcbk+jvyd
-	 kkg/0ejujbFNPj6TJVGkeP1Oa11mjtxFTJRDX2fE9fdiOP/iDDsDCoeTA3e52/NzGo
-	 oFRf3SlOQW4uBnsdMOZK+YHUOk6Ia5MSxzI8sNTbH567UxMTfGGsXMa2hhoKO++dzs
-	 nhNttX8+IvfLj082op/P53vR/pPknfF9cuPa7FfVYf06bGbYBVgKnJYYBw9/syBPL+
-	 R+m+pVzH8l5xg==
+	b=N8Jz2X30asuT03WkVMnqHDL+Lwb3vmpaUJFnGwGQjfN6hZFSHlvZklAfVlbnVSW8e
+	 NkSx/w0DjjxY2q1wDgQC5ansgflJbi6Rc0sMKD0FfbZcRbGw2foLl91jqt2/LFfYCA
+	 mW3TB6K5Pqk5NTRkYz4G40eMxY0MNdQ33JsMeYLNwMGMjPGfLvBk/DARIZLEE4Ul+J
+	 2SznEp+Q6dCGO9HmToqXgxO3D+xIfHb7icajF3M/YFIDLXXA530wqmE4X7mx5CfqQ7
+	 5rjn9/N0j2Ea3zsqlSKuZjnR8TYWkAhK+s0iNYbLVGDepOMy5KwbJTgVfj1hkbyAVh
+	 aXS3E6IQGddNQ==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1vyQuq-000000003AT-3aeF;
+	id 1vyQuq-000000003AN-3ShE;
 	Fri, 06 Mar 2026 09:52:12 +0100
 From: Johan Hovold <johan@kernel.org>
 To: linux-wireless@vger.kernel.org
@@ -55,9 +55,9 @@ Cc: Jeff Johnson <jjohnson@kernel.org>,
 	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 05/18] wifi: ath10k: rename disconnect callback
-Date: Fri,  6 Mar 2026 09:51:31 +0100
-Message-ID: <20260306085144.12064-6-johan@kernel.org>
+Subject: [PATCH v2 02/18] wifi: ath6kl: rename disconnect callback
+Date: Fri,  6 Mar 2026 09:51:28 +0100
+Message-ID: <20260306085144.12064-3-johan@kernel.org>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260306085144.12064-1-johan@kernel.org>
 References: <20260306085144.12064-1-johan@kernel.org>
@@ -75,29 +75,29 @@ for).
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/usb.c | 4 ++--
+ drivers/net/wireless/ath/ath6kl/usb.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
-index ad1cf0681b19..987d57a01ddf 100644
---- a/drivers/net/wireless/ath/ath10k/usb.c
-+++ b/drivers/net/wireless/ath/ath10k/usb.c
-@@ -1057,7 +1057,7 @@ static int ath10k_usb_probe(struct usb_interface *interface,
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 814faf96f1ff..79c18f5ee02b 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -1175,7 +1175,7 @@ static int ath6kl_usb_probe(struct usb_interface *interface,
  	return ret;
  }
  
--static void ath10k_usb_remove(struct usb_interface *interface)
-+static void ath10k_usb_disconnect(struct usb_interface *interface)
+-static void ath6kl_usb_remove(struct usb_interface *interface)
++static void ath6kl_usb_disconnect(struct usb_interface *interface)
  {
- 	struct ath10k_usb *ar_usb;
- 
-@@ -1113,7 +1113,7 @@ static struct usb_driver ath10k_usb_driver = {
- 	.probe = ath10k_usb_probe,
- 	.suspend = ath10k_usb_pm_suspend,
- 	.resume = ath10k_usb_pm_resume,
--	.disconnect = ath10k_usb_remove,
-+	.disconnect = ath10k_usb_disconnect,
- 	.id_table = ath10k_usb_ids,
+ 	ath6kl_usb_device_detached(interface);
+ }
+@@ -1227,7 +1227,7 @@ static struct usb_driver ath6kl_usb_driver = {
+ 	.probe = ath6kl_usb_probe,
+ 	.suspend = ath6kl_usb_pm_suspend,
+ 	.resume = ath6kl_usb_pm_resume,
+-	.disconnect = ath6kl_usb_remove,
++	.disconnect = ath6kl_usb_disconnect,
+ 	.id_table = ath6kl_usb_ids,
  	.supports_autosuspend = true,
  	.disable_hub_initiated_lpm = 1,
 -- 
