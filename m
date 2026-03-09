@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DAF6350A3A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA5A350A1F
 	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 06:07:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773036466; cv=none; b=o7LCBsKbtqkFtyfc6gx2a7e3eBxpBFTPHKbnVIGH7qgS7NEew0UjK1Nli26oo8VQQektzxLjc/qnonLltLyxxIzJy3/X48urbQr7eq5WGUSWcVa0jOYgjMODkbJT2Bq9SJ+5kdB7zTuR6A3krPCyaBr6j63Pa63Olm3hUdkbmPg=
+	t=1773036466; cv=none; b=Hn47HX9PWhrPt46NfGDvtEPqo6P1pQROL/tXG03yZT1cQQRtN1me6B4Oy1SxBLF1FIIlEYw+7X76MD2v9XFh75Lhh4PY5928OPctRVBl/6JoNu24t/7euM2vI+aEnUtM9MHsUJ6Tw8MJLqwJ/zoqh8Ml4w268dSdRTv35XjLUc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773036466; c=relaxed/simple;
-	bh=p7yJ/X06yXkcHw2lNs8QBEx7rBMDENK11N9uLwv2EQw=;
+	bh=yufl/3J9JCN7V1vl9weGeB5JVvG2s99PgRNMrhkZX/M=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qUOdPpa5d2CSks9YJOJwkPPjlZ1M9fOq0EOWW0cd+ceyDiWsbfc/X0iYjHnlKjwMuoiQNeYLalfEvqdxCed2dXOt+YqbpRWXWGkiPzFBA8oDFprCU/ILGs4Lh/Tgm/z0/siS2Xvo4l3X7XVLkfzmCJ802+/8sazfZvecxuHBwdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=WE9utbOe; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=qBU7bblsrFFgZtZU1JiSv56Ok7M5OYYZm0LX6VyhCVlkcQdMnoq5JYQm+4S9lgoGczpTo1dWVqd066uuMb3Wo3SKErOIN54FDdiPm7iepf2ZKw8Csn2cmOclHbCk+djYhmhFxsuTH9HD/w01gTWq8vgeCwMRzxRJ8oKNU1IIj0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Fy0N0uYy; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WE9utbOe"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Fy0N0uYy"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=mPoMPLrYwzp9daRpy6G3PqZs/9wJOgn2lAPosJEHLIM=; b=WE9utbOeyMlfH16cxEaity4GWd
-	0GzxSEmaRDLeKGazX2GbeZGvn4TWH1qKECBtSYcm1ED7OxfXwCNS8Ase1wcYFUWQ8ayj9MTq59X8s
-	dBTTKFAxycJEzMTRIQswkDgUim4/ba4ILy1v5CG0S1qcTUN9cybJCcKYrwfM5bRSEI5c=;
+	bh=Rcg0JbdLePtCDvhXZEByTNpLCxIxrbIAXOHUZscSDyw=; b=Fy0N0uYyUauwZFb+3dVYS24P1C
+	PfU9wHGpPA9Kua8YkuZGP9kvboMbup+UWwgEI/yGoSxfHFUbq6n2d4Zao94Kga5kht3MenzpawVn3
+	mb5QiOO1DmXut02x41ykeWWxKolII0NOuwGj1iMLbQ6UriDupvK9bUtrqMyWIpTfKgJ4=;
 Received: from p200300cadf236500000000000000085c.dip0.t-ipconnect.de ([2003:ca:df23:6500::85c] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1vzTmD-00GH43-2f
+	id 1vzTmE-00GH43-0B
 	for linux-wireless@vger.kernel.org;
-	Mon, 09 Mar 2026 07:07:37 +0100
+	Mon, 09 Mar 2026 07:07:38 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 09/11] wifi: mt76: route nullfunc frames to PSD/ALTX queue
-Date: Mon,  9 Mar 2026 06:07:28 +0000
-Message-ID: <20260309060730.87840-9-nbd@nbd.name>
+Subject: [PATCH mt76 10/11] wifi: mt76: wait for firmware TX completion of mgmt frames before channel switch
+Date: Mon,  9 Mar 2026 06:07:29 +0000
+Message-ID: <20260309060730.87840-10-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260309060730.87840-1-nbd@nbd.name>
 References: <20260309060730.87840-1-nbd@nbd.name>
@@ -48,38 +48,149 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ieee80211_is_data() returns true for nullfunc/QoS-nullfunc frames, so
-they bypass the PSD queue routing and go through the regular VO data
-queue. This means firmware processes them through the normal TID queue
-instead of the ALTX queue, which doesn't guarantee immediate
-transmission.
+After flushing software-pending frames to DMA, mt76_has_tx_pending()
+only checks DMA ring q->queued. For token-based drivers, q->queued is
+decremented at DMA consumption, but firmware may not have transmitted
+the frame yet. Waiting for all tokens is not feasible because data
+frames may be stuck in firmware powersave/aggregation queues.
 
-Use ieee80211_is_data_present() instead, which returns false for both
-management frames and nullfunc/QoS-nullfunc (no payload), routing them
-to MT_TXQ_PSD. Firmware maps PSD to the ALTX queue, which transmits
-immediately without PS buffering.
+Track PSD queue tokens (firmware ALTX) per phy using an atomic counter.
+These frames are sent by firmware immediately without PS buffering, so
+the counter reliably reaches zero after transmission.
 
-This only affects frames from the mt76_tx() pending path. Regular
-mac80211 TXQ scheduling is unchanged.
+Increment the counter in mt76_token_consume() and decrement it in
+mt76_token_release(), only for PSD queue tokens. Include the counter
+in mt76_has_tx_pending() so channel switch waits for firmware TX
+completion of management and nullfunc frames.
+
+mt7615 (uses mt76_token_get/put) and non-token drivers are unaffected
+as they never call mt76_token_consume/release.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/dma.c           |  2 ++
+ drivers/net/wireless/mediatek/mt76/mac80211.c      |  3 +++
+ drivers/net/wireless/mediatek/mt76/mt76.h          |  3 +++
+ .../net/wireless/mediatek/mt76/mt76_connac_mac.c   |  6 ++++++
+ drivers/net/wireless/mediatek/mt76/mt7996/mac.c    |  6 ++++++
+ drivers/net/wireless/mediatek/mt76/tx.c            | 14 +++++++++++++-
+ 6 files changed, 33 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 2d133ace7c33..f8c2fe5f2f58 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -666,6 +666,8 @@ mt76_dma_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 	if (!t)
+ 		goto free_skb;
+ 
++	t->phy_idx = phy->band_idx;
++	t->qid = qid;
+ 	txwi = mt76_get_txwi_ptr(dev, t);
+ 
+ 	skb->prev = skb->next = NULL;
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 51fe696c9825..38b2088e8c19 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -971,6 +971,9 @@ bool mt76_has_tx_pending(struct mt76_phy *phy)
+ 			return true;
+ 	}
+ 
++	if (atomic_read(&phy->mgmt_tx_pending))
++		return true;
++
+ 	return false;
+ }
+ EXPORT_SYMBOL_GPL(mt76_has_tx_pending);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index fe4f30ea71da..0e6be1d0dffa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -453,6 +453,7 @@ struct mt76_txwi_cache {
+ 	};
+ 
+ 	u8 qid;
++	u8 phy_idx;
+ };
+ 
+ struct mt76_rx_tid {
+@@ -863,6 +864,8 @@ struct mt76_phy {
+ 	struct list_head tx_list;
+ 	struct mt76_queue *q_tx[__MT_TXQ_MAX];
+ 
++	atomic_t mgmt_tx_pending;
++
+ 	struct cfg80211_chan_def chandef;
+ 	struct cfg80211_chan_def main_chandef;
+ 	bool offchannel;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index 15d8a6da0c92..ad539b22585e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -1209,5 +1209,11 @@ void mt76_connac2_tx_token_put(struct mt76_dev *dev)
+ 	}
+ 	spin_unlock_bh(&dev->token_lock);
+ 	idr_destroy(&dev->token);
++
++	for (id = 0; id < __MT_MAX_BAND; id++) {
++		struct mt76_phy *phy = dev->phys[id];
++		if (phy)
++			atomic_set(&phy->mgmt_tx_pending, 0);
++	}
+ }
+ EXPORT_SYMBOL_GPL(mt76_connac2_tx_token_put);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index ed9ada53f8e5..ae7ce19a4d9b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -2215,6 +2215,12 @@ void mt7996_tx_token_put(struct mt7996_dev *dev)
+ 	}
+ 	spin_unlock_bh(&dev->mt76.token_lock);
+ 	idr_destroy(&dev->mt76.token);
++
++	for (id = 0; id < __MT_MAX_BAND; id++) {
++		struct mt76_phy *phy = dev->mt76.phys[id];
++		if (phy)
++			atomic_set(&phy->mgmt_tx_pending, 0);
++	}
+ }
+ 
+ static int
 diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index ab62591b7a26..7b0fae694f12 100644
+index 7b0fae694f12..22f9690634c9 100644
 --- a/drivers/net/wireless/mediatek/mt76/tx.c
 +++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -632,7 +632,7 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid,
+@@ -866,9 +866,15 @@ int mt76_token_consume(struct mt76_dev *dev, struct mt76_txwi_cache **ptxwi)
+ 	token = idr_alloc(&dev->token, *ptxwi, dev->token_start,
+ 			  dev->token_start + dev->token_size,
+ 			  GFP_ATOMIC);
+-	if (token >= dev->token_start)
++	if (token >= dev->token_start) {
+ 		dev->token_count++;
  
- 		if ((dev->drv->drv_flags & MT_DRV_HW_MGMT_TXQ) &&
- 		    !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
--		    !ieee80211_is_data(hdr->frame_control) &&
-+		    !ieee80211_is_data_present(hdr->frame_control) &&
- 		    (!ieee80211_is_bufferable_mmpdu(skb) ||
- 		     ieee80211_is_deauth(hdr->frame_control) ||
- 		     head == &wcid->tx_offchannel))
++		if ((*ptxwi)->qid == MT_TXQ_PSD) {
++			struct mt76_phy *mphy = mt76_dev_phy(dev, (*ptxwi)->phy_idx);
++			atomic_inc(&mphy->mgmt_tx_pending);
++		}
++	}
++
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+ 	if (mtk_wed_device_active(&dev->mmio.wed) &&
+ 	    token >= dev->mmio.wed.wlan.token_start)
+@@ -913,6 +919,12 @@ mt76_token_release(struct mt76_dev *dev, int token, bool *wake)
+ 	if (txwi) {
+ 		dev->token_count--;
+ 
++		if (txwi->qid == MT_TXQ_PSD) {
++			struct mt76_phy *mphy = mt76_dev_phy(dev, txwi->phy_idx);
++			if (atomic_dec_and_test(&mphy->mgmt_tx_pending))
++				wake_up(&dev->tx_wait);
++		}
++
+ #ifdef CONFIG_NET_MEDIATEK_SOC_WED
+ 		if (mtk_wed_device_active(&dev->mmio.wed) &&
+ 		    token >= dev->mmio.wed.wlan.token_start &&
 -- 
 2.51.0
 
