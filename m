@@ -1,122 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8317636C0A3
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 08:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F2236D4F9
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 08:22:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773044412; cv=none; b=HBsL34cKg3V7gunnbAytsRcwAgcy2gIYt6f9x7MG278KxXCETy7woS5upJ/9YuyIsOn1+cXpU+3h0MeeINkpVEUxOuidzZA1g3JOU5VdlQM2GEJeM3nunyqns+ybeq2JRNumGRoCQhVB7BhB/dbiLb4rVZcwoupp4XpAkF3uzVQ=
+	t=1773044580; cv=none; b=QU54sXDRijjgYHxUL1bO96HsRhObgHwbrJoYrZRCIpTMvGof3oIG8cOw7fv15XCC4KAyDF/P3kcsc3VSkhJViVbFzBitdbTUy11arYrurtHytClb8FKoIIFPNSumXb/YJTdEDkq/QI4u9Y4Q39L9cOrD86RL2sZWEGIVFhutlYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773044412; c=relaxed/simple;
-	bh=qJ4w4qQRmM2ZjqtZa5UjUUiweqrIUMgHTeE5IFVGESM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QMx7M4ylI+q8UBXpR8oKd6C+Tds9xe+kG2UU+BW8J43uFlOu30P3FPoBWlnokwergzZwblY3XizDCNzbPiX9DT3bw+3jpFay6EzulXjH2/rtEgVBALBW1O9uvzRLIR/Vh80H+TmcdVCPCrnCMhJIbRIpy5TRqoiVu5d6A5mI3Os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NW02B5Sa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773044580; c=relaxed/simple;
+	bh=wc4KpAHHCOAr867bDpCKNjFxjoSaCDLT9gycb6oDdoc=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Oknt+fMvMQgFQwfOFO7Uzb2DPPXgZ1yrS+pnyhZJY1rM/qCEAd5Nc+56FnwyGVwU214aNAJ70jR9BEp4k6IbcwdYSVleMW7E2t5cz6V76IeUegr+IPvoCmdsZbwy6wLG4oGWg6iIbgkOrnEC6Gj2ROv4KW5nFbjlWXa42W/rmFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=MjzRNFMp; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NW02B5Sa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6051C4CEF7;
-	Mon,  9 Mar 2026 08:20:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773044412;
-	bh=qJ4w4qQRmM2ZjqtZa5UjUUiweqrIUMgHTeE5IFVGESM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NW02B5SaBqa9ZXjEazsWGqbg8ToSFwGD2OOwTf0qVPUFWlM4RncnhkqKZxxobVRu+
-	 lt/VqOxbvBPKJ+WR5B/ANY5vVHwwJg+jGhtFBKpORXrnT6ZlOZV4tr9sZzfcMpXYHj
-	 D96tthIqZejhlS++tV4xaQvTq+q9ph4iuXO4qexgnu8VAq/lhE+6lzFF2/yoq5ty35
-	 MYdYcVFjvxZPlPmA3CMe5QOkT1ZVXov/YLgPGV5r4xrK1fbbDduoJwLAuXYruv/wnA
-	 I75QK78eaHCGm/s4JKS9lJotdO4pA9bvfSC9sNqiaYosdvl/vuEvbdKw+9nz/N7Sb2
-	 S/gMD0wqEnIuw==
-Date: Mon, 9 Mar 2026 09:20:09 +0100
-From: Lorenzo Bianconi <lorenzo@kernel.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
-	linux-wireless@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="MjzRNFMp"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=wc4KpAHHCOAr867bDpCKNjFxjoSaCDLT9gycb6oDdoc=;
+	t=1773044579; x=1774254179; b=MjzRNFMpWvPvIKviqEw+8HwQwZmHc7EDfLeJITMJMpdverM
+	tq2qwrv0FocCGE3Kr6BtQG2JN28cB2y0Cum7pjj/uNnRoRw4AjmShXt3TspBm08eKTjHfFJznZg7l
+	JcBFd2JdpOpTPdW/JFUgRxSEyxAFVHgCNInOKwzHTlInns6T8kcFqlYafRFQ6ldNNHZX5dp3upufH
+	V7GaJahUQtNW2mGlYIaqjUDMrwMZM+QloNzsSGevd2z0U2UFJMeaTssmjfOwGh/O036rXhLiag6xk
+	MvUbhXBvVPjalo1/uivSepR7G5+vVnv/t1nbUQWJQkjXvFBAr2aOpJ7S9oKq+row==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1vzVtA-0000000Co3i-3iBD;
+	Mon, 09 Mar 2026 09:22:57 +0100
+Message-ID: <e62a7a4fcdbb71c76d9e96d058610c0ca57bfc0d.camel@sipsolutions.net>
 Subject: Re: [PATCH wireless-next] wifi: mac80211: Remove deleted sta links
  in ieee80211_ml_reconf_work()
-Message-ID: <aa6CuVi3BZxLBcPA@lore-desk>
-References: <20260307-mac80211-reconf-remove-sta-link-v1-1-efe58070cd36@kernel.org>
- <jv2kdsru66rktkm6bwq3ww5wshubjtv36le5xk4ziedocc72gp@psssohaoamus>
- <aa15YDx5G7WN-nsH@lore-desk>
- <be1c90f6be71f6118590b0add4d657cd79d2ea2b.camel@sipsolutions.net>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo@kernel.org>
+Cc: Lachlan Hodges <lachlan.hodges@morsemicro.com>, 
+	linux-wireless@vger.kernel.org
+Date: Mon, 09 Mar 2026 09:22:55 +0100
+In-Reply-To: <aa6CuVi3BZxLBcPA@lore-desk>
+References: 
+	<20260307-mac80211-reconf-remove-sta-link-v1-1-efe58070cd36@kernel.org>
+	 <jv2kdsru66rktkm6bwq3ww5wshubjtv36le5xk4ziedocc72gp@psssohaoamus>
+	 <aa15YDx5G7WN-nsH@lore-desk>
+	 <be1c90f6be71f6118590b0add4d657cd79d2ea2b.camel@sipsolutions.net>
+	 <aa6CuVi3BZxLBcPA@lore-desk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="XsTQrGGjvwKiyfIz"
-Content-Disposition: inline
-In-Reply-To: <be1c90f6be71f6118590b0add4d657cd79d2ea2b.camel@sipsolutions.net>
+X-malware-bazaar: not-scanned
 
-
---XsTQrGGjvwKiyfIz
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mar 09, Johannes Berg wrote:
-> On Sun, 2026-03-08 at 14:28 +0100, Lorenzo Bianconi wrote:
-> > > > +	rcu_read_lock();
-> > > > +	sta =3D sta_info_get(sdata, sdata->vif.cfg.ap_addr);
-> > > > +	if (sta) {
-> > > > +		unsigned long removed_links =3D sdata->u.mgd.removed_links;
-> > > > +		unsigned int link_id;
-> > > > +
-> > > > +		for_each_set_bit(link_id, &removed_links,
-> > > > +				 IEEE80211_MLD_MAX_NUM_LINKS)
-> > > > +			ieee80211_sta_free_link(sta, link_id);
-> > > > +	}
-> > > > +	rcu_read_unlock();
-> > > > +
-> > >=20
-> > > Could use scoped_guard(rcu) instead?
-> >=20
-> > I do not have a strong opinion here.
-> > @Johannes: Which one do you prefer?
-> >=20
+On Mon, 2026-03-09 at 09:20 +0100, Lorenzo Bianconi wrote:
+> > Also, I think you need ieee80211_sta_remove_link() to tell the driver?
 >=20
-> To answer the literal question: No strong preference I guess, given that
-> there's no error path here this seems fine, and the scoped version would
-> just add another indentation level.
+> I think we already inform the driver running ieee80211_set_active_links()=
+ so
+> ieee80211_sta_remove_link() seems redundant, right?
 >=20
-> But you really should just remove the rcu_read_lock/unlock anyway, it's
-> not needed since this holds wiphy mutex, which is sufficient to access
-> the STA table etc.
+> ieee80211_set_active_links() -> _ieee80211_set_active_links() -> drv_chan=
+ge_sta_links()
 
-ack, I will fix it in v2.
+Oh, hmm, yeah, good point!
 
+> > And I realized another thing - this needs to destroy TDLS stations that
+> > were on the link being removed, but maybe that's a separate commit.
 >=20
-> Also, I think you need ieee80211_sta_remove_link() to tell the driver?
+> Do you mean ieee80211_teardown_tdls_peers()? Is it done in
+> _ieee80211_set_active_links() too?
 
-I think we already inform the driver running ieee80211_set_active_links() so
-ieee80211_sta_remove_link() seems redundant, right?
+So ... it was all already consistent all along, at least towards the
+driver? I totally missed that, sorry. Thanks for checking!
 
-ieee80211_set_active_links() -> _ieee80211_set_active_links() -> drv_change=
-_sta_links()
-
->=20
-> And I realized another thing - this needs to destroy TDLS stations that
-> were on the link being removed, but maybe that's a separate commit.
-
-Do you mean ieee80211_teardown_tdls_peers()? Is it done in
-_ieee80211_set_active_links() too?
-
-Regards,
-Lorenzo
-
->=20
-> johannes
-
---XsTQrGGjvwKiyfIz
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCaa6CuQAKCRA6cBh0uS2t
-rHmNAQCRm3oVOEAILtxk4altC1bjBCYcdGpz/X36AI2ki2CtwwD/fX7W36SmbCat
-AB6rl8QkPD17437chDjHOXTsv5Rm3QE=
-=zXBJ
------END PGP SIGNATURE-----
-
---XsTQrGGjvwKiyfIz--
+johannes
