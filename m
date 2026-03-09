@@ -1,42 +1,45 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70DF834D932
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 06:07:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129FB34DCEE
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 06:07:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773036464; cv=none; b=hgbd89gUaG8cydbq/LK3CXVimjpmHXpDDQrfzhZMjggItiMCpmFQcUnoR8YKbSfYdMP1uZgZNJ9NwA33Jkv8sHcKhqJiNHg60iTu3NNZfAP4YfkyyKsQUZLK+/9zCZ5F3Zo1lQDSXE5P/P2FEbkmUnuCyUU4yHkGihYE26joUkk=
+	t=1773036464; cv=none; b=RFmi0MM7Ibxv1F2ucQA0VsQ0Rddb19YGUVhyOj7ykGavumUJA0HWaCD8FzV+jG8gujWHk12wGGMC1kaZFww00XGrPen+liMb/nYpdf7E1EXt7dGyYxz6SkudKT1NhYGBAyoXdIgmL0uUOLFN5HJyJSD0Hr+85WPwp9JtS1JC78k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773036464; c=relaxed/simple;
-	bh=2DnkMeKmf5KsMk2HIJpjP9XhajSV2q2u73cQwbGqqmQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hwH4UZZJKscFFsN/kMD8pqp2bsFxpsbOZlcq9mi+GdW39sfCQw+mY43dj1MgRGL1/9TMtq5c+0if4ac35rAg69xOBtjFMfxw2QpxAJQocj+cRG6jUyiVuqov4do6qlxU0Z08oMAvuHcMvBTQqQgOeNLPgGxGttuMt0QtU+2kdR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Qn5fF8HH; arc=none smtp.client-ip=46.4.11.11
+	bh=FCeNw9YWD/x1Z1iiiL1av2no30ZSiKs3OAPiDqJoqq8=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Yryj27uXP0yE4iOa1wD1eFqnGqDHsywXKRg4RUaXZyW+f9vMq/aJ01UYHDy4X6XDkrh1VI3Dzddv99HtdCFtRWUE88PzOwNMOhwWmVWLZBzbmTJnFeM8C1CIMBwgVEpRR2Ol9N+lNSopeqgzzoGoJlfl3E7XzTL4MMA3WfgEaS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=sA1yVwqL; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Qn5fF8HH"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="sA1yVwqL"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=XRtb8UXlxJoG8Dp4Z6agtCvg6ELcQXsUXpC3zhul3Ow=; b=Qn5fF8HHSrV/Oe5PPQj1qw2alz
-	IB/e0VGkkDWDXTMq13v1+BY5IyXi12Bi+J1dZgrqLsD8bky6McLtjYw+la7IH7bIu+46G++2QWSMn
-	yH2I2EAZKSvDbMtwoB86YWctqxU4usWtF9/W0qQ0YB8vbpHhF7jL+B+L3Ws3Up1tC5ls=;
+	bh=L2+xUBBpfnoTqkREqqeW30YyzAJv6BYQqgLxp/9xrLg=; b=sA1yVwqLN55RSnEMRw2iCgcRRz
+	QDicUccec1kdms9U2fAjmlpm1Fk3il3O9BZVQuSwTkpoGuF7/hCdzkIlzlt6pEsrBtZ/+Mt20iPqO
+	yoPMtp/euYrx1P8oGuj2AW6cJ59YwToTnzbUZ8RyxXk5XGSey/UbQZZFWpD1kvSnuIFc=;
 Received: from p200300cadf236500000000000000085c.dip0.t-ipconnect.de ([2003:ca:df23:6500::85c] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1vzTmB-00GH43-00;
-	Mon, 09 Mar 2026 07:07:35 +0100
+	id 1vzTmC-00GH43-1b
+	for linux-wireless@vger.kernel.org;
+	Mon, 09 Mar 2026 07:07:36 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Cc: Chad Monroe <chad@monroe.io>
-Subject: [PATCH mt76 01/11] wifi: mt76: fix multi-radio on-channel scanning
-Date: Mon,  9 Mar 2026 06:07:20 +0000
-Message-ID: <20260309060730.87840-1-nbd@nbd.name>
+Subject: [PATCH mt76 05/11] wifi: mt76: abort ROC on chanctx changes
+Date: Mon,  9 Mar 2026 06:07:24 +0000
+Message-ID: <20260309060730.87840-5-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260309060730.87840-1-nbd@nbd.name>
+References: <20260309060730.87840-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -45,79 +48,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Chad Monroe <chad@monroe.io>
+mt76_change_chanctx() calls mt76_phy_update_channel() which switches
+the hardware channel. If ROC is active on the same phy, this switches
+away from the ROC channel and clears offchannel, but leaves ROC state
+intact. Mac80211 still thinks the phy is on the ROC channel.
 
-avoid unnecessary channel switch when performing an on-channel scan
-using a multi-radio device.
+Abort any active ROC before proceeding, matching the pattern already
+used in add, remove, assign, unassign, and switch chanctx functions.
 
-Fixes: c56d6edebc1f ("wifi: mt76: mt7996: use emulated hardware scan support")
-Signed-off-by: Chad Monroe <chad@monroe.io>
-Link: https://patch.msgid.link/20251118102723.47997-1-nbd@nbd.name
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/scan.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mediatek/mt76/channel.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index ff9176cdee3d..89f16c23e352 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -16,7 +16,7 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
- 
- 	clear_bit(MT76_SCANNING, &phy->state);
- 
--	if (dev->scan.chan && phy->main_chandef.chan &&
-+	if (dev->scan.chan && phy->main_chandef.chan && phy->offchannel &&
- 	    !test_bit(MT76_MCU_RESET, &dev->phy.state))
- 		mt76_set_channel(phy, &phy->main_chandef, false);
- 	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
-@@ -87,6 +87,7 @@ void mt76_scan_work(struct work_struct *work)
- 	struct cfg80211_chan_def chandef = {};
- 	struct mt76_phy *phy = dev->scan.phy;
- 	int duration = HZ / 9; /* ~110 ms */
-+	bool offchannel = true;
- 	int i;
- 
- 	if (dev->scan.chan_idx >= req->n_channels) {
-@@ -94,7 +95,7 @@ void mt76_scan_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
+index cfff50892a6e..8d2e72c68c6b 100644
+--- a/drivers/net/wireless/mediatek/mt76/channel.c
++++ b/drivers/net/wireless/mediatek/mt76/channel.c
+@@ -88,6 +88,9 @@ void mt76_change_chanctx(struct ieee80211_hw *hw,
+ 			 IEEE80211_CHANCTX_CHANGE_RADAR)))
  		return;
- 	}
  
--	if (dev->scan.chan && phy->num_sta) {
-+	if (dev->scan.chan && phy->num_sta && phy->offchannel) {
- 		dev->scan.chan = NULL;
- 		mt76_set_channel(phy, &phy->main_chandef, false);
- 		goto out;
-@@ -102,20 +103,26 @@ void mt76_scan_work(struct work_struct *work)
- 
- 	dev->scan.chan = req->channels[dev->scan.chan_idx++];
- 	cfg80211_chandef_create(&chandef, dev->scan.chan, NL80211_CHAN_HT20);
--	mt76_set_channel(phy, &chandef, true);
-+	if (phy->main_chandef.chan == dev->scan.chan) {
-+		chandef = phy->main_chandef;
-+		offchannel = false;
-+	}
++	if (phy->roc_vif)
++		mt76_abort_roc(phy);
 +
-+	mt76_set_channel(phy, &chandef, offchannel);
+ 	cancel_delayed_work_sync(&phy->mac_work);
  
- 	if (!req->n_ssids ||
- 	    chandef.chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR))
- 		goto out;
- 
--	duration = HZ / 16; /* ~60 ms */
-+	if (phy->offchannel)
-+		duration = HZ / 16; /* ~60 ms */
- 	local_bh_disable();
- 	for (i = 0; i < req->n_ssids; i++)
- 		mt76_scan_send_probe(dev, &req->ssids[i]);
- 	local_bh_enable();
- 
- out:
--	if (dev->scan.chan)
-+	if (dev->scan.chan && phy->offchannel)
- 		duration = max_t(int, duration,
- 			         msecs_to_jiffies(req->duration +
- 						  (req->duration >> 5)));
+ 	mutex_lock(&dev->mutex);
 -- 
 2.51.0
 
