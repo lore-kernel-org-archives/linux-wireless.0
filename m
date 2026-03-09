@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B206C34F48D
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 06:07:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DAF6350A3A
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2026 06:07:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773036466; cv=none; b=YLkJ8d0vc35tNnxc3f3HM5rfoATtfBaTE0S1fP56IURsglvrbITk1q9qMYp4RwUpOkEun/ODST5q7M3vqwNUSwMDaElAT3yQFs4mRC0rWb/CufT1603PDUkd+YvCN47dS/o5+ghuoXWmVPG7clnvXbCH+/iHJoZdnEftCNLuZ2s=
+	t=1773036466; cv=none; b=o7LCBsKbtqkFtyfc6gx2a7e3eBxpBFTPHKbnVIGH7qgS7NEew0UjK1Nli26oo8VQQektzxLjc/qnonLltLyxxIzJy3/X48urbQr7eq5WGUSWcVa0jOYgjMODkbJT2Bq9SJ+5kdB7zTuR6A3krPCyaBr6j63Pa63Olm3hUdkbmPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773036466; c=relaxed/simple;
-	bh=cP7JFXRY6S0Xa7b4SGvfo5vhYLNUrbO5ksNC52nDMPM=;
+	bh=p7yJ/X06yXkcHw2lNs8QBEx7rBMDENK11N9uLwv2EQw=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZuF7uEtjTrJL86hZ0j5lmeL4BKtJ19+OXYLe9WXrD+wruN0bJrFLGnNyNET+OJJUJ4d4aSYjhOJuvTAZkRCm0HYUySSn7KlOuWPFHTpXal76Ip5z7zoyGANNBshhzkHqF0vIzKaZO1AJdSlNIUa8LZpkZ/qWgN02PhKFzMdAAH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=HP12uRCl; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=qUOdPpa5d2CSks9YJOJwkPPjlZ1M9fOq0EOWW0cd+ceyDiWsbfc/X0iYjHnlKjwMuoiQNeYLalfEvqdxCed2dXOt+YqbpRWXWGkiPzFBA8oDFprCU/ILGs4Lh/Tgm/z0/siS2Xvo4l3X7XVLkfzmCJ802+/8sazfZvecxuHBwdw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=WE9utbOe; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HP12uRCl"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WE9utbOe"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=TOYqq167cP0xoGc2kzerVbhS4KQUbhHFQ/7PC28fx1Q=; b=HP12uRClMLeWjKvaPkQ5BnPXpd
-	zkYaDFEaIWm/+ICV9Ak45nVlP8JCmC+hWiqOy+XkmQ9WYmh7l+l2s7FOieiINJxNiwd2XhmgkFVyI
-	NKoJ7vuDNFMEr6xgsrD8eXP5QtByGPdDLLblNNiy/vdvn4aEHpbALCqvHQrX2sz+BPQs=;
+	bh=mPoMPLrYwzp9daRpy6G3PqZs/9wJOgn2lAPosJEHLIM=; b=WE9utbOeyMlfH16cxEaity4GWd
+	0GzxSEmaRDLeKGazX2GbeZGvn4TWH1qKECBtSYcm1ED7OxfXwCNS8Ase1wcYFUWQ8ayj9MTq59X8s
+	dBTTKFAxycJEzMTRIQswkDgUim4/ba4ILy1v5CG0S1qcTUN9cybJCcKYrwfM5bRSEI5c=;
 Received: from p200300cadf236500000000000000085c.dip0.t-ipconnect.de ([2003:ca:df23:6500::85c] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1vzTmD-00GH43-0d
+	id 1vzTmD-00GH43-2f
 	for linux-wireless@vger.kernel.org;
 	Mon, 09 Mar 2026 07:07:37 +0100
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 07/11] wifi: mt76: send nullfunc PS frames on offchannel transitions
-Date: Mon,  9 Mar 2026 06:07:26 +0000
-Message-ID: <20260309060730.87840-7-nbd@nbd.name>
+Subject: [PATCH mt76 09/11] wifi: mt76: route nullfunc frames to PSD/ALTX queue
+Date: Mon,  9 Mar 2026 06:07:28 +0000
+Message-ID: <20260309060730.87840-9-nbd@nbd.name>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260309060730.87840-1-nbd@nbd.name>
 References: <20260309060730.87840-1-nbd@nbd.name>
@@ -48,215 +48,38 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Since mt76 uses chanctx, mac80211 does not send nullfunc power save
-notifications when the driver goes offchannel for scan or ROC.
-Add mt76_offchannel_notify() to send nullfunc PM=1 before going
-offchannel and PM=0 after returning, so that the AP can buffer
-frames during the absence.
+ieee80211_is_data() returns true for nullfunc/QoS-nullfunc frames, so
+they bypass the PSD queue routing and go through the regular VO data
+queue. This means firmware processes them through the normal TID queue
+instead of the ALTX queue, which doesn't guarantee immediate
+transmission.
 
-For MLO, iterate all vif links on the phy and set
-IEEE80211_TX_CTRL_MLO_LINK so that the driver's tx_prepare_skb
-resolves the correct per-link wcid.
+Use ieee80211_is_data_present() instead, which returns false for both
+management frames and nullfunc/QoS-nullfunc (no payload), routing them
+to MT_TXQ_PSD. Firmware maps PSD to the ALTX queue, which transmits
+immediately without PS buffering.
+
+This only affects frames from the mt76_tx() pending path. Regular
+mac80211 TXQ scheduling is unchanged.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/channel.c  |  12 ++-
- drivers/net/wireless/mediatek/mt76/mac80211.c | 101 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76.h     |   1 +
- drivers/net/wireless/mediatek/mt76/scan.c     |   7 +-
- 4 files changed, 117 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
-index f42f25101544..3072e11e2688 100644
---- a/drivers/net/wireless/mediatek/mt76/channel.c
-+++ b/drivers/net/wireless/mediatek/mt76/channel.c
-@@ -328,8 +328,10 @@ void mt76_roc_complete(struct mt76_phy *phy)
- 	if (mlink)
- 		mlink->mvif->roc_phy = NULL;
- 	if (phy->chanctx && phy->main_chandef.chan && phy->offchannel &&
--	    !test_bit(MT76_MCU_RESET, &dev->phy.state))
-+	    !test_bit(MT76_MCU_RESET, &dev->phy.state)) {
- 		__mt76_set_channel(phy, &phy->main_chandef, false);
-+		mt76_offchannel_notify(phy, false);
-+	}
- 	mt76_put_vif_phy_link(phy, phy->roc_vif, phy->roc_link);
- 	phy->roc_vif = NULL;
- 	phy->roc_link = NULL;
-@@ -367,6 +369,7 @@ int mt76_remain_on_channel(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt76_phy *phy = hw->priv;
- 	struct mt76_dev *dev = phy->dev;
- 	struct mt76_vif_link *mlink;
-+	bool offchannel;
- 	int ret = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index ab62591b7a26..7b0fae694f12 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -632,7 +632,7 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid,
  
- 	phy = dev->band_phys[chan->band];
-@@ -392,8 +395,11 @@ int mt76_remain_on_channel(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	mlink->mvif->roc_phy = phy;
- 	phy->roc_vif = vif;
- 	phy->roc_link = mlink;
--	ret = __mt76_set_channel(phy, &chandef,
--				 mt76_offchannel_chandef(phy, chan, &chandef));
-+
-+	offchannel = mt76_offchannel_chandef(phy, chan, &chandef);
-+	if (offchannel)
-+		mt76_offchannel_notify(phy, true);
-+	ret = __mt76_set_channel(phy, &chandef, offchannel);
- 	if (ret) {
- 		mlink->mvif->roc_phy = NULL;
- 		phy->roc_vif = NULL;
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 3c539c263238..e6315d35c683 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -2132,3 +2132,104 @@ u16 mt76_select_links(struct ieee80211_vif *vif, int max_active_links)
- 	return sel_links;
- }
- EXPORT_SYMBOL_GPL(mt76_select_links);
-+
-+struct mt76_offchannel_cb_data {
-+	struct mt76_phy *phy;
-+	bool offchannel;
-+};
-+
-+static void
-+mt76_offchannel_send_nullfunc(struct mt76_offchannel_cb_data *data,
-+			      struct ieee80211_vif *vif, int link_id)
-+{
-+	struct mt76_phy *phy = data->phy;
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_sta *sta = NULL;
-+	struct ieee80211_hdr *hdr;
-+	struct mt76_wcid *wcid;
-+	struct sk_buff *skb;
-+
-+	skb = ieee80211_nullfunc_get(phy->hw, vif, link_id, true);
-+	if (!skb)
-+		return;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	if (data->offchannel)
-+		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-+
-+	skb->priority = 7;
-+	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-+
-+	if (!ieee80211_tx_prepare_skb(phy->hw, vif, skb,
-+				      phy->main_chandef.chan->band,
-+				      &sta)) {
-+		ieee80211_free_txskb(phy->hw, skb);
-+		return;
-+	}
-+
-+	if (sta)
-+		wcid = (struct mt76_wcid *)sta->drv_priv;
-+	else
-+		wcid = ((struct mt76_vif_link *)vif->drv_priv)->wcid;
-+
-+	if (link_id >= 0) {
-+		info = IEEE80211_SKB_CB(skb);
-+		info->control.flags &= ~IEEE80211_TX_CTRL_MLO_LINK;
-+		info->control.flags |=
-+			u32_encode_bits(link_id, IEEE80211_TX_CTRL_MLO_LINK);
-+	}
-+
-+	mt76_tx(phy, sta, wcid, skb);
-+}
-+
-+static void
-+mt76_offchannel_notify_iter(void *_data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct mt76_offchannel_cb_data *data = _data;
-+	struct mt76_vif_link *mlink;
-+	struct mt76_vif_data *mvif;
-+	int link_id;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION || !vif->cfg.assoc)
-+		return;
-+
-+	mlink = (struct mt76_vif_link *)vif->drv_priv;
-+	mvif = mlink->mvif;
-+
-+	if (!ieee80211_vif_is_mld(vif)) {
-+		if (mt76_vif_link_phy(mlink) == data->phy)
-+			mt76_offchannel_send_nullfunc(data, vif, -1);
-+		return;
-+	}
-+
-+	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
-+		if (link_id == mvif->deflink_id)
-+			mlink = (struct mt76_vif_link *)vif->drv_priv;
-+		else
-+			mlink = rcu_dereference(mvif->link[link_id]);
-+		if (!mlink)
-+			continue;
-+		if (mt76_vif_link_phy(mlink) != data->phy)
-+			continue;
-+
-+		mt76_offchannel_send_nullfunc(data, vif, link_id);
-+	}
-+}
-+
-+void mt76_offchannel_notify(struct mt76_phy *phy, bool offchannel)
-+{
-+	struct mt76_offchannel_cb_data data = {
-+		.phy = phy,
-+		.offchannel = offchannel,
-+	};
-+
-+	if (!phy->num_sta)
-+		return;
-+
-+	local_bh_disable();
-+	ieee80211_iterate_active_interfaces_atomic(phy->hw,
-+		IEEE80211_IFACE_ITER_NORMAL,
-+		mt76_offchannel_notify_iter, &data);
-+	local_bh_enable();
-+}
-+EXPORT_SYMBOL_GPL(mt76_offchannel_notify);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index fe1c50af460c..bafbc1747673 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -1816,6 +1816,7 @@ struct mt76_vif_link *mt76_get_vif_phy_link(struct mt76_phy *phy,
- 					    struct ieee80211_vif *vif);
- void mt76_put_vif_phy_link(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 			   struct mt76_vif_link *mlink);
-+void mt76_offchannel_notify(struct mt76_phy *phy, bool offchannel);
- 
- /* usb */
- static inline bool mt76u_urb_error(struct urb *urb)
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index 5a67e9b8183a..04cf8a01f20d 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -17,8 +17,10 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
- 	clear_bit(MT76_SCANNING, &phy->state);
- 
- 	if (dev->scan.chan && phy->main_chandef.chan && phy->offchannel &&
--	    !test_bit(MT76_MCU_RESET, &dev->phy.state))
-+	    !test_bit(MT76_MCU_RESET, &dev->phy.state)) {
- 		mt76_set_channel(phy, &phy->main_chandef, false);
-+		mt76_offchannel_notify(phy, false);
-+	}
- 	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
- 	memset(&dev->scan, 0, sizeof(dev->scan));
- 	if (!test_bit(MT76_MCU_RESET, &dev->phy.state))
-@@ -135,12 +137,15 @@ void mt76_scan_work(struct work_struct *work)
- 	if (dev->scan.chan && phy->num_sta && phy->offchannel) {
- 		dev->scan.chan = NULL;
- 		mt76_set_channel(phy, &phy->main_chandef, false);
-+		mt76_offchannel_notify(phy, false);
- 		goto out;
- 	}
- 
- 	dev->scan.chan = req->channels[dev->scan.chan_idx++];
- 	offchannel = mt76_offchannel_chandef(phy, dev->scan.chan, &chandef);
- 
-+	if (offchannel)
-+		mt76_offchannel_notify(phy, true);
- 	mt76_set_channel(phy, &chandef, offchannel);
- 
- 	if (!req->n_ssids)
+ 		if ((dev->drv->drv_flags & MT_DRV_HW_MGMT_TXQ) &&
+ 		    !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
+-		    !ieee80211_is_data(hdr->frame_control) &&
++		    !ieee80211_is_data_present(hdr->frame_control) &&
+ 		    (!ieee80211_is_bufferable_mmpdu(skb) ||
+ 		     ieee80211_is_deauth(hdr->frame_control) ||
+ 		     head == &wcid->tx_offchannel))
 -- 
 2.51.0
 
