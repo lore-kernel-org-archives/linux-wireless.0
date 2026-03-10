@@ -1,39 +1,39 @@
-Received: from mail.avm.de (mail.avm.de [212.42.244.94])
+Received: from mail.avm.de (mail.avm.de [212.42.244.119])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66991477987;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C3E472796;
 	Tue, 10 Mar 2026 11:55:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.94
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143750; cv=none; b=okdiQaCRQ6f4+hnI+Xf0ZIiNY+MkSIMs+SnyXykXO2Z/qjYp0870M9xso1uXjV9IKM69NaG8S86Rk+oMvgbvYTRfJGexb8+g1CgYi5M20k4NHmY76S8bzDv2D229el6xZrRep8v10wih8zl6otF/KQAvF+U8im2zAH97/YWhNqw=
+	t=1773143749; cv=none; b=UrcDOlD+7zWLmEFj9bXEL/pRtdtRHFK142I7dk99eA4nuc0pAVrhJTJi+I6u1MiMYIeOAM0LWYPzTqE8pfWuFV3CQ0pQv8kJG6fUfUtJXcyRqqgYiDpj7V4C5PwiJUPIlOCgjEhApqao9hQUCq7Tq6d11UtDvKvGi9iGdYrn0AE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143750; c=relaxed/simple;
-	bh=7QEjQvc53kHdYvJikGIe0XIqNo63J0gbffxhQyvvDmc=;
+	s=arc-20240116; t=1773143749; c=relaxed/simple;
+	bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Yf30Lg18oDEK+3q7MT/AhxVyPPHV127dtliULxpXWH4CTqUWCEqhppP8jAFod6FNbSXC7+U93u2mSKUpJMhveOEmud0Vv7Xg5nuJibpLO0ABxzVjoLJ4LUoA/Il9duUUfXhgUr+b1DNRlbNctyhbt8osbeTA7hNT/9Cq0Yb3VOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=xkT1xwtn; arc=none smtp.client-ip=212.42.244.94
+	 In-Reply-To:To:Cc; b=IZIFSgxMnvDcw20+31r9qX+AgN0X0tyVBWDHquxdZV+vVzDiNrNkknnSPEiDnGZGkN0Y/iy5NGFDdefm2S4L/I5w1WWJvrQiCqktnTDBr3cyFG6AigcvqrQ4Bt0Duh668BTTljVSJlR+ozp1WCQxvlsdQp/my2Y4GqgDaV+k6k4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=iZgR9Qp/; arc=none smtp.client-ip=212.42.244.119
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="xkT1xwtn"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="iZgR9Qp/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143727; bh=7QEjQvc53kHdYvJikGIe0XIqNo63J0gbffxhQyvvDmc=;
+	t=1773143726; bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=xkT1xwtnaKnF5zwky80U90tVBtgjXUcX+GeykmrAvdmpppC5+8VK/cr2uIrG8dU1M
-	 7wm2m1OyU4JV6u1islMHTFtIiUXXXY5n/w/md+c+5C+f1bhtmzGNVLxiuCLq3+FykP
-	 yZ+BZpZfQ6y4Yx2gZPgoiPOharwFnkzMOEjjrW34=
-Received: from [212.42.244.71] (helo=mail.avm.de)
+	b=iZgR9Qp/lpX/OmreeYrgDIq0nKrn+2xXsmJ+ujKKHWj38gCjeIaXC0HXbLenxcKHn
+	 eZNL4G3CPb7QgYlqv4ksyr0oQNQgvUXSGiVD/dqs5vJU27jmBKVg8iLhZmsc9hNUgC
+	 53HbVKeoFbQObql2T4QVWLDcbSGiyf68GGOL/0jI=
+Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006af-e21d-7f0000032729-7f000001da52-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:27 +0100
-Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
+	id 69b006ad-2367-7f0000032729-7f0000019d92-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:25 +0100
+Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:27 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:25 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:49:07 +0100
-Subject: [PATCH 41/61] pinctrl: Prefer IS_ERR_OR_NULL over manual NULL
- check
+Date: Tue, 10 Mar 2026 12:48:51 +0100
+Subject: [PATCH 25/61] net/bluetooth: Prefer IS_ERR_OR_NULL over manual
+ NULL check
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -42,7 +42,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-41-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-25-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -72,21 +72,23 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Linus Walleij <linusw@kernel.org>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=974; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=7QEjQvc53kHdYvJikGIe0XIqNo63J0gbffxhQyvvDmc=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAZht0v/gzetsO7BqEut/SimpAgjLSUxejqDN
- jYPITjd+qeJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGYQAKCRA0LQZT0ays
- 2w/2B/4pX609pdZXvqHfb+Vqmmi/TuKtxSLe3zgXgKoCJW/gh17vsp/T22wIBqf6SXS4OIznDwc
- CqIbsgeOEAAlNDyBRYAY6KPNdElI/rv3fa2ORfx9RdjhIHa4x5wKb3P01gEbIVxJDT7L+eaQBY5
- W5yNdsizunhdj+FuJcUWkiWweG/sakXiGLIkqX5NlLESVIppvEGGOaxwjbsMisZ9PSaDKihHXQV
- LTJsTcuZgnx6Ly3LMJ0SQkiMEfMsx1Sbu6dG9rRM3ckN2uFTC5HrsnBNmmT4sZqY9FpULICBCkq
- q7sHGVDOpWpuw1oJ3VO2Y9YZsG2cD9KHQpB9olXNSESNKBcu
+Cc: Marcel Holtmann <marcel@holtmann.org>, 
+ Johan Hedberg <johan.hedberg@gmail.com>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1522; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=U4MQ2UyTEtTm9FfUFN8u0E2v86RR/vLyOkwrg7Rl0HM=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAYq6Vp4tN82O3UqmYAB2rCpxamSEi8qzxQbQ
+ a7J5ECg00uJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGKgAKCRA0LQZT0ays
+ 2zTjB/4mjCTr3iXgM6OBkpfxhcEN7EQQZ1y9EXzSAaaFnPJ4J6dbscyHQ/vrwihzqSCkid2ehYX
+ PXWgLr3enkVF+dbM8V9NRPpLg6F53eMyK7CDWQG9AEEJdJq5IDVkThiVxeIs2iOyPBRVnnYWh+Q
+ FhA5NtTEwVLOnsWfWahJLqDe7jVY+yfeXhrX4z5N5WnqSQs4m5vScZRnTkdBPMBPzYgMtNL5igV
+ SF/croNsrnotNJXtafaXYhWm05HCgfm5TNLHJLZIRe+0bC9Er8RwnfgRXEDKBgK6ljnqVy3QgCk
+ bdr+gnx+ukbOMXU8jf2GxeDozNZ6NjdS7QCYNHlx/c+fJCr+
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143727-8E664F2F-77ABA0D5/0/0
+X-purgate-ID: 149429::1773143725-82488E1F-09EB3E40/0/0
 X-purgate-type: clean
-X-purgate-size: 976
+X-purgate-size: 1524
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -96,27 +98,47 @@ check.
 
 Change generated with coccinelle.
 
-To: Linus Walleij <linusw@kernel.org>
-Cc: linux-gpio@vger.kernel.org
+To: Marcel Holtmann <marcel@holtmann.org>
+To: Johan Hedberg <johan.hedberg@gmail.com>
+To: Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- drivers/pinctrl/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/bluetooth/mgmt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pinctrl/core.c b/drivers/pinctrl/core.c
-index b5e97689589fbf1b6750620fc193bc820012be2b..97a80989601abbe969d4b64cb0f3926fd4f291f5 100644
---- a/drivers/pinctrl/core.c
-+++ b/drivers/pinctrl/core.c
-@@ -1991,7 +1991,7 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
- 	device_root = debugfs_create_dir(debugfs_name, debugfs_root);
- 	pctldev->device_root = device_root;
+diff --git a/net/bluetooth/mgmt.c b/net/bluetooth/mgmt.c
+index a7238fd3b03bb54f39af1afee74dc1acd931c324..06d2da67bbe14e17ee478aa939de26526c333d91 100644
+--- a/net/bluetooth/mgmt.c
++++ b/net/bluetooth/mgmt.c
+@@ -4169,7 +4169,7 @@ static void set_default_phy_complete(struct hci_dev *hdev, void *data, int err)
+ 		mgmt_phy_configuration_changed(hdev, cmd->sk);
+ 	}
  
--	if (IS_ERR(device_root) || !device_root) {
-+	if (IS_ERR_OR_NULL(device_root)) {
- 		pr_warn("failed to create debugfs directory for %s\n",
- 			dev_name(pctldev->dev));
- 		return;
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	mgmt_pending_free(cmd);
+@@ -5730,7 +5730,7 @@ static void read_local_oob_data_complete(struct hci_dev *hdev, void *data,
+ 			  MGMT_STATUS_SUCCESS, &mgmt_rp, rp_size);
+ 
+ remove:
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	mgmt_pending_free(cmd);
+@@ -8277,7 +8277,7 @@ static void read_local_oob_ext_data_complete(struct hci_dev *hdev, void *data,
+ 				 mgmt_rp, sizeof(*mgmt_rp) + eir_len,
+ 				 HCI_MGMT_OOB_DATA_EVENTS, cmd->sk);
+ done:
+-	if (skb && !IS_ERR(skb))
++	if (!IS_ERR_OR_NULL(skb))
+ 		kfree_skb(skb);
+ 
+ 	kfree(mgmt_rp);
 
 -- 
 2.43.0
