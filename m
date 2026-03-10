@@ -1,38 +1,38 @@
 Received: from mail.avm.de (mail.avm.de [212.42.244.119])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42D7B421893;
-	Tue, 10 Mar 2026 11:55:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BADED41C30A;
+	Tue, 10 Mar 2026 11:55:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143736; cv=none; b=fCHy4QPJAAtIOe4cvJZmKdncc3xnM1aa7W2k2erlRqOPsHuWgCBNTlxbu0DNrUBvrHNHtqHze3a8auZza1BFLFEyqQAaAQU4DxM5vry51Kuy2tbtc2DYiday7fhhRTqIserI+mlADBOE0Qz10sTITgu9J1FXJ0E8PEJ7hrVq/K8=
+	t=1773143736; cv=none; b=OYEs/pvjKmBeVuWJXZ76bYRQO+zhzJr+zkWuNBOeJ/jmjqFhqcd2BSE0u/nvTjiLrMS9munyN94/I3hK04957ehxglwpJ/kyVLKJJEFQwevvct0+PGisoYgEPQXWQJN6jiLV4QDLrtTM2yp3wm2TYSxxpY26YrOuYcFTV0FOZ/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773143736; c=relaxed/simple;
-	bh=N8ytNu1U36GmBgTPXVAE5/A4s2PfdogY1tJY/l2pxcM=;
+	bh=OPqqHdKZkEBOTA9s0xCv07joTtAqSJfXU2nXlSYlnvo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=bSlcYwcP095yvVrohoYeFqe1oW9yE7hmZr2Xbd7I6sDzci00ZJtnqwlDMZnVezxP4YEihU/GXRBG7sJwKLQN03BPi/BRv+InQ/9u46yfa6l1GxnLmrl/vQY1u8zLp69AfA4TRoONQcnC8vFura+fBtuJFH2D5qoLLY+pLgCzmnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=PHEJo42B; arc=none smtp.client-ip=212.42.244.119
+	 In-Reply-To:To:Cc; b=LfxQVWJG8fWy4eWEiBQ6mIaQFi0SsqycstI+btCcnHT2RK+fNYhQN/NuRElyfyUjasUSavNhiJzd5nRV5quQgoMB/y7PsIu9mhNTjCVKijk8ZJ2Mf2xjRZiMv2KmN3jpTpqoXV4uDbDVB4tJ+LqG/MXmiRGODJTTCDlxEYrp8bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=JnSrJk99; arc=none smtp.client-ip=212.42.244.119
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="PHEJo42B"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="JnSrJk99"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143724; bh=N8ytNu1U36GmBgTPXVAE5/A4s2PfdogY1tJY/l2pxcM=;
+	t=1773143724; bh=OPqqHdKZkEBOTA9s0xCv07joTtAqSJfXU2nXlSYlnvo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=PHEJo42B3PMMNw+D4O57Y3xXAOsnz4uGNQ+k/VswulC/oomzwyEvO98QhnQkZxPaE
-	 y9ukNxQKkVCnm5ZWSv5HseodiuL/UWW+ndWHELpXYRLrc1KJb+1VpqPhQYS4etoAD0
-	 VdX+rZHzbNdCVQj4Ov3KbqOirnpakz/6K9YbcLb0=
+	b=JnSrJk99cMmEll/e0Ny6kdP6d7z5e2adRmc4BQNm0IfEWQA0v8Ia2/4OtczT7zTv0
+	 zuDRp3CXS4OlS3cviAJlMazOv5W3776khhgj6gPjV1UTcdP1jjerFNUOvMmQEoWhNK
+	 cVnCK+DSv1tu32bgvLbIqQqVG4gy8NgWLzdZkaqE=
 Received: from [212.42.244.71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006ac-2367-7f0000032729-7f0000019d22-1
+	id 69b006ac-2367-7f0000032729-7f0000019d12-1
 	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:24 +0100
 Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
 	by mail.avm.de (Postfix) with ESMTPS;
 	Tue, 10 Mar 2026 12:55:24 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:48:38 +0100
-Subject: [PATCH 12/61] quota: Prefer IS_ERR_OR_NULL over manual NULL check
+Date: Tue, 10 Mar 2026 12:48:36 +0100
+Subject: [PATCH 10/61] gfs2: Prefer IS_ERR_OR_NULL over manual NULL check
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-12-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-10-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -71,21 +71,21 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Jan Kara <jack@suse.com>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=763; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=N8ytNu1U36GmBgTPXVAE5/A4s2PfdogY1tJY/l2pxcM=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAX+MICb9QGDh9sr8xrXC0GI/+3a26bt3TCKL
- Vjl33LfQY+JATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAF/gAKCRA0LQZT0ays
- 26n6B/wNFZznKdxnE0qMd12a2eIuA9+krGiImi7olxEd9wOJhsBf8sKwI0E3QgvpW0h7L8AJ/V7
- YwWi88O6oeBiZ3QDKSUmLS/9VlykYZ97N4eOIEzkOMJxki98cx4PncgKAN9Jy63O/7GoZyteCZ7
- +9i83brafUHJWnhfe2dyfef6pp7LRzaCEfdld6TPIgAENhsi0/zr3Pv5hQfjJiyWTNInkfN/Wc9
- eBcVMsl2Zb6jE1xGE/aNpGFG8dNw74geAiaLniVxheZHeJfqzhWkArPaHQ0SYGtCtwd5smdDDAA
- 6BFeqEcljgo2LkEM+gZQjogP088dQYDyFGUkwYA0hLFDBEaT
+Cc: Andreas Gruenbacher <agruenba@redhat.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=893; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=OPqqHdKZkEBOTA9s0xCv07joTtAqSJfXU2nXlSYlnvo=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAX4/dv49K4j89zI86N9JpAw6t8eU0kmPVDxm
+ PT/7+a10hGJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAF+AAKCRA0LQZT0ays
+ 2zIKB/999m4RLBdXe9kckM0CjKr4GcE3BeYjqHOf9Mb/fXRspIYiRhfK/0d76B0wUZ9vMlV+kHN
+ aPugbL3mxS3VAKy9S9eV+9mHhq2ovSgAXuPOSy8/qOTGHUqDaNzk/2uQki9ZfnbI3N1QVu0zj5x
+ 8blYFqhhVL5JzTcz+RG+KziT6t1xXKbIKoya+t7T6UrNg4H5H2bWy4EaQ7+S0qT/OwwuCndJ5uT
+ z17dIMTDIfQoeXt9rkvrr2Ft1Brl0Ry1Iiv5kD+CcJTipZJNdlQgICgttnzL/8iG0G6ksTSjehE
+ 819EPypp6/ZxNz8oLOAo07gCKojS6jLLwc/BvUWqoKOgacEb
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143724-794FAE1F-8D9A4D71/0/0
+X-purgate-ID: 149429::1773143724-9BCBFE1F-865D3B73/0/0
 X-purgate-type: clean
-X-purgate-size: 765
+X-purgate-size: 895
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -95,26 +95,27 @@ check.
 
 Change generated with coccinelle.
 
-To: Jan Kara <jack@suse.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: gfs2@lists.linux.dev
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- fs/quota/quota.c | 2 +-
+ fs/gfs2/glock.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 33bacd70758007129e0375bab44d7431195ec441..2e09fc247d0cf45b9e83a4f8a0be7ea694c8c2a1 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -965,7 +965,7 @@ SYSCALL_DEFINE4(quotactl, unsigned int, cmd, const char __user *, special,
- 	else
- 		drop_super_exclusive(sb);
- out:
--	if (pathp && !IS_ERR(pathp))
-+	if (!IS_ERR_OR_NULL(pathp))
- 		path_put(pathp);
- 	return ret;
- }
+diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
+index 2acbabccc8adf957e02845041193502a96370a6d..8ed6b4535a728e217e5cec7b64488583b5737c58 100644
+--- a/fs/gfs2/glock.c
++++ b/fs/gfs2/glock.c
+@@ -2013,7 +2013,7 @@ static void glock_hash_walk(glock_examiner examiner, const struct gfs2_sbd *sdp)
+ 	do {
+ 		rhashtable_walk_start(&iter);
+ 
+-		while ((gl = rhashtable_walk_next(&iter)) && !IS_ERR(gl)) {
++		while (!IS_ERR_OR_NULL((gl = rhashtable_walk_next(&iter)))) {
+ 			if (glock_sbd(gl) == sdp)
+ 				examiner(gl);
+ 		}
 
 -- 
 2.43.0
