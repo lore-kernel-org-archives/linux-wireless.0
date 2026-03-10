@@ -1,38 +1,38 @@
-Received: from mail.avm.de (mail.avm.de [212.42.244.120])
+Received: from mail.avm.de (mail.avm.de [212.42.244.119])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 054BB3815F3;
-	Tue, 10 Mar 2026 11:55:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.120
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC49244E045;
+	Tue, 10 Mar 2026 11:55:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143738; cv=none; b=fyvO87NAfM+kd043EBmxARpdGwMuTcbpiMzsUROEV2NrLDoLcSxhYyscfr+LITh6uYbHhg1H/T/vDkhagIoGPpSQKOgMqMLhcnauCoJLfvAFmk7zcRPlBghKfVlOG7d72ysAkBdrvnX+klaxzdZIuTidRZ7wlouKj64KhXGobgE=
+	t=1773143741; cv=none; b=j2uWYNXFSI9umfzQIdLLhr6Va+alBR6kvAooltTt+D1MWD/Kd8Pi0dWqNy864XhGYerRPVV7+a3hW8EAY6+2M93/xW74swmcwLODM7PZ1FU+cRSeqGUVi3btXxKXS3c7ZK8ODCZAbi1HkPmuaPiC2iurquAm+LmkIu3cz/z3ovQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143738; c=relaxed/simple;
-	bh=FEizU4OZfQ9wQ3wvLqHfhAD95k5qump7I9MIi0BZQKk=;
+	s=arc-20240116; t=1773143741; c=relaxed/simple;
+	bh=4BhjLgHklMOlrlh15TjcKsWCe6nSKPYF24qnetdWXbg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Xr1CEIA90Um5zlLKYG2BiaU2PMPWnHHxK/Pp7A+KhJ90xlNTuZzP2RBV6zs97aJ6kiRAQXubms6IWjJ1uSR+8RVGFbR8wrZ8Xq+L9Vi2RyCTwYfq1e5zk/DKoKIfS9BOBfGjZ7adwKGrHJAU0TTgUqARf/m+/F90GFds4btoI/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=c82oZww+; arc=none smtp.client-ip=212.42.244.120
+	 In-Reply-To:To:Cc; b=GfeiDWYlD2BPEUa2dFmirqkLimBPJWF5XFz6ZPfAuClxmM/KRpu07g7YbDYWelJd2E0I9r4qKrRfIcV01xeROTzF7DspL8UnFcSyxtgsnZ9EZUrz9o7/Vi/Ry8UY8P5MboOhw1ggdce43U542uJY/rsQpQ65Q6wi/d7ZrB+62LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=Kcmi7CgR; arc=none smtp.client-ip=212.42.244.119
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="c82oZww+"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="Kcmi7CgR"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143723; bh=FEizU4OZfQ9wQ3wvLqHfhAD95k5qump7I9MIi0BZQKk=;
+	t=1773143725; bh=4BhjLgHklMOlrlh15TjcKsWCe6nSKPYF24qnetdWXbg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=c82oZww+lbU7eZObn0mHUt/ADXguyvPmkp2WwW/65C3ed8qK4CrmSOXbL/rxqWo/H
-	 HKG+pWVZvsl6IpGhznfWOx6hJ1AAdBwPsr7jljQeOBME8xsUoXvflN8IbfY9LpDRDp
-	 SnXibb3lMvX93fGmfIgXDUv1W+rDlHH1cledzz28=
+	b=Kcmi7CgRdrgX5T/CgxZGIDhbBC+WyStvPKOs47T7DPw5F6C84CqeRqBLtWYK4R9B1
+	 z0ZLys5/SnZ8XMcnvQp6VNBfPyNKHnLSFAZ93qiX8TUnR1lbQsG/F5bSVHrhCLDwCs
+	 DoRBho47YIm6ObGkLTfE5xwbjzMxed0ZJ7VxGPIk=
 Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006aa-b734-7f0000032729-7f000001bf9c-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:23 +0100
+	id 69b006ac-2367-7f0000032729-7f0000019d4a-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:24 +0100
 Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:22 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:24 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:48:29 +0100
-Subject: [PATCH 03/61] ceph: Prefer IS_ERR_OR_NULL over manual NULL check
+Date: Tue, 10 Mar 2026 12:48:43 +0100
+Subject: [PATCH 17/61] module: Prefer IS_ERR_OR_NULL over manual NULL check
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-3-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-17-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -71,22 +71,23 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Ilya Dryomov <idryomov@gmail.com>, Alex Markuze <amarkuze@redhat.com>, 
- Viacheslav Dubeyko <slava@dubeyko.com>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1465; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=FEizU4OZfQ9wQ3wvLqHfhAD95k5qump7I9MIi0BZQKk=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAXdroDlhymGqsGkbn1SZv53cw4YuzOIIwtui
- bzXW6sBBQWJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAF3QAKCRA0LQZT0ays
- 2/1wB/sGTAYBPIahrXD3EXFQ9FcpHqqnw1r9sZLiba/u035gmw5LoaZhwTxHDBskl2iaWkVnIXz
- Iy7Anuu/HF1GBhMkP4ZE553CQedkoQLkwUxzFneqcFtg8dEj/bcSSJoqNhuTbcFTeYPFZ2FuuJR
- mi6wxSHOtk1jHNn9K4y3/ujXKX8zNKkMQCDkESe1H1kZKzWifi4aoEVftzahJtLslDJIa2qDL4i
- OSDOnojL7uRKrSwdvp+XJGBIrrn9XWylS2+dg5zaohBqwfc9ulGK+fMI3nM/n2Gqrv2OPrXEBM6
- 17i7pbPmqS6afMN4bPYcsNPNwynB+aJ8jBm/4wPpjycn86fZ
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Petr Pavlu <petr.pavlu@suse.com>, 
+ Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
+ Aaron Tomlin <atomlin@atomlin.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1087; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=4BhjLgHklMOlrlh15TjcKsWCe6nSKPYF24qnetdWXbg=;
+ b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAYP1zVxsf2YMTk3nHod4kxayUyKVXG5YGkG6
+ XkvhcJVQpuJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGDwAKCRA0LQZT0ays
+ 29zxB/9Vdu5hjf1A8B4GpfddcKXgGOm+ASeWeBg79jEgG19UwsDASm00GiT7wXrv7TVWglbpyDv
+ ECLvIdXvLb6GFPl24e5Q/Ve/2lM6CN8TnFAQr/bcz+KkA4Hn7jXYyv6h9374/TPjeoBNkjjuKzc
+ 49rS3Zyn2ZE1N/pwblhVtNHW7x2/CX8DXUg689bp4h2f5jZ7vjpU/WwSX1p72SC1Tlm0gsvFFTb
+ dPTe/Bl9fdCyXVd1WxpdGHGUoYwBsXbIz5EfKpJdHSyW9Ymon48BTvBc3UoZP4hxtotyJKui89/
+ eL7nz+He7k3GWFJ6LNunqb0XsBSbt8hh3S6Sw1Py47Sdhmn3
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143723-735C7A3D-6F9C64C1/0/0
+X-purgate-ID: 149429::1773143724-B8CB5E1F-2E62FAB1/0/0
 X-purgate-type: clean
-X-purgate-size: 1467
+X-purgate-size: 1089
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -96,43 +97,31 @@ check.
 
 Change generated with coccinelle.
 
-To: Ilya Dryomov <idryomov@gmail.com>
-To: Alex Markuze <amarkuze@redhat.com>
-To: Viacheslav Dubeyko <slava@dubeyko.com>
-Cc: ceph-devel@vger.kernel.org
+To: Luis Chamberlain <mcgrof@kernel.org>
+To: Petr Pavlu <petr.pavlu@suse.com>
+To: Daniel Gomez <da.gomez@kernel.org>
+To: Sami Tolvanen <samitolvanen@google.com>
+To: Aaron Tomlin <atomlin@atomlin.com>
+Cc: linux-modules@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- fs/ceph/dir.c  | 2 +-
- fs/ceph/snap.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ kernel/module/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/ceph/dir.c b/fs/ceph/dir.c
-index 86d7aa594ea99335af3e91a95c0a418fdc1b8a8a..934250748ae4fd4c148fd27bdf91175047c2877d 100644
---- a/fs/ceph/dir.c
-+++ b/fs/ceph/dir.c
-@@ -889,7 +889,7 @@ int ceph_handle_notrace_create(struct inode *dir, struct dentry *dentry)
- {
- 	struct dentry *result = ceph_lookup(dir, dentry, 0);
- 
--	if (result && !IS_ERR(result)) {
-+	if (!IS_ERR_OR_NULL(result)) {
- 		/*
- 		 * We created the item, then did a lookup, and found
- 		 * it was already linked to another inode we already
-diff --git a/fs/ceph/snap.c b/fs/ceph/snap.c
-index 52b4c2684f922bfed39550311e793bfe3622cd26..528ad581be160713f91416115659e2dc6f259576 100644
---- a/fs/ceph/snap.c
-+++ b/fs/ceph/snap.c
-@@ -902,7 +902,7 @@ int ceph_update_snap_trace(struct ceph_mds_client *mdsc,
- bad:
- 	err = -EIO;
- fail:
--	if (realm && !IS_ERR(realm))
-+	if (!IS_ERR_OR_NULL(realm))
- 		ceph_put_snap_realm(mdsc, realm);
- 	if (first_realm)
- 		ceph_put_snap_realm(mdsc, first_realm);
+diff --git a/kernel/module/main.c b/kernel/module/main.c
+index c3ce106c70af165e2dc1a3c79f5a074a5c3e3d34..7f62f0620dcd75960e431f7af3d1cadf4cc41e4b 100644
+--- a/kernel/module/main.c
++++ b/kernel/module/main.c
+@@ -1551,7 +1551,7 @@ static int simplify_symbols(struct module *mod, const struct load_info *info)
+ 		case SHN_UNDEF:
+ 			ksym = resolve_symbol_wait(mod, info, name);
+ 			/* Ok if resolved.  */
+-			if (ksym && !IS_ERR(ksym)) {
++			if (!IS_ERR_OR_NULL(ksym)) {
+ 				sym[i].st_value = kernel_symbol_value(ksym);
+ 				break;
+ 			}
 
 -- 
 2.43.0
