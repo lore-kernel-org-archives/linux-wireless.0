@@ -1,39 +1,38 @@
-Received: from mail.avm.de (mail.avm.de [212.42.244.119])
+Received: from mail.avm.de (mail.avm.de [212.42.244.120])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0F19478869;
-	Tue, 10 Mar 2026 11:55:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.119
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC454480967;
+	Tue, 10 Mar 2026 11:55:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.42.244.120
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773143751; cv=none; b=rHSRhsXkLkZ7GsblTXITMQcbLbveHY8R7Nmb5OGmtZq+E8xrfHs+NByBa1LxaeJ06dEvaottrd4/0c5Utt/uNOFXB9Xc8LJ1RsNHE3X+VA4qVW4Ucd4iAUyZO4f2CkKzl4O2JUkCLNKS7g2FIeNHCq2xAkgos3XfhbC4QrQlIUI=
+	t=1773143757; cv=none; b=iZkmxEfcPEU/CX7u8LrlWxHSuwhOxdvm9AETOsiGd/GvkzB2KerNDDISewUj1pcF1YxaeVPaFFCymPHGXOYF0BPGleVs8RyWZaJCqY1PxT+MDD69+rzdMU9rcMb8IgNOCiCfZ6kMCmb02e/mXBvnxBmkG46Cqh3kI22Wov9Ta/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773143751; c=relaxed/simple;
-	bh=uPgyjK+s+NGMdE+cG5MPshRhc7ZZgUWwr7PoRjCZSpk=;
+	s=arc-20240116; t=1773143757; c=relaxed/simple;
+	bh=ZbyyRff0LT6QULh5d8SMPc41iTaBzP0/3JVOQy1bx0k=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=q2a2TvZXQgmW2GyCk65SRwAM8raSVzZ/mKB01kBOePht2sbqluYIudF3KYuiVSBN7Y0mczkf/iQF+fhm01G9bNf5+7OV9BYNCv7ecVrR7XEdGNrkYml9NZqGHpSiZ8GDpQOzSvDr9SpPJg2rxgNxTg13FTdqIzs9IuFNzDk3KrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=LL5fkEPt; arc=none smtp.client-ip=212.42.244.119
+	 In-Reply-To:To:Cc; b=qYx1vJUBQgtY6rESLHnE1KGikGSnYYF2/pAk8Q4ExfI9Qr+pZrK1s9Ea0EvTgahnFtvOSm4xQT3r7N5A9aNJqGIcUZdLfCW9IcdSaXBEGNf+6ILTo2E9bmTYs4m8vCSWjvQF04mH9c2uPEMOqcLd5Wu+buIVjgZIyy2NLnIrdJk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de; spf=pass smtp.mailfrom=avm.de; dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b=HV8nrF4k; arc=none smtp.client-ip=212.42.244.120
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=avm.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=avm.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="LL5fkEPt"
+	dkim=pass (1024-bit key) header.d=avm.de header.i=@avm.de header.b="HV8nrF4k"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=avm.de; s=mail;
-	t=1773143726; bh=uPgyjK+s+NGMdE+cG5MPshRhc7ZZgUWwr7PoRjCZSpk=;
+	t=1773143727; bh=ZbyyRff0LT6QULh5d8SMPc41iTaBzP0/3JVOQy1bx0k=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=LL5fkEPtuV9CbSpN4lCeRhwj9wOtYG14bBrYQwlDsOiRDOGvFMxFrXR7ICbQv7yjD
-	 Nh2HAS9PUSY6cF2/IYciLO3m4j1I9tMFQwKZtaHKKl6PFiu+Ec72Q+OEgh5iBsI71c
-	 w1fC3wa9FfW9t6cnmITmf5Kz51IBZsPxU1ekALWo=
-Received: from [212.42.244.71] (helo=mail.avm.de)
+	b=HV8nrF4k8f8j1nqCXCo11OycnQoLgSJ9E+iEvd5pugXzP6VQoTJpM3fnKn+IdxmfS
+	 GuEf8SJsm6Aj2OJiTdvqet18rFTZDh3+xLvd8WXhX3ExeglzL5A0LB1MTyjdEUg5vI
+	 SXPZf1SpChG18sz+QPMqBgkzimh/yol90pGz3iF0=
+Received: from [2001:bf0:244:244::71] (helo=mail.avm.de)
 	by mail.avm.de with ESMTP (eXpurgate 4.55.2)
 	(envelope-from <phahn-oss@avm.de>)
-	id 69b006ad-2367-7f0000032729-7f0000019da0-1
-	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:25 +0100
-Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [212.42.244.71])
+	id 69b006ae-b734-7f0000032729-7f000001c0b6-1
+	for <multiple-recipients>; Tue, 10 Mar 2026 12:55:26 +0100
+Received: from mail-auth.avm.de (dovecot-mx-01.avm.de [IPv6:2001:bf0:244:244::71])
 	by mail.avm.de (Postfix) with ESMTPS;
-	Tue, 10 Mar 2026 12:55:25 +0100 (CET)
+	Tue, 10 Mar 2026 12:55:26 +0100 (CET)
 From: Philipp Hahn <phahn-oss@avm.de>
-Date: Tue, 10 Mar 2026 12:48:55 +0100
-Subject: [PATCH 29/61] net/sctp: Prefer IS_ERR_OR_NULL over manual NULL
- check
+Date: Tue, 10 Mar 2026 12:49:15 +0100
+Subject: [PATCH 49/61] media: Prefer IS_ERR_OR_NULL over manual NULL check
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -42,7 +41,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260310-b4-is_err_or_null-v1-29-bd63b656022d@avm.de>
+Message-Id: <20260310-b4-is_err_or_null-v1-49-bd63b656022d@avm.de>
 References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 In-Reply-To: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
 To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com, 
@@ -72,24 +71,23 @@ To: amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
  sched-ext@lists.linux.dev, target-devel@vger.kernel.org, 
  tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev, 
  Philipp Hahn <phahn-oss@avm.de>
-Cc: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>, 
- Xin Long <lucien.xin@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1169; i=phahn-oss@avm.de;
- h=from:subject:message-id; bh=uPgyjK+s+NGMdE+cG5MPshRhc7ZZgUWwr7PoRjCZSpk=;
- b=owEBbQGS/pANAwAKATQtBlPRrKzbAcsmYgBpsAY4baP8me9X19X7pKru5bhCt+OcLVsbTz9gw
- 3EXL2x+9HiJATMEAAEKAB0WIQQ5bPBtrWDUcDQCppg0LQZT0ays2wUCabAGOAAKCRA0LQZT0ays
- 20eCB/9R10a8QtWnOE8FDIK68et8w+x4vBIl7DAH3ljWsVvEsJtllIM7WoriXoMKcy69weBfdTt
- udsIaDDf3FpSbi6d23LNVWvY7/j8StHi4Mb7YRTkDtjVuH7qFkxhMIEkO0P72RZbdjNmUsWZOT+
- 4yfdZZ4sqiFeE73LKQ05t8sm9/1XHgZKcnk5I6ebEYNeQeVfoiugFSvaTmWSBPUItBis/2y3N1h
- 19AfztgUerK/fadW7Y/vZ3pDRpIi5ZAslPLWaCgGa6B5OoDoVAvOz5XPc/Ut45LGyZkJYA2qiTr
- TmaKunQohnKINyK0THlxz9DBNJM47y+p9em5r+zCNMTJFQSn
+Cc: Shuah Khan <skhan@linuxfoundation.org>, 
+ Kieran Bingham <kieran.bingham@ideasonboard.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1137; i=phahn-oss@avm.de;
+ h=from:subject:message-id; bh=ZbyyRff0LT6QULh5d8SMPc41iTaBzP0/3JVOQy1bx0k=;
+ b=owGbwMvMwMVoossWfHHNmtuMp9WSGDI3sNXOaG8LSpQxY8hSPVKqIh1pc5sxIOPz7VZbeXXdX
+ ZHfDi7vZDRmYWDkYpAVU2SxzPmQuzbhSoEJ07IZMINYmUCmMHBxCsBETr7kYJhV9Mu9xk6ccYGt
+ z5eI8srl4dfXXYqUXRzEX+fI1uJjH6WxrLeo7biojv5WpVXreE2zezbYn9tpWFQcfdhA7GboGts
+ YsRtM2Sv+M4kcacuwnNqZvb/GZGJWrZS8LE8bh/QGFvGyvRsUfnm1/N3xyXReUlT8crHiVPEW88
+ th9t3G59lklUJeXporbNhhPOddhfW2O0w/bnRvOz2h//fC3tr8X+mn7tezeLhE/9TY8ugub9qq6
+ ED20BjzW2dmxov+rXp6lOvAkub/n+Z/6nD5cFX/zdFNpRcPRKxfsPR8nlf6/VdXbs812Sme8b7r
+ xv6PtjP3CotJpB81uFK+Mnp2gw1/TIQQc7bV7OyuT17mAA==
 X-Developer-Key: i=phahn-oss@avm.de; a=openpgp;
  fpr=58AF7C2E007CDBE62C59E078F50EFDCF8AD04B1A
-X-purgate-ID: 149429::1773143725-1CCB5E1F-58F0DA51/0/0
+X-purgate-ID: 149429::1773143726-C8585A3D-9FEF7DDF/0/0
 X-purgate-type: clean
-X-purgate-size: 1171
+X-purgate-size: 1139
 X-purgate-Ad: Categorized by eleven eXpurgate (R) https://www.eleven.de
 X-purgate: This mail is considered clean (visit https://www.eleven.de for further information)
 X-purgate: clean
@@ -99,34 +97,29 @@ check.
 
 Change generated with coccinelle.
 
-To: Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-To: Xin Long <lucien.xin@gmail.com>
-To: "David S. Miller" <davem@davemloft.net>
-To: Eric Dumazet <edumazet@google.com>
-To: Jakub Kicinski <kuba@kernel.org>
-To: Paolo Abeni <pabeni@redhat.com>
-To: Simon Horman <horms@kernel.org>
-Cc: linux-sctp@vger.kernel.org
-Cc: netdev@vger.kernel.org
+To: Shuah Khan <skhan@linuxfoundation.org>
+To: Kieran Bingham <kieran.bingham@ideasonboard.com>
+To: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-media@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Signed-off-by: Philipp Hahn <phahn-oss@avm.de>
 ---
- net/sctp/socket.c | 2 +-
+ drivers/media/test-drivers/vimc/vimc-streamer.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/sctp/socket.c b/net/sctp/socket.c
-index 05fb00c9c33576d1e18ee31c34974d8b76efa768..a0596c94be4ad6afae6be13adb3bce17140264e9 100644
---- a/net/sctp/socket.c
-+++ b/net/sctp/socket.c
-@@ -5349,7 +5349,7 @@ struct sctp_transport *sctp_transport_get_idx(struct net *net,
- 	if (!pos)
- 		return SEQ_START_TOKEN;
- 
--	while ((t = sctp_transport_get_next(net, iter)) && !IS_ERR(t)) {
-+	while (!IS_ERR_OR_NULL((t = sctp_transport_get_next(net, iter)))) {
- 		if (!--pos)
- 			break;
- 		sctp_transport_put(t);
+diff --git a/drivers/media/test-drivers/vimc/vimc-streamer.c b/drivers/media/test-drivers/vimc/vimc-streamer.c
+index 15d863f97cbf96b7ca7fbf3d7b6b6ec39fcc8ae3..da5aca50bcb4990c06f28e5a883eb398606991e9 100644
+--- a/drivers/media/test-drivers/vimc/vimc-streamer.c
++++ b/drivers/media/test-drivers/vimc/vimc-streamer.c
+@@ -167,7 +167,7 @@ static int vimc_streamer_thread(void *data)
+ 		for (i = stream->pipe_size - 1; i >= 0; i--) {
+ 			frame = stream->ved_pipeline[i]->process_frame(
+ 					stream->ved_pipeline[i], frame);
+-			if (!frame || IS_ERR(frame))
++			if (IS_ERR_OR_NULL(frame))
+ 				break;
+ 		}
+ 		//wait for 60hz
 
 -- 
 2.43.0
