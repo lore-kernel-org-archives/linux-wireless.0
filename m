@@ -1,50 +1,54 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7436B28640C
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2026 08:02:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153CB3ECBF1
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2026 08:02:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773129770; cv=none; b=sm4LU+Ra8LwFJXFCUlndQWotY4Ru/3LMtff8m2007qabjGDG3msxz8hxrNlUipzeLAgCsX41d6MmaMe/Qca7JQWkqo9h76+PideTK3deYljVRzju3NMmZVgMTHBP8V+RjHrPojhlEmjwyNTm4i5K35WmDfcWVCN9Rzlpsn5GUVM=
+	t=1773129777; cv=none; b=i24/im83m30/sqzypPcfAnvhfdTCVO5UHkpNlzp3fPTCwodGLl0Dxg4QGG+MnxC9470gJw2100xrP+uLRZZq4kGHhBaDa5jhCSuLkCqgse+JB/dM0/2nFVpmZAgFz+6TgdfGK3jvQKHaCR7v7GAeu+/44n1J5SKyheJ0jxs8cDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773129770; c=relaxed/simple;
-	bh=btjsrDnRblUsmgJX3H4xfEOsuzTrEhAQjAuKBa59XOg=;
+	s=arc-20240116; t=1773129777; c=relaxed/simple;
+	bh=8yal0697GZWsEu/QjZtReN64oPPOimryfgiUSU1nzOE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tCv9b2ahR/9b9NnG8IA1GoZx4FmOVefqvc1lWxpDq2zewEk2Crdp6g62iAsbx4nida9D4pDXnOQUammums9vmIfm+bU1ZvwzR52nvksCTlXkUNO9O0birwa4QH309ZPtxxsQDzDq6u6AoQJwGk/9xKbUH5AZS+2GBr9p9VAkjzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Uazjb7Eg; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=CdwJIHnWOi+50xjgiQ2pvkrTiBgAxkndfNjjLrziJvIQL3FuSO4O0MmSfZmLlKM3KWuEnUS256J02xPpAihL8tiI2LfrIku21GVUWrMrp/e+BSPr8TTRXRSFOPJfmAyUh8IQ6hMqkND5rCfGx1RUhoyy47IPT9wbzuzxzOj1D88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=FlNfD9BI; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Uazjb7Eg"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 62A82m2V22211364, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="FlNfD9BI"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 62A82spyE2211393, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1773129768; bh=IwZDvq6nO0xAYmj96bHLoOyscc0dW5oprvVdZAKhoBU=;
+	t=1773129774; bh=2PRPKamk1kHWiu1NGCElAw8BeEs5U6DaEZl5WuDqvII=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=Uazjb7EgQPTztsSrWV/DFxn8w770Pdfax8KFVmZLxXmgv2YAvErGUQKxCZaBCS+t+
-	 uxnTgVBH1HbMRTYFUQ1UOt/bg6G/rU1pS6rqpmJugarRrfvOMn8ym6u5z7vqsAFlh9
-	 KbZQZQ0DjEjTyGH5xytb6m4T0hSwPqlxgBJ+hpjAmqRB5oUbyNc9ENLndc05Js2cr/
-	 VIjokTfzo59U92ecInIENHI6v+7/1wXArugmefTlwPmhieEkQhjvCc5q+JLw34TINY
-	 HGuWv+N1vc/OGuHZv2+b7Z8ku2K603KtPRVi6Z2qX7CqclWn0Y6nuvffi/lITB0hDZ
-	 GaVjkU4pPar2g==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 62A82m2V22211364
+	b=FlNfD9BIJEVyZOpUMwXDqCRyUKJwR40PybBVoBulwLSpoSEdR9j5+Gvn1jh14cIk7
+	 zhOYjkAI9F5uSzKaM/zsr8UaHUBrpZHIj0PZhS3WtLfbH/nzCFwITp9d1iYr7qHytv
+	 +l6Jbsr1rbVdVk8OgRXls3ya5VAz6ebDjXkPV74hTe1/uA6dFiMACBzG1VP0cE9j08
+	 rGDCStKgOeRpH1WSQLBe9Li67ehBQruIlzrbpqneXRVUdpgdxQ+kposCyf31ewiqvz
+	 X29rCcN2tJlABsQjNMtFHe+OXhZHJBENobLJeWo4TDeva0e+ps/0NrP1ujzJlQ+1U9
+	 Mm/ZNGWnFu7Ag==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.21/5.94) with ESMTPS id 62A82spyE2211393
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2026 16:02:48 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2026 16:02:54 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 10 Mar 2026 16:02:46 +0800
+ 15.2.1748.10; Tue, 10 Mar 2026 16:02:54 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Tue, 10 Mar 2026 16:02:52 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
  (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Tue, 10 Mar 2026 16:02:46 +0800
+ Transport; Tue, 10 Mar 2026 16:02:52 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <timlee@realtek.com>, <phhuang@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 09/13] wifi: rtw89: wow: add retry for ensuring packet are processed
-Date: Tue, 10 Mar 2026 16:01:42 +0800
-Message-ID: <20260310080146.31113-10-pkshih@realtek.com>
+Subject: [PATCH rtw-next 10/13] wifi: rtw89: replace RF mutex with wiphy lock assertion
+Date: Tue, 10 Mar 2026 16:01:43 +0800
+Message-ID: <20260310080146.31113-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260310080146.31113-1-pkshih@realtek.com>
 References: <20260310080146.31113-1-pkshih@realtek.com>
@@ -57,65 +61,98 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Chin-Yen Lee <timlee@realtek.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Before entering WoWLAN mode, the driver must ensure that
-all received packets have been processed to prevent packet
-loss. Consequently, a retry mechanism has been implemented
-to guarantee completion.
+Now, stack has introduced wiphy lock. And, the normal paths calling
+RF read/write should be under wiphy lock. So, replace RF mutex with
+wiphy lock assertion. Besides, in dbgfs paths, add the corresponding
+lock option.
 
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/mac.c | 15 ++++++++++++++-
- drivers/net/wireless/realtek/rtw89/mac.h |  1 +
- 2 files changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw89/core.c  |  2 --
+ drivers/net/wireless/realtek/rtw89/core.h  | 14 ++++----------
+ drivers/net/wireless/realtek/rtw89/debug.c |  6 +++---
+ 3 files changed, 7 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
-index a292a14394b2..35fd18fe6470 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac.c
-@@ -7183,7 +7183,7 @@ int rtw89_mac_ptk_drop_by_band_and_wait(struct rtw89_dev *rtwdev,
- 	return ret;
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 6ab99a3577f3..18dbf3664f0a 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -6147,7 +6147,6 @@ int rtw89_core_init(struct rtw89_dev *rtwdev)
+ 		return -ENOMEM;
+ 	spin_lock_init(&rtwdev->ba_lock);
+ 	spin_lock_init(&rtwdev->rpwm_lock);
+-	mutex_init(&rtwdev->rf_mutex);
+ 	rtwdev->total_sta_assoc = 0;
+ 
+ 	rtw89_init_wait(&rtwdev->mcc.wait);
+@@ -6206,7 +6205,6 @@ void rtw89_core_deinit(struct rtw89_dev *rtwdev)
+ 	__rtw89_fw_free_all_early_h2c(rtwdev);
+ 
+ 	destroy_workqueue(rtwdev->txq_wq);
+-	mutex_destroy(&rtwdev->rf_mutex);
+ }
+ EXPORT_SYMBOL(rtw89_core_deinit);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
+index 01573150ab3c..ce04ecaa3a5e 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.h
++++ b/drivers/net/wireless/realtek/rtw89/core.h
+@@ -6182,8 +6182,6 @@ struct rtw89_dev {
+ 	refcount_t refcount_ap_info;
+ 
+ 	struct list_head rtwvifs_list;
+-	/* used to protect rf read write */
+-	struct mutex rf_mutex;
+ 	struct workqueue_struct *txq_wq;
+ 	struct work_struct txq_work;
+ 	struct delayed_work txq_reinvoke_work;
+@@ -6808,22 +6806,18 @@ static inline u32
+ rtw89_read_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 	      u32 addr, u32 mask)
+ {
+-	u32 val;
+-
+-	mutex_lock(&rtwdev->rf_mutex);
+-	val = rtwdev->chip->ops->read_rf(rtwdev, rf_path, addr, mask);
+-	mutex_unlock(&rtwdev->rf_mutex);
++	lockdep_assert_wiphy(rtwdev->hw->wiphy);
+ 
+-	return val;
++	return rtwdev->chip->ops->read_rf(rtwdev, rf_path, addr, mask);
  }
  
--int rtw89_mac_cpu_io_rx(struct rtw89_dev *rtwdev, bool wow_enable)
-+static int _rtw89_mac_cpu_io_rx(struct rtw89_dev *rtwdev, bool wow_enable)
+ static inline void
+ rtw89_write_rf(struct rtw89_dev *rtwdev, enum rtw89_rf_path rf_path,
+ 	       u32 addr, u32 mask, u32 data)
  {
- 	struct rtw89_mac_h2c_info h2c_info = {};
- 	struct rtw89_mac_c2h_info c2h_info = {};
-@@ -7206,6 +7206,19 @@ int rtw89_mac_cpu_io_rx(struct rtw89_dev *rtwdev, bool wow_enable)
- 	return ret;
+-	mutex_lock(&rtwdev->rf_mutex);
++	lockdep_assert_wiphy(rtwdev->hw->wiphy);
++
+ 	rtwdev->chip->ops->write_rf(rtwdev, rf_path, addr, mask, data);
+-	mutex_unlock(&rtwdev->rf_mutex);
  }
  
-+int rtw89_mac_cpu_io_rx(struct rtw89_dev *rtwdev, bool wow_enable)
-+{
-+	int i, ret;
-+
-+	for (i = 0; i < CPU_IO_RX_RETRY_CNT; i++) {
-+		ret = _rtw89_mac_cpu_io_rx(rtwdev, wow_enable);
-+		if (!ret)
-+			return 0;
-+	}
-+
-+	return ret;
-+}
-+
- static int rtw89_wow_config_mac_ax(struct rtw89_dev *rtwdev, bool enable_wow)
- {
- 	const struct rtw89_mac_gen_def *mac = rtwdev->chip->mac_def;
-diff --git a/drivers/net/wireless/realtek/rtw89/mac.h b/drivers/net/wireless/realtek/rtw89/mac.h
-index 9c77bfaa34ee..88a877556cb3 100644
---- a/drivers/net/wireless/realtek/rtw89/mac.h
-+++ b/drivers/net/wireless/realtek/rtw89/mac.h
-@@ -17,6 +17,7 @@
- #define BSSID_CAM_ENT_SIZE 0x08
- #define HFC_PAGE_UNIT 64
- #define RPWM_TRY_CNT 3
-+#define CPU_IO_RX_RETRY_CNT 3
- 
- enum rtw89_mac_hwmod_sel {
- 	RTW89_DMAC_SEL = 0,
+ static inline u32 rtw89_read32_pci_cfg(struct rtw89_dev *rtwdev, u32 addr)
+diff --git a/drivers/net/wireless/realtek/rtw89/debug.c b/drivers/net/wireless/realtek/rtw89/debug.c
+index aee0f25e036a..d461ffc6dc9e 100644
+--- a/drivers/net/wireless/realtek/rtw89/debug.c
++++ b/drivers/net/wireless/realtek/rtw89/debug.c
+@@ -4859,9 +4859,9 @@ rtw89_debug_priv_beacon_info_get(struct rtw89_dev *rtwdev,
+ static const struct rtw89_debugfs rtw89_debugfs_templ = {
+ 	.read_reg = rtw89_debug_priv_select_and_get(read_reg),
+ 	.write_reg = rtw89_debug_priv_set(write_reg),
+-	.read_rf = rtw89_debug_priv_select_and_get(read_rf),
+-	.write_rf = rtw89_debug_priv_set(write_rf),
+-	.rf_reg_dump = rtw89_debug_priv_get(rf_reg_dump, RSIZE_8K),
++	.read_rf = rtw89_debug_priv_select_and_get(read_rf, RLOCK),
++	.write_rf = rtw89_debug_priv_set(write_rf, WLOCK),
++	.rf_reg_dump = rtw89_debug_priv_get(rf_reg_dump, RSIZE_8K, RLOCK),
+ 	.txpwr_table = rtw89_debug_priv_get(txpwr_table, RSIZE_20K, RLOCK),
+ 	.mac_reg_dump = rtw89_debug_priv_select_and_get(mac_reg_dump, RSIZE_128K),
+ 	.mac_mem_dump = rtw89_debug_priv_select_and_get(mac_mem_dump, RSIZE_16K, RLOCK),
 -- 
 2.25.1
 
