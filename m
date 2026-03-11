@@ -1,42 +1,42 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BCC91E8320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9194390C8B
 	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773270467; cv=none; b=sAxWhGOZgfHhFq/2epAs6h84D+fHXyqSRLbYulEe51bvd8d8EQEdSVo/Az3dR9g8zQvlUqQLU07PkpvfgZRvaE0uy15xGGi8k6As2LWFk+CT+zJtPe4tJVwm8Ox9eTXk69UAeCiwplBHKZDdb4rve1/2fSDaTuJRGblCCPLjrvY=
+	t=1773270467; cv=none; b=vAPUPqsLkb47gdOzaUWDJwHzPiytwaQREGBzPPYSiHLb/Lkc8ZmSNRm4pL01KdJn6dgtOOYGr+LqcNtnn4NCLknF6pL7bZF3Q9o2reOwpP+fCR+39EZG8bbr+EkA4MZY+aiCtDiMP2Wn5wMnGLeLKLwI+o/95uGSL30l/jjFVjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773270467; c=relaxed/simple;
-	bh=TOt5e1Mn6oqo6w2KCnw6jXoqI7H+jLVsg9914AqdJzI=;
+	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n4hyEoqo6D4ajB2veMwOLwBsOzgtX2VNwSZCeO1azKBLFxg797MclgqYgbA44Of6+CMMtySA1xiHo6KUFXLO5Mf4njAMEW2+tLY7WsHQBVfNp+0DoZ7eqj8ZTm6XP6j34hsBypOBcZyK8ZAUxXqkOJ4XkUPTF5tD4tx7KXR3eTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=ap3v3lj8; arc=none smtp.client-ip=148.163.129.48
+	 MIME-Version; b=X0xraiwKWT/NLojuBqZ+50DYMpFgWtz9Mk876JCAyeRO4lOK2hSc5W3gzOqdbUbLNZ8tnfeumb2SsFUqJYugA8dRjy5H+eKs2Zd8LHxpiV/t8j2+S/ZmfOx32cCyzEFaXM0EXKkC5AWJljBaMWuVnYKJuDSOl9e1fsYQAEsubWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=aVuilHIU; arc=none smtp.client-ip=67.231.154.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="ap3v3lj8"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="aVuilHIU"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 46A4BAC0069
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:39 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 0B35F2C0080
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:38 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id CD9C113C2B4;
+	by mail3.candelatech.com (Postfix) with ESMTP id 53A3C13C2B1;
 	Wed, 11 Mar 2026 16:07:36 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com CD9C113C2B4
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 53A3C13C2B1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
 	s=default; t=1773270456;
-	bh=TOt5e1Mn6oqo6w2KCnw6jXoqI7H+jLVsg9914AqdJzI=;
+	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ap3v3lj8EwnUv1ZLBcWtJa6cF5FzMAsPf2PVwKWI1rrK6K/hKfsLtl5gRog3XY2BA
-	 sU3G/WyNTBjySNPH1ZlkSOgkrPDH0Ylcqo47haQqu65kNmRyBs6KGkcXDKyRgJXd3Z
-	 RSssRztYhl9lnYM5qwnUL2vY4sFi4cFiucTkDBGY=
+	b=aVuilHIUna1l0vbJLP0ZBjoHx3flkihi2FXn7cPAkVDQiA3p8Ug9sK1xx2rvBZLx/
+	 1gRW1q3hm1O2+Iss4hiC4N2CdnXMivIfi7f8rs86sBQdWTn0TX2qZ4rU60AcFFJ5jq
+	 DoTLQc0IqBe1GnN3Ww7OHo39+FhmqPwe0V9ptqIM=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next 03/28] wifi: iwlwifi: mld: Add check for null vif in stats callback.
-Date: Wed, 11 Mar 2026 16:07:05 -0700
-Message-ID: <20260311230730.163348-4-greearb@candelatech.com>
+Subject: [PATCH wireless-next 01/28] wifi: iwlwifi: mld:  Check for NULL before lookup.
+Date: Wed, 11 Mar 2026 16:07:03 -0700
+Message-ID: <20260311230730.163348-2-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260311230730.163348-1-greearb@candelatech.com>
 References: <20260311230730.163348-1-greearb@candelatech.com>
@@ -47,34 +47,44 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773270459-FXmt0OwVgr22
+X-MDID: 1773270459-Uk0_ybx3u53l
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;ut7;1773270459;FXmt0OwVgr22;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;at1;1773270459;Uk0_ybx3u53l;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-A crash was seen in this area, protect against null.
+Do not call iwl_mld_sta_from_mac80211(sta) unless we have
+verified sta is non NULL.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/stats.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/stats.c b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-index 7b8709716324..8d6bd7219b94 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-@@ -415,7 +415,7 @@ iwl_mld_process_per_link_stats(struct iwl_mld *mld,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+index 3bf36f8f6874..a757077b0a7a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+@@ -194,7 +194,7 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 	struct iwl_mld_baid_data *baid_data;
+ 	struct iwl_mld_reorder_buffer *buffer;
+ 	struct iwl_mld_reorder_buf_entry *entries;
+-	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
++	struct iwl_mld_sta *mld_sta;
+ 	struct iwl_mld_link_sta *mld_link_sta;
+ 	u32 reorder = le32_to_cpu(desc->reorder_data);
+ 	bool amsdu, last_subframe, is_old_sn, is_dup;
+@@ -221,6 +221,8 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 		      "Got valid BAID without a valid station assigned\n"))
+ 		return IWL_MLD_PASS_SKB;
  
- 		bss_conf = wiphy_dereference(mld->wiphy,
- 					     mld->fw_id_to_bss_conf[fw_id]);
--		if (!bss_conf || bss_conf->vif->type != NL80211_IFTYPE_STATION)
-+		if (!bss_conf || !bss_conf->vif || bss_conf->vif->type != NL80211_IFTYPE_STATION)
- 			continue;
- 
- 		link_stats = &per_link[fw_id];
++	mld_sta = iwl_mld_sta_from_mac80211(sta);
++
+ 	/* not a data packet */
+ 	if (!ieee80211_is_data_qos(hdr->frame_control) ||
+ 	    is_multicast_ether_addr(hdr->addr1))
 -- 
 2.42.0
 
