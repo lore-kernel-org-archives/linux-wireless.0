@@ -1,45 +1,42 @@
 Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F0C3A16B5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F9E3A16B6
 	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773270470; cv=none; b=Bs3vdJsXLSC9AWoAfDIZ8peVcHml1ZaxloSvLb0gwx1dLn9RVPMGBNokQRfnUO1cysT+V682hpoKXH/DD/rCanQKp2QVBZn1srPhdCb345A9tcU99uG48yfFBHricEyE4/Uow21XEdXHDqjOLq7K9rfx8kV+V5gJsO3K0OvBR3c=
+	t=1773270470; cv=none; b=bj4px+Q5yH6+02Oeo0q9+irwyf2qjM/UByilXCbkJhaYjiNzKtHgeaLLDNC7KpM7t/bJRz1n8XeQCPrMjVxWpF+QuPieRDmUuVJQKXw0b+YJ0Nh2EiwD4wAljqwVw1dYlgMQD7QJl+nBqC5DVJAuW2ELP4r51E9O876Hj7BE0u8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773270470; c=relaxed/simple;
-	bh=Z+bL97X10ttZavUDhVPw3Ahdpno1vHwhYxGt+bBZ1d8=;
+	bh=lR+gxuvJkoFGHPxnwd75D5Pg8X4FlLDMb+OXL5R6TJA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rpt+QmDTWiHB0qmxUSV0ohUtrgZUiEkJn59FI9afYe2LrSWhvWw1S++K+97v/RrVkhqJeEvYWJJOOtG5nf9kmmIjOTxMygpMGLJAB1F3fXcDBYARisB8f7DscgotZcVRXIuDqdydoJs98y5b+O/UiuR/XJxmeC37tHsZ2nSY+Fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=fEoGTHyr; arc=none smtp.client-ip=67.231.154.183
+	 MIME-Version; b=Qazma4r88bDDLXeJsRa7wdEoNtH1HUU1I2DM2ZoIxLa6mfE+CUpsKJI/P6gtD7lARMUbIttLyQ/0yaMkWUl0rLlnphFv8TY1VFFg+BTrQ1EibS12LIrQR7ct+fqBIjld+iBrW3GjAu2YWgoebGiEKMDV+U+JdCThvUQ3gm9Vj7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=aqIOES+B; arc=none smtp.client-ip=67.231.154.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="fEoGTHyr"
-Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
-	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 96F7D50B7C3
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:47 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="aqIOES+B"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 99A0044007C
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:40 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 77ADF440095
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:42 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id C5F2213C2B8;
-	Wed, 11 Mar 2026 16:07:37 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C5F2213C2B8
+	by mail3.candelatech.com (Postfix) with ESMTP id 3539D13C2B5;
+	Wed, 11 Mar 2026 16:07:40 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3539D13C2B5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773270457;
-	bh=Z+bL97X10ttZavUDhVPw3Ahdpno1vHwhYxGt+bBZ1d8=;
+	s=default; t=1773270460;
+	bh=lR+gxuvJkoFGHPxnwd75D5Pg8X4FlLDMb+OXL5R6TJA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fEoGTHyrj1XUBtfJk3p+NTcYY+p/vgi3WFIdGB42izk65GoWfR4jENJzbSYRzvY7k
-	 q+54j5J+fzclEmvsMBHpNqqsA1Fu4Yh6aB3MEeBqKPfZebAAuQmPtxnB8GUJdTt3u6
-	 HW5dqFL/vW5YAo+TdlcYkk2D3RcF8tvHjb0nubnY=
+	b=aqIOES+B18+t+S0cU026tvPPuCXr+plsbpxaCHEVyrb7x83lPMPnKsociR5G3CyUa
+	 i6DWPpqGnRRSKxDWJl79xnHTrdc4hiUH6vECvhMTl5Rf9iZ+r5W340K8rrzqzhAD28
+	 KKvYDJmyBbaKB3Zul+P51UU1lP8/dTqPybJNlkig=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next 07/28] wifi: mac80211:  Fix use-after-free of debugfs inodes.
-Date: Wed, 11 Mar 2026 16:07:09 -0700
-Message-ID: <20260311230730.163348-8-greearb@candelatech.com>
+Subject: [PATCH wireless-next 17/28] wifi: iwlwifi: mld: use warn-on-once in error path.
+Date: Wed, 11 Mar 2026 16:07:19 -0700
+Message-ID: <20260311230730.163348-18-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260311230730.163348-1-greearb@candelatech.com>
 References: <20260311230730.163348-1-greearb@candelatech.com>
@@ -50,57 +47,37 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773270461-hyhoL7o2ZOrv
+X-MDID: 1773270463-5RgaoUbbqhl3
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;at1;1773270461;hyhoL7o2ZOrv;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;at1;1773270463;5RgaoUbbqhl3;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-When recursively removing debugfs files, clean up child link
-debugfs pointers since the recursive removal will have deleted
-their memory.  This fixes use-after-free problem when those child
-links are eventually cleaned up.
+Just splat a WARNING once, and add debug output to indicate
+a bit about why it is hitting the warn path.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/debugfs_netdev.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 51d2ae232a85..bc2da35db4ae 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -1039,9 +1039,28 @@ static void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+index 23d55374ef8a..413a8688e4eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+@@ -496,7 +496,9 @@ static void iwl_mld_free_reorder_buffer(struct iwl_mld *mld,
+ 		 * sync internal DELBA notification should trigger a release
+ 		 * of all frames in the reorder buffer.
+ 		 */
+-		WARN_ON(1);
++		WARN_ON_ONCE(1);
++		IWL_ERR(mld, "free-reorder-buffer problem, rxq: %d  num-stored: %d, will purge frames\n",
++			i, reorder_buf->num_stored);
  
- void ieee80211_debugfs_remove_netdev(struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_link_data *link;
-+	int i;
-+
- 	if (!sdata->vif.debugfs_dir)
- 		return;
- 
-+	/* In case where there were errors on station creation and maybe
-+	 * teardown, we may get here with some links still active.  We are
-+	 * about to recursively delete debugfs, so remove any pointers the
-+	 * links may have.
-+	 */
-+	rcu_read_lock();
-+
-+	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++) {
-+		link = rcu_access_pointer(sdata->link[i]);
-+		if (!link)
-+			continue;
-+
-+		link->debugfs_dir = NULL;
-+	}
-+	rcu_read_unlock();
-+
- 	debugfs_remove_recursive(sdata->vif.debugfs_dir);
- 	sdata->vif.debugfs_dir = NULL;
- 	sdata->debugfs.subdir_stations = NULL;
+ 		for (int j = 0; j < data->buf_size; j++)
+ 			__skb_queue_purge(&entries[j].frames);
 -- 
 2.42.0
 
