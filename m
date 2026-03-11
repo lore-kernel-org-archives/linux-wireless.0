@@ -1,42 +1,45 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49ACB3A3E87
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B73939FCB4
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773270473; cv=none; b=rsaGbXaQwNUe5G2egw6eMZjoRXMHqaH4OBvdtaM2EG/pmPpSE48U/Fv4QVfD60vnOW6ldYFJZtUA/dLlQZ/eChYnNMe9Cij7QDnuwamzDCu1hB2iCbiy5JKWmFHBlasshuvIv4JymIGfcKeFDeE4fewkm31GmouG4/IH138gm9s=
+	t=1773270483; cv=none; b=eiL4W1Vhy+UWyRy0zRh6XBbSViFz4vEDI0BJmer5sfekbUzu8zn2VSftuAUtaTKKlcMYV47KQgEzaNZLGX6MVaOBWoUFx8FMbmvehs69eLpJI+EM4SCUqJQFhgZHM/6bulPiUv02jcuLAz/N90uOUrqOOAU88mPR0BhZfnSaZVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773270473; c=relaxed/simple;
-	bh=9bEwIouyN/FaLS3kVOEMHmKUqLgkpTcccITqVBxMObQ=;
+	s=arc-20240116; t=1773270483; c=relaxed/simple;
+	bh=CTCMuoNTR1zKOuUeLRCwrEf946YXF/gSoMHht7voBy0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H/UNbFs9w5WFfQe1Rw/KDOQQHAtCl8lmOTSjnT5HD/Dp88RN2W37aOTKL0v8gNJVVqgLCEtb+4rZYJ0pnASf3MH5CcZw/7/zpKjJ87qonVJGSFtk/aQVJaVMjSir/7RotZZZrdrB9+WYfsb1pczeP5/awEV5aSISh1pmrY2N2wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=e8HKQwJ9; arc=none smtp.client-ip=148.163.129.48
+	 MIME-Version; b=L8OqoB89PauN3VM0FVSxB97DQa63Sux/1QFLH3VENmIfO4Yt0uzl8WOUvYcUDRldGlFZAz/HvhMMcLet4Pmax77cNiyR5AAh2pg0XmpmMHTN8EaaytFLPsgSAXAUZLd7RG4GzpFVE+EZ54vwo92YpIoD4oDUBxwfss5/eExa7dU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=SxNsKkU3; arc=none smtp.client-ip=148.163.129.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="e8HKQwJ9"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="SxNsKkU3"
+Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
+	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 557632C00A7
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:49 +0000 (UTC)
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 6F11FA8007E
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:43 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 817D4A80075
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:42 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 9EF9A13C2B8;
-	Wed, 11 Mar 2026 16:07:41 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 9EF9A13C2B8
+	by mail3.candelatech.com (Postfix) with ESMTP id AEDB913C2B3;
+	Wed, 11 Mar 2026 16:07:39 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com AEDB913C2B3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773270461;
-	bh=9bEwIouyN/FaLS3kVOEMHmKUqLgkpTcccITqVBxMObQ=;
+	s=default; t=1773270459;
+	bh=CTCMuoNTR1zKOuUeLRCwrEf946YXF/gSoMHht7voBy0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=e8HKQwJ98Vopq75q8rFbQGoBpeK5u4PLYTM11evzPio6nWuYcln2rNF1Pr9to9bJz
-	 mjuQ1HkcAmPexsHVAgEWy/AM7KgbdfRStzSy+FiafEbmeEOV679vzxyX7poAFZ3WDY
-	 2uKfUFexIdmpCLh15HXtE/ly/KXO9xANFZwPShBU=
+	b=SxNsKkU3g3XNwILV2A8qGc3gFk1ZCcGq0B7MAFFotBZO7djG/xnPIOXYdQofiRjlS
+	 u6qcjro6ih0hC2mQpqEuYx0wNFWrFF5EUxbs0tuf4iMyfoHmo3G53hTx/oCJw8JzrL
+	 SDJqHMhpYLimmJdatxYqIo0JxzzubPcjbvgSBO74=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next 22/28] wifi: mac80211: Add force-cleanup call to driver.
-Date: Wed, 11 Mar 2026 16:07:24 -0700
-Message-ID: <20260311230730.163348-23-greearb@candelatech.com>
+Subject: [PATCH wireless-next 15/28] wifi: iwlwifi: mld: Fix use-after-free of bss_conf
+Date: Wed, 11 Mar 2026 16:07:17 -0700
+Message-ID: <20260311230730.163348-16-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260311230730.163348-1-greearb@candelatech.com>
 References: <20260311230730.163348-1-greearb@candelatech.com>
@@ -47,93 +50,88 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773270464-GoCXbEuFXOJ6
+X-MDID: 1773270463-0c15Q_QVrwEM
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;ut7;1773270464;GoCXbEuFXOJ6;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;ut7;1773270463;0c15Q_QVrwEM;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-When hardware is determined by mac80211 to be in non-recoverable
-state, then SDATA_IN_DRIVER flag is removed, and mac80211 will no
-longer do any 'graceful' teardown of the objects in the driver.
+In certain failure paths, the driver is not fully configured, and
+it fails to find the link object.  We still need to remove pointers
+to the bss_conf to keep from crashing shortly afterwards.
 
-This was causing use-after-free crashes in the iwlwifi driver
-since it's logic to do internal cleanup is not quite right for
-some reason.
-
-Add an explicit callback to the driver to tell it to clean up
-whatever it needs to clean up in case mac80211 considers it
-dead.
+Search all indices for stale pointer if we cannot do the fast
+lookup by ID.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- include/net/mac80211.h    | 7 +++++++
- net/mac80211/driver-ops.h | 8 ++++++++
- net/mac80211/util.c       | 5 +++++
- 3 files changed, 20 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mld/link.c | 42 +++++++++++++++----
+ 1 file changed, 34 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9cc482191ab9..d963f213863b 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3934,6 +3934,12 @@ struct ieee80211_prep_tx_info {
-  *	you should ensure to cancel it on this callback.
-  *	Must be implemented and can sleep.
-  *
-+ * @force_cleanup: Called after mac80211 determines the
-+ *      driver/firmware/hardware has failed and cannot
-+ *      be restarted.  SDATA_IN_DRIVER is false at this point,
-+ *      so normal cleanup will not happen.  This force_cleanup
-+ *      operation lets the driver do any needed houskeeping.
-+ *
-  * @suspend: Suspend the device; mac80211 itself will quiesce before and
-  *	stop transmitting and doing any other configuration, and then
-  *	ask the device to suspend. This is only invoked when WoWLAN is
-@@ -4569,6 +4575,7 @@ struct ieee80211_ops {
- 		   struct sk_buff *skb);
- 	int (*start)(struct ieee80211_hw *hw);
- 	void (*stop)(struct ieee80211_hw *hw, bool suspend);
-+	void (*force_cleanup)(struct ieee80211_hw *hw);
- #ifdef CONFIG_PM
- 	int (*suspend)(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
- 	int (*resume)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index e2283d7dcd1e..3bd3d078ce9b 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -300,6 +300,14 @@ static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.c b/drivers/net/wireless/intel/iwlwifi/mld/link.c
+index b5430e8a73d6..1e4959ceb3db 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/link.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/link.c
+@@ -504,23 +504,49 @@ void iwl_mld_remove_link(struct iwl_mld *mld,
+ 	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(bss_conf->vif);
+ 	struct iwl_mld_link *link = iwl_mld_link_from_mac80211(bss_conf);
+ 	bool is_deflink = link == &mld_vif->deflink;
+-	u8 fw_id = link->fw_id;
++	u16 fw_id;
  
-+static inline void
-+drv_force_cleanup(struct ieee80211_local *local)
-+{
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+	if (local->ops->force_cleanup)
-+		local->ops->force_cleanup(&local->hw);
-+}
+-	if (WARN_ON(!link || link->active))
+-		return;
++	if (WARN_ON_ONCE(!link)) {
++		IWL_ERR(mld, "Remove nonexistent link, bss_conf: 0x%px link-id: %d\n",
++			bss_conf, bss_conf->link_id);
++		fw_id = 0xffff;
++	} else {
++		fw_id  = link->fw_id;
++	}
 +
- static inline int
- drv_sched_scan_start(struct ieee80211_local *local,
- 		     struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 55054de62508..ec11ee6b8752 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1692,6 +1692,11 @@ static void ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
- 	 */
- 	list_for_each_entry(ctx, &local->chanctx_list, list)
- 		ctx->driver_present = false;
-+
-+	/* Tell driver to purge any remaining configuration it may have
-+	 * lingering around.
++	/* Not cleaning it up seems worse than cleaning up an active link,
++	 * so continue on even in warning case.
 +	 */
-+	drv_force_cleanup(local);
++	if (link && WARN_ON_ONCE(link->active))
++		IWL_ERR(mld, "Removing active link, id: %d\n",
++			bss_conf->link_id);
+ 
+ 	iwl_mld_rm_link_from_fw(mld, bss_conf);
+ 	/* Continue cleanup on failure */
+ 
+-	if (!is_deflink)
++	if (link && !is_deflink)
+ 		kfree_rcu(link, rcu_head);
+ 
++	rcu_read_lock();
+ 	RCU_INIT_POINTER(mld_vif->link[bss_conf->link_id], NULL);
+ 
+-	if (WARN_ON(fw_id >= mld->fw->ucode_capa.num_links))
+-		return;
+-
+-	RCU_INIT_POINTER(mld->fw_id_to_bss_conf[fw_id], NULL);
++	if (fw_id >= mld->fw->ucode_capa.num_links) {
++		struct ieee80211_bss_conf *tmp_bss_conf;
++		int i;
++
++		/* Search for any existing back-pointer */
++		for (i = 0; i < ARRAY_SIZE(mld->fw_id_to_bss_conf); i++) {
++			tmp_bss_conf = rcu_dereference(mld->fw_id_to_bss_conf[i]);
++			if (tmp_bss_conf == bss_conf) {
++				IWL_ERR(mld, "WARNING: Found bss_conf in fw_id_to_bss_conf[%i], Nulling pointer.\n",
++					i);
++				RCU_INIT_POINTER(mld->fw_id_to_bss_conf[i], NULL);
++			}
++		}
++	} else {
++		RCU_INIT_POINTER(mld->fw_id_to_bss_conf[fw_id], NULL);
++	}
++	rcu_read_unlock();
  }
  
- static void ieee80211_assign_chanctx(struct ieee80211_local *local,
+ void iwl_mld_handle_missed_beacon_notif(struct iwl_mld *mld,
 -- 
 2.42.0
 
