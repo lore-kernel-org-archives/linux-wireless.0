@@ -1,42 +1,42 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.183])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B76B3A381F
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 303C33A16B4
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773270470; cv=none; b=Lwu4g5lQ8n30l1JF2MRisf7HykikDW8meSvfDKtFV9BwN8dFpjvgdTH8/atY3WcXCCrWynrAODOTJFodpQlPyg0CU6ffCEuYc6dbQ0SO4qI1AzMy6UX9cgEK7csDyig/SqSuE75mK98bfDCtGGOvvRZrlL/qaTlhdqOEaJ2A1Sw=
+	t=1773270470; cv=none; b=jU7DhyxylUOUBMN03IM2ZvY7ZeLyMAx6Y7Hgv/NYE50pbfeYZTEka+uFujV7TQLcOZxzwg9GS/oQeAFv5ktaKGtq0va6JlrFbaHHSbmquYLxWv0F6H0zjLUy1gzWV1SIA90S7OeidRsZ+39rKalbmnCywM9FFsY53OtlcBzydII=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773270470; c=relaxed/simple;
-	bh=mRQpnpMqVqBj1C++P+SgMnDw3psGcoLR1NEbkaNg2so=;
+	bh=K+GwCuxKtjcSmwOUXvnQjepT2zhFcF8qL6zmH4yzcAM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X1brIfRHFqsuyht8edwM1S4eo1ymZBlqQlYNtdMoxpWN8fWs3qjtmBcNvN56lvrNzo6IzVNCC9JFb5CjjHTnhxJPXf867fUETroMGDekjFkGPVjhC1ikKJHgFMREkH7hD6SglvKugaFACmmGCoqe15LWvE9B2urz8rE41s4MlGs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=DRAyP6yK; arc=none smtp.client-ip=67.231.154.183
+	 MIME-Version; b=m/frJum4sB6abZHlubii4F2LgEfsmuoKph9Ccom4LAmZMmrpc+NkyrBOzed9QgNXP9fcQmlZtFG2cenxWo1CnqP/4PqgDlQ1zj3bab+wxfvwL8aOLTH9pn9AOLjFyh2i9qtt1kxJaeoBsF/7wp6muLea2CfF3UEqp+xFGYjV3/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=AsdmaA72; arc=none smtp.client-ip=67.231.154.164
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="DRAyP6yK"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="AsdmaA72"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 2132B440086
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:45 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id A40379C005A
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 23:07:41 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id B5CD313C2B3;
-	Wed, 11 Mar 2026 16:07:42 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com B5CD313C2B3
+	by mail3.candelatech.com (Postfix) with ESMTP id E3E7513C2BD;
+	Wed, 11 Mar 2026 16:07:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E3E7513C2BD
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773270462;
-	bh=mRQpnpMqVqBj1C++P+SgMnDw3psGcoLR1NEbkaNg2so=;
+	s=default; t=1773270459;
+	bh=K+GwCuxKtjcSmwOUXvnQjepT2zhFcF8qL6zmH4yzcAM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=DRAyP6yKkUcxwDTXcupy7kbLqGbDx4yH78ZQH/Vrsrz19gGaPK0T4BJ3NBP1N3KIe
-	 aSoqqGEX3KIkdOw8ENOYhni/SVT58z3l0Fl2uFxIJvZXgmAQNjXf9UzGcqQy2uUnDl
-	 qRZqIjS7oNWjS64YxBh4K2pAw5UvvbH07K4cd5kA=
+	b=AsdmaA72iwn1SCVYMrQBwPEHddnEPvo1/NJb7NgbFqgMeF6SXW7CBY5rNs1uFMx/x
+	 or8XTTHfdjrPMWS8lATg2uFK6YwvMTRPEi1I3HBGQlKELFkmHY2jR98zJmPJyi31Rn
+	 fKgyry3INNUrfvh1UiN8S9AOwe53M5znCNMk9iOs=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next 27/28] wifi: iwlwifi: mld: Convert to WARN_ONCE in link removal path.
-Date: Wed, 11 Mar 2026 16:07:29 -0700
-Message-ID: <20260311230730.163348-28-greearb@candelatech.com>
+Subject: [PATCH wireless-next 12/28] wifi: iwlwifi: mld:  Improve logging in error cases.
+Date: Wed, 11 Mar 2026 16:07:14 -0700
+Message-ID: <20260311230730.163348-13-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260311230730.163348-1-greearb@candelatech.com>
 References: <20260311230730.163348-1-greearb@candelatech.com>
@@ -47,36 +47,60 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773270465-gDlBCxFjxBpx
+X-MDID: 1773270462-6TilpiCWpr_r
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;at1;1773270465;gDlBCxFjxBpx;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;at1;1773270462;6TilpiCWpr_r;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-While the comment indicates this should not happen, it does at least
-when firmware is being problematic.  Change to WARN_ON_ONCE to
-decrease log spam.
+To give better understanding of how and when failures
+happen.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/sta.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mld/sta.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.h b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-index 1897b121aae2..44c54e6d68e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-@@ -170,7 +170,7 @@ iwl_mld_cleanup_sta(void *data, struct ieee80211_sta *sta)
- 			continue;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
+index c478cee570a2..6338ca46f68e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
+@@ -574,7 +574,8 @@ static int iwl_mld_rm_sta_from_fw(struct iwl_mld *mld, u8 fw_sta_id)
+ 				   WIDE_ID(MAC_CONF_GROUP, STA_REMOVE_CMD),
+ 				   &cmd);
+ 	if (ret)
+-		IWL_ERR(mld, "Failed to remove station. Id=%d\n", fw_sta_id);
++		IWL_ERR(mld, "Failed to remove station. Id=%d ret: %d\n",
++			fw_sta_id, ret);
  
- 		/* Should not happen as link removal should always succeed */
--		WARN_ON(1);
-+		WARN_ON_ONCE(1);
- 		RCU_INIT_POINTER(mld_sta->link[link_id], NULL);
- 		RCU_INIT_POINTER(mld_sta->mld->fw_id_to_link_sta[mld_link_sta->fw_id],
- 				 NULL);
+ 	return ret;
+ }
+@@ -735,8 +736,10 @@ int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
+ 	int ret;
+ 
+ 	ret = iwl_mld_init_sta(mld, sta, vif, type);
+-	if (ret)
++	if (ret) {
++		IWL_ERR(mld, "iwl-mld-add-sta, mld-init-sta failed. ret=%d\n", ret);
+ 		return ret;
++	}
+ 
+ 	/* We could have add only the deflink link_sta, but it will not work
+ 	 * in the restart case if the single link that is active during
+@@ -744,8 +747,10 @@ int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
+ 	 */
+ 	for_each_sta_active_link(mld_sta->vif, sta, link_sta, link_id) {
+ 		ret = iwl_mld_add_link_sta(mld, link_sta);
+-		if (ret)
++		if (ret) {
++			IWL_ERR(mld, "iwl-mld-add-sta, mld-add-link-sta failed. ret=%d\n", ret);
+ 			goto destroy_sta;
++		}
+ 	}
+ 
+ 	return 0;
 -- 
 2.42.0
 
