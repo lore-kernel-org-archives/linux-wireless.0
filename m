@@ -1,55 +1,57 @@
-Received: from GVZP280CU018.outbound.protection.outlook.com (mail-swedencentralazolkn19012054.outbound.protection.outlook.com [52.103.35.54])
+Received: from MM0P280CU009.outbound.protection.outlook.com (mail-swedensouthazolkn19011033.outbound.protection.outlook.com [52.103.34.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBCBA3E3D86
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2026 19:52:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.35.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9341724728F
+	for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2026 20:38:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.34.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774986742; cv=fail; b=HlPK5yrK33Ylj2SVzFyJ/8J466tK5BsYLy1nq61ap6Nb1UOLQ80IN0nZNCcFifiKWHly6JEp28lNMW4mlm4mUkSQS/rfMWFvsLiMqQRTLXVxsJWI3pkDSGPnC5RPdL8C2+7qLJLh/HdtoLrpnCCl0RaF5bdsbo/lIhq2E2Wb7qE=
+	t=1774989498; cv=fail; b=UpYABTL6bqNrkLzr7+zCVa/13Fou8D2MgxOLicreyuOdbEYMP9b4DwMjznJck1CKfKADpySIikUE5RLXpyBj4Drvn7rTKHmEo0o13aIzOljPwT8BpzLcmRsNXRvEZj8RZOxwwd29HHzPwJowmmWgj81TiD7Oy80fLJH9SReLLdc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774986742; c=relaxed/simple;
-	bh=UsfGAGgsdv8tqCKqpTpxSMcHOdmDD5/bOkLAeYLJt98=;
-	h=Message-ID:From:To:CC:Subject:Date:Content-Type:MIME-Version; b=nN02cx90POhitZpo4Jfp3CeTzc5IY2pGNzL7h6IIaDzyLHTBA4qlf3ODmS5/2Q/bAmOohU+fUngItRaVoKRCw7wKXQLIbmU8MFy4rGmb9SgzHh0tQOy6FG1ZkPkE7xbDW1tdUT0/bPpm/C2BT7LQPjZBO4Mt3hQAsywOxAj9BIg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de; spf=pass smtp.mailfrom=hotmail.de; dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b=YgncOwPh; arc=fail smtp.client-ip=52.103.35.54
+	s=arc-20240116; t=1774989498; c=relaxed/simple;
+	bh=PN3qZ0tLjeaILYSGrg3h7YWyIJtmCQ+uEZsOgSoK0xk=;
+	h=Message-ID:From:Date:Subject:To:Cc:Content-Type:MIME-Version; b=a3J2WDOohszy/ZNpsLBEgUYXF1r8j6VRzr9DYI1R1gcbn2AYJwKSqfna3VJGcENM9zXu8fHPh5WuRgWDzzOMNRuNILKN+GS4DaHfODtkKIORw7nU9LFeTglLStz3XiOIsbIfw2OjT/uEBIyp9l2AyBIp2iBYyxLyVpVERZkrC5M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de; spf=pass smtp.mailfrom=hotmail.de; dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b=D/n0RxiQ; arc=fail smtp.client-ip=52.103.34.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b="YgncOwPh"
+	dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b="D/n0RxiQ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cjs0XeLPhIfx0HB3Ym6AWieIfW9OxC0hneL9NcmcH+wCxxy7rxLxQDXilsLESPjvLudtgalc6TVygXMP1SePaitQATh1KDb07H0d/nx+xAAHp9ATPZ2SmjnFFIavxklTSAz/ctOwxXUArc71D0icMSRJ4F+xdUxtX8XTVUvOPXBwXsNCS+3ydxzCgTgJIVQRSo29avvxhSX0DENfx2HyJRBx0dWieib8LA2s+XU84kKuFfpevlRCRarCharG6vP7tC5aWIM5Ywas033wLbOxwLXPfbhF4DWo7Mxs9B3Jp/s06GwdQiYVe6MpScnq9UgH9b6DA+M8X5rXRRuP5noTug==
+ b=fomL+/q4En1UkR4545iKSFaQB6CeO0oj/hxncwgMjdh9Ct0Y6B7yv/Q/DyVyeLb+hdtQhFc+EEQuSE5wsdMIJwi56nfhXn0lcj5FZlJxUx7s/b0qmuITqWzsJdjEdfKPYyKEDKyUbEe+ERAkQCoVSx8DFAa+JfOaqpM//zflMatoAMFcPoY1pATy3hv4dnG6k3MS/fVbvndS9VRekW7ob6nQKUrjquHylvX2t5DWNhcfkBvtAcDQJNDsQrqJPeN3GjNkmharAH7H9KfDYbwxi+ouN2snYZFgzPVEBOBSb13RB4lggcq6YAAeaOBC5HgEqe1zhod+RRC7tjnbe9N82Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2AudJIo8FvXEFk9OjUSi8pUKJb8LbkYLxAl6Al+CG3Q=;
- b=yHewPQDvC59EkZ88y7CzH+JpiHKcudcAjNqHzWfgftHsoFzkQs9gw6B/z7wQNRApeag5clK8FGzIjUuDL7/rsvLaEfbNFcYQxUahX+QeTUJWVox3SylRLcGs3qI4p4hEM+I+4nFLxff4M8vpkQryfJQSQZytk7Mb7FZ5+3E9ll59TBPVwGFRcRVSpUsvx9jLg40l56ulNMRPj7wY1/kjMDxHwvKc226q4vcppYJgknnI7VJOjSzoEAY+6SpHZfQHOlAWWK1nfxyFDw4dPm9l/ZEUlzk2XlEKzdpXiNOUafz5UO3FwDsa0OkcMtGLCOpOCYRdWHVUEF/qB1JeL7S8Iw==
+ bh=dFbhoS8rkKP9Vxzssnq8FsSVLHGn/DJawS/aw/ElJRc=;
+ b=M7SD3qWiPY2ld22MPecOsiYYVma5lYHWUEouGCgVBhaheCyAyjdp3GbmXGdlkGpih+q7pTaHnjUkcCOXmnIgePfzOy7vXLuNz/XU+bOfW2VxY56esGrlgOPzoqg5Nkf7IQ7P9rNGDWeffXmRe7vQh7bcx75eJPvG3G9UNLpgqTe6fc+TAhV/YlLkOVNdbJAiAM1WR4Gngd0R67FaEgLShsTKeU9Urj9bWp54mM5M1wRd14pQsyrzS/hzPFlXaKt76LRIYWLHUklUjbxMaGdCigYbEpT0B0m0HEkrVVKj5fKBWKuSWn8Ogj2KiPSsZs3XOcDnUaRIXIjCJd55G7fS8Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.DE;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2AudJIo8FvXEFk9OjUSi8pUKJb8LbkYLxAl6Al+CG3Q=;
- b=YgncOwPhmTsFKH8KmVyqRf5Ttvu/x3uSKa8M+lAzAYvDQK0h1DHEwr0gGS3Gexe9GKvQV9q8arQGHQMZ3jdZdVpNCImrQiV740P+hNTPO1Xv+T0CrNesLYwndWtz+pbH2TAWFiaGGKALg5x7tlz6OlxHBYgbUKhWp4CPcQyoTci6zgAFj/j0+E79bWyQGkv2mL8/CPjX698C0lgoIMwRklAypscVjs329c/7dA+fU10d1x1kVcwgjS2qiQaAr5+BW3Ck68TBQ8MofBEMMGsuCjusYZ109c8YJM1z3SqHlNyRHolInL7QVPPeX+fj54oygtjegN8J4/IqZUoPxRtU3A==
+ bh=dFbhoS8rkKP9Vxzssnq8FsSVLHGn/DJawS/aw/ElJRc=;
+ b=D/n0RxiQPanEcoRt3MttpWeSdi/wy+pNzaSdNNAVFkB2tGqMTruVQ10Fi02F3BQS4iz1LDskbwTwYhz+Vsh6T7WfxKjIbU5y4hy8MmCJDCWbfY7jriBtguhkZIe01fDcHLymFoBQVmKeg1ntpffC6hknN4FRKnlCNzok6OkeyL2UY4q7eB91Pi0IZf0iiu/5GtDmgASYiJUG6Bfr8Jh6ELPd04YyoI/Bd5nmW4OVxtguZdv4q/0Gg/eFiKcTm3iEF6rYksWjRbsn6qV6IkLOPf0l5gEMAn5KTAIFBvAPI0z8eAs8EcqfSic8MJJRIzzCIfmx/j4roY2zmTT9mm1LHg==
 Received: from GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:19b::9)
- by GV3P280MB0433.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:10::12) with
+ by MM0P280MB0851.SWEP280.PROD.OUTLOOK.COM (2603:10a6:190:3::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.15; Tue, 31 Mar
- 2026 19:52:18 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Tue, 31 Mar
+ 2026 20:38:13 +0000
 Received: from GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  ([fe80::6328:bea5:c218:593f]) by GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  ([fe80::6328:bea5:c218:593f%4]) with mapi id 15.20.9723.018; Tue, 31 Mar 2026
- 19:52:18 +0000
+ 20:38:13 +0000
 Message-ID:
- <GVYP280MB1518217E38C263874B46F7D69453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
+ <GVYP280MB151838ED650B504461FCD56C9453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
 From: Masi Osmani <mas-i@hotmail.de>
+Date: Thu, 12 Mar 2026 02:03:43 +0100
+Subject: [PATCH v2 01/16] carl9170: mac80211: enable Short Guard Interval for
+ 20 MHz (experimental)
 To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] carl9170: rx: discard spurious firmware response during probe init
-Date: Tue, 31 Mar 2026 12:04:00 +0200
-Content-Type: text/plain; charset=UTF-8
-X-ClientProxiedBy: FR3P281CA0161.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:a2::20) To GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
+Cc: linux-wireless@vger.kernel.org,
+    ath9k-devel@qca.qualcomm.com
+Content-Type: text/plain
+X-ClientProxiedBy: FR2P281CA0120.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:9d::13) To GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  (2603:10a6:150:19b::9)
-X-Microsoft-Original-Message-ID: <58d98be30cdabddf940f3541b9db144b@hotmail.de>
+X-Microsoft-Original-Message-ID: <6aa78391efe8f7a63fed880add06e0d8@hotmail.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,137 +60,126 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GVYP280MB1518:EE_|GV3P280MB0433:EE_
-X-MS-Office365-Filtering-Correlation-Id: 677d41d2-ff94-4f1a-7a11-08de8f5f0398
+X-MS-TrafficTypeDiagnostic: GVYP280MB1518:EE_|MM0P280MB0851:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9625cf17-7669-4c1d-de2e-08de8f656df8
+X-MS-Exchange-SLBlob-MailProps:
+	30ekHghIwFrYYoNnnwxejuezs5MQ3rPaZEgdfl4JixiRFe4i4TAQQxI1TxCIrDKO8CP/YgN8bMEhb4hzJpbEZcPRZeLk+sLU1SfH+SO5/HLQCHjJjq/a84KyODzy9xM8G3JUjJm2w1e4gNAnt5fByfOK2hd5vtHKynm6C7TdwZhNBQY7JT2H3KhMSZKeKHzfFMM0lRqnT0IkkowTTFPBv+SPXsHxCtHkFOD2Dldjlyw01Olt/pkA8ExHIjGEDdOomQojcVWNMh5PGjpwrNFsXcUKtvXsfDmERuFKpCofNmrQoPSPch3KrTMzlOGblG5Ts491NHKgvQ4bVI1770dJPEGZni3svDJX8m1Mee/xQtlC8DjPyCZEB9wT7cn1Lda7QWASzlpjeT39mBcAWB20Bp8oDBkKl1npP7q8G1+3d93cSwD9zLK9m3GEwbqLJP2oO6KhbwfewFQLiej05sIUWcLOD67fwdpOK6i3MS3mV+j5KExjjKRqbIGn1Ige9EfITZyPPxwNwn1cTUS+RVxdgGW+8eEkK3jMs4HsaKlJyfl/IZLfIbFDzCeTkB7Y7eeGa8h3b9vZ6evKPov+nEgbcGvQtlBPMqR6LMbjG56QZMy+FGSh/6vKzb3ms80O+mqF0a0BV5KiQlNipUqSlMglmOYKTZJInHuUaEPF3ktxSaj2dKEojuD+GXHQm1KRYaigGJcK26eCXvrdS9ZeM30OZbhi4O9FFdMANIuCCq25bfJhcykHEg3Q94tN4uaB6UdH
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|19110799012|12121999013|23021999003|5072599009|51005399006|6090799003|41001999006|5062599005|8060799015|15080799012|461199028|3412199025|440099028|26121999003|40105399003;
+	BCL:0;ARA:14566002|51005399006|8060799015|23021999003|12121999013|5072599009|5062599005|19110799012|15080799012|461199028|26121999003|40105399003|440099028|3412199025;
 X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?azdSVkNyVGVqV2ZKMkRuQ1VUSjUzcG1mYWJaVHFNbTQzUW9UdlNxOXFUQnhD?=
- =?utf-8?B?aUpxbDM1ck9kdmREcThmT2gzNTZjSS9qWU9JV25rRkNQcE44ekNwVks1bFNB?=
- =?utf-8?B?SnFTTklvT1N2UFl4QTBmR1BHdGtXUzVKRm9RMGNlZVQwdXk5Qkdvb2M1K2dD?=
- =?utf-8?B?MVU2eklubjBCbWRvc0YvL0J4cWlacmo1M3RvODN1MVN4MVVLQWtUZXBlWC8v?=
- =?utf-8?B?U2syY0lmNzBzcHdFRWh2NkVYNi9jR3pMdGdTZzVsVXJZeWlINUhSQjRxMDFO?=
- =?utf-8?B?TWxlTmxTSnV4cDlibStJMmRhUUdiT2M4cUh2ZkU0cUZmbGFVQzVTRDRjZzkv?=
- =?utf-8?B?bEtMQS9TN24vWjZZejgwdndqdUxTV3poUzJybXpmaTNLY2s3cWF0M3BlVHUz?=
- =?utf-8?B?ZFJiM2RwZHdOM2ZiQkg4QWw0NWQ4UEIwRkR5blhUQlBzZGFTd0ZOVVM0bHhV?=
- =?utf-8?B?OEgwUzFhQ1pGM2JGL2dLSUxYdEJOaDZtaHBXaWY5UC91aEk2TEttWmlmRzND?=
- =?utf-8?B?cjJoalNqb0lXMHkra2Vueko5V0Z3ODdveldEcm92aThnNG9INkQ2NHdaS1A5?=
- =?utf-8?B?WmlIeWNOTlZ3NFlUWXBobFI5bGtDVDdWMFVWNlFhUldpMEUyTERROFEzN2ZE?=
- =?utf-8?B?M3JTa0J2ZUdXQnU4RG9UNThEK2FTVCtKY0lIazc4aXRzSmU2RityaVdnOTQx?=
- =?utf-8?B?TE1mNGNxQlJzeGRzVmZRTW9iQ2tHTm5yOXJ5ZHhuRWZrTTJwbFdqc0RWWld3?=
- =?utf-8?B?cjBrTkNiWGc3blRFNnRWclZQSDJneGZ0ZjlRU1Zvd3ZBMGNETzJTVVNIZHNM?=
- =?utf-8?B?NllKSEtKenVyM1hQTWVlK3JzSjgwUndiR0xxV01qMnkwdVVEOFRBdU1xc25H?=
- =?utf-8?B?NkxsNkxpM3E4S043ak1FQk1FZWRhZWh1T2VlbW41ZFBvaFR0OEJnTi9vdkRY?=
- =?utf-8?B?VEIxd0F5R29hTUNuNFhMOVBabk9KNlphc3JDS0hERmJRTXZCRG1kWHNnZXRs?=
- =?utf-8?B?SUpSVnArZWdvakMvMjc1UXJCUElLekNPUmRYVnExU2ZLVXdpUFFSUEFKV0h5?=
- =?utf-8?B?UGlvV0xNS0Z4bXNiVzZMOG9XME5tclJud2p4M1VhUVMzSzM2MkY4SVJ4MzBL?=
- =?utf-8?B?c0VzWHVjTTMvNUtMZ21HbnFOOGFQME1NVTA3TG9KRTRRZVJHejVvbFpQOUZD?=
- =?utf-8?B?LzhReFAxUWNNdjhLbzhrWGMzMkE3YTZqVzhtT0ZwK2xsbUttdTlJQTdtZ1lw?=
- =?utf-8?B?alArVWhDYVJnb1l2RHMzS1ZUeTI3WnZsL2NyRTlJSmhFbis5VloxS2VjRksx?=
- =?utf-8?B?aFA2bTN6dkJtcXBmK3lCMVFHK1NsY3p5T1E1UzZDWDFpOG9qMkk3cUJYM1Fn?=
- =?utf-8?B?Z0xVeEx6WGVlWldJanhpaGVWQTRGWjMrUGlzajNjRW4zZ3R3SHUwdWZ2Y1Nz?=
- =?utf-8?Q?tV1CscQD?=
+	=?us-ascii?Q?xjfmSSUzdYrbOzvWVJV6nOkMwfmv4u1z+TTD8EOTSQKTGst8/urWc10ph2PC?=
+ =?us-ascii?Q?lMYNqJm+oplDyxrTc4foqZPqfWPM6rlvhCWDrNAkE1WpTnL1gkYUFN418CwZ?=
+ =?us-ascii?Q?mCyAudLAz8Q4flcuGPZb29mdM7kI5Z09mS7H62OlSxakaBKCdvg8/Ha6C9bh?=
+ =?us-ascii?Q?9LWetReEc+hN9erxx8NGw/wEVKtPZfVFmnjJsIJGV0PNS6RgWQ1Q7aDC2FRZ?=
+ =?us-ascii?Q?hC/3RKwRj7OlmTaz9ciSjhA4WXNFylVZz1LS76KMdUCpSxic4yU3MCekd6pe?=
+ =?us-ascii?Q?s01HavjmNc6nRvapf7GaKooCn4Vxjh509tihMYXM3USzDnNkw0y6/NNVECeo?=
+ =?us-ascii?Q?TKPIvPASzmM/az02NvWFGPLuZGKaxu+jmNqcDpZwVskdhkGCAFv+HMDYdmHS?=
+ =?us-ascii?Q?X+0XrqDMRJ81ilc7//SrgQNUL5cZvjUKlnkJbOr5CiSsAz3AULBnxULxtLNZ?=
+ =?us-ascii?Q?5B10F8jGxNcRU3GjpwJDtnVjj2tjVtgQpY3wJXkzaIK6XJZfRHTJ8Qe9YnMM?=
+ =?us-ascii?Q?mLBXrGkPPATontoraABQRbvSZj0TmxEg/gl1ZrAx+AXMt/DSdrUUfsZSX2PF?=
+ =?us-ascii?Q?GuL2lMeKMuP+x1tuyG6nOcbpoS0T1oXEwbUqtPrE+c4d5FTS91W0pf7GLUac?=
+ =?us-ascii?Q?mqsebXGWQp5xflzXPvxuEFyW5XIaxotqcYJ7/5wOAyxtA7ay6Cgsf86enVIe?=
+ =?us-ascii?Q?q9IAVUNG+9X1nb7dp9HCSil/rZTGUI6uSTZcxd3Bywe+OBskhFlX7gbCOVjo?=
+ =?us-ascii?Q?qtAB1/wiameN79tujxuutxlaphZNKufhJGeY0GHMmnqEF6rK2ytFnyI1+5OW?=
+ =?us-ascii?Q?i3VujIhsycATOVLUkjHiKE+d56q5o6DzuS99kJbD7+0eDhMqfQVjy7hQ8aFo?=
+ =?us-ascii?Q?v81qzyOQpqIH3uMyq2pDFzyNQyB7GaxjiFT+dHOcBjl7GIb1U6zGCP4TArIS?=
+ =?us-ascii?Q?2hnhTVq9bEs1vDL8oEGQYc+u/k5hW8hoFOmPbeJCNCjaP5FvBLiuOqSQh27P?=
+ =?us-ascii?Q?Jzr0?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?QzBRdjAzRTRadkFZN2JiWGZRN3c5d3U4MEtjOUtJdS9KT2JBUWJ0NVg5UXJo?=
- =?utf-8?B?Zi9VOW9SMDdTdVI5Y2d5d2lNaXJDVUw1RlBaQ29CanpWYXZVNjhHNGxES2xo?=
- =?utf-8?B?V1diR24rK2cwL251UElPR3V4RWdCWURJSTZWa3Q2WlVGU1N3SEw0elA2ODJZ?=
- =?utf-8?B?QmdaK01USmhabjFZS1I5bHFYcjZmSFlJQXFHMmovNjhJeWVtM0J6bThGYlQy?=
- =?utf-8?B?R0FRSEVuL3JFS1JqMVMyeUIxREdCRlN1dTMxbTdBWFdFbndDSU9ETG9IaERK?=
- =?utf-8?B?ampQOEJrZi9qVUN4VkZNeXhsU1JSVWZoUVNteThtTDhDR1NFTzFYRU5LbjNz?=
- =?utf-8?B?Q1JFaHczMWpTRVJLYktlUThVMU5MVUo4aEcxeW45N3RsZWV4T09NYVFIM0JH?=
- =?utf-8?B?dmthYmQwUFd5Mnh5bHNMVTdUMnJVTWgyRU1sTk1HZW1nbnhpdE0rTU03bHpl?=
- =?utf-8?B?NXd1eDNTeXkzRWRYSHNXZzhhNFRDL1VUdVEyM3dzb0ZaaFV0eDF4QzlHcmoz?=
- =?utf-8?B?VFZnV3BGdEpwbFhHMlVwVjQyeVY5NmhTSW5pdUpDN3Fua3FMaVVoQ0tuN3pt?=
- =?utf-8?B?YStxVEFBYkJmNHNMNDg1QUtKTHcrbU1rRkxCcExwN2htalNqbHBraVRPT1J2?=
- =?utf-8?B?Y0IvWjVEa0Y0Zzc1ZUtxTDlLMEpaWHBjMHFiZEZyZ1gwMXdHSkR4ZzNZKytW?=
- =?utf-8?B?UldYSTFFMU43R3V3OHk2R2NyTklvdmhVZ3pOVDVNdldtZ2EzVzhVS1JWQ3Y4?=
- =?utf-8?B?REpkWGUyaERCTkZoUjNvK1pzTmxiTlA2VUdTWGcwQ2ZkeDdEL1RQeGZ3b1RF?=
- =?utf-8?B?ZXVlS1pUWEJwWHo4U1lPVnZTQmg2ZTJNSXg3dUJpZnRjMmU5aFB4TnMrVjV4?=
- =?utf-8?B?VkhBOE9CUVdoYUZYL1RqU0RNbEViMEJ6YXZGM3NOMmR4U1NxdmhxeXFhdkY3?=
- =?utf-8?B?R0ZwNmNtU1VZQ2RETVJxRGtCRTdSSWZwS2ZMOUJOOXl4ZTFzM3plU0RBK2lh?=
- =?utf-8?B?NWNvUGNUYzlXN1F0UWYxdnc5dzRwWlYwcmRxcHUzRkN2cHlCOFRSeWpzTmRs?=
- =?utf-8?B?Q2U3ZU1GNElacldzSzJBUzFMTEFDOVY3bEk4bEJMbkJpVTJPRlN0dXRnSnll?=
- =?utf-8?B?TzRWSTBEVkJmUlArMW1PSWw5SU1uV0lqd0x2M293SU9INXUxTzhzMW9pRXhQ?=
- =?utf-8?B?YWthbUJHeXB2c0xWQmVKK1M3TFJLeThpUkx6cXYwNWszZkFEbEQ2b3ArMmhN?=
- =?utf-8?B?cTJLUnkvUVhpUHFOdXlra2h1WWtVZ2RtOGZ2OEhaLzRnL1l2RlFoNHFVL2Q1?=
- =?utf-8?B?YzVYVWV2ZUR2Y3dPUTN4ZzVnVlBkZEd5UzM4Um1YWDg0ZWllQkllbkE4bW1m?=
- =?utf-8?B?WkpKMjk4alhLWE9MWExpT09kbmg0Ni9WMU5tVFdITDZQN2JabGg5ZzBVZGZp?=
- =?utf-8?B?UEJtL0Rhb3MzNFdqQks0cWhLY0dFdzIwM3A3cUpzRnZTSGJ5ZnBYcVh3K0tH?=
- =?utf-8?B?cHZNZkhKZG5NTkRsSWZBVUMrN2ZQSk42V0Jidkp1UnBSdXpmOWt0VjhFQUk4?=
- =?utf-8?B?ak1kbW9KMTBXMTV2WVMwZWY0YWtFaHE5dnBwOW1ReG5WZXJVZ2pPdE9QeCtm?=
- =?utf-8?B?SlRGeUFzU1J1cWRyYkxLLy9vb2JUU01JYzJYTWR6ZDFPdHRtMDc1RnNjbDlQ?=
- =?utf-8?B?Tlo3N094UThnVXJUdk9GbDZEbkQwMUNHa251VzdGUXVOL3lJYjBZN0I2bzB2?=
- =?utf-8?B?NFNRY2FwVkYrL3JxWWJtanBTeWUyZXZia1JCS2FoVkQzUEZ3YnlxM3FsQlZU?=
- =?utf-8?B?TlBnMmxqMWcxN1dXZStzY2l0dzE3TlVYdHJWaURDZTYwS1BCeUVudW1HQlJI?=
- =?utf-8?Q?pXANCkRlVrpCS?=
+	=?us-ascii?Q?31OFAowDSpHkwKpWWrNyL9gNZhnGnlLiVDGxXpmdHggjSYmyKCfwvBXIjVIp?=
+ =?us-ascii?Q?bqqCwD4fxERccuAHW9C8reWYVnWzj7A6ZleCwVhtLtzyCSJWsGLnpSKcXmGl?=
+ =?us-ascii?Q?8DGtot0qU4Iv6lH/D+lTw01FxtP47XjlEJQmcjqGzkXxsbEQBs9dCyKppDjP?=
+ =?us-ascii?Q?JV9TfPvzqle3VTJIQYYUIcSwSqm5C44xN14bl/GUKCi5ft8RScPFfsxLbb6X?=
+ =?us-ascii?Q?sC28R0nqo4JYG6blCBHhgdhtTR7zmvxABNz4K9dppqox4kjpZr7t9+jHqiUf?=
+ =?us-ascii?Q?sj9XkSWxzAXLy9Jia2nT0jM1UejblErhEHJ3iBoRhb7dnN4xYJxdxbPa4ZOp?=
+ =?us-ascii?Q?3D2wJikmTQ0AV33qIcwkJ0lnhJt/RK207BNYmLICYLIK1KOU/XiWnPTWmyEk?=
+ =?us-ascii?Q?JZOkDRtuX1T5x6sMXjbc0SE5t1x6YIO3Eyhv17RD/0CIQWOvKTAmn/I+bV1T?=
+ =?us-ascii?Q?Xz4KcBrKy+7bFxQkvdch3KHXJjUL2jUbUp0e16RMCcGzS7Pikky2gh0Ipfnn?=
+ =?us-ascii?Q?P7yXjkYdwJ5GwSRw9tZ1N17byXvVCZ6dadhUUcVAd1mMJar//KmOTFYThDVR?=
+ =?us-ascii?Q?wmOqa2eTd95dPExTjNv/kSmg9BWzvKJxpcOSIRUIw84AV4JrLhueTm6/7Mak?=
+ =?us-ascii?Q?7Epd4MocedXNMMXRetFGt8HDvGhUnUWRm/lK7e3z4h5kEg3pMqjgUPsFBTNW?=
+ =?us-ascii?Q?LWfspLiGx9qJjz5/nT0pnlWuoxjDonGkQLtCHK/FInI6cOxI9ADEfkz/QbZt?=
+ =?us-ascii?Q?j6rIf1odxpeBCMYYBsUBTi6EkNNfS8wfrbjAAryf2vzv4PHHUxQ9UFgc+a6Y?=
+ =?us-ascii?Q?9AyZuJQ+shQrGPTYk1JT8sJB9qfOGbkh9aUQ1+5zfz7Mkzh294q+RjQHIKuT?=
+ =?us-ascii?Q?F9vhIr3k7s9cKlDb7zv9ugCX7xYE/eX3lW2YuUm4BVJxrLWJk6WHHQv5mA0S?=
+ =?us-ascii?Q?lOFCj+VLmlYM3oiSieVdifqafCmi1IkEgA2kLqXWKC6CnPQD7DZs/sH41Xa/?=
+ =?us-ascii?Q?7dU/yXR7IYtVbb/oPXG1jnfKkhvcZt/4T+SBYHxH6eI+2K/Q4ja0RV5E/Rg2?=
+ =?us-ascii?Q?uWgprl3b0j+Cw9JvDIHhHkVaY3bnJXwnXZyQQF3HiLoMF2krlIMxIp8Afdus?=
+ =?us-ascii?Q?nqfL2d7j9qQKvk0jO8yK78WtL2Pb7kBP6J+5EzbvcXWgOgm05ho1ZYfpWwUd?=
+ =?us-ascii?Q?VdNcrqUtL9RMJQSTTvlbZoWN8YDNoQcEbAm9/83ThNUNG9AEUg+ocDWqvEZL?=
+ =?us-ascii?Q?W9JpzpzT6amfklvPXmEJtTkz36lctgG6lC6i2p1llmB7pSkB2d0B8sexBOoz?=
+ =?us-ascii?Q?ZqkmP3YBrriVetYPtyrRIHjmUzF31xxTS9tRLVm0nVCJsbu8RWO1GfMe0Keh?=
+ =?us-ascii?Q?XVxp0Ww8uYf8nAf6Lz9dUmG+rMgJ?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-10872.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: 677d41d2-ff94-4f1a-7a11-08de8f5f0398
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9625cf17-7669-4c1d-de2e-08de8f656df8
 X-MS-Exchange-CrossTenant-AuthSource: GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 19:52:18.0127
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 20:38:13.4800
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV3P280MB0433
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MM0P280MB0851
 
-The AR9170 SH-2 processor retains its internal command queue state
-across USB disconnect/reconnect when power is not fully cut (dirty
-disconnect).  On the next probe the firmware delivers the stale echo
-test response from the previous session BEFORE the new echo test is
-sent.  carl9170_cmd_callback() sees:
+The AR9170 hardware uses an OFDM baseband inherited from the AR9285/AR9287
+family which supports 400 ns Guard Interval on both 20 MHz and 40 MHz
+channels.  SGI_40 was already advertised; SGI_20 was not.
 
-  ar->readlen == 0   (no command pending yet, cmd_seq still -2)
-  response len == 4  (stale echo payload)
+Enabling SGI_20 reduces the OFDM symbol duration from 800 ns to 400 ns
+on 20 MHz channels, increasing the maximum PHY rate from 130 Mbps to
+144.4 Mbps (MCS 15, 2SS).
 
-and logs:
+The capability has been verified on Fritz!WLAN N (AR9170) hardware with
+no stability issues over several weeks of operation.  It is gated behind
+the sgi_20 module parameter (default N) to allow opt-in until broader
+hardware validation is available.
 
-  received invalid command response: got 4, instead of 0
-  carl9170 cmd: 04 02 00 00 ef be ad de
-  carl9170 rsp: 04 02 0e 00 ef be ad de
-  restart device (9)
-
-This cascades into probe failure -115.
-
-BUG-015 (0015) drains the USB bulk IN endpoint before URBs are
-attached, but cannot catch responses that arrive after URB submission
-begins.  Add a second line of defence inside carl9170_cmd_callback():
-when cmd_seq is still -2 (init phase, before the command sequence
-counter is synchronised) a length mismatch is treated as a stale
-response from a prior session and discarded at dev_dbg level without
-triggering a restart.
+The ath9k SGI_20 gate (AR_SREV_9287_11_OR_LATER / AR_SREV_9271) is a
+MAC silicon revision check specific to the ath9k PCI driver and does not
+apply to the AR9170's ZyDAS USB MAC.
 
 Signed-off-by: Masi Osmani <mas-i@hotmail.de>
 ---
- drivers/net/wireless/ath/carl9170/rx.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Changes in v2:
+  - Move IEEE80211_HT_CAP_SGI_20 from the static CARL9170_HT_CAP macro
+    to a module_param (modparam_sgi_20, bool, 0444) with conditional
+    dynamic setting.  The AR9170 uses a ZyDAS MAC with no silicon
+    revision register — cannot gate the capability at compile time as
+    ath9k does with AR_SREV_9287_11_OR_LATER.  Approach mirrors
+    modparam_noht already used in main.c.
 
-diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index XXXXXXX..YYYYYYY 100644
---- a/drivers/net/wireless/ath/carl9170/rx.c
-+++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -142,6 +142,18 @@
- 	 * So we only check if we provided enough space for the data.
- 	 */
- 	if (unlikely(ar->readlen != (len - 4))) {
-+		if (ar->cmd_seq == -2) {
-+			/*
-+			 * Firmware retained a stale response from a previous
-+			 * probe's echo test across USB reconnect (SH-2 retains
-+			 * state if power is not fully cut).  The real echo test
-+			 * has not been sent yet -- discard silently.
-+			 */
-+			dev_dbg(&ar->udev->dev,
-+				"discarding stale init response (len %d)\n",
-+				len - 4);
-+			return;
-+		}
- 		dev_warn(&ar->udev->dev, "received invalid command response:"
- 			 "got %d, instead of %d\n", len - 4, ar->readlen);
- 		print_hex_dump_bytes("carl9170 cmd:", DUMP_PREFIX_OFFSET,
+ drivers/net/wireless/ath/carl9170/main.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index af632418f..41a9f931f 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -55,6 +55,10 @@ int modparam_noht;
+ module_param_named(noht, modparam_noht, int, 0444);
+ MODULE_PARM_DESC(noht, "Disable MPDU aggregation.");
+
++static bool modparam_sgi_20;
++module_param_named(sgi_20, modparam_sgi_20, bool, 0444);
++MODULE_PARM_DESC(sgi_20, "Enable Short Guard Interval for 20 MHz (experimental).");
++
+ #define RATE(_bitrate, _hw_rate, _txpidx, _flags) {	\
+ 	.bitrate	= (_bitrate),			\
+ 	.flags		= (_flags),			\
+@@ -1972,6 +1976,11 @@ int carl9170_register(struct ar9170 *ar)
+ 		carl9170_band_5GHz.ht_cap.ht_supported = false;
+ 	}
+
++	if (modparam_sgi_20) {
++		carl9170_band_2GHz.ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
++		carl9170_band_5GHz.ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
++	}
++
+ 	for (i = 0; i < ar->fw.vif_num; i++) {
+ 		ar->vif_priv[i].id = i;
+ 		ar->vif_priv[i].vif = NULL;
 --
-Regards,
-Masi Osmani
+2.53.0
+
