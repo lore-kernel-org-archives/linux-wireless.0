@@ -1,30 +1,30 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E2618027
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:58:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D633B47ED
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:58:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773309529; cv=none; b=Zsda/3958YDeS0TfSOITKTi2qCt2I687p6zaR2xCug+hYQ8iPqvU1m8OdqlRe5FltaQRtlL/8lik0d3VQnZnhz/YlYVTutj3E4kUNwetekVnBbBCFJ8jJgdx1baql0mWNDBBG8CwCCX8kIXE5ItCW7ws0sd5ZV9JfHz2qYINVso=
+	t=1773309531; cv=none; b=h3O4sacUdwegHZW7QwP3cGdudgt0RycjQcr3h7BqnKGRi/K9sHOvydILFr2KH4/I05tbVeCDBFEsARrxr9MJ1yYBOqAaRsMmwt36DBNAXJcBc8nyfYr59vC3glyElcPJztvG/R4F7s/lqDArMPTeLoILtthem6LiXQlmqOfkQC4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773309529; c=relaxed/simple;
-	bh=DZm9b1ve14wHaFW0+GVrvyrBbI/2Fy5h03rdRNOFivw=;
+	s=arc-20240116; t=1773309531; c=relaxed/simple;
+	bh=W7C63lixE47GGl7afoEV6EO1Ps0o7BkIWjNV4Z2Ra5o=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pBEgyP0lqAYzE4sZGvKybJRKOM9214RddWhUKlL4NLiJuG8OPHQSzmBNkX9qz9QqP2BBzNYuvpusuK/sdUzcEaZQTZnOEN6Pev9iAyd0QizoQLuwYO7eREsXxoNpSCl15F+3iEX7MfVqOd5hrUMiW+dYclkiL8o+GMVK/d717b8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=HR4PpS+D; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=szs5+BQdFvvLcAOnzBJm4ZNrXbxct0o5ep5XwJTgK+QN8jMEuhUPos8sJdDgT990zA1aogo6zMvwbJ5v97kUDZ0twcTfFpRMdqppHmvJRQq0beP3VzynV3yXi9jX4Rq4Qk4GpPLShn/lhkF4kA7QcrMA32/21KvBo4ma/+IjHBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=P+5kOrp2; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="HR4PpS+D"
-X-UUID: 09d8d0ba1dfa11f1a02d4725871ece0b-20260312
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="P+5kOrp2"
+X-UUID: 0a13e01a1dfa11f1a02d4725871ece0b-20260312
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=4gWtsLnA6e7HTZJHIKf23ltT0p1tN93Y4nlsAfY2MRE=;
-	b=HR4PpS+DtSgN5vwyXhEcEbhppCut81W3MdsJYJBP6PgrRBbIET0ll21hK1IicuBcSnodaTTj7LCYrOuzsln1mckcJVhvRwgZST2jdnMfa3UyWw1ShWWVXergoC9bSrT69duT1E7j+POXBlHiIQ8xz4ZSvuN2vU2czBfWN70djQA=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=FLxfmK/cRatiKWu0FXZh6VM3FJyy/lEMau3hNxqvd38=;
+	b=P+5kOrp28EPtmAZXctmxVkU+fpNzLCw8UQryA1dzeJSN5Ig9Gky0AbGgvEsdKCBOvsM/lsoX9B3ASCrl7sUBU64BKSfQmStGQdB7OBmVrfPHcaGp/eok3WPIcAcVDmaxm59wzIMjKB1oMxMccU5sTpoVOBvaP3Qs/48/E0U+Xmg=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:35d1f967-b040-4f7e-affc-9837ef8db387,IP:0,U
-	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:25
-X-CID-META: VersionHash:e7bac3a,CLOUDID:2112eef9-dfaf-419f-9dd3-d093c7e8f968,B
+X-CID-O-INFO: VERSION:1.3.12,REQID:a1a5a082-1037-4ff4-a42e-ec1353285756,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:e7bac3a,CLOUDID:4112eef9-dfaf-419f-9dd3-d093c7e8f968,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
 	0|15|50,EDM:5,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:
 	0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,15 +32,15 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 09d8d0ba1dfa11f1a02d4725871ece0b-20260312
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+X-UUID: 0a13e01a1dfa11f1a02d4725871ece0b-20260312
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1930450911; Thu, 12 Mar 2026 17:58:36 +0800
+	with ESMTP id 1103246238; Thu, 12 Mar 2026 17:58:37 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 12 Mar 2026 17:58:35 +0800
+ 15.2.2562.29; Thu, 12 Mar 2026 17:58:36 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
  15.2.2562.29 via Frontend Transport; Thu, 12 Mar 2026 17:58:35 +0800
@@ -49,11 +49,11 @@ To: Felix Fietkau <nbd@nbd.name>
 CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
 	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
-	linux-mediatek <linux-mediatek@lists.infradead.org>, Howard Hsu
-	<howard-yh.hsu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76 2/6] wifi: mt76: mt7996: support critical packet mode for MT7990 chipsets
-Date: Thu, 12 Mar 2026 17:57:20 +0800
-Message-ID: <20260312095724.2117448-2-shayne.chen@mediatek.com>
+	linux-mediatek <linux-mediatek@lists.infradead.org>, Rex Lu
+	<rex.lu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76 4/6] wifi: mt76: mt7996: adjust timeout value for boot-up calibration commands
+Date: Thu, 12 Mar 2026 17:57:22 +0800
+Message-ID: <20260312095724.2117448-4-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20260312095724.2117448-1-shayne.chen@mediatek.com>
 References: <20260312095724.2117448-1-shayne.chen@mediatek.com>
@@ -67,30 +67,33 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-From: Howard Hsu <howard-yh.hsu@mediatek.com>
+From: Rex Lu <rex.lu@mediatek.com>
 
-For MT7990 chipsets, critical packet mode must be enabled. Without this,
-some higher priority packets may be placed in the wrong AC queue.
+Align the vendor driver by adjusting the timeout values for the
+MCU_UNI_CMD_EFUSE_CTRL and MCU_UNI_CMD_EXT_EEPROM_CTRL commands.
+Without this adjustment, false positive command timeout errors may occur,
+especially on some iPA variants.
 
-Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
+Signed-off-by: Rex Lu <rex.lu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index e1e51c9a0767..d286dedddd9b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -56,7 +56,7 @@ static int mt7996_start(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&dev->mt76.mutex);
- 	ret = mt7996_mcu_set_hdr_trans(dev, true);
--	if (!ret && is_mt7992(&dev->mt76)) {
-+	if (!ret && !is_mt7996(&dev->mt76)) {
- 		u8 queue = mt76_connac_lmac_mapping(IEEE80211_AC_VI);
- 
- 		ret = mt7996_mcu_cp_support(dev, queue);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index bdb9e30c54c1..2a9c59d15894 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -271,7 +271,8 @@ mt7996_mcu_set_timeout(struct mt76_dev *mdev, int cmd)
+ 		mdev->mcu.timeout = 2 * HZ;
+ 		return;
+ 	case MCU_UNI_CMD_EFUSE_CTRL:
+-		mdev->mcu.timeout = 20 * HZ;
++	case MCU_UNI_CMD_EXT_EEPROM_CTRL:
++		mdev->mcu.timeout = 30 * HZ;
+ 		return;
+ 	default:
+ 		break;
 -- 
 2.51.0
 
