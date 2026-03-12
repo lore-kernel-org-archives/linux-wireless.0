@@ -1,166 +1,96 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95AB93BA232;
-	Thu, 12 Mar 2026 09:37:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9E2618027
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:58:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773308276; cv=none; b=r3Ko9DixdZDqC2/PlxEtx8biK4GtokTEHSZlP4Hns31Pmsw9poUwOKMSWbKBpe1D4auGfL70YtZN6+Bzg7urrB+egy1PbYAEmXl+BE1/3JyehWAkVns8H65uk0Dz4wrms1azwwqcFs3hKkLLDXpbhBgYO2DrvMOE8dJjl7yaETA=
+	t=1773309529; cv=none; b=Zsda/3958YDeS0TfSOITKTi2qCt2I687p6zaR2xCug+hYQ8iPqvU1m8OdqlRe5FltaQRtlL/8lik0d3VQnZnhz/YlYVTutj3E4kUNwetekVnBbBCFJ8jJgdx1baql0mWNDBBG8CwCCX8kIXE5ItCW7ws0sd5ZV9JfHz2qYINVso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773308276; c=relaxed/simple;
-	bh=7St0SgkpoCqegFRGPaU8gPTTG4NNTsHqAMxFMontZ3U=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=AYDufNZkC4E9rGymzkDN2lINFkY4YoitzRNcF73Dsi4DLz1rM/LiQy4X0NfehYF24dHAKLjxdEltayh9P4ClnSFFmD9PohPUntBc+3Fbuir3kdzAu4ADS2f9jTKoYDWyap9DvzP0ITEEcuaYUFmFKyCyzIyg/Tzd8viwzchvY8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=K/FA5zxM; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1773309529; c=relaxed/simple;
+	bh=DZm9b1ve14wHaFW0+GVrvyrBbI/2Fy5h03rdRNOFivw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pBEgyP0lqAYzE4sZGvKybJRKOM9214RddWhUKlL4NLiJuG8OPHQSzmBNkX9qz9QqP2BBzNYuvpusuK/sdUzcEaZQTZnOEN6Pev9iAyd0QizoQLuwYO7eREsXxoNpSCl15F+3iEX7MfVqOd5hrUMiW+dYclkiL8o+GMVK/d717b8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=HR4PpS+D; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="K/FA5zxM"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=GWyIkvOFf1wPgGGSCnpAqsN4f/t5t8iIVdsRu5KdwmU=;
-	t=1773308270; x=1774517870; b=K/FA5zxMKreNO7Sutp9DFwfX5Sl8uX2B1ytk+3FqeDZv75y
-	4DgtneOqaELl8NaQ5oBOs87SxuWT/UjXZ5glQkfDKItkgFz0fXcnk0gqZRXa/BAN8W46TqnHu/yEV
-	sObmeg7VWDK9cB8MZ/toSKelaG26nGADPBI1cKbv/PTIdUjsUGdkYrDdBX16zvg3fZ/LQA4uPybWa
-	81CBfykNNzdvOokpQJ6Zebpjc1lEfELk7c35Qo3n9w5S99p4K2ksY8xGYVBFW41EGThTlNLB/RFAz
-	JxRCF9XbDvQeJXupiKzw4R5LYC4ETfz/7uQUQh6+ahBOrBsXutvBKjGnbbEMYB4g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1w0cUE-0000000FlgF-32tr;
-	Thu, 12 Mar 2026 10:37:46 +0100
-Message-ID: <b7f4c8f1a251ea9cccb32f021828896371953143.camel@sipsolutions.net>
-Subject: Re: ath12k: handling of HE and EHT capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alexander Wilhelm <alexander.wilhelm@westermo.com>, Jeff Johnson
-	 <jjohnson@kernel.org>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Thu, 12 Mar 2026 10:37:46 +0100
-In-Reply-To: <abKBOp8Jc7f7U0T8@FUE-ALEWI-WINX>
-References: <abKBOp8Jc7f7U0T8@FUE-ALEWI-WINX>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="HR4PpS+D"
+X-UUID: 09d8d0ba1dfa11f1a02d4725871ece0b-20260312
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=4gWtsLnA6e7HTZJHIKf23ltT0p1tN93Y4nlsAfY2MRE=;
+	b=HR4PpS+DtSgN5vwyXhEcEbhppCut81W3MdsJYJBP6PgrRBbIET0ll21hK1IicuBcSnodaTTj7LCYrOuzsln1mckcJVhvRwgZST2jdnMfa3UyWw1ShWWVXergoC9bSrT69duT1E7j+POXBlHiIQ8xz4ZSvuN2vU2czBfWN70djQA=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:35d1f967-b040-4f7e-affc-9837ef8db387,IP:0,U
+	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:25
+X-CID-META: VersionHash:e7bac3a,CLOUDID:2112eef9-dfaf-419f-9dd3-d093c7e8f968,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
+	0|15|50,EDM:5,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:
+	0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 09d8d0ba1dfa11f1a02d4725871ece0b-20260312
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+	(envelope-from <shayne.chen@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1930450911; Thu, 12 Mar 2026 17:58:36 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 12 Mar 2026 17:58:35 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 12 Mar 2026 17:58:35 +0800
+From: Shayne Chen <shayne.chen@mediatek.com>
+To: Felix Fietkau <nbd@nbd.name>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
+	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
+	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
+	linux-mediatek <linux-mediatek@lists.infradead.org>, Howard Hsu
+	<howard-yh.hsu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
+Subject: [PATCH mt76 2/6] wifi: mt76: mt7996: support critical packet mode for MT7990 chipsets
+Date: Thu, 12 Mar 2026 17:57:20 +0800
+Message-ID: <20260312095724.2117448-2-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260312095724.2117448-1-shayne.chen@mediatek.com>
+References: <20260312095724.2117448-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Hi,
-> For example, I use the `iw` tool to display the capabilities and their
-> descriptions. The code for that has the following function prototypes:
->=20
->     * void print_ht_capability(__u16 cap);
->     * void print_vht_info(__u32 capa, const __u8 *mcs);
->     * static void __print_he_capa(const __u16 *mac_cap,
->                                   const __u16 *phy_cap,
->                                   const __u16 *mcs_set, size_t mcs_len,
->                                   const __u8 *ppet, int ppet_len,
->                                   bool indent);
->     * static void __print_eht_capa(int band,
->                                    const __u8 *mac_cap,
->                                    const __u32 *phy_cap,
->                                    const __u8 *mcs_set, size_t mcs_len,
->                                    const __u8 *ppet, size_t ppet_len,
->                                    const __u16 *he_phy_cap,
->                                    bool indent);
+From: Howard Hsu <howard-yh.hsu@mediatek.com>
 
-This is perhaps a bit unfortunate, but note that the HE and EHT __u16
-and __u32 here are really little endian pointers, and the functions do
-byte-order conversion.
+For MT7990 chipsets, critical packet mode must be enabled. Without this,
+some higher priority packets may be placed in the wrong AC queue.
 
->     struct ieee80211_sta_ht_cap {
->         u16 cap; /* use IEEE80211_HT_CAP_ */
->         bool ht_supported;
->         u8 ampdu_factor;
->         u8 ampdu_density;
->         struct ieee80211_mcs_info mcs;
->     };
->=20
->     struct ieee80211_sta_vht_cap {
->         bool vht_supported;
->         u32 cap; /* use IEEE80211_VHT_CAP_ */
->         struct ieee80211_vht_mcs_info vht_mcs;
->     };
->=20
-> The structs for HT and VHT use `u16` and `u32` data types for the `cap`
-> variable, matching what `iw` does. That part is consistent.
+Signed-off-by: Howard Hsu <howard-yh.hsu@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Careful. There are different structs used in different places, notably
-HT/VHT and HE/EHT differ.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+index e1e51c9a0767..d286dedddd9b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
+@@ -56,7 +56,7 @@ static int mt7996_start(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&dev->mt76.mutex);
+ 	ret = mt7996_mcu_set_hdr_trans(dev, true);
+-	if (!ret && is_mt7992(&dev->mt76)) {
++	if (!ret && !is_mt7996(&dev->mt76)) {
+ 		u8 queue = mt76_connac_lmac_mapping(IEEE80211_AC_VI);
+ 
+ 		ret = mt7996_mcu_cp_support(dev, queue);
+-- 
+2.51.0
 
-For HT and VHT, look at the start of nl80211_send_band_rateinfo(), which
-sends themas individual attributes, defined in enum nl80211_band_attr,
-and the values that are u16 (NL80211_BAND_ATTR_HT_CAPA) or u32
-(NL80211_BAND_ATTR_VHT_CAPA) are in host byte order, though both are
-actually documented misleadingly ("as in [V]HT information IE" is just
-all around wrong.)
-
-For HE/EHT, you have it in nl80211_send_iftype_data() since it's per
-interface type, and all the individual values are just as they appear in
-the spec, regardless of their size.
-
-Note that spec is generally in little endian, but sometimes has strange
-field lengths like MAC capabilities being 6 bytes in HE:
-
->     struct ieee80211_he_cap_elem {
->         u8 mac_cap_info[6];
->         u8 phy_cap_info[11];
->     } __packed;
->=20
->     struct ieee80211_he_6ghz_capa {
->         /* uses IEEE80211_HE_6GHZ_CAP_* below */
->         __le16 capa; }
->     __packed;
->=20
-> However, for HE the types differ from the `iw` implementation. Here, `u8`
-> arrays are used instead of `u16` for MAC and PHY capabilities. The 6 GHz
-> capabilities use `u16`, which is also different.
-
-That doesn't really matter, they're just a set of 6 or 11 bytes, and
-e.g. the HE MAC capabilities are treated by the kernel as a set of 6
-bytes, but by iw as a set of 3 __le16, which results in the same
-interpretation, or at least should.
-
->     struct ieee80211_eht_cap_elem_fixed {
->         u8 mac_cap_info[2];
->         u8 phy_cap_info[9];
->     } __packed;
->=20
-> For EHT, `u8` arrays are also used for both MAC and PHY caps, instead of
-> `u32` for the PHY caps as in the `iw` implementation.
-
-Same thing here.
-
-> The current `ath12k` implementation always uses `u32` values, which does
-> not work on big=E2=80=91endian platforms:
-
-Yeah, that seems problematic and not really fitting for something that's
-6, 11, 2 or 9 bytes long?
-
-> I want to address and fix this issue. However, I cannot apply the =E2=80=
-=9Cnever
-> break the userspace=E2=80=9D rule here, as it seems, it is already broken=
-.
-
-I don't think it's broken, why do you say so?
-
-What's (clearly) broken is how ath12k puts the data into the HE/EHT
-structs that the kernel expects, but per your dmesg:
-
->     ath12k_pci 0001:01:00.0: ieee80211 registration failed: -22
->     ath12k_pci 0001:01:00.0: failed register the radio with mac80211: -22
-
-it seems that even mac80211 doesn't like the capabilities, so the byte
-order issue already exists there.
-
-It seems to me the issue is that ath12k_band_cap is in u32, converted,
-but then memcpy()d.
-
-johannes
