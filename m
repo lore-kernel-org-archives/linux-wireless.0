@@ -1,45 +1,42 @@
 Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7EB39020A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC75C38839D
 	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334864; cv=none; b=nnstchLnqHJVisirEclDs9EZbT368L+gFqPPBVfC+TwoQVYtCOMeyRp3UOdt2NwuirRc1YmzljB3D/zX6Tn0pYWLoS8XnpD7yFCfij2axTq54qg7xwLtcuGUsv4qhx+vmTLV4p85v5/8xYxcbhAl+5a+LeK+EQLp4J9Bn/GeTD4=
+	t=1773334864; cv=none; b=sZE4Qy/Tizae8zLfhhna1sJnJejldaLw6AeVALS8dP3t080PpJiMm6rAffFrfRrsAFElwZqmMnqPBxryrG347Las5qGSnJ0Sb1D9VHOD65RiKZFMFU2AwPyxA/8YGwT7Y+RPbkYKS7w1h+6hYcmRw24+t/3W5raHOIlzaVOA294=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773334864; c=relaxed/simple;
-	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kLhBJXCwVdnoI2jR9gQ1x2WEzuOpuLQYXXZlPc7MH/kfbm7HbVSDahBkMzehNttRmySUohddJLVOh+hFVR+7RJBpzEJEq/CJ4UMwzl6rkg14cfMLlZxYIUYzzBkzUrugCn3kR3PzCTg7EYgiVXLXmdOgqE1+UDd6Zfnm3LGMAzA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=CMgp+OJD; arc=none smtp.client-ip=67.231.154.184
+	bh=DSCdSK4lU5RQBZjdelV3oyF4A75rcEZSnG/xpqU1mJo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OSsuOJmgZ1CM6Vs0KU9u3bUz5vjP3VnhiF3ZyetLBXbiry4PBoYnRc5mNtRzJ1FiB5Cp3XHhS7aSR1bFGEB3Yqts7bcshqcSoxsLLm2chxvQPkLrna3boV2taItCJq0CWBu/RiEJxfV2j2Q1l46Pn1+Ej6zsHQrnM0yzAT8APL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=jSrztf6u; arc=none smtp.client-ip=67.231.154.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="CMgp+OJD"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="jSrztf6u"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id ACC186C007E
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 568A29400D1
 	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:00 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 0EF8913C2B1;
-	Thu, 12 Mar 2026 10:00:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0EF8913C2B1
+	by mail3.candelatech.com (Postfix) with ESMTP id BFC2213C2B0;
+	Thu, 12 Mar 2026 10:00:57 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com BFC2213C2B0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773334858;
-	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CMgp+OJDNyNnhoK73+prvH2zBf3TfytjOnzuJHB16gSuBUhRfxGxtX0rK37o+Sz7n
-	 UG7SZvjtTX8R8cRfwvOPbI9EpGV3C5GZFjy2N3mVW11WMp4ZXIoaa8Fv7T1dgIJbBS
-	 3CCDd2h6BxhHXwcuk6kIEb1rM5NVcwbYHDj2xkjE=
+	s=default; t=1773334857;
+	bh=DSCdSK4lU5RQBZjdelV3oyF4A75rcEZSnG/xpqU1mJo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=jSrztf6u11QwPYr/XQKjbOdQGKAQbAbTI1GIniokbmWbxgPJUxRorWOnNlcrlb9x6
+	 bqGIL3ZLTSLK/3qLQbEuRJ30zY9RLciLgH+P4wYRqd+lbI6DMoZlEFHfP5A17DPNPg
+	 7baT9Vf9PFW3PCAPvp5kqDc1x/HG/hHovs04xm5c=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next v2 01/28] wifi: iwlwifi: mld:  Check for NULL before lookup.
-Date: Thu, 12 Mar 2026 09:59:59 -0700
-Message-ID: <20260312170026.285494-2-greearb@candelatech.com>
+Subject: [PATCH wireless-next v2 00/28] iwlwifi + mac80211 stability
+Date: Thu, 12 Mar 2026 09:59:58 -0700
+Message-ID: <20260312170026.285494-1-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
-References: <20260312170026.285494-1-greearb@candelatech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,44 +44,88 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773334861-mh_LBtroxhYP
+X-MDID: 1773334861-8pLku_mG2oC8
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;at1;1773334861;mh_LBtroxhYP;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;at1;1773334861;8pLku_mG2oC8;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-Do not call iwl_mld_sta_from_mac80211(sta) unless we have
-verified sta is non NULL.
+mac80211 and iwlwifi stability patches from our internal
+tree.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/intel/iwlwifi/mld/agg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+General test case is 40 be200 radios attempting to connect and
+run max traffic against an AP that doesn't really like that many
+eMLSR stations.  Firmware crashes, AP rejections, assoc timeouts,
+and other problems are seen often, and that seems to hit a lot
+of edge cases.  Kernel has kasan, lockdep and other debugging
+enabled.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-index 3bf36f8f6874..a757077b0a7a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
-@@ -194,7 +194,7 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
- 	struct iwl_mld_baid_data *baid_data;
- 	struct iwl_mld_reorder_buffer *buffer;
- 	struct iwl_mld_reorder_buf_entry *entries;
--	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
-+	struct iwl_mld_sta *mld_sta;
- 	struct iwl_mld_link_sta *mld_link_sta;
- 	u32 reorder = le32_to_cpu(desc->reorder_data);
- 	bool amsdu, last_subframe, is_old_sn, is_dup;
-@@ -221,6 +221,8 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
- 		      "Got valid BAID without a valid station assigned\n"))
- 		return IWL_MLD_PASS_SKB;
- 
-+	mld_sta = iwl_mld_sta_from_mac80211(sta);
-+
- 	/* not a data packet */
- 	if (!ieee80211_is_data_qos(hdr->frame_control) ||
- 	    is_multicast_ether_addr(hdr->addr1))
+This was primarily tested against 6.18.14 stable kernel, but has been
+revised to work against wireless-next and it is passing at least the
+first hour of tests so far.  Likely some problems still remain in
+this area.
+
+checkpatch seems mostly satisfied.
+
+v2:  Remove 0002 patch that did not actually do anything useful.
+     Add new patch to check debugfs creation in net/wireless.  Hopefully
+     this solves the syzbot WARNING that was reported.
+
+Ben Greear (28):
+  wifi: iwlwifi: mld:  Check for NULL before lookup.
+  wifi: iwlwifi: mld: Add check for null vif in stats callback.
+  wifi: wireless:  Check debugfs create return values.
+  wifi: mac80211:  Check debugfs creation return values.
+  wifi: mac80211: do not fail taking sta to lower state.
+  wifi: mac80211: Mark sta as uploaded if single transition succeeds.
+  wifi: mac80211:  Fix use-after-free of debugfs inodes.
+  wifi: mac80211: Debugfs safety checks.
+  wifi: mac80211: Use warn-on-once in drv_remove_chanctxt
+  wifi: mac80211: Ensure sta debugfs is not double-freed.
+  wifi: iwlwifi: mld: Fix stale reference in fw_id_to_link_sta
+  wifi: iwlwifi: mld:  Improve logging in error cases.
+  wifi: iwlwifi: mld: Remove warning about BAID.
+  wifi: mac80211: Add dmesg log regarding warn-on in drv-stop.
+  wifi: iwlwifi: mld: Fix use-after-free of bss_conf
+  wifi: iwlwifi: mld: Check for null in iwl_mld_wait_sta_txqs_empty
+  wifi: iwlwifi: mld: use warn-on-once in error path.
+  wifi: iwlwifi: mld: Use warn-on-once in emlsr exit logic.
+  wifi: iwlwifi: mld: Improve error message in rx path.
+  wifi: iwlwifi: mld: Improve logging message.
+  wifi: iwlwifi: mld: Protect from null mld_sta
+  wifi: mac80211: Add force-cleanup call to driver.
+  wifi: iwlwifi: mld: Support force-cleanup op
+  wifi: iwlwifi: mld: Fix NPE in flush logic.
+  wifi: iwlwifi: mld: Fix bad return address in tx code.
+  wifi: mac80211: Ensure link work-items are only initialized once.
+  wifi: iwlwifi: mld: Convert to WARN_ONCE in link removal path.
+  wifi: mac80211: Decrease WARN spam.
+
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c  |  20 +++-
+ drivers/net/wireless/intel/iwlwifi/mld/link.c |  42 +++++--
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c |  19 +++-
+ drivers/net/wireless/intel/iwlwifi/mld/mlo.c  |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/sta.c  |  20 +++-
+ drivers/net/wireless/intel/iwlwifi/mld/sta.h  |   2 +-
+ .../net/wireless/intel/iwlwifi/mld/stats.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/tx.h   |   2 +
+ include/net/mac80211.h                        |   7 ++
+ net/mac80211/debugfs.c                        |  11 ++
+ net/mac80211/debugfs_key.c                    |   6 +
+ net/mac80211/debugfs_netdev.c                 | 106 +++++++++++++++++-
+ net/mac80211/debugfs_sta.c                    |  15 +++
+ net/mac80211/driver-ops.c                     |  10 +-
+ net/mac80211/driver-ops.h                     |  12 +-
+ net/mac80211/ieee80211_i.h                    |   1 +
+ net/mac80211/link.c                           |  29 +++--
+ net/mac80211/sta_info.c                       |   8 +-
+ net/mac80211/util.c                           |   8 +-
+ net/wireless/core.c                           |  11 ++
+ 21 files changed, 296 insertions(+), 44 deletions(-)
+
 -- 
 2.42.0
 
