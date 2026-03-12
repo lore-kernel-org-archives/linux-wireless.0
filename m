@@ -1,141 +1,177 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88C9514A8B
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 00:49:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773276570; cv=pass; b=nYzwCspO3kulSxZx4+tBFn0/wHoRXnYqSW4DC/v61XD/LKpIxzk30V8v4JPHzsmmy0DXeDuH2LkQ4KEcUkHWlAzw4RyS6d2MEU6VFPaoXBpNiVJYxFXVR4XgiHhYfESmlzi5q3S2wC4xj07fRHoN7aSZ4Q7KkISFCS5PD6sESVk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773276570; c=relaxed/simple;
-	bh=mwVpUA/giWdIJw58k9hDbz0hUZ4oBZ31MQ6sjUpSbkU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=C0LjIqqakEjJjb0A+Cz/I3YoZxDIPf5318RiDm0/QGMlr7EepD4WNXsmpIFVWl7bd/X1wxpzsD/zKC3SEmaFfDRIQGxaqiYHaJ5VVBtQV2zvmdNJjRkXwRrxRfzg/Jv54vhkAZwdvyV7u6c7ARx4fEgdaixX81DmpMgihu5DJsQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AalmctL1; arc=pass smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AalmctL1"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-b942a41c5fcso55897766b.0
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2026 17:49:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1773276568; cv=none;
-        d=google.com; s=arc-20240605;
-        b=QGVGeeUd456RlqfaGpBDaKlqYFsfw0s5DaAI4+J+J4PhFfDfi5ys2GXnntd9hQV4kk
-         shrLJCXLMYblU7U/qfOassGsm18u+7c16KlSg3GaDB67G6ne05eiOBSLjj3ugRXNNe3N
-         9cbH16WgIDU0TRM63pip2uEX7RBiXKR1ZLVPUNYVaorFVohJjbd8ChiyuLElSwrANlN5
-         Z5zaxsAkyEMsVerFZVItw5I17ykhpjYE62SwZH3NArZATqkLnX98Y6PrXHxt4rHGJAvF
-         9DBxfLB7puer1VQuD9DtCuRH7FKgsie83c16ohPUTSYjI/Rnc6wJJDHl7T0THcAo240X
-         HIMw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=mwVpUA/giWdIJw58k9hDbz0hUZ4oBZ31MQ6sjUpSbkU=;
-        fh=NEObcxblMrqXviMD6t8Af9NV6vBFXK2xX2AX9Y7rA0c=;
-        b=Y2Z0P0+wGpqNVqwG43PIPkr/SusRYwPOlRKORlWLKMRAgQ+Au6FA3BEz5dOzile2JR
-         oEdzxrqDTsQmXSejkom2+xOHot3AzxM+5JasgcsDWaYtDBPE9YMUAse+r3RREXmRFlr7
-         MtP/NlnEBx9ce7D+i1foZIjhvBtJY4yrrdcoDRuHBXXzTNAVDHIUdT6o459GfldDBZi1
-         sYWmmhQDflJcmbWq2qoMUsq9LiS4ICaiQSObcg4Y5YT9VWZgXsQ/7qlnT/ZjN/1XcnWZ
-         Y1aeD2aL6St4cV+JO0WBRkw0VN4lWaGx08wilyCxZAHaork9iypP+c9+SXJ8XVxWbU1r
-         hKzA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1773276568; x=1773881368; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mwVpUA/giWdIJw58k9hDbz0hUZ4oBZ31MQ6sjUpSbkU=;
-        b=AalmctL1rAyeyp2LDB/BLBLH0068yqJ4aTEixZLgp4n/ZdbI2yO1jjOrXXELFh+Z/S
-         YXKQElfCaLrQtTDp+p/d+5/QRpDpWrcP55jFkftuL4dXV1lBYM9WTs5Ce1LLsnsw0Nni
-         jEmtvwVzk3xKAhClxbzQVJ9/0/qOfvIayBuDUexfdyf3vuNwobCYByaU6J+wuaFtdhEu
-         fmpFKQMOYmKSId0aHTK1Jt6G+WguRo94HB8k5pXq2GBAhguCZ1+/A8A6BeYs98WNL12v
-         0CD9JAFkCsexk1yVfOsTq2Lv8WgtiI3Y8Ly5CBaZCWrkE0h3cwN3pdI4pYyNWVzBuiab
-         /LEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773276568; x=1773881368;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=mwVpUA/giWdIJw58k9hDbz0hUZ4oBZ31MQ6sjUpSbkU=;
-        b=t3gjBhyjBbc4ff9RIWecrxqOsRXOGTY18Xc58hvlm55vFw1ENHJT4SjFW9i7gca0nE
-         KPR/faKr9eD+jfNOecQccMtnS2MerTdcPjimpMjH7l6m6qpXdG8mNkbRIEfRMRuAKf1I
-         1HEzywoWp9XaOMpa8L3PgmCtrswlImuwTwkIFDy4fMGcxnqEHBzCYgjK8IXAbhmOyrHE
-         8JBWXcJRLFkvVVbzXxT3tYHVeY5LzFBirvsvp7OmjxPzmFxua9EKNoKjnZs5MtvsracL
-         aceVeLsCZ072uG5kTafIQoFu+49Qh7IPmkg5F1eehPuHHqd1gq0BdbGMIlxFuPPo1PRh
-         zh8Q==
-X-Gm-Message-State: AOJu0Yy0RJ5KhMVDM54Qo6N7LmJWrs1Bi9f/ZFHbmRU4Knbnp9Y7XMaN
-	sBru7hkC2HJNvBpd0tXz0I/PS8+xbBXLoDLYkQt4PbRx5OfW9Tzey39AFuHOgws+n1JbvNuseye
-	ATbanenA6SPUc2WTxHp+Aw/OQ/uCqIBI=
-X-Gm-Gg: ATEYQzz1z5m6jCfrM5PsWWRtBwjxizuq2uXeWi3+kbFYVxAqMWO43LfrRWtKcM1xPcn
-	66A8XJ0vHgyxekwSWKkLvIQPZrpx4Y9/UkOJKpRNp2BoCq/QnxU4M9S54oIUSJB5FP23L2A2ey9
-	GSjDZcikvl9rRvBjtG+JgQy/Al5XJpUcbRXZubJxtPB9bJojMFMrM1po8X9SSouOmoL3e4SCF6L
-	xyQQlBkukzdlnFjQowsOiljf3dPrSetClIBXRJg1XAqQpgWpsc5KEuDmmBo+PAmMx2hIeNV30H9
-	caWhwQ==
-X-Received: by 2002:a17:906:a8f:b0:b88:4e52:bfb6 with SMTP id
- a640c23a62f3a-b972e6c8e7dmr179250466b.56.1773276567628; Wed, 11 Mar 2026
- 17:49:27 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE351A6832;
+	Thu, 12 Mar 2026 01:41:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773279669; cv=none; b=FGwl19CXLRzkyap+kZ9zddum+seQfEmUqpCTtC7Ydy1fgc1n4P6svLnxUJJmCMGomh0yYRYuRMgsV5X5sfVhJnPlShoCKotdsVt2UofggJ88b65oVSaw3TBBERwlyKtyVSGCiV/jUWuAaRcRLSAo8LjaoFUBVR88dRkJqRJ6DX4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773279669; c=relaxed/simple;
+	bh=yLo/YY+YfuQ6BSr+REO8tabywheEmVWKKoLtLuAIyHM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LHTXCJyD7OitbiO+6N3aADBZyK0u0M11e31Itd/oYGEEyeFrAUPsPEDHpD9x5SjZq72zI3Uv7qYR7eqDXvlkWIyr+df7mX7kcrAgkIOYW5K9DGq+zZzhfxRZoGolmzICgJF742ybWl2rBbKa6ymVEsGJKxXAyF7TcycH3pMYQSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 83356ff41db411f1a21c59e7364eecb8-20260312
+X-CID-CACHE: Type:Local,Time:202603120931+08,HitQuantity:1
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.11,REQID:6ecbe081-bbc8-49f5-9a7c-2efdc8cfe5c9,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:89c9d04,CLOUDID:c01da53ef879e46a6af16c8db909bb4c,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|898,TC:nil,Content:0|15|50,EDM:5,IP:
+	nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,L
+	ES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 83356ff41db411f1a21c59e7364eecb8-20260312
+X-User: liujiajia@kylinos.cn
+Received: from iris.lan [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <liujiajia@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 400210812; Thu, 12 Mar 2026 09:40:55 +0800
+From: Jiajia Liu <liujiajia@kylinos.cn>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Jiajia Liu <liujiajia@kylinos.cn>
+Subject: [PATCH] wifi: iwlwifi: use unique thermal zone type
+Date: Thu, 12 Mar 2026 09:40:43 +0800
+Message-ID: <20260312014043.13361-1-liujiajia@kylinos.cn>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CANAPQzi3BkfnRS4CEXAA560O5cO8e6MEYxeVVx1u+xUeXS-gmA@mail.gmail.com>
- <CAGp9LzoidBL1iYYC371+Fw+drbArLRTneJKxCoFiitx=dweKCg@mail.gmail.com>
- <CANAPQzjiBf8Rqphn2SypYN2O6bddj6vB=63Mp=T5YVEt2oGvyw@mail.gmail.com>
- <CANAPQzgiE1rMP3F=5NJg3hp2uBXtq44+vTRBdkHwdfHyXJ8MQQ@mail.gmail.com>
- <CANAPQzgD312EPSbvaQTE6U+wn85L65+xZHms7DP509ApxWvSZA@mail.gmail.com> <CANAPQzgXN2UOjuwV1fRofN2syxG933kSaB9S7DyFAykHHMRzew@mail.gmail.com>
-In-Reply-To: <CANAPQzgXN2UOjuwV1fRofN2syxG933kSaB9S7DyFAykHHMRzew@mail.gmail.com>
-From: bryam vargas <bryamestebanvargas@gmail.com>
-Date: Wed, 11 Mar 2026 19:49:16 -0500
-X-Gm-Features: AaiRm50HsJHpMb3HbIXjmjo7HBZSIJYEz5Gy_TSE0LfzfxeboZKaIdZ6E1IIr6E
-Message-ID: <CANAPQzhJfMCqqgdJJEY8uYPexBXYaXx6XVVUiRcQZA5=t_fBgQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mt76: connac: fix txpower_cur not updated in mt76_connac_mcu_set_rate_txpower()
-To: Sean Wang <sean.wang@kernel.org>
-Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Subject: mt76: mt7921u: WF_MIB registers inaccessible over USB =E2=80=94 ri=
-ght
-approach for survey fix?
+Unloading iwlmld or iwlmvm can trigger hung task when two devices
+using iwlmvm and iwlmld respectively on one setup. Their thermal
+zones have the same type and share the same hwmon device created
+by the first zone. The second zone indirectly holds the first zone
+through hwmon and prevents the first zone from unregistering.
+Tested with AX211 (8086:7af0) and BE200 (8086:272b).
 
-Hi Sean,
+INFO: task modprobe:5295 blocked for more than 120 seconds.
+      Not tainted 7.0.0-rc2-up1 #2
+Call Trace:
+ __schedule+0x4df/0xfd0
+ schedule+0x27/0xd0
+ schedule_timeout+0xbd/0x100
+ __wait_for_common+0x97/0x1b0
+ ? __pfx_schedule_timeout+0x10/0x10
+ thermal_zone_device_unregister+0x173/0x1c0
+ iwl_mld_thermal_exit+0xbb/0xd0 [iwlmld]
+ iwl_op_mode_mld_stop+0x37/0x120 [iwlmld]
+ iwl_opmode_deregister+0xc0/0x160 [iwlwifi]
+ __do_sys_delete_module+0x1b5/0x320
 
-Thank you for the v1 review. I've just sent v2 addressing both points.
+Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-utils.c   | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-utils.h   |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/mld/thermal.c |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c      |  6 ++++--
+ 4 files changed, 20 insertions(+), 4 deletions(-)
 
-While investigating why iw reports zero channel time on mt7921u, I
-traced the issue to mt792x_phy_update_channel(): it reads
-MT_MIB_SDR9/36/37 via mt76_rr(), which works fine on PCIe (direct
-MMIO), but on USB these are hardware MAC counters in the WF_MIB block
-that the firmware does not map in its USB vendor request table =E2=80=94 so
-they always return 0.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-utils.c b/drivers/net/wireless/intel/iwlwifi/iwl-utils.c
+index d503544fda40..fe5fa5e59664 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-utils.c
+@@ -193,3 +193,13 @@ s8 iwl_average_neg_dbm(const u8 *neg_dbm_values, u8 len)
+ 	return clamp(average_magnitude - i, -128, 0);
+ }
+ IWL_EXPORT_SYMBOL(iwl_average_neg_dbm);
++
++#ifdef CONFIG_THERMAL
++u8 iwl_thermal_zone_get_id(void)
++{
++	static atomic_t counter = ATOMIC_INIT(0);
++
++	return atomic_inc_return(&counter) & 0xFF;
++}
++IWL_EXPORT_SYMBOL(iwl_thermal_zone_get_id);
++#endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-utils.h b/drivers/net/wireless/intel/iwlwifi/iwl-utils.h
+index 5172035e4d26..84a4543fd290 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-utils.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-utils.h
+@@ -55,4 +55,8 @@ u32 iwl_find_ie_offset(u8 *beacon, u8 eid, u32 frame_size)
+ 
+ s8 iwl_average_neg_dbm(const u8 *neg_dbm_values, u8 len);
+ 
++#ifdef CONFIG_THERMAL
++u8 iwl_thermal_zone_get_id(void);
++#endif
++
+ #endif /* __iwl_utils_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+index f8a8c35066be..500028a4dbd3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+@@ -5,6 +5,7 @@
+ #ifdef CONFIG_THERMAL
+ #include <linux/sort.h>
+ #include <linux/thermal.h>
++#include "iwl-utils.h"
+ #endif
+ 
+ #include "fw/api/phy.h"
+@@ -243,7 +244,6 @@ static void iwl_mld_thermal_zone_register(struct iwl_mld *mld)
+ {
+ 	int ret;
+ 	char name[16];
+-	static atomic_t counter = ATOMIC_INIT(0);
+ 	struct thermal_trip trips[IWL_MAX_DTS_TRIPS] = {
+ 		[0 ... IWL_MAX_DTS_TRIPS - 1] = {
+ 			.temperature = THERMAL_TEMP_INVALID,
+@@ -254,7 +254,7 @@ static void iwl_mld_thermal_zone_register(struct iwl_mld *mld)
+ 
+ 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
+ 
+-	sprintf(name, "iwlwifi_%u", atomic_inc_return(&counter) & 0xFF);
++	sprintf(name, "iwlwifi_%u", iwl_thermal_zone_get_id());
+ 	mld->tzone =
+ 		thermal_zone_device_register_with_trips(name, trips,
+ 							IWL_MAX_DTS_TRIPS,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 53bab21ebae2..ea8e616174db 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -7,6 +7,9 @@
+ #include <linux/sort.h>
+ 
+ #include "mvm.h"
++#ifdef CONFIG_THERMAL
++#include "iwl-utils.h"
++#endif
+ 
+ #define IWL_MVM_NUM_CTDP_STEPS		20
+ #define IWL_MVM_MIN_CTDP_BUDGET_MW	150
+@@ -652,7 +655,6 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+ {
+ 	int i, ret;
+ 	char name[16];
+-	static atomic_t counter = ATOMIC_INIT(0);
+ 
+ 	if (!iwl_mvm_is_tt_in_fw(mvm)) {
+ 		mvm->tz_device.tzone = NULL;
+@@ -662,7 +664,7 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+ 
+ 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
+ 
+-	sprintf(name, "iwlwifi_%u", atomic_inc_return(&counter) & 0xFF);
++	sprintf(name, "iwlwifi_%u", iwl_thermal_zone_get_id());
+ 	/*
+ 	 * 0 is a valid temperature,
+ 	 * so initialize the array with S16_MIN which invalid temperature
+-- 
+2.53.0
 
-Evidence:
-- iw dev wlan0 survey dump reports 0ms for active/busy/rx/tx time
-after transmitting 638 MiB
-- Disabling power save has no effect (rules out pm_wake early return)
-- mt7925 USB has the same issue (same mt792x_update_channel path)
-- WTBL registers (MT_WTBL_AC0_CTT_OFFSET) work fine over USB =E2=80=94 used=
- in
-mac.c for per-station airtime
-
-Before writing a patch, I wanted to ask:
-
-1. Is there an existing MCU command that can retrieve MIB counters
-(busy/tx/rx time) from the firmware in the mt7921 USB case? I didn't
-find one in mt7921/mcu.c or mt76_connac_mcu.c.
-
-2. Alternatively, would it be acceptable to accumulate survey data
-from the per-station airtime counters (airtime_ac[], already read via
-WTBL in mt7921_mac_sta_poll()) into chan_state->cc_tx/cc_rx? This
-would give approximate but functional channel utilization reporting.
-
-3. Is there a reason the WF_MIB block is intentionally not exposed
-over USB in the firmware?
-
-Any guidance on the preferred approach would be appreciated before I
-write a patch.
-
-Best regards,
-Bryam Vargas
