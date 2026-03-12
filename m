@@ -1,42 +1,42 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E908399358
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 373603FCB09
 	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334870; cv=none; b=KSGU/e1Xx+tZWIMKlCad1n8JUR4etV8tCg7XMyOWvCugqcc6SyLK2TajfsVYDEwb32vLHK9sDcj6crufrKfr/iO+mNYLC1FAO8k26HFjEmld9btnanINIfQnZafKOVRBwnnasHwvF4BgN9++Qsj8HAQ/VD5Ajl8Xu96VJwD+a8o=
+	t=1773334871; cv=none; b=EoZisD+BbWslzW3H7wjC/IPaDcAqp6CF4w4VVrzn6QxYOK21Sa/0kXKVPfxMMbVUqxrjJ+JV2jE4YxixRilm/OhZP/JSF4Zf67gI/Nc2NOzmln5QZOwPsVk6Mhz1ujLf6+bfUkMBoxcjMaE5Xn9tal+u3xmkCDk3PwlqDEGDpzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773334870; c=relaxed/simple;
-	bh=mRQpnpMqVqBj1C++P+SgMnDw3psGcoLR1NEbkaNg2so=;
+	s=arc-20240116; t=1773334871; c=relaxed/simple;
+	bh=9bEwIouyN/FaLS3kVOEMHmKUqLgkpTcccITqVBxMObQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XcEkMBzmd1mNHhXg8BI2iXfWKP4/mVt3BRT2MTNKuUU/N2OmrsJPtCvrLp3Zz0N3KIetsJPwFi4CNNyM7xHNJWSD5+2svtK9FEs0rn7Ry0PatpSrnl9WHe5UI4D3JusmiwobGDibeNNb/glgNDXyqXggVih6Jdu1KKMzrXZALcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=n/Jdidgy; arc=none smtp.client-ip=148.163.129.49
+	 MIME-Version; b=P4Ubpreay3qEe3QxQ0xHClINxStgzvnzmxrgP+buuS7Nhq+HWOAf0AYv/XMzpIKUvtCYfyIpKs/aS4Td1iGfhTskQn0fLDG3h7+qh3Vn9bc9mAA9DNClK1fAKHwJC6LQitdRxv55Pea13OqAvhWvHUP8y10vOJ1uHeZHEtWDpBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=ntLBgCum; arc=none smtp.client-ip=148.163.129.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="n/Jdidgy"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="ntLBgCum"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CD14D400071
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:06 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id D1A0AC0105
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:04 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 7037413C2B4;
-	Thu, 12 Mar 2026 10:01:04 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 7037413C2B4
+	by mail3.candelatech.com (Postfix) with ESMTP id 3C77913C2B8;
+	Thu, 12 Mar 2026 10:01:03 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3C77913C2B8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773334864;
-	bh=mRQpnpMqVqBj1C++P+SgMnDw3psGcoLR1NEbkaNg2so=;
+	s=default; t=1773334863;
+	bh=9bEwIouyN/FaLS3kVOEMHmKUqLgkpTcccITqVBxMObQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=n/JdidgyKGYJ7M1hdHwMuupDDzl8H2B1JZH3OeeWaASwV2hQesyGmteQda/WAxAZG
-	 oNE0N8ORnBojRQeIhSYBtGYIrzxhc+UzZHd5Mc3fWimvDMu2BaXcRvFf3/riRE3g+D
-	 2Vfwio8Lra6cZIYlHWALHnxE8w/nXbLf8VhYPyyc=
+	b=ntLBgCum4EdGs9v7hzzpDEN0X8X+DCzg7pjTclW238TpOKL7WiAK3e9DY+ttmk9gr
+	 8ooalr4+A6Ky885wc2i+J8O8Xci4QiZBOa7y5NXdMngdsL+62u9Ln4iscu2QMkj1q7
+	 KcpjQtlW7BPKH7h2oxLZjxdfLsj0ynKCOzefyxL4=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next v2 27/28] wifi: iwlwifi: mld: Convert to WARN_ONCE in link removal path.
-Date: Thu, 12 Mar 2026 10:00:25 -0700
-Message-ID: <20260312170026.285494-28-greearb@candelatech.com>
+Subject: [PATCH wireless-next v2 22/28] wifi: mac80211: Add force-cleanup call to driver.
+Date: Thu, 12 Mar 2026 10:00:20 -0700
+Message-ID: <20260312170026.285494-23-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
 References: <20260312170026.285494-1-greearb@candelatech.com>
@@ -47,36 +47,93 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773334867-453rrcL79oDA
+X-MDID: 1773334865-QgLLp9QaWmAA
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;ut7;1773334867;453rrcL79oDA;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;ut7;1773334865;QgLLp9QaWmAA;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-While the comment indicates this should not happen, it does at least
-when firmware is being problematic.  Change to WARN_ON_ONCE to
-decrease log spam.
+When hardware is determined by mac80211 to be in non-recoverable
+state, then SDATA_IN_DRIVER flag is removed, and mac80211 will no
+longer do any 'graceful' teardown of the objects in the driver.
+
+This was causing use-after-free crashes in the iwlwifi driver
+since it's logic to do internal cleanup is not quite right for
+some reason.
+
+Add an explicit callback to the driver to tell it to clean up
+whatever it needs to clean up in case mac80211 considers it
+dead.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/sta.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/mac80211.h    | 7 +++++++
+ net/mac80211/driver-ops.h | 8 ++++++++
+ net/mac80211/util.c       | 5 +++++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.h b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-index 1897b121aae2..44c54e6d68e6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
-@@ -170,7 +170,7 @@ iwl_mld_cleanup_sta(void *data, struct ieee80211_sta *sta)
- 			continue;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9cc482191ab9..d963f213863b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3934,6 +3934,12 @@ struct ieee80211_prep_tx_info {
+  *	you should ensure to cancel it on this callback.
+  *	Must be implemented and can sleep.
+  *
++ * @force_cleanup: Called after mac80211 determines the
++ *      driver/firmware/hardware has failed and cannot
++ *      be restarted.  SDATA_IN_DRIVER is false at this point,
++ *      so normal cleanup will not happen.  This force_cleanup
++ *      operation lets the driver do any needed houskeeping.
++ *
+  * @suspend: Suspend the device; mac80211 itself will quiesce before and
+  *	stop transmitting and doing any other configuration, and then
+  *	ask the device to suspend. This is only invoked when WoWLAN is
+@@ -4569,6 +4575,7 @@ struct ieee80211_ops {
+ 		   struct sk_buff *skb);
+ 	int (*start)(struct ieee80211_hw *hw);
+ 	void (*stop)(struct ieee80211_hw *hw, bool suspend);
++	void (*force_cleanup)(struct ieee80211_hw *hw);
+ #ifdef CONFIG_PM
+ 	int (*suspend)(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
+ 	int (*resume)(struct ieee80211_hw *hw);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e2283d7dcd1e..3bd3d078ce9b 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -300,6 +300,14 @@ static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
  
- 		/* Should not happen as link removal should always succeed */
--		WARN_ON(1);
-+		WARN_ON_ONCE(1);
- 		RCU_INIT_POINTER(mld_sta->link[link_id], NULL);
- 		RCU_INIT_POINTER(mld_sta->mld->fw_id_to_link_sta[mld_link_sta->fw_id],
- 				 NULL);
++static inline void
++drv_force_cleanup(struct ieee80211_local *local)
++{
++	lockdep_assert_wiphy(local->hw.wiphy);
++	if (local->ops->force_cleanup)
++		local->ops->force_cleanup(&local->hw);
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 55054de62508..ec11ee6b8752 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1692,6 +1692,11 @@ static void ieee80211_handle_reconfig_failure(struct ieee80211_local *local)
+ 	 */
+ 	list_for_each_entry(ctx, &local->chanctx_list, list)
+ 		ctx->driver_present = false;
++
++	/* Tell driver to purge any remaining configuration it may have
++	 * lingering around.
++	 */
++	drv_force_cleanup(local);
+ }
+ 
+ static void ieee80211_assign_chanctx(struct ieee80211_local *local,
 -- 
 2.42.0
 
