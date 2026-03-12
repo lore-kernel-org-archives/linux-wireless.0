@@ -1,82 +1,117 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11DD53FCB00
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F98F3FBED9
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:06:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334872; cv=none; b=eQHa47tIzRTBI6mLx1jZffgJ8VKhgE9D78cnj2885ReBw0lvOstnafmX2HcDwu6K3GtUd6yce0nOtND/11gmPdeuF38wUSOJLT44ChEQt4znGpMvjZYV5VBT4ou5uKuLOjU/LPDaMk02CcAk690MmaqpMBQmbDbWjzMUFmdmIXs=
+	t=1773335182; cv=none; b=u+ox7/nGYGWKStq5Z56vVhtZ8AF/tyuXv1QAC1SjrK/Mp5SEw7bxU82KH0oX5O4WcvJnq20a8n6EDYLPPdfi38fq+HtyuBVryfWzqXN5yjRTOYfzFXVrOoeX1giRLS8BDekLwGCqUHPpi3cb0hG3dsmLTpz1+gmTJ5RiCsR/IOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773334872; c=relaxed/simple;
-	bh=DXHneObEFURGAmje7Og6zAxA3fF6Totm6rdxbwrFdcA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hKGKwhWsnZabYOoj0kVkhumfF4MzEFB/WCvgaI8jPKHydZYnNXJbR8UNb9WRTnuzv1BtRhBBCEKV+mWDAy9S/GzlMH0CSvYz1s9uh6v6qxlIOBidh5UAO2rAHZuSeuXMQ+0WVyGQgtQ8oAPMzJSE1T2CGfEV9NcTT1aFbkHu4qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=Da+5kD9V; arc=none smtp.client-ip=148.163.129.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	s=arc-20240116; t=1773335182; c=relaxed/simple;
+	bh=uY6gst47tFqN8YZ0l+9ZTPBv5nCDABKlGzvlClzI+xI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XlFxdoBBjny/ihS57UJW4BASPD6YPSurDRXMISU0YeeR2rs06mMIB0UZk1ZYvOpl6PcnRaRwMH+j3YwTkss2Br/Mzq4LDQ8ibrMcyY11Ab56IzK5qhM6e0Uer7eLQ4MPKjK7yfXhqnVd00z6k4wDATadKwH793y8K9WReAxNpns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XhOJ3SMI; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Da+5kD9V"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 056112800C5
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:05 +0000 (UTC)
-Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id A600413C2B0;
-	Thu, 12 Mar 2026 10:01:03 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A600413C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773334863;
-	bh=DXHneObEFURGAmje7Og6zAxA3fF6Totm6rdxbwrFdcA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Da+5kD9V86Fqo39gwFHqmDaOTZ0Tw4J/wiWeExd1f2QMBazrTu1qshPIIJOUtOARm
-	 0AX/U4On+sTNXAC4igBUW7ZffFqfYGI1MJeyR2lOQXGctNrEVaIrLkrB3qqz9+Jphp
-	 mAHP/bF6RtosXBgtPnjMCg4QnidZUGeVrbfub1VM=
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next v2 24/28] wifi: iwlwifi: mld: Fix NPE in flush logic.
-Date: Thu, 12 Mar 2026 10:00:22 -0700
-Message-ID: <20260312170026.285494-25-greearb@candelatech.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
-References: <20260312170026.285494-1-greearb@candelatech.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XhOJ3SMI"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-660be63279bso3442602a12.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 10:06:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773335174; x=1773939974; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Zc0/XO1VtWeZp5Kp4LH4+ZSPoiQRfk4MoxjN2FBNgu8=;
+        b=XhOJ3SMIQwLyPka+DYEhQxQBKu6qb4XhpdqJbNJdCCXVPejdHNv3aS5ai4mFISCYEO
+         3TCXmchQq7i+PJ/TBkBMQqs1serhHVf0qF9c9/ywAJelz/1nrjTQhgDaaKhGNKfODcG5
+         TgIVEISFtnSAqbSgbqCxa8NNDoAMk9zsiea+ihzsLSaG77/StCTf6O+LHP9Ow1ztqcW7
+         NwymMv0QeoFTqKamrs8jGBMiuhuFMMrV6Z3snM1Mrp6td2eEz0Bx/3Mul5MVgqg+7LSe
+         p4bpKHWt3F3Inhx/lWC2ZHjG2al/q+WeLPBd8EVe2toIcXGDWESwbvU/kL6mQ6vIt1D+
+         FAfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1773335174; x=1773939974;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Zc0/XO1VtWeZp5Kp4LH4+ZSPoiQRfk4MoxjN2FBNgu8=;
+        b=nNi6lZkmz3JcyBIkVj3Qb4GuXcNRyVKwV4jSSdNtJ3klfWJv8xocig3gm9yklWlS7z
+         4fbRuweTVUvSOki7d6+hQGjCtu1qh3ESc/lHK9RJF9p8IICqoFb+j2pWz5MeZAv7judN
+         xiwgnN4+3SnCa8feVF3JJO88bOHtwa9TVqdLzK88tf50eepFclrh3WPYQDpajjcPMmKD
+         deIRVhHhoJWSTEqire+e5l5GrJbh9ReIxMDwe311GsdSheQzYu9qH0bkpFMMSTvb079P
+         /UfUeOc3OH+sN93TRn0xlC43WxEc4pFKLX+UtmwW/ocN/Etnt9lPbix2VNL7049OiWNu
+         pIBw==
+X-Gm-Message-State: AOJu0Yzh3uTDDOcbyivrxXNbOfVR76y4jYH1Rpl4A4AY+bq8VFgRDH3t
+	fo2UMNqloRP2ktIsN1uLQrgZj91LXNxtyPKvrPN4kIcadHrRm8JfonyK
+X-Gm-Gg: ATEYQzxAhWsm7SrFxyEA0Rb1tT3oNFhXNPF2KkMiCor+SbrJ123NncJQSd+Iv9t7twO
+	c7UYEktzRlnhpcSoj8ocgt0td+wZ2DPhl0rXG+q+MInKobZdFhucHnh0gL69Bnb4/J1+mmcRxqg
+	ljSQ/c1+oXeaD7s9U5v3E2DREyNuc5GgBzHlEACxBwfQWgZCSZgz3m4UAd/D2kKCQ1FZmdXxqIJ
+	1vmm3a1GQVeCBGHFsL5OsWdJ/0HoXjL29n2LUj5F/TU3o2I6qYz7XHG6syXcxz6UH25qiLjDS6A
+	8kZGrdztTGdBK+v7/DiC/sx0joLj+JYbyPNQRnE6fk/oCoMZjckyi8T13GJlNDVF+LbesENUPtt
+	TtguyKXnHU7RskBhyhE7KIGdf4hczbXJ9PRMZWSB61i7JAjNYR4MoL/roF8Fofi6HwoHvV9f01a
+	3otSf5Bcv1+udoy4o/i/QRxcD2RYtZCw==
+X-Received: by 2002:a17:907:7285:b0:b8e:fc90:7119 with SMTP id a640c23a62f3a-b974029896amr233987066b.30.1773335173945;
+        Thu, 12 Mar 2026 10:06:13 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.93])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b972de092dcsm146613266b.4.2026.03.12.10.06.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 12 Mar 2026 10:06:13 -0700 (PDT)
+Message-ID: <d622184a-36b2-4df6-bea2-7f5c6ba9b22a@gmail.com>
+Date: Thu, 12 Mar 2026 19:06:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: rtl8xxxu: Enable AP mode for RTL8188EU
+To: =?UTF-8?Q?Georg_M=C3=BCller?= <georgmueller@gmx.net>,
+ Jes.Sorensen@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260312142155.2642993-1-georgmueller@gmx.net>
+ <093ad0f2-8265-4560-a51f-397eb34f7f1c@gmail.com>
+ <98711825-cbf3-46ad-a26c-9f1d284480ac@gmx.net>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <98711825-cbf3-46ad-a26c-9f1d284480ac@gmx.net>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773334866-PdPcwDGvQAKP
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;ut7;1773334866;PdPcwDGvQAKP;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
-X-PPE-TRUSTED: V=1;DIR=OUT;
 
-From: Ben Greear <greearb@candelatech.com>
+On 12/03/2026 18:08, Georg Müller wrote:
+> 
+> Am 12.03.26 um 16:58 schrieb Bitterblue Smith:
+>> On 12/03/2026 16:21, Georg Müller wrote:
+>>> Allow devices with this driver to be used as a wireless access point.
+>>>
+>>> I successfully tested this with a TP-Link TP-Link TL-WN725N adapter.
+>>>
+>>> Experiments two years ago failed, but some other improvements to the
+>>> driver seemed to have resolved theses issues.
+>>>
+>>
+>> The rate control code still doesn't handle more than one station.
+>> It's not going to work right.
+>>
+>> It shouldn't be too complicated. The ra_info member of rtl8xxxu_priv
+>> needs to become an array.
+> 
+> Ok, I have only tested it with one client in my setup.
+> 
+> So the ra_info array needs to of size max_macid_num?
+> Dynamically allocated or hard-coded in struct rtl8xxxu_priv (8188e seems
+> to be the only user of struct rtl8xxxu_ra_info)?
+> 
 
-It appears that sometimes the sta can be NULL, so check for
-that and return early.
+Yes. :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/intel/iwlwifi/mld/sta.c | 3 +++
- 1 file changed, 3 insertions(+)
+Also, if I remember correctly, there was a member of rtl8xxxu_ra_info
+that needs to be moved to rtl8xxxu_priv, because it's a global thing,
+not per macid.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-index 288fc4b7604e..06e064466e3b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-@@ -779,6 +779,9 @@ void iwl_mld_flush_sta_txqs(struct iwl_mld *mld, struct ieee80211_sta *sta)
- 
- void iwl_mld_wait_sta_txqs_empty(struct iwl_mld *mld, struct ieee80211_sta *sta)
- {
-+	if (!sta)
-+		return;
-+
- 	/* Avoid a warning in iwl_trans_wait_txq_empty if are anyway on the way
- 	 * to a restart.
- 	 */
--- 
-2.42.0
+> Best regards,
+> Georg
+> 
 
