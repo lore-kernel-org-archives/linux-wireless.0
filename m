@@ -1,147 +1,90 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62263FBEA8
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 16:54:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7EB39020A
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334493; cv=none; b=eGNDilPy+HOTYJHoHX1gL7lsasL6LwDFfFlkkT9LEnXw6ikcVXKLDNec6erj00ff9Q5C3MeUQFccYj18a7D6FFf3/eU36gwgKzuf3jg/LRed5O9EVBoSJOZGwfVtNs/EOXSyMYs4kPDXxssTtSGc/Z99zXAAkuLlODJKy+Phl60=
+	t=1773334864; cv=none; b=nnstchLnqHJVisirEclDs9EZbT368L+gFqPPBVfC+TwoQVYtCOMeyRp3UOdt2NwuirRc1YmzljB3D/zX6Tn0pYWLoS8XnpD7yFCfij2axTq54qg7xwLtcuGUsv4qhx+vmTLV4p85v5/8xYxcbhAl+5a+LeK+EQLp4J9Bn/GeTD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773334493; c=relaxed/simple;
-	bh=ENv0+4bH9YdpFLGeURNwJ3+rEUsnNn74RNCtOl26SEA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QP6iTvng5toZXtHmkIxRhCg0rZjRcQPyWOTUwk0jJJs8Se8cPWNGYlZa+kxXRhhAK+wteDlRxDv/QMsNqmvhYW4WIvXBz2TxgE/rjqYPl+3ebCDW8RZJzbtUhuXiNBILzT6iRgufO44ZoloHCa+xSJ8iQ0lAxWExPVYgP8eBP4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=TCUycPJz; arc=none smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1773334864; c=relaxed/simple;
+	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=kLhBJXCwVdnoI2jR9gQ1x2WEzuOpuLQYXXZlPc7MH/kfbm7HbVSDahBkMzehNttRmySUohddJLVOh+hFVR+7RJBpzEJEq/CJ4UMwzl6rkg14cfMLlZxYIUYzzBkzUrugCn3kR3PzCTg7EYgiVXLXmdOgqE1+UDd6Zfnm3LGMAzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=CMgp+OJD; arc=none smtp.client-ip=67.231.154.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="TCUycPJz"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-509164dce91so11154611cf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:54:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1773334491; x=1773939291; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VQXCfPVu6b6dIVECzm0C8AUD7IL7VvpSkD5+M4S95sw=;
-        b=TCUycPJzE2fI+UEqk7FktReSuNB+qmtoLxCPQIhObf2GoM3FGGUoUzmOL4EcJ8nqrV
-         31wLWw0iuRrm5q/A3vl9oGJab4nkcB5GgE9L87TaBE5zWVhGKUEWMOYZrC4hQkz7+K+y
-         MdSN9PZxg9+VlLOffdwRmQphGTW7UoGABbBRu3CtgROAhKqAusDMmmrNFgCXGsGgS+um
-         4b3n9KF8H9mgZuxtPx/c84lVtPd3kX8R2XT1vLZ+RjANCZT5FGS44RpBGA5cN1JRJXTn
-         oCOtB2FnqO56y3+c6Fos0prISIneHSMHrQ7vAs2p/teTVBOn2DfneDCxuRpkTU9D9cja
-         6IGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773334491; x=1773939291;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VQXCfPVu6b6dIVECzm0C8AUD7IL7VvpSkD5+M4S95sw=;
-        b=QgQAtyhIc/T6KYl49B2tXnojZfvKK6eMP6Ilyois0/kHubTuRB+X00LFizb0+ZScKD
-         4oswRXY0jhog15pfvo5kMUUbNwcAXcBgfmO194dhwWDWJ/VKwXA7Hs0zkD88bQJH57tP
-         iGpPXnk3+xFwFfku2TpkrBs1URmjfnF+kbBnS8CMiHoJH/RKcL/5Flr/CAqneqpEE9ay
-         PHnUAJeKyQ0MXEPxyrPf9CaYNHdlIo0LOW5zlOMl9DjQDajgsLEOryCo/CUQ1vzV9Cbh
-         /nEfRNXQV9L7AsqXZNkRAceb0dUdZEj5S+8S138rAjYilWNnbuUS89vzAYEo0rIj/8LZ
-         wQ8g==
-X-Forwarded-Encrypted: i=1; AJvYcCX5Q7rrU693MSozckQ9E2efEVkoZPXD/mlJzNKsbvwV33AljlqEblJC6MI5fRkk07UMflcbJfY0m3E0JFfm0g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyaHOCc+3amnsoAiDIX1+QTDW/uB9zjNrQoWTsWRPuWnmfCT1Cx
-	wouNxoLSS5pAuuY/bFJWzlIyVliCbkWD4WrDWsJhX5IIQK/TDWFK7+v9kZUxuBXcPlU=
-X-Gm-Gg: ATEYQzw5cwJGX35fYOF0zm/dRO3nJoC2/pdMA5txbvgtsBuaiYiI1/aMLuRyOEZIzWN
-	YAh8GxqnisNd18sGrXpATBvzOFvssa3hOu9bDLiJUH3HwGWvYmlGJgIjvG8HRrYPH0lLa443a3e
-	Lm0BO66CmdEf63vGSEXvF9DvgxQI+P3FYzWOA6dJIU1qYITB32G5JWvJbtIZt5buVLQRtc+VjLL
-	fNlZxBq+EO5jdYWjersQw8a9npWNDnl2Akqhd37Gg3m/slr3rY3H36ajiy4QhtOtRSbceNUUf7r
-	IZGwN7Ecd1FHVbg/ylJs4g2Lx5jFs8uQyJr6lKko7gMLo3LmQVq2n8olVGnpNRxHnoMtWoyQzdn
-	Y3UihJUWB4xVM6CnaJtanH1KhQEMUPj9GR8TSomAjj/bjnqPRGx4YOjwVY3Qmks/MTWqVNRqXZA
-	Hny1NNqv8OO8Uki1xxydQnL3RfXIb3ke1dfQp/Xbskh+ymT7VAeNeshhqIWM79RXzjwxrOt/rcg
-	kr+B4gy2u1VUXZcsN8=
-X-Received: by 2002:a05:622a:289:b0:509:44c3:5ffa with SMTP id d75a77b69052e-50957e10673mr1403911cf.52.1773334490530;
-        Thu, 12 Mar 2026 09:54:50 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-142-162-112-119.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.112.119])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5093a119602sm36658181cf.28.2026.03.12.09.54.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Mar 2026 09:54:49 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1w0jJA-00000006i8N-40X9;
-	Thu, 12 Mar 2026 13:54:48 -0300
-Date: Thu, 12 Mar 2026 13:54:48 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Kuan-Wei Chiu <visitorckw@gmail.com>, Philipp Hahn <phahn-oss@avm.de>,
-	amd-gfx@lists.freedesktop.org, apparmor@lists.ubuntu.com,
-	bpf@vger.kernel.org, ceph-devel@vger.kernel.org, cocci@inria.fr,
-	dm-devel@lists.linux.dev, dri-devel@lists.freedesktop.org,
-	gfs2@lists.linux.dev, intel-gfx@lists.freedesktop.org,
-	intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev,
-	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org,
-	linux-clk@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-mips@vger.kernel.org, linux-mm@kvack.org,
-	linux-modules@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-nfs@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-phy@lists.infradead.org, linux-pm@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
-	linux-security-module@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-trace-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev, samba-technical@lists.samba.org,
-	sched-ext@lists.linux.dev, target-devel@vger.kernel.org,
-	tipc-discussion@lists.sourceforge.net, v9fs@lists.linux.dev
-Subject: Re: [PATCH 00/61] treewide: Use IS_ERR_OR_NULL over manual NULL
- check - refactor
-Message-ID: <20260312165448.GN1469476@ziepe.ca>
-References: <20260310-b4-is_err_or_null-v1-0-bd63b656022d@avm.de>
- <abBlpGKO842B3yl9@google.com>
- <20260312125730.GI1469476@ziepe.ca>
- <f5688b895eaebabae6545a0d9baf8f1404e8454e.camel@HansenPartnership.com>
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="CMgp+OJD"
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id ACC186C007E
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:00 +0000 (UTC)
+Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
+	by mail3.candelatech.com (Postfix) with ESMTP id 0EF8913C2B1;
+	Thu, 12 Mar 2026 10:00:58 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 0EF8913C2B1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1773334858;
+	bh=dQrP21XeCUe5KAVZOE/kb7roW3sCZoMge60mBQE1tns=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=CMgp+OJDNyNnhoK73+prvH2zBf3TfytjOnzuJHB16gSuBUhRfxGxtX0rK37o+Sz7n
+	 UG7SZvjtTX8R8cRfwvOPbI9EpGV3C5GZFjy2N3mVW11WMp4ZXIoaa8Fv7T1dgIJbBS
+	 3CCDd2h6BxhHXwcuk6kIEb1rM5NVcwbYHDj2xkjE=
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH wireless-next v2 01/28] wifi: iwlwifi: mld:  Check for NULL before lookup.
+Date: Thu, 12 Mar 2026 09:59:59 -0700
+Message-ID: <20260312170026.285494-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
+References: <20260312170026.285494-1-greearb@candelatech.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f5688b895eaebabae6545a0d9baf8f1404e8454e.camel@HansenPartnership.com>
+Content-Transfer-Encoding: 8bit
+X-MDID: 1773334861-mh_LBtroxhYP
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;at1;1773334861;mh_LBtroxhYP;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On Thu, Mar 12, 2026 at 11:32:37AM -0400, James Bottomley wrote:
-> On Thu, 2026-03-12 at 09:57 -0300, Jason Gunthorpe wrote:
-> > On Wed, Mar 11, 2026 at 02:40:36AM +0800, Kuan-Wei Chiu wrote:
-> > 
-> > > IMHO, the necessity of IS_ERR_OR_NULL() often highlights a
-> > > confusing or flawed API design. It usually implies that the caller
-> > > is unsure whether a failure results in an error pointer or a NULL
-> > > pointer. 
-> > 
-> > +1
-> > 
-> > IS_ERR_OR_NULL() should always be looked on with suspicion. Very
-> > little should be returning some tri-state 'ERR' 'NULL' 'SUCCESS'
-> > pointer. What does the middle condition even mean? IS_ERR_OR_NULL()
-> > implies ERR and NULL are semanticly the same, so fix the things to
-> > always use ERR.
-> 
-> Not in any way supporting the original patch.  However, the pattern
-> ERR, NULL, PTR is used extensively in the dentry code of filesystems. 
-> See the try_lookup..() set of functions in fs/namei.c
-> 
-> The meaning is
-> 
-> PTR - I found it
-> NULL - It definitely doesn't exist
-> ERR - something went wrong during the lookup.
-> 
-> So I don't think you can blanket say this pattern is wrong.
+From: Ben Greear <greearb@candelatech.com>
 
-Lots of places also would return ENOENT, I'd argue that is easier to
-use..
+Do not call iwl_mld_sta_from_mac80211(sta) unless we have
+verified sta is non NULL.
 
-But yes, I did use the word "suspicion" not blanket wrong :)
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Jason
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/agg.c b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+index 3bf36f8f6874..a757077b0a7a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/agg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/agg.c
+@@ -194,7 +194,7 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 	struct iwl_mld_baid_data *baid_data;
+ 	struct iwl_mld_reorder_buffer *buffer;
+ 	struct iwl_mld_reorder_buf_entry *entries;
+-	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
++	struct iwl_mld_sta *mld_sta;
+ 	struct iwl_mld_link_sta *mld_link_sta;
+ 	u32 reorder = le32_to_cpu(desc->reorder_data);
+ 	bool amsdu, last_subframe, is_old_sn, is_dup;
+@@ -221,6 +221,8 @@ iwl_mld_reorder(struct iwl_mld *mld, struct napi_struct *napi,
+ 		      "Got valid BAID without a valid station assigned\n"))
+ 		return IWL_MLD_PASS_SKB;
+ 
++	mld_sta = iwl_mld_sta_from_mac80211(sta);
++
+ 	/* not a data packet */
+ 	if (!ieee80211_is_data_qos(hdr->frame_control) ||
+ 	    is_multicast_ether_addr(hdr->addr1))
+-- 
+2.42.0
+
