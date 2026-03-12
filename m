@@ -1,42 +1,42 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A50DB3D88FA
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2583F3FBEC6
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334871; cv=none; b=bW1Vwdn3jjou16iTVEni+LFTwU8MGSS9KI6nB+jdSmGLnNcu2A+ygPJ0VvsSjO/8Kip0riVjcLgBcUh/mzGYz5seLH75Qa3rQoNHN18BYam2iLuEuR4jMjmmmwLrbB7JMMtCW+/8f2XmJgWyQjUkqAyjGbx/zEPCINuU4TzYB8o=
+	t=1773334871; cv=none; b=ZQXfCkHCkX0z+VhQ9wOgLDgPcYCEzw6YypiM64+3twG88GgxFIepYWzYhFHKis1AfQQvgg2UN3I7Kd6dik0vMq7CjqIZhOXxN2ywC+r+2PNRoNzwB8vA9eIcYg35HaVIeahDO+nj4XaM/vk1M8P+w+DrFIDe5eIyB/GqE+00/cs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773334871; c=relaxed/simple;
-	bh=uDr9ACmA42e7vs6+u5VWzCciVNMoUr5KcIXIezdh68A=;
+	bh=VMEXyTECxWwmKFvGRgjDmP6W+k/4YAn7N1+e+XNPtVU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bvg6/scbZlnFfhT6ODsscurm9f6Ln8NVqZ8EfB0KiLDE4Sl3R2vQJ1CyI1v9pMjPB48VCRM6sDK2k2SAS93hOZb3Y/haWyRzB7ODKnvRXWzh5q4yiSyOf69UPfzo/PhF1gMfYw7Up+xXlLTfKwk+hXipP8pK7yON+sTdjrp9G4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=EfDvwdlV; arc=none smtp.client-ip=148.163.129.49
+	 MIME-Version; b=HYhfUdvLogYxErNslxNiymnFf7PiyrPHQgXbYmHZB88eGL9A7xIRRw9/wzthboMXQoOxU/w3uTaQ2jFLUOZkMN+i4jk6xlsxmZKon4G/XXQCz6PSk3ffstZClxH95JMUT6PM6bQKS8NdG5nUPcjsJOslI00WWt7ruJzdiAW+g1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=YYJ/Hsva; arc=none smtp.client-ip=67.231.154.164
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="EfDvwdlV"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="YYJ/Hsva"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 8BC7628008E
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:06 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id E15B880087
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:04 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 3898113C2B3;
-	Thu, 12 Mar 2026 10:01:04 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 3898113C2B3
+	by mail3.candelatech.com (Postfix) with ESMTP id 6867C13C2B7;
+	Thu, 12 Mar 2026 10:01:02 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 6867C13C2B7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773334864;
-	bh=uDr9ACmA42e7vs6+u5VWzCciVNMoUr5KcIXIezdh68A=;
+	s=default; t=1773334862;
+	bh=VMEXyTECxWwmKFvGRgjDmP6W+k/4YAn7N1+e+XNPtVU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EfDvwdlVm11YdP9HKL8I6YE9i+FxX8ArBgmKMcefud2vy81IpqgNbKMh6ASn3EKR4
-	 1n/uM4K4xE8+xKZLchj5rPXyv0KnQp88aQhJdjBdi0MiIyDJlpNG6x3UWqs0Bih4DG
-	 zvjPXphjv7U5VxrGs4WBw7zhVFBj+9UefU0yKHXc=
+	b=YYJ/Hsvaf7e2H1qx/S3u7WCX3pClbeDl6hQiy99gjeWoyYrAHSP7iGImcGEuVMRHw
+	 NVQ+o3WE8sEx4bGT3Wd4dMJRcYvQbejFPC/7UO6wehdtFh5wv1fsS2/H+OkWFKh5mZ
+	 DxPSVnXzUipKkLfKgHO9Y5pLyOZaid8ergExxOc8=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next v2 26/28] wifi: mac80211: Ensure link work-items are only initialized once.
-Date: Thu, 12 Mar 2026 10:00:24 -0700
-Message-ID: <20260312170026.285494-27-greearb@candelatech.com>
+Subject: [PATCH wireless-next v2 19/28] wifi: iwlwifi: mld: Improve error message in rx path.
+Date: Thu, 12 Mar 2026 10:00:17 -0700
+Message-ID: <20260312170026.285494-20-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
 References: <20260312170026.285494-1-greearb@candelatech.com>
@@ -47,81 +47,36 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773334867-y9DLraJss0S5
+X-MDID: 1773334865-EF8mNt0CLZig
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;ut7;1773334867;y9DLraJss0S5;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;at1;1773334865;EF8mNt0CLZig;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-Re-initialization could cause corruption in work queues in case
-links were not properly stopped for some reason.
+Print return code that is causing the failure path.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/link.c        | 28 ++++++++++++++++++++--------
- 2 files changed, 21 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d71e0c6d2165..ac4e10f16cd9 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1079,6 +1079,7 @@ struct ieee80211_link_data {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index 214dcfde2fb4..f5c20a3aa869 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -2204,8 +2204,8 @@ void iwl_mld_sync_rx_queues(struct iwl_mld *mld,
+ 	ret = wait_event_timeout(mld->rxq_sync.waitq,
+ 				 READ_ONCE(mld->rxq_sync.state) == 0,
+ 				 SYNC_RX_QUEUE_TIMEOUT);
+-	WARN_ONCE(!ret, "RXQ sync failed: state=0x%lx, cookie=%d\n",
+-		  mld->rxq_sync.state, mld->rxq_sync.cookie);
++	WARN_ONCE(!ret, "RXQ sync failed: state=0x%lx, cookie=%d, ret: %d\n",
++		  mld->rxq_sync.state, mld->rxq_sync.cookie, ret);
  
- 
- 	bool operating_11g_mode;
-+	bool already_initialized; /* has ieee80211_link_init been called? */
- 
- 	struct {
- 		struct wiphy_work finalize_work;
-diff --git a/net/mac80211/link.c b/net/mac80211/link.c
-index 03bfca27d205..6125e79f67c9 100644
---- a/net/mac80211/link.c
-+++ b/net/mac80211/link.c
-@@ -110,14 +110,25 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
- 	link->user_power_level = sdata->local->user_power_level;
- 	link_conf->txpower = INT_MIN;
- 
--	wiphy_work_init(&link->csa.finalize_work,
--			ieee80211_csa_finalize_work);
--	wiphy_work_init(&link->color_change_finalize_work,
--			ieee80211_color_change_finalize_work);
--	wiphy_delayed_work_init(&link->color_collision_detect_work,
--				ieee80211_color_collision_detection_work);
--	wiphy_hrtimer_work_init(&link->dfs_cac_timer_work,
--				ieee80211_dfs_cac_timer_work);
-+	if (link->already_initialized) {
-+		wiphy_delayed_work_cancel(link->sdata->local->hw.wiphy,
-+					  &link->color_collision_detect_work);
-+		wiphy_work_cancel(link->sdata->local->hw.wiphy,
-+				  &link->color_change_finalize_work);
-+		wiphy_work_cancel(link->sdata->local->hw.wiphy,
-+				  &link->csa.finalize_work);
-+		wiphy_hrtimer_work_cancel(link->sdata->local->hw.wiphy,
-+					  &link->dfs_cac_timer_work);
-+	} else {
-+		wiphy_work_init(&link->csa.finalize_work,
-+				ieee80211_csa_finalize_work);
-+		wiphy_work_init(&link->color_change_finalize_work,
-+				ieee80211_color_change_finalize_work);
-+		wiphy_delayed_work_init(&link->color_collision_detect_work,
-+					ieee80211_color_collision_detection_work);
-+		wiphy_hrtimer_work_init(&link->dfs_cac_timer_work,
-+					ieee80211_dfs_cac_timer_work);
-+	}
- 
- 	if (!deflink) {
- 		switch (sdata->vif.type) {
-@@ -138,6 +149,7 @@ void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_link_debugfs_add(link);
- 	}
- 
-+	link->already_initialized = true;
- 	rcu_assign_pointer(sdata->vif.link_conf[link_id], link_conf);
- 	rcu_assign_pointer(sdata->link[link_id], link);
- }
+ out:
+ 	mld->rxq_sync.state = 0;
 -- 
 2.42.0
 
