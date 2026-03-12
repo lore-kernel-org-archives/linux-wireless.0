@@ -1,44 +1,43 @@
 Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33A0C3B47F8
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:58:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 339803B3BF3
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 09:58:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773309531; cv=none; b=irDA7DhARFI/ciAwYtpKXmtegW7IozOTB0ROch4dqg74WnqwKBMwfflhk5yZpOTUgaDWqC+RajpgrAjM89h0PwXP+ZPVNToQtIa1MHSTAwiNVrfBdZNwBPQy2kPEqYTHmcl4v6c/NWN+Cn0BZif5+lb88nThF+snhkSGK0Auo60=
+	t=1773309531; cv=none; b=HNaAiP5NQDd45CkZrA286S9Gcx9fJ0GlhLng8eGKvxMK9eDofxJliSxV3av+MQlUViDy/olGqOa9Qyj/T0f7OiPOJvxG3+/x1U/kspktr6dNhbJWNyKYA3MXE/c1sfITtLBpQCyajz29m8BMlVZFJ6nHw60AkPlno54BPl75n4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773309531; c=relaxed/simple;
-	bh=wER/Nzq7q52u/siZSyThjbxE4LADiJwgDMS7CFmzGsQ=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VLIOL8kEQ9BFWO5poKx63XoArXJheo11/6e9IOzWbJyR6AZorZuALoMKipbBaSN4fo7wZ/4VHMZCF5t1KpZZTHa2GsLZDAcdJ9Sd0B9FRrXRMceJQlR++A8LPrmvAkvYs2Y/hvU4KboqxBiXSiffxp6Q8E7wI1vHl7Ubf/vbXL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=X3nIMKfp; arc=none smtp.client-ip=210.61.82.184
+	bh=fIJwNvs9aXvaeStdORYDQUgGYPbScP+cZ1kAYCJMV4g=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HgWssdQQs6qEuYlUhJI3RGyPreiQ8EZKsFW0A3YtTbtqAD0GH8KGgkpm8jomN/EAP8cX+vxvz3AVAuj96jAWbeJ9pVXRLQQt+OLR1G+X4GYwMR/VtjfrnvtR5aitwxcjY6eW7TpsCnfRnv/QVWLYM0K0qGFUmZVte2OtasUwxds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=bVMT1ilH; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="X3nIMKfp"
-X-UUID: 09ecdc541dfa11f1a39cd589f645bc18-20260312
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bVMT1ilH"
+X-UUID: 09b57fac1dfa11f1a39cd589f645bc18-20260312
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=K19GaqUpapvZu4p2oYRo+83CgK9hKV6x66IFjailb3s=;
-	b=X3nIMKfpLolo2NZuwpom30IS9cDUTxYqRXDBh73mJcA6PcigbcWhHWtmMBSwEWW8sqj5IF2W42UeJ9r3yW30xVcldNGqaEgEzZHo+2eKpVswRBjGlQxwZh3pm+pmleVuUPDwbGndCwXXvBCkACNX14cXkElMJSoG+52KNiLBoRc=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=qplD8CGYzuO6b35VEHxpGDhWihWOwoDLawx+46tbPcQ=;
+	b=bVMT1ilHTAXmLhRl+z/hCEDAPFLCe8JqxYRklwfhmKGhg1QETYMiFEdSkFgRl9YGtZgxqw9vh+gBst8NJQKvLIl9TcTyRsjD3+VavCy6SPU8T2Sadsj9PTFHsUkqGLCxYb03kAojdTULnoEkYwCd+VaO7fTf2OlQ3z5ffoLgbsc=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:154598da-d1d6-4335-b74f-fd58631c88a9,IP:0,U
+X-CID-O-INFO: VERSION:1.3.12,REQID:dd7392c3-6963-446f-a9cd-0e68cd0aa32d,IP:0,U
 	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
 	:release,TS:-5
-X-CID-META: VersionHash:e7bac3a,CLOUDID:579784eb-3b42-43ec-801b-62c7b12ba70e,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:e7bac3a,CLOUDID:756ea4d4-060f-4ecc-9ee0-121eeeb4a682,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
+	0,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA
+	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 09ecdc541dfa11f1a39cd589f645bc18-20260312
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+X-UUID: 09b57fac1dfa11f1a39cd589f645bc18-20260312
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
 	(envelope-from <shayne.chen@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 926352955; Thu, 12 Mar 2026 17:58:37 +0800
+	with ESMTP id 1985089657; Thu, 12 Mar 2026 17:58:36 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.2.2562.29; Thu, 12 Mar 2026 17:58:35 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
@@ -51,12 +50,10 @@ CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
 	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
 	linux-mediatek <linux-mediatek@lists.infradead.org>, Peter Chiu
 	<chui-hao.chiu@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>
-Subject: [PATCH mt76 3/6] wifi: mt76: mt7996: update WFSYS reset flow for MT7990 chipsets
-Date: Thu, 12 Mar 2026 17:57:21 +0800
-Message-ID: <20260312095724.2117448-3-shayne.chen@mediatek.com>
+Subject: [PATCH mt76 1/6] wifi: mt76: mt7996: fix RRO EMU configuration
+Date: Thu, 12 Mar 2026 17:57:19 +0800
+Message-ID: <20260312095724.2117448-1-shayne.chen@mediatek.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20260312095724.2117448-1-shayne.chen@mediatek.com>
-References: <20260312095724.2117448-1-shayne.chen@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,80 +66,44 @@ X-MTK: N
 
 From: Peter Chiu <chui-hao.chiu@mediatek.com>
 
-Skip WFSYS reset during bootup for MT7990 chipsets; only reset if L0.5
-recovery is triggered.
-Without this fix, the following kernel error may occur:
-Internal error: synchronous external abort.
+Use the correct helper to update specific bitfields instead of
+overwriting the entire register.
 
+Fixes: eedb427eb260 ("wifi: mt76: mt7996: Enable HW RRO for MT7992 chipset")
 Signed-off-by: Peter Chiu <chui-hao.chiu@mediatek.com>
 Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
 ---
- .../net/wireless/mediatek/mt76/mt7996/init.c  | 29 +++++++++++++++++--
- .../net/wireless/mediatek/mt76/mt7996/regs.h  |  8 +++++
- 2 files changed, 34 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c | 3 +--
+ drivers/net/wireless/mediatek/mt76/mt7996/mac.c  | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-index f3239f530aea..8dfb81eabc9a 100644
+index 5aaa93767109..f3239f530aea 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -791,11 +791,34 @@ static void mt7996_init_work(struct work_struct *work)
+@@ -873,8 +873,7 @@ void mt7996_rro_hw_init(struct mt7996_dev *dev)
+ 			}
+ 		} else {
+ 			/* set emul 3.0 function */
+-			mt76_wr(dev, MT_RRO_3_0_EMU_CONF,
+-				MT_RRO_3_0_EMU_CONF_EN_MASK);
++			mt76_set(dev, MT_RRO_3_0_EMU_CONF, MT_RRO_3_0_EMU_CONF_EN_MASK);
  
- void mt7996_wfsys_reset(struct mt7996_dev *dev)
- {
--	mt76_set(dev, MT_WF_SUBSYS_RST, 0x1);
--	msleep(20);
-+	if (!is_mt7990(&dev->mt76)) {
-+		mt76_set(dev, MT_WF_SUBSYS_RST, 0x1);
-+		msleep(20);
-+
-+		mt76_clear(dev, MT_WF_SUBSYS_RST, 0x1);
-+		msleep(20);
-+
-+		return;
-+	}
+ 			mt76_wr(dev, MT_RRO_ADDR_ARRAY_BASE0,
+ 				dev->wed_rro.addr_elem[0].phy_addr);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index a415cc610eee..86aaf0f29e28 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -2559,7 +2559,7 @@ void mt7996_mac_reset_work(struct work_struct *work)
+ 	mt7996_dma_start(dev, false, false);
  
--	mt76_clear(dev, MT_WF_SUBSYS_RST, 0x1);
-+	if (!dev->recovery.hw_full_reset)
-+		return;
-+
-+	mt76_set(dev, MT_WF_SUBSYS_RST,
-+		 MT_WF_SUBSYS_RST_WHOLE_PATH_RST_REVERT |
-+		 MT_WF_SUBSYS_RST_BYPASS_WFDMA_SLP_PROT |
-+		 MT_WF_SUBSYS_RST_BYPASS_WFDMA2_SLP_PROT);
-+	mt76_rmw(dev, MT_WF_SUBSYS_RST,
-+		 MT_WF_SUBSYS_RST_WHOLE_PATH_RST_REVERT_CYCLE,
-+		 u32_encode_bits(0x20, MT_WF_SUBSYS_RST_WHOLE_PATH_RST_REVERT_CYCLE));
-+	mt76_clear(dev, MT_WF_L05_RST, MT_WF_L05_RST_WF_RST_MASK);
-+	mt76_set(dev, MT_WF_SUBSYS_RST, MT_WF_SUBSYS_RST_WHOLE_PATH_RST);
- 	msleep(20);
-+
-+	if (mt76_poll(dev, MT_WF_L05_RST, MT_WF_L05_RST_WF_RST_MASK, 0x1a, 1000))
-+		return;
-+
-+	dev_err(dev->mt76.dev, "wfsys reset fail\n");
- }
+ 	if (!is_mt7996(&dev->mt76) && dev->mt76.hwrro_mode == MT76_HWRRO_V3)
+-		mt76_wr(dev, MT_RRO_3_0_EMU_CONF, MT_RRO_3_0_EMU_CONF_EN_MASK);
++		mt76_set(dev, MT_RRO_3_0_EMU_CONF, MT_RRO_3_0_EMU_CONF_EN_MASK);
  
- static void mt7996_rro_hw_init_v3(struct mt7996_dev *dev)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-index 393faae2d52b..c6379933b6c3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
-@@ -736,7 +736,15 @@ enum offs_rev {
- #define MT_HW_REV				0x70010204
- #define MT_HW_REV1				0x8a00
- 
-+#define MT_WF_L05_RST				0x70028550
-+#define MT_WF_L05_RST_WF_RST_MASK		GENMASK(4, 0)
-+
- #define MT_WF_SUBSYS_RST			0x70028600
-+#define MT_WF_SUBSYS_RST_WHOLE_PATH_RST		BIT(0)
-+#define MT_WF_SUBSYS_RST_WHOLE_PATH_RST_REVERT	BIT(5)
-+#define MT_WF_SUBSYS_RST_BYPASS_WFDMA_SLP_PROT	BIT(6)
-+#define MT_WF_SUBSYS_RST_BYPASS_WFDMA2_SLP_PROT	BIT(16)
-+#define MT_WF_SUBSYS_RST_WHOLE_PATH_RST_REVERT_CYCLE	GENMASK(15, 8)
- 
- /* PCIE MAC */
- #define MT_PCIE_MAC_BASE			0x74030000
+ 	if (mtk_wed_device_active(&dev->mt76.mmio.wed)) {
+ 		u32 wed_irq_mask = MT_INT_TX_DONE_BAND2 |
 -- 
 2.51.0
 
