@@ -1,42 +1,42 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13A70396588
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F84D3976B0
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773334865; cv=none; b=tFRcQAjR4B7sMfZik82Y+D944eBys0yqcVUhV6MjgWTqzWn5ZaD5Hybq986zVXyzMsy74EYFgk6uHL03PClBG/xQtuf9KdeoqKSe3wB+bNGw8XQlIyXbpCuzPD3oKPxkStHDWgylZWoeDK1TeauV4LAuJ03JFCEeGwrOp2ehfGY=
+	t=1773334865; cv=none; b=GDJTEaq1uxklE/ws4+AKGauapHJiXBDeeOCTpcxglw+UdzstBFpBUJvWsQ1hKSOCEZpKuLcA3qXlEl4as0eJnKDMQLk7xxhM1dc81NhmRtiK7jN+9AGSrsMKzC3f74+Jf3MzL1norAS1ymX+ULQcLBCGk92BtXdeHcNQ1J6eRhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773334865; c=relaxed/simple;
-	bh=TOt5e1Mn6oqo6w2KCnw6jXoqI7H+jLVsg9914AqdJzI=;
+	bh=vwY/GGcAms18Dpnp9HGaFOyKVZsyjFJJqlMhBQq18Hk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h7PQuKqrmiBh315szq8uZ+Ou6RYMaxIfmETdLIG8lUwjfvJgYj9QUt8CvmDsPAq3e5quaAP4DgRQPRoKLUpsN2+ItvKlnTfrATLjgajJrnwCv0a9d4nn1mQN1LGUJ2vO/v/HX+MT9ABwSsnNjsjBfQi2fmfwL0oCmV2vutjg4Cg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=KASG3oUF; arc=none smtp.client-ip=67.231.154.164
+	 MIME-Version; b=HI9n3tCCB/GJE/mSTzNk/h7ApPLHI+iRAtjTLkGKlpyPbRcd6uRV1DhI7p5CRs09VcDHMiX6kZn7/wX05C8yzaUQRGYoD7Rlvv/zIIvXKvda1oOWEZGEGe8A01jHjZuCOKvrHa80tSnhpAa6nxOIOzUJPeQe5nujk4IUbBJPvZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=EQg9Ga9q; arc=none smtp.client-ip=148.163.129.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="KASG3oUF"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="EQg9Ga9q"
 X-Virus-Scanned: Proofpoint Essentials engine
 Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id D8D019C00E2
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:00 +0000 (UTC)
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id EDCAE34006E
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2026 17:01:01 +0000 (UTC)
 Received: from ben-dt5.candelatech.com (firewall.candelatech.com [50.251.239.81])
-	by mail3.candelatech.com (Postfix) with ESMTP id 49BB213C2B3;
+	by mail3.candelatech.com (Postfix) with ESMTP id 05EAF13C2B6;
 	Thu, 12 Mar 2026 10:00:58 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 49BB213C2B3
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 05EAF13C2B6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1773334858;
-	bh=TOt5e1Mn6oqo6w2KCnw6jXoqI7H+jLVsg9914AqdJzI=;
+	s=default; t=1773334859;
+	bh=vwY/GGcAms18Dpnp9HGaFOyKVZsyjFJJqlMhBQq18Hk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=KASG3oUF/AdKU7NcTlJ97vPLUbSqIegWD25Gg5ADiCzLdhkfijeb0aq+6U+Gt63Yx
-	 YLSH9OzQD2NUDMQzS1DigqAwreYHOhwQP4QFTLZD8ddjpX+8je7kBJU1sxaGAe2QGe
-	 a2TtGvaMEAGx6Zrfg8gcHxSUguyr21EQYIFW14dQ=
+	b=EQg9Ga9q8KaReodFdV6ajqt532CBOwGVYA77erBOJKKvRkH4cienHIGrcQtrXffoo
+	 uI4+/GvAHVtcb+90WyZDTf7SjGS44GfJFn2/0/hx7aqWKw+taPrmUsl5880zgHtQrb
+	 FjyIGcuwBg3esun+x8sx6Q5pBoI9ZoYic/f38RS8=
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH wireless-next v2 02/28] wifi: iwlwifi: mld: Add check for null vif in stats callback.
-Date: Thu, 12 Mar 2026 10:00:00 -0700
-Message-ID: <20260312170026.285494-3-greearb@candelatech.com>
+Subject: [PATCH wireless-next v2 05/28] wifi: mac80211: do not fail taking sta to lower state.
+Date: Thu, 12 Mar 2026 10:00:03 -0700
+Message-ID: <20260312170026.285494-6-greearb@candelatech.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20260312170026.285494-1-greearb@candelatech.com>
 References: <20260312170026.285494-1-greearb@candelatech.com>
@@ -47,34 +47,41 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-MDID: 1773334861-Ghwz87mWosHz
+X-MDID: 1773334862-D8WXQdRmzEFn
 X-PPE-STACK: {"stack":"us5"}
 X-MDID-O:
- us5;at1;1773334861;Ghwz87mWosHz;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
+ us5;ut7;1773334862;D8WXQdRmzEFn;<greearb@candelatech.com>;f7146c1849a4b08a52804beb1c1cdf45
 X-PPE-TRUSTED: V=1;DIR=OUT;
 
 From: Ben Greear <greearb@candelatech.com>
 
-A crash was seen in this area, protect against null.
+If sdata-in-driver-check fails, then we assume STA is definitely
+not in the driver, and so going to less connected states should not
+fail.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/stats.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/driver-ops.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/stats.c b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-index 7b8709716324..8d6bd7219b94 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
-@@ -415,7 +415,7 @@ iwl_mld_process_per_link_stats(struct iwl_mld *mld,
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index 49753b73aba2..59998d0af3ff 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -143,8 +143,12 @@ int drv_sta_state(struct ieee80211_local *local,
+ 	lockdep_assert_wiphy(local->hw.wiphy);
  
- 		bss_conf = wiphy_dereference(mld->wiphy,
- 					     mld->fw_id_to_bss_conf[fw_id]);
--		if (!bss_conf || bss_conf->vif->type != NL80211_IFTYPE_STATION)
-+		if (!bss_conf || !bss_conf->vif || bss_conf->vif->type != NL80211_IFTYPE_STATION)
- 			continue;
+ 	sdata = get_bss_sdata(sdata);
+-	if (!check_sdata_in_driver(sdata))
++	if (!check_sdata_in_driver(sdata)) {
++		/* Going down should not fail in this case. */
++		if (new_state < old_state)
++			return 0;
+ 		return -EIO;
++	}
  
- 		link_stats = &per_link[fw_id];
+ 	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
+ 	if (local->ops->sta_state) {
 -- 
 2.42.0
 
