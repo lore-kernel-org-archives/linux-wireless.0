@@ -1,40 +1,40 @@
 Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB691383C6F;
-	Fri, 13 Mar 2026 21:28:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A332E3845A3;
+	Fri, 13 Mar 2026 21:28:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773437317; cv=none; b=ou4RCSPQrQbadoG87+UrrDEPWXoeDI0+8WLNf31aRNpM7jPbZGSaxIr5QmJXHy1cAmLOWmBsakcUx0cC+iHHagUihGfTIgU3bxWs+AKlmJoZ2PbeG52QTm0khh/6e97RVCjSuOGD3ev8Wb9F4wDF9fMIHWnx6RH1IyzRblNhdgw=
+	t=1773437319; cv=none; b=NCdnfHl/Y4X7OlaNP7CKabvyljCbC90GiYJwjDnelkyEIKrEOeInbTBaJ0ZSq9Bf6MR5RZi/8tb1CJwaHMbc+xU0h8csOXfyejFUR/1c/u2EG/b9bM0Aqk9wq3mvwBu90ToZhgw24BSD7EMQWLwcdIZA4uhkX6Pca7lA2b09DPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773437317; c=relaxed/simple;
-	bh=zExRomcPKnjAtinRkt6KMsB26g2jkpv2YzaeFON3qEM=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=HxbMgrFyqx8XzdAxmFe96a3dKb5QritjS/lTsG7vWiASVXxdWn1IHLp/iW2Is1Dvod2viEOxRccvH9YqQDjOgTJVZ50FNoau1AGiYnwAhdRigrgk8xWrhoyHzYsIpz7k+XzCxvkoTSDUdX5sS5vAju+aDryxsYbDAknk2hbOIvk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=kS1vKUBO; arc=none smtp.client-ip=213.97.179.56
+	s=arc-20240116; t=1773437319; c=relaxed/simple;
+	bh=W75rJzcQ9OqjLMj37j3eU7ccV8Fk+yD0YTYrhsXASVk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=UejRbwqD3G17bP6UnOWWsuoAJCuyHdtH7QFBzZ1GHN37MpvfqRW9DpOsZ9ZyIId24WH4ntmu0VPOacOV2oe6sRB4mHFgH6w2RTSDjBbAnutxK7u/RHfDw24j8oiZTXEgSBFVaFGgDsoK5iMoOidqFzBpBatqromgafArCLi0D+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=BBJ1OgFR; arc=none smtp.client-ip=213.97.179.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="kS1vKUBO"
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="BBJ1OgFR"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Cc:To:Content-Transfer-Encoding:Content-Type:MIME-Version:
-	Message-Id:Date:Subject:From:Sender:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=+nNz6YA7+pDqY0dz/bzIhLRvah3GG0oYcR+y3o/Wm/Q=; b=kS1vKUBO9z0Jq2qdYjMxnnl/38
-	FgSS8BhjceQaZmgT9f/8W5K6kYJPmYqdpA8M8xUKOjNyoZF2aVMlqz0DS5Az9NhObGrOPJNWr/DWs
-	1JL5TZyWODmG98QMUPkclBzqLPSOX/1hAdsMtwbyRgy2mU5lzEW/P6gwGQaou41RS6VBFY+ISSX7B
-	w7BqqTXMUaDF6iYUAsaireL7N90Bb9wyLhTiJ9oNPdkRNLqjKWyTFj5Rm2Qr4Z96hZjYT3PV6cDKS
-	JFWCesWBzJtcQ7VhVZydnSX9bA+DFpQdQUoAjKVFT5L147Z7vR58OU/t/VJBVEQ5xePkt5+m+513z
-	FgIk4MHA==;
+	s=20170329; h=Cc:To:In-Reply-To:References:Message-Id:
+	Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:Date:From:Sender:
+	Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender
+	:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=iPJMovgEDfKBBMN9a4vOtIg1aTmb+ZeSY/mDll1OlFY=; b=BBJ1OgFRDC/MivY5/YXJF5/JXe
+	kzaURJ8HGWTn0Oh3qa/Jcwt9TJRGfqsMi8NVqFlR5TYVb5tGGMHIKerRzphjUsPQvjUrDQp2i99FU
+	oGl/tv7X3s3XYg7sVCgnh67GFLh+hB0rQzAC5XBx8xyvLlwbfey3Kg74Di4NaAlqJfdAtYdaIEVrK
+	DhG8K0cBuxbJl4bg+cTyKmYnrP1bdXn+Tq6JehgM6kj7Jet1heEvJPqafpKfMsjP4kFc9zDwWhAwu
+	S05lhSYRBfLn5Ae4FrOO4KCezw72XnWGdiVJ/rfcY+3FcI/fE5iod2NkFCXaq4v/rfH55kIE6Mftz
+	XzcIQfoA==;
 Received: from 189-14-81-93.vmaxnet.com.br ([189.14.81.93] helo=[127.0.1.1])
 	by fanzine2.igalia.com with esmtpsa 
 	(Cipher TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1w1A3b-00FRhq-HN; Fri, 13 Mar 2026 22:28:31 +0100
+	id 1w1A3f-00FRhq-E6; Fri, 13 Mar 2026 22:28:35 +0100
 From: Heitor Alves de Siqueira <halves@igalia.com>
-Subject: [PATCH 0/2] wifi: libertas: add USB anchors for TX/RX paths
-Date: Fri, 13 Mar 2026 18:27:56 -0300
-Message-Id: <20260313-libertas-usb-anchors-v1-0-915afbe988d7@igalia.com>
+Date: Fri, 13 Mar 2026 18:27:58 -0300
+Subject: [PATCH 2/2] wifi: libertas: don't kill URBs in interrupt context
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -43,10 +43,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MQQqEMAxA0atI1hOwtajMVWQW1UQNSB0SFUG8u
- 8XlW/x/gbEKG3yLC5QPMVlThvsUMMwxTYxC2eBLX5eVq3CRnnWLhrv1GNMwr2rYOKI2BE8UPOT
- 0rzzK+W67330/nn3tM2YAAAA=
-X-Change-ID: 20260313-libertas-usb-anchors-71dd8442dd42
+Message-Id: <20260313-libertas-usb-anchors-v1-2-915afbe988d7@igalia.com>
+References: <20260313-libertas-usb-anchors-v1-0-915afbe988d7@igalia.com>
+In-Reply-To: <20260313-libertas-usb-anchors-v1-0-915afbe988d7@igalia.com>
 To: Johannes Berg <johannes.berg@intel.com>, 
  Szymon Wilczek <swilczek.lx@gmail.com>
 Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org, 
@@ -54,33 +53,43 @@ Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
  syzbot+74afbb6355826ffc2239@syzkaller.appspotmail.com
 X-Mailer: b4 0.14.3
 
-This series fixes a sleep-in-interrupt-context bug reported by Syzbot in
-the Marvell libertas driver. Previous in-flight URBs were killed with
-usb_kill_urb(), which shouldn't be called from interrupt context as it
-might sleep.
+Serialization for the TX path was enforced by calling
+usb_kill_urb()/usb_kill_anchored_urbs(), to prevent transmission before
+a previous URB was completed. usb_tx_block() can be called from
+interrupt context (e.g. in the HCD giveback path), so we can't always
+use it to kill in-flight URBs.
 
-The first patch adds USB anchors for the TX and RX paths, so we have a
-way to track any in-flight URBs. Existing functions now use the anchors
-instead of handling URBs directly.
+Prevent sleeping during interrupt context by checking the tx_submitted
+anchor for existing URBs. We now return -EBUSY, to indicate there's
+a pending request.
 
-The second patch fixes the reported bug by checking the TX anchor for
-any in-flight URBs before sending out new ones. We now return -EBUSY
-instead of killing the pending URB.
-
+Reported-by: syzbot+74afbb6355826ffc2239@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=74afbb6355826ffc2239
+Fixes: d66676e6ca96 ("wifi: libertas: fix WARNING in usb_tx_block")
 Signed-off-by: Heitor Alves de Siqueira <halves@igalia.com>
 ---
-Heitor Alves de Siqueira (2):
-      wifi: libertas: use USB anchors for tracking in-flight URBs
-      wifi: libertas: don't kill URBs in interrupt context
+ drivers/net/wireless/marvell/libertas/if_usb.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/marvell/libertas/if_usb.c | 32 ++++++++++++++++++--------
- drivers/net/wireless/marvell/libertas/if_usb.h |  3 +++
- 2 files changed, 25 insertions(+), 10 deletions(-)
----
-base-commit: 80234b5ab240f52fa45d201e899e207b9265ef91
-change-id: 20260313-libertas-usb-anchors-71dd8442dd42
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index 11cd1422f46a..d3b9f7619a1a 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -429,7 +429,12 @@ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload, uint16_t nb
+ 		goto tx_ret;
+ 	}
+ 
+-	usb_kill_anchored_urbs(&cardp->tx_submitted);
++	/* check if there are pending URBs */
++	if (!usb_anchor_empty(&cardp->tx_submitted)) {
++		lbs_deb_usbd(&cardp->udev->dev, "%s failed: pending URB\n", __func__);
++		ret = -EBUSY;
++		goto tx_ret;
++	}
+ 
+ 	usb_fill_bulk_urb(cardp->tx_urb, cardp->udev,
+ 			  usb_sndbulkpipe(cardp->udev,
 
-Best regards,
 -- 
-Heitor Alves de Siqueira <halves@igalia.com>
+2.53.0
 
