@@ -1,48 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7842E30CD82;
-	Mon, 16 Mar 2026 10:32:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E9EF17D2;
+	Mon, 16 Mar 2026 10:38:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773657174; cv=none; b=leUj2E9q6IPQdMqvcyxu4wbU8PjbbHLTERfnYoS+QQA+irn8OuSGLqfc+y4B93Jtd7BJNxZ+hXRB81NWbakUwzZsYQKjuT3pKzbOjJvgQec4QtbvIEtN8GEwRBVMnO6gpv/Q9bSvOCJ/zWk6WxvqtTrH5bP3Zm+Eo8j702pOzWo=
+	t=1773657489; cv=none; b=uxVJ7ZrZ6/EEZoVP0FaBsF/ak1Y66z0L4lls9NQtSuLzVEI5D016uiRUNWB/lgdxp7LSElNNoaq/JMkqED2/LKWiy1U4AT5xcp9X8dkWOV4X7cDuDRSzF34hgsdarY/KYOD+F6nB1/3jnelLHk/ADoPsv2F+w7ypvcpkTgPwB+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773657174; c=relaxed/simple;
-	bh=foo6ha6utUqAHOJAB6N0DTi6sIWbgbJ0LhHs/34tGZQ=;
+	s=arc-20240116; t=1773657489; c=relaxed/simple;
+	bh=P+WGoX56mYFeB5NHJVqP3DF3oHzkRuS066gqfc2Rusc=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=p5/OQcqHH5njUYYDpZiYTeHSxZ/vuHte3UyP3YHi2+15J05G7uFS4pL/JjI3vch5CiT2jmu4w9WnufhMz6n2DqH7MAk+6kjrc8jKNTIG3Mlj+MORYvAPCg5trTZKCCiqs6gzKieUP1+p3Ck7jAtSTF50qfSJaIeAt1OTPVBPQ60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=B84xoUdb; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=XvRHMnCEKWrvoLmVsUly+67eLUb+bOtMwMULGJemkXZM2pN+EMdSfDaBzHZiD91WuYPMDO41bJGgZWNR6x6aXCFZUdi2gicJU6pTvCm1G+MHbc3LDAlFeNVRcnFstLR+WIk6jD/OZU1NTSjg8IyxSWXOdSmNBgZ68YJ4OQhf8o0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=hL2UrIKW; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="B84xoUdb"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="hL2UrIKW"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=aqjs+KPpIasbkcYqseVWATk4xS55mwQ+d2bTN58VHtw=;
-	t=1773657173; x=1774866773; b=B84xoUdbn5qfhQksiS+rXWykGQHKQRSN5uFqiHUpwylOyRO
-	H4oeJDlrCH9Pla1dMF+dkEG1VDqIVl4BbuXZhsr2XzdGwjrIw9YCrqXFq5alk2Gmyk+8oSKPN6CL8
-	0cZi/y+stuWN+tc5vBT/eo7BNsaTQ2LMHt0Ej8mh2vSNoId6WZNt5pO905oRnR8U8lP3DOr5+zLG9
-	9r54rbUlioEYZFJ8KEfpDgLK1Rky14u7FxUgBcWzxG1hwpCvHsIZeH2WJ+LNz2uz6bjxmF7/yY8pv
-	gfKjc+BIMV6Ww1eEmdrSQYdqsU2LCmthBZQGzBcq1h8uKcw7qTRrP4egsFeEuJLQ==;
+	Resent-Cc:Resent-Message-ID; bh=n7VM6NNCGH0TvPrUW5qoHi31o78h40B/CYvexp2TK04=;
+	t=1773657488; x=1774867088; b=hL2UrIKWZEKX2s0WnrwY7/zGCdQwykFieHx8SvX/gG6RNsG
+	7Jw32EaZy3fkd5QmzgG8Mz+fos6xR4fTNE7OcfzbEZbD/K5qeatlM3uBZcVBGyrZpOtF7N4dh6zHB
+	/0pYfqm2mQAL88eu1TK/aso6Oj0RT9D+1MJ8TlbDwRuShnIDWCLUBn77r0pSkX39DQQRN0onkU7sb
+	T7PK/7Xk7S+0TtZBWpAdfA4ogkj5Xwodj4loQIoKyRJOHdI3Vm4OMTD6s3W1xf46To9mb3nVQDRc/
+	Sds9b0UtN2vdoAy0Op1nQVLdFztogeWnDga2+LfNOD8MEzhc9hGhVdMoJCyUTb5g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w25Fc-000000028p4-2au1;
-	Mon, 16 Mar 2026 11:32:44 +0100
-Message-ID: <c0dee26157e9e717864aca406dd10e928a13985e.camel@sipsolutions.net>
-Subject: Re: [PATCH v3 1/3] wifi: iwlwifi: pcie: optimize MSI-X interrupt
- affinity
+	id 1w25Ko-000000028z5-09oc;
+	Mon, 16 Mar 2026 11:38:06 +0100
+Message-ID: <71acefb76084d5a82f9ce4536e270942cffc64e3.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: mac80211: fix monitor mode frame capture for real
+ chanctx drivers
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Adri=E1n_Garc=EDa?= Casado
- <adriangarciacasado42@gmail.com>,  Miri Korenblit
- <miriam.rachel.korenblit@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Miguel
- Ojeda	 <miguel.ojeda.sandonis@gmail.com>
-Date: Mon, 16 Mar 2026 11:32:43 +0100
-In-Reply-To: <20260315201647.15328-1-adriangarciacasado42@gmail.com>
-References: <20260315201647.15328-1-adriangarciacasado42@gmail.com>
+To: =?UTF-8?Q?=E5=82=85=E7=BB=A7=E6=99=97?= <fjhhz1997@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org, oscar.alfonso.diaz@gmail.com
+Date: Mon, 16 Mar 2026 11:38:05 +0100
+In-Reply-To: <20260309104559.22252-1-fjhhz1997@gmail.com> (sfid-20260309_114615_459820_69893C51)
+References: <20260309104559.22252-1-fjhhz1997@gmail.com>
+	 (sfid-20260309_114615_459820_69893C51)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -54,47 +53,74 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-Hi,
+On Mon, 2026-03-09 at 10:45 +0000, =E5=82=85=E7=BB=A7=E6=99=97 wrote:
+>=20
+> I see the key difference between our approaches: your v2 iterates
+> the chanctx_list and only proceeds when there is exactly one entry
+> (going to fail_rcu if more than one exists), while mine blindly takes
+> the first entry via list_first_entry_or_null(). Your approach is
+> clearly safer -- in a multi-chanctx scenario, there is no way to know
+> which channel the user intends to inject on, so refusing is the
+> correct behaviour.
 
-Somehow you messed up reposting this - the whole v2 series appears twice
-and the v3 of this patch appears twice but without the rest of the
-series?
+Oh, right, I hadn't even realised that at first.
 
-> Implement a balanced RSS queue distribution by skipping CPU0 for
-> high-rate MSI-X interrupts when multiple CPUs are online. This reduces
-> contention with system housekeeping tasks on the boot core and improves
-> overall throughput.
+> I have tested my patch on an MT7921AU (mt76, USB) adapter across
+> v6.13, v6.19, and v7.0-rc2 with managed + monitor coexistence, and
+> have not observed any crashes. However, my testing was limited to a
+> single-chanctx scenario (one managed interface + one monitor
+> interface), so it does not rule out crashes in multi-chanctx
+> configurations.
 
-*Does* it improve throughput though? You should back up such claims with
-numbers ... I doubt it would (unconditionally). It's not like the system
-is going to be *really busy* all the time with housekeeping etc., and
-the boot core is probably going to be a P-core, where you might have a
-system with only 2 P-cores and 4-8 E (or even smaller) cores. This
-likely also breaks some Intel-internal system requirements, but that
-could be debated with the right folks.
+Maybe =C3=93scar can comment on which device/version he tested and got the
+crash with? I just would like to avoid having crashes because of this,
+but generally think that - perhaps optionally - we could have code like
+this, since people _do_ want injection to work.
 
-Either way,
+> Could you share some details about the crashes that were reported
+> with your v2? For example, which devices/drivers were affected and
+> what the crash signature looked like? That would help me understand
+> whether the issue was specific to multi-chanctx usage or something
+> more fundamental with accessing the chanctx_list in this code path.
 
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-> @@ -1683,7 +1683,17 @@ static void iwl_pcie_irq_set_affinity(struct iwl_t=
-rans *trans,
->  		 * Get the cpu prior to the place to search
->  		 * (i.e. return will be > i - 1).
->  		 */
-> +		/*
-> +		 * Balanced distribution: skip CPU0 for high-rate RSS queues
-> +		 * to avoid contention with system housekeeping.
-> +		 */
->  		cpu =3D cpumask_next(i - offset, cpu_online_mask);
-> +		if (cpu >=3D nr_cpu_ids)
-> +			cpu =3D cpumask_first(cpu_online_mask);
+No, it was specific to some driver implementation, but I don't have any
+more information now.
+
+> If you agree, I would like to send a v2 that combines both approaches:
+> use list_first_entry_or_null() for simplicity, but add a
+> list_is_singular() guard so we only proceed when there is exactly one
+> chanctx -- matching the safety constraint from your v2:
+>=20
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -2399,10 +2399,24 @@
+> -	if (chanctx_conf)
+> +	if (chanctx_conf) {
+>  		chandef =3D &chanctx_conf->def;
+> -	else if (local->emulate_chanctx)
+> +	} else if (local->emulate_chanctx) {
+>  		chandef =3D &local->hw.conf.chandef;
+> -	else
+> -		goto fail_rcu;
+> +	} else {
+> +		struct ieee80211_chanctx *ctx;
 > +
-> +		if (cpu =3D=3D 0 && num_online_cpus() > 1)
-> +			cpu =3D cpumask_next(0, cpu_online_mask);
-> +
+> +		ctx =3D list_first_entry_or_null(&local->chanctx_list,
+> +					       struct ieee80211_chanctx,
+> +					       list);
+> +		if (ctx && list_is_singular(&local->chanctx_list))
+> +			chandef =3D &ctx->conf.def;
+> +		else
+> +			goto fail_rcu;
+> +	}
+>=20
+> This avoids the ambiguity of picking an arbitrary chanctx in
+> multi-chanctx scenarios while still fixing the common single-chanctx
+> case (e.g. one managed + one monitor interface).
 
-this is wrong since you really then should allocate one queue less,
-rather than mapping two queues to the same core.
+Seems reasonable, I think we could even drop the "if (emulate) part
+(since in that case the list should always be singular). Just like I
+said above - would like to understand the issue that had appeared with
+it.
 
 johannes
