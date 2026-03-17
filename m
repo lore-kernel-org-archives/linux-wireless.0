@@ -1,34 +1,34 @@
-Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+Received: from out-176.mta1.migadu.com (out-176.mta1.migadu.com [95.215.58.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3669737881E
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2026 17:30:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C9D1A6820
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2026 17:30:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773768630; cv=none; b=nlDenB3GFx2Ue2P/V+qw30bbbQ1KkRoCgV9gVaEJKl+DxlxPZi5G0bmaU36kDAgScgXJQynILfDr1ysdsf7x/UIeB91FiGdIH4pI+D8MPSYJ3+8myfU3uzzDAyr3dJVAfrPbgQ32eg5F24KzJTnZ4ZYFU9S/mRqLoSjRwGrHiBo=
+	t=1773768632; cv=none; b=j5aBNlNNCpRph2uSidYUSmzGQEiaG3wpFgJgr/HbKEhtl2n96fvJ1E3AzZ22FxowB+tBEfN8SOF0+x2z2Ep7C0o7DV8KGu7+jVtzDfYVRsyqZhQcDtsKTtBRkfi76KW7yzl+K5kh+KMGhfptej4xeNac+53PM4tshx4by22Hb+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773768630; c=relaxed/simple;
-	bh=7Kcx/vlxG1rv93svyUUGJca+uCyfY6vStjBgnfsfPQM=;
+	s=arc-20240116; t=1773768632; c=relaxed/simple;
+	bh=ZLM8JlT4gWHzo6JpQLH/igkQh2XIDLodYhACrufzsq4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HVwsaGZnQT+7JMVtUejd2DID1N1gOQRcpahghQ6o8m/UEFGwRbNh2U19YoEkgeoua19+VfjJKX5gnUNOkQ9iVv1dDRZ76Z7z791T/NLaQljRPpODeEE40g4vFo4MChKMRGZpbOrlnptU74pPa4qNUO5/iBjFGI5jpp4drQLENA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=xDgoQTnh; arc=none smtp.client-ip=95.215.58.187
+	 MIME-Version; b=FMU4RbP7zyxZpgXaVUD2C26Z26I3wMwmhZ6imgJqHTTw00V9RHFAYUceTQYwSj3HJ2j+Af8nILrcFI1rCh+wVD52Ffkf4nROUy6I7m+KEiYo7j/9ZYi1KR33mPrdEqabCkk8Zh87WEYMHJwM4S0626IbFIpirE29B4cOFQOMUnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=KEYfGPXh; arc=none smtp.client-ip=95.215.58.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="xDgoQTnh"
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="KEYfGPXh"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1773768626;
+	s=key1; t=1773768628;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1laft9brAscXHWygDMHywLWraBhdNtqQIsBfWpKqcP0=;
-	b=xDgoQTnhyg3ZyjO+S1IVetCbyrkyqOeIPe6J+TKd9GIKz4ch07z9d//AGbH27GbGFRfhvt
-	OFpP4zyfzwsqTOiVHMCGL08TC0gC/isHPjRU3f2xgEsSHlNAmxH0R+jrTBEc7yGgY9LsPr
-	DO4RkydI1nr6V4C57ZLBVvlShhUxL85HWJQIYaIOMCFBrN8XMSUbumBSnRz9USRCzcf9cV
-	ESthIKAEB/9tqeujl+3sSsj5WkM9XASvoLaBZmuvf3g4Yn7YEfzu1lNsOuU1S89HW+gz7d
-	9RDZBiayNi1sN4CLN3RF71Iw/u6/vm6xuxYUW1oJLKoMIcuaRlDN3ZOt/NYycQ==
+	bh=y1Sa/OI14235f1o3BnTehycDoIrodctjm5BQzxUDkn0=;
+	b=KEYfGPXhOTukL2f/O139Z4+EwlxumRNfGlocS2yKOwqsdK2I7vXICDP/na3srp+ARKhSx4
+	+8XQy1//DHXr8tPZV/0jT2P8/Sg34A5DrP5ApZjI1F01iqwNv3W9aZdHeIAGEJTrWJl52R
+	t+c6Qip6VebFt83TFRyGRwUub1DG5dmjVbh7I+U5WIaCEzOBr5mZceDZ6wOsobW0KrYJZy
+	T0dbwsUeGxaYw+e77Ef87KY1vS+MOG0dAS4g6j77mvd1aiB8cgqo6fg2DzNCoDeLd+2Ejs
+	HiE+P3Tvgsx2v//p/mrc2HM7LBwKi2PfgTaRXisK5/Bx+0IMYo91bLVSN0/HHw==
 From: Lucid Duck <lucid_duck@justthetip.ca>
 To: linux-wireless@vger.kernel.org
 Cc: nbd@nbd.name,
@@ -37,11 +37,11 @@ Cc: nbd@nbd.name,
 	linux-mediatek@lists.infradead.org,
 	morrownr@gmail.com,
 	Lucid Duck <lucid_duck@justthetip.ca>
-Subject: [PATCH v3 0/1] wifi: mt76: mt7921: fix txpower reporting from rate power configuration
-Date: Tue, 17 Mar 2026 10:30:15 -0700
-Message-ID: <20260317173016.136975-1-lucid_duck@justthetip.ca>
-In-Reply-To: <CAGp9Lzp0LEac0DnAzs477fG5rmA+ZjdDHfdAPWccK3GKEY05rw@mail.gmail.com>
-References: 
+Subject: [PATCH v3 1/1] wifi: mt76: mt7921: fix txpower reporting from rate power configuration
+Date: Tue, 17 Mar 2026 10:30:16 -0700
+Message-ID: <20260317173016.136975-2-lucid_duck@justthetip.ca>
+In-Reply-To: <20260317173016.136975-1-lucid_duck@justthetip.ca>
+References: <20260317173016.136975-1-lucid_duck@justthetip.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,81 +51,139 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Sean, Felix,
+The mt7921 driver never updates phy->txpower_cur
+when TX power rate configuration is sent to firmware. This causes
+mt76_get_txpower() to report bogus values to userspace (typically
+3 dBm) regardless of actual regulatory or SAR limits. User-set
+txpower limits via iw are also not reflected.
 
-Here's v3 of the txpower fix, reworked based on both of your feedback.
+Three root causes are addressed:
 
-Felix pointed out in v1 review that the fix should determine the maximum
-rate power from the loop in mt76_connac_mcu_rate_txpower_band(). Sean
-confirmed this direction in v2 review and clarified that the value should
-come from the same computation that configures the firmware's per-rate
-power tables, not from bss_conf.txpower.
+1. The rate power loop in mt76_connac_mcu_rate_txpower_band() computes
+   the correct bounded TX power for each channel but discards the return
+   value of mt76_get_rate_power_limits(). Fix: capture the return value
+   and store it to phy->txpower_cur when processing the current channel.
 
-v3 does exactly that. The loop already computes the right value via
-mt76_get_rate_power_limits() but discards the return. This patch
-captures it and stores it to phy->txpower_cur for the current channel,
-matching how mt7915 handles this in mt7915_mcu_set_txpower_sku().
-Nick independently confirmed v2 produced correct values on his
-MT7921AU -- v3 preserves those results while addressing the
-source-of-truth concern.
+2. mt7921 uses the chanctx model but its add_chanctx callback bypasses
+   the common mt76_phy_update_channel(), leaving phy->chandef stale.
+   Fix: update phy->chandef from ctx->def in both add_chanctx and
+   change_chanctx, and trigger the rate power path to refresh
+   txpower_cur. Also trigger on IEEE80211_CONF_CHANGE_CHANNEL in
+   config(), matching mt7915.
 
-Two additional issues came up during implementation:
+3. For chanctx drivers, mac80211 routes user txpower changes through
+   BSS_CHANGED_TXPOWER in bss_info_changed() -- not through
+   IEEE80211_CONF_CHANGE_POWER in config(). hw->conf.power_level is
+   never updated. Fix: handle BSS_CHANGED_TXPOWER in
+   mt7921_bss_info_changed(), bridge bss_conf.txpower to
+   hw->conf.power_level, and re-trigger the rate power path.
 
-- mt7921's chanctx callbacks don't update phy->chandef (the common
-  mt76_add_chanctx does, but mt7921 overrides it with a minimal
-  version). Fixed by syncing chandef from ctx->def and re-triggering
-  the rate power path in add_chanctx and change_chanctx.
+Tested on Alfa AWUS036AXML (MT7921AU), kernel 6.17.1-300.fc43:
 
-- For chanctx drivers, mac80211 routes iw set txpower through
-  BSS_CHANGED_TXPOWER, not IEEE80211_CONF_CHANGE_POWER, and never
-  updates hw->conf.power_level. Added a BSS_CHANGED_TXPOWER handler
-  to bridge this into the rate power path.
+  Before: iw dev wlan0 info shows "txpower 3.00 dBm" (wrong)
+  After:  correct per-band values, user limits reflected
 
-Tested on Alfa AWUS036AXML (MT7921AU), kernel 6.17.1, Canada:
+Test results (regulatory domain: Canada/CA):
+  - 2.4GHz ch6:  33 dBm (30 dBm limit + 3 dBm 2x2 path delta)
+  - 5GHz ch36:   26 dBm (23 dBm limit + 3 dBm path delta)
+  - 6GHz ch5:    15 dBm (12 dBm limit + 3 dBm path delta)
+  - Band switch: 100 cycles, 0 failures
+  - Module reload: 50 cycles, 0 failures
+  - 2-hour soak: 480 samples, zero drift
+  - Regdomain switching: 10 countries, all correct
+  - User txpower limits: reflected on all bands
+  - Monitor mode: correct on all tested channels
 
-  Band       Auto       User limit (15dBm)   Stock (before)
-  2.4GHz     33 dBm     18 dBm               3 dBm
-  5GHz       26 dBm     18 dBm               3 dBm
-  6GHz       15 dBm      8 dBm (5dBm limit)  3 dBm
-
-  Values match regulatory limits + 3 dBm 2x2 path delta.
-
-Test suite (973 tests, 3.5 hours):
-
-  Regulatory accuracy:     correct on all 3 bands (2.4/5/6 GHz)
-
-  User txpower sweep:      every 1 dBm from 1 to reg_max, all 3 bands
-
-  Band switching:          100 cycles between 2.4 and 5 GHz, 0 failures
-
-  Module reload:           50 rmmod/insmod/connect/verify cycles, 0 failures
-
-  2-hour soak:             480 samples at 15s intervals, zero drift
-
-  Band rotation soak:      30 rotations across all 3 bands over 1 hour,
-                           240 samples, 0 failures
-
-  Regdomain switching:     10 countries (CA/US/JP/DE/GB/AU/NZ/BR/KR/TW)
-                           mid-session without reconnecting, all correct
-                           (JP correctly dropped to 23 dBm on 5GHz UNII-1)
-
-  Monitor mode:            correct on ch1/6/11 (2.4GHz) and ch36/44/149
-                           (5GHz), txpower set works in monitor mode
-
-  Edge cases:              min power (1dBm), over-max clamping, rapid
-                           power changes (10 in 10s), all correct
-
-  Firmware cross-check:    debugfs txpower_sku confirms per-rate tables
-                           match regulatory limits on all bands
-
-Lucid Duck (1):
-  wifi: mt76: mt7921: fix txpower reporting from rate power
-    configuration
-
+Signed-off-by: Lucid Duck <lucid_duck@justthetip.ca>
+---
  .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 12 +++++++---
  .../net/wireless/mediatek/mt76/mt7921/main.c  | 22 ++++++++++++++++++-
  2 files changed, 30 insertions(+), 4 deletions(-)
 
---
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+index 16db0f208..5856924a9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
+@@ -2193,14 +2193,20 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy *phy,
+ 				.hw_value = ch_list[idx],
+ 				.band = band,
+ 			};
+-			s8 reg_power, sar_power;
++			s8 reg_power, sar_power, max_power;
+ 
+ 			reg_power = mt76_connac_get_ch_power(phy, &chan,
+ 							     tx_power);
+ 			sar_power = mt76_get_sar_power(phy, &chan, reg_power);
+ 
+-			mt76_get_rate_power_limits(phy, &chan, limits,
+-						   sar_power);
++			max_power = mt76_get_rate_power_limits(phy, &chan,
++							       limits,
++							       sar_power);
++
++			if (phy->chandef.chan &&
++			    phy->chandef.chan->hw_value == ch_list[idx] &&
++			    phy->chandef.chan->band == band)
++				phy->txpower_cur = max_power;
+ 
+ 			tx_power_tlv.last_msg = ch_list[idx] == last_ch;
+ 			sku_tlbv.channel = ch_list[idx];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+index 5881040ac..38a59c6f2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
+@@ -638,7 +638,8 @@ static int mt7921_config(struct ieee80211_hw *hw, int radio_idx, u32 changed)
+ 
+ 	mt792x_mutex_acquire(dev);
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_POWER) {
++	if (changed & (IEEE80211_CONF_CHANGE_POWER |
++		       IEEE80211_CONF_CHANGE_CHANNEL)) {
+ 		ret = mt7921_set_tx_sar_pwr(hw, NULL);
+ 		if (ret)
+ 			goto out;
+@@ -719,6 +720,14 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_CQM)
+ 		mt7921_mcu_set_rssimonitor(dev, vif);
+ 
++	if (changed & BSS_CHANGED_TXPOWER) {
++		int tx_power = info->txpower;
++
++		if (tx_power != INT_MIN && tx_power > 0)
++			hw->conf.power_level = tx_power;
++		mt7921_set_tx_sar_pwr(hw, NULL);
++	}
++
+ 	if (changed & BSS_CHANGED_ASSOC) {
+ 		mt7921_mcu_sta_update(dev, NULL, vif, true,
+ 				      MT76_STA_INFO_STATE_ASSOC);
+@@ -1360,8 +1369,15 @@ mt7921_add_chanctx(struct ieee80211_hw *hw,
+ 		   struct ieee80211_chanctx_conf *ctx)
+ {
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
++	struct mt76_phy *mphy = hw->priv;
+ 
+ 	dev->new_ctx = ctx;
++	mphy->chandef = ctx->def;
++
++	mt792x_mutex_acquire(dev);
++	mt7921_set_tx_sar_pwr(hw, NULL);
++	mt792x_mutex_release(dev);
++
+ 	return 0;
+ }
+ 
+@@ -1396,6 +1412,10 @@ mt7921_change_chanctx(struct ieee80211_hw *hw,
+ 		mt7921_mcu_config_sniffer(mvif, ctx);
+ 	else
+ 		mt76_connac_mcu_uni_set_chctx(mvif->phy->mt76, &mvif->bss_conf.mt76, ctx);
++
++	phy->mt76->chandef = ctx->def;
++	mt7921_set_tx_sar_pwr(hw, NULL);
++
+ 	mt792x_mutex_release(phy->dev);
+ }
+ 
+-- 
 2.51.0
 
