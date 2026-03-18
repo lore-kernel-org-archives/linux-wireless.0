@@ -1,48 +1,48 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEC4317C220;
-	Wed, 18 Mar 2026 07:53:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5C53750AE;
+	Wed, 18 Mar 2026 08:00:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773820383; cv=none; b=NxeXJzxM7cqlLLMVtqD1NXgDSxEtU/77GNws6phuXbgeisq1wKbU0EMG2Gb6VZz6qTfadbeQiMmQT8qJIETjXDVFI3zBJOsdaz/eYKZhHMPwNv7DWYO0Uds47cfyo4wM0iQGD3OxqxUxCWYCUNlxBmlH3lGhSpaEQfyQ3J947kQ=
+	t=1773820837; cv=none; b=XvKL8x+mHji5MjJ1s4MiHhzZxxcyYK5fpsziFbW0pdRS2FuWLjtvfx0HKIEH1r3Dekh61k49/7IUO1f1BpTRx4MA9b9KMFvKl4JDazdcfAtamycTJIbRBSHTXflMjGDBPgXAUkpKqQCxLtqlBmaXaPtjyX56EKFKOxoNL7yZ6Ms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773820383; c=relaxed/simple;
-	bh=iUmyObubGDhCCaY8aMDS2fWr3diRcYq2mTdl5vsLjME=;
+	s=arc-20240116; t=1773820837; c=relaxed/simple;
+	bh=NFh1/dS2yY1V5/j/8/hnXWN2hIvOcY9YkdUK+OouIP8=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=qu2660qXsYSKwIoHhXS+jDkp2KszBI3d/IbReVZfkubc/aF03RaxBHKltjUzgOeZB6gHYAWbFxqMKHz1OO1wp5DupKznT2n2sNifM/RqQpSRNo2oDdR08KgsZpjzEKLOoI0wAbcDqtTru87syVNN1YAW9FSvgOFbgOfg2u2bbck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=XqN/kPcG; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=U7N2NCsu+0XDvOCGnjPuNTcKwzp7pd5b2U7XXffBWQ39CB4KuZkdmgMBTYX7kvJ4PzObrvFPARDYnST9RWy5oXMGOtQ+tZhNrZtFmDt3OjZ1VF9CogCTSFjpJ8oHyBup1o2aIn27WIGSdy4r5jZNI8smzxx7A5OoKy6MV+Ifx0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=dCr9CAta; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="XqN/kPcG"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="dCr9CAta"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=iUmyObubGDhCCaY8aMDS2fWr3diRcYq2mTdl5vsLjME=;
-	t=1773820382; x=1775029982; b=XqN/kPcGFAA1+oCCnv5U5t49lQx74mcURQzpTRfDI8eIekK
-	4DHI/RhyO1HhFfszIQkBIe/CNK8wqbNC9YW5dhoA5IcYwTSFLs4bzc2SKM9k6ZRfwVeq4vRgwWfSe
-	vVqt7K7ZcfYKpzQMjuJRLdbyYXcR70A99JqvgaXsDz9zq9ANPdTETIaiMHnviOWqFcHiorbrBtyjd
-	zB71zjm7Jsjr8K9egzeN4h6/JS3RtzX3tWhzHtPhelLnV0OiRCw0FAw+WUGyA7V5wjuHh3wBK1BhR
-	zabgaQdCjfgCl1dg35u4i6rxfNGmCg8sdltkLkJbSTKdi225CQ1tVdEeq6fRDW9Q==;
+	Resent-Cc:Resent-Message-ID; bh=hixFf7wKq0QLhS/T/VMdwyyyYGbw1xeEU0sU2ZelLU4=;
+	t=1773820835; x=1775030435; b=dCr9CAtafbV/QypXAZLI8gJSBASFtHFqgOO4oghmm3V+j+b
+	CuQHbSqvex4YD7BFXuKBVKSdupoIIrW1HVPxuKVce5Bk5eUE9g4fRJ81CA9dYQL4EXn/VQBhHrQs3
+	EnX30ufDVDaXPioQ1+ZN2euT93KYzKIaGwthNpYe/ma0jah23uYGHdLoDwiVVtmJg/DxPUwo5JyO/
+	3W5KyhcLihG4wS4BFUgBSBAltlDEj0fqqLRAVTLbznyYgVvmrE5ATFM0p3+ITOoVABeAKRJOzSrn5
+	0SiNAUd1qNorLm1aNGZfWD6/x4gGGZnFAwLhuQCq3IEbRpXtd7MJrj1asX2PlQzw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w2li6-00000004G34-34NH;
-	Wed, 18 Mar 2026 08:52:58 +0100
-Message-ID: <6eb04d4729c562ffebd29e34c83be63996c886ea.camel@sipsolutions.net>
-Subject: Re: [PATCH v4] wifi: iwlwifi: pcie: optimize MSI-X interrupt
- affinity
+	id 1w2lpQ-00000004GGr-2qkK;
+	Wed, 18 Mar 2026 09:00:32 +0100
+Message-ID: <d30024f1a2ae07944714a1eaaa056c55bdc774b2.camel@sipsolutions.net>
+Subject: Re: [syzbot] [wireless?] WARNING in cfg80211_chandef_create
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Adri=E1n_Garc=EDa?= Casado
- <adriangarciacasado42@gmail.com>,  Miri Korenblit
- <miriam.rachel.korenblit@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Miguel
- Ojeda	 <miguel.ojeda.sandonis@gmail.com>
-Date: Wed, 18 Mar 2026 08:52:57 +0100
-In-Reply-To: <20260317193252.13763-1-adriangarciacasado42@gmail.com>
-References: <20260317193252.13763-1-adriangarciacasado42@gmail.com>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>, syzbot
+	 <syzbot+d9f5fabbbcf4b377d01f@syzkaller.appspotmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Date: Wed, 18 Mar 2026 09:00:31 +0100
+In-Reply-To: <tffrshs5h76cfj3k6lelrx6lmm7qtc7hww7r554xtnhfnsw2ip@dqktqrq2k47q> (sfid-20260318_015325_570672_B8B037B9)
+References: <69b992c2.050a0220.248e02.0132.GAE@google.com>
+	 <tffrshs5h76cfj3k6lelrx6lmm7qtc7hww7r554xtnhfnsw2ip@dqktqrq2k47q>
+	 (sfid-20260318_015325_570672_B8B037B9)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -54,22 +54,12 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Tue, 2026-03-17 at 20:32 +0100, Adri=C3=A1n Garc=C3=ADa Casado wrote:
-> Balanced distribution: skip CPU0 for high-rate RSS queues to avoid conten=
-tion with system housekeeping. Use a stateful last_cpu approach to ensure u=
-nique core assignment when skipping CPU0. This avoids mapping multiple queu=
-es to the same core.
+On Wed, 2026-03-18 at 11:53 +1100, Lachlan Hodges wrote:
+> > HEAD commit:    b84a0ebe421c Add linux-next specific files for 20260313
+>=20
+> I think this didn't have your fix already?
 
-You need to break lines ...
-
-I tend to think you need a better reason to skip CPU0. Last time you
-pretended it was actually going to be faster, now you pretend there's
-contention, without ever really getting to any proof of that?
-
-
-Also please read what I said before:
-
->> this is wrong since you really then should allocate one queue less,
->> rather than mapping two queues to the same core.
+Indeed, looks like that tree got cut between your and my commits, even
+though they less than eight hours apart :)
 
 johannes
