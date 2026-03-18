@@ -1,132 +1,126 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B023D2D6E70;
-	Wed, 18 Mar 2026 17:25:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D04035504D
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2026 17:45:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773854721; cv=none; b=c6ahBM0MGwcVyoSl12Yu+9r4d8yMek5GjJINYHEdKz/ZkJfTr4E5gvakNTDv2Cd4ia0Qwl/xMER3xTYqHd7KcYooiJzJQGuvgVyOpj3mF7ayiww4y6OO2wpOEG1HcrYbgRoMgr8Qt26CSf530OYk92qCWbrBfx1IXqccZ/I41RI=
+	t=1773855919; cv=none; b=gw/pI5q1OoG1w3/IgSGkpNur1mPgkgTDVdGnbuDLEnrbEqnXXKRYG4iM9ZYk30+z+jZjgpWy5Zk99Zr2S/+EGVurAmr6xflC/Xbc1jGSb9PwKiSJmtwMohh9zpHD4aFPH1w798VfXOljPBZDYKezs7cGk8Gggj+GDSFWOTyG48s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773854721; c=relaxed/simple;
-	bh=yu4dATME5kRmTSr6FHbRTvhd/PGjjKeDLagi/M2QyjM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gkILLRfX7mPfDSMYUYwrvYfTbOZfhcO24aiJ9wt2CxRInm2OrUTI4Dvk9yd1oU0iCNKorp8vUtR56MnSHDfb1/+PUrAJn3+PbfRgaRVLA2/sAvQ3klksYRPtqstkj0XTzvDLxb9GIXIrX69OU4dpcO3SZfIVm1fs/3v7PtoKbsA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=rvtgvTiJ; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1773855919; c=relaxed/simple;
+	bh=efS2lZkv4yg7g9tDwtRURsw63XISZQRYo1qecGyFcNM=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=Hoq2DfVP4krwbthdk2lBnNUmojjaCOhRdmu92zbqq1D95Q7QDmRPXazUz7Rr5OjAJddqXxF4geffdrc8lFbjWs252A2SQe9Jo8s6uOUgJ2KcmIQ9MZshJjTcAmrwCfxu9Y0wdDsaJTm5ClV/bSgDxk2BGYBmpeJFZU5JOs6Xg5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OsbMmetx; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rvtgvTiJ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=iEV2g761NfyXrHTmNv15Nm2NKnKFbyzlLM+bO3W70Fo=; t=1773854720; x=1775064320; 
-	b=rvtgvTiJaVfHBPXK3mxpKT/4zTTrFPmeWnP+UQGhoJdYNW84WaiEr+Nk9wDZl5lj8qxEbXlQ45V
-	B+D+qb3bpVxv5hl0FRtMbmUDZc8u52E4f0vqx29hq+xePHFAb0eyOhSY49XjpS6Ekxd9VtGdB+N0j
-	QYJjq8jewlasMF5t1CRSQPco5MOcoK1IndV8A1mX6aKLDO5XbLDvdEUkXlfU7rFkKl8S7BcqRpLpT
-	yzZLnjZwryE5IMKNiAxFFCTddqn3i6yDo4lUveNrHQ20nrQm367Q7U5BMvmP9lQ2n+rtFDnSw520g
-	rsP9NZsfWfJ45Yc3RRG94gtws/C00PjiQXhA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1w2udy-00000004Zjb-0jCI;
-	Wed, 18 Mar 2026 18:25:18 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [GIT PULL] wireless-2026-03-18
-Date: Wed, 18 Mar 2026 18:20:49 +0100
-Message-ID: <20260318172515.381148-3-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OsbMmetx"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4853e1ce427so1108575e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2026 10:45:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773855916; x=1774460716; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:cc:to:subject:from
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eCAyeQCfTjJMe2lF/fMvn0FK0TqRCqDD+nk9yk6LTnw=;
+        b=OsbMmetxg7G1vkT48gB0Y4MdV4iyNitRIFoOf5wbNzrMyYUHyJI0V1q6kZBo3g/FSR
+         QSOXWEkezqv7mWUVhzxJuttZr7sWsg666J+/olG2fVq9OeM6PWHtDkoEFR6WGMky9EYr
+         8KJozdzd7yND8UnABlBZNtw2JuU1Eb3n7EGSWu8SE0BJUU+UcKSM9pPozdogeln6B03p
+         dtPxuoxGfBpi4ABolLhYXxL3Uf4YucbxWDfTOv1wWw95++mCIrRn7bRfSnWbtvTPjmOB
+         s7J90XEmzQyFowF0lNmWK5V4JjabyBG+t/DGkaUEsp3Nio1mAn7qm3qrh1RD6P1WdeMG
+         HzSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773855916; x=1774460716;
+        h=content-transfer-encoding:content-language:cc:to:subject:from
+         :user-agent:mime-version:date:message-id:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=eCAyeQCfTjJMe2lF/fMvn0FK0TqRCqDD+nk9yk6LTnw=;
+        b=b77T2Qxdq5c5qMZDUaoaNeMC7OKqAIhqn/PXYaxDVZv1RezL+zLWUFVcAmkSqe32wY
+         PvhMe6bcPJRh/9HUNnhBOVx0Z+Pj9aE+dUrKn9Zkl57dG3qknHX0OFtewYNX1Cn0VMVW
+         9ofvErXkU/fdmSZfb6VI1trSMHe/LrYju07hSy9skZf3sklA9BNpQI6wMHLw3MP+S7p8
+         kX/1NMOj3rqkzuE/eEJn6md5lZmf/ZSNCXHjqDQZQqdqUkqWMdBrTd5cONc3Uox1xhXa
+         YaMQAWUX8hO1TbZl2WkkooY1yxxRBKiUNiz1h1QJcku+RyVwQ2D71AqOCLObguQQyJue
+         1q5g==
+X-Gm-Message-State: AOJu0YwrkNEJKZmhNVdJvLMOJu0OsbvZ/i6ATq4e1IahbHDP9PggAI3e
+	ySZaAuS6yZ7A57BfiFtWi8hy9wJfN7/u2zxTEzZf+0xKpTZnXp3D3+6j+sKhcw==
+X-Gm-Gg: ATEYQzy2yHIU1hjOn2Qcvu43hMLw1Fns5SROvb1BlSyQa9aF88n55NfNaDGq227nA3E
+	J8ZXcsxwspG08tlCaYpd6+jgUx0TdIk8WEMT1U6qokimBLegM6xUUYqq3warbWlPoHX6lvxicGq
+	WcFeWBbncNwhh6ipk+l0J8m8h/6sFd6kqWp284KQxefpJJhCKrhJnSNkwWDBlAP9/m1We+Kqxph
+	Ph1f/W5z7Wb2943OiQZxdkDqY76RvMytf0PNCooSJT2YxTH5b90c/vLYVWIa6kk7UWUt/GQueCE
+	p8bwS+zbHa70RpSUSIzyxvPztC4wEuS3WRh7yED70xU0rTm9JmYA3ZokZC2ElX0QZy50kYoGjVS
+	3ZL7MWpISxwa+Q4NjV5vhmPIwhm2MeXddPl0vCdX8pKegvwRV+CP0XwpliYkvammzW/TyXT3Abp
+	KaeirJqy/SZJNKie/kvGWTXE9Ote/Pdw==
+X-Received: by 2002:a05:600c:848d:b0:485:3fd1:9936 with SMTP id 5b1f17b1804b1-486f442e598mr72220485e9.5.1773855916148;
+        Wed, 18 Mar 2026 10:45:16 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.93])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-486f462caf0sm37588895e9.2.2026.03.18.10.45.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Mar 2026 10:45:15 -0700 (PDT)
+Message-ID: <2b53fb0d-b1ed-47b6-8caa-2bb9ae2acb80@gmail.com>
+Date: Wed, 18 Mar 2026 19:45:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH rtw-next v2] wifi: rtw88: TX QOS Null data the same way as
+ Null data
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi,
+When filling out the TX descriptor, Null data frames are treated like
+management frames, but QOS Null data frames are treated like normal
+data frames. Somehow this causes a problem for the firmware.
 
-So maybe a couple more fixes than I'd like, but here we
-are, and it's small. I also failed to notice the missing
-"wifi:" subject for one of the commits, but didn't rebase
-just because of that now.
+When connected to a network in the 2.4 GHz band, wpa_supplicant (or
+NetworkManager?) triggers a scan every five minutes. During these scans
+mac80211 transmits many QOS Null frames in quick succession. Because
+these frames are marked with IEEE80211_TX_CTL_REQ_TX_STATUS, rtw88
+asks the firmware to report the TX ACK status for each of these frames.
+Sometimes the firmware can't process the TX status requests quickly
+enough, they add up, it only processes some of them, and then marks
+every subsequent TX status report with the wrong number.
 
-Please pull and let us know if there's any problem.
+The symptom is that after a while the warning "failed to get tx report
+from firmware" appears every five minutes.
 
-Thanks,
-johannes
+This problem apparently happens only with the older RTL8723D, RTL8821A,
+RTL8812A, and probably RTL8703B chips.
 
+Treat QOS Null data frames the same way as Null data frames. This seems
+to avoid the problem.
 
+Tested with RTL8821AU, RTL8723DU, RTL8811CU, and RTL8812BU.
 
-The following changes since commit abacaf559950eec0d99d37ff6b92049409af5943:
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+---
+v2:
+ - Completely different approach: avoid the problem instead of ignoring
+   the effects. v1 was here:
+   https://lore.kernel.org/linux-wireless/4fc30feb-5616-4e2e-86d8-0d96e4f191c2@gmail.com/
+---
+ drivers/net/wireless/realtek/rtw88/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  Merge tag 'net-7.0-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-03-05 11:00:46 -0800)
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index c04ff31d0f1e..e2d288186b30 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -424,7 +424,7 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 		pkt_info->mac_id = rtwvif->mac_id;
+ 	}
+ 
+-	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
++	if (ieee80211_is_mgmt(fc) || ieee80211_is_any_nullfunc(fc))
+ 		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, sta, skb);
+ 	else if (ieee80211_is_data(fc))
+ 		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, sta, skb);
+-- 
+2.53.0
 
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2026-03-18
-
-for you to fetch changes up to d5ad6ab61cbd89afdb60881f6274f74328af3ee9:
-
-  wifi: mac80211: always free skb on ieee80211_tx_prepare_skb() failure (2026-03-18 09:09:58 +0100)
-
-----------------------------------------------------------------
-Just a few updates:
- - cfg80211:
-   - guarantee pmsr work is cancelled
- - mac80211:
-   - reject TDLS operations on non-TDLS stations
-   - fix crash in AP_VLAN bandwidth change
-   - fix leak or double-free on some TX preparation
-     failures
-   - remove keys needed for beacons _after_ stopping
-     those
-   - fix debugfs static branch race
-   - avoid underflow in inactive time
-   - fix another NULL dereference in mesh on invalid
-     frames
- - ti/wlcore: avoid infinite realloc loop
-
-----------------------------------------------------------------
-Deepanshu Kartikey (1):
-      wifi: mac80211: check tdls flag in ieee80211_tdls_oper
-
-Felix Fietkau (2):
-      mac80211: fix crash in ieee80211_chan_bw_change for AP_VLAN stations
-      wifi: mac80211: always free skb on ieee80211_tx_prepare_skb() failure
-
-Guenter Roeck (1):
-      wifi: wlcore: Return -ENOMEM instead of -EAGAIN if there is not enough headroom
-
-Johannes Berg (2):
-      wifi: mac80211_hwsim: fully initialise PMSR capabilities
-      wifi: mac80211: remove keys after disabling beaconing
-
-Kuniyuki Iwashima (1):
-      wifi: mac80211: Fix static_branch_dec() underflow for aql_disable.
-
-Nicolas Cavallari (1):
-      wifi: mac80211: use jiffies_delta_to_msecs() for sta_info inactive times
-
-Peddolla Harshavardhan Reddy (1):
-      wifi: cfg80211: cancel pmsr_free_wk in cfg80211_pmsr_wdev_down
-
-Xiang Mei (1):
-      wifi: mac80211: fix NULL deref in mesh_matches_local()
-
- drivers/net/wireless/ath/ath9k/channel.c      |  6 ++----
- drivers/net/wireless/mediatek/mt76/scan.c     |  4 +---
- drivers/net/wireless/ti/wlcore/tx.c           |  2 +-
- drivers/net/wireless/virtual/mac80211_hwsim.c |  3 +--
- include/net/mac80211.h                        |  4 +++-
- net/mac80211/cfg.c                            | 12 ++++++------
- net/mac80211/chan.c                           |  6 ++++--
- net/mac80211/debugfs.c                        | 14 +++++---------
- net/mac80211/mesh.c                           |  3 +++
- net/mac80211/sta_info.c                       |  7 +++++--
- net/mac80211/tdls.c                           |  2 +-
- net/mac80211/tx.c                             |  4 +++-
- net/wireless/pmsr.c                           |  1 +
- 13 files changed, 36 insertions(+), 32 deletions(-)
