@@ -1,83 +1,107 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49A8032F742
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2026 17:06:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40571E89C
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2026 17:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773853595; cv=none; b=Alop7a8/xf8s0hcHhMVO8mL8rpnndf+8mR6AVGCZZsg4NP1nlozKuN8HNlRn4FbT+jApePWLi1MWc2AgGy7OAe4ASqQ8BcGEB8Yfi5EIm5It23PFR3HoQtoSl9AslEny5v6k/D5C47hTnFhMAcuL9E1LJmN1MBPg7U5TdXYEeG8=
+	t=1773854674; cv=none; b=gCH+06PbNBSwLxRSG8oeaZN9JYMRdTCDesJWnZCcDH4ZN/ki5eHpmwO36J/Aa4r7Nwfp+b9xif25izNbaZKCIE80bGoxPj5urowj2idYog7BHsSsN3qef7gDjyhp9B/Wv0AYeUyn6UukiVtcxoXv2Pqs+OeBulbHjWDXs3wqkuo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773853595; c=relaxed/simple;
-	bh=gF3gwPfU9Ibyg2Bnl7mOtjAEH7ISwIOubNpAbAg4p5Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ei13zAs9UWDmq7CBPV3gPNXCrl1a1ToOPTXOfTOhpItfilk8ehd4/ni9BAy2UDzL3PWPE3crk/XdRCAF7X6dkPsiIqPpqI6w7P/K0S46khNl/q17Csh3vOPz6ZdbLUC79IVY553bM7dmHxW7khDnYKkNL5+3sOzkfUvYKKyA57c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=JdJKyAbV; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1773854674; c=relaxed/simple;
+	bh=mle9TPjxbQQB49vWxT239XWJgNhWyzIBF+C7mi5J5bk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sV7Qixw4H3Kn5m+ZBL46IQYaLzCrCLZUA3yV0nTYEeYKPRO/Q+y/n62aiQ5RKeWlYEX7+9bhgWKO+xrlBgq0hOMYB5ZxbrvvQW/75EReMwRvz3lCnoTO2nPxR914MXW8r+M+a7lMnr1eBmCN9OIO0E87DaedXzxUnO71HAjBVOo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K4M9Krik; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="JdJKyAbV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=/d7Jc1IjKbum5Xm4JaYjzkh7CkRJVynXPZOZGFl9Ff0=; t=1773853594; x=1775063194; 
-	b=JdJKyAbVnQ2vMT777fft8hOAC85QhB3CT6HV6c2vi3/5DSUiSmX9BQTDULxW01wZoGpuyC18ACf
-	t43K58wbIUebghDVpPEIm6QOB4x/w6EAhL8YFGw1f88lVwR+XFOTUaXVh2Q0en5qr9gYvyJWbGYV5
-	A2edT4MIY8FXJw3dzatdpSzTg5hx9ulssnpSz26KW4fbLVVzphnqcXJJ0Mjm6SU7I/FYCxfcyPKm4
-	k7swTNVovGH11kZlW7ot/ZndwGz23MsHczRGmzP7mTJ1/U/X8uF/9XjKC5iH4eZCKq2Fbh44nwytR
-	WUBF4OOi4kvTSLnCLd4jhfipqLpBmEvfneJg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1w2uLh-00000004Z9q-39Gy;
-	Wed, 18 Mar 2026 18:06:25 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K4M9Krik"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B090BC19421;
+	Wed, 18 Mar 2026 17:24:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773854674;
+	bh=mle9TPjxbQQB49vWxT239XWJgNhWyzIBF+C7mi5J5bk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=K4M9Krik8gMOdknrZJk4Xla8jczyIpFx9JCJc34L6tecfF/rnaTpiwLCjXchmkn2I
+	 QVKN/DJjojZhTvAavTo3TZ6pWm8wHFz83fPT69I1Fd0di0luDAT9YDAYfET7y/7cxb
+	 uKFZKE44v5R7NV97jq+0Rqfb7oixhsH6hqP2RSC0F0kR2/j304DVCclc8sfk5qHsRa
+	 SAngPbw4IMtlg/r+T1bkzxJBGmnqnvuOSENajpwcMkvckJCct96Ibzt1OE0FTNhfpU
+	 AFbpEpXi8i6W16W81NW0cfpaMTClamiQ8Q0P5zW4eXZOTBwXW0lXKnKDSzyOW/gvrW
+	 7h7yqclF8t0Bw==
+Date: Wed, 18 Mar 2026 18:24:31 +0100
+From: Lorenzo Bianconi <lorenzo@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Johannes Berg <johannes.berg@intel.com>,
 	Jouni Malinen <j@w1.fi>
-Subject: [PATCH wireless-next] wifi: mac80211: fix STA link removal during link removal
-Date: Wed, 18 Mar 2026 18:06:22 +0100
-Message-ID: <20260318180622.9240067117e9.I45fb2b7f04d75e48d2f3e9c6650ef9f54a314f5b@changeid>
-X-Mailer: git-send-email 2.53.0
+Subject: Re: [PATCH wireless-next] wifi: mac80211: fix STA link removal
+ during link removal
+Message-ID: <abrfz9t3DIu1PDPm@lore-desk>
+References: <20260318180622.9240067117e9.I45fb2b7f04d75e48d2f3e9c6650ef9f54a314f5b@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="pyh8sLobxD/xLVyK"
+Content-Disposition: inline
+In-Reply-To: <20260318180622.9240067117e9.I45fb2b7f04d75e48d2f3e9c6650ef9f54a314f5b@changeid>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_sta_free_link() only frees the link and doesn't
-unhash it, so it can't be used here. Instead this needs
-to use ieee80211_sta_remove_link(), which unhashes it. An
-argument against it was that it also calls the driver and
-that already happened, but calls to the driver removing a
-link that's already removed are suppressed, so that's not
-actually an issue. Use it to fix the hashtable.
+--pyh8sLobxD/xLVyK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Reported-and-tested-by: Jouni Malinen <j@w1.fi>
-Fixes: 84674b03d8bf ("wifi: mac80211: Remove deleted sta links in ieee80211_ml_reconf_work()")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Johannes Berg <johannes.berg@intel.com>
+>=20
+> ieee80211_sta_free_link() only frees the link and doesn't
+> unhash it, so it can't be used here. Instead this needs
+> to use ieee80211_sta_remove_link(), which unhashes it. An
+> argument against it was that it also calls the driver and
+> that already happened, but calls to the driver removing a
+> link that's already removed are suppressed, so that's not
+> actually an issue. Use it to fix the hashtable.
+>=20
+> Reported-and-tested-by: Jouni Malinen <j@w1.fi>
+> Fixes: 84674b03d8bf ("wifi: mac80211: Remove deleted sta links in ieee802=
+11_ml_reconf_work()")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f279bdb03aca..0cd8d07bf668 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7119,7 +7119,7 @@ static void ieee80211_ml_reconf_work(struct wiphy *wiphy,
- 
- 		for_each_set_bit(link_id, &removed_links,
- 				 IEEE80211_MLD_MAX_NUM_LINKS)
--			ieee80211_sta_free_link(sta, link_id);
-+			ieee80211_sta_remove_link(sta, link_id);
- 	}
- 
- 	new_dormant_links = sdata->vif.dormant_links & ~sdata->u.mgd.removed_links;
--- 
-2.53.0
+Thanks for fixing it.
+Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
+> ---
+>  net/mac80211/mlme.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index f279bdb03aca..0cd8d07bf668 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -7119,7 +7119,7 @@ static void ieee80211_ml_reconf_work(struct wiphy *=
+wiphy,
+> =20
+>  		for_each_set_bit(link_id, &removed_links,
+>  				 IEEE80211_MLD_MAX_NUM_LINKS)
+> -			ieee80211_sta_free_link(sta, link_id);
+> +			ieee80211_sta_remove_link(sta, link_id);
+>  	}
+> =20
+>  	new_dormant_links =3D sdata->vif.dormant_links & ~sdata->u.mgd.removed_=
+links;
+> --=20
+> 2.53.0
+>=20
+
+--pyh8sLobxD/xLVyK
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCabrfzwAKCRA6cBh0uS2t
+rMlXAP9DSP07iLVqZY2GaUxv0rs9mWTy2CDUveXXgXv7rJlA+wD+LDUxmhL13JP/
+0o0X3df2+EFitbrSvqMz5hNQqSRn4QE=
+=Pmdl
+-----END PGP SIGNATURE-----
+
+--pyh8sLobxD/xLVyK--
