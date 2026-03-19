@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 264AD371892
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AC2C3B47CE
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773911395; cv=none; b=mSBwvIbcBmZiAiKcoWZIEej9gc0NE/eYmjHGXDwz8OmRy57637VWGor14onkVWBfamwlfdYmbutjgfjE2VPbkpSWdeFVeZzW0QmR2j/M330xAAtJ/gsmWZFtfrzr6KlGdCwMAtkBcAusopBEFZv2qO/ooPEgLBMe15Ot6H3ahvA=
+	t=1773911398; cv=none; b=tSEd8CmvQJS9VdizMnOLZIqWfsha+kleKXAAra+abw6ptH+xTDLjP6BEm/puz8IoOCvbNxaA+kysbE2D+ZupWLzjMo4+c41M751Ddp0fL/pVAcTk9wsJ1OB5T402UBx/V7IPsWAgV2xymetcS11Gv0Diq00PYOFDRTHrayTMnbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773911395; c=relaxed/simple;
-	bh=S3ef25JEgyt8x+gTBJlcJyYRBHZX3CV14Ew6hfzOcX4=;
+	s=arc-20240116; t=1773911398; c=relaxed/simple;
+	bh=5iSYZq3LU7EnQBmKIbSz1I6oXJCBjO591EtzZ3HAU8M=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DF4MIeIBYod5doD9S0BUPkjHCteUZmGcFOw+58gF7+6lQGCqk+8gHsORx8uk+E5YmpaWar546e7E7i1toiWceCOG7REqaZ0VzaF8XfyhFkbC7FGkFSOE+mGH4SRKIZfH2Kf3g2zznkfWpJXDRPz7essoO7CueNLzoJrnWKbEqSI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ug8VDTnd; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=IgTF5cca2TPuTcBiUQkMco4UMWpfshqAuZXvATJAaMLIXXS55BcWXHptcNGTMi9VMJ29KbkcAr35h5kadVoLEW5N7G6AAFke7W3zgrTqzh0JHPyylepC1iYe8rqjq09bEwoHD2r1L/DIbyoZmIOIzDPJfHl4cZnHY0cx4hMn5/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LXurD/wO; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ug8VDTnd"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LXurD/wO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773911391; x=1805447391;
+  t=1773911394; x=1805447394;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=S3ef25JEgyt8x+gTBJlcJyYRBHZX3CV14Ew6hfzOcX4=;
-  b=Ug8VDTndzD/i6cnNy6IRN4eZ2KgZIY7otT79xV1ZkO0P6+O8LcXUW7rM
-   wUW7dHxLm7EVEub257TQJ4+MPHo/4uOohahMIVAxdqi+g3Yib5mIyU9Q8
-   8RnC/gY3Gd+OXWbMYYg36WuyZ0/OzIb++CDEoVIsu8/V99X97GlPct4pV
-   XO7EkYaV81zUPnZg8Gd0v0ZqjNudTnFN0AslPM8PDJe/gkgHYGCO4ErgB
-   8UlhUBzrbEE9UbuSZxXBtIyucl3//R0WXCIQgU/y7mz5Ovm6WBwX6cVDT
-   ZlEY/GqM27w1DziUwpkmb2zlbuUvVkQXkXuBlQqjlYL+zOPUyzTvOxVJo
+  bh=5iSYZq3LU7EnQBmKIbSz1I6oXJCBjO591EtzZ3HAU8M=;
+  b=LXurD/wO2k+r2MNPD9wiuPD79kQbjwxqKT5QF/3lfqhYcGsmp64d0DU+
+   YBt1OqjRk3AdIWUmW7putU2bft3VkSHNZk8kGs9GSawKWmWB6M0OVQPO/
+   2HTI1VTEwpQBDTmyI32hpZjDfNWlQSx1CDchlyCsEIJ+OT63Lc7ZhNYxG
+   nT7p8KRUq6kLXxDgt916+bmhydgTSecCg8T0MH8aCQXLF3hfbTDVh8E/1
+   jQNkY+gOplVhhzaWqp6vcnQQh4Pu2ck2A5IYy16EcSZ9pMniII3czNR7d
+   RoGQgUH/PFTk0KS3F6yEoPAHZKY51kbvUSRCFGGI+HufIksnqHot4wAov
    g==;
-X-CSE-ConnectionGUID: 7cEIEKWJSraNB50WzE/ikQ==
-X-CSE-MsgGUID: tf20/XAkRp6dbMMih/nnCQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992720"
+X-CSE-ConnectionGUID: /t9+ZhunSOCUWLtJcsrKrA==
+X-CSE-MsgGUID: a6AK4ySMRFe92NE6ph32hg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992728"
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="73992720"
+   d="scan'208";a="73992728"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:50 -0700
-X-CSE-ConnectionGUID: IbMaU7JGSBWn8K1Nhk8exA==
-X-CSE-MsgGUID: mN3D/lNTS2e+dNKAQfsGgA==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:52 -0700
+X-CSE-ConnectionGUID: fSxOQDDxRoOM0I4skI3ANg==
+X-CSE-MsgGUID: 4qEL1n+MTrahXjU7DgpsRQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="218387142"
+   d="scan'208";a="218387150"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:49 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:51 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 iwlwifi-next 08/15] wifi: iwlwifi: mld: Introduce scan command version 18
-Date: Thu, 19 Mar 2026 11:09:20 +0200
-Message-Id: <20260319110722.c995b4e8bbc5.Ie401d9cf02daaa5e6adf2b3c309643589e3ead71@changeid>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2 iwlwifi-next 10/15] wifi: iwlwifi: bring iwl_fill_ppag_table to the iwlmvm
+Date: Thu, 19 Mar 2026 11:09:22 +0200
+Message-Id: <20260319110722.1f9b38ff7d22.I5c7482c074d63cd18533ac83289cc0b26c1be3d2@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
 References: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
@@ -61,268 +61,317 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The FW scan logic was extended to support new channels in the
-7 GHz band, as such, the scan command was modified to support
-scanning more PSC channels.
+iwl_fill_ppag_table fills a command that is sent to the firmware. This
+command has several versions and handling those different versions is
+the responsibility of the op_mode.
 
-Introduce scan command version 18 handling, which is different
-from scan command version 17 only in the number of supported
-channel configurations.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  | 45 ++++++++++
- drivers/net/wireless/intel/iwlwifi/mld/scan.c | 87 +++++++++++++++----
- 2 files changed, 115 insertions(+), 17 deletions(-)
+ .../wireless/intel/iwlwifi/fw/regulatory.c    | 126 -----------------
+ .../wireless/intel/iwlwifi/fw/regulatory.h    |   4 -
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 129 +++++++++++++++++-
+ 3 files changed, 128 insertions(+), 131 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 60f0a4924ddf..c2bb400c834c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -985,6 +985,7 @@ struct iwl_scan_probe_params_v4 {
- } __packed; /* SCAN_PROBE_PARAMS_API_S_VER_4 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 5793c267daf7..9e834cc1b054 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -304,132 +304,6 @@ int iwl_sar_fill_profile(struct iwl_fw_runtime *fwrt,
+ }
+ IWL_EXPORT_SYMBOL(iwl_sar_fill_profile);
  
- #define SCAN_MAX_NUM_CHANS_V3 67
-+#define SCAN_MAX_NUM_CHANS_V4 68
- 
- /**
-  * struct iwl_scan_channel_params_v4 - channel params
-@@ -1027,6 +1028,24 @@ struct iwl_scan_channel_params_v7 {
- 	struct iwl_scan_channel_cfg_umac channel_config[SCAN_MAX_NUM_CHANS_V3];
- } __packed; /* SCAN_CHANNEL_PARAMS_API_S_VER_6 */
- 
-+/**
-+ * struct iwl_scan_channel_params_v8 - channel params
-+ * @flags: channel flags &enum iwl_scan_channel_flags
-+ * @count: num of channels in scan request
-+ * @n_aps_override: override the number of APs the FW uses to calculate dwell
-+ *	time when adaptive dwell is used.
-+ *	Channel k will use n_aps_override[i] when BIT(20 + i) is set in
-+ *	channel_config[k].flags
-+ * @channel_config: array of explicit channel configurations
-+ *      for 2.4Ghz and 5.2Ghz bands
-+ */
-+struct iwl_scan_channel_params_v8 {
-+	u8 flags;
-+	u8 count;
-+	u8 n_aps_override[2];
-+	struct iwl_scan_channel_cfg_umac channel_config[SCAN_MAX_NUM_CHANS_V4];
-+} __packed; /* SCAN_CHANNEL_PARAMS_API_S_VER_8 */
-+
- /**
-  * struct iwl_scan_general_params_v11 - channel params
-  * @flags: &enum iwl_umac_scan_general_flags_v2
-@@ -1109,6 +1128,20 @@ struct iwl_scan_req_params_v17 {
- 	struct iwl_scan_probe_params_v4 probe_params;
- } __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_17 - 14 */
- 
-+/**
-+ * struct iwl_scan_req_params_v18 - scan request parameters (v18)
-+ * @general_params: &struct iwl_scan_general_params_v11
-+ * @channel_params: &struct iwl_scan_channel_params_v8
-+ * @periodic_params: &struct iwl_scan_periodic_parms_v1
-+ * @probe_params: &struct iwl_scan_probe_params_v4
-+ */
-+struct iwl_scan_req_params_v18 {
-+	struct iwl_scan_general_params_v11 general_params;
-+	struct iwl_scan_channel_params_v8 channel_params;
-+	struct iwl_scan_periodic_parms_v1 periodic_params;
-+	struct iwl_scan_probe_params_v4 probe_params;
-+} __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_18 */
-+
- /**
-  * struct iwl_scan_req_umac_v12 - scan request command (v12)
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-@@ -1133,6 +1166,18 @@ struct iwl_scan_req_umac_v17 {
- 	struct iwl_scan_req_params_v17 scan_params;
- } __packed; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_17 - 14 */
- 
-+/**
-+ * struct iwl_scan_req_umac_v18 - scan request command (v18)
-+ * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-+ * @ooc_priority: out of channel priority - &enum iwl_scan_priority
-+ * @scan_params: scan parameters
-+ */
-+struct iwl_scan_req_umac_v18 {
-+	__le32 uid;
-+	__le32 ooc_priority;
-+	struct iwl_scan_req_params_v18 scan_params;
-+} __packed; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_18 */
-+
- /**
-  * struct iwl_umac_scan_abort - scan abort command
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.c b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-index 7f4679134def..96cd970cceb4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-@@ -118,7 +118,7 @@ struct iwl_mld_scan_params {
- 
- struct iwl_scan_req_params_ptrs {
- 	struct iwl_scan_general_params_v11 *general_params;
--	struct iwl_scan_channel_params_v7 *channel_params;
-+	struct iwl_scan_channel_params_v8 *channel_params;
- 	struct iwl_scan_periodic_parms_v1 *periodic_params;
- 	struct iwl_scan_probe_params_v4 *probe_params;
- };
-@@ -840,7 +840,7 @@ iwl_mld_scan_cmd_set_channels(struct iwl_mld *mld,
- 			      int n_channels, u32 flags,
- 			      enum nl80211_iftype vif_type)
+-static bool iwl_ppag_value_valid(struct iwl_fw_runtime *fwrt, int chain,
+-				 int subband)
+-{
+-	s8 ppag_val = fwrt->ppag_chains[chain].subbands[subband];
+-
+-	if ((subband == 0 &&
+-	     (ppag_val > IWL_PPAG_MAX_LB || ppag_val < IWL_PPAG_MIN_LB)) ||
+-	    (subband != 0 &&
+-	     (ppag_val > IWL_PPAG_MAX_HB || ppag_val < IWL_PPAG_MIN_HB))) {
+-		IWL_DEBUG_RADIO(fwrt, "Invalid PPAG value: %d\n", ppag_val);
+-		return false;
+-	}
+-	return true;
+-}
+-
+-/* Utility function for iwlmvm and iwlxvt */
+-int iwl_fill_ppag_table(struct iwl_fw_runtime *fwrt,
+-			union iwl_ppag_table_cmd *cmd, int *cmd_size)
+-{
+-	u8 cmd_ver;
+-	int i, j, num_sub_bands;
+-	s8 *gain;
+-	bool send_ppag_always;
+-
+-	/* many firmware images for JF lie about this */
+-	if (CSR_HW_RFID_TYPE(fwrt->trans->info.hw_rf_id) ==
+-	    CSR_HW_RFID_TYPE(CSR_HW_RF_ID_TYPE_JF))
+-		return -EOPNOTSUPP;
+-
+-	if (!fw_has_capa(&fwrt->fw->ucode_capa, IWL_UCODE_TLV_CAPA_SET_PPAG)) {
+-		IWL_DEBUG_RADIO(fwrt,
+-				"PPAG capability not supported by FW, command not sent.\n");
+-		return -EINVAL;
+-	}
+-
+-	cmd_ver = iwl_fw_lookup_cmd_ver(fwrt->fw,
+-					WIDE_ID(PHY_OPS_GROUP,
+-						PER_PLATFORM_ANT_GAIN_CMD), 1);
+-	/*
+-	 * Starting from ver 4, driver needs to send the PPAG CMD regardless
+-	 * if PPAG is enabled/disabled or valid/invalid.
+-	 */
+-	send_ppag_always = cmd_ver > 3;
+-
+-	/* Don't send PPAG if it is disabled */
+-	if (!send_ppag_always && !fwrt->ppag_flags) {
+-		IWL_DEBUG_RADIO(fwrt, "PPAG not enabled, command not sent.\n");
+-		return -EINVAL;
+-	}
+-
+-	IWL_DEBUG_RADIO(fwrt, "PPAG cmd ver is %d\n", cmd_ver);
+-	if (cmd_ver == 1) {
+-		num_sub_bands = IWL_NUM_SUB_BANDS_V1;
+-		gain = cmd->v1.gain[0];
+-		*cmd_size = sizeof(cmd->v1);
+-		cmd->v1.flags = cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V1_MASK);
+-		if (fwrt->ppag_bios_rev >= 1) {
+-			/* in this case FW supports revision 0 */
+-			IWL_DEBUG_RADIO(fwrt,
+-					"PPAG table rev is %d, send truncated table\n",
+-					fwrt->ppag_bios_rev);
+-		}
+-	} else if (cmd_ver == 5) {
+-		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
+-		gain = cmd->v5.gain[0];
+-		*cmd_size = sizeof(cmd->v5);
+-		cmd->v5.flags = cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V5_MASK);
+-		if (fwrt->ppag_bios_rev == 0) {
+-			/* in this case FW supports revisions 1,2 or 3 */
+-			IWL_DEBUG_RADIO(fwrt,
+-					"PPAG table rev is 0, send padded table\n");
+-		}
+-	} else if (cmd_ver == 7) {
+-		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
+-		gain = cmd->v7.gain[0];
+-		*cmd_size = sizeof(cmd->v7);
+-		cmd->v7.ppag_config_info.hdr.table_source =
+-			fwrt->ppag_bios_source;
+-		cmd->v7.ppag_config_info.hdr.table_revision =
+-			fwrt->ppag_bios_rev;
+-		cmd->v7.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags);
+-	} else {
+-		IWL_DEBUG_RADIO(fwrt, "Unsupported PPAG command version\n");
+-		return -EINVAL;
+-	}
+-
+-	/* ppag mode */
+-	IWL_DEBUG_RADIO(fwrt,
+-			"PPAG MODE bits were read from bios: %d\n",
+-			fwrt->ppag_flags);
+-
+-	if (cmd_ver == 1 &&
+-	    !fw_has_capa(&fwrt->fw->ucode_capa,
+-			 IWL_UCODE_TLV_CAPA_PPAG_CHINA_BIOS_SUPPORT)) {
+-		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_ETSI_MASK);
+-		IWL_DEBUG_RADIO(fwrt, "masking ppag China bit\n");
+-	} else {
+-		IWL_DEBUG_RADIO(fwrt, "isn't masking ppag China bit\n");
+-	}
+-
+-	/* The 'flags' field is the same in v1 and v5 so we can just
+-	 * use v1 to access it.
+-	 */
+-	IWL_DEBUG_RADIO(fwrt,
+-			"PPAG MODE bits going to be sent: %d\n",
+-			(cmd_ver < 7) ? le32_to_cpu(cmd->v1.flags) :
+-					le32_to_cpu(cmd->v7.ppag_config_info.value));
+-
+-	for (i = 0; i < IWL_NUM_CHAIN_LIMITS; i++) {
+-		for (j = 0; j < num_sub_bands; j++) {
+-			if (!send_ppag_always &&
+-			    !iwl_ppag_value_valid(fwrt, i, j))
+-				return -EINVAL;
+-
+-			gain[i * num_sub_bands + j] =
+-				fwrt->ppag_chains[i].subbands[j];
+-			IWL_DEBUG_RADIO(fwrt,
+-					"PPAG table: chain[%d] band[%d]: gain = %d\n",
+-					i, j, gain[i * num_sub_bands + j]);
+-		}
+-	}
+-
+-	return 0;
+-}
+-IWL_EXPORT_SYMBOL(iwl_fill_ppag_table);
+-
+ bool iwl_is_ppag_approved(struct iwl_fw_runtime *fwrt)
  {
--	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
-+	struct iwl_scan_channel_params_v8 *cp = scan_ptrs->channel_params;
+ 	if (!dmi_check_system(dmi_ppag_approved_list)) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+index 1489031687b7..8e04b0e2d507 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+@@ -190,10 +190,6 @@ int iwl_sar_fill_profile(struct iwl_fw_runtime *fwrt,
+ 			 __le16 *per_chain, u32 n_tables, u32 n_subbands,
+ 			 int prof_a, int prof_b);
  
- 	for (int i = 0; i < n_channels; i++) {
- 		enum nl80211_band band = channels[i]->band;
-@@ -883,7 +883,7 @@ iwl_mld_scan_cfg_channels_6g(struct iwl_mld *mld,
- 			     enum nl80211_iftype vif_type)
- {
- 	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
--	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
-+	struct iwl_scan_channel_params_v8 *cp = scan_ptrs->channel_params;
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
- 		params->scan_6ghz_params;
- 	u32 i;
-@@ -1083,7 +1083,7 @@ iwl_mld_scan_cmd_set_6ghz_chan_params(struct iwl_mld *mld,
- 				      struct ieee80211_vif *vif,
- 				      struct iwl_scan_req_params_ptrs *scan_ptrs)
- {
--	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
-+	struct iwl_scan_channel_params_v8 *cp = scan_ptrs->channel_params;
+-int iwl_fill_ppag_table(struct iwl_fw_runtime *fwrt,
+-			union iwl_ppag_table_cmd *cmd,
+-			int *cmd_size);
+-
+ bool iwl_is_ppag_approved(struct iwl_fw_runtime *fwrt);
  
- 	/* Explicitly clear the flags since most of them are not
- 	 * relevant for 6 GHz scan.
-@@ -1111,7 +1111,7 @@ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
- 				 enum iwl_mld_scan_status scan_status,
- 				 u32 channel_cfg_flags)
- {
--	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
-+	struct iwl_scan_channel_params_v8 *cp = scan_ptrs->channel_params;
- 	struct ieee80211_supported_band *sband =
- 		&mld->nvm_data->bands[NL80211_BAND_6GHZ];
- 
-@@ -1173,39 +1173,89 @@ struct iwl_scan_umac_handler {
- 	.handler = iwl_mld_scan_umac_v##_ver,	\
+ bool iwl_is_tas_approved(void);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index f5e5c10cc581..d46715abd7a5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1034,12 +1034,139 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
+ 	return iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0, len, &cmd);
  }
  
--static int iwl_mld_scan_umac_v17(struct iwl_mld *mld, struct ieee80211_vif *vif,
-+static int iwl_mld_scan_umac_common(struct iwl_mld *mld,
-+				    struct ieee80211_vif *vif,
-+				    struct iwl_mld_scan_params *params,
-+				    struct iwl_scan_req_params_ptrs *scan_ptrs,
-+				    enum iwl_mld_scan_status scan_status,
-+				    bool low_latency)
++static bool iwl_mvm_ppag_value_valid(struct iwl_fw_runtime *fwrt, int chain,
++				     int subband)
 +{
-+	u32 bitmap_ssid = 0;
-+	int ret;
++	s8 ppag_val = fwrt->ppag_chains[chain].subbands[subband];
 +
-+	iwl_mld_scan_cmd_set_gen_params(mld, params, vif, scan_ptrs,
-+					scan_status);
-+
-+	ret = iwl_mld_scan_cmd_set_sched_params(params, scan_ptrs);
-+	if (ret)
-+		return ret;
-+
-+	iwl_mld_scan_cmd_set_probe_params(params, scan_ptrs, &bitmap_ssid);
-+
-+	return iwl_mld_scan_cmd_set_chan_params(mld, params, vif, scan_ptrs,
-+						low_latency, scan_status,
-+						bitmap_ssid);
++	if ((subband == 0 &&
++	     (ppag_val > IWL_PPAG_MAX_LB || ppag_val < IWL_PPAG_MIN_LB)) ||
++	    (subband != 0 &&
++	     (ppag_val > IWL_PPAG_MAX_HB || ppag_val < IWL_PPAG_MIN_HB))) {
++		IWL_DEBUG_RADIO(fwrt, "Invalid PPAG value: %d\n", ppag_val);
++		return false;
++	}
++	return true;
 +}
 +
-+static int iwl_mld_scan_umac_v18(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 				 struct iwl_mld_scan_params *params,
- 				 enum iwl_mld_scan_status scan_status,
- 				 int uid, u32 ooc_priority, bool low_latency)
- {
--	struct iwl_scan_req_umac_v17 *cmd = mld->scan.cmd;
-+	struct iwl_scan_req_umac_v18 *cmd = mld->scan.cmd;
- 	struct iwl_scan_req_params_ptrs scan_ptrs = {
- 		.general_params = &cmd->scan_params.general_params,
- 		.probe_params = &cmd->scan_params.probe_params,
- 		.channel_params = &cmd->scan_params.channel_params,
- 		.periodic_params = &cmd->scan_params.periodic_params
- 	};
--	u32 bitmap_ssid = 0;
- 	int ret;
- 
--	if (WARN_ON(params->n_channels > SCAN_MAX_NUM_CHANS_V3))
-+	if (WARN_ON(params->n_channels > SCAN_MAX_NUM_CHANS_V4))
- 		return -EINVAL;
- 
- 	cmd->uid = cpu_to_le32(uid);
- 	cmd->ooc_priority = cpu_to_le32(ooc_priority);
- 
--	iwl_mld_scan_cmd_set_gen_params(mld, params, vif, &scan_ptrs,
--					scan_status);
--
--	ret = iwl_mld_scan_cmd_set_sched_params(params, &scan_ptrs);
-+	ret = iwl_mld_scan_umac_common(mld, vif, params, &scan_ptrs,
-+				       scan_status, low_latency);
- 	if (ret)
- 		return ret;
- 
--	iwl_mld_scan_cmd_set_probe_params(params, &scan_ptrs, &bitmap_ssid);
-+	return uid;
-+}
-+
-+static int iwl_mld_scan_umac_v17(struct iwl_mld *mld, struct ieee80211_vif *vif,
-+				 struct iwl_mld_scan_params *params,
-+				 enum iwl_mld_scan_status scan_status,
-+				 int uid, u32 ooc_priority, bool low_latency)
++static int iwl_mvm_fill_ppag_table(struct iwl_fw_runtime *fwrt,
++				   union iwl_ppag_table_cmd *cmd,
++				   int *cmd_size)
 +{
-+	struct iwl_scan_req_umac_v17 *cmd = mld->scan.cmd;
-+	struct iwl_scan_req_params_ptrs scan_ptrs = {
-+		.general_params = &cmd->scan_params.general_params,
-+		.probe_params = &cmd->scan_params.probe_params,
++	u8 cmd_ver;
++	int i, j, num_sub_bands;
++	s8 *gain;
++	bool send_ppag_always;
 +
-+		/* struct iwl_scan_channel_params_v8 and struct
-+		 * iwl_scan_channel_params_v7 are almost identical. The only
-+		 * difference is that the newer version allows configuration of
-+		 * more channels. So casting here is ok as long as we ensure
-+		 * that we don't exceed the max number of channels supported by
-+		 * the older version (see the WARN_ON below).
-+		 */
-+		.channel_params = (struct iwl_scan_channel_params_v8 *)
-+			&cmd->scan_params.channel_params,
-+		.periodic_params = &cmd->scan_params.periodic_params
-+	};
-+	int ret;
++	/* many firmware images for JF lie about this */
++	if (CSR_HW_RFID_TYPE(fwrt->trans->info.hw_rf_id) ==
++	    CSR_HW_RFID_TYPE(CSR_HW_RF_ID_TYPE_JF))
++		return -EOPNOTSUPP;
 +
-+	if (WARN_ON(params->n_channels > SCAN_MAX_NUM_CHANS_V3))
++	if (!fw_has_capa(&fwrt->fw->ucode_capa, IWL_UCODE_TLV_CAPA_SET_PPAG)) {
++		IWL_DEBUG_RADIO(fwrt,
++				"PPAG capability not supported by FW, command not sent.\n");
 +		return -EINVAL;
++	}
 +
-+	cmd->uid = cpu_to_le32(uid);
-+	cmd->ooc_priority = cpu_to_le32(ooc_priority);
++	cmd_ver = iwl_fw_lookup_cmd_ver(fwrt->fw,
++					WIDE_ID(PHY_OPS_GROUP,
++						PER_PLATFORM_ANT_GAIN_CMD), 1);
++	/*
++	 * Starting from ver 4, driver needs to send the PPAG CMD regardless
++	 * if PPAG is enabled/disabled or valid/invalid.
++	 */
++	send_ppag_always = cmd_ver > 3;
++
++	/* Don't send PPAG if it is disabled */
++	if (!send_ppag_always && !fwrt->ppag_flags) {
++		IWL_DEBUG_RADIO(fwrt, "PPAG not enabled, command not sent.\n");
++		return -EINVAL;
++	}
++
++	IWL_DEBUG_RADIO(fwrt, "PPAG cmd ver is %d\n", cmd_ver);
++	if (cmd_ver == 1) {
++		num_sub_bands = IWL_NUM_SUB_BANDS_V1;
++		gain = cmd->v1.gain[0];
++		*cmd_size = sizeof(cmd->v1);
++		cmd->v1.flags =
++			cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V1_MASK);
++		if (fwrt->ppag_bios_rev >= 1) {
++			/* in this case FW supports revision 0 */
++			IWL_DEBUG_RADIO(fwrt,
++					"PPAG table rev is %d, send truncated table\n",
++					fwrt->ppag_bios_rev);
++		}
++	} else if (cmd_ver == 5) {
++		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
++		gain = cmd->v5.gain[0];
++		*cmd_size = sizeof(cmd->v5);
++		cmd->v5.flags =
++			cpu_to_le32(fwrt->ppag_flags & IWL_PPAG_CMD_V5_MASK);
++		if (fwrt->ppag_bios_rev == 0) {
++			/* in this case FW supports revisions 1,2 or 3 */
++			IWL_DEBUG_RADIO(fwrt,
++					"PPAG table rev is 0, send padded table\n");
++		}
++	} else if (cmd_ver == 7) {
++		num_sub_bands = IWL_NUM_SUB_BANDS_V2;
++		gain = cmd->v7.gain[0];
++		*cmd_size = sizeof(cmd->v7);
++		cmd->v7.ppag_config_info.hdr.table_source =
++			fwrt->ppag_bios_source;
++		cmd->v7.ppag_config_info.hdr.table_revision =
++			fwrt->ppag_bios_rev;
++		cmd->v7.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags);
++	} else {
++		IWL_DEBUG_RADIO(fwrt, "Unsupported PPAG command version\n");
++		return -EINVAL;
++	}
++
++	/* ppag mode */
++	IWL_DEBUG_RADIO(fwrt,
++			"PPAG MODE bits were read from bios: %d\n",
++			fwrt->ppag_flags);
++
++	if (cmd_ver == 1 &&
++	    !fw_has_capa(&fwrt->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_PPAG_CHINA_BIOS_SUPPORT)) {
++		cmd->v1.flags &= cpu_to_le32(IWL_PPAG_ETSI_MASK);
++		IWL_DEBUG_RADIO(fwrt, "masking ppag China bit\n");
++	} else {
++		IWL_DEBUG_RADIO(fwrt, "isn't masking ppag China bit\n");
++	}
++
++	/* The 'flags' field is the same in v1 and v5 so we can just
++	 * use v1 to access it.
++	 */
++	IWL_DEBUG_RADIO(fwrt,
++			"PPAG MODE bits going to be sent: %d\n",
++			(cmd_ver < 7) ? le32_to_cpu(cmd->v1.flags) :
++					le32_to_cpu(cmd->v7.ppag_config_info.value));
++
++	for (i = 0; i < IWL_NUM_CHAIN_LIMITS; i++) {
++		for (j = 0; j < num_sub_bands; j++) {
++			if (!send_ppag_always &&
++			    !iwl_mvm_ppag_value_valid(fwrt, i, j))
++				return -EINVAL;
++
++			gain[i * num_sub_bands + j] =
++				fwrt->ppag_chains[i].subbands[j];
++			IWL_DEBUG_RADIO(fwrt,
++					"PPAG table: chain[%d] band[%d]: gain = %d\n",
++					i, j, gain[i * num_sub_bands + j]);
++		}
++	}
++
++	return 0;
++}
++
+ int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
+ {
+ 	union iwl_ppag_table_cmd cmd;
+ 	int ret, cmd_size;
  
--	ret = iwl_mld_scan_cmd_set_chan_params(mld, params, vif, &scan_ptrs,
--					       low_latency, scan_status,
--					       bitmap_ssid);
-+	ret = iwl_mld_scan_umac_common(mld, vif, params, &scan_ptrs,
-+				       scan_status, low_latency);
- 	if (ret)
- 		return ret;
- 
-@@ -1214,6 +1264,7 @@ static int iwl_mld_scan_umac_v17(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 
- static const struct iwl_scan_umac_handler iwl_scan_umac_handlers[] = {
- 	/* set the newest version first to shorten the list traverse time */
-+	IWL_SCAN_UMAC_HANDLER(18),
- 	IWL_SCAN_UMAC_HANDLER(17),
- };
- 
-@@ -2095,6 +2146,8 @@ int iwl_mld_alloc_scan_cmd(struct iwl_mld *mld)
- 
- 	if (scan_cmd_ver == 17) {
- 		scan_cmd_size = sizeof(struct iwl_scan_req_umac_v17);
-+	} else if (scan_cmd_ver == 18) {
-+		scan_cmd_size = sizeof(struct iwl_scan_req_umac_v18);
- 	} else {
- 		IWL_ERR(mld, "Unexpected scan cmd version %d\n", scan_cmd_ver);
- 		return -EINVAL;
+-	ret = iwl_fill_ppag_table(&mvm->fwrt, &cmd, &cmd_size);
++	ret = iwl_mvm_fill_ppag_table(&mvm->fwrt, &cmd, &cmd_size);
+ 	/* Not supporting PPAG table is a valid scenario */
+ 	if (ret < 0)
+ 		return 0;
 -- 
 2.34.1
 
