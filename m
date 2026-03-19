@@ -1,178 +1,152 @@
-Received: from flow-b3-smtp.messagingengine.com (flow-b3-smtp.messagingengine.com [202.12.124.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC6140B6D1;
-	Thu, 19 Mar 2026 22:24:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.138
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773959093; cv=none; b=ARKmlMgzjn/+c8ZpIGAvfr1wwfdCy5Qv9CV//NQF3mr2kQPzRHp6MlUVrBf5T0ohF4a8gQMScSk6tk1Vjky3EAqfzfSy1SAEAl5HbOPW2c2ylYQbo3UposjevjS4t1hPbHuDhtzK4Blxi0uUYHynBYBDKxpg2tOKIGUlska5DR4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773959093; c=relaxed/simple;
-	bh=PYlAslJCMZr5+HVdvaUdUa19VFxbM+K5DE/+iCdWcok=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc:
-	 In-Reply-To:References; b=I2jWTVfPLnyBDBjtPL8bS4gUP5IWpmKWc++yUmSJwqapFHBF48SFVhK64q/r7eR4S02sfut5XXswFDPViuQUzazWiYUx6fjG2WyaFc+NW6J5az6EpkInCAUJuFvteIEqCELCGtk8DSJjOfm5Epps9AWdsVhm6L3VoR8fqfEKOrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me; spf=pass smtp.mailfrom=jetm.me; dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b=cevtMucL; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=w+yXR61z; arc=none smtp.client-ip=202.12.124.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jetm.me
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02FF37F73D
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 23:58:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.174
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1773964732; cv=pass; b=I2OIGX7tZWdMjKYx4sPZxcgvHNCMsWDhII/+F5b2i6NGvzP/kl+43F9PKjcZOYnxOSpdktYxc7ETnxFTIokfcj2c9Fg5hIq63TkiCu5oFWsWfuZDERn+c2M6bsxuMkm1vF0TRMl/kUNpTl4YoNuXFwvvJDpz8tlj/VJBqpSGm5o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1773964732; c=relaxed/simple;
+	bh=qBjA8cX0wGWtIAHiuXxD2bFal/kkFcexgu2D8X6q9gg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=c3p82OtUV/W57IjKaohAu1ztdxat+ETtZ/R2hWQIq36Gwp40f1WJdAthFT3rqW78LVyRTASEX4cs9D8Hfat06rAktiFkPrPE5fdNQZs7K3P03VsIEMzQzy8336V9/JT1fc3Zpqo+TWJv6jTdo0y1HgNU0V7zXRW8wpU/fEhe8m4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aM5wPn8U; arc=pass smtp.client-ip=209.85.167.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b="cevtMucL";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="w+yXR61z"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailflow.stl.internal (Postfix) with ESMTP id ECD951300161;
-	Thu, 19 Mar 2026 18:24:44 -0400 (EDT)
-Received: from phl-imap-07 ([10.202.2.97])
-  by phl-compute-02.internal (MEProxy); Thu, 19 Mar 2026 18:24:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jetm.me; h=cc:cc
-	:content-transfer-encoding:content-type:content-type:date:date
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1773959084;
-	 x=1773966284; bh=6BCjacgyBBQfzI6KlQ7yHr92rvcdU94u/TkCmemPomE=; b=
-	cevtMucLzLJxleQXCszJxKVovnBj3gTno4K9Mb4qtvtRzxkuM4uJ7u8rXhfUGku0
-	9L65v76WDbI1gUErykxR/V02Op59YKX2ZKCwM5+AscDnjFjPmSyP5RGMi+MYuQO+
-	tbw0VKnjXQ4mu9hyCDjlcQ/vhKvWaPBmofgZ/S+zsfDv38Rgt0GxWixJTXghGs41
-	fBxTZJDKq3jpZfiDZ9yzofxePXKLdsXhw1WGQTMf7QUEG11VJsvSz3z3zHY1P174
-	w4109WvPQN8TnicmVm5rR3tQ3z/cBYoHuhbSKDmGmAC4NL09d27ocX3VGDdHUcBq
-	xxqSo21J2wFkHpTaDLkNKQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1773959084; x=
-	1773966284; bh=6BCjacgyBBQfzI6KlQ7yHr92rvcdU94u/TkCmemPomE=; b=w
-	+yXR61zsxbWkpFV0EjrBNFwIXp1/d7/L95Lfb1nzZNmexQaFlSLJ3vn/AorUvT7y
-	66pt6jGS7297YvwRhR4av6fchVEVJGazdxbOB52TcM2Dp+ev1bavOoquRwFqfFQ+
-	WTJOX5405maqnvzYdUpumoXAPO3u8xTlwEaNHp9qOSxHoyvXKQuAiX/1gosYGur9
-	AL3pPWvcBHf2MGmO9qg9sD7eCabgf5mLkYdbTvtzyEMom314HiYPxRx3sM3RNm7s
-	GPIjIONzyBazcmzQFjs9zfwJrJz6OBkWhvqhkGZfiEJM23pT3CnEMwgxgXgo5EsR
-	5F8RRYoI+TLSYhytdLMTg==
-X-ME-Sender: <xms:rHe8aczeiBXceQm1scrprSfdIpZDJuKDJNRLaBt-qepaW2l1UBI9pQ>
-    <xme:rHe8abH4EEvdVl5RZYMTq_WStWQs1bFH4YZXLPPqPKX3EUTIiLYTFgRF7h5ZE0f8U
-    V0zDXBUqN9_DTDI7S2BURoyEoLMPNnrC5h8D9nYp50wP5a-E6LyANo>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdeftdekvddtucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepoffhfffugggtgffkvfevofgjfhesthekredtredtjeenucfhrhhomheplfgrvhhi
-    vghrucfvihgruceofhhlohhsshesjhgvthhmrdhmvgeqnecuggftrfgrthhtvghrnhepve
-    ektdfhffevuddtgfetieevtddvheduhfeggfekveejlefhleefieevueefiefhnecuvehl
-    uhhsthgvrhfuihiivgepkeenucfrrghrrghmpehmrghilhhfrhhomhepfhhlohhsshesjh
-    gvthhmrdhmvgdpnhgspghrtghpthhtohepvddvpdhmohguvgepshhmthhpohhuthdprhgt
-    phhtthhopegrnhhgvghlohhgihhorggttghhihhnohdruggvlhhrvghgnhhosegtohhllh
-    grsghorhgrrdgtohhmpdhrtghpthhtohepfeduleefieefudesghhmrghilhdrtghomhdp
-    rhgtphhtthhopehlohhonhhgrddtgidttdesghhmrghilhdrtghomhdprhgtphhtthhope
-    grrhhivghlrdhrohhsvghnfhgvlhgurdejhedtsehgmhgrihhlrdgtohhmpdhrtghpthht
-    oheptghhrghpuhhishgurghrihhogeesghhmrghilhdrtghomhdprhgtphhtthhopehgih
-    hoshgrlheltdesghhmrghilhdrtghomhdprhgtphhtthhopehmrghtthhhihgrshdrsghg
-    ghesghhmrghilhdrtghomhdprhgtphhtthhopehrrgguohhirdgthhhrihhssehgmhgrih
-    hlrdgtohhmpdhrtghpthhtohepshgrmhhurdhtohhljhgrmhhosehgmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:rHe8aVj-2OgPzTNRPjVPJEMtMAQFmCu7c1-yC1OjuWMJ1eqmeRPt9A>
-    <xmx:rHe8aXOyP_h8QPgn7NlBzRUuAEekfkLDYO1eMYdRFbe6swphwlYi1Q>
-    <xmx:rHe8aZnFLSFpuTZJKX0Qe9y8p1fQmnerI8Z2Yh0ut4DTH3YwKQuLvQ>
-    <xmx:rHe8aWef2SyUPsiT9hG2fbfleA_z3NXjpFgVO69zgL-rprXlo0yUig>
-    <xmx:rHe8aVBA_YijLhGrF-ndlWy7SHO85xGuMGvdWqnHRP3jrqM-GRpsgT-u>
-Feedback-ID: i9dde48b3:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id A278C1EA006B; Thu, 19 Mar 2026 18:24:44 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-From: Javier Tia <floss@jetm.me>
-Date: Thu, 19 Mar 2026 16:24:28 -0600
-Subject: [PATCH v2 12/13] wifi: mt76: mt7925: enable low power support for
- MT7927
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aM5wPn8U"
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-466f1c3c627so84049b6e.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 16:58:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1773964730; cv=none;
+        d=google.com; s=arc-20240605;
+        b=QduqrNp6HJlry4QUEX7+kQJOrFiPgyY+sLrTCVfajUso7XsS3+04duhkNwq+WrTZ0h
+         polFQJFjaWP3HtHdFVsoTI9elON0KMOs44aHf5kY0QlhezI34oCaWN30KIMdu4GDwqH/
+         j9gmiw0+3MqtUacs1aLtEeHmmILGehtm6u3WD0B5VhH1C2Szj6ouqa5PdZtAJ/9hg1Iy
+         EwDWLbh7PgC2xwsCJs4lpH91dVc6z3d8JkMs71+YlNArv5LKeclfQCO74Vm82pAG5m9C
+         vcf+RbMzDKbHRb7XQXjp/G23PnICb53SKfc42BaP5GPqLcIDmwHI05BKs4eE1ztD9FPj
+         RIlA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=09dt1W9Q838znUdBswhk+Ubmk3etxZx0mf/5nmJBCXw=;
+        fh=fFUQ3bDSnwWYL/1dqZwPKYywXd5TONRsAevI/mvHYbI=;
+        b=csCFrVUN0XxmKBjRlhY993RszP7SgmuzbZgIttqcDSLCIybSFL81KpsWZyaGY/2Mh0
+         Xhpi7T43xUHP7XMEjk9tRu9y1dMt7iG2kiNKiV/LyatA79VYAluxBnFDsAgl3Q6PUqLp
+         tglEAE2NxyaonziBicLhocV05OaocC16iDxk72Ez/2xVd2eghoBmpjW+Kffe2BCQ5N7L
+         1Q6iTowbP9yGlGt3Yo6AFu51FHYNUbkkKHgJML49sng9r4Ba3ib9qzqGnfS3mkKx8f1v
+         WJj6YFwZS4ZDE+RWtCx8kLAEWZ52JTIhwhgvapx9QpWLueM7H24sEoiXjyfoTxNfQvxl
+         EZ2A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1773964730; x=1774569530; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=09dt1W9Q838znUdBswhk+Ubmk3etxZx0mf/5nmJBCXw=;
+        b=aM5wPn8U358ZWV98MWYEG9i1ag1b2G/WFrEFIrL2zBAEe4u8XP5Xs3S9X5FxVIvZXs
+         prOHv7XXvWA5JdyGcKDcx7e+WjeXMSJU9AnZUjzxsZ4DyyxCel1bnlj5V9NWt11RJrej
+         wDI0KRjVtbRs6yuyDA50Zb86I7g96PvPRt8YMo/gwkl554aih0ukCbZJmBuvvsKHqDxD
+         Tbk9YDCWZ2fn3XKyYRw+SyDwx0WtxLWDBGBrO/vS4y8fTq5sy5GaSMe97gOMtJ+Apb+z
+         GmG1UJeHL9a8xNrlryFKccTv0bELfOT25ilYLSEnphWenRP6rVrWBRGz+5QT3tfdFKau
+         wz2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1773964730; x=1774569530;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=09dt1W9Q838znUdBswhk+Ubmk3etxZx0mf/5nmJBCXw=;
+        b=Z03na4E/qU2/qBJ91ujnrXOq3RgfVQk5MfYM2U6tPnbp51rvTRvCQi/Qz0+Hvsxx1m
+         39aemLiDNJdJY2gxGGwYFbsEhmbfkIBh3R0RKwRB4d+3pB1WJ07RYMtx+q5UAWaWpqzm
+         KT4mmYEqSYEF23p39iQvJKGDyI3ZD1RmKfQfZNUo/oFbJQpmzsJXqIR+HVbKaWmE9Ra3
+         C98GGLaSVqyY1vq6mQ+x87iRW09LuVVZn5csHPm9hKxA3KhiLOos60FHWTWibk9f58bO
+         tJx5l2MVQFriHZiC+sq+4wS6FaSuUVt5LjjFjfr54sJvtqy7zTzgmKOyx+sqr5mxNvp4
+         fxgg==
+X-Gm-Message-State: AOJu0YwA/R41MDvEnYKgO0AYknUpj/AXNANbl8kiDfqO3db2Z7ObqgW+
+	L0P6B2/VAp3FI30yC30fUKpjsxncAsJ8hPoamsKBN9K4Hd+cDnXkO/hjTUGlizVfqfGnBtTs0gt
+	TnwSnZvWH0ZPxiJppyxyuMaUq4sAV+9Y=
+X-Gm-Gg: ATEYQzzqAMCc5PtFbebAA9PN8sHkoMdOB32TXYmdkG5b8DpUb+Ag6JWlHHbFOKnqCq2
+	tfjSvSjizi0EuJXQ29YYfbo7IpXPNNrUxHBneGCwmK5msZNnCrwy3w49FP8IVm+mT5LLexkMHq+
+	Xxqt+IRaK2TNHYUs/b728+srnunOSMevMwwnYhBaQ0CTouJOyKnJb9aJCrr7Olo6qfmYrlebR8/
+	d64/U3tTZjuF504TJE5mqXNkMQkwJKOjkJn/uE4qqY+fvLUc6KKVQ3lHxwQTLSFVHkJa1FveCHA
+	8aRGq/QXo3+XF59Oe48=
+X-Received: by 2002:a05:6808:4483:b0:466:f57b:2ae2 with SMTP id
+ 5614622812f47-467e600292cmr768423b6e.52.1773964729647; Thu, 19 Mar 2026
+ 16:58:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20260319-mt7927-wifi-support-v2-v2-12-d627a7fad70d@jetm.me>
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Deren Wu <deren.wu@mediatek.com>,
- Ming Yen Hsieh <mingyen.hsieh@mediatek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
- Marcin FM <marcin@lgic.pl>, Cristian-Florin Radoi <radoi.chris@gmail.com>,
- George Salukvadze <giosal90@gmail.com>, Evgeny Kapusta <3193631@gmail.com>,
- Samu Toljamo <samu.toljamo@gmail.com>,
- Ariel Rosenfeld <ariel.rosenfeld.750@gmail.com>,
- Chapuis Dario <chapuisdario4@gmail.com>,
- =?utf-8?q?Thibaut_Fran=C3=A7ois?= <tibo@humeurlibre.fr>,
- =?utf-8?q?=E5=BC=A0=E6=97=AD=E6=B6=B5?= <Loong.0x00@gmail.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2465; i=floss@jetm.me;
- h=from:subject:message-id; bh=PYlAslJCMZr5+HVdvaUdUa19VFxbM+K5DE/+iCdWcok=;
- b=owEB7QES/pANAwAKAbXuwwuoZ3cfAcsmYgBpvHeRc4cmYJPBln9OK9QdhGO7p49+QnY5d7Sib
- wETU9ysHtKJAbMEAAEKAB0WIQSbE7ILzw7eI0VKk8m17sMLqGd3HwUCabx3kQAKCRC17sMLqGd3
- H8BJDACyBzfw/ms19DMpM9SYwG47V11JEsvTkPt0AFM5YZcG+7QowV3LhaRAryaBinvBHORFqNa
- rIWxqyzxSxaBQf0zipQC1ZiHIX/wk8BX1TXcAKDDJ8JFUUYu4XKiAUcuu/51wg16MgwTeoWj4l/
- IqRzMd6XoT3dZA5XUi1q5fTSM+eovVOTf3VtIq3ZsFDDzh+e0a4KaiHwj4+1LGs0R9F8lp2uYHY
- USH8k4KHIx0Ik1Pun3qYBpha1L9gIOSsKBirimhv/huaiks5U5qbFRWjHDHnxF6GjFdC9jUjAUz
- U9A/HEplrp9AsAmK0ptSc4JTySlsxDCG3N8HLO6sXh2KbDH3IWkYJaDFeuymJvM2L+XMoblv9Z4
- 8UPLHiKtnEz9+lAnHZCtOfJ5Rv6rCVjkoCtiMcXsd8h14SHHlIUXvnbWE7nCQsiBOaXbjctTY1r
- OX7uA9QyaExri5SwZHrNdXIOSgqlmj5gVa8QGWaw85Qn+q5ExwuEbNx1gKqDG4LGKOP4M=
-X-Developer-Key: i=floss@jetm.me; a=openpgp;
- fpr=9B13B20BCF0EDE23454A93C9B5EEC30BA867771F
-In-Reply-To: <20260319-mt7927-wifi-support-v2-v2-0-d627a7fad70d@jetm.me>
-References: <20260319-mt7927-wifi-support-v2-v2-0-d627a7fad70d@jetm.me>
+References: <CALdGYqSQ1Ko2TTBhUizMu_FvLMUAuQfFrVwS10n_C-LSQJQQkQ@mail.gmail.com>
+ <1e96af437fa24674b353ddb530b2d8e7@realtek.com> <CALdGYqQb=Vt0jjqW7k8RGMV1gczL0cg-26cHgCm3MmzBjezGMQ@mail.gmail.com>
+ <792645eed36041f0b3df951f1b28a08a@realtek.com> <e6720993c8c14245981432cfa4ae902b@realtek.com>
+ <CALdGYqQn8GGXXjZTsL+a5Mfdmw5HRYB2Jyvqq5M5SUwxK9yd_g@mail.gmail.com>
+ <CALdGYqQee1sjgdBAPJSyb1gL6ksK4z8Uw_v3ANTnyXE+LXFAiA@mail.gmail.com>
+ <458ed80e39734ea99610050140bb31ce@realtek.com> <CALdGYqQykO9ZzO=-+D17R_8LC=Win5nGN6-9zFqChtNEyUzEfg@mail.gmail.com>
+ <CALdGYqTHz5Pz3uSGLbrVuNMWAXaqniUCuOSQACXUYHSL22ySvw@mail.gmail.com>
+ <CALdGYqQ5K0iuxjjX4TwNLi9Km5O+YL3Y9r6Bwfk9BaiuV3BHPA@mail.gmail.com>
+ <CALdGYqRYVxGbg+qRNUvRNr9V4f2YVZ7p=amwq1ktdmZVkwxjQg@mail.gmail.com>
+ <CALdGYqSq416qqqZ7t+wG5fir9NWfi3578+brdaj05q-42Gj14w@mail.gmail.com>
+ <CALdGYqSf66mBiufysr3tjm74A_w98LRN50fik0U9WGVvkBJ_5g@mail.gmail.com>
+ <1bd495ffe57c47eb827eec084729afa2@realtek.com> <CALdGYqSMUPnPfW-_q1RgYr0_SjoXUejAaJJr-o+jpwCk1S7ndQ@mail.gmail.com>
+ <e5f00d0a42994812b42df867718fa087@realtek.com> <CALdGYqRbkV7_w7WDiqD-vYMa8MUFV7nSYz-=q2FzotgLHRy=HA@mail.gmail.com>
+ <cb32c1eefb614a8bb96ef6fe2c4f4989@realtek.com> <CALdGYqQ3tS_aQpmf7xLkaCG9W55ATQXP=tnRNdjBAG8waqg8yA@mail.gmail.com>
+ <dbe78a09fafe4a0ab16cd691049896a8@realtek.com>
+In-Reply-To: <dbe78a09fafe4a0ab16cd691049896a8@realtek.com>
+From: LB F <goainwo@gmail.com>
+Date: Fri, 20 Mar 2026 01:58:13 +0200
+X-Gm-Features: AaiRm50uYhmZW-U34lUzJQ6hyZoENsUk8WmXyZJls2V_w9gd0LmqwFIaANUE7DQ
+Message-ID: <CALdGYqQ3JQgFvvjiqh-ck8UqUQpAoJ0zeUzEL4i4Un8qPmqxJA@mail.gmail.com>
+Subject: Re: [BUG] wifi: rtw88: Hard system freeze on RTL8821CE when
+ power_save is enabled (LPS/ASPM conflict)
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Enable runtime PM and deep sleep for MT7927 now that the DMA wake path
-properly restores all MT7927-specific GLO_CFG bits (ADDR_EXT_EN,
-CSR_LBK_RX_Q_SEL_EN, FW_DWLD_BYPASS_DMASHDL) via the DMA config
-struct on every PM wake cycle.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+> Maybe we should check the capabilities of PCI bridge side?
+> I think there are two problems. One is ASPM causing system frozen,
+> and the other is LPS deep mode causing H2C timeouts.
 
-Disable PCIe ASPM unconditionally for MT7927. The CONNINFRA power
-domain and WFDMA register access are unreliable with PCIe L1 active,
-causing throughput to drop from 1+ Gbps to ~200 Mbps. L0s savings are
-negligible for a PCIe WLAN card, and mt76_pci_disable_aspm() handles
-both device and parent bridge in one call.
+Hi Ping-Ke,
 
-Tested-by: Marcin FM <marcin@lgic.pl>
-Tested-by: Cristian-Florin Radoi <radoi.chris@gmail.com>
-Tested-by: George Salukvadze <giosal90@gmail.com>
-Tested-by: Evgeny Kapusta <3193631@gmail.com>
-Tested-by: Samu Toljamo <samu.toljamo@gmail.com>
-Tested-by: Ariel Rosenfeld <ariel.rosenfeld.750@gmail.com>
-Tested-by: Chapuis Dario <chapuisdario4@gmail.com>
-Tested-by: Thibaut François <tibo@humeurlibre.fr>
-Tested-by: 张旭涵 <Loong.0x00@gmail.com>
-Signed-off-by: Javier Tia <floss@jetm.me>
+You were right on both counts. Here are the PCI bridge capabilities.
+
+The upstream bridge for the RTL8821CE (13:00.0) is:
+  Intel Corporation Wildcat Point-LP PCI Express Root Port #5 (00:1c.4)
+
+Bridge (00:1c.4):
+  LnkCap: Port #5, Speed 5GT/s, Width x1, ASPM L0s L1,
+          Exit Latency L0s <512ns, L1 <16us
+  LnkCtl: ASPM L0s L1 Enabled
+
+WiFi card (13:00.0):
+  LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,
+          Exit Latency L0s <2us, L1 <64us
+  LnkCtl: ASPM L0s L1 Enabled
+
+So ASPM L0s and L1 are enabled by the BIOS on both ends of the bus,
+despite the ACPI FADT claiming the OS has no ASPM control. ASPM was
+active on this machine all along. I apologize for the incorrect
+earlier conclusion that ASPM was not active.
+
+This confirms your analysis: there are indeed two separate problems --
+ASPM causing the hard freeze, and LPS Deep Mode causing the H2C
+timeouts. The v2 patch correctly addresses both.
+
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index 393d9f408b84..693e08f35d68 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -530,7 +530,13 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
- 	if (ret)
- 		goto err_free_pci_vec;
- 
--	if (mt7925_disable_aspm)
-+	is_mt7927_hw = (pdev->device == 0x6639 || pdev->device == 0x7927);
-+
-+	/* MT7927: CONNINFRA power domain and WFDMA register access are
-+	 * unreliable with PCIe L1 active, causing throughput to drop
-+	 * from 1+ Gbps to ~200 Mbps. Disable ASPM unconditionally.
-+	 */
-+	if (mt7925_disable_aspm || is_mt7927_hw)
- 		mt76_pci_disable_aspm(pdev);
- 
- 	ops = mt792x_get_mac80211_ops(&pdev->dev, &mt7925_ops,
-@@ -562,7 +568,6 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
- 	dev = container_of(mdev, struct mt792x_dev, mt76);
- 	dev->fw_features = features;
- 	dev->hif_ops = &mt7925_pcie_ops;
--	is_mt7927_hw = (pdev->device == 0x6639 || pdev->device == 0x7927);
- 	dev->irq_map = is_mt7927_hw ? &mt7927_irq_map : &irq_map;
- 	dev->dma_config = is_mt7927_hw ? &mt7927_dma_cfg : &mt7925_dma_cfg;
- 	mt76_mmio_init(&dev->mt76, pcim_iomap_table(pdev)[0]);
+Regarding your rate validation patch: I applied it (removing the
+earlier pr_err block and inserting the new check in
+rtw_rx_query_rx_desc). The patch compiled and installed correctly --
+verified via strings on the installed .zst module.
 
--- 
-2.53.0
+I was unable to reproduce the "weird rate" condition or the WARNING
+during this test session. The diagnostic module remains installed and
+active -- I will report back immediately if I manage to catch it.
 
+Best regards,
+Oleksandr Havrylov
