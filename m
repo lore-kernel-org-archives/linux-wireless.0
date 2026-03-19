@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88013B47D1
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5088F3BA252
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773911394; cv=none; b=WzdskeOOUJGeiRHTzo0NSx4BmCqBU5tHXf3oo+OGaDDa0katLdplU7nIcOJiMlfJoFNRFSCLOKlHvW7nYFVkCpditXlpVWOp7Z2eWQZvNMoRWG9lvTQ+/Tx0QIadWlVnxcxmVdZjcJrpsNRMSZ1s5whzWbpLfH3VawLiLVQurkk=
+	t=1773911394; cv=none; b=Q9egcj7hEE6r6yorTZAqrDkxYeNOOqFJ8uVJxRDXL816/oUhKjvx0MAGuE3hmXNBtxXVgJmMfK2rLEG6tl03M+UlOHJKDqaI53EfZStYVmZTLnRHBWiJ5YOccdlRpZoWCMiFnEdnCNpkm+NcgWNSIoQjs8sxkFwrf+XtGrGH9Tc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773911394; c=relaxed/simple;
-	bh=682icWfmaI85i/YmZIbdBHdgZ+kEdxnEWkDiS3uyuAY=;
+	bh=2Hm0v4mg9kbPayj1gBHKaxMAysswBEFgXGoN+NOIHsg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iklZhBIonAL9xUPBlTnN/9YsuvABRoCGgX1K2PowN8RM0zkQyWoexCZ8s7DV+aQInC+SX3Te9Nqe0WvnufHa4fAjBzkWt+iqWJbY1v0/kw2rmEFWbX2kOqkpX1RMbVcJRl82GCXn7nY1Au9QXjmu+7aKVM9J+wqmnPC1WqI4xPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WZyyEzz5; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=a/YJtFyA21mTCOXDOrQCVIR3hID+loVe+GxHZN26i/C0ix9R7SuU1BefnDFyMa76IO8CqCJdZIHLxuBfoKRYfyAvT/YYXEhYb0xy5YMFdArmS3L6M/oxkfAAQz5oOZTK0JvI6NaFzWIn1Vc6l7iYMojTKEthBleGCnLf5jbsRxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CNO2DwnP; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WZyyEzz5"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CNO2DwnP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773911389; x=1805447389;
+  t=1773911391; x=1805447391;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=682icWfmaI85i/YmZIbdBHdgZ+kEdxnEWkDiS3uyuAY=;
-  b=WZyyEzz5dYtvT0FnricmQZzBI8Sb+aOPRax/oRKnPPhaw/iuBXyaJV6h
-   RpNez7YnXgUZiT5JcR7ZwoB9BpwXnx3w7GjG1QZfna9aDGxR+KZZ91dQz
-   oRDLNhzYZN814MTi+YijQ2a8OZD+l15Jb7q+Xz7ts8AwcRHyN5j77sMWo
-   teNZDaOa6L+5ORmMUTk1TPTXrUrTVjKCdmw7x6pX/Vs60umyuXOdwE/04
-   t0k3VAgB8vh6PmPTOywrHM48RELMnqMB8yNrWYDgTIyUHwjhnFQE8SrUa
-   Pe4FDI+mBRayihNAyzy7h3oa3k8PObzx3jyxwBF5N/+MzrpMxLIEP0YkP
-   g==;
-X-CSE-ConnectionGUID: tZxp8u/pQiG3j7wQq2Gd5g==
-X-CSE-MsgGUID: EXmm0YegSqK7kWa+nb1RAQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992715"
+  bh=2Hm0v4mg9kbPayj1gBHKaxMAysswBEFgXGoN+NOIHsg=;
+  b=CNO2DwnPQxqqAL9MaxXrvPn7Vt03zyF3KUBjv236SnXGfGScVS/fQvGh
+   Mc8XJLWgl7BfDfInsu+/SPfz6ONUlZiUBwopQzj55l2sf8iVEthOOyUj5
+   dqATKOZMyNPk1Q6BcLzK9hirpu/uejCzhfkV4iXceGEIYcBlNbmHLCit0
+   w8cCkJ0t7IPgF31iv7Qf4F+SPWMA4y418dCex73NlCGfx3kq9auU/trRh
+   aIiwpH9yBJSncI/bz5Qk2WHaSBTnqOSUvdwsd1d6UEeRhKeAqFAAkwVb2
+   T+XSN/X0fK2jZ8uAnjTXv4thC0NfYFecIrRpsksPSjDXwzIUCLacE6d/A
+   Q==;
+X-CSE-ConnectionGUID: CwDb+DVYSB6Lw4XzNnxx0Q==
+X-CSE-MsgGUID: Ry1dTC2iRWCn35Q9yqTvJg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992724"
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="73992715"
+   d="scan'208";a="73992724"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:49 -0700
-X-CSE-ConnectionGUID: 6/DZmBcJTuetJtY39OVBTw==
-X-CSE-MsgGUID: M/808NeYTC6skWIlL4pMGQ==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:51 -0700
+X-CSE-ConnectionGUID: l5yXu1iaTuG7vZc+W/ytiA==
+X-CSE-MsgGUID: ZyCOFzmXTXyB1z50PDJqnw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="218387139"
+   d="scan'208";a="218387147"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:47 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:50 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 iwlwifi-next 07/15] wifi: iwlwifi: mld: Refactor scan command handling
-Date: Thu, 19 Mar 2026 11:09:19 +0200
-Message-Id: <20260319110722.a3e9589769f0.If458023e234ed79db7474107d98f0b6e28e565e5@changeid>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2 iwlwifi-next 09/15] wifi: iwlwifi: uefi: open code the PPAG table store operation
+Date: Thu, 19 Mar 2026 11:09:21 +0200
+Message-Id: <20260319110722.61e729ea2bde.I9d9cda29f576290bf966f780bf7ad5af34970e6f@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
 References: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
@@ -61,358 +61,115 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-As a preparation for a new scan command version, refactor
-the scan command building such that it would allow introducing
-new scan command structures in a simpler way.
+The structure in firmware runtime will need to grow because we're adding
+a subband for UNII-9.
+This means that we will soon no longer be able to just memcpy the data
+from the UEFI table. The layout of the array will change.
+Tediously copy the data byte-byte to make sure things get to the right
+place even when we'll increase the number of subbands.
+Make it easier for the uefi_cnv_var_ppag structure to grow by
+simpiflying the layout it becomes an array of s8.
+The layout of the structure becomes less obvious from the structure's
+declaration, but then the code is more flexible.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Don't use UEFI_SAR_MAX_SUB_BANDS_NUM for the number of bands for PPAG.
+Of course, SAR related structures will grow in future patches, but
+decouple SAR and PPAG to make the work easier.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/scan.c | 159 ++++++++++++------
- drivers/net/wireless/intel/iwlwifi/mld/scan.h |   2 +
- 2 files changed, 114 insertions(+), 47 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 23 ++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.h | 16 +++++---------
+ 2 files changed, 25 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.c b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-index a1a4cf3ab3d3..7f4679134def 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-@@ -116,6 +116,13 @@ struct iwl_mld_scan_params {
- 	u8 bssid[ETH_ALEN] __aligned(2);
- };
- 
-+struct iwl_scan_req_params_ptrs {
-+	struct iwl_scan_general_params_v11 *general_params;
-+	struct iwl_scan_channel_params_v7 *channel_params;
-+	struct iwl_scan_periodic_parms_v1 *periodic_params;
-+	struct iwl_scan_probe_params_v4 *probe_params;
-+};
-+
- struct iwl_mld_scan_respect_p2p_go_iter_data {
- 	struct ieee80211_vif *current_vif;
- 	bool p2p_go;
-@@ -512,9 +519,10 @@ iwl_mld_scan_get_cmd_gen_flags2(struct iwl_mld *mld,
- 
- static void
- iwl_mld_scan_cmd_set_dwell(struct iwl_mld *mld,
--			   struct iwl_scan_general_params_v11 *gp,
--			   struct iwl_mld_scan_params *params)
-+			   struct iwl_mld_scan_params *params,
-+			   struct iwl_scan_req_params_ptrs *scan_ptrs)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+index d4e1ab1f7c84..38f9d9adf90e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+@@ -571,9 +571,11 @@ int iwl_uefi_get_ppag_table(struct iwl_fw_runtime *fwrt)
  {
-+	struct iwl_scan_general_params_v11 *gp = scan_ptrs->general_params;
- 	const struct iwl_mld_scan_timing_params *timing =
- 		&scan_timing[params->type];
+ 	struct uefi_cnv_var_ppag *data;
+ 	int ret = 0;
++	int data_sz = sizeof(*data) + sizeof(data->vals[0]) *
++		IWL_NUM_CHAIN_LIMITS * UEFI_PPAG_SUB_BANDS_NUM;
  
-@@ -551,9 +559,10 @@ static void
- iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
- 				struct iwl_mld_scan_params *params,
- 				struct ieee80211_vif *vif,
--				struct iwl_scan_general_params_v11 *gp,
-+				struct iwl_scan_req_params_ptrs *scan_ptrs,
- 				enum iwl_mld_scan_status scan_status)
- {
-+	struct iwl_scan_general_params_v11 *gp = scan_ptrs->general_params;
- 	u16 gen_flags = iwl_mld_scan_get_cmd_gen_flags(mld, params, vif,
- 						       scan_status);
- 	u8 gen_flags2 = iwl_mld_scan_get_cmd_gen_flags2(mld, params, vif,
-@@ -566,7 +575,7 @@ iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
- 	gp->flags = cpu_to_le16(gen_flags);
- 	gp->flags2 = gen_flags2;
- 
--	iwl_mld_scan_cmd_set_dwell(mld, gp, params);
-+	iwl_mld_scan_cmd_set_dwell(mld, params, scan_ptrs);
- 
- 	if (gen_flags & IWL_UMAC_SCAN_GEN_FLAGS_V2_FRAGMENTED_LMAC1)
- 		gp->num_of_fragments[SCAN_LB_LMAC_IDX] = IWL_SCAN_NUM_OF_FRAGS;
-@@ -577,9 +586,12 @@ iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
- 
- static int
- iwl_mld_scan_cmd_set_sched_params(struct iwl_mld_scan_params *params,
--				  struct iwl_scan_umac_schedule *schedule,
--				  __le16 *delay)
-+				  struct iwl_scan_req_params_ptrs *scan_ptrs)
- {
-+	struct iwl_scan_umac_schedule *schedule =
-+		scan_ptrs->periodic_params->schedule;
-+	__le16 *delay = &scan_ptrs->periodic_params->delay;
-+
- 	if (WARN_ON(!params->n_scan_plans ||
- 		    params->n_scan_plans > IWL_MAX_SCHED_SCAN_PLANS))
- 		return -EINVAL;
-@@ -657,11 +669,12 @@ iwl_mld_scan_cmd_build_ssids(struct iwl_mld_scan_params *params,
- 
- static void
- iwl_mld_scan_fill_6g_chan_list(struct iwl_mld_scan_params *params,
--			       struct iwl_scan_probe_params_v4 *pp)
-+			       struct iwl_scan_req_params_ptrs *scan_ptrs)
- {
- 	int j, idex_s = 0, idex_b = 0;
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
- 		params->scan_6ghz_params;
-+	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
- 
- 	for (j = 0;
- 	     j < params->n_ssids && idex_s < SCAN_SHORT_SSID_MAX_SIZE;
-@@ -725,13 +738,15 @@ iwl_mld_scan_fill_6g_chan_list(struct iwl_mld_scan_params *params,
- 
- static void
- iwl_mld_scan_cmd_set_probe_params(struct iwl_mld_scan_params *params,
--				  struct iwl_scan_probe_params_v4 *pp,
-+				  struct iwl_scan_req_params_ptrs *scan_ptrs,
- 				  u32 *bitmap_ssid)
- {
-+	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
-+
- 	pp->preq = params->preq;
- 
- 	if (params->scan_6ghz) {
--		iwl_mld_scan_fill_6g_chan_list(params, pp);
-+		iwl_mld_scan_fill_6g_chan_list(params, scan_ptrs);
- 		return;
- 	}
- 
-@@ -821,10 +836,12 @@ static u32 iwl_mld_scan_ch_n_aps_flag(enum nl80211_iftype vif_type, u8 ch_id)
- static void
- iwl_mld_scan_cmd_set_channels(struct iwl_mld *mld,
- 			      struct ieee80211_channel **channels,
--			      struct iwl_scan_channel_params_v7 *cp,
-+			      struct iwl_scan_req_params_ptrs *scan_ptrs,
- 			      int n_channels, u32 flags,
- 			      enum nl80211_iftype vif_type)
- {
-+	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
-+
- 	for (int i = 0; i < n_channels; i++) {
- 		enum nl80211_band band = channels[i]->band;
- 		struct iwl_scan_channel_cfg_umac *cfg = &cp->channel_config[i];
-@@ -862,10 +879,11 @@ static u8
- iwl_mld_scan_cfg_channels_6g(struct iwl_mld *mld,
- 			     struct iwl_mld_scan_params *params,
- 			     u32 n_channels,
--			     struct iwl_scan_probe_params_v4 *pp,
--			     struct iwl_scan_channel_params_v7 *cp,
-+			     struct iwl_scan_req_params_ptrs *scan_ptrs,
- 			     enum nl80211_iftype vif_type)
- {
-+	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
-+	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
- 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
- 		params->scan_6ghz_params;
- 	u32 i;
-@@ -1063,25 +1081,23 @@ static int
- iwl_mld_scan_cmd_set_6ghz_chan_params(struct iwl_mld *mld,
- 				      struct iwl_mld_scan_params *params,
- 				      struct ieee80211_vif *vif,
--				      struct iwl_scan_req_params_v17 *scan_p)
-+				      struct iwl_scan_req_params_ptrs *scan_ptrs)
- {
--	struct iwl_scan_channel_params_v7 *chan_p = &scan_p->channel_params;
--	struct iwl_scan_probe_params_v4 *probe_p = &scan_p->probe_params;
-+	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
- 
- 	/* Explicitly clear the flags since most of them are not
- 	 * relevant for 6 GHz scan.
- 	 */
--	chan_p->flags = 0;
--	chan_p->count = iwl_mld_scan_cfg_channels_6g(mld, params,
--						     params->n_channels,
--						     probe_p, chan_p,
--						     vif->type);
--	if (!chan_p->count)
-+	cp->flags = 0;
-+	cp->count = iwl_mld_scan_cfg_channels_6g(mld, params,
-+						 params->n_channels,
-+						 scan_ptrs, vif->type);
-+	if (!cp->count)
+ 	data = iwl_uefi_get_verified_variable(fwrt->trans, IWL_UEFI_PPAG_NAME,
+-					      "PPAG", sizeof(*data), NULL);
++					      "PPAG", data_sz, NULL);
+ 	if (IS_ERR(data))
  		return -EINVAL;
  
- 	if (!params->n_ssids ||
- 	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
--		chan_p->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
-+		cp->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
+@@ -589,9 +591,22 @@ int iwl_uefi_get_ppag_table(struct iwl_fw_runtime *fwrt)
+ 	fwrt->ppag_flags = iwl_bios_get_ppag_flags(data->ppag_modes,
+ 						   fwrt->ppag_bios_rev);
  
- 	return 0;
- }
-@@ -1090,12 +1106,12 @@ static int
- iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
- 				 struct iwl_mld_scan_params *params,
- 				 struct ieee80211_vif *vif,
--				 struct iwl_scan_req_params_v17 *scan_p,
-+				 struct iwl_scan_req_params_ptrs *scan_ptrs,
- 				 bool low_latency,
- 				 enum iwl_mld_scan_status scan_status,
- 				 u32 channel_cfg_flags)
- {
--	struct iwl_scan_channel_params_v7 *cp = &scan_p->channel_params;
-+	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
- 	struct ieee80211_supported_band *sband =
- 		&mld->nvm_data->bands[NL80211_BAND_6GHZ];
- 
-@@ -1107,14 +1123,14 @@ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
- 
- 	if (params->scan_6ghz)
- 		return iwl_mld_scan_cmd_set_6ghz_chan_params(mld, params,
--							     vif, scan_p);
-+							     vif, scan_ptrs);
- 
- 	/* relevant only for 2.4 GHz/5 GHz scan */
- 	cp->flags = iwl_mld_scan_cmd_set_chan_flags(mld, params, vif,
- 						    low_latency);
- 	cp->count = params->n_channels;
- 
--	iwl_mld_scan_cmd_set_channels(mld, params->channels, cp,
-+	iwl_mld_scan_cmd_set_channels(mld, params->channels, scan_ptrs,
- 				      params->n_channels, channel_cfg_flags,
- 				      vif->type);
- 
-@@ -1144,41 +1160,50 @@ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
- 	return 0;
- }
- 
--static int
--iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
-+struct iwl_scan_umac_handler {
-+	u8 version;
-+	int (*handler)(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 		       struct iwl_mld_scan_params *params,
- 		       enum iwl_mld_scan_status scan_status,
--		       bool low_latency)
-+		       int uid, u32 ooc_priority, bool low_latency);
-+};
+-	BUILD_BUG_ON(sizeof(fwrt->ppag_chains) != sizeof(data->ppag_chains));
+-	memcpy(&fwrt->ppag_chains, &data->ppag_chains,
+-	       sizeof(data->ppag_chains));
++	/*
++	 * Make sure fwrt has enough room to hold
++	 * data coming from the UEFI table
++	 */
++	BUILD_BUG_ON(ARRAY_SIZE(fwrt->ppag_chains) *
++		     ARRAY_SIZE(fwrt->ppag_chains[0].subbands) <
++		     IWL_NUM_CHAIN_LIMITS * UEFI_PPAG_SUB_BANDS_NUM);
 +
-+#define IWL_SCAN_UMAC_HANDLER(_ver) {		\
-+	.version = _ver,			\
-+	.handler = iwl_mld_scan_umac_v##_ver,	\
-+}
-+
-+static int iwl_mld_scan_umac_v17(struct iwl_mld *mld, struct ieee80211_vif *vif,
-+				 struct iwl_mld_scan_params *params,
-+				 enum iwl_mld_scan_status scan_status,
-+				 int uid, u32 ooc_priority, bool low_latency)
- {
- 	struct iwl_scan_req_umac_v17 *cmd = mld->scan.cmd;
--	struct iwl_scan_req_params_v17 *scan_p = &cmd->scan_params;
-+	struct iwl_scan_req_params_ptrs scan_ptrs = {
-+		.general_params = &cmd->scan_params.general_params,
-+		.probe_params = &cmd->scan_params.probe_params,
-+		.channel_params = &cmd->scan_params.channel_params,
-+		.periodic_params = &cmd->scan_params.periodic_params
-+	};
- 	u32 bitmap_ssid = 0;
--	int uid, ret;
--
--	memset(mld->scan.cmd, 0, mld->scan.cmd_size);
-+	int ret;
- 
--	/* find a free UID entry */
--	uid = iwl_mld_scan_uid_by_status(mld, IWL_MLD_SCAN_NONE);
--	if (uid < 0)
--		return uid;
-+	if (WARN_ON(params->n_channels > SCAN_MAX_NUM_CHANS_V3))
-+		return -EINVAL;
- 
- 	cmd->uid = cpu_to_le32(uid);
--	cmd->ooc_priority =
--		cpu_to_le32(iwl_mld_scan_ooc_priority(scan_status));
-+	cmd->ooc_priority = cpu_to_le32(ooc_priority);
- 
--	iwl_mld_scan_cmd_set_gen_params(mld, params, vif,
--					&scan_p->general_params, scan_status);
-+	iwl_mld_scan_cmd_set_gen_params(mld, params, vif, &scan_ptrs,
-+					scan_status);
- 
--	ret = iwl_mld_scan_cmd_set_sched_params(params,
--						scan_p->periodic_params.schedule,
--						&scan_p->periodic_params.delay);
-+	ret = iwl_mld_scan_cmd_set_sched_params(params, &scan_ptrs);
- 	if (ret)
- 		return ret;
- 
--	iwl_mld_scan_cmd_set_probe_params(params, &scan_p->probe_params,
--					  &bitmap_ssid);
-+	iwl_mld_scan_cmd_set_probe_params(params, &scan_ptrs, &bitmap_ssid);
- 
--	ret = iwl_mld_scan_cmd_set_chan_params(mld, params, vif, scan_p,
-+	ret = iwl_mld_scan_cmd_set_chan_params(mld, params, vif, &scan_ptrs,
- 					       low_latency, scan_status,
- 					       bitmap_ssid);
- 	if (ret)
-@@ -1187,6 +1212,45 @@ iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 	return uid;
- }
- 
-+static const struct iwl_scan_umac_handler iwl_scan_umac_handlers[] = {
-+	/* set the newest version first to shorten the list traverse time */
-+	IWL_SCAN_UMAC_HANDLER(17),
-+};
-+
-+static int
-+iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
-+		       struct iwl_mld_scan_params *params,
-+		       enum iwl_mld_scan_status scan_status,
-+		       bool low_latency)
-+{
-+	int uid, err;
-+	u32 ooc_priority;
-+
-+	memset(mld->scan.cmd, 0, mld->scan.cmd_size);
-+	uid = iwl_mld_scan_uid_by_status(mld, IWL_MLD_SCAN_NONE);
-+	if (uid < 0)
-+		return uid;
-+
-+	ooc_priority = iwl_mld_scan_ooc_priority(scan_status);
-+
-+	for (size_t i = 0; i < ARRAY_SIZE(iwl_scan_umac_handlers); i++) {
-+		const struct iwl_scan_umac_handler *ver_handler =
-+			&iwl_scan_umac_handlers[i];
-+
-+		if (ver_handler->version != mld->scan.cmd_ver)
-+			continue;
-+
-+		err = ver_handler->handler(mld, vif, params, scan_status,
-+					   uid, ooc_priority, low_latency);
-+		return err ? : uid;
++	for (int chain = 0; chain < IWL_NUM_CHAIN_LIMITS; chain++) {
++		for (int subband = 0;
++		     subband < UEFI_PPAG_SUB_BANDS_NUM;
++		     subband++)
++			fwrt->ppag_chains[chain].subbands[subband] =
++				data->vals[chain * UEFI_PPAG_SUB_BANDS_NUM + subband];
 +	}
 +
-+	IWL_ERR(mld, "No handler for UMAC scan cmd version %d\n",
-+		mld->scan.cmd_ver);
-+
-+	return -EINVAL;
-+}
-+
- static bool
- iwl_mld_scan_pass_all(struct iwl_mld *mld,
- 		      struct cfg80211_sched_scan_request *req)
-@@ -2041,6 +2105,7 @@ int iwl_mld_alloc_scan_cmd(struct iwl_mld *mld)
- 		return -ENOMEM;
+ 	fwrt->ppag_bios_source = BIOS_SOURCE_UEFI;
+ out:
+ 	kfree(data);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+index c6940a3c03ea..4f0ce068a589 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+@@ -77,6 +77,7 @@ struct uefi_cnv_common_step_data {
+ } __packed;
  
- 	mld->scan.cmd_size = scan_cmd_size;
-+	mld->scan.cmd_ver = scan_cmd_ver;
+ #define UEFI_SAR_MAX_SUB_BANDS_NUM	11
++#define UEFI_PPAG_SUB_BANDS_NUM		11
+ #define UEFI_SAR_MAX_CHAINS_PER_PROFILE	4
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.h b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-index 69110f0cfc8e..772b3a02c4c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-@@ -109,6 +109,7 @@ enum iwl_mld_traffic_load {
-  * @traffic_load.status: The current traffic load status, see
-  *	&enum iwl_mld_traffic_load
-  * @cmd_size: size of %cmd.
-+ * @cmd_ver: version of the scan command format.
-  * @cmd: pointer to scan cmd buffer (allocated once in op mode start).
-  * @last_6ghz_passive_jiffies: stores the last 6GHz passive scan time
-  *	in jiffies.
-@@ -134,6 +135,7 @@ struct iwl_mld_scan {
- 	/* And here fields that survive a fw restart */
- 	size_t cmd_size;
- 	void *cmd;
-+	u8 cmd_ver;
- 	unsigned long last_6ghz_passive_jiffies;
- 	unsigned long last_start_time_jiffies;
- 	u64 last_mlo_scan_time;
+ /*
+@@ -136,24 +137,19 @@ struct uefi_cnv_var_wgds {
+ 	struct iwl_geo_profile geo_profiles[BIOS_GEO_MAX_PROFILE_NUM];
+ } __packed;
+ 
+-/*
+- * struct uefi_ppag_chain - PPAG table for a specific chain
+- * @subbands: the PPAG values for band
+- */
+-struct uefi_ppag_chain {
+-	s8 subbands[UEFI_SAR_MAX_SUB_BANDS_NUM];
+-};
+-
+ /*
+  * struct uefi_cnv_var_ppag - PPAG table as defined in UEFI
+  * @revision: the revision of the table
+  * @ppag_modes: values from &enum iwl_ppag_flags
+- * @ppag_chains: the PPAG values per chain and band
++ * @vals: the PPAG values per chain and band as an array.
++ *	vals[chain * num_of_subbands + subband] will return the right value.
++ *	num_of_subbands is %UEFI_PPAG_SUB_BANDS_NUM.
++ *	the max number of chains is currently 2
+  */
+ struct uefi_cnv_var_ppag {
+ 	u8 revision;
+ 	u32 ppag_modes;
+-	struct uefi_ppag_chain ppag_chains[IWL_NUM_CHAIN_LIMITS];
++	s8 vals[];
+ } __packed;
+ 
+ /* struct uefi_cnv_var_wtas - WTAS tabled as defined in UEFI
 -- 
 2.34.1
 
