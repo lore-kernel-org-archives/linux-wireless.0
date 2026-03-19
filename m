@@ -1,55 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F463AF673
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88013B47D1
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773911391; cv=none; b=a0J6mIKaj9r0O1lOT/9ARbLG51rJLz9nkirBXKb7H77aKeeQ8WfbGIOCLxgy49e+W/wfzrrRGk9UIpuGg1iFR7AEZgWIczD3dFi6Nv8mGgoqTkGRZO5Di8hD2NX9j1xtFac9np8ObCoFakxCysXQppRTVypIWNydcUppKXwH43I=
+	t=1773911394; cv=none; b=WzdskeOOUJGeiRHTzo0NSx4BmCqBU5tHXf3oo+OGaDDa0katLdplU7nIcOJiMlfJoFNRFSCLOKlHvW7nYFVkCpditXlpVWOp7Z2eWQZvNMoRWG9lvTQ+/Tx0QIadWlVnxcxmVdZjcJrpsNRMSZ1s5whzWbpLfH3VawLiLVQurkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773911391; c=relaxed/simple;
-	bh=jbLU+2qsbgL6ElJvmR0vtQy8jiyrz24JkAH4QFTczyA=;
+	s=arc-20240116; t=1773911394; c=relaxed/simple;
+	bh=682icWfmaI85i/YmZIbdBHdgZ+kEdxnEWkDiS3uyuAY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZwUZnkfoHME8RjwVym6LnWPgSfAqz7HRxKwXHeMxB1c3xkFpDbtvB9V2eWpbUKl316oGJHprU5mC1Lgo8YtFc2TsvXfmzB4qzio+1iPcVHcDvggBfibhUiSxLdHG4Ytodtcbx5c97V05u5cEEiNl/0qPcdke6RKnGR9KO3XfJE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=i7158Jog; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=iklZhBIonAL9xUPBlTnN/9YsuvABRoCGgX1K2PowN8RM0zkQyWoexCZ8s7DV+aQInC+SX3Te9Nqe0WvnufHa4fAjBzkWt+iqWJbY1v0/kw2rmEFWbX2kOqkpX1RMbVcJRl82GCXn7nY1Au9QXjmu+7aKVM9J+wqmnPC1WqI4xPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WZyyEzz5; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="i7158Jog"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WZyyEzz5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773911387; x=1805447387;
+  t=1773911389; x=1805447389;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=jbLU+2qsbgL6ElJvmR0vtQy8jiyrz24JkAH4QFTczyA=;
-  b=i7158JogVMAL2DT+yvQIYjhRYbORKX9jKdfsLZf4o0I8WLCpfcoi6XAK
-   ghccNHnx3Bi1WPtP4v/g7gV2aRL+Dj0Ee0+tYAPj3b5eOyM1A7aEWZuMC
-   zjt0rYYstSoNpRQMyvAiarpgjPc/LjdLoqaJJeRvtfdnKwySbanE5rk2X
-   uV04IeLohMXBgDkseHdkqwZIvN1ah/mcDoElOWR8EKqDfqFTvjxWEO8LT
-   vndhME/kE8SD391ul7nv1NawFzEZRpWUASTTWLQzc0L2qwgxXpPbffF3K
-   uAgD5toBZeWAKrbm3CWxhrgqYQZpIb6nYpWXVNuVlrSyb1Ht0/Ql19MOS
-   w==;
-X-CSE-ConnectionGUID: Mwu+EbmyS0yisLtWD+vulw==
-X-CSE-MsgGUID: mE/MhNTUQsuZCO2JwwkpCw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992709"
+  bh=682icWfmaI85i/YmZIbdBHdgZ+kEdxnEWkDiS3uyuAY=;
+  b=WZyyEzz5dYtvT0FnricmQZzBI8Sb+aOPRax/oRKnPPhaw/iuBXyaJV6h
+   RpNez7YnXgUZiT5JcR7ZwoB9BpwXnx3w7GjG1QZfna9aDGxR+KZZ91dQz
+   oRDLNhzYZN814MTi+YijQ2a8OZD+l15Jb7q+Xz7ts8AwcRHyN5j77sMWo
+   teNZDaOa6L+5ORmMUTk1TPTXrUrTVjKCdmw7x6pX/Vs60umyuXOdwE/04
+   t0k3VAgB8vh6PmPTOywrHM48RELMnqMB8yNrWYDgTIyUHwjhnFQE8SrUa
+   Pe4FDI+mBRayihNAyzy7h3oa3k8PObzx3jyxwBF5N/+MzrpMxLIEP0YkP
+   g==;
+X-CSE-ConnectionGUID: tZxp8u/pQiG3j7wQq2Gd5g==
+X-CSE-MsgGUID: EXmm0YegSqK7kWa+nb1RAQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992715"
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="73992709"
+   d="scan'208";a="73992715"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:46 -0700
-X-CSE-ConnectionGUID: UCHP4svZQSqOmGCwTg3yeA==
-X-CSE-MsgGUID: TBfGdR/8QZqFTaXfw6DO1Q==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:49 -0700
+X-CSE-ConnectionGUID: 6/DZmBcJTuetJtY39OVBTw==
+X-CSE-MsgGUID: M/808NeYTC6skWIlL4pMGQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="218387131"
+   d="scan'208";a="218387139"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:44 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:47 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Nidhish A N <nidhish.a.n@intel.com>,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH v2 iwlwifi-next 05/15] wifi: iwlwifi: mvm: cleanup some more MLO code
-Date: Thu, 19 Mar 2026 11:09:17 +0200
-Message-Id: <20260319110722.8efcec472e91.Icaf4f4d6b9008e12310f408cfef7f35643f27ca5@changeid>
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 iwlwifi-next 07/15] wifi: iwlwifi: mld: Refactor scan command handling
+Date: Thu, 19 Mar 2026 11:09:19 +0200
+Message-Id: <20260319110722.a3e9589769f0.If458023e234ed79db7474107d98f0b6e28e565e5@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
 References: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
@@ -62,552 +61,358 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Nidhish A N <nidhish.a.n@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-iwlmld is now the op mode that is used  for EHT devices,
-so iwlmvm code can never run in MLO.
-Clean up some more MLO code.
+As a preparation for a new scan command version, refactor
+the scan command building such that it would allow introducing
+new scan command structures in a simpler way.
 
-Signed-off-by: Nidhish A N <nidhish.a.n@intel.com>
-Reviewed-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mld-key.c  |  46 ---
- .../wireless/intel/iwlwifi/mvm/mld-mac80211.c | 132 --------
- .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  | 285 ------------------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   5 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |   4 -
- 5 files changed, 472 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/scan.c | 159 ++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/mld/scan.h |   2 +
+ 2 files changed, 114 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-index 9bb253dcf4a7..4869a5fa8abc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.c
-@@ -121,52 +121,6 @@ struct iwl_mvm_sta_key_update_data {
- 	int err;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.c b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
+index a1a4cf3ab3d3..7f4679134def 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
+@@ -116,6 +116,13 @@ struct iwl_mld_scan_params {
+ 	u8 bssid[ETH_ALEN] __aligned(2);
  };
  
--static void iwl_mvm_mld_update_sta_key(struct ieee80211_hw *hw,
--				       struct ieee80211_vif *vif,
--				       struct ieee80211_sta *sta,
--				       struct ieee80211_key_conf *key,
--				       void *_data)
--{
--	u32 cmd_id = WIDE_ID(DATA_PATH_GROUP, SEC_KEY_CMD);
--	struct iwl_mvm_sta_key_update_data *data = _data;
--	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--	struct iwl_sec_key_cmd cmd = {
--		.action = cpu_to_le32(FW_CTXT_ACTION_MODIFY),
--		.u.modify.old_sta_mask = cpu_to_le32(data->old_sta_mask),
--		.u.modify.new_sta_mask = cpu_to_le32(data->new_sta_mask),
--		.u.modify.key_id = cpu_to_le32(key->keyidx),
--		.u.modify.key_flags =
--			cpu_to_le32(iwl_mvm_get_sec_flags(mvm, vif, sta, key)),
--	};
--	int err;
--
--	/* only need to do this for pairwise keys (link_id == -1) */
--	if (sta != data->sta || key->link_id >= 0)
--		return;
--
--	err = iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0, sizeof(cmd), &cmd);
--
--	if (err)
--		data->err = err;
--}
--
--int iwl_mvm_mld_update_sta_keys(struct iwl_mvm *mvm,
--				struct ieee80211_vif *vif,
--				struct ieee80211_sta *sta,
--				u32 old_sta_mask,
--				u32 new_sta_mask)
--{
--	struct iwl_mvm_sta_key_update_data data = {
--		.sta = sta,
--		.old_sta_mask = old_sta_mask,
--		.new_sta_mask = new_sta_mask,
--	};
--
--	ieee80211_iter_keys(mvm->hw, vif, iwl_mvm_mld_update_sta_key,
--			    &data);
--	return data.err;
--}
--
- static int __iwl_mvm_sec_key_del(struct iwl_mvm *mvm, u32 sta_mask,
- 				 u32 key_flags, u32 keyidx, u32 flags)
++struct iwl_scan_req_params_ptrs {
++	struct iwl_scan_general_params_v11 *general_params;
++	struct iwl_scan_channel_params_v7 *channel_params;
++	struct iwl_scan_periodic_parms_v1 *periodic_params;
++	struct iwl_scan_probe_params_v4 *probe_params;
++};
++
+ struct iwl_mld_scan_respect_p2p_go_iter_data {
+ 	struct ieee80211_vif *current_vif;
+ 	bool p2p_go;
+@@ -512,9 +519,10 @@ iwl_mld_scan_get_cmd_gen_flags2(struct iwl_mld *mld,
+ 
+ static void
+ iwl_mld_scan_cmd_set_dwell(struct iwl_mld *mld,
+-			   struct iwl_scan_general_params_v11 *gp,
+-			   struct iwl_mld_scan_params *params)
++			   struct iwl_mld_scan_params *params,
++			   struct iwl_scan_req_params_ptrs *scan_ptrs)
  {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index 896ed9823021..f1dbfeae20bc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -886,133 +886,6 @@ static int iwl_mvm_mld_roc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return iwl_mvm_roc_common(hw, vif, channel, duration, type, &ops);
++	struct iwl_scan_general_params_v11 *gp = scan_ptrs->general_params;
+ 	const struct iwl_mld_scan_timing_params *timing =
+ 		&scan_timing[params->type];
+ 
+@@ -551,9 +559,10 @@ static void
+ iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
+ 				struct iwl_mld_scan_params *params,
+ 				struct ieee80211_vif *vif,
+-				struct iwl_scan_general_params_v11 *gp,
++				struct iwl_scan_req_params_ptrs *scan_ptrs,
+ 				enum iwl_mld_scan_status scan_status)
+ {
++	struct iwl_scan_general_params_v11 *gp = scan_ptrs->general_params;
+ 	u16 gen_flags = iwl_mld_scan_get_cmd_gen_flags(mld, params, vif,
+ 						       scan_status);
+ 	u8 gen_flags2 = iwl_mld_scan_get_cmd_gen_flags2(mld, params, vif,
+@@ -566,7 +575,7 @@ iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
+ 	gp->flags = cpu_to_le16(gen_flags);
+ 	gp->flags2 = gen_flags2;
+ 
+-	iwl_mld_scan_cmd_set_dwell(mld, gp, params);
++	iwl_mld_scan_cmd_set_dwell(mld, params, scan_ptrs);
+ 
+ 	if (gen_flags & IWL_UMAC_SCAN_GEN_FLAGS_V2_FRAGMENTED_LMAC1)
+ 		gp->num_of_fragments[SCAN_LB_LMAC_IDX] = IWL_SCAN_NUM_OF_FRAGS;
+@@ -577,9 +586,12 @@ iwl_mld_scan_cmd_set_gen_params(struct iwl_mld *mld,
+ 
+ static int
+ iwl_mld_scan_cmd_set_sched_params(struct iwl_mld_scan_params *params,
+-				  struct iwl_scan_umac_schedule *schedule,
+-				  __le16 *delay)
++				  struct iwl_scan_req_params_ptrs *scan_ptrs)
+ {
++	struct iwl_scan_umac_schedule *schedule =
++		scan_ptrs->periodic_params->schedule;
++	__le16 *delay = &scan_ptrs->periodic_params->delay;
++
+ 	if (WARN_ON(!params->n_scan_plans ||
+ 		    params->n_scan_plans > IWL_MAX_SCHED_SCAN_PLANS))
+ 		return -EINVAL;
+@@ -657,11 +669,12 @@ iwl_mld_scan_cmd_build_ssids(struct iwl_mld_scan_params *params,
+ 
+ static void
+ iwl_mld_scan_fill_6g_chan_list(struct iwl_mld_scan_params *params,
+-			       struct iwl_scan_probe_params_v4 *pp)
++			       struct iwl_scan_req_params_ptrs *scan_ptrs)
+ {
+ 	int j, idex_s = 0, idex_b = 0;
+ 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
+ 		params->scan_6ghz_params;
++	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
+ 
+ 	for (j = 0;
+ 	     j < params->n_ssids && idex_s < SCAN_SHORT_SSID_MAX_SIZE;
+@@ -725,13 +738,15 @@ iwl_mld_scan_fill_6g_chan_list(struct iwl_mld_scan_params *params,
+ 
+ static void
+ iwl_mld_scan_cmd_set_probe_params(struct iwl_mld_scan_params *params,
+-				  struct iwl_scan_probe_params_v4 *pp,
++				  struct iwl_scan_req_params_ptrs *scan_ptrs,
+ 				  u32 *bitmap_ssid)
+ {
++	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
++
+ 	pp->preq = params->preq;
+ 
+ 	if (params->scan_6ghz) {
+-		iwl_mld_scan_fill_6g_chan_list(params, pp);
++		iwl_mld_scan_fill_6g_chan_list(params, scan_ptrs);
+ 		return;
+ 	}
+ 
+@@ -821,10 +836,12 @@ static u32 iwl_mld_scan_ch_n_aps_flag(enum nl80211_iftype vif_type, u8 ch_id)
+ static void
+ iwl_mld_scan_cmd_set_channels(struct iwl_mld *mld,
+ 			      struct ieee80211_channel **channels,
+-			      struct iwl_scan_channel_params_v7 *cp,
++			      struct iwl_scan_req_params_ptrs *scan_ptrs,
+ 			      int n_channels, u32 flags,
+ 			      enum nl80211_iftype vif_type)
+ {
++	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
++
+ 	for (int i = 0; i < n_channels; i++) {
+ 		enum nl80211_band band = channels[i]->band;
+ 		struct iwl_scan_channel_cfg_umac *cfg = &cp->channel_config[i];
+@@ -862,10 +879,11 @@ static u8
+ iwl_mld_scan_cfg_channels_6g(struct iwl_mld *mld,
+ 			     struct iwl_mld_scan_params *params,
+ 			     u32 n_channels,
+-			     struct iwl_scan_probe_params_v4 *pp,
+-			     struct iwl_scan_channel_params_v7 *cp,
++			     struct iwl_scan_req_params_ptrs *scan_ptrs,
+ 			     enum nl80211_iftype vif_type)
+ {
++	struct iwl_scan_probe_params_v4 *pp = scan_ptrs->probe_params;
++	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
+ 	struct cfg80211_scan_6ghz_params *scan_6ghz_params =
+ 		params->scan_6ghz_params;
+ 	u32 i;
+@@ -1063,25 +1081,23 @@ static int
+ iwl_mld_scan_cmd_set_6ghz_chan_params(struct iwl_mld *mld,
+ 				      struct iwl_mld_scan_params *params,
+ 				      struct ieee80211_vif *vif,
+-				      struct iwl_scan_req_params_v17 *scan_p)
++				      struct iwl_scan_req_params_ptrs *scan_ptrs)
+ {
+-	struct iwl_scan_channel_params_v7 *chan_p = &scan_p->channel_params;
+-	struct iwl_scan_probe_params_v4 *probe_p = &scan_p->probe_params;
++	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
+ 
+ 	/* Explicitly clear the flags since most of them are not
+ 	 * relevant for 6 GHz scan.
+ 	 */
+-	chan_p->flags = 0;
+-	chan_p->count = iwl_mld_scan_cfg_channels_6g(mld, params,
+-						     params->n_channels,
+-						     probe_p, chan_p,
+-						     vif->type);
+-	if (!chan_p->count)
++	cp->flags = 0;
++	cp->count = iwl_mld_scan_cfg_channels_6g(mld, params,
++						 params->n_channels,
++						 scan_ptrs, vif->type);
++	if (!cp->count)
+ 		return -EINVAL;
+ 
+ 	if (!params->n_ssids ||
+ 	    (params->n_ssids == 1 && !params->ssids[0].ssid_len))
+-		chan_p->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
++		cp->flags |= IWL_SCAN_CHANNEL_FLAG_6G_PSC_NO_FILTER;
+ 
+ 	return 0;
+ }
+@@ -1090,12 +1106,12 @@ static int
+ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
+ 				 struct iwl_mld_scan_params *params,
+ 				 struct ieee80211_vif *vif,
+-				 struct iwl_scan_req_params_v17 *scan_p,
++				 struct iwl_scan_req_params_ptrs *scan_ptrs,
+ 				 bool low_latency,
+ 				 enum iwl_mld_scan_status scan_status,
+ 				 u32 channel_cfg_flags)
+ {
+-	struct iwl_scan_channel_params_v7 *cp = &scan_p->channel_params;
++	struct iwl_scan_channel_params_v7 *cp = scan_ptrs->channel_params;
+ 	struct ieee80211_supported_band *sband =
+ 		&mld->nvm_data->bands[NL80211_BAND_6GHZ];
+ 
+@@ -1107,14 +1123,14 @@ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
+ 
+ 	if (params->scan_6ghz)
+ 		return iwl_mld_scan_cmd_set_6ghz_chan_params(mld, params,
+-							     vif, scan_p);
++							     vif, scan_ptrs);
+ 
+ 	/* relevant only for 2.4 GHz/5 GHz scan */
+ 	cp->flags = iwl_mld_scan_cmd_set_chan_flags(mld, params, vif,
+ 						    low_latency);
+ 	cp->count = params->n_channels;
+ 
+-	iwl_mld_scan_cmd_set_channels(mld, params->channels, cp,
++	iwl_mld_scan_cmd_set_channels(mld, params->channels, scan_ptrs,
+ 				      params->n_channels, channel_cfg_flags,
+ 				      vif->type);
+ 
+@@ -1144,41 +1160,50 @@ iwl_mld_scan_cmd_set_chan_params(struct iwl_mld *mld,
+ 	return 0;
  }
  
 -static int
--iwl_mvm_mld_change_vif_links(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     u16 old_links, u16 new_links,
--			     struct ieee80211_bss_conf *old[IEEE80211_MLD_MAX_NUM_LINKS])
--{
--	struct iwl_mvm_vif_link_info *new_link[IEEE80211_MLD_MAX_NUM_LINKS] = {};
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--	u16 removed = old_links & ~new_links;
--	u16 added = new_links & ~old_links;
--	int err, i;
+-iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
++struct iwl_scan_umac_handler {
++	u8 version;
++	int (*handler)(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 		       struct iwl_mld_scan_params *params,
+ 		       enum iwl_mld_scan_status scan_status,
+-		       bool low_latency)
++		       int uid, u32 ooc_priority, bool low_latency);
++};
++
++#define IWL_SCAN_UMAC_HANDLER(_ver) {		\
++	.version = _ver,			\
++	.handler = iwl_mld_scan_umac_v##_ver,	\
++}
++
++static int iwl_mld_scan_umac_v17(struct iwl_mld *mld, struct ieee80211_vif *vif,
++				 struct iwl_mld_scan_params *params,
++				 enum iwl_mld_scan_status scan_status,
++				 int uid, u32 ooc_priority, bool low_latency)
+ {
+ 	struct iwl_scan_req_umac_v17 *cmd = mld->scan.cmd;
+-	struct iwl_scan_req_params_v17 *scan_p = &cmd->scan_params;
++	struct iwl_scan_req_params_ptrs scan_ptrs = {
++		.general_params = &cmd->scan_params.general_params,
++		.probe_params = &cmd->scan_params.probe_params,
++		.channel_params = &cmd->scan_params.channel_params,
++		.periodic_params = &cmd->scan_params.periodic_params
++	};
+ 	u32 bitmap_ssid = 0;
+-	int uid, ret;
 -
--	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++) {
--		if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
--			break;
--
--		if (!(added & BIT(i)))
--			continue;
--		new_link[i] = kzalloc_obj(*new_link[i]);
--		if (!new_link[i]) {
--			err = -ENOMEM;
--			goto free;
--		}
--
--		new_link[i]->fw_link_id = IWL_MVM_FW_LINK_ID_INVALID;
--		iwl_mvm_init_link(new_link[i]);
--	}
--
--	mutex_lock(&mvm->mutex);
--
--	/* If we're in RESTART flow, the default link wasn't added in
--         * drv_add_interface(), and link[0] doesn't point to it.
--	 */
--	if (old_links == 0 && !test_bit(IWL_MVM_STATUS_IN_HW_RESTART,
--					&mvm->status)) {
--		err = iwl_mvm_disable_link(mvm, vif, &vif->bss_conf);
--		if (err)
--			goto out_err;
--		mvmvif->link[0] = NULL;
--	}
--
--	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++) {
--		if (removed & BIT(i)) {
--			struct ieee80211_bss_conf *link_conf = old[i];
--
--			err = iwl_mvm_disable_link(mvm, vif, link_conf);
--			if (err)
--				goto out_err;
--			kfree(mvmvif->link[i]);
--			mvmvif->link[i] = NULL;
--		} else if (added & BIT(i)) {
--			struct ieee80211_bss_conf *link_conf;
--
--			link_conf = link_conf_dereference_protected(vif, i);
--			if (WARN_ON(!link_conf))
--				continue;
--
--			if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART,
--				      &mvm->status))
--				mvmvif->link[i] = new_link[i];
--			new_link[i] = NULL;
--			err = iwl_mvm_add_link(mvm, vif, link_conf);
--			if (err)
--				goto out_err;
--		}
--	}
--
--	err = 0;
--	if (new_links == 0) {
--		mvmvif->link[0] = &mvmvif->deflink;
--		err = iwl_mvm_add_link(mvm, vif, &vif->bss_conf);
--	}
--
--out_err:
--	/* we really don't have a good way to roll back here ... */
--	mutex_unlock(&mvm->mutex);
--
--free:
--	for (i = 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++)
--		kfree(new_link[i]);
--	return err;
--}
--
--static int
--iwl_mvm_mld_change_sta_links(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif,
--			     struct ieee80211_sta *sta,
--			     u16 old_links, u16 new_links)
--{
--	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
--
--	guard(mvm)(mvm);
--	return iwl_mvm_mld_update_sta_links(mvm, vif, sta, old_links, new_links);
--}
--
--static bool iwl_mvm_mld_can_activate_links(struct ieee80211_hw *hw,
--					   struct ieee80211_vif *vif,
--					   u16 desired_links)
--{
--	int n_links = hweight16(desired_links);
--
--	if (n_links <= 1)
--		return true;
--
--	WARN_ON(1);
--	return false;
--}
--
--static enum ieee80211_neg_ttlm_res
--iwl_mvm_mld_can_neg_ttlm(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--			 struct ieee80211_neg_ttlm *neg_ttlm)
--{
--	u16 map;
--	u8 i;
--
--	/* Verify all TIDs are mapped to the same links set */
--	map = neg_ttlm->downlink[0];
--	for (i = 0; i < IEEE80211_TTLM_NUM_TIDS; i++) {
--		if (neg_ttlm->downlink[i] != neg_ttlm->uplink[i] ||
--		    neg_ttlm->uplink[i] != map)
--			return NEG_TTLM_RES_REJECT;
--	}
--
--	return NEG_TTLM_RES_ACCEPT;
--}
--
- const struct ieee80211_ops iwl_mvm_mld_hw_ops = {
- 	.tx = iwl_mvm_mac_tx,
- 	.wake_tx_queue = iwl_mvm_mac_wake_tx_queue,
-@@ -1102,9 +975,4 @@ const struct ieee80211_ops iwl_mvm_mld_hw_ops = {
- 	.link_sta_add_debugfs = iwl_mvm_link_sta_add_debugfs,
- #endif
- 	.set_hw_timestamp = iwl_mvm_set_hw_timestamp,
--
--	.change_vif_links = iwl_mvm_mld_change_vif_links,
--	.change_sta_links = iwl_mvm_mld_change_sta_links,
--	.can_activate_links = iwl_mvm_mld_can_activate_links,
--	.can_neg_ttlm = iwl_mvm_mld_can_neg_ttlm,
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index 3359e02e151f..44e16ee9514e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -913,288 +913,3 @@ void iwl_mvm_mld_modify_all_sta_disable_tx(struct iwl_mvm *mvm,
+-	memset(mld->scan.cmd, 0, mld->scan.cmd_size);
++	int ret;
  
- 	rcu_read_unlock();
+-	/* find a free UID entry */
+-	uid = iwl_mld_scan_uid_by_status(mld, IWL_MLD_SCAN_NONE);
+-	if (uid < 0)
+-		return uid;
++	if (WARN_ON(params->n_channels > SCAN_MAX_NUM_CHANS_V3))
++		return -EINVAL;
+ 
+ 	cmd->uid = cpu_to_le32(uid);
+-	cmd->ooc_priority =
+-		cpu_to_le32(iwl_mld_scan_ooc_priority(scan_status));
++	cmd->ooc_priority = cpu_to_le32(ooc_priority);
+ 
+-	iwl_mld_scan_cmd_set_gen_params(mld, params, vif,
+-					&scan_p->general_params, scan_status);
++	iwl_mld_scan_cmd_set_gen_params(mld, params, vif, &scan_ptrs,
++					scan_status);
+ 
+-	ret = iwl_mld_scan_cmd_set_sched_params(params,
+-						scan_p->periodic_params.schedule,
+-						&scan_p->periodic_params.delay);
++	ret = iwl_mld_scan_cmd_set_sched_params(params, &scan_ptrs);
+ 	if (ret)
+ 		return ret;
+ 
+-	iwl_mld_scan_cmd_set_probe_params(params, &scan_p->probe_params,
+-					  &bitmap_ssid);
++	iwl_mld_scan_cmd_set_probe_params(params, &scan_ptrs, &bitmap_ssid);
+ 
+-	ret = iwl_mld_scan_cmd_set_chan_params(mld, params, vif, scan_p,
++	ret = iwl_mld_scan_cmd_set_chan_params(mld, params, vif, &scan_ptrs,
+ 					       low_latency, scan_status,
+ 					       bitmap_ssid);
+ 	if (ret)
+@@ -1187,6 +1212,45 @@ iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 	return uid;
  }
--
--static int iwl_mvm_mld_update_sta_queues(struct iwl_mvm *mvm,
--					 struct ieee80211_sta *sta,
--					 u32 old_sta_mask,
--					 u32 new_sta_mask)
--{
--	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_scd_queue_cfg_cmd cmd = {
--		.operation = cpu_to_le32(IWL_SCD_QUEUE_MODIFY),
--		.u.modify.old_sta_mask = cpu_to_le32(old_sta_mask),
--		.u.modify.new_sta_mask = cpu_to_le32(new_sta_mask),
--	};
--	struct iwl_host_cmd hcmd = {
--		.id = WIDE_ID(DATA_PATH_GROUP, SCD_QUEUE_CONFIG_CMD),
--		.len[0] = sizeof(cmd),
--		.data[0] = &cmd
--	};
--	int tid;
--	int ret;
--
--	lockdep_assert_held(&mvm->mutex);
--
--	for (tid = 0; tid <= IWL_MAX_TID_COUNT; tid++) {
--		struct iwl_mvm_tid_data *tid_data = &mvm_sta->tid_data[tid];
--		int txq_id = tid_data->txq_id;
--
--		if (txq_id == IWL_MVM_INVALID_QUEUE)
--			continue;
--
--		if (tid == IWL_MAX_TID_COUNT)
--			cmd.u.modify.tid = cpu_to_le32(IWL_MGMT_TID);
--		else
--			cmd.u.modify.tid = cpu_to_le32(tid);
--
--		ret = iwl_mvm_send_cmd(mvm, &hcmd);
--		if (ret)
--			return ret;
--	}
--
--	return 0;
--}
--
--static int iwl_mvm_mld_update_sta_baids(struct iwl_mvm *mvm,
--					u32 old_sta_mask,
--					u32 new_sta_mask)
--{
--	struct iwl_rx_baid_cfg_cmd cmd = {
--		.action = cpu_to_le32(IWL_RX_BAID_ACTION_MODIFY),
--		.modify.old_sta_id_mask = cpu_to_le32(old_sta_mask),
--		.modify.new_sta_id_mask = cpu_to_le32(new_sta_mask),
--	};
--	u32 cmd_id = WIDE_ID(DATA_PATH_GROUP, RX_BAID_ALLOCATION_CONFIG_CMD);
--	int baid;
--
--	/* mac80211 will remove sessions later, but we ignore all that */
--	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
--		return 0;
--
--	BUILD_BUG_ON(sizeof(struct iwl_rx_baid_cfg_resp) != sizeof(baid));
--
--	for (baid = 0; baid < ARRAY_SIZE(mvm->baid_map); baid++) {
--		struct iwl_mvm_baid_data *data;
--		int ret;
--
--		data = rcu_dereference_protected(mvm->baid_map[baid],
--						 lockdep_is_held(&mvm->mutex));
--		if (!data)
--			continue;
--
--		if (!(data->sta_mask & old_sta_mask))
--			continue;
--
--		WARN_ONCE(data->sta_mask != old_sta_mask,
--			  "BAID data for %d corrupted - expected 0x%x found 0x%x\n",
--			  baid, old_sta_mask, data->sta_mask);
--
--		cmd.modify.tid = cpu_to_le32(data->tid);
--
--		ret = iwl_mvm_send_cmd_pdu(mvm, cmd_id, CMD_SEND_IN_RFKILL,
--					   sizeof(cmd), &cmd);
--		data->sta_mask = new_sta_mask;
--		if (ret)
--			return ret;
--	}
--
--	return 0;
--}
--
--static int iwl_mvm_mld_update_sta_resources(struct iwl_mvm *mvm,
--					    struct ieee80211_vif *vif,
--					    struct ieee80211_sta *sta,
--					    u32 old_sta_mask,
--					    u32 new_sta_mask)
--{
--	int ret;
--
--	ret = iwl_mvm_mld_update_sta_queues(mvm, sta,
--					    old_sta_mask,
--					    new_sta_mask);
--	if (ret)
--		return ret;
--
--	ret = iwl_mvm_mld_update_sta_keys(mvm, vif, sta,
--					  old_sta_mask,
--					  new_sta_mask);
--	if (ret)
--		return ret;
--
--	return iwl_mvm_mld_update_sta_baids(mvm, old_sta_mask, new_sta_mask);
--}
--
--int iwl_mvm_mld_update_sta_links(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 struct ieee80211_sta *sta,
--				 u16 old_links, u16 new_links)
--{
--	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
--	struct iwl_mvm_vif *mvm_vif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_mvm_link_sta *mvm_sta_link;
--	struct iwl_mvm_vif_link_info *mvm_vif_link;
--	unsigned long links_to_add = ~old_links & new_links;
--	unsigned long links_to_rem = old_links & ~new_links;
--	unsigned long old_links_long = old_links;
--	u32 current_sta_mask = 0, sta_mask_added = 0, sta_mask_to_rem = 0;
--	unsigned long link_sta_added_to_fw = 0, link_sta_allocated = 0;
--	unsigned int link_id;
--	int ret;
--
--	lockdep_assert_wiphy(mvm->hw->wiphy);
--	lockdep_assert_held(&mvm->mutex);
--
--	for_each_set_bit(link_id, &old_links_long,
--			 IEEE80211_MLD_MAX_NUM_LINKS) {
--		mvm_sta_link =
--			rcu_dereference_protected(mvm_sta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--
--		if (WARN_ON(!mvm_sta_link)) {
--			ret = -EINVAL;
--			goto err;
--		}
--
--		current_sta_mask |= BIT(mvm_sta_link->sta_id);
--		if (links_to_rem & BIT(link_id))
--			sta_mask_to_rem |= BIT(mvm_sta_link->sta_id);
--	}
--
--	if (sta_mask_to_rem) {
--		ret = iwl_mvm_mld_update_sta_resources(mvm, vif, sta,
--						       current_sta_mask,
--						       current_sta_mask &
--							~sta_mask_to_rem);
--		if (WARN_ON(ret))
--			goto err;
--
--		current_sta_mask &= ~sta_mask_to_rem;
--	}
--
--	for_each_set_bit(link_id, &links_to_rem, IEEE80211_MLD_MAX_NUM_LINKS) {
--		mvm_sta_link =
--			rcu_dereference_protected(mvm_sta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--		mvm_vif_link = mvm_vif->link[link_id];
--
--		if (WARN_ON(!mvm_sta_link || !mvm_vif_link)) {
--			ret = -EINVAL;
--			goto err;
--		}
--
--		ret = iwl_mvm_mld_rm_sta_from_fw(mvm, mvm_sta_link->sta_id);
--		if (WARN_ON(ret))
--			goto err;
--
--		if (vif->type == NL80211_IFTYPE_STATION)
--			mvm_vif_link->ap_sta_id = IWL_INVALID_STA;
--
--		iwl_mvm_mld_free_sta_link(mvm, mvm_sta, mvm_sta_link, link_id);
--	}
--
--	for_each_set_bit(link_id, &links_to_add, IEEE80211_MLD_MAX_NUM_LINKS) {
--		struct ieee80211_bss_conf *link_conf =
--			link_conf_dereference_protected(vif, link_id);
--		struct ieee80211_link_sta *link_sta =
--			link_sta_dereference_protected(sta, link_id);
--		mvm_vif_link = mvm_vif->link[link_id];
--
--		if (WARN_ON(!mvm_vif_link || !link_conf || !link_sta)) {
--			ret = -EINVAL;
--			goto err;
--		}
--
--		if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
--			struct iwl_mvm_link_sta *mvm_link_sta =
--				rcu_dereference_protected(mvm_sta->link[link_id],
--							  lockdep_is_held(&mvm->mutex));
--			u32 sta_id;
--
--			if (WARN_ON(!mvm_link_sta)) {
--				ret = -EINVAL;
--				goto err;
--			}
--
--			sta_id = mvm_link_sta->sta_id;
--
--			rcu_assign_pointer(mvm->fw_id_to_mac_id[sta_id], sta);
--			rcu_assign_pointer(mvm->fw_id_to_link_sta[sta_id],
--					   link_sta);
--		} else {
--			if (WARN_ON(mvm_sta->link[link_id])) {
--				ret = -EINVAL;
--				goto err;
--			}
--			ret = iwl_mvm_mld_alloc_sta_link(mvm, vif, sta,
--							 link_id);
--			if (WARN_ON(ret))
--				goto err;
--		}
--
--		link_sta->agg.max_rc_amsdu_len = 1;
--		ieee80211_sta_recalc_aggregates(sta);
--
--		mvm_sta_link =
--			rcu_dereference_protected(mvm_sta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--
--		if (WARN_ON(!mvm_sta_link)) {
--			ret = -EINVAL;
--			goto err;
--		}
--
--		if (vif->type == NL80211_IFTYPE_STATION)
--			iwl_mvm_mld_set_ap_sta_id(sta, mvm_vif_link,
--						  mvm_sta_link);
--
--		link_sta_allocated |= BIT(link_id);
--
--		sta_mask_added |= BIT(mvm_sta_link->sta_id);
--
--		ret = iwl_mvm_mld_cfg_sta(mvm, sta, vif, link_sta, link_conf,
--					  mvm_sta_link);
--		if (WARN_ON(ret))
--			goto err;
--
--		link_sta_added_to_fw |= BIT(link_id);
--
--		iwl_mvm_rs_add_sta_link(mvm, mvm_sta_link);
--
--		iwl_mvm_rs_rate_init(mvm, vif, sta, link_conf, link_sta,
--				     link_conf->chanreq.oper.chan->band);
--	}
--
--	if (sta_mask_added) {
--		ret = iwl_mvm_mld_update_sta_resources(mvm, vif, sta,
--						       current_sta_mask,
--						       current_sta_mask |
--							sta_mask_added);
--		if (WARN_ON(ret))
--			goto err;
--	}
--
--	return 0;
--
--err:
--	/* remove all already allocated stations in FW */
--	for_each_set_bit(link_id, &link_sta_added_to_fw,
--			 IEEE80211_MLD_MAX_NUM_LINKS) {
--		mvm_sta_link =
--			rcu_dereference_protected(mvm_sta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--
--		iwl_mvm_mld_rm_sta_from_fw(mvm, mvm_sta_link->sta_id);
--	}
--
--	/* remove all already allocated station links in driver */
--	for_each_set_bit(link_id, &link_sta_allocated,
--			 IEEE80211_MLD_MAX_NUM_LINKS) {
--		mvm_sta_link =
--			rcu_dereference_protected(mvm_sta->link[link_id],
--						  lockdep_is_held(&mvm->mutex));
--
--		iwl_mvm_mld_free_sta_link(mvm, mvm_sta, mvm_sta_link, link_id);
--	}
--
--	return ret;
--}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 46a9dfa58a53..402ba5dee8b2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -2450,11 +2450,6 @@ void iwl_mvm_sec_key_remove_ap(struct iwl_mvm *mvm,
- 			       struct ieee80211_vif *vif,
- 			       struct iwl_mvm_vif_link_info *link,
- 			       unsigned int link_id);
--int iwl_mvm_mld_update_sta_keys(struct iwl_mvm *mvm,
--				struct ieee80211_vif *vif,
--				struct ieee80211_sta *sta,
--				u32 old_sta_mask,
--				u32 new_sta_mask);
- int iwl_mvm_mld_send_key(struct iwl_mvm *mvm, u32 sta_mask, u32 key_flags,
- 			 struct ieee80211_key_conf *keyconf);
- u32 iwl_mvm_get_sec_flags(struct iwl_mvm *mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index c25edc7c1813..ff099aec7886 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -637,10 +637,6 @@ void iwl_mvm_mld_free_sta_link(struct iwl_mvm *mvm,
- 			       struct iwl_mvm_link_sta *mvm_sta_link,
- 			       unsigned int link_id);
- int iwl_mvm_mld_rm_sta_id(struct iwl_mvm *mvm, u8 sta_id);
--int iwl_mvm_mld_update_sta_links(struct iwl_mvm *mvm,
--				 struct ieee80211_vif *vif,
--				 struct ieee80211_sta *sta,
--				 u16 old_links, u16 new_links);
- u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			   int filter_link_id);
- int iwl_mvm_mld_add_int_sta_with_queue(struct iwl_mvm *mvm,
+ 
++static const struct iwl_scan_umac_handler iwl_scan_umac_handlers[] = {
++	/* set the newest version first to shorten the list traverse time */
++	IWL_SCAN_UMAC_HANDLER(17),
++};
++
++static int
++iwl_mld_scan_build_cmd(struct iwl_mld *mld, struct ieee80211_vif *vif,
++		       struct iwl_mld_scan_params *params,
++		       enum iwl_mld_scan_status scan_status,
++		       bool low_latency)
++{
++	int uid, err;
++	u32 ooc_priority;
++
++	memset(mld->scan.cmd, 0, mld->scan.cmd_size);
++	uid = iwl_mld_scan_uid_by_status(mld, IWL_MLD_SCAN_NONE);
++	if (uid < 0)
++		return uid;
++
++	ooc_priority = iwl_mld_scan_ooc_priority(scan_status);
++
++	for (size_t i = 0; i < ARRAY_SIZE(iwl_scan_umac_handlers); i++) {
++		const struct iwl_scan_umac_handler *ver_handler =
++			&iwl_scan_umac_handlers[i];
++
++		if (ver_handler->version != mld->scan.cmd_ver)
++			continue;
++
++		err = ver_handler->handler(mld, vif, params, scan_status,
++					   uid, ooc_priority, low_latency);
++		return err ? : uid;
++	}
++
++	IWL_ERR(mld, "No handler for UMAC scan cmd version %d\n",
++		mld->scan.cmd_ver);
++
++	return -EINVAL;
++}
++
+ static bool
+ iwl_mld_scan_pass_all(struct iwl_mld *mld,
+ 		      struct cfg80211_sched_scan_request *req)
+@@ -2041,6 +2105,7 @@ int iwl_mld_alloc_scan_cmd(struct iwl_mld *mld)
+ 		return -ENOMEM;
+ 
+ 	mld->scan.cmd_size = scan_cmd_size;
++	mld->scan.cmd_ver = scan_cmd_ver;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.h b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
+index 69110f0cfc8e..772b3a02c4c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
+@@ -109,6 +109,7 @@ enum iwl_mld_traffic_load {
+  * @traffic_load.status: The current traffic load status, see
+  *	&enum iwl_mld_traffic_load
+  * @cmd_size: size of %cmd.
++ * @cmd_ver: version of the scan command format.
+  * @cmd: pointer to scan cmd buffer (allocated once in op mode start).
+  * @last_6ghz_passive_jiffies: stores the last 6GHz passive scan time
+  *	in jiffies.
+@@ -134,6 +135,7 @@ struct iwl_mld_scan {
+ 	/* And here fields that survive a fw restart */
+ 	size_t cmd_size;
+ 	void *cmd;
++	u8 cmd_ver;
+ 	unsigned long last_6ghz_passive_jiffies;
+ 	unsigned long last_start_time_jiffies;
+ 	u64 last_mlo_scan_time;
 -- 
 2.34.1
 
