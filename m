@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF43D3BA241
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A31F3B47EF
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 09:09:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773911400; cv=none; b=WmwwkmW8cWDh42MINOssuTlj6qHEIuHwpoBMSS83raDwZq7ZH+6REATDYcGw8Ss9xiU3Z1mARya0//l3Hqm2AV8RhAHMfPs8wbBeoBcgQKT28CYEKjgBnKCAcACjhp7LuxRVmCqYfC7EZbW+t0HscRhZiTJ5/ui7UND05LgxgNA=
+	t=1773911402; cv=none; b=NPsQXQ04aJXMOyPurrv3pf/85qYZPlKEeE26ChbSvqj5YBLpo7aWT1nOJyRdzt/AcZ88PHyLppYJiV6jTQTZG4vJbd/CxZdAcIQj39PDumiXMazGL+T80ffjsVxeFVWaWHpD2w7wsivxO0cRjXqZNy6IOBXXFj7TwFffC50ujhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773911400; c=relaxed/simple;
-	bh=yLSysYn5qI+6IOI/+tbT1PKqC7rPv2Xr4flGUPg6H6k=;
+	s=arc-20240116; t=1773911402; c=relaxed/simple;
+	bh=3U2vFM3LEuR28r8ELOYDFi3OdFyjwLWg7wirs3SnKIQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rev90J6oIRId0w0oHXiQpgVVERDUy3VvqGtfeZo7BDfjFQ8ZlBjjVOSTR44Og9Rd4pKGg/bZkLCJeww1mm5CbuIgbYWBy9qT4LJroR0HyVWQ64EFiUfT8NZ8YSeohMfXDF2CSYQfZBkn4pDGSUv37J8xD7ycWVH+Lf/j0/yUyf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=anm4ovdb; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=o3TzYXfyjIIXBTrPHib0lROlEFY5k1o1CH4hcGI7I4ZRxg24Z2l/3CHxLqQiBzqk1ezPvyZ6J00dFmhvl4NjgfmKhlhMmJFhP7Qp3Z67Vz3Vk4VWi4K7KoF9bYPa+XKIpqFxXiroTOTYK4NbE0K2f+TTbq242BI41E2xqasyRB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k1BwNkE4; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="anm4ovdb"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k1BwNkE4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773911395; x=1805447395;
+  t=1773911399; x=1805447399;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=yLSysYn5qI+6IOI/+tbT1PKqC7rPv2Xr4flGUPg6H6k=;
-  b=anm4ovdbqn2vTLgctgzg5y+3FwVKdgMRpkkM/BDUXk2BrblfSSMYqB70
-   uVoI9cjT96xteAYmMUY4BUGXJ+rwqbOZQQOod8JeBaLiFV8jTkg+YI4ss
-   O+ZsKpNxJ2kemeB7AXPz9JP+0DnbbEP1mUD4pJkXM9t2UBclsP6FOwUyv
-   UVxAaeRLgNO4YwM8Ap97jYgIrgS9HM7m9VcNtpJXjklkgu/nvbKf2Mcni
-   kGd/yxkSJsqONt8+2gZU3N8N9gN6qs0OA/09avNb5q7Pmf7hpt0Kycals
-   12ntBGwTGt/pgMJ+qrYKmwyGFzCilTrGJ4iuWuYv/wsuu9O5guqOp+m+w
+  bh=3U2vFM3LEuR28r8ELOYDFi3OdFyjwLWg7wirs3SnKIQ=;
+  b=k1BwNkE4pyh20YWODnMQVOpW9SdIPe363lc96d5FXGq+ECZGuOE2O2NX
+   nQLBzMTekDUVOPavCG2lscGRVkl/TclBPhkhAqL96euKrFUqjtw9pBppp
+   VeZBgSZ8dzR3NleNWZ5DfQd80CafMt/LFvs3gcWnJvXZdoAjofD7JVm7b
+   tIDcZjyOIpg+c/pMgYk68eLpZOhpcnVHroB9/oxBDvzN90WWXcXraygH2
+   nPscejHuy+VGJX3mReV4d+/7aKDf4+s9fXucK+8nWnOH9bkEhHZFOVgIr
+   gh2FzaAP/6+q8QnazbX3StbCuKucuH9p/m1PYyq9AkHP7SlK92pK0QL4X
    g==;
-X-CSE-ConnectionGUID: rLLQl2M8R2WRKm+8qyCjaA==
-X-CSE-MsgGUID: sSJlxRFtSGaCvLFcPlx4FA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992733"
+X-CSE-ConnectionGUID: pcOhel5+Sti//Rq2uzNLBw==
+X-CSE-MsgGUID: FJwlE1ZmSamEnEIPB/d4WQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11733"; a="73992741"
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="73992733"
+   d="scan'208";a="73992741"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:54 -0700
-X-CSE-ConnectionGUID: VYO+ZRqbQnqWHA2tCn4Uzg==
-X-CSE-MsgGUID: w+iRb8D9Q7udyU83zTQLZg==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:56 -0700
+X-CSE-ConnectionGUID: Ngfs175IQ3q8xExFqXCxnA==
+X-CSE-MsgGUID: r9GOCpeWSxWwZ1gwX0QNGA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="218387153"
+   d="scan'208";a="218387160"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:52 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 02:09:55 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 iwlwifi-next 11/15] wifi: iwlwifi: mld: add support for sta command version 3
-Date: Thu, 19 Mar 2026 11:09:23 +0200
-Message-Id: <20260319110722.382a30bd1b70.Id6271e7eba233a11dc214ed2e07c2b186b167c66@changeid>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2 iwlwifi-next 13/15] wifi: iwlwifi: regulatory: support a new command for PPAG
+Date: Thu, 19 Mar 2026 11:09:25 +0200
+Message-Id: <20260319110722.2e577236d3c9.I042697a73893d79ef761796354b5d1dd8522f734@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
 References: <20260319090927.1090112-1-miriam.rachel.korenblit@intel.com>
@@ -61,260 +61,249 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-In this version, the link_id becomes a link_mask to support multiple
-links that are used to communicate with the station in question.
-This is needed for NAN, in which we can communicate on multiple channels
-with the same station.
-Also add a new STA type - NAN peer.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Per Platform Antenna Gain is getting support for UNII-9.
+Add a new version of PER_PLATFORM_ANT_GAIN_CMD.
+This requires to increase the number of subbands in the firmware runtime
+object.
+Pass the number of subbands to iwl_bios_print_ppag to avoid printing
+invalid values.
+
+Introduce BIOS_PPAG_MAX_SUB_BANDS_NUM to avoid impacting
+BIOS_SAR_MAX_SUB_BANDS_NUM which was used until now for PPAG as well.
+SAR will get support for the new subband in future patches.
+
+While at it, print the PPAG table as it was read from BIOS.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/mac-cfg.h   | 94 ++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mld/sta.c  | 42 +++++++--
- .../net/wireless/intel/iwlwifi/mvm/mld-sta.c  |  6 +-
- 3 files changed, 129 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  1 +
+ .../net/wireless/intel/iwlwifi/fw/api/power.h |  8 +++
+ .../wireless/intel/iwlwifi/fw/regulatory.c    | 21 ++++++
+ .../wireless/intel/iwlwifi/fw/regulatory.h    |  6 +-
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c  |  1 +
+ .../wireless/intel/iwlwifi/mld/regulatory.c   | 66 +++++++++++++++----
+ 6 files changed, 91 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-index c7a833f8041a..444d60a05a98 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac-cfg.h
-@@ -42,7 +42,8 @@ enum iwl_mac_conf_subcmd_ids {
- 	 */
- 	LINK_CONFIG_CMD = 0x9,
- 	/**
--	 * @STA_CONFIG_CMD: &struct iwl_sta_cfg_cmd
-+	 * @STA_CONFIG_CMD: &struct iwl_sta_cfg_cmd_v1,
-+	 *	&struct iwl_sta_cfg_cmd_v2, or struct iwl_sta_cfg_cmd
- 	 */
- 	STA_CONFIG_CMD = 0xA,
- 	/**
-@@ -664,13 +665,21 @@ struct iwl_link_config_cmd {
-  *	power save state and the DTIM timing
-  * @STATION_TYPE_AUX: aux sta. In the FW there is no need for a special type
-  *	for the aux sta, so this type is only for driver - internal use.
-+ * @STATION_TYPE_NAN_PEER_NMI: NAN management peer station type. A station
-+ *	of this type can have any number of links (even none) set in the
-+ *	link_mask. (Supported since version 3.)
-+ * @STATION_TYPE_NAN_PEER_NDI: NAN data peer station type. A station
-+ *	of this type can have any number of links (even none) set in the
-+ *	link_mask. (Supported since version 3.)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+index b64abb8439b7..d00191e84f20 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -981,6 +981,7 @@ int iwl_acpi_get_ppag_table(struct iwl_fw_runtime *fwrt)
+ 		}
+ 	}
+ 
++	iwl_bios_print_ppag(fwrt, num_sub_bands);
+ 	fwrt->ppag_bios_source = BIOS_SOURCE_ACPI;
+ 	ret = 0;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index 0cd8a12e0f7c..118c08f95649 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -269,6 +269,7 @@ enum iwl_dev_tx_power_cmd_mode {
+ #define IWL_NUM_CHAIN_LIMITS	2
+ #define IWL_NUM_SUB_BANDS_V1	5
+ #define IWL_NUM_SUB_BANDS_V2	11
++#define IWL_NUM_SUB_BANDS_V3	12
+ 
+ /**
+  * struct iwl_dev_tx_power_common - Common part of the TX power reduction cmd
+@@ -573,6 +574,7 @@ enum iwl_ppag_flags {
+  * @v1: command version 1 structure.
+  * @v5: command version 5 structure.
+  * @v7: command version 7 structure.
++ * @v8: command version 8 structure.
+  * @v1.flags: values from &enum iwl_ppag_flags
+  * @v1.gain: table of antenna gain values per chain and sub-band
+  * @v1.reserved: reserved
+@@ -581,6 +583,8 @@ enum iwl_ppag_flags {
+  * @v7.ppag_config_info: see @struct bios_value_u32
+  * @v7.gain: table of antenna gain values per chain and sub-band
+  * @v7.reserved: reserved
++ * @v8.ppag_config_info: see @struct bios_value_u32
++ * @v8.gain: table of antenna gain values per chain and sub-band
   */
- enum iwl_fw_sta_type {
- 	STATION_TYPE_PEER,
- 	STATION_TYPE_BCAST_MGMT,
- 	STATION_TYPE_MCAST,
- 	STATION_TYPE_AUX,
--}; /* STATION_TYPE_E_VER_1 */
-+	STATION_TYPE_NAN_PEER_NMI,
-+	STATION_TYPE_NAN_PEER_NDI,
-+}; /* STATION_TYPE_E_VER_1, _VER_2 */
+ union iwl_ppag_table_cmd {
+ 	struct {
+@@ -598,6 +602,10 @@ union iwl_ppag_table_cmd {
+ 		s8 gain[IWL_NUM_CHAIN_LIMITS][IWL_NUM_SUB_BANDS_V2];
+ 		s8 reserved[2];
+ 	} __packed v7; /* PER_PLAT_ANTENNA_GAIN_CMD_API_S_VER_7 */
++	struct {
++		struct bios_value_u32 ppag_config_info;
++		s8 gain[IWL_NUM_CHAIN_LIMITS][IWL_NUM_SUB_BANDS_V3];
++	} __packed v8; /* PER_PLAT_ANTENNA_GAIN_CMD_API_S_VER_8 */
+ } __packed;
  
- /**
-  * struct iwl_sta_cfg_cmd_v1 - cmd structure to add a peer sta to the uCode's
-@@ -729,7 +738,7 @@ struct iwl_sta_cfg_cmd_v1 {
- } __packed; /* STA_CMD_API_S_VER_1 */
- 
- /**
-- * struct iwl_sta_cfg_cmd - cmd structure to add a peer sta to the uCode's
-+ * struct iwl_sta_cfg_cmd_v2 - cmd structure to add a peer sta to the uCode's
-  *	station table
-  * ( STA_CONFIG_CMD = 0xA )
-  *
-@@ -769,7 +778,7 @@ struct iwl_sta_cfg_cmd_v1 {
-  * @mic_compute_pad_delay: MIC compute time padding
-  * @reserved: Reserved for alignment
-  */
--struct iwl_sta_cfg_cmd {
-+struct iwl_sta_cfg_cmd_v2 {
- 	__le32 sta_id;
- 	__le32 link_id;
- 	u8 peer_mld_address[ETH_ALEN];
-@@ -799,6 +808,83 @@ struct iwl_sta_cfg_cmd {
- 	u8 reserved[2];
- } __packed; /* STA_CMD_API_S_VER_2 */
- 
-+/**
-+ * struct iwl_sta_cfg_cmd - cmd structure to add a peer sta to the uCode's
-+ *	station table
-+ * ( STA_CONFIG_CMD = 0xA )
-+ *
-+ * @sta_id: index of station in uCode's station table
-+ * @link_mask: bitmap of link FW IDs used with this STA
-+ * @peer_mld_address: the peers mld address
-+ * @reserved_for_peer_mld_address: reserved
-+ * @peer_link_address: the address of the link that is used to communicate
-+ *	with this sta
-+ * @reserved_for_peer_link_address: reserved
-+ * @station_type: type of this station. See &enum iwl_fw_sta_type
-+ * @assoc_id: for GO only
-+ * @beamform_flags: beam forming controls
-+ * @mfp: indicates whether the STA uses management frame protection or not.
-+ * @mimo: indicates whether the sta uses mimo or not
-+ * @mimo_protection: indicates whether the sta uses mimo protection or not
-+ * @ack_enabled: indicates that the AP supports receiving ACK-
-+ *	enabled AGG, i.e. both BACK and non-BACK frames in a single AGG
-+ * @trig_rnd_alloc: indicates that trigger based random allocation
-+ *	is enabled according to UORA element existence
-+ * @tx_ampdu_spacing: minimum A-MPDU spacing:
-+ *	4 - 2us density, 5 - 4us density, 6 - 8us density, 7 - 16us density
-+ * @tx_ampdu_max_size: maximum A-MPDU length: 0 - 8K, 1 - 16K, 2 - 32K,
-+ *	3 - 64K, 4 - 128K, 5 - 256K, 6 - 512K, 7 - 1024K.
-+ * @sp_length: the size of the SP in actual number of frames
-+ * @uapsd_acs:  4 LS bits are trigger enabled ACs, 4 MS bits are the deliver
-+ *	enabled ACs.
-+ * @pkt_ext: optional, exists according to PPE-present bit in the HE/EHT-PHY
-+ *	capa
-+ * @htc_flags: which features are supported in HTC
-+ * @use_ldpc_x2_cw: Indicates whether to use LDPC with double CW
-+ * @use_icf: Indicates whether to use ICF instead of RTS
-+ * @dps_pad_time: DPS (Dynamic Power Save) padding delay resolution to ensure
-+ *	proper timing alignment
-+ * @dps_trans_delay: DPS minimal time that takes the peer to return to low power
-+ * @dps_enabled: flag indicating whether or not DPS is enabled
-+ * @mic_prep_pad_delay: MIC prep time padding
-+ * @mic_compute_pad_delay: MIC compute time padding
-+ * @nmi_sta_id: for an NDI peer STA, the NMI peer STA ID it relates to
-+ * @ndi_local_addr: for an NDI peer STA, the local NDI interface MAC address
-+ * @reserved: Reserved for alignment
-+ */
-+struct iwl_sta_cfg_cmd {
-+	__le32 sta_id;
-+	__le32 link_mask;
-+	u8 peer_mld_address[ETH_ALEN];
-+	__le16 reserved_for_peer_mld_address;
-+	u8 peer_link_address[ETH_ALEN];
-+	__le16 reserved_for_peer_link_address;
-+	__le32 station_type;
-+	__le32 assoc_id;
-+	__le32 beamform_flags;
-+	__le32 mfp;
-+	__le32 mimo;
-+	__le32 mimo_protection;
-+	__le32 ack_enabled;
-+	__le32 trig_rnd_alloc;
-+	__le32 tx_ampdu_spacing;
-+	__le32 tx_ampdu_max_size;
-+	__le32 sp_length;
-+	__le32 uapsd_acs;
-+	struct iwl_he_pkt_ext_v2 pkt_ext;
-+	__le32 htc_flags;
-+	u8 use_ldpc_x2_cw;
-+	u8 use_icf;
-+	u8 dps_pad_time;
-+	u8 dps_trans_delay;
-+	u8 dps_enabled;
-+	u8 mic_prep_pad_delay;
-+	u8 mic_compute_pad_delay;
-+	u8 nmi_sta_id;
-+	u8 ndi_local_addr[ETH_ALEN];
-+	u8 reserved[2];
-+} __packed; /* STA_CMD_API_S_VER_3 */
-+
- /**
-  * struct iwl_aux_sta_cmd - command for AUX STA configuration
-  * ( AUX_STA_CMD = 0xB )
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-index 6b7a89e050e6..f40c49377466 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
-@@ -398,12 +398,42 @@ static u32 iwl_mld_get_htc_flags(struct ieee80211_link_sta *link_sta)
- 	return htc_flags;
+ #define IWL_PPAG_CMD_V1_MASK (IWL_PPAG_ETSI_MASK | IWL_PPAG_CHINA_MASK)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 9e834cc1b054..55128caac7ed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -318,6 +318,27 @@ bool iwl_is_ppag_approved(struct iwl_fw_runtime *fwrt)
  }
+ IWL_EXPORT_SYMBOL(iwl_is_ppag_approved);
  
-+/* Note: modifies the command depending on FW command version */
- static int iwl_mld_send_sta_cmd(struct iwl_mld *mld,
--				const struct iwl_sta_cfg_cmd *cmd)
-+				struct iwl_sta_cfg_cmd *cmd)
++/* Print the PPAG table as read from BIOS */
++void iwl_bios_print_ppag(struct iwl_fw_runtime *fwrt, int n_subbands)
++{
++	int i, j;
++
++	IWL_DEBUG_RADIO(fwrt, "PPAG table as read from BIOS:\n");
++	IWL_DEBUG_RADIO(fwrt, "PPAG revision = %d\n", fwrt->ppag_bios_rev);
++	IWL_DEBUG_RADIO(fwrt, "PPAG flags = 0x%x\n", fwrt->ppag_flags);
++
++	if (WARN_ON_ONCE(n_subbands >
++			 ARRAY_SIZE(fwrt->ppag_chains[0].subbands)))
++		return;
++
++	for (i = 0; i < ARRAY_SIZE(fwrt->ppag_chains); i++)
++		for (j = 0; j < n_subbands; j++)
++			IWL_DEBUG_RADIO(fwrt,
++					"ppag_chains[%d].subbands[%d] = %d\n",
++					i, j,
++					fwrt->ppag_chains[i].subbands[j]);
++}
++
+ bool iwl_is_tas_approved(void)
  {
--	int ret = iwl_mld_send_cmd_pdu(mld,
--				       WIDE_ID(MAC_CONF_GROUP, STA_CONFIG_CMD),
--				       cmd);
-+	int cmd_id = WIDE_ID(MAC_CONF_GROUP, STA_CONFIG_CMD);
-+	int cmd_ver = iwl_fw_lookup_cmd_ver(mld->fw, cmd_id, 0);
-+	int len = sizeof(*cmd);
-+	int ret;
+ 	return dmi_check_system(dmi_tas_approved_list);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+index 8e04b0e2d507..446c8a2c4f9d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
+@@ -22,6 +22,7 @@
+ #define BIOS_SAR_MAX_CHAINS_PER_PROFILE 4
+ #define BIOS_SAR_NUM_CHAINS             2
+ #define BIOS_SAR_MAX_SUB_BANDS_NUM      11
++#define BIOS_PPAG_MAX_SUB_BANDS_NUM     12
+ 
+ #define BIOS_GEO_NUM_CHAINS		2
+ #define BIOS_GEO_MAX_NUM_BANDS		3
+@@ -100,7 +101,7 @@ struct iwl_geo_profile {
+ 
+ /* Same thing as with SAR, all revisions fit in revision 2 */
+ struct iwl_ppag_chain {
+-	s8 subbands[BIOS_SAR_MAX_SUB_BANDS_NUM];
++	s8 subbands[BIOS_PPAG_MAX_SUB_BANDS_NUM];
+ };
+ 
+ struct iwl_tas_data {
+@@ -180,6 +181,9 @@ enum iwl_dsm_masks_reg {
+ 
+ struct iwl_fw_runtime;
+ 
++/* Print the PPAG table as read from BIOS */
++void iwl_bios_print_ppag(struct iwl_fw_runtime *fwrt, int n_subbands);
 +
-+	if (cmd_ver < 2) {
-+		IWL_ERR(mld, "Unsupported STA_CONFIG_CMD version %d\n",
-+			cmd_ver);
-+		return -EINVAL;
-+	} else if (cmd_ver == 2) {
-+		struct iwl_sta_cfg_cmd_v2 *cmd_v2 = (void *)cmd;
-+
-+		if (WARN_ON(cmd->station_type == cpu_to_le32(STATION_TYPE_NAN_PEER_NMI) ||
-+			    cmd->station_type == cpu_to_le32(STATION_TYPE_NAN_PEER_NDI) ||
-+			    hweight32(le32_to_cpu(cmd->link_mask)) != 1))
-+			return -EINVAL;
-+		/*
-+		 * These fields are located in a different place in the struct of v2.
-+		 * The assumption is that UHR won't be used with FW that has v2.
-+		 */
-+		if (WARN_ON(cmd->mic_prep_pad_delay || cmd->mic_compute_pad_delay))
-+			return -EINVAL;
-+
-+		len = sizeof(struct iwl_sta_cfg_cmd_v2);
-+		cmd_v2->link_id = cpu_to_le32(__ffs(le32_to_cpu(cmd->link_mask)));
-+	} else if (WARN_ON(cmd->station_type != cpu_to_le32(STATION_TYPE_NAN_PEER_NMI) &&
-+			   cmd->station_type != cpu_to_le32(STATION_TYPE_NAN_PEER_NDI) &&
-+			   hweight32(le32_to_cpu(cmd->link_mask)) != 1)) {
-+		return -EINVAL;
-+	}
-+
-+	ret = iwl_mld_send_cmd_pdu(mld, cmd_id, cmd, len);
- 	if (ret)
- 		IWL_ERR(mld, "STA_CONFIG_CMD send failed, ret=0x%x\n", ret);
- 	return ret;
-@@ -431,8 +461,8 @@ iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
- 		return -EINVAL;
+ bool iwl_sar_geo_support(struct iwl_fw_runtime *fwrt);
  
- 	cmd.sta_id = cpu_to_le32(fw_id);
-+	cmd.link_mask = cpu_to_le32(BIT(mld_link->fw_id));
- 	cmd.station_type = cpu_to_le32(mld_sta->sta_type);
--	cmd.link_id = cpu_to_le32(mld_link->fw_id);
+ int iwl_sar_geo_fill_table(struct iwl_fw_runtime *fwrt,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+index 38f9d9adf90e..fba41976be6b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+@@ -607,6 +607,7 @@ int iwl_uefi_get_ppag_table(struct iwl_fw_runtime *fwrt)
+ 				data->vals[chain * UEFI_PPAG_SUB_BANDS_NUM + subband];
+ 	}
  
- 	memcpy(&cmd.peer_mld_address, sta->addr, ETH_ALEN);
- 	memcpy(&cmd.peer_link_address, link_sta->addr, ETH_ALEN);
-@@ -982,7 +1012,7 @@ iwl_mld_add_internal_sta_to_fw(struct iwl_mld *mld,
- 		return iwl_mld_send_aux_sta_cmd(mld, internal_sta);
- 
- 	cmd.sta_id = cpu_to_le32((u8)internal_sta->sta_id);
--	cmd.link_id = cpu_to_le32(fw_link_id);
-+	cmd.link_mask = cpu_to_le32(BIT(fw_link_id));
- 	cmd.station_type = cpu_to_le32(internal_sta->sta_type);
- 
- 	/* FW doesn't allow to add a IGTK/BIGTK if the sta isn't marked as MFP.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-index 44e16ee9514e..da7ed4639a93 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.c
-@@ -20,7 +20,7 @@ u32 iwl_mvm_sta_fw_id_mask(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- }
- 
- static int iwl_mvm_mld_send_sta_cmd(struct iwl_mvm *mvm,
--				    struct iwl_sta_cfg_cmd *cmd)
-+				    struct iwl_sta_cfg_cmd_v2 *cmd)
++	iwl_bios_print_ppag(fwrt, UEFI_PPAG_SUB_BANDS_NUM);
+ 	fwrt->ppag_bios_source = BIOS_SOURCE_UEFI;
+ out:
+ 	kfree(data);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+index d1a55b565898..27059ec93847 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+@@ -166,30 +166,74 @@ static int iwl_mld_ppag_send_cmd(struct iwl_mld *mld)
  {
- 	u32 cmd_id = WIDE_ID(MAC_CONF_GROUP, STA_CONFIG_CMD);
- 	int cmd_len = iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 0) > 1 ?
-@@ -41,7 +41,7 @@ static int iwl_mvm_mld_add_int_sta_to_fw(struct iwl_mvm *mvm,
- 					 struct iwl_mvm_int_sta *sta,
- 					 const u8 *addr, int link_id)
- {
--	struct iwl_sta_cfg_cmd cmd;
-+	struct iwl_sta_cfg_cmd_v2 cmd;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
-@@ -416,7 +416,7 @@ static int iwl_mvm_mld_cfg_sta(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	struct iwl_mvm_vif *mvm_vif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm_vif_link_info *link_info =
- 					mvm_vif->link[link_conf->link_id];
--	struct iwl_sta_cfg_cmd cmd = {
-+	struct iwl_sta_cfg_cmd_v2 cmd = {
- 		.sta_id = cpu_to_le32(mvm_link_sta->sta_id),
- 		.station_type = cpu_to_le32(mvm_sta->sta_type),
+ 	struct iwl_fw_runtime *fwrt = &mld->fwrt;
+ 	union iwl_ppag_table_cmd cmd = {
+-		.v7.ppag_config_info.hdr.table_source = fwrt->ppag_bios_source,
+-		.v7.ppag_config_info.hdr.table_revision = fwrt->ppag_bios_rev,
+-		.v7.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags),
++		/* v7 and v8 have the same layout for the ppag_config_info */
++		.v8.ppag_config_info.hdr.table_source = fwrt->ppag_bios_source,
++		.v8.ppag_config_info.hdr.table_revision = fwrt->ppag_bios_rev,
++		.v8.ppag_config_info.value = cpu_to_le32(fwrt->ppag_flags),
  	};
++	int cmd_ver =
++		iwl_fw_lookup_cmd_ver(mld->fw,
++				      WIDE_ID(PHY_OPS_GROUP,
++					      PER_PLATFORM_ANT_GAIN_CMD), 1);
++	int cmd_len = sizeof(cmd.v8);
+ 	int ret;
+ 
++	BUILD_BUG_ON(offsetof(typeof(cmd), v8.ppag_config_info.hdr) !=
++		     offsetof(typeof(cmd), v7.ppag_config_info.hdr));
++	BUILD_BUG_ON(offsetof(typeof(cmd), v8.gain) !=
++		     offsetof(typeof(cmd), v7.gain));
++
++	BUILD_BUG_ON(ARRAY_SIZE(cmd.v7.gain) > ARRAY_SIZE(fwrt->ppag_chains));
++	BUILD_BUG_ON(ARRAY_SIZE(cmd.v7.gain[0]) >
++		     ARRAY_SIZE(fwrt->ppag_chains[0].subbands));
++	BUILD_BUG_ON(ARRAY_SIZE(cmd.v8.gain) > ARRAY_SIZE(fwrt->ppag_chains));
++	BUILD_BUG_ON(ARRAY_SIZE(cmd.v8.gain[0]) >
++		     ARRAY_SIZE(fwrt->ppag_chains[0].subbands));
++
+ 	IWL_DEBUG_RADIO(fwrt,
+ 			"PPAG MODE bits going to be sent: %d\n",
+ 			fwrt->ppag_flags);
+ 
+-	for (int chain = 0; chain < IWL_NUM_CHAIN_LIMITS; chain++) {
+-		for (int subband = 0; subband < IWL_NUM_SUB_BANDS_V2; subband++) {
+-			cmd.v7.gain[chain][subband] =
+-				fwrt->ppag_chains[chain].subbands[subband];
+-			IWL_DEBUG_RADIO(fwrt,
+-					"PPAG table: chain[%d] band[%d]: gain = %d\n",
+-					chain, subband, cmd.v7.gain[chain][subband]);
++	/* Since ver 7 will be deprecated at some point, don't bother making
++	 * this code generic for both ver 7 and ver 8: duplicate the code.
++	 */
++	if (cmd_ver == 7) {
++		for (int chain = 0; chain < ARRAY_SIZE(cmd.v7.gain); chain++) {
++			for (int subband = 0;
++			     subband < ARRAY_SIZE(cmd.v7.gain[0]);
++			     subband++) {
++				cmd.v7.gain[chain][subband] =
++					fwrt->ppag_chains[chain].subbands[subband];
++				IWL_DEBUG_RADIO(fwrt,
++						"PPAG table: chain[%d] band[%d]: gain = %d\n",
++						chain, subband,
++						cmd.v7.gain[chain][subband]);
++			}
+ 		}
++		cmd_len = sizeof(cmd.v7);
++	} else if (cmd_ver == 8) {
++		for (int chain = 0; chain < ARRAY_SIZE(cmd.v8.gain); chain++) {
++			for (int subband = 0;
++			     subband < ARRAY_SIZE(cmd.v8.gain[0]);
++			     subband++) {
++				cmd.v8.gain[chain][subband] =
++					fwrt->ppag_chains[chain].subbands[subband];
++				IWL_DEBUG_RADIO(fwrt,
++						"PPAG table: chain[%d] band[%d]: gain = %d\n",
++						chain, subband,
++						cmd.v8.gain[chain][subband]);
++			}
++		}
++	} else {
++		WARN(1, "Bad version for PER_PLATFORM_ANT_GAIN_CMD %d\n",
++		     cmd_ver);
++		return -EINVAL;
+ 	}
+ 
+ 	IWL_DEBUG_RADIO(mld, "Sending PER_PLATFORM_ANT_GAIN_CMD\n");
+ 	ret = iwl_mld_send_cmd_pdu(mld, WIDE_ID(PHY_OPS_GROUP,
+ 						PER_PLATFORM_ANT_GAIN_CMD),
+-				   &cmd, sizeof(cmd.v7));
++				   &cmd, cmd_len);
+ 	if (ret < 0)
+ 		IWL_ERR(mld, "failed to send PER_PLATFORM_ANT_GAIN_CMD (%d)\n",
+ 			ret);
 -- 
 2.34.1
 
