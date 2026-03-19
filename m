@@ -1,53 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC022DF3FD
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 18:49:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7C03164AA
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2026 18:49:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773946152; cv=none; b=CGy4dj63Hg35FIkcU9Wx/81GSA11o7Ih94poeM87mb4vufkqsRTwrpL3b7CJ7WelEp6oSrlmO20G5fX8QzEZgkVlN7qFmEb6Is2Ljn3fQRJWWwu88mehwGlUnoXap/3wO/JlUfSgtwHJ5LS9eYsqxibQXA4ixCgQtAnqjlzsmMY=
+	t=1773946153; cv=none; b=ZVrVbc5D6Gwp5tcmTTuJNGD2kZkTeZfzL5jVH2LDuYbKcriFMRuKgjPDP7EoCAbasQt+Ke5YhM94K3Jpvx5qGzXaY4Ap//LOa+ahsioC4KhJX9X3w7ZInXvwKtWs/JP4gq+em6sRyKha5Ya3uUDJh/V7qUVbifY4yc2OJ2miEBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773946152; c=relaxed/simple;
-	bh=bLL8EeLY++OSoO/LgdW0A7UfjHKTvSwvBOUZfTBNy6g=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=OMK6aht7LlClyUUnii8McEosVR+GZKPJYHA15z/yMHfVM5ZvKMnf29x95ODRh6szpVlL2SKSuWe3UGL7QAlf5DUUBW1Y/hJr2q19Rsc5i4KiENX58n44JAF+Lcv7jDyEVuLW99zC4K713peAEO6bKAd1FAGQ/nrSjELnHM8tBR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kKCmerSG; arc=none smtp.client-ip=192.198.163.11
+	s=arc-20240116; t=1773946153; c=relaxed/simple;
+	bh=qKC+pAjQVFlhJ9kZh5OfRO3Rx0ILnKrOSwZIbFhvvMA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=VsJyHkLBQCLlv3fsm95yeXC76bApZQy/+FeSuZvTcFZiuAmY2WwEo9+GmJdOzEJxmpI1dnPAcf3gd+TS2pSVa2wF6/c145zfD1aL+ssCjpe/ZKhuhx97RBJYHCDPPmMZqVNLueA3UWo+zuFlAwAUdCWMBEu7JfAIMEleAYOr2Nk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q8vl8YTx; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kKCmerSG"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q8vl8YTx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773946151; x=1805482151;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=bLL8EeLY++OSoO/LgdW0A7UfjHKTvSwvBOUZfTBNy6g=;
-  b=kKCmerSGjvGSeYyp5++6PNNH+qtSAApCzYGBJ9nPv/oAS+fjTRjaeFM6
-   YHkv7pfbGLXrtBskbP14Ybiy0I3BdRkGwGMrX03JIPseb8P8+/uKbJsQX
-   GerKBcvdwmkYp5MgNrxY2ppKkuopYZyFxJpwb9NFf/RwIfA6AuuElHqR4
-   Z5gLkRepzLx87QpjXeE7SthwtEzHqF9iL3TPZ7giiiWAuap/GSMH6zKw3
-   zFGOfiBlUtWkPTCjK8CIRR1dRLBbP2DhEI91yFBpcANLCfx2TgnPAydz/
-   JSovgIpGEw9HrqYdFVXFLvnHmtzL6ocRN0IXaM5EgNr9TND1tw9xwMeoo
-   Q==;
-X-CSE-ConnectionGUID: hRl/caR2QZ6acO7isNltGQ==
-X-CSE-MsgGUID: 8evbMd7fTKmbDigar0C78Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="85656464"
+  t=1773946153; x=1805482153;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=qKC+pAjQVFlhJ9kZh5OfRO3Rx0ILnKrOSwZIbFhvvMA=;
+  b=Q8vl8YTxCYtJ59STh+/0uFwHVFilp+dfVrQ2jrMR5sZFrFP1n1ZSmMKc
+   XvYr1LFLOzwCs6lFzQCjVkwN4Xqj6iFxC/5vPqHOMBJQNNoCPSDy1LSPG
+   xUzxEsfsmupdZOBxYMa66quITE/jz0ZLOJtcHMq6eRC+GTmycmlCzRzWV
+   xawYgFMmQQG5DZ6iutXiDxaILjd6Ot8IS56CBRyY9/lVh1kC/TTvtDYNQ
+   VjO4wdqsfyNP6sMRMGe4AbJm8GDcAdRFqpBhtmXCc3tUJ/OyvBIqwaCnz
+   hELANFzI8Qek5I5xclvdE32qAnTUAHEhnVsaNX65Ini07DTXrzgnHDAV1
+   w==;
+X-CSE-ConnectionGUID: DFchpOsBSTWXsVaSGpXwrg==
+X-CSE-MsgGUID: jMdIkFi1Rt+ZtiYhpz2AyQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="85656471"
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="85656464"
+   d="scan'208";a="85656471"
 Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 11:49:07 -0700
-X-CSE-ConnectionGUID: ukU4PHy+TsKlEgvLkQirMA==
-X-CSE-MsgGUID: 60k09BnKQH+EYNb/n0hWmg==
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 11:49:10 -0700
+X-CSE-ConnectionGUID: LTFLZSOJRZar7ynjzdLgFg==
+X-CSE-MsgGUID: 00W927QBQBWRoBYU3/UzGw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,129,1770624000"; 
-   d="scan'208";a="227998474"
+   d="scan'208";a="227998496"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 11:49:06 -0700
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2026 11:49:09 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates - 2026-03-19
-Date: Thu, 19 Mar 2026 20:48:40 +0200
-Message-Id: <20260319184855.1981384-1-miriam.rachel.korenblit@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 02/15] wifi: iwlwifi: restrict TOP reset to some devices
+Date: Thu, 19 Mar 2026 20:48:42 +0200
+Message-Id: <20260319204647.6c4479f4e49d.I5023d70cb33f1e18f7cb15981fc3acfbb00862b7@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260319184855.1981384-1-miriam.rachel.korenblit@intel.com>
+References: <20260319184855.1981384-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,50 +61,92 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-features and cleanups from our internal tree.
+Due to the Bluetooth implementation needing to match, not all
+devices can actually do TOP reset. Restrict it to Sc2/Sc2f or
+later, with Wh RF or later.
 
-Thanks,
-Miri
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 10 +++++-----
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 18 ++++++++++++++++++
+ .../wireless/intel/iwlwifi/pcie/gen1_2/trans.c |  2 +-
+ 3 files changed, 24 insertions(+), 6 deletions(-)
 
-Emmanuel Grumbach (14):
-  wifi: iwlwifi: uefi: add support for PPAG table rev5
-  wifi: iwlwifi: mvm: zero iwl_geo_tx_power_profiles_cmd before sending
-  wifi: iwlwifi: uefi: support the new WRDS and EWRD tables
-  wifi: iwlwifi: acpi: add support for WRDS rev 3 table
-  wifi: iwlwifi: acpi: add support for EWRD rev 3 table
-  wifi: iwlwifi: mld: support version 11 of REDUCE_TX_POWER_CMD
-  wifi: iwlwifi: uefi: open code the parsing of the WGDS table
-  wifi: iwlwifi: uefi: add support for WGDS rev4
-  wifi: iwlwifi: acpi: validate the WGDS table
-  wifi: iwlwifi: acpi: add support for WGDS revision 4
-  wifi: iwlwifi: support PER_CHAIN_LIMIT_OFFSET_CMD v6
-  wifi: iwlwifi: uefi: mode the comments valid kerneldoc comments
-  wifi: iwlwifi: remove IWL_MAX_WD_TIMEOUT
-  wifi: iwlwifi: mld: remove SCAN_TIMEOUT_MSEC
-
-Johannes Berg (1):
-  wifi: iwlwifi: restrict TOP reset to some devices
-
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c  | 101 +++++++--
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h  |   7 +
- .../net/wireless/intel/iwlwifi/fw/api/power.h |  29 ++-
- .../wireless/intel/iwlwifi/fw/regulatory.h    |   4 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   2 +
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c  | 210 ++++++++++++++----
- drivers/net/wireless/intel/iwlwifi/fw/uefi.h  | 133 +++++++----
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   1 -
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |  10 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  18 ++
- .../net/wireless/intel/iwlwifi/mld/power.c    |   5 +-
- .../wireless/intel/iwlwifi/mld/regulatory.c   |  64 +++++-
- drivers/net/wireless/intel/iwlwifi/mld/scan.c |   2 -
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |   4 +-
- .../intel/iwlwifi/pcie/gen1_2/trans.c         |   2 +-
- 15 files changed, 468 insertions(+), 124 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+index 89901786fd68..16b2c313e72b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
+@@ -138,7 +138,7 @@ iwl_trans_determine_restart_mode(struct iwl_trans *trans)
+ 		IWL_RESET_MODE_FUNC_RESET,
+ 		IWL_RESET_MODE_PROD_RESET,
+ 	};
+-	static const enum iwl_reset_mode escalation_list_sc[] = {
++	static const enum iwl_reset_mode escalation_list_top[] = {
+ 		IWL_RESET_MODE_SW_RESET,
+ 		IWL_RESET_MODE_REPROBE,
+ 		IWL_RESET_MODE_REPROBE,
+@@ -159,14 +159,14 @@ iwl_trans_determine_restart_mode(struct iwl_trans *trans)
+ 
+ 	if (trans->request_top_reset) {
+ 		trans->request_top_reset = 0;
+-		if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_SC)
++		if (iwl_trans_is_top_reset_supported(trans))
+ 			return IWL_RESET_MODE_TOP_RESET;
+ 		return IWL_RESET_MODE_PROD_RESET;
+ 	}
+ 
+-	if (trans->mac_cfg->device_family >= IWL_DEVICE_FAMILY_SC) {
+-		escalation_list = escalation_list_sc;
+-		escalation_list_size = ARRAY_SIZE(escalation_list_sc);
++	if (iwl_trans_is_top_reset_supported(trans)) {
++		escalation_list = escalation_list_top;
++		escalation_list_size = ARRAY_SIZE(escalation_list_top);
+ 	} else {
+ 		escalation_list = escalation_list_old;
+ 		escalation_list_size = ARRAY_SIZE(escalation_list_old);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index aa0952a011e0..61e4f4776dcb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1258,4 +1258,22 @@ bool iwl_trans_is_pm_supported(struct iwl_trans *trans);
+ 
+ bool iwl_trans_is_ltr_enabled(struct iwl_trans *trans);
+ 
++static inline bool iwl_trans_is_top_reset_supported(struct iwl_trans *trans)
++{
++	/* not supported before Sc family */
++	if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_SC)
++		return false;
++
++	/* for Sc family only supported for Sc2/Sc2f */
++	if (trans->mac_cfg->device_family == IWL_DEVICE_FAMILY_SC &&
++	    CSR_HW_REV_TYPE(trans->info.hw_rev) == IWL_CFG_MAC_TYPE_SC)
++		return false;
++
++	/* so far these numbers are increasing - not before Pe */
++	if (CSR_HW_RFID_TYPE(trans->info.hw_rf_id) < IWL_CFG_RF_TYPE_PE)
++		return false;
++
++	return true;
++}
++
+ #endif /* __iwl_trans_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+index 4560d92d76fe..a05f60f9224b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+@@ -3197,7 +3197,7 @@ static ssize_t iwl_dbgfs_reset_write(struct file *file,
+ 		if (!test_bit(STATUS_DEVICE_ENABLED, &trans->status))
+ 			return -EINVAL;
+ 		if (mode == IWL_RESET_MODE_TOP_RESET) {
+-			if (trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_SC)
++			if (!iwl_trans_is_top_reset_supported(trans))
+ 				return -EINVAL;
+ 			trans->request_top_reset = 1;
+ 		}
 -- 
 2.34.1
 
