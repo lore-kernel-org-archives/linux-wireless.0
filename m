@@ -1,53 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1EE37269E
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 08:09:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE7F377572
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 08:09:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773994173; cv=none; b=hHyYieWQ0y+12N7NROw4EMEZxZeSj6axgxE3jxNTpMSRtd6yCd8e3FHLsAUm9WZPUl8N07OPDPhrVp4NaprlVjVjBzlN+zYHkLxtZpESGktrZAfzPChJ57ygKHGdHfIusdeJbuzBdvMjaAjCpBp6OUT9iy+Q1KPQd+br0R7grVs=
+	t=1773994174; cv=none; b=LdRSCDObP54Aw5Fjp8YQdQ8h0ntF61PNuTxmryGt9x8ajwNLjBVjSOTkRDKpMdZ88M3uDadeafCHDQ9TtsZM6OynYa0mKzjCSGLjeMPIT5r3T8AL+h7cBRMRiwfhhCPfrRAJEoEzDAPfmISp5V9829FDeAv9MpuGmdJxss/5t+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773994173; c=relaxed/simple;
-	bh=5KIjacq4CxJ0vnBQqRBnMSs29J6tnKhTH2S4iIXZVvY=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=XVWnIGiLunAh7uw8UgK0mQ7G/D/GzuQq7LB0KfHPqz+X5HNErSCxEQb1QtfT+QkIJbWX5A6rt4e5mfEJ+pWHZnNQn8rWWE8WJjOlisAEg+qBY3Vwwa5Lj3YM4TtqZg1fqV1NxZZb/HEBuROXgWC5cAnOoyvw+5Bxdf6svcjQQ0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oJtPyDbj; arc=none smtp.client-ip=198.175.65.13
+	s=arc-20240116; t=1773994174; c=relaxed/simple;
+	bh=7FzvLpjvB/f5LKygcwNJBhRXKLSYEpqPA6EEkv/ENys=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=cFao0Q0y65dmoL1oMUPTADOGHQ0509az2rl/prkrZBxAzYuOou58RJ8Dh71dF2d8BApG2pk6WHAVHzhjqshNrXn761zkhl90iufHm5iqfXDKkzDu97VhTD4emd0W8s3PbEXrLYPKFjhb5SqI8SqTNblnduaK/ZCK7MxZ7y5ORCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C0N5gdFt; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oJtPyDbj"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C0N5gdFt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773994173; x=1805530173;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5KIjacq4CxJ0vnBQqRBnMSs29J6tnKhTH2S4iIXZVvY=;
-  b=oJtPyDbj8No88f8bl5AFFCrRBCt0M7JjsDkH19HA5jCYfqXnnwJYDW9h
-   kHH0UqdWHDOF0Nl6QQY1yPrCmBpz8bvovdBqIuiVNRClGaVi6gHg3/A1J
-   4ABw9xeJ9OSpVzwFdsi9CD2Wlbc1gfFlF5Xeb5lb9+Xr092qLt6vcKuWL
-   4PLUqGD/0gTSpD0wGZo3peBA79EaIbDObw/YkJq5T3C8ZDsFLrQ2lIHJ6
-   0ow1wNYL2DDlgaKZdJlPQfm+ixBnA0P2yp1xLYD3F/HBhP1pFSTmhT8c4
-   /iJeHHkRbTCjKu1vvmzWL4T5Xdrw2LYhTmE7X6AwUKLfnT0i8Jp3lsrxW
-   Q==;
-X-CSE-ConnectionGUID: Bi1Fq+nhTYyomddZ174kTQ==
-X-CSE-MsgGUID: BvU9VqKQSJyq5VGHJB1vqw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="86154105"
+  t=1773994174; x=1805530174;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=7FzvLpjvB/f5LKygcwNJBhRXKLSYEpqPA6EEkv/ENys=;
+  b=C0N5gdFtWi7aPoTa5/sNyyuM7HWCvCFV+1QRVXejmHtt73CIHv93TCn6
+   B2fsRbtmjzvg2svckbDKo1ilrrlHLxn05sR8qx/3kdNRDQI0DVy9S/bOF
+   fMrnPGuswayZOpnotneMWcgx+7F0SWgsxGT8zc9n5QVMkiEBAWZx015KA
+   YvthgFkY9STvdGHhoQELu/gfWszazzleN4BR7QHaM99k8K5qLS+zNYaUc
+   Zu8FtcR2tEGwN+I63gLkqUBzFkoqN7Q6GxWmum+A27SYrBi+sUda92ri1
+   XOsUhm4tGZeSPGv16NzbDuAD4B0yFjH5BDrE9EQvBgRWL/0EEV+xOGNKc
+   A==;
+X-CSE-ConnectionGUID: t1Pf71KwQouHWixYW4J7yw==
+X-CSE-MsgGUID: NVieJDvKRgmnDDDHRGULVA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="86154110"
 X-IronPort-AV: E=Sophos;i="6.23,130,1770624000"; 
-   d="scan'208";a="86154105"
+   d="scan'208";a="86154110"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:31 -0700
-X-CSE-ConnectionGUID: K6iQiAlGSPWytTt4t0MXfg==
-X-CSE-MsgGUID: wT63/VXuTkO/1eka5ij9Ow==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:34 -0700
+X-CSE-ConnectionGUID: dPSigSnDT4eLrWM2sUSStg==
+X-CSE-MsgGUID: EAh24IcoSuaWdon8kz4qMQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,130,1770624000"; 
-   d="scan'208";a="227692546"
+   d="scan'208";a="227692555"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:30 -0700
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:32 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates - 2026-03-20
-Date: Fri, 20 Mar 2026 10:09:03 +0200
-Message-Id: <20260320080918.2567780-1-miriam.rachel.korenblit@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 02/15] wifi: iwlwifi: mld: set UHR MCS in RX status
+Date: Fri, 20 Mar 2026 10:09:05 +0200
+Message-Id: <20260320100746.7d235ea6a4f2.Ibc8c7e1af45cae2756e4ddcdf6dc5424b3992f7b@changeid>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260320080918.2567780-1-miriam.rachel.korenblit@intel.com>
+References: <20260320080918.2567780-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,70 +61,41 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-features and cleanups from our internal tree.
+Handle UHR MCSes in the RX status when receiving UHR frames.
 
-Thanks,
-Miri
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Avinash Bhatt (1):
-  wifi: iwlwifi: add CQM event support for per-link RSSI changes
-
-Emmanuel Grumbach (1):
-  wifi: iwlwifi: add support for additional channels in NVM_GET_INFO
-
-Johannes Berg (8):
-  wifi: iwlwifi: mld: enable UHR in TLC
-  wifi: iwlwifi: mld: set UHR MCS in RX status
-  wifi: iwlwifi: advertise UHR capabilities for such devices
-  wifi: iwlwifi: mld: support changing iftype at runtime
-  wifi: iwlwifi: use IWL_FW_CHECK for sync timeout
-  wifi: iwlwifi: pcie: don't dump on reset handshake in dump
-  wifi: iwlwifi: mld: make iwl_mld_mac80211_iftype_to_fw() static
-  wifi: iwlwifi: mld: remove type argument from iwl_mld_add_sta()
-
-Miri Korenblit (2):
-  wifi: iwlwifi: bump core version for BZ/SC/DR
-  wifi: iwlwifi: validate the channels received in
-    iwl_mcc_update_resp_v*
-
-Pagadala Yesu Anjaneyulu (3):
-  wifi: iwlwifi: fw: Add TLV support for BIOS revision of command
-  wifi: iwlwifi: mld: eliminate duplicate WIDE_ID in PPAG command
-    handling
-  wifi: iwlwifi: mld: add BIOS revision compatibility check for PPAG
-    command
-
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c   |   2 +-
- .../net/wireless/intel/iwlwifi/cfg/rf-pe.c    |  24 ++-
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c   |   2 +-
- .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   |  37 +++-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |  15 ++
- drivers/net/wireless/intel/iwlwifi/fw/img.c   |  32 +++-
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |   8 +
- .../net/wireless/intel/iwlwifi/iwl-config.h   |   9 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  21 +++
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 158 ++++++++++++------
- .../wireless/intel/iwlwifi/iwl-nvm-parse.h    |   2 +
- .../wireless/intel/iwlwifi/iwl-nvm-utils.h    |   3 +-
- .../net/wireless/intel/iwlwifi/mld/iface.c    |   6 +-
- .../net/wireless/intel/iwlwifi/mld/iface.h    |   2 -
- drivers/net/wireless/intel/iwlwifi/mld/link.h |   2 +
- .../net/wireless/intel/iwlwifi/mld/mac80211.c |  27 ++-
- .../wireless/intel/iwlwifi/mld/regulatory.c   |  25 ++-
- drivers/net/wireless/intel/iwlwifi/mld/rx.c   |  12 +-
- drivers/net/wireless/intel/iwlwifi/mld/sta.c  |   4 +-
- drivers/net/wireless/intel/iwlwifi/mld/sta.h  |   2 +-
- .../net/wireless/intel/iwlwifi/mld/stats.c    |  26 ++-
- drivers/net/wireless/intel/iwlwifi/mld/tlc.c  |  28 +++-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |   7 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |   2 +-
- .../intel/iwlwifi/pcie/gen1_2/trans-gen2.c    |  13 +-
- 26 files changed, 379 insertions(+), 92 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index 214dcfde2fb4..ff6e71e3ff6e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -1407,6 +1407,7 @@ static void iwl_mld_set_rx_rate(struct iwl_mld *mld,
+ 	u32 rate_n_flags = phy_data->rate_n_flags;
+ 	u8 stbc = u32_get_bits(rate_n_flags, RATE_MCS_STBC_MSK);
+ 	u32 format = rate_n_flags & RATE_MCS_MOD_TYPE_MSK;
++	u32 he_type = u32_get_bits(rate_n_flags, RATE_MCS_HE_TYPE_MSK);
+ 	bool is_sgi = rate_n_flags & RATE_MCS_SGI_MSK;
+ 
+ 	/* bandwidth may be overridden to RU by PHY ntfy */
+@@ -1481,6 +1482,12 @@ static void iwl_mld_set_rx_rate(struct iwl_mld *mld,
+ 		rx_status->encoding = RX_ENC_EHT;
+ 		iwl_mld_set_rx_nonlegacy_rate_info(rate_n_flags, rx_status);
+ 		break;
++	case RATE_MCS_MOD_TYPE_UHR:
++		rx_status->encoding = RX_ENC_UHR;
++		iwl_mld_set_rx_nonlegacy_rate_info(rate_n_flags, rx_status);
++		if (he_type == RATE_MCS_HE_TYPE_UHR_ELR)
++			rx_status->uhr.elr = 1;
++		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 	}
 -- 
 2.34.1
 
