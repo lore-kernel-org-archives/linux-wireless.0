@@ -1,607 +1,164 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9221330E82E
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 19:00:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F4A3016EE
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 19:04:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774033258; cv=none; b=Vju+u7TO2IIK0m+iP7J3fLflzDn3CLhwPgMnoZ0DIBiqlcWwH2mgfm0ZMyBEWsCDNFTPz1pOALoZJfTQy8J450PheC6wNRsU5shvk2B5pg9pwGoA2AGzAdxqhcT9FVg6zMDJGWko69PWDIEFdErZxZXpQQ61iBTVqO9Tqk7xW7A=
+	t=1774033499; cv=none; b=iauuATLelhypxJMDvLnbP8YHxX6o7hB2fIiIAnIoqCeulWASmceLPFd9PTuH8FXNGj35aR2zkYWkq8Es2nKdlo+R19t3FZ9MEFyObrla22RKlbS0RGwXs/F8Vjkl/zYkU9g8+g2YrF9o24p0COI603EuvA2Iz/oSanQK//rXdFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774033258; c=relaxed/simple;
-	bh=pT1SxTnj1sa9NOPzjJgmMrRS17d0Bmwp5wRm6Lx67Yg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r1no9nFuw9PScDBJFO7ZXuRxzIQXz7VD+QvMIszgjZoxfdfxH2fLOD8xegxv/XLXZd7a+u8X10YIy3Y5YTOUp/KSxgApd09vyR7l2oPUwj8JkwgD36+JbddlWyB/LY6axLc4WwgZBNOd5VgruA+mjAkx21aH6MaVFBua7FPMexo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E1D8B5BE11;
-	Fri, 20 Mar 2026 19:00:34 +0000 (UTC)
-Authentication-Results: smtp-out2.suse.de;
-	none
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2499642955;
-	Fri, 20 Mar 2026 19:00:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id kDKmBVCZvWnyTgAAD6G6ig
-	(envelope-from <fmancera@suse.de>); Fri, 20 Mar 2026 19:00:32 +0000
-From: Fernando Fernandez Mancera <fmancera@suse.de>
-To: netdev@vger.kernel.org
-Cc: Fernando Fernandez Mancera <fmancera@suse.de>,
-	=?UTF-8?q?Ricardo=20B=2E=20Marli=C3=A8re?= <rbm@suse.com>,
-	"Jason A. Donenfeld" <Jason@zx2c4.com>,
-	Antonio Quartulli <antonio@openvpn.net>,
-	Edward Cree <ecree.xilinx@gmail.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Leon Romanovsky <leon@kernel.org>,
-	Zhu Yanjun <zyjzyj2000@gmail.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Tariq Toukan <tariqt@nvidia.com>,
-	Mark Bloch <mbloch@nvidia.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Boris Pismenny <borisp@nvidia.com>,
-	Simon Horman <horms@kernel.org>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Harald Welte <laforge@gnumonks.org>,
-	Sabrina Dubroca <sd@queasysnail.net>,
-	Oliver Neukum <oliver@neukum.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Nikolay Aleksandrov <razor@blackwall.org>,
-	Ido Schimmel <idosch@nvidia.com>,
-	Edward Srouji <edwards@nvidia.com>,
-	Parav Pandit <parav@nvidia.com>,
-	Vlad Dumitrescu <vdumitrescu@nvidia.com>,
-	Kees Cook <kees@kernel.org>,
-	Jianbo Liu <jianbol@nvidia.com>,
-	Gal Pressman <gal@nvidia.com>,
-	Guillaume Nault <gnault@redhat.com>,
-	Alexei Lazar <alazar@nvidia.com>,
-	Cosmin Ratiu <cratiu@nvidia.com>,
-	Carolina Jubran <cjubran@nvidia.com>,
-	Alexandre Cassen <acassen@corp.free.fr>,
-	Petr Machata <petrm@nvidia.com>,
-	Stanislav Fomichev <sdf@fomichev.me>,
-	linux-rdma@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	oss-drivers@corigine.com,
-	linux-net-drivers@amd.com,
-	osmocom-net-gprs@lists.osmocom.org,
-	linux-usb@vger.kernel.org,
-	wireguard@lists.zx2c4.com,
-	linux-wireless@vger.kernel.org,
-	bridge@lists.linux.dev
-Subject: [PATCH 06/11 net-next v4] drivers: net: drop ipv6_stub usage and use direct function calls
-Date: Fri, 20 Mar 2026 19:56:00 +0100
-Message-ID: <20260320185649.5411-9-fmancera@suse.de>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260320185649.5411-1-fmancera@suse.de>
-References: <20260320185649.5411-1-fmancera@suse.de>
+	s=arc-20240116; t=1774033499; c=relaxed/simple;
+	bh=QoEWvLKLnsbwigzW5mFwE/PzZrolP7So19e8UasWp+w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AWI+2GBOkF6bx8703Dt9yjNPXYZ3WOuwDPm9u8KE/HICTjPJxhS7e7ymfIPdWqMk3LZSfAdR6YmMhEhIoC9disRYRYIG3+dyUU46wv4BKrEcWQzLFcyFsBuBwZbZv+U5KXD0NkIYISoMmQWxpkYSn6rMePh5+1FZwmFajNw/Hnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Maa63I+D; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dkdbSPqR; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Maa63I+D";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dkdbSPqR"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 62KEC0R53557777
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 19:04:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	vgW3HKgK/7FO69CDE3Yu0jRrt4mYjcF41UTG7syrNZg=; b=Maa63I+DtFiv+Lvj
+	3DXKcQIS/18Ps39z12HafNnfF4mX1EUxruZ8f4UpgXdsRXUezlqyS3qVb2dpNzHv
+	fJHyQbOhTTmmad6TwnFfBEr0SPBfk8AIsluLD9Nmc3XLIXoHSBLQ+dt/Tekl2CA7
+	jvQQZ42ya7453m8rxZY1xXoLOlP4sDmD7ne1eI2nqmIIAjYqZtMxspA2CJgfeeX6
+	lP8WY7f/pIGpRJMptBH6DlPTDaSK1Kj0w931rfO21qNV8h0myaLEE/S23qDiO1de
+	0u7uNwzFlC+oLekTovBe5DcgFOqUgFOqD2gXUZwQVQtRNAsFsh+Q8Ve45kpaCAP+
+	o1p/PA==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4d0r1gu4bt-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 19:04:56 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c7414179cceso545892a12.0
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 12:04:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1774033496; x=1774638296; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vgW3HKgK/7FO69CDE3Yu0jRrt4mYjcF41UTG7syrNZg=;
+        b=dkdbSPqRV67h49o+U9Jf7y10kGEUNpWxot8NqACOfaOayHP+HwrX+HXlr+FAMmrOaJ
+         JkjpG6685wgh2pOTJk3ta4pS3oQNb1I/X9N1YJoefS51nfkpNLY4wDzdEiHCsvMatKfm
+         dRKG9N6+7Qe1u8tQHq5sICxWn18FmBL81jd8AP4/fts9MFHCGxf58e0i9E1RP/W0FTH3
+         VqTdRm6UCI46xd7G39C9HXCqnqu+u/P3QRa3a/kTVfJGb2nR7HKTz6tOGoypHKZQIMKD
+         IcbLQCvfG2lt7t4W2iF0hHyqTCFJQajDwmHL4g94QVp4EpdHbSVvvwM/xOzY/TO4jMgx
+         nKOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774033496; x=1774638296;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vgW3HKgK/7FO69CDE3Yu0jRrt4mYjcF41UTG7syrNZg=;
+        b=QHq7DkIXR/jwwRee4kwX29TVzzMHwJ7Dlv6/dZvX2eMUX0hM2uQlCI1a6PjlLfUNri
+         vNqLJBoyaJtTk/KMkCIhKrL1XFNTUHVnpAmtNUxLEcz5QRHrF4/YLiKgvxVKUYmi6gAv
+         LuVB2CLD2U5KeyZH4u9+sLuv1YsH9qsgx08XUoh9Sml4ApxCPFfPcGTezglq9u354tt7
+         5OdbqPdNEFoOpnGN4xGpntIPL0UWtZAt4JkkKcHm9S5+sCq12tkQ6WpnaGS/z38cPRB4
+         mZ0hgpQnA3mFqADaP4a051REFNpBl/zeF4BCqOEeMd+GbmkBYpZBFClFzUnfqFlbP55U
+         gtWg==
+X-Gm-Message-State: AOJu0YwC3XT6YGvBG3vlFCci4Y5EiHThwPIvBq3PDiGG9uPcHV59sbJz
+	p04GPLfutDWrqrgUuutqVCaHwa5VUP7KElPT4d5vBJW0ulYu+3DiquOadyRE8z+SFUkR4yvl7+e
+	+2xa8fT/87RG3ia3lfbPH3YUcm0N4a3NcPNVdCGUkjHXGWKupCsX/89Yn7lqPQpd5v5js
+X-Gm-Gg: ATEYQzwW/4yod5BIEOBHMItDsZ+tPCPonkdyKDe/9cqFLDCLK8AQivnlAv0FqeOwEAd
+	Joi+r/hlihfbwnD+WfHr4oV1HUqFdBiZthgcMb3HLCeS9qWnj8T/YyEsLp0M7CEyTDsau+YyscI
+	zkXGATKk8Wosr4Y59SlSHUdF6Xrqjzzx0w/LpINIx1kfmrQ9CnqBqJKek3xSXPfnuKHlS/Y23++
+	OovJiakOszPn0J0fhGTnv546QH3akMIOti1QFDNbRzvsGME3/G1yICZAk8jInPory78hPPmIl/x
+	3VKWks4eFM7lnp/mbjJu/6czwwELBYh1Q8JHcGj6iey/i0IlFFTy900QUYEYVqEWYEj3mAgt6mQ
+	hYKa2SkZVBpvbzy6vkRNjG4VGRvg8+FMO+BctIaKsj8YhVGkDZS+AUL4=
+X-Received: by 2002:a05:6a20:7353:b0:398:6b26:dbfb with SMTP id adf61e73a8af0-39bcebcd47fmr3907175637.49.1774033495763;
+        Fri, 20 Mar 2026 12:04:55 -0700 (PDT)
+X-Received: by 2002:a05:6a20:7353:b0:398:6b26:dbfb with SMTP id adf61e73a8af0-39bcebcd47fmr3907148637.49.1774033495290;
+        Fri, 20 Mar 2026 12:04:55 -0700 (PDT)
+Received: from [192.168.0.109] ([103.88.239.213])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82b03bc6881sm3140735b3a.22.2026.03.20.12.04.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 20 Mar 2026 12:04:54 -0700 (PDT)
+Message-ID: <1cf960e7-87b8-4196-a0a4-cf3ba3b0c6b8@oss.qualcomm.com>
+Date: Sat, 21 Mar 2026 00:34:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next v3 13/15] wifi: cfg80211: add result
+ reporting control for PD requests
+To: "Stern, Avraham" <avraham.stern@intel.com>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "kavita.kavita@oss.qualcomm.com" <kavita.kavita@oss.qualcomm.com>
+References: <20260305160712.1263829-1-peddolla.reddy@oss.qualcomm.com>
+ <20260305160712.1263829-14-peddolla.reddy@oss.qualcomm.com>
+ <CH3PR11MB8383F6C4E5840702AF996AB9FF44A@CH3PR11MB8383.namprd11.prod.outlook.com>
+Content-Language: en-US
+From: Peddolla Harshavardhan Reddy <peddolla.reddy@oss.qualcomm.com>
+In-Reply-To: <CH3PR11MB8383F6C4E5840702AF996AB9FF44A@CH3PR11MB8383.namprd11.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Queue-Id: E1D8B5BE11
-X-Rspamd-Pre-Result: action=no action;
-	module=replies;
-	Message is reply to one we originated
-X-Rspamd-Action: no action
-X-Spam-Score: -4.00
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.00 / 50.00];
-	REPLY(-4.00)[];
-	TAGGED_RCPT(0.00)[netdev]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMzIwMDE1NSBTYWx0ZWRfX/DMTkiPa7NsR
+ ldT8jfVsU/UMVGj0DOwbozMWGhbonVUyJJLlzLluOr3QftXV0o3q3GmVRFyElT53AcfIm6NwYZd
+ seN1XDWS4lyGooXhpUF7d76X+sNfKdMn56EsfXuvir1WcdreSmtrQ1W+Xh4q6/i86CtFivZth2+
+ HVJfFelq6jyEmbs1pbO0266NPFX0Z79nGAlzCg8EFMKtV3PRaytRB95a64elLdp0pj/BgGAf/MA
+ Y8h5jSpmQMgnhpRk3ordrFneCcVNVPbWPdj5WPXnF8yNNRwUHBwXKSdl5ltH11CAAVJYHjUlwnQ
+ 9ZQ057HsbaNoQv01ZGV0KJM/9LQ0BKZPM6KXgAjkF+bWiZX5d837Dm2/pJA50qCpHu+0TkyYSBv
+ Z9DG7fvllqTQR2AluKmddzPbxY/n7m6aYUP5KKyks1/0c4P4Np9ChtEqz0eMNYq/cwETHDPpXPa
+ 7uz35s8oKdDfv7UYGYQ==
+X-Proofpoint-GUID: yLzU1NJPXTk1W7At_uiTfYEKjbm0Q3lG
+X-Proofpoint-ORIG-GUID: yLzU1NJPXTk1W7At_uiTfYEKjbm0Q3lG
+X-Authority-Analysis: v=2.4 cv=Y/D1cxeN c=1 sm=1 tr=0 ts=69bd9a58 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=YekYzGz3bqI42vIqjoHHTA==:17
+ a=IkcTkHD0fZMA:10 a=Yq5XynenixoA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=EUspDBNiAAAA:8 a=stkexhm8AAAA:8 a=VwQbUJbxAAAA:8 a=tltu21h82NG8XwUORdoA:9
+ a=QEXdDO2ut3YA:10 a=_Vgx9l1VpLgwpw_dHYaR:22 a=pIW3pCRaVxJDc-hWtpF8:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-03-20_03,2026-03-20_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 spamscore=0 priorityscore=1501 adultscore=0 lowpriorityscore=0
+ malwarescore=0 clxscore=1015 phishscore=0 bulkscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2603050001 definitions=main-2603200155
 
-As IPv6 is built-in only, the ipv6_stub infrastructure is no longer
-necessary.
 
-Convert all drivers currently utilizing ipv6_stub to make direct
-function calls. The fallback functions introduced previously will
-prevent linkage errors when CONFIG_IPV6 is disabled.
+On 13-Mar-26 2:46 AM, Stern, Avraham wrote:
+>
+>> From: Peddolla Harshavardhan Reddy <peddolla.reddy@oss.qualcomm.com> 
+>> Sent: Thursday, March 5, 2026 6:07 PM
+>> To: johannes@sipsolutions.net
+>> Cc: linux-wireless@vger.kernel.org; kavita.kavita@oss.qualcomm.com
+>> Subject: [PATCH wireless-next v3 13/15] wifi: cfg80211: add result reporting control for PD requests
+>> Proximity detection applications may not need detailed ranging measurements for every request, yet currently receive all results causing unnecessary data transfer, host wakeups, and processing overhead. Currently, there is no mechanism for applications to suppress result reporting when only proximity detection is needed.
+>> Introduce optional result suppression control that drivers can use to implement selective result reporting. Add a flag allowing applications to disable ranging reports when only proximity detection is needed, enabling drivers to reduce unnecessary data transfer and host wakeups. This flag cannot be combined > with range report or LMR feedback requests in RSTA mode as these require result reporting.
+> As commented on previous patch, LMR feedback and range report are mandatory for PD ranging. Results can be not reported regardless.
 
-Signed-off-by: Fernando Fernandez Mancera <fmancera@suse.de>
-Tested-by: Ricardo B. Marlière <rbm@suse.com>
-Reviewed-by: Jason A. Donenfeld <Jason@zx2c4.com>
-Reviewed-by: Antonio Quartulli <antonio@openvpn.net>
-Reviewed-by: Edward Cree <ecree.xilinx@gmail.com>
----
- drivers/infiniband/core/addr.c                  |  3 +--
- drivers/infiniband/sw/rxe/rxe_net.c             |  6 +++---
- .../ethernet/mellanox/mlx5/core/en/rep/neigh.c  |  9 +++++----
- .../net/ethernet/mellanox/mlx5/core/en/tc_tun.c |  3 +--
- .../mellanox/mlx5/core/en/tc_tun_encap.c        |  2 +-
- .../mellanox/mlx5/core/en_accel/ipsec.c         |  1 -
- .../net/ethernet/mellanox/mlx5/core/en_rep.c    |  1 -
- drivers/net/ethernet/mellanox/mlx5/core/en_tc.c |  1 -
- .../net/ethernet/netronome/nfp/flower/action.c  |  2 +-
- .../ethernet/netronome/nfp/flower/tunnel_conf.c |  7 +++----
- drivers/net/ethernet/sfc/tc_counters.c          |  2 +-
- drivers/net/ethernet/sfc/tc_encap_actions.c     |  5 ++---
- drivers/net/geneve.c                            |  1 -
- drivers/net/gtp.c                               |  2 +-
- drivers/net/ovpn/peer.c                         |  3 +--
- drivers/net/ovpn/udp.c                          |  3 +--
- drivers/net/usb/cdc_mbim.c                      | 17 +++++++++--------
- drivers/net/vxlan/vxlan_core.c                  | 11 +++++------
- drivers/net/vxlan/vxlan_multicast.c             |  6 ++----
- drivers/net/wireguard/socket.c                  |  3 +--
- drivers/net/wireless/intel/ipw2x00/ipw2100.c    |  2 +-
- net/bridge/br_arp_nd_proxy.c                    |  3 +--
- 22 files changed, 40 insertions(+), 53 deletions(-)
+yes you are right, fixed in the next version.
 
-diff --git a/drivers/infiniband/core/addr.c b/drivers/infiniband/core/addr.c
-index 866746695712..48d4b06384ec 100644
---- a/drivers/infiniband/core/addr.c
-+++ b/drivers/infiniband/core/addr.c
-@@ -41,7 +41,6 @@
- #include <net/neighbour.h>
- #include <net/route.h>
- #include <net/netevent.h>
--#include <net/ipv6_stubs.h>
- #include <net/ip6_route.h>
- #include <rdma/ib_addr.h>
- #include <rdma/ib_cache.h>
-@@ -411,7 +410,7 @@ static int addr6_resolve(struct sockaddr *src_sock,
- 	fl6.saddr = src_in->sin6_addr;
- 	fl6.flowi6_oif = addr->bound_dev_if;
- 
--	dst = ipv6_stub->ipv6_dst_lookup_flow(addr->net, NULL, &fl6, NULL);
-+	dst = ip6_dst_lookup_flow(addr->net, NULL, &fl6, NULL);
- 	if (IS_ERR(dst))
- 		return PTR_ERR(dst);
- 
-diff --git a/drivers/infiniband/sw/rxe/rxe_net.c b/drivers/infiniband/sw/rxe/rxe_net.c
-index 0bd0902b11f7..cbc646a30003 100644
---- a/drivers/infiniband/sw/rxe/rxe_net.c
-+++ b/drivers/infiniband/sw/rxe/rxe_net.c
-@@ -138,9 +138,9 @@ static struct dst_entry *rxe_find_route6(struct rxe_qp *qp,
- 	memcpy(&fl6.daddr, daddr, sizeof(*daddr));
- 	fl6.flowi6_proto = IPPROTO_UDP;
- 
--	ndst = ipv6_stub->ipv6_dst_lookup_flow(sock_net(recv_sockets.sk6->sk),
--					       recv_sockets.sk6->sk, &fl6,
--					       NULL);
-+	ndst = ip6_dst_lookup_flow(sock_net(recv_sockets.sk6->sk),
-+				   recv_sockets.sk6->sk, &fl6,
-+				   NULL);
- 	if (IS_ERR(ndst)) {
- 		rxe_dbg_qp(qp, "no route to %pI6\n", daddr);
- 		return NULL;
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en/rep/neigh.c b/drivers/net/ethernet/mellanox/mlx5/core/en/rep/neigh.c
-index d220b045b331..648f4521c096 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en/rep/neigh.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en/rep/neigh.c
-@@ -10,6 +10,7 @@
- #include <linux/notifier.h>
- #include <net/netevent.h>
- #include <net/arp.h>
-+#include <net/ndisc.h>
- #include "neigh.h"
- #include "tc.h"
- #include "en_rep.h"
-@@ -18,8 +19,8 @@
- 
- static unsigned long mlx5e_rep_ipv6_interval(void)
- {
--	if (IS_ENABLED(CONFIG_IPV6) && ipv6_stub->nd_tbl)
--		return NEIGH_VAR(&ipv6_stub->nd_tbl->parms, DELAY_PROBE_TIME);
-+	if (IS_ENABLED(CONFIG_IPV6) && ipv6_mod_enabled())
-+		return NEIGH_VAR(&nd_tbl.parms, DELAY_PROBE_TIME);
- 
- 	return ~0UL;
- }
-@@ -217,7 +218,7 @@ static int mlx5e_rep_netevent_event(struct notifier_block *nb,
- 	case NETEVENT_NEIGH_UPDATE:
- 		n = ptr;
- #if IS_ENABLED(CONFIG_IPV6)
--		if (n->tbl != ipv6_stub->nd_tbl && n->tbl != &arp_tbl)
-+		if (n->tbl != &nd_tbl && n->tbl != &arp_tbl)
- #else
- 		if (n->tbl != &arp_tbl)
- #endif
-@@ -238,7 +239,7 @@ static int mlx5e_rep_netevent_event(struct notifier_block *nb,
- 		 * done per device delay prob time parameter.
- 		 */
- #if IS_ENABLED(CONFIG_IPV6)
--		if (!p->dev || (p->tbl != ipv6_stub->nd_tbl && p->tbl != &arp_tbl))
-+		if (!p->dev || (p->tbl != &nd_tbl && p->tbl != &arp_tbl))
- #else
- 		if (!p->dev || p->tbl != &arp_tbl)
- #endif
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun.c b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun.c
-index a14f216048cd..de74dbfe7b20 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun.c
-@@ -453,8 +453,7 @@ static int mlx5e_route_lookup_ipv6_get(struct mlx5e_priv *priv,
- 
- 	if (tunnel && tunnel->get_remote_ifindex)
- 		attr->fl.fl6.flowi6_oif = tunnel->get_remote_ifindex(dev);
--	dst = ipv6_stub->ipv6_dst_lookup_flow(dev_net(dev), NULL, &attr->fl.fl6,
--					      NULL);
-+	dst = ip6_dst_lookup_flow(dev_net(dev), NULL, &attr->fl.fl6, NULL);
- 	if (IS_ERR(dst))
- 		return PTR_ERR(dst);
- 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun_encap.c b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun_encap.c
-index bfd401bee9e8..8b827201935e 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun_encap.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en/tc_tun_encap.c
-@@ -402,7 +402,7 @@ void mlx5e_tc_update_neigh_used_value(struct mlx5e_neigh_hash_entry *nhe)
- 		tbl = &arp_tbl;
- #if IS_ENABLED(CONFIG_IPV6)
- 	else if (m_neigh->family == AF_INET6)
--		tbl = ipv6_stub->nd_tbl;
-+		tbl = &nd_tbl;
- #endif
- 	else
- 		return;
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ipsec.c b/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ipsec.c
-index 64e13747084e..a52e12c3c95a 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ipsec.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ipsec.c
-@@ -36,7 +36,6 @@
- #include <linux/inetdevice.h>
- #include <linux/netdevice.h>
- #include <net/netevent.h>
--#include <net/ipv6_stubs.h>
- 
- #include "en.h"
- #include "eswitch.h"
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c b/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c
-index 1db4ecb2356f..5ec5cae8d229 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en_rep.c
-@@ -38,7 +38,6 @@
- #include <net/pkt_cls.h>
- #include <net/act_api.h>
- #include <net/devlink.h>
--#include <net/ipv6_stubs.h>
- 
- #include "eswitch.h"
- #include "en.h"
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c b/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c
-index 397a93584fd6..a9001d1c902f 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/en_tc.c
-@@ -41,7 +41,6 @@
- #include <linux/refcount.h>
- #include <linux/completion.h>
- #include <net/arp.h>
--#include <net/ipv6_stubs.h>
- #include <net/bareudp.h>
- #include <net/bonding.h>
- #include <net/dst_metadata.h>
-diff --git a/drivers/net/ethernet/netronome/nfp/flower/action.c b/drivers/net/ethernet/netronome/nfp/flower/action.c
-index aca2a7417af3..ae2f8b31adfb 100644
---- a/drivers/net/ethernet/netronome/nfp/flower/action.c
-+++ b/drivers/net/ethernet/netronome/nfp/flower/action.c
-@@ -470,7 +470,7 @@ nfp_fl_set_tun(struct nfp_app *app, struct nfp_fl_set_tun *set_tun,
- 
- 		flow.daddr = ip_tun->key.u.ipv6.dst;
- 		flow.flowi4_proto = IPPROTO_UDP;
--		dst = ipv6_stub->ipv6_dst_lookup_flow(net, NULL, &flow, NULL);
-+		dst = ip6_dst_lookup_flow(net, NULL, &flow, NULL);
- 		if (!IS_ERR(dst)) {
- 			set_tun->ttl = ip6_dst_hoplimit(dst);
- 			dst_release(dst);
-diff --git a/drivers/net/ethernet/netronome/nfp/flower/tunnel_conf.c b/drivers/net/ethernet/netronome/nfp/flower/tunnel_conf.c
-index 0cef0e2b85d0..ca30702f8878 100644
---- a/drivers/net/ethernet/netronome/nfp/flower/tunnel_conf.c
-+++ b/drivers/net/ethernet/netronome/nfp/flower/tunnel_conf.c
-@@ -650,7 +650,7 @@ static void nfp_tun_neigh_update(struct work_struct *work)
- 		flow6.daddr = *(struct in6_addr *)n->primary_key;
- 		if (!neigh_invalid) {
- 			struct dst_entry *dst;
--			/* Use ipv6_dst_lookup_flow to populate flow6->saddr
-+			/* Use ip6_dst_lookup_flow to populate flow6->saddr
- 			 * and other fields. This information is only needed
- 			 * for new entries, lookup can be skipped when an entry
- 			 * gets invalidated - as only the daddr is needed for
-@@ -730,7 +730,7 @@ nfp_tun_neigh_event_handler(struct notifier_block *nb, unsigned long event,
- 		return NOTIFY_DONE;
- 	}
- #if IS_ENABLED(CONFIG_IPV6)
--	if (n->tbl != ipv6_stub->nd_tbl && n->tbl != &arp_tbl)
-+	if (n->tbl != &nd_tbl && n->tbl != &arp_tbl)
- #else
- 	if (n->tbl != &arp_tbl)
- #endif
-@@ -815,8 +815,7 @@ void nfp_tunnel_request_route_v6(struct nfp_app *app, struct sk_buff *skb)
- 	flow.flowi6_proto = IPPROTO_UDP;
- 
- #if IS_ENABLED(CONFIG_INET) && IS_ENABLED(CONFIG_IPV6)
--	dst = ipv6_stub->ipv6_dst_lookup_flow(dev_net(netdev), NULL, &flow,
--					      NULL);
-+	dst = ip6_dst_lookup_flow(dev_net(netdev), NULL, &flow, NULL);
- 	if (IS_ERR(dst))
- 		goto fail_rcu_unlock;
- #else
-diff --git a/drivers/net/ethernet/sfc/tc_counters.c b/drivers/net/ethernet/sfc/tc_counters.c
-index d168282f30bf..b84235e93ffe 100644
---- a/drivers/net/ethernet/sfc/tc_counters.c
-+++ b/drivers/net/ethernet/sfc/tc_counters.c
-@@ -112,7 +112,7 @@ static void efx_tc_counter_work(struct work_struct *work)
- 					 encap->neigh->egdev);
- 		else
- #if IS_ENABLED(CONFIG_IPV6)
--			n = neigh_lookup(ipv6_stub->nd_tbl,
-+			n = neigh_lookup(&nd_tbl,
- 					 &encap->neigh->dst_ip6,
- 					 encap->neigh->egdev);
- #else
-diff --git a/drivers/net/ethernet/sfc/tc_encap_actions.c b/drivers/net/ethernet/sfc/tc_encap_actions.c
-index da35705cc5e1..db222abef53b 100644
---- a/drivers/net/ethernet/sfc/tc_encap_actions.c
-+++ b/drivers/net/ethernet/sfc/tc_encap_actions.c
-@@ -149,8 +149,7 @@ static int efx_bind_neigh(struct efx_nic *efx,
- #if IS_ENABLED(CONFIG_IPV6)
- 			struct dst_entry *dst;
- 
--			dst = ipv6_stub->ipv6_dst_lookup_flow(net, NULL, &flow6,
--							      NULL);
-+			dst = ip6_dst_lookup_flow(net, NULL, &flow6, NULL);
- 			rc = PTR_ERR_OR_ZERO(dst);
- 			if (rc) {
- 				NL_SET_ERR_MSG_MOD(extack, "Failed to lookup route for IPv6 encap");
-@@ -531,7 +530,7 @@ static int efx_neigh_event(struct efx_nic *efx, struct neighbour *n)
- 	if (n->tbl == &arp_tbl) {
- 		keysize = sizeof(keys.dst_ip);
- #if IS_ENABLED(CONFIG_IPV6)
--	} else if (n->tbl == ipv6_stub->nd_tbl) {
-+	} else if (n->tbl == &nd_tbl) {
- 		ipv6 = true;
- 		keysize = sizeof(keys.dst_ip6);
- #endif
-diff --git a/drivers/net/geneve.c b/drivers/net/geneve.c
-index 01cdd06102e0..c6563367d382 100644
---- a/drivers/net/geneve.c
-+++ b/drivers/net/geneve.c
-@@ -12,7 +12,6 @@
- #include <linux/module.h>
- #include <linux/etherdevice.h>
- #include <linux/hash.h>
--#include <net/ipv6_stubs.h>
- #include <net/dst_metadata.h>
- #include <net/gro_cells.h>
- #include <net/rtnetlink.h>
-diff --git a/drivers/net/gtp.c b/drivers/net/gtp.c
-index e8949f556209..70b9e58b9b78 100644
---- a/drivers/net/gtp.c
-+++ b/drivers/net/gtp.c
-@@ -374,7 +374,7 @@ static struct rt6_info *ip6_route_output_gtp(struct net *net,
- 	fl6->saddr		= *saddr;
- 	fl6->flowi6_proto	= sk->sk_protocol;
- 
--	dst = ipv6_stub->ipv6_dst_lookup_flow(net, sk, fl6, NULL);
-+	dst = ip6_dst_lookup_flow(net, sk, fl6, NULL);
- 	if (IS_ERR(dst))
- 		return ERR_PTR(-ENETUNREACH);
- 
-diff --git a/drivers/net/ovpn/peer.c b/drivers/net/ovpn/peer.c
-index 26b55d813f0e..c02dfab51a6e 100644
---- a/drivers/net/ovpn/peer.c
-+++ b/drivers/net/ovpn/peer.c
-@@ -827,8 +827,7 @@ static struct in6_addr ovpn_nexthop_from_rt6(struct ovpn_priv *ovpn,
- 		.daddr = dest,
- 	};
- 
--	entry = ipv6_stub->ipv6_dst_lookup_flow(dev_net(ovpn->dev), NULL, &fl,
--						NULL);
-+	entry = ip6_dst_lookup_flow(dev_net(ovpn->dev), NULL, &fl, NULL);
- 	if (IS_ERR(entry)) {
- 		net_dbg_ratelimited("%s: no route to host %pI6c\n",
- 				    netdev_name(ovpn->dev), &dest);
-diff --git a/drivers/net/ovpn/udp.c b/drivers/net/ovpn/udp.c
-index 272b535ecaad..059e896b4a2f 100644
---- a/drivers/net/ovpn/udp.c
-+++ b/drivers/net/ovpn/udp.c
-@@ -14,7 +14,6 @@
- #include <net/addrconf.h>
- #include <net/dst_cache.h>
- #include <net/route.h>
--#include <net/ipv6_stubs.h>
- #include <net/transp_v6.h>
- #include <net/udp.h>
- #include <net/udp_tunnel.h>
-@@ -251,7 +250,7 @@ static int ovpn_udp6_output(struct ovpn_peer *peer, struct ovpn_bind *bind,
- 		dst_cache_reset(cache);
- 	}
- 
--	dst = ipv6_stub->ipv6_dst_lookup_flow(sock_net(sk), sk, &fl, NULL);
-+	dst = ip6_dst_lookup_flow(sock_net(sk), sk, &fl, NULL);
- 	if (IS_ERR(dst)) {
- 		ret = PTR_ERR(dst);
- 		net_dbg_ratelimited("%s: no route to host %pISpc: %d\n",
-diff --git a/drivers/net/usb/cdc_mbim.c b/drivers/net/usb/cdc_mbim.c
-index dbf01210b0e7..877fb0ed7d3d 100644
---- a/drivers/net/usb/cdc_mbim.c
-+++ b/drivers/net/usb/cdc_mbim.c
-@@ -20,7 +20,6 @@
- #include <linux/usb/cdc_ncm.h>
- #include <net/ipv6.h>
- #include <net/addrconf.h>
--#include <net/ipv6_stubs.h>
- #include <net/ndisc.h>
- 
- /* alternative VLAN for IP session 0 if not untagged */
-@@ -302,6 +301,7 @@ static struct sk_buff *cdc_mbim_tx_fixup(struct usbnet *dev, struct sk_buff *skb
- 	return NULL;
- }
- 
-+#if IS_ENABLED(CONFIG_IPV6)
- /* Some devices are known to send Neighbor Solicitation messages and
-  * require Neighbor Advertisement replies.  The IPv6 core will not
-  * respond since IFF_NOARP is set, so we must handle them ourselves.
-@@ -342,12 +342,11 @@ static void do_neigh_solicit(struct usbnet *dev, u8 *buf, u16 tci)
- 	is_router = !!READ_ONCE(in6_dev->cnf.forwarding);
- 	in6_dev_put(in6_dev);
- 
--	/* ipv6_stub != NULL if in6_dev_get returned an inet6_dev */
--	ipv6_stub->ndisc_send_na(netdev, &iph->saddr, &msg->target,
--				 is_router /* router */,
--				 true /* solicited */,
--				 false /* override */,
--				 true /* inc_opt */);
-+	ndisc_send_na(netdev, &iph->saddr, &msg->target,
-+		      is_router /* router */,
-+		      true /* solicited */,
-+		      false /* override */,
-+		      true /* inc_opt */);
- out:
- 	dev_put(netdev);
- }
-@@ -362,7 +361,7 @@ static bool is_neigh_solicit(u8 *buf, size_t len)
- 		msg->icmph.icmp6_code == 0 &&
- 		msg->icmph.icmp6_type == NDISC_NEIGHBOUR_SOLICITATION);
- }
--
-+#endif /* IPV6 */
- 
- static struct sk_buff *cdc_mbim_process_dgram(struct usbnet *dev, u8 *buf, size_t len, u16 tci)
- {
-@@ -378,8 +377,10 @@ static struct sk_buff *cdc_mbim_process_dgram(struct usbnet *dev, u8 *buf, size_
- 			proto = htons(ETH_P_IP);
- 			break;
- 		case 0x60:
-+#if IS_ENABLED(CONFIG_IPV6)
- 			if (is_neigh_solicit(buf, len))
- 				do_neigh_solicit(dev, buf, tci);
-+#endif
- 			proto = htons(ETH_P_IPV6);
- 			break;
- 		default:
-diff --git a/drivers/net/vxlan/vxlan_core.c b/drivers/net/vxlan/vxlan_core.c
-index 17c941aac32d..b5fbd03418b6 100644
---- a/drivers/net/vxlan/vxlan_core.c
-+++ b/drivers/net/vxlan/vxlan_core.c
-@@ -19,7 +19,6 @@
- #include <net/arp.h>
- #include <net/ndisc.h>
- #include <net/gro.h>
--#include <net/ipv6_stubs.h>
- #include <net/ip.h>
- #include <net/icmp.h>
- #include <net/rtnetlink.h>
-@@ -2045,7 +2044,7 @@ static int neigh_reduce(struct net_device *dev, struct sk_buff *skb, __be32 vni)
- 	    ipv6_addr_is_multicast(&msg->target))
- 		goto out;
- 
--	n = neigh_lookup(ipv6_stub->nd_tbl, &msg->target, dev);
-+	n = neigh_lookup(&nd_tbl, &msg->target, dev);
- 
- 	if (n) {
- 		struct vxlan_rdst *rdst = NULL;
-@@ -2130,15 +2129,15 @@ static bool route_shortcircuit(struct net_device *dev, struct sk_buff *skb)
- 	{
- 		struct ipv6hdr *pip6;
- 
--		/* check if nd_tbl is not initiliazed due to
--		 * ipv6.disable=1 set during boot
-+		/* check if ipv6.disable=1 set during boot was set
-+		 * during booting so nd_tbl is not initialized
- 		 */
--		if (!ipv6_stub->nd_tbl)
-+		if (!ipv6_mod_enabled())
- 			return false;
- 		if (!pskb_may_pull(skb, sizeof(struct ipv6hdr)))
- 			return false;
- 		pip6 = ipv6_hdr(skb);
--		n = neigh_lookup(ipv6_stub->nd_tbl, &pip6->daddr, dev);
-+		n = neigh_lookup(&nd_tbl, &pip6->daddr, dev);
- 		if (!n && (vxlan->cfg.flags & VXLAN_F_L3MISS)) {
- 			union vxlan_addr ipa = {
- 				.sin6.sin6_addr = pip6->daddr,
-diff --git a/drivers/net/vxlan/vxlan_multicast.c b/drivers/net/vxlan/vxlan_multicast.c
-index a7f2d67dc61b..b0e80bca855c 100644
---- a/drivers/net/vxlan/vxlan_multicast.c
-+++ b/drivers/net/vxlan/vxlan_multicast.c
-@@ -39,8 +39,7 @@ int vxlan_igmp_join(struct vxlan_dev *vxlan, union vxlan_addr *rip,
- 
- 		sk = sock6->sock->sk;
- 		lock_sock(sk);
--		ret = ipv6_stub->ipv6_sock_mc_join(sk, ifindex,
--						   &ip->sin6.sin6_addr);
-+		ret = ipv6_sock_mc_join(sk, ifindex, &ip->sin6.sin6_addr);
- 		release_sock(sk);
- #endif
- 	}
-@@ -73,8 +72,7 @@ int vxlan_igmp_leave(struct vxlan_dev *vxlan, union vxlan_addr *rip,
- 
- 		sk = sock6->sock->sk;
- 		lock_sock(sk);
--		ret = ipv6_stub->ipv6_sock_mc_drop(sk, ifindex,
--						   &ip->sin6.sin6_addr);
-+		ret = ipv6_sock_mc_drop(sk, ifindex, &ip->sin6.sin6_addr);
- 		release_sock(sk);
- #endif
- 	}
-diff --git a/drivers/net/wireguard/socket.c b/drivers/net/wireguard/socket.c
-index 253488f8c00f..c362c78d908e 100644
---- a/drivers/net/wireguard/socket.c
-+++ b/drivers/net/wireguard/socket.c
-@@ -136,8 +136,7 @@ static int send6(struct wg_device *wg, struct sk_buff *skb,
- 			if (cache)
- 				dst_cache_reset(cache);
- 		}
--		dst = ipv6_stub->ipv6_dst_lookup_flow(sock_net(sock), sock, &fl,
--						      NULL);
-+		dst = ip6_dst_lookup_flow(sock_net(sock), sock, &fl, NULL);
- 		if (IS_ERR(dst)) {
- 			ret = PTR_ERR(dst);
- 			net_dbg_ratelimited("%s: No route to %pISpfsc, error %d\n",
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 248a051da52d..c11428485dcc 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -4838,7 +4838,7 @@ static int ipw2100_system_config(struct ipw2100_priv *priv, int batch_mode)
- 
- /* If IPv6 is configured in the kernel then we don't want to filter out all
-  * of the multicast packets as IPv6 needs some. */
--#if !defined(CONFIG_IPV6) && !defined(CONFIG_IPV6_MODULE)
-+#if !defined(CONFIG_IPV6)
- 	cmd.host_command = ADD_MULTICAST;
- 	cmd.host_command_sequence = 0;
- 	cmd.host_command_length = 0;
-diff --git a/net/bridge/br_arp_nd_proxy.c b/net/bridge/br_arp_nd_proxy.c
-index 1e2b51769eec..c06386eda47f 100644
---- a/net/bridge/br_arp_nd_proxy.c
-+++ b/net/bridge/br_arp_nd_proxy.c
-@@ -17,7 +17,6 @@
- #include <linux/if_vlan.h>
- #include <linux/inetdevice.h>
- #include <net/addrconf.h>
--#include <net/ipv6_stubs.h>
- #if IS_ENABLED(CONFIG_IPV6)
- #include <net/ip6_checksum.h>
- #endif
-@@ -455,7 +454,7 @@ void br_do_suppress_nd(struct sk_buff *skb, struct net_bridge *br,
- 		return;
- 	}
- 
--	n = neigh_lookup(ipv6_stub->nd_tbl, &msg->target, vlandev);
-+	n = neigh_lookup(&nd_tbl, &msg->target, vlandev);
- 	if (n) {
- 		struct net_bridge_fdb_entry *f;
- 
--- 
-2.53.0
 
+>
+>> + * @pd_suppress_range_results: flag to suppress ranging results for PD
+>> + *	requests. When set, ranging measurements are performed but results
+>> + *	are not reported to userspace, regardless of ranging role or type.
+>> + *	Only valid when @pd_request is set. Cannot be used with @range_report
+> The title said "applications may not need detailed ranging measurements for every request", but here it says no results at all...
+> So this is intended for providing ranging services to another peer?
+
+
+Updated in the next version.
+
+>
+>
+> ---------------------------------------------------------------------
+> A member of the Intel Corporation group of companies
+>
+> This e-mail and any attachments may contain confidential material for
+> the sole use of the intended recipient(s). Any review or distribution
+> by others is strictly prohibited. If you are not the intended
+> recipient, please contact the sender and delete all copies.
+>
