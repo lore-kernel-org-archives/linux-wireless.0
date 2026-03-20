@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87FA5377EC0
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 08:09:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FE0378D76
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2026 08:09:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773994175; cv=none; b=k6Duyb9RHM+UVdl1xpWmuzGqwS/owF6G7EsWdDbMY3+6oieF7/TovNpD8q6VqyV91ybUXOE/H0hMin24pIvsEdA0jw3lnW/Nbnt85DKIKUkgjIAzmBf1NjAv3SSZEhvUOdgZkphUs+dALr4RLf9E+NDQbEPZ18qFlhrO+H73dTg=
+	t=1773994177; cv=none; b=HAP7nW/gXbK5Y5CXRBbmiXP8rbytarP+oJCZzbk1SB9AKXJMHVnqAuBGOLDTHzOAT/01H5jRRBIXBu6/PpQlTrTZ6fKOs4+fMkawJ4ZvBkvnHzD16EwIXB97SsNWebNiumAGUjzuGSjeNwMb1JwLans3KPdWlliKkq8FklHbZoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773994175; c=relaxed/simple;
-	bh=+P0y4c2lCWkHx+BgaE+mwAo7H+Jvseg8H7uFrsT1GMU=;
+	s=arc-20240116; t=1773994177; c=relaxed/simple;
+	bh=t60Ex0SoIbmcPdLYTq10Yv+jHkd+EBjLyaSDbRL2KGU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZmVVnTPHTAyyLD0ZGIK2SKD/hBexMNhy6Q9JQ+XWCAbnADT5s8FK7MOiqgc8wO5o7ihk17rrnWidQ7WjSC7S0ntr5SxEzcjFeW5Dw693QSvBmF6q0zECBASBtJ2z2MAdRPlLPMe5Y2/HH54OR4HRfF1aILFB1iscYbm0IQA8dkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A03trHjp; arc=none smtp.client-ip=198.175.65.13
+	 MIME-Version; b=Y1hKHW8n9YTadJmJLGk9FQkif0h6X00QhTDotf0ygwgPi4RonHtUlaHHuqStwZ8OALpgWX8SHKHfnyh4fiA71fNn3Sp2Ulb+XdJEpTeE3OqHMNpM5oxFfdtTUAFE9cIBqVHfz4NLwZNBG/wt2y1XHS58K5NlZ99i+Kzqy1kRj48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k8XtUAFh; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A03trHjp"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k8XtUAFh"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1773994174; x=1805530174;
+  t=1773994175; x=1805530175;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+P0y4c2lCWkHx+BgaE+mwAo7H+Jvseg8H7uFrsT1GMU=;
-  b=A03trHjpgVhFjYvfLP21V8huKzur5fzkudPCOP0BAUpHBDPAp6UxxJLF
-   86t04bHTG8k8gLhskJtVw+U8/Odz2vIJtRRIO5SlRUX6FIqxWwq4tzdv+
-   dsOtlVGl3kB9IW+BFlvk3m70DJbhf2neKAElVUqzouotcY8FNFbURy4dW
-   nj2zQ0pW73M9+dVY4f0Z6IHeeSQnqJVyO1zLo5+nl7SjMjwttNRfU9Ohh
-   ZOj3yu8GFQ7r3jiM6eWpyIpbwfscX3dPMfJN3bF1mM0abs3n2jjEzIGad
-   tC7aCmgl7crj6kK4a5pwB3nQ6JpI0epqidIe2/gnNuY6gR7Jo22RKc/Qg
-   w==;
-X-CSE-ConnectionGUID: AmW/vzVPQzKvum65E/eAPA==
-X-CSE-MsgGUID: bfY7WTkARXCpabr8j7u+xw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="86154108"
+  bh=t60Ex0SoIbmcPdLYTq10Yv+jHkd+EBjLyaSDbRL2KGU=;
+  b=k8XtUAFhRX+Z4rt0OzOGAX8sLmxrEXIiOHlMvEHcfFB96zn99mPeCzhr
+   wkxesRENT6llJ2fsdJCCgsN9D7bpT5FB1TTZiwSARR3SGuOGxVcy3PrEd
+   i1ChizPSg+QTor87nhSblQ9YXRZjahpWzD+2zB+yZduJiNtGUSa20fCwf
+   FCVv7nngr6CxqJ9PmC95WoVkTbBLqPs9iVh89gJYUmzlyPYQda03HM2Bz
+   k9bzejRGyJj6wOi4iymIFvfOizUm99XgfxaH41sQE4tN+RzjmVFb23hZb
+   2G5mWugh56LQmcDR7xu05/JLScikSPzdwYFPfhYiqDIA1pRW1rJCzvQZo
+   A==;
+X-CSE-ConnectionGUID: pMTHHR1CTsas4v4Q6UfCnw==
+X-CSE-MsgGUID: 2gwCZQZRR0G4D0ERPqjt+A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11734"; a="86154112"
 X-IronPort-AV: E=Sophos;i="6.23,130,1770624000"; 
-   d="scan'208";a="86154108"
+   d="scan'208";a="86154112"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:32 -0700
-X-CSE-ConnectionGUID: TQtpihLvSN6HznXSHsypZg==
-X-CSE-MsgGUID: 14QsJwJKQuiAkx1hxdkkqA==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:35 -0700
+X-CSE-ConnectionGUID: uJm6RJXDTnyH+9x6doO5zQ==
+X-CSE-MsgGUID: pgebkjlkQIWpPQ1wWjBZ3A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,130,1770624000"; 
-   d="scan'208";a="227692551"
+   d="scan'208";a="227692559"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:31 -0700
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2026 01:09:34 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 01/15] wifi: iwlwifi: mld: enable UHR in TLC
-Date: Fri, 20 Mar 2026 10:09:04 +0200
-Message-Id: <20260320100746.7117009d7c39.If4e8cdc63fdf4c5f14d923a5c59fb7b43df72a67@changeid>
+Subject: [PATCH iwlwifi-next 03/15] wifi: iwlwifi: advertise UHR capabilities for such devices
+Date: Fri, 20 Mar 2026 10:09:06 +0200
+Message-Id: <20260320100746.dda78e53dccc.I85b67f4973752bcf62416dabb943b9ddf1e63f16@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260320080918.2567780-1-miriam.rachel.korenblit@intel.com>
 References: <20260320080918.2567780-1-miriam.rachel.korenblit@intel.com>
@@ -63,98 +63,339 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Tell the firmware if UHR is supported, including ELR (enhanced
-long range) MCS support.
+Advertise UHR capabilities for devices supporting UHR
+(i.e. devices with some, but not all, PE RFs.)
 
-Note that the spec currently doesn't differentiate between 1.5
-and 3 Mbps ELR MCSes, unlike the firmware.
+For correct support it's also needed to plumb through
+the regulatory flags the firmware might have/enforce.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/tlc.c | 28 +++++++++++++++++---
- 1 file changed, 24 insertions(+), 4 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/rf-pe.c    | 23 ++++-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  7 +-
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 87 +++++++++++++------
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.h    |  2 +
+ .../wireless/intel/iwlwifi/iwl-nvm-utils.h    |  3 +-
+ .../net/wireless/intel/iwlwifi/mld/iface.c    |  4 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  2 +-
+ 7 files changed, 95 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-index 62a54c37a98c..ede385909e38 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-@@ -36,7 +36,8 @@ iwl_mld_get_tlc_cmd_flags(struct iwl_mld *mld,
- 			  struct ieee80211_vif *vif,
- 			  struct ieee80211_link_sta *link_sta,
- 			  const struct ieee80211_sta_he_cap *own_he_cap,
--			  const struct ieee80211_sta_eht_cap *own_eht_cap)
-+			  const struct ieee80211_sta_eht_cap *own_eht_cap,
-+			  const struct ieee80211_sta_uhr_cap *own_uhr_cap)
- {
- 	struct ieee80211_sta_ht_cap *ht_cap = &link_sta->ht_cap;
- 	struct ieee80211_sta_vht_cap *vht_cap = &link_sta->vht_cap;
-@@ -90,6 +91,12 @@ iwl_mld_get_tlc_cmd_flags(struct iwl_mld *mld,
- 		flags |= IWL_TLC_MNG_CFG_FLAGS_EHT_EXTRA_LTF_MSK;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/rf-pe.c b/drivers/net/wireless/intel/iwlwifi/cfg/rf-pe.c
+index 2c29054ce7b8..c02478b73057 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/rf-pe.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/rf-pe.c
+@@ -4,7 +4,28 @@
+  */
+ #include "iwl-config.h"
+ 
+-/* currently iwl_rf_wh/iwl_rf_wh_160mhz are just defines for the FM ones */
++#define IWL_PE_NVM_VERSION		0x0a1d
++
++#define IWL_DEVICE_PE							\
++	.ht_params = {							\
++		.stbc = true,						\
++		.ldpc = true,						\
++		.ht40_bands = BIT(NL80211_BAND_2GHZ) |			\
++			      BIT(NL80211_BAND_5GHZ),			\
++	},								\
++	.led_mode = IWL_LED_RF_STATE,					\
++	.non_shared_ant = ANT_B,					\
++	.vht_mu_mimo_supported = true,					\
++	.uhb_supported = true,						\
++	.eht_supported = true,						\
++	.uhr_supported = true,						\
++	.num_rbds = IWL_NUM_RBDS_EHT,					\
++	.nvm_ver = IWL_PE_NVM_VERSION,					\
++	.nvm_type = IWL_NVM_EXT
++
++const struct iwl_rf_cfg iwl_rf_pe = {
++	IWL_DEVICE_PE,
++};
+ 
+ const char iwl_killer_bn1850w2_name[] =
+ 	"Killer(R) Wi-Fi 8 BN1850w2 320MHz Wireless Network Adapter (BN201.D2W)";
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 5f40cd15e27f..da6d3686e7dd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -416,6 +416,7 @@ struct iwl_mac_cfg {
+  * @nvm_type: see &enum iwl_nvm_type
+  * @uhb_supported: ultra high band channels supported
+  * @eht_supported: EHT supported
++ * @uhr_supported: UHR supported
+  * @num_rbds: number of receive buffer descriptors to use
+  *	(only used for multi-queue capable devices)
+  *
+@@ -449,7 +450,8 @@ struct iwl_rf_cfg {
+ 	    lp_xtal_workaround:1,
+ 	    vht_mu_mimo_supported:1,
+ 	    uhb_supported:1,
+-	    eht_supported:1;
++	    eht_supported:1,
++	    uhr_supported:1;
+ 	u8 valid_tx_ant;
+ 	u8 valid_rx_ant;
+ 	u8 non_shared_ant;
+@@ -744,7 +746,8 @@ extern const struct iwl_rf_cfg iwl_rf_fm_160mhz;
+ #define iwl_rf_wh iwl_rf_fm
+ #define iwl_rf_wh_160mhz iwl_rf_fm_160mhz
+ extern const struct iwl_rf_cfg iwl_rf_wh_non_eht;
+-#define iwl_rf_pe iwl_rf_fm
++extern const struct iwl_rf_cfg iwl_rf_pe;
++#define iwl_rf_pe_no_uhr iwl_rf_fm
+ #endif /* CONFIG_IWLMLD */
+ 
+ #endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 6d235c417fdd..b24ac3cec412 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -204,28 +204,30 @@ enum iwl_reg_capa_flags_v2 {
+ }; /* GEO_CHANNEL_CAPABILITIES_API_S_VER_2 */
+ 
+ /**
+- * enum iwl_reg_capa_flags_v4 - global flags applied for the whole regulatory
++ * enum iwl_reg_capa_flags_v5 - global flags applied for the whole regulatory
+  * domain.
+- * @REG_CAPA_V4_160MHZ_ALLOWED: 11ac channel with a width of 160Mhz is allowed
++ * @REG_CAPA_V5_160MHZ_ALLOWED: 11ac channel with a width of 160Mhz is allowed
+  *	for this regulatory domain (valid only in 5Ghz).
+- * @REG_CAPA_V4_80MHZ_ALLOWED: 11ac channel with a width of 80Mhz is allowed
++ * @REG_CAPA_V5_80MHZ_ALLOWED: 11ac channel with a width of 80Mhz is allowed
+  *	for this regulatory domain (valid only in 5Ghz).
+- * @REG_CAPA_V4_MCS_12_ALLOWED: 11ac with MCS 12 is allowed.
+- * @REG_CAPA_V4_MCS_13_ALLOWED: 11ac with MCS 13 is allowed.
+- * @REG_CAPA_V4_11BE_DISABLED: 11be is forbidden for this regulatory domain.
+- * @REG_CAPA_V4_11AX_DISABLED: 11ax is forbidden for this regulatory domain.
+- * @REG_CAPA_V4_320MHZ_ALLOWED: 11be channel with a width of 320Mhz is allowed
++ * @REG_CAPA_V5_MCS_12_ALLOWED: 11ac with MCS 12 is allowed.
++ * @REG_CAPA_V5_MCS_13_ALLOWED: 11ac with MCS 13 is allowed.
++ * @REG_CAPA_V5_11BE_DISABLED: 11be is forbidden for this regulatory domain.
++ * @REG_CAPA_V5_11AX_DISABLED: 11ax is forbidden for this regulatory domain.
++ * @REG_CAPA_V5_320MHZ_ALLOWED: 11be channel with a width of 320Mhz is allowed
+  *	for this regulatory domain (valid only in 5GHz).
++ * @REG_CAPA_V5_11BN_DISABLED: UHR is not allowed for this regulatory domain
+  */
+-enum iwl_reg_capa_flags_v4 {
+-	REG_CAPA_V4_160MHZ_ALLOWED		= BIT(3),
+-	REG_CAPA_V4_80MHZ_ALLOWED		= BIT(4),
+-	REG_CAPA_V4_MCS_12_ALLOWED		= BIT(5),
+-	REG_CAPA_V4_MCS_13_ALLOWED		= BIT(6),
+-	REG_CAPA_V4_11BE_DISABLED		= BIT(8),
+-	REG_CAPA_V4_11AX_DISABLED		= BIT(13),
+-	REG_CAPA_V4_320MHZ_ALLOWED		= BIT(16),
+-}; /* GEO_CHANNEL_CAPABILITIES_API_S_VER_4 */
++enum iwl_reg_capa_flags_v5 {
++	REG_CAPA_V5_160MHZ_ALLOWED		= BIT(3),
++	REG_CAPA_V5_80MHZ_ALLOWED		= BIT(4),
++	REG_CAPA_V5_MCS_12_ALLOWED		= BIT(5),
++	REG_CAPA_V5_MCS_13_ALLOWED		= BIT(6),
++	REG_CAPA_V5_11BE_DISABLED		= BIT(8),
++	REG_CAPA_V5_11AX_DISABLED		= BIT(13),
++	REG_CAPA_V5_320MHZ_ALLOWED		= BIT(16),
++	REG_CAPA_V5_11BN_DISABLED		= BIT(17),
++}; /* GEO_CHANNEL_CAPABILITIES_API_S_VER_4, 5 */
+ 
+ /*
+ * API v2 for reg_capa_flags is relevant from version 6 and onwards of the
+@@ -544,7 +546,7 @@ static const u8 iwl_vendor_caps[] = {
+ 	0x00
+ };
+ 
+-static const struct ieee80211_sband_iftype_data iwl_he_eht_capa[] = {
++static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 	{
+ 		.types_mask = BIT(NL80211_IFTYPE_STATION) |
+ 			      BIT(NL80211_IFTYPE_P2P_CLIENT),
+@@ -688,6 +690,11 @@ static const struct ieee80211_sband_iftype_data iwl_he_eht_capa[] = {
+ 			 */
+ 			.eht_ppe_thres = {0xc1, 0x0e, 0xe0 }
+ 		},
++		.uhr_cap = {
++			.has_uhr = true,
++			.phy.cap = IEEE80211_UHR_PHY_CAP_ELR_RX |
++				   IEEE80211_UHR_PHY_CAP_ELR_TX,
++		},
+ 	},
+ 	{
+ 		.types_mask = BIT(NL80211_IFTYPE_AP) |
+@@ -786,6 +793,11 @@ static const struct ieee80211_sband_iftype_data iwl_he_eht_capa[] = {
+ 			 */
+ 			.eht_ppe_thres = {0xc1, 0x0e, 0xe0 }
+ 		},
++		.uhr_cap = {
++			.has_uhr = true,
++			.phy.cap = IEEE80211_UHR_PHY_CAP_ELR_RX |
++				   IEEE80211_UHR_PHY_CAP_ELR_TX,
++		},
+ 	},
+ };
+ 
+@@ -853,6 +865,19 @@ iwl_nvm_fixup_sband_iftd(struct iwl_trans *trans,
+ 	    fips_enabled)
+ 		iftype_data->eht_cap.has_eht = false;
+ 
++	if (!data->sku_cap_11bn_enable || !iftype_data->eht_cap.has_eht)
++		iftype_data->uhr_cap.has_uhr = false;
++
++	if (sband->band != NL80211_BAND_2GHZ) {
++		/* on 5 and 6 GHz ELR is uplink only */
++		if (is_ap)
++			iftype_data->uhr_cap.phy.cap &=
++				~IEEE80211_UHR_PHY_CAP_ELR_TX;
++		else
++			iftype_data->uhr_cap.phy.cap &=
++				~IEEE80211_UHR_PHY_CAP_ELR_RX;
++	}
++
+ 	/* Advertise an A-MPDU exponent extension based on
+ 	 * operating band
+ 	 */
+@@ -1021,9 +1046,9 @@ static void iwl_init_he_hw_capab(struct iwl_trans *trans,
+ 	struct ieee80211_sband_iftype_data *iftype_data;
+ 	int i;
+ 
+-	BUILD_BUG_ON(sizeof(data->iftd.low) != sizeof(iwl_he_eht_capa));
+-	BUILD_BUG_ON(sizeof(data->iftd.high) != sizeof(iwl_he_eht_capa));
+-	BUILD_BUG_ON(sizeof(data->iftd.uhb) != sizeof(iwl_he_eht_capa));
++	BUILD_BUG_ON(sizeof(data->iftd.low) != sizeof(iwl_iftype_cap));
++	BUILD_BUG_ON(sizeof(data->iftd.high) != sizeof(iwl_iftype_cap));
++	BUILD_BUG_ON(sizeof(data->iftd.uhb) != sizeof(iwl_iftype_cap));
+ 
+ 	switch (sband->band) {
+ 	case NL80211_BAND_2GHZ:
+@@ -1040,10 +1065,10 @@ static void iwl_init_he_hw_capab(struct iwl_trans *trans,
+ 		return;
  	}
  
-+	if (link_sta->uhr_cap.has_uhr && own_uhr_cap &&
-+	    link_sta->uhr_cap.phy.cap & IEEE80211_UHR_PHY_CAP_ELR_RX &&
-+	    own_uhr_cap->phy.cap & IEEE80211_UHR_PHY_CAP_ELR_TX)
-+		flags |= IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_1_5_MBPS_MSK |
-+			 IWL_TLC_MNG_CFG_FLAGS_UHR_ELR_3_MBPS_MSK;
+-	memcpy(iftype_data, iwl_he_eht_capa, sizeof(iwl_he_eht_capa));
++	memcpy(iftype_data, iwl_iftype_cap, sizeof(iwl_iftype_cap));
+ 
+ 	_ieee80211_set_sband_iftype_data(sband, iftype_data,
+-					 ARRAY_SIZE(iwl_he_eht_capa));
++					 ARRAY_SIZE(iwl_iftype_cap));
+ 
+ 	for (i = 0; i < sband->n_iftype_data; i++)
+ 		iwl_nvm_fixup_sband_iftd(trans, data, sband, &iftype_data[i],
+@@ -1609,6 +1634,9 @@ u32 iwl_nvm_get_regdom_bw_flags(const u16 *nvm_chan,
+ 	if (reg_capa.disable_11be)
+ 		flags |= NL80211_RRF_NO_EHT;
+ 
++	if (reg_capa.disable_11bn)
++		flags |= NL80211_RRF_NO_UHR;
 +
- 	return cpu_to_le16(flags);
+ 	return flags;
+ }
+ EXPORT_SYMBOL_IF_IWLWIFI_KUNIT(iwl_nvm_get_regdom_bw_flags);
+@@ -1619,11 +1647,13 @@ static struct iwl_reg_capa iwl_get_reg_capa(u32 flags, u8 resp_ver)
+ 
+ 	if (resp_ver >= REG_CAPA_V4_RESP_VER) {
+ 		reg_capa.allow_40mhz = true;
+-		reg_capa.allow_80mhz = flags & REG_CAPA_V4_80MHZ_ALLOWED;
+-		reg_capa.allow_160mhz = flags & REG_CAPA_V4_160MHZ_ALLOWED;
+-		reg_capa.allow_320mhz = flags & REG_CAPA_V4_320MHZ_ALLOWED;
+-		reg_capa.disable_11ax = flags & REG_CAPA_V4_11AX_DISABLED;
+-		reg_capa.disable_11be = flags & REG_CAPA_V4_11BE_DISABLED;
++		reg_capa.allow_80mhz = flags & REG_CAPA_V5_80MHZ_ALLOWED;
++		reg_capa.allow_160mhz = flags & REG_CAPA_V5_160MHZ_ALLOWED;
++		reg_capa.allow_320mhz = flags & REG_CAPA_V5_320MHZ_ALLOWED;
++		reg_capa.disable_11ax = flags & REG_CAPA_V5_11AX_DISABLED;
++		reg_capa.disable_11be = flags & REG_CAPA_V5_11BE_DISABLED;
++		/* can check: was reserved and irrelevant for pre-UHR devices */
++		reg_capa.disable_11bn = flags & REG_CAPA_V5_11BN_DISABLED;
+ 	} else if (resp_ver >= REG_CAPA_V2_RESP_VER) {
+ 		reg_capa.allow_40mhz = flags & REG_CAPA_V2_40MHZ_ALLOWED;
+ 		reg_capa.allow_80mhz = flags & REG_CAPA_V2_80MHZ_ALLOWED;
+@@ -2072,6 +2102,7 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 		!!(mac_flags & NVM_MAC_SKU_FLAGS_MIMO_DISABLED);
+ 	if (trans->cfg->eht_supported)
+ 		nvm->sku_cap_11be_enable = true;
++	nvm->sku_cap_11bn_enable = trans->cfg->uhr_supported;
+ 
+ 	/* Initialize PHY sku data */
+ 	nvm->valid_tx_ant = (u8)le32_to_cpu(rsp->phy_sku.tx_chains);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+index 12f28bb0e859..e676d7c2d6cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+@@ -35,6 +35,7 @@ enum iwl_nvm_sbands_flags {
+  *	for this regulatory domain (valid only in 6 Ghz).
+  * @disable_11ax: 11ax is forbidden for this regulatory domain.
+  * @disable_11be: 11be is forbidden for this regulatory domain.
++ * @disable_11bn: UHR/11bn is not allowed for this regulatory domain
+  */
+ struct iwl_reg_capa {
+ 	bool allow_40mhz;
+@@ -43,6 +44,7 @@ struct iwl_reg_capa {
+ 	bool allow_320mhz;
+ 	bool disable_11ax;
+ 	bool disable_11be;
++	bool disable_11bn;
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-utils.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-utils.h
+index ac0a29a1c31f..353f5269d17a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-utils.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-utils.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2005-2014, 2018, 2020-2023 Intel Corporation
++ * Copyright (C) 2005-2014, 2018, 2020-2023, 2025 Intel Corporation
+  * Copyright (C) 2015 Intel Mobile Communications GmbH
+  */
+ #ifndef __iwl_eeprom_parse_h__
+@@ -32,6 +32,7 @@ struct iwl_nvm_data {
+ 	bool sku_cap_ipan_enable;
+ 	bool sku_cap_mimo_disabled;
+ 	bool sku_cap_11be_enable;
++	bool sku_cap_11bn_enable;
+ 
+ 	u16 radio_cfg_type;
+ 	u8 radio_cfg_step;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+index 9215fc7e2eca..dc96214671d9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+@@ -132,6 +132,8 @@ static void iwl_mld_mac_wifi_gen_sta_iter(void *_data,
+ 			data->support->he_support = 1;
+ 		if (link_sta->eht_cap.has_eht)
+ 			data->support->eht_support = 1;
++		if (link_sta->uhr_cap.has_uhr)
++			data->support->uhr_support = 1;
+ 	}
  }
  
-@@ -406,6 +413,7 @@ iwl_mld_fill_supp_rates(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 			struct ieee80211_supported_band *sband,
- 			const struct ieee80211_sta_he_cap *own_he_cap,
- 			const struct ieee80211_sta_eht_cap *own_eht_cap,
-+			const struct ieee80211_sta_uhr_cap *own_uhr_cap,
- 			struct iwl_tlc_config_cmd *cmd)
- {
- 	int i;
-@@ -423,7 +431,16 @@ iwl_mld_fill_supp_rates(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 	cmd->non_ht_rates = cpu_to_le16(non_ht_rates);
- 	cmd->mode = IWL_TLC_MNG_MODE_NON_HT;
+@@ -151,12 +153,14 @@ static void iwl_mld_set_wifi_gen(struct iwl_mld *mld,
+ 		/* for sniffer, set to HW capabilities */
+ 		support->he_support = 1;
+ 		support->eht_support = mld->trans->cfg->eht_supported;
++		support->uhr_support = mld->trans->cfg->uhr_supported;
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		/* for AP set according to the link configs */
+ 		for_each_vif_active_link(vif, link_conf, link_id) {
+ 			support->he_ap_support |= link_conf->he_support;
+ 			support->eht_support |= link_conf->eht_support;
++			support->uhr_support |= link_conf->uhr_support;
+ 		}
+ 		break;
+ 	default:
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index dc99e7ac4726..78482db732c1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1069,7 +1069,7 @@ VISIBLE_IF_IWLWIFI_KUNIT const struct iwl_dev_info iwl_dev_info_table[] = {
  
--	if (link_sta->eht_cap.has_eht && own_he_cap && own_eht_cap) {
-+	if (link_sta->uhr_cap.has_uhr && own_uhr_cap) {
-+		cmd->mode = IWL_TLC_MNG_MODE_UHR;
-+		/*
-+		 * FIXME: spec currently inherits from EHT but has no
-+		 * finer MCS bits. Once that's there, need to add them
-+		 * to the bitmaps (and maybe copy this to UHR, or so.)
-+		 */
-+		iwl_mld_fill_eht_rates(vif, link_sta, own_he_cap,
-+				       own_eht_cap, cmd);
-+	} else if (link_sta->eht_cap.has_eht && own_he_cap && own_eht_cap) {
- 		cmd->mode = IWL_TLC_MNG_MODE_EHT;
- 		iwl_mld_fill_eht_rates(vif, link_sta, own_he_cap,
- 				       own_eht_cap, cmd);
-@@ -519,13 +536,16 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
- 		ieee80211_get_he_iftype_cap_vif(sband, vif);
- 	const struct ieee80211_sta_eht_cap *own_eht_cap =
- 		ieee80211_get_eht_iftype_cap_vif(sband, vif);
-+	const struct ieee80211_sta_uhr_cap *own_uhr_cap =
-+		ieee80211_get_uhr_iftype_cap_vif(sband, vif);
- 	struct iwl_tlc_config_cmd cmd = {
- 		/* For AP mode, use 20 MHz until the STA is authorized */
- 		.max_ch_width = mld_sta->sta_state > IEEE80211_STA_ASSOC ?
- 			iwl_mld_fw_bw_from_sta_bw(link_sta) :
- 			IWL_TLC_MNG_CH_WIDTH_20MHZ,
- 		.flags = iwl_mld_get_tlc_cmd_flags(mld, vif, link_sta,
--						   own_he_cap, own_eht_cap),
-+						   own_he_cap, own_eht_cap,
-+						   own_uhr_cap),
- 		.chains = iwl_mld_get_fw_chains(mld),
- 		.sgi_ch_width_supp = iwl_mld_get_fw_sgi(link_sta),
- 		.max_mpdu_len = cpu_to_le16(link_sta->agg.max_amsdu_len),
-@@ -555,7 +575,7 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
- 
- 	iwl_mld_fill_supp_rates(mld, vif, link_sta, sband,
- 				own_he_cap, own_eht_cap,
--				&cmd);
-+				own_uhr_cap, &cmd);
- 
- 	if (cmd_ver == 6) {
- 		cmd_ptr = &cmd;
+ /* PE RF */
+ 	IWL_DEV_INFO(iwl_rf_pe, iwl_bn201_name, RF_TYPE(PE)),
+-	IWL_DEV_INFO(iwl_rf_pe, iwl_be223_name, RF_TYPE(PE),
++	IWL_DEV_INFO(iwl_rf_pe_no_uhr, iwl_be223_name, RF_TYPE(PE),
+ 		     SUBDEV_MASKED(0x0524, 0xFFF)),
+ 	IWL_DEV_INFO(iwl_rf_pe, iwl_bn203_name, RF_TYPE(PE),
+ 		     SUBDEV_MASKED(0x0324, 0xFFF)),
 -- 
 2.34.1
 
