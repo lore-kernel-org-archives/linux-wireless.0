@@ -1,239 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpbgau2.qq.com (smtpbgau2.qq.com [54.206.34.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A40D8346A0A
-	for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2026 08:58:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8248435949;
+	Sat, 21 Mar 2026 11:00:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.206.34.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774083508; cv=none; b=iLOnl1sJAtfyW2pQyr5lM7rDvOsUc832NyJhgrBNKA29xsbZdGCLosXyChjD3+3T41vrVG37ZJk3PAjmXPUm95IUIFqseBUCQQ5qxBY61NDkkgD90bNbPjyt7tJ7PMxi+siMEygSabwm3Gf0qyY3wUE/85F1jTF8CtXZPFHoqmk=
+	t=1774090851; cv=none; b=a2XJ4UmNsWYAogkDVGZ613xL0AYs019OBuvhl8SYjjI58W6oLqfnfTT72uGpYXxsPHIPwoILIRpjBOjObInmqkpxwPVdzXTsrh6esksyg2mFM2L3axvTUlG+Sd71lhTGPvXOP9bKpEYrkkloE5UxqCOfP/DaDXiOe0Cp44D6QX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774083508; c=relaxed/simple;
-	bh=2XHxbPwnxKukyNT67I5mzcaAWXGuDcV1AruFyiB0Bd8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XePL1MjhxffURrnZn91jJvXWCwIrJAA0QbYs0RdqdMKtYnX3PQl3dVC6tLJ3mYMwe+Uh3Tm4wL/QvuK0J8ZGX1Y4DvHwTZrefyof6tYUlA2l4k2GXYXusRGxnLfFNXWoQiEO5C7Cmie+mqa4AOKhBQU8gbGmounLhFyOM9fjk+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oQWM+2+0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774090851; c=relaxed/simple;
+	bh=u/JvpN/J/xE2HPRdbpOyyO2It4mAEDMbKBD5RxfqTfw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bvWS37F+jBKPt5uVnVGYwjdOlHKfsF+svzi9ZeE6eujF1aXoPXJMjWCKSUKJWSX2CKMd9xyOo0lRX3vSeCXdfxIjCpP410OyGO1EBsWz8pTWTvTCcdHd9FJ82T8hHcDfuCKT/0JTy6Lp69DoZ9nT8Req/dP/IxS86sFem8f74rM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn; spf=pass smtp.mailfrom=smail.nju.edu.cn; dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b=gb23/m3R; arc=none smtp.client-ip=54.206.34.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smail.nju.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oQWM+2+0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77364C2BCB0
-	for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2026 08:58:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774083508;
-	bh=2XHxbPwnxKukyNT67I5mzcaAWXGuDcV1AruFyiB0Bd8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=oQWM+2+0a1J0ixRPtxTmIis0R0JYOZWP3n3HX53iAsns6Xreszyeocic6+Og5dA8q
-	 +BzkRwqNK4th/1cnSrp2IfAfO6yfTt461eeP2KIABBn93jUh5gyDI+0osVbU6nFg6c
-	 +jYvDo35Bjm50kNARQNpaX0nmbYS7zx5oJeB/gI8VZGEhuEtchSeNbTzMYyjuMhL1U
-	 86OTRfeqxae7bXerF/ntdYbRqEcRFxixCU5VCj8kvoq2cduL1gBWVLXZAmMqapdMak
-	 WC+mrY6kn1iHoUbm/4lBCZKt2a/RdMTrvvSbWLs5aOSmi5VNwMmRnX5Cz6TD4gUUdS
-	 k5kTl0SyQjfyQ==
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-5a0faa0d15cso2624584e87.0
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Mar 2026 01:58:28 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUA0fbuGxndjJyphaNANIwRdoIHFdfFyUzOn910LZ1ynczcqLzgKo+ZtxAGSsjGsF+V6KG+MOY4GcBSxPu06Q==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbtHRaTuYnsiW+G/DuRD4n5TXEGIb7iYih7nQ6pIHpnefvAikO
-	KWawouwnSgngtBEwnqCFhVdaZosf+pspltLCLtUWkGnF8zLAhIrfyI2rW7rS7Gv7sIV0w7wLqOX
-	GlPqdl046Cpi1+FA6brFu98zczv9Z0ps=
-X-Received: by 2002:a05:6512:3b0a:b0:5a1:d34e:25d with SMTP id
- 2adb3069b0e04-5a285b071camr1756554e87.18.1774083506738; Sat, 21 Mar 2026
- 01:58:26 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.b="gb23/m3R"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smail.nju.edu.cn;
+	s=iohv2404; t=1774090824;
+	bh=FWXH44yr3WXDFkSlyl3oxIpDco1Bm9mCtTk8gi5yxYs=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=gb23/m3RZs2D0HfzbTU+ARYPidKzcsVDsKgVihcaIaUeviJIyUc/cFj6qnpFx+r8S
+	 Ap4hpmSTmaKt+T5qqIOnpaAzQ2r6eRSdnZjISfFG31PdBFNz63w9KEt5O8tr++cDO3
+	 wWyrRylNtpGdYwfx2mtkUStRehMnWH/pFW8JgqmY=
+X-QQ-mid: zesmtpgz4t1774090822t64eeb699
+X-QQ-Originating-IP: iOUSNHpVdWD8qbSUIEldRV7GceL6S85yDHqTjEKo+kI=
+Received: from localhost.localdomain ( [116.172.93.199])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Sat, 21 Mar 2026 19:00:20 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 15896690706035518709
+EX-QQ-RecipientCnt: 10
+From: Kexin Sun <kexinsun@smail.nju.edu.cn>
+To: miriam.rachel.korenblit@intel.com,
+	johannes.berg@intel.com,
+	ilan.peer@intel.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: julia.lawall@inria.fr,
+	xutong.ma@inria.fr,
+	kexinsun@smail.nju.edu.cn,
+	yunbolyu@smu.edu.sg,
+	ratnadiraw@smu.edu.sg
+Subject: [PATCH] wifi: iwlwifi: mvm: update outdated comment for renamed ieee80211_tx_status()
+Date: Sat, 21 Mar 2026 19:00:20 +0800
+Message-Id: <20260321110020.8636-1-kexinsun@smail.nju.edu.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGp9LzqLbdEb25ocObMMuFPZitrL-UnC7uhaLOkYQN=TgSTmnA@mail.gmail.com>
- <20260319203854.30479-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20260319203854.30479-1-lucid_duck@justthetip.ca>
-From: Sean Wang <sean.wang@kernel.org>
-Date: Sat, 21 Mar 2026 03:58:15 -0500
-X-Gmail-Original-Message-ID: <CAGp9LzpVYj=FVyJX+mm0vSsJL52WEPi=L-6Ev3taViJZ+xL_vw@mail.gmail.com>
-X-Gm-Features: AaiRm52CEIxpNeBsnDo08uYM5XfWpwvzEeFcNwWJAwhqs_1O6X-L42sdV8KzR9E
-Message-ID: <CAGp9LzpVYj=FVyJX+mm0vSsJL52WEPi=L-6Ev3taViJZ+xL_vw@mail.gmail.com>
-Subject: Re: [PATCH v4] wifi: mt76: mt7921: fix txpower reporting from rate
- power configuration
-To: Lucid Duck <lucid_duck@justthetip.ca>
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, linux-wireless@vger.kernel.org, 
-	linux-mediatek@lists.infradead.org, morrownr@gmail.com, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpgz:smail.nju.edu.cn:qybglogicsvrgz:qybglogicsvrgz5b-0
+X-QQ-XMAILINFO: NSTsyPg8kQQYZog19g9BvHOfXbcNwHXqt46VKCuOiRmlP8IKc5kA8G/7
+	0ojJ/lTt1nY/O5EL+T60+jHM5vvjoM1isXhfQsNDgVwyoXXy5rKH5rBloIWJsCmjqAYwMTH
+	hneZKzsDcHkB/noOMQ6TO7KrOC9of7iDdEBGND9851A73xTcQe+dAnX8MpI2eKHLjedZ6Gx
+	mdB+551jU8K4zWwXeqFOCSbr+9az8e+may3FtW7ltRd8N3XUxDsCkbrH5QBfNZCmwNReKQv
+	WtAL2Hs3xLLf3awQxKkGOmLpjFWroZLSVcIaPSFLH+YaHL4qsHfuqT8rUnnKHahK8fN6bt7
+	P6rDAm6/5PESgUVnRvuOwh9FAosDsGNH86EhiXGVb7bLZMlo08fw08qaHLg9BC077lfgIZa
+	6QUMwlzJrII8in8Ewdy46FTbTiAk2g/dbGDyjIFgJHup4+0w58X+o268Ey9bXOTLtGwvPjC
+	ljCe1sOrT8P0wyVI/GXxFcziG4XN2IbcNbIw4u6zjKba6FXrm3Oru82Uj+q8XPe4ggR/I9I
+	sRUHj5VrexPIOk26j6itqTVU8i1ayX8MfgAQBs0EPx626oINt46io4DFlqnQL5UpjskRLvv
+	ryfqDYDn6UrnTvRQEQ5qe3UegaLlCwgX9IrPn6865kwViZO/bjQTSZYyRioqhbOWatoTKxm
+	MKDLVA6cQF+4UeLOzb/CrhDHFsqFvcdv2wjir+4N095wy18El6cg9+ifiKDCbmoTaUN746P
+	YsqU0beHk7KkMM3b219ip3ShTXkL5/wLhTcSsO1g/5ehupr1mIAbCCwyAByxZ3NXttt3rfY
+	amP+GV1jLRkQVHwLeTJ5iBhEOl9nDMG4C7vrf79zoG+5wnexVCROG6CMC/cVkpKRDQ8m7nP
+	u5qZjx+WWOx5PnYL29o/vlI3Bgt3hT5RgCwaTsCKAzlXBa6zJ9+dgQ4xyjkV5uzDW/FqAm4
+	R/ml8qHErPAQUC/f1ZEUBgcCc0KObX9hentvYGxUKSsxtmLiWliKGgq1bILzSfqF1tTqK8A
+	Y04gJVOCyptGaBB5SIW2uQPDpe0BziezStDzn+SNEvR7kZLUc0TVQA7wffX2F4sAZ6ZsELA
+	UAVvXIe00kXl+ykh8XbJGEDJ3xJbl8p2A==
+X-QQ-XMRINFO: MPJ6Tf5t3I/ylTmHUqvI8+Wpn+Gzalws3A==
+X-QQ-RECHKSPAM: 0
 
-Hi,
+The function ieee80211_tx_status() was renamed to
+ieee80211_tx_status_skb() by commit 2703bc851399
+("wifi: mac80211: rename ieee80211_tx_status() to
+ieee80211_tx_status_skb()").  Update the stale reference
+in rs_set_lq_ss_params().
 
-On Thu, Mar 19, 2026 at 3:39=E2=80=AFPM Lucid Duck <lucid_duck@justthetip.c=
-a> wrote:
->
-> The mt7921 driver never updates phy->txpower_cur from the rate power
-> configuration sent to firmware, causing mt76_get_txpower() to report
-> bogus values to userspace (typically 3 dBm) regardless of actual
-> regulatory or SAR limits.
->
-> Two issues are addressed:
->
-> 1. The rate power loop in mt76_connac_mcu_rate_txpower_band() computes
->    the correct bounded TX power per channel via
->    mt76_get_rate_power_limits() but discards the return value. Capture
->    it and store to phy->txpower_cur when processing the current
->    channel, matching how mt7915 handles this in
->    mt7915_mcu_set_txpower_sku(). Subtract the multi-chain path delta
->    before storing, since mt76_get_txpower() adds it back when
->    reporting -- consistent with mt7915's use of mt76_get_power_bound()
->    which performs the same subtraction.
->
-> 2. mt7921 uses the chanctx model but its add_chanctx callback does not
->    update phy->chandef, leaving it stale after association. The rate
->    power loop's channel comparison then fails silently. Sync
->    phy->chandef from ctx->def in add_chanctx and change_chanctx, and
->    recompute txpower_cur via a lightweight helper that performs the
->    same bounded power calculation for the current channel without
->    reprogramming firmware rate tables.
->
-> Tested on Alfa AWUS036AXML (MT7921AU), kernel 6.19.8, Canada:
->
->   Before: iw dev wlan0 info shows "txpower 3.00 dBm" (wrong)
->   After:  2.4GHz 36 dBm, 5GHz 23 dBm, 6GHz 12 dBm (match regulatory)
->
-> Cc: stable@vger.kernel.org
-> Fixes: 1c099ab44727 ("mt76: mt7921: add MAC support")
-> Signed-off-by: Lucid Duck <lucid_duck@justthetip.ca>
-> ---
-> Changes since v3:
-> - Removed mt7921_set_tx_sar_pwr() from add_chanctx and change_chanctx.
->   Channel transitions don't change underlying power constraints, so
->   reprogramming the full rate table is unnecessary. Replaced with a
->   lightweight helper that recomputes txpower_cur locally.
-> - Removed IEEE80211_CONF_CHANGE_CHANNEL trigger from config().
-> - Removed BSS_CHANGED_TXPOWER handler from bss_info_changed(). Writing
->   per-vif txpower into per-HW hw->conf.power_level breaks multi-vif
->   semantics. User txpower limits need a different approach (follow-up).
-> - Subtracted path delta before storing txpower_cur. The connac rate
->   loop stores total bounded power, but mt76_get_txpower() adds the
->   multi-chain path delta when reporting. mt7915 accounts for this via
->   mt76_get_power_bound(), which subtracts the delta before storing.
->   Without the same subtraction, reported values were inflated by 3 dBm
->   on 2x2 devices.
->
->  .../wireless/mediatek/mt76/mt76_connac_mcu.c  | 14 +++++++--
->  .../net/wireless/mediatek/mt76/mt7921/main.c  | 30 +++++++++++++++++++
->  2 files changed, 41 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c b/drive=
-rs/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-> index 16db0f208..e26a2cb39 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c
-> @@ -2193,14 +2193,22 @@ mt76_connac_mcu_rate_txpower_band(struct mt76_phy=
- *phy,
->                                 .hw_value =3D ch_list[idx],
->                                 .band =3D band,
->                         };
-> -                       s8 reg_power, sar_power;
-> +                       s8 reg_power, sar_power, max_power;
->
->                         reg_power =3D mt76_connac_get_ch_power(phy, &chan=
-,
->                                                              tx_power);
->                         sar_power =3D mt76_get_sar_power(phy, &chan, reg_=
-power);
->
-> -                       mt76_get_rate_power_limits(phy, &chan, limits,
-> -                                                  sar_power);
-> +                       max_power =3D mt76_get_rate_power_limits(phy, &ch=
-an,
-> +                                                              limits,
-> +                                                              sar_power)=
-;
-> +
-> +                       if (phy->chandef.chan &&
-> +                           phy->chandef.chan->hw_value =3D=3D ch_list[id=
-x] &&
-> +                           phy->chandef.chan->band =3D=3D band)
-> +                               phy->txpower_cur =3D max_power -
-> +                                       mt76_tx_power_path_delta(
-> +                                               hweight16(phy->chainmask)=
-);
->
->                         tx_power_tlv.last_msg =3D ch_list[idx] =3D=3D las=
-t_ch;
->                         sku_tlbv.channel =3D ch_list[idx];
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c b/drivers/n=
-et/wireless/mediatek/mt76/mt7921/main.c
-> index 5881040ac..a77ae5791 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-> @@ -1355,13 +1355,39 @@ mt7921_stop_ap(struct ieee80211_hw *hw, struct ie=
-ee80211_vif *vif,
->         mt792x_mutex_release(dev);
->  }
->
-> +static void mt7921_update_txpower_cur(struct mt76_phy *phy)
-> +{
-> +       struct mt76_power_limits limits;
-> +       struct ieee80211_channel *chan =3D phy->chandef.chan;
-> +       int n_chains =3D hweight16(phy->chainmask);
-> +       s8 reg_power, sar_power, max_power;
-> +       int tx_power;
-> +
-> +       if (!chan)
-> +               return;
-> +
-> +       tx_power =3D 2 * phy->hw->conf.power_level;
-> +       if (!tx_power)
-> +               tx_power =3D 127;
-> +
-> +       reg_power =3D mt76_connac_get_ch_power(phy, chan, tx_power);
-> +       sar_power =3D mt76_get_sar_power(phy, chan, reg_power);
-> +       max_power =3D mt76_get_rate_power_limits(phy, chan, &limits, sar_=
-power);
-> +
-> +       phy->txpower_cur =3D max_power - mt76_tx_power_path_delta(n_chain=
-s);
-> +}
-> +
->  static int
->  mt7921_add_chanctx(struct ieee80211_hw *hw,
->                    struct ieee80211_chanctx_conf *ctx)
->  {
->         struct mt792x_dev *dev =3D mt792x_hw_dev(hw);
-> +       struct mt76_phy *mphy =3D hw->priv;
->
->         dev->new_ctx =3D ctx;
-> +       mphy->chandef =3D ctx->def;
-> +       mt7921_update_txpower_cur(mphy);
-> +
+Assisted-by: unnamed:deepseek-v3.2 coccinelle
+Signed-off-by: Kexin Sun <kexinsun@smail.nju.edu.cn>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't think this is the right fix.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index d1619a229d8f..2216a91cdc8f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3553,7 +3553,7 @@ static void rs_set_lq_ss_params(struct iwl_mvm *mvm,
+ 
+ 	/* This code is safe as it doesn't run concurrently for different
+ 	 * stations. This is guaranteed by the fact that calls to
+-	 * ieee80211_tx_status wouldn't run concurrently for a single HW.
++	 * ieee80211_tx_status_skb wouldn't run concurrently for a single HW.
+ 	 */
+ 	if (!bfer_mvmsta) {
+ 		IWL_DEBUG_RATE(mvm, "No sta with BFER allowed found. Allow\n");
+-- 
+2.25.1
 
-This mixes multiple things in one patch and duplicates the same power
-limit calculation in shared connac code and mt7921-specific code.
-
-The issue is in txpower reporting. A channel context is just a view of
-the current PHY configuration and should not be used to overwrite PHY
-state.
-
-I think this needs to be reworked in a cleaner way, with the shared
-logic kept in shared code and the reporting side fixed in the common
-mt792x path so it can apply cleanly to both mt7921 and mt7925.
-
-Given the points above, I'd prefer not to keep iterating on the current
-approach for v5. I'll try to rework this along the lines above and send
-an updated version.
-
->         return 0;
->  }
->
-> @@ -1396,6 +1422,10 @@ mt7921_change_chanctx(struct ieee80211_hw *hw,
->                 mt7921_mcu_config_sniffer(mvif, ctx);
->         else
->                 mt76_connac_mcu_uni_set_chctx(mvif->phy->mt76, &mvif->bss=
-_conf.mt76, ctx);
-> +
-> +       phy->mt76->chandef =3D ctx->def;
-> +       mt7921_update_txpower_cur(phy->mt76);
-> +
->         mt792x_mutex_release(phy->dev);
->  }
->
-> --
-> 2.53.0
->
