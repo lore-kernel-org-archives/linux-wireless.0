@@ -1,48 +1,48 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C783E36EAA8
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 08:18:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF25329BD9A
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 08:21:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774253887; cv=none; b=ZMSB8wlnXuxThslQqoN81YnDlGMjyJ21yPRSsoEfjViZSV/EvKT5uX8PLzOiiMUHEUAxJpE+ovoaX4LsHZwSG1UaXkEORiZfrHVuhEPP2oz5NX1ZIeAbq3fg8/1YEof1umj0IFwxUYUKEQdXRkf7iWP+zeQ0E4+qGpGFCSitgVw=
+	t=1774254102; cv=none; b=WYxtcCbW8QJZ6Npu1B+GURU3yYCO4A5Sn6bnO5rA5MnhG5S2KWZmohy8WiEm9Dm4Tjx1PJUiun3n859GcadM5/puWHzykHI0d9oYnmCsv7FsClu2ssti1rf+k8DFF0Dd5ef+htpxCwAKHqD3JwEPPCyxinM8t3EVkqUIfdg1N7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774253887; c=relaxed/simple;
-	bh=Td7+EKOiNHjXxN7wHmlTfOg1CFWPKcCO9svWUymt38Y=;
+	s=arc-20240116; t=1774254102; c=relaxed/simple;
+	bh=R0LArFFEdFDRRLrwgPM89Aqc4JJy2PcPnDWgs/JYPxw=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=YoT5d/ylmvNtNmi72x1UxCcpw2ZPsCBZ8PwDUB7pXkki6/fVaunQjO2D+8YxC6VCwB0vCVGMuAu5dHdrrjH8xL4MrWhGukFJjinTtoPPSUx55Wse7+3lr1P6VUrp7CX6vrzK1t9GLzcNdNmNtcrBKmgZZ849rMunTn2VhrA70G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=n90NPObo; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=rqiU+b+L7Ctf56L9ZP/w+bqSZyzKhK6B5MzFJgEHUAL2Ld+MlFj65DrWtUKp7l2xAlPPXhn94Gh99PIA3Ddr0pyG/6iOVL5n3UwCGBC9b66XbR+I093sCc09J8Hs45tKJtMSmVzG1cVN5G54Kn5cOTxq92eaUNa3mAmMehiNQ8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HVaF4llo; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="n90NPObo"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HVaF4llo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Td7+EKOiNHjXxN7wHmlTfOg1CFWPKcCO9svWUymt38Y=;
-	t=1774253884; x=1775463484; b=n90NPOboHxxi7hiHLZXlgR18qkO5UBEnVEMUTDwM3GDUmkL
-	KuSesbbNEpXepfL37/1UxiElt+Vv67T47RdLCA8M4rdfH43R3r/qvZMd6smqvmWArwzOlTyFp6yqM
-	Vfj7nL1t/L2Os13blVLg9M1DiXV3JACyYCZE6No3EnP25kIzEHBwm5kjOSzh7Jo5V8o9ZSH1Xor0Y
-	uzjlESx8cPDT5Osmo6wCrQoGcdv90oaQ8C9COWomj0WSEY46743FxlV+s1mJDuTuLwAviGrM3TYk3
-	AwFOMNP9iCqEik9qQ4pzxHPFSSQX4g3rb74k6E9RyXrTjd7RRdcHRO8aLKr9as6g==;
+	Resent-Cc:Resent-Message-ID; bh=R0LArFFEdFDRRLrwgPM89Aqc4JJy2PcPnDWgs/JYPxw=;
+	t=1774254101; x=1775463701; b=HVaF4lloUBsiOAtcNTmaEhEOuS/4qwgJ6tB0WwMsOi4j364
+	JYxQIUk547l9aBhuN/LPealeJv9vIXga/ZYFZ7fNDchfj1VGLa6f8i4OUz5ngNxh2hNLEOr02j2e9
+	OILgmTzcokJ6DOYTzegVsEkqAuxY97pypEz2uLq2ulx++CP+RN9mMUVbVQLC++m4LEfsA+GOxD0lQ
+	Bat5F4TutTHuW2OMhMRaR8vAfWcGBf79JDkICNEg2t/d0XWb7oZF6ocQVF4Elc1ik3NzJb2MfxDtd
+	k8X4N+pkC4qUUng9OWGWijyWi88rllIpdVspD74hY61euCztVTqcbrB7IxGp13zA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w4aU0-00000009dHr-0P9r;
-	Mon, 23 Mar 2026 09:17:56 +0100
-Message-ID: <99567d484a37d7101ae51ea6f022f40ef469d81d.camel@sipsolutions.net>
+	id 1w4aXb-00000009dNj-1XGO;
+	Mon, 23 Mar 2026 09:21:39 +0100
+Message-ID: <31bc4e5e701190d1fb00908f521145dd00095f66.camel@sipsolutions.net>
 Subject: Re: [PATCH 11/12] carl9170: skip cross-band channel changes during
  software scan
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Christian Lamparter <chunkeey@gmail.com>, Masi Osmani <mas-i@hotmail.de>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon, 23 Mar 2026 09:17:55 +0100
-In-Reply-To: <73153743-e0e8-4f2d-8774-066f53460511@gmail.com> (sfid-20260321_225837_658503_FA497F52)
+Date: Mon, 23 Mar 2026 09:21:38 +0100
+In-Reply-To: <99567d484a37d7101ae51ea6f022f40ef469d81d.camel@sipsolutions.net>
 References: 
 	<AM7PPF5613FA0B68A6825857195D5EF51B59443A@AM7PPF5613FA0B6.EURP251.PROD.OUTLOOK.COM>
-	 <73153743-e0e8-4f2d-8774-066f53460511@gmail.com>
-	 (sfid-20260321_225837_658503_FA497F52)
+		 <73153743-e0e8-4f2d-8774-066f53460511@gmail.com>
+		 (sfid-20260321_225837_658503_FA497F52) <99567d484a37d7101ae51ea6f022f40ef469d81d.camel@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -54,17 +54,17 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sat, 2026-03-21 at 22:58 +0100, Christian Lamparter wrote:
-> >=20
-> > When the adapter is associated on a specific band, scanning channels
-> > on the other band produces no useful roaming candidates for the
-> > current BSS.
+On Mon, 2026-03-23 at 09:17 +0100, Johannes Berg wrote:
+> On Sat, 2026-03-21 at 22:58 +0100, Christian Lamparter wrote:
+> > >=20
+> > > When the adapter is associated on a specific band, scanning channels
+> > > on the other band produces no useful roaming candidates for the
+> > > current BSS.
+>=20
+> This sentence is so clearly wrong, I don't really even know what to say.
 
-This sentence is so clearly wrong, I don't really even know what to say.
-
-> @Johannes: Is this "stay within the band" something the driver should do,
-> or could this be moved up to mac80211/cfg80211?
-
-It's something neither should do.
+Well, actually ... I read "current BSS" as "current ESS" since otherwise
+the sentence is true but nonsense, since roaming obviously involves
+leaving the current BSS and joining a different BSS in the same ESS.
 
 johannes
