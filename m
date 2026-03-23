@@ -1,32 +1,31 @@
 Received: from courrier.aliel.fr (pouet.aliel.fr [65.21.61.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B8E938655E;
-	Mon, 23 Mar 2026 09:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0411FE44A;
+	Mon, 23 Mar 2026 09:58:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.61.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774259909; cv=none; b=fLDVs9dORnLtulhvaKD244YpBPWwlaux6K1N2vWhuuF8TmrgrChCbr48xR7QbWCE+9csiH5NS7Yn15kCenP+5lKZidxMLtXA2mZ4ZfvkohKm5hYa/maxI2pCuY2WPfeaoLb59DLaldo6jGa2R6EFnav8goWEUDafu2MyU6SBo+s=
+	t=1774259909; cv=none; b=iMxPhxvNZpBTl3/15t5iI/Vhsl01e4hUp3B+KPXfPUDPbbdFWVt0Xwn4gGy2AvMXq+vTxgJs3sEWoOJ/A5tV+eCdfw8o/mpQx67JbAKH6/5HRtym4ON3L8KcCxFcp6edOges2Qwd/wprfAH4apgVSJlcJsmHfwuLL79B0KOPisI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774259909; c=relaxed/simple;
-	bh=OHhaocqrcyvsfcC4nwRCQzXz7HSpal5P8Pl4jRGYs5Q=;
+	bh=Ywdd79SLlnG+5FuD1iPwguAxNCDzzkCuTsJrgYS9eQA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=V9kzwHNvLoohKLDyg9UC1bTbK8xE9Nh0f0F03z9BbiPLPxV7EmOgYCoq5UgLGOycS/PR7cgboy26Wj+4xrwubUHK0ara8VJ8DDN7jV1F1re6mA/iWzIiOe4FKFt/lTUzFjaCEweNMqfRbZPDQs22l8rxAYfom2mUhrtOY8ErKQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=OUTZmbQQ; arc=none smtp.client-ip=65.21.61.41
+	 In-Reply-To:To:Cc; b=RTZNfk77soAMYJIZuD0cgIdmcmeOWbbUBTasBkF56fVK4E0qB+KPMz/65lbrFGu89LF7NmdmNdhzszIEtLk2a/aMTiB5lVDugohyfDq7I4EVQkWpT+PK3PtX5KD4MVRHMmCa+hsxPxjMxo4gSWbB+sofpqS7cS1kNURl4/unek8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=Bb5vBKKc; arc=none smtp.client-ip=65.21.61.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="OUTZmbQQ"
+	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="Bb5vBKKc"
 From: Ronald Claveau <linux-kernel-dev@aliel.fr>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aliel.fr;
-	s=courrier-s1; t=1774259903;
-	bh=OHhaocqrcyvsfcC4nwRCQzXz7HSpal5P8Pl4jRGYs5Q=;
+	s=courrier-s1; t=1774259905;
+	bh=Ywdd79SLlnG+5FuD1iPwguAxNCDzzkCuTsJrgYS9eQA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=OUTZmbQQlN/RqGWdkrOHanbOL8AdBU2wDAOdjiUgc/It7IDE4YwAAr7QokoV3NLR7
-	 p2P/PM8l+pXNMxPkqnOBglk/Supq9KRFLr271a73gZQ0T4PXBcVUVRMdXqvS9OZxht
-	 5nfc0l1InUaIBfb1pu0xrWoNYCK1pNatSSJ8Y4oU=
-Date: Mon, 23 Mar 2026 10:55:32 +0100
-Subject: [PATCH v3 7/9] arm64: dts: amlogic: t7: khadas-vim4: Add SDIO
- power sequence and WiFi clock
+	b=Bb5vBKKcHrQrCUXjhW2Cz4IuM0XNMePmeixn8P6uiZR8waRm6evd9CVlZrjJHRbyE
+	 0LbIbSka2GyYZZSOzRlmOnx/m+WdKAk3LQdNCrmS8Zv3itmdOZjYug0nU4B2ZupeGF
+	 n5mrsZDuQ6PZ6Kisc2yV091ZAQx9UnuqYgD0AJiI=
+Date: Mon, 23 Mar 2026 10:55:34 +0100
+Subject: [PATCH v3 9/9] arm64: dts: amlogic: t7: khadas-vim4: Add MMC nodes
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,7 +34,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260323-add-emmc-t7-vim4-v3-7-5159d90a984c@aliel.fr>
+Message-Id: <20260323-add-emmc-t7-vim4-v3-9-5159d90a984c@aliel.fr>
 References: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
 In-Reply-To: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
 To: Neil Armstrong <neil.armstrong@linaro.org>, 
@@ -49,64 +48,134 @@ Cc: linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org,
  linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, 
  Ronald Claveau <linux-kernel-dev@aliel.fr>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openssh-sha256; t=1774259895; l=1444;
+X-Developer-Signature: v=1; a=openssh-sha256; t=1774259896; l=2817;
  i=linux-kernel-dev@aliel.fr; s=id_ed25519; h=from:subject:message-id;
- bh=OHhaocqrcyvsfcC4nwRCQzXz7HSpal5P8Pl4jRGYs5Q=;
+ bh=Ywdd79SLlnG+5FuD1iPwguAxNCDzzkCuTsJrgYS9eQA=;
  b=U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgMGec55oxeeisqykQiUedekMYyOnR9
  BG9E/7rDWyqdNoAAAAGcGF0YXR0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAA
- QA2+JhnbgwDiwkQMZUUK1kdfqFB6gHx/VO/wHVQT2TwQo4rpGN3NvKqU74eiBj0Fbt6jWjlYGAc
- Sh7XzGYO9TQg=
+ QFYi+0Gd/+Zfbjizr+3GvRz83PiMYVaWwRvNHIFH0qMDvp4p00u17IJJSA3FSShpYkWVFarxAJD
+ yjScxsu/shAU=
 X-Developer-Key: i=linux-kernel-dev@aliel.fr; a=openssh;
  fpr=SHA256:kch4osYZ6A1BrPps5AUs6KnfdE2wm4ocMtyTc8TmZMs
 
-Add the SDIO power sequence node using mmc-pwrseq-simple and a
-32.768kHz PWM-based clock required by the Wi-Fi module.
+Enable and configure the three MMC controllers for the Khadas VIM4 board:
+- sd_emmc_a: SDIO interface for the BCM43752 Wi-Fi module
+- sd_emmc_b: SD card slot
+- sd_emmc_c: eMMC storage
 
 Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
 ---
- .../dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts  | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ .../dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts  | 90 +++++++++++++++++++++-
+ 1 file changed, 89 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
-index 2450084d37642..770f06b0b16c7 100644
+index 770f06b0b16c7..5a73ae081036c 100644
 --- a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
 +++ b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
-@@ -67,6 +67,15 @@ sd_3v3: regulator-sdcard-3v3 {
- 		regulator-always-on;
+@@ -14,7 +14,10 @@ / {
+ 	compatible = "khadas,vim4", "amlogic,a311d2", "amlogic,t7";
+ 
+ 	aliases {
+-		serial0 = &uart_a;
++		serial0	= &uart_a;
++		mmc0	= &sd_emmc_c;
++		mmc1	= &sd_emmc_b;
++		mmc2	= &sd_emmc_a;
  	};
  
-+	sdio_pwrseq: sdio-pwrseq {
-+		compatible = "mmc-pwrseq-simple";
-+		reset-gpios = <&gpio GPIOX_6 GPIO_ACTIVE_LOW>;
-+		post-power-on-delay-ms = <500>;
-+		power-off-delay-us = <200000>;
-+		clocks = <&wifi32k>;
-+		clock-names = "ext_clock";
-+	};
+ 	memory@0 {
+@@ -159,6 +162,91 @@ &pwm_ab {
+ 	pinctrl-names = "default";
+ };
+ 
++/* SDIO */
++&sd_emmc_a {
++	status = "okay";
++	pinctrl-0 = <&sdio_pins>;
++	pinctrl-1 = <&sdio_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++	#address-cells = <1>;
++	#size-cells = <0>;
 +
- 	vcc5v: regulator-vcc-5v {
- 		compatible = "regulator-fixed";
- 		regulator-name = "VCC5V";
-@@ -135,6 +144,19 @@ vddio_c: regulator-gpio-c {
- 		states = <1800000 1
- 			  3300000 0>;
- 	};
++	bus-width = <4>;
++	cap-sd-highspeed;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	cap-sdio-irq;
++	max-frequency = <200000000>;
++	non-removable;
++	disable-wp;
++	no-mmc;
++	no-sd;
 +
-+	wifi32k: wifi32k {
-+		compatible = "pwm-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <32768>;
-+			pwms = <&pwm_ab 0 30518 0>;
++	power-domains = <&pwrc PWRC_T7_SDIO_A_ID>;
++
++	keep-power-in-suspend;
++
++	mmc-pwrseq = <&sdio_pwrseq>;
++
++	vmmc-supply = <&vddao_3v3>;
++	vqmmc-supply = <&vddao_1v8>;
++
++	brcmf: wifi@1 {
++		reg = <1>;
++		compatible = "brcm,bcm43752-fmac", "brcm,bcm4329-fmac";
 +	};
 +};
 +
-+&pwm_ab {
++/* SD card */
++&sd_emmc_b {
 +	status = "okay";
-+	pinctrl-0 = <&pwm_a_pins>;
-+	pinctrl-names = "default";
- };
- 
++	pinctrl-0 = <&sdcard_pins>;
++	pinctrl-1 = <&sdcard_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <4>;
++	cap-sd-highspeed;
++	sd-uhs-sdr12;
++	sd-uhs-sdr25;
++	sd-uhs-sdr50;
++	sd-uhs-sdr104;
++	max-frequency = <200000000>;
++	disable-wp;
++	no-sdio;
++	no-mmc;
++
++	power-domains = <&pwrc PWRC_T7_SDIO_B_ID>;
++
++	cd-gpios = <&gpio GPIOC_6 GPIO_ACTIVE_LOW>;
++	vmmc-supply = <&sd_3v3>;
++	vqmmc-supply = <&vddio_c>;
++};
++
++/* eMMC */
++&sd_emmc_c {
++	status = "okay";
++	pinctrl-0 = <&emmc_ctrl_pins>, <&emmc_data_8b_pins>, <&emmc_ds_pins>;
++	pinctrl-1 = <&emmc_clk_gate_pins>;
++	pinctrl-names = "default", "clk-gate";
++
++	bus-width = <8>;
++	cap-mmc-highspeed;
++	mmc-ddr-1_8v;
++	mmc-hs200-1_8v;
++	max-frequency = <200000000>;
++	disable-wp;
++	non-removable;
++	no-sdio;
++	no-sd;
++
++	power-domains = <&pwrc PWRC_T7_EMMC_ID>;
++
++	vmmc-supply = <&vddio_3v3>;
++	vqmmc-supply = <&vddio_1v8>;
++};
++
  &uart_a {
+ 	status = "okay";
+ 	clocks = <&xtal>, <&xtal>, <&xtal>;
 
 -- 
 2.49.0
