@@ -1,62 +1,93 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C64C3876AE
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 10:39:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924A136B047
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 10:43:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774262382; cv=none; b=kBcA8Uo7udeCbc9XOE6Pi6+iit3BdESBRu14HD1sx5cCrWmrGMLvXm+1nBnCzTIiONkpOIlt2Pbvcax9debZgIjMJXWmtFVWObn82AAuO6jHih3XeWD5/rOY/BxB3hXrbxmJEeh0f+m/SJXHQ/Nuk0JGkQqov1TXVboF/gMqAFE=
+	t=1774262603; cv=none; b=nZ34eZ9NccvVd8Pcs52FdHC63IkQ/Dr9upvvYoX/UsifZXUzvv/mZt8oEaGhwKxwVXTOveOPEl0t0oTzxDSplgSHvPSV0JRX10Q7oWi9GQsXa7ek7lpAV/EcKUznJYSKohS81AW4wnkkW6WF7HpldCX/2zwXdvprJoxzfqpr+EI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774262382; c=relaxed/simple;
-	bh=fQxDulDZuDv2JLZZk897t0rpQZeUCeQ6adLmaWv2k8c=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PE8vlTCEVL5DT63nB5pWDoKBBljGWArVg0Vb1X8CYUWx107mCCxUfihU5spiMWI7HsQYMQx4vukp4HcQN7U2LW+GC6vW3Vs+vglGlWFJ/jrEATqv0gCwtd6/bKwzkD0L7vkX+P8Zqnlv9eIukSMo/Ggld+d8ugV0d/qsaEvNFEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=OtDkLndB; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1774262603; c=relaxed/simple;
+	bh=tL5S6WeSGDuhFnSholIq6VlS8yf4tERR1cnQOLGXSRc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=FRQn/wvwE3a1ArY8WWcwm8kiaQZpozfgaTei/srMV+JiDSoU2M3h4N4fk0Ru0sSbdiRN1ZYoi2fuFFKvnREJk+U2Rd4YQuW1jeCg23PmU8g78DzwlToSsFbe402GQNuomjVg5GHFRqOdyQYus1Nu43luvssx4P1995IRz69q0wY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=k8BQVR9X; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="OtDkLndB"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=fQxDulDZuDv2JLZZk897t0rpQZeUCeQ6adLmaWv2k8c=;
-	t=1774262381; x=1775471981; b=OtDkLndBjK9mXkKOkxCR96yfjR7j9UCLqLDF7j+xhvARKb4
-	4fmPC3ApQyeeUGdowpjB+xV0E2bzN0Jfo4Amig17I07iyyPpNV1AI+JddKida53+F8NQhxEV+TEX8
-	LYOhSbnDWwNeO8lRE1Djqq0jgKbCUUU3JH+RcavR1urvcpAu3gzGcwFCxvwXDGC8mMSz+D+bFHboI
-	tB1unkTrSc1P4Y8yBdOPoWTitLEgeTy2J3KN3SHdOQhtUUz60PfwjH4N31iahAT72q/e7iMsePL4A
-	9W3/Ov2kfqGhjXJgpPTwmME/LwwLFTAJn38XawerMOINHSuuYUbpldbURzuTRsyQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1w4ch8-00000009i6l-2F5e;
-	Mon, 23 Mar 2026 11:39:38 +0100
-Message-ID: <ba47b360ece399763cc55f7ddfeeb02a6cbb02db.camel@sipsolutions.net>
-Subject: Re: [PATCH 4/4] wifi: mac80211: add ieee80211_txq_aql_pending()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Date: Mon, 23 Mar 2026 11:39:37 +0100
-In-Reply-To: <20260323101954.874299-4-nbd@nbd.name>
-References: <20260323101954.874299-1-nbd@nbd.name>
-	 <20260323101954.874299-4-nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="k8BQVR9X"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:Cc:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=qK5nGL8RyOjVVH8LlAyck2qW5Id9uQsX9S6U9qknX98=; b=k8BQVR9X8ybjvrzV2BDkC5a6vR
+	iskkDVBidsrPDraNSo5Muqp7HAf840KjozxxF8/6ZH4+PpFpe8V8wbnxTrCvy5C7QncY+tSj5vAeP
+	DFtTnohNG3xPY1XB7wOWSUaqnSLVFo89TdjfqnbeBmFwTNp7RYh4MvdNIHzYa49g31jA=;
+Received: from p5b0151bb.dip0.t-ipconnect.de ([91.1.81.187] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1w4ckh-00ALnv-3C;
+	Mon, 23 Mar 2026 11:43:20 +0100
+Message-ID: <083f4d07-2530-4a1f-a109-94e2d2c85846@nbd.name>
+Date: Mon, 23 Mar 2026 11:43:19 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/4] wifi: mac80211: add ieee80211_txq_aql_pending()
+To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
+References: <20260323101954.874299-1-nbd@nbd.name>
+ <20260323101954.874299-4-nbd@nbd.name>
+ <ba47b360ece399763cc55f7ddfeeb02a6cbb02db.camel@sipsolutions.net>
+Content-Language: en-US
+From: Felix Fietkau <nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+In-Reply-To: <ba47b360ece399763cc55f7ddfeeb02a6cbb02db.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, 2026-03-23 at 10:19 +0000, Felix Fietkau wrote:
-> Add a function to allow drivers to query the pending AQL airtime
-> for a given txq, for both unicast and broadcast.
-> This will be used for mt76 to limit buffering in AP mode for power-save
-> stations.
+On 23.03.26 11:39, Johannes Berg wrote:
+> On Mon, 2026-03-23 at 10:19 +0000, Felix Fietkau wrote:
+>> Add a function to allow drivers to query the pending AQL airtime
+>> for a given txq, for both unicast and broadcast.
+>> This will be used for mt76 to limit buffering in AP mode for power-save
+>> stations.
+> 
+> Can you elaborate? Seems strange to make buffering decisions in the HW
+> queues (presumably) based on what's already in SW queues?
 
-Can you elaborate? Seems strange to make buffering decisions in the HW
-queues (presumably) based on what's already in SW queues?
+AQL is tracking what's pushed to HW queues already, not SW queues.
+On MT7615 and newer, firmware handles wakeup of PS stations internally 
+based on queued packets.
+I want to make sure that the driver doesn't queue more packets for 
+sleeping stations than what's needed to wake them up.
 
-johannes
+- Felix
