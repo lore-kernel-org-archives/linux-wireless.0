@@ -1,70 +1,90 @@
-Received: from wens.tw (mirror2.csie.ntu.edu.tw [140.112.30.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7D3158535
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 05:21:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=140.112.30.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EED136308B;
+	Mon, 23 Mar 2026 07:46:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774243289; cv=none; b=TbA2ng1DhUnHh9noHzQmPDZrRfB/QZ6IfUR3KwQTxy4ErqDVZHRImpGb07W/2FcE6synfqv9Ovw+L9EKWqjQcC34bTgXEXECeNv9LPmhvwC3N1DBdIb9e7tl3q4P8CLq2fMNfHEIoAZXr8iB+PV3do2KvX/+hNUjouD3rKOk88w=
+	t=1774251973; cv=none; b=H3zGQ5ozMWPlH931pSBorF5n+ZWlFfW8YTMMDF0MZA+5YFe9qkrFVRDFKA4IwYmG3uX2xTt6KYhgvPgGCmqDc25A3SVK6BSAOhkho53p918h5j6pcRiQXQ1fb2QJFVPcoPR55OzEEF+mTA3GmWfv8XhCd6zxtIaLFktJRAx20X8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774243289; c=relaxed/simple;
-	bh=/VZnn8djpX+dd5nxqqCDeB4gEgYhbWiFp8fYksq1M/M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j8m4UdVHm8Yoloo4tSVv7oofi2i7aYgL3myBUDR8NZBt3NEqfOWsY3TeFSLQ98k5S0q0voM05UyuuKBB0C1PW2mS3/sW3IHHTZm+gr1ke1SK8bhlqJ4pVcgIULip/NSDQ6tiZpvrVakvUDCPqzd3RdeFZRnCVKegKgxNa52+j3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=wens.tw; arc=none smtp.client-ip=140.112.30.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wens.tw
-Received: by wens.tw (Postfix, from userid 1000)
-	id 486865FBB2; Mon, 23 Mar 2026 13:12:44 +0800 (CST)
-From: Chen-Yu Tsai <wens@kernel.org>
-To: Chen-Yu Tsai <wens@kernel.org>
-Cc: druth@google.com,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	wireless-regdb@lists.infradead.org,
+	s=arc-20240116; t=1774251973; c=relaxed/simple;
+	bh=EGxQ8w7SxowLpXWXu/NnEtXy+k7Z7GJ6vCaR8lP/xug=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uOaIGLtFESX7LTYya5vdR2Cwc1CRLnr4hI/4zkZFJZsNqGPLuYLw+LVOOjoxwtfhxyw+lVaHcv0IpA2ITiAA4zvmiGAQHT89+x5JtBq3CXwQbsnmmyFoeeujgfzzywQeGuIZAhL8Dn29JLBVbkMvF4zH/6ApZ7BMkxmzq9vRAUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.245.197])
+	by APP-03 (Coremail) with SMTP id rQCowABnhNuw78Bp6cCGCw--.4541S2;
+	Mon, 23 Mar 2026 15:45:52 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: arend.vanspriel@broadcom.com
+Cc: johannes.berg@intel.com,
+	chi-hsien.lin@infineon.com,
+	chung-hsien.hsu@infineon.com,
 	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Gaurav Kansal <gaurav.kansal@nic.gov.in>,
-	Degrader Snehil <degradersnehil@gmail.com>
-Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for India (IN) on 6GHz
-Date: Mon, 23 Mar 2026 13:12:40 +0800
-Message-ID: <177424269386.1094638.13596680362967400436.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260311085141.1634383-1-wens@kernel.org>
-References: <20260311085141.1634383-1-wens@kernel.org>
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	kees@kernel.org,
+	pengpeng@iscas.ac.cn
+Subject: [PATCH] brcmfmac: validate bsscfg indices in IF events
+Date: Mon, 23 Mar 2026 15:45:51 +0800
+Message-ID: <20260323074551.93530-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowABnhNuw78Bp6cCGCw--.4541S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7JF18GFy8Jr1rKrWDJryfCrg_yoWkKFc_GF
+	18urn7Xw1rKa929340v3W2yrZayw40qan29rnrtayfZrZ5XFWUGrZ5ZFZxJ347G3y29Fnx
+	Cr1Ut345W34j9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3xFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxa
+	n2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4
+	AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE
+	17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMI
+	IF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4l
+	IxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvf
+	C2KfnxnUUI43ZEXa7VUbHa0JUUUUU==
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-On Wed, 11 Mar 2026 16:51:40 +0800, Chen-Yu Tsai wrote:
-> The Government of India has officially opened this band for licence-exempt
-> use via Gazette Notification G.S.R. 47(E), dated January 20, 2026,
-> published January 21, 2026, issued by the Ministry of Communications
-> under the Indian Telegraph Act, 1885 and the Indian Wireless Telegraphy
-> Act, 1933.
-> 
-> Gazette details:
->   Title   : Use of Low Power and Very Low Power Wireless Access System
->             including Radio Local Area Network in Lower 6 GHz Band
->             (Exemption from Licensing Requirement) Rules, 2026
->   File No : 24-04/2025-UBB
->   Gazette : No. 47, CG-DL-E-21012026-269488
->   Signed  : Devendra Kumar Rai, Joint Secretary, Ministry of Communications
->   URL : https://www.dot.gov.in/static/uploads/2026/02/88f0ac8c74eb6f6907934d17d0015ab5.pdf
-> 
-> [...]
+brcmf_fweh_handle_if_event() validates the firmware-provided interface
+index before it touches drvr->iflist[], but it still uses the raw
+bsscfgidx field as an array index without a matching range check.
 
-Late notification.
+Reject IF events whose bsscfg index does not fit in drvr->iflist[]
+before indexing the interface array.
 
-Applied to master in wens/wireless-regdb.git, thanks!
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-[1/1] wireless-regdb: Update regulatory rules for India (IN) on 6GHz
-      https://git.kernel.org/wens/wireless-regdb/c/5db6ce73e616
-
-Best regards,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 984886481f4e..1cff4ba76943 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -153,6 +153,11 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 		bphy_err(drvr, "invalid interface index: %u\n", ifevent->ifidx);
+ 		return;
+ 	}
++	if (ifevent->bsscfgidx >= BRCMF_MAX_IFS) {
++		bphy_err(drvr, "invalid bsscfg index: %u\n",
++			 ifevent->bsscfgidx);
++		return;
++	}
+ 
+ 	ifp = drvr->iflist[ifevent->bsscfgidx];
+ 
 -- 
-Chen-Yu Tsai <wens@kernel.org>
+2.50.1 (Apple Git-155)
+
