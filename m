@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2663372ECA
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 21:03:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C457D29BD9A
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 21:09:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774299787; cv=none; b=iRcvG6yEMqR4h0mrRBCAbaQUrF84gqXJiN771Bpr9OJFXxEmRcNPdG8mHRjrP10rjVgg5hPJNRlJYvXW1UKC548VGDMSYUqxMszL08n6s5NaZXOazweeNzSiZgrmPQH8PeYnbrYz04MyJ+Azxe0xGm5C042bvfEWzgqg61wuPVs=
+	t=1774300200; cv=none; b=GWCy10i9K0kYBo8Rav3q14wniW4JcOBZ48z+7mpmg5ig1XywY9E01FetZZcg0FNQllYADqNQuqT/FBdS0TsI7Wg0DGMgE5w9L2KtGKwO1d+9tgpUw9vO5bINM4iSX6VTzgeBWwPXNLiClQGePR464PwiYV7ZV2K/JljnEzbHSFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774299787; c=relaxed/simple;
-	bh=Hk871Q9nGks2H04+DQgFaQ9XM6NpJ2VNoWQio0sVQaM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=MsiQjxaVguYF7mHzWfnvU3iEuTSHFWiXEzuczufuMPNUfrIAzoEhZaHACaRuWN/kesDYE4tLJDgS1vlfBEMRF33aIjSAnK+/FAyCrBRcC+dO7YRgyxNmdpU5WXMpfQXb3nnI5+Bx4O2RIOJ/NlzrHqjlU6tY8IObXpWy9AMtZqI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aHCby0bs; arc=none smtp.client-ip=192.198.163.8
+	s=arc-20240116; t=1774300200; c=relaxed/simple;
+	bh=dRFy2KWIKa7o5R9KI+cmFEkG3ZJFEwXi9oDGiAK6NJc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WTbN6RVK81rZpM891GSGv74prdCzH5rcpZq72BCKVj3mtK4u6/WhyM1llw6FJriuu6JrcKU8fyOPWDLip5+Bu3mCaXN48zGSukAlBNy9fLg8n8jpSOHgiRCr8sROQnzCyB62n63eRiOTBaBaQhsxJTyQIxU1jJ/JyVLFDEPrlTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZGQtcYbO; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aHCby0bs"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZGQtcYbO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774299786; x=1805835786;
+  t=1774300198; x=1805836198;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=Hk871Q9nGks2H04+DQgFaQ9XM6NpJ2VNoWQio0sVQaM=;
-  b=aHCby0bsz1oRa+kj7LR3rp8SOWzunQh3sZKvILRbK7HsusNB0iWKyDC9
-   Hm3Bah395I4F0/jNbyl+LWCXrkOIlxEAEuQJ8bHK+reikby6FJngm8+sV
-   2reUKJeIIUB81NYjZQqCGu8fAG1nwtWZrgpRpCOanz0tgrN4AiYRlUw5H
-   c62vtKv3VD2QpCOeR9fB5FIz+8xz/xOy3rVJ3SNlzrxVOU37wPJoo72ne
-   Tlaonr4YhHPO+bFRxkQ2qdWkuyvRT1Z7melL7yinVG2qqtrI+MfpX13Ue
-   D9ZgG64NU0QTWqdoYc4oPASIqMwuPV4QT1MQIQZVz90icM6YXOijA0yiK
-   g==;
-X-CSE-ConnectionGUID: JFYpOV7fSJOcPESPAZyBQQ==
-X-CSE-MsgGUID: WmVUtKeCQtKRiQZKlKD4Lg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="92882517"
+  bh=dRFy2KWIKa7o5R9KI+cmFEkG3ZJFEwXi9oDGiAK6NJc=;
+  b=ZGQtcYbOcCBztd9FtEqnxDw/8HjvQSl8tSK++szA1BXkbD97WDKHl+D4
+   Tiyx1lFe9St+1LdVnch+1pNGN2JCjFmXszKsU4/6QZLeXgAjm9w+bidoa
+   jSf0/mytnlVrNO4/WcvmxQQx4+d+R2f9pE5ahcjKhPG0oeJb6osB7BCJO
+   LI8nXbCocJ3utO37IEDWbswjPLU8rVexTER/f1LMajEdfnPSud3F/xSJB
+   e/sRnHMULD5Peh2H8YKsYGDZeFBhm7VQTTGJfoQv5wcFMYujH8c8XIOdb
+   lysO9JcWlFly8H4g3hvnsRbh/ZF5VyEkmRT/O5qlmhs4ObqAXKK2Ey24G
+   A==;
+X-CSE-ConnectionGUID: TI17WwOuQHO6YZP0JNc7dg==
+X-CSE-MsgGUID: 7bwsrJjvQvqMj5MzRDJLxw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="79163757"
 X-IronPort-AV: E=Sophos;i="6.23,137,1770624000"; 
-   d="scan'208";a="92882517"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 14:03:04 -0700
-X-CSE-ConnectionGUID: sWgvXdG6RPy1e+gr/wpp1w==
-X-CSE-MsgGUID: gU64avE+ShayG2UFOq8kYQ==
+   d="scan'208";a="79163757"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 14:09:58 -0700
+X-CSE-ConnectionGUID: tbCF7MKdQC2qe9guUhY8jg==
+X-CSE-MsgGUID: C7r2RJtmSjiYmnT033wAAw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,137,1770624000"; 
-   d="scan'208";a="228206218"
+   d="scan'208";a="254621746"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 14:03:01 -0700
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2026 14:09:57 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH wireless-next] wifi: cfg80211: Add support for additional 7 GHz channels
-Date: Mon, 23 Mar 2026 23:02:50 +0200
-Message-Id: <20260323230242.072942e8e55a.I20eba7b534c6402d5e55f862865ff1e6fef64d83@changeid>
+Cc: Benjamin Berg <benjamin.berg@intel.com>
+Subject: [PATCH wireless-next] wifi: radiotap: add field for information about observed energy
+Date: Mon, 23 Mar 2026 23:09:46 +0200
+Message-Id: <20260323230634.9dec62e53f3a.Id8d5f0036705f42e496984c269956088bd85e067@changeid>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -58,39 +58,66 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-Add support for channels 237, 241, 245, 249, 253 and support
-for additional 320 MHz segment.
+This can be used to report some information about frames that are
+duplicated across multiple channels. The reported information may just
+be an estimate based on the energy observed on each subchannel. An
+example of such duplication are RTS frames that are sent using a legacy
+rate but are duplicated into multiple subchannels for compatibility.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/wireless/chan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/net/ieee80211_radiotap.h | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index fa0764ede9c5..2dcf18f5655e 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -317,7 +317,7 @@ static bool cfg80211_valid_center_freq(u32 center,
- 	int step;
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 6c2210a253cd..11c1544bc449 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2017		Intel Deutschland GmbH
+- * Copyright (c) 2018-2019, 2021-2022, 2025 Intel Corporation
++ * Copyright (c) 2018-2019, 2021-2022, 2025-2026 Intel Corporation
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -95,6 +95,7 @@ enum ieee80211_radiotap_presence {
+ 	IEEE80211_RADIOTAP_EXT = 31,
+ 	IEEE80211_RADIOTAP_EHT_USIG = 33,
+ 	IEEE80211_RADIOTAP_EHT = 34,
++	IEEE80211_RADIOTAP_OBSERVED_ENERGY = 35,
+ 	IEEE80211_RADIOTAP_UHR_ELR = 37,
+ 	IEEE80211_RADIOTAP_UHR = 38,
+ };
+@@ -604,6 +605,25 @@ enum ieee80211_radiotap_eht_usig_tb {
+ 	IEEE80211_RADIOTAP_EHT_USIG2_TB_B20_B25_TAIL		= 0xfc000000,
+ };
  
- 	/* We only do strict verification on 6 GHz */
--	if (center < 5955 || center > 7115)
-+	if (center < 5955 || center > 7215)
- 		return true;
- 
- 	bw = nl80211_chan_width_to_mhz(width);
-@@ -325,7 +325,7 @@ static bool cfg80211_valid_center_freq(u32 center,
- 		return false;
- 
- 	/* Validate that the channels bw is entirely within the 6 GHz band */
--	if (center - bw / 2 < 5945 || center + bw / 2 > 7125)
-+	if (center - bw / 2 < 5945 || center + bw / 2 > 7225)
- 		return false;
- 
- 	/* With 320 MHz the permitted channels overlap */
++/* for IEEE80211_RADIOTAP_OBSERVED_ENERGY */
++enum ieee80211_radiotap_observed_energy_known {
++	IEEE80211_RADIOTAP_OBSERVED_ENERGY_KNOWN_BW		= 0x0001,
++};
++
++/**
++ * struct ieee80211_radiotap_observed_energy - Observed Energy (type 35)
++ * see www.radiotap.org/fields/observed%20energy.html for details.
++ *
++ * @known: Bitmap indicating which information is present
++ * @bw: The bandwidth in MHz sufficient to contain all subchannels where energy
++ *	likely belonging to the same transmission was observed. This may
++ *	indicate that the transmission was duplicated on multiple channels.
++ */
++struct ieee80211_radiotap_observed_energy {
++	__le16 known;
++	__le16 bw;
++} __packed;
++
+ /*
+  * ieee80211_radiotap_uhr_elr - content of UHR-ELR TLV (type 35)
+  * see https://www.radiotap.org/fields/UHR-ELR for details
 -- 
 2.34.1
 
