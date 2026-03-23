@@ -1,89 +1,103 @@
-Received: from courrier.aliel.fr (pouet.aliel.fr [65.21.61.41])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8B1C389E1F;
-	Mon, 23 Mar 2026 10:08:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.61.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72D2D38B145
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2026 10:19:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774260517; cv=none; b=o4QxFmsIZf34X8ZYasb0W6iHdcpNIuWbeSFSzOankvZcBacMoXhzwGjbpeoPlJN43Pwv+VmK8m2y2FpEsRCvio7xZjQabZfJQZAjPck8Glpvz577wWsaJwFm5Yr5Apvhe0j3wAVwmx7bZE9o2ufaK956eFIAG4eRpgjU1nJWh4I=
+	t=1774261200; cv=none; b=qHnAfn72sSV4LblSgSUx1DwnBsBVbNLULSTLAxg+pA1ZcqSk/bkRfy609KxlU4fNIljz5S9O8UzTdrgDYIUjqz1nOse8m/2uY14vNwgzal1gJT4/LMufd7z1m5eF87AH4mavPSD99CfupSO4OW3JTG/X+nbGgQLNqTRs9X5AXFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774260517; c=relaxed/simple;
-	bh=HEk6TEzOtM91mjfH4G/gA0WRcmn4ewAqqaYnYDr2u6M=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=U+mDLg8M8ETuoyPmFpQzBsnPQaK4z1b7dKSMaRuwbinqp0Bkonr5b3rpfKWwDGfTZ1Db7GtuGM8YC+PnbnBiIUXg5h9jEml4RcfzhQmJEP8E1jaUsJalFjQnLTZklcWCMgAx4ogsf+F2Qmu6PSyO4I+PRmfiPKJQKWyTeNdIMUo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=RfuJL8F/; arc=none smtp.client-ip=65.21.61.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliel.fr
+	s=arc-20240116; t=1774261200; c=relaxed/simple;
+	bh=hEN6vVeVXRajinyQurlghyRr50SpFgAdCvnZtom7gME=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JqaoWLTzj8kXtFvqnjTX0fFzq8B4kkF++/n7xGlRQ/OE2oQM4wWp/EKT3ZFt9OkibN488cQvp80wIO0FyEJA8zl9lT08J4OmJdi5cwz9oOBKQr2KQX3k8XtEJcA5J6f/pO2fXUAKkC8+KNHLQe5Sy67u/+xDBpI2tct4ZvMV12A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=fphDP8MW; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="RfuJL8F/"
-From: Ronald Claveau <linux-kernel-dev@aliel.fr>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aliel.fr;
-	s=courrier-s1; t=1774259899;
-	bh=HEk6TEzOtM91mjfH4G/gA0WRcmn4ewAqqaYnYDr2u6M=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=RfuJL8F/1TH2Xq19mYcLTOiJ+jSp77kgzU/0hqByMUgEZSeE8tjwfV2xhUewcx2Hf
-	 HXRc1Ee3p9fHL4UFTKcZqHYfBANdP76dd9hmDxMCnh0ZyNqRxmjxOa42J5IBbET71e
-	 iYNyIUvd+OOiEPLh1Bxmd83/7GZmSFYupOT5OpiI=
-Date: Mon, 23 Mar 2026 10:55:27 +0100
-Subject: [PATCH v3 2/9] dt-bindings: mmc: amlogic: Add compatible for T7
- mmc
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="fphDP8MW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=CLuw3UtfxSre6eFcGibdyl77ORqwpkWrRuEcMo6jxlQ=; b=fphDP8MWeEPtqDjGejYXRf3QbV
+	8hp5VjiOmktqkrqEOtmO/WT/XoMSHQzxySPi5Zde5xQ3eh18+gnUXXZDfpGZOT8VsRRzSB8RZKkFM
+	k9sktRa5Y7vxAEXDmXmq7Olupu9r+TMkIvU8n+dE0EL6V98S33u6om2JAzLeCyKlmjyM=;
+Received: from p200300cadf30ee00000000000000085c.dip0.t-ipconnect.de ([2003:ca:df30:ee00::85c] helo=max)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1w4cO4-00ALUX-2y;
+	Mon, 23 Mar 2026 11:19:56 +0100
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/4] wifi: mac80211: estimate expected throughput if not provided by driver/rc
+Date: Mon, 23 Mar 2026 10:19:52 +0000
+Message-ID: <20260323101954.874299-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260323101954.874299-1-nbd@nbd.name>
+References: <20260323101954.874299-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260323-add-emmc-t7-vim4-v3-2-5159d90a984c@aliel.fr>
-References: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
-In-Reply-To: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
-To: Neil Armstrong <neil.armstrong@linaro.org>, 
- Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
- Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, 
- Johannes Berg <johannes@sipsolutions.net>, van Spriel <arend@broadcom.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, 
- Ronald Claveau <linux-kernel-dev@aliel.fr>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openssh-sha256; t=1774259894; l=1008;
- i=linux-kernel-dev@aliel.fr; s=id_ed25519; h=from:subject:message-id;
- bh=HEk6TEzOtM91mjfH4G/gA0WRcmn4ewAqqaYnYDr2u6M=;
- b=U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgMGec55oxeeisqykQiUedekMYyOnR9
- BG9E/7rDWyqdNoAAAAGcGF0YXR0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAA
- QDVLAOKolTOjlCFNMip2F+ZQ5qNM40GZZeT/VYe8fG8hUx+xrsfO2/aVKj06NEU0HXYHwKdOEmf
- WXXMN/RTBRg4=
-X-Developer-Key: i=linux-kernel-dev@aliel.fr; a=openssh;
- fpr=SHA256:kch4osYZ6A1BrPps5AUs6KnfdE2wm4ocMtyTc8TmZMs
+Content-Transfer-Encoding: 8bit
 
-Add amlogic,t7-mmc compatible string, falling back to amlogic,meson-axg-mmc
-as the T7 MMC controller is compatible with the AXG implementation.
+Estimate the tx throughput based on the expected per-packet tx time.
+This is useful for mesh implementations that rely on expected throughput,
+e.g. 802.11s or batman-adv.
 
-Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- Documentation/devicetree/bindings/mmc/amlogic,meson-gx-mmc.yaml | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/sta_info.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/mmc/amlogic,meson-gx-mmc.yaml b/Documentation/devicetree/bindings/mmc/amlogic,meson-gx-mmc.yaml
-index 57646575a13f8..40dccf9715781 100644
---- a/Documentation/devicetree/bindings/mmc/amlogic,meson-gx-mmc.yaml
-+++ b/Documentation/devicetree/bindings/mmc/amlogic,meson-gx-mmc.yaml
-@@ -19,7 +19,10 @@ allOf:
- properties:
-   compatible:
-     oneOf:
--      - const: amlogic,meson-axg-mmc
-+      - items:
-+          - enum:
-+              - amlogic,t7-mmc
-+          - const: amlogic,meson-axg-mmc
-       - items:
-           - const: amlogic,meson-gx-mmc
-           - const: amlogic,meson-gxbb-mmc
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4259e9c13ed7..912f00d905b8 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2978,6 +2978,27 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+ 	}
+ }
+ 
++static u32 sta_estimate_expected_throughput(struct sta_info *sta,
++					    struct station_info *sinfo)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sdata->local;
++	struct rate_info *ri = &sinfo->txrate;
++	struct ieee80211_hw *hw = &local->hw;
++	struct ieee80211_chanctx_conf *conf;
++	u32 duration;
++	u8 band = 0;
++
++	conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
++	if (conf)
++			band = conf->def.chan->band;
++
++	duration = ieee80211_rate_expected_tx_airtime(hw, NULL, ri, band, true, 1024);
++	duration += duration >> 4; /* add assumed packet error rate of ~6% */
++
++	return ((1024 * USEC_PER_SEC) / duration) * 8;
++}
++
+ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		   bool tidstats)
+ {
+@@ -3202,6 +3223,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
+ 
+ 	thr = sta_get_expected_throughput(sta);
++	if (!thr && (sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
++	    thr = sta_estimate_expected_throughput(sta, sinfo);
+ 
+ 	if (thr != 0) {
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
 -- 
-2.49.0
+2.51.0
 
