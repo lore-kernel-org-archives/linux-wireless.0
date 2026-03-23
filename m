@@ -1,32 +1,32 @@
 Received: from courrier.aliel.fr (pouet.aliel.fr [65.21.61.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C65B31F996;
-	Mon, 23 Mar 2026 09:58:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B85C385507;
+	Mon, 23 Mar 2026 09:58:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.61.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774259910; cv=none; b=ORhU48iGttLRbMWoNKxfhDocz5a/u+uE+WNB32vEKd519d6i3UwczKGWGqTIXGRngH1/5ZhybrB0uwyi7G7sTev+WGdyFL2zvp9d8jyAEaOIHL9efVBF307aAtdkn46HmCgUSapzN4SbX4GVUYFUJAdbRNb0euyuCay082cMt9k=
+	t=1774259910; cv=none; b=lSm9AsZQslu6rHTqe05KGX3BzQc3k/UBEV/no8BqRNDHXVTN8Qx9hWfMHtwDXXiZjC6a4qK4IAvIViYy6H3Hx1t/1pfwoC7CA4R4CKkJt1ncnnjAjPosnth8oEXVUnwhmD4ntEKw5ALGwj/MNjg5LJyhpdm/JoO+1c+B5+2otZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774259910; c=relaxed/simple;
-	bh=ZPh1Ffg46SESKBriWMqpzSn5XjrMVWuNy3WH4xfUZ5A=;
+	bh=PAO6Z2Ay8+M9O7tMUw0wZiqIaHw2Mt0/shBBmfty138=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Bla6Qg/ytHdM7iodUFbwdmqmJHevnAI71TovubkflxPTaUmVLMu57qBwu4xx6AOc7LhQRJ5M2Lf9k43j2ENLuvQK+4y3+n/14lnrZeI2dyxF5Xik6j3llw/AEMGD3xf2O9CBikqZtNqyaEwpWz+U1q56vCact2g7va+yAFYpLf0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=TS+jRnKN; arc=none smtp.client-ip=65.21.61.41
+	 In-Reply-To:To:Cc; b=QQw/iEdbMrxeM2/G54uG6M6AC46wxI8UrExd5Z2ps0bNMzcSKIwp6ApifRgp0DkMjaPgjxHFXNAD6URYsOvbUT72JmahZHD//Mlwd33BQZ+tfgxSc1yGE1TjP9LX28f0Ld2AsbzjkqAobL/OkTQDAX02tvT8OXamjs2+1PJLRNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=n+ARx0QO; arc=none smtp.client-ip=65.21.61.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="TS+jRnKN"
+	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="n+ARx0QO"
 From: Ronald Claveau <linux-kernel-dev@aliel.fr>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aliel.fr;
-	s=courrier-s1; t=1774259902;
-	bh=ZPh1Ffg46SESKBriWMqpzSn5XjrMVWuNy3WH4xfUZ5A=;
+	s=courrier-s1; t=1774259904;
+	bh=PAO6Z2Ay8+M9O7tMUw0wZiqIaHw2Mt0/shBBmfty138=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=TS+jRnKNGHtdaqZg1ZVubazE5moSsgdnsCc54AXeGGRXBRCm+cdTUnqk5WCrJ5ust
-	 IsHHMcd6UE/eFn5TxSPIAqHpwAXv0qKbVLieNIwWEuxgdRxB5NULA3bBXVIUEqUbLP
-	 BasDTRf68fBtjgpmz2JDrWAmgCdT6IQ2z1qoVa+w=
-Date: Mon, 23 Mar 2026 10:55:31 +0100
-Subject: [PATCH v3 6/9] arm64: dts: amlogic: t7: khadas-vim4: Add power
- regulators
+	b=n+ARx0QOVSI73gnbSYWYoc3FeYm6S0ZuS4gLh6vZorOhzOL2O7NgR0Y7vxBc0FPh9
+	 tYLBdHXIl6VvsrR4MH5yKsYceKGDckIY31MxXGiJiOUadGL7KYIfZtYduutrudz/Wh
+	 +sHj/ramNMCcN1R8gYEXtN4Nu8WaL7gPAZ+a/92c=
+Date: Mon, 23 Mar 2026 10:55:33 +0100
+Subject: [PATCH v3 8/9] dt-bindings: net: wireless: brcm: Add compatible
+ for bcm43752
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260323-add-emmc-t7-vim4-v3-6-5159d90a984c@aliel.fr>
+Message-Id: <20260323-add-emmc-t7-vim4-v3-8-5159d90a984c@aliel.fr>
 References: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
 In-Reply-To: <20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr>
 To: Neil Armstrong <neil.armstrong@linaro.org>, 
@@ -49,132 +49,35 @@ Cc: linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org,
  linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, 
  Ronald Claveau <linux-kernel-dev@aliel.fr>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openssh-sha256; t=1774259895; l=3369;
+X-Developer-Signature: v=1; a=openssh-sha256; t=1774259896; l=906;
  i=linux-kernel-dev@aliel.fr; s=id_ed25519; h=from:subject:message-id;
- bh=ZPh1Ffg46SESKBriWMqpzSn5XjrMVWuNy3WH4xfUZ5A=;
+ bh=PAO6Z2Ay8+M9O7tMUw0wZiqIaHw2Mt0/shBBmfty138=;
  b=U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgMGec55oxeeisqykQiUedekMYyOnR9
  BG9E/7rDWyqdNoAAAAGcGF0YXR0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAA
- QEk7jRQ5NqIXVtgE0yrDaWudAWWqnyzdVDSDtVR07dfpvFdfMdfIYkLbvXvFvHDpDzRHxmw+dm4
- q9sElrp4CdAc=
+ QOLZ3+1Vg9dXpfnoDSeRCndObgEvaQXG1m2vupZ47DejBFobf7+EIYHilTiWgcPx4NElNSDZoRL
+ B6GhSQAWK2AU=
 X-Developer-Key: i=linux-kernel-dev@aliel.fr; a=openssh;
  fpr=SHA256:kch4osYZ6A1BrPps5AUs6KnfdE2wm4ocMtyTc8TmZMs
 
-Add voltage regulator nodes describing the VIM4 power tree,
-required by peripheral nodes such as the SD card controller.
+Add bcm43752 compatible with its bcm4329 compatible fallback.
 
 Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
 ---
- .../dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts  | 90 ++++++++++++++++++++++
- 1 file changed, 90 insertions(+)
+ Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
-index fffdab96b12eb..2450084d37642 100644
---- a/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
-+++ b/arch/arm64/boot/dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts
-@@ -6,6 +6,8 @@
- /dts-v1/;
- 
- #include "amlogic-t7.dtsi"
-+#include <dt-bindings/gpio/amlogic,t7-periphs-pinctrl.h>
-+#include <dt-bindings/gpio/gpio.h>
- 
- / {
- 	model = "Khadas vim4";
-@@ -45,6 +47,94 @@ xtal: xtal-clk {
- 		#clock-cells = <0>;
- 	};
- 
-+	dc_in: regulator-dc-in {
-+		compatible = "regulator-fixed";
-+		regulator-name = "DC_IN";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-always-on;
-+	};
-+
-+	sd_3v3: regulator-sdcard-3v3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "SD_3V3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&vddao_3v3>;
-+		gpio = <&gpio GPIOD_11 GPIO_ACTIVE_LOW>;
-+		regulator-boot-on;
-+		enable-active-low;
-+		regulator-always-on;
-+	};
-+
-+	vcc5v: regulator-vcc-5v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VCC5V";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&dc_in>;
-+
-+		gpio = <&gpio GPIOH_4 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
-+	vcc5v0_usb: regulator-vcc-usb {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VCC5V0_USB";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&vcc5v>;
-+
-+		gpio = <&gpio GPIOY_5 GPIO_ACTIVE_HIGH>;
-+		enable-active-high;
-+	};
-+
-+	vddao_1v8: regulator-vddao-1v8 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VDDAO_1V8";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		vin-supply = <&vddao_3v3>;
-+		regulator-always-on;
-+	};
-+
-+	vddao_3v3: regulator-vddao-3v3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VDDAO_3V3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&dc_in>;
-+		regulator-always-on;
-+	};
-+
-+	vddio_1v8: regulator-vddio-1v8 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VDDIO_1V8";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+		vin-supply = <&vddio_3v3>;
-+		regulator-always-on;
-+	};
-+
-+	vddio_3v3: regulator-vddio-3v3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "VDDIO_3V3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&vddao_3v3>;
-+		regulator-always-on;
-+	};
-+
-+	vddio_c: regulator-gpio-c {
-+		compatible = "regulator-gpio";
-+		regulator-name = "VDDIO_C";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&vddio_3v3>;
-+		gpios = <&gpio GPIOD_9 GPIO_ACTIVE_HIGH>;
-+		states = <1800000 1
-+			  3300000 0>;
-+	};
- };
- 
- &uart_a {
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+index 3be7576787644..81fd3e37452a6 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+@@ -42,6 +42,7 @@ properties:
+               - brcm,bcm4356-fmac
+               - brcm,bcm4359-fmac
+               - brcm,bcm4366-fmac
++              - brcm,bcm43752-fmac
+               - cypress,cyw4373-fmac
+               - cypress,cyw43012-fmac
+               - infineon,cyw43439-fmac
 
 -- 
 2.49.0
