@@ -1,54 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827AF3DB656
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2026 09:33:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282073D8138
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2026 09:33:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774344820; cv=none; b=mqrhHMbiz1GQQLQ+SL3YAm35XzjbNxcjZI1HDQdUdqZyukqSy9rPUV9C4ikRyOFN/XxQDM+cE66Pr9DsugCg89lbBJWykCZ4MIZUbHYBt3sCcj3KAZgQG5D611+641HV8loQUQzaaQORhyrHYJDQo3k0JmVowMnUK+t7o+vkMgI=
+	t=1774344824; cv=none; b=Hwj+M3HWpF8VVwOpFYkBhrCJseC4PRGc2SRm1FZCA//snYKShZ+jr8bkS8uQAE3CZn+as/3m4tPHh/B9p+lwGt/mjaGMH7UVd8IIuAkkIP2rGBCH3ew8H/1KVmLd5ZL2j0gzwsuKa00aspBRrV6ZAFwBxv5NBKxrOsFKV5o0nP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774344820; c=relaxed/simple;
-	bh=AoTxC1BhQv6fgsOITx5Yu2rkmippmSprp0E4Y0RxXCY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=keUEeG7tqvF7TV7PMBa0RkjhSA4NJC6uoaV26ShlDDMP1zTlNI7ThtQJkaH/N/Szzs1kFebxuiTeM8iSoQqCVo61ulK215LwOigregzL582uOecSq+B+KkwtHG3yaAldDZWquWdSed5XI7367+SI3TTgLupjQTD465gtgam6xgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DqzCHLBd; arc=none smtp.client-ip=198.175.65.19
+	s=arc-20240116; t=1774344824; c=relaxed/simple;
+	bh=UfuX/L2OE1VfmHrzM2TGxXwcYCaHEDAQiPYQyvTB2rE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=by3aSjqO2zbOWbgLpcMVXjnul8B2s+m7yRmGWyOWALQ0PwusiGIlfAT4wrCYlEmdKRTaKIAWPk7HPFX7OlSy1nNs8Q/xpGwO/ZQjT5/w5UWE5sxN2mpyYpagbGRlX6dlcYFngJJvzBkcYyvinQ/mrgOSpB6pdTLUayBSEz1VEic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Jl39mOyC; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DqzCHLBd"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Jl39mOyC"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774344819; x=1805880819;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=AoTxC1BhQv6fgsOITx5Yu2rkmippmSprp0E4Y0RxXCY=;
-  b=DqzCHLBdc8zOyyKtkzPCAxEI0ihhzOL3yGPiYBLaGylb75Xt82ays3BO
-   xx4zForgpSfa3Cag+zlJ9+J9GLUUWamgU13KtGCgJLVtLGdAufFkGZzuk
-   HzhJBXq9KQOuWNgHyLTeza1n1+st2T402Rd3QHpHGZE0DWe25JiKngez3
-   LGE1xnxqX+5ns8Xssj6WyDxyBNysQcazNLEePGa7nS/AGfQEogwGAVaAs
-   iMQn063wqCeRwVYfPM5HyDpYUxWToHyaqvc8jfRxCng3ZIdMCccHhnaKT
-   Amp+s9LyZukBmHaFJWEbPYPNJNpU7O/Mf883Bq9Iz618iNxjXbMEf4ZKo
+  t=1774344824; x=1805880824;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=UfuX/L2OE1VfmHrzM2TGxXwcYCaHEDAQiPYQyvTB2rE=;
+  b=Jl39mOyCOuwwka0XsYhyUBYwG4hVL9RSPZQulyvWKeb2B927EYOWzHLn
+   s176jLt1aKHJN7VjDX5IcMcuRA2WUXVRHKGQXnzPN6gCD7ui6s80JjjZz
+   5GdkcDBPXH9gaY2CEaL/9RRmphSJK4ZKvJQYbz8oer/yvgXf1w3bf1ZIQ
+   v3ZOVjQewhzovKlLUHhWdQwY6vlzEM5AmHqeOSTPjFWQtCJQQFLqbHeVj
+   83Hicpb517s82/THkkEusvv5MYAH4/RQ8bX72J1mOTsrM1Rx6UKx7hBPr
+   pci+27J4ogIjM/O/doc33Md7bPx5ZOUJApyrIXxJkNg2+CaYaxvNIXSV5
    w==;
-X-CSE-ConnectionGUID: W/UzmFmkSzeKhdGIXbUqww==
-X-CSE-MsgGUID: l6NFxRAoSCmklXpMr3lKOQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="75239816"
+X-CSE-ConnectionGUID: pmhJgELuQkaxSnZuJGIZ2A==
+X-CSE-MsgGUID: sTRdQOdXT7WjIsh13XT2gw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11738"; a="75239820"
 X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
-   d="scan'208";a="75239816"
+   d="scan'208";a="75239820"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 02:33:38 -0700
-X-CSE-ConnectionGUID: m1kBOy1eR+CsfbrHqyNUfA==
-X-CSE-MsgGUID: 1+7vBbRpTgORnvoe+Ti2bg==
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 02:33:43 -0700
+X-CSE-ConnectionGUID: 07tSvKqCT9OFhTSlwl+4lQ==
+X-CSE-MsgGUID: nwX4xGdHQXSqIF+c8+Wflg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,138,1770624000"; 
-   d="scan'208";a="224302418"
+   d="scan'208";a="224302432"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 02:33:36 -0700
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2026 02:33:40 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH iwlwifi-fixes 1/3] wifi: iwlwifi: mld: Fix MLO scan timing
-Date: Tue, 24 Mar 2026 11:33:24 +0200
-Message-Id: <20260324113316.4c56b8bac533.I6e656d8cc30bb82c96aabadedd62bd67f4c46bf9@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-fixes 3/3] wifi: iwlwifi: mld: correctly set wifi generation data
+Date: Tue, 24 Mar 2026 11:33:26 +0200
+Message-Id: <20260324093333.2953495-1-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260324113316.4c56b8bac533.I6e656d8cc30bb82c96aabadedd62bd67f4c46bf9@changeid>
+References: <20260324113316.4c56b8bac533.I6e656d8cc30bb82c96aabadedd62bd67f4c46bf9@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,227 +61,203 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Calculate MLO scan start time based on actual
-scan start notification from firmware instead of recording
-time when scan command is sent.
+In each MAC context, the firmware expects the wifi generation
+data, i.e. whether or not HE/EHT (and in the future UHR) is
+enabled on that MAC.
 
-Currently, MLO scan start time was captured immediately
-after sending the scan command to firmware. However, the
-actual scan start time may differ due to the FW being busy
-with a previous scan.
+However, this is currently handled wrong in two ways:
+ - EHT is only enabled when the interface is also an MLD, but
+   we currently allow (despite the spec) connecting with EHT
+   but without MLO.
+ - when HE or EHT are used by TDLS peers, the firmware needs
+   to have them enabled regardless of the AP
 
-In that case, the link selection code will think that the MLO
-scan is too old, and will warn.
+Fix this by iterating setting up the data depending on the
+interface type:
+ - for AP, just set it according to the BSS configuration
+ - for monitor, set it according to HW capabilities
+ - otherwise, particularly for client, iterate all stations
+   and then their links on the interface in question and set
+   according to their capabilities, this handles the AP and
+   TDLS peers. Re-calculate this whenever a TDLS station is
+   marked associated or removed so that it's kept updated,
+   for the AP it's already updated on assoc/disassoc.
 
-To fix it, Implement start scan notification handling to
-capture the precise moment when firmware begins the scan
-operation.
-
-Fixes: 9324731b9985 ("wifi: iwlwifi: mld: avoid selecting bad links")
-Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Fixes: d1e879ec600f ("wifi: iwlwifi: add iwlmld sub-driver")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260319110722.404713b22177.Ic972b5e557d011a5438f8f97c1e793cc829e2ea9@changeid
 ---
- .../wireless/intel/iwlwifi/fw/api/commands.h  |  5 ++++
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  | 10 +++++++
- drivers/net/wireless/intel/iwlwifi/mld/mld.c  |  1 +
- drivers/net/wireless/intel/iwlwifi/mld/mlo.c  |  4 +--
- .../net/wireless/intel/iwlwifi/mld/notif.c    |  5 ++++
- drivers/net/wireless/intel/iwlwifi/mld/scan.c | 30 +++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mld/scan.h |  9 ++++--
- 7 files changed, 56 insertions(+), 8 deletions(-)
+ .../net/wireless/intel/iwlwifi/mld/iface.c    | 101 ++++++++++++------
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c |  19 ++++
+ 2 files changed, 88 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index 8d64a271bb94..36159a769916 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -296,6 +296,11 @@ enum iwl_legacy_cmds {
- 	 */
- 	SCAN_OFFLOAD_UPDATE_PROFILES_CMD = 0x6E,
- 
-+	/**
-+	 * @SCAN_START_NOTIFICATION_UMAC: uses &struct iwl_umac_scan_start
-+	 */
-+	SCAN_START_NOTIFICATION_UMAC = 0xb2,
-+
- 	/**
- 	 * @MATCH_FOUND_NOTIFICATION: scan match found
- 	 */
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 60f0a4924ddf..46fcc32608e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -1156,6 +1156,16 @@ enum iwl_umac_scan_abort_status {
- 	IWL_UMAC_SCAN_ABORT_STATUS_NOT_FOUND,
- };
- 
-+/**
-+ * struct iwl_umac_scan_start - scan start notification
-+ * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-+ * @reserved: for future use
-+ */
-+struct iwl_umac_scan_start {
-+	__le32 uid;
-+	__le32 reserved;
-+} __packed; /* SCAN_START_UMAC_API_S_VER_1 */
-+
- /**
-  * struct iwl_umac_scan_complete - scan complete notification
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-index 495e9d8f3af6..9af79297c3b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-@@ -171,6 +171,7 @@ static const struct iwl_hcmd_names iwl_mld_legacy_names[] = {
- 	HCMD_NAME(MISSED_BEACONS_NOTIFICATION),
- 	HCMD_NAME(MAC_PM_POWER_TABLE),
- 	HCMD_NAME(MFUART_LOAD_NOTIFICATION),
-+	HCMD_NAME(SCAN_START_NOTIFICATION_UMAC),
- 	HCMD_NAME(RSS_CONFIG_CMD),
- 	HCMD_NAME(SCAN_ITERATION_COMPLETE_UMAC),
- 	HCMD_NAME(REPLY_RX_MPDU_CMD),
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mlo.c b/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-index f842f5183223..fbff5915f7fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mlo.c
-@@ -739,7 +739,7 @@ iwl_mld_set_link_sel_data(struct iwl_mld *mld,
- 
- 		/* Ignore any BSS that was not seen in the last MLO scan */
- 		if (ktime_before(link_conf->bss->ts_boottime,
--				 mld->scan.last_mlo_scan_time))
-+				 mld->scan.last_mlo_scan_start_time))
- 			continue;
- 
- 		data[n_data].link_id = link_id;
-@@ -945,7 +945,7 @@ static void _iwl_mld_select_links(struct iwl_mld *mld,
- 	if (!mld_vif->authorized || hweight16(usable_links) <= 1)
- 		return;
- 
--	if (WARN(ktime_before(mld->scan.last_mlo_scan_time,
-+	if (WARN(ktime_before(mld->scan.last_mlo_scan_start_time,
- 			      ktime_sub_ns(ktime_get_boottime_ns(),
- 					   5ULL * NSEC_PER_SEC)),
- 		"Last MLO scan was too long ago, can't select links\n"))
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/notif.c b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
-index 240526d8b632..9c88a8579a75 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/notif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
-@@ -287,6 +287,8 @@ static void iwl_mld_handle_beacon_notification(struct iwl_mld *mld,
-  * at least enough bytes to cover the structure listed in the CMD_VER_ENTRY.
-  */
- 
-+CMD_VERSIONS(scan_start_notif,
-+	     CMD_VER_ENTRY(1, iwl_umac_scan_start))
- CMD_VERSIONS(scan_complete_notif,
- 	     CMD_VER_ENTRY(1, iwl_umac_scan_complete))
- CMD_VERSIONS(scan_iter_complete_notif,
-@@ -360,6 +362,7 @@ DEFINE_SIMPLE_CANCELLATION(datapath_monitor, iwl_datapath_monitor_notif,
- 			   link_id)
- DEFINE_SIMPLE_CANCELLATION(roc, iwl_roc_notif, activity)
- DEFINE_SIMPLE_CANCELLATION(scan_complete, iwl_umac_scan_complete, uid)
-+DEFINE_SIMPLE_CANCELLATION(scan_start, iwl_umac_scan_start, uid)
- DEFINE_SIMPLE_CANCELLATION(probe_resp_data, iwl_probe_resp_data_notif,
- 			   mac_id)
- DEFINE_SIMPLE_CANCELLATION(uapsd_misbehaving_ap, iwl_uapsd_misbehaving_ap_notif,
-@@ -402,6 +405,8 @@ const struct iwl_rx_handler iwl_mld_rx_handlers[] = {
- 			     RX_HANDLER_SYNC)
- 	RX_HANDLER_NO_OBJECT(LEGACY_GROUP, BA_NOTIF, compressed_ba_notif,
- 			     RX_HANDLER_SYNC)
-+	RX_HANDLER_OF_SCAN(LEGACY_GROUP, SCAN_START_NOTIFICATION_UMAC,
-+			   scan_start_notif)
- 	RX_HANDLER_OF_SCAN(LEGACY_GROUP, SCAN_COMPLETE_UMAC,
- 			   scan_complete_notif)
- 	RX_HANDLER_NO_OBJECT(LEGACY_GROUP, SCAN_ITERATION_COMPLETE_UMAC,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.c b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-index a1a4cf3ab3d3..abd4281b4b0e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.c
-@@ -473,6 +473,9 @@ iwl_mld_scan_get_cmd_gen_flags(struct iwl_mld *mld,
- 	    params->flags & NL80211_SCAN_FLAG_COLOCATED_6GHZ)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_V2_TRIGGER_UHB_SCAN;
- 
-+	if (scan_status == IWL_MLD_SCAN_INT_MLO)
-+		flags |= IWL_UMAC_SCAN_GEN_FLAGS_V2_NTF_START;
-+
- 	if (params->enable_6ghz_passive)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_V2_6GHZ_PASSIVE_SCAN;
- 
-@@ -1817,9 +1820,6 @@ static void iwl_mld_int_mlo_scan_start(struct iwl_mld *mld,
- 	ret = _iwl_mld_single_scan_start(mld, vif, req, &ies,
- 					 IWL_MLD_SCAN_INT_MLO);
- 
--	if (!ret)
--		mld->scan.last_mlo_scan_time = ktime_get_boottime_ns();
--
- 	IWL_DEBUG_SCAN(mld, "Internal MLO scan: ret=%d\n", ret);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+index 29df747c8938..9215fc7e2eca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+@@ -111,14 +111,75 @@ static bool iwl_mld_is_nic_ack_enabled(struct iwl_mld *mld,
+ 			       IEEE80211_HE_MAC_CAP2_ACK_EN);
  }
  
-@@ -1904,6 +1904,30 @@ void iwl_mld_handle_match_found_notif(struct iwl_mld *mld,
- 	ieee80211_sched_scan_results(mld->hw);
- }
- 
-+void iwl_mld_handle_scan_start_notif(struct iwl_mld *mld,
-+				     struct iwl_rx_packet *pkt)
-+{
-+	struct iwl_umac_scan_complete *notif = (void *)pkt->data;
-+	u32 uid = le32_to_cpu(notif->uid);
+-static void iwl_mld_set_he_support(struct iwl_mld *mld,
+-				   struct ieee80211_vif *vif,
+-				   struct iwl_mac_config_cmd *cmd)
++struct iwl_mld_mac_wifi_gen_sta_iter_data {
++	struct ieee80211_vif *vif;
++	struct iwl_mac_wifi_gen_support *support;
++};
 +
-+	if (IWL_FW_CHECK(mld, uid >= ARRAY_SIZE(mld->scan.uid_status),
-+			 "FW reports out-of-range scan UID %d\n", uid))
++static void iwl_mld_mac_wifi_gen_sta_iter(void *_data,
++					  struct ieee80211_sta *sta)
+ {
+-	if (vif->type == NL80211_IFTYPE_AP)
+-		cmd->wifi_gen.he_ap_support = 1;
+-	else
+-		cmd->wifi_gen.he_support = 1;
++	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
++	struct iwl_mld_mac_wifi_gen_sta_iter_data *data = _data;
++	struct ieee80211_link_sta *link_sta;
++	unsigned int link_id;
++
++	if (mld_sta->vif != data->vif)
 +		return;
 +
-+	if (IWL_FW_CHECK(mld, !(mld->scan.uid_status[uid] & mld->scan.status),
-+			 "FW reports scan UID %d we didn't trigger\n", uid))
-+		return;
-+
-+	IWL_DEBUG_SCAN(mld, "Scan started: uid=%u type=%u\n", uid,
-+		       mld->scan.uid_status[uid]);
-+	if (IWL_FW_CHECK(mld, mld->scan.uid_status[uid] != IWL_MLD_SCAN_INT_MLO,
-+			 "FW reports scan start notification %d we didn't trigger\n",
-+			 mld->scan.uid_status[uid]))
-+		return;
-+
-+	mld->scan.last_mlo_scan_start_time = ktime_get_boottime_ns();
++	for_each_sta_active_link(data->vif, sta, link_sta, link_id) {
++		if (link_sta->he_cap.has_he)
++			data->support->he_support = 1;
++		if (link_sta->eht_cap.has_eht)
++			data->support->eht_support = 1;
++	}
 +}
 +
- void iwl_mld_handle_scan_complete_notif(struct iwl_mld *mld,
- 					struct iwl_rx_packet *pkt)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/scan.h b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-index 69110f0cfc8e..de5620e7f463 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/scan.h
-@@ -27,6 +27,9 @@ int iwl_mld_sched_scan_start(struct iwl_mld *mld,
- void iwl_mld_handle_match_found_notif(struct iwl_mld *mld,
- 				      struct iwl_rx_packet *pkt);
- 
-+void iwl_mld_handle_scan_start_notif(struct iwl_mld *mld,
-+				     struct iwl_rx_packet *pkt);
++static void iwl_mld_set_wifi_gen(struct iwl_mld *mld,
++				 struct ieee80211_vif *vif,
++				 struct iwl_mac_wifi_gen_support *support)
++{
++	struct iwl_mld_mac_wifi_gen_sta_iter_data sta_iter_data = {
++		.vif = vif,
++		.support = support,
++	};
++	struct ieee80211_bss_conf *link_conf;
++	unsigned int link_id;
 +
- void iwl_mld_handle_scan_complete_notif(struct iwl_mld *mld,
- 					struct iwl_rx_packet *pkt);
++	switch (vif->type) {
++	case NL80211_IFTYPE_MONITOR:
++		/* for sniffer, set to HW capabilities */
++		support->he_support = 1;
++		support->eht_support = mld->trans->cfg->eht_supported;
++		break;
++	case NL80211_IFTYPE_AP:
++		/* for AP set according to the link configs */
++		for_each_vif_active_link(vif, link_conf, link_id) {
++			support->he_ap_support |= link_conf->he_support;
++			support->eht_support |= link_conf->eht_support;
++		}
++		break;
++	default:
++		/*
++		 * If we have MLO enabled, then the firmware needs to enable
++		 * address translation for the station(s) we add. That depends
++		 * on having EHT enabled in firmware, which in turn depends on
++		 * mac80211 in the iteration below.
++		 * However, mac80211 doesn't enable capabilities on the AP STA
++		 * until it has parsed the association response successfully,
++		 * so set EHT (and HE as a pre-requisite for EHT) when the vif
++		 * is an MLD.
++		 */
++		if (ieee80211_vif_is_mld(vif)) {
++			support->he_support = 1;
++			support->eht_support = 1;
++		}
++
++		ieee80211_iterate_stations_mtx(mld->hw,
++					       iwl_mld_mac_wifi_gen_sta_iter,
++					       &sta_iter_data);
++		break;
++	}
+ }
  
-@@ -114,8 +117,8 @@ enum iwl_mld_traffic_load {
-  *	in jiffies.
-  * @last_start_time_jiffies: stores the last start time in jiffies
-  *	(interface up/reset/resume).
-- * @last_mlo_scan_time: start time of the last MLO scan in nanoseconds since
-- *	boot.
-+ * @last_mlo_scan_start_time: start time of the last MLO scan in nanoseconds
-+ * since boot.
-  */
- struct iwl_mld_scan {
- 	/* Add here fields that need clean up on restart */
-@@ -136,7 +139,7 @@ struct iwl_mld_scan {
- 	void *cmd;
- 	unsigned long last_6ghz_passive_jiffies;
- 	unsigned long last_start_time_jiffies;
--	u64 last_mlo_scan_time;
-+	u64 last_mlo_scan_start_time;
- };
+ /* fill the common part for all interface types */
+@@ -128,8 +189,6 @@ static void iwl_mld_mac_cmd_fill_common(struct iwl_mld *mld,
+ 					u32 action)
+ {
+ 	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
+-	struct ieee80211_bss_conf *link_conf;
+-	unsigned int link_id;
  
- /**
+ 	lockdep_assert_wiphy(mld->wiphy);
+ 
+@@ -147,29 +206,7 @@ static void iwl_mld_mac_cmd_fill_common(struct iwl_mld *mld,
+ 	cmd->nic_not_ack_enabled =
+ 		cpu_to_le32(!iwl_mld_is_nic_ack_enabled(mld, vif));
+ 
+-	/* If we have MLO enabled, then the firmware needs to enable
+-	 * address translation for the station(s) we add. That depends
+-	 * on having EHT enabled in firmware, which in turn depends on
+-	 * mac80211 in the code below.
+-	 * However, mac80211 doesn't enable HE/EHT until it has parsed
+-	 * the association response successfully, so just skip all that
+-	 * and enable both when we have MLO.
+-	 */
+-	if (ieee80211_vif_is_mld(vif)) {
+-		iwl_mld_set_he_support(mld, vif, cmd);
+-		cmd->wifi_gen.eht_support = 1;
+-		return;
+-	}
+-
+-	for_each_vif_active_link(vif, link_conf, link_id) {
+-		if (!link_conf->he_support)
+-			continue;
+-
+-		iwl_mld_set_he_support(mld, vif, cmd);
+-
+-		/* EHT, if supported, was already set above */
+-		break;
+-	}
++	iwl_mld_set_wifi_gen(mld, vif, &cmd->wifi_gen);
+ }
+ 
+ static void iwl_mld_fill_mac_cmd_sta(struct iwl_mld *mld,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index 0c53d6bd9651..71a9a72c9ac0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -1761,6 +1761,16 @@ static int iwl_mld_move_sta_state_up(struct iwl_mld *mld,
+ 
+ 		if (vif->type == NL80211_IFTYPE_STATION)
+ 			iwl_mld_link_set_2mhz_block(mld, vif, sta);
++
++		if (sta->tdls) {
++			/*
++			 * update MAC since wifi generation flags may change,
++			 * we also update MAC on association to the AP via the
++			 * vif assoc change
++			 */
++			iwl_mld_mac_fw_action(mld, vif, FW_CTXT_ACTION_MODIFY);
++		}
++
+ 		/* Now the link_sta's capabilities are set, update the FW */
+ 		iwl_mld_config_tlc(mld, vif, sta);
+ 
+@@ -1873,6 +1883,15 @@ static int iwl_mld_move_sta_state_down(struct iwl_mld *mld,
+ 			/* just removed last TDLS STA, so enable PM */
+ 			iwl_mld_update_mac_power(mld, vif, false);
+ 		}
++
++		if (sta->tdls) {
++			/*
++			 * update MAC since wifi generation flags may change,
++			 * we also update MAC on disassociation to the AP via
++			 * the vif assoc change
++			 */
++			iwl_mld_mac_fw_action(mld, vif, FW_CTXT_ACTION_MODIFY);
++		}
+ 	} else {
+ 		return -EINVAL;
+ 	}
 -- 
 2.34.1
 
