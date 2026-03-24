@@ -1,81 +1,101 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9149C402459;
-	Tue, 24 Mar 2026 15:25:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4E129BDB1
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2026 15:49:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774365909; cv=none; b=RkR2f33IrXC82NHJkBXWI9pIJldMhw7EzKXjqe4ePolFjvUg1iR1GZnzsm5IU7umt90W4BTPNe8WzqLnpvzfs047/pXWX0UFiLM2+9TKBmHMg+dVfz+utPiW4xQ6RESIjrdoCg3KCOjgsXLTUZFnXRGpRTxKIEfMrphl4Nr9rFc=
+	t=1774367359; cv=none; b=o+ad+fUBmvoG9xTA38J0C1uKggqMsEjd5caqCXlzOUE7jo+E+q4KtJP/7gfiLwoB+Dw5LWtH9koyVajyQHW8Zfuq3F1jENjYzFl0FwQCRUL+aLS2I2sjdGt2aERVFnx5Z8R3RC9RnxZnRXWo7pg8ji1TB1vAU73tw9iiiyabv1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774365909; c=relaxed/simple;
-	bh=JNyYFA76J+jQHcBV1rf+dBeWcK1puB0zpjFH0YPVt7c=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=FWY21vJYx+3VrYCIy9UeKB1KxYaSosR0C+naoUq1+ZBLS4w0fwMH+xk871XWHFHXW59m8MIr+es0F3yp0tt66rOzbrj36B4iWdGs5pmq+wtEl25W70U/vgUgHdfcwckPu7OvuvAUBbyUw3hKx901Xs74WbZ2PqovOm3ok8n/St8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=b14Pkza7; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1774367359; c=relaxed/simple;
+	bh=Q88nHSAQemzWnHNM0BQBKmQswo3NXVDjC5dq4Tn+M/k=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WEWpRzUhVfd1wp27vdtn8bdClN8E+VVwX5K4vqCZl5DnorvQVEImKG5MQeo/+/KEbhHgVmYG9AlbKuZU68iomSjc5Tq40DvSJIoxgnEqiiYfNTqDxwd8mpXQOpc2BFDW35kUngPvrErdDj18NbthaG/5W6S9ViJcYZFKeFEkcvE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=UAtDY8CM; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="b14Pkza7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=HnMY1RSwhTCYvBir6obZ+OuRp6EWJUCF7twCrDHIGWw=;
-	t=1774365908; x=1775575508; b=b14Pkza7uhSf3cGA/sCfkuipU5d9DMuPWIW8VEWRBEwhwGG
-	3mTXQfM17WnxK356BQkH/6eC47P1/gEvW21SQWUmOPhLs3nUU2drWuNpJyoYTH58L1bUULkcwOm6v
-	SuQq5oSfe9Hmd6Wtrc7w7hy15ug+26a5gEYVIkKim5nsij54xIBmty8evrAGarSzWLxnXIZEFwLXn
-	9vnmRwr6VRSIORIOkRn68nxb7n9Ud55LrtpkD7pGdnhyLX/OcWniRwdSVj7j8dpp0/IBFHDxOKmbb
-	kwmm/uGHTkR6hI2Poof+uUyZZ82cEXMt2W/cXi5nvOjngGpAr+ml4Vvsb91GKB+A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1w53co-0000000Azl0-1BAa;
-	Tue, 24 Mar 2026 16:24:58 +0100
-Message-ID: <3d2f9e4d3f06f93e8eb191ade69f4b43752a36bf.camel@sipsolutions.net>
-Subject: Re: pull request: mt76-next 2026-03-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless
-	 <linux-wireless@vger.kernel.org>
-Cc: Ryder Lee <ryder.lee@mediatek.com>, devicetree@vger.kernel.org, 
- Krzysztof Kozlowski
-	 <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
-Date: Tue, 24 Mar 2026 16:24:57 +0100
-In-Reply-To: <bf6858fc-98f0-4523-bca4-8da7ecf3738c@nbd.name>
-References: <bf6858fc-98f0-4523-bca4-8da7ecf3738c@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UAtDY8CM"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=qm8xzxuHJC54a5Hw//8ZtzEYPjBPtwG/MjnkYt0SkPQ=; b=UAtDY8CMlBAtTXE6pLvSKVygQc
+	FfoL0Qw8TogWQgGGtIK1zzT5d3n+syLS1oBkEZuDJHQ1d2OCv16SMBybhgmeSiao/SZbuSZ5tZtXw
+	M6vb+MWpex6GEXWs0CxLt4oJ56ogINqYM8iZ2qWqE5Qn/W/NepuUBXaCc6u1PKWLpxZU=;
+Received: from p200300cadf3fa900000000000000085c.dip0.t-ipconnect.de ([2003:ca:df3f:a900::85c] helo=max)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1w540F-00Bfki-06
+	for linux-wireless@vger.kernel.org;
+	Tue, 24 Mar 2026 16:49:11 +0100
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wifi: mt76: mt7996: add missing max_remain_on_channel_duration
+Date: Tue, 24 Mar 2026 15:49:04 +0000
+Message-ID: <20260324154904.2555603-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20260324154904.2555603-1-nbd@nbd.name>
+References: <20260324154904.2555603-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2026-03-23 at 10:33 +0100, Felix Fietkau wrote:
+Having this unset breaks remain-on-channel and mgmt TX.
+Move setting it to mt76 core to keep it in one place.
 
-> The following changes since commit 9ac76f3d0bb2940db3a9684d596b9c8f301ef3=
-15:
->=20
->    Merge tag 'wireless-next-2026-03-19' of https://git.kernel.org/pub/scm=
-/linux/kernel/git/wireless/wireless-next (2026-03-19 15:30:20 +0100)
->=20
-> are available in the Git repository at:
->=20
->    https://github.com/nbd168/wireless tags/mt76-next-2026-03-23
+Fixes: 69d54ce7491d0 ("wifi: mt76: mt7996: switch to single multi-radio wiphy")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c    | 2 ++
+ drivers/net/wireless/mediatek/mt76/mt7615/init.c | 1 -
+ drivers/net/wireless/mediatek/mt76/mt792x_core.c | 1 -
+ 3 files changed, 2 insertions(+), 2 deletions(-)
 
-[...]
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 4ae5e4715a9c..dd68776ada28 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -449,6 +449,8 @@ mt76_phy_init(struct mt76_phy *phy, struct ieee80211_hw *hw)
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_AQL);
+ 
++	if (!wiphy->max_remain_on_channel_duration)
++		wiphy->max_remain_on_channel_duration = 5000;
+ 	if (!wiphy->available_antennas_tx)
+ 		wiphy->available_antennas_tx = phy->antenna_mask;
+ 	if (!wiphy->available_antennas_rx)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 42e11ba1206e..e437e088b2e9 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -195,7 +195,6 @@ mt7615_check_offload_capability(struct mt7615_dev *dev)
+ 		ieee80211_hw_set(hw, SUPPORTS_DYNAMIC_PS);
+ 
+ 		wiphy->flags &= ~WIPHY_FLAG_4ADDR_STATION;
+-		wiphy->max_remain_on_channel_duration = 5000;
+ 		wiphy->features |= NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+ 				   NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
+ 				   WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index 152cfcca2f90..5a5d7534830b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -657,7 +657,6 @@ int mt792x_init_wiphy(struct ieee80211_hw *hw)
+ 				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 				 BIT(NL80211_IFTYPE_P2P_GO) |
+ 				 BIT(NL80211_IFTYPE_P2P_DEVICE);
+-	wiphy->max_remain_on_channel_duration = 5000;
+ 	wiphy->max_scan_ie_len = MT76_CONNAC_SCAN_IE_LEN;
+ 	wiphy->max_scan_ssids = 4;
+ 	wiphy->max_sched_scan_plan_interval =
+-- 
+2.51.0
 
->        dt-bindings: net: wireless: mt76: add mt79 PCI devices
->        dt-bindings: net: wireless: mt76: clarify backoff limit usage
-
-OK I have no idea what happened here, apparently Ryder has a super
-messed up email setup that ended up sending different versions with the
-same Message-Id, so the lore archive is a big mess ... whatever is going
-on there, please fix that.
-
-But given what I _can_ see about these patches in the archive, I don't
-want to pull this now unless I get a clear ACK from DT maintainers.
-
-johannes
