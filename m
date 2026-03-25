@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C003A6EF4;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4F7340FDA8;
 	Wed, 25 Mar 2026 17:57:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774461438; cv=none; b=K+v7Jtr/sXPwPibAmZsNrW6I8Lo8ONdQtcxW4HLvqdWXHBbewmBaQSFLi360L6pvl5fNwZdf1oeTW+IYvet2oWGq6Q8n57oSQhi381iijvaW9jyB2LLqXVCUXPbpxJoCM1PKCTJXOnoFXolX4vZBMc1C/aoyiB4djUpJqFe3fy4=
+	t=1774461438; cv=none; b=bUtq3GeNH0vzRG0bCb8LH/O6Hq/MNKUiCj00u0dQyiCXQK8v7iPPq0u8+zEt7p973Sv0qCZK4KxEJH+18PjlclLG0IkzmqwJBokfjAF5Fp3CyWm65Nzm/zWrM8ZlS/jWoJ9nVuZX6lE98B+KbzzIZ2+XmQJ8XLkxi5m09T+e40c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774461438; c=relaxed/simple;
-	bh=qsTEgT/W9QOLmt4TqjUxrRDazuJnu2x+qBXV69+B19g=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Xr7dpgdmKd0hjs+7Kh/xRsUlbcvhwJgIK0zz7CxBq7hlBl2w3bBQ9nrpv0tT2PTyWDixIzL1nzNsdMItJ5ba1hxCaAPg4vSZi0lwCk9Jr85lTglwaf3XT+Ai+KCuwf58thzg7Rkbr3OoKZFrLa+gB63EgXR+8f2lLGuwNaJghP8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gbDVLN8F; arc=none smtp.client-ip=10.30.226.201
+	bh=l+Sa6PHie0+76HOU1LeHnQNEt+3sCVhiCKKJMpio3TI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=JfZgR7UTXBz5bggzAB58Xwd/bjEgaCJyWkwe8V0AJER9irfryU8MTVQVnP0rT+4Y145yWRaY2+7S7qePfB6M7Jfy1/yeI5PAf3Kwrs75XSZWJ31yKu9/XJkrytMURMf+CYW4zkCQpi4ADaFx5XOULWOcDdKAgIABKnlNlt+bQDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LyQqQFlS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gbDVLN8F"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D9C0CC4AF0D;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LyQqQFlS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AC6E7C2BCB1;
 	Wed, 25 Mar 2026 17:57:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774461437;
-	bh=qsTEgT/W9QOLmt4TqjUxrRDazuJnu2x+qBXV69+B19g=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=gbDVLN8Fpu3Y7PeQcKnWHkJUTKf7w+RjrgOa4GMGSBzumrQ3tRCcOw1dTcUkw+RJ9
-	 kNnF5Qz3on9ZZ4/8YlCe8Kej/Q6SkMbd/NoO7lntP9qggA2ZK0IaV+/8LTqcLfez7L
-	 bqcvltmDsasyZiAyCULo1aqYerh7lQTGrHCX4n1HC9OJ80YOmJLkkAgrehPhoTFl/H
-	 xod+SHD842T1SzWIrradQuinkf1r1q61sFnju1crX2dfDXVk7i/yy7e+xTNNTanYnf
-	 dQ/15NmiF0wufdYttkfRec5qB7cWXyXpKQons7uHXbzHn2+MfnjnDgqs8zSwtZFBED
-	 27V0cw/Rumj1Q==
+	s=k20201202; t=1774461438;
+	bh=l+Sa6PHie0+76HOU1LeHnQNEt+3sCVhiCKKJMpio3TI=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=LyQqQFlStrqXuLb5r08huZTd85F+NyFKXuJxU+45+FdxMTwneGrNm5lkTSvM7ZflR
+	 Vqj3xchr/HuM2tw4tQwKeVPP9RFvhKLZwE4l1knBsAL1NLNzrpTLDV/rb1azFomtI0
+	 Paz8Wa2Dz7n9m179NvK7CZzW8/+MeVnUWOJqbGCO/zffxo4/skx98M0DTKCPbru3kP
+	 dNz4fgdPssP5ZPUWdMV7z3PhwfGKNj385vA9kG9z7g2Az4wZyyjnNyljCbjfQDBjlM
+	 hHGFBqeTnJt7rIqfHfd8GaeWc65HmzXPUQtMrRCWhZN8lkS1TSUPt/PPtH8AG7+Iwm
+	 5kXL7cNn5xNPw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CACA3109C04D;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A77109C040;
 	Wed, 25 Mar 2026 17:57:17 +0000 (UTC)
 From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Wed, 25 Mar 2026 18:57:17 +0100
-Subject: [PATCH v4 3/3] arm64: dts: qcom: sdm845-xiaomi-beryllium: Enable
- ath10k host-cap skip quirk
+Subject: [PATCH v4 0/3] ath10k: Introduce a devicetree quirk to skip host
+ cap QMI requests
+Date: Wed, 25 Mar 2026 18:57:14 +0100
+Message-Id: <20260325-skip-host-cam-qmi-req-v4-0-bc08538487aa@ixit.cz>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -41,9 +41,12 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260325-skip-host-cam-qmi-req-v4-3-bc08538487aa@ixit.cz>
-References: <20260325-skip-host-cam-qmi-req-v4-0-bc08538487aa@ixit.cz>
-In-Reply-To: <20260325-skip-host-cam-qmi-req-v4-0-bc08538487aa@ixit.cz>
+X-B4-Tracking: v=1; b=H4sIAPohxGkC/4XOTW6DMBAF4KtEXnci/2DHZJV7VFkYM8CoMSY2R
+ Ukj7l6DVHVVdTPSW8z33otlTISZnQ8vlnChTHEsoXo7MD+4sUegtmQmudRCCA75gyYYYp7BuwD
+ 3QJDwDii0NtJi41XNyu+UsKPH7r5fS+5SDDAPCd2uCcMF11ZbAaKuTLnQ0wwZxxYwOLqBCzQfp
+ 8+xpXS50ehSPMbUb/RAeY7puS9e5Fbw37hFAgfeuq6y2tX25C70KLr/Ytu0Rf0Yhiup/zJUMRp
+ hlO9OjfJW/Brrun4D2U6Qa0cBAAA=
+X-Change-ID: 20251110-skip-host-cam-qmi-req-e155628ebc39
 To: Johannes Berg <johannes@sipsolutions.net>, 
  Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
  Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, 
@@ -55,52 +58,76 @@ Cc: Amit Pundir <amit.pundir@linaro.org>, linux-wireless@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
  phone-devel@vger.kernel.org, David Heidelberg <david@ixit.cz>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=865; i=david@ixit.cz;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2045; i=david@ixit.cz;
  h=from:subject:message-id;
- bh=7WCT4AIXs3RES5sBwcwPY1VLLZLiJwKsEh3sFLY3XeA=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBpxCH731ERAs00JnGTMwhjDc7fvFNGG6zHnruKt
- CzctlaDyk6JAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCacQh+wAKCRBgAj/E00kg
- ch0UD/9bRRDJsrM0G4teP9+2n5J/36wjbkVECTL3P9N4I0zEVmBUPaHYndwRhiz2OdWQ850FzrC
- 9l3RUNEjqdi14CbA3wNDnNBlqGdS4m7pnEjPTCgz9rUa4pqqV0blSTnsxMPUkldndytGhBMwCKv
- 0FZ3HnHYNjX/9p/OrHglUWmuuSeWS7pCWZQEuTC+yNesYSgdUoFJpgQKZ/AIephysyQGo06c0Cx
- 3/5FajViggtoX8K9bYrnoRaOiBNoGs2i6iKNn6ybc++JRtcwDkUjKzhE36jVN8YpsvijHreLHyu
- 73SmHDNuQxi7fq7P6paQx6SjMpNMrhSEvQocilCvJmiUYAH1t8Q5OFXGiuDDWcvcsz80tr+o37x
- R9i5YxVJ6xDXBT8XEJWfEIyqsu97obj4TILDO3NDEKOkduvAnVPsirgFlsnxi4DSL/i08yJOf3y
- eQGFnhEqzkok4HpJyylXIqGQ0sAQHXcPijZhs0lpdUz9hnhnzdCLxl8iUBx5Wm2HrKONCex7uSz
- VTG56POA1mOSu48mQV2blAZIyNk8lM52x8t8OAE1j7Ny0ov41eHqmcBT2KYnB6c0ZV4V+8/wraS
- zazwSChKzwhWB4ku7qk80ODz/xgoYzcE/trWbyUqIeyNCwAzGWpXLJeeyZisCa4PEQLcyF8covI
- zF7BssX7Fpp7DYA==
+ bh=l+Sa6PHie0+76HOU1LeHnQNEt+3sCVhiCKKJMpio3TI=;
+ b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBpxCH7ElA0Nd5DUi8t0QqcUigdI3QY//8k7Dyqz
+ jRky/PwpA+JAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCacQh+wAKCRBgAj/E00kg
+ coh6D/9AsFFPwvKeFoEmXBxHBif+w1qdamrOK/Ez4rcrIsTVlItX5wcf0yvYzIqKrSlCUphp+VT
+ Z6Yhj3aT2UZvsS3qgXPwQtHqaTEAeHRgFzYq+pAgPat953/4tI4TS1ca0EsFIw0WDLU4R6THF/L
+ 74IB2IPQHC9kjNEDJemH9hrq9pFljUIVClfY3v/BQ4jocazqY50lMqIoKiGORKAR0+tNmGZQ14J
+ z/MCGoE+aFkpa2sT0Y4ZvE3fh3i0XmKd/WPtH/hxvvXtvrEYHGzeCe+eXYkKpcAuA26837an0fw
+ dvTgC+XehXWRTASnhgWZxS1IcFizrAIUub9JNw00qjZuGTrJKuQ7GJWCPlgzMX9XxL3hrbLS+t3
+ st4RAVjGZ0+dDqS9Syh/3ARmo28jsHaC3StTM1NfLWmiizOz+O5BxfmRs0YHC3p+z/bVyGM9Clz
+ v3+aBR58MiZojkFjYR41592dQNzxwRbRcru4lvvNY1plFKADVL7DeFPMMD/aNKfHEi4tqN6cKwV
+ 3DK8BW41yVsw9djWl8S0s08GLaUDKTQMTKB2SB12bQ/KguMb3yLYLfPWywonmPBdRJbqQ9IwhrV
+ NOFr72aIKW0pWa5PAHFt6rdFamToZHz2vZV4Ekk9SWRiF2tr2jezhkOyFA+Kyu1Lk8YrADVRj0G
+ sA0j4vvHSlRZIlA==
 X-Developer-Key: i=david@ixit.cz; a=openpgp;
  fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
 X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
 X-Original-From: David Heidelberg <david@ixit.cz>
 Reply-To: david@ixit.cz
 
-From: Amit Pundir <amit.pundir@linaro.org>
+This quirk is used so far used on:
+ - LG G7 ThinQ
+ - Xiaomi Poco F1
 
-The Wi-Fi firmware used on Xiaomi Poco F1 (beryllium) phone doesn't
-support the host-capability QMI request, so add a quirk to skip it on
-this device.
+I'm resending it after ~ 4 years since initial send due to Snapdragon
+845 being one of best supported platform for mobile phones running
+Linux, so it would be shame to not have shiny support.
 
-Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+Original thread:
+  https://lore.kernel.org/all/b796bfee-b753-479a-a8d6-ba1fe3ee6222@ixit.cz/
+
+I tried the embedding the information inside the firmware, but the
+information is required *before* loading the firmware itself.
+Firmware quirk thread:
+  https://lore.kernel.org/linux-wireless/20251111-xiaomi-beryllium-firmware-v1-0-836b9c51ad86@ixit.cz/
+
+Until merged, available also at:
+  https://codeberg.org/sdm845/linux/commits/branch/b4/skip-host-cam-qmi-req
+
 Signed-off-by: David Heidelberg <david@ixit.cz>
 ---
- arch/arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi | 1 +
- 1 file changed, 1 insertion(+)
+Changes in v4:
+- Added my own missing SoB. (Dmitry)
+- Improve the commit message. (Dmitry)
+- Link to v3: https://lore.kernel.org/r/20260325-skip-host-cam-qmi-req-v3-0-b163cf7b3c81@ixit.cz
 
-diff --git a/arch/arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi b/arch/arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi
-index 1298485c42142..950bbcc3bf91f 100644
---- a/arch/arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi
-@@ -661,5 +661,6 @@ &wifi {
- 	vdd-3.3-ch1-supply = <&vreg_l23a_3p3>;
- 
- 	qcom,calibration-variant = "xiaomi_beryllium";
-+	qcom,snoc-host-cap-skip-quirk;
- };
- 
+Changes in v3:
+- Rebased on recent linux-next (next-20260325).
+- Improved motivation and description. (Dmitry)
+- Link to v2: https://lore.kernel.org/r/20251110-skip-host-cam-qmi-req-v2-0-0daf485a987a@ixit.cz
 
+---
+Amit Pundir (3):
+      dt-bindings: wireless: ath10k: Add quirk to skip host cap QMI requests
+      ath10k: Add device-tree quirk to skip host cap QMI requests
+      arm64: dts: qcom: sdm845-xiaomi-beryllium: Enable ath10k host-cap skip quirk
+
+ .../devicetree/bindings/net/wireless/qcom,ath10k.yaml       |  6 ++++++
+ .../arm64/boot/dts/qcom/sdm845-xiaomi-beryllium-common.dtsi |  1 +
+ drivers/net/wireless/ath/ath10k/qmi.c                       | 13 ++++++++++---
+ drivers/net/wireless/ath/ath10k/snoc.c                      |  3 +++
+ drivers/net/wireless/ath/ath10k/snoc.h                      |  1 +
+ 5 files changed, 21 insertions(+), 3 deletions(-)
+---
+base-commit: 85964cdcad0fac9a0eb7b87a0f9d88cc074b854c
+change-id: 20251110-skip-host-cam-qmi-req-e155628ebc39
+
+Best regards,
 -- 
-2.53.0
+David Heidelberg <david@ixit.cz>
 
 
