@@ -1,32 +1,31 @@
 Received: from courrier.aliel.fr (pouet.aliel.fr [65.21.61.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84630314A9F;
-	Wed, 25 Mar 2026 09:18:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730792E8B6B;
+	Wed, 25 Mar 2026 09:18:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.61.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774430331; cv=none; b=bQfxoSfNcBTB4S3drGqahBMn3NX9zG7lNTtGurboqHL9uQK2p1B83gc1pnA5s8xY2+wwEeOt2bS+k5L87T36xO+gGIy9lk0jmi/hnZzXWpIFOtFIHd0Hl5eeQhcn9OdDq9gF5R7ws+XjsRXoUzWCMePlMuYLaY8coezGIzusL0c=
+	t=1774430331; cv=none; b=iEZo2uhggYaEc3LK9bFd8gK3SC2JpVg4LEMpVvmx1RWZCzleJXXT7YRxxbVkdr7bdOh4ujihDpBRvw0thY3jyzmb5I6Ajo5ABv2i3csueYxEBdxPPlBM2Zf+aiZjdAqTSeBFgheG2NHwDdxlTCAcDL1YcYHNT/DEheLK54LdaX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774430331; c=relaxed/simple;
-	bh=qZgg2/em0UQrmXDkkNz9+fEbqFZp6rL3BaB4H4Zgk1I=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=EBE3tOQ5P4mM/yb7XFwbGVztuJxeYBdn6HahGFNEAEQvqxgH5YDosKcoNS3fEzpGO/MsbcxXZz5AVZuXs6WPqTofGpBY+jBJmDef/YueYaZUBtOaIyujhsOkVqpB6MaRBpsuWiIlNUJCwiUdDfo3LUpp48EXT6tlp+sRkjQegpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=W+ci3AfO; arc=none smtp.client-ip=65.21.61.41
+	bh=Mv91SPp0jibHt4TPwMZ16mk6wXIXuBSAkTZzcmsns8w=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=c1CftHB7v+M0pj1Cm6e8XOXgIAtjxnZd9sZMWvOdu4ofeBrPIkDc8lXq2orblzRFOfPYzzc8lhSUkq9xVYGxMQ/0LeGvWPL3q1RMsm3x5LK359M80yRpmWaRFWR4BDLvlJUKxUbaW3turu6oDRc3UnRk9PpLrgvhyFMTYPSuN9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr; spf=pass smtp.mailfrom=aliel.fr; dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b=N8kV8Ru+; arc=none smtp.client-ip=65.21.61.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aliel.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="W+ci3AfO"
+	dkim=pass (1024-bit key) header.d=aliel.fr header.i=@aliel.fr header.b="N8kV8Ru+"
 From: Ronald Claveau <linux-kernel-dev@aliel.fr>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=aliel.fr;
-	s=courrier-s1; t=1774430326;
-	bh=qZgg2/em0UQrmXDkkNz9+fEbqFZp6rL3BaB4H4Zgk1I=;
-	h=From:Subject:Date:To:Cc;
-	b=W+ci3AfOQDl7PXqpLMquScKokZ9vuSF72EboAukLJvl/jienz0GZo2ElWtphU1dq3
-	 WI+UojSM5L/RzwSWU+Wrn0Ry14X3kKihrNCeKCn/zwFwwEEf9apAUpX14ob5V56LIN
-	 M1/HoITLfboQSg93MPeQwbya96CsesZcWJYB5Xl0=
-Subject: [PATCH v4 0/9] arm64: dts: amlogic: Add MMC/SD/SDIO support for
- Khadas VIM4 (Amlogic T7)
-Date: Wed, 25 Mar 2026 10:15:18 +0100
-Message-Id: <20260325-add-emmc-t7-vim4-v4-0-44c7b4a5e459@aliel.fr>
+	s=courrier-s1; t=1774430328;
+	bh=Mv91SPp0jibHt4TPwMZ16mk6wXIXuBSAkTZzcmsns8w=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=N8kV8Ru+fWPp6sb0fzU55ohVhGoIbsNJXCkyBs60GR8l/+oK6yw+adJgP+FLyey8x
+	 WrJBl8+/vCv/8k0Zmq5+r1jaVSBL9w0ntP+239rebthFfyDFkh+700sjNOLovhkjf8
+	 ejHjx60V5jtEb77jEbcC2QyS/gZ0Mocu4UamAzng=
+Date: Wed, 25 Mar 2026 10:15:21 +0100
+Subject: [PATCH v4 3/9] arm64: dts: amlogic: t7: Add MMC controller nodes
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,12 +34,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6WQ3WqEMBBGX0Vy3ZH8qauUsu9RepGacU3XxDbRY
- Fl892ZjoYVe9mbgTPjOx+RGAnqDgXTFjXiMJpjZJZAPBelH5S4IRicmnPKaCk5BaQ1obQ9LA9F
- YCbXSrMZW1kwOJMXePQ5my8rnl4M9fqzJvBxLYjEElc1d8XiImaANpZyXaUrRAIM3o1w5rmdlp
- /li+rKf7dNd/6oCQgJrlq5wuC3wbWjJvW00YZn9Z74nslyX3zk7Mcoa2paikhVNBZNx6wZX9A4
- n0BjPajI4lYPPnsj/kRU/WcHF3y+LAihUrGp1S1V7kv2v/L7vX3dLJkSVAQAA
-X-Change-ID: 20260320-add-emmc-t7-vim4-6ad16e94614f
+Message-Id: <20260325-add-emmc-t7-vim4-v4-3-44c7b4a5e459@aliel.fr>
+References: <20260325-add-emmc-t7-vim4-v4-0-44c7b4a5e459@aliel.fr>
+In-Reply-To: <20260325-add-emmc-t7-vim4-v4-0-44c7b4a5e459@aliel.fr>
 To: Neil Armstrong <neil.armstrong@linaro.org>, 
  Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
  Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
@@ -50,79 +46,79 @@ To: Neil Armstrong <neil.armstrong@linaro.org>,
 Cc: linux-arm-kernel@lists.infradead.org, linux-amlogic@lists.infradead.org, 
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, 
- Ronald Claveau <linux-kernel-dev@aliel.fr>, Nick Xie <nick@khadas.com>
+ Ronald Claveau <linux-kernel-dev@aliel.fr>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openssh-sha256; t=1774430322; l=2970;
+X-Developer-Signature: v=1; a=openssh-sha256; t=1774430323; l=2309;
  i=linux-kernel-dev@aliel.fr; s=id_ed25519; h=from:subject:message-id;
- bh=qZgg2/em0UQrmXDkkNz9+fEbqFZp6rL3BaB4H4Zgk1I=;
+ bh=Mv91SPp0jibHt4TPwMZ16mk6wXIXuBSAkTZzcmsns8w=;
  b=U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgMGec55oxeeisqykQiUedekMYyOnR9
  BG9E/7rDWyqdNoAAAAGcGF0YXR0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAA
- QKQVj+Pq+QZ1dPHXnx93BiJVL48LoNgsShQ9+3LoMPwrlcwyPr6axg76cgSOR3GKYLjvfenYsZv
- tjC3CZ4d9fAg=
+ QCGRaZVD6raCaZKAtzOqnoPQ6/EallwcInVlyyTy99CBePVkSrXO7UpYM3s0rf2NLMuYgl3ONRR
+ w8zCE+laTxQI=
 X-Developer-Key: i=linux-kernel-dev@aliel.fr; a=openssh;
  fpr=SHA256:kch4osYZ6A1BrPps5AUs6KnfdE2wm4ocMtyTc8TmZMs
 
-This patch series depends on Jian's SCMI clock patches yet to merge
-https://lore.kernel.org/all/20260313070022.700437-1-jian.hu@amlogic.com/
-
-This series adds device tree support for the MMC, SD card and SDIO
-interfaces on the Amlogic T7 SoC and the Khadas VIM4 board.
-
-The first patches add the necessary building blocks in the T7 SoC
-DTSI: pinctrl nodes for pin muxing, PWM controller nodes, and MMC
-controller nodes. The amlogic,t7-mmc and amlogic,t7-pwm compatible
-strings are introduced with fallbacks to existing drivers, avoiding
-the need for new driver code.
-
-The remaining patches enable these interfaces on the Khadas VIM4
-board, including the power regulators, the SDIO power sequence and
-32.768kHz PWM clock required by the BCM43752 Wi-Fi module, and the
-board-specific MMC controller configurations.
+Add device tree nodes for the three MMC controllers available
+on the Amlogic T7 SoC, using amlogic,meson-axg-mmc as fallback compatible.
+All nodes are disabled by default and should be
+enabled in the board-specific DTS file.
 
 Signed-off-by: Ronald Claveau <linux-kernel-dev@aliel.fr>
 ---
-Changes in v4:
-- Address potential DT binding API break from Xianwei's feedback.
-- Change underscore to dash in pinctrl nodes names from Xianwei's feedback.
-- Link to v3: https://lore.kernel.org/r/20260323-add-emmc-t7-vim4-v3-0-5159d90a984c@aliel.fr
+ arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi | 39 +++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-Changes in v3:
-- Remove all changes about fixed pll clock from analog controller.
-- Use clocks retrieved through SCMI.
-- Add other MMC controllers
-- Manage Wi-Fi module enablement. 
-- Link to v2: https://lore.kernel.org/r/20260218101709.35450-1-linux-kernel-dev@aliel.fr
+diff --git a/arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi b/arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi
+index 016b5429c8d1b..62c87d0ef7065 100644
+--- a/arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi
++++ b/arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi
+@@ -374,6 +374,45 @@ sec_ao: ao-secure@10220 {
+ 				reg = <0x0 0x10220 0x0 0x140>;
+ 				amlogic,has-chip-id;
+ 			};
++
++			sd_emmc_a: mmc@88000 {
++				compatible = "amlogic,t7-mmc", "amlogic,meson-axg-mmc";
++				reg = <0x0 0x88000 0x0 0x800>;
++				interrupts = <GIC_SPI 176 IRQ_TYPE_LEVEL_HIGH>;
++				status = "disabled";
++				clocks = <&clkc_periphs CLKID_SYS_SD_EMMC_A>,
++					 <&clkc_periphs CLKID_SD_EMMC_A>,
++					 <&scmi_clk CLKID_FCLK_DIV2>;
++				clock-names = "core", "clkin0", "clkin1";
++				assigned-clocks = <&clkc_periphs CLKID_SD_EMMC_A_SEL>;
++				assigned-clock-parents = <&xtal>;
++			};
++
++			sd_emmc_b: mmc@8a000 {
++				compatible = "amlogic,t7-mmc", "amlogic,meson-axg-mmc";
++				reg = <0x0 0x8a000 0x0 0x800>;
++				interrupts = <GIC_SPI 177 IRQ_TYPE_EDGE_RISING>;
++				status = "disabled";
++				clocks = <&clkc_periphs CLKID_SYS_SD_EMMC_B>,
++					 <&clkc_periphs CLKID_SD_EMMC_B>,
++					 <&scmi_clk CLKID_FCLK_DIV2>;
++				clock-names = "core", "clkin0", "clkin1";
++				assigned-clocks = <&clkc_periphs CLKID_SD_EMMC_B_SEL>;
++				assigned-clock-parents = <&xtal>;
++			};
++
++			sd_emmc_c: mmc@8c000 {
++				compatible = "amlogic,t7-mmc", "amlogic,meson-axg-mmc";
++				reg = <0x0 0x8c000 0x0 0x800>;
++				interrupts = <GIC_SPI 178 IRQ_TYPE_EDGE_RISING>;
++				status = "disabled";
++				clocks = <&clkc_periphs CLKID_SYS_SD_EMMC_C>,
++					 <&clkc_periphs CLKID_SD_EMMC_C>,
++					 <&scmi_clk CLKID_FCLK_DIV2>;
++				clock-names = "core", "clkin0", "clkin1";
++				assigned-clocks = <&clkc_periphs CLKID_SD_EMMC_C_SEL>;
++				assigned-clock-parents = <&xtal>;
++			};
+ 		};
+ 
+ 	};
 
-Changes in v2:
-- Resend v1 patches as attached to the first patch.
-- Link to v1: https://lore.kernel.org/r/20260218101709.35450-1-linux-kernel-dev@aliel.fr
-
----
-Ronald Claveau (9):
-      arm64: dts: amlogic: t7: Add eMMC, SD card and SDIO pinctrl nodes
-      dt-bindings: mmc: amlogic: Add compatible for T7 mmc
-      arm64: dts: amlogic: t7: Add MMC controller nodes
-      arm64: dts: amlogic: t7: Add PWM pinctrl nodes
-      arm64: dts: amlogic: t7: Add PWM controller nodes
-      arm64: dts: amlogic: t7: khadas-vim4: Add power regulators
-      arm64: dts: amlogic: t7: khadas-vim4: Add SDIO power sequence and WiFi clock
-      dt-bindings: net: wireless: brcm: Add compatible for bcm43752
-      arm64: dts: amlogic: t7: khadas-vim4: Add MMC nodes
-
- .../bindings/mmc/amlogic,meson-gx-mmc.yaml         |   4 +
- .../bindings/net/wireless/brcm,bcm4329-fmac.yaml   |   1 +
- .../dts/amlogic/amlogic-t7-a311d2-khadas-vim4.dts  | 202 ++++++++++++-
- arch/arm64/boot/dts/amlogic/amlogic-t7.dtsi        | 336 +++++++++++++++++++++
- 4 files changed, 542 insertions(+), 1 deletion(-)
----
-base-commit: f6eb9ae8b9fc13c3971e4a6d1e8442f253001f36
-change-id: 20260320-add-emmc-t7-vim4-6ad16e94614f
-prerequisite-message-id: <20260313070022.700437-1-jian.hu@amlogic.com>
-prerequisite-patch-id: f03a086b4137158412b2d47b3de793b858de8dde
-prerequisite-patch-id: 123970c9b29c2090440f2fd71c85d3c6fd8e36de
-prerequisite-patch-id: 3e2e56b0926ba327b520f935df4ced5089bbe503
-
-Best regards,
 -- 
-Ronald Claveau <linux-kernel-dev@aliel.fr>
+2.49.0
 
