@@ -1,53 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C416D3BE17E
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 10:15:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455613C2769
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 10:15:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774520117; cv=none; b=INqqUUdqTW2Do1z0e67WPnH3rQlgKNNL4OaLzGgF+p0y7UY29nlFkbCFNsODFb6vYvvNxlBpBxiTovMAuED398o1JPcp0OsLG0XONAHfgZnvI8xOxOVNYfSYNFF4UH+vyHnfdWOKdCYmB1b6ox8341UDgsHkcIuAvKxhRANKO0U=
+	t=1774520119; cv=none; b=KXj/QNaGfgKz2bew/npI4cRVT9C5hNK7GOEIZn/ohJKTo29+0UW0t3DFWij++NQWUXjzYt2BTJqGIlWDO6eVqkkS+yRoFkbxrYswoS9Smkuv8jxAV46HKvuWZOSzL3U3o/e5lJWKRrTQCxnz0f7LBhKJutwgJUeGD0/caeKGRoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774520117; c=relaxed/simple;
-	bh=7/9Xvr1HvaGpmI4e/IFJQ7nTgza+yQyMBg+CaNV9do0=;
+	s=arc-20240116; t=1774520119; c=relaxed/simple;
+	bh=C41Tsn9zTIhfbqIQmYOje5tB57ioH7gLdou5+Z71vjM=;
 	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rirrTPwEG8afhF6vXo0jZ36IoUjhQdGF6lcAZGvwt7lNNdfIWvBkCiUGy8EKL0BuSoFU9DZH8MDbQFp26E+yj4J5snb21391FArLgR/YD/MzowrYI78vv3aV8a8R377+XJRJsL045d/9SA4iNgNMmWEyby2ajo3mlds2HqAUuDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jGkq+qb0; arc=none smtp.client-ip=198.175.65.12
+	 MIME-Version; b=D2OPNlvXcrem8xDSZ+U4N4Ydnnf43egSZc2kDbOfKSrrgTjnoCkFAQWuXXueCCiK4UpmuYniApJOC/JizdtlIRSMzhuU+qQmO1ZzuAy4+kPD5jv0m2pTB8mcyLfSQEzTes0vj+vK5vr451AZ5EaDWiol4fFJYxVggBCeiHJBrdk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oBqYrvN3; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jGkq+qb0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oBqYrvN3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774520116; x=1806056116;
+  t=1774520117; x=1806056117;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=7/9Xvr1HvaGpmI4e/IFJQ7nTgza+yQyMBg+CaNV9do0=;
-  b=jGkq+qb0pX4Y7ftd1juDVO7lQ+pT3w/nWm7CfyxC+J3Kr5e1E4lmQoKt
-   5ySXuWLRrWbqxohkpAVBVwXVH+UIxxjKrKIH1mqclWDaNK04QAQHhOM7c
-   UVjvrqsIJR8gXfoeg3tDYJoLfOOQbjKcEuJfOstrh4DSSrvIh3AAtFqJK
-   giNnG6E4yzglKx0WYoXBuCw57wy5X+gt5GlmFmTtMBPJt31RA3AASKaNv
-   orZXls4xT6p1YFVH/ESWe8l6mtMAHjwhz+fPHImDrNUDOIUcAQ9HiqCvi
-   +DeG+YlC+MjsvM0om10ByB/sZWBtVjZiHAZg0pGKRqSXxOjc4u+S9xJ/m
-   A==;
-X-CSE-ConnectionGUID: w2wYQp30RliCRVP6LYUYww==
-X-CSE-MsgGUID: aEFch7jlSkSHMjoCyjr4xg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="87048568"
+  bh=C41Tsn9zTIhfbqIQmYOje5tB57ioH7gLdou5+Z71vjM=;
+  b=oBqYrvN3sZ7n4yt4gz6pCH1RfueuHJ3M2ElBN5sncHd3BY5g8Ga9lKML
+   94aizx6duBatCaf97swmi9ZSq+HoPxealR+BlPSrglMKS6u0NBs8wbHHq
+   L0vrwJyjYGB6MVY4R1yDA1bCPVrEQ3JLo78VhOqXfs5G9cI+w9V98AeV0
+   tNofMMJYxBuXgxOdrTadXdvSTgOy45oj/te8ZLaAfYekNmkX+9O/LS5Bm
+   OOz9v5wf6ix3Txdl9Z8EpildgT7VjeSFao7oYtMAxsuG141sju9WHPExX
+   KRXw1cM3LVwnWwvkpFJbzfaIukA55oSF17d0JuScX1XrzGlwvAvVUXs2O
+   Q==;
+X-CSE-ConnectionGUID: sdY85ut9T7i1DItuIn0jsw==
+X-CSE-MsgGUID: xVBuOX6ASeSHtMWkvy58pg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="87048575"
 X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
-   d="scan'208";a="87048568"
+   d="scan'208";a="87048575"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:13 -0700
-X-CSE-ConnectionGUID: 2R+2yj3ZSkGBnlm7fWXsSw==
-X-CSE-MsgGUID: 8ajTtVKzQ2GR5SYpZ5Bsqw==
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:16 -0700
+X-CSE-ConnectionGUID: XJf9VUi+QVeYGYdJpPlWJQ==
+X-CSE-MsgGUID: mwxp3f6+R7+XLEKTcPWG/w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
-   d="scan'208";a="221653218"
+   d="scan'208";a="221653240"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:13 -0700
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:15 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 wireless-next 11/15] wifi: mac80211: add support for TX over NAN_DATA interfaces
-Date: Thu, 26 Mar 2026 12:14:41 +0200
-Message-Id: <20260326121156.b1d248947158.I04b27d9727f7a553fa80520cf6e532683ac03690@changeid>
+Subject: [PATCH v2 wireless-next 14/15] wifi: mac80211: report and drop spurious NAN Data frames
+Date: Thu, 26 Mar 2026 12:14:44 +0200
+Message-Id: <20260326121156.721b3a61c580.I19e3572508beeba143871682c80e9a56b6c1046a@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260326101445.1443198-1-miriam.rachel.korenblit@intel.com>
 References: <20260326101445.1443198-1-miriam.rachel.korenblit@intel.com>
@@ -60,75 +60,48 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Add support for TXing frames over NAN_DATA interfaces:
-- find the NDI station
-- populoate the addresses fields
-- use NUM_NL80211_BANDS for the band, similar to NAN interfaces.
+According to Wi-Fi Aware (TM) 4.0 specification 6.2.5, in case a frame
+is recevied from an address that doesn't belong to any active NDP, the
+frame should be dropped and a NAN Data Path Termination should be sent
+to the transmitter.
+Do it by dropping the frame and calling cfg80211_rx_spurious_frame in
+that case.
 
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/tx.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+ net/mac80211/rx.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 730c208c3bdf..b0eacab6763d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2541,6 +2541,13 @@ int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
- 		if (!sta)
- 			return -ENOLINK;
- 		break;
-+	case NL80211_IFTYPE_NAN_DATA:
-+		if (is_multicast_ether_addr(skb->data)) {
-+			*sta_out = ERR_PTR(-ENOENT);
-+			return 0;
-+		}
-+		sta = sta_info_get(sdata, skb->data);
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2834,18 +2841,37 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		memcpy(hdr.addr3, sdata->u.ibss.bssid, ETH_ALEN);
- 		hdrlen = 24;
- 		break;
-+	case NL80211_IFTYPE_NAN_DATA: {
-+		struct ieee80211_sub_if_data *nmi;
-+
-+		/* DA SA Cluster ID */
-+		memcpy(hdr.addr1, skb->data, ETH_ALEN);
-+		memcpy(hdr.addr2, skb->data + ETH_ALEN, ETH_ALEN);
-+		nmi = rcu_dereference(sdata->u.nan_data.nmi);
-+		if (!nmi) {
-+			ret = -ENOTCONN;
-+			goto free;
-+		}
-+		memcpy(hdr.addr3, nmi->wdev.u.nan.cluster_id, ETH_ALEN);
-+		hdrlen = 24;
-+		break;
-+	}
- 	default:
- 		ret = -EINVAL;
- 		goto free;
- 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 979ac26d1173..3e5d1c47a5b0 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1589,6 +1589,25 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+ 	if (ieee80211_vif_is_mesh(&rx->sdata->vif))
+ 		return ieee80211_rx_mesh_check(rx);
  
- 	if (!chanctx_conf) {
--		if (!ieee80211_vif_is_mld(&sdata->vif)) {
-+		if (sdata->vif.type == NL80211_IFTYPE_NAN_DATA) {
-+			 /* NAN operates on multiple bands */
-+			band = NUM_NL80211_BANDS;
-+		} else if (!ieee80211_vif_is_mld(&sdata->vif)) {
- 			ret = -ENOTCONN;
- 			goto free;
-+		} else {
-+			/* MLD transmissions must not rely on the band */
-+			band = 0;
- 		}
--		/* MLD transmissions must not rely on the band */
--		band = 0;
- 	} else {
- 		band = chanctx_conf->def.chan->band;
- 	}
++	/*
++	 * Wi-Fi Aware (TM) 4.0 specification 6.2.5:
++	 * For NAN_DATA, unicast data frames must have A2 (source)
++	 * assigned to an active NDP. If not the frame must be dropped
++	 * and NAN Data Path termination frame should be sent. Notify
++	 * user space so it can do so.
++	 */
++	if (rx->sdata->vif.type == NL80211_IFTYPE_NAN_DATA) {
++		if (ieee80211_is_data(hdr->frame_control) &&
++		    !is_multicast_ether_addr(hdr->addr1) &&
++		    (!rx->sta || !test_sta_flag(rx->sta, WLAN_STA_ASSOC))) {
++			if (cfg80211_rx_spurious_frame(rx->sdata->dev, hdr->addr2,
++						       rx->link_id, GFP_ATOMIC))
++				return RX_DROP_U_SPURIOUS_NOTIF;
++			return RX_DROP_U_SPURIOUS;
++		}
++		return RX_CONTINUE;
++	}
++
+ 	if (unlikely((ieee80211_is_data(hdr->frame_control) ||
+ 		      ieee80211_is_pspoll(hdr->frame_control)) &&
+ 		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
 -- 
 2.34.1
 
