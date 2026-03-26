@@ -1,136 +1,181 @@
-Received: from flow-a1-smtp.messagingengine.com (flow-a1-smtp.messagingengine.com [103.168.172.136])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD5C78C9C;
-	Thu, 26 Mar 2026 21:18:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.136
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF573BED28
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 23:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774559894; cv=none; b=HbmQJaaQUQaWuU65LIsnsvCmd7sstqfpX/f+iUd5aDZMcANVm3jmUYPByYzxFxBMvFhhqirJlMvBsgt0+k852R7bK5MxUH5uxBpYT8mzzxY4Exsc3NkcTEjh3QBcv2mOGLO+GAuAOzvymyvHRhICDpUVCSt/dV9sRqYOHzIwIMg=
+	t=1774567960; cv=none; b=Czu98+2KQH6JG5AIJ+lBWJQOJAbfgAg7VEFGxb/mRZOKR7yr3JAimmG/qluW5iMKp+wIAClGJuYH7ChavtX6cNZLPciiH+y3KtA0T7y8IXed8vLZXMUcKx2ytVYw4rhvWvE4sqJQdQXOQgveR0daXiWPCwKfieMG+aTy8nPmhZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774559894; c=relaxed/simple;
-	bh=DRLRvIU8ZWZkXRz1bJkCUDrO6OoViF8KWKqmafYFSQU=;
-	h=Content-Type:MIME-Version:From:To:Date:Subject:Cc:In-Reply-To:
-	 References:Message-Id; b=HZZMSM1rR7hrksr/uYknrc0UAuyQPGAfjt63oJsBA1CcfyBV0O/ydv//IT8HUb/iwalm4F0/6IpZJ2Z5Fe2BFjtMhnzUuhonEReAiQ4Hc7b7Frl/byMN1eQxjMbquyHGvq1HhjvkmRkLs/lU2IVy2CB+ohxEf83ij9RJBZh2mko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me; spf=pass smtp.mailfrom=jetm.me; dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b=B1OozqUR; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=qoFAzsoV; arc=none smtp.client-ip=103.168.172.136
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jetm.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b="B1OozqUR";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="qoFAzsoV"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailflow.phl.internal (Postfix) with ESMTP id 8DD59138014D;
-	Thu, 26 Mar 2026 17:18:12 -0400 (EDT)
-Received: from phl-imap-07 ([10.202.2.97])
-  by phl-compute-02.internal (MEProxy); Thu, 26 Mar 2026 17:18:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jetm.me; h=cc:cc
-	:content-transfer-encoding:content-type:content-type:date:date
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1774559892;
-	 x=1774567092; bh=+tfmY/v2HtY5x2GcuRis244mDWronYR/iYKmIjptCQ8=; b=
-	B1OozqUR9wU2oJhixwEKUomHLfraD83tHL6yHnbYQ4iOZjVUWhHp1Opo+ZccK+zV
-	FWdShXollx6H1e6xnBK2cYid9K7YzIVspBRKkgWgRXa72nd47KX7dLHeyxf9WLnC
-	kAlXEb/CTobWxTl8Uo7P3YwJCBv2PaPIEroGqCLYjuDUA6KMVChAji+d1fl//MM1
-	ZuZUI7eOGOR5IRNAXMPzPAItDe5pGIPPaC0KbCHX4tyNPwgpjP1xMlParGhF7cx6
-	1gdPlDif9EizP2iGILTuaTTS/7Qxq4dOB2QmIdk+WlWJxvJAvp65lBQUzX9Tu/F7
-	r099vtVAz+eRqGS1d5nEjQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1774559892; x=
-	1774567092; bh=+tfmY/v2HtY5x2GcuRis244mDWronYR/iYKmIjptCQ8=; b=q
-	oFAzsoVEYP8xIX3IfCmjayWsk3qcBb6ga+rm9ACMoeL8elZikkQNs3itFtbUWpFk
-	K5rpwXTbvS1pSRVJ/sQx+yqQ2jjGGsFidxVDVtrDrq0MsLXf55A2vJltXiJhXzCY
-	b6zLbpYQ4hCg8N1NwaTuLMdID0VAiF7WsBjgDbBlrntkYPtKWaggkg+uv7oz5U92
-	yujBFFG7fSUaX8afui+uu0hACmJ+Gy2GbQ9fxjPmMa+3qYB4hh4iCUmALtRh9q6c
-	Gox/mZa9HMjeVPyLqaOzzvz7eNl1UMnV1dvklP/3I9p+oVj8juazJz0AkaMd7s9F
-	D5W8nZhc/uRDVNKLJRRdQ==
-X-ME-Sender: <xms:k6LFacctHZRcR25SPnyYG6-2Og085ugVTzFbtgZ4JJSmb1Vm_pxyjQ>
-    <xme:k6LFaZAbkOi9K98JcoiD7xZo_0_P7RHK0b0snKR6Dvh5y7xgr93XWVeHNQzDePXgR
-    upqhOSvu1AzwajmuVxZJuXEfocwN0dBTvv3zVqNw3wOBbrmosSgqrw>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefvdekgeegucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnegopf
-    hokfffucdluddtmdenucfjughrpefotggggffhvfffufevjghfsehtkedttdertdejnecu
-    hfhrohhmpeflrghvihgvrhcuvfhirgcuoehflhhoshhssehjvghtmhdrmhgvqeenucggtf
-    frrghtthgvrhhnpeektdffveejhfeffeevgfefhffhuedvvdfgfffhieetleefvefgfeek
-    tedvffffgfenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuih
-    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhlohhsshesjhgvthhmrdhmvgdp
-    nhgspghrtghpthhtohepvdefpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegrnh
-    hgvghlohhgihhorggttghhihhnohdruggvlhhrvghgnhhosegtohhllhgrsghorhgrrdgt
-    ohhmpdhrtghpthhtohepfeduleefieefudesghhmrghilhdrtghomhdprhgtphhtthhope
-    hlohhonhhgrddtgidttdesghhmrghilhdrtghomhdprhgtphhtthhopegrrhhivghlrdhr
-    ohhsvghnfhgvlhgurdejhedtsehgmhgrihhlrdgtohhmpdhrtghpthhtoheptghhrghpuh
-    hishgurghrihhogeesghhmrghilhdrtghomhdprhgtphhtthhopehgihhoshgrlheltdes
-    ghhmrghilhdrtghomhdprhgtphhtthhopehmrghtthhhihgrshdrsghgghesghhmrghilh
-    drtghomhdprhgtphhtthhopehrrgguohhirdgthhhrihhssehgmhgrihhlrdgtohhmpdhr
-    tghpthhtohepshgrmhhurdhtohhljhgrmhhosehgmhgrihhlrdgtohhm
-X-ME-Proxy: <xmx:k6LFaUFKcKZxNTo4j08o25c0HF_9cQzQ4_XdwnFdMEk0bX4NsCj6xA>
-    <xmx:k6LFaZDTFJ9nvrD2sx7cZAtayQuL4yd-Dt6Pe7IuVmYFICS9dUiKJw>
-    <xmx:k6LFaY3N-fYUmW7OxyFcbUCmMGe4-b0ASjdXftHTslMpTEPjfSG7FQ>
-    <xmx:k6LFaXB6Lyk9B_EX-VJgI9tps54kS5YK-AS_bsALI0siRyvt-vaRqQ>
-    <xmx:lKLFaSt9bSBv8SlWNkJ26_WP26ipKaDCtqsKVhxNXkMQHbjD91A6-F8g>
-Feedback-ID: i9dde48b3:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id C96EC1EA006B; Thu, 26 Mar 2026 17:18:11 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-Content-Type: text/plain; charset="utf-8"
+	s=arc-20240116; t=1774567960; c=relaxed/simple;
+	bh=xGTGXikS4JqfrfKY/gM0rFRga49Ih2vR19rEFj5+2dk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=NgAJ7c8m7JLBqryUrqILWJLsYVXkghID6fdh2i4lwxSn+Z3B1KHo1/sam7WvHTRtzPTGMWpO9k2hdoro3oTygNuqt4X+ZQtSH8G3z91dAKc6Nas4z6Xu6MbeVB5sguUtFezflfeF1MD4hawv9vIUD+PZnYjzqDeuXKSdUUPMM50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [141.14.14.115] (v115.vpnx.molgen.mpg.de [141.14.14.115])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6602C4C2C37F0A;
+	Fri, 27 Mar 2026 00:32:00 +0100 (CET)
+Message-ID: <7af13762-3e98-4d77-bde2-c14cdb3b1e3c@molgen.mpg.de>
+Date: Fri, 27 Mar 2026 00:31:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-From: Javier Tia <floss@jetm.me>
-To: Sean Wang <sean.wang@kernel.org>
-Date: Thu, 26 Mar 2026 15:09:40 -0600
-Subject: Re: [PATCH v3 00/13] This series adds support for the MediaTek MT7927 (Filogic 380) combo
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ming Yen Hsieh <mingyen.hsieh@mediatek.com>, Deren Wu <deren.wu@mediatek.com>, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Marcin FM <marcin@lgic.pl>, Cristian-Florin Radoi <radoi.chris@gmail.com>, George Salukvadze <giosal90@gmail.com>, Evgeny Kapusta <3193631@gmail.com>, Samu Toljamo <samu.toljamo@gmail.com>, Ariel Rosenfeld <ariel.rosenfeld.750@gmail.com>, Chapuis Dario <chapuisdario4@gmail.com>, =?utf-8?q?Thibaut_Fran=C3=A7ois?= <tibo@humeurlibre.fr>, =?utf-8?b?5byg5pet5ra1?= <Loong.0x00@gmail.com>
-In-Reply-To: CAGp9Lzo1XPR7=Gwi_Qr9ZC=g4ec+zGg_eUdh8yBgUdi=qiHMag@mail.gmail.com
-References: 20260325-mt7927-wifi-support-v2-v3-0-5ca66c97a755@jetm.me CAGp9Lzo1XPR7=Gwi_Qr9ZC=g4ec+zGg_eUdh8yBgUdi=qiHMag@mail.gmail.com
-Message-Id: <20260326211811.C96EC1EA006B@mailuser.phl.internal>
+User-Agent: Mozilla Thunderbird
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH ath-current] wifi: ath10k: fix station lookup failure
+ during disconnect
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+ Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+References: <20260325-ath10k-station-lookup-failure-v1-1-2e0c970f25d5@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260325-ath10k-station-lookup-failure-v1-1-2e0c970f25d5@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Sean,
+Dear Baochen,
 
-On Wed, Mar 26, 2026 Sean Wang wrote:
-> This part patch 1-8 looks good overall. My only concern was a possible
-> regression on mt7925, but now that the incorrect mt7925 320 MHz
-> support has been fixed  in the version, this should be fine.
 
-Thank you. Patch 5 also had a build error (is_320mhz_supported()
-called is_mt7927() before it was defined in patch 6). Fixed in v4
-by using mt76_chip() directly.
+Thank you for sending the patch out.
 
-> I am still thinking a bit more about patches 9-11. My current
-> preference is to introduce the generic layer first, and then migrate
-> the mt7925 and mt7927-specific parts on top of it.
-> I will handle this part on my side, since I want to carefully compare
-> the vendor driver with your changes first, and make sure the mt7925
-> side is solid before moving the mt7927-related changes forward. For
-> the mt7927-related work, I will make sure your contribution, as well
-> as the work from the other volunteers, is properly preserved when I
-> carry this forward.
+Am 25.03.26 um 04:05 schrieb Baochen Qiang:
+> Recent commit [1] moved station statistics collection to an earlier stage
+> of the disconnect flow. With this change in place, ath10k fails to resolve
+> the station entry when handling a peer stats event triggered during
+> disconnect, resulting in log messages such as:
+> 
+> wlp58s0: deauthenticating from 74:1a:e0:e7:b4:c8 by local choice (Reason: 3=DEAUTH_LEAVING)
+> ath10k_pci 0000:3a:00.0: not found station for peer stats
+> ath10k_pci 0000:3a:00.0: failed to parse stats info tlv: -22
+> 
+> The failure occurs because ath10k relies on ieee80211_find_sta_by_ifaddr()
+> for station lookup. That function uses local->sta_hash, but by the time
+> the peer stats request is triggered during disconnect, mac80211 has
+> already removed the station from that hash table, leading to lookup
+> failure.
+> 
+> Before commit [1], this issue was not visible because the transition from
+> IEEE80211_STA_NONE to IEEE80211_STA_NOTEXIST prevented ath10k from sending
+> a peer stats request at all: ath10k_mac_sta_get_peer_stats_info() would
+> fail early to find the peer and skip requesting statistics.
+> 
+> Fix this by switching the lookup path to ath10k_peer_find(), which queries
+> ath10k's internal peer table. At the point where the firmware emits the
+> peer stats event, the peer entry is still present in the driver's list,
+> ensuring lookup succeeds.
 
-Understood. v4 drops patches 9-13 so you have full control over
-the DMA, HW init, band_idx, and PCI device ID enablement.
+Out of curiosity, how can the statistics be printed?
 
-Regarding your feedback on v3 patch 13 (CNM quirk) - you suggested
-folding the MT792x_FW_CAP_CNM force into mt792x_get_mac80211_ops()
-instead of the post-hoc memcpy. Since the PCI IDs patch is now
-part of your series, would you prefer to handle the CNM fix there
-as well, or should I send a standalone patch for it ahead of your
-DMA/init work?
+> Tested-on: QCA6174 hw3.2 PCI WLAN.RM.4.4.1-00309-QCARMSWPZ-1
+> 
+> Fixes: a203dbeeca15 ("wifi: mac80211: collect station statistics earlier when disconnect") # [1]
+> Reported-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> Closes: https://lore.kernel.org/ath10k/57671b89-ec9f-4e6c-992c-45eb8e75929c@molgen.mpg.de
+> Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/wmi-tlv.c | 26 +++++++++++++++-----------
+>   1 file changed, 15 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> index ec8e91707f84..01f2d1fa9d7d 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> @@ -3,7 +3,7 @@
+>    * Copyright (c) 2005-2011 Atheros Communications Inc.
+>    * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+>    * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+> - * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+> + * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+>    */
+>   #include "core.h"
+>   #include "debug.h"
+> @@ -14,6 +14,7 @@
+>   #include "wmi-tlv.h"
+>   #include "p2p.h"
+>   #include "testmode.h"
+> +#include "txrx.h"
+>   #include <linux/bitfield.h>
+>   
+>   /***************/
+> @@ -224,8 +225,9 @@ static int ath10k_wmi_tlv_parse_peer_stats_info(struct ath10k *ar, u16 tag, u16
+>   						const void *ptr, void *data)
+>   {
+>   	const struct wmi_tlv_peer_stats_info *stat = ptr;
+> -	struct ieee80211_sta *sta;
+> +	u32 vdev_id = *(u32 *)data;
+>   	struct ath10k_sta *arsta;
+> +	struct ath10k_peer *peer;
+>   
+>   	if (tag != WMI_TLV_TAG_STRUCT_PEER_STATS_INFO)
+>   		return -EPROTO;
+> @@ -241,20 +243,20 @@ static int ath10k_wmi_tlv_parse_peer_stats_info(struct ath10k *ar, u16 tag, u16
+>   		   __le32_to_cpu(stat->last_tx_rate_code),
+>   		   __le32_to_cpu(stat->last_tx_bitrate_kbps));
+>   
+> -	rcu_read_lock();
+> -	sta = ieee80211_find_sta_by_ifaddr(ar->hw, stat->peer_macaddr.addr, NULL);
+> -	if (!sta) {
+> -		rcu_read_unlock();
+> -		ath10k_warn(ar, "not found station for peer stats\n");
+> +	guard(spinlock_bh)(&ar->data_lock);
+> +
+> +	peer = ath10k_peer_find(ar, vdev_id, stat->peer_macaddr.addr);
+> +	if (!peer || !peer->sta) {
+> +		ath10k_warn(ar, "not found %s with vdev id %u mac addr %pM for peer stats\n",
+> +			    peer ? "sta" : "peer", vdev_id, stat->peer_macaddr.addr);
+>   		return -EINVAL;
+>   	}
+>   
+> -	arsta = (struct ath10k_sta *)sta->drv_priv;
+> +	arsta = (struct ath10k_sta *)peer->sta->drv_priv;
+>   	arsta->rx_rate_code = __le32_to_cpu(stat->last_rx_rate_code);
+>   	arsta->rx_bitrate_kbps = __le32_to_cpu(stat->last_rx_bitrate_kbps);
+>   	arsta->tx_rate_code = __le32_to_cpu(stat->last_tx_rate_code);
+>   	arsta->tx_bitrate_kbps = __le32_to_cpu(stat->last_tx_bitrate_kbps);
+> -	rcu_read_unlock();
+>   
+>   	return 0;
+>   }
+> @@ -266,6 +268,7 @@ static int ath10k_wmi_tlv_op_pull_peer_stats_info(struct ath10k *ar,
+>   	const struct wmi_tlv_peer_stats_info_ev *ev;
+>   	const void *data;
+>   	u32 num_peer_stats;
+> +	u32 vdev_id;
+>   	int ret;
+>   
+>   	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
+> @@ -284,15 +287,16 @@ static int ath10k_wmi_tlv_op_pull_peer_stats_info(struct ath10k *ar,
+>   	}
+>   
+>   	num_peer_stats = __le32_to_cpu(ev->num_peers);
+> +	vdev_id = __le32_to_cpu(ev->vdev_id);
+>   
+>   	ath10k_dbg(ar, ATH10K_DBG_WMI,
+>   		   "wmi tlv peer stats info update peer vdev id %d peers %i more data %d\n",
+> -		   __le32_to_cpu(ev->vdev_id),
+> +		   vdev_id,
+>   		   num_peer_stats,
+>   		   __le32_to_cpu(ev->more_data));
+>   
+>   	ret = ath10k_wmi_tlv_iter(ar, data, ath10k_wmi_tlv_len(data),
+> -				  ath10k_wmi_tlv_parse_peer_stats_info, NULL);
+> +				  ath10k_wmi_tlv_parse_peer_stats_info, &vdev_id);
+>   	if (ret)
+>   		ath10k_warn(ar, "failed to parse stats info tlv: %d\n", ret);
 
-> Similar to the BT side, I would prefer to have a dedicated Linux
-> firmware for mt7927 WiFi.
+Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Tested-by: Paul Menzel <pmenzel@molgen.mpg.de>
 
-Noted. The driver currently requests mediatek/mt7927/ paths. Once
-a dedicated firmware is available we can adjust if needed.
 
-v4 sent with patches 1-8 + ASPM/PM disable (9 patches):
-https://lore.kernel.org/linux-wireless/20260326-mt7927-wifi-support-v4-v4-0-8ab465addcfe@jetm.me/T/#u
+Kind regards,
 
-Best,
-Javier
+Paul
