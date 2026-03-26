@@ -1,122 +1,121 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB68641C2F3
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 17:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C91BE42189E
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 17:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774544660; cv=none; b=PpNQ5mgyOBzi1KPbCwY15MbgjFAxLckyDhKq1/vysViuCGVyc3x3TlbIRiyqcU5ca9Ak+nAwkxnNs80x3QzsPUfsAs+BS0nXBi9KnEaU3q+TeEO+x/o5fWUfXyTQoMS1aJbuk8TzwTTKD61YoH6ccdiVDa7xXLGoi8ZicuU+XHs=
+	t=1774544687; cv=none; b=mLVfmMEEzxPmUeEG3Rb/XwmowoFi/hLXuHyYaVmdoOgtjCIJr+Hri/JWhmLYFjcPTQvnlbfi7VxMqOZFmcfkmzPIy8SYyJ9NfNgIKSP6hSZfS5Svit478Loa6KP2qqHcx+RPNFtLLCh076GdorFJX5fwNIGyC/n1JWNaXskLOWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774544660; c=relaxed/simple;
-	bh=6O+Fb4y6hZGC1Ii/vWaybHRB6+JV10GYTuqP7uR3g5s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wkwf6HbnHshilmD6mg6TJo6qNndZb8CYDxrjh0y+Y/llB9KACChOMwiWMgkBV6IZ0P7XK26eGa4IY6w8tvYIJr0evPuNPh0hVOyAppkx7lYQPOnmsPqA8Dn3dusir0/qq6syqhz11fd1RNgXIsSIR6DZy2Ehs+XPObmpnjhpxZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=jJHpo35c; arc=none smtp.client-ip=91.218.175.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1774544687; c=relaxed/simple;
+	bh=kJLAFNTCR5dulPOLBF3J3PDAqPSgWvgHXqw+44Umz2I=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=irHqlWr5gIHjy2r+ppwY4p3OIiAQaWbh4AyNikRlIwjQxZE05wLUIVEgfCArhTpi0OaeiOflFScym7jvF4f3UExbxVreOeACLn2DOhnbIVj30dVfckpIdOwl9jpvTUDewURNCKvaYNS5yNcFoWcYBMthGMDlt4b1Cmop4lhzzEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E6/mAzv2; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="jJHpo35c"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1774544655;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rPLbETzywDZ/LXKktaa48OxW8xTevcANb3hp9TPiGq8=;
-	b=jJHpo35c6UoaYo0r2PqWNFsmNOrlCcnvuMLHUiaa7MH9jgeBIdS89t1NeuCeuPCPpMgYsm
-	IPbT/ufWg6suIGeNhKkzdMgB0WGk7qsn4JNaKiiNKCinNjz843LXNNcAc7LzbVCF6BQQe9
-	xiczeHZbn/cZoLfLbcuqbz9bPmc4bx1Mx9a5X1xlmmBap+SSjuzk/xETD4RrmaCSAxjmHc
-	GfjHRsplTQ5BXyAt7Ap6iQACQOwL6Yj6StAUAz5MNfWtW1gauRV26/89tBR1eeR9RlREb+
-	hFX6QqEAx218F6IqDiWKaKDmmUxFJjfzSVm9/3XCkUWV6rh0R6pAUkOzLtC5ZA==
-From: Lucid Duck <lucid_duck@justthetip.ca>
-To: sean.wang@kernel.org
-Cc: nbd@nbd.name,
-	lorenzo.bianconi@redhat.com,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	morrownr@gmail.com
-Subject: Re: [PATCH 1/3] wifi: mt76: connac: use a helper to cache txpower_cur
-Date: Thu, 26 Mar 2026 10:04:07 -0700
-Message-ID: <20260326170407.406431-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20260325043318.13298-1-sean.wang@kernel.org>
-References: <20260325043318.13298-1-sean.wang@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E6/mAzv2"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-483487335c2so14217335e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 10:04:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774544684; x=1775149484; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=hy/GeqkAFLDnWJCP8C9Frz6efgp+ZKkvHBiM8u3dibg=;
+        b=E6/mAzv2iVkKJw8o7do1mV/m2B7TxY7Iimim4UvdunNyHKUzK/Qzi9y5j99exMNkln
+         bvy63TA1IlxN0+hlWelyAR+kALSlva8IsZjpj4WqtA3GtBmbqRQsq0v7DduZm1hXkCMw
+         NmUsrj5tuJcMMITZnGMHtihDuF4AXjo8vf7cpGygH4aiR340I/SnOQqZ4NR8IJGyn0iA
+         kNOqxr56BkS+HQpxhCjFBhFSiF5fpPEq5S/iOdeFsA19KaTIKeD+KFRpBp+lXRu9Yrq/
+         7rK4IalP7/LEv3pRHAVk40w+NYHvTyy0Gf6WO9sD5TqknQH1k97SE4lyPTQw3E61dx0d
+         4ndQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774544684; x=1775149484;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hy/GeqkAFLDnWJCP8C9Frz6efgp+ZKkvHBiM8u3dibg=;
+        b=Ad/pU2isw3v+1cyQfhIxYfTi9D1/0CTQIv3SubKo6pY9geM3dVhizrmMuuDDkmoMQ4
+         2bfA6jSbXopMGD6zWN7A3PrFjz1CE8HbyJkubivRyEmoyC4a6i6q6yLGaCeiVVhw44Kp
+         pSLA5DMLTRPUkyozG18bD1nWCUP0CA6y9r68rgomdn/psjzdJW9XeIEW0DUfV2iP1A0p
+         GRcQG0Nj85S9esT8rLcewG0zB0096n6smcxW4HdQsfxckFSxKvZTC2T0dsVuk/5uqKH7
+         25iPJ5k1PubXPEEOxWsoZDg9sGoIVSBRMdyXAhwnDqxfuMNo4r3S1U6B5/Qj1mj/px1n
+         fvCg==
+X-Gm-Message-State: AOJu0Yxz5PHIFRupUeb4Hst7DuXW7NUGM24cP2dsuovqOAFfa6msKEJ4
+	o0NQjUi0ujXbqdzJyTlweqcGmbuqVHQuNdzmSp/rkTrvHtzwaF8ITvmt8uQfUw==
+X-Gm-Gg: ATEYQzzn/QHgPwsAXc0I5p1g1Lvu4arDzluWCouZDr/mMi1MGp4PhnZ7Owl3kFQBx5W
+	hehb6s05zlPOWMdcae1S8aiNQA2k+mYdWEAH9BWmrOyiMwFfN2cJPbX7GznyZ0TgApRWlPHKp2g
+	hIlABgDAPTvU6531cGfbavvyff1FluyLOA4UyXtRmWzxB9+2GjwVWMnjDaUR578K5Q6iqi+N0yf
+	nwcjPPqQ+1eoAK3EImO/phGx0UMmhdzFVrwGNNR15MD92WZ4ZmTaRRPKUMQ2lKqS4eWI3hlDiYn
+	zcLzsZrschnyEzVj/QY+fcTzMBtd6uhQnpPg+ra2l4KwdK4yOH5uyB95okt5Ry3qngOisIrrjtY
+	r19HB4oytQlpJJ12JsnPtKjouYIFXxWI5jyr0kg+XTVF3fFwfLzvwtjHuadPn5CTRBkcc9ibVhX
+	yc/GQUdSjiAbFj0CCfs7/Ywe78V3hi/A==
+X-Received: by 2002:a05:600c:33aa:b0:487:1c2:6a4f with SMTP id 5b1f17b1804b1-4871607e25amr69551405e9.31.1774544683893;
+        Thu, 26 Mar 2026 10:04:43 -0700 (PDT)
+Received: from [192.168.1.50] ([81.196.40.93])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48725da0333sm919655e9.2.2026.03.26.10.04.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Mar 2026 10:04:43 -0700 (PDT)
+Message-ID: <78bddba4-d87b-4081-b110-8ddf7fb48d93@gmail.com>
+Date: Thu, 26 Mar 2026 19:04:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH rtw-next 03/12] wifi: rtw89: Fix rtw89_usb_ops_mac_lv1_rcvy()
+ for RTL8922AU
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+References: <8549233f-dd83-4e77-be88-5e22ecd4f5f1@gmail.com>
+Content-Language: en-US
+In-Reply-To: <8549233f-dd83-4e77-be88-5e22ecd4f5f1@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7bit
 
-Sean,
+RTL8922AU uses a different register and mask to reset TX/RX. Add them
+here.
 
-Tested the full 3-patch series on MT7921AU. All three bands working
-correctly -- txpower reporting is fixed.
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+---
+ drivers/net/wireless/realtek/rtw89/reg.h | 4 ++++
+ drivers/net/wireless/realtek/rtw89/usb.c | 4 ++++
+ 2 files changed, 8 insertions(+)
 
-Test environment:
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index 9b605617c3f0..200c08c97ad1 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -4729,6 +4729,10 @@
+ #define R_BE_LTR_LATENCY_IDX2_V1 0x361C
+ #define R_BE_LTR_LATENCY_IDX3_V1 0x3620
+ 
++#define R_BE_USB2_WLAN_TRX_OPT_PAR2 0x41BC
++#define B_BE_USB2_USBRX_RST BIT(1)
++#define B_BE_USB2_USBTX_RST BIT(0)
++
+ #define R_BE_HCI_BUF_IMR 0x6018
+ #define B_BE_HCI_BUF_IMR_CLR 0xC0000303
+ #define B_BE_HCI_BUF_IMR_SET 0xC0000301
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
+index 327449141d8d..eedc8dd2b070 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.c
++++ b/drivers/net/wireless/realtek/rtw89/usb.c
+@@ -855,6 +855,10 @@ static int rtw89_usb_ops_mac_lv1_rcvy(struct rtw89_dev *rtwdev,
+ 		reg = R_AX_USB_WLAN0_1_V1;
+ 		mask = B_AX_USBRX_RST_V1 | B_AX_USBTX_RST_V1;
+ 		break;
++	case RTL8922A:
++		reg = R_BE_USB2_WLAN_TRX_OPT_PAR2;
++		mask = B_BE_USB2_USBRX_RST | B_BE_USB2_USBTX_RST;
++		break;
+ 	default:
+ 		rtw89_err(rtwdev, "%s: fix me\n", __func__);
+ 		return -EOPNOTSUPP;
+-- 
+2.53.0
 
-  Kernel:     6.19.8-200.fc43.x86_64 (Fedora 43)
-  Device:     MediaTek MT7921AU USB (0e8d:7961)
-  Firmware:   HW/SW 0x8a108a10, WM 20251223091148
-  AP:         Tri-band (2.4/5/6 GHz)
-  Regdomain:  CA (DFS-FCC), also tested US, JP, DE
-  Note:       Internet maintained via separate USB ethernet
-              adapter during WiFi testing
-
-Baseline (stock 6.19.8, pre-patch):
-
-  txpower 3.00 dBm on all bands
-
-Post-patch txpower:
-
-  2.4 GHz  ch 1   (2412 MHz, 20 MHz):   36.00 dBm
-  5 GHz    ch 100 (5500 MHz, 80 MHz):    26.00 dBm
-  6 GHz    ch 5   (5975 MHz, 80 MHz):    12.00 dBm
-
-All values match expected CA regulatory limits. Connectivity verified
-with 0% packet loss on every band.
-
-Stress testing (28 tests, 28 passed, 0 failed):
-
-  - Connect/disconnect: 10 cycles per band (30 total), txpower
-    correct and ping 0% loss on every cycle
-  - Band switching: 30 sequential hops (2.4 -> 5 -> 6 -> repeat),
-    txpower correct on every hop, ping 30/30
-  - Module reload: 15 full rmmod/insmod cycles of all mt76 modules,
-    txpower correct after every reload
-  - Throughput: 100-ping per band, 0% loss on all
-      2.4 GHz: avg 2.4 ms, max 23.6 ms
-      5 GHz:   avg 1.9 ms, max 8.0 ms
-      6 GHz:   avg 2.2 ms, max 3.3 ms
-  - Soak: 20-minute continuous test per band (60 min total),
-    txpower sampled every 30 seconds, never deviated
-      2.4 GHz: 40/40 samples at 36.00 dBm, slab delta -4 kB
-      5 GHz:   40/40 samples at 26.00 dBm, slab delta +16 kB
-      6 GHz:   40/40 samples at 12.00 dBm, slab delta -16 kB
-  - Memory: 50 connect/disconnect cycles, slab delta +64 kB
-    (negligible, no leak)
-  - Band-hop marathon: 200 random band hops, 200/200 pass,
-    ping 200/200 OK, completed in 1232 seconds
-  - Concurrent managed + monitor: txpower stable on all bands
-    with a monitor VIF present, ping 0% loss
-  - Regulatory domain switching: txpower correctly adjusts
-    per country on 5 GHz
-      CA: 26.00 dBm
-      US: 24.00 dBm
-      JP: 23.00 dBm
-      DE: 26.00 dBm
-
-Zero kernel warnings in dmesg throughout all testing.
-
-For context, I originally reported this bug and submitted a fix in
-January (v1 through v4 on linux-wireless, as Lucid Duck). Patches 1
-and 2 in this series address the same core issue -- capturing the rate
-power loop output and subtracting the path delta before caching
-txpower_cur. Patch 3 (the per-vif-link get_txpower callback) is a
-good addition that was not in my series.
-
-Reported-by: Lucid Duck <lucid_duck@justthetip.ca>
-Tested-by: Lucid Duck <lucid_duck@justthetip.ca>
