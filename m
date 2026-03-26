@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EA61399030
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 10:15:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A1803BE15F
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2026 10:15:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774520111; cv=none; b=TtwnZLuVtL6FwUX2PFybfxKj8Bnx+FHvlIfixP+zrj9WJNjJunk1R4LRpZjxJjEE7Oucyiv7aiKo+W8AQ4uh6zp1yUjoJwzmYcjksCmZHNlAeiI3UZaIa+A1cMactdMe7VBVRQmCQhX34+7fQcR3IvkeWOlVlE2Vg0dD6XJweW4=
+	t=1774520112; cv=none; b=tUHzjhY5qFGobg/PZe3OEUw48xPU+Le6c2/4L6c0Am1rUJKg+byFPObwfLEGxHCTiTvt1p03ttTzNjBGlBmnAiGCmnNtwCUrTkey9iHFLjsrI86AzZTVpz9+fNIkYrdgpZjlFmvsq1GwPB8ivNqHoND18dk0bBgVZGJmr4ObatM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774520111; c=relaxed/simple;
-	bh=jW3v3+ayvZxgXzGsXSfVeY7oJ4tjVa88JV2ZWIe3GaQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=irk7y1bBTyLwB3Mrt40ARNuucAQNQQhY+fYhkPMJLBNavDyBFy+8VuFV0cZX0cPp0dJjPNeNS7qMhc29mMz8TeoRQdbS3x2iIoh6UMlJCuktNzhMFuXC4/RHjCgYiOVy5+VtP8t4jDmTZ9xklpP3W7cxY6TQisIHwl7h0G/1jxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Z8HdxfYr; arc=none smtp.client-ip=198.175.65.12
+	s=arc-20240116; t=1774520112; c=relaxed/simple;
+	bh=D6r5XRVoe2HSTOv4/EW+mDWNuaXaC9FHTtkyxMkVfeI=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Opqa0FNg++XT8oNYQL+N4ZW5s3i9Laz2gnnKE8WFHTkeyaEzcT2cfhsbVI+IcmB0PGAgYI6SXUZGeX1ivXo7T/fgIRKNchsBFlKEfLDebQ+dWXT7Uwn6L6vZudcOKuMheQYTax+Gf9iRYJQE82D/tA2j6DNBStjUxAb7m7THLz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IeL0vebt; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Z8HdxfYr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IeL0vebt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774520110; x=1806056110;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=jW3v3+ayvZxgXzGsXSfVeY7oJ4tjVa88JV2ZWIe3GaQ=;
-  b=Z8HdxfYrhgT4AMsuoZvgW5/YieLYsx6lm6M5XBJxmaJfkGAW4rA8fqav
-   lu6jNZddFwppueEEEOpYgNsssAtu+M4UrK4IgcwCIXJ/hUrYFHwVnK4Jq
-   MDsiSDow326nNaK+oqcWLdqHexK7t80Wjj1PaiFHH4GH1u6RsXMi601HP
-   S6kxAp3yOuCFHyd69AYKZyS1AsksE5JGCUhNxrUTlz2mLkWKDJ1Bv5KKW
-   Xoz2hZ8OJwRLQVnYCfJZz9SZDsevkmzpGAt8WOvQI0d0rlw6lrpfos5Ek
-   PDwpCyT69FKKIeV0PO2RQyD8jQNK0xiUkXlKGumNoXfHhb9dA7+Iv9xQJ
+  t=1774520111; x=1806056111;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=D6r5XRVoe2HSTOv4/EW+mDWNuaXaC9FHTtkyxMkVfeI=;
+  b=IeL0vebtzCc4WTapm4OSumnc+aSnMaVqXrf230wdROeW6zJhTc/H44Re
+   bjQ1TH4xUcdznRUTIv+Ed2/s5DHhpIc3lJRyFCaTqSDJWbsrLy3ySGoWy
+   1xuVY6HhM8FNm2aBdHwLr724U8XVRT5P+WeP78+u8aUL+ODET73qPb853
+   zwEWZqVul2aiESWnObSGmC4ZSycRs3yQfTdRnkfB4Kc71RLffjHiZykmy
+   AatbrlUkGrCAlfnr2embjtR44+aY4JfB7y7EWPP6XQ6c8Tt2g3opu0G/b
+   C60yFgbJTmCO7TD33hV69vWjPrqyg/MJ1BTwI/ZdP5JAJ0Y4dQ9eberUc
    w==;
-X-CSE-ConnectionGUID: TMwmJlM5SZKfCxqVXi190Q==
-X-CSE-MsgGUID: X5I2YR2dSzynQKGe49q75A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="87048558"
+X-CSE-ConnectionGUID: Km/KEnHuRJy1o8YjTlgyig==
+X-CSE-MsgGUID: T0r7iX69SKua5wKo7Yq8QA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11740"; a="87048559"
 X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
-   d="scan'208";a="87048558"
+   d="scan'208";a="87048559"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
   by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:09 -0700
-X-CSE-ConnectionGUID: GUJcxsmOSQqA+D5eF2b1nQ==
-X-CSE-MsgGUID: rJvN/JzJRJKslPWHB5tvMg==
+X-CSE-ConnectionGUID: Ga5u1XXsQwitrRdmI78vtA==
+X-CSE-MsgGUID: aj5+jh9CQcaoGw6Zoj8iNg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,141,1770624000"; 
-   d="scan'208";a="221653174"
+   d="scan'208";a="221653138"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:02 -0700
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Mar 2026 03:15:05 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH v2 wireless-next 02/15] wifi: ieee80211: add more NAN definitions
-Date: Thu, 26 Mar 2026 12:14:32 +0200
-Message-Id: <20260326121156.ebb52db4c1eb.Ie8142cf92fc8c97c744a7c8b0a94ce3da6ff75ec@changeid>
+Subject: [PATCH v2 wireless-next 04/15] wifi: mac80211: run NAN DE code only when appropriate
+Date: Thu, 26 Mar 2026 12:14:34 +0200
+Message-Id: <20260326121156.6665f64865cd.Iee24bef3bae2e1d502216192e760c1e699d271c9@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260326101445.1443198-1-miriam.rachel.korenblit@intel.com>
 References: <20260326101445.1443198-1-miriam.rachel.korenblit@intel.com>
@@ -61,75 +60,268 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+NAN DE (Discovery Engine) may be handled in the device or in user space.
+When handled in user space, all the NAN func management code should not
+run. Moreover, devices with user space DE should not provide the
+add/del_nan_func callbaks. For such devices, ieee80211_reconfig_nan will
+always fail.
 
-These will be needed to implement NAN synchronization in mac80211_hwsim.
+Make it clear what parts of ieee80211_if_nan are relevant to DE
+management, and touch those only when DE is offloaded.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Add a check that makes sure that a driver doesn't register with
+add_del/nan_func callbacks if DE is in user space.
+
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- include/linux/ieee80211-nan.h | 37 +++++++++++++++++++++++++++++++++++
- include/linux/ieee80211.h     |  1 +
- 2 files changed, 38 insertions(+)
+ net/mac80211/cfg.c         | 52 ++++++++++++++++++++++++--------------
+ net/mac80211/ieee80211_i.h | 13 ++++++----
+ net/mac80211/iface.c       | 25 +++++++++++-------
+ net/mac80211/main.c        |  4 ++-
+ net/mac80211/util.c        | 10 +++++---
+ 5 files changed, 67 insertions(+), 37 deletions(-)
 
-diff --git a/include/linux/ieee80211-nan.h b/include/linux/ieee80211-nan.h
-index ebf28ea651f9..455033955e54 100644
---- a/include/linux/ieee80211-nan.h
-+++ b/include/linux/ieee80211-nan.h
-@@ -37,4 +37,41 @@
- #define NAN_DEV_CAPA_NDPE_SUPPORTED		0x08
- #define NAN_DEV_CAPA_S3_SUPPORTED		0x10
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 13132215afb4..e851668f4ef3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -502,12 +502,15 @@ static int ieee80211_add_nan_func(struct wiphy *wiphy,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
  
-+/* NAN attributes, as defined in Wi-Fi Aware (TM) specification 4.0 Table 42 */
-+#define NAN_ATTR_MASTER_INDICATION		0x00
-+#define NAN_ATTR_CLUSTER_INFO			0x01
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return -EOPNOTSUPP;
 +
-+struct ieee80211_nan_attr {
-+	u8 attr;
-+	__le16 length;
-+	u8 data[];
-+} __packed;
-+
-+struct ieee80211_nan_master_indication {
-+	u8 master_pref;
-+	u8 random_factor;
-+} __packed;
-+
-+struct ieee80211_nan_anchor_master_info {
-+	union {
-+		__le64 master_rank;
-+		struct {
-+			u8 master_addr[ETH_ALEN];
-+			u8 random_factor;
-+			u8 master_pref;
-+		} __packed;
-+	} __packed;
-+	u8 hop_count;
-+	__le32 ambtt;
-+} __packed;
-+
-+#define for_each_nan_attr(_attr, _data, _datalen)			\
-+	for (_attr = (const struct ieee80211_nan_attr *)(_data);	\
-+	     (const u8 *)(_data) + (_datalen) - (const u8 *)_attr >=	\
-+		(int)sizeof(*_attr) &&					\
-+	     (const u8 *)(_data) + (_datalen) - (const u8 *)_attr >=	\
-+		(int)sizeof(*_attr) + le16_to_cpu(_attr->length);	\
-+	     _attr = (const struct ieee80211_nan_attr *)		\
-+		(_attr->data + le16_to_cpu(_attr->length)))
-+
- #endif /* LINUX_IEEE80211_NAN_H */
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b5d649db123f..ffa8f9f77efe 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2240,6 +2240,7 @@ struct ieee80211_multiple_bssid_configuration {
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
  
- #define WLAN_OUI_WFA			0x506f9a
- #define WLAN_OUI_TYPE_WFA_P2P		9
-+#define WLAN_OUI_TYPE_WFA_NAN		0x13
- #define WLAN_OUI_TYPE_WFA_DPP		0x1A
- #define WLAN_OUI_MICROSOFT		0x0050f2
- #define WLAN_OUI_TYPE_MICROSOFT_WPA	1
+-	ret = idr_alloc(&sdata->u.nan.function_inst_ids,
++	ret = idr_alloc(&sdata->u.nan.de.function_inst_ids,
+ 			nan_func, 1, sdata->local->hw.max_nan_de_entries + 1,
+ 			GFP_ATOMIC);
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	if (ret < 0)
+ 		return ret;
+@@ -518,10 +521,10 @@ static int ieee80211_add_nan_func(struct wiphy *wiphy,
+ 
+ 	ret = drv_add_nan_func(sdata->local, sdata, nan_func);
+ 	if (ret) {
+-		spin_lock_bh(&sdata->u.nan.func_lock);
+-		idr_remove(&sdata->u.nan.function_inst_ids,
++		spin_lock_bh(&sdata->u.nan.de.func_lock);
++		idr_remove(&sdata->u.nan.de.function_inst_ids,
+ 			   nan_func->instance_id);
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 	}
+ 
+ 	return ret;
+@@ -534,9 +537,9 @@ ieee80211_find_nan_func_by_cookie(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_nan_func *func;
+ 	int id;
+ 
+-	lockdep_assert_held(&sdata->u.nan.func_lock);
++	lockdep_assert_held(&sdata->u.nan.de.func_lock);
+ 
+-	idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, id) {
++	idr_for_each_entry(&sdata->u.nan.de.function_inst_ids, func, id) {
+ 		if (func->cookie == cookie)
+ 			return func;
+ 	}
+@@ -555,13 +558,16 @@ static void ieee80211_del_nan_func(struct wiphy *wiphy,
+ 	    !ieee80211_sdata_running(sdata))
+ 		return;
+ 
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	func = ieee80211_find_nan_func_by_cookie(sdata, cookie);
+ 	if (func)
+ 		instance_id = func->instance_id;
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	if (instance_id)
+ 		drv_del_nan_func(sdata->local, sdata, instance_id);
+@@ -4888,18 +4894,22 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ 	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
+ 		return;
+ 
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(sdata->local->hw.wiphy->nan_capa.flags &
++		    WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
+ 
+-	func = idr_find(&sdata->u.nan.function_inst_ids, inst_id);
++	func = idr_find(&sdata->u.nan.de.function_inst_ids, inst_id);
+ 	if (WARN_ON(!func)) {
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		return;
+ 	}
+ 
+ 	cookie = func->cookie;
+-	idr_remove(&sdata->u.nan.function_inst_ids, inst_id);
++	idr_remove(&sdata->u.nan.de.function_inst_ids, inst_id);
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	cfg80211_free_nan_func(func);
+ 
+@@ -4918,16 +4928,20 @@ void ieee80211_nan_func_match(struct ieee80211_vif *vif,
+ 	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
+ 		return;
+ 
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	if (WARN_ON(sdata->local->hw.wiphy->nan_capa.flags &
++		    WIPHY_NAN_FLAGS_USERSPACE_DE))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
+ 
+-	func = idr_find(&sdata->u.nan.function_inst_ids,  match->inst_id);
++	func = idr_find(&sdata->u.nan.de.function_inst_ids,  match->inst_id);
+ 	if (WARN_ON(!func)) {
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
++		spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		return;
+ 	}
+ 	match->cookie = func->cookie;
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	cfg80211_nan_match(ieee80211_vif_to_wdev(vif), match, gfp);
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 53d783769642..8d5f9a725fdf 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -987,16 +987,19 @@ struct ieee80211_if_mntr {
+  *
+  * @conf: current NAN configuration
+  * @started: true iff NAN is started
+- * @func_lock: lock for @func_inst_ids
+- * @function_inst_ids: a bitmap of available instance_id's
++ * @de: Discovery Engine state (only valid if !WIPHY_NAN_FLAGS_USERSPACE_DE)
++ * @de.func_lock: lock for @de.function_inst_ids
++ * @de.function_inst_ids: a bitmap of available instance_id's
+  */
+ struct ieee80211_if_nan {
+ 	struct cfg80211_nan_conf conf;
+ 	bool started;
+ 
+-	/* protects function_inst_ids */
+-	spinlock_t func_lock;
+-	struct idr function_inst_ids;
++	struct {
++		/* protects function_inst_ids */
++		spinlock_t func_lock;
++		struct idr function_inst_ids;
++	} de;
+ };
+ 
+ struct ieee80211_link_data_managed {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 7518dcbcdf1c..f0a5a675c5a5 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -622,15 +622,19 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 		break;
+ 	case NL80211_IFTYPE_NAN:
+ 		/* clean all the functions */
+-		spin_lock_bh(&sdata->u.nan.func_lock);
++		if (!(local->hw.wiphy->nan_capa.flags &
++		      WIPHY_NAN_FLAGS_USERSPACE_DE)) {
++			spin_lock_bh(&sdata->u.nan.de.func_lock);
++
++			idr_for_each_entry(&sdata->u.nan.de.function_inst_ids,
++					   func, i) {
++				idr_remove(&sdata->u.nan.de.function_inst_ids, i);
++				cfg80211_free_nan_func(func);
++			}
++			idr_destroy(&sdata->u.nan.de.function_inst_ids);
+ 
+-		idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, i) {
+-			idr_remove(&sdata->u.nan.function_inst_ids, i);
+-			cfg80211_free_nan_func(func);
++			spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		}
+-		idr_destroy(&sdata->u.nan.function_inst_ids);
+-
+-		spin_unlock_bh(&sdata->u.nan.func_lock);
+ 		break;
+ 	default:
+ 		wiphy_work_cancel(sdata->local->hw.wiphy, &sdata->work);
+@@ -1942,8 +1946,11 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 				      MONITOR_FLAG_OTHER_BSS;
+ 		break;
+ 	case NL80211_IFTYPE_NAN:
+-		idr_init(&sdata->u.nan.function_inst_ids);
+-		spin_lock_init(&sdata->u.nan.func_lock);
++		if (!(sdata->local->hw.wiphy->nan_capa.flags &
++		      WIPHY_NAN_FLAGS_USERSPACE_DE)) {
++			idr_init(&sdata->u.nan.de.function_inst_ids);
++			spin_lock_init(&sdata->u.nan.de.func_lock);
++		}
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
+ 		break;
+ 	case NL80211_IFTYPE_AP_VLAN:
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d1bb6353908d..f47dd58770ad 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1157,7 +1157,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	if (WARN_ON(local->hw.wiphy->interface_modes &
+ 			BIT(NL80211_IFTYPE_NAN) &&
+-		    (!local->ops->start_nan || !local->ops->stop_nan)))
++		    ((!local->ops->start_nan || !local->ops->stop_nan) ||
++		     (local->hw.wiphy->nan_capa.flags & WIPHY_NAN_FLAGS_USERSPACE_DE &&
++		     (local->ops->add_nan_func || local->ops->del_nan_func)))))
+ 		return -EINVAL;
+ 
+ 	if (hw->wiphy->flags & WIPHY_FLAG_SUPPORTS_MLO) {
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 38b0c42c4c13..36795529ff82 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1754,6 +1754,10 @@ static int ieee80211_reconfig_nan(struct ieee80211_sub_if_data *sdata)
+ 	if (WARN_ON(res))
+ 		return res;
+ 
++	if (sdata->local->hw.wiphy->nan_capa.flags &
++	    WIPHY_NAN_FLAGS_USERSPACE_DE)
++		return 0;
++
+ 	funcs = kzalloc_objs(*funcs, sdata->local->hw.max_nan_de_entries + 1);
+ 	if (!funcs)
+ 		return -ENOMEM;
+@@ -1762,12 +1766,12 @@ static int ieee80211_reconfig_nan(struct ieee80211_sub_if_data *sdata)
+ 	 * This is a little bit ugly. We need to call a potentially sleeping
+ 	 * callback for each NAN function, so we can't hold the spinlock.
+ 	 */
+-	spin_lock_bh(&sdata->u.nan.func_lock);
++	spin_lock_bh(&sdata->u.nan.de.func_lock);
+ 
+-	idr_for_each_entry(&sdata->u.nan.function_inst_ids, func, id)
++	idr_for_each_entry(&sdata->u.nan.de.function_inst_ids, func, id)
+ 		funcs[i++] = func;
+ 
+-	spin_unlock_bh(&sdata->u.nan.func_lock);
++	spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 
+ 	for (i = 0; funcs[i]; i++) {
+ 		res = drv_add_nan_func(sdata->local, sdata, funcs[i]);
 -- 
 2.34.1
 
