@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24D5D3DCDA4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A5153DCD8C
 	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 09:37:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774604234; cv=none; b=eYkSTk9QMLSj59SaqUr57NoCNWswNTOa47a2ROWYoFoLsJt8L785U2vZasKrZfEa2hHBEK7K/Zw/9UyJpF6d5NC0m9ZXJYbCEDB257ovbiZvoICwioiSHaUMmrw51Bh+3GNE5e+m7FYg6rtPxqI2B/rBTgNiu/JSdnp2tRcw0AM=
+	t=1774604234; cv=none; b=JIWxSVTYFom+MOFnDUyiJts4zV+2eI7PBlO73pvgJ6g+qFtlHRjqfYTVYNo0QzGpw8QZ8MPe4q9wQkoIYaqRaixNd2Td0ap7VOUhdG3c9NgJ4d5ut52UXWyhaGi4VN8qaP5UMjNQL1lBZuOk4APaq97T+V7PsSclQ9Nawf3G/08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774604234; c=relaxed/simple;
-	bh=YV7VW7BRF9jky04S9x1EEczfhpwL+fMKZCiFvRcq/Ew=;
+	bh=UvsBdjWjYnrKxHFBDWLMrLD4qKJZGdD1YY8ojqMCQPY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h7SKHfI1VL5KfiakXRFxlW2NWsqs45cPn12H7zUTjq+GDvAqQZ6LmIsfBF7fE432chq7JI3KRI9OSHVh3tPQg7vM6Wrhkg4iSD4UGE9IbbrndGKsChCjAURuZtknXc3hKlAvqguUXJ1iSu8Dk6TVKFIwVuReA1s5VtAX7gIcgIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=seGVuxzt; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=HcJA7Z4kSO+Nn47gqhulia+oT+dXPVuJrBsGuDGhZ5NtgT7PwrIalVQklG2TWzaOPCwvbtgxp4W2w/kirjeLh+PbA+As1VWxJsw+t7s9VBtKyyirR8qwUWv1BYqaci0ON2Umit7zPkkNhYSMwl0vq5/UcU5LppcVhyYNJhkPttE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=AnChP5V9; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="seGVuxzt"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="AnChP5V9"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=/8xCcKgIZXRife0H15BPNVyoqUUTOHc3lS1+mIrBA6E=;
-	t=1774604233; x=1775813833; b=seGVuxzt7OoIWyiL3OCsTv8I32DuhajlXnSCTa7qcogL0RX
-	UDotxFKaC/w28v/d6StXcQJnforXkBsXNdhYSg36Ldl2sAK+dVqo3itZyFpcAKKwch0nXi3sP4Xs2
-	SrzC6swjNXDJ5LSJE3/t/FKhOn7TnBj1ycoxeI7WX7c4Ppig95aF6+RDiFQ7oEH3DwcIaEtWI9Dis
-	qcSmbl6rKRSr/ro+uJ85NbAgbpvHPJHoaKXOgmTwiPr72YukCkCBWlel6ypcZrnB9XrfyzQ0PGGRs
-	NUTwHd8J94q3T3jexpFVd2jaPN8KnPNiFxyem/vxd06wakIQ8HT32pffQCvt8VSw==;
+	Resent-Cc:Resent-Message-ID; bh=RNBEoxkOZpB20HM+MEkb/7esdQ9Jw/Bi8o7NCsnb4hg=;
+	t=1774604233; x=1775813833; b=AnChP5V9g8F/8BAJZiJfjs5P4I1ivn7SkBNfsjUICklJ0Xb
+	Jgfw+//mReeaSbXOSme3/q47fD6a5aG58CD9D26r8HG/WtX/qHHmwL/7DFIWANVEtxfz/ZX/3kX8u
+	c5aP5X9EZDAy2vAg3rRbGatZE63u/GzY+zCXyXcfFNqdcdO2tL4EGawvGCwcyOOCCYGWNl4WcWzqa
+	1iuZSq7yGXGbCSkVJ8if4HUSZQhm6y3Oai9Tf15RtXxKvoI/5v6eveESqR5iP3WnkfvcrEC0k4rMl
+	dP5ugJG2PpYh90Qo8w4hYDvUMwLv7fFNvbHqkafgaDFY+G+wUmMxX2YBYU7C5fzg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w63cn-0000000E83L-2E8e;
-	Fri, 27 Mar 2026 10:37:05 +0100
+	id 1w63ct-0000000E83L-0B0i;
+	Fri, 27 Mar 2026 10:37:11 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 06/19] wifi: nl80211: document channel opmode change channel width
-Date: Fri, 27 Mar 2026 10:31:32 +0100
-Message-ID: <20260327103659.8adf6dae2d31.Ia9a0769d52dcfe56f7b0dff903ed14db3ef04920@changeid>
+Subject: [RFC PATCH 15/19] wifi: nl80211: reject too short HT/VHT/HE/EHT capability/operation
+Date: Fri, 27 Mar 2026 10:31:41 +0100
+Message-ID: <20260327103659.0030d54a57a7.Ib1368e4d8e33a396f332a38a6ba6708fd188f143@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260327093659.711584-21-johannes@sipsolutions.net>
 References: <20260327093659.711584-21-johannes@sipsolutions.net>
@@ -50,38 +50,126 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The opmode change notification is entirely unused by existing
-userspace except for printing out the values. As such, there's
-no need to keep it perfectly accurate, and the implementation
-in mac80211 doesn't report it correctly today. Add a note in
-the documentation that it may not differentiate 80+80 and 160.
+If any of these are present, the code only assigns pointers when
+they're also long enough. Instead of ignoring them in that case,
+reject the configuration instead.
+
+Also add error messages to existing error paths.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/uapi/linux/nl80211.h | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ net/wireless/nl80211.c | 51 +++++++++++++++++++++++++++++++++---------
+ 1 file changed, 41 insertions(+), 10 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 3d55bf4be36f..072b383d7d3c 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1204,10 +1204,12 @@
-  *	user space through the connect result as the user space would have
-  *	initiated the connection through the connect request.
-  *
-- * @NL80211_CMD_STA_OPMODE_CHANGED: An event that notify station's
-- *	ht opmode or vht opmode changes using any of %NL80211_ATTR_SMPS_MODE,
-- *	%NL80211_ATTR_CHANNEL_WIDTH,%NL80211_ATTR_NSS attributes with its
-- *	address(specified in %NL80211_ATTR_MAC).
-+ * @NL80211_CMD_STA_OPMODE_CHANGED: An event that notifies that a station's
-+ *	HT opmode or VHT opmode changed using any of %NL80211_ATTR_SMPS_MODE,
-+ *	%NL80211_ATTR_CHANNEL_WIDTH, %NL80211_ATTR_NSS attributes with its
-+ *	address (specified in %NL80211_ATTR_MAC).
-+ *	Note that 80+80 and 160 MHz might not be differentiated, i.e. may
-+ *	report %NL80211_CHAN_WIDTH_160 instead of %NL80211_CHAN_WIDTH_80P80.
-  *
-  * @NL80211_CMD_GET_FTM_RESPONDER_STATS: Retrieve FTM responder statistics, in
-  *	the %NL80211_ATTR_FTM_RESPONDER_STATS attribute.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e0ed9ed28093..263d04a1366e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6649,28 +6649,49 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_beacon_data *bcn,
+  * HT/VHT/... capabilities, we parse them out of the elements and check for
+  * validity for use by drivers/mac80211.
+  */
+-static int nl80211_calculate_ap_capabilities(struct cfg80211_ap_settings *params)
++static int nl80211_calculate_ap_capabilities(struct genl_info *info,
++					     struct cfg80211_ap_settings *params)
+ {
+ 	size_t ies_len = params->beacon.tail_len;
+ 	const u8 *ies = params->beacon.tail;
+ 	const struct element *cap;
+ 
+ 	cap = cfg80211_find_elem(WLAN_EID_HT_CAPABILITY, ies, ies_len);
+-	if (cap && cap->datalen >= sizeof(*params->ht_cap))
++	if (cap) {
++		if (cap->datalen < sizeof(*params->ht_cap)) {
++			GENL_SET_ERR_MSG(info, "bad HT capability in beacon");
++			return -EINVAL;
++		}
+ 		params->ht_cap = (void *)cap->data;
++	}
++
+ 	cap = cfg80211_find_elem(WLAN_EID_VHT_CAPABILITY, ies, ies_len);
+-	if (cap && cap->datalen >= sizeof(*params->vht_cap))
++	if (cap) {
++		if (cap->datalen < sizeof(*params->vht_cap)) {
++			GENL_SET_ERR_MSG(info, "bad VHT capability in beacon");
++			return -EINVAL;
++		}
+ 		params->vht_cap = (void *)cap->data;
++	}
++
+ 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_CAPABILITY, ies, ies_len);
+-	if (cap && cap->datalen >= sizeof(*params->he_cap) + 1)
++	if (cap) {
++		if (cap->datalen < sizeof(*params->he_cap) + 1) {
++			GENL_SET_ERR_MSG(info, "bad HE capability in beacon");
++			return -EINVAL;
++		}
+ 		params->he_cap = (void *)(cap->data + 1);
++	}
++
+ 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY, ies, ies_len);
+ 	if (cap) {
+ 		params->eht_cap = (void *)(cap->data + 1);
+ 		if (!ieee80211_eht_capa_size_ok((const u8 *)params->he_cap,
+ 						(const u8 *)params->eht_cap,
+-						cap->datalen - 1, true))
++						cap->datalen - 1, true)) {
++			GENL_SET_ERR_MSG(info, "bad EHT capability in beacon");
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -6696,26 +6717,36 @@ static int nl80211_calculate_ap_operation(struct genl_info *info,
+ 	nl80211_check_ap_rate_selectors(bcn, rates);
+ 
+ 	op = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
+-	if (op && op->datalen >= sizeof(*bcn->he_oper) + 1) {
++	if (op) {
++		if (op->datalen < sizeof(*bcn->he_oper) + 1) {
++			GENL_SET_ERR_MSG(info, "bad HE operation in beacon");
++			return -EINVAL;
++		}
+ 		bcn->he_oper = (void *)(op->data + 1);
+ 		/* takes extension ID into account */
+-		if (op->datalen < ieee80211_he_oper_size((void *)bcn->he_oper))
++		if (op->datalen < ieee80211_he_oper_size((void *)bcn->he_oper)) {
++			GENL_SET_ERR_MSG(info, "bad HE operation in beacon");
+ 			return -EINVAL;
++		}
+ 	}
+ 
+ 	op = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_OPERATION, ies, ies_len);
+ 	if (op) {
+ 		if (!ieee80211_eht_oper_size_ok(op->data + 1,
+-						op->datalen - 1))
++						op->datalen - 1)) {
++			GENL_SET_ERR_MSG(info, "bad EHT operation in beacon");
+ 			return -EINVAL;
++		}
+ 		bcn->eht_oper = (void *)(op->data + 1);
+ 	}
+ 
+ 	op = cfg80211_find_ext_elem(WLAN_EID_EXT_UHR_OPER, ies, ies_len);
+ 	if (op) {
+ 		/* need full UHR operation separately */
+-		if (!info->attrs[NL80211_ATTR_UHR_OPERATION])
++		if (!info->attrs[NL80211_ATTR_UHR_OPERATION]) {
++			GENL_SET_ERR_MSG(info, "missing UHR operation");
+ 			return -EINVAL;
++		}
+ 		bcn->uhr_oper = nla_data(info->attrs[NL80211_ATTR_UHR_OPERATION]);
+ 	} else if (info->attrs[NL80211_ATTR_UHR_OPERATION]) {
+ 		GENL_SET_ERR_MSG(info, "unexpected UHR operation");
+@@ -7156,7 +7187,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 			goto out;
+ 	}
+ 
+-	err = nl80211_calculate_ap_capabilities(params);
++	err = nl80211_calculate_ap_capabilities(info, params);
+ 	if (err)
+ 		goto out;
+ 
 -- 
 2.53.0
 
